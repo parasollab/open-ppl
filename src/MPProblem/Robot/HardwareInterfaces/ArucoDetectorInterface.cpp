@@ -58,17 +58,16 @@ GetCoordinatesFromMarker() {
   char c;
   *m_socket >> c;
   count = c;
-  //cout << "Size of c " << count << endl;
 
   // The detector will attempt to loacalize itself for each marker that it sees.
   // Receive these estimates here and sum.
-  double x = 0.0;
-  double y = 0.0;
-  double angle = 0.0;
+  double x = 0,
+         y = 0,
+         angle = 0;
 
   // Set the number of markers seen at this point
   m_numMarkersSeen = count;
-  for(size_t i=0;i<count;i++) {
+  for(size_t i = 0; i < count; ++i) {
     packet p1;
     *m_socket >> p1;
 
@@ -80,17 +79,20 @@ GetCoordinatesFromMarker() {
   }
 
   m_socket->disconnect();
+
   // Divide the summed estimates by the number of estimates to produce an
   // average.
   /// @TODO Consider using a kalman filter instead of averaging.
   double totalMarkers = (double)count;
   if(totalMarkers > 0) {
-    x = x/totalMarkers;
-    y = y/totalMarkers;
-    angle = angle/totalMarkers;
+    x = x / totalMarkers;
+    y = y / totalMarkers;
+    angle = angle / totalMarkers;
     std::vector<double> coordinates = {x, y, (angle)*(180/M_PI)};
     return coordinates;
   }
+
+  // If we didn't see any markers, we cannot return a reasonable estimate.
   return {};
 }
 

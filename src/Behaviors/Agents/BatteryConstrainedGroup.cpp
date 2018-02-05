@@ -112,6 +112,7 @@ Initialize() {
   // Generate the shared roadmap. This uses an empty task, so an appropriate map
   // evaluator should be chosen to get the desired PRM coverage.
   std::unique_ptr<MPTask> sharedRoadmapTask(new MPTask(m_robot));
+  sharedRoadmapTask->SetLabel("InitializeSharedRoadmap");
   auto task = sharedRoadmapTask.get();
   problem->AddTask(std::move(sharedRoadmapTask));
 

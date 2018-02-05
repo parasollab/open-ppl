@@ -97,12 +97,13 @@ Step() {
   const double timestep = m_problem->GetEnvironment()->GetTimeRes();
 
   // Set each Robot's multibody to its current simulated state.
-  /// @TODO This will not work for concurrent planning by multiple agents.
-  ///       Replace as part of that upgrade.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
     m_problem->GetRobot(i)->SynchronizeModels();
 
   // Step each Robot's agent to set the forces for the next step.
+  /// @note Any agents which will plan concurrently with the main simulation
+  ///       loop must first copy the current problem state in order to get
+  ///       accurate positions for the other dynamic objects.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
     m_problem->GetRobot(i)->Step(timestep);
 

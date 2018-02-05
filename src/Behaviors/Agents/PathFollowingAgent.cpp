@@ -11,16 +11,17 @@
 /*------------------------------ Construction --------------------------------*/
 
 PathFollowingAgent::
-PathFollowingAgent(Robot* const _r) : Agent(_r) { }
+PathFollowingAgent(Robot* const _r) : PlanningAgent(_r) { }
 
 
 PathFollowingAgent::
-PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a) : Agent(_r, _a)
+PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a)
+  : PlanningAgent(_r, _a)
 { }
 
 
 PathFollowingAgent::
-PathFollowingAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
+PathFollowingAgent(Robot* const _r, XMLNode& _node) : PlanningAgent(_r) {
   // Currently there are no parameters. Parse XML options here.
 }
 
@@ -42,47 +43,36 @@ PathFollowingAgent::
 
 void
 PathFollowingAgent::
-Initialize() {
-  if(m_initialized)
+Uninitialize() {
+  if(!m_initialized)
     return;
-  m_initialized = true;
+  PlanningAgent::Uninitialize();
 
-  // Get problem info.
-  auto problem = m_robot->GetMPProblem();
-  const std::string& xmlFile = problem->GetXMLFilename();
-
-  // Initialize the agent's planning library.
-  m_library = new MPLibrary(xmlFile);
-
-  /// @TODO Choose the task intelligently rather than just taking the first one.
-  auto task = problem->GetTasks(m_robot).front();
-  this->SetTask(task);
-
-  // Create a new solution object to hold a plan for this agent.
-  auto solution = new MPSolution(m_robot);
-
-  // Use the planning library to find a path.
-  m_library->Solve(problem, task, solution);
-
-  // Extract the path from the solution.
-  m_path = solution->GetPath()->Cfgs();
-  delete solution;
+  m_path.clear();
+  m_pathIndex = 0;
 }
 
+/*----------------------------- Planning Helpers -----------------------------*/
 
 void
 PathFollowingAgent::
-Step(const double _dt) {
-  Initialize();
+GeneratePlan() {
+  PlanningAgent::GeneratePlan();
 
-  // Do nothing if there are no unvisited points left.
-  if(m_pathIndex >= m_path.size())
-    return;
+  // Extract the path from the solution.
+  m_path = m_solution->GetPath()->Cfgs();
+  m_pathIndex = 0;
 
-  if(m_debug)
-    std::cout << "Approaching waypoint " << m_pathIndex << " / "
-              << m_path.size() - 1 << ".\n";
+  // Throw if PMPL failed to generate a solution.
+  if(m_path.empty())
+    throw RunTimeException(WHERE, "PMPL failed to produce a solution.");
+}
 
+/*------------------------------- Task Helpers -------------------------------*/
+
+bool
+PathFollowingAgent::
+EvaluateTask() {
   // Get the current configuration.
   const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
 
@@ -99,56 +89,54 @@ Step(const double _dt) {
               << distance << "/" << threshold
               << std::endl;
 
-  while(distance < threshold and m_pathIndex < m_path.size()) {
+  // Advance our subgoal while we are within the distance threshold of the next
+  // one.
+  while(distance < threshold) {
     if(m_debug)
       std::cout << "\tReached waypoint " << m_pathIndex << " at "
-                << distance << "/" << threshold << std::endl
-                << "Waypoint = " << m_path[m_pathIndex] << std::endl;
+                << distance << "/" << threshold
+                << "\n\t\t" << m_path[m_pathIndex].PrettyPrint()
+                << std::endl;
 
     // Move to next cfg in path since the distance is within the threshold.
     ++m_pathIndex;
 
-    // Break if we try to go beyond the path's end. Necessary, as calculating
-    // the distance on an undefined cfg will crash some systems.
-    if(m_pathIndex >= m_path.size())
-      break;
+    // Check if we have completed the path. If so, this task is complete.
+    if(m_pathIndex == m_path.size())
+    {
+      if(m_debug)
+        std::cout << "Reached the end of the path." << std::endl;
+      GetTask()->SetCompleted();
+      m_path.clear();
+      m_pathIndex = 0;
+      SetTask(nullptr);
+      return true;
+    }
 
     distance = dm->Distance(current, m_path[m_pathIndex]);
   }
 
-  // If we hit the end, return.
-  if(m_pathIndex >= m_path.size()) {
-    if(m_debug)
-      std::cout << "Reached the end of the path." << std::endl;
-
-    // Warning: Halt() doesn't respect the dynamics of the simulation and is
-    // only to be used for visual verification of the path in the simulator.
-    this->Halt();
-    return;
-  }
-
-  // Otherwise, execute the control that is nearest to the desired force.
-  auto bestControl = m_robot->GetController()->operator()(current,
-      m_path[m_pathIndex], _dt);
-  bestControl.Execute();
-
-  auto hardwareInterface = static_cast<QueuedHardwareInterface*>(m_robot->
-      GetHardwareInterface("base")); //TODO Magic string
-  if(hardwareInterface)
-    hardwareInterface->EnqueueCommand({bestControl}, _dt);
+  return false;
 }
 
 
 void
 PathFollowingAgent::
-Uninitialize() {
-  if(!m_initialized)
-    return;
-  m_initialized = false;
+ExecuteTask(const double _dt) {
+  if(m_debug)
+    std::cout << "Approaching waypoint " << m_pathIndex << " / "
+              << m_path.size() - 1 << "."
+              << std::endl;
 
-  m_path.clear();
-  m_pathIndex = 0;
-  delete m_library;
+  // Get the smallest safe time interval in case _dt is too fast for the hardware.
+  const size_t steps = std::max(NearestNumSteps(_dt), MinimumSteps());
+  const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes(),
+               time = timeRes * steps;
+
+  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+  auto bestControl = m_robot->GetController()->operator()(current,
+      m_path[m_pathIndex], time);
+  ExecuteControls({bestControl}, steps);
 }
 
 /*----------------------------------------------------------------------------*/

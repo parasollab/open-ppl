@@ -126,64 +126,49 @@ PathFollowingChildAgent::
 Step(const double _dt) {
   Initialize();
 
-  // Skip till you match the hardware time.
-  auto hardware = m_robot->GetHardwareInterface("base");
-  if(hardware) {
-    const double hardwareTime = hardware->GetCommunicationTime();
-
-    m_dt += _dt;
-    if(m_dt < hardwareTime)
-      return;
-  }
-  else
-    m_dt = _dt;
-
-  //If we have moved 1.0 meters, localize. The error seems high just after 1 m, so
-  //we would need to localize often.
-  if(m_distance > 2.0) {
-    Localize(m_dt);
-    LocalizeAngle(m_dt);
-    m_dt = 0;
+  // We cannot send commands faster than the hardware can accept them, so skip
+  // until the hardware is ready.
+  if(WaitForHardware(_dt))
     return;
+
+  // If the current task is completed, get a new task from coordinator.
+  if(m_task->IsCompleted()) {
   }
 
-  if(m_parentAgent->IsHelper(m_robot))
-    HelperStep(m_dt);
-  else
-    WorkerStep(m_dt);
-
-  // If not in collision, keep going with current task.
-  InCollision();
-  bool inHeadonCollision = false;
-  if(!collision) {
-    m_shouldHalt = false;
-    m_headOnCollidingRobot = nullptr;
-  }
-  // Otherwise, check if it should stop/plan around.
-  else if(m_shouldHalt) {
-    this->Halt();
-    //halt and return, don't call Execute task
-    PauseAgent(m_dt);
-    m_dt = 0;
-    return;
-  }
-  else
-    inHeadonCollision = IsHeadOnCollision();
-
-  //If the tasked is assigned but not started
+  // If we have a task that is not started, make a plan for it now.
   if(m_task && !m_task->IsStarted()) {
-    //If in headon collision then skip this step and don't plan the task.
-    //Lazy PRM will tak care of it in the next time step.
-    if(!inHeadonCollision)
-      GetNextPath(m_task);
-    else {
-      m_dt = 0;
-      return;
-    }
   }
+
+  /* Helper ------------------------------------------------------------------*/
+
+  if(m_task->GetLabel() == "GoingToHelp") {
+    // Keep going
+  }
+  else if(/* not at charging station */)
+    // Find nearest charging station
+  else {
+    // At charging station:
+    // Clear the current path and halt the robot
+    // Reset robot priority to 0 while it charges
+    // If battery is low, charge
+    // If battery is full (more than 90%) , available to help
+  }
+
+  /* Worker ------------------------------------------------------------------*/
+
+  if(IsBatteryLow()) {
+    // if no helper
+    //   halt
+    //   call for help
+    // else if helper is close enough to take over
+    //   give task to helper
+    //   swap priorities
+    //   send worker back to charger
+  }
+
+  /*--------------------------------------------------------------------------*/
 
   ExecuteTask(m_dt);
-  m_dt = 0;
 }
 
 
@@ -224,16 +209,7 @@ IsBatteryHigh() {
 void
 PathFollowingChildAgent::
 ExecuteControl(const Control _c, const double _dt) {
-  // Execute the control on the simulated robot.
-  _c.Execute();
-
-  // If we are controlling a hardware robot, execute the control on hardware as
-  // well.
-  auto hardwareInterface = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base")); //TODO Magic string
-
-  if(hardwareInterface)
-    hardwareInterface->EnqueueCommand({_c}, _dt);
+  this->Agent::ExecuteControl(_c, _dt);
 
   // Update odometry tracking.
   /// @TODO This assumes we are using a velocity-based iCreate controller. Make
@@ -267,13 +243,15 @@ void
 PathFollowingChildAgent::
 GeneratePlan() {
   // If we have no task, do nothing.
-  if(!GetTask())
+  auto myTask = GetTask();
+  if(!myTask)
     return;
 
   /// TODO
   // Halt agent
-  // Synchronize models
-  // Copy parent's problem
+  // Copy problem so that we can plan concurrently with the main simulation.
+  MPProblem problem = m_robot->GetMPProblem();
+
   // Solve in separate thread
   // Update parent's roadmap
   //m_library->Solve(m_robot->GetMPProblem(), GetTask(), m_solution,
@@ -308,159 +286,7 @@ Rotate(double& _angle, double _dt) {
 
 void
 PathFollowingChildAgent::
-Localize(double _dt) {
-  if(m_ignoreLocalization)
-    return;
-
-  m_ignoreAngleLocalization = true;
-  m_finishedLocalizing = false;
-
-  auto hardwareInterface = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base")); //TODO Magic string
-
-  // Rotate for about 90 degrees
-  if(abs(m_localizingAngle) > 0.2)
-    Rotate(m_localizingAngle, _dt);
-  else {
-    //PauseAgent(_dt);
-    this->Halt();
-    if(hardwareInterface->IsIdle()) {
-      //cout << "Coordinates in the simulator: " <<
-        //m_robot->GetDynamicsModel()->GetSimulatedState() << endl;
-
-      ArucoDetectorInterface* netbook = static_cast<ArucoDetectorInterface*>
-        (m_robot->GetHardwareInterface("netbook")); //TODO Magic string
-
-      vector< vector<double> > allCoordinates;
-
-      vector<double> coordinates;
-      for(int i = 0; i< 2; i++)
-        coordinates = netbook->GetCoordinatesFromMarker();
-
-      if(!coordinates.empty() and netbook->GetNumMarkersSeen() >= 2) {
-        /*cout << "Coordinates from markers: " << endl;
-        for(auto info : coordinates)
-          cout << info << ", ";
-        cout << endl;*/
-        coordinates[2] = coordinates[2]/(180); //Get it in the range [-1, 1]
-        allCoordinates.push_back(coordinates);
-      }
-
-      if(m_totalRotations >= 4 or netbook->GetNumMarkersSeen() >= 3) {
-        m_totalRotations = 0;
-
-        double x = 0, y = 0, ang = 0;
-        for(auto vec : allCoordinates) {
-          x += vec[0];
-          y += vec[1];
-          ang += vec[2];
-        }
-
-        x = x/allCoordinates.size();
-        y = y/allCoordinates.size();
-        ang = ang/allCoordinates.size();
-
-        vector<double> finalPos{x,y,ang};
-
-        m_robotPos.SetData(finalPos);
-
-        m_ignoreAngleLocalization = false;
-
-        //cout << "Finished with positional localization, "
-          //"angle will be calculated next. " << endl;
-        return;
-      }
-      else {
-        // reset this value to 90 degrees
-        m_localizingAngle = 1.57;
-        m_totalRotations++;
-        //cout << "Changing angle " << endl;
-        //cout << netbook->GetNumMarkersSeen() <<
-          //" Markers found. Rotating more." << endl;
-      }
-    }
-  }
-  return;
-}
-
-
-void
-PathFollowingChildAgent::
-LocalizeAngle(double _dt) {
-  if(m_ignoreAngleLocalization)
-    return;
-
-  m_ignoreLocalization = true;
-
-  auto hardwareInterface = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base")); //TODO Magic string
-
-  // Rotate till angle is almost 0
-  if(abs(m_localizingAngle) > 0.2)
-    Rotate(m_localizingAngle, _dt);
-  else {
-    this->Halt();
-    //PauseAgent(_dt);
-
-    if(hardwareInterface->IsIdle()) {
-
-      ArucoDetectorInterface* netbook = static_cast<ArucoDetectorInterface*>
-        (m_robot->GetHardwareInterface("netbook")); //TODO Magic string
-
-      vector<double> coordinates;
-      for(int i = 0; i< 2; i++)
-        coordinates = netbook->GetCoordinatesFromMarker();
-
-      if(!coordinates.empty()) {
-        coordinates[2] = coordinates[2]/(180); //Get it in the range [-1, 1]
-        Cfg tempPos(m_robot);
-        tempPos.SetData(coordinates);
-
-        /*cout << "Position calculated after all markers: " << m_robotPos << endl;
-        cout << "temporary position in after 360 rotation: " << tempPos << endl;
-        cout << "Distance between the physical robot and temppos: " << dist << endl;*/
-
-        if(EuclideanDistance(m_robotPos, tempPos) < 0.5) {
-          m_distance = 0;
-          m_ignoreLocalization = false;
-          m_finishedLocalizing = true;
-
-          Cfg actualPhysicalPos(m_robot);
-          actualPhysicalPos.SetData({m_robotPos[0],m_robotPos[1], coordinates[2]});
-          m_robot->GetDynamicsModel()->SetSimulatedState(actualPhysicalPos);
-          if(m_goToSameGoal)
-          {
-            // Replan(); This function just recreated the same task and did not
-            // replan.
-          }
-          else{
-            GetNextPath(m_task, true);
-            m_goToSameGoal = true;
-          }
-          return;
-        }
-        else {
-          m_localizingAngle = 1.57;
-          return;
-        }
-      }
-      else {
-        // reset this value to 60 degrees; TODO: don't use magic numbers
-        m_localizingAngle = 1.57;
-        //cout << netbook->GetNumMarkersSeen() << " Markers found. Rotating more." << endl;
-      }
-    }
-  }
-  return;
-}
-
-
-void
-PathFollowingChildAgent::
 ExecuteTask(double _dt) {
-  if(!m_finishedLocalizing)
-    return;
-
   // Do nothing if there are no unvisited points left
   if(m_pathIndex >= m_path.size() or m_path.empty())
     return;
@@ -517,47 +343,6 @@ PauseAgent(double _dt) {
   auto emptyControl = m_robot->GetController()->operator()(point, point, _dt);
 
   ExecuteControl(emptyControl, _dt);
-}
-
-
-void
-PathFollowingChildAgent::
-WorkerStep(double _dt) {
-  if(IsBatteryLow()) {
-    // if no helper
-    //   halt
-    //   call for help
-    // else if helper is close enough to take over
-    //   give task to helper
-    //   swap priorities
-    //   send worker back to charger
-  }
-
-  if(m_task->IsCompleted()) {
-    // Get a new task from coordinator
-  }
-}
-
-
-void
-PathFollowingChildAgent::
-HelperStep(double _dt) {
-  if(m_task->GetLabel() == "GoingToHelp") {
-    // Keep going
-  }
-  else if(/* not at charging station */)
-    // Find nearest charging station
-  else {
-    // At charging station:
-    //Clear the current path and halt the robot
-    m_path.clear();
-    m_pathIndex = 0;
-    this->Halt();
-    PauseAgent(_dt);
-    // Reset robot priority to 0 while it charges
-    // If battery is low, charge
-    // If battery is full (more than 90%) , available to help
-  }
 }
 
 

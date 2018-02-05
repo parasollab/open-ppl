@@ -67,11 +67,6 @@ class PathFollowingChildAgent : public Agent {
     ///@name Helper Functions
     ///@{
 
-    /// Execute a control on the robot, and on the hardware if present.
-    /// @param _c The control to execute.
-    /// @param _dt The length of time to execute the control.
-    void ExecuteControl(const Control _c, const double _dt);
-
     /// Check if this member is in collision proximity to any others. If so, ask
     /// the coordinator to arbitrate the collision.
     void InCollision();
@@ -79,15 +74,7 @@ class PathFollowingChildAgent : public Agent {
     /// Generate a new plan for the robot's current task.
     void GeneratePlan();
 
-    void WorkerStep(double);
-
-    void HelperStep(double);
-
     void AvoidCollision();
-
-    void Localize(double);
-
-    void LocalizeAngle(double);
 
     void Rotate(double&, double);
 
@@ -96,9 +83,7 @@ class PathFollowingChildAgent : public Agent {
     /// @return The length of _path from start to goal.
     const double GetPathLength(const vector<Cfg>& _path) const;
 
-    void PauseSimulatedAgent(double);
-
-    void PauseHardwareAgent(double);
+    void PauseAgent(double);
 
     ///@}
 
@@ -115,15 +100,11 @@ class PathFollowingChildAgent : public Agent {
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
 
 
+
+
     bool m_shouldHalt{false}; ///< The robot should halt if inCollision & lower priority.
 
-    double m_dt{0.0};                         ///< Track the amount of _dt steps taken
-
     double m_distance{0.0}; ///< The distance traveled since localizing.
-
-    double m_localizingAngle{0.0};
-
-    int m_totalRotations{0};
 
 
     bool m_ignoreLocalization{false};  ///Using this to ignore positional localization when trying to localize the angle

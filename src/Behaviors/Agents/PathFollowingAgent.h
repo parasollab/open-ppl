@@ -1,16 +1,15 @@
 #ifndef PATH_FOLLOWING_AGENT_H_
 #define PATH_FOLLOWING_AGENT_H_
 
-#include "Agent.h"
+#include "PlanningAgent.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "MPLibrary/PMPL.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent calls pmpl once and then follows the resulting path.
 ////////////////////////////////////////////////////////////////////////////////
-class PathFollowingAgent : public Agent {
+class PathFollowingAgent : public PlanningAgent {
 
   public:
 
@@ -31,26 +30,31 @@ class PathFollowingAgent : public Agent {
     ///@name Agent Interface
     ///@{
 
-    /// Call PMPL to create a path for the agent to follow.
-    virtual void Initialize() override;
-
-    /// Follow the path.
-    virtual void Step(const double _dt) override;
-
-    /// Clean up.
     virtual void Uninitialize() override;
 
     ///@}
 
   protected:
 
+    ///@name Planning Helpers
+    ///@{
+
+    virtual void GeneratePlan() override;
+
+    ///@}
+    ///@name Task Helpers
+    ///@{
+
+    virtual bool EvaluateTask() override;
+
+    virtual void ExecuteTask(const double _dt) override;
+
+    ///@}
     ///@name Internal State
     ///@{
 
     std::vector<Cfg> m_path; ///< The path to follow.
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
-
-    MPLibrary* m_library{nullptr}; ///< This agent's planning library.
 
     ///@}
 
