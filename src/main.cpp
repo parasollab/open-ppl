@@ -28,7 +28,7 @@ main(int _argc, char** _argv) {
     MPTask* task = problem->GetTasks(robot).front();
     pmpl->Solve(problem, task);
 
-    // Release resources.
+    // Release resourcess.
     delete problem;
     delete pmpl;
 
