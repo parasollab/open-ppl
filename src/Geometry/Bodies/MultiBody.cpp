@@ -687,17 +687,18 @@ GenerateModelTransformation(const std::vector<double>& _v, int& _index,
 
   if(_movementType == Body::MovementType::Rotational) {
     if(_bodyType == Body::Type::Planar)
-      gamma = _v[++_index];
+      alpha = _v[++_index]; // Rotation about Z
     else {
-      alpha = _v[++_index];
-      beta = _v[++_index];
-      gamma = _v[++_index];
+      gamma = _v[++_index]; // Rotation about X is the third Euler angle
+      beta  = _v[++_index]; // Rotation about Y is the second Euler angle
+      alpha = _v[++_index]; // Rotation about Z is the first Euler angle
     }
   }
   ++_index; // Needs to happen to make up for first indexing with no addition.
-  Transformation t1(Vector3d(x, y, z), Orientation(EulerAngle(gamma * PI,
-                                                   beta * PI, alpha * PI)));
-  return t1;
+
+  // Generate the transformation with a translation vector and ZYX Euler angle.
+  return Transformation(Vector3d(x, y, z),
+                        EulerAngle(alpha * PI, beta * PI, gamma * PI));
 }
 
 /*----------------------------------- I/O ------------------------------------*/
