@@ -19,7 +19,7 @@ namespace mathtool {
 ///       updated value. This is intended to decouple the process of adjusting
 ///       the object with a gui and subsequently updating the original model.
 ////////////////////////////////////////////////////////////////////////////////
-class EditTransformationWidget : public QWidget {
+class EditTransformationWidget : public QGroupBox {
 
   Q_OBJECT
 
@@ -30,8 +30,9 @@ class EditTransformationWidget : public QWidget {
 
     /// Create a transform edit widget.
     /// @param _parent The owning widget.
+    /// @param _label The transformation label.
     /// @param _t The initial value of the transformation object.
-    EditTransformationWidget(QWidget* const _parent,
+    EditTransformationWidget(QWidget* const _parent, const std::string& _label,
         const mathtool::Transformation& _t);
 
     ///@}
@@ -77,7 +78,7 @@ class EditTransformationWidget : public QWidget {
 ///       updated value. This is intended to decouple the process of adjusting
 ///       the object with a gui and subsequently updating the original model.
 ////////////////////////////////////////////////////////////////////////////////
-class EditDHParametersWidget : public QWidget {
+class EditDHParametersWidget : public QGroupBox {
 
   Q_OBJECT
 
@@ -88,8 +89,10 @@ class EditDHParametersWidget : public QWidget {
 
     /// Create a dhparam edit widget.
     /// @param _parent The owning widget.
+    /// @param _label The DH param label.
     /// @param _dh The initial value of the dhparam object.
-    EditDHParametersWidget(QWidget* const _parent, const DHParameters& _dh);
+    EditDHParametersWidget(QWidget* const _parent, const std::string& _label,
+        const DHParameters& _dh);
 
     ///@}
     ///@name Helpers

@@ -11,8 +11,9 @@ using namespace mathtool;
 /*------------------------------- Construction -------------------------------*/
 
 EditTransformationWidget::
-EditTransformationWidget(QWidget* const _parent, const Transformation& _t)
-  : QWidget(_parent)
+EditTransformationWidget(QWidget* const _parent, const std::string& _label,
+    const Transformation& _t)
+  : QGroupBox(("Transformation: " + _label).c_str(), _parent)
 {
   // Create slider text widgets for each transform value.
   /// @TODO How to set XYZ limits? Probably pass a boundary or vector<Range>?
@@ -73,8 +74,9 @@ SetValue(const Transformation& _t) {
 /*------------------------------- Construction -------------------------------*/
 
 EditDHParametersWidget::
-EditDHParametersWidget(QWidget* const _parent, const DHParameters& _dh)
-  : QWidget(_parent)
+EditDHParametersWidget(QWidget* const _parent, const std::string& _label,
+    const DHParameters& _dh)
+  : QGroupBox(("DH Params: " + _label).c_str(), _parent)
 {
   // Create slider text widgets for each transform value.
   /// @TODO How to set a/d limits? Hard-coding for now to save time. Probably we

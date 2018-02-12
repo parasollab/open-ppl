@@ -23,18 +23,25 @@ EditConnectionDialog(main_window* const _parent, DrawableMultiBody* const _mb,
   : QDialog(_parent), m_main(_parent), m_drawable(_mb),
     m_connection(m_drawable->GetMultiBody()->GetJoint(_index))
 {
+  /// @TODO Figure out how to make this take up the whole dialog space.
   setWindowTitle("Edit Connection");
   setAttribute(Qt::WA_DeleteOnClose, true);
   setMinimumWidth(400);
+  setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+  // Create a display area which will hold all the subcomponents (needed for
+  // scroll area support).
+  QWidget* displayArea = new QWidget(this);
+  displayArea->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   // Create Widgets to edit the transforms.
-  m_transform1Editor = new EditTransformationWidget(this,
+  m_transform1Editor = new EditTransformationWidget(this, "Parent -> Actuation",
       m_connection->GetTransformationToDHFrame());
-  m_transform2Editor = new EditTransformationWidget(this,
+  m_transform2Editor = new EditTransformationWidget(this, "Actuation -> Link",
       m_connection->GetTransformationToBody2());
 
   // Create a widget to edit the DH params.
-  m_dhParamsEditor = new EditDHParametersWidget(this,
+  m_dhParamsEditor = new EditDHParametersWidget(this, "Actuation",
       m_connection->GetDHParameters());
 
   // Create buttons.
@@ -42,13 +49,27 @@ EditConnectionDialog(main_window* const _parent, DrawableMultiBody* const _mb,
   okCancel->setOrientation(Qt::Horizontal);
   okCancel->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
 
-  // Create a layout for the dialog and add the subcomponents.
-  QVBoxLayout* layout = new QVBoxLayout();
-  layout->addWidget(m_transform1Editor);
-  layout->addWidget(m_dhParamsEditor);
-  layout->addWidget(m_transform2Editor);
-  layout->addWidget(okCancel);
-  setLayout(layout);
+  // Create a layout for the display area and add the subcomponents.
+  QVBoxLayout* displayLayout = new QVBoxLayout(this);
+  displayLayout->setSizeConstraint(QLayout::SetMaximumSize);
+  displayLayout->addWidget(m_transform1Editor);
+  displayLayout->addWidget(m_dhParamsEditor);
+  displayLayout->addWidget(m_transform2Editor);
+  displayLayout->addWidget(okCancel);
+  displayArea->setLayout(displayLayout);
+
+  // Create a scroll area to allow displayArea to be scrolled up and down.
+  QScrollArea* scroll = new QScrollArea(this);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  scroll->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+  scroll->setWidget(displayArea);
+
+  // Create a layout for the dialog and add the scroll area to it.
+  QVBoxLayout* scrollLayout = new QVBoxLayout(this);
+  scrollLayout->setSizeConstraint(QLayout::SetMaximumSize);
+  scrollLayout->addWidget(scroll);
+  setLayout(scrollLayout);
 
   // Connect the ok/cancel buttons.
   connect(okCancel, SIGNAL(accepted()), this, SLOT(accept()));

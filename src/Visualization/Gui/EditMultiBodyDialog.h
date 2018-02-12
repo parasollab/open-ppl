@@ -38,6 +38,9 @@ class EditMultiBodyDialog : public QDialog {
     /// Launch a dialog to edit the currently selected connection.
     void EditConnection();
 
+    /// Export the multibody data to the terminal.
+    void Export();
+
     ///@}
 
   private:

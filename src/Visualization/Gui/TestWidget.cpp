@@ -18,12 +18,9 @@ TestWidget(main_window* const _parent) : QWidget(_parent), m_main(_parent) {
   QLabel* const title = new QLabel(this);
   title->setText("Test Widget");
 
-  // Create a slider text widget.
-  //OK//SliderTextWidget* st = new SliderTextWidget(this, "Test", -100, 100);
-
   // Create a transformation edit widget.
   Transformation t(Vector3d(4, 5, 6), EulerAngle(PI, 0, -PI));
-  m_transformEditor = new EditTransformationWidget(this, t);
+  m_transformEditor = new EditTransformationWidget(this, "Test", t);
 
   // Create a button to show a transform export.
   QPushButton* showIt = new QPushButton("Show Transformation", this);
@@ -31,7 +28,6 @@ TestWidget(main_window* const _parent) : QWidget(_parent), m_main(_parent) {
   // Create the layout.
   QVBoxLayout* const layout = new QVBoxLayout(this);
   layout->addWidget(title);
-  //layout->addWidget(st);
   layout->addWidget(m_transformEditor);
   layout->addWidget(showIt);
   setLayout(layout);

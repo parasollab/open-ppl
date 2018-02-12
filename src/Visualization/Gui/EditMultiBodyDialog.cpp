@@ -47,7 +47,8 @@ EditMultiBodyDialog(main_window* const _parent, DrawableMultiBody* const _mb)
 
   // Create buttons for editing bodies and connections.
   QPushButton* editBodyButton       = new QPushButton("Edit Body", this),
-             * editConnectionButton = new QPushButton("Edit Connection", this);
+             * editConnectionButton = new QPushButton("Edit Connection", this),
+             * exportButton         = new QPushButton("Export", this);
 
   // Create buttons for OK and Cancel.
   QDialogButtonBox* okCancel = new QDialogButtonBox(this);
@@ -60,6 +61,7 @@ EditMultiBodyDialog(main_window* const _parent, DrawableMultiBody* const _mb)
   layout->addWidget(editBodyButton);
   layout->addWidget(m_connectionList);
   layout->addWidget(editConnectionButton);
+  layout->addWidget(exportButton);
   layout->addWidget(okCancel);
   setLayout(layout);
 
@@ -68,6 +70,8 @@ EditMultiBodyDialog(main_window* const _parent, DrawableMultiBody* const _mb)
           this,           SLOT(EditBody()));
   connect(editConnectionButton, SIGNAL(clicked()),
           this,                 SLOT(EditConnection()));
+  connect(exportButton, SIGNAL(clicked()),
+          this,         SLOT(Export()));
 
   // Connect the ok/cancel buttons.
   connect(okCancel, SIGNAL(accepted()), this, SLOT(accept()));
@@ -108,6 +112,13 @@ EditConnection() {
 
   // Launch an edit body dialog for this connection.
   m_main->show_dialog(new EditConnectionDialog(m_main, m_drawable, row));
+}
+
+
+void
+EditMultiBodyDialog::
+Export() {
+  m_multibody->Write(std::cout);
 }
 
 /*----------------------------------------------------------------------------*/
