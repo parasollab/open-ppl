@@ -1,5 +1,7 @@
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
+#include "Visualization/Gui/Setup.h"
+
 #include "sandbox/gui/main_window.h"
 
 
@@ -31,19 +33,25 @@ main(int _argc, char** _argv) {
     }
 
     // Make simulation object.
-    Simulation simulation(problem);
+    Simulation::Create(problem);
+    Simulation* simulation = Simulation::Get();
+    //simulation->SetBacklog(1);
 
     // Make visualizer object.
     QApplication app(_argc, _argv);
     main_window window;
 
+    // TODO In progress
+    // Set up the gui.
+    //SetupMainWindow(&window);
+
     // Load the simulation into the visualizer and start it.
-    window.visualization(&simulation);
+    window.visualization(simulation);
     window.show();
     app.exec();
 
     // Clean up the simulation and problem when we are done.
-    simulation.Uninitialize();
+    simulation->Uninitialize();
     delete problem;
 
     return 0;

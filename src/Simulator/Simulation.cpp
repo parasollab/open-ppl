@@ -16,6 +16,10 @@
 
 /*---------------------------- Construction ----------------------------------*/
 
+/// Create the singleton.
+static Simulation* s_singleton{nullptr};
+
+
 Simulation::
 Simulation(MPProblem* const _problem) : m_problem(_problem) {}
 
@@ -23,6 +27,23 @@ Simulation(MPProblem* const _problem) : m_problem(_problem) {}
 Simulation::
 ~Simulation() {
   reset();
+  s_singleton = nullptr;
+}
+
+
+void
+Simulation::
+Create(MPProblem* const _problem) {
+  if(s_singleton)
+    throw RunTimeException(WHERE, "THERE CAN ONLY BE ONE!");
+  s_singleton = new Simulation(_problem);
+}
+
+
+Simulation*
+Simulation::
+Get() {
+  return s_singleton;
 }
 
 /*-------------------------- Simulation Interface ----------------------------*/
@@ -86,11 +107,9 @@ Step() {
 
     // Enqueue the current position of each mobile object in the scene.
     for(size_t i = 0; i < this->m_drawables.size(); ++i) {
-      /// @TODO Fix this to the transform of object i once we make the bbx
-      ///       drawable.
       auto d = static_cast<DrawableMultiBody*>(this->m_drawables[i]);
       for(size_t j = 0; j < d->GetNumBodies(); ++j)
-        d->PushTransform(j, m_engine->GetObjectTransform(i + 1, j));
+        d->PushTransform(j, m_engine->GetObjectTransform(i, j));
     }
   }
 
@@ -172,11 +191,45 @@ reset() {
   Uninitialize();
 }
 
+
+void
+Simulation::
+SetBacklog(const size_t _max) {
+  m_backlogMax = _max;
+}
+
+/*------------------------------------- Locking ------------------------------*/
+
+void
+Simulation::
+Lock() {
+  m_guard.lock();
+}
+
+
+void
+Simulation::
+Unlock() {
+  m_guard.unlock();
+}
+
+/*--------------------------------- Editing ----------------------------------*/
+
+void
+Simulation::
+RebuildMultiBody(MultiBody* const _m) {
+  m_engine->RebuildObject(_m);
+}
+
 /*----------------------------------- Helpers --------------------------------*/
 
 void
 Simulation::
 AddBBX() {
+  /// @TODO Our current pseudo-boundary isn't doing anything. Removing it until
+  ///       we can implement full support.
+  return;
+#if 0
   const auto& boundary = m_problem->GetEnvironment()->GetBoundary();
 
   // Get bounding box ranges
@@ -203,6 +256,7 @@ AddBBX() {
   /// @TODO Support other boundary types.
   //auto d = new Drawable(?);
   //this->add_drawable(d);
+#endif
 }
 
 
@@ -229,14 +283,9 @@ AddRobots() {
     if(robot->IsVirtual())
       continue;
 
+    m_engine->AddRobot(robot);
+
     auto multiBody = robot->GetMultiBody();
-    auto bulletModel = m_engine->AddRobot(robot);
-
-    robot->SetDynamicsModel(bulletModel);
-
-    if(robot->IsCarlike())
-      m_engine->CreateCarlikeCallback(bulletModel);
-
     this->add_drawable(new DrawableMultiBody(multiBody));
   }
 }

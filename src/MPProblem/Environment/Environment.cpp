@@ -156,7 +156,7 @@ ReadXML(XMLNode& _node) {
   // Read and construct boundary, bodies, and other objects in the environment.
   for(auto& child : _node) {
     if(child.Name() == "Boundary") {
-      m_boundary = Boundary::Factory(_node);
+      m_boundary = Boundary::Factory(child);
     }
     else if(child.Name() == "MultiBody") {
       m_obstacles.emplace_back(new MultiBody(child));

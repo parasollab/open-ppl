@@ -2,7 +2,7 @@
 <Environment saveDofs="false" frictionCoefficient=".01" gravityX="0"
   gravityY="-9.8" gravityZ="0" positionRes=".05" orientationRes=".05">
 
-  <Boundary type="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
+  <Boundary space="workspace" shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
 
   <MultiBody type="passive">
     <Base filename="block.obj" comAdjustment="none" type="fixed"

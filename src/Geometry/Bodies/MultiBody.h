@@ -151,6 +151,10 @@ class MultiBody {
     /// @return The index of the added body.
     size_t AddBody(Body&& _body);
 
+    /// Get the base body.
+    Body* GetBase() noexcept;
+    const Body* GetBase() const noexcept;
+
     /// Set the base body.
     /// @param _index The index of the body to use as the base.
     void SetBaseBody(const size_t _index);
@@ -190,6 +194,10 @@ class MultiBody {
 
     /// Get the Connections in this multibody.
     const std::vector<std::unique_ptr<Connection>>& GetJoints() const noexcept;
+
+    /// Get a specific Connection.
+    /// @param _i The connection index.
+    Connection* GetJoint(const size_t _i) noexcept;
 
     /// Get the DOF type for a specific degree of freedom.
     const DofType& GetDOFType(const size_t _i) const noexcept;

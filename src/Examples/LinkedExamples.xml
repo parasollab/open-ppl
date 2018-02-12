@@ -6,9 +6,9 @@
 
     <Environment filename="3D/3d.xml"/>
 
-    <Robot label="linked" filename="3D/linked.xml"/>
-
-    <!--Query filename="3D/linked.query"/-->
+    <Robot label="linked" filename="3D/linked.xml">
+      <!--Agent type="pathfollowing"/-->
+    </Robot>
 
     <Task label="query" robot="linked">
       <StartConstraints>
@@ -53,9 +53,8 @@
         <ValidityChecker label="mac"/>
       </ComposeValidity>
       <AlwaysTrueValidity label="alwaysTrue"/>
-      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="pqp_solid"
-        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true"/>
+      <ObstacleClearance label="oc" clearanceThreshold="2.5" vcLabel="pqp_solid"
+        debug="false"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -277,7 +276,7 @@
       <PRMQuery label="PRMQuery" debug="false">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
-      <RRTQuery label="RRTQuery" goalDist="0"
+      <RRTQuery label="RRTQuery" goalDist="1"
         nfLabel="Nearest" exLabel="BERO" debug="false"/>
       <RRTQuery label="KinoRRTQuery" goalDist=".3"
         nfLabel="Nearest" exLabel="KinoExtender" debug="false"/>

@@ -16,8 +16,29 @@ icreate ?= 0
 
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-PMPL_DIR  ?= .
-UTILS_DIR ?= ../utils
+PMPL_DIR  := .
+UTILS_DIR := ../utils
+
+# The OBJ_DIR is the landing zone for our object files. Create it with a
+# directory structure to match our source tree.
+OBJ_DIR := build
+MOC_DIR := $(OBJ_DIR)/moc
+
+# Treat all sub-directories except the build tree as possible source locations.
+SRC_DIRS  := $(patsubst ./%,%, $(shell find . -type d \
+               ! \( -path "./$(OBJ_DIR)*" -o -name '.' \) ))
+
+# Always try to rebuild the build directory to catch newly added dirs.
+#.PHONY: $(OBJ_DIR)
+$(OBJ_DIR):
+	@mkdir -p $@ $(patsubst %,$(OBJ_DIR)/%,$(SRC_DIRS))
+$(MOC_DIR): | $(OBJ_DIR)
+	@mkdir $@
+
+# Look for files in the source directories.
+vpath %.h       $(SRC_DIRS)
+vpath %.cpp     $(SRC_DIRS)
+vpath moc_%.cpp $(MOC_DIR)
 
 # External Makefiles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -29,10 +50,15 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(vizmo_map)
 INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
 LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
-DEPS = -MMD -MF $*.d
 
 # Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+# Pre-pend the build directory to the object file names.
+PMPL_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
+SIM_OBJS  := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
+
+# Make the object files depend on updated utility libraries so the libs are
+# built first.
 $(PMPL_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
@@ -61,18 +87,39 @@ pmpl: $(MAIN) $(PMPL_LIBFILE)
 
 # Build the simulator.
 sim: SIM_DEF := -DPMPL_SIMULATOR
-sim: $(PMPL_LIBFILE) $(SIM_OBJS)
+sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) \
+     | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(LIBS) -o $@
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-%.o: %.cpp
-	@$(MAKE) -s check_platform
-	@echo Compiling $@...
+# Set up dependency tracking.
+DEPS_OUT = $(OBJ_DIR)/$*.d
+DEPS     = -MMD -MF $(DEPS_OUT)
+
+DEPENDENCIES := $(OBJ_DIR)/Dependencies
+-include $(DEPENDENCIES)
+
+# This recipe runs headers with Q_OBJECT through the qt MOC.
+$(MOC_DIR)/moc_%.cpp: %.h | $(MOC_DIR)
+	@echo Moc\'ing $(shell echo $< | sed 's|.*/||' )...
+	@$(QT_MOC) $< -o $@
+
+# This recipe is for MOC sources.
+$(MOC_DIR)/moc_%.o: $(MOC_DIR)/moc_%.cpp %.h | $(MOC_DIR)
+	@echo Compiling Moc\'d source $(shell echo $< | sed 's|.*/||' )...
 	@$(CXX) -c $(CXXFLAGS) $(OPTS) $(DEFS) $(INCL) $(DEPS) $< -o $@
-	@cat $*.d >> Dependencies
-	@rm -f $*.d
+	@cat $(DEPS_OUT) >> $(DEPENDENCIES)
+	@rm -f $(DEPS_OUT)
+
+# This recipe is for regular objects.
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
+	@$(MAKE) -s check_platform
+	@echo Compiling $<...
+	@$(CXX) -c $(CXXFLAGS) $(OPTS) $(DEFS) $(INCL) $(DEPS) $< -o $@
+	@cat $(DEPS_OUT) >> $(DEPENDENCIES)
+	@rm -f $(DEPS_OUT)
 
 # Cleanup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -84,8 +131,9 @@ clean:
 .PHONY: reallyclean
 reallyclean: clean
 	@echo Cleaning all pmpl objects...
-	@rm -f $(PMPL_OBJS) *.d
-	@rm -f Dependencies
+	@rm -f $(PMPL_OBJS)
+	@rm -rf $(OBJ_DIR)
+	@rm -f $(DEPENDENCIES)
 
 .PHONY: reallyreallyclean
 reallyreallyclean: reallyclean
@@ -102,9 +150,8 @@ reallyreallyclean: reallyclean
 	@cd $(BULLET_DIR) && $(MAKE) clean
 	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE) clean
 
-# Other Stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-# include automatically generated dependencies
--include Dependencies
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+.PHONY: test
+test: SIM_DEF := -DPMPL_SIMULATOR
+test:
+	@echo srcdirs $(SRC_DIRS)

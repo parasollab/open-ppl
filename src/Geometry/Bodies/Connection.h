@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-#include <Transformation.h>
+#include "Transformation.h"
 using namespace mathtool;
 
 #include "DHParameters.h"
@@ -141,9 +141,6 @@ class Connection final {
     DHParameters& GetDHParameters() noexcept;
     const DHParameters& GetDHParameters() const noexcept;
 
-    /// @return DH frame description for rendering
-    DHParameters& GetDHRenderParameters() noexcept;
-
     /// @return Transformation to second body
     Transformation& GetTransformationToBody2() noexcept;
     const Transformation& GetTransformationToBody2() const noexcept;
@@ -163,7 +160,6 @@ class Connection final {
     Transformation m_transformationToBody2;   ///< Transform to second body
     Transformation m_transformationToDHFrame; ///< Transform to DH frame
     DHParameters m_dhParameters;              ///< DH frame description
-    DHParameters m_dhRenderParameters;        ///< DH Rendering parameters
 
     JointType m_jointType;                     ///< Type of connection
     std::pair<size_t, size_t> m_bodyIndices;   ///< (previous body, next body)

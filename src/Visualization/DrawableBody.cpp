@@ -9,8 +9,16 @@
 /*------------------------------ Construction --------------------------------*/
 
 DrawableBody::
-DrawableBody(DrawableMultiBody* const _parent, const Body* const _body)
+DrawableBody(DrawableMultiBody* const _parent, Body* const _body)
   : m_parent(_parent), m_body(_body) { }
+
+/*------------------------------- Body Support -------------------------------*/
+
+Body*
+DrawableBody::
+GetBody() const noexcept {
+  return m_body;
+}
 
 /*--------------------------- drawable Overrides -----------------------------*/
 

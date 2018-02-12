@@ -16,7 +16,7 @@ class DrawableBody final : public glutils::drawable_call_list {
   ///@{
 
   DrawableMultiBody* const m_parent; ///< The owning Drawable object.
-  const Body* const m_body;          ///< The Body to draw.
+  Body* const m_body;                ///< The Body to draw.
 
   ///@}
 
@@ -25,9 +25,15 @@ class DrawableBody final : public glutils::drawable_call_list {
     ///@name Construction
     ///@{
 
-    DrawableBody(DrawableMultiBody* const _parent, const Body* const _body);
+    DrawableBody(DrawableMultiBody* const _parent, Body* const _body);
 
     virtual ~DrawableBody() = default;
+
+    ///@}
+    ///@name Body Support
+    ///@{
+
+    Body* GetBody() const noexcept;
 
     ///@}
     ///@name drawable Overrides

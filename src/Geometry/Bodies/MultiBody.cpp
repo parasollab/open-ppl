@@ -379,6 +379,20 @@ AddBody(Body&& _body) {
 }
 
 
+Body*
+MultiBody::
+GetBase() noexcept {
+  return m_baseBody;
+}
+
+
+const Body*
+MultiBody::
+GetBase() const noexcept {
+  return m_baseBody;
+}
+
+
 void
 MultiBody::
 SetBaseBody(const size_t _index) {
@@ -542,6 +556,13 @@ const std::vector<std::unique_ptr<Connection>>&
 MultiBody::
 GetJoints() const noexcept {
   return m_joints;
+}
+
+
+Connection*
+MultiBody::
+GetJoint(const size_t _i) noexcept {
+  return m_joints[_i].get();
 }
 
 
@@ -719,6 +740,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   if(IsPassive()) {
     const size_t index = AddBody(Body(this));
     GetBody(index)->Read(_is, _cbs);
+    SetBaseBody(index);
 
     FindMultiBodyInfo();
     return;
@@ -732,12 +754,8 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
     auto free = GetBody(index);
     free->Read(_is, _cbs);
 
-    if(free->IsBase() && m_baseIndex == size_t(-1)) {
-      m_baseIndex = i;
-      m_baseBody = free;
-      m_baseType = free->GetBodyType();
-      m_baseMovement = free->GetMovementType();
-    }
+    if(free->IsBase() && m_baseIndex == size_t(-1))
+      SetBaseBody(i);
   }
 
   if(m_baseIndex == size_t(-1))

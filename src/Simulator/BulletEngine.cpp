@@ -1,5 +1,7 @@
 #include "BulletEngine.h"
 
+#include "BulletModel.h"
+#include "Conversions.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/Connection.h"
@@ -18,9 +20,7 @@
 #include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
 #include "ConvexDecomposition/cd_wavefront.h"
 
-#include "Conversions.h"
 #include "nonstd/runtime.h"
-#include "nonstd/io.h"
 
 
 /*--------------------------- Static Initialization --------------------------*/
@@ -56,6 +56,9 @@ BulletEngine(MPProblem* const _problem) : m_problem(_problem) {
 
 BulletEngine::
 ~BulletEngine() {
+  // Acquire the lock for the remainder of object life.
+  std::lock_guard<std::mutex> lock(m_lock);
+
   // Delete the rigid bodies in the bullet dynamics world.
   for(int i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; --i) {
     btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
@@ -69,11 +72,9 @@ BulletEngine::
     delete obj;
   }
 
-  // Collision shapes aren't deleted with their associated rigid bodies because
-  // multiple rigid bodies might share a collision shape. Delete them explicitly.
-  for(int i = 0; i < m_collisionShapes.size(); ++i)
-    delete m_collisionShapes[i];
-  m_collisionShapes.clear();
+  // Clear the models before the dynamicsWorld as the former need the later to
+  // tear down properly.
+  m_models.clear();
 
   // Remove this engine's dynamics world and call-back set from the call-back
   // map.
@@ -92,6 +93,11 @@ BulletEngine::
 void
 BulletEngine::
 Step(const btScalar _timestep) {
+  std::lock_guard<std::mutex> lock(m_lock);
+
+  // Rebuild any objects which need it.
+  RebuildObjects();
+
   // This doesn't seem to be required in the examples, testing without it for
   // now.
   //m_dynamicsWorld->updateAabbs();
@@ -138,336 +144,86 @@ btMultiBody*
 BulletEngine::
 AddRobot(Robot* const _robot) {
   // This is an active body.
-  MultiBody* activeBody = _robot->GetMultiBody();
-  //Save the dofs that PMPL set the active body to for the first query cfg.
-  std::vector<double> startDofs = activeBody->GetCurrentDOFs();
+  MultiBody* const multiBody = _robot->GetMultiBody();
 
-  if(m_debug)
-    std::cout << "Saved startDofs = " << startDofs << std::endl;
+  // We need to set the body at its zero Cfg to create the bullet model. Save
+  // the current DOFs so that we can restore them afterward.
+  std::vector<double> startDofs = multiBody->GetCurrentDOFs();
+  multiBody->Configure(std::vector<double>(startDofs.size(), 0));
 
-  //Re-configure the multibody so that Bullet is setting up based on the
-  // correct 0-configuration information.
-  activeBody->Configure(std::vector<double>(startDofs.size(), 0));
+  btMultiBody* const bulletModel = AddObject(multiBody);
 
-  btMultiBody* result = AddObject(activeBody);
+  // Restore the original configuration.
+  multiBody->Configure(startDofs);
 
-  //Set the PMPL cfg back to its original DOFs.
-  activeBody->Configure(startDofs);
-
-  //Configure the Bullet body to be in the same state as the initial PMPL body:
+  // Configure the bullet body to match.
   Cfg cfg(_robot);
   cfg.SetData(startDofs);
-  ConfigureSimulatedState(cfg, result);
+  ConfigureSimulatedState(cfg, bulletModel);
 
-  return result;
+  // Set the bullet model as the robot's dynamics model.
+  _robot->SetDynamicsModel(bulletModel);
+
+  // If the robot is car-like, create the necessary callbacks.
+  if(_robot->IsCarlike())
+    CreateCarlikeCallback(bulletModel);
+
+  return bulletModel;
 }
 
 
 btMultiBody*
 BulletEngine::
-AddObject(MultiBody* _m) {
-  auto base = _m->GetBody(0);
+AddObject(MultiBody* const _m) {
+  std::lock_guard<std::mutex> lock(m_lock);
 
-  if(_m->IsActive()) {
-    // This is an active body.
-    return AddObject(BuildCollisionShape(_m),
-        ToBullet(base->GetWorldTransformation()), base->GetMass(),
-        _m->GetJoints());
-  }
-  else {
-    // This is a static body.
-    // For now, assume that static multibodies have no links. We should expand
-    // this in the future though to support fixed joints.
-    return AddObject(BuildCollisionShape(_m),
-        ToBullet(base->GetWorldTransformation()), 0, {});
-  }
-}
+  // Check that we haven't already added this model.
+  if(m_models.count(_m))
+    throw RunTimeException(WHERE, "Cannot add the same MultiBody twice.");
 
+  m_models[_m] = std::unique_ptr<BulletModel>(new BulletModel(_m));
+  m_models[_m]->Initialize();
+  m_models[_m]->AddToDynamicsWorld(m_dynamicsWorld);
 
-btMultiBody*
-BulletEngine::
-AddObject(btCollisionShape* _shape, btTransform _transform, const double _mass) {
-  return AddObject({_shape}, std::move(_transform), _mass, {});
-}
-
-
-btMultiBody*
-BulletEngine::
-AddObject(std::vector<btCollisionShape*>&& _shapes, btTransform&& _baseTransform,
-    const double _baseMass,
-    const std::vector<std::unique_ptr<Connection>>& _joints) {
-  if(m_debug)
-    std::cout << "BulletEngine: adding object with "
-              << _shapes.size() << " components and "
-              << _joints.size() << " joints." << std::endl;
-
-  // First check that number of elements of each vector match. We need one less
-  // joint as the base is not considered a joint.
-  if(_shapes.size() - 1 != _joints.size())
-    throw RunTimeException(WHERE, "Expected the number of shapes (" +
-        std::to_string(_shapes.size()) + ") to be equal to the number of "
-        "joints (" + std::to_string(_joints.size()) + ") plus 1.");
-
-  // Add the shapes to a list of shapes to be deleted later.
-  for(auto shape : _shapes)
-    m_collisionShapes.push_back(shape);
-
-  // Compute the dynamics properties of this object. It is dynamic if the base
-  // has non-zero mass.
-  const bool isDynamic = _baseMass != 0.;
-
-  if(m_debug)
-    std::cout << "\tObject is " << (isDynamic ? "" : "not ") << "dynamic."
-              << std::endl;
-
-  // See BulletCollision/BroadphaseCollision/btBroadphaseProxy.h
-  // and BulletCollision/CollisionDispatch/btCollisionWorld.h
-  // for more info on these.
-  auto collisionFilterGroup = isDynamic ? btBroadphaseProxy::DefaultFilter
-                                        : btBroadphaseProxy::StaticFilter;
-  auto collisionFilterMask = isDynamic ? btBroadphaseProxy::AllFilter
-      : btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
-        // This is logically equivalent to "All BUT StaticFilter":
-
-  // Create the base and overall btMultiBody object.
-  btMultiBody* mb;
-  {
-    // Compute inertia for base.
-    btVector3 inertia(0, 0, 0);
-    if(isDynamic)
-      _shapes[0]->calculateLocalInertia(_baseMass, inertia);
-
-    // Compute other properties that apply to the whole multibody object.
-    const int links = _shapes.size() - 1;
-    const bool fixedBase = !isDynamic;
-    const bool canSleep = false; // Can this object sleep? Not sure what it means.
-
-    // Make multibody.
-    mb = new btMultiBody(links, _baseMass, inertia, fixedBase, canSleep);
-    mb->setBaseWorldTransform(_baseTransform);
-
-    // The multibody on its own doesn't process collisions. Create a collider
-    // object for each component to handle this. The base has id -1.
-    btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, -1);
-    col->setCollisionShape(_shapes[0]);
-    col->setWorldTransform(_baseTransform);
-    col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
-
-    // Attach the collider to the dynamics world and multibody.
-    m_dynamicsWorld->addCollisionObject(col, collisionFilterGroup,
-        collisionFilterMask);
-    mb->setBaseCollider(col);
-
-    if(m_debug)
-      std::cout << "\tAdded base with mass " << _baseMass << "."
-                << std::endl;
-  }
-
-  // Create the links.
-  for(size_t i = 0; i < _joints.size(); i++) {
-    if(m_debug)
-      std::cout << "\tAdding joint " << i << "..." << std::endl;
-
-    // Get the PMPL link.
-    const Body* const linkBody = _joints[i]->GetNextBody();
-
-    // Get the PMPL indices for this link and its parent.
-    const int parentPmplIndex = _joints[i]->GetPreviousBodyIndex();
-    const int linkPmplIndex = _joints[i]->GetNextBodyIndex();
-
-    // The indices according to how Bullet stores the links (from 0 to
-    // num_links - 1).
-    const int parentIndex = parentPmplIndex - 1;
-    const int linkIndex = linkPmplIndex - 1;
-
-    if(m_debug)
-      std::cout << std::endl << std::endl
-                << "-----------------------------------------------------------"
-                << std::endl << "Joint " << i << ": Connecting Bullet body "
-                << parentIndex << " to body " << linkIndex << std::endl;
-
-    // Get the mass for the link:
-    const btScalar mass = linkBody->GetMass();
-
-    btVector3 inertia(0, 0, 0);
-    if(isDynamic)
-      _shapes[linkPmplIndex]->calculateLocalInertia(mass, inertia);
-
-
-    //This should transform parent -> joint frame BEFORE joint actuation is applied
-    Transformation parentToJoint = _joints[i]->GetTransformationToDHFrame();
-
-    //This should be the transform for jointActuation -> DH Frame.
-    Transformation jointActuation =
-        _joints[i]->GetDHParameters().GetTransformation();
-
-    //The transform from the parent frame to the joint frame after applying
-    // the joint's current actuation.
-    Transformation parentToJointActuation = parentToJoint * jointActuation;
-
-    // Get the transform from the joint to the link.
-    Transformation jointToLink = _joints[i]->GetTransformationToBody2();
-
-    //The parent frame to the link frame entire transform.
-    Transformation parentToLink = parentToJointActuation * jointToLink;
-
-    if(m_debug)
-      std::cout << std::endl << "parentToJointActuation = "
-                << parentToJointActuation << std::endl << "jointToLink = "
-                << jointToLink << std::endl << "parentToLink = " << parentToLink
-                << std::endl << std::endl;
-
-    //----------------------parentToLinkRotation--------------------------------
-    // Compute the rotation from parent frame to link frame in bullet
-    // quaternion representation.
-    btQuaternion parentToLinkRotation;
-    {
-      Quaternion temp;
-      mathtool::convertFromMatrix(temp, parentToLink.rotation().matrix());
-      parentToLinkRotation = ToBullet(temp);
-    }
-    //--------------------------------------------------------------------------
-
-
-    //--------------------------parentToJointTranslation------------------------
-    //Here it shouldn't matter between parentToJoint or parentToJointActuation
-    // since they should only differ by at most a rotation.
-    btVector3 parentToJointTranslation = ToBullet(parentToJoint.translation());
-    //--------------------------------------------------------------------------
-
-
-    //--------------------------jointToLinkTranslation--------------------------
-    //Note: we appear to need the inverse rotation here.
-    mathtool::Vector3d jointToLinkTranslationInLinkFrame =
-                           -jointToLink.rotation() * jointToLink.translation();
-    //This is a place where I think it's possible that something could be wrong,
-    // but so far all tests suggest that this is correct.
-    btVector3 jointToLinkTranslation =
-                                  ToBullet(jointToLinkTranslationInLinkFrame);
-    //--------------------------------------------------------------------------
-
-    // It looks like this should be true (disabled) if "the self-collision
-    // has conflicting/non-resolvable contact normals".
-    // A further justification for this to be true is that we cannot perfectly
-    // convert angles between PMPL and Bullet, so it's possible that joints on
-    // tight-fitting parts would endlessly self-collide, if this was false.
-    const bool disableParentCollision = true;
-
-    // Set up the connection between this link and its parent based on the joint
-    switch(_joints[i]->GetConnectionType()) {
-      case Connection::JointType::Revolute:
-      {
-        //For a revolute link, the last piece now is to set the jointAxis from
-        // the link's frame.
-        mathtool::Vector3d jointAxisInLinkFrame = jointToLink.rotation() * Vector3d(0, 0, 1);
-        btVector3 jointAxis =
-            ToBullet(jointAxisInLinkFrame.selfNormalize());
-
-        if(m_debug)
-          std::cout << std::endl << "jointAxisInLinkFrame (not normalized) = "
-                    << jointAxisInLinkFrame << std::endl
-                    << "jointAxis = " << jointAxis << std::endl
-                    << "Parent to link full transform = " << parentToLink
-                    << std::endl << std::endl
-                    << "Creating revolute joint for link index "
-                    << linkIndex << std::endl << "Parent to link rotation = "
-                    << parentToLinkRotation << std::endl
-                    << "Joint Axis (link's frame) = "
-                    << jointAxis << std::endl
-                    << "Parent to joint translation (parent frame) = "
-                    << parentToJointTranslation << std::endl
-                    << "Joint to link translation (link's frame) = "
-                    << jointToLinkTranslation
-                    << std::endl << std::endl;
-
-        mb->setupRevolute(linkIndex, mass, inertia, parentIndex,
-               parentToLinkRotation, jointAxis, parentToJointTranslation,
-               jointToLinkTranslation, disableParentCollision);
-
-        // Add joint limits as a bullet constraint.
-        const Range<double> range = _joints[i]->GetJointRange(0);
-        btMultiBodyConstraint* con = new btMultiBodyJointLimitConstraint(mb,
-                              linkIndex, range.min * PI, range.max * PI);
-
-        m_dynamicsWorld->addMultiBodyConstraint(con);
-
-        if(m_debug)
-          std::cout << "\t\tAdded revolute joint " << linkIndex
-                    << "with joint range ["
-                    << std::setprecision(3) << range.min * PI << " : "
-                    << std::setprecision(3) << range.max * PI << "]."
-                    << std::endl;
-        break;
-      }
-      case Connection::JointType::Spherical:
-      {
-        /// @TODO support spherical constraints. As per answers here:
-        /// http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=9&t=10780
-        /// Until then, warn the user that their constraints won't be respected.
-        std::cerr << "Bullet supports spherical joints, but not constraints for "
-                  << "them. Any constraints on this joint will be ignored!"
-                  << std::endl;
-
-        mb->setupSpherical(linkIndex, mass, inertia, parentIndex,
-              parentToLinkRotation, parentToJointTranslation,
-              jointToLinkTranslation, disableParentCollision);
-
-        if(m_debug)
-          std::cout << "\t\tAdded spherical joint " << linkIndex << "."
-                    << std::endl;
-        break;
-      }
-      case Connection::JointType::NonActuated:
-      {
-        // Since this is a fixed joint, there is no need for joint constraints.
-        mb->setupFixed(linkIndex, mass, inertia, parentIndex,
-            parentToLinkRotation, parentToJointTranslation,
-            jointToLinkTranslation, disableParentCollision);
-
-        if(m_debug)
-          std::cout << "\t\tAdded fixed joint " << linkIndex << "."
-                    << std::endl;
-        break;
-      }
-      default:
-        throw RunTimeException(WHERE, "Unsupported joint type.");
-    }
-  }
-
-  // Finalize the multibody.
-  mb->finalizeMultiDof();
-  mb->setBaseVel({0, 0, 0}); // Must happen after finalizeMultiDof().
-  m_dynamicsWorld->addMultiBody(mb);
-
-  // Create a collider for each joint.
-  // See examples/MultiBody/Pendulum.cpp for related example code.
-  for(int i = 0; i < mb->getNumLinks(); i++) {
-    btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(mb, i);
-    col->setCollisionShape(_shapes[i + 1]);
-    col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
-
-    m_dynamicsWorld->addCollisionObject(col, collisionFilterGroup,
-        collisionFilterMask);
-
-    mb->getLink(i).m_collider = col;
-  }
-
-  // Also from Pendulum.cpp:
-  btAlignedObjectArray<btQuaternion> scratch_q;
-  btAlignedObjectArray<btVector3> scratch_m;
-  mb->forwardKinematics(scratch_q, scratch_m);
-  btAlignedObjectArray<btQuaternion> world_to_local;
-  btAlignedObjectArray<btVector3> local_origin;
-  mb->updateCollisionObjectWorldTransforms(world_to_local, local_origin);
-
-  return mb;
+  return m_models[_m]->GetBulletMultiBody();
 }
 
 
 void
 BulletEngine::
-SetGravity(const btVector3& _gravityVec) {
-  m_dynamicsWorld->setGravity(_gravityVec);
+SetGravity(const btVector3& _gravity) {
+  std::lock_guard<std::mutex> lock(m_lock);
+
+  m_dynamicsWorld->setGravity(_gravity);
+}
+
+
+void
+BulletEngine::
+RebuildObject(MultiBody* const _m) {
+  std::lock_guard<std::mutex> lock(m_lock);
+
+  m_rebuildQueue.push(_m);
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+void
+BulletEngine::
+RebuildObjects() {
+  while(!m_rebuildQueue.empty()) {
+    // Dequeue the next multibody.
+    MultiBody* const m = m_rebuildQueue.front();
+    m_rebuildQueue.pop();
+
+    // Check that this model exists.
+    auto iter = m_models.find(m);
+    if(iter == m_models.end())
+      throw RunTimeException(WHERE, "MultiBody not found.");
+
+    // Rebuild the model.
+    iter->second->Rebuild();
+  }
 }
 
 /*--------------------------- Callback Functions -----------------------------*/
@@ -499,58 +255,6 @@ ExecuteCallbacks(btDynamicsWorld* _world, btScalar _timeStep) {
   // Execute each call-back in the set.
   for(auto& callback : callbacks)
     callback();
-}
-
-/*------------------------------ Helpers -------------------------------------*/
-
-vector<btCollisionShape*>
-BulletEngine::
-BuildCollisionShape(MultiBody* _multibody) {
-  std::vector<btCollisionShape*> shapes;
-
-  // Make simulator collision shape(s).
-  for(size_t i = 0; i < _multibody->GetNumBodies(); i++) {
-    const Body* body = _multibody->GetBody(i);
-    btTriangleMesh* shapeMesh = BuildCollisionShape(body);
-
-    //Make the bullet impact shape:
-    auto ptr = new btGImpactMeshShape(shapeMesh);
-    ptr->updateBound();
-    shapes.push_back(ptr);
-
-    //Very important for the controls that PMPL plans for to match up with how
-    // they are simulated. If not done, getting very close to an obstacle will
-    // cause a collision and Bullet will throw off the results.
-    shapes.back()->setMargin(0);
-  }
-
-  return shapes;
-}
-
-
-btTriangleMesh*
-BulletEngine::
-BuildCollisionShape(const Body* _body) {
-  // Get the body's polyhedron, vertices, and facets.
-  const GMSPolyhedron& poly = _body->GetPolyhedron();
-  const auto& vertices = poly.GetVertexList();
-  const auto& facets = poly.GetPolygonList();
-
-  // Initialize a btTriangleMesh with enough space for our model.
-  btTriangleMesh* mesh = new btTriangleMesh();
-  mesh->preallocateVertices(vertices.size());
-  mesh->preallocateIndices(facets.size());
-
-  // Add vertices, don't remove duplicates (because PMPL doesn't, and this will
-  // mess up the facet indexes).
-  for(const auto& v : vertices)
-    mesh->findOrAddVertex(btVector3(v[0], v[1], v[2]), false);
-
-  // Add facets.
-  for(const auto& f : facets)
-    mesh->addTriangleIndices(f[0], f[1], f[2]);
-
-  return mesh;
 }
 
 /*----------------------------------------------------------------------------*/

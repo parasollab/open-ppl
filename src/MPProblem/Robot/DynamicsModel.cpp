@@ -33,10 +33,8 @@ MicroSimulator::
 MicroSimulator(Robot* const _robot) :
     m_robot(_robot),
     m_engine(new BulletEngine(m_robot->GetMPProblem())),
-    m_model(m_engine->AddObject(m_robot->GetMultiBody())) {
-  if(m_robot->IsCarlike())
-    m_engine->CreateCarlikeCallback(m_model);
-}
+    m_model(m_engine->AddRobot(m_robot))
+{ }
 
 
 MicroSimulator::

@@ -20,6 +20,7 @@ class DrawableMultiBody final : public glutils::drawable {
   ///@name Internal State
   ///@{
 
+  MultiBody* const m_multibody;       ///< The corresponding PMPL multibody.
   std::vector<DrawableBody> m_bodies; ///< Drawables for each sub-body.
 
   ///@}
@@ -31,7 +32,11 @@ class DrawableMultiBody final : public glutils::drawable {
 
     /// Construct a drawable representation of a PMPL multibody.
     /// @param[in] _m The PMPL multibody to draw.
-    DrawableMultiBody(MultiBody* _m);
+    DrawableMultiBody(MultiBody* const _m);
+
+    /// Since this is a container, rebuild requests must be passed on to the
+    /// child bodies.
+    virtual void rebuild() override;
 
     virtual ~DrawableMultiBody() = default;
 
@@ -39,8 +44,16 @@ class DrawableMultiBody final : public glutils::drawable {
     ///@name MultiBody Support
     ///@{
 
+    /// Get the PMPL multibody.
+    MultiBody* GetMultiBody() const noexcept;
+
     /// Get the number of bodies in this drawable.
     size_t GetNumBodies() const noexcept;
+
+    /// Get a child drawable body.
+    /// @param[in] _i The index of the drawable body to get.
+    /// @return A pointer to the drawable.
+    DrawableBody* GetDrawableBody(const size_t _i) noexcept;
 
     /// Push a transform for a given body.
     /// @param[in] _i The index of the body to update.

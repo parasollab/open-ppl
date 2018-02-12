@@ -7,7 +7,7 @@
 /*------------------------------- Construction -------------------------------*/
 
 DrawableMultiBody::
-DrawableMultiBody(MultiBody* _m) {
+DrawableMultiBody(MultiBody* const _m) : m_multibody(_m) {
   switch(_m->GetType()) {
     case MultiBody::Type::Internal:
       break;
@@ -21,12 +21,37 @@ DrawableMultiBody(MultiBody* _m) {
   }
 }
 
+
+void
+DrawableMultiBody::
+rebuild() {
+  for(auto& b : m_bodies)
+    b.rebuild();
+
+  // Call base class version.
+  glutils::drawable::rebuild();
+}
+
 /*---------------------------- MultiBody Support -----------------------------*/
+
+MultiBody*
+DrawableMultiBody::
+GetMultiBody() const noexcept {
+  return m_multibody;
+}
+
 
 size_t
 DrawableMultiBody::
 GetNumBodies() const noexcept {
   return m_bodies.size();
+}
+
+
+DrawableBody*
+DrawableMultiBody::
+GetDrawableBody(const size_t _i) noexcept {
+  return &m_bodies.at(_i);
 }
 
 

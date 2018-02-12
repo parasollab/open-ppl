@@ -4,6 +4,8 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <queue>
 #include <vector>
 
 #include "btBulletDynamicsCommon.h"
@@ -21,6 +23,7 @@ class btMultiBody;
 
 // PMPL forward-declarations.
 class Body;
+class BulletModel;
 class Connection;
 class MultiBody;
 class MPProblem;
@@ -43,11 +46,6 @@ class BulletEngine final {
   btCollisionDispatcher*           m_dispatcher{nullptr};
   btBroadphaseInterface*           m_broadphase{nullptr};
   btMultiBodyConstraintSolver*     m_solver{nullptr};
-
-  /// The collision shapes in our bullet world. These are stored separately from
-  /// rigid bodies to allow bodies with the same shape to share collision
-  /// structures.
-  btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
   ///@}
   ///@name Call-back Functions
@@ -73,8 +71,15 @@ class BulletEngine final {
   ///@name Other Internal State
   ///@{
 
-  /// A pointer to the MPProblem being simulated.
-  MPProblem* const m_problem;
+  MPProblem* const m_problem; ///< A pointer to the problem being simulated.
+
+  /// A map from PMPL to bullet models that exist in this simulation.
+  std::map<MultiBody*, std::unique_ptr<BulletModel>> m_models;
+
+  /// A queue of objects which are needing rebuild.
+  std::queue<MultiBody*> m_rebuildQueue;
+
+  std::mutex m_lock;    ///< Lock the engine while objects are edited.
 
   bool m_debug{false};  ///< Show debug messages?
 
@@ -94,7 +99,7 @@ class BulletEngine final {
     ///@{
 
     /// Step the simulation forward.
-    /// @param _timestep    The total length of time to advance the simulation.
+    /// @param _timestep The total length of time to advance the simulation.
     void Step(const btScalar _timestep);
 
     ///@}
@@ -119,18 +124,32 @@ class BulletEngine final {
 
     /// Add a PMPL multibody to the simulation.
     /// @param _m The multibody to add.
-    btMultiBody* AddObject(MultiBody* _m);
-
-    /// Add an object to the world,
-    /// @param _shape The bullet collision shape that reprsents the object.
-    /// @param _transform The world tranform of object.
-    /// @param _mass The mass of _shape in the world.
-    btMultiBody* AddObject(btCollisionShape* _shape, btTransform _transform,
-        const double _mass);
+    /// @return The bullet representation of _m.
+    btMultiBody* AddObject(MultiBody* const _m);
 
     /// Set the gravity in the world (this will also set it for all bodies)
     /// @param _gravityVec Is simply the 3-vector representing (x,y,z) gravity
     void SetGravity(const btVector3& _gravityVec);
+
+    /// Request that the physics model of an object be rebuilt. The rebuild will
+    /// occur on the next call to Step.
+    /// @param _m The object to rebuild.
+    void RebuildObject(MultiBody* const _m);
+
+    ///@}
+
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Rebuild the bullet models for which a rebuild was requested.
+    /// @WARNING The simulation must be halted while this is going on. Also, if
+    ///          you do this for a robot then its internal MicroSimulator will
+    ///          not receive any updates that may have been made to the global
+    ///          bullet model. This function does not lock as it should be
+    ///          called only within Step().
+    void RebuildObjects();
 
     ///@}
     ///@name Call-back Function Interface
@@ -143,33 +162,6 @@ class BulletEngine final {
 
     /// Execute all call-backs for a given dynamics world.
     static void ExecuteCallbacks(btDynamicsWorld* _world, btScalar _timeStep);
-
-    ///@}
-
-  private:
-
-    ///@name Helpers
-    ///@{
-
-    /// Add an object to the world.
-    /// @param _shapes The bullet collision shapes that reprsents the object
-    ///                with or without multiple links
-    /// @param _baseTransform The world transform for the base.
-    /// @param _baseMass The mass for the base.
-    /// @param _joints The list of connections between links.
-    btMultiBody* AddObject(std::vector<btCollisionShape*>&& _shapes,
-        btTransform&& _baseTransform, const double _baseMass,
-        const std::vector<std::unique_ptr<Connection>>& _joints);
-
-    /// Build a bullet collision shape from a pmpl MultiBody.
-    /// @param _body The pmpl MultiBody.
-    /// @return A bullet collision shape.
-    std::vector<btCollisionShape*> BuildCollisionShape(MultiBody* _body);
-
-    /// Build a bullet collision shape from a pmpl Body.
-    /// @param _body The pmpl Body to use.
-    /// @return A bullet triangle mesh collision shape.
-    btTriangleMesh* BuildCollisionShape(const Body* _body);
 
     ///@}
 

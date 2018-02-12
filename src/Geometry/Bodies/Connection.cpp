@@ -137,7 +137,6 @@ operator=(const Connection& _other) {
     m_transformationToBody2   = _other.m_transformationToBody2;
     m_transformationToDHFrame = _other.m_transformationToDHFrame;
     m_dhParameters            = _other.m_dhParameters;
-    m_dhRenderParameters      = _other.m_dhRenderParameters;
     m_jointType               = _other.m_jointType;
     m_bodyIndices             = _other.m_bodyIndices;
     m_jointRange              = _other.m_jointRange;
@@ -339,13 +338,6 @@ const DHParameters&
 Connection::
 GetDHParameters() const noexcept {
   return m_dhParameters;
-}
-
-
-DHParameters&
-Connection::
-GetDHRenderParameters() noexcept {
-  return m_dhRenderParameters;
 }
 
 

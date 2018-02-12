@@ -250,6 +250,15 @@ QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
            -I$(QT_BASE)/QtOpenGL
 QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
 
+# Moc setup
+QT_MOC  := moc
+
+# Find the header files with Q_OBJECT.
+MOC_SRCS := $(patsubst ./%.h,moc_%.cpp, $(shell find . -type f \
+		    -name '*.h' -execdir grep -rl Q_OBJECT \{} + ))
+# Create the list of objects which must be built from MOC_SRCS.
+MOC_OBJS := $(patsubst %.cpp,$(MOC_DIR)/%.o, $(MOC_SRCS))
+
 ################################################################################
 # gl_visualizer
 ################################################################################
@@ -267,7 +276,6 @@ $(GLVIS_LIBFILE):
 ################################################################################
 # physicalrobots
 ################################################################################
-
 PHYSICAL_ROBOTS_DIR := $(UTILS_DIR)/physicalrobots
 PLAYER_DIR          := $(PHYSICAL_ROBOTS_DIR)/player/build/install
 
@@ -291,23 +299,30 @@ $(PHYSICAL_ROBOTS_LIBFILE):
 	@echo Building physicalrobots library...
 	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE)
 
-
 ################################################################################
 # Simulator
 ################################################################################
 SIM_INCL := $(QT_INCL)
 SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 
-SIM_OBJS := \
-  $(PMPL_DIR)/sim_main.o \
-  Behaviors/Agents/PathFollowingAgent.o \
-  Behaviors/Agents/PlanningAgent.o \
-  Behaviors/Agents/RoadmapFollowingAgent.o \
-  Simulator/Simulation.o \
-  Visualization/DrawableBody.o \
-  Visualization/DrawableMultiBody.o
-#  Behaviors/Agents/BatteryConstrainedGroup.o \
-  Behaviors/Agents/PathFollowingChildAgent.o \
+SIM_SRCS := \
+  $(PMPL_DIR)/sim_main.cpp \
+  Behaviors/Agents/PathFollowingAgent.cpp \
+  Behaviors/Agents/PlanningAgent.cpp \
+  Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Simulator/Simulation.cpp \
+  Visualization/DrawableBody.cpp \
+  Visualization/DrawableMultiBody.cpp \
+  Visualization/Gui/EditBodyDialog.cpp \
+  Visualization/Gui/EditCfgDialog.cpp \
+  Visualization/Gui/EditConnectionDialog.cpp \
+  Visualization/Gui/EditMultiBodyDialog.cpp \
+  Visualization/Gui/EditWidgets.cpp \
+  Visualization/Gui/Setup.cpp \
+  Visualization/Gui/SliderTextWidget.cpp \
+  Visualization/Gui/TestWidget.cpp
+#  Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/PathFollowingChildAgent.cpp \
 
 ################################################################################
 # PMPL
@@ -318,70 +333,71 @@ PMPL_LIB  := -L$(PMPL_DIR) -lobprm
 
 PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
-PMPL_OBJS := \
-  Behaviors/Agents/Agent.o \
-  Behaviors/Controllers/ControllerMethod.o \
-  Behaviors/Controllers/ControlSetGenerators.o \
-  Behaviors/Controllers/PIDFeedback.o \
-  Behaviors/Controllers/SimpleController.o \
-  Behaviors/Controllers/ICreateController.o \
-  ConfigurationSpace/Cfg.o \
-  Geometry/GMSPolygon.o \
-  Geometry/GMSPolyhedron.o \
-  Geometry/Bodies/Body.o \
-  Geometry/Bodies/MultiBody.o \
-  Geometry/Bodies/Connection.o \
-  Geometry/Bodies/DHParameters.o \
-  Geometry/Boundaries/Boundary.o \
-  Geometry/Boundaries/AbstractBoundingBox.o \
-  Geometry/Boundaries/AbstractBoundingSphere.o \
-  Geometry/Boundaries/CSpaceBoundingBox.o \
-  Geometry/Boundaries/CSpaceBoundingSphere.o \
-  Geometry/Boundaries/TetrahedralBoundary.o \
-  Geometry/Boundaries/WorkspaceBoundingBox.o \
-  Geometry/Boundaries/WorkspaceBoundingSphere.o \
-  Geometry/Shapes/NBox.o \
-  Geometry/Shapes/NSphere.o \
-  MPLibrary/MPTools/ReebGraphConstruction.o \
-  MPLibrary/MPTools/RegionKit.o \
-  MPLibrary/MPTools/TetGenDecomposition.o \
-  MPLibrary/NeighborhoodFinders/MPNNWrapper.o \
-  MPLibrary/Samplers/SimilarStructureSampler.o \
-  MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o \
-  MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.o \
-  MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.o \
-  MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.o \
-  MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.o \
-  MPProblem/MPProblem.o \
-  MPProblem/MPTask.o \
-  MPProblem/Constraints/Constraint.o \
-  MPProblem/Constraints/BoundaryConstraint.o \
-  MPProblem/Constraints/CSpaceConstraint.o \
-  MPProblem/Constraints/WorkspaceConstraint.o \
-  MPProblem/DynamicObstacle.o \
-  MPProblem/Environment/Environment.o \
-  MPProblem/Robot/Actuator.o \
-  MPProblem/Robot/Control.o \
-  MPProblem/Robot/DynamicsModel.o \
-  MPProblem/Robot/Robot.o \
-  MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.o \
-  MPProblem/Robot/HardwareInterfaces/Battery.o \
-  MPProblem/Robot/HardwareInterfaces/HardwareInterface.o \
-  MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.o \
-  MPProblem/Robot/HardwareInterfaces/ServerQueueInterface.o \
-  Simulator/BulletEngine.o \
-  Utilities/CountingStreamBuffer.o \
-  Utilities/IOUtils.o \
-  Utilities/MedialAxis2D.o \
-  Utilities/MetricUtils.o \
-  Utilities/MPUtils.o \
-  Utilities/XMLNode.o \
-  Workspace/GridOverlay.o \
-  Workspace/WorkspaceDecomposition.o \
-  Workspace/WorkspacePortal.o \
-  Workspace/WorkspaceRegion.o \
-  Workspace/WorkspaceSkeleton.o
+PMPL_SRCS := \
+  Behaviors/Agents/Agent.cpp \
+  Behaviors/Controllers/ControllerMethod.cpp \
+  Behaviors/Controllers/ControlSetGenerators.cpp \
+  Behaviors/Controllers/PIDFeedback.cpp \
+  Behaviors/Controllers/SimpleController.cpp \
+  Behaviors/Controllers/ICreateController.cpp \
+  ConfigurationSpace/Cfg.cpp \
+  Geometry/GMSPolygon.cpp \
+  Geometry/GMSPolyhedron.cpp \
+  Geometry/Bodies/Body.cpp \
+  Geometry/Bodies/MultiBody.cpp \
+  Geometry/Bodies/Connection.cpp \
+  Geometry/Bodies/DHParameters.cpp \
+  Geometry/Boundaries/Boundary.cpp \
+  Geometry/Boundaries/AbstractBoundingBox.cpp \
+  Geometry/Boundaries/AbstractBoundingSphere.cpp \
+  Geometry/Boundaries/CSpaceBoundingBox.cpp \
+  Geometry/Boundaries/CSpaceBoundingSphere.cpp \
+  Geometry/Boundaries/TetrahedralBoundary.cpp \
+  Geometry/Boundaries/WorkspaceBoundingBox.cpp \
+  Geometry/Boundaries/WorkspaceBoundingSphere.cpp \
+  Geometry/Shapes/NBox.cpp \
+  Geometry/Shapes/NSphere.cpp \
+  MPLibrary/MPTools/ReebGraphConstruction.cpp \
+  MPLibrary/MPTools/RegionKit.cpp \
+  MPLibrary/MPTools/TetGenDecomposition.cpp \
+  MPLibrary/NeighborhoodFinders/MPNNWrapper.cpp \
+  MPLibrary/Samplers/SimilarStructureSampler.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.cpp \
+  MPProblem/MPProblem.cpp \
+  MPProblem/MPTask.cpp \
+  MPProblem/Constraints/Constraint.cpp \
+  MPProblem/Constraints/BoundaryConstraint.cpp \
+  MPProblem/Constraints/CSpaceConstraint.cpp \
+  MPProblem/Constraints/WorkspaceConstraint.cpp \
+  MPProblem/DynamicObstacle.cpp \
+  MPProblem/Environment/Environment.cpp \
+  MPProblem/Robot/Actuator.cpp \
+  MPProblem/Robot/Control.cpp \
+  MPProblem/Robot/DynamicsModel.cpp \
+  MPProblem/Robot/Robot.cpp \
+  MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/Battery.cpp \
+  MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/ServerQueueInterface.cpp \
+  Simulator/BulletEngine.cpp \
+  Simulator/BulletModel.cpp \
+  Utilities/CountingStreamBuffer.cpp \
+  Utilities/IOUtils.cpp \
+  Utilities/MedialAxis2D.cpp \
+  Utilities/MetricUtils.cpp \
+  Utilities/MPUtils.cpp \
+  Utilities/XMLNode.cpp \
+  Workspace/GridOverlay.cpp \
+  Workspace/WorkspaceDecomposition.cpp \
+  Workspace/WorkspacePortal.cpp \
+  Workspace/WorkspaceRegion.cpp \
+  Workspace/WorkspaceSkeleton.cpp
 
 ifneq ($(icreate), 0)
-  PMPL_OBJS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.o
+  PMPL_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
 endif
