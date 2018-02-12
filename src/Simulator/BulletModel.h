@@ -75,7 +75,9 @@ class BulletModel final {
     void Initialize();
 
     /// Release all bullet structures.
-    void Uninitialize();
+    /// @param _delete Delete the bullet model? Should only be true when called
+    ///                by the destructor.
+    void Uninitialize(const bool _delete = false);
 
     /// Destroy and rebuild all structures. This is intended for edit tools
     /// which need to update bullet models to match changes to the PMPL

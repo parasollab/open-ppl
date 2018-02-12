@@ -13,19 +13,6 @@
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 
 
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Local Helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
-/// Extract the configuration from a simulated robot.
-/// @param _robot A PMPL robot.
-/// @param _model A bullet model of _robot.
-/// @return The configuration data of _model in its simulation.
-Cfg ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model);
-
-/// Configure a simulated robot.
-/// @param _c The configuration to set.
-/// @param _model A bullet model of _c's robot.
-void ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model);
-
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Micro Simulator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*------------------------------ Construction --------------------------------*/
 
@@ -328,6 +315,70 @@ ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model) {
 }
 
 
+std::vector<double>
+ExtractSimulatedPosition(MultiBody* const _mb, const btMultiBody* const _model) {
+  std::vector<double> out(_mb->DOF(), 0);
+
+  // First get the base state.
+  switch(_mb->GetBaseType()) {
+    case Body::Type::Fixed:
+      break;
+    case Body::Type::Planar:
+      {
+        // Get the base transform.
+        auto transform = ToPMPL(_model->getBaseWorldTransform());
+        auto cfg = transform.GetCfg();
+
+        switch(_mb->GetBaseMovementType()) {
+          case Body::MovementType::Rotational:
+            out[2] = cfg[5];
+          case Body::MovementType::Translational:
+            out[0] = cfg[0];
+            out[1] = cfg[1];
+            break;
+          default:
+            throw RunTimeException(WHERE, "Unrecognized base movement type.");
+        }
+      }
+      break;
+    case Body::Type::Volumetric:
+      {
+        // Get the base transform.
+        auto transform = ToPMPL(_model->getBaseWorldTransform());
+        auto cfg = transform.GetCfg();
+
+        switch(_mb->GetBaseMovementType()) {
+          case Body::MovementType::Rotational:
+            for(size_t i = 3; i < 6; ++i)
+              out[i] = Normalize(cfg[i]);
+          case Body::MovementType::Translational:
+            for(size_t i = 0; i < 3; ++i)
+              out[i] = cfg[i];
+            break;
+          default:
+            throw RunTimeException(WHERE, "Unrecognized base movement type.");
+        }
+      }
+      break;
+    default:
+      throw RunTimeException(WHERE, "Unrecognized base type.");
+  }
+
+  // Get joint positions.
+  {
+    const size_t firstJointIndex = _mb->DOF() - _mb->JointDOF();
+    const size_t lastJointIndex = _mb->DOF();
+
+    int count = 0;
+    for(size_t i = firstJointIndex; i < lastJointIndex; ++i, ++count)
+      // Bullet uses [ -PI : PI ].
+      out[i] = _model->getJointPos(count) / PI;
+  }
+
+  return out;
+}
+
+
 void
 ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model) {
   auto mb = _c.GetMultiBody();
@@ -354,6 +405,23 @@ ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model) {
     if(getVelocity)
       _model->setJointVel(index, _c.Velocity(i) * PI);
   }
+}
+
+
+void
+ConfigureSimulatedPosition(const std::vector<double>& _v,
+    btMultiBody* const _model) {
+  // Set the base DOFs.
+  // This computation of t must align with MultiBody::Configure.
+  Transformation t(Vector3d(_v[0], _v[1], _v[2]),
+                   EulerAngle(_v[5], _v[4], _v[3]));
+
+  _model->setBaseWorldTransform(ToBullet(t));
+
+  // Set the joint DOFs.
+  for(size_t i = 6, index = 0; i < _v.size(); ++i, ++index)
+    // Bullet uses [ -PI : PI ].
+    _model->setJointPos(index, _v[i] * PI);
 }
 
 /*----------------------------------------------------------------------------*/

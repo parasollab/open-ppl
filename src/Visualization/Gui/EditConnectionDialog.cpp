@@ -88,9 +88,7 @@ UpdateDHParameters() {
   auto simulation = Simulation::Get();
   simulation->Lock();
 
-  std::cout << "Updating DH params" << std::endl;
   m_connection->GetDHParameters() = m_dhParamsEditor->GetValue();
-  m_drawable->rebuild();
   simulation->RebuildMultiBody(m_drawable->GetMultiBody());
 
   simulation->Unlock();
@@ -104,9 +102,7 @@ UpdateTransformation(EditTransformationWidget* const _w, Transformation& _t) {
   auto simulation = Simulation::Get();
   simulation->Lock();
 
-  std::cout << "Updating Transformation" << std::endl;
   _t = _w->GetValue();
-  m_drawable->rebuild();
   simulation->RebuildMultiBody(m_drawable->GetMultiBody());
 
   simulation->Unlock();

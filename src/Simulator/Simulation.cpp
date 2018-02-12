@@ -109,7 +109,7 @@ Step() {
     for(size_t i = 0; i < this->m_drawables.size(); ++i) {
       auto d = static_cast<DrawableMultiBody*>(this->m_drawables[i]);
       for(size_t j = 0; j < d->GetNumBodies(); ++j)
-        d->PushTransform(j, m_engine->GetObjectTransform(i, j));
+        d->PushTransform(j, m_engine->GetObjectTransform(d->GetMultiBody(), j));
     }
   }
 

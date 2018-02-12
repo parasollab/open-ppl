@@ -5,6 +5,7 @@
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/GMSPolyhedron.h"
+#include "MPProblem/Robot/DynamicsModel.h"
 
 #include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
@@ -29,10 +30,7 @@ BulletModel(MultiBody* const _mb) : m_pmplModel(_mb),
 
 BulletModel::
 ~BulletModel() {
-  Uninitialize();
-
-  // Finally delete the bullet model.
-  delete m_bulletModel;
+  Uninitialize(true);
 }
 
 /*------------------------------ Initialization ------------------------------*/
@@ -40,13 +38,24 @@ BulletModel::
 void
 BulletModel::
 Initialize() {
+  // Store active model's current configuration and zero before rebuilding.
+  const std::vector<double> zeros(m_pmplModel->DOF(), 0),
+                            currentCfg = m_pmplModel->GetCurrentDOFs();
+  if(m_pmplModel->IsActive())
+    m_pmplModel->Configure(zeros);
+
   Build();
+
+  if(m_pmplModel->IsActive()) {
+    m_pmplModel->Configure(currentCfg);
+    ConfigureSimulatedPosition(currentCfg, m_bulletModel);
+  }
 }
 
 
 void
 BulletModel::
-Uninitialize() {
+Uninitialize(const bool _delete) {
   if(m_world)
     RemoveFromDynamicsWorld();
 
@@ -64,18 +73,27 @@ Uninitialize() {
   // We must manually destruct the model rather than deleting it to avoid having
   // it move around in memory, which will disrupt the Robot objects. Overwrite
   // the space with zeros to ensure no stale data is left over.
-  m_bulletModel->~btMultiBody();
-  std::fill_n((char*)m_bulletModel, sizeof(btMultiBody), (char)0);
+  if(!_delete) {
+    m_bulletModel->~btMultiBody();
+    std::fill_n((char*)m_bulletModel, sizeof(btMultiBody), (char)0);
+  }
+  else
+    delete m_bulletModel;
 }
 
 
 void
 BulletModel::
 Rebuild() {
+  // Store the model's current configuration and zero before rebuilding.
+  //const std::vector<double> currentCfg = ExtractSimulatedPosition(m_pmplModel,
+  //                                                                m_bulletModel);
+
   auto world = m_world;
   Uninitialize();
   Initialize();
-  AddToDynamicsWorld(world);
+  if(world)
+    AddToDynamicsWorld(world);
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
@@ -126,6 +144,7 @@ AddToDynamicsWorld(btMultiBodyDynamicsWorld* const _world) {
   for(auto* constraint : m_constraints)
     m_world->addMultiBodyConstraint(constraint);
 
+  /// @TODO Need to set friction properly.
   //col->setFriction(m_problem->GetEnvironment()->GetFrictionCoefficient());
 }
 

@@ -107,12 +107,12 @@ class BulletEngine final {
     ///@{
 
     /// Get the current transform for a given object.
-    /// @param _i The object's index.
+    /// @param _m The object pointer.
     /// @param _j The component index (0 for base by default).
     /// @return An OpenGL transform matrix describing object _i's current
     ///         position and orientation.
-    glutils::transform GetObjectTransform(const size_t _i, const size_t _j = 0)
-        const;
+    glutils::transform GetObjectTransform(MultiBody* const _m,
+        const size_t _j = 0) const;
 
     ///@}
     ///@name Modifiers

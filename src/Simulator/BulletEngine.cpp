@@ -59,6 +59,10 @@ BulletEngine::
   // Acquire the lock for the remainder of object life.
   std::lock_guard<std::mutex> lock(m_lock);
 
+  // Clear the models before the dynamicsWorld as the former need the later to
+  // tear down properly.
+  m_models.clear();
+
   // Delete the rigid bodies in the bullet dynamics world.
   for(int i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; --i) {
     btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
@@ -71,10 +75,6 @@ BulletEngine::
     m_dynamicsWorld->removeCollisionObject(obj);
     delete obj;
   }
-
-  // Clear the models before the dynamicsWorld as the former need the later to
-  // tear down properly.
-  m_models.clear();
 
   // Remove this engine's dynamics world and call-back set from the call-back
   // map.
@@ -115,15 +115,12 @@ Step(const btScalar _timestep) {
 
 glutils::transform
 BulletEngine::
-GetObjectTransform(const size_t _i, const size_t _j) const {
+GetObjectTransform(MultiBody* const _m, const size_t _j) const {
   // Check for out-of-range access.
-  nonstd::assert_msg(_i < size_t(m_dynamicsWorld->getNumMultibodies()),
-      "BulletEngine error: requested transform for object " + std::to_string(_i)
-      + ", but there are only " +
-      std::to_string(m_dynamicsWorld->getNumMultibodies()) +
-      " objects in the simulation.");
+  if(!m_models.count(_m))
+    throw RunTimeException(WHERE, "Requested model does not exist.");
 
-  btMultiBody* mb = m_dynamicsWorld->getMultiBody(_i);
+  btMultiBody* mb = m_models.at(_m)->GetBulletMultiBody();
 
   std::array<double, 16> buffer;
   if(_j == 0)

@@ -35,15 +35,17 @@ main(int _argc, char** _argv) {
     // Make simulation object.
     Simulation::Create(problem);
     Simulation* simulation = Simulation::Get();
-    //simulation->SetBacklog(1);
 
     // Make visualizer object.
     QApplication app(_argc, _argv);
     main_window window;
 
-    // TODO In progress
     // Set up the gui.
-    //SetupMainWindow(&window);
+    SetupMainWindow(&window);
+
+    // You will want to uncomment this if you are using the edit tools
+    /// @TODO Create an alternate flag like '-e' to launch the sim in edit mode.
+    //simulation->SetBacklog(1);
 
     // Load the simulation into the visualizer and start it.
     window.visualization(simulation);
