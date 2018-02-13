@@ -34,6 +34,20 @@ EditConnectionDialog(main_window* const _parent, DrawableMultiBody* const _mb,
   QWidget* displayArea = new QWidget(this);
   displayArea->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
+  // Create widgets to edit the joint limits.
+  std::string type;
+  switch(m_connection->GetConnectionType())
+  {
+    case Connection::JointType::Spherical:
+      type = "Spherical";
+    case Connection::JointType::Revolute:
+      if(type.empty())
+        type = "Revolute";
+      m_limitsEditor = new EditJointLimitsWidget(this, type, *m_connection);
+    default:
+      break;
+  }
+
   // Create Widgets to edit the transforms.
   m_transform1Editor = new EditTransformationWidget(this, "Parent -> Actuation",
       m_connection->GetTransformationToDHFrame());
@@ -52,6 +66,8 @@ EditConnectionDialog(main_window* const _parent, DrawableMultiBody* const _mb,
   // Create a layout for the display area and add the subcomponents.
   QVBoxLayout* displayLayout = new QVBoxLayout(this);
   displayLayout->setSizeConstraint(QLayout::SetMaximumSize);
+  if(m_limitsEditor)
+    displayLayout->addWidget(m_limitsEditor);
   displayLayout->addWidget(m_transform1Editor);
   displayLayout->addWidget(m_dhParamsEditor);
   displayLayout->addWidget(m_transform2Editor);
@@ -82,6 +98,9 @@ EditConnectionDialog(main_window* const _parent, DrawableMultiBody* const _mb,
           this,               SLOT(UpdateTransformationToBody2()));
   connect(m_dhParamsEditor,   SIGNAL(ValueChanged()),
           this,               SLOT(UpdateDHParameters()));
+  if(m_limitsEditor)
+    connect(m_limitsEditor,   SIGNAL(ValueChanged()),
+            this,             SLOT(UpdateJointLimits()));
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -105,28 +124,35 @@ UpdateTransformationToBody2() {
 void
 EditConnectionDialog::
 UpdateDHParameters() {
-  // Lock the simulation while we update the data.
-  auto simulation = Simulation::Get();
-  simulation->Lock();
-
   m_connection->GetDHParameters() = m_dhParamsEditor->GetValue();
-  simulation->RebuildMultiBody(m_drawable->GetMultiBody());
-
-  simulation->Unlock();
+  auto mb = m_drawable->GetMultiBody();
+  mb->Configure(mb->GetCurrentDOFs());
 }
 
 
 void
 EditConnectionDialog::
 UpdateTransformation(EditTransformationWidget* const _w, Transformation& _t) {
-  // Lock the simulation while we update the data.
-  auto simulation = Simulation::Get();
-  simulation->Lock();
-
   _t = _w->GetValue();
-  simulation->RebuildMultiBody(m_drawable->GetMultiBody());
+  auto mb = m_drawable->GetMultiBody();
+  mb->Configure(mb->GetCurrentDOFs());
+}
 
-  simulation->Unlock();
+
+void
+EditConnectionDialog::
+UpdateJointLimits() {
+  const std::vector<Range<double>> values = m_limitsEditor->GetValue();
+
+  // Update the connection.
+  m_connection->SetJointRange(0, values[0]);
+  if(values.size() > 1)
+    m_connection->SetJointRange(1, values[1]);
+
+  // Update the multibody to make sure the configuration is within limits.
+  auto mb = m_drawable->GetMultiBody();
+  mb->UpdateJointLimits();
+  mb->PushToNearestValidConfiguration();
 }
 
 /*----------------------------------------------------------------------------*/

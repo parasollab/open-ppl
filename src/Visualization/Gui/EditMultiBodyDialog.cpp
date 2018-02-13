@@ -10,6 +10,8 @@
 
 #include "sandbox/gui/main_window.h"
 
+#include "nonstd/io.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -115,10 +117,37 @@ EditConnection() {
 }
 
 
+#ifdef DEBUG_BULLET_PROBLEMS
+#include "BulletDynamics/Featherstone/btMultiBody.h"
+#include "Simulator/Conversions.h"
+#endif
+
 void
 EditMultiBodyDialog::
 Export() {
   m_multibody->Write(std::cout);
+  std::cout << "\nBody transforms:";
+  for(size_t i = 0; i < m_multibody->GetNumBodies(); ++i)
+    std::cout << "\n\tBody " << i << ": "
+              << m_multibody->GetBody(i)->GetWorldTransformation();
+
+  std::cout << "\nCfg: " << m_multibody->GetCurrentCfg()
+            << std::endl;
+
+#ifdef DEBUG_BULLET_PROBLEMS
+  btMultiBody* const b = m_multibody->m_bullet;
+
+  std::cout << "\nBullet transforms:"
+            << "\n\tBody 0: " << ToPMPL(b->getBaseWorldTransform());
+  for(size_t i = 0; i < (size_t)b->getNumLinks(); ++i)
+    std::cout << "\n\tBody " << i << ": "
+              << ToPMPL(b->getLink(i).m_cachedWorldTransform);
+
+  std::cout << "\nJoint Cfg:";
+  for(size_t i = 0; i < (size_t)b->getNumLinks(); ++i)
+    std::cout << " " << b->getLink(i).m_jointPos[0] / PI;
+  std::cout << std::endl;
+#endif
 }
 
 /*----------------------------------------------------------------------------*/

@@ -6,6 +6,7 @@
 class Connection;
 class DrawableMultiBody;
 class EditDHParametersWidget;
+class EditJointLimitsWidget;
 class EditTransformationWidget;
 class main_window;
 class MultiBody;
@@ -48,6 +49,9 @@ class EditConnectionDialog : public QDialog {
     /// Update the DH parameters.
     void UpdateDHParameters();
 
+    /// Update the joint limits.
+    void UpdateJointLimits();
+
   private:
 
     /// Update a transformation from the edit tool values.
@@ -66,6 +70,7 @@ class EditConnectionDialog : public QDialog {
     EditTransformationWidget* m_transform1Editor{nullptr};
     EditTransformationWidget* m_transform2Editor{nullptr};
     EditDHParametersWidget*   m_dhParamsEditor{nullptr};
+    EditJointLimitsWidget*    m_limitsEditor{nullptr};
 
     ///@}
 };

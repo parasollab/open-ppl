@@ -13,6 +13,10 @@ class Cfg;
 class Connection;
 class XMLNode;
 
+#ifdef DEBUG_BULLET_PROBLEMS
+class btMultiBody;
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Types of movement that are supported.
@@ -61,6 +65,14 @@ struct DofInfo final {
 class MultiBody {
 
   public:
+
+#ifdef DEBUG_BULLET_PROBLEMS
+    /// @note This is a dirty hack for debugging the problems with linked robots
+    ///       in the bullet simulation. Please do not use this elsewhere as I
+    ///       will delete any code that does after I fix bullet and remove the
+    ///       hack.
+    btMultiBody* m_bullet{nullptr};
+#endif
 
     ///@name Local Types
     ///@{
@@ -134,6 +146,9 @@ class MultiBody {
     /// Get the current DOFs for this configuration, as set by Configure().
     const std::vector<double>& GetCurrentDOFs() const noexcept;
 
+    /// Get the current configuration dofs (no velocity), as set by Configure().
+    std::vector<double> GetCurrentCfg() noexcept;
+
     ///@}
     ///@name Body Accessors
     ///@{
@@ -205,6 +220,11 @@ class MultiBody {
     /// Get the DOF info for a specific degree of freedom.
     const vector<DofInfo>& GetDofInfo() const noexcept;
 
+    /// Update the DOF info from the current values in the connection objects.
+    /// @TODO Fix this so that we do not double-store the limits both here and in
+    ///       connection.
+    void UpdateJointLimits() noexcept;
+
     ///@}
     ///@name Configuration Methods
     ///@{
@@ -236,6 +256,12 @@ class MultiBody {
     /// Support function for configuring composite bodies.
     void FinishConfigureCompositeBody(const std::vector<double>& _v,
                                       int& _index);
+
+    /// Check if the DOF values are out-of-range. If so, push them to the nearest
+    /// acceptable configuration and reconfigure the model.
+    /// @note In this context, 'valid' means with respect to the joint limits
+    ///       only. It does not consider collisions or any other validity.
+    void PushToNearestValidConfiguration();
 
     ///@}
     ///@name I/O

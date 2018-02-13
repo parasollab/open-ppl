@@ -113,7 +113,13 @@ class Connection final {
     /// Get a joint range.
     /// @param _i The range to get (0 normally, 1 for second spherical range).
     /// @return The corresponding range object.
-    const Range<double>& GetJointRange(size_t _i) const noexcept;
+    const Range<double>& GetJointRange(const size_t _i) const noexcept;
+
+    /// Set a joint range. Note this will NOT re-initialize the owning robot's
+    /// configuration space.
+    /// @param _i The range to set (0 normally, 1 for second spherical range).
+    /// @param _r The new joint range.
+    void SetJointRange(const size_t _i, const Range<double>& _r) noexcept;
 
     ///@}
     ///@name Body information

@@ -234,104 +234,83 @@ Transform(std::vector<double>& _force, std::function<void(btVector3&)>&& _f)
   }
 }
 
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Internal Helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~ External Helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 Cfg
 ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model) {
   auto mb = _robot->GetMultiBody();
   Cfg out(_robot);
 
-  // First get the base state.
-  switch(mb->GetBaseType()) {
-    case Body::Type::Fixed:
-      break;
-    case Body::Type::Planar:
-      {
-        // Get the base transform.
-        auto transform = ToPMPL(_model->getBaseWorldTransform());
-        auto cfg = transform.GetCfg();
+  // Get the position.
+  out.SetData(ExtractSimulatedPosition(mb, _model));
 
-        switch(mb->GetBaseMovementType()) {
-          case Body::MovementType::Rotational:
-            out[2] = cfg[5];
-          case Body::MovementType::Translational:
-            out[0] = cfg[0];
-            out[1] = cfg[1];
-            break;
-          default:
-            throw RunTimeException(WHERE, "Unrecognized base movement type.");
-        }
-      }
-      break;
-    case Body::Type::Volumetric:
-      {
-        // Get the base transform.
-        auto transform = ToPMPL(_model->getBaseWorldTransform());
-        auto cfg = transform.GetCfg();
-
-        switch(mb->GetBaseMovementType()) {
-          case Body::MovementType::Translational:
-            out[0] = cfg[0];
-            out[1] = cfg[1];
-            out[2] = cfg[2];
-            break;
-          case Body::MovementType::Rotational:
-            for(size_t i = 0; i < 6; ++i)
-              out[i] = cfg[i];
-            break;
-          default:
-            throw RunTimeException(WHERE, "Unrecognized base movement type.");
-        }
-      }
-      break;
-    default:
-      throw RunTimeException(WHERE, "Unrecognized base type.");
-  }
-  out.NormalizeOrientation();
-
-  // Get base velocities.
+  // Get the velocities.
   const bool getVelocity = _robot->IsNonholonomic();
   if(getVelocity)
   {
+    // Get base velocity.
     out.SetLinearVelocity(ToPMPL(_model->getBaseVel()));
     out.SetAngularVelocity(ToPMPL(_model->getBaseOmega()));
-  }
 
-  // Get joint positions.
-  {
+    // Get joint velocities.
     const size_t firstJointIndex = mb->DOF() - mb->JointDOF();
     const size_t lastJointIndex = mb->DOF();
 
-    int count = 0;
-    for(size_t i = firstJointIndex; i < lastJointIndex; ++i, ++count) {
+    for(size_t i = firstJointIndex, index = 0; i < lastJointIndex; ++i, ++index)
       // Bullet uses [ -PI : PI ].
-      out[i] = _model->getJointPos(count) / PI;
-      if(getVelocity)
-        out.Velocity(i) = _model->getJointVel(count) / PI;
-    }
+      out.Velocity(i) = _model->getJointVel(index) / PI;
   }
 
   return out;
 }
 
 
+void
+ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model) {
+  /// @TODO Make a more efficient routine for this, that doesn't need to
+  ///       configure the PMPL robot. Ideally we should grab the base's world
+  ///       transform directly from the _c cfg.
+  _c.ConfigureRobot();
+  auto mb = _c.GetMultiBody();
+
+  // Set the position.
+  ConfigureSimulatedPosition(mb, _model);
+
+  // Set velocities if needed.
+  const bool hasVelocity = _c.GetRobot()->IsNonholonomic();
+  if(hasVelocity) {
+    // Set the base velocities.
+    _model->setBaseVel(ToBullet(_c.GetLinearVelocity()));
+    _model->setBaseOmega(ToBullet(_c.GetAngularVelocity()));
+
+    // Set the joint velocities.
+    const size_t firstJointIndex = mb->DOF() - mb->JointDOF();
+    const size_t lastJointIndex = mb->DOF();
+    for(size_t i = firstJointIndex, index = 0; i < lastJointIndex; ++i, ++index)
+      // Bullet uses [ -PI : PI ].
+      _model->setJointVel(index, _c.Velocity(i) * PI);
+  }
+}
+
+
 std::vector<double>
-ExtractSimulatedPosition(MultiBody* const _mb, const btMultiBody* const _model) {
-  std::vector<double> out(_mb->DOF(), 0);
+ExtractSimulatedPosition(MultiBody* const _pmpl, const btMultiBody* const _bullet)
+{
+  std::vector<double> out(_pmpl->DOF(), 0);
 
   // First get the base state.
-  switch(_mb->GetBaseType()) {
+  switch(_pmpl->GetBaseType()) {
     case Body::Type::Fixed:
       break;
     case Body::Type::Planar:
       {
         // Get the base transform.
-        auto transform = ToPMPL(_model->getBaseWorldTransform());
+        auto transform = ToPMPL(_bullet->getBaseWorldTransform());
         auto cfg = transform.GetCfg();
 
-        switch(_mb->GetBaseMovementType()) {
+        switch(_pmpl->GetBaseMovementType()) {
           case Body::MovementType::Rotational:
-            out[2] = cfg[5];
+            out[2] = Normalize(cfg[5]);
           case Body::MovementType::Translational:
             out[0] = cfg[0];
             out[1] = cfg[1];
@@ -344,10 +323,10 @@ ExtractSimulatedPosition(MultiBody* const _mb, const btMultiBody* const _model) 
     case Body::Type::Volumetric:
       {
         // Get the base transform.
-        auto transform = ToPMPL(_model->getBaseWorldTransform());
+        auto transform = ToPMPL(_bullet->getBaseWorldTransform());
         auto cfg = transform.GetCfg();
 
-        switch(_mb->GetBaseMovementType()) {
+        switch(_pmpl->GetBaseMovementType()) {
           case Body::MovementType::Rotational:
             for(size_t i = 3; i < 6; ++i)
               out[i] = Normalize(cfg[i]);
@@ -366,13 +345,13 @@ ExtractSimulatedPosition(MultiBody* const _mb, const btMultiBody* const _model) 
 
   // Get joint positions.
   {
-    const size_t firstJointIndex = _mb->DOF() - _mb->JointDOF();
-    const size_t lastJointIndex = _mb->DOF();
+    const size_t firstJointIndex = _pmpl->DOF() - _pmpl->JointDOF();
+    const size_t lastJointIndex = _pmpl->DOF();
 
     int count = 0;
     for(size_t i = firstJointIndex; i < lastJointIndex; ++i, ++count)
       // Bullet uses [ -PI : PI ].
-      out[i] = _model->getJointPos(count) / PI;
+      out[i] = _bullet->getJointPos(count) / PI;
   }
 
   return out;
@@ -380,48 +359,19 @@ ExtractSimulatedPosition(MultiBody* const _mb, const btMultiBody* const _model) 
 
 
 void
-ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model) {
-  auto mb = _c.GetMultiBody();
-  const bool getVelocity = _c.GetRobot()->IsNonholonomic();
-
-  // Set the base DOFs.
-  /// @TODO Make a more efficient routine for this, that doesn't need to
-  ///       configure the PMPL robot. Ideally we should grab the base's world
-  ///       transform directly from the _c cfg.
-  _c.ConfigureRobot();
-  _model->setBaseWorldTransform(ToBullet(mb->GetBody(0)->
+ConfigureSimulatedPosition(MultiBody* const _pmpl, btMultiBody* const _bullet) {
+  // Set the base transform.
+  _bullet->setBaseWorldTransform(ToBullet(_pmpl->GetBase()->
         GetWorldTransformation()));
-  if(getVelocity) {
-    _model->setBaseVel(ToBullet(_c.GetLinearVelocity()));
-    _model->setBaseOmega(ToBullet(_c.GetAngularVelocity()));
-  }
+
+  auto dofs = _pmpl->GetCurrentCfg();
 
   // Set the joint DOFs.
-  const size_t firstJointIndex = mb->DOF() - mb->JointDOF();
-  const size_t lastJointIndex = mb->DOF();
-  for(size_t i = firstJointIndex, index = 0; i < lastJointIndex; ++i, ++index) {
+  const size_t firstJointIndex = _pmpl->DOF() - _pmpl->JointDOF();
+  const size_t lastJointIndex = _pmpl->DOF();
+  for(size_t i = firstJointIndex, index = 0; i < lastJointIndex; ++i, ++index)
     // Bullet uses [ -PI : PI ].
-    _model->setJointPos(index, _c[i] * PI);
-    if(getVelocity)
-      _model->setJointVel(index, _c.Velocity(i) * PI);
-  }
-}
-
-
-void
-ConfigureSimulatedPosition(const std::vector<double>& _v,
-    btMultiBody* const _model) {
-  // Set the base DOFs.
-  // This computation of t must align with MultiBody::Configure.
-  Transformation t(Vector3d(_v[0], _v[1], _v[2]),
-                   EulerAngle(_v[5], _v[4], _v[3]));
-
-  _model->setBaseWorldTransform(ToBullet(t));
-
-  // Set the joint DOFs.
-  for(size_t i = 6, index = 0; i < _v.size(); ++i, ++index)
-    // Bullet uses [ -PI : PI ].
-    _model->setJointPos(index, _v[i] * PI);
+    _bullet->setJointPos(index, dofs[i] * PI);
 }
 
 /*----------------------------------------------------------------------------*/

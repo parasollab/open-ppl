@@ -14,7 +14,11 @@
 #include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
 #include "ConvexDecomposition/cd_wavefront.h"
 
+#include "nonstd/io.h"
+
 #include <algorithm>
+
+#define USE_BULLET_COLLIDERS // Comment this out to disable bullet collision.
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -23,6 +27,9 @@ BulletModel::
 BulletModel(MultiBody* const _mb) : m_pmplModel(_mb),
     m_bulletModel(new btMultiBody(0, 0, btVector3(), false, false)) {
   // Uninitialize first to destruct and clear the dummy m_bulletModel.
+#ifdef DEBUG_BULLET_PROBLEMS
+  _mb->m_bullet = m_bulletModel;
+#endif
   Uninitialize();
   Initialize();
 }
@@ -40,15 +47,17 @@ BulletModel::
 Initialize() {
   // Store active model's current configuration and zero before rebuilding.
   const std::vector<double> zeros(m_pmplModel->DOF(), 0),
-                            currentCfg = m_pmplModel->GetCurrentDOFs();
-  if(m_pmplModel->IsActive())
+                            currentCfg = m_pmplModel->GetCurrentCfg();
+  if(m_pmplModel->IsActive()) {
     m_pmplModel->Configure(zeros);
+    std::cout << "Initializing from " << currentCfg << std::endl;
+  }
 
   Build();
 
   if(m_pmplModel->IsActive()) {
     m_pmplModel->Configure(currentCfg);
-    ConfigureSimulatedPosition(currentCfg, m_bulletModel);
+    ConfigureSimulatedPosition(m_pmplModel, m_bulletModel);
   }
 }
 
@@ -85,10 +94,6 @@ Uninitialize(const bool _delete) {
 void
 BulletModel::
 Rebuild() {
-  // Store the model's current configuration and zero before rebuilding.
-  //const std::vector<double> currentCfg = ExtractSimulatedPosition(m_pmplModel,
-  //                                                                m_bulletModel);
-
   auto world = m_world;
   Uninitialize();
   Initialize();
@@ -216,6 +221,7 @@ Build() {
         m_pmplModel->GetBase()->GetWorldTransformation());
     m_bulletModel->setBaseWorldTransform(baseTransform);
 
+#ifdef USE_BULLET_COLLIDERS
     // The multibody on its own doesn't process collisions. Create a collider
     // object for each component to handle this. The base has id -1.
     btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(m_bulletModel, -1);
@@ -225,6 +231,7 @@ Build() {
 
     // Attach the collider to this model.
     m_colliders.push_back(col);
+#endif
 
     if(m_debug)
       std::cout << "\tAdded base with mass " << baseMass << "."
@@ -351,6 +358,7 @@ Build() {
         throw RunTimeException(WHERE, "Unsupported joint type.");
     }
 
+#ifdef USE_BULLET_COLLIDERS
     // Create a collider for the link.
     // See examples/MultiBody/Pendulum.cpp for related example code.
     btMultiBodyLinkCollider* col = new btMultiBodyLinkCollider(m_bulletModel,
@@ -359,6 +367,7 @@ Build() {
     m_bulletModel->getLink(linkIndex).m_collider = col;
 
     m_colliders.push_back(col);
+#endif
   }
 
   // Finalize the multibody.

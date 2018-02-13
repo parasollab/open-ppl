@@ -339,6 +339,59 @@ GetCurrentDOFs() const noexcept {
   return m_currentDofs;
 }
 
+
+std::vector<double>
+MultiBody::
+GetCurrentCfg() noexcept {
+  std::vector<double> output(DOF(), 0);
+
+  // First get the DOFs for the base.
+  const std::vector<double> base = GetBase()->GetWorldTransformation().GetCfg();
+
+  // Define the boundaries of each DOF segment.
+  auto pos = output.begin(),
+       ori = output.begin() + PosDOF(),
+       jnt = output.begin() + PosDOF() + OrientationDOF(),
+       end = output.end();
+
+  // Determine how many orientation values from 'base' will be unused.
+  const size_t ignore = 3 - OrientationDOF();
+
+  // Copy the required values into the output vector, depending on base movement
+  // type. For the orientation, we will skip the unused values.
+  std::copy(base.begin(), base.begin() + PosDOF(), pos);
+  std::copy(base.begin() + 3 + ignore, base.end(), ori);
+
+  // Make sure the orientation values are normalized.
+  for(auto iter = ori; iter < jnt; ++iter)
+    *iter = Normalize(*iter);
+
+  // Make sure the joint transforms are current.
+  UpdateLinks();
+
+  // For each joint, copy its values.
+  for(auto& joint : m_joints) {
+    // Skip non-actuated joints.
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+      continue;
+
+    // Get the connection object's DHParameters.
+    const DHParameters& dh = joint->GetDHParameters();
+
+    // Set the joint DOF values from the DH params.
+    *jnt++ = dh.m_theta / PI;
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      *jnt++ = dh.m_alpha / PI;
+  }
+
+  // If jnt is not at the end now, we did something wrong.
+  if(jnt != end)
+    throw RunTimeException(WHERE, "Danger Will Robinson.");
+
+  m_currentDofs = output;
+  return output;
+}
+
 /*------------------------------ Body Accessors ------------------------------*/
 
 size_t
@@ -579,6 +632,30 @@ GetDofInfo() const noexcept {
   return m_dofInfo;
 }
 
+
+void
+MultiBody::
+UpdateJointLimits() noexcept {
+  const size_t firstJointIndex = PosDOF() + OrientationDOF();
+
+  auto joint = m_joints.begin(); // iter to unique_ptr
+  for(size_t i = firstJointIndex; i < DOF(); ++i) {
+    switch(joint->get()->GetConnectionType())
+    {
+      case Connection::JointType::Revolute:
+        m_dofInfo[i].range = joint->get()->GetJointRange(0);
+        break;
+      case Connection::JointType::Spherical:
+        m_dofInfo[i].range   = joint->get()->GetJointRange(0);
+        m_dofInfo[++i].range = (++joint)->get()->GetJointRange(1);
+        break;
+      case Connection::JointType::NonActuated:
+        break;
+    }
+    ++joint;
+  }
+}
+
 /*------------------------- Configuration Methods ----------------------------*/
 
 void
@@ -610,7 +687,7 @@ Configure(const vector<double>& _v) {
   }
 
   // configure remaining free bodies, if this is a composite body
-  if (IsComposite())
+  if(IsComposite())
     FinishConfigureCompositeBody(_v, index);
 
   // Configure the links.
@@ -720,6 +797,25 @@ GenerateModelTransformation(const std::vector<double>& _v, int& _index,
   // Generate the transformation with a translation vector and ZYX Euler angle.
   return Transformation(Vector3d(x, y, z),
                         EulerAngle(alpha * PI, beta * PI, gamma * PI));
+}
+
+
+void
+MultiBody::
+PushToNearestValidConfiguration() {
+  // First get the actual configured Cfg.
+  std::vector<double> cfg = GetCurrentCfg();
+
+  // Check each value against the joint limits.
+  for(size_t i = 0; i < DOF(); ++i) {
+    const Range<double>& limit = m_dofInfo[i].range;
+    // If the current cfg lies outside the limits, push it inside.
+    if(!limit.Contains(cfg[i]))
+      cfg[i] = limit.ClearancePoint(cfg[i]);
+  }
+
+  // Configure on the valid Cfg.
+  Configure(cfg);
 }
 
 /*----------------------------------- I/O ------------------------------------*/

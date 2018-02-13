@@ -8,8 +8,9 @@
 int
 main(int _argc, char** _argv) {
   try {
-    if(_argc < 3 || std::string(_argv[1]) != "-f")
-      throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
+    const std::string flag = std::string(_argv[1]);
+    if(_argc < 3 || (flag != "-f" and flag != "-e"))
+      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e} options.xml");
 
     // Make problem object.
     MPProblem* problem = new MPProblem(_argv[2]);
@@ -20,8 +21,12 @@ main(int _argc, char** _argv) {
     ///       the first task is a query and its start boundary is a single point.
     for(const auto& robot : problem->GetRobots()) {
       Robot* const r = robot.get();
-      auto startBoundary = problem->GetTasks(r).front()->GetStartBoundary();
-      r->GetMultiBody()->Configure(startBoundary->GetCenter());
+
+      // Position the robot at zero, or at the task center if one exists.
+      std::vector<double> dofs(r->GetMultiBody()->DOF(), 0);
+      if(!problem->GetTasks(r).empty())
+        dofs = problem->GetTasks(r).front()->GetStartBoundary()->GetCenter();
+      r->GetMultiBody()->Configure(dofs);
 
       // Randomize body colors for now to help see the robots.
       for(size_t i=0; i< r->GetMultiBody()->GetNumBodies();i++) {
@@ -33,19 +38,17 @@ main(int _argc, char** _argv) {
     }
 
     // Make simulation object.
-    Simulation::Create(problem);
+    const bool editMode = flag == "-e";
+    Simulation::Create(problem, editMode);
     Simulation* simulation = Simulation::Get();
 
     // Make visualizer object.
     QApplication app(_argc, _argv);
     main_window window;
 
-    // Set up the gui.
-    SetupMainWindow(&window);
-
-    // You will want to uncomment this if you are using the edit tools
-    /// @TODO Create an alternate flag like '-e' to launch the sim in edit mode.
-    //simulation->SetBacklog(1);
+    // Set up the extra gui elements if we are in edit mode.
+    if(editMode)
+      SetupMainWindow(&window);
 
     // Load the simulation into the visualizer and start it.
     window.visualization(simulation);

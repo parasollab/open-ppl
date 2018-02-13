@@ -278,8 +278,15 @@ IsNonActuated() const noexcept {
 
 const Range<double>&
 Connection::
-GetJointRange(size_t _i) const noexcept {
+GetJointRange(const size_t _i) const noexcept {
   return m_jointRange[_i];
+}
+
+
+void
+Connection::
+SetJointRange(const size_t _i, const Range<double>& _r) noexcept {
+  m_jointRange[_i] = _r;
 }
 
 /*----------------------------- Body Information -----------------------------*/

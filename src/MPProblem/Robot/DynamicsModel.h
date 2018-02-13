@@ -190,23 +190,24 @@ class MicroSimulator final {
 /// @return The configuration data of _model in its simulation.
 Cfg ExtractSimulatedState(Robot* const _robot, const btMultiBody* const _model);
 
-/// Extract the position configuration DOFs from a simulated robot.
-/// @param _mb A PMPL multibody.
-/// @param _model A bullet model of _mb.
-/// @return The configuration data of _mb in its simulation, excluding velocity.
-std::vector<double> ExtractSimulatedPosition(MultiBody* const _mb,
-    const btMultiBody* const _model);
-
 /// Configure a simulated robot.
 /// @param _c The configuration to set.
 /// @param _model A bullet model of _c's robot.
 void ConfigureSimulatedState(const Cfg& _c, btMultiBody* const _model);
 
-/// Configure only the position of a simulated robot.
-/// @param _v The DOF values to set.
-/// @param _model A bullet model the robot.
-void ConfigureSimulatedPosition(const std::vector<double>& _v,
-    btMultiBody* const _model);
+
+/// Extract the position configuration DOFs from an object (no velocities).
+/// @param _pmpl The PMPL multibody.
+/// @param _bullet The bullet mmultibody.
+/// @return The configuration data of _pmpl in its simulation, excluding velocity.
+std::vector<double> ExtractSimulatedPosition(MultiBody* const _pmpl,
+    const btMultiBody* const _bullet);
+
+/// Configure only the position of a simulated object (no velocities).
+/// @param _pmpl The PMPL multibody.
+/// @param _bullet The bullet multibody.
+void ConfigureSimulatedPosition(MultiBody* const _pmpl,
+    btMultiBody* const _bullet);
 
 
 #endif

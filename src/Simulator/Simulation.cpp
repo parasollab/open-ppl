@@ -21,7 +21,13 @@ static Simulation* s_singleton{nullptr};
 
 
 Simulation::
-Simulation(MPProblem* const _problem) : m_problem(_problem) {}
+Simulation(MPProblem* const _problem, const bool _edit)
+  : m_problem(_problem), m_editMode(_edit) {
+  // If we are in edit mode, then the backlog is annoying rather than helpful.
+  // Disable it in that case.
+  if(m_editMode)
+    SetBacklog(1);
+}
 
 
 Simulation::
@@ -33,10 +39,10 @@ Simulation::
 
 void
 Simulation::
-Create(MPProblem* const _problem) {
+Create(MPProblem* const _problem, const bool _edit) {
   if(s_singleton)
     throw RunTimeException(WHERE, "THERE CAN ONLY BE ONE!");
-  s_singleton = new Simulation(_problem);
+  s_singleton = new Simulation(_problem, _edit);
 }
 
 
@@ -94,7 +100,7 @@ Uninitialize() {
 
 void
 Simulation::
-Step() {
+SimulationStep() {
   // Push the current transforms for all rendering objects.
   {
     std::lock_guard<std::mutex> lock(m_guard);
@@ -128,6 +134,30 @@ Step() {
 
   // Step the simulation.
   m_engine->Step(timestep);
+}
+
+
+void
+Simulation::
+EditStep() {
+  // Push the current transforms for all rendering objects.
+  {
+    std::lock_guard<std::mutex> lock(m_guard);
+
+    // If we have already pre-computed the maximum number of steps allowed,
+    // don't do anything.
+    if(m_backloggedSteps >= m_backlogMax)
+      return;
+    ++m_backloggedSteps;
+
+    // Enqueue the current position of each mobile object in the scene.
+    for(size_t i = 0; i < this->m_drawables.size(); ++i) {
+      auto d  = static_cast<DrawableMultiBody*>(this->m_drawables[i]);
+      auto mb = d->GetMultiBody();
+      for(size_t j = 0; j < d->GetNumBodies(); ++j)
+        d->PushTransform(j, ToGLUtils(mb->GetBody(j)->GetWorldTransformation()));
+    }
+  }
 }
 
 /*------------------------ Visualization Interface ---------------------------*/
@@ -165,12 +195,22 @@ start() {
 
   Initialize();
 
-  // Create a worker object to step the simulation.
-  auto workFunction = [this]() {
+  // Create a worker object to step the physics simulation.
+  auto physicsWorkFunction = [this]() {
     while(this->m_running)
-      this->Step();
+      this->SimulationStep();
   };
-  m_worker = std::thread(workFunction);
+
+  // Create a worker object to step the edit simulation.
+  auto editWorkFunction = [this]() {
+    while(this->m_running)
+      this->EditStep();
+  };
+
+  // If we are using edit mode, don't use the physics engine - just update the
+  // model transforms to match the MPProblem on each step.
+  m_worker = m_editMode ? std::thread(editWorkFunction)
+                        : std::thread(physicsWorkFunction);
   if(!m_worker.joinable())
     throw RunTimeException(WHERE, "Could not create worker thread.");
 }
@@ -217,8 +257,12 @@ Unlock() {
 
 void
 Simulation::
-RebuildMultiBody(MultiBody* const _m) {
-  m_engine->RebuildObject(_m);
+RebuildMultiBody(DrawableMultiBody* const _d) {
+  std::lock_guard<std::mutex> lock(m_guard);
+
+  _d->rebuild();
+  if(!m_editMode)
+    m_engine->RebuildObject(_d->GetMultiBody());
 }
 
 /*----------------------------------- Helpers --------------------------------*/
@@ -250,7 +294,8 @@ AddBBX() {
 
   // Create a btCollisionShape using half lengths of the bounding box
   btBoxShape* box = new btBoxShape(btVector3(x, thickness, z));
-  m_engine->AddObject(box, trans, 0.);
+  if(!m_editMode)
+    m_engine->AddObject(box, trans, 0.);
 
   /// @TODO Add visual for the bounding box/floor.
   /// @TODO Support other boundary types.
@@ -266,8 +311,11 @@ AddObstacles() {
   Environment* env = m_problem->GetEnvironment();
 
   for(size_t i = 0; i < env->NumObstacles(); ++i) {
-    MultiBody* multiBody = env->GetObstacle(i);
-    m_engine->AddObject(multiBody);
+    MultiBody* const multiBody = env->GetObstacle(i);
+
+    if(!m_editMode)
+      m_engine->AddObject(multiBody);
+
     this->add_drawable(new DrawableMultiBody(multiBody));
   }
 }
@@ -283,7 +331,8 @@ AddRobots() {
     if(robot->IsVirtual())
       continue;
 
-    m_engine->AddRobot(robot);
+    if(!m_editMode)
+      m_engine->AddRobot(robot);
 
     auto multiBody = robot->GetMultiBody();
     this->add_drawable(new DrawableMultiBody(multiBody));

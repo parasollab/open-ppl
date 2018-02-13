@@ -9,6 +9,7 @@
 #include "sandbox/base_visualization.h"
 
 class BulletEngine;
+class DrawableMultiBody;
 class MPProblem;
 class MultiBody;
 
@@ -28,7 +29,8 @@ class Simulation : public base_visualization {
 
     /// Create a simulation of an MPProblem.
     /// @param[in] _problem The MPProblem to simulate.
-    Simulation(MPProblem* const _problem);
+    /// @param[in] _edit Start in edit mode instead of the physical simulator?
+    Simulation(MPProblem* const _problem, const bool _edit);
 
     virtual ~Simulation();
 
@@ -36,7 +38,8 @@ class Simulation : public base_visualization {
 
     /// Create the singleton.
     /// @param[in] _problem The MPProblem to simulate.
-    static void Create(MPProblem* const _problem);
+    /// @param[in] _edit Start in edit mode instead of the physical simulator?
+    static void Create(MPProblem* const _problem, const bool _edit = false);
 
     /// Get the singleton.
     static Simulation* Get();
@@ -52,7 +55,10 @@ class Simulation : public base_visualization {
     void Uninitialize();
 
     /// Advance the simulation one timestep.
-    void Step();
+    void SimulationStep();
+
+    /// Update the drawable transforms to match those in the MPProblem.
+    void EditStep();
 
     ///@}
     ///@name Visualization Interface
@@ -80,9 +86,9 @@ class Simulation : public base_visualization {
     ///@{
 
     /// Rebuild the physics engine's model for a given multibody.
-    /// @param _m The multibody to rebuild.
+    /// @param _m The drawable multibody to rebuild.
     /// @WARNING The simulation must be locked while you do this!
-    void RebuildMultiBody(MultiBody* const _m);
+    void RebuildMultiBody(DrawableMultiBody* const _m);
 
     ///@}
 
@@ -114,6 +120,8 @@ class Simulation : public base_visualization {
 
     volatile size_t m_backloggedSteps{0};  ///< Number of precomputed steps.
     size_t m_backlogMax{100};              ///< Max number of precomputed steps.
+
+    const bool m_editMode{false};          ///< Are we in edit mode?
 
     ///@}
     ///@name Deleted Functions

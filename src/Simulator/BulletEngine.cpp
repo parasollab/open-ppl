@@ -140,23 +140,11 @@ GetObjectTransform(MultiBody* const _m, const size_t _j) const {
 btMultiBody*
 BulletEngine::
 AddRobot(Robot* const _robot) {
-  // This is an active body.
+  // Build the bullet model.
   MultiBody* const multiBody = _robot->GetMultiBody();
-
-  // We need to set the body at its zero Cfg to create the bullet model. Save
-  // the current DOFs so that we can restore them afterward.
-  std::vector<double> startDofs = multiBody->GetCurrentDOFs();
-  multiBody->Configure(std::vector<double>(startDofs.size(), 0));
-
   btMultiBody* const bulletModel = AddObject(multiBody);
 
-  // Restore the original configuration.
-  multiBody->Configure(startDofs);
-
-  // Configure the bullet body to match.
-  Cfg cfg(_robot);
-  cfg.SetData(startDofs);
-  ConfigureSimulatedState(cfg, bulletModel);
+  /// @TODO We need a way to set initial velocities for the robot.
 
   // Set the bullet model as the robot's dynamics model.
   _robot->SetDynamicsModel(bulletModel);
@@ -179,7 +167,6 @@ AddObject(MultiBody* const _m) {
     throw RunTimeException(WHERE, "Cannot add the same MultiBody twice.");
 
   m_models[_m] = std::unique_ptr<BulletModel>(new BulletModel(_m));
-  m_models[_m]->Initialize();
   m_models[_m]->AddToDynamicsWorld(m_dynamicsWorld);
 
   return m_models[_m]->GetBulletMultiBody();
