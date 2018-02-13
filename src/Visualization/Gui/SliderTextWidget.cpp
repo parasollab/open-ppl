@@ -6,17 +6,24 @@
 SliderTextWidget::
 SliderTextWidget(QWidget* const _parent, const std::string& _label,
     const double _min, const double _max)
-  : QGroupBox(_label.c_str(), _parent), m_range(_min, _max)
+  : SliderTextWidget(_parent, _label, Range<double>(_min, _max))
+{ }
+
+
+SliderTextWidget::
+SliderTextWidget(QWidget* const _parent, const std::string& _label,
+    const Range<double>& _range)
+  : QGroupBox(_label.c_str(), _parent), m_range(_range)
 {
   // Assert the range makes sense.
-  if(_min >= _max)
+  if(m_range.min >= m_range.max)
     throw RunTimeException(WHERE, "Nonsense range requested from " +
-        std::to_string(_min) + " to " + std::to_string(_max) + ".");
+        std::to_string(m_range.min) + " to " + std::to_string(m_range.max) + ".");
 
   // Initialize the line edit widget.
   m_text = new QLineEdit(this);
   m_text->setMaxLength(9);
-  m_text->setValidator(new QDoubleValidator(_min, _max, 8, m_text));
+  m_text->setValidator(new QDoubleValidator(m_range.min, m_range.max, 8, m_text));
 
   // Initialize the slider widget.
   m_slider = new QSlider(this);

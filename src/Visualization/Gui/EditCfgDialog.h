@@ -5,6 +5,7 @@
 
 class main_window;
 class DrawableMultiBody;
+class SliderTextWidget;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,19 +28,25 @@ class EditCfgDialog : public QDialog {
     virtual ~EditCfgDialog();
 
     ///@}
-    ///@name
+
+  public slots:
+
+    ///@name Helpers
     ///@{
 
+    void UpdateCfg();
 
     ///@}
 
-  protected:
+  private:
 
-    ///@name
+    ///@name Internal State
     ///@{
 
-    main_window* const m_main;            ///< The owning main window.
-    DrawableMultiBody* const m_multibody; ///< The edit multibody.
+    main_window* const m_main;           ///< The owning main window.
+    DrawableMultiBody* const m_drawable; ///< The edit multibody.
+
+    std::vector<SliderTextWidget*> m_sliders; ///< The DOF value editors.
 
     ///@}
 };

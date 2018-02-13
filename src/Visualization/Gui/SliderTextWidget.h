@@ -28,6 +28,13 @@ class SliderTextWidget : public QGroupBox {
     SliderTextWidget(QWidget* const _parent, const std::string& _label,
         const double _min, const double _max);
 
+    /// Create a slider text widget.
+    /// @param _parent The parent widget.
+    /// @param _label The label.
+    /// @param _range The allowed range.
+    SliderTextWidget(QWidget* const _parent, const std::string& _label,
+        const Range<double>& _range);
+
     ///@}
     ///@name Helpers
     ///@{
@@ -63,7 +70,7 @@ class SliderTextWidget : public QGroupBox {
     ///@name Internal State
     ///@{
 
-    static constexpr int s_numTicks{1000}; ///< Desired number of slider ticks.
+    static constexpr int s_numTicks{50000}; ///< Desired number of slider ticks.
 
     const Range<double> m_range; ///< The valid range.
 
