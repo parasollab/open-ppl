@@ -23,6 +23,7 @@ EditMultiBodyDialog(main_window* const _parent, DrawableMultiBody* const _mb)
   setWindowTitle("Edit MultiBody");
   setAttribute(Qt::WA_DeleteOnClose, true);
   setMinimumWidth(400);
+  setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
   // Create a list of bodies to edit.
   m_bodyList = new QListWidget(this);
@@ -57,15 +58,34 @@ EditMultiBodyDialog(main_window* const _parent, DrawableMultiBody* const _mb)
   okCancel->setOrientation(Qt::Horizontal);
   okCancel->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
 
-  // Create a layout for the dialog and add the subcomponents.
-  QVBoxLayout* layout = new QVBoxLayout();
-  layout->addWidget(m_bodyList);
-  layout->addWidget(editBodyButton);
-  layout->addWidget(m_connectionList);
-  layout->addWidget(editConnectionButton);
-  layout->addWidget(exportButton);
-  layout->addWidget(okCancel);
-  setLayout(layout);
+  // Create a display area which will hold all the subcomponents (needed for
+  // scroll area support).
+  QWidget* displayArea = new QWidget(this);
+  displayArea->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+
+  // Create a layout for the display area and add the subcomponents.
+  QVBoxLayout* displayLayout = new QVBoxLayout(this);
+  displayLayout->setSizeConstraint(QLayout::SetMaximumSize);
+  displayLayout->addWidget(m_bodyList);
+  displayLayout->addWidget(editBodyButton);
+  displayLayout->addWidget(m_connectionList);
+  displayLayout->addWidget(editConnectionButton);
+  displayLayout->addWidget(exportButton);
+  displayLayout->addWidget(okCancel);
+  displayArea->setLayout(displayLayout);
+
+  // Create a scroll area to allow displayArea to be scrolled up and down.
+  QScrollArea* scroll = new QScrollArea(this);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  scroll->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+  scroll->setWidget(displayArea);
+
+  // Create a layout for the dialog and add the scroll area to it.
+  QVBoxLayout* scrollLayout = new QVBoxLayout(this);
+  scrollLayout->setSizeConstraint(QLayout::SetMaximumSize);
+  scrollLayout->addWidget(scroll);
+  setLayout(scrollLayout);
 
   // Connect the buttons to their appropriate functions.
   connect(editBodyButton, SIGNAL(clicked()),
