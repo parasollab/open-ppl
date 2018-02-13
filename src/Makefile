@@ -149,6 +149,7 @@ reallyreallyclean: reallyclean
 	@cd $(SANDBOX_DIR) && $(MAKE) clean
 	@cd $(BULLET_DIR) && $(MAKE) clean
 	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE) clean
+	@cd $(LKH_DIR) && $(MAKE) clean
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 .PHONY: test
