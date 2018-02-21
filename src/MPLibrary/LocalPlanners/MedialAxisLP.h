@@ -33,7 +33,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     virtual ~MedialAxisLP() = default;
 
     virtual void Print(ostream& _os) const;
-
+//    virtual void Initialize();
     MedialAxisUtility<MPTraits>& GetMedialAxisUtility() {
       return m_medialAxisUtility;
     }
@@ -83,6 +83,7 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     //variables for medial axis
     double m_macEpsilon; //some epsilon
     size_t m_maxIter; //maximum depth of recursion
+    size_t m_maxFailures; //maximum number of failures that can ocure while pushing.
     double m_resFactor{1.0}; //factor of the resolution
 
     MedialAxisClearanceValidity<MPTraits>* m_macVC{nullptr};  //mac validity checker
@@ -116,7 +117,7 @@ MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
       "Which algorithm to run?");
   transform(controller.begin(), controller.end(),
       controller.begin(), ::toupper);
-  m_maxIter = _node.Read("maxIter", true, 2, 1, MAX_INT,
+  m_maxIter = _node.Read("maxIter", controller != "ITERATIVE", 2, 1, MAX_INT,
       "Maximum Number of Iterations");
   if(controller == "RECURSIVE") {
     m_controller = Controller::Recursive;
@@ -128,6 +129,8 @@ MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
       Controller::Iterative : Controller::Binary;
     m_resFactor = _node.Read("resFactor", true, m_resFactor, 0.0,
         MAX_DBL, "Resolution for Iter and Bin");
+    m_maxFailures = _node.Read("maxFailures", m_controller == Controller::Iterative, 
+        0ul, 0ul, (size_t) -1, "Maximun number of medial axis failures for Iter");
   }
   else
     throw ParseException(_node.Where(),
@@ -140,7 +143,6 @@ template<class MPTraits>
 void
 MedialAxisLP<MPTraits>::
 Init() {
-  this->SetName("MedialAxisLP");
 
   //Construct a medial axis clearance validity
   m_macVC = new MedialAxisClearanceValidity<MPTraits>(
@@ -215,7 +217,6 @@ IsConnected(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     cout << "\nMedialAxisLP::IsConnected" << endl
          << "Start: " << _c1 << endl
          << "End  : " << _c2 << endl;
-
   bool connected = false;
   stats->IncLPAttempts(this->GetNameAndLabel());
   switch(m_controller) {
@@ -496,7 +497,8 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   if(this->m_debug) {
     cout << "  MedialAxisLP::IsConnectedIter" << endl
          << "  Start  : " << _c1 << endl
-         << "  End    : " << _c2 << endl;
+         << "  End    : " << _c2 << endl
+         << "  Dist   : " << (_c2 - _c1).PositionMagnitude() << endl;
 
     VDClearAll();
     VDAddTempCfg(_c1, false);
@@ -507,15 +509,22 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   CfgType curr = _c1;
   LPOutput<MPTraits> lpOutput;
   int nticks;
-  size_t iter = 0;
+  size_t failures = 0;
   double r = m_resFactor;
-
+  
+  size_t iter = 0;
   do {
 
     CfgType prev = curr;
 
     //Find tick at resolution
     CfgType tick(robot);
+    if(this->m_debug) {
+      std::cout << "|------------------ Iteration: " << iter << " Failures: " << failures << " -------------|" << std::endl;
+
+      std::cout << "Current: " << curr << " End: " << _c2 << std::endl;
+    }
+    ++iter;
     tick.FindIncrement(curr, _c2, &nticks, r*_posRes, r*_oriRes);
     curr += tick;
 
@@ -541,32 +550,48 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       return true;
     }
 
-    if(this->m_debug)
+    if( false && this->m_debug)
       cout << "Curr before pushing = " << curr << endl;
 
     //Push to medial axis
     if(!m_medialAxisUtility.PushToMedialAxis(curr,
           this->GetEnvironment()->GetBoundary())) {
       curr = prev;
-      r *= 2;
+      ++failures;
+
       if(this->m_debug)
-        std::cout << "MA Push failed. Position resolution for connecting set to "
-                  << r*_posRes << std::endl;
+        std::cout << "MA Push failed. Failure count: " << failures << std::endl;
       continue;
     }
 
-    r = m_resFactor;
 
     if(this->m_debug) {
       cout << "curr after pushing = " << curr << endl;
       VDAddTempCfg(curr, true);
     }
 
+
     //check for pushes to previous configs, if true, return false
     if(curr == prev) {
       if(this->m_debug)
         cout << "Push to prev location. Returning false." << endl;
       return false;
+    }
+
+    // checking for progression.
+    auto dm = this->GetDistanceMetric(m_dmLabel); 
+    
+    auto newDistance = dm->Distance(curr, _c2);
+    auto oldDistance = dm->Distance(prev, _c2);
+    if(this->m_debug)
+      std::cout << "New Distance: " << newDistance << " Old Distance: " << oldDistance << std::endl;
+
+    if(newDistance > oldDistance) {
+      if(this->m_debug)
+        std::cout << "Failed to progress enough to the goal cfg: incrementing failures" << std::endl;
+      ++failures;
+      curr = prev;
+      continue;
     }
 
     //check for valid connection between previous cfg and pushed cfg
@@ -590,10 +615,16 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       _lpOutput->m_intermediates.push_back(curr);
     }
 
-  } while(iter++ < m_maxIter);
-
+    // reset the failures at a successful iteration
+    // this means that there will have to be m_maxFailures in a row for a
+    // failure.
+    failures= 0;
+  } while(failures < m_maxFailures);
+  
+  //if(this->m_debug)
+  //  cout << "Max iter reached. Not connected." << endl;
   if(this->m_debug)
-    cout << "Max iter reached. Not connected." << endl;
+    std::cout << "Reached the max failure limit: " << m_maxFailures << std::endl;
   return false;
 }
 
