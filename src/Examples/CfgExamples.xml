@@ -152,7 +152,7 @@
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
         positional="true"
-        debug="true" saveIntermediates="true"/>
+        debug="true" saveIntermediates="true" maxFailures="100"/>
       <MedialAxisLP label="malpb" controller="binary"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"

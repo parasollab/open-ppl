@@ -1,6 +1,7 @@
 #ifndef AGENT_H_
 #define AGENT_H_
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 

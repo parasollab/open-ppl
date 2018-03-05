@@ -1,11 +1,5 @@
 #include "Agent.h"
 
-#ifdef PMPL_SIMULATOR
-//#include "BatteryConstrainedGroup.h"
-#include "PathFollowingAgent.h"
-#include "RoadmapFollowingAgent.h"
-#endif
-
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -17,7 +11,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 #include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
-#include "Utilities/XMLNode.h"
+#include "Utilities/PMPLExceptions.h"
 
 #include "nonstd/numerics.h"
 
@@ -36,39 +30,6 @@ Agent(Robot* const _r, const Agent& _a)
     m_initialized(_a.m_initialized),
     m_debug(_a.m_debug)
 { }
-
-
-std::unique_ptr<Agent>
-Agent::
-Factory(Robot* const _r, XMLNode& _node) {
-  // Read the node and mark it as visited.
-  std::string type = _node.Read("type", true, "", "The Agent class name.");
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-
-  std::unique_ptr<Agent> output;
-
-#ifdef PMPL_SIMULATOR
-  if(type == "pathfollowing")
-    output = std::unique_ptr<PathFollowingAgent>(
-        new PathFollowingAgent(_r, _node)
-    );
-  else if(type == "roadmapfollowing")
-    output = std::unique_ptr<RoadmapFollowingAgent>(
-        new RoadmapFollowingAgent(_r, _node)
-    );
-  //else if(type == "batteryconstrainedgroup")
-  //  output = std::unique_ptr<BatteryConstrainedGroup>(
-  //      new BatteryConstrainedGroup(_r, _node)
-  //  );
-  else
-    throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
-#else
-  // If we are not building the simulator, ignore the agent node.
-  _node.Ignore();
-#endif
-
-  return output;
-}
 
 
 Agent::

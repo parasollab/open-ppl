@@ -305,10 +305,10 @@ $(PHYSICAL_ROBOTS_LIBFILE):
 ################################################################################
 LKH_DIR  := $(UTILS_DIR)/LKH
 LKH_INCL := -I$(LKH_DIR)/SRC/INCLUDE
-LKH_LIBS := $(LKH_DIR)/libLKH.a 
+LKH_LIBS := $(LKH_DIR)/libLKH.a
 LKH_DEF  :=
 
-LKH_LIBFILE = $(LKH_DIR)/libLKH.a 
+LKH_LIBFILE = $(LKH_DIR)/libLKH.a
 $(LKH_LIBFILE):
 	@echo Building LKH library...
 	@cd $(LKH_DIR) && $(MAKE)
@@ -321,6 +321,7 @@ SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_SRCS := \
   $(PMPL_DIR)/sim_main.cpp \
+  Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
@@ -349,6 +350,7 @@ PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_SRCS := \
   Behaviors/Agents/Agent.cpp \
+  Behaviors/Agents/AgentFactory_pmpl.cpp \
   Behaviors/Controllers/ControllerMethod.cpp \
   Behaviors/Controllers/ControlSetGenerators.cpp \
   Behaviors/Controllers/PIDFeedback.cpp \
@@ -412,6 +414,7 @@ PMPL_SRCS := \
   Workspace/WorkspaceRegion.cpp \
   Workspace/WorkspaceSkeleton.cpp
 
+# Also build iCreate interface if we are compiling with that option.
 ifneq ($(icreate), 0)
   PMPL_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
 endif
