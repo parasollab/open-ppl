@@ -47,24 +47,31 @@ PlanningAgent::
 Step(const double _dt) {
   Initialize();
 
+  // If the agent is planning, skip this step.
+  if(m_planning)
+    return;
+
   // Wait for the previous controls to finish if they still have time remaining.
   if(ContinueLastControls())
     return;
 
-  // If we have no task, select the next one and generate a plan.
-  if(!GetTask()) {
+  // If we have no task, select the next one.
+  if(!GetTask() && !SelectTask()) {
     // If no incomplete tasks remain, we are done.
-    if(!SelectTask()) {
-      if(m_debug)
-        std::cout << "Completed all tasks, halting robot." << std::endl;
-      Halt();
-      return;
-    }
-    GeneratePlan();
+    if(m_debug)
+      std::cout << "Completed all tasks, halting robot." << std::endl;
+    PauseAgent(1);
+    return;
   }
 
-  // Evaluate task progress. If not done, continue execution.
-  if(!EvaluateTask())
+  // If we have no plan, generate a plan.
+  if(!HasPlan()){
+    GeneratePlan();
+    return;
+  }
+
+  // Evaluate task progress. If task is still valid, continue execution.
+  if(EvaluateTask())
     ExecuteTask(_dt);
 }
 
@@ -81,19 +88,54 @@ Uninitialize() {
   SetTask(nullptr);
 }
 
+
+/*------------------------------- Planning -----------------------------------*/
+
+bool
+PlanningAgent::
+IsPlanning() const {
+  return m_planning;
+}
+
+
+/*---------------------------- Planning Versions -----------------------------*/
+
+void
+PlanningAgent::
+SetPlanVersion(size_t _version) {
+  m_planVersion = _version;
+}
+
+size_t
+PlanningAgent::
+GetPlanVersion() const {
+  return m_planVersion;
+}
+
 /*---------------------------- Planning Helpers ------------------------------*/
 
 void
 PlanningAgent::
 GeneratePlan() {
+  m_planning = true;
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
+  std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
 
-  // Use the planning library to find a path. This works on a copy of the
-  // problem to avoid concurrency issues.
-  MPProblem problemCopy = *m_robot->GetMPProblem();
-  m_library->Solve(&problemCopy, GetTask(), m_solution.get());
+  m_thread = std::thread([this, problemCopy](){
+    this->WorkFunction(problemCopy);
+  });
+
+  // Detach thread so that it automatically joins on completion.
+  m_thread.detach();
 }
 
+void 
+PlanningAgent::
+WorkFunction(std::shared_ptr<MPProblem> _problem) {
+  // TODO: Stop trying to solve if it takes longer than t_max.
+  m_library->Solve(_problem.get(), GetTask(), m_solution.get());
+  m_planning = false;
+}
 /*------------------------------ Task Helpers --------------------------------*/
 
 bool

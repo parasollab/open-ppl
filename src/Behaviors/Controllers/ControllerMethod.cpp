@@ -95,14 +95,17 @@ ControllerMethod::
 Control
 ControllerMethod::
 operator()(const Cfg& _current, const Cfg& _target, const double _dt) {
-  if(m_debug)
-    std::cout << "Computing desired force to go from " << _current << " to "
-              << _target
-              << "\nTarget / Current = " << _target / _current
-              << std::endl;
-
   // Compute the ideal force.
   auto force = this->ComputeDesiredForce(_current, _target, _dt);
+
+  if(m_debug)
+    std::cout << "Computing desired force:"
+              << "\n\tfrom: " << _current.PrettyPrint()
+              << "\n\tto:   " << _target.PrettyPrint()
+              << "\n\tDifference = "
+              << _current.FindDirectionTo(_target).PrettyPrint()
+              << "\n\tDesired F  = " << force
+              << std::endl;
 
   // Return the control that produces the nearest result.
   return this->ComputeNearestControl(_current, std::move(force));

@@ -82,6 +82,12 @@ class Agent {
     MPTask* GetTask() const noexcept;
 
     ///@}
+    ///@name Internal State
+    ///@{
+
+    virtual bool IsChild() const;
+
+    ///@}
     ///@name Disabled Functions
     ///@{
     /// Regular copy/move is disabled because each agent must be created for a
@@ -110,6 +116,33 @@ class Agent {
     /// pre-initialize state.
     virtual void Uninitialize() = 0;
 
+    ///@}
+
+    // TODO: Move all functions below this comment to protected.
+  
+    /// Check for proximity of other robots and return those that lie within
+    /// some threshold.
+    /// @param _distance The distance threshold.
+    /// @return the vector of Robots within the threshold.
+    std::vector<Agent*> ProximityCheck(const double _distance) const;
+
+    ///@name Time Horizon
+    ///@{
+   
+    /// Find agents within a robot's time horizon
+    /// @param _distance The distance theshold for the proximity check.
+    /// @param _tmax The maximum planning time.
+    std::vector<Agent*> TimeHorizonCheck(const double _distance, const size_t _tmax) const;
+    ///@}
+
+    /// Orders The agent to stop itself at its current position.
+    /// @param _steps The number of steps we wish to stop for.
+    void PauseAgent(const size_t _steps);
+ 
+    /// Continue executing the last controls if time remains.
+    /// @return True if we still have time left on the last controls, false if
+    ///         we are done and need new controls.
+    bool ContinueLastControls();
   protected:
 
     /// Find the smallest number of time steps which covers a given time
@@ -121,12 +154,6 @@ class Agent {
     /// Find the smallest time interval which is an integer multiple of the
     /// problem time resolution and larger than the hardware time (if any).
     size_t MinimumSteps() const;
-
-    /// Check for proximity of other robots and return those that lie within
-    /// some threshold.
-    /// @param _distance The distance threshold.
-    /// @return the vector of Robots within the threshold.
-    std::vector<Robot*> ProximityCheck(const double _distance) const;
 
     /// Compare the simulated robot state against some expected value.
     /// @param _expected The expected robot state.
@@ -147,16 +174,11 @@ class Agent {
     ///          completion, but it is not physically realistic.
     virtual void Halt();
 
-    /// Continue executing the last controls if time remains.
-    /// @return True if we still have time left on the last controls, false if
-    ///         we are done and need new controls.
-    bool ContinueLastControls();
-
     /// Execute a set of controls on the simulated robot, and on the hardware if
     /// present.
     /// @param _c The controls to execute.
     /// @param _steps The number of time steps to execute the control.
-    void ExecuteControls(const ControlSet& _c, const size_t _steps);
+    virtual void ExecuteControls(const ControlSet& _c, const size_t _steps);
 
   private:
 

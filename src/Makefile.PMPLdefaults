@@ -325,6 +325,8 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/PathFollowingChildAgent.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableMultiBody.cpp \
@@ -336,8 +338,6 @@ SIM_SRCS := \
   Visualization/Gui/Setup.cpp \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp
-#  Behaviors/Agents/BatteryConstrainedGroup.cpp \
-  Behaviors/Agents/PathFollowingChildAgent.cpp \
 
 ################################################################################
 # PMPL

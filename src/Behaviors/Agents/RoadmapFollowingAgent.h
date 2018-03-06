@@ -41,6 +41,14 @@ class RoadmapFollowingAgent : public PlanningAgent {
     virtual void Uninitialize() override;
 
     ///@}
+    ///@name Planning
+    ///@{
+    
+    virtual bool HasPlan() const override;
+
+    virtual void ClearPlan() override;
+
+    ///@}
 
   protected:
 

@@ -59,6 +59,10 @@ Initialize() {
     m_pmplModel->Configure(currentCfg);
     ConfigureSimulatedPosition(m_pmplModel, m_bulletModel);
   }
+
+  // Zero the model's velocities.
+  m_bulletModel->setBaseVel({0,0,0});
+  m_bulletModel->setBaseOmega({0,0,0});
 }
 
 
@@ -372,7 +376,6 @@ Build() {
 
   // Finalize the multibody.
   m_bulletModel->finalizeMultiDof();
-  m_bulletModel->setBaseVel({0, 0, 0}); // Must happen after finalizeMultiDof().
 
   // Also from Pendulum.cpp:
   // Initialize the internal link transforms.

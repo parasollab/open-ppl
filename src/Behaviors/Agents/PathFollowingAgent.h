@@ -33,13 +33,21 @@ class PathFollowingAgent : public PlanningAgent {
     virtual void Uninitialize() override;
 
     ///@}
+    ///@name Planning
+    ///@{
+    
+    virtual bool HasPlan() const override;
+
+    virtual void ClearPlan() override;
+
+    ///@}
 
   protected:
 
     ///@name Planning Helpers
     ///@{
 
-    virtual void GeneratePlan() override;
+    virtual void WorkFunction(std::shared_ptr<MPProblem> _problem) override;
 
     ///@}
     ///@name Task Helpers

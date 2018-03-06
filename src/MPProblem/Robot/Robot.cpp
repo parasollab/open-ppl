@@ -327,7 +327,7 @@ Robot::
 Step(const double _dt) {
   // Run the agent's decision-making routine. The agent will apply controls as
   // required to execute its decision.
-  if(m_agent)
+  if(m_agent && !m_agent->IsChild())
     m_agent->Step(_dt);
 }
 

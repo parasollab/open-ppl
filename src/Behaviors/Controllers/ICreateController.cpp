@@ -39,30 +39,34 @@ ICreateController::
 std::vector<double>
 ICreateController::
 ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
-  const double xDist = (_target[0] - _current[0]);
-  const double yDist = (_target[1] - _current[1]);
-  const double translateAmt = sqrt(pow(xDist,2) + pow(yDist,2));
-  double rotAmt = atan2(yDist,xDist) - _current[2]*M_PI;
+  /// @TODO Make robot turn/translate at max speed as often as possible, rather
+  ///       than using something proportional to the error.
+  const double x = _target[0] - _current[0],
+               y = _target[1] - _current[1],
+               a = _target[2] - _current[2],
+               translation = std::sqrt(x*x + y*y),
+               preRotation = atan2(y, x)/PI - _current[2];
 
-  // Normalize the rotation to within [-2PI, 2PI].
-  if(rotAmt > PI)
-    rotAmt -= (2 * PI);
-  else if(rotAmt < -PI)
-    rotAmt += (2 * PI);
+  static constexpr double threshold = 1e-4;
 
-  vector<double> RotationAndTranslation;
-  if(abs(rotAmt) > 0.06) {
-    RotationAndTranslation.push_back(0);
-    RotationAndTranslation.push_back(0);
-    RotationAndTranslation.push_back(rotAmt);
+  // If we're still here, we are at the target. Line up with the end Cfg.
+  if(translation <= threshold)
+  {
+    std::cout << "End rotation" << std::endl;
+    return {0, 0, a};
   }
-  else {
-    RotationAndTranslation.push_back(translateAmt);
-    RotationAndTranslation.push_back(0);
-    RotationAndTranslation.push_back(0);
+  // Line up to move towards target.
+  else if(std::abs(preRotation) > threshold)
+  {
+    std::cout << "Pre rotation" << std::endl;
+    return {0, 0, preRotation};
   }
-
-  return RotationAndTranslation;
+  // If we're still here, we are lined up. Go to the target.
+  else
+  {
+    std::cout << "Translation" << std::endl;
+    return {translation, 0, 0};
+  }
 }
 
 /*----------------------------------------------------------------------------*/

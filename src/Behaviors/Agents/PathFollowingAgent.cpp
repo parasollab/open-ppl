@@ -48,24 +48,38 @@ Uninitialize() {
     return;
   PlanningAgent::Uninitialize();
 
+  ClearPlan();
+}
+
+/*--------------------------------- Planning ---------------------------------*/
+
+bool 
+PathFollowingAgent::
+HasPlan() const {
+  return !m_path.empty();
+}
+
+void 
+PathFollowingAgent::
+ClearPlan() {
   m_path.clear();
   m_pathIndex = 0;
 }
 
 /*----------------------------- Planning Helpers -----------------------------*/
 
-void
+void 
 PathFollowingAgent::
-GeneratePlan() {
-  PlanningAgent::GeneratePlan();
-
-  // Extract the path from the solution.
+WorkFunction(std::shared_ptr<MPProblem> _problem) {
+  PlanningAgent::WorkFunction(_problem);
+  
   m_path = m_solution->GetPath()->Cfgs();
   m_pathIndex = 0;
 
   // Throw if PMPL failed to generate a solution.
   if(m_path.empty())
     throw RunTimeException(WHERE, "PMPL failed to produce a solution.");
+
 }
 
 /*------------------------------- Task Helpers -------------------------------*/
@@ -107,16 +121,15 @@ EvaluateTask() {
       if(m_debug)
         std::cout << "Reached the end of the path." << std::endl;
       GetTask()->SetCompleted();
-      m_path.clear();
-      m_pathIndex = 0;
+      ClearPlan();
       SetTask(nullptr);
-      return true;
+      return false;
     }
 
     distance = dm->Distance(current, m_path[m_pathIndex]);
   }
 
-  return false;
+  return true;
 }
 
 

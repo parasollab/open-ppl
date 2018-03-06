@@ -2,6 +2,7 @@
 #define BATTERY_CONSTRAINED_GROUP_H_
 
 #include "Agent.h"
+#include "PlanningAgent.h"
 
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
@@ -33,7 +34,14 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Local Types
     ///@{
 
-    enum Role {Worker, Helper, Charging};
+    enum Role {Worker, Helper, Charging, WaitingForHelp};
+
+    struct PausedTask {
+
+      MPTask* m_task{nullptr};
+      Agent* m_previousOwner{nullptr};
+      size_t m_priority{0};
+    };
 
     ///@}
     ///@name Motion Planning Types
@@ -55,6 +63,7 @@ class BatteryConstrainedGroup : public Agent {
 
     virtual ~BatteryConstrainedGroup();
 
+    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const;
     ///@}
     ///@name Agent Interface
     ///@{
@@ -76,14 +85,13 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The member which is requesting a new task.
     void AssignTask(Agent* const _member);
 
-    /// Decide what to do when some group of robots are facing a potential
-    /// collision. Send a command to each robot in this group to resolve the
+    /// Decide what to do when some group of agents are facing a potential
+    /// collision. Send a command to each agent in this group to resolve the
     /// potential collision.
-    /// @param _robots The robots that are potentially in collision.
-    void ArbitrateCollision(const vector<Robot*>& _robots);
+    void ArbitrateCollision();
 
     ///@}
-
+    
   private:
 
     ///@}
@@ -100,6 +108,13 @@ class BatteryConstrainedGroup : public Agent {
     /// @return The priority of _a.
     size_t GetPriority(Agent* const _a);
 
+    /// Determine if an agent has the highest priority in its proximity group.
+    /// @param _a The member agent to check the priority for.
+    /// @param _group The group of agents near _a.
+    /// @return True if _a has a higher priority than the robots around it,
+    /// False otherwise. 
+    bool IsHighestPriority(Agent* const _a, const vector<Agent*>& _group);
+
     /// Change the role of a group member.
     /// @param _member The member agent.
     /// @param _role The new role for _member.
@@ -108,10 +123,15 @@ class BatteryConstrainedGroup : public Agent {
     /// Get the current role for a group member.
     /// @param _member The member agent.
     /// @return The current role of _member.
-    Role GetRole(Agent* const _member);
+    Role GetRole(Agent* const _member) const;
+
+    /// Determine if the group member is a worker.
+    /// @param _member The member agent.
+    /// @return True if the member is a worker.
+    bool IsWorker(Agent* const _member) const;
 
     /// Get the set of all robots which are currently helpers.
-    std::vector<Robot*>& GetHelpers();
+    std::vector<Agent*> GetHelpers();
 
     /// Get the nearest helper to another group member.
     /// @param _member The target group member.
@@ -130,6 +150,20 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member2 The second member.
     /// @return True if the members are close enough to execute a handoff.
     bool InHandoffProximity(Agent* const _member1, Agent* const _member2);
+
+    /// Update other agents' knowledge about an agent's plan versions.
+    /// @param _member The agent being updated.
+    /// @param _agents The agents within proximity to the updating agent. 
+    void UpdateVersionMap(PlanningAgent* const _member, std::vector<Agent*> _agents);
+
+    /// For each agent in proximity, ensure that its map has an up-to-date
+    /// version for the agent (_member) that may need to replan. 
+    /// @param _member The agent who's version number must be verified for the
+    /// proximity agents.
+    /// @param _agents The proximity agents who's _member version number must be
+    /// checked. 
+    /// @return True if the versions are up-to-date, false otherwise.
+    bool ValidateVersionMap(PlanningAgent* const _member, std::vector<Agent*> _agents);
 
     ///@}
     ///@name Charging Locations
@@ -152,7 +186,30 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The group member.
     /// @return A pointer to the nearest charging location within the threshold,
     ///         or null if none was found.
-    bool IsAtChargingStation(Agent* const _member);
+    bool IsAtChargingLocation(Agent* const _member);
+
+    /// Clears the charging location that a member was previously on before
+    /// going to assist a low-battery worker.
+    /// @param _member The agent that was on the charging location
+    void ClearChargingLocation(Agent* const _member);
+
+    /// Sends the current agent to its nearest charging location.
+    /// @param _member The agent being sent to the charging location.
+    void GoToCharge(Agent* const _member);
+
+    ///@}
+    ///@name Task Management
+    /// Assign a new task to a worker member.
+    /// @param _member The worker member which is requesting a new task.
+    void AssignTaskWorker(Agent* const _member);
+
+    /// Assign a new task to a worker member.
+    /// @param _member The worker member which is requesting a new task.
+    void AssignTaskHelper(Agent* const _member);
+
+    /// Assign a new task to a worker member.
+    /// @param _member The worker member which is requesting a new task.
+    void AssignTaskWaiting(Agent* const _member);
 
     ///@}
 
@@ -182,9 +239,21 @@ class BatteryConstrainedGroup : public Agent {
     /// Map group members to their current role.
     std::unordered_map<Agent*, Role> m_roleMap;
 
+    /// Map group members to their last assigned task;
+    std::list<PausedTask> m_pausedTasks;
+    
+    /// Map worker to assigned helper
+    std::unordered_map<Agent*, Agent*> m_helperMap;
+
     /// Map group members to their initial roles (needed for parsing only).
     std::unordered_map<std::string, Role> m_initialRoles;
 
+    /// Flag determining whether or not the Agents should wait for a helper to
+    /// arrive (handoff) before returning to a charging location. 
+    bool m_handoff{false};
+
+    /// Map agents to their current knowledge of other agents' plan versions.
+    std::unordered_map<Agent*, std::unordered_map<PlanningAgent*, size_t>> m_versionMap;
     ///@}
 
 };

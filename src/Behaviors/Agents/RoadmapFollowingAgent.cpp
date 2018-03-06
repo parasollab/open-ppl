@@ -49,6 +49,21 @@ Uninitialize() {
     return;
   PlanningAgent::Uninitialize();
 
+  ClearPlan();
+}
+
+/*--------------------------------- Planning ---------------------------------*/
+
+bool 
+RoadmapFollowingAgent::
+HasPlan() const {
+  return m_solution->GetPath()->Size() != 0;
+}
+
+void 
+RoadmapFollowingAgent::
+ClearPlan() {
+  m_solution->GetPath()->Clear();
   m_currentSubgoal = VIDIterator();
   m_edge = nullptr;
 }
@@ -83,9 +98,10 @@ EvaluateTask() {
       std::cout << "Reached the end of the path." << std::endl;
     GetTask()->SetCompleted();
     SetTask(nullptr);
+    ClearPlan();
   }
 
-  return complete;
+  return !complete;
 }
 
 

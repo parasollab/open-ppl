@@ -227,7 +227,7 @@ MPTask::Status
 MPTask::
 Evaluate(const std::vector<Cfg>& _p) const {
   // If start constraints are not satisfied, this task is still on deck.
-  if(!EvaluateStartConstraints(_p))
+  if(m_status == OnDeck and !EvaluateStartConstraints(_p))
     return OnDeck;
 
   // If path constraints aren't satisfied, this is an invalid path.
@@ -247,7 +247,10 @@ Evaluate(const std::vector<Cfg>& _p) const {
 bool
 MPTask::
 EvaluateStartConstraints(const std::vector<Cfg>& _p) const {
-  return EvaluateConstraints(_p, m_startConstraints);
+  const bool ok = EvaluateConstraints(_p, m_startConstraints);
+  if(ok and m_status == OnDeck)
+    m_status = InProgress;
+  return ok;
 }
 
 

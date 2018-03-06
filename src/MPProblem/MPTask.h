@@ -182,7 +182,7 @@ class MPTask final {
     /// @TODO Change this to a robot group when that code is ready.
     Robot* m_robot{nullptr};      ///< The robot assigned to this task.
 
-    Status m_status{OnDeck};      ///< The status of the current task.
+    mutable Status m_status{OnDeck};      ///< The status of the current task.
 
     ConstraintSet m_startConstraints;  ///< Req'd to start task.
     ConstraintSet m_pathConstraints;   ///< Req'd during whole task.

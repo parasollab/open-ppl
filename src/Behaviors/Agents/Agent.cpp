@@ -57,6 +57,15 @@ GetTask() const noexcept {
   return m_task;
 }
 
+/*------------------------------ Internal State ------------------------------*/
+
+//TODO: Return true if Agent is a PathFollowingChildAgent, false otherwise.
+bool
+Agent::
+IsChild() const{
+  return false;
+}
+
 /*---------------------------- Simulation Interface --------------------------*/
 
 size_t
@@ -94,7 +103,7 @@ MinimumSteps() const {
 }
 
 
-std::vector<Robot*>
+std::vector<Agent*>
 Agent::
 ProximityCheck(const double _distance) const {
   // TODO: WeightedEuclideanDistance assumes that both robots have identical
@@ -103,7 +112,7 @@ ProximityCheck(const double _distance) const {
   static WeightedEuclideanDistance<PMPLTraits> dm(1,0,0,0);
   auto problem = m_robot->GetMPProblem();
 
-  vector<Robot*> result;
+  vector<Agent*> result;
 
   for(auto& robotPtr : problem->GetRobots()) {
     auto robot = robotPtr.get();
@@ -115,12 +124,42 @@ ProximityCheck(const double _distance) const {
     double distance = dm.Distance(robotPosition, myPosition);
 
     if(distance < _distance){
-      result.push_back(robot);
+      result.push_back(robot->GetAgent());
     }
   }
   return result;
 }
 
+
+/*------------------------------ Time Horizon --------------------------------*/
+
+//TODO: Fill out this function (need to figure out how to consider t_max)
+std::vector<Agent*>
+Agent::
+TimeHorizonCheck(const double _distance, const size_t _tmax) const {
+  /*static WeightedEuclideanDistance<PMPLTraits> dm(1,0,0,0);
+  auto problem = m_robot->GetMPProblem();
+
+  vector<Agent*> result;
+
+  for(auto& robotPtr : problem->GetRobots()) {
+    auto robot = robotPtr.get();
+    if(robot->IsVirtual() or robot == m_robot)
+      continue;
+
+    auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState();
+    auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
+    double distance = dm.Distance(robotPosition, myPosition);
+
+    if(distance < _distance){
+      result.push_back(robot->GetAgent());
+    }
+  }
+  return result;*/
+
+  vector<Agent*> result;
+  return result;
+}
 
 void
 Agent::
@@ -162,6 +201,23 @@ Halt() {
               << std::endl;
 }
 
+void
+Agent::
+PauseAgent(const size_t _steps) {
+  /// @TODO This isn't working quite right. Holonomic robots have no velocity,
+  ///       so this mechanism doesn't work for them.
+  // Set a goal at the current position with 0 velocity.
+  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+  Cfg desired = current;
+  desired.SetLinearVelocity(Vector3d());
+  desired.SetAngularVelocity(Vector3d());
+
+  const size_t steps = std::max(_steps, MinimumSteps());
+  auto emptyControl = m_robot->GetController()->operator()(current, desired,
+      m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes() * steps);
+
+  ExecuteControls({emptyControl}, steps);
+}
 
 bool
 Agent::
