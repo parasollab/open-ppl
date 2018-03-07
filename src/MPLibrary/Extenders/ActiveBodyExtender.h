@@ -305,6 +305,18 @@ ExpandSubassembly(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   int ticker = 0;
   const unsigned int refBodyNum = m_activeBodies[0]; // The body rotated about.
 
+  ///@TODO move this sanity checking to DisassemblyMethod::Initialize probably.
+  MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
+  const unsigned int numBodies = mb->GetNumBodies();
+  const unsigned int posDofsPerBody = mb->PosDOF();
+  const unsigned int oriDofsPerBody = mb->OrientationDOF();
+  const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
+
+  // A little bit of sanity checking:
+  if((dofsPerBody * numBodies) != mb->DOF() ||
+     (posDofsPerBody + oriDofsPerBody) != dofsPerBody)
+    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
+
   mathtool::Orientation rotation;
   int nTicks = GetCompositeIncrAndRot(_start, _end, incr, incrUntouched, rotation,
                              _posRes, _oriRes);
@@ -345,21 +357,23 @@ ExpandSubassembly(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
 
     // rotation is the rotation delta for m_activeBodies[0] by incr, then
     // gets applied to each body ABOUT m_activeBodies[0].
-    tick = RotateCfgAboutBody<MPTraits>(m_activeBodies, tick, rotation, this->m_debug);
+    tick = RotateCfgAboutBody<MPTraits>(m_activeBodies, tick, rotation,
+                                        dofsPerBody, this->m_debug);
 
     if(this->m_debug) {
       std::cout << "tick after rotation = " << tick.PrettyPrint(6) << std::endl
                 << "Interpolated dofs for first active body (body " << refBodyNum
                 << ") =" << std::endl << "{ ";
       const CfgType interpCfg = _start + incrUntouched * (ticker + 1);
-      for(unsigned int i = 0; i < 5; ++i)
-        std::cout << interpCfg[refBodyNum*6 + i] << ", ";
-      std::cout << interpCfg[refBodyNum*6 + 5] << " }" << std::endl
-                << "Same dofs from tick (should match closely) = "
+      for(unsigned int i = 0; i < dofsPerBody-1; ++i)
+        std::cout << interpCfg[refBodyNum*dofsPerBody + i] << ", ";
+      std::cout << interpCfg[refBodyNum*dofsPerBody + dofsPerBody-1] << " }"
+                << std::endl << "Same dofs from tick (should match closely) = "
                 << std::endl << "{ ";
-      for(unsigned int i = 0; i < 5; ++i)
-        std::cout << tick[refBodyNum*6 + i] << ", ";
-      std::cout << tick[refBodyNum*6 + 5] << " }" << std::endl << std::endl;
+      for(unsigned int i = 0; i < dofsPerBody-1; ++i)
+        std::cout << tick[refBodyNum*dofsPerBody + i] << ", ";
+      std::cout << tick[refBodyNum*dofsPerBody + dofsPerBody-1] << " }"
+                << std::endl << std::endl;
     }
 
     if(!tick.InBounds(env->GetBoundary()) || !(vc->IsValid(tick, _cdInfo, callee)))
@@ -417,6 +431,10 @@ ActiveBodyExtender<MPTraits>::
 GetCompositeIncrAndRot(const CfgType& _cfg, const CfgType& _target, CfgType& _incr,
               CfgType& _incrUntouched, mathtool::Orientation& _rotation,
               const double _posRes, const double _oriRes) {
+  MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
+  const unsigned int posDofsPerBody = mb->PosDOF();
+  const unsigned int dofsPerBody = posDofsPerBody + mb->OrientationDOF();
+
   //This function returns (via references) the incr with the delta translation
   // for the rotated-about body placed into each translation component for _incr
   //_rotation will hold the rotation delta that FindIncrement finds for the
@@ -444,13 +462,14 @@ GetCompositeIncrAndRot(const CfgType& _cfg, const CfgType& _target, CfgType& _in
   /// but the Euler angle deltas are way off (only when using only 1 part?).
 
 
+  ///@TODO This should be able to use GroupUtils::OverwriteDofsFromBodies().
   //Now remove the rotational bits, as incr should only do the
   // translation and then RotateCfgAboutBody() will handle all rotations:
   _incr = CfgType(this->GetTask()->GetRobot()); // Ensure zeroed out.
   for(const unsigned int body : m_activeBodies) {
     //Copy translation of main body to translation dofs for other active bodies.
-    for(unsigned int i = 0; i < 3; ++i)
-      _incr[body*6 + i] = _incrUntouched[refBodyNum*6 + i];
+    for(unsigned int i = 0; i < posDofsPerBody; ++i)
+      _incr[body*dofsPerBody + i] = _incrUntouched[refBodyNum*dofsPerBody + i];
   }
   return nTicks;
 }

@@ -137,13 +137,16 @@ IsConnectedFunc(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   const string callee = this->GetNameAndLabel() + "::IsConnectedFunc";
 
   const unsigned int refBodyNum = m_activeBodies[0]; // The body rotated about.
+  const unsigned int posDofsPerBody = incr.PosDOF();
+  const unsigned int dofsPerBody = posDofsPerBody + incr.OriDOF();
+
+  ///@TODO Set this to false to have single parts treated (less
+  ///      efficiently) as multiple parts, which SHOULD be identical.
   const bool multipleParts = m_activeBodies.size() > 1;
 
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
   mathtool::Orientation rotation;
 
-  ///@TODO comment this condition to have single parts treated (less
-  ///      efficiently) as multiple parts, which SHOULD be identical.
   if(multipleParts) {
     incr.GetMultiBody()->Configure(incr); //To get correct transformation
     //Note that m_activeBodies[0] is the body to rotate about (vector is sorted)
@@ -153,42 +156,40 @@ IsConnectedFunc(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
     //Now remove the rotational bits, as incr should only do the
     // translation and then RotateCfgAboutBody() will handle all rotations:
-    for(unsigned int body : m_activeBodies) {
+    for(const unsigned int body : m_activeBodies) {
       //Copy translation of main body to all components for other bodies
-      for(unsigned int i = 0; i < 3; ++i)
-        incr[body*6 + i] = incr[refBodyNum*6 + i];
+      for(unsigned int i = 0; i < posDofsPerBody; ++i)
+        incr[body*dofsPerBody + i] = incr[refBodyNum*dofsPerBody + i];
 
       //Zero out all rotations:
-      for(unsigned int i = 3; i < 6; ++i)
-        incr[body*6 + i] = 0.;
+      for(unsigned int i = posDofsPerBody; i < dofsPerBody; ++i)
+        incr[body*dofsPerBody + i] = 0.;
     }
   }
 
   int nIter = 0;
-  for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
+  for(int i = 1; i < nTicks; ++i) { //don't need to check the ends, _c1 and _c2
     previous = tick;
     tick += incr;
-    ///@TODO comment this condition to have single parts treated (less
-    ///      efficiently) as multiple parts, which SHOULD be identical.
-    if(multipleParts) //Handle subassembly rotation correctly.
-      tick = RotateCfgAboutBody<MPTraits>(m_activeBodies, tick, rotation);
 
-    cdCounter++;
+    if(multipleParts) //Handle subassembly rotation correctly.
+      tick = RotateCfgAboutBody<MPTraits>(m_activeBodies, tick, rotation,
+                                          dofsPerBody, this->m_debug);
+    ++cdCounter;
     if(_checkCollision){
       if(!tick.InBounds(env->GetBoundary()) || !vc->IsValid(tick, callee)) {
         if(tick.InBounds(env->GetBoundary()))
           _col = tick;
-        //tick = previous;
         _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight() + nIter);
         _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight() + nIter);
         connected = false;
         break;
       }
     }
-    if(_savePath) {
+
+    if(_savePath)
       _lpOutput->m_path.push_back(tick);
-    }
-    nIter++;
+    ++nIter;
   }
   _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight() + nIter);
   _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight() + nIter);

@@ -67,8 +67,8 @@ class MatingSphereSampler : public MaskedSamplerMethod<MPTraits> {
 
     std::vector<CfgType> m_samples; ///< list with all computed samples
     size_t m_numNodes = 0;     ///< number of samples of the last computation
-    double m_pi = M_PI;
-    double m_twoPi = M_PI * 2;
+    const double m_pi = M_PI;
+    const double m_twoPi = M_PI * 2;
     double m_dist;
 
     ///@}
@@ -106,9 +106,22 @@ template <typename MPTraits>
 void
 MatingSphereSampler<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _result, OutputIterator _collision) {
+       OutputIterator _result, OutputIterator _collision) {
   if(this->m_debug)
     cout << this->GetNameAndLabel() << "::Sample()" << endl;
+
+  ///@TODO: For now I'm assuming that the bodies all have the same dofsPerBody,
+  ///       this should be updated to be arbitrary in the future.
+  MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
+  const unsigned int numBodies = mb->GetNumBodies();
+  const unsigned int dofsPerBody = mb->DOF() / numBodies;
+  const unsigned int posDofsPerBody = mb->PosDOF();
+  const unsigned int oriDofsPerBody = mb->OrientationDOF();
+
+  // A little bit of sanity checking:
+  if((dofsPerBody * numBodies) != mb->DOF() ||
+     (posDofsPerBody + oriDofsPerBody) != dofsPerBody)
+    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
 
   // compute the samples only once, if the number of nodes keeps the same
   if (_numNodes != m_numNodes || m_samples.empty()) {
@@ -128,14 +141,15 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
         Vector3d vec;
         vec[0] = cos(theta) * sin(phi);
         vec[1] = sin(theta) * sin(phi);
-        vec[2] = cos(phi);
+        if(posDofsPerBody == 3)
+          vec[2] = cos(phi); // Only need this if Volumetric
         // normalize and multiply with distance r
         vec.selfNormalize();
         vec *= m_dist;
         CfgType cfg = this->m_startCfg; //Start it at the start cfg, then extend
         for(size_t i = 0; i < robot->GetMultiBody()->GetNumBodies(); i++) {
-          for(size_t j = 0; j < 3; j++) {
-            cfg[(i*6) + j] += vec[j]; //Add in dof component, don't set it.
+          for(size_t j = 0; j < posDofsPerBody; j++) {
+            cfg[(i*dofsPerBody) + j] += vec[j]; //Add in dof component, not set.
           }
         }
         // check sample for collision/OOB

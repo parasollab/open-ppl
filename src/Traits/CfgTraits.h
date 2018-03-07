@@ -10,6 +10,7 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+#include "MPLibrary/DistanceMetrics/ActiveBodyEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
 #include "MPLibrary/DistanceMetrics/CenterOfMassDistance.h"
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
@@ -185,6 +186,7 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    ActiveBodyEuclideanDistance<MPTraits>,
     BinaryLPSweptDistance<MPTraits>,
     CenterOfMassDistance<MPTraits>,
     EuclideanDistance<MPTraits>,

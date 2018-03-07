@@ -172,22 +172,23 @@ InitializeDOFs(const Boundary* const _b) {
   //Add dofs of multiple free bodies without connections for composite C-Spaces.
   if (IsComposite()) {
     for (size_t i = 1; i < m_bodies.size(); ++i) {
+      const string bodStr = "Body " + to_string(i) + " ";
       if(m_bodies[i].GetBodyType() == Body::Type::Planar) {
-        m_dofInfo.emplace_back("Base X Translation ", position, _b->GetRange(0));
-        m_dofInfo.emplace_back("Base Y Translation ", position, _b->GetRange(1));
+        m_dofInfo.emplace_back(bodStr + "X Translation ", position, _b->GetRange(0));
+        m_dofInfo.emplace_back(bodStr + "Y Translation ", position, _b->GetRange(1));
 
         if(m_bodies[i].GetMovementType() == Body::MovementType::Rotational)
-          m_dofInfo.emplace_back("Base Rotation ", rotation, full);
+          m_dofInfo.emplace_back(bodStr + "Rotation ", rotation, full);
       }
       else if(m_bodies[i].GetBodyType() == Body::Type::Volumetric) {
-        m_dofInfo.emplace_back("Base X Translation ", position, _b->GetRange(0));
-        m_dofInfo.emplace_back("Base Y Translation ", position, _b->GetRange(1));
-        m_dofInfo.emplace_back("Base Z Translation ", position, _b->GetRange(2));
+        m_dofInfo.emplace_back(bodStr + "X Translation ", position, _b->GetRange(0));
+        m_dofInfo.emplace_back(bodStr + "Y Translation ", position, _b->GetRange(1));
+        m_dofInfo.emplace_back(bodStr + "Z Translation ", position, _b->GetRange(2));
 
         if(m_bodies[i].GetMovementType() == Body::MovementType::Rotational) {
-          m_dofInfo.emplace_back("Base X Rotation ", rotation, full);
-          m_dofInfo.emplace_back("Base Y Rotation ", rotation, full);
-          m_dofInfo.emplace_back("Base Z Rotation ", rotation, full);
+          m_dofInfo.emplace_back(bodStr + "X Rotation ", rotation, full);
+          m_dofInfo.emplace_back(bodStr + "Y Rotation ", rotation, full);
+          m_dofInfo.emplace_back(bodStr + "Z Rotation ", rotation, full);
         }
       }
     }
@@ -298,6 +299,7 @@ IsComposite() const noexcept {
 size_t
 MultiBody::
 DOF() const noexcept {
+  ///@warning For assembly planning this returns a total DOF count.
   return m_dofInfo.size();
 }
 
@@ -305,6 +307,7 @@ DOF() const noexcept {
 size_t
 MultiBody::
 PosDOF() const noexcept {
+  ///@warning For assembly planning this returns a "per body" DOF count.
   switch(m_baseType) {
     case Body::Type::Planar:
       return 2;
@@ -319,6 +322,7 @@ PosDOF() const noexcept {
 size_t
 MultiBody::
 OrientationDOF() const noexcept {
+  ///@warning For assembly planning this returns a "per body" DOF count.
   if(m_baseMovement != Body::MovementType::Rotational)
     return 0;
   else
@@ -687,8 +691,15 @@ Configure(const vector<double>& _v) {
   }
 
   // configure remaining free bodies, if this is a composite body
-  if(IsComposite())
+  if (IsComposite()) {
+    // Note: index is the #dofs for the first body.
+    const bool isUniformDOFs = (_v.size() % index) == 0;
+    if(!isUniformDOFs)
+      throw RunTimeException(WHERE, "Composite CSpaces must currently have "
+          "uniform dofs for each body! #DOFs provided = " + to_string(_v.size())
+          + ", #DOFs for first body = " + to_string(index));
     FinishConfigureCompositeBody(_v, index);
+  }
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -728,8 +739,15 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
   }
 
   // configure remaining free bodies, if this is a composite body
-  if (IsComposite())
+  if (IsComposite()) {
+    // Note: index is the #dofs for the first body.
+    const bool isUniformDOFs = (_v.size() % index) != 0;
+    if(!isUniformDOFs)
+      throw RunTimeException(WHERE, "Composite CSpaces must currently have "
+          "uniform dofs for each body! #DOFs provided = " + to_string(_v.size())
+          + ", #DOFs for first body = " + to_string(index));
     FinishConfigureCompositeBody(_v, index);
+  }
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -759,7 +777,7 @@ MultiBody::
 FinishConfigureCompositeBody(const std::vector<double>& _v, int& _index) {
   // This configures all but the base body for composite bodies. It updates
   // the index that tracks which dofs in _v are accounted for.
-  for (size_t i = 0; i < m_bodies.size(); ++i) {
+  for(size_t i = 0; i < m_bodies.size(); ++i) {
     if(i == m_baseIndex)
       continue;
     Body* const part = &m_bodies[i];

@@ -342,8 +342,8 @@ IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
     bool coll = false; // Start as false, then if set true it can't turn back.
     for(unsigned int j = 0; j < _obst->GetNumBodies(); ++j) {
-      coll = coll || m_cdMethod->
-                     IsInCollision(_rob->GetBody(i), _obst->GetBody(j), cdInfo);
+      coll |= m_cdMethod->IsInCollision(_rob->GetBody(i), _obst->GetBody(j),
+                                        cdInfo);
 
       //retain minimum distance information
       if(cdInfo < _cdInfo)

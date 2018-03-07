@@ -20,6 +20,7 @@ class SpecificBodyCollisionValidity : public CollisionDetectionValidity<MPTraits
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename std::vector<unsigned int> Subassembly;
 
     ///@}
     ///@name Construction
@@ -81,7 +82,7 @@ class SpecificBodyCollisionValidity : public CollisionDetectionValidity<MPTraits
     /// The body numbers represent which bodies don't need to be checked, with
     /// respect to each other. This means that each body included will be
     /// checked against all those not included and all obstacles.
-    vector<unsigned int> m_bodyNumbers;
+    Subassembly m_bodyNumbers;
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -114,7 +115,7 @@ template <typename MPTraits>
 bool
 SpecificBodyCollisionValidity<MPTraits>::
 IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName,
-    const vector<unsigned int>& _bodyNumbers) {
+            const vector<unsigned int>& _bodyNumbers) {
   SetBodyNumbers(_bodyNumbers);
   return IsValidImpl(_cfg, _cdInfo, _callName);
 }
@@ -220,6 +221,11 @@ IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
     movingBodies = m_bodyNumbers;
   }
 
+  if(this->m_debug)
+    std::cout << "Going to do an all-to-all CD check between the following 2 "
+              "sets of robot bodies:" << std::endl << "Moving bodies: "
+              << movingBodies << "Other bodies: " << otherBodies << std::endl;
+
   bool collision = false;
   _cdInfo.m_selfClearance.resize(numBody, numeric_limits<double>::max());
   for(const unsigned int i : movingBodies) {
@@ -275,8 +281,8 @@ IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
     bool coll = false;
     for(unsigned int j = 0; j < _obst->GetNumBodies(); ++j) {
-      coll = coll || this->m_cdMethod->
-                     IsInCollision(_rob->GetBody(i), _obst->GetBody(j), cdInfo);
+      coll = this->m_cdMethod->IsInCollision(
+                           _rob->GetBody(i), _obst->GetBody(j), cdInfo) || coll;
 
       //retain minimum distance information
       if(cdInfo < _cdInfo)

@@ -54,6 +54,8 @@ class MinimumClearanceEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     ///@}
 
+    double GetMinDist() { return m_minDist; }
+
   private:
     bool TestCfg(CfgType &_cfg);
 

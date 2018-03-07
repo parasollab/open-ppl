@@ -88,15 +88,15 @@ void
 DisassemblyParallelizedSAs<MPTraits>::
 Iterate() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Iterate()" << endl;
+    std::cout << this->GetNameAndLabel() << "::Iterate()" << endl;
 
   auto stats = this->GetStatClass();
-  const static string tempClockName = "Temporary timer for each SA removal";
-  const static string initialRemovalClockName =
+  const string tempClockName = "Temporary timer for each SA removal";
+  const string initialRemovalClockName =
                                             "Initial subassembly removal time";
 
   if (!m_lastNode && !m_disNodes.empty()) { // check if disassembly is complete
-    cout << endl << endl << "Disassembling complete!" << endl << endl;
+    std::cout << endl << endl << "Disassembling complete!" << endl << endl;
     this->m_successful = true;
     const double initialTime = stats->GetSeconds(initialRemovalClockName);
     stats->SetStat("Total time for in-parallel removal",
@@ -129,7 +129,8 @@ Iterate() {
         // so printing a message will be the most helpful.
         if(this->m_debug)
           std::cout << "Warning! Removing the subassembly " << sub
-                    << " failed in the initial step!!!" << std::endl;
+                    << " failed in the initial step!!!" << std::endl
+                    << std::endl;
       }
       node = SelectExpansionNode();//Update to the newly generated node, repeat.
     }
@@ -183,7 +184,7 @@ typename DisassemblyParallelizedSAs<MPTraits>::DisassemblyNode*
 DisassemblyParallelizedSAs<MPTraits>::
 SelectExpansionNode() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectExpansionCfg()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectExpansionCfg()" << endl;
 
   // check if first iteration
   if (m_disNodes.empty()) {
@@ -232,7 +233,7 @@ vector<unsigned int>
 DisassemblyParallelizedSAs<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
 
   return Subassembly();
 }
@@ -244,7 +245,7 @@ Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
   if (_subassembly.empty())
     return make_pair(false, vector<CfgType>());
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Expand with Subassembly: "
+    std::cout << this->GetNameAndLabel() << "::Expand with Subassembly: "
          << _subassembly << endl;
 
   VID newVID;

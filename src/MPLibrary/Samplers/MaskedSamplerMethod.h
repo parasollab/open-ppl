@@ -27,7 +27,7 @@
 /// @code
 /// size_t num, attempts;
 /// Boundary* bounds;
-/// vector<CfgType> result;
+/// vector<Cfg> result;
 /// auto s = this->GetSampler(m_sLabel);
 /// s->Sample(num, attempts, bounds, back_inserter(result));
 /// @endcode
@@ -37,7 +37,7 @@
 ///
 /// @usage
 /// @code
-/// vector<CfgType> input, result;
+/// vector<Cfg> input, result;
 /// size_t attempts;
 /// Boundary* bounds;
 /// auto s = this->GetSampler(m_sLabel);
@@ -50,7 +50,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 #ifdef _PARALLEL
-class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
+class SamplerMethod : public MPBaseObject<MPTraits> {
 #else
 class MaskedSamplerMethod : public SamplerMethod<MPTraits> {
 #endif
@@ -63,6 +63,7 @@ class MaskedSamplerMethod : public SamplerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename std::vector<CfgType>::iterator InputIterator;
     typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
+    typedef typename std::vector<unsigned int> Subassembly;
 
     ///@}
     ///@name Construction
@@ -110,21 +111,27 @@ class MaskedSamplerMethod : public SamplerMethod<MPTraits> {
     void MaskCfgs(std::vector<Cfg>& _input);
 
     /// Sets mask to default mask (all true values) of the same size.
-    void ClearMask();
+    unsigned int ClearMask();
 
     /// Accessing functions:
-    const std::vector<bool>& GetMask() const;
+    const std::vector<bool>& GetMask() const { return m_currentMask; };
     void SetMask(const std::vector<bool>& _mask);
-    void SetMask(const CfgType& _cfgMask);
+    void SetMask(const Cfg& _cfgMask);
 
-    void SetStartCfg(const CfgType& _cfg) { m_startCfg = _cfg; }
+    void SetStartCfg(const Cfg& _cfg) { m_startCfg = _cfg; }
+    const Cfg& GetStartCfg() { return m_startCfg; }
 
     //It is the responsibility of the strategy to set this correctly.
-    unsigned int GetLastRotAboutBody() { return m_lastRotAboutBody; }
+    unsigned int GetLastSamplesLeaderBody() { return m_lastSamplesLeaderBody; }
 
-    bool GetUseOnlyPosDofs() { return m_onlyPositionalDOFs; }
-    void SetMaskByBodyList(const std::vector<unsigned int>& _bodyList,
-                           const bool _onlyPositionalDOFs = false);
+    void SetMaskByBodyList(const std::vector<unsigned int>& _bodyList);
+
+    Subassembly GetActiveBodies() { return m_bodyList; }
+
+    /// Verify that, given the set mask and startCfg, the cfg generated has been
+    /// properly created.
+    bool VerifyCfg(const Cfg& _input);
+
     ///@}
 
   protected:
@@ -138,8 +145,8 @@ class MaskedSamplerMethod : public SamplerMethod<MPTraits> {
     /// @param[in] _boundary The sampling boundary.
     /// @param[out] _result The resulting output configurations.
     /// @param[out] _collision The (optional) return for failed attempts.
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) = 0;
+    virtual bool Sampler(Cfg& _cfg, const Boundary* const _boundary,
+        vector<Cfg>& _result, vector<Cfg>& _collision) = 0;
 
     ///@}
 
@@ -148,20 +155,16 @@ class MaskedSamplerMethod : public SamplerMethod<MPTraits> {
     /// (marks it as an "active body").
     std::vector<bool> m_currentMask;
 
-    //TODO: This should change into getting extracted from the body (so that
-    // whatever is set ("translational", "volumetric", "planar", etc...) is used.
-    bool m_onlyPositionalDOFs = false;
-
-    //Body numbers of the masking. Only updated in SetMaskByBodyList!
-    vector<unsigned int> m_bodyList;
+    //Body numbers of the masking. Only updated in SetMaskByBodyList().
+    std::vector<unsigned int> m_bodyList;//TODO rename to active bodies
 
     //This is the cfg that has all the default values for dofs that
     // are to be masked. Not formally needed by MaskedRoadmapExtenderSampler.
-    CfgType m_startCfg;
+    Cfg m_startCfg;
 
     // Since the sampler determines which body is rotated about, this provides
     // access to which body was chosen.
-    unsigned int m_lastRotAboutBody;
+    unsigned int m_lastSamplesLeaderBody;
 
     /// Helper function that masks a single cfg. Not public as it's meant to be
     /// called from MaskCfgs().
@@ -189,27 +192,45 @@ Initialize() {
 template <typename MPTraits>
 void
 MaskedSamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts,
-    const Boundary* const _boundary,
-    OutputIterator _result, OutputIterator _collision) {
+Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
+       OutputIterator _result, OutputIterator _collision) {
+
+
+  //No sampler should be using this Sample() right now.
+  throw RunTimeException(WHERE, "Don't use this sampler, it needs to be "
+        "reevaluated (it's a bad choice given the large environments we plan in "
+        "for disassembly)");
+
+
   // Sample as normal:
   for(size_t i = 0; i < _numNodes; ++i) {
-    CfgType cfg(this->GetTask()->GetRobot());
+    Cfg cfg(this->GetTask()->GetRobot());
 
     //If only doing translation, MaskCfgs() handles removing orientation:
     cfg.GetRandomCfg(_boundary);
 
-    if(m_startCfg != this->GetRoadmap()->GetGraph()->GetVertex(0))
-      throw RunTimeException(WHERE, "startCfg didn't equal root cfg as expected!");
+//    if(m_startCfg != this->GetRoadmap()->GetGraph()->GetVertex(0))
+//      throw RunTimeException(WHERE, "startCfg didn't equal root cfg as expected!");
 
     //TODO: make it so this is scaled to the max extension distance or half it or something.
     cfg /= 30.;//Otherwise rotations will barely show up due to large environments
 
+
+
+
+    //TODO: I should restructure the samplers here! Make cfg always start at the startcfg
+    //        then it's up to Sampler() to modify it. Then I can remove ProximitySampler's Sample().
+
+
+
+
+
+
     //Add in the root offset, so the parts aren't on top of each other:
     cfg += m_startCfg;
 
-    vector<CfgType> result;
-    vector<CfgType> collision;
+    vector<Cfg> result;
+    vector<Cfg> collision;
     //Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
@@ -225,7 +246,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
 
     if(this->m_debug) {
       std::cout << "MaskedSamplerMethod::Sample result = "
-              << nonstd::print_container(result) << std::endl;
+                << nonstd::print_container(result) << std::endl;
     }
   }
 }
@@ -235,7 +256,7 @@ void
 MaskedSamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
         const Boundary* const _boundary, OutputIterator _result) {
-  vector<CfgType> collision;
+  vector<Cfg> collision;
 
   Sample(_numNodes, _maxAttempts, _boundary, _result, back_inserter(collision));
 }
@@ -255,6 +276,38 @@ SampleMask(size_t _numNodes, size_t _maxAttempts,
 
 
 template <typename MPTraits>
+bool
+MaskedSamplerMethod<MPTraits>::
+VerifyCfg(const Cfg& _input) {
+  if(find(m_bodyList.begin(), m_bodyList.end(), m_lastSamplesLeaderBody)
+                                               == m_bodyList.end())
+    return false;
+
+    //Note the following check is not strictly valid for angular motion:
+    const MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
+    const unsigned int numBodies = mb->GetNumBodies();
+    const unsigned int dofsPerBody = mb->PosDOF() + mb->OrientationDOF();
+    const Cfg offsetCfg = _input - m_startCfg;
+    for(unsigned int bodyNum = 0; bodyNum < numBodies; ++bodyNum) {
+      //If the body is found in m_bodyList, it's validly moving.
+      const bool isMovingBody = find(m_bodyList.begin(), m_bodyList.end(),
+                                                 bodyNum) != m_bodyList.end();
+      for(unsigned int dofNum = 0; dofNum < dofsPerBody; ++dofNum) {
+        if(!isMovingBody && abs(offsetCfg[bodyNum*dofsPerBody + dofNum]) > 1e-10) {
+          std::cout << "Error reached, the start cfg in the sampler is:"
+                    << std::endl << m_startCfg.PrettyPrint() << std::endl
+                    << "Offset cfg = " << offsetCfg.PrettyPrint() << std::endl;
+          return false;
+        }
+    }
+  }
+
+  std::cout << "Verified cfg = " << _input.PrettyPrint() << std::endl;
+  return true;
+}
+
+
+template <typename MPTraits>
 void
 MaskedSamplerMethod<MPTraits>::
 MaskCfg(Cfg& _input) {
@@ -265,6 +318,10 @@ MaskCfg(Cfg& _input) {
   for(size_t i = 0; i < _input.DOF(); i++)
     if(!m_currentMask[i])
       _input[i] = m_startCfg[i];
+
+  if(this->m_debug)
+    if(!VerifyCfg(_input))
+      throw RunTimeException(WHERE, "Generated an improper cfg!");
 }
 
 
@@ -277,25 +334,22 @@ MaskCfgs(std::vector<Cfg>& _input) {
               << std::endl << m_currentMask << std::endl;
 
   //Mask each cfg in _input, recording whether it was successful or not.
-  for(CfgType& sample : _input)
+  for(Cfg& sample : _input)
     MaskCfg(sample);
 }
 
 
 template <typename MPTraits>
-void
+unsigned int
 MaskedSamplerMethod<MPTraits>::
 ClearMask() {
-  CfgType temp(this->GetTask()->GetRobot());
+  //Return the dofs per body that it sized itself on (note the total size of DOF
+  // is number of bodies * dofs per body, we just return dofs per body of this mb)
+  const MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
   m_currentMask.clear(); // Since resize only sets values for new elements.
-  m_currentMask.resize(temp.DOF(), false);
-}
+  m_currentMask.resize(mb->DOF(), false);
 
-template <typename MPTraits>
-const std::vector<bool>&
-MaskedSamplerMethod<MPTraits>::
-GetMask() const {
-  return m_currentMask;
+  return (mb->PosDOF() + mb->OrientationDOF());
 }
 
 template <typename MPTraits>
@@ -308,8 +362,7 @@ SetMask(const std::vector<bool>& _mask) {
 template <typename MPTraits>
 void
 MaskedSamplerMethod<MPTraits>::
-SetMask(const CfgType& _cfgMask) {
-  std::vector<double> temp;
+SetMask(const Cfg& _cfgMask) {
   for(bool bit : _cfgMask.GetData())
     m_currentMask  = (bit > 0 ? true : false);//assume >0 is 1, <=0 is a 0.
 }
@@ -317,20 +370,15 @@ SetMask(const CfgType& _cfgMask) {
 template <typename MPTraits>
 void
 MaskedSamplerMethod<MPTraits>::
-SetMaskByBodyList(const std::vector<unsigned int>& _bodyList,
-                  const bool _onlyPositionalDOFs) {
-  const unsigned int dofsPerBody = 6;
-  unsigned int dofsUsedPerBody;
-  m_bodyList = _bodyList;
-  m_onlyPositionalDOFs = _onlyPositionalDOFs;
-  if(_onlyPositionalDOFs)
-    dofsUsedPerBody = 3;
-  else
-    dofsUsedPerBody = 6;
+SetMaskByBodyList(const std::vector<unsigned int>& _bodyList) {
+  ///@TODO _dofsPerBody isn't strictly needed, consider getting from Task's
+  ///      robot's multibody instead.
 
-  ClearMask();
-  for(auto& bodyNum : _bodyList)
-    for(std::size_t i = 0; i < dofsUsedPerBody; i++)
+  // Resize mask based on this Task's robot, returns the dofs per body.
+  const unsigned int dofsPerBody = ClearMask();
+  m_bodyList = _bodyList;
+  for(const unsigned int bodyNum : _bodyList)
+    for(std::size_t i = 0; i < dofsPerBody; ++i)
       m_currentMask[bodyNum*dofsPerBody + i] = true;
 
   if(this->m_debug)

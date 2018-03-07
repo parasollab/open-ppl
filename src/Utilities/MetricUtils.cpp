@@ -62,16 +62,16 @@ PrintClock(std::ostream& _os) {
   _os << m_clockName << ": " << GetSeconds() << " sec" <<endl;
 }
 
-
 double
 ClockClass::
-GetSeconds() {
+GetSeconds() const {
   return (double)m_uuTime/1e6+m_uTime;
 }
 
+
 int
 ClockClass::
-GetUSeconds() {
+GetUSeconds() const {
   return (int)(m_uTime * 1e6 + m_uuTime);
 }
 

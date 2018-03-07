@@ -49,10 +49,10 @@ class ClockClass {
     void PrintClock(std::ostream& _os);
 
     /// Get the recorded time in seconds.
-    double GetSeconds();
+    double GetSeconds() const;
 
     /// Get the recorded time in microseconds.
-    int GetUSeconds();
+    int GetUSeconds() const;
 
   private:
 

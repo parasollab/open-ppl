@@ -44,6 +44,8 @@ class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
     DisassemblyNode* m_lastNode{nullptr};
     VID m_qInitVid{0};
 
+    Subassembly m_sub;
+
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
     using DisassemblyMethod<MPTraits>::m_robot;
@@ -97,14 +99,16 @@ Iterate() {
     return;
   }
 
-  Subassembly sub = SelectSubassembly(m_lastNode);
+  m_sub = SelectSubassembly(m_lastNode);
 
   if(this->m_debug)
-    std::cout << "Thanh Le Expanding with sub = " << sub << std::endl;
+    std::cout << "Thanh Le Expanding with sub = " << m_sub << std::endl
+              << "And remaining parts = " << m_lastNode->GetCompletePartList()
+              << std::endl;
 
   VID newVid = 0;
   const vector<CfgType> path =
-      this->ExpandRRTApproach(m_qInitVid, sub, newVid, this->m_useRotations);
+      this->ExpandRRTApproach(m_qInitVid, m_sub, newVid);
 
   //NOTE: we will usually update the cfg for RRT to expand from, but we only
   // create DT nodes if a part was actually removed.
@@ -114,7 +118,14 @@ Iterate() {
       std::cout << "Successful removal!" << std::endl;
     //Whatever VID is put in needs to be set as the next node to start from.
     std::vector< std::vector<CfgType> > removingPaths = {path};
-    m_lastNode = this->GenerateNode(m_lastNode, sub, removingPaths, false);
+
+    /// TODO: See if this works:
+    /// here I should set the m_lastNode.vid = newVid, then when the new node
+    /// is generated, this will keep the progress!
+    m_lastNode->vid = newVid; // So that the new node keeps any other parts' progress from the rrt.
+
+
+    m_lastNode = this->GenerateNode(m_lastNode, m_sub, removingPaths, false);
     m_qInitVid = m_lastNode->vid;
   }
   else if(newVid != 0) {
@@ -153,12 +164,23 @@ vector<unsigned int>
 DisassemblyThanhLe<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
   // check count of initialParts and return empty Subassembly if empty
   if (_q->initialParts.empty()) {
-    cout << "initialParts are empty!" << endl;
+    std::cout << "initialParts are empty!" << std::endl;
     return Subassembly();
+  }
+
+  ///@TODO: Try returning parts sequentially!!! Also fix node generation so that
+  ///       it isn't resetting some of the partial rrt progress (not sure exactly
+  ///       why it even is though...)
+  static unsigned int lastIndexTried = _q->initialParts.size();
+  if(lastIndexTried > 1 && lastIndexTried <= _q->initialParts.size())
+    return Subassembly({_q->initialParts[--lastIndexTried]});
+  else {
+    lastIndexTried = _q->initialParts.size();
+    return Subassembly({_q->initialParts[0]});
   }
 
   //Always return just a random single part from the remaining parts.

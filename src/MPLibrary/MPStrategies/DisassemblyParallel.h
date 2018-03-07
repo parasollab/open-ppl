@@ -188,13 +188,6 @@ Iterate() {
     }
   }
 
-//  if (removedParts.empty()) {
-//    this->m_successful = true;
-//    std::cout << std::endl << std::endl << "Disassembling not completed!!!"
-//              << std::endl << std::endl << std::endl;
-//    return;
-//  }
-
   if(!removedParts.empty()) // Means a successful separation occurred.
     AppendNode(node, removedParts, removingPaths, m_state == State::multiPart);
 }
@@ -249,8 +242,7 @@ Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
   std::vector<CfgType> path;
   // choose between RRT and mating approach
   if (m_approach == Approach::rrt)
-    path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID,
-                                   this->m_useRotations);
+    path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID);
   else
     path = this->ExpandMatingApproach(_q->vid, _subassembly, newVID);
 

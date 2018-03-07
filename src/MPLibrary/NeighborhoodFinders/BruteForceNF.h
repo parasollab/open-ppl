@@ -76,17 +76,17 @@ FindNeighbors(RoadmapType* _rmp,
     if(this->CheckUnconnected(_rmp, _cfg, map->GetVID(it)))
       continue;
 
-    CfgType node = map->GetVertex(it);
+    const CfgType node = map->GetVertex(it);
 
     if(node == _cfg) // Don't connect to self
       continue;
 
-    double dist = dmm->Distance(node, _cfg);
+    const double dist = dmm->Distance(node, _cfg);
 
     if(std::isinf(dist))
       continue;
 
-    if(pq.size() < this->m_k){
+    if(pq.size() < this->m_k) {
       VID vid = map->GetVID(it);
       pq.push(make_pair(vid, dist));
     }
@@ -115,7 +115,8 @@ FindNeighbors(RoadmapType* _rmp,
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
-BruteForceNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+BruteForceNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {

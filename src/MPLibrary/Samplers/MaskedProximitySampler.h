@@ -32,6 +32,7 @@ class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename std::vector<CfgType>::iterator InputIterator;
     typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
+    typedef typename std::vector<unsigned int> Subassembly;
 
     ///@}
     ///@name Construction
@@ -70,6 +71,9 @@ class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
     ///@{
 
     double m_maxDist{1.0}; /// Maximum distance to move away from a cfg.
+
+    // m_rotationFactor determines the magnitude of rotation that is allowed to be
+    // applied to the sample, wrt the starting cfg.
     double m_rotationFactor{1.0};
 
     string m_vcLabel;
@@ -111,18 +115,20 @@ void
 MaskedProximitySampler<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
        OutputIterator _result) {
-  auto graph = this->GetRoadmap()->GetGraph();
+//  auto graph = this->GetRoadmap()->GetGraph();
 
   for(size_t i = 0; i < _numNodes; ++i) {
     //Get a random vertex from the graph and hand it to Sampler()
-    size_t cfgVid = LRand() % graph->get_num_vertices();
-    CfgType cfg = graph->GetVertex(cfgVid);
+
+    //TODO: it seems like I might need to just use the startCfg here:
+//    size_t cfgVid = LRand() % graph->get_num_vertices();
+//    CfgType cfg = graph->GetVertex(cfgVid);
     vector<CfgType> result;
     vector<CfgType> collision;
     //Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
-      if(this->Sampler(cfg, _boundary, result, collision))
+      if(this->Sampler(this->m_startCfg, _boundary, result, collision))
         break;
     }
 
@@ -130,9 +136,11 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
         result.size());
     _result = copy(result.begin(), result.end(), _result);
     if(this->m_debug)
-      for(const CfgType& cfg : result)
+      for(const CfgType& cfg : result) {
         std::cout << "MaskedProximitySampler::Sample result = "
                   << cfg.PrettyPrint() << std::endl;
+        this->VerifyCfg(cfg);
+      }
   }
   if(this->m_debug)
     std::cout << std::endl; // To show where an entire Sample call ends.
@@ -151,68 +159,132 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   auto graph = this->GetRoadmap()->GetGraph();
 
   const string callee = this->GetNameAndLabel() + "::Sampler()";
-  const unsigned int dofsPerBody = 6;
 
-  CfgType extendedCfg = _cfg;//The cfg to 'extend' from.
+  ///@TODO: For now I'm assuming that the bodies all have the same dofsPerBody,
+  ///       this should be updated to be arbitrary in the future.
+  const unsigned int numBodies = _cfg.GetMultiBody()->GetNumBodies();
+  const unsigned int posDofsPerBody = _cfg.PosDOF();
+  const unsigned int oriDofsPerBody = _cfg.OriDOF();
+  const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
+  const bool isRotational = oriDofsPerBody > 0;
 
-  //Get random direction of m_maxDist length, scale it down using the range [0,1),
-  // then add the new direction to the starting cfg.
-  mathtool::Vector3d dir(DRand()-.5, DRand()-.5, DRand()-.5);
+  const bool doRotationalSubassemblies = false;//Hardcoded to prevent it for now
+
+  // A little bit of sanity checking:
+  if((dofsPerBody * numBodies) != _cfg.DOF() ||
+     _cfg.DOF() % (posDofsPerBody + oriDofsPerBody) != 0)
+    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
+
+  CfgType extendedCfg = _cfg; // The cfg to be in proximity of.
+
+  //Get random direction, scale it down using the range [0,1), scale it up to
+  // m_maxDist then add the new direction to the starting cfg.
+  const double x = DRand()-.5;
+  const double y = DRand()-.5;
+  double z;
+  if(posDofsPerBody == 2)
+    z = 0.;
+  else
+    z = DRand()-.5;
+
+  mathtool::Vector3d dir(x, y, z);
   dir.selfNormalize();
   dir *= m_maxDist;
 
-  for(unsigned int bodyNum : this->m_bodyList)
-    for(unsigned int i = 0; i < 3; i++)
+  Subassembly bodyList = this->m_bodyList;  // Copy for potential reordering.
+  for(unsigned int bodyNum : bodyList)
+    for(unsigned int i = 0; i < posDofsPerBody; i++)
       extendedCfg[bodyNum*dofsPerBody + i] += dir[i];
 
-  //A constant used throughout the function.
-  // m_rotationFactor might go away or change since this just limits what the
-  // angle can get set to, not how far it will rotate, which is bad.
-  const double rotScale = 2. * m_rotationFactor;
 
-  if(!this->m_onlyPositionalDOFs) {
-    if (this->m_bodyList.size() == 1) {
-      for(unsigned int i = 3; i < 6; i++) { // compute first rotation
-        extendedCfg[this->m_bodyList[0]*dofsPerBody + i] = (DRand() - .5) * rotScale;
-      }
-    }
-    else { // multi part subassembly
-      std::vector<unsigned int> bodyList = this->m_bodyList;//Copy it for reordering
+//  const CfgType offsetCfg = extendedCfg - _cfg;
+//
+//  std::vector<double> uniformTranslationDofs(posDofsPerBody, 0.0);
+//  const bool translationOnly = posDofsPerBody == dofsPerBody;
+//  if(translationOnly) {
+//    //We know that in the case of no rotations, a subassembly will have
+//    // identical relative translation among all parts (if correct).
+//    for(unsigned int i = 0; i < dofsPerBody; ++i) {
+//      const unsigned int ind = this->m_bodyList[0]*dofsPerBody + i;
+//      uniformTranslationDofs[i] = offsetCfg[ind];
+//    }
+//  }
+//
+//  for(unsigned int bodyNum = 0; bodyNum < numBodies; ++bodyNum) {
+//    //If the body is found in this->m_bodyList, it's validly moving.
+//    const bool isMovingBody = find(this->m_bodyList.begin(), this->m_bodyList.end(),
+//                                               bodyNum) != this->m_bodyList.end();
+//    //Note that we only look at translation since angle comparison is more involved.
+//    for(unsigned int dofNum = 0; dofNum < dofsPerBody; ++dofNum) {
+//      const unsigned int ind = bodyNum*dofsPerBody + dofNum;
+//      if(isMovingBody && translationOnly &&
+//         fabs(uniformTranslationDofs.at(dofNum) - offsetCfg[ind]) > 1e-10) {
+//        throw RunTimeException(WHERE, "The sample would have messed up the "
+//                                      "subassembly!");
+//      }
+//
+//      if(!isMovingBody && abs(offsetCfg[ind]) > 1e-10) {
+//        std::cout << "Error reached, the start cfg in the sampler was:"
+//                  << std::endl << this->m_startCfg.PrettyPrint() << std::endl
+//                  << "Offset cfg = " << offsetCfg.PrettyPrint() << std::endl;
+//        throw RunTimeException(WHERE, "The sample moved bodies "
+//                                      "not in the this->m_bodyList!");
+//      }
+//    }
+//  }
 
-      // shuffle randomly, and then rotate about the body number in bodyList[0].
-      ///@TODO uncomment this once working for true random sampling.
+
+
+  /// Now the translation has been applied to all the bodies. Next, handle
+  /// rotations appropriately:
+  const double rotScale = 2. * m_rotationFactor; // Scale amount of rotation
+  if (bodyList.size() == 1) { // Single body case
+    for(unsigned int i = posDofsPerBody; i < dofsPerBody; i++)
+      extendedCfg[bodyList[0]*dofsPerBody + i] += (DRand() - .5) * rotScale;
+  }
+  else if(isRotational && doRotationalSubassemblies) {
+    // shuffle randomly, and then rotate about the body number in bodyList[0].
+    /// @TODO uncomment this once working for true random sampling.
 //      random_shuffle(bodyList.begin(), bodyList.end());
 
-      //Generate the random rotation, taking into account rotation bounds:
-      const double piScaled = PI * rotScale;
-      mathtool::EulerAngle deltaRot(piScaled * (DRand() - .5),
-                                    piScaled * (DRand() - .5),
-                                    piScaled * (DRand() - .5));
-
-      mathtool::Orientation rotMat(deltaRot);
-
-      if(this->m_debug) {
-        std::cout << "Rotating the following bodies about body " << bodyList[0]
-                  << ": {";
-        for(size_t i = 1; i < bodyList.size()-1; ++i)
-          std::cout << bodyList[i] << ", ";
-        std::cout << bodyList[bodyList.size()-1] << "}" << std::endl;
-      }
-      //Preserves any existing translations, as it will undo, rotate, and redo
-      // any translation (and additional components due to not rotating about itself)
-      extendedCfg = RotateCfgAboutBody<MPTraits>(bodyList, extendedCfg, rotMat);
-      this->m_lastRotAboutBody = bodyList[0];
+    //Generate the random rotation, taking into account rotation bounds:
+    const double piScaled = PI * rotScale; // Needs PI for Euler Angle creation.
+    const double gamma = piScaled * (DRand() - .5);
+    double alpha, beta;
+    if(oriDofsPerBody == 1) {
+      alpha = 0;
+      beta = 0;
     }
+    else {
+      alpha = piScaled * (DRand() - .5);
+      beta = piScaled * (DRand() - .5);
+    }
+    const mathtool::EulerAngle deltaRot(gamma, beta, alpha); // ZYX order?
+    const mathtool::Orientation rotMat(deltaRot);
+
+    if(this->m_debug)
+      std::cout << "m_bodyList = " << this->m_bodyList << std::endl;
+
+    //Preserves any existing translations, as it will undo, rotate, and redo
+    // any translation (and additional components due to not rotating about itself)
+    extendedCfg = RotateCfgAboutBody<MPTraits>(bodyList, extendedCfg, rotMat,
+                                               dofsPerBody, this->m_debug);
   }
 
+  this->m_lastSamplesLeaderBody = bodyList[0];
   extendedCfg.NormalizeOrientation();
 
   //Check that the sample is in bounds and valid:
-  if(!extendedCfg.InBounds(_boundary)
-      || !vc->IsValid(extendedCfg, callee)) {
+  if(!extendedCfg.InBounds(_boundary) ||
+     !vc->IsValid(extendedCfg, callee)) {
     _collision.push_back(extendedCfg - graph->GetVertex(0));
     return false;
   }
+
+
+
+
+
 
   //The sample given back must account for startCfg offset, which is built into
   // the cfg we started from, so no adjustment is needed here.

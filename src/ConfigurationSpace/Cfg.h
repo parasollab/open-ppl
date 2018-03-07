@@ -113,8 +113,12 @@ class Cfg {
     /// Get the robot's multibody.
     MultiBody* GetMultiBody() const noexcept;
 
+    /// @warning For composite C-Space this returns a total DOF count.
     size_t DOF() const noexcept;
+
+    ///@warning For composite C-Space this returns a "per body" DOF count.
     size_t PosDOF() const noexcept;
+    ///@warning For composite C-Space this returns a "per body" DOF count.
     size_t OriDOF() const noexcept;
     size_t JointDOF() const noexcept;
 

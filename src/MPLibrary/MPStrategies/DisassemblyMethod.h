@@ -32,8 +32,6 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     enum class Approach { mating, rrt, invalid };
     enum class State { singlePart, multiPart, done };
 
-    const unsigned int dofsPerBody = 6;
-
     struct DisassemblyNode {
       //The vid for the cfg that is to be expanded from in this node.
       VID vid;
@@ -133,8 +131,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
         const vector<string>& _evaluatorLabels = vector<string>(),
         const double _contactDist = 0.1, const double _neighborDist = 1,
         const double _removePos = 8, const double _subassemblyPos = 5,
-        const double _subassemblyOffset = 2, const bool useRot = false,
-        const double _minMatingDist = 0.0);
+        const double _subassemblyOffset = 2, const double _minMatingDist = 0.0);
     DisassemblyMethod(XMLNode& _node);
     virtual ~DisassemblyMethod() {}
 
@@ -150,6 +147,8 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
     list<DisassemblyNode>& GetDisassemblyNodes() {return m_disNodes;}
 
+    void PrintDisassemblyTree();
+
   protected:
     ///@}
     ///@name virtual disassembly methods
@@ -164,7 +163,8 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     ///@{
 
     // create samples for the mating approach and return them as vector of cfgs
-    vector<CfgType> GetMatingSamples(const Subassembly& _subassembly);
+    bool EnsureMinimumClearance(CfgType& _cfg);
+    std::vector<CfgType> GetMatingSamples(const Subassembly& _subassembly);
     vector<CfgType> ExpandMatingApproach(const VID _q,
                                          const Subassembly& _subassembly,
                                          VID& _newVid);
@@ -176,8 +176,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     // the assembly. Then adds the path (if successful) to the roadmap.
     vector<CfgType> ExpandRRTApproach(const VID _q,
                                       const Subassembly& _subassembly,
-                                      VID& _newVid,
-                                      const bool _useRotation = false);
+                                      VID& _newVid);
 
     //Adds a path of Cfgs (nodes and edges) to the roadmap. Aassumed that
     // _startVID is connected to _path[0], and _path[n] is connected to
@@ -186,6 +185,10 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
                                       GraphType* const _rrtGraph,
                                       VID _roadmapStartVID,
                                       VID& _lastAddedVID);
+
+    // Loops through m_rrtClockStrings and accumulates the times over runs:
+    void AccumulateClockTimes(
+        const std::map<std::string, ClockClass>& _rrtClocks);
 
     /// GenerateNode creates a new disassembly node and adds it to the graph.
     /// It requires the parent node, the list of parts removed,
@@ -206,6 +209,9 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
                              const vector<unsigned int>& _partIndices);
     void AnalysePartContacts(const VID _q, const unsigned int _partIndex);
 
+    /// @warning This function does not obey _parts for the generation of the
+    /// subassembly candidates if the flag m_generateSubassembliesOnce is true.
+    /// In some cases this is slower.
     vector<Subassembly> GenerateSubassemblies(const VID _currentVid,
                                     const vector<unsigned int>& _parts);
     vector<Subassembly> GenerateDirectionalCollisionSubassemblies(
@@ -257,6 +263,8 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
     map<string, pair<size_t, size_t> > m_matingSamplerLabels;
     map<string, pair<size_t, size_t> > m_rrtSamplerLabels;
+    std::string m_rrtDMLabel;
+
     string m_vcLabel;          ///< The validity checker label.
     string m_singleVcLabel;
     string m_lpLabel;          ///< The local planner label.
@@ -272,12 +280,6 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     VID    m_rootVid = 0;     ///< root VID of the graph
 
     VID    m_lastAddedVID = 0; ///< Keep track so we can connect all CC's
-
-    /// The number of DOFs we have per body of the robot:
-    const unsigned int m_dofsPerPart = 6;
-    /// The number of DOFs used per body of the robot:
-    unsigned int m_dofsUsed = 3;
-    bool m_useRotations = false;//Our default option
 
     //m_disNodes is the master list of all the disassembly nodes in play during
     // execution. Everything else that uses a disassembly node should use a
@@ -337,6 +339,12 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     /// If true, all of the mating directions will be attempted and a node for
     /// each will be added to the roadmap as an initial step for RRT.
     bool m_matingExtensionBeforeRRT = false;
+
+
+    /// If true, only generate subassemblies once for the root node with all
+    /// parts, and then do the matching scheme used for predefined subassemblies
+    /// NOTE: This will be superseded by predefined subassemblies!
+    bool m_generateSubassembliesOnce{true};
 };
 
 template <typename MPTraits>
@@ -350,7 +358,7 @@ DisassemblyMethod(
     const double _contactDist,
     const double _neighborDist, const double _removePos,
     const double _subassemblyPos, const double _subassemblyOffset,
-    const bool _useRot, const double _minMatingDist) :
+    const double _minMatingDist) :
     m_matingSamplerLabels(_matingSamplerLabels),
     m_rrtSamplerLabels(_rrtSamplerLabels), m_vcLabel(_vc),
     m_singleVcLabel(_singleVc),
@@ -358,10 +366,6 @@ DisassemblyMethod(
     m_neighborDist(_neighborDist), m_removePos(_removePos),
     m_subassemblyPos(_subassemblyPos), m_subassemblyOffset(_subassemblyOffset),
     m_minMatingDist(_minMatingDist) {
-  if (_useRot) {
-    m_dofsUsed = 6;
-    m_useRotations = true;
-  }
   this->m_meLabels = _evaluatorLabels;
 }
 
@@ -411,6 +415,13 @@ ParseXML(XMLNode& _node) {
                           m_keepBestRRTPathOnFailure,
                           "Keep the best node (and path to it) when RRT fails");
 
+  m_rrtDMLabel = _node.Read("rrtDMLabel", true, m_rrtDMLabel, "Label for the "
+      "RRT's Nearest Neighbor's Distance Metric. Needed for active body setting.");
+
+  m_generateSubassembliesOnce = _node.Read("generateSubassembliesOnce", false,
+      m_generateSubassembliesOnce, "If true, will only calculate subassemblies "
+      "once for everything, then match based on remaining parts");
+
   std::vector<std::string> subassemblyStrings;
   for(auto& child : _node) {
     if(child.Name() == "MatingSampler") {
@@ -443,11 +454,10 @@ ParseXML(XMLNode& _node) {
     }
   }
 
-  if (_node.Read("useRotation", false, m_useRotations, "Rotation with RRT")) {
-    m_dofsUsed = 6;
-    m_useRotations = true;
-    if (this->m_debug)
-      std::cout << "Strategy uses RRT with rotation" << std::endl;
+  if (_node.Read("useRotation", false, false, "DEPRACATED: Rotation with RRT")) {
+    std::cout << std::endl << "Warning: the useRotation flag is no longer "
+        "obeyed by assembly planning methods, instead set up the environment "
+        "and robot files correctly." << std::endl << std::endl;
   }
 
   //Parse out each subassembly found from nodes:
@@ -498,8 +508,7 @@ DisassemblyMethod<MPTraits>::
 Initialize() {
   const string label = this->GetNameAndLabel() + "::Initialize()";
 
-  //Clear everything out:
-  //We shouldn't need to reset anything that gets defined from the xml.
+  //We shouldn't reset anything that gets set from the xml.
   m_disNodes.clear();
   m_rootNode = nullptr;
 
@@ -541,19 +550,19 @@ Initialize() {
     std::cout << label << std::endl;
     if(!m_predefinedSubassemblies.empty()) {
       std::cout << "Predefined subassemblies to use: " << std::endl;
-      for(Subassembly& sub : m_predefinedSubassemblies) {
+      for(const Subassembly& sub : m_predefinedSubassemblies)
         std::cout << sub << std::endl;
-      }
     }
     else
       std::cout << "No predefined subassemblies, will generate subassemblies "
                    "manually" << std::endl;
 
+    const unsigned int dofsPerBody = root.PosDOF() + root.OriDOF();
     //Print various other info:
     std::cout << "Number of free Parts: " << m_numParts << std::endl
               << "Number of DOFs: "
               << this->GetTask()->GetRobot()->GetMultiBody()->DOF()
-              << std::endl << "DOFs per part: " << m_dofsPerPart << std::endl
+              << std::endl << "DOFs per part: " << dofsPerBody << std::endl
               << "DissassemblyMethod::Initialize(): root VID = " << m_rootVid
               << ", Robot* = " << root.GetRobot() << std::endl
               << "Root cfg = " << root.PrettyPrint() << std::endl;
@@ -584,9 +593,11 @@ template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
 Finalize() {
-  if(!this->m_successful)
-    std::cout << std::endl << std::endl << "Disassembling not completed!!!"
-              << std::endl << std::endl << std::endl;
+  //Always print out the overall success:
+  const string completedString = this->m_successful ?
+                                                  "completed" : "not completed";
+  std::cout << std::endl << std::endl << "Disassembling " << completedString
+            << "!!!" << std::endl << std::endl << std::endl;
 
   // Output final map.
   this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
@@ -646,7 +657,7 @@ Finalize() {
                     << path.VIDs() << std::endl;
         //Generate the intermediates, and output the cfgs to a path file:
         const string filename = this->GetBaseFilename() + "." +
-                                static_cast<char>('0' + ind) + ".path";
+                                std::to_string(ind) + ".path";
         //Pass an empty string as lp so FullCfgs uses the edge's set lp.
         WritePath(filename, path.FullCfgs(this->GetMPLibrary(), ""));
       }
@@ -714,23 +725,19 @@ GenerateFullDisassemblyPath(const std::vector<VID>& _path) {
 }
 
 template <typename MPTraits>
-vector<typename DisassemblyMethod<MPTraits>::CfgType>
+std::vector<typename DisassemblyMethod<MPTraits>::CfgType>
 DisassemblyMethod<MPTraits>::
 GetMatingSamples(const Subassembly& _subassembly) {
   std::vector<CfgType> samples;
 
-  auto sampler = m_matingSamplerLabels.begin();
-  auto s = dynamic_pointer_cast<MaskedSamplerMethod<MPTraits> >(
+  auto const sampler = m_matingSamplerLabels.begin();
+  auto const s = dynamic_pointer_cast<MaskedSamplerMethod<MPTraits> >(
             this->GetSampler(sampler->first));
 
-  // These are the entries in the sampled cfg that we'd like to keep:
-  std::vector<bool> mask(m_numParts*m_dofsPerPart, false);
-  for (auto partId : _subassembly)
-    for (unsigned int i = 0; i < 3; ++i) // use only translation for mating
-      mask[(partId * m_dofsPerPart) + i] = true;
+  s->SetMaskByBodyList(_subassembly);
 
-  s->SampleMask(sampler->second.first, sampler->second.second,
-      this->GetEnvironment()->GetBoundary(), back_inserter(samples), mask);
+  s->Sample(sampler->second.first, sampler->second.second,
+      this->GetEnvironment()->GetBoundary(), back_inserter(samples));
   return samples;
 }
 
@@ -776,11 +783,62 @@ FindClosestRemovalCfg(const CfgType& _startCfg, const CfgType& _endCfg,
 
 
 template <typename MPTraits>
+void
+DisassemblyMethod<MPTraits>::
+PrintDisassemblyTree() {
+  /// This function loops through the member m_disNodes and prints key
+  /// components of each node.
+
+  std::cout << std::endl << std::endl << "Printing all " << m_disNodes.size()
+            << " disassembly nodes:" << std::endl;
+  unsigned int nodeNum = 0;
+  for(const DisassemblyNode& node : m_disNodes) {
+    std::cout << "Node " << nodeNum << ": " << std::endl
+              << "{ VID: " << node.vid << "; Depth: " << node.depth << "; "
+              << "Number of parents: " << node.parents.size() << "; "
+              << "Number of children: " << node.children.size() << std::endl
+              << "Parts in initial position: " << node.initialParts << "; "
+              << std::endl
+              << "Set aside subassemblies: " << node.usedSubassemblies << "; }"
+              << std::endl;
+    ++nodeNum;
+  }
+  std::cout << std::endl << std::endl;
+}
+
+
+template <typename MPTraits>
+bool
+DisassemblyMethod<MPTraits>::
+EnsureMinimumClearance(CfgType& _cfg) {
+  // This function will check if the clearance of a mating removal actually
+  // passes the equivalent of its map evaluator check for minimum clearance.
+  // This is also to check that if parts are embedded in an assembly, as a full
+  // mating extension might complete, but not actually remove the part.
+
+  /// TODO Remove hardcoding of this, but for now this is the only one I've made
+  auto const minDistME = std::dynamic_pointer_cast<MinimumClearanceEvaluator<
+                         MPTraits> >(this->GetMapEvaluator("MinClearanceEval"));
+  auto const vc = this->GetValidityChecker(this->m_vcLabel);
+  if(!minDistME)
+    throw RunTimeException(WHERE, "Couldn't find and/or cast MinClearanceEval");
+  CDInfo cdInfo(true); // Need full clearance info.
+  if(!vc->IsValid(_cfg, cdInfo, this->GetNameAndLabel()))
+    return false;
+
+  // Note that minDist == clearance.
+  if(cdInfo.m_minDist < minDistME->GetMinDist())
+    return false;
+
+  return true;
+}
+
+template <typename MPTraits>
 vector<typename DisassemblyMethod<MPTraits>::CfgType>
 DisassemblyMethod<MPTraits>::
 ExpandMatingApproach(const VID _q,
                      const Subassembly& _subassembly, VID& _newVid) {
-  if(this->m_debug)
+//  if(this->m_debug)
     this->GetStatClass()->StartClock("ExpandMatingApproachClock");
   auto const graph = this->GetRoadmap()->GetGraph();
   auto const env = this->GetEnvironment();
@@ -796,7 +854,7 @@ ExpandMatingApproach(const VID _q,
   auto startCfg = graph->GetVertex(_q);
 
   const string samplerLabel = m_matingSamplerLabels.begin()->first;
-  auto s = dynamic_pointer_cast<MaskedSamplerMethod<MPTraits> >(
+  auto const s = dynamic_pointer_cast<MaskedSamplerMethod<MPTraits> >(
                                               this->GetSampler(samplerLabel));
   s->SetStartCfg(startCfg);//Masked entries are set to the values in startCfg
 
@@ -808,17 +866,32 @@ ExpandMatingApproach(const VID _q,
     activeBodyLP->SetActiveBodies(_subassembly); //Now lp can be used as normal.
 
   bool pathFound = false;
-  CfgType newCfg(this->GetTask()->GetRobot()), col(this->GetTask()->GetRobot());
+  CfgType newCfg(startCfg.GetRobot()), col(startCfg.GetRobot());
   LPOutput<MPTraits> lpOutput;
   size_t sampleNum = 0;
+  const bool savePath = true;
+  const bool checkCollision = true; // Just for clarity.
+
+  if(this->m_debug)
+    std::cout << "Attempting mating over " << samples.size() <<
+                 " mating samples" << std::endl;
+
   for (const CfgType& sample : samples) {
     // Check if the local plan is successful:
     if(lp->IsConnected(startCfg, sample, col, &lpOutput, env->GetPositionRes(),
-                       env->GetOrientationRes(), true)) {
+                       env->GetOrientationRes(), checkCollision, savePath)) {
       if (m_minMatingDist > 0) // only used if mating distance is set (slower!)
         newCfg = FindClosestRemovalCfg(startCfg, sample, lpOutput);
       else
         newCfg = sample;
+
+      if(!EnsureMinimumClearance(newCfg)) {
+        if(this->m_debug)
+          std::cout << "Warning: full mating extension completed, but the "
+                       "clearance check failed!" << std::endl;
+        continue; // Must make sure we hit a sufficient clearance for success.
+      }
+
       pathFound = true;
       if(this->m_debug)
         std::cout << "Path found on direction " << sampleNum << std::endl;
@@ -829,22 +902,26 @@ ExpandMatingApproach(const VID _q,
   if(!pathFound) {
     if(this->m_debug) {
       std::cout << "Mating failed over all directions." << std::endl;
-      this->GetStatClass()->StopClock("ExpandMatingApproachClock");
     }
+    this->GetStatClass()->StopClock("ExpandMatingApproachClock");
     return std::vector<CfgType>();
   }
 
   _newVid = graph->AddVertex(newCfg);
   lpOutput.SetActiveBodies(_subassembly);
   graph->AddEdge(_q, _newVid, lpOutput.m_edge);
-  if(this->m_debug)
-    std::cout << "Removal Complete! Created edge between vid " << _q << " and "
-              << _newVid << std::endl << std::endl;
   m_lastAddedVID = _newVid;
   std::vector<CfgType> path = {startCfg, newCfg};
+  this->GetStatClass()->StopClock("ExpandMatingApproachClock");
 
-  if(this->m_debug)
-    this->GetStatClass()->StopClock("ExpandMatingApproachClock");
+  if(this->m_debug) {
+    std::cout << "Removal Complete! Created edge between vid " << _q << " and "
+              << _newVid << std::endl << std::endl;
+//    PrintDisassemblyTree(); // Prints a lot of output each time.
+    if(startCfg.GetRobot() == nullptr || newCfg.GetRobot() == nullptr)
+      throw RunTimeException(WHERE, "One of the endpoint cfgs has a null robot "
+                                    "after LP!");
+  }
 
   return path;
 }
@@ -852,10 +929,8 @@ ExpandMatingApproach(const VID _q,
 template <typename MPTraits>
 vector<typename DisassemblyMethod<MPTraits>::CfgType>
 DisassemblyMethod<MPTraits>::
-ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
-                  VID& _newVID, const bool _useRotation) {
-  if(this->m_debug)
-    this->GetStatClass()->StartClock("ExpandRRTApproachClock");
+ExpandRRTApproach(const VID _q, const Subassembly& _subassembly, VID& _newVID) {
+  this->GetStatClass()->StartClock("ExpandRRTApproachClock");
   auto graph = this->GetRoadmap()->GetGraph();
   auto vc = dynamic_pointer_cast<SpecificBodyCollisionValidity<MPTraits> >(
                 this->GetValidityChecker(m_vcLabel));
@@ -863,16 +938,19 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
 
   auto sampler = dynamic_pointer_cast<MaskedSamplerMethod<MPTraits> >(
                  this->GetSampler(m_rrtSamplerLabels.begin()->first));
+  auto dm = dynamic_pointer_cast<ActiveBodyEuclideanDistance<MPTraits> > (
+            this->GetDistanceMetric(m_rrtDMLabel));
+
+  const CfgType startCfg = graph->GetVertex(_q);
+  if(!startCfg.GetRobot())
+    throw RunTimeException(WHERE, "Error: startCfg was retrieved from the graph"
+                                  " with a null robot pointer!");
 
   //Set up the two things I need (note that RRT must be using the same
   // vc/sampler)
   vc->SetBodyNumbers(_subassembly);
-  sampler->SetMaskByBodyList(_subassembly, !_useRotation);
-
-  CfgType startCfg = graph->GetVertex(_q);
-  if(!startCfg.GetRobot())
-    throw RunTimeException(WHERE, "Error: startCfg was retrieved from the graph"
-                                  " with a null robot pointer!");
+  dm->SetActiveBodies(_subassembly);
+  sampler->SetMaskByBodyList(_subassembly);
 
   if(this->m_debug)
     std::cout << callee << ": Start VID in roadmap = " << _q << std::endl;
@@ -907,7 +985,7 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
                      this->GetMPStrategy(m_rrtStrategyLabel));
   rrtStrategy->m_startCfg = &startCfg;
   rrtStrategy->SetActiveBodies(_subassembly);// RRT needs this for its extender.
-  sampler->SetStartCfg(startCfg);//TODO should RRT just do this?
+  sampler->SetStartCfg(startCfg);// should RRT just do this?
   //Make sure if we are/are not expecting a path on failure, that RRT matches:
   rrtStrategy->SetKeepBestPathOnFailure(m_keepBestRRTPathOnFailure);
 
@@ -915,6 +993,10 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
   //    all needed data in the new MPSolution.
   (*rrtStrategy)();
   const bool successfulRemoval = rrtStrategy->IsSuccessful();
+
+  //Make a copy of the clocks from the RRT:
+  const std::map<std::string, ClockClass> rrtClocks =
+                                        rrtStrategy->GetStatClass()->m_clockMap;
 
   if(this->m_debug)
     std::cout << "After RRT: successfulRemoval = " << successfulRemoval
@@ -929,6 +1011,8 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
 
     // We have all needed path data, so put the original solution back:
     this->GetMPLibrary()->SetMPSolution(originalSolution);
+    if(this->m_debug)
+      AccumulateClockTimes(rrtClocks);
 
     if(this->m_debug)
       std::cout << "RRT path length = " << rrtPath.size() << std::endl;
@@ -943,7 +1027,11 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
   }
 
   //After finishing, reset everything and return the path:
-  this->GetMPLibrary()->SetMPSolution(originalSolution);
+  if(rrtPath.empty()) { //Means we didn't set the solution already
+    this->GetMPLibrary()->SetMPSolution(originalSolution);
+    if(this->m_debug)
+      AccumulateClockTimes(rrtClocks);
+  }
   rrtStrategy->m_startCfg = nullptr;
   delete tempSolution;
 
@@ -963,8 +1051,7 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
                                         " couldn't reproduce!");
         _newVID = 0;
       }
-      if(this->m_debug)
-        this->GetStatClass()->StopClock("ExpandRRTApproachClock");
+      this->GetStatClass()->StopClock("ExpandRRTApproachClock");
       return vector<CfgType>();
     }
     else if(this->m_debug)
@@ -973,8 +1060,7 @@ ExpandRRTApproach(const VID _q, const Subassembly& _subassembly,
 
   m_lastAddedVID = _newVID;
 
-  if(this->m_debug)
-    this->GetStatClass()->StopClock("ExpandRRTApproachClock");
+  this->GetStatClass()->StopClock("ExpandRRTApproachClock");
 
   return rrtPath;
 }
@@ -1027,6 +1113,19 @@ AddDissassemblyPathToRoadmap(const std::vector<VID>& _pathVids,
   return true;
 }
 
+template <typename MPTraits>
+void
+DisassemblyMethod<MPTraits>::
+AccumulateClockTimes(
+    const std::map<std::string, ClockClass>& _rrtClocks) {
+//  StatClass* const otherStats = _strategy->GetStatClass();
+  StatClass* const currentStats = this->GetStatClass();
+  const static string rrtString = "DisassemblyRRT::";
+
+  for(const std::pair<std::string, ClockClass>& clockPair : _rrtClocks)
+    currentStats->IncStat(rrtString + clockPair.first, clockPair.second.GetSeconds());
+}
+
 
 template <typename MPTraits>
 typename DisassemblyMethod<MPTraits>::DisassemblyNode*
@@ -1038,8 +1137,8 @@ GenerateNode(DisassemblyNode* _parent,
              const double _localWeight) {
   if(this->m_debug) {
     std::cout << this->GetNameAndLabel() << "::GenerateNode()" << std::endl;
-    this->GetStatClass()->StartClock("GenerateNodeClock");
   }
+  this->GetStatClass()->StartClock("GenerateNodeClock");
   auto graph = this->GetRoadmap()->GetGraph();
 
   DisassemblyNode node;
@@ -1048,10 +1147,6 @@ GenerateNode(DisassemblyNode* _parent,
   node.removedParts = _removedParts;
   node.removalPaths = _removingPaths;
 
-  //Also update the node weight. Since we are given a local weight, it must be
-  // added with the parent's weight for this node's actual cumulative weight.
-  //Note also, new nodes will have exactly one parent/no children. So the best
-  // weight to this node is indeed the one along that path.
   if(!node.parents[0])
     throw RunTimeException(WHERE, "Null parent when creating new node!");
 
@@ -1083,24 +1178,34 @@ GenerateNode(DisassemblyNode* _parent,
   // For all removed parts, we want to offset wrt their root positions:
   OverwriteDofsFromBodies<MPTraits>(expansionCfg, graph->GetVertex(m_rootVid),
                                     _removedParts);
-  std::vector<double> dofOffsets;
+
+  //Note: I cannot use the DOF() function here as it's not "per body"
+  const unsigned int posDofsPerBody = expansionCfg.PosDOF();
+  const unsigned int dofsPerBody = posDofsPerBody + expansionCfg.OriDOF();
+
+  //dofOffsets represents the 'offset' from the root cfg that fully removed
+  // parts are placed at. This means that the root's cfg is kept in-tact
+  // it simply is translated, preserving each part's positions/rotations
+  // relative to the other parts'.
+  std::vector<double> dofOffsets(dofsPerBody, 0.0); // So default val is 0.
   if (_isMultiPartSubassembly) {
     node.usedSubassemblies.push_back(_removedParts); // Record this in the node.
     const double subassemblyOffset =
         m_subassemblyPos + (m_subassemblyOffset * node.depth);
-    dofOffsets =
-        { subassemblyOffset, subassemblyOffset, subassemblyOffset, 0., 0., 0. };
+    for(unsigned int i = 0; i < posDofsPerBody; ++i)
+      dofOffsets[i] = subassemblyOffset;
   }
   else {
     // Either a single part or multiple parts were removed not as a subassembly,
     // offset the root cfg to place things to the side in formation:
-    dofOffsets = { m_removePos, m_removePos, m_removePos, 0., 0., 0. };
+    for(unsigned int i = 0; i < posDofsPerBody; ++i)
+      dofOffsets[i] = m_removePos;
   }
-  // Add the 6 dof dofOffsets into expansinCfg for _removedParts.
+  // Add the dofOffsets into expansionCfg for _removedParts.
   AddDofsForBodies<MPTraits>(expansionCfg, dofOffsets, _removedParts);
 
   if(this->m_debug)
-    std::cout << "Added dofs " << dofOffsets << " into root cfg for parts "
+    std::cout << "Added dofs " << dofOffsets << " into root cfg for part(s) "
               << _removedParts << ". Final cfg = " << std::endl
               << expansionCfg.PrettyPrint() << std::endl;
 
@@ -1123,7 +1228,7 @@ GenerateNode(DisassemblyNode* _parent,
         //Ensure that we have a mating path with just two nodes:
         if(cfgPair.size() != 2)
           throw RunTimeException(WHERE, "There was a simultaneous removal with"
-                " a path of size " + static_cast<char>('0' + cfgPair.size()));
+                " a path of size " + std::to_string('0' + cfgPair.size()));
 
         //We need to accumulate the removals, then fix them offset from the
         // assembly, until we remove all the ones for the node, then put off to
@@ -1170,7 +1275,7 @@ GenerateNode(DisassemblyNode* _parent,
   //Update the parent to have this new node as a child.
   _parent->children.push_back(make_pair(_localWeight, &m_disNodes.back()));
 
-  if(this->m_debug)
+//  if(this->m_debug)
     this->GetStatClass()->StopClock("GenerateNodeClock");
 
   return &m_disNodes.back();
@@ -1249,11 +1354,24 @@ GenerateSubassemblies(const VID _currentVid,
                       const vector<unsigned int>& _parts) {
   if(this->m_debug)
       std::cout << this->GetNameAndLabel()
-           << "::GenerateSubassemblies()" << std::endl;
-  if(m_predefinedSubassemblies.empty())
+                << "::GenerateSubassemblies()" << std::endl;
+
+  //Generate subassemblies on a node-to-node basis, versus using a master list:
+  if(!m_generateSubassembliesOnce && m_predefinedSubassemblies.empty())
     return GenerateDirectionalCollisionSubassemblies(_currentVid, _parts);
-  else
-    return GeneratePredefinedSubassemblies(_parts);
+
+  // Generate master list once and cache it. Then match subassemblies to
+  // candidates based on the remaining _parts.
+  if(m_predefinedSubassemblies.empty())
+    m_predefinedSubassemblies = GenerateDirectionalCollisionSubassemblies(
+                                     m_rootNode->vid, m_rootNode->initialParts);
+
+  this->GetStatClass()->SetStat("Subassemblies in m_predefinedSubassemblies",
+                                m_predefinedSubassemblies.size());
+
+  // Match m_predefinedSubassemblies to _parts and only return subs that are
+  // subsets of the set _parts.
+  return GeneratePredefinedSubassemblies(_parts);
 }
 
 template <typename MPTraits>
@@ -1286,9 +1404,12 @@ GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
   // m_bodyContacts[whichBody][whichDirection] to get all of the colliding Parts
   // for the piece at index whichBody and direction.
 
+
   vector<Subassembly> subassemblies;
   if(_parts.size() < 2)
     return subassemblies;
+
+  this->GetStatClass()->StartClock("GenerateDirectionalCollisionSubassembliesClock");
 
   if(this->m_debug)
     std::cout << this->GetNameAndLabel()
@@ -1353,6 +1474,8 @@ GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
       std::cout << tmp << ";  ";
     std::cout << std::endl;
   }
+
+  this->GetStatClass()->StopClock("GenerateDirectionalCollisionSubassembliesClock");
 
   return subassemblies;
 }

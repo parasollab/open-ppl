@@ -123,18 +123,31 @@ Cfg::
 operator-=(const Cfg& _cfg) {
   const size_t posDOF = PosDOF(), oriDOF = OriDOF(), dof = DOF();
 
-  // Positional dofs
-  for(size_t i = 0; i < posDOF; ++i)
-    m_dofs[i] -= _cfg[i];
-  // Orientation dofs
-  for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
-  // Joint dofs
-  for(size_t i = posDOF + oriDOF; i < dof; ++i)
-    m_dofs[i] -= _cfg[i];
+  /// @TODO For optimal runtime, comment out this condition. Assembly planning
+  ///       needs this case handled differently to make sure we get all dofs.
+  if(!GetMultiBody()->IsComposite()) {
+    // Positional dofs
+    for(size_t i = 0; i < posDOF; ++i)
+      m_dofs[i] -= _cfg[i];
+    // Orientation dofs
+    for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
+      m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
+    // Joint dofs
+    for(size_t i = posDOF + oriDOF; i < dof; ++i)
+      m_dofs[i] -= _cfg[i];
 
-  for(size_t i = 0; i < m_vel.size(); ++i)
-    m_vel[i] -= _cfg.m_vel[i];
+    for(size_t i = 0; i < m_vel.size(); ++i)
+      m_vel[i] -= _cfg.m_vel[i];
+    }
+  else {
+    const MultiBody* const mb = GetMultiBody();
+    for(size_t i = 0; i < dof; ++i) {
+      if(mb->GetDOFType(i) == DofType::Rotational)
+        m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
+      else
+        m_dofs[i] -= _cfg[i];
+    }
+  }
 
   m_witnessCfg.reset();
   return *this;
@@ -537,6 +550,7 @@ GetPoint() const noexcept {
 vector<double>
 Cfg::
 GetPosition() const {
+  /// @Note: This is perfectly valid for Composite CSpaces.
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i)
     if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
@@ -548,6 +562,7 @@ GetPosition() const {
 vector<double>
 Cfg::
 GetRotation() const {
+  /// @Note: This is perfectly valid for Composite CSpaces.
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i)
     if(GetMultiBody()->GetDOFType(i) == DofType::Rotational)

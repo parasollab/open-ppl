@@ -26,9 +26,13 @@ typename MPTraits::CfgType
 RotateCfgAboutBody(const std::vector<unsigned int>& _bodyList,
                    const typename MPTraits::CfgType& _cfg,
                    const mathtool::Orientation& _rotation,
-                   const bool _debug = false,
-                   const unsigned int _dofsPerBody = 6) {
+                   const unsigned int _dofsPerBody,
+                   const bool _debug = false) {
   typedef typename MPTraits::CfgType CfgType;
+
+  if(_bodyList.size() > 1)
+    throw RunTimeException(WHERE, "This function is buggy and should not be used!"
+                              " It will misalign subassemblies (most likely).");
 
   // compute position and rotation of part A, BEFORE rotation:
   _cfg.GetMultiBody()->Configure(_cfg);//Update transform
@@ -102,7 +106,7 @@ OverwriteDofsFromBodies(typename MPTraits::CfgType& _toCfg,
                         const std::vector<unsigned int>& _bodies) {
   // This function assigns the values from _fromCfg into _toCfg, based on which
   // bodies are given in _bodies.
-  const unsigned int dofsPerBody = 6; ///@TODO: Dynamically select this value.
+  const unsigned int dofsPerBody = _toCfg.PosDOF() + _toCfg.OriDOF();
   for(const unsigned int body : _bodies) {
     const unsigned int bodyOffset = body * dofsPerBody;
     for (unsigned int i = 0; i < dofsPerBody; ++i) {

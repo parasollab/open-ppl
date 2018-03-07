@@ -25,6 +25,7 @@ class MaskedRandomSampler : public MaskedSamplerMethod<MPTraits> {
     typedef typename MPTraits::CfgType CfgType;
     typedef typename std::vector<CfgType>::iterator InputIterator;
     typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
+    typedef typename std::vector<unsigned int> Subassembly;
 
     ///@}
     ///@name Construction
@@ -77,27 +78,51 @@ MaskedRandomSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  if(!this->m_onlyPositionalDOFs) {
-    if (this->m_bodyList.size() == 1) { // single part subassembly
-      if(this->m_debug)
-        std::cout << "rotation params = (";
-      for(unsigned int i = 3; i < 6; i++) { // compute first rotation
-        _cfg[this->m_bodyList[0]*6 + i] = (DRand() - .5) * 2.; // [-1:1]
+  throw RunTimeException(WHERE, "Don't use this sampler, it needs to be "
+      "reevaluated (it's a bad choice given the large environments we plan in "
+      "for disassembly)");
 
-        if(this->m_debug)
-          std::cout << _cfg[this->m_bodyList[0]*6 + i] << ", ";
-      }
-      _cfg.NormalizeOrientation();
+  ///@TODO: For now I'm assuming that the bodies all have the same dofsPerBody,
+  ///       this should be updated to be arbitrary in the future.
+  MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
+  const unsigned int numBodies = mb->GetNumBodies();
+  const unsigned int dofsPerBody = mb->DOF() / numBodies;
+  const unsigned int posDofsPerBody = mb->PosDOF();
+  const unsigned int oriDofsPerBody = mb->OrientationDOF();
+  const unsigned int leaderBody = this->m_bodyList[0]; // body rotated about
+
+  // TODO: Move this check:
+  // A little bit of sanity checking:
+  if((dofsPerBody * numBodies) != mb->DOF() ||
+     (posDofsPerBody + oriDofsPerBody) != dofsPerBody)
+    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
+
+  Subassembly bodyList = this->m_bodyList; // Copy so we can rearrange it later
+
+  if (bodyList.size() == 1) { // single part subassembly
+    if(this->m_debug)
+      std::cout << "rotation params = (";
+    for(unsigned int i = posDofsPerBody; i < dofsPerBody; i++) {
+      _cfg[leaderBody*dofsPerBody + i] = (DRand() - .5) * 2.; // range: [-1:1]
+
       if(this->m_debug)
-        std::cout << ")" << std::endl
-                  << "After normalizing = ("
-                  << _cfg[this->m_bodyList[0]*6 + 3] << ","
-                  << _cfg[this->m_bodyList[0]*6 + 4] << ","
-                  << _cfg[this->m_bodyList[0]*6 + 5] << std::endl;
+        std::cout << _cfg[leaderBody*dofsPerBody + i] << ", ";
     }
-    else
-      throw RunTimeException(WHERE, "Rotations not supported for subassemblies yet here!");
+    _cfg.NormalizeOrientation();
+
+    if(this->m_debug) {
+      std::cout << ")" << std::endl;
+      if(oriDofsPerBody == 3)
+        std::cout << "After normalizing = ("
+                  << _cfg[leaderBody*dofsPerBody + 3] << ","
+                  << _cfg[leaderBody*dofsPerBody + 4] << ","
+                  << _cfg[leaderBody*dofsPerBody + 5] << ")" << std::endl;
+    }
   }
+  else
+    throw RunTimeException(WHERE, "Rotations not supported for subassemblies yet!");
+
+  this->m_lastSamplesLeaderBody = bodyList[0];
 
   //Only check that the sample is in bounds:
   if(!_cfg.InBounds(_boundary)) {

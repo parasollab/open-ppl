@@ -124,6 +124,18 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
     m_samples = std::vector<CfgType>();
   }
 
+  ///@TODO move this sanity checking part to DisassemblyMethod::Initialize()
+  MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
+  const unsigned int numBodies = mb->GetNumBodies();
+  const unsigned int posDofsPerBody = mb->PosDOF();
+  const unsigned int oriDofsPerBody = mb->OrientationDOF();
+  const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
+
+  // A little bit of sanity checking:
+  if((dofsPerBody * numBodies) != mb->DOF() ||
+     (posDofsPerBody + oriDofsPerBody) != dofsPerBody)
+    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
+
   // compute the samples only once, checks if samples are empty
   if (m_samples.empty()) {
     // compute the distance for one sample to separate from the robot
@@ -136,19 +148,43 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
     std::vector<Vector3d> normals;
     normals.reserve(60000);
 
-    size_t numBody = multiBody->GetNumBodies();
-    for(size_t i = 0; i < numBody - 1; ++i) {
-      auto polygons = multiBody->GetBody(i)->GetPolyhedron().m_polygonList;
-      for (auto polygon : polygons)
-        normals.push_back(polygon.GetNormal());
+    //Push back the standard x/y/z dirs to ensure they are included (and not
+    // something that's just similar but skewed).
+    const Vector3d xDir(1,0,0);
+    const Vector3d yDir(0,1,0);
+
+    normals.push_back(xDir);
+    normals.push_back(-xDir);
+    normals.push_back(yDir);
+    normals.push_back(-yDir);
+
+    if(posDofsPerBody == 3) {
+      const Vector3d zDir(0,0,1);
+      normals.push_back(zDir);
+      normals.push_back(-zDir);
     }
 
-    for (auto &normal : normals)
+
+    ///@TODO: This had (numBodies - 1) which seemed wrong (but has been
+    ///       working fine...). Check this!
+    for(size_t i = 0; i < numBodies; ++i) {
+      const std::vector<GMSPolygon>& polygons =
+                           multiBody->GetBody(i)->GetPolyhedron().m_polygonList;
+      for (const GMSPolygon& polygon : polygons) {
+        Vector3d normal = polygon.GetNormal();
+        if(posDofsPerBody == 2)
+          normal[2] = 0.0; // If 2D, zero out the z-component
+
+        normals.push_back(normal);
+      }
+    }
+
+    for (Vector3d& normal : normals)
       normal.selfNormalize(); // normalize normals
 
     if(this->m_debug)
       std::cout << "Normalized the normals" << std::endl;
-    // remove duplicates from normal list
+    // remove duplicates from normal list, start with sorting to make it faster
     struct {
       bool operator()(Vector3d a, Vector3d b) const
       {
@@ -186,8 +222,8 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
     for (auto &normal : normals) {
       CfgType cfg = this->m_startCfg; //Start it at the start cfg, then extend.
       for(size_t i = 0; i < robot->GetMultiBody()->GetNumBodies(); i++)
-        for(size_t j = 0; j < 3; j++)
-          cfg[(i*6) + j] += normal[j]; //Add in dof component, don't set it.
+        for(size_t j = 0; j < posDofsPerBody; j++)
+          cfg[(i*dofsPerBody) + j] += normal[j]; //Add in dof component, don't set it.
 
       Sampler(cfg, _boundary, result, collision);
     }

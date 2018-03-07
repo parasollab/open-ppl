@@ -113,18 +113,18 @@ Iterate() {
 
   DisassemblyNode* node = SelectExpansionNode();
 
+
+
   m_approach = Approach::rrt; //So we skip everything, do RRT immediately.
-  if (this->m_dofsUsed == 6) {
-    if (removedParts.empty()) {
-      m_state = State::multiPart;
-      ComputeSubassemblies(node);
-      for (auto &sub : m_subassemblies) {
-        pair<bool, vector<CfgType>> result = Expand(node, sub);
-        if (result.first) {
-          removedParts = sub;
-          removingPaths.push_back(result.second);
-          break;
-        }
+  if (removedParts.empty()) {
+    m_state = State::multiPart;
+    ComputeSubassemblies(node);
+    for (auto &sub : m_subassemblies) {
+      pair<bool, vector<CfgType>> result = Expand(node, sub);
+      if (result.first) {
+        removedParts = sub;
+        removingPaths.push_back(result.second);
+        break;
       }
     }
   }
@@ -198,13 +198,12 @@ Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
     return make_pair(false, vector<CfgType>());
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with Subassembly: "
-         << _subassembly << std::endl;
+              << _subassembly << std::endl;
 
   VID newVID;
   vector<CfgType> path;
   if (m_approach == Approach::rrt) // choose between RRT and mating approach
-    path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID,
-                                   this->m_useRotations);
+    path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID);
   else
     path = this->ExpandMatingApproach(_q->vid, _subassembly, newVID);
 
