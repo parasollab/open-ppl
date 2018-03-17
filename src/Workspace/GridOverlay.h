@@ -120,6 +120,16 @@ class GridOverlay {
     static constexpr bool m_debug{false}; ///< Enable debugging messages?
 
     ///@}
+
+  public:
+
+    ///@name Testing
+    ///@{
+
+    /// Test this object.
+    void Test(const size_t _trials) const;
+
+    ///@}
 };
 
 #endif

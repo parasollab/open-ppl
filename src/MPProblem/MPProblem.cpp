@@ -52,10 +52,12 @@ operator=(const MPProblem& _other) {
   );
 
   // Copy robots.
+  m_robots.clear();
   for(const auto& robot : _other.m_robots)
     m_robots.emplace_back(new Robot(this, *robot));
 
   // Copy tasks.
+  m_taskMap.clear();
   for(const auto& robotTasks : _other.m_taskMap) {
     Robot* const robot = robotTasks.first;
     const auto& tasks = robotTasks.second;
@@ -354,13 +356,13 @@ ParseChild(XMLNode& _node) {
 void
 MPProblem::
 MakePointRobot() {
-  /// @TODO We should probably make the point robot planar for 2d boundaries.
-
   // Make robot's multibody.
   std::unique_ptr<MultiBody> point(new MultiBody(MultiBody::Type::Active));
 
+  const bool is2d = GetEnvironment()->GetBoundary()->GetDimension() == 2;
+
   Body body(point.get());
-  body.SetBodyType(Body::Type::Volumetric);
+  body.SetBodyType(is2d ? Body::Type::Planar : Body::Type::Volumetric);
   body.SetMovementType(Body::MovementType::Translational);
 
   // Create body geometry. Use a single, open triangle.

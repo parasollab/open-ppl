@@ -52,6 +52,15 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     virtual void PushInside(std::vector<double>& _sample) const noexcept override;
 
     ///@}
+    ///@name Scaling
+    ///@{
+
+    virtual void ScalePoint(std::vector<double>& _point) const noexcept override;
+
+    virtual void UnscalePoint(std::vector<double>& _point) const noexcept
+        override;
+
+    ///@}
     ///@name Containment Testing
     ///@{
 

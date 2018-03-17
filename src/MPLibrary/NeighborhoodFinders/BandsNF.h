@@ -414,19 +414,19 @@ class Band : public MPBaseObject<MPTraits> {
       size_t k = _node.Read("k", true, 1, 0, 10000, "k");
 
       if (policy == "closest") {
-        m_policy = new ClosestPolicy(k, m_debug);
+        m_policy = std::unique_ptr<Policy>(new ClosestPolicy(k, m_debug));
       }
       else if (policy == "random") {
-        m_policy = new RandomPolicy(k, m_debug);
+        m_policy = std::unique_ptr<Policy>(new RandomPolicy(k, m_debug));
       }
       else if (policy == "RWR") {
-        m_policy = new RankWeightedRandomPolicy(k, alpha, m_debug);
+        m_policy = std::unique_ptr<Policy>(new RankWeightedRandomPolicy(k, alpha, m_debug));
       }
       else if (policy == "DWR") {
-        m_policy = new DistanceWeightedRandomPolicy(k, alpha, m_debug);
+        m_policy = std::unique_ptr<Policy>(new DistanceWeightedRandomPolicy(k, alpha, m_debug));
       }
       else if (policy == "preferential") {
-        m_policy = new PreferentialPolicy(k, m_debug);
+        m_policy = std::unique_ptr<Policy>(new PreferentialPolicy(k, m_debug));
       }
       else {
         cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
@@ -489,7 +489,7 @@ class Band : public MPBaseObject<MPTraits> {
     double m_max;
     string m_type;
     string m_dmLabel;
-    Policy* m_policy;
+    std::unique_ptr<Policy> m_policy;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -659,12 +659,10 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
         this->SetName("BandsNF");
         for(auto& child : _node) {
           if (child.Name() == "DBand") {
-            Band<MPTraits>* dband = new DBand<MPTraits>(child);
-            this->m_bands.push_back(dband);
+            this->m_bands.emplace_back(new DBand<MPTraits>(child));
           }
           else if(child.Name() == "RBand") {
-            Band<MPTraits>* rband = new RBand<MPTraits>(child);
-            this->m_bands.push_back(rband);
+            this->m_bands.emplace_back(new RBand<MPTraits>(child));
           }
         }
       }
@@ -685,7 +683,7 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
           OutputIterator _out);
 
   private:
-    vector<Band<MPTraits>*> m_bands;
+    std::vector<std::unique_ptr<Band<MPTraits>>> m_bands;
 };
 
 // Returns all nodes within radius from _cfg
@@ -702,17 +700,16 @@ FindNeighbors(RoadmapType* _roadmap,
   vector< pair<VID, double> > neighbors;
 
   // iterate through bands
-  typename vector<Band<MPTraits>*>::iterator bandIT;
-  for (bandIT = this->m_bands.begin(); bandIT != this->m_bands.end(); ++bandIT) {
+  for(auto bandIT = m_bands.begin(); bandIT != m_bands.end(); ++bandIT) {
     if (this->m_debug) cout << "Finding Neighbors for Band" << endl;
 
     vector< pair<VID, double> > bandNeighbors;
 
     if((*bandIT)->GetName() == "DBand"){
-      bandNeighbors = ((DBand<MPTraits>*)*bandIT)->GetNeighbors(_roadmap, _first, _last, _cfg);
+      bandNeighbors = ((DBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_roadmap, _first, _last, _cfg);
     }
     else if((*bandIT)->GetName() == "RBand"){
-      bandNeighbors = ((RBand<MPTraits>*)*bandIT)->GetNeighbors(_roadmap, _first, _last, _cfg);
+      bandNeighbors = ((RBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_roadmap, _first, _last, _cfg);
     }
 
     for (typename vector< pair<VID, double> >::iterator itr = bandNeighbors.begin(); itr != bandNeighbors.end(); ++itr) {

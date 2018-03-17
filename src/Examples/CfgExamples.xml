@@ -106,11 +106,8 @@
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"/>
-      <GridSampler label="Grid" vcLabel="rapid">
-        <Dimension index="0" points="10"/>
-        <Dimension index="1" points="5"/>
-        <Dimension index="2" points="5"/>
-      </GridSampler>
+      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+        debug="true"/>
       <MixSampler label="MixSampler">
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>
@@ -626,6 +623,8 @@
       <MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true"/>
+
+      <SVMModel kernel="radial" c="10" epsilon=".001" gamma="1"/>
 
     </MPTools>
 

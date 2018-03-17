@@ -170,4 +170,36 @@ XIndex(const size_t _index) const noexcept {
   return _index % (m_num[0] * m_num[1]) % m_num[0];
 }
 
+/*-------------------------------- Testing -----------------------------------*/
+
+void
+GridOverlay::
+Test(const size_t _trials) const {
+  // Generate a ton of cell indexes. For each index, get the x,y,z indexes and
+  // confirm that they return the original cell index.
+  for(size_t i = 0; i < _trials; ++i)
+  {
+    const size_t cell = LRand() % Size(),
+                 x    = XIndex(cell),
+                 y    = YIndex(cell),
+                 z    = ZIndex(cell),
+                 test = CellIndex(x, y, z);
+
+    const bool ok = test == cell;
+
+    if(!ok) {
+      std::cout << "GridOverlay::Test failed on trial " << i << ":"
+                << "\n\tcell: " << cell
+                << "\n\tx:    " << x
+                << "\n\ty:    " << y
+                << "\n\tz:    " << z
+                << "\n\ttest: " << test << " != cell"
+                << std::endl;
+      throw RunTimeException(WHERE, "Test failed.");
+    }
+  }
+
+  std::cout << "GridOverlay::Test passed." << std::endl;
+}
+
 /*----------------------------------------------------------------------------*/

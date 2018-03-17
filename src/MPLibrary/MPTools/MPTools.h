@@ -21,10 +21,10 @@ class WorkspaceDecomposition;
 /// elsewhere. It gives us a way to do XML parsing and uniform access for these
 /// odd-balls like medial axis tools.
 ///
-/// For the medial axis and clearance utilities, this object creates and
-/// maintains a map of string -> instance. One instance will be generated for
-/// each MedialAxisUtility node in the XML file (with corresponding label).
-/// Instances can also be added manually with the Set functions.
+/// For most utilities, this object creates and maintains a map of string ->
+/// instance. One instance will be generated for each MedialAxisUtility node in
+/// the XML file (with corresponding label). Instances can also be added
+/// manually with the Set functions.
 ///
 /// For the other tools, this object parses a single XML node to set default
 /// parameters for the tool classes. Default-constructed tools then use those
@@ -54,14 +54,12 @@ class MPToolsType final {
 
   MPLibrary* const m_library; ///< The owning library.
 
-  LabelMap<ClearanceUtility> m_clearanceUtils;
-  LabelMap<MedialAxisUtility> m_medialAxisUtils;
+  LabelMap<ClearanceUtility>         m_clearanceUtils;
+  LabelMap<MedialAxisUtility>        m_medialAxisUtils;
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
-  LabelMap<TopologicalMap> m_topologicalMaps;
-  LabelMap<SafeIntervalTool> m_safeIntervalTools;
+  LabelMap<TopologicalMap>           m_topologicalMaps;
+  LabelMap<SafeIntervalTool>         m_safeIntervalTools;
 
-  // Handling of tetgens is really hacky, need to streamline after current
-  // ICRA deadline.
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
 
@@ -280,15 +278,6 @@ ParseXML(XMLNode& _node) {
       m_tetgens[label] = TetGenDecomposition(child);
       SetDecomposition(label, nullptr);
     }
-    else if(child.Name() == "ReebGraphConstruction") {
-      if(parsedReebGraph)
-        throw ParseException(child.Where(),
-            "Second ReebGraphConstruction node detected. This node sets "
-            "default parameters - only one is allowed.");
-      parsedReebGraph = true;
-
-      ReebGraphConstruction::SetDefaultParameters(child);
-    }
     else if(child.Name() == "SafeIntervalTool") {
       auto utility = new SafeIntervalTool<MPTraits>(child);
 
@@ -299,6 +288,16 @@ ParseXML(XMLNode& _node) {
             "unique.");
 
       SetSafeIntervalTool(utility->GetLabel(), utility);
+    }
+    // Below here we are setting defaults rather than creating instances.
+    else if(child.Name() == "ReebGraphConstruction") {
+      if(parsedReebGraph)
+        throw ParseException(child.Where(),
+            "Second ReebGraphConstruction node detected. This node sets "
+            "default parameters - only one is allowed.");
+      parsedReebGraph = true;
+
+      ReebGraphConstruction::SetDefaultParameters(child);
     }
   }
 }
@@ -316,6 +315,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_topologicalMaps)
     pair.second->Initialize();
+  for(auto& pair : m_safeIntervalTools)
+    pair.second->Initialize();
 }
 
 
@@ -329,6 +330,10 @@ MPToolsType<MPTraits>::
   for(auto& pair : m_skeletonUtils)
     delete pair.second;
   for(auto& pair : m_topologicalMaps)
+    delete pair.second;
+  for(auto& pair : m_safeIntervalTools)
+    delete pair.second;
+  for(auto& pair : m_decompositions)
     delete pair.second;
 }
 

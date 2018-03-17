@@ -10,6 +10,8 @@
 #include "Utilities/MetricUtils.h"
 #include "Utilities/XMLNode.h"
 
+#include "nonstd/numerics.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -60,6 +62,31 @@ Factory(XMLNode& _node) {
         "'.");
 
   return output;
+}
+
+/*--------------------------------- Scaling ----------------------------------*/
+
+void
+Boundary::
+ScalePoint(std::vector<double>& _point) const noexcept {
+  const size_t limit = std::min(GetDimension(), _point.size());
+
+  for(size_t i = 0; i < limit; ++i) {
+    const auto r = GetRange(i);
+    _point[i] = nonstd::rescale(_point[i], r.min, r.max, -1., 1.);
+  }
+}
+
+
+void
+Boundary::
+UnscalePoint(std::vector<double>& _point) const noexcept {
+  const size_t limit = std::min(GetDimension(), _point.size());
+
+  for(size_t i = 0; i < limit; ++i) {
+    const auto r = GetRange(i);
+    _point[i] = nonstd::rescale(_point[i], -1., 1., r.min, r.max);
+  }
 }
 
 /*--------------------------- Containment Testing ----------------------------*/

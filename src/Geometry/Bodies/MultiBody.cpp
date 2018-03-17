@@ -170,8 +170,8 @@ InitializeDOFs(const Boundary* const _b) {
   }
 
   //Add dofs of multiple free bodies without connections for composite C-Spaces.
-  if (IsComposite()) {
-    for (size_t i = 1; i < m_bodies.size(); ++i) {
+  if(IsComposite()) {
+    for(size_t i = 1; i < m_bodies.size(); ++i) {
       const string bodStr = "Body " + to_string(i) + " ";
       if(m_bodies[i].GetBodyType() == Body::Type::Planar) {
         m_dofInfo.emplace_back(bodStr + "X Translation ", position, _b->GetRange(0));
@@ -289,17 +289,17 @@ IsInternal() const noexcept {
   return m_multiBodyType == Type::Internal;
 }
 
+
 bool
 MultiBody::
 IsComposite() const noexcept {
-  //If no joints but multiple bodies, we consider that a sufficient condition.
-  return (m_joints.empty() && m_bodies.size() > 1);
+  return m_joints.empty() and m_bodies.size() > 1;
 }
+
 
 size_t
 MultiBody::
 DOF() const noexcept {
-  ///@warning For assembly planning this returns a total DOF count.
   return m_dofInfo.size();
 }
 
@@ -307,7 +307,6 @@ DOF() const noexcept {
 size_t
 MultiBody::
 PosDOF() const noexcept {
-  ///@warning For assembly planning this returns a "per body" DOF count.
   switch(m_baseType) {
     case Body::Type::Planar:
       return 2;
@@ -322,7 +321,6 @@ PosDOF() const noexcept {
 size_t
 MultiBody::
 OrientationDOF() const noexcept {
-  ///@warning For assembly planning this returns a "per body" DOF count.
   if(m_baseMovement != Body::MovementType::Rotational)
     return 0;
   else
@@ -739,7 +737,7 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
   }
 
   // configure remaining free bodies, if this is a composite body
-  if (IsComposite()) {
+  if(IsComposite()) {
     // Note: index is the #dofs for the first body.
     const bool isUniformDOFs = (_v.size() % index) != 0;
     if(!isUniformDOFs)
@@ -981,11 +979,11 @@ FindMultiBodyInfo() {
     const auto& maxVertex = bbx.m_vertexList[7];
 
     minX = std::min(minX, minVertex[0]);
-    maxX = std::max(maxX, maxVertex[1]);
-    minY = std::min(minY, minVertex[2]);
-    maxY = std::max(maxY, maxVertex[3]);
-    minZ = std::min(minZ, minVertex[4]);
-    maxZ = std::max(maxZ, maxVertex[5]);
+    maxX = std::max(maxX, maxVertex[0]);
+    minY = std::min(minY, minVertex[1]);
+    maxY = std::max(maxY, maxVertex[1]);
+    minZ = std::min(minZ, minVertex[2]);
+    maxZ = std::max(maxZ, maxVertex[2]);
   }
 
   m_boundingBox[0] = minX;

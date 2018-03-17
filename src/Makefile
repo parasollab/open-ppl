@@ -1,8 +1,10 @@
 # Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# Set platform, debug mode, and parallel compile if not already set.
+# Set platform, debug mode, address sanitizer, and parallel compile if not
+# already set.
 platform ?= LINUX_gcc
 debug    ?= 0
+asan     ?= 0
 parallel ?= 0
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.

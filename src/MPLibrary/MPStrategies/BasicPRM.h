@@ -38,7 +38,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
     virtual void Initialize();
     virtual void Iterate();
-    virtual void Finalize();
 
   protected:
     ////////////////////////////////////////////////////////////////////////////
@@ -257,21 +256,6 @@ Iterate() {
       break;
   }
   m_startAt = Sampling;
-}
-
-
-template <typename MPTraits>
-void
-BasicPRM<MPTraits>::
-Finalize() {
-  // Output final map.
-  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
-      this->GetEnvironment());
-
-  // Output stats.
-  ofstream  osStat(this->GetBaseFilename() + ".stat");
-  StatClass* stats = this->GetStatClass();
-  stats->PrintAllStats(osStat, this->GetRoadmap());
 }
 
 

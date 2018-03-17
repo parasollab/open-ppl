@@ -87,8 +87,27 @@ class Boundary {
     /// Get a random point inside the boundary.
     virtual std::vector<double> GetRandomPoint() const = 0;
 
-    /// Minimally push a sampled point so that it lies within the boundary.
-    virtual void PushInside(std::vector<double>& _sample) const noexcept = 0;
+    /// Minimally push a point so that it lies within the boundary.
+    /// @param _point The point to push.
+    virtual void PushInside(std::vector<double>& _point) const noexcept = 0;
+
+    ///@}
+    ///@name Scaling
+    ///@{
+
+    /// Scale a point relative to the maximum range of the boundary. Up to
+    /// GetDimension() elements will be scaled so that this boundary's maximum
+    /// range maps to [-1, 1]. Additional elements in the point will not be
+    /// scaled.
+    /// @param _point The point to unscale.
+    virtual void ScalePoint(std::vector<double>& _point) const noexcept;
+
+    /// Unscale a point relative to the maximum range of the boundary. Up to
+    /// GetDimension() elements will be scaled so that [-1, 1] maps to this
+    /// boundary's maximum range. Additional elements in the point will not be
+    /// scaled.
+    /// @param _point The point to unscale.
+    virtual void UnscalePoint(std::vector<double>& _point) const noexcept;
 
     ///@}
     ///@name Containment Testing

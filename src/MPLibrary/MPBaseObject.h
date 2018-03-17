@@ -82,7 +82,7 @@ class MPBaseObject {
 
     /// Print internal state of this object.
     /// @param _os The std::ostream to print to.
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     ///@}
     ///@name Initialization
@@ -234,7 +234,7 @@ MPBaseObject(XMLNode& _node) {
 template <typename MPTraits>
 void
 MPBaseObject<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   _os << this->GetNameAndLabel() << endl;
 }
 

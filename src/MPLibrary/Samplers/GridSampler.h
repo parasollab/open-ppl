@@ -5,221 +5,310 @@
 
 #include <algorithm>
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief Generate configurations along a grid through @cspace.
+/// Generate configurations along a grid through a submanifold in @cspace. The
+/// DOFs not specified by the grid will be (independently) randomly sampled.
 ///
-/// This samplers generates randomly a cfg \f$c\f$. Then for the dimensions
-/// established in the xml file it generates a grid of points changing the
-/// values of \f$c\f$s dimensions and validate them.
+/// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class GridSampler : public SamplerMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
 
-    GridSampler(string _vcm = "",
-        map<size_t, size_t> _numPoints = map<size_t, size_t>(),
-        bool _useBoundary  = true);
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename SamplerMethod<MPTraits>::InputIterator;
+    using typename SamplerMethod<MPTraits>::OutputIterator;
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    GridSampler(std::string _vcm = "", std::vector<size_t> _numPoints = {});
 
     GridSampler(XMLNode& _node);
 
-    // Reads XML
-    void ParseXML(XMLNode& _node);
+    virtual ~GridSampler() = default;
 
-    // Prints options
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    // Attempts to sample, bool value is not working, it just return true at the end.
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision);
+    virtual void Print(std::ostream& _os) const override;
+    virtual void Initialize() override;
+
+    ///@}
+    ///@name SamplerMethod Overrides
+    ///@{
+
+    /// For a grid sampler, the number of nodes is the desired number of nodes
+    /// PER GRID POINT, so usually this will be 1. The max attempts is also per
+    /// grid point.
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+        const Boundary* const _boundary, OutputIterator _result,
+        OutputIterator _collision) override;
+
+    /// Not implemented for this method.
+    virtual void Sample(InputIterator _first, InputIterator _last,
+        size_t _maxAttempts, const Boundary* const _boundary,
+        OutputIterator _result, OutputIterator _collision) override;
+
+    ///@}
 
   private:
-    void GetCoordLocation(int _iter, size_t _totalCell,
-        map<size_t,size_t>& _coords, map<size_t,int> _tempSize);
 
-    void GetRealLocation(map<size_t,double>& _locations,
-        map<size_t,size_t> _coordinates, const Boundary* const  _boundary);
+    ///@name Helpers
+    ///@{
 
-    string m_vcLabel; // Validity checker method
-    map<size_t, size_t> m_numPoints; // Map of dimension to number of grid points
+    /// Parse the ticks string, which defines the number of ticks to use in each
+    /// grid dimension.
+    void ParseTicksString(XMLNode& _node, const std::string& _s);
+
+    /// Reset the ticker to its starting position.
+    void ResetTicker();
+
+    /// Advance the ticker to the next grid position.
+    void AdvanceTicker();
+
+    /// Position a configuration at the current ticker position.
+    void PositionAtTicker(CfgType& _cfg, const Boundary* const _b) const;
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::string m_vcLabel;        ///< Validity checker label.
+    std::vector<size_t> m_ticks;  ///< The number of ticks in each dimension.
+    std::vector<size_t> m_ticker; ///< Current tick in sampling process.
+    size_t m_numPoints{0};        ///< The number of points in the grid.
+
+    ///@}
+
 };
 
-template <typename MPTraits>
-GridSampler<MPTraits>::
-GridSampler(string _vcm, map<size_t, size_t> _numPoints, bool _useBoundary)
-  : m_vcLabel(_vcm), m_numPoints(_numPoints) {
-    this->SetName("GridSampler");
-  }
+/*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
 GridSampler<MPTraits>::
-GridSampler(XMLNode& _node) :
-  SamplerMethod<MPTraits>(_node) {
-    this->SetName("GridSampler");
-    ParseXML(_node);
-  }
+GridSampler(string _vcm, std::vector<size_t> _ticks)
+    : m_vcLabel(_vcm), m_ticks(_ticks) {
+  this->SetName("GridSampler");
+}
 
-// Reads XML
+
 template <typename MPTraits>
-void
 GridSampler<MPTraits>::
-ParseXML(XMLNode& _node) {
-
-  // Read grid data and store in m_numPoints
-  for(auto& child : _node) {
-    if(child.Name() == "Dimension") {
-      size_t points = child.Read("points", true, 10, 0,
-          MAX_INT, "Number of grid points, excluding min and max");
-      size_t index = child.Read("index", true, 0, 0, MAX_INT,
-          "Index in bounding box");
-      m_numPoints[index] = points;
-    }
-  }
+GridSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
+  this->SetName("GridSampler");
 
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity test method");
+
+  const std::string ticksString = _node.Read("ticks", true, "", "Either a "
+      "string of numbers where each represents the number of ticks in one "
+      "dimension (starting from dof 0), or a single number which represents the "
+      "number of ticks in all dimensions.");
+
+  ParseTicksString(_node, ticksString);
 }
 
-// Prints options
+/*------------------------- MPBaseObject Overrides ---------------------------*/
+
 template <typename MPTraits>
 void
 GridSampler<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
-  _os << "\tvcLabel = " << m_vcLabel << endl;
-  _os << "\tnumPoints (index, points):" << endl;
-  for(auto& dim : m_numPoints)
-    _os << "\t\t" << dim.first << ", " << dim.second << endl;
+
+  _os << "\tvcLabel: " << m_vcLabel
+      << "\n\tticks: " << m_ticks
+      << "\n\ttotal points: " << m_numPoints
+      << std::endl;
 }
 
-// Attempts to sample, bool value is not working, it just return true at the end.
-template <typename MPTraits>
-bool
-GridSampler<MPTraits>::
-Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-  string callee = this->GetNameAndLabel() + "::Sampler()";
+template <typename MPTraits>
+void
+GridSampler<MPTraits>::
+Initialize() {
+  // If we have only one point token, assume we want to use that value as the
+  // number of points in each DOF.
+  if(m_ticks.size() == 1)
+    m_ticks.resize(this->GetTask()->GetRobot()->GetMultiBody()->DOF(),
+                   m_ticks[0]);
+
+  // Compute the total number of positions in the grid.
+  m_numPoints = 1;
+  for(auto numTicks : m_ticks)
+    m_numPoints *= numTicks;
+}
+
+/*------------------------- SamplerMethod Overrides --------------------------*/
+
+template <typename MPTraits>
+void
+GridSampler<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts,
+    const Boundary* const _boundary,
+    OutputIterator _result, OutputIterator _collision) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetName() + "::Sample");
+
+  // Ensure that the boundary has enough dimensions.
+  if(m_ticks.size() > _boundary->GetDimension())
+    throw RunTimeException(WHERE, "Boundary has too few dimensions " +
+        std::to_string(_boundary->GetDimension()) + ", expected at least " +
+        std::to_string(m_ticks.size()) + ".");
+
+  const std::string callee = this->GetName() + "::Sampler";
   auto vc = this->GetValidityChecker(m_vcLabel);
 
-  //Calculate total number of cfg to be created
-  size_t totalCell = 1;
-  for(auto&  num : m_numPoints) {
-    totalCell = totalCell * num.second;
-  }
-  //Generate all the points in the grid for the asked dimensions
-  for(size_t i = 0; i < totalCell; ++i) {
-    map<size_t,size_t> coordinates;
-    map<size_t,int> tempSize;
-    int dimSize = 1;
-    //Get the cummulative sizes of the dimensions required.
-    //Multiply the size of the n first dimensions and each time use one more dim.
-    for(auto&  num : m_numPoints) {
-      int index = num.first;
-      int sizee = num.second;
-      dimSize = dimSize * sizee;
-      tempSize[index] = dimSize;
+  CfgType cfg(this->GetTask()->GetRobot());
+  ResetTicker();
+
+  // Create samples at each grid point.
+  for(size_t n = 0; n < m_numPoints; ++n) {
+    if(this->m_debug)
+      std::cout << "Sampling point " << n << " / " << m_numPoints
+                << "\n\tTicker position: " << m_ticker << " / " << m_ticks
+                << std::endl;
+
+    // Try to sample _numNodes points at this position.
+    for(size_t i = 0; i < _numNodes; ++i) {
+      // Try to sample a point at this position up to _maxAttempts times.
+      for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
+        // Sample a new configuration in the boundary.
+        stats->IncNodesAttempted(this->GetNameAndLabel());
+        cfg.GetRandomCfg(_boundary);
+
+        // Overwrite the DOFs which are specified by the grid.
+        PositionAtTicker(cfg, _boundary);
+
+        // Evaluate validity and store the result.
+        if(cfg.InBounds(_boundary) and vc->IsValid(cfg, callee)) {
+          if(this->m_debug)
+            std::cout << "\tGenerated valid cfg at " << cfg.PrettyPrint()
+                      << std::endl;
+
+          stats->IncNodesGenerated(this->GetNameAndLabel());
+          _result++ = cfg;
+          break;
+        }
+        else
+          _collision++ = cfg;
+      }
     }
-    //Returns coordinates in the grid as int value (uses m_numPoints)
-    GetCoordLocation(i, totalCell, coordinates, tempSize);
-
-    //Turn the grid's coordinates into real values (uses m_numPoints, _boundary)
-    map<size_t,double> locations;
-    GetRealLocation(locations, coordinates, _boundary);
-
-    //Update the DoF values of the point generated.
-    for(auto&  location : locations)
-      _cfg[location.first] = location.second;
-
-    // Is _cfg a valid configuration?
-    if(_cfg.InBounds(_boundary) and vc->IsValid(_cfg, callee)) {
-      // Yes (sampler successful)
-      _result.push_back(_cfg);
-    }
+    // We are done attempting for this position; advance the ticker to the next
+    // one.
+    AdvanceTicker();
   }
-  return true;
 }
 
-/*
- * Calculate the grid's coordinates for a cfg specified as an int number (use m_numPoints)
- * Each point in the grid is numerated. This function transforms the int number
- * into coordinates of the dimensions required.
- */
+
 template <typename MPTraits>
 void
 GridSampler<MPTraits>::
-GetCoordLocation(int _iter, size_t _totalCell, map<size_t,size_t>& _coords,
-    map<size_t,int> _tempSize) {
+Sample(InputIterator _first, InputIterator _last,
+    size_t _maxAttempts, const Boundary* const _boundary,
+    OutputIterator _result, OutputIterator _collision) {
+  throw RunTimeException(WHERE, "GridSampler does not support the filtering "
+      "version of Sample.");
+}
 
-  int iterVal = _iter; //Assigning variable value as _iter.
-  int divResult= 0;
-  int mod = 0;
-  int lastIt= 0;
+/*-------------------------------- Helpers -----------------------------------*/
 
-  //Check if it is just one point's dimension required
-  //If the grid is defined in 1 dim, then return _iter as the coordinate.
-  if(_tempSize.size() == 1) {
-    map<size_t, size_t>::iterator iterat = m_numPoints.begin();
-    int inde = iterat->first;
-    _coords[inde] = _iter;
-    return;
-  }
+template <typename MPTraits>
+void
+GridSampler<MPTraits>::
+ParseTicksString(XMLNode& _node, const std::string& _s) {
+  m_ticks.clear();
 
-  //If there more than 1 dim, for each dim is needed to take the values of the coordinates
-  //by dividing the int value that represent the grid point by the tempSize related to
-  //each dim.
-  //Note: It starts at the end of the map going backwards saving the mod value.
+  // Accept space, comma, or semicolon as a delimiter.
+  std::vector<std::string> tokens = nonstd::tokenize(_s, ",; ");
 
-  for(map<size_t, int>::reverse_iterator it = _tempSize.rbegin();
-      it != _tempSize.rend();it++) {
-    int ind = it->first;
-    int siz = it->second; //Saving the cummulative size of ind dim
-
-    if(it == _tempSize.rbegin()) { //If this is the bigger dimension just safe 0
-      _coords[ind] = 0;
-      lastIt = ind; //Saving the reference value to the location asigned with 0.
+  // Convert each token into an integer. The conversion may throw an
+  // out-of-range if it doesn't work. Upgrade those to our exception so that we
+  // can see where it came from.
+  /// @TODO It would be a good idea to add a regex check for non-numeric
+  ///       characters, but the lab's gcc version (4.8.5) doesn't currently
+  ///       support <regex>.
+  try {
+    for(const auto& token : tokens) {
+      const size_t numPoints = std::stoul(token);
+      m_ticks.push_back(numPoints);
     }
+  }
+  catch(const std::exception&) {
+    throw ParseException(_node.Where(), "Could not convert the point string '"
+        + _s + "' into a set of unsigned integers.");
+  }
+}
+
+
+template <typename MPTraits>
+void
+GridSampler<MPTraits>::
+ResetTicker() {
+  m_ticker.resize(m_ticks.size(), 0);
+}
+
+
+template <typename MPTraits>
+void
+GridSampler<MPTraits>::
+AdvanceTicker() {
+  const size_t dimensions = m_ticks.size();
+
+  // Advance along the first dimension.
+  ++m_ticker[0];
+
+  // If it now exceeds the max number of ticks, advance the next one. Cascade as
+  // we over-extend the limits.
+
+  for(size_t d = 0; d < dimensions; ++d)
+  {
+    // If we are not at the end, quit now
+    if(m_ticker[d] < m_ticks[d])
+      break;
+
+    // Otherwise we are at the end. Reset this dimension to the 0th tick and
+    // increment the next one.
+    m_ticker[d] = 0;
+    if(d + 1 < dimensions)
+      ++m_ticker[d + 1];
+  }
+}
+
+
+template <typename MPTraits>
+void
+GridSampler<MPTraits>::
+PositionAtTicker(CfgType& _cfg, const Boundary* const _b) const {
+  for(size_t d = 0; d < m_ticker.size(); ++d) {
+    // Skip dimensions with no ticks.
+    if(m_ticks[d] == 0)
+      continue;
+
+    // If this dimension has only one tick, use the center point.
+    if(m_ticks[d] == 1)
+      _cfg[d] = _b->GetCenter()[d];
+    // Otherwise extrapolate the appropriate fraction of the range in dimension
+    // d.
     else {
-      divResult = iterVal/siz; //Divide iterVal by siz
-      mod = iterVal%siz; //Calculate mod of iterVal mod siz.
-      _coords[lastIt] = divResult; //Saving divResult but using the preceding iter
-      _coords[ind] = mod; //Saving the mod value using the present iter
-      lastIt = ind; //Update auxiliaries
-      iterVal = mod;
+      auto r = _b->GetRange(d);
+      _cfg[d] = r.min + r.Length() * m_ticker[d] / (m_ticks[d] - 1);
     }
   }
 }
 
-//Calculate the real point in the workspace for a cfg having the number of grid's point
-//of each dimension.
-template <typename MPTraits>
-void
-GridSampler<MPTraits>::
-GetRealLocation(map<size_t,double>& _locations, map<size_t,size_t> _coordinates,
-    const Boundary* const  _boundary) {
-
-  for(auto&  num : m_numPoints) {
-    int index = num.first;
-    int numPoints = num.second;
-
-    // Get bounding box min and max (for this dimension)
-    auto range = _boundary->GetRange(index);
-
-    // Resolution of grid
-    double delta = range.Length();
-    if(numPoints != 0)
-      delta /= numPoints;
-
-    // Get the real place in the workspace .
-    double gridVal = (_coordinates[index] * delta) + range.min;
-
-    //Push gridVal inside bounding box (if necessary)
-    gridVal = min(range.max, gridVal);
-    gridVal = max(range.min, gridVal);
-    _locations[index] = gridVal;
-  }
-}
+/*----------------------------------------------------------------------------*/
 
 #endif

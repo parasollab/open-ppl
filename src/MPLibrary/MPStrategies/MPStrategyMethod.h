@@ -49,7 +49,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name Interface
@@ -62,7 +62,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Run();            ///< Call Iterate until EvaluateMap is true.
     virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
-    virtual void Finalize() {}     ///< Clean-up and output results.
+    virtual void Finalize();       ///< Clean-up and output results.
 
     /// Determine if any of the map evaluators have "Query" in their label.
     /// @TODO Remove this once we finish setting up the new query mechanism.
@@ -82,7 +82,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@name Internal State
     ///@{
 
-    vector<string> m_meLabels;        ///< The list of map evaluators to use.
+    std::vector<std::string> m_meLabels;  ///< The list of map evaluators to use.
 
     /// This is currently used in Disassembly planning methods.
     bool m_successful{false}; ///< A flag to set as true in Finalize() to indicate success.
@@ -101,8 +101,8 @@ MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) { }
 template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
-Print(ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl;
+Print(std::ostream& _os) const {
+  _os << this->GetNameAndLabel() << std::endl;
 }
 
 /*------------------------------ Interface -----------------------------------*/
@@ -111,9 +111,9 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 operator()() {
-  this->Initialize();
-  this->Run();
-  this->Finalize();
+  Initialize();
+  Run();
+  Finalize();
 #ifdef VIZMO
   GetVizmo().GetMap()->RefreshMap();
 #endif
@@ -124,24 +124,23 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
-  this->Print(std::cout);
+  std::string clockName = this->GetNameAndLabel() + "::Run";
+  auto stats = this->GetStatClass();
+  stats->StartClock(clockName);
 
-  string clockName = this->GetNameAndLabel() + "::Run";
-  if(this->m_debug)
-    cout << clockName << endl;
-  this->GetStatClass()->StartClock(clockName);
-  this->m_successful = false;
+  Print(std::cout);
+
+  m_successful = false;
 
   do {
-    this->Iterate();
+    Iterate();
 #ifdef VIZMO
     GetVizmo().GetMap()->RefreshMap();
 #endif
-  } while(!this->EvaluateMap());
+  } while(!EvaluateMap());
 
-  this->GetStatClass()->StopClock(clockName);
-  if(this->m_debug)
-    this->GetStatClass()->PrintClock(clockName, cout);
+  stats->StopClock(clockName);
+  stats->PrintClock(clockName, std::cout);
 }
 
 
@@ -149,38 +148,57 @@ template <typename MPTraits>
 bool
 MPStrategyMethod<MPTraits>::
 EvaluateMap() {
+  // If there are no evaluators, then this is a single-iteration method.
   if(m_meLabels.empty())
     return true;
-  else {
-    StatClass* stats = this->GetStatClass();
 
-    bool passed = true;
-    string clockName = this->GetNameAndLabel() + "::EvaluateMap";
-    stats->StartClock(clockName);
+  StatClass* stats = this->GetStatClass();
 
-    for(auto& label : m_meLabels) {
-      auto evaluator = this->GetMapEvaluator(label);
-      const string& evalName = evaluator->GetNameAndLabel();
+  bool passed = true;
+  std::string clockName = this->GetNameAndLabel() + "::EvaluateMap";
+  stats->StartClock(clockName);
 
-      stats->StartClock(evalName);
-      passed = evaluator->operator()();
-      stats->StopClock(evalName);
+  for(auto& label : m_meLabels) {
+    auto evaluator = this->GetMapEvaluator(label);
+    const std::string& evalName = evaluator->GetNameAndLabel();
 
-      if(this->m_debug) {
-        stats->PrintClock(evalName, cout);
-        cout << evalName << (passed ? "  (Passed)" : "  (Failed)") << endl;
-      }
+    stats->StartClock(evalName);
+    passed = evaluator->operator()();
+    stats->StopClock(evalName);
 
-      if(!passed)
-        break;
+    if(this->m_debug) {
+      std::cout << evalName << (passed ? " Passed" : " Failed") << "\t";
+      stats->PrintClock(evalName, std::cout);
+      std::cout << std::endl;
     }
 
-    stats->StopClock(clockName);
-    if(this->m_debug)
-      stats->PrintClock(clockName, cout);
-
-    return passed;
+    if(!passed)
+      break;
   }
+
+  stats->StopClock(clockName);
+
+  if(this->m_debug) {
+    std::cout << clockName << (passed ? " Passed" : " Failed") << "\t";
+    stats->PrintClock(clockName, std::cout);
+    std::cout << std::endl;
+  }
+
+  return passed;
+}
+
+
+template <typename MPTraits>
+void
+MPStrategyMethod<MPTraits>::
+Finalize() {
+  // Output final map.
+  auto roadmap = this->GetRoadmap();
+  roadmap->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
+
+  // Output stats.
+  std::ofstream osStat(this->GetBaseFilename() + ".stat");
+  this->GetStatClass()->PrintAllStats(osStat, this->GetRoadmap());
 }
 
 
@@ -191,7 +209,7 @@ UsingQuery() const {
   /// @TODO This is horribly brittle and depends on magic XML values. Let's find
   ///       a better way.
   for(const auto& label : m_meLabels)
-    if(label.find("Query", 0) != string::npos)
+    if(label.find("Query", 0) != std::string::npos)
       return true;
   return false;
 }

@@ -114,7 +114,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _result An iterator to storage for the output configurations.
     /// @param[out] _collision An (optional) iterator to storage for failed
     ///                        attempts.
-    void Sample(InputIterator _first, InputIterator _last,
+    virtual void Sample(InputIterator _first, InputIterator _last,
         size_t _maxAttempts, const Boundary* const _boundary,
         OutputIterator _result,
         OutputIterator _collision);
@@ -138,7 +138,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _result The resulting output configurations.
     /// @param[out] _collision The (optional) return for failed attempts.
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) = 0;
+        vector<CfgType>& _result, vector<CfgType>& _collision) {return false;}
 
     ///@}
 
@@ -170,22 +170,23 @@ SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
     OutputIterator _result, OutputIterator _collision) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetName() + "::Sample");
 
   for(size_t i = 0; i < _numNodes; ++i) {
     CfgType cfg(this->GetTask()->GetRobot());
     cfg.GetRandomCfg(_boundary);
 
-    vector<CfgType> result;
-    vector<CfgType> collision;
+    std::vector<CfgType> result;
+    std::vector<CfgType> collision;
     //Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
+      stats->IncNodesAttempted(this->GetNameAndLabel());
       if(this->Sampler(cfg, _boundary, result, collision))
         break;
     }
 
-    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(),
-        result.size());
+    stats->IncNodesGenerated(this->GetNameAndLabel(), result.size());
     _result = copy(result.begin(), result.end(), _result);
     _collision = copy(collision.begin(), collision.end(), _collision);
   }
@@ -198,7 +199,7 @@ SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
     OutputIterator _result) {
-  vector<CfgType> collision;
+  std::vector<CfgType> collision;
 
   Sample(_numNodes, _maxAttempts, _boundary, _result, back_inserter(collision));
 }
@@ -211,25 +212,24 @@ Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
     OutputIterator _result,
     OutputIterator _collision) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetName() + "::Sample");
 
   while(_first != _last) {
-    vector<CfgType> result;
-    vector<CfgType> collision;
+    std::vector<CfgType> result;
+    std::vector<CfgType> collision;
     //Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; attempts++) {
-      this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
+      stats->IncNodesAttempted(this->GetNameAndLabel());
       if(this->Sampler(*_first, _boundary, result, collision))
         break;
     }
 
-    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(),
-        result.size());
+    stats->IncNodesGenerated(this->GetNameAndLabel(), result.size());
     _result = copy(result.begin(), result.end(), _result);
     _collision = copy(collision.begin(), collision.end(), _collision);
     _first++;
   }
-
-  return _result;
 }
 
 
