@@ -172,21 +172,8 @@ class Environment {
     /// @return A map from obstacle points to obstacle indexes.
     std::map<Vector3d, std::vector<size_t>> ComputeObstacleVertexMap() const;
 
-    ///@}
-    ///@name Decomposition
-    ///@{
-
-    /// Get the decomposition model if this workspace. If it has not been
-    /// created yet, a null pointer will be returned.
-    WorkspaceDecomposition* GetDecomposition();
-
-    /// Get the decomposition model if this workspace. If it has not been
-    /// created yet, a null pointer will be returned.
-    const WorkspaceDecomposition* GetDecomposition() const;
-
-    /// Compute a decomposition of the workspace.
-    /// @param _f The decomposition function to use.
-    void Decompose(DecompositionFunction&& _f);
+    /// Check if the boundary is also modeled as an obstacle.
+    bool UsingBoundaryObstacle() const noexcept;
 
     ///@}
     ///@name Physical Properties
@@ -207,6 +194,9 @@ class Environment {
 
     /// Initialize a boundary object of the appropriate type.
     void InitializeBoundary(std::string _type, const std::string _where);
+
+    /// Create an obstacle for the boundary.
+    void CreateBoundaryObstacle();
 
     ///@}
     ///@name File Info
@@ -234,6 +224,7 @@ class Environment {
 
     std::unique_ptr<Boundary> m_boundary;               ///< Workspace boundary.
     std::vector<std::unique_ptr<MultiBody>> m_obstacles;///< Obstacle multibodies.
+    bool m_boundaryObstacle{false}; ///< Use the boundary as an obstacle?
 
     ///@}
     ///@name Decomposition

@@ -159,7 +159,7 @@ class Body {
     double GetInsideSphereRadius() const;
 
     /// Set the polyhedron model for this body.
-    void SetPolyhedron(GMSPolyhedron& _poly);
+    void SetPolyhedron(GMSPolyhedron&& _poly);
 
     /// Get the polyhedron in model coordinates.
     const GMSPolyhedron& GetPolyhedron() const;

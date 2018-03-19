@@ -18,6 +18,7 @@ using namespace mathtool;
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
 class Cfg;
+class GMSPolyhedron;
 class XMLNode;
 
 
@@ -177,7 +178,7 @@ class Boundary {
     virtual void Write(std::ostream& _os) const = 0;
 
     ///@}
-    ///@name CGAL Representations
+    ///@name Polyhedron Representations
     ///@{
 
     typedef CGAL::Exact_predicates_exact_constructions_kernel CGALKernel;
@@ -185,6 +186,11 @@ class Boundary {
 
     /// Create a CGAL polyhedron representation of this.
     virtual CGALPolyhedron CGAL() const;
+
+    /// Create a GMSPolyhedron representation of this. The polyhedron will be
+    /// inside-out (normals facing inward) to properly represent the contact
+    /// normals.
+    virtual GMSPolyhedron MakePolyhedron() const;
 
     ///@}
 

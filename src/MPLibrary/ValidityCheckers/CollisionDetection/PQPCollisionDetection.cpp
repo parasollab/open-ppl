@@ -58,8 +58,8 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
 
     _cdInfo.m_minDist = result.Distance();
 
-    _cdInfo.m_robotPoint = t1 * result.P1();
-    _cdInfo.m_objectPoint = t2 * result.P2();
+    _cdInfo.m_robotPoint = t1 * Vector3d(result.P1());
+    _cdInfo.m_objectPoint = t2 * Vector3d(result.P2());
 
     const bool inCollision = result.Distance() <= 0.0;
 

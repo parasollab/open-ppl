@@ -46,6 +46,13 @@ class WorkspaceBoundingSphere : public AbstractBoundingSphere {
     virtual bool InBoundary(const Cfg& _cfg) const override;
 
     ///@}
+    ///@name Polyhedron Representations
+    ///@{
+
+    /// This will be an approximate sphere with 512 faces.
+    virtual GMSPolyhedron MakePolyhedron() const override;
+
+    ///@}
 };
 
 #endif

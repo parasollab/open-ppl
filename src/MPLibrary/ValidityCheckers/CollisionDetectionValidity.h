@@ -199,21 +199,20 @@ bool
 CollisionDetectionValidity<MPTraits>::
 IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
-  bool retVal = false;
 
-  //get multiBody
-  Environment* env = this->GetEnvironment();
+  const Environment* const env = this->GetEnvironment();
   auto multiBody = _cfg.GetMultiBody();
 
   //check self collision
-  if(!m_ignoreSelfCollision && multiBody->GetNumBodies() > 1 &&
+  if(!m_ignoreSelfCollision and multiBody->GetNumBodies() > 1 and
       IsInSelfCollision(_cdInfo, multiBody, _callName)) {
     _cdInfo.m_collidingObstIndex = -1;
     return true;
   }
 
   // Check boundary collision.
-  const bool inBounds = _cfg.InBounds(this->GetEnvironment());
+  const bool inBounds = env->UsingBoundaryObstacle()
+                     or _cfg.InBounds(this->GetEnvironment());
   if(!inBounds) {
     _cdInfo.m_collidingObstIndex = -1;
     return true;
@@ -221,6 +220,7 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
 
 
   //check obstacle collisions
+  bool inCollision = false;
   size_t numObst = env->NumObstacles();
   for(size_t i = 0; i < numObst; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
@@ -234,9 +234,9 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
     }
 
     //store first collision in colliding index
-    if(coll && !retVal) {
+    if(coll && !inCollision) {
       _cdInfo.m_collidingObstIndex = i;
-      retVal = true;
+      inCollision = true;
     }
 
     //early quit if we don't care about distance information
@@ -254,13 +254,13 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
 
       // Perform the collision check.
       CDInfo cdInfo(_cdInfo.m_retAllInfo);
-      const bool collision = IsInterRobotCollision(cdInfo, _cfg.GetRobot()->GetMultiBody(),
-          robot->GetMultiBody(), _callName);
+      const bool collision = IsInterRobotCollision(cdInfo,
+          _cfg.GetRobot()->GetMultiBody(), robot->GetMultiBody(), _callName);
       if(collision)
         return true;
     }
   }
-  return retVal;
+  return inCollision;
 }
 
 
@@ -399,14 +399,14 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
     p = _a + Vector3d(0,1e-8,0);
 
   // Create a new free body with a nullptr as owning multibody
-  Body* lineBody = new Body(nullptr);
+  Body lineBody(nullptr);
   // Create body geometry with a single triangle
   GMSPolyhedron poly;
   poly.GetVertexList() = vector<Vector3d>{{_a[0], _a[1], _a[2]},
       {_b[0], _b[1], _b[2]}, p};
   poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
       poly.GetVertexList())};
-  lineBody->SetPolyhedron(poly);
+  lineBody.SetPolyhedron(std::move(poly));
 
   // Default behaviour do not store the cd info
   CDInfo cdInfo;
@@ -416,16 +416,16 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
 
   bool visible = true;
 
-  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   for(size_t i = 0; i < num; ++i) {
-    if(m_cdMethod->IsInCollision(lineBody, env->GetObstacle(i)->GetBody(0),
-        cdInfo)) {
-      visible = false;
-      break;
+    auto obst = env->GetObstacle(i);
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+      if(m_cdMethod->IsInCollision(&lineBody, obst->GetBody(j), cdInfo)) {
+        visible = false;
+        break;
+      }
     }
   }
 
-  delete lineBody;
   return visible;
 }
 

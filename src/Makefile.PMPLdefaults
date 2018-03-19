@@ -18,7 +18,7 @@ UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
              $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
-	     $(GLVIS_INCL) $(LKH_INCL)
+	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB) $(BULLET_LIB) \
 	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS)
@@ -314,6 +314,12 @@ $(LKH_LIBFILE):
 	@cd $(LKH_DIR) && $(MAKE)
 
 ################################################################################
+## dlib
+################################################################################
+DLIB_DIR  := $(UTILS_DIR)/dlib
+DLIB_INCL := -I$(DLIB_DIR)
+
+################################################################################
 # Simulator
 ################################################################################
 SIM_INCL := $(QT_INCL)
@@ -377,6 +383,8 @@ PMPL_SRCS := \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/NeighborhoodFinders/MPNNWrapper.cpp \
+  MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
+  MPLibrary/LearningModels/RadialKernelGradient.cpp \
   MPLibrary/Samplers/SimilarStructureSampler.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \

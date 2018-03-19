@@ -1,6 +1,7 @@
 #include "Geometry/Boundaries/Boundary.h"
 
 #include "ConfigurationSpace/Cfg.h"
+#include "Geometry/GMSPolyhedron.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
@@ -169,13 +170,21 @@ GetClearancePoint(const Vector3d& _p) const {
   return Vector3d();
 }
 
-/*-------------------------- CGAL Representations ----------------------------*/
+/*----------------------- Polyhedron Representations -------------------------*/
 
 Boundary::CGALPolyhedron
 Boundary::
 CGAL() const {
   throw RunTimeException(WHERE, "No base class implementation supported.");
   return CGALPolyhedron();
+}
+
+
+GMSPolyhedron
+Boundary::
+MakePolyhedron() const {
+  throw RunTimeException(WHERE, "No base class implementation supported.");
+  return GMSPolyhedron();
 }
 
 /*----------------------------------- I/O ------------------------------------*/

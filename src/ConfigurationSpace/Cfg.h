@@ -2,7 +2,9 @@
 #define CFG_H_
 
 #include <cstddef>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
@@ -57,7 +59,7 @@ class Cfg {
     Cfg(const Cfg& _other);
     Cfg(Cfg&& _other);
 
-    virtual ~Cfg() = default;
+    virtual ~Cfg();
 
     ///@}
     ///@name Assignment
@@ -116,9 +118,8 @@ class Cfg {
     /// @warning For composite C-Space this returns a total DOF count.
     size_t DOF() const noexcept;
 
-    ///@warning For composite C-Space this returns a "per body" DOF count.
+    /// @warning For composite C-Space these functions return "per body" counts.
     size_t PosDOF() const noexcept;
-    ///@warning For composite C-Space this returns a "per body" DOF count.
     size_t OriDOF() const noexcept;
     size_t JointDOF() const noexcept;
 
@@ -133,30 +134,30 @@ class Cfg {
     double operator[](const size_t _dof) const noexcept;
 
     /// Get the data for all DOFs.
-    const vector<double>& GetData() const noexcept;
+    const std::vector<double>& GetData() const noexcept;
 
     /// Access the velocity data for a given DOF.
     double& Velocity(const size_t _dof) noexcept;
     double Velocity(const size_t _dof) const noexcept;
 
     /// Get the velocity data for all DOFs.
-    const vector<double>& GetVelocity() const noexcept;
+    const std::vector<double>& GetVelocity() const noexcept;
 
     /// Set the DOF data.
-    virtual void SetData(const vector<double>& _data);
-    virtual void SetData(vector<double>&& _data);
+    virtual void SetData(const std::vector<double>& _data);
+    virtual void SetData(std::vector<double>&& _data);
 
     /// Set the joint DOF data. Other DOFs will remain unchanged.
-    void SetJointData(const vector<double>& _data);
+    void SetJointData(const std::vector<double>& _data);
 
     /// Get the robot's reference point.
     Point3d GetPoint() const noexcept;
 
-    virtual vector<double> GetPosition() const;
-    virtual vector<double> GetRotation() const;
-    virtual vector<double> GetJoints() const;
-    virtual vector<double> GetNonJoints() const;
-    virtual vector<double> GetOrientation() const;
+    virtual std::vector<double> GetPosition() const;
+    virtual std::vector<double> GetRotation() const;
+    virtual std::vector<double> GetJoints() const;
+    virtual std::vector<double> GetNonJoints() const;
+    virtual std::vector<double> GetOrientation() const;
 
     virtual double Magnitude() const;
     virtual double PositionMagnitude() const;
@@ -293,11 +294,11 @@ class Cfg {
 
     /// Read a configuration from an input stream.
     /// @param _is The input stream to read from.
-    virtual void Read(istream& _is);
+    virtual void Read(std::istream& _is);
 
     /// Write a configuration to an output stream.
     /// @param _os The output stream to write to.
-    virtual void Write(ostream& _os) const;
+    virtual void Write(std::ostream& _os) const;
 
     /// Writes very helpful info when comparing two cfgs, like their euclidean
     /// distance, their positions, velocities, and the difference. This is
@@ -323,7 +324,7 @@ class Cfg {
     /// @TODO Witness should not be a shared_ptr.
 
     CDInfo m_clearanceInfo;
-    shared_ptr<Cfg> m_witnessCfg;
+    std::shared_ptr<Cfg> m_witnessCfg;
 
     ///@}
     ///@name Helpers
@@ -344,12 +345,12 @@ class Cfg {
     ///@name Internal State
     ///@{
 
-    vector<double> m_dofs;         ///< The DOF values.
-    vector<double> m_vel;          ///< The velocities, if any.
+    std::vector<double> m_dofs;         ///< The DOF values.
+    std::vector<double> m_vel;          ///< The velocities, if any.
     Robot* m_robot{nullptr};       ///< The robot this cfg refers to.
 
-    map<string, bool> m_labelMap;  ///< A map of labels for this cfg.
-    map<string, double> m_statMap; ///< A map of stats for this cfg.
+    std::map<std::string, bool> m_labelMap;  ///< A map of labels for this cfg.
+    std::map<std::string, double> m_statMap; ///< A map of stats for this cfg.
 
     ///@}
 
@@ -376,7 +377,7 @@ GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) 
 
 /*----------------------------------------------------------------------------*/
 
-ostream& operator<<(ostream& _os, const Cfg& _cfg);
-istream& operator>>(istream& _is, Cfg& _cfg);
+std::ostream& operator<<(std::ostream& _os, const Cfg& _cfg);
+std::istream& operator>>(std::istream& _is, Cfg& _cfg);
 
 #endif

@@ -4,7 +4,7 @@
   <!-- Here we specify input files, such as environment and query. -->
   <Problem>
 
-    <Environment filename="3D/3d.env"
+    <Environment filename="3D/3d.env" boundaryObstacle="true"
       frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot">
@@ -588,6 +588,8 @@
 
       <ScratchStrategy label="scratch"/>
 
+      <SVMTest label="svm"/>
+
     </MPStrategies>
 
     <MPTools>
@@ -595,11 +597,14 @@
            that each decomposition defined will be created immediately upon
            initialization. If you don't need them, comment them out to save
            pre-processing time. -->
+      <!--
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
+      -->
 
       <!-- The same workspace decomposition nodes, this time reading in from
-           saved files like 'coarse.ele' and 'coarse.node'.
+           saved files like 'coarse.ele' and 'coarse.node'. -->
+      <!--
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
         io="read" baseFilename="3D/coarse"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
@@ -609,10 +614,12 @@
       <!-- Different objects need to work with different granularities when it
            comes to decomposition-based tools. You can define multiple
            topological maps for this purpose. -->
+      <!--
       <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
         gridSize=".5"/>
       <TopologicalMap label="tm-fine" decompositionLabel="fine"
         gridSize=".5"/>
+      -->
 
       <ReebGraphConstruction debug="false" write="false" filename=""/>
 
@@ -630,7 +637,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="svm" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>

@@ -7,6 +7,8 @@
 #include "Utilities/MetricUtils.h"
 #include "nonstd.h"
 
+using namespace std;
+
 
 /*-------------------------------- Construction ------------------------------*/
 
@@ -56,6 +58,10 @@ Cfg(Cfg&& _other) :
     m_robot(_other.m_robot),
     m_labelMap(std::move(_other.m_labelMap)),
     m_statMap(std::move(_other.m_statMap)) { }
+
+
+Cfg::
+~Cfg() = default;
 
 /*------------------------------- Assignment ---------------------------------*/
 
@@ -135,10 +141,7 @@ operator-=(const Cfg& _cfg) {
     // Joint dofs
     for(size_t i = posDOF + oriDOF; i < dof; ++i)
       m_dofs[i] -= _cfg[i];
-
-    for(size_t i = 0; i < m_vel.size(); ++i)
-      m_vel[i] -= _cfg.m_vel[i];
-    }
+  }
   else {
     const MultiBody* const mb = GetMultiBody();
     for(size_t i = 0; i < dof; ++i) {
@@ -148,6 +151,9 @@ operator-=(const Cfg& _cfg) {
         m_dofs[i] -= _cfg[i];
     }
   }
+
+  for(size_t i = 0; i < m_vel.size(); ++i)
+    m_vel[i] -= _cfg.m_vel[i];
 
   m_witnessCfg.reset();
   return *this;
@@ -550,7 +556,6 @@ GetPoint() const noexcept {
 vector<double>
 Cfg::
 GetPosition() const {
-  /// @Note: This is perfectly valid for Composite CSpaces.
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i)
     if(GetMultiBody()->GetDOFType(i) == DofType::Positional)
@@ -562,7 +567,6 @@ GetPosition() const {
 vector<double>
 Cfg::
 GetRotation() const {
-  /// @Note: This is perfectly valid for Composite CSpaces.
   vector<double> ret;
   for(size_t i = 0; i < DOF(); ++i)
     if(GetMultiBody()->GetDOFType(i) == DofType::Rotational)

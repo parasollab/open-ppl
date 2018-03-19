@@ -14,6 +14,8 @@
 #include "Utilities/IOUtils.h"
 #include "Utilities/MPUtils.h"
 
+#include "glutils/triangulated_model.h"
+
 using namespace std;
 
 
@@ -27,7 +29,7 @@ GMSPolyhedron(const GMSPolyhedron& _p) :
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
     m_boundaryLines(_p.m_boundaryLines),
-    m_boundaryBuilt(_p.m_boundaryBuilt),
+    m_boundaryCached(_p.m_boundaryCached),
     m_force2DBoundary(_p.m_force2DBoundary)
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
@@ -46,7 +48,7 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
     m_boundaryLines(move(_p.m_boundaryLines)),
-    m_boundaryBuilt(_p.m_boundaryBuilt),
+    m_boundaryCached(_p.m_boundaryCached),
     m_force2DBoundary(_p.m_force2DBoundary)
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
@@ -54,6 +56,29 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
   m_polygonList.reserve(_p.m_polygonList.size());
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+}
+
+
+GMSPolyhedron::
+GMSPolyhedron(glutils::triangulated_model&& _t) {
+  m_vertexList.reserve(_t.num_points());
+  m_polygonList.reserve(_t.num_facets());
+
+  // Copy vertices.
+  for(auto iter = _t.points_begin(); iter != _t.points_end(); ++iter) {
+    const glutils::vector3f& v = *iter;
+    m_vertexList.emplace_back(v[0], v[1], v[2]);
+  }
+
+  // Copy facets.
+  for(auto iter = _t.facets_begin(); iter != _t.facets_end(); ++iter) {
+    const glutils::triangle_facet& f = *iter;
+    m_polygonList.emplace_back(f[0], f[1], f[2], m_vertexList);
+  }
+
+  MarkDirty();
+  ComputeSurfaceArea();
+  ComputeRadii();
 }
 
 /*------------------------------- Assignment ---------------------------------*/
@@ -67,7 +92,7 @@ operator=(const GMSPolyhedron& _p) {
   m_maxRadius = _p.m_maxRadius;
   m_minRadius = _p.m_minRadius;
   m_boundaryLines = _p.m_boundaryLines;
-  m_boundaryBuilt = _p.m_boundaryBuilt;
+  m_boundaryCached = _p.m_boundaryCached;
   m_force2DBoundary = _p.m_force2DBoundary;
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
@@ -90,7 +115,7 @@ operator=(GMSPolyhedron&& _p) {
   m_maxRadius = _p.m_maxRadius;
   m_minRadius = _p.m_minRadius;
   m_boundaryLines = move(_p.m_boundaryLines);
-  m_boundaryBuilt = _p.m_boundaryBuilt;
+  m_boundaryCached = _p.m_boundaryCached;
   m_force2DBoundary = _p.m_force2DBoundary;
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
@@ -131,6 +156,14 @@ operator*=(const Transformation& _t) {
   }
 
   return *this;
+}
+
+
+void
+GMSPolyhedron::
+Invert() {
+  for(auto& facet : m_polygonList)
+    facet.Reverse();
 }
 
 /*-------------------------------- Equality ----------------------------------*/
@@ -203,9 +236,8 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
   ccom[1] /= double(m_cgalPoints.size());
   ccom[2] /= double(m_cgalPoints.size());
 
-  // Apply COMAdjust to vertices and find radii.
-  m_maxRadius = 0;
-  m_minRadius = numeric_limits<double>::infinity();
+  // Apply COMAdjust to vertices.
+  /// @TODO Remove this and force everything to be bounding-box centered.
   for(size_t i = 0; i < m_vertexList.size(); ++i) {
     auto& v = m_vertexList[i];
     auto& c = m_cgalPoints[i];
@@ -226,20 +258,15 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
       default:
         break;
     }
-
-    double dist = v.norm();
-    m_maxRadius = max(m_maxRadius, dist);
-    m_minRadius = min(m_minRadius, dist);
   }
 
   // Add triangles to the polyhedron.
   for(auto& t : _imodel->GetTriP())
     m_polygonList.emplace_back(t[0], t[1], t[2], m_vertexList);
 
-  // Compute the surface area.
-  m_area = 0;
-  for(const auto& p : m_polygonList)
-    m_area += p.GetArea();
+  // Compute the surface area and radii.
+  ComputeSurfaceArea();
+  ComputeRadii();
 
   return com;
 }
@@ -487,9 +514,32 @@ GetCentroid() const {
 
 void
 GMSPolyhedron::
+ComputeSurfaceArea() {
+  m_area = 0;
+  for(const auto& p : m_polygonList)
+    m_area += p.GetArea();
+}
+
+
+void
+GMSPolyhedron::
+ComputeRadii() {
+  m_maxRadius = 0;
+  m_minRadius = numeric_limits<double>::infinity();
+
+  for(const auto& v : m_vertexList) {
+    const double distance = v.norm();
+    m_maxRadius = std::max(m_maxRadius, distance);
+    m_minRadius = std::min(m_minRadius, distance);
+  }
+}
+
+
+void
+GMSPolyhedron::
 MarkDirty() const {
   m_centroidCached = false;
-  ///@TODO does m_boundaryBuilt need to be done in here too?
+  m_boundaryCached = false;
 }
 
 
@@ -598,7 +648,7 @@ void
 GMSPolyhedron::
 BuildBoundary2D() {
   m_boundaryLines.clear();
-  m_boundaryBuilt = false;
+  m_boundaryCached = false;
   m_force2DBoundary = true;
   BuildBoundary();
 }
@@ -607,13 +657,13 @@ BuildBoundary2D() {
 void
 GMSPolyhedron::
 BuildBoundary() {
-  if(m_boundaryBuilt) return;            // only allow this to be attempted once
-  if(m_boundaryLines.size() > 0) return; // this has been done
-
-  m_boundaryBuilt = true;
+  // If the boundary is already cached, we do not need to compute it again.
+  if(m_boundaryCached)
+    return;
+  m_boundaryCached = true;
 
   // Create function for determining if a polygon is near the XZ surface plane.
-  static auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
+  auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
     const double tolerance = 0.3; // Tolerance for considering points near-plane.
     return fabs(_p.GetPoint(0)[1]) <= tolerance
         && fabs(_p.GetPoint(1)[1]) <= tolerance
@@ -646,6 +696,7 @@ BuildBoundary() {
     --iter;
   }
 
+  m_boundaryLines.clear();
   m_boundaryLines.reserve(lines.size());
   copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
 }

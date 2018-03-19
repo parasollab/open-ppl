@@ -32,9 +32,9 @@ template <typename MPTraits> class MixSampler;
 /// @code
 /// size_t num, attempts;
 /// Boundary* bounds;
-/// vector<CfgType> result;
+/// vector<CfgType> valid;
 /// auto s = this->GetSampler(m_sLabel);
-/// s->Sample(num, attempts, bounds, back_inserter(result));
+/// s->Sample(num, attempts, bounds, std::back_inserter(valid));
 /// @endcode
 ///
 /// The other form of @c Sample sends a list of input configurations to apply
@@ -42,12 +42,12 @@ template <typename MPTraits> class MixSampler;
 ///
 /// @usage
 /// @code
-/// vector<CfgType> input, result;
+/// vector<CfgType> input, valid;
 /// size_t attempts;
 /// Boundary* bounds;
 /// auto s = this->GetSampler(m_sLabel);
 /// s->Sample(input.begin(), input.end(), attempts, bounds,
-///     back_inserter(result));
+///     std::back_inserter(valid));
 /// @endcode
 ///
 /// Both versions of this method offer the option to return the failed attempts
@@ -91,16 +91,16 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[in] _numNodes The number of samples desired.
     /// @param[in] _maxAttempts The maximum number of attempts for each sample.
     /// @param[in] _boundary The boundary to sample from.
-    /// @param[out] _result An iterator to storage for the new configurations.
-    /// @param[out] _collision An (optional) iterator to storage for failed
+    /// @param[out] _valid An iterator to storage for the new configurations.
+    /// @param[out] _invalid An (optional) iterator to storage for failed
     ///                        attempts.
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
-        const Boundary* const _boundary, OutputIterator _result,
-        OutputIterator _collision);
+        const Boundary* const _boundary, OutputIterator _valid,
+        OutputIterator _invalid);
 
     /// \overload
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
-        const Boundary* const _boundary, OutputIterator _result);
+        const Boundary* const _boundary, OutputIterator _valid);
 
     /// Apply the sampler rule to a set of existing configurations. The output
     /// will generally be a filtered or perturbed version of the input set.
@@ -111,18 +111,18 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[in] _maxAttempts The maximum number of attempts to successfully
     ///                         apply the sampler rule to each input.
     /// @param[in] _boundary The sampling boundary to use.
-    /// @param[out] _result An iterator to storage for the output configurations.
-    /// @param[out] _collision An (optional) iterator to storage for failed
+    /// @param[out] _valid An iterator to storage for the output configurations.
+    /// @param[out] _invalid An (optional) iterator to storage for failed
     ///                        attempts.
     virtual void Sample(InputIterator _first, InputIterator _last,
         size_t _maxAttempts, const Boundary* const _boundary,
-        OutputIterator _result,
-        OutputIterator _collision);
+        OutputIterator _valid,
+        OutputIterator _invalid);
 
     /// \overload
     void Sample(InputIterator _first, InputIterator _last,
         size_t _maxAttempts, const Boundary* const _boundary,
-        OutputIterator _result);
+        OutputIterator _valid);
 
     ///@}
 
@@ -135,10 +135,10 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// generate one or more output configurations.
     /// @param[in] _cfg The input configuration.
     /// @param[in] _boundary The sampling boundary.
-    /// @param[out] _result The resulting output configurations.
-    /// @param[out] _collision The (optional) return for failed attempts.
+    /// @param[out] _valid The resulting output configurations.
+    /// @param[out] _invalid The (optional) return for failed attempts.
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) {return false;}
+        vector<CfgType>& _valid, vector<CfgType>& _invalid) {return false;}
 
     ///@}
 
@@ -169,26 +169,29 @@ void
 SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
-    OutputIterator _result, OutputIterator _collision) {
+    OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetName() + "::Sample");
 
-  for(size_t i = 0; i < _numNodes; ++i) {
-    CfgType cfg(this->GetTask()->GetRobot());
-    cfg.GetRandomCfg(_boundary);
+  CfgType cfg(this->GetTask()->GetRobot());
+  std::vector<CfgType> valid;
+  std::vector<CfgType> invalid;
 
-    std::vector<CfgType> result;
-    std::vector<CfgType> collision;
-    //Terminate when node generated or attempts exhausted
+  for(size_t i = 0; i < _numNodes; ++i) {
+    valid.clear();
+    invalid.clear();
+
+    // Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
+      cfg.GetRandomCfg(_boundary);
       stats->IncNodesAttempted(this->GetNameAndLabel());
-      if(this->Sampler(cfg, _boundary, result, collision))
+      if(this->Sampler(cfg, _boundary, valid, invalid))
         break;
     }
 
-    stats->IncNodesGenerated(this->GetNameAndLabel(), result.size());
-    _result = copy(result.begin(), result.end(), _result);
-    _collision = copy(collision.begin(), collision.end(), _collision);
+    stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
+    _valid = copy(valid.begin(), valid.end(), _valid);
+    _invalid = copy(invalid.begin(), invalid.end(), _invalid);
   }
 }
 
@@ -198,10 +201,11 @@ void
 SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
-    OutputIterator _result) {
-  std::vector<CfgType> collision;
+    OutputIterator _valid) {
+  std::vector<CfgType> invalid;
 
-  Sample(_numNodes, _maxAttempts, _boundary, _result, back_inserter(collision));
+  Sample(_numNodes, _maxAttempts, _boundary, _valid,
+      std::back_inserter(invalid));
 }
 
 
@@ -210,24 +214,27 @@ void
 SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _result,
-    OutputIterator _collision) {
+    OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetName() + "::Sample");
 
+  std::vector<CfgType> valid;
+  std::vector<CfgType> invalid;
+
   while(_first != _last) {
-    std::vector<CfgType> result;
-    std::vector<CfgType> collision;
-    //Terminate when node generated or attempts exhausted
-    for(size_t attempts = 0; attempts < _maxAttempts; attempts++) {
+    valid.clear();
+    invalid.clear();
+
+    // Terminate when node generated or attempts exhausted.
+    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       stats->IncNodesAttempted(this->GetNameAndLabel());
-      if(this->Sampler(*_first, _boundary, result, collision))
+      if(this->Sampler(*_first, _boundary, valid, invalid))
         break;
     }
 
-    stats->IncNodesGenerated(this->GetNameAndLabel(), result.size());
-    _result = copy(result.begin(), result.end(), _result);
-    _collision = copy(collision.begin(), collision.end(), _collision);
+    stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
+    _valid = copy(valid.begin(), valid.end(), _valid);
+    _invalid = copy(invalid.begin(), invalid.end(), _invalid);
     _first++;
   }
 }
@@ -238,11 +245,11 @@ void
 SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _result)
+    OutputIterator _valid)
 {
-  std::vector<CfgType> collision;
-  Sample(_first, _last, _maxAttempts, _boundary, _result,
-      back_inserter(collision));
+  std::vector<CfgType> invalid;
+  Sample(_first, _last, _maxAttempts, _boundary, _valid,
+      std::back_inserter(invalid));
 }
 
 /*----------------------------------------------------------------------------*/

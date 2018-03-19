@@ -17,10 +17,17 @@ class IModel;
 #include "GMSPolygon.h"
 
 using namespace mathtool;
+namespace glutils {
+  class triangulated_model;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometric structure for polyhedra including vertices, faces, and surface area.
+///
+/// @TODO Migrate vertex/facet representation to glutils::triangulated_model to
+///       separate concerns regarding geometric computations (here) from
+///       polygonal mesh issues (there).
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron final {
@@ -54,6 +61,8 @@ class GMSPolyhedron final {
 
     GMSPolyhedron(GMSPolyhedron&& _p);
 
+    GMSPolyhedron(glutils::triangulated_model&& _t);
+
     ///@}
     ///@name Assignment
     ///@{
@@ -67,6 +76,9 @@ class GMSPolyhedron final {
 
     /// Apply a transformation to the polyhedron.
     GMSPolyhedron& operator*=(const Transformation& _t);
+
+    /// Invert the polyhedron so that normals face the opposite direction.
+    void Invert();
 
     ///@}
     ///@name Equality
@@ -195,7 +207,7 @@ class GMSPolyhedron final {
 
     std::vector<std::pair<int,int>> m_boundaryLines; ///< Surface edges.
 
-    bool m_boundaryBuilt{false};    ///< Is the boundary initialized?
+    mutable bool m_boundaryCached{false};  ///< Is the boundary cached?
     bool m_force2DBoundary{false};  ///< Require a 2d boundary.
 
     ///@}
@@ -213,6 +225,13 @@ class GMSPolyhedron final {
 
     /// Compute the centroid.
     void ComputeCentroid() const;
+
+    /// Compute the surface area.
+    void ComputeSurfaceArea();
+
+    /// Compute the minimum and maximum radius relative to model coordinates.
+    /// @WARNING The computed values are relative to the model's local frame.
+    void ComputeRadii();
 
     ///@}
 };

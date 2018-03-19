@@ -111,10 +111,12 @@ ComputeNormal() {
 const bool
 GMSPolygon::
 operator==(const GMSPolygon& _p) const noexcept {
+  // We don't check m_pointList as it would prohibit checking if two polyhedrons
+  // represent the same shape. We leave it to the polyhedron to check if the
+  // point lists are value-equal.
   return m_area == _p.m_area
-      && m_pointList == _p.m_pointList
-      && m_normal == _p.m_normal
-      && m_indexes == _p.m_indexes;
+     and m_normal == _p.m_normal
+     and m_indexes == _p.m_indexes;
 }
 
 

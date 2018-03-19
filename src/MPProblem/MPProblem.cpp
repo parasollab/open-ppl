@@ -371,7 +371,7 @@ MakePointRobot() {
       {0, 0, 1e-8}, {-1e-8, 0, 0}};
   poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
       poly.GetVertexList())};
-  body.SetPolyhedron(poly);
+  body.SetPolyhedron(std::move(poly));
 
   // Add body geometry to multibody.
   const size_t index = point->AddBody(std::move(body));

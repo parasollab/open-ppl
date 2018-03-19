@@ -10,6 +10,7 @@
 #include "SkeletonClearanceUtility.h"
 #include "TetGenDecomposition.h"
 #include "TopologicalMap.h"
+#include "MPLibrary/LearningModels/SVMModel.h"
 
 #include "Utilities/XMLNode.h"
 
@@ -219,7 +220,8 @@ MPToolsType<MPTraits>::
 ParseXML(XMLNode& _node) {
   // For the tools that use the XML to set defaults, keep track of whether we've
   // seen them before.
-  bool parsedReebGraph = false;
+  bool parsedReebGraph = false,
+       parsedSVMModel  = false;
 
   // MPTools shouldn't have any data of its own, only child nodes.
   for(auto& child : _node) {
@@ -298,6 +300,14 @@ ParseXML(XMLNode& _node) {
       parsedReebGraph = true;
 
       ReebGraphConstruction::SetDefaultParameters(child);
+    }
+    else if(child.Name() == "SVMModel") {
+      if(parsedSVMModel)
+        throw ParseException(child.Where(), "Second SVMModel node detected. "
+            "This node sets default parameters - only one is allowed.");
+      parsedSVMModel = true;
+
+      SVMModel<MPTraits>::SetDefaultParameters(child);
     }
   }
 }

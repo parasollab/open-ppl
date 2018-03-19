@@ -194,8 +194,7 @@ AddFacets(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 }
 
 
-/// Add holes to the free model for each obstacle touching the final'
-///        boundary.
+/// Add holes to the free model for each obstacle.
 /// @param _freeModel The tetgen model under construction.
 /// @param _freespace The free space polyhedra.
 /// @param _env The environment object.
@@ -212,7 +211,7 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   boundary = boundary.complement();
 
   vector<MultiBody*> holes;
-  for(size_t i = 0; i < _env->NumObstacles(); ++i) {
+  for(size_t i = _env->UsingBoundaryObstacle(); i < _env->NumObstacles(); ++i) {
     MultiBody* obst = _env->GetObstacle(i);
     if(!obst->IsInternal())
       holes.push_back(obst);
@@ -225,20 +224,21 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
   size_t num = 0;
   for(const auto obst : holes) {
-    ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
-    const auto body = obst->GetBody(0);
-    const auto& com = body->GetWorldPolyhedron().GetCentroid();
-    Vector3d hole = com;
-    const GMSPolyhedron& poly = body->GetPolyhedron();
-    for(auto& v : poly.m_vertexList)
-      if(body->IsConvexHullVertex(v) && (v - com).norm() > (hole - com).norm())
-        hole = v;
-    hole = hole + (com - hole).normalize() * 0.0001;
-    hole = body->GetWorldTransformation() * hole;
-    _freeModel->holelist[3 * num + 0] = hole[0];
-    _freeModel->holelist[3 * num + 1] = hole[1];
-    _freeModel->holelist[3 * num + 2] = hole[2];
-    ++num;
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+      const auto body = obst->GetBody(j);
+      const auto& com = body->GetWorldPolyhedron().GetCentroid();
+      Vector3d hole = com;
+      const GMSPolyhedron& poly = body->GetPolyhedron();
+      for(auto& v : poly.m_vertexList)
+        if(body->IsConvexHullVertex(v) && (v - com).norm() > (hole - com).norm())
+          hole = v;
+      hole = hole + (com - hole).normalize() * 0.0001;
+      hole = body->GetWorldTransformation() * hole;
+      _freeModel->holelist[3 * num + 0] = hole[0];
+      _freeModel->holelist[3 * num + 1] = hole[1];
+      _freeModel->holelist[3 * num + 2] = hole[2];
+      ++num;
+    }
   }
 }
 
@@ -246,15 +246,6 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
 TetGenDecomposition::
 TetGenDecomposition() = default;
-//
-//
-//TetGenDecomposition::
-//TetGenDecomposition(const string& _switches, const std::string& _baseFilename)
-//    : m_switches(_switches), m_baseFilename(_baseFilename) {
-//  ValidateSwitches(m_switches);
-//  if(!m_baseFilename.empty())
-//    m_ioType = Read;
-//}
 
 
 TetGenDecomposition::
@@ -407,22 +398,24 @@ MakeFreeModel(const Environment* _env) {
   NefPolyhedron freespace(cp);
 
   // Subtract each obstacle from the freespace.
-  for(size_t i = 0; i < _env->NumObstacles(); ++i) {
+  for(size_t i = _env->UsingBoundaryObstacle(); i < _env->NumObstacles(); ++i) {
     if(m_debug)
       cout << "\tAdding obstacle " << i << "..." << endl;
 
-    MultiBody* obst = _env->GetObstacle(i);
+    const MultiBody* const obst = _env->GetObstacle(i);
     if(!obst->IsInternal()) {
-      // Make CGAL representation of this obstacle.
-      ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
-      auto ocp = obst->GetBody(0)->GetWorldPolyhedron().CGAL();
+      for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+        // Make CGAL representation of this obstacle.
+        auto ocp = obst->GetBody(j)->GetWorldPolyhedron().CGAL();
 
-      if(m_debug)
-        cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")
-             << "closed" << endl;
+        if(m_debug)
+          std::cout << "\t\tbody " << j
+                    << " is " << (ocp.is_closed() ? "" : "not ") << "closed"
+                    << std::endl;
 
-      // Subtract it from the freespace.
-      freespace -= NefPolyhedron(ocp);
+        // Subtract it from the freespace.
+        freespace -= NefPolyhedron(ocp);
+      }
     }
   }
 

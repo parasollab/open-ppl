@@ -42,6 +42,9 @@ Environment(XMLNode& _node) {
     ReadXMLOptions(_node);
     Read(m_filename);
   }
+
+  if(m_boundaryObstacle)
+    CreateBoundaryObstacle();
 }
 
 
@@ -141,6 +144,9 @@ ReadXMLOptions(XMLNode& _node) {
       "Orientation resolution of environment");
   m_timeRes = _node.Read("timeRes", false, m_timeRes, .05, 10.,
       "Time resolution in seconds");
+
+  m_boundaryObstacle = _node.Read("boundaryObstacle", false, m_boundaryObstacle,
+      "Create a multibody obstacle for the boundary.");
 }
 
 
@@ -504,26 +510,11 @@ ComputeObstacleVertexMap() const {
   return out;
 }
 
-/*------------------------------- Decomposition ------------------------------*/
 
-WorkspaceDecomposition*
+bool
 Environment::
-GetDecomposition() {
-  return m_decomposition.get();
-}
-
-
-const WorkspaceDecomposition*
-Environment::
-GetDecomposition() const {
-  return m_decomposition.get();
-}
-
-
-void
-Environment::
-Decompose(DecompositionFunction&& _f) {
-  m_decomposition = _f(this);
+UsingBoundaryObstacle() const noexcept {
+  return m_boundaryObstacle;
 }
 
 /*-------------------------- Physical Properties -----------------------------*/
@@ -559,6 +550,37 @@ InitializeBoundary(std::string _type, const std::string _where) {
   else
     throw ParseException(_where, "Unknown boundary type '" + _type +
         "'. Options are: box, box2d, sphere, or sphere2d.");
+}
+
+
+void
+Environment::
+CreateBoundaryObstacle() {
+  // Make a multibody for the boundary obstacle.
+  std::unique_ptr<MultiBody> mb(new MultiBody(MultiBody::Type::Passive));
+
+  // Make the boundary body.
+  Body body(mb.get());
+  body.SetBodyType(Body::Type::Fixed);
+  body.SetPolyhedron(m_boundary->MakePolyhedron());
+
+  // Add the body to the multibody and finish initialization.
+  const size_t index = mb->AddBody(std::move(body));
+  mb->SetBaseBody(index);
+
+  // Ensure that we don't double-add the boundary obstacle.
+  const bool alreadyAdded = !m_obstacles.empty() and
+    mb->GetBase()->GetPolyhedron() ==
+    m_obstacles[0]->GetBase()->GetPolyhedron();
+  if(alreadyAdded) {
+    std::cout << "Boundary obstacle already exists." << std::endl;
+    return;
+  }
+  else
+    std::cout << "Created boundary obstacle." << std::endl;
+
+  // Insert the boundary at obstacle index 0.
+  m_obstacles.insert(m_obstacles.begin(), std::move(mb));
 }
 
 /*----------------------------------------------------------------------------*/

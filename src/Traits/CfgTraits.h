@@ -156,6 +156,7 @@
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/UnitTest/ClearanceTestStrategy.h"
 #include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
+#include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
 #include "MPLibrary/MPStrategies/UtilityGuidedGenerator.h"
 #include "MPLibrary/MPStrategies/VisibilityBasedPRM.h"
 
@@ -372,6 +373,7 @@ struct MPTraits {
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
+    SVMTest<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,

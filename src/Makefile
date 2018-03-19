@@ -65,11 +65,18 @@ $(PMPL_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 ifeq ($(parallel), 1)
-  MAIN = parallel_main.o
+  MAIN := $(OBJ_DIR)/parallel_main.o
 else
-  MAIN = main.o
+  MAIN := $(OBJ_DIR)/main.o
 endif
 $(MAIN): $(PMPL_LIBFILE)
+
+# Set up dependency tracking.
+DEPS_OUT = $(OBJ_DIR)/$*.d
+DEPS     = -MMD -MF $(DEPS_OUT)
+
+DEPENDENCIES := $(OBJ_DIR)/Dependencies
+-include $(DEPENDENCIES)
 
 # Library Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -94,13 +101,6 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) \
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(LIBS) -o $@
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-# Set up dependency tracking.
-DEPS_OUT = $(OBJ_DIR)/$*.d
-DEPS     = -MMD -MF $(DEPS_OUT)
-
-DEPENDENCIES := $(OBJ_DIR)/Dependencies
--include $(DEPENDENCIES)
 
 # This recipe runs headers with Q_OBJECT through the qt MOC.
 $(MOC_DIR)/moc_%.cpp: %.h | $(MOC_DIR)

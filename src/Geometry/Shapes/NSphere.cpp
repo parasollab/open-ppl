@@ -79,9 +79,14 @@ Contains(const std::vector<double>& _p) const noexcept {
 double
 NSphere::
 Clearance(std::vector<double> _p) const noexcept {
+  // Only consider dimensions that are in both _p and this.
   const size_t maxIndex = std::min(_p.size(), GetDimension());
+  _p.resize(maxIndex);
+
+  // Transform _p to the coordinate frame at the sphere's center.
   for(size_t i = 0; i < maxIndex; ++i)
     _p[i] -= m_center[i];
+
   return m_radius - nonstd::magnitude<double>(_p);
 }
 
@@ -91,24 +96,20 @@ NSphere::
 ClearancePoint(std::vector<double> _p) const noexcept {
   // Only consider dimensions that are in both _p and this.
   const size_t maxIndex = std::min(_p.size(), GetDimension());
-  auto point = _p;
-  point.resize(maxIndex, 0);
+  _p.resize(maxIndex);
 
-  // Transform point to the coordinate frame at the sphere's center.
+  // Transform _p to the coordinate frame at the sphere's center.
   for(size_t i = 0; i < maxIndex; ++i)
-    point[i] -= m_center[i];
+    _p[i] -= m_center[i];
 
-  // Find the scaling factor that places point on the sphere's boundary.
-  const double scale = m_radius / nonstd::magnitude<double>(point);
+  // Find the scaling factor that places _p on the sphere's boundary.
+  const double scale = m_radius / nonstd::magnitude<double>(_p);
 
   // Scale the values in point and return to original coordinate frame.
   for(size_t i = 0; i < maxIndex; ++i) {
-    point[i] *= scale;
-    point[i] += m_center[i];
+    _p[i] *= scale;
+    _p[i] += m_center[i];
   }
-
-  // Copy the modified values back to the original point.
-  std::copy(point.begin(), point.begin() + maxIndex, _p.begin());
 
   return _p;
 }
@@ -118,14 +119,19 @@ ClearancePoint(std::vector<double> _p) const noexcept {
 std::vector<double>
 NSphere::
 Sample() const {
-  // Generate a random value for each dimension in the range [-1,1] with
-  // gaussian probability.
+  // Generate a direction with uniform probability by creating a random value
+  // for each dimension in the range [-1,1] with gaussian probability (mean 0,
+  // var 1).
   std::vector<double> point(GetDimension());
   for(auto& value : point)
     value = GRand();
 
-  // Scale and translate the point appropriately.
-  const double scale = m_radius * DRand() / nonstd::magnitude<double>(point);
+  // Generate a distance-from-center. The random fraction of the radius d must be
+  // adjusted to d^(1/N) to get uniform sampling within the N-sphere's volume.
+  const double scale = m_radius * std::pow(DRand(), 1. / GetDimension())
+                     / nonstd::magnitude<double>(point);
+
+  // Scale and translate the point.
   for(size_t i = 0; i < point.size(); ++i) {
     point[i] *= scale;
     point[i] += m_center[i];

@@ -4,6 +4,8 @@
 
 #include "Utilities/PMPLExceptions.h"
 
+#include "nonstd/container_ops.h"
+
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -121,8 +123,17 @@ Clearance(const std::vector<double>& _p) const noexcept {
   double minClearance = std::numeric_limits<double>::max();
 
   const size_t maxIndex = std::min(_p.size(), GetDimension());
-  for(size_t i = 0; i < maxIndex; ++i)
-    minClearance = std::min(minClearance, GetRange(i).Clearance(_p[i]));
+  for(size_t i = 0; i < maxIndex; ++i) {
+    // If _p is outside the range, we must use a more expensive computation.
+    if(!m_range[i].Contains(_p[i]))
+    {
+      auto cp = ClearancePoint(_p);
+      for(size_t i = 0; i < cp.size(); ++i)
+        cp[i] -= _p[i];
+      return -nonstd::magnitude<double>(cp);
+    }
+    minClearance = std::min(minClearance, m_range[i].Clearance(_p[i]));
+  }
   return minClearance;
 }
 
@@ -132,8 +143,7 @@ NBox::
 ClearancePoint(std::vector<double> _p) const noexcept {
   // Only consider dimensions that are in both _p and this.
   const size_t maxIndex = std::min(_p.size(), GetDimension());
-  auto point = _p;
-  point.resize(maxIndex, 0);
+  _p.resize(maxIndex);
 
   // Find the clearance in each dimension.
   double minClearance = numeric_limits<double>::max();
@@ -141,18 +151,16 @@ ClearancePoint(std::vector<double> _p) const noexcept {
 
   for(size_t i = 0; i < maxIndex; ++i) {
     const auto& r = m_range[i];
-    auto& val = point[i];
 
     // Compute clearance in this dimension.
-    const double clearance = r.Clearance(val);
+    const double clearance = r.Clearance(_p[i]);
 
+    // If _p lies outside the range in this dimension, use the closest endpoint.
     if(clearance < 0)
-      // _p lies outside the range in this dimension. use the closest endpoint.
-      val = r.ClearancePoint(val);
-
+      _p[i] = r.ClearancePoint(_p[i]);
+    // If _p lies inside the range in this dimension and is closer than previous
+    // best, update the clearance index.
     else if(clearance < minClearance) {
-      // _p lies inside the range in this dimension and is closer than previous
-      // best.
       index = i;
       minClearance = clearance;
     }
@@ -161,10 +169,7 @@ ClearancePoint(std::vector<double> _p) const noexcept {
   // If at least one dimension of _p was inside the range, push _p to the
   // boundary in the closest dimension.
   if(index != size_t(-1))
-    point[index] = m_range[index].ClearancePoint(point[index]);
-
-  // Copy new values back to the original point.
-  std::copy(point.begin(), point.begin() + maxIndex, _p.begin());
+    _p[index] = m_range[index].ClearancePoint(_p[index]);
 
   return _p;
 }

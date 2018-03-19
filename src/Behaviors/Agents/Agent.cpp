@@ -1,10 +1,11 @@
 #include "Agent.h"
 
+#include "Behaviors/Controllers/ControllerMethod.h"
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
-#include "MPLibrary/PMPL.h"
+#include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Control.h"
 #include "MPProblem/Robot/DynamicsModel.h"
@@ -106,22 +107,22 @@ MinimumSteps() const {
 std::vector<Agent*>
 Agent::
 ProximityCheck(const double _distance) const {
-  // TODO: WeightedEuclideanDistance assumes that both robots have identical
-  // configuration spaces. Adjust this function to find the true minimum
-  // distance between the robot bodies.
-  static WeightedEuclideanDistance<PMPLTraits> dm(1,0,0,0);
+  /// @TODO This implementation checks only the distance between reference
+  ///       points. Adjust this function to find the true minimum distance
+  ///       between the robot bodies.
   auto problem = m_robot->GetMPProblem();
+  auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState().GetPoint();
 
   vector<Agent*> result;
 
   for(auto& robotPtr : problem->GetRobots()) {
     auto robot = robotPtr.get();
+    // Skip this agent's robot and any virtual robots.
     if(robot->IsVirtual() or robot == m_robot)
       continue;
 
-    auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState();
-    auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
-    double distance = dm.Distance(robotPosition, myPosition);
+    auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState().GetPoint();
+    const double distance = (robotPosition - myPosition).norm();
 
     if(distance < _distance){
       result.push_back(robot->GetAgent());
@@ -129,37 +130,17 @@ ProximityCheck(const double _distance) const {
   }
   return result;
 }
-
 
 /*------------------------------ Time Horizon --------------------------------*/
 
-//TODO: Fill out this function (need to figure out how to consider t_max)
 std::vector<Agent*>
 Agent::
 TimeHorizonCheck(const double _distance, const size_t _tmax) const {
-  /*static WeightedEuclideanDistance<PMPLTraits> dm(1,0,0,0);
-  auto problem = m_robot->GetMPProblem();
-
-  vector<Agent*> result;
-
-  for(auto& robotPtr : problem->GetRobots()) {
-    auto robot = robotPtr.get();
-    if(robot->IsVirtual() or robot == m_robot)
-      continue;
-
-    auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState();
-    auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState();
-    double distance = dm.Distance(robotPosition, myPosition);
-
-    if(distance < _distance){
-      result.push_back(robot->GetAgent());
-    }
-  }
-  return result;*/
-
+  /// @TODO Fill out this function (need to figure out how to consider t_max)
   vector<Agent*> result;
   return result;
 }
+
 
 void
 Agent::

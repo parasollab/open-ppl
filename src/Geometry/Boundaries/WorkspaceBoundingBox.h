@@ -41,12 +41,14 @@ class WorkspaceBoundingBox : public AbstractBoundingBox {
     virtual bool InBoundary(const Cfg& _c) const override;
 
     ///@}
-    ///@name CGAL Representations
+    ///@name Polyhedron Representations
     ///@{
 
     using Boundary::CGALPolyhedron;
 
     virtual CGALPolyhedron CGAL() const override;
+
+    virtual GMSPolyhedron MakePolyhedron() const override;
 
     ///@}
 

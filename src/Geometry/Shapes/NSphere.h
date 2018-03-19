@@ -8,7 +8,12 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A general representation of a sphere in N dimensions.
+/// A general representation of a spherical volume in N dimensions.
+///
+/// This object also models the inscribed hyper-volume, so the proper formal
+/// name for it is an 'N-ball'. I.e., setting N = 3 creates a (two-)sphere in R^3
+/// plus the inscribed volume. See wikipedia's article on n-sphere for further
+/// clarification.
 ////////////////////////////////////////////////////////////////////////////////
 class NSphere {
 

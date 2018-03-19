@@ -128,7 +128,8 @@ class MultiBody {
     /// Is this MultiBody an internal type?
     bool IsInternal() const noexcept;
 
-    /// Is this MultiBody a composite body? (used for assembly planning)
+    /// Is this MultiBody a composite body, i.e. having multiple decoupled
+    /// bases? (used for assembly planning)
     bool IsComposite() const noexcept;
 
     /// Get the number of DOF for this multibody.

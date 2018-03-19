@@ -37,7 +37,6 @@ class ScratchStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     virtual void Iterate() override;
-    virtual void Finalize() override;
 
     ///@}
 
@@ -65,17 +64,6 @@ void
 ScratchStrategy<MPTraits>::
 Iterate() {
   MethodTimer mt(this->GetStatClass(), "Test Iteration");
-}
-
-
-template <typename MPTraits>
-void
-ScratchStrategy<MPTraits>::
-Finalize() {
-  // Output stats.
-  ofstream  osStat(this->GetBaseFilename() + ".stat");
-  StatClass* stats = this->GetStatClass();
-  stats->PrintAllStats(osStat, this->GetRoadmap());
 }
 
 /*----------------------------------------------------------------------------*/
