@@ -145,7 +145,6 @@ endif
 	@cd $(CD_DIR) && $(MAKE) clean
 	@cd $(TINYXML_DIR) && $(MAKE) clean
 	@cd $(MPNN_SRC) && $(MAKE) clean
-	@cd $(MATHTOOL_DIR) && $(MAKE) clean
 	@cd $(MODELLOADER_DIR) && $(MAKE) clean
 	@cd $(KMEANS_DIR) && $(MAKE) clean
 	@cd $(TETGEN_DIR) && $(MAKE) clean
