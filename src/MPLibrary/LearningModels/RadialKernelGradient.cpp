@@ -29,7 +29,7 @@ operator()(const SampleType& _s) const {
     // diff is a set of vectors s.t. diff(i) = supports[i] - _s.
     diff(i) = supports(i) - _s;
 
-    // kernel is the kernel term e^(gamma * |diff(i)|^2).
+    // kernel is the kernel term e^(-gamma * |diff(i)|^2).
     kernel(i) = m_kernel(supports(i), _s);
   }
 
@@ -39,7 +39,7 @@ operator()(const SampleType& _s) const {
     for(size_t i = 0; i < n; ++i) {
       output(j) += weights(i) * kernel(i) * diff(i)(j);
     }
-    output(j) *= -2. * m_kernel.gamma;
+    output(j) *= 2. * m_kernel.gamma;
   }
 
   return output;

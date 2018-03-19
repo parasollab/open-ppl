@@ -94,7 +94,7 @@ Iterate() {
 
   std::cout << "\nGenerating test points...\n" << std::endl;
 
-  const size_t numTestPoints = 100;
+  const size_t numTestPoints = 10000;
   std::vector<CfgType> testingGood, testingBad;
   testingGood.reserve(numTestPoints);
   testingBad.reserve(numTestPoints);

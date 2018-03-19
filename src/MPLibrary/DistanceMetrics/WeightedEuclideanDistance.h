@@ -27,7 +27,7 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
 
     WeightedEuclideanDistance(XMLNode& _node);
 
-    WeightedEuclideanDistance(const double _pos, const double _rot, 
+    WeightedEuclideanDistance(const double _pos, const double _rot,
                               const double _vel, const double _avl);
 
     virtual ~WeightedEuclideanDistance() = default;
@@ -89,7 +89,7 @@ WeightedEuclideanDistance(XMLNode& _node) :
 
 template <typename MPTraits>
 WeightedEuclideanDistance<MPTraits>::
-WeightedEuclideanDistance(const double _pos, const double _rot, 
+WeightedEuclideanDistance(const double _pos, const double _rot,
                           const double _vel, const double _avl) {
   this->SetName("WeightedEuclidean");
 
@@ -117,7 +117,7 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   const CfgType diff = _c1 - _c2;
 
   return m_posW * diff.GetLinearPosition().norm()
-       + m_rotW * diff.GetAngularPosition().norm()
+       + m_rotW * (diff.GetAngularPosition() / PI).norm()
        + m_velW * diff.GetLinearVelocity().norm()
        + m_avlW * diff.GetAngularVelocity().norm();
 }

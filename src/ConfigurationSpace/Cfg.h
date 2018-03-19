@@ -163,10 +163,10 @@ class Cfg {
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
 
-    Vector3d GetLinearPosition() const;
-    Vector3d GetAngularPosition() const;
-    Vector3d GetLinearVelocity() const;
-    Vector3d GetAngularVelocity() const;
+    Vector3d GetLinearPosition() const;   ///< Get the position in R^3.
+    Vector3d GetAngularPosition() const;  ///< Get the euler vector rotation.
+    Vector3d GetLinearVelocity() const;   ///< Get the position velocity in R^3.
+    Vector3d GetAngularVelocity() const;  ///< Get the rotation velocity in R^3.
 
     void SetLinearPosition(const Vector3d& _v);
     void SetAngularPosition(const Vector3d& _v);

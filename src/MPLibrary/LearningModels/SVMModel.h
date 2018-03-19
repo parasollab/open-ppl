@@ -292,7 +292,8 @@ SetDefaultParameters(XMLNode& _node) {
   s_defaultParams.epsilon = _node.Read("epsilon", false, s_defaultParams.epsilon,
       0., 1., "Error tolerance");
   s_defaultParams.gamma = _node.Read("gamma", false, s_defaultParams.gamma,
-      0., 1., "Kernel dot product coefficient");
+      0., std::numeric_limits<double>::max(),
+      "Kernel vector operation coefficient");
   s_defaultParams.coeff = _node.Read("coeff", false, s_defaultParams.coeff,
       std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(),
       "Kernel offset");
@@ -767,9 +768,42 @@ template <typename MPTraits>
 typename SVMModel<MPTraits>::SampleType
 SVMModel<MPTraits>::
 ToSample(const CfgType& _cfg) const {
+  MethodTimer mt(this->GetStatClass(), "SVMModel::ToSample");
+
+  const size_t i = _cfg.PosDOF();
+
   // Scale the DOF data to the domain boundary and convert to SampleType.
   std::vector<double> data = _cfg.GetData();
-  m_boundary->ScalePoint(data);
+
+  // Convert any orientation DOFs from euler angles to euler vectors.
+  if(_cfg.GetMultiBody()->GetBase()->GetMovementType() ==
+      Body::MovementType::Rotational)
+  {
+    const Vector3d eulerVector = _cfg.GetAngularPosition();
+
+    switch(_cfg.OriDOF()) {
+      case 1:
+        data[i] = eulerVector[2] / PI;
+        break;
+      case 3:
+        data[i]     = eulerVector[0] / PI;
+        data[i + 1] = eulerVector[1] / PI;
+        data[i + 2] = eulerVector[2] / PI;
+        break;
+      default:;
+    }
+  }
+
+  // Scale w.r.t. boundary limits.
+  // For cspace boundaries, scale all of the points.
+  if(m_boundary->Type() == Boundary::Space::CSpace)
+    m_boundary->ScalePoint(data);
+  // For workspace boundaries, scale only the positional points.
+  else {
+    std::vector<double> position(data.begin(), data.begin() + i);
+    m_boundary->ScalePoint(position);
+    std::copy(position.begin(), position.end(), data.begin());
+  }
   return dlib::mat(data);
 }
 
@@ -778,16 +812,48 @@ template <typename MPTraits>
 typename SVMModel<MPTraits>::CfgType
 SVMModel<MPTraits>::
 ToCfg(const SampleType& _s) const {
+  MethodTimer mt(this->GetStatClass(), "SVMModel::ToCfg");
+
   // Copy the data from _s into a std::vector.
-  std::vector<double> data(m_samples[0].size());
+  std::vector<double> data(_s.size());
   for(size_t i = 0; i < data.size(); ++i)
     data[i] = _s(i);
 
-  // Unscale the data relative to the domain boundary.
-  m_boundary->UnscalePoint(data);
-
   CfgType cfg(this->GetTask()->GetRobot());
+  const size_t i = cfg.PosDOF();
+
+  // Unscale the data relative to the domain boundary.
+  // For cspace boundaries, unscale all of the points.
+  if(m_boundary->Type() == Boundary::Space::CSpace)
+    m_boundary->UnscalePoint(data);
+  // For workspace boundaries, unscale only the positional points.
+  else {
+    std::vector<double> position(data.begin(), data.begin() + i);
+    m_boundary->UnscalePoint(position);
+    std::copy(position.begin(), position.end(), data.begin());
+  }
+
   cfg.SetData(data);
+
+  // Convert any orientation DOFs from euler vectors to euler angles.
+  switch(cfg.OriDOF()) {
+    case 1:
+      {
+        const Vector3d eulerVector(0, 0, data[i] * PI);;
+        cfg.SetAngularPosition(eulerVector);
+        break;
+      }
+    case 3:
+      {
+        const Vector3d eulerVector(data[i] * PI,
+                                   data[i + 1] * PI,
+                                   data[i + 2] * PI);;
+        cfg.SetAngularPosition(eulerVector);
+        break;
+      }
+    default:;
+  }
+
   return cfg;
 }
 

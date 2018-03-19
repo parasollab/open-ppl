@@ -654,18 +654,22 @@ GetLinearPosition() const {
 Vector3d
 Cfg::
 GetAngularPosition() const {
-  /// @BUG This isn't right - the DOFs are specified in Euler angles, so we need
-  ///      to convert to that and then make a rotation vector (rodrigues?) from
-  ///      that.
   const size_t i = PosDOF();
+  Vector3d vector;
+
   switch(OriDOF()) {
     case 1:
-      return Vector3d(0, 0, m_dofs[i]);
+      convertFromEulerAngle(vector, EulerAngle(m_dofs[i] * PI, 0, 0));
+      break;
     case 3:
-      return Vector3d(m_dofs[i], m_dofs[i + 1], m_dofs[i + 2]);
-    default:
-      return Vector3d();
+      convertFromEulerAngle(vector, EulerAngle(m_dofs[i + 2] * PI,
+                                               m_dofs[i + 1] * PI,
+                                               m_dofs[i] * PI));
+      break;
+    default:;
   }
+
+  return vector;
 }
 
 
@@ -711,8 +715,22 @@ SetLinearPosition(const Vector3d& _v) {
 void
 Cfg::
 SetAngularPosition(const Vector3d& _v) {
-  throw RunTimeException(WHERE, "Not yet implemented - need a conversion "
-      "function for Euler angles <-> rotation vector.");
+  // Convert to euler angle.
+  EulerAngle angle;
+  convertFromEulerVector(angle, _v);
+
+  const size_t i = PosDOF();
+  switch(OriDOF()) {
+    case 1:
+      m_dofs[i] = angle.alpha() / PI;
+      break;
+    case 3:
+      m_dofs[i + 2] = angle.alpha() / PI;
+      m_dofs[i + 1] = angle.beta()  / PI;
+      m_dofs[i]     = angle.gamma() / PI;
+      break;
+    default:;
+  }
 }
 
 

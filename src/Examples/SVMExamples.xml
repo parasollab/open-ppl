@@ -631,7 +631,7 @@
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positional="true"/>
 
-      <SVMModel kernel="radial" c="10" epsilon=".001" gamma="1"/>
+      <SVMModel kernel="radial" c="20" epsilon=".001" gamma="1"/>
 
     </MPTools>
 
