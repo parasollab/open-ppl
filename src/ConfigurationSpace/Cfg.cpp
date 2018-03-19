@@ -1049,6 +1049,13 @@ Read(istream& _is) {
     throw RunTimeException(WHERE, "Cannot read in a Cfg without knowing the "
         "robot. Use inputRobot member to specify the default robot pointer.");
 
+#ifdef VIZMO_MAP
+  // If we are using the vizmo roadmap format, we need to read and discard the
+  // robot index.
+  size_t index;
+  _is >> index;
+#endif
+
   // Read one DOF first. If that fails, return and rely on checking _is.fail()
   // from the call site to determine that no more Cfg's are available.
   _is >> m_dofs[0];

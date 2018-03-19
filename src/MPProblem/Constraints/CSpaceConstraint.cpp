@@ -54,7 +54,11 @@ CSpaceConstraint(Robot* const _r, XMLNode& _node)
   else {
     // This is a point constraint.
     Cfg point(_r);
+#ifdef VIZMO_MAP
+    std::istringstream pointStream("0 " + pointString);
+#else
     std::istringstream pointStream(pointString);
+#endif
     point.Read(pointStream);
 
     m_bbx.ShrinkToPoint(point);
