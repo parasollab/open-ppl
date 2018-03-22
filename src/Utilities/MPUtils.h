@@ -68,8 +68,11 @@ void SRand(const unsigned long _seed);
 /// Normalize a value into the range [-1,1).
 double Normalize(double _a);
 
-/// Calculate the minimum DIRECTED angular distan between two angles normalized
-/// to 1.0.
+/// Calculate the minimum DIRECTED angular distance from one angle to another,
+/// normalized to 1.0.
+/// @param _a The original angle.
+/// @param _a The destination angle.
+/// @param The shortest signed distance from Normalize(_a) to Normalize(_b).
 double DirectedAngularDistance(double _a, double _b);
 
 /// Determine height of triangle defined by three points.

@@ -137,7 +137,7 @@ operator-=(const Cfg& _cfg) {
       m_dofs[i] -= _cfg[i];
     // Orientation dofs
     for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-      m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
+      m_dofs[i] = DirectedAngularDistance(_cfg[i], m_dofs[i]);
     // Joint dofs
     for(size_t i = posDOF + oriDOF; i < dof; ++i)
       m_dofs[i] -= _cfg[i];
@@ -146,7 +146,7 @@ operator-=(const Cfg& _cfg) {
     const MultiBody* const mb = GetMultiBody();
     for(size_t i = 0; i < dof; ++i) {
       if(mb->GetDOFType(i) == DofType::Rotational)
-        m_dofs[i] = DirectedAngularDistance(m_dofs[i], _cfg[i]);
+        m_dofs[i] = DirectedAngularDistance(_cfg[i], m_dofs[i]);
       else
         m_dofs[i] -= _cfg[i];
     }
@@ -375,7 +375,7 @@ WithinResolution(const Cfg& _cfg, const double _posRes,
             return false;
           break;
         case DofType::Rotational:
-          if(std::abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > _oriRes)
+          if(std::abs(DirectedAngularDistance(_cfg[i], m_dofs[i])) > _oriRes)
             return false;
           break;
       }
@@ -393,7 +393,7 @@ WithinResolution(const Cfg& _cfg, const double _posRes,
 
     // Orientation dofs
     for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-      if(std::abs(DirectedAngularDistance(m_dofs[i], _cfg[i])) > _oriRes)
+      if(std::abs(DirectedAngularDistance(_cfg[i], m_dofs[i])) > _oriRes)
         return false;
 
     // Joint dofs

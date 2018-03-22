@@ -56,7 +56,7 @@ SRand(const unsigned long _seed) {
 
 double
 Normalize(double _a) {
-  _a = fmod(_a + 1., 2.);
+  _a = std::fmod(_a + 1., 2.);
   if(_a < 0.)
     _a += 2.;
   return --_a;
