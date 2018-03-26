@@ -129,7 +129,6 @@
 #include "MPLibrary/MapEvaluators/RRTQuery.h"
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
-#include "MPLibrary/MapEvaluators/TRPQuery.h"
 #include "MPLibrary/MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
