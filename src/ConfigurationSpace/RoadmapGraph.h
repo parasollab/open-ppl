@@ -2,6 +2,8 @@
 #define ROADMAP_GRAPH_H_
 
 #include <functional>
+#include "Utilities/RuntimeUtils.h"
+
 
 #ifdef _PARALLEL
 #include <containers/graph/dynamic_graph.hpp>

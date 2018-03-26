@@ -9,6 +9,7 @@
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "BulletDynamics/Featherstone/btMultiBody.h"
+#include "MPLibrary/MPTools/TRPTool.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
@@ -145,6 +146,22 @@ Initialize() {
 
   m_library->Solve(problem, task, m_solution);
   task->SetCompleted();
+
+  std::cout << "Got to James's Test stuff" << std::endl;
+  //James testing trp stuff
+  std::vector<Robot*> workerRobots;
+  for(auto worker : GetWorkers()){
+    workerRobots.push_back(worker->GetRobot());
+    worker->GetRobot()->SetVirtual(true);
+  }
+  auto trp = m_library->GetMPTools()->GetTRPTool("trpTool");
+  trp->Initialize(m_robot, workerRobots);
+  trp->Search();
+
+  for(auto worker : GetWorkers()){
+    worker->GetRobot()->SetVirtual(false);
+  }
+  std::cout << "Finished James's Test stuff" << std::endl;
 }
 
 
@@ -275,6 +292,18 @@ bool
 BatteryConstrainedGroup::
 IsWorker(Agent* const _a) const {
   return GetRole(_a) == Worker;
+}
+
+std::vector<Agent*>
+BatteryConstrainedGroup::
+GetWorkers() {
+  std::vector<Agent*> output;
+
+  for(auto member : m_memberAgents)
+    if(GetRole(member) == Worker)
+      output.push_back(member);
+
+  return output;
 }
 
 std::vector<Agent*>

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 
+#include "Behaviors/Agents/BatteryBreak.h"
 #include "Roadmap.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
@@ -34,7 +35,7 @@ class PathType final {
 
     /// Construct an empty path.
     /// @param[in] _r The roadmap used by this path.
-    PathType(RoadmapType* const _r);
+    PathType(RoadmapType* const _r = nullptr);
 
     ///@}
     ///@name Path Interface
@@ -67,6 +68,17 @@ class PathType final {
     template <typename MPLibrary>
     const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
+    
+    /// Find the furthest place and time in a path that an agent can travel to
+    /// before being required to return to a charger.
+    /// @params[in] _batteryLevel Current battery level of the agent.
+    /// @params[in] _rate Rate at which battery levels decrease.
+    /// @params[in] _threshold Lowest level battery can reach before charging.
+    /// @params[in] _currentTime current time for the path to start calculatin
+    ///         from.
+    /// @params[in] _timeRes Resolution of a single timestep.
+    BatteryBreak FindBatteryBreak(double _batteryLevel, double _rate, double _theshold, 
+                 double _currentTime, double _timeRes);
 
     /// Append another path to the end of this one.
     /// @param[in] _p The path to append.
@@ -83,6 +95,9 @@ class PathType final {
     /// Add a new set of VIDs to the end of this path and return the result.
     /// @param[in] _vids The VIDs to add.
     PathType operator+(const std::vector<VID>& _vids) const;
+
+    /// Copy assignment operator.
+    PathType& operator=(const PathType& _p);
 
     /// Clear all data in the path.
     void Clear();
@@ -274,6 +289,27 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   return out;
 }
 
+template <typename MPTraits>
+BatteryBreak
+PathType<MPTraits>::
+FindBatteryBreak(double _batteryLevel, double _rate, double _theshold, 
+                 double _currentTime, double _timeRes){
+  std::vector<CfgType> fullPath = FullCfgs();
+  size_t cfgIt = 0; //keeps track of last path cfg reached before battery break
+  size_t time = 0;
+  for(auto cfg : fullPath){
+    _batteryLevel -= _rate;
+    if(_batteryLevel <= _theshold) 
+      break;
+    _currentTime += _timeRes;
+    if(cfg == m_cfgs[cfgIt]){
+      cfgIt++;
+      time = _currentTime;
+    }
+  }
+  return BatteryBreak(m_cfgs[cfgIt], time);
+
+}
 
 template <typename MPTraits>
 PathType<MPTraits>&
@@ -315,6 +351,22 @@ operator+(const std::vector<VID>& _vids) const {
   return out;
 }
 
+template <typename MPTraits>
+PathType<MPTraits>& 
+PathType<MPTraits>::
+operator=(const PathType& _p){
+    if(m_roadmap != _p.m_roadmap){
+      throw RunTimeException(WHERE, "Can't assign path from another roadmap");
+    }
+    m_vids = _p.m_vids; 
+
+    m_cfgs = _p.m_cfgs;
+    m_cfgsCached = _p.m_cfgsCached;
+
+    m_length = _p.m_length;
+    m_lengthCached = _p.m_lengthCached;
+    return *this;
+}
 
 template <typename MPTraits>
 void

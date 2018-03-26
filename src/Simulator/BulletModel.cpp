@@ -46,9 +46,10 @@ void
 BulletModel::
 Initialize() {
   // Store active model's current configuration and zero before rebuilding.
-  const std::vector<double> zeros(m_pmplModel->DOF(), 0),
-                            currentCfg = m_pmplModel->GetCurrentCfg();
+  std::vector<double> zeros(m_pmplModel->DOF(), 0),
+                            currentCfg;
   if(m_pmplModel->IsActive()) {
+    currentCfg = m_pmplModel->GetCurrentCfg();
     m_pmplModel->Configure(zeros);
     std::cout << "Initializing from " << currentCfg << std::endl;
   }

@@ -9,6 +9,8 @@
 #include "ConfigurationSpace/Roadmap.h"
 #include "ConfigurationSpace/Weight.h"
 
+#include "MPProblem/GoalMap.h"
+
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/ActiveBodyEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
@@ -127,6 +129,7 @@
 #include "MPLibrary/MapEvaluators/RRTQuery.h"
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/TRPQuery.h"
 #include "MPLibrary/MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
@@ -184,6 +187,7 @@ struct MPTraits {
   typedef MPLibraryType<MPTraits>  MPLibrary;
   typedef MPSolutionType<MPTraits> MPSolution;
   typedef MPToolsType<MPTraits>    MPTools;
+  typedef GoalMap<MPTraits>        GoalMapType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

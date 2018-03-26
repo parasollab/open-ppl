@@ -130,6 +130,9 @@ class BatteryConstrainedGroup : public Agent {
     /// @return True if the member is a worker.
     bool IsWorker(Agent* const _member) const;
 
+    /// Get the set of all robots which are currently workers.
+    std::vector<Agent*> GetWorkers();
+
     /// Get the set of all robots which are currently helpers.
     std::vector<Agent*> GetHelpers();
 

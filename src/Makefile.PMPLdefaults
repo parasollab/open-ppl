@@ -305,7 +305,7 @@ $(PHYSICAL_ROBOTS_LIBFILE):
 ################################################################################
 LKH_DIR  := $(UTILS_DIR)/LKH
 LKH_INCL := -I$(LKH_DIR)/SRC/INCLUDE
-LKH_LIBS := $(LKH_DIR)/libLKH.a
+LKH_LIBS := -L$(LKH_DIR) -lLKH
 LKH_DEF  :=
 
 LKH_LIBFILE = $(LKH_DIR)/libLKH.a

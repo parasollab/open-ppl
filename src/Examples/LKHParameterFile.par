@@ -1,0 +1,2 @@
+PROBLEM_FILE = ProblemFile.atsp
+OUTPUT_TOUR_FILE = ATSP.txt

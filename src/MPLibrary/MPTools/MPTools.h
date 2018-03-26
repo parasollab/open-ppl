@@ -4,15 +4,18 @@
 #include <string>
 #include <unordered_map>
 
+#include "Utilities/XMLNode.h"
+
 #include "MedialAxisUtilities.h"
 #include "ReebGraphConstruction.h"
 #include "SafeIntervalTool.h"
 #include "SkeletonClearanceUtility.h"
 #include "TetGenDecomposition.h"
 #include "TopologicalMap.h"
+#include "TRPTool.h"
+#include "MPLibrary/MPTools/LKHSearch.h"
 #include "MPLibrary/LearningModels/SVMModel.h"
 
-#include "Utilities/XMLNode.h"
 
 class WorkspaceDecomposition;
 
@@ -60,6 +63,8 @@ class MPToolsType final {
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
   LabelMap<TopologicalMap>           m_topologicalMaps;
   LabelMap<SafeIntervalTool>         m_safeIntervalTools;
+  LabelMap<LKHSearch> m_lkhSearchTools;
+  LabelMap<TRPTool> m_trpTools;
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
@@ -173,6 +178,40 @@ class MPToolsType final {
     void SetSafeIntervalTool(const std::string& _label,
         SafeIntervalTool<MPTraits>* const _utility);
 
+    ///@}
+    ///@name LKH Search 
+    ///@{
+
+    /// Get an LKH Search by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    // @return The labeled utility.
+
+    LKHSearch<MPTraits>* GetLKHSearch(const std::string& _label) const;
+    
+    /// Set an LKH Search
+    /// @param _label The string label for the new utility
+    /// @param _utility The LKHSearch to use
+    void SetLKHSearch(const std::string& _label, 
+        LKHSearch<MPTraits>* const _utility);
+    
+    ///@}
+    ////@name TRP Tool 
+    ///@{
+
+    /// Get a TRP Tool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    // @return The labeled utility.
+
+    TRPTool<MPTraits>* GetTRPTool(const std::string& _label) const;
+    
+    /// Set a TRP Tool
+    /// @param _label The string label for the new utility
+    /// @param _utility The LKHSearch to use
+    void SetTRPTool(const std::string& _label, 
+        TRPTool<MPTraits>* const _utility);
+    
     ///@}
     ///@name Decompositions
     ///@{
@@ -290,6 +329,22 @@ ParseXML(XMLNode& _node) {
             "unique.");
 
       SetSafeIntervalTool(utility->GetLabel(), utility);
+    }
+    else if(child.Name() == "LKHSearch") {
+
+      auto utility = new LKHSearch<MPTraits>(child);
+      SetLKHSearch(utility->GetLabel(), utility);
+    }
+    else if(child.Name() == "TRPTool") {
+
+      auto utility = new TRPTool<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_trpTools.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second TRPTool "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+     SetTRPTool(utility->GetLabel(), utility); 
     }
     // Below here we are setting defaults rather than creating instances.
     else if(child.Name() == "ReebGraphConstruction") {
@@ -437,6 +492,45 @@ SetSafeIntervalTool(const std::string& _label,
     SafeIntervalTool<MPTraits>* const _utility) {
   SetUtility(_label, _utility, m_safeIntervalTools);
 }
+
+/*------------------------------- LKH Search ---------------------------------*/
+
+template <typename MPTraits>
+LKHSearch<MPTraits>* 
+MPToolsType<MPTraits>::
+GetLKHSearch(const std::string& _label) const {
+  return m_lkhSearchTools.at(_label);
+}
+
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetLKHSearch(const std::string& _label,
+    LKHSearch<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_lkhSearchTools);
+}
+
+/*-------------------------------- TRP Tool ----------------------------------*/
+
+template <typename MPTraits>
+TRPTool<MPTraits>* 
+MPToolsType<MPTraits>::
+GetTRPTool(const std::string& _label) const {
+  return m_trpTools.at(_label);
+}
+
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetTRPTool(const std::string& _label,
+    TRPTool<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_trpTools);
+}
+
 
 /*----------------------------- Decompositions -------------------------------*/
 
