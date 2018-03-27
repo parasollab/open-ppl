@@ -317,6 +317,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     double m_minMatingDist = 0.0;
 
     bool m_graphMethod{false};
+    bool m_aStarSearch{false};
 
     ///< A vector of predefined subassemblies. Using these as the candidates
     ///< will override the generation using directional collisions.
@@ -622,11 +623,14 @@ Finalize() {
   std::vector<size_t> pathIndices; // indices of desired paths from m_pathVids
 
   if(m_printFullPath) {
-    if(!this->m_graphMethod) {
-      //Preemptive needs to setup the query here:
-      pathIndices.clear(); m_pathVids.clear();//clear both paths
+    if(this->m_aStarSearch || !this->m_graphMethod) {
+      //Both A* and Preemptive needs to setup the query here:
+      pathIndices.clear();
+      m_pathVids.clear();//clear both paths
       pathIndices.push_back(0);//use the 0th (only) path
 
+      //Create the pair of weights, then the path will be between the root and
+      // the last added VID.
       m_pathVids.push_back(make_pair(0, std::vector<VID>()));
       m_pathVids[0].second.push_back(m_rootVid);
       m_pathVids[0].second.push_back(map->GetGraph()->get_num_vertices()-1);
