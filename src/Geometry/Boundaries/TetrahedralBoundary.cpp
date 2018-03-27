@@ -12,9 +12,9 @@ TetrahedralBoundary::
 TetrahedralBoundary(const std::array<Point3d, 4>& _pts, const bool _check) :
     m_points(_pts) {
   if(_check)
-    FixPoints();
+    OrderPoints();
   m_normals = ComputeNormals();
-  m_center = ComputeCenter();
+  m_bbx = ComputeBBX();
 }
 
 
@@ -27,9 +27,9 @@ TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
 
   std::copy(_pts.begin(), _pts.end(), m_points.begin());
   if(_check)
-    FixPoints();
+    OrderPoints();
   m_normals = ComputeNormals();
-  m_center = ComputeCenter();
+  m_bbx = ComputeBBX();
 }
 
 
@@ -85,23 +85,17 @@ GetMaxDist(const double _r1, const double _r2) const {
 }
 
 
-Range<double>
+const Range<double>&
 TetrahedralBoundary::
 GetRange(const size_t _i) const {
-  double minV = numeric_limits<double>::max();
-  double maxV = numeric_limits<double>::min();
-  for(const auto& p : m_points) {
-    minV = std::min(minV, p[_i]);
-    maxV = std::max(maxV, p[_i]);
-  }
-  return make_pair(minV, maxV);
+  return m_bbx.GetRange(_i);
 }
 
 
 const std::vector<double>&
 TetrahedralBoundary::
 GetCenter() const noexcept {
-  return m_center;
+  return m_bbx.GetCenter();
 }
 
 /*--------------------------------- Sampling ---------------------------------*/
@@ -211,20 +205,21 @@ void
 TetrahedralBoundary::
 SetCenter(const std::vector<double>& _c) noexcept {
   const size_t maxIndex = std::min(_c.size(), size_t(3));
+
   for(size_t i = 0; i < maxIndex; ++i) {
-    const double offset = _c[i] - m_center[i];
+    const double offset = _c[i] - GetCenter()[i];
     for(size_t j = 0; j < 4; ++j)
       m_points[j][i] += offset;
-    m_center[i] = _c[i];
   }
+
+  m_bbx.SetCenter(_c);
 }
 
 
 void
 TetrahedralBoundary::
 ApplyOffset(const Vector3d& _v) {
-  for(size_t i = 0; i < 3; ++i)
-    m_center[i] += _v[i];
+  m_bbx.Translate({_v[0], _v[1], _v[2]});
   for(auto& p : m_points)
     p += _v;
 }
@@ -320,7 +315,7 @@ CGAL() const {
 
 void
 TetrahedralBoundary::
-FixPoints() noexcept {
+OrderPoints() noexcept {
   // Get the points.
   const Vector3d& base = m_points[0];
   const Vector3d& a    = m_points[1];
@@ -366,14 +361,22 @@ ComputeNormals() const {
 }
 
 
-std::vector<double>
+NBox
 TetrahedralBoundary::
-ComputeCenter() const {
-  std::vector<double> center(3, 0.);
-  for(size_t i = 0; i < 3; ++i)
+ComputeBBX() const {
+  NBox bbx(3);
+
+  for(size_t i = 0; i < bbx.GetDimension(); ++i) {
+    Range<double> r(std::numeric_limits<double>::max(),
+                    std::numeric_limits<double>::lowest());
+
     for(size_t j = 0; j < 4; ++j)
-      center[i] += m_points[j][i];
-  return center;
+      r.ExpandToInclude(m_points[j][i]);
+
+    bbx.SetRange(i, r);
+  }
+
+  return bbx;
 }
 
 /*----------------------------------------------------------------------------*/

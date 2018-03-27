@@ -5,11 +5,10 @@
 #include "MPLibrary/MPSolution.h"
 #include "MPLibrary/MPTools/MPTools.h"
 
+#include "ConfigurationSpace/LocalObstacleMap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Roadmap.h"
 #include "ConfigurationSpace/Weight.h"
-
-#include "MPProblem/GoalMap.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/ActiveBodyEuclideanDistance.h"
@@ -179,14 +178,14 @@
 template <typename C, typename W = DefaultWeight<C>>
 struct MPTraits {
 
-  typedef C                        CfgType;
-  typedef W                        WeightType;
-  typedef PathType<MPTraits>       Path;
-  typedef Roadmap<MPTraits>        RoadmapType;
-  typedef MPLibraryType<MPTraits>  MPLibrary;
-  typedef MPSolutionType<MPTraits> MPSolution;
-  typedef MPToolsType<MPTraits>    MPTools;
-  typedef GoalMap<MPTraits>        GoalMapType;
+  typedef C                              CfgType;
+  typedef W                              WeightType;
+  typedef PathType<MPTraits>             Path;
+  typedef Roadmap<MPTraits>              RoadmapType;
+  typedef MPLibraryType<MPTraits>        MPLibrary;
+  typedef MPSolutionType<MPTraits>       MPSolution;
+  typedef MPToolsType<MPTraits>          MPTools;
+  typedef LocalObstacleMapType<MPTraits> LocalObstacleMap;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

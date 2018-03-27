@@ -111,7 +111,7 @@ operator+=(const Cfg& _cfg) {
     m_dofs[i] += _cfg[i];
   // Orientation dofs
   for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    m_dofs[i] = Normalize(m_dofs[i] + _cfg[i]);
+    m_dofs[i] = m_normalizer(m_dofs[i] + _cfg[i]);
   // Joint dofs
   for(size_t i = posDOF + oriDOF; i < dof; ++i)
     m_dofs[i] += _cfg[i];
@@ -137,7 +137,7 @@ operator-=(const Cfg& _cfg) {
       m_dofs[i] -= _cfg[i];
     // Orientation dofs
     for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-      m_dofs[i] = DirectedAngularDistance(_cfg[i], m_dofs[i]);
+      m_dofs[i] = m_normalizer(m_dofs[i] - _cfg[i]);
     // Joint dofs
     for(size_t i = posDOF + oriDOF; i < dof; ++i)
       m_dofs[i] -= _cfg[i];
@@ -146,7 +146,7 @@ operator-=(const Cfg& _cfg) {
     const MultiBody* const mb = GetMultiBody();
     for(size_t i = 0; i < dof; ++i) {
       if(mb->GetDOFType(i) == DofType::Rotational)
-        m_dofs[i] = DirectedAngularDistance(_cfg[i], m_dofs[i]);
+        m_dofs[i] = m_normalizer(m_dofs[i] - _cfg[i]);
       else
         m_dofs[i] -= _cfg[i];
     }
@@ -170,7 +170,7 @@ operator*=(const Cfg& _cfg) {
     m_dofs[i] *= _cfg[i];
   // Orientation dofs
   for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    m_dofs[i] = Normalize(m_dofs[i] * _cfg[i]);
+    m_dofs[i] = m_normalizer(m_dofs[i] * _cfg[i]);
   // Joint dofs
   for(size_t i = posDOF + oriDOF; i < dof; ++i)
     m_dofs[i] *= _cfg[i];
@@ -193,7 +193,7 @@ operator/=(const Cfg& _cfg) {
     m_dofs[i] /= _cfg[i];
   // Orientation dofs
   for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    m_dofs[i] = Normalize(m_dofs[i] / _cfg[i]);
+    m_dofs[i] = m_normalizer(m_dofs[i] / _cfg[i]);
   // Joint dofs
   for(size_t i = posDOF + oriDOF; i < dof; ++i)
     m_dofs[i] /= _cfg[i];
@@ -216,7 +216,7 @@ operator*=(const double _d) {
     m_dofs[i] *= _d;
   // Orientation dofs
   for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    m_dofs[i] = Normalize(m_dofs[i] * _d);
+    m_dofs[i] = m_normalizer(m_dofs[i] * _d);
   // Joint dofs
   for(size_t i = posDOF + oriDOF; i < dof; ++i)
     m_dofs[i] *= _d;
@@ -239,7 +239,7 @@ operator/=(const double _d) {
     m_dofs[i] /= _d;
   // Orientation dofs
   for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-    m_dofs[i] = Normalize(m_dofs[i] / _d);
+    m_dofs[i] = m_normalizer(m_dofs[i] / _d);
   // Joint dofs
   for(size_t i = posDOF + oriDOF; i < dof; ++i)
     m_dofs[i] /= _d;
@@ -314,18 +314,18 @@ bool
 Cfg::
 operator==(const Cfg& _cfg) const {
   // First check for same robot pointer.
-    if(m_robot != _cfg.m_robot)
+  if(m_robot != _cfg.m_robot)
+    return false;
+
+  static constexpr double tolerance = 100 * std::numeric_limits<double>::epsilon();
+
+  // Check the velocities.
+  for(size_t i = 0; i < m_vel.size(); ++i)
+    if(std::abs(m_vel[i] - _cfg.m_vel[i]) > tolerance)
       return false;
 
-    static constexpr double tolerance = 100 * std::numeric_limits<double>::epsilon();
-
-    // Check the velocities.
-    for(size_t i = 0; i < m_vel.size(); ++i)
-      if(std::abs(m_vel[i] - _cfg.m_vel[i]) > tolerance)
-        return false;
-
-    // Check everything else (joints, position, and rotational dofs).
-    return WithinResolution(_cfg, tolerance, tolerance);
+  // Check everything else (joints, position, and rotational dofs).
+  return WithinResolution(_cfg, tolerance, tolerance);
 }
 
 
@@ -375,7 +375,7 @@ WithinResolution(const Cfg& _cfg, const double _posRes,
             return false;
           break;
         case DofType::Rotational:
-          if(std::abs(DirectedAngularDistance(_cfg[i], m_dofs[i])) > _oriRes)
+          if(std::abs(m_normalizer(m_dofs[i] - _cfg[i])) > _oriRes)
             return false;
           break;
       }
@@ -393,7 +393,7 @@ WithinResolution(const Cfg& _cfg, const double _posRes,
 
     // Orientation dofs
     for(size_t i = posDOF; i < posDOF + oriDOF; ++i)
-      if(std::abs(DirectedAngularDistance(_cfg[i], m_dofs[i])) > _oriRes)
+      if(std::abs(m_normalizer(m_dofs[i] - _cfg[i])) > _oriRes)
         return false;
 
     // Joint dofs
@@ -957,10 +957,10 @@ IncrementTowardsGoal(const Cfg& _goal, const Cfg& _increment) {
         break;
       case DofType::Rotational:
         {
-          const double dist = DirectedAngularDistance(m_dofs[i], _goal[i]);
+          const double dist = m_normalizer(_goal[i] - m_dofs[i]);
           const bool overshootsGoal = std::abs(dist) < std::abs(_increment[i]);
           m_dofs[i] = overshootsGoal ? _goal[i] :
-                                       Normalize(m_dofs[i] += _increment[i]);
+                                       m_normalizer(m_dofs[i] += _increment[i]);
         }
         break;
     }
@@ -986,12 +986,11 @@ FindIncrement(const Cfg& _start, const Cfg& _goal, const int _nTicks) {
         m_dofs[i] = (_goal[i] - _start[i]) / _nTicks;
         break;
       case DofType::Rotational:
-        m_dofs[i] = DirectedAngularDistance(_start[i], _goal[i]) / _nTicks;
+        m_dofs[i] = m_normalizer(_goal[i] - _start[i]) / _nTicks;
         break;
     }
   }
 
-  NormalizeOrientation();
   m_witnessCfg.reset();
 }
 
@@ -1200,15 +1199,29 @@ operator<<(ostream& _os, const Cfg& _cfg) {
 
 void
 Cfg::
+EnableNormalization() const {
+  m_normalizer = Normalize;
+}
+
+
+void
+Cfg::
+DisableNormalization() const {
+  m_normalizer = Identity<double>;
+}
+
+
+void
+Cfg::
 NormalizeOrientation(const int _index) noexcept {
   if(_index == -1) {
     for(size_t i = 0; i < DOF(); ++i)
       if(GetMultiBody()->GetDOFType(i) == DofType::Rotational)
-        m_dofs[i] = Normalize(m_dofs[i]);
+        m_dofs[i] = m_normalizer(m_dofs[i]);
   }
   else if(GetMultiBody()->GetDOFType(_index) == DofType::Rotational) {
     // orientation index
-    m_dofs[_index] = Normalize(m_dofs[_index]);
+    m_dofs[_index] = m_normalizer(m_dofs[_index]);
   }
 }
 

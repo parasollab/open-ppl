@@ -587,12 +587,13 @@ template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePathDynamic(const VID _start, const VID _end) {
+  /// @TODO Homogenize our custom SSSP implementations. We have them now at
+  ///       least in WorkspaceDecomposition, TopologicalMap, and QueryMethod.
 
   if(_start == _end){
     return std::vector<VID>{_start};
   }
 
-  typedef typename GraphType::EID                 ED;
   typedef typename GraphType::adj_edge_iterator   EI;
   typedef std::unordered_map<VID, VID>            ParentMap;
 
@@ -608,8 +609,8 @@ GeneratePathDynamic(const VID _start, const VID _end) {
   /// containment within a Safe Interval.
   struct element{
 
-    VID parent;         ///< The parent cell descriptor.
-    VID vd;             ///< This cell descriptor.
+    VID parent;         ///< The parent vertex descriptor.
+    VID vd;             ///< This vertex descriptor.
     double distance;    ///< Computed distance (time) at the time of insertion.
 
     /// Total order by decreasing distance.
@@ -628,22 +629,15 @@ GeneratePathDynamic(const VID _start, const VID _end) {
 
   std::unordered_map<VID, bool> visited;
   std::unordered_map<VID, double> distance;
-  // Initialize the various maps.
 
-  for(auto vi = g->begin(); vi != g->end(); ++vi) {
-    visited[vi->descriptor()] = false;
-    distance[vi->descriptor()] = std::numeric_limits<double>::max();
-  }
-
-  auto relax = [&distance, this, &pq, iTool, g, &parentMap](const ED& _ed) {
-    EI edgeIter;
-    bool valid = g->GetEdge(_ed.source(), _ed.target(), edgeIter);
-    if(!valid)
-      throw RunTimeException(WHERE, "Edge not found.");
-
-    const double sourceDistance = distance[_ed.source()],
-                 targetDistance = distance[_ed.target()],
-                 edgeWeight     = edgeIter->property().GetTimeSteps(),
+  auto relax = [&distance, this, &pq, iTool, g, &parentMap](EI& _ei) {
+    const double sourceDistance = distance.count(_ei->source())
+                                  ? distance[_ei->source()]
+                                  : std::numeric_limits<double>::infinity(),
+                 targetDistance = distance.count(_ei->target())
+                                  ? distance[_ei->target()]
+                                  : std::numeric_limits<double>::infinity(),
+                 edgeWeight     = _ei->property().GetTimeSteps(),
                  newDistance    = sourceDistance + edgeWeight;
 
     if(newDistance >= targetDistance){
@@ -654,7 +648,7 @@ GeneratePathDynamic(const VID _start, const VID _end) {
 
     // Ensure that the target vertex is contained within a SafeInterval when
     // arriving.
-    auto vertexIntervals = iTool->ComputeIntervals(g->GetVertex(_ed.target()));
+    auto vertexIntervals = iTool->ComputeIntervals(g->GetVertex(_ei->target()));
     if(!(iTool->ContainsTimestep(vertexIntervals, newDistance))){
       if(this->m_debug){
         std::cout << "Breaking because the vertex is invalid." << std::endl;
@@ -664,16 +658,16 @@ GeneratePathDynamic(const VID _start, const VID _end) {
     }
 
     // Ensure that the edge is contained within a SafeInterval if leaving now.
-    auto edgeIntervals = iTool->ComputeIntervals(edgeIter->property());
+    auto edgeIntervals = iTool->ComputeIntervals(_ei->property());
     if(!(iTool->ContainsTimestep(edgeIntervals, sourceDistance))){
       if(this->m_debug)
         std::cout << "Breaking because the edge is invalid." << std::endl;
       return;
     }
 
-    distance[_ed.target()] = newDistance;
-    pq.push(element{_ed.source(), _ed.target(), newDistance});
-    parentMap[_ed.target()] = _ed.source();
+    distance[_ei->target()] = newDistance;
+    pq.push(element{_ei->source(), _ei->target(), newDistance});
+    parentMap[_ei->target()] = _ei->source();
     if(this->m_debug)
       std::cout << "======Relaxed Edge======" << std::endl;
   };
@@ -681,26 +675,28 @@ GeneratePathDynamic(const VID _start, const VID _end) {
   distance[_start] = 0;
   pq.push(element{_start, _start, 0});
   parentMap[_start] = _start;
-  
+
   // Dijkstras
   while(!pq.empty()) {
     // Get the next element
-    element current = pq.top();
+    const element current = pq.top();
     pq.pop();
 
     // If we are done with this node, discard the element.
-    if(visited[current.vd])
+    if(visited.count(current.vd))
       continue;
     visited[current.vd] = true;
 
-    auto vertexIter = g->find_vertex(current.vd);
-    for(auto edgeIter = vertexIter->begin(); edgeIter != vertexIter->end();
-        ++edgeIter) {
-      relax(edgeIter->descriptor());
+    // Relax edges to unvisited adjacent vertices.
+    auto vi = g->find_vertex(current.vd);
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
+      const size_t target = ei->target();
+      if(!visited.count(target))
+        relax(ei);
     }
   }
 
-  vector<VID> path;
+  std::vector<VID> path;
   if(!parentMap.count(_end))
     return path;
 

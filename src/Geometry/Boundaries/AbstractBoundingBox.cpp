@@ -63,7 +63,7 @@ GetMaxDist(const double _r1, const double _r2) const {
 }
 
 
-Range<double>
+const Range<double>&
 AbstractBoundingBox::
 GetRange(const size_t _i) const {
   if(_i > NBox::GetDimension())
@@ -93,31 +93,6 @@ AbstractBoundingBox::
 PushInside(std::vector<double>& _sample) const noexcept {
   if(!NBox::Contains(_sample))
     _sample = NBox::ClearancePoint(_sample);
-}
-
-/*--------------------------------- Scaling ----------------------------------*/
-
-void
-AbstractBoundingBox::
-ScalePoint(std::vector<double>& _point) const noexcept {
-  const size_t limit = std::min(GetDimension(), _point.size());
-
-  for(size_t i = 0; i < limit; ++i) {
-    const auto& r = NBox::GetRange(i);
-    _point[i] = nonstd::rescale(_point[i], r.min, r.max, -1., 1.);
-  }
-}
-
-
-void
-AbstractBoundingBox::
-UnscalePoint(std::vector<double>& _point) const noexcept {
-  const size_t limit = std::min(GetDimension(), _point.size());
-
-  for(size_t i = 0; i < limit; ++i) {
-    const auto& r = NBox::GetRange(i);
-    _point[i] = nonstd::rescale(_point[i], -1., 1., r.min, r.max);
-  }
 }
 
 /*----------------------------- Containment Testing --------------------------*/

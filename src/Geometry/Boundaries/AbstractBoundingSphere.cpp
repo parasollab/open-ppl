@@ -10,12 +10,12 @@
 
 AbstractBoundingSphere::
 AbstractBoundingSphere(const size_t _n, const double _radius) :
-    NSphere(_n, _radius) { }
+    NSphere(_n, _radius), m_range(ComputeRange()) { }
 
 
 AbstractBoundingSphere::
 AbstractBoundingSphere(const std::vector<double>& _center, const double _radius) :
-    NSphere(_center, _radius) { }
+    NSphere(_center, _radius), m_range(ComputeRange()) { }
 
 
 AbstractBoundingSphere::
@@ -32,6 +32,8 @@ AbstractBoundingSphere(XMLNode& _node) : NSphere(0) {
   catch(PMPLException& _e) {
     throw ParseException(_node.Where(), _e.what());
   }
+
+  m_range = ComputeRange();
 }
 
 
@@ -54,14 +56,13 @@ GetMaxDist(const double _r1, const double _r2) const {
 }
 
 
-Range<double>
+const Range<double>&
 AbstractBoundingSphere::
 GetRange(const size_t _i) const {
   if(_i > NSphere::GetDimension())
     throw RunTimeException(WHERE,
         "Invalid access to dimension '" + std::to_string(_i) + "'.");
-  return Range<double>(NSphere::GetCenter()[_i] - NSphere::GetRadius(),
-                       NSphere::GetCenter()[_i] + NSphere::GetRadius());
+  return m_range[_i];
 }
 
 
@@ -108,7 +109,7 @@ Vector3d
 AbstractBoundingSphere::
 GetClearancePoint(const Vector3d& _p) const {
   auto v = NSphere::ClearancePoint(std::vector<double>{_p[0], _p[1], _p[2]});
-  return Vector3d(v[0], v[1], NSphere::GetDimension() > 2 ? v[2] : 0);
+  return Vector3d(v[0], v[1], NSphere::GetDimension() > 2 ? v[2] : _p[2]);
 }
 
 /*---------------------------------- Modifiers -------------------------------*/
@@ -117,6 +118,11 @@ void
 AbstractBoundingSphere::
 SetCenter(const std::vector<double>& _c) noexcept {
   NSphere::SetCenter(_c);
+
+  const size_t maxIndex = std::min(_c.size(), NSphere::GetDimension());
+
+  for(size_t i = 0; i < maxIndex; ++i)
+    m_range[i].SetCenter(_c[i]);
 }
 
 
@@ -124,6 +130,11 @@ void
 AbstractBoundingSphere::
 ApplyOffset(const Vector3d& _v) {
   NSphere::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
+
+  const size_t maxIndex = std::min(size_t(3), NSphere::GetDimension());
+
+  for(size_t i = 0; i < maxIndex; ++i)
+    m_range[i].Translate(_v[i]);
 }
 
 
@@ -132,6 +143,20 @@ AbstractBoundingSphere::
 ResetBoundary(const vector<pair<double, double>>&, const double) {
   throw RunTimeException(WHERE, "This operation does not make sense for a "
       "sphere. Can't resize each dimension independently!");
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+std::vector<Range<double>>
+AbstractBoundingSphere::
+ComputeRange() const {
+  std::vector<Range<double>> r(NSphere::GetDimension());
+
+  for(size_t i = 0; i < GetDimension(); ++i)
+    r[i].Resize(NSphere::GetCenter()[i] - NSphere::GetRadius(),
+                NSphere::GetCenter()[i] + NSphere::GetRadius());
+
+  return r;
 }
 
 /*------------------------------------ I/O -----------------------------------*/
@@ -147,6 +172,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   catch(PMPLException& _e) {
     throw ParseException(_cbs.Where(), _e.what());
   }
+
+  m_range = std::move(ComputeRange());
 }
 
 

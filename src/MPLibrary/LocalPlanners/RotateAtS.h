@@ -3,82 +3,93 @@
 
 #include "TransformAtS.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Generates a local plan by translating the start configuration to the location
+/// "s" percent along the straight line path, then rotating to match the goal
+/// orientation, and finally translating to the goal.
 /// @ingroup LocalPlanners
-/// @brief Translate to \f$s\f$ along straight-line, rotate all, then finish
-///        translation.
-///
-/// The rotate at s local planner performs a translation to the location "s"
-/// percent along the straight line path, change all orientation DoFs, then
-/// translate to the goal.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RotateAtS : public TransformAtS<MPTraits> {
+
   public:
+
+    ///@name Motion Planning Types
+    ///@{
 
     typedef typename MPTraits::CfgType CfgType;
 
-    RotateAtS(double _s = 0.5, const string& _vcLabel = "", bool _evalation = false,
-        bool _saveIntermediates = false);
+    ///@}
+    ///@name Construction
+    ///@{
+
+    RotateAtS(double _s = 0.5, const string& _vcLabel = "",
+        bool _evalation = false, bool _saveIntermediates = false);
+
     RotateAtS(XMLNode& _node);
-    virtual ~RotateAtS();
+
+    virtual ~RotateAtS() = default;
+
+    ///@}
 
   protected:
-    virtual bool IsReversible() {
-      return fabs(this->m_sValue - 0.5) < std::numeric_limits<double>::epsilon();
-    }
 
-    virtual void GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
-        double _s, vector<CfgType>& _sequence, bool _reverse = false);
+    ///@name TransformAtS Overrides
+    ///@{
+
+    virtual std::vector<CfgType> GetSequenceNodes(const CfgType& _c1,
+        const CfgType& _c2, const bool _reverse = false) override;
+
+    ///@}
+
 };
 
-template<class MPTraits>
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
 RotateAtS<MPTraits>::
-RotateAtS(double _s, const string& _vcLabel,
-    bool _evalation, bool _saveIntermediates) :
-  TransformAtS<MPTraits>(_s, _vcLabel, _evalation, _saveIntermediates) {
-    this->SetName("RotateAtS");
-  }
-
-template<class MPTraits>
-RotateAtS<MPTraits>::
-RotateAtS(XMLNode& _node):
-  TransformAtS<MPTraits>(_node) {
-    this->SetName("RotateAtS");
-  }
-
-template<class MPTraits>
-RotateAtS<MPTraits>::~RotateAtS() {}
-
-template<class MPTraits>
-void
-RotateAtS<MPTraits>::GetSequenceNodes(const CfgType& _c1, const CfgType& _c2,
-    double _s, vector<CfgType>& _sequence, bool _reverse) {
-  auto robot = this->GetTask()->GetRobot();
-
-  CfgType thisCopy(robot);
-  vector<double> _v1 = _c1.GetData();
-  thisCopy.SetData(_v1);
-  _sequence.push_back(thisCopy);
-
-  CfgType weightedSum(robot);
-  weightedSum.SetData(_v1);
-  weightedSum.WeightedSum(_c1, _c2, _s);
-
-  CfgType s1(robot);
-  s1.SetData(_v1);
-  s1.GetPositionOrientationFrom2Cfg(weightedSum, _c1);
-  _sequence.push_back(s1);
-
-  CfgType s2(robot);
-  s2.SetData(_v1);
-  s2.GetPositionOrientationFrom2Cfg(weightedSum, _c2);
-  _sequence.push_back(s2);
-
-  CfgType otherCopy(robot);
-  vector<double> _v2 = _c2.GetData();
-  otherCopy.SetData(_v2);
-  _sequence.push_back(otherCopy);
+RotateAtS(double _s, const string& _vcLabel, bool _evalation,
+    bool _saveIntermediates) :
+    TransformAtS<MPTraits>(_s, _vcLabel, _evalation, _saveIntermediates) {
+  this->SetName("RotateAtS");
 }
+
+
+template <typename MPTraits>
+RotateAtS<MPTraits>::
+RotateAtS(XMLNode& _node): TransformAtS<MPTraits>(_node) {
+  this->SetName("RotateAtS");
+}
+
+/*-------------------------- TransformAtS Overrides --------------------------*/
+
+template <typename MPTraits>
+std::vector<typename MPTraits::CfgType>
+RotateAtS<MPTraits>::
+GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, const bool _reverse) {
+  // Push the start node into the sequence.
+  std::vector<CfgType> sequence;
+  sequence.reserve(4);
+  sequence.push_back(_c1);
+
+  // Make the first transform point (up to the rotation).
+  CfgType upToRotation = _c1;
+  upToRotation.SetLinearPosition(_c2.GetLinearPosition());
+  upToRotation.WeightedSum(_c1, upToRotation, this->m_s);
+  sequence.push_back(upToRotation);
+
+  // Make the second transform point (after the rotation).
+  CfgType afterRotation = _c2;
+  afterRotation.SetLinearPosition(upToRotation.GetLinearPosition());
+  sequence.push_back(afterRotation);
+
+  // Push the end node into the sequence.
+  sequence.push_back(_c2);
+
+  return sequence;
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

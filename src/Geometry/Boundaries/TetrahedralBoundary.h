@@ -3,9 +3,11 @@
 
 #include "Boundary.h"
 
+#include "Geometry/Shapes/NBox.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// A tetrahedral bounding region in workspace.
-/// @ingroup Environment
 ////////////////////////////////////////////////////////////////////////////////
 class TetrahedralBoundary : public Boundary {
 
@@ -53,7 +55,7 @@ class TetrahedralBoundary : public Boundary {
     virtual double GetMaxDist(const double _r1 = 2., const double _r2 = .5)
         const override;
 
-    virtual Range<double> GetRange(const size_t _i) const override;
+    virtual const Range<double>& GetRange(const size_t _i) const override;
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
@@ -116,7 +118,7 @@ class TetrahedralBoundary : public Boundary {
     ///@{
 
     /// Check that the points are in the correct order and fix if necessary.
-    void FixPoints() noexcept;
+    void OrderPoints() noexcept;
 
     /// Compute the edges. The resulting vectors point from lower-index points
     /// higher-index points.
@@ -125,16 +127,16 @@ class TetrahedralBoundary : public Boundary {
     /// Compute the normals. The first three are for faces touched by point 0.
     std::array<Vector3d, 4> ComputeNormals() const;
 
-    /// Compute the center.
-    std::vector<double> ComputeCenter() const;
+    /// Compute the bounding box.
+    NBox ComputeBBX() const;
 
     ///@}
     ///@name Internal State
     ///@{
 
-    std::vector<double> m_center;      ///< The center point of the tetrahedron.
     std::array<Point3d, 4> m_points;   ///< The vertices of the tetrahedron.
     std::array<Vector3d, 4> m_normals; ///< The normals of the tetrahedron.
+    NBox m_bbx{3};                     ///< The bounding box of the tetrahedron.
 
     ///@}
 };

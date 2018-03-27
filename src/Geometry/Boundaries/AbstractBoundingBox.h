@@ -39,7 +39,7 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     virtual double GetMaxDist(const double _r1 = 2., const double _r2 = .5)
         const override;
 
-    virtual Range<double> GetRange(const size_t _i) const override;
+    virtual const Range<double>& GetRange(const size_t _i) const override;
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
@@ -50,15 +50,6 @@ class AbstractBoundingBox :  public Boundary, public NBox {
     virtual std::vector<double> GetRandomPoint() const override;
 
     virtual void PushInside(std::vector<double>& _sample) const noexcept override;
-
-    ///@}
-    ///@name Scaling
-    ///@{
-
-    virtual void ScalePoint(std::vector<double>& _point) const noexcept override;
-
-    virtual void UnscalePoint(std::vector<double>& _point) const noexcept
-        override;
 
     ///@}
     ///@name Containment Testing

@@ -5,13 +5,15 @@
 /*--------------------------- Construction -----------------------------------*/
 
 WorkspacePortal::
-WorkspacePortal() : m_sourceIndex(-1), m_targetIndex(-1) { }
+WorkspacePortal() : m_sourceIndex(-1), m_targetIndex(-1),
+    m_weight(std::numeric_limits<double>::infinity()) { }
 
 
 WorkspacePortal::
 WorkspacePortal(WorkspaceDecomposition* const _wd, const size_t _s,
     const size_t _t) : m_decomposition(_wd), m_sourceIndex(_s),
-    m_targetIndex(_t) { }
+    m_targetIndex(_t), m_weight(ComputeWeight()) {
+}
 
 
 void
@@ -49,6 +51,13 @@ GetTarget() const noexcept {
   return m_decomposition->GetRegion(m_targetIndex);
 }
 
+
+double
+WorkspacePortal::
+GetWeight() const noexcept {
+  return m_weight;
+}
+
 /*-------------------------------- Queries -----------------------------------*/
 
 const vector<Point3d>
@@ -62,6 +71,26 @@ const vector<const WorkspacePortal::Facet*>
 WorkspacePortal::
 FindFacets() const {
   return GetSource().FindSharedFacets(GetTarget());
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+double
+WorkspacePortal::
+ComputeWeight() const {
+  double bestDistance = std::numeric_limits<double>::infinity();
+
+  const Point3d sourceCenter = GetSource().FindCenter(),
+                targetCenter = GetTarget().FindCenter();
+
+  for(auto facet : FindFacets()) {
+    const Point3d facetCenter = facet->FindCenter();
+    const double distance = (sourceCenter - facetCenter).norm()
+                          + (facetCenter - targetCenter).norm();
+    bestDistance = std::min(bestDistance, distance);
+  }
+
+  return bestDistance;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -76,7 +76,7 @@ class Boundary {
     /// Get the boundary range for a specific dimension.
     /// @param _i The dimension index.
     /// @return The range of values spanned by this boundary in dimension _i.
-    virtual Range<double> GetRange(const size_t _i) const = 0;
+    virtual const Range<double>& GetRange(const size_t _i) const = 0;
 
     /// Get the boundary's center point.
     virtual const std::vector<double>& GetCenter() const noexcept = 0;

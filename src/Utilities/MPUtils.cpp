@@ -55,26 +55,12 @@ SRand(const unsigned long _seed) {
 /*------------------------------ Geometry Utils ------------------------------*/
 
 double
-Normalize(double _a) {
-  _a = std::fmod(_a + 1., 2.);
-  if(_a < 0.)
-    _a += 2.;
-  return --_a;
-}
-
-
-double
-DirectedAngularDistance(double _a, double _b) {
-  // normalize both a and b to [-1, 1)
-  _a = Normalize(_a);
-  _b = Normalize(_b);
-
-  if(_b - _a > 1.)
-    _a += 2.;
-  else if(_a - _b > 1.)
-    _b += 2.;
-
-  return _b - _a;
+Normalize(const double& _a) {
+  // Translate _a right by one so that mod 2 gives a normalized rotation.
+  double a = std::fmod(_a + 1., 2.);
+  // Untranslate _a to the [-1, 1] range. If it was negative we would also have
+  // to add 2 (one whole rotation).
+  return a < 0 ? a + 1 : a - 1;
 }
 
 

@@ -41,10 +41,11 @@ class MPLibraryType final
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPSolution  MPSolution;
-    typedef typename MPTraits::RoadmapType RoadmapType;
-    typedef typename MPTraits::Path        Path;
-    typedef typename MPTraits::MPTools     MPTools;
+    typedef typename MPTraits::MPSolution       MPSolution;
+    typedef typename MPTraits::RoadmapType      RoadmapType;
+    typedef typename MPTraits::Path             Path;
+    typedef typename MPTraits::MPTools          MPTools;
+    typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
 
     ///@}
     ///@name Local Types
@@ -99,7 +100,7 @@ class MPLibraryType final
     ///@{
 
     MPLibraryType();
-    MPLibraryType(const string& _filename);
+    MPLibraryType(const std::string& _filename);
     ~MPLibraryType();
 
     ///@}
@@ -108,23 +109,16 @@ class MPLibraryType final
 
     /// Read an XML file to set the algorithms and parameters in this instance.
     /// @param[in] _filename The XML file name.
-    void ReadXMLFile(const string& _filename);
-
-    ///@}
-    ///@name Base Filename Accessors
-    ///@{
-
-    const string& GetBaseFilename() const {return m_problem->GetBaseFilename();}
-    void SetBaseFilename(const string& _s) {m_problem->SetBaseFilename(_s);}
+    void ReadXMLFile(const std::string& _filename);
 
     ///@}
     ///@name Distance Metric Accessors
     ///@{
 
-    DistanceMetricPointer GetDistanceMetric(const string& _l) {
+    DistanceMetricPointer GetDistanceMetric(const std::string& _l) {
       return m_distanceMetrics->GetMethod(_l);
     }
-    void AddDistanceMetric(DistanceMetricPointer _dm, const string& _l) {
+    void AddDistanceMetric(DistanceMetricPointer _dm, const std::string& _l) {
       m_distanceMetrics->AddMethod(_dm, _l);
     }
 
@@ -132,24 +126,27 @@ class MPLibraryType final
     ///@name Validity Checker Accessors
     ///@{
 
-    ValidityCheckerPointer GetValidityChecker(const string& _l) {
+    ValidityCheckerPointer GetValidityChecker(const std::string& _l) {
       return m_validityCheckers->GetMethod(_l);
     }
-    void AddValidityChecker(ValidityCheckerPointer _vc, const string& _l) {
+    void AddValidityChecker(ValidityCheckerPointer _vc, const std::string& _l) {
       m_validityCheckers->AddMethod(_vc, _l);
     }
+
+    /// Toggle (negate) the validity output for ALL validity checkers.
     void ToggleValidity() {
-      for(auto& vc : *m_validityCheckers) vc.second->ToggleValidity();
+      for(auto& vc : *m_validityCheckers)
+        vc.second->ToggleValidity();
     }
 
     ///@}
     ///@name Neighborhood Finder Accessors
     ///@{
 
-    NeighborhoodFinderPointer GetNeighborhoodFinder(const string& _l) {
+    NeighborhoodFinderPointer GetNeighborhoodFinder(const std::string& _l) {
       return m_neighborhoodFinders->GetMethod(_l);
     }
-    void AddNeighborhoodFinder(NeighborhoodFinderPointer _nf, const string& _l) {
+    void AddNeighborhoodFinder(NeighborhoodFinderPointer _nf, const std::string& _l) {
       m_neighborhoodFinders->AddMethod(_nf, _l);
     }
 
@@ -158,10 +155,10 @@ class MPLibraryType final
     ///@{
 
     const SamplerSet* const GetSamplers() const {return m_samplers;}
-    SamplerPointer GetSampler(const string& _l) {
+    SamplerPointer GetSampler(const std::string& _l) {
       return m_samplers->GetMethod(_l);
     }
-    void AddSampler(SamplerPointer _s, const string& _l) {
+    void AddSampler(SamplerPointer _s, const std::string& _l) {
       m_samplers->AddMethod(_s, _l);
     }
 
@@ -169,10 +166,10 @@ class MPLibraryType final
     ///@name Local Planner Accessors
     ///@{
 
-    LocalPlannerPointer GetLocalPlanner(const string& _l) {
+    LocalPlannerPointer GetLocalPlanner(const std::string& _l) {
       return m_localPlanners->GetMethod(_l);
     }
-    void AddLocalPlanner(LocalPlannerPointer _lp, const string& _l) {
+    void AddLocalPlanner(LocalPlannerPointer _lp, const std::string& _l) {
       m_localPlanners->AddMethod(_lp, _l);
     }
 
@@ -180,10 +177,10 @@ class MPLibraryType final
     ///@name Extender Accessors
     ///@{
 
-    ExtenderPointer GetExtender(const string& _l) {
+    ExtenderPointer GetExtender(const std::string& _l) {
       return m_extenders->GetMethod(_l);
     }
-    void AddExtender(ExtenderPointer _mps, const string& _l) {
+    void AddExtender(ExtenderPointer _mps, const std::string& _l) {
       m_extenders->AddMethod(_mps, _l);
     }
 
@@ -191,10 +188,10 @@ class MPLibraryType final
     ///@name Path Modifier Accessors
     ///@{
 
-    PathModifierPointer GetPathModifier(const string& _l) {
+    PathModifierPointer GetPathModifier(const std::string& _l) {
       return m_pathModifiers->GetMethod(_l);
     }
-    void AddPathModifier(PathModifierPointer _ps, const string& _l) {
+    void AddPathModifier(PathModifierPointer _ps, const std::string& _l) {
       m_pathModifiers->AddMethod(_ps, _l);
     }
 
@@ -202,10 +199,10 @@ class MPLibraryType final
     ///@name Connector Accessors
     ///@{
 
-    ConnectorPointer GetConnector(const string& _l) {
+    ConnectorPointer GetConnector(const std::string& _l) {
       return m_connectors->GetMethod(_l);
     }
-    void AddConnector(ConnectorPointer _c, const string& _l) {
+    void AddConnector(ConnectorPointer _c, const std::string& _l) {
       m_connectors->AddMethod(_c, _l);
     }
 
@@ -213,8 +210,8 @@ class MPLibraryType final
     ///@name Metric Accessors
     ///@{
 
-    MetricPointer GetMetric(const string& _l) {return m_metrics->GetMethod(_l);}
-    void AddMetric(MetricPointer _m, const string& _l) {
+    MetricPointer GetMetric(const std::string& _l) {return m_metrics->GetMethod(_l);}
+    void AddMetric(MetricPointer _m, const std::string& _l) {
       m_metrics->AddMethod(_m, _l);
     }
 
@@ -222,10 +219,10 @@ class MPLibraryType final
     ///@name Map Evaluator Accessors
     ///@{
 
-    MapEvaluatorPointer GetMapEvaluator(const string& _l) {
+    MapEvaluatorPointer GetMapEvaluator(const std::string& _l) {
       return m_mapEvaluators->GetMethod(_l);
     }
-    void AddMapEvaluator(MapEvaluatorPointer _me, const string& _l) {
+    void AddMapEvaluator(MapEvaluatorPointer _me, const std::string& _l) {
       m_mapEvaluators->AddMethod(_me, _l);
     }
 
@@ -234,10 +231,10 @@ class MPLibraryType final
     ///@{
 
     const MPStrategySet* const GetMPStrategies() const {return m_mpStrategies;}
-    MPStrategyPointer GetMPStrategy(const string& _l) {
+    MPStrategyPointer GetMPStrategy(const std::string& _l) {
       return m_mpStrategies->GetMethod(_l);
     }
-    void AddMPStrategy(MPStrategyPointer _mps, const string& _l) {
+    void AddMPStrategy(MPStrategyPointer _mps, const std::string& _l) {
       m_mpStrategies->AddMethod(_mps, _l);
     }
 
@@ -248,39 +245,39 @@ class MPLibraryType final
     MPTools* GetMPTools() {return m_mpTools;}
 
     ///@}
-    ///@name Task Accessors
+    ///@name Input Accessors
     ///@{
 
-    MPTask* GetTask() {return m_task;}
+    MPProblem* GetMPProblem() const noexcept;
+    MPTask* GetTask() const noexcept;
+
+    const std::string& GetBaseFilename() const noexcept;
+    void SetBaseFilename(const std::string& _s) noexcept;
 
     ///@}
     ///@name Solution Accessors
     ///@{
 
-    /// These are necessary for swapping out the solution when trying to run an
-    /// RRT during a disassembly extension.
-    MPSolution* GetMPSolution() {return m_solution;}
-    void SetMPSolution(MPSolution* _sol) {m_solution = _sol;}
+    MPSolution* GetMPSolution() const noexcept;
+    void SetMPSolution(MPSolution* _sol) noexcept;
 
-    RoadmapType* GetRoadmap() {return m_solution->GetRoadmap();}
-    RoadmapType* GetBlockRoadmap() {return m_solution->GetBlockRoadmap();}
-    StatClass*   GetStatClass() {return m_solution->GetStatClass();}
-    Path*        GetPath() {return m_solution->GetPath();}
+    RoadmapType*      GetRoadmap()          const noexcept;
+    RoadmapType*      GetBlockRoadmap()     const noexcept;
+    StatClass*        GetStatClass()        const noexcept;
+    Path*             GetPath()             const noexcept;
+    LocalObstacleMap* GetLocalObstacleMap() const noexcept;
 
     ///@}
     ///@name Execution Interface
     ///@{
-
-    /// Get the current MPProblem.
-    MPProblem* GetMPProblem() {return m_problem;}
 
     /// Add an input set to this MPLibrary.
     /// @param[in] _label        The MPStrategy label to use.
     /// @param[in] _seed         The random seed to use.
     /// @param[in] _baseFileName The base name of the XML file to use.
     /// @param[in] _vizmoDebug   Enable/disable vizmo debug.
-    void AddSolver(const string& _label, long _seed,
-        const string& _baseFileName, bool _vizmoDebug = false) {
+    void AddSolver(const std::string& _label, long _seed,
+        const std::string& _baseFileName, bool _vizmoDebug = false) {
       m_solvers.push_back(Solver{_label, _seed, _baseFileName, _vizmoDebug});
     }
 
@@ -349,9 +346,6 @@ class MPLibraryType final
     /// Helper for parsing XML nodes.
     /// @param[in] _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
-
-    /// Set the current MPProblem of all methods.
-    void SetMPProblem(MPProblem* _p);
 
     ///@}
     ///@name Inputs
@@ -425,7 +419,7 @@ MPLibraryType() {
 
 template <typename MPTraits>
 MPLibraryType<MPTraits>::
-MPLibraryType(const string& _filename) : MPLibraryType() {
+MPLibraryType(const std::string& _filename) : MPLibraryType() {
   ReadXMLFile(_filename);
 }
 
@@ -445,14 +439,6 @@ MPLibraryType<MPTraits>::
   delete m_mapEvaluators;
   delete m_mpStrategies;
   delete m_mpTools;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-SetMPProblem(MPProblem* _p) {
-  m_problem = _p;
 }
 
 
@@ -486,7 +472,7 @@ Uninitialize() {
 template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
-ReadXMLFile(const string& _filename) {
+ReadXMLFile(const std::string& _filename) {
   // Open the XML and get the root node.
   XMLNode mpNode(_filename, "MotionPlanning");
 
@@ -578,18 +564,20 @@ ParseChild(XMLNode& _node) {
     return true;
   }
   else if(_node.Name() == "Solver") {
-    string label = _node.Read("mpStrategyLabel", true, "", "The strategy pointed"
-        " to by this label will be used to solve the problem");
-    long seed = _node.Read("seed", true, 1, 0, MAX_INT,
-        "The random number generator seed for the solver.");
-    string baseFilename = _node.Read("baseFilename", true, "",
-        "BaseFilename for the solver.");
-    ostringstream oss;
-    oss << baseFilename << "." << seed;
-    baseFilename = oss.str();
-    bool vdOutput = _node.Read("vizmoDebug", false, false,
+    const std::string label = _node.Read("mpStrategyLabel", true, "",
+        "The strategy to use.");
+
+    const long seed = _node.Read("seed", true, size_t(1), size_t(0),
+        std::numeric_limits<size_t>::max(),
+        "The random number generator seed.");
+
+    const std::string baseFilename = _node.Read("baseFilename", true, "",
+        "BaseFilename for the solver.") + "." + std::to_string(seed);
+
+    const bool vdOutput = _node.Read("vizmoDebug", false, false,
         "True yields VizmoDebug output for the solver.");
-    m_solvers.push_back(Solver{label, seed, baseFilename, vdOutput});
+
+    m_solvers.emplace_back(Solver{label, seed, baseFilename, vdOutput});
     return true;
   }
   else
@@ -602,7 +590,7 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Print(ostream& _os) const {
-  _os << "MPLibrary" << endl;
+  _os << "MPLibrary" << std::endl;
   m_distanceMetrics->Print(_os);
   m_validityCheckers->Print(_os);
   m_neighborhoodFinders->Print(_os);
@@ -616,13 +604,113 @@ Print(ostream& _os) const {
   m_mpStrategies->Print(_os);
 }
 
+/*----------------------------- Input Accessors ------------------------------*/
+
+template <typename MPTraits>
+inline
+MPProblem*
+MPLibraryType<MPTraits>::
+GetMPProblem() const noexcept {
+  return m_problem;
+}
+
+
+template <typename MPTraits>
+inline
+MPTask*
+MPLibraryType<MPTraits>::
+GetTask() const noexcept {
+  return m_task;
+}
+
+
+template <typename MPTraits>
+inline
+const std::string&
+MPLibraryType<MPTraits>::
+GetBaseFilename() const noexcept {
+  return m_problem->GetBaseFilename();
+}
+
+
+template <typename MPTraits>
+inline
+void
+MPLibraryType<MPTraits>::
+SetBaseFilename(const std::string& _s) noexcept {
+  m_problem->SetBaseFilename(_s);
+}
+
+/*---------------------------- Solution Accessors ----------------------------*/
+
+template <typename MPTraits>
+inline
+typename MPTraits::MPSolution*
+MPLibraryType<MPTraits>::
+GetMPSolution() const noexcept {
+  return m_solution;
+}
+
+
+template <typename MPTraits>
+inline
+void
+MPLibraryType<MPTraits>::
+SetMPSolution(MPSolution* const _sol) noexcept {
+  m_solution = _sol;
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::RoadmapType*
+MPLibraryType<MPTraits>::
+GetRoadmap() const noexcept {
+  return m_solution->GetRoadmap();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::RoadmapType*
+MPLibraryType<MPTraits>::
+GetBlockRoadmap() const noexcept {
+  return m_solution->GetBlockRoadmap();
+}
+
+
+template <typename MPTraits>
+inline
+StatClass*
+MPLibraryType<MPTraits>::
+GetStatClass() const noexcept {
+  return m_solution->GetStatClass();
+}
+
+
+template <typename MPTraits>
+typename MPTraits::Path*
+MPLibraryType<MPTraits>::
+GetPath() const noexcept {
+  return m_solution->GetPath();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::LocalObstacleMap*
+MPLibraryType<MPTraits>::
+GetLocalObstacleMap() const noexcept {
+  return m_solution->GetLocalObstacleMap();
+}
+
 /*--------------------------- Execution Interface ----------------------------*/
 
 template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
-  SetMPProblem(_problem);
+  m_problem = _problem;
   m_task = _task;
   m_solution = _solution;
 
@@ -635,7 +723,7 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task) {
-  SetMPProblem(_problem);
+  m_problem = _problem;
   m_task = _task;
 
   for(auto& solver : m_solvers) {
@@ -657,7 +745,7 @@ MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
     const std::string& _label, const long _seed,
     const std::string& _baseFilename) {
-  SetMPProblem(_problem);
+  m_problem = _problem;
   m_task = _task;
   m_solution = _solution;
 

@@ -64,6 +64,7 @@ void
 ScratchStrategy<MPTraits>::
 Iterate() {
   MethodTimer mt(this->GetStatClass(), "Test Iteration");
+
 }
 
 /*----------------------------------------------------------------------------*/

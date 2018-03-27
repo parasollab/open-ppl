@@ -15,7 +15,6 @@
 
 class MultiBody;
 class Boundary;
-class Cfg;
 class Environment;
 class Robot;
 
@@ -330,6 +329,12 @@ class Cfg {
     ///@name Helpers
     ///@{
 
+    /// Enable the normalization of orientation DOFs.
+    void EnableNormalization() const;
+
+    /// Disable the normalization of orientation DOFs.
+    void DisableNormalization() const;
+
     /// Normalize an orientation DOF to the range [-1, 1).
     /// @param[in] _index The index of the DOF to normalize. If it is -1, all
     ///                   orientation DOFs will be normalized.
@@ -345,12 +350,15 @@ class Cfg {
     ///@name Internal State
     ///@{
 
-    std::vector<double> m_dofs;         ///< The DOF values.
-    std::vector<double> m_vel;          ///< The velocities, if any.
+    std::vector<double> m_dofs;    ///< The DOF values.
+    std::vector<double> m_vel;     ///< The velocities, if any.
     Robot* m_robot{nullptr};       ///< The robot this cfg refers to.
 
     std::map<std::string, bool> m_labelMap;  ///< A map of labels for this cfg.
     std::map<std::string, double> m_statMap; ///< A map of stats for this cfg.
+
+    /// The function to use for normalizing orientation DOFs.
+    mutable double (*m_normalizer)(const double&){Normalize};
 
     ///@}
 

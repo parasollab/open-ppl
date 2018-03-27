@@ -13,7 +13,7 @@
 /// hereby refered to as the Traveling Robots Problem.
 ///
 /// This implements the transformation of the TRP into a Atypical Traveling
-/// Salesman Problem as described in the paper : 
+/// Salesman Problem as described in the paper :
 //TODO insert paper name and authors
 ///
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,22 +22,30 @@ class TRPTool {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::MPLibrary              MPLibrary;
-    typedef typename MPTraits::GoalMapType            GoalMap;
-    typedef typename GoalMap::vertex_descriptor       vertex_descriptor;
     typedef typename MPTraits::Path                   Path;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    typedef GoalMap<MPTraits>                         GoalMapType;
+    typedef typename GoalMapType::vertex_descriptor   vertex_descriptor;
     typedef std::vector<std::vector<Path>>            PathSets;
+
     ///@}
     ///@name Construction
     ///@{
-    
 
     TRPTool();
 
-    TRPTool(XMLNode& _node); 
-    
+    TRPTool(XMLNode& _node);
+
     virtual ~TRPTool()=default;
-    
+
     ///@}
     ///@name Problem Interface
     ///@{
@@ -49,18 +57,18 @@ class TRPTool {
     /// @param _workers The group of robots that will be performing the set of
     ///                 tasks.
     void Initialize(Robot* _robot, std::vector<Robot*> _workers);
-    
+
     /// Perform TRP search on the problem
     /// @return Set of paths with each index corresponding to index of robot in
     /// _worker input in Initialize.
     PathSets Search();
-    
+
     ///@}
     ///@name Accessors
     ///@{
 
     const std::string& GetLabel();
-    
+
     ///@}
     ///@name Setters
     ///@{
@@ -69,10 +77,10 @@ class TRPTool {
 
     ///@}
   private:
-    
+
     ///@name helpers
     ///@{
-    
+
     /// Adds the depots (robot locations) to the goal map.
     void AddDepots();
 
@@ -80,16 +88,16 @@ class TRPTool {
     /// @params _pathVertices The indices of the paths taken by each robot in
     /// the solution.
     PathSets Extract(std::vector<std::vector<size_t>> _pathVertices);
-    
+
     ///@}
-    ///@name internal state 
+    ///@name internal state
     ///@{
-   
+
     MPLibrary* m_library{nullptr};
     std::string m_queryMethod;
     Robot* m_robot{nullptr};
     std::vector<Robot*> m_workers;
-    GoalMap m_goalMap;
+    GoalMapType m_goalMap;
     vector<vertex_descriptor> m_ATSPPath;
     std::string m_label;
     ///@}
@@ -125,7 +133,7 @@ Initialize(Robot* _robot, std::vector<Robot*> _workers){
   m_workers = _workers;
   //goal mapp constructor should initialize the map to include all of the goals
   //std::cout << "creating the goal map" << std::endl;
-  m_goalMap = GoalMap(_robot, m_queryMethod, m_library);
+  m_goalMap = GoalMapType(_robot, m_queryMethod, m_library);
   AddDepots();
 }
 
@@ -170,10 +178,10 @@ AddDepots(){
 template <typename MPTraits>
 typename TRPTool<MPTraits>::PathSets
 TRPTool<MPTraits>::
-Extract(std::vector<std::vector<size_t>> _pathVertices){ 
+Extract(std::vector<std::vector<size_t>> _pathVertices){
   //each index is the set of paths for the corresponding worker
   TRPTool<MPTraits>::PathSets pathSets;
-  //vertex set is the goal map vertex descriptor representation of the path 
+  //vertex set is the goal map vertex descriptor representation of the path
   //for each worker as found by the LKH Library and transformation to/from ATSP
   for(auto vertexSet : _pathVertices){
     std::vector<typename MPTraits::Path> workerSet;
@@ -186,22 +194,3 @@ Extract(std::vector<std::vector<size_t>> _pathVertices){
 }
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -103,12 +103,12 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
     /// Environment* env = this->GetEnvironment();
     /// CfgType c1, c2;
-    /// vector<CfgType> intermediates;
+    /// std::vector<CfgType> intermediates;
     /// lp->ReconstructPath(c1, c2, intermediates, env->GetPositionRes(),
     ///     env->GetOrientationRes());
     /// @endcode
-    virtual vector<CfgType> ReconstructPath(const CfgType& _start,
-        const CfgType& _end, const vector<CfgType>& _intermediates,
+    virtual std::vector<CfgType> ReconstructPath(const CfgType& _start,
+        const CfgType& _end, const std::vector<CfgType>& _intermediates,
         double _posRes, double _oriRes);
 
     ///@}
@@ -165,10 +165,10 @@ IsConnected(const CfgType& _start, const CfgType& _end,
 
 
 template <typename MPTraits>
-vector<typename MPTraits::CfgType>
+std::vector<typename MPTraits::CfgType>
 LocalPlannerMethod<MPTraits>::
 ReconstructPath(const CfgType& _start, const CfgType& _end,
-    const vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
+    const std::vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
   LPOutput<MPTraits> lpOutput;
   IsConnected(_start, _end, &lpOutput, _posRes, _oriRes, false, true);
   return lpOutput.m_path;

@@ -139,6 +139,7 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
       env->GetPositionRes(), env->GetOrientationRes());
 }
 
+
 template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
@@ -181,7 +182,6 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
     double _delta, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
     double _posRes, double _oriRes) {
   _lp.Clear();
-  Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
   const std::string callee("BasicExtender::Expand");
@@ -206,7 +206,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
         ticker <= nTicks) {
     previous = tick;
     tick += incr;
-    if(!tick.InBounds(env) || !(vc->IsValid(tick, _cdInfo, callee)))
+    if(!vc->IsValid(tick, _cdInfo, callee))
       collision = true; //return previous tick, as it is collision-free
     ++ticker;
   }

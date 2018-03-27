@@ -45,7 +45,7 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     virtual double GetMaxDist(const double _r1 = 2.0, const double _r2 = 0.5)
         const override;
 
-    virtual Range<double> GetRange(const size_t _i) const override;
+    virtual const Range<double>& GetRange(const size_t _i) const override;
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
@@ -91,6 +91,22 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
     virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
 
     virtual void Write(ostream& _os) const override;
+
+    ///@}
+
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Compute the ranges.
+    std::vector<Range<double>> ComputeRange() const;
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::vector<Range<double>> m_range;
 
     ///@}
 

@@ -137,6 +137,27 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     void Print(std::ostream& _os) const;
 
     ///@}
+    ///@name Path Finding
+    ///@{
+
+    /// Find a path between two regions.
+    /// @param _source The source region.
+    /// @param _target The target region.
+    std::vector<size_t> FindPath(const size_t _source, const size_t _target)
+        const;
+    /// @overload
+    std::vector<size_t> FindPath(const WorkspaceRegion* const _source,
+        const WorkspaceRegion* const _target) const;
+
+    /// Find a neighborhood surrounding a set of regions.
+    /// @param _roots The region descriptors to search from.
+    /// @param _threshold The max distance from source, through midpoints, for
+    ///                   other regions in the neighborhood.
+    /// @return The descriptors within this neighborhood.
+    std::vector<size_t> FindNeighborhood(const std::vector<size_t>& _roots,
+        const double _threshold) const;
+
+    ///@}
 
   private:
 

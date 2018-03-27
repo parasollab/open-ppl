@@ -66,14 +66,7 @@ void SRand(const unsigned long _seed);
 /*------------------------------ Geometry Utils ------------------------------*/
 
 /// Normalize a value into the range [-1,1).
-double Normalize(double _a);
-
-/// Calculate the minimum DIRECTED angular distance from one angle to another,
-/// normalized to 1.0.
-/// @param _a The original angle.
-/// @param _a The destination angle.
-/// @param The shortest signed distance from Normalize(_a) to Normalize(_b).
-double DirectedAngularDistance(double _a, double _b);
+double Normalize(const double& _a);
 
 /// Determine height of triangle defined by three points.
 /// @param _a The first triangle vertex.
@@ -370,6 +363,13 @@ BinarySearch(RandomIterator _begin, RandomIterator _end, const T& _value,
 
 /// Loads a configuration path from a file for a dynamic obstacle.
 std::vector<Cfg> LoadPath(const std::string &_filename, Robot* _robot);
+
+
+template <typename T>
+T
+Identity(const T& _t) noexcept {
+  return _t;
+}
 
 /*----------------------------------------------------------------------------*/
 

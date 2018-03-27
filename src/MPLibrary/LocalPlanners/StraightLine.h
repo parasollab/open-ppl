@@ -94,8 +94,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
 
     /// Check if two Cfgs could be connected by straight line
     /// This method uses binary search to check clearances of Cfgs between _c1
-    /// and _c2. If any Cfg with clearance less than 0.001 was found, false will
-    /// be returned.
+    /// and _c2.
     virtual bool IsConnectedSLBinary(
         const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
@@ -117,7 +116,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
 
 template <typename MPTraits>
 StraightLine<MPTraits>::
-StraightLine(const string& _vcLabel, bool _binary, bool _saveIntermediates)
+StraightLine(const std::string& _vcLabel, bool _binary, bool _saveIntermediates)
   : LocalPlannerMethod<MPTraits>(_saveIntermediates),
     m_vcLabel(_vcLabel), m_binaryEvaluation(_binary) {
   this->SetName("StraightLine");
@@ -166,7 +165,7 @@ IsConnected(
               << std::endl;
 
   _lpOutput->Clear();
-  bool connected = IsConnectedFunc(_c1, _c2,
+  const bool connected = IsConnectedFunc(_c1, _c2,
       _col, _lpOutput, _positionRes, _orientationRes, _checkCollision,
       _savePath);
   if(connected)
@@ -226,7 +225,7 @@ IsConnectedFunc(
 //  Environment* env = this->GetEnvironment();
 //  auto vc = this->GetValidityChecker(m_vcLabel);
 //  StatClass* stats = this->GetStatClass();
-//  string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
+//  std::string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
 //
 //  stats->IncLPAttempts(this->GetNameAndLabel());
 //  int cdCounter = 0;
@@ -297,7 +296,7 @@ IsConnectedSLSequential(
   CfgType tick(robot), incr(robot);
   tick = _c1;
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
-  string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
+  std::string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
 
   if(this->m_debug)
     std::cout << "\n\tComputed increment for " << nTicks << " ticks: "
@@ -316,6 +315,9 @@ IsConnectedSLSequential(
         ///       whether we hit the boundary or obstacle.
         if(inBounds)
           _col = tick;
+        /// @TODO This is definitely wrong. The number of ticks does not equal
+        ///       the cspace distance. We need to adjust ALL LocalPlanners to
+        ///       take a distance metric for measuring the true edge length.
         _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight()
             + nIter);
         _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight()
@@ -356,7 +358,7 @@ IsConnectedSLBinary(
     return IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
         _cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
 
-  string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
+  std::string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
 
   int nTicks;
   CfgType incr(this->GetTask()->GetRobot());
@@ -367,7 +369,7 @@ IsConnectedSLBinary(
               << incr.PrettyPrint()
               << std::endl;
 
-  deque<pair<int,int> > Q;
+  std::deque<std::pair<int,int> > Q;
 
   //only perform binary evaluation when the nodes are further apart than the
   //resolution
@@ -375,7 +377,7 @@ IsConnectedSLBinary(
     Q.push_back(make_pair(0, nTicks));
 
   while(!Q.empty()) {
-    pair<int,int> p = Q.front();
+    std::pair<int,int> p = Q.front();
     int i = p.first;
     int j = p.second;
     Q.pop_front();

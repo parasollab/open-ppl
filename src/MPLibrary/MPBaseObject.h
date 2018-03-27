@@ -43,6 +43,7 @@ class MPBaseObject {
     ///@{
 
     typedef typename MPTraits::RoadmapType             RoadmapType;
+    typedef typename MPTraits::LocalObstacleMap        LocalObstacleMap;
     typedef typename MPTraits::Path                    Path;
     typedef typename MPTraits::MPLibrary               MPLibrary;
 
@@ -190,6 +191,9 @@ class MPBaseObject {
 
     /// Get the current StatClass.
     StatClass* GetStatClass() const noexcept;
+
+    /// Get the local obstacle map.
+    LocalObstacleMap* GetLocalObstacleMap() const noexcept;
 
     ///@}
 
@@ -465,6 +469,15 @@ StatClass*
 MPBaseObject<MPTraits>::
 GetStatClass() const noexcept {
   return m_library->GetStatClass();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::LocalObstacleMap*
+MPBaseObject<MPTraits>::
+GetLocalObstacleMap() const noexcept {
+  return m_library->GetLocalObstacleMap();
 }
 
 /*----------------------------------------------------------------------------*/

@@ -56,6 +56,9 @@ class WorkspacePortal {
     const WorkspaceRegion& GetSource() const noexcept;
     const WorkspaceRegion& GetTarget() const noexcept;
 
+    /// Get the distance between region centers through the facet midpoint.
+    double GetWeight() const noexcept;
+
     ///@}
     ///@name Queries
     ///@{
@@ -71,6 +74,12 @@ class WorkspacePortal {
 
   private:
 
+    ///@name Helpers
+    ///@{
+
+    double ComputeWeight() const;
+
+    ///@}
     ///@name Internal State
     ///@{
 
@@ -78,6 +87,8 @@ class WorkspacePortal {
 
     size_t m_sourceIndex; ///< The source region.
     size_t m_targetIndex; ///< The target region.
+
+    double m_weight;  ///< Distance between centers through the facet midpoint.
 
     ///@}
 

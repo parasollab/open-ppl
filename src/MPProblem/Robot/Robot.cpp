@@ -206,7 +206,10 @@ ReadXMLFile(const std::string& _filename) {
       std::numeric_limits<double>::max(), "The robot's maximum angular velocity");
 
   for(auto& child : node) {
-    if(child.Name() == "MultiBody") {
+    std::string name = child.Name();
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    if(name == "multibody") {
       // Read the multibody file. Eventually we'll go full XML and pass the
       // child node directly to the multibody instead.
       const std::string mbFile = child.Read("filename", false, "", "Name of the "
@@ -219,12 +222,17 @@ ReadXMLFile(const std::string& _filename) {
       else
         ReadMultibodyFile(GetPathName(_filename) + mbFile);
     }
-    else if(child.Name() == "Actuator") {
+    else if(name == "actuator") {
+      // We need a multibody to parse the actuators.
+      if(!m_multibody)
+        throw ParseException(child.Where(), "A multibody must be specified "
+            "before any actuators.");
+
       // Parse the actuator.
       std::unique_ptr<Actuator> actuator(new Actuator(this, child));
       m_actuators[actuator->GetLabel()] = std::move(actuator);
     }
-    else if(child.Name() == "Controller") {
+    else if(name == "controller") {
       auto controller = ControllerMethod::Factory(this, child);
       SetController(std::move(controller));
     }

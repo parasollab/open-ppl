@@ -12,7 +12,6 @@
 
 /*------------------------- Range-checking Functions -------------------------*/
 
-////////////////////////////////////////////////////////////////////////////////
 /// Check a value for containment within a given range.
 /// @param _val The value to test.
 /// @param _min The lower bound of the range.
@@ -30,7 +29,6 @@ InRange(const U& _val, const T& _min, const T& _max, const bool _inclusive = tru
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
 /// Check a value for containment within a given range.
 /// @param _val The value to test.
 /// @param _bounds A pair describing the lower, upper bounds.
@@ -46,7 +44,6 @@ InRange(const U& _val, const std::pair<T, T>& _bounds,
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
 /// Sample a range for an enclosed value with uniform probability.
 /// @param _min The lower bound.
 /// @param _max The upper bound.
@@ -133,6 +130,18 @@ struct Range final {
   /// @param _min The new lower bound.
   /// @param _max The new upper bound.
   void Resize(const T _min, const T _max) noexcept;
+
+  /// Translate the range.
+  /// @param _t The translation magnitude.
+  void Translate(const T _t) noexcept;
+
+  /// Translate the range to a new center.
+  /// @param _t The new center value.
+  void SetCenter(const T _t) noexcept;
+
+  /// Expand the range to include a value.
+  /// @param _t The new value to include.
+  void ExpandToInclude(const T _t) noexcept;
 
   ///@}
 
@@ -235,6 +244,35 @@ Range<T>::
 Resize(const T _min, const T _max) noexcept {
   min = _min;
   max = _max;
+}
+
+
+template <typename T>
+inline
+void
+Range<T>::
+Translate(const T _t) noexcept {
+  min += _t;
+  max += _t;
+}
+
+
+template <typename T>
+inline
+void
+Range<T>::
+SetCenter(const T _t) noexcept {
+  Translate(_t - Center());
+}
+
+
+template <typename T>
+inline
+void
+Range<T>::
+ExpandToInclude(const T _t) noexcept {
+  min = std::min(min, _t);
+  max = std::max(max, _t);
 }
 
 /*---------------------------------- I/O -------------------------------------*/

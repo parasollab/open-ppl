@@ -51,7 +51,7 @@
 /// @endcode
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class SVMModel : public MPBaseObject<MPTraits> {
+class SVMModel final : public MPBaseObject<MPTraits> {
 
   private:
 
@@ -76,11 +76,13 @@ class SVMModel : public MPBaseObject<MPTraits> {
     typedef dlib::any_decision_function<SampleType, LabelType>  DecisionType;
     typedef std::function<SampleType(const SampleType&)>        GradientType;
 
+    //typedef dlib::svm_pegasos<dlib::radial_basis_kernel<SampleType>> IncTrainerType;
+
     ///@}
     ///@name Input State
     ///@{
 
-    std::unique_ptr<Boundary> m_boundary;        ///< The domain boundary.
+    std::shared_ptr<Boundary> m_boundary;        ///< The domain boundary.
     std::vector<SampleType>   m_samples;         ///< Storage for samples.
     std::vector<LabelType>    m_labels;          ///< Storage for labels.
     size_t                    m_numPositive{0};  ///< The count of +1 samples.
@@ -96,6 +98,8 @@ class SVMModel : public MPBaseObject<MPTraits> {
     std::vector<size_t> m_negativeSupports; ///< The negative SV indexes.
     DecisionType        m_decision;         ///< Output decision of SVM.
     GradientType        m_gradient;         ///< Computes the decision gradient.
+
+    //IncTrainerType m_pegasos;
 
     ///@}
     ///@name Parameters
@@ -132,8 +136,6 @@ class SVMModel : public MPBaseObject<MPTraits> {
     /// @param _library The MP library.
     SVMModel(MPLibrary* const _library);
 
-    virtual ~SVMModel() = default;
-
     ///@}
     ///@name MPBaseObject Overrides
     ///@{
@@ -161,12 +163,16 @@ class SVMModel : public MPBaseObject<MPTraits> {
     /// Set the domain boundary for this model.
     /// @param _b The domain boundary. Input samples will be scaled to the
     ///           boundary so that all values fall within [-1, 1].
-    void SetBoundary(std::unique_ptr<Boundary>&& _b);
+    void SetBoundary(std::shared_ptr<Boundary> _b);
 
     /// Train an SVM model on the input data using a polynomial kernel.
     /// @throws PMPLException Fewer than three free or obstacle configurations
     ///                       provided.
     void Train();
+
+    //void IncTrain(const CfgType& _cfg, const bool _valid);
+    //size_t GetNumPositive() const noexcept {return m_numPositive;}
+    //size_t GetNumNegative() const noexcept {return m_numNegative;}
 
     ///@}
     ///@name Prediction Interface
@@ -373,6 +379,11 @@ Reset() {
   ClearDecision();
   ResetParameters();
   m_boundary.reset();
+
+  //m_pegasos.set_lambda(.0001);
+  //m_pegasos.set_kernel(dlib::radial_basis_kernel<SampleType>(m_params.gamma));
+  //m_pegasos.set_tolerance(m_params.epsilon);
+  //m_pegasos.set_max_num_sv(64);
 }
 
 
@@ -384,6 +395,8 @@ ClearInput() {
   m_labels.clear();
   m_numPositive = 0;
   m_numNegative = 0;
+
+  //m_pegasos.clear();
 }
 
 
@@ -443,12 +456,12 @@ LoadData(const ContainerType& _free, const ContainerType& _obst) {
 template <typename MPTraits>
 void
 SVMModel<MPTraits>::
-SetBoundary(std::unique_ptr<Boundary>&& _b) {
+SetBoundary(std::shared_ptr<Boundary> _b) {
   // Ensure _b is valid.
   if(!_b.get())
     throw RunTimeException(WHERE, "Null boundary provided!");
 
-  m_boundary = std::move(_b);
+  m_boundary = _b;
 }
 
 
@@ -509,6 +522,19 @@ Train() {
   if(this->m_debug)
     std::cout << *this;
 }
+
+
+//template <typename MPTraits>
+//void
+//SVMModel<MPTraits>::
+//IncTrain(const CfgType& _cfg, const bool _valid) {
+//  MethodTimer mt(this->GetStatClass(), "SVMModel::IncTrain");
+//
+//  m_pegasos.train(ToSample(_cfg), _valid ? 1 : -1);
+//
+//  auto& count = _valid ? m_numPositive : m_numNegative;
+//  ++count;
+//}
 
 /*--------------------------- Prediction Interface ---------------------------*/
 
@@ -744,6 +770,7 @@ double
 SVMModel<MPTraits>::
 Score(const SampleType& _s) const {
   return m_decision(_s);
+  //return m_pegasos(_s);
 }
 
 

@@ -8,10 +8,10 @@
 #include <LKHInclude/LKH.h>
 #include <LKHInclude/Genetic.h>
 ////////////////////////////////////////////////////////////////////////////////
-/// Interfaces with the LKH libray in utils. Uses a heursitic to evaluate 
+/// Interfaces with the LKH libray in utils. Uses a heursitic to evaluate
 /// variants of the Traveling Salesman Problem.
 ///
-/// Paramters for the LKH library are set in parameter file designated in the 
+/// Paramters for the LKH library are set in parameter file designated in the
 /// XML file. The parameter file must designate the problem file being passed
 /// to the library which is written here (problem file called ProblemFile.atsp
 /// for now but it needs to be updated to take in different types of problems
@@ -24,7 +24,7 @@ class LKHSearch final : public MPBaseObject<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
-    
+
     typedef typename MPTraits::CfgType        CfgType;
     typedef typename MPTraits::WeightType     WeightType;
     typedef typename MPTraits::RoadmapType    Roadmap;
@@ -63,7 +63,7 @@ class LKHSearch final : public MPBaseObject<MPTraits> {
 
     ///@name Helpers
     ///@{
-   
+
     /// generate adjacency matrix
     /// @param _map goal map that the matrix is being dreated for.
     void CreateAdjacencyMatrix(GoalMap<MPTraits>* _map);
@@ -74,38 +74,38 @@ class LKHSearch final : public MPBaseObject<MPTraits> {
 
     /// Translated LKHmain file from LKH Library. Calls the functionality of the
     /// LKH library.
-    void LKHmain(); 
-    
+    void LKHmain();
+
     /// Reads the output file from the LKH Library.
     /// @return List of vertices visited in the ATSP solution to the transformed
     /// TRP problem.
     std::vector<size_t> ReadPathFile();
-  
+
     /// Converts the ATSP solution back into a TRP solution for the set of
     /// robots.
     /// @param _nodes List of vertices visted in ATSP solution to the problem.
     /// @param _map GoalMap that represents the TRP problem being solved.
     /// @return Set of paths that each robot in the group takes.
-    std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>> 
+    std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>>
             DeconstructATSPPath(std::vector<size_t> _nodes, GoalMap<MPTraits>* _map);
     ///@}
     ///@name Internal State
     ///{
-       
+
     size_t m_MAX = 9999;
     bool m_debug{true};
-            
-    std::string m_label; 
+
+    std::string m_label;
 
     std::string m_parameterFile{"Examples/LKHParameterFile.par"};
     std::string m_problemFile{"ProblemFile.atsp"};
-    std::string m_problemType{"ATSP"}; //TODO need to be able to change in XML 
-    std::string m_outputFile{"ATSP.txt"};   
+    std::string m_problemType{"ATSP"}; //TODO need to be able to change in XML
+    std::string m_outputFile{"ATSP.txt"};
 
-    std::vector<std::vector<size_t>> m_adjMatrix; 
+    std::vector<std::vector<size_t>> m_adjMatrix;
     ///@}
 };
-    
+
 /*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
@@ -142,7 +142,7 @@ std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>>
 LKHSearch<MPTraits>::
 SearchTRP(GoalMap<MPTraits>* _map){
   CreateAdjacencyMatrix(_map);
-  
+
   //make problem file for the LKH Library to take in
   CreateProblemFile();
 
@@ -152,7 +152,7 @@ SearchTRP(GoalMap<MPTraits>* _map){
   //read path from LKH Library output file
   std::vector<size_t> nodes = ReadPathFile();
 
-  return DeconstructATSPPath(nodes, _map); 
+  return DeconstructATSPPath(nodes, _map);
 
 }
 
@@ -165,7 +165,7 @@ LKHSearch<MPTraits>::
 CreateAdjacencyMatrix(GoalMap<MPTraits>* _map){
 
   if(m_debug){
-    std::cout << "creating adjacency matrix" << std::endl;  
+    std::cout << "creating adjacency matrix" << std::endl;
   }
   const size_t maxDistance = m_MAX;//(size_t)-1;
   //TODO need to figure out how to calculate this rather than arbitrarily
@@ -242,11 +242,11 @@ CreateAdjacencyMatrix(GoalMap<MPTraits>* _map){
 
 
 template <typename MPTraits>
-void 
+void
 LKHSearch<MPTraits>::
 CreateProblemFile(){
   if(m_debug){
-    std::cout << "creating problem file: " << m_problemFile << std::endl; 
+    std::cout << "creating problem file: " << m_problemFile << std::endl;
   }
   std::ofstream myfile;
   myfile.open(m_problemFile);
@@ -417,13 +417,13 @@ LKHmain(){
 }
 
 template <typename MPTraits>
-std::vector<size_t> 
+std::vector<size_t>
 LKHSearch<MPTraits>::
 ReadPathFile(){
   std::vector<size_t> goals;
   std::ifstream myfile;
   myfile.open(m_outputFile);
-  std::string input; 
+  std::string input;
   while(std::getline(myfile, input)){
     //filters other info in output file
     if(isdigit(input[0])){
@@ -484,7 +484,7 @@ DeconstructATSPPath(std::vector<size_t> _nodes, GoalMap<MPTraits>* _map){
     }
     pathSets.push_back(*tour);
 */
-    
+
     std::cout << "Looking for: " << _map->GetDepotDescriptors()->at(i) << std::endl;
     std::vector<typename GoalMap<MPTraits>::vertex_descriptor> tour;
     bool complete = false;

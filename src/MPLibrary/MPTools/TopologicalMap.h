@@ -37,7 +37,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     typedef typename RoadmapType::GraphType           GraphType;
     typedef typename GraphType::VI                    VI;
     typedef WorkspaceDecomposition::vertex_descriptor VD;
-    typedef WorkspaceDecomposition::edge_descriptor   ED;
+    typedef WorkspaceDecomposition::adj_edge_iterator EI;
 
     ///@}
     ///@name Local Types
@@ -146,12 +146,10 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
         const double _earlyStopDistance = -1,
         const AdjacencyMap& _adjacency = {});
 
+    ///@}
+
   private:
 
-    /// Compute the weight map between adjacent decomposition cells.
-    void ComputeWeightMap();
-
-    ///@}
     ///@name Cfg Mapping
     ///@{
 
@@ -186,12 +184,6 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     /// An inverse mapping from VID to the containing region.
     std::unordered_map<VID, const WorkspaceRegion*> m_vidToRegion;
-
-    /// After first SSSP computation, maintain a weight map to represent the
-    /// distances between decomposition regions, where the weight between cells
-    /// is the euclidean distance from cell center -> shared facet center ->
-    /// cell center.
-    std::unordered_map<size_t, double> m_weights;
 
     ///@}
 
@@ -235,7 +227,6 @@ void
 TopologicalMap<MPTraits>::
 Initialize() {
   ClearMap();
-  m_weights.clear();
 
   auto env = this->GetEnvironment();
   auto stats = this->GetStatClass();
@@ -258,8 +249,6 @@ Initialize() {
   // Undo the mapping when cfgs are deleted.
   g->InstallHook(GraphType::HookType::DeleteVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->UnmapCfg(_vi);});
-
-  ComputeWeightMap();
 }
 
 /*---------------------------------- Queries ---------------------------------*/
@@ -496,44 +485,12 @@ ClearMap() {
 /*----------------------------------- SSSP -----------------------------------*/
 
 template <typename MPTraits>
-void
-TopologicalMap<MPTraits>::
-ComputeWeightMap() {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::ComputeWeightMap");
-  m_weights.clear();
-
-  auto decomposition = GetDecomposition();
-
-  for(auto edge = decomposition->edges_begin();
-      edge != decomposition->edges_end(); ++edge) {
-    // Ensure there is exactly one facet between each pair of regions.
-    const WorkspacePortal& portal = edge->property();
-    auto facets = portal.FindFacets();
-    if(facets.size() > 1)
-      throw RunTimeException(WHERE, "This implementation assumes that the "
-          "WorkspaceRegions are connected by only one facet. At this time we do "
-          "not have any decompositions that need more than this. We can easily "
-          "extend this by searching through the possible lengths and choosing "
-          "the smallest.");
-
-    // Get the center points of each region and the facet.
-    const Point3d facet  = facets[0]->FindCenter(),
-                  source = portal.GetSource().FindCenter(),
-                  target = portal.GetTarget().FindCenter();
-
-    // Compute the map key and value.
-    const double distance = (target - facet).norm() + (facet - source).norm();
-
-    m_weights[edge->id()] = distance;
-  }
-}
-
-
-template <typename MPTraits>
 typename TopologicalMap<MPTraits>::SSSPOutput
 TopologicalMap<MPTraits>::
 ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistance,
     const AdjacencyMap& _adjacency) {
+  /// @TODO Homogenize our custom SSSP implementations. We have them now at
+  ///       least in WorkspaceDecomposition, TopologicalMap, and QueryMethod.
   MethodTimer mt(this->GetStatClass(), "TopologicalMap::ComputeSSSP");
   const bool customAdjacency = !_adjacency.empty();
   const bool earlyStop = _earlyStopDistance != -1;
@@ -542,7 +499,10 @@ ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistanc
     std::cout << "TopologicalMap::ComputeSSSP\n";
 
   SSSPOutput output;
-  auto decomposition = GetDecomposition();
+  // Const cast is required because STAPL has an API error preventing useful
+  // iteration over non-const graphs.
+  auto decomposition = const_cast<WorkspaceDecomposition*>(
+      this->GetMPTools()->GetDecomposition(m_decompositionLabel));
 
 
   /// An element in the PQ for dijkstra's, representing one instance of
@@ -569,20 +529,20 @@ ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistanc
                       std::vector<element>,
                       std::greater<element>> pq;
 
-  // Initialize visited and temporary distance maps. The later holds an *exact*
-  // copy of the most up-to-date distance for each node.
   std::unordered_map<VD, bool> visited;
   std::unordered_map<VD, double> distance;
-  for(auto iter = decomposition->begin(); iter != decomposition->end(); ++iter) {
-    visited[iter->descriptor()] = false;
-    distance[iter->descriptor()] = std::numeric_limits<double>::max();
-  }
 
   // Define a relax edge function.
-  auto relax = [&distance, this, &pq](const ED& _ed) {
-    const double sourceDistance = distance[_ed.source()],
-                 targetDistance = distance[_ed.target()],
-                 edgeWeight     = this->m_weights[_ed.id()],
+  auto relax = [&distance, this, &pq](EI& _ei) {
+    const VD source = _ei->source(),
+             target = _ei->target();
+    const double sourceDistance = distance.count(source)
+                                ? distance[source]
+                                : std::numeric_limits<double>::infinity(),
+                 targetDistance = distance.count(target)
+                                ? distance[target]
+                                : std::numeric_limits<double>::infinity(),
+                 edgeWeight     = _ei->property().GetWeight(),
                  newDistance    = sourceDistance + edgeWeight;
 
     // If the new distance isn't better, quit.
@@ -590,8 +550,8 @@ ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistanc
       return;
 
     // Otherwise, update target distance and add the target to the queue.
-    distance[_ed.target()] = newDistance;
-    pq.push(element{_ed.source(), _ed.target(), newDistance});
+    distance[target] = newDistance;
+    pq.push(element{source, target, newDistance});
   };
 
   // Initialize the first node.
@@ -609,7 +569,7 @@ ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistanc
     pq.pop();
 
     // If we are done with this node, the element is stale. Discard.
-    if(visited[current.vd])
+    if(visited.count(current.vd))
       continue;
     visited[current.vd] = true;
 
@@ -652,19 +612,17 @@ ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistanc
 
 
     // Relax each outgoing edge.
-    auto vertexIter = decomposition->find_vertex(current.vd);
-    for(auto edgeIter = vertexIter->begin(); edgeIter != vertexIter->end();
-        ++edgeIter) {
+    auto vi = decomposition->find_vertex(current.vd);
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
       // If we are not using custom adjacency, simply relax the edge.
       if(!customAdjacency)
-        relax(edgeIter->descriptor());
+        relax(ei);
       // Otherwise, only relax if this edge appears in _adjacency.
       else if(_adjacency.count(current.vd)) {
         const auto& neighbors = _adjacency.at(current.vd);
-        auto iter = std::find(neighbors.begin(), neighbors.end(),
-            edgeIter->target());
+        auto iter = std::find(neighbors.begin(), neighbors.end(), ei->target());
         if(iter != neighbors.end())
-          relax(edgeIter->descriptor());
+          relax(ei);
       }
     }
   }

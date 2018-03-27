@@ -129,7 +129,7 @@ MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
       Controller::Iterative : Controller::Binary;
     m_resFactor = _node.Read("resFactor", true, m_resFactor, 0.0,
         MAX_DBL, "Resolution for Iter and Bin");
-    m_maxFailures = _node.Read("maxFailures", m_controller == Controller::Iterative, 
+    m_maxFailures = _node.Read("maxFailures", m_controller == Controller::Iterative,
         0ul, 0ul, (size_t) -1, "Maximun number of medial axis failures for Iter");
   }
   else
@@ -511,7 +511,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   int nticks;
   size_t failures = 0;
   double r = m_resFactor;
-  
+
   size_t iter = 0;
   do {
 
@@ -579,8 +579,8 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     }
 
     // checking for progression.
-    auto dm = this->GetDistanceMetric(m_dmLabel); 
-    
+    auto dm = this->GetDistanceMetric(m_dmLabel);
+
     auto newDistance = dm->Distance(curr, _c2);
     auto oldDistance = dm->Distance(prev, _c2);
     if(this->m_debug)
@@ -620,7 +620,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     // failure.
     failures= 0;
   } while(failures < m_maxFailures);
-  
+
   //if(this->m_debug)
   //  cout << "Max iter reached. Not connected." << endl;
   if(this->m_debug)
@@ -730,38 +730,46 @@ ReconstructPath(const CfgType& _c1, const CfgType& _c2,
     double _posRes, double _oriRes) {
   if(!m_initialized)
     Init();
-  LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
-  LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
+  LPOutput<MPTraits> lpOutput, dummyLPO;
+  auto& path = lpOutput.m_path;
   auto robot = this->GetTask()->GetRobot();
   CfgType col(robot);
 
-  if(_intermediates.size() > 0) {
-    m_envLP.IsConnected(_c1, _intermediates[0], col,
-        dummyLPOutput, _posRes, _oriRes, false, true);
-    for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-      lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
-    for(size_t i = 0; i < _intermediates.size() - 1; i++){
-      lpOutput->m_path.push_back(_intermediates[i]);
-      m_envLP.IsConnected(_intermediates[i], _intermediates[i + 1],
-          col, dummyLPOutput, _posRes, _oriRes, false, true);
-      for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-        lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
-    }
-    lpOutput->m_path.push_back(_intermediates[_intermediates.size() - 1]);
-    m_envLP.IsConnected(_intermediates[_intermediates.size() - 1],
-        _c2, col, dummyLPOutput, _posRes, _oriRes, false, true);
-    for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-      lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
+  // If there are no intermediates, just replan from start to end.
+  if(_intermediates.empty()) {
+    m_envLP.IsConnected(_c1, _c2, col, &lpOutput, _posRes, _oriRes, false, true);
   }
+  // Otherwise we must plan through the intermediates in order.
   else {
-    m_envLP.IsConnected(_c1, _c2, col, dummyLPOutput,
-        _posRes, _oriRes, false, true);
-    for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-      lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
+    // Plan from start to the first intermediate.
+    m_envLP.IsConnected(_c1, _intermediates[0], col, &dummyLPO, _posRes, _oriRes,
+        false, true);
+    std::copy(dummyLPO.m_path.begin(), dummyLPO.m_path.end(),
+        std::back_inserter(path));
+
+    // Plan between intermediates.
+    for(size_t i = 0; i < _intermediates.size() - 1; i++) {
+      const auto& current = _intermediates[i],
+                & next    = _intermediates[i + 1];
+
+      path.push_back(current);
+
+      dummyLPO.Clear();
+      m_envLP.IsConnected(current, next, col, &dummyLPO, _posRes, _oriRes,
+          false, true);
+      std::copy(dummyLPO.m_path.begin(), dummyLPO.m_path.end(),
+          std::back_inserter(path));
+    }
+    path.push_back(_intermediates.back());
+
+    // Plan from last intermediate to end.
+    dummyLPO.Clear();
+    m_envLP.IsConnected(_intermediates.back(), _c2, col, &dummyLPO, _posRes,
+        _oriRes, false, true);
+    std::copy(dummyLPO.m_path.begin(), dummyLPO.m_path.end(),
+        std::back_inserter(path));
   }
-  vector<CfgType> path = lpOutput->m_path;
-  delete lpOutput;
-  delete dummyLPOutput;
+
   return path;
 }
 

@@ -274,9 +274,9 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
       recreatedEdge.insert(recreatedEdge.begin(), start);
       recreatedEdge.push_back(end);
       for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-      std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
-      out.insert(out.end(), edge.begin(), edge.end());
+        std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
+            std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+        out.insert(out.end(), edge.begin(), edge.end());
       }
     }
     else {

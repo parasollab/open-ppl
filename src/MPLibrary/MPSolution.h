@@ -3,6 +3,8 @@
 
 #include "Utilities/MetricUtils.h"
 
+#include "ConfigurationSpace/LocalObstacleMap.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Container for the output of a planning algorithm. Includes free and blocked
@@ -16,16 +18,15 @@ class MPSolutionType final {
     ///@name Solution Object Types
     ///@{
 
-    typedef typename MPTraits::Path        Path;
-    typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename MPTraits::Path             Path;
+    typedef typename MPTraits::RoadmapType      RoadmapType;
+    typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
 
     ///@}
     ///@name Construction
     ///@{
 
     MPSolutionType(Robot* const _r);
-
-    ~MPSolutionType();
 
     ///@}
     ///@name Accessors
@@ -39,6 +40,8 @@ class MPSolutionType final {
 
     StatClass* GetStatClass() const noexcept;
 
+    LocalObstacleMap* GetLocalObstacleMap() const noexcept;
+
     ///@}
 
   private:
@@ -48,10 +51,11 @@ class MPSolutionType final {
 
     Robot* const m_robot;            ///< The robot executing this task.
 
-    RoadmapType* m_freeMap{nullptr}; ///< The free-space roadmap.
-    RoadmapType* m_obstMap{nullptr}; ///< The obstacle-space roadmap.
-    Path*        m_path{nullptr};    ///< The current solution path.
-    StatClass*   m_stats{nullptr};   ///< Performance tracking.
+    std::unique_ptr<RoadmapType>  m_freeMap; ///< The free-space roadmap.
+    std::unique_ptr<RoadmapType>  m_obstMap; ///< The obstacle-space roadmap.
+    std::unique_ptr<Path>            m_path; ///< The current solution path.
+    std::unique_ptr<StatClass>      m_stats; ///< Performance tracking.
+    std::unique_ptr<LocalObstacleMap> m_lom; ///< The local obstacle map.
 
     ///@}
 };
@@ -60,22 +64,14 @@ class MPSolutionType final {
 
 template <typename MPTraits>
 MPSolutionType<MPTraits>::
-MPSolutionType(Robot* const _r) : m_robot(_r) {
-  m_freeMap = new RoadmapType(_r);
-  m_obstMap = new RoadmapType(_r);
-  m_path = new Path(m_freeMap);
-  m_stats = new StatClass();
-}
-
-
-template <typename MPTraits>
-MPSolutionType<MPTraits>::
-~MPSolutionType() {
-  delete m_freeMap;
-  delete m_obstMap;
-  delete m_path;
-  delete m_stats;
-}
+MPSolutionType(Robot* const _r)
+  : m_robot(_r),
+    m_freeMap(new RoadmapType(_r)),
+    m_obstMap(new RoadmapType(_r)),
+    m_path(new Path(m_freeMap.get())),
+    m_stats(new StatClass()),
+    m_lom(new LocalObstacleMap(m_stats.get()))
+{ }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/
 
@@ -84,7 +80,7 @@ inline
 typename MPTraits::RoadmapType*
 MPSolutionType<MPTraits>::
 GetRoadmap() const noexcept {
-  return m_freeMap;
+  return m_freeMap.get();
 }
 
 
@@ -93,7 +89,7 @@ inline
 typename MPTraits::RoadmapType*
 MPSolutionType<MPTraits>::
 GetBlockRoadmap() const noexcept {
-  return m_obstMap;
+  return m_obstMap.get();
 }
 
 
@@ -102,7 +98,7 @@ inline
 typename MPTraits::Path*
 MPSolutionType<MPTraits>::
 GetPath() const noexcept {
-  return m_path;
+  return m_path.get();
 }
 
 
@@ -111,7 +107,16 @@ inline
 StatClass*
 MPSolutionType<MPTraits>::
 GetStatClass() const noexcept {
-  return m_stats;
+  return m_stats.get();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::LocalObstacleMap*
+MPSolutionType<MPTraits>::
+GetLocalObstacleMap() const noexcept {
+  return m_lom.get();
 }
 
 /*----------------------------------------------------------------------------*/

@@ -606,7 +606,7 @@ template<typename T>
 typename RoadmapGraph<Vertex, Edge>::VP
 RoadmapGraph<Vertex, Edge>::
 GetVertex(T& _t) noexcept {
-  return this->find_vertex(*_t)->property();
+  return GetVertex(VID(*_t));
 }
 
 
@@ -622,7 +622,11 @@ template <typename Vertex, typename Edge>
 typename RoadmapGraph<Vertex, Edge>::VP
 RoadmapGraph<Vertex, Edge>::
 GetVertex(VID _t) noexcept {
-  return this->find_vertex(_t)->property();
+  auto iter = this->find_vertex(_t);
+  if(iter == this->end())
+    throw RunTimeException(WHERE, "Requested node '" + std::to_string(_t) +
+        "' which is not in the graph.");
+  return iter->property();
 }
 
 
