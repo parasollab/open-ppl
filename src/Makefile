@@ -7,6 +7,11 @@ debug    ?= 0
 asan     ?= 0
 parallel ?= 0
 
+#! Important note about ASAN: you will also need to set these environment
+#  variables to get useful output:
+#  export ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer"
+#  export ASAN_OPTIONS="symbolize=1"
+
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
 vizmo_map := #-DVIZMO_MAP
 
