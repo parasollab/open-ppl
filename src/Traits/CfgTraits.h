@@ -6,6 +6,9 @@
 #include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/GroupCfg.h"
+#include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Roadmap.h"
 #include "ConfigurationSpace/Weight.h"
@@ -186,6 +189,8 @@ struct MPTraits {
   typedef MPSolutionType<MPTraits>       MPSolution;
   typedef MPToolsType<MPTraits>          MPTools;
   typedef LocalObstacleMapType<MPTraits> LocalObstacleMap;
+  typedef GroupLocalPlan<CfgType>        GroupLocalPlanType;
+  typedef GroupRoadmap<GroupCfg, GroupLocalPlanType> GroupRoadmapType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

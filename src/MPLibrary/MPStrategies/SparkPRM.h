@@ -77,6 +77,13 @@ class SparkPRM : public Strategy<MPTraits> {
     // Selects a random direction for growth
     CfgType SelectDirection();
 
+    /// Compute the graph of all connected component centroids. The output graph will
+    /// contain only the centroids and no edges.
+    /// @param[in] _graph The roadmap graph to analyze.
+    /// @param[out] _centroidGraph The output centroid graph. It should be
+    ///                            initialized prior to this call.
+    void ComputeCCCentroidGraph(GraphType* _graph, GraphType* _centroidGraph);
+
     size_t m_maxNPCCSize;   // The maximum size of CC that we consider to be
                             // within a narrow passage
     size_t m_initSamples;   // Number of initial samples before RRT strategies
@@ -452,6 +459,12 @@ ComputeCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
   // Get centroids, remove the RRT's CC
   /// @TODO This looks like an iterator invalidation bug. Next person to use
   ///       this should check that deleting the vertex doesn't have ill effects.
+  /// @TODO This doesn't make sense either. The root will never be a centroid
+  ///       unless we are very lucky/unlucky. Next user should review the paper
+  ///       and re-implement properly.
+  throw RunTimeException(WHERE, "This function doesn't make sense. Please "
+      "review comments and repair if you wish to use this method.");
+
   ComputeCCCentroidGraph(graph, centroidGraph);
   for(auto it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
     cMap.reset();
@@ -773,5 +786,23 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
   }
   return recentVID;
 }
+
+
+template<class MPTraits, template<typename> class Strategy>
+void
+SparkPRM<MPTraits, Strategy>::
+ComputeCCCentroidGraph(GraphType* _graph, GraphType* _centroidGraph) {
+  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+  std::vector<std::pair<size_t, VID>> allCCs;
+  std::vector<VID> cc;
+  get_cc_stats(*_graph, cmap, allCCs);
+
+  for(size_t i = 0; i < allCCs.size(); i++) {
+    get_cc(*_graph, cmap, allCCs[i].second, cc);
+    CfgType centroid = GetCentroid(_graph, cc);
+    centroid.SetStat("ccVID", allCCs[i].second);
+    _centroidGraph->AddVertex(centroid);
+  }
+};
 
 #endif

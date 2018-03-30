@@ -12,8 +12,10 @@
 
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Control.h"
-#include "Utilities/MPUtils.h"
+#include "MPProblem/Robot/Robot.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Range.h"
+#include "Utilities/MPUtils.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

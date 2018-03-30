@@ -262,11 +262,11 @@ class MPLibraryType final
     MPSolution* GetMPSolution() const noexcept;
     void SetMPSolution(MPSolution* _sol) noexcept;
 
-    RoadmapType*      GetRoadmap()          const noexcept;
-    RoadmapType*      GetBlockRoadmap()     const noexcept;
-    StatClass*        GetStatClass()        const noexcept;
-    Path*             GetPath()             const noexcept;
-    LocalObstacleMap* GetLocalObstacleMap() const noexcept;
+    RoadmapType*      GetRoadmap(Robot* const _r = nullptr) const noexcept;
+    RoadmapType*      GetBlockRoadmap(Robot* const _r = nullptr) const noexcept;
+    Path*             GetPath(Robot* const _r = nullptr) const noexcept;
+    LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const noexcept;
+    StatClass*        GetStatClass() const noexcept;
 
     ///@}
     ///@name Execution Interface
@@ -674,8 +674,8 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPLibraryType<MPTraits>::
-GetRoadmap() const noexcept {
-  return m_solution->GetRoadmap();
+GetRoadmap(Robot* const _r) const noexcept {
+  return m_solution->GetRoadmap(_r);
 }
 
 
@@ -683,8 +683,25 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPLibraryType<MPTraits>::
-GetBlockRoadmap() const noexcept {
-  return m_solution->GetBlockRoadmap();
+GetBlockRoadmap(Robot* const _r) const noexcept {
+  return m_solution->GetBlockRoadmap(_r);
+}
+
+
+template <typename MPTraits>
+typename MPTraits::Path*
+MPLibraryType<MPTraits>::
+GetPath(Robot* const _r) const noexcept {
+  return m_solution->GetPath(_r);
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::LocalObstacleMap*
+MPLibraryType<MPTraits>::
+GetLocalObstacleMap(Robot* const _r) const noexcept {
+  return m_solution->GetLocalObstacleMap(_r);
 }
 
 
@@ -694,23 +711,6 @@ StatClass*
 MPLibraryType<MPTraits>::
 GetStatClass() const noexcept {
   return m_solution->GetStatClass();
-}
-
-
-template <typename MPTraits>
-typename MPTraits::Path*
-MPLibraryType<MPTraits>::
-GetPath() const noexcept {
-  return m_solution->GetPath();
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::LocalObstacleMap*
-MPLibraryType<MPTraits>::
-GetLocalObstacleMap() const noexcept {
-  return m_solution->GetLocalObstacleMap();
 }
 
 /*--------------------------- Execution Interface ----------------------------*/
@@ -770,8 +770,9 @@ RunSolver(const Solver& _solver) {
   Initialize();
 
   // Call solver
-  cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
-       << _solver.label << " using seed " << _solver.seed << "." << endl;
+  std::cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
+            << _solver.label << " using seed " << _solver.seed << "."
+            << std::endl;
 
 #ifdef _PARALLEL
   SRand(_solver.seed + get_location_id());

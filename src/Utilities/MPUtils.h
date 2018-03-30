@@ -288,33 +288,6 @@ GetCentroid(RoadmapGraph<CfgType, Weight>* _graph,
   return center;
 };
 
-#ifndef _PARALLEL
-/// Compute the graph of all connected component centroids. The output graph will
-/// contain only the centroids and no edges.
-/// @param[in] _graph The roadmap graph to analyze.
-/// @param[out] _centroidGraph The output centroid graph. It should be
-///                            initialized prior to this call.
-template<template<typename, typename> class Roadmap, class CfgType, class Weight>
-void
-ComputeCCCentroidGraph(Roadmap<CfgType, Weight>* _graph,
-    Roadmap<CfgType, Weight>* _centroidGraph) {
-  typedef typename Roadmap<CfgType, Weight>::VID VID;
-  stapl::sequential::vector_property_map<Roadmap<CfgType, Weight>, size_t> cmap;
-  vector<pair<size_t, VID>> allCCs;
-  vector<VID> cc;
-  Roadmap<CfgType, Weight> centroids;
-  get_cc_stats(*_graph, cmap, allCCs);
-
-  for(size_t i = 0; i < allCCs.size(); i++) {
-    get_cc(*_graph, cmap, allCCs[i].second, cc);
-    CfgType centroid = GetCentroid(_graph, cc);
-    centroid.SetStat("ccVID", allCCs[i].second);
-    _centroidGraph->AddVertex(centroid);
-  }
-
-};
-#endif
-
 /*----------------------------- Other Random Stuff ---------------------------*/
 
 ////////////////////////////////////////////////////////////////////////////////

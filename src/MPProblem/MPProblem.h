@@ -158,9 +158,9 @@ class MPProblem final
     ///@name Core Properties
     ///@{
 
-    std::unique_ptr<Environment> m_environment;             ///< The planning environment.
-    std::vector<std::unique_ptr<Robot>> m_robots;           ///< The robots in our problem.
-    std::unique_ptr<Robot> m_pointRobot;                    ///< A pseudo point-robot.
+    std::unique_ptr<Environment> m_environment;    ///< The planning environment.
+    std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
+    std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
     std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
 
     /// Map the tasks assigned to each robot.

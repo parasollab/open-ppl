@@ -364,6 +364,7 @@ PMPL_SRCS := \
   Behaviors/Controllers/SimpleController.cpp \
   Behaviors/Controllers/ICreateController.cpp \
   ConfigurationSpace/Cfg.cpp \
+  ConfigurationSpace/GroupCfg.cpp \
   Geometry/GMSPolygon.cpp \
   Geometry/GMSPolyhedron.cpp \
   Geometry/Bodies/Body.cpp \
@@ -404,6 +405,7 @@ PMPL_SRCS := \
   MPProblem/Robot/Control.cpp \
   MPProblem/Robot/DynamicsModel.cpp \
   MPProblem/Robot/Robot.cpp \
+  MPProblem/RobotGroup/RobotGroup.cpp \
   MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp \
   MPProblem/Robot/HardwareInterfaces/Battery.cpp \
   MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \

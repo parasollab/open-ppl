@@ -28,6 +28,8 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     virtual ~ToggleLP();
 
     void CalcStats(bool _var, bool _toggle);
+
+    virtual void Initialize() override;
     virtual void Print(ostream& _os) const;
 
     virtual bool IsConnected(
@@ -74,7 +76,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     double m_iterations;
     bool m_degeneracyReached;
     deque<CfgType> m_colHist;
-    GraphType m_pathGraph;
+    std::unique_ptr<GraphType> m_pathGraph;
     VID m_sVID, m_gVID;
 };
 
@@ -110,7 +112,14 @@ ToggleLP<MPTraits>::InitVars(){
 }
 
 template<class MPTraits>
-ToggleLP<MPTraits>::~ToggleLP() {
+ToggleLP<MPTraits>::~ToggleLP() = default;
+
+template<class MPTraits>
+void
+ToggleLP<MPTraits>::
+Initialize() {
+  auto robot = this->GetTask()->GetRobot();
+  m_pathGraph = std::unique_ptr<GraphType>(new GraphType(robot));
 }
 
 template<class MPTraits>
@@ -141,9 +150,9 @@ ToggleLP<MPTraits>::IsConnected(
   //To do : fix me-Dijkstra doesn't compile with pGraph!!!!!!
   //clear lpOutput
   _lpOutput->Clear();
-  m_pathGraph.clear();
-  m_sVID = m_pathGraph.AddVertex(_c1);
-  m_gVID = m_pathGraph.AddVertex(_c2);
+  m_pathGraph->clear();
+  m_sVID = m_pathGraph->AddVertex(_c1);
+  m_gVID = m_pathGraph->AddVertex(_c2);
 
   stats->IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0;
@@ -154,11 +163,11 @@ ToggleLP<MPTraits>::IsConnected(
     stats->IncLPConnections(this->GetNameAndLabel());
     //find path in m_pathGraph
     vector<VID> path;
-    stapl::sequential::find_path_dijkstra(m_pathGraph, m_sVID, m_gVID, path,
+    stapl::sequential::find_path_dijkstra(*m_pathGraph, m_sVID, m_gVID, path,
         WeightType::MaxWeight());
     if(path.size() > 0) {
       for(size_t i = 1; i <path.size() - 1; i++) {
-        _lpOutput->m_intermediates.push_back(m_pathGraph.find_vertex(path[i])->property());
+        _lpOutput->m_intermediates.push_back(m_pathGraph->find_vertex(path[i])->property());
       }
     }
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
@@ -276,16 +285,16 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     VDAddTempCfg(_col, false);
   }
   if(isValid) {
-    VID nvid = m_pathGraph.AddVertex(n);
+    VID nvid = m_pathGraph->AddVertex(n);
     CfgType c2(robot), c3(robot);
     bool b1 = lp->IsConnected(_c1, n, c2, _lpOutput,
         _positionRes, _orientationRes, true, false);
     if(b1)
-      m_pathGraph.AddEdge(m_sVID, nvid, pair<WeightType, WeightType>());
+      m_pathGraph->AddEdge(m_sVID, nvid, pair<WeightType, WeightType>());
     bool b2 = lp->IsConnected(_c2, n, c3, _lpOutput,
         _positionRes, _orientationRes, true, false);
     if(b2)
-      m_pathGraph.AddEdge(m_gVID, nvid, pair<WeightType, WeightType>());
+      m_pathGraph->AddEdge(m_gVID, nvid, pair<WeightType, WeightType>());
     if(this->m_debug) {
       VDAddNode(n);
       VDAddTempEdge(_c1, n);
@@ -430,7 +439,7 @@ ToggleLP<MPTraits>::ToggleConnect(
   //successful connection, add the edge and return validity state
   if(connect) {
     if(_toggle) {
-      m_pathGraph.AddEdge(m_pathGraph.GetVID(_s), m_pathGraph.GetVID(_g), pair<WeightType,
+      m_pathGraph->AddEdge(m_pathGraph->GetVID(_s), m_pathGraph->GetVID(_g), pair<WeightType,
           WeightType>());
     }
     if(this->m_debug && _toggle)
@@ -439,7 +448,7 @@ ToggleLP<MPTraits>::ToggleConnect(
   }
 
   if(!_toggle) {
-    m_pathGraph.AddVertex(c);
+    m_pathGraph->AddVertex(c);
   }
 
   if(this->m_debug) VDAddTempCfg(c, !_toggle);

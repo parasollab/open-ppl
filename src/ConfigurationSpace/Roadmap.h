@@ -59,6 +59,8 @@ class Roadmap final {
     /// @param _r The roadmap to copy from.
     void AppendRoadmap(const Roadmap& _r);
 
+    Robot* GetRobot() const noexcept;
+
     /// Set the robot pointer and adjust all Cfgs to match.
     void SetRobot(Robot* const _r) noexcept;
 
@@ -82,7 +84,6 @@ class Roadmap final {
     ///@name Internal State
     ///@{
 
-    Robot* m_robot{nullptr};       ///< The robot this roadmap is for.
     GraphType* m_graph{nullptr};   ///< Graph of configurations and edges.
 
     ///@}
@@ -93,19 +94,19 @@ class Roadmap final {
 
 template <typename MPTraits>
 Roadmap<MPTraits>::
-Roadmap(Robot* const _r) : m_robot(_r), m_graph(new GraphType()) { }
+Roadmap(Robot* const _r) : m_graph(new GraphType(_r)) { }
 
 
 template <typename MPTraits>
 Roadmap<MPTraits>::
-Roadmap(const Roadmap& _r) : m_robot(_r.m_robot), m_graph(new GraphType()) {
+Roadmap(const Roadmap& _r) : m_graph(new GraphType(_r)) {
   AppendRoadmap(_r);
 }
 
 
 template <typename MPTraits>
 Roadmap<MPTraits>::
-Roadmap(Roadmap&& _r) : m_robot(_r.m_robot), m_graph(std::move(_r.m_graph)) {
+Roadmap(Roadmap&& _r) : m_graph(std::move(_r.m_graph)) {
   _r.m_graph = nullptr;
 }
 
@@ -168,10 +169,17 @@ AppendRoadmap(const Roadmap& _r) {
 
 
 template <typename MPTraits>
+Robot*
+Roadmap<MPTraits>::
+GetRobot() const noexcept {
+  return m_graph->GetRobot();
+}
+
+
+template <typename MPTraits>
 void
 Roadmap<MPTraits>::
 SetRobot(Robot* const _r) noexcept {
-  m_robot = _r;
   m_graph->SetRobot(_r);
 }
 
@@ -201,15 +209,15 @@ Read(const std::string& _filename) {
       headerParsed = true;
   }
 
-  if(!m_robot)
+  if(!GetRobot())
     RunTimeException(WHERE, "Must specify robot when reading in roadmaps."
         " m_robot was null.");
 
   // Set the input robot for our edge class.
   /// @TODO this is a bad way to handle the fact that it's necessary to know
   /// the robot type (non/holonomic) when reading and writing.
-  WeightType::inputRobot = m_robot;
-  CfgType::inputRobot = m_robot;
+  WeightType::inputRobot = GetRobot();
+  CfgType::inputRobot = GetRobot();
 
   // Set ifs back to the line with the GRAPHSTART tag and read in the graph.
   ifs.seekg(graphStart, ifs.beg);

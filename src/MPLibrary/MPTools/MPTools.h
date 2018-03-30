@@ -179,7 +179,7 @@ class MPToolsType final {
         SafeIntervalTool<MPTraits>* const _utility);
 
     ///@}
-    ///@name LKH Search 
+    ///@name LKH Search
     ///@{
 
     /// Get an LKH Search by label.
@@ -188,15 +188,15 @@ class MPToolsType final {
     // @return The labeled utility.
 
     LKHSearch<MPTraits>* GetLKHSearch(const std::string& _label) const;
-    
+
     /// Set an LKH Search
     /// @param _label The string label for the new utility
     /// @param _utility The LKHSearch to use
-    void SetLKHSearch(const std::string& _label, 
+    void SetLKHSearch(const std::string& _label,
         LKHSearch<MPTraits>* const _utility);
-    
+
     ///@}
-    ////@name TRP Tool 
+    ////@name TRP Tool
     ///@{
 
     /// Get a TRP Tool by label.
@@ -205,13 +205,13 @@ class MPToolsType final {
     // @return The labeled utility.
 
     TRPTool<MPTraits>* GetTRPTool(const std::string& _label) const;
-    
+
     /// Set a TRP Tool
     /// @param _label The string label for the new utility
     /// @param _utility The LKHSearch to use
-    void SetTRPTool(const std::string& _label, 
+    void SetTRPTool(const std::string& _label,
         TRPTool<MPTraits>* const _utility);
-    
+
     ///@}
     ///@name Decompositions
     ///@{
@@ -344,7 +344,7 @@ ParseXML(XMLNode& _node) {
         throw ParseException(child.Where(), "Second TRPTool "
             "node with the label '" + utility->GetLabel() + "'. Labels must be "
             "unique.");
-     SetTRPTool(utility->GetLabel(), utility); 
+     SetTRPTool(utility->GetLabel(), utility);
     }
     // Below here we are setting defaults rather than creating instances.
     else if(child.Name() == "ReebGraphConstruction") {
@@ -496,7 +496,7 @@ SetSafeIntervalTool(const std::string& _label,
 /*------------------------------- LKH Search ---------------------------------*/
 
 template <typename MPTraits>
-LKHSearch<MPTraits>* 
+LKHSearch<MPTraits>*
 MPToolsType<MPTraits>::
 GetLKHSearch(const std::string& _label) const {
   return m_lkhSearchTools.at(_label);
@@ -515,7 +515,7 @@ SetLKHSearch(const std::string& _label,
 /*-------------------------------- TRP Tool ----------------------------------*/
 
 template <typename MPTraits>
-TRPTool<MPTraits>* 
+TRPTool<MPTraits>*
 MPToolsType<MPTraits>::
 GetTRPTool(const std::string& _label) const {
   return m_trpTools.at(_label);

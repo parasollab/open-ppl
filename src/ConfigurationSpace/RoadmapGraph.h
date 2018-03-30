@@ -1,7 +1,6 @@
 #ifndef ROADMAP_GRAPH_H_
 #define ROADMAP_GRAPH_H_
 
-#include <functional>
 #include "Utilities/RuntimeUtils.h"
 
 
@@ -24,6 +23,13 @@
 #ifndef INVALID_EID
 #define INVALID_EID (std::numeric_limits<size_t>::max())
 #endif
+
+#include <functional>
+#include <string>
+#include <unordered_map>
+
+class Robot;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph data structure of robot configurations (vertices) connected by local
@@ -80,6 +86,7 @@ class RoadmapGraph : public
     ///TODO: Remove guard after const issue is fixed in STAPL
     typedef typename STAPLGraph::const_vertex_iterator                 CVI;
     typedef typename STAPLGraph::vertex_property&                      VP;
+    typedef typename STAPLGraph::edge_property&                        EP;
     typedef stapl::sequential::vdata_iterator<VI>                      VPI;
     typedef stapl::sequential::const_vdata_iterator<VI>                CVPI;
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
@@ -94,6 +101,12 @@ class RoadmapGraph : public
     enum class HookType : char {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
 
     ///@}
+    ///@name Construction
+    ///@{
+
+    RoadmapGraph(Robot* const _r);
+
+    ///@}
     ///@name Modifiers
     ///@{
 
@@ -101,7 +114,7 @@ class RoadmapGraph : public
     /// will be printed to cerr.
     /// @param _v The vertex to add.
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
-    VID AddVertex(const Vertex& _v) noexcept;
+    virtual VID AddVertex(const Vertex& _v) noexcept;
 
     /// Add a new unique vertex to the graph with a designated descriptor. If it
     /// already exists or the descriptor is already in use, a warning will be
@@ -109,33 +122,33 @@ class RoadmapGraph : public
     /// @param _vid The desired descriptor.
     /// @param _v The vertex property.
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
-    VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
+    virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
 
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
-    void DeleteVertex(const VID _v) noexcept;
+    virtual void DeleteVertex(const VID _v) noexcept;
 
     /// Add an edge from source to target.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge property.
-    void AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept;
+    virtual void AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept;
 
     /// Add edges both ways between source and target vertices.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge properties (source to target first).
-    void AddEdge(const VID _source, const VID _target,
+    virtual void AddEdge(const VID _source, const VID _target,
         const std::pair<Edge, Edge>& _w) noexcept;
 
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
-    void DeleteEdge(const VID _source, const VID _target) noexcept;
+    virtual void DeleteEdge(const VID _source, const VID _target) noexcept;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
-    void DeleteEdge(EI _iterator) noexcept;
+    virtual void DeleteEdge(EI _iterator) noexcept;
 
     /// Set the robot pointer on all configurations in the map.
     void SetRobot(Robot* const _r) noexcept;
@@ -199,6 +212,11 @@ class RoadmapGraph : public
     ///            otherwise.
     /// @return True if the edge was located.
     bool GetEdge(const VID _source, const VID _target, EI& _ei) noexcept;
+
+    EP GetEdge(const VID _source, const VID _target) noexcept;
+    EP GetEdge(const EID _descriptor) noexcept;
+
+    Robot* GetRobot() const noexcept;
 
     ///@}
     ///@name Hooks
@@ -267,7 +285,7 @@ class RoadmapGraph : public
     size_t get_out_degree(const VID& _vd) {return this->get_degree(_vd);}
 #endif
 
-  private:
+  protected:
 
     ///@name Base Class Unhiding
     ///@{
@@ -309,6 +327,8 @@ class RoadmapGraph : public
     ///@name Internal State
     ///@{
 
+    Robot* m_robot{nullptr};       ///< The robot this roadmap is for.
+
     size_t m_timestamp{0};    ///< Tracks the number of changes to the graph.
 
     bool m_enableHooks{true}; ///< Use hook functions?
@@ -322,6 +342,12 @@ class RoadmapGraph : public
     ///@}
 
 };
+
+/*------------------------------- Construction -------------------------------*/
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>::
+RoadmapGraph(Robot* const _r) : m_robot(_r) { }
 
 /*------------------------------- Modifiers ----------------------------------*/
 
@@ -512,6 +538,7 @@ template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 SetRobot(Robot* const _r) noexcept {
+  m_robot = _r;
   for(VI vi = this->begin(); vi != this->end(); ++vi)
     vi->property().SetRobot(_r);
 }
@@ -652,6 +679,37 @@ GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
 #else
   return false;
 #endif
+}
+
+
+template <typename Vertex, typename Edge>
+typename RoadmapGraph<Vertex, Edge>::EP
+RoadmapGraph<Vertex, Edge>::
+GetEdge(const VID _source, const VID _target) noexcept {
+  EI ei;
+  if(!GetEdge(_source, _target, ei)) {
+    std::ostringstream oss;
+    oss << "Requested non-existent edge (" << _source << ", " << _target << ").";
+    throw RunTimeException(WHERE, oss.str());
+  }
+
+  return ei->property();
+}
+
+
+template <typename Vertex, typename Edge>
+typename RoadmapGraph<Vertex, Edge>::EP
+RoadmapGraph<Vertex, Edge>::
+GetEdge(const EID _descriptor) noexcept {
+  return GetEdge(_descriptor.source(), _descriptor.target());
+}
+
+
+template <typename Vertex, typename Edge>
+Robot*
+RoadmapGraph<Vertex, Edge>::
+GetRobot() const noexcept {
+  return m_robot;
 }
 
 /*--------------------------------- Hooks ------------------------------------*/
