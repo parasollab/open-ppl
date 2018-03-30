@@ -408,6 +408,27 @@ WithinResolution(const Cfg& _cfg, const double _posRes,
 
 /*------------------------------- Robot Info ---------------------------------*/
 
+Robot*
+Cfg::
+GetRobot() const noexcept {
+  return m_robot;
+}
+
+
+void
+Cfg::
+SetRobot(Robot* const _r) noexcept {
+  m_robot = _r;
+}
+
+
+MultiBody*
+Cfg::
+GetMultiBody() const noexcept {
+  return m_robot->GetMultiBody();
+}
+
+
 size_t
 Cfg::
 DOF() const noexcept {
@@ -440,21 +461,6 @@ bool
 Cfg::
 IsNonholonomic() const noexcept {
   return GetRobot()->IsNonholonomic();
-}
-
-
-
-Robot*
-Cfg::
-GetRobot() const noexcept {
-  return m_robot;
-}
-
-
-MultiBody*
-Cfg::
-GetMultiBody() const noexcept {
-  return m_robot->GetMultiBody();
 }
 
 /*----------------------------- DOF Accessors --------------------------------*/

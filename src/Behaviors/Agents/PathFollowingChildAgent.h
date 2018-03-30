@@ -49,6 +49,9 @@ class PathFollowingChildAgent : public PathFollowingAgent {
 
     virtual bool IsChild() const override;
 
+    /// Finds the battery break along its path and communicates it with the
+    /// parent agent.
+    void SetBatteryBreak();
     ///@}
 
   protected:
@@ -70,7 +73,8 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     
     virtual bool SelectTask() override;
 
-    virtual bool EvaluateTask() override;
+    // TODO: Remove this.
+    // virtual bool EvaluateTask() override;
 
     ///@}
     ///@name Controller Helpers
@@ -87,7 +91,10 @@ class PathFollowingChildAgent : public PathFollowingAgent {
 
     double m_distance{0.0}; ///< The distance traveled since localizing.
 
+    bool reactive{true};
+
     ///@}
+    //
 
 };
 

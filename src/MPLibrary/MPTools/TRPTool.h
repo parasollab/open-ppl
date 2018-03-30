@@ -127,12 +127,8 @@ template <typename MPTraits>
 void
 TRPTool<MPTraits>::
 Initialize(Robot* _robot, std::vector<Robot*> _workers){
-  //std::cout << "Initializing TRPTool" << std::endl;
-  //std::cout << "Number of workers: " << _workers.size() << std::endl;
   m_robot = _robot;
   m_workers = _workers;
-  //goal mapp constructor should initialize the map to include all of the goals
-  //std::cout << "creating the goal map" << std::endl;
   m_goalMap = GoalMapType(_robot, m_queryMethod, m_library);
   AddDepots();
 }

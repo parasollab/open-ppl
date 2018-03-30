@@ -103,17 +103,13 @@ class MPTask final {
     /// when necessary. We require dynamically-allocated objects here because
     /// exact (derived) type of each constraint will not be known until runtime.
 
-    void AddStartConstraint(std::unique_ptr<Constraint>&& _c);
+    void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
     void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
     void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
 
-    const ConstraintSet& GetStartConstraints() const noexcept;
+    const Constraint* GetStartConstraint() const noexcept;
     const ConstraintSet& GetPathConstraints() const noexcept;
     const ConstraintSet& GetGoalConstraints() const noexcept;
-
-    const Boundary* GetStartBoundary() const noexcept;
-    const Boundary* GetPathBoundary() const noexcept;
-    const Boundary* GetGoalBoundary() const noexcept;
 
     ///@}
     ///@name Constraint Evaluation
@@ -127,7 +123,7 @@ class MPTask final {
     /// Check if a path's starting point satisfies the start constraints.
     /// @param _p The potential solution to check.
     /// @return True if the starting point of _p satisfies all start constraints.
-    bool EvaluateStartConstraints(const std::vector<Cfg>& _p) const;
+    bool EvaluateStartConstraint(const std::vector<Cfg>& _p) const;
 
     /// Check if all points in the path satisfy the end constraints.
     /// @param _p The potential solution to check.
@@ -158,22 +154,6 @@ class MPTask final {
 
   private:
 
-    ///@name Helpers
-    ///@{
-
-    /// Evaluate a path against a set of constraints.
-    /// @param _p The path to validate.
-    /// @param _c The set of constraints to check.
-    /// @return True if all constraints in _c are satisfied by _p.
-    bool EvaluateConstraints(const std::vector<Cfg>& _p,
-        const ConstraintSet& _c) const;
-
-    /// Create a compose boundary object from a set of constraints.
-    /// @param _c The set of constraints to use.
-    /// @return A boundary describing the spaces that satisfy _c.
-    const Boundary* MakeComposeBoundary(const ConstraintSet& _c) const noexcept;
-
-    ///@}
     ///@name Internal State
     ///@{
 
@@ -184,7 +164,7 @@ class MPTask final {
 
     mutable Status m_status{OnDeck};      ///< The status of the current task.
 
-    ConstraintSet m_startConstraints;  ///< Req'd to start task.
+    std::unique_ptr<Constraint> m_startConstraint;  ///< Req'd to start task.
     ConstraintSet m_pathConstraints;   ///< Req'd during whole task.
     ConstraintSet m_goalConstraints;   ///< Req'd to end task.
 

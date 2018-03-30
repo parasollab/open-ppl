@@ -255,19 +255,12 @@ CreateProblemFile(){
          << "EDGE_WEIGHT_TYPE: EXPLICIT" << std::endl
          << "EDGE_WEIGHT_FORMAT: FULL_MATRIX" << std::endl
          << "EDGE_WEIGHT_SECTION" << std::endl;
-  //TODO write edge weight format and description
   for(auto vertex : m_adjMatrix){
     for(auto edge : vertex){
       myfile << edge << "   ";
     }
     myfile << std::endl;
   }
-  /*for(size_t i = 0; i < m_adjMatrix[0].size(); i++){
-    for(auto vertex : m_adjMatrix) {
-      myfile << vertex[i] << "    ";
-    }
-    myfile << std::endl;
-  }*/
 
   myfile << "EOF";
   myfile.close();

@@ -6,6 +6,7 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
+#include "BatteryBreak.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,10 +35,12 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Local Types
     ///@{
 
-    enum Role {Worker, Helper, Charging, WaitingForHelp};
+    /// The various roles that a member robot can assume.
+    enum Role {Worker, Helper, Charging, ReturningToCharge, WaitingForHelp};
 
+    /// A tracking structure for a task that was started by a worker but not
+    /// completed.
     struct PausedTask {
-
       MPTask* m_task{nullptr};
       Agent* m_previousOwner{nullptr};
       size_t m_priority{0};
@@ -64,6 +67,7 @@ class BatteryConstrainedGroup : public Agent {
     virtual ~BatteryConstrainedGroup();
 
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const;
+
     ///@}
     ///@name Agent Interface
     ///@{
@@ -90,8 +94,19 @@ class BatteryConstrainedGroup : public Agent {
     /// potential collision.
     void ArbitrateCollision();
 
+    /// Save battery breaks after workers plan paths.
+    void SetBatteryBreak(BatteryBreak _break, Agent* _member);
+
     ///@}
-    
+    ///@name Accessors
+    ///@{
+
+    /// Gets the current time of the simulation.
+    /// @return m_currentTime
+    double GetCurrentTime();
+
+    ///@}
+
   private:
 
     ///@}
@@ -112,7 +127,7 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _a The member agent to check the priority for.
     /// @param _group The group of agents near _a.
     /// @return True if _a has a higher priority than the robots around it,
-    /// False otherwise. 
+    /// False otherwise.
     bool IsHighestPriority(Agent* const _a, const vector<Agent*>& _group);
 
     /// Change the role of a group member.
@@ -156,17 +171,17 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Update other agents' knowledge about an agent's plan versions.
     /// @param _member The agent being updated.
-    /// @param _agents The agents within proximity to the updating agent. 
-    void UpdateVersionMap(PlanningAgent* const _member, std::vector<Agent*> _agents);
+    /// @param _agents The agents within proximity to the updating agent.
+    void UpdateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
 
     /// For each agent in proximity, ensure that its map has an up-to-date
-    /// version for the agent (_member) that may need to replan. 
+    /// version for the agent (_member) that may need to replan.
     /// @param _member The agent who's version number must be verified for the
     /// proximity agents.
     /// @param _agents The proximity agents who's _member version number must be
-    /// checked. 
+    /// checked.
     /// @return True if the versions are up-to-date, false otherwise.
-    bool ValidateVersionMap(PlanningAgent* const _member, std::vector<Agent*> _agents);
+    bool ValidateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
 
     ///@}
     ///@name Charging Locations
@@ -202,6 +217,8 @@ class BatteryConstrainedGroup : public Agent {
 
     ///@}
     ///@name Task Management
+    ///@{
+
     /// Assign a new task to a worker member.
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskWorker(Agent* const _member);
@@ -213,6 +230,11 @@ class BatteryConstrainedGroup : public Agent {
     /// Assign a new task to a worker member.
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskWaiting(Agent* const _member);
+
+    /// Checks the battery level of a worker and assigns its task to the
+    /// PausedTask queue if the battery level is low.
+    /// @param _member The worker member which could be pausing its task.
+    void BatteryCheck(Agent* const _member);
 
     ///@}
 
@@ -244,7 +266,7 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Map group members to their last assigned task;
     std::list<PausedTask> m_pausedTasks;
-    
+
     /// Map worker to assigned helper
     std::unordered_map<Agent*, Agent*> m_helperMap;
 
@@ -252,11 +274,18 @@ class BatteryConstrainedGroup : public Agent {
     std::unordered_map<std::string, Role> m_initialRoles;
 
     /// Flag determining whether or not the Agents should wait for a helper to
-    /// arrive (handoff) before returning to a charging location. 
+    /// arrive (handoff) before returning to a charging location.
     bool m_handoff{false};
+
+    bool m_reactive{true};
+
+    double m_currentTime{0.0};
+
+    std::unordered_map<Agent*, BatteryBreak> m_batteryBreaks;
 
     /// Map agents to their current knowledge of other agents' plan versions.
     std::unordered_map<Agent*, std::unordered_map<PlanningAgent*, size_t>> m_versionMap;
+
     ///@}
 
 };

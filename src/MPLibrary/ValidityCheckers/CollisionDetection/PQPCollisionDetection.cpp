@@ -154,13 +154,13 @@ IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
   // duplicate transitions of the same type and x-value. Duplicate removal guards
   // against the case where the psuedo-ray passes through an edge or vertex that
   // is shared by multiple triangles with the same facing.
-  static auto compare = [](const Transition& _t1, const Transition& _t2) -> bool {
+  auto compare = [](const Transition& _t1, const Transition& _t2) -> bool {
     if(abs(_t1.first - _t2.first) > tolerance)
       return _t1.first < _t2.first;
     else
       return _t1.second < _t2.second;
   };
-  static set<Transition, decltype(compare)> collisions(compare);
+  set<Transition, decltype(compare)> collisions(compare);
 
   // Process each collision.
   collisions.clear();

@@ -49,7 +49,8 @@
 
     <MapEvaluators>
       <LazyToggleQuery label="LazyToggleQuery" fullRecreatePath="false"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="pqp_solid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="pqp_solid"
+        graphSearchAlg="astar"
         deleteNodes="false" iterative="true" safeIntervalToolLabel="SI">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="ToggleConnect"/>

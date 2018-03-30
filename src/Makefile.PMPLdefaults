@@ -357,6 +357,7 @@ PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 PMPL_SRCS := \
   Behaviors/Agents/Agent.cpp \
   Behaviors/Agents/AgentFactory_pmpl.cpp \
+  Behaviors/Agents/BatteryBreak.cpp \
   Behaviors/Controllers/ControllerMethod.cpp \
   Behaviors/Controllers/ControlSetGenerators.cpp \
   Behaviors/Controllers/PIDFeedback.cpp \

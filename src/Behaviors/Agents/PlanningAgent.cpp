@@ -39,6 +39,7 @@ Initialize() {
 
   // Initialize the agent's planning library.
   m_library = std::unique_ptr<MPLibrary>(new MPLibrary(xmlFile));
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 }
 
 
@@ -57,6 +58,7 @@ Step(const double _dt) {
 
   // If we have no task, select the next one.
   if(!GetTask() && !SelectTask()) {
+    /// @TODO: Helper's battery level is being depleted here, must fix this.
     // If no incomplete tasks remain, we are done.
     if(m_debug)
       std::cout << "Completed all tasks, halting robot." << std::endl;
@@ -65,7 +67,7 @@ Step(const double _dt) {
   }
 
   // If we have no plan, generate a plan.
-  if(!HasPlan()){
+  if(!HasPlan()) {
     GeneratePlan();
     return;
   }
@@ -89,6 +91,13 @@ Uninitialize() {
 }
 
 
+void
+PlanningAgent::
+SetTask(MPTask* const _task) {
+  ClearPlan();
+  Agent::SetTask(_task);
+}
+
 /*------------------------------- Planning -----------------------------------*/
 
 bool
@@ -97,7 +106,6 @@ IsPlanning() const {
   return m_planning;
 }
 
-
 /*---------------------------- Planning Versions -----------------------------*/
 
 void
@@ -105,6 +113,7 @@ PlanningAgent::
 SetPlanVersion(size_t _version) {
   m_planVersion = _version;
 }
+
 
 size_t
 PlanningAgent::
@@ -118,7 +127,6 @@ void
 PlanningAgent::
 GeneratePlan() {
   m_planning = true;
-  m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
 
   m_thread = std::thread([this, problemCopy](){
@@ -129,13 +137,15 @@ GeneratePlan() {
   m_thread.detach();
 }
 
-void 
+
+void
 PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
-  // TODO: Stop trying to solve if it takes longer than t_max.
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
   m_library->Solve(_problem.get(), GetTask(), m_solution.get());
   m_planning = false;
 }
+
 /*------------------------------ Task Helpers --------------------------------*/
 
 bool

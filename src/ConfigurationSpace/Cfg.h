@@ -111,6 +111,9 @@ class Cfg {
     /// Get the robot referenced by this configuration.
     Robot* GetRobot() const noexcept;
 
+    /// Set the robot referenced by this configuration.
+    void SetRobot(Robot* const _r) noexcept;
+
     /// Get the robot's multibody.
     MultiBody* GetMultiBody() const noexcept;
 

@@ -164,8 +164,6 @@ GoalMap() = default;
 template <typename MPTraits>
 GoalMap<MPTraits>::
 GoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library){
-  //m_roadmap = _roadmap;
-  //m_goals = _goals;
   m_robot = _robot;
   m_queryMethodLabel = _queryMethod;
   m_library = _library;
@@ -198,19 +196,6 @@ GoalMap<MPTraits>::
 GetDepotDescriptors() {
   return &m_depotDescriptors;
 }
-/*template <typename MPTraits>
-const typename Boundary& 
-GoalMap<MPTraits>::
-GetGoal(const size_t _i) const noexcept {
-  return Boundary();
-}*/
-
-/*template <typename MPTraits>
-const typename GoalMap<MPTraits>::vertex_descriptor 
-GoalMap<MPTraits>::
-GetDescriptor(const VID _vid) const noexcept {
-  return vertex_descriptor();
-}*/
 
 template <typename MPTraits>
 const typename GoalMap<MPTraits>::Path& 
@@ -219,9 +204,7 @@ GetPath(const size_t _i1, const size_t _i2) const noexcept {
   const_adj_edge_iterator edge;
   const_iterator vert;
   edge_descriptor ed(_i1, _i2);
-  std::cout << "Calling find edge for " << _i1 << " " << _i2 <<std::endl;
   this->find_edge(ed, vert, edge);
-  std::cout << "Found edge" << std::endl;
   return edge->property();
   
 }
@@ -232,7 +215,8 @@ template <typename MPTraits>
 void
 GoalMap<MPTraits>::
 AddDepots(std::vector<Robot*> _workers){
-  std::cout << "adding depots for " << _workers.size() << " workers" << endl; 
+  if(m_debug)
+    std::cout << "adding depots for " << _workers.size() << " workers" << endl; 
   for(auto robot : _workers){
     std::unique_ptr<CSpaceConstraint> constraint(
           new CSpaceConstraint(robot,robot->GetDynamicsModel()->GetSimulatedState()));
@@ -243,28 +227,18 @@ AddDepots(std::vector<Robot*> _workers){
     m_depotDescriptors.push_back(this->add_vertex(depot->Clone()));
   }
   //debug purposes
-  for(auto depot : m_depotDescriptors){
-    std::cout << "Depot Descriptor: " << depot << endl; 
-  }
-/*
-  for(auto& depot : m_depotConstraints){
-    for(auto& goal : m_goalConstraints){
-      MPTask* task(new MPTask(m_robot));
-      task->AddStartConstraint(std::move(depot->Clone()));
-      task->AddGoalConstraint(std::move(goal->Clone()));
-      m_library->Solve(m_library->GetMPProblem(),task,
-            m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
-      m_intergoalPaths.push_back(*m_library->GetPath());
+  if(m_debug){
+    for(auto depot : m_depotDescriptors){
+      std::cout << "Depot Descriptor: " << depot << endl; 
     }
   }
-*/
 
   for(size_t i = 0; i < m_depotConstraints.size(); i++){
     for(size_t j = 0 ; j < m_depotConstraints.size(); j++){
       if(i == j) continue;
       MPTask* task(new MPTask(m_robot));
-      task->AddStartConstraint(std::move(m_depotConstraints[i]->Clone()));
-      task->AddGoalConstraint(std::move(m_depotConstraints[j]->Clone()));
+      task->SetStartConstraint(m_depotConstraints[i]->Clone());
+      task->AddGoalConstraint(m_depotConstraints[j]->Clone());
       m_library->Solve(m_library->GetMPProblem(),task,
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
       m_depotPaths.push_back(*m_library->GetPath());
@@ -277,27 +251,10 @@ AddDepots(std::vector<Robot*> _workers){
     }
   }
 
-/*
-  for(auto& depot : m_depotConstraints){
-    for(auto& goal : m_goalConstraints){
-      MPTask* task(new MPTask(m_robot));
-      task->AddStartConstraint(std::move(goal->Clone()));
-      task->AddGoalConstraint(std::move(depot->Clone()));
-      m_library->Solve(m_library->GetMPProblem(),task,
-            m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
-      m_intergoalPaths.push_back(*m_library->GetPath());
-    }
-  }
-
-  for(auto path : m_intergoalPaths){
-    m_goalDepotPathDescriptors.push_back(this->add_edge(path));
-  }
-*/
-  
   for(size_t i = 0; i < m_depotConstraints.size(); i++){
     for(size_t j = 0 ; j < m_goalConstraints.size(); j++){
       MPTask* task(new MPTask(m_robot));
-      task->AddStartConstraint(std::move(m_depotConstraints[i]->Clone()));
+      task->SetStartConstraint(std::move(m_depotConstraints[i]->Clone()));
       task->AddGoalConstraint(std::move(m_goalConstraints[j]->Clone()));
       m_library->Solve(m_library->GetMPProblem(),task,
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
@@ -305,16 +262,17 @@ AddDepots(std::vector<Robot*> _workers){
       m_depotGoalPathDescriptors.push_back(this->add_edge(
             m_depotDescriptors[i], m_goalDescriptors[j],*m_library->GetPath())); 
       //debug purposes
-      std::cout << "Depot Descriptor: " << m_depotDescriptors[i] << std::endl;
-      std::cout << "Goal Descriptor: " << m_goalDescriptors[j] << std::endl;
-      std::cout << "Distance: " << m_depotGoalPaths.back().Length() << std::endl;
-      
+      if(m_debug){
+        std::cout << "Depot Descriptor: " << m_depotDescriptors[i] << std::endl;
+        std::cout << "Goal Descriptor: " << m_goalDescriptors[j] << std::endl;
+        std::cout << "Distance: " << m_depotGoalPaths.back().Length() << std::endl;
+      }
       
       
       
       
       task = new MPTask(m_robot);
-      task->AddStartConstraint(std::move(m_goalConstraints[j]->Clone()));
+      task->SetStartConstraint(std::move(m_goalConstraints[j]->Clone()));
       task->AddGoalConstraint(std::move(m_depotConstraints[i]->Clone()));
       m_library->Solve(m_library->GetMPProblem(),task,
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
@@ -322,94 +280,17 @@ AddDepots(std::vector<Robot*> _workers){
       m_goalDepotPathDescriptors.push_back(this->add_edge(
             m_goalDescriptors[j], m_depotDescriptors[i],*m_library->GetPath())); 
       //debug purposes
-      std::cout << "Goal Descriptor: " << m_goalDescriptors[j] << std::endl;
-      std::cout << "Depot Descriptor: " << m_depotDescriptors[i] << std::endl;
-      std::cout << "Distance: " << m_goalDepotPaths.back().Length() << std::endl;
+      if(m_debug){
+        std::cout << "Goal Descriptor: " << m_goalDescriptors[j] << std::endl;
+        std::cout << "Depot Descriptor: " << m_depotDescriptors[i] << std::endl;
+        std::cout << "Distance: " << m_goalDepotPaths.back().Length() << std::endl;
+      }
     }
   }
-
-
-
-
-  /*for(auto robot : _workers){
-    std::unique_ptr<CSpaceConstraint> constraint(
-            new CSpaceConstraint(robot,robot->GetDynamcsModel()->GetSimulatedState()));
-    CSpaceConstraint copy = contraint->Clone();
-    copy->SetRobot(nullptr);
-    m_depots.push_back(this->add(*copy));
-
-    for(auto goal : m_goals){
-      MPTask* task(new MPTask(m_robot));
-      task->AddGoalConstraint(goal->property());
-      task->AddStartConstraint(copy);
-      //find the path between the two goals
-      m_library->Solve(m_library->GetMPProblem(),task,
-        m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
-      m_intergoalPaths.push_back(this->add_edge(*m_library->GetPath()));
-
-      task = new MPTask(m_robot);
-      task->AddGoalConstraint(copy);
-      task->AddStartConstraint(goal->property())
-    }
-  }
-*/
-
 }
 
 
 
-/*template <typename MPTraits>
-void
-AddDepots(std::vector<Robot*> _workers) {
-  std::vector<CSpaceConstraint> startingPositions; //starting locations of all the workers
-  for(auto robot : _workers){
-    CSpaceConstraint constraint(robot,robot->GetDynamcsModel()->GetSimulatedState());
-    startingPositions.push_back(constraint);
-  }
-  //TODO Add boundaries of constraints (depots) to graph
-  for(auto constraint : startingPositions){
-    depots.push_back(this->add(*constraint->Boundary()));
-    
-    for(auto goal : m_goals){
-      MPTask* task(new MPTask(m_robot));
-      task->AddGoalConstraint(goal->property());
-    }
-  }
-
-  //TODO Add terminals (fake depots)
-  
-
-  //TODO Add edges from goals to depots
-  for(auto depot : m_depots){
-    for(auto goal : m_goals){
-      // set the start and end point for the new path
-      MPTask* task(new MPTask(m_robot));
-      task->AddGoalConstraint((depot->property()));
-      task->AddStartConstraint();
-      // find the path between the two goals
-      m_library->Solve(m_library->GetMPProblem(),task,
-          m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
-      m_intergoalPaths.push_back(*m_library->GetPath());
-    }
-  }
-  }
-
-  //TODO Copy those edges to the terminals
-
-
-  //TODO Add zero-weight edges from terminals to depots
-  // Maybe leave these unconnected and leave out the terminals altogether here
-  // and add them in the LKH Search tool and pass in the number of workers to
-  // the tool and have it copy the last n---if graph is unordered it won't
-  // work---unlesss I search for the nodes of the worker locations instead
-  //
-  // other option is have a path with zero weight instead
-  // paths default have a length of zero
-  // perhaps generate/copy any random path object then call clear to set length
-  // to zero
-
-}
-*/
 
 /*------------------------------ Helpers -------------------------------------*/
 
@@ -418,34 +299,22 @@ template <typename MPTraits>
 void 
 GoalMap<MPTraits>::
 UpdateGoalMap() {
-   
-  std::cout << "Updating goal map" << std::endl;  
+  if(m_debug) 
+    std::cout << "Updating goal map" << std::endl;  
   for(auto task : m_library->GetMPProblem()->GetTasks(m_robot)){
+    const auto& constraints = task->GetGoalConstraints();
+    if(constraints.size() > 1)
+      throw RunTimeException(WHERE, "Multi-stage task not supported.");
     m_goalConstraints.push_back(task->GetGoalConstraints().front()->Clone());
   }
   for(auto& goal : m_goalConstraints){
     m_goalDescriptors.push_back(this->add_vertex(goal->Clone()));
   }
-  /*
-  for(auto& start : m_goalConstraints){
-    for(auto& end : m_goalConstraints){
-      if(start == end) continue;
-      MPTask* task(new MPTask(m_robot));
-      task->AddStartConstraint(std::move(start->Clone()));
-      task->AddGoalConstraint(std::move(end->Clone()));
-      m_library->Solve(m_library->GetMPProblem(),task,
-          m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
-      m_intergoalPaths.push_back(*m_library->GetPath());
-    }
-  }
-  for(auto path : m_intergoalPaths){
-    m_pathDescriptors.push_back(this->add_edge(path));
-  }*/
   for(size_t i = 0; i < m_goalConstraints.size(); i++){
     for(size_t j = 0 ; j < m_goalConstraints.size(); j++){
       if(i == j) continue;
       MPTask* task(new MPTask(m_robot));
-      task->AddStartConstraint(std::move(m_goalConstraints[i]->Clone()));
+      task->SetStartConstraint(std::move(m_goalConstraints[i]->Clone()));
       task->AddGoalConstraint(std::move(m_goalConstraints[j]->Clone()));
       m_library->Solve(m_library->GetMPProblem(),task,
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");

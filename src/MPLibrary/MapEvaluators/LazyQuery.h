@@ -102,8 +102,8 @@ class LazyQuery : public PRMQuery<MPTraits> {
     /// These objects are used to lazily validate the computed path.
 
     std::string m_dmLabel{"euclidean"};  ///< The distance metric label.
-    std::string m_vcLabel{"pqp_solid"};  ///< The validity checker label.
     std::string m_lpLabel{"sl"};         ///< The local planner label.
+    using QueryMethod<MPTraits>::m_vcLabel;
 
     ///@}
     ///@name Internal State
@@ -137,7 +137,6 @@ LazyQuery(XMLNode& _node) : PRMQuery<MPTraits>(_node) {
   this->SetName("LazyQuery");
 
   m_dmLabel = _node.Read("dmLabel", false, m_dmLabel, "Distance metric method");
-  m_vcLabel = _node.Read("vcMethod", false, m_vcLabel, "Validity checker method");
   m_lpLabel = _node.Read("lpLabel", false, m_lpLabel, "Local planner method");
 
   m_deleteInvalid = _node.Read("deleteInvalid", false, m_deleteInvalid,

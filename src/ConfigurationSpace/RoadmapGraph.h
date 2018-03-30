@@ -137,6 +137,9 @@ class RoadmapGraph : public
     /// @param _iterator An iterator to the edge.
     void DeleteEdge(EI _iterator) noexcept;
 
+    /// Set the robot pointer on all configurations in the map.
+    void SetRobot(Robot* const _r) noexcept;
+
     ///@}
     ///@name Queries
     ///@{
@@ -502,6 +505,15 @@ DeleteEdge(EI _iterator) noexcept {
 #ifdef VIZMO
   sourceCfg.UnLock();
 #endif
+}
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+SetRobot(Robot* const _r) noexcept {
+  for(VI vi = this->begin(); vi != this->end(); ++vi)
+    vi->property().SetRobot(_r);
 }
 
 /*-------------------------------- Queries -----------------------------------*/

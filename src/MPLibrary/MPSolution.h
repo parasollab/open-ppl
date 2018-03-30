@@ -29,6 +29,12 @@ class MPSolutionType final {
     MPSolutionType(Robot* const _r);
 
     ///@}
+    ///@name Modifiers
+    ///@{
+
+    void SetRobot(Robot* const _r) noexcept;
+
+    ///@}
     ///@name Accessors
     ///@{
 
@@ -49,7 +55,7 @@ class MPSolutionType final {
     ///@name Internal State
     ///@{
 
-    Robot* const m_robot;            ///< The robot executing this task.
+    Robot* m_robot{nullptr};            ///< The robot executing this task.
 
     std::unique_ptr<RoadmapType>  m_freeMap; ///< The free-space roadmap.
     std::unique_ptr<RoadmapType>  m_obstMap; ///< The obstacle-space roadmap.
@@ -72,6 +78,18 @@ MPSolutionType(Robot* const _r)
     m_stats(new StatClass()),
     m_lom(new LocalObstacleMap(m_stats.get()))
 { }
+
+/*-------------------------------- Modifiers ---------------------------------*/
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+SetRobot(Robot* const _r) noexcept {
+  m_robot = _r;
+  m_freeMap->SetRobot(_r);
+  m_obstMap->SetRobot(_r);
+  m_path->FlushCache();
+}
 
 /*---------------------------- Roadmap Accessors -----------------------------*/
 

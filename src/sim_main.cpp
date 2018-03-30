@@ -21,11 +21,13 @@ main(int _argc, char** _argv) {
     ///       the first task is a query and its start boundary is a single point.
     for(const auto& robot : problem->GetRobots()) {
       Robot* const r = robot.get();
-
+      if(r->IsVirtual())
+        continue;
       // Position the robot at zero, or at the task center if one exists.
       std::vector<double> dofs(r->GetMultiBody()->DOF(), 0);
       if(!problem->GetTasks(r).empty())
-        dofs = problem->GetTasks(r).front()->GetStartBoundary()->GetCenter();
+        dofs = problem->GetTasks(r).front()->GetStartConstraint()->
+               GetBoundary()->GetCenter();
       r->GetMultiBody()->Configure(dofs);
 
       // Randomize body colors for now to help see the robots.

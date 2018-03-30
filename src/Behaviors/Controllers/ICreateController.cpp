@@ -52,19 +52,22 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
   // If we're still here, we are at the target. Line up with the end Cfg.
   if(translation <= threshold)
   {
-    std::cout << "End rotation" << std::endl;
+    if(m_debug)
+      std::cout << "End rotation" << std::endl;
     return {0, 0, a};
   }
   // Line up to move towards target.
   else if(std::abs(preRotation) > threshold)
   {
-    std::cout << "Pre rotation" << std::endl;
+    if(m_debug)
+      std::cout << "Pre rotation" << std::endl;
     return {0, 0, preRotation};
   }
   // If we're still here, we are lined up. Go to the target.
   else
   {
-    std::cout << "Translation" << std::endl;
+    if(m_debug)
+      std::cout << "Translation" << std::endl;
     return {translation, 0, 0};
   }
 }

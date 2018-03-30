@@ -43,7 +43,7 @@
 
     <MapEvaluators>
       <PRMQuery label="PRMQuery" debug="false" fullRecreatePath="false"
-                safeIntervalToolLabel="SI">
+                vcLabel="pqp_solid" safeIntervalToolLabel="SI">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
     </MapEvaluators>

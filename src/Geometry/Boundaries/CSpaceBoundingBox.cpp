@@ -56,14 +56,15 @@ InBoundary(const Cfg& _c) const {
 void
 CSpaceBoundingBox::
 ShrinkToPoint(const Cfg& _c) noexcept {
-  const size_t dof = _c.DOF();
+  const size_t dof = std::min(_c.DOF(), GetDimension());
 
   for(size_t i = 0; i < dof; ++i)
     NBox::SetRange(i, _c[i], _c[i]);
 
-  if(_c.IsNonholonomic())
+  /*if(_c.IsNonholonomic())
     for(size_t i = 0; i < dof; ++i)
       NBox::SetRange(i + dof, _c.Velocity(i), _c.Velocity(i));
+  */
 }
 
 /*----------------------------------------------------------------------------*/

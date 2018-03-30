@@ -542,7 +542,7 @@ Initialize() {
 
   CfgType root(this->GetTask()->GetRobot());
   root.SetData(
-      this->GetTask()->GetStartConstraints().at(0)->GetBoundary()->GetCenter());
+      this->GetTask()->GetStartConstraint()->GetBoundary()->GetCenter());
   m_rootVid = this->GetRoadmap()->GetGraph()->AddVertex(root);
 
   GenerateAdjacencyMats();

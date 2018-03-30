@@ -3,11 +3,13 @@
 
 #include <algorithm>
 
-#include "Behaviors/Agents/BatteryBreak.h"
 #include "Roadmap.h"
+#include "Behaviors/Agents/BatteryBreak.h"
+#include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
 #include "Utilities/PMPLExceptions.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A path of connected configurations from a given roadmap.
@@ -68,7 +70,7 @@ class PathType final {
     template <typename MPLibrary>
     const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
-    
+
     /// Find the furthest place and time in a path that an agent can travel to
     /// before being required to return to a charger.
     /// @params[in] _batteryLevel Current battery level of the agent.
@@ -77,8 +79,10 @@ class PathType final {
     /// @params[in] _currentTime current time for the path to start calculatin
     ///         from.
     /// @params[in] _timeRes Resolution of a single timestep.
-    BatteryBreak FindBatteryBreak(double _batteryLevel, double _rate, double _theshold, 
-                 double _currentTime, double _timeRes);
+    template <typename MPLibrary>
+    BatteryBreak FindBatteryBreak(double _batteryLevel, double _rate,
+        double _theshold, double _currentTime, double _timeRes,
+        MPLibrary* const _lib);
 
     /// Append another path to the end of this one.
     /// @param[in] _p The path to append.
@@ -101,6 +105,9 @@ class PathType final {
 
     /// Clear all data in the path.
     void Clear();
+
+    /// Clear cached data, but leave the VIDs.
+    void FlushCache();
 
     ///@}
 
@@ -289,27 +296,39 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   return out;
 }
 
+
 template <typename MPTraits>
+template <typename MPLibrary>
 BatteryBreak
 PathType<MPTraits>::
-FindBatteryBreak(double _batteryLevel, double _rate, double _theshold, 
-                 double _currentTime, double _timeRes){
-  std::vector<CfgType> fullPath = FullCfgs();
+FindBatteryBreak(double _batteryLevel, double _rate, double _threshold,
+                 double _currentTime, double _timeRes, MPLibrary* const _lib){
+  std::vector<CfgType> fullPath = FullCfgs(_lib);
+  /*std::cout << "Battery Level: " << _batteryLevel << "\nRate: " << _rate <<
+            "\nThreshold: " << _threshold << std::endl;
+  std::cout << "Printing full path" << std::endl;
+  for(auto cfg : fullPath){
+    std::cout << cfg << std::endl;
+  }*/
+  /*
+  //TODO: Figure out if the abstracted path will ever be necessary
+  std::cout << "Printing abstracted path" << std::endl;
+  std::vector<CfgType> path = Cfgs();
+  for(auto cfg : path){
+    std::cout << cfg << std::endl;
+  }*/
   size_t cfgIt = 0; //keeps track of last path cfg reached before battery break
-  size_t time = 0;
   for(auto cfg : fullPath){
     _batteryLevel -= _rate;
-    if(_batteryLevel <= _theshold) 
+    //std::cout << "BatteryLevel: " << _batteryLevel << std::endl;
+    if(_batteryLevel <= _threshold)
       break;
     _currentTime += _timeRes;
-    if(cfg == m_cfgs[cfgIt]){
-      cfgIt++;
-      time = _currentTime;
-    }
+    cfgIt++;
   }
-  return BatteryBreak(m_cfgs[cfgIt], time);
-
+  return BatteryBreak(fullPath[cfgIt], _currentTime);
 }
+
 
 template <typename MPTraits>
 PathType<MPTraits>&
@@ -351,22 +370,23 @@ operator+(const std::vector<VID>& _vids) const {
   return out;
 }
 
+
 template <typename MPTraits>
-PathType<MPTraits>& 
+PathType<MPTraits>&
 PathType<MPTraits>::
-operator=(const PathType& _p){
-    if(m_roadmap != _p.m_roadmap){
-      throw RunTimeException(WHERE, "Can't assign path from another roadmap");
-    }
-    m_vids = _p.m_vids; 
+operator=(const PathType& _p) {
+  if(m_roadmap != _p.m_roadmap)
+    throw RunTimeException(WHERE, "Can't assign path from another roadmap");
 
-    m_cfgs = _p.m_cfgs;
-    m_cfgsCached = _p.m_cfgsCached;
+  m_vids         = _p.m_vids;
+  m_cfgs         = _p.m_cfgs;
+  m_cfgsCached   = _p.m_cfgsCached;
+  m_length       = _p.m_length;
+  m_lengthCached = _p.m_lengthCached;
 
-    m_length = _p.m_length;
-    m_lengthCached = _p.m_lengthCached;
-    return *this;
+  return *this;
 }
+
 
 template <typename MPTraits>
 void
@@ -376,6 +396,16 @@ Clear() {
   m_cfgsCached = false;
   m_cfgs.clear();
   m_vids.clear();
+}
+
+
+template <typename MPTraits>
+void
+PathType<MPTraits>::
+FlushCache() {
+  m_lengthCached = false;
+  m_cfgsCached = false;
+  m_cfgs.clear();
 }
 
 /*--------------------------------- Helpers ----------------------------------*/

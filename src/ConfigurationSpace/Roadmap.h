@@ -59,6 +59,9 @@ class Roadmap final {
     /// @param _r The roadmap to copy from.
     void AppendRoadmap(const Roadmap& _r);
 
+    /// Set the robot pointer and adjust all Cfgs to match.
+    void SetRobot(Robot* const _r) noexcept;
+
     ///@}
     ///@name I/O
     ///@{
@@ -79,7 +82,7 @@ class Roadmap final {
     ///@name Internal State
     ///@{
 
-    Robot* const m_robot;          ///< The robot this roadmap is for.
+    Robot* m_robot{nullptr};       ///< The robot this roadmap is for.
     GraphType* m_graph{nullptr};   ///< Graph of configurations and edges.
 
     ///@}
@@ -161,6 +164,15 @@ AppendRoadmap(const Roadmap& _r) {
         m_graph->AddEdge(source, target, eit->property());
     }
   }
+}
+
+
+template <typename MPTraits>
+void
+Roadmap<MPTraits>::
+SetRobot(Robot* const _r) noexcept {
+  m_robot = _r;
+  m_graph->SetRobot(_r);
 }
 
 /*----------------------------------- I/O ------------------------------------*/

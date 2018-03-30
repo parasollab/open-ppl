@@ -66,6 +66,7 @@ ClearPlan() {
   m_pathIndex = 0;
 }
 
+
 /*----------------------------- Planning Helpers -----------------------------*/
 
 void 
@@ -121,7 +122,6 @@ EvaluateTask() {
       if(m_debug)
         std::cout << "Reached the end of the path." << std::endl;
       GetTask()->SetCompleted();
-      ClearPlan();
       SetTask(nullptr);
       return false;
     }

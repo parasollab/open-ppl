@@ -10,9 +10,6 @@ BatteryBreak(Cfg _cfg, double _time)
 }
 
 
-BatteryBreak::
-~BatteryBreak() = default;
-
 /*-------------------------------- Accessors ---------------------------------*/
 
 Cfg

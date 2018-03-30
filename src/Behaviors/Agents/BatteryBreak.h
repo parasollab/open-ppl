@@ -25,7 +25,7 @@ class BatteryBreak {
     /// @param _time time at which the battery break occurs.
     BatteryBreak(Cfg _cfg, double _time);
 
-    ~BatteryBreak();
+    ~BatteryBreak()=default;
 
     ///@}
     ///@name Accessors

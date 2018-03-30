@@ -37,6 +37,8 @@ class PlanningAgent : public Agent {
 
     virtual void Uninitialize() override;
 
+    virtual void SetTask(MPTask* const _task) override;
+
     ///@}
     ///@name Planning
     ///@{
@@ -91,7 +93,7 @@ class PlanningAgent : public Agent {
     /// Continue executing the agent's current task.
     /// @param _dt The step length.
     virtual void ExecuteTask(const double _dt) = 0;
-    
+
     ///@}
     ///@name Internal State
     ///@{
@@ -100,7 +102,7 @@ class PlanningAgent : public Agent {
     std::unique_ptr<MPSolution> m_solution; ///< The current solution.
     std::thread m_thread;                   ///< Thread for agent to run PMPL.
     std::atomic<bool> m_planning{false};    ///< Is the agent currently planning.
-    size_t m_planVersion{1};                ///< The agent's current plan version.
+    size_t m_planVersion{1};                ///< The current plan version.
 
     ///@}
 
