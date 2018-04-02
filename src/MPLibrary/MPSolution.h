@@ -141,16 +141,14 @@ MPSolutionType<MPTraits>::
 SetRobot(Robot* const _r) noexcept {
   // Move m_robot's solution to match the new pointer.
   auto iter = m_solutions.find(m_robot);
-  m_solutions[_r] = std::move(*iter);
+  m_solutions[_r] = std::move(iter->second);
   m_solutions.erase(iter);
 
   m_robot = _r;
 
-  m_solutions[_r].m_freeMap->SetRobot(_r);
-  m_solutions[_r].m_obstMap->SetRobot(_r);
-  m_solutions[_r].m_path->FlushCache();
-
-  m_groupMap = std::unique_ptr<GroupRoadmapType>(new GroupRoadmapType(m_group));
+  m_solutions[_r].freeMap->SetRobot(_r);
+  m_solutions[_r].obstMap->SetRobot(_r);
+  m_solutions[_r].path->FlushCache();
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/

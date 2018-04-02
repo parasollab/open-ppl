@@ -758,8 +758,9 @@ GenerateQuery() {
     }
   } while(!vc->IsValid(start, "QueryMethod::GenerateQuery"));
 
-  std::cout << "Tried " << maxTries - tries << " times to generate the start."
-            << std::endl;
+  if(this->m_debug)
+    std::cout << "Tried " << maxTries - tries << " times to generate the start."
+              << std::endl;
   m_query.push_back(start);
 
   // Generate a goal configuration if we have a start constraint.
@@ -784,25 +785,15 @@ GenerateQuery() {
     } while(!vc->IsValid(goal, "QueryMethod::GenerateQuery"));
 
     m_query.push_back(goal);
-    std::cout << "Tried " << maxTries - tries << " times to generate a goal."
-              << std::endl;
+    if(this->m_debug)
+      std::cout << "Tried " << maxTries - tries << " times to generate a goal."
+                << std::endl;
   }
-  /*if(this->m_debug and (startBoundary or goalBoundary)) {
-    std::cout << "Query generation:";
-    if(startBoundary)
-      std::cout << "\n\tStart boundary : " << *startBoundary
-                << "\n\tStart cfg: " << m_query.front();
-    if(goalBoundary)
-      std::cout << "\n\tGoal boundary  : " << *goalBoundary
-                << "\n\tGoal cfg: " << m_query.back();
-    std::cout << std::endl;
-  }*/
 
   if(m_query.empty())
     throw RunTimeException(WHERE, this->GetNameAndLabel() + "::PerformQuery "
         "error: m_query is empty. This is sometimes caused by reading the wrong "
         "query file in the XML.");
-
 }
 
 /*----------------------------------------------------------------------------*/

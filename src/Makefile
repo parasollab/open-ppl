@@ -11,6 +11,11 @@ parallel ?= 0
 #  variables to get useful output:
 #  export ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer"
 #  export ASAN_OPTIONS="symbolize=1"
+#! You may instead want to set this option since the lab machines' version of
+#  ASAN has at least one malloc which is later deleted instead of freed (thereby
+#  terminating your program with a bogus error):
+#  export ASAN_OPTIONS="symbolize=1:alloc_dealloc_mismatch=0"
+
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
 vizmo_map := #-DVIZMO_MAP

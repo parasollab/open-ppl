@@ -143,6 +143,7 @@ PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
   m_library->Solve(_problem.get(), GetTask(), m_solution.get());
+  m_library->SetMPProblem(m_robot->GetMPProblem());
   m_planning = false;
 }
 

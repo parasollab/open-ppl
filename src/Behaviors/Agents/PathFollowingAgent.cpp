@@ -53,13 +53,13 @@ Uninitialize() {
 
 /*--------------------------------- Planning ---------------------------------*/
 
-bool 
+bool
 PathFollowingAgent::
 HasPlan() const {
   return !m_path.empty();
 }
 
-void 
+void
 PathFollowingAgent::
 ClearPlan() {
   m_path.clear();
@@ -69,11 +69,11 @@ ClearPlan() {
 
 /*----------------------------- Planning Helpers -----------------------------*/
 
-void 
+void
 PathFollowingAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
   PlanningAgent::WorkFunction(_problem);
-  
+
   m_path = m_solution->GetPath()->Cfgs();
   m_pathIndex = 0;
 

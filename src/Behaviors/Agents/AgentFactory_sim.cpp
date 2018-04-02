@@ -24,7 +24,7 @@ Factory(Robot* const _r, XMLNode& _node) {
     output = std::unique_ptr<PathFollowingAgent>(
         new PathFollowingAgent(_r, _node)
     );
-  else if(type == "pathfollowingchildagent")
+  else if(type == "pathfollowingchild")
     output = std::unique_ptr<PathFollowingChildAgent>(
         new PathFollowingChildAgent(_r, _node)
     );

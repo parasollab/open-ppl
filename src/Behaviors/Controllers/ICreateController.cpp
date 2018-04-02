@@ -38,9 +38,7 @@ ICreateController::
 
 std::vector<double>
 ICreateController::
-ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
-  /// @TODO Make robot turn/translate at max speed as often as possible, rather
-  ///       than using something proportional to the error.
+ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double _dt) {
   const double x = _target[0] - _current[0],
                y = _target[1] - _current[1],
                a = _target[2] - _current[2],
@@ -49,26 +47,30 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
 
   static constexpr double threshold = 1e-4;
 
+  // Ideally, we would like the robot to cover the entire translation or
+  // rotation in one step. The computed distances will thus be divided by _dt to
+  // give the desired velocity.
+
   // If we're still here, we are at the target. Line up with the end Cfg.
   if(translation <= threshold)
   {
     if(m_debug)
       std::cout << "End rotation" << std::endl;
-    return {0, 0, a};
+    return {0, 0, a / _dt};
   }
   // Line up to move towards target.
   else if(std::abs(preRotation) > threshold)
   {
     if(m_debug)
       std::cout << "Pre rotation" << std::endl;
-    return {0, 0, preRotation};
+    return {0, 0, preRotation / _dt};
   }
   // If we're still here, we are lined up. Go to the target.
   else
   {
     if(m_debug)
       std::cout << "Translation" << std::endl;
-    return {translation, 0, 0};
+    return {translation / _dt, 0, 0};
   }
 }
 

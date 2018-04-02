@@ -95,8 +95,8 @@ class ControllerMethod {
     ///@name Control Selection
     ///@{
 
-    /// Compute the desired generalized force in the robot's local fraame to
-    /// move from the current position to the target.
+    /// Compute the desired generalized force (or velocity) in the robot's local
+    /// frame to move from the current position to the target.
     /// @param[in] _current The current configuration.
     /// @param[in] _target The target configuration.
     /// @param[in] _dt The timestep length.

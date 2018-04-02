@@ -106,8 +106,13 @@
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"/>
+      <!-- The lab's old GCC version (4.8.5) doesn't support <regex>, which is
+           required to parse this node. The lab's GCC version 6 module doesn't
+           link our libraries properly. I give up on fixing this for the lab
+           machines. We need a working, non-ancient GCC to uncomment this node.
       <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
         debug="false"/>
+      -->
       <MixSampler label="MixSampler">
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>
@@ -281,15 +286,15 @@
 
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
-      <PRMQuery label="PRMQuery" debug="false">
+      <PRMQuery label="PRMQuery" vcLabel="pqp_solid" debug="false">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
       <RRTQuery label="RRTQuery" goalDist="0"
-        nfLabel="Nearest" exLabel="BERO" debug="false"/>
+        nfLabel="Nearest" exLabel="BERO" vcLabel="pqp_solid" debug="false"/>
       <RRTQuery label="KinoRRTQuery" goalDist=".3"
-        nfLabel="Nearest" exLabel="KinoExtender" debug="false"/>
+        nfLabel="Nearest" exLabel="KinoExtender" vcLabel="pqp_solid" debug="false"/>
       <LazyQuery label="LazyQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid" graphSearchAlg="astar"
         debug="false" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
@@ -297,7 +302,7 @@
         <Resolution mult="1"/>
       </LazyQuery>
       <LazyToggleQuery label="LazyToggleQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid" graphSearchAlg="astar"
         iterative="true" debug="false">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="LazyToggleConnect"/>

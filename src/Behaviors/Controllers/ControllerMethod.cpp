@@ -163,7 +163,7 @@ ComputeNearestContinuousControl(const Cfg& _current,
     const auto unitForce = nonstd::unit(actuator->ComputeForce(signal));
 
     const double dot = nonstd::dot<double>(desiredDirection, unitForce);
-    if(dot >= bestDot) {
+    if(dot > bestDot) {
       best = Control{actuator, signal};
       bestDot = dot;
     }
@@ -227,7 +227,6 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
         "This is probably an error in the control set definition.");
 
   return best;
-
 }
 
 /*----------------------------------------------------------------------------*/
