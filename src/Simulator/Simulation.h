@@ -119,7 +119,7 @@ class Simulation : public base_visualization {
     std::atomic<bool> m_running{false};    ///< Is the simulation running?
 
     volatile size_t m_backloggedSteps{0};  ///< Number of precomputed steps.
-    size_t m_backlogMax{100};              ///< Max number of precomputed steps.
+    size_t m_backlogMax{1};              ///< Max number of precomputed steps.
 
     const bool m_editMode{false};          ///< Are we in edit mode?
 

@@ -37,7 +37,7 @@ class PlanningAgent : public Agent {
 
     virtual void Uninitialize() override;
 
-    virtual void SetTask(MPTask* const _task) override;
+    virtual void SetTask(std::shared_ptr<MPTask> const _task) override;
 
     ///@}
     ///@name Planning
@@ -90,7 +90,8 @@ class PlanningAgent : public Agent {
     ///@}
     ///@name Internal State
     ///@{
-
+    //TODO Find out why these need to be unique bc it's super hard to get access
+    //to them at the moment.
     std::unique_ptr<MPLibrary> m_library;   ///< This agent's planning library.
     std::unique_ptr<MPSolution> m_solution; ///< The current solution.
     std::thread m_thread;                   ///< Thread for agent to run PMPL.

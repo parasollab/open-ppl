@@ -143,6 +143,14 @@ AddGoalConstraint(std::unique_ptr<Constraint>&& _c) {
   m_goalConstraints.push_back(std::move(_c));
 }
 
+
+void
+MPTask::
+SetArrivalTime(double _arrivalTime){
+  m_arrivalTime = _arrivalTime;
+}
+
+
 const Constraint*
 MPTask::
 GetStartConstraint() const noexcept {
@@ -162,6 +170,14 @@ MPTask::
 GetGoalConstraints() const noexcept {
   return m_goalConstraints;
 }
+
+
+const double
+MPTask::
+GetArrivalTime() const noexcept {
+  return m_arrivalTime;
+}
+
 
 /*------------------------------- Task Status --------------------------------*/
 

@@ -31,7 +31,7 @@ class Agent {
 
     mutable bool m_initialized{false}; ///< Is the agent initialized?
 
-    MPTask* m_task{nullptr};           ///< The task this agent is working on.
+    std::shared_ptr<MPTask> m_task;    ///< The task this agent is working on.
 
     ControlSet m_currentControls;      ///< The current control set.
     size_t m_stepsRemaining{0};        ///< Steps remaining on current controls.
@@ -76,10 +76,10 @@ class Agent {
     /// Set the task for this agent.
     /// @param _task The new task for this agent. Should be owned by the
     ///              MPProblem.
-    virtual void SetTask(MPTask* const _task);
+    virtual void SetTask(std::shared_ptr<MPTask> const _task);
 
     /// Get the task that the agent is currently working on.
-    MPTask* GetTask() const noexcept;
+    std::shared_ptr<MPTask> GetTask() const noexcept;
 
     /// Is this agent a child of some group/aggregate?
     virtual bool IsChild() const;

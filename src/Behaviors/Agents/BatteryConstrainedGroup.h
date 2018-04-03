@@ -35,13 +35,11 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Local Types
     ///@{
 
-    /// The various roles that a member robot can assume.
-    enum Role {Worker, Helper, Charging, ReturningToCharge, WaitingForHelp};
+    enum Role {Worker, Helper, Charging, ReturningToCharge, WaitingForHelp, GoingToHelp};
 
-    /// A tracking structure for a task that was started by a worker but not
-    /// completed.
     struct PausedTask {
-      MPTask* m_task{nullptr};
+
+      std::shared_ptr<MPTask> m_task;
       Agent* m_previousOwner{nullptr};
       size_t m_priority{0};
     };
@@ -67,7 +65,6 @@ class BatteryConstrainedGroup : public Agent {
     virtual ~BatteryConstrainedGroup();
 
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const;
-
     ///@}
     ///@name Agent Interface
     ///@{
@@ -77,7 +74,7 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Follow the roadmap.
     virtual void Step(const double _dt) override;
-
+    
     /// Clean up.
     virtual void Uninitialize() override;
 
@@ -89,13 +86,22 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The member which is requesting a new task.
     void AssignTask(Agent* const _member);
 
+    /// Save battery breaks after workers plan paths.
+    void SetBatteryBreak(BatteryBreak _break, Agent* _member);
+
+    /// Sends the current agent to its nearest charging location.
+    /// @param _member The agent being sent to the charging location.
+    void GoToCharge(Agent* const _member);
+    
+    /// Checks if the agent just swapped with another agent that is currently
+    /// sitting on the goal of the task that _member just took over.
+    /// @param _member The agent that is trying to plan.
+    bool ClearToPlan(Agent* const _member);
+
     /// Decide what to do when some group of agents are facing a potential
     /// collision. Send a command to each agent in this group to resolve the
     /// potential collision.
     void ArbitrateCollision();
-
-    /// Save battery breaks after workers plan paths.
-    void SetBatteryBreak(BatteryBreak _break, Agent* _member);
 
     ///@}
     ///@name Accessors
@@ -107,6 +113,7 @@ class BatteryConstrainedGroup : public Agent {
 
     ///@}
 
+    
   private:
 
     ///@}
@@ -127,7 +134,7 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _a The member agent to check the priority for.
     /// @param _group The group of agents near _a.
     /// @return True if _a has a higher priority than the robots around it,
-    /// False otherwise.
+    /// False otherwise. 
     bool IsHighestPriority(Agent* const _a, const vector<Agent*>& _group);
 
     /// Change the role of a group member.
@@ -171,17 +178,22 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Update other agents' knowledge about an agent's plan versions.
     /// @param _member The agent being updated.
-    /// @param _agents The agents within proximity to the updating agent.
+    /// @param _agents The agents within proximity to the updating agent. 
     void UpdateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
 
     /// For each agent in proximity, ensure that its map has an up-to-date
-    /// version for the agent (_member) that may need to replan.
+    /// version for the agent (_member) that may need to replan. 
     /// @param _member The agent who's version number must be verified for the
     /// proximity agents.
     /// @param _agents The proximity agents who's _member version number must be
-    /// checked.
+    /// checked. 
     /// @return True if the versions are up-to-date, false otherwise.
     bool ValidateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
+
+    /// Checks if the agent(helper) has reached its assigned worker, and assigns
+    /// it the new tasks if it has.
+    /// @param _member The helper that is checking if it has reached the worker.
+    void CheckReachedWorker(Agent* const _member);
 
     ///@}
     ///@name Charging Locations
@@ -211,14 +223,8 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The agent that was on the charging location
     void ClearChargingLocation(Agent* const _member);
 
-    /// Sends the current agent to its nearest charging location.
-    /// @param _member The agent being sent to the charging location.
-    void GoToCharge(Agent* const _member);
-
     ///@}
     ///@name Task Management
-    ///@{
-
     /// Assign a new task to a worker member.
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskWorker(Agent* const _member);
@@ -227,15 +233,22 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskHelper(Agent* const _member);
 
+    void AssignProactiveHelperTask(Agent* const _member);
+
     /// Assign a new task to a worker member.
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskWaiting(Agent* const _member);
+
+
+    void PerformHelperSwap(Agent* const _member, Agent* _worker);
 
     /// Checks the battery level of a worker and assigns its task to the
     /// PausedTask queue if the battery level is low.
     /// @param _member The worker member which could be pausing its task.
     void BatteryCheck(Agent* const _member);
 
+    
+    
     ///@}
 
   protected:
@@ -266,26 +279,27 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Map group members to their last assigned task;
     std::list<PausedTask> m_pausedTasks;
-
-    /// Map worker to assigned helper
+    
+    /// Map worker to assigned helper.
     std::unordered_map<Agent*, Agent*> m_helperMap;
 
     /// Map group members to their initial roles (needed for parsing only).
     std::unordered_map<std::string, Role> m_initialRoles;
 
     /// Flag determining whether or not the Agents should wait for a helper to
-    /// arrive (handoff) before returning to a charging location.
-    bool m_handoff{false};
+    /// arrive (handoff) before returning to a charging location. 
+    bool m_handoff{true};
 
-    bool m_reactive{true};
+    bool m_proactive{false};
 
     double m_currentTime{0.0};
+
+    double m_chargingRate{5.0};
 
     std::unordered_map<Agent*, BatteryBreak> m_batteryBreaks;
 
     /// Map agents to their current knowledge of other agents' plan versions.
     std::unordered_map<Agent*, std::unordered_map<PlanningAgent*, size_t>> m_versionMap;
-
     ///@}
 
 };

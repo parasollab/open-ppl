@@ -53,7 +53,13 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     /// Finds the battery break along its path and communicates it with the
     /// parent agent.
     void SetBatteryBreak();
+    
+    /// Sets the paused task that the helper will use to restart the path the 
+    /// worker was working on.
+    void SetPausedTask(std::shared_ptr<MPTask> _pausedTask);
 
+    /// Returns the paused task that the helper is supposed to resume
+    std::shared_ptr<MPTask> GetPausedTask();
     ///@}
 
   protected:
@@ -86,8 +92,9 @@ class PathFollowingChildAgent : public PathFollowingAgent {
 
     double m_distance{0.0}; ///< The distance traveled since localizing.
 
-    bool reactive{true};
+    bool proactive{false};
 
+    std::shared_ptr<MPTask> m_pausedTask;
     ///@}
 
 };

@@ -246,16 +246,16 @@ GetRobots() const noexcept {
 
 /*----------------------------- Task Accessors -------------------------------*/
 
-std::vector<MPTask*>
+std::vector<std::shared_ptr<MPTask>>
 MPProblem::
 GetTasks(Robot* const _robot) const noexcept {
   const auto& tasks = m_taskMap.at(_robot);
 
-  std::vector<MPTask*> output;
+  std::vector<std::shared_ptr<MPTask>> output;
 
   for(const auto& task : tasks)
     if(!task->IsCompleted())
-      output.push_back(task.get());
+      output.push_back(task);
 
   return output;
 }

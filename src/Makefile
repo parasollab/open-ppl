@@ -3,7 +3,7 @@
 # Set platform, debug mode, address sanitizer, and parallel compile if not
 # already set.
 platform ?= LINUX_gcc
-debug    ?= 0
+debug    ?= 1
 asan     ?= 0
 parallel ?= 0
 
@@ -98,7 +98,7 @@ $(PMPL_LIBFILE): $(PMPL_OBJS)
 	@$(AR) $@ $^
 
 # Executable Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
+# CXXFLAGS += -fsanitize=address
 # Build the traditional pmpl executable.
 pmpl: $(MAIN) $(PMPL_LIBFILE)
 	@echo Linking $@...

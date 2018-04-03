@@ -44,19 +44,19 @@ GetRobot() const noexcept {
   return m_robot;
 }
 
-
 void
 Agent::
-SetTask(MPTask* const _task) {
+SetTask(std::shared_ptr<MPTask> const _task) {
   m_task = _task;
 }
 
 
-MPTask*
+std::shared_ptr<MPTask>
 Agent::
 GetTask() const noexcept {
   return m_task;
 }
+
 
 /*------------------------------ Internal State ------------------------------*/
 
@@ -217,7 +217,7 @@ Agent::
 ExecuteControls(const ControlSet& _c, const size_t _steps) {
   // Store the last used controls.
   m_currentControls = _c;
-  m_stepsRemaining = _steps;
+  m_stepsRemaining = _steps - 1;
 
   if(m_debug) {
     std::cout << "New controls selected for the next " << m_stepsRemaining

@@ -241,6 +241,9 @@ QueryMethod(XMLNode& _node) :
 
   m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
       "Label of the SafeIntervalTool");
+  
+  m_vcLabel = _node.Read("vcLabel", true, "",
+      "Label of the Validity Checker for generating the Query");
 
   m_vcLabel = _node.Read("vcLabel", true, "",
       "Label of the Validity Checker for generating the Query");
@@ -795,7 +798,6 @@ GenerateQuery() {
         "error: m_query is empty. This is sometimes caused by reading the wrong "
         "query file in the XML.");
 }
-
 /*----------------------------------------------------------------------------*/
 
 #endif

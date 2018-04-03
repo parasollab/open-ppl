@@ -105,6 +105,13 @@ EvaluateTask() {
               << distance << "/" << threshold
               << std::endl;
 
+  if(GetTask()->EvaluateGoalConstraints({current})) {
+    if(true)
+      std::cout << "Reached the end of the path." << std::endl;
+    GetTask()->SetCompleted();
+    SetTask(nullptr);
+    return false;
+  }
   // Advance our subgoal while we are within the distance threshold of the next
   // one.
   while(distance < threshold) {
@@ -118,9 +125,9 @@ EvaluateTask() {
     ++m_pathIndex;
 
     // Check if we have completed the path. If so, this task is complete.
-    if(m_pathIndex == m_path.size())
+    if(m_pathIndex == m_path.size() or GetTask()->EvaluateGoalConstraints({current}))
     {
-      if(m_debug)
+      if(true)
         std::cout << "Reached the end of the path." << std::endl;
       GetTask()->SetCompleted();
       SetTask(nullptr);

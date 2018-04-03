@@ -20,10 +20,16 @@ class BatteryBreak {
     ///@name Construction
     ///@{
 
+    BatteryBreak();
+    
     /// Construct a battery break.
     /// @param _cfg place at which the battery break occurs.
     /// @param _time time at which the battery break occurs.
     BatteryBreak(Cfg _cfg, double _time);
+    
+    BatteryBreak(const BatteryBreak& _break);
+
+    BatteryBreak& operator=(const BatteryBreak& _break);
 
     ~BatteryBreak()=default;
 
@@ -44,8 +50,8 @@ class BatteryBreak {
     ///@name Internal State
     ///@{
 
-    Cfg m_place;   ///< Location of the battery break.
-    double m_time; ///< Time of the battery break.
+    Cfg m_place;        ///< Location of the battery break.
+    double m_time{0.0}; ///< Time of the battery break.
     
     ///@}
 

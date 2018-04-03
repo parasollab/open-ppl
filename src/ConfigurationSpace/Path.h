@@ -6,6 +6,7 @@
 #include "Roadmap.h"
 #include "Behaviors/Agents/BatteryBreak.h"
 #include "MPLibrary/MPLibrary.h"
+#include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
 #include "Utilities/PMPLExceptions.h"

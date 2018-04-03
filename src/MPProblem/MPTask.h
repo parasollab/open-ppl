@@ -106,10 +106,12 @@ class MPTask final {
     void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
     void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
     void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
+    void SetArrivalTime(double _arrivalTime);
 
     const Constraint* GetStartConstraint() const noexcept;
     const ConstraintSet& GetPathConstraints() const noexcept;
     const ConstraintSet& GetGoalConstraints() const noexcept;
+    const double GetArrivalTime() const noexcept;
 
     ///@}
     ///@name Constraint Evaluation
@@ -167,7 +169,9 @@ class MPTask final {
     std::unique_ptr<Constraint> m_startConstraint;  ///< Req'd to start task.
     ConstraintSet m_pathConstraints;   ///< Req'd during whole task.
     ConstraintSet m_goalConstraints;   ///< Req'd to end task.
-
+  
+    double m_arrivalTime{0};
+    
     ///@}
 
 };

@@ -103,11 +103,16 @@ IsChild() const {
 void
 PathFollowingChildAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
+  //if(!m_parentAgent->ClearToPlan(this))
+  //  return;
   // TODO: Stop trying to plan if it takes longer than t_max
   // TODO: Parameterize this later to avoid hardcoding to LazyPRM
-  std::cout << m_robot->GetLabel() << " STARTING PLANNING LAZYQUERY"
+  std::cout << m_robot->GetLabel() 
+            << " STARTING PLANNING LAZYQUERY"
             << std::endl;
-
+  std::cout << "Battery level: "
+            << m_robot->GetBattery()->GetCurLevel() 
+            << std::endl;
   // Set the copy of this robot to virtual.
   auto currentRobot = _problem->GetRobot(m_robot->GetLabel());
   currentRobot->SetVirtual(true);
@@ -121,23 +126,24 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
       new CSpaceConstraint(m_robot, position));
   GetTask()->SetStartConstraint(std::move(start));
   GetTask()->SetRobot(parentCopyRobot);
-
-  // Set the solution for appending with the parent copy.
+  std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
+  std::cout << "Currently at: " << m_robot->GetDynamicsModel()->GetSimulatedState() << std::endl;
   m_solution->GetPath()->Clear();
+  // Set the solution for appending with the parent copy.
   m_solution->SetRobot(parentCopyRobot);
 
   // Solve for the plan.
   std::cout << "Calling Solve for " << m_robot->GetLabel()
             << "\n\tCurrently at: " << position << std::endl;
 
-  m_library->Solve(_problem.get(), GetTask(), m_solution.get(), "LazyPRM",
+  m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(), "LazyPRM",
       LRand(), "LazyCollisionAvoidance");
-
+  
   // Reset the modified states.
-  GetTask()->SetRobot(nullptr);
+  GetTask()->SetRobot(m_robot);
   m_solution->SetRobot(m_robot);
   m_library->SetMPProblem(m_robot->GetMPProblem());
-
+  
   // Extract the path for this robot.
   m_pathIndex = 0;
   m_path = m_solution->GetPath()->Cfgs();
@@ -159,8 +165,9 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 PathFollowingChildAgent::
 SelectTask(){
+  //std::cout << "In SelectTask in PFCA" << std::endl;
   m_parentAgent->AssignTask(this);
-  return GetTask();
+  return GetTask().get();
 }
 
 
@@ -194,7 +201,6 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   m_robot->GetBattery()->UpdateValue(_steps * timeRes * depletionRate);
 }
 
-
 void
 PathFollowingChildAgent::
 SetBatteryBreak(){
@@ -213,6 +219,20 @@ SetBatteryBreak(){
   std::cout << "Battery Break at: " << batteryBreak.GetPlace() << std::endl
             << "\t" << batteryBreak.GetTime() << std::endl;
   m_parentAgent->SetBatteryBreak(batteryBreak, this);
+}
+
+
+void 
+PathFollowingChildAgent::
+SetPausedTask(std::shared_ptr<MPTask> _pausedTask){
+  m_pausedTask = _pausedTask;
+}
+
+
+std::shared_ptr<MPTask> 
+PathFollowingChildAgent::
+GetPausedTask(){
+  return m_pausedTask;
 }
 
 /*----------------------------------------------------------------------------*/

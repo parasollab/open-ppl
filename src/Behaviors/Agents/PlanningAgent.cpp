@@ -52,10 +52,12 @@ Step(const double _dt) {
   if(m_planning)
     return;
 
+  //std::cout << "Continue last controls" << std::endl; 
   // Wait for the previous controls to finish if they still have time remaining.
   if(ContinueLastControls())
     return;
 
+  //std::cout << "G/ST" << std::endl; 
   // If we have no task, select the next one.
   if(!GetTask() && !SelectTask()) {
     /// @TODO: Helper's battery level is being depleted here, must fix this.
@@ -66,15 +68,21 @@ Step(const double _dt) {
     return;
   }
 
+  //std::cout << "HP" << std::endl; 
   // If we have no plan, generate a plan.
   if(!HasPlan()) {
+    //std::cout << "GP" << std::endl;
     GeneratePlan();
     return;
   }
 
+  //std::cout << "EvT" << std::endl; 
   // Evaluate task progress. If task is still valid, continue execution.
-  if(EvaluateTask())
+  if(EvaluateTask()){
+    //std::cout << "ExT" << std::endl;
     ExecuteTask(_dt);
+  }
+
 }
 
 
@@ -90,10 +98,9 @@ Uninitialize() {
   SetTask(nullptr);
 }
 
-
 void
 PlanningAgent::
-SetTask(MPTask* const _task) {
+SetTask(std::shared_ptr<MPTask> const _task) {
   ClearPlan();
   Agent::SetTask(_task);
 }
@@ -120,7 +127,7 @@ PlanningAgent::
 GeneratePlan() {
   m_planning = true;
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
-
+  m_planVersion++;
   m_thread = std::thread([this, problemCopy](){
     this->WorkFunction(problemCopy);
   });
@@ -137,9 +144,8 @@ PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Initialize the solution.
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
-
   // Create a plan with PMPL.
-  m_library->Solve(_problem.get(), GetTask(), m_solution.get());
+  m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());
 
   // Retarget the library's problem back on the global copy so that later uses
   // of m_library which depend on the problem will not crash.
@@ -153,6 +159,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 PlanningAgent::
 SelectTask() {
+  //std::cout << "In SelectTask in Planning Agent" << std::endl;
   auto tasks = m_robot->GetMPProblem()->GetTasks(m_robot);
 
   // Return false if there are no unfinished tasks.
@@ -162,7 +169,7 @@ SelectTask() {
   }
 
   // Otherwise, choose the next one.
-  SetTask(tasks.front());
+  SetTask(std::shared_ptr<MPTask>(tasks.front()));
   GetTask()->SetStarted();
   return true;
 }
