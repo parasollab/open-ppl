@@ -43,10 +43,6 @@ class PlanningAgent : public Agent {
     ///@name Planning
     ///@{
 
-    /// Is the agent currently generating a plan.
-    /// @return True if the agent is generating a plan.
-    bool IsPlanning() const;
-
     /// Does the agent have a plan for its current task.
     /// @return True if the agent has a plan.
     virtual bool HasPlan() const = 0;
@@ -54,19 +50,16 @@ class PlanningAgent : public Agent {
     /// Clear the agent's current plan.
     virtual void ClearPlan() = 0;
 
-    ///@}
-
-    ///@name Plan Version
-    ///@{
-    /// Set the agent's plan version number.
-    /// @param The version number.
-    void SetPlanVersion(size_t _version);
+    /// Is the agent currently generating a plan.
+    /// @return True if the agent is generating a plan.
+    bool IsPlanning() const;
 
     /// Get the current version number for the agent's plan.
     /// @return The plan version number.
     size_t GetPlanVersion() const;
 
     ///@}
+
   protected:
 
     ///@name Planning Helpers

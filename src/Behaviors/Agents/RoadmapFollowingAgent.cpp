@@ -54,13 +54,14 @@ Uninitialize() {
 
 /*--------------------------------- Planning ---------------------------------*/
 
-bool 
+bool
 RoadmapFollowingAgent::
 HasPlan() const {
   return m_solution->GetPath()->Size() != 0;
 }
 
-void 
+
+void
 RoadmapFollowingAgent::
 ClearPlan() {
   m_solution->GetPath()->Clear();
@@ -121,7 +122,9 @@ ExecuteTask(const double) {
     else
       expected = &(m_edge->GetIntermediates()[edgeIndex - 1]);
 
-    CheckRobot(*expected);
+    const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+
+    Cfg::PrintRobotCfgComparisonInfo(std::cout, *expected, current);
   }
 
   // Get the next edge in the roadmap path.

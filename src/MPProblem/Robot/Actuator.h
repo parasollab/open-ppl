@@ -42,31 +42,9 @@ class Actuator final {
 
     /// The types of dynamics supported. Force-based actuators exert forces on a
     /// robot, while velocity-based actuators simply set the velocity.
-    enum DynamicsType {Force, Velocity};
+    enum class DynamicsType {Force, Velocity};
 
     ///@}
-
-  protected:
-
-    ///@name Internal State
-    ///@{
-
-    Robot* const m_robot;                ///< The owning robot object.
-
-    std::string m_label;                 ///< The unique label for this actuator.
-
-    std::vector<bool> m_mask;            ///< Which DOFs can this affect?
-    std::vector<Range<double>> m_limits; ///< Maximum backward/forward force.
-    double m_maxForce;                   ///< The largest producible force.
-
-    DynamicsType m_type{Force};          ///< The dynamics type.
-
-    ControlSpace m_controlSpace;      ///< The space of accepted control signals.
-
-    ///@}
-
-  public:
-
     ///@name Construction
     ///@{
 
@@ -75,7 +53,7 @@ class Actuator final {
     /// @param[in] _label The actuator label.
     /// @param[in] _t The dynamics type.
     Actuator(Robot* const _r, const std::string& _label,
-        const DynamicsType _t = Force);
+        const DynamicsType _t = DynamicsType::Force);
 
     /// Construct an actuator for a given robot from an XML input.
     /// @param[in] _r The owning robot.
@@ -90,6 +68,15 @@ class Actuator final {
     ///@}
     ///@name Actuator Properties
     ///@{
+
+    /// Get the robot that the actuator is on
+    Robot* GetRobot() const;
+
+    /// Get the label for this actuator
+    std::string GetLabel() const;
+
+    /// Get the type of output this actuator produces.
+    DynamicsType GetDynamicsType() const;
 
     /// Set the minimum and maximum generalized forces that this actuator can
     /// apply to any DOF.
@@ -140,12 +127,6 @@ class Actuator final {
     /// @param _model The bullet model of m_robot to control.
     void Execute(const Control::Signal& _s, btMultiBody* const _model) const;
 
-    /// Get the label for this actuator
-    std::string GetLabel() const;
-
-    /// Get the robot that the actuator is on
-    Robot* GetRobot() const;
-
     ///@}
 
   private:
@@ -164,6 +145,23 @@ class Actuator final {
     friend std::ostream& operator<<(std::ostream&, const Actuator&);
 
     ///@}
+    ///@name Internal State
+    ///@{
+
+    Robot* const m_robot;                ///< The owning robot object.
+
+    std::string m_label;                 ///< The unique label for this actuator.
+
+    std::vector<bool> m_mask;            ///< Which DOFs can this affect?
+    std::vector<Range<double>> m_limits; ///< Maximum backward/forward force.
+    double m_maxForce;                   ///< The largest producible force.
+
+    DynamicsType m_type{DynamicsType::Force}; ///< The dynamics type.
+
+    ControlSpace m_controlSpace;      ///< The space of accepted control signals.
+
+    ///@}
+
 };
 
 #endif

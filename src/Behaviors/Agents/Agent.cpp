@@ -60,7 +60,6 @@ GetTask() const noexcept {
 
 /*------------------------------ Internal State ------------------------------*/
 
-//TODO: Return true if Agent is a PathFollowingChildAgent, false otherwise.
 bool
 Agent::
 IsChild() const{
@@ -131,24 +130,14 @@ ProximityCheck(const double _distance) const {
   return result;
 }
 
-/*------------------------------ Time Horizon --------------------------------*/
 
 std::vector<Agent*>
 Agent::
 TimeHorizonCheck(const double _distance, const size_t _tmax) const {
   /// @TODO Fill out this function (need to figure out how to consider t_max)
+  throw RunTimeException(WHERE, "Not yet implemented.");
   vector<Agent*> result;
   return result;
-}
-
-
-void
-Agent::
-CheckRobot(const Cfg& _expected) const {
-  // Find the current configuration for the robot.
-  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
-
-  Cfg::PrintRobotCfgComparisonInfo(std::cout, _expected, current);
 }
 
 /*------------------------------ Agent Control -------------------------------*/
@@ -182,6 +171,7 @@ Halt() {
               << std::endl;
 }
 
+
 void
 Agent::
 PauseAgent(const size_t _steps) {
@@ -199,6 +189,7 @@ PauseAgent(const size_t _steps) {
 
   ExecuteControls({emptyControl}, steps);
 }
+
 
 bool
 Agent::

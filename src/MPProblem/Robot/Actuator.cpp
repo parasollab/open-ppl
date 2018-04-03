@@ -82,9 +82,9 @@ Actuator(Robot* const _r, XMLNode& _node) : m_robot(_r),
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
   if(type == "force")
-    m_type = Force;
+    m_type = DynamicsType::Force;
   else if(type == "velocity")
-    m_type = Velocity;
+    m_type = DynamicsType::Velocity;
   else
     throw ParseException(_node.Where(), "Unknown dynamics type '" + type + "'.");
 
@@ -104,6 +104,27 @@ Actuator(Robot* const _r, const Actuator& _a)
 { }
 
 /*-------------------------- Actuator Properties -----------------------------*/
+
+Robot*
+Actuator::
+GetRobot() const {
+  return m_robot;
+}
+
+
+std::string
+Actuator::
+GetLabel() const {
+  return m_label;
+}
+
+
+Actuator::DynamicsType
+Actuator::
+GetDynamicsType() const {
+  return m_type;
+}
+
 
 void
 Actuator::
@@ -128,21 +149,6 @@ Actuator::
 SetMaxForce(const double _total) {
   m_maxForce = _total;
 }
-
-
-std::string
-Actuator::
-GetLabel() const {
-  return m_label;
-}
-
-
-Robot*
-Actuator::
-GetRobot() const {
-  return m_robot;
-}
-
 
 /*--------------------------- Planning Interface -----------------------------*/
 
@@ -227,76 +233,55 @@ Execute(const Control::Signal& _s) const {
 void
 Actuator::
 Execute(const Control::Signal& _s, btMultiBody* const _model) const {
-  std::vector<double> force = ComputeForce(_s);
-  m_robot->GetDynamicsModel()->LocalToWorld(force, _model);
+  std::vector<double> computedForce = ComputeForce(_s);
+  m_robot->GetDynamicsModel()->LocalToWorld(computedForce, _model);
 
-#if 0
-  // Debug check for the applied force in the world frame.
-  std::cout << "Checking execution force: ";
-  for(const auto& val : force)
-    std::cout << val << " ";
-  std::cout << std::endl;
-#endif
-
-  auto iter = force.begin();
+  auto iter = computedForce.begin();
   auto mb = m_robot->GetMultiBody();
 
-  btVector3 scratch(0, 0, 0);
+  btVector3 force(0, 0, 0), torque(0, 0, 0);
 
   // Set base force.
   const size_t numPos = mb->PosDOF();
   for(size_t i = 0; i < numPos; ++i, ++iter)
-    scratch[i] = *iter;
-
-  switch(m_type) {
-    case Force:
-      _model->addBaseForce(scratch);
-      break;
-    case Velocity:
-      _model->setBaseVel(scratch);
-      break;
-    default:;
-  }
+    force[i] = *iter;
 
   // Set base torque.
-  scratch.setValue(0, 0, 0);
   switch(mb->OrientationDOF()) {
     case 1:
       // This is a planar rotational robot. We only want a torque in the Z
       // direction.
-      scratch[2] = *iter++;
+      torque[2] = *iter++;
       break;
     case 3:
       // This is a volumetric rotational robot. We need all three torque
       // directions.
       for(size_t i = 0; i < 2; ++i, ++iter)
-        scratch[i] = *iter;
+        torque[i] = *iter;
       break;
     default:
       // This robot does not rotate.
       ;
   }
 
-  switch(m_type) {
-    case Force:
-      _model->addBaseTorque(scratch);
-      break;
-    case Velocity:
-      _model->setBaseOmega(scratch);
-      break;
-    default:;
-  }
-
-  // Finally, add forces/velocities to the joints.
   const size_t numJoints = mb->JointDOF();
 
-  // Multiply by PI because bullet uses [ -PI : PI ].
   switch(m_type) {
-    case Force:
+    case DynamicsType::Force:
+      _model->addBaseForce(force);
+      _model->addBaseTorque(torque);
+
+      // Finally, add forces to the joints.
+      // Multiply by PI because bullet uses [ -PI : PI ].
       for(size_t i = 0; i < numJoints; ++i, ++iter)
         _model->addJointTorque(i, *iter * PI);
       break;
-    case Velocity:
+    case DynamicsType::Velocity:
+      _model->setBaseVel(force);
+      _model->setBaseOmega(torque);
+
+      // Finally, add velocities to the joints.
+      // Multiply by PI because bullet uses [ -PI : PI ].
       for(size_t i = 0; i < numJoints; ++i, ++iter)
         _model->setJointVel(i, *iter * PI);
       break;
@@ -341,8 +326,10 @@ ComputeControlSpace() {
 
 std::ostream&
 operator<<(std::ostream& _os, const Actuator& _a) {
-  _os << "Actuator (robot " << _a.m_robot << "):"
-      << "\n\tType: " << _a.m_type
+  _os << "Actuator (robot " << _a.GetRobot() << "):"
+      << "\n\tType: "
+      << (_a.GetDynamicsType() == Actuator::DynamicsType::Force ?
+          "force" : "velocity")
       << "\n\tMaxForce: " << _a.m_maxForce
       << "\n\tMask: ";
   for(const auto& m : _a.m_mask)

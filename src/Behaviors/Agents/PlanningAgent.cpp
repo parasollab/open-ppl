@@ -106,14 +106,6 @@ IsPlanning() const {
   return m_planning;
 }
 
-/*---------------------------- Planning Versions -----------------------------*/
-
-void
-PlanningAgent::
-SetPlanVersion(size_t _version) {
-  m_planVersion = _version;
-}
-
 
 size_t
 PlanningAgent::
@@ -133,6 +125,8 @@ GeneratePlan() {
     this->WorkFunction(problemCopy);
   });
 
+  ++m_planVersion;
+
   // Detach thread so that it automatically joins on completion.
   m_thread.detach();
 }
@@ -141,9 +135,16 @@ GeneratePlan() {
 void
 PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
+  // Initialize the solution.
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
+
+  // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask(), m_solution.get());
+
+  // Retarget the library's problem back on the global copy so that later uses
+  // of m_library which depend on the problem will not crash.
   m_library->SetMPProblem(m_robot->GetMPProblem());
+
   m_planning = false;
 }
 

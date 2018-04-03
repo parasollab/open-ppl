@@ -81,10 +81,7 @@ class Agent {
     /// Get the task that the agent is currently working on.
     MPTask* GetTask() const noexcept;
 
-    ///@}
-    ///@name Internal State
-    ///@{
-
+    /// Is this agent a child of some group/aggregate?
     virtual bool IsChild() const;
 
     ///@}
@@ -116,35 +113,6 @@ class Agent {
     /// pre-initialize state.
     virtual void Uninitialize() = 0;
 
-    ///@}
-
-    // TODO: Move all functions below this comment to protected.
-  
-    /// Check for proximity of other robots and return those that lie within
-    /// some threshold.
-    /// @param _distance The distance threshold.
-    /// @return the vector of Robots within the threshold.
-    std::vector<Agent*> ProximityCheck(const double _distance) const;
-
-    ///@name Time Horizon
-    ///@{
-   
-    /// Find agents within a robot's time horizon
-    /// @param _distance The distance theshold for the proximity check.
-    /// @param _tmax The maximum planning time.
-    std::vector<Agent*> TimeHorizonCheck(const double _distance, const size_t _tmax) const;
-    ///@}
-
-    /// Orders The agent to stop itself at its current position.
-    /// @param _steps The number of steps we wish to stop for.
-    void PauseAgent(const size_t _steps);
- 
-    /// Continue executing the last controls if time remains.
-    /// @return True if we still have time left on the last controls, false if
-    ///         we are done and need new controls.
-    bool ContinueLastControls();
-  protected:
-
     /// Find the smallest number of time steps which covers a given time
     /// interval.
     /// @param _dt The original time interval.
@@ -155,14 +123,17 @@ class Agent {
     /// problem time resolution and larger than the hardware time (if any).
     size_t MinimumSteps() const;
 
-    /// Compare the simulated robot state against some expected value.
-    /// @param _expected The expected robot state.
-    /// @note Even in the best case, there will be some
-    ///       difference between the simulated robot and the roadmap after the
-    ///       first rotation occurs. This is because of unavoidable round-off
-    ///       error related to coordinate frame transformations and (separately)
-    ///       euler-angle to rotation matrix conversions.
-    void CheckRobot(const Cfg& _expected) const;
+    /// Check for proximity of other robots and return those that lie within
+    /// some threshold.
+    /// @param _distance The distance threshold.
+    /// @return the vector of Robots within the threshold.
+    std::vector<Agent*> ProximityCheck(const double _distance) const;
+
+    /// Find agents within a robot's time horizon
+    /// @param _distance The distance theshold for the proximity check.
+    /// @param _tmax The maximum planning time.
+    std::vector<Agent*> TimeHorizonCheck(const double _distance,
+        const size_t _tmax) const;
 
     ///@}
     ///@name Agent Control
@@ -172,7 +143,18 @@ class Agent {
     /// @WARNING Arbitrarily setting the velocity does not respect the robot's
     ///          dynamics. It is OK for debugging and freezing a scenario upon
     ///          completion, but it is not physically realistic.
-    virtual void Halt();
+    void Halt();
+
+    /// Orders The agent to stop itself at its current position.
+    /// @param _steps The number of steps we wish to stop for.
+    void PauseAgent(const size_t _steps);
+
+  protected:
+
+    /// Continue executing the last controls if time remains.
+    /// @return True if we still have time left on the last controls, false if
+    ///         we are done and need new controls.
+    bool ContinueLastControls();
 
     /// Execute a set of controls on the simulated robot, and on the hardware if
     /// present.

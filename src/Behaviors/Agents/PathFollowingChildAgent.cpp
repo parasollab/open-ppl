@@ -6,6 +6,7 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Behaviors/Agents/BatteryConstrainedGroup.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
+#include "Behaviors/Controllers/ICreateController.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
@@ -38,6 +39,30 @@ PathFollowingChildAgent::
 ~PathFollowingChildAgent() {
   // Ensure agent is properly torn down.
   Uninitialize();
+}
+
+/*---------------------------- Simulation Interface --------------------------*/
+
+void
+PathFollowingChildAgent::
+Initialize() {
+  PathFollowingAgent::Initialize();
+
+  // This agent assumes we are using a velocity-based iCreate controller. Assert
+  // this now.
+  auto controller = m_robot->GetController();
+  ICreateController* test = dynamic_cast<ICreateController*>(controller);
+  if(!test)
+    throw RunTimeException(WHERE, "The robot must use an ICreateController "
+        "with this agent.");
+
+  const auto& actuators = m_robot->GetActuators();
+  for(const auto& pair : actuators) {
+    const auto& actuator = pair.second;
+    if(actuator->GetDynamicsType() == Actuator::DynamicsType::Force)
+      throw RunTimeException(WHERE, "The robot must use velocity actuators "
+          "with this agent.");
+  }
 }
 
 /*----------------------------- Child Interface ------------------------------*/
@@ -73,30 +98,7 @@ IsChild() const {
   return true;
 }
 
-
 /*------------------------------ Helpers -------------------------------------*/
-void
-PathFollowingChildAgent::
-Rotate(double& _angle, double _dt) {
-
-  Cfg point(m_robot);
-  point.SetData(std::vector<double>{0, 0, 0, 0, 0, 0});
-
-  //TODO: Hacky solution to make it rotate. Could be done in a better way,
-  //maybe?
-  Cfg point2(m_robot);
-  point2.SetData(std::vector<double>{0, 0, _angle / M_PI, 0, 0, 0});
-
-  auto bestControl = m_robot->GetController()->operator()
-    (point2, point, _dt);
-
-  // Execute the control.
-  const size_t steps = std::max(NearestNumSteps(_dt), MinimumSteps());
-
-  ExecuteControls({bestControl}, steps);
-  vector<double> temp = bestControl.GetForce();
-  _angle -= abs(temp[2]*_dt);
-}
 
 void
 PathFollowingChildAgent::
@@ -168,8 +170,6 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   this->Agent::ExecuteControls(_c, _steps);
 
   // Update odometry tracking.
-  /// @TODO This assumes we are using a velocity-based iCreate controller. Make
-  ///       this explicitly required or generalize.
   if(_c.size() > 1)
     throw RunTimeException(WHERE,
         "We are assuming that only one control will be passed in at a time.");

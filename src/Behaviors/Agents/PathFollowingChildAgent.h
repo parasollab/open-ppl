@@ -27,6 +27,12 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     virtual ~PathFollowingChildAgent();
 
     ///@}
+    ///@name Simulation Interface
+    ///@{
+
+    virtual void Initialize() override;
+
+    ///@}
     ///@name Child Interface
     ///@{
 
@@ -38,11 +44,6 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     /// threshold.
     bool IsBatteryHigh();
 
-    ///@}
-    
-    ///@name Internal State Functions
-    ///@{
-   
     ///Set m_parentAgent to the passed in group controller
     ///@param _parent The parent agent.
     void SetParentAgent(BatteryConstrainedGroup* const _parent);
@@ -52,41 +53,35 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     /// Finds the battery break along its path and communicates it with the
     /// parent agent.
     void SetBatteryBreak();
+
     ///@}
 
   protected:
 
-    ///@name Helper Functions
-    ///@{
-
-    void Rotate(double&, double);
-
     ///@}
     ///@name Planning Helpers
     ///@{
-    
+
     virtual void WorkFunction(std::shared_ptr<MPProblem> _problem) override;
 
     ///@}
     ///@name Task Helpers
     ///@{
-    
-    virtual bool SelectTask() override;
 
-    // TODO: Remove this.
-    // virtual bool EvaluateTask() override;
+    virtual bool SelectTask() override;
 
     ///@}
     ///@name Controller Helpers
     ///@{
 
-    virtual void ExecuteControls(const ControlSet& _c, const size_t _steps) override;
+    virtual void ExecuteControls(const ControlSet& _c, const size_t _steps)
+        override;
 
     ///@}
-
     ///@name Internal State
     ///@{
 
+    /// The parent group to which this agent belongs.
     BatteryConstrainedGroup* m_parentAgent{nullptr};
 
     double m_distance{0.0}; ///< The distance traveled since localizing.
@@ -94,7 +89,6 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     bool reactive{true};
 
     ///@}
-    //
 
 };
 

@@ -59,6 +59,7 @@ HasPlan() const {
   return !m_path.empty();
 }
 
+
 void
 PathFollowingAgent::
 ClearPlan() {

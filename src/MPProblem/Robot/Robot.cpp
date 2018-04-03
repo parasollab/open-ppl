@@ -66,7 +66,8 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
                         forward(m_multibody->DOF(),  1);
     m_actuators["default"] = std::unique_ptr<Actuator>(
         new Actuator(this, "default",
-          IsNonholonomic() ? Actuator::Force : Actuator::Velocity));
+          IsNonholonomic() ? Actuator::DynamicsType::Force
+                           : Actuator::DynamicsType::Velocity));
     m_actuators["default"]->SetLimits(reverse, forward);
     m_actuators["default"]->SetMaxForce(1);
 

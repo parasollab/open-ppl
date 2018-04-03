@@ -254,10 +254,10 @@ void
 BatteryConstrainedGroup::
 ArbitrateCollision() {
   std::vector<std::pair<Agent*, std::vector<Agent*>>> needReplan;
-  for(auto agent : m_memberAgents){
+  for(auto agent : m_memberAgents) {
     PathFollowingChildAgent* childAgent =
       static_cast<PathFollowingChildAgent*>(agent);
-    if(childAgent->IsPlanning() || childAgent->ContinueLastControls())
+    if(childAgent->IsPlanning())
       continue;
     const double distanceThreshold = 6. *
       childAgent->GetRobot()->GetMultiBody()->GetBoundingSphereRadius();
