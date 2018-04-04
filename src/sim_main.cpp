@@ -3,6 +3,7 @@
 #include "Visualization/Gui/Setup.h"
 
 #include "sandbox/gui/main_window.h"
+#include "sandbox/gui/gl_widget.h"
 
 
 int
@@ -55,6 +56,7 @@ main(int _argc, char** _argv) {
     // Load the simulation into the visualizer and start it.
     window.visualization(simulation);
     window.show();
+    window.gl()->start();
     app.exec();
 
     // Clean up the simulation and problem when we are done.
