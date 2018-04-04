@@ -25,7 +25,7 @@ main(int _argc, char** _argv) {
     // Create storage for the solution and ask the library to solve our problem.
     /// @TODO Generalize this to handle more than just the first task.
     Robot* const robot = problem->GetRobots().front().get();
-    MPTask* task = problem->GetTasks(robot).front();
+    MPTask* task = problem->GetTasks(robot).front().get();
     pmpl->Solve(problem, task);
 
     // Release resourcess.

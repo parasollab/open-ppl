@@ -331,8 +331,10 @@ AddRobots() {
     if(robot->IsVirtual())
       continue;
 
-    if(!m_editMode)
-      m_engine->AddRobot(robot);
+    if(!m_editMode) {
+      auto bulletModel = m_engine->AddRobot(robot);
+      robot->SetDynamicsModel(bulletModel);
+    }
 
     auto multiBody = robot->GetMultiBody();
     this->add_drawable(new DrawableMultiBody(multiBody));

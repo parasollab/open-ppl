@@ -146,9 +146,6 @@ AddRobot(Robot* const _robot) {
 
   /// @TODO We need a way to set initial velocities for the robot.
 
-  // Set the bullet model as the robot's dynamics model.
-  _robot->SetDynamicsModel(bulletModel);
-
   // If the robot is car-like, create the necessary callbacks.
   if(_robot->IsCarlike())
     CreateCarlikeCallback(bulletModel);
