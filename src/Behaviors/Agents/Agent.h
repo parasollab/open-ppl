@@ -76,7 +76,7 @@ class Agent {
     /// Set the task for this agent.
     /// @param _task The new task for this agent. Should be owned by the
     ///              MPProblem.
-    virtual void SetTask(std::shared_ptr<MPTask> const _task);
+    virtual void SetTask(const std::shared_ptr<MPTask> _task);
 
     /// Get the task that the agent is currently working on.
     std::shared_ptr<MPTask> GetTask() const noexcept;

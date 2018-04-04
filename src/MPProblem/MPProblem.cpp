@@ -68,6 +68,8 @@ operator=(const MPProblem& _other) {
     }
   }
 
+  m_pointRobot.reset(new Robot(this, *_other.m_pointRobot));
+
   m_xmlFilename = _other.m_xmlFilename;
   m_baseFilename = _other.m_baseFilename;
   m_filePath = _other.m_filePath;
@@ -101,6 +103,11 @@ ReadXMLFile(const string& _filename) {
   // Open the XML and get the root and input nodes.
   XMLNode mpNode(_filename, "MotionPlanning");
   XMLNode input(_filename, "Problem");
+
+  // Check the input node for a base filename. This will only be used by the
+  // simulator at present (will be overwritten for individual planning runs).
+  m_baseFilename = input.Read("baseFilename", false, "", "The output base name "
+      "for simulator stats.");
 
   // Parse the input node to set the environment, robot(s), and query.
   if(!envIsSet)

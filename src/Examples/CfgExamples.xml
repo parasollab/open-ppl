@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
 
-  <!-- Here we specify input files, such as environment and query. -->
-  <Problem>
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="example">
 
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
@@ -599,25 +600,27 @@
       <!-- Example nodes for a workspace decomposition with tetgen. Be aware
            that each decomposition defined will be created immediately upon
            initialization. If you don't need them, comment them out to save
-           pre-processing time. -->
+           pre-processing time. These examples would create new decompositions.
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
+      -->
 
       <!-- The same workspace decomposition nodes, this time reading in from
-           saved files like 'coarse.ele' and 'coarse.node'.
+           saved files like 'coarse.ele' and 'coarse.node'. This is preferred as
+           we cannot completely control the randomness in the CGAL functions
+           which generate the decompositions. -->
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
         io="read" baseFilename="3D/coarse"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
         io="read" baseFilename="3D/quality"/>
-      -->
 
       <!-- Different objects need to work with different granularities when it
            comes to decomposition-based tools. You can define multiple
            topological maps for this purpose. -->
       <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
-        gridSize=".5"/>
+        gridSize="1"/>
       <TopologicalMap label="tm-fine" decompositionLabel="fine"
-        gridSize=".5"/>
+        gridSize="1"/>
 
       <ReebGraphConstruction debug="false" write="false" filename=""/>
 

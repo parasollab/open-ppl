@@ -47,8 +47,9 @@ class PlanningAgent : public Agent {
     /// @return True if the agent has a plan.
     virtual bool HasPlan() const = 0;
 
-    /// Clear the agent's current plan.
-    virtual void ClearPlan() = 0;
+    /// Clear the agent's current plan. Overrides should always call this base
+    /// method to update the plan version.
+    virtual void ClearPlan();
 
     /// Is the agent currently generating a plan.
     /// @return True if the agent is generating a plan.
@@ -90,8 +91,7 @@ class PlanningAgent : public Agent {
     ///@}
     ///@name Internal State
     ///@{
-    //TODO Find out why these need to be unique bc it's super hard to get access
-    //to them at the moment.
+
     std::unique_ptr<MPLibrary> m_library;   ///< This agent's planning library.
     std::unique_ptr<MPSolution> m_solution; ///< The current solution.
     std::thread m_thread;                   ///< Thread for agent to run PMPL.

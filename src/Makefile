@@ -3,7 +3,7 @@
 # Set platform, debug mode, address sanitizer, and parallel compile if not
 # already set.
 platform ?= LINUX_gcc
-debug    ?= 1
+debug    ?= 0
 asan     ?= 0
 parallel ?= 0
 

@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <memory>
 #include <mutex>
 #include <thread>
 
@@ -12,6 +13,7 @@ class BulletEngine;
 class DrawableMultiBody;
 class MPProblem;
 class MultiBody;
+class StatClass;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,19 +32,23 @@ class Simulation : public base_visualization {
     /// Create a simulation of an MPProblem.
     /// @param[in] _problem The MPProblem to simulate.
     /// @param[in] _edit Start in edit mode instead of the physical simulator?
-    Simulation(MPProblem* const _problem, const bool _edit);
-
-    virtual ~Simulation();
+    Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit);
 
   public:
+
+    virtual ~Simulation();
 
     /// Create the singleton.
     /// @param[in] _problem The MPProblem to simulate.
     /// @param[in] _edit Start in edit mode instead of the physical simulator?
-    static void Create(MPProblem* const _problem, const bool _edit = false);
+    static void Create(std::shared_ptr<MPProblem> _problem,
+        const bool _edit = false);
 
     /// Get the singleton.
     static Simulation* Get();
+
+    /// Get the simulator's stat class for time profiling.
+    static StatClass* GetStatClass();
 
     ///@}
     ///@name Simulation Interface
@@ -110,7 +116,7 @@ class Simulation : public base_visualization {
     ///@name Internal State
     ///@{
 
-    MPProblem* const m_problem;        ///< The MPProblem we are simulating.
+    const std::shared_ptr<MPProblem> m_problem;  ///< The MPProblem we are simulating.
     BulletEngine* m_engine{nullptr};   ///< An engine to drive the simulation.
 
     mutable std::mutex m_guard;        ///< Lock for updating object transforms.
@@ -122,6 +128,8 @@ class Simulation : public base_visualization {
     size_t m_backlogMax{1};              ///< Max number of precomputed steps.
 
     const bool m_editMode{false};          ///< Are we in edit mode?
+
+    std::unique_ptr<StatClass> m_stats;  ///< StatClass for time profiling.
 
     ///@}
     ///@name Deleted Functions

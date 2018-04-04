@@ -63,6 +63,7 @@ HasPlan() const {
 void
 PathFollowingAgent::
 ClearPlan() {
+  PlanningAgent::ClearPlan();
   m_path.clear();
   m_pathIndex = 0;
 }

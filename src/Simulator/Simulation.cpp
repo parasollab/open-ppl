@@ -1,6 +1,7 @@
 #include "Simulation.h"
 
 #include <iostream>
+#include <fstream>
 
 #include "BulletEngine.h"
 #include "Conversions.h"
@@ -8,6 +9,7 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Utilities/MetricUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Visualization/DrawableMultiBody.h"
 
@@ -17,12 +19,12 @@
 /*---------------------------- Construction ----------------------------------*/
 
 /// Create the singleton.
-static Simulation* s_singleton{nullptr};
+static std::unique_ptr<Simulation> s_singleton;
 
 
 Simulation::
-Simulation(MPProblem* const _problem, const bool _edit)
-  : m_problem(_problem), m_editMode(_edit) {
+Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit)
+  : m_problem(_problem), m_editMode(_edit), m_stats(new StatClass()) {
   // If we are in edit mode, then the backlog is annoying rather than helpful.
   // Disable it in that case.
   if(m_editMode)
@@ -33,23 +35,37 @@ Simulation(MPProblem* const _problem, const bool _edit)
 Simulation::
 ~Simulation() {
   reset();
-  s_singleton = nullptr;
+
+  // Print the stats upon deletion.
+  std::ofstream osStat(m_problem->GetPath(m_problem->GetBaseFilename() +
+      "-sim.stat"));
+  m_stats->PrintAllStats(osStat);
+
+  // Release the singleton so that it points to nothing.
+  s_singleton.release();
 }
 
 
 void
 Simulation::
-Create(MPProblem* const _problem, const bool _edit) {
-  if(s_singleton)
+Create(std::shared_ptr<MPProblem> _problem, const bool _edit) {
+  if(s_singleton.get())
     throw RunTimeException(WHERE, "THERE CAN ONLY BE ONE!");
-  s_singleton = new Simulation(_problem, _edit);
+  s_singleton.reset(new Simulation(_problem, _edit));
 }
 
 
 Simulation*
 Simulation::
 Get() {
-  return s_singleton;
+  return s_singleton.get();
+}
+
+
+StatClass*
+Simulation::
+GetStatClass() {
+  return s_singleton->m_stats.get();
 }
 
 /*-------------------------- Simulation Interface ----------------------------*/
@@ -62,12 +78,12 @@ Initialize() {
     return;
 
   // Require a non-null problem to initialize.
-  if(!m_problem)
+  if(!m_problem.get())
     throw RunTimeException(WHERE, "Simulation error: cannot initialize with a "
       "null problem!");
 
   // Create a bullet engine.
-  m_engine = new BulletEngine(m_problem);
+  m_engine = new BulletEngine(m_problem.get());
 
   // Add the problem objects to the simulation.
   AddBBX();

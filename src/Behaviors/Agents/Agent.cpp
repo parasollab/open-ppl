@@ -44,9 +44,10 @@ GetRobot() const noexcept {
   return m_robot;
 }
 
+
 void
 Agent::
-SetTask(std::shared_ptr<MPTask> const _task) {
+SetTask(const std::shared_ptr<MPTask> _task) {
   m_task = _task;
 }
 
@@ -56,7 +57,6 @@ Agent::
 GetTask() const noexcept {
   return m_task;
 }
-
 
 /*------------------------------ Internal State ------------------------------*/
 

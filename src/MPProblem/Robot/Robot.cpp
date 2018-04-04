@@ -162,24 +162,14 @@ Robot(MPProblem* const _p, const Robot& _r)
   if(_r.m_dynamicsModel)
     SetDynamicsModel(nullptr);
 
-  // TODO
   // We will not copy the agent because each one must be created for a specific
   // robot object. We will only copy the agent label and require the Simulation
   // to handle the rest.
-  if(_r.m_agent)
-    std::cerr << "WARNING: copying a robot does not copy the agent object "
-              << "because each must be created for a terface object driving a "
-              << "given piece of hardware at a time."
-              << std::endl;
 
   // We will not copy the hardware interfaces because there should only be one
   // such object for a given piece of hardware. Warn the user in this case.
-  if(_r.m_hardware.size())
-    std::cerr << "WARNING: copying a robot does not copy the hardware interface "
-              << "because there should only be one interface object driving a "
-              << "given piece of hardware at a time."
-              << std::endl;
 
+  // The battery is emulated and may be copied safely.
   if(_r.m_battery.get())
     m_battery = std::unique_ptr<Battery>(new Battery(*_r.m_battery));
 }

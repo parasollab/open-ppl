@@ -14,7 +14,7 @@ main(int _argc, char** _argv) {
       throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e} options.xml");
 
     // Make problem object.
-    MPProblem* problem = new MPProblem(_argv[2]);
+    std::shared_ptr<MPProblem> problem(new MPProblem(_argv[2]));
 
     // Position the robot by sampling from the first task and set colors.
     /// @TODO Decide on a way to declare the starting configuration either
@@ -61,7 +61,6 @@ main(int _argc, char** _argv) {
 
     // Clean up the simulation and problem when we are done.
     simulation->Uninitialize();
-    delete problem;
 
     return 0;
   }

@@ -64,6 +64,7 @@ HasPlan() const {
 void
 RoadmapFollowingAgent::
 ClearPlan() {
+  PlanningAgent::ClearPlan();
   m_solution->GetPath()->Clear();
   m_currentSubgoal = VIDIterator();
   m_edge = nullptr;

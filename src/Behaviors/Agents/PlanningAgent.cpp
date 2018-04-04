@@ -1,5 +1,9 @@
 #include "PlanningAgent.h"
 
+#include "Simulator/Simulation.h"
+#include "Utilities/MetricUtils.h"
+#include "Utilities/MetricUtils.h"
+
 #include <iostream>
 
 
@@ -40,6 +44,11 @@ Initialize() {
   // Initialize the agent's planning library.
   m_library = std::unique_ptr<MPLibrary>(new MPLibrary(xmlFile));
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
+
+  // Initialize a clock to track this agent's total planning time. This is done
+  // to ensure that the stat's clock map isn't adding elements across threads.
+  const std::string clockName = "Planning::" + m_robot->GetLabel();
+  Simulation::GetStatClass()->ClearClock(clockName);
 }
 
 
@@ -52,15 +61,12 @@ Step(const double _dt) {
   if(m_planning)
     return;
 
-  //std::cout << "Continue last controls" << std::endl; 
   // Wait for the previous controls to finish if they still have time remaining.
   if(ContinueLastControls())
     return;
 
-  //std::cout << "G/ST" << std::endl; 
   // If we have no task, select the next one.
   if(!GetTask() && !SelectTask()) {
-    /// @TODO: Helper's battery level is being depleted here, must fix this.
     // If no incomplete tasks remain, we are done.
     if(m_debug)
       std::cout << "Completed all tasks, halting robot." << std::endl;
@@ -68,21 +74,15 @@ Step(const double _dt) {
     return;
   }
 
-  //std::cout << "HP" << std::endl; 
   // If we have no plan, generate a plan.
   if(!HasPlan()) {
-    //std::cout << "GP" << std::endl;
     GeneratePlan();
     return;
   }
 
-  //std::cout << "EvT" << std::endl; 
   // Evaluate task progress. If task is still valid, continue execution.
-  if(EvaluateTask()){
-    //std::cout << "ExT" << std::endl;
+  if(EvaluateTask())
     ExecuteTask(_dt);
-  }
-
 }
 
 
@@ -98,6 +98,7 @@ Uninitialize() {
   SetTask(nullptr);
 }
 
+
 void
 PlanningAgent::
 SetTask(std::shared_ptr<MPTask> const _task) {
@@ -106,6 +107,13 @@ SetTask(std::shared_ptr<MPTask> const _task) {
 }
 
 /*------------------------------- Planning -----------------------------------*/
+
+void
+PlanningAgent::
+ClearPlan() {
+  ++m_planVersion;
+}
+
 
 bool
 PlanningAgent::
@@ -126,9 +134,11 @@ void
 PlanningAgent::
 GeneratePlan() {
   m_planning = true;
+  const std::string clockName = "Planning::" + m_robot->GetLabel();
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
-  m_planVersion++;
-  m_thread = std::thread([this, problemCopy](){
+
+  m_thread = std::thread([this, problemCopy, clockName]() {
+    MethodTimer mt(Simulation::GetStatClass(), clockName);
     this->WorkFunction(problemCopy);
   });
 
@@ -159,7 +169,6 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 PlanningAgent::
 SelectTask() {
-  //std::cout << "In SelectTask in Planning Agent" << std::endl;
   auto tasks = m_robot->GetMPProblem()->GetTasks(m_robot);
 
   // Return false if there are no unfinished tasks.
@@ -169,7 +178,7 @@ SelectTask() {
   }
 
   // Otherwise, choose the next one.
-  SetTask(std::shared_ptr<MPTask>(tasks.front()));
+  SetTask(tasks.front());
   GetTask()->SetStarted();
   return true;
 }

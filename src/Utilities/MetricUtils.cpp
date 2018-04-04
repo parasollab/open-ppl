@@ -270,6 +270,106 @@ SetAuxDest(const std::string& _s) {
   m_auxFileDest = _s;
 }
 
+
+void
+StatClass::
+PrintAllStats(std::ostream& _os) {
+  // Output sampler statistics.
+  if(!m_samplerInfo.empty()) {
+    size_t totalAttempts = 0, totalGenerated = 0;
+    _os << "\n\n"
+        << std::setw(60) << std::left  << "Sampler Statistics"
+        << std::setw(10) << std::right << "Attempts"
+        << std::setw(10) << std::right << "Successes"
+        << "\n\n";
+
+    for(const auto& info : m_samplerInfo) {
+      _os << "  "
+          << std::setw(58) << std::left  << info.first
+          << std::setw(10) << std::right << info.second.first
+          << std::setw(10) << std::right << info.second.second
+          << std::endl;
+      totalAttempts += info.second.first;
+      totalGenerated += info.second.second;
+    }
+
+    if(totalAttempts > 0)
+      _os << "  "
+          << std::setw(58) << std::left << "All Samplers"
+          << std::setw(10) << std::right << totalAttempts
+          << std::setw(10) << std::right << totalGenerated
+          << "\n  Success Rate: "
+          << std::setprecision(3) << totalGenerated * 100.0 / totalAttempts << "%"
+          << std::endl;
+  }
+
+  // Output local planner statistics.
+  if(!m_lpInfo.empty()) {
+    _os << "\n\n"
+        << std::setw(44) << std::left  << "Local Planner Statistics"
+        << std::setw(12) << std::right << "Attempts"
+        << std::setw(12) << std::right << "Connections"
+        << std::setw(12) << std::right << "CD Calls"
+        << "\n\n";
+
+    for(const auto& info : m_lpInfo)
+      _os << "  "
+          << std::setw(42) << std::left  << info.first
+          << std::setw(12) << std::right << std::get<0>(info.second)
+          << std::setw(12) << std::right << std::get<1>(info.second)
+          << std::setw(12) << std::right << std::get<2>(info.second)
+          << std::endl;
+  }
+
+  // Ouput CD statistics.
+  if(!m_isCollByName.empty()) {
+    _os << "\n\n"
+        << std::setw(70) << std::left  << "Collision Detection Calls"
+        << std::setw(10) << std::right << "Count"
+        << "\n\n";
+    for(const auto& info : m_isCollByName)
+      _os << "  "
+          << std::setw(68) << std::left  << info.first
+          << std::setw(10) << std::right << info.second
+          << std::endl;
+    _os << "  "
+        << std::setw(68) << std::left  << "All Collision Detectors"
+        << std::setw(10) << std::right << m_isCollTotal
+        << std::endl;
+  }
+
+  // Output other statistics.
+  if(!m_stats.empty()) {
+    _os << "\n\n"
+        << std::setw(70) << std::left  << "Other Statistics"
+        << std::setw(10) << std::right << "Value"
+        << "\n\n";
+    for(const auto& stat : m_stats)
+      _os << "  "
+          << std::setw(68) << std::left  << stat.first
+          << std::setw(10) << std::right << stat.second
+          << std::endl;
+  }
+
+  // Output clocks.
+  _os << "\n\n"
+      << std::setw(66) << std::left  << "Clock Name"
+      << std::setw(14) << std::right << "Time (Seconds)"
+      << "\n\n";
+  for(auto& clock : m_clockMap)
+    _os << "  "
+        << std::setw(68) << std::left << clock.first
+        << std::setw(10) << std::right << clock.second.GetSeconds()
+        << std::endl;
+
+  // Write out history files.
+  for(const auto& hist : m_histories) {
+    std::ofstream ofs(m_auxFileDest + "." + hist.first + ".hist");
+    for(const auto& item : hist.second)
+      ofs << item << std::endl;
+  }
+}
+
 /*------------------------------- MethodTimer --------------------------------*/
 
 MethodTimer::

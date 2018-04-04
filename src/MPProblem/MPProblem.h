@@ -95,7 +95,8 @@ class MPProblem final
     /// Get the unfinished tasks currently assigned to a given robot.
     /// @param _robot The robot to retrieve tasks for.
     /// @return The set of tasks currently assigned to _robot.
-    std::vector<std::shared_ptr<MPTask>> GetTasks(Robot* const _robot) const noexcept;
+    std::vector<std::shared_ptr<MPTask>> GetTasks(Robot* const _robot) const
+        noexcept;
 
     /// Add a task to the problem. The assigned robot will be taken from the
     /// task object.
