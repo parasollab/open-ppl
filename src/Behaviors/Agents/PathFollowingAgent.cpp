@@ -6,6 +6,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
+#include "Simulator/Simulation.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -63,11 +64,12 @@ HasPlan() const {
 void
 PathFollowingAgent::
 ClearPlan() {
+  if(HasPlan() and Simulation::Get())
+    Simulation::Get()->RemovePath(m_pathVisualID);
   PlanningAgent::ClearPlan();
   m_path.clear();
   m_pathIndex = 0;
 }
-
 
 /*----------------------------- Planning Helpers -----------------------------*/
 
@@ -83,6 +85,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   if(m_path.empty())
     throw RunTimeException(WHERE, "PMPL failed to produce a solution.");
 
+  m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
 }
 
 /*------------------------------- Task Helpers -------------------------------*/

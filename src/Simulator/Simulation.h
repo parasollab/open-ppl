@@ -8,9 +8,12 @@
 #include <thread>
 
 #include "sandbox/base_visualization.h"
+#include "nonstd/collection.h"
 
 class BulletEngine;
+class Cfg;
 class DrawableMultiBody;
+class DrawablePath;
 class MPProblem;
 class MultiBody;
 class StatClass;
@@ -78,6 +81,16 @@ class Simulation : public base_visualization {
     /// @param _max The maximum number of backlogged frames to compute.
     void SetBacklog(const size_t _max);
 
+    /// Draw a set of path edges as a series of connecting lines.
+    /// @param _path The path to render.
+    /// @param _c The line color.
+    /// @return The ID of the path.
+    size_t AddPath(const std::vector<Cfg>& _path, glutils::color _c);
+
+    /// Remove a path from the scene.
+    /// @param _id The path ID.
+    void RemovePath(const size_t _id);
+
     ///@}
     ///@name Locking
     ///@{
@@ -130,6 +143,8 @@ class Simulation : public base_visualization {
     const bool m_editMode{false};          ///< Are we in edit mode?
 
     std::unique_ptr<StatClass> m_stats;  ///< StatClass for time profiling.
+
+    nonstd::collection<DrawablePath> m_paths; ///< Paths we are drawing.
 
     ///@}
     ///@name Deleted Functions

@@ -12,6 +12,7 @@
 #include "Utilities/MetricUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Visualization/DrawableMultiBody.h"
+#include "Visualization/DrawablePath.h"
 
 #include "nonstd/io.h"
 
@@ -196,6 +197,9 @@ render() {
       static_cast<DrawableMultiBody*>(d)->UpdateTransform();
   }
 
+  for(auto d : m_paths.get_all())
+    d->render();
+
   // Rrrrrender.
   base_visualization::render();
 }
@@ -252,6 +256,26 @@ void
 Simulation::
 SetBacklog(const size_t _max) {
   m_backlogMax = _max;
+}
+
+
+size_t
+Simulation::
+AddPath(const std::vector<Cfg>& _path, glutils::color _c) {
+  std::lock_guard<std::mutex> lock(m_guard);
+  if(_path.empty())
+    throw RunTimeException(WHERE, "Cannot draw an empty path.");
+
+  return m_paths.add(new DrawablePath(_path, _c));
+}
+
+
+void
+Simulation::
+RemovePath(const size_t _id) {
+  std::lock_guard<std::mutex> lock(m_guard);
+  DrawablePath* path = m_paths.take(_id);
+  delete path;
 }
 
 /*------------------------------------- Locking ------------------------------*/

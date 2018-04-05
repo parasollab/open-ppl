@@ -336,6 +336,7 @@ SIM_SRCS := \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableMultiBody.cpp \
+  Visualization/DrawablePath.cpp \
   Visualization/Gui/EditBodyDialog.cpp \
   Visualization/Gui/EditCfgDialog.cpp \
   Visualization/Gui/EditConnectionDialog.cpp \

@@ -35,7 +35,7 @@ class PathFollowingAgent : public PlanningAgent {
     ///@}
     ///@name Planning
     ///@{
-    
+
     virtual bool HasPlan() const override;
 
     virtual void ClearPlan() override;
@@ -63,6 +63,8 @@ class PathFollowingAgent : public PlanningAgent {
 
     std::vector<Cfg> m_path; ///< The path to follow.
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
+
+    size_t m_pathVisualID{0}; ///< The ID of the path drawing.
 
     ///@}
 

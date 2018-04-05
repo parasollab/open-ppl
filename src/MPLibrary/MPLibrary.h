@@ -250,6 +250,7 @@ class MPLibraryType final
 
     MPProblem* GetMPProblem() const noexcept;
     void SetMPProblem(MPProblem* const _problem) noexcept;
+
     MPTask* GetTask() const noexcept;
 
     const std::string& GetBaseFilename() const noexcept;
@@ -615,12 +616,13 @@ GetMPProblem() const noexcept {
   return m_problem;
 }
 
+
 template <typename MPTraits>
-void 
+void
 MPLibraryType<MPTraits>::
 SetMPProblem(MPProblem* const _problem) noexcept
 {
-  m_problem = _problem;  
+  m_problem = _problem;
 }
 
 
