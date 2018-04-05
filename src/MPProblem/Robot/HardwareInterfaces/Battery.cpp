@@ -5,7 +5,7 @@ using namespace std;
 
 Battery::
 Battery() {
-  SetValues(30,30);
+  SetValues(60,60);
 }
 
 void

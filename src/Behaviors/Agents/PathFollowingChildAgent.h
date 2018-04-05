@@ -57,6 +57,10 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     /// Sets the paused task that the helper will use to restart the path the 
     /// worker was working on.
     void SetPausedTask(std::shared_ptr<MPTask> _pausedTask);
+    
+    /// Sets the amount of time the path is expected to take.
+    /// @param _pathTime Amount of time path is expected to take;
+    void SetPathTime(double _pathTime);
 
     /// Returns the paused task that the helper is supposed to resume
     std::shared_ptr<MPTask> GetPausedTask();
@@ -93,6 +97,8 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     double m_distance{0.0}; ///< The distance traveled since localizing.
 
     bool proactive{false};
+
+    double pathTime{0.0};
 
     std::shared_ptr<MPTask> m_pausedTask;
     ///@}

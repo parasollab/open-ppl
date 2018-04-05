@@ -253,6 +253,8 @@ class MPLibraryType final
 
     MPTask* GetTask() const noexcept;
 
+    void SetTask(MPTask* const _task) noexcept;
+
     const std::string& GetBaseFilename() const noexcept;
     void SetBaseFilename(const std::string& _s) noexcept;
 
@@ -634,6 +636,13 @@ GetTask() const noexcept {
   return m_task;
 }
 
+template <typename MPTraits>
+inline
+void
+MPLibraryType<MPTraits>::
+SetTask(MPTask* const _task) noexcept {
+  m_task = _task;
+}
 
 template <typename MPTraits>
 inline

@@ -266,6 +266,8 @@ ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
   // Convert steps to time and enqueue the command.
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   hardware->EnqueueCommand(_c, _steps * timeRes);
+  //m_robot->GetBattery()->UpdateValue(_steps * timeRes * depletionRate);
+
 }
 
 /*----------------------------------------------------------------------------*/

@@ -39,7 +39,6 @@ Test(const Cfg& _start, const Control& _control, const double _dt) {
     throw RunTimeException(WHERE, "Can't test dynamics model on a configuration "
         "for a different robot.");
   ConfigureSimulatedState(_start, m_model);
-
 #if 0
   // Verify our conversions. Use this test to assert that we get back the same
   // Cfg that we put in to bullet.

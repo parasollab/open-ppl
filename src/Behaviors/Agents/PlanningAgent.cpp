@@ -76,6 +76,7 @@ Step(const double _dt) {
 
   // If we have no plan, generate a plan.
   if(!HasPlan()) {
+    PauseAgent(1);
     GeneratePlan();
     return;
   }
@@ -83,6 +84,8 @@ Step(const double _dt) {
   // Evaluate task progress. If task is still valid, continue execution.
   if(EvaluateTask())
     ExecuteTask(_dt);
+  else 
+    PauseAgent(1);
 }
 
 
@@ -111,7 +114,8 @@ SetTask(std::shared_ptr<MPTask> const _task) {
 void
 PlanningAgent::
 ClearPlan() {
-  ++m_planVersion;
+  if(HasPlan())
+    ++m_planVersion;
 }
 
 

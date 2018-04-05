@@ -247,6 +247,7 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The worker member which could be pausing its task.
     void BatteryCheck(Agent* const _member);
 
+    bool IsProactive();
     
     
     ///@}

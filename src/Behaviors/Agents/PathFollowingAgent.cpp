@@ -110,12 +110,15 @@ EvaluateTask() {
               << std::endl;
 
   if(GetTask()->EvaluateGoalConstraints({current})) {
-    if(true)
+    if(true){
       std::cout << "Reached the end of the path." << std::endl;
+      //std::cout << "Time: " << m_parentAgent->GetCurrentTime() << std::endl;
+    }
     GetTask()->SetCompleted();
     SetTask(nullptr);
     return false;
   }
+
   // Advance our subgoal while we are within the distance threshold of the next
   // one.
   while(distance < threshold) {
@@ -129,7 +132,7 @@ EvaluateTask() {
     ++m_pathIndex;
 
     // Check if we have completed the path. If so, this task is complete.
-    if(m_pathIndex == m_path.size() or GetTask()->EvaluateGoalConstraints({current}))
+    if(m_pathIndex == m_path.size())
     {
       if(true)
         std::cout << "Reached the end of the path." << std::endl;
@@ -161,6 +164,8 @@ ExecuteTask(const double _dt) {
   const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
   auto bestControl = m_robot->GetController()->operator()(current,
       m_path[m_pathIndex], time);
+  //std::cout << "Best control on actual robot: " << bestControl << std::endl;
+  //std::cout << "Battery: " << m_robot->GetBattery()->GetCurLevel() << std::endl;
   ExecuteControls({bestControl}, steps);
 }
 

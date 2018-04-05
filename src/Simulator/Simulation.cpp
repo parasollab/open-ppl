@@ -17,6 +17,8 @@
 #include "nonstd/io.h"
 
 
+main_window* theOneWindow = nullptr;
+
 /*---------------------------- Construction ----------------------------------*/
 
 /// Create the singleton.
@@ -36,16 +38,21 @@ Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit)
 Simulation::
 ~Simulation() {
   reset();
+  PrintStatFile();
+  // Release the singleton so that it points to nothing.
+  s_singleton.release();
+}
 
+void
+Simulation::
+PrintStatFile(){
   // Print the stats upon deletion.
   std::ofstream osStat(m_problem->GetPath(m_problem->GetBaseFilename() +
       "-sim.stat"));
   m_stats->PrintAllStats(osStat);
 
-  // Release the singleton so that it points to nothing.
-  s_singleton.release();
+  std::cout << "File path: " <<  m_problem->GetPath(m_problem->GetBaseFilename()) << std::endl; 
 }
-
 
 void
 Simulation::

@@ -18,6 +18,9 @@ class MPProblem;
 class MultiBody;
 class StatClass;
 
+class main_window;
+extern main_window* theOneWindow;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Simulate an MPProblem using the bullet physics engine. Rendering is
@@ -41,6 +44,7 @@ class Simulation : public base_visualization {
 
     virtual ~Simulation();
 
+    void PrintStatFile();
     /// Create the singleton.
     /// @param[in] _problem The MPProblem to simulate.
     /// @param[in] _edit Start in edit mode instead of the physical simulator?
