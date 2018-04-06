@@ -104,18 +104,18 @@ ReadFieldString(istream& _is, CountingStreamBuffer& _cbs,
 
 
 vector<string>
-GetTags(string _stags, string _delim) {
+GetTokens(string _s, string _delimiters) {
   vector<string> tokens;
   int cutAt;
-  while( (cutAt = _stags.find_first_of(_delim)) != (int)_stags.npos ) {
-    if(cutAt > 0) {
-      tokens.push_back(_stags.substr(0,cutAt));
-    }
-    _stags = _stags.substr(cutAt+1);
+  while( (cutAt = _s.find_first_of(_delimiters)) != (int)_s.npos ) {
+    if(cutAt > 0)
+      tokens.push_back(_s.substr(0, cutAt));
+    _s = _s.substr(cutAt + 1);
   }
-  if(_stags.length() > 0){
-    tokens.push_back(_stags);
-  }
+
+  if(_s.length() > 0)
+    tokens.push_back(_s);
+
   return tokens;
 }
 

@@ -231,8 +231,8 @@ GridSampler<MPTraits>::
 ParseTicksString(XMLNode& _node, const std::string& _s) {
   m_ticks.clear();
 
-  // Accept space, comma, or semicolon as a delimiter.
-  std::vector<std::string> tokens = nonstd::tokenize(_s, ",; ");
+  // Tokenize the ticks string. Accept space, comma, or semicolon as a delimiter.
+  std::vector<std::string> tokens = GetTokens(_s, ",; ");
 
   // Convert each token into an integer. The conversion may throw an
   // out-of-range if it doesn't work. Upgrade those to our exception so that we

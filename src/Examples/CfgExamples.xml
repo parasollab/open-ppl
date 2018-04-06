@@ -107,13 +107,8 @@
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"/>
-      <!-- The lab's old GCC version (4.8.5) doesn't support <regex>, which is
-           required to parse this node. The lab's GCC version 6 module doesn't
-           link our libraries properly. I give up on fixing this for the lab
-           machines. We need a working, non-ancient GCC to uncomment this node.
       <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
         debug="false"/>
-      -->
       <MixSampler label="MixSampler">
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>

@@ -251,7 +251,10 @@ Color4 GetColorFromComment(std::istream& _is);
 
 
 /// Split string based on delimiter.
-std::vector<std::string> GetTags(std::string _stags, std::string _delim);
+/// @param _s The string to split.
+/// @param _delimiters The delimiters to split on.
+/// @return The set of tokens.
+std::vector<std::string> GetTokens(std::string _s, std::string _delimiters);
 
 /*----------------------------------------------------------------------------*/
 
