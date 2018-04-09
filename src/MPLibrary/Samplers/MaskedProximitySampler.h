@@ -118,16 +118,13 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
 //  auto graph = this->GetRoadmap()->GetGraph();
 
   for(size_t i = 0; i < _numNodes; ++i) {
-    //Get a random vertex from the graph and hand it to Sampler()
-
-    //TODO: it seems like I might need to just use the startCfg here:
-//    size_t cfgVid = LRand() % graph->get_num_vertices();
-//    CfgType cfg = graph->GetVertex(cfgVid);
     vector<CfgType> result;
     vector<CfgType> collision;
     //Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
+
+      // Just use the start cfg as the cfg to get a proximity sample from:
       if(this->Sampler(this->m_startCfg, _boundary, result, collision))
         break;
     }
@@ -168,8 +165,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
   const bool isRotational = oriDofsPerBody > 0;
 
-  const bool doRotationalSubassemblies = false;//Hardcoded to prevent it for now
-
   // A little bit of sanity checking:
   if((dofsPerBody * numBodies) != _cfg.DOF() ||
      _cfg.DOF() % (posDofsPerBody + oriDofsPerBody) != 0)
@@ -196,45 +191,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     for(unsigned int i = 0; i < posDofsPerBody; i++)
       extendedCfg[bodyNum*dofsPerBody + i] += dir[i];
 
-
-//  const CfgType offsetCfg = extendedCfg - _cfg;
-//
-//  std::vector<double> uniformTranslationDofs(posDofsPerBody, 0.0);
-//  const bool translationOnly = posDofsPerBody == dofsPerBody;
-//  if(translationOnly) {
-//    //We know that in the case of no rotations, a subassembly will have
-//    // identical relative translation among all parts (if correct).
-//    for(unsigned int i = 0; i < dofsPerBody; ++i) {
-//      const unsigned int ind = this->m_bodyList[0]*dofsPerBody + i;
-//      uniformTranslationDofs[i] = offsetCfg[ind];
-//    }
-//  }
-//
-//  for(unsigned int bodyNum = 0; bodyNum < numBodies; ++bodyNum) {
-//    //If the body is found in this->m_bodyList, it's validly moving.
-//    const bool isMovingBody = find(this->m_bodyList.begin(), this->m_bodyList.end(),
-//                                               bodyNum) != this->m_bodyList.end();
-//    //Note that we only look at translation since angle comparison is more involved.
-//    for(unsigned int dofNum = 0; dofNum < dofsPerBody; ++dofNum) {
-//      const unsigned int ind = bodyNum*dofsPerBody + dofNum;
-//      if(isMovingBody && translationOnly &&
-//         fabs(uniformTranslationDofs.at(dofNum) - offsetCfg[ind]) > 1e-10) {
-//        throw RunTimeException(WHERE, "The sample would have messed up the "
-//                                      "subassembly!");
-//      }
-//
-//      if(!isMovingBody && abs(offsetCfg[ind]) > 1e-10) {
-//        std::cout << "Error reached, the start cfg in the sampler was:"
-//                  << std::endl << this->m_startCfg.PrettyPrint() << std::endl
-//                  << "Offset cfg = " << offsetCfg.PrettyPrint() << std::endl;
-//        throw RunTimeException(WHERE, "The sample moved bodies "
-//                                      "not in the this->m_bodyList!");
-//      }
-//    }
-//  }
-
-
-
   /// Now the translation has been applied to all the bodies. Next, handle
   /// rotations appropriately:
   const double rotScale = 2. * m_rotationFactor; // Scale amount of rotation
@@ -242,10 +198,9 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     for(unsigned int i = posDofsPerBody; i < dofsPerBody; i++)
       extendedCfg[bodyList[0]*dofsPerBody + i] += (DRand() - .5) * rotScale;
   }
-  else if(isRotational && doRotationalSubassemblies) {
+  else if(isRotational) {
     // shuffle randomly, and then rotate about the body number in bodyList[0].
-    /// @TODO uncomment this once working for true random sampling.
-//      random_shuffle(bodyList.begin(), bodyList.end());
+    random_shuffle(bodyList.begin(), bodyList.end());
 
     //Generate the random rotation, taking into account rotation bounds:
     const double piScaled = PI * rotScale; // Needs PI for Euler Angle creation.
@@ -280,11 +235,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     _collision.push_back(extendedCfg - graph->GetVertex(0));
     return false;
   }
-
-
-
-
-
 
   //The sample given back must account for startCfg offset, which is built into
   // the cfg we started from, so no adjustment is needed here.

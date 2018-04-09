@@ -30,10 +30,6 @@ RotateCfgAboutBody(const std::vector<unsigned int>& _bodyList,
                    const bool _debug = false) {
   typedef typename MPTraits::CfgType CfgType;
 
-  if(_bodyList.size() > 1)
-    throw RunTimeException(WHERE, "This function is buggy and should not be used!"
-                              " It will misalign subassemblies (most likely).");
-
   // compute position and rotation of part A, BEFORE rotation:
   _cfg.GetMultiBody()->Configure(_cfg);//Update transform
   mathtool::Transformation initTA = _cfg.GetMultiBody()->
@@ -73,6 +69,23 @@ RotateCfgAboutBody(const std::vector<unsigned int>& _bodyList,
   return rotatedCfg;
 }
 
+
+//template <typename MPTraits>
+//size_t
+//GetApproximateFormationResolution(const typename MPTraits::CfgType& _start,
+//                                  const typename MPTraits::CfgType& _target,
+//                                  const std::vector<unsigned int> _bodyList,
+//                                  const double _posRes,
+//                                  const double _oriRes) {
+//  //Returns the number of extra steps per tick to make _start -> _target conform
+//  // to _posRes and _oriRes for the bodies in _bodyList.
+//  //Assume _start and _target are a single tick away from each other, with
+//  // respect to the Cfg::FindIncrement function.
+//
+//  //TODO: When fixing orientation resolution in PMPL, we need to also properly
+//  // handle the case here, for now it's left for the future though.
+//
+//}
 
 /// Given a configuration, add in the same DOF values to each body given.
 /// This is a common thing to do in assembly planning/composite C-Spaces.

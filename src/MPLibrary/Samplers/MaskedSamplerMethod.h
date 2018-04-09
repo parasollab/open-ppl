@@ -279,6 +279,7 @@ template <typename MPTraits>
 bool
 MaskedSamplerMethod<MPTraits>::
 VerifyCfg(const Cfg& _input) {
+  /// Note: this is intended to be a debug-only function.
   if(find(m_bodyList.begin(), m_bodyList.end(), m_lastSamplesLeaderBody)
                                                == m_bodyList.end())
     return false;

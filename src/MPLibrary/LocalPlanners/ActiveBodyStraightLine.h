@@ -140,20 +140,19 @@ IsConnectedFunc(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   const unsigned int posDofsPerBody = incr.PosDOF();
   const unsigned int dofsPerBody = posDofsPerBody + incr.OriDOF();
 
-  ///@TODO Set this to false to have single parts treated (less
+  ///@TODO Set this to true to have single parts treated (less
   ///      efficiently) as multiple parts, which SHOULD be identical.
   const bool multipleParts = m_activeBodies.size() > 1;
+//  const bool multipleParts = true;
 
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
   mathtool::Orientation rotation;
 
-  if(multipleParts) {
-    incr.GetMultiBody()->Configure(incr); //To get correct transformation
-    //Note that m_activeBodies[0] is the body to rotate about (vector is sorted)
-    mathtool::Transformation incrTransform = incr.GetMultiBody()->
-                      GetBody(refBodyNum)->GetWorldTransformation();
-    rotation = incrTransform.rotation();
+  const CfgType incrUntouched = incr;
+  CfgType oneStep = _c1;// + incr;
 
+
+  if(multipleParts) {
     //Now remove the rotational bits, as incr should only do the
     // translation and then RotateCfgAboutBody() will handle all rotations:
     for(const unsigned int body : m_activeBodies) {
@@ -171,6 +170,23 @@ IsConnectedFunc(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   for(int i = 1; i < nTicks; ++i) { //don't need to check the ends, _c1 and _c2
     previous = tick;
     tick += incr;
+
+    oneStep += incrUntouched;
+
+    // New attempt:
+    previous.ConfigureRobot();
+    mathtool::Transformation initialTransform = previous.GetMultiBody()->
+        GetBody(refBodyNum)->GetWorldTransformation();
+
+    oneStep.ConfigureRobot();
+    mathtool::Transformation finalTransform = oneStep.GetMultiBody()->
+        GetBody(refBodyNum)->GetWorldTransformation();
+
+    mathtool::Transformation delta = -initialTransform * finalTransform;
+
+    //Note that m_activeBodies[0] is the body to rotate about.
+    rotation = delta.rotation();
+
 
     if(multipleParts) //Handle subassembly rotation correctly.
       tick = RotateCfgAboutBody<MPTraits>(m_activeBodies, tick, rotation,

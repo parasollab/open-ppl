@@ -312,11 +312,16 @@ ExpandSubassembly(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   const unsigned int oriDofsPerBody = mb->OrientationDOF();
   const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
 
+  // TODO clean up logic of this code.
+  CfgType oneStep = _start; // The placeholder for computing steps of angles.
+
+
   // A little bit of sanity checking:
   if((dofsPerBody * numBodies) != mb->DOF() ||
      (posDofsPerBody + oriDofsPerBody) != dofsPerBody)
     throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
 
+  // TODO clean up the logic of the code here:
   mathtool::Orientation rotation;
   int nTicks = GetCompositeIncrAndRot(_start, _end, incr, incrUntouched, rotation,
                              _posRes, _oriRes);
@@ -338,18 +343,24 @@ ExpandSubassembly(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   // given resolution and the distance _delta: the maximum distance to grow
   while(!collision && dm->Distance(_start, tick) <= _delta &&
         ticker <= nTicks) {
-//        !_end.WithinResolution(tick, _posRes, _oriRes)) {
-
-    ///@TODO remove this (and line above): was an idea to iteratively update incr.
-//    CfgType dummy(this->GetTask()->GetRobot()); // Don't want to overwrite incrUntouched
-//    //Note: right now this doubles some work done outside the loop:
-//    int newTicks = GetCompositeIncrAndRot(tick, _end, incr, dummy, rotation,
-//                                 _posRes, _oriRes);
-//    if(this->m_debug)
-//      std::cout << "Updated incr. newTicks (unused) = " << newTicks << std::endl;
-
     previous = tick;
     tick += incr;
+
+    oneStep += incrUntouched;
+
+    // New attempt:
+    previous.ConfigureRobot();
+    mathtool::Transformation initialTransform = previous.GetMultiBody()->
+                                  GetBody(refBodyNum)->GetWorldTransformation();
+
+    oneStep.ConfigureRobot();
+    mathtool::Transformation finalTransform = oneStep.GetMultiBody()->
+                                  GetBody(refBodyNum)->GetWorldTransformation();
+
+    mathtool::Transformation delta = -initialTransform * finalTransform;
+
+    //Note that m_activeBodies[0] is the body to rotate about.
+    rotation = delta.rotation();
 
     if(this->m_debug)
       std::cout << "tick before rotation = " << tick.PrettyPrint(4) << std::endl;
@@ -456,10 +467,8 @@ GetCompositeIncrAndRot(const CfgType& _cfg, const CfgType& _target, CfgType& _in
   }
 
   //Note that m_activeBodies[0] is the body to rotate about.
+  //This rotation currently gets overwritten, so it technically doesn't matter.
   _rotation = incrTransform.rotation();
-  ///@TODO I'm pretty sure the rotation right here is wrong. Not sure yet what
-  /// the issue is though, as the cfg components seem to divide up correctly,
-  /// but the Euler angle deltas are way off (only when using only 1 part?).
 
 
   ///@TODO This should be able to use GroupUtils::OverwriteDofsFromBodies().
