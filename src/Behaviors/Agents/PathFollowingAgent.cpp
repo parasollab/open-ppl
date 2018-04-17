@@ -99,7 +99,7 @@ EvaluateTask() {
   // We consider the robot to have reached the next subgoal if it is within a
   // threshold distance. Advance the path index until the next subgoal is
   // at least one threshold away.
-  auto dm = m_library->GetDistanceMetric("euclidean");
+  auto dm = m_library->GetDistanceMetric("positionEuclidean");
   const double threshold = .05;
 
   double distance = dm->Distance(current, m_path[m_pathIndex]);

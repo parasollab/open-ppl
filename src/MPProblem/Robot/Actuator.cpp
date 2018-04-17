@@ -304,7 +304,7 @@ ComputeControlSpace() {
       // If the minimum and maximum force have the same sign, the control space
       // is unidirectional (either forward or reverse only). Compute the larger
       // limit as 1 and the smaller one as the appropriate fraction.
-      if(min > 0 || max < 0) {
+      if(m_limits[i].min > 0 or m_limits[i].max < 0) {
         const double largestForce = std::max(std::abs(m_limits[i].min),
                                              std::abs(m_limits[i].max));
         min = m_limits[i].min / largestForce;

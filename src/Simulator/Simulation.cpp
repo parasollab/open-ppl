@@ -51,7 +51,7 @@ PrintStatFile(){
       "-sim.stat"));
   m_stats->PrintAllStats(osStat);
 
-  std::cout << "File path: " <<  m_problem->GetPath(m_problem->GetBaseFilename()) << std::endl; 
+  std::cout << "File path: " <<  m_problem->GetPath(m_problem->GetBaseFilename()) << std::endl;
 }
 
 void

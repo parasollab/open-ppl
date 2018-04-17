@@ -84,7 +84,7 @@ Step(const double _dt) {
   // Evaluate task progress. If task is still valid, continue execution.
   if(EvaluateTask())
     ExecuteTask(_dt);
-  else 
+  else
     PauseAgent(1);
 }
 

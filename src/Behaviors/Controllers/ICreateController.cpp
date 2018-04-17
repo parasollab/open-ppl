@@ -43,9 +43,9 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double _dt) {
                y = _target[1] - _current[1],
                a = _target[2] - _current[2],
                translation = std::sqrt(x*x + y*y),
-               preRotation = atan2(y, x)/PI - _current[2];
+               preRotation = std::atan2(y, x)/PI - _current[2];
 
-  static constexpr double threshold = 1e-4;
+  static constexpr double threshold = 1e-2;
 
   // Ideally, we would like the robot to cover the entire translation or
   // rotation in one step. The computed distances will thus be divided by _dt to
