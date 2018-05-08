@@ -71,8 +71,8 @@ TriangleHeight(const Point3d& _a, const Point3d& _b, const Point3d& _c) {
   double bc = (_b - _c).norm();
   double ac = (_a - _c).norm();
   double p = (ab + bc + ac) / 2; //half of the perimeter
-  double area = sqrt(p * (p - ab) * (p - bc) * (p - ac));
-  double height = 2 * area / (max(max(ab, bc), ac)); //h = 2A/b
+  double area = std::sqrt(p * (p - ab) * (p - bc) * (p - ac));
+  double height = 2 * area / (std::max(std::max(ab, bc), ac)); //h = 2A/b
   return height;
 }
 
@@ -158,24 +158,20 @@ NormalizeTheta(double _theta) {
 std::vector<Cfg>
 LoadPath(const std::string &_filename, Robot* _robot) {
   std::vector<Cfg> result;
-  if(!FileExists(_filename)){
+  if(!FileExists(_filename))
     throw ParseException(WHERE, "File '" + _filename + "' does not exist");
-    return result;
-  }
 
-  ifstream pathfile(_filename);
-  string line;
+  std::ifstream pathfile(_filename);
+  std::string line;
   Cfg cfg = Cfg(_robot);
-  getline(pathfile, line);
-  getline(pathfile, line);
-  getline(pathfile, line);
-  while(pathfile){
-    getline(pathfile, line);
-    istringstream cfgInput(line);
+  std::getline(pathfile, line);
+  std::getline(pathfile, line);
+  std::getline(pathfile, line);
+  while(pathfile) {
+    std::getline(pathfile, line);
+    std::istringstream cfgInput(line);
     cfg.Read(cfgInput);
     result.push_back(cfg);
   }
   return result;
 }
-
-

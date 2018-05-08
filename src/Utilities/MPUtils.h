@@ -115,7 +115,8 @@ double NormalizeTheta(double _theta);
 template <typename T, typename U>
 struct CompareSecond {
 
-  const bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+  const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
+      const {
     return _a.second < _b.second;
   }
 
@@ -129,7 +130,8 @@ struct CompareSecond {
 template <typename T, typename U>
 struct CompareSecondReverse {
 
-  const bool operator()(const pair<T, U>& _a, const pair<T, U>& _b) const {
+  const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
+      const {
     return _a.second > _b.second;
   }
 
@@ -161,10 +163,10 @@ struct Compose {
 /// @TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
-struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
+struct Compose<InputIterator, std::logical_and<bool>, UnaryOperator> {
 
   const bool operator()(InputIterator _first, InputIterator _last,
-      logical_and<bool> _binaryOp, UnaryOperator _op) const {
+      std::logical_and<bool> _binaryOp, UnaryOperator _op) const {
     if (_first == _last)
       return false;
     else {
@@ -186,10 +188,10 @@ struct Compose<InputIterator, logical_and<bool>, UnaryOperator> {
 /// @TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename InputIterator, typename UnaryOperator>
-struct Compose<InputIterator, logical_or<bool>, UnaryOperator> {
+struct Compose<InputIterator, std::logical_or<bool>, UnaryOperator> {
 
   const bool operator()(InputIterator _first, InputIterator _last,
-      logical_or<bool> _binaryOp, UnaryOperator _op) const {
+      std::logical_or<bool> _binaryOp, UnaryOperator _op) const {
     if (_first == _last)
       return false;
     else {
@@ -278,7 +280,7 @@ template<template<typename, typename> class RoadmapGraph, class CfgType,
     class Weight>
 CfgType
 GetCentroid(RoadmapGraph<CfgType, Weight>* _graph,
-    vector<typename RoadmapGraph<CfgType, Weight>::VID>& _cc) {
+    std::vector<typename RoadmapGraph<CfgType, Weight>::VID>& _cc) {
   CfgType center(_graph->begin()->property().GetRobot());
   for(size_t i = 0; i < _cc.size(); i++) {
     CfgType cfg = _graph->GetVertex(_cc[i]);

@@ -4,17 +4,15 @@
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "ConfigurationSpace/Cfg.h"
-#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Control.h"
 #include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
-#include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
+#include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
+#include "Simulator/Simulation.h"
 #include "Utilities/PMPLExceptions.h"
-
-#include "nonstd/numerics.h"
 
 #include <iostream>
 
@@ -62,27 +60,11 @@ GetTask() const noexcept {
 
 bool
 Agent::
-IsChild() const{
+IsChild() const noexcept {
   return false;
 }
 
 /*---------------------------- Simulation Interface --------------------------*/
-
-size_t
-Agent::
-NearestNumSteps(const double _dt) const {
-  const double timeRes  = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes(),
-               multiple = _dt / timeRes,
-               threshold = timeRes * .01;
-
-  // If _dt is approximately an integer number of time steps, return that
-  // integer.
-  if(nonstd::approx(multiple, std::round(multiple), threshold))
-    return std::lround(multiple);
-  // Otherwise, return the next largest number of steps.
-  return size_t(std::ceil(multiple));
-}
-
 
 size_t
 Agent::
@@ -91,15 +73,14 @@ MinimumSteps() const {
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 
   // If we are not controlling a hardware base, the problem resolution is OK.
-  auto hardware = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base")); //TODO Magic string
+  auto hardware = m_robot->GetHardwareQueue();
   if(!hardware)
     return timeRes;
 
   // Otherwise, return the largest multiple of timeRes which is at least as long
   // as the hardware time.
   const double hardwareTime = hardware->GetCommunicationTime();
-  return NearestNumSteps(hardwareTime);
+  return Simulation::NearestNumSteps(hardwareTime);
 }
 
 
@@ -112,7 +93,7 @@ ProximityCheck(const double _distance) const {
   auto problem = m_robot->GetMPProblem();
   auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState().GetPoint();
 
-  vector<Agent*> result;
+  std::vector<Agent*> result;
 
   for(auto& robotPtr : problem->GetRobots()) {
     auto robot = robotPtr.get();
@@ -130,26 +111,18 @@ ProximityCheck(const double _distance) const {
   return result;
 }
 
-
-std::vector<Agent*>
-Agent::
-TimeHorizonCheck(const double _distance, const size_t _tmax) const {
-  /// @TODO Fill out this function (need to figure out how to consider t_max)
-  throw RunTimeException(WHERE, "Not yet implemented.");
-  vector<Agent*> result;
-  return result;
-}
-
 /*------------------------------ Agent Control -------------------------------*/
 
 void
 Agent::
 Halt() {
-  // Zero the robot's velocity so that we can tell that it has completed its
-  // path by visual inspection.
   btMultiBody* body = m_robot->GetDynamicsModel()->Get();
+
+  // Zero the base velocity.
   body->setBaseVel({0,0,0});
   body->setBaseOmega({0,0,0});
+
+  // Zero the joint velocities.
   for(int i = 0; i < body->getNumLinks(); i++) {
     // If it's a spherical (2 dof) joint, then we must use the other version of
     // setting the link velocity dofs for each value of desired velocity.
@@ -159,14 +132,14 @@ Halt() {
       body->setJointVelMultiDof(i, temp);
     }
     // Do nothing if the joint was a non-actuated joint.
-    else if (body->getLink(i).m_jointType !=
+    else if(body->getLink(i).m_jointType !=
         btMultibodyLink::eFeatherstoneJointType::eFixed) {
       body->setJointVel(i, 0);
     }
   }
 
   if(m_debug)
-    std::cout << "\nRoadmap finished."
+    std::cout << "\nHalting robot '" << m_robot->GetLabel() << "'."
               << "\nAll velocity DOFs set to 0 for visual inspection."
               << std::endl;
 }
@@ -250,24 +223,21 @@ ExecuteControlsSimulation(const ControlSet& _c) {
 void
 Agent::
 ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
-  auto hardware = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base")); //TODO Magic string
-
   // Do nothing if we are not controlling a hardware base.
+  auto hardware = m_robot->GetHardwareQueue();
   if(!hardware)
     return;
 
   // Make sure that the requested time is at least as long as the hardware time.
   if(_steps < MinimumSteps())
-    throw RunTimeException(WHERE, "Cannot enqueue command for fewer steps than "
-        "the hardware's minimum response time (" + std::to_string(_steps) + " < "
-        + std::to_string(MinimumSteps()) + ").");
+    throw RunTimeException(WHERE) << "Cannot enqueue command for fewer steps "
+                                  << "than the hardware's minimum response time "
+                                  << "(" << _steps << " < " << MinimumSteps()
+                                  << ").";
 
   // Convert steps to time and enqueue the command.
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  hardware->EnqueueCommand(_c, _steps * timeRes);
-  //m_robot->GetBattery()->UpdateValue(_steps * timeRes * depletionRate);
-
+  hardware->EnqueueCommand(MotionCommand(_c, _steps * timeRes));
 }
 
 /*----------------------------------------------------------------------------*/

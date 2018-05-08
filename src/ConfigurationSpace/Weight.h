@@ -181,7 +181,7 @@ DefaultWeight<CfgType>::
 DefaultWeight(const std::string& _label, const double _w,
     const std::vector<CfgType>& _intermediates) :
     m_lpLabel(_label), m_weight(_w), m_intermediates(_intermediates),
-    m_checkedMult(numeric_limits<int>::max()), m_hasClearance(false) { }
+    m_checkedMult(std::numeric_limits<int>::max()), m_hasClearance(false) { }
 
 /*------------------------------- Assignment ---------------------------------*/
 
@@ -356,7 +356,7 @@ template <typename CfgType>
 void
 DefaultWeight<CfgType>::
 SetChecked(const int _mult) noexcept {
-  m_checkedMult = min(m_checkedMult, _mult);
+  m_checkedMult = std::min(m_checkedMult, _mult);
 }
 
 
@@ -563,7 +563,7 @@ template <typename CfgType>
 DefaultWeight<CfgType>
 DefaultWeight<CfgType>::
 MaxWeight() noexcept {
-  static constexpr double max = numeric_limits<double>::max();
+  static constexpr double max = std::numeric_limits<double>::max();
   return DefaultWeight("INVALID", max);
 }
 

@@ -11,6 +11,22 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for agents which will plan paths using PMPL.
+///
+/// The core behavior is:
+/// 1. If no task, select one (or pass if none is available).
+/// 2. If no plan, create one (in a separate thread, robot waits during planning).
+/// 3. Continue executing current plan.
+///
+/// There are two primary mechanisms for directing agents of this type:
+/// 1. The task: describes the agent's planning task/high level goal. Without a
+///              task, the agent will not attempt to do anything.
+/// 2. The plan: describes the agent's motion plan for achieving the task.
+///              Clearing this without clearing the task will cause the agent to
+///              replan.
+///
+/// Whenever the agent produces a new plan or clears an existing one, its 'plan
+/// version' will be incremented by one. This allows coordinated agents to
+/// detect changes in each others' plans and possibly react/replan in response.
 ////////////////////////////////////////////////////////////////////////////////
 class PlanningAgent : public Agent {
 
@@ -28,7 +44,7 @@ class PlanningAgent : public Agent {
     virtual ~PlanningAgent();
 
     ///@}
-    ///@name Agent Interface
+    ///@name Agent Overrides
     ///@{
 
     virtual void Initialize() override;
@@ -47,11 +63,12 @@ class PlanningAgent : public Agent {
     /// @return True if the agent has a plan.
     virtual bool HasPlan() const = 0;
 
-    /// Clear the agent's current plan. Overrides should always call this base
-    /// method to update the plan version.
+    /// Clear the agent's current plan. If a plan was cleared, the plan version
+    /// will be updated. Overrides should always call this base method to update
+    /// the plan version.
     virtual void ClearPlan();
 
-    /// Is the agent currently generating a plan.
+    /// Is the agent currently generating a plan?
     /// @return True if the agent is generating a plan.
     bool IsPlanning() const;
 
@@ -66,7 +83,8 @@ class PlanningAgent : public Agent {
     ///@name Planning Helpers
     ///@{
 
-    /// Generate a plan for the agent's current task.
+    /// Generate a plan for the agent's current task. Calls the WorkFunction in
+    /// a separate thread.
     virtual void GeneratePlan();
 
     /// Function call for PMPL.
@@ -76,7 +94,8 @@ class PlanningAgent : public Agent {
     ///@name Task Helpers
     ///@{
 
-    /// Select the next task for this agent.
+    /// Select the next task for this agent. The base implementation selects the
+    /// first available task.
     /// @return True if a new task was selected, or false if none remain.
     virtual bool SelectTask();
 
@@ -96,7 +115,7 @@ class PlanningAgent : public Agent {
     std::unique_ptr<MPSolution> m_solution; ///< The current solution.
     std::thread m_thread;                   ///< Thread for agent to run PMPL.
     std::atomic<bool> m_planning{false};    ///< Is the agent currently planning.
-    size_t m_planVersion{1};                ///< The current plan version.
+    std::atomic<size_t> m_planVersion{1};   ///< The current plan version.
 
     ///@}
 

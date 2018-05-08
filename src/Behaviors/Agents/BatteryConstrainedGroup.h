@@ -35,7 +35,8 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Local Types
     ///@{
 
-    enum Role {Worker, Helper, Charging, ReturningToCharge, WaitingForHelp, GoingToHelp};
+    enum Role {Worker, Helper, Charging, ReturningToCharge, WaitingForHelp,
+               GoingToHelp};
 
     struct PausedTask {
 
@@ -74,7 +75,7 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Follow the roadmap.
     virtual void Step(const double _dt) override;
-    
+
     /// Clean up.
     virtual void Uninitialize() override;
 
@@ -92,7 +93,7 @@ class BatteryConstrainedGroup : public Agent {
     /// Sends the current agent to its nearest charging location.
     /// @param _member The agent being sent to the charging location.
     void GoToCharge(Agent* const _member);
-    
+
     /// Checks if the agent just swapped with another agent that is currently
     /// sitting on the goal of the task that _member just took over.
     /// @param _member The agent that is trying to plan.
@@ -113,7 +114,7 @@ class BatteryConstrainedGroup : public Agent {
 
     ///@}
 
-    
+
   private:
 
     ///@}
@@ -134,7 +135,7 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _a The member agent to check the priority for.
     /// @param _group The group of agents near _a.
     /// @return True if _a has a higher priority than the robots around it,
-    /// False otherwise. 
+    /// False otherwise.
     bool IsHighestPriority(Agent* const _a, const vector<Agent*>& _group);
 
     /// Change the role of a group member.
@@ -178,15 +179,15 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Update other agents' knowledge about an agent's plan versions.
     /// @param _member The agent being updated.
-    /// @param _agents The agents within proximity to the updating agent. 
+    /// @param _agents The agents within proximity to the updating agent.
     void UpdateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
 
     /// For each agent in proximity, ensure that its map has an up-to-date
-    /// version for the agent (_member) that may need to replan. 
+    /// version for the agent (_member) that may need to replan.
     /// @param _member The agent who's version number must be verified for the
     /// proximity agents.
     /// @param _agents The proximity agents who's _member version number must be
-    /// checked. 
+    /// checked.
     /// @return True if the versions are up-to-date, false otherwise.
     bool ValidateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
 
@@ -225,6 +226,8 @@ class BatteryConstrainedGroup : public Agent {
 
     ///@}
     ///@name Task Management
+    ///@{
+
     /// Assign a new task to a worker member.
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskWorker(Agent* const _member);
@@ -248,8 +251,8 @@ class BatteryConstrainedGroup : public Agent {
     void BatteryCheck(Agent* const _member);
 
     bool IsProactive();
-    
-    
+
+
     ///@}
 
   protected:
@@ -271,25 +274,26 @@ class BatteryConstrainedGroup : public Agent {
     /// any.
     std::vector<std::pair<std::unique_ptr<Boundary>, Agent*>> m_chargingLocations;
 
-    /// Timers
-    double m_lazyTime{0.0};
-    double m_prmTime{0.0};
-
     /// Map group members to their current role.
     std::unordered_map<Agent*, Role> m_roleMap;
 
     /// Map group members to their last assigned task;
     std::list<PausedTask> m_pausedTasks;
-    
+
     /// Map worker to assigned helper.
     std::unordered_map<Agent*, Agent*> m_helperMap;
 
     /// Map group members to their initial roles (needed for parsing only).
     std::unordered_map<std::string, Role> m_initialRoles;
 
-    /// Flag determining whether or not the Agents should wait for a helper to
-    /// arrive (handoff) before returning to a charging location. 
+    /// Should agents wait for a helper to arrive (handoff) before returning to a
+    /// charging location?
     bool m_handoff{true};
+    std::string m_handoffDm;   ///< The distance metric for handoff checks.
+    double m_handoffThreshold; ///< The distance threshold for handoff checks.
+
+    /// The regular distance metric for finding nearest agents/chargers.
+    std::string m_dmLabel;
 
     bool m_proactive{false};
 
@@ -301,6 +305,7 @@ class BatteryConstrainedGroup : public Agent {
 
     /// Map agents to their current knowledge of other agents' plan versions.
     std::unordered_map<Agent*, std::unordered_map<PlanningAgent*, size_t>> m_versionMap;
+
     ///@}
 
 };

@@ -22,8 +22,8 @@ TetrahedralBoundary::
 TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
   // Ensure the input vector contains exactly four points.
   if(_pts.size() != 4)
-    throw RunTimeException(WHERE, "Can't build tetrahedron with " +
-        to_string(_pts.size()) + " points.");
+    throw RunTimeException(WHERE) << "Can't build tetrahedron with "
+                                  << _pts.size() << " points.";
 
   std::copy(_pts.begin(), _pts.end(), m_points.begin());
   if(_check)
@@ -77,11 +77,11 @@ TetrahedralBoundary::
 GetMaxDist(const double _r1, const double _r2) const {
   auto edges = ComputeEdges();
 
-  array<double, 6> edgeLengths;
+  std::array<double, 6> edgeLengths;
   for(size_t i = 0; i < 6; ++i)
     edgeLengths[i] = edges[i].norm();
 
-  return *max_element(edgeLengths.begin(), edgeLengths.end());
+  return *std::max_element(edgeLengths.begin(), edgeLengths.end());
 }
 
 
@@ -123,14 +123,14 @@ GetRandomPoint() const {
     if(t + u > 1) {
       double ttmp = 1 - u;
       double utmp = 1 - s - t;
-      swap(t, ttmp);
-      swap(u, utmp);
+      std::swap(t, ttmp);
+      std::swap(u, utmp);
     }
     else {
       double stmp = 1 - t - u;
       double utmp = s + t + u - 1;
-      swap(s, stmp);
-      swap(u, utmp);
+      std::swap(s, stmp);
+      std::swap(u, utmp);
     }
   }
 
@@ -227,7 +227,7 @@ ApplyOffset(const Vector3d& _v) {
 
 void
 TetrahedralBoundary::
-ResetBoundary(const std::vector<pair<double, double>>& _bbx,
+ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
     const double _margin) {
   throw RunTimeException(WHERE, "Not implemented");
 }
@@ -236,14 +236,14 @@ ResetBoundary(const std::vector<pair<double, double>>& _bbx,
 
 void
 TetrahedralBoundary::
-Read(istream& _is, CountingStreamBuffer& _cbs) {
+Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   throw RunTimeException(WHERE, "Not implemented");
 }
 
 
 void
 TetrahedralBoundary::
-Write(ostream& _os) const {
+Write(std::ostream& _os) const {
   throw RunTimeException(WHERE, "Not implemented");
 }
 
@@ -332,7 +332,7 @@ OrderPoints() noexcept {
   const Vector3d norm  = edgeA % edgeB;
   const bool normFacesAway = norm * edgeC < 0;
   if(!normFacesAway)
-    swap(m_points[1], m_points[2]);
+    std::swap(m_points[1], m_points[2]);
 }
 
 

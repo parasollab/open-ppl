@@ -9,12 +9,25 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// An abstract interface for communicating with IP-capable hardware.
+///
+/// @note For now, all our use cases involve robots that we talk to through an IP
+///       address, so this is hard-coded into the base abstraction. If this
+///       changes later, we will wish to abstract those components into a more
+///       general 'communication interface' object and use that here or as a
+///       superclass.
 ////////////////////////////////////////////////////////////////////////////////
 class HardwareInterface
 {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
+    /// The types of supported hardware.
+    enum HardwareType {Actuator, Sensor};
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -50,6 +63,8 @@ class HardwareInterface
 
     double GetCommunicationTime() const noexcept;
     void SetCommunicationTime(const double _t) noexcept;
+
+    virtual HardwareType GetHardwareType() const noexcept = 0;
 
     ///@}
 

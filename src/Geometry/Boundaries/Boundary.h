@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Vector.h"
@@ -160,7 +161,7 @@ class Boundary {
     /// @param _bbx The new base bounding box.
     /// @param _margin The additional margin for _bbx. Negative margins cause
     ///                shrinkage.
-    virtual void ResetBoundary(const std::vector<pair<double, double>>& _bbx,
+    virtual void ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
         const double _margin) = 0;
 
     ///@}

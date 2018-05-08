@@ -138,15 +138,27 @@ void
 PlanningAgent::
 GeneratePlan() {
   m_planning = true;
-  const std::string clockName = "Planning::" + m_robot->GetLabel();
+
+  // Create a copy of the problem so that we can use the data objects in planning
+  // without affecting the rest of the simulation.
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
 
-  m_thread = std::thread([this, problemCopy, clockName]() {
-    MethodTimer mt(Simulation::GetStatClass(), clockName);
-    this->WorkFunction(problemCopy);
-  });
+  // Start running the work function in another thread.
+  m_thread = std::thread([this, problemCopy]() {
+    // Track planning time by robot label.
+    MethodTimer mt(Simulation::GetStatClass(),
+        "Planning::" + this->m_robot->GetLabel());
 
-  ++m_planVersion;
+    this->WorkFunction(problemCopy);
+
+    // Retarget the library's problem back on the global copy so that later uses
+    // of m_library which depend on the problem will not crash.
+    this->m_library->SetMPProblem(this->m_robot->GetMPProblem());
+
+    // Update plan version and flag.
+    ++m_planVersion;
+    m_planning = false;
+  });
 
   // Detach thread so that it automatically joins on completion.
   m_thread.detach();
@@ -158,14 +170,9 @@ PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Initialize the solution.
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
+
   // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());
-
-  // Retarget the library's problem back on the global copy so that later uses
-  // of m_library which depend on the problem will not crash.
-  m_library->SetMPProblem(m_robot->GetMPProblem());
-
-  m_planning = false;
 }
 
 /*------------------------------ Task Helpers --------------------------------*/

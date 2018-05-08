@@ -92,11 +92,21 @@ struct Control final {
 std::ostream& operator<<(std::ostream&, const Control&);
 
 
-/// A discrete set of controls can be defined by a sequence of allowed controls.
-typedef std::vector<Control> ControlSet;
-
 /// A continuous space of controls can be defined by an N-dimensional box in
 /// C-space.
 typedef NBox ControlSpace;
+
+
+/// A discrete set of controls can be defined by a sequence of allowed controls.
+typedef std::vector<Control> ControlSet;
+
+/// When dealing with hardware it is often more convenient to have a single
+/// force/velocity vector, depending on how the robot model will be set up.
+/// This helper converts a control set to a single summed force/velocity
+/// vector.
+/// @param _controls The control set.
+/// @return An aggregated output vector (force/velocity according to actuator
+///         type).
+std::vector<double> AggregatedControlVector(const ControlSet& _controls);
 
 #endif

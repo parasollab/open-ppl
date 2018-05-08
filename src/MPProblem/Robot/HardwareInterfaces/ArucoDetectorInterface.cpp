@@ -1,20 +1,29 @@
 #include "ArucoDetectorInterface.h"
 
-#include <iostream>
-
-#include <unistd.h>
+#include "Commands.h"
 
 #include "nonstd/numerics.h"
 #include "nonstd/tcp_socket.h"
+
+#include <unistd.h>
+
+#include <iostream>
 
 /// The measured time that we need to send a message to the aruco detector.
 static constexpr double arucoDetectorCommunicationTime = .3;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A packet of information about a detected aruco marker.
+/// A packet of information about a detected aruco marker's position in the
+/// camera's local frame.
+///
+/// The packet is used to send data over the network in integer format. The
+/// floating point values (x,y,angle) will be multiplied by s_factor so that
+/// they can be transported as integers.
 ////////////////////////////////////////////////////////////////////////////////
 struct packet {
+
+  static constexpr double s_factor = 10000;
 
   int id{0}, x{0}, y{0}, angle{0};
 
@@ -25,12 +34,34 @@ struct packet {
 
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// An observation of a marker relative to the camera's current position.
+////////////////////////////////////////////////////////////////////////////////
+struct ArucoObservation {
+
+  size_t id{0};
+
+  double x{0}, y{0}, angle{0};
+
+  ArucoObservation() = default;
+
+  ArucoObservation(const packet& _p)
+    : id(_p.id),
+      x(_p.x / packet::s_factor),
+      y(_p.y / packet::s_factor),
+      angle(_p.angle / packet::s_factor)
+  { }
+
+};
+
 /*------------------------------- Construction -------------------------------*/
 
 ArucoDetectorInterface::
 ArucoDetectorInterface(const std::string& _ip, const unsigned short _port)
-    : HardwareInterface("ArucoDetector", _ip, _port,
-        arucoDetectorCommunicationTime) {
+    : SensorInterface("ArucoDetector", _ip, _port, arucoDetectorCommunicationTime)
+{
+  m_socket = new nonstd::tcp_socket();
 }
 
 
@@ -39,60 +70,70 @@ ArucoDetectorInterface::
   delete m_socket; // Disconnect is automatic.
 }
 
-/*------------------------------ Accessors -------------------------------*/
+/*----------------------------- Sensor Interface -----------------------------*/
 
-size_t
+SensorInterface::SensorType
 ArucoDetectorInterface::
-GetNumMarkersSeen() {
-  return m_numMarkersSeen;
+GetType() const noexcept {
+  return SensorInterface::SensorType::Transformation;
 }
 
-/*------------------------------ Command Queue -------------------------------*/
 
-std::vector<double>
+void
 ArucoDetectorInterface::
-GetCoordinatesFromMarker() {
+SendCommand(const SensorCommand& _c) {
   // Connect to the netbook's socket for aruco data.
-  m_socket = new nonstd::tcp_socket(m_ip, std::to_string(m_port));
-  size_t count;
+  /// @TODO It seems like we should be able to connect just once here...
+  m_socket->connect(m_ip, std::to_string(m_port));
+
+  // Clear the previous measurement.
+  m_observations.clear();
+
+  // Get the number of markers observed.
   char c;
   *m_socket >> c;
-  count = c;
+  size_t count = c;
 
-  // The detector will attempt to loacalize itself for each marker that it sees.
-  // Receive these estimates here and sum.
-  double x = 0,
-         y = 0,
-         angle = 0;
-
-  // Set the number of markers seen at this point
-  m_numMarkersSeen = count;
+  // Receive a packet for each marker and save the observation.
   for(size_t i = 0; i < count; ++i) {
-    packet p1;
-    *m_socket >> p1;
+    packet p;
+    *m_socket >> p;
 
-    if(p1.x != -1 and p1.y != -1) {
-      x += p1.x/10000.0;
-      y += p1.y/10000.0;
-      angle += p1.angle/10000.0;
-    }
+    /// @TODO What is this check for?
+    if(p.x == -1 or p.y == -1)
+      continue;
+
+    m_observations.emplace_back(p);
   }
 
   m_socket->disconnect();
+}
 
-  // Divide the summed estimates by the number of estimates to produce an
-  // average.
-  /// @TODO Consider using a kalman filter instead of averaging.
-  double totalMarkers = (double)count;
-  if(totalMarkers > 0) {
-    x = x / totalMarkers;
-    y = y / totalMarkers;
-    angle = angle / totalMarkers;
-    std::vector<double> coordinates = {x, y, (angle)*(180/M_PI)};
-    return coordinates;
-  }
 
+std::vector<double>
+ArucoDetectorInterface::
+GetLastMeasurement() {
+  return EstimateGlobalPositionFromObservations();
+}
+
+
+std::vector<double>
+ArucoDetectorInterface::
+GetUncertainty() {
+  /// @TODO Determine our measurement uncertainty.
+  return {};
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+std::vector<double>
+ArucoDetectorInterface::
+EstimateGlobalPositionFromObservations() {
   // If we didn't see any markers, we cannot return a reasonable estimate.
+  if(m_observations.empty())
+    return {};
+
+  /// @TODO Use the marker map to determine what we saw.
   return {};
 }
 

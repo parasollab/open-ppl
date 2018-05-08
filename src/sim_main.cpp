@@ -65,8 +65,9 @@ main(int _argc, char** _argv) {
 
     return 0;
   }
-  catch(const std::runtime_error& e) {
-    std::cerr << std::endl << e.what() << std::endl;
+  catch(const std::runtime_error& _e) {
+    // Write exceptions to cout so that we still get them when piping stdout.
+    std::cout << std::endl << _e.what() << std::endl;
     return 1;
   }
 }

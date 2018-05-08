@@ -3,9 +3,6 @@
 
 #include "PathFollowingAgent.h"
 
-//#include "ConfigurationSpace/Cfg.h"
-//#include "MPLibrary/PMPL.h"
-
 class BatteryConstrainedGroup;
 class NetbookInterface;
 
@@ -48,16 +45,16 @@ class PathFollowingChildAgent : public PathFollowingAgent {
     ///@param _parent The parent agent.
     void SetParentAgent(BatteryConstrainedGroup* const _parent);
 
-    virtual bool IsChild() const override;
+    virtual bool IsChild() const noexcept override;
 
     /// Finds the battery break along its path and communicates it with the
     /// parent agent.
     void SetBatteryBreak();
-    
-    /// Sets the paused task that the helper will use to restart the path the 
+
+    /// Sets the paused task that the helper will use to restart the path the
     /// worker was working on.
     void SetPausedTask(std::shared_ptr<MPTask> _pausedTask);
-    
+
     /// Sets the amount of time the path is expected to take.
     /// @param _pathTime Amount of time path is expected to take;
     void SetPathTime(double _pathTime);

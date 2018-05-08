@@ -1,11 +1,8 @@
 #include "Robot.h"
 
-#include <algorithm>
-#include <sstream>
-
 #include "Actuator.h"
 #include "DynamicsModel.h"
-#include "HardwareInterfaces/HardwareInterface.h"
+#include "HardwareInterfaces/RobotCommandQueue.h"
 
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
@@ -17,11 +14,13 @@
 #include "MPProblem/Environment/Environment.h"
 #include "Utilities/XMLNode.h"
 
-// Temporaries for hard-coded stuff
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"
-#include "Behaviors/Controllers/ICreateController.h"
 #include "nonstd/io.h"
+
+#include <algorithm>
+#include <sstream>
+
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -41,9 +40,6 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
       "and will not be included in the simulation or CD checks.");
 
-  //std::string color = _node.Read("color", false, "1 0 0 1", "Color of the robot in simulation");
-  //this->GetMultiBody()->GetBody(i)->SetBodyColor(color);
-
   // Get the multibody file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
   const std::string file = _node.Read("filename", true, "", "Robot file name");
@@ -53,7 +49,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     throw ParseException(_node.Where(), "File '" + filename + "' does not exist");
 
   // If we got an XML file, use that parsing mechanism.
-  if(filename.find(".xml") != string::npos)
+  if(filename.find(".xml") != std::string::npos)
     ReadXMLFile(filename);
   // Otherwise we got a multibody file, which cannot specify dynamics options
   // like actuators and controls. Assume some defaults for these.
@@ -88,16 +84,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   // Parse hardware and agent child nodes.
   for(auto& child : _node) {
-    if(child.Name() == "HardwareInterface") {
-      // Make sure we don't allow duplicate labels.
-      const std::string label = child.Read("label", true, "",
-          "A unique label for this hardware.");
-      const bool duplicate = m_hardware.count(label);
-      if(duplicate)
-        throw RunTimeException(WHERE, "Hardware labels must be unique for a "
-            "given robot.");
-
-      SetHardwareInterface(label, HardwareInterface::Factory(child));
+    if(child.Name() == "Hardware") {
+      m_hardware = std::unique_ptr<RobotCommandQueue>(
+          new RobotCommandQueue(child));
     }
     else if(child.Name() == "Agent") {
       SetAgent(Agent::Factory(this, child));
@@ -167,7 +156,7 @@ Robot(MPProblem* const _p, const Robot& _r)
   // to handle the rest.
 
   // We will not copy the hardware interfaces because there should only be one
-  // such object for a given piece of hardware. Warn the user in this case.
+  // such object for a given piece of hardware.
 
   // The battery is emulated and may be copied safely.
   if(_r.m_battery.get())
@@ -178,10 +167,14 @@ Robot(MPProblem* const _p, const Robot& _r)
 Robot::
 ~Robot() = default;
 
+
 Robot::
 Robot(Robot&&) = default;
 
-Robot& Robot::operator=(Robot&&) = default;
+
+Robot&
+Robot::
+operator=(Robot&&) = default;
 
 /*---------------------------------- I/O -------------------------------------*/
 
@@ -418,20 +411,10 @@ SetDynamicsModel(btMultiBody* const _m) {
 
 /*---------------------------- Hardware Interface ----------------------------*/
 
-HardwareInterface*
+RobotCommandQueue*
 Robot::
-GetHardwareInterface(const std::string& _label) const noexcept {
-  if(m_hardware.count(_label))
-    return m_hardware.at(_label).get();
-  return nullptr;
-}
-
-
-void
-Robot::
-SetHardwareInterface(const std::string& _label,
-    std::unique_ptr<HardwareInterface>&& _i) noexcept {
-  m_hardware[_label] = std::move(_i);
+GetHardwareQueue() const noexcept {
+  return m_hardware.get();
 }
 
 

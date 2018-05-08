@@ -280,10 +280,10 @@ XMLNode::
 AttrInvalidBounds(const std::string& _name, const std::string& _desc,
     const T& _min, const T& _max, const T& _val) const {
   std::ostringstream oss;
-  oss << "Invalid value for attribute '" << _name << "'." << endl
-      << "\tAttribute description: " << _desc << "." << endl
-      << "\tValid range: [" << _min << ", " << _max << "]" << endl
-      << "\tValue specified: " << _val;
+  oss << "Invalid value for attribute '" << _name << "'."
+      << "\n\tAttribute description: " << _desc << "."
+      << "\n\tValid range: [" << _min << ", " << _max << "]"
+      << "\n\tValue specified: " << _val;
   return oss.str();
 }
 

@@ -128,8 +128,8 @@ GetClearancePoint(const Vector3d& _p) const {
 
 int
 AbstractBoundingBox::
-GetSideID(const vector<double>& _p) const {
-  double minClearance = numeric_limits<double>::max();
+GetSideID(const std::vector<double>& _p) const {
+  double minClearance = std::numeric_limits<double>::max();
   int id = 0;
 
   const size_t maxIndex = std::min(size_t(3), NBox::GetDimension());
@@ -162,7 +162,8 @@ ApplyOffset(const Vector3d& _v) {
 
 void
 AbstractBoundingBox::
-ResetBoundary(const vector<pair<double, double>>& _bbx, const double _margin) {
+ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
+    const double _margin) {
   const size_t maxIndex = std::min(_bbx.size(), NBox::GetDimension());
   for(size_t i = 0; i < maxIndex; ++i)
     NBox::SetRange(i, _bbx[i].first - _margin, _bbx[i].second + _margin);

@@ -1,6 +1,7 @@
 #include "ICreateController.h"
 
 #include "ConfigurationSpace/Cfg.h"
+#include "Utilities/MPUtils.h"
 #include "Utilities/XMLNode.h"
 
 #include <algorithm>
@@ -41,9 +42,9 @@ ICreateController::
 ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double _dt) {
   const double x = _target[0] - _current[0],
                y = _target[1] - _current[1],
-               a = _target[2] - _current[2],
+               a = Normalize(_target[2] - _current[2]),
                translation = std::sqrt(x*x + y*y),
-               preRotation = std::atan2(y, x)/PI - _current[2];
+               preRotation = Normalize(std::atan2(y, x)/PI - _current[2]);
 
   static constexpr double threshold = 1e-2;
 

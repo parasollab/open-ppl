@@ -92,7 +92,7 @@ AddPoint(const size_t _i) {
 void
 WorkspaceRegion::
 AddFacet(Facet&& _f) {
-  m_facets.emplace_back(move(_f));
+  m_facets.emplace_back(std::move(_f));
 }
 
 
@@ -125,10 +125,10 @@ GetPoint(const size_t _i) const noexcept {
 }
 
 
-const vector<Point3d>
+const std::vector<Point3d>
 WorkspaceRegion::
 GetPoints() const noexcept {
-  vector<Point3d> out;
+  std::vector<Point3d> out;
   for(const auto& index : m_points)
     out.push_back(m_decomposition->GetPoint(index));
   return out;
@@ -171,21 +171,21 @@ FindCenter() const noexcept {
 }
 
 
-const vector<Point3d>
+const std::vector<Point3d>
 WorkspaceRegion::
 FindSharedPoints(const WorkspaceRegion& _wr) const noexcept {
   // Find shared indexes.
-  vector<size_t> mine = m_points;
-  vector<size_t> theirs = _wr.m_points;
-  sort(mine.begin(), mine.end());
-  sort(theirs.begin(), theirs.end());
+  std::vector<size_t> mine = m_points;
+  std::vector<size_t> theirs = _wr.m_points;
+  std::sort(mine.begin(), mine.end());
+  std::sort(theirs.begin(), theirs.end());
 
-  vector<size_t> shared;
-  set_intersection(mine.begin(), mine.end(), theirs.begin(), theirs.end(),
-      back_inserter(shared));
+  std::vector<size_t> shared;
+  std::set_intersection(mine.begin(), mine.end(), theirs.begin(), theirs.end(),
+      std::back_inserter(shared));
 
   // Get points from indexes.
-  vector<Point3d> out;
+  std::vector<Point3d> out;
   for(const auto& index : shared)
     out.push_back(m_decomposition->GetPoint(index));
 
@@ -193,10 +193,10 @@ FindSharedPoints(const WorkspaceRegion& _wr) const noexcept {
 }
 
 
-const vector<const WorkspaceRegion::Facet*>
+const std::vector<const WorkspaceRegion::Facet*>
 WorkspaceRegion::
 FindSharedFacets(const WorkspaceRegion& _wr) const noexcept {
-  vector<const Facet*> out;
+  std::vector<const Facet*> out;
   for(const auto& myFacet : m_facets) {
     // Flip facet orientation before comparing as the normals will be reversed.
     for(auto theirFacet : _wr.m_facets) {

@@ -98,7 +98,7 @@ $(PMPL_LIBFILE): $(PMPL_OBJS)
 	@$(AR) $@ $^
 
 # Executable Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# CXXFLAGS += -fsanitize=address
+
 # Build the traditional pmpl executable.
 pmpl: $(MAIN) $(PMPL_LIBFILE)
 	@echo Linking $@...
@@ -137,14 +137,12 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 .PHONY: clean
 clean:
 	@echo Cleaning pmpl library and executables...
-	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl $(SIM_OBJS) sim
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim
 
 .PHONY: reallyclean
 reallyclean: clean
 	@echo Cleaning all pmpl objects...
-	@rm -f $(PMPL_OBJS)
 	@rm -rf $(OBJ_DIR)
-	@rm -f $(DEPENDENCIES)
 
 .PHONY: reallyreallyclean
 reallyreallyclean: reallyclean

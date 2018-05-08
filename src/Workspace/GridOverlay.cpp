@@ -141,7 +141,7 @@ CellIndex(const size_t _x, const size_t _y, const size_t _z) const noexcept {
 
 size_t
 GridOverlay::
-CellIndex(const array<size_t, 3>& _indexes) const noexcept {
+CellIndex(const std::array<size_t, 3>& _indexes) const noexcept {
   return CellIndex(_indexes[0], _indexes[1], _indexes[2]);
 }
 

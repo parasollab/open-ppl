@@ -19,10 +19,8 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
-#include "MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.h"
-#include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
-
 #include "Simulator/Simulation.h"
+
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -95,9 +93,10 @@ SetParentAgent(BatteryConstrainedGroup* const _parent) {
   m_parentAgent = _parent;
 }
 
+
 bool
 PathFollowingChildAgent::
-IsChild() const {
+IsChild() const noexcept {
   return true;
 }
 
@@ -145,12 +144,11 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Reset the modified states.
   GetTask()->SetRobot(m_robot);
   m_solution->SetRobot(m_robot);
-  m_library->SetMPProblem(m_robot->GetMPProblem());
 
   // Extract the path for this robot.
   m_pathIndex = 0;
   m_path = m_solution->GetPath()->Cfgs();
-  
+
   std::cout << m_path << std::endl;
 
   // Throw if PMPL failed to generate a solution.
@@ -173,7 +171,6 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 PathFollowingChildAgent::
 SelectTask(){
-  //std::cout << "In SelectTask in PFCA" << std::endl;
   m_parentAgent->AssignTask(this);
   return GetTask().get();
 }
@@ -184,17 +181,17 @@ PathFollowingChildAgent::
 ExecuteControls(const ControlSet& _c, const size_t _steps) {
   this->Agent::ExecuteControls(_c, _steps);
 
-  // Update odometry tracking.
   if(_c.size() > 1)
     throw RunTimeException(WHERE,
         "We are assuming that only one control will be passed in at a time.");
 
-  // Drain the battery proportional to the controller output (higher output =
-  // higher drain).
+  // Update odometry tracking.
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   if(_c.size())
     m_distance += _steps * timeRes * nonstd::magnitude<double>(_c[0].GetForce());
 
+  // TODO Drain the battery proportional to the controller output (higher output
+  // = higher drain).
   //std::cout << m_robot->GetLabel() << " BATTERY LEVEL: "
   //          << m_robot->GetBattery()->GetCurLevel()
   //          << std::endl;
@@ -202,12 +199,12 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   // Derate the emulated battery.
   // Derate faster when we are using the iCreates so that we don't need
   // to wait forever to see the switch.
-  //auto hardware = static_cast<QueuedHardwareInterface*>
-  //  (m_robot->GetHardwareInterface("base"));
+  //auto hardware = m_robot->GetHardwareQueue();
   //const double depletionRate = hardware ? .36 : .04;
   //const double depletionRate = hardware ? .36 : .5;
   //m_robot->GetBattery()->UpdateValue(_steps * timeRes * depletionRate);
 }
+
 
 void
 PathFollowingChildAgent::
@@ -215,12 +212,11 @@ SetBatteryBreak() {
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   const Cfg position = m_robot->GetDynamicsModel()->GetSimulatedState();
   std::cout << "Position: " << position.PrettyPrint() << std::endl;
-  std::cout << "Position: " 
-            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint() 
+  std::cout << "Position: "
+            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
             << std::endl;
   // Set the battery depletion rate.
-  auto hardware = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base"));
+  auto hardware = m_robot->GetHardwareQueue();
   const double depletionRate = hardware ? .36 : .5;
 
   const double batteryThreshold = .18 * m_robot->GetBattery()->GetMaxLevel();
@@ -234,9 +230,8 @@ SetBatteryBreak() {
   const auto& path = m_solution->GetPath()->Cfgs();
   auto controller  = m_robot->GetController();
   auto dynamics    = m_robot->GetDynamicsModel();
-  auto dm          = m_library->GetDistanceMetric("euclidean");
+  auto dm          = m_library->GetDistanceMetric(m_waypointDm);
 
-  const double distanceThreshold = .05;
   double numSteps = 0;
 
   for(size_t i = 1; i < path.size(); ++i) {
@@ -246,7 +241,7 @@ SetBatteryBreak() {
 
     // While current is too far from way point, use the controller to generate
     // a control and test it with the dynamics model.
-    while(dm->Distance(current, waypoint) > distanceThreshold) {
+    while(dm->Distance(current, waypoint) > m_waypointThreshold) {
       // If the battery level is too low for another step, there is a break now.
       if(batteryLevel - depletionRate < batteryThreshold) {
         BatteryBreak batteryBreak(current,
@@ -260,8 +255,8 @@ SetBatteryBreak() {
         position.ConfigureRobot();
         dynamics->SetSimulatedState(position);
         std::cout << "Original position: " << position.PrettyPrint() << std::endl;
-        std::cout << "Position: " 
-                  << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint() 
+        std::cout << "Position: "
+                  << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
                   << std::endl;
         std::cout << "Multibody position: " << m_robot->GetMultiBody()->GetCurrentCfg() << std::endl;
         return;
@@ -293,12 +288,12 @@ SetBatteryBreak() {
 
   }
 
-  
+
 
   position.ConfigureRobot();
   dynamics->SetSimulatedState(position);
-  std::cout << "Position: " 
-            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint() 
+  std::cout << "Position: "
+            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
             << std::endl;
   //auto batteryBreak = path->FindBatteryBreak(batteryLevel, depletionRate, batteryThreshold,
   //                      m_parentAgent->GetCurrentTime(), timeRes, m_library.get());

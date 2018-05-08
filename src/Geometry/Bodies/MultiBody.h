@@ -219,7 +219,7 @@ class MultiBody {
     const DofType& GetDOFType(const size_t _i) const noexcept;
 
     /// Get the DOF info for a specific degree of freedom.
-    const vector<DofInfo>& GetDofInfo() const noexcept;
+    const std::vector<DofInfo>& GetDofInfo() const noexcept;
 
     /// Update the DOF info from the current values in the connection objects.
     /// @TODO Fix this so that we do not double-store the limits both here and in

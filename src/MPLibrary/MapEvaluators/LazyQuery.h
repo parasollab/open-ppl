@@ -16,8 +16,12 @@
 ///
 /// @TODO Validate that the enhancement edges are working properly. It appears
 ///       that once a candidate edge is created, it will never be released. This
-///       looks wrong and should be validated against the paper (include
-///       reference here as well).
+///       looks wrong and should be validated against the paper.
+///
+/// Reference:
+/// Robert Bohlin and Lydia E. Kavraki. "Path Planning Using Lazy PRM".
+///   ICRA 2000.
+///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>

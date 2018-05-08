@@ -60,14 +60,14 @@ GetWeight() const noexcept {
 
 /*-------------------------------- Queries -----------------------------------*/
 
-const vector<Point3d>
+const std::vector<Point3d>
 WorkspacePortal::
 FindPoints() const {
   return GetSource().FindSharedPoints(GetTarget());
 }
 
 
-const vector<const WorkspacePortal::Facet*>
+const std::vector<const WorkspacePortal::Facet*>
 WorkspacePortal::
 FindFacets() const {
   return GetSource().FindSharedFacets(GetTarget());

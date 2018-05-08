@@ -1,14 +1,14 @@
-#ifndef ROBOT_H_
-#define ROBOT_H_
+#ifndef PMPL_ROBOT_H_
+#define PMPL_ROBOT_H_
+
+#include "Control.h"
+#include "HardwareInterfaces/Battery.h"
 
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-#include "HardwareInterfaces/Battery.h"
-#include "Control.h"
 
 class Actuator;
 class Agent;
@@ -17,9 +17,9 @@ class Boundary;
 class ControllerMethod;
 class CSpaceBoundingBox;
 class DynamicsModel;
-class HardwareInterface;
 class MPProblem;
 class MultiBody;
+class RobotCommandQueue;
 class XMLNode;
 
 
@@ -68,9 +68,9 @@ class Robot final {
 
   std::unique_ptr<Agent> m_agent;          ///< High-level decision-making agent.
 
-  /// Interfaces the robot's hardware, mapped by label.
-  std::unordered_map<std::string, std::unique_ptr<HardwareInterface>> m_hardware;
-  
+  /// Command queue for controlling a hardware robot.
+  std::unique_ptr<RobotCommandQueue> m_hardware;
+
   std::unique_ptr<Battery> m_battery; ///< An emulated battery for this agent. TODO: Unify with other hardware stuff
 
   ///@}
@@ -213,10 +213,7 @@ class Robot final {
     ///@{
     /// Access the interface to the hardware robot (if any).
 
-    HardwareInterface* GetHardwareInterface(const std::string& _label) const
-        noexcept;
-    void SetHardwareInterface(const std::string& _label,
-        std::unique_ptr<HardwareInterface>&& _i) noexcept;
+    RobotCommandQueue* GetHardwareQueue() const noexcept;
 
     Battery* GetBattery() const noexcept;
 

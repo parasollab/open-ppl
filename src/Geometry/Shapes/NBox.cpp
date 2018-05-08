@@ -146,7 +146,7 @@ ClearancePoint(std::vector<double> _p) const noexcept {
   _p.resize(maxIndex);
 
   // Find the clearance in each dimension.
-  double minClearance = numeric_limits<double>::max();
+  double minClearance = std::numeric_limits<double>::max();
   size_t index = -1;
 
   for(size_t i = 0; i < maxIndex; ++i) {

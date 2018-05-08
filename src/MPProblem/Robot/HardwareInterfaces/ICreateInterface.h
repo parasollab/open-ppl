@@ -1,7 +1,9 @@
-#ifndef ICREATE_INTERFACE_H
-#define ICREATE_INTERFACE_H
+#ifndef PMPL_ICREATE_INTERFACE_H
+#define PMPL_ICREATE_INTERFACE_H
 
-#include "ServerQueueInterface.h"
+#include "ActuatorInterface.h"
+
+#include "MPProblem/Robot/Control.h"
 
 namespace PlayerCc
 {
@@ -15,7 +17,7 @@ namespace PlayerCc
 /// implement the connection. The robot's on-board controller in this case is a
 /// netbook riding on top of the create running the client-side player software.
 ////////////////////////////////////////////////////////////////////////////////
-class ICreateInterface : public ServerQueueInterface
+class ICreateInterface : public ActuatorInterface
 {
 
   public:
@@ -31,21 +33,12 @@ class ICreateInterface : public ServerQueueInterface
     virtual ~ICreateInterface();
 
     ///@}
-    ///@name Command Queue
+    ///@name ActuatorInterface overrides
     ///@{
 
-    virtual bool FullStop();
+    virtual void SendCommand(const MotionCommand& _command) override;
 
-    ///@}
-
-  protected:
-
-    ///@name Hardware Communication
-    ///@{
-
-    /// Send a command to the robot. Must check for and recognize empty controls
-    /// as 'wait' commands.
-    virtual void SendToRobot(const Command& _command);
+    virtual bool FullStop() override;
 
     ///@}
 

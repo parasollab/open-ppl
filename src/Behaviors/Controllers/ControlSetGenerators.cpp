@@ -77,7 +77,7 @@ EnumeratedControlSetGenerator(Robot* const _r, XMLNode& _node) {
 
     // Parse the control signal.
     Control::Signal signal;
-    istringstream signalStream(signalString);
+    std::istringstream signalStream(signalString);
     double temp;
     while(signalStream >> temp)
       signal.push_back(temp);

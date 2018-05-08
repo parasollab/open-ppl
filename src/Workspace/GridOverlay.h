@@ -97,7 +97,7 @@ class GridOverlay {
       noexcept;
 
     /// @overload
-    size_t CellIndex(const array<size_t, 3>& _indexes) const noexcept;
+    size_t CellIndex(const std::array<size_t, 3>& _indexes) const noexcept;
 
     /// Get the z-index of a cell index.
     size_t ZIndex(const size_t _index) const noexcept;

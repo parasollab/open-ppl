@@ -12,7 +12,6 @@
 #include "MPLibrary/MPTools/TRPTool.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/DynamicsModel.h"
-#include "MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "Simulator/Simulation.h"
@@ -54,11 +53,19 @@ BatteryConstrainedGroup(Robot* const _r, XMLNode& _node) : Agent(_r) {
     m_initialRoles[memberLabel] = memberRole;
   }
 
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
+      "nearest agents and charging locations.");
+
   m_handoff = _node.Read("handoff", true, m_handoff, "Should workers wait "
       "for helpers to arrive before going back to charge?");
+  m_handoffDm = _node.Read("handoffDm", m_handoff, "", "The distance metric to "
+      "use for checking hand off proximity.");
+  m_handoffThreshold = _node.Read("handoffThreshold", m_handoff, 0., 0.,
+      std::numeric_limits<double>::infinity(), "Robots within this threshold "
+      "distance can hand off a task.");
 
   m_proactive = _node.Read("proactive", false, m_proactive, "Should helpers"
-               " proactively move to swap with workers");
+      " proactively move to swap with workers?");
 
   // This is a coordinator agent, which does not make sense without some group
   // members to coordinate. Throw an exception if it has no members.
@@ -211,8 +218,7 @@ Step(const double _dt) {
 
 
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  auto hardware = static_cast<QueuedHardwareInterface*>
-    (m_robot->GetHardwareInterface("base"));
+  auto hardware = m_robot->GetHardwareQueue();
   //const double depletionRate = hardware ? .36 : .04;
   const double depletionRate = hardware ? .36 : .5;
 
@@ -246,11 +252,7 @@ Step(const double _dt) {
     }
   }
 
-  //TODO need to be sure that time res is the right way to do this
   m_currentTime += m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  //std::cout << "COORDINATOR TIME: " << m_currentTime << std::endl;
-  //std::cout << "COORDINATOR TIME: " << m_currentTime << std::endl;
-  //std::cout << "COORDINATOR TIME: " << m_currentTime << std::endl;
 }
 
 
@@ -410,31 +412,37 @@ IsHighestPriority(Agent* const _a, const vector<Agent*>& _group){
   return GetPriority(_a) > maxPriority;
 }
 
+
 void
 BatteryConstrainedGroup::
 SetRole(Agent* const _a, const Role _r) {
+  auto stats = Simulation::GetStatClass();
+  const auto& label = _a->GetRobot()->GetLabel();
+
   switch(_r) {
     case Worker :
-      Simulation::GetStatClass()->StartClock("Productive Time for" + _a->GetRobot()->GetLabel());
-      Simulation::GetStatClass()->StopClock("Going to Help Time for" + _a->GetRobot()->GetLabel());
+      stats->StartClock("Productive Time for " + label);
+      stats->StopClock("Going to Help Time for " + label);
       break;
     case WaitingForHelp :
-      Simulation::GetStatClass()->StopClock("Productive Time for" + _a->GetRobot()->GetLabel());
+      stats->StopClock("Productive Time for " + label);
       break;
     case ReturningToCharge :
-      Simulation::GetStatClass()->StartClock("Returning to Charger Time for" + _a->GetRobot()->GetLabel());
+      stats->StartClock("Returning to Charger Time for " + label);
       break;
     case Charging :
-      Simulation::GetStatClass()->StopClock("Returning to Charger Time for" + _a->GetRobot()->GetLabel());
+      stats->StopClock("Returning to Charger Time for " + label);
       break;
     case GoingToHelp :
-      Simulation::GetStatClass()->StartClock("Going to Help Time for" + _a->GetRobot()->GetLabel());
+      stats->StartClock("Going to Help Time for " + label);
       break;
     case Helper :
       break;
   }
+
   m_roleMap[_a] = _r;
 }
+
 
 BatteryConstrainedGroup::Role
 BatteryConstrainedGroup::
@@ -442,11 +450,13 @@ GetRole(Agent* const _a) const {
   return m_roleMap.at(_a);
 }
 
+
 bool
 BatteryConstrainedGroup::
 IsWorker(Agent* const _a) const {
   return GetRole(_a) == Worker;
 }
+
 
 std::vector<Agent*>
 BatteryConstrainedGroup::
@@ -459,6 +469,7 @@ GetWorkers() {
 
   return output;
 }
+
 
 std::vector<Agent*>
 BatteryConstrainedGroup::
@@ -484,10 +495,11 @@ GetNearestHelper(Agent* const _member) {
   double nearestDistance = std::numeric_limits<double>::max();
   Agent* nearestHelper = nullptr;
 
-  auto dm = m_library->GetDistanceMetric("connectedFreeSpace");
+  auto dm = m_library->GetDistanceMetric(m_dmLabel);
 
   for(auto helper : GetHelpers()) {
-    const Cfg helperPos = helper->GetRobot()->GetDynamicsModel()->GetSimulatedState();
+    const Cfg helperPos = helper->GetRobot()->GetDynamicsModel()->
+                          GetSimulatedState();
     const double distance = dm->Distance(memberPos, helperPos);
 
     if(distance < nearestDistance) {
@@ -537,19 +549,18 @@ InHandoffProximity(Agent* const _member1, Agent* const _member2) {
   auto cfg1 = robot1->GetDynamicsModel()->GetSimulatedState(),
        cfg2 = robot2->GetDynamicsModel()->GetSimulatedState();
 
-  /// @TODO: Parse the distance metric string instead of hard coding.
-  auto dm = m_library->GetDistanceMetric("positionEuclidean");
+  auto dm = m_library->GetDistanceMetric(m_handoffDm);
 
   const double distance = dm->Distance(cfg1, cfg2);
 
   // Use twice the average diameter as the handoff distance.
-  const double threshold = 5. *
-    (robot1->GetMultiBody()->GetBoundingSphereRadius() +
-     robot2->GetMultiBody()->GetBoundingSphereRadius());
-  //std::cout << "Distance from worker/helper: " << distance
-            //<< " threshold: " << threshold << std::endl;
-  return distance < threshold;
+  //const double threshold = 5. *
+  //  (robot1->GetMultiBody()->GetBoundingSphereRadius() +
+  //   robot2->GetMultiBody()->GetBoundingSphereRadius());
+
+  return distance < m_handoffThreshold;
 }
+
 
 void
 BatteryConstrainedGroup::
@@ -674,7 +685,8 @@ InitializeChargingLocations() {
       continue;
 
     // Get the position of the member.
-    auto position = agent->GetRobot()->GetDynamicsModel()->GetSimulatedState().GetPosition();
+    auto position = agent->GetRobot()->GetDynamicsModel()->GetSimulatedState().
+                    GetPosition();
 
     // Create a new charging boundary using this position.
     std::unique_ptr<CSpaceBoundingSphere> boundary(new CSpaceBoundingSphere(position, .2));
@@ -691,12 +703,10 @@ BatteryConstrainedGroup::
 FindNearestChargingLocation(Agent* const _a) {
   auto robot = _a->GetRobot();
   auto currentPos = robot->GetDynamicsModel()->GetSimulatedState();
-  //std::cout << "HERE1" << std::endl;
   Boundary* bestChargingLocation = nullptr;
   double bestDistance = std::numeric_limits<double>::max();
 
-  /// @TODO Parse the distance metric from the agent XML node.
-  auto dm = m_library->GetDistanceMetric("euclidean");
+  auto dm = m_library->GetDistanceMetric(m_dmLabel);
 
   std::pair<std::unique_ptr<Boundary>, Agent*>* goalLocation = nullptr;
 
@@ -1033,7 +1043,7 @@ AssignProactiveHelperTask(Agent* const _member){
 
   auto controller  = memberRobot->GetController();
   auto dynamics    = memberRobot->GetDynamicsModel();
-  auto dm          = m_library->GetDistanceMetric("euclidean");
+  auto dm          = m_library->GetDistanceMetric(m_dmLabel);
 
   const double distanceThreshold = .05;
   double numSteps = 0;

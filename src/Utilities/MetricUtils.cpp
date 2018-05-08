@@ -59,7 +59,7 @@ StopPrintClock(std::ostream& _os) {
 void
 ClockClass::
 PrintClock(std::ostream& _os) {
-  _os << m_clockName << ": " << GetSeconds() << " sec" <<endl;
+  _os << m_clockName << ": " << GetSeconds() << " sec" << std::endl;
 }
 
 double

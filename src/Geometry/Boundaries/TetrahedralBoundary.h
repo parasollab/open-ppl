@@ -93,7 +93,7 @@ class TetrahedralBoundary : public Boundary {
 
     virtual void ApplyOffset(const Vector3d& _v) override;
 
-    virtual void ResetBoundary(const std::vector<pair<double, double>>& _bbx,
+    virtual void ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
         const double _margin) override;
 
     ///@}

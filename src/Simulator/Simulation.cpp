@@ -15,6 +15,7 @@
 #include "Visualization/DrawablePath.h"
 
 #include "nonstd/io.h"
+#include "nonstd/numerics.h"
 
 
 main_window* theOneWindow = nullptr;
@@ -35,25 +36,6 @@ Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit)
 }
 
 
-Simulation::
-~Simulation() {
-  reset();
-  PrintStatFile();
-  // Release the singleton so that it points to nothing.
-  s_singleton.release();
-}
-
-void
-Simulation::
-PrintStatFile(){
-  // Print the stats upon deletion.
-  std::ofstream osStat(m_problem->GetPath(m_problem->GetBaseFilename() +
-      "-sim.stat"));
-  m_stats->PrintAllStats(osStat);
-
-  std::cout << "File path: " <<  m_problem->GetPath(m_problem->GetBaseFilename()) << std::endl;
-}
-
 void
 Simulation::
 Create(std::shared_ptr<MPProblem> _problem, const bool _edit) {
@@ -63,18 +45,43 @@ Create(std::shared_ptr<MPProblem> _problem, const bool _edit) {
 }
 
 
+Simulation::
+~Simulation() {
+  reset();
+
+  // Print the stats on our way out so that we still get output in the event of
+  // an uncaught exception.
+  PrintStatFile();
+
+  // Release the singleton so that it points to nothing.
+  s_singleton.release();
+}
+
+/*-------------------------------- Accessors ---------------------------------*/
+
 Simulation*
 Simulation::
-Get() {
+Get() noexcept {
   return s_singleton.get();
 }
 
 
-StatClass*
+size_t
 Simulation::
-GetStatClass() {
-  return s_singleton->m_stats.get();
+NearestNumSteps(const double _dt) noexcept {
+  const double timeRes  = s_singleton->m_problem->GetEnvironment()->GetTimeRes(),
+               multiple = _dt / timeRes,
+               threshold = timeRes * .01;
+
+  // If _dt is approximately an integer number of time steps, return that
+  // integer.
+  if(nonstd::approx(multiple, std::round(multiple), threshold))
+    return std::lround(multiple);
+
+  // Otherwise, return the next largest number of steps.
+  return size_t(std::ceil(multiple));
 }
+
 
 /*-------------------------- Simulation Interface ----------------------------*/
 
@@ -184,7 +191,7 @@ EditStep() {
   }
 }
 
-/*------------------------ Visualization Interface ---------------------------*/
+/*-------------------------- Rendering Interface -----------------------------*/
 
 void
 Simulation::
@@ -234,10 +241,11 @@ start() {
       this->EditStep();
   };
 
-  // If we are using edit mode, don't use the physics engine - just update the
-  // model transforms to match the MPProblem on each step.
+  // Start the appropriate stepping function in a worker thread.
   m_worker = m_editMode ? std::thread(editWorkFunction)
                         : std::thread(physicsWorkFunction);
+
+  // Ensure the thread was created successfully.
   if(!m_worker.joinable())
     throw RunTimeException(WHERE, "Could not create worker thread.");
 }
@@ -265,11 +273,14 @@ SetBacklog(const size_t _max) {
   m_backlogMax = _max;
 }
 
+/*------------------------- Additional Visualization -------------------------*/
 
 size_t
 Simulation::
 AddPath(const std::vector<Cfg>& _path, glutils::color _c) {
   std::lock_guard<std::mutex> lock(m_guard);
+
+  // Assert the path is not empty.
   if(_path.empty())
     throw RunTimeException(WHERE, "Cannot draw an empty path.");
 
@@ -281,23 +292,10 @@ void
 Simulation::
 RemovePath(const size_t _id) {
   std::lock_guard<std::mutex> lock(m_guard);
+
+  // Remove this path from the collection and release it.
   DrawablePath* path = m_paths.take(_id);
   delete path;
-}
-
-/*------------------------------------- Locking ------------------------------*/
-
-void
-Simulation::
-Lock() {
-  m_guard.lock();
-}
-
-
-void
-Simulation::
-Unlock() {
-  m_guard.unlock();
 }
 
 /*--------------------------------- Editing ----------------------------------*/
@@ -310,6 +308,28 @@ RebuildMultiBody(DrawableMultiBody* const _d) {
   _d->rebuild();
   if(!m_editMode)
     m_engine->RebuildObject(_d->GetMultiBody());
+}
+
+/*--------------------------- Performance Measurement ------------------------*/
+
+StatClass*
+Simulation::
+GetStatClass() noexcept {
+  return s_singleton->m_stats.get();
+}
+
+
+void
+Simulation::
+PrintStatFile(const std::string& _basename) {
+  // Determine the base and full filenames.
+  const std::string basename = _basename.empty() ? m_problem->GetBaseFilename()
+                                                 : _basename,
+                    fullname = m_problem->GetPath(basename + "-sim.stat");
+
+  // Print the stats to file.
+  std::ofstream osStat(fullname);
+  m_stats->PrintAllStats(osStat);
 }
 
 /*----------------------------------- Helpers --------------------------------*/

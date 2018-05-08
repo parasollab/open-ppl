@@ -81,16 +81,16 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
 
     virtual void ApplyOffset(const Vector3d& _v) override;
 
-    virtual void ResetBoundary(const vector<pair<double, double>>& _bbx,
+    virtual void ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
         const double _margin) override;
 
     ///@}
     ///@name I/O
     ///@{
 
-    virtual void Read(istream& _is, CountingStreamBuffer& _cbs) override;
+    virtual void Read(std::istream& _is, CountingStreamBuffer& _cbs) override;
 
-    virtual void Write(ostream& _os) const override;
+    virtual void Write(std::ostream& _os) const override;
 
     ///@}
 

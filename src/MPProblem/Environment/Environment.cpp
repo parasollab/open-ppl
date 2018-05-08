@@ -25,7 +25,7 @@ Environment(XMLNode& _node) {
 
   // If the filename is an XML file we will read all of the environment
   // information from that file.
-  const bool readXML = m_filename.substr(m_filename.rfind(".", string::npos))
+  const bool readXML = m_filename.substr(m_filename.rfind(".", std::string::npos))
     == ".xml";
 
   if(readXML) {
@@ -154,7 +154,7 @@ void
 Environment::
 ReadXML(XMLNode& _node) {
   size_t sl = m_filename.rfind('/');
-  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl) + "/";
+  m_modelDataDir = m_filename.substr(0, sl == std::string::npos ? 0 : sl) + "/";
   Body::m_modelDataDir = m_modelDataDir;
 
   m_obstacles.clear();
@@ -184,14 +184,14 @@ Read(std::string _filename) {
 
   m_filename = _filename;
   size_t sl = m_filename.rfind('/');
-  m_modelDataDir = m_filename.substr(0, sl == string::npos ? 0 : sl) + "/";
+  m_modelDataDir = m_filename.substr(0, sl == std::string::npos ? 0 : sl) + "/";
   Body::m_modelDataDir = m_modelDataDir;
 
   m_obstacles.clear();
 
   // open file
   CountingStreamBuffer cbs(_filename);
-  istream ifs(&cbs);
+  std::istream ifs(&cbs);
 
   // read boundary
   std::string bndry = ReadFieldString(ifs, cbs, "Failed reading boundary tag.");
@@ -204,7 +204,7 @@ Read(std::string _filename) {
   m_boundary->Read(ifs, cbs);
 
   // read resolutions
-  string resolution;
+  std::string resolution;
   while((resolution = ReadFieldString(ifs, cbs, "Failed reading resolution tag."))
       != "MULTIBODIES") {
     if(resolution == "POSITIONRES")
@@ -246,7 +246,7 @@ Read(std::string _filename) {
 
 void
 Environment::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   _os << "Environment"
       << "\n\tpositionRes: " << m_positionRes
       << "\n\torientationRes: " << m_orientationRes
@@ -267,13 +267,12 @@ Environment::
 Write(std::ostream & _os) {
   _os << "Boundary ";
   m_boundary->Write(_os);
-  _os << endl << endl
-      << "Obstacles" << endl
+  _os << "\n\nObstacles\n"
       << m_obstacles.size()
-      << endl << endl;
+      << "\n\n";
   for(const auto& body : m_obstacles) {
     body->Write(_os);
-    _os << endl;
+    _os << std::endl;
   }
 }
 
@@ -287,10 +286,11 @@ ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots) {
 
   double bodiesMinSpan = std::numeric_limits<double>::max();
   for(auto& robot : _robots)
-    bodiesMinSpan = min(bodiesMinSpan, robot->GetMultiBody()->GetMaxAxisRange());
+    bodiesMinSpan = std::min(bodiesMinSpan,
+                             robot->GetMultiBody()->GetMaxAxisRange());
 
   for(auto& body : m_obstacles)
-    bodiesMinSpan = min(bodiesMinSpan, body->GetMaxAxisRange());
+    bodiesMinSpan = std::min(bodiesMinSpan, body->GetMaxAxisRange());
 
   // Set to XML input resolution if specified, else compute resolution factor
   m_positionRes = bodiesMinSpan * m_positionResFactor;
@@ -361,26 +361,26 @@ void
 Environment::
 ResetBoundary(double _d, const MultiBody* const _multibody) {
   double minx, miny, minz, maxx, maxy, maxz;
-  minx = miny = minz =  std::numeric_limits<double>::max();
-  maxx = maxy = maxz = -std::numeric_limits<double>::max();
+  minx = miny = minz = std::numeric_limits<double>::max();
+  maxx = maxy = maxz = std::numeric_limits<double>::lowest();
 
   double robotRadius = _multibody->GetBoundingSphereRadius();
   _d += robotRadius;
 
   for(auto& body : m_obstacles) {
     const double* tmp = body->GetBoundingBox();
-    minx = min(minx, tmp[0]);
-    maxx = max(maxx, tmp[1]);
-    miny = min(miny, tmp[2]);
-    maxy = max(maxy, tmp[3]);
-    minz = min(minz, tmp[4]);
-    maxz = max(maxz, tmp[5]);
+    minx = std::min(minx, tmp[0]);
+    maxx = std::max(maxx, tmp[1]);
+    miny = std::min(miny, tmp[2]);
+    maxy = std::max(maxy, tmp[3]);
+    minz = std::min(minz, tmp[4]);
+    maxz = std::max(maxz, tmp[5]);
   }
 
-  vector<pair<double, double> > obstBBX(3);
-  obstBBX[0] = make_pair(minx, maxx);
-  obstBBX[1] = make_pair(miny, maxy);
-  obstBBX[2] = make_pair(minz, maxz);
+  std::vector<std::pair<double, double> > obstBBX(3);
+  obstBBX[0] = std::make_pair(minx, maxx);
+  obstBBX[1] = std::make_pair(miny, maxy);
+  obstBBX[2] = std::make_pair(minz, maxz);
 
   m_boundary->ResetBoundary(obstBBX, _d);
 }
@@ -388,7 +388,8 @@ ResetBoundary(double _d, const MultiBody* const _multibody) {
 
 void
 Environment::
-ResetBoundary(const vector<pair<double, double>>& _bbx, const double _margin) {
+ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
+    const double _margin) {
   m_boundary->ResetBoundary(_bbx, _margin);
 }
 
@@ -399,10 +400,10 @@ ExpandBoundary(double _d, const MultiBody* const _multibody) {
   double robotRadius = _multibody->GetBoundingSphereRadius();
   _d += robotRadius;
 
-  vector<pair<double, double>> originBBX(3);
+  std::vector<std::pair<double, double>> originBBX(3);
   for(size_t i = 0; i < 3; ++i) {
     const auto& r = GetBoundary()->GetRange(i);
-    originBBX[i] = make_pair(r.min, r.max);
+    originBBX[i] = std::make_pair(r.min, r.max);
   }
 
   m_boundary->ResetBoundary(originBBX, _d);
@@ -421,8 +422,7 @@ MultiBody*
 Environment::
 GetObstacle(size_t _index) const {
   if(_index < 0 || _index >= m_obstacles.size())
-    throw RunTimeException(WHERE,
-        "Cannot access obstacle '" + ::to_string(_index) + "'.");
+    throw RunTimeException(WHERE) << "Cannot access obstacle '" << _index << "'.";
   return m_obstacles[_index].get();
 }
 
@@ -440,7 +440,7 @@ GetRandomObstacle() const {
 
 size_t
 Environment::
-AddObstacle(const string& _dir, const string& _filename,
+AddObstacle(const std::string& _dir, const std::string& _filename,
     const Transformation& _t) {
   const std::string filename = _dir.empty() ? _filename
                                             : _dir + '/' + _filename;
@@ -470,9 +470,9 @@ RemoveObstacle(const size_t _index) {
   if(_index < count)
     m_obstacles.erase(m_obstacles.begin() + _index);
   else
-    throw RunTimeException(WHERE, "Cannot remove obstacle with index " +
-        std::to_string(_index) + ", only " + std::to_string(count) +
-        " obstacles in the environment.");
+    throw RunTimeException(WHERE) << "Cannot remove obstacle with index "
+                                  << _index << ", only " << count
+                                  << " obstacles in the environment.";
 }
 
 
@@ -486,9 +486,9 @@ RemoveObstacle(MultiBody* const _obst) {
     return;
   }
 
-  throw RunTimeException(WHERE, "Cannot remove obstacle "
-      + std::to_string((size_t)_obst)
-      + ", does not match any obstacles in the environment.");
+  throw RunTimeException(WHERE) << "Cannot remove obstacle " << _obst
+                                << ", does not match any obstacles in the "
+                                << "environment.";
 }
 
 

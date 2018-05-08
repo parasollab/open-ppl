@@ -9,7 +9,8 @@
       frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot">
-      <Agent type="pathfollowing"/>
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
     </Robot>
 
     <!-- WARNING Support for multiple constraints is not yet implemented! -->
@@ -36,6 +37,8 @@
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
       <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
+      <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
+        velWeight="0" avlWeight="0"/>
       <CenterOfMass label="com"/>
       <KnotTheory label="knot"/>
       <Manhattan label="manhattan"/>

@@ -320,6 +320,26 @@ DLIB_DIR  := $(UTILS_DIR)/dlib
 DLIB_INCL := -I$(DLIB_DIR)
 
 ################################################################################
+# Hardware Support
+################################################################################
+# These get built with the regular PMPL executable because the robot class needs
+# to understand RobotCommandQueue, which requires the other abstractions.
+HARDWARE_SRCS := \
+  MPProblem/Robot/HardwareInterfaces/ActuatorInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/Battery.cpp \
+  MPProblem/Robot/HardwareInterfaces/Commands.cpp \
+  MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.cpp \
+  MPProblem/Robot/HardwareInterfaces/SensorInterface.cpp
+
+
+# Also build iCreate interface if we are compiling with that option.
+ifneq ($(icreate), 0)
+  HARDWARE_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
+endif
+
+################################################################################
 # Simulator
 ################################################################################
 SIM_INCL := $(QT_INCL)
@@ -407,11 +427,6 @@ PMPL_SRCS := \
   MPProblem/Robot/DynamicsModel.cpp \
   MPProblem/Robot/Robot.cpp \
   MPProblem/RobotGroup/RobotGroup.cpp \
-  MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/Battery.cpp \
-  MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/QueuedHardwareInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/ServerQueueInterface.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
   Utilities/CountingStreamBuffer.cpp \
@@ -424,9 +439,5 @@ PMPL_SRCS := \
   Workspace/WorkspaceDecomposition.cpp \
   Workspace/WorkspacePortal.cpp \
   Workspace/WorkspaceRegion.cpp \
-  Workspace/WorkspaceSkeleton.cpp
-
-# Also build iCreate interface if we are compiling with that option.
-ifneq ($(icreate), 0)
-  PMPL_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
-endif
+  Workspace/WorkspaceSkeleton.cpp \
+  $(HARDWARE_SRCS)

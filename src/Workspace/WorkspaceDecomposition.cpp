@@ -171,7 +171,7 @@ AddTetrahedralRegion(const int _pts[4]) {
     f.ComputeNormal();
     if(f.PointIsAbove(center))
       f.Reverse();
-    wr.AddFacet(move(f));
+    wr.AddFacet(std::move(f));
   }
 
   // Create a tetrahedral boundary object for the region.

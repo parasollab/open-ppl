@@ -7,7 +7,8 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This agent calls pmpl once and then follows the resulting path.
+/// This agent calls pmpl to generate a path, then attempts to follow the path
+/// waypoints as closely as possible by relying on the robot's controller.
 ////////////////////////////////////////////////////////////////////////////////
 class PathFollowingAgent : public PlanningAgent {
 
@@ -63,6 +64,13 @@ class PathFollowingAgent : public PlanningAgent {
 
     std::vector<Cfg> m_path; ///< The path to follow.
     size_t m_pathIndex{0};   ///< The path node that is the current subgoal.
+
+    /// The distance metric for checking whether the agent has reached a
+    /// path waypoint.
+    std::string m_waypointDm;
+
+    /// The distance threshold for waypoint proximity.
+    double m_waypointThreshold{.05};
 
     size_t m_pathVisualID{0}; ///< The ID of the path drawing.
 

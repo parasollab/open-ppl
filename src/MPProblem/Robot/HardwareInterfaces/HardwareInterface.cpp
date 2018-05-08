@@ -1,5 +1,6 @@
 #include "HardwareInterface.h"
 
+#include "ArucoDetectorInterface.h"
 #ifdef PMPL_USE_ICREATE
 #include "ICreateInterface.h"
 #endif
@@ -44,7 +45,7 @@ Factory(XMLNode& _node) {
   std::unique_ptr<HardwareInterface> output;
 
   // Match the type string to known interfaces. Provide detailed errors here to
-  // make sure we don't waste time on sily configuration problems.
+  // make sure we don't waste time on silly configuration problems.
   if(type == "icreate") {
 #ifdef PMPL_USE_ICREATE
     output = std::unique_ptr<ICreateInterface>(
@@ -55,6 +56,12 @@ Factory(XMLNode& _node) {
     throw ParseException(_node.Where(), "Requested interface for 'icreate', but "
         "support for this was not compiled. Re-make with 'icreate=1' to enable.");
 #endif
+  }
+  else if(type == "aruco") {
+    output = std::unique_ptr<ArucoDetectorInterface>(
+        port == 0 ? new ArucoDetectorInterface(ip)
+                  : new ArucoDetectorInterface(ip, port)
+    );
   }
   else
     throw ParseException(_node.Where(), "Unrecognized hardware '" + type + "'.");

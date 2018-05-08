@@ -140,7 +140,7 @@ ApplyOffset(const Vector3d& _v) {
 
 void
 AbstractBoundingSphere::
-ResetBoundary(const vector<pair<double, double>>&, const double) {
+ResetBoundary(const std::vector<std::pair<double, double>>&, const double) {
   throw RunTimeException(WHERE, "This operation does not make sense for a "
       "sphere. Can't resize each dimension independently!");
 }
@@ -163,7 +163,7 @@ ComputeRange() const {
 
 void
 AbstractBoundingSphere::
-Read(istream& _is, CountingStreamBuffer& _cbs) {
+Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   // Try to read in using NSphere. Re-propogate any exceptions with the better
   // debug info from the CountingStreamBuffer.
   try {
@@ -179,7 +179,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 AbstractBoundingSphere::
-Write(ostream& _os) const {
+Write(std::ostream& _os) const {
   _os << static_cast<const NSphere&>(*this);
 }
 

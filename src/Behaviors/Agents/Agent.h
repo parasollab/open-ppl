@@ -67,11 +67,18 @@ class Agent {
     virtual ~Agent();
 
     ///@}
-    ///@name Accessors
+    ///@name Agent Properties
     ///@{
 
-    /// Get the robot object which this agent belongs to.
-    virtual Robot* GetRobot() const noexcept;
+    /// Get the robot object to which this agent belongs.
+    Robot* GetRobot() const noexcept;
+
+    /// Is this agent a child of some group/aggregate?
+    virtual bool IsChild() const noexcept;
+
+    ///@}
+    ///@name Task Management
+    ///@{
 
     /// Set the task for this agent.
     /// @param _task The new task for this agent. Should be owned by the
@@ -80,21 +87,6 @@ class Agent {
 
     /// Get the task that the agent is currently working on.
     std::shared_ptr<MPTask> GetTask() const noexcept;
-
-    /// Is this agent a child of some group/aggregate?
-    virtual bool IsChild() const;
-
-    ///@}
-    ///@name Disabled Functions
-    ///@{
-    /// Regular copy/move is disabled because each agent must be created for a
-    /// specific robot object.
-
-    Agent(const Agent&) = delete;
-    Agent(Agent&&) = delete;
-
-    Agent& operator=(const Agent&) = delete;
-    Agent& operator=(Agent&&) = delete;
 
     ///@}
     ///@name Simulation Interface
@@ -113,27 +105,17 @@ class Agent {
     /// pre-initialize state.
     virtual void Uninitialize() = 0;
 
-    /// Find the smallest number of time steps which covers a given time
-    /// interval.
-    /// @param _dt The original time interval.
-    /// @return The smallest number of time steps which contains _dt.
-    size_t NearestNumSteps(const double _dt) const;
-
     /// Find the smallest time interval which is an integer multiple of the
     /// problem time resolution and larger than the hardware time (if any).
     size_t MinimumSteps() const;
 
     /// Check for proximity of other robots and return those that lie within
     /// some threshold.
+    /// @WARNING This checks the distance between the robots' reference points;
+    ///          it does not indicate the minimum distance between their hulls.
     /// @param _distance The distance threshold.
     /// @return the vector of Robots within the threshold.
     std::vector<Agent*> ProximityCheck(const double _distance) const;
-
-    /// Find agents within a robot's time horizon
-    /// @param _distance The distance theshold for the proximity check.
-    /// @param _tmax The maximum planning time.
-    std::vector<Agent*> TimeHorizonCheck(const double _distance,
-        const size_t _tmax) const;
 
     ///@}
     ///@name Agent Control
@@ -145,7 +127,9 @@ class Agent {
     ///          completion, but it is not physically realistic.
     void Halt();
 
-    /// Orders The agent to stop itself at its current position.
+    /// Orders the agent to stop itself at its current position. It will ask the
+    /// controller to choose actions which stay as close as possible to the
+    /// current position.
     /// @param _steps The number of steps we wish to stop for.
     void PauseAgent(const size_t _steps);
 
@@ -172,6 +156,18 @@ class Agent {
     /// @param _c The controls to execute.
     /// @param _steps The number of time steps to execute the control.
     void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps);
+
+    ///@}
+    ///@name Disabled Functions
+    ///@{
+    /// Regular copy/move is disabled because each agent must be created for a
+    /// specific robot object.
+
+    Agent(const Agent&) = delete;
+    Agent(Agent&&)      = delete;
+
+    Agent& operator=(const Agent&) = delete;
+    Agent& operator=(Agent&&)      = delete;
 
     ///@}
 
