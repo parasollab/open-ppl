@@ -73,6 +73,16 @@ class XMLNode {
     /// Get the XML filename.
     const std::string& Filename() const;
 
+    /// Get the directory path containing the XML file.
+    const std::string& GetPath() const;
+
+    ///@}
+    ///@name Content Accessors
+    ///@{
+
+    /// Get the text between opening and closing tags.
+    std::string GetText() const;
+
     ///@}
     ///@name Attribute Parsing
     ///@{
@@ -130,6 +140,10 @@ class XMLNode {
         const bool _req,
         const std::string& _default,
         const std::string& _desc);
+
+    ///@}
+    ///@name Parsing Flow
+    ///@{
 
     /// Ignore unrequested node/attribute errors for this node.
     void Ignore();
@@ -228,6 +242,7 @@ class XMLNode {
     std::vector<XMLNode> m_children; ///< Children of node
     std::unordered_set<std::string> m_reqAttributes; ///< Requested attributes.
     std::string m_filename;          ///< XML Filename
+    std::string m_path;              ///< XML file path (without name).
 
     /// Overall TiXmlDocument. Can be shared by child nodes.
     std::shared_ptr<TiXmlDocument> m_doc;

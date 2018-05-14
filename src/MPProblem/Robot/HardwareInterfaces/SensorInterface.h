@@ -4,6 +4,9 @@
 #include "HardwareInterface.h"
 
 class SensorCommand;
+namespace mathtool {
+  class Transformation;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,8 +49,11 @@ class SensorInterface : public HardwareInterface {
     /// Instruct the sensor to take a measurement.
     virtual void SendCommand(const SensorCommand& _c) = 0;
 
-    /// Get the last measurement.
-    virtual std::vector<double> GetLastMeasurement() = 0;
+    /// Get the last transformation measurements.
+    virtual std::vector<mathtool::Transformation> GetLastTransformations();
+
+    /// Get the last joint angle measurements.
+    virtual std::vector<std::vector<double>> GetLastJointAngles();
 
     /// Get the measurement uncertainty.
     /// @TODO This should maybe be a covariance matrix instead of an uncertainty

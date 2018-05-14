@@ -26,6 +26,9 @@ ROBOT_DEF ?= PMPCfg
 # Build support for iCreate hardware?
 icreate ?= 0
 
+# Build support for aruco detector hardware?
+aruco ?= 0
+
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 PMPL_DIR  := .
@@ -66,13 +69,15 @@ LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 # Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Pre-pend the build directory to the object file names.
-PMPL_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
-SIM_OBJS  := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
+PMPL_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
+SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
+HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
 
 # Make the object files depend on updated utility libraries so the libs are
 # built first.
-$(PMPL_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
-$(SIM_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 ifeq ($(parallel), 1)
   MAIN := $(OBJ_DIR)/parallel_main.o
@@ -100,15 +105,16 @@ $(PMPL_LIBFILE): $(PMPL_OBJS)
 # Executable Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Build the traditional pmpl executable.
-pmpl: $(MAIN) $(PMPL_LIBFILE)
+pmpl: $(MAIN) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(HARDWARE_OBJS) $(LIBS) -o $@
 
 # Build the simulator.
-sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) \
+sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
      | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
+	  $(LIBS) -o $@
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

@@ -9,6 +9,10 @@
 XMLNode::
 XMLNode(const std::string& _filename, const std::string& _desiredNode) :
     m_filename(_filename) {
+  // Determine the file path.
+  const size_t sl = _filename.rfind("/");
+  m_path = _filename.substr(0, sl == std::string::npos ? 0 : sl + 1);
+
   // Read the XML file into a tinyxml document.
   m_doc = std::shared_ptr<TiXmlDocument>(new TiXmlDocument(_filename));
   if(!m_doc->LoadFile())
@@ -86,6 +90,21 @@ const std::string&
 XMLNode::
 Filename() const {
   return m_filename;
+}
+
+
+const std::string&
+XMLNode::
+GetPath() const {
+  return m_path;
+}
+
+/*--------------------------- Content Accessors ------------------------------*/
+
+std::string
+XMLNode::
+GetText() const {
+  return std::string(m_node->ToElement()->GetText());
 }
 
 /*----------------------------------------------------------------------------*/

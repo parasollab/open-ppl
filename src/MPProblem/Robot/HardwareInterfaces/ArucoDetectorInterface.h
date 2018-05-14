@@ -3,13 +3,18 @@
 
 #include "SensorInterface.h"
 
+#include <memory>
+#include <mutex>
+#include <string>
 #include <vector>
 
 namespace nonstd {
   class tcp_socket;
 }
 
+class ArucoMarkerMap;
 class ArucoObservation;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +29,7 @@ class ArucoDetectorInterface : public SensorInterface
     ///@name Construction
     ///@{
 
-    ArucoDetectorInterface(const std::string& _ip,
+    ArucoDetectorInterface(XMLNode& _node, const std::string& _ip,
         const unsigned short _port = 4002);
 
     virtual ~ArucoDetectorInterface();
@@ -37,7 +42,8 @@ class ArucoDetectorInterface : public SensorInterface
 
     virtual void SendCommand(const SensorCommand& _c) override;
 
-    virtual std::vector<double> GetLastMeasurement() override;
+    virtual std::vector<mathtool::Transformation> GetLastTransformations()
+        override;
 
     virtual std::vector<double> GetUncertainty() override;
 
@@ -45,23 +51,18 @@ class ArucoDetectorInterface : public SensorInterface
 
   private:
 
-    ///@name Helpers
-    ///@{
-
-    /// Use the marker map to estimate the robot's global position from the
-    /// current observations.
-    /// @return Data for a 6-DOF cfg representing the robot's base
-    ///         transformation.
-    std::vector<double> EstimateGlobalPositionFromObservations();
-
-    ///@}
     ///@name Internal State
     ///@{
 
-    nonstd::tcp_socket* m_socket{nullptr}; ///< TCP connection object.
+    std::unique_ptr<nonstd::tcp_socket> m_socket; ///< TCP connection object.
 
     /// Marker data from the last measurement.
     std::vector<ArucoObservation> m_observations;
+
+    /// Map of the known locations for aruco markers.
+    std::unique_ptr<ArucoMarkerMap> m_markerMap;
+
+    mutable std::mutex m_lock; ///< Lock for sending/retrieving data.
 
     ///@}
 

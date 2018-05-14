@@ -53,18 +53,28 @@ Factory(XMLNode& _node) {
                   : new ICreateInterface(ip, port)
     );
 #else
-    throw ParseException(_node.Where(), "Requested interface for 'icreate', but "
-        "support for this was not compiled. Re-make with 'icreate=1' to enable.");
+    throw ParseException(_node.Where()) << "Requested interface for 'icreate', "
+                                        << "but support for this was not "
+                                        << "compiled. Re-make with 'icreate=1' "
+                                        << "to enable.";
 #endif
   }
   else if(type == "aruco") {
+#ifdef PMPL_USE_ARUCO
     output = std::unique_ptr<ArucoDetectorInterface>(
-        port == 0 ? new ArucoDetectorInterface(ip)
-                  : new ArucoDetectorInterface(ip, port)
+        port == 0 ? new ArucoDetectorInterface(_node, ip)
+                  : new ArucoDetectorInterface(_node, ip, port)
     );
+#else
+    throw ParseException(_node.Where()) << "Requested interface for 'aruco', "
+                                        << "but support for this was not "
+                                        << "compiled. Re-make with 'aruco=1' "
+                                        << "to enable.";
+#endif
   }
   else
-    throw ParseException(_node.Where(), "Unrecognized hardware '" + type + "'.");
+    throw ParseException(_node.Where()) << "Unrecognized hardware '"
+                                        << type << "'.";
 
   return output;
 }

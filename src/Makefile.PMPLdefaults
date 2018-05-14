@@ -281,20 +281,29 @@ PHYSICAL_ROBOTS_DIR := $(UTILS_DIR)/physicalrobots
 PLAYER_DIR          := $(PHYSICAL_ROBOTS_DIR)/player/build/install
 
 ifneq ($(icreate), 0)
-  PHYSICAL_ROBOTS_DEF  := -DPMPL_USE_ICREATE \
-                          -DBOOST_SIGNALS_NO_DEPRECATION_WARNING
-  PHYSICAL_ROBOTS_INCL := -I$(PHYSICAL_ROBOTS_DIR)/src \
-                          -I$(PHYSICAL_ROBOTS_DIR)/tcp \
-		          -I$(PLAYER_DIR)/include/player-3.0
-  PHYSICAL_ROBOTS_LIBS := -L$(PLAYER_DIR)/lib64 \
-			  -lplayerc++ -lplayerc -lplayercommon -lplayercore \
-			  -lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
-			  -lplayerwkb \
-			  -lopencv_core -lopencv_calib3d \
-			  -lboost_system -lboost_thread -lboost_signals
+  ICREATE_DEF  := -DPMPL_USE_ICREATE \
+                  -DBOOST_SIGNALS_NO_DEPRECATION_WARNING
+  ICREATE_INCL := -I$(PLAYER_DIR)/include/player-3.0
+  ICREATE_LIBS := -L$(PLAYER_DIR)/lib64 \
+	      	  -lplayerc++ -lplayerc -lplayercommon -lplayercore \
+		  -lplayerinterface -lplayerjpeg -lplayertcp -lplayerudp \
+		  -lplayerwkb \
+		  -lopencv_core -lopencv_calib3d \
+		  -lboost_system -lboost_thread -lboost_signals
 
-  PHYSICAL_ROBOTS_LIBFILE := $(PHYSICAL_ROBOTS_DIR)/src/libcreate_controller.a
+  ICREATE_LIBFILE := $(PHYSICAL_ROBOTS_DIR)/player/build/install/lib64/libplayerc++.a
 endif
+
+ifneq ($(aruco), 0)
+  ARUCO_DEF  := -DPMPL_USE_ARUCO
+  ARUCO_INCL := -I$(PHYSICAL_ROBOTS_DIR)
+endif
+
+
+PHYSICAL_ROBOTS_DEF  := $(ICREATE_DEF) $(ARUCO_DEF)
+PHYSICAL_ROBOTS_INCL := $(ICREATE_INCL) $(ARUCO_INCL)
+PHYSICAL_ROBOTS_LIBS := $(ICREATE_LIBS) $(ARUCO_LIBS)
+PHYSICAL_ROBOTS_LIBFILE := $(ICREATE_LIBFILE)
 
 $(PHYSICAL_ROBOTS_LIBFILE):
 	@echo Building physicalrobots library...
@@ -320,26 +329,6 @@ DLIB_DIR  := $(UTILS_DIR)/dlib
 DLIB_INCL := -I$(DLIB_DIR)
 
 ################################################################################
-# Hardware Support
-################################################################################
-# These get built with the regular PMPL executable because the robot class needs
-# to understand RobotCommandQueue, which requires the other abstractions.
-HARDWARE_SRCS := \
-  MPProblem/Robot/HardwareInterfaces/ActuatorInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/Battery.cpp \
-  MPProblem/Robot/HardwareInterfaces/Commands.cpp \
-  MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.cpp \
-  MPProblem/Robot/HardwareInterfaces/SensorInterface.cpp
-
-
-# Also build iCreate interface if we are compiling with that option.
-ifneq ($(icreate), 0)
-  HARDWARE_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
-endif
-
-################################################################################
 # Simulator
 ################################################################################
 SIM_INCL := $(QT_INCL)
@@ -353,6 +342,7 @@ SIM_SRCS := \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
+  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableMultiBody.cpp \
@@ -365,6 +355,30 @@ SIM_SRCS := \
   Visualization/Gui/Setup.cpp \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp
+
+################################################################################
+# Hardware
+################################################################################
+HARDWARE_SRCS := \
+  MPProblem/Robot/HardwareInterfaces/ActuatorInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/Battery.cpp \
+  MPProblem/Robot/HardwareInterfaces/Commands.cpp \
+  MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \
+  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.cpp \
+  MPProblem/Robot/HardwareInterfaces/SensorInterface.cpp
+
+# Also build Aruco interface if we are compiling with that option.
+ifneq ($(aruco), 0)
+  HARDWARE_SRCS += MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp \
+                   MPProblem/Robot/HardwareInterfaces/ArucoMarkerMap.cpp
+endif
+
+
+# Also build iCreate interface if we are compiling with that option.
+ifneq ($(icreate), 0)
+  HARDWARE_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
+endif
+
 
 ################################################################################
 # PMPL
@@ -426,6 +440,7 @@ PMPL_SRCS := \
   MPProblem/Robot/Control.cpp \
   MPProblem/Robot/DynamicsModel.cpp \
   MPProblem/Robot/Robot.cpp \
+  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp \
   MPProblem/RobotGroup/RobotGroup.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
@@ -439,5 +454,4 @@ PMPL_SRCS := \
   Workspace/WorkspaceDecomposition.cpp \
   Workspace/WorkspacePortal.cpp \
   Workspace/WorkspaceRegion.cpp \
-  Workspace/WorkspaceSkeleton.cpp \
-  $(HARDWARE_SRCS)
+  Workspace/WorkspaceSkeleton.cpp
