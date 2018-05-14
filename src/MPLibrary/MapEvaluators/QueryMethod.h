@@ -241,7 +241,7 @@ QueryMethod(XMLNode& _node) :
 
   m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
       "Label of the SafeIntervalTool");
-  
+
   m_vcLabel = _node.Read("vcLabel", true, "",
       "Label of the Validity Checker for generating the Query");
 
@@ -270,7 +270,7 @@ Initialize() {
   // Clear previous state.
   m_query.clear();
   m_goals.clear();
-
+  GenerateQuery();
   Reset(nullptr);
 }
 
@@ -289,9 +289,6 @@ template <typename MPTraits>
 bool
 QueryMethod<MPTraits>::
 PerformQuery(RoadmapType* const _r) {
-  if(m_query.empty())
-    GenerateQuery();
-
   if(this->m_debug)
     cout << "Evaluating query, " << m_goals.size() << " goals not connected.\n";
 
