@@ -204,10 +204,12 @@ RobotCommandQueue::
 SendToRobot(const Command& _command) {
   switch(_command.type) {
     case Command::Type::Motion:
-      m_base->SendCommand(_command.ToMotionCommand());
+      if(m_base.get())
+        m_base->SendCommand(_command.ToMotionCommand());
       return;
     case Command::Type::Sensor:
-      m_sensor->SendCommand(_command.ToSensorCommand());
+      if(m_sensor.get())
+        m_sensor->SendCommand(_command.ToSensorCommand());
       return;
   }
 }
