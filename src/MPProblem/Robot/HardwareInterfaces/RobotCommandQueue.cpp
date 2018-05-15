@@ -33,8 +33,8 @@ RobotCommandQueue::
 double
 RobotCommandQueue::
 GetCommunicationTime() const {
-  return std::max(m_base->GetCommunicationTime(),
-                  m_sensor->GetCommunicationTime());
+  return std::max(m_base.get()   ? m_base->GetCommunicationTime()   : 0,
+                  m_sensor.get() ? m_sensor->GetCommunicationTime() : 0);
 }
 
 /*------------------------------ Command Queue -------------------------------*/
@@ -167,7 +167,7 @@ QueueFunction() {
 
     // If the current command is shorter than the polling period, we will try
     // to execute it anyway but there may be some issues.
-    if(executeTime < m_period) {
+    if(executeTime < m_period and !currentCommandSent) {
       std::cerr << "\nRobotCommandQueue:: WARNING! Current command has "
                 << "duration " << executeTime << " remaining, which is less than "
                 << "the polling period " << m_period << "! "

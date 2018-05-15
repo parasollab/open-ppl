@@ -30,6 +30,8 @@ RobotCommandQueue(XMLNode& _node) {
 
   // Set the queue period to the maximum communication time..
   m_period = GetCommunicationTime();
+
+  StartQueue();
 }
 
 /*----------------------------------------------------------------------------*/
