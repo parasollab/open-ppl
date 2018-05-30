@@ -75,7 +75,7 @@ class Agent {
 
     /// Is this agent a child of some group/aggregate?
     virtual bool IsChild() const noexcept;
-
+    
     ///@}
     ///@name Task Management
     ///@{

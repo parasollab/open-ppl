@@ -2,6 +2,8 @@
 #define ROADMAP_H_
 
 #include <unordered_map>
+#include <iostream>
+#include <fstream>
 
 #include "RoadmapGraph.h"
 #include "MPProblem/Environment/Environment.h"
@@ -189,7 +191,7 @@ template <class MPTraits>
 void
 Roadmap<MPTraits>::
 Read(const std::string& _filename) {
-  ifstream ifs(_filename.c_str());
+  std::ifstream ifs(_filename.c_str());
   if(!ifs)
     throw ParseException(WHERE, "Cannot open file " + _filename + ".");
 
@@ -205,7 +207,7 @@ Read(const std::string& _filename) {
           "GRAPHSTART tag is missing.");
 
     // If we find the GRAPHSTART tag, we are done.
-    if(tag.find("GRAPHSTART") != string::npos)
+    if(tag.find("GRAPHSTART") != std::string::npos)
       headerParsed = true;
   }
 

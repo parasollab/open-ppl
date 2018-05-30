@@ -176,7 +176,9 @@ Initialize() {
   for(auto worker : GetWorkers()){
     worker->GetRobot()->SetVirtual(false);
   }
-  std::cout << "Finished James's Test stuff" << std::endl;*/
+  std::cout << "Finished James's Test stuff" << std::endl;
+  */
+  Simulation::GetStatClass()->StartClock("TotalRunTime");
 }
 
 
@@ -206,7 +208,6 @@ Step(const double _dt) {
   if(this->m_debug)
     std::cout << "Number of battery breaks: " << m_batteryBreaks.size()
               << std::endl;
-
   if(m_batteryBreaks.size() > 1)
     throw RunTimeException(WHERE, "Too many battery breaks");
 
@@ -251,7 +252,6 @@ Step(const double _dt) {
       chargingLocation.second->GetRobot()->GetBattery()->Charge(m_chargingRate + timeRes*depletionRate);
     }
   }
-
   m_currentTime += m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 }
 
@@ -370,6 +370,9 @@ ArbitrateCollision() {
       if(this->m_debug)
         std::cout << "Updating Version Map" << std::endl;
       UpdateVersionMap(groupAgent, group);
+      if(GetRole(groupAgent) == GoingToHelp){
+        CheckReachedWorker(groupAgent);
+      }
     }
     else{
       groupAgent->PauseAgent(5);
@@ -646,7 +649,9 @@ CheckReachedWorker(Agent* const _member){
           GetDynamicsModel()->GetSimulatedState().GetPosition();
         auto combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
             agentPair.first->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
-        CSpaceBoundingSphere boundingSphere(workerPos, combinedRadius);
+        std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
+                              new CSpaceBoundingSphere(workerPos, combinedRadius));  
+        /*
         std::vector<Cfg> goalPoints;
 
         /// @TODO Change this to a parameter instead of hardcoding sampler label.
@@ -659,14 +664,18 @@ CheckReachedWorker(Agent* const _member){
           throw RunTimeException(WHERE, "No valid starting configuration for the PausedTask.");
 
         Cfg validCfg = goalPoints[0];
-        auto goal = std::unique_ptr<CSpaceConstraint>
-          (new CSpaceConstraint(m_robot, validCfg));
+        */
+        auto goal = std::unique_ptr<BoundaryConstraint>
+          (new BoundaryConstraint(m_robot, std::move(boundingSphere))); 
 
         //TODO: Need to insert goal constraint at the beginning
         newTask->AddGoalConstraint(std::move(goal));
         _member->SetTask(newTask);
       }
     }
+  }
+  if(m_helperMap.empty() && !m_proactive){
+    PerformHelperSwap(_member, nullptr);
   }
 }
 
@@ -863,7 +872,9 @@ AssignTaskWorker(Agent* const _member) {
     if(tasks.size() < 1){
       if(this->m_debug)
         std::cout << "No Tasks left in the problem" << std::endl;
-      Simulation::Get()->PrintStatFile();
+
+      Simulation::GetStatClass()->StopClock("TotalRunTime");
+      //Simulation::Get()->PrintStatFile();
       theOneWindow->close();
     }
   }
@@ -906,7 +917,9 @@ AssignTaskHelper(Agent* const _member) {
     GetDynamicsModel()->GetSimulatedState().GetPosition();
   auto combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
       previousOwner->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
-  CSpaceBoundingSphere boundingSphere(workerPos, combinedRadius);
+  std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
+                      new CSpaceBoundingSphere(workerPos, combinedRadius));  
+  /*
   std::vector<Cfg> goalPoints;
 
   /// @TODO Change this to a parameter instead of hardcoding sampler label.
@@ -919,8 +932,9 @@ AssignTaskHelper(Agent* const _member) {
     throw RunTimeException(WHERE, "No valid starting configuration for the PausedTask.");
 
   Cfg validCfg = goalPoints[0];
-  auto goal = std::unique_ptr<CSpaceConstraint>
-    (new CSpaceConstraint(m_robot, validCfg));
+  */
+  auto goal = std::unique_ptr<BoundaryConstraint>
+    (new BoundaryConstraint(m_robot, std::move(boundingSphere))); 
 
   //TODO: Need to insert goal constraint at the beginning
   newTask->AddGoalConstraint(std::move(goal));
@@ -965,7 +979,7 @@ AssignProactiveHelperTask(Agent* const _member){
   //  throw RunTimeException(WHERE, "No valid starting configuration for the PausedTask.");
 
   //Cfg validCfg = goalPoints[0];
-  auto goal = std::unique_ptr<Constraint>
+  auto goal = std::unique_ptr<BoundaryConstraint>
     (new BoundaryConstraint(m_robot, std::move(boundingSphere)));
 
   //auto swapPoint = bBreak.GetPlace();
@@ -1110,6 +1124,8 @@ AssignTaskWaiting(Agent* const _member){
       //Simulation::GetStatClass()->StopClock("DownTime for" + _member->GetRobot()->
       //        GetLabel() + " " + std::to_string(childAgent->GetPlanVersion()));
       SetRole(_member, ReturningToCharge);
+      if(m_proactive)
+        m_batteryBreaks.erase(m_batteryBreaks.find(_member));
       // TODO: This 0 priority could be a problem later, since we are assuming the
       //       robot has just enough battery to reach a charging station.
       SetPriority(_member, GetPriority(_member) + 500);
@@ -1154,7 +1170,7 @@ PerformHelperSwap(Agent* const _helper, Agent* _worker){
           std::cout << "Assigning a new task" << std::endl;
       }
       m_pausedTasks.erase(it);
-      m_batteryBreaks.erase(m_batteryBreaks.find(_worker));
+      //m_batteryBreaks.erase(m_batteryBreaks.find(_worker));
       break;
     }
   }
@@ -1210,7 +1226,7 @@ BatteryCheck(Agent* const _member){
                     << std::endl;
         _member->SetTask(nullptr);
         SetRole(_member, WaitingForHelp);
-        SetPriority(_member, GetPriority(_member) - 1000);
+        SetPriority(_member, GetPriority(_member) - 1500);
       }
       // If we can stop the task without waiting, go charge.
       else{

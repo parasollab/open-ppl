@@ -1,6 +1,8 @@
 #include "Agent.h"
 
 #include "BatteryConstrainedGroup.h"
+#include "Coordinator.h"
+#include "HandoffAgent.h"
 #include "PathFollowingChildAgent.h"
 #include "PathFollowingAgent.h"
 #include "RoadmapFollowingAgent.h"
@@ -35,6 +37,14 @@ Factory(Robot* const _r, XMLNode& _node) {
   else if(type == "batteryconstrainedgroup")
     output = std::unique_ptr<BatteryConstrainedGroup>(
         new BatteryConstrainedGroup(_r, _node)
+    );
+  else if(type == "handoff")
+    output = std::unique_ptr<HandoffAgent>(
+        new HandoffAgent(_r, _node)
+    );
+  else if(type == "coordinator")
+    output = std::unique_ptr<Coordinator>(
+        new Coordinator(_r, _node)
     );
   else
     throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");

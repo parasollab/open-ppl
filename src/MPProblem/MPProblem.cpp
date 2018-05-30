@@ -5,6 +5,7 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/DynamicObstacle.h"
+#include "MPProblem/MPHandoffTemplate.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -317,6 +318,11 @@ SetPath(const string& _filename) {
   m_filePath = _filename;
 }
 
+std::vector<MPHandoffTemplate*> 
+MPProblem::
+GetHandoffTemplates() const {
+  return m_handoffTemplates;
+}
 /*---------------------------- Construction Helpers --------------------------*/
 
 bool
@@ -353,6 +359,10 @@ ParseChild(XMLNode& _node) {
     const std::string label = _node.Read("robot", true, "", "Label for the robot "
         " assigned to this task.");
     m_taskMap[this->GetRobot(label)].emplace_back(new MPTask(this, _node));
+    return true;
+  }
+  else if(_node.Name() == "HandoffTemplate") {
+    m_handoffTemplates.emplace_back(new MPHandoffTemplate(this, _node));
     return true;
   }
   else

@@ -2,7 +2,7 @@
 #define ROADMAP_GRAPH_H_
 
 #include "Utilities/RuntimeUtils.h"
-
+#include "Utilities/PMPLExceptions.h"
 
 #ifdef _PARALLEL
 #include <containers/graph/dynamic_graph.hpp>

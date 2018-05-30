@@ -9,6 +9,7 @@
 #include <vector>
 
 class DynamicObstacle;
+class MPHandoffTemplate;
 class Environment;
 class MPTask;
 class MultiBody;
@@ -143,6 +144,14 @@ class MPProblem final
 
     ///@}
 
+    ///@name Handoff Template Accessors
+    ///@{
+   
+    /// Return the list of handoff templates defined in the problem
+    /// @return vector of handoff templates
+    std::vector<MPHandoffTemplate*> GetHandoffTemplates() const;
+
+    ///@}
   protected:
 
     ///@name Construction Helpers
@@ -163,6 +172,7 @@ class MPProblem final
     std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
     std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
+    std::vector<MPHandoffTemplate*> m_handoffTemplates; ///< All handoff templates for a problem.
 
     /// Map the tasks assigned to each robot.
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;

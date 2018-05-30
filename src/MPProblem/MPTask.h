@@ -106,12 +106,22 @@ class MPTask final {
     void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
     void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
     void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
-    void SetArrivalTime(double _arrivalTime);
 
     const Constraint* GetStartConstraint() const noexcept;
     const ConstraintSet& GetPathConstraints() const noexcept;
     const ConstraintSet& GetGoalConstraints() const noexcept;
     const double GetArrivalTime() const noexcept;
+    const double GetStartTime() const noexcept;
+
+    ///@}
+    ///@name Time Accessors
+    ///@{
+
+    /// Stores the projected arrival time of the robot at the goal
+    void SetArrivalTime(double _arrivalTime);
+
+    /// Stores the expected start time of the task
+    void SetStartTime(double _arrivalTime);
 
     ///@}
     ///@name Constraint Evaluation
@@ -154,12 +164,16 @@ class MPTask final {
 
     ///@}
 
+    std::string GetCapability() const;
+
   private:
 
     ///@name Internal State
     ///@{
 
     std::string m_label;          ///< The task's semantic label.
+
+    std::string m_capability;  ///< Indicates the capability of the robot performing the task.
 
     /// @TODO Change this to a robot group when that code is ready.
     Robot* m_robot{nullptr};      ///< The robot assigned to this task.
@@ -169,9 +183,9 @@ class MPTask final {
     std::unique_ptr<Constraint> m_startConstraint;  ///< Req'd to start task.
     ConstraintSet m_pathConstraints;   ///< Req'd during whole task.
     ConstraintSet m_goalConstraints;   ///< Req'd to end task.
-  
-    double m_arrivalTime{0};
-    
+ 
+    double m_arrivalTime{0}; ///< Estimated time of arrival at goal
+    double m_startTime{0};   ///< Estimated start time of task
     ///@}
 
 };

@@ -21,6 +21,10 @@ PlanningAgent(Robot* const _r, const PlanningAgent& _a) : Agent(_r, _a)
 PlanningAgent::
 PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
   // Currently there are no parameters. Parse XML options here.
+  
+  m_capability = _node.Read("capability", false, "", "The Agent capability type");
+  std::transform(m_capability.begin(), m_capability.end(), m_capability.begin(), ::tolower);
+
 }
 
 
@@ -116,6 +120,9 @@ PlanningAgent::
 ClearPlan() {
   if(HasPlan())
     ++m_planVersion;
+  if(!GetTask())
+    return;
+
 }
 
 
@@ -132,6 +139,14 @@ GetPlanVersion() const {
   return m_planVersion;
 }
 
+
+std::string
+PlanningAgent::
+GetAgentCapability() const noexcept {
+  return m_capability;
+}
+
+
 /*---------------------------- Planning Helpers ------------------------------*/
 
 void
@@ -139,6 +154,12 @@ PlanningAgent::
 GeneratePlan() {
   m_planning = true;
 
+  // Sets tasks' start constraint to the robot's current position
+  auto position = m_robot->GetDynamicsModel()->GetSimulatedState();
+  auto start = std::unique_ptr<CSpaceConstraint>(
+      new CSpaceConstraint(m_robot, position));
+  
+  GetTask()->SetStartConstraint(std::move(start));
   // Create a copy of the problem so that we can use the data objects in planning
   // without affecting the rest of the simulation.
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));

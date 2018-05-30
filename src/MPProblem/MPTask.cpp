@@ -28,6 +28,9 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
       "robot assigned to this task.");
   m_robot = _problem->GetRobot(robotLabel);
 
+  m_capability = _node.Read("capability", false, "", 
+      "Indicates the capability of the robot performing the task.");
+
   // Parse constraints.
   for(auto& child : _node) {
     if(child.Name() == "StartConstraints") {
@@ -151,6 +154,13 @@ SetArrivalTime(double _arrivalTime){
 }
 
 
+void
+MPTask::
+SetStartTime(double _startTime){
+  m_startTime = _startTime;
+}
+
+
 const Constraint*
 MPTask::
 GetStartConstraint() const noexcept {
@@ -178,6 +188,18 @@ GetArrivalTime() const noexcept {
   return m_arrivalTime;
 }
 
+
+const double
+MPTask::
+GetStartTime() const noexcept {
+  return m_startTime;
+}
+
+std::string
+MPTask::
+GetCapability() const {
+  return m_capability;
+}
 
 /*------------------------------- Task Status --------------------------------*/
 
