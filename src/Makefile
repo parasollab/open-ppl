@@ -51,7 +51,7 @@ INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL}
 LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${STAPL_LIB} ${BOOST_LIB}
 
 # targets
-default_target: library
+.DEFAULT_GOAL := library
 
 ${PMPL_OBJS}: ${UTILS_LIBFILE} ${STAPL_LIBFILE}
 
@@ -78,7 +78,8 @@ pmpl: ${PMPL_LIBFILE} ${MAIN}
 
 
 # clean targets
-CLEAN = ${PMPL_LIBFILE} ${MAIN} pmpl
+clean:
+	rm -rf ${PMPL_LIBFILE} ${MAIN} pmpl
 
 reallyclean:
 	@${MAKE} clean
@@ -92,7 +93,6 @@ reallyreallyclean:
 	cd ${CD_DIR}; ${MAKE} clean
 	cd ${TINYXML_DIR}; ${MAKE} clean
 	cd ${MPNN_SRC}; ${MAKE} clean
-	cd ${MATHTOOL_DIR}; ${MAKE} clean
 	cd ${MODELLOADER_DIR}; ${MAKE} clean
 	cd ${KMEANS_DIR}; ${MAKE} clean
 	cd ${TETGEN_DIR}; ${MAKE} clean

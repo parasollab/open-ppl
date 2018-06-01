@@ -5,10 +5,11 @@ INCL = -I. -I/usr/local/include
 OBJECTS = KM_ANN.o KMeans.o KMterm.o KMrand.o KCutil.o KCtree.o KMdata.o KMcenters.o \
 	KMfilterCenters.o KMlocal.o
 
-CLEAN = $(OBJECTS) *.a *.so *~ *.o
+clean:
+	rm -rf $(OBJECTS) *.a *.so *~ *.o
 
 #default target
-default_target: library
+.DEFAULT_GOAL := library
 
 library: libkmeans.a
 
