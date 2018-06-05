@@ -195,7 +195,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     void GenerateQuery();
 
     ///@}
-    ///@name Query State
+    ///@name Internal State
     ///@{
 
     std::vector<CfgType> m_query;    ///< The start and all goal configurations.
@@ -205,10 +205,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     RoadmapType* m_roadmap{nullptr};   ///< Last roadmap queried.
 
-    ///@}
-    ///@name Graph Search
-    ///@{
-
     enum GraphSearchAlg {DIJKSTRAS, ASTAR}; ///< The supported sssp algorithms.
     GraphSearchAlg m_searchAlg{DIJKSTRAS};  ///< The sssp algorithm to use.
 
@@ -217,6 +213,9 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     std::string m_safeIntervalLabel;    ///< The XML label for the SafeIntervalTool.
 
     std::string m_vcLabel;             ///< The validity checker for generating the query.
+
+    ///@}
+
 };
 
 /*----------------------------- Construction ---------------------------------*/
@@ -241,9 +240,6 @@ QueryMethod(XMLNode& _node) :
 
   m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
       "Label of the SafeIntervalTool");
-
-  m_vcLabel = _node.Read("vcLabel", true, "",
-      "Label of the Validity Checker for generating the Query");
 
   m_vcLabel = _node.Read("vcLabel", true, "",
       "Label of the Validity Checker for generating the Query");
@@ -729,6 +725,9 @@ GenerateQuery() {
   ///       and should be done here.
   MethodTimer mt(this->GetStatClass(), "QueryMethod::GeneratingQuery");
 
+  if(this->m_debug)
+    std::cout << this->GetNameAndLabel() << "::GenerateQuery" << std::endl;
+
   auto task = this->GetTask();
   auto robot = task->GetRobot();
   auto startBoundary = task->GetStartConstraint()->GetBoundary();
@@ -741,60 +740,74 @@ GenerateQuery() {
 
   // Generate a start configuration if we have a start constraint.
   if(!startBoundary)
-    throw RunTimeException(WHERE, "A start constraint is required for query "
-        "methods.");
+    throw RunTimeException(WHERE) << "A start constraint is required for query "
+                                  << "methods.";
 
   CfgType start(robot);
   size_t tries = maxTries;
   do {
+    if(this->m_debug)
+      std::cout << "\t\tGenerating start cfg with VC '" << m_vcLabel << "'. "
+                << tries << " attempts remain."
+                << std::endl;
     start.GetRandomCfg(startBoundary);
     --tries;
-    if(tries == 0) {
-      std::ostringstream ss;
-      ss << "Could not generate valid start configuration in boundary "
-         << *startBoundary << " with validity checker '" << m_vcLabel << "'."
-         << std::endl;
-      throw RunTimeException(WHERE, ss.str());
-    }
+    if(tries == 0)
+      throw RunTimeException(WHERE) << "Could not generate valid start "
+                                    << "configuration in boundary "
+                                    << *startBoundary
+                                    << " with validity checker '" << m_vcLabel
+                                    << "'.";
   } while(!vc->IsValid(start, "QueryMethod::GenerateQuery"));
 
   if(this->m_debug)
-    std::cout << "Tried " << maxTries - tries << " times to generate the start."
+    std::cout << "\tTried " << maxTries - tries << " times to generate the "
+              << "start configuration."
+              << "\n\tStart cfg: " << start.PrettyPrint()
               << std::endl;
   m_query.push_back(start);
 
-  // Generate a goal configuration if we have a start constraint.
+  // Generate a goal configuration for each goal constraint.
   if(goalConstraints.empty())
     throw RunTimeException(WHERE, "A goal constraint is required for query "
         "methods.");
 
-  for(const auto& constraint : goalConstraints) {
-    auto goalBoundary = constraint->GetBoundary();
+  if(this->m_debug)
+    std::cout << "\tThere are " << goalConstraints.size()
+              << " goals in this problem."
+              << std::endl;
+
+  for(size_t i = 0; i < goalConstraints.size(); ++i) {
+    if(this->m_debug)
+      std::cout << "\tGenerating configuration for goal " << i << "."
+                << std::endl;
+    auto goalBoundary = goalConstraints[i]->GetBoundary();
     CfgType goal(robot);
     tries = maxTries;
     do {
+      if(this->m_debug)
+        std::cout << "\t\tGenerating goal cfg with VC '" << m_vcLabel << "'. "
+                  << tries << " attempts remain."
+                  << std::endl;
       goal.GetRandomCfg(goalBoundary);
       --tries;
-      if(tries == 0) {
-        std::ostringstream ss;
-        ss << "Could not generate valid goal configuration in boundary "
-           << *goalBoundary << " with validity checker '" << m_vcLabel << "'."
-           << std::endl;
-        throw RunTimeException(WHERE, ss.str());
-      }
+      if(tries == 0)
+        throw RunTimeException(WHERE) << "Could not generate valid goal "
+                                      << "configuration in boundary "
+                                      << *goalBoundary
+                                      << " with validity checker '"
+                                      << m_vcLabel << "'.";
     } while(!vc->IsValid(goal, "QueryMethod::GenerateQuery"));
 
     m_query.push_back(goal);
     if(this->m_debug)
-      std::cout << "Tried " << maxTries - tries << " times to generate a goal."
+      std::cout << "\tTried " << maxTries - tries << " times to generate a "
+                << "goal configuration."
+                << "\n\tGoal " << i << " cfg: " << goal.PrettyPrint()
                 << std::endl;
   }
-
-  if(m_query.empty())
-    throw RunTimeException(WHERE, this->GetNameAndLabel() + "::PerformQuery "
-        "error: m_query is empty. This is sometimes caused by reading the wrong "
-        "query file in the XML.");
 }
+
 /*----------------------------------------------------------------------------*/
 
 #endif

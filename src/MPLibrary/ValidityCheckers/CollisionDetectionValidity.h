@@ -14,11 +14,14 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
 
+#include "nonstd/io.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup ValidityCheckers
 /// Validation here means collision-free. This class interfaces with external CD
 /// libraries to determine collision information -- sometimes including
 /// clearance and penetration information.
+/// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
@@ -207,6 +210,14 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   if(!m_ignoreSelfCollision and multiBody->GetNumBodies() > 1 and
       IsInSelfCollision(_cdInfo, multiBody, _callName)) {
     _cdInfo.m_collidingObstIndex = -1;
+
+    if(this->m_debug)
+      std::cout << "Self-collision detected:"
+                << "\n\tCfg: " << _cfg.PrettyPrint()
+                << "\n\tEnvironment boundary: "
+                << *this->GetEnvironment()->GetBoundary()
+                << std::endl;
+
     return true;
   }
 
@@ -215,6 +226,14 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
                      or _cfg.InBounds(this->GetEnvironment());
   if(!inBounds) {
     _cdInfo.m_collidingObstIndex = -1;
+
+    if(this->m_debug)
+      std::cout << "Out-of-bounds detected:"
+                << "\n\tCfg: " << _cfg.PrettyPrint()
+                << "\n\tEnvironment boundary: "
+                << *this->GetEnvironment()->GetBoundary()
+                << std::endl;
+
     return true;
   }
 
@@ -224,7 +243,7 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   size_t numObst = env->NumObstacles();
   for(size_t i = 0; i < numObst; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
-    bool coll = IsInObstCollision(
+    const bool coll = IsInObstCollision(
         cdInfo, multiBody, env->GetObstacle(i), _callName);
 
     //make sure to store closest obstacle information
@@ -239,8 +258,14 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
       inCollision = true;
     }
 
+    if(coll and this->m_debug)
+      std::cout << "Obstacle collision detected:"
+                << "\n\tCfg: " << _cfg.PrettyPrint()
+                << "\n\tObstacle index: " << i
+                << std::endl;
+
     //early quit if we don't care about distance information
-    if(coll && !_cdInfo.m_retAllInfo)
+    if(coll and !_cdInfo.m_retAllInfo)
       return true;
   }
 
@@ -256,10 +281,19 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
       CDInfo cdInfo(_cdInfo.m_retAllInfo);
       const bool collision = IsInterRobotCollision(cdInfo,
           _cfg.GetRobot()->GetMultiBody(), robot->GetMultiBody(), _callName);
-      if(collision)
+      if(collision) {
+        if(this->m_debug)
+          std::cout << "Inter-robot collision detected:"
+                    << "\n\tRobot1: " << _cfg.GetRobot()->GetLabel()
+                    << "\n\tCfg1: " << _cfg.PrettyPrint()
+                    << "\n\tRobot2: " << robot->GetLabel()
+                    << "\n\tCfg2: " << robot->GetMultiBody()->GetCurrentDOFs()
+                    << std::endl;
         return true;
+      }
     }
   }
+
   return inCollision;
 }
 
@@ -340,21 +374,18 @@ IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
 
   for(size_t i = 0; i < numBody; ++i) {
     CDInfo cdInfo(_cdInfo.m_retAllInfo);
-    bool coll = false; // Start as false, then if set true it can't turn back.
     for(unsigned int j = 0; j < _obst->GetNumBodies(); ++j) {
-      coll |= m_cdMethod->IsInCollision(_rob->GetBody(i), _obst->GetBody(j),
-                                        cdInfo);
+      collision |= m_cdMethod->IsInCollision(_rob->GetBody(i),
+                                             _obst->GetBody(j),
+                                             cdInfo);
 
-      //retain minimum distance information
+      // Retain minimum distance information.
       if(cdInfo < _cdInfo)
         _cdInfo = cdInfo;
 
-      //Early quit if we do not care for distance information
-      if(coll) {
-        if(!_cdInfo.m_retAllInfo)
-          return true;
-        collision = true;
-      }
+      // Early quit if we do not care for distance information.
+      if(collision and !_cdInfo.m_retAllInfo)
+        return true;
     }
   }
 

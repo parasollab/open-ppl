@@ -12,11 +12,11 @@
 
     <Task label="query" robot="linked">
       <StartConstraints>
-        <CSpaceConstraint point="0 0 0 0 0 0  0 0 0 0 0 0"/>
+        <CSpaceConstraint point="0 0 0 0 0 0  0"/>
       </StartConstraints>
 
       <GoalConstraints>
-        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5  .2 0 0 0 0 0"/>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5  .2"/>
       </GoalConstraints>
     </Task>
 
@@ -42,7 +42,8 @@
     <ValidityCheckers>
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
-      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"
+        ignoreAdjacentLinks="true"/>
       <NodeClearanceValidity label="nc" delta="0.3" nfLabel="Nearest"/>
       <NegateValidity label="nv" vcLabel="rapid"/>
       <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp_solid"
@@ -96,11 +97,8 @@
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
         useBBX="true" debug="false" positional="true"/>
-      <GridSampler label="Grid" vcLabel="rapid">
-        <Dimension index="0" points="10"/>
-        <Dimension index="1" points="5"/>
-        <Dimension index="2" points="5"/>
-      </GridSampler>
+      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+        debug="false"/>
       <MixSampler label="MixSampler">
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>
@@ -128,24 +126,6 @@
         histLength="10" dmLabel="euclidean" clearanceType="exact"
         penetrationType="exact" clearanceRays="2"
         useBBX="true" positional="true" debug="false"/>
-      <MedialAxisLP label="malpr" controller="recursive"
-        macEpsilon="0.1" maxIter="10"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"
-        debug="true" saveIntermediates="true"/>
-      <MedialAxisLP label="malpi" controller="iterative"
-        resFactor="20" maxIter="100"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"
-        debug="true" saveIntermediates="true"/>
-      <MedialAxisLP label="malpb" controller="binary"
-        resFactor="20" maxIter="100"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"
-        debug="true" saveIntermediates="true"/>
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
       <ApproxSpheres label="apsph" vcLabel="pqp_solid" dmLabel="euclidean"
@@ -160,7 +140,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="1." minDist=".001"/>
+        vcLabel="pqp_solid" maxDist="1." minDist=".001"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
@@ -273,23 +253,25 @@
 
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
-      <PRMQuery label="PRMQuery" debug="false">
+      <PRMQuery label="PRMQuery" vcLabel="pqp_solid" debug="false">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
       <RRTQuery label="RRTQuery" goalDist="1"
-        nfLabel="Nearest" exLabel="BERO" debug="false"/>
+        nfLabel="Nearest" exLabel="BERO" vcLabel="pqp_solid" debug="false"/>
       <RRTQuery label="KinoRRTQuery" goalDist=".3"
-        nfLabel="Nearest" exLabel="KinoExtender" debug="false"/>
+        nfLabel="Nearest" exLabel="KinoExtender" vcLabel="pqp_solid" debug="false"/>
       <LazyQuery label="LazyQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
-        debug="false" numEnhance="10" d="0.5">
+        lpLabel="sl" dmLabel="euclidean" vcLabel="pqp_solid"
+        graphSearchAlg="astar"
+        debug="false" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
       <LazyToggleQuery label="LazyToggleQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="pqp_solid"
+        graphSearchAlg="astar"
         iterative="true" debug="false">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="LazyToggleConnect"/>
@@ -387,9 +369,9 @@
       <!-- BasicRRT -->
       <BasicRRTStrategy label="BasicRRT"
         numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
+        nfLabel="Nearest" vcLabel="pqp_solid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="BERO" samplerLabel="UniformRandom">
+        growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -560,7 +542,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="BasicRRT" seed="12345678"
       baseFilename="linked" vizmoDebug="true"/>
     <!--Solver mpStrategyLabel="KinoRRT" seed="12345678"
       baseFilename="Basic" vizmoDebug="true"/-->
