@@ -402,22 +402,27 @@ PMPL_SRCS := \
   Behaviors/Controllers/ICreateController.cpp \
   ConfigurationSpace/Cfg.cpp \
   ConfigurationSpace/GroupCfg.cpp \
+  ConfigurationSpace/ReachableVolumes.cpp \
   Geometry/GMSPolygon.cpp \
   Geometry/GMSPolyhedron.cpp \
   Geometry/Bodies/Body.cpp \
-  Geometry/Bodies/MultiBody.cpp \
+  Geometry/Bodies/Chain.cpp \
   Geometry/Bodies/Connection.cpp \
   Geometry/Bodies/DHParameters.cpp \
+  Geometry/Bodies/MultiBody.cpp \
   Geometry/Boundaries/Boundary.cpp \
   Geometry/Boundaries/AbstractBoundingBox.cpp \
   Geometry/Boundaries/AbstractBoundingSphere.cpp \
+  Geometry/Boundaries/AbstractBoundingSphericalShell.cpp \
   Geometry/Boundaries/CSpaceBoundingBox.cpp \
   Geometry/Boundaries/CSpaceBoundingSphere.cpp \
   Geometry/Boundaries/TetrahedralBoundary.cpp \
   Geometry/Boundaries/WorkspaceBoundingBox.cpp \
   Geometry/Boundaries/WorkspaceBoundingSphere.cpp \
+  Geometry/Boundaries/WorkspaceBoundingSphericalShell.cpp \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
+  Geometry/Shapes/NSphericalShell.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \

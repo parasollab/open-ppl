@@ -375,4 +375,11 @@ GetTransformationToDHFrame() const noexcept {
   return m_transformationToDHFrame;
 }
 
+/*---------------------------------- Debug -----------------------------------*/
+
+std::ostream&
+operator<<(std::ostream& _os, const Connection::JointType& _j) {
+  return _os << GetTagFromJointType(_j);
+}
+
 /*----------------------------------------------------------------------------*/

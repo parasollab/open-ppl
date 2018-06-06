@@ -158,6 +158,7 @@
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
 #include "MPLibrary/MPStrategies/UnitTest/ClearanceTestStrategy.h"
 #include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
 #include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
@@ -358,7 +359,6 @@ struct MPTraits {
 #endif
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
-    ClearanceTestStrategy<MPTraits>,
     DisassemblyExhaustiveGraph<MPTraits>,
     DisassemblyParallel<MPTraits>,
     DisassemblyParallelizedSAs<MPTraits>,
@@ -366,25 +366,28 @@ struct MPTraits {
     DisassemblyRRTStrategy<MPTraits>,
     DisassemblySequential<MPTraits>,
     DisassemblyThanhLe<MPTraits>,
-    DMTestStrategy<MPTraits>,
     DynamicDomainRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,
     LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
-    PushCfgToMATest<MPTraits>,
     PushQueryToMA<MPTraits>,
     ScratchStrategy<MPTraits>,
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
-    SVMTest<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
-    VisibilityBasedPRM<MPTraits>
+    VisibilityBasedPRM<MPTraits>,
+
+    BoundaryTest<MPTraits>,
+    ClearanceTestStrategy<MPTraits>,
+    DMTestStrategy<MPTraits>,
+    PushCfgToMATest<MPTraits>,
+    SVMTest<MPTraits>
       > MPStrategyMethodList;
 };
 

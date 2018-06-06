@@ -155,8 +155,15 @@ SetCenter(const std::vector<double>& _c) noexcept {
 
 void
 AbstractBoundingBox::
-ApplyOffset(const Vector3d& _v) {
-  NBox::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
+Translate(const Vector3d& _v) {
+  AbstractBoundingBox::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
+}
+
+
+void
+AbstractBoundingBox::
+Translate(const std::vector<double>& _t) {
+  NBox::Translate(_t);
 }
 
 

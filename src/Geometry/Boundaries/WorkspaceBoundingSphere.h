@@ -49,7 +49,7 @@ class WorkspaceBoundingSphere : public AbstractBoundingSphere {
     ///@name Polyhedron Representations
     ///@{
 
-    /// This will be an approximate sphere with 512 faces.
+    /// This will be an approximate sphere with 480 faces.
     virtual GMSPolyhedron MakePolyhedron() const override;
 
     ///@}

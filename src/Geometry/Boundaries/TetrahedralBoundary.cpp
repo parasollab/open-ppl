@@ -218,10 +218,25 @@ SetCenter(const std::vector<double>& _c) noexcept {
 
 void
 TetrahedralBoundary::
-ApplyOffset(const Vector3d& _v) {
+Translate(const Vector3d& _v) {
   m_bbx.Translate({_v[0], _v[1], _v[2]});
   for(auto& p : m_points)
     p += _v;
+}
+
+
+void
+TetrahedralBoundary::
+Translate(const std::vector<double>& _t) {
+  m_bbx.Translate(_t);
+
+  const size_t maxIndex = std::min(size_t(3), _t.size());
+  Vector3d v;
+  for(size_t i = 0; i < maxIndex; ++i)
+    v[i] = _t[i];
+
+  for(auto& p : m_points)
+    p += v;
 }
 
 

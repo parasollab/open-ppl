@@ -153,9 +153,13 @@ class Boundary {
     /// @param _c The new center point for the boundary.
     virtual void SetCenter(const std::vector<double>& _c) noexcept = 0;
 
-    /// Translate the boundary by an offset vector.
+    /// Translate the boundary.
     /// @param _v The offset to apply.
-    virtual void ApplyOffset(const Vector3d& _v) = 0;
+    virtual void Translate(const Vector3d& _v) = 0;
+
+    /// Translate the boundary.
+    /// @param _t The offset to apply.
+    virtual void Translate(const std::vector<double>& _t) = 0;
 
     /// Resize the boundary to fit inside a bounding box plus some margin.
     /// @param _bbx The new base bounding box.

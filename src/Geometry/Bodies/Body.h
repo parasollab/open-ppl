@@ -225,6 +225,12 @@ class Body {
     /// @return Requested backward Connection
     Connection& GetBackwardConnection(const size_t _index) const noexcept;
 
+    /// Get the connection joining this to another body.
+    /// @param _other The other body.
+    /// @return The connection joining this and _other, or nullptr if the bodies
+    ///         are not connected.
+    Connection* GetConnectionTo(const Body* const _other) const noexcept;
+
     /// Determines if two bodies share the same joint
     /// @param _otherBody Second body
     /// @return True if adjacent

@@ -128,13 +128,20 @@ SetCenter(const std::vector<double>& _c) noexcept {
 
 void
 AbstractBoundingSphere::
-ApplyOffset(const Vector3d& _v) {
-  NSphere::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
+Translate(const Vector3d& _v) {
+  AbstractBoundingSphere::Translate(std::vector<double>{_v[0], _v[1], _v[2]});
+}
 
-  const size_t maxIndex = std::min(size_t(3), NSphere::GetDimension());
+
+void
+AbstractBoundingSphere::
+Translate(const std::vector<double>& _t) {
+  NSphere::Translate(_t);
+
+  const size_t maxIndex = std::min(_t.size(), NSphere::GetDimension());
 
   for(size_t i = 0; i < maxIndex; ++i)
-    m_range[i].Translate(_v[i]);
+    m_range[i].Translate(_t[i]);
 }
 
 

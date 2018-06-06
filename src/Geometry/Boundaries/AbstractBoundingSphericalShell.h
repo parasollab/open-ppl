@@ -1,42 +1,52 @@
-#ifndef ABSTRACT_BOUNDING_BOX_H_
-#define ABSTRACT_BOUNDING_BOX_H_
+#ifndef PMPL_ABSTRACT_BOUNDING_SPHERICAL_SHELL_H_
+#define PMPL_ABSTRACT_BOUNDING_SPHERICAL_SHELL_H_
 
 #include "Boundary.h"
-#include "Geometry/Shapes/NBox.h"
+#include "Geometry/Shapes/NSphericalShell.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An abstract axis-aligned N-dimensional bounding box.
+/// An n-dimensional bounding spherical shell.
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
-class AbstractBoundingBox :  public Boundary, public NBox {
+class AbstractBoundingSphericalShell : public Boundary, public NSphericalShell {
 
   public:
 
     ///@name Construction
     ///@{
 
-    /// Construct an infinite bounding box in n dimensions.
-    /// @param[in] _n The number of dimensions.
-    explicit AbstractBoundingBox(const size_t _n);
+    /// Construct a bounding spherical shell at the origin with a fixed number of
+    /// dimensions and radius.
+    /// @param _n The number of dimensions to use.
+    /// @param _outer The outer radius (infinite by default).
+    /// @param _inner The inner radius (0 by default).
+    explicit AbstractBoundingSphericalShell(const size_t _n,
+        const double _outer = std::numeric_limits<double>::max(),
+        const double _inner = 0);
 
-    /// Construct an infinite bounding box in n dimensions.
-    /// @param[in] _n The number of dimensions.
-    explicit AbstractBoundingBox(const std::vector<double>& _center);
+    /// Construct a bounding spherical shell with a given center point and radius.
+    /// @param _center The center point, which is assumed to be of full
+    ///                dimension.
+    /// @param _outer The outer radius (infinite by default).
+    /// @param _inner The inner radius (0 by default).
+    explicit AbstractBoundingSphericalShell(const std::vector<double>& _center,
+        const double _outer = std::numeric_limits<double>::max(),
+        const double _inner = 0);
 
-    /// Construct a bounding box from an XML node.
+    /// Construct a bounding spherical shell from an XML node.
     /// @param _node The XML node to parse.
-    AbstractBoundingBox(XMLNode& _node);
+    AbstractBoundingSphericalShell(XMLNode& _node);
 
-    virtual ~AbstractBoundingBox() noexcept;
+    virtual ~AbstractBoundingSphericalShell() noexcept;
 
     ///@}
-    ///@name Property Accesors
-    ///@}
+    ///@name Boundary Properties
+    ///@{
 
     virtual size_t GetDimension() const noexcept override;
 
-    virtual double GetMaxDist(const double _r1 = 2., const double _r2 = .5)
+    virtual double GetMaxDist(const double _r1 = 2.0, const double _r2 = 0.5)
         const override;
 
     virtual const Range<double>& GetRange(const size_t _i) const override;
@@ -67,12 +77,6 @@ class AbstractBoundingBox :  public Boundary, public NBox {
 
     virtual Vector3d GetClearancePoint(const Vector3d& _p) const override;
 
-    /// Get an integer describing which three-dimensional side a given point _p
-    /// is nearest.
-    /// @param _p The point of interest.
-    /// @return An integer indicating the nearest side.
-    int GetSideID(const std::vector<double>& _p) const;
-
     ///@}
     ///@name Modifiers
     ///@{
@@ -96,14 +100,31 @@ class AbstractBoundingBox :  public Boundary, public NBox {
 
     ///@}
 
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Compute the ranges.
+    std::vector<Range<double>> ComputeRange() const;
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::vector<Range<double>> m_range;
+
+    ///@}
+
 };
 
 /*----------------------------------- I/O ------------------------------------*/
 
-std::ostream& operator<<(std::ostream& _os, const AbstractBoundingBox& _b);
+std::ostream& operator<<(std::ostream& _os,
+    const AbstractBoundingSphericalShell& _b);
 
 /// @TODO Move impl from environment to here.
-//istream& operator>>(istream& _is, const Boundary& _b);
+//std::istream& operator>>(std::istream& _is, const Boundary& _b);
 
 /*----------------------------------------------------------------------------*/
 

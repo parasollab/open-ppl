@@ -153,9 +153,6 @@ reallyclean: clean
 .PHONY: reallyreallyclean
 reallyreallyclean: reallyclean
 	@echo Cleaning all utilities...
-ifeq ($(parallel), 1)
-	@cd $(STAPL_DIR) && $(MAKE) platform=$(platform) stl=$(STL_LIB) clean
-endif
 	@cd $(CD_DIR) && $(MAKE) clean
 	@cd $(TINYXML_DIR) && $(MAKE) clean
 	@cd $(MPNN_SRC) && $(MAKE) clean
@@ -166,5 +163,8 @@ endif
 	@cd $(BULLET_DIR) && $(MAKE) clean
 	@cd $(PHYSICAL_ROBOTS_DIR) && $(MAKE) clean
 	@cd $(LKH_DIR) && $(MAKE) clean
+ifeq ($(parallel), 1)
+	@cd $(STAPL_DIR) && $(MAKE) platform=$(platform) stl=$(STL_LIB) clean
+endif
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

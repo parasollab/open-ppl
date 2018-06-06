@@ -579,6 +579,19 @@ GetBackwardConnection(const size_t _index) const noexcept {
 }
 
 
+Connection*
+Body::
+GetConnectionTo(const Body* const _other) const noexcept {
+  for(const auto c : m_forwardConnections)
+    if(c->GetNextBody() == _other)
+      return c;
+  for(const auto c : m_backwardConnections)
+    if(c->GetPreviousBody() == _other)
+      return c;
+  return nullptr;
+}
+
+
 bool
 Body::
 IsAdjacent(const Body* const _other) const {

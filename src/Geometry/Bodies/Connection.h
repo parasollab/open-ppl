@@ -175,4 +175,7 @@ class Connection final {
 
 };
 
+// Debug.
+std::ostream& operator<<(std::ostream&, const Connection::JointType&);
+
 #endif
