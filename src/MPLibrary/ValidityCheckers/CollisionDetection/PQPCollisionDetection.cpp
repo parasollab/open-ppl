@@ -185,12 +185,19 @@ IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
   // Check the ordered collisions to see what happened. Skip over any points
   // where we enter and exit at the same point.
   while(!collisions.empty()) {
-    if(collisions.size() == 1 ||
-        abs(collisions.begin()->first - (++collisions.begin())->first) >
-        tolerance)
+    if(collisions.size() == 1)
       return collisions.begin()->second;
+
+    auto one = collisions.begin(),
+         two = ++collisions.begin();
+
+    const bool colocated = abs(one->first - two->first) < tolerance,
+               sameType  = one->second == two->second;
+
+    if(colocated and !sameType)
+      collisions.erase(one, ++two);
     else
-      collisions.erase(collisions.begin(), ++++collisions.begin());
+      return one->second;
   }
 
   // If we're still here, there are no valid collisions.
