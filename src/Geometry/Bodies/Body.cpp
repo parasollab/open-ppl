@@ -248,9 +248,9 @@ operator=(Body&& _other) = default;
 
 /*------------------------------- Validation ---------------------------------*/
 
-bool
+void
 Body::
-Validate(const bool _report) const {
+Validate() const {
   using CGALPolyhedron = GMSPolyhedron::CGALPolyhedron;
 
   // First use CGAL to check valid, triangular, and closed.
@@ -259,14 +259,12 @@ Validate(const bool _report) const {
     mesh = m_polyhedron.CGAL();
   }
   catch(std::exception& _e) {
-    if(_report)
-      std::cerr << "Warning: invalid polyhedron detected from file '"
-                << m_filename << "'."
-                << "\n\tCould not build a CGAL model of this, which usually "
-                << "means that the normals are inconsistent or the file is "
-                << "corrupted."
-                << std::endl;
-    return false;
+    throw ParseException(WHERE) << "Warning: invalid polyhedron detected from "
+                                << "file '" << m_filename << "'."
+                                << "\n\tCould not build a CGAL model of this, "
+                                << "which usually means that the normals are "
+                                << "inconsistent or the file is corrupted."
+                                << std::endl;
   }
 
   const bool valid      = mesh.is_valid(),
@@ -293,21 +291,18 @@ Validate(const bool _report) const {
   // The polyhedron is good if it is valid, triangular, closed, and
   // outward-facing.
   if(valid and triangular and closed and outward)
-    return true;
+    return;
 
   // Something isn't good - report errors if requested.
-  if(_report)
-    std::cerr << "Warning: invalid polyhedron detected from file '"
-              << m_filename << "'."
-              << "\n\tnum vertices: " << mesh.size_of_vertices()
-              << "\n\tnum facets: " << mesh.size_of_facets()
-              << "\n\tvalid: " << valid
-              << "\n\ttriangular: " << triangular
-              << "\n\tclosed: " << closed
-              << "\n\toutward: " << outward
-              << std::endl;
-
-  return false;
+  throw ParseException(WHERE) << "Warning: invalid polyhedron detected from "
+                              << "file '" << m_filename << "'."
+                              << "\n\tnum vertices: " << mesh.size_of_vertices()
+                              << "\n\tnum facets: " << mesh.size_of_facets()
+                              << "\n\tvalid: " << valid
+                              << "\n\ttriangular: " << triangular
+                              << "\n\tclosed: " << closed
+                              << "\n\toutward: " << outward
+                              << std::endl;
 }
 
 /*---------------------------- MultiBody Accessors ---------------------------*/
@@ -700,7 +695,7 @@ ReadGeometryFile(GMSPolyhedron::COMAdjust _comAdjust) {
   ComputeBoundingBox();
   MarkDirty();
   BuildCDModels();
-  Validate(true);
+  Validate();
 }
 
 

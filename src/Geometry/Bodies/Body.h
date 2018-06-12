@@ -95,12 +95,12 @@ class Body {
 
     /// @TODO Move to GMSPolyhedron.
     /// Determine if the polyhedron is valid, triangulated, closed, and having
-    /// all normals facing a consistent 'outward' direction.
-    /// @param _report Print warnings to cerr if any checks fail.
-    /// @return True if the model is closed and consistent.
+    /// all normals facing a consistent 'outward' direction. Throws an exception
+    /// if the model is invalid (because invalid models do not behave properly
+    /// with collision checks).
     /// @note Uses a combination of the regular and CGAL points as we use CGAL
     ///       for some of these checks.
-    bool Validate(const bool _report = true) const;
+    void Validate() const;
 
     ///@}
     ///@name MultiBody Accessors
