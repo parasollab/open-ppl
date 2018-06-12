@@ -158,10 +158,10 @@
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
-#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
-#include "MPLibrary/MPStrategies/UnitTest/ClearanceTestStrategy.h"
-#include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
-#include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
+//#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
+//#include "MPLibrary/MPStrategies/UnitTest/ClearanceTestStrategy.h"
+//#include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
+//#include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
 #include "MPLibrary/MPStrategies/UtilityGuidedGenerator.h"
 #include "MPLibrary/MPStrategies/VisibilityBasedPRM.h"
 
@@ -383,11 +383,11 @@ struct MPTraits {
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>,
 
-    BoundaryTest<MPTraits>,
-    ClearanceTestStrategy<MPTraits>,
-    DMTestStrategy<MPTraits>,
-    PushCfgToMATest<MPTraits>,
-    SVMTest<MPTraits>
+    //BoundaryTest<MPTraits>,
+    //ClearanceTestStrategy<MPTraits>,
+    //DMTestStrategy<MPTraits>,
+    PushCfgToMATest<MPTraits>
+    //SVMTest<MPTraits>
       > MPStrategyMethodList;
 };
 
