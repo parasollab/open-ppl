@@ -95,6 +95,9 @@
       </BandsNF>
       <TopologicalFilter label="TopologicalNF" nfLabel="BFNF" tmLabel="tm"
         backtrackDistance="6" debug="true"/>
+      <LSHNF label="LSHNF"
+        k="8" hashDimension="3" hashFamilies="8" hashRadius="9"
+        dmLabel="euclidean"/>
     </NeighborhoodFinders>
 
     <Samplers>
