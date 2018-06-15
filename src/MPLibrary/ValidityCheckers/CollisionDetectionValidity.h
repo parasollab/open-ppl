@@ -41,7 +41,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _ignoreSelfCollision Compute robot self-collisions?
     /// @param _ignoreAdjacentLinks For self-collision adjacent links to ignore
     CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod = nullptr,
-        bool _ignoreSelfCollision = false, int _ignoreAdjacentLinks = 1,
+        bool _ignoreSelfCollision = false, int _ignoreAdjacentLinks = 0,
+        int _ignoreSiblingCollisions = 0,
         bool measureSelfDist = false);
 
     CollisionDetectionValidity(XMLNode& _node);
@@ -121,6 +122,7 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     bool m_ignoreSelfCollision{false};    ///< Check self collisions
     bool m_interRobotCollision{false};    ///< Check inter-robot collisions
     bool m_ignoreAdjacentLinks{false};    ///< Ignore adj links in self collisions
+    bool m_ignoreSiblingCollisions{false};    ///< Ignore sibling links self collisions
 
     ///@}
 
@@ -131,12 +133,14 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
 CollisionDetectionValidity(CollisionDetectionMethod* _cdMethod,
-    bool _ignoreSelfCollision, int _ignoreAdjacentLinks, bool measureSelfDist) :
-    ValidityCheckerMethod<MPTraits>(), m_cdMethod(_cdMethod),
-    m_ignoreSelfCollision(_ignoreSelfCollision),
-    m_ignoreAdjacentLinks(_ignoreAdjacentLinks) {
-  this->SetName("CollisionDetection");
-}
+    bool _ignoreSelfCollision, int _ignoreAdjacentLinks,
+    int _ignoreSiblingCollisions,bool measureSelfDist) :
+  ValidityCheckerMethod<MPTraits>(), m_cdMethod(_cdMethod),
+  m_ignoreSelfCollision(_ignoreSelfCollision),
+  m_ignoreAdjacentLinks(_ignoreAdjacentLinks),
+  m_ignoreSiblingCollisions(_ignoreSiblingCollisions) {
+    this->SetName("CollisionDetection");
+  }
 
 
 template <typename MPTraits>
@@ -151,6 +155,8 @@ CollisionDetectionValidity(XMLNode& _node) :
       "Check for intern robot collision");
   m_ignoreAdjacentLinks = _node.Read("ignoreAdjacentLinks", false, false,
       "Ignore adjacent links in self-collision checks.");
+  m_ignoreSiblingCollisions = _node.Read("ignoreSiblingCollisions", false, false,
+      "Ignore links that share a parent in self-collision checks.");
 
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
@@ -313,6 +319,9 @@ IsInSelfCollision(CDInfo& _cdInfo, MultiBody* _rob,
       auto body2 = _rob->GetBody(j);
 
       if(m_ignoreAdjacentLinks and body1->IsAdjacent(body2))
+        continue;
+
+      if(m_ignoreSiblingCollisions and body1->SameParent(body2))
         continue;
 
       if (!_cdInfo.m_retAllInfo) {

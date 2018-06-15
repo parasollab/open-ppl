@@ -209,6 +209,24 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 Connection::
+SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
+    const size_t _secondIndex) {
+
+  // Set the parent and child indexes.
+  m_bodyIndices.first = _firstIndex;
+  m_bodyIndices.second = _secondIndex;
+
+  // Set the owning multibody.
+  m_multibody = _owner;
+
+  // Update the bodies.
+  m_multibody->GetBody(_firstIndex)->LinkAdjacency(this);
+  m_multibody->GetBody(_secondIndex)->LinkAdjacency(this);
+}
+
+
+void
+Connection::
 SetBodies(MultiBody* const _owner, const size_t _parentIndex,
     const size_t _childIndex) {
   // Set the parent and child indexes.

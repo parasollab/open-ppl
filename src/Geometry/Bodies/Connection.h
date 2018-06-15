@@ -87,6 +87,13 @@ class Connection final {
     void SetBodies(MultiBody* const _owner, const size_t _parentIndex,
         const size_t _childIndex);
 
+    /// Set the free bodies which are adjacent without an explicit connection.
+    /// @param _owner The owning multibody.
+    /// @param _parentIndex The parent body index.
+    /// @param _childIndex The child body index.
+    void SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
+        const size_t _secondIndex);
+
     /// This overload assumes that the parent/child indexes have already been
     /// set and are the same in the new owner.
     /// @overload

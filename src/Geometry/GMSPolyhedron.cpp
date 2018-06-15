@@ -287,6 +287,28 @@ WriteBYU(ostream& _os) const {
   }
 }
 
+void
+GMSPolyhedron::
+WriteObj(ostream& _os) const {
+ _os << "#Number of vertices: " << m_vertexList.size() << endl;
+ _os << "#Number of triangles: " << m_polygonList.size() << endl;
+ for(auto v : m_vertexList) {
+   _os << "v " << v << endl;
+ }
+ for(auto p: m_polygonList) {
+   p.ComputeNormal();
+   _os << "vn " << p.GetNormal() << endl;
+ }
+
+ for(auto p: m_polygonList) {
+   _os << "f ";
+   for(auto i = p.begin(); i != p.end(); i++) {
+     _os << *i + 1 << "//" << *i + 1 << " ";
+   }
+   _os << endl;
+ }
+}
+
 /*-------------------------------- Accessors ---------------------------------*/
 
 vector<Vector3d>&
@@ -642,6 +664,48 @@ CGAL() const {
   return cp;
 }
 
+
+GMSPolyhedron
+GMSPolyhedron::
+ComputeConvexHull() const {
+
+  // Compute convex hull of non-collinear points with CGAL.
+  const auto& points = m_cgalPoints;
+  CGALPolyhedron poly;
+  CGAL::convex_hull_3(points.begin(), points.end(), poly);
+  GMSPolyhedron convexHull;
+
+  // Convert from CGAL points to our Vector3d to store the convex hull.
+  for(auto vit = poly.points_begin(); vit != poly.points_end(); ++vit)
+    convexHull.m_vertexList.emplace_back(
+        to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2]));
+
+  //iterate through convex hull facets
+    for(CGALPolyhedron::Facet_iterator fit = poly.facets_begin();
+        fit != poly.facets_end(); ++fit) {
+      HalfedgeFacetCirculator he = fit->facet_begin();
+      vector<int> indexes;
+      vector<Vector3d> points;
+      do
+      {
+        indexes.push_back(std::distance(poly.vertices_begin(), he->vertex()));
+        points.push_back(Vector3d(
+            to_double(he->vertex()->point()[0]),
+            to_double(he->vertex()->point()[1]),
+            to_double(he->vertex()->point()[2])));
+      } while(++he != fit->facet_begin());
+
+      if(indexes.size() < 3) {
+        cout << "shouldn't have polygon of less than 3 vertices." << endl;
+        exit(0);
+      }
+      convexHull.m_polygonList.emplace_back(GMSPolygon(indexes[0], indexes[1],
+            indexes[2], points));
+    }
+
+    return convexHull;
+}
+
 /*-------------------------- Initialization Helpers --------------------------*/
 
 void
@@ -737,4 +801,37 @@ operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
   return poly *= _t;
 }
 
+
+void
+GMSPolyhedron::
+Scale(double _scalingFactor) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_scalingFactor, 0.0 , 0.0},
+    {0.0, _scalingFactor, 0.0},
+    {0.0, 0.0, _scalingFactor}};
+
+  Vector3d toCenter = -(GetCentroid());
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  Transformation center(toCenter, Orientation(unitM));
+
+  Transformation scale(Vector3d(0,0,0), Orientation(scaleM));
+
+  Transformation recenter(-toCenter, Orientation(unitM));
+
+  Transformation t = center * scale * recenter;
+
+  *(this) *= t;
+}
 /*----------------------------------------------------------------------------*/

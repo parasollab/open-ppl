@@ -15,7 +15,6 @@
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/Polyhedron_3.h>
-#include <CGAL/convex_hull_3.h>
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Local Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -220,6 +219,8 @@ operator=(const Body& _other) {
   m_transformCached       = _other.m_transformCached;
   m_worldPolyhedron       = _other.m_worldPolyhedron;
   m_worldPolyhedronCached = _other.m_worldPolyhedronCached;
+  m_worldConvexHull       = _other.m_worldConvexHull;
+  m_worldConvexHullCached = _other.m_worldConvexHullCached;
   m_mass                  = _other.m_mass;
   m_moment                = _other.m_moment;
   m_comAdjust             = _other.m_comAdjust;
@@ -231,6 +232,7 @@ operator=(const Body& _other) {
 
   m_forwardConnections.clear();
   m_backwardConnections.clear();
+  m_adjacencyConnections.clear();
   m_transformFetcher = _other.m_transformFetcher;
 
   m_color         = _other.m_color;
@@ -433,8 +435,10 @@ GetPolyhedron() const {
 const GMSPolyhedron&
 Body::
 GetWorldPolyhedron() const {
-  if(!m_worldPolyhedronCached)
-    ComputeWorldPolyhedron();
+  if(!m_worldPolyhedronCached) {
+    ComputeWorldPolyhedron(m_polyhedron, m_worldPolyhedron);
+    m_worldPolyhedronCached = true;
+  }
   return m_worldPolyhedron;
 }
 
@@ -471,6 +475,7 @@ void
 Body::
 MarkDirty() const {
   m_convexHullCached = false;
+  m_worldConvexHullCached = false;
   m_transformCached = false;
   m_worldPolyhedronCached = false;
   m_worldPolyhedron.MarkDirty(); /// Must do so for the polyhedron too.
@@ -544,6 +549,12 @@ BackwardConnectionCount() const noexcept {
 }
 
 
+size_t
+Body::
+AdjacencyConnectionCount() const noexcept {
+  return m_adjacencyConnections.size();
+}
+
 Connection&
 Body::
 GetForwardConnection(const size_t _index) const noexcept {
@@ -573,6 +584,19 @@ GetBackwardConnection(const size_t _index) const noexcept {
   }
 }
 
+Connection&
+Body::
+GetAdjacencyConnection(const size_t _index) const noexcept {
+  try {
+    return *m_adjacencyConnections.at(_index);
+  }
+  catch(std::exception&) {
+    // Re-propgate out-of-range exception with better error info.
+    throw RunTimeException(WHERE, "Cannot access adjacency connection " +
+        ::to_string(_index) + ", number of adjacency connections = " +
+        ::to_string(AdjacencyConnectionCount()) + ".");
+  }
+}
 
 Connection*
 Body::
@@ -599,6 +623,24 @@ IsAdjacent(const Body* const _other) const {
   for(const auto& c : m_backwardConnections)
     if(c->GetPreviousBody() == _other)
       return true;
+  for(const auto& c : m_adjacencyConnections)
+    if(c->GetNextBody() == _other || c->GetPreviousBody() == _other)
+      return true;
+
+  return false;
+}
+
+
+bool
+Body::
+SameParent(const Body* const _other) const {
+  //1: for branched structures: check if there is a shared parent
+  for(const auto& c1: m_backwardConnections) {
+    for(const auto& c2: _other->m_backwardConnections) {
+      if(c1->GetPreviousBodyIndex() == c2->GetPreviousBodyIndex())
+        return true;
+    }
+  }
   return false;
 }
 
@@ -615,6 +657,14 @@ void
 Body::
 LinkBackward(Connection* const _c) {
   m_backwardConnections.push_back(_c);
+  MarkDirty();
+}
+
+
+void
+Body::
+LinkAdjacency(Connection* const _c) {
+  m_adjacencyConnections.push_back(_c);
   MarkDirty();
 }
 
@@ -641,6 +691,17 @@ Unlink(Connection* const _c) {
   // If we found it, remove the link and return.
   if(backwardIter != m_backwardConnections.end()) {
     m_backwardConnections.erase(backwardIter);
+    return;
+  }
+
+  // Search for _c in the adjacency connections.
+  auto adjacencyIter = std::find(m_adjacencyConnections.begin(),
+                                m_adjacencyConnections.end(),
+                                _c);
+
+  // If we found it, remove the link and return.
+  if(adjacencyIter != m_adjacencyConnections.end()) {
+    m_adjacencyConnections.erase(adjacencyIter);
     return;
   }
 
@@ -866,21 +927,31 @@ ComputeBoundingBox() const {
 void
 Body::
 ComputeConvexHull() const {
-  using Kernel = GMSPolyhedron::CGALKernel;
-  using CGALPolyhedron = GMSPolyhedron::CGALPolyhedron;
-
-  // Compute convex hull of non-collinear points with CGAL.
-  const auto& points = m_polyhedron.m_cgalPoints;
-  CGALPolyhedron poly;
-  CGAL::convex_hull_3(points.begin(), points.end(), poly);
-
-  // Convert from CGAL points to our Vector3d to store the convex hull.
   auto& convexHull = const_cast<GMSPolyhedron&>(m_convexHull);
-  for(auto vit = poly.points_begin(); vit != poly.points_end(); ++vit)
-    convexHull.m_vertexList.emplace_back(
-        to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2]));
-
+  convexHull = GetPolyhedron().ComputeConvexHull();
   m_convexHullCached = true;
+}
+
+
+GMSPolyhedron&
+Body::
+GetConvexHull() {
+  if(!m_convexHullCached) {
+    ComputeConvexHull();
+    m_worldConvexHull = m_convexHull;
+  }
+  return m_convexHull;
+}
+
+
+const GMSPolyhedron&
+Body::
+GetWorldConvexHull() {
+  if(!m_worldConvexHullCached) {
+    ComputeWorldPolyhedron(GetConvexHull(), m_worldConvexHull);
+    m_worldConvexHullCached = true;
+  }
+  return m_worldConvexHull;
 }
 
 
@@ -931,8 +1002,8 @@ ComputeWorldTransformation(std::set<size_t>& _visited) const {
 
 void
 Body::
-ComputeWorldPolyhedron() const {
-  auto& poly = const_cast<GMSPolyhedron&>(m_worldPolyhedron);
+ComputeWorldPolyhedron(const GMSPolyhedron& _polyhedron, const GMSPolyhedron& _worldPolyhedron) const {
+  auto& poly = const_cast<GMSPolyhedron&>(_worldPolyhedron);
 
   using CGAL::to_double;
   using Kernel = GMSPolyhedron::CGALKernel;
@@ -945,19 +1016,17 @@ ComputeWorldPolyhedron() const {
                                                r[1][0], r[1][1], r[1][2], t[1],
                                                r[2][0], r[2][1], r[2][2], t[2]);
 
-  const auto& c = m_polyhedron.m_cgalPoints;
+  const auto& c = _polyhedron.m_cgalPoints;
   for(size_t i = 0; i < c.size(); ++i)
     poly.m_cgalPoints[i] = cgalTrans(c[i]);
 
-  auto& vertices = m_polyhedron.m_vertexList;
+  auto& vertices = _polyhedron.m_vertexList;
   for(size_t i = 0; i < vertices.size(); ++i)
     poly.m_vertexList[i] = transformation * vertices[i];
 
-  auto& polygons = m_polyhedron.m_polygonList;
+  auto& polygons = _polyhedron.m_polygonList;
   for(size_t i = 0; i < polygons.size(); ++i)
     poly.m_polygonList[i].ComputeNormal();
-
-  m_worldPolyhedronCached = true;
 }
 
 /*------------------------------- Display Stuff ------------------------------*/

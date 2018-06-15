@@ -23,10 +23,11 @@ main(int _argc, char** _argv) {
     MPLibrary* pmpl = new MPLibrary(xmlFile);
 
     // Create storage for the solution and ask the library to solve our problem.
-    /// @TODO Generalize this to handle more than just the first task.
     Robot* const robot = problem->GetRobots().front().get();
-    MPTask* task = problem->GetTasks(robot).front().get();
-    pmpl->Solve(problem, task);
+
+    //solve for every task
+    for(auto task : problem->GetTasks(robot))
+      pmpl->Solve(problem, task.get());
 
     // Release resourcess.
     delete problem;

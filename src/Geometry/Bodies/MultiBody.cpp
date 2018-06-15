@@ -876,6 +876,21 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   //get connection info
   std::string connectionTag = ReadFieldString(_is, _cbs,
       "Failed reading connections tag.");
+
+  //check that there is any additional adjacency connections
+    if(connectionTag == "ADJACENCIES") {
+      size_t adjacencyCount = ReadField<size_t>(_is, _cbs,
+          "Failed reading number of closing loop adjacency connections.");
+      for(size_t m = 0; m < adjacencyCount && _is; ++m) {
+        //read body indices
+        int firstI = ReadField<int>(_is, _cbs, "Failed reading first closing loop index");
+        int secondI = ReadField<int>(_is, _cbs, "Failed reading second closing loop index");
+        m_joints.emplace_back(new Connection(this));
+        m_joints.back()->SetAdjacentBodies(this, firstI, secondI);
+      }
+      connectionTag = ReadFieldString(_is, _cbs, "Failed reading connections tag.");
+    }
+
   if(connectionTag != "CONNECTIONS")
     throw ParseException(_cbs.Where(),
         "Unknwon connections tag '" + connectionTag + "'."

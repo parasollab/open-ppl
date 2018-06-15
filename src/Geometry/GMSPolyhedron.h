@@ -11,6 +11,7 @@
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
+#include <CGAL/convex_hull_3.h>
 
 class IModel;
 
@@ -40,6 +41,7 @@ class GMSPolyhedron final {
     typedef CGAL::Exact_predicates_exact_constructions_kernel CGALKernel;
     typedef CGALKernel::Point_3                               CGALPoint;
     typedef CGAL::Polyhedron_3<CGALKernel>                    CGALPolyhedron;
+    typedef CGALPolyhedron::Halfedge_around_facet_circulator  HalfedgeFacetCirculator;
 
     ////////////////////////////////////////////////////////////////////////////
     /// Center of mass adjustment approaches
@@ -92,21 +94,25 @@ class GMSPolyhedron final {
     ///@{
 
     /// Read in a geometry file in either BYU or OBJ format.
-    /// @param[in] _fileName The name of the file to read.
-    /// @param[in] _comAdjust The type of COM adjustment to use.
+    /// @param _fileName The name of the file to read.
+    /// @param _comAdjust The type of COM adjustment to use.
     /// @return The parsed model's center of mass.
     Vector3d Read(const std::string& _fileName, COMAdjust _comAdjust);
 
     /// Load vertices and triangles from the IModel, which loads all types
     /// of models.
-    /// @param[in] _imodel An IModel input.
-    /// @param[in] _comAdjust The COM adjustment type to use.
+    /// @param _imodel An IModel input.
+    /// @param_comAdjust The COM adjustment type to use.
     /// @return The parsed model's center of mass.
     Vector3d LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust);
 
     /// Output the model to a BYU-format file.
-    /// @param[in] _os The output stream to use.
+    /// @param _os The output stream to use.
     void WriteBYU(std::ostream& _os) const;
+
+    /// Output the model to a Obj-format file.
+    /// @param _os The output stream to use.
+    void WriteObj(std::ostream& _os) const;
 
     ///@}
     ///@name Accessors
@@ -130,20 +136,20 @@ class GMSPolyhedron final {
     Point3d GetRandPtOnSurface() const;
 
     /// Check if a 2d point lies on the surface of the polyhedron.
-    /// @param[in] _p The point of interest.
+    /// @param _p The point of interest.
     bool IsOnSurface(const Point2d& _p) const;
 
     /// Get the height (y-coord) of the polyhedron at a designated point on the
     /// xz-plane.
-    /// @param[in] _p The xz point.
-    /// @param[in/out] _valid Does the polyhedron have a point at _p?
+    /// @param _p The xz point.
+    /// @param _valid Does the polyhedron have a point at _p?
     /// @return The height of the polyhedron at _p, or -19999 if invalid.
     double HeightAtPt(const Point2d& _p, bool& _valid) const;
 
     /// Compute the closest point on a boundary edge of the polyhedron to a
     /// reference point _p.
-    /// @param[in] _p The reference point of interest.
-    /// @param[in/out] _closest The closest point on the bounding edges.
+    /// @param _p The reference point of interest.
+    /// @param _closest The closest point on the bounding edges.
     /// @return The distance from _p to _closest.
     /// @warning This function doesn't compute the clearance to the polyhedron:
     ///          instead, it computes the clearance to the closest point on a
@@ -151,7 +157,7 @@ class GMSPolyhedron final {
     double GetClearance(const Point3d& _p, Point3d& _closest);
 
     /// Push a point to the (surface) medial axis.
-    /// @param[in] _p The point to push.
+    /// @param _p The point to push.
     /// @return The pushed point's clearance from the nearest obstacle.
     /// @warning This function is mis-named: it is actually a push to to the
     ///          'surface' medial axis on the xz plane. GB people, please correct
@@ -178,6 +184,11 @@ class GMSPolyhedron final {
     ///
     GMSPolyhedron ComputeBoundingPolyhedron() const;
 
+    /// Compute the polyhedron's convex hull vertices and facets
+    /// @param _convexHull convexhull container.
+    ///
+    GMSPolyhedron ComputeConvexHull() const;
+
     /// Get a CGAL polyhedron representation of this object.
     CGALPolyhedron CGAL() const;
 
@@ -186,6 +197,10 @@ class GMSPolyhedron final {
     /// not be exact as they are copied from doubles.
     void UpdateCGALPoints();
 
+    /// Scale a polyhedron by a factor and keep it centered at its original
+    /// centroid.
+    /// @param _scalingFactor The scaling factor
+    void Scale(double _scalingFactor);
     ///@}
     ///@name Internal State
     ///@{

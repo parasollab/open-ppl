@@ -791,7 +791,10 @@ RunSolver(const Solver& _solver) {
   SRand(_solver.seed);
 #endif
 
-  SetBaseFilename(GetMPProblem()->GetPath(_solver.baseFilename));
+  // Append the task label to the solver's file name
+  std::string baseFilename = _solver.baseFilename + "." + m_task->GetLabel();
+
+  SetBaseFilename(GetMPProblem()->GetPath(baseFilename));
   GetStatClass()->SetAuxDest(GetBaseFilename());
 
   // Initialize vizmo debug if there is a valid filename

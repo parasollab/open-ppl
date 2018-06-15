@@ -217,6 +217,9 @@ class Body {
     /// @return Number of backward Connection
     size_t BackwardConnectionCount() const noexcept;
 
+    /// @return Number of additional adjacent Connections
+    size_t AdjacencyConnectionCount() const noexcept;
+
     /// @param _index Index of desired forward Connection
     /// @return Requested forward Connection
     Connection& GetForwardConnection(const size_t _index) const noexcept;
@@ -224,6 +227,10 @@ class Body {
     /// @param _index Index of desired backward Connection
     /// @return Requested backward Connection
     Connection& GetBackwardConnection(const size_t _index) const noexcept;
+
+    /// @param _index Index of desired adjacency Connection
+    /// @return Requested adjacency Connection
+    Connection& GetAdjacencyConnection(const size_t _index) const noexcept;
 
     /// Get the connection joining this to another body.
     /// @param _other The other body.
@@ -236,6 +243,11 @@ class Body {
     /// @return True if adjacent
     bool IsAdjacent(const Body* const _otherBody) const;
 
+    /// Determines if two bodies share a parent
+    /// @param _otherBody Second body
+    /// @return True if sharing a parent
+    bool SameParent(const Body* const _otherBody) const;
+
     /// Attach a forward connection to this body.
     /// @param _c The Connection to attach.
     void LinkForward(Connection* const _c);
@@ -243,6 +255,10 @@ class Body {
     /// Attach a backward connection to this body.
     /// @param _c The Connection to attach.
     void LinkBackward(Connection* const _c);
+
+    /// Attach an Adjacency connection to this body.
+    /// @param _c The Connection to attach.
+    void LinkAdjacency(Connection* const _c);
 
     /// Remove a connection to this body. Does not affect the other body or the
     /// connection object.
@@ -281,6 +297,11 @@ class Body {
     ///       working on this function.
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
 
+    /// @return the convex hull in model coordinates
+    GMSPolyhedron& GetConvexHull();
+
+    /// @return a convex hull in world coordinates
+    const GMSPolyhedron& GetWorldConvexHull();
     ///@}
     ///@name Visualization
     ///@{
@@ -325,7 +346,9 @@ class Body {
 
     /// Compute the world-coordinate polyhedron by applying the world transform
     /// to the model-coordinate version.
-    void ComputeWorldPolyhedron() const;
+    /// @param _polyhedron is the polyhedron to operate on
+    /// @param _worldPolyhedron stores the world-coordinate result
+    void ComputeWorldPolyhedron(const GMSPolyhedron& _polyhedron, const GMSPolyhedron& _worldPolyhedron) const;
 
     ///@}
     ///@name Internal State
@@ -351,6 +374,9 @@ class Body {
     GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates.
     mutable bool m_worldPolyhedronCached{false}; ///< Is world polyhedron cached?
 
+    GMSPolyhedron m_worldConvexHull;         ///< Convex model in world coordinates.
+    mutable bool m_worldConvexHullCached{false};  ///< Is world convex hull cached?
+
     double m_mass{1};                        ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia
     GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
@@ -360,6 +386,7 @@ class Body {
 
     std::vector<Connection*> m_forwardConnections;  ///< Forward Connections
     std::vector<Connection*> m_backwardConnections; ///< Backward Connections
+    std::vector<Connection*> m_adjacencyConnections;///< Adjacency Connections
 
     const Transformation& (Body::*m_transformFetcher)(void) const noexcept = nullptr;
 
