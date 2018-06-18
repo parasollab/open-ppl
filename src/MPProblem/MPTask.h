@@ -171,19 +171,19 @@ class MPTask final {
     ///@name Internal State
     ///@{
 
+    /// @TODO Change this to a robot group when that code is ready.
+    Robot* m_robot{nullptr};      ///< The robot assigned to this task.
+
     std::string m_label;          ///< The task's semantic label.
 
     std::string m_capability;  ///< Indicates the capability of the robot performing the task.
-
-    /// @TODO Change this to a robot group when that code is ready.
-    Robot* m_robot{nullptr};      ///< The robot assigned to this task.
 
     mutable Status m_status{OnDeck};      ///< The status of the current task.
 
     std::unique_ptr<Constraint> m_startConstraint;  ///< Req'd to start task.
     ConstraintSet m_pathConstraints;   ///< Req'd during whole task.
     ConstraintSet m_goalConstraints;   ///< Req'd to end task.
- 
+
     double m_arrivalTime{0}; ///< Estimated time of arrival at goal
     double m_startTime{0};   ///< Estimated start time of task
     ///@}

@@ -23,6 +23,8 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
+#include <algorithm>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of planning algorithms that can operate on a specific
@@ -791,8 +793,17 @@ RunSolver(const Solver& _solver) {
   SRand(_solver.seed);
 #endif
 
-  // Append the task label to the solver's file name
-  std::string baseFilename = _solver.baseFilename + "." + m_task->GetLabel();
+  // If this task has a label, append it to the solver's output file name.
+  std::string baseFilename = _solver.baseFilename;
+  if(!m_task->GetLabel().empty())
+    baseFilename += "." + m_task->GetLabel();
+
+  // Remove spaces to keep file names nice.
+  {
+    auto newEnd = std::remove_if(baseFilename.begin(), baseFilename.end(),
+        ::isspace);
+    baseFilename.erase(newEnd, baseFilename.end());
+  }
 
   SetBaseFilename(GetMPProblem()->GetPath(baseFilename));
   GetStatClass()->SetAuxDest(GetBaseFilename());

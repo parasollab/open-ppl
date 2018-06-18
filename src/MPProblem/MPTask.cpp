@@ -14,7 +14,6 @@
 
 MPTask::
 MPTask(Robot* const _robot) : m_robot(_robot) {
-  m_label = "null task";
 }
 
 
@@ -28,7 +27,7 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
       "robot assigned to this task.");
   m_robot = _problem->GetRobot(robotLabel);
 
-  m_capability = _node.Read("capability", false, "", 
+  m_capability = _node.Read("capability", false, "",
       "Indicates the capability of the robot performing the task.");
 
   // Parse constraints.
@@ -68,14 +67,19 @@ MPTask&
 MPTask::
 operator=(const MPTask& _other) {
   if(this != &_other) {
-    m_label      = _other.m_label;
-    m_robot      = _other.m_robot;
+    m_label = _other.m_label;
+    m_robot = _other.m_robot;
+
     if(_other.m_startConstraint.get())
       m_startConstraint = _other.m_startConstraint->Clone();
-    else 
+    else
       m_startConstraint.reset();
+
+    m_pathConstraints.clear();
     for(const auto& c : _other.m_pathConstraints)
       m_pathConstraints.push_back(c->Clone());
+
+    m_goalConstraints.clear();
     for(const auto& c : _other.m_goalConstraints)
       m_goalConstraints.push_back(c->Clone());
   }
