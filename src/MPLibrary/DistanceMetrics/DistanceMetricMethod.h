@@ -36,7 +36,10 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename GraphType::VID         VID;
 
     ///@}
     ///@name Construction
@@ -46,33 +49,32 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     DistanceMetricMethod(XMLNode& _node);
     virtual ~DistanceMetricMethod() = default;
 
-      ///@}
-      ///@name Distance Interface
-      ///@{
+    ///@}
+    ///@name Distance Interface
+    ///@{
 
-      /// @brief Compute a distance between two configurations
-      /// @param _c1 Configuration 1
-      /// @param _c2 Configuration 2
-      /// @return Distance value
+    /// Compute a distance between two configurations
+    /// @param _c1 Configuration 1
+    /// @param _c2 Configuration 2
+    /// @return Distance value
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
 
-      /// @brief Scale a directional configuration to a certain magnitude
-      /// @param _length Desired magnitude
-      /// @param _c Configuration to be scaled
-      /// @param _o Configuration to scale upon (origin of scaling)
-      /// @return Distance value
-    virtual void ScaleCfg(double _length, CfgType& _c,
-      const CfgType& _o);
+    /// @brief Scale a directional configuration to a certain magnitude
+    /// @param _length Desired magnitude
+    /// @param _c Configuration to be scaled
+    /// @param _o Configuration to scale upon (origin of scaling)
+    /// @return Distance value
+    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o);
 
-      /// @brief Compute the weight of an existing roadmap edge
-      /// @param _source VID source/start
-      /// @param _target VID target/end 
-      /// @return Edge Weight value 
+    /// Compute the weight of an existing roadmap edge
+    /// @param _source VID source/start
+    /// @param _target VID target/end
+    /// @return The total edge weight going through each intermediate.
     virtual double EdgeWeight(const VID _source, const VID _target);
 
     void ScaleCfg(double _length, CfgType& _c);
 
-      ///@}
+    ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -88,14 +90,14 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
-_length = fabs(_length); //a distance must be positive
-CfgType origin = _o;
-CfgType outsideCfg = _c;
-// first find an outsite configuration with sufficient size
-while(Distance(origin, outsideCfg) < 2*_length)
-  for(size_t i=0; i<outsideCfg.DOF(); ++i)
-    outsideCfg[i] *= 2.0;
-// now, using binary search find a configuration with the approximate length
+  _length = fabs(_length); //a distance must be positive
+  CfgType origin = _o;
+  CfgType outsideCfg = _c;
+  // first find an outsite configuration with sufficient size
+  while(Distance(origin, outsideCfg) < 2*_length)
+    for(size_t i=0; i<outsideCfg.DOF(); ++i)
+      outsideCfg[i] *= 2.0;
+  // now, using binary search find a configuration with the approximate length
   CfgType aboveCfg = outsideCfg;
   CfgType belowCfg = origin;
   CfgType currentCfg = _c;
@@ -127,42 +129,27 @@ template <typename MPTraits>
 double
 DistanceMetricMethod<MPTraits>::
 EdgeWeight(const VID _source, const VID _target) {
-  auto g = this->GetRoadmap()->GetGraph()
-  if( !( g->IsEdge(_source, _target) ) )
+  auto g = this->GetRoadmap()->GetGraph();
 
+  // If the edge does not exist, report infinite distance.
+  if(!g->IsEdge(_source, _target))
     return std::numeric_limits<double>::infinity();
 
-  else {
+  // Get the intermediates. If there aren't any, the weight is just from source
+  // to target.
+  auto& intermediates = g->GetEdge(_source, _target).GetIntermediates();
+  if(intermediates.empty())
+    return Distance(g->GetVertex(_source), g->GetVertex(_target));
 
-    auto edge = g->GetEdge( _source, _target);
-    
-    auto& intermediates = edges.GetIntermediates();
+  // If we're still here, there are intermediates. Add up the distance through
+  // the intermediates.
+  double totalDistance = Distance(g->GetVertex(_source), intermediates.front())
+                       + Distance(intermediates.back(), g->GetVertex(_target));
 
-    if( intermediates.empty()) {
+  for(size_t i = 0; i < intermediates.size() - 1; ++i)
+    totalDistance += Distance(intermediates[i], intermediates[i + 1]);
 
-      return Distance(g->GetVertex(_source),g->GetVertex(_target) );
-
-    } else {
-
-      double intermediatesDist = 0.0;
-
-      intermediatesDist += Distance(g->GetVertex(_source),g->GetVertex(intermediates.front()));
-      intermediatesDist += Distance(g->GetVertex(intermediates.back(), g->GetVertex(_target)));
-
-      for(int iter = 0; iter < intermediates.size() - 1; iter ++) {
-        intermediatesDist += Distance(g->GetVertex(intermediates[iter]), g->GetVertex(intermediates[iter + 1]));
-      }
-
-      return intermediatesDist;
-
-
-
-    }
-
-
-
-  }
-
+  return totalDistance;
 }
 
 /*----------------------------------------------------------------------------*/
