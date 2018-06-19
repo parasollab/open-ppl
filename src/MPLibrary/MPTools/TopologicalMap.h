@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "MPLibrary/MPBaseObject.h"
+#include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
@@ -43,19 +44,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    /// A descriptor-based adjacency map for the successors from an SSSP run.
-    typedef std::unordered_map<VD, std::vector<VD>> AdjacencyMap;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// The output of an SSSP run.
-    ////////////////////////////////////////////////////////////////////////////
-    struct SSSPOutput {
-
-      std::unordered_map<VD, double> distances; ///< Distance to each cell from start.
-      std::vector<VD> ordering;                 ///< Cell discovery ordering.
-      AdjacencyMap successors;                  ///< Maps predecessor -> successors.
-
-    };
+    typedef SSSPAdjacencyMap<WorkspaceDecomposition> AdjacencyMap;
+    typedef SSSPOutput<WorkspaceDecomposition>       SSSPData;
 
     ///@}
     ///@name Construction
@@ -141,7 +131,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _adjacency An optional adjacency map to use instead of the
     ///                   decomposition's.
     /// @return The cell distances and successor tree.
-    SSSPOutput
+    SSSPData
     ComputeSSSP(const WorkspaceRegion* const _region,
         const double _earlyStopDistance = -1,
         const AdjacencyMap& _adjacency = {});
@@ -485,115 +475,42 @@ ClearMap() {
 /*----------------------------------- SSSP -----------------------------------*/
 
 template <typename MPTraits>
-typename TopologicalMap<MPTraits>::SSSPOutput
+typename TopologicalMap<MPTraits>::SSSPData
 TopologicalMap<MPTraits>::
 ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistance,
     const AdjacencyMap& _adjacency) {
-  /// @TODO Homogenize our custom SSSP implementations. We have them now at
-  ///       least in WorkspaceDecomposition, TopologicalMap, and QueryMethod.
   MethodTimer mt(this->GetStatClass(), "TopologicalMap::ComputeSSSP");
-  const bool customAdjacency = !_adjacency.empty();
-  const bool earlyStop = _earlyStopDistance != -1;
 
   if(this->m_debug)
     std::cout << "TopologicalMap::ComputeSSSP\n";
 
-  SSSPOutput output;
   // Const cast is required because STAPL has an API error preventing useful
   // iteration over non-const graphs.
-  auto decomposition = const_cast<WorkspaceDecomposition*>(
+  auto wd = const_cast<WorkspaceDecomposition*>(
       this->GetMPTools()->GetDecomposition(m_decompositionLabel));
 
+  // Create an early stop criterion if required.
+  SSSPTerminationCriterion<WorkspaceDecomposition> stop;
 
-  /// An element in the PQ for dijkstra's, representing one instance of
-  /// discovering a cell. Cells may be discovered multiple times from different
-  /// parents with different distances.
-  struct element {
-
-    VD parent;         ///< The parent cell descriptor.
-    VD vd;             ///< This cell descriptor.
-    double distance;   ///< Computed distance at the time of insertion.
-
-    /// Total ordering by decreasing distance.
-    bool operator>(const element& _e) const noexcept {
-      return distance > _e.distance;
-    }
-
-  };
-
-  // Define a min priority queue for dijkstras. We will not update elements when
-  // better distances are found - instead we will track the most up-to-date
-  // distance and ignore elements with different values. This is effectively a
-  // lazy delete of stale elements.
-  std::priority_queue<element,
-                      std::vector<element>,
-                      std::greater<element>> pq;
-
-  std::unordered_map<VD, bool> visited;
-  std::unordered_map<VD, double> distance;
-
-  // Define a relax edge function.
-  auto relax = [&distance, this, &pq](EI& _ei) {
-    const VD source = _ei->source(),
-             target = _ei->target();
-    const double sourceDistance = distance.count(source)
-                                ? distance[source]
-                                : std::numeric_limits<double>::infinity(),
-                 targetDistance = distance.count(target)
-                                ? distance[target]
-                                : std::numeric_limits<double>::infinity(),
-                 edgeWeight     = _ei->property().GetWeight(),
-                 newDistance    = sourceDistance + edgeWeight;
-
-    // If the new distance isn't better, quit.
-    if(newDistance >= targetDistance)
-      return;
-
-    // Otherwise, update target distance and add the target to the queue.
-    distance[target] = newDistance;
-    pq.push(element{source, target, newDistance});
-  };
-
-  // Initialize the first node.
-  const VD root = decomposition->GetDescriptor(*_region);
-  distance[root] = 0;
-  pq.push(element{root, root, 0});
-
+  // Create storage for the maximum distance and whether we have found a
+  // populated region.
   double maxDistance = std::numeric_limits<double>::max();
   bool foundFirstPopulated = false;
 
-  // Dijkstras.
-  while(!pq.empty()) {
-    // Get the next element.
-    element current = pq.top();
-    pq.pop();
+  const bool earlyStop = _earlyStopDistance != -1;
+  if(earlyStop)
+    stop = [this, wd, _earlyStopDistance, &maxDistance, &foundFirstPopulated](
+        typename WorkspaceDecomposition::vertex_iterator& _vi,
+        const SSSPOutput<WorkspaceDecomposition>& _sssp) {
+      const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
+      const double distance = _sssp.distance.at(vd);
 
-    // If we are done with this node, the element is stale. Discard.
-    if(visited.count(current.vd))
-      continue;
-    visited[current.vd] = true;
-
-    // Save this score and successor relationship.
-    output.ordering.push_back(current.vd);
-    output.distances[current.vd] = distance[current.vd];
-    output.successors[current.parent].push_back(current.vd);
-
-    if(this->m_debug)
-      std::cout << "\tVertex " << current.vd
-                << " has parent " << current.parent
-                << ", score " << std::setprecision(4) << distance[current.vd]
-                << ", and center at "
-                << decomposition->GetRegion(current.vd).FindCenter()
-                << std::endl;
-
-    // Manage early stop conditions.
-    if(earlyStop) {
       // If we haven't found the first populated region yet, check for it now.
       if(!foundFirstPopulated) {
-        auto& region = decomposition->GetRegion(current.vd);
-        if(IsPopulated(&region)) {
+        auto& region = wd->GetRegion(vd);
+        if(this->IsPopulated(&region)) {
           foundFirstPopulated = true;
-          maxDistance = distance[current.vd] + _earlyStopDistance;
+          maxDistance = distance + _earlyStopDistance;
 
           if(this->m_debug)
             std::cout << "\t\tFirst populated node found, max distance is "
@@ -601,39 +518,26 @@ ComputeSSSP(const WorkspaceRegion* const _region, const double _earlyStopDistanc
                       << std::endl;
         }
       }
-      // Otherwise, check for exceeding the max distance.
-      else if(distance[current.vd] > maxDistance) {
+
+      // Check for exceeding the max distance (not an else-condition incase the
+      // max distance is 0).
+      if(foundFirstPopulated and distance >= maxDistance) {
         if(this->m_debug)
-          std::cout << "\t\tLast populated node found."
+          std::cout << "\t\tLast populated node found at distance "
+                    << std::setprecision(4) << distance
                     << std::endl;
-        break;
+        return SSSPTermination::EndSearch;
       }
-    }
 
+      return SSSPTermination::Continue;
+    };
+  else
+    stop = SSSPDefaultTermination<WorkspaceDecomposition>();
 
-    // Relax each outgoing edge.
-    auto vi = decomposition->find_vertex(current.vd);
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      // If we are not using custom adjacency, simply relax the edge.
-      if(!customAdjacency)
-        relax(ei);
-      // Otherwise, only relax if this edge appears in _adjacency.
-      else if(_adjacency.count(current.vd)) {
-        const auto& neighbors = _adjacency.at(current.vd);
-        auto iter = std::find(neighbors.begin(), neighbors.end(), ei->target());
-        if(iter != neighbors.end())
-          relax(ei);
-      }
-    }
-  }
+  // Get the descriptor of the root node.
+  const VD root = wd->GetDescriptor(*_region);
 
-  // The root was added to its own successor map - fix that now.
-  auto& rootMap = output.successors[root];
-  rootMap.erase(std::find(rootMap.begin(), rootMap.end(), root));
-
-  // The root was added to the front of the distance set, which we want.
-
-  return output;
+  return DijkstraSSSP(wd, {root}, stop, _adjacency);
 }
 
 /*----------------------------------------------------------------------------*/

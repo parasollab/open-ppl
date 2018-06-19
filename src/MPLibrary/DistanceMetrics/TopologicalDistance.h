@@ -196,7 +196,7 @@ UpdateMap(const KeyPair& _key) {
   // Compute the SSSP from this cell and save all results to the distance map.
   const auto sssp = tm->ComputeSSSP(_key.first);
 
-  for(const auto& item : sssp.distances) {
+  for(const auto& item : sssp.distance) {
     const auto& region = decomposition->GetRegion(item.first);
     const KeyPair key = MakeKey(_key.first, &region);
 

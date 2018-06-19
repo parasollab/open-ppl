@@ -1,6 +1,7 @@
 #include "WorkspaceDecomposition.h"
 
 #include "Geometry/Boundaries/TetrahedralBoundary.h"
+#include "Utilities/SSSP.h"
 
 #include "containers/sequential/graph/algorithms/dijkstra.h"
 
@@ -228,103 +229,36 @@ FindPath(const size_t _source, const size_t _target) const {
   if(_source == INVALID_VID or _target == INVALID_VID)
     return {};
 
-  /// @TODO Homogenize our custom SSSP implementations. We have them now at
-  ///       least in WorkspaceDecomposition, TopologicalMap, and QueryMethod.
-
   /// @TODO Remove the const-cast after STAPL fixes its API.
   WorkspaceDecomposition* wd = const_cast<WorkspaceDecomposition*>(this);
 
-  /// An element in the PQ for dijkstra's.
-  struct element {
+  // Set up an early termination criterion so that we quit early if we find the
+  // _target node.
+  SSSPTerminationCriterion<WorkspaceDecomposition> quit(
+      [_target](typename WorkspaceDecomposition::vertex_iterator& _vi,
+         const SSSPOutput<WorkspaceDecomposition>& _sssp) {
+        return _vi->descriptor() == _target ? SSSPTermination::EndSearch
+                                            : SSSPTermination::Continue;
+      }
+  );
+  const SSSPOutput<WorkspaceDecomposition> sssp = DijkstraSSSP(wd, {_source}, quit);
 
-    vertex_descriptor parent; ///< The parent descriptor.
-    vertex_descriptor vd;     ///< The vertex descriptor.
-    double distance;  ///< Computed distance from souce at the time of insertion.
-
-    /// Total order by decreasing distance.
-    bool operator>(const element& _e) const noexcept {
-      return distance > _e.distance;
-    }
-
-  };
-
-  // Define a min priority queue for dijkstras. We will not update elements when
-  // better distances are found - instead we will add them again and ignore all
-  // copies after the first (with best distance) is visited.
-  std::priority_queue<element,
-                      std::vector<element>,
-                      std::greater<element>> pq;
-
-  std::unordered_map<vertex_descriptor, bool> visited;
-  std::unordered_map<vertex_descriptor, double> distance;
-  std::unordered_map<vertex_descriptor, vertex_descriptor> parent;
-
-  // Define the relax function.
-  auto relax = [&pq, &distance](adj_edge_iterator& _ei) {
-    const vertex_descriptor source = _ei->source(),
-                            target = _ei->target();
-
-    const double sourceDistance = distance.count(source)
-                                  ? distance[source]
-                                  : std::numeric_limits<double>::infinity(),
-                 targetDistance = distance.count(target)
-                                  ? distance[target]
-                                  : std::numeric_limits<double>::infinity(),
-                 edgeWeight     = _ei->property().GetWeight(),
-                 newDistance    = sourceDistance + edgeWeight;
-
-    // Skip this target if the new distance is worse.
-    if(newDistance >= targetDistance)
-      return;
-
-    distance[target] = newDistance;
-    pq.push(element{source, target, newDistance});
-  };
-
-  // Add the root to the queue at distance 0.
-  distance[_source] = 0;
-  pq.push(element{_source, _source, 0});
-
-  // Search outward through the decomposition graph to locate the neighborhood.
-  while(!pq.empty()) {
-    // Get the next element
-    const element current = pq.top();
-    pq.pop();
-
-    // If we are done with this node, discard the element.
-    if(visited.count(current.vd))
-      continue;
-    visited[current.vd] = true;
-    parent[current.vd] = current.parent;
-
-    // If this is the target node, we are done.
-    if(current.vd == _target)
-      break;
-
-    // Relax edges to unvisited adjacent vertices.
-    auto vi = wd->find_vertex(current.vd);
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      const size_t target = ei->target();
-      if(!visited.count(target))
-        relax(ei);
-    }
-  }
-
-  // If the target has no parent, then it wasn't found.
-  if(!parent.count(_target))
+  // If the end node has no parent, there is no path.
+  if(!sssp.parent.count(_target))
     return {};
 
-  // Copy each visited node into the output set.
-  std::vector<size_t> output;
-  vertex_descriptor current = _target;
-  while(current != _source) {
-    output.push_back(current);
-    current = parent[current];
-  }
-  output.push_back(_source);
-  std::reverse(output.begin(), output.end());
+  // Extract the path.
+  std::vector<vertex_descriptor> path;
+  path.push_back(_target);
 
-  return output;
+  vertex_descriptor current = _target;
+  do {
+    current = sssp.parent.at(current);
+    path.push_back(current);
+  } while(current != _source);
+  std::reverse(path.begin(), path.end());
+
+  return path;
 }
 
 
@@ -340,91 +274,28 @@ std::vector<size_t>
 WorkspaceDecomposition::
 FindNeighborhood(const std::vector<size_t>& _roots, const double _threshold)
     const {
-  /// @TODO Homogenize our custom SSSP implementations. We have them now at
-  ///       least in WorkspaceDecomposition, TopologicalMap, and QueryMethod.
-
   /// @TODO Remove the const-cast after STAPL fixes its API.
   WorkspaceDecomposition* wd = const_cast<WorkspaceDecomposition*>(this);
 
-  /// An element in the PQ for dijkstra's.
-  struct element {
+  // Define a path weight function that skips targets if the new distance
+  // exceeds the neighborhood threshold.
+  SSSPPathWeightFunction<WorkspaceDecomposition> weight(
+      [&_threshold](adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+        const double edgeWeight  = _ei->property().GetWeight(),
+                     newDistance = _sourceDistance + edgeWeight;
 
-    vertex_descriptor vd; ///< The vertex descriptor.
-    double distance;  ///< Computed distance from souce at the time of insertion.
+        if(newDistance > _threshold)
+          return std::numeric_limits<double>::infinity();
+        return newDistance;
+      }
+  );
 
-    /// Total order by decreasing distance.
-    bool operator>(const element& _e) const noexcept {
-      return distance > _e.distance;
-    }
-
-  };
-
-  // Define a min priority queue for dijkstras. We will not update elements when
-  // better distances are found - instead we will add them again and ignore all
-  // copies after the first (with best distance) is visited.
-  std::priority_queue<element,
-                      std::vector<element>,
-                      std::greater<element>> pq;
-
-  std::unordered_map<vertex_descriptor, bool> visited;
-  std::unordered_map<vertex_descriptor, double> distance;
-
-  // Define the relax function.
-  auto relax = [&pq, &distance, &_threshold](adj_edge_iterator& _ei) {
-    const vertex_descriptor source = _ei->source(),
-                            target = _ei->target();
-
-    const double sourceDistance = distance.count(source)
-                                  ? distance[source]
-                                  : std::numeric_limits<double>::infinity(),
-                 targetDistance = distance.count(target)
-                                  ? distance[target]
-                                  : std::numeric_limits<double>::infinity(),
-                 edgeWeight     = _ei->property().GetWeight(),
-                 newDistance    = sourceDistance + edgeWeight;
-
-    // Skip this target if the new distance is worse or exceeds the neighborhood
-    // threshold.
-    if(newDistance >= std::min(targetDistance, _threshold))
-      return;
-
-    distance[target] = newDistance;
-    pq.push(element{target, newDistance});
-  };
-
-  // Add each root to the queue at distance 0.
-  for(const auto& root : _roots) {
-    distance[root] = 0;
-    pq.push(element{root, 0});
-  }
-
-  // Search outward through the decomposition graph to locate the neighborhood.
-  while(!pq.empty()) {
-    // Get the next element
-    const element current = pq.top();
-    pq.pop();
-
-    // If we are done with this node, discard the element.
-    if(visited.count(current.vd))
-      continue;
-    visited[current.vd] = true;
-
-    // Relax edges to unvisited adjacent vertices.
-    auto vi = wd->find_vertex(current.vd);
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      const size_t target = ei->target();
-      if(!visited.count(target))
-        relax(ei);
-    }
-  }
-
-  // Copy each visited node into the output set.
-  std::vector<size_t> output;
-  output.reserve(visited.size());
-  for(auto& pair : visited)
-    output.push_back(pair.first);
-
-  return output;
+  // Run SSSP from the set of roots to find the neighborhood. Return the set of
+  // all discovered nodes.
+  SSSPOutput<WorkspaceDecomposition> sssp = DijkstraSSSP(wd, _roots, weight);
+  return sssp.ordering;
 }
 
 /*------------------------------ Helpers -------------------------------------*/

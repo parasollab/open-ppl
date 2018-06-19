@@ -9,8 +9,8 @@
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Robot.h"
-#include "Utilities/DynamicWeightMap.h"
 #include "Utilities/MetricUtils.h"
+#include "Utilities/SSSP.h"
 #include "nonstd/io.h"
 
 #include "containers/sequential/graph/algorithms/astar.h"
@@ -148,12 +148,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param[in] _end The end node.
     std::vector<VID> GeneratePath(const VID _start, const VID _end);
 
-    /// Generate a path through the roadmap from a start node to an end node.
-    /// Called when using dynamic obstacles.
-    /// @param[in] _start The start node.
-    /// @param[in] _end The end node.
-    // TODO: Verify that this is correct with LazyPRM
-    std::vector<VID> GeneratePathDynamic(const VID _start, const VID _end);
     ///@}
 
   protected:
@@ -193,6 +187,27 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     /// Generate query configurations from the task constraints.
     void GenerateQuery();
+
+    /// Define a function for computing a path weight for a specific edge,
+    /// ignoring dynamic obstacles.
+    /// @param _ei An iterator to the edge we are checking.
+    /// @param _sourceDistance The shortest distance to the source node.
+    /// @param _targetDistance The best known distance to the target node.
+    /// @return The distance to the target node via this edge, or infinity if
+    ///         the edge isn't used due to lazy invalidation.
+    double StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
+        const double _sourceDistance, const double _targetDistance) const;
+
+    /// Define a function for computing path weights w.r.t. dynamic obstacles.
+    /// Here the metric is the number of time steps, and we return infinity if
+    /// taking an edge would result in a collision with a dynamic obstacle.
+    /// @param _ei An iterator to the edge we are checking.
+    /// @param _sourceDistance The shortest time to the source node.
+    /// @param _targetDistance The best known time to the target node.
+    /// @return The time to the target node via this edge, or infinity if taking
+    ///         this edge would result in a collision with dynamic obstacles.
+    double DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
+        const double _sourceDistance, const double _targetDistance) const;
 
     ///@}
     ///@name Internal State
@@ -460,222 +475,131 @@ template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
-
-  if(!(this->GetMPProblem()->GetDynamicObstacles().empty())){
-    std::cout << "Number of Dynamic Obstacles: " << this->GetMPProblem()->GetDynamicObstacles().size() << std::endl;
-    return GeneratePathDynamic(_start, _end);
-  }
-
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "QueryMethod::GraphSearch");
+  MethodTimer mt(stats, "QueryMethod::GeneratePath");
   stats->IncStat("Graph Search");
 
-  // Define types we will need for the graph search.
-  using namespace stapl::sequential;
-  using namespace stapl;
-
-  typedef typename GraphType::vertex_reference     VR;
-  typedef map_property_map<GraphType, VID>         ParentMap;
-  //typedef map_property_map<GraphType, WeightType>  DistanceMap;
-  typedef DynamicWeightMap<GraphType, WeightType>  DistanceMap;
-  typedef std::less<WeightType>                    Comparator;
-  typedef std::plus<WeightType>                    Combiner;
-  typedef d_ary_heap_indirect<VR, 4, ParentMap, DistanceMap, Comparator> Queue;
-
-  // Build structures for STAPL graph search.
-  static const WeightType weightMax("", std::numeric_limits<double>::max()),
-                          weightZero("", 0.);
-  static const Combiner combiner;
-  static const Comparator comparator;
-  ParentMap parentMap, indexMap, colorMap = GetColorMap();
-  DistanceMap weightMap, distanceMap;
-
-  auto g = this->GetRoadmap()->GetGraph();
-
-  // Initialize the various maps.
-  for(auto vi = g->begin(); vi != g->end(); ++vi) {
-    parentMap.put(*vi, vi->descriptor());
-
-    // Intialize the distance to this vertex as 0 if we are not using it. This
-    // causes it to be skipped by the graph searches. Otherwise initialize to
-    // max weight.
-    const bool usingThis = IsVertexUsed(vi->descriptor());
-    distanceMap.put(*vi, usingThis ? weightMax : weightZero);
-
-    // Initialize the edge weight map for each adjacent edge.
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei)
-      weightMap.put(*ei, this->IsEdgeUsed(ei->id()) ? ei->property() : weightMax);
-  }
-
-  // Make sure the start vertex has zero distance.
-  distanceMap.put(_start, weightZero);
-
-  Queue queue(distanceMap, indexMap, comparator);
-
-  // Run the graph search.
-  switch(m_searchAlg) {
-    case DIJKSTRAS:
-      dijkstra_sssp(*g, parentMap, distanceMap, weightMap,
-                    _start, _end, comparator, weightMax,
-                    combiner, colorMap, queue);
-      break;
-    case ASTAR:
-      Heuristic<MPTraits> heuristic(g->GetVertex(_end),
-          this->GetEnvironment()->GetPositionRes(),
-          this->GetEnvironment()->GetOrientationRes());
-      DistanceMap dummyMap;
-      astar(*g, parentMap, distanceMap, dummyMap, weightMap,
-            _start, _end, heuristic, comparator,
-            combiner, colorMap, queue);
-      break;
-  }
-
-  // Extract path from sssp results.
-  vector<VID> path;
-  path.push_back(_end);
-  VID temp = _end;
-  while(parentMap.get(temp) != temp)
-  {
-    path.push_back(parentMap.get(temp));
-    temp = parentMap.get(temp);
-  }
-
-  // A path was found if temp is the start node. In that case reverse it so that
-  // it goes from start to goal.
-  if(temp == _start)
-    std::reverse(path.begin(), path.end());
-  else
-    path.clear();
-
-  return path;
-}
-
-template <typename MPTraits>
-std::vector<typename QueryMethod<MPTraits>::VID>
-QueryMethod<MPTraits>::
-GeneratePathDynamic(const VID _start, const VID _end) {
-  /// @TODO Homogenize our custom SSSP implementations. We have them now at
-  ///       least in WorkspaceDecomposition, TopologicalMap, and QueryMethod.
-
-  if(_start == _end){
-    return std::vector<VID>{_start};
-  }
-
-  typedef typename GraphType::adj_edge_iterator   EI;
-  typedef std::unordered_map<VID, VID>            ParentMap;
-
-  MethodTimer mt(this->GetStatClass(), "QueryMethod::GeneratePathDynamic");
-
-  auto g = this->GetRoadmap()->GetGraph();
-
-  SafeIntervalTool<MPTraits>* iTool = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
-
-  ParentMap parentMap;
-  /// An element in the PQ for dijkstra's. Elements will store
-  /// their time, which will be used to check possible edges for
-  /// containment within a Safe Interval.
-  struct element{
-
-    VID parent;         ///< The parent vertex descriptor.
-    VID vd;             ///< This vertex descriptor.
-    double distance;    ///< Computed distance (time) at the time of insertion.
-
-    /// Total order by decreasing distance.
-    bool operator>(const element& _e) const noexcept {
-      return distance > _e.distance;
-    }
-
-  };
-
-  // Define a min priority queue for dijkstras. We will not update elements when
-  // better distances are found - instead we will trak the most up-to-date
-  // distance and ignore elements with different values.
-  std::priority_queue<element,
-                      std::vector<element>,
-                      std::greater<element>> pq;
-
-  std::unordered_map<VID, bool> visited;
-  std::unordered_map<VID, double> distance;
-
-  auto relax = [&distance, this, &pq, iTool, g, &parentMap](EI& _ei) {
-    const double sourceDistance = distance.count(_ei->source())
-                                  ? distance[_ei->source()]
-                                  : std::numeric_limits<double>::infinity(),
-                 targetDistance = distance.count(_ei->target())
-                                  ? distance[_ei->target()]
-                                  : std::numeric_limits<double>::infinity(),
-                 edgeWeight     = _ei->property().GetTimeSteps(),
-                 newDistance    = sourceDistance + edgeWeight;
-
-    if(newDistance >= targetDistance){
-      if(this->m_debug)
-        std::cout << "Breaking because the path is not optimal." << std::endl;
-      return;
-    }
-
-    // Ensure that the target vertex is contained within a SafeInterval when
-    // arriving.
-    auto vertexIntervals = iTool->ComputeIntervals(g->GetVertex(_ei->target()));
-    if(!(iTool->ContainsTimestep(vertexIntervals, newDistance))){
-      if(this->m_debug){
-        std::cout << "Breaking because the vertex is invalid." << std::endl;
-        std::cout << "vertexIntervals: " << vertexIntervals << std::endl;
+  // Set up the termination criterion to quit early if we find the _end node.
+  SSSPTerminationCriterion<GraphType> termination(
+      [_end](typename GraphType::vertex_iterator& _vi,
+             const SSSPOutput<GraphType>& _sssp) {
+        return _vi->descriptor() == _end ? SSSPTermination::EndSearch
+                                         : SSSPTermination::Continue;
       }
-      return;
-    }
+  );
 
-    // Ensure that the edge is contained within a SafeInterval if leaving now.
-    auto edgeIntervals = iTool->ComputeIntervals(_ei->property());
-    if(!(iTool->ContainsTimestep(edgeIntervals, sourceDistance))){
-      if(this->m_debug)
-        std::cout << "Breaking because the edge is invalid." << std::endl;
-      return;
-    }
-
-    distance[_ei->target()] = newDistance;
-    pq.push(element{_ei->source(), _ei->target(), newDistance});
-    parentMap[_ei->target()] = _ei->source();
-    if(this->m_debug)
-      std::cout << "======Relaxed Edge======" << std::endl;
-  };
-
-  distance[_start] = 0;
-  pq.push(element{_start, _start, 0});
-  parentMap[_start] = _start;
-
-  // Dijkstras
-  while(!pq.empty()) {
-    // Get the next element
-    const element current = pq.top();
-    pq.pop();
-
-    // If we are done with this node, discard the element.
-    if(visited.count(current.vd))
-      continue;
-    visited[current.vd] = true;
-
-    // Relax edges to unvisited adjacent vertices.
-    auto vi = g->find_vertex(current.vd);
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      const size_t target = ei->target();
-      if(!visited.count(target))
-        relax(ei);
-    }
+  // Set up the path weight function depending on whether we have any dynamic
+  // obstacles.
+  SSSPPathWeightFunction<GraphType> weight;
+  if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
+    weight = [this](typename GraphType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+  else {
+    weight = [this](typename GraphType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->StaticPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
   }
 
+
+  // Run dijkstra's algorithm to find the path, if it exists.
+  auto g = this->GetRoadmap()->GetGraph();
+  const SSSPOutput<GraphType> sssp = DijkstraSSSP(g, {_start}, weight);
+
+  // If the end node has no parent, there is no path.
+  if(!sssp.parent.count(_end))
+    return {};
+
+  // Extract the path.
   std::vector<VID> path;
-  if(!parentMap.count(_end))
-    return path;
+  path.push_back(_end);
 
   VID current = _end;
-  while(current != _start){
+  do {
+    current = sssp.parent.at(current);
     path.push_back(current);
-    current = parentMap[current];
-  }
-  path.push_back(_start);
+  } while(current != _start);
   std::reverse(path.begin(), path.end());
+
   return path;
 }
+
+
+template <typename MPTraits>
+double
+QueryMethod<MPTraits>::
+StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
+    const double _sourceDistance, const double _targetDistance) const {
+  // First check that this edge is used. If not, the distance is infinite.
+  if(!IsEdgeUsed(_ei->id()))
+    return std::numeric_limits<double>::infinity();
+
+  // Compute the new 'distance', which is the number of timesteps at which
+  // the robot would reach the target node.
+  const double edgeWeight  = _ei->property().GetWeight(),
+               newDistance = _sourceDistance + edgeWeight;
+
+  return newDistance;
+}
+
+
+template <typename MPTraits>
+double
+QueryMethod<MPTraits>::
+DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
+    const double _sourceDistance, const double _targetDistance) const {
+  // First check that this edge is used. If not, the distance is infinite.
+  if(!IsEdgeUsed(_ei->id()))
+    return std::numeric_limits<double>::infinity();
+
+  // Compute the new 'distance', which is the number of timesteps at which
+  // the robot would reach the target node.
+  const double edgeWeight  = _ei->property().GetTimeSteps(),
+               newDistance = _sourceDistance + edgeWeight;
+
+  // If this edge isn't better than the previous, we can return without
+  // checking the dynamic obstacles.
+  if(newDistance >= _targetDistance) {
+    if(this->m_debug)
+      std::cout << "Breaking because the path is not optimal."
+                << std::endl;
+    return newDistance;
+  }
+
+  // Get the graph and safe interval tool.
+  auto g = this->GetRoadmap()->GetGraph();
+  SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool(
+      m_safeIntervalLabel);
+
+  // Ensure that the target vertex is contained within a SafeInterval when
+  // arriving.
+  auto vertexIntervals = siTool->ComputeIntervals(g->GetVertex(_ei->target()));
+  if(!(siTool->ContainsTimestep(vertexIntervals, newDistance))) {
+    if(this->m_debug)
+      std::cout << "Breaking because the target vertex is dynamically invalid."
+                << "\n\tvertexIntervals: " << vertexIntervals
+                << std::endl;
+    return std::numeric_limits<double>::infinity();
+  }
+
+  // Ensure that the edge is contained within a SafeInterval if leaving now.
+  auto edgeIntervals = siTool->ComputeIntervals(_ei->property());
+  if(!(siTool->ContainsTimestep(edgeIntervals, _sourceDistance))){
+    if(this->m_debug)
+      std::cout << "Breaking because the edge is dynamically invalid."
+                << std::endl;
+    return std::numeric_limits<double>::infinity();
+  }
+
+  // If we're still here, the edge is OK.
+  return newDistance;
+}
+
 
 template <typename MPTraits>
 bool
@@ -710,6 +634,7 @@ GetColorMap() const {
 
   return colorMap;
 }
+
 
 template <typename MPTraits>
 void

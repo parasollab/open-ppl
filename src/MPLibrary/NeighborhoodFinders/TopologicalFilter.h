@@ -106,7 +106,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
 
     /// The SSSP data cache.
     std::unordered_map<const WorkspaceRegion*,
-        typename TopologicalMap<MPTraits>::SSSPOutput> m_ssspCache;
+        typename TopologicalMap<MPTraits>::SSSPData> m_ssspCache;
 
     const WorkspaceRegion* m_goalRegion{nullptr}; ///< Query goal region.
     typename TopologicalMap<MPTraits>::AdjacencyMap m_queryMap; ///< Query-relevant adjacency map.
@@ -371,14 +371,14 @@ FindCandidateRegions(const CfgType& _cfg) {
     return {};
 
   // Binary search to check if we can prune the distance map.
-  const auto& distances = m_ssspCache[rootRegion].distances;
-  const double maxDistance = distances.at(*beginIter) + m_backtrackDistance;
+  const auto& distance = m_ssspCache[rootRegion].distance;
+  const double maxDistance = distance.at(*beginIter) + m_backtrackDistance;
 
   if(this->m_debug)
     std::cout << "\tFirst populated cell " << *beginIter
               << " in order " << std::distance(ordering.begin(), beginIter)
               << " has distance "
-              << std::setprecision(4) << distances.at(*beginIter)
+              << std::setprecision(4) << distance.at(*beginIter)
               << ", max distance is "
               << std::setprecision(4) << maxDistance
               << ".\n\tSearching for new last cell."
@@ -392,28 +392,28 @@ FindCandidateRegions(const CfgType& _cfg) {
 
     if(this->m_debug) {
       std::cout << "\titer: " << *iter
-                << ", " << std::setprecision(4) << distances.at(*iter)
+                << ", " << std::setprecision(4) << distance.at(*iter)
                 << "\tmid:  " << *midpoint
-                << ", " << std::setprecision(4) << distances.at(*midpoint)
+                << ", " << std::setprecision(4) << distance.at(*midpoint)
                 << "\tend:  ";
       if(endIter == ordering.end())
         std::cout << "end iter";
       else
         std::cout << *endIter
-                  << ", " << std::setprecision(4) << distances.at(*endIter);
+                  << ", " << std::setprecision(4) << distance.at(*endIter);
       std::cout << std::endl;
     }
 
-    if(distances.at(*midpoint) > maxDistance)
+    if(distance.at(*midpoint) > maxDistance)
       endIter = midpoint;
-    else if(distances.at(*midpoint) < maxDistance)
+    else if(distance.at(*midpoint) < maxDistance)
       iter = ++midpoint;
     else
       break;
   }
 
   // Scan forward until the last node exceeds the max distance.
-  while(iter != ordering.end() and distances.at(*iter) == maxDistance)
+  while(iter != ordering.end() and distance.at(*iter) == maxDistance)
     ++iter;
 
   if(this->m_debug) {
@@ -421,7 +421,7 @@ FindCandidateRegions(const CfgType& _cfg) {
               << " cells from the distance map.";
     if(iter != ordering.end())
       std::cout << "\tLast retained node has distance "
-                << std::setprecision(4) << distances.at(*iter) << ".";
+                << std::setprecision(4) << distance.at(*iter) << ".";
     std::cout << std::endl;
   }
 
@@ -533,9 +533,9 @@ LazyInitialize() {
                  target = ei->target();
         // If the target has a higher score, it is a child in the successor
         // pseudo-DAG.
-        if(sssp.distances.count(source) and
-            sssp.distances.count(target) and
-            sssp.distances.at(source) <= sssp.distances.at(target))
+        if(sssp.distance.count(source) and
+            sssp.distance.count(target) and
+            sssp.distance.at(source) <= sssp.distance.at(target))
           m_queryMap[source].push_back(target);
       }
     }

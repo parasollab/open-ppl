@@ -457,6 +457,7 @@ PMPL_SRCS := \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \
+  Utilities/SSSP.cpp \
   Utilities/XMLNode.cpp \
   Workspace/GridOverlay.cpp \
   Workspace/WorkspaceDecomposition.cpp \
