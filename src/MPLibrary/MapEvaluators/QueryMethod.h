@@ -375,7 +375,7 @@ template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 SetDMLabel(string const _dmLabel) {
-	m_dmLabel = _dmLabel;
+  m_dmLabel = _dmLabel;
 }
 
 
@@ -553,12 +553,13 @@ StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
   if(!IsEdgeUsed(_ei->id()))
     return std::numeric_limits<double>::infinity();
 
-  // Check if Distance Metric has been defined. If so use the Distance Metric's Edge Weight Function 
-	if(!(m_dmLabel.empty())) {
-	  auto dm = this->GetDistanceMetric(m_dmLabel); // Retrieve the Distance Metric 	  
-	  const double edgeWeight = dm->EdgeWeight(_ei->source(), _ei->target()); // Get EdgeWeight Distance
-	  return edgeWeight;
-	} 
+  // Check if Distance Metric has been defined. If so use the Distance Metric's
+  // Edge Weight Function
+  if(!(m_dmLabel.empty())) {
+    auto dm = this->GetDistanceMetric(m_dmLabel);
+    const double edgeWeight = dm->EdgeWeight(_ei->source(), _ei->target());
+    return edgeWeight;
+  }
 
   // Compute the new 'distance', which is the number of timesteps at which
   // the robot would reach the target node.

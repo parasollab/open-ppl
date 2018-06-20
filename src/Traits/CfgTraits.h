@@ -151,8 +151,6 @@
 #include "MPLibrary/MPStrategies/LPCompare.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
-#include "MPLibrary/MPStrategies/MyEST.h"
-//#include "MPLibrary/MPStrategies/MyStrategy.h"
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/PushQueryToMA.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
