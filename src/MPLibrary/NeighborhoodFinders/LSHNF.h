@@ -386,6 +386,7 @@ InsertIntoMap(const VI _vi) {
 
 /// Define an ordering operation on hash keys so that we can use them as a key in
 /// a multimap.
+inline
 bool
 operator<(const std::vector<int>& _h1, const std::vector<int>& _h2) {
   const size_t numElements = std::min(_h1.size(), _h2.size());
