@@ -18,7 +18,7 @@ parallel ?= 0
 
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
-vizmo_map := #-DVIZMO_MAP
+vizmo_map := -DVIZMO_MAP
 
 # Define robot type if it isn't already set.
 ROBOT_DEF ?= PMPCfg

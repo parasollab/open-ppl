@@ -70,7 +70,7 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="32"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
@@ -588,12 +588,20 @@
         <Evaluator label="RRTQuery"/>
       </Syclop>
 
+
+
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"
         vcLabel="rapid" lpLabel="sl"
         maxFailedIterations="20" debug="false"/>
 
-      <ScratchStrategy label="scratch"/>
+
+      <!--<MyStrategy label="MyStrategy" lpLabel="sl" vcLabel="pqp_solid"/-->
+      <MyEST label="MyEST" lpLabel="sl" vcLabel="pqp_solid" debug="true" dmLabel="euclidean">
+        <Evaluator methodLabel="PRMQuery"/>
+      </MyEST>
+
+      <ScratchStrategy label="scratch" />
 
     </MPStrategies>
 
@@ -639,8 +647,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="MyEST" seed="12345678"
+      baseFilename="MyEST" vizmoDebug="true"/>
 
   </Library>
 

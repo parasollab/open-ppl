@@ -139,6 +139,10 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// Output the discovered path to file.
     void WritePath() const;
 
+    /// Takes a string and sets m_dmLabel
+    /// @param[in] _label The Distance Metric being used
+    void SetDMLabel(string _dmLabel);
+
     /// Reset the path and list of undiscovered goals.
     virtual void Reset(RoadmapType* const _r);
 
@@ -229,6 +233,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     std::string m_vcLabel;             ///< The validity checker for generating the query.
 
+    std::string m_dmLabel;			   ///< The Distance Metric Label.
     ///@}
 
 };
@@ -279,6 +284,7 @@ void
 QueryMethod<MPTraits>::
 Initialize() {
   // Clear previous state.
+  m_dmLabel.clear();
   m_query.clear();
   m_goals.clear();
   GenerateQuery();
@@ -364,6 +370,14 @@ WritePath() const {
   else
     ::WritePath(base + ".rdmp.path", this->GetPath()->Cfgs());
 }
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetDMLabel(string const _dmLabel) {
+	m_dmLabel = _dmLabel;
+}
+
 
 
 template <typename MPTraits>
@@ -539,11 +553,17 @@ StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
   if(!IsEdgeUsed(_ei->id()))
     return std::numeric_limits<double>::infinity();
 
+  // Check if Distance Metric has been defined. If so use the Distance Metric's Edge Weight Function 
+	if(!(m_dmLabel.empty())) {
+	  auto dm = this->GetDistanceMetric(m_dmLabel); // Retrieve the Distance Metric 	  
+	  const double edgeWeight = dm->EdgeWeight(_ei->source(), _ei->target()); // Get EdgeWeight Distance
+	  return edgeWeight;
+	} 
+
   // Compute the new 'distance', which is the number of timesteps at which
   // the robot would reach the target node.
   const double edgeWeight  = _ei->property().GetWeight(),
                newDistance = _sourceDistance + edgeWeight;
-
   return newDistance;
 }
 
