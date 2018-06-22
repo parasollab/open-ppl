@@ -36,7 +36,10 @@ class Agent {
     ControlSet m_currentControls;      ///< The current control set.
     size_t m_stepsRemaining{0};        ///< Steps remaining on current controls.
 
-    bool m_debug{false};               ///< Toggle debug messages.
+    bool m_debug{true};               ///< Toggle debug messages.
+
+    /// Specifiies the type of agent for heterogenous multiagent teams
+    std::string m_capability{"icreate"};
 
     ///@}
 
@@ -132,6 +135,11 @@ class Agent {
     /// current position.
     /// @param _steps The number of steps we wish to stop for.
     void PauseAgent(const size_t _steps);
+
+    /// Get the type of agent
+    std::string GetCapability() const noexcept;
+
+    void SetCapability(std::string _capability);
 
   protected:
 

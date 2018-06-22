@@ -236,7 +236,7 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     }
 
     if(!validEdge)
-      throw RunTimeException(WHERE, "Edge doesn't exist in roadmap!");
+      throw RunTimeException(WHERE) << "Edge from " << *it << " to " << *(it+1) << " doesn't exist in roadmap!";
 
     // Use the local planner from parameter if specified.
     // If not specified, use the edge lp.

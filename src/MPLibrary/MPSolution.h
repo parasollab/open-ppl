@@ -33,6 +33,10 @@ class MPSolutionType final {
     typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
 
+    typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::WeightType       WeightType;
+    typedef RoadmapGraph<CfgType, WeightType>   GraphType;
+
     /// The outputs for an individual robot.
     struct RobotSolution {
       std::unique_ptr<RoadmapType>  freeMap; ///< The free-space roadmap.

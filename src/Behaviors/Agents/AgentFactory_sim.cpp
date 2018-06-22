@@ -19,6 +19,9 @@ Factory(Robot* const _r, XMLNode& _node) {
   // Read the node and mark it as visited.
   std::string type = _node.Read("type", true, "", "The Agent class name.");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+  
+  std::string capability = _node.Read("capability", false, "", "The Agent capability type");
+  std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
 
   std::unique_ptr<Agent> output;
 
@@ -51,6 +54,7 @@ Factory(Robot* const _r, XMLNode& _node) {
 
   // Read the debug flag.
   output->m_debug = _node.Read("debug", false, false, "Show debug messages.");
-
+  output->SetCapability(capability);
+  
   return output;
 }

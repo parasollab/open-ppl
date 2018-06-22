@@ -21,7 +21,7 @@ PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a)
 
 
 PathFollowingAgent::
-PathFollowingAgent(Robot* const _r, XMLNode& _node) : PlanningAgent(_r) {
+PathFollowingAgent(Robot* const _r, XMLNode& _node) : PlanningAgent(_r, _node) {
   m_waypointDm = _node.Read("waypointDm", true, "",
       "The distance metric to use for checking proximity to a path waypoint.");
 

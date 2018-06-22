@@ -112,6 +112,7 @@ Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
 Robot::
 Robot(MPProblem* const _p, const Robot& _r)
   : m_problem(_p),
+    m_virtual(_r.m_virtual),
     m_nonholonomic(_r.m_nonholonomic),
     m_carlike(_r.m_carlike),
     m_maxLinearVelocity(_r.m_maxLinearVelocity),

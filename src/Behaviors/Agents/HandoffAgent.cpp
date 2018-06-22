@@ -51,11 +51,10 @@ Initialize() {
 
 void
 HandoffAgent::
-InitializeRoadmap() {
-  std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
-  // TODO: Change the workfunction to work with BasicPRM (parameterize it)
-  WorkFunction(problemCopy);
+InitializeRoadmap() {  
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 }
+
 
 void
 HandoffAgent::
@@ -74,6 +73,7 @@ IsChild() const noexcept {
 void 
 HandoffAgent::
 GenerateCost(std::shared_ptr<MPTask> const _task) {
+  std::cout << "Starting generate cost function" << std::endl;
   // Save current state in case the robot has not finished its current task.
   // TODO: Find way to check if initial task is completed if secondary task is
   // assigned (maybe change m_task to a queue - m_tasks)
@@ -123,6 +123,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   // Restore the task/path state to currentTask/currentPath
   SetTask(currentTask);
   m_path = currentPath;
+  std::cout << "Finishing generate cost function" << std::endl;
 }
 
 double
@@ -199,8 +200,12 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   GetTask()->SetRobot(parentCopyRobot);
   std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
   std::cout << "Currently at: " << m_robot->GetDynamicsModel()->GetSimulatedState() << std::endl;
-  m_solution->GetPath()->Clear();
-
+  if(m_solution){
+    m_solution->GetPath()->Clear();
+  }
+  else {
+    m_solution = unique_ptr<MPSolution>(new MPSolution(m_robot));
+  }
   // Set the solution for appending with the parent copy.
   m_solution->SetRobot(parentCopyRobot);
 
@@ -255,3 +260,10 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   if(_c.size())
     m_distance += _steps * timeRes * nonstd::magnitude<double>(_c[0].GetForce());
 }
+
+MPSolution*
+HandoffAgent::
+GetMPSolution(){
+  return m_solution.get();
+}
+

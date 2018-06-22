@@ -76,9 +76,9 @@ class PlanningAgent : public Agent {
     /// @return The plan version number.
     size_t GetPlanVersion() const;
 
-    /// Get the type of agent
-    std::string GetAgentCapability() const noexcept;
+    void SetMPLibrary(MPLibrary* _library);
 
+    
     /// TODO: Generate the utility cost (dependent on some metric) for a given task
     /// @return The cost of the plan.
     // virtual double GenerateCost(std::shared_ptr<MPTask> const _task);
@@ -124,9 +124,6 @@ class PlanningAgent : public Agent {
     std::atomic<bool> m_planning{false};    ///< Is the agent currently planning.
     std::atomic<size_t> m_planVersion{1};   ///< The current plan version.
 
-
-    /// Specifiies the type of agent for heterogenous multiagent teams
-    std::string m_capability{"iCreate"};
 
     ///@}
 

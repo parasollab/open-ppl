@@ -27,6 +27,9 @@
 ///
 /// @WARNING This object currently only supports homogeneous robot teams, and
 ///          assumes a shared roadmap model.
+///
+/// None of the above information is accurate. Will and James wrote a bunch of
+/// new stuff that may or (more likely) may not work.
 ////////////////////////////////////////////////////////////////////////////////
 class Coordinator : public Agent {
 
@@ -36,7 +39,15 @@ class Coordinator : public Agent {
       
       std::shared_ptr<MPTask> m_task;
       std::vector<std::shared_ptr<MPTask>> m_subtasks;
+      /// Maps of capabilities to cfgs of start and end points for corresponding
+      /// capabilities
+      std::unordered_map<std::string, std::vector<Cfg>> m_startPoints;
+      std::unordered_map<std::string, std::vector<size_t>> m_startVIDs;
+      std::unordered_map<std::string, std::vector<Cfg>> m_goalPoints;
+      std::unordered_map<std::string, std::vector<size_t>> m_goalVIDs;
       size_t m_subtaskIterator{0};
+
+      std::vector<Cfg> m_wholePath; 
 
     };
 
@@ -149,7 +160,7 @@ class Coordinator : public Agent {
     void AddSubtask(std::shared_ptr<MPTask> _subtask);
 
     ///@}
-    ///@name Initialize Helpers
+    ///@name Initialize Functions
     ///@{
 
     /// Generates the dummy agents of each capabiltiy used for planning
@@ -159,11 +170,41 @@ class Coordinator : public Agent {
     /// XML file.
     void GenerateHandoffTemplates();
 
+    /// Randomly transforms the handoff template and attempts to validate it in
+    /// the environment
+    void TranslateHandoffTemplates();
+
+    /// Initiallizes configurations for each capability at the start and end
+    /// constriants of each whole task and adds them to the megaRoadmap
+    void SetupWholeTasks();
+    
     /// Generates the initial roadmaps for each capability type
     void GenerateRoadmaps();
 
+    /// Creates the WholeTask objects that will be divided into subtasks
+    void PlanWholeTasks();
+
+    /// Makes sure all of the agents are ready to execute the plans
+    void InitializeAgents();
+
     /// Assigns tasks through the auction system concept
     void AssignInitialTasks();
+
+    ///@}
+    ///@name Helpers
+    ///@{
+
+    /// Transforms a Cfg by a given Cfg
+    void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
+
+    /// Connects two roadmaps by sampling random points and planning between
+    /// them
+    void ConnectDistinctRoadmaps(vector<size_t> _roadmap1, vector<size_t> _roadmap2,
+      HandoffAgent* _agent);
+
+    /// Connects the start and end configurations from the whole tasks of each 
+    /// capability to the megaRoadmap
+    void ConnectWholeTasks(std::string _capability, HandoffAgent* _agent);
 
     ///@}
   
@@ -177,6 +218,13 @@ class Coordinator : public Agent {
     MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
     
     std::unique_ptr<Environment> m_handoffEnvironment;    ///< The handoff template environment.
+
+    std::vector<RoadmapType> m_translatedHandoffs; ///< Translated handoffs
+
+    /// The VIDs of all individual agent roadmaps in each transformed handoff template.
+    std::vector<std::vector<size_t>> m_transformedRoadmaps;
+    
+    GraphType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
 
     std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
     std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.

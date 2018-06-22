@@ -48,6 +48,8 @@ class HandoffAgent : public PathFollowingAgent {
 
     double GetTaskTime() const;
 
+    MPSolution* GetMPSolution();
+
   protected:
 
     ///@}

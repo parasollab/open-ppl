@@ -22,9 +22,6 @@ PlanningAgent::
 PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
   // Currently there are no parameters. Parse XML options here.
   
-  m_capability = _node.Read("capability", false, "", "The Agent capability type");
-  std::transform(m_capability.begin(), m_capability.end(), m_capability.begin(), ::tolower);
-
 }
 
 
@@ -139,13 +136,11 @@ GetPlanVersion() const {
   return m_planVersion;
 }
 
-
-std::string
+void 
 PlanningAgent::
-GetAgentCapability() const noexcept {
-  return m_capability;
+SetMPLibrary(MPLibrary* _library){
+  m_library = std::unique_ptr<MPLibrary>(_library);
 }
-
 
 /*---------------------------- Planning Helpers ------------------------------*/
 

@@ -204,8 +204,11 @@ MPProblem::
 SetEnvironment(std::unique_ptr<Environment>&& _e) {
   m_environment = std::move(_e);
 
-  // Reset the robot DOF limits based on the new environment.
+  // Reset point robot in the case of changing the environment.
+  m_pointRobot.reset();
   MakePointRobot();
+
+  // Reset the robot DOF limits based on the new environment.
   for(auto& robot : m_robots)
     robot->InitializePlanningSpaces();
 }

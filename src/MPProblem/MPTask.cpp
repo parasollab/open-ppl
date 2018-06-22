@@ -29,6 +29,7 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
 
   m_capability = _node.Read("capability", false, "",
       "Indicates the capability of the robot performing the task.");
+  std::transform(m_capability.begin(), m_capability.end(), m_capability.begin(), ::tolower);
 
   // Parse constraints.
   for(auto& child : _node) {

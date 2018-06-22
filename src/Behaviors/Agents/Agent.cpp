@@ -56,6 +56,17 @@ GetTask() const noexcept {
   return m_task;
 }
 
+std::string
+Agent::
+GetCapability() const noexcept {
+  return m_capability;
+}
+
+void 
+Agent::
+SetCapability(std::string _capability) {
+  m_capability = _capability;
+}
 /*------------------------------ Internal State ------------------------------*/
 
 bool
