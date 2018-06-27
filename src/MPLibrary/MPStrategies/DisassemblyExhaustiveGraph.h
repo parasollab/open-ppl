@@ -15,17 +15,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename MPTraits::WeightType        WeightType;
-    typedef typename RoadmapType::VID            VID;
-    typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
-    typedef vector<unsigned int>                 Subassembly;
-    typedef typename DisassemblyMethod<MPTraits>::Approach Approach;
-    typedef typename DisassemblyMethod<MPTraits>::State State;
-    typedef pair<Subassembly, map<Approach, bool> > AttemptEntry;
+    typedef typename DisassemblyMethod<MPTraits>::GroupCfgType     GroupCfgType;
+    typedef typename DisassemblyMethod<MPTraits>::GroupRoadmapType RoadmapType;
+    typedef typename DisassemblyMethod<MPTraits>::GroupWeightType  WeightType;
+    typedef typename DisassemblyMethod<MPTraits>::VID              VID;
+    typedef typename DisassemblyMethod<MPTraits>::VIDPath          VIDPath;
+    typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode  DisassemblyNode;
+    typedef typename DisassemblyMethod<MPTraits>::Formation        Formation;
+    typedef typename DisassemblyMethod<MPTraits>::Approach         Approach;
+    typedef typename DisassemblyMethod<MPTraits>::State            State;
+    typedef pair<Formation, map<Approach, bool> >                  AttemptEntry;
 
     DisassemblyExhaustiveGraph(
         const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
@@ -43,14 +44,14 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Subassembly SelectSubassembly(DisassemblyNode* _q) override;
-    virtual std::pair<bool, vector<CfgType>> Expand(DisassemblyNode* _q,
-                                      const Subassembly& _subassembly) override;
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+                                      const Formation& _subassembly) override;
 
-    std::pair<bool, vector<CfgType>> UnWeightedExpand(DisassemblyNode* _q,
-                                              const Subassembly& _subassembly);
-    std::pair<bool, vector<CfgType>> WeightedExpand(DisassemblyNode* _q,
-                                          const Subassembly& _subassembly);
+    std::pair<bool, VIDPath> UnWeightedExpand(DisassemblyNode* _q,
+                                              const Formation& _subassembly);
+    std::pair<bool, VIDPath> WeightedExpand(DisassemblyNode* _q,
+                                          const Formation& _subassembly);
 
     void RunUnitTests();
     void RunAStarTests();
@@ -203,13 +204,13 @@ RunUnitTests() {
   sortMe.usedSubassemblies = {{7,8},{12,11,9,10},{2},{21},{20,19,0,18,17}};
   EnforcePartSorting(&sortMe);
 
-  if(sortMe.initialParts != Subassembly({1,3,4,5,6}))
+  if(sortMe.initialParts != Formation({1,3,4,5,6}))
     throw RunTimeException(WHERE, "Initial Parts sorting test failed!!!");
 
-  std::vector<Subassembly> sortedSubs =
+  std::vector<Formation> sortedSubs =
                                   {{0,17,18,19,20},{2},{7,8},{9,10,11,12},{21}};
   if(sortMe.usedSubassemblies != sortedSubs)
-    throw RunTimeException(WHERE, "Subassembly sorting test failed!!!");
+    throw RunTimeException(WHERE, "Formation sorting test failed!!!");
 
   m_nodeBuckets.clear();//Clean up
   this->m_disNodes.clear();
@@ -230,36 +231,49 @@ RunAStarTests() {
   //4- Verify
 
   //1//- Create configurations including sub&parts motion
-  const auto g = this->GetRoadmap()->GetGraph();
+//  const auto g = this->GetRoadmap()->GetGraph();
+  const auto g = this->GetGroupRoadmap();
 
-  const CfgType root = g->GetVertex(0);
-  const unsigned int dofsPerPart = root.PosDOF() + root.OriDOF();
+  const GroupCfgType root = g->GetVertex(0);
+  const size_t dofsPerPart = root.PosDOF() + root.OriDOF();
   if(root.DOF()/dofsPerPart < 5)
     throw RunTimeException(WHERE, "The problem was not set up with enough parts"
                                   " to properly run the unit test!");
 
-  CfgType cfg0 = root, cfg1 = root, cfg2 = root, cfg3 = root, cfg4 = root,
+  GroupCfgType cfg0 = root, cfg1 = root, cfg2 = root, cfg3 = root, cfg4 = root,
           cfg5 = root, cfg6 = root, cfg7 = root, cfg8 = root;
 
-  cfg0[dofsPerPart*4] += 5;
-  cfg0[dofsPerPart*5] += 5;//x trans of sub 4&5
+  const Vector3d xTrans(5,0,0);
+  const Vector3d yTrans(0,5,0);
 
-  cfg1[dofsPerPart*3] += 5;// x trans of part 3
+  cfg0.AddDofsForRobots(xTrans, {4, 5});
+//  cfg0[dofsPerPart*4] += 5;
+//  CFG0[DOFSPERPART*5] += 5;//x trans of sub 4&5
 
-  cfg2[dofsPerPart*2] += 5;
-  cfg2[dofsPerPart*3] += 5;//x trans of sub 2&3
+  cfg1.AddDofsForRobots(xTrans, {3});
+//  cfg1[dofsPerPart*3] += 5;// x trans of part 3
 
-  cfg3[dofsPerPart*2] += 5;//x trans of part 2
+  cfg2.AddDofsForRobots(xTrans, {2, 3});
+//  cfg2[dofsPerPart*2] += 5;
+//  cfg2[dofsPerPart*3] += 5;//x trans of sub 2&3
 
-  cfg4[dofsPerPart*1] += 5;
-  cfg4[dofsPerPart*2] += 5;//x trans of sub 1&2
+  cfg3.AddDofsForRobots(xTrans, {2});
+//  cfg3[dofsPerPart*2] += 5;//x trans of part 2
 
-  cfg5[dofsPerPart*1] += 5;//x trans of part 1
-  cfg6[dofsPerPart*1 + 1] += 5;//y trans of part 1
+  cfg4.AddDofsForRobots(xTrans, {1, 2});
+//  cfg4[dofsPerPart*1] += 5;
+//  cfg4[dofsPerPart*2] += 5;//x trans of sub 1&2
 
-  cfg7[dofsPerPart*4 + 1] += 5;//y trans part 4
+  cfg5.AddDofsForRobots(xTrans, {1});
+//  cfg5[dofsPerPart*1] += 5;//x trans of part 1
+  cfg6.AddDofsForRobots(yTrans, {1});
+//  cfg6[dofsPerPart*1 + 1] += 5;//y trans of part 1
 
-  cfg8[dofsPerPart*3] += 5; //x trans of part 3
+  cfg7.AddDofsForRobots(yTrans, {4});
+//  cfg7[dofsPerPart*4 + 1] += 5;//y trans part 4
+
+  cfg8.AddDofsForRobots(xTrans, {3});
+//  cfg8[dofsPerPart*3] += 5; //x trans of part 3
 
   //2//- Create the nodes
 
@@ -272,58 +286,61 @@ RunAStarTests() {
 
   //3//- Define motion from parent to child
 
-  std::vector<std::vector<CfgType> > v1, v2, v3, v4, v5, v6, v7, v8;
-  v1.push_back({cfg0, cfg1});
-  v2.push_back({cfg0, cfg2});
-  v3.push_back({cfg1, cfg3});
-  v4.push_back({cfg1, cfg4});
-  v5.push_back({cfg2, cfg5});
-  v6.push_back({cfg4, cfg6});
-  v7.push_back({cfg4, cfg7});
-  v8.push_back({cfg8, cfg1});
+  /// TODO: Update all of this to use VIDs instead of cfgs and rerun (was
+  ///       working with cfg version though).
 
-  //4//- Generate the three
-  DisassemblyNode* l1 = this->GenerateNode(l0, Subassembly({4}), v1, true, 3);
-  HandleNewNode(l1);
-
-  DisassemblyNode* l2 = this->GenerateNode(l0, Subassembly({3, 4}), v2, true, 4);
-  HandleNewNode(l2);
-
-  DisassemblyNode* l3 = this->GenerateNode(l1, Subassembly({3}), v3, true, 4);
-  HandleNewNode(l3);
-
-  DisassemblyNode* l4 = this->GenerateNode(l1, Subassembly({2, 3}), v4, true, 1);
-  HandleNewNode(l4);
-
-  DisassemblyNode* l5 = this->GenerateNode(l2, Subassembly({2}), v5, true, 4);
-  HandleNewNode(l5);
-
-  DisassemblyNode* l6 = this->GenerateNode(l4, Subassembly({2}), v6, true, 1);
-  HandleNewNode(l6);
-
-  DisassemblyNode* l7 = this->GenerateNode(l4, Subassembly({5}), v7, true, 2);
-  HandleNewNode(l7);
-
-  DisassemblyNode* l8 = this->GenerateNode(l0, Subassembly({4}), v8, true, 2);
-  HandleNewNode(l8);
-
-  //5//- Verify the data
-  //compare the expected weight VS the recursive function result finalWeight
-  if (l6->bestCumulativeWeight != 4 || l7->bestCumulativeWeight != 5
-      || l3->bestCumulativeWeight != 6 || l1->bestCumulativeWeight != 2)
-    throw RunTimeException(WHERE, "Weight checking test failed!");
-  else
-    std::cout << "Weight checking test success!" << std::endl;
-
-  //if the newPrent is now l8, the function have correctly choose the cost-effective path
-  if (l1->parents[0] == l0 && l3->parents[0] == l1 && l4->parents[0] == l1
-      && l6->parents[0] == l4 && l7->parents[0] == l4)
-    std::cout << "Parents checking test successful!" << std::endl;
-  else
-    throw RunTimeException(WHERE, "Parents checking test failed!!!");
-
-  m_nodeBuckets.clear(); // Clean up
-  this->m_disNodes.clear();
+//  std::vector<std::vector<GroupCfgType> > v1, v2, v3, v4, v5, v6, v7, v8;
+//  v1.push_back({cfg0, cfg1});
+//  v2.push_back({cfg0, cfg2});
+//  v3.push_back({cfg1, cfg3});
+//  v4.push_back({cfg1, cfg4});
+//  v5.push_back({cfg2, cfg5});
+//  v6.push_back({cfg4, cfg6});
+//  v7.push_back({cfg4, cfg7});
+//  v8.push_back({cfg8, cfg1});
+//
+//  //4//- Generate the three
+//  DisassemblyNode* l1 = this->GenerateNode(l0, Formation({4}), v1, true, 3);
+//  HandleNewNode(l1);
+//
+//  DisassemblyNode* l2 = this->GenerateNode(l0, Formation({3, 4}), v2, true, 4);
+//  HandleNewNode(l2);
+//
+//  DisassemblyNode* l3 = this->GenerateNode(l1, Formation({3}), v3, true, 4);
+//  HandleNewNode(l3);
+//
+//  DisassemblyNode* l4 = this->GenerateNode(l1, Formation({2, 3}), v4, true, 1);
+//  HandleNewNode(l4);
+//
+//  DisassemblyNode* l5 = this->GenerateNode(l2, Formation({2}), v5, true, 4);
+//  HandleNewNode(l5);
+//
+//  DisassemblyNode* l6 = this->GenerateNode(l4, Formation({2}), v6, true, 1);
+//  HandleNewNode(l6);
+//
+//  DisassemblyNode* l7 = this->GenerateNode(l4, Formation({5}), v7, true, 2);
+//  HandleNewNode(l7);
+//
+//  DisassemblyNode* l8 = this->GenerateNode(l0, Formation({4}), v8, true, 2);
+//  HandleNewNode(l8);
+//
+//  //5//- Verify the data
+//  //compare the expected weight VS the recursive function result finalWeight
+//  if (l6->bestCumulativeWeight != 4 || l7->bestCumulativeWeight != 5
+//      || l3->bestCumulativeWeight != 6 || l1->bestCumulativeWeight != 2)
+//    throw RunTimeException(WHERE, "Weight checking test failed!");
+//  else
+//    std::cout << "Weight checking test success!" << std::endl;
+//
+//  //if the newPrent is now l8, the function have correctly choose the cost-effective path
+//  if (l1->parents[0] == l0 && l3->parents[0] == l1 && l4->parents[0] == l1
+//      && l6->parents[0] == l4 && l7->parents[0] == l4)
+//    std::cout << "Parents checking test successful!" << std::endl;
+//  else
+//    throw RunTimeException(WHERE, "Parents checking test failed!!!");
+//
+//  m_nodeBuckets.clear(); // Clean up
+//  this->m_disNodes.clear();
 }
 
 
@@ -340,7 +357,7 @@ EnforcePartSorting(DisassemblyNode* const _node) {
 
   //Sort subassemblies by increasing number of first part:
   struct SortByFirstPart {
-    bool operator() (const Subassembly& i, const Subassembly& j) {
+    bool operator() (const Formation& i, const Formation& j) {
       return (i.at(0) < j.at(0));
     }
   } sortFirstPart;
@@ -402,7 +419,7 @@ Iterate() {
     return;
   }
 
-  Expand(node, Subassembly());
+  Expand(node, Formation());
 }
 
 template <typename MPTraits>
@@ -417,8 +434,8 @@ SelectExpansionNode() {
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<unsigned int> robotParts;
-    for (unsigned int i = 0; i < this->m_numParts; ++i)
+    vector<size_t> robotParts;
+    for (size_t i = 0; i < this->m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -457,19 +474,19 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-vector<unsigned int>
+typename DisassemblyExhaustiveGraph<MPTraits>::Formation
 DisassemblyExhaustiveGraph<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
   throw RunTimeException(WHERE, "Not used by this method");
-  return Subassembly();
+  return Formation();
 }
 
 template <typename MPTraits>
-std::pair<bool, std::vector<typename DisassemblyExhaustiveGraph<MPTraits>::CfgType>>
+std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
-Expand(DisassemblyNode* _node, const Subassembly& _subassembly) {
+Expand(DisassemblyNode* _node, const Formation& _subassembly) {
   if(this->m_aStarSearch)
     return WeightedExpand(_node, _subassembly);
   else
@@ -477,16 +494,16 @@ Expand(DisassemblyNode* _node, const Subassembly& _subassembly) {
 }
 
 template <typename MPTraits>
-std::pair<bool, std::vector<typename DisassemblyExhaustiveGraph<MPTraits>::CfgType>>
+std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
-UnWeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
+UnWeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
          << std::endl;
 
   VID newVID;
-  std::vector<std::vector<CfgType> > removingPaths;
-  Subassembly singleSub;
+  std::vector<VIDPath> removingPaths;
+  Formation singleSub;
   DisassemblyNode* newNode = nullptr;
 
   // first test all single bodies for expansion with mating and rrt approach
@@ -498,7 +515,7 @@ UnWeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
 
   //1. Attempt all single parts: mating, then RRT if mating fails.
   for (auto &part : parts) {
-    Subassembly sub = {part};
+    Formation sub = {part};
     singleSub = sub;
     newNode = nullptr;
     // expand
@@ -576,14 +593,14 @@ UnWeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
     }
   }
 
-  return std::make_pair(true, std::vector<CfgType>());
+  return std::make_pair(true, VIDPath());
 }
 
 
 template <typename MPTraits>
-std::pair<bool, std::vector<typename DisassemblyExhaustiveGraph<MPTraits>::CfgType>>
+std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
-WeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
+WeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
               << std::endl;
@@ -595,8 +612,8 @@ WeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
   // the goal, then the strategy will still return the optimal path.
 
   VID newVID;
-  vector<vector<CfgType>> removingPaths;
-  Subassembly singleSub;
+  vector<VIDPath> removingPaths;
+  Formation singleSub;
   DisassemblyNode* newNode = nullptr;
 
   // first test all single bodies for expansion with mating and rrt approach
@@ -608,7 +625,7 @@ WeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
 
   //1. Attempt all single parts: mating, then RRT if mating fails.
   for (auto &part : parts) {
-    Subassembly sub = {part};
+    Formation sub = {part};
     singleSub = sub;
     newNode = nullptr;
     // expand
@@ -710,7 +727,7 @@ WeightedExpand(DisassemblyNode* _node, const Subassembly& _subassembly) {
     }
   }
 
-  return make_pair(true, vector<CfgType>());
+  return make_pair(true, VIDPath());
 }
 
 template <typename MPTraits>
@@ -754,19 +771,22 @@ FixRoadmapVids(DisassemblyNode* const _node,
     //  The only case where this should happen is for subassemblies
     //  taken out at different depths. Since we offset it proportional to the
     //  depth, the same state might have its subassemblies at different offsets.
-    auto graph = this->GetRoadmap()->GetGraph();
+    auto graph = this->GetGroupRoadmap();
 
     //Create the roadmap connection newVid -> existingVid, so that both
     // parents have a path from its vid to existingVid.
     const VID newVid = _node->vid;
     const VID existingVid = _existingNode->vid;
 
-    const CfgType& newCfg = graph->GetVertex(newVid);
-    const CfgType& existingCfg = graph->GetVertex(existingVid);
-    const std::vector<CfgType> fakePath = {newCfg, existingCfg};
-    WeightType edge("", 1., fakePath);
-    edge.SetSkipEdge();// Won't be reproduced.
-    graph->AddEdge(newVid, existingVid, edge);
+    const GroupCfgType& newCfg = graph->GetVertex(newVid);
+    const GroupCfgType& existingCfg = graph->GetVertex(existingVid);
+    const std::vector<GroupCfgType> fakePath = {newCfg, existingCfg};
+
+
+    WeightType edge(graph, "", 1., fakePath);
+    GroupLPOutput<MPTraits> lp(graph, edge);
+    lp.SetSkipEdge();// Won't be reproduced.
+    graph->AddEdge(newVid, existingVid, lp.m_edge);
     if(this->m_debug)
       std::cout << "When merging _node with vid " << _node->vid << " into node"
                 << " with vid " << _existingNode->vid << " we had to manually "
@@ -826,7 +846,7 @@ MergeNodes(DisassemblyNode* const _node, DisassemblyNode* const _existingNode) {
 
     // We have the new data at the back of the two vectors; since it's better,
     // swap both to the front to indicate it's the new best path.
-    const unsigned int last = _existingNode->parents.size() - 1;
+    const size_t last = _existingNode->parents.size() - 1;
     std::swap(_existingNode->parents[0], _existingNode->parents[last]);
     std::swap(_existingNode->removalPaths[0], _existingNode->removalPaths[last]);
 
@@ -846,7 +866,7 @@ RecursiveUpdateChildrenWeights(DisassemblyNode* const _n,
               << " and with _newCumulativeWeight = " << _newCumulativeWeight
               << std::endl;
 
-  for (unsigned int i = 0; i < _n->children.size(); ++i) {
+  for (size_t i = 0; i < _n->children.size(); ++i) {
     //Check if this child needs updating:
     DisassemblyNode* const child = _n->children[i].second;
     const double newWeight = _newCumulativeWeight + child->localWeight;
@@ -854,7 +874,7 @@ RecursiveUpdateChildrenWeights(DisassemblyNode* const _n,
       child->bestCumulativeWeight = newWeight;
       // Swap the child's pointer to the parent to the front, as that should
       // always correspond to the best path towards the root from this node.
-      for (unsigned int j = 0; j < child->parents.size(); ++j) {
+      for (size_t j = 0; j < child->parents.size(); ++j) {
         if (child->parents[j] == _n) {
           // Swap this value with the first element of the list
           std::swap(child->parents[0], child->parents[j]);

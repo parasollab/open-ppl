@@ -20,7 +20,9 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType                         CfgType;
+    typedef typename MPTraits::GroupCfgType                    GroupCfgType;
+    typedef typename DistanceMetricMethod<MPTraits>::Formation Formation;
 
     ///@}
     ///@name Construction
@@ -46,10 +48,21 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     virtual void ScaleCfg(double _length, CfgType& _c,
-        const CfgType& _o) override;
+                          const CfgType& _o) override;
 
     static double PositionDistance(Environment *_env, const CfgType& _c,
-        double _r1, double _r3, bool _normalize);
+                                   double _r1, double _r3, bool _normalize);
+
+
+    /// GroupCfg Overloads:
+    virtual double Distance(const GroupCfgType& _c1,
+                            const GroupCfgType& _c2) override;
+
+    virtual void ScaleCfg(double _length, GroupCfgType& _c,
+                          const GroupCfgType& _o) override;
+
+    static double PositionDistance(Environment *_env, const GroupCfgType& _c,
+                                   double _r1, double _r3, bool _normalize);
 
     ///@}
 
@@ -194,5 +207,64 @@ OrientationDistance(const CfgType& _c) {
 }
 
 /*----------------------------------------------------------------------------*/
+
+template <typename MPTraits>
+double
+MinkowskiDistance<MPTraits>::
+Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
+  if(this->m_activeRobots.empty())
+    throw RunTimeException(WHERE, "Used group version but didn't provide active"
+                                  " robots!");
+
+  const double closeToZero = std::numeric_limits<double>::epsilon();
+  const bool isMultiPartAllowed = this->m_activeRobots.size() > 1;
+
+  Formation robotsMoved;
+  double compositeDistance = 0.0;
+
+  // Loop through ALL robots, to ensure that we have a valid pair (robots can
+  // only "move" if they are in the activeRobot list, or if they move and no
+  // other robot moves).
+  for(size_t i = 0; i < _c1.GetNumRobots(); ++i) {
+    // Get the robot cfg and use the normal distance metric, but accumulated.
+    const double cfgDist = Distance(_c1.GetRobotCfg(i), _c2.GetRobotCfg(i));
+
+    // Ensure that the robots "moved" between the two cfgs are allowed:
+    if (cfgDist > closeToZero) {
+      compositeDistance += cfgDist; // Accumulate individual distances.
+      robotsMoved.push_back(i);
+
+      // We can quit right away if more than one part is moved and we're not
+      // allowing for a multi-part subassembly.
+      if(!isMultiPartAllowed && robotsMoved.size() > 1)
+        return std::numeric_limits<double>::infinity(); // Invalid neighbors.
+    }
+  }
+
+  if(robotsMoved.empty())
+    return 0;
+
+  // m_activeRobots is sorted ascending when it's set (see SetActiveRobots) and
+  // we know that robotsMoved will be ascending due to the loop above.
+  if(robotsMoved != this->m_activeRobots)
+    return std::numeric_limits<double>::infinity(); // Invalid neighbors.
+
+  return compositeDistance;
+}
+
+template <typename MPTraits>
+void
+MinkowskiDistance<MPTraits>::
+ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
+  throw RunTimeException(WHERE, "Not implemented!");
+}
+
+template <typename MPTraits>
+double
+MinkowskiDistance<MPTraits>::
+PositionDistance(Environment *_env, const GroupCfgType& _c,
+                 double _r1, double _r3, bool _normalize) {
+  throw RunTimeException(WHERE, "Not implemented!");
+}
 
 #endif

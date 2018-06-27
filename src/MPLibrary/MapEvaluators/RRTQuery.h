@@ -136,7 +136,7 @@ RRTQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
       "method");
   m_exLabel = _node.Read("exLabel", true, m_exLabel, "Extender method");
   m_goalDist = _node.Read("goalDist", false, 0., 0.,
-      numeric_limits<double>::max(), "Minimun Distance for valid query");
+      numeric_limits<double>::max(), "Minimum Distance for valid query");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/

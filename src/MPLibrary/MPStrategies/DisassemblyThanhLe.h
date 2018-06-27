@@ -6,20 +6,17 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
-/// @brief Basic serial disassembly method
+/// @brief Implementation of the I-ML-RRT disassembly method.
 ///
 ///
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename RoadmapType::VID            VID;
+    typedef typename DisassemblyMethod<MPTraits>::VID             VID;
+    typedef typename DisassemblyMethod<MPTraits>::VIDPath         VIDPath;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
-    typedef unsigned int                         Part;
-    typedef vector<Part>                         Subassembly;
+    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
 
     DisassemblyThanhLe(
         const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
@@ -37,18 +34,17 @@ class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Subassembly SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, vector<CfgType>> Expand(DisassemblyNode* _q,
-                                   const Subassembly& _subassembly) override;
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+                                   const Formation& _subassembly) override;
 
     DisassemblyNode* m_lastNode{nullptr};
     VID m_qInitVid{0};
 
-    Subassembly m_sub;
+    Formation m_sub;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
-    using DisassemblyMethod<MPTraits>::m_robot;
 };
 
 template <typename MPTraits>
@@ -78,8 +74,8 @@ DisassemblyThanhLe<MPTraits>::
 Iterate() {
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<unsigned int> robotParts;
-    for (unsigned int i = 0; i < m_numParts; ++i)
+    vector<size_t> robotParts;
+    for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -107,8 +103,7 @@ Iterate() {
               << std::endl;
 
   VID newVid = 0;
-  const vector<CfgType> path =
-      this->ExpandRRTApproach(m_qInitVid, m_sub, newVid);
+  const VIDPath path = this->ExpandRRTApproach(m_qInitVid, m_sub, newVid);
 
   //NOTE: we will usually update the cfg for RRT to expand from, but we only
   // create DT nodes if a part was actually removed.
@@ -117,13 +112,10 @@ Iterate() {
     if(this->m_debug)
       std::cout << "Successful removal!" << std::endl;
     //Whatever VID is put in needs to be set as the next node to start from.
-    std::vector< std::vector<CfgType> > removingPaths = {path};
+    std::vector<VIDPath> removingPaths = {path};
 
-    /// TODO: See if this works:
-    /// here I should set the m_lastNode.vid = newVid, then when the new node
-    /// is generated, this will keep the progress!
-    m_lastNode->vid = newVid; // So that the new node keeps any other parts' progress from the rrt.
-
+    // So that a new node keeps any other parts' progress from the RRT.
+    m_lastNode->vid = newVid;
 
     m_lastNode = this->GenerateNode(m_lastNode, m_sub, removingPaths, false);
     m_qInitVid = m_lastNode->vid;
@@ -151,40 +143,38 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-pair<bool, vector<typename DisassemblyThanhLe<MPTraits>::CfgType>>
+pair<bool, typename DisassemblyThanhLe<MPTraits>::VIDPath>
 DisassemblyThanhLe<MPTraits>::
-Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
+Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   throw RunTimeException(WHERE,"Not implemented");
-  return pair<bool, vector<CfgType>>(false, vector<CfgType>());
+  return make_pair(false, VIDPath());
 }
 
 
 template <typename MPTraits>
-vector<unsigned int>
+typename DisassemblyMethod<MPTraits>::Formation
 DisassemblyThanhLe<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
-  // check count of initialParts and return empty Subassembly if empty
+  // check count of initialParts and return empty Formation if empty
   if (_q->initialParts.empty()) {
     std::cout << "initialParts are empty!" << std::endl;
-    return Subassembly();
+    return Formation();
   }
 
-  ///@TODO: Try returning parts sequentially!!! Also fix node generation so that
-  ///       it isn't resetting some of the partial rrt progress (not sure exactly
-  ///       why it even is though...)
-  static unsigned int lastIndexTried = _q->initialParts.size();
+  /// Return parts sequentially.
+  static size_t lastIndexTried = _q->initialParts.size();
   if(lastIndexTried > 1 && lastIndexTried <= _q->initialParts.size())
-    return Subassembly({_q->initialParts[--lastIndexTried]});
+    return Formation({_q->initialParts[--lastIndexTried]});
   else {
     lastIndexTried = _q->initialParts.size();
-    return Subassembly({_q->initialParts[0]});
+    return Formation({_q->initialParts[0]});
   }
 
   //Always return just a random single part from the remaining parts.
-  return Subassembly({_q->initialParts[(LRand() % _q->initialParts.size())]});
+  return Formation({_q->initialParts[(LRand() % _q->initialParts.size())]});
 }
 
 #endif

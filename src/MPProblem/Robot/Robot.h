@@ -89,7 +89,7 @@ class Robot final {
     /// @param[in] _p The owning MPProblem.
     /// @param[in] _label The unique label for this robot.
     Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
-        const std::string& _label);
+          const std::string& _label);
 
     /// Copy a robot to another MPProblem.
     /// @param _p The destination MPProblem.
@@ -119,9 +119,13 @@ class Robot final {
     ///@name I/O
     ///@{
 
-    /// Parse an XML robot file.
+    /// Parse an XML robot file (passes node to ReadXMLNode).
     /// @param[in] _filename The file name.
     void ReadXMLFile(const std::string& _filename);
+
+    /// Parse an XML robot node.
+    /// @param[in] _node The SML node.
+    void ReadXMLNode(XMLNode& _node, const std::string& _filename = "");
 
     /// Parse multibody information from robot's XML file.
     /// @param[in] _node The XML node to parse

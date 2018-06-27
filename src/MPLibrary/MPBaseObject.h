@@ -6,7 +6,6 @@
 ///@TODO Remove this everywhere. We should never have 'using namespace'
 ///      directives in header files.
 using namespace std;
-///
 
 #include "MPProblem/MPProblem.h"
 #include "Utilities/IOUtils.h"
@@ -43,8 +42,10 @@ class MPBaseObject {
     ///@{
 
     typedef typename MPTraits::RoadmapType             RoadmapType;
+    typedef typename MPTraits::GroupRoadmapType        GroupRoadmapType;
     typedef typename MPTraits::LocalObstacleMap        LocalObstacleMap;
     typedef typename MPTraits::Path                    Path;
+    typedef typename MPTraits::GroupPathType           GroupPath;
     typedef typename MPTraits::MPLibrary               MPLibrary;
 
     typedef typename MPLibrary::SamplerPointer         SamplerPointer;
@@ -176,6 +177,9 @@ class MPBaseObject {
     /// Get the current task.
     MPTask* GetTask() const noexcept;
 
+    /// Get the current group task.
+    GroupTask* GetGroupTask() const noexcept;
+
     ///@}
     ///@name Solution Accessors
     ///@{
@@ -183,11 +187,17 @@ class MPBaseObject {
     /// Get the current free-space roadmap.
     RoadmapType* GetRoadmap() const noexcept;
 
+    /// Get the current free-space group roadmap.
+    GroupRoadmapType* GetGroupRoadmap() const noexcept;
+
     /// Get the current obstacle-space roadmap.
     RoadmapType* GetBlockRoadmap() const noexcept;
 
     /// Get the current best path.
     Path* GetPath() const noexcept;
+
+    /// Get the current best group path.
+    GroupPath* GetGroupPath() const noexcept;
 
     /// Get the current StatClass.
     StatClass* GetStatClass() const noexcept;
@@ -434,6 +444,15 @@ GetTask() const noexcept {
   return m_library->GetTask();
 }
 
+
+template <typename MPTraits>
+inline
+GroupTask*
+MPBaseObject<MPTraits>::
+GetGroupTask() const noexcept {
+  return m_library->GetGroupTask();
+}
+
 /*--------------------------- Solution Accessors -----------------------------*/
 
 template <typename MPTraits>
@@ -442,6 +461,15 @@ typename MPTraits::RoadmapType*
 MPBaseObject<MPTraits>::
 GetRoadmap() const noexcept {
   return m_library->GetRoadmap();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::GroupRoadmapType*
+MPBaseObject<MPTraits>::
+GetGroupRoadmap() const noexcept {
+  return m_library->GetGroupRoadmap();
 }
 
 
@@ -460,6 +488,15 @@ typename MPTraits::Path*
 MPBaseObject<MPTraits>::
 GetPath() const noexcept {
   return m_library->GetPath();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::GroupPathType*
+MPBaseObject<MPTraits>::
+GetGroupPath() const noexcept {
+  return m_library->GetGroupPath();
 }
 
 

@@ -8,13 +8,13 @@
 #include "ConfigurationSpace/LocalObstacleMap.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Roadmap.h"
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
-#include "MPLibrary/DistanceMetrics/ActiveBodyEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
 #include "MPLibrary/DistanceMetrics/CenterOfMassDistance.h"
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
@@ -30,12 +30,11 @@
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/GroupTwoRobotValidityChecker.h"
 #include "MPLibrary/ValidityCheckers/MedialAxisClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/NegateValidity.h"
 #include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
-#include "MPLibrary/ValidityCheckers/SpecificBodyCollisionValidity.h"
-#include "MPLibrary/ValidityCheckers/TwoBodyValidityChecker.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BandsNF.h"
@@ -54,11 +53,10 @@
 #include "MPLibrary/Samplers/DynamicRegionSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 #include "MPLibrary/Samplers/GridSampler.h"
-#include "MPLibrary/Samplers/MaskedProximitySampler.h"
-#include "MPLibrary/Samplers/MaskedRandomSampler.h"
-#include "MPLibrary/Samplers/MaskedSamplerMethod.h"
-#include "MPLibrary/Samplers/MatingNormalSampler.h"
-#include "MPLibrary/Samplers/MatingSphereSampler.h"
+#include "MPLibrary/Samplers/MaskedProximitySamplerGroup.h"
+#include "MPLibrary/Samplers/MaskedSamplerMethodGroup.h"
+#include "MPLibrary/Samplers/MatingNormalSamplerGroup.h"
+//#include "MPLibrary/Samplers/MatingSphereSampler.h" // TODO re-add once group-ified
 #include "MPLibrary/Samplers/MedialAxisSampler.h"
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
@@ -69,7 +67,6 @@
 #include "MPLibrary/Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
-#include "MPLibrary/LocalPlanners/ActiveBodyStraightLine.h"
 #include "MPLibrary/LocalPlanners/AStar.h"
 #include "MPLibrary/LocalPlanners/HierarchicalLP.h"
 #include "MPLibrary/LocalPlanners/MedialAxisLP.h"
@@ -80,7 +77,6 @@
 #include "MPLibrary/LocalPlanners/ApproxSpheres.h"
 
 //extenders includes
-#include "MPLibrary/Extenders/ActiveBodyExtender.h"
 #include "MPLibrary/Extenders/BasicExtender.h"
 #include "MPLibrary/Extenders/KinodynamicExtender.h"
 #include "MPLibrary/Extenders/LimitedDistanceExtender.h"
@@ -121,6 +117,7 @@
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/IterationCountEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/LazyToggleQuery.h"
@@ -183,20 +180,22 @@
 template <typename C, typename W = DefaultWeight<C>>
 struct MPTraits {
 
-  typedef C                              CfgType;
-  typedef W                              WeightType;
-  typedef PathType<MPTraits>             Path;
-  typedef Roadmap<MPTraits>              RoadmapType;
-  typedef MPLibraryType<MPTraits>        MPLibrary;
-  typedef MPSolutionType<MPTraits>       MPSolution;
-  typedef MPToolsType<MPTraits>          MPTools;
-  typedef LocalObstacleMapType<MPTraits> LocalObstacleMap;
-  typedef GroupLocalPlan<CfgType>        GroupLocalPlanType;
-  typedef GroupRoadmap<GroupCfg, GroupLocalPlanType> GroupRoadmapType;
+  typedef C                               CfgType;
+  typedef W                               WeightType;
+  typedef Roadmap<MPTraits>               RoadmapType;
+  typedef PathType<MPTraits>              Path;
+  typedef MPLibraryType<MPTraits>         MPLibrary;
+  typedef MPSolutionType<MPTraits>        MPSolution;
+  typedef MPToolsType<MPTraits>           MPTools;
+  typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
+
+  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
+  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
+  typedef GroupPath<MPTraits>                        GroupPathType;
+  typedef GroupCfg                                   GroupCfgType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    ActiveBodyEuclideanDistance<MPTraits>,
     BinaryLPSweptDistance<MPTraits>,
     CenterOfMassDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
@@ -215,12 +214,11 @@ struct MPTraits {
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
     ComposeValidity<MPTraits>,
+    GroupTwoRobotValidityChecker<MPTraits>,
     MedialAxisClearanceValidity<MPTraits>,
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>,
-    SpecificBodyCollisionValidity<MPTraits>,
-    TwoBodyValidityChecker<MPTraits>
+    ObstacleClearanceValidity<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -243,10 +241,9 @@ struct MPTraits {
     DynamicRegionSampler<MPTraits>,
     GaussianSampler<MPTraits>,
     GridSampler<MPTraits>,
-    MaskedRandomSampler<MPTraits>,
-    MaskedProximitySampler<MPTraits>,
-    MatingNormalSampler<MPTraits>,
-    MatingSphereSampler<MPTraits>,
+    MaskedProximitySamplerGroup<MPTraits>,
+    MatingNormalSamplerGroup<MPTraits>,
+//    MatingSphereSampler<MPTraits>, // TODO: re-add once group-ified
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
@@ -259,7 +256,6 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    ActiveBodyStraightLine<MPTraits>,
     AStarClearance<MPTraits>,
     AStarDistance<MPTraits>,
     HierarchicalLP<MPTraits>,
@@ -273,7 +269,6 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    ActiveBodyExtender<MPTraits>,
     BasicExtender<MPTraits>,
     KinodynamicExtender<MPTraits>,
     LimitedDistanceExtender<MPTraits>,
@@ -339,6 +334,7 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
+    GroupQuery<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     IterationCountEvaluator<MPTraits>,
     LazyQuery<MPTraits>,

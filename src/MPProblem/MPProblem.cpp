@@ -2,8 +2,10 @@
 
 #include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/MPTask.h"
+#include "MPProblem/GroupTask.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
+#include "MPProblem/RobotGroup/RobotGroup.h"
 #include "MPProblem/DynamicObstacle.h"
 #include "MPProblem/MPHandoffTemplate.h"
 #include "Utilities/MPUtils.h"
@@ -68,6 +70,18 @@ operator=(const MPProblem& _other) {
       m_taskMap[robot].back()->SetRobot(robot);
     }
   }
+
+//  // Copy Group Tasks.
+//  m_groupTaskMap.clear();
+//  for(const auto& groupTasks : _other.m_groupTaskMap) {
+//    RobotGroup* const group = groupTasks.first;
+//    const auto& tasks = groupTasks.second;
+//
+//    for(const auto& groupTask : tasks) {
+//      m_groupTaskMap[group].emplace_back(new GroupTask(*groupTask));
+//      m_groupTaskMap[group].back()->SetRobotGroup(group);
+//    }
+//  }
 
   m_pointRobot.reset(new Robot(this, *_other.m_pointRobot));
 
@@ -139,7 +153,7 @@ ReadXMLFile(const string& _filename) {
 
   // If no tasks were specified, assume we want an unconstrained plan for the
   // first robot.
-  if(m_taskMap.empty()) {
+  if(m_taskMap.empty() and m_groupTaskMap.empty()) {
     if(m_robots.size() > 1)
       throw ParseException(input.Where(), "No task was specified in the problem "
           "node, but multiple robots are specified. Taskless execution only "
@@ -244,7 +258,7 @@ GetRobot(const std::string& _label) const {
       return robot.get();
 
   throw RunTimeException(WHERE, "Requested Robot with label '" + _label + "', "
-      "but no such robot was found.");
+                                "but no such robot was found.");
   return nullptr;
 }
 
@@ -255,14 +269,70 @@ GetRobots() const noexcept {
   return m_robots;
 }
 
+
+size_t
+MPProblem::
+NumRobotGroups() const noexcept {
+  return m_robotGroups.size();
+}
+
+
+RobotGroup*
+MPProblem::
+GetRobotGroup(size_t _index) const {
+  if(_index >= m_robotGroups.size())
+    throw RunTimeException(WHERE, "Requested Robot " + std::to_string(_index) +
+        ", but only " + std::to_string(m_robots.size()) +
+        " robots are available.");
+  return m_robotGroups[_index].get();
+}
+
+
+RobotGroup*
+MPProblem::
+GetRobotGroup(const std::string& _label) const {
+  for(auto& group : m_robotGroups)
+    if(group->GetLabel() == _label)
+      return group.get();
+
+  throw RunTimeException(WHERE, "Requested Robot group with label '" + _label +
+                                "', but no such robot was found.");
+  return nullptr;
+}
+
+
+const std::vector<std::unique_ptr<RobotGroup>>&
+MPProblem::
+GetRobotGroups() const noexcept {
+  return m_robotGroups;
+}
+
 /*----------------------------- Task Accessors -------------------------------*/
 
 std::vector<std::shared_ptr<MPTask>>
 MPProblem::
 GetTasks(Robot* const _robot) const noexcept {
+  if(m_taskMap.empty())
+    return std::vector<std::shared_ptr<MPTask>>();
+
   const auto& tasks = m_taskMap.at(_robot);
 
   std::vector<std::shared_ptr<MPTask>> output;
+
+  for(const auto& task : tasks)
+    if(!task->IsCompleted())
+      output.push_back(task);
+
+  return output;
+}
+
+
+std::vector<std::shared_ptr<GroupTask>>
+MPProblem::
+GetTasks(RobotGroup* const _group) const noexcept {
+  const auto& tasks = m_groupTaskMap.at(_group);
+
+  std::vector<std::shared_ptr<GroupTask>> output;
 
   for(const auto& task : tasks)
     if(!task->IsCompleted())
@@ -344,6 +414,10 @@ ParseChild(XMLNode& _node) {
     m_robots.emplace_back(new Robot(this, _node));
     return true;
   }
+  else if(_node.Name() == "RobotGroup") {
+    m_robotGroups.emplace_back(new RobotGroup(this, _node));
+    return true;
+  }
   else if(_node.Name() == "DynamicObstacle") {
     // If this is a dynamic obstacle, get the path file name and make sure it exists.
 
@@ -362,6 +436,12 @@ ParseChild(XMLNode& _node) {
     const std::string label = _node.Read("robot", true, "", "Label for the robot "
         " assigned to this task.");
     m_taskMap[this->GetRobot(label)].emplace_back(new MPTask(this, _node));
+    return true;
+  }
+  else if(_node.Name() == "GroupTask") {
+    const std::string groupLabel = _node.Read("robotGroupLabel", true, "",
+        "Label for the robot group assigned to this task.");
+    m_groupTaskMap[this->GetRobotGroup(groupLabel)].emplace_back(new GroupTask(this, _node));
     return true;
   }
   else if(_node.Name() == "HandoffTemplate") {

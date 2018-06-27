@@ -24,6 +24,11 @@ struct CDInfo {
   /// @return Is minimum distance less than other's minimum distance
   bool operator<(const CDInfo& _cdInfo);
 
+  /// Set all CD info that is to be maintained when a shorter distance is found
+  /// (should just set everything except group-level stuff).
+  /// @param _cdInfo Other CDInfo
+  CDInfo& operator=(const CDInfo& _cdInfo);
+
   bool m_retAllInfo;                ///< If this instance contains all
                                     ///< (following) information.
   int m_collidingObstIndex;         ///< The index for fisrt discovered obstacle
@@ -41,9 +46,9 @@ struct CDInfo {
   std::vector<CollisionPair> m_trianglePairs; ///< All colliding triangle pairs.
 
   /// m_selfClearance is required for assembly planning. In the case of a
-  /// subassembly, this will normally be the closest distance wrt any body of it
-  std::vector<double> m_selfClearance; ///< Clearance of robot's bodies to
-                                       ///< each other.
+  /// subassembly, this will be the closest distance of any robot NOT in the
+  /// subassembly, compared to any robot in it.
+  std::vector<double> m_selfClearance;
 };
 
 #endif

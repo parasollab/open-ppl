@@ -4,6 +4,7 @@
 #include "MPLibrary/PMPL.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
+#include "MPProblem/GroupTask.h"
 #include "Utilities/PMPLExceptions.h"
 
 
@@ -24,12 +25,29 @@ main(int _argc, char** _argv) {
 
     // Create storage for the solution and ask the library to solve our problem.
     Robot* const robot = problem->GetRobots().front().get();
+    const auto robotTasks = problem->GetTasks(robot);
+    if(!robotTasks.empty()) {
+      //solve for every task
+      for(auto task : robotTasks)
+        pmpl->Solve(problem, task.get());
+    }
 
-    //solve for every task
-    for(auto task : problem->GetTasks(robot))
-      pmpl->Solve(problem, task.get());
+    /// Also solve the group task.
+    /// @TODO Generalize this to handle more than just the first group task.
+    if(!problem->GetRobotGroups().empty()) {
+      RobotGroup* const robotGroup = problem->GetRobotGroups().front().get();
+      const auto groupTasks = problem->GetTasks(robotGroup);
+      if(!groupTasks.empty()) {
+        GroupTask* groupTask = groupTasks.front().get();
+        pmpl->Solve(problem, groupTask);
+      }
+    }
 
-    // Release resourcess.
+    if(robotTasks.empty() && (problem->GetRobotGroups().empty() ||
+           problem->GetTasks(problem->GetRobotGroups().front().get()).empty()))
+      throw RunTimeException(WHERE, "No single or group tasks were specified!");
+
+    // Release resources.
     delete problem;
     delete pmpl;
 

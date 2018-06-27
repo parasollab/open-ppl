@@ -42,18 +42,21 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   // Get the multibody file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
-  const std::string file = _node.Read("filename", true, "", "Robot file name");
+  const std::string file = _node.Read("filename", false, "", "Robot file name");
   const std::string filename = path + file;
 
-  if(!FileExists(filename))
-    throw ParseException(_node.Where(), "File '" + filename + "' does not exist");
-
-  // If we got an XML file, use that parsing mechanism.
-  if(filename.find(".xml") != std::string::npos)
+  if(file.empty() or !FileExists(filename)) {
+    // If we don't get a filename, assume the robot is defined fully in this
+    // Robot node, in the same way it would be in the external file.
+    ReadXMLNode(_node);
+  }
+  else if(filename.find(".xml") != std::string::npos) {
+    // If we got an XML file, use that parsing mechanism.
     ReadXMLFile(filename);
-  // Otherwise we got a multibody file, which cannot specify dynamics options
-  // like actuators and controls. Assume some defaults for these.
+  }
   else {
+    // Otherwise we got a multibody file, which cannot specify dynamics options
+    // like actuators and controls. Assume some defaults for these.
     ReadMultibodyFile(filename);
 
     // Set up a single, velocity-based actuator for all DOF. As this robot is
@@ -183,14 +186,20 @@ void
 Robot::
 ReadXMLFile(const std::string& _filename) {
   XMLNode node(_filename, "Robot");
+  ReadXMLNode(node, _filename);
+}
 
+
+void
+Robot::
+ReadXMLNode(XMLNode& _node, const std::string& _filename) {
   // Read attributes of the robot node.
-  m_maxLinearVelocity = node.Read("maxLinearVelocity", false, 10., 0.,
+  m_maxLinearVelocity = _node.Read("maxLinearVelocity", false, 10., 0.,
       std::numeric_limits<double>::max(), "The robot's maximum linear velocity");
-  m_maxAngularVelocity = node.Read("maxAngularVelocity", false, 1., 0.,
+  m_maxAngularVelocity = _node.Read("maxAngularVelocity", false, 1., 0.,
       std::numeric_limits<double>::max(), "The robot's maximum angular velocity");
 
-  for(auto& child : node) {
+  for(auto& child : _node) {
     std::string name = child.Name();
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
@@ -198,7 +207,7 @@ ReadXMLFile(const std::string& _filename) {
       // Read the multibody file. Eventually we'll go full XML and pass the
       // child node directly to the multibody instead.
       const std::string mbFile = child.Read("filename", false, "", "Name of the "
-          "robot's multibody file");
+                                            "robot's multibody file");
 
       // If there is no filename then the multibody information is in the XML
       // child node.
@@ -224,7 +233,7 @@ ReadXMLFile(const std::string& _filename) {
   }
 
   // Throw errors for any unrequested attributes or nodes.
-  node.WarnAll(true);
+  _node.WarnAll(true);
 }
 
 

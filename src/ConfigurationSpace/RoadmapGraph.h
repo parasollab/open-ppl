@@ -1,6 +1,7 @@
 #ifndef ROADMAP_GRAPH_H_
 #define ROADMAP_GRAPH_H_
 
+#include "Utilities/PMPLExceptions.h"
 #include "Utilities/RuntimeUtils.h"
 #include "Utilities/PMPLExceptions.h"
 

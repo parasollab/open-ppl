@@ -32,9 +32,12 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType     CfgType;
-    typedef typename MPTraits::RoadmapType RoadmapType;
-    typedef typename RoadmapType::VID      VID;
+    typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename MPTraits::CfgType                CfgType;
+    typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::GraphType           GraphType;
+    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
+    typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
     ///@}
     ///@name Local Types
@@ -83,6 +86,23 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
+
+
+    /// Group overloads:
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+        const GroupCfgType& _cfg, OutputIterator _out) {
+      throw RunTimeException(WHERE, "Not Supported for groups!");
+    }
+
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+        InputIterator _first1, InputIterator _last1,
+        InputIterator _first2, InputIterator _last2,
+        OutputIterator _out) {
+      throw RunTimeException(WHERE, "Not Supported for groups!");
+    }
 
     ///@}
 

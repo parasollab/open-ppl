@@ -24,3 +24,19 @@ CDInfo::
 operator<(const CDInfo& _cdInfo) {
   return m_minDist < _cdInfo.m_minDist;
 }
+
+
+CDInfo&
+CDInfo::
+operator=(const CDInfo& _cdInfo) {
+  m_retAllInfo = _cdInfo.m_retAllInfo;
+  m_collidingObstIndex = _cdInfo.m_collidingObstIndex;
+  m_nearestObstIndex = _cdInfo.m_nearestObstIndex;
+  m_minDist = _cdInfo.m_minDist;
+  m_robotPoint = _cdInfo.m_robotPoint;
+  m_objectPoint = _cdInfo.m_objectPoint;
+  m_trianglePairs = _cdInfo.m_trianglePairs;
+  // Don't set the self-distance stuff, as that is maintained slightly differently
+  return *this;
+}
+

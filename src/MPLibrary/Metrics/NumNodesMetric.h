@@ -51,7 +51,10 @@ template <typename MPTraits>
 double
 NumNodesMetric<MPTraits>::
 operator()() {
-  return this->GetRoadmap()->GetGraph()->get_num_vertices();
+  if(!this->GetGroupRoadmap())
+    return this->GetRoadmap()->GetGraph()->get_num_vertices();
+  else
+    return this->GetGroupRoadmap()->get_num_vertices();
 }
 
 /*----------------------------------------------------------------------------*/

@@ -39,7 +39,7 @@ Build(Body* const _body) {
 bool
 PQP::
 IsInCollision(const Body* const _body1, const Body* const _body2,
-    CDInfo& _cdInfo) {
+              CDInfo& _cdInfo) {
   auto body1 = _body1->GetPQPBody();
   auto body2 = _body2->GetPQPBody();
   /// @TODO See if we can modify PQP_Distance to take const double arrays

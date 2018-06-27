@@ -33,6 +33,7 @@ class MPSolutionType final {
     typedef typename RoadmapType::GraphType     GraphType;
     typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
+    typedef typename MPTraits::GroupPathType    GroupPathType;
 
     /// The outputs for an individual robot.
     struct RobotSolution {
@@ -76,7 +77,13 @@ class MPSolutionType final {
 
     GroupRoadmapType* GetGroupRoadmap() const noexcept;
 
+    GroupPathType* GetGroupPath() const noexcept { return m_groupPath; }
+
     StatClass* GetStatClass() const noexcept;
+
+    Robot* GetRobot() const noexcept { return m_robot; }
+
+    RobotGroup* GetRobotGroup() const noexcept { return m_group; }
 
     ///@}
 
@@ -101,6 +108,9 @@ class MPSolutionType final {
 
     /// The group roadmap.
     std::unique_ptr<GroupRoadmapType> m_groupMap;
+
+    /// The group path.
+    GroupPathType* m_groupPath;
 
     ///@}
 };
@@ -128,10 +138,14 @@ MPSolutionType(Robot* const _r)
 template <typename MPTraits>
 MPSolutionType<MPTraits>::
 MPSolutionType(RobotGroup* const _g)
-  : m_robot(nullptr), m_group(_g), m_stats(new StatClass()) {
-
+  : m_robot(nullptr), m_group(_g), m_stats(new StatClass()),
+    m_groupMap(nullptr), m_groupPath(nullptr) {
   for(auto robot : *m_group)
     m_solutions[robot] = std::move(RobotSolution(robot, m_stats.get()));
+
+  // Must happen after solutions are populated!
+  m_groupMap = std::unique_ptr<GroupRoadmapType>(new GroupRoadmapType(_g, this));
+  m_groupPath = new GroupPathType(m_groupMap.get());
 }
 
 /*-------------------------------- Modifiers ---------------------------------*/
@@ -219,9 +233,9 @@ GetRobotSolution(Robot* _r) const noexcept {
   try {
     return m_solutions.at(_r);
   }
-  catch(const std::runtime_error& _e) {
+  catch(const std::out_of_range& _e) {
     std::ostringstream oss;
-    oss << "Robot " << _r << " has no data in this solution.";
+    oss << "Robot with pointer " << _r << " has no data in this solution.";
     throw RunTimeException(WHERE, oss.str());
   }
 }

@@ -192,6 +192,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name MP Object Labels
     ///@{
 
+    /// Note: m_dmLabel is unused and should be removed as extraneous parameter.
     string m_dmLabel;       ///< The distance metric label.
     string m_samplerLabel;  ///< The sampler label.
     string m_nfLabel;       ///< The neighborhood finder label.

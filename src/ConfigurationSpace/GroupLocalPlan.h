@@ -2,12 +2,15 @@
 #define GROUP_LOCAL_PLAN_H_
 
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Weight.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
 #include "containers/sequential/graph/graph_util.h"
 
+#include <algorithm>
+#include <iostream>
 #include <vector>
 
 
@@ -25,7 +28,10 @@ class GroupLocalPlan final {
 
     typedef double                                         EdgeWeight;
     typedef DefaultWeight<CfgType>                         IndividualEdge;
-    typedef GroupRoadmap<GroupCfg, GroupLocalPlan>          GraphType;
+    typedef GroupRoadmap<GroupCfg, GroupLocalPlan>         GroupRoadmapType;
+    typedef std::vector<GroupCfg>                          CfgPath;
+    typedef std::vector<size_t>                            Formation;
+    typedef size_t                                         GroupVID;
 
     typedef stapl::edge_descriptor_impl<size_t> ED;
 
@@ -33,7 +39,8 @@ class GroupLocalPlan final {
     ///@name Construction
     ///@{
 
-    GroupLocalPlan(GraphType* const _g = nullptr);
+    GroupLocalPlan(GroupRoadmapType* const _g = nullptr, const std::string& _lpLabel = "",
+                   const double _w = 0.0, const CfgPath& _path = CfgPath());
 
     ///@}
     ///@name Ordering and Equality
@@ -54,13 +61,47 @@ class GroupLocalPlan final {
 
     void SetWeight(const EdgeWeight _w) noexcept;
 
+
+    ///@}
+    ///@name Misc. Interface Functions
+    ///@{
+
+    // There is no current use case where this should ever get reset to false.
+    void SetSkipEdge() noexcept { m_skipEdge = true; }
+    bool SkipEdge() const noexcept { return m_skipEdge; }
+
+    void SetActiveRobots(const std::vector<size_t>& _indices)
+        { m_activeRobots = _indices; }
+    std::vector<size_t> GetActiveRobots() const noexcept
+        { return m_activeRobots; }
+
+    void Clear() noexcept;
+
+    CfgPath& GetIntermediates() noexcept { return m_intermediates; }
+    const CfgPath& GetIntermediates() const noexcept { return m_intermediates; }
+
+    void SetIntermediates(const CfgPath& _cfgs) { m_intermediates = _cfgs; }
+
+    std::string GetLPLabel() const noexcept { return m_lpLabel; }
+    void SetLPLabel(const std::string _label) noexcept { m_lpLabel = _label; }
+
+
+    Cfg GetRobotStartCfg(const size_t _index) const;
+
     ///@}
     ///@name Individual Local Plans
     ///@{
 
+    // TODO: right now the individual roadmaps are only getting one direction of
+    //       edges in SetEdge. This should be updated in the future but is fine
+    //       for now.
+
     /// Set the individual edge for a robot to a local copy of an edge.
     /// @param _robot The robot which the edge refers to.
     /// @param _edge The edge.
+    void SetEdge(const size_t _robot, IndividualEdge&& _edge);
+
+    /// overload for Robot pointer
     void SetEdge(Robot* const _robot, IndividualEdge&& _edge);
 
     /// Set the individual edge for a robot to a roadmap copy of an edge.
@@ -80,10 +121,27 @@ class GroupLocalPlan final {
     ///         yet been set.
     const IndividualEdge* GetEdge(Robot* const _robot) const;
 
+    /// Overloads for using index instead of robot pointer.
+    IndividualEdge* GetEdge(const size_t _robotIndex);
+    const IndividualEdge* GetEdge(const size_t _robotIndex) const;
+
+
     std::vector<IndividualEdge>& GetLocalEdges() noexcept;
     std::vector<ED>& GetEdgeDescriptors() noexcept;
 
     void ClearLocalEdges() noexcept;
+
+    size_t GetNumRobots() const noexcept {return m_groupMap->GetGroup()->Size();}
+
+    ///@}
+    ///@name Stuff for stapl graph interface
+    ///@{
+
+    /// This only adds weights, it doesn't take intermediates into account.
+    virtual GroupLocalPlan operator+(const GroupLocalPlan& _other) const ;
+
+    double Weight() const noexcept;
+    static GroupLocalPlan MaxWeight() noexcept; // For Dijkstra's Alg
 
     ///@}
     ///@name Iteration
@@ -106,14 +164,26 @@ class GroupLocalPlan final {
     ///@name Internal State
     ///@{
 
-    GraphType* m_groupMap{nullptr};  ///< The robot group which follows this edge.
+    GroupRoadmapType* m_groupMap{nullptr};  ///< The robot group which follows this edge.
 
-    /// Note that any edges added to m_localEdges must be complete.
-    std::vector<IndividualEdge> m_localEdges; ///< Edges which are not in a map.
-    std::vector<ED> m_edges;                  ///< Descriptors of the individual edges.
+    std::string m_lpLabel;   ///< Label of local planner that built this edge.
 
     /// The edge weight.
     double m_weight{std::numeric_limits<double>::infinity()};
+
+    CfgPath m_intermediates; ///< Group cfg intermediates.
+
+    GroupVID m_startCfgVID; ///< Not yet used (will be for handling intermediates)
+
+    // The ordered formation for this local plan with respect to the robots
+    // in m_groupMap. The first robot in the list is assumed to be the leader.
+    std::vector<size_t> m_activeRobots;
+
+    /// Note that any edges added to m_localEdges must be valid and complete.
+    std::vector<IndividualEdge> m_localEdges; ///< Edges which are not in a map.
+    std::vector<ED> m_edges;           ///< Descriptors of the individual edges.
+
+    bool m_skipEdge{false}; ///< Flag to skip full recreation in GroupPath::FullCfgs.
 
     ///@}
 
@@ -123,8 +193,14 @@ class GroupLocalPlan final {
 
 template <typename CfgType>
 GroupLocalPlan<CfgType>::
-GroupLocalPlan(GraphType* const _g) : m_groupMap(_g),
-    m_edges(m_groupMap->GetGroup()->Size(), INVALID_ED) {
+GroupLocalPlan(GroupRoadmapType* const _g, const std::string& _lpLabel,
+               const double _w, const CfgPath& _intermediates) : m_groupMap(_g),
+               m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates),
+               m_startCfgVID(INVALID_VID) {
+  if(m_groupMap)
+    m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
+  else
+    std::cout << "Warning: no group map provided in group LP!" << std::endl;
 }
 
 /*--------------------------- Ordering and Equality --------------------------*/
@@ -138,7 +214,8 @@ operator==(const GroupLocalPlan& _other) const noexcept {
     return false;
 
   // Ensure the edges are equal.
-  for(size_t i = 0; i < m_groupMap->GetGroup()->Size(); ++i) {
+//  for(size_t i = 0; i < m_groupMap->GetGroup()->Size(); ++i) {
+  for(const size_t i : m_activeRobots) {
     // If both descriptors are valid and equal, these edges are equal.
     const auto& ed1 = m_edges[i],
               & ed2 = _other.m_edges[i];
@@ -190,19 +267,51 @@ SetWeight(const EdgeWeight _w) noexcept {
   m_weight = _w;
 }
 
+
+/*------------------------- Misc Interface Functions -------------------------*/
+
+
+template <typename CfgType>
+void
+GroupLocalPlan<CfgType>::
+Clear() noexcept {
+  // Reset the initial state variables of this object:
+  m_lpLabel.clear();
+  m_weight = 0.;
+  m_intermediates.clear();
+}
+
+template <typename CfgType>
+Cfg
+GroupLocalPlan<CfgType>::
+GetRobotStartCfg(const size_t _index) const {
+  if(m_startCfgVID == INVALID_VID)
+    throw RunTimeException(WHERE, "Start cfg VID not set!");
+
+  return m_groupMap->GetVertex(m_startCfgVID).GetRobotCfg(_index);
+}
+
+
 /*-------------------------- Individual Local Plans --------------------------*/
 
 template <typename CfgType>
 void
 GroupLocalPlan<CfgType>::
 SetEdge(Robot* const _robot, IndividualEdge&& _edge) {
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  SetEdge(index, std::move(_edge));
+}
+
+
+template <typename CfgType>
+void
+GroupLocalPlan<CfgType>::
+SetEdge(const size_t robotIndex, IndividualEdge&& _edge) {
   // Allocate space for local edges if not already done.
   m_localEdges.resize(m_groupMap->GetGroup()->Size());
 
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
-
-  m_localEdges[index] = std::move(_edge);
-  m_edges[index] = INVALID_ED;
+  m_localEdges[robotIndex] = std::move(_edge);
+  m_edges[robotIndex] = INVALID_ED;
 }
 
 
@@ -213,6 +322,23 @@ SetEdge(Robot* const _robot, const ED _ed) {
   const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
 
   m_edges[index] = _ed;
+}
+
+
+template <typename CfgType>
+typename GroupLocalPlan<CfgType>::IndividualEdge*
+GroupLocalPlan<CfgType>::
+GetEdge(const size_t _robotIndex) {
+  return const_cast<IndividualEdge*>(GetEdge(
+                          this->m_groupMap->GetGroup()->GetRobot(_robotIndex)));
+}
+
+
+template <typename CfgType>
+const typename GroupLocalPlan<CfgType>::IndividualEdge*
+GroupLocalPlan<CfgType>::
+GetEdge(const size_t _robotIndex) const {
+  return GetEdge(this->m_groupMap->GetGroup()->GetRobot(_robotIndex));
 }
 
 
@@ -235,17 +361,16 @@ GetEdge(Robot* const _robot) const {
     try {
       return &m_localEdges.at(index);
     }
-    catch(const std::runtime_error&) {
+    catch(const std::out_of_range&) {
       std::ostringstream oss;
-      oss << "Requested edge (" << descriptor.source() << ", "
-          << descriptor.target() << ") for robot " << index
-          << " (" << _robot << "), which is not in the group map.";
+      oss << "Requested individual edge for robot " << index << " (" << _robot
+          << "), which is either stationary for this LP or not in the group.";
       throw RunTimeException(WHERE, oss.str());
     }
   }
 
   return &m_groupMap->GetRoadmap(index)->GetEdge(descriptor.source(),
-      descriptor.target());
+                                                 descriptor.target());
 }
 
 
@@ -271,6 +396,35 @@ GroupLocalPlan<CfgType>::
 ClearLocalEdges() noexcept {
   m_localEdges.clear();
 }
+
+
+/*---------------------- stapl graph interface helpers -----------------------*/
+
+template <typename CfgType>
+GroupLocalPlan<CfgType>
+GroupLocalPlan<CfgType>::
+operator+(const GroupLocalPlan& _other) const {
+  return GroupLocalPlan(m_groupMap, m_lpLabel,
+                        m_weight + _other.m_weight);
+}
+
+
+template <typename CfgType>
+double
+GroupLocalPlan<CfgType>::
+Weight() const noexcept {
+  return GetWeight();
+}
+
+
+template <typename CfgType>
+GroupLocalPlan<CfgType>
+GroupLocalPlan<CfgType>::
+MaxWeight() noexcept {
+  static constexpr double max = std::numeric_limits<double>::max();
+  return GroupLocalPlan(nullptr, "INVALID", max);
+}
+
 
 /*-------------------------------- Iteration ---------------------------------*/
 
@@ -305,6 +459,67 @@ end() const noexcept {
   return m_edges.end();
 }
 
-/*----------------------------------------------------------------------------*/
+
+/*------------------------------ Input/Output --------------------------------*/
+
+template<typename CfgType>
+std::ostream& operator<<(std::ostream& _os,
+                         const GroupLocalPlan<CfgType>& _groupLP) {
+  //For the group edges, the only caveat is that the intermediates need to line up.
+  // Each individual edge within a GroupLocalPlan should have the same number of
+  // intermediates (for now) so that we can do this easily. Then for a
+  // GroupLocalPlan with n individual edges for i robots, you would print all i
+  // of the nth intermediates, then the (n+1)th, etc.
+
+  // Make a vector of edges corresponding to each robot's edge to prevent from
+  // repeatedly retrieving each vector of cfgs.
+#if 0
+  // TODO: when group intermediates are needed, use this code (but it's untested
+  //       right now). Also it should really just populate m_intermediates and
+  //       then print that vector (see DefaultWeight::Write() for analogous code).
+  std::vector< std::vector<CfgType> > edgeIntermediates;
+  const size_t numRobots = _groupLP.GetNumRobots();
+  size_t numIntermediates = 0;
+  const std::vector<size_t>& activeRobots = _groupLP.GetActiveRobots();
+  for(size_t i = 0; i < numRobots; ++i) {
+    // Check if the robot is inactive, if so, just duplicate the start cfg:
+    if(std::find(activeRobots.begin(), activeRobots.end(), i) ==
+                                                           activeRobots.end()) {
+      // Get the cfg that the robot is stationary at. Will be resized later to
+      // account for correct number of intermediates.
+      edgeIntermediates.push_back({_groupLP.GetRobotStartCfg(i)});
+    }
+    else {
+      edgeIntermediates.push_back(_groupLP.GetEdge(i)->GetIntermediates());
+      numIntermediates = edgeIntermediates.back().size();
+    }
+  }
+
+  if(numIntermediates == 0)
+    throw RunTimeException(WHERE, "No active robots were detected in an edge!");
+
+  // Now all intermediate vectors of size 1 need to have their cfgs duplicated
+  for(std::vector<CfgType>& intermediateVec : edgeIntermediates)
+    if(intermediateVec.size() == 1)
+      intermediateVec.resize(numIntermediates, intermediateVec[0]);
+  // TODO: this could be optimized by not duplicating but won't be for now.
+
+  // Now loop through all intermediates so we construct each intermediate's
+  // composite cfg preserving the order of the robots in the group.
+  // Note: assuming the same number of intermediates in each edge.
+  for(size_t i = 0; i < numIntermediates; ++i) {
+    for(size_t robot = 0; i < numRobots; ++i) {
+      _os << edgeIntermediates[robot][i] << " ";
+    }
+  }
+
+#endif
+
+  _os << 0 << " "; // 0 intermediates for now.
+  _os << _groupLP.Weight(); // Print out the weight.
+
+  return _os;
+}
+
 
 #endif

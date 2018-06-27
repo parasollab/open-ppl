@@ -3,7 +3,9 @@
 
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
+#include "MPProblem/GroupTask.h"
 #include "MPProblem/Robot/Robot.h"
+#include "MPProblem/RobotGroup/RobotGroup.h"
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
@@ -45,7 +47,9 @@ class MPLibraryType final
 
     typedef typename MPTraits::MPSolution       MPSolution;
     typedef typename MPTraits::RoadmapType      RoadmapType;
+    typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::Path             Path;
+    typedef typename MPTraits::GroupPathType    GroupPath;
     typedef typename MPTraits::MPTools          MPTools;
     typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
 
@@ -255,6 +259,8 @@ class MPLibraryType final
 
     MPTask* GetTask() const noexcept;
 
+    GroupTask* GetGroupTask() const noexcept;
+
     void SetTask(MPTask* const _task) noexcept;
 
     const std::string& GetBaseFilename() const noexcept;
@@ -268,8 +274,10 @@ class MPLibraryType final
     void SetMPSolution(MPSolution* _sol) noexcept;
 
     RoadmapType*      GetRoadmap(Robot* const _r = nullptr) const noexcept;
+    GroupRoadmapType* GetGroupRoadmap() const noexcept;
     RoadmapType*      GetBlockRoadmap(Robot* const _r = nullptr) const noexcept;
     Path*             GetPath(Robot* const _r = nullptr) const noexcept;
+    GroupPath*        GetGroupPath() const noexcept;
     LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const noexcept;
     StatClass*        GetStatClass() const noexcept;
 
@@ -306,6 +314,9 @@ class MPLibraryType final
     /// @param[in] _problem The problem representation.
     /// @param[in] _task The task representation.
     void Solve(MPProblem* _problem, MPTask* _task);
+
+    /// Group overload:
+    void Solve(MPProblem* _problem, GroupTask* _task);
 
     /// Run a specific MPStrategy from the XML file with a designated seed and
     /// base output file name. This is intended for use with the simulator where
@@ -359,6 +370,7 @@ class MPLibraryType final
 
     MPProblem*          m_problem{nullptr};  ///< The current MPProblem.
     MPTask*             m_task{nullptr};     ///< The current task.
+    GroupTask*          m_groupTask{nullptr};///< The current group task.
     MPSolution*         m_solution{nullptr}; ///< The current solution.
     std::vector<Solver> m_solvers;           ///< The set of inputs to execute.
 
@@ -470,7 +482,11 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Uninitialize() {
-  this->GetRoadmap()->GetGraph()->ClearHooks();
+  // For now, hooks are only supported by single robots (not groups), so that
+  // can be triggered by the robot group pointer being set and the robot pointer
+  // being null.
+  if(!m_solution->GetRobotGroup() && m_solution->GetRobot())
+    this->GetRoadmap()->GetGraph()->ClearHooks();
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -638,6 +654,16 @@ GetTask() const noexcept {
   return m_task;
 }
 
+
+template <typename MPTraits>
+inline
+GroupTask*
+MPLibraryType<MPTraits>::
+GetGroupTask() const noexcept {
+  return m_groupTask;
+}
+
+
 template <typename MPTraits>
 inline
 void
@@ -694,6 +720,15 @@ GetRoadmap(Robot* const _r) const noexcept {
 
 template <typename MPTraits>
 inline
+typename MPTraits::GroupRoadmapType*
+MPLibraryType<MPTraits>::
+GetGroupRoadmap() const noexcept {
+  return m_solution->GetGroupRoadmap();
+}
+
+
+template <typename MPTraits>
+inline
 typename MPTraits::RoadmapType*
 MPLibraryType<MPTraits>::
 GetBlockRoadmap(Robot* const _r) const noexcept {
@@ -706,6 +741,14 @@ typename MPTraits::Path*
 MPLibraryType<MPTraits>::
 GetPath(Robot* const _r) const noexcept {
   return m_solution->GetPath(_r);
+}
+
+
+template <typename MPTraits>
+typename MPTraits::GroupPathType*
+MPLibraryType<MPTraits>::
+GetGroupPath() const noexcept {
+  return m_solution->GetGroupPath();
 }
 
 
@@ -764,6 +807,26 @@ Solve(MPProblem* _problem, MPTask* _task) {
 template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, GroupTask* _task) {
+  m_problem = _problem;
+  m_groupTask = _task;
+
+  for(auto& solver : m_solvers) {
+    // Create storage for the solution.
+    m_solution = new MPSolution(m_groupTask->GetRobotGroup());
+
+    RunSolver(solver);
+
+    delete m_solution;
+  }
+
+  m_solution = nullptr;
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
     const std::string& _label, const long _seed,
     const std::string& _baseFilename) {
@@ -795,7 +858,12 @@ RunSolver(const Solver& _solver) {
 
   // If this task has a label, append it to the solver's output file name.
   std::string baseFilename = _solver.baseFilename;
-  if(!m_task->GetLabel().empty())
+
+  if(m_groupTask) {
+    if(!m_groupTask->GetLabel().empty())
+      baseFilename += "." + m_groupTask->GetLabel();
+  }
+  else if(!m_task->GetLabel().empty())
     baseFilename += "." + m_task->GetLabel();
 
   // Remove spaces to keep file names nice.

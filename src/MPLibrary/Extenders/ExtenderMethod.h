@@ -4,6 +4,7 @@
 #include <limits>
 
 #include "MPLibrary/LocalPlanners/LPOutput.h"
+#include "MPLibrary/LocalPlanners/GroupLPOutput.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Extenders
@@ -40,6 +41,8 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
+    typedef typename MPTraits::GroupWeightType GroupWeightType;
 
     ///@}
     ///@name Construction
@@ -83,6 +86,18 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     /// An optional version if CDInfo is desired. Not required to implement.
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
             CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo);
+
+
+    /// GroupCfg Overrides:
+    virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
+        GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
+        const std::vector<size_t>& _robotIndexes = std::vector<size_t>())
+    { throw RunTimeException(WHERE, "Not Implemented!"); }
+
+    virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
+        GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
+        const std::vector<size_t>& _robotIndexes = std::vector<size_t>())
+    { throw RunTimeException(WHERE, "Not Implemented!"); }
 
     ///@}
 };

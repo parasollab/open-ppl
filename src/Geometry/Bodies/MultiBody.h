@@ -254,10 +254,6 @@ class MultiBody {
                             int& _index, const Body::MovementType _movementType,
                             const Body::Type _bodyType) const;
 
-    /// Support function for configuring composite bodies.
-    void FinishConfigureCompositeBody(const std::vector<double>& _v,
-                                      int& _index);
-
     /// Check if the DOF values are out-of-range. If so, push them to the nearest
     /// acceptable configuration and reconfigure the model.
     /// @note In this context, 'valid' means with respect to the joint limits

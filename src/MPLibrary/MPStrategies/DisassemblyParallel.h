@@ -6,18 +6,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
-/// @brief Basic serial disassembly method
+/// @brief This is the Preemptive DFS technique, with a few minor variants
+///        built in as options.
 ///
 ///
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
+
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename RoadmapType::VID            VID;
-    typedef vector<unsigned int>                 Subassembly;
+//    typedef typename MPTraits::GroupCfgType                       GroupCfgType;
+    typedef typename DisassemblyMethod<MPTraits>::VID             VID;
+    typedef typename DisassemblyMethod<MPTraits>::VIDPath         VIDPath;
+    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
@@ -38,16 +39,16 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Subassembly SelectSubassembly(DisassemblyNode* _q) override {
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override {
       throw RunTimeException(WHERE, "Unused by this strategy");
-      return Subassembly();
+      return Formation();
     }
-    virtual pair<bool, vector<CfgType>> Expand(DisassemblyNode* _q,
-                                   const Subassembly& _subassembly) override;
+    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+                                   const Formation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
-                    const vector<unsigned int>& _removedParts,
-                    const vector<vector<CfgType>>& _removingPaths,
+                    const vector<size_t>& _removedParts,
+                    const vector<VIDPath>& _removingPaths,
                     const bool _isMultiPart);
 
     void ComputeSubassemblies(DisassemblyNode* _node);
@@ -56,8 +57,8 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
     // 1. The subassembly itself as its own node, so it gets fully disassembled.
     // 2. The current assembly without the subassembly, to return to after
     //      finishing with the subassembly.
-    void GenerateSubassemblyNodes(DisassemblyNode* _parent,
-                                  const Subassembly& _subassembly);
+    void GenerateFormationNodes(DisassemblyNode* _parent,
+                                  const Formation& _subassembly);
 
     Approach m_approach = Approach::mating;
     State m_state = State::singlePart;
@@ -68,14 +69,14 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
     bool m_noSubassemblies{false};
 
     // subassembly candidates
-    vector<Subassembly> m_subassemblies;
+    std::vector<Formation> m_subassemblies;
 
     // Determine whether to do (pseudo) in-parallel removals or not:
-    bool m_useParallelRemoval{true};
+    // setting default to false as this is not yet supported for groups
+    bool m_useParallelRemoval{false};
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
-    using DisassemblyMethod<MPTraits>::m_robot;
 };
 
 template <typename MPTraits>
@@ -102,6 +103,9 @@ DisassemblyParallel(XMLNode& _node) : DisassemblyMethod<MPTraits>(_node) {
   m_useParallelRemoval = _node.Read("useParallelRemoval", false,
                                     m_useParallelRemoval,
                                    "Use (pseudo) in-parallel removals.");
+  if(m_useParallelRemoval)
+    throw RunTimeException(WHERE, "Parallel removal is not currently supported "
+                                  "for groups.");
 }
 
 template <typename MPTraits>
@@ -118,9 +122,9 @@ Iterate() {
     return;
   }
 
-  std::vector<unsigned int> removedParts;
-  std::vector<std::vector<CfgType> > removingPaths;
-  Subassembly subassembly;
+  std::vector<size_t> removedParts;
+  std::vector<VIDPath > removingPaths;
+  Formation subassembly;
 
   DisassemblyNode* node = SelectExpansionNode();
 
@@ -130,11 +134,26 @@ Iterate() {
   else
     m_approach = Approach::rrt;
 
+  Formation completePartList = node->GetCompletePartList();
+
+
+
+
+
+  // TODO: remove this, just an optimization while testing simple coax with
+  // group stuff:
+  std::reverse(completePartList.begin(), completePartList.end());
+
+
+
+
+
   if(!node->determinismExhausted) { // In here are the deterministic methods:
+    // Mating vector single parts:
     if(m_state == State::singlePart && m_approach == Approach::mating) {
-      for (const unsigned int id : m_lastNode->GetCompletePartList()) {
+      for (const size_t id : completePartList) {
         subassembly = {id};
-        std::pair<bool,std::vector<CfgType>> result = Expand(node, subassembly);
+        std::pair<bool,VIDPath> result = Expand(node, subassembly);
         if (result.first) {
           removedParts.push_back(id);
           removingPaths.push_back(result.second);
@@ -145,13 +164,13 @@ Iterate() {
     }
 
     if (removedParts.empty()) {
+      // Mating vector multiple parts:
       m_state = State::multiPart;
       ComputeSubassemblies(node);
       for (auto &sub : m_subassemblies) {
-        if (sub.size() == node->GetCompletePartList().size()
-            && node->initialParts.empty())
+        if (sub.size() == completePartList.size() && node->initialParts.empty())
           continue; // step over complete subassemblies apart from init position
-        std::pair<bool, std::vector<CfgType> > result = Expand(node, sub);
+        std::pair<bool, VIDPath > result = Expand(node, sub);
         if (result.first) {
           removedParts = sub;
           removingPaths.push_back(result.second);
@@ -163,9 +182,9 @@ Iterate() {
   }
   else { // Determinism exhausted, attempt RRT until timeout or state change.
     // RRT single part:
-    for (const unsigned int id : m_lastNode->GetCompletePartList()) {
-      subassembly = Subassembly({id});
-      std::pair<bool, std::vector<CfgType> > result = Expand(node, subassembly);
+    for (const size_t id : completePartList) {
+      subassembly = Formation({id});
+      std::pair<bool, VIDPath > result = Expand(node, subassembly);
       if (result.first) {
         removedParts.push_back(id);
         removingPaths.push_back(result.second);
@@ -177,8 +196,8 @@ Iterate() {
     if (removedParts.empty()) {
       m_state = State::multiPart;
       ComputeSubassemblies(node);
-      for (const Subassembly& sub : m_subassemblies) {
-        std::pair<bool, std::vector<CfgType> > result = Expand(node, sub);
+      for (const Formation& sub : m_subassemblies) {
+        std::pair<bool, VIDPath > result = Expand(node, sub);
         if (result.first) {
           removedParts = sub;
           removingPaths.push_back(result.second);
@@ -202,8 +221,8 @@ SelectExpansionNode() {
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    std::vector<unsigned int> robotParts;
-    for (unsigned int i = 0; i < m_numParts; ++i)
+    std::vector<size_t> robotParts;
+    for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -227,19 +246,19 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-std::pair<bool, vector<typename DisassemblyParallel<MPTraits>::CfgType> >
+std::pair<bool, typename DisassemblyParallel<MPTraits>::VIDPath >
 DisassemblyParallel<MPTraits>::
-Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
+Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   if(_subassembly.empty())
-    return std::make_pair(false, vector<CfgType>());
+    return std::make_pair(false, VIDPath());
 
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Expand with Subassembly: "
+    std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
               << _subassembly << std::endl << "And remaining parts: "
               << _q->GetCompletePartList() << std::endl;
 
   VID newVID = 0; // This will be set by the chosen Expand approach.
-  std::vector<CfgType> path;
+  VIDPath path;
   // choose between RRT and mating approach
   if (m_approach == Approach::rrt)
     path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID);
@@ -270,8 +289,8 @@ Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
 template <typename MPTraits>
 void
 DisassemblyParallel<MPTraits>::
-AppendNode(DisassemblyNode* _parent, const vector<unsigned int>& _removedParts,
-       const vector<vector<CfgType>>& _removingPaths, const bool _isMultiPart) {
+AppendNode(DisassemblyNode* _parent, const vector<size_t>& _removedParts,
+       const vector<VIDPath>& _removingPaths, const bool _isMultiPart) {
 
   // update node to new state
   m_lastNode = this->GenerateNode(_parent, _removedParts, _removingPaths,
@@ -292,7 +311,7 @@ ComputeSubassemblies(DisassemblyNode* _node) {
                   this->GenerateSubassemblies(_node->vid, _node->initialParts);
     //Get all sub-subassemblies that could be used from usedSubassemblies:
     for (const auto &usedSub : _node->usedSubassemblies) {
-      vector<Subassembly> subs =
+      vector<Formation> subs =
                               this->GenerateSubassemblies(_node->vid, usedSub);
       if (!subs.empty()) {
         //Don't reuse any complete subassemblies already in usedSubassemblies:
@@ -308,9 +327,13 @@ ComputeSubassemblies(DisassemblyNode* _node) {
       }
     }
   }
-  if(this->m_debug)
-    std::cout << "After ComputeSubassemblies: m_subassemblies = "
-              << m_subassemblies << std::endl;
+  if(this->m_debug) {
+    if(!m_subassemblies.empty())
+      std::cout << "After ComputeSubassemblies: m_subassemblies = "
+                << m_subassemblies << std::endl;
+    else
+      std::cout << "No subassemblies found in ComputeSubassemblies!" << std::endl;
+  }
 }
 
 #endif

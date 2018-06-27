@@ -69,6 +69,10 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     typedef typename std::vector<CfgType>::iterator InputIterator;
     typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
 
+    typedef typename MPTraits::GroupCfgType GroupCfg;
+    typedef typename std::vector<GroupCfg>::iterator GroupInputIterator;
+    typedef typename std::back_insert_iterator<std::vector<GroupCfg>> GroupOutputIterator;
+
     ///@}
     ///@name Construction
     ///@{
@@ -95,12 +99,22 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _invalid An (optional) iterator to storage for failed
     ///                        attempts.
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
-        const Boundary* const _boundary, OutputIterator _valid,
-        OutputIterator _invalid);
+                        const Boundary* const _boundary, OutputIterator _valid,
+                        OutputIterator _invalid);
 
     /// \overload
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
-        const Boundary* const _boundary, OutputIterator _valid);
+                        const Boundary* const _boundary, OutputIterator _valid);
+
+    /// Group Cfg versions:
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+                        const Boundary* const _boundary, GroupOutputIterator _valid,
+                        GroupOutputIterator _invalid);
+
+    /// \overload
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+                        const Boundary* const _boundary,
+                        GroupOutputIterator _valid);
 
     /// Apply the sampler rule to a set of existing configurations. The output
     /// will generally be a filtered or perturbed version of the input set.
@@ -115,14 +129,24 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _invalid An (optional) iterator to storage for failed
     ///                        attempts.
     virtual void Sample(InputIterator _first, InputIterator _last,
-        size_t _maxAttempts, const Boundary* const _boundary,
-        OutputIterator _valid,
-        OutputIterator _invalid);
+                        size_t _maxAttempts, const Boundary* const _boundary,
+                        OutputIterator _valid, OutputIterator _invalid);
 
     /// \overload
     void Sample(InputIterator _first, InputIterator _last,
-        size_t _maxAttempts, const Boundary* const _boundary,
-        OutputIterator _valid);
+                size_t _maxAttempts, const Boundary* const _boundary,
+                OutputIterator _valid);
+
+
+    /// Group Cfg versions:
+    virtual void Sample(GroupInputIterator _first, GroupInputIterator _last,
+                        size_t _maxAttempts, const Boundary* const _boundary,
+                        GroupOutputIterator _valid, GroupOutputIterator _invalid);
+
+    /// \overload
+    void Sample(GroupInputIterator _first, GroupInputIterator _last,
+                size_t _maxAttempts, const Boundary* const _boundary,
+                GroupOutputIterator _valid);
 
     ///@}
 
@@ -139,6 +163,11 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param[out] _invalid The (optional) return for failed attempts.
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _valid, vector<CfgType>& _invalid) {return false;}
+
+    /// GroupCfg version.
+    virtual bool Sampler(GroupCfg& _cfg, const Boundary* const _boundary,
+            vector<GroupCfg>& _valid, vector<GroupCfg>& _invalid)
+        {throw RunTimeException(WHERE, "Not implemented!");}
 
     ///@}
 
@@ -212,6 +241,26 @@ Sample(size_t _numNodes, size_t _maxAttempts,
 template <typename MPTraits>
 void
 SamplerMethod<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts,
+    const Boundary* const _boundary,
+    GroupOutputIterator _valid, GroupOutputIterator _invalid) {
+  throw RunTimeException(WHERE, "Not implemented!");
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts,
+    const Boundary* const _boundary,
+    GroupOutputIterator _valid) {
+  throw RunTimeException(WHERE, "Not implemented!");
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
     OutputIterator _valid, OutputIterator _invalid) {
@@ -245,11 +294,30 @@ void
 SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _valid)
-{
+    OutputIterator _valid) {
   std::vector<CfgType> invalid;
   Sample(_first, _last, _maxAttempts, _boundary, _valid,
       std::back_inserter(invalid));
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
+Sample(GroupInputIterator _first, GroupInputIterator _last,
+       size_t _maxAttempts, const Boundary* const _boundary,
+       GroupOutputIterator _valid, GroupOutputIterator _invalid) {
+  throw RunTimeException(WHERE, "Not implemented!");
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
+Sample(GroupInputIterator _first, GroupInputIterator _last,
+       size_t _maxAttempts, const Boundary* const _boundary,
+       GroupOutputIterator _valid) {
+  throw RunTimeException(WHERE, "Not implemented!");
 }
 
 /*----------------------------------------------------------------------------*/

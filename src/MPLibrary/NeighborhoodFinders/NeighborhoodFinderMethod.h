@@ -38,7 +38,7 @@ namespace pmpl_detail {
         T* tptr = dynamic_cast<T*>(m_methodPointer);
         if(tptr != nullptr)
           tptr->FindNeighbors(m_rdmp, m_first, m_last, m_fromFullRoadmap,
-              m_cfg, m_output);
+                              m_cfg, m_output);
       }
 
       ///@}
@@ -76,8 +76,9 @@ namespace pmpl_detail {
       ///@{
 
       VirtualFindNeighborPairs(NF* _v, RDMP* _r, I _f1, I _l1, I _f2, I _l2,
-          O _o) : m_methodPointer(_v), m_rdmp(_r), m_first1(_f1), m_last1(_l1), m_first2(_f2), m_last2(_l2), m_output(_o){
-        }
+          O _o) :
+            m_methodPointer(_v), m_rdmp(_r), m_first1(_f1), m_last1(_l1),
+            m_first2(_f2), m_last2(_l2), m_output(_o) { }
 
       ///@}
       ///@name Interface
@@ -86,9 +87,9 @@ namespace pmpl_detail {
       template<typename T>
       void operator()(T& _t) {
         T* tptr = dynamic_cast<T*>(m_methodPointer);
-        if(tptr != NULL){
-          tptr->FindNeighborPairs(m_rdmp, m_first1, m_last1, m_first2, m_last2, m_output);
-        }
+        if(tptr != nullptr)
+          tptr->FindNeighborPairs(m_rdmp, m_first1, m_last1, m_first2,
+                                  m_last2, m_output);
       }
 
       ///@}
@@ -102,6 +103,7 @@ namespace pmpl_detail {
       RDMP* m_rdmp;
       I m_first1, m_last1, m_first2, m_last2;
       O m_output;
+//      std::vector<size_t> m_formation;
 
       ///@}
 
@@ -158,17 +160,17 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename MPTraits::MPLibrary    MPLibrary;
+    typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename MPTraits::CfgType                CfgType;
+    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
+    typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
     ///@}
     ///@name Construction
     ///@{
 
     NeighborhoodFinderMethod(std::string _dmLabel = "",
-        bool _unconnected = false);
+                             bool _unconnected = false);
 
     NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM = true);
 
@@ -205,10 +207,16 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// Uses the entire roadmap as set of nodes.
     template<typename OutputIterator>
     OutputIterator FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
-        OutputIterator _out) {
-      return FindNeighbors(_rmp,
-          _rmp->GetGraph()->begin(), _rmp->GetGraph()->end(), true,
-          _cfg, _out);
+                OutputIterator _out) {
+      auto graph = _rmp->GetGraph();
+      return FindNeighbors(_rmp, graph->begin(), graph->end(), true, _cfg, _out);
+    }
+
+    /// Group overload
+    template<typename OutputIterator>
+    OutputIterator FindNeighbors(GroupRoadmapType* _rmp, const GroupCfgType& _cfg,
+                                 OutputIterator _out) {
+      return FindNeighbors(_rmp, _rmp->begin(), _rmp->end(), true, _cfg, _out);
     }
 
     /// Finds "closest" neighbors in a set of nodes to an input configuration.
@@ -231,6 +239,19 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
       boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
           NeighborhoodFinderMethod, RoadmapType,
           InputIterator, CfgType, OutputIterator>(
+            this, _rmp, _first, _last, _fromFullRoadmap, _cfg, _out));
+      return _out;
+    }
+
+    /// Group overload
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+        const GroupCfgType& _cfg, OutputIterator _out) {
+      typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
+      boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
+          NeighborhoodFinderMethod, GroupRoadmapType,
+          InputIterator, GroupCfgType, OutputIterator>(
             this, _rmp, _first, _last, _fromFullRoadmap, _cfg, _out));
       return _out;
     }
@@ -258,14 +279,30 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
       return _out;
     }
 
+    /// Group overload
+    template<typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+        InputIterator _first1, InputIterator _last1,
+        InputIterator _first2, InputIterator _last2,
+        OutputIterator _out) {
+      typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
+      boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighborPairs<
+          NeighborhoodFinderMethod, GroupRoadmapType,
+          InputIterator, OutputIterator>(this, _rmp, _first1, _last1, _first2,
+              _last2, _out));
+      return _out;
+    }
+
   protected:
 
     /// Checks that there is no direct edge to potential neighbor
     /// @param _rmp Roadmap to find neighbor
     /// @param _c Query configuration
     /// @param _v Potential neighbor
-    /// @return Edge existance
-    bool CheckUnconnected(RoadmapType* _rmp, const CfgType& _c, VID _v);
+    /// @return Edge existence
+    template <typename Roadmap, typename Cfg>
+    bool CheckUnconnected(Roadmap* _rmp, const Cfg& _c,
+                          typename Roadmap::VID _v);
 
     /// Increment total number of neighborhood finding requests
     void IncrementNumQueries() const;
@@ -358,11 +395,12 @@ GetDMLabel() const noexcept {
 
 
 template <typename MPTraits>
+template <typename Roadmap, typename Cfg>
 bool
 NeighborhoodFinderMethod<MPTraits>::
-CheckUnconnected(RoadmapType* _r, const CfgType& _c, VID _v) {
+CheckUnconnected(Roadmap* _r, const Cfg& _c, typename Roadmap::VID _v) {
   if(this->m_unconnected) {
-    VID vid = _r->GetGraph()->GetVID(_c);
+    typename Roadmap::VID vid = _r->GetGraph()->GetVID(_c);
     if(vid != INVALID_VID and _r->GetGraph()->IsEdge(_v, vid))
       return true;
   }

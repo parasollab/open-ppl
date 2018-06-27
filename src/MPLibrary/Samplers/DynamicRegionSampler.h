@@ -291,8 +291,10 @@ LazyInitialize() {
 
   // Get the start and goal point from the query.
   /// @TODO Support this for RRT and PRM.
-  auto query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
-      get());
+  auto query = static_cast<RRTQuery<MPTraits>*>(
+                                       this->GetMapEvaluator("RRTQuery").get());
+  if(!query)
+    throw RunTimeException(WHERE, "RRTQuery not in map evaluators.");
   const Point3d start = query->GetQuery()[0].GetPoint(),
                 goal  = query->GetQuery()[1].GetPoint();
 

@@ -1,11 +1,13 @@
 #include "RobotGroup.h"
 
+#include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
 #include <algorithm>
+#include <sstream>
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -24,21 +26,43 @@ RobotGroup(MPProblem* const _problem, XMLNode& _node) : m_problem(_problem) {
   // A robot group node should have a label and a set of child robots.
   m_label = _node.Read("label", true, "", "The group label.");
 
-  // Parse each child node.
-  for(auto& child : _node) {
-    std::string name = child.Name();
-    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+  const std::string robotLabelList = _node.Read("robotLabels", false, "",
+                        "A space-delimited list of all robot labels in group.");
 
-    // Currently only "Member" children are supported.
-    if(name != "member")
-      continue;
+  // If there's not a single list, then check if there are child nodes:
+  if(robotLabelList.empty()) {
+    // Parse each child node.
+    for(auto& child : _node) {
+      std::string name = child.Name();
+      std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-    const std::string label = child.Read("label", true, "", "The member robot "
-        "label.");
+      // Currently only "member" children are supported.
+      if(name != "member")
+        continue;
 
-    auto memberRobot = m_problem->GetRobot(label);
-    m_robots.push_back(memberRobot);
+      const std::string label = child.Read("label", true, "", "The robot group "
+                                                              "label.");
+      Robot* const memberRobot = m_problem->GetRobot(label);
+      m_robots.push_back(memberRobot);
+    }
   }
+  else {
+    // Parse the space-delimited robot label list.
+    std::istringstream labelStream(robotLabelList);
+//    std::vector<std::string> labelVector(
+//                                std::istream_iterator<std::string>(labelStream),
+//                                std::istream_iterator<std::string>());
+//    for(auto& robotLabel : labelVector) {
+    std::string robotLabel;
+    while(labelStream >> robotLabel) {
+      Robot* const memberRobot = m_problem->GetRobot(robotLabel);
+      m_robots.push_back(memberRobot);
+    }
+  }
+
+  if(m_robots.empty())
+    throw ParseException(WHERE, "No robots specified in either robotLabels or "
+                         "in child nodes of robot group with label" + m_label);
 
   for(size_t i = 0; i < m_robots.size(); ++i)
     m_indexes[m_robots[i]] = i;
@@ -89,10 +113,34 @@ GetGroupIndex(Robot* const _robot) const noexcept {
 }
 
 
+bool
+RobotGroup::
+VerifyRobotInGroup(Robot* const _robot) const noexcept {
+  try {
+    m_indexes.at(_robot);
+  }
+  catch(const std::runtime_error& _e) {
+    return false;
+  }
+  return true;
+}
+
+
 size_t
 RobotGroup::
 Size() const noexcept {
   return m_robots.size();
+}
+
+
+size_t
+RobotGroup::
+TotalDofs() const noexcept {
+  size_t dofs = 0;
+  for(Robot* const r : m_robots)
+    dofs += r->GetMultiBody()->DOF();
+
+  return dofs;
 }
 
 /*-------------------------------- Iteration ---------------------------------*/

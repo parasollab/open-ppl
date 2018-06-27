@@ -1,7 +1,7 @@
 #ifndef MATING_SPHERE_SAMPLER_H_
 #define MATING_SPHERE_SAMPLER_H_
 
-#include "MaskedSamplerMethod.h"
+#include "MaskedSamplerMethodGroup.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
@@ -9,10 +9,15 @@
 ///        simply translates along a straight line. This one allows for bodies
 ///        to be set, in order to handle composite C-Spaces. This version of the
 ///        mating sampler randomly generates points on a unit sphere as dirs.
+///
+/// TODO: This class is not done (and also unused) but is unique and should be
+///       updated to group behaviors if needed!
 ////////////////////////////////////////////////////////////////////////////////
 
 template <class MPTraits>
-class MatingSphereSampler : public MaskedSamplerMethod<MPTraits> {
+class MatingSphereSampler : public MaskedSamplerMethodGroup<MPTraits> {
+
+    //TODO: This class still needs updating to Groups!
 
   public:
 

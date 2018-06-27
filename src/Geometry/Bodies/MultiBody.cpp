@@ -169,30 +169,9 @@ InitializeDOFs(const Boundary* const _b) {
     }
   }
 
-  //Add dofs of multiple free bodies without connections for composite C-Spaces.
-  if(IsComposite()) {
-    for(size_t i = 1; i < m_bodies.size(); ++i) {
-      const string bodStr = "Body " + to_string(i) + " ";
-      if(m_bodies[i].GetBodyType() == Body::Type::Planar) {
-        m_dofInfo.emplace_back(bodStr + "X Translation ", position, _b->GetRange(0));
-        m_dofInfo.emplace_back(bodStr + "Y Translation ", position, _b->GetRange(1));
-
-        if(m_bodies[i].GetMovementType() == Body::MovementType::Rotational)
-          m_dofInfo.emplace_back(bodStr + "Rotation ", rotation, full);
-      }
-      else if(m_bodies[i].GetBodyType() == Body::Type::Volumetric) {
-        m_dofInfo.emplace_back(bodStr + "X Translation ", position, _b->GetRange(0));
-        m_dofInfo.emplace_back(bodStr + "Y Translation ", position, _b->GetRange(1));
-        m_dofInfo.emplace_back(bodStr + "Z Translation ", position, _b->GetRange(2));
-
-        if(m_bodies[i].GetMovementType() == Body::MovementType::Rotational) {
-          m_dofInfo.emplace_back(bodStr + "X Rotation ", rotation, full);
-          m_dofInfo.emplace_back(bodStr + "Y Rotation ", rotation, full);
-          m_dofInfo.emplace_back(bodStr + "Z Rotation ", rotation, full);
-        }
-      }
-    }
-  }
+  if(IsComposite())
+    throw RunTimeException(WHERE, "Any composite bodies should be handled "
+                                  "through group cfgs now.");
 
   m_currentDofs.resize(DOF(), 0);
   Configure(m_currentDofs);
@@ -688,16 +667,9 @@ Configure(const vector<double>& _v) {
     m_baseBody->Configure(t1);
   }
 
-  // configure remaining free bodies, if this is a composite body
-  if (IsComposite()) {
-    // Note: index is the #dofs for the first body.
-    const bool isUniformDOFs = (_v.size() % index) == 0;
-    if(!isUniformDOFs)
-      throw RunTimeException(WHERE, "Composite CSpaces must currently have "
-          "uniform dofs for each body! #DOFs provided = " + to_string(_v.size())
-          + ", #DOFs for first body = " + to_string(index));
-    FinishConfigureCompositeBody(_v, index);
-  }
+  if (IsComposite())
+    throw RunTimeException(WHERE, "Any composite bodies should be handled "
+                                  "through group cfgs now.");
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -736,16 +708,9 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
     m_baseBody->Configure(t1);
   }
 
-  // configure remaining free bodies, if this is a composite body
-  if(IsComposite()) {
-    // Note: index is the #dofs for the first body.
-    const bool isUniformDOFs = (_v.size() % index) != 0;
-    if(!isUniformDOFs)
-      throw RunTimeException(WHERE, "Composite CSpaces must currently have "
-          "uniform dofs for each body! #DOFs provided = " + to_string(_v.size())
-          + ", #DOFs for first body = " + to_string(index));
-    FinishConfigureCompositeBody(_v, index);
-  }
+  if(IsComposite())
+    throw RunTimeException(WHERE, "Any composite bodies should be handled "
+                                  "through group cfgs now.");
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -767,24 +732,6 @@ Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
 
   // The base transform has been updated, now update the links.
   UpdateLinks();
-}
-
-
-void
-MultiBody::
-FinishConfigureCompositeBody(const std::vector<double>& _v, int& _index) {
-  // This configures all but the base body for composite bodies. It updates
-  // the index that tracks which dofs in _v are accounted for.
-  for(size_t i = 0; i < m_bodies.size(); ++i) {
-    if(i == m_baseIndex)
-      continue;
-    Body* const part = &m_bodies[i];
-    if(part->GetBodyType() != Body::Type::Fixed) {
-      Transformation t = GenerateModelTransformation(_v, _index,
-                                  part->GetMovementType(), part->GetBodyType());
-      part->Configure(t);
-    }
-  }
 }
 
 

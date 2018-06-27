@@ -221,7 +221,7 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
 
     // If the obstacle is in collision with _cfg at _timestep, return false
     CDInfo cdInfo;
-    if(vc->IsInterRobotCollision(cdInfo, obstacleMultiBody, robotMultiBody,
+    if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
         this->GetNameAndLabel())) {
       return false;
     }

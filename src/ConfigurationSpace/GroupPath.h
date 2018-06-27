@@ -1,5 +1,5 @@
-#ifndef PATH_H_
-#define PATH_H_
+#ifndef GROUP_PATH_H_
+#define GROUP_PATH_H_
 
 #include <algorithm>
 
@@ -18,18 +18,18 @@
 /// The corresponding configurations are computed lazily upon request.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class PathType final {
+class GroupPath final {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::WeightType    WeightType;
-    typedef typename MPTraits::RoadmapType   RoadmapType;
-    typedef typename RoadmapType::GraphType  GraphType;
-    typedef typename RoadmapType::VID        VID;
+    typedef typename MPTraits::GroupCfgType       GroupCfg;
+    typedef typename MPTraits::GroupWeightType    WeightType;
+    typedef typename MPTraits::GroupRoadmapType   RoadmapType;
+    typedef typename RoadmapType::VID             VID;
+    typedef typename GroupCfg::Formation          Formation;
 
     ///@}
     ///@name Construction
@@ -37,7 +37,7 @@ class PathType final {
 
     /// Construct an empty path.
     /// @param[in] _r The roadmap used by this path.
-    PathType(RoadmapType* const _r = nullptr);
+    GroupPath(RoadmapType* const _r = nullptr);
 
     ///@}
     ///@name Path Interface
@@ -58,7 +58,7 @@ class PathType final {
     /// Get a copy of the Cfgs in the path.
     /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
     ///          values or labels are edited), this copy will be out-of-date.
-    const std::vector<CfgType>& Cfgs() const;
+    const std::vector<GroupCfg>& Cfgs() const;
 
     /// Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
@@ -68,7 +68,7 @@ class PathType final {
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
     template <typename MPLibrary>
-    const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
+    const std::vector<GroupCfg> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
 
     /// Find the furthest place and time in a path that an agent can travel to
@@ -86,22 +86,22 @@ class PathType final {
 
     /// Append another path to the end of this one.
     /// @param[in] _p The path to append.
-    PathType& operator+=(const PathType& _p);
+    GroupPath& operator+=(const GroupPath& _p);
 
     /// Add another path to the end of this one and return the result.
     /// @param[in] _p The path to add.
-    PathType operator+(const PathType& _p) const;
+    GroupPath operator+(const GroupPath& _p) const;
 
     /// Append a new set of VIDs to the end of this path.
     /// @param[in] _vids The VIDs to append.
-    PathType& operator+=(const std::vector<VID>& _vids);
+    GroupPath& operator+=(const std::vector<VID>& _vids);
 
     /// Add a new set of VIDs to the end of this path and return the result.
     /// @param[in] _vids The VIDs to add.
-    PathType operator+(const std::vector<VID>& _vids) const;
+    GroupPath operator+(const std::vector<VID>& _vids) const;
 
     /// Copy assignment operator.
-    PathType& operator=(const PathType& _p);
+    GroupPath& operator=(const GroupPath& _p);
 
     /// Clear all data in the path.
     void Clear();
@@ -116,7 +116,7 @@ class PathType final {
     ///@name Helpers
     ///@{
 
-    void AssertSameMap(const PathType& _p) const;
+    void AssertSameMap(const GroupPath& _p) const;
 
     ///@}
     ///@name Internal State
@@ -125,7 +125,7 @@ class PathType final {
     RoadmapType* const m_roadmap;       ///< The roadmap.
     std::vector<VID> m_vids;            ///< The vids of the path configurations.
 
-    std::vector<CfgType> m_cfgs;        ///< The path configurations.
+    std::vector<GroupCfg> m_cfgs;        ///< The path configurations.
     mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
 
     double m_length{0};                 ///< The path length.
@@ -137,14 +137,14 @@ class PathType final {
 /*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
-PathType<MPTraits>::
-PathType(RoadmapType* const _r) : m_roadmap(_r) { }
+GroupPath<MPTraits>::
+GroupPath(RoadmapType* const _r) : m_roadmap(_r) { }
 
 /*------------------------------ Path Interface ------------------------------*/
 
 template <typename MPTraits>
-typename MPTraits::RoadmapType*
-PathType<MPTraits>::
+typename MPTraits::GroupRoadmapType*
+GroupPath<MPTraits>::
 GetRoadmap() const noexcept {
   return m_roadmap;
 }
@@ -152,7 +152,7 @@ GetRoadmap() const noexcept {
 
 template <typename MPTraits>
 size_t
-PathType<MPTraits>::
+GroupPath<MPTraits>::
 Size() const noexcept {
   return m_vids.size();
 }
@@ -160,7 +160,7 @@ Size() const noexcept {
 
 template <typename MPTraits>
 double
-PathType<MPTraits>::
+GroupPath<MPTraits>::
 Length() const {
   if(!m_lengthCached) {
     double& length = const_cast<double&>(m_length);
@@ -168,9 +168,9 @@ Length() const {
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
       if(*start == *(start + 1))
         continue;  // Skip repeated vertices.
-      typename GraphType::edge_descriptor ed(*start, *(start + 1));
-      typename GraphType::vertex_iterator vi;
-      typename GraphType::adj_edge_iterator ei;
+      typename RoadmapType::edge_descriptor ed(*start, *(start + 1));
+      typename RoadmapType::vertex_iterator vi;
+      typename RoadmapType::adj_edge_iterator ei;
       if(m_roadmap->GetGraph()->find_edge(ed, vi, ei))
         length += (*ei).property().GetWeight();
       else
@@ -186,19 +186,19 @@ Length() const {
 
 
 template <typename MPTraits>
-const std::vector<typename PathType<MPTraits>::VID>&
-PathType<MPTraits>::
+const std::vector<typename GroupPath<MPTraits>::VID>&
+GroupPath<MPTraits>::
 VIDs() const noexcept {
   return m_vids;
 }
 
 
 template <typename MPTraits>
-const std::vector<typename MPTraits::CfgType>&
-PathType<MPTraits>::
+const std::vector<typename MPTraits::GroupCfgType>&
+GroupPath<MPTraits>::
 Cfgs() const {
   if(!m_cfgsCached) {
-    std::vector<CfgType>& cfgs = const_cast<std::vector<CfgType>&>(m_cfgs);
+    std::vector<GroupCfg>& cfgs = const_cast<std::vector<GroupCfg>&>(m_cfgs);
     cfgs.clear();
     cfgs.reserve(m_vids.size());
     for(const auto& vid : m_vids)
@@ -211,14 +211,13 @@ Cfgs() const {
 
 template <typename MPTraits>
 template <typename MPLibrary>
-const std::vector<typename MPTraits::CfgType>
-PathType<MPTraits>::
+const std::vector<typename MPTraits::GroupCfgType>
+GroupPath<MPTraits>::
 FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   if(m_vids.empty())
-    return std::vector<CfgType>();
+    return std::vector<GroupCfg>();
 
-  GraphType* g = m_roadmap->GetGraph();
-  std::vector<CfgType> out = {g->GetVertex(m_vids.front())};
+  std::vector<GroupCfg> out = {m_roadmap->GetVertex(m_vids.front())};
 
   // Set up local planner to recreate edges. If none was provided, use edge
   // planner, or fall back to straight-line.
@@ -227,15 +226,16 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.
     bool validEdge = false;
-    typename GraphType::adj_edge_iterator ei;
+    typename RoadmapType::adj_edge_iterator ei;
     {
-      typename GraphType::edge_descriptor ed(*it, *(it+1));
-      typename GraphType::vertex_iterator vi;
-      validEdge = g->find_edge(ed, vi, ei);
-    }
+      typename RoadmapType::edge_descriptor ed(*it, *(it+1));
+      typename RoadmapType::vertex_iterator vi;
+      validEdge = m_roadmap->find_edge(ed, vi, ei);
 
-    if(!validEdge)
-      throw RunTimeException(WHERE) << "Edge from " << *it << " to " << *(it+1) << " doesn't exist in roadmap!";
+      if(!validEdge)
+        throw RunTimeException(WHERE) << "Edge " << *it << ", " << *(it+1)
+                                      << " doesn't exist in roadmap!";
+    }
 
     // Use the local planner from parameter if specified.
     // If not specified, use the edge lp.
@@ -249,22 +249,25 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
         lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
       }
       catch(...) {
-        lp = _lib->GetLocalPlanner("sl");
+          lp = _lib->GetLocalPlanner("sl");
       }
     }
 
+    Formation formation = ei->property().GetActiveRobots();
+
     // Recreate this edge, including intermediates.
-    CfgType& start = g->GetVertex(*it);
-    CfgType& end   = g->GetVertex(*(it+1));
+    GroupCfg& start = m_roadmap->GetVertex(*it);
+    GroupCfg& end   = m_roadmap->GetVertex(*(it+1));
 
     // Construct a resolution-level path along the recreated edge.
     if(!ei->property().SkipEdge()) {
-      std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+      std::vector<GroupCfg> recreatedEdge = ei->property().GetIntermediates();
       recreatedEdge.insert(recreatedEdge.begin(), start);
       recreatedEdge.push_back(end);
       for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-        std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-            std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+        std::vector<GroupCfg> edge = lp->ReconstructPath(*cit, *(cit+1),
+                                std::vector<GroupCfg>(), env->GetPositionRes(),
+                                env->GetOrientationRes(), formation);
         out.insert(out.end(), edge.begin(), edge.end());
       }
     }
@@ -282,10 +285,10 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
 template <typename MPTraits>
 template <typename MPLibrary>
 BatteryBreak
-PathType<MPTraits>::
+GroupPath<MPTraits>::
 FindBatteryBreak(double _batteryLevel, double _rate, double _threshold,
                  double _currentTime, double _timeRes, MPLibrary* const _lib){
-  std::vector<CfgType> fullPath = FullCfgs(_lib);
+  std::vector<GroupCfg> fullPath = FullCfgs(_lib);
   /*std::cout << "Battery Level: " << _batteryLevel << "\nRate: " << _rate <<
             "\nThreshold: " << _threshold << std::endl;
   std::cout << "Printing full path" << std::endl;
@@ -313,26 +316,26 @@ FindBatteryBreak(double _batteryLevel, double _rate, double _threshold,
 
 
 template <typename MPTraits>
-PathType<MPTraits>&
-PathType<MPTraits>::
-operator+=(const PathType& _p) {
+GroupPath<MPTraits>&
+GroupPath<MPTraits>::
+operator+=(const GroupPath& _p) {
   AssertSameMap(_p);
   return *this += _p.m_vids;
 }
 
 
 template <typename MPTraits>
-PathType<MPTraits>
-PathType<MPTraits>::
-operator+(const PathType& _p) const {
+GroupPath<MPTraits>
+GroupPath<MPTraits>::
+operator+(const GroupPath& _p) const {
   AssertSameMap(_p);
   return *this + _p.m_vids;
 }
 
 
 template <typename MPTraits>
-PathType<MPTraits>&
-PathType<MPTraits>::
+GroupPath<MPTraits>&
+GroupPath<MPTraits>::
 operator+=(const std::vector<VID>& _vids) {
   if(_vids.size()) {
     std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
@@ -344,19 +347,19 @@ operator+=(const std::vector<VID>& _vids) {
 
 
 template <typename MPTraits>
-PathType<MPTraits>
-PathType<MPTraits>::
+GroupPath<MPTraits>
+GroupPath<MPTraits>::
 operator+(const std::vector<VID>& _vids) const {
-  PathType out(*this);
+  GroupPath out(*this);
   out += _vids;
   return out;
 }
 
 
 template <typename MPTraits>
-PathType<MPTraits>&
-PathType<MPTraits>::
-operator=(const PathType& _p) {
+GroupPath<MPTraits>&
+GroupPath<MPTraits>::
+operator=(const GroupPath& _p) {
   if(m_roadmap != _p.m_roadmap)
     throw RunTimeException(WHERE, "Can't assign path from another roadmap");
 
@@ -372,7 +375,7 @@ operator=(const PathType& _p) {
 
 template <typename MPTraits>
 void
-PathType<MPTraits>::
+GroupPath<MPTraits>::
 Clear() {
   m_lengthCached = false;
   m_cfgsCached = false;
@@ -383,7 +386,7 @@ Clear() {
 
 template <typename MPTraits>
 void
-PathType<MPTraits>::
+GroupPath<MPTraits>::
 FlushCache() {
   m_lengthCached = false;
   m_cfgsCached = false;
@@ -394,8 +397,8 @@ FlushCache() {
 
 template <typename MPTraits>
 void
-PathType<MPTraits>::
-AssertSameMap(const PathType& _p) const {
+GroupPath<MPTraits>::
+AssertSameMap(const GroupPath& _p) const {
   if(m_roadmap != _p.m_roadmap)
     throw RunTimeException(WHERE, "Can't add paths from different roadmaps!");
 }

@@ -12,8 +12,10 @@ class DynamicObstacle;
 class MPHandoffTemplate;
 class Environment;
 class MPTask;
+class GroupTask;
 class MultiBody;
 class Robot;
+class RobotGroup;
 class XMLNode;
 
 
@@ -89,6 +91,19 @@ class MPProblem final
     /// Get all robots in this problem.
     const std::vector<std::unique_ptr<Robot>>& GetRobots() const noexcept;
 
+    /// Group versions:
+    /// Get the number of robot groups in our problem.
+    size_t NumRobotGroups() const noexcept;
+
+    /// Get a specific robot group by index.
+    RobotGroup* GetRobotGroup(size_t _index) const;
+
+    /// Get a specific robot group by group's label.
+    RobotGroup* GetRobotGroup(const std::string& _label) const;
+
+    /// Get all robot groups in this problem.
+    const std::vector<std::unique_ptr<RobotGroup>>& GetRobotGroups() const noexcept;
+
     ///@}
     ///@name Task Accessors
     ///@{
@@ -98,6 +113,10 @@ class MPProblem final
     /// @return The set of tasks currently assigned to _robot.
     std::vector<std::shared_ptr<MPTask>> GetTasks(Robot* const _robot) const
         noexcept;
+
+    /// Group overload
+    std::vector<std::shared_ptr<GroupTask>> GetTasks(RobotGroup* const _group)
+        const noexcept;
 
     /// Add a task to the problem. The assigned robot will be taken from the
     /// task object.
@@ -170,12 +189,14 @@ class MPProblem final
 
     std::unique_ptr<Environment> m_environment;    ///< The planning environment.
     std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
+    std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot group for problem.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
     std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
     std::vector<MPHandoffTemplate*> m_handoffTemplates; ///< All handoff templates for a problem.
 
     /// Map the tasks assigned to each robot.
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;
+    std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>> m_groupTaskMap;
 
     ///@}
     ///@name Files

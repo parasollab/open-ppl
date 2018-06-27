@@ -31,7 +31,9 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
+    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction
@@ -53,6 +55,14 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     bool IsValid(CfgType& _cfg, const std::string& _callName) {
       CDInfo cdInfo;
       return IsValid(_cfg, cdInfo, _callName);
+    }
+
+    /// Classify a GroupCfg in the same manner.
+    /// @overload
+    bool IsValid(GroupCfgType& _cfg, const std::string& _callName,
+                 const Formation& _robotIndexes = Formation()) {
+      CDInfo cdInfo;
+      return IsValid(_cfg, cdInfo, _callName, _robotIndexes);
     }
 
     /// Classify a configuration to either @cfree or @cobst.
@@ -77,6 +87,17 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
         return !IsValidImpl(_cfg, _cdInfo, _callName);
     }
 
+    /// Classify a GroupCfg in the same manner.
+    /// @overload
+    bool IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo,
+                 const std::string& _callName,
+                 const Formation& _robotIndexes = Formation()) {
+      if(m_validity)
+        return IsValidImpl(_cfg, _cdInfo, _callName, _robotIndexes);
+      else
+        return !IsValidImpl(_cfg, _cdInfo, _callName, _robotIndexes);
+    }
+
     /// Determine if a configuration lies entirely in a workspace obstacle.
     /// @param _cfg Configuration
     /// @return boolean inside/outside of workspace obstacle.
@@ -89,6 +110,16 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @endcode
     virtual bool IsInsideObstacle(const CfgType& _cfg) {
       throw RunTimeException(WHERE, "IsInsideObstacle() not defined.");
+    }
+
+
+    /// TODO: Confirm this is ideal behavior.
+    virtual bool IsInsideObstacle(const GroupCfgType& _cfg,
+                                  const Formation& _robotIndexes = Formation()){
+      for(size_t i : _robotIndexes)
+        if(!IsInsideObstacle(_cfg.GetRobotCfg(i)))
+          return false; // If any robots are not inside, we say it's false.
+      return true;
     }
 
     /// Switches the meaning of "valid" to "invalid" and vice versa
@@ -106,7 +137,15 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _callName Function caller for statistics tracking
     /// @return boolean valid/invalid. Valid (true) implies @cfree.
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const std::string& _callName) = 0;
+                             const std::string& _callName) = 0;
+
+    /// We don't want to require VCs implement group behavior, but want the
+    /// default to be an exception thrown.
+    virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
+                             const std::string& _callName,
+                             const Formation& _robotIndexes = 0) {
+      throw RunTimeException(WHERE, "Not Implemented.");
+    }
 
     bool m_validity{true}; ///< Use standard validity? False indicates negation.
 

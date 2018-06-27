@@ -8,16 +8,16 @@
 /// @ingroup MotionPlanningStrategies
 /// @brief Basic serial disassembly method
 ///
-///
+/// TODO remove this strategy once we are positive subassembly rotations are
+/// 100% good.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename RoadmapType::VID            VID;
-    typedef vector<unsigned int>                 Subassembly;
+//    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+    typedef typename DisassemblyMethod<MPTraits>::VID            VID;
+    typedef typename DisassemblyMethod<MPTraits>::VIDPath        VIDPath;
+    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
@@ -38,13 +38,13 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Subassembly SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, vector<CfgType>> Expand(DisassemblyNode* _q,
-                                   const Subassembly& _subassembly) override;
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+                                   const Formation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
-                    const vector<unsigned int>& _removedParts,
-                    const vector<vector<CfgType>>& _removingPaths,
+                    const vector<size_t>& _removedParts,
+                    const vector<VIDPath>& _removingPaths,
                     const bool _isMultiPart);
 
     void ComputeSubassemblies(DisassemblyNode* _node);
@@ -53,8 +53,8 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
     // 1. The subassembly itself as its own node, so that it gets disassembled.
     // 2. The current assembly without the subassembly, to return to after
     //      finishing with the subassembly.
-    void GenerateSubassemblyNodes(DisassemblyNode* _parent,
-                                  const Subassembly& _subassembly);
+    void GenerateFormationNodes(DisassemblyNode* _parent,
+                                  const Formation& _subassembly);
 
     Approach m_approach = Approach::mating;
     State m_state = State::singlePart;
@@ -65,11 +65,10 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
     bool m_noSubassemblies{false};
 
     // subassembly candidates
-    vector<Subassembly> m_subassemblies;
+    vector<Formation> m_subassemblies;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
-    using DisassemblyMethod<MPTraits>::m_robot;
 };
 
 template <typename MPTraits>
@@ -107,9 +106,9 @@ Iterate() {
     return;
   }
 
-  vector<unsigned int> removedParts;
-  vector<vector<CfgType>> removingPaths;
-  Subassembly subassembly;
+  vector<size_t> removedParts;
+  vector<VIDPath> removingPaths;
+  Formation subassembly;
 
   DisassemblyNode* node = SelectExpansionNode();
 
@@ -120,7 +119,7 @@ Iterate() {
     m_state = State::multiPart;
     ComputeSubassemblies(node);
     for (auto &sub : m_subassemblies) {
-      pair<bool, vector<CfgType>> result = Expand(node, sub);
+      pair<bool, VIDPath> result = Expand(node, sub);
       if (result.first) {
         removedParts = sub;
         removingPaths.push_back(result.second);
@@ -157,8 +156,8 @@ SelectExpansionNode() {
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<unsigned int> robotParts;
-    for (unsigned int i = 0; i < m_numParts; ++i)
+    vector<size_t> robotParts;
+    for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -181,27 +180,27 @@ SelectExpansionNode() {
 }
 
 template <typename MPTraits>
-vector<unsigned int>
+typename DisassemblyMethod<MPTraits>::Formation
 DisassemblyParallelRot<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
 
-  return Subassembly();
+  return Formation();
 }
 
 template <typename MPTraits>
-pair<bool, vector<typename DisassemblyParallelRot<MPTraits>::CfgType>>
+pair<bool, typename DisassemblyParallelRot<MPTraits>::VIDPath>
 DisassemblyParallelRot<MPTraits>::
-Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
+Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   if (_subassembly.empty())
-    return make_pair(false, vector<CfgType>());
+    return make_pair(false, VIDPath());
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Expand with Subassembly: "
+    std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
               << _subassembly << std::endl;
 
   VID newVID;
-  vector<CfgType> path;
+  VIDPath path;
   if (m_approach == Approach::rrt) // choose between RRT and mating approach
     path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID);
   else
@@ -216,8 +215,8 @@ Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
 template <typename MPTraits>
 void
 DisassemblyParallelRot<MPTraits>::
-AppendNode(DisassemblyNode* _parent, const vector<unsigned int>& _removedParts,
-           const vector<vector<CfgType>>& _removingPaths,
+AppendNode(DisassemblyNode* _parent, const vector<size_t>& _removedParts,
+           const vector<VIDPath>& _removingPaths,
            const bool _isMultiPart) {
 
   // update node to new state
@@ -234,10 +233,10 @@ DisassemblyParallelRot<MPTraits>::
 ComputeSubassemblies(DisassemblyNode* _node) {
   m_subassemblies.clear();
   if(!m_noSubassemblies) {
-    vector<Subassembly> subassemblies =
+    vector<Formation> subassemblies =
                   this->GenerateSubassemblies(_node->vid, _node->initialParts);
     for (const auto &usedSub : _node->usedSubassemblies) {
-      vector<Subassembly> subs =
+      vector<Formation> subs =
                                this->GenerateSubassemblies(_node->vid, usedSub);
       if (!subs.empty())
         subassemblies.insert(subassemblies.end(), subs.begin(), subs.end());

@@ -2,7 +2,10 @@
 #define GROUP_ROADMAP_H_
 
 #include "ConfigurationSpace/RoadmapGraph.h"
+#include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 #ifndef INVALID_ED
 #define INVALID_ED ED{std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()}
@@ -32,14 +35,25 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     typedef typename Vertex::IndividualCfg IndividualCfg;
     typedef typename Edge::IndividualEdge  IndividualEdge;
     typedef typename Vertex::VIDSet        VIDSet;
+    typedef Vertex                         CfgType;
+
+    // This is just a dependent type when templating Path on RoadmapType.
+    // The GroupRoadmap hierarchy doesn't use the outer Roadmap class, so for a
+    // GroupRoadmap, that class is simply itself.
+    typedef GroupRoadmap GraphType;
+
+    typedef RoadmapGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+
+    typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
+    typedef typename BaseType::edge_descriptor edge_descriptor;
+    typedef typename BaseType::vertex_iterator vertex_iterator;
+    typedef typename BaseType::vertex_descriptor vertex_descriptor;
 
     using typename BaseType::CVI;
     using typename BaseType::VI;
     using typename BaseType::EI;
     using typename BaseType::VID;
     using typename BaseType::STAPLGraph;
-
-    typedef RoadmapGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
 
     ///@}
     ///@name Construction
@@ -59,8 +73,35 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// Get the individual roadmap for a robot in the group.
     IndividualRoadmap* GetRoadmap(const size_t _index);
+    const IndividualRoadmap* GetRoadmap(const size_t _index) const;
+
+    /// This is implemented specifically to get MetricUtils::PrintAllStats and
+    /// Path::FullCfgs() to work with this as the template argument.
+    GroupRoadmap* GetGraph() noexcept { return this; }
+
+    /// Get the number of robots for the group this roadmap is for.
+    size_t GetNumRobots() const noexcept { return m_group->Size(); }
 
     ///@}
+    ///@name Input/Output
+    ///@{
+
+    /// Write the roadmap using the current standard output rule.
+    /// @param _filename The file to write to.
+    /// @param _env The environment, to place in the roadmap.
+    void Write(const std::string& _filename, Environment* _env) const;
+
+    /// Write the roadmap as a Vizmo-compatible composite C-Space path.
+    /// @param _filename The file to write to.
+    /// @param _env The environment, to place in the roadmap.
+    void WriteCompositePath(const std::string& _filename,
+                            Environment* const _env) const;
+
+    std::string PrettyPrint() const;
+
+    ///@}
+
+
     ///@name Modifiers
     ///@{
 
@@ -70,13 +111,12 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept override;
 
-    /// Add a new unique vertex to the graph with a designated descriptor. If it
-    /// already exists or the descriptor is already in use, a warning will be
-    /// printed to cerr.
+    /// Add a new unique vertex to the graph with a designated descriptor. This
+    /// is NOT supported for GroupRoadmap and simply throws an exception!
     /// @param _vid The desired descriptor.
     /// @param _v The vertex property.
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
-    //virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept override;
+//    virtual VID AddVertex(const VID _vid, const Vertex& _v) override;
 
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
@@ -88,6 +128,13 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// @param _w  The edge property.
     virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
         noexcept override;
+
+    /// Add edges both ways between source and target vertices.
+    /// @param _source The source vertex.
+    /// @param _target The target vertex.
+    /// @param _w  The edge properties (source to target first).
+    virtual void AddEdge(const VID _source, const VID _target,
+                         const std::pair<Edge, Edge>& _w) noexcept;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
@@ -115,9 +162,13 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 template <typename Vertex, typename Edge>
 template <typename MPSolution>
 GroupRoadmap<Vertex, Edge>::
-GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) : m_group(_g) {
-  for(const Robot* const robot : m_group)
-    m_roadmaps.push_back(_solution->GetRoadmap(robot));
+GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
+  RoadmapGraph<Vertex, Edge>(nullptr), m_group(_g) {
+
+  // TODO: Ensure that we should be constructing the individual roadmaps in here
+  for(Robot* const robot : *m_group)
+    m_roadmaps.push_back(_solution->GetRoadmap(robot)->GetGraph());
+//    m_roadmaps.push_back(_solution->GetRoadmap(robot)->GetGraph());
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
@@ -139,20 +190,83 @@ GetRoadmap(const size_t _index) {
   return m_roadmaps[_index];
 }
 
+
+template <typename Vertex, typename Edge>
+inline
+const typename GroupRoadmap<Vertex, Edge>::IndividualRoadmap*
+GroupRoadmap<Vertex, Edge>::
+GetRoadmap(const size_t _index) const {
+  return m_roadmaps[_index];
+}
+
+
+/*-------------------------------Input/Output---------------------------------*/
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+Write(const std::string& _filename, Environment* _env) const {
+  WriteCompositePath(_filename, _env);
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+WriteCompositePath(const std::string& _filename, Environment* _env) const {
+  #ifndef VIZMO_MAP
+    throw RunTimeException(WHERE, "Cannot use this method without the vizmo map"
+                                  " option enabled in the Makefile!");
+  #endif
+
+  std::ofstream ofs(_filename);
+  ofs << "#####ENVFILESTART#####" << std::endl
+      << _env->GetEnvFileName() << std::endl
+      << "#####ENVFILESTOP#####" << std::endl;
+
+  // Pass *this because GroupRoadmap has a unified Graph/Roadmap representation.
+  stapl::sequential::write_graph(*this, ofs);
+}
+
+template <typename Vertex, typename Edge>
+std::string
+GroupRoadmap<Vertex, Edge>::
+PrettyPrint() const {
+  std::ostringstream out;
+  out << "Number of group vertices: " << this->get_num_vertices() << std::endl;
+  out << "Vertices in each individual roadmap:" << std::endl << "| ";
+  for(size_t i = 0; i < GetNumRobots(); ++i) {
+    out << "(Robot " << i << ") " << GetRoadmap(i)->get_num_vertices() << " | ";
+  }
+  out << std::endl;
+
+  return out.str();
+}
+
+
+
 /*-------------------------------- Modifiers ---------------------------------*/
 
 template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
+  if(_lp.GetWeight() == 0 or _lp.GetWeight() == 0)
+    throw RunTimeException(WHERE, "Tried to add zero weight edge!");
+
   // We need to adjust _lp, but we still want to override the base class
-  // function.
+  // function, so make a local copy of the edge.
   Edge edge = _lp;
+
+  // Vector of local edges, which are NOT already in individual roadmaps.
   std::vector<IndividualEdge>& localEdges = edge.GetLocalEdges();
+
+  // Vector of edge descriptors, which are edges already in individual roadmaps
   std::vector<ED>& edgeDescriptors = edge.GetEdgeDescriptors();
 
   const Vertex& sourceCfg = this->GetVertex(_source),
-                & targetCfg = this->GetVertex(_target);
+              & targetCfg = this->GetVertex(_target);
+
+  size_t numInactiveRobots = 0;
 
   // First, make sure all the local edges are in the individual roadmaps.
   for(size_t i = 0; i < edgeDescriptors.size(); ++i) {
@@ -160,6 +274,13 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
     const VID individualSourceVID = sourceCfg.GetVID(i),
               individualTargetVID = targetCfg.GetVID(i);
+
+    // If they are the same, it means this is an inactive robot. Record the
+    // number of these that occur so that we can ensure SOME robot(s) moved.
+    if(individualSourceVID == individualTargetVID) {
+      ++numInactiveRobots;
+      continue;
+    }
 
     // Assert that the individual vertices exist.
     const bool verticesExist =
@@ -185,14 +306,21 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // add it.
     else {
       if(edgeExists)
-        throw RunTimeException(WHERE, "Cannot re-add existing edge.");
+        std::cerr << "\nGroupRoadmap::AddEdge: robot " << i
+                  << "'s individual edge (" << individualSourceVID << ", "
+                  << individualTargetVID << ") already exists, "
+                  << "not adding to its roadmap." << std::endl;
+//        throw RunTimeException(WHERE, "Cannot re-add existing edge.");
 
-      roadmap->AddEdge(individualSourceVID,
-                       individualTargetVID,
-                       localEdges[i]);
+      // NOTE: If you are getting a seg fault here, it's most likely due to not
+      //       calling GroupLPOutput::SetIndividualEdges() before calling this!
+      roadmap->AddEdge(individualSourceVID, individualTargetVID, localEdges[i]);
       edgeDescriptors[i] = ED(individualSourceVID, individualTargetVID);
     }
   }
+
+  if(numInactiveRobots >= GetNumRobots())
+    throw RunTimeException(WHERE, "No robots were moved in this edge!");
 
   // Now all of the individual edges are in the local maps. Clear out the local
   // copies in edge before we add it to the group map.
@@ -208,20 +336,43 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 }
 
 
+template <class Vertex, class Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+AddEdge(const VID _source, const VID _target, const std::pair<Edge, Edge>& _w)
+          noexcept {
+  AddEdge(_source, _target, _w.first);
+
+  AddEdge(_target, _source, _w.second);
+}
+
+
 template <typename Vertex, typename Edge>
 typename GroupRoadmap<Vertex, Edge>::VID
 GroupRoadmap<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
-  Vertex cfg = _v;
+  Vertex cfg; // Will be a copy of the const Vertex
+  // Check that the group map is correct, if not, try and change it.
+  if(_v.GetGroupMap() != this) {
+    std::cerr << std::endl << "GroupRoadmap::AddVertex: Warning! Group roadmap "
+              << "doesn't match this, attempting to exchange the roadmap..."
+              << std::endl;
+    cfg = _v.ChangeRoadmap(this);
+  }
+  else { // Roadmaps match, no change to attempt.
+    cfg = _v;
+  }
 
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(this->IsVertex(cfg, vi)) {
-    std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
+    std::cerr << "\nGroupRoadmap::AddVertex(1/1): vertex " << vi->descriptor()
               << " already in graph"
               << std::endl;
     return vi->descriptor();
   }
+
+//  std::cout << "\nGroupRoadmap::AddVertex(1/3): Adding individual vertices..." << std::endl;
 
   // Add each vid to individual roadmaps if not already present.
   for(size_t i = 0; i < m_group->Size(); ++i) {
@@ -238,35 +389,16 @@ AddVertex(const Vertex& _v) noexcept {
           std::to_string(individualVID) + " does not exist!");
   }
 
+//  std::cout << "\nGroupRoadmap::AddVertex(2/3): Adding group vertex..." << std::endl;
+
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(cfg);
   ++m_timestamp;
 
+//  std::cout << "\nGroupRoadmap::AddVertex(3/3): Added group vertex as vid " << vid << std::endl;
+
   return vid;
 }
-
-
-//template <typename Vertex, typename Edge>
-//VID
-//GroupRoadmap<Vertex, Edge>::
-//AddVertex(const VID _vid, const Vertex& _v) noexcept {
-//  // Find the vertex and ensure it does not already exist.
-//  auto iter = this->find_vertex(_vid);
-//  const bool exists = iter != this->end();
-//  if(exists or IsVertex(_v)) {
-//    std::cerr << "\nGroupRoadmap::AddVertex: already in graph" << std::endl;
-//    return iter->descriptor();
-//  }
-//
-//  // The vertex does not exist. Add it now.
-//  const VID vid = this->add_vertex(_vid, _v);
-//  ++m_timestamp; // TODO keep?
-//
-//  // TODO: update vizmo debug.
-//  VDAddNode(_v);
-//
-//  return vid;
-//}
 
 
 template <typename Vertex, typename Edge>

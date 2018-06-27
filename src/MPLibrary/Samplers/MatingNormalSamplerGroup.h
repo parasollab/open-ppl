@@ -1,7 +1,7 @@
 #ifndef MATING_NORMAL_SAMPLER_H_
 #define MATING_NORMAL_SAMPLER_H_
 
-#include "MaskedSamplerMethod.h"
+#include "MaskedSamplerMethodGroup.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Samplers
@@ -14,14 +14,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 template <class MPTraits>
-class MatingNormalSampler : public MaskedSamplerMethod<MPTraits> {
+class MatingNormalSamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType CfgType;
     typedef typename std::vector<CfgType>::iterator InputIterator;
     typedef typename std::back_insert_iterator<std::vector<CfgType> >
                                                                  OutputIterator;
@@ -30,10 +30,10 @@ class MatingNormalSampler : public MaskedSamplerMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    MatingNormalSampler(const double dist = 10,
+    MatingNormalSamplerGroup(const double dist = 10,
                         const double _duplicateThreshold = 0.001);
-    MatingNormalSampler(XMLNode& _node);
-    virtual ~MatingNormalSampler() = default;
+    MatingNormalSamplerGroup(XMLNode& _node);
+    virtual ~MatingNormalSamplerGroup() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -59,6 +59,9 @@ class MatingNormalSampler : public MaskedSamplerMethod<MPTraits> {
             const Boundary* const _boundary, OutputIterator _result,
             OutputIterator _collision) override;
 
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+            const Boundary* const _boundary, OutputIterator _result) override;
+
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision) override;
 
@@ -69,11 +72,11 @@ class MatingNormalSampler : public MaskedSamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    std::vector<CfgType> m_samples; ///< list with all computed samples
-    CfgType m_startCfgForSamples;
+    std::vector<mathtool::Vector3d> m_normals; ///< List with computed samples.
+    CfgType m_startCfgForSamples; ///< To determine whether m_normals is current.
 
-    double m_duplicateThreshold; ///< threshold to remove duplicates
-    double m_dist;
+    double m_duplicateThreshold; ///< Dot product threshold to remove duplicates.
+    double m_dist; ///< Length of each vector.
 
     ///@}
 };
@@ -81,18 +84,18 @@ class MatingNormalSampler : public MaskedSamplerMethod<MPTraits> {
 /*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
-MatingNormalSampler<MPTraits>::
-MatingNormalSampler(const double dist, const double _duplicateThreshold) :
-    MaskedSamplerMethod<MPTraits>(),
+MatingNormalSamplerGroup<MPTraits>::
+MatingNormalSamplerGroup(const double dist, const double _duplicateThreshold) :
+    MaskedSamplerMethodGroup<MPTraits>(),
     m_duplicateThreshold(_duplicateThreshold), m_dist(dist) {
-  this->SetName("MatingNormalSampler");
+  this->SetName("MatingNormalSamplerGroup");
 }
 
 
 template <typename MPTraits>
-MatingNormalSampler<MPTraits>::
-MatingNormalSampler(XMLNode& _node) : MaskedSamplerMethod<MPTraits>(_node) {
-  this->SetName("MatingNormalSampler");
+MatingNormalSamplerGroup<MPTraits>::
+MatingNormalSamplerGroup(XMLNode& _node) : MaskedSamplerMethodGroup<MPTraits>(_node) {
+  this->SetName("MatingNormalSamplerGroup");
   m_duplicateThreshold = _node.Read("duplicateThreshold", false, 0.01, 0.0, 10.0,
         "Threshold to remove duplictates from the normal list");
   m_dist = _node.Read("dist", false, 1., 0.,
@@ -103,7 +106,7 @@ MatingNormalSampler(XMLNode& _node) : MaskedSamplerMethod<MPTraits>(_node) {
 
 template <typename MPTraits>
 void
-MatingNormalSampler<MPTraits>::
+MatingNormalSamplerGroup<MPTraits>::
 Print(ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
 }
@@ -112,7 +115,16 @@ Print(ostream& _os) const {
 
 template <typename MPTraits>
 void
-MatingNormalSampler<MPTraits>::
+MatingNormalSamplerGroup<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
+       OutputIterator _result) {
+  std::vector<CfgType> collision;
+  Sample(_numNodes, _maxAttempts, _boundary, _result, back_inserter(collision));
+}
+
+template <typename MPTraits>
+void
+MatingNormalSamplerGroup<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
        OutputIterator _result, OutputIterator _collision) {
   if(this->m_debug)
@@ -121,32 +133,16 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
   if(this->m_startCfg != m_startCfgForSamples) {
     if(this->m_debug)
       std::cout << "New startCfg detected, recomputing samples." << std::endl;
-    m_samples = std::vector<CfgType>();
+    m_normals = std::vector<mathtool::Vector3d>();
   }
 
-  ///@TODO move this sanity checking part to DisassemblyMethod::Initialize()
-  MultiBody* const mb = this->GetTask()->GetRobot()->GetMultiBody();
-  const unsigned int numBodies = mb->GetNumBodies();
-  const unsigned int posDofsPerBody = mb->PosDOF();
-  const unsigned int oriDofsPerBody = mb->OrientationDOF();
-  const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
-
-  // A little bit of sanity checking:
-  if((dofsPerBody * numBodies) != mb->DOF() ||
-     (posDofsPerBody + oriDofsPerBody) != dofsPerBody)
-    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
-
   // compute the samples only once, checks if samples are empty
-  if (m_samples.empty()) {
-    // compute the distance for one sample to separate from the robot
-    auto robot = this->GetTask()->GetRobot();
-    auto multiBody = robot->GetMultiBody();
-
-    std::vector<CfgType> result;
-    std::vector<CfgType> collision;
+  if (m_normals.empty()) {
+    const size_t numRobots = this->m_startCfg.GetNumRobots();
+    const size_t posDofsPerBody = this->m_startCfg.PosDOF();
 
     std::vector<Vector3d> normals;
-    normals.reserve(60000);
+    normals.reserve(60000); // Arbitrary number.
 
     //Push back the standard x/y/z dirs to ensure they are included (and not
     // something that's just similar but skewed).
@@ -164,12 +160,14 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
       normals.push_back(-zDir);
     }
 
-
-    ///@TODO: This had (numBodies - 1) which seemed wrong (but has been
-    ///       working fine...). Check this!
-    for(size_t i = 0; i < numBodies; ++i) {
+    for(size_t i = 0; i < numRobots; ++i) {
+      MultiBody* const multiBody = this->m_startCfg.GetRobot(i)->GetMultiBody();
+      if(multiBody->GetNumBodies() > 1)
+        throw RunTimeException(WHERE, "More than one body is in individual "
+                      "robot's multibody! For now this is not supported here!");
+      const size_t body = 0; /// TODO add loop here to support multiple bodies.
       const std::vector<GMSPolygon>& polygons =
-                           multiBody->GetBody(i)->GetPolyhedron().m_polygonList;
+                        multiBody->GetBody(body)->GetPolyhedron().m_polygonList;
       for (const GMSPolygon& polygon : polygons) {
         Vector3d normal = polygon.GetNormal();
         if(posDofsPerBody == 2)
@@ -212,50 +210,50 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
     } // TODO: This doesn't compare the last two normals and should be fixed.
 
     // multiply the normals to get the right magnitude
-    for (auto &normal : normals)
+    for (Vector3d& normal : normals)
       normal *= m_dist;
 
     if(this->m_debug)
-      std::cout << "Final scaled normals = " << normals << std::endl;
-
-    // check sample for collision
-    for (auto &normal : normals) {
-      CfgType cfg = this->m_startCfg; //Start it at the start cfg, then extend.
-      for(size_t i = 0; i < robot->GetMultiBody()->GetNumBodies(); i++)
-        for(size_t j = 0; j < posDofsPerBody; j++)
-          cfg[(i*dofsPerBody) + j] += normal[j]; //Add in dof component, don't set it.
-
-      Sampler(cfg, _boundary, result, collision);
-    }
-
-    if(this->m_debug)
-      std::cout << this->GetNameAndLabel() << "There were " << result.size()
+      std::cout << this->GetNameAndLabel() << "There were " << normals.size()
                 << " normal mating vectors found." << std::endl;
     this->GetStatClass()->IncNodesGenerated(
-                                        this->GetNameAndLabel(), result.size());
+                                       this->GetNameAndLabel(), normals.size());
     //The startCfg can change (like if we use subassemblies) so we need to keep
     // track of which cfg the cached samples are valid for.
     m_startCfgForSamples = this->m_startCfg;
-    m_samples = result;
-    this->MaskCfgs(result);
-    _result = copy(result.begin(), result.end(), _result);
-    _collision = copy(collision.begin(), collision.end(), _collision);
+
+    m_normals = normals;
   }
-  else {
-    vector<CfgType> result = m_samples;
-    this->MaskCfgs(result);
-    _result = copy(result.begin(), result.end(), _result);
+
+  // Add in the dofs for each mating vector
+  for (size_t i = 0; i < m_normals.size(); ++i) {
+    CfgType cfg = m_startCfgForSamples;
+    cfg.AddDofsForRobots(m_normals[i], this->m_activeRobots);
+    _result = cfg;
   }
 }
 
+//template <typename MPTraits>
+//std::vector<typename MPTraits::GroupCfg>
+//MatingNormalSamplerGroup<MPTraits>::
+//MakeMatingVectors(const GroupCfg& _startCfg,
+//          const std::vector<Vector3d>& _normals, const std::vector<size_t>& ) {
+//
+//  // Create a vector of group cfgs set to the _startCfg.
+//  std::vector<GroupCfg> cfgs(_normals.size(), _startCfg);
+//  for (size_t i = 0; i < _normals.size(); ++i)
+//    cfgs[i].AddDofsForBodies(_normals[i], this->m_activeRobots);
+//}
+
 template <typename MPTraits>
 bool
-MatingNormalSampler<MPTraits>::
+MatingNormalSamplerGroup<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
+        vector<CfgType>& _result, vector<CfgType>& _collision) {
 
   Environment* env = this->GetEnvironment();
 
+  // Note: this does not do a validity check.
   if(_cfg.InBounds(env->GetBoundary())) {
     _result.push_back(_cfg);
     return true;

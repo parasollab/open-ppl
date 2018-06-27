@@ -79,13 +79,6 @@ class DefaultWeight {
     ControlSet& GetControlSet() noexcept;
     void SetControlSet(const ControlSet& _c) noexcept;
 
-    //For disassembly planning, we need the bodies (first one must be the body
-    // rotated about) that were moved to create the edge.
-    void SetActiveBodies(const std::vector<unsigned int>& _bodies) {
-      m_activeBodies = _bodies;
-    }
-    std::vector<unsigned int> GetActiveBodies() {return m_activeBodies;}
-
     /// Call this so that Path::FullCfgs() doesn't reproduce intermediates for
     /// this edge (only used for disassembly planning right now). This creates
     /// INVALID roadmaps, and should only be used for visualization purposes.
@@ -145,11 +138,7 @@ class DefaultWeight {
     double m_weight{0.};                  ///< The edge length.
     std::vector<CfgType> m_intermediates; ///< Intermediate configurations.
 
-    // In order to reproduce correct intermediates of a subassembly's path for
-    // disassembly planning, we need the moved parts, with the body num that was
-    // rotated about in the first element:
-    std::vector<unsigned int> m_activeBodies;
-
+    // TODO: remove this from here.
     bool m_skipEdge{false}; ///< Don't compute intermediates in Path::FullCfgs()
 
     int m_checkedMult;

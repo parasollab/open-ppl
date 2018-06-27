@@ -437,6 +437,7 @@ PMPL_SRCS := \
   MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.cpp \
   MPProblem/MPProblem.cpp \
   MPProblem/MPTask.cpp \
+  MPProblem/GroupTask.cpp \
   MPProblem/MPHandoffTemplate.cpp \
   MPProblem/Constraints/Constraint.cpp \
   MPProblem/Constraints/BoundaryConstraint.cpp \

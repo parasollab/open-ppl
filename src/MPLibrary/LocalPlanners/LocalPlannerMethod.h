@@ -7,6 +7,7 @@
 #include "Utilities/MPUtils.h"
 
 template <typename MPTraits> struct LPOutput;
+template <typename MPTraits> struct GroupLPOutput;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref LocalPlanners.
@@ -35,7 +36,9 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType       CfgType;
+    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction
@@ -88,6 +91,21 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false);
 
+    /// GroupCfg overloads:
+    virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
+        GroupCfgType& _col, GroupLPOutput<MPTraits>* _lpOutput, double _posRes,
+        double _oriRes, bool _checkCollision = true, bool _savePath = false,
+        const Formation& _formation = Formation())
+    { throw RunTimeException(WHERE,"Not implemented!"); }
+
+    /// Validate a simple path between two nodes without returning a
+    /// witness node on failure.
+    /// @overload
+    virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
+        GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
+        bool _checkCollision = true, bool _savePath = false,
+        const Formation& _formation = Formation());
+
     /// Reconstruct a previously computed simple path between two nodes
     /// @param _start Configuration 1
     /// @param _end Configuration 2
@@ -110,6 +128,13 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     virtual std::vector<CfgType> ReconstructPath(const CfgType& _start,
         const CfgType& _end, const std::vector<CfgType>& _intermediates,
         double _posRes, double _oriRes);
+
+
+    /// GroupCfg overload:
+    virtual std::vector<GroupCfgType> ReconstructPath(const GroupCfgType& _start,
+        const GroupCfgType& _end, const std::vector<GroupCfgType>& _intermediates,
+        double _posRes, double _oriRes,
+        const Formation& _formation = Formation());
 
     ///@}
 
@@ -165,12 +190,36 @@ IsConnected(const CfgType& _start, const CfgType& _end,
 
 
 template <typename MPTraits>
+bool
+LocalPlannerMethod<MPTraits>::
+IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
+    GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
+    bool _checkCollision, bool _savePath, const Formation& _formation) {
+  GroupCfgType col(this->GetGroupRoadmap());
+  return IsConnected(_start, _end, col, _lpOutput, _posRes,
+                     _oriRes, _checkCollision, _savePath, _formation);
+}
+
+
+template <typename MPTraits>
 std::vector<typename MPTraits::CfgType>
 LocalPlannerMethod<MPTraits>::
 ReconstructPath(const CfgType& _start, const CfgType& _end,
     const std::vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
   LPOutput<MPTraits> lpOutput;
   IsConnected(_start, _end, &lpOutput, _posRes, _oriRes, false, true);
+  return lpOutput.m_path;
+}
+
+
+template <typename MPTraits>
+std::vector<typename MPTraits::GroupCfgType>
+LocalPlannerMethod<MPTraits>::
+ReconstructPath(const GroupCfgType& _start, const GroupCfgType& _end,
+                const std::vector<GroupCfgType>& _intermediates, double _posRes,
+                double _oriRes, const Formation& _formation) {
+  GroupLPOutput<MPTraits> lpOutput(_start.GetGroupMap());
+  IsConnected(_start, _end, &lpOutput, _posRes, _oriRes, false, true, _formation);
   return lpOutput.m_path;
 }
 

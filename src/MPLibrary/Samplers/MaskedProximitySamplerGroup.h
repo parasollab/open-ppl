@@ -1,9 +1,9 @@
-#ifndef MASKED_PROXIMITY_SAMPLER_H_
-#define MASKED_PROXIMITY_SAMPLER_H_
+#ifndef MASKED_PROXIMITY_SAMPLER_GROUP_H_
+#define MASKED_PROXIMITY_SAMPLER_GROUP_H_
 
 #include <iostream>
 
-#include "MaskedSamplerMethod.h"
+#include "MaskedSamplerMethodGroup.h"
 #include "MPProblem/RobotGroup/GroupUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,7 +20,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
+class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
 
   public:
     typedef typename MPTraits::MPLibrary::DistanceMetricPointer  DistanceMetricPointer;
@@ -29,18 +29,19 @@ class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename std::vector<CfgType>::iterator InputIterator;
-    typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
-    typedef typename std::vector<unsigned int> Subassembly;
+    typedef typename MaskedSamplerMethodGroup<MPTraits>::GroupCfgType GroupCfgType;
+    typedef typename GroupCfgType::IndividualCfg IndividualCfg;
+    typedef typename std::vector<GroupCfgType>::iterator InputIterator;
+    typedef typename std::back_insert_iterator<std::vector<GroupCfgType>> OutputIterator;
+    typedef typename std::vector<size_t> Formation;
 
     ///@}
     ///@name Construction
     ///@{
 
-    MaskedProximitySampler();
-    MaskedProximitySampler(XMLNode& _node);
-    virtual ~MaskedProximitySampler() = default;
+    MaskedProximitySamplerGroup();
+    MaskedProximitySamplerGroup(XMLNode& _node);
+    virtual ~MaskedProximitySamplerGroup() = default;
 
     ///@}
 
@@ -62,8 +63,8 @@ class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
     /// @param[in] _boundary The sampling boundary.
     /// @param[out] _result The resulting output configurations.
     /// @param[out] _collision The (optional) return for failed attempts.
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision);
+    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) override;
 
     ///@}
 
@@ -71,10 +72,6 @@ class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
     ///@{
 
     double m_maxDist{1.0}; /// Maximum distance to move away from a cfg.
-
-    // m_rotationFactor determines the magnitude of rotation that is allowed to be
-    // applied to the sample, wrt the starting cfg.
-    double m_rotationFactor{1.0};
 
     string m_vcLabel;
     string m_dmLabel;
@@ -85,15 +82,12 @@ class MaskedProximitySampler : public MaskedSamplerMethod<MPTraits> {
 /*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
-MaskedProximitySampler<MPTraits>::
-MaskedProximitySampler(XMLNode& _node) : MaskedSamplerMethod<MPTraits>(_node) {
-  this->SetName("MaskedProximitySampler");
+MaskedProximitySamplerGroup<MPTraits>::
+MaskedProximitySamplerGroup(XMLNode& _node) : MaskedSamplerMethodGroup<MPTraits>(_node) {
+  this->SetName("MaskedProximitySamplerGroup");
   m_maxDist = _node.Read("maxDist", false, m_maxDist, 0.,
                           numeric_limits<double>::max(),
                          "The maximum distance to move from a cfg.");
-
-  m_rotationFactor = _node.Read("rotationFactor", false, m_rotationFactor,
-                         0., 1.0, "Factor to determine max sampled rotation");
 
   m_vcLabel = _node.Read("vcLabel", true, "",
                          "The validity checker to use for sampling");
@@ -102,9 +96,9 @@ MaskedProximitySampler(XMLNode& _node) : MaskedSamplerMethod<MPTraits>(_node) {
 }
 
 template <typename MPTraits>
-MaskedProximitySampler<MPTraits>::
-MaskedProximitySampler() : MaskedSamplerMethod<MPTraits>() {
-  this->SetName("MaskedProximitySampler");
+MaskedProximitySamplerGroup<MPTraits>::
+MaskedProximitySamplerGroup() : MaskedSamplerMethodGroup<MPTraits>() {
+  this->SetName("MaskedProximitySamplerGroup");
 }
 
 
@@ -112,19 +106,17 @@ MaskedProximitySampler() : MaskedSamplerMethod<MPTraits>() {
 
 template <typename MPTraits>
 void
-MaskedProximitySampler<MPTraits>::
+MaskedProximitySamplerGroup<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
        OutputIterator _result) {
-//  auto graph = this->GetRoadmap()->GetGraph();
-
   for(size_t i = 0; i < _numNodes; ++i) {
-    vector<CfgType> result;
-    vector<CfgType> collision;
+    //Get a random vertex from the graph and hand it to Sampler()
+
+    vector<GroupCfgType> result;
+    vector<GroupCfgType> collision;
     //Terminate when node generated or attempts exhausted
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
-
-      // Just use the start cfg as the cfg to get a proximity sample from:
       if(this->Sampler(this->m_startCfg, _boundary, result, collision))
         break;
     }
@@ -133,10 +125,9 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
         result.size());
     _result = copy(result.begin(), result.end(), _result);
     if(this->m_debug)
-      for(const CfgType& cfg : result) {
-        std::cout << "MaskedProximitySampler::Sample result = "
+      for(const GroupCfgType& cfg : result) {
+        std::cout << "MaskedProximitySamplerGroup::Sample result = "
                   << cfg.PrettyPrint() << std::endl;
-        this->VerifyCfg(cfg);
       }
   }
   if(this->m_debug)
@@ -146,31 +137,31 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
 
 template <typename MPTraits>
 bool
-MaskedProximitySampler<MPTraits>::
-Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) {
+MaskedProximitySamplerGroup<MPTraits>::
+Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
+  if(!this->m_startCfg.GetGroupMap())
+    throw RunTimeException(WHERE, "Invalid start cfg!");
+
   //The input cfg is a cfg from the roadmap. Extend up to m_maxDist away
   // from _cfg and return (extendedCfg - roadmap[0]).
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-  auto graph = this->GetRoadmap()->GetGraph();
+//  auto map = this->GetGroupRoadmap();
 
   const string callee = this->GetNameAndLabel() + "::Sampler()";
 
+  Formation robotList = this->m_activeRobots;  // Copy for potential reordering.
+
   ///@TODO: For now I'm assuming that the bodies all have the same dofsPerBody,
   ///       this should be updated to be arbitrary in the future.
-  const unsigned int numBodies = _cfg.GetMultiBody()->GetNumBodies();
-  const unsigned int posDofsPerBody = _cfg.PosDOF();
-  const unsigned int oriDofsPerBody = _cfg.OriDOF();
-  const unsigned int dofsPerBody = posDofsPerBody + oriDofsPerBody;
+  const IndividualCfg& robotCfg = _cfg.GetRobotCfg(robotList[0]);
+  const size_t posDofsPerBody = robotCfg.PosDOF();
+  const size_t oriDofsPerBody = robotCfg.OriDOF();
+  const size_t dofsPerBody = posDofsPerBody + oriDofsPerBody;
   const bool isRotational = oriDofsPerBody > 0;
 
-  // A little bit of sanity checking:
-  if((dofsPerBody * numBodies) != _cfg.DOF() ||
-     _cfg.DOF() % (posDofsPerBody + oriDofsPerBody) != 0)
-    throw RunTimeException(WHERE, "DOFs don't match up for multibody!");
-
-  CfgType extendedCfg = _cfg; // The cfg to be in proximity of.
+  GroupCfgType extendedCfg = _cfg; // The cfg to be in proximity of.
 
   //Get random direction, scale it down using the range [0,1), scale it up to
   // m_maxDist then add the new direction to the starting cfg.
@@ -186,21 +177,24 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   dir.selfNormalize();
   dir *= m_maxDist;
 
-  Subassembly bodyList = this->m_bodyList;  // Copy for potential reordering.
-  for(unsigned int bodyNum : bodyList)
-    for(unsigned int i = 0; i < posDofsPerBody; i++)
-      extendedCfg[bodyNum*dofsPerBody + i] += dir[i];
+//  for(size_t bodyNum : bodyList)
+//    for(size_t i = 0; i < posDofsPerBody; i++)
+//      extendedCfg[bodyNum*dofsPerBody + i] += dir[i];
+  extendedCfg.AddDofsForRobots(dir, robotList);
 
   /// Now the translation has been applied to all the bodies. Next, handle
   /// rotations appropriately:
-  const double rotScale = 2. * m_rotationFactor; // Scale amount of rotation
-  if (bodyList.size() == 1) { // Single body case
-    for(unsigned int i = posDofsPerBody; i < dofsPerBody; i++)
-      extendedCfg[bodyList[0]*dofsPerBody + i] += (DRand() - .5) * rotScale;
+  const double rotScale = 2.0;
+  if (robotList.size() == 1) { // Single body case
+    for(size_t i = posDofsPerBody; i < dofsPerBody; ++i)
+      extendedCfg.GetRobotCfg(robotList[0])[i] += (DRand() - .5) * rotScale;
   }
   else if(isRotational) {
-    // shuffle randomly, and then rotate about the body number in bodyList[0].
-    random_shuffle(bodyList.begin(), bodyList.end());
+    // Rotate about the body number in bodyList[0].
+//    random_shuffle(robotList.begin(), robotList.end());
+    const size_t randInd = LRand() % robotList.size();
+    if(randInd > 0)
+      std::swap(robotList[0], robotList[randInd]);
 
     //Generate the random rotation, taking into account rotation bounds:
     const double piScaled = PI * rotScale; // Needs PI for Euler Angle creation.
@@ -218,21 +212,20 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     const mathtool::Orientation rotMat(deltaRot);
 
     if(this->m_debug)
-      std::cout << "m_bodyList = " << this->m_bodyList << std::endl;
+      std::cout << "m_activeRobots = " << this->m_activeRobots << std::endl;
 
     //Preserves any existing translations, as it will undo, rotate, and redo
     // any translation (and additional components due to not rotating about itself)
-    extendedCfg = RotateCfgAboutBody<MPTraits>(bodyList, extendedCfg, rotMat,
-                                               dofsPerBody, this->m_debug);
+    extendedCfg.RotateFormationAboutLeader(robotList, rotMat, this->m_debug);
   }
 
-  this->m_lastSamplesLeaderBody = bodyList[0];
-  extendedCfg.NormalizeOrientation();
+  extendedCfg.NormalizeOrientation(robotList);
 
   //Check that the sample is in bounds and valid:
   if(!extendedCfg.InBounds(_boundary) ||
-     !vc->IsValid(extendedCfg, callee)) {
-    _collision.push_back(extendedCfg - graph->GetVertex(0));
+     !vc->IsValid(extendedCfg, callee, this->m_activeRobots)) {
+//    _collision.push_back(extendedCfg - map->GetVertex(0));
+    _collision.push_back(extendedCfg);
     return false;
   }
 

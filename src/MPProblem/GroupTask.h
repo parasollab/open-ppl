@@ -1,15 +1,19 @@
-#ifndef MP_TASK_TYPE_H_
-#define MP_TASK_TYPE_H_
+#ifndef GROUP_TASK_H
+#define GROUP_TASK_H
 
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
+
+#include "MPProblem/MPTask.h"
 
 class Boundary;
-class Cfg;
+class GroupCfg;
 class Constraint;
 class MPProblem;
 class Robot;
+class RobotGroup;
 class XMLNode;
 
 
@@ -33,7 +37,7 @@ class XMLNode;
 /// constraints, respectively. Each contains a set of its own child nodes
 /// describing the appropriate constraints.
 ////////////////////////////////////////////////////////////////////////////////
-class MPTask final {
+class GroupTask final {
 
   public:
 
@@ -51,44 +55,41 @@ class MPTask final {
     /// @arg Invalid A path constraint is violated.
     enum Status {OnDeck, InProgress, Complete, Invalid};
 
-    /// A set of constraints.
-    typedef std::vector<std::unique_ptr<Constraint>> ConstraintSet;
-
     ///@}
     ///@name Construction
     ///@{
 
     /// Create an empty task for a given robot.
     /// @param _robot The robot assigned to this task.
-    explicit MPTask(Robot* const _robot);
+    explicit GroupTask(RobotGroup* const _robotGroup);
 
     /// Parse the set of task constraints described in an XML node.
     /// @param _problem The MPProblem for this task.
     /// @param _node The XML node to parse.
-    explicit MPTask(MPProblem* const _problem, XMLNode& _node);
+    explicit GroupTask(MPProblem* const _problem, XMLNode& _node);
 
-    MPTask(const MPTask& _other);  ///< Copy.
-    MPTask(MPTask&& _other);       ///< Move.
+    GroupTask(const GroupTask& _other);  ///< Copy.
+    GroupTask(GroupTask&& _other);       ///< Move.
 
-    ~MPTask();
+    ~GroupTask();
 
     ///@}
     ///@name Assignment
     ///@{
 
-    MPTask& operator=(const MPTask& _other); ///< Copy.
-    MPTask& operator=(MPTask&& _other);      ///< Move.
+    GroupTask& operator=(const GroupTask& _other); ///< Copy.
+    GroupTask& operator=(GroupTask&& _other);      ///< Move.
 
     ///@}
     ///@name Property Accessors
     ///@{
 
     /// Get the robot associated with this task.
-    Robot* GetRobot() const noexcept;
+    RobotGroup* GetRobotGroup() const noexcept;
 
-    /// Re-assign this task to another robot.
+    /// Assign this task to the robot group specified.
     /// @param _r The destination robot which will receive this assignment.
-    void SetRobot(Robot* const _r);
+    void SetRobotGroup(RobotGroup* const _r);
 
     /// Get the semantic label for this task.
     const std::string& GetLabel() const noexcept;
@@ -103,25 +104,19 @@ class MPTask final {
     /// when necessary. We require dynamically-allocated objects here because
     /// exact (derived) type of each constraint will not be known until runtime.
 
-    void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
-    void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
-    void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
+    /// Uses the robot group in _center to populate all of the individual cfgs
+    /// in that group cfg.
+    void GetStartConstraintCenter(GroupCfg& _center) const noexcept;
 
-    const Constraint* GetStartConstraint() const noexcept;
-    const ConstraintSet& GetPathConstraints() const noexcept;
-    const ConstraintSet& GetGoalConstraints() const noexcept;
-    const double GetArrivalTime() const noexcept;
-    const double GetStartTime() const noexcept;
+//    void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
+//    void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
+//    void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
+//    void SetArrivalTime(double _arrivalTime);
 
-    ///@}
-    ///@name Time Accessors
-    ///@{
-
-    /// Stores the projected arrival time of the robot at the goal
-    void SetArrivalTime(double _arrivalTime);
-
-    /// Stores the expected start time of the task
-    void SetStartTime(double _arrivalTime);
+//    const Constraint* GetStartConstraint() const noexcept;
+//    const ConstraintSet& GetPathConstraints() const noexcept;
+//    const ConstraintSet& GetGoalConstraints() const noexcept;
+//    const double GetArrivalTime() const noexcept;
 
     ///@}
     ///@name Constraint Evaluation
@@ -130,22 +125,22 @@ class MPTask final {
     /// Evaluate a path to see if it meets the constraints.
     /// @param _p The path to validate.
     /// @return The status of the task using _p as a solution.
-    Status Evaluate(const std::vector<Cfg>& _p) const;
+    Status Evaluate(const std::vector<GroupCfg>& _p) const;
 
-    /// Check if a path's starting point satisfies the start constraints.
-    /// @param _p The potential solution to check.
-    /// @return True if the starting point of _p satisfies all start constraints.
-    bool EvaluateStartConstraint(const std::vector<Cfg>& _p) const;
-
-    /// Check if all points in the path satisfy the end constraints.
-    /// @param _p The potential solution to check.
-    /// @return True if all points in _p satisfy all path constraints.
-    bool EvaluatePathConstraints(const std::vector<Cfg>& _p) const;
-
-    /// Check if a path's end point satisfies the goal constraints.
-    /// @param _p The potential solution to check.
-    /// @return True if the ending point of _p satisfies all goal constraints.
-    bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
+//    /// Check if a path's starting point satisfies the start constraints.
+//    /// @param _p The potential solution to check.
+//    /// @return True if the starting point of _p satisfies all start constraints.
+//    bool EvaluateStartConstraint(const std::vector<Cfg>& _p) const;
+//
+//    /// Check if all points in the path satisfy the end constraints.
+//    /// @param _p The potential solution to check.
+//    /// @return True if all points in _p satisfy all path constraints.
+//    bool EvaluatePathConstraints(const std::vector<Cfg>& _p) const;
+//
+//    /// Check if a path's end point satisfies the goal constraints.
+//    /// @param _p The potential solution to check.
+//    /// @return True if the ending point of _p satisfies all goal constraints.
+//    bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
 
     ///@}
     ///@name Task Status
@@ -164,27 +159,22 @@ class MPTask final {
 
     ///@}
 
-    std::string GetCapability() const;
-
   private:
 
     ///@name Internal State
     ///@{
 
-    Robot* m_robot{nullptr};      ///< The robot assigned to this task.
-
     std::string m_label;          ///< The task's semantic label.
 
-    std::string m_capability;  ///< Indicates the capability of the robot performing the task.
+    RobotGroup* m_robotGroup{nullptr}; ///< The robot group assigned to this task.
 
-    mutable Status m_status{OnDeck};      ///< The status of the current task.
+    mutable Status m_status{OnDeck};      ///< The status of the group task.
 
-    std::unique_ptr<Constraint> m_startConstraint;  ///< Req'd to start task.
-    ConstraintSet m_pathConstraints;   ///< Req'd during whole task.
-    ConstraintSet m_goalConstraints;   ///< Req'd to end task.
+//    double m_arrivalTime{0};
 
-    double m_arrivalTime{0}; ///< Estimated time of arrival at goal
-    double m_startTime{0};   ///< Estimated start time of task
+    /// TODO: Doesn't this need to be a map between a list of MPTasks??
+    std::unordered_map<Robot*, MPTask> m_robotTasks; ///< The task for each robot in the group.
+
     ///@}
 
 };

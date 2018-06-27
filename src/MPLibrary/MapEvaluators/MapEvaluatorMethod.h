@@ -53,6 +53,23 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     virtual bool operator()() = 0;
 
     ///@}
+    ///@name Accessors and Modifiers
+    ///@{
+
+    /// Set the active robots.
+    void SetActiveRobots(const std::vector<size_t> _activeRobots)
+        { m_activeRobots = _activeRobots; }
+
+    /// Get the active robots.
+    std::vector<size_t> GetActiveRobots() const { return m_activeRobots; }
+
+    ///@}
+
+
+  protected:
+
+    std::vector<size_t> m_activeRobots; ///< Active robots for group evaluators
+
 };
 
 #endif

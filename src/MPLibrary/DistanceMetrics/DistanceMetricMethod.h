@@ -36,10 +36,12 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename GraphType::VID         VID;
+    typedef typename MPTraits::CfgType       CfgType;
+    typedef typename MPTraits::RoadmapType   RoadmapType;
+    typedef typename RoadmapType::GraphType  GraphType;
+    typedef typename GraphType::VID          VID;
+    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction
@@ -59,12 +61,18 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     /// @return Distance value
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
 
+    /// GroupCfg Overload
+    virtual double Distance(const GroupCfgType& _c1, const GroupCfgType& _c2)
+        { throw RunTimeException(WHERE, "Not Implemented!"); }
+
+
     /// @brief Scale a directional configuration to a certain magnitude
     /// @param _length Desired magnitude
     /// @param _c Configuration to be scaled
     /// @param _o Configuration to scale upon (origin of scaling)
     /// @return Distance value
     virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o);
+
 
     /// Compute the weight of an existing roadmap edge
     /// @param _source VID source/start
@@ -74,7 +82,28 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
     void ScaleCfg(double _length, CfgType& _c);
 
+
+    /// Group Cfg Overloads:
+    virtual void ScaleCfg(double _length, GroupCfgType& _c,
+              const GroupCfgType& _o)
+        { throw RunTimeException(WHERE, "Not Implemented!"); }
+
+    void ScaleCfg(double _length, GroupCfgType& _c)
+        { throw RunTimeException(WHERE, "Not Implemented!"); }
+
     ///@}
+    ///@name Modifiers
+    ///@{
+
+    /// Sets and sorts the active robots, which is used for group cfg comparing.
+    void SetActiveRobots(const Formation& _robots);
+    Formation GetActiveRobots() const noexcept { return m_activeRobots; }
+
+    ///@}
+
+  protected:
+
+    Formation m_activeRobots; ///< Used for group cfgs to ensure valid neighbors
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -153,5 +182,17 @@ EdgeWeight(const VID _source, const VID _target) {
 }
 
 /*----------------------------------------------------------------------------*/
+
+
+template <typename MPTraits>
+void
+DistanceMetricMethod<MPTraits>::
+SetActiveRobots(const Formation& _robots) {
+  m_activeRobots = _robots;
+
+  // Sort it for easy equality checking (order ultimately doesn't matter though)
+  if(m_activeRobots.size() > 1)
+    std::sort(m_activeRobots.begin(), m_activeRobots.end());
+}
 
 #endif

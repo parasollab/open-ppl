@@ -253,16 +253,16 @@ QueryMethod(XMLNode& _node) :
     MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("QueryMethod");
 
-  string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras", "Graph "
-      "search algorithm");
+  const string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras",
+                                      "Graph search algorithm");
   m_fullRecreatePath = _node.Read("fullRecreatePath", false, true, "Whether or "
-      "not to recreate path");
+                                  "not to recreate path");
 
   m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
-      "Label of the SafeIntervalTool");
+                                   "Label of the SafeIntervalTool");
 
   m_vcLabel = _node.Read("vcLabel", true, "",
-      "Label of the Validity Checker for generating the Query");
+                         "Label of the Validity Checker for generating Query");
 
   SetSearchAlgViaString(searchAlg, _node.Where());
 }
@@ -716,7 +716,7 @@ GenerateQuery() {
   // Generate a goal configuration for each goal constraint.
   if(goalConstraints.empty())
     throw RunTimeException(WHERE, "A goal constraint is required for query "
-        "methods.");
+                                  "methods.");
 
   if(this->m_debug)
     std::cout << "\tThere are " << goalConstraints.size()

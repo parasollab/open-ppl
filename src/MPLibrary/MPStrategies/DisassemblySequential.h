@@ -14,15 +14,13 @@
 template <typename MPTraits>
 class DisassemblySequential : public DisassemblyMethod<MPTraits> {
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename RoadmapType::VID            VID;
+    typedef typename DisassemblyMethod<MPTraits>::VID            VID;
+    typedef typename DisassemblyMethod<MPTraits>::VIDPath        VIDPath;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
-    typedef vector<unsigned int>                 Subassembly;
+    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
     typedef typename DisassemblyMethod<MPTraits>::Approach Approach;
     typedef typename DisassemblyMethod<MPTraits>::State State;
-    typedef pair<Subassembly, map<Approach, bool> > AttemptEntry;
+    typedef pair<Formation, map<Approach, bool> > AttemptEntry;
 
     DisassemblySequential(
         const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
@@ -40,9 +38,9 @@ class DisassemblySequential : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Subassembly SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, vector<CfgType>> Expand(DisassemblyNode* _q,
-                                      const Subassembly& _subassembly) override;
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+                                      const Formation& _subassembly) override;
 
     list<DisassemblyNode*> m_nodeQueue;
 
@@ -95,7 +93,7 @@ Iterate() {
     return;
   }
 
-  Expand(node, Subassembly());
+  Expand(node, Formation());
 }
 
 template <typename MPTraits>
@@ -108,8 +106,8 @@ SelectExpansionNode() {
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<unsigned int> robotParts;
-    for (unsigned int i = 0; i < this->m_numParts; ++i)
+    vector<size_t> robotParts;
+    for (size_t i = 0; i < this->m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -135,25 +133,25 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-vector<unsigned int>
+typename DisassemblyMethod<MPTraits>::Formation
 DisassemblySequential<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
-  return Subassembly();
+  return Formation();
 }
 
 template <typename MPTraits>
-pair<bool, vector<typename DisassemblySequential<MPTraits>::CfgType>>
+pair<bool, typename DisassemblySequential<MPTraits>::VIDPath>
 DisassemblySequential<MPTraits>::
-Expand(DisassemblyNode* _node, const Subassembly& _subassembly) {
+Expand(DisassemblyNode* _node, const Formation& _subassembly) {
   if(this->m_debug)
     cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
          << endl;
 
   VID newVID;
-  vector<vector<CfgType>> removingPaths;
-  Subassembly singleSub;
+  vector<VIDPath> removingPaths;
+  Formation singleSub;
   DisassemblyNode* newNode = nullptr;
 
   // first test all single bodies for expansion with mating and rrt approach
@@ -164,7 +162,7 @@ Expand(DisassemblyNode* _node, const Subassembly& _subassembly) {
       parts.push_back(part);
 
   for (auto &part : parts) {
-    Subassembly sub = {part};
+    Formation sub = {part};
     singleSub = sub;
     newNode = nullptr;
     // expand
@@ -243,7 +241,7 @@ Expand(DisassemblyNode* _node, const Subassembly& _subassembly) {
     }
   }
 
-  return make_pair(true, vector<CfgType>());
+  return make_pair(true, VIDPath());
 }
 
 #endif

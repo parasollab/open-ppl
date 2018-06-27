@@ -13,11 +13,10 @@
 template <typename MPTraits>
 class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename RoadmapType::VID            VID;
-    typedef vector<unsigned int>                 Subassembly;
+//    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+    typedef typename DisassemblyMethod<MPTraits>::VID            VID;
+    typedef typename DisassemblyMethod<MPTraits>::VIDPath        VIDPath;
+    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
@@ -38,13 +37,13 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Subassembly SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, vector<CfgType>> Expand(DisassemblyNode* _q,
-                                   const Subassembly& _subassembly) override;
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+                                   const Formation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
-                    const vector<unsigned int>& _removedParts,
-                    const vector<vector<CfgType>>& _removingPaths,
+                    const vector<size_t>& _removedParts,
+                    const vector<VIDPath>& _removingPaths,
                     const bool _isMultiPart);
 
     Approach m_approach = Approach::mating;
@@ -54,14 +53,13 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
 
     bool m_initialMatingRemoval{true};//A flag to keep track of Iterate state
 
-    double m_maxSubassemblyTime = 0;
+    double m_maxFormationTime = 0;
 
     // subassembly candidates
-    vector<Subassembly> m_subassemblies;
+    vector<Formation> m_subassemblies;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
-    using DisassemblyMethod<MPTraits>::m_robot;
 };
 
 template <typename MPTraits>
@@ -100,7 +98,7 @@ Iterate() {
     this->m_successful = true;
     const double initialTime = stats->GetSeconds(initialRemovalClockName);
     stats->SetStat("Total time for in-parallel removal",
-                   initialTime + m_maxSubassemblyTime);
+                   initialTime + m_maxFormationTime);
     return;
   }
 
@@ -117,10 +115,10 @@ Iterate() {
     m_initialMatingRemoval = false;//Only attempt once.
     //Pass the node (will be the root) and its initial parts as the subassembly
     // so that all parts are attempted.
-    for(Subassembly& sub : this->m_predefinedSubassemblies) {
+    for(Formation& sub : this->m_predefinedSubassemblies) {
       if(this->m_debug)
         std::cout << "Attempting initial sub = " << sub << std::endl;
-      pair<bool, vector<CfgType>> result = Expand(node, sub);
+      pair<bool, VIDPath> result = Expand(node, sub);
       if (result.first)
         AppendNode(node, sub, {result.second}, sub.size() > 1);
       else {
@@ -139,20 +137,20 @@ Iterate() {
   else {
     //Not on the initial SA removal step, so attempt each subassembly
     // and time how long it takes for each one, recording the max time.
-    for(unsigned int i = 0; i < this->m_predefinedSubassemblies.size(); i++) {
-      Subassembly sub = this->m_predefinedSubassemblies.at(i);
+    for(size_t i = 0; i < this->m_predefinedSubassemblies.size(); i++) {
+      Formation sub = this->m_predefinedSubassemblies.at(i);
       //Create new clock so we don't accumulate each time:
       const string thisClockName = tempClockName + to_string(i);
       if(this->m_debug)
         std::cout << "Disassembling subassembly " << sub << std::endl;
       stats->StartClock(thisClockName);
       while(!sub.empty()) {
-        std::vector<unsigned int> removedParts;
-        std::vector<std::vector<CfgType> > removalPaths;
-        for(unsigned int j = 0; j < sub.size(); ++j) {
-          const unsigned int part = sub.at(j);
-          const Subassembly partSub({part});
-          pair<bool, vector<CfgType>> result = Expand(node, partSub);
+        std::vector<size_t> removedParts;
+        std::vector<VIDPath> removalPaths;
+        for(size_t j = 0; j < sub.size(); ++j) {
+          const size_t part = sub.at(j);
+          const Formation partSub({part});
+          pair<bool, VIDPath> result = Expand(node, partSub);
           if (result.first) {
             sub.erase(remove(sub.begin(), sub.end(), part), sub.end());
             --j;//decrement so that we don't skip parts when removing
@@ -173,8 +171,8 @@ Iterate() {
       }
       stats->StopClock(thisClockName);
       const double timeTaken = stats->GetSeconds(thisClockName);
-      if(timeTaken > m_maxSubassemblyTime)
-        m_maxSubassemblyTime = timeTaken;
+      if(timeTaken > m_maxFormationTime)
+        m_maxFormationTime = timeTaken;
     }
   }
 }
@@ -188,8 +186,8 @@ SelectExpansionNode() {
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<unsigned int> robotParts;
-    for (unsigned int i = 0; i < m_numParts; ++i)
+    vector<size_t> robotParts;
+    for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -209,7 +207,7 @@ SelectExpansionNode() {
 
     //Do some error checking (that part numbers are valid and #parts in the
     // predefined subs are exactly the same as #parts in problem):
-    vector<unsigned int> initParts = this->m_rootNode->GetCompletePartList();
+    vector<size_t> initParts = this->m_rootNode->GetCompletePartList();
     size_t numberOfParts = 0;
     for(auto& sub : this->m_predefinedSubassemblies) {
       numberOfParts += sub.size();
@@ -229,27 +227,27 @@ SelectExpansionNode() {
 }
 
 template <typename MPTraits>
-vector<unsigned int>
+typename DisassemblyMethod<MPTraits>::Formation
 DisassemblyParallelizedSAs<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
 
-  return Subassembly();
+  return Formation();
 }
 
 template <typename MPTraits>
-pair<bool, vector<typename DisassemblyParallelizedSAs<MPTraits>::CfgType>>
+pair<bool, typename DisassemblyParallelizedSAs<MPTraits>::VIDPath>
 DisassemblyParallelizedSAs<MPTraits>::
-Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
+Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   if (_subassembly.empty())
-    return make_pair(false, vector<CfgType>());
+    return make_pair(false, VIDPath());
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Expand with Subassembly: "
+    std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
          << _subassembly << endl;
 
   VID newVID;
-  vector<CfgType> path;
+  VIDPath path;
   if (m_approach == Approach::rrt) // choose between RRT and mating approach
     path = this->ExpandRRTApproach(_q->vid, _subassembly, newVID);
   else
@@ -264,8 +262,8 @@ Expand(DisassemblyNode* _q, const Subassembly& _subassembly) {
 template <typename MPTraits>
 void
 DisassemblyParallelizedSAs<MPTraits>::
-AppendNode(DisassemblyNode* _parent, const vector<unsigned int>& _removedParts,
-           const vector<vector<CfgType>>& _removingPaths,
+AppendNode(DisassemblyNode* _parent, const vector<size_t>& _removedParts,
+           const vector<VIDPath>& _removingPaths,
            const bool _isMultiPart) {
 
   // update node to new state

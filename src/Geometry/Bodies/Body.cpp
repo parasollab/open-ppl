@@ -261,7 +261,9 @@ Validate() const {
     mesh = m_polyhedron.CGAL();
   }
   catch(std::exception& _e) {
-    throw ParseException(WHERE) << "Warning: invalid polyhedron detected from "
+//    throw ParseException(WHERE)
+    std::cerr
+                                << "Warning: invalid polyhedron detected from "
                                 << "file '" << m_filename << "'."
                                 << "\n\tCould not build a CGAL model of this, "
                                 << "which usually means that the normals are "
@@ -296,7 +298,9 @@ Validate() const {
     return;
 
   // Something isn't good - report errors if requested.
-  throw ParseException(WHERE) << "Warning: invalid polyhedron detected from "
+//  throw ParseException(WHERE)
+  std::cerr
+                              << "Warning: invalid polyhedron detected from "
                               << "file '" << m_filename << "'."
                               << "\n\tnum vertices: " << mesh.size_of_vertices()
                               << "\n\tnum facets: " << mesh.size_of_facets()

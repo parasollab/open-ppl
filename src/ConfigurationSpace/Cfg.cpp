@@ -1124,7 +1124,9 @@ void
 Cfg::
 Write(ostream& _os) const {
 #ifdef VIZMO_MAP
-  _os << "0 "; // uncomment for vizmo?
+  #ifndef GROUP_MAP
+    _os << "0 ";
+  #endif
 #endif
   // Write DOFs.
   _os << scientific << setprecision(17);

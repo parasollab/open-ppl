@@ -33,7 +33,7 @@ class RobotGroup final {
     /// @param _label The group label.
     /// @param _robot The set of robots in this group.
     RobotGroup(MPProblem* const _problem, const std::string& _label,
-        const std::vector<Robot*> _robots);
+               const std::vector<Robot*> _robots);
 
     /// Construct a group from an XML node. The referenced robots must be
     /// specified before the group in the XML file.
@@ -54,12 +54,21 @@ class RobotGroup final {
     /// Get a robot by label.
     Robot* GetRobot(const std::string& _label) const noexcept;
 
+    /// Get all robots
+    std::vector<Robot*> GetRobots() const noexcept { return m_robots; }
+
     /// Get the group index for a robot.
     /// @note This is NOT the index in the MPProblem.
     size_t GetGroupIndex(Robot* const _robot) const noexcept;
 
+    /// Check whether the robot is in the group or not.
+    bool VerifyRobotInGroup(Robot* const _robot) const noexcept;
+
     /// Get the number of robots in the group.
     size_t Size() const noexcept;
+
+    /// Get the number of DOFs accumulated over all robots.
+    size_t TotalDofs() const noexcept;
 
     ///@}
     ///@name Iteration
