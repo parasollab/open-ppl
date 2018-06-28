@@ -24,9 +24,10 @@ main(int _argc, char** _argv) {
       Robot* const r = robot.get();
       if(r->IsVirtual())
         continue;
+
       // Position the robot at zero, or at the task center if one exists.
       std::vector<double> dofs(r->GetMultiBody()->DOF(), 0);
-      if(!problem->GetTasks(r).empty())
+      if(problem->GetTasks(r).front()->GetStartConstraint())
         dofs = problem->GetTasks(r).front()->GetStartConstraint()->
                GetBoundary()->GetCenter();
       r->GetMultiBody()->Configure(dofs);

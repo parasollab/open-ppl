@@ -11,18 +11,17 @@ using namespace mathtool;
 ////////////////////////////////////////////////////////////////////////////////
 /// Denavit-Hartenberg Parameters for describing joint connections.
 ///
-/// @details A description of DH Parameters:
-///   - The z vector of any link frame is on a joint axis.
-///   - d is the algebraic distance along axis z_{i-1} to the point
-///     where the common perpendicular intersects axis z_{i-1}.
-///   - a is the length of the common perpendicular.
-///   - \theta is the angle, about z_{i-1}, that the common
-///     perpendicular makes with vector x_{i-1}.
-///   - \alpha is the angle, about x_i, that vector z_i makes
-///     with vector z_{i-1}.
-/// Here x_i, z_i is x and z direction of current link.
-/// x_{i-1} and z_{i-1} is x and z direction of previous
-/// link.
+/// We have changed from 'alternative' to 'standard' DH parameters on r5929.
+/// This should only affect spherical joints, of which we had no working examples.
+/// In the standard notation, a DH transform looks like two simpler transforms:
+/// One:
+/// - m_d is the offset along the parent z to the common normal (new x)
+/// - m_theta is the rotation about the parent z
+/// Two:
+/// - m_a is the offset along the x axis after transform One
+/// - m_alpha is the rotation about the x axis after transform One
+/// Check wikipedia's article for further details.
+///
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
 class DHParameters {
