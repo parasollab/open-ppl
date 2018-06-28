@@ -58,6 +58,9 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     virtual void Modify(vector<CfgType>& _path,
         vector<CfgType>& _newPath);
 
+    virtual void Modify(RoadmapType* _graph, vector<CfgType>& _path, 
+                        vector<CfgType>& _newPath);
+
   protected:
 
     /// Modifies the input path to a new valid path
@@ -65,7 +68,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     ///        distance of each other
     /// @param _newPath An empty vector to place the resulting modified path
     /// @return Success/failed modification
-    virtual bool ModifyImpl(vector<CfgType>& _path,
+    virtual bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path,
         vector<CfgType>& _newPath) = 0;
 
     /// Appends local plan to path
@@ -124,7 +127,14 @@ template <typename MPTraits>
 void
 PathModifierMethod<MPTraits>::
 Modify(vector<CfgType>& _path, vector<CfgType>& _newPath) {
-  ModifyImpl(_path, _newPath);
+  ModifyImpl(this->GetRoadmap(), _path, _newPath);
+}
+
+template <typename MPTraits>
+void
+PathModifierMethod<MPTraits>::
+Modify(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) {
+  ModifyImpl(_graph, _path, _newPath);
 }
 
 

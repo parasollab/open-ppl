@@ -84,10 +84,14 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
     double m_macEpsilon; //some epsilon
     size_t m_maxIter; //maximum depth of recursion
     size_t m_maxFailures; //maximum number of failures that can ocure while pushing.
+    size_t m_maxProgress; //maximum number of no progress failures that can occure.
     double m_resFactor{1.0}; //factor of the resolution
+
 
     MedialAxisClearanceValidity<MPTraits>* m_macVC{nullptr};  //mac validity checker
     StraightLine<MPTraits> m_envLP, m_macLP;     //straight line local planners
+
+    std::string m_pathModifier;
 
     bool m_macVCAdded{false};
 
@@ -131,6 +135,10 @@ MedialAxisLP(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node),
         MAX_DBL, "Resolution for Iter and Bin");
     m_maxFailures = _node.Read("maxFailures", m_controller == Controller::Iterative,
         0ul, 0ul, (size_t) -1, "Maximun number of medial axis failures for Iter");
+    m_maxProgress = _node.Read("noProgress", m_controller == Controller::Iterative,
+        0ul, 0ul, (size_t) -1, "Maximum number of no progress extentions");
+    m_pathModifier = _node.Read("pathModifier", m_controller == Controller::Iterative,
+        "", "Path modifier used to smooth the edges");
   }
   else
     throw ParseException(_node.Where(),
@@ -493,7 +501,7 @@ MedialAxisLP<MPTraits>::
 IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
                 LPOutput<MPTraits>* _lpOutput,
                 double _posRes, double _oriRes) {
-
+  auto stat = this->GetStatClass();
   if(this->m_debug) {
     cout << "  MedialAxisLP::IsConnectedIter" << endl
          << "  Start  : " << _c1 << endl
@@ -510,6 +518,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
   LPOutput<MPTraits> lpOutput;
   int nticks;
   size_t failures = 0;
+  size_t no_progress = 0;
   double r = m_resFactor;
 
   size_t iter = 0;
@@ -537,6 +546,8 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
         if(this->m_debug)
           cout << "Couldn't connect prev: " << prev
                << " to final: " << _c2 << endl;
+        if(this->m_debug)
+          std::cout << "Fail: Last Local Plan: " << failures << ", " << no_progress << std::endl;
         return false;
       }
 
@@ -546,6 +557,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       if(this->m_debug) {
         VDAddTempEdge(prev, _c2);
         cout << "Final cfg reached. Connected!" << endl;
+        std::cout << "Success: " << failures << ", " << no_progress << std::endl;
       }
       return true;
     }
@@ -559,8 +571,8 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       curr = prev;
       ++failures;
 
-      if(this->m_debug)
-        std::cout << "MA Push failed. Failure count: " << failures << std::endl;
+      if(this->m_debug) {}
+        std::cout << "Fail: Medial Axis Push: " << failures << ", " << no_progress << std::endl;
       continue;
     }
 
@@ -571,28 +583,24 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     }
 
 
-    //check for pushes to previous configs, if true, return false
-    if(curr == prev) {
-      if(this->m_debug)
-        cout << "Push to prev location. Returning false." << endl;
-      return false;
-    }
-
     // checking for progression.
     auto dm = this->GetDistanceMetric(m_dmLabel);
-
-    auto newDistance = dm->Distance(curr, _c2);
-    auto oldDistance = dm->Distance(prev, _c2);
-    if(this->m_debug)
-      std::cout << "New Distance: " << newDistance << " Old Distance: " << oldDistance << std::endl;
-
-    if(newDistance > oldDistance) {
-      if(this->m_debug)
-        std::cout << "Failed to progress enough to the goal cfg: incrementing failures" << std::endl;
+  
+    if(dm->Distance(prev, curr) < _posRes) {
       ++failures;
       curr = prev;
+      stat->IncStat("Failed to extend far enough");
+      if(this->m_debug)
+        std::cout << "Same Point: " << failures << ", " << no_progress << std::endl;
       continue;
+    } 
+    else if(dm->Distance(prev, _c2) < dm->Distance(curr, _c2)) {
+      ++no_progress; 
+      stat->IncStat("Failed to make progress");
+      if(this->m_debug)
+        std::cout << "No Progress: " << failures << ", " << no_progress << std::endl;
     }
+
 
     //check for valid connection between previous cfg and pushed cfg
     //if valid, save path.
@@ -601,7 +609,13 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       if(this->m_debug)
         cout << "Couldn't connect prev: " << prev
              << " to curr: " << curr << endl;
-      return false;
+      stat->IncStat("Invalid Path");
+
+      ++failures;
+      curr = prev;
+      if(this->m_debug)
+        std::cout << "Invalid Local Plan: " << failures << ", " << no_progress << std::endl;
+      continue;
     }
 
     if(this->m_debug)
@@ -618,13 +632,13 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
     // reset the failures at a successful iteration
     // this means that there will have to be m_maxFailures in a row for a
     // failure.
-    failures= 0;
-  } while(failures < m_maxFailures);
+    failures = 0;
+  } while(failures < m_maxFailures and no_progress < m_maxProgress);
 
   //if(this->m_debug)
   //  cout << "Max iter reached. Not connected." << endl;
   if(this->m_debug)
-    std::cout << "Reached the max failure limit: " << m_maxFailures << std::endl;
+    std::cout << "Fail: Max Count: " << failures << ", " << no_progress << std::endl;
   return false;
 }
 
@@ -835,12 +849,16 @@ RemoveBranches(LPOutput<MPTraits>* _lpOutput) {
   _lpOutput->m_intermediates = newIntermediates;
 }
 
+/*
+
+   I am leaving this just in case it is needed later.
+
 template<class MPTraits>
 void
 MedialAxisLP<MPTraits>::
 ReduceNoise(const CfgType& _c1, const CfgType& _c2,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes) {
-
+  
   if(_lpOutput->m_intermediates.empty())
     return;
 
@@ -851,7 +869,8 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   //    add new intermediate
   //  else
   //    add old intermediate
-
+  
+  MethodTimer mt(this->GetStatClass(), "Reduce Noise");
   LPOutput<MPTraits> lpOutput;
 
   CfgType col(this->GetTask()->GetRobot());
@@ -893,6 +912,42 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   _lpOutput->m_path = ReconstructPath(_c1, _c2, newIntermediates,
       _posRes, _oriRes);
   _lpOutput->m_intermediates = newIntermediates;
+}
+*/
+
+#include <memory>
+template<class MPTraits>
+void
+MedialAxisLP<MPTraits>::
+ReduceNoise(const CfgType& _c1, const CfgType& _c2,
+    LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes) {
+
+  MethodTimer mt(this->GetStatClass(), this->GetName() + "::ReduceNoice");
+
+  typename MPTraits::RoadmapType tempGraph(_c1.GetRobot());
+  auto g = tempGraph.GetGraph();
+  auto v1 = g->AddVertex(_c1);
+  std::vector<CfgType> path, newPath;
+  path.push_back(_c1) ;
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+
+  for(auto iter = _lpOutput->m_path.begin() + 1;
+      iter < _lpOutput->m_path.end();
+      ++iter) {
+    auto next = g->AddVertex(*iter);
+    g->AddEdge(v1, next, typename MPTraits::WeightType("edge", dm->Distance(path.back(), *iter)));
+    path.push_back(*iter);
+    v1 = next;
+  }
+
+  path.push_back(_c2);
+
+
+  auto smoother = this->GetPathModifier(m_pathModifier);
+
+  smoother->Modify(&tempGraph, path, newPath);
+
+  _lpOutput->m_path = ReconstructPath(_c1, _c2, newPath, _posRes, _oriRes);
 }
 
 #endif

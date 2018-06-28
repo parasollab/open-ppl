@@ -44,7 +44,7 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
     ///@name Modifier Interface
     ///@{
 
-    virtual bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath)
+    virtual bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath)
         override;
 
     ///@}
@@ -100,7 +100,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 MedialAxisPathModifier<MPTraits>::
-ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
+ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) {
   //MAPS Algorithm
   //Input: _path
   //Ouput: _newPath
@@ -130,13 +130,13 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
   vector<CfgType> path;
   if(m_pmLabel != "NULL") {
     auto pm = this->GetPathModifier(m_pmLabel);
-    pm->Modify(_path, path);
+    pm->Modify(_graph, _path, path);
   }
   else
     path = _path;
 
   //Ensure path comes from the roadmap
-  GraphType* graph = this->GetRoadmap()->GetGraph();
+  GraphType* graph = _graph->GetGraph();
   vector<VID> pathVIDs = this->GetPathVIDs(path, graph);
   if(pathVIDs.empty())
     throw PMPLException("Path Modification", WHERE,

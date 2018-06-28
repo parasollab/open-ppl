@@ -125,6 +125,7 @@ Connect(RoadmapType* _rm,
       cout << "Neighbors | ";
       for(typename vector<pair<VID, double> >::iterator nit = closest.begin(); nit!=closest.end(); ++nit)
         cout << nit->first << " ";
+      std::cout << std::endl;
     }
 
     //test connections through LP

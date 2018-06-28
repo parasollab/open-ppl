@@ -42,7 +42,7 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
     ///@name PathModifierMethod Overrides
     ///@{
 
-    virtual bool ModifyImpl(vector<CfgType>& _originalPath,
+    virtual bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _originalPath,
         vector<CfgType>& _newPath) override;
 
     ///@}
@@ -54,7 +54,8 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
 
     /// @TODO
     vector<pair<CfgType, double>> FindNeighbors(CfgType& _previous,
-        CfgType& _current, CfgType& _next, size_t _maxAttempts);
+        CfgType& _current, CfgType& _next, size_t _maxAttempts,
+        RoadmapType* _graph);
 
     /// Get the minimum clearance for a given configuration.
     /// @param _c The configuration of interest.
@@ -132,7 +133,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 ResamplePathModifier<MPTraits>::
-ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
+ModifyImpl(RoadmapType* _graph, vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
   if(this->m_debug)
     cout << "\n*R* Executing ResampleSmoother::Modifier" << endl;
 
@@ -182,7 +183,7 @@ ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
       CfgType next = *(cit+1);
 
       vector<pair<CfgType, double> > sampledNeighbors =
-          FindNeighbors(previous, current, next, maxAttempts);
+          FindNeighbors(previous, current, next, maxAttempts, _graph);
 
       if(sampledNeighbors.size() > 0) {
         auto nit = sampledNeighbors.begin();
@@ -235,7 +236,7 @@ template <typename MPTraits>
 vector<pair<typename MPTraits::CfgType, double>>
 ResamplePathModifier<MPTraits>::
 FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
-    size_t _maxAttempts) {
+    size_t _maxAttempts, RoadmapType* _graph) {
   size_t numOfSamples = m_numResamples;
   vector<pair<CfgType, double>> result;
   double newConfigurationWeight, oldConfigurationWeight;
@@ -244,7 +245,7 @@ FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
   LPOutput<MPTraits> lpOutput;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
-  GraphType* graph = this->GetRoadmap()->GetGraph();
+  GraphType* graph = _graph->GetGraph();
   Environment* env = this->GetEnvironment();
   auto robot = this->GetTask()->GetRobot();
 

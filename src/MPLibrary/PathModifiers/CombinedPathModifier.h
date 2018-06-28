@@ -13,6 +13,7 @@ class CombinedPathModifier : public PathModifierMethod<MPTraits> {
   public:
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::RoadmapType RoadmapType;
 
     CombinedPathModifier(const vector<string>& _pathModifierLabels = vector<string>());
     CombinedPathModifier(XMLNode& _node);
@@ -20,7 +21,7 @@ class CombinedPathModifier : public PathModifierMethod<MPTraits> {
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
-    bool ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath);
+    bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _originalPath, vector<CfgType>& _newPath) override;
 
   private:
     vector<string> m_pathModifierLabels;
@@ -61,7 +62,7 @@ CombinedPathModifier<MPTraits>::Print(ostream& _os) const {
 
 template <typename MPTraits>
 bool
-CombinedPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
+CombinedPathModifier<MPTraits>::ModifyImpl(RoadmapType* _graph, vector<CfgType>& _originalPath, vector<CfgType>& _newPath) {
   if(this->m_debug)
     cout << "\n*C* Executing CombinedPathModifier::Modifier" << endl;
 
@@ -72,7 +73,7 @@ CombinedPathModifier<MPTraits>::ModifyImpl(vector<CfgType>& _originalPath, vecto
     if(this->m_debug)
       cout << "*C* Executing path modifier : " << *it << endl;
     tmpPath = _newPath;
-    this->GetPathModifier(*it)->Modify(tmpPath, _newPath);
+    this->GetPathModifier(*it)->Modify(_graph, tmpPath, _newPath);
   }
 
   return false;

@@ -26,7 +26,7 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
     virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
-    bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
+    bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) override;
 
   private:
     string m_lpLabel; // Local planner
@@ -67,11 +67,10 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 ShortcuttingPathModifier<MPTraits>::
-ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
-
+ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) {
   if(this->m_debug) cout << "\n*S* Executing ShortcuttingPathModifier::Modifier" << endl;
-
-  GraphType* graph = this->GetRoadmap()->GetGraph();
+  
+  auto graph = _graph ? _graph->GetGraph() : this->GetRoadmap()->GetGraph();
 
   vector<VID> originalPathVIDs = this->GetPathVIDs(_path, graph);
 
@@ -174,6 +173,7 @@ ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
       << " is empty. Aborting smoothing operation(s)." << endl;
     return false;
   }
+   
 }
 
 #endif

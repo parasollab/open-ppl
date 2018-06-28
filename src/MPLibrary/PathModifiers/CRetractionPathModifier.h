@@ -47,7 +47,7 @@ class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
     ///@name PathModifierMethod Overrides
     ///@{
 
-    bool ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath);
+    bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath);
 
     ///@}
 
@@ -108,7 +108,7 @@ Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 CRetractionPathModifier<MPTraits>::
-ModifyImpl(vector<CfgType>& _path, vector<CfgType>& _newPath) {
+ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) {
   //C-Retraction
   //Input: _path
   //Output: _newPath
