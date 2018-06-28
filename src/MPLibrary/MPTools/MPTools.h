@@ -13,6 +13,7 @@
 #include "TetGenDecomposition.h"
 #include "TopologicalMap.h"
 #include "TRPTool.h"
+#include "ReachabilityUtil.h"
 #include "MPLibrary/MPTools/LKHSearch.h"
 #include "MPLibrary/LearningModels/SVMModel.h"
 
@@ -65,6 +66,7 @@ class MPToolsType final {
   LabelMap<SafeIntervalTool>         m_safeIntervalTools;
   LabelMap<LKHSearch> m_lkhSearchTools;
   LabelMap<TRPTool> m_trpTools;
+  LabelMap<ReachabilityUtil> m_reachabilityUtils;
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
@@ -228,6 +230,19 @@ class MPToolsType final {
         const WorkspaceDecomposition* _decomposition);
 
     ///@}
+    ///@name Reachability
+    ///@{
+  
+    /// Get a Reachability Utility
+    /// @param _label The label of the decomposition to use.
+    ReachabilityUtil<MPTraits>* GetReachabilityUtil(const std::string& _label) const;
+
+    /// Set a reachability utility  by label.
+    /// @param _label The label for this utility
+    /// @param _decomposition the reachability utility
+    void SetReachabilityUtil(const std::string& _label, ReachabilityUtil<MPTraits>* _util);
+
+    ///}
 
   private:
 
@@ -364,6 +379,10 @@ ParseXML(XMLNode& _node) {
 
       SVMModel<MPTraits>::SetDefaultParameters(child);
     }
+    else if(child.Name() == "ReachabilityUtil") {
+      auto util = new ReachabilityUtil<MPTraits>(child);
+      SetReachabilityUtil(util->GetLabel(), util);
+    }
   }
 }
 
@@ -382,6 +401,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_safeIntervalTools)
     pair.second->Initialize();
+  for(auto& pair : m_reachabilityUtils)
+    pair.second->Initialize();
 }
 
 
@@ -399,6 +420,8 @@ MPToolsType<MPTraits>::
   for(auto& pair : m_safeIntervalTools)
     delete pair.second;
   for(auto& pair : m_decompositions)
+    delete pair.second;
+  for(auto& pair : m_reachabilityUtils)
     delete pair.second;
 }
 
@@ -564,6 +587,25 @@ SetDecomposition(const std::string& _label,
   }
   else
     m_decompositions[_label] = _decomposition;
+}
+
+/*----------------------------- Reachability Utils -------------------------------*/
+
+template <typename MPTraits>
+ReachabilityUtil<MPTraits>*
+MPToolsType<MPTraits>::
+GetReachabilityUtil(const std::string& _label) const {
+  auto util = m_reachabilityUtils.find(_label);
+  if(util == m_reachabilityUtils.end()) return nullptr;
+  return util->second;
+}
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetReachabilityUtil(const std::string& _label,
+    ReachabilityUtil<MPTraits>* _util) {
+  SetUtility(_label, _util, m_reachabilityUtils);
 }
 
 /*---------------------------------- Helpers ---------------------------------*/

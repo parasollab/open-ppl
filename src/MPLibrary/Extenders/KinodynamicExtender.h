@@ -58,7 +58,17 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     virtual double GetMaxDistance() const override;
 
     ///@}
+    ///@name Helpers
+    ///@{
 
+    /// Applies a single control at a starting state for m_numSteps.
+    /// @param      _start      The start configuration.
+    /// @param      _con        The Control used.
+    /// @return     The resulting cfg after _start has been stepped m_numSteps
+    //              using _con as the control.
+    CfgType ApplyControl(const CfgType& _start, const Control& _con);
+    
+    ///@}
   protected:
 
     ///@name Helpers
@@ -201,6 +211,21 @@ GetMaxDistance() const {
 }
 
 /*------------------------------ Helpers -------------------------------------*/
+template <typename MPTraits>
+typename MPTraits::CfgType
+KinodynamicExtender<MPTraits>::
+ApplyControl(const CfgType& _start, const Control& _con) {
+    auto robot = _start.GetRobot();
+    CfgType temp(robot), end(robot);
+    LPOutput<MPTraits> lp;
+  
+    // temp is the last valid cfg.
+    if(ApplyControl(_start, end, temp, lp, m_numSteps, _con))
+      return temp;
+    // Apply control returns false if the min distance is not reached.
+    // So since that is the case we want to return the start cfg.
+    else return _start;
+}
 
 template<typename MPTraits>
 bool
