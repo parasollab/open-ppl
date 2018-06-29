@@ -3,6 +3,8 @@
 
 #include "HardwareInterface.h"
 
+#include <atomic>
+
 class SensorCommand;
 namespace mathtool {
   class Transformation;
@@ -10,7 +12,8 @@ namespace mathtool {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An abstract interface for a hardware sensor.
+/// An abstract interface for a hardware sensor that measures the robot's world
+/// state (either base transformation and/or joint angles).
 ////////////////////////////////////////////////////////////////////////////////
 class SensorInterface : public HardwareInterface {
 
@@ -36,7 +39,7 @@ class SensorInterface : public HardwareInterface {
     ///@name Hardware Properties
     ///@{
 
-    virtual HardwareType GetHardwareType() const noexcept;
+    virtual HardwareType GetHardwareType() const noexcept override;
 
     ///@}
     ///@name Sensor Interface
@@ -48,6 +51,12 @@ class SensorInterface : public HardwareInterface {
 
     /// Instruct the sensor to take a measurement.
     virtual void SendCommand(const SensorCommand& _c) = 0;
+
+    /// Check if the sensor has completed its measurement.
+    bool IsReady() const noexcept;
+
+    /// Get the timestep when the last measurement was completed.
+    size_t GetLastTimestamp() const noexcept;
 
     /// Get the last transformation measurements.
     virtual std::vector<mathtool::Transformation> GetLastTransformations();
@@ -66,6 +75,17 @@ class SensorInterface : public HardwareInterface {
     ///       eigen will probably be the choice.
 
     ///@}
+
+  protected:
+
+    ///@name Internal State
+    ///@{
+
+    std::atomic<bool> m_ready{false};   ///< Is the measurement is ready to read?
+    std::atomic<size_t> m_timestamp{0}; ///< Timestep of last completed measurement.
+
+    ///@}
+
 };
 
 #endif

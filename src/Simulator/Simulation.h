@@ -74,6 +74,10 @@ class Simulation : public base_visualization {
     /// @return The number of steps needed to represent _dt.
     static size_t NearestNumSteps(const double _dt) noexcept;
 
+    /// Get the current timestamp.
+    /// @return The number of steps taken so far.
+    static size_t GetTimestamp() noexcept;
+
     ///@}
     ///@name Simulation Interface
     ///@{
@@ -175,6 +179,7 @@ class Simulation : public base_visualization {
     std::atomic<bool> m_running{false};    ///< Is the simulation running?
     volatile size_t m_backloggedSteps{0};  ///< Number of precomputed steps.
     size_t m_backlogMax{1};                ///< Max number of precomputed steps.
+    std::atomic<size_t> m_timestep{0};     ///< Total steps taken.
 
     const bool m_editMode{false};             ///< Are we in edit mode?
 

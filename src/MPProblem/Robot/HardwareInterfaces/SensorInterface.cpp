@@ -18,6 +18,20 @@ GetHardwareType() const noexcept {
 
 /*----------------------------- Sensor Interface -----------------------------*/
 
+bool
+SensorInterface::
+IsReady() const noexcept {
+  return m_ready;
+}
+
+
+size_t
+SensorInterface::
+GetLastTimestamp() const noexcept {
+  return m_timestamp;
+}
+
+
 std::vector<mathtool::Transformation>
 SensorInterface::
 GetLastTransformations() {

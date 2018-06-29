@@ -2,6 +2,7 @@
 
 #include "ArucoMarkerMap.h"
 #include "Commands.h"
+#include "Simulator/Simulation.h"
 #include "Utilities/XMLNode.h"
 
 #include "detector_server/packet.h"
@@ -15,7 +16,7 @@ static constexpr double arucoDetectorCommunicationTime = .3;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An observation of a marker relative to the camera's current position.
+/// An observation of the camera's position in a marker's local frame.
 ////////////////////////////////////////////////////////////////////////////////
 struct ArucoObservation {
 
@@ -49,6 +50,7 @@ ArucoDetectorInterface(XMLNode& _node, const std::string& _ip,
   // Connect to the netbook's socket for aruco data.
   m_socket = std::unique_ptr<nonstd::tcp_socket>(
       new nonstd::tcp_socket(m_ip, std::to_string(m_port)));
+  m_ready = true;
 }
 
 
@@ -68,9 +70,14 @@ void
 ArucoDetectorInterface::
 SendCommand(const SensorCommand& _c) {
   std::lock_guard<std::mutex> guard(m_lock);
+  m_ready = false;
 
   // Clear the previous measurement.
   m_observations.clear();
+
+  // Tell the detector to take a measurement.
+  bool go = true;
+  *m_socket << go;
 
   // Get the number of markers observed.
   char c;
@@ -84,6 +91,9 @@ SendCommand(const SensorCommand& _c) {
 
     m_observations.emplace_back(p);
   }
+
+  m_timestamp = Simulation::GetTimestamp();
+  m_ready = true;
 }
 
 
@@ -105,7 +115,8 @@ GetLastTransformations() {
 std::vector<double>
 ArucoDetectorInterface::
 GetUncertainty() {
-  /// @TODO Determine our measurement uncertainty.
+  /// @TODO Determine our measurement uncertainty. This should be a vector of
+  ///       three elements which describe the error in {x, y, t}.
   return {};
 }
 

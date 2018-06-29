@@ -78,7 +78,7 @@ class Agent {
 
     /// Is this agent a child of some group/aggregate?
     virtual bool IsChild() const noexcept;
-    
+
     ///@}
     ///@name Task Management
     ///@{
@@ -142,6 +142,15 @@ class Agent {
     void SetCapability(std::string _capability);
 
   protected:
+
+    /// Instruct the agent to enqueue a command for gathering sensor readings.
+    void Localize();
+
+    /// Is the agent waiting on sensor data?
+    bool IsLocalizing() const noexcept;
+
+    /// Estimate the state of the robot from the last localization data.
+    Cfg EstimateState();
 
     /// Continue executing the last controls if time remains.
     /// @return True if we still have time left on the last controls, false if

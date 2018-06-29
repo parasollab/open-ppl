@@ -11,6 +11,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
+#include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/PMPLExceptions.h"
 
@@ -56,17 +57,20 @@ GetTask() const noexcept {
   return m_task;
 }
 
+
 std::string
 Agent::
 GetCapability() const noexcept {
   return m_capability;
 }
 
-void 
+
+void
 Agent::
 SetCapability(std::string _capability) {
   m_capability = _capability;
 }
+
 /*------------------------------ Internal State ------------------------------*/
 
 bool
@@ -175,6 +179,58 @@ PauseAgent(const size_t _steps) {
 }
 
 
+void
+Agent::
+Localize() {
+  // Get the hardware and sensor interface. If either is null, this agent has no
+  // sensor and cannot localize.
+  auto hardware = m_robot->GetHardwareQueue();
+  if(!hardware)
+    return;
+
+  auto sensor = hardware->GetSensor();
+  if(!sensor)
+    return;
+
+  // Pause the agent to make sure the hardware actuator doesn't continue
+  // executing a previous motion command while localizing.
+  PauseAgent(1);
+
+  // Ask sensor to take measurement.
+  hardware->EnqueueCommand(SensorCommand());
+}
+
+
+bool
+Agent::
+IsLocalizing() const noexcept {
+  // Get the hardware and sensor interface. If either is null, this agent has no
+  // sensor and cannot localize.
+  auto hardware = m_robot->GetHardwareQueue();
+  if(!hardware)
+    return false;
+
+  auto sensor = hardware->GetSensor();
+  if(!sensor)
+    return false;
+
+  // We are localizing if the sensor isn't ready.
+  return !sensor->IsReady();
+}
+
+
+Cfg
+Agent::
+EstimateState() {
+  // Get odometry relative to last localization.
+  // Get last sensor readings.
+  // Feed into state estimator.
+  // Return result.
+
+  return Cfg();
+}
+
+
 bool
 Agent::
 ContinueLastControls() {
@@ -192,6 +248,11 @@ ContinueLastControls() {
 
   --m_stepsRemaining;
   ExecuteControlsSimulation(m_currentControls);
+
+  // TEST LOCALIZATION
+  if(m_stepsRemaining == 0) {
+    Localize();
+  }
   return true;
 }
 
@@ -204,7 +265,7 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   m_stepsRemaining = _steps - 1;
 
   if(m_debug) {
-    std::cout << "New controls selected for the next " << m_stepsRemaining
+    std::cout << "New controls selected for the next " << m_stepsRemaining + 1
               << " steps:";
     for(const auto& c : m_currentControls)
       std::cout << "\n\t" << c;

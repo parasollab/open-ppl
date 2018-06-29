@@ -56,6 +56,12 @@ class RobotCommandQueue final {
     /// Get the longest communication time for any piece of hardware.
     double GetCommunicationTime() const;
 
+    /// Get the robot's base/actuator.
+    ActuatorInterface* GetActuator() const noexcept;
+
+    /// Get the robot's sensor.
+    SensorInterface* GetSensor() const noexcept;
+
     ///@}
     ///@name Command Queue Manipulation
     ///@{

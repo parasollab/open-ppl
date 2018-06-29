@@ -83,6 +83,12 @@ NearestNumSteps(const double _dt) noexcept {
 }
 
 
+size_t
+Simulation::
+GetTimestamp() noexcept {
+  return s_singleton->m_timestep;
+}
+
 /*-------------------------- Simulation Interface ----------------------------*/
 
 void
@@ -135,6 +141,8 @@ SimulationStep() {
   // Push the current transforms for all rendering objects.
   {
     std::lock_guard<std::mutex> lock(m_guard);
+
+    ++m_timestep;
 
     // If we have already pre-computed the maximum number of steps allowed,
     // don't do anything.

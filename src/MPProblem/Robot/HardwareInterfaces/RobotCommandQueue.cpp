@@ -37,6 +37,20 @@ GetCommunicationTime() const {
                   m_sensor.get() ? m_sensor->GetCommunicationTime() : 0);
 }
 
+
+ActuatorInterface*
+RobotCommandQueue::
+GetActuator() const noexcept {
+  return m_base.get();
+}
+
+
+SensorInterface*
+RobotCommandQueue::
+GetSensor() const noexcept {
+  return m_sensor.get();
+}
+
 /*------------------------------ Command Queue -------------------------------*/
 
 std::shared_ptr<Command>
@@ -79,6 +93,7 @@ IsIdle() const {
 bool
 RobotCommandQueue::
 FullStop() {
+  std::cout << "Calling full stop." << std::endl;
   return m_base->FullStop();
 }
 

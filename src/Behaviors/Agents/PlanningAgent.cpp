@@ -1,5 +1,7 @@
 #include "PlanningAgent.h"
 
+#include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
+#include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MetricUtils.h"
@@ -21,7 +23,7 @@ PlanningAgent(Robot* const _r, const PlanningAgent& _a) : Agent(_r, _a)
 PlanningAgent::
 PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
   // Currently there are no parameters. Parse XML options here.
-  
+
 }
 
 
@@ -58,16 +60,36 @@ PlanningAgent::
 Step(const double _dt) {
   Initialize();
 
-  // If the agent is planning, skip this step.
-  if(m_planning)
+  // If the agent is planning or localizing, skip this step.
+  if(IsPlanning() or IsLocalizing())
     return;
+
+  // TEST LOCALIZATION
+  // Get the transform estimates and print them
+  auto hardware = m_robot->GetHardwareQueue();
+  if(hardware) {
+    auto sensor = hardware->GetSensor();
+    if(sensor) {
+      auto transformations = sensor->GetLastTransformations();
+
+      std::cout << "***\nSaw " << transformations.size() << " markers:";
+      for(auto& t : transformations)
+      {
+        std::cout << "\n\t" << t.translation()
+                  << "\n\t" << t.rotation()
+                  << std::endl;
+      }
+      std::cout << std::endl;
+    }
+  }
+
 
   // Wait for the previous controls to finish if they still have time remaining.
   if(ContinueLastControls())
     return;
 
   // If we have no task, select the next one.
-  if(!GetTask() && !SelectTask()) {
+  if(!GetTask() and !SelectTask()) {
     // If no incomplete tasks remain, we are done.
     if(m_debug)
       std::cout << "Completed all tasks, halting robot." << std::endl;
@@ -141,7 +163,7 @@ GetPlanVersion() const {
   return m_planVersion;
 }
 
-void 
+void
 PlanningAgent::
 SetMPLibrary(MPLibrary* _library){
   m_library = std::unique_ptr<MPLibrary>(_library);
@@ -158,7 +180,7 @@ GeneratePlan() {
   auto position = m_robot->GetDynamicsModel()->GetSimulatedState();
   auto start = std::unique_ptr<CSpaceConstraint>(
       new CSpaceConstraint(m_robot, position));
-  
+
   GetTask()->SetStartConstraint(std::move(start));
   // Create a copy of the problem so that we can use the data objects in planning
   // without affecting the rest of the simulation.
