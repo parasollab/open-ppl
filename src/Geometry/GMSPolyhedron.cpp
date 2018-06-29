@@ -668,42 +668,41 @@ CGAL() const {
 GMSPolyhedron
 GMSPolyhedron::
 ComputeConvexHull() const {
-
   // Compute convex hull of non-collinear points with CGAL.
-  const auto& points = m_cgalPoints;
   CGALPolyhedron poly;
-  CGAL::convex_hull_3(points.begin(), points.end(), poly);
+  CGAL::convex_hull_3(m_cgalPoints.begin(), m_cgalPoints.end(), poly);
+
   GMSPolyhedron convexHull;
 
-  // Convert from CGAL points to our Vector3d to store the convex hull.
-  for(auto vit = poly.points_begin(); vit != poly.points_end(); ++vit)
+  // Add the convex hull points computed by CGAL to our output object.
+  for(auto vit = poly.points_begin(); vit != poly.points_end(); ++vit) {
     convexHull.m_vertexList.emplace_back(
         to_double((*vit)[0]), to_double((*vit)[1]), to_double((*vit)[2]));
+    convexHull.m_cgalPoints.emplace_back(*vit);
+  }
 
-  //iterate through convex hull facets
-    for(CGALPolyhedron::Facet_iterator fit = poly.facets_begin();
-        fit != poly.facets_end(); ++fit) {
-      HalfedgeFacetCirculator he = fit->facet_begin();
-      vector<int> indexes;
-      vector<Vector3d> points;
-      do
-      {
-        indexes.push_back(std::distance(poly.vertices_begin(), he->vertex()));
-        points.push_back(Vector3d(
-            to_double(he->vertex()->point()[0]),
-            to_double(he->vertex()->point()[1]),
-            to_double(he->vertex()->point()[2])));
-      } while(++he != fit->facet_begin());
+  // Add the convex hull facets computed by CGAL to our output object.
+  for(CGALPolyhedron::Facet_iterator fit = poly.facets_begin();
+      fit != poly.facets_end(); ++fit) {
+    // Each facet is described by a set of half-edges. Get the vertex/point
+    // indexes in each facet.
+    HalfedgeFacetCirculator he = fit->facet_begin();
+    vector<int> indexes;
+    do {
+      indexes.push_back(std::distance(poly.vertices_begin(), he->vertex()));
+    } while(++he != fit->facet_begin());
 
-      if(indexes.size() < 3) {
-        cout << "shouldn't have polygon of less than 3 vertices." << endl;
-        exit(0);
-      }
-      convexHull.m_polygonList.emplace_back(GMSPolygon(indexes[0], indexes[1],
-            indexes[2], points));
-    }
+    // Ensure we got a valid polygon.
+    if(indexes.size() < 3)
+      throw RunTimeException(WHERE) << "Polygons can't have less than 3 vertices."
+                                    << std::endl;
 
-    return convexHull;
+    // Add this polygon to the convex hull.
+    convexHull.m_polygonList.emplace_back(GMSPolygon(indexes[0], indexes[1],
+          indexes[2], convexHull.m_vertexList));
+  }
+
+  return convexHull;
 }
 
 /*-------------------------- Initialization Helpers --------------------------*/
