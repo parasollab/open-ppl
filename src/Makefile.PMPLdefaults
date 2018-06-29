@@ -349,6 +349,7 @@ SIM_SRCS := \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableMultiBody.cpp \
   Visualization/DrawablePath.cpp \
+	Visualization/DrawableRoadmap.cpp \
   Visualization/Gui/EditBodyDialog.cpp \
   Visualization/Gui/EditCfgDialog.cpp \
   Visualization/Gui/EditConnectionDialog.cpp \
