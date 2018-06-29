@@ -1,6 +1,8 @@
 #include "HardwareInterface.h"
 
+#ifdef PMPL_USE_ARUCO
 #include "ArucoDetectorInterface.h"
+#endif
 #ifdef PMPL_USE_ICREATE
 #include "ICreateInterface.h"
 #endif
