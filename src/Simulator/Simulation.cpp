@@ -10,9 +10,9 @@
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
-#include "Utilities/PMPLExceptions.h"
 #include "Visualization/DrawableMultiBody.h"
 #include "Visualization/DrawablePath.h"
+#include "Visualization/DrawableRoadmap.h"
 
 #include "nonstd/io.h"
 #include "nonstd/numerics.h"
@@ -214,6 +214,9 @@ render() {
   for(auto d : m_paths.get_all())
     d->render();
 
+  for(auto d : m_roadmaps.get_all())
+    d->render();
+
   // Rrrrrender.
   base_visualization::render();
 }
@@ -298,6 +301,24 @@ RemovePath(const size_t _id) {
   delete path;
 }
 
+size_t
+Simulation::
+AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph, const glutils::color& _color) {
+  if(!_graph)
+    throw RunTimeException(WHERE, "Cannot draw a NULL graph.");
+
+  return m_roadmaps.add(new DrawableRoadmap(_graph, _color));
+}
+
+void
+Simulation::
+RemoveRoadmap(const size_t _id) {
+  std::lock_guard<std::mutex> lock(m_guard);
+
+  // Remove this path from the collection and release it.
+  DrawableRoadmap* roadmap = m_roadmaps.take(_id);
+  delete roadmap;
+}
 /*--------------------------------- Editing ----------------------------------*/
 
 void

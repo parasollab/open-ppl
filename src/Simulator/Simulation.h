@@ -9,14 +9,23 @@
 
 #include "sandbox/base_visualization.h"
 #include "nonstd/collection.h"
+#include "Utilities/PMPLExceptions.h"
+#include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 
+//template <typename Vertex, typename E> class RoadmapGraph;
+//
+//template <typename T> class DefaultWeight;
 class BulletEngine;
 class Cfg;
 class DrawableMultiBody;
 class DrawablePath;
+class DrawableRoadmap;
 class MPProblem;
 class MultiBody;
 class StatClass;
+
 
 /// @TODO Update gl_visualizer so that the main window is a singleton and
 ///       accessible via a static getter.
@@ -107,6 +116,16 @@ class Simulation : public base_visualization {
     /// @param _id The path ID.
     void RemovePath(const size_t _id);
 
+    /// Draw a Roadmap
+    /// @param _graph the graph to rendered
+    /// @param _c The line color.
+    /// @return The ID of the path.
+    size_t AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph, const glutils::color& _c);
+
+    /// Remove a path from the scene.
+    /// @param _id The path ID.
+    void RemoveRoadmap(const size_t _id);
+
     ///@}
     ///@name Editing
     ///@{
@@ -162,6 +181,8 @@ class Simulation : public base_visualization {
     std::unique_ptr<StatClass> m_stats;       ///< StatClass for time profiling.
 
     nonstd::collection<DrawablePath> m_paths; ///< Paths we are drawing.
+
+    nonstd::collection<DrawableRoadmap> m_roadmaps; ///< Roadmaps to be drawn.
 
     ///@}
     ///@name Deleted Functions
