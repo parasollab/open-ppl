@@ -74,6 +74,7 @@ class PathFollowingAgent : public PlanningAgent {
 
     size_t m_pathVisualID{0}; ///< The ID of the path drawing.
 
+
     ///@}
 
 };

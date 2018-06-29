@@ -124,6 +124,7 @@ class PlanningAgent : public Agent {
     std::atomic<bool> m_planning{false};    ///< Is the agent currently planning.
     std::atomic<size_t> m_planVersion{1};   ///< The current plan version.
 
+    size_t m_roadmapVisualID{0}; ///< The ID of the roadmap drawing.
 
     ///@}
 

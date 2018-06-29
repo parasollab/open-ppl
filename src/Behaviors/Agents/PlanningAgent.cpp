@@ -100,6 +100,11 @@ Uninitialize() {
   m_library.reset();
   m_solution.reset();
   SetTask(nullptr);
+
+  if(m_roadmapVisualID)
+    Simulation::Get()->RemoveRoadmap(m_roadmapVisualID);
+
+  m_roadmapVisualID = 0;
 }
 
 
@@ -186,6 +191,10 @@ PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Initialize the solution.
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
+  
+  // add DrawableRoadmap to be drawn
+  m_roadmapVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap()->GetGraph(),
+      glutils::color::green);
 
   // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());
