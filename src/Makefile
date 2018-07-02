@@ -27,10 +27,10 @@ group_map := #-DGROUP_MAP
 ROBOT_DEF ?= PMPCfg
 
 # Build support for iCreate hardware?
-icreate ?= 1
+icreate ?= 0
 
 # Build support for aruco detector hardware?
-aruco ?= 1
+aruco ?= 0
 
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
