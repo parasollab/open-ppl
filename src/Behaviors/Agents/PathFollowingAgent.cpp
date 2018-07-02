@@ -177,6 +177,14 @@ ExecuteTask(const double _dt) {
   auto bestControl = m_robot->GetController()->operator()(current,
       m_path[m_pathIndex], time);
 
+
+  if(m_debug){
+    std::cout << "Printing m_path in agent step function" << std::endl;
+    for(auto cfg : m_path){
+      std::cout << cfg.PrettyPrint() << std::endl;
+    }
+  }
+
   ExecuteControls({bestControl}, steps);
 }
 

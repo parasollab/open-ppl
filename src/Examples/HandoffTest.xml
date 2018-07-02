@@ -8,16 +8,16 @@
 
     <Robot label="member1" filename="iCreate.xml">
       <Agent type="handoff" debug="false" waypointDm="positionEuclidean"
-        capability="iCreate"/>
+        capability="iCreate1"/>
     </Robot>
 
     <Robot label="member2" filename="iCreate.xml">
       <Agent type="handoff" debug="false" waypointDm="positionEuclidean"
-        capability="iCreate"/>
+        capability="iCreate2"/>
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="iCreate.xml">
-      <Agent type="coordinator" dmLabel="euclidean">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true">
         <Member label="member1"/>
         <Member label="member2"/>
         <HandoffEnvironment filename="handoff.env" positionRes=".01"/>
@@ -44,29 +44,38 @@
 
     <Task label="query" robot="coordinator">
       <StartConstraints>
-        <CSpaceConstraint point="8 0 0"/>
+        <CSpaceConstraint point="7 0 0"/>
       </StartConstraints>
       <GoalConstraints>
-        <CSpaceConstraint point="3 0 0"/>
+        <CSpaceConstraint point="1 0 0"/>
       </GoalConstraints>
     </Task>
 
-    <HandoffTemplate label="robotmatingsequence" maxAttempts="10">
-      <Task label="query" robot="coordinator" capability="iCreate">
+    <Task label="query" robot="coordinator">
+      <StartConstraints>
+        <CSpaceConstraint point="3 0 0"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="8 1 0"/>
+      </GoalConstraints>
+    </Task>
+    
+    <HandoffTemplate label="robotmatingsequence" maxAttempts="5">
+      <Task label="query" robot="coordinator" capability="iCreate1">
         <StartConstraints>
-          <CSpaceConstraint bbx="[-1.1:-0.9 ; -0.1:0.1]"/>
+          <CSpaceConstraint bbx="[-1.0:-0.8 ; -0.1:0.1]"/>
         </StartConstraints>
         <GoalConstraints>
-          <CSpaceConstraint point="0 0 0"/>
+          <CSpaceConstraint point="-.2 0 0"/>
         </GoalConstraints>
       </Task>
 
-      <Task label="query" robot="coordinator" capability="iCreate">
+      <Task label="query" robot="coordinator" capability="iCreate2">
         <StartConstraints>
-          <CSpaceConstraint bbx="[2.9:3.1 ; -0.1:0.1]"/>
+          <CSpaceConstraint bbx="[0.8:1.0 ; -0.1:0.1]"/>
         </StartConstraints>
         <GoalConstraints>
-          <CSpaceConstraint point="2 0 0"/>
+          <CSpaceConstraint point=".2 0 0"/>
         </GoalConstraints>
       </Task>
     </HandoffTemplate>
@@ -181,7 +190,7 @@
       <AStarClearance label="asc" vcLabel="pqp_solid" maxTries="6" numNeighbors="3"
         histLength="10" dmLabel="euclidean" clearanceType="exact"
         penetrationType="exact" useBBX="true" positional="true" debug="false"/>
-      <MedialAxisLP label="malpr" controller="recursive"
+      <!--MedialAxisLP label="malpr" controller="recursive"
         macEpsilon="0.1" maxIter="10"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
@@ -198,7 +207,7 @@
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
         positional="true"
-        debug="true" saveIntermediates="true"/>
+        debug="true" saveIntermediates="true"/-->
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
       <ApproxSpheres label="apsph" vcLabel="pqp_solid" dmLabel="euclidean"

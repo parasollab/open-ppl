@@ -50,6 +50,10 @@ class HandoffAgent : public PathFollowingAgent {
 
     MPSolution* GetMPSolution();
 
+    void SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+
+    void AddSubtask(std::shared_ptr<MPTask> _task);
+
   protected:
 
     ///@}
@@ -87,6 +91,9 @@ class HandoffAgent : public PathFollowingAgent {
 
     /// The cost of completing a potential task
     double m_potentialCost;
+
+    /// Stores all of the subtasks that the agent has been assigned
+    std::list<std::shared_ptr<MPTask>> m_queuedSubtasks;
 
     ///@}
 

@@ -45,6 +45,8 @@ class MPHandoffTemplate {
 
     size_t GetMaxAttempts() const;
 
+    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> GetRoadmaps();
+
     RoadmapGraph<Cfg, DefaultWeight<Cfg>>* GetConnectedRoadmap() const; 
 
     std::vector<std::vector<size_t>>& GetDistinctRoadmaps();

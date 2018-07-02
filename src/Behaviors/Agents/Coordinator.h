@@ -187,6 +187,9 @@ class Coordinator : public Agent {
     /// Makes sure all of the agents are ready to execute the plans
     void InitializeAgents();
 
+    /// Copy over the cabaility roadmaps to each of the corresponding agents
+    void CopyCapabilityRoadmaps();
+
     /// Assigns tasks through the auction system concept
     void AssignInitialTasks();
 
@@ -223,6 +226,12 @@ class Coordinator : public Agent {
 
     /// The VIDs of all individual agent roadmaps in each transformed handoff template.
     std::vector<std::vector<size_t>> m_transformedRoadmaps;
+    
+    /// The VIDs of the start and end points of the whole tasks in the
+    /// megaRoadmap
+    std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
+
+    std::unordered_map<std::string, GraphType*> m_capabilityRoadmaps;
     
     GraphType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
 

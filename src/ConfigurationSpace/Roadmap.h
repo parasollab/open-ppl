@@ -141,7 +141,8 @@ template <typename MPTraits>
 void
 Roadmap<MPTraits>::
 SetGraph(GraphType* const _g) noexcept {
-  delete m_graph;
+  //TODO: Either clena up graphs or get rid of the roadmap abstraction
+  //delete m_graph;
   m_graph = _g;
 }
 

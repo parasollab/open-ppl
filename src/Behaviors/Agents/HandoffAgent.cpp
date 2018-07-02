@@ -95,31 +95,40 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   else
     position = m_robot->GetDynamicsModel()->GetSimulatedState();
 
+  std::shared_ptr<MPTask> setupTask(new MPTask(m_robot));
   auto start = std::unique_ptr<CSpaceConstraint>(
       new CSpaceConstraint(m_robot, position));
-  std::shared_ptr<MPTask> setupTask(new MPTask(m_robot));
   setupTask->SetStartConstraint(std::move(start));
   std::unique_ptr<Constraint> setupStart(_task->GetStartConstraint()->Clone());
   setupTask->AddGoalConstraint(std::move(setupStart));
-  
   SetTask(setupTask);
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
   WorkFunction(problemCopy);
-  auto setupPath = m_path;
-  m_potentialCost += m_solution->GetPath()->Length();
+  if(!m_solution->GetPath()->Cfgs().empty()){
+    auto setupPath = m_path;
+    m_potentialCost += m_solution->GetPath()->Length();
 
-  // Compute cost to travel from start constraint to goal constraint
-  SetTask(_task);
-  std::shared_ptr<MPProblem> problemCopyDos(new MPProblem(*m_robot->GetMPProblem()));
-  WorkFunction(problemCopyDos);
-  auto goalPath = m_path;
-  m_potentialCost += m_solution->GetPath()->Length();
-  
-  // Save the computed paths in case this robot is selected to perform the task.
-  m_potentialPath = currentPath;
-  m_potentialPath.insert(m_potentialPath.end(), setupPath.begin(), setupPath.end());
-  m_potentialPath.insert(m_potentialPath.end(), goalPath.begin(), goalPath.end());
+    // Compute cost to travel from start constraint to goal constraint
+    SetTask(_task);
+    std::shared_ptr<MPProblem> problemCopyDos(new MPProblem(*m_robot->GetMPProblem()));
+    WorkFunction(problemCopyDos);
+    
+    if(!m_solution->GetPath()->Cfgs().empty()){
+      auto goalPath = m_path;
+      m_potentialCost += m_solution->GetPath()->Length();
 
+      // Save the computed paths in case this robot is selected to perform the task.
+      m_potentialPath = currentPath;
+      m_potentialPath.insert(m_potentialPath.end(), setupPath.begin(), setupPath.end());
+      m_potentialPath.insert(m_potentialPath.end(), goalPath.begin(), goalPath.end());
+    }
+    else{ // Robot cannot complete the task
+      m_potentialCost = std::numeric_limits<size_t>::max();
+    }
+  }
+  else { // Robot cannot get to the start location of the task
+    m_potentialCost = std::numeric_limits<size_t>::max();
+  }
   // Restore the task/path state to currentTask/currentPath
   SetTask(currentTask);
   m_path = currentPath;
@@ -138,10 +147,10 @@ HandoffAgent::
 GetTaskTime() const {
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   const Cfg position = m_robot->GetDynamicsModel()->GetSimulatedState();
-  std::cout << "Position: " << position.PrettyPrint() << std::endl;
-  std::cout << "Position: "
-            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-            << std::endl;
+  //std::cout << "Position: " << position.PrettyPrint() << std::endl;
+  //std::cout << "Position: "
+  //          << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
+  //          << std::endl;
 
   // Use the controller and dynamics model to generate an ideal course for this
   // path.
@@ -195,9 +204,10 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 
   // Create a task for the parent robot copy (because this is a shared roadmap
   // method).
-  auto parentRobot = m_parentAgent->GetRobot();
-  auto parentCopyRobot = _problem->GetRobot(parentRobot->GetLabel());
-  GetTask()->SetRobot(parentCopyRobot);
+  //auto parentRobot = m_parentAgent->GetRobot();
+  //auto parentCopyRobot = _problem->GetRobot(parentRobot->GetLabel());
+  auto copyRobot = _problem->GetRobot(m_robot->GetLabel());
+  GetTask()->SetRobot(copyRobot);
   std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
   std::cout << "Currently at: " << m_robot->GetDynamicsModel()->GetSimulatedState() << std::endl;
   if(m_solution){
@@ -207,13 +217,14 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
     m_solution = unique_ptr<MPSolution>(new MPSolution(m_robot));
   }
   // Set the solution for appending with the parent copy.
-  m_solution->SetRobot(parentCopyRobot);
+  m_solution->SetRobot(copyRobot);
 
+  m_roadmapVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap()->GetGraph(),
+      glutils::color::green);
   // Solve for the plan.
   std::cout << "Calling Solve for " << m_robot->GetLabel() << std::endl;
 
-  m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(), "LazyPRM",
-      LRand(), "LazyCollisionAvoidance");
+  m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(), "LazyPRM", LRand(), "LazyCollisionAvoidance");
 
   // Reset the modified states.
   GetTask()->SetRobot(m_robot);
@@ -240,8 +251,10 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 HandoffAgent::
 SelectTask(){
-  //TODO: Figure out if we still need this
-  //m_parentAgent->AssignTask(this);
+  if(m_queuedSubtasks.size() == 0)
+    return false;
+  this->SetTask(m_queuedSubtasks.front());
+  m_queuedSubtasks.pop_front();
   return GetTask().get();
 }
 
@@ -267,3 +280,14 @@ GetMPSolution(){
   return m_solution.get();
 }
 
+void
+HandoffAgent::
+SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+  m_solution->GetRoadmap()->SetGraph(_graph);
+}
+
+void 
+HandoffAgent::
+AddSubtask(std::shared_ptr<MPTask> _task){
+  m_queuedSubtasks.push_back(_task);
+}

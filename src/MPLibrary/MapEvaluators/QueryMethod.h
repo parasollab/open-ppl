@@ -489,10 +489,19 @@ template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
+
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "QueryMethod::GeneratePath");
-  stats->IncStat("Graph Search");
+ 
+  // Check for trivial path
+  if(_start == _end){
+    std::vector<VID> path;
+    path.push_back(_end);
+    return path;
+  }
 
+  stats->IncStat("Graph Search");
+  
   // Set up the termination criterion to quit early if we find the _end node.
   SSSPTerminationCriterion<GraphType> termination(
       [_end](typename GraphType::vertex_iterator& _vi,

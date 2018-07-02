@@ -51,6 +51,12 @@ GetMaxAttempts() const {
   return m_maxAttempts;
 }
 
+std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*>
+MPHandoffTemplate::
+GetRoadmaps() {
+  return m_roadmaps;
+}
+
 RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
 MPHandoffTemplate::
 GetConnectedRoadmap() const {
@@ -67,10 +73,16 @@ GetDistinctRoadmaps() {
 void
 MPHandoffTemplate::
 AddRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
-  auto robot = _roadmap->begin()->property().GetRobot();
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
+  //auto robot = _roadmap->begin()->property().GetRobot();
+  //RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(*_roadmap);
+  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap = 
+    new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(_roadmap->GetRobot());
   *roadmap = *_roadmap;
   m_roadmaps.push_back(roadmap);
+  /*for(auto vit = _roadmap->begin(); vit != _roadmap->end(); vit++){
+    const size_t oldVID = vit->descriptor();
+    const size_t newVID = 
+  }*/
 }
 
 
@@ -98,6 +110,7 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
     std::unordered_map<size_t, size_t> oldToNew;
     for(auto vit = roadmap->begin(); vit != roadmap->end(); ++vit) {
       auto oldVID = vit->descriptor();
+      //TODO: This cfg does not have a robot. Need to figure out if this matters
       auto newCfg = vit->property();
       newCfg.SetRobot(_problem->GetRobot(newCfg.GetRobot()->GetLabel()));
       auto newVID = m_connectedRoadmap->AddVertex(newCfg);
@@ -109,8 +122,9 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
       for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
         auto source = oldToNew[eit->source()];
         auto target = oldToNew[eit->target()];
-        if(!roadmap->IsEdge(source, target))
+        if(!m_connectedRoadmap->IsEdge(source, target)){
           m_connectedRoadmap->AddEdge(source, target, eit->property());
+        }
       }
     }
     m_distinctRoadmaps.push_back(currentRoadmap);
