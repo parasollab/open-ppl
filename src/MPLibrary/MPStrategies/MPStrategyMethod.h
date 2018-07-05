@@ -1,5 +1,5 @@
-#ifndef MP_STRATEGY_METHOD_H_
-#define MP_STRATEGY_METHOD_H_
+#ifndef PMPL_MP_STRATEGY_METHOD_H_
+#define PMPL_MP_STRATEGY_METHOD_H_
 
 #include "Utilities/MPUtils.h"
 #include "Utilities/MetricUtils.h"

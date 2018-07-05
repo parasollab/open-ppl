@@ -1,104 +1,100 @@
-#ifndef EVALUATE_MAP_STRATEGY_H_
-#define EVALUATE_MAP_STRATEGY_H_
+#ifndef PMPL_EVALUATE_MAP_STRATEGY_H_
+#define PMPL_EVALUATE_MAP_STRATEGY_H_
 
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
+#include "Utilities/XMLNode.h"
+
+#include <iostream>
+#include <string>
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the current roadmap using a designated map evaluator. This is
+/// mostly useful in simulations where we need to verify/analyze some property
+/// of a roadmap.
 /// @ingroup MotionPlanningStrategies
-/// @brief TODO
-///
-/// TODO
-///
-/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
-    EvaluateMapStrategy(string _mapFileName = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+    ///@name Construction
+    ///@{
+
+    EvaluateMapStrategy();
+
     EvaluateMapStrategy(XMLNode& _node);
-    virtual ~EvaluateMapStrategy() {}
 
-    virtual void Print(ostream& _os) const;
+    virtual ~EvaluateMapStrategy() = default;
 
-    virtual void ParseXML(XMLNode& _node);
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    virtual void Initialize();
-    virtual void Run();
-    virtual void Iterate() {}
-    virtual void Finalize() {}
+    virtual void Print(std::ostream& _os) const override;
 
-  protected:
+    ///@}
+    ///@name MPStrategy Overrides
+    ///@{
 
-    string m_mapFileName;
+    virtual void Iterate() override;
+    virtual void Finalize() override;
+
+    ///@}
+
 };
 
+/*------------------------------ Construction --------------------------------*/
 
 template <typename MPTraits>
 EvaluateMapStrategy<MPTraits>::
-EvaluateMapStrategy(string _mapFileName,
-    const vector<string>& _evaluatorLabels) : m_mapFileName(_mapFileName) {
-  this->m_meLabels = _evaluatorLabels;
+EvaluateMapStrategy() {
   this->SetName("EvaluateMapStrategy");
 }
 
 
 template <typename MPTraits>
 EvaluateMapStrategy<MPTraits>::
-EvaluateMapStrategy(XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_node) {
+EvaluateMapStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("EvaluateMapStrategy");
-  ParseXML(_node);
-}
-
-
-template <typename MPTraits>
-void
-EvaluateMapStrategy<MPTraits>::
-Print(ostream& _os) const {
-  _os << "EvaluateMapStrategy::";
-  _os << "\n\tmap file = \"" << m_mapFileName << "\"";
-  _os << "\tevaluators: ";
-  for(auto&  l : this->m_meLabels)
-      cout << l << " ";
-}
-
-
-template <typename MPTraits>
-void
-EvaluateMapStrategy<MPTraits>::
-ParseXML(XMLNode& _node) {
-  m_mapFileName = _node.Read("mapFilename", true, "", "Map Filename");
 
   for(auto& child : _node)
     if(child.Name() == "Evaluator") {
-      string method = child.Read("label", true, "", "Map Evaluation Method");
+      std::string method = child.Read("label", true, "", "Map Evaluation Method");
       this->m_meLabels.push_back(method);
     }
 }
 
+/*------------------------- MPBaseObject Overrides ---------------------------*/
 
 template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
-Initialize() {
-  this->GetRoadmap()->Read(m_mapFileName.c_str());
+Print(std::ostream& _os) const {
+  _os << "EvaluateMapStrategy::"
+      << "\n\tevaluators:";
+  for(auto& label : this->m_meLabels)
+    std::cout << " " << label;
+}
+
+/*----------------------- MPStrategyMethod Overrides -------------------------*/
+
+template <typename MPTraits>
+void
+EvaluateMapStrategy<MPTraits>::
+Iterate() {
+  this->EvaluateMap();
 }
 
 
 template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
-Run() {
-  bool passed = this->EvaluateMap();
-  if(passed)
-    cout << "\t  (passed)\n";
-  else {
-    cout << "\t  (failed)\n";
-    return;
-  }
+Finalize() {
+  // Don't print roadmaps or stats for this strategy.
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

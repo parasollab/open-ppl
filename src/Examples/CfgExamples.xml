@@ -518,7 +518,7 @@
       </UAStrategy-->
 
       <!-- EvaluateMapStrategy -->
-      <EvaluateMapStrategy label="EvaluateMapStrategy" mapFilename="3D/3d.map">
+      <EvaluateMapStrategy label="EvaluateMapStrategy">
         <Evaluator label="NodesEval"/>
       </EvaluateMapStrategy>
 
