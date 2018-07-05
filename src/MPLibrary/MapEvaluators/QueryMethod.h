@@ -489,19 +489,15 @@ template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
 GeneratePath(const VID _start, const VID _end) {
-
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "QueryMethod::GeneratePath");
- 
-  // Check for trivial path
-  if(_start == _end){
-    std::vector<VID> path;
-    path.push_back(_end);
-    return path;
-  }
+
+  // Check for trivial path.
+  if(_start == _end)
+    return {_start};
 
   stats->IncStat("Graph Search");
-  
+
   // Set up the termination criterion to quit early if we find the _end node.
   SSSPTerminationCriterion<GraphType> termination(
       [_end](typename GraphType::vertex_iterator& _vi,
@@ -532,7 +528,8 @@ GeneratePath(const VID _start, const VID _end) {
 
   // Run dijkstra's algorithm to find the path, if it exists.
   auto g = this->GetRoadmap()->GetGraph();
-  const SSSPOutput<GraphType> sssp = DijkstraSSSP(g, {_start}, weight);
+  const SSSPOutput<GraphType> sssp = DijkstraSSSP(g, {_start}, weight,
+      termination);
 
   // If the end node has no parent, there is no path.
   if(!sssp.parent.count(_end))
