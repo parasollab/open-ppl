@@ -266,7 +266,8 @@ GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {
     CfgType& cfg1 = _rm->GetGraph()->GetVertex(_vid1);
     CfgType& cfg2 = _rm->GetGraph()->GetVertex(_vid2);
     WeightType w(this->m_lpLabel);
-    return m_clearanceUtility.MinEdgeClearance(cfg1, cfg2, w);
+    vector<double> clearanceVec = m_clearanceUtility.EdgeClearance(cfg1, cfg2, w);
+    return *min_element(clearanceVec.begin(), clearanceVec.end());
   }
 }
 

@@ -21,6 +21,7 @@ struct ClearanceStats {
   double m_min{0};
   double m_max{0};
   double m_var{0};
+  vector<double> m_clearanceAlongPath;
   double m_pathLength{0};
 };
 
@@ -142,7 +143,7 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ClearanceStats PathClearance(vector<VID>& _path);
     ClearanceStats PathClearance(vector<Cfg>& _path);
 
-    double MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
+    vector<double> EdgeClearance(const CfgType& _c1, const CfgType& _c2,
         const WeightType& _weight);
 
     ///@}
@@ -1014,11 +1015,13 @@ RoadmapClearance() {
 
   //loop over graph edges and calculate clearance
   for(auto it = g->edges_begin(); it != g->edges_end(); ++it) {
-    double currentClearance =
-      MinEdgeClearance(g->GetVertex((*it).source()),
+    vector<double> currentClearance =
+      EdgeClearance(g->GetVertex((*it).source()),
           g->GetVertex((*it).target()), (*it).property());
     //Save this value for variance computation later
-    clearanceVec.push_back(currentClearance);
+    clearanceVec.insert(clearanceVec.end(), 
+			currentClearance.begin(), 
+			currentClearance.end());
   }
 
   //min, max, avg, variance of graph edge variances
@@ -1027,6 +1030,7 @@ RoadmapClearance() {
   stats.m_max = *max_element(clearanceVec.begin(), clearanceVec.end());
   stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) /
     clearanceVec.size();
+  stats.m_clearanceAlongPath = clearanceVec;
   double varSum = 0;
   for(auto&  i : clearanceVec)
     varSum += sqr(i - stats.m_avg);
@@ -1060,8 +1064,10 @@ PathClearance(vector<VID>& _path) {
     g->find_edge(ed, vi, ei);
     CfgType& s = g->GetVertex((*ei).source()), t = g->GetVertex((*ei).target());
     pathLength += dm->Distance(s, t);
-    double currentClearance = MinEdgeClearance(s, t, (*ei).property());
-    clearanceVec.push_back(currentClearance);
+    vector<double> currentClearance = EdgeClearance(s, t, (*ei).property());
+    clearanceVec.insert(clearanceVec.end(), 
+			currentClearance.begin(), 
+			currentClearance.end());
   }
 
   //min, max, avg, variance of graph edge variances
@@ -1071,9 +1077,12 @@ PathClearance(vector<VID>& _path) {
   stats.m_max = *max_element(clearanceVec.begin(), clearanceVec.end());
   stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) /
     clearanceVec.size();
+  stats.m_clearanceAlongPath = clearanceVec;
+
   double varSum = 0;
-  for(auto&  i : clearanceVec)
+  for(auto&  i : clearanceVec) {
     varSum += sqr(i - stats.m_avg);
+  }
   stats.m_var = varSum / clearanceVec.size();
 
   return stats;
@@ -1124,8 +1133,10 @@ PathClearance(vector<Cfg>& _path) {
           weight = (*ei).property();
       }
     }
-    double currentClearance = MinEdgeClearance(*cit, *(cit + 1), weight);
-    clearanceVec.push_back(currentClearance);
+    vector<double> currentClearance = EdgeClearance(*cit, *(cit + 1), weight);
+    clearanceVec.insert(clearanceVec.end(), 
+			currentClearance.begin(), 
+			currentClearance.end());
   }
 
   //min, max, avg, variance of graph edge variances
@@ -1135,6 +1146,7 @@ PathClearance(vector<Cfg>& _path) {
   stats.m_max = *max_element(clearanceVec.begin(), clearanceVec.end());
   stats.m_avg = accumulate(clearanceVec.begin(), clearanceVec.end(), 0.0) /
     clearanceVec.size();
+  stats.m_clearanceAlongPath = clearanceVec;
   double varSum = 0;
   for(auto&  i : clearanceVec)
     varSum += sqr(i - stats.m_avg);
@@ -1145,17 +1157,20 @@ PathClearance(vector<Cfg>& _path) {
 
 
 template<class MPTraits>
-double
+vector<double>
 ClearanceUtility<MPTraits>::
-MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
+EdgeClearance(const CfgType& _c1, const CfgType& _c2,
     const WeightType& _weight) {
-  if(_weight.HasClearance())
-    return _weight.GetClearance();
+  //This function calculates the edge clearance
+  //for each intermediate cfg and return a vector
+  //of their clearances.
+
+  //TODO: if the vector of clearance values for an edge 
+  //is already available, return it here.
 
   Environment* env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto robot = this->GetTask()->GetRobot();
-  double minClearance = 1e6;
 
   //Reconstruct the path given the two nodes
   vector<CfgType> intermediates = _weight.GetIntermediates();
@@ -1187,18 +1202,15 @@ MinEdgeClearance(const CfgType& _c1, const CfgType& _c2,
 
   reconEdge.insert(reconEdge.begin(), _c1);
   reconEdge.push_back(_c2);
+  vector<double> clearance;
   for(auto it = reconEdge.begin(); it != reconEdge.end(); ++it) {
     CDInfo collInfo;
     CfgType clrCfg(robot);
     //Decide which collision info function to use
     CollisionInfo(*it, clrCfg, env->GetBoundary(), collInfo);
-    double currentClearance = collInfo.m_minDist;
-    //If newly computed clearance is less than the previous minimum
-    //it becomes the minimum
-    if(currentClearance < minClearance)
-      minClearance = currentClearance;
+    clearance.push_back(collInfo.m_minDist);
   }
-  return minClearance;
+  return clearance;
 }
 
 /*--------------------------- Medial Axis Utility ----------------------------*/
