@@ -80,6 +80,9 @@ class RobotCommandQueue final {
     /// will return false if you have ordered the robot to wait.
     bool IsIdle() const;
 
+    /// Check if the robot has a localizing command currently on the queue.
+    bool IsLocalizing() const;
+
     ///@}
     ///@name Robot Control
     ///@{
@@ -130,6 +133,8 @@ class RobotCommandQueue final {
 
     std::unique_ptr<ActuatorInterface> m_base;  ///< Interface for the base.
     std::unique_ptr<SensorInterface> m_sensor;  ///< Interface for the sensor.
+
+    std::atomic<bool> m_localizing{false}; ///< Is there a localization command in the queue?
 
     ///@}
 

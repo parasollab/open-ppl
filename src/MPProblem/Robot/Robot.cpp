@@ -40,6 +40,11 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
       "and will not be included in the simulation or CD checks.");
 
+  // Get the (optional) capability type for the robot.
+  std::string capability = _node.Read("capability", false, "", "The Robot capability type");
+  std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
+  SetCapability(capability);
+  
   // Get the multibody file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
   const std::string file = _node.Read("filename", false, "", "Robot file name");
@@ -95,7 +100,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       SetAgent(Agent::Factory(this, child));
     }
   }
-
+ 
   // Initialize the emulated battery.
   m_battery = std::unique_ptr<Battery>(new Battery());
 }
@@ -482,6 +487,20 @@ const std::string&
 Robot::
 GetLabel() const noexcept {
   return m_label;
+}
+
+
+const std::string& 
+Robot::
+GetCapability() const noexcept {
+  return m_capability;
+}
+
+
+void
+Robot::
+SetCapability(const std::string& _capability) {
+  m_capability = _capability;
 }
 
 /*---------------------------------- Debug -----------------------------------*/

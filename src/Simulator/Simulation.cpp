@@ -1,5 +1,4 @@
-#include "Simulation.h"
-
+#include "Simulation.h" 
 #include <iostream>
 #include <fstream>
 
@@ -13,12 +12,14 @@
 #include "Visualization/DrawableMultiBody.h"
 #include "Visualization/DrawablePath.h"
 #include "Visualization/DrawableRoadmap.h"
+#include "Visualization/DrawableBoundary.h"
 
 #include "nonstd/io.h"
 #include "nonstd/numerics.h"
 
 
 main_window* theOneWindow = nullptr;
+
 
 /*---------------------------- Construction ----------------------------------*/
 
@@ -48,6 +49,7 @@ Create(std::shared_ptr<MPProblem> _problem, const bool _edit) {
 Simulation::
 ~Simulation() {
   reset();
+
 
   // Print the stats on our way out so that we still get output in the event of
   // an uncaught exception.
@@ -110,6 +112,7 @@ Initialize() {
   AddBBX();
   AddRobots();
   AddObstacles();
+  AddTerrain();
 }
 
 
@@ -225,6 +228,9 @@ render() {
   for(auto d : m_roadmaps.get_all())
     d->render();
 
+  for(auto d : m_boundaries.get_all())
+    d->render();
+
   // Rrrrrender.
   base_visualization::render();
 }
@@ -311,7 +317,10 @@ RemovePath(const size_t _id) {
 
 size_t
 Simulation::
-AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph, const glutils::color& _color) {
+AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+    const glutils::color& _color) {
+  std::lock_guard<std::mutex> lock(m_guard);
+
   if(!_graph)
     throw RunTimeException(WHERE, "Cannot draw a NULL graph.");
 
@@ -327,6 +336,28 @@ RemoveRoadmap(const size_t _id) {
   DrawableRoadmap* roadmap = m_roadmaps.take(_id);
   delete roadmap;
 }
+
+size_t
+Simulation::
+AddBoundary(const Boundary* _boundary, const glutils::color& _color, bool _solid) {
+  std::lock_guard<std::mutex> lock(m_guard);
+  
+  if(!_boundary)
+    throw RunTimeException(WHERE, "Cannot draw a NULL boundary.");
+
+  return m_boundaries.add(new DrawableBoundary(_boundary, _color, _solid));
+}
+
+void
+Simulation::
+RemoveBoundary(const size_t _id) {
+  std::lock_guard<std::mutex> lock(m_guard);
+
+  // Remove this path from the collection and release it.
+  DrawableBoundary* boundary = m_boundaries.take(_id);
+  delete boundary;
+}
+
 /*--------------------------------- Editing ----------------------------------*/
 
 void
@@ -368,7 +399,11 @@ Simulation::
 AddBBX() {
   /// @TODO Our current pseudo-boundary isn't doing anything. Removing it until
   ///       we can implement full support.
-  return;
+  
+
+  // @NOTE: uncomment this to see the bounding box.
+  //auto environment = m_problem->GetEnvironment();
+  //m_boundaryID = this->AddBoundary(environment->GetBoundary(), glutils::color::white);
 #if 0
   const auto& boundary = m_problem->GetEnvironment()->GetBoundary();
 
@@ -434,6 +469,18 @@ AddRobots() {
 
     auto multiBody = robot->GetMultiBody();
     this->add_drawable(new DrawableMultiBody(multiBody));
+  }
+}
+
+void
+Simulation::
+AddTerrain() {
+  auto env = m_problem->GetEnvironment();
+  for(auto& elem : env->GetTerrains()) {
+    for(auto& terrain : elem.second) {
+      auto color = StringToColor(terrain.color);
+      AddBoundary(terrain.boundary.get(), color, false);
+    }
   }
 }
 

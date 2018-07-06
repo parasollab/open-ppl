@@ -14,6 +14,17 @@
 
 /*------------------------------- Construction -------------------------------*/
 
+Terrain::
+Terrain() = default;
+
+
+Terrain::
+Terrain(const Terrain& _terrain) {
+  color = _terrain.color;
+  boundary = _terrain.boundary->Clone();
+}
+
+
 Environment::
 Environment() = default;
 
@@ -45,6 +56,7 @@ Environment(XMLNode& _node) {
 
   if(m_boundaryObstacle)
     CreateBoundaryObstacle();
+
 }
 
 
@@ -75,6 +87,7 @@ operator=(const Environment& _other) {
   m_timeRes             = _other.m_timeRes;
   m_frictionCoefficient = _other.m_frictionCoefficient;
   m_gravity             = _other.m_gravity;
+  m_terrains            = _other.m_terrains;
 
   // Copy the boundary.
   SetBoundary(_other.m_boundary->Clone());
@@ -147,6 +160,28 @@ ReadXMLOptions(XMLNode& _node) {
 
   m_boundaryObstacle = _node.Read("boundaryObstacle", false, m_boundaryObstacle,
       "Create a multibody obstacle for the boundary.");
+  
+  for(auto& child : _node) {
+    if(child.Name() == "Terrain") {
+
+      std::string capability = child.Read("capability", true, "", "The types of "
+          "agents that can be within the terrain boundaries.");
+      std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
+
+      for(auto& grandChild : child) {
+        Terrain terrain;
+        if(grandChild.Name() == "Boundary") {
+          terrain.boundary = std::move(Boundary::Factory(grandChild));
+          
+          std::string color = grandChild.Read("color", false, "blue", "Color of the Terrain");
+          std::transform(color.begin(), color.end(), color.begin(), ::tolower);
+          terrain.color = color;
+          
+          m_terrains[capability].push_back(std::move(terrain));
+        }
+      }
+    }
+  } 
 }
 
 
@@ -530,6 +565,15 @@ const Vector3d&
 Environment::
 GetGravity() const noexcept {
   return m_gravity;
+}
+
+
+/*-------------------------- Terrain Functions -----------------------------*/
+
+const Environment::TerrainMap&
+Environment::
+GetTerrains() const noexcept {
+  return m_terrains;
 }
 
 /*------------------------------- Helpers ------------------------------------*/

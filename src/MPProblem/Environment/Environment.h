@@ -13,12 +13,25 @@ using namespace mathtool;
 
 #include "Geometry/Boundaries/Boundary.h"
 #include "Utilities/MPUtils.h"
+#include <unordered_map>
 
 class CollisionDetectionMethod;
 class MultiBody;
+
 class Robot;
 class WorkspaceDecomposition;
 class XMLNode;
+
+
+struct Terrain {
+  std::string color;
+  std::unique_ptr<Boundary> boundary;
+
+  Terrain();
+
+  Terrain(const Terrain& _terrain);
+
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +47,9 @@ class Environment {
 
     typedef std::function<std::shared_ptr<WorkspaceDecomposition>(
         const Environment*)> DecompositionFunction;
+    
+    typedef std::unordered_map<std::string, std::vector<Terrain>> 
+        TerrainMap;
 
     ///@}
     ///@name Construction
@@ -187,6 +203,13 @@ class Environment {
 
     ///@}
 
+    ///@name Terrain Functions
+    ///@{
+
+    const TerrainMap& GetTerrains() const noexcept;
+
+    ///@}
+
   protected:
 
     ///@name Helpers
@@ -241,7 +264,12 @@ class Environment {
     Vector3d m_gravity;              ///< The gravity direction and magnitude.
 
     ///@}
+    ///@name Terrains
+    ///@{
 
+    TerrainMap m_terrains; ///< Environment terrains.
+
+    ///@}
 };
 
 #endif

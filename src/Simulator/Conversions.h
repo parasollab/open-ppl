@@ -12,6 +12,7 @@
 #include "Vector.h"
 
 #include "glutils/gltraits.h"
+#include "glutils/color.h"
 
 using namespace mathtool;
 
@@ -110,6 +111,8 @@ ToGLUtils(const Transformation& _t) {
                                t[0],    t[1],    t[2], 1};
 #pragma GCC diagnostic pop
 }
+
+glutils::color StringToColor(const std::string& _color);
 
 /*------------------------ Output for Bullet Objects -------------------------*/
 

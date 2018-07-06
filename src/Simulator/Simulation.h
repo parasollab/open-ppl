@@ -22,6 +22,7 @@ class Cfg;
 class DrawableMultiBody;
 class DrawablePath;
 class DrawableRoadmap;
+class DrawableBoundary;
 class MPProblem;
 class MultiBody;
 class StatClass;
@@ -73,7 +74,7 @@ class Simulation : public base_visualization {
     /// @param _dt The time interval.
     /// @return The number of steps needed to represent _dt.
     static size_t NearestNumSteps(const double _dt) noexcept;
-
+  
     /// Get the current timestamp.
     /// @return The number of steps taken so far.
     static size_t GetTimestamp() noexcept;
@@ -126,9 +127,20 @@ class Simulation : public base_visualization {
     /// @return The ID of the path.
     size_t AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph, const glutils::color& _c);
 
-    /// Remove a path from the scene.
+    /// Remove a roadmap from the scene.
     /// @param _id The path ID.
     void RemoveRoadmap(const size_t _id);
+
+    /// Draw a Bounary
+    /// @param _bounary the boundary to be rendered
+    /// @param _c The line color.
+    /// @param _solid Solid body or wire frame.
+    /// @return The ID of the boundary
+    size_t AddBoundary(const Boundary* _boundary, const glutils::color& _c, bool _solid = false);
+
+    /// Remove a boundary from the scene.
+    /// @param _id The path ID.
+    void RemoveBoundary(const size_t _id);
 
     ///@}
     ///@name Editing
@@ -167,6 +179,9 @@ class Simulation : public base_visualization {
     /// Add all robots in the problem to the bullet world.
     void AddRobots();
 
+    /// Ad all terrain in the problem to the bullet world.
+    void AddTerrain();
+
     ///@}
     ///@name Internal State
     ///@{
@@ -184,10 +199,13 @@ class Simulation : public base_visualization {
     const bool m_editMode{false};             ///< Are we in edit mode?
 
     std::unique_ptr<StatClass> m_stats;       ///< StatClass for time profiling.
-
+  
+    // TODO: Reduce this down to one collection?
     nonstd::collection<DrawablePath> m_paths; ///< Paths we are drawing.
 
     nonstd::collection<DrawableRoadmap> m_roadmaps; ///< Roadmaps to be drawn.
+
+    nonstd::collection<DrawableBoundary> m_boundaries; ///< Boundaries to be drawn.
 
     ///@}
     ///@name Deleted Functions
@@ -202,6 +220,7 @@ class Simulation : public base_visualization {
 
     ///@}
 
+    size_t m_boundaryID{0};
 };
 
 #endif

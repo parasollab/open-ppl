@@ -345,11 +345,13 @@ SIM_SRCS := \
   Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
+  Simulator/Conversions.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
+  Visualization/DrawableBoundary.cpp \
   Visualization/DrawableMultiBody.cpp \
   Visualization/DrawablePath.cpp \
-	Visualization/DrawableRoadmap.cpp \
+  Visualization/DrawableRoadmap.cpp \
   Visualization/Gui/EditBodyDialog.cpp \
   Visualization/Gui/EditCfgDialog.cpp \
   Visualization/Gui/EditConnectionDialog.cpp \

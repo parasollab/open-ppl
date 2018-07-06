@@ -73,6 +73,7 @@ class Robot final {
 
   std::unique_ptr<Battery> m_battery; ///< An emulated battery for this agent. TODO: Unify with other hardware stuff
 
+  std::string m_capability; ///< The terrain label that the robot can use.
   ///@}
 
   public:
@@ -248,8 +249,15 @@ class Robot final {
 
     /// Get the unique label for this robot.
     const std::string& GetLabel() const noexcept;
+  
+    /// Get the capability for this robot.
+    const std::string& GetCapability() const noexcept;
 
+    /// Set the capability for this robot.
+    void SetCapability(const std::string& _capability);
+    
     ///@}
+
 
 };
 

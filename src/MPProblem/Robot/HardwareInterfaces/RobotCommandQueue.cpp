@@ -67,6 +67,8 @@ EnqueueCommand(Command&& _command) {
   // Make sure the command duration is at least equal to the polling period.
   _command.seconds = std::max(m_period, _command.seconds);
 
+  if(_command.type == Command::Type::Sensor)
+    m_localizing = true;
   std::lock_guard<std::mutex> guard(m_lock);
   m_queue.emplace(_command.Clone());
 }
@@ -86,6 +88,12 @@ RobotCommandQueue::
 IsIdle() const {
   std::lock_guard<std::mutex> guard(m_lock);
   return m_idle;
+}
+
+bool
+RobotCommandQueue::
+IsLocalizing() const {
+  return m_localizing;
 }
 
 /*----------------------------- Robot Control --------------------------------*/
@@ -225,6 +233,7 @@ SendToRobot(const Command& _command) {
     case Command::Type::Sensor:
       if(m_sensor.get())
         m_sensor->SendCommand(_command.ToSensorCommand());
+      m_localizing = false;
       return;
   }
 }

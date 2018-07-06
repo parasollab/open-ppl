@@ -137,9 +137,7 @@ class Agent {
     void PauseAgent(const size_t _steps);
 
     /// Get the type of agent
-    std::string GetCapability() const noexcept;
-
-    void SetCapability(std::string _capability);
+    const std::string& GetCapability() const noexcept;
 
   protected:
 

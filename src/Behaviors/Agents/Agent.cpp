@@ -58,17 +58,10 @@ GetTask() const noexcept {
 }
 
 
-std::string
+const std::string&
 Agent::
 GetCapability() const noexcept {
-  return m_capability;
-}
-
-
-void
-Agent::
-SetCapability(std::string _capability) {
-  m_capability = _capability;
+  return m_robot->GetCapability();
 }
 
 /*------------------------------ Internal State ------------------------------*/
@@ -214,8 +207,8 @@ IsLocalizing() const noexcept {
   if(!sensor)
     return false;
 
-  // We are localizing if the sensor isn't ready.
-  return !sensor->IsReady();
+  // We are localizing if the hardware is waiting to localize or sensor isn't ready.
+  return hardware->IsLocalizing() or !sensor->IsReady();
 }
 
 
