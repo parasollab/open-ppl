@@ -9,7 +9,6 @@
 ///@name Runtime Utilities
 ///@{
 
-////////////////////////////////////////////////////////////////////////////////
 /// Describe the source-code location where an error occurs.
 /// @param _file The file name.
 /// @param _func The function name.
@@ -26,32 +25,11 @@ WhereAt(FilenameType _file, FunctionNameType _func, LineType _line) {
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
 /// Macro for retrieving info about file, function, and line number.
+#ifdef WHERE
+#undef WHERE
+#endif
 #define WHERE WhereAt(__FILE__, __PRETTY_FUNCTION__, __LINE__)
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Terminate exection and display a message.
-/// @param _msg The message to display.
-inline
-void
-ExitMsg(const std::string& _msg) noexcept {
-  std::cerr << _msg << std::endl;
-  std::exit(-1);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Terminate exection and display a message if the asserted condition is false.
-/// @param _condition The condition to assert.
-/// @param _msg The message to display on failure.
-inline
-void
-AssertMsg(const bool _condition, const std::string& _msg) noexcept {
-  if(!_condition)
-    ExitMsg(_msg);
-}
 
 ///@}
 
