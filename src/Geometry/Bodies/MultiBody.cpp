@@ -94,6 +94,9 @@ MultiBody(XMLNode& _node) {
     }
   }
 
+  for(auto& joint : m_joints)
+    joint->SetBodies();
+
   // Make sure a base was provided.
   if(!m_baseBody)
     throw ParseException(_node.Where(), "MultiBody has no base.");
@@ -367,7 +370,11 @@ GetCurrentCfg() noexcept {
 
   // If jnt is not at the end now, we did something wrong.
   if(jnt != end)
-    throw RunTimeException(WHERE, "Danger Will Robinson.");
+    throw RunTimeException(WHERE) << "Computation error:"
+                                  << "\n\tDOF: " << DOF()
+                                  << "\n\tEnd distance: " << std::distance(pos, end)
+                                  << "\n\tJnt distance: " << std::distance(pos, jnt)
+                                  << std::endl;
 
   m_currentDofs = output;
   return output;
@@ -654,12 +661,6 @@ Configure(const vector<double>& _v) {
   std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),
       m_currentDofs.begin());
 
-  ///@TODO: This is a band-aid for an issue where the m_baseBody pointer is off
-  /// from the the actual base's pointer. Also causes a CGAL crash, and occurred
-  /// after merging in assembly planning changes.
-  if(&m_bodies[m_baseIndex] != m_baseBody)
-    SetBaseBody(m_baseIndex);
-
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
     Transformation t1 = GenerateModelTransformation(_v, index, m_baseMovement,
@@ -667,9 +668,9 @@ Configure(const vector<double>& _v) {
     m_baseBody->Configure(t1);
   }
 
-  if (IsComposite())
-    throw RunTimeException(WHERE, "Any composite bodies should be handled "
-                                  "through group cfgs now.");
+  if(IsComposite())
+    throw RunTimeException(WHERE) << "Composite bodies should be handled "
+                                  << "through group cfgs.";
 
   // Configure the links.
   for(auto& joint : m_joints) {
@@ -684,48 +685,6 @@ Configure(const vector<double>& _v) {
 
     // Adjust connection to reflect new configuration.
     dh.m_theta = _v[index++] * PI;
-    if(joint->GetConnectionType() == Connection::JointType::Spherical)
-      dh.m_alpha = _v[index++] * PI;
-  }
-
-  // The base transform has been updated, now update the links.
-  UpdateLinks();
-}
-
-
-void
-MultiBody::
-Configure(const std::vector<double>& _v, const std::vector<double>& _t) {
-  int index = 0, t_index = 0;
-
-  std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),
-      m_currentDofs.begin());
-
-  // Configure the base.
-  if(m_baseType != Body::Type::Fixed) {
-    Transformation t1 = GenerateModelTransformation(_v, index, m_baseMovement,
-                                                    m_baseType);
-    m_baseBody->Configure(t1);
-  }
-
-  if(IsComposite())
-    throw RunTimeException(WHERE, "Any composite bodies should be handled "
-                                  "through group cfgs now.");
-
-  // Configure the links.
-  for(auto& joint : m_joints) {
-    // Skip non-actuated joints.
-    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
-      continue;
-
-    // Get the connection object's DHParameters.
-    const size_t jointIndex = joint->GetNextBodyIndex();
-    auto& connection = m_bodies[jointIndex].GetBackwardConnection(0);
-    auto& dh = connection.GetDHParameters();
-
-    // Adjust connection to reflect new configuration.
-    m_currentDofs[index++] = _t[t_index]/PI; // Skip the theta value in _v as we will use _t instead.
-    dh.m_theta = _t[t_index++];
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       dh.m_alpha = _v[index++] * PI;
   }
@@ -849,6 +808,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
     // add connection info to multibody connection map
     m_joints.emplace_back(new Connection(this));
     m_joints.back()->Read(_is, _cbs);
+    m_joints.back()->SetBodies();
   }
 
   SortJoints();

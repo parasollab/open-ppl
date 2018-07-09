@@ -80,12 +80,18 @@ class Connection final {
     /// @param _cbs The input counting stream buffer.
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
-    /// Set the free bodies which are joined by this connection.
-    /// @param _owner The owning multibody.
+    /// Set the free bodies which are joined by this connection and call their
+    /// link functions.
+    /// @param _owner The owning multibody, or null to use the current.
     /// @param _parentIndex The parent body index.
     /// @param _childIndex The child body index.
     void SetBodies(MultiBody* const _owner, const size_t _parentIndex,
         const size_t _childIndex);
+
+    /// This overload assumes that the parent/child indexes have already been
+    /// set.
+    /// @overload
+    void SetBodies(MultiBody* const _owner = nullptr);
 
     /// Set the free bodies which are adjacent without an explicit connection.
     /// @param _owner The owning multibody.
@@ -93,11 +99,6 @@ class Connection final {
     /// @param _childIndex The child body index.
     void SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
         const size_t _secondIndex);
-
-    /// This overload assumes that the parent/child indexes have already been
-    /// set and are the same in the new owner.
-    /// @overload
-    void SetBodies(MultiBody* const _owner);
 
     friend std::ostream& operator<<(std::ostream& _os, const Connection& _c);
 

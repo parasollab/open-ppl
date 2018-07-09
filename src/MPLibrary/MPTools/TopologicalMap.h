@@ -162,7 +162,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     std::string m_decompositionLabel; ///< The workspace decomposition to use.
 
     /// A grid matrix overlaid on the workspace.
-    const GridOverlay* m_grid{nullptr};
+    std::unique_ptr<const GridOverlay> m_grid;
 
     double m_gridSize{.1}; ///< Length of each grid cell.
 
@@ -206,9 +206,7 @@ TopologicalMap(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 
 template <typename MPTraits>
 TopologicalMap<MPTraits>::
-~TopologicalMap() {
-  delete m_grid;
-}
+~TopologicalMap() = default;
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
@@ -218,13 +216,12 @@ TopologicalMap<MPTraits>::
 Initialize() {
   ClearMap();
 
-  auto env = this->GetEnvironment();
+  auto envBound = this->GetEnvironment()->GetBoundary();
   auto stats = this->GetStatClass();
   auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
 
   // Initialize the grid and decomposition map.
-  delete m_grid;
-  m_grid = new GridOverlay(env->GetBoundary(), m_gridSize);
+  m_grid = std::unique_ptr<const GridOverlay>(new GridOverlay(envBound, m_gridSize));
   {
     MethodTimer mt(stats, "GridOverlay::ComputeDecompositionMap");
     m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
@@ -247,6 +244,8 @@ template <typename MPTraits>
 std::vector<typename TopologicalMap<MPTraits>::VID>
 TopologicalMap<MPTraits>::
 GetMappedVIDs(const WorkspaceRegion* const _region) const {
+  MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetMappedVIDs");
+
   auto iter = m_regionToVIDs.find(_region);
   return iter == m_regionToVIDs.end() ? std::vector<VID>() : iter->second;
 }
@@ -271,16 +270,14 @@ GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions) const {
     std::copy(vids.begin(), vids.end(), std::back_inserter(all));
   }
 
-  const size_t preUniqueSize = all.size();
-
   // Sort and make sure list is unique.
   std::sort(all.begin(), all.end());
-  std::unique(all.begin(), all.end());
+  auto newEnd = std::unique(all.begin(), all.end());
 
   // Check that we didn't double-add any vertices.
-  if(preUniqueSize != all.size())
-    throw RunTimeException(WHERE, "Unique removed vertices. Each vertex should "
-        "be mapped to only one region.");
+  if(all.end() != newEnd)
+    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex should "
+                                  << "be mapped to only one region.";
 
   return all;
 }
@@ -308,6 +305,7 @@ const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 GetRandomRegion() const {
   MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetRandomRegion");
+
   auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
   return &decomposition->GetRegion(LRand() % decomposition->GetNumRegions());
 }
@@ -446,16 +444,16 @@ UnmapCfg(const VI _vertex) {
   auto regionIter = m_vidToRegion.find(vid);
 
   if(regionIter == m_vidToRegion.end())
-    throw RunTimeException(WHERE, "Tried to unmap vertex "
-        + std::to_string(vid) + ", but didn't find a region for it.");
+    throw RunTimeException(WHERE) << "Tried to unmap vertex " << vid
+                                  << ", but didn't find a region for it.";
 
   // Assert that the region was mapped to the vertex.
   auto& regionMap = m_regionToVIDs[regionIter->second];
   auto vidIter = std::find(regionMap.begin(), regionMap.end(), vid);
 
   if(vidIter == regionMap.end())
-    throw RunTimeException(WHERE, "Tried to unmap vertex "
-        + std::to_string(vid) + ", but it was missing from it's region map.");
+    throw RunTimeException(WHERE) << "Tried to unmap vertex " << vid
+                                  << ", but it was missing from it's region map.";
 
 
   // Remove this vertex from the mappings.

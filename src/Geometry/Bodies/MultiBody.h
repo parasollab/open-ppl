@@ -238,16 +238,6 @@ class MultiBody {
     /// @param _v The DOF values to use.
     void Configure(const std::vector<double>& _v);
 
-    /// Place a robot at a given configuration.
-    /// @param _v The position DOF values to use.
-    /// @param _t The orientation DOF values to use.
-    ///
-    /// This version is to support functionality in the folding code where
-    /// we need to configure the theta values as well. Note that they are not
-    /// stored in _v as full dofs since they are not treated as such.  Instead
-    /// they are computed as a function of _v and other bio-specific things.
-    void Configure(const std::vector<double>& _v, const std::vector<double>& _t);
-
     /// A helper function that generates the transformation for the body
     /// passed to it. given the dofs in _v and the _index offset.
     Transformation GenerateModelTransformation(const std::vector<double>& _v,

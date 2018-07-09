@@ -6,10 +6,10 @@ DrawableRoadmap::
 void
 DrawableRoadmap::
 draw() {
-  
+
   // sets the color
   glColor4fv(m_color);
-  
+
   // sets the size of each point (radius in pixels?)
   glPointSize(8.0);
 
@@ -18,10 +18,10 @@ draw() {
   for(auto& v : m_cfgs)
     glVertex3fv(v.begin());
   glEnd();
-  
+
   // sets the width of the line
   glLineWidth(1.0);
- 
+
   for(const auto& edge : m_edges) {
 
     // after the first vertex, for each new vertice

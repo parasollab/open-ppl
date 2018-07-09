@@ -115,5 +115,6 @@ XMLControlSetGenerator(Robot* const _r, XMLNode& _node) {
 void
 RemoveDuplicateControls(ControlSet* const _controls) {
   std::sort(_controls->begin(), _controls->end());
-  std::unique(_controls->begin(), _controls->end());
+  auto iter = std::unique(_controls->begin(), _controls->end());
+  _controls->erase(iter, _controls->end());
 }

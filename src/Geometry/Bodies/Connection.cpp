@@ -39,6 +39,8 @@ GetTagFromJointType(const Connection::JointType _j) {
       return "Revolute";
     case Connection::JointType::Spherical:
       return "Spherical";
+    case Connection::JointType::NonActuated:
+      return "Nonactuated";
     default:
       return "Unknown Joint Type";
   }
@@ -58,33 +60,33 @@ Connection::
 Connection(MultiBody* const _owner, XMLNode& _node)
   : Connection(_owner) {
   // Get the indices of the two bodies that are connected.
-  const size_t parentIndex = _node.Read("parentIndex", true, size_t(0), size_t(0),
+  m_bodyIndices.first = _node.Read("parentIndex", true, size_t(0), size_t(0),
       std::numeric_limits<size_t>::max(), "Index of the parent body.");
-  const size_t childIndex = _node.Read("childIndex", true, size_t(0), size_t(0),
+  m_bodyIndices.second = _node.Read("childIndex", true, size_t(0), size_t(0),
       std::numeric_limits<size_t>::max(), "Index of the child body.");
-  SetBodies(m_multibody, parentIndex, childIndex);
 
   // Read the joint info.
 
   // Read joint type.
-  std::string joint = _node.Read("joint", true, "", "Type of joint.");
-  std::transform(joint.begin(), joint.end(), joint.begin(), ::toupper);
+  const std::string joint = _node.Read("joint", true, "", "Type of joint.");
   m_jointType = GetJointTypeFromTag(joint, _node.Where());
 
   // Read the first joint range.
-  {
-    const std::string rangeString = _node.Read("range", true, "",
-        "Range of the joint.");
-    std::istringstream buffer(rangeString);
-    buffer >> m_jointRange[0];
-  }
+  if(!IsNonActuated()) {
+    {
+      const std::string rangeString = _node.Read("range", true, "",
+          "Range of the joint.");
+      std::istringstream buffer(rangeString);
+      buffer >> m_jointRange[0];
+    }
 
-  // Spherical joints have two joint ranges, read the second now.
-  if(IsSpherical()) {
-    const std::string rangeString2 = _node.Read("range2", true, "",
-        "Range of the joint about the second axis.");
-    std::istringstream buffer(rangeString2);
-    buffer >> m_jointRange[1];
+    // Spherical joints have two joint ranges, read the second now.
+    if(IsSpherical()) {
+      const std::string rangeString2 = _node.Read("range2", true, "",
+          "Range of the joint about the second axis.");
+      std::istringstream buffer(rangeString2);
+      buffer >> m_jointRange[1];
+    }
   }
 
   // Read the transformations and DH params.
@@ -156,11 +158,10 @@ void
 Connection::
 Read(istream& _is, CountingStreamBuffer& _cbs) {
   //body indices
-  const size_t parentIndex = ReadField<int>(_is, _cbs,
+  m_bodyIndices.first = ReadField<size_t>(_is, _cbs,
       "Failed reading parent body index.");
-  const size_t childIndex = ReadField<int>(_is, _cbs,
+  m_bodyIndices.second = ReadField<size_t>(_is, _cbs,
       "Failed reading child body index.");
-  SetBodies(m_multibody, parentIndex, childIndex);
 
   //grab the joint type
   std::string connectionTypeTag = ReadFieldString(_is, _cbs,
@@ -209,6 +210,31 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 
 void
 Connection::
+SetBodies(MultiBody* const _owner, const size_t _parentIndex,
+    const size_t _childIndex) {
+  // Set the parent and child indexes.
+  m_bodyIndices.first = _parentIndex;
+  m_bodyIndices.second = _childIndex;
+
+  // Set the owning multibody.
+  if(_owner)
+    m_multibody = _owner;
+
+  // Update the bodies.
+  GetPreviousBody()->LinkForward(this);
+  GetNextBody()->LinkBackward(this);
+}
+
+
+void
+Connection::
+SetBodies(MultiBody* const _owner) {
+  SetBodies(_owner, m_bodyIndices.first, m_bodyIndices.second);
+}
+
+
+void
+Connection::
 SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
     const size_t _secondIndex) {
 
@@ -222,30 +248,6 @@ SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
   // Update the bodies.
   m_multibody->GetBody(_firstIndex)->LinkAdjacency(this);
   m_multibody->GetBody(_secondIndex)->LinkAdjacency(this);
-}
-
-
-void
-Connection::
-SetBodies(MultiBody* const _owner, const size_t _parentIndex,
-    const size_t _childIndex) {
-  // Set the parent and child indexes.
-  m_bodyIndices.first = _parentIndex;
-  m_bodyIndices.second = _childIndex;
-
-  // Set the owning multibody.
-  m_multibody = _owner;
-
-  // Update the bodies.
-  GetPreviousBody()->LinkForward(this);
-  GetNextBody()->LinkBackward(this);
-}
-
-
-void
-Connection::
-SetBodies(MultiBody* const _owner) {
-  SetBodies(_owner, m_bodyIndices.first, m_bodyIndices.second);
 }
 
 

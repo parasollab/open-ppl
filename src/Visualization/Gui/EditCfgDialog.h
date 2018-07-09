@@ -37,6 +37,12 @@ class EditCfgDialog : public QDialog {
     void UpdateCfg();
 
     ///@}
+    ///@name QDialog Overrides
+    ///@{
+
+    virtual void reject() override;
+
+    ///@}
 
   private:
 
@@ -47,6 +53,7 @@ class EditCfgDialog : public QDialog {
     DrawableMultiBody* const m_drawable; ///< The edit multibody.
 
     std::vector<SliderTextWidget*> m_sliders; ///< The DOF value editors.
+    std::vector<double> m_originalCfg;        ///< The original Cfg value.
 
     ///@}
 };

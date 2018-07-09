@@ -31,14 +31,6 @@ main(int _argc, char** _argv) {
         dofs = problem->GetTasks(r).front()->GetStartConstraint()->
                GetBoundary()->GetCenter();
       r->GetMultiBody()->Configure(dofs);
-
-      // Randomize body colors for now to help see the robots.
-      for(size_t i=0; i< r->GetMultiBody()->GetNumBodies();i++) {
-        glutils::color c = {float(DRand() * .5 + .5),
-                            float(DRand() * .5 + .5),
-                            float(DRand() * .5 + .5), 1.};
-        r->GetMultiBody()->GetBody(i)->SetBodyColor(c);
-      }
     }
 
     // Make simulation object.

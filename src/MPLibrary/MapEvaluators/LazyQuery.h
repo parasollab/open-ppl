@@ -156,13 +156,15 @@ LazyQuery(XMLNode& _node) : PRMQuery<MPTraits>(_node) {
       m_resolutions.push_back(child.Read("mult", true, 1, 1, MAX_INT,
           "Multiple of finest resolution checked"));
 
-  // Sort resolutions in decreasing order, ensure that '1' is included
-  sort(m_resolutions.begin(), m_resolutions.end(), greater<int>());
-  auto iter = unique(m_resolutions.begin(), m_resolutions.end());
+  // Sort resolutions in decreasing order.
+  std::sort(m_resolutions.begin(), m_resolutions.end(), std::greater<int>());
+  auto iter = std::unique(m_resolutions.begin(), m_resolutions.end());
   m_resolutions.erase(iter, m_resolutions.end());
+
+  // Ensure that resolution '1' is included.
   if(m_resolutions.back() != 1)
-    throw RunTimeException(WHERE, "Last resolution should be 1, but it is "
-        + to_string(m_resolutions.back()) + ".");
+    throw RunTimeException(WHERE) << "Last resolution should be '1', but it is '"
+                                  << m_resolutions.back() << "'.";
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/

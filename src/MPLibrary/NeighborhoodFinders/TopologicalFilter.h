@@ -477,7 +477,8 @@ ComputeIntersection(InputIterator _first, InputIterator _last,
 
   // Sort and uniqueify the input set.
   std::sort(inputRange.begin(), inputRange.end());
-  std::unique(inputRange.begin(), inputRange.end());
+  auto iter = std::unique(inputRange.begin(), inputRange.end());
+  inputRange.erase(iter, inputRange.end());
 
   // Compute the intersection with the candidate set.
   std::vector<VID> intersection;

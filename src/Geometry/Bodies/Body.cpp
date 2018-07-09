@@ -3,6 +3,7 @@
 #include "Connection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
+#include "Utilities/Color.h"
 #include "Utilities/XMLNode.h"
 
 #include <algorithm>
@@ -25,7 +26,9 @@
 /// @return The body type parsed from _tag.
 Body::Type
 GetBodyTypeFromTag(std::string _tag, const std::string& _where) {
+  // Downcase the tag.
   std::transform(_tag.begin(), _tag.end(), _tag.begin(), ::tolower);
+
   if(_tag == "planar")
     return Body::Type::Planar;
   else if(_tag == "volumetric")
@@ -35,9 +38,9 @@ GetBodyTypeFromTag(std::string _tag, const std::string& _where) {
   else if(_tag == "joint")
     return Body::Type::Joint;
   else
-    throw ParseException(_where,
-        "Unknown body type '" + _tag + "'. "
-        "Options are: 'planar', 'volumetric', 'fixed', or 'joint'.");
+    throw ParseException(_where) << "Unknown body type '" << _tag << "'. "
+                                 << "Options are: 'planar', 'volumetric', "
+                                 << "'fixed', or 'joint'.";
 }
 
 
@@ -46,15 +49,22 @@ GetBodyTypeFromTag(std::string _tag, const std::string& _where) {
 /// @param _where Error information for undetected types.
 /// @return The movement type parsed from _tag.
 Body::MovementType
-GetMovementTypeFromTag(const std::string& _tag, const std::string& _where) {
-  if(_tag == "ROTATIONAL")
+GetMovementTypeFromTag(std::string _tag, const std::string& _where) {
+  // Downcase the tag.
+  std::transform(_tag.begin(), _tag.end(), _tag.begin(), ::tolower);
+
+  if(_tag == "rotational")
     return Body::MovementType::Rotational;
-  else if (_tag == "TRANSLATIONAL")
+  else if(_tag == "translational")
     return Body::MovementType::Translational;
+  else if(_tag == "fixed")
+    return Body::MovementType::Fixed;
+  else if(_tag == "joint")
+    return Body::MovementType::Joint;
   else
-    throw ParseException(_where,
-        "Unknown movement type '" + _tag + "'."
-        " Options are: 'rotational' or 'translational'.");
+    throw ParseException(_where) << "Unknown movement type '" << _tag << "'."
+                                 << " Options are: 'rotational', "
+                                 << "'translational', 'fixed'.";
 }
 
 
@@ -71,7 +81,6 @@ GetTagFromBodyType(const Body::Type _b) {
       return "Joint";
     default:
       throw ParseException(WHERE, "Unknown body type.");
-      return "Unknown body type.";
   }
 }
 
@@ -83,9 +92,12 @@ GetTagFromMovementType(const Body::MovementType _bm) {
       return "Rotational";
     case Body::MovementType::Translational:
       return "Translational";
+    case Body::MovementType::Fixed:
+      return "Fixed";
+    case Body::MovementType::Joint:
+      return "Joint";
     default:
-      throw ParseException(WHERE, "Unknown movement type.");
-      return "Unknown movement type.";
+      throw ParseException(WHERE) << "Unknown movement type.";
   }
 }
 
@@ -136,40 +148,41 @@ Body(MultiBody* const _owner, XMLNode& _node)
   if(!color.empty()) {
     std::istringstream buffer(color);
     buffer >> m_color;
-    m_colorLoaded = true;
   }
 
   // Parse optional texture file.
   m_textureFile = _node.Read("textureFile", false, "", "Name of the texture "
       "file.");
-  m_textureLoaded = !m_textureFile.empty();
 
   // Read mass.
   m_mass = _node.Read("mass", false, 1.,
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
       "Mass of the body.");
 
-  // Read movement type.
-  std::string movement = _node.Read("movement", false, "",
-      "Type of the movement (rotational, or translational).");
-  std::transform(movement.begin(), movement.end(), movement.begin(), ::tolower);
-  if(movement == "rotational")
-    m_movementType = MovementType::Rotational;
-  else if(movement == "translational")
-    m_movementType = MovementType::Translational;
-  else if(!movement.empty())
-    throw ParseException(_node.Where(), "Unrecognized movement type.");
-
   // Read body type.
   std::string type = _node.Read("type", true, "",
       "Type of the body (volumetric, planar, fixed, or joint.");
-  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
   SetBodyType(GetBodyTypeFromTag(type, _node.Where()));
+  const bool isFixed = GetBodyType() == Body::Type::Fixed,
+             isJoint = GetBodyType() == Body::Type::Joint;
+
+  // Read movement type.
+  std::string movement = _node.Read("movement", !isFixed and !isJoint, "",
+      "Type of the movement (rotational, or translational).");
+  // If the body is fixed, we shouldn't receive a movement type.
+  if((isFixed or isJoint) and !movement.empty()) {
+    throw ParseException(_node.Where()) << "Fixed and joint bodies may not "
+                                        << "specify a movement type ('"
+                                        << movement << "' provided).";
+  }
+  if(isFixed)
+    movement = "fixed";
+  else if(isJoint)
+    movement = "joint";
+  SetMovementType(GetMovementTypeFromTag(movement, _node.Where()));
 
   // Read the transform for fixed bodies.
-  if(type == "fixed") {
-    SetBodyType(Body::Type::Fixed);
-
+  if(isFixed) {
     const std::string transform = _node.Read("transform", true, "",
         "The transform for this body.");
 
@@ -236,9 +249,7 @@ operator=(const Body& _other) {
   m_transformFetcher = _other.m_transformFetcher;
 
   m_color         = _other.m_color;
-  m_colorLoaded   = _other.m_colorLoaded;
   m_textureFile   = _other.m_textureFile;
-  m_textureLoaded = _other.m_textureLoaded;
 
   return *this;
 }
@@ -814,11 +825,11 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
       _is >> c; //read c(
       if(c != '(')
         throw ParseException(_cbs.Where(), "Invalid specification of color.");
-      m_color = ReadField<Color4>(_is, _cbs, "Invalid specification of color.");
+      const Color4 color = ReadField<Color4>(_is, _cbs, "Invalid specification of color.");
+      m_color = glutils::color(color[0], color[1], color[2], color[3]);
       _is >> c; //read )
       if(c != ')')
         throw ParseException(_cbs.Where(), "Invalid specification of color.");
-      m_colorLoaded = true;
     }
     // Parse optional texture file.
     else if(c == 't') {
@@ -835,7 +846,6 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
         if(c != ')')
           throw ParseException(_cbs.Where(), "Invalid specification of texture.");
       }
-      m_textureLoaded = true;
     }
     // Put back - for possible -x translation.
     else {
@@ -873,7 +883,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
         std::string baseMovementTag = ReadFieldString(_is, _cbs,
             "Failed reading rotation tag."
             " Options are: rotational or translational.");
-        m_movementType = GetMovementTypeFromTag(baseMovementTag, _cbs.Where());
+        SetMovementType(GetMovementTypeFromTag(baseMovementTag, _cbs.Where()));
         break;
       }
     case Body::Type::Fixed:
@@ -881,11 +891,13 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
       {
         m_transform = ReadField<Transformation>(_is, _cbs,
             "Failed reading fixed based transformation.");
+        SetMovementType(Body::MovementType::Fixed);
         Configure(m_transform);
         break;
       }
     case Body::Type::Joint:
       // No additional parsing needed if base is a joint.
+      SetMovementType(Body::MovementType::Joint);
       break;
   }
 
@@ -1037,36 +1049,22 @@ ComputeWorldPolyhedron(const GMSPolyhedron& _polyhedron, const GMSPolyhedron& _w
 
 const glutils::color&
 Body::
-GetBodyColor() const {
-  return m_bodyColor;
+GetColor() const {
+  return m_color;
 }
 
 
 void
 Body::
-SetBodyColor(const glutils::color& _m) {
-  m_bodyColor = _m;
-}
-
-
-bool
-Body::
-IsColorLoaded() const {
-  return m_colorLoaded;
-}
-
-
-const Color4&
-Body::
-GetColor() const {
-  return m_color;
+SetColor(const glutils::color& _m) {
+  m_color = _m;
 }
 
 
 bool
 Body::
 IsTextureLoaded() const {
-  return m_textureLoaded;
+  return !m_textureFile.empty();
 }
 
 

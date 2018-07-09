@@ -8,7 +8,6 @@
 
 #include "glutils/color.h"
 #include "Geometry/GMSPolyhedron.h"
-#include "Utilities/Color.h"
 #include "Utilities/MPUtils.h"
 
 #include "Transformation.h"
@@ -56,6 +55,8 @@ class Body {
 
     /// The type of movement this body can perform.
     enum class MovementType {
+      Fixed,        ///< No movement
+      Joint,        ///< Defined by joint connection
       Rotational,   ///< Rotation + translation
       Translational ///< Just translation
     };
@@ -302,16 +303,16 @@ class Body {
 
     /// @return a convex hull in world coordinates
     const GMSPolyhedron& GetWorldConvexHull();
+
     ///@}
     ///@name Visualization
     ///@{
-    ///@TODO Figure out how to move this to the DrawableBody class.
 
     /// Get the color for the body.
-    const glutils::color& GetBodyColor() const;
+    const glutils::color& GetColor() const;
 
     /// Set the color for the body.
-    void SetBodyColor(const glutils::color& _c);
+    void SetColor(const glutils::color& _c);
 
     ///@}
 
@@ -398,25 +399,15 @@ class Body {
     ///       separate the visualization details from the geometric model stored
     ///       here.
 
-    /// Check if a color was loaded.
-    bool IsColorLoaded() const;
-
-    /// Get the loaded color.
-    const Color4& GetColor() const;
-
     /// Check if a texture was loaded.
     bool IsTextureLoaded() const;
 
     /// Get the loaded texture file name.
     const std::string& GetTexture() const;
 
-    Color4 m_color;                          ///< Optionally specified color
-    bool m_colorLoaded{false};               ///< Was color option set?
-
-    std::string m_textureFile;               ///< Optionally specified texture
+    glutils::color m_color{glutils::color::blue}; ///< Body color.
+    std::string m_textureFile;                    ///< Optional texture file.
     bool m_textureLoaded{false};             ///< Was texture option set?
-
-    glutils::color m_bodyColor{glutils::color::blue}; ///< Simulator color.
 
     ///@}
 

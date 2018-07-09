@@ -66,4 +66,17 @@ struct RunTimeException : public PMPLException {
 
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Exception for features which are not yet implemented.
+/// @ingroup Exceptions
+////////////////////////////////////////////////////////////////////////////////
+struct NotImplementedException : public PMPLException {
+
+  NotImplementedException(const std::string& _where) :
+      PMPLException("Not Implemented Exception", _where,
+                    "This feature is not yet implemented.") {}
+
+};
+
 #endif

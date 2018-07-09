@@ -12,10 +12,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 class DrawableRoadmap : public glutils::drawable  {
   public:
-  
+
     /// @name Constructor
     /// @{
-  
+
     /// Installs hooks onto _graph and populates existing
     /// vertices and edges.
     /// @tparam GraphType the type of the roadmap graph.
@@ -23,10 +23,10 @@ class DrawableRoadmap : public glutils::drawable  {
     /// @param _graph The graph this DrawableRoadmap represents.
     /// @param _color The color to draw the cfgs and edges.
     template <typename GraphType>
-    DrawableRoadmap(GraphType* _graph, const glutils::color& _color); 
+    DrawableRoadmap(GraphType* _graph, const glutils::color& _color);
 
     ~DrawableRoadmap();
-  
+
     /// @}
     /// @name Modifiers
     /// @{
@@ -44,12 +44,12 @@ class DrawableRoadmap : public glutils::drawable  {
     void AddEdge(EI _vi);
 
     /// @}
-    
+
   protected:
 
     /// @name Drawable Overloads
     /// @{
-  
+
     /// How to draw the base roadmap
     virtual void draw() override;
 
@@ -85,11 +85,11 @@ DrawableRoadmap(GraphType* _graph, const glutils::color& _color) :
       [this](typename GraphType::EI _vi) {
         this->AddEdge(_vi);
       });
-  
+
   // Adding the current content of the graph to the DRM.
   for(auto iter = _graph->begin(); iter != _graph->end(); ++iter)
     AddVertex(iter);
-  
+
   for(auto iter = _graph->edges_begin(); iter != _graph->edges_end(); ++iter)
     AddEdge(iter);
 }
@@ -99,9 +99,9 @@ void
 DrawableRoadmap::
 AddVertex(VI _vi) {
   // Gets Vertex data.
-  auto cfg = _vi->property();  
+  auto cfg = _vi->property();
   auto p = cfg.GetPoint();
-  
+
   // build 3d vector
   glutils::vector3f point = {(float)p[0], (float) p[1], (float) p[2]};
 
@@ -121,14 +121,14 @@ AddEdge(EI _ei) {
   // vids of the source and target vids
   auto start_vid = _ei->source();
   auto end_vid = _ei->target();
-  
+
   m_edges.push_back(std::vector<glutils::vector3f>());
 
   // add the source point to the edge points
-  // Since the cfgs are added inorder of creation, the 
+  // Since the cfgs are added inorder of creation, the
   // VIDs can be used as an index into the array.
   m_edges.back().push_back(m_cfgs[start_vid]);
-  
+
   // for each intermiate add it to the last edge, the edge
   // just created.
   for(const auto& inter : intermediates) {

@@ -227,7 +227,7 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
     for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
       const auto body = obst->GetBody(j);
       const auto& com = body->GetWorldPolyhedron().GetCentroid();
-      Vector3d hole = com;
+      mathtool::Vector3d hole = com;
       const GMSPolyhedron& poly = body->GetPolyhedron();
       for(auto& v : poly.m_vertexList)
         if(body->IsConvexHullVertex(v) && (v - com).norm() > (hole - com).norm())
@@ -271,8 +271,8 @@ TetGenDecomposition(XMLNode& _node) {
   else if(ioType == "write")
     m_ioType = Write;
   else if(ioType != "none")
-    throw ParseException(_node.Where(), "Unrecognized IO operation '" + ioType +
-        "'.");
+    throw ParseException(_node.Where()) << "Unrecognized IO operation '"
+                                        << ioType << "'.";
 
   m_debug = _node.Read("debug", false, m_debug, "Show debugging messages, "
       "and also write the freespace model if we are writing.");

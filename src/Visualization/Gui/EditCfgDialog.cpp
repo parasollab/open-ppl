@@ -29,8 +29,14 @@ EditCfgDialog(main_window* const _parent, DrawableMultiBody* const _mb)
   displayArea->setLayout(displayLayout);
 
   // Create a slider for each dof.
-  for(const auto& info : m_drawable->GetMultiBody()->GetDofInfo()) {
+  auto mb = m_drawable->GetMultiBody();
+  const auto& dofInfo = mb->GetDofInfo();
+  m_originalCfg = mb->GetCurrentCfg();
+
+  for(size_t i = 0; i < mb->DOF(); ++i) {
+    const auto& info = dofInfo[i];
     SliderTextWidget* slider = new SliderTextWidget(this, info.name, info.range);
+    slider->SetValue(m_originalCfg[i]);
 
     // Add to the layout and connect the signal.
     displayLayout->addWidget(slider);
@@ -80,6 +86,15 @@ UpdateCfg() {
     cfg[i] = m_sliders[i]->GetValue();
 
   mb->Configure(cfg);
+}
+
+/*---------------------------- QDialog Overrides -----------------------------*/
+
+void
+EditCfgDialog::
+reject() {
+  m_drawable->GetMultiBody()->Configure(m_originalCfg);
+  QDialog::reject();
 }
 
 /*----------------------------------------------------------------------------*/

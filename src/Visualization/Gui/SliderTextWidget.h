@@ -44,7 +44,7 @@ class SliderTextWidget : public QGroupBox {
 
   public slots:
 
-    /// Set the value for both subwidgets..
+    /// Set the value for both subwidgets.
     void SetValue(const double);
 
     /// Synchronize the slider to match the text field.

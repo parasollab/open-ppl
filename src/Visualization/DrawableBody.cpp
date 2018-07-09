@@ -54,9 +54,8 @@ unhighlight() noexcept {
 void
 DrawableBody::
 build() {
-  /// @TODO Set color from pmpl body.
-  auto color = m_body->GetBodyColor();
-  glColor3fv(color);
+  auto color = m_body->GetColor();
+  glColor4fv(color);
   build_select();
 }
 
@@ -77,7 +76,7 @@ build_select() {
 void
 DrawableBody::
 build_selected() {
-  glColor3fv(glutils::color::yellow);
+  glColor4fv(glutils::color::yellow);
   glLineWidth(4);
 
   const auto& polyhedron = m_body->GetPolyhedron();

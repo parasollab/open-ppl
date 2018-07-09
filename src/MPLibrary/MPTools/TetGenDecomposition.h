@@ -3,10 +3,9 @@
 
 #include <containers/sequential/graph/graph.h>
 
-#include <Vector.h>
-using namespace mathtool;
-
 #include "Utilities/IOUtils.h"
+
+#include "Vector.h"
 
 class Environment;
 class MultiBody;
@@ -21,6 +20,13 @@ class tetgenio;
 ///
 /// TetGen offers two levels of courseness - maximally course (default) and
 /// 'quality' (use 'q' in switches).
+///
+/// @bug Tetgen fails to compute the decomposition if certain obstacles are
+///      stuck against the boundary. For example, a cylinder pressed against the
+///      environment bounding box will cause tetgen to fail. We would like to
+///      understand why and what cases will cause failure, but until that time
+///      the work-around is to have the obstacle stick outside of the boundary
+///      slightly.
 /// @ingroup Utilities
 ////////////////////////////////////////////////////////////////////////////////
 class TetGenDecomposition final {

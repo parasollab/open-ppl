@@ -1,4 +1,5 @@
-#include "Simulation.h" 
+#include "Simulation.h"
+
 #include <iostream>
 #include <fstream>
 
@@ -315,6 +316,7 @@ RemovePath(const size_t _id) {
   delete path;
 }
 
+
 size_t
 Simulation::
 AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
@@ -327,6 +329,7 @@ AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
   return m_roadmaps.add(new DrawableRoadmap(_graph, _color));
 }
 
+
 void
 Simulation::
 RemoveRoadmap(const size_t _id) {
@@ -337,16 +340,18 @@ RemoveRoadmap(const size_t _id) {
   delete roadmap;
 }
 
+
 size_t
 Simulation::
 AddBoundary(const Boundary* _boundary, const glutils::color& _color, bool _solid) {
   std::lock_guard<std::mutex> lock(m_guard);
-  
+
   if(!_boundary)
     throw RunTimeException(WHERE, "Cannot draw a NULL boundary.");
 
   return m_boundaries.add(new DrawableBoundary(_boundary, _color, _solid));
 }
+
 
 void
 Simulation::
@@ -387,6 +392,10 @@ PrintStatFile(const std::string& _basename) {
                                                  : _basename,
                     fullname = m_problem->GetPath(basename + "-sim.stat");
 
+  // If the base name is empty, then we did not request a simulation stat file.
+  if(basename.empty())
+    return;
+
   // Print the stats to file.
   std::ofstream osStat(fullname);
   m_stats->PrintAllStats(osStat);
@@ -399,7 +408,7 @@ Simulation::
 AddBBX() {
   /// @TODO Our current pseudo-boundary isn't doing anything. Removing it until
   ///       we can implement full support.
-  
+
 
   // @NOTE: uncomment this to see the bounding box.
   //auto environment = m_problem->GetEnvironment();
