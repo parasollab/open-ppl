@@ -1,18 +1,16 @@
 #ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
 
-#include <functional>
+#include "Geometry/Boundaries/Boundary.h"
+#include "Utilities/MPUtils.h"
+
+#include "Transformation.h"
+
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "Transformation.h"
-using namespace mathtool;
-
-#include "Geometry/Boundaries/Boundary.h"
-#include "Utilities/MPUtils.h"
 #include <unordered_map>
 
 class CollisionDetectionMethod;
@@ -45,10 +43,7 @@ class Environment {
     ///@name Local Types
     ///@{
 
-    typedef std::function<std::shared_ptr<WorkspaceDecomposition>(
-        const Environment*)> DecompositionFunction;
-    
-    typedef std::unordered_map<std::string, std::vector<Terrain>> 
+    typedef std::unordered_map<std::string, std::vector<Terrain>>
         TerrainMap;
 
     ///@}
@@ -174,7 +169,7 @@ class Environment {
     /// @param _t Transformation of object
     /// @return The index of the newly created obstacle.
     size_t AddObstacle(const std::string& _dir, const std::string& _filename,
-        const Transformation& _t = Transformation());
+        const mathtool::Transformation& _t = mathtool::Transformation());
 
     /// Remove an obstacle from the environment.
     /// @param _position Index in m_obstacleBodies to be removed
@@ -186,7 +181,8 @@ class Environment {
 
     /// Compute a mapping of the obstacle vertices.
     /// @return A map from obstacle points to obstacle indexes.
-    std::map<Vector3d, std::vector<size_t>> ComputeObstacleVertexMap() const;
+    std::map<mathtool::Vector3d, std::vector<size_t>> ComputeObstacleVertexMap()
+        const;
 
     /// Check if the boundary is also modeled as an obstacle.
     bool UsingBoundaryObstacle() const noexcept;
@@ -199,14 +195,21 @@ class Environment {
     double GetFrictionCoefficient() const noexcept;
 
     /// Get the gravity 3-vector
-    const Vector3d& GetGravity() const noexcept;
+    const mathtool::Vector3d& GetGravity() const noexcept;
 
     ///@}
-
     ///@name Terrain Functions
     ///@{
 
     const TerrainMap& GetTerrains() const noexcept;
+
+    ///@}
+    ///@name Simulation Functions
+    ///@{
+
+    /// Get the initial transformation for the camera.
+    const mathtool::Transformation& GetInitialCameraTransformation() const
+        noexcept;
 
     ///@}
 
@@ -250,18 +253,11 @@ class Environment {
     bool m_boundaryObstacle{false}; ///< Use the boundary as an obstacle?
 
     ///@}
-    ///@name Decomposition
-    ///@{
-
-    /// A workspace decomposition model describes a partitioning of free space.
-    std::shared_ptr<WorkspaceDecomposition> m_decomposition;
-
-    ///@}
     ///@name Physical Properties
     ///@{
 
     double m_frictionCoefficient{0}; ///< The uniform friction coefficient.
-    Vector3d m_gravity;              ///< The gravity direction and magnitude.
+    mathtool::Vector3d m_gravity;    ///< The gravity direction and magnitude.
 
     ///@}
     ///@name Terrains
@@ -270,6 +266,13 @@ class Environment {
     TerrainMap m_terrains; ///< Environment terrains.
 
     ///@}
+    ///@name Simulation Properties
+    ///@{
+
+    mathtool::Transformation m_initialCameraTransform; ///< Camera starts here.
+
+    ///@}
+
 };
 
 #endif

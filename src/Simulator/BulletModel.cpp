@@ -64,6 +64,9 @@ Initialize() {
   // Zero the model's velocities.
   m_bulletModel->setBaseVel({0,0,0});
   m_bulletModel->setBaseOmega({0,0,0});
+
+  for(int i = 0; i < m_bulletModel->getNumLinks(); ++i)
+    m_bulletModel->setJointVel(i, 0);
 }
 
 
@@ -239,7 +242,7 @@ Build() {
 #endif
 
     if(m_debug)
-      std::cout << "\tAdded base with mass " << baseMass << "."
+      std::cout << "Added base with mass " << baseMass << "."
                 << std::endl;
   }
 
@@ -253,7 +256,7 @@ Build() {
               linkIndex       = linkPmplIndex - 1;
 
     if(m_debug)
-      std::cout << "\tAdding joint " << i << " connecting bodies "
+      std::cout << "\nAdding joint " << i << " connecting bodies "
                 << parentPmplIndex << " and " << linkPmplIndex << "."
                 << std::endl;
 
@@ -274,13 +277,41 @@ Build() {
                    actuationToLink = joints[i]->GetTransformationToBody2(),
                    parentToLink = parentToActuation * actuation * actuationToLink;
 
+    if(m_debug)
+      std::cout << "PMPL Transforms:"
+                << "\nparentToActuation: " << parentToActuation
+                << "\nactuation: " << actuation
+                << "\nactuationToLink: " << actuationToLink
+                << "\nparentToLink: " << parentToLink
+                << std::endl;
+
     // Get the parent to link rotation for the 0 configuration, in the PARENT
     // frame.
     btQuaternion parentToLinkRotationInParentFrame;
     {
       mathtool::Quaternion temp;
+      mathtool::Matrix3x3 check;
       mathtool::convertFromMatrix(temp, parentToLink.rotation().matrix());
-      parentToLinkRotationInParentFrame = ToBullet(temp);
+      mathtool::convertFromQuaternion(check, temp);
+      const bool reconverted = check == parentToLink.rotation().matrix(),
+                 unitQuat    = temp.norm() == 1;
+      if(m_debug and !reconverted)
+        std::cout << "Mat <-> Quat conversion is bad."
+                  << "\nOriginal mat: " << parentToLink.rotation().matrix()
+                  << "\nReconverted:  " << check
+                  << std::endl;
+      if(m_debug and !unitQuat)
+        std::cout << "Quat is not unit length (" << temp.norm() << ")"
+                  << "\nQ: " << temp
+                  << std::endl;
+      auto quat = ToBullet(temp);
+      parentToLinkRotationInParentFrame = quat;
+
+      std::cout << "\n\nparentToLinkRotationInParentFrame: "
+                << "\nPMPL mat: " << parentToLink.rotation().matrix()
+                << "\nPMPL quat: " << temp
+                << "\nBullet quat: " << quat
+                << std::endl;
     }
 
     // Get the parent to actuation frame translation, in the PARENT frame.
@@ -325,6 +356,12 @@ Build() {
       }
       case Connection::JointType::Spherical:
       {
+        throw NotImplementedException(WHERE) << "Bullet uses three-dof spherical "
+                                             << "joints, and we do not have "
+                                             << "support for handling that ("
+                                             << "original impl assumed 2 dof)."
+                                             << std::endl;
+
         /// @TODO support spherical constraints. As per answers here:
         /// http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=9&t=10780
         /// Until then, warn the user that their constraints won't be respected.

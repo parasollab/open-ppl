@@ -46,8 +46,6 @@ btQuaternion
 ToBullet(const Quaternion& _q) {
   const Vector3d imag = _q.imaginary();
   return btQuaternion(imag[0], imag[1], imag[2], _q.real());
-  //This was the wrong constructor:
-  //btQuaternion(ToBullet(_q.imaginary()), _q.real());
 }
 
 
@@ -111,6 +109,17 @@ ToGLUtils(const Transformation& _t) {
                                t[0],    t[1],    t[2], 1};
 #pragma GCC diagnostic pop
 }
+
+
+inline
+glutils::vector3f
+ToGLUtils(const Vector3d& _v) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
+  return {_v[0], _v[1], _v[2]};
+#pragma GCC diagnostic pop
+}
+
 
 glutils::color StringToColor(const std::string& _color);
 

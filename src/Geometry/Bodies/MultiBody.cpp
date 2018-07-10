@@ -75,8 +75,7 @@ MultiBody(XMLNode& _node) {
       if(m_baseBody)
         throw ParseException(child.Where(), "Only one base is permitted.");
 
-      const size_t index = AddBody(Body(this, child));
-      SetBaseBody(index);
+      m_baseIndex = AddBody(Body(this, child));
     }
     else if(child.Name() == "Link") {
       // A link node has body information and a single child node describing its
@@ -93,6 +92,7 @@ MultiBody(XMLNode& _node) {
       m_joints.emplace_back(new Connection(this, *child.begin()));
     }
   }
+  SetBaseBody(m_baseIndex);
 
   for(auto& joint : m_joints)
     joint->SetBodies();
@@ -773,8 +773,9 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
     free->Read(_is, _cbs);
 
     if(free->IsBase() && m_baseIndex == size_t(-1))
-      SetBaseBody(i);
+      m_baseIndex = index;
   }
+  SetBaseBody(m_baseIndex);
 
   if(m_baseIndex == size_t(-1))
     throw ParseException(_cbs.Where(), "Active body has no base.");

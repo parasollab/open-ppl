@@ -11,6 +11,8 @@
 #include "Utilities/XMLNode.h"
 #include "Workspace/WorkspaceDecomposition.h"
 
+using namespace mathtool;
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -37,7 +39,7 @@ Environment(XMLNode& _node) {
   // If the filename is an XML file we will read all of the environment
   // information from that file.
   const bool readXML = m_filename.substr(m_filename.rfind(".", std::string::npos))
-    == ".xml";
+                     == ".xml";
 
   if(readXML) {
     XMLNode envNode = XMLNode(m_filename, "Environment");
@@ -100,12 +102,6 @@ operator=(const Environment& _other) {
   for(const auto& obstacle : _other.m_obstacles)
     m_obstacles.emplace_back(new MultiBody(*obstacle));
 
-  // Copy the decomposition.
-  if(_other.m_decomposition.get())
-    m_decomposition = std::shared_ptr<WorkspaceDecomposition>(
-        new WorkspaceDecomposition(*_other.m_decomposition.get())
-    );
-
   return *this;
 }
 
@@ -132,20 +128,13 @@ ReadXMLOptions(XMLNode& _node) {
   m_frictionCoefficient = _node.Read("frictionCoefficient", false, 0., 0.,
       std::numeric_limits<double>::max(), "friction coefficient (uniform)");
 
-  // Read in the gravity (all three directions)
-  double gravityX, gravityY, gravityZ;
-  gravityX = _node.Read("gravityX", false, 0.,
-      std::numeric_limits<double>::lowest(),
-      std::numeric_limits<double>::max(), "X gravity component");
-  gravityY = _node.Read("gravityY", false, 0.,
-      std::numeric_limits<double>::lowest(),
-      std::numeric_limits<double>::max(), "Y gravity component");
-  gravityZ = _node.Read("gravityZ", false, 0.,
-      std::numeric_limits<double>::lowest(),
-      std::numeric_limits<double>::max(), "Z gravity component");
-
-  // Put into the member gravity vector:
-  m_gravity(gravityX, gravityY, gravityZ);
+  // Read in the gravity vector.
+  {
+    const std::string gravity = _node.Read("gravity", false, "0 0 0",
+        "The gravity vector in this environment.");
+    std::istringstream buffer(gravity);
+    buffer >> m_gravity;
+  }
 
   // If the position or orientation resolution is provided in the xml, overwrite
   // any previous value that could have been set in the env file.
@@ -160,7 +149,7 @@ ReadXMLOptions(XMLNode& _node) {
 
   m_boundaryObstacle = _node.Read("boundaryObstacle", false, m_boundaryObstacle,
       "Create a multibody obstacle for the boundary.");
-  
+
   for(auto& child : _node) {
     if(child.Name() == "Terrain") {
 
@@ -172,16 +161,25 @@ ReadXMLOptions(XMLNode& _node) {
         Terrain terrain;
         if(grandChild.Name() == "Boundary") {
           terrain.boundary = std::move(Boundary::Factory(grandChild));
-          
+
           std::string color = grandChild.Read("color", false, "blue", "Color of the Terrain");
           std::transform(color.begin(), color.end(), color.begin(), ::tolower);
           terrain.color = color;
-          
+
           m_terrains[capability].push_back(std::move(terrain));
         }
       }
     }
-  } 
+  }
+
+  // Read the initial camera transformation. Assume slightly behind the z = 0
+  // plane if not provided.
+  {
+    const std::string transformation = _node.Read("cameraInit", false,
+        "0 0 20 0 0 0", "The initial transformation for the camera.");
+    std::istringstream buffer(transformation);
+    buffer >> m_initialCameraTransform;
+  }
 }
 
 
@@ -574,6 +572,14 @@ const Environment::TerrainMap&
 Environment::
 GetTerrains() const noexcept {
   return m_terrains;
+}
+
+/*--------------------------- Simulation Functions ---------------------------*/
+
+const mathtool::Transformation&
+Environment::
+GetInitialCameraTransformation() const noexcept {
+  return m_initialCameraTransform;
 }
 
 /*------------------------------- Helpers ------------------------------------*/

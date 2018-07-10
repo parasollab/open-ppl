@@ -17,6 +17,9 @@
 
 #include "nonstd/io.h"
 #include "nonstd/numerics.h"
+#include "glutils/camera.h"
+#include "sandbox/gui/gl_widget.h"
+#include "sandbox/gui/main_window.h"
 
 
 main_window* theOneWindow = nullptr;
@@ -103,8 +106,11 @@ Initialize() {
 
   // Require a non-null problem to initialize.
   if(!m_problem.get())
-    throw RunTimeException(WHERE, "Simulation error: cannot initialize with a "
-      "null problem!");
+    throw RunTimeException(WHERE) << "Cannot initialize with a null problem!";
+
+  // Require a non-null main window to initialize.
+  if(!theOneWindow)
+    throw RunTimeException(WHERE) << "Cannot initialize without a main window!";
 
   // Create a bullet engine.
   m_engine = new BulletEngine(m_problem.get());
@@ -114,6 +120,14 @@ Initialize() {
   AddRobots();
   AddObstacles();
   AddTerrain();
+
+  // Set the camera position.
+  const auto& t = m_problem->GetEnvironment()->GetInitialCameraTransformation();
+  const glutils::vector3f pos = ToGLUtils(t.translation()),
+                          at  = ToGLUtils(t * Vector3d(0, 0, -1)),
+                          up  = ToGLUtils(t.rotation() * Vector3d(0, 1, 0));
+
+  theOneWindow->gl()->camera()->position(pos, at, up);
 }
 
 
@@ -212,15 +226,14 @@ render() {
   {
     std::lock_guard<std::mutex> lock(m_guard);
 
-    // If there are no queued frames, there is nothing new to render. Leave the
-    // previous frame on the scene.
-    if(m_backloggedSteps == 0)
-      return;
-    --m_backloggedSteps;
+    // If there are queued frames, update objects to the next queued positions.
+    if(m_backloggedSteps > 0)
+    {
+      --m_backloggedSteps;
 
-    // Otherwise, update objects to the next queued positions.
-    for(auto d : m_drawables)
-      static_cast<DrawableMultiBody*>(d)->UpdateTransform();
+      for(auto d : m_drawables)
+        static_cast<DrawableMultiBody*>(d)->UpdateTransform();
+    }
   }
 
   for(auto d : m_paths.get_all())
@@ -480,6 +493,7 @@ AddRobots() {
     this->add_drawable(new DrawableMultiBody(multiBody));
   }
 }
+
 
 void
 Simulation::

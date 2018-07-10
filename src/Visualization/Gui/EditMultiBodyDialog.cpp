@@ -160,7 +160,7 @@ Export() {
   std::cout << "\nBullet transforms:"
             << "\n\tBody 0: " << ToPMPL(b->getBaseWorldTransform());
   for(size_t i = 0; i < (size_t)b->getNumLinks(); ++i)
-    std::cout << "\n\tBody " << i << ": "
+    std::cout << "\n\tBody " << i + 1 << ": "
               << ToPMPL(b->getLink(i).m_cachedWorldTransform);
 
   std::cout << "\nJoint Cfg:";

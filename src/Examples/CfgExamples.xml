@@ -6,7 +6,7 @@
   <Problem baseFilename="example">
 
     <Environment filename="3D/3d.env"
-      frictionCoefficient="0" gravityX="0" gravityY="0" gravityZ="0"/>
+      frictionCoefficient="0" gravity="0 0 0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot">
       <Agent type="pathfollowing" waypointDm="euclideanPosition"
