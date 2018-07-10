@@ -3,9 +3,13 @@
 #include "CDInfo.h"
 #include "Geometry/Bodies/Body.h"
 
+#include <PQP.h>
+
+#include <limits>
 #include <set>
 
-#include <PQP.h>
+using namespace mathtool;
+using namespace std;
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PQP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -13,6 +17,10 @@
 
 PQP::
 PQP() : CollisionDetectionMethod("PQP") { }
+
+
+PQP::
+~PQP() = default;
 
 /*------------------------------- CD Interface -------------------------------*/
 
@@ -101,6 +109,10 @@ PQPSolid::
 PQPSolid() : PQP() {
   m_name = "PQP_SOLID";
 }
+
+
+PQPSolid::
+~PQPSolid() = default;
 
 /*------------------------------- CD Interface -------------------------------*/
 

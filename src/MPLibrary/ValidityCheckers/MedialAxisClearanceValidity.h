@@ -24,8 +24,6 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual void Print(ostream& _os) const;
 
-    virtual bool IsInsideObstacle(const CfgType& _cfg);
-
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
 
     vector< pair<CfgType,CfgType> >& GetHistory();
@@ -72,14 +70,6 @@ Print(ostream& _os) const {
   m_medialAxisUtility.Print(_os);
 }
 
-
-template <typename MPTraits>
-bool
-MedialAxisClearanceValidity<MPTraits>::
-IsInsideObstacle(const CfgType& _cfg) {
-  auto vcm = this->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
-  return vcm->IsInsideObstacle(_cfg);
-}
 
 template <typename MPTraits>
 bool

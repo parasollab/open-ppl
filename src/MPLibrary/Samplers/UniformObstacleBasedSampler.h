@@ -129,7 +129,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   //Generate first cfg
   CfgType& cfg1 = _cfg;
 
-  cfg1Free = (vc->IsValid(cfg1, callee)) && (!vc->IsInsideObstacle(cfg1));
+  cfg1Free = vc->IsValid(cfg1, callee);
 
   CfgType cfg2(robot);
   CfgType incr(robot);
@@ -162,7 +162,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   env->ResetBoundary(origBoundary, 0);
   for(int i = 1; i < nTicks; i++) {
     tick += inter;
-    tickFree = (vc->IsValid(tick, callee)) && (!vc->IsInsideObstacle(tick));
+    tickFree = vc->IsValid(tick, callee);
     if(m_useBoundary)
       tickFree = tickFree && tick.InBounds(_boundary);
 

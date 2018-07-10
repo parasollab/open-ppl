@@ -1,18 +1,16 @@
-#ifndef COLLISION_DETECTION_METHOD_H_
-#define COLLISION_DETECTION_METHOD_H_
-
-#include <memory>
-#include <string>
-using namespace std;
+#ifndef PMPL_COLLISION_DETECTION_METHOD_H_
+#define PMPL_COLLISION_DETECTION_METHOD_H_
 
 #include "Vector.h"
-using namespace mathtool;
+
+#include <iostream>
+#include <string>
 
 class Body;
 class CDInfo;
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup CollisionDetection
 /// Base abstraction for \ref CollisionDetection.
 ///
 /// CollisionDetectionMethod is a base class for geometric collision detection
@@ -21,6 +19,8 @@ class CDInfo;
 /// functions, @c IsInCollision and @c IsInsideObstacle. @c IsInCollision takes
 /// as input two @c Body and determine if they collide. @c IsInsideObstacle
 /// takes a point and a @c Body to determine if the point is inside of the body.
+///
+/// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
 class CollisionDetectionMethod {
 
@@ -30,38 +30,39 @@ class CollisionDetectionMethod {
     ///@{
 
     /// @param _name The method name.
-    CollisionDetectionMethod(const string& _name = "CD_USER1");
+    CollisionDetectionMethod(const std::string& _name = "CD_USER1");
 
-    virtual ~CollisionDetectionMethod() = default;
+    virtual ~CollisionDetectionMethod();
 
     ///@}
     ///@name Accessors
     ///@{
 
     /// @return Name of CD Method
-    const string& GetName() const {return m_name;}
+    const std::string& GetName() const;
 
-    /// Output class information
-    /// @param _os Output stream
-    virtual void Print(ostream& _os) const;
+    /// Print information to an output stream.
+    /// @param _os The output stream.
+    virtual void Print(std::ostream& _os) const;
 
     ///@}
     ///@name CD Interface
     ///@{
 
     /// Check if two bodies are in collision.
-    /// @param[in]  _body1  The first Body.
-    /// @param[in]  _body2  The second Body.
-    /// @param[out] _cdInfo Output information from the collision computation.
+    /// @param _body1  The first Body.
+    /// @param _body2  The second Body.
+    /// @param _cdInfo Output information from the collision computation.
     /// @return Do the bodies touch?
     virtual bool IsInCollision(const Body* const _body1,
         const Body* const _body2, CDInfo& _cdInfo) = 0;
 
     /// Check if a point is inside of a body.
-    /// @param[in] _pt   The point to check.
-    /// @param[in] _body The body to check against.
+    /// @param _pt   The point to check.
+    /// @param _body The body to check against.
     /// @return Is the point inside the body?
-    virtual bool IsInsideObstacle(const Vector3d& _pt, const Body* const _body);
+    virtual bool IsInsideObstacle(const mathtool::Vector3d& _pt,
+        const Body* const _body);
 
     ///@}
 
@@ -70,9 +71,10 @@ class CollisionDetectionMethod {
     ///@name Internal State
     ///@{
 
-    string m_name; ///< Name of the CD method.
+    std::string m_name; ///< Name of the CD method.
 
     ///@}
+
 };
 
 #endif

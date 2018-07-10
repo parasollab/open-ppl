@@ -11,6 +11,10 @@
 Rapid::
 Rapid() : CollisionDetectionMethod("RAPID") { }
 
+
+Rapid::
+~Rapid() = default;
+
 /*------------------------------- CD Interface -------------------------------*/
 
 void

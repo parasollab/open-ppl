@@ -52,25 +52,16 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     virtual ~CollisionDetectionValidity();
 
     ///@}
-    ///@name ValidityChecker Interface
-    ///@{
-
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-                             const string& _callName);
-
-    /// Group Cfg implementation.
-    virtual bool IsValidImpl(GroupCfg& _cfg, CDInfo& _cdInfo,
-              const string& _callName,
-              const Formation& _robotIndexes = Formation());
-
-    ///@}
     ///@name CollisionDetection Interface
     ///@{
 
     /// @return Collision Detection library
     CollisionDetectionMethod* GetCDMethod() const noexcept {return m_cdMethod;}
 
-    virtual bool IsInsideObstacle(const CfgType& _cfg);
+    /// Determine whether a workspace point lies inside of an obstacle.
+    /// @param _p The workspace point.
+    /// @return True if _p is inside an obstacle.
+    bool IsInsideObstacle(const Point3d& _p);
 
     /// Check if two workspace points are mutually visible.
     /// @param _a The first point.
@@ -93,6 +84,13 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     ///@name Helpers
     ///@{
+
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const string& _callName) override;
+
+    virtual bool IsValidImpl(GroupCfg& _cfg, CDInfo& _cdInfo,
+        const string& _callName, const Formation& _robotIndexes = Formation())
+        override;
 
     /// Orchestrate collision computation between robot and environment
     /// multibodies
@@ -130,7 +128,6 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @return Collision
     virtual bool IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
                                    MultiBody* _obst, const string& _callName);
-
 
     ///@}
     ///@name Internal State
@@ -213,7 +210,7 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
   _cfg.ConfigureRobot();
 
   //check collision
-  bool inCollision = IsInCollision(_cdInfo, _cfg, _callName);
+  const bool inCollision = IsInCollision(_cdInfo, _cfg, _callName);
 
   _cfg.SetLabel("VALID", !inCollision);
 
@@ -586,21 +583,23 @@ IsInObstCollision(CDInfo& _cdInfo, MultiBody* _rob,
 template <typename MPTraits>
 bool
 CollisionDetectionValidity<MPTraits>::
-IsInsideObstacle(const CfgType& _cfg) {
-  Environment* env = this->GetEnvironment();
-  size_t nMulti = env->NumObstacles();
+IsInsideObstacle(const Point3d& _p) {
+  /// @todo Implement a bounding box check (per multibody and body) before
+  ///       calling m_cdMethod.
 
-  throw RunTimeException(WHERE, "This function is incorrect - it checks the Cfg "
-      "reference point, which may be outside the robot geometry. A correct "
-      "implementation must check one of the robot body vertices instead. Please "
-      "repair before using.");
+  auto env = this->GetEnvironment();
+  const size_t numObstacles = env->NumObstacles();
 
-  Vector3d robotPt(_cfg.GetData()[0], _cfg.GetData()[1], _cfg.GetData()[2]);
+  // Check each obstacle.
+  for(size_t i = 0; i < numObstacles; ++i) {
+    auto obst = env->GetObstacle(i);
 
-  ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
-  for(size_t i = 0; i < nMulti; ++i)
-    if(m_cdMethod->IsInsideObstacle(robotPt, env->GetObstacle(i)->GetBody(0)))
-      return true;
+    // Check each body.
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j)
+      if(m_cdMethod->IsInsideObstacle(_p, obst->GetBody(j)))
+        return true;
+  }
+
   return false;
 }
 

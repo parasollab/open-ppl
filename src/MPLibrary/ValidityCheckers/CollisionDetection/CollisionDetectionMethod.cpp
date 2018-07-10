@@ -1,26 +1,36 @@
 #include "CollisionDetectionMethod.h"
 #include "Utilities/PMPLExceptions.h"
 
-#include <iostream>
 
 /*------------------------------- Construction -------------------------------*/
 
 CollisionDetectionMethod::
-CollisionDetectionMethod(const string& _name) : m_name(_name) { }
+CollisionDetectionMethod(const std::string& _name) : m_name(_name) { }
+
+
+CollisionDetectionMethod::
+~CollisionDetectionMethod() = default;
 
 /*--------------------------------- Accessors --------------------------------*/
 
+const std::string&
+CollisionDetectionMethod::
+GetName() const {
+  return m_name;
+}
+
+
 void
 CollisionDetectionMethod::
-Print(ostream& _os) const {
-  _os << m_name << endl;
+Print(std::ostream& _os) const {
+  _os << m_name << std::endl;
 }
 
 /*------------------------------- CD Interface -------------------------------*/
 
 bool
 CollisionDetectionMethod::
-IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
+IsInsideObstacle(const mathtool::Vector3d& _pt, const Body* const _body) {
   throw RunTimeException(WHERE, "Not implemented.");
 }
 

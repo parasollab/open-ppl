@@ -1,13 +1,20 @@
-#ifndef RAPID_COLLISION_DETECTION_H_
-#define RAPID_COLLISION_DETECTION_H_
+#ifndef PMPL_RAPID_COLLISION_DETECTION_H_
+#define PMPL_RAPID_COLLISION_DETECTION_H_
 
 #include "CollisionDetectionMethod.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// RAPID is typically used to simply and quickly determine collision between
-/// two objects, but cannot compute any distance information. The contacts
-/// found, i.e., triangle IDs are stored in CDInfo.
+/// RAPID checks for polygon collisions between two meshes.
+///
+/// RAPID is fast, but it cannot determine any auxiliary information or detect
+/// when one mesh is completely inside the other. The contacts (colliding
+/// triangle IDs) are stored in the CDInfo object.
+///
+/// Reference:
+///   Stefan Gottschalk and Ming C. Lin and Dinesh Manocha. "OBBTree: A
+///   Hierarchical Structure for Rapid Interference Detection". SIGGRAPH 1996.
+///
 /// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
 class Rapid: public CollisionDetectionMethod {
@@ -19,7 +26,7 @@ class Rapid: public CollisionDetectionMethod {
 
     Rapid();
 
-    virtual ~Rapid() = default;
+    virtual ~Rapid();
 
     ///@}
     ///@name CollisionDetectionMethod Overrides
