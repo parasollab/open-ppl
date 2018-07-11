@@ -349,8 +349,8 @@ ExtractSimulatedPosition(MultiBody* const _pmpl, const btMultiBody* const _bulle
 
     int count = 0;
     for(size_t i = firstJointIndex; i < lastJointIndex; ++i, ++count)
-      // Bullet uses [ -PI : PI ] and negative DOF values compared with PMPL.
-      out[i] = -_bullet->getJointPos(count) / PI;
+      // Bullet uses [ -PI : PI ].
+      out[i] = _bullet->getJointPos(count) / PI;
   }
 
   return out;
@@ -369,8 +369,8 @@ ConfigureSimulatedPosition(MultiBody* const _pmpl, btMultiBody* const _bullet) {
   const size_t firstJointIndex = _pmpl->DOF() - _pmpl->JointDOF();
   const size_t lastJointIndex = _pmpl->DOF();
   for(size_t i = firstJointIndex, index = 0; i < lastJointIndex; ++i, ++index)
-    // Bullet uses [ -PI : PI ] and negative DOF values compared with PMPL.
-    _bullet->setJointPos(index, -dofs[i] * PI);
+    // Bullet uses [ -PI : PI ].
+    _bullet->setJointPos(index, dofs[i] * PI);
 }
 
 /*----------------------------------------------------------------------------*/

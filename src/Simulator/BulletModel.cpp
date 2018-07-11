@@ -307,11 +307,12 @@ Build() {
       auto quat = ToBullet(temp);
       parentToLinkRotationInParentFrame = quat;
 
-      std::cout << "\n\nparentToLinkRotationInParentFrame: "
-                << "\nPMPL mat: " << parentToLink.rotation().matrix()
-                << "\nPMPL quat: " << temp
-                << "\nBullet quat: " << quat
-                << std::endl;
+      if(m_debug)
+        std::cout << "\n\nparentToLinkRotationInParentFrame: "
+                  << "\nPMPL mat: " << parentToLink.rotation().matrix()
+                  << "\nPMPL quat: " << temp
+                  << "\nBullet quat: " << quat
+                  << std::endl;
     }
 
     // Get the parent to actuation frame translation, in the PARENT frame.
@@ -330,7 +331,7 @@ Build() {
         // the link's frame. For revolute joints this is the Z-direction in the
         // actuation frame, so we just need to rotate it to the link frame.
         const btVector3 jointAxisInLinkFrame = ToBullet(
-            actuationToLink.rotation() * Vector3d(0, 0, 1));
+            actuationToLink.rotation() * Vector3d(0, 0, -1));
 
         m_bulletModel->setupRevolute(linkIndex, linkMass, linkInertia,
             parentIndex,
