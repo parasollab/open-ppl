@@ -242,11 +242,11 @@ render() {
   for(auto d : m_roadmaps.get_all())
     d->render();
 
-  for(auto d : m_boundaries.get_all())
-    d->render();
-
   // Rrrrrender.
   base_visualization::render();
+
+  for(auto d : m_boundaries.get_all())
+    d->render();
 }
 
 
@@ -425,7 +425,8 @@ AddBBX() {
 
   // @NOTE: uncomment this to see the bounding box.
   //auto environment = m_problem->GetEnvironment();
-  //m_boundaryID = this->AddBoundary(environment->GetBoundary(), glutils::color::white);
+  //m_boundaryID = this->AddBoundary(environment->GetBoundary(),
+  //    glutils::color::dark_grey);
 #if 0
   const auto& boundary = m_problem->GetEnvironment()->GetBoundary();
 

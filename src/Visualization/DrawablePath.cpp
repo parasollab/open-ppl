@@ -19,7 +19,9 @@ DrawablePath::
 void
 DrawablePath::
 build() {
+  glDisable(GL_LIGHTING);
   glColor4fv(m_color);
+  glLineWidth(1.);
 
   // For each pair of Cfgs in the path, draw a line between their points. Do
   // this first so that Cfgs always occlude the lines rather than the other way
@@ -34,6 +36,7 @@ build() {
   // Now that the drawing is complete, we can release the cfgs as they are no
   // longer needed.
   m_cfgs.clear();
+  glEnable(GL_LIGHTING);
 }
 
 /*----------------------------------------------------------------------------*/

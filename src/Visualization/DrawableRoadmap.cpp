@@ -14,6 +14,7 @@ draw() {
   glPointSize(8.0);
 
   // says to draw a point primative
+  glDisable(GL_LIGHTING);
   glBegin(GL_POINTS);
   for(auto& v : m_cfgs)
     glVertex3fv(v.begin());
@@ -21,9 +22,7 @@ draw() {
 
   // sets the width of the line
   glLineWidth(1.0);
-
   for(const auto& edge : m_edges) {
-
     // after the first vertex, for each new vertice
     // added a new line will be drawn.
     // Lets say n vertices were drawn, n-1 vertices will
@@ -33,6 +32,7 @@ draw() {
       glVertex3fv(inter.begin());
     glEnd();
   }
+  glEnable(GL_LIGHTING);
 }
 
 void

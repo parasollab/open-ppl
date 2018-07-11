@@ -56,14 +56,24 @@ DrawableBody::
 build() {
   auto color = m_body->GetColor();
   glColor4fv(color);
-  build_select();
+
+  /// @todo See if we can support proper rendering of transparent objects
+  ///       without needing to z-sort every drawable.
+
+  glBegin(GL_TRIANGLES);
+  const auto& polyhedron = m_body->GetPolyhedron();
+  for(const auto& polygon : polyhedron.GetPolygonList())
+    for(size_t i = 0; i < 3; ++i) {
+      glNormal3dv(static_cast<const GLdouble*>(polygon.GetNormal()));
+      glVertex3dv(static_cast<const GLdouble*>(polygon.GetPoint(i)));
+    }
+  glEnd();
 }
 
 
 void
 DrawableBody::
 build_select() {
-  glLineWidth(1);
   glBegin(GL_TRIANGLES);
   const auto& polyhedron = m_body->GetPolyhedron();
   for(const auto& polygon : polyhedron.GetPolygonList())
@@ -76,6 +86,7 @@ build_select() {
 void
 DrawableBody::
 build_selected() {
+  glDisable(GL_LIGHTING);
   glColor4fv(glutils::color::yellow);
   glLineWidth(4);
 
@@ -87,6 +98,7 @@ build_selected() {
       glVertex3dv(static_cast<const GLdouble*>(polygon.GetPoint(i)));
     glEnd();
   }
+  glEnable(GL_LIGHTING);
 }
 
 
