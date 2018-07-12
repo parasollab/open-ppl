@@ -115,6 +115,19 @@ class PlanningAgent : public Agent {
     virtual void ExecuteTask(const double _dt) = 0;
 
     ///@}
+    ///@name Localization Helpers
+    ///@{
+    
+    /// Evaluates whether the robot's simulated state is incorrect (beyond some error
+    /// threshold) and sets the simulated state as necessary.
+    void UpdateSimulatedState(const std::vector<mathtool::Transformation>& _transformations);
+
+    /// Normalizes the angles received from the marker readings and returns the
+    /// average estimated angle. 
+    /// @return The estimated angle.
+    double ComputeRotation(const std::vector<mathtool::Transformation>& _transformations);
+
+    ///@}
     ///@name Internal State
     ///@{
 
@@ -126,6 +139,9 @@ class PlanningAgent : public Agent {
 
     size_t m_roadmapVisualID{0}; ///< The ID of the roadmap drawing.
 
+    size_t m_localizePeriod{200};         ///< The number of timesteps between localize calls.
+    size_t m_localizeCount{1};            ///< The number of timesteps since the last localize call.
+    double m_localizeErrorThreshold{0.4}; ///< The largest allowed error before requiring a replan.
     ///@}
 
 };

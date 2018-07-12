@@ -242,10 +242,6 @@ ContinueLastControls() {
   --m_stepsRemaining;
   ExecuteControlsSimulation(m_currentControls);
 
-  // TEST LOCALIZATION
-  if(m_stepsRemaining == 0) {
-    Localize();
-  }
   return true;
 }
 
