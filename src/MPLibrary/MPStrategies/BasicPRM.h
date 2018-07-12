@@ -33,7 +33,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     BasicPRM(XMLNode& _node);
     virtual ~BasicPRM() {}
 
-    virtual void ParseXML(XMLNode& _node);
     virtual void Print(ostream& _os) const;
 
     virtual void Initialize();
@@ -65,12 +64,23 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     template<class InputIterator>
       void CheckNarrowPassageSamples(InputIterator _first, InputIterator _last);
 
+    ///@name Internal State
+    ///@{
+
     map<string, pair<size_t, size_t> > m_samplerLabels; ///< Sampler labels with number and attempts of sampler
     vector<string> m_connectorLabels; ///< Connector labels for node-to-node
     vector<string> m_componentConnectorLabels; ///< Connector labels for cc-to-cc
     size_t m_currentIteration; ///< Current iteration of while-loop of Run function
     string m_inputMapFilename; ///< Input roadmap to initialize map
     Start m_startAt; ///< When inputting a roadmap, specifies where in algorithm to start
+
+    bool m_fixBase{false};  ///< Keep the base fixed to the start cfg?
+
+    /// An optional sampling boundary for fixing the base.
+    std::unique_ptr<Boundary> m_samplingBoundary;
+
+    ///@}
+
 };
 
 template <typename MPTraits>
@@ -88,18 +98,13 @@ BasicPRM(const map<string, pair<size_t, size_t> >& _samplerLabels,
   this->SetName("BasicPRM");
 }
 
+
 template <typename MPTraits>
 BasicPRM<MPTraits>::
 BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
     m_currentIteration(0), m_inputMapFilename(""), m_startAt(Sampling) {
   this->SetName("BasicPRM");
-  ParseXML(_node);
-}
 
-template <typename MPTraits>
-void
-BasicPRM<MPTraits>::
-ParseXML(XMLNode& _node) {
   m_inputMapFilename = _node.Read("inputMap", false, "",
       "filename of roadmap to start from");
   string startAt = _node.Read("startAt", false, "sampling",
@@ -139,6 +144,9 @@ ParseXML(XMLNode& _node) {
       this->m_meLabels.push_back(
           child.Read("method", true, "", "Evaluator Label"));
   }
+
+  m_fixBase = _node.Read("fixBase", false, m_fixBase,
+      "Fix the robot's base position and orientation to the start cfg?");
 }
 
 template <typename MPTraits>
@@ -175,6 +183,9 @@ Print(ostream& _os) const {
   _os<<"\tMapEvaluators" << std::endl;
   for(const auto& label : this->m_meLabels)
     _os << "\t\t" << label << std::endl;
+
+  _os << "\tFix base: " << (m_fixBase ? "true" : "false")
+      << std::endl;
 }
 
 template <typename MPTraits>
@@ -185,6 +196,30 @@ Initialize() {
     std::cout << this->GetName() << "::Initialize"
               << std::endl;
 
+  // If a query was loaded, process query cfgs
+  m_samplingBoundary.reset();
+  if(m_fixBase and this->UsingQuery()) {
+    // Assume a query named "PRMQuery" is available.
+    auto query = static_cast<PRMQuery<MPTraits>*>(
+        this->GetMapEvaluator("PRMQuery").get());
+
+    const std::vector<CfgType>& queryCfgs = query->GetQuery();
+    const auto& start = queryCfgs.front();
+
+    // Create a version of the robot's cspace where the base
+    // position/translation are fixed.
+    auto robot = this->GetTask()->GetRobot();
+    auto mb = robot->GetMultiBody();
+    m_samplingBoundary = robot->GetCSpace()->Clone();
+    const size_t numDOF = mb->PosDOF() + mb->OrientationDOF();
+
+    // Need to downcast to c-space bounding box to be able to set the range.
+    auto bbx = static_cast<CSpaceBoundingBox*>(m_samplingBoundary.get());
+    for(size_t i = 0; i < numDOF; ++i)
+      bbx->SetRange(i, start[i], start[i]);
+  }
+
+  /// @todo Move input map parsing to the MPSolution somehow.
   //read in and reload roadmap and evaluators
   if(!m_inputMapFilename.empty()) {
     RoadmapType* r = this->GetRoadmap();
@@ -271,13 +306,16 @@ Sample(OutputIterator _thisIterationOut) {
   StatClass* stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetName() + "::Sample");
 
+  auto boundary = m_samplingBoundary.get() ? m_samplingBoundary.get()
+                                        : this->GetEnvironment()->GetBoundary();
+
   // Generate nodes with each sampler.
   vector<CfgType> samples;
   for(auto&  sampler : m_samplerLabels) {
     auto s = this->GetSampler(sampler.first);
 
     s->Sample(sampler.second.first, sampler.second.second,
-        this->GetEnvironment()->GetBoundary(), back_inserter(samples));
+        boundary, back_inserter(samples));
   }
 
   if(this->m_debug)

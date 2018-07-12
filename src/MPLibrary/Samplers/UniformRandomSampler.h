@@ -1,13 +1,12 @@
-#ifndef UNIFORM_RANDOM_SAMPLER_H_
-#define UNIFORM_RANDOM_SAMPLER_H_
+#ifndef PMPL_UNIFORM_RANDOM_SAMPLER_H_
+#define PMPL_UNIFORM_RANDOM_SAMPLER_H_
 
 #include "SamplerMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief TODO
 ///
-/// TODO
+/// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class UniformRandomSampler : public SamplerMethod<MPTraits> {
@@ -24,7 +23,9 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     UniformRandomSampler(string _vcLabel = "");
+
     UniformRandomSampler(XMLNode& _node);
+
     virtual ~UniformRandomSampler() = default;
 
     ///@}
