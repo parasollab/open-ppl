@@ -147,6 +147,16 @@ Test(const Cfg& _start, const Control& _c, const double _dt) const {
 }
 
 
+Cfg
+DynamicsModel::
+Test(const Cfg& _start, const ControlSet& _c, const double _dt) const {
+  // Initialze the internal simulator if it isn't already available.
+  if(!m_simulator)
+    m_simulator = new MicroSimulator(m_robot);
+  return m_simulator->Test(_start, _c, _dt);
+}
+
+
 void
 DynamicsModel::
 LocalToWorld(std::vector<double>& _force, btMultiBody* const _model) const {

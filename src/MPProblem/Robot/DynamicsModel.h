@@ -84,6 +84,15 @@ class DynamicsModel final {
     ///         starting from _start.
     Cfg Test(const Cfg& _start, const Control& _c, const double _dt) const;
 
+    /// Test the result of applying a control set to a given start configuration
+    /// using the internal simulator.
+    /// @param _start The starting configuration.
+    /// @param _c The controls to apply.
+    /// @param _dt The length of time to apply the control.
+    /// @return The result of applying controls _c to the robot for _dt seconds,
+    ///         starting from _start.
+    Cfg Test(const Cfg& _start, const ControlSet& _c, const double _dt) const;
+
     /// Convert a generalized force from the robot's local frame to the world
     /// frame.
     /// @param _force The generalized force to convert.
