@@ -381,6 +381,17 @@ ConfigureSimulatedPosition(MultiBody* const _pmpl, btMultiBody* const _bullet) {
   for(size_t i = firstJointIndex, index = 0; i < lastJointIndex; ++i, ++index)
     // Bullet uses [ -PI : PI ].
     _bullet->setJointPos(index, dofs[i] * PI);
+
+  // Reinitialize the internal link transforms.
+  btAlignedObjectArray<btQuaternion> scratch_q;
+  btAlignedObjectArray<btVector3> scratch_m;
+  _bullet->forwardKinematics(scratch_q, scratch_m);
+
+  // Reinitialize the internal collider transforms.
+  btAlignedObjectArray<btQuaternion> world_to_local;
+  btAlignedObjectArray<btVector3> local_origin;
+  _bullet->updateCollisionObjectWorldTransforms(world_to_local,
+      local_origin);
 }
 
 /*----------------------------------------------------------------------------*/
