@@ -4,7 +4,7 @@
 
 DrawableBoundary::
 DrawableBoundary(const Boundary* _boundary, const glutils::color& _color, bool _solid) :
-  glutils::drawable_call_list(),
+  glutils::drawable_display_list(),
   m_boundary(_boundary), m_color(_color), m_solid(_solid) {}
 
 void

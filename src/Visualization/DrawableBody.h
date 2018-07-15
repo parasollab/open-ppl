@@ -1,7 +1,7 @@
 #ifndef DRAWABLE_BODY_H_
 #define DRAWABLE_BODY_H_
 
-#include "glutils/drawable_call_list.h"
+#include "glutils/drawable_display_list.h"
 
 class Body;
 class DrawableMultiBody;
@@ -10,7 +10,7 @@ class DrawableMultiBody;
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawable representation of a pmpl Body.
 ////////////////////////////////////////////////////////////////////////////////
-class DrawableBody final : public glutils::drawable_call_list {
+class DrawableBody final : public glutils::drawable_display_list {
 
   ///@name Internal State
   ///@{
@@ -51,7 +51,7 @@ class DrawableBody final : public glutils::drawable_call_list {
 
   protected:
 
-    ///@name drawable_call_list Overrides
+    ///@name drawable_display_list Overrides
     ///@{
 
     virtual void build() override;

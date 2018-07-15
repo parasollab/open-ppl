@@ -383,7 +383,7 @@ Simulation::
 RebuildMultiBody(DrawableMultiBody* const _d) {
   std::lock_guard<std::mutex> lock(m_guard);
 
-  _d->rebuild();
+  _d->uninitialize();
   if(!m_editMode)
     m_engine->RebuildObject(_d->GetMultiBody());
 }

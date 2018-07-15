@@ -49,7 +49,7 @@ unhighlight() noexcept {
   m_parent->unhighlight();
 }
 
-/*----------------------- drawable_call_list Overrides -----------------------*/
+/*--------------------- drawable_display_list Overrides ----------------------*/
 
 void
 DrawableBody::

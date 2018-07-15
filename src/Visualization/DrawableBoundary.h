@@ -3,12 +3,13 @@
 
 class Boundary;
 
-#include <glutils/drawable_call_list.h>
+#include "glutils/drawable_display_list.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawable representation of a pmpl boundary
 ////////////////////////////////////////////////////////////////////////////////
-class DrawableBoundary : public glutils::drawable_call_list {
+class DrawableBoundary : public glutils::drawable_display_list {
   public:
     ///@name Constructor
     ///@{

@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "glutils/color.h"
-#include "glutils/drawable_call_list.h"
+#include "glutils/drawable_display_list.h"
 
 class Cfg;
 class MultiBody;
@@ -15,7 +15,7 @@ class MultiBody;
 ////////////////////////////////////////////////////////////////////////////////
 /// Instructions for drawing a pmpl Path in the Simulator.
 ////////////////////////////////////////////////////////////////////////////////
-class DrawablePath final : public glutils::drawable_call_list {
+class DrawablePath final : public glutils::drawable_display_list {
 
   ///@name Internal State
   ///@{
@@ -35,13 +35,10 @@ class DrawablePath final : public glutils::drawable_call_list {
     /// @param _color The drawing color.
     DrawablePath(const std::vector<Cfg>& _cfgs, glutils::color _color);
 
-    /// We will never rebuild this object.
-    virtual void rebuild() override {}
-
     virtual ~DrawablePath();
 
     ///@}
-    ///@name Drawable Call List Overrides
+    ///@name drawable_display_list Overrides
     ///@{
     /// Paths cannot be selected/highlighted.
 

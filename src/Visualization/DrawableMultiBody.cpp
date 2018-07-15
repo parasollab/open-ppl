@@ -24,12 +24,12 @@ DrawableMultiBody(MultiBody* const _m) : m_multibody(_m) {
 
 void
 DrawableMultiBody::
-rebuild() {
+uninitialize() {
   for(auto& b : m_bodies)
-    b.rebuild();
+    b.uninitialize();
 
   // Call base class version.
-  glutils::drawable::rebuild();
+  glutils::drawable::uninitialize();
 }
 
 /*---------------------------- MultiBody Support -----------------------------*/
