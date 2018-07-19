@@ -99,7 +99,7 @@ class ClosestPolicy : public Policy {
           if(pq.size() < m_k)
             pq.push(*it);
           // If better than the worst so far, replace worst so far
-          else if(it->distance < pq.top().distance) {
+          else if((it->distance) < pq.top().distance) {
             pq.pop();
             pq.push(*it);
           }

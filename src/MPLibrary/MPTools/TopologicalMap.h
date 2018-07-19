@@ -318,7 +318,6 @@ Initialize() {
       [this](const VI _vi){this->UnmapCfg(_vi);});
 
   // If the graph has existing vertices, map them now.
-  std::cout << "Graph has " << g->Size() << " vertices." << std::endl;
   for(auto iter = g->begin(); iter != g->end(); ++iter)
     MapCfg(iter);
 }
