@@ -55,5 +55,8 @@ StringToColor(const std::string& _color) {
   else if(_color == "violet")
       return glutils::color::violet;
   else
-    throw RunTimeException(WHERE, "Unrecognized color, see Simulation.cpp for list of color strings");
+    throw RunTimeException(WHERE)
+      << "Unrecognized color '"
+      << _color <<
+      "', see Simulation.cpp for list of color strings";
 }

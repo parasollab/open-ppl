@@ -34,6 +34,8 @@ class DrawableMultiBody final : public glutils::drawable {
     /// @param[in] _m The PMPL multibody to draw.
     DrawableMultiBody(MultiBody* const _m);
 
+    virtual void initialize() override;
+
     /// Since this is a container, uninit requests must be passed on to the
     /// child bodies.
     virtual void uninitialize() override;

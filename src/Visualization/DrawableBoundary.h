@@ -1,42 +1,42 @@
 #ifndef DRAWABLE_BOUNDARY_H_
 #define DRAWABLE_BOUNDARY_H_
 
-class Boundary;
 
-#include "glutils/drawable_display_list.h"
+#include "DrawablePolyhedron.h"
+
+class Boundary;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawable representation of a pmpl boundary
 ////////////////////////////////////////////////////////////////////////////////
-class DrawableBoundary : public glutils::drawable_display_list {
+class DrawableBoundary : public DrawablePolyhedron {
   public:
     ///@name Constructor
     ///@{
 
     /// Builds a new drawable boundary for drawing.
-    /// @param _boundary Boundary to be drawn
-    /// @param _color the color to render the boundary.
-    /// @param _solid whether to draw the boundary in wire frame
-    ///               or rasterized triangles.
+    ///@param _boundary Boundary to be drawn
+    ///@param _color the color to render the boundary.
+    ///@param _wire whether to draw the boundary in wire frame
+    ///              or rasterized triangles.
+
     DrawableBoundary(const Boundary* _boundary, const glutils::color& _color,
-        bool _solid = false);
+        bool _wire = false);
 
     ///@}
-    ///@name Drawable Call List overrides
+
+  protected:
+    ///@name DrawalbePolyhedron Overrides
     ///@{
 
-    virtual void build() override;
-    virtual void build_select() override;
+    void build() override;
 
     ///@}
-  private:
-    ///@name Internal State
+    ///@name Local State
     ///@{
-
-    const Boundary* m_boundary; ///< Boundary being drawn.
-    glutils::color m_color;     ///< Color to render in
-    bool m_solid;               ///< solid flag
+  
+    GMSPolyhedron m_polyhedron;
 
     ///@}
 };

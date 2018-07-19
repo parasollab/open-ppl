@@ -5,8 +5,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that a robot is within terrains for which it has the required
-/// capability. A configuration is considered valid if it is within the 
-/// required terrain and outside all other terrains. 
+/// capability. A configuration is considered valid if it is within the
+/// required terrain and outside all other terrains.
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -35,7 +35,7 @@ class TerrainValidityChecker : public ValidityCheckerMethod<MPTraits> {
         const string& _callName) override;
 
     ///@}
-    
+
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -62,22 +62,22 @@ IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
   auto env = this->GetEnvironment();
 
 
-  /// Check whether the cfg is within a terrain boundary. If so, 
+  /// Check whether the cfg is within a terrain boundary. If so,
   //  Check that the capability of its robot matches the capability of the terrain.
   for(auto& elem : env->GetTerrains()) {
     auto terrainCapability = elem.first;
 
     if(this->m_debug)
-      std::cout << "Terrain Capability: " << terrainCapability 
-                << " Robot Capability:  " << _cfg.GetRobot()->GetCapability() 
+      std::cout << "Terrain Capability: " << terrainCapability
+                << " Robot Capability:  " << _cfg.GetRobot()->GetCapability()
                 << std::endl;
 
     const bool hasCapability = terrainCapability == _cfg.GetRobot()->GetCapability();
     bool inBoundary = false;
 
     for(auto& terrain : elem.second) {
-      inBoundary |= terrain.boundary->InBoundary(_cfg.GetPoint()) || 
-                    terrain.boundary->InBoundary(_cfg);
+      inBoundary |= terrain.GetBoundary()->InBoundary(_cfg.GetPoint()) ||
+                    terrain.GetBoundary()->InBoundary(_cfg);
 
       // If the cfg is within the terrain boundary and has the same capability
       // then move on to check the other terrains.

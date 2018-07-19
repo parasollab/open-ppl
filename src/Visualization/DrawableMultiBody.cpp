@@ -21,6 +21,15 @@ DrawableMultiBody(MultiBody* const _m) : m_multibody(_m) {
   }
 }
 
+void
+DrawableMultiBody::
+initialize() {
+  for(auto& b : m_bodies)
+    b.initialize();
+
+  // Call base class version.
+  glutils::drawable::initialize();
+}
 
 void
 DrawableMultiBody::

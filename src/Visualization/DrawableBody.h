@@ -1,7 +1,7 @@
 #ifndef DRAWABLE_BODY_H_
 #define DRAWABLE_BODY_H_
 
-#include "glutils/drawable_display_list.h"
+#include "DrawablePolyhedron.h"
 
 class Body;
 class DrawableMultiBody;
@@ -10,7 +10,7 @@ class DrawableMultiBody;
 ////////////////////////////////////////////////////////////////////////////////
 /// Drawable representation of a pmpl Body.
 ////////////////////////////////////////////////////////////////////////////////
-class DrawableBody final : public glutils::drawable_display_list {
+class DrawableBody final : public  DrawablePolyhedron {
 
   ///@name Internal State
   ///@{
@@ -25,7 +25,7 @@ class DrawableBody final : public glutils::drawable_display_list {
     ///@name Construction
     ///@{
 
-    DrawableBody(DrawableMultiBody* const _parent, Body* const _body);
+    DrawableBody(DrawableMultiBody* const _parent, Body* const _body, bool _wired = false);
 
     virtual ~DrawableBody() = default;
 
@@ -48,19 +48,6 @@ class DrawableBody final : public glutils::drawable_display_list {
     virtual void unhighlight() noexcept override;
 
     ///@}
-
-  protected:
-
-    ///@name drawable_display_list Overrides
-    ///@{
-
-    virtual void build() override;
-    virtual void build_select() override;
-    virtual void build_selected() override;
-    virtual void build_highlighted() override;
-
-    ///@}
-
 };
 
 #endif

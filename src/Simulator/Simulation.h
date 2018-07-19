@@ -136,7 +136,7 @@ class Simulation : public base_visualization {
     /// @param _c The line color.
     /// @param _solid Solid body or wire frame.
     /// @return The ID of the boundary
-    size_t AddBoundary(const Boundary* _boundary, const glutils::color& _c, bool _solid = false);
+    size_t AddBoundary(const Boundary* _boundary, const glutils::color& _c, bool _wired = true);
 
     /// Remove a boundary from the scene.
     /// @param _id The path ID.

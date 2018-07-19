@@ -5,6 +5,7 @@
 #include "Utilities/MPUtils.h"
 
 #include "Transformation.h"
+#include "glutils/color.h"
 
 #include <iostream>
 #include <map>
@@ -21,14 +22,42 @@ class WorkspaceDecomposition;
 class XMLNode;
 
 
-struct Terrain {
-  std::string color;
-  std::unique_ptr<Boundary> boundary;
+////////////////////////////////////////////////////////////////////////////////
+/// Workspace representation of terrain within the world.
+////////////////////////////////////////////////////////////////////////////////
+class Terrain {
+  public:
 
-  Terrain();
+    ///@name Construction
+    ///@{
 
-  Terrain(const Terrain& _terrain);
+    /// Default constructor
+    Terrain();
 
+    /// Constructor for xml parsing
+    Terrain(XMLNode& _node);
+
+    /// Copy constructor
+    Terrain(const Terrain& _terrain);
+
+    ///@}
+    ///@name Accessors
+    ///@{
+
+    const glutils::color& Color() const noexcept;
+
+    const Boundary* GetBoundary() const noexcept;
+
+    bool IsWired() const noexcept;
+
+    ///@}
+  private:
+    glutils::color m_color{glutils::color::green}; ///< the color of the boundary when rendering
+    std::unique_ptr<Boundary> m_boundary; ///< represents where the terrain is located.
+
+    /// A rendering property, if true then the boundary is
+    /// rendered as a solid mesh; otherwise, it is rendered in wire frame.
+    bool m_wire{true};
 };
 
 

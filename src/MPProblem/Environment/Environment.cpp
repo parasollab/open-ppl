@@ -10,6 +10,7 @@
 #include "Utilities/IOUtils.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/WorkspaceDecomposition.h"
+#include "Simulator/Conversions.h"
 
 using namespace mathtool;
 
@@ -19,11 +20,51 @@ using namespace mathtool;
 Terrain::
 Terrain() = default;
 
+Terrain::
+Terrain(XMLNode& _node) {
+
+  m_boundary = std::move(Boundary::Factory(_node));
+
+  std::string color = _node.Read("color", false, "blue", "Color of the Terrain");
+  m_wire = _node.Read("wire", false, true, "Render type");
+
+  try {
+    std::stringstream ss(color);
+    ss >> this->m_color;
+  }
+  catch(nonstd::exception) {
+    std::transform(color.begin(), color.end(), color.begin(), ::tolower);
+    m_color = StringToColor(color);
+  }
+}
+
 
 Terrain::
 Terrain(const Terrain& _terrain) {
-  color = _terrain.color;
-  boundary = _terrain.boundary->Clone();
+  m_color = _terrain.m_color;
+  m_boundary = _terrain.m_boundary->Clone();
+  m_wire = _terrain.m_wire;
+}
+
+
+const glutils::color&
+Terrain::
+Color() const noexcept {
+  return m_color;
+}
+
+
+const Boundary*
+Terrain::
+GetBoundary() const noexcept {
+  return m_boundary.get();
+}
+
+
+bool
+Terrain::
+IsWired() const noexcept {
+  return m_wire;
 }
 
 
@@ -158,13 +199,9 @@ ReadXMLOptions(XMLNode& _node) {
       std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
 
       for(auto& grandChild : child) {
-        Terrain terrain;
         if(grandChild.Name() == "Boundary") {
-          terrain.boundary = std::move(Boundary::Factory(grandChild));
 
-          std::string color = grandChild.Read("color", false, "blue", "Color of the Terrain");
-          std::transform(color.begin(), color.end(), color.begin(), ::tolower);
-          terrain.color = color;
+          Terrain terrain(grandChild);
 
           m_terrains[capability].push_back(std::move(terrain));
         }

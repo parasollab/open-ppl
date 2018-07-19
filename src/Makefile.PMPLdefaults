@@ -349,8 +349,10 @@ SIM_SRCS := \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableBoundary.cpp \
+	Visualization/DrawableCfg.cpp \
   Visualization/DrawableMultiBody.cpp \
   Visualization/DrawablePath.cpp \
+	Visualization/DrawablePolyhedron.cpp \
   Visualization/DrawableRoadmap.cpp \
   Visualization/Gui/EditBodyDialog.cpp \
   Visualization/Gui/EditCfgDialog.cpp \

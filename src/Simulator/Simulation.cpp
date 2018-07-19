@@ -20,7 +20,7 @@
 #include "glutils/camera.h"
 #include "sandbox/gui/gl_widget.h"
 #include "sandbox/gui/main_window.h"
-
+#include "glutils/selector.h"
 
 main_window* theOneWindow = nullptr;
 
@@ -62,7 +62,6 @@ Simulation::
   // Release the singleton so that it points to nothing.
   s_singleton.release();
 }
-
 /*-------------------------------- Accessors ---------------------------------*/
 
 Simulation*
@@ -356,13 +355,17 @@ RemoveRoadmap(const size_t _id) {
 
 size_t
 Simulation::
-AddBoundary(const Boundary* _boundary, const glutils::color& _color, bool _solid) {
+AddBoundary(const Boundary* _boundary, const glutils::color& _color, bool _wired) {
   std::lock_guard<std::mutex> lock(m_guard);
 
   if(!_boundary)
     throw RunTimeException(WHERE, "Cannot draw a NULL boundary.");
+  auto draw = new DrawableBoundary(_boundary, _color, _wired);
 
-  return m_boundaries.add(new DrawableBoundary(_boundary, _color, _solid));
+  m_selector->add_drawable(draw);
+  m_highlighter->add_drawable(draw);
+
+  return m_boundaries.add(draw);
 }
 
 
@@ -373,6 +376,10 @@ RemoveBoundary(const size_t _id) {
 
   // Remove this path from the collection and release it.
   DrawableBoundary* boundary = m_boundaries.take(_id);
+
+  m_selector->remove_drawable(boundary);
+  m_highlighter->remove_drawable(boundary);
+
   delete boundary;
 }
 
@@ -423,10 +430,9 @@ AddBBX() {
   ///       we can implement full support.
 
 
-  // @NOTE: uncomment this to see the bounding box.
-  //auto environment = m_problem->GetEnvironment();
-  //m_boundaryID = this->AddBoundary(environment->GetBoundary(),
-  //    glutils::color::dark_grey);
+  auto environment = m_problem->GetEnvironment();
+  m_boundaryID = AddBoundary(environment->GetBoundary(),
+      glutils::color::black);
 #if 0
   const auto& boundary = m_problem->GetEnvironment()->GetBoundary();
 
@@ -500,10 +506,9 @@ void
 Simulation::
 AddTerrain() {
   auto env = m_problem->GetEnvironment();
-  for(auto& elem : env->GetTerrains()) {
-    for(auto& terrain : elem.second) {
-      auto color = StringToColor(terrain.color);
-      AddBoundary(terrain.boundary.get(), color, false);
+  for(const auto& elem : env->GetTerrains()) {
+    for(const auto& terrain : elem.second) {
+      AddBoundary(terrain.GetBoundary(), terrain.Color(), terrain.IsWired());
     }
   }
 }
