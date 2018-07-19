@@ -24,7 +24,7 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     ///@{
 
     CoverageMetric(const Set& _samples = Set(),
-        const vector<string>& _connectorLabels = vector<string>(),
+        const std::vector<std::string>& _connectorLabels = std::vector<std::string>(),
         bool _computeAllCCs = false);
 
     CoverageMetric(XMLNode& _node, bool _computeAllCCs = false);
@@ -51,9 +51,9 @@ class CoverageMetric : public MetricMethod<MPTraits> {
     ///@{
 
     Set m_samples;
-    vector<string> m_connectorLabels;
+    std::vector<std::string> m_connectorLabels;
     bool m_allData;
-    vector<vector<VID> > m_connections;
+    std::vector<std::vector<VID> > m_connections;
     ofstream m_history;
 
     ///@}
@@ -64,7 +64,7 @@ class CoverageMetric : public MetricMethod<MPTraits> {
 
 template<class MPTraits, class Set>
 CoverageMetric<MPTraits, Set>::
-CoverageMetric(const Set& _samples, const vector<string>& _connectorLabels,
+CoverageMetric(const Set& _samples, const std::vector<std::string>& _connectorLabels,
     bool _computeAllCCs) : m_samples(_samples),
     m_connectorLabels(_connectorLabels), m_allData(_computeAllCCs) {
   this->SetName("CoverageMetric" + Set::GetName());
@@ -102,7 +102,7 @@ Print(ostream& _os) const {
       << "\tall_data = " << m_allData << endl
       << "\tnode_connection_labels = ";
   copy(m_connectorLabels.begin(), m_connectorLabels.end(),
-      ostream_iterator<string>(_os, " "));
+      ostream_iterator<std::string>(_os, " "));
   _os << endl;
 }
 
@@ -119,14 +119,14 @@ operator()() {
   RoadmapType* rmap = this->GetRoadmap();
   GraphType* rgraph = rmap->GetGraph();
 
-  m_connections = vector<vector<VID> >(m_samples.size());
+  m_connections = std::vector<std::vector<VID> >(m_samples.size());
 
   stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  vector<pair<size_t, VID> > ccs;
-  typename vector<pair<size_t, VID> >::iterator ccit;
+  std::vector<std::pair<size_t, VID> > ccs;
+  typename std::vector<std::pair<size_t, VID> >::iterator ccit;
   get_cc_stats(*rgraph, cmap, ccs);
 
-  vector<VID> sampleList, cc;
+  std::vector<VID> sampleList, cc;
   StatClass stats;
 
   // Temporarily disable roadmap hooks while we make some test vertices and

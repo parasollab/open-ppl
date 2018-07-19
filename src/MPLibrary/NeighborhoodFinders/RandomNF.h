@@ -1,75 +1,115 @@
-#ifndef RANDOM_NF_H_
-#define RANDOM_NF_H_
+#ifndef PMPL_RANDOM_NF_H_
+#define PMPL_RANDOM_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
+#include <string>
+#include <unordered_set>
+
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Selects a set of random neighbors from the roadmap.
 /// @ingroup NeighborhoodFinders
-/// @brief TODO
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
 
   public:
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
-    typedef typename MPTraits::GroupCfgType           GroupCfgType;
+    ///@name Motion Planning Types
+    ///@{
 
-    RandomNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5):
-      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
-        this->SetName("RandomNF");
-        this->m_nfType = K;
-        this->m_k = _k;
-      }
+    typedef typename MPTraits::CfgType           CfgType;
+    typedef typename MPTraits::RoadmapType       RoadmapType;
+    typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::GraphType      GraphType;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
-    RandomNF(XMLNode& _node):
-      NeighborhoodFinderMethod<MPTraits>(_node) {
-        this->SetName("RandomNF");
-        this->m_nfType = K;
-        this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
-      }
+    ///@}
+    ///@name Construction
+    ///@{
 
-    virtual void Print(ostream& _os) const {
-      NeighborhoodFinderMethod<MPTraits>::Print(_os);
-      _os << "\tk: " << this->m_k << endl;
-    }
+    RandomNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5);
 
-    //Find k-random neighbors.
-    template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-          const CfgType& _cfg, OutputIterator _out);
+    RandomNF(XMLNode& _node);
 
-    //Find k-random pairs of neighbors
-    template<typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1,
-          InputIterator _first2, InputIterator _last2,
-          OutputIterator _out);
+    virtual ~RandomNF();
 
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    /// Group overloads:
-    template<typename InputIterator, typename OutputIterator>
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name NeighborhoodFinder Interface
+    ///@{
+
+    template <typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighbors(RoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+        const CfgType& _cfg, OutputIterator _out);
+
+    template <typename InputIterator, typename OutputIterator>
+    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+        InputIterator _first1, InputIterator _last1,
+        InputIterator _first2, InputIterator _last2,
+        OutputIterator _out);
+
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        const GroupCfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
-        OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        OutputIterator _out);
+
+    ///@}
+
 };
+
+/*------------------------------- Construction -------------------------------*/
+
+template <class MPTraits>
+RandomNF<MPTraits>::
+RandomNF(std::string _dmLabel, bool _unconnected, size_t _k)
+  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+  this->SetName("RandomNF");
+  this->m_nfType = K;
+  this->m_k = _k;
+}
+
+
+template <class MPTraits>
+RandomNF<MPTraits>::
+RandomNF(XMLNode& _node):
+NeighborhoodFinderMethod<MPTraits>(_node) {
+  this->SetName("RandomNF");
+  this->m_nfType = K;
+  this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
+}
+
+
+template <class MPTraits>
+RandomNF<MPTraits>::
+~RandomNF() = default;
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
+
+template <class MPTraits>
+void
+RandomNF<MPTraits>::
+Print(std::ostream& _os) const {
+  NeighborhoodFinderMethod<MPTraits>::Print(_os);
+  _os << "\tk: " << this->m_k
+      << std::endl;
+}
+
+/*----------------------- NeighborhoodFinder Interface -----------------------*/
 
 template <class MPTraits>
 template <typename InputIterator, typename OutputIterator>
@@ -78,23 +118,39 @@ RandomNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "RandomNF::FindNeighbors");
-  this->IncrementNumQueries();
+  GraphType* g = _rmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
-  GraphType* map = _rmp->GetGraph();
-  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
+  std::unordered_set<VID> foundVIDs;
+  const VID queryVID = g->GetVID(_cfg);
 
-  set<VID> vids;
-  VID cvid = map->GetVID(_cfg);
+  const size_t inputSize = std::distance(_first, _last);
 
-  size_t dist = distance(_first, _last);
-  for(size_t i = 0; i < this->m_k && i < dist; ++i) {
-    VID vid;
-    do {
-      vid = map->GetVID(_first + LRand() % dist);
-    } while(vids.find(vid) != vids.end() && cvid == vid && this->CheckUnconnected(_rmp, _cfg, vid));
-    vids.insert(vid);
-    *_out++ = make_pair(vid, dmm->Distance(_cfg, map->GetVertex(vid)));
+  // Look for up to m_k random neighbors.
+  for(size_t i = 0; i < this->m_k && i < inputSize; ++i) {
+    // Try until we find a valid neighbor or run out of choices.
+    while(foundVIDs.size() < inputSize) {
+      const VID vid = g->GetVID(_first + LRand() % inputSize);
+
+      // Check for invalid conditions.
+      const bool alreadyFound = foundVIDs.count(vid),
+                 isQuery = queryVID == vid,
+                 isConnected = this->CheckUnconnected(_rmp, _cfg, vid);
+
+      // Track this VID.
+      foundVIDs.insert(vid);
+
+      if(alreadyFound or isQuery or isConnected)
+        continue;
+
+      // Check distance.
+      const double distance = dm->Distance(_cfg, g->GetVertex(vid));
+      if(std::isinf(distance))
+        continue;
+
+      *_out++ = Neighbor(vid, distance);
+      break;
+    }
   }
 
   return _out;
@@ -109,30 +165,67 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "RandomNF::FindNeighborPairs");
-  this->IncrementNumQueries();
+  GraphType* g = _rmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
-  GraphType* map = _rmp->GetGraph();
-  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
+  std::set<std::pair<VID, VID>> foundPairs;
 
-  set<pair<VID, VID> > ids;
+  const size_t inputSize1 = std::distance(_first1, _last1),
+               inputSize2 = std::distance(_first2, _last2);
 
-  size_t dist1 = distance(_first1, _last1), dist2 = distance(_first2, _last2);
-  for(size_t i=0; i < this->m_k && i < dist1 && i < dist2; ++i) {
-    VID vid1, vid2;
-    pair<VID, VID> pairId;
-    do {
-      vid1 = map->GetVID(_first1 + LRand() % dist1);
-      vid2 = map->GetVID(_first2 + LRand() % dist2);
-      pairId = make_pair(vid1, vid2);
-    } while(ids.find(pairId) != ids.end() && vid1 == vid2);
-    ids.insert(pairId);
-    *_out++ = make_pair(
-        make_pair(vid1, vid2),
-        dmm->Distance(map->GetVertex(vid1), map->GetVertex(vid2)));
+  for(size_t i = 0; i < this->m_k and i < inputSize1 and i < inputSize2; ++i) {
+    // Try until we find a valid neighbor or run out of choices.
+    while(foundPairs.size() < inputSize1 * inputSize2) {
+      const VID vid1 = g->GetVID(_first1 + LRand() % inputSize1),
+                vid2 = g->GetVID(_first2 + LRand() % inputSize2);
+      const CfgType& cfg1 = g->GetVertex(vid1);
+
+      // Check for invalid conditions.
+      const bool alreadyFound = foundPairs.count({vid1, vid2}),
+                 isConnected = this->CheckUnconnected(_rmp, cfg1, vid2);
+
+      // Track this pair.
+      foundPairs.emplace(vid1, vid2);
+
+      if(alreadyFound or isConnected)
+        continue;
+
+      // Check distance.
+      const double distance = dm->Distance(cfg1, g->GetVertex(vid2));
+      if(std::isinf(distance))
+        continue;
+
+      *_out++ = Neighbor(vid1, vid2, distance);
+      break;
+    }
   }
 
   return _out;
 }
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+RandomNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+    const GroupCfgType& _cfg, OutputIterator _out) {
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+RandomNF<MPTraits>::
+FindNeighborPairs(GroupRoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
+  throw NotImplementedException(WHERE);
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -19,14 +19,14 @@ class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
 
     DisassemblyThanhLe(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "",
+        const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
     DisassemblyThanhLe(XMLNode& _node);
     virtual ~DisassemblyThanhLe() {}
 
@@ -35,7 +35,7 @@ class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
     virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                    const Formation& _subassembly) override;
 
     DisassemblyNode* m_lastNode{nullptr};
@@ -50,11 +50,11 @@ class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblyThanhLe<MPTraits>::
 DisassemblyThanhLe(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc,
+    const std::string _lp, const std::string _ex,
+    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
   this->SetName("DisassemblyThanhLe");
@@ -74,7 +74,7 @@ DisassemblyThanhLe<MPTraits>::
 Iterate() {
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<size_t> robotParts;
+    std::vector<size_t> robotParts;
     for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
@@ -143,11 +143,11 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-pair<bool, typename DisassemblyThanhLe<MPTraits>::VIDPath>
+std::pair<bool, typename DisassemblyThanhLe<MPTraits>::VIDPath>
 DisassemblyThanhLe<MPTraits>::
 Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   throw RunTimeException(WHERE,"Not implemented");
-  return make_pair(false, VIDPath());
+  return std::make_pair(false, VIDPath());
 }
 
 

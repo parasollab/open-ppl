@@ -26,17 +26,17 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::Formation        Formation;
     typedef typename DisassemblyMethod<MPTraits>::Approach         Approach;
     typedef typename DisassemblyMethod<MPTraits>::State            State;
-    typedef pair<Formation, map<Approach, bool> >                  AttemptEntry;
+    typedef std::pair<Formation, std::map<Approach, bool> >                  AttemptEntry;
 
     DisassemblyExhaustiveGraph(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "",
+        const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
     DisassemblyExhaustiveGraph(XMLNode& _node);
     virtual ~DisassemblyExhaustiveGraph() {}
 
@@ -104,10 +104,10 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblyExhaustiveGraph<MPTraits>::
 DisassemblyExhaustiveGraph(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc, const string _lp,
-    const string _ex, const string _dm, const vector<string>& _evaluatorLabels):
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc, const std::string _lp,
+    const std::string _ex, const std::string _dm, const std::vector<std::string>& _evaluatorLabels):
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
   this->SetName("DisassemblyExhaustiveGraph");
@@ -434,7 +434,7 @@ SelectExpansionNode() {
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<size_t> robotParts;
+    std::vector<size_t> robotParts;
     for (size_t i = 0; i < this->m_numParts; ++i)
       robotParts.push_back(i);
 
@@ -612,7 +612,7 @@ WeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
   // the goal, then the strategy will still return the optimal path.
 
   VID newVID;
-  vector<VIDPath> removingPaths;
+  std::vector<VIDPath> removingPaths;
   Formation singleSub;
   DisassemblyNode* newNode = nullptr;
 
@@ -727,7 +727,7 @@ WeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
     }
   }
 
-  return make_pair(true, VIDPath());
+  return std::make_pair(true, VIDPath());
 }
 
 template <typename MPTraits>
@@ -828,7 +828,7 @@ MergeNodes(DisassemblyNode* const _node, DisassemblyNode* const _existingNode) {
   _existingNode->parents.push_back(newParent);
   //Record that newParent can reach the state of _existingNode with the weight
   // found for _node:
-  newParent->children.push_back(make_pair(_node->localWeight, _existingNode));
+  newParent->children.push_back(std::make_pair(_node->localWeight, _existingNode));
 
   //Update the removal paths (only one in _node since it only has one parent):
   // Note that we HAVE to keep this aligned with the node's parents vector!

@@ -77,11 +77,11 @@ class TopologicalDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     /// First check the connected workspace distance between the decomposition
-    /// cells holding each configuration. If that is equal, fall back to
+    /// cells holding each configuration's base. If that is equal, fall back to
     /// underlying DM.
     /// @param _c1 The first configuration.
     /// @param _c2 The second configuration.
-    /// @return The distance between _c1 and _c2.
+    /// @return The connected workspace distance between the base at _c1 and _c2.
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     ///@}
@@ -193,8 +193,8 @@ UpdateMap(const KeyPair& _key) {
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto decomposition = tm->GetDecomposition();
 
-  // Compute the SSSP from this cell and save all results to the distance map.
-  const auto sssp = tm->ComputeSSSP(_key.first);
+  // Compute the frontier from this cell and save results to the distance map.
+  const auto sssp = tm->ComputeFrontier(_key.first);
 
   for(const auto& item : sssp.distance) {
     const auto& region = decomposition->GetRegion(item.first);

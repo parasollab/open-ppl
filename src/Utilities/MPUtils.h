@@ -116,7 +116,7 @@ template <typename T, typename U>
 struct CompareSecond {
 
   const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
-      const {
+      const noexcept {
     return _a.second < _b.second;
   }
 
@@ -131,7 +131,7 @@ template <typename T, typename U>
 struct CompareSecondReverse {
 
   const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
-      const {
+      const noexcept {
     return _a.second > _b.second;
   }
 
@@ -146,7 +146,7 @@ template <typename InputIterator, typename BinaryOperator, typename UnaryOperato
 struct Compose {
 
   const bool operator()(InputIterator _first, InputIterator _last,
-      BinaryOperator _binaryOp, UnaryOperator _op) const {
+      BinaryOperator _binaryOp, UnaryOperator _op) const noexcept {
     if (_first == _last)
       return false;
     else {
@@ -166,7 +166,7 @@ template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, std::logical_and<bool>, UnaryOperator> {
 
   const bool operator()(InputIterator _first, InputIterator _last,
-      std::logical_and<bool> _binaryOp, UnaryOperator _op) const {
+      std::logical_and<bool> _binaryOp, UnaryOperator _op) const noexcept {
     if (_first == _last)
       return false;
     else {
@@ -191,7 +191,7 @@ template <typename InputIterator, typename UnaryOperator>
 struct Compose<InputIterator, std::logical_or<bool>, UnaryOperator> {
 
   const bool operator()(InputIterator _first, InputIterator _last,
-      std::logical_or<bool> _binaryOp, UnaryOperator _op) const {
+      std::logical_or<bool> _binaryOp, UnaryOperator _op) const noexcept {
     if (_first == _last)
       return false;
     else {
@@ -215,7 +215,7 @@ struct Compose<InputIterator, std::logical_or<bool>, UnaryOperator> {
 template <typename InputIterator, typename UnaryOperator>
 struct ComposeNegate {
 
-  const bool operator()(InputIterator _it, UnaryOperator _op) const {
+  const bool operator()(InputIterator _it, UnaryOperator _op) const noexcept {
     return !_op(*_it);
   }
 

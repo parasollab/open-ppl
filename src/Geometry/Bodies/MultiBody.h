@@ -255,8 +255,8 @@ class MultiBody {
     ///@{
 
     /// Read a MultiBody from an input stream and compute information.
-    /// @param[in] _is The input stream to read from.
-    /// @param[in] _cbs Counting stream buffer
+    /// @param _is The input stream to read from.
+    /// @param _cbs Counting stream buffer
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
 
     /// Write the MultiBody to an output stream.

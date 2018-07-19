@@ -52,10 +52,10 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    DisassemblyRRTStrategy(string _dm = "euclidean", string _nf = "bfnf",
-        string _vc = "rapid", string _nc = "kClosest", string _ex = "BERO",
-        vector<string> _evaluators = vector<string>(),
-        string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
+    DisassemblyRRTStrategy(std::string _dm = "euclidean", std::string _nf = "bfnf",
+        std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
+        std::vector<std::string> _evaluators = std::vector<std::string>(),
+        std::string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3);
 
@@ -67,7 +67,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name MPBaseObject overrides
     ///@{
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     ///@}
     ///@name MPStrategy Overrides
@@ -107,7 +107,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     /// Get the configurations that are adjacent to _v in the map.
-    vector<GroupCfgType> SelectNeighbors(VID _v);
+    std::vector<GroupCfgType> SelectNeighbors(VID _v);
 
     /// Find the nearest configuration to the target _cfg within _tree.
     virtual VID FindNearestNeighbor(const GroupCfgType& _cfg, const TreeType& _tree);
@@ -134,7 +134,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _newCfg    The new configuration to add.
     /// @return A pair with the added VID and a bool indicating whether the new
     ///         node was already in the map.
-    virtual pair<VID, bool> AddNode(const GroupCfgType& _newCfg);
+    virtual std::pair<VID, bool> AddNode(const GroupCfgType& _newCfg);
 
     /// Add a new edge to the roadmap.
     /// @param _source   The source node.
@@ -168,20 +168,20 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name MP Object Labels
     ///@{
 
-//    string m_dmLabel;       ///< The distance metric label.
-    string m_nfLabel;       ///< The neighborhood finder label.
-    string m_vcLabel;       ///< The validity checker label.
-//    string m_ncLabel;       ///< The connector label.
-    string m_exLabel;       ///< The extender label.
-    string m_gt;            ///< The graph type.
+//    std::string m_dmLabel;       ///< The distance metric label.
+    std::string m_nfLabel;       ///< The neighborhood finder label.
+    std::string m_vcLabel;       ///< The validity checker label.
+//    std::string m_ncLabel;       ///< The connector label.
+    std::string m_exLabel;       ///< The extender label.
+    std::string m_gt;            ///< The graph type.
 
-    string m_samplerLabel; ///< Sampler label.
+    std::string m_samplerLabel; ///< Sampler label.
     //No number or attempts is recorded because we need single
     // disassembly samples.
 
-    string m_strategyLabel; ///< This strategy's label
-    string m_stateMELabel; ///< The ME label for the StrategyStateEvaluator used
-    string m_successfulCheckME; ///< The ME label that determines the successful
+    std::string m_strategyLabel; ///< This strategy's label
+    std::string m_stateMELabel; ///< The ME label for the StrategyStateEvaluator used
+    std::string m_successfulCheckME; ///< The ME label that determines the successful
                                 ///< flag of this strategy (should be minimum
                                 ///< clearance).
 
@@ -238,8 +238,8 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyRRTStrategy<MPTraits>::
-DisassemblyRRTStrategy(string _dm, string _nf, string _vc, string _nc,
-    string _ex, vector<string> _evaluators, string _gt, bool _growGoals,
+DisassemblyRRTStrategy(std::string _dm, std::string _nf, std::string _vc, std::string _nc,
+    std::string _ex, std::vector<std::string> _evaluators, std::string _gt, bool _growGoals,
     double _growthFocus, size_t _numRoots, size_t _numDirections,
     size_t _maxTrial) :
 //    m_dmLabel(_dm),
@@ -302,7 +302,7 @@ DisassemblyRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 DisassemblyRRTStrategy<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   if(this->m_debug) {
   _os << "DisassemblyRRTStrategy::Print (debug is true)" << std::endl
       << "  MP objects:" << std::endl
@@ -445,7 +445,7 @@ void
 DisassemblyRRTStrategy<MPTraits>::
 Finalize() {
   GroupRoadmapType* const map = this->GetGroupRoadmap();
-  const string baseFilename = this->GetBaseFilename();
+  const std::string baseFilename = this->GetBaseFilename();
   const size_t mapVerts = map->GetGraph()->get_num_vertices();
   GroupPathType* const path = this->GetGroupPath();
   ValidityCheckerPointer vc = this->GetValidityChecker(this->m_vcLabel);
@@ -607,7 +607,7 @@ SelectTarget() {
   // Get one sample trying a few times:
   const size_t numAttempts = 3;
   sampler->Sample(1, numAttempts, this->GetEnvironment()->GetBoundary(),
-                  back_inserter(successfulSamples));
+                  std::back_inserter(successfulSamples));
 
   if(!successfulSamples.empty()) {
     //Choose a random cfg (if size = 1, it will just take the 0 index)
@@ -621,12 +621,12 @@ SelectTarget() {
 /*---------------------------- Neighbor Helpers ------------------------------*/
 
 template <typename MPTraits>
-vector<typename DisassemblyRRTStrategy<MPTraits>::GroupCfgType>
+std::vector<typename DisassemblyRRTStrategy<MPTraits>::GroupCfgType>
 DisassemblyRRTStrategy<MPTraits>::
 SelectNeighbors(VID _v) {
   GroupRoadmapType* g = this->GetGroupRoadmap();
   typename GroupRoadmapType::vertex_iterator vi = g->find_vertex(_v);
-  vector<GroupCfgType> vec;
+  std::vector<GroupCfgType> vec;
   for(const auto& e : *vi)
     vec.push_back(g->GetVertex(e.target()));
   return vec;
@@ -638,12 +638,12 @@ typename DisassemblyRRTStrategy<MPTraits>::VID
 DisassemblyRRTStrategy<MPTraits>::
 FindNearestNeighbor(const GroupCfgType& _cfg, const TreeType& _tree) {
   auto roadmap = this->GetGroupRoadmap();
-  vector<pair<VID, double>> neighbors;
+  std::vector<Neighbor> neighbors;
   auto const nf = this->GetNeighborhoodFinder(m_nfLabel);
   nf->FindNeighbors(roadmap, _tree.begin(), _tree.end(),
                     _tree.size() == roadmap->get_num_vertices(),
-                    _cfg, back_inserter(neighbors));
-  const VID nearestVID = neighbors[0].first;
+                    _cfg, std::back_inserter(neighbors));
+  const VID nearestVID = neighbors[0].target;
 
   return nearestVID;
 }
@@ -654,11 +654,11 @@ template <typename MPTraits>
 typename DisassemblyRRTStrategy<MPTraits>::VID
 DisassemblyRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
-  const string label = this->GetNameAndLabel() + "::Extend()";
+  const std::string label = this->GetNameAndLabel() + "::Extend()";
   GroupRoadmapType* const graph = this->GetGroupRoadmap();
 
   GroupLPOutput<MPTraits> lpOutput(graph);
-  pair<VID, bool> extension{INVALID_VID, false};
+  std::pair<VID, bool> extension{INVALID_VID, false};
   bool extended;
   CDInfo cdInfo(true);
   const GroupCfgType& qNear = graph->GetVertex(_nearVID);
@@ -761,7 +761,7 @@ Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
 
 
 template <typename MPTraits>
-pair<typename DisassemblyRRTStrategy<MPTraits>::VID, bool>
+std::pair<typename DisassemblyRRTStrategy<MPTraits>::VID, bool>
 DisassemblyRRTStrategy<MPTraits>::
 AddNode(const GroupCfgType& _newCfg) {
   GroupRoadmapType* const g = this->GetGroupRoadmap();
@@ -783,7 +783,7 @@ AddNode(const GroupCfgType& _newCfg) {
     std::cout << "RRT: roadmap state after adding vertex:" << std::endl
               << g->PrettyPrint();
 
-  return make_pair(newVID, nodeIsNew);
+  return std::make_pair(newVID, nodeIsNew);
 }
 
 
@@ -898,7 +898,7 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
 
     //Create perterbCfg from this
     sampler->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
-                    back_inserter(successfulSamples));
+                    std::back_inserter(successfulSamples));
 
     //TODO: I'm removing this as the way samples are generated shouldn't matter,
     //      LPs/extenders should choose which leader to use.

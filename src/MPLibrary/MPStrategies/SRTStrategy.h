@@ -31,8 +31,8 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     ///\name Local Types
     ///@{
 
-    typedef pair<CfgType, vector<VID> > Tree; ///< Centroid, tree pair.
-    typedef map<VID, Tree> Trees;             ///< Node->tree mapping.
+    typedef std::pair<CfgType, std::vector<VID> > Tree; ///< Centroid, tree pair.
+    typedef std::map<VID, Tree> Trees;             ///< Node->tree mapping.
 
     ///@}
     ///\name Construction
@@ -46,7 +46,7 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     virtual void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///\name MPStrategyMethod Overrides
@@ -66,8 +66,8 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     //general SRT functions
     void GenerateTrees();
     void ExpandTrees();
-    void FindCandidateConnections(vector<pair<VID, VID> >& _candPairs);
-    void ConnectTrees(vector<pair<VID, VID> >& _candPairs);
+    void FindCandidateConnections(std::vector<std::pair<VID, VID> >& _candPairs);
+    void ConnectTrees(std::vector<std::pair<VID, VID> >& _candPairs);
 
     //connect trees functions
     bool Connect(VID _t1, VID _t2);
@@ -81,11 +81,11 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     ///\name MP Object Labels
     ///@{
 
-    string m_lpLabel{"sl"};
-    string m_dmLabel{"euclidean"};
-    string m_nfLabel{"Nearest"};
-    string m_vcLabel{"pqp_solid"};
-    string m_exLabel{"BERO"};
+    std::string m_lpLabel{"sl"};
+    std::string m_dmLabel{"euclidean"};
+    std::string m_nfLabel{"Nearest"};
+    std::string m_vcLabel{"pqp_solid"};
+    std::string m_exLabel{"BERO"};
 
     ///@}
     ///\name SRT Parameters
@@ -160,16 +160,16 @@ ParseXML(XMLNode& _node) {
 template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
-Print(ostream& _os) const {
-  _os << "SRTStrategy::Print" << endl;
-  _os << "\tNeighborhood Finder:: " << m_nfLabel << endl;
-  _os << "\tDistance Metric:: " << m_dmLabel << endl;
-  _os << "\tValidity Checker:: " << m_vcLabel << endl;
-  _os << "\tLocal Planner:: " << m_lpLabel << endl;
-  _os << "\tExtender:: " << m_exLabel << endl;
-  _os << "\tEvaluators:: " << endl;
+Print(std::ostream& _os) const {
+  _os << "SRTStrategy::Print" << std::endl;
+  _os << "\tNeighborhood Finder:: " << m_nfLabel << std::endl;
+  _os << "\tDistance Metric:: " << m_dmLabel << std::endl;
+  _os << "\tValidity Checker:: " << m_vcLabel << std::endl;
+  _os << "\tLocal Planner:: " << m_lpLabel << std::endl;
+  _os << "\tExtender:: " << m_exLabel << std::endl;
+  _os << "\tEvaluators:: " << std::endl;
   for(const auto& label: this->m_meLabels)
-    _os << "\t\t" << label << endl;
+    _os << "\t\t" << label << std::endl;
 }
 
 /*------------------------ MPStrategyMethod Overrides ------------------------*/
@@ -179,7 +179,7 @@ void
 SRTStrategy<MPTraits>::
 Initialize() {
   if(this->m_debug)
-    cout<<"\nInitializing SRTStrategy"<<endl;
+    std::cout<<"\nInitializing SRTStrategy"<<std::endl;
 
   // Setup SRT Variables
   if(this->UsingQuery()) {
@@ -190,14 +190,14 @@ Initialize() {
 
     for(const auto& cfg : query->GetQuery()) {
       VID v = g->AddVertex(cfg);
-      m_trees[v] = Tree(cfg, vector<VID>{v});
+      m_trees[v] = Tree(cfg, std::vector<VID>{v});
       if(this->m_debug)
-        cout << "Adding Cfg::" << cfg << " from query." << endl;
+        std::cout << "Adding Cfg::" << cfg << " from query." << std::endl;
     }
   }
 
   if(this->m_debug)
-    cout<<"\nEnding Initializing SRTStrategy"<<endl;
+    std::cout<<"\nEnding Initializing SRTStrategy"<<std::endl;
 }
 
 
@@ -205,13 +205,13 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Iterate() {
-  cout << "Starting iteration " << ++m_iteration << endl;
+  std::cout << "Starting iteration " << ++m_iteration << std::endl;
   //grow "k" randomly placed trees for "m" iterations
   GenerateTrees();
   ExpandTrees();
 
   //determine edge candidates
-  vector<pair<VID, VID> > connectionCandidates;
+  std::vector<std::pair<VID, VID> > connectionCandidates;
   FindCandidateConnections(connectionCandidates);
 
   //attempt edge candidates
@@ -224,7 +224,7 @@ void
 SRTStrategy<MPTraits>::
 Finalize() {
   if(this->m_debug)
-    cout<<"\nFinalizing SRTStrategy::"<<endl;
+    std::cout<<"\nFinalizing SRTStrategy::"<<std::endl;
 
   //output final map
   this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
@@ -232,15 +232,15 @@ Finalize() {
 
   //output stats
   StatClass* stats = this->GetStatClass();
-  string str = this->GetBaseFilename() + ".stat";
-  ofstream  osStat(str.c_str());
-  osStat << "NodeGen+Connection Stats" << endl;
+  std::string str = this->GetBaseFilename() + ".stat";
+  std::ofstream  osStat(str.c_str());
+  osStat << "NodeGen+Connection Stats" << std::endl;
   stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("SRT Generation", osStat);
   osStat.close();
 
   if(this->m_debug)
-    cout<<"\nEnd Finalizing SRTStrategy"<<endl;
+    std::cout<<"\nEnd Finalizing SRTStrategy"<<std::endl;
 }
 
 /*------------------------------- Helpers ------------------------------------*/
@@ -250,7 +250,7 @@ void
 SRTStrategy<MPTraits>::
 GenerateTrees() {
   if(this->m_debug)
-    cout << "\nBegin GenerateTrees" << endl;
+    std::cout << "\nBegin GenerateTrees" << std::endl;
 
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
@@ -265,11 +265,11 @@ GenerateTrees() {
 
     // Create a new tree rooted at cfg.
     VID v = this->GetRoadmap()->GetGraph()->AddVertex(cfg);
-    m_trees[v] = Tree(cfg, vector<VID>{v});
+    m_trees[v] = Tree(cfg, std::vector<VID>{v});
   }
 
   if(this->m_debug)
-    cout << "\nEnd GenerateTrees" << endl;
+    std::cout << "\nEnd GenerateTrees" << std::endl;
 }
 
 
@@ -278,27 +278,27 @@ void
 SRTStrategy<MPTraits>::
 ExpandTrees() {
   if(this->m_debug)
-    cout << "\nBegin ExpandTrees" << endl;
+    std::cout << "\nBegin ExpandTrees" << std::endl;
 
   for(auto& tree : m_trees)
     while(tree.second.second.size() < m_numExpansions)
       this->ExpandTree(tree.first, this->SelectTarget());
 
   if(this->m_debug)
-    cout << "\nEnd ExpandTrees" << endl;
+    std::cout << "\nEnd ExpandTrees" << std::endl;
 }
 
 
 template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
-FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
+FindCandidateConnections(std::vector<std::pair<VID, VID> >& _candPairs) {
   if(this->m_debug)
-    cout << "\nBegin FindCandidateConnections" << endl;
+    std::cout << "\nBegin FindCandidateConnections" << std::endl;
 
   _candPairs.clear();
 
-  vector<VID> reps;
+  std::vector<VID> reps;
   RoadmapType centRdmp(this->GetTask()->GetRobot());
   for(auto& tree : m_trees) {
     reps.push_back(tree.first);
@@ -307,16 +307,16 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
 
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   for(auto& tree : m_trees) {
-    set<VID> cands;
+    std::set<VID> cands;
 
     // Find n_c closest centroids.
-    vector<pair<VID, double> > closest;
+    std::vector<Neighbor> closest;
     size_t oldK = nf->GetK();
     nf->GetK() = m_numCloseCent;
-    nf->FindNeighbors(&centRdmp, tree.second.first, back_inserter(closest));
+    nf->FindNeighbors(&centRdmp, tree.second.first, std::back_inserter(closest));
     nf->GetK() = oldK;
     for(auto& neighbor : closest)
-      cands.insert(neighbor.first);
+      cands.insert(neighbor.target);
 
     // Find n_r random centroids.
     random_shuffle(reps.begin(), reps.end());
@@ -325,29 +325,29 @@ FindCandidateConnections(vector<pair<VID, VID> >& _candPairs) {
 
     // Generate pairs for the tree.
     for(auto& vid : cands)
-      _candPairs.push_back(make_pair(tree.first, vid));
+      _candPairs.push_back(std::make_pair(tree.first, vid));
   }
 
   if(this->m_debug)
-    cout << "\nEnd FindCandidateConnections" << endl;
+    std::cout << "\nEnd FindCandidateConnections" << std::endl;
 }
 
 
 template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
-ConnectTrees(vector<pair<VID, VID>>& _candPairs) {
+ConnectTrees(std::vector<std::pair<VID, VID>>& _candPairs) {
   if(this->m_debug)
-    cout << "\nBegin ConnectTrees" << endl;
+    std::cout << "\nBegin ConnectTrees" << std::endl;
 
   stapl::sequential::vector_property_map<typename GraphType::STAPLGraph, size_t>
       cMap;
   GraphType* g = this->GetRoadmap()->GetGraph();
-  vector<pair<VID, VID> > succPair;
+  std::vector<std::pair<VID, VID> > succPair;
 
   for(auto& pair : _candPairs) {
     if(this->m_debug)
-      cout << "Connecting trees " << pair.first << "::" << pair.second << endl;
+      std::cout << "Connecting trees " << pair.first << "::" << pair.second << std::endl;
 
     //check if in same cc first
     cMap.reset();
@@ -357,7 +357,7 @@ ConnectTrees(vector<pair<VID, VID>>& _candPairs) {
       if(Connect(pair.first, pair.second) || RRTConnect(pair.first,
             pair.second)) {
         if(this->m_debug)
-          cout << "Successful connection." << endl;
+          std::cout << "Successful connection." << std::endl;
         succPair.push_back(pair);
       }
     }
@@ -389,7 +389,7 @@ ConnectTrees(vector<pair<VID, VID>>& _candPairs) {
   }
 
   if(this->m_debug)
-    cout << "\nEnd ConnectTrees" << endl;
+    std::cout << "\nEnd ConnectTrees" << std::endl;
 }
 
 
@@ -408,25 +408,25 @@ Connect(VID _t1, VID _t2) {
   Tree& t2 = m_trees[_t2];
 
   //find n_p closest pairs
-  vector<pair<pair<VID, VID>, double> > closest;
+  std::vector<Neighbor> closest;
   size_t oldK = nf->GetK();
   nf->GetK() = m_numClosePairs;
   nf->FindNeighborPairs(rdmp,
       t1.second.begin(), t1.second.end(),
       t2.second.begin(), t2.second.end(),
-      back_inserter(closest));
+      std::back_inserter(closest));
   nf->GetK() = oldK;
 
   //attempt local plan
   for(auto cit = closest.begin(); cit != closest.end(); ++cit) {
-    CfgType& c1 = rdmp->GetGraph()->GetVertex(cit->first.first);
-    CfgType& c2 = rdmp->GetGraph()->GetVertex(cit->first.second);
+    CfgType& c1 = rdmp->GetGraph()->GetVertex(cit->source);
+    CfgType& c2 = rdmp->GetGraph()->GetVertex(cit->target);
     CfgType col(this->GetTask()->GetRobot());
 
     if(lp->IsConnected(c1, c2, col,
           &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
       //successful connection add graph edge
-      rdmp->GetGraph()->AddEdge(cit->first.first, cit->first.second,
+      rdmp->GetGraph()->AddEdge(cit->source, cit->target,
           lpOutput.m_edge);
       return true;
     }
@@ -487,8 +487,8 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
 
   VID recentVID = INVALID_VID;
   // Find closest Cfg in map
-  vector<pair<VID, double> > kClosest;
-  vector<CfgType> cfgs;
+  std::vector<Neighbor> kClosest;
+  std::vector<CfgType> cfgs;
 
   RoadmapType* rdmp = this->GetRoadmap();
   GraphType* g = rdmp->GetGraph();
@@ -496,9 +496,9 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
 
   nf->FindNeighbors(rdmp,
       currentTree.second.begin(), currentTree.second.end(), false,
-      _dir, back_inserter(kClosest));
+      _dir, std::back_inserter(kClosest));
 
-  CfgType& nearest = g->GetVertex(kClosest[0].first);
+  CfgType& nearest = g->GetVertex(kClosest[0].target);
 
   CfgType newCfg(this->GetTask()->GetRobot());
   int weight = 0;
@@ -507,12 +507,12 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
   LPOutput<MPTraits> lpOutput;
   if(!e->Extend(nearest, _dir, newCfg, lpOutput)) {
     if(this->m_debug)
-      cout << "RRT could not expand!" << endl;
+      std::cout << "RRT could not expand!" << std::endl;
     return recentVID;
   }
 
   if(this->m_debug)
-    cout << "RRT expanded to " << newCfg << endl;
+    std::cout << "RRT expanded to " << newCfg << std::endl;
 
   // If good to go, add to roadmap
   if(dm->Distance(newCfg, nearest) >= e->GetMinDistance()) {
@@ -524,10 +524,10 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
     currentTree.first = (currentTree.first * (s-1) + newCfg) / s;
 
     //add edge
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand",
+    std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
         weight), WeightType("RRTExpand", weight));
-    g->AddEdge(kClosest[0].first, recentVID, weights);
-    g->GetVertex(recentVID).SetStat("Parent", kClosest[0].first);
+    g->AddEdge(kClosest[0].target, recentVID, weights);
+    g->GetVertex(recentVID).SetStat("Parent", kClosest[0].target);
   }
 
   return recentVID;

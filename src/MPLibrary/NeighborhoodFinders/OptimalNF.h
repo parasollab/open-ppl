@@ -1,5 +1,5 @@
-#ifndef OPTIMAL_NF_H_
-#define OPTIMAL_NF_H_
+#ifndef PMPL_OPTIMAL_NF_H_
+#define PMPL_OPTIMAL_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -21,15 +21,12 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename MPTraits::CfgType                CfgType;
+    typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::GraphType           GraphType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
-
-    typedef typename MPTraits::MPLibrary              MPLibrary;
-    typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
 
     ///@}
     ///@name Construction
@@ -65,22 +62,16 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-
-    /// Group overloads:
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        const GroupCfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
-        OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        OutputIterator _out);
 
     ///@}
 
@@ -142,15 +133,12 @@ Print(std::ostream& _os) const {
 /*-------------------- NeighborhoodFinderMethod Interface --------------------*/
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
+template <typename InputIterator, typename OutputIterator>
 OutputIterator
 OptimalNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "OptimalNF::FindNeighbors");
-  this->IncrementNumQueries();
-
   auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   //save k and radius
@@ -188,14 +176,37 @@ FindNeighbors(RoadmapType* _rmp,
 
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
+template <typename InputIterator, typename OutputIterator>
 OutputIterator
 OptimalNF<MPTraits>::
 FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+OptimalNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+    const GroupCfgType& _cfg, OutputIterator _out) {
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+OptimalNF<MPTraits>::
+FindNeighborPairs(GroupRoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
+  throw NotImplementedException(WHERE);
 }
 
 /*----------------------------------------------------------------------------*/

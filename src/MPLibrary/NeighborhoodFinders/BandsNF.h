@@ -1,11 +1,10 @@
-#ifndef BANDS_NF_H_
-#define BANDS_NF_H_
+#ifndef PMPL_BANDS_NF_H_
+#define PMPL_BANDS_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 #include "MPProblem/MPProblem.h"
 
 #include <vector>
-using namespace std;
 
 class Policy;
 class ClosestPolicy;
@@ -14,7 +13,8 @@ class PreferentialPolicy;
 class RankWeightedRandomPolicy;
 class DistanceWeightedRandomPolicy;
 
-namespace pmpl_detail { //hide NeighborhoodFinderMethodList in pmpl_detail namespace
+namespace pmpl_detail {
+
 typedef boost::mpl::list<
   ClosestPolicy,
   RandomPolicy,
@@ -91,28 +91,28 @@ class ClosestPolicy : public Policy {
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-        if(m_debug) cout << "ClosestPolicy::SelectNeighbors()" << endl;
+        if(m_debug) std::cout << "ClosestPolicy::SelectNeighbors()" << std::endl;
 
-        typedef typename RDMP::VID VID;
-        priority_queue<pair<VID, double>, vector<pair<VID, double> >, CompareSecond<VID, double> > pq;
+        std::priority_queue<Neighbor> pq;
+
         for(InputIterator it = _first; it != _last; it++) {
           if(pq.size() < m_k)
             pq.push(*it);
           // If better than the worst so far, replace worst so far
-          else if(it->second < pq.top().second) {
+          else if(it->distance < pq.top().distance) {
             pq.pop();
             pq.push(*it);
           }
         }
 
         // Transfer k closest to vector, sorted greatest to least dist
-        vector<pair<VID, double> > closest;
+        std::vector<Neighbor> closest;
         while(!pq.empty()) {
           closest.push_back(pq.top());
           pq.pop();
         }
         // Reverse order
-        for(typename vector<pair<VID, double> >::reverse_iterator it = closest.rbegin(); it < closest.rend(); it++) {
+        for(auto it = closest.rbegin(); it < closest.rend(); it++) {
           *_out++ = *it;
         }
       }
@@ -133,9 +133,9 @@ class RandomPolicy : public Policy {
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-        if(m_debug) cout << "RandomPolicy::SelectNeighbors()" << endl;
+        if(m_debug) std::cout << "RandomPolicy::SelectNeighbors()" << std::endl;
 
-        vector<typename RDMP::VID> neighbors;
+        std::vector<typename RDMP::VID> neighbors;
 
         size_t maxIter = m_k;
         if(_last - _first < (int)maxIter)
@@ -151,12 +151,12 @@ class RandomPolicy : public Policy {
             size_t id = (size_t)(LRand()%(_last - _first));
             p = _first + id;
 
-            typename RDMP::VID v = p->first;
-            if(m_debug) cout << "\tchecking id = " << id << ", VID = " << v;
+            typename RDMP::VID v = p->target;
+            if(m_debug) std::cout << "\tchecking id = " << id << ", VID = " << v;
 
             // check to see if this has been added
             if(find(neighbors.begin(), neighbors.end(), v) == neighbors.end()){
-              if(m_debug) cout << " | added!" << endl;
+              if(m_debug) std::cout << " | added!" << std::endl;
               neighbors.push_back(v);
               *_out++ = *p;
               break;
@@ -181,9 +181,9 @@ class PreferentialPolicy : public Policy {
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-        if(m_debug) cout << "PreferentialPolicy::SelectNeighbors()" << endl;
+        if(m_debug) std::cout << "PreferentialPolicy::SelectNeighbors()" << std::endl;
 
-        vector<typename RDMP::VID> neighbors;
+        std::vector<typename RDMP::VID> neighbors;
 
         size_t found = 0;
         size_t maxIter = m_k;
@@ -196,21 +196,21 @@ class PreferentialPolicy : public Policy {
           // iterate through candidate set, adding as neighbor with probability = PrefProb(_rmp, v, n)
           for(InputIterator itr = _first; itr != _last; ++itr) {
             double drand = DRand();
-            pair<typename RDMP::VID, double> p = *itr;
-            typename RDMP::VID v = p.first;
+            const Neighbor& p = *itr;
+            typename RDMP::VID v = p.target;
             double prob = PrefProb(_rmp, v, _last - _first, setDegree);
-            if(m_debug) cout << "found = " << found << ", VID = " << v << ", drand = " << drand << ", prob = " << prob;
+            if(m_debug) std::cout << "found = " << found << ", VID = " << v << ", drand = " << drand << ", prob = " << prob;
             if(drand < prob) {
-              if(m_debug) cout << " ||| ";
+              if(m_debug) std::cout << " ||| ";
 
               if(find(neighbors.begin(), neighbors.end(), v) == neighbors.end()){
                 neighbors.push_back(v);
                 *_out++ = p;
-                if (m_debug) cout << " added!";
+                if (m_debug) std::cout << " added!";
                 found++;
               }
             }
-            if(m_debug) cout << endl;
+            if(m_debug) std::cout << std::endl;
             if(found == maxIter)
               break;
           }
@@ -224,7 +224,7 @@ class PreferentialPolicy : public Policy {
         size_t candidateDegree = _rm->GetGraph()->get_degree(_vid);
         size_t totalDegree = _totDegree;
         if (_totDegree == (size_t)-1) totalDegree = _rm->GetGraph()->get_num_edges();
-        if (m_debug) cout << "PrefProb(" << _vid << ", " << _n << ") = " << 1 + candidateDegree << " / " << _n + totalDegree << endl;
+        if (m_debug) std::cout << "PrefProb(" << _vid << ", " << _n << ") = " << 1 + candidateDegree << " / " << _n + totalDegree << std::endl;
         return ((double)(1 + candidateDegree) / (double)(_n + totalDegree));
       }
 
@@ -234,9 +234,9 @@ class PreferentialPolicy : public Policy {
       size_t CandidateSetDegree(RDMP* _rm, InputIterator _first, InputIterator _last) {
         size_t totalDegree = 0;
         for (InputIterator itr = _first; itr != _last; ++itr) {
-          size_t candidateDegree = _rm->GetGraph()->get_degree(itr->first);
+          size_t candidateDegree = _rm->GetGraph()->get_degree(itr->target);
           totalDegree += candidateDegree;
-          if (m_debug) cout << "CandidateSetDegree += " << candidateDegree << endl;
+          if (m_debug) std::cout << "CandidateSetDegree += " << candidateDegree << std::endl;
         }
         return totalDegree;
       }
@@ -256,9 +256,9 @@ class RankWeightedRandomPolicy : public Policy {
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-        if (m_debug) cout << "RankWeightedRandomPolicy::SelectNeighbors()" << endl;
+        if (m_debug) std::cout << "RankWeightedRandomPolicy::SelectNeighbors()" << std::endl;
 
-        vector<typename RDMP::VID> neighbors;
+        std::vector<typename RDMP::VID> neighbors;
 
         size_t maxIter = m_k;
         if (_last - _first < (int)maxIter)
@@ -266,20 +266,19 @@ class RankWeightedRandomPolicy : public Policy {
 
         double maxRank = (_last - _first);
 
-        if (m_debug) cout << "\t\tmaxRank = " << maxRank << endl;
+        if (m_debug) std::cout << "\t\tmaxRank = " << maxRank << std::endl;
 
         for (size_t i = 0; i < maxIter; i++) {
-          pair<typename RDMP::VID, double> p;
 
           // select random candidate that hasn't been added yet
           bool done = false;
           while (!done) {
 
             size_t id = (size_t)(LRand()%(_last - _first));
-            p = *(_first + id);
+            const auto& p = *(_first + id);
 
             // check to see if this VID has been added
-            if(find(neighbors.begin(), neighbors.end(), p.first) == neighbors.end()){
+            if(find(neighbors.begin(), neighbors.end(), p.target) == neighbors.end()){
               // if it hasn't been added, add it with some probability
               double prob = pow((maxRank - id) / (maxRank), m_alpha);
               double roll = DRand();
@@ -289,17 +288,17 @@ class RankWeightedRandomPolicy : public Policy {
                 prob = 1.0;
               }
 
-              if (m_debug) cout << "\t\t\trank = " << id << ", prob = " << prob << ", alpha = " << m_alpha << ", roll = " << roll;
+              if (m_debug) std::cout << "\t\t\trank = " << id << ", prob = " << prob << ", alpha = " << m_alpha << ", roll = " << roll;
 
               if (roll < prob) {
-                neighbors.push_back(p.first);
+                neighbors.push_back(p.target);
                 *_out++ = p;
-                if (m_debug) cout << " | added";
+                if (m_debug) std::cout << " | added";
               }
               else
                 done = false;
 
-              if (m_debug) cout << endl;
+              if (m_debug) std::cout << std::endl;
             }
           }
         }
@@ -323,35 +322,33 @@ class DistanceWeightedRandomPolicy : public Policy {
     template<typename RDMP, typename InputIterator, typename OutputIterator>
       void SelectNeighbors(RDMP* _rmp, InputIterator _first, InputIterator _last, OutputIterator _out){
 
-        if (m_debug) cout << "DistanceWeightedRandomPolicy::SelectNeighbors()" << endl;
+        if (m_debug) std::cout << "DistanceWeightedRandomPolicy::SelectNeighbors()" << std::endl;
 
-        vector<typename RDMP::VID> neighbors;
+        std::vector<typename RDMP::VID> neighbors;
 
         size_t maxIter = m_k;
         if (_last - _first < (int)maxIter)
           maxIter = _last - _first;
 
-        reverse_iterator<InputIterator> riter = reverse_iterator<InputIterator>(_last);
-        double maxDist = (*riter).second;
-        double minDist = (*_first).second;
+        std::reverse_iterator<InputIterator> riter(_last);
+        double maxDist = (*riter).distance;
+        double minDist = (*_first).distance;
 
-        if (m_debug) cout << "\t\tminDist = " << minDist << ", maxDist = " << maxDist << endl;
+        if (m_debug) std::cout << "\t\tminDist = " << minDist << ", maxDist = " << maxDist << std::endl;
 
         for (size_t i = 0; i < maxIter; i++) {
-
-          pair<typename RDMP::VID, double> p;
 
           // select random candidate that hasn't been added yet
           bool done = false;
           while (!done) {
 
             size_t id = (size_t)(LRand()%(_last - _first));
-            p = *(_first + id);
+            const auto& p = *(_first + id);
 
             // check to see if this VID has been added
-            if(find(neighbors.begin(), neighbors.end(), p.first) == neighbors.end()){
+            if(find(neighbors.begin(), neighbors.end(), p.target) == neighbors.end()){
               // if it hasn't been added, add it with some probability
-              double prob = pow((maxDist - p.second) / (maxDist - minDist), m_alpha);
+              double prob = pow((maxDist - p.distance) / (maxDist - minDist), m_alpha);
               double roll = DRand();
 
               // if we are taking less than K (every neighbor in the candidate set), set prob to 1
@@ -359,17 +356,17 @@ class DistanceWeightedRandomPolicy : public Policy {
                 prob = 1.0;
               }
 
-              if (m_debug) cout << "\t\t\tdist = " << p.second << ", prob = " << prob << ", roll = " << roll;
+              if (m_debug) std::cout << "\t\t\tdist = " << p.distance << ", prob = " << prob << ", roll = " << roll;
 
               if (roll < prob) {
-                neighbors.push_back(p.first);
+                neighbors.push_back(p.target);
                 *_out++ = p;
-                if (m_debug) cout << " | added";
+                if (m_debug) std::cout << " | added";
               }
               else
                 done = false;
 
-              if (m_debug) cout << endl;
+              if (m_debug) std::cout << std::endl;
             }
           }
         }
@@ -396,7 +393,7 @@ class Band : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
-    Band(string _dmm = "", string _label = "") :
+    Band(std::string _dmm = "", std::string _label = "") :
         MPBaseObject<MPTraits>(_label), m_dmLabel(_dmm) {
       this->SetName("Band");
     }
@@ -412,7 +409,7 @@ class Band : public MPBaseObject<MPTraits> {
 
       double alpha = _node.Read("alpha", false, 1.0, 0.0, 100.0, "alpha");
 
-      string policy = _node.Read("policy", true, "closest", "selection policy");
+      std::string policy = _node.Read("policy", true, "closest", "selection policy");
       size_t k = _node.Read("k", true, 1, 0, 10000, "k");
 
       if (policy == "closest") {
@@ -431,62 +428,46 @@ class Band : public MPBaseObject<MPTraits> {
         m_policy = std::unique_ptr<Policy>(new PreferentialPolicy(k, m_debug));
       }
       else {
-        cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << endl;
+        std::cout << "policy \"" << policy << "\" is not a valid option.  Exiting..." << std::endl;
         exit(-1);
       }
     }
 
     virtual void Print(ostream& _os) const {
-      _os << this->GetNameAndLabel() << ":: TODO" << endl;
+      _os << this->GetNameAndLabel() << ":: TODO" << std::endl;
     }
 
     // given initial set V (_first --> _last), and CFG v1, return V_n.
     template<typename InputIterator, typename RoadmapType, typename CfgType>
-      vector< pair<typename RoadmapType::VID, double> >
+      std::vector<Neighbor>
       GetNeighbors(RoadmapType* _rmp,
           InputIterator _first, InputIterator _last, const CfgType& _cfg);
 
-//    template<typename InputIterator>
-//      vector< pair<GroupVID, double> >
-//      GetNeighbors(GroupRoadmapType* _rmp, InputIterator _first,
-//                   InputIterator _last, const GroupCfgType& _cfg);
-
   protected:
-    template<typename InputIterator, typename RoadmapType, typename CfgType>
-    vector< pair<typename RoadmapType::VID, double> >
+    template <typename InputIterator, typename RoadmapType, typename CfgType>
+    std::vector<Neighbor>
     GetCandidateSet(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, const CfgType& _cfg){
-      if (m_debug) cout << "Band<MPTraits>::GetCandidateSet()" << endl;
+      if (m_debug) std::cout << "Band<MPTraits>::GetCandidateSet()" << std::endl;
 
       // this will be overwritten by extending classes
-      vector< pair<typename RoadmapType::VID, double> > candidates;
+      std::vector<Neighbor> candidates;
       return candidates;
     }
 
-//    template<typename InputIterator>
-//    vector< pair<GroupVID, double> >
-//    GetCandidateSet(GroupRoadmapType* _rmp, InputIterator _first,
-//                    InputIterator _last, const GroupCfgType& _cfg) {
-//      if (m_debug) cout << "Band<MPTraits>::GetCandidateSet()" << endl;
-//
-//      // this will be overwritten by extending classes
-//      vector< pair<GroupVID, double> > candidates;
-//      return candidates;
-//    }
-
     template<typename InputIterator, typename RoadmapType, typename CfgType>
-    vector< pair<typename RoadmapType::VID, double> >
+    std::vector<Neighbor>
     GetDistList(RoadmapType* _rmp, InputIterator _first,
                 InputIterator _last, const CfgType& _cfg) {
       typedef typename RoadmapType::VID VID;
 
       if (m_debug)
-        cout << "Band<MPTraits>:::GetDistList()" << endl;
+        std::cout << "Band<MPTraits>:::GetDistList()" << std::endl;
 
       typename RoadmapType::GraphType* map = _rmp->GetGraph();
       auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
-      vector< pair<VID, double> > distList;
+      std::vector<Neighbor> distList;
 
       // compute sorted neighbor list
       for (InputIterator V1 = _first; V1 != _last; ++V1) {
@@ -496,10 +477,10 @@ class Band : public MPBaseObject<MPTraits> {
           continue; //don't connect same
 
         double dist = dmm->Distance(_cfg, v1);
-        distList.push_back(make_pair(map->GetVID(V1), dist));
+        distList.emplace_back(map->GetVID(V1), dist);
       }
 
-      sort(distList.begin(), distList.end(), CompareSecond<VID, double>());
+      std::sort(distList.begin(), distList.end());
 
       return distList;
     }
@@ -510,8 +491,8 @@ class Band : public MPBaseObject<MPTraits> {
     bool m_usePercent;
     double m_min;
     double m_max;
-    string m_type;
-    string m_dmLabel;
+    std::string m_type;
+    std::string m_dmLabel;
     std::unique_ptr<Policy> m_policy;
 
 };
@@ -539,37 +520,37 @@ class DBand : public Band<MPTraits> {
     }
 
     template<typename InputIterator, typename RoadmapType, typename CfgType>
-    vector<pair<typename RoadmapType::VID, double> >
+    std::vector<Neighbor>
     GetNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
                  const CfgType& _cfg) {
       typedef typename RoadmapType::VID VID;
 
       if (this->m_debug)
-        cout << "DBand<MPTraits>::GetNeighbors()" << endl;
+        std::cout << "DBand<MPTraits>::GetNeighbors()" << std::endl;
 
       // get candidate set
-      vector< pair<VID, double> > candidateSet = GetCandidateSet(_rmp, _first, _last, _cfg);
-      if (this->m_debug) cout << "  num_candidates = " << candidateSet.size() << endl;
+      std::vector<Neighbor> candidateSet = GetCandidateSet(_rmp, _first, _last, _cfg);
+      if (this->m_debug) std::cout << "  num_candidates = " << candidateSet.size() << std::endl;
 
       // get neighbors from candidate set using policy
-      vector<pair<VID, double> > neighborSet;
+      std::vector<Neighbor> neighborSet;
       this->m_policy->SelectNeighbors(_rmp, candidateSet.begin(), candidateSet.end(), back_inserter(neighborSet));
       return neighborSet;
     }
 
   private:
     template <typename InputIterator, typename RoadmapType, typename CfgType>
-    vector< pair<typename RoadmapType::VID, double> >
+    std::vector<Neighbor>
     GetCandidateSet(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, const CfgType& _cfg) {
       typedef typename RoadmapType::VID VID;
 
       if (this->m_debug)
-        cout << "DBand<MPTraits>::GetCandidateSet()" << endl;
+        std::cout << "DBand<MPTraits>::GetCandidateSet()" << std::endl;
 
       // obtain sorted distance list
-      vector< pair<VID, double> > distList = this->GetDistList(_rmp, _first, _last, _cfg);
-      vector< pair<VID, double> > candidates;
+      std::vector<Neighbor> distList = this->GetDistList(_rmp, _first, _last, _cfg);
+      std::vector<Neighbor> candidates;
 
       double min, max;
 
@@ -577,22 +558,22 @@ class DBand : public Band<MPTraits> {
       max = this->m_max;
 
       // iterate through list, return all (VID, dist) pairs that are between min and max
-      typename vector< pair<VID, double> >::iterator V1;
+      typename std::vector<Neighbor>::iterator V1;
       if (this->m_debug)
-        cout << "\tchecking candidates (min = " << min << ", max = " << max
-             << ") for CFG = " << _cfg << ": " << endl;
+        std::cout << "\tchecking candidates (min = " << min << ", max = " << max
+             << ") for CFG = " << _cfg << ": " << std::endl;
       for (V1 = distList.begin(); V1 != distList.end(); ++V1) {
-        double dist = (*V1).second;
+        double dist = (*V1).distance;
         if (this->m_debug)
-          cout << "\t\t(" << (*V1).first << ", " << (*V1).second << ") ";
+          std::cout << "\t\t(" << (*V1).target << ", " << (*V1).distance << ") ";
         if (min <= dist && dist < max) {
-          if (this->m_debug) cout << "added";
+          if (this->m_debug) std::cout << "added";
           candidates.push_back(*V1);
         }
         if (this->m_debug) {
-          cout << endl;
-          cout << "Candidate: VID = " << (*V1).first << " | dist = "
-               << (*V1).second << endl;
+          std::cout << std::endl;
+          std::cout << "Candidate: VID = " << (*V1).target << " | dist = "
+               << (*V1).distance << std::endl;
         }
       }
 
@@ -620,36 +601,36 @@ class RBand : public Band<MPTraits> {
     }
 
     template<typename InputIterator, typename RoadmapType, typename CfgType>
-    vector< pair<typename RoadmapType::VID, double> >
+    std::vector<Neighbor>
     GetNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last, const CfgType& _cfg) {
       typedef typename RoadmapType::VID VID;
 
       if (this->m_debug)
-        cout << "RBand<MPTraits>::GetNeighbors()" << endl;
+        std::cout << "RBand<MPTraits>::GetNeighbors()" << std::endl;
 
       // get candidate set
-      vector<pair<VID, double> > candidateSet = GetCandidateSet(_rmp, _first, _last, _cfg);
-      if (this->m_debug) cout << "  num_candidates = " << candidateSet.size() << endl;
+      std::vector<Neighbor> candidateSet = GetCandidateSet(_rmp, _first, _last, _cfg);
+      if (this->m_debug) std::cout << "  num_candidates = " << candidateSet.size() << std::endl;
 
       // get neighbors from candidate set using policy
-      vector<pair<VID, double> > neighborSet;
+      std::vector<Neighbor> neighborSet;
       this->m_policy->SelectNeighbors(_rmp, candidateSet.begin(), candidateSet.end(), back_inserter(neighborSet));
       return neighborSet;
     }
 
   private:
     template<typename InputIterator, typename RoadmapType, typename CfgType>
-    vector< pair<typename RoadmapType::VID, double> >
+    std::vector<Neighbor>
     GetCandidateSet(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, const CfgType& _cfg) {
       typedef typename RoadmapType::VID VID;
 
       if (this->m_debug)
-        cout << "RBand<MPTraits>::GetCandidateSet()" << endl;
+        std::cout << "RBand<MPTraits>::GetCandidateSet()" << std::endl;
 
       // obtain sorted distance list
-      vector< pair<VID, double> > distList = this->GetDistList(_rmp, _first, _last, _cfg);
-      vector< pair<VID, double> > candidates;
+      std::vector<Neighbor> distList = this->GetDistList(_rmp, _first, _last, _cfg);
+      std::vector<Neighbor> candidates;
 
       double min, max;
 
@@ -663,20 +644,20 @@ class RBand : public Band<MPTraits> {
 
       // iterate through list, return all (VID, dist) pairs that are between min and max
       double rank = 0;
-      typename vector< pair<VID, double> >::iterator V1;
+      typename std::vector<Neighbor>::iterator V1;
       if (this->m_debug)
-        cout << "\tchecking candidates (min = " << min << ", max = " << max
-             << ") for CFG = " << _cfg << ": " << endl;
+        std::cout << "\tchecking candidates (min = " << min << ", max = " << max
+             << ") for CFG = " << _cfg << ": " << std::endl;
       for (V1 = distList.begin(); V1 != distList.end(); ++V1) {
         if (this->m_debug)
-          cout << "\t\t(" << (*V1).first << ", " << (*V1).second << ") ";
+          std::cout << "\t\t(" << (*V1).target << ", " << (*V1).distance << ") ";
         if (min <= rank && rank < max) {
           if (this->m_debug)
-            cout << "added";
+            std::cout << "added";
           candidates.push_back(*V1);
         }
         if (this->m_debug)
-          cout << endl;
+          std::cout << std::endl;
         rank++;
       }
 
@@ -702,7 +683,7 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
-    BandsNF(string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
+    BandsNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
       NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
         this->SetName("BandsNF");
       }
@@ -735,13 +716,11 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-
-    /// Group overloads:
     template<typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
+      throw NotImplementedException(WHERE);
     }
 
     template<typename InputIterator, typename OutputIterator>
@@ -749,7 +728,7 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
+      throw NotImplementedException(WHERE);
     }
 
   private:
@@ -764,16 +743,13 @@ BandsNF<MPTraits>::
 FindNeighbors(RoadmapType* _roadmap,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "BandsNF::FindNeighbors");
-  this->IncrementNumQueries();
-
-  vector< pair<VID, double> > neighbors;
+  std::vector<Neighbor> neighbors;
 
   // iterate through bands
   for(auto bandIT = m_bands.begin(); bandIT != m_bands.end(); ++bandIT) {
-    if (this->m_debug) cout << "Finding Neighbors for Band" << endl;
+    if (this->m_debug) std::cout << "Finding Neighbors for Band" << std::endl;
 
-    vector< pair<VID, double> > bandNeighbors;
+    std::vector<Neighbor> bandNeighbors;
 
     if((*bandIT)->GetName() == "DBand"){
       bandNeighbors = ((DBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_roadmap, _first, _last, _cfg);
@@ -782,23 +758,23 @@ FindNeighbors(RoadmapType* _roadmap,
       bandNeighbors = ((RBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_roadmap, _first, _last, _cfg);
     }
 
-    for (typename vector< pair<VID, double> >::iterator itr = bandNeighbors.begin(); itr != bandNeighbors.end(); ++itr) {
-      if ((*itr).first != INVALID_VID) {
-        if (this->m_debug) cout << "neighbor: VID = " << (*itr).first << " | dist = " << (*itr).second << endl;
+    for (typename std::vector<Neighbor>::iterator itr = bandNeighbors.begin(); itr != bandNeighbors.end(); ++itr) {
+      if ((*itr).target != INVALID_VID) {
+        if (this->m_debug) std::cout << "neighbor: VID = " << (*itr).target << " | dist = " << (*itr).distance << std::endl;
         neighbors.push_back(*itr);
       }
     }
 
   }
 
-  sort(neighbors.begin(), neighbors.end(), CompareSecond<VID, double>());
+  std::sort(neighbors.begin(), neighbors.end());
 
   // now add VIDs from neighbors to output
-  for(typename vector< pair<VID, double> >::iterator itr = neighbors.begin();
+  for(typename std::vector<Neighbor>::iterator itr = neighbors.begin();
       itr != neighbors.end(); ++itr) {
-    if ((*itr).first != INVALID_VID) {
+    if ((*itr).target != INVALID_VID) {
       if(this->m_debug)
-        cout << "\tVID = " << (*itr).first << " | dist = " << (*itr).second << endl;
+        std::cout << "\tVID = " << (*itr).target << " | dist = " << (*itr).distance << std::endl;
 
       *_out = *itr;
       ++_out;
@@ -816,7 +792,7 @@ BandsNF<MPTraits>::FindNeighborPairs(RoadmapType* _roadmap,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
+  throw NotImplementedException(WHERE);
 }
 
 #endif

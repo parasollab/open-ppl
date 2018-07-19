@@ -1,22 +1,24 @@
-#ifndef _MPNN_WRAPPER_H_
-#define _MPNN_WRAPPER_H_
+#ifndef PMPL_MPNN_WRAPPER_H_
+#define PMPL_MPNN_WRAPPER_H_
+
+#include "Neighbors.h"
+
+#include "DNN/ANN.h"
+#include "DNN/multiann.h"
 
 #include <vector>
 #include <map>
-#include "DNN/ANN.h"
-#include "DNN/multiann.h"
 
 #ifndef PI
 #define PI 3.1415926535897932385
 #endif
 
-using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup NeighborhoodFinderUtils
-/// @brief TODO
-///
 /// TODO
+/// @todo This class has memory leaks and needs some serious TLC.
+/// @todo Add paper reference.
+/// @ingroup NeighborhoodFinderUtils
 ////////////////////////////////////////////////////////////////////////////////
 class MPNNWrapper
 {
@@ -26,20 +28,20 @@ class MPNNWrapper
 
     // here, scale refers to how much weight a given DOF carries...
     //   rotational DOFs should have a higher scale than regular DOFs
-    MPNNWrapper(vector<int> _topology, int maxPts, int maxNeighbors, double _epsilon);
-    MPNNWrapper(vector<int> _topology, vector<double> _scale,
+    MPNNWrapper(std::vector<int> _topology, int maxPts, int maxNeighbors, double _epsilon);
+    MPNNWrapper(std::vector<int> _topology, std::vector<double> _scale,
                 int maxPts, int maxNeighbors, double _epsilon);
 
     // return type = MPNN's index for this point
     //   this point is also stored in vidMapping
-    int add_node(vector<double> point, int vid);
+    int add_node(std::vector<double> point, int vid);
 
     // this returns the VID associated with the given point
-    int get_vid(vector<double> point);
+    int get_vid(std::vector<double> point);
 
     // get the k-closest VIDs to the input point (not necessarily in tree)
     template <typename OutputIterator>
-    OutputIterator KClosest(vector<double> point, int k, OutputIterator _out);
+    OutputIterator KClosest(std::vector<double> point, int k, OutputIterator _out);
 
     // get the k-closest VIDs to the input vid (already in tree)
     template <typename OutputIterator>
@@ -61,8 +63,8 @@ class MPNNWrapper
     MultiANN *MAG;
 
     // maps a MultiANN index (int) to a Roadmap VID
-    map<int, int> indexToVIDMapping;
-    map<int, int> vidToIndexMapping;
+    std::map<int, int> indexToVIDMapping;
+    std::map<int, int> vidToIndexMapping;
 };
 
 /*
@@ -74,7 +76,7 @@ class MPNNWrapper
 template <typename OutputIterator>
 OutputIterator
 MPNNWrapper::
-KClosest(vector<double> point, int k, OutputIterator _out)
+KClosest(std::vector<double> point, int k, OutputIterator _out)
 {
   // return one extra node, then filter
   k += 1;
@@ -129,7 +131,7 @@ KClosest(vector<double> point, int k, OutputIterator _out)
     }
 
     //cout << d_best_list[i] << " - index = " << resultVID << endl;
-    *_out = pair<int, double>(resultVID, d_best_list[i]);
+    *_out = Neighbor(resultVID, d_best_list[i]);
     ++_out;
   }
 
@@ -176,11 +178,11 @@ KClosest(int vid, int k, OutputIterator _out)
       continue;
 
     //cout << d_best_list[i] << " - index = " << resultVID << endl;
-    *_out = pair<int, double>(resultVID, d_best_list[i]);
+    *_out = Neighbor(resultVID, d_best_list[i]);
     ++_out;
   }
 
   return _out;
 }
 
-#endif //end #ifndef _MPNN_WRAPPER_H_
+#endif

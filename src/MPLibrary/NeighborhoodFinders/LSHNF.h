@@ -3,6 +3,10 @@
 
 #include "NeighborhoodFinderMethod.h"
 
+#include <map>
+#include <utility>
+#include <vector>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method implements a locality sensitive hashing-based approximate
@@ -21,28 +25,32 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename GraphType::VI          VI;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
-    typedef typename MPTraits::GroupCfgType           GroupCfgType;
+    typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::RoadmapType      RoadmapType;
+    typedef typename RoadmapType::GraphType     GraphType;
+    typedef typename GraphType::VI              VI;
+    typedef typename RoadmapType::VID           VID;
+    typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
+    typedef typename MPTraits::GroupCfgType     GroupCfgType;
+
+    ///@}
+    ///@name Local Types
+    ///@{
 
     /// The a vector and b scalar that define our hash functions.
     typedef std::pair<std::vector<double>,double> hash_parameters;
 
     /// A hash family is a set of hash functions.
-    typedef std::vector<hash_parameters> hash_family;
+    typedef std::vector<hash_parameters> HashFamily;
 
     /// The hash key (or bucket) for a hash family.
-    typedef std::vector<int> hash_key;
+    typedef std::vector<int> HashKey;
 
     /// Maps a hash key to a set of VIDs.
-    typedef std::multimap<hash_key, VID> bucket_map;
+    typedef std::multimap<HashKey, VID> BucketMap;
 
     ///@}
     ///@name Construction
@@ -51,6 +59,8 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     LSHNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5);
 
     LSHNF(XMLNode& _node);
+
+    virtual ~LSHNF();
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -62,19 +72,17 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
 
     ///@}
     ///@name NeighborhoodFinder Methods
+    ///@{
 
     template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    /// Overload for groups
     template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not implemented!");
-    }
+        const GroupCfgType& _cfg, OutputIterator _out);
 
     ///@}
 
@@ -97,14 +105,7 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     /// @param _cfg The configuration.
     /// @param _h The hash family to use.
     /// @return A complete hash key for _cfg using _h.
-    hash_key HashFamilyFunction(const CfgType& _cfg, const hash_family& _h) const;
-
-    /// Find the mapped VIDs with the same hash key as a given query
-    /// configuration. These neighbors will be in no particular order.
-    /// @param _query The query configuration.
-    /// @return Up to m_k VIDs that share a hash key with _query in at least one
-    ///         hash map.
-    std::vector<VID> GetNeighbors(const CfgType& _query) const;
+    HashKey HashFamilyFunction(const CfgType& _cfg, const HashFamily& _h) const;
 
     /// Add a new node to the hash maps.
     /// @param _vi An iterator to the new node in the roadmap graph.
@@ -114,17 +115,12 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    double m_hashRadius;               ///< Sort-of-bucket radius in c-space.
+    double m_hashRadius;      ///< Sort-of-bucket radius in c-space.
     size_t m_hashFamilyCount; ///< The number of hash families.
     size_t m_hashDimension;   ///< The number of hash functions in a family.
 
-    std::vector<hash_family> m_hashFamilies; ///< The set of hash families.
-    std::vector<bucket_map> m_hashMaps;      ///< The set of hash maps.
-
-    double m_maxDist;     ///< stats
-    double m_minDist;     ///< stats
-    double m_avgDist;     ///< stats
-    double m_totalNodes;  ///< stats
+    std::vector<HashFamily> m_hashFamilies; ///< The set of hash families.
+    std::vector<BucketMap> m_hashMaps;      ///< The set of hash maps.
 
     ///@}
 
@@ -134,8 +130,8 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 LSHNF<MPTraits>::
-LSHNF(std::string _dmLabel, bool _unconnected, size_t _k) :
-      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+LSHNF(std::string _dmLabel, bool _unconnected, size_t _k)
+  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
   this->SetName("LSHNF");
   this->m_nfType = K;
   this->m_k = _k;
@@ -162,27 +158,32 @@ LSHNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
 }
 
 
+template <typename MPTraits>
+LSHNF<MPTraits>::
+~LSHNF() = default;
+
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
 LSHNF<MPTraits>::
 Initialize() {
+  /*
   auto boundary = this->GetEnvironment()->GetBoundary();
   auto mb = this->GetTask()->GetRobot()->GetMultiBody();
 
-  //Getting robot's base radius
+  // Getting robot's base radius
   double radius = mb->GetBase()->GetBoundingSphereRadius();
   double hyper = 1;//to compute hypervolume of the environment
   size_t dim = boundary->GetDimension();
+
   //Computing hypervolume Venv
   for (size_t i = 0 ; i  < dim ; ++i ) {
     hyper = hyper * (boundary->GetRange(i).max - boundary->GetRange(i).min);
   }
   size_t targetSize = ceil(hyper / ( pow(radius,dim)) );//Ratio Venv/Vrobot
 
-  /////////////
-  /* Next values for l,k and r were obtained in practice, for now they are commented
+  // Next values for l,k and r were obtained in practice, for now they are commented
   // they could be useful in the future
   m_hashFamilyCount = ceil(2 * log2(targetSize));
   m_hashRadius = ceil( pow((log10(targetSize) - 1.5),2)+1);
@@ -192,14 +193,7 @@ Initialize() {
   if(mb->PosDOF() == 0) {
     m_hashDimension = 5;
   }
-  ///////////// */
-
-  if(this->m_debug) {
-    Print(std::cout);
-    std::cout << "Venv: " << hyper << std::endl;
-    std::cout << "Vrobot: " << pow(radius,dim) << std::endl;
-    std::cout << "targetSize(ratio): " << targetSize << std::endl;
-  }
+  */
 
   // Create the hash families and initialize empty maps.
   m_hashMaps.resize(m_hashFamilyCount);
@@ -212,11 +206,7 @@ Initialize() {
   g->InstallHook(GraphType::HookType::AddVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->InsertIntoMap(_vi);});
 
-  // Initialize member variables for debugging purposes.
-  m_maxDist = 0;
-  m_minDist = 1000;
-  m_avgDist = 0;
-  m_totalNodes = 0;
+  /// @todo Create a hook for removing the mapping.
 }
 
 
@@ -239,54 +229,62 @@ OutputIterator
 LSHNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "LSHNF::FindNeighbors");
-  this->IncrementNumQueries();
-
-  GraphType* g = _rmp->GetGraph();
-  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
-
-  // When all neighbors are requested, simply
-  if(!this->m_k) {
-    for(InputIterator it = _first; it != _last; ++it)
-      if(g->GetVertex(it) != _cfg)
-        *_out++ = make_pair(_rmp->GetGraph()->GetVID(it),
-            dmm->Distance(_cfg, g->GetVertex(it)));
-    return _out;
-  }
+    const CfgType& _query, OutputIterator _out) {
+  auto g = _rmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // Find the first m_k approximate nearest-neighbors from the hash map.
-  auto neighbors = GetNeighbors(_cfg);
+  std::set<Neighbor> neighbors;
 
-  // Store neighbors sorted by ascending distance.
-  std::set<std::pair<VID, double>, CompareSecond<VID, double>> closest;
+  try {
+    for(size_t i = 0 ; i < m_hashMaps.size() ; ++i) {
+      // Compute the hash key for _query using this hash function.
+      const HashKey key = HashFamilyFunction(_query, m_hashFamilies.at(i));
 
-  for(unsigned int i = 0; i < neighbors.size() ;++i) {
-    const VID vid = neighbors[i];
-    const double distance = dmm->Distance(g->GetVertex(vid), _cfg);
-    closest.insert(std::make_pair(vid, distance));
+      // Look for configurations in the corresponding hash map which shares this
+      // key.
+      auto range = m_hashMaps.at(i).equal_range(key);
+      for(auto it = range.first; it != range.second; ++it) {
+        const VID vid = it->second;
 
-    //stats
-    if(this->m_debug) {
-      m_minDist = std::min(m_minDist, distance);
-      m_maxDist = std::max(m_maxDist, distance);
-      m_avgDist += distance;
-      ++m_totalNodes;
+        // Skip connections to self.
+        const CfgType& cfg = g->GetVertex(vid);
+        if(_query == cfg)
+          continue;
 
-      std::cout << "Max Dist: "   << m_maxDist
-                << "\nMin Dist: " << m_minDist
-                << "\nAvg Dist: " << m_avgDist / m_totalNodes
-                << std::endl;
+        // Check distance. If it is infinite, these are not connectable.
+        const double distance = dm->Distance(_query, cfg);
+        if(std::isinf(distance))
+          continue;
+
+        // Add this configuration to the neighbor list.
+        neighbors.emplace(vid, distance);
+        if(neighbors.size() >= this->m_k)
+          break;
+      }
     }
+  }
+  catch(const std::runtime_error& _e) {
+    // If we had an out-of-range access, re-propogate the error with WHERE info.
+    throw RunTimeException(WHERE) << _e.what();
   }
 
   if(this->m_debug)
-    std::cout << "Found " << closest.size() << " neighbors."
+    std::cout << "Found " << neighbors.size() << " neighbors."
               << std::endl;
 
-  // Returning closest
-  return std::copy(closest.begin(), closest.end(), _out);
+  return std::copy(neighbors.begin(), neighbors.end(), _out);
+}
 
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+LSHNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+    const GroupCfgType& _cfg, OutputIterator _out) {
+  throw NotImplementedException(WHERE);
 }
 
 /*------------------------------ Helper Functions ----------------------------*/
@@ -310,8 +308,9 @@ MakeHashFamily() const {
     // The b scalar is a random fraction of m_hashRadius.
     b = DRand() * m_hashRadius;
 
-    family.push_back(std::make_pair(a,b));
+    family.emplace_back(a, b);
   }
+
   return family;
 }
 
@@ -332,48 +331,11 @@ HashFunction(const CfgType& _cfg, const hash_parameters& _h) const {
 template <typename MPTraits>
 typename std::vector<int>
 LSHNF<MPTraits>::
-HashFamilyFunction(const CfgType& _cfg, const hash_family& _h) const {
-  hash_key output;
+HashFamilyFunction(const CfgType& _cfg, const HashFamily& _h) const {
+  HashKey output;
   for(const auto& parameters : _h)
     output.push_back(HashFunction(_cfg, parameters));
   return output;
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::RoadmapType::VID>
-LSHNF<MPTraits>::
-GetNeighbors(const CfgType& _query) const {
-  auto g = this->GetRoadmap()->GetGraph();
-  std::vector<VID> neighbors;
-  neighbors.reserve(this->m_k);
-
-  try {
-    for(size_t i = 0 ; i < m_hashMaps.size() ; ++i) {
-      // Compute the hash key for _query using this hash function.
-      const hash_key key = HashFamilyFunction(_query, m_hashFamilies.at(i));
-
-      // Look for configurations in the corresponding hash map which shares this
-      // key.
-      auto range = m_hashMaps.at(i).equal_range(key);
-      for(auto it = range.first; it != range.second; ++it) {
-        // Skip connections to self.
-        const Cfg& cfg = g->GetVertex(it->second);
-        if(_query == cfg)
-         continue;
-
-        // Add this VID to the neighbor list.
-        neighbors.push_back(it->second);
-        if(neighbors.size() >= this->m_k)
-          return neighbors;
-      }
-    }
-    return neighbors;
-  }
-  catch(const std::runtime_error& _e) {
-    // If we had an out-of-range access, re-propogate the error with WHERE info.
-    throw RunTimeException(WHERE) << _e.what();
-  }
 }
 
 
@@ -388,7 +350,7 @@ InsertIntoMap(const VI _vi) {
 
   // Add this cfg to each hash map.
   for(unsigned int i = 0; i < m_hashMaps.size(); ++i) {
-    const hash_key hash = HashFamilyFunction(_cfg, m_hashFamilies[i]);
+    const HashKey hash = HashFamilyFunction(_cfg, m_hashFamilies[i]);
     m_hashMaps[i].emplace(hash, vid);
   }
 }

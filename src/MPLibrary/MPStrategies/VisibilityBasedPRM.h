@@ -1,5 +1,5 @@
-#ifndef VISIBILITY_BASED_PRM_H_
-#define VISIBILITY_BASED_PRM_H_
+#ifndef PMPL_VISIBILITY_BASED_PRM_H_
+#define PMPL_VISIBILITY_BASED_PRM_H_
 
 #include "MPStrategyMethod.h"
 #include "Utilities/IOUtils.h"
@@ -38,13 +38,13 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
     typedef typename RoadmapType::GraphType GraphType;
 
-    VisibilityBasedPRM(const string _sampler = "",
-        const string _vc = "", const string _lp = "",
+    VisibilityBasedPRM(const std::string _sampler = "",
+        const std::string _vc = "", const std::string _lp = "",
         const size_t _maxFailedIterations = 10);
     VisibilityBasedPRM(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     virtual void Initialize() {}
     virtual void Iterate();
@@ -54,24 +54,24 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
   protected:
 
     //Input parameters
-    string m_samplerLabel;
-    string m_vcLabel;
-    string m_lpLabel;
+    std::string m_samplerLabel;
+    std::string m_vcLabel;
+    std::string m_lpLabel;
     size_t m_maxFailedIterations; ///< Number of attempts allowed per guard.
     size_t m_failedIterations;    ///< Tracks consecutive failed attempts.
 
     //Local data
-    vector<vector<CfgType> > m_guards;
+    std::vector<std::vector<CfgType> > m_guards;
 
     //Auxiliary Functions
-    void GenerateNode(vector<CfgType>& _outNode);
-    bool ConnectVisibleGuardSets(vector<CfgType>& _outNode);
+    void GenerateNode(std::vector<CfgType>& _outNode);
+    bool ConnectVisibleGuardSets(std::vector<CfgType>& _outNode);
 };
 
 
 template <typename MPTraits>
 VisibilityBasedPRM<MPTraits>::
-VisibilityBasedPRM(const string _sampler, const string _vc, const string _lp,
+VisibilityBasedPRM(const std::string _sampler, const std::string _vc, const std::string _lp,
     const size_t _maxFailedIterations) : m_samplerLabel(_sampler),
     m_vcLabel(_vc), m_lpLabel(_lp), m_maxFailedIterations(_maxFailedIterations),
     m_failedIterations(0) {
@@ -103,13 +103,13 @@ ParseXML(XMLNode& _node) {
 template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   _os << this->GetNameAndLabel()
       << "\n\tSampler: " << m_samplerLabel
       << "\n\tValidity Checker: " << m_vcLabel
       << "\n\tLocal Planner: " << m_lpLabel
       << "\n\tMaximum consecutive failed iterations: " << m_maxFailedIterations
-      << endl;
+      << std::endl;
 }
 
 
@@ -118,12 +118,12 @@ void
 VisibilityBasedPRM<MPTraits>::
 Iterate() {
   if(this->m_debug)
-    cout << "\nCreating node, currently "
+    std::cout << "\nCreating node, currently "
          << this->GetRoadmap()->GetGraph()->get_num_vertices()
          << " nodes and " << m_guards.size() << " guard sets.";
 
   //Sample one node
-  vector<CfgType> tempNode;
+  std::vector<CfgType> tempNode;
   GenerateNode(tempNode);
 
   //Iterate over guard subsets and try to connect tempNode to one node in each
@@ -135,7 +135,7 @@ Iterate() {
   else m_failedIterations++;
 
   if(this->m_debug)
-    cout << "\n\tFailed Iterations = " << m_failedIterations;
+    std::cout << "\n\tFailed Iterations = " << m_failedIterations;
 }
 
 
@@ -152,7 +152,7 @@ void
 VisibilityBasedPRM<MPTraits>::
 Finalize() {
   if(this->m_debug)
-    cout << "\nFinalizing VisibilityBasedPRM::\n";
+    std::cout << "\nFinalizing VisibilityBasedPRM::\n";
 
   //Output .map file
   this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
@@ -160,8 +160,8 @@ Finalize() {
 
   //Output .stat file
   StatClass* stats = this->GetStatClass();
-  string fileName = this->GetBaseFilename() + ".stat";
-  ofstream osStat(fileName.c_str());
+  std::string fileName = this->GetBaseFilename() + ".stat";
+  std::ofstream osStat(fileName.c_str());
   osStat << "Visibility-Based PRM Stats\n";
   stats->PrintAllStats(osStat, this->GetRoadmap());
   stats->PrintClock("Map Generation", osStat);
@@ -169,24 +169,24 @@ Finalize() {
   osStat.close();
 
   if(this->m_debug)
-    cout << "\nFinished finalizing VisibilityBasedPRM.\n";
+    std::cout << "\nFinished finalizing VisibilityBasedPRM.\n";
 }
 
 
 template <typename MPTraits>
 void
 VisibilityBasedPRM<MPTraits>::
-GenerateNode(vector<CfgType>& _outNode) {
+GenerateNode(std::vector<CfgType>& _outNode) {
   auto sampler = this->GetSampler(m_samplerLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 
-  string callee("VisibilityBasedPRM::GenerateNodes");
+  std::string callee("VisibilityBasedPRM::GenerateNodes");
 
   do {
     //Sample one node
     do {
       sampler->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
-          back_inserter(_outNode));
+          std::back_inserter(_outNode));
     } while (_outNode.size() <= 0);
 
     //Check validity
@@ -197,26 +197,26 @@ GenerateNode(vector<CfgType>& _outNode) {
     //Discard and resample if invalid
   } while (!_outNode[0].GetLabel("VALID"));
 
-  if(this->m_debug) cout << "\nNode created, searching for connections:";
+  if(this->m_debug) std::cout << "\nNode created, searching for connections:";
 }
 
 
 template <typename MPTraits>
 bool
 VisibilityBasedPRM<MPTraits>::
-ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
+ConnectVisibleGuardSets(std::vector<CfgType>& _outNode) {
   auto lp = this->GetLocalPlanner(m_lpLabel);
   GraphType* g = this->GetRoadmap()->GetGraph();
   Environment* env = this->GetEnvironment();
 
-  typedef pair<WeightType, WeightType> LPEdge;
+  typedef std::pair<WeightType, WeightType> LPEdge;
 
   LPOutput<MPTraits> lpOutput;
   CfgType col(this->GetTask()->GetRobot());
-  vector<pair<VID, LPEdge>> validEdges;
+  std::vector<std::pair<VID, LPEdge>> validEdges;
 
-  typedef typename vector<vector<CfgType>>::iterator GIT; // Guard subset iterator
-  vector<GIT> visibleGuardSets;
+  typedef typename std::vector<std::vector<CfgType>>::iterator GIT; // Guard subset iterator
+  std::vector<GIT> visibleGuardSets;
 
   if(this->m_debug)
     VDAddNode(_outNode[0]);
@@ -226,16 +226,16 @@ ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
     for(auto cit = git->begin(); cit != git->end(); cit++) {
 
       if(this->m_debug)
-        cout << "\n\tAttempting connection to node " << g->GetVID(*cit);
+        std::cout << "\n\tAttempting connection to node " << g->GetVID(*cit);
 
       //Attempt connection to current guard node *cit
       if(lp->IsConnected(_outNode[0], *cit, col, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes(), true)) {
         CfgType* validNode = &(*cit);
-        validEdges.push_back(make_pair(g->GetVID(*validNode), lpOutput.m_edge));
+        validEdges.push_back(std::make_pair(g->GetVID(*validNode), lpOutput.m_edge));
         visibleGuardSets.push_back(git);
         if(this->m_debug) {
-          cout << "\n\tConnection found.";
+          std::cout << "\n\tConnection found.";
           VDAddEdge(_outNode[0], *cit);
         }
         break;
@@ -262,15 +262,15 @@ ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
       g->AddEdge(newNode, eit->first, eit->second);
 
     //Merge guard subsets that are connected by _outNode
-    vector<CfgType>* firstSet = &(**(visibleGuardSets.begin()));
+    std::vector<CfgType>* firstSet = &(**(visibleGuardSets.begin()));
     for(auto vit = visibleGuardSets.begin() + 1; vit != visibleGuardSets.end();
         vit++) {
-      copy((*vit)->begin(), (*vit)->end(), back_inserter(*firstSet));
+      std::copy((*vit)->begin(), (*vit)->end(), std::back_inserter(*firstSet));
       m_guards.erase(*vit);
     }
 
     if(this->m_debug)
-      cout << "\n\tNode is connector joining " << visibleGuardSets.size()
+      std::cout << "\n\tNode is connector joining " << visibleGuardSets.size()
            << " guard sets.";
   }
 
@@ -280,13 +280,13 @@ ConnectVisibleGuardSets(vector<CfgType>& _outNode) {
     g->AddVertex(_outNode[0]);
     m_guards.push_back(_outNode);
     if(this->m_debug)
-      cout << "\n\tNode is a guard, adding a new guard set.";
+      std::cout << "\n\tNode is a guard, adding a new guard set.";
     return true;
   }
 
   //If _outNode is neither a guard nor a connection, it is discarded
   if(this->m_debug && visibleGuardSets.size() == 1) {
-    cout << "\n\tOnly one connection, node discarded.";
+    std::cout << "\n\tOnly one connection, node discarded.";
     VDRemoveEdge(_outNode[0], g->GetVertex(validEdges[0].first));
     VDRemoveNode(_outNode[0]);
   }

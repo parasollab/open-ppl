@@ -22,8 +22,8 @@ bool init=false;
 ////////////////////////////////////////////////////////////////////////////////
 class PerturbJoints{
  public:
-  shared_ptr<vector<Vector3D> > operator()(ReachableVolumeRobot &_rvr,  vector<Vector3D> *_node, vector<Vector3D> *_perturbTowards, double _delta, string _perturbDir = "WorkspaceDir", string _repositionPolicy = "Random"){
-    shared_ptr<vector<Vector3D> > returnValue;
+  std::shared_ptr<std::vector<Vector3D> > operator()(ReachableVolumeRobot &_rvr,  std::vector<Vector3D> *_node, std::vector<Vector3D> *_perturbTowards, double _delta, std::string _perturbDir = "WorkspaceDir", std::string _repositionPolicy = "Random"){
+    std::shared_ptr<std::vector<Vector3D> > returnValue;
     return returnValue;
   }
 };
@@ -38,13 +38,13 @@ class PerturbJoints{
 class PerturbOneRandomJoint : public PerturbJoints{
  public:
 
-  vector<Vector3D> *operator()(ReachableVolumeRobot &_rvr,  vector<Vector3D> *_node, vector<Vector3D> *_perturbTowards, double _delta, string _perturbDir = "WorkspaceDir", string _repositionPolicy = "Random"){
+  std::vector<Vector3D> *operator()(ReachableVolumeRobot &_rvr,  std::vector<Vector3D> *_node, std::vector<Vector3D> *_perturbTowards, double _delta, std::string _perturbDir = "WorkspaceDir", std::string _repositionPolicy = "Random"){
     //Find rvj for node from rvr
     //perturb node and check if still in rv
     //recursivly resample if node not in rv
     //return sample
 
-    vector<Vector3D> *newNode= new vector<Vector3D>(_node->begin(),_node->end());
+    std::vector<Vector3D> *newNode= new std::vector<Vector3D>(_node->begin(),_node->end());
 
     for(int i=0; i<=_rvr.m_nAttempts; i++){
       int jointId = 1 + LRand() % (_node->size()-2);
@@ -63,7 +63,7 @@ class PerturbOneRandomJoint : public PerturbJoints{
     }
 
     delete(newNode);
-    return new vector<Vector3D>;
+    return new std::vector<Vector3D>;
   }
 };
 
@@ -78,13 +78,13 @@ class PerturbOneRandomJoint : public PerturbJoints{
 class PerturbClosestJoint : public PerturbJoints{
  public:
 
-  vector<Vector3D> *operator()(ReachableVolumeRobot &_rvr,  vector<Vector3D> *_node, vector<Vector3D> *_perturbTowards, double _delta, string _perturbDir = "WorkspaceDir", string _repositionPolicy = "Random"){
+  std::vector<Vector3D> *operator()(ReachableVolumeRobot &_rvr,  std::vector<Vector3D> *_node, std::vector<Vector3D> *_perturbTowards, double _delta, std::string _perturbDir = "WorkspaceDir", std::string _repositionPolicy = "Random"){
     //Find rvj for node from rvr
     //perturb node and check if still in rv
     //recursivly resample if node not in rv
     //return sample
 
-    vector<Vector3D> *newNode = new vector<Vector3D>(_node->begin(),_node->end());
+    std::vector<Vector3D> *newNode = new std::vector<Vector3D>(_node->begin(),_node->end());
     int jointId=1;
     double d = ReachableVolume::distance((*_perturbTowards)[0],(*_node)[0]);
     for(unsigned int j=1; j<newNode->size(); j++){
@@ -109,7 +109,7 @@ class PerturbClosestJoint : public PerturbJoints{
     }
 
     delete(newNode);
-    return new vector<Vector3D>;
+    return new std::vector<Vector3D>;
   }
 };
 
@@ -124,13 +124,13 @@ class PerturbClosestJoint : public PerturbJoints{
 class PerturbMostDistantJoint : public PerturbJoints{
  public:
 
-  vector<Vector3D> *operator()(ReachableVolumeRobot &_rvr,  vector<Vector3D> *_node, vector<Vector3D> *_perturbTowards, double _delta, string _perturbDir = "WorkspaceDir", string _repositionPolicy = "Random"){
+  std::vector<Vector3D> *operator()(ReachableVolumeRobot &_rvr,  std::vector<Vector3D> *_node, std::vector<Vector3D> *_perturbTowards, double _delta, std::string _perturbDir = "WorkspaceDir", std::string _repositionPolicy = "Random"){
     //Find rvj for node from rvr
     //perturb node and check if still in rv
     //recursivly resample if node not in rv
     //return sample
 
-    vector<Vector3D> *newNode = new vector<Vector3D>(_node->begin(),_node->end());
+    std::vector<Vector3D> *newNode = new std::vector<Vector3D>(_node->begin(),_node->end());
     int jointId=1;
     double d = ReachableVolume::distance((*_perturbTowards)[0],(*_node)[0]);
     for(unsigned int j=1; j<newNode->size(); j++){
@@ -155,7 +155,7 @@ class PerturbMostDistantJoint : public PerturbJoints{
     }
 
     delete(newNode);
-    return new vector<Vector3D>;
+    return new std::vector<Vector3D>;
 
   }
 };
@@ -177,15 +177,15 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
-    map<VID, shared_ptr<vector<Vector3D> > > m_rvCfgs;  //whenever adding node also add to this, later we may want to add this to cfg instead
+    std::map<VID, std::shared_ptr<std::vector<Vector3D> > > m_rvCfgs;  //whenever adding node also add to this, later we may want to add this to cfg instead
     double m_deltaRV;
     double m_S;
     double m_S_rot;
 
-    string m_treeStructure;
-    string m_jointPerturbMethod;
-    string m_perturbDir;
-    string m_repositionPolicy;
+    std::string m_treeStructure;
+    std::string m_jointPerturbMethod;
+    std::string m_perturbDir;
+    std::string m_repositionPolicy;
 
 
 
@@ -199,11 +199,11 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
     this->SetName("ReachableVolumeRRT");
   }
 
-  ReachableVolumeRRT(string _lp, string _dm,
-		     string _nf, string _vc, string _nc, string _gt, vector<string> _evaluators,
+  ReachableVolumeRRT(std::string _lp, std::string _dm,
+		     std::string _nf, std::string _vc, std::string _nc, std::string _gt, std::vector<std::string> _evaluators,
 		     double _delta, double _minDist, double _growthFocus, bool _evaluateGoal, CfgType _start, CfgType _goal,
 		     size_t _numRoots, size_t _numDirections, bool _growGoals,char* _chainFile = "Chain.tree"):BasicRRTStrategy<MPTraits>(_lp,_dm,_nf,_vc,_nc,_gt,_evaluators,_delta,_minDist,_growthFocus,_evaluateGoal,_start,_goal,_numRoots,_numDirections,_growGoals){//passing everything but the kitchen sink...
-    //cout<<"loading 2"<<m_treeStructure<<endl;
+    //std::cout<<"loading 2"<<m_treeStructure<<std::endl;
     if(!init){
       g_reachableVolumeRobotsRVRRT.loadTree(_chainFile,m_treeStructure);
       init=true;
@@ -232,8 +232,8 @@ class ReachableVolumeRRT : public BasicRRTStrategy<MPTraits> {
 
 ~ReachableVolumeRRT(){ }
 
-shared_ptr<vector<Vector3D> > convertToJointPositions(CfgType _cfg){
-  shared_ptr<vector<Vector3D> > joints = shared_ptr<vector<Vector3D> >(new vector<Vector3D>);
+std::shared_ptr<std::vector<Vector3D> > convertToJointPositions(CfgType _cfg){
+  std::shared_ptr<std::vector<Vector3D> > joints = std::shared_ptr<std::vector<Vector3D> >(new std::vector<Vector3D>);
   _cfg.ConfigureRobot();
   _cfg.GetMultiBody()->PolygonalApproximation(*joints);
   for(unsigned int i=1; i<joints->size();i++){
@@ -247,26 +247,26 @@ shared_ptr<vector<Vector3D> > convertToJointPositions(CfgType _cfg){
 
 
 
-void PrintOptions(ostream& _os) {
-  typedef vector<string>::iterator SIT;
-  _os << "ReachableVolumeRRT::PrintOptions" << endl;
+void PrintOptions(std::ostream& _os) {
+  typedef std::vector<std::string>::iterator SIT;
+  _os << "ReachableVolumeRRT::PrintOptions" << std::endl;
   /*
-  _os << "\tNeighborhood Finder:: " << this->m_nf << endl;
-  _os << "\tDistance Metric:: " << this->m_dm << endl;
-  _os << "\tValidity Checker:: " << this->m_vc << endl;
-  _os << "\tLocal Planner:: " << m_lp << endl;
-  _os << "\tConnection Method:: " << m_nc << endl;
-  _os << "\tGraph Type:: " << m_gt << endl;
-  _os << "\tEvaluate Goal:: " << m_evaluateGoal << endl;
-  _os << "\tEvaluators:: " << endl;
-  _os << "\tGrow Goals:: " << m_growGoals << endl;
+  _os << "\tNeighborhood Finder:: " << this->m_nf << std::endl;
+  _os << "\tDistance Metric:: " << this->m_dm << std::endl;
+  _os << "\tValidity Checker:: " << this->m_vc << std::endl;
+  _os << "\tLocal Planner:: " << m_lp << std::endl;
+  _os << "\tConnection Method:: " << m_nc << std::endl;
+  _os << "\tGraph Type:: " << m_gt << std::endl;
+  _os << "\tEvaluate Goal:: " << m_evaluateGoal << std::endl;
+  _os << "\tEvaluators:: " << std::endl;
+  _os << "\tGrow Goals:: " << m_growGoals << std::endl;
   for(const auto& label : m_meLabels)
-    _os << "\t\t" << label << endl;
-  _os << "\tdelta:: " << m_delta << endl;
-  _os << "\tminimum distance:: " << m_minDist << endl;
-  _os << "\tnumber of roots:: " << m_numRoots << endl;
-  _os << "\tgrowth focus:: " << m_growthFocus << endl;
-  _os << "\tnumber of expansion directions:: " << m_numDirections << endl;
+    _os << "\t\t" << label << std::endl;
+  _os << "\tdelta:: " << m_delta << std::endl;
+  _os << "\tminimum distance:: " << m_minDist << std::endl;
+  _os << "\tnumber of roots:: " << m_numRoots << std::endl;
+  _os << "\tgrowth focus:: " << m_growthFocus << std::endl;
+  _os << "\tnumber of expansion directions:: " << m_numDirections << std::endl;
   */
 }
 
@@ -292,7 +292,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
   auto nfp = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   this->m_debug=false;
-  if(this->m_debug) cout << "\nRunning RVRRTStrategy::" << endl;
+  if(this->m_debug) std::cout << "\nRunning RVRRTStrategy::" << std::endl;
 
   // Setup MP Variables
 
@@ -310,7 +310,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
   while(!mapPassedEvaluation){
     //get dir - need both rv cfg (for perturbation) and regular cfg (for dm)
     dir.GetRandomCfg(this->GetEnvironment());
-    if(this->m_debug) cout<<"dir = "<<dir<<endl;
+    if(this->m_debug) std::cout<<"dir = "<<dir<<std::endl;
     VID nnVid;
     CfgType nn(robot);
     minDist=-1;
@@ -325,9 +325,9 @@ ReachableVolumeRRT<MPTraits>::Run() {
       }
 
     }
-    shared_ptr<vector<Vector3D> > dirJoints = convertToJointPositions(dir);
-    typename map<VID, shared_ptr<vector<Vector3D> > >::iterator nnIter=m_rvCfgs.find(nnVid);
-    shared_ptr<vector<Vector3D> > nnRvSample;
+    std::shared_ptr<std::vector<Vector3D> > dirJoints = convertToJointPositions(dir);
+    typename std::map<VID, std::shared_ptr<std::vector<Vector3D> > >::iterator nnIter=m_rvCfgs.find(nnVid);
+    std::shared_ptr<std::vector<Vector3D> > nnRvSample;
     if(nnIter!=m_rvCfgs.end()){
 	nnRvSample=nnIter->second;
     }else{
@@ -335,9 +335,9 @@ ReachableVolumeRRT<MPTraits>::Run() {
       m_rvCfgs[nnVid]=nnRvSample;
     }
 
-    vector<Vector3D> tmp = *nnRvSample;
+    std::vector<Vector3D> tmp = *nnRvSample;
 
-    vector<Vector3D> *newNode;
+    std::vector<Vector3D> *newNode;
     double deltaRV = m_deltaRV;
     double deltaTrans = 0;
 
@@ -363,23 +363,23 @@ ReachableVolumeRRT<MPTraits>::Run() {
       PerturbMostDistantJoint pj;
       newNode = pj(g_reachableVolumeRobotsRVRRT, &tmp, dirJoints.get(), deltaRV,this->m_perturbDir,this->m_repositionPolicy);
     }else{
-      cout<<"jointPerturbMethod = "<<this->m_jointPerturbMethod<<".  This method does not exist.  Defaulting to PerturbOneRandom method."<<endl;
+      std::cout<<"jointPerturbMethod = "<<this->m_jointPerturbMethod<<".  This method does not exist.  Defaulting to PerturbOneRandom method."<<std::endl;
       PerturbOneRandomJoint pj;
       newNode = pj(g_reachableVolumeRobotsRVRRT, &tmp, dirJoints.get(), deltaRV,this->m_perturbDir, this->m_repositionPolicy);
     }
     if(newNode==NULL || newNode==0){
-      if(this->m_debug)cout<<"null pointer"<<endl;
+      if(this->m_debug)std::cout<<"null pointer"<<std::endl;
       continue;
     }
     if(newNode->size()==0){
-      if(this->m_debug)cout<<"size = 0"<<endl;
+      if(this->m_debug)std::cout<<"size = 0"<<std::endl;
       continue;
     }
-    if(this->m_debug)cout<<newNode->size()<<endl;
-    vector<double> *jointAngleCfg = g_reachableVolumeRobotsRVRRT.convertToJointAngleSample(*newNode);
+    if(this->m_debug)std::cout<<newNode->size()<<std::endl;
+    std::vector<double> *jointAngleCfg = g_reachableVolumeRobotsRVRRT.convertToJointAngleSample(*newNode);
     //deal with translational coordinates
     //push rotational + translational coordinates by delta in dir of random node
-    vector<double> cfgData(6);
+    std::vector<double> cfgData(6);
 
     if(g_reachableVolumeRobotsRVRRT.m_fixed){
       //fixed base, all nodes should have the same base pos
@@ -434,19 +434,18 @@ ReachableVolumeRRT<MPTraits>::Run() {
     CfgType newNodeCfg(robot);  //convert new node to cfg
     newNodeCfg.SetData(cfgData);
     LPOutput<MPTraits> lpOutput;
-    if(this->m_debug) cout<<"new node ="<<newNodeCfg<<endl;
+    if(this->m_debug) std::cout<<"new node ="<<newNodeCfg<<std::endl;
     bool success = this->GetLocalPlanner(this->m_lp)->
       IsConnected(nn, newNodeCfg, &lpOutput, this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes(),true,false,false);  //changed dir to nn here
     if(success){
       VID newNodeVid = this->GetRoadmap()->GetGraph()->AddVertex(newNodeCfg);
       this->GetRoadmap()->GetGraph()->AddEdge(nnVid,newNodeVid,WeightType());
       this->GetRoadmap()->GetGraph()->AddEdge(newNodeVid,nnVid,WeightType());
-      m_rvCfgs[newNodeVid] = shared_ptr<vector<Vector3D> >(newNode);
+      m_rvCfgs[newNodeVid] = std::shared_ptr<std::vector<Vector3D> >(newNode);
       if(this->m_growGoals){
 	this->ConnectTrees(newNodeVid);
       }else{
-	for(vector<size_t>::iterator i = this->m_goalsNotFound.begin(); i!=this->m_goalsNotFound.end(); i++){
-	  vector<pair<VID, double> > closest;
+	for(std::vector<size_t>::iterator i = this->m_goalsNotFound.begin(); i!=this->m_goalsNotFound.end(); i++){
 	  bool connectToGoal = this->GetLocalPlanner(this->m_lp)->
 	    IsConnected(nn, newNodeCfg, &lpOutput, this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes(),true,false,false);
 
@@ -470,7 +469,7 @@ ReachableVolumeRRT<MPTraits>::Run() {
 	mapPassedEvaluation=evalMap;
       }
       if(this->m_goalsNotFound.size()==0)
-        cout << "RRT FOUND ALL GOALS" << endl;
+        std::cout << "RRT FOUND ALL GOALS" << std::endl;
     }else{
       if(evalMap || this->m_trees.size()==1){
 	mapPassedEvaluation=true;
@@ -479,8 +478,8 @@ ReachableVolumeRRT<MPTraits>::Run() {
 
     stats->StopClock("RRT Generation");
     if(this->m_debug) {
-      stats->PrintClock("RRT Generation", cout);
-      cout<<"\nEnd Running BasicRRTStrategy::" << endl;
+      stats->PrintClock("RRT Generation", std::cout);
+      std::cout<<"\nEnd Running BasicRRTStrategy::" << std::endl;
     }
 
   }

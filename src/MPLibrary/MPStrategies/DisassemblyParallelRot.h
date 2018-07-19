@@ -23,14 +23,14 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::State           State;
 
     DisassemblyParallelRot(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "",
+        const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
     DisassemblyParallelRot(XMLNode& _node);
     virtual ~DisassemblyParallelRot() {}
 
@@ -39,12 +39,12 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
     virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                    const Formation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
-                    const vector<size_t>& _removedParts,
-                    const vector<VIDPath>& _removingPaths,
+                    const std::vector<size_t>& _removedParts,
+                    const std::vector<VIDPath>& _removingPaths,
                     const bool _isMultiPart);
 
     void ComputeSubassemblies(DisassemblyNode* _node);
@@ -65,7 +65,7 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
     bool m_noSubassemblies{false};
 
     // subassembly candidates
-    vector<Formation> m_subassemblies;
+    std::vector<Formation> m_subassemblies;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
@@ -74,11 +74,11 @@ class DisassemblyParallelRot : public DisassemblyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblyParallelRot<MPTraits>::
 DisassemblyParallelRot(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc,
+    const std::string _lp, const std::string _ex,
+    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
   this->SetName("DisassemblyParallelRot");
@@ -98,16 +98,16 @@ void
 DisassemblyParallelRot<MPTraits>::
 Iterate() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Iterate()" << endl;
+    std::cout << this->GetNameAndLabel() << "::Iterate()" << std::endl;
 
   if (!m_lastNode && !m_disNodes.empty()) { // check if disassembly is complete
-    cout << endl << endl << "Disassembling complete!" << endl << endl;
+    std::cout << std::endl << std::endl << "Disassembling complete!" << std::endl << std::endl;
     this->m_successful = true;
     return;
   }
 
-  vector<size_t> removedParts;
-  vector<VIDPath> removingPaths;
+  std::vector<size_t> removedParts;
+  std::vector<VIDPath> removingPaths;
   Formation subassembly;
 
   DisassemblyNode* node = SelectExpansionNode();
@@ -119,7 +119,7 @@ Iterate() {
     m_state = State::multiPart;
     ComputeSubassemblies(node);
     for (auto &sub : m_subassemblies) {
-      pair<bool, VIDPath> result = Expand(node, sub);
+      std::pair<bool, VIDPath> result = Expand(node, sub);
       if (result.first) {
         removedParts = sub;
         removingPaths.push_back(result.second);
@@ -152,11 +152,11 @@ typename DisassemblyParallelRot<MPTraits>::DisassemblyNode*
 DisassemblyParallelRot<MPTraits>::
 SelectExpansionNode() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectExpansionCfg()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectExpansionCfg()" << std::endl;
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<size_t> robotParts;
+    std::vector<size_t> robotParts;
     for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
@@ -184,17 +184,17 @@ typename DisassemblyMethod<MPTraits>::Formation
 DisassemblyParallelRot<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
   return Formation();
 }
 
 template <typename MPTraits>
-pair<bool, typename DisassemblyParallelRot<MPTraits>::VIDPath>
+std::pair<bool, typename DisassemblyParallelRot<MPTraits>::VIDPath>
 DisassemblyParallelRot<MPTraits>::
 Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   if (_subassembly.empty())
-    return make_pair(false, VIDPath());
+    return std::make_pair(false, VIDPath());
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
               << _subassembly << std::endl;
@@ -207,16 +207,16 @@ Expand(DisassemblyNode* _q, const Formation& _subassembly) {
     path = this->ExpandMatingApproach(_q->vid, _subassembly, newVID);
 
   if (!path.empty())
-    return make_pair(true, path);
+    return std::make_pair(true, path);
   else
-    return make_pair(false, path);
+    return std::make_pair(false, path);
 }
 
 template <typename MPTraits>
 void
 DisassemblyParallelRot<MPTraits>::
-AppendNode(DisassemblyNode* _parent, const vector<size_t>& _removedParts,
-           const vector<VIDPath>& _removingPaths,
+AppendNode(DisassemblyNode* _parent, const std::vector<size_t>& _removedParts,
+           const std::vector<VIDPath>& _removingPaths,
            const bool _isMultiPart) {
 
   // update node to new state
@@ -233,10 +233,10 @@ DisassemblyParallelRot<MPTraits>::
 ComputeSubassemblies(DisassemblyNode* _node) {
   m_subassemblies.clear();
   if(!m_noSubassemblies) {
-    vector<Formation> subassemblies =
+    std::vector<Formation> subassemblies =
                   this->GenerateSubassemblies(_node->vid, _node->initialParts);
     for (const auto &usedSub : _node->usedSubassemblies) {
-      vector<Formation> subs =
+      std::vector<Formation> subs =
                                this->GenerateSubassemblies(_node->vid, usedSub);
       if (!subs.empty())
         subassemblies.insert(subassemblies.end(), subs.begin(), subs.end());

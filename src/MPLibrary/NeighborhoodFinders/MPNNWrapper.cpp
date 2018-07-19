@@ -1,5 +1,8 @@
 #include "MPNNWrapper.h"
 
+using namespace std;
+
+
 MPNNWrapper::MPNNWrapper() { }
 
 MPNNWrapper::~MPNNWrapper()

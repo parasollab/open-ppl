@@ -37,10 +37,10 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     ///@name Construction
     ///@{
 
-    DynamicDomainRRT(string _dm = "euclidean", string _nf = "bfnf",
-        string _vc = "rapid", string _nc = "kClosest", string _ex = "BERO",
-        vector<string> _evaluators = vector<string>(),
-        string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
+    DynamicDomainRRT(std::string _dm = "euclidean", std::string _nf = "bfnf",
+        std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
+        std::vector<std::string> _evaluators = std::vector<std::string>(),
+        std::string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3, double _r = 10.);
 
@@ -58,7 +58,7 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     ///@}
 
@@ -78,7 +78,7 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     /// @return String for accessing Cfg::GetStat for radius value
-    static constexpr string RLabel() {return "DDRRT::R";}
+    static constexpr std::string RLabel() {return "DDRRT::R";}
 
     ///@}
     ///@name Internal State
@@ -98,8 +98,8 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
 
 template <typename MPTraits>
 DynamicDomainRRT<MPTraits>::
-DynamicDomainRRT(string _dm, string _nf, string _vc, string _nc,
-    string _ex, vector<string> _evaluators, string _gt, bool _growGoals,
+DynamicDomainRRT(std::string _dm, std::string _nf, std::string _vc, std::string _nc,
+    std::string _ex, std::vector<std::string> _evaluators, std::string _gt, bool _growGoals,
     double _growthFocus, size_t _numRoots, size_t _numDirections,
     size_t _maxTrial, double _r) :
     BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _ex, _evaluators, _gt,
@@ -123,9 +123,9 @@ DynamicDomainRRT(XMLNode& _node) :
 template <typename MPTraits>
 void
 DynamicDomainRRT<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   BasicRRTStrategy<MPTraits>::Print(_os);
-  _os << "\tr:: " << m_r << endl;
+  _os << "\tr:: " << m_r << std::endl;
 }
 
 /*-------------------------- MPStrategy Overrides ----------------------------*/

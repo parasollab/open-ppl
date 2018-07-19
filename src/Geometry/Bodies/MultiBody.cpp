@@ -656,6 +656,10 @@ Configure(const Cfg& _c) {
 void
 MultiBody::
 Configure(const vector<double>& _v) {
+  // Do not reconfigure if we are already here.
+  if(_v == m_currentDofs)
+    return;
+
   int index = 0;
 
   std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),

@@ -24,14 +24,14 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::State           State;
 
     DisassemblyParallel(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "",
+        const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
     DisassemblyParallel(XMLNode& _node);
     virtual ~DisassemblyParallel() {}
 
@@ -43,12 +43,12 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
       throw RunTimeException(WHERE, "Unused by this strategy");
       return Formation();
     }
-    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                    const Formation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
-                    const vector<size_t>& _removedParts,
-                    const vector<VIDPath>& _removingPaths,
+                    const std::vector<size_t>& _removedParts,
+                    const std::vector<VIDPath>& _removingPaths,
                     const bool _isMultiPart);
 
     void ComputeSubassemblies(DisassemblyNode* _node);
@@ -82,11 +82,11 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblyParallel<MPTraits>::
 DisassemblyParallel(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc,
+    const std::string _lp, const std::string _ex,
+    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
   this->SetName("DisassemblyParallel");
@@ -289,8 +289,8 @@ Expand(DisassemblyNode* _q, const Formation& _subassembly) {
 template <typename MPTraits>
 void
 DisassemblyParallel<MPTraits>::
-AppendNode(DisassemblyNode* _parent, const vector<size_t>& _removedParts,
-       const vector<VIDPath>& _removingPaths, const bool _isMultiPart) {
+AppendNode(DisassemblyNode* _parent, const std::vector<size_t>& _removedParts,
+       const std::vector<VIDPath>& _removingPaths, const bool _isMultiPart) {
 
   // update node to new state
   m_lastNode = this->GenerateNode(_parent, _removedParts, _removingPaths,
@@ -311,7 +311,7 @@ ComputeSubassemblies(DisassemblyNode* _node) {
                   this->GenerateSubassemblies(_node->vid, _node->initialParts);
     //Get all sub-subassemblies that could be used from usedSubassemblies:
     for (const auto &usedSub : _node->usedSubassemblies) {
-      vector<Formation> subs =
+      std::vector<Formation> subs =
                               this->GenerateSubassemblies(_node->vid, usedSub);
       if (!subs.empty()) {
         //Don't reuse any complete subassemblies already in usedSubassemblies:

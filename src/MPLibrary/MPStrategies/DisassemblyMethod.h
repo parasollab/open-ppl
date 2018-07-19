@@ -126,13 +126,13 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     };
 
     DisassemblyMethod(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-                                          map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-                                          map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "", const string _dm = "",
-        const std::vector<string>& _evaluatorLabels = std::vector<string>(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+                                          std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+                                          std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "", const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>(),
         const double _contactDist = 0.1, const double _neighborDist = 1,
         const double _removePos = 8, const double _subassemblyPos = 5,
         const double _subassemblyOffset = 2, const double _minMatingDist = 0.0);
@@ -144,7 +144,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     ///@{
 
     virtual void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     virtual void Initialize() override;
     virtual void Finalize();
@@ -159,7 +159,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     ///@{
     virtual DisassemblyNode* SelectExpansionNode() = 0;
     virtual Formation SelectSubassembly(DisassemblyNode* _q) = 0;
-    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                            const Formation& _subassembly) = 0;
 
     ///@}
@@ -285,23 +285,23 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     void VerifyNodes();
 
     void GenerateDotFile();
-    void GenerateDotNodeStruct(ofstream& _dotFile,
+    void GenerateDotNodeStruct(std::ofstream& _dotFile,
                                const DisassemblyNode* const _node) const;
-    void GenerateDotEdges(ofstream& _dotFile) const;
+    void GenerateDotEdges(std::ofstream& _dotFile) const;
 
-    map<string, pair<size_t, size_t> > m_matingSamplerLabels;
-    map<string, pair<size_t, size_t> > m_rrtSamplerLabels;
+    std::map<std::string, std::pair<size_t, size_t> > m_matingSamplerLabels;
+    std::map<std::string, std::pair<size_t, size_t> > m_rrtSamplerLabels;
     std::string m_rrtDMLabel;
 
-    string m_vcLabel;          ///< The validity checker label.
-    string m_singleVcLabel;
-    string m_lpLabel;          ///< The local planner label.
-    string m_exLabel;          ///< The extender label.
-    string m_dmLabel;          ///< The distance metric label.
-    string m_rrtStrategyLabel; ///< The RRT label for extensions.
+    std::string m_vcLabel;          ///< The validity checker label.
+    std::string m_singleVcLabel;
+    std::string m_lpLabel;          ///< The local planner label.
+    std::string m_exLabel;          ///< The extender label.
+    std::string m_dmLabel;          ///< The distance metric label.
+    std::string m_rrtStrategyLabel; ///< The RRT label for extensions.
 
-    string m_strategyLabel;    ///< The strategy label (needed for state ME)
-    string m_stateMELabel;
+    std::string m_strategyLabel;    ///< The strategy label (needed for state ME)
+    std::string m_stateMELabel;
 
     size_t m_numParts = 0;       ///< number of free Parts of the robot
     VID    m_rootVid = 0;     ///< root VID of the graph
@@ -380,11 +380,11 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblyMethod<MPTraits>::
 DisassemblyMethod(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc, const string _lp,
-    const string _ex,
-    const string _dm, const std::vector<string>& _evaluatorLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc, const std::string _lp,
+    const std::string _ex,
+    const std::string _dm, const std::vector<std::string>& _evaluatorLabels,
     const double _contactDist,
     const double _neighborDist, const double _removePos,
     const double _subassemblyPos, const double _subassemblyOffset,
@@ -460,20 +460,20 @@ ParseXML(XMLNode& _node) {
   std::vector<std::string> subassemblyStrings;
   for(auto& child : _node) {
     if(child.Name() == "MatingSampler") {
-      string s = child.Read("method", true, "", "Sampler Label");
+      std::string s = child.Read("method", true, "", "Sampler Label");
       size_t num = child.Read("number", true,
           1, 0, MAX_INT, "Number of samples");
       size_t attempts = child.Read("attempts", false,
           1, 0, MAX_INT, "Number of attempts per sample");
-      m_matingSamplerLabels[s] = make_pair(num, attempts);
+      m_matingSamplerLabels[s] = std::make_pair(num, attempts);
     }
     if(child.Name() == "RRTSampler") {
-      string s = child.Read("method", true, "", "Sampler Label");
+      std::string s = child.Read("method", true, "", "Sampler Label");
       size_t num = child.Read("number", true,
           1, 0, MAX_INT, "Number of samples");
       size_t attempts = child.Read("attempts", false,
           1, 0, MAX_INT, "Number of attempts per sample");
-      m_rrtSamplerLabels[s] = make_pair(num, attempts);
+      m_rrtSamplerLabels[s] = std::make_pair(num, attempts);
     }
     if(child.Name() == "Evaluator")
       this->m_meLabels.push_back(child.Read("label", true, "",
@@ -500,7 +500,7 @@ ParseXML(XMLNode& _node) {
     std::stringstream ss(saStr);
     Formation sub;
     size_t part;
-    //Parse the subassembly string:
+    //Parse the subassembly std::string:
     while(ss >> part)
       sub.push_back(part);
 
@@ -513,7 +513,7 @@ ParseXML(XMLNode& _node) {
 template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
 
   _os << "DisassemblyMethod::Print" << std::endl
@@ -547,7 +547,7 @@ Initialize() {
                                   " option enabled in the Makefile!");
   #endif
 
-  const string label = this->GetNameAndLabel() + "::Initialize()";
+  const std::string label = this->GetNameAndLabel() + "::Initialize()";
 
   //We shouldn't reset anything that gets set from the xml.
   m_disNodes.clear();
@@ -562,7 +562,7 @@ Initialize() {
 
   this->m_successful = false;
 
-  for(string& label : this->m_meLabels) {
+  for(std::string& label : this->m_meLabels) {
     auto me = this->GetMapEvaluator(label);
     me->Initialize();
     if(!m_stateMELabel.empty()) {
@@ -619,7 +619,7 @@ Initialize() {
   //Note: This can be useful in centering models (getting the proper root cfg
   //      formatted in an automated way) but I don't want it to always happen.
   // write translation between origin and body centroid
-//  ofstream queryFile;
+//  std::ofstream queryFile;
 //  queryFile.open(this->GetBaseFilename() + ".query");
 //  const mathtool::Vector3d zero(0,0,0);
 //  MultiBody* const multiBody = m_robot->GetMultiBody();
@@ -636,7 +636,7 @@ void
 DisassemblyMethod<MPTraits>::
 Finalize() {
   //Always print out the overall success:
-  const string statusString = this->m_successful ? "" : "not ";
+  const std::string statusString = this->m_successful ? "" : "not ";
   std::cout << std::endl << std::endl << "Disassembling " << statusString
             << " completed!!!" << std::endl << std::endl << std::endl;
 
@@ -648,7 +648,7 @@ Finalize() {
   const size_t numVertices = map->get_num_vertices();
 
   // Output stats.
-  ofstream osStat(this->GetBaseFilename() + ".stat");
+  std::ofstream osStat(this->GetBaseFilename() + ".stat");
   StatClass* stats = this->GetStatClass();
 
   if(this->m_debug) {
@@ -676,7 +676,7 @@ Finalize() {
 
         //Create the pair of weights, then the path will be between the root and
         // the last added VID.
-        m_pathVids.push_back(make_pair(0, VIDPath()));
+        m_pathVids.push_back(std::make_pair(0, VIDPath()));
         m_pathVids[0].second.push_back(m_rootVid);
         m_pathVids[0].second.push_back(numVertices-1);
         //query will grab all needed vids along path (and create intermediates).
@@ -706,7 +706,7 @@ Finalize() {
           std::cout << "Writing path with index " << ind << ", with vids: "
                     << path.VIDs() << std::endl;
         //Generate the intermediates, and output the cfgs to a path file:
-        const string filename = this->GetBaseFilename() + "." +
+        const std::string filename = this->GetBaseFilename() + "." +
                                 std::to_string(ind) + ".path";
         const std::vector<GroupCfgType> fullCfgs =
                                         path.FullCfgs(this->GetMPLibrary(), "");
@@ -803,7 +803,7 @@ GetMatingSamples(const Formation& _subassembly) {
   s->SetActiveRobots(_subassembly);
 
   s->Sample(sampler->second.first, sampler->second.second,
-            this->GetEnvironment()->GetBoundary(), back_inserter(samples));
+            this->GetEnvironment()->GetBoundary(), std::back_inserter(samples));
   return samples;
 }
 
@@ -829,7 +829,7 @@ GetMatingSamples(const Formation& _subassembly) {
 //  lp->IsConnected(_startCfg, _endCfg, col, &_lpOutput,
 //    env->GetPositionRes(), env->GetOrientationRes(), true, true);
 //  // get last valid cfg to the defined mating dist
-//  string callee("DisassemblyMethod::ExpandMatingApproach");
+//  std::string callee("DisassemblyMethod::ExpandMatingApproach");
 //  CDInfo cdInfo(true);
 //  GroupCfg lastCfg = _lpOutput.m_path.back();
 //
@@ -911,7 +911,7 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid) {
 
   auto startCfg = graph->GetVertex(_q);
 
-  const string samplerLabel = m_matingSamplerLabels.begin()->first;
+  const std::string samplerLabel = m_matingSamplerLabels.begin()->first;
   auto const s = dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits> >(
                                               this->GetSampler(samplerLabel));
   s->SetStartCfg(startCfg);//Masked entries are set to the values in startCfg
@@ -996,7 +996,7 @@ DisassemblyMethod<MPTraits>::
 ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID) {
   this->GetStatClass()->StartClock("ExpandRRTApproachClock");
   auto const graph = this->GetGroupRoadmap();
-  const string callee = "DiassemblyMethod::ExpandRRTApproach";
+  const std::string callee = "DiassemblyMethod::ExpandRRTApproach";
 
   auto sampler = dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits> >(
                  this->GetSampler(m_rrtSamplerLabels.begin()->first));
@@ -1195,7 +1195,7 @@ DisassemblyMethod<MPTraits>::
 AccumulateClockTimes(
     const std::map<std::string, ClockClass>& _rrtClocks) {
   StatClass* const currentStats = this->GetStatClass();
-  const static string rrtString = "DisassemblyRRT::";
+  const static std::string rrtString = "DisassemblyRRT::";
 
   for(const std::pair<std::string, ClockClass>& clockPair : _rrtClocks)
     currentStats->IncStat(
@@ -1368,7 +1368,7 @@ GenerateNode(DisassemblyNode* const _parent,
 
   m_disNodes.push_back(node);
   //Update the parent to have this new node as a child.
-  _parent->children.push_back(make_pair(_localWeight, &m_disNodes.back()));
+  _parent->children.push_back(std::make_pair(_localWeight, &m_disNodes.back()));
 
   this->GetStatClass()->StopClock("GenerateNodeClock");
 
@@ -1752,7 +1752,7 @@ DisassemblyMethod<MPTraits>::
 GetSequenceStats() {
   //This will create a .allpaths file to give stats about all DSP paths found
   // and also will add stats to the stat file
-  ofstream osStat(this->GetBaseFilename() + ".allpaths");
+  std::ofstream osStat(this->GetBaseFilename() + ".allpaths");
   StatClass* stats = this->GetStatClass();
 
   // print sequence stats
@@ -1864,10 +1864,10 @@ RecursivePathStats(DisassemblyNode* _node, const double _curDist,
 
   if (_node->parents.empty()) { // Base case: quit at root node
     const size_t numNodes = _curPath.size();
-    m_seqList.push_back(make_pair(numNodes, _curDist));
+    m_seqList.push_back(std::make_pair(numNodes, _curDist));
 
     //Add the path to the list, reverse it so the root is the first vid.
-    m_pathVids.push_back(make_pair(numNodes, _curPath));
+    m_pathVids.push_back(std::make_pair(numNodes, _curPath));
     std::reverse(m_pathVids.back().second.begin(),
                  m_pathVids.back().second.end());
   }
@@ -1929,7 +1929,7 @@ void
 DisassemblyMethod<MPTraits>::
 GenerateDotFile() {
   // initialize dot file
-  ofstream dotFile;
+  std::ofstream dotFile;
   dotFile.open (this->GetBaseFilename() + ".dot");
   dotFile << "digraph structs {" << std::endl
          << "node [shape=record];" << std::endl;
@@ -1952,7 +1952,7 @@ GenerateDotFile() {
 template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
-GenerateDotNodeStruct(ofstream& _dotFile,
+GenerateDotNodeStruct(std::ofstream& _dotFile,
                       const DisassemblyNode* const _node) const {
   // If this is the root node, handle it accordingly:
   if (_node == m_rootNode || _node->parents.size() == 0) {
@@ -1997,7 +1997,7 @@ GenerateDotNodeStruct(ofstream& _dotFile,
 template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
-GenerateDotEdges(ofstream& _dotFile) const {
+GenerateDotEdges(std::ofstream& _dotFile) const {
   // create the edges of the graph
   for (const DisassemblyNode& node : m_disNodes) {
     if (node.parents.size() == 0)

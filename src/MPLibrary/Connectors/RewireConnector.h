@@ -1,5 +1,5 @@
-#ifndef REWIRE_CONNECTOR_H_
-#define REWIRE_CONNECTOR_H_
+#ifndef PMPL_REWIRE_CONNECTOR_H_
+#define PMPL_REWIRE_CONNECTOR_H_
 
 #include "ConnectorMethod.h"
 #include "MPLibrary/MPTools/MedialAxisUtilities.h"
@@ -33,7 +33,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
   private:
     template<typename OutputIterator>
     void ConnectNeighbors(RoadmapType* _rm, VID _vid,
-        vector<pair<VID, double> >& _closest, OutputIterator _collision);
+        vector<Neighbor>& _closest, OutputIterator _collision);
 
     double GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm);
     double GetShortestPath(VID _root, VID _vid, RoadmapType* _rm);
@@ -42,14 +42,14 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     ClearanceUtility<MPTraits> m_clearanceUtility;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 RewireConnector<MPTraits>::
 RewireConnector(string _nfLabel, string _lpLabel) :
     ConnectorMethod<MPTraits>(_nfLabel, _lpLabel) {
   this->SetName("RewireConnector");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 RewireConnector<MPTraits>::
 RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   this->SetName("RewireConnector");
@@ -59,7 +59,7 @@ RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
     m_clearanceUtility = ClearanceUtility<MPTraits>(_node);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
 RewireConnector<MPTraits>::
@@ -85,14 +85,14 @@ Connect(RoadmapType* _rm,
         << vid << "  --> Cfg = " << vCfg << endl;
 
     //determine nearest neighbors
-    vector<pair<VID, double> > closest;
+    vector<Neighbor> closest;
     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
-        back_inserter(closest));
+        std::back_inserter(closest));
 
     if(this->m_debug){
       cout << "Neighbors | ";
       for(auto&  neighbor : closest)
-        cout << neighbor.first << " ";
+        cout << neighbor.target << " ";
     }
 
     //test connections through LP
@@ -100,13 +100,12 @@ Connect(RoadmapType* _rm,
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename OutputIterator>
 void
 RewireConnector<MPTraits>::
 ConnectNeighbors(RoadmapType* _rm, VID _vid,
-    vector<pair<VID, double> >& _closest, OutputIterator _collision) {
- #ifndef _PARALLEL // proper fix will be to call parallel dijkstra if there is one
+    vector<Neighbor>& _closest, OutputIterator _collision) {
   Environment* env = this->GetEnvironment();
   LPOutput<MPTraits> lpOutput, minlpOutput;
 
@@ -120,9 +119,8 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
   double currentMin = GetShortestPath(root, _vid, _rm);
   double minWeight = 0;
 
-  typedef typename vector<pair<VID, double> >::reverse_iterator RVIT;
-  for(RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
-    VID neighbor = rvit->first;
+  for(auto rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
+    VID neighbor = rvit->target;
     CfgType col(this->GetTask()->GetRobot());
     double neighborCost = GetShortestPath(root, neighbor, _rm);
     double neighborDistance = GetDistance(neighbor, _vid, _rm);
@@ -161,23 +159,23 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
     cout << "Connected to Optimal Neighbor" << endl;
 
   double vidCost = GetShortestPath(root, _vid, _rm);
-  for(RVIT rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
+  for(auto rvit = _closest.rbegin(); rvit!=_closest.rend(); rvit++) {
 
     //make sure not to not reroute to cause cycles
     VID v = _vid;
     bool cont = false;
     while(_rm->GetGraph()->GetVertex(v).IsStat("Parent")){
       v = _rm->GetGraph()->GetVertex(v).GetStat("Parent");
-      if(rvit->first == v) {
+      if(rvit->target == v) {
         cont = true;
         break;
       }
     }
-    //if(rvit->first == root)
+    //if(rvit->target == root)
     if(cont)
       continue;
 
-    VID neighbor = rvit->first;
+    VID neighbor = rvit->target;
     CfgType col(this->GetTask()->GetRobot());
     double neighborCost = GetShortestPath(root, neighbor, _rm);
     double neighborDist = GetDistance(neighbor, _vid, _rm);
@@ -212,10 +210,9 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
       }
     }
   }
-  #endif
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RewireConnector<MPTraits>::
 GetShortestPath(VID _root, VID _vid, RoadmapType* _rm) {
@@ -241,7 +238,7 @@ GetShortestPath(VID _root, VID _vid, RoadmapType* _rm) {
   return totalWeight;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 double
 RewireConnector<MPTraits>::
 GetDistance(VID _vid1, VID _vid2, RoadmapType* _rm) {

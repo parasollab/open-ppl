@@ -1,5 +1,5 @@
-#ifndef CC_EXPANSION_H_
-#define CC_EXPANSION_H_
+#ifndef PMPL_CC_EXPANSION_H_
+#define PMPL_CC_EXPANSION_H_
 
 #include "ConnectorMethod.h"
 #include "MPLibrary/Extenders/BasicExtender.h"
@@ -182,7 +182,7 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
 
 //////////////////////////* Method Definitions *///////////////////////////////
 
-template<class MPTraits>
+template <typename MPTraits>
 CCExpansion<MPTraits>::
 CCExpansion(string _lp, string _nf, string _vc) :
     ConnectorMethod<MPTraits>(), m_medialAxisUtility() {
@@ -201,7 +201,7 @@ CCExpansion(string _lp, string _nf, string _vc) :
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 CCExpansion<MPTraits>::
 CCExpansion(XMLNode& _node) : ConnectorMethod<MPTraits>(_node),
     m_medialAxisUtility(_node) {
@@ -288,7 +288,7 @@ ParseXML(XMLNode& _node){
 ///////////////////////////////////////////////////////////////////////////////
 /* Connect Function */
 ///////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
 CCExpansion<MPTraits>::
@@ -332,7 +332,7 @@ Connect(RoadmapType* _rm,
 ///////////////////////////////////////////////////////////////////////////////
 /* Preprocess Method */
 ///////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 PreExpansionSetup(RoadmapType* _rm, int _index, vector<VID>& _allCC) {
@@ -349,7 +349,7 @@ PreExpansionSetup(RoadmapType* _rm, int _index, vector<VID>& _allCC) {
 ///////////////////////////////////////////////////////////////////////////////
 /* Expansion Method Wrapper */
 ///////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 Expand(RoadmapType* _rm, int _index){
@@ -366,7 +366,7 @@ Expand(RoadmapType* _rm, int _index){
 /////////////////////////////////////////////////////////////////////////////
 /* Random Expansion Method */
 /////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 RandomExpand(RoadmapType* _rm, int _index) {
@@ -466,7 +466,7 @@ ExpandFrom(RoadmapType* _rm, int _index) {
 /////////////////////////////////////////////////////////////////////////////
 /* ExpandTo Method */
 /////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 ExpandTo(RoadmapType* _rm, int _index) {
@@ -667,12 +667,13 @@ FindDifficultNodes(RoadmapType* _rm, vector<VID>& _cc1, int _k) {
 /////////////////////////////////////////////////////////////////////////////
 /* Get farthest nodes from the m_srcCentroid of the CC */
 /////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 FindNearestCC(RoadmapType* _rm, VID& _curCC, vector<VID>& _allCCs) {
   vector<VID> ccvids;
   pair<VID,double> nearestCC(INVALID_VID, numeric_limits<double>::max());
+
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
@@ -700,12 +701,11 @@ FindNearestCC(RoadmapType* _rm, VID& _curCC, vector<VID>& _allCCs) {
 /////////////////////////////////////////////////////////////////////////////
 /* Get farthest nodes from the m_srcCentroid of the CC */
 /////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
 
-  vector< pair<VID,double> > cc1Mod;
   m_avgIntraDistTarget = 0;
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
@@ -713,17 +713,16 @@ TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
   for(auto it = _curCC.begin(); it != _curCC.end(); ++it){
     CfgType cfg = _rm->GetGraph()->GetVertex(*it);
     double dist = dm->Distance(cfg, m_goalTargetNode);
-    cc1Mod.push_back(make_pair(*it,dist));
     m_avgIntraDistTarget = m_avgIntraDistTarget + dist;
   }
 
-  m_avgIntraDistTarget /= cc1Mod.size();
+  m_avgIntraDistTarget /= _curCC.size();
 }
 
 /////////////////////////////////////////////////////////////////////////////
 /* Get farthest nodes from the m_srcCentroid of the CC */
 /////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCExpansion<MPTraits>::
 SelectCandidates(RoadmapType* _rm, vector<VID>& _curCC){

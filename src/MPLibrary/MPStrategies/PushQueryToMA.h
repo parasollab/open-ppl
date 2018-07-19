@@ -15,8 +15,8 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
 
-    PushQueryToMA(const string& _inQueryFile = "",
-        const string& _outQueryFile = "",
+    PushQueryToMA(const std::string& _inQueryFile = "",
+        const std::string& _outQueryFile = "",
         const MedialAxisUtility<MPTraits>& _medialAxisUtility =
         MedialAxisUtility<MPTraits>());
     PushQueryToMA(XMLNode& _node);
@@ -24,18 +24,18 @@ class PushQueryToMA : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Iterate();
     virtual void Finalize();
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
   protected:
-    string m_inQueryFile, m_outQueryFile;
+    std::string m_inQueryFile, m_outQueryFile;
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
 
-    vector<CfgType> m_query;
+    std::vector<CfgType> m_query;
 };
 
 template <typename MPTraits>
 PushQueryToMA<MPTraits>::
-PushQueryToMA(const string& _inQueryFile, const string& _outQueryFile,
+PushQueryToMA(const std::string& _inQueryFile, const std::string& _outQueryFile,
     const MedialAxisUtility<MPTraits>& _medialAxisUtility) :
   m_inQueryFile(_inQueryFile), m_outQueryFile(_outQueryFile),
   m_medialAxisUtility(_medialAxisUtility) {
@@ -55,9 +55,9 @@ PushQueryToMA(XMLNode& _node) :
 template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
-Print(ostream& _os) const {
-  _os << "In Query file: " << m_inQueryFile << endl;
-  _os << "Out Query file: " << m_outQueryFile << endl;
+Print(std::ostream& _os) const {
+  _os << "In Query file: " << m_inQueryFile << std::endl;
+  _os << "Out Query file: " << m_outQueryFile << std::endl;
   m_medialAxisUtility.Print(_os);
 }
 
@@ -90,9 +90,9 @@ template <typename MPTraits>
 void
 PushQueryToMA<MPTraits>::
 Finalize() {
-  ofstream ofs(m_outQueryFile.c_str());
+  std::ofstream ofs(m_outQueryFile.c_str());
   for(auto&  cfg : m_query)
-    ofs << cfg << endl;
+    ofs << cfg << std::endl;
 }
 
 #endif

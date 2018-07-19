@@ -1,5 +1,5 @@
-#ifndef HOP_LIMIT_NF_H_
-#define HOP_LIMIT_NF_H_
+#ifndef PMPL_HOP_LIMIT_NF_H_
+#define PMPL_HOP_LIMIT_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -9,6 +9,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Finds all connected neighbors within some maximum number of hops, and then
 /// orders those according to a second NeighborhoodFinder (the 'underlying' NF).
+/// @todo Adjust this class so that it only finds neighbors within the hop
+///       limit. There should be no 'underlying' NF - this can always be
+///       achieved with a hierarchical NF.
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -46,33 +49,27 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinderMethod Interface
     ///@{
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighborPairs(RoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-
-    /// Group overloads:
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        const GroupCfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
-        OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        OutputIterator _out);
 
     ///@}
 
@@ -127,51 +124,70 @@ Print(std::ostream& _os) const {
 /*-------------------- NeighborhoodFinderMethod Interface --------------------*/
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
+template <typename InputIterator, typename OutputIterator>
 OutputIterator
 HopLimitNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-#ifdef _PARALLEL
-  // Proper fix will be to call parallel versions of graph algorithms called here
-#error "HopLimitNF is not implemented for parallel. "\
-       "You must either implement it or remove this NF from your traits file."
-#endif
-  MethodTimer mt(this->GetStatClass(), "HopLimitNF::FindNeighbors");
-  this->IncrementNumQueries();
-
-  GraphType* graph = _rmp->GetGraph();
+  GraphType* g = _rmp->GetGraph();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
-  VID v = graph->GetVID(_cfg);
-  typename GraphType::vertex_iterator vi = graph->find_vertex(v);
+  VID v = g->GetVID(_cfg);
+  typename GraphType::vertex_iterator vi = g->find_vertex(v);
   VID parent = vi->property().GetStat("Parent");
 
   vector<VID> vRes;
+
   typedef stapl::sequential::map_property_map<typename GraphType::STAPLGraph,
       size_t> ColorMap;
   ColorMap hopMap, colorMap;
   hopMap.put(parent, 0);
+
   stapl::sequential::hops_detail::hops_visitor<typename GraphType::STAPLGraph>
-      vis(*graph, hopMap, m_h, vRes);
-  breadth_first_search_early_quit(*graph, parent, vis, colorMap);
+      vis(*g, hopMap, m_h, vRes);
+  breadth_first_search_early_quit(*g, parent, vis, colorMap);
+
   nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(),
-      vRes.size() == graph->get_num_vertices(), _cfg, _out);
+      vRes.size() == g->get_num_vertices(), _cfg, _out);
 
   return _out;
 }
 
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
+template <typename InputIterator, typename OutputIterator>
 OutputIterator
-HopLimitNF<MPTraits>::FindNeighborPairs(RoadmapType* _rmp,
+HopLimitNF<MPTraits>::
+FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+HopLimitNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+    const GroupCfgType& _cfg, OutputIterator _out) {
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+HopLimitNF<MPTraits>::
+FindNeighborPairs(GroupRoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
+  throw NotImplementedException(WHERE);
 }
 
 /*----------------------------------------------------------------------------*/

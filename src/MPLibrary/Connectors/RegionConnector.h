@@ -1,5 +1,5 @@
-#ifndef REGION_CONNECT_H_
-#define REGION_CONNECT_H_
+#ifndef PMPL_REGION_CONNECT_H_
+#define PMPL_REGION_CONNECT_H_
 
 #include "ConnectorMethod.h"
 
@@ -7,7 +7,7 @@
 /// @ingroup Connectors
 /// @brief TODO
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class RegionConnector : public ConnectorMethod<MPTraits> {
 
   public:
@@ -37,20 +37,20 @@ class RegionConnector : public ConnectorMethod<MPTraits> {
   protected:
     template<typename OutputIterator>
       void ConnectNeighbors(RoadmapType* _rm, VID _vid,
-          vector<pair<VID, double>>& _closest, OutputIterator _collision);
+          vector<Neighbor>& _closest, OutputIterator _collision);
 
   private:
     size_t m_iters;
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 RegionConnector<MPTraits>::
 RegionConnector(string _nfLabel, string _lpLabel, size_t _iters) :
     ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_iters(_iters) {
   this->SetName("RegionConnector");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 RegionConnector<MPTraits>::
 RegionConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node)  {
   this->SetName("RegionConnector");
@@ -58,7 +58,7 @@ RegionConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node)  {
       "number of times to execute the region connection");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 RegionConnector<MPTraits>::
 Print(ostream& _os) const {
@@ -69,7 +69,7 @@ Print(ostream& _os) const {
 // 2. the K-closest nodes from region 2 are obtained
 // 3. the K-closest nodes of nodes found in step 2 from region 1 are obtained
 // 4. Connections are attempted from those two groups
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
 RegionConnector<MPTraits>::
@@ -87,19 +87,20 @@ Connect(RoadmapType* _rm,
     std::advance(randNode, rand);
 
     // 2. the K-closest nodes from region 2 are obtained
-    vector<pair<VID, double>> closestRegion2;
-    CfgType cfg = _rm->GetGraph()->GetVertex(randNode);
+    std::vector<Neighbor> closestRegion2;
+    const CfgType& cfg = _rm->GetGraph()->GetVertex(randNode);
 
     auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
-    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, cfg, back_inserter(closestRegion2));
+    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, cfg,
+        std::back_inserter(closestRegion2));
 
     // 3. the closest node from region 1 of nodes found in step 2 are obtained
-    typedef typename vector<pair<VID, double>>::iterator VIT;
-    for(VIT vit = closestRegion2.begin(); vit != closestRegion2.end(); ++vit) {
-      CfgType cfg = _rm->GetGraph()->GetVertex(vit->first);
-      vector<pair<VID, double>> closest;
+    for(auto vit = closestRegion2.begin(); vit != closestRegion2.end(); ++vit) {
+      const CfgType& cfg = _rm->GetGraph()->GetVertex(vit->first);
+      std::vector<Neighbor> closest;
 
-      nfptr->FindNeighbors(_rm, _itr1First, _itr1Last, cfg, back_inserter(closest));
+      nfptr->FindNeighbors(_rm, _itr1First, _itr1Last, cfg,
+          std::back_inserter(closest));
 
       // 4. Connections are attempted from those two groups
       this->ConnectNeighbors(_rm, vit->first, closest, _collision);
@@ -108,38 +109,37 @@ Connect(RoadmapType* _rm,
 }
 
 // Will connect the neighbors contained in the vector with the current node
-template<class MPTraits>
+template <typename MPTraits>
 template<typename OutputIterator>
 void
 RegionConnector<MPTraits>::
 ConnectNeighbors(RoadmapType* _rm, VID _vid,
-    vector<pair<VID, double>>& _closest, OutputIterator _collision) {
+    vector<Neighbor>& _closest, OutputIterator _collision) {
 
   Environment* env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
   LPOutput <MPTraits> lpOutput;
   auto robot = this->GetTask()->GetRobot();
 
-  typedef typename vector<pair<VID, double>>::iterator VIT;
-  for(VIT vit = _closest.begin(); vit != _closest.end(); ++vit) {
+  for(auto vit = _closest.begin(); vit != _closest.end(); ++vit) {
     // Stopping Conditions
-    if(!CheckEdge(_vid, vit->first, _rm))
+    if(!CheckEdge(_vid, vit->target, _rm))
       continue;
 
     CfgType col(robot);
     if(lp->IsConnected(_rm->GetGraph()->GetVertex(_vid),
-          _rm->GetGraph()->GetVertex(vit->first),
+          _rm->GetGraph()->GetVertex(vit->target),
           col, &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
 
-      _rm->GetGraph()->AddEdge(_vid, vit->first, lpOutput.m_edge);
+      _rm->GetGraph()->AddEdge(_vid, vit->target, lpOutput.m_edge);
 
-      this->AddConnectionAttempt(_vid, vit->first, true);
+      this->AddConnectionAttempt(_vid, vit->target, true);
 
       if (this->m_debug)
         cout << "| Connection was successful" << endl;
     }
     else {
-      this->AddConnectionAttempt(_vid, vit->first, false);
+      this->AddConnectionAttempt(_vid, vit->target, false);
       if (this->m_debug)
         cout << "| Connection failed" << endl;
     }
@@ -149,7 +149,7 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 bool
 RegionConnector<MPTraits>::CheckEdge(VID _vid1, VID _vid2, RoadmapType* _rm) {
 

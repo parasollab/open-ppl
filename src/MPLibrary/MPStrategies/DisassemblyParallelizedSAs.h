@@ -22,14 +22,14 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::State           State;
 
     DisassemblyParallelizedSAs(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "",
+        const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
     DisassemblyParallelizedSAs(XMLNode& _node);
     virtual ~DisassemblyParallelizedSAs() {}
 
@@ -38,12 +38,12 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
     virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                    const Formation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
-                    const vector<size_t>& _removedParts,
-                    const vector<VIDPath>& _removingPaths,
+                    const std::vector<size_t>& _removedParts,
+                    const std::vector<VIDPath>& _removingPaths,
                     const bool _isMultiPart);
 
     Approach m_approach = Approach::mating;
@@ -56,7 +56,7 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
     double m_maxFormationTime = 0;
 
     // subassembly candidates
-    vector<Formation> m_subassemblies;
+    std::vector<Formation> m_subassemblies;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
@@ -65,11 +65,11 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblyParallelizedSAs<MPTraits>::
 DisassemblyParallelizedSAs(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc,
+    const std::string _lp, const std::string _ex,
+    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
   this->SetName("DisassemblyParallelizedSAs");
@@ -86,15 +86,15 @@ void
 DisassemblyParallelizedSAs<MPTraits>::
 Iterate() {
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Iterate()" << endl;
+    std::cout << this->GetNameAndLabel() << "::Iterate()" << std::endl;
 
   auto stats = this->GetStatClass();
-  const string tempClockName = "Temporary timer for each SA removal";
-  const string initialRemovalClockName =
+  const std::string tempClockName = "Temporary timer for each SA removal";
+  const std::string initialRemovalClockName =
                                             "Initial subassembly removal time";
 
   if (!m_lastNode && !m_disNodes.empty()) { // check if disassembly is complete
-    std::cout << endl << endl << "Disassembling complete!" << endl << endl;
+    std::cout << std::endl << std::endl << "Disassembling complete!" << std::endl << std::endl;
     this->m_successful = true;
     const double initialTime = stats->GetSeconds(initialRemovalClockName);
     stats->SetStat("Total time for in-parallel removal",
@@ -118,7 +118,7 @@ Iterate() {
     for(Formation& sub : this->m_predefinedSubassemblies) {
       if(this->m_debug)
         std::cout << "Attempting initial sub = " << sub << std::endl;
-      pair<bool, VIDPath> result = Expand(node, sub);
+      std::pair<bool, VIDPath> result = Expand(node, sub);
       if (result.first)
         AppendNode(node, sub, {result.second}, sub.size() > 1);
       else {
@@ -140,7 +140,7 @@ Iterate() {
     for(size_t i = 0; i < this->m_predefinedSubassemblies.size(); i++) {
       Formation sub = this->m_predefinedSubassemblies.at(i);
       //Create new clock so we don't accumulate each time:
-      const string thisClockName = tempClockName + to_string(i);
+      const std::string thisClockName = tempClockName + std::to_string(i);
       if(this->m_debug)
         std::cout << "Disassembling subassembly " << sub << std::endl;
       stats->StartClock(thisClockName);
@@ -150,7 +150,7 @@ Iterate() {
         for(size_t j = 0; j < sub.size(); ++j) {
           const size_t part = sub.at(j);
           const Formation partSub({part});
-          pair<bool, VIDPath> result = Expand(node, partSub);
+          std::pair<bool, VIDPath> result = Expand(node, partSub);
           if (result.first) {
             sub.erase(remove(sub.begin(), sub.end(), part), sub.end());
             --j;//decrement so that we don't skip parts when removing
@@ -182,11 +182,11 @@ typename DisassemblyParallelizedSAs<MPTraits>::DisassemblyNode*
 DisassemblyParallelizedSAs<MPTraits>::
 SelectExpansionNode() {
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::SelectExpansionCfg()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectExpansionCfg()" << std::endl;
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<size_t> robotParts;
+    std::vector<size_t> robotParts;
     for (size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
@@ -207,7 +207,7 @@ SelectExpansionNode() {
 
     //Do some error checking (that part numbers are valid and #parts in the
     // predefined subs are exactly the same as #parts in problem):
-    vector<size_t> initParts = this->m_rootNode->GetCompletePartList();
+    std::vector<size_t> initParts = this->m_rootNode->GetCompletePartList();
     size_t numberOfParts = 0;
     for(auto& sub : this->m_predefinedSubassemblies) {
       numberOfParts += sub.size();
@@ -231,20 +231,20 @@ typename DisassemblyMethod<MPTraits>::Formation
 DisassemblyParallelizedSAs<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
   return Formation();
 }
 
 template <typename MPTraits>
-pair<bool, typename DisassemblyParallelizedSAs<MPTraits>::VIDPath>
+std::pair<bool, typename DisassemblyParallelizedSAs<MPTraits>::VIDPath>
 DisassemblyParallelizedSAs<MPTraits>::
 Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   if (_subassembly.empty())
-    return make_pair(false, VIDPath());
+    return std::make_pair(false, VIDPath());
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
-         << _subassembly << endl;
+         << _subassembly << std::endl;
 
   VID newVID;
   VIDPath path;
@@ -254,16 +254,16 @@ Expand(DisassemblyNode* _q, const Formation& _subassembly) {
     path = this->ExpandMatingApproach(_q->vid, _subassembly, newVID);
 
   if (!path.empty())
-    return make_pair(true, path);
+    return std::make_pair(true, path);
   else
-    return make_pair(false, path);
+    return std::make_pair(false, path);
 }
 
 template <typename MPTraits>
 void
 DisassemblyParallelizedSAs<MPTraits>::
-AppendNode(DisassemblyNode* _parent, const vector<size_t>& _removedParts,
-           const vector<VIDPath>& _removingPaths,
+AppendNode(DisassemblyNode* _parent, const std::vector<size_t>& _removedParts,
+           const std::vector<VIDPath>& _removingPaths,
            const bool _isMultiPart) {
 
   // update node to new state

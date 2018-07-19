@@ -29,10 +29,10 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
   private:
     tuple<double, double, double> CompareEdge(CfgType& _s, CfgType& _g,
         WeightType& _w1, WeightType& _w2);
-    double ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2);
-    double ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2);
+    double ComparePaths(std::vector<CfgType>& _p1, std::vector<CfgType>& _p2);
+    double ComparePaths2(std::vector<CfgType>& _p1, std::vector<CfgType>& _p2);
 
-    string m_rdmp1in, m_rdmp2in, m_dmLabel, m_lpLabel1, m_lpLabel2;
+    std::string m_rdmp1in, m_rdmp2in, m_dmLabel, m_lpLabel1, m_lpLabel2;
     RoadmapType* m_rdmp1,* m_rdmp2;
 
     double m_q1, m_q2, m_q3;
@@ -77,11 +77,11 @@ Iterate() {
   GraphType* g1 = m_rdmp1->GetGraph();
   GraphType* g2 = m_rdmp2->GetGraph();
 
-  cout << "LPCompare: " << endl
+  std::cout << "LPCompare: " << std::endl
     << "RDMP1: " << g1->get_num_vertices()
-    << " " << g1->get_num_edges() << endl
+    << " " << g1->get_num_edges() << std::endl
     << "RDMP2: " << g2->get_num_vertices()
-    << " " << g2->get_num_edges() << endl;
+    << " " << g2->get_num_edges() << std::endl;
 
   m_numSimilar = 0;
 
@@ -117,10 +117,10 @@ Iterate() {
   m_numOnlyInR1 = g1->get_num_edges() - m_numSimilar;
   m_numOnlyInR2 = g2->get_num_edges() - m_numSimilar;
 
-  cout << "LP Similarity: " << m_q1 << " " << m_q2 << " " << m_q3 << endl;
-  cout << "Num Similar: " << m_numSimilar << endl;
-  cout << "Num Only In R1: " << m_numOnlyInR1 << endl;
-  cout << "Num Only In R2: " << m_numOnlyInR2 << endl;
+  std::cout << "LP Similarity: " << m_q1 << " " << m_q2 << " " << m_q3 << std::endl;
+  std::cout << "Num Similar: " << m_numSimilar << std::endl;
+  std::cout << "Num Only In R1: " << m_numOnlyInR1 << std::endl;
+  std::cout << "Num Only In R2: " << m_numOnlyInR2 << std::endl;
 }
 
 template <typename MPTraits>
@@ -130,17 +130,17 @@ Finalize() {
   //setup variables
   StatClass* stats = this->GetStatClass();
 
-  string str;
+  std::string str;
 
   //output stats
   str = this->GetBaseFilename() + ".stat";
-  ofstream  osStat(str.c_str());
-  osStat << "NodeGen+Connection Stats" << endl;
+  std::ofstream  osStat(str.c_str());
+  osStat << "NodeGen+Connection Stats" << std::endl;
   stats->PrintAllStats(osStat, this->GetRoadmap());
-  osStat << "LPSimilarity: " << m_q1 << " " << m_q2 << " " << m_q3 << endl;
-  osStat << "NumSimilar: " << m_numSimilar << endl;
-  osStat << "NumOnlyInR1: " << m_numOnlyInR1 << endl;
-  osStat << "NumOnlyInR2: " << m_numOnlyInR2 << endl;
+  osStat << "LPSimilarity: " << m_q1 << " " << m_q2 << " " << m_q3 << std::endl;
+  osStat << "NumSimilar: " << m_numSimilar << std::endl;
+  osStat << "NumOnlyInR1: " << m_numOnlyInR1 << std::endl;
+  osStat << "NumOnlyInR2: " << m_numOnlyInR2 << std::endl;
 }
 
 template <typename MPTraits>
@@ -154,7 +154,7 @@ CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, WeightType& _w2) {
   tuple<double, double, double> q;
 
   //collect paths
-  vector<CfgType> p1, p2;
+  std::vector<CfgType> p1, p2;
 
   //path on edge 1
   auto lp1 = this->GetLocalPlanner(m_lpLabel1);
@@ -175,7 +175,7 @@ CompareEdge(CfgType& _s, CfgType& _g, WeightType& _w1, WeightType& _w2) {
 template <typename MPTraits>
 double
 LPCompare<MPTraits>::
-ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
+ComparePaths(std::vector<CfgType>& _p1, std::vector<CfgType>& _p2) {
   auto dm = this->GetDistanceMetric(m_dmLabel);
 
   //for each cfg in p1
@@ -197,7 +197,7 @@ ComparePaths(vector<CfgType>& _p1, vector<CfgType>& _p2) {
 template <typename MPTraits>
 double
 LPCompare<MPTraits>::
-ComparePaths2(vector<CfgType>& _p1, vector<CfgType>& _p2) {
+ComparePaths2(std::vector<CfgType>& _p1, std::vector<CfgType>& _p2) {
   auto dm = this->GetDistanceMetric(m_dmLabel);
 
   double c1 = ComparePaths(_p1, _p2) * _p1.size();

@@ -26,7 +26,7 @@ class MultiStrategy : public MPStrategyMethod<MPTraits> {
 
   private:
 
-    vector<string> m_mpsLabels;
+    std::vector<std::string> m_mpsLabels;
 
 };
 
@@ -58,7 +58,7 @@ ParseXML(XMLNode& _node) {
 template <typename MPTraits>
 void MultiStrategy<MPTraits>::Run() {
   for(auto& label : m_mpsLabels) {
-    cout << "MultiStrategy: Beginning Strategy: " << label << endl;
+    std::cout << "MultiStrategy: Beginning Strategy: " << label << std::endl;
     (*this->GetMPStrategy(label))();
   }
 }

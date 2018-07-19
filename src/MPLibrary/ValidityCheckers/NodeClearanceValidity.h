@@ -16,21 +16,21 @@ class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 
-    NodeClearanceValidity(double _delta = 1.0, string _nfLabel = "");
+    NodeClearanceValidity(double _delta = 1.0, std::string _nfLabel = "");
     NodeClearanceValidity(XMLNode& _node);
     virtual ~NodeClearanceValidity();
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName);
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName);
 
   private:
     double m_delta;
-    string m_nfLabel;
+    std::string m_nfLabel;
 };
 
 template <class MPTraits>
-NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, string _nfLabel) :
+NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, std::string _nfLabel) :
   ValidityCheckerMethod<MPTraits>(), m_delta(_delta), m_nfLabel(_nfLabel) {
     this->SetName("NodeClearanceValidity");
   }
@@ -48,36 +48,29 @@ NodeClearanceValidity<MPTraits>::~NodeClearanceValidity() {}
 
 template <class MPTraits>
 void
-NodeClearanceValidity<MPTraits>::Print(ostream& _os) const {
+NodeClearanceValidity<MPTraits>::Print(std::ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::Print(_os);
   _os << "\tdelta::" << m_delta
-    << "\tnfLabel::" << m_nfLabel << endl;
+    << "\tnfLabel::" << m_nfLabel << std::endl;
 }
 
 template <class MPTraits>
 bool
 NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
-    CDInfo& _cdInfo, const string& _callName) {
-  /* TODO: remove ifdef when constness problem in STAPL is fixed*/
-#ifndef _PARALLEL
-  vector<pair<VID, double> > kClosest;
+    CDInfo& _cdInfo, const std::string& _callName) {
+  std::vector<Neighbor> kClosest;
   this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(
-      this->GetRoadmap(), static_cast<CfgType>(_cfg), back_inserter(kClosest) );
+      this->GetRoadmap(), static_cast<CfgType>(_cfg), std::back_inserter(kClosest) );
 
   if(kClosest.empty()) {
     _cfg.SetLabel("VALID", true);
     return true;
   }
 
-  bool result = m_delta < kClosest[0].second;
+  bool result = m_delta < kClosest[0].distance;
 
   _cfg.SetLabel("VALID", result);
   return result;
-
-#else
-  stapl_assert(false, "NodeClearanceValidity");
-  return false;
-#endif
 }
 
 #endif

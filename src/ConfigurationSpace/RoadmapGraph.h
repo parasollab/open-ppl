@@ -158,6 +158,9 @@ class RoadmapGraph : public
     ///@name Queries
     ///@{
 
+    /// Get the number of vertices in the roadmap.
+    size_t Size() const noexcept;
+
     /// Check if a vertex is present in the graph.
     /// @param _v  The vertex property to seek.
     /// @return True if the vertex property was found in the graph.
@@ -546,6 +549,14 @@ SetRobot(Robot* const _r) noexcept {
 }
 
 /*-------------------------------- Queries -----------------------------------*/
+
+template <typename Vertex, typename Edge>
+size_t
+RoadmapGraph<Vertex, Edge>::
+Size() const noexcept {
+  return this->get_num_vertices();
+}
+
 
 template <typename Vertex, typename Edge>
 bool

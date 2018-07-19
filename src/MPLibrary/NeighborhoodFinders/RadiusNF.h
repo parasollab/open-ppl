@@ -1,5 +1,5 @@
-#ifndef RADIUS_NF_H_
-#define RADIUS_NF_H_
+#ifndef PMPL_RADIUS_NF_H_
+#define PMPL_RADIUS_NF_H_
 
 #include "NeighborhoodFinderMethod.h"
 
@@ -16,12 +16,12 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
-    typedef typename MPTraits::GroupCfgType           GroupCfgType;
+    typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::RoadmapType      RoadmapType;
+    typedef typename RoadmapType::VID           VID;
+    typedef typename RoadmapType::GraphType     GraphType;
+    typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
+    typedef typename MPTraits::GroupCfgType     GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -45,39 +45,33 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name NeighborhoodFinderMethod Interface
     ///@{
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighborPairs(RoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-
-    /// Group overloads:
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        const GroupCfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
+    template <typename InputIterator, typename OutputIterator>
     OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
-        OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        OutputIterator _out);
 
     ///@}
 
@@ -86,8 +80,8 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    bool m_useFallback{false}; ///< Use the nearest node if no nodes are found
-                               ///< within the radius.
+    /// Use the nearest node if no nodes are found within the radius.
+    bool m_useFallback{false};
 
     ///@}
 
@@ -138,40 +132,37 @@ RadiusNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "RadiusNF::FindNeighbors");
-  this->IncrementNumQueries();
+  GraphType* g = _rmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
-  GraphType* map = _rmp->GetGraph();
-  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
-  std::multiset<pair<VID, double>, CompareSecond<VID, double> > inRadius;
-
-  // The node used as a fallback if m_useFallback is set. Pair of VID and
-  // distance from _cfg. This is returned if no nodes are found within the
-  // radius.
-  pair<VID, double> fallback;
-
-  // Distance used when tracking the fallback node. Will always be larger than
-  // the radius.
-  double fallbackDist = std::numeric_limits<double>::max();
+  // The neighbor to use as a fallback if m_useFallback is set.
+  Neighbor fallback;
 
   // Find all nodes within radius
+  std::multiset<Neighbor> inRadius;
+
   for(InputIterator it = _first; it != _last; it++) {
-
-    if(this->CheckUnconnected(_rmp, _cfg, map->GetVID(it)))
+    // Check for connectedness.
+    const VID vid = g->GetVID(it);
+    if(this->CheckUnconnected(_rmp, _cfg, vid))
       continue;
 
-    CfgType node = map->GetVertex(it);
-    if(node == _cfg) // Don't connect to itself
+    // Check for connection to self.
+    const CfgType& node = g->GetVertex(it);
+    if(node == _cfg)
       continue;
 
-    // If within radius, add to list
-    double dist = dmm->Distance(_cfg, node);
-    if(dist <= this->m_radius)
-      inRadius.insert(make_pair(map->GetVID(it), dist));
-    // Track nearest node outside of radius and its distance.
-    else if(m_useFallback and dist < fallbackDist) {
-      fallbackDist = dist;
-      fallback = make_pair(map->GetVID(it), fallbackDist);
+    // Check distance. If it is infinite, this is not connectable.
+    const double distance = dm->Distance(_cfg, node);
+    if(std::isinf(distance))
+      continue;
+
+    // If within radius, add to list. If not, check for better fallback node.
+    if(distance <= this->m_radius)
+      inRadius.emplace(vid, distance);
+    else if(m_useFallback and distance < fallback.distance) {
+      fallback.distance = distance;
+      fallback.target = vid;
     }
   }
 
@@ -179,7 +170,7 @@ FindNeighbors(RoadmapType* _rmp,
   if(m_useFallback and inRadius.empty())
     inRadius.insert(fallback);
 
-  return copy(inRadius.begin(), inRadius.end(), _out);
+  return std::copy(inRadius.begin(), inRadius.end(), _out);
 }
 
 
@@ -191,32 +182,56 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "RadiusNF::FindNeighborPairs");
-  this->IncrementNumQueries();
-
-  GraphType* map = _rmp->GetGraph();
-  auto dmm = this->GetDistanceMetric(this->m_dmLabel);
-  std::multiset<pair<pair<VID, VID >, double> > inRadius;
+  GraphType* g = _rmp->GetGraph();
+  auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // Find all pairs within radius
+  std::multiset<Neighbor> inRadius;
+
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-    CfgType node1 = map->GetVertex(it1);
+    const CfgType& node1 = g->GetVertex(it1);
+
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
-      if(*it1 == *it2) // Don't connect to itself
+      // Check for connection to self.
+      if(*it1 == *it2)
         continue;
-      CfgType node2 = map->GetVertex(it2);
+
+      // Check distance.
+      const CfgType& node2 = g->GetVertex(it2);
+      const double distance = dm->Distance(node1, node2);
+      if(std::isinf(distance))
+        continue;
 
       // If within radius, add to list
-      double dist = dmm->Distance(node1, node2);
-      if(dist <= this->m_radius){
-        inRadius.insert(make_pair(
-              make_pair(map->GetVID(it1), map->GetVID(it2)),
-              dist));
-      }
+      if(distance <= this->m_radius)
+        inRadius.emplace(g->GetVID(it1), g->GetVID(it2), distance);
     }
   }
 
-  return copy(inRadius.begin(), inRadius.end(), _out);
+  return std::copy(inRadius.begin(), inRadius.end(), _out);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+RadiusNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* _rmp,
+    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+    const GroupCfgType& _cfg, OutputIterator _out) {
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator, typename OutputIterator>
+OutputIterator
+RadiusNF<MPTraits>::
+FindNeighborPairs(GroupRoadmapType* _rmp,
+    InputIterator _first1, InputIterator _last1,
+    InputIterator _first2, InputIterator _last2,
+    OutputIterator _out) {
+  throw NotImplementedException(WHERE);
 }
 
 /*----------------------------------------------------------------------------*/

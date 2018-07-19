@@ -1,5 +1,5 @@
-#ifndef CCS_CONNECTOR_H_
-#define CCS_CONNECTOR_H_
+#ifndef PMPL_CCS_CONNECTOR_H_
+#define PMPL_CCS_CONNECTOR_H_
 
 #include "ConnectorMethod.h"
 
@@ -13,7 +13,7 @@
 /// We try to connect k-closest pairs of connected components.
 /// When connecting the CCs, we only attempt neighboring pairs of nodes.
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class CCsConnector: public ConnectorMethod<MPTraits> {
 
   public:
@@ -81,7 +81,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
 };
 
 
-template<class MPTraits>
+template <typename MPTraits>
 CCsConnector<MPTraits>::
 CCsConnector(string _nfLabel, string _lpLabel, size_t _k) :
     ConnectorMethod<MPTraits>(_nfLabel, _lpLabel), m_k(_k) {
@@ -89,7 +89,7 @@ CCsConnector(string _nfLabel, string _lpLabel, size_t _k) :
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 CCsConnector<MPTraits>::
 CCsConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   this->SetName("CCsConnector");
@@ -97,7 +97,7 @@ CCsConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCsConnector<MPTraits>::
 Print(ostream& _os) const {
@@ -106,7 +106,7 @@ Print(ostream& _os) const {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator1, typename InputIterator2,
     typename OutputIterator>
 void
@@ -172,7 +172,7 @@ Connect(RoadmapType* _rm,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename OutputIterator>
 void
 CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
@@ -184,18 +184,16 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
 
-  typedef vector<pair<pair<VID, VID>, double> > NeighborPairs;
-
-  NeighborPairs neighborPairs;
+  std::vector<Neighbor> neighborPairs;
   nf->FindNeighborPairs(_rm, _cc1Vec.begin(), _cc1Vec.end(), _cc2Vec.begin(),
-      _cc2Vec.end(), back_inserter(neighborPairs));
+      _cc2Vec.end(), std::back_inserter(neighborPairs));
 
   // Begin the connection attempts
   auto robot = this->GetTask()->GetRobot();
   for(auto npit = neighborPairs.begin(); npit != neighborPairs.end(); ++npit) {
 
-    VID cc1Elem = npit->first.first;
-    VID cc2Elem = npit->first.second;
+    const VID cc1Elem = npit->source,
+              cc2Elem = npit->target;
 
     CfgType _col(robot);
     if(lp->IsConnected(
@@ -212,7 +210,7 @@ CCsConnector<MPTraits>::ConnectCC(RoadmapType* _rm,
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCsConnector<MPTraits>::
 ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
@@ -244,12 +242,12 @@ ComputeAllPairsCCDist(RoadmapType* _rm, vector<pair<size_t, VID> >& _ccs) {
 }
 
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 CCsConnector<MPTraits>::GetKCCs(size_t _k, VID _ccid, vector<VID>& _kCCID){
   typedef vector<double>::iterator IT;
   vector<pair<VID, double> >& dis2CCs = m_ccDist[_ccid];
-  partial_sort(dis2CCs.begin(), dis2CCs.begin() + _k, dis2CCs.end(),
+  std::partial_sort(dis2CCs.begin(), dis2CCs.begin() + _k, dis2CCs.end(),
       CompareSecond<VID, double>());
 
   for(auto i = dis2CCs.begin(); i != dis2CCs.begin() + _k; ++i)

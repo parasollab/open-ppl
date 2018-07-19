@@ -31,11 +31,11 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 
     //cost calculation for the AdaptiveRRT
     enum CostMethod {FIXED, REWARD, CYCLES};
-    //map<string, pair<double, double> > is a single Growth Set representing
+    //std::map<std::string, std::pair<double, double> > is a single Growth Set representing
     //growth method, cost, weight tuple
-    typedef map<string, pair<pair<double, long>, double> > GrowthSet;
+    typedef std::map<std::string, std::pair<std::pair<double, long>, double> > GrowthSet;
     //double is visibility threshold for the GrowthSet
-    typedef map<double, GrowthSet> GrowthSets;
+    typedef std::map<double, GrowthSet> GrowthSets;
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
@@ -49,14 +49,14 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 
     virtual void Initialize();
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
   protected:
     // Helper functions
     virtual VID ExpandTree(CfgType& _dir);
-    string SelectGrowthMethod(GrowthSet& _gs);
-    void UpdateCost(double _cost, string _s, GrowthSet& _gs);
-    void RewardGrowthMethod(double _r, string _s, GrowthSet& _gs);
+    std::string SelectGrowthMethod(GrowthSet& _gs);
+    void UpdateCost(double _cost, std::string _s, GrowthSet& _gs);
+    void RewardGrowthMethod(double _r, std::string _s, GrowthSet& _gs);
     VID UpdateTree(VID _nearest, CfgType& _new, CfgType& _dir, double _delta);
     VID UpdateTree(CfgType& _newCfg, VID _nearVID, bool _againstWall,
         double _ratio);
@@ -68,8 +68,8 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     void AvgVisibility(CfgType& _cfg, double _val);
     //simple helper to grab the visibility from _cfg
     double GetVisibility(CfgType& _cfg);
-    double GetCost(string _s, GrowthSet& _gs);
-    double CostInsensitiveProb(string _s, GrowthSet& _gs);
+    double GetCost(std::string _s, GrowthSet& _gs);
+    double CostInsensitiveProb(std::string _s, GrowthSet& _gs);
 
     double m_wallPenalty; //initial visibility for nodes which extend into C-obst
     double m_gamma;
@@ -100,8 +100,8 @@ AdaptiveRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node){
       GrowthSet growthSet;
       for(auto& child2 : child) {
         if(child2.Name() == "Extender"){
-          string label = child2.Read("label", true, "", "Extender strategy");
-          growthSet[label] = make_pair(make_pair(0, 0), 1.0);
+          std::string label = child2.Read("label", true, "", "Extender strategy");
+          growthSet[label] = std::make_pair(std::make_pair(0, 0), 1.0);
         }
       }
       m_growthSets[threshold] = growthSet;
@@ -112,7 +112,7 @@ AdaptiveRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node){
       "Initial visibility for nodes agains C-obst");
   m_gamma = _node.Read("gamma", true, 0.5, 0.0, 1.0,
       "Gamma for adaptivity formulas");
-  string costMethod = _node.Read("cost", true, "fixed", "Cost method");
+  std::string costMethod = _node.Read("cost", true, "fixed", "Cost method");
   transform(costMethod.begin(), costMethod.end(),
       costMethod.begin(), ::tolower);
 
@@ -129,24 +129,24 @@ AdaptiveRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node){
 
 template <typename MPTraits>
 void
-AdaptiveRRT<MPTraits>::Print(ostream& _os) const {
+AdaptiveRRT<MPTraits>::Print(std::ostream& _os) const {
   BasicRRTStrategy<MPTraits>::Print(_os);
-  _os << "\tWallPenalty::" << m_wallPenalty << endl;
-  _os << "\tGamma::" << m_gamma << endl;
-  _os << "\tGrowthSets::" << endl;
+  _os << "\tWallPenalty::" << m_wallPenalty << std::endl;
+  _os << "\tGamma::" << m_gamma << std::endl;
+  _os << "\tGrowthSets::" << std::endl;
   typedef typename GrowthSets::const_iterator GSIT;
   typedef typename GrowthSet::const_iterator GIT;
   for(GSIT gsit = m_growthSets.begin(); gsit!=m_growthSets.end(); ++gsit){
-    _os << "\t\tGrowthSet::" << gsit->first << endl;
+    _os << "\t\tGrowthSet::" << gsit->first << std::endl;
     for(GIT git = gsit->second.begin(); git!=gsit->second.end(); ++git){
-      _os << "\t\t\t" << git->first << endl;
+      _os << "\t\t\t" << git->first << std::endl;
     }
   }
   _os << "\tCostMethod::";
   if(m_costMethod == FIXED) _os << "fixed";
   else if(m_costMethod == REWARD) _os << "reward";
   else _os << "cycles";
-  _os << endl;
+  _os << std::endl;
 }
 
 template <typename MPTraits>
@@ -174,12 +174,12 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 
   //get the expand node from the roadmap
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  vector<pair<VID, double> > kClosest;
+  std::vector<std::pair<VID, double> > kClosest;
   nf->FindNeighbors(this->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
       this->m_currentTree->size() ==
       this->GetRoadmap()->GetGraph()->get_num_vertices(),
-      _dir, back_inserter(kClosest));
+      _dir, std::back_inserter(kClosest));
   CfgType& nearest =
       this->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
 
@@ -187,7 +187,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   double visibility = GetVisibility(nearest);
 
   if(this->m_debug)
-    cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << endl;
+    std::cout << "nearest:: " << nearest << "\tvisibility:: " << visibility << std::endl;
 
   double minDist = this->GetExtender(this->m_exLabel)->GetMinDistance();
   if(dm->Distance(_dir, nearest) < minDist){
@@ -206,7 +206,7 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   }
 
   //select the growth method from the selected growth set
-  string gm = SelectGrowthMethod(rgsit->second);
+  std::string gm = SelectGrowthMethod(rgsit->second);
 
   //grow the RRT using growth method gm
   //start timing from cycles
@@ -229,8 +229,8 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   //expansion Failed Penalize nearest with 0
   if(!verifiedValid) {
     if(this->m_debug)
-      cout << "Growth Failed on::" << nearest << ", with visibility::"
-           << visibility << endl;
+      std::cout << "Growth Failed on::" << nearest << ", with visibility::"
+           << visibility << std::endl;
     nearest.IncrementStat("Fail");
     AvgVisibility(nearest, 0);
 
@@ -279,18 +279,18 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
 }
 
 template <typename MPTraits>
-string
+std::string
 AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   if(this->m_debug)
-    cout << ":::::Selecting Growth Method:::::" << endl;
-  map<string, double> pistars, pis;
+    std::cout << ":::::Selecting Growth Method:::::" << std::endl;
+  std::map<std::string, double> pistars, pis;
   double spc = 0.0;
   //compute p_i*/c_i and the sum over all growth methods
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
     if(this->m_debug)
-      cout << "Method::" << gsit->first
+      std::cout << "Method::" << gsit->first
         << "::Cost::" << GetCost(gsit->first, _gs)
-        << "::Weight::" << gsit->second.second << endl;
+        << "::Weight::" << gsit->second.second << std::endl;
     double pistar = CostInsensitiveProb(gsit->first, _gs)/GetCost(gsit->first,
         _gs);
     pistars[gsit->first] = pistar;
@@ -301,34 +301,34 @@ AdaptiveRRT<MPTraits>::SelectGrowthMethod(GrowthSet& _gs){
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
     pis[gsit->first] = pistars[gsit->first]/spc;
     if(this->m_debug)
-      cout << "Method::" << gsit->first
-        << "::Prob::" << pis[gsit->first] << endl;
+      std::cout << "Method::" << gsit->first
+        << "::Prob::" << pis[gsit->first] << std::endl;
   }
 
   if(this->m_debug)
-    cout << endl << endl;
+    std::cout << std::endl << std::endl;
 
   //select method based upon probability
   double r = DRand(), cumm = 0.0;
-  for(map<string, double>::const_iterator mit = pis.begin(); mit!=pis.end();
+  for(std::map<std::string, double>::const_iterator mit = pis.begin(); mit!=pis.end();
       ++mit){
     cumm += mit->second;
     if(r <= cumm) {
       if(this->m_debug) {
-        cout << "r::" << r << endl;
-        cout << "MethodSelected::" << mit->first << endl;
+        std::cout << "r::" << r << std::endl;
+        std::cout << "MethodSelected::" << mit->first << std::endl;
       }
       return mit->first;
     }
   }
 
-  cerr << "Error::Growth method not selected." << endl;
-  exit(1);
+  std::cerr << "Error::Growth method not selected." << std::endl;
+  std::exit(1);
 }
 
 template <typename MPTraits>
 void
-AdaptiveRRT<MPTraits>::UpdateCost(double _cost, string _s, GrowthSet& _gs){
+AdaptiveRRT<MPTraits>::UpdateCost(double _cost, std::string _s, GrowthSet& _gs){
   //update the average cost of the growth method
   if(_gs[_s].first.second == 0){
     _gs[_s].first.second = 1;
@@ -342,12 +342,12 @@ AdaptiveRRT<MPTraits>::UpdateCost(double _cost, string _s, GrowthSet& _gs){
 
 template <typename MPTraits>
 void
-AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, string _s, GrowthSet& _gs){
+AdaptiveRRT<MPTraits>::RewardGrowthMethod(double _r, std::string _s, GrowthSet& _gs){
   if(this->m_debug)
-    cout << "Reward::" << _s << "::" << _r << endl;
+    std::cout << "Reward::" << _s << "::" << _r << std::endl;
   //factor is e^(g * x_i' / K) where g is gamma, x_i' = x_i/p_i* where x_i is
   //the reward r, and K is the number of growth methods
-  double factor = exp(m_gamma * (_r/CostInsensitiveProb(_s, _gs)) /
+  double factor = std::exp(m_gamma * (_r/CostInsensitiveProb(_s, _gs)) /
       double(_gs.size()));
   //update the weight on growth method _s
   _gs[_s].second *= factor;
@@ -373,11 +373,11 @@ AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
   VID returnVID = UpdateTree(_newCfg, _expandNode, partial, ratio);
 
   if(this->m_debug){
-    cout << "near vid::" << _expandNode << "\tvisibility::" << visibility
-         << endl;
-    cout << "new vid::" << returnVID << "\tvisibility::"
-         << GetVisibility(_newCfg) << endl;
-    cout << "expansionRatio::" << ratio << endl;
+    std::cout << "near vid::" << _expandNode << "\tvisibility::" << visibility
+         << std::endl;
+    std::cout << "new vid::" << returnVID << "\tvisibility::"
+         << GetVisibility(_newCfg) << std::endl;
+    std::cout << "expansionRatio::" << ratio << std::endl;
   }
 
   return returnVID;
@@ -396,13 +396,13 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
   //calculate edge weight and add edge
   CfgType& parentcfg = rdmp->GetVertex(_nearVID);
   if(this->m_debug)
-    cout << "parentcfg::" << parentcfg << endl;
+    std::cout << "parentcfg::" << parentcfg << std::endl;
   int weight;
   CfgType incr(this->GetTask()->GetRobot());
   Environment* env = this->GetEnvironment();
   incr.FindIncrement(parentcfg, _newCfg, &weight, env->GetPositionRes(),
       env->GetOrientationRes());
-  pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand",
+  std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
       weight), WeightType("RRTExpand", weight));
   rdmp->AddEdge(_nearVID, newVID, weights);
 
@@ -451,8 +451,8 @@ template <typename MPTraits>
 double
 AdaptiveRRT<MPTraits>::GetVisibility(CfgType& _cfg){
   if(!_cfg.IsStat("Visibility")){
-    cerr << "Warning::Visibility not a statistic of node::" << _cfg << endl;
-    cerr << "Setting and Returning 1 as its visibility." << endl;
+    std::cerr << "Warning::Visibility not a statistic of node::" << _cfg << std::endl;
+    std::cerr << "Setting and Returning 1 as its visibility." << std::endl;
     _cfg.SetStat("Success", 1);
     _cfg.SetStat("Fail", 0);
     _cfg.SetStat("Visibility", 1);
@@ -462,7 +462,7 @@ AdaptiveRRT<MPTraits>::GetVisibility(CfgType& _cfg){
 
 template <typename MPTraits>
 double
-AdaptiveRRT<MPTraits>::GetCost(string _s, GrowthSet& _gs){
+AdaptiveRRT<MPTraits>::GetCost(std::string _s, GrowthSet& _gs){
   if(m_costMethod == FIXED)
     return 1;
   if(_gs[_s].first.second == 0)
@@ -473,7 +473,7 @@ AdaptiveRRT<MPTraits>::GetCost(string _s, GrowthSet& _gs){
 
 template <typename MPTraits>
 double
-AdaptiveRRT<MPTraits>::CostInsensitiveProb(string _s, GrowthSet& _gs){
+AdaptiveRRT<MPTraits>::CostInsensitiveProb(std::string _s, GrowthSet& _gs){
   double sw = 0.0;
   for(GrowthSet::const_iterator gsit = _gs.begin(); gsit!=_gs.end(); ++gsit){
     sw+=log(gsit->second.second+1);

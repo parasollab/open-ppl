@@ -20,17 +20,17 @@ class DisassemblySequential : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
     typedef typename DisassemblyMethod<MPTraits>::Approach Approach;
     typedef typename DisassemblyMethod<MPTraits>::State State;
-    typedef pair<Formation, map<Approach, bool> > AttemptEntry;
+    typedef std::pair<Formation, std::map<Approach, bool> > AttemptEntry;
 
     DisassemblySequential(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
+            std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::string _vc = "", const std::string _singleVc = "",
+        const std::string _lp = "", const std::string _ex = "",
+        const std::string _dm = "",
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
     DisassemblySequential(XMLNode& _node);
     virtual ~DisassemblySequential() {}
 
@@ -39,7 +39,7 @@ class DisassemblySequential : public DisassemblyMethod<MPTraits> {
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
     virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
-    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                       const Formation& _subassembly) override;
 
     list<DisassemblyNode*> m_nodeQueue;
@@ -52,11 +52,11 @@ class DisassemblySequential : public DisassemblyMethod<MPTraits> {
 template <typename MPTraits>
 DisassemblySequential<MPTraits>::
 DisassemblySequential(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
+    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
+    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
+    const std::string _vc, const std::string _singleVc,
+    const std::string _lp, const std::string _ex,
+    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
   this->SetName("DisassemblySequential");
@@ -75,21 +75,21 @@ void
 DisassemblySequential<MPTraits>::
 Iterate() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Iterate()" << endl;
+    std::cout << this->GetNameAndLabel() << "::Iterate()" << std::endl;
 
   if(m_nodeQueue.empty() && !m_disNodes.empty()) {
     this->m_successful = true;
-    cout << endl << "Successful disassembling!" << endl << endl;
+    std::cout << std::endl << "Successful disassembling!" << std::endl << std::endl;
     return;
   }
 
   DisassemblyNode* node = SelectExpansionNode();
   if(!node) {
-    cout << "Error: returned nullptr node" << endl;
+    std::cout << "Error: returned nullptr node" << std::endl;
     return;
   }
   else if(node->GetCompletePartList().empty()) {
-    cout << "Error: select Node with empty parts" << endl;
+    std::cout << "Error: select Node with empty parts" << std::endl;
     return;
   }
 
@@ -101,12 +101,12 @@ typename DisassemblySequential<MPTraits>::DisassemblyNode*
 DisassemblySequential<MPTraits>::
 SelectExpansionNode() {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectExpansionCfg() | "
-         << "Size of candidates = " << m_nodeQueue.size() << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectExpansionCfg() | "
+         << "Size of candidates = " << m_nodeQueue.size() << std::endl;
 
   // check if first iteration
   if (m_disNodes.empty()) {
-    vector<size_t> robotParts;
+    std::vector<size_t> robotParts;
     for (size_t i = 0; i < this->m_numParts; ++i)
       robotParts.push_back(i);
 
@@ -137,20 +137,20 @@ typename DisassemblyMethod<MPTraits>::Formation
 DisassemblySequential<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::SelectSubassembly()" << endl;
+    std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
   return Formation();
 }
 
 template <typename MPTraits>
-pair<bool, typename DisassemblySequential<MPTraits>::VIDPath>
+std::pair<bool, typename DisassemblySequential<MPTraits>::VIDPath>
 DisassemblySequential<MPTraits>::
 Expand(DisassemblyNode* _node, const Formation& _subassembly) {
   if(this->m_debug)
-    cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
-         << endl;
+    std::cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
+         << std::endl;
 
   VID newVID;
-  vector<VIDPath> removingPaths;
+  std::vector<VIDPath> removingPaths;
   Formation singleSub;
   DisassemblyNode* newNode = nullptr;
 
@@ -184,8 +184,8 @@ Expand(DisassemblyNode* _node, const Formation& _subassembly) {
   }
 
   if (this->m_debug)
-    cout << this->GetNameAndLabel() << "::Expand with multi-part subassemblies"
-         << endl;
+    std::cout << this->GetNameAndLabel() << "::Expand with multi-part subassemblies"
+         << std::endl;
   // second test all possible multi part subassemblies
   // here are two different kinds, as first the initialParts at initial position
   // and secondly the used subassemblies
@@ -241,7 +241,7 @@ Expand(DisassemblyNode* _node, const Formation& _subassembly) {
     }
   }
 
-  return make_pair(true, VIDPath());
+  return std::make_pair(true, VIDPath());
 }
 
 #endif

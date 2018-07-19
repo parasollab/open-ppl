@@ -24,16 +24,16 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     BasicPRM(
-        const map<string, pair<size_t, size_t> >& _samplerLabels = map<string, pair<size_t, size_t> >(),
-        const vector<string>& _connectorLabels = vector<string>(),
-        const vector<string>& _componentConnectorLabels = vector<string>(),
-        const vector<string>& _evaluatorLabels = vector<string>(),
-        string _inputMapFilename = "",
+        const std::map<std::string, std::pair<size_t, size_t> >& _samplerLabels = std::map<std::string, std::pair<size_t, size_t> >(),
+        const std::vector<std::string>& _connectorLabels = std::vector<std::string>(),
+        const std::vector<std::string>& _componentConnectorLabels = std::vector<std::string>(),
+        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>(),
+        std::string _inputMapFilename = "",
         Start _startAt = Sampling);
     BasicPRM(XMLNode& _node);
     virtual ~BasicPRM() {}
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     virtual void Initialize();
     virtual void Iterate();
@@ -54,7 +54,7 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     /// @param _labels Connector labels used in connection
     template<class InputIterator>
       void Connect(InputIterator _first, InputIterator _last,
-          const vector<string>& _labels);
+          const std::vector<std::string>& _labels);
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Iterate over range and check nodes to be within narrow passage
@@ -67,11 +67,11 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    map<string, pair<size_t, size_t> > m_samplerLabels; ///< Sampler labels with number and attempts of sampler
-    vector<string> m_connectorLabels; ///< Connector labels for node-to-node
-    vector<string> m_componentConnectorLabels; ///< Connector labels for cc-to-cc
+    std::map<std::string, std::pair<size_t, size_t> > m_samplerLabels; ///< Sampler labels with number and attempts of sampler
+    std::vector<std::string> m_connectorLabels; ///< Connector labels for node-to-node
+    std::vector<std::string> m_componentConnectorLabels; ///< Connector labels for cc-to-cc
     size_t m_currentIteration; ///< Current iteration of while-loop of Run function
-    string m_inputMapFilename; ///< Input roadmap to initialize map
+    std::string m_inputMapFilename; ///< Input roadmap to initialize map
     Start m_startAt; ///< When inputting a roadmap, specifies where in algorithm to start
 
     bool m_fixBase{false};  ///< Keep the base fixed to the start cfg?
@@ -85,11 +85,11 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
 template <typename MPTraits>
 BasicPRM<MPTraits>::
-BasicPRM(const map<string, pair<size_t, size_t> >& _samplerLabels,
-    const vector<string>& _connectorLabels,
-    const vector<string>& _componentConnectorLabels,
-    const vector<string>& _evaluatorLabels,
-    string _inputMapFilename, Start _startAt) :
+BasicPRM(const std::map<std::string, std::pair<size_t, size_t> >& _samplerLabels,
+    const std::vector<std::string>& _connectorLabels,
+    const std::vector<std::string>& _componentConnectorLabels,
+    const std::vector<std::string>& _evaluatorLabels,
+    std::string _inputMapFilename, Start _startAt) :
     m_samplerLabels(_samplerLabels), m_connectorLabels(_connectorLabels),
     m_componentConnectorLabels(_componentConnectorLabels),
     m_currentIteration(0), m_inputMapFilename(_inputMapFilename),
@@ -107,7 +107,7 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
 
   m_inputMapFilename = _node.Read("inputMap", false, "",
       "filename of roadmap to start from");
-  string startAt = _node.Read("startAt", false, "sampling",
+  std::string startAt = _node.Read("startAt", false, "sampling",
       "point of algorithm where to begin at: \
       \"sampling\" (default), \"connecting\", \
       \"connectingcomponents\", \"evaluating\"");
@@ -120,19 +120,19 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
   else if(startAt == "evaluating")
     m_startAt = Evaluating;
   else  {
-    string message = "Start at is '" + startAt +
+    std::string message = "Start at is '" + startAt +
       "'. Choices are 'sampling', 'connecting', 'connectingComponents', 'evaluating'.";
     throw ParseException(_node.Where(), message);
   }
 
   for(auto& child : _node) {
     if(child.Name() == "Sampler") {
-      string s = child.Read("method", true, "", "Sampler Label");
+      std::string s = child.Read("method", true, "", "Sampler Label");
       size_t num = child.Read("number", true,
           1, 0, MAX_INT, "Number of samples");
       size_t attempts = child.Read("attempts", false,
           1, 0, MAX_INT, "Number of attempts per sample");
-      m_samplerLabels[s] = make_pair(num, attempts);
+      m_samplerLabels[s] = std::make_pair(num, attempts);
     }
     else if(child.Name() == "Connector")
       m_connectorLabels.push_back(
@@ -152,7 +152,7 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
 template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
   _os << "\tInput Map: " << m_inputMapFilename << std::endl;
 
@@ -259,12 +259,12 @@ Iterate() {
               << m_currentIteration
               << std::endl;
 
-  vector<VID> vids;
+  std::vector<VID> vids;
 
   switch(m_startAt) {
 
     case Sampling:
-      Sample(back_inserter(vids));
+      Sample(std::back_inserter(vids));
 
     case Connecting:
       {
@@ -310,12 +310,12 @@ Sample(OutputIterator _thisIterationOut) {
                                         : this->GetEnvironment()->GetBoundary();
 
   // Generate nodes with each sampler.
-  vector<CfgType> samples;
+  std::vector<CfgType> samples;
   for(auto&  sampler : m_samplerLabels) {
     auto s = this->GetSampler(sampler.first);
 
     s->Sample(sampler.second.first, sampler.second.second,
-        boundary, back_inserter(samples));
+        boundary, std::back_inserter(samples));
   }
 
   if(this->m_debug)
@@ -336,7 +336,7 @@ template<class InputIterator>
 void
 BasicPRM<MPTraits>::
 Connect(InputIterator _first, InputIterator _last,
-    const std::vector<string>& _labels) {
+    const std::vector<std::string>& _labels) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Connect()"
               << std::endl;

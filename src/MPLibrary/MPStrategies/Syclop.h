@@ -88,7 +88,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
         LPOutput<MPTraits>& _lp) override;
 
     /// As basic RRT, but also updates coverage information.
-    virtual pair<VID, bool> AddNode(const CfgType& _newCfg) override;
+    virtual std::pair<VID, bool> AddNode(const CfgType& _newCfg) override;
 
     /// As basic RRT, but also updates region edge connectivity information.
     virtual void AddEdge(VID _source, VID _target,
@@ -99,10 +99,10 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     /// Compute a high-level plan (a sequence of regions).
-    vector<VID> DiscreteLead();
+    std::vector<VID> DiscreteLead();
 
     /// Compute a set of potential regions from the discrete lead.
-    void FindAvailableRegions(vector<VID> _lead);
+    void FindAvailableRegions(std::vector<VID> _lead);
 
     /// Select a region from a set of available regions.
     const WorkspaceRegion* SelectRegion();
@@ -158,9 +158,9 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
       /// The number of times this region has been selected.
       size_t numTimesSelected{0};
 
-      vector<VID> vertices; ///< The VID's of the configurations in this region.
+      std::vector<VID> vertices; ///< The VID's of the configurations in this region.
 
-      set<size_t> cells; ///< The set of coverage cells in the target that
+      std::set<size_t> cells; ///< The set of coverage cells in the target that
                          ///< were reached from the source.
 
       size_t Coverage() const {return cells.size();}
@@ -177,12 +177,12 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
       }
 
       void UpdateAlpha() {
-        alpha = 1. / ((1. + Coverage()) * pow(freeVolume, 4.));
+        alpha = 1. / ((1. + Coverage()) * std::pow(freeVolume, 4.));
       }
 
       void UpdateWeight() {
-        weight = pow(freeVolume, 4.) /
-            ((1. + Coverage()) * (1. + pow(numTimesSelected, 2.)));
+        weight = std::pow(freeVolume, 4.) /
+            ((1. + Coverage()) * (1. + std::pow(numTimesSelected, 2.)));
       }
 
       ///@}
@@ -211,7 +211,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
         /// The set of coverage cells in the target that were reached from the
         /// source.
-        set<size_t> cells;
+        std::set<size_t> cells;
 
         ///@}
     };
@@ -266,7 +266,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
       typedef WorkspaceDecomposition graph_type;
       typedef stapl::visitor_return  visitor_return;
-      typedef map<VID, VID>          map_type;
+      typedef std::map<VID, VID>          map_type;
 
       ///@}
       ///@name Internal State
@@ -301,13 +301,13 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     std::map<const WorkspaceRegion*, RegionData> m_regionData;
 
     /// Holds extra data associated with region pairs.
-    std::map<pair<const WorkspaceRegion*, const WorkspaceRegion*>, RegionPairData>
+    std::map<std::pair<const WorkspaceRegion*, const WorkspaceRegion*>, RegionPairData>
         m_regionPairData;
 
     std::string m_tmLabel; ///< The topological map label.
 
     /// The currently available regions.
-    set<const WorkspaceRegion*> m_availableRegions;
+    std::set<const WorkspaceRegion*> m_availableRegions;
 
     ///@}
     ///@name Switch Tracking
@@ -414,17 +414,17 @@ FindNearestNeighbor(const CfgType& _cfg) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
 
-  vector<pair<VID, double>> neighbors;
+  std::vector<Neighbor> neighbors;
 
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   nf->FindNeighbors(this->GetRoadmap(),
       vertices.begin(), vertices.end(),
-      true, _cfg, back_inserter(neighbors));
+      true, _cfg, std::back_inserter(neighbors));
 
   VID nearestVID = INVALID_VID;
 
   if(!neighbors.empty())
-    nearestVID = neighbors[0].first;
+    nearestVID = neighbors[0].target;
   else
     // We really don't want this to happen. If you see high numbers for this,
     // you likely have problems with parameter or algorithm selection.
@@ -444,14 +444,14 @@ Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp) {
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   const WorkspaceRegion* r1 = tm->LocateRegion(_nearVID);
   const WorkspaceRegion* r2 = tm->LocateRegion(_qRand);
-  ++(m_regionPairData[make_pair(r1, r2)].numAttempts);
+  ++(m_regionPairData[std::make_pair(r1, r2)].numAttempts);
 
   return BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp);
 }
 
 
 template <typename MPTraits>
-pair<typename Syclop<MPTraits>::VID, bool>
+std::pair<typename Syclop<MPTraits>::VID, bool>
 Syclop<MPTraits>::
 AddNode(const CfgType& _newCfg) {
   auto added = BasicRRTStrategy<MPTraits>::AddNode(_newCfg);
@@ -498,13 +498,13 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
   const WorkspaceRegion* r2 = tm->LocateRegion(_target);
   const size_t cellIndex = tm->LocateCell(_target);
 
-  m_regionPairData[make_pair(r1, r2)].AddCell(cellIndex);
+  m_regionPairData[std::make_pair(r1, r2)].AddCell(cellIndex);
 }
 
 /*------------------------------ Syclop Functions ----------------------------*/
 
 template <typename MPTraits>
-vector<typename Syclop<MPTraits>::VID>
+std::vector<typename Syclop<MPTraits>::VID>
 Syclop<MPTraits>::
 DiscreteLead() {
   this->GetStatClass()->StartClock("GenerateDiscreteLead");
@@ -512,7 +512,7 @@ DiscreteLead() {
   static constexpr double probabilityOfDijkstras = .95;
 
   if(this->m_debug)
-    cout << "Generating new discrete lead..." << endl;
+    std::cout << "Generating new discrete lead..." << std::endl;
 
   auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
       GetDecomposition();
@@ -536,11 +536,11 @@ DiscreteLead() {
   }
 
   // Search region graph for a path from start to goal.
-  vector<VID> path;
+  std::vector<VID> path;
   if(DRand() < probabilityOfDijkstras) {
     // Search with djikstra's.
     if(this->m_debug)
-      cout << "\tSearching with dijkstras algorithm..." << endl;
+      std::cout << "\tSearching with dijkstras algorithm..." << std::endl;
 
     // Set up an edge weight map that maps edges to the cost function.
     stapl::sequential::edge_property_map<WorkspaceDecomposition, WeightFunctor>
@@ -555,10 +555,10 @@ DiscreteLead() {
   else {
     // Search with DFS, random child ordering.
     if(this->m_debug)
-      cout << "\tSearching with DFS..." << endl;
+      std::cout << "\tSearching with DFS..." << std::endl;
 
     // Set up a parent map to capture the search path.
-    map<VID, VID> parentMap;
+    std::map<VID, VID> parentMap;
     parentMap[start] = INVALID_VID;
 
     stapl::sequential::vector_property_map<GraphType, size_t> cmap;
@@ -575,7 +575,7 @@ DiscreteLead() {
     }
 
     if(this->m_debug)
-      cout << "\t\tGenerated a parent map of size " << parentMap.size() << ".\n";
+      std::cout << "\t\tGenerated a parent map of size " << parentMap.size() << ".\n";
 
     reverse(path.begin(), path.end());
   }
@@ -584,7 +584,7 @@ DiscreteLead() {
   for(auto i1 = path.begin(), i2 = i1 + 1; i2 != path.end(); ++i1, ++i2) {
     auto r1 = &regionGraph->GetRegion(*i1);
     auto r2 = &regionGraph->GetRegion(*i2);
-    ++(m_regionPairData[make_pair(r1, r2)].numLeadUses);
+    ++(m_regionPairData[std::make_pair(r1, r2)].numLeadUses);
   }
 
   // Mark this lead as unused.
@@ -592,7 +592,7 @@ DiscreteLead() {
 
   // Sanity check.
   if(this->m_debug)
-    cout << "\tGenerated lead of length " << path.size() << "." << endl;
+    std::cout << "\tGenerated lead of length " << path.size() << "." << std::endl;
   if(path.empty())
     throw RunTimeException(WHERE, "Path is empty");
 
@@ -604,11 +604,11 @@ DiscreteLead() {
 template <typename MPTraits>
 void
 Syclop<MPTraits>::
-FindAvailableRegions(vector<VID> _lead) {
+FindAvailableRegions(std::vector<VID> _lead) {
   static constexpr double probabilityOfQuitting = .5;
 
   if(this->m_debug)
-    cout << "Finding available regions from lead...\n";
+    std::cout << "Finding available regions from lead...\n";
 
   m_availableRegions.clear();
 
@@ -634,7 +634,7 @@ FindAvailableRegions(vector<VID> _lead) {
 
   // Sanity check.
   if(this->m_debug)
-    cout << "\tFound " << m_availableRegions.size() << " available regions.\n";
+    std::cout << "\tFound " << m_availableRegions.size() << " available regions.\n";
   if(m_availableRegions.empty())
     throw RunTimeException(WHERE, "Available regions is empty");
 }
@@ -651,13 +651,13 @@ SelectRegion() {
       m_currentRegionUses >= m_maxRegionUses;
 
   if(this->m_debug) {
-    cout << "Selecting a region...\n";
+    std::cout << "Selecting a region...\n";
     if(m_currentRegion)
-      cout << "\tCurrent region has been used " << m_currentRegionUses << "/"
+      std::cout << "\tCurrent region has been used " << m_currentRegionUses << "/"
            << m_maxRegionUses << " times.\n";
-    cout << "\t"
+    std::cout << "\t"
          << (needNewRegion ? "Selecting a new region." : "Using current region.")
-         << endl;
+         << std::endl;
   }
 
   if(needNewRegion) {
@@ -675,15 +675,15 @@ SelectRegion() {
 
     if(this->m_debug) {
       if(!m_availableRegions.empty())
-        cout << "\tCurrent lead has been used " << m_currentLeadUses << "/"
+        std::cout << "\tCurrent lead has been used " << m_currentLeadUses << "/"
              << m_maxLeadUses << " times.\n";
       else
-        cout << "\tNo discrete lead available.\n";
+        std::cout << "\tNo discrete lead available.\n";
       if(!needNewLead && abandonEarly)
-        cout << "\tAbandoning current lead early!\n";
-      cout << "\t"
+        std::cout << "\tAbandoning current lead early!\n";
+      std::cout << "\t"
            << (needNewLead || abandonEarly ? "Generating new" : "Using current")
-           << " lead." << endl;
+           << " lead." << std::endl;
     }
 
     if(needNewLead || abandonEarly)
@@ -711,10 +711,10 @@ SelectRegion() {
         m_currentRegion = region;
 
         if(this->m_debug)
-          cout << "\tSelected " << count << "th available region with "
+          std::cout << "\tSelected " << count << "th available region with "
                << "relative weight " << setprecision(4) << relativeWeight
                << " out of " << m_availableRegions.size() << " candidates."
-               << endl;
+               << std::endl;
         break;
       }
     }
@@ -748,8 +748,8 @@ SelectVertex(const WorkspaceRegion* const _r) {
   const VID selected = vertices[randomIndex];
 
   if(this->m_debug)
-    cout << "Selected VID " << selected << " out of " << vertices.size()
-         << " vertices in the current region." << endl;
+    std::cout << "Selected VID " << selected << " out of " << vertices.size()
+         << " vertices in the current region." << std::endl;
   return selected;
 }
 
@@ -761,7 +761,7 @@ Syclop<MPTraits>::
 Sel(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2) {
   const auto& rd1 = m_regionData[_r1];
   const auto& rd2 = m_regionData[_r2];
-  const auto& edgeData = m_regionPairData[make_pair(_r1, _r2)];
+  const auto& edgeData = m_regionPairData[std::make_pair(_r1, _r2)];
 
   // If _r1 and _r2 have no samples, then return number of times discrete lead
   // has included the edge _r1, _r2.
@@ -777,7 +777,7 @@ template <typename MPTraits>
 size_t
 Syclop<MPTraits>::
 Conn(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2) {
-  return m_regionPairData[make_pair(_r1, _r2)].Coverage();
+  return m_regionPairData[std::make_pair(_r1, _r2)].Coverage();
 }
 
 
@@ -795,7 +795,7 @@ Syclop<MPTraits>::
 Cost(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2) {
   const double a1 = m_regionData[_r1].alpha;
   const double a2 = m_regionData[_r2].alpha;
-  return a1 * a2 * (1. + pow(Sel(_r1, _r2), 2)) / (1. + pow(Conn(_r1, _r2), 2));
+  return a1 * a2 * (1. + std::pow(Sel(_r1, _r2), 2)) / (1. + std::pow(Conn(_r1, _r2), 2));
 }
 
 /*--------------------------- Pre-processing Stuff ---------------------------*/
@@ -807,7 +807,7 @@ ComputeFreeVolumes() {
   MethodTimer mt(this->GetStatClass(), "ComputeFreeVolumes");
 
   if(this->m_debug)
-    cout << "Computing region volumes and initializing region data...\n";
+    std::cout << "Computing region volumes and initializing region data...\n";
 
   static constexpr double eps = 1;
   static constexpr size_t numSamples = 5000;
@@ -816,19 +816,19 @@ ComputeFreeVolumes() {
   auto sampler = this->GetSampler("UniformRandom");
   auto boundary = this->GetEnvironment()->GetBoundary();
 
-  vector<CfgType> samples;
-  sampler->Sample(numSamples, 1, boundary, back_inserter(samples));
+  std::vector<CfgType> samples;
+  sampler->Sample(numSamples, 1, boundary, std::back_inserter(samples));
 
   // Assert that we made the right number of samples.
   if(samples.size() != numSamples)
-    throw RunTimeException(WHERE, "Tried to make " + to_string(numSamples) +
-        " samples, but instead produced " + to_string(samples.size()));
+    throw RunTimeException(WHERE, "Tried to make " + std::to_string(numSamples) +
+        " samples, but instead produced " + std::to_string(samples.size()));
 
   // Count the number of valid and invalid samples in each region.
   auto vc = this->GetValidityChecker("pqp_solid");
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
 
-  map<const WorkspaceRegion*, pair<size_t, size_t>> results;
+  std::map<const WorkspaceRegion*, std::pair<size_t, size_t>> results;
   for(auto& sample : samples) {
     const WorkspaceRegion* r = tm->LocateRegion(sample);
     if(!r)
@@ -866,7 +866,7 @@ ComputeFreeVolumes() {
   }
 
   if(this->m_debug)
-    cout << "\tThere are " << regionGraph->GetNumRegions() << " regions.\n";
+    std::cout << "\tThere are " << regionGraph->GetNumRegions() << " regions.\n";
 }
 
 /*----------------------------------------------------------------------------*/

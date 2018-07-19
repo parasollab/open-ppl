@@ -1,5 +1,5 @@
-#ifndef NEIGHBORHOOD_CONNECTOR_H
-#define NEIGHBORHOOD_CONNECTOR_H
+#ifndef PMPL_NEIGHBORHOOD_CONNECTOR_H
+#define PMPL_NEIGHBORHOOD_CONNECTOR_H
 
 #include "ConnectorMethod.h"
 
@@ -18,7 +18,7 @@
 ///     -# end for
 /// -# end for
 ////////////////////////////////////////////////////////////////////////////////
-template<class MPTraits>
+template <typename MPTraits>
 class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 
   public:
@@ -57,7 +57,7 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     size_t m_fail; //number of allowed failures per iteration
 };
 
-template<class MPTraits>
+template <typename MPTraits>
 NeighborhoodConnector<MPTraits>::
 NeighborhoodConnector(string _nfLabel, string _lpLabel,
     bool _checkIfSameCC, bool _countFailures, size_t _fail) :
@@ -68,13 +68,13 @@ NeighborhoodConnector(string _nfLabel, string _lpLabel,
   this->SetName("NeighborhoodConnector");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 NeighborhoodConnector<MPTraits>::
 NeighborhoodConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   ParseXML(_node);
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodConnector<MPTraits>::
 ParseXML(XMLNode& _node){
@@ -84,7 +84,7 @@ ParseXML(XMLNode& _node){
   m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 void
 NeighborhoodConnector<MPTraits>::Print(ostream& _os) const {
   ConnectorMethod<MPTraits>::Print(_os);
@@ -92,7 +92,7 @@ NeighborhoodConnector<MPTraits>::Print(ostream& _os) const {
   _os << "\tcountFailures = " << m_countFailures << endl;
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
@@ -117,14 +117,14 @@ Connect(RoadmapType* _rm,
         << vid << "  --> Cfg = " << vCfg << endl;
 
     //determine nearest neighbors
-    vector<pair<VID, double> > closest;
+    vector<Neighbor> closest;
     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
         back_inserter(closest));
 
     if(this->m_debug){
       cout << "Neighbors | ";
-      for(typename vector<pair<VID, double> >::iterator nit = closest.begin(); nit!=closest.end(); ++nit)
-        cout << nit->first << " ";
+      for(auto nit = closest.begin(); nit!=closest.end(); ++nit)
+        cout << nit->target << " ";
       std::cout << std::endl;
     }
 
@@ -133,7 +133,7 @@ Connect(RoadmapType* _rm,
   }
 }
 
-template<class MPTraits>
+template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
@@ -151,12 +151,12 @@ ConnectNeighbors(RoadmapType* _rm, VID _vid,
   // connect the found k-closest to the current iteration's CfgType
   for(InputIterator itr2 = _first; itr2 != _last; ++itr2){
 
-    VID v2 = itr2->first;
+    VID v2 = itr2->target;
 
     if(this->m_debug)
       cout << "\tfailures = " << failure
            << " | VID = " << v2
-           << " | dist = " << itr2->second;
+           << " | dist = " << itr2->distance;
 
     // stopping conditions
     if(this->m_countFailures && failure >= m_fail) {

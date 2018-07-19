@@ -314,6 +314,12 @@ class Body {
     /// Set the color for the body.
     void SetColor(const glutils::color& _c);
 
+    /// Check if a texture was loaded.
+    bool IsTextureLoaded() const;
+
+    /// Get the loaded texture file name.
+    const std::string& GetTexture() const;
+
     ///@}
 
   private:
@@ -391,23 +397,8 @@ class Body {
 
     const Transformation& (Body::*m_transformFetcher)(void) const noexcept = nullptr;
 
-    ///@}
-    ///@name Display Stuff
-    ///@{
-    /// @TODO Rethink these parts as we move to the new simulator. Perhaps they
-    ///       will move to the visualization department. In any case we should
-    ///       separate the visualization details from the geometric model stored
-    ///       here.
-
-    /// Check if a texture was loaded.
-    bool IsTextureLoaded() const;
-
-    /// Get the loaded texture file name.
-    const std::string& GetTexture() const;
-
     glutils::color m_color{glutils::color::blue}; ///< Body color.
     std::string m_textureFile;                    ///< Optional texture file.
-    bool m_textureLoaded{false};             ///< Was texture option set?
 
     ///@}
 

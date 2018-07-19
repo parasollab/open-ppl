@@ -26,13 +26,13 @@ class SparkPRM : public Strategy<MPTraits> {
         bool _checkEdgeCases = true, bool _trimAll = true,
         bool _biasConnect = false, bool _checkStartGoal = true,
         double _delta = 10, double _minDist = 0.001, double _growthFocus = 0.05,
-        string _dmLabel = "", string _nfLabel = "", string _nfVertexLabel = "",
-        string _vcLabel = "", string _cLabel = "", string _eLabel = "",
+        std::string _dmLabel = "", std::string _nfLabel = "", std::string _nfVertexLabel = "",
+        std::string _vcLabel = "", std::string _cLabel = "", std::string _eLabel = "",
         bool _rrtDebug = false);
     SparkPRM(XMLNode& _node);
 
     virtual void ParseXML(XMLNode& _node);
-    virtual void Print(ostream& _os);
+    virtual void Print(std::ostream& _os);
 
     // Performs a narrow passage test and then constructs an RRT if successful.
     // Returns true if start and goal connected.
@@ -41,7 +41,7 @@ class SparkPRM : public Strategy<MPTraits> {
   private:
     // Helper method to remove CCs connected to the RRT from the centroids list
     // and to update notRRT if needed
-    bool UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT,
+    bool UpdateCentroids(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT,
         VID _root);
 
   protected:
@@ -57,19 +57,19 @@ class SparkPRM : public Strategy<MPTraits> {
 
     // Finds the centroid of each CC other than the RRT itself, and adds
     // vertices to the notRRT list
-    void ComputeCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT,
+    void ComputeCentroids(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT,
         VID _root);
 
     // Connects an RRT vertex to the rest of the map. Connection can be biased
     // if desired.
-    void ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT,
+    void ConnectVertex(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT,
         VID _recentVID);
 
     // Trims the RRT. Returns the number of deleted vertices.
-    int TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs);
+    int TrimRRT(std::vector<VID>& _rrt, std::vector<VID>& _important, int _connectedCCs);
 
     // Attempts to expand the RRT to the given direction
-    VID ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important);
+    VID ExpandTree(CfgType& _dir, std::vector<VID>& _rrt, std::vector<VID>& _important);
 
     // Pick a big enough random CC (not the RRT's CC), then pick a random
     // vertex in it
@@ -102,12 +102,12 @@ class SparkPRM : public Strategy<MPTraits> {
     double m_delta;         // Maximum distance to expand
     double m_minDist;       // Minimum distance to expand
     double m_growthFocus;   // How often to direct growth toward goal
-    string m_dmLabel;       // Distance metric
-    string m_nfLabel;       // Neighborhood finder
-    string m_nfVertexLabel; // Neighborhood finder for ConnectVertex step, k=1
-    string m_vcLabel;       // Validity checker
-    string m_cLabel;        // Node connector
-    string m_eLabel;        // Extender Method
+    std::string m_dmLabel;       // Distance metric
+    std::string m_nfLabel;       // Neighborhood finder
+    std::string m_nfVertexLabel; // Neighborhood finder for ConnectVertex step, k=1
+    std::string m_vcLabel;       // Validity checker
+    std::string m_cLabel;        // Node connector
+    std::string m_eLabel;        // Extender Method
 
     bool m_rrtDebug;        // like m_debug but for the rrt stuff only. TODO:
                             // get rid of this (but imo reading the debug output
@@ -121,8 +121,8 @@ SparkPRM(size_t _maxNPCCSize, size_t _initSamples,
     bool _checkImportant, bool _checkEdgeCases, bool _trimAll,
     bool _biasConnect, bool _checkStartGoal,
     double _delta, double _minDist, double _growthFocus,
-    string _dmLabel, string _nfLabel, string _nfVertexLabel,
-    string _vcLabel, string _cLabel, string _eLabel,
+    std::string _dmLabel, std::string _nfLabel, std::string _nfVertexLabel,
+    std::string _vcLabel, std::string _cLabel, std::string _eLabel,
     bool _rrtDebug) :
   m_maxNPCCSize(_maxNPCCSize), m_initSamples(_initSamples),
   m_maxRRTSize(_maxRRTSize), m_attemptRatio(_attemptRatio),
@@ -190,7 +190,7 @@ ParseXML(XMLNode& _node) {
 template<class MPTraits, template<typename> class Strategy>
 void
 SparkPRM<MPTraits, Strategy>::
-Print(ostream& _os) {
+Print(std::ostream& _os) {
   _os << this->GetNameAndLabel() << "::";
   _os << "\n\tmaxNPCCSize = " << m_maxNPCCSize;
   _os << "\n\tinitSamples = " << m_initSamples;
@@ -212,7 +212,7 @@ Print(ostream& _os) {
   _os << "\n\tcLabel = " << m_cLabel;
   _os << "\n\teLabel = " << m_eLabel;
   _os << "\n\trrtDebug = " << m_rrtDebug;
-  _os << endl;
+  _os << std::endl;
 }
 
 // Performs a narrow passage test and then constructs an RRT if successful.
@@ -261,7 +261,7 @@ NarrowPassage(VID _vid) {
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: Narrow Passage");
-  vector<VID> cc;
+  std::vector<VID> cc;
   size_t ccSize = get_cc(*(this->GetRoadmap()->GetGraph()), cMap, _vid, cc);
   stats->StopClock("RRT: Narrow Passage");
   return ccSize <= m_maxNPCCSize;
@@ -278,7 +278,7 @@ ConstructRRT(VID _root) {
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
 
   if(this->m_rrtDebug)
-    cout << "\nConstructing an RRT! VID = " << _root << endl;
+    std::cout << "\nConstructing an RRT! VID = " << _root << std::endl;
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("Total RRT");
@@ -291,8 +291,8 @@ ConstructRRT(VID _root) {
                            // running total as they are found
 
   VID recentVID;
-  vector<VID> rrt, important, cc;
-  vector<VID> notRRT; // Used only if m_biasConnect is false (connect to
+  std::vector<VID> rrt, important, cc;
+  std::vector<VID> notRRT; // Used only if m_biasConnect is false (connect to
                       // everything outside the RRT's CC)
   RoadmapType centroidRdmp(this->GetTask()->GetRobot());
 
@@ -330,7 +330,7 @@ ConstructRRT(VID _root) {
     // and should not be in rrt.
     if(rrt[rrt.size()-1] <= rrt[rrt.size()-2]) {
       if(this->m_rrtDebug)
-        cout << "  Vertex VID = " << rrt[rrt.size()-1] << endl;
+        std::cout << "  Vertex VID = " << rrt[rrt.size()-1] << std::endl;
       // The vertex might have been in a separate CC that is now connected to
       // the RRT
       if(UpdateCentroids(&centroidRdmp, notRRT, _root)) {
@@ -345,7 +345,7 @@ ConstructRRT(VID _root) {
               graph->GetVertex(rrt[rrt.size()-1]).GetStat("Parent");
           important.push_back(importantVID);
           if(this->m_rrtDebug)
-            cout << "New Important VID: " << importantVID << endl;
+            std::cout << "New Important VID: " << importantVID << std::endl;
 
           // If the RRT connects too quickly, it's probably an edge case, don't
           // waste time on it
@@ -365,9 +365,9 @@ ConstructRRT(VID _root) {
     }
 
     if(this->m_rrtDebug)
-      cout << "  RRT Size = " << rrt.size() << ". Attempts = " << attempts
+      std::cout << "  RRT Size = " << rrt.size() << ". Attempts = " << attempts
         << ". VID = " << recentVID << "\n    Cfg: "
-        << graph->GetVertex(recentVID) << endl;
+        << graph->GetVertex(recentVID) << std::endl;
 
     // Stop growth if RRT becomes too large
     if(rrt.size() >= m_maxRRTSize)
@@ -387,15 +387,15 @@ ConstructRRT(VID _root) {
       size_t totalSize = get_cc(*graph, cMap, recentVID, cc);
 
       if(this->m_rrtDebug)
-        cout << "  Total size = " << totalSize << ", rrt.size() = "
+        std::cout << "  Total size = " << totalSize << ", rrt.size() = "
           << rrt.size() << "\n  Connected to a CC of size "
-          << (totalSize - rrt.size() - oldCCSize) << endl;
+          << (totalSize - rrt.size() - oldCCSize) << std::endl;
 
       // Is the new CC is big enough to count as outside the narrow passage?
       if(rrt.size() + oldCCSize + m_maxNPCCSize <= totalSize) {
         connectedCCs++;
         important.push_back(recentVID);
-        if(this->m_rrtDebug) cout << "New Important VID: " << recentVID << endl;
+        if(this->m_rrtDebug) std::cout << "New Important VID: " << recentVID << std::endl;
 
         // If the RRT connects too quickly, it's probably an edge case, don't
         // waste time on it
@@ -432,8 +432,8 @@ ConstructRRT(VID _root) {
   stats->StopClock("Total RRT");
   stats->IncStat("RRT CD Calls", stats->GetIsCollTotal() - initialCD);
   if(this->m_rrtDebug)
-    cout << "End constructing RRT. Size = " << (rrt.size()-numDeleted)
-         << ", connected CCs = " << connectedCCs << endl;
+    std::cout << "End constructing RRT. Size = " << (rrt.size()-numDeleted)
+         << ", connected CCs = " << connectedCCs << std::endl;
 
   cMap.reset();
   // TODO NOTE: This step assumes that the start and goal are VIDs 0 and 1!
@@ -445,15 +445,15 @@ ConstructRRT(VID _root) {
 template<class MPTraits, template<typename> class Strategy>
 void
 SparkPRM<MPTraits, Strategy>::
-ComputeCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
+ComputeCentroids(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _root) {
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: ComputeCentroids");
   GraphType* graph = this->GetRoadmap()->GetGraph();
   GraphType* centroidGraph = _centroidRdmp->GetGraph();
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
-  vector<pair<size_t, VID> > allCCs;
-  vector<VID> cc;
+  std::vector<std::pair<size_t, VID> > allCCs;
+  std::vector<VID> cc;
   get_cc_stats(*graph, cMap, allCCs);
 
   // Get centroids, remove the RRT's CC
@@ -494,7 +494,7 @@ ComputeCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
 template<class MPTraits, template<typename> class Strategy>
 void
 SparkPRM<MPTraits, Strategy>::
-ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _recentVID) {
+ConnectVertex(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _recentVID) {
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: ConnectVertex");
@@ -511,13 +511,13 @@ ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _recentVID) 
       stats->StartClock("RRT: BiasConnect");
       auto nf = this->GetNeighborhoodFinder(m_nfVertexLabel);
       GraphType* graph = this->GetRoadmap()->GetGraph();
-      vector<VID> cc;
-      vector<pair<VID, double> > closest;
+      std::vector<VID> cc;
+      std::vector<Neighbor> closest;
       CfgType recentCfg = graph->GetVertex(_recentVID);
 
-      nf->FindNeighbors(_centroidRdmp, recentCfg, back_inserter(closest));
+      nf->FindNeighbors(_centroidRdmp, recentCfg, std::back_inserter(closest));
       get_cc(*graph, cMap,
-          centroidGraph->GetVertex(closest[0].first).GetStat("ccVID"), cc);
+          centroidGraph->GetVertex(closest[0].target).GetStat("ccVID"), cc);
 
       stats->StopClock("RRT: BiasConnect");
       connector->Connect(this->GetRoadmap(), _recentVID, cc.begin(), cc.end(), false);
@@ -535,15 +535,11 @@ ConnectVertex(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _recentVID) 
 template<class MPTraits, template<typename> class Strategy>
 int
 SparkPRM<MPTraits, Strategy>::
-TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
-
-  //TODO: Reimplement this with STAPL stuff
-  // Sorry Jory, I just never got around to doing that
-
+TrimRRT(std::vector<VID>& _rrt, std::vector<VID>& _important, int _connectedCCs) {
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: TrimRRT");
   GraphType* graph = this->GetRoadmap()->GetGraph();
-  set<VID> trimmed;
+  std::set<VID> trimmed;
 
   int numDeleted = 0;
   if(m_trimDepth > 0) {
@@ -553,17 +549,17 @@ TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
       _important.push_back(_rrt[0]);
 
     if(_connectedCCs == 2 || (m_trimAll && _connectedCCs == 1)) {
-      vector<VID> path;
+      std::vector<VID> path;
       find_path_dijkstra(*graph, _important[0], _important[1], path,
           WeightType::MaxWeight());
       stats->IncStat("Graph Search");
 
-      queue<pair<VID, size_t> > q;
+      queue<std::pair<VID, size_t> > q;
 
       // Put each vertex along the shortest path in the queue, giving each a
       // depth of 1
       for(size_t i = 0; i < path.size(); i++)
-        q.push(make_pair(path[i], 1));
+        q.push(std::make_pair(path[i], 1));
 
       // BFS
       while(!q.empty()) {
@@ -578,10 +574,10 @@ TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
           continue;
 
         // Put neighbors in queue with depth+1
-        vector<VID> adj;
+        std::vector<VID> adj;
         graph->get_successors(cur, adj);
         for(size_t i = 0; i < adj.size(); i++)
-          q.push(make_pair(adj[i], depth+1));
+          q.push(std::make_pair(adj[i], depth+1));
       }
 
       // Don't delete the root, to preserve benefits of whatever sampling
@@ -589,33 +585,33 @@ TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
       trimmed.insert(_rrt[0]);
 
       if(this->m_rrtDebug) {
-        cout << "\n\n *** Trimming RRT ***\n\nRRT:";
+        std::cout << "\n\n *** Trimming RRT ***\n\nRRT:";
         for(size_t i = 0; i < _rrt.size(); i++)
-          cout << " " << _rrt[i];
-        cout << "\nImportant VIDs: " << _important[0] << " " << _important[1]
+          std::cout << " " << _rrt[i];
+        std::cout << "\nImportant VIDs: " << _important[0] << " " << _important[1]
              << "\nPath VIDs:";
         for(size_t i = 0; i < path.size(); i++)
-          cout << " " << path[i];
-        cout << "\ntrimmed:";
-        for(typename set<VID>::iterator it = trimmed.begin();
+          std::cout << " " << path[i];
+        std::cout << "\ntrimmed:";
+        for(typename std::set<VID>::iterator it = trimmed.begin();
             it != trimmed.end(); it++)
-          cout << " " << *it;
-        cout << "\nDeleted VIDs:";
+          std::cout << " " << *it;
+        std::cout << "\nDeleted VIDs:";
       }
 
       // Delete everything not saved in the set
-      for(typename vector<VID>::iterator it = _rrt.begin(); it != _rrt.end();
+      for(typename std::vector<VID>::iterator it = _rrt.begin(); it != _rrt.end();
           it++) {
         if(trimmed.find(*it) == trimmed.end()) {
           if(this->m_rrtDebug)
-            cout << " " << *it;
+            std::cout << " " << *it;
           numDeleted++;
           graph->DeleteVertex(*it);
         }
       }
 
       if(this->m_rrtDebug)
-        cout << "\n\n *** End ***\n\n";
+        std::cout << "\n\n *** End ***\n\n";
     }
   }
 
@@ -628,7 +624,7 @@ TrimRRT(vector<VID>& _rrt, vector<VID>& _important, int _connectedCCs) {
 template<class MPTraits, template<typename> class Strategy>
 bool
 SparkPRM<MPTraits, Strategy>::
-UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
+UpdateCentroids(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _root) {
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: UpdateCentroids");
   GraphType* graph = this->GetRoadmap()->GetGraph();
@@ -663,7 +659,7 @@ UpdateCentroids(RoadmapType* _centroidRdmp, vector<VID>& _notRRT, VID _root) {
 
   // Reconstruct the notRRT list if needed
   if(needUpdate && !m_biasConnect) {
-    vector<VID> cc;
+    std::vector<VID> cc;
     _notRRT.clear();
     for(auto it = centroidGraph->begin(); it != centroidGraph->end(); it++) {
       cMap.reset();
@@ -686,8 +682,8 @@ GoalBiasedDirection(VID _rrt) {
   stats->StartClock("Biased Direction");
   GraphType* graph = this->GetRoadmap()->GetGraph();
   stapl::sequential::vector_property_map<GraphType, size_t> cMap;
-  vector<pair<size_t, VID> > allCCs;
-  vector<VID> randCC;
+  std::vector<std::pair<size_t, VID> > allCCs;
+  std::vector<VID> randCC;
   get_cc_stats(*graph, cMap, allCCs);
   cMap.reset();
   size_t randCCIndex = LRand() % allCCs.size();
@@ -726,7 +722,7 @@ SelectDirection() {
 template<class MPTraits, template<typename> class Strategy>
 typename SparkPRM<MPTraits, Strategy>::VID
 SparkPRM<MPTraits, Strategy>::
-ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
+ExpandTree(CfgType& _dir, std::vector<VID>& _rrt, std::vector<VID>& _important) {
 
   StatClass* stats = this->GetStatClass();
   GraphType* graph = this->GetRoadmap()->GetGraph();
@@ -737,21 +733,21 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
   CDInfo cdInfo;
   CfgType nearest(robot), newCfg(robot);
   int weight = 0;
-  vector<pair<VID, double> > kClosest;
-  vector<CfgType> cfgs;
+  std::vector<Neighbor> kClosest;
+  std::vector<CfgType> cfgs;
 
   // Find closest CFG in map
   stats->StartClock("RRT: ExpandTree: KClosest");
   nf->FindNeighbors(this->GetRoadmap(), _rrt.begin(), _rrt.end(), false, _dir,
-      back_inserter(kClosest));
+      std::back_inserter(kClosest));
   stats->StopClock("RRT: ExpandTree: KClosest");
-  nearest = graph->GetVertex(kClosest[0].first);
+  nearest = graph->GetVertex(kClosest[0].target);
 
   // If connected too close to an important VID, don't expand
   if(m_checkImportant) {
     stats->StartClock("RRT: ExpandTree: Important");
     VID isImportant = INVALID_VID;
-    for(typename vector<VID>::iterator it = _important.begin();
+    for(typename std::vector<VID>::iterator it = _important.begin();
         it != _important.end(); it++) {
       CfgType _importantCfg = graph->GetVertex(*it);
       if(dm->Distance(nearest, _importantCfg) <= 1.01*m_delta) {
@@ -779,10 +775,10 @@ ExpandTree(CfgType& _dir, vector<VID>& _rrt, vector<VID>& _important) {
     recentVID = graph->AddVertex(newCfg);
     _rrt.push_back(recentVID);
 
-    pair<WeightType, WeightType> weights = make_pair(WeightType("RRTExpand",
+    std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
         weight), WeightType("RRTExpand", weight));
-    graph->AddEdge(kClosest[0].first, recentVID, weights);
-    graph->GetVertex(recentVID).SetStat("Parent", kClosest[0].first);
+    graph->AddEdge(kClosest[0].target, recentVID, weights);
+    graph->GetVertex(recentVID).SetStat("Parent", kClosest[0].target);
   }
   return recentVID;
 }

@@ -25,11 +25,11 @@ class PushCfgToMATest : public MPStrategyMethod<MPTraits> {
     virtual void Initialize();
     virtual void Iterate();
     virtual void Finalize();
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
   protected:
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
-    const string m_strategyName = "PushCfgToMATest";
+    const std::string m_strategyName = "PushCfgToMATest";
 
     //This will scale all samples so that in the 2D standard env, they initially
     // start in the narrow passage (used for some troubleshooting tests)
@@ -50,10 +50,10 @@ class PushCfgToMATest : public MPStrategyMethod<MPTraits> {
     bool m_doSameValidityWitness{false};
 
     //The string keys of the samplers (Note: only 1 is supported currently)
-    vector<string> m_samplerIndices;
+    std::vector<std::string> m_samplerIndices;
 
     // Sampler labels mapped to number and attempts of sampler:
-    map<string, pair<size_t, size_t> > m_samplerLabels;
+    std::map<std::string, std::pair<size_t, size_t> > m_samplerLabels;
 
     //Data that I accumulate in Iterate() and output in Finalize()
     size_t m_narrowPassageCount{0};
@@ -81,12 +81,12 @@ PushCfgToMATest(XMLNode& _node) :
     //This was stolen from line ~124 of MPStrategies/BasicPRM.h:
     for(auto& child : _node) {
         if(child.Name() == "Sampler") {
-          string s = child.Read("method", true, "", "Sampler Label");
+          std::string s = child.Read("method", true, "", "Sampler Label");
           size_t num = child.Read("number", true,
               1, 0, MAX_INT, "Number of samples");
           size_t attempts = child.Read("attempts", false,
               1, 0, MAX_INT, "Number of attempts per sample");
-          m_samplerLabels[s] = make_pair(num, attempts);
+          m_samplerLabels[s] = std::make_pair(num, attempts);
           m_samplerIndices.push_back(s);
         }
     }
@@ -115,7 +115,7 @@ PushCfgToMATest(XMLNode& _node) :
 template <typename MPTraits>
 void
 PushCfgToMATest<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   m_medialAxisUtility.Print(_os);
 }
 
@@ -163,7 +163,7 @@ Iterate() {
 
   auto env = this->GetEnvironment();
   auto boundary = env->GetBoundary();
-  string callee = this->GetNameAndLabel() + "::PushCfgToMATest";
+  std::string callee = this->GetNameAndLabel() + "::PushCfgToMATest";
   auto vcm =
       this->GetValidityChecker(m_medialAxisUtility.GetValidityCheckerLabel());
 
@@ -173,7 +173,7 @@ Iterate() {
 
   //I'm kind of abusing pmpl by having this loop in Iterate(), but it provides
   // a lot of ease of control when doing it this way.
-  vector<CfgType> samples;//not currently used except by sampler
+  std::vector<CfgType> samples;//not currently used except by sampler
   while(numAdded < numSamples
         && (numAdded + m_numSamplesFailed) < m_maxSamplesToAttempt){
     CfgType cfg;
@@ -182,7 +182,7 @@ Iterate() {
     StatClass* stats = this->GetStatClass();
 
     //Get 1 sample
-    sampler->Sample(1, maxAttempts, boundary, back_inserter(samples));
+    sampler->Sample(1, maxAttempts, boundary, std::back_inserter(samples));
     if(samples.empty())
       continue;
     cfg = samples.at(samples.size()-1);
@@ -313,7 +313,7 @@ Finalize() {
   stats->SetStat("Environment's position resolution used", posRes);
 
   // Output stats.
-  ofstream osStat(this->GetBaseFilename() + ".stat");
+  std::ofstream osStat(this->GetBaseFilename() + ".stat");
   stats->PrintAllStats(osStat, this->GetRoadmap());
 }
 

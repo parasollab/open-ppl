@@ -100,7 +100,7 @@ operator()() {
   // From each sample in the coverage set, distance to the nearest nodes in the
   // roadmap is calculated
   for(auto i = m_samples.begin(); i != m_samples.end(); ++i) {
-    vector<pair<VID, double> > kClosest;
+    vector<Neighbor> kClosest;
     BruteForceNF<MPTraits> bfnf(m_dmLabel, false, 1);
     bfnf.SetMPLibrary(this->GetMPLibrary());
     bfnf.Initialize();
@@ -108,9 +108,9 @@ operator()() {
     RoadmapType* r = this->GetRoadmap();
     GraphType* g = r->GetGraph();
     bfnf.FindNeighbors(r, g->begin(), g->end(), true, *i,
-        back_inserter(kClosest));
-    CfgType nearest = g->GetVertex(kClosest[0].first);
-    disVec.push_back(kClosest[0].second);
+        std::back_inserter(kClosest));
+    CfgType nearest = g->GetVertex(kClosest[0].target);
+    disVec.push_back(kClosest[0].distance);
   }
   //average of distance vector and standard deviation is calculated
   double avgSum = 0;

@@ -74,7 +74,7 @@ class Simulation : public base_visualization {
     /// @param _dt The time interval.
     /// @return The number of steps needed to represent _dt.
     static size_t NearestNumSteps(const double _dt) noexcept;
-  
+
     /// Get the current timestamp.
     /// @return The number of steps taken so far.
     static size_t GetTimestamp() noexcept;
@@ -199,7 +199,7 @@ class Simulation : public base_visualization {
     const bool m_editMode{false};             ///< Are we in edit mode?
 
     std::unique_ptr<StatClass> m_stats;       ///< StatClass for time profiling.
-  
+
     // TODO: Reduce this down to one collection?
     nonstd::collection<DrawablePath> m_paths; ///< Paths we are drawing.
 

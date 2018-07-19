@@ -71,7 +71,7 @@ class RRTQuery : public QueryMethod<MPTraits> {
     /// @return The descriptor of the map node that is nearest to _goal, or
     ///         INVALID_VID if we have already checked every node in the map. The
     ///         second item is the distance from said node to _goal.
-    pair<VID, double> FindNearestNeighbor(const CfgType& _goal);
+    Neighbor FindNearestNeighbor(const CfgType& _goal);
 
     /// Find the nearest node to a goal configuration that is already connected
     /// to the start node. The start is assumed to be in the map, but the goal
@@ -82,7 +82,7 @@ class RRTQuery : public QueryMethod<MPTraits> {
     ///         node that is nearest to it and their separation distance. If
     ///         the goal is already in the map, return its VID if it is connected
     ///         to the start and INVALID_VID otherwise.
-    pair<VID, double> FindNearestConnectedNeighbor(const VID _start,
+    Neighbor FindNearestConnectedNeighbor(const VID _start,
         const CfgType& _goal);
 
     /// Extend towards a goal from the nearest node in the map.
@@ -91,8 +91,7 @@ class RRTQuery : public QueryMethod<MPTraits> {
     /// @param[in] _goal The goal configuration to extend towards.
     /// @return The descriptor of the newly extended node and its distance to
     ///         _goal, or INVALID_VID if the extension failed.
-    pair<VID,double> ExtendToGoal(const pair<VID, double>& _nearest,
-        const CfgType& _goal) const;
+    Neighbor ExtendToGoal(const Neighbor& _nearest, const CfgType& _goal) const;
 
     ///@}
     ///@name Query State
@@ -174,17 +173,17 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
          << "\tto   " << _goal << endl;
 
   VID start = this->GetRoadmap()->GetGraph()->GetVID(_start);
-  pair<VID, double> nearest;
+  Neighbor nearest;
   bool connected = false;
 
   // Find the nearest node to _goal that is also connected to _start.
   nearest = FindNearestConnectedNeighbor(start, _goal);
 
-  if(nearest.first == INVALID_VID)
+  if(nearest.target == INVALID_VID)
     // If the nearest node is invalid, it means that the goal is in the map and
     // not connected to start. In this case, we can't connect.
     connected = false;
-  else if(nearest.second <= m_goalDist)
+  else if(nearest.distance <= m_goalDist)
     // The nearest node is within the goal distance, so we are close enough.
     connected = true;
   else {
@@ -192,19 +191,19 @@ PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
     // extend toward goal if we are within extender's delta range. If we can't
     // extend, we can't connect.
     nearest = ExtendToGoal(nearest, _goal);
-    connected = nearest.first != INVALID_VID && nearest.second <= m_goalDist;
+    connected = nearest.target != INVALID_VID and nearest.distance <= m_goalDist;
   }
 
   // If we have a successful connection through the roadmap, attempt to generate
   // the path.
   if(connected) {
-    auto path = this->GeneratePath(start, nearest.first);
+    auto path = this->GeneratePath(start, nearest.target);
 
     if(!path.empty()) {
       *this->GetPath() += path;
       if(this->m_debug)
         cout << "\tSuccess: found path from start to nearest node "
-             << nearest.first << " at a distance of " << nearest.second
+             << nearest.target << " at a distance of " << nearest.distance
              << " from the goal." << endl;
       return true;
     }
@@ -234,7 +233,7 @@ Reset(RoadmapType* const _r) {
 /*------------------------------- Helpers ------------------------------------*/
 
 template <typename MPTraits>
-pair<typename RRTQuery<MPTraits>::VID, double>
+Neighbor
 RRTQuery<MPTraits>::
 FindNearestNeighbor(const CfgType& _goal) {
   MethodTimer mt(this->GetStatClass(), "RRTQuery::FindNearestNeighbor");
@@ -250,7 +249,7 @@ FindNearestNeighbor(const CfgType& _goal) {
   if(m_highestCheckedVID == highestVID) {
     if(this->m_debug)
       cout << "\t\t\tAll nodes have already been checked." << endl;
-    return make_pair(INVALID_VID, numeric_limits<double>::max());
+    return Neighbor();
   }
   else if(this->m_debug)
     cout << "\t\t\tNodes 0 through " << m_highestCheckedVID
@@ -271,11 +270,11 @@ FindNearestNeighbor(const CfgType& _goal) {
   auto firstUnchecked = ++lastChecked;
 
   // Now check the nodes that haven't been checked yet.
-  vector<pair<VID, double>> neighbors;
+  std::vector<Neighbor> neighbors;
   const bool wholeRoadmap = firstUnchecked == g->begin();
   this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(this->GetRoadmap(),
       firstUnchecked, g->end(), wholeRoadmap, _goal,
-      back_inserter(neighbors));
+      std::back_inserter(neighbors));
   m_highestCheckedVID = highestVID;
 
   if(this->m_debug) {
@@ -283,20 +282,20 @@ FindNearestNeighbor(const CfgType& _goal) {
       std::cout << "\t\t\tNo nearest neighbor found."
                 << std::endl;
     else
-      std::cout << "\t\t\tFound nearest node " << neighbors.back().first << " at "
-                << "distance " << neighbors.back().second << "."
+      std::cout << "\t\t\tFound nearest node " << neighbors.back().target << " at "
+                << "distance " << neighbors.back().distance << "."
                 << std::endl;
   }
 
   if(neighbors.empty())
-    return make_pair(INVALID_VID, numeric_limits<double>::max());
+    return Neighbor();
   else
     return neighbors.back();
 }
 
 
 template <typename MPTraits>
-pair<typename RRTQuery<MPTraits>::VID, double>
+Neighbor
 RRTQuery<MPTraits>::
 FindNearestConnectedNeighbor(const VID _start, const CfgType& _goal) {
   MethodTimer mt(this->GetStatClass(), "RRTQuery::FindNearestConnectedNeighbor");
@@ -305,25 +304,23 @@ FindNearestConnectedNeighbor(const VID _start, const CfgType& _goal) {
     cout << "\tSearching for the nearest connected neighbor..." << endl;
 
   auto g = this->GetRoadmap()->GetGraph();
-  pair<VID, double> nearest;
+  Neighbor nearest;
 
   if(g->IsVertex(_goal)) {
     // The goal is already in the roadmap. It is it's own neighbor if it shares
     // a CC with _start and disconnected otherwise.
     VID goal = g->GetVID(_goal);
     if(this->SameCC(_start, goal))
-      nearest = make_pair(goal, 0);
-    else
-      nearest = make_pair(INVALID_VID, numeric_limits<double>::max());
+      nearest = Neighbor(goal, 0);
   }
   else
     // If _goal isn't already connected, find the nearest connected node.
     nearest = FindNearestNeighbor(_goal);
 
   if(this->m_debug) {
-    if(nearest.first != INVALID_VID)
-      cout << "\t\tClosest neighbor to goal is node " << nearest.first << " at "
-           << "distance " << setprecision(4) << nearest.second << ".\n";
+    if(nearest.target != INVALID_VID)
+      cout << "\t\tClosest neighbor to goal is node " << nearest.target << " at "
+           << "distance " << setprecision(4) << nearest.distance << ".\n";
     else
       cout << "\t\tNo valid node was found." << endl;
   }
@@ -332,9 +329,9 @@ FindNearestConnectedNeighbor(const VID _start, const CfgType& _goal) {
 
 
 template <typename MPTraits>
-pair<typename RRTQuery<MPTraits>::VID, double>
+Neighbor
 RRTQuery<MPTraits>::
-ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
+ExtendToGoal(const Neighbor& _nearest, const CfgType& _goal) const {
   MethodTimer mt(this->GetStatClass(), "RRTQuery::ExtendToGoal");
 
   auto g = this->GetRoadmap()->GetGraph();
@@ -344,11 +341,11 @@ ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
   double distance = numeric_limits<double>::max();
 
   // If the nearest node is outside the extender's range, return invalid.
-  if(_nearest.second > e->GetMaxDistance())
-    return make_pair(newVID, distance);
+  if(_nearest.distance > e->GetMaxDistance())
+    return Neighbor(newVID, distance);
 
   if(this->m_debug)
-    cout << "\tTrying extension from node " << _nearest.first
+    cout << "\tTrying extension from node " << _nearest.target
          << " toward goal.\n";
 
   // Use the NeighborhoodFinder's Distance metric for consistency.
@@ -358,13 +355,13 @@ ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
   // Otherwise, try to extend from _nearest to _goal.
   CfgType qNew(this->GetTask()->GetRobot());
   LPOutput<MPTraits> lpOutput;
-  if(e->Extend(g->GetVertex(_nearest.first), _goal, qNew, lpOutput)) {
+  if(e->Extend(g->GetVertex(_nearest.target), _goal, qNew, lpOutput)) {
     distance = lpOutput.m_edge.first.GetWeight();
     // If we went far enough, add the new node and edge.
     if(distance > e->GetMinDistance() && !g->IsVertex(qNew)) {
       newVID = g->AddVertex(qNew);
-      qNew.SetStat("Parent", _nearest.first);
-      g->AddEdge(_nearest.first, newVID, lpOutput.m_edge);
+      qNew.SetStat("Parent", _nearest.target);
+      g->AddEdge(_nearest.target, newVID, lpOutput.m_edge);
       distance = dm->Distance(qNew, _goal);
       if(this->m_debug)
         cout << "\t\tExtension succeeded, created new node " << newVID << " at "
@@ -374,7 +371,7 @@ ExtendToGoal(const pair<VID, double>& _nearest, const CfgType& _goal) const {
       cout << "\t\tExtension failed." << endl;
   }
 
-  return make_pair(newVID, distance);
+  return Neighbor(newVID, distance);
 }
 
 /*----------------------------------------------------------------------------*/

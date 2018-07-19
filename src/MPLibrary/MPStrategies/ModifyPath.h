@@ -15,27 +15,27 @@ class ModifyPath : public MPStrategyMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
 
-    ModifyPath(const string& _pathFile = "", const string& _mapFile = "",
-        const string& _pmLabel = "");
+    ModifyPath(const std::string& _pathFile = "", const std::string& _mapFile = "",
+        const std::string& _pmLabel = "");
     ModifyPath(XMLNode& _node);
 
     virtual void Initialize();
     virtual void Iterate();
     virtual void Finalize();
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
   protected:
-    string m_pathFile;
-    string m_mapFile;
-    string m_pmLabel;
+    std::string m_pathFile;
+    std::string m_mapFile;
+    std::string m_pmLabel;
 
-    vector<CfgType> m_path, m_smoothPath;
+    std::vector<CfgType> m_path, m_smoothPath;
 };
 
 template <typename MPTraits>
 ModifyPath<MPTraits>::
-ModifyPath(const string& _pathFile, const string& _mapFile,
-    const string& _pmLabel) :
+ModifyPath(const std::string& _pathFile, const std::string& _mapFile,
+    const std::string& _pmLabel) :
   m_pathFile(_pathFile), m_mapFile(_mapFile), m_pmLabel(_pmLabel) {
     this->SetName("ModifyPath");
   }
@@ -53,9 +53,9 @@ ModifyPath(XMLNode& _node) :
 template <typename MPTraits>
 void
 ModifyPath<MPTraits>::
-Print(ostream& _os) const {
-  _os << "In Query file: " << m_pathFile << endl;
-  _os << "Path Modifier: " << m_pmLabel << endl;
+Print(std::ostream& _os) const {
+  _os << "In Query file: " << m_pathFile << std::endl;
+  _os << "Path Modifier: " << m_pmLabel << std::endl;
 }
 
 template <typename MPTraits>
@@ -68,7 +68,7 @@ Initialize() {
         "Path file '" + m_pathFile + "' does not exist.");
 
   ifstream ifs(m_pathFile.c_str());
-  string tmp;
+  std::string tmp;
   getline(ifs, tmp);
   getline(ifs, tmp);
   getline(ifs, tmp);
@@ -103,7 +103,7 @@ template <typename MPTraits>
 void
 ModifyPath<MPTraits>::Finalize() {
   //output smoothed path
-  string outPathFile = this->GetBaseFilename() + ".smooth.path";
+  std::string outPathFile = this->GetBaseFilename() + ".smooth.path";
   WritePath(outPathFile, m_smoothPath);
 }
 
