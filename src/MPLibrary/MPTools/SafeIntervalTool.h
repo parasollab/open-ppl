@@ -1,5 +1,5 @@
-#ifndef SAFE_INTERVAL_TOOL_H_
-#define SAFE_INTERVAL_TOOL_H_
+#ifndef PMPL_SAFE_INTERVAL_TOOL_H_
+#define PMPL_SAFE_INTERVAL_TOOL_H_
 
 #include <vector>
 

@@ -527,13 +527,13 @@ DiscreteLead() {
   auto goalRegion = tm->LocateRegion(goalCfg);
 
   // Find the start and goal in the graph
-  size_t start, goal;
-  for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
-    if(&iter->property() == startRegion)
-      start = iter->descriptor();
-    if(&iter->property() == goalRegion)
-      goal = iter->descriptor();
-  }
+  const VID start = regionGraph->GetDescriptor(*startRegion),
+            goal  = regionGraph->GetDescriptor(*goalRegion);
+
+  if(start == INVALID_VID)
+    throw RunTimeException(WHERE) << "Could not locate start region.";
+  if(goal == INVALID_VID)
+    throw RunTimeException(WHERE) << "Could not locate goal region.";
 
   // Search region graph for a path from start to goal.
   std::vector<VID> path;

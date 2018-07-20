@@ -1,9 +1,9 @@
-#ifndef TET_GEN_DECOMPOSITION_H_
-#define TET_GEN_DECOMPOSITION_H_
-
-#include <containers/sequential/graph/graph.h>
+#ifndef PMPL_TET_GEN_DECOMPOSITION_H_
+#define PMPL_TET_GEN_DECOMPOSITION_H_
 
 #include "Utilities/IOUtils.h"
+
+#include <containers/sequential/graph/graph.h>
 
 #include "Vector.h"
 

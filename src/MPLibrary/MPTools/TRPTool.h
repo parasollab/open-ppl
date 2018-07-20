@@ -1,11 +1,12 @@
-#ifndef TRP_TOOL_H_
-#define TRP_TOOL_H_
+#ifndef PMPL_TRP_TOOL_H_
+#define PMPL_TRP_TOOL_H_
 
 #include "ConfigurationSpace/Path.h"
+#include "MPLibrary/MPBaseObject.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPProblem/GoalMap.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPLibrary/MPBaseObject.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate a roadmap to find the optimal assignment of goals to a team of
@@ -14,11 +15,10 @@
 ///
 /// This implements the transformation of the TRP into a Atypical Traveling
 /// Salesman Problem as described in the paper :
-//TODO insert paper name and authors
-///
+/// @todo insert paper name and authors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class TRPTool {
+class TRPTool : public MPBaseObject<MPTraits> {
 
   public:
 
@@ -44,12 +44,11 @@ class TRPTool {
 
     TRPTool(XMLNode& _node);
 
-    virtual ~TRPTool()=default;
+    virtual ~TRPTool() = default;
 
     ///@}
     ///@name Problem Interface
     ///@{
-
 
     /// Provide problem input information
     /// @param _robot Main robot that holds the set of tasks to be performed by
@@ -64,18 +63,13 @@ class TRPTool {
     PathSets Search();
 
     ///@}
-    ///@name Accessors
-    ///@{
-
-    const std::string& GetLabel();
-
-    ///@}
     ///@name Setters
     ///@{
 
     void SetMPLibrary(MPLibrary* _library);
 
     ///@}
+
   private:
 
     ///@name helpers
@@ -99,25 +93,27 @@ class TRPTool {
     std::vector<Robot*> m_workers;
     GoalMapType m_goalMap;
     vector<vertex_descriptor> m_ATSPPath;
-    std::string m_label;
-    ///@}
 
+    ///@}
 
 };
 
-
 /*------------------------------- Construction -------------------------------*/
-template <typename MPTraits>
-TRPTool<MPTraits>::
-TRPTool() = default;
-
-
 
 template <typename MPTraits>
 TRPTool<MPTraits>::
-TRPTool(XMLNode& _node){
-  m_queryMethod = _node.Read("queryLabel", true, "", "TRP Query Method for Goal Map");
-  m_label = _node.Read("label", true, "", "TRPTool label");
+TRPTool() {
+  this->SetName("TRPTool");
+}
+
+
+template <typename MPTraits>
+TRPTool<MPTraits>::
+TRPTool(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+  this->SetName("TRPTool");
+
+  m_queryMethod = _node.Read("queryLabel", true, "",
+      "TRP Query Method for Goal Map");
 }
 
 
@@ -126,7 +122,7 @@ TRPTool(XMLNode& _node){
 template <typename MPTraits>
 void
 TRPTool<MPTraits>::
-Initialize(Robot* _robot, std::vector<Robot*> _workers){
+Initialize(Robot* _robot, std::vector<Robot*> _workers) {
   m_robot = _robot;
   m_workers = _workers;
   m_goalMap = GoalMapType(_robot, m_queryMethod, m_library);
@@ -143,15 +139,6 @@ Search(){
   return Extract(pathVertices);
 }
 
-/*-------------------------------- Accessors ----------------------------------*/
-template <typename MPTraits>
-const std::string&
-TRPTool<MPTraits>::
-GetLabel(){
-  return m_label;
-}
-
-
 /*--------------------------------- Setters -----------------------------------*/
 
 template <typename MPTraits>
@@ -161,8 +148,8 @@ SetMPLibrary(MPLibrary* _library){
   m_library = _library;
 }
 
-
 /*--------------------------------- Helpers ----------------------------------*/
+
 template <typename MPTraits>
 void
 TRPTool<MPTraits>::

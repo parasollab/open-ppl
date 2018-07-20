@@ -1,5 +1,5 @@
-#ifndef SKELETON_CLEARANCE_UTILITY_H_
-#define SKELETON_CLEARANCE_UTILITY_H_
+#ifndef PMPL_SKELETON_CLEARANCE_UTILITY_H_
+#define PMPL_SKELETON_CLEARANCE_UTILITY_H_
 
 #include <string>
 
@@ -34,7 +34,7 @@ class SkeletonClearanceUtility final : public MPBaseObject<MPTraits> {
     ///@name Construction
     ///@{
 
-    SkeletonClearanceUtility() = default;
+    SkeletonClearanceUtility();
 
     SkeletonClearanceUtility(XMLNode& _node);
 
@@ -63,6 +63,13 @@ class SkeletonClearanceUtility final : public MPBaseObject<MPTraits> {
 };
 
 /*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
+SkeletonClearanceUtility<MPTraits>::
+SkeletonClearanceUtility() {
+  this->SetName("SkeletonClearanceUtility");
+}
+
 
 template <typename MPTraits>
 SkeletonClearanceUtility<MPTraits>::

@@ -1,5 +1,5 @@
-#ifndef MEDIAL_AXIS_UTILITY_H_
-#define MEDIAL_AXIS_UTILITY_H_
+#ifndef PMPL_MEDIAL_AXIS_UTILITY_H_
+#define PMPL_MEDIAL_AXIS_UTILITY_H_
 
 #include <ctgmath>
 #include <deque>
@@ -1019,8 +1019,8 @@ RoadmapClearance() {
       EdgeClearance(g->GetVertex((*it).source()),
           g->GetVertex((*it).target()), (*it).property());
     //Save this value for variance computation later
-    clearanceVec.insert(clearanceVec.end(), 
-			currentClearance.begin(), 
+    clearanceVec.insert(clearanceVec.end(),
+			currentClearance.begin(),
 			currentClearance.end());
   }
 
@@ -1065,8 +1065,8 @@ PathClearance(vector<VID>& _path) {
     CfgType& s = g->GetVertex((*ei).source()), t = g->GetVertex((*ei).target());
     pathLength += dm->Distance(s, t);
     vector<double> currentClearance = EdgeClearance(s, t, (*ei).property());
-    clearanceVec.insert(clearanceVec.end(), 
-			currentClearance.begin(), 
+    clearanceVec.insert(clearanceVec.end(),
+			currentClearance.begin(),
 			currentClearance.end());
   }
 
@@ -1134,8 +1134,8 @@ PathClearance(vector<Cfg>& _path) {
       }
     }
     vector<double> currentClearance = EdgeClearance(*cit, *(cit + 1), weight);
-    clearanceVec.insert(clearanceVec.end(), 
-			currentClearance.begin(), 
+    clearanceVec.insert(clearanceVec.end(),
+			currentClearance.begin(),
 			currentClearance.end());
   }
 
@@ -1165,7 +1165,7 @@ EdgeClearance(const CfgType& _c1, const CfgType& _c2,
   //for each intermediate cfg and return a vector
   //of their clearances.
 
-  //TODO: if the vector of clearance values for an edge 
+  //TODO: if the vector of clearance values for an edge
   //is already available, return it here.
 
   Environment* env = this->GetEnvironment();

@@ -1,5 +1,5 @@
-#ifndef REGION_KIT_H_
-#define REGION_KIT_H_
+#ifndef PMPL_REGION_KIT_H_
+#define PMPL_REGION_KIT_H_
 
 #include <iostream>
 #include <map>

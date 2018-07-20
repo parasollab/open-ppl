@@ -1,5 +1,5 @@
-#ifndef MP_BASE_OBJECT_H_
-#define MP_BASE_OBJECT_H_
+#ifndef PMPL_MP_BASE_OBJECT_H_
+#define PMPL_MP_BASE_OBJECT_H_
 
 #include <iostream>
 #include <string>

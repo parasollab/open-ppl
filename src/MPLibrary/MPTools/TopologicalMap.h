@@ -260,6 +260,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 template <typename MPTraits>
 TopologicalMap<MPTraits>::
 TopologicalMap() : MPBaseObject<MPTraits>("TopologicalMap") {
+  this->SetName("TopologicalMap");
 }
 
 

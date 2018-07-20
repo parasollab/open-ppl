@@ -64,9 +64,9 @@ class MPToolsType final {
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
   LabelMap<TopologicalMap>           m_topologicalMaps;
   LabelMap<SafeIntervalTool>         m_safeIntervalTools;
-  LabelMap<LKHSearch> m_lkhSearchTools;
-  LabelMap<TRPTool> m_trpTools;
-  LabelMap<ReachabilityUtil> m_reachabilityUtils;
+  LabelMap<LKHSearch>                m_lkhSearchTools;
+  LabelMap<TRPTool>                  m_trpTools;
+  LabelMap<ReachabilityUtil>         m_reachabilityUtils;
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
@@ -187,8 +187,7 @@ class MPToolsType final {
     /// Get an LKH Search by label.
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
-    // @return The labeled utility.
-
+    /// @return The labeled utility.
     LKHSearch<MPTraits>* GetLKHSearch(const std::string& _label) const;
 
     /// Set an LKH Search
@@ -204,8 +203,7 @@ class MPToolsType final {
     /// Get a TRP Tool by label.
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
-    // @return The labeled utility.
-
+    /// @return The labeled utility.
     TRPTool<MPTraits>* GetTRPTool(const std::string& _label) const;
 
     /// Set a TRP Tool
@@ -232,7 +230,7 @@ class MPToolsType final {
     ///@}
     ///@name Reachability
     ///@{
-  
+
     /// Get a Reachability Utility
     /// @param _label The label of the decomposition to use.
     ReachabilityUtil<MPTraits>* GetReachabilityUtil(const std::string& _label) const;
@@ -240,7 +238,8 @@ class MPToolsType final {
     /// Set a reachability utility  by label.
     /// @param _label The label for this utility
     /// @param _decomposition the reachability utility
-    void SetReachabilityUtil(const std::string& _label, ReachabilityUtil<MPTraits>* _util);
+    void SetReachabilityUtil(const std::string& _label,
+        ReachabilityUtil<MPTraits>* _util);
 
     ///}
 
@@ -248,6 +247,15 @@ class MPToolsType final {
 
     ///@name Helpers
     ///@{
+
+    /// Get a utility in a label map. Throws if not found.
+    /// @param _label The utility label.
+    /// @param _map The label map which holds _utility.
+    /// @return The named utility.
+    template <template <typename> class Utility>
+    Utility<MPTraits>* GetUtility(const std::string& _label,
+        const LabelMap<Utility>& _map) const;
+
 
     /// Set a utility in a label map.
     /// @param _label The utility label.
@@ -346,12 +354,17 @@ ParseXML(XMLNode& _node) {
       SetSafeIntervalTool(utility->GetLabel(), utility);
     }
     else if(child.Name() == "LKHSearch") {
-
       auto utility = new LKHSearch<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_lkhSearchTools.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second LKHSearch "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
       SetLKHSearch(utility->GetLabel(), utility);
     }
     else if(child.Name() == "TRPTool") {
-
       auto utility = new TRPTool<MPTraits>(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -359,7 +372,8 @@ ParseXML(XMLNode& _node) {
         throw ParseException(child.Where(), "Second TRPTool "
             "node with the label '" + utility->GetLabel() + "'. Labels must be "
             "unique.");
-     SetTRPTool(utility->GetLabel(), utility);
+
+      SetTRPTool(utility->GetLabel(), utility);
     }
     // Below here we are setting defaults rather than creating instances.
     else if(child.Name() == "ReebGraphConstruction") {
@@ -401,6 +415,11 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_safeIntervalTools)
     pair.second->Initialize();
+  for(auto& pair : m_lkhSearchTools)
+    pair.second->Initialize();
+  /// @todo Homogenize trp tool initialization.
+  //for(auto& pair : m_trpTools)
+  //  pair.second->Initialize();
   for(auto& pair : m_reachabilityUtils)
     pair.second->Initialize();
 }
@@ -421,6 +440,10 @@ MPToolsType<MPTraits>::
     delete pair.second;
   for(auto& pair : m_decompositions)
     delete pair.second;
+  for(auto& pair : m_lkhSearchTools)
+    delete pair.second;
+  for(auto& pair : m_trpTools)
+    delete pair.second;
   for(auto& pair : m_reachabilityUtils)
     delete pair.second;
 }
@@ -431,7 +454,7 @@ template <typename MPTraits>
 ClearanceUtility<MPTraits>*
 MPToolsType<MPTraits>::
 GetClearanceUtility(const std::string& _label) const {
-  return m_clearanceUtils.at(_label);
+  return GetUtility(_label, m_clearanceUtils);
 }
 
 
@@ -450,7 +473,7 @@ template <typename MPTraits>
 MedialAxisUtility<MPTraits>*
 MPToolsType<MPTraits>::
 GetMedialAxisUtility(const std::string& _label) const {
-  return m_medialAxisUtils.at(_label);
+  return GetUtility(_label, m_medialAxisUtils);
 }
 
 
@@ -468,7 +491,7 @@ template <typename MPTraits>
 SkeletonClearanceUtility<MPTraits>*
 MPToolsType<MPTraits>::
 GetSkeletonClearanceUtility(const std::string& _label) const {
-  return m_skeletonUtils.at(_label);
+  return GetUtility(_label, m_skeletonUtils);
 }
 
 
@@ -486,7 +509,7 @@ template <typename MPTraits>
 TopologicalMap<MPTraits>*
 MPToolsType<MPTraits>::
 GetTopologicalMap(const std::string& _label) const {
-  return m_topologicalMaps.at(_label);
+  return GetUtility(_label, m_topologicalMaps);
 }
 
 
@@ -504,7 +527,7 @@ template <typename MPTraits>
 SafeIntervalTool<MPTraits>*
 MPToolsType<MPTraits>::
 GetSafeIntervalTool(const std::string& _label) const {
-  return m_safeIntervalTools.at(_label);
+  return GetUtility(_label, m_safeIntervalTools);
 }
 
 
@@ -522,7 +545,7 @@ template <typename MPTraits>
 LKHSearch<MPTraits>*
 MPToolsType<MPTraits>::
 GetLKHSearch(const std::string& _label) const {
-  return m_lkhSearchTools.at(_label);
+  return GetUtility(_label, m_lkhSearchTools);
 }
 
 
@@ -541,7 +564,7 @@ template <typename MPTraits>
 TRPTool<MPTraits>*
 MPToolsType<MPTraits>::
 GetTRPTool(const std::string& _label) const {
-  return m_trpTools.at(_label);
+  return GetUtility(_label, m_trpTools);
 }
 
 
@@ -562,7 +585,15 @@ const WorkspaceDecomposition*
 MPToolsType<MPTraits>::
 GetDecomposition(const std::string& _label) {
   // Initialize the decomposition if not already.
-  auto iter = m_decompositions.find(_label);
+  typename decltype(m_decompositions)::iterator iter;
+  try {
+    iter = m_decompositions.find(_label);
+  }
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Requested decomposition '" << _label
+                                  << "' does not exist.";
+  }
+
   if(iter->second == nullptr) {
     MethodTimer mt(m_library->GetStatClass(), "TetGenDecomposition::" + _label);
     iter->second = m_tetgens[_label](m_library->GetMPProblem()->GetEnvironment());
@@ -595,10 +626,9 @@ template <typename MPTraits>
 ReachabilityUtil<MPTraits>*
 MPToolsType<MPTraits>::
 GetReachabilityUtil(const std::string& _label) const {
-  auto util = m_reachabilityUtils.find(_label);
-  if(util == m_reachabilityUtils.end()) return nullptr;
-  return util->second;
+  return GetUtility(_label, m_reachabilityUtils);
 }
+
 
 template <typename MPTraits>
 void
@@ -609,6 +639,33 @@ SetReachabilityUtil(const std::string& _label,
 }
 
 /*---------------------------------- Helpers ---------------------------------*/
+
+template <typename MPTraits>
+template <template <typename> class Utility>
+inline
+Utility<MPTraits>*
+MPToolsType<MPTraits>::
+GetUtility(const std::string& _label, const LabelMap<Utility>& _map) const {
+  try {
+    return _map.at(_label);
+  }
+  catch(const std::out_of_range&) {
+    Utility<MPTraits> dummy;
+    throw RunTimeException(WHERE) << "Requested " << dummy.GetName()
+                                  << " '" << _label  << "' does not exist.";
+  }
+  catch(const std::exception& _e) {
+    Utility<MPTraits> dummy;
+    throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
+                                  << " '" << _label << "': " << _e.what();
+  }
+  catch(...) {
+    Utility<MPTraits> dummy;
+    throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
+                                  << " '" << _label << "': (unknown).";
+  }
+}
+
 
 template <typename MPTraits>
 template <template <typename> class Utility>

@@ -1,5 +1,5 @@
-#ifndef REEB_GRAPH_CONSTRUCTION_H_
-#define REEB_GRAPH_CONSTRUCTION_H_
+#ifndef PMPL_REEB_GRAPH_CONSTRUCTION_H_
+#define PMPL_REEB_GRAPH_CONSTRUCTION_H_
 
 #include <vector>
 #include <unordered_set>

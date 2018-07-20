@@ -118,7 +118,8 @@ template <typename MPTraits>
 LKHSearch<MPTraits>::
 LKHSearch(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   this->SetName("LKHSearch");
-  m_parameterFile = _node.Read("parameterFile", false, "Examples/LKHParameterFile.par", "LKH Parameter File");
+  m_parameterFile = _node.Read("parameterFile", false,
+      "Examples/LKHParameterFile.par", "LKH Parameter File");
   m_label = _node.Read("label", true, "", "LKHSearch Label");
 }
 
@@ -133,7 +134,6 @@ void
 LKHSearch<MPTraits>::
 Initialize() {
 }
-
 
 /*------------------------------- Graph Search  -------------------------------*/
 
