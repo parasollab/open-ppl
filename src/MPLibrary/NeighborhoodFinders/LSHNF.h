@@ -40,6 +40,8 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
     /// The a vector and b scalar that define our hash functions.
     typedef std::pair<std::vector<double>,double> hash_parameters;
 
@@ -56,7 +58,7 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    LSHNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5);
+    LSHNF();
 
     LSHNF(XMLNode& _node);
 
@@ -130,11 +132,9 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 LSHNF<MPTraits>::
-LSHNF(std::string _dmLabel, bool _unconnected, size_t _k)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+LSHNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("LSHNF");
-  this->m_nfType = K;
-  this->m_k = _k;
+  this->m_nfType = Type::K;
 }
 
 
@@ -142,7 +142,7 @@ template <typename MPTraits>
 LSHNF<MPTraits>::
 LSHNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("LSHNF");
-  this->m_nfType = K;
+  this->m_nfType = Type::K;
   this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 
   m_hashDimension = _node.Read("hashDimension", true, 1, 1, MAX_INT,

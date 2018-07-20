@@ -42,6 +42,12 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
     typedef std::vector<double> Projected; ///< Projected point of dim m
 
     ////////////////////////////////////////////////////////////////////////////
@@ -58,8 +64,7 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    DPESNF(std::string _dmLabel = "", bool _unconnected = false,
-        size_t _m = 3, size_t _k = 10);
+    DPESNF();
 
     DPESNF(XMLNode& _node);
 
@@ -163,11 +168,9 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 DPESNF<MPTraits>::
-DPESNF(std::string _dmLabel, bool _unconnected, size_t _m, size_t _k)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected), m_m(_m) {
+DPESNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("DPESNF");
-  this->m_nfType = K;
-  this->m_k = _k;
+  this->m_nfType = Type::K;
 }
 
 
@@ -175,8 +178,9 @@ template <typename MPTraits>
 DPESNF<MPTraits>::
 DPESNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("DPESNF");
-  this->m_nfType = K;
+  this->m_nfType = Type::K;
   this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "k value");
+
   m_m = _node.Read("m", true, 3, 1, MAX_INT, "m value for DPES");
 }
 

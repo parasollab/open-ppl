@@ -29,10 +29,16 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
-    HierarchicalNF(std::string _dmLabel = "");
+    HierarchicalNF();
 
     HierarchicalNF(XMLNode& _node);
 
@@ -88,10 +94,9 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 HierarchicalNF<MPTraits>::
-HierarchicalNF(std::string _dmLabel)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel) {
+HierarchicalNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("HierarchicalNF");
-  this->m_nfType = OTHER;
+  this->m_nfType = Type::OTHER;
 }
 
 
@@ -99,7 +104,8 @@ template <typename MPTraits>
 HierarchicalNF<MPTraits>::
 HierarchicalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("HierarchicalNF");
-  this->m_nfType = OTHER;
+  this->m_nfType = Type::OTHER;
+
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighbor Finder Method1");
   m_nfLabel2 = _node.Read("nfLabel2", true, "", "Neighbor Finder Method2");
 }

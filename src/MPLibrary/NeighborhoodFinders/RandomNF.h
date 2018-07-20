@@ -27,10 +27,16 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
-    RandomNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5);
+    RandomNF();
 
     RandomNF(XMLNode& _node);
 
@@ -76,11 +82,9 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <class MPTraits>
 RandomNF<MPTraits>::
-RandomNF(std::string _dmLabel, bool _unconnected, size_t _k)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+RandomNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("RandomNF");
-  this->m_nfType = K;
-  this->m_k = _k;
+  this->m_nfType = Type::K;
 }
 
 
@@ -89,7 +93,7 @@ RandomNF<MPTraits>::
 RandomNF(XMLNode& _node):
 NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("RandomNF");
-  this->m_nfType = K;
+  this->m_nfType = Type::K;
   this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 }
 

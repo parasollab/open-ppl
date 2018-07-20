@@ -24,19 +24,17 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
-    /// Construct a radius neighborhood finder.
-    /// @param _dmLabel The distance metric to use.
-    /// @param _unconnected Return only neighbors that are not connected?
-    /// @param _r Return all nodes within this distance of the query point.
-    /// @param _useFallback Return the nearest node if none are in the radius?
-    RadiusNF(const std::string& _dmLabel = "", const bool _unconnected = false,
-        const double _r = 1.0, const bool _useFallback = false);
+    RadiusNF();
 
-    /// Construct a radius neighborhood finder from an XML node.
-    /// @param _node The XML node.
     RadiusNF(XMLNode& _node);
 
     virtual ~RadiusNF() = default;
@@ -91,13 +89,9 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 RadiusNF<MPTraits>::
-RadiusNF(const std::string& _dmLabel, const bool _unconnected,
-    const double _r, const bool _useFallback) :
-    NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+RadiusNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("RadiusNF");
-  this->m_nfType = RADIUS;
-  this->m_radius = _r;
-  m_useFallback = _useFallback;
+  this->m_nfType = Type::RADIUS;
 }
 
 
@@ -105,7 +99,7 @@ template <typename MPTraits>
 RadiusNF<MPTraits>::
 RadiusNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("RadiusNF");
-  this->m_nfType = RADIUS;
+  this->m_nfType = Type::RADIUS;
   this->m_radius = _node.Read("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
   m_useFallback = _node.Read("useFallback", false, false,
       "Use nearest node if none are found within the radius.");

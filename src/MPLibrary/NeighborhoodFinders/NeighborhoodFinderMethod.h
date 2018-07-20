@@ -113,14 +113,6 @@ namespace pmpl_detail {
 }
 
 
-// K      - NF will find k-closest neighbors
-// RADIUS - NF will find all neighbors within a radius
-// OPTIMAL- NF will find optimal neighbors
-// APPROX - NF will find approximate nearest neighbors
-// OTHER  - NF will find neighbors in some other way
-enum NFType {K, RADIUS, OPTIMAL, APPROX, OTHER};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref NeighborhoodFinders.
 ///
@@ -169,6 +161,19 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    /// The type of neighbors found.
+    enum class Type {
+      K,       ///< k-closest neighbors
+      RADIUS,  ///< All neighbors within a radius
+      OPTIMAL, ///< Optimal neighbors
+      APPROX,  ///< Approximate nearest neighbors
+      OTHER    ///< Something else
+    };
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -190,7 +195,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     /// @return Type of neighborhood finder
-    NFType GetNFType() const noexcept;
+    Type GetType() const noexcept;
 
     /// @return Number of closest neighbors to find
     size_t& GetK() noexcept;
@@ -309,12 +314,12 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@name Internal State
     ///@{
 
-    NFType m_nfType;         ///< Type of neighborhood finder.
-    size_t m_k;              ///< How many closest neighbors to find?
-    double m_radius;         ///< Maximum distance of closest neighbors.
+    Type m_nfType{Type::OTHER}; ///< Type of neighborhood finder.
+    size_t m_k{0};              ///< How many closest neighbors to find?
+    double m_radius{0};         ///< Maximum distance of closest neighbors.
 
-    std::string m_dmLabel;   ///< The distance metric to use.
-    bool m_unconnected;      ///< Require neighbors with no direct edge.
+    std::string m_dmLabel;      ///< The distance metric to use.
+    bool m_unconnected{false};  ///< Require neighbors with no direct edge.
 
     ///@}
 
@@ -325,17 +330,17 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
 template <typename MPTraits>
 NeighborhoodFinderMethod<MPTraits>::
 NeighborhoodFinderMethod(std::string _dmLabel, bool _unconnected) :
-    MPBaseObject<MPTraits>(), m_nfType(OTHER), m_k(0), m_radius(0),
-    m_dmLabel(_dmLabel), m_unconnected(_unconnected) { }
+    MPBaseObject<MPTraits>(), m_dmLabel(_dmLabel), m_unconnected(_unconnected) { }
 
 
 template <typename MPTraits>
 NeighborhoodFinderMethod<MPTraits>::
 NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM) :
-    MPBaseObject<MPTraits>(_node), m_nfType(OTHER), m_k(0), m_radius(0) {
+    MPBaseObject<MPTraits>(_node) {
   m_dmLabel = _node.Read("dmLabel", _requireDM, "", "Distance Metric Method");
-  m_unconnected = _node.Read("unconnected", false, false, "Require neighbors "
-      "to be non-adjacent to the query configuration");
+
+  m_unconnected = _node.Read("unconnected", false, m_unconnected,
+      "Require neighbors to be non-adjacent to the query configuration");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -353,9 +358,9 @@ Print(std::ostream& _os) const {
 /*-------------------------------- Accessors ---------------------------------*/
 
 template <typename MPTraits>
-NFType
+typename NeighborhoodFinderMethod<MPTraits>::Type
 NeighborhoodFinderMethod<MPTraits>::
-GetNFType() const noexcept {
+GetType() const noexcept {
   return m_nfType;
 }
 
@@ -424,9 +429,9 @@ FindNeighbors(RoadmapType* _rmp,
   MethodTimer mt(stats, this->GetName() + "::FindNeighbors");
   stats->IncStat(this->GetName() + "::NumQueries");
 
-  // If all neighbors were requested, there is no need to call the derived
-  // method.
-  if(!this->m_k)
+  // If all neighbors were requested for a k-nearest type, there is no need to
+  // call the derived method.
+  if(GetK() == 0 and GetType() == Type::K)
     return NeighborhoodFinderMethod::FindAllNeighbors(_rmp->GetGraph(),
         _first, _last, _cfg, _out);
 
@@ -452,9 +457,9 @@ FindNeighbors(GroupRoadmapType* _rmp,
   MethodTimer mt(stats, this->GetName() + "::FindNeighbors");
   stats->IncStat(this->GetName() + "::NumQueries");
 
-  // If all neighbors were requested, there is no need to call the derived
-  // method.
-  if(!this->m_k)
+  // If all neighbors were requested for a k-nearest type, there is no need to
+  // call the derived method.
+  if(GetK() == 0 and GetType() == Type::K)
     return NeighborhoodFinderMethod::FindAllNeighbors(_rmp, _first, _last, _cfg,
         _out);
 

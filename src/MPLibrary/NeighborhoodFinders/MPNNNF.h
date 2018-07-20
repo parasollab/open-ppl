@@ -28,10 +28,16 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
-    MPNNNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5);
+    MPNNNF();
 
     MPNNNF(XMLNode& _node);
 
@@ -95,11 +101,9 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 MPNNNF<MPTraits>::
-MPNNNF(std::string _dmLabel, bool _unconnected, size_t _k)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+MPNNNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("MPNNNF");
-  this->m_nfType = K;
-  this->m_k = _k;
+  this->m_nfType = Type::K;
 }
 
 
@@ -107,7 +111,7 @@ template <typename MPTraits>
 MPNNNF<MPTraits>::
 MPNNNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("MPNNNF");
-  this->m_nfType = K;
+  this->m_nfType = Type::K;
   this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 }
 

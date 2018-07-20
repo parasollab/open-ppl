@@ -22,18 +22,24 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
-    typedef typename MPTraits::GroupCfgType           GroupCfgType;
+    typedef typename MPTraits::CfgType           CfgType;
+    typedef typename MPTraits::RoadmapType       RoadmapType;
+    typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::GraphType      GraphType;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
 
     ///@}
     ///@name Construction
     ///@{
 
-    HopLimitNF(const std::string& _dmLabel = "", const size_t _h = 1);
+    HopLimitNF();
 
     HopLimitNF(XMLNode& _node);
 
@@ -78,7 +84,7 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    size_t m_h;            ///< Maximum number of hops.
+    size_t m_h{1};         ///< Maximum number of hops.
     std::string m_nfLabel; ///< Underlying NF.
 
     ///@}
@@ -88,10 +94,9 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 HopLimitNF<MPTraits>::
-HopLimitNF(const std::string& _dmLabel, const size_t _h)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel), m_h(_h) {
+HopLimitNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("HopLimitNF");
-  this->m_nfType = OTHER;
+  this->m_nfType = Type::OTHER;
 }
 
 
@@ -99,9 +104,12 @@ template <typename MPTraits>
 HopLimitNF<MPTraits>::
 HopLimitNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("HopLimitNF");
-  this->m_nfType = OTHER;
-  m_h = _node.Read("hoplimit", true, MAX_INT, 1, MAX_INT, "Hop Limit");
-  m_nfLabel = _node.Read("nfLabel", true, "default", "Neighbor Finder Method");
+  this->m_nfType = Type::OTHER;
+
+  m_h = _node.Read("hoplimit", true, m_h, size_t(1),
+      std::numeric_limits<size_t>::max(), "Hop Limit");
+
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighbor Finder Method");
 }
 
 

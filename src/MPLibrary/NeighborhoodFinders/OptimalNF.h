@@ -29,11 +29,16 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
-    OptimalNF(const std::string& _dmLabel = "", const bool _unconnected = false,
-        const size_t _k = 5);
+    OptimalNF();
 
     OptimalNF(XMLNode& _node);
 
@@ -90,10 +95,9 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 OptimalNF<MPTraits>::
-OptimalNF(const std::string& _dmLabel, const bool _unconnected, const size_t _k)
-  : NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+OptimalNF() : NeighborhoodFinderMethod<MPTraits>() {
   this->SetName("OptimalNF");
-  this->m_nfType = OPTIMAL;
+  this->m_nfType = Type::OPTIMAL;
 }
 
 
@@ -101,7 +105,7 @@ template <typename MPTraits>
 OptimalNF<MPTraits>::
 OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, false) {
   this->SetName("OptimalNF");
-  this->m_nfType = OPTIMAL;
+  this->m_nfType = Type::OPTIMAL;
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
 }
 
@@ -145,23 +149,22 @@ FindNeighbors(RoadmapType* _rmp,
   this->m_k = nfptr->GetK();
   this->m_radius = nfptr->GetRadius();
 
-  if(nfptr->GetNFType() == K) {
+  if(nfptr->GetType() == Type::K) {
     // Calculate k rounding up
     nfptr->GetK() = std::min<size_t>(
-        ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())),
-        distance(_first, _last));
+        std::ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())),
+        std::distance(_first, _last));
     if(this->m_debug)
       cout << "Finding closest neighbors with k = " << nfptr->GetK() << endl;
   }
-  else if(nfptr->GetNFType() == RADIUS) {
+  else if(nfptr->GetType() == Type::RADIUS) {
+    throw NotImplementedException(WHERE);
     if(this->m_debug)
       cout << "Finding closest neighbors within radius = " << endl;
-    throw RunTimeException(WHERE, "OptimalNF cannot use radius based NF method."
-        " Optimal radius not yet implemented.");
   }
   else {
     throw RunTimeException(WHERE, "OptimalNF cannot use anything but radius or "
-      " k based NF method.");
+      " k based NF method (but radius is also not implemented).");
   }
 
   // Compute neighbors

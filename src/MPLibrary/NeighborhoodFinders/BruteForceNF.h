@@ -30,6 +30,12 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -83,7 +89,7 @@ BruteForceNF<MPTraits>::
 BruteForceNF(std::string _dmLabel, bool _unconnected, size_t _k) :
     NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
   this->SetName("BruteForceNF");
-  this->m_nfType = K;
+  this->m_nfType = Type::K;
   this->m_k = _k;
 }
 
@@ -92,7 +98,7 @@ template <typename MPTraits>
 BruteForceNF<MPTraits>::
 BruteForceNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("BruteForceNF");
-  this->m_nfType = K;
+  this->m_nfType = Type::K;
   this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 }
 

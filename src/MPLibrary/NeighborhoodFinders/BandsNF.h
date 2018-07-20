@@ -683,23 +683,21 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
-    BandsNF(std::string _dmLabel = "", bool _unconnected = false, size_t _k = 5) :
-      NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
-        this->SetName("BandsNF");
-      }
+    BandsNF() : NeighborhoodFinderMethod<MPTraits>() {
+      this->SetName("BandsNF");
+    }
 
-    BandsNF(XMLNode& _node) :
-      NeighborhoodFinderMethod<MPTraits>(_node) {
-        this->SetName("BandsNF");
-        for(auto& child : _node) {
-          if (child.Name() == "DBand") {
-            this->m_bands.emplace_back(new DBand<MPTraits>(child));
-          }
-          else if(child.Name() == "RBand") {
-            this->m_bands.emplace_back(new RBand<MPTraits>(child));
-          }
+    BandsNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
+      this->SetName("BandsNF");
+      for(auto& child : _node) {
+        if(child.Name() == "DBand") {
+          this->m_bands.emplace_back(new DBand<MPTraits>(child));
+        }
+        else if(child.Name() == "RBand") {
+          this->m_bands.emplace_back(new RBand<MPTraits>(child));
         }
       }
+    }
 
     virtual void Print(std::ostream& _os) const {
       NeighborhoodFinderMethod<MPTraits>::Print(_os);
@@ -784,7 +782,7 @@ FindNeighbors(RoadmapType* _roadmap,
   return _out;
 }
 
-// Returns all pairs within radius
+
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
