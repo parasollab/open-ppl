@@ -1,9 +1,8 @@
 #include "PlanningAgent.h"
 
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
-#include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
+#include "MPProblem/Robot/HardwareInterfaces/StateEstimator.h"
 #include "Simulator/Simulation.h"
-#include "Utilities/MetricUtils.h"
 #include "Utilities/MetricUtils.h"
 
 #include <iostream>
@@ -66,14 +65,8 @@ Step(const double _dt) {
 
   // If the agent localized before this step, update the simulated state and
   // replan if necessary.
-  if(!IsLocalizing() and m_localizeCount == 0) {
-    auto hardware = m_robot->GetHardwareQueue();
-    if(hardware) {
-      auto sensor = hardware->GetSensor();
-      if(sensor)
-        UpdateSimulatedState(sensor->GetLastTransformations());
-    }
-  }
+  if(!IsLocalizing() and m_localizeCount == 0)
+    UpdateSimulatedState();
 
   // If the simulation has passed a set number of timesteps, localize.
   ++m_localizeCount;
@@ -246,29 +239,20 @@ SelectTask() {
 
 void 
 PlanningAgent::
-UpdateSimulatedState(const std::vector<mathtool::Transformation>& _transformations) {
-
-  // Do nothing if the robot saw no markers.
-  if(_transformations.size() == 0) {
-    if(m_debug)
-      std::cout << "No Markers Found" << std::endl;
+UpdateSimulatedState() {
+  
+  auto hardware = m_robot->GetHardwareQueue();
+  if(!hardware)
     return;
-  }
 
-  // Average the estimated state and update the robot's simulated position.
-  double averageX = 0, averageY = 0;
-  for(auto& t : _transformations) {
-    averageX += t.translation()[0];
-    averageY += t.translation()[1];
-  }
-  averageX /= _transformations.size();
-  averageY /= _transformations.size();
-  double averageT = ComputeRotation(_transformations);
+  auto sensor = hardware->GetSensor();
+  if(!sensor)
+    return;
 
-  auto previousPos = m_robot->GetDynamicsModel()->GetSimulatedState();
-  Cfg updatedPos(m_robot);
-  updatedPos.SetLinearPosition(Vector3d(averageX, averageY, 0));
-  updatedPos.SetAngularPosition(Vector3d(0, 0, averageT));
+  auto stateEstimator = m_robot->GetStateEstimator();
+  stateEstimator->ApplyObservations(sensor);
+
+  auto updatedPos = stateEstimator->GetEstimatedState();
 
   // Ensure that the updated position is valid 
   if(!m_library->GetValidityChecker("pqp_solid")->IsValid(updatedPos, "cfg")) {
@@ -277,49 +261,30 @@ UpdateSimulatedState(const std::vector<mathtool::Transformation>& _transformatio
     return;
   }
     
+  auto previousPos = m_robot->GetDynamicsModel()->GetSimulatedState();
   m_robot->GetDynamicsModel()->SetSimulatedState(updatedPos);
-  
+
   auto dm = m_library->GetDistanceMetric("euclidean");
   const double distance = dm->Distance(previousPos, updatedPos);
   // If the error is too large, tell the agent to replan.
-  if(distance > m_localizeErrorThreshold)
+  if(distance > m_localizeErrorThreshold) {
     ClearPlan();
-    
-  if(m_debug) {
-    std::cout << "***\nSaw " << _transformations.size() << " markers:";
-    for(auto& t : _transformations) {
-      std::cout << "\n\t" << t.translation()
-                << "\n\t" << t.rotation()
+    if(m_debug)
+      std::cout << "Large Error Found in Localization"
+                << "\nError Distance: "
+                << distance
+                << "\nClearing Plan for Robot: "
+                << m_robot->GetLabel()
                 << std::endl;
-    }
+  }
+
+  if(m_debug)
     std::cout << "\nOld Simulated State: "
               << previousPos
               << "\nNew Simulated State: "
-              << m_robot->GetDynamicsModel()->GetSimulatedState()
-              << "\nDistance: "
-              << distance
+              << updatedPos
               << std::endl;
-  }
-}
-
-double
-PlanningAgent::
-ComputeRotation(const std::vector<mathtool::Transformation>& _transformations) {
-  double estimateX = 0, estimateY = 0;
-  // Add each marker angle into the vector.
-  for(auto& t : _transformations) { 
-    EulerAngle e;
-    convertFromMatrix(e, t.rotation().matrix());
-    double theta = e.alpha();
-    estimateX += std::cos(theta);
-    estimateY += std::sin(theta);
-  }
-  estimateX /= _transformations.size();
-  estimateY /= _transformations.size();
-  
-  // Get the estimated angle from the unit vector.
-  return std::atan2(estimateY, estimateX);
-
+    
 }
 
 /*----------------------------------------------------------------------------*/

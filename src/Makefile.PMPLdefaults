@@ -372,7 +372,8 @@ HARDWARE_SRCS := \
   MPProblem/Robot/HardwareInterfaces/HardwareInterface.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.cpp \
   MPProblem/Robot/HardwareInterfaces/SensorInterface.cpp \
-  MPProblem/Robot/HardwareInterfaces/StateEstimator.cpp
+  MPProblem/Robot/HardwareInterfaces/StateEstimator.cpp \
+  MPProblem/Robot/HardwareInterfaces/AverageEstimator.cpp
 
 # Also build Aruco interface if we are compiling with that option.
 ifneq ($(aruco), 0)

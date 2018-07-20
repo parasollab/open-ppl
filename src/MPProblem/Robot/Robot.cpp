@@ -3,6 +3,7 @@
 #include "Actuator.h"
 #include "DynamicsModel.h"
 #include "HardwareInterfaces/RobotCommandQueue.h"
+#include "HardwareInterfaces/StateEstimator.h"
 
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
@@ -95,6 +96,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     if(child.Name() == "Hardware") {
       m_hardware = std::unique_ptr<RobotCommandQueue>(
           new RobotCommandQueue(child));
+    }
+    else if(child.Name() == "StateEstimator") {
+      SetStateEstimator(StateEstimator::Factory(this, child));
     }
     else if(child.Name() == "Agent") {
       SetAgent(Agent::Factory(this, child));
@@ -437,6 +441,18 @@ Battery*
 Robot::
 GetBattery() const noexcept {
   return m_battery.get();
+}
+
+StateEstimator*
+Robot::
+GetStateEstimator() const noexcept {
+  return m_stateEstimator.get();
+}
+
+void
+Robot::
+SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator) noexcept {
+  m_stateEstimator = std::move(_stateEstimator);
 }
 
 /*------------------------------- Other --------------------------------------*/

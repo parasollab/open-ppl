@@ -5,9 +5,11 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Control.h"
+#include "Transformation.h"
 
 class Robot;
 class SensorInterface;
+class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,6 +27,12 @@ class StateEstimator {
     ///@{
 
     StateEstimator(Robot* const _robot);
+    
+    /// Create a dynamically-allocated state estimator from an XML node.
+    /// @param _robot The robot which this state estimator will work for.
+    /// @param _node The XML node to parse.
+    /// @return A state estimator of the type specified by _node.
+    static std::unique_ptr<StateEstimator> Factory(Robot* const _robot, XMLNode& _node);
 
     virtual ~StateEstimator();
 
@@ -47,7 +55,7 @@ class StateEstimator {
     /// Apply the most recent observations from a sensor to the current
     /// estimated state.
     /// @param _sensor The sensor to take observations from.
-    virtual void ApplyObservations(const SensorInterface* const _sensor) = 0;
+    virtual void ApplyObservations(SensorInterface* const _sensor) = 0;
 
     /// Get the current state estimate.
     const Cfg& GetEstimatedState() const;
@@ -69,6 +77,8 @@ class StateEstimator {
 
     Cfg m_estimatedState;              ///< The current estimated state.
     std::vector<double> m_uncertainty; ///< Uncertainty in the current estimate.
+
+    bool m_debug{false};               ///< The debug flag.
 
     ///@}
 

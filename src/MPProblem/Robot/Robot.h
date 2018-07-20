@@ -21,6 +21,7 @@ class MPProblem;
 class MultiBody;
 class RobotCommandQueue;
 class XMLNode;
+class StateEstimator;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +75,9 @@ class Robot final {
   std::unique_ptr<Battery> m_battery; ///< An emulated battery for this agent. TODO: Unify with other hardware stuff
 
   std::string m_capability; ///< The terrain label that the robot can use.
+
+  std::unique_ptr<StateEstimator> m_stateEstimator;  ///< The state estimator used for robot localization.
+
   ///@}
 
   public:
@@ -221,6 +225,10 @@ class Robot final {
     RobotCommandQueue* GetHardwareQueue() const noexcept;
 
     Battery* GetBattery() const noexcept;
+
+    StateEstimator* GetStateEstimator() const noexcept;
+
+    void SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator) noexcept;
 
     ///@}
     ///@name Other Properties

@@ -8,7 +8,6 @@
 
 #include <memory>
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for agents which will plan paths using PMPL.
 ///
@@ -120,12 +119,7 @@ class PlanningAgent : public Agent {
     
     /// Evaluates whether the robot's simulated state is incorrect (beyond some error
     /// threshold) and sets the simulated state as necessary.
-    void UpdateSimulatedState(const std::vector<mathtool::Transformation>& _transformations);
-
-    /// Normalizes the angles received from the marker readings and returns the
-    /// average estimated angle. 
-    /// @return The estimated angle.
-    double ComputeRotation(const std::vector<mathtool::Transformation>& _transformations);
+    void UpdateSimulatedState();
 
     ///@}
     ///@name Internal State
