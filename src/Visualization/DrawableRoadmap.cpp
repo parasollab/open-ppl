@@ -1,20 +1,23 @@
 #include "DrawableRoadmap.h"
+
 #include "DrawableMultiBody.h"
 #include "Geometry/Bodies/MultiBody.h"
-#include "sandbox/gui/main_window.h"
 #include "Simulator/Conversions.h"
 #include "Simulator/Simulation.h"
 
+#include "sandbox/gui/main_window.h"
+
 #include <iostream>
 
-// counter for the number of instances of DrawableRoadmapGraph
-static size_t roadmapGraphCounter = 0;
 
 DrawableRoadmap::
-DrawableRoadmap(GraphType* _graph, const glutils::color& _color, const std::string& _name) :
-  m_color(_color),
-  m_multiBody(*_graph->GetRobot()->GetMultiBody()),
-  m_graph(_graph) {
+DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
+    const std::string& _name)
+  : m_color(_color),
+    m_multiBody(*_graph->GetRobot()->GetMultiBody()),
+    m_graph(_graph) {
+  // counter for the number of instances of DrawableRoadmapGraph
+  static size_t roadmapGraphCounter = 0;
 
   // if a name is given the use that name, otherwise generate one
   if(_name.empty())
@@ -22,17 +25,22 @@ DrawableRoadmap(GraphType* _graph, const glutils::color& _color, const std::stri
   else
     m_name = _name;
 
-  std::cout << "Name: " << m_name << std::endl;
-  // setting hook for adding vertices to DRM
+  // Install hooks to update the visualization whenever the roadmap changes.
   m_graph->InstallHook(GraphType::HookType::AddVertex, m_name,
       [this](VI _vi) {
         this->AddVertex(_vi);
       });
-
-  // setting hook for adding edges to DRM
   m_graph->InstallHook(GraphType::HookType::AddEdge, m_name,
       [this](EI _ei) {
         this->AddEdge(_ei);
+      });
+  m_graph->InstallHook(GraphType::HookType::DeleteVertex, m_name,
+      [this](VI _vi) {
+        this->DeleteVertex(_vi);
+      });
+  m_graph->InstallHook(GraphType::HookType::DeleteEdge, m_name,
+      [this](EI _ei) {
+        this->DeleteEdge(_ei);
       });
 
   // Adding the current content of the graph to the DRM.
@@ -43,28 +51,35 @@ DrawableRoadmap(GraphType* _graph, const glutils::color& _color, const std::stri
     for(auto edges = iter->begin(); edges != iter->end(); ++edges)
         AddEdge(edges);
 
-  // @TODO: Check if the graph is selected and being rendered before toggling
-  //        the render mode.
+  /// @todo Check if the graph is selected and being rendered before toggling
+  ///       the render mode.
   auto fn = [this](QKeyEvent* const _e) {
       if(_e->key() == Qt::Key_P) {
         this->ToggleRobot();
       }
     };
 
-  theOneWindow->add_key_mapping(m_name, std::move(fn));
+  main_window::get()->add_key_mapping(m_name, std::move(fn));
 }
 
-// The map hooks have already been cleared by the time the destructor is called
-// by the Simulator.
+
 DrawableRoadmap::
 ~DrawableRoadmap() {
+  // Remove the graph hooks if not already done.
   if(m_graph->IsHook(GraphType::HookType::AddVertex, m_name))
     m_graph->RemoveHook(GraphType::HookType::AddVertex, m_name);
   if(m_graph->IsHook(GraphType::HookType::AddEdge, m_name))
     m_graph->RemoveHook(GraphType::HookType::AddEdge, m_name);
-  if(theOneWindow)
-    theOneWindow->delete_key_mapping(m_name);
+  if(m_graph->IsHook(GraphType::HookType::DeleteVertex, m_name))
+    m_graph->RemoveHook(GraphType::HookType::DeleteVertex, m_name);
+  if(m_graph->IsHook(GraphType::HookType::DeleteEdge, m_name))
+    m_graph->RemoveHook(GraphType::HookType::DeleteEdge, m_name);
+
+  // Remove the key mapping.
+  if(main_window::get())
+    main_window::get()->delete_key_mapping(m_name);
 }
+
 
 void
 DrawableRoadmap::
@@ -75,10 +90,10 @@ AddVertex(VI _vi) {
   m_bufferCfgs.push_back(DrawableCfg(cfg.GetData(), m_dmb.get()));
 }
 
+
 void
 DrawableRoadmap::
 AddEdge(EI _ei) {
-
   // Gets Edge data.
   auto edge = _ei->property();
   const auto& intermediates = edge.GetIntermediates();
@@ -109,16 +124,20 @@ AddEdge(EI _ei) {
   m_bufferEdges.emplace_back(std::move(edgeList));
 }
 
+
 void
 DrawableRoadmap::
-RemoveVertex(VI _vi) {
+DeleteVertex(VI _vi) {
   throw NotImplementedException(WHERE);
 }
 
-void DrawableRoadmap::
-RemoveEdge(EI _ei) {
+
+void
+DrawableRoadmap::
+DeleteEdge(EI _ei) {
   throw NotImplementedException(WHERE);
 }
+
 
 void
 DrawableRoadmap::
@@ -187,14 +206,22 @@ draw() {
   }
   glEnable(GL_LIGHTING);
 }
-void DrawableRoadmap:: draw_select() {}
+
+
+void
+DrawableRoadmap::
+draw_select() {}
+
+
 void
 DrawableRoadmap::
 draw_selected() {}
 
+
 void
 DrawableRoadmap::
 draw_highlighted() {}
+
 
 void
 DrawableRoadmap::

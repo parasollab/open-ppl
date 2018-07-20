@@ -1,5 +1,5 @@
-#ifndef SIMULATION_H_
-#define SIMULATION_H_
+#ifndef PMPL_SIMULATION_H_
+#define PMPL_SIMULATION_H_
 
 #include <atomic>
 #include <cstddef>
@@ -14,9 +14,6 @@
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 
-//template <typename Vertex, typename E> class RoadmapGraph;
-//
-//template <typename T> class DefaultWeight;
 class BulletEngine;
 class Cfg;
 class DrawableMultiBody;
@@ -26,12 +23,6 @@ class DrawableBoundary;
 class MPProblem;
 class MultiBody;
 class StatClass;
-
-
-/// @TODO Update gl_visualizer so that the main window is a singleton and
-///       accessible via a static getter.
-class main_window;
-extern main_window* theOneWindow;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,12 +191,11 @@ class Simulation : public base_visualization {
 
     std::unique_ptr<StatClass> m_stats;       ///< StatClass for time profiling.
 
-    // TODO: Reduce this down to one collection?
     nonstd::collection<DrawablePath> m_paths; ///< Paths we are drawing.
-
     nonstd::collection<DrawableRoadmap> m_roadmaps; ///< Roadmaps to be drawn.
-
     nonstd::collection<DrawableBoundary> m_boundaries; ///< Boundaries to be drawn.
+
+    std::vector<glutils::drawable*> m_removedDrawables; ///< Drawables to remove.
 
     ///@}
     ///@name Deleted Functions

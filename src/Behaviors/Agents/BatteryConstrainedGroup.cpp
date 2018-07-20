@@ -650,7 +650,7 @@ CheckReachedWorker(Agent* const _member){
         auto combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
             agentPair.first->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
         std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
-                              new CSpaceBoundingSphere(workerPos, combinedRadius));  
+                              new CSpaceBoundingSphere(workerPos, combinedRadius));
         /*
         std::vector<Cfg> goalPoints;
 
@@ -666,7 +666,7 @@ CheckReachedWorker(Agent* const _member){
         Cfg validCfg = goalPoints[0];
         */
         auto goal = std::unique_ptr<BoundaryConstraint>
-          (new BoundaryConstraint(m_robot, std::move(boundingSphere))); 
+          (new BoundaryConstraint(m_robot, std::move(boundingSphere)));
 
         //TODO: Need to insert goal constraint at the beginning
         newTask->AddGoalConstraint(std::move(goal));
@@ -874,8 +874,7 @@ AssignTaskWorker(Agent* const _member) {
         std::cout << "No Tasks left in the problem" << std::endl;
 
       Simulation::GetStatClass()->StopClock("TotalRunTime");
-      //Simulation::Get()->PrintStatFile();
-      theOneWindow->close();
+      main_window::get()->close();
     }
   }
 }
@@ -918,7 +917,7 @@ AssignTaskHelper(Agent* const _member) {
   auto combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
       previousOwner->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
   std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
-                      new CSpaceBoundingSphere(workerPos, combinedRadius));  
+                      new CSpaceBoundingSphere(workerPos, combinedRadius));
   /*
   std::vector<Cfg> goalPoints;
 
@@ -934,7 +933,7 @@ AssignTaskHelper(Agent* const _member) {
   Cfg validCfg = goalPoints[0];
   */
   auto goal = std::unique_ptr<BoundaryConstraint>
-    (new BoundaryConstraint(m_robot, std::move(boundingSphere))); 
+    (new BoundaryConstraint(m_robot, std::move(boundingSphere)));
 
   //TODO: Need to insert goal constraint at the beginning
   newTask->AddGoalConstraint(std::move(goal));

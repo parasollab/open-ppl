@@ -1,5 +1,7 @@
 #include "DrawableBoundary.h"
+
 #include "Geometry/Boundaries/Boundary.h"
+
 
 DrawableBoundary::
 DrawableBoundary(const Boundary* _boundary, const glutils::color& _color, bool _wire) :

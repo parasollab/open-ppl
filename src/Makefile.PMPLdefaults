@@ -345,14 +345,13 @@ SIM_SRCS := \
   Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
-  Simulator/Conversions.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableBoundary.cpp \
-	Visualization/DrawableCfg.cpp \
+  Visualization/DrawableCfg.cpp \
   Visualization/DrawableMultiBody.cpp \
   Visualization/DrawablePath.cpp \
-	Visualization/DrawablePolyhedron.cpp \
+  Visualization/DrawablePolyhedron.cpp \
   Visualization/DrawableRoadmap.cpp \
   Visualization/Gui/EditBodyDialog.cpp \
   Visualization/Gui/EditCfgDialog.cpp \
@@ -459,6 +458,7 @@ PMPL_SRCS := \
   MPProblem/RobotGroup/RobotGroup.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
+  Simulator/Conversions.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \
   Utilities/MedialAxis2D.cpp \

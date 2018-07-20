@@ -41,7 +41,6 @@ main(int _argc, char** _argv) {
     // Make visualizer object.
     QApplication app(_argc, _argv);
     main_window window;
-    theOneWindow = &window;
 
     // Set up the extra gui elements if we are in edit mode.
     if(editMode)
@@ -56,7 +55,6 @@ main(int _argc, char** _argv) {
     // Clean up the simulation and problem when we are done.
     simulation->Uninitialize();
 
-    theOneWindow = nullptr;
     return 0;
   }
   catch(const std::runtime_error& _e) {

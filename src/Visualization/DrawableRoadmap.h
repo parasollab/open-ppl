@@ -34,9 +34,9 @@ class DrawableRoadmap : public glutils::drawable  {
 
     /// Installs hooks onto _graph and populates existing
     /// vertices and edges.
-    ///@param _graph The graph this DrawableRoadmap represents.
-    ///@param _color The color to draw the cfgs and edges.
-    ///@param _name A name refering to this DrawableRoadmap
+    /// @param _graph The graph this DrawableRoadmap represents.
+    /// @param _color The color to draw the cfgs and edges.
+    /// @param _name A name refering to this DrawableRoadmap
     DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
         const std::string& _name = "");
 
@@ -47,21 +47,20 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@{
 
     /// Adds vertices to be rendered
-    ///@param _vi Vertex iterator to the vertex just added.
+    /// @param _vi Vertex iterator to the vertex just added.
     void AddVertex(VI _vi);
 
     /// Adds edges to be rendered
-    ///@param _ei edge iterator to the edge just added.
+    /// @param _ei edge iterator to the edge just added.
     void AddEdge(EI _ei);
 
-
     /// Removes vertices from graph
-    ///@param _vi Vertex iterator to the vertex just added.
-    void RemoveVertex(VI _vi);
+    /// @param _vi Vertex iterator to the vertex just added.
+    void DeleteVertex(VI _vi);
 
     /// Removes an edges from graph
-    ///@param _ei edge iterator to the edge just added.
-    void RemoveEdge(EI _ei);
+    /// @param _ei edge iterator to the edge just added.
+    void DeleteEdge(EI _ei);
 
     ///@}
     ///@name Rendering Property

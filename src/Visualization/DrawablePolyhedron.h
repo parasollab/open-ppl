@@ -1,25 +1,39 @@
-#ifndef DRAWABLE_POLYHEDRON_H_
-#define DRAWABLE_POLYHEDRON_H_
+#ifndef PMPL_DRAWABLE_POLYHEDRON_H_
+#define PMPL_DRAWABLE_POLYHEDRON_H_
 
 #include "glutils/drawable_display_list.h"
-#include "Geometry/GMSPolyhedron.h"
 
+#include <set>
+
+class GMSPolyhedron;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// A visualization of a polyhedron.
+////////////////////////////////////////////////////////////////////////////////
 class DrawablePolyhedron : public glutils::drawable_display_list {
-  public:
 
+  public:
 
     ///@name Constructor
     ///@{
 
-    DrawablePolyhedron(const GMSPolyhedron& _polyhedron, const glutils::color& _color, bool _wire);
+    /// Construct a polyhedron visualization.
+    /// @param _polyhedron The polyhedron to visualize.
+    /// @param _color The color to render in.
+    /// @param _wire Render a wireframe instead of the full model?
+    DrawablePolyhedron(const GMSPolyhedron& _polyhedron,
+        const glutils::color& _color, const bool _wire = false);
 
     ///@}
-    ///@name Modifier
+    ///@name Rendering Options
     ///@{
 
+    /// Toggle between wire and full-frame rendering.
     void ToggleRenderMode();
 
     ///@}
+
   protected:
 
     ///@name drawable_display_list overrides
@@ -30,10 +44,17 @@ class DrawablePolyhedron : public glutils::drawable_display_list {
     virtual void build_selected() override;
 
     ///@}
+
   protected:
 
     ///@name Helpers
     ///@{
+
+    /// The build commands for the polyhedron model.
+    void build_polyhedron();
+
+    /// The build commands for the wireframe model.
+    void build_wireframe();
 
     /// Builds a map showing the lines of adjacent polygons and whether they
     /// need to be drawn.
@@ -41,14 +62,15 @@ class DrawablePolyhedron : public glutils::drawable_display_list {
     std::set<std::pair<size_t, size_t>> BuildAdjacencyMap();
 
     ///@}
-    ///@name Local State
+    ///@name Internal State
     ///@{
 
-    const GMSPolyhedron& m_polyhedron; ///< Copy of the polyhedron
-    glutils::color m_color;     ///< Color fo the polyhedron
-    bool m_wire;                ///< Render mode (true: wireframe, false: solid mesh)
+    const GMSPolyhedron& m_polyhedron; ///< The polyhedron to visualize.
+    glutils::color m_color;            ///< The rendering color.
+    bool m_wire{false};                ///< Render a wireframe only?
 
     ///@}
+
 };
 
 #endif

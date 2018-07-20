@@ -22,8 +22,6 @@
 #include "sandbox/gui/main_window.h"
 #include "glutils/selector.h"
 
-main_window* theOneWindow = nullptr;
-
 
 /*---------------------------- Construction ----------------------------------*/
 
@@ -108,7 +106,7 @@ Initialize() {
     throw RunTimeException(WHERE) << "Cannot initialize with a null problem!";
 
   // Require a non-null main window to initialize.
-  if(!theOneWindow)
+  if(!main_window::get())
     throw RunTimeException(WHERE) << "Cannot initialize without a main window!";
 
   // Create a bullet engine.
@@ -126,7 +124,7 @@ Initialize() {
                           at  = ToGLUtils(t * Vector3d(0, 0, -1)),
                           up  = ToGLUtils(t.rotation() * Vector3d(0, 1, 0));
 
-  theOneWindow->gl()->camera()->position(pos, at, up);
+  main_window::get()->gl()->camera()->position(pos, at, up);
 }
 
 
@@ -233,6 +231,12 @@ render() {
       for(auto d : m_drawables)
         static_cast<DrawableMultiBody*>(d)->UpdateTransform();
     }
+
+    for(auto d : m_removedDrawables) {
+      d->uninitialize();
+      delete d;
+    }
+    m_removedDrawables.clear();
   }
 
   for(auto d : m_paths.get_all())
@@ -325,7 +329,7 @@ RemovePath(const size_t _id) {
 
   // Remove this path from the collection and release it.
   DrawablePath* path = m_paths.take(_id);
-  delete path;
+  m_removedDrawables.push_back(path);
 }
 
 
@@ -349,7 +353,7 @@ RemoveRoadmap(const size_t _id) {
 
   // Remove this path from the collection and release it.
   DrawableRoadmap* roadmap = m_roadmaps.take(_id);
-  delete roadmap;
+  m_removedDrawables.push_back(roadmap);
 }
 
 
@@ -380,7 +384,7 @@ RemoveBoundary(const size_t _id) {
   m_selector->remove_drawable(boundary);
   m_highlighter->remove_drawable(boundary);
 
-  delete boundary;
+  m_removedDrawables.push_back(boundary);
 }
 
 /*--------------------------------- Editing ----------------------------------*/
