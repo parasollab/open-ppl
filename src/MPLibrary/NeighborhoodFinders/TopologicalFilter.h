@@ -499,7 +499,10 @@ FindCandidates(const CfgType& _cfg) {
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto mb = this->GetTask()->GetRobot()->GetMultiBody();
 
-  std::vector<VID> candidates, buffer;
+  std::vector<VID> candidates, newCandidates, buffer;
+
+  if(this->m_debug)
+    std::cout << "Searching for candidate VIDs..." << std::endl;
 
   // Find the candidate configurations for each body and intersect them as we go.
   // Start with the EE and work backward.
@@ -508,21 +511,40 @@ FindCandidates(const CfgType& _cfg) {
   ///       subsequent call to FindCandidateRegions.
   /// @todo Figure out how to support tree-like robots here. The current impl
   ///       will only handle chains, and assumes the EE is the last body.
+  bool first = true;
   for(size_t i = mb->GetNumBodies() - 1; i != size_t(-1); --i) {
     // Find the candidate regions for this body.
     const std::vector<const WorkspaceRegion*> regions = FindCandidateRegions(
         _cfg, i);
 
     // Get the sorted candidates for this region.
-    std::vector<VID> newCandidates = tm->GetMappedVIDs(regions, i);
+    newCandidates.clear();
+    newCandidates = tm->GetMappedVIDs(regions, i);
 
-    // Combine with existing candidates.
-    buffer.clear();
-    buffer.reserve(std::max(candidates.size(), newCandidates.size()));
-    std::set_intersection(candidates.begin(), candidates.end(),
-                          newCandidates.begin(), newCandidates.end(),
-                          std::back_inserter(buffer));
-    std::swap(buffer, candidates);
+    if(this->m_debug)
+      std::cout << newCandidates.size() << " candidate VIDs found for body "
+                << i << "."
+                << std::endl;
+
+    // For the first body, retain all candidates. For each successive body,
+    // intersect with existing candidates.
+    if(first) {
+      first = false;
+      std::swap(candidates, newCandidates);
+    }
+    else {
+      buffer.clear();
+      buffer.reserve(std::max(candidates.size(), newCandidates.size()));
+      std::set_intersection(candidates.begin(), candidates.end(),
+                            newCandidates.begin(), newCandidates.end(),
+                            std::back_inserter(buffer));
+      std::swap(buffer, candidates);
+
+      if(this->m_debug)
+        std::cout << "\t" << candidates.size()
+                  << " in common with previous bodies."
+                  << std::endl;
+    }
 
     // If the candidates are empty, there are no viable neighbors.
     if(candidates.empty())
