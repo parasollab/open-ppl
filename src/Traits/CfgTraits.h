@@ -43,6 +43,7 @@
 #include "MPLibrary/NeighborhoodFinders/DPESNF.h"
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
 #include "MPLibrary/NeighborhoodFinders/HopLimitNF.h"
+#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
 #include "MPLibrary/NeighborhoodFinders/LSHNF.h"
 #include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
@@ -230,6 +231,7 @@ struct MPTraits {
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
+    KdTreeNF<MPTraits>,
     LSHNF<MPTraits>,
     OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,

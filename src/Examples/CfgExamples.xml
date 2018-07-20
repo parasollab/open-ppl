@@ -98,6 +98,9 @@
       <LSHNF label="LSHNF"
         k="8" hashDimension="3" hashFamilies="8" hashRadius="9"
         dmLabel="euclidean"/>
+      <KdTreeNF label="KdTreeNF"
+        k="5" epsilon=".01" useScaling="true"
+        dmLabel="euclidean"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -256,6 +259,8 @@
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl"
         checkIfSameCC="false"/>
+      <NeighborhoodConnector label="KdTree" nfLabel="KdTreeNF" lpLabel="sl"
+        checkIfSameCC="false"/>
       <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
     </Connectors>
 
@@ -379,6 +384,7 @@
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
         <Connector method="Closest"/>
+        <!--Connector method="KdTree"/-->
         <!--ComponentConnector method="ConnectCCs"/-->
         <Evaluator method="PRMQuery"/>
       </BasicPRM>
