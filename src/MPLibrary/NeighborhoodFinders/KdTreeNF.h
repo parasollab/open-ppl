@@ -239,7 +239,7 @@ FindNeighbors(RoadmapType* _rmp,
   // Insert scaled query (copy of original CFG).
   vector<double> queryCfg = _cfg.GetData();
   if(m_useScaling)
-    for(int i = 0; i < _cfg.PosDOF(); ++i)
+    for(size_t i = 0; i < _cfg.PosDOF(); ++i)
       queryCfg[i] /= m_maxBBXRange;
 
   PointD query(dim, queryCfg.begin(), queryCfg.end());
@@ -295,7 +295,7 @@ UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
       vector<double> cfgData = cfg.GetData();
 
       if(m_useScaling)
-        for(int i = 0; i < cfg.PosDOF(); ++i)
+        for(size_t i = 0; i < cfg.PosDOF(); ++i)
           cfgData[i] /= m_maxBBXRange;
 
       m_trees[_rmp].insert(PointD(vid, cfg.DOF(), cfgData.begin(),
