@@ -147,6 +147,9 @@ class Connection final {
     /// Get the index of the child Body within the parent multibody.
     size_t GetNextBodyIndex() const noexcept;
 
+    /// Get the pair of body indices.
+    std::pair<size_t, size_t> GetBodyIndices() const noexcept;
+
     ///@}
     ///@name Transformation information
     ///@{
@@ -185,5 +188,6 @@ class Connection final {
 
 // Debug.
 std::ostream& operator<<(std::ostream&, const Connection::JointType&);
+bool operator==(const Connection& j, const Connection& k);
 
 #endif

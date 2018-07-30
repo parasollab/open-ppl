@@ -82,7 +82,6 @@ GetRandomPoint() const {
   return NSphericalShell::Sample();
 }
 
-
 void
 AbstractBoundingSphericalShell::
 PushInside(std::vector<double>& _sample) const noexcept {

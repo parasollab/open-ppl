@@ -324,6 +324,11 @@ GetPreviousBody() noexcept {
   return m_multibody->GetBody(m_bodyIndices.first);
 }
 
+std::pair<size_t, size_t>
+Connection::
+GetBodyIndices() const noexcept {
+  return m_bodyIndices;
+}
 
 size_t
 Connection::
@@ -400,6 +405,12 @@ GetTransformationToDHFrame() const noexcept {
 std::ostream&
 operator<<(std::ostream& _os, const Connection::JointType& _j) {
   return _os << GetTagFromJointType(_j);
+}
+
+/*---------------------------------- Comparison -----------------------------------*/
+bool
+operator==(const Connection& _j, const Connection& _k) {
+  return _j.GetBodyIndices() == _k.GetBodyIndices();
 }
 
 /*----------------------------------------------------------------------------*/

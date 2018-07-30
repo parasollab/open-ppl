@@ -155,7 +155,7 @@ class MultiBody {
     ///@{
 
     /// Get the number of bodies in this multibody.
-    size_t GetNumBodies() const noexcept;
+    const size_t GetNumBodies() const noexcept;
 
     /// Get an internal body.
     /// @param _i The index of the body.
@@ -192,6 +192,7 @@ class MultiBody {
     double GetBoundingSphereRadius() const noexcept;
 
     /// Get the maximum distance in X, Y, or Z direction.
+    std::vector<Body> GetBodies() const noexcept;
     double GetMaxAxisRange() const noexcept;
 
     /// Get the bounding box.

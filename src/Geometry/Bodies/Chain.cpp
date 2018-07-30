@@ -1,7 +1,7 @@
 #include "Chain.h"
 
-#include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/Connection.h"
+#include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
 
 #include "Utilities/PMPLExceptions.h"
@@ -14,30 +14,30 @@
 
 std::vector<Chain>
 Chain::
-Decompose(const MultiBody* _mb) {
-  // Composite multibodies are not supported.
-  /// @todo We can probably support composite bodies here, but it is not
+Decompose(MultiBody* _mb) {
+  // Composite multijoints are not supported.
+  /// @todo We can probably support composite joints here, but it is not
   ///       immediately required. Need to test this separately.
   if(_mb->IsComposite())
-    throw RunTimeException(WHERE) << "Composite bodies are not yet supported.";
+    throw RunTimeException(WHERE) << "Composite joints are not yet supported.";
 
   std::vector<Chain> chains;
 
-  // Start from the base and scan outward. Repeat until the entire multibody is
+  // Start from the base and scan outward. Repeat until the entire MultiBody is
   // decomposed.
-  std::queue<const Body*> roots;
+  std::queue<Body*> roots;
   roots.push(_mb->GetBase());
 
   while(!roots.empty()) {
     // Get the next root.
-    const Body* const current = roots.front();
+    Body* current = roots.front();
     roots.pop();
 
     // Find the longest linear chain from the current root.
     chains.emplace_back(Chain::FindLongestLinearChain(_mb, current, true));
 
     // Get the last body in the chain.
-    const Body* const last = chains.back().GetEnd();
+    Body* last = chains.back().GetEnd()->GetNextBody();
 
     // If last has any forward connections, they are now roots for new
     // subchains.
@@ -49,29 +49,44 @@ Decompose(const MultiBody* _mb) {
 }
 
 
+
 std::pair<Chain, Chain>
 Chain::
-Bisect() const noexcept {
-  const size_t halfSize = m_bodies.size() / 2;
+Bisect() noexcept {
+  //bisects the chain into two chains that have to same last joint
+  const size_t halfSize = ceil(m_joints.size() / 2.0);
+  cout << "num joints: " << m_joints.size() << endl;
 
-  BodyList bodies1(halfSize, nullptr),
-           bodies2(halfSize, nullptr);
+  JointList joints1, joints2;
 
-  auto midpoint = m_bodies.begin() + halfSize;
+  auto midpoint = m_joints.begin() + halfSize;
+  for (auto it = m_joints.begin(); it != midpoint; it++) {
+    joints1.push_back(*it);
+  }
 
-  std::copy(m_bodies.begin(), midpoint, bodies1.begin());
-  std::copy(midpoint, m_bodies.end(), bodies2.begin());
+  
+  for (midpoint = m_joints.begin() + halfSize - 1; midpoint != m_joints.end(); midpoint++) {
+    joints2.push_back(*midpoint);
+  }
 
-  return {Chain(m_multibody, std::move(bodies1), m_forward),
-          Chain(m_multibody, std::move(bodies2), m_forward)};
+  //and set both chains to have null last body (i.e, it doesn't have a last body because it has a last joint)
+  //
+  if (m_forward)
+    return {Chain(m_multibody, std::move(joints1), this->GetBase(), nullptr, m_forward),
+	    Chain(m_multibody, std::move(joints2), nullptr, this->GetLastBody(), m_forward)};
+  else
+    return {Chain(m_multibody, std::move(joints2), nullptr, nullptr, m_forward),
+	    Chain(m_multibody, std::move(joints1), this->GetBase(), nullptr, m_forward)};
 }
 
 /*-------------------------------- Modifiers ---------------------------------*/
 
+
 Chain&
 Chain::
 Reverse() noexcept {
-  std::reverse(m_bodies.begin(), m_bodies.end());
+  std::reverse(m_joints.begin(), m_joints.end());
+  std::swap(m_base, m_lastBody);
   m_forward = !m_forward;
 
   return *this;
@@ -89,15 +104,15 @@ Append(const Chain& _other) noexcept {
                                   << "\n\tChain 2: " << _other.IsForward();
 
   // Assert that the end of this chain is connected to the root of _other.
-  if(!IsValidEnd(_other.GetRoot()))
+  if(!IsValidEnd(_other.GetBase()))
     throw RunTimeException(WHERE) << "Cannot append disconnected chains."
                                   << "\n\tChain 1: " << *this
                                   << "\n\tChain 2: " << _other;
 
   // We're still here, so the chains are compatible for joining.
-  // Copy the bodies in _other into this.
-  std::copy(_other.m_bodies.begin(), _other.m_bodies.end(),
-      std::back_inserter(m_bodies));
+  // Copy the joints in _other into this.
+  std::copy(_other.m_joints.begin(), _other.m_joints.end(),
+      std::back_inserter(m_joints));
 
   return *this;
 }
@@ -106,15 +121,14 @@ Append(const Chain& _other) noexcept {
 Chain&
 Chain::
 PopRoot() noexcept {
-  m_bodies.pop_front();
+  m_joints.pop_front();
   return *this;
 }
-
 
 Chain&
 Chain::
 PopEnd() noexcept {
-  m_bodies.pop_back();
+  m_joints.pop_back();
   return *this;
 }
 
@@ -125,10 +139,10 @@ PushRoot(const Body* const _newRoot) noexcept {
   if(!IsValidRoot(_newRoot))
     throw RunTimeException(WHERE) << "Tried to push an invalid root into the "
                                   << "chain."
-                                  << "\n\tBody: " << _newRoot->GetIndex()
+                                  << "\n\tConnection: " << _newRoot->GetIndex()
                                   << "\n\tChain: " << *this;
 
-  m_bodies.push_front(_newRoot);
+  m_joints.push_front(&(_newRoot->GetForwardConnection(0)));
   return *this;
 }
 
@@ -139,10 +153,10 @@ PushEnd(const Body* const _newEnd) noexcept {
   if(!IsValidEnd(_newEnd))
     throw RunTimeException(WHERE) << "Tried to push an invalid end into the "
                                   << "chain."
-                                  << "\n\tBody: " << _newEnd->GetIndex()
+                                  << "\n\tConnection: " << _newEnd->GetIndex()
                                   << "\n\tChain: " << *this;
 
-  m_bodies.push_back(_newEnd);
+  m_joints.push_back(&(_newEnd->GetBackwardConnection(0)));
   return *this;
 }
 
@@ -151,28 +165,28 @@ PushEnd(const Body* const _newEnd) noexcept {
 Chain::iterator
 Chain::
 begin() const noexcept {
-  return m_bodies.begin();
+  return m_joints.begin();
 }
 
 
 Chain::iterator
 Chain::end() const noexcept {
-  return m_bodies.end();
+  return m_joints.end();
 }
 
 /*--------------------------------- Queries ----------------------------------*/
 
-const Body*
+const Connection*
 Chain::
 GetRoot() const noexcept {
-  return m_bodies.front();
+  return m_joints.front();
 }
 
 
-const Body*
+Connection*
 Chain::
-GetEnd() const noexcept {
-  return m_bodies.back();
+GetEnd() noexcept {
+    return m_joints.back();
 }
 
 
@@ -186,24 +200,47 @@ IsForward() const noexcept {
 size_t
 Chain::
 Size() const noexcept {
-  return m_bodies.size();
+  return m_joints.size();
 }
 
+Body*
+Chain::
+GetBase() noexcept {
+  return m_base;
+}
+
+const Body*
+Chain::
+GetBase() const noexcept {
+  return m_base;
+}
+
+Body*
+Chain::
+GetLastBody() noexcept {
+  return m_lastBody;
+}
+
+const Body*
+Chain::
+GetLastBody() const noexcept {
+  return m_lastBody;
+}
 
 bool
 Chain::
 IsValidRoot(const Body* const _newRoot) const noexcept {
-  const Body* const root = GetRoot();
+  const Body* const root = GetBase();
 
   if(IsForward()) {
-    // Check that _newRoot is the previous body of one of root's backward
+    // Check that _newRoot is the previous Connection of one of root's backward
     // connections.
     for(size_t i = 0; i < root->BackwardConnectionCount(); ++i)
       if(root->GetBackwardConnection(i).GetPreviousBody() == _newRoot)
         return true;
   }
   else {
-    // Check that _newRoot is the next body of one of root's forward connections.
+    // Check that _newRoot is the next Connection of one of root's forward connections.
     for(size_t i = 0; i < root->ForwardConnectionCount(); ++i)
       if(root->GetForwardConnection(i).GetNextBody() == _newRoot)
         return true;
@@ -216,16 +253,17 @@ IsValidRoot(const Body* const _newRoot) const noexcept {
 bool
 Chain::
 IsValidEnd(const Body* const _newEnd) const noexcept {
-  const Body* const end = GetEnd();
+  const Body* const end = GetLastBody();
 
   if(IsForward()) {
-    // Check that _newEnd is the next body of one of end's forward connections.
+    // Check that _newEnd is the next Connection of one of end's forward connections.
+
     for(size_t i = 0; i < end->ForwardConnectionCount(); ++i)
       if(end->GetForwardConnection(i).GetNextBody() == _newEnd)
         return true;
   }
   else {
-    // Check that _newEnd is the previous body of one of end's backward
+    // Check that _newEnd is the previous Connection of one of end's backward
     // connections.
     for(size_t i = 0; i < end->BackwardConnectionCount(); ++i)
       if(end->GetBackwardConnection(i).GetPreviousBody() == _newEnd)
@@ -239,39 +277,61 @@ IsValidEnd(const Body* const _newEnd) const noexcept {
 
 Chain
 Chain::
-FindLongestLinearChain(const MultiBody* const _mb, const Body* const _root,
+FindLongestLinearChain(const MultiBody* const _mb, Body* _root,
     const bool _forward) noexcept {
-  BodyList bodies;
+  JointList joints;
 
   // Start from the root body and traverse until we find a link with
   // more than one forward connection.
-  const Body* current = _root;
+  Body* current = _root;
   while(true) {
-    // Push the current link into the chain.
-    bodies.push_back(current);
+    // Push the current joint into the chain.
+    _forward ? joints.push_back(&(current->GetForwardConnection(0))) 
+	     : joints.push_back(&(current->GetBackwardConnection(0)));
 
     // If there is not exactly one connection from current to the next link(s)
     // in the traversal direction, we are finished.
     const size_t numConnections = _forward ? current->ForwardConnectionCount()
                                            : current->BackwardConnectionCount();
     if(numConnections != 1)
+    {
       break;
+    }
 
-    // Set current to the next body in this traversal direction.
+    // Set current to the next Connection in this traversal direction.
     current = _forward ? current->GetForwardConnection(0).GetNextBody()
                        : current->GetBackwardConnection(0).GetPreviousBody();
   }
 
-  return Chain(_mb, std::move(bodies), _forward);
+  //constructs a chain that stores the current (end) body as m_lastBody
+  return Chain(_mb, std::move(joints), current, _forward);
 }
 
 /*------------------------------- Construction -------------------------------*/
 
 Chain::
-Chain(const MultiBody* const _mb, BodyList&& _bodies, const bool _forward)
-  : m_multibody(_mb), m_bodies(std::move(_bodies)), m_forward(_forward) {
+Chain(const MultiBody* _mb, JointList&& _joints, Body* _lastBody, const bool _forward)
+  : m_multibody(_mb), m_joints(std::move(_joints)), m_lastBody(_lastBody), m_forward(_forward) {
   // There is no purpose to an empty chain; please do not make one.
-  if(m_bodies.empty())
+  if(m_joints.empty())
+    throw RunTimeException(WHERE) << "Cowardly refusing to instantiate an "
+                                  << "empty chain.";
+}
+
+Chain::
+Chain(const MultiBody*  _mb, JointList&& _joints, const bool _forward)
+  : m_multibody(_mb), m_joints(std::move(_joints)), m_forward(_forward) {
+  // There is no purpose to an empty chain; please do not make one.
+  if(m_joints.empty())
+    throw RunTimeException(WHERE) << "Cowardly refusing to instantiate an "
+                                  << "empty chain.";
+}
+
+Chain::
+Chain(const MultiBody* _mb, JointList&& _joints, Body* _base, Body* _lastBody, const bool _forward)
+  : m_multibody(_mb), m_joints(_joints), m_base(_base), m_lastBody(_lastBody), m_forward(_forward){
+  // There is no purpose to an empty chain; please do not make one.
+  if(m_joints.empty())
     throw RunTimeException(WHERE) << "Cowardly refusing to instantiate an "
                                   << "empty chain.";
 }
@@ -281,8 +341,8 @@ Chain(const MultiBody* const _mb, BodyList&& _bodies, const bool _forward)
 std::ostream&
 operator<<(std::ostream& _os, const Chain& _c) {
   _os << "{";
-  for(auto body : _c)
-    _os << " " << body->GetIndex();
+  for(auto Connection : _c)
+    _os << " " << Connection->GetNextBodyIndex();
   return _os << " }";
 }
 

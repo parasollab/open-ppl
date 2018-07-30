@@ -85,6 +85,7 @@ class AbstractBoundingSphericalShell : public Boundary, public NSphericalShell {
 
     virtual void Translate(const Vector3d& _v) override;
 
+
     virtual void Translate(const std::vector<double>& _t) override;
 
     virtual void ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
