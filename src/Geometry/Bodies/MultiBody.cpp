@@ -177,9 +177,7 @@ InitializeDOFs(const Boundary* const _b) {
                                   "through group cfgs now.");
 
   m_currentDofs.resize(DOF(), 0);
-  cout << "before configure" << endl;
   Configure(m_currentDofs);
-  cout << "before find multibody info" << endl;
   FindMultiBodyInfo();
 }
 
@@ -245,13 +243,6 @@ operator=(MultiBody&& _other) {
 }
 
 /*--------------------------- MultiBody Properties ---------------------------*/
-
-
-std::vector<Body>
-MultiBody::
-GetBodies() const noexcept {
-  return m_bodies;
-}
 
 MultiBody::Type
 MultiBody::
@@ -391,7 +382,7 @@ GetCurrentCfg() noexcept {
 
 /*------------------------------ Body Accessors ------------------------------*/
 
-const size_t
+size_t
 MultiBody::
 GetNumBodies() const noexcept {
   return m_bodies.size();
@@ -818,7 +809,6 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   size_t connectionCount = ReadField<size_t>(_is, _cbs,
       "Failed reading number of connections.");
 
-  cout << "connection count: " << connectionCount << endl;
   for(size_t i = 0; i < connectionCount; ++i) {
     // add connection info to multibody connection map
     m_joints.emplace_back(new Connection(this));

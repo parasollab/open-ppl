@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-class Connection;
 class Body;
 class MultiBody;
 
@@ -31,8 +30,8 @@ class Chain final {
     ///@name Local Types
     ///@{
 
-    typedef std::deque<Connection*>  JointList;
-    typedef JointList::const_iterator iterator;
+    typedef std::deque<const Body*>  BodyList;
+    typedef BodyList::const_iterator iterator;
 
     ///@}
     ///@name Generation
@@ -42,11 +41,13 @@ class Chain final {
     /// Decompose a multibody into a set of linear chains.
     /// @param _mb The multibody to decompose.
     /// @return A set of Chains representing linear subsets of _mb.
-    static std::vector<Chain> Decompose(MultiBody* _mb);
+    static std::vector<Chain> Decompose(const MultiBody* const _mb);
 
-    /// Bisect this to produce two subchains. Their order
+    /// Bisect this to produce two subchains. If there are an odd number of
+    /// links, the second chain will contain the extra one.
+    /// @return A pair of subchains whos union is equal to this. Their order
     ///         will be the same as this.
-    std::pair<Chain, Chain> Bisect() noexcept;
+    std::pair<Chain, Chain> Bisect() const noexcept;
 
     ///@}
     ///@name Modifiers
@@ -77,36 +78,24 @@ class Chain final {
     /// @param _newEnd The new end.
     Chain& PushEnd(const Body* const _newEnd) noexcept;
 
-    /// Gets the last body of the chain to use for Reachable Volume calculation when an end joint doesn't exist
-    const Body* GetLastBody() const noexcept;
-    Body* GetLastBody() noexcept;
-
-    ///sets the last body of the chain
-    ///@param _b The new m_lastBody
-    Body& SetLastBody(Body* _b) noexcept;
-
     ///@}
     ///@name Iteration
     ///@{
     /// Iterate over the bodies in the chain in traversal order.
 
-
     iterator begin() const noexcept;
+
     iterator end() const noexcept;
 
     ///@}
     ///@name Queries
     ///@{
 
-    /// Get the first body
-    const Body* GetBase() const noexcept;
-    Body* GetBase() noexcept;
+    /// Get the root body.
+    const Body* GetRoot() const noexcept;
 
-    /// Get the root joint.
-    const Connection* GetRoot() const noexcept;
-
-    /// Get the end joint.
-    Connection* GetEnd() noexcept;
+    /// Get the end body.
+    const Body* GetEnd() const noexcept;
 
     /// Is this chain oriented in the same way as the multibody?
     bool IsForward() const noexcept;
@@ -128,22 +117,6 @@ class Chain final {
 
     ///@}
 
-    ///@}
-    ///@name Construction
-    ///@{
-    /// Construct a chain.
-    /// @param _mb The multibody.
-    /// @param _bodies The bodies in this chain, from root to end.
-    /// @param _forward True if _end is further away from the base than _root.
-    Chain(const MultiBody* _mb, JointList&& _joints,
-	    Body* _lastBody, const bool _forward);
-
-    Chain(const MultiBody* _mb, JointList&& _joints,
-          const bool _forward);
-
-    Chain(const MultiBody* _mb, JointList&& _joints, Body* _base, 
-	    Body* _lastBody, const bool _forward);
-
   private:
 
     ///@name Helpers
@@ -156,20 +129,27 @@ class Chain final {
     /// @param _forward Search forward (out from base)?
     /// @return The longest linear segment in _mb starting from _root and
     ///         traversing outward if _forward.
-    static Chain FindLongestLinearChain(const MultiBody* _mb,
-        Body* _root, const bool _forward) noexcept;
+    static Chain FindLongestLinearChain(const MultiBody* const _mb,
+        const Body* const _root, const bool _forward) noexcept;
 
+    ///@}
+    ///@name Construction
+    ///@{
 
+    /// Construct a chain.
+    /// @param _mb The multibody.
+    /// @param _bodies The bodies in this chain, from root to end.
+    /// @param _forward True if _end is further away from the base than _root.
+    Chain(const MultiBody* const _mb, BodyList&& _bodies,
+        const bool _forward);
 
     ///@}
     ///@name Internal State
     ///@{
 
-      const MultiBody* m_multibody;  ///< The multibody.
-      JointList m_joints;                   ///< The joints in this chain.
-      Body* m_base;                        ///< the first body of the chain
-      Body* m_lastBody;                   ///< the last body of a chain, null if a last joint exists (e.g, when bisecting a chain)
-      bool m_forward{true};                ///< Is the chain in forward order?
+    const MultiBody* const m_multibody;  ///< The multibody.
+    BodyList m_bodies;                   ///< The bodies in this chain.
+    bool m_forward{true};                ///< Is the chain in forward order?
 
     ///@}
 
