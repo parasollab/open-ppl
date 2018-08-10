@@ -63,6 +63,7 @@
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/SimilarStructureSampler.h"
+#include "MPLibrary/Samplers/ReachableVolumeSampler.h"
 #include "MPLibrary/Samplers/UniformMedialAxisSampler.h"
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
@@ -137,6 +138,8 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+//#include "MPLibrary/MPStrategies/CurveSkeletonTest.h"
+#include "MPLibrary/MPStrategies/ClearanceStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
 #include "MPLibrary/MPStrategies/DisassemblyParallel.h"
 #include "MPLibrary/MPStrategies/DisassemblyParallelizedSAs.h"
@@ -159,7 +162,6 @@
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 //#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
-//#include "MPLibrary/MPStrategies/UnitTest/ClearanceTestStrategy.h"
 //#include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
 //#include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
 #include "MPLibrary/MPStrategies/UtilityGuidedGenerator.h"
@@ -252,6 +254,7 @@ struct MPTraits {
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     SimilarStructureSampler<MPTraits>,
+    ReachableVolumeSampler<MPTraits>,
     UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>,
@@ -386,7 +389,6 @@ struct MPTraits {
     VisibilityBasedPRM<MPTraits>,
 
     //BoundaryTest<MPTraits>,
-    //ClearanceTestStrategy<MPTraits>,
     //DMTestStrategy<MPTraits>,
     PushCfgToMATest<MPTraits>
     //SVMTest<MPTraits>

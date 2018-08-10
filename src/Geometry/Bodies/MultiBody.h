@@ -192,6 +192,7 @@ class MultiBody {
     double GetBoundingSphereRadius() const noexcept;
 
     /// Get the maximum distance in X, Y, or Z direction.
+    const std::vector<Body>& GetBodies() const noexcept;
     double GetMaxAxisRange() const noexcept;
 
     /// Get the bounding box.
