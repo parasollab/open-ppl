@@ -138,8 +138,6 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
-//#include "MPLibrary/MPStrategies/CurveSkeletonTest.h"
-#include "MPLibrary/MPStrategies/ClearanceStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
 #include "MPLibrary/MPStrategies/DisassemblyParallel.h"
 #include "MPLibrary/MPStrategies/DisassemblyParallelizedSAs.h"

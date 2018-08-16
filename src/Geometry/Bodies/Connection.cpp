@@ -324,6 +324,7 @@ GetPreviousBody() noexcept {
   return m_multibody->GetBody(m_bodyIndices.first);
 }
 
+
 size_t
 Connection::
 GetPreviousBodyIndex() const noexcept {

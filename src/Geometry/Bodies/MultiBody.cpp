@@ -244,13 +244,6 @@ operator=(MultiBody&& _other) {
 
 /*--------------------------- MultiBody Properties ---------------------------*/
 
-
-const std::vector<Body>&
-MultiBody::
-GetBodies() const noexcept {
-  return m_bodies;
-}
-
 MultiBody::Type
 MultiBody::
 GetType() const noexcept {
@@ -393,6 +386,13 @@ size_t
 MultiBody::
 GetNumBodies() const noexcept {
   return m_bodies.size();
+}
+
+
+const std::vector<Body>&
+MultiBody::
+GetBodies() const noexcept {
+  return m_bodies;
 }
 
 
