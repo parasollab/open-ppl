@@ -69,23 +69,15 @@ ComputeReachableVolumeOfSingleLink(const size_t _dimension,
 
   //this segment is needed because when the direction of chain changes, 
   //the next and previous bodies that connection store to do not.
-  bool chainDir = _chain->IsForward();
-  const Body* nextBody = chainDir ? _frontJoint->GetNextBody() : 
-				    _frontJoint->GetPreviousBody();
 
-  if (nextBody == _chain->GetLastBody()){
-    //handle joint to end effector
-    dist =  _frontJoint->GetTransformationToDHFrame().translation().norm() +
-	    _backJoint->GetTransformationToBody2().translation().norm() +
-            _frontJoint->GetTransformationToBody2().translation().norm();
-  }
-  else {
-    //handle joint to joint
+  if (_chain->IsForward())
     dist =  _frontJoint->GetTransformationToDHFrame().translation().norm() +
 	    _backJoint->GetTransformationToBody2().translation().norm();
-  }
+  else
+    dist =  _frontJoint->GetTransformationToBody2().translation().norm() +
+	    _backJoint->GetTransformationToDHFrame().translation().norm();
 
-
+  //cout << "dist calculated: " << dist << endl;
   return dist;
 }
 
@@ -100,7 +92,7 @@ ComputeReachableVolume(const size_t _dimension,
          max = 0;
 
   //computes the base to the first joint
-  if (_chain.GetBase()) {
+  if(_chain.GetBase()) {
     max += (*(_chain.begin()))->GetTransformationToDHFrame().translation().norm();
     min = max;
   }
@@ -114,9 +106,17 @@ ComputeReachableVolume(const size_t _dimension,
     const double rd = ComputeReachableVolumeOfSingleLink(
         _dimension, *iter2, *iter1, &_chain);
 
-    // Update the chain's minimum and maximum reachable distance.
+    // Update the chain's minimum and maximum reachable distance with Minknowski sum.
     min = std::max(0., (min > rd) ? min - rd
 				  : rd - max);
+    max += rd;
+  }
+
+  if(_chain.GetLastBody() != nullptr) {
+    const double rd = (*(_chain.end() - 1))->
+        	      GetTransformationToBody2().translation().norm();
+    min = std::max(0., (min > rd) ? min - rd
+        			  : rd - max);
     max += rd;
   }
 
