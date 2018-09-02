@@ -52,7 +52,6 @@ Simulation::
 ~Simulation() {
   reset();
 
-
   // Print the stats on our way out so that we still get output in the event of
   // an uncaught exception.
   PrintStatFile();
@@ -60,6 +59,7 @@ Simulation::
   // Release the singleton so that it points to nothing.
   s_singleton.release();
 }
+
 /*-------------------------------- Accessors ---------------------------------*/
 
 Simulation*
@@ -146,7 +146,7 @@ Uninitialize() {
 
   // Remove bullet model pointers from problem objects.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
-    m_problem->GetRobot(i)->SetDynamicsModel(nullptr);
+    m_problem->GetRobot(i)->SetSimulationModel(nullptr);
 }
 
 
@@ -311,12 +311,12 @@ SetBacklog(const size_t _max) {
 
 size_t
 Simulation::
-AddPath(const std::vector<Cfg>& _path, glutils::color _c) {
+AddPath(const std::vector<Cfg>& _path, const glutils::color& _c) {
   std::lock_guard<std::mutex> lock(m_guard);
 
   // Assert the path is not empty.
   if(_path.empty())
-    throw RunTimeException(WHERE, "Cannot draw an empty path.");
+    throw RunTimeException(WHERE) << "Cannot draw an empty path.";
 
   return m_paths.add(new DrawablePath(_path, _c));
 }
@@ -340,7 +340,7 @@ AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
   std::lock_guard<std::mutex> lock(m_guard);
 
   if(!_graph)
-    throw RunTimeException(WHERE, "Cannot draw a NULL graph.");
+    throw RunTimeException(WHERE) << "Cannot draw a NULL graph.";
 
   return m_roadmaps.add(new DrawableRoadmap(_graph, _color));
 }
@@ -359,13 +359,14 @@ RemoveRoadmap(const size_t _id) {
 
 size_t
 Simulation::
-AddBoundary(const Boundary* _boundary, const glutils::color& _color, bool _wired) {
+AddBoundary(const Boundary* const _boundary, const glutils::color& _color,
+    const bool _wired) {
   std::lock_guard<std::mutex> lock(m_guard);
 
   if(!_boundary)
-    throw RunTimeException(WHERE, "Cannot draw a NULL boundary.");
-  auto draw = new DrawableBoundary(_boundary, _color, _wired);
+    throw RunTimeException(WHERE) << "Cannot draw a null boundary.";
 
+  auto draw = new DrawableBoundary(_boundary, _color, _wired);
   m_selector->add_drawable(draw);
   m_highlighter->add_drawable(draw);
 
@@ -430,13 +431,11 @@ PrintStatFile(const std::string& _basename) {
 void
 Simulation::
 AddBBX() {
-  /// @TODO Our current pseudo-boundary isn't doing anything. Removing it until
-  ///       we can implement full support.
+  /// @TODO We are rendering the boundary but not including it in the physics
+  ///       simulation. Ideally it should be an immobile object in the
+  ///       simulation like any other obstacle.
+  AddBoundary(m_problem->GetEnvironment()->GetBoundary(), glutils::color::black);
 
-
-  auto environment = m_problem->GetEnvironment();
-  m_boundaryID = AddBoundary(environment->GetBoundary(),
-      glutils::color::black);
 #if 0
   const auto& boundary = m_problem->GetEnvironment()->GetBoundary();
 
@@ -459,7 +458,7 @@ AddBBX() {
   // Create a btCollisionShape using half lengths of the bounding box
   btBoxShape* box = new btBoxShape(btVector3(x, thickness, z));
   if(!m_editMode)
-    m_engine->AddObject(box, trans, 0.);
+    m_engine->AddMultiBody(box, trans, 0.);
 
   /// @TODO Add visual for the bounding box/floor.
   /// @TODO Support other boundary types.
@@ -478,7 +477,7 @@ AddObstacles() {
     MultiBody* const multiBody = env->GetObstacle(i);
 
     if(!m_editMode)
-      m_engine->AddObject(multiBody);
+      m_engine->AddMultiBody(multiBody);
 
     this->add_drawable(new DrawableMultiBody(multiBody));
   }
@@ -497,7 +496,7 @@ AddRobots() {
 
     if(!m_editMode) {
       auto bulletModel = m_engine->AddRobot(robot);
-      robot->SetDynamicsModel(bulletModel);
+      robot->SetSimulationModel(bulletModel);
     }
 
     auto multiBody = robot->GetMultiBody();

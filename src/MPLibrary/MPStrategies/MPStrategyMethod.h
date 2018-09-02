@@ -137,7 +137,7 @@ Run() {
 #ifdef VIZMO
     GetVizmo().GetMap()->RefreshMap();
 #endif
-  } while(!EvaluateMap());
+  } while(!EvaluateMap() and this->IsRunning());
 
   stats->StopClock(clockName);
   stats->PrintClock(clockName, std::cout);

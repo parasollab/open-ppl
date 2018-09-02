@@ -1,5 +1,5 @@
-#ifndef SIMPLE_CONTROLLER_H_
-#define SIMPLE_CONTROLLER_H_
+#ifndef PMPL_SIMPLE_CONTROLLER_H_
+#define PMPL_SIMPLE_CONTROLLER_H_
 
 #include "ControllerMethod.h"
 
@@ -17,15 +17,15 @@ class SimpleController : public ControllerMethod {
     ///@{
 
     /// Construct a simple controller.
-    /// @param[in] _r The robot to control.
-    /// @param[in] _gain The direct error gain.
-    /// @param[in] _max  The maximum force to request.
+    /// @param _r The robot to control.
+    /// @param _gain The direct error gain.
+    /// @param _max  The maximum force to request.
     SimpleController(Robot* const _r, const double _gain,
         const double _max = std::numeric_limits<double>::infinity());
 
     /// Construct a simple controller from an XML node.
-    /// @param[in] _r The robot to control.
-    /// @param[in] _node The XML node to parse.
+    /// @param _r The robot to control.
+    /// @param _node The XML node to parse.
     SimpleController(Robot* const _r, XMLNode& _node);
 
     /// Copy a controller for another robot.

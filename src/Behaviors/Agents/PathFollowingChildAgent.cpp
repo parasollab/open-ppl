@@ -9,7 +9,8 @@
 #include "Behaviors/Controllers/ICreateController.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/DynamicsModel.h"
+#include "MPProblem/Robot/HardwareInterfaces/Battery.h"
+#include "Simulator/BulletModel.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -123,13 +124,13 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // method).
   auto parentRobot = m_parentAgent->GetRobot();
   auto parentCopyRobot = _problem->GetRobot(parentRobot->GetLabel());
-  auto position = m_robot->GetDynamicsModel()->GetSimulatedState();
+  auto position = m_robot->GetSimulationModel()->GetState();
   auto start = std::unique_ptr<CSpaceConstraint>(
       new CSpaceConstraint(m_robot, position));
   GetTask()->SetStartConstraint(std::move(start));
   GetTask()->SetRobot(parentCopyRobot);
   std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
-  std::cout << "Currently at: " << m_robot->GetDynamicsModel()->GetSimulatedState() << std::endl;
+  std::cout << "Currently at: " << m_robot->GetSimulationModel()->GetState() << std::endl;
   m_solution->GetPath()->Clear();
   // Set the solution for appending with the parent copy.
   m_solution->SetRobot(parentCopyRobot);
@@ -188,7 +189,7 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   // Update odometry tracking.
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   if(_c.size())
-    m_distance += _steps * timeRes * nonstd::magnitude<double>(_c[0].GetForce());
+    m_distance += _steps * timeRes * nonstd::magnitude<double>(_c[0].GetOutput());
 
   // TODO Drain the battery proportional to the controller output (higher output
   // = higher drain).
@@ -210,11 +211,7 @@ void
 PathFollowingChildAgent::
 SetBatteryBreak() {
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  const Cfg position = m_robot->GetDynamicsModel()->GetSimulatedState();
-  std::cout << "Position: " << position.PrettyPrint() << std::endl;
-  std::cout << "Position: "
-            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-            << std::endl;
+
   // Set the battery depletion rate.
   auto hardware = m_robot->GetHardwareQueue();
   const double depletionRate = hardware ? .36 : .5;
@@ -229,7 +226,6 @@ SetBatteryBreak() {
   // path.
   const auto& path = m_solution->GetPath()->Cfgs();
   auto controller  = m_robot->GetController();
-  auto dynamics    = m_robot->GetDynamicsModel();
   auto dm          = m_library->GetDistanceMetric(m_waypointDm);
 
   double numSteps = 0;
@@ -252,26 +248,17 @@ SetBatteryBreak() {
                   << std::endl;
 
         m_parentAgent->SetBatteryBreak(batteryBreak, this);
-        position.ConfigureRobot();
-        dynamics->SetSimulatedState(position);
-        std::cout << "Original position: " << position.PrettyPrint() << std::endl;
-        std::cout << "Position: "
-                  << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-                  << std::endl;
-        std::cout << "Multibody position: " << m_robot->GetMultiBody()->GetCurrentCfg() << std::endl;
         return;
       }
 
       // Otherwise, apply the next control.
       Control nextControl = (*controller)(current, waypoint, timeRes);
-      //std::cout << "Controls being applied: " << nextControl << std::endl;
-      current = dynamics->Test(current, nextControl, timeRes);
-      //std::cout << "Current: " << current.PrettyPrint() << std::endl;
+      current = m_robot->GetMicroSimulator()->Test(current, nextControl, timeRes);
       numSteps += 1;
       batteryLevel -= depletionRate * timeRes;
-      //std::cout << "current battery level: " << batteryLevel << std::endl;
     }
   }
+
   double departureTime = GetTask()->GetArrivalTime() - numSteps*timeRes;
   double currentTime =m_parentAgent->GetCurrentTime();
   if(departureTime > currentTime){
@@ -288,13 +275,6 @@ SetBatteryBreak() {
 
   }
 
-
-
-  position.ConfigureRobot();
-  dynamics->SetSimulatedState(position);
-  std::cout << "Position: "
-            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-            << std::endl;
   //auto batteryBreak = path->FindBatteryBreak(batteryLevel, depletionRate, batteryThreshold,
   //                      m_parentAgent->GetCurrentTime(), timeRes, m_library.get());
   //std::cout << "Battery Break at: " << batteryBreak.GetPlace() << std::endl

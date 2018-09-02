@@ -1,5 +1,5 @@
-#ifndef DRAWABLE_ROADMAP_H_
-#define DRAWABLE_ROADMAP_H_
+#ifndef PMPL_DRAWABLE_ROADMAP_H_
+#define PMPL_DRAWABLE_ROADMAP_H_
 
 #include <vector>
 #include <chrono>
@@ -12,6 +12,7 @@
 #include <mutex>
 
 class DrawableMultiBody;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Renderable representation of a Roadmap. Allows for visualization of vertex
@@ -28,7 +29,6 @@ class DrawableRoadmap : public glutils::drawable  {
     typedef typename GraphType::EI EI;
 
     ///@}
-
     ///@name Constructor
     ///@{
 
@@ -77,16 +77,12 @@ class DrawableRoadmap : public glutils::drawable  {
 
     virtual void initialize() override;
 
-    /// How to draw the base roadmap
     virtual void draw() override;
-
 
     virtual void draw_select() override;
 
-    /// How to draw the roadmap when selected
     virtual void draw_selected() override;
 
-    /// How to draw the roadmap when highlighted
     virtual void draw_highlighted() override;
 
     ///@}
@@ -100,8 +96,7 @@ class DrawableRoadmap : public glutils::drawable  {
     MultiBody m_multiBody;                 ///< local copy of the graphs multibody.
     std::unique_ptr<DrawableMultiBody> m_dmb;              ///< DrawableMultiBody used by the cfgs.
     std::atomic<bool> m_drawRobot{false};               ///< rendering mode. (defaults to point mode)
-    mutable std::mutex m_CfgGuard;         ///< Lock for updating cfgs.
-    mutable std::mutex m_EdgeGuard;        ///< Lock for updating edges.
+    mutable std::mutex m_lock;             ///< Lock for updating the map.
     GraphType* m_graph;                    ///< a pointer to the RoadmapGraph.
 
     std::string m_name;                    ///< A name for this graph.

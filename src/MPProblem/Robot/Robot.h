@@ -2,7 +2,6 @@
 #define PMPL_ROBOT_H_
 
 #include "Control.h"
-#include "HardwareInterfaces/Battery.h"
 
 #include <iostream>
 #include <memory>
@@ -12,11 +11,12 @@
 
 class Actuator;
 class Agent;
-class btMultiBody;
+class Battery;
 class Boundary;
+class BulletModel;
 class ControllerMethod;
 class CSpaceBoundingBox;
-class DynamicsModel;
+class MicroSimulator;
 class MPProblem;
 class MultiBody;
 class RobotCommandQueue;
@@ -36,8 +36,15 @@ class StateEstimator;
 ///                   into generalized forces.
 ///   @arg Controller: The robot's low-level controller, which determines what
 ///                    control should be applied to move from point to point.
-///   @arg DynamicsModel: Simulation model of the robot. Represents the robot in
-///                       the bullet world.
+///   @arg BulletModel: Simulation model of the robot. Represents the robot in
+///                     the bullet world.
+///   @arg MicroSimulator: Isolated simulation of this robot for testing control
+///                        applications.
+///   @arg CommandQueue: Controls a set of hardware for this robot.
+///   @arg StateEstimator: Object for integrating sensor data with commands to
+///                        localize a hardware robot.
+///
+/// @todo Come up with a nice way to support both real and emulated hardware.
 ////////////////////////////////////////////////////////////////////////////////
 class Robot final {
 
@@ -46,37 +53,28 @@ class Robot final {
 
   MPProblem* m_problem{nullptr};              ///< The owning problem object.
 
-  std::string m_label;                     ///< The robot's unique label.
-
-  bool m_virtual{false};                   ///< Is this an imaginary robot?
-
   std::unique_ptr<MultiBody> m_multibody;  ///< Robot's geometric representation.
 
-  /// Actuators.
+  /// Actuators, mapped by label.
   std::unordered_map<std::string, std::unique_ptr<Actuator>> m_actuators;
-
+  std::unique_ptr<CSpaceBoundingBox> m_cspace;    ///< The robot's c-space.
+  std::unique_ptr<CSpaceBoundingBox> m_vspace;    ///< The robot's velocity space.
+  std::unique_ptr<Agent> m_agent;                 ///< High-level decision agent.
   std::unique_ptr<ControllerMethod> m_controller; ///< Low-level controller.
+  std::unique_ptr<MicroSimulator> m_simulator;    ///< Internal simulator.
+  BulletModel* m_bulletModel{nullptr};            ///< The bullet simulation model.
 
-  bool m_nonholonomic{false};              ///< Is the robot nonholonomic?
-  bool m_carlike{false};                   ///< Is the robot car-like?
-  std::unique_ptr<DynamicsModel> m_dynamicsModel; ///< The bullet dynamics model.
+  std::unique_ptr<RobotCommandQueue> m_hardware;    ///< Hardware command queue.
+  std::unique_ptr<StateEstimator> m_stateEstimator; ///< The localization object.
+  std::unique_ptr<Battery> m_battery;               ///< An emulated battery.
 
-  double m_maxLinearVelocity{10};          ///< Max linear velocity.
-  double m_maxAngularVelocity{1};          ///< Max angular velocity.
-
-  std::unique_ptr<CSpaceBoundingBox> m_cspace; ///< The robot's c-space.
-  std::unique_ptr<CSpaceBoundingBox> m_vspace; ///< The robot's velocity space.
-
-  std::unique_ptr<Agent> m_agent;          ///< High-level decision-making agent.
-
-  /// Command queue for controlling a hardware robot.
-  std::unique_ptr<RobotCommandQueue> m_hardware;
-
-  std::unique_ptr<Battery> m_battery; ///< An emulated battery for this agent. TODO: Unify with other hardware stuff
-
-  std::string m_capability; ///< The terrain label that the robot can use.
-
-  std::unique_ptr<StateEstimator> m_stateEstimator;  ///< The state estimator used for robot localization.
+  std::string m_label;             ///< The robot's unique label.
+  bool m_virtual{false};           ///< Is this an imaginary robot?
+  bool m_nonholonomic{false};      ///< Is the robot nonholonomic?
+  bool m_carlike{false};           ///< Is the robot car-like?
+  double m_maxLinearVelocity{10};  ///< Max linear velocity.
+  double m_maxAngularVelocity{1};  ///< Max angular velocity.
+  std::string m_capability;        ///< The terrain label that the robot can use.
 
   ///@}
 
@@ -86,13 +84,13 @@ class Robot final {
     ///@{
 
     /// Construct a robot from an XML node.
-    /// @param[in] _p The owning MPProblem.
-    /// @param[in] _node The XML node to parse.
+    /// @param _p The owning MPProblem.
+    /// @param _node The XML node to parse.
     Robot(MPProblem* const _p, XMLNode& _node);
 
     /// Construct a robot from a multibody.
-    /// @param[in] _p The owning MPProblem.
-    /// @param[in] _label The unique label for this robot.
+    /// @param _p The owning MPProblem.
+    /// @param _label The unique label for this robot.
     Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
           const std::string& _label);
 
@@ -112,10 +110,10 @@ class Robot final {
     /// robots. Destruct the old one and create a new one instead.
 
     Robot(const Robot&) = delete;
-    Robot(Robot&&);
+    Robot(Robot&&) = delete;
 
     Robot& operator=(const Robot&) = delete;
-    Robot& operator=(Robot&&);
+    Robot& operator=(Robot&&) = delete;
 
     ///@}
 
@@ -125,19 +123,19 @@ class Robot final {
     ///@{
 
     /// Parse an XML robot file (passes node to ReadXMLNode).
-    /// @param[in] _filename The file name.
+    /// @param _filename The file name.
     void ReadXMLFile(const std::string& _filename);
 
     /// Parse an XML robot node.
-    /// @param[in] _node The SML node.
+    /// @param _node The SML node.
     void ReadXMLNode(XMLNode& _node, const std::string& _filename = "");
 
     /// Parse multibody information from robot's XML file.
-    /// @param[in] _node The XML node to parse
+    /// @param _node The XML node to parse
     void ReadMultiBodyXML(XMLNode& _node);
 
     /// Parse a multibody file describing this robot.
-    /// @param[in] _filename The file name.
+    /// @param _filename The file name.
     void ReadMultibodyFile(const std::string& _filename);
 
     ///@}
@@ -165,11 +163,19 @@ class Robot final {
 
     /// Execute a simulation step: update the percept model, have the agent make
     /// a decision, and send the resulting controls to the actuators.
-    /// @param[in] _dt The timestep length.
+    /// @param _dt The timestep length.
     void Step(const double _dt);
 
     /// Align the multibody model to the robot's current simulated state.
     void SynchronizeModels() noexcept;
+
+    /// Access the robot's simulation model. This is owned by the simulation
+    /// engine.
+    BulletModel* GetSimulationModel() noexcept;
+
+    /// Set the robot's simulation model (should only happen in the main bullet
+    /// engine).
+    void SetSimulationModel(BulletModel* const _m);
 
     ///@}
     ///@name Geometry Accessors
@@ -211,11 +217,9 @@ class Robot final {
     ///@}
     ///@name Dynamics Accessors
     ///@{
-    /// Access the robot's dynamics model. The robot will take ownership of it
-    /// and delete it when necessary.
 
-    DynamicsModel* GetDynamicsModel() noexcept;
-    void SetDynamicsModel(btMultiBody* const _m);
+    /// Get the robot's micro-simulator to test out controls.
+    MicroSimulator* GetMicroSimulator() noexcept;
 
     ///@}
     ///@name Hardware Interface
@@ -228,7 +232,8 @@ class Robot final {
 
     StateEstimator* GetStateEstimator() const noexcept;
 
-    void SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator) noexcept;
+    void SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator)
+        noexcept;
 
     ///@}
     ///@name Other Properties
@@ -257,13 +262,13 @@ class Robot final {
 
     /// Get the unique label for this robot.
     const std::string& GetLabel() const noexcept;
-  
+
     /// Get the capability for this robot.
     const std::string& GetCapability() const noexcept;
 
     /// Set the capability for this robot.
     void SetCapability(const std::string& _capability);
-    
+
     ///@}
 
 

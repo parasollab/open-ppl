@@ -39,7 +39,7 @@ class Agent {
     bool m_debug{true};               ///< Toggle debug messages.
 
     /// Specifiies the type of agent for heterogenous multiagent teams
-    std::string m_capability{"icreate"};
+    std::string m_capability;
 
     ///@}
 

@@ -34,10 +34,6 @@ MPProblem(const MPProblem& _other) {
 
 
 MPProblem::
-MPProblem(MPProblem&& _other) = default;
-
-
-MPProblem::
 ~MPProblem() = default;
 
 /*-------------------------------- Assignment --------------------------------*/
@@ -62,7 +58,7 @@ operator=(const MPProblem& _other) {
   // Copy tasks.
   m_taskMap.clear();
   for(const auto& robotTasks : _other.m_taskMap) {
-    Robot* const robot = robotTasks.first;
+    Robot* const robot = GetRobot(robotTasks.first->GetLabel());
     const auto& tasks = robotTasks.second;
 
     for(const auto& task : tasks) {
@@ -91,11 +87,6 @@ operator=(const MPProblem& _other) {
 
   return *this;
 }
-
-
-MPProblem&
-MPProblem::
-operator=(MPProblem&& _other) = default;
 
 /*---------------------------- XML Helpers -----------------------------------*/
 
@@ -391,11 +382,13 @@ SetPath(const string& _filename) {
   m_filePath = _filename;
 }
 
-std::vector<MPHandoffTemplate*> 
+
+std::vector<MPHandoffTemplate*>
 MPProblem::
 GetHandoffTemplates() const {
   return m_handoffTemplates;
 }
+
 /*---------------------------- Construction Helpers --------------------------*/
 
 bool

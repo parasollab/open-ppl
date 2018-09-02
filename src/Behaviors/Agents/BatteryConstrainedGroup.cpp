@@ -8,12 +8,12 @@
 #include "Behaviors/Agents/PathFollowingChildAgent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
-#include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "MPLibrary/MPTools/TRPTool.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/DynamicsModel.h"
+#include "MPProblem/Robot/HardwareInterfaces/Battery.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
+#include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 
 #include "sandbox/gui/main_window.h"
@@ -235,7 +235,7 @@ Step(const double _dt) {
         if(chargingLocation.second != agent)
           continue;
         if(!chargingLocation.first->InBoundary(agent->GetRobot()->
-              GetDynamicsModel()->GetSimulatedState())){
+              GetSimulationModel()->GetState())){
           ClearChargingLocation(agent);
         }
         break;
@@ -492,7 +492,7 @@ BatteryConstrainedGroup::
 GetNearestHelper(Agent* const _member) {
   // Get _member's current location.
   auto robot = _member->GetRobot();
-  const Cfg memberPos = robot->GetDynamicsModel()->GetSimulatedState();
+  const Cfg memberPos = robot->GetSimulationModel()->GetState();
 
   // Compare with all helpers and return the nearest.
   double nearestDistance = std::numeric_limits<double>::max();
@@ -501,8 +501,7 @@ GetNearestHelper(Agent* const _member) {
   auto dm = m_library->GetDistanceMetric(m_dmLabel);
 
   for(auto helper : GetHelpers()) {
-    const Cfg helperPos = helper->GetRobot()->GetDynamicsModel()->
-                          GetSimulatedState();
+    const Cfg helperPos = helper->GetRobot()->GetSimulationModel()->GetState();
     const double distance = dm->Distance(memberPos, helperPos);
 
     if(distance < nearestDistance) {
@@ -549,8 +548,8 @@ InHandoffProximity(Agent* const _member1, Agent* const _member2) {
   auto robot1 = _member1->GetRobot(),
        robot2 = _member2->GetRobot();
 
-  auto cfg1 = robot1->GetDynamicsModel()->GetSimulatedState(),
-       cfg2 = robot2->GetDynamicsModel()->GetSimulatedState();
+  auto cfg1 = robot1->GetSimulationModel()->GetState(),
+       cfg2 = robot2->GetSimulationModel()->GetState();
 
   auto dm = m_library->GetDistanceMetric(m_handoffDm);
 
@@ -646,7 +645,7 @@ CheckReachedWorker(Agent* const _member){
         // Create bounding sphere around the old worker robot and select a valid
         // starting configuration within the boundary
         auto workerPos = agentPair.first->GetRobot()->
-          GetDynamicsModel()->GetSimulatedState().GetPosition();
+          GetSimulationModel()->GetState().GetPosition();
         auto combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
             agentPair.first->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
         std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
@@ -694,7 +693,7 @@ InitializeChargingLocations() {
       continue;
 
     // Get the position of the member.
-    auto position = agent->GetRobot()->GetDynamicsModel()->GetSimulatedState().
+    auto position = agent->GetRobot()->GetSimulationModel()->GetState().
                     GetPosition();
 
     // Create a new charging boundary using this position.
@@ -711,7 +710,7 @@ std::pair<Boundary*, double>
 BatteryConstrainedGroup::
 FindNearestChargingLocation(Agent* const _a) {
   auto robot = _a->GetRobot();
-  auto currentPos = robot->GetDynamicsModel()->GetSimulatedState();
+  auto currentPos = robot->GetSimulationModel()->GetState();
   Boundary* bestChargingLocation = nullptr;
   double bestDistance = std::numeric_limits<double>::max();
 
@@ -743,13 +742,13 @@ FindNearestChargingLocation(Agent* const _a) {
     //std::cout << "Best Distance: " << bestDistance << std::endl;
   }
   if(this->m_debug and bestChargingLocation->
-      InBoundary(m_helperMap[_a]->GetRobot()->GetDynamicsModel()->GetSimulatedState())){
+      InBoundary(m_helperMap[_a]->GetRobot()->GetSimulationModel()->GetState())){
     std::cout << "My helper is on the charging location." << std::endl;
 
   }
   //If there is no empty charging location return an empty pointer
   if(!goalLocation or bestChargingLocation->
-      InBoundary(m_helperMap[_a]->GetRobot()->GetDynamicsModel()->GetSimulatedState()))
+      InBoundary(m_helperMap[_a]->GetRobot()->GetSimulationModel()->GetState()))
     return {nullptr,std::numeric_limits<double>::infinity()};
   //goalLocation->second = _a;
 
@@ -787,7 +786,7 @@ IsAtChargingLocation(Agent* const _member) {
     if(charger.first.get() == location){
       // If an agent is at the charging location, assign it to the charging
       // location.
-      if(location->InBoundary(_member->GetRobot()->GetDynamicsModel()->GetSimulatedState())){
+      if(location->InBoundary(_member->GetRobot()->GetSimulationModel()->GetState())){
         charger.second = _member;
         return true;
       }
@@ -846,7 +845,7 @@ ClearToPlan(Agent* const _member){
     if(agentPair.second != _member)
       continue;
     return !task->EvaluateGoalConstraints({agentPair.first->GetRobot()->
-                  GetDynamicsModel()->GetSimulatedState()});
+                  GetSimulationModel()->GetState()});
   }
   return true;
 }
@@ -913,7 +912,7 @@ AssignTaskHelper(Agent* const _member) {
   // Create bounding sphere around the old worker robot and select a valid
   // starting configuration within the boundary
   auto workerPos = previousOwner->GetRobot()->
-    GetDynamicsModel()->GetSimulatedState().GetPosition();
+    GetSimulationModel()->GetState().GetPosition();
   auto combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
       previousOwner->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
   std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
@@ -1003,7 +1002,7 @@ AssignProactiveHelperTask(Agent* const _member){
   currentRobot->SetVirtual(true);
 
   auto parentCopyRobot = problemCopy->GetRobot(m_robot->GetLabel());
-  Cfg position = _member->GetRobot()->GetDynamicsModel()->GetSimulatedState();
+  Cfg position = _member->GetRobot()->GetSimulationModel()->GetState();
   std::cout << "Creating Start Constraint" << std::endl;
   position.SetRobot(parentCopyRobot);
   auto start = std::unique_ptr<CSpaceConstraint>(
@@ -1015,7 +1014,7 @@ AssignProactiveHelperTask(Agent* const _member){
             << " as procative helper calculation"
             << std::endl;
   std::cout << "Currently at: "
-            << _member->GetRobot()->GetDynamicsModel()->GetSimulatedState()
+            << _member->GetRobot()->GetSimulationModel()->GetState()
             << std::endl;
   m_solution->GetPath()->Clear();
   // Set the solution for appending with the parent copy.
@@ -1038,13 +1037,12 @@ AssignProactiveHelperTask(Agent* const _member){
   m_solution->SetRobot(memberRobot);
   m_library->SetMPProblem(m_robot->GetMPProblem());
 
-  Cfg pos = memberRobot->GetDynamicsModel()->GetSimulatedState();
+  Cfg pos = memberRobot->GetSimulationModel()->GetState();
 
 
 
 
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  //const Cfg position = m_robot->GetDynamicsModel()->GetSimulatedState();
 
   // Use the controller and dynamics model to generate an ideal course for this
   // path.
@@ -1055,7 +1053,7 @@ AssignProactiveHelperTask(Agent* const _member){
   }
 
   auto controller  = memberRobot->GetController();
-  auto dynamics    = memberRobot->GetDynamicsModel();
+  auto dynamics    = memberRobot->GetSimulationModel();
   auto dm          = m_library->GetDistanceMetric(m_dmLabel);
 
   const double distanceThreshold = .05;
@@ -1081,10 +1079,6 @@ AssignProactiveHelperTask(Agent* const _member){
     }
   }
   pos.ConfigureRobot();
-  dynamics->SetSimulatedState(position);
-  std::cout << "Position: "
-            << memberRobot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-            << std::endl;
 
 
   const double helpTime = numSteps * timeRes;
@@ -1206,7 +1200,7 @@ BatteryCheck(Agent* const _member){
       task.m_task = _member->GetTask();
 
       if(task.m_task->EvaluateGoalConstraints({_member->GetRobot()->
-                  GetDynamicsModel()->GetSimulatedState()})){
+                  GetSimulationModel()->GetState()})){
         task.m_task->SetCompleted();
         task.m_task = nullptr;
       }

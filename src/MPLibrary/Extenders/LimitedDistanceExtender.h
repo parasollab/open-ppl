@@ -1,5 +1,5 @@
-#ifndef LIMITED_DISTANCE_EXTENDER_H_
-#define LIMITED_DISTANCE_EXTENDER_H_
+#ifndef PMPL_LIMITED_DISTANCE_EXTENDER_H_
+#define PMPL_LIMITED_DISTANCE_EXTENDER_H_
 
 #include "KinodynamicExtender.h"
 
@@ -151,7 +151,7 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
   auto vc = this->GetValidityChecker(this->m_vcLabel);
   auto robot = _start.GetRobot();
-  auto dynamicsModel = robot->GetDynamicsModel();
+  auto simulator = robot->GetMicroSimulator();
 
   // Get the length of each sub-step.
   auto env = this->GetEnvironment();
@@ -166,7 +166,7 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   size_t i = 0;
   for(; i < m_minTimeSteps; ++i) {
      // Advance from the last known good cfg.
-    CfgType temp = dynamicsModel->Test(_new, _control, dt);
+    CfgType temp = simulator->Test(_new, _control, dt);
 
     // Quit if we collided.
     if(!temp.InBounds(env) or !vc->IsValid(temp, "LimitedDistanceExtender"))
@@ -189,7 +189,7 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
 
   while(distance < maxDist) {
     // Advance from the last known good cfg.
-    CfgType temp = dynamicsModel->Test(_new, _control, dt);
+    CfgType temp = simulator->Test(_new, _control, dt);
 
     // Quit if we collided.
     if(!temp.InBounds(env) or !vc->IsValid(temp, "LimitedDistanceExtender"))

@@ -43,7 +43,7 @@ class MPProblem final
     explicit MPProblem(const std::string& _filename);
 
     MPProblem(const MPProblem& _other); ///< Copy.
-    MPProblem(MPProblem&& _other);      ///< Move.
+    MPProblem(MPProblem&& _other) = delete;
 
     ~MPProblem();
 
@@ -52,7 +52,7 @@ class MPProblem final
     ///@{
 
     MPProblem& operator=(const MPProblem& _other); ///< Copy.
-    MPProblem& operator=(MPProblem&& _other);      ///< Move.
+    MPProblem& operator=(MPProblem&& _other) = delete;
 
     ///@}
     ///@name XML File Parsing
@@ -165,7 +165,7 @@ class MPProblem final
 
     ///@name Handoff Template Accessors
     ///@{
-   
+
     /// Return the list of handoff templates defined in the problem
     /// @return vector of handoff templates
     std::vector<MPHandoffTemplate*> GetHandoffTemplates() const;
@@ -191,6 +191,7 @@ class MPProblem final
     std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
     std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot group for problem.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
+
     std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
     std::vector<MPHandoffTemplate*> m_handoffTemplates; ///< All handoff templates for a problem.
 

@@ -18,38 +18,20 @@ Control() = default;
 
 Control::
 Control(Actuator* const _actuator, const Signal& _signal)
-  : actuator(_actuator), signal(_signal) {
-}
+  : actuator(_actuator), signal(_signal)
+{ }
 
 /*--------------------------- Simulation Interface ---------------------------*/
 
 std::vector<double>
 Control::
-GetForce() const {
+GetOutput() const {
   if(actuator)
     // If we have an actuator, ask it for the force.
-    return actuator->ComputeForce(signal);
+    return actuator->ComputeOutput(signal);
   else
     // Otherwise this is a coast control - return a 0 force vector.
     return std::vector<double>(signal.size(), 0);
-}
-
-
-void
-Control::
-Execute() const {
-  if(actuator)
-    // If we have an actuator, ask it to execute this control.
-    actuator->Execute(signal);
-  // Otherwise this is a coast control - we don't need to do anything.
-}
-
-
-void
-Control::
-Execute(btMultiBody* const _model) const {
-  if(actuator)
-    actuator->Execute(signal, _model);
 }
 
 /*-------------------------- Ordering and Equality ---------------------------*/
@@ -76,7 +58,8 @@ operator<(const Control& _rhs) const noexcept {
 bool
 Control::
 operator==(const Control& _rhs) const noexcept {
-  return actuator == _rhs.actuator && signal == _rhs.signal;
+  return actuator == _rhs.actuator
+     and signal == _rhs.signal;
 }
 
 
@@ -90,10 +73,8 @@ operator!=(const Control& _rhs) const noexcept {
 
 std::ostream&
 operator<<(std::ostream& _os, const Control& _c) {
-  if(_c.signal.empty())
-    return _os;
-  _os << (_c.actuator ? _c.actuator->GetLabel() : "coast") << " ";
-  return _os << nonstd::print_container(_c.signal);
+  return _os << (_c.actuator ? _c.actuator->GetLabel() : "coast") << " "
+             << nonstd::print_container(_c.signal);
 }
 
 /*------------------------------- Control Set --------------------------------*/
@@ -106,12 +87,12 @@ AggregatedControlVector(const ControlSet& _controls) {
 
   // Add up the control signals and 'forces', which may actually be velocities
   // for robots with 1st order dynamics (like iCreates).
-  std::vector<double> force  = _controls[0].GetForce(),
+  std::vector<double> force  = _controls[0].GetOutput(),
                       signal = _controls[0].signal;
 
   for(size_t i = 1; i < _controls.size(); ++i) {
     const auto& signalI = _controls[i].signal;
-    const auto forceI = _controls[i].GetForce();
+    const auto forceI = _controls[i].GetOutput();
 
     std::transform(signal.begin(), signal.end(), signalI.begin(), signal.begin(),
         std::plus<double>());

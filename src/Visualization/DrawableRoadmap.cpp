@@ -57,7 +57,7 @@ DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
       if(_e->key() == Qt::Key_P) {
         this->ToggleRobot();
       }
-    };
+  };
 
   main_window::get()->add_key_mapping(m_name, std::move(fn));
 }
@@ -86,7 +86,7 @@ DrawableRoadmap::
 AddVertex(VI _vi) {
   // Gets Vertex data.
   auto cfg = _vi->property();
-  std::lock_guard<std::mutex> lock(m_CfgGuard);
+  std::lock_guard<std::mutex> lock(m_lock);
   m_bufferCfgs.push_back(DrawableCfg(cfg.GetData(), m_dmb.get()));
 }
 
@@ -105,8 +105,8 @@ AddEdge(EI _ei) {
   std::vector<glutils::vector3f> edgeList;
 
   // get the cfgs from the graph
-  auto startCfg = m_graph->GetVertex(startVid);
-  auto endCfg   = m_graph->GetVertex(endVid);
+  const Cfg& startCfg = m_graph->GetVertex(startVid);
+  const Cfg& endCfg   = m_graph->GetVertex(endVid);
 
   edgeList.push_back(ToGLUtils(startCfg.GetPoint()));
 
@@ -120,7 +120,7 @@ AddEdge(EI _ei) {
   edgeList.push_back(ToGLUtils(endCfg.GetPoint()));
 
   // add the target cfg to the edge points
-  std::lock_guard<std::mutex> lock(m_EdgeGuard);
+  std::lock_guard<std::mutex> lock(m_lock);
   m_bufferEdges.emplace_back(std::move(edgeList));
 }
 
@@ -158,19 +158,16 @@ draw() {
   // sets the color
   glColor4fv(m_color);
 
-  /// copy all of the recently added elements into the render buffer
+  // copy all of the recently added elements into the render buffer
   {
-    std::lock_guard<std::mutex> lock(m_CfgGuard);
+    std::lock_guard<std::mutex> lock(m_lock);
+
     copy(m_bufferCfgs.begin(), m_bufferCfgs.end(), std::back_inserter(m_cfgs));
     m_bufferCfgs.clear();
-  }
-  {
-    std::lock_guard<std::mutex> lock(m_EdgeGuard);
+
     copy(m_bufferEdges.begin(), m_bufferEdges.end(), std::back_inserter(m_edges));
     m_bufferEdges.clear();
   }
-
-
 
   // if draw robot then draw a rendering of the robot at the cfg,
   // otherwise, draw the cfg as a point.

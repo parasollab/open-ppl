@@ -6,7 +6,7 @@
       movement="rotational" mass="1"/>
 
     <Link filename="link.obj" color="0 1 0 1" index="1"
-      type="joint" movement="rotational" mass="1">
+      type="joint" mass="1">
       <Connection joint="revolute" range="-1:1"
         parentIndex="0"
         childIndex="1"

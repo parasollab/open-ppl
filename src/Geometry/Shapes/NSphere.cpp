@@ -149,7 +149,7 @@ operator>>(std::istream& _is, NSphere& _sphere) {
   // Read opening bracket.
   char c;
   if(!(_is >> c && c == '['))
-    throw ParseException(WHERE, "Failed reading NSphere bounds. Missing '['.");
+    throw ParseException(WHERE) << "Failed reading NSphere bounds. Missing '['.";
 
   // Read the center point values.
   double temp;
@@ -159,29 +159,31 @@ operator>>(std::istream& _is, NSphere& _sphere) {
 
     // If the next character is not digit, we are done reading center point
     // values.
-    if(!isdigit(_is.peek()))
+    c = _is.peek();
+    if(!isdigit(c) and c != '-' and c != '.')
       break;
 
     // Otherwise, read the next center point value.
     if(!(_is >> temp))
-      throw ParseException(WHERE, "Failed reading center point value " +
-          std::to_string(_sphere.m_center.size()) + ".");
+      throw ParseException(WHERE) << "Failed reading center point value "
+                                  << _sphere.m_center.size() << ".";
     _sphere.m_center.push_back(temp);
   }
 
   // Read separator.
   if(!(_is >> c and c == ';'))
-    throw ParseException(WHERE, "Failed reading NSphere bounds. Missing ';'.");
+    throw ParseException(WHERE) << "Failed reading NSphere bounds. Read '"
+                                << c << "' instead of ';'.";
 
   // Read the radius.
   if(!(_is >> temp))
-    throw ParseException(WHERE, "Failed reading NSphere radius.");
+    throw ParseException(WHERE) << "Failed reading NSphere radius.";
   _sphere.m_radius = temp;
 
   // Read the last separator.
   _is >> std::ws;
   if(!(_is >> c and c == ']'))
-    throw ParseException(WHERE, "Failed reading NSphere bounds. Missing ']'.");
+    throw ParseException(WHERE) << "Failed reading NSphere bounds. Missing ']'.";
 
   return _is;
 }

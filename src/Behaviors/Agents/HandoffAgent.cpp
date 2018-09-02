@@ -8,7 +8,9 @@
 #include "Behaviors/Controllers/ICreateController.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/DynamicsModel.h"
+#include "Simulator/BulletModel.h"
+#include "Simulator/MicroSimulator.h"
+#include "Simulator/Simulation.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -18,7 +20,6 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
-#include "Simulator/Simulation.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -51,7 +52,7 @@ Initialize() {
 
 void
 HandoffAgent::
-InitializeRoadmap() {  
+InitializeRoadmap() {
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 }
 
@@ -70,14 +71,14 @@ IsChild() const noexcept {
 }
 
 
-void 
+void
 HandoffAgent::
 GenerateCost(std::shared_ptr<MPTask> const _task) {
   std::cout << "Starting generate cost function" << std::endl;
   // Save current state in case the robot has not finished its current task.
   // TODO: Find way to check if initial task is completed if secondary task is
   // assigned (maybe change m_task to a queue - m_tasks)
-  auto currentTask = GetTask(); 
+  auto currentTask = GetTask();
   auto currentPath = m_path;
 
   // TODO: Create cost functions for the path (adjust edge weights according to
@@ -85,7 +86,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   m_potentialCost = 0.0;
   if(!currentPath.empty())
     m_potentialCost = m_solution->GetPath()->Length();
-  
+
   // Compute cost to travel from current position to start constraint
   Cfg position;
   // If the robot currently has a path, set its position to the end of that path
@@ -93,7 +94,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   if(!currentPath.empty())
     position = m_path.back();
   else
-    position = m_robot->GetDynamicsModel()->GetSimulatedState();
+    position = m_robot->GetSimulationModel()->GetState();
 
   std::shared_ptr<MPTask> setupTask(new MPTask(m_robot));
   auto start = std::unique_ptr<CSpaceConstraint>(
@@ -112,7 +113,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
     SetTask(_task);
     std::shared_ptr<MPProblem> problemCopyDos(new MPProblem(*m_robot->GetMPProblem()));
     WorkFunction(problemCopyDos);
-    
+
     if(!m_solution->GetPath()->Cfgs().empty()){
       auto goalPath = m_path;
       m_potentialCost += m_solution->GetPath()->Length();
@@ -142,21 +143,16 @@ GetPotentialCost() const {
 }
 
 
-double 
+double
 HandoffAgent::
 GetTaskTime() const {
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  const Cfg position = m_robot->GetDynamicsModel()->GetSimulatedState();
-  //std::cout << "Position: " << position.PrettyPrint() << std::endl;
-  //std::cout << "Position: "
-  //          << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-  //          << std::endl;
 
   // Use the controller and dynamics model to generate an ideal course for this
   // path.
   const auto& path = m_solution->GetPath()->Cfgs();
   auto controller  = m_robot->GetController();
-  auto dynamics    = m_robot->GetDynamicsModel();
+  auto dynamics    = m_robot->GetMicroSimulator();
   auto dm          = m_library->GetDistanceMetric(m_waypointDm);
 
   double numSteps = 0;
@@ -179,12 +175,6 @@ GetTaskTime() const {
     }
   }
 
-  position.ConfigureRobot();
-  dynamics->SetSimulatedState(position);
-  std::cout << "Position: "
-            << m_robot->GetDynamicsModel()->GetSimulatedState().PrettyPrint()
-            << std::endl;
-  
   return numSteps * timeRes;
 
 }
@@ -209,7 +199,8 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   auto copyRobot = _problem->GetRobot(m_robot->GetLabel());
   GetTask()->SetRobot(copyRobot);
   std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
-  std::cout << "Currently at: " << m_robot->GetDynamicsModel()->GetSimulatedState() << std::endl;
+  std::cout << "Currently at: " << m_robot->GetSimulationModel()->GetState()
+            << std::endl;
   if(m_solution){
     m_solution->GetPath()->Clear();
   }
@@ -271,7 +262,7 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   // Update odometry tracking.
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   if(_c.size())
-    m_distance += _steps * timeRes * nonstd::magnitude<double>(_c[0].GetForce());
+    m_distance += _steps * timeRes * nonstd::magnitude<double>(_c[0].GetOutput());
 }
 
 MPSolution*
@@ -286,7 +277,7 @@ SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
   m_solution->GetRoadmap()->SetGraph(_graph);
 }
 
-void 
+void
 HandoffAgent::
 AddSubtask(std::shared_ptr<MPTask> _task){
   m_queuedSubtasks.push_back(_task);

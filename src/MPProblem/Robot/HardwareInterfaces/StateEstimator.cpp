@@ -1,8 +1,8 @@
 #include "StateEstimator.h"
 
 #include "AverageEstimator.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Simulator/MicroSimulator.h"
 #include "Utilities/XMLNode.h"
 #include "Utilities/PMPLExceptions.h"
 
@@ -15,23 +15,23 @@ StateEstimator(Robot* const _robot)
 { }
 
 
-std::unique_ptr<StateEstimator> 
+std::unique_ptr<StateEstimator>
 StateEstimator::
 Factory(Robot* const _robot, XMLNode& _node) {
-  std::string type = _node.Read("type", true, "", "The StateEstimator class name.");
+  std::string type = _node.Read("type", true, "",
+      "The StateEstimator class name.");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
   std::unique_ptr<StateEstimator> output;
 
   if(type == "average")
-    output = std::unique_ptr<AverageEstimator>(
-        new AverageEstimator(_robot)
-    );
+    output = std::unique_ptr<AverageEstimator>(new AverageEstimator(_robot));
   else
-    throw ParseException(_node.Where(), "Unknown StateEstimator type '" + type + "'.");
-  
+    throw ParseException(_node.Where()) << "Unknown StateEstimator type '"
+                                        << type << "'.";
+
   output->m_debug = _node.Read("debug", false, false, "Show debug messages.");
-  
+
   return output;
 }
 
@@ -61,7 +61,7 @@ void
 StateEstimator::
 ApplyControls(const ControlSet& _controls, const double _dt) {
   // Use the robot's dynamics model to estimate the effect of the controls.
-  m_estimatedState = m_robot->GetDynamicsModel()->Test(m_estimatedState,
+  m_estimatedState = m_robot->GetMicroSimulator()->Test(m_estimatedState,
       _controls, _dt);
 
   /// @todo Update uncertainty based on actuator's process noise. Ideally the

@@ -1,21 +1,17 @@
-#ifndef KINODYNAMIC_EXTENDER_H_
-#define KINODYNAMIC_EXTENDER_H_
+#ifndef PMPL_KINODYNAMIC_EXTENDER_H_
+#define PMPL_KINODYNAMIC_EXTENDER_H_
 
 #include "ExtenderMethod.h"
 
-#include "MPProblem/Robot/Control.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
+#include "MPProblem/Robot/Control.h"
+#include "MPProblem/Robot/Robot.h"
+#include "Simulator/MicroSimulator.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Extender for nonholonomic robots.
-///
-/// @TODO Currently this method requires the robot's controller to have a discrete
-///       control set. We should re-write this class so that it asks the
-///       controller to determine the control, and let all of the details be
-///       handled in the ControllerMethod classes.
-///
+/// Extender for nonholonomic robots. Extends an initial configuration by
+/// applying a control for some number of time steps.
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -32,7 +28,8 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    KinodynamicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
+    KinodynamicExtender(const std::string& _dmLabel = "",
+        const std::string& _vcLabel = "",
         const double _min = .001, const size_t _steps = 10,
         const bool _fixed = true, const bool _best = false);
 
@@ -44,7 +41,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name ExtenderMethod Overrides
@@ -58,17 +55,19 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     virtual double GetMaxDistance() const override;
 
     ///@}
-    ///@name Helpers
+    ///@name KinodynamicExtender Interface
     ///@{
 
-    /// Applies a single control at a starting state for m_numSteps.
-    /// @param      _start      The start configuration.
-    /// @param      _con        The Control used.
-    /// @return     The resulting cfg after _start has been stepped m_numSteps
-    //              using _con as the control.
+    /// Apply a control to a starting state for m_numSteps.
+    /// @param _start The start configuration.
+    /// @param _con   The Control used.
+    /// @return The resulting cfg after _start has been stepped m_numSteps
+    ///         using _con as the control. If the extension fails, _start is
+    ///         returned instead.
     CfgType ApplyControl(const CfgType& _start, const Control& _con);
-    
+
     ///@}
+
   protected:
 
     ///@name Helpers
@@ -118,9 +117,10 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@name Extender Properties
     ///@{
 
-    size_t m_numSteps; ///< The number of time resolutions to use for a step.
-    bool m_fixed;      ///< True for fixed time step, false for variable.
-    bool m_best;       ///< True for best control, false for random control.
+    size_t m_numSteps{10}; ///< The number of time resolutions to use for a step.
+    bool m_fixed{true};    ///< True for fixed time step, false for variable.
+    bool m_best{false};    ///< True for best control, false for random control.
+    mutable bool m_distanceCached{false}; ///< Is the max distance cached?
 
     ///@}
 };
@@ -129,7 +129,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
 
 template <typename MPTraits>
 KinodynamicExtender<MPTraits>::
-KinodynamicExtender(const string& _dmLabel, const string& _vcLabel,
+KinodynamicExtender(const std::string& _dmLabel, const std::string& _vcLabel,
     const double _min, const size_t _steps, const bool _fixed, const bool _best) :
     ExtenderMethod<MPTraits>(_min), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
     m_numSteps(_steps), m_fixed(_fixed), m_best(_best) {
@@ -144,13 +144,13 @@ KinodynamicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
 
   m_dmLabel = _node.Read("dmLabel",true,"", "Distance metric label.");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label.");
-  /// @TODO Ensure that numSteps is used.
-  m_numSteps = _node.Read("numSteps", false, size_t(10), size_t(1),
-      std::numeric_limits<size_t>::max(), "Maximum number of time steps to take "
-      "for each extension.");
-  m_fixed = _node.Read("fixed", true, true, "Fixed or variable number of time "
-      "steps.");
-  m_best = _node.Read("best", true, false, "Best control or random control.");
+
+  m_numSteps = _node.Read("numSteps", true, m_numSteps,
+      size_t(1), std::numeric_limits<size_t>::max(),
+      "Maximum number of time steps to take for each extension.");
+  m_fixed = _node.Read("fixed", true, m_fixed,
+      "Fixed or variable number of time steps.");
+  m_best = _node.Read("best", true, m_best, "Best control or random control.");
 
   /// @TODO Ensure maxDist isn't used.
   //_node.Read("maxDist", true, 0., 0., -1., "Max distance can't be specified "
@@ -162,11 +162,14 @@ KinodynamicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 KinodynamicExtender<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   ExtenderMethod<MPTraits>::Print(_os);
-  _os << "\tdistance metric : \"" << m_dmLabel << "\"" << endl
-      << "\tvalidity checker : \"" << m_vcLabel << "\"" << endl
-      << "\tnum steps = " << m_numSteps << endl;
+  _os << "\tdistance metric: " << m_dmLabel
+      << "\n\tvalidity checker: " << m_vcLabel
+      << "\n\tnum steps: " << m_numSteps << ", "
+      << (m_fixed ? "fixed" : "variable")
+      << "\n\tcontrol: " << (m_best ? "best" : "random")
+      << std::endl;
 }
 
 /*------------------------- ExtenderMethod Overrides -------------------------*/
@@ -176,17 +179,19 @@ bool
 KinodynamicExtender<MPTraits>::
 Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp) {
-  // Number of sub-steps to take.
+  // Number of sub-steps to take. We average two random numbers to bias
+  // selection toward the middle of the range.
   const size_t numSteps = m_fixed ? m_numSteps :
-      std::max(3., m_numSteps * ((DRand() + DRand()) / 2.));
+      std::max(1., m_numSteps * ((DRand() + DRand()) / 2.));
 
   if(this->m_debug)
     std::cout << "Extending with " << (m_best ? "best" : "random")
               << " control and " << (m_fixed ? "fixed" : "variable")
               << " timestep " << std::setprecision(4)
               << numSteps * this->GetEnvironment()->GetTimeRes()
-              << " (" << numSteps << " x " << this->GetEnvironment()->GetTimeRes()
-              << ")." << std::endl;
+              << " (" << numSteps << " x "
+              << this->GetEnvironment()->GetTimeRes() << ")."
+              << std::endl;
 
   if(m_best)
     return ExtendBestControl(_start, _end, _new, _lp, numSteps);
@@ -199,74 +204,50 @@ template <typename MPTraits>
 double
 KinodynamicExtender<MPTraits>::
 GetMaxDistance() const {
-  static bool distanceCached = false;
-  if(!distanceCached) {
+  if(!m_distanceCached) {
     // Approximate max distance as the largest timestep * max velocity.
     const double time = this->GetEnvironment()->GetTimeRes() * m_numSteps;
     auto robot = this->GetTask()->GetRobot();
     const_cast<double&>(this->m_maxDist) = robot->GetMaxLinearVelocity() * time;
-    distanceCached = true;
+    m_distanceCached = true;
   }
+
   return this->m_maxDist;
 }
 
 /*------------------------------ Helpers -------------------------------------*/
+
 template <typename MPTraits>
 typename MPTraits::CfgType
 KinodynamicExtender<MPTraits>::
 ApplyControl(const CfgType& _start, const Control& _con) {
-    auto robot = _start.GetRobot();
-    CfgType temp(robot), end(robot);
-    LPOutput<MPTraits> lp;
-  
-    // temp is the last valid cfg.
-    if(ApplyControl(_start, end, temp, lp, m_numSteps, _con))
-      return temp;
-    // Apply control returns false if the min distance is not reached.
-    // So since that is the case we want to return the start cfg.
-    else return _start;
+  auto robot = _start.GetRobot();
+  CfgType temp(robot), end(robot);
+  LPOutput<MPTraits> lp;
+
+  if(ApplyControl(_start, end, temp, lp, m_numSteps, _con))
+    return temp;
+  else
+    return _start;
 }
+
 
 template<typename MPTraits>
 bool
 KinodynamicExtender<MPTraits>::
 ExtendBestControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp, const size_t _steps) const {
-  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto env = this->GetEnvironment();
 
-  // Get the set of controls.
+  // Ask the controller to find the best control.
   auto robot = _start.GetRobot();
-  auto controls = robot->GetController()->GetControlSet();
+  auto controller = robot->GetController();
+  const Control c = (*controller)(_start, _end, _steps * env->GetTimeRes());
 
-  // Find the best control.
-  double bestDistance = numeric_limits<double>::infinity();
-  for(const auto& c : *controls) {
-    if(this->m_debug)
-      std::cout << "\tBest distance: " << bestDistance << std::endl;
+  // Apply the control.
+  const bool valid = ApplyControl(_start, _end, _new, _lp, _steps, c);
 
-    // Apply the control.
-    CfgType temp(robot);
-    LPOutput<MPTraits> lp;
-    const bool valid = ApplyControl(_start, _end, temp, lp, _steps, c);
-
-    // Discard invalid extensions.
-    if(!valid)
-      continue;
-
-    // Check distance to the target.
-    const double distance = dm->Distance(temp, _end);
-    if(this->m_debug)
-      std::cout << "\t\tDistance to goal: " << distance << std::endl;
-
-    // If this control gets us closer to the target, it's the new best.
-    if(distance < bestDistance) {
-      bestDistance = distance;
-      _new = temp;
-      _lp = lp;
-    }
-  }
-
-  return bestDistance != numeric_limits<double>::infinity();
+  return valid;
 }
 
 
@@ -275,15 +256,16 @@ bool
 KinodynamicExtender<MPTraits>::
 ExtendRandomControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp, const size_t _steps) const {
+  auto env = this->GetEnvironment();
+
   // Get a random control.
   auto robot = _start.GetRobot();
-  auto controls = robot->GetController()->GetControlSet();
-  const size_t controlIndex = LRand() % controls->size();
-
-  const Control& randomControl = (*controls)[controlIndex];
+  auto controller = robot->GetController();
+  const Control c = controller->GetRandomControl(_start,
+      _steps * env->GetTimeRes());
 
   // Apply the control.
-  return ApplyControl(_start, _end, _new, _lp, _steps, randomControl);
+  return ApplyControl(_start, _end, _new, _lp, _steps, c);
 }
 
 
@@ -293,7 +275,7 @@ KinodynamicExtender<MPTraits>::
 ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
     LPOutput<MPTraits>& _lp, const size_t _steps, const Control& _control)
     const {
-  this->GetStatClass()->StartClock("KinodynamicExtender::ApplyControl");
+  MethodTimer mt(this->GetStatClass(), "KinodynamicExtender::ApplyControl");
 
   if(this->m_debug)
     std::cout << "\tTrying control " << _control << std::endl;
@@ -301,7 +283,7 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto robot = _start.GetRobot();
-  auto dynamicsModel = robot->GetDynamicsModel();
+  auto simulator = robot->GetMicroSimulator();
 
   // Get the length of each sub-step.
   auto env = this->GetEnvironment();
@@ -317,7 +299,7 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   size_t i = 0;
   for(; i < _steps; ++i) {
     // Advance from the last known good cfg.
-    CfgType temp = dynamicsModel->Test(_new, _control, dt);
+    CfgType temp = simulator->Test(_new, _control, dt);
 
     // Quit if we collided.
     if(!temp.InBounds(env) or !vc->IsValid(temp, "KinodynamicExtender"))
@@ -336,15 +318,15 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
   _lp.m_edge.first.SetControl(_control);
   _lp.m_edge.first.SetTimeSteps(i);
 
-
   const bool valid = distance >= this->m_minDist;
+
   if(this->m_debug)
     std::cout << "\t\tExtension was " << (valid ? "valid" : "invalid") << "."
               << "\n\t\tExtended " << distance
               << (valid ? " >= " : " < ") << this->m_minDist
-              << " units." << std::endl;
+              << " units."
+              << std::endl;
 
-  this->GetStatClass()->StopClock("KinodynamicExtender::ApplyControl");
   return valid;
 }
 

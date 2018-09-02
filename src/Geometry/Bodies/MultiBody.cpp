@@ -667,16 +667,15 @@ Configure(const vector<double>& _v) {
   if(_v == m_currentDofs)
     return;
 
-  int index = 0;
+  size_t index = 0;
 
   std::copy(_v.begin(), _v.begin() + std::min(_v.size(), DOF()),
       m_currentDofs.begin());
 
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
-    Transformation t1 = GenerateModelTransformation(_v, index, m_baseMovement,
-                                                    m_baseType);
-    m_baseBody->Configure(t1);
+    m_baseBody->Configure(GenerateBaseTransformation(_v));
+    index = PosDOF() + OrientationDOF();
   }
 
   if(IsComposite())
@@ -702,34 +701,6 @@ Configure(const vector<double>& _v) {
 
   // The base transform has been updated, now update the links.
   UpdateLinks();
-}
-
-
-Transformation
-MultiBody::
-GenerateModelTransformation(const std::vector<double>& _v, int& _index,
-                            const Body::MovementType _movementType,
-                            const Body::Type _bodyType) const {
-  double z = 0, alpha = 0, beta = 0, gamma = 0;
-  const double x = _v[_index];
-  const double y = _v[++_index];
-  if(_bodyType == Body::Type::Volumetric)
-    z = _v[++_index];
-
-  if(_movementType == Body::MovementType::Rotational) {
-    if(_bodyType == Body::Type::Planar)
-      alpha = _v[++_index]; // Rotation about Z
-    else {
-      gamma = _v[++_index]; // Rotation about X is the third Euler angle
-      beta  = _v[++_index]; // Rotation about Y is the second Euler angle
-      alpha = _v[++_index]; // Rotation about Z is the first Euler angle
-    }
-  }
-  ++_index; // Needs to happen to make up for first indexing with no addition.
-
-  // Generate the transformation with a translation vector and ZYX Euler angle.
-  return Transformation(Vector3d(x, y, z),
-                        EulerAngle(alpha * PI, beta * PI, gamma * PI));
 }
 
 
@@ -938,6 +909,28 @@ FindMultiBodyInfo() {
   m_radius = m_bodies[0].GetPolyhedron().m_maxRadius;
   for(size_t i = 1; i < m_bodies.size(); ++i)
     m_radius += m_bodies[i].GetPolyhedron().m_maxRadius * 2.0;
+}
+
+
+Transformation
+MultiBody::
+GenerateBaseTransformation(const std::vector<double>& _v) const {
+  const size_t pos = PosDOF(),
+               ori = OrientationDOF();
+
+  const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
+
+  EulerAngle rotation(0, 0, 0);
+  if(ori == 1) {
+    rotation.alpha() = _v[pos] * PI;     // about Z
+  }
+  else if(ori == 3) {
+    rotation.gamma() = _v[pos]     * PI; // about X is the third Euler angle
+    rotation.beta()  = _v[pos + 1] * PI; // about Y is the second Euler angle
+    rotation.alpha() = _v[pos + 2] * PI; // about Z is the first Euler angle
+  }
+
+  return Transformation(std::move(translation), std::move(rotation));
 }
 
 /*----------------------------------------------------------------------------*/

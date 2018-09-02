@@ -1,5 +1,5 @@
-#ifndef GOAL_GRAPH_H
-#define GOAL_GRAPH_H
+#ifndef PMPL_GOAL_GRAPH_H
+#define PMPL_GOAL_GRAPH_H
 
 #include <vector>
 
@@ -11,8 +11,8 @@
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/MPTask.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Simulator/BulletModel.h"
 
 #include "Utilities/PMPLExceptions.h"
 
@@ -48,9 +48,9 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     typedef typename MPTraits::RoadmapType                      RoadmapType;
     typedef typename RoadmapType::VID                           VID;
     typedef typename MPTraits::Path                             Path;
-    
+
     typedef typename MPTraits::MPLibrary                        MPLibrary;
-    
+
     ///@}
     ///@name Construction
     ///@{
@@ -76,11 +76,11 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     /// Get the set of descriptors for the goal vertices.
     /// @return Set of descriptors for the goal vertices.
     std::vector<size_t>* GetGoalDescriptors();
-    
+
     /// Get the set of descriptors for the depot vertices (used in TRP).
     /// @return Set of descriptors for the depot vertices.
     std::vector<size_t>* GetDepotDescriptors();
-    
+
     //const vertex_descriptor GetDescriptor(const VID _vid) const
     //    noexcept;
 
@@ -98,11 +98,11 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     ///@}
     ///@name Problem Customization
     ///@{
-    
+
     /// Add the depots needed for TRP->ATSP
     /// @param _workers Set of robots to use for depot locations.
     void AddDepots(std::vector<Robot*> _workers);
-    
+
     ///@}
     ///@name Modifiers
 
@@ -112,22 +112,22 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     ///@}
 
   private:
-  
+
     ///@name Helpers
     ///@{
 
-    /// Find the shortest paths between the goals 
+    /// Find the shortest paths between the goals
     void UpdateGoalMap();
 
     ///@}
     ///@name Internal State
     ///@{
-   
+
     bool m_debug{true};
 
     std::string m_queryMethodLabel; /// denotes the query method utilized to find
                                     /// the shortest path between goals
-    
+
     MPLibrary* m_library{nullptr};  /// used to calculate paths between goals
     Robot* m_robot{nullptr};        /// should be coordinator asigned all the goals
     //vector<VID> m_goals;            /// stores the goals for the roadmap
@@ -139,17 +139,17 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
 
     vector<vertex_descriptor> m_goalDescriptors;
     vector<vertex_descriptor> m_depotDescriptors;
-    
+
     vector<edge_descriptor> m_depotGoalPathDescriptors;
     vector<Path> m_depotGoalPaths;
-    
+
     vector<edge_descriptor> m_goalDepotPathDescriptors;
     vector<Path> m_goalDepotPaths;
-   
+
     vector<edge_descriptor> m_depotPathDescriptors;
     vector<Path> m_depotPaths;
     /// starting locations of all the worker robots
-    //std::vector<CSpaceConstraint> m_startingPositions; 
+    //std::vector<CSpaceConstraint> m_startingPositions;
 
     ///@}
 };
@@ -177,28 +177,28 @@ GoalMap<MPTraits>::
 /*----------------------------- Accessors ------------------------------------*/
 
 template <typename MPTraits>
-const size_t 
+const size_t
 GoalMap<MPTraits>::
 GetNumVertices() const noexcept {
   return m_depotDescriptors.size() + m_goalDescriptors.size();
 }
 
 template <typename MPTraits>
-std::vector<size_t>* 
+std::vector<size_t>*
 GoalMap<MPTraits>::
 GetGoalDescriptors() {
   return &m_goalDescriptors;
 }
 
 template <typename MPTraits>
-std::vector<size_t>* 
+std::vector<size_t>*
 GoalMap<MPTraits>::
 GetDepotDescriptors() {
   return &m_depotDescriptors;
 }
 
 template <typename MPTraits>
-const typename GoalMap<MPTraits>::Path& 
+const typename GoalMap<MPTraits>::Path&
 GoalMap<MPTraits>::
 GetPath(const size_t _i1, const size_t _i2) const noexcept {
   const_adj_edge_iterator edge;
@@ -206,7 +206,7 @@ GetPath(const size_t _i1, const size_t _i2) const noexcept {
   edge_descriptor ed(_i1, _i2);
   this->find_edge(ed, vert, edge);
   return edge->property();
-  
+
 }
 
 /*----------------------- Problem Customization ------------------------------*/
@@ -216,10 +216,10 @@ void
 GoalMap<MPTraits>::
 AddDepots(std::vector<Robot*> _workers){
   if(m_debug)
-    std::cout << "adding depots for " << _workers.size() << " workers" << endl; 
+    std::cout << "adding depots for " << _workers.size() << " workers" << endl;
   for(auto robot : _workers){
     std::unique_ptr<CSpaceConstraint> constraint(
-          new CSpaceConstraint(robot,robot->GetDynamicsModel()->GetSimulatedState()));
+          new CSpaceConstraint(robot,robot->GetSimulationModel()->GetState()));
     constraint->SetRobot(nullptr);
     m_depotConstraints.push_back(constraint->Clone());
   }
@@ -229,7 +229,7 @@ AddDepots(std::vector<Robot*> _workers){
   //debug purposes
   if(m_debug){
     for(auto depot : m_depotDescriptors){
-      std::cout << "Depot Descriptor: " << depot << endl; 
+      std::cout << "Depot Descriptor: " << depot << endl;
     }
   }
 
@@ -243,9 +243,9 @@ AddDepots(std::vector<Robot*> _workers){
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
       m_depotPaths.push_back(*m_library->GetPath());
       m_depotPathDescriptors.push_back(this->add_edge(
-            m_depotDescriptors[i], m_depotDescriptors[j],*m_library->GetPath())); 
+            m_depotDescriptors[i], m_depotDescriptors[j],*m_library->GetPath()));
       if(m_debug){
-        std::cout << "Path for: " << m_depotDescriptors[i] << ", "<<  m_depotDescriptors[j] 
+        std::cout << "Path for: " << m_depotDescriptors[i] << ", "<<  m_depotDescriptors[j]
                   << " has length: " << m_depotPaths.back().Length() << std::endl;
       }
     }
@@ -260,17 +260,17 @@ AddDepots(std::vector<Robot*> _workers){
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
       m_depotGoalPaths.push_back(*m_library->GetPath());
       m_depotGoalPathDescriptors.push_back(this->add_edge(
-            m_depotDescriptors[i], m_goalDescriptors[j],*m_library->GetPath())); 
+            m_depotDescriptors[i], m_goalDescriptors[j],*m_library->GetPath()));
       //debug purposes
       if(m_debug){
         std::cout << "Depot Descriptor: " << m_depotDescriptors[i] << std::endl;
         std::cout << "Goal Descriptor: " << m_goalDescriptors[j] << std::endl;
         std::cout << "Distance: " << m_depotGoalPaths.back().Length() << std::endl;
       }
-      
-      
-      
-      
+
+
+
+
       task = new MPTask(m_robot);
       task->SetStartConstraint(std::move(m_goalConstraints[j]->Clone()));
       task->AddGoalConstraint(std::move(m_depotConstraints[i]->Clone()));
@@ -278,7 +278,7 @@ AddDepots(std::vector<Robot*> _workers){
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
       m_goalDepotPaths.push_back(*m_library->GetPath());
       m_goalDepotPathDescriptors.push_back(this->add_edge(
-            m_goalDescriptors[j], m_depotDescriptors[i],*m_library->GetPath())); 
+            m_goalDescriptors[j], m_depotDescriptors[i],*m_library->GetPath()));
       //debug purposes
       if(m_debug){
         std::cout << "Goal Descriptor: " << m_goalDescriptors[j] << std::endl;
@@ -296,11 +296,11 @@ AddDepots(std::vector<Robot*> _workers){
 
 
 template <typename MPTraits>
-void 
+void
 GoalMap<MPTraits>::
 UpdateGoalMap() {
-  if(m_debug) 
-    std::cout << "Updating goal map" << std::endl;  
+  if(m_debug)
+    std::cout << "Updating goal map" << std::endl;
   for(auto task : m_library->GetMPProblem()->GetTasks(m_robot)){
     const auto& constraints = task->GetGoalConstraints();
     if(constraints.size() > 1)
@@ -320,7 +320,7 @@ UpdateGoalMap() {
           m_library->GetMPSolution(), m_queryMethodLabel, LRand(), "");
       m_intergoalPaths.push_back(*m_library->GetPath());
       m_pathDescriptors.push_back(this->add_edge(
-            m_goalDescriptors[i], m_goalDescriptors[j],*m_library->GetPath())); 
+            m_goalDescriptors[i], m_goalDescriptors[j],*m_library->GetPath()));
     }
   }
 

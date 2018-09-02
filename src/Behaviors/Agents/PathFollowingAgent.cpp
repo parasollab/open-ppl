@@ -4,7 +4,7 @@
 
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/DynamicsModel.h"
+#include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 
 
@@ -104,7 +104,7 @@ bool
 PathFollowingAgent::
 EvaluateTask() {
   // Get the current configuration.
-  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+  const Cfg current = m_robot->GetSimulationModel()->GetState();
 
   // We consider the robot to have reached the next subgoal if it is within a
   // threshold distance. Advance the path index until the next subgoal is
@@ -173,7 +173,7 @@ ExecuteTask(const double _dt) {
 
   // Ask the controller for the best action to get from the current position to
   // the next waypoint.
-  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+  const Cfg current = m_robot->GetSimulationModel()->GetState();
   auto bestControl = m_robot->GetController()->operator()(current,
       m_path[m_pathIndex], time);
 

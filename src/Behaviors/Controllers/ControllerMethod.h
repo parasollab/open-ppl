@@ -1,5 +1,5 @@
-#ifndef CONTROLLER_METHOD_H_
-#define CONTROLLER_METHOD_H_
+#ifndef PMPL_CONTROLLER_METHOD_H_
+#define PMPL_CONTROLLER_METHOD_H_
 
 #include <vector>
 
@@ -70,12 +70,20 @@ class ControllerMethod {
 
     /// Find the best available control to steer a robot from a starting
     /// configuration to a target configuration.
-    /// @param[in] _current The current configuration.
-    /// @param[in] _target The target configuration.
-    /// @param[in] _dt The timestep length.
+    /// @param _current The current configuration.
+    /// @param _target The target configuration.
+    /// @param _dt The timestep length.
     /// @return The best available control for steering from _current to _target.
     virtual Control operator()(const Cfg& _current, const Cfg& _target,
         const double _dt);
+
+    /// Find a random control.
+    /// @param _current The current configuration.
+    /// @param _dt The timestep length.
+    /// @return A random control that can be executed from _current for _dt
+    ///         steps.
+    Control GetRandomControl(const Cfg& _current, const double _dt) const
+        noexcept;
 
     /// Get the discrete set of controls that this controller can use, if any.
     /// @return The discrete set of controls for this controller, or null if it
@@ -97,32 +105,32 @@ class ControllerMethod {
 
     /// Compute the desired generalized force (or velocity) in the robot's local
     /// frame to move from the current position to the target.
-    /// @param[in] _current The current configuration.
-    /// @param[in] _target The target configuration.
-    /// @param[in] _dt The timestep length.
+    /// @param _current The current configuration.
+    /// @param _target The target configuration.
+    /// @param _dt The timestep length.
     /// @return The ideal generalized force.
     virtual std::vector<double> ComputeDesiredForce(const Cfg& _current,
         const Cfg& _target, const double _dt) = 0;
 
     /// Compute the control that produces the closest force to the ideal.
-    /// @param[in] _current The current configuration.
-    /// @param[in] _force The desired force in the robot's local frame.
+    /// @param _current The current configuration.
+    /// @param _force The desired force in the robot's local frame.
     /// @return The control whos result is nearest to _force.
     virtual Control ComputeNearestControl(const Cfg& _current,
         std::vector<double>&& _force);
 
     /// Compute the continuous control that produces the closest force to the
     /// ideal.
-    /// @param[in] _current The current configuration.
-    /// @param[in] _force The desired force in the robot's local frame.
+    /// @param _current The current configuration.
+    /// @param _force The desired force in the robot's local frame.
     /// @return The control whos result is nearest to _force.
     virtual Control ComputeNearestContinuousControl(const Cfg& _current,
         std::vector<double>&& _force);
 
     /// Compute the discrete control that produces the closest force to the
     /// ideal.
-    /// @param[in] _current The current configuration.
-    /// @param[in] _force The desired force in the robot's local frame.
+    /// @param _current The current configuration.
+    /// @param _force The desired force in the robot's local frame.
     /// @return The control whos result is nearest to _force.
     virtual Control ComputeNearestDiscreteControl(const Cfg& _current,
         std::vector<double>&& _force);
@@ -131,11 +139,9 @@ class ControllerMethod {
     ///@name Internal State
     ///@{
 
-    Robot* const m_robot; ///< The owning robot object.
-
+    Robot* const m_robot;            ///< The owning robot object.
     ControlSet* m_controls{nullptr}; ///< The discrete controls, if any.
-
-    bool m_debug{false};  ///< Show debug messages?
+    bool m_debug{false};             ///< Show debug messages?
 
     ///@}
 

@@ -1,9 +1,6 @@
 #include "Robot.h"
 
 #include "Actuator.h"
-#include "DynamicsModel.h"
-#include "HardwareInterfaces/RobotCommandQueue.h"
-#include "HardwareInterfaces/StateEstimator.h"
 
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
@@ -11,8 +8,13 @@
 #include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
+#include "HardwareInterfaces/Battery.h"
+#include "HardwareInterfaces/RobotCommandQueue.h"
+#include "HardwareInterfaces/StateEstimator.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Environment/Environment.h"
+#include "Simulator/BulletModel.h"
+#include "Simulator/MicroSimulator.h"
 #include "Utilities/XMLNode.h"
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
@@ -45,7 +47,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
   std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
   SetCapability(capability);
-  
+
   // Get the multibody file name and make sure it exists.
   const std::string path = GetPathName(_node.Filename());
   const std::string file = _node.Read("filename", false, "", "Robot file name");
@@ -78,18 +80,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
     // Use the simplest controller.
     m_controller = std::unique_ptr<SimpleController>(
-        new SimpleController(this, 1, 1)
+        new SimpleController(this, 1)
     );
-
-    // If the robot is nonholonomic, we need a discrete control set for now to
-    // get the kinodynamic extender working.
-    if(IsNonholonomic())
-      m_controller->SetControlSet(SimpleControlSetGenerator(this));
   }
-
-  // Create dynamics model if the robot is nonholonomic.
-  if(IsNonholonomic())
-    SetDynamicsModel(nullptr);
 
   // Parse hardware and agent child nodes.
   for(auto& child : _node) {
@@ -104,7 +97,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       SetAgent(Agent::Factory(this, child));
     }
   }
- 
+
   // Initialize the emulated battery.
   m_battery = std::unique_ptr<Battery>(new Battery());
 }
@@ -113,7 +106,10 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 Robot::
 Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
     const std::string& _label)
-  : m_problem(_p), m_label(_label), m_multibody(std::move(_mb)) {
+  : m_problem(_p),
+    m_multibody(std::move(_mb)),
+    m_label(_label)
+{
   InitializePlanningSpaces();
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 
@@ -160,9 +156,7 @@ Robot(MPProblem* const _p, const Robot& _r)
 
   // We can't copy the bullet model directly - it must be recreated by adding
   // this robot to a simulation because some of the related data is stored in
-  // the Simulation object. This will initialize the internal micro-sim only.
-  if(_r.m_dynamicsModel)
-    SetDynamicsModel(nullptr);
+  // the Simulation object.
 
   // We will not copy the agent because each one must be created for a specific
   // robot object. We will only copy the agent label and require the Simulation
@@ -179,15 +173,6 @@ Robot(MPProblem* const _p, const Robot& _r)
 
 Robot::
 ~Robot() = default;
-
-
-Robot::
-Robot(Robot&&) = default;
-
-
-Robot&
-Robot::
-operator=(Robot&&) = default;
 
 /*---------------------------------- I/O -------------------------------------*/
 
@@ -338,7 +323,7 @@ Robot::
 Step(const double _dt) {
   // Run the agent's decision-making routine. The agent will apply controls as
   // required to execute its decision.
-  if(m_agent && !m_agent->IsChild())
+  if(m_agent and !m_agent->IsChild())
     m_agent->Step(_dt);
 }
 
@@ -346,9 +331,22 @@ Step(const double _dt) {
 void
 Robot::
 SynchronizeModels() noexcept {
-  auto dynamics = GetDynamicsModel();
-  if(dynamics)
-    GetMultiBody()->Configure(dynamics->GetSimulatedState());
+  if(m_bulletModel)
+    GetMultiBody()->Configure(m_bulletModel->GetState());
+}
+
+
+BulletModel*
+Robot::
+GetSimulationModel() noexcept {
+  return m_bulletModel;
+}
+
+
+void
+Robot::
+SetSimulationModel(BulletModel* const _m) {
+  m_bulletModel = _m;
 }
 
 /*--------------------------- Geometry Accessors -----------------------------*/
@@ -413,19 +411,13 @@ GetActuators() const noexcept {
 
 /*---------------------------- Dynamics Accessors ----------------------------*/
 
-DynamicsModel*
+MicroSimulator*
 Robot::
-GetDynamicsModel() noexcept {
-  return m_dynamicsModel.get();
-}
+GetMicroSimulator() noexcept {
+  if(!m_simulator)
+    m_simulator.reset(new MicroSimulator(this));
 
-
-void
-Robot::
-SetDynamicsModel(btMultiBody* const _m) {
-  if(m_dynamicsModel and _m == m_dynamicsModel->Get())
-    return;
-  m_dynamicsModel = std::unique_ptr<DynamicsModel>(new DynamicsModel(this, _m));
+  return m_simulator.get();
 }
 
 /*---------------------------- Hardware Interface ----------------------------*/
@@ -443,11 +435,13 @@ GetBattery() const noexcept {
   return m_battery.get();
 }
 
+
 StateEstimator*
 Robot::
 GetStateEstimator() const noexcept {
   return m_stateEstimator.get();
 }
+
 
 void
 Robot::
@@ -506,7 +500,7 @@ GetLabel() const noexcept {
 }
 
 
-const std::string& 
+const std::string&
 Robot::
 GetCapability() const noexcept {
   return m_capability;

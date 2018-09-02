@@ -10,7 +10,6 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 
 #include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
 #include "BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h"
@@ -59,7 +58,7 @@ BulletEngine::
   // Acquire the lock for the remainder of object life.
   std::lock_guard<std::mutex> lock(m_lock);
 
-  // Clear the models before the dynamicsWorld as the former need the later to
+  // Clear the models before the dynamicsWorld as the former need the latter to
   // tear down properly.
   m_models.clear();
 
@@ -118,7 +117,7 @@ BulletEngine::
 GetObjectTransform(MultiBody* const _m, const size_t _j) const {
   // Check for out-of-range access.
   if(!m_models.count(_m))
-    throw RunTimeException(WHERE, "Requested model does not exist.");
+    throw RunTimeException(WHERE) << "Requested model does not exist.";
 
   btMultiBody* mb = m_models.at(_m)->GetBulletMultiBody();
 
@@ -137,36 +136,17 @@ GetObjectTransform(MultiBody* const _m, const size_t _j) const {
 
 /*----------------------------- Modifiers ------------------------------------*/
 
-btMultiBody*
+BulletModel*
 BulletEngine::
 AddRobot(Robot* const _robot) {
-  // Build the bullet model.
-  MultiBody* const multiBody = _robot->GetMultiBody();
-  btMultiBody* const bulletModel = AddObject(multiBody);
-
-  /// @TODO We need a way to set initial velocities for the robot.
-
-  // If the robot is car-like, create the necessary callbacks.
-  if(_robot->IsCarlike())
-    CreateCarlikeCallback(bulletModel);
-
-  return bulletModel;
+  return AddObject(_robot->GetMultiBody(), _robot);
 }
 
 
-btMultiBody*
+BulletModel*
 BulletEngine::
-AddObject(MultiBody* const _m) {
-  std::lock_guard<std::mutex> lock(m_lock);
-
-  // Check that we haven't already added this model.
-  if(m_models.count(_m))
-    throw RunTimeException(WHERE, "Cannot add the same MultiBody twice.");
-
-  m_models[_m] = std::unique_ptr<BulletModel>(new BulletModel(_m));
-  m_models[_m]->AddToDynamicsWorld(m_dynamicsWorld);
-
-  return m_models[_m]->GetBulletMultiBody();
+AddMultiBody(MultiBody* const _m) {
+  return AddObject(_m);
 }
 
 
@@ -189,6 +169,31 @@ RebuildObject(MultiBody* const _m) {
 
 /*--------------------------------- Helpers ----------------------------------*/
 
+BulletModel*
+BulletEngine::
+AddObject(MultiBody* const _m, Robot* const _robot) {
+  std::lock_guard<std::mutex> lock(m_lock);
+
+  // Check that the robot's multibody matches _m.
+  if(_robot and _robot->GetMultiBody() != _m)
+    throw RunTimeException(WHERE) << "Mismatch between multibody and robot.";
+
+  // Check that we haven't already added this model.
+  if(m_models.count(_m))
+    throw RunTimeException(WHERE) << "Cannot add the same MultiBody twice.";
+
+  auto& model = m_models[_m];
+  model.reset(new BulletModel(_m, _robot));
+  model->AddToDynamicsWorld(m_dynamicsWorld);
+
+  // If this is a car-like robot, create the necessary callbacks.
+  if(_robot and _robot->IsCarlike())
+    CreateCarlikeCallback(model->GetBulletMultiBody());
+
+  return model.get();
+}
+
+
 void
 BulletEngine::
 RebuildObjects() {
@@ -200,7 +205,7 @@ RebuildObjects() {
     // Check that this model exists.
     auto iter = m_models.find(m);
     if(iter == m_models.end())
-      throw RunTimeException(WHERE, "MultiBody not found.");
+      throw RunTimeException(WHERE) << "MultiBody not found.";
 
     // Rebuild the model.
     iter->second->Rebuild();

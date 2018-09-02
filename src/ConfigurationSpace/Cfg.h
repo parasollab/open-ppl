@@ -1,5 +1,5 @@
-#ifndef CFG_H_
-#define CFG_H_
+#ifndef PMPL_CFG_H_
+#define PMPL_CFG_H_
 
 #include <cstddef>
 #include <iostream>
@@ -7,9 +7,9 @@
 #include <memory>
 #include <vector>
 
+#include "Geometry/Boundaries/Range.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Utilities/MPUtils.h"
-#include "Geometry/Boundaries/Range.h"
 
 #include "Vector.h"
 
@@ -19,6 +19,11 @@ class Environment;
 class Robot;
 
 enum class DofType;
+
+namespace mathtool {
+  class EulerAngle;
+  class Transformation;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +58,7 @@ class Cfg {
     /// workspace.
     /// @param[in] _v The workspace location of the robot's reference point.
     /// @param[in] _robot The robot to represent.
-    explicit Cfg(const Vector3d& _v, Robot* const _robot = nullptr);
+    explicit Cfg(const mathtool::Vector3d& _v, Robot* const _robot = nullptr);
 
     Cfg(const Cfg& _other);
     Cfg(Cfg&& _other);
@@ -165,15 +170,25 @@ class Cfg {
     virtual double PositionMagnitude() const;
     virtual double OrientationMagnitude() const;
 
-    Vector3d GetLinearPosition() const;   ///< Get the position in R^3.
-    Vector3d GetAngularPosition() const;  ///< Get the euler vector rotation.
-    Vector3d GetLinearVelocity() const;   ///< Get the position velocity in R^3.
-    Vector3d GetAngularVelocity() const;  ///< Get the rotation velocity in R^3.
+    /// Get the position in R^3.
+    mathtool::Vector3d GetLinearPosition() const;
+    /// Get the euler vector rotation.
+    mathtool::Vector3d GetAngularPosition() const;
+    /// Get the euler angle rotation.
+    mathtool::EulerAngle GetEulerAngle() const;
+    /// Get the position velocity in R^3.
+    mathtool::Vector3d GetLinearVelocity() const;
+    /// Get the rotation velocity in R^3.
+    mathtool::Vector3d GetAngularVelocity() const;
+    /// Get the world transformation of the robot's base.
+    mathtool::Transformation GetBaseTransformation() const;
 
-    void SetLinearPosition(const Vector3d& _v);
-    void SetAngularPosition(const Vector3d& _v);
-    void SetLinearVelocity(const Vector3d& _v);
-    void SetAngularVelocity(const Vector3d& _v);
+    void SetLinearPosition(const mathtool::Vector3d&);
+    void SetAngularPosition(const mathtool::Vector3d&);
+    void SetEulerAngle(const mathtool::EulerAngle&);
+    void SetLinearVelocity(const mathtool::Vector3d&);
+    void SetAngularVelocity(const mathtool::Vector3d&);
+    void SetBaseTransformation(const mathtool::Transformation&);
 
     ///@}
     ///@name Labels and Stats
@@ -270,17 +285,16 @@ class Cfg {
     ///@name C-Space Directions
     ///@{
 
-    /// Compute the direction in C-Space between two Cfgs. This is equivalent
-    /// to subtraction without normalization.
-    /// @WARNING This function produces a non-normalized Cfg. Applying any Cfg
-    ///          arithmetic operations to it will then normalize it. We should
-    ///          eventually fix this by implementing Cfg's with a generic
-    ///          n-vector object that represents directions. Then, our Cfg
-    ///          arithmetic can normalize the values for point representation and
-    ///          return the non-normalized vector objects for directions.
-    /// @param[in] _target The destination point in C-Space.
-    /// @return The direction (_target - *this).
-    Cfg FindDirectionTo(const Cfg& _target) const;
+    /// Find a c-space direction to another configuration in the local (base body)
+    /// frame of this Cfg. The rotational component will be in Euler Vector
+    /// representation since Euler Angles do not really live in the local or
+    /// global frame.
+    /// @param _target The target configuration.
+    /// @return The c-space direction from this to _target in the local frame of
+    ///         this, using Euler Vector representation for the orientation.
+    /// @WARNING This function is still wrong, it does not handle the rotational
+    ///          components correctly.
+    std::vector<double> DirectionInLocalFrame(const Cfg& _target) const;
 
     ///@}
     ///@name I/O
@@ -301,16 +315,6 @@ class Cfg {
     /// Write a configuration to an output stream.
     /// @param _os The output stream to write to.
     virtual void Write(std::ostream& _os) const;
-
-    /// Writes very helpful info when comparing two cfgs, like their euclidean
-    /// distance, their positions, velocities, and the difference. This is
-    /// especially helpful for debugging nonholonomic control-following from
-    /// a roadmap while simulating.
-    /// @param _os The output stream to write to.
-    /// @param _shouldBe The cfg that is where the cfg is supposed to be.
-    /// @param _current The cfg that is where the cfg actually is.
-    static void PrintRobotCfgComparisonInfo(
-        std::ostream& _out, const Cfg& _shouldBe, const Cfg& _current);
 
     /// Print the Cfg's dofs and velocities with limited precision for terminal
     /// debugging.
@@ -339,8 +343,8 @@ class Cfg {
     void DisableNormalization() const;
 
     /// Normalize an orientation DOF to the range [-1, 1).
-    /// @param[in] _index The index of the DOF to normalize. If it is -1, all
-    ///                   orientation DOFs will be normalized.
+    /// @param _index The index of the DOF to normalize. If it is -1, all
+    ///               orientation DOFs will be normalized.
     virtual void NormalizeOrientation(const int _index = -1) noexcept;
 
     /// Ensure that this Cfg respects the robot's velocity limits.

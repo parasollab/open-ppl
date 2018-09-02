@@ -6,7 +6,6 @@
 
 #include "Utilities/PMPLExceptions.h"
 
-struct rusage buf;
 
 
 /*------------------------------- ClockClass ---------------------------------*/
@@ -34,7 +33,8 @@ ClearClock() {
 void
 ClockClass::
 StartClock() {
-  getrusage(RUSAGE_SELF, &buf);
+  struct rusage buf;
+  getrusage(RUSAGE_THREAD, &buf);
   m_suTime = buf.ru_utime.tv_usec;
   m_sTime = buf.ru_utime.tv_sec;
 }
@@ -43,7 +43,8 @@ StartClock() {
 void
 ClockClass::
 StopClock() {
-  getrusage(RUSAGE_SELF, &buf);
+  struct rusage buf;
+  getrusage(RUSAGE_THREAD, &buf);
   m_uuTime += buf.ru_utime.tv_usec - m_suTime;
   m_uTime += buf.ru_utime.tv_sec - m_sTime;
 }

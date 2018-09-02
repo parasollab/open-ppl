@@ -412,7 +412,7 @@
         nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
         gtype="UNDIRECTED_TREE" debug="false"
         growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom">
-        <Evaluator label="NodesEval"/>
+        <Evaluator label="RRTQuery"/>
       </BasicRRTStrategy>
 
       <!-- Kindodynamic RRT -->

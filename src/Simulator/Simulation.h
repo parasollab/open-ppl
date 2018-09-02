@@ -39,15 +39,15 @@ class Simulation : public base_visualization {
     ///@{
 
     /// Create a simulation of an MPProblem.
-    /// @param[in] _problem The MPProblem to simulate.
-    /// @param[in] _edit Start in edit mode instead of the physical simulator?
+    /// @param _problem The MPProblem to simulate.
+    /// @param _edit Start in edit mode instead of the physical simulator?
     Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit);
 
   public:
 
     /// Create the singleton.
-    /// @param[in] _problem The MPProblem to simulate.
-    /// @param[in] _edit Start in edit mode instead of the physical simulator?
+    /// @param _problem The MPProblem to simulate.
+    /// @param _edit Start in edit mode instead of the physical simulator?
     static void Create(std::shared_ptr<MPProblem> _problem,
         const bool _edit = false);
 
@@ -102,34 +102,37 @@ class Simulation : public base_visualization {
     ///@name Additional Visualization
     ///@{
 
-    /// Draw a set of path edges as a series of connecting lines.
+    /// Add a path graphic to the scene as a sequence of connected line
+    /// segments.
     /// @param _path The path to render.
     /// @param _c The line color.
     /// @return The ID of the path.
-    size_t AddPath(const std::vector<Cfg>& _path, glutils::color _c);
+    size_t AddPath(const std::vector<Cfg>& _path, const glutils::color& _c);
 
-    /// Remove a path from the scene.
+    /// Remove a path graphic from the scene.
     /// @param _id The path ID.
     void RemovePath(const size_t _id);
 
-    /// Draw a Roadmap
+    /// Add a roadmap graphic to the scene.
     /// @param _graph the graph to rendered
     /// @param _c The line color.
     /// @return The ID of the path.
-    size_t AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph, const glutils::color& _c);
+    size_t AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+        const glutils::color& _c);
 
-    /// Remove a roadmap from the scene.
+    /// Remove a roadmap graphic from the scene.
     /// @param _id The path ID.
     void RemoveRoadmap(const size_t _id);
 
-    /// Draw a Bounary
-    /// @param _bounary the boundary to be rendered
-    /// @param _c The line color.
-    /// @param _solid Solid body or wire frame.
+    /// Add a boundary graphic to the scene.
+    /// @param _boundary the boundary to be rendered
+    /// @param _c The rendering color.
+    /// @param _wired Render in wireframe if true, solid if false.
     /// @return The ID of the boundary
-    size_t AddBoundary(const Boundary* _boundary, const glutils::color& _c, bool _wired = true);
+    size_t AddBoundary(const Boundary* const _boundary, const glutils::color& _c,
+        const bool _wired = true);
 
-    /// Remove a boundary from the scene.
+    /// Remove a boundary graphic from the scene.
     /// @param _id The path ID.
     void RemoveBoundary(const size_t _id);
 
@@ -210,7 +213,6 @@ class Simulation : public base_visualization {
 
     ///@}
 
-    size_t m_boundaryID{0};
 };
 
 #endif

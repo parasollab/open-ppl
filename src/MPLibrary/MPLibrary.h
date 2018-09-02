@@ -26,6 +26,7 @@
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
 #include <algorithm>
+#include <atomic>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,11 +286,18 @@ class MPLibraryType final
     ///@name Execution Interface
     ///@{
 
+    /// Halt the current strategy and move on to finalization. Useful for
+    /// controlling the library from an external client object.
+    void Halt();
+
+    /// Check to see if the strategy should continue.
+    bool IsRunning() const noexcept;
+
     /// Add an input set to this MPLibrary.
-    /// @param[in] _label        The MPStrategy label to use.
-    /// @param[in] _seed         The random seed to use.
-    /// @param[in] _baseFileName The base name of the XML file to use.
-    /// @param[in] _vizmoDebug   Enable/disable vizmo debug.
+    /// @param _label        The MPStrategy label to use.
+    /// @param _seed         The random seed to use.
+    /// @param _baseFileName The base name of the XML file to use.
+    /// @param _vizmoDebug   Enable/disable vizmo debug.
     void AddSolver(const std::string& _label, long _seed,
         const std::string& _baseFileName, bool _vizmoDebug = false) {
       m_solvers.push_back(Solver{_label, _seed, _baseFileName, _vizmoDebug});
@@ -303,16 +311,16 @@ class MPLibraryType final
     }
 
     /// Run a single input (solver) and get back its solution.
-    /// @param[in] _problem The problem representation.
-    /// @param[in] _task The task representation.
-    /// @param[in/out] _solution The solution container, which may or may not
-    ///                          already be populated. Existing solutions should
-    ///                          be extended, not overwritten.
+    /// @param _problem The problem representation.
+    /// @param _task The task representation.
+    /// @param _solution The solution container, which may or may not
+    ///                  already be populated. Existing solutions should
+    ///                  be extended, not overwritten.
     void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution);
 
     /// Run each input (solver) in sequence.
-    /// @param[in] _problem The problem representation.
-    /// @param[in] _task The task representation.
+    /// @param _problem The problem representation.
+    /// @param _task The task representation.
     void Solve(MPProblem* _problem, MPTask* _task);
 
     /// Group overload:
@@ -321,14 +329,14 @@ class MPLibraryType final
     /// Run a specific MPStrategy from the XML file with a designated seed and
     /// base output file name. This is intended for use with the simulator where
     /// agents may need to call various strategies within a single execution.
-    /// @param[in] _problem The problem representation.
-    /// @param[in] _task The task representation.
-    /// @param[in/out] _solution The solution container, which may or may not
-    ///                          already be populated. Existing solutions should
-    ///                          be extended, not overwritten.
-    /// @param[in] _label The label of the MPStrategy to call.
-    /// @param[in] _seed The seed to use.
-    /// @param[in] _baseFilename The base name for output files.
+    /// @param _problem The problem representation.
+    /// @param _task The task representation.
+    /// @param _solution The solution container, which may or may not
+    ///                  already be populated. Existing solutions should
+    ///                  be extended, not overwritten.
+    /// @param _label The label of the MPStrategy to call.
+    /// @param _seed The seed to use.
+    /// @param _baseFilename The base name for output files.
     void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
         const std::string& _label, const long _seed,
         const std::string& _baseFilename);
@@ -399,6 +407,12 @@ class MPLibraryType final
     /// share a common interface.
 
     MPTools* m_mpTools{nullptr};
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::atomic<bool> m_running{true};  ///< Keep running the strategy?
 
     ///@}
 
@@ -475,6 +489,8 @@ Initialize() {
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
   m_mpTools->Initialize();
+
+  m_running = true;
 }
 
 
@@ -770,6 +786,22 @@ GetStatClass() const noexcept {
 }
 
 /*--------------------------- Execution Interface ----------------------------*/
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+Halt() {
+  m_running = false;
+}
+
+
+template <typename MPTraits>
+bool
+MPLibraryType<MPTraits>::
+IsRunning() const noexcept {
+  return m_running;
+}
+
 
 template <typename MPTraits>
 void

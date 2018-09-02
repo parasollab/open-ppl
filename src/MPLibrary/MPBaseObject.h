@@ -128,6 +128,9 @@ class MPBaseObject {
     /// Get the owning MPLibrary.
     MPLibrary* GetMPLibrary() const noexcept;
 
+    /// Check the library's running flag.
+    bool IsRunning() const noexcept;
+
     /// Get a distance metric by label from the owning MPLibrary.
     DistanceMetricPointer GetDistanceMetric(const std::string&) const noexcept;
 
@@ -306,6 +309,15 @@ typename MPTraits::MPLibrary*
 MPBaseObject<MPTraits>::
 GetMPLibrary() const noexcept {
   return m_library;
+}
+
+
+template <typename MPTraits>
+inline
+bool
+MPBaseObject<MPTraits>::
+IsRunning() const noexcept {
+  return m_library->IsRunning();
 }
 
 

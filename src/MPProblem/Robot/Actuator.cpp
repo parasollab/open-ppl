@@ -5,13 +5,11 @@
 #include <sstream>
 #include <string>
 
-#include "DynamicsModel.h"
 #include "Robot.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
-#include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "nonstd/numerics.h"
 
 
@@ -86,7 +84,8 @@ Actuator(Robot* const _r, XMLNode& _node) : m_robot(_r),
   else if(type == "velocity")
     m_type = DynamicsType::Velocity;
   else
-    throw ParseException(_node.Where(), "Unknown dynamics type '" + type + "'.");
+    throw ParseException(_node.Where()) << "Unknown dynamics type '"
+                                        << type << "'.";
 
   ComputeControlSpace();
 }
@@ -130,10 +129,12 @@ void
 Actuator::
 SetLimits(const std::vector<double>& _min, const std::vector<double>& _max) {
   if(_min.size() != m_limits.size() or _max.size() != m_limits.size())
-    throw RunTimeException(WHERE, "Actuator limits vector must have exactly one"
-        " element for each DOF. Robot has " + std::to_string(m_limits.size()) +
-        " DOFs, but new limits have " + std::to_string(_min.size()) + ", " +
-        std::to_string(_max.size()) + " DOFs.");
+    throw RunTimeException(WHERE) << "Actuator limits must have exactly "
+                                  << "one element for each DOF. Robot has "
+                                  << m_limits.size()
+                                  << " DOFs, but new limits have "
+                                  << _min.size() << ", " << _max.size()
+                                  << " DOFs.";
 
   for(size_t i = 0; i < m_limits.size(); ++i) {
     m_limits[i] = Range<double>(_min[i], _max[i]);
@@ -161,7 +162,7 @@ ControlMask() const {
 
 std::vector<double>
 Actuator::
-ComputeForce(const Control::Signal& _s) const {
+ComputeOutput(const Control::Signal& _s) const {
   /// @TODO Generalize this so that the robot's starting point can be taken into
   ///       account. Currently we assume that the generated force is independent
   ///       of starting state.
@@ -221,72 +222,11 @@ ComputeNearestSignal(const std::vector<double>& _force) const {
     return m_controlSpace.ClearancePoint(signal);
 }
 
-/*-------------------------- Simulation Interface ----------------------------*/
 
-void
+Control
 Actuator::
-Execute(const Control::Signal& _s) const {
-  Execute(_s, m_robot->GetDynamicsModel()->Get());
-}
-
-
-void
-Actuator::
-Execute(const Control::Signal& _s, btMultiBody* const _model) const {
-  std::vector<double> computedForce = ComputeForce(_s);
-  m_robot->GetDynamicsModel()->LocalToWorld(computedForce, _model);
-
-  auto iter = computedForce.begin();
-  auto mb = m_robot->GetMultiBody();
-
-  btVector3 force(0, 0, 0), torque(0, 0, 0);
-
-  // Set base force.
-  const size_t numPos = mb->PosDOF();
-  for(size_t i = 0; i < numPos; ++i, ++iter)
-    force[i] = *iter;
-
-  // Set base torque.
-  switch(mb->OrientationDOF()) {
-    case 1:
-      // This is a planar rotational robot. We only want a torque in the Z
-      // direction.
-      torque[2] = *iter++;
-      break;
-    case 3:
-      // This is a volumetric rotational robot. We need all three torque
-      // directions.
-      for(size_t i = 0; i < 2; ++i, ++iter)
-        torque[i] = *iter;
-      break;
-    default:
-      // This robot does not rotate.
-      ;
-  }
-
-  const size_t numJoints = mb->JointDOF();
-
-  switch(m_type) {
-    case DynamicsType::Force:
-      _model->addBaseForce(force);
-      _model->addBaseTorque(torque);
-
-      // Finally, add forces to the joints.
-      // Multiply by PI because bullet uses [ -PI : PI ].
-      for(size_t i = 0; i < numJoints; ++i, ++iter)
-        _model->addJointTorque(i, *iter * PI);
-      break;
-    case DynamicsType::Velocity:
-      _model->setBaseVel(force);
-      _model->setBaseOmega(torque);
-
-      // Finally, add velocities to the joints.
-      // Multiply by PI because bullet uses [ -PI : PI ].
-      for(size_t i = 0; i < numJoints; ++i, ++iter)
-        _model->setJointVel(i, *iter * PI);
-      break;
-    default:;
-  }
+GetRandomControl() const noexcept {
+  return {const_cast<Actuator*>(this), m_controlSpace.Sample()};
 }
 
 /*-------------------------------- Helpers -----------------------------------*/

@@ -1,9 +1,8 @@
-#ifndef PLANNING_AGENT_H_
-#define PLANNING_AGENT_H_
+#ifndef PMPL_PLANNING_AGENT_H_
+#define PMPL_PLANNING_AGENT_H_
 
 #include "Agent.h"
 
-#include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
 
 #include <memory>
@@ -26,6 +25,7 @@
 /// Whenever the agent produces a new plan or clears an existing one, its 'plan
 /// version' will be incremented by one. This allows coordinated agents to
 /// detect changes in each others' plans and possibly react/replan in response.
+/// @ingroup Agents
 ////////////////////////////////////////////////////////////////////////////////
 class PlanningAgent : public Agent {
 
@@ -77,7 +77,7 @@ class PlanningAgent : public Agent {
 
     void SetMPLibrary(MPLibrary* _library);
 
-    
+
     /// TODO: Generate the utility cost (dependent on some metric) for a given task
     /// @return The cost of the plan.
     // virtual double GenerateCost(std::shared_ptr<MPTask> const _task);
@@ -95,6 +95,10 @@ class PlanningAgent : public Agent {
 
     /// Function call for PMPL.
     virtual void WorkFunction(std::shared_ptr<MPProblem> _problem);
+
+    /// Stop the current plan (only works for MPStrategies which are implemented
+    /// using the base Run() method).
+    void StopPlanning();
 
     ///@}
     ///@name Task Helpers
@@ -116,7 +120,7 @@ class PlanningAgent : public Agent {
     ///@}
     ///@name Localization Helpers
     ///@{
-    
+
     /// Evaluates whether the robot's simulated state is incorrect (beyond some error
     /// threshold) and sets the simulated state as necessary.
     void UpdateSimulatedState();
@@ -136,6 +140,7 @@ class PlanningAgent : public Agent {
     size_t m_localizePeriod{200};         ///< The number of timesteps between localize calls.
     size_t m_localizeCount{1};            ///< The number of timesteps since the last localize call.
     double m_localizeErrorThreshold{0.4}; ///< The largest allowed error before requiring a replan.
+
     ///@}
 
 };

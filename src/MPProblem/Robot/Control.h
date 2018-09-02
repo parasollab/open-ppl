@@ -1,5 +1,5 @@
-#ifndef CONTROL_H_
-#define CONTROL_H_
+#ifndef PMPL_CONTROL_H_
+#define PMPL_CONTROL_H_
 
 #include <cstddef>
 #include <iostream>
@@ -9,7 +9,6 @@
 #include "Geometry/Shapes/NBox.h"
 
 class Actuator;
-class btMultiBody;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,21 +56,7 @@ struct Control final {
   ///@{
 
   /// Ask the actuator to compute the generalized force for this control.
-  /// @TODO We now support more dynamics models, so this is not always a force.
-  ///       It needs to be renamed to 'GetOutput' or 'GetDelta' or something
-  ///       else that doesn't imply it is always a force.
-  std::vector<double> GetForce() const;
-
-  ///@}
-  ///@name Simulation Interface
-  ///@{
-
-  /// Tell the actuator to execute this control on the simulated robot.
-  void Execute() const;
-
-  /// Tell the actuator to execute this control on an arbitrary simulated robot.
-  /// @param _model The simulated robot to use.
-  void Execute(btMultiBody* const _model) const;
+  std::vector<double> GetOutput() const;
 
   ///@}
   ///@name Ordering and Equality

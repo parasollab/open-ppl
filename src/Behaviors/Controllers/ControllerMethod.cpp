@@ -2,11 +2,10 @@
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/ICreateController.h"
-#include "Behaviors/Controllers/PIDFeedback.h"
+//#include "Behaviors/Controllers/PIDFeedback.h"
 #include "Behaviors/Controllers/SimpleController.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Actuator.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -73,8 +72,8 @@ Factory(Robot* const _r, XMLNode& _node) {
   // Setup the appropriate controller type.
   if(controllerType == "simple")
     output = std::unique_ptr<SimpleController>(new SimpleController(_r, _node));
-  else if(controllerType == "pid")
-    output = std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, _node));
+  //else if(controllerType == "pid")
+  //  output = std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, _node));
   else if(controllerType == "icreatecontroller")
     output = std::unique_ptr<ICreateController>(new ICreateController(_r, _node));
   else
@@ -102,13 +101,33 @@ operator()(const Cfg& _current, const Cfg& _target, const double _dt) {
     std::cout << "Computing desired force:"
               << "\n\tfrom: " << _current.PrettyPrint()
               << "\n\tto:   " << _target.PrettyPrint()
-              << "\n\tDifference = "
-              << _current.FindDirectionTo(_target).PrettyPrint()
+              << "\n\tDifference = " << (_target - _current).PrettyPrint()
               << "\n\tDesired F  = " << force
               << std::endl;
 
   // Return the control that produces the nearest result.
   return this->ComputeNearestControl(_current, std::move(force));
+}
+
+
+Control
+ControllerMethod::
+GetRandomControl(const Cfg& _current, const double _dt) const noexcept {
+  // If we have a discrete control set, pick a random element.
+  if(m_controls) {
+    const size_t controlIndex = LRand() % m_controls->size();
+    return (*m_controls)[controlIndex];
+  }
+
+  // Else, randomly pick an actuator and get a random point in its control
+  // space.
+  const auto& actuators = m_robot->GetActuators();
+  const size_t actuatorIndex = LRand() % actuators.size();
+
+  auto iter = actuators.begin();
+  std::advance(iter, actuatorIndex);
+
+  return iter->second->GetRandomControl();
 }
 
 
@@ -160,7 +179,7 @@ ComputeNearestContinuousControl(const Cfg& _current,
 
     // Compute the nearest
     const auto signal = actuator->ComputeNearestSignal(_force);
-    const auto unitForce = nonstd::unit(actuator->ComputeForce(signal));
+    const auto unitForce = nonstd::unit(actuator->ComputeOutput(signal));
 
     const double dot = nonstd::dot<double>(desiredDirection, unitForce);
     if(dot > bestDot) {
@@ -171,20 +190,22 @@ ComputeNearestContinuousControl(const Cfg& _current,
 
   // Debug.
   if(m_debug) {
-    std::cout << "Computing best continuous control...\n" << std::endl
-              << "\tdesired force (local): " << _force << std::endl
-              << "\tbest control:          " << best << std::endl;
+    std::cout << "Computing best continuous control..."
+              << "\n\tdesired force (local): " << _force
+              << "\n\tbest control:          " << best
+              << std::endl;
     if(best.actuator)
       std::cout << "\tbest force (local):    "
-                << best.actuator->ComputeForce(best.signal) << std::endl;
+                << best.actuator->ComputeOutput(best.signal) << std::endl;
     std::cout << "\tnearest control has directional similarity " << bestDot
               << std::endl;
   }
 
   // Assert that the selected control is sensible.
   if(bestDot == -1)
-    throw RunTimeException(WHERE, "Best control is directly counter-productive. "
-        "This is probably an error in the control set definition.");
+    throw RunTimeException(WHERE) << "Best control is directly counter-"
+                                  << "productive. This is probably an error in "
+                                  << "the control set definition.";
 
   return best;
 }
@@ -201,7 +222,7 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
 
   // Rank force similarity first by direction and then by magnitude.
   for(const auto& control : *GetControlSet()) {
-    const auto unitForce = nonstd::unit(control.GetForce());
+    const auto unitForce = nonstd::unit(control.GetOutput());
     const double dot = nonstd::dot<double>(desiredDirection, unitForce);
     if(dot > bestDot) {
       best = control;
@@ -211,20 +232,22 @@ ComputeNearestDiscreteControl(const Cfg& _current, std::vector<double>&& _force)
 
   // Debug.
   if(m_debug) {
-    std::cout << "Computing best discrete control..." << std::endl
-              << "\tdesired force (local): " << desiredDirection << std::endl
-              << "\tbest control:          " << best << std::endl;
+    std::cout << "Computing best discrete control..."
+              << "\n\tdesired force (local): " << desiredDirection
+              << "\n\tbest control:          " << best
+              << std::endl;
     if(best.actuator)
       std::cout << "\tbest force:    "
-                << best.actuator->ComputeForce(best.signal) << std::endl;
+                << best.actuator->ComputeOutput(best.signal) << std::endl;
     std::cout << "\tnearest control has directional similarity " << bestDot
               << std::endl;
   }
 
   // Assert that the selected control is sensible.
   if(bestDot == -1)
-    throw RunTimeException(WHERE, "Best control is directly counter-productive. "
-        "This is probably an error in the control set definition.");
+    throw RunTimeException(WHERE) << "Best control is directly counter-"
+                                  << "productive. This is probably an error in "
+                                  << "the control set definition.";
 
   return best;
 }

@@ -3,10 +3,9 @@
 #include <limits>
 
 #include "Behaviors/Controllers/ControllerMethod.h"
-#include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPProblem/Robot/DynamicsModel.h"
+#include "Simulator/BulletModel.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -36,19 +35,7 @@ Clone(Robot* const _r) const {
 
 RoadmapFollowingAgent::
 ~RoadmapFollowingAgent() {
-  RoadmapFollowingAgent::Uninitialize();
-}
-
-/*------------------------------ Agent Interface -----------------------------*/
-
-void
-RoadmapFollowingAgent::
-Uninitialize() {
-  if(!m_initialized)
-    return;
-  PlanningAgent::Uninitialize();
-
-  ClearPlan();
+  Uninitialize();
 }
 
 /*--------------------------------- Planning ---------------------------------*/
@@ -73,13 +60,13 @@ ClearPlan() {
 
 void
 RoadmapFollowingAgent::
-GeneratePlan() {
+WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Create a new plan.
-  PlanningAgent::GeneratePlan();
+  PlanningAgent::WorkFunction(_problem);
 
   // If the path is empty, PMPL has failed somehow.
   if(m_solution->GetPath()->Size() == 0)
-    throw RunTimeException(WHERE, "PMPL produced an empty path.");
+    throw RunTimeException(WHERE) << "PMPL produced an empty path.";
 
   // Initialize the current subgoal.
   m_currentSubgoal = m_solution->GetPath()->VIDs().begin();
@@ -122,9 +109,14 @@ ExecuteTask(const double) {
     else
       expected = &(m_edge->GetIntermediates()[edgeIndex - 1]);
 
-    const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+    const Cfg current = m_robot->GetSimulationModel()->GetState();
 
-    Cfg::PrintRobotCfgComparisonInfo(std::cout, *expected, current);
+    std::cout << "Check robot position:"
+              << "\n\tCurrent:    " << current.PrettyPrint()
+              << "\n\tExpected:   " << expected->PrettyPrint()
+              << "\n\tDifference: " << (*expected - current).PrettyPrint()
+              << "\n\t|Diff|:     " << (*expected - current).Magnitude()
+              << std::endl;
   }
 
   // Get the next edge in the roadmap path.
@@ -138,9 +130,9 @@ ExecuteTask(const double) {
 
   // Assert that we found the edge.
   if(!found)
-    throw RunTimeException(WHERE, "Couldn't find next edge in roadmap from VID "
-        + std::to_string(*previousSubgoal) + " to "
-        + std::to_string(*m_currentSubgoal) + ".");
+    throw RunTimeException(WHERE) << "Couldn't find next edge in roadmap from "
+                                  << "VID " << *previousSubgoal
+                                  << " to " << *m_currentSubgoal << ".";
 
   // Store the edge and enqueue the corresponding command.
   m_edge = &ei->property();

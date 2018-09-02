@@ -1,5 +1,5 @@
-#ifndef ROADMAP_FOLLOWING_AGENT_H_
-#define ROADMAP_FOLLOWING_AGENT_H_
+#ifndef PMPL_ROADMAP_FOLLOWING_AGENT_H_
+#define PMPL_ROADMAP_FOLLOWING_AGENT_H_
 
 #include "PlanningAgent.h"
 
@@ -8,6 +8,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent calls pmpl once and then follows the resulting path.
+/// @ingroup Agents
 ////////////////////////////////////////////////////////////////////////////////
 class RoadmapFollowingAgent : public PlanningAgent {
 
@@ -35,15 +36,9 @@ class RoadmapFollowingAgent : public PlanningAgent {
     virtual ~RoadmapFollowingAgent();
 
     ///@}
-    ///@name Agent Interface
-    ///@{
-
-    virtual void Uninitialize() override;
-
-    ///@}
     ///@name Planning
     ///@{
-    
+
     virtual bool HasPlan() const override;
 
     virtual void ClearPlan() override;
@@ -55,7 +50,7 @@ class RoadmapFollowingAgent : public PlanningAgent {
     ///@name Planning Helpers
     ///@{
 
-    virtual void GeneratePlan() override;
+    virtual void WorkFunction(std::shared_ptr<MPProblem> _problem) override;
 
     ///@}
     ///@name Task Helpers

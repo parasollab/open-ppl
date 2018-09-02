@@ -2,9 +2,11 @@
 
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
 #include "MPProblem/Robot/HardwareInterfaces/StateEstimator.h"
+#include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
 
+#include <chrono>
 #include <iostream>
 
 
@@ -113,9 +115,14 @@ Uninitialize() {
     return;
   m_initialized = false;
 
+  // Wait for the planning thread to stop.
+  StopPlanning();
+  while(m_planning)
+    std::this_thread::sleep_for(std::chrono::microseconds(1));
+
+  SetTask(nullptr);
   m_library.reset();
   m_solution.reset();
-  SetTask(nullptr);
 
   if(m_roadmapVisualID)
     Simulation::Get()->RemoveRoadmap(m_roadmapVisualID);
@@ -138,9 +145,6 @@ PlanningAgent::
 ClearPlan() {
   if(HasPlan())
     ++m_planVersion;
-  if(!GetTask())
-    return;
-
 }
 
 
@@ -157,6 +161,7 @@ GetPlanVersion() const {
   return m_planVersion;
 }
 
+
 void
 PlanningAgent::
 SetMPLibrary(MPLibrary* _library){
@@ -171,9 +176,8 @@ GeneratePlan() {
   m_planning = true;
 
   // Sets tasks' start constraint to the robot's current position
-  auto position = m_robot->GetDynamicsModel()->GetSimulatedState();
   auto start = std::unique_ptr<CSpaceConstraint>(
-      new CSpaceConstraint(m_robot, position));
+      new CSpaceConstraint(m_robot, m_robot->GetSimulationModel()->GetState()));
 
   GetTask()->SetStartConstraint(std::move(start));
   // Create a copy of the problem so that we can use the data objects in planning
@@ -207,13 +211,20 @@ PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Initialize the solution.
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
-  
+
   // add DrawableRoadmap to be drawn
-  m_roadmapVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap()->GetGraph(),
-      glutils::color::green);
+  m_roadmapVisualID = Simulation::Get()->AddRoadmap(
+      m_solution->GetRoadmap()->GetGraph(), glutils::color::green);
 
   // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());
+}
+
+
+void
+PlanningAgent::
+StopPlanning() {
+  m_library->Halt();
 }
 
 /*------------------------------ Task Helpers --------------------------------*/
@@ -235,12 +246,11 @@ SelectTask() {
   return true;
 }
 
-/*------------------------------ Localization Helpers --------------------------------*/
+/*--------------------------- Localization Helpers ---------------------------*/
 
-void 
+void
 PlanningAgent::
 UpdateSimulatedState() {
-  
   auto hardware = m_robot->GetHardwareQueue();
   if(!hardware)
     return;
@@ -254,18 +264,20 @@ UpdateSimulatedState() {
 
   auto updatedPos = stateEstimator->GetEstimatedState();
 
-  // Ensure that the updated position is valid 
+  // Ensure that the updated position is valid
   if(!m_library->GetValidityChecker("pqp_solid")->IsValid(updatedPos, "cfg")) {
     if(m_debug)
-      std::cout << "Ignoring Invalid Localization at: " << updatedPos << std::endl;
+      std::cout << "Ignoring Invalid Localization at: " << updatedPos
+                << std::endl;
     return;
   }
-    
-  auto previousPos = m_robot->GetDynamicsModel()->GetSimulatedState();
-  m_robot->GetDynamicsModel()->SetSimulatedState(updatedPos);
+
+  auto previousPos = m_robot->GetSimulationModel()->GetState();
+  m_robot->GetSimulationModel()->SetState(updatedPos);
 
   auto dm = m_library->GetDistanceMetric("euclidean");
   const double distance = dm->Distance(previousPos, updatedPos);
+
   // If the error is too large, tell the agent to replan.
   if(distance > m_localizeErrorThreshold) {
     ClearPlan();
@@ -284,7 +296,6 @@ UpdateSimulatedState() {
               << "\nNew Simulated State: "
               << updatedPos
               << std::endl;
-    
 }
 
 /*----------------------------------------------------------------------------*/

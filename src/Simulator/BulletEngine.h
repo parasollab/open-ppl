@@ -1,5 +1,9 @@
-#ifndef BULLET_ENGINE_H_
-#define BULLET_ENGINE_H_
+#ifndef PMPL_BULLET_ENGINE_H_
+#define PMPL_BULLET_ENGINE_H_
+
+#include "btBulletDynamicsCommon.h"
+
+#include "glutils/gltraits.h"
 
 #include <functional>
 #include <map>
@@ -7,11 +11,6 @@
 #include <mutex>
 #include <queue>
 #include <vector>
-
-#include "btBulletDynamicsCommon.h"
-
-#include "glutils/gltraits.h"
-
 
 // Bullet forward-declarations.
 class btMultiBodyDynamicsWorld;
@@ -118,14 +117,16 @@ class BulletEngine final {
     ///@name Modifiers
     ///@{
 
-    /// Add a PMPL robot to the simulation.
+    /// Add a robot to the simulation.
     /// @param _robot The robot to add.
-    btMultiBody* AddRobot(Robot* const _robot);
+    /// @return The bullet representation of _robot.
+    /// @todo We need a way to set initial velocities for the robot.
+    BulletModel* AddRobot(Robot* const _robot);
 
-    /// Add a PMPL multibody to the simulation.
+    /// Add a non-robot multibody to the simulation.
     /// @param _m The multibody to add.
     /// @return The bullet representation of _m.
-    btMultiBody* AddObject(MultiBody* const _m);
+    BulletModel* AddMultiBody(MultiBody* const _m);
 
     /// Set the gravity in the world (this will also set it for all bodies)
     /// @param _gravityVec Is simply the 3-vector representing (x,y,z) gravity
@@ -142,6 +143,13 @@ class BulletEngine final {
 
     ///@name Helpers
     ///@{
+
+    /// Add a multibody object to the world.
+    /// @param _m The multibody to add.
+    /// @param _robot The robot associated with _m, if any (should only be used
+    ///               by AddRobot).
+    /// @return The bullet representation of _m.
+    BulletModel* AddObject(MultiBody* const _m, Robot* const _robot = nullptr);
 
     /// Rebuild the bullet models for which a rebuild was requested.
     /// @WARNING The simulation must be halted while this is going on. Also, if
@@ -161,7 +169,19 @@ class BulletEngine final {
     void CreateCarlikeCallback(btMultiBody* const _model);
 
     /// Execute all call-backs for a given dynamics world.
+    /// @param _world The dynamics world.
+    /// @param _timeStep The length of the last time step.
     static void ExecuteCallbacks(btDynamicsWorld* _world, btScalar _timeStep);
+
+    ///@}
+    ///@name Deleted Functions
+    ///@{
+
+    BulletEngine(const BulletEngine&) = delete;
+    BulletEngine& operator=(const BulletEngine&) = delete;
+
+    BulletEngine(BulletEngine&&) = delete;
+    BulletEngine& operator=(BulletEngine&&) = delete;
 
     ///@}
 

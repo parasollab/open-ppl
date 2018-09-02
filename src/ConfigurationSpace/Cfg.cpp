@@ -8,6 +8,9 @@
 #include "nonstd.h"
 
 using namespace std;
+using mathtool::Vector3d;
+using mathtool::Transformation;
+using mathtool::EulerAngle;
 
 
 /*-------------------------------- Construction ------------------------------*/
@@ -513,9 +516,9 @@ Cfg::
 SetData(const vector<double>& _data) {
   // Assert that we got the correct number of DOFs.
   if(_data.size() != DOF())
-    throw RunTimeException(WHERE, "Tried to set data for " +
-        std::to_string(_data.size()) + " DOFs, but robot has " +
-        std::to_string(DOF()) + " DOFs!");
+    throw RunTimeException(WHERE) << "Tried to set data for " << _data.size()
+                                  << " DOFs, but robot has " << DOF()
+                                  << " DOFs!";
 
   m_dofs = _data;
   m_witnessCfg.reset();
@@ -527,9 +530,9 @@ Cfg::
 SetData(vector<double>&& _data) {
   // Assert that we got the correct number of DOFs.
   if(_data.size() != DOF())
-    throw RunTimeException(WHERE, "Tried to set data for " +
-        std::to_string(_data.size()) + " DOFs, but robot has " +
-        std::to_string(DOF()) + " DOFs!");
+    throw RunTimeException(WHERE) << "Tried to set data for " << _data.size()
+                                  << " DOFs, but robot has " << DOF()
+                                  << " DOFs!";
 
   m_dofs = std::move(_data);
   m_witnessCfg.reset();
@@ -541,9 +544,9 @@ Cfg::
 SetJointData(const vector<double>& _data) {
   // Assert that we got the correct number of DOFs.
   if(_data.size() != JointDOF())
-    throw RunTimeException(WHERE, "Tried to set data for " +
-        std::to_string(_data.size()) + " joint DOFs, but robot has " +
-        std::to_string(JointDOF()) + " joint DOFs!");
+    throw RunTimeException(WHERE) << "Tried to set data for " << _data.size()
+                                  << " joint DOFs, but robot has " << JointDOF()
+                                  << " joint DOFs!";
 
   for(size_t i = 0, j = 0; i < DOF(); ++i)
     if(GetMultiBody()->GetDOFType(i) == DofType::Joint)
@@ -660,22 +663,27 @@ GetLinearPosition() const {
 Vector3d
 Cfg::
 GetAngularPosition() const {
-  const size_t i = PosDOF();
   Vector3d vector;
+  convertFromEulerAngle(vector, GetEulerAngle());
+  return vector;
+}
+
+
+EulerAngle
+Cfg::
+GetEulerAngle() const {
+  const size_t i = PosDOF();
 
   switch(OriDOF()) {
     case 1:
-      convertFromEulerAngle(vector, EulerAngle(m_dofs[i] * PI, 0, 0));
-      break;
+      return EulerAngle(m_dofs[i] * PI, 0, 0);
     case 3:
-      convertFromEulerAngle(vector, EulerAngle(m_dofs[i + 2] * PI,
-                                               m_dofs[i + 1] * PI,
-                                               m_dofs[i] * PI));
-      break;
-    default:;
+      return EulerAngle(m_dofs[i + 2] * PI,
+                        m_dofs[i + 1] * PI,
+                        m_dofs[i] * PI);
+    default:
+      return EulerAngle(0, 0, 0);
   }
-
-  return vector;
 }
 
 
@@ -710,6 +718,13 @@ GetAngularVelocity() const {
 }
 
 
+Transformation
+Cfg::
+GetBaseTransformation() const {
+  return {GetLinearPosition(), GetEulerAngle()};
+}
+
+
 void
 Cfg::
 SetLinearPosition(const Vector3d& _v) {
@@ -724,16 +739,22 @@ SetAngularPosition(const Vector3d& _v) {
   // Convert to euler angle.
   EulerAngle angle;
   convertFromEulerVector(angle, _v);
+  SetEulerAngle(angle);
+}
 
+
+void
+Cfg::
+SetEulerAngle(const EulerAngle& _e) {
   const size_t i = PosDOF();
   switch(OriDOF()) {
     case 1:
-      m_dofs[i] = angle.alpha() / PI;
+      m_dofs[i] = _e.alpha() / PI;
       break;
     case 3:
-      m_dofs[i + 2] = angle.alpha() / PI;
-      m_dofs[i + 1] = angle.beta()  / PI;
-      m_dofs[i]     = angle.gamma() / PI;
+      m_dofs[i + 2] = _e.alpha() / PI;
+      m_dofs[i + 1] = _e.beta()  / PI;
+      m_dofs[i]     = _e.gamma() / PI;
       break;
     default:;
   }
@@ -769,6 +790,17 @@ SetAngularVelocity(const Vector3d& _v) {
       return;
     default:;
   }
+}
+
+
+void
+Cfg::
+SetBaseTransformation(const Transformation& _t) {
+  EulerAngle e;
+  convertFromMatrix(e, _t.rotation().matrix());
+
+  SetLinearPosition(_t.translation());
+  SetEulerAngle(e);
 }
 
 /*------------------------- Labels and Stats ---------------------------------*/
@@ -888,7 +920,7 @@ GetRandomCfg(const Boundary* const _b) {
     if(vspace) {
       // Copy generated velocity values to m_vel.
       for(size_t j = 0; j < numVel; ++j)
-        m_vel[j] = sample[j + dof];
+        m_vel[j] = sample[j + numDof];
 
       // For each velocity that was not generated inside the sampling boundary,
       // generate a value from the robot's velocity space.
@@ -906,14 +938,17 @@ GetRandomCfg(const Boundary* const _b) {
   }
 
   // throw error message and some helpful statistics
-  ostringstream oss;
-  oss << "GetRandomCfg could not generate a sample.\n"
-      << "\nRobot C-Space: " << *cspace;
+  std::ostringstream oss;
   if(vspace)
-    oss << "\nRobot V-Space: " << *vspace;
-  oss << "\nSampling boundary: " << *_b
-      << "\nRobot radius: " << GetMultiBody()->GetBoundingSphereRadius() << ".";
-  throw PMPLException("Sampling Failure", WHERE, oss.str());
+    oss << *vspace;
+  else
+    oss << "none";
+  throw RunTimeException(WHERE) << "GetRandomCfg could not generate a sample.\n"
+                                << "\nRobot C-Space: " << *cspace
+                                << "\nRobot V-Space: " << oss.str()
+                                << "\nSampling boundary: " << *_b
+                                << "\nRobot radius: "
+                                << GetMultiBody()->GetBoundingSphereRadius();
 }
 
 
@@ -981,7 +1016,7 @@ Cfg::
 FindIncrement(const Cfg& _start, const Cfg& _goal, const int _nTicks) {
   // Need positive number of ticks.
   if(_nTicks <= 0)
-    throw RunTimeException(WHERE, "Divide by 0");
+    throw RunTimeException(WHERE) << "Divide by 0";
 
   // Compute the increment value for each DOF needed to go from _start to _goal
   // in _nTicks steps.
@@ -1043,20 +1078,60 @@ GetPositionOrientationFrom2Cfg(const Cfg& _pos, const Cfg& _ori) {
 
 /*--------------------------- C-Space Directions -----------------------------*/
 
-Cfg
+std::vector<double>
 Cfg::
-FindDirectionTo(const Cfg& _target) const {
-  Cfg output = _target;
-  output.m_witnessCfg.reset();
+DirectionInLocalFrame(const Cfg& _target) const {
+  // Compute direction from here to there.
+  const Cfg dir = _target - *this;
+  Cfg output(m_robot);
 
-  for(size_t i = 0; i < DOF(); ++i)
-    output.m_dofs[i] -= m_dofs[i];
+  // Get the world rotation of here.
+  const QuaternionOrientation worldRotation(GetEulerAngle());
 
-  if(!m_vel.empty())
-    for(size_t i = 0; i < DOF(); ++i)
-      output.m_vel[i] -= m_vel[i];
+  // Compute the relative translation from here to there in the local frame.
+  output.SetLinearPosition(-worldRotation * dir.GetLinearPosition());
 
-  return output;
+  // If there are no orientation DOFs, then we are done (joint DOFs are always in
+  // the local frame).
+  const size_t ori = OriDOF();
+  if(ori == 0)
+    return output.GetData();
+
+  // Compute the relative rotation from here to there in the local frame.
+  Quaternion q;
+  convertFromEulerVector(q, dir.GetAngularPosition());
+  const QuaternionOrientation relativeWorldRotation(q);
+
+  const QuaternionOrientation relativeLocalRotation = -worldRotation *
+      relativeWorldRotation;
+
+  Vector3d eulerVector;
+  convertFromQuaternion(eulerVector, relativeLocalRotation.quaternion());
+
+  //std::cout << "\nDiff EV:               " << dir.GetAngularPosition()
+  //          << "\nDiff EA:               " << dir.GetEulerAngle()
+  //          << "\nrelativeWorldRotation: " << relativeWorldRotation
+  //          << "\nrelativeLocalRotation: " << relativeLocalRotation
+  //          << "\neulerVector:           " << eulerVector
+  //          << std::endl;
+
+  const size_t pos = PosDOF();
+  switch(ori)
+  {
+    case 1:
+      output[pos] = eulerVector[2];
+      break;
+    case 3:
+      output[pos]     = eulerVector[0];
+      output[pos + 1] = eulerVector[1];
+      output[pos + 2] = eulerVector[2];
+      break;
+    default:
+      throw RunTimeException(WHERE) << "Computed relative orientation for Cfg "
+                                    << "with " << ori << " orientation DOFs.";
+  }
+
+  return output.GetData();
 }
 
 /*----------------------------------- I/O ------------------------------------*/
@@ -1069,8 +1144,9 @@ Cfg::
 Read(istream& _is) {
   // Require the Cfg to already have a robot pointer for now.
   if(!m_robot)
-    throw RunTimeException(WHERE, "Cannot read in a Cfg without knowing the "
-        "robot. Use inputRobot member to specify the default robot pointer.");
+    throw RunTimeException(WHERE) << "Cannot read in a Cfg without knowing the "
+                                  << "robot. Use inputRobot member to specify "
+                                  << "the default robot pointer.";
 
 #ifdef VIZMO_MAP
   // If we are using the vizmo roadmap format, we need to read and discard the
@@ -1094,9 +1170,9 @@ Read(istream& _is) {
       for(size_t k = 0; k < i; ++k)
         dofs += to_string(m_dofs[i]) + " ";
 
-      throw ParseException(WHERE, "Failed reading values for all dofs: expected "
-          + std::to_string(m_dofs.size()) + ", but read " + std::to_string(i) +
-          ":\n\t" + dofs);
+      throw ParseException(WHERE) << "Failed reading values for all dofs. "
+                                  << "Expected " << m_dofs.size()
+                                  << ", but read " << i << ":\n\t" << dofs;
     }
   }
 
@@ -1109,9 +1185,9 @@ Read(istream& _is) {
       for(size_t k = 0; k < i; ++k)
         err += to_string(m_vel[i]) + " ";
 
-      throw ParseException(WHERE, "Failed reading values for all velocities: "
-          "expected " + std::to_string(m_vel.size()) + ", but read " +
-          std::to_string(i) + ":\n\t" + err);
+      throw ParseException(WHERE) << "Failed reading values for all velocities. "
+                                  << "Expected " << m_vel.size()
+                                  << ", but read " << i << ":\n\t" << err;
     }
 
   }
@@ -1140,28 +1216,7 @@ Write(ostream& _os) const {
   // Unset scientific/precision options.
   _os.unsetf(ios_base::floatfield);
   if(_os.fail())
-    throw RunTimeException(WHERE, "Failed to write to file.");
-}
-
-
-void
-Cfg::
-PrintRobotCfgComparisonInfo(
-    std::ostream& _out, const Cfg& _shouldBe, const Cfg& _current)
-{
-  //Extremely helpful debugging output:
-  _out << std::endl <<"--------------------------------------------------";
-  _out << std::endl << "Robot is currently at        "
-            << nonstd::print_container(_current.GetData()) << ", "
-            << nonstd::print_container(_current.GetVelocity()) << std::endl;
-  _out << "Robot SHOULD currently be at "
-            << nonstd::print_container(_shouldBe.GetData()) << ", "
-            << nonstd::print_container(_shouldBe.GetVelocity())
-            << std::endl
-            << "Desired Robot cfg minus current cfg = " << _shouldBe - _current
-            << std::endl
-            << "Euclidian distance = " << (_shouldBe-_current).Magnitude()
-            << std::endl << std::endl;
+    throw RunTimeException(WHERE) << "Failed to write to file.";
 }
 
 
@@ -1258,7 +1313,7 @@ EnforceVelocityLimits() noexcept {
   const double angularVel = angular.norm();
 
   if(angularVel > maxAngularVel)
-    for(size_t i = PosDOF(); i < OriDOF(); ++i)
+    for(size_t i = PosDOF(); i < PosDOF() + OriDOF(); ++i)
       m_vel[i] *= maxAngularVel / angularVel;
 }
 

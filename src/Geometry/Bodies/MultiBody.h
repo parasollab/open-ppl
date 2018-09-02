@@ -241,12 +241,6 @@ class MultiBody {
     /// @param _v The DOF values to use.
     void Configure(const std::vector<double>& _v);
 
-    /// A helper function that generates the transformation for the body
-    /// passed to it. given the dofs in _v and the _index offset.
-    Transformation GenerateModelTransformation(const std::vector<double>& _v,
-                            int& _index, const Body::MovementType _movementType,
-                            const Body::Type _bodyType) const;
-
     /// Check if the DOF values are out-of-range. If so, push them to the nearest
     /// acceptable configuration and reconfigure the model.
     /// @note In this context, 'valid' means with respect to the joint limits
@@ -287,6 +281,12 @@ class MultiBody {
     ///          and bbx, but these things should change as active bodies change
     ///          configuration.
     void FindMultiBodyInfo();
+
+    /// Generate the transformation for the base body at some set of DOF values.
+    /// @param _v The DOF values.
+    /// @return The base body transformation at _v.
+    Transformation GenerateBaseTransformation(const std::vector<double>& _v)
+        const;
 
     ///@}
     ///@name Internal State

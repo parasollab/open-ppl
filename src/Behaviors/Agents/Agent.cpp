@@ -1,17 +1,15 @@
 #include "Agent.h"
 
 #include "Behaviors/Controllers/ControllerMethod.h"
-#include "BulletDynamics/Featherstone/btMultiBody.h"
-#include "BulletDynamics/Featherstone/btMultiBodyLink.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Control.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
 #include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
+#include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/PMPLExceptions.h"
 
@@ -99,7 +97,7 @@ ProximityCheck(const double _distance) const {
   ///       points. Adjust this function to find the true minimum distance
   ///       between the robot bodies.
   auto problem = m_robot->GetMPProblem();
-  auto myPosition = m_robot->GetDynamicsModel()->GetSimulatedState().GetPoint();
+  auto myPosition = m_robot->GetSimulationModel()->GetState().GetPoint();
 
   std::vector<Agent*> result;
 
@@ -109,7 +107,7 @@ ProximityCheck(const double _distance) const {
     if(robot->IsVirtual() or robot == m_robot)
       continue;
 
-    auto robotPosition = robot->GetDynamicsModel()->GetSimulatedState().GetPoint();
+    auto robotPosition = robot->GetSimulationModel()->GetState().GetPoint();
     const double distance = (robotPosition - myPosition).norm();
 
     if(distance < _distance){
@@ -124,27 +122,7 @@ ProximityCheck(const double _distance) const {
 void
 Agent::
 Halt() {
-  btMultiBody* body = m_robot->GetDynamicsModel()->Get();
-
-  // Zero the base velocity.
-  body->setBaseVel({0,0,0});
-  body->setBaseOmega({0,0,0});
-
-  // Zero the joint velocities.
-  for(int i = 0; i < body->getNumLinks(); i++) {
-    // If it's a spherical (2 dof) joint, then we must use the other version of
-    // setting the link velocity dofs for each value of desired velocity.
-    if(body->getLink(i).m_jointType ==
-        btMultibodyLink::eFeatherstoneJointType::eSpherical) {
-      btScalar temp[] = {0,0};
-      body->setJointVelMultiDof(i, temp);
-    }
-    // Do nothing if the joint was a non-actuated joint.
-    else if(body->getLink(i).m_jointType !=
-        btMultibodyLink::eFeatherstoneJointType::eFixed) {
-      body->setJointVel(i, 0);
-    }
-  }
+  m_robot->GetSimulationModel()->ZeroVelocities();
 
   if(m_debug)
     std::cout << "\nHalting robot '" << m_robot->GetLabel() << "'."
@@ -156,19 +134,21 @@ Halt() {
 void
 Agent::
 PauseAgent(const size_t _steps) {
-  /// @TODO This isn't working quite right. Holonomic robots have no velocity,
-  ///       so this mechanism doesn't work for them.
+  m_robot->GetSimulationModel()->ZeroVelocities();
+  return;
+
   // Set a goal at the current position with 0 velocity.
-  const Cfg current = m_robot->GetDynamicsModel()->GetSimulatedState();
+  const Cfg current = m_robot->GetSimulationModel()->GetState();
   Cfg desired = current;
   desired.SetLinearVelocity(Vector3d());
   desired.SetAngularVelocity(Vector3d());
 
   const size_t steps = std::max(_steps, MinimumSteps());
-  auto emptyControl = m_robot->GetController()->operator()(current, desired,
+
+  auto stopControl = m_robot->GetController()->operator()(current, desired,
       m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes() * steps);
 
-  ExecuteControls({emptyControl}, steps);
+  ExecuteControls({stopControl}, steps);
 }
 
 
@@ -270,14 +250,14 @@ void
 Agent::
 ExecuteControlsSimulation(const ControlSet& _c) {
   // Execute the controls on the simulated robot.
-  for(size_t i = 0; i < _c.size(); ++i) {
-    auto& control = _c[i];
-    control.Execute();
-
-    if(m_debug)
-      std::cout << "\tApplying control " << i << ": " << control
+  if(m_debug) {
+    for(size_t i = 0; i < _c.size(); ++i) {
+      std::cout << "\tApplying control " << i << ": " << _c[i]
                 << std::endl;
+    }
   }
+
+  m_robot->GetSimulationModel()->Execute(_c);
 }
 
 

@@ -1,8 +1,9 @@
 #include "AverageEstimator.h"
 
 #include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Simulator/BulletModel.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -15,10 +16,9 @@ AverageEstimator::
 
 /*------------------------- StateEstimator Interface -------------------------*/
 
-void 
+void
 AverageEstimator::
 ApplyObservations(SensorInterface* const _sensor) {
-
   auto transformations = _sensor->GetLastTransformations();
 
   if(m_debug) {
@@ -32,7 +32,7 @@ ApplyObservations(SensorInterface* const _sensor) {
 
   // If no markers are seen, assume the current simulated state is correct.
   if(transformations.size() == 0) {
-    m_estimatedState = m_robot->GetDynamicsModel()->GetSimulatedState();
+    m_estimatedState = m_robot->GetSimulationModel()->GetState();
     return;
   }
 
@@ -44,17 +44,16 @@ ApplyObservations(SensorInterface* const _sensor) {
   }
   averageX /= transformations.size();
   averageY /= transformations.size();
-  double averageT = ComputeRotation(_sensor);
+  const double averageT = ComputeRotation(_sensor);
 
   Cfg updatedPos(m_robot);
   updatedPos.SetLinearPosition(Vector3d(averageX, averageY, 0));
   updatedPos.SetAngularPosition(Vector3d(0, 0, averageT));
 
   m_estimatedState = updatedPos;
-  
 }
 
-/*------------------------- Estimation Helpers -------------------------*/
+/*---------------------------- Estimation Helpers ----------------------------*/
 
 double
 AverageEstimator::
@@ -63,7 +62,7 @@ ComputeRotation(SensorInterface* const _sensor) {
   double estimateX = 0, estimateY = 0;
 
   // Add each marker angle into the vector.
-  for(auto& t : transformations) { 
+  for(auto& t : transformations) {
     EulerAngle e;
     convertFromMatrix(e, t.rotation().matrix());
     double theta = e.alpha();
@@ -72,7 +71,9 @@ ComputeRotation(SensorInterface* const _sensor) {
   }
   estimateX /= transformations.size();
   estimateY /= transformations.size();
-  
+
   // Get the estimated angle from the unit vector.
   return std::atan2(estimateY, estimateX);
 }
+
+/*----------------------------------------------------------------------------*/

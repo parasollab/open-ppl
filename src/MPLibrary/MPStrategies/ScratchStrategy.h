@@ -1,5 +1,5 @@
-#ifndef SCRATCH_STRATEGY_H_
-#define SCRATCH_STRATEGY_H_
+#ifndef PMPL_SCRATCH_STRATEGY_H_
+#define PMPL_SCRATCH_STRATEGY_H_
 
 #include "MPStrategyMethod.h"
 #include "nonstd/io.h"
@@ -63,8 +63,6 @@ template <typename MPTraits>
 void
 ScratchStrategy<MPTraits>::
 Iterate() {
-  MethodTimer mt(this->GetStatClass(), "Test Iteration");
-
 }
 
 /*----------------------------------------------------------------------------*/

@@ -168,9 +168,10 @@ bool
 RRTQuery<MPTraits>::
 PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
   if(this->m_debug)
-    cout << "Evaluating sub-query:" << endl
-         << "\tfrom " << _start << endl
-         << "\tto   " << _goal << endl;
+    std::cout << "Evaluating sub-query:"
+              << "\n\tfrom " << _start.PrettyPrint()
+              << "\n\tto   " << _goal.PrettyPrint()
+              << std::endl;
 
   VID start = this->GetRoadmap()->GetGraph()->GetVID(_start);
   Neighbor nearest;

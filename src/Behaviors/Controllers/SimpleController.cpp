@@ -1,11 +1,12 @@
 #include "SimpleController.h"
 
-#include <algorithm>
-
 #include "ConfigurationSpace/Cfg.h"
-#include "MPProblem/Robot/DynamicsModel.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/XMLNode.h"
+
+#include <algorithm>
+
+#include "nonstd/container_ops.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -53,26 +54,19 @@ SimpleController::
 std::vector<double>
 SimpleController::
 ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double) {
-  // Compute the c-space direction from _current to _target.
-  const Cfg delta = _current.FindDirectionTo(_target);
+  // Compute the shortest c-space direction from _current to _target.
+  std::vector<double> delta = _current.DirectionInLocalFrame(_target);
 
   // Determine the gain coefficient for delta.
-  double coefficient = m_gain;
-
-  const double magnitude = delta.Magnitude();
-
-  if(magnitude * m_gain > m_max)
-    coefficient = m_max / magnitude;
+  const double magnitude = nonstd::magnitude<double>(delta),
+               coefficient = (magnitude * m_gain > m_max) ? m_max / magnitude
+                                                          : m_gain;
 
   // Compute the desired force from delta and coefficient.
-  std::vector<double> desired = delta.GetData();
-  std::for_each(desired.begin(), desired.end(),
+  std::for_each(delta.begin(), delta.end(),
       [coefficient](double& _val) {_val *= coefficient;});
 
-  // Put the force into the robot's local frame.
-  m_robot->GetDynamicsModel()->WorldToLocal(desired);
-
-  return desired;
+  return delta;
 }
 
 /*----------------------------------------------------------------------------*/
