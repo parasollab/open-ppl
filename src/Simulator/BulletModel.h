@@ -51,7 +51,7 @@ class BulletModel final {
     std::vector<btMultiBodyConstraint*>   m_constraints;
     std::vector<btCollisionShape*>        m_collisionShapes;
 
-    bool m_debug{false};  ///< Show debug messages?
+    static constexpr bool s_debug{false};  ///< Show debug messages?
 
     ///@}
     ///@name Class Constants

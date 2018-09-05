@@ -41,6 +41,8 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
+    virtual void Initialize() override;
+
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
@@ -158,6 +160,14 @@ KinodynamicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
 }
 
 /*---------------------------- MPBaseObject Overrides ------------------------*/
+
+template <typename MPTraits>
+void
+KinodynamicExtender<MPTraits>::
+Initialize() {
+  m_distanceCached = false;
+}
+
 
 template <typename MPTraits>
 void
@@ -325,7 +335,19 @@ ApplyControl(const CfgType& _start, const CfgType& _end, CfgType& _new,
               << "\n\t\tExtended " << distance
               << (valid ? " >= " : " < ") << this->m_minDist
               << " units."
+              << "\n\t\tFrom: " << _start.PrettyPrint()
+              << "\n\t\tTo:   " << _new.PrettyPrint()
               << std::endl;
+
+  // There is some kind of error here which is producing ridiculous edges.
+  if(distance > this->GetMaxDistance())
+  {
+    std::cerr << "Extended distance exceeds calculated maximum "
+              << this->GetMaxDistance()
+              << ", something is wrong."
+              << std::endl;
+    return false;
+  }
 
   return valid;
 }

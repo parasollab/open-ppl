@@ -401,6 +401,7 @@ PMPL_SRCS := \
   Behaviors/Agents/Agent.cpp \
   Behaviors/Agents/AgentFactory_pmpl.cpp \
   Behaviors/Agents/BatteryBreak.cpp \
+  Behaviors/Controllers/CarlikeNeedleController.cpp \
   Behaviors/Controllers/ControllerMethod.cpp \
   Behaviors/Controllers/ControlSetGenerators.cpp \
   Behaviors/Controllers/SimpleController.cpp \

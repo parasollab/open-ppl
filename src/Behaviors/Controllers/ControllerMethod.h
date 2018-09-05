@@ -82,7 +82,7 @@ class ControllerMethod {
     /// @param _dt The timestep length.
     /// @return A random control that can be executed from _current for _dt
     ///         steps.
-    Control GetRandomControl(const Cfg& _current, const double _dt) const
+    virtual Control GetRandomControl(const Cfg& _current, const double _dt) const
         noexcept;
 
     /// Get the discrete set of controls that this controller can use, if any.

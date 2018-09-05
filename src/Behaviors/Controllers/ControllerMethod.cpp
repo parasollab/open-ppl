@@ -1,5 +1,6 @@
 #include "ControllerMethod.h"
 
+#include "Behaviors/Controllers/CarlikeNeedleController.h"
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/ICreateController.h"
 //#include "Behaviors/Controllers/PIDFeedback.h"
@@ -76,6 +77,9 @@ Factory(Robot* const _r, XMLNode& _node) {
   //  output = std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, _node));
   else if(controllerType == "icreatecontroller")
     output = std::unique_ptr<ICreateController>(new ICreateController(_r, _node));
+  else if(controllerType == "carlikeneedle")
+    output = std::unique_ptr<CarlikeNeedleController>(new
+        CarlikeNeedleController(_r, _node));
   else
     throw ParseException(_node.Where(), "Unknown controller label '" +
         controllerType + "'. Currently only 'simple' is supported.");

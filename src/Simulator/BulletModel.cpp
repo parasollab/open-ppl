@@ -287,6 +287,26 @@ Execute(const Control& _c) noexcept {
 
   const size_t numJoints = m_pmplModel->JointDOF();
 
+  if(s_debug) {
+    const std::string translationType =
+        _c.actuator->GetDynamicsType() == Actuator::DynamicsType::Force
+        ? "force" : "velocity";
+    const std::string rotationType =
+        _c.actuator->GetDynamicsType() == Actuator::DynamicsType::Force
+        ? "torque" : "omega";
+
+    std::cout << "\nBulletModel::Execute"
+              << "\nControl: " << _c
+              << "\nBase " << translationType << ": " << force
+              << "\nBase " << rotationType << ": " << torque;
+
+    auto diter = iter;
+    for(size_t i = 0; i < numJoints; ++i, ++diter)
+      std::cout << "\nJoint " << i << " " << rotationType << ": " << *diter * PI;
+
+    std::cout << std::endl;
+  }
+
   switch(_c.actuator->GetDynamicsType()) {
     case Actuator::DynamicsType::Force:
       m_bulletModel->addBaseForce(force);
@@ -411,7 +431,7 @@ Build() {
   const bool  isDynamic = m_pmplModel->IsActive();
   const auto& joints    = m_pmplModel->GetJoints();
 
-  if(m_debug)
+  if(s_debug)
     std::cout << "BulletModel::AddObject: Creating multibody"
               << "\n\t" << m_collisionShapes.size() << " bodies"
               << "\n\t" << joints.size() << " joints"
@@ -459,7 +479,7 @@ Build() {
     m_colliders.push_back(col);
 #endif
 
-    if(m_debug)
+    if(s_debug)
       std::cout << "Added base with mass " << baseMass << "."
                 << std::endl;
   }
@@ -473,7 +493,7 @@ Build() {
               parentIndex     = parentPmplIndex - 1,
               linkIndex       = linkPmplIndex - 1;
 
-    if(m_debug)
+    if(s_debug)
       std::cout << "\nAdding joint " << i << " connecting bodies "
                 << parentPmplIndex << " and " << linkPmplIndex << "."
                 << std::endl;
@@ -495,7 +515,7 @@ Build() {
                    actuationToLink = joints[i]->GetTransformationToBody2(),
                    parentToLink = parentToActuation * actuation * actuationToLink;
 
-    if(m_debug)
+    if(s_debug)
       std::cout << "PMPL Transforms:"
                 << "\nparentToActuation: " << parentToActuation
                 << "\nactuation: " << actuation
@@ -513,7 +533,7 @@ Build() {
 
       parentToLinkRotationInParentFrame = ToBullet(temp);
 
-      if(m_debug) {
+      if(s_debug) {
         mathtool::convertFromQuaternion(check, temp);
         const bool reconverted = check == parentToLink.rotation().matrix(),
                    unitQuat    = temp.norm() == 1;
@@ -567,7 +587,7 @@ Build() {
             m_bulletModel, linkIndex, range.min * PI, range.max * PI);
         m_constraints.push_back(con);
 
-        if(m_debug)
+        if(s_debug)
           std::cout << "\t\tAdded revolute joint " << linkIndex
                     << "with joint range ["
                     << std::setprecision(3) << range.min * PI << " : "
@@ -598,7 +618,7 @@ Build() {
             actuationToLinkTranslationInLinkFrame,
             s_disableParentCollision);
 
-        if(m_debug)
+        if(s_debug)
           std::cout << "\t\tAdded spherical joint " << linkIndex << "."
                     << std::endl;
         break;
@@ -612,7 +632,7 @@ Build() {
             actuationToLinkTranslationInLinkFrame,
             s_disableParentCollision);
 
-        if(m_debug)
+        if(s_debug)
           std::cout << "\t\tAdded fixed joint " << linkIndex << "."
                     << std::endl;
         break;
