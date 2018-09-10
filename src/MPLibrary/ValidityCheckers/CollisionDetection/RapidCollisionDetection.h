@@ -15,6 +15,12 @@
 ///   Stefan Gottschalk and Ming C. Lin and Dinesh Manocha. "OBBTree: A
 ///   Hierarchical Structure for Rapid Interference Detection". SIGGRAPH 1996.
 ///
+/// @warning RAPID is not a thread-safe library; it uses static data as part of
+///          its internal implementation. We cannot use RAPID in any
+///          multi-threaded context, including the simulator - race conditions
+///          will result! Use PQP instead, which uses separate structures for
+///          each collision check.
+///
 /// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
 class Rapid: public CollisionDetectionMethod {
