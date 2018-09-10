@@ -5,6 +5,8 @@
 
 #include <RAPID.H>
 
+#include <mutex>
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -20,6 +22,10 @@ Rapid::
 void
 Rapid::
 Build(Body* const _body) {
+  // Rapid is not thread-safe, even for building models.
+  static std::mutex lock;
+  std::lock_guard<std::mutex> guard(lock);
+
   const GMSPolyhedron& poly = _body->GetPolyhedron();
   std::unique_ptr<RAPID_model> rapidBody(new RAPID_model);
   rapidBody->BeginModel();

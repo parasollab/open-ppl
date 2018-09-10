@@ -68,8 +68,11 @@ void
 PathFollowingAgent::
 ClearPlan() {
   // Remove the path visual if needed.
-  if(HasPlan() and Simulation::Get())
+  if(HasPlan() and Simulation::Get() and m_pathVisualID != size_t(-1))
+  {
     Simulation::Get()->RemovePath(m_pathVisualID);
+    m_pathVisualID = size_t(-1);
+  }
 
   // Clear path data.
   PlanningAgent::ClearPlan();

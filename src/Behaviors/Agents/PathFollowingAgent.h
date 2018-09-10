@@ -72,7 +72,7 @@ class PathFollowingAgent : public PlanningAgent {
     /// The distance threshold for waypoint proximity.
     double m_waypointThreshold{.05};
 
-    size_t m_pathVisualID{0}; ///< The ID of the path drawing.
+    size_t m_pathVisualID{size_t(-1)}; ///< The ID of the path drawing.
 
 
     ///@}
