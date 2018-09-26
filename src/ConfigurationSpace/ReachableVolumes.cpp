@@ -19,7 +19,8 @@
 /// @return The reachable volume of a single link of the chain
 double
 ComputeReachableVolumeOfSingleLink(const size_t _dimension,
-     const Connection* _frontJoint, const Connection* _backJoint, const Chain* _chain) {
+    const Connection* _frontJoint, const Connection* _backJoint,
+    const Chain* _chain) {
 
   // Check that the joint type is supported.
   const Connection::JointType frontJointType = _frontJoint->GetConnectionType();
@@ -57,25 +58,25 @@ ComputeReachableVolumeOfSingleLink(const size_t _dimension,
     throw RunTimeException(WHERE) << "Reachable volumes do not handle joints "
                                   << "with offsets in the DH params. "
                                   << "Connection between bodies "
-                                  << _frontJoint->GetNextBodyIndex() 
-				  << " and "
-                                  << _frontJoint->GetPreviousBodyIndex() 
-				  << " has a = " << dh.m_a
+                                  << _frontJoint->GetNextBodyIndex()
+                                  << " and "
+                                  << _frontJoint->GetPreviousBodyIndex()
+                                  << " has a = " << dh.m_a
                                   << ", d = " << dh.m_d << ".";
 
   // Get the distance from one joint to the next. If m_lastBody is valid then use that as the next (and last) joint
   //the min RD is the max RD in a single link
   double dist;
 
-  //this segment is needed because when the direction of chain changes, 
+  //this segment is needed because when the direction of chain changes,
   //the next and previous bodies that connection store to do not.
 
   if (_chain->IsForward())
     dist =  _frontJoint->GetTransformationToDHFrame().translation().norm() +
-	    _backJoint->GetTransformationToBody2().translation().norm();
+      _backJoint->GetTransformationToBody2().translation().norm();
   else
     dist =  _frontJoint->GetTransformationToBody2().translation().norm() +
-	    _backJoint->GetTransformationToDHFrame().translation().norm();
+      _backJoint->GetTransformationToDHFrame().translation().norm();
 
   //cout << "dist calculated: " << dist << endl;
   return dist;
@@ -84,21 +85,20 @@ ComputeReachableVolumeOfSingleLink(const size_t _dimension,
 
 ///computes the reachable volume of a linear chain
 WorkspaceBoundingSphericalShell
-ComputeReachableVolume(const size_t _dimension, 
-			const vector<double>& _center, 
-			const Chain& _chain) {
+ComputeReachableVolume(const size_t _dimension, const vector<double>& _center,
+                       const Chain& _chain) {
   // Initialize minimum and maximum reachable distances.
   double min = 0,
          max = 0;
 
   //computes the base to the first joint
   if(_chain.GetBase()) {
-    max += (*(_chain.begin()))->GetTransformationToDHFrame().translation().norm();
+    max += (*_chain.begin())->GetTransformationToDHFrame().translation().norm();
     min = max;
   }
 
   //compute RV of internal joint
-  for(auto iter1 = _chain.begin(), iter2 = _chain.begin() + 1; 
+  for(auto iter1 = _chain.begin(), iter2 = _chain.begin() + 1;
       iter2 != _chain.end(); ++iter1, ++iter2) {
     //start from first joint and stop when front joint is last
 
@@ -108,15 +108,15 @@ ComputeReachableVolume(const size_t _dimension,
 
     // Update the chain's minimum and maximum reachable distance with Minknowski sum.
     min = std::max(0., (min > rd) ? min - rd
-				  : rd - max);
+          : rd - max);
     max += rd;
   }
 
   if(_chain.GetLastBody() != nullptr) {
     const double rd = (*(_chain.end() - 1))->
-        	      GetTransformationToBody2().translation().norm();
+                GetTransformationToBody2().translation().norm();
     min = std::max(0., (min > rd) ? min - rd
-        			  : rd - max);
+                : rd - max);
     max += rd;
   }
 

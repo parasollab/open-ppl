@@ -31,7 +31,7 @@ class Chain final {
     ///@name Local Types
     ///@{
 
-    typedef std::deque<Connection*>  JointList;
+    typedef std::deque<Connection*>   JointList;
     typedef JointList::const_iterator iterator;
 
     ///@}
@@ -134,13 +134,13 @@ class Chain final {
     /// @param _bodies The bodies in this chain, from root to end.
     /// @param _forward True if _end is further away from the base than _root.
     Chain(MultiBody* _mb, JointList&& _joints,
-	    const Body* _lastBody, const bool _forward);
+      const Body* _lastBody, const bool _forward);
 
     Chain(MultiBody* _mb, JointList&& _joints,
           const bool _forward);
 
     Chain(MultiBody* _mb, JointList&& _joints, const Body* _base, 
-	    const Body* _lastBody, const bool _forward);
+      const Body* _lastBody, const bool _forward);
 
   private:
 

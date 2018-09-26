@@ -1,5 +1,5 @@
-#ifndef SAMPLER_METHOD_H_
-#define SAMPLER_METHOD_H_
+#ifndef PMPL_SAMPLER_METHOD_H_
+#define PMPL_SAMPLER_METHOD_H_
 
 #include <iostream>
 
@@ -157,10 +157,11 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
 
     /// Takes a single input configuration and applies the sampler rule to
     /// generate one or more output configurations.
-    /// @param[in] _cfg The input configuration.
-    /// @param[in] _boundary The sampling boundary.
-    /// @param[out] _valid The resulting output configurations.
-    /// @param[out] _invalid The (optional) return for failed attempts.
+    /// @param _cfg The input configuration.
+    /// @param _boundary The sampling boundary.
+    /// @param _valid The resulting output configurations.
+    /// @param _invalid The (optional) return for failed attempts.
+    /// @return True if a valid configuration was generated, false otherwise.
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _valid, vector<CfgType>& _invalid) {return false;}
 
@@ -293,8 +294,8 @@ template <typename MPTraits>
 void
 SamplerMethod<MPTraits>::
 Sample(InputIterator _first, InputIterator _last,
-    size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _valid) {
+       size_t _maxAttempts, const Boundary* const _boundary,
+       OutputIterator _valid) {
   std::vector<CfgType> invalid;
   Sample(_first, _last, _maxAttempts, _boundary, _valid,
       std::back_inserter(invalid));

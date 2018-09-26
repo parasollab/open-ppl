@@ -72,10 +72,10 @@ Bisect() const noexcept {
   //properly split the chain based on the traversal direction of the chain at hand
   if (m_forward)
     return {Chain(m_multibody, std::move(joints1), this->GetBase(), nullptr, m_forward),
-	    Chain(m_multibody, std::move(joints2), nullptr, this->GetLastBody(), m_forward)};
+      Chain(m_multibody, std::move(joints2), nullptr, this->GetLastBody(), m_forward)};
   else
     return {Chain(m_multibody, std::move(joints2), nullptr, nullptr, m_forward),
-	    Chain(m_multibody, std::move(joints1), this->GetBase(), nullptr, m_forward)};
+      Chain(m_multibody, std::move(joints1), this->GetBase(), nullptr, m_forward)};
 }
 
 /*-------------------------------- Modifiers ---------------------------------*/
@@ -124,8 +124,8 @@ IsSingleLink() const noexcept {
   const Body* base = GetBase();
   int size = Size(); //number of connection types stored in m_joints
   return (size == 2 && !base && !lastBody) ||
-	  (size == 1 && base && !lastBody) ||
-	  (size == 1 && !base && lastBody);
+    (size == 1 && base && !lastBody) ||
+    (size == 1 && !base && lastBody);
 }
 
 Chain&
@@ -267,7 +267,6 @@ IsValidEnd(const Body* const _newEnd) const noexcept {
 
   if(IsForward()) {
     // Check that _newEnd is the next Connection of one of end's forward connections.
-
     for(size_t i = 0; i < end->ForwardConnectionCount(); ++i)
       if(end->GetForwardConnection(i).GetNextBody() == _newEnd)
         return true;
@@ -298,7 +297,7 @@ FindLongestLinearChain(MultiBody* const _mb, Body* _root,
 
     // Push the current joint into the chain.
     _forward ? joints.push_back(&(current->GetForwardConnection(0))) 
-	     : joints.push_back(&(current->GetBackwardConnection(0)));
+       : joints.push_back(&(current->GetBackwardConnection(0)));
 
     // If there is not exactly one connection from current to the next link(s)
     // in the traversal direction, we are finished.
@@ -319,8 +318,10 @@ FindLongestLinearChain(MultiBody* const _mb, Body* _root,
 /*------------------------------- Construction -------------------------------*/
 
 Chain::
-Chain(MultiBody* _mb, JointList&& _joints, const Body* _lastBody, const bool _forward)
-  : m_multibody(_mb), m_joints(std::move(_joints)), m_lastBody(_lastBody), m_forward(_forward) {
+Chain(MultiBody* _mb, JointList&& _joints, const Body* _lastBody,
+      const bool _forward)
+  : m_multibody(_mb), m_joints(std::move(_joints)), m_lastBody(_lastBody),
+    m_forward(_forward) {
   // There is no purpose to an empty chain; please do not make one.
   if(m_joints.empty())
     throw RunTimeException(WHERE) << "Cowardly refusing to instantiate an "
@@ -337,8 +338,10 @@ Chain(MultiBody*  _mb, JointList&& _joints, const bool _forward)
 }
 
 Chain::
-Chain(MultiBody* _mb, JointList&& _joints, const Body* _base, const Body* _lastBody, const bool _forward)
-  : m_multibody(_mb), m_joints(_joints), m_base(_base), m_lastBody(_lastBody), m_forward(_forward){
+Chain(MultiBody* _mb, JointList&& _joints, const Body* _base,
+      const Body* _lastBody, const bool _forward)
+  : m_multibody(_mb), m_joints(_joints), m_base(_base),
+    m_lastBody(_lastBody), m_forward(_forward) {
   // There is no purpose to an empty chain; please do not make one.
   if(m_joints.empty())
     throw RunTimeException(WHERE) << "Cowardly refusing to instantiate an "
