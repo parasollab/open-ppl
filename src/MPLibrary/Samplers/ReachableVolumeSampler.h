@@ -255,19 +255,21 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
     //   iter2   |c      vectors a and b when both are placed at the same origin.
     //     \     |       This creates a right-hand rotation of the child link
     //      \    |       about the joint's local +x axis.
-    //        \  |     The 'rotational angle' describes the rotation of joint's
-    //        iter1      local +x axis relative to the zero configuration.
+    //      a\   |     The 'rotational angle' describes the rotation of joint's
+    //        \  |       local +x axis relative to the zero configuration.
+    //        iter1
 
     // Compute the relevant vectors from the rv sample. The 'orthogonal'
     // direction here is the rotated +x axis in world coordinates.
     const Vector3d aVec = *iter2 - *iter1,
                    bVec = *iter3 - *iter2,
-                   orthogonal = (aVec % bVec).selfNormalize();
+                   aHat = aVec.normalize(),
+                   bHat = bVec.normalize(),
+                   orthogonal = aHat % bHat;
 
     // Use law of cosines to compute the articulated angle (angle away from
     // vertical in radians) and divide by PI for PMPL's normalized representation.
-    const double articulatedAngle = std::acos(aVec.normalize()
-                                            * bVec.normalize()) / PI;
+    const double articulatedAngle = std::acos(aHat * bHat) / PI;
 
     // Transform orthogonal to the joint's local (pre-rotated) frame. It should
     // not have any Z component in the local frame because this is the axis of
@@ -276,17 +278,25 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
     const Connection* const joint = _cfg.GetMultiBody()->GetJoint(jointNumber);
     auto transformation = joint->GetPreviousBody()->GetWorldTransformation()
                         * joint->GetTransformationToDHFrame();
-    const Vector3d orthLocal = -(transformation.rotation()) * orthogonal;
 
-    // Compute the rotational angle (rotation about vertical).
-    const double rotationalAngle = std::atan2(orthLocal[1], orthLocal[0]) / PI;
+    const double orthNorm = orthogonal.norm();
+    const Vector3d orthLocal = -(transformation.rotation()) * orthogonal /
+                               orthNorm;
+
+    // Compute the rotational angle (rotation about vertical). If the orthogonal
+    // vector is very small, then the rotational angle is approximately zero
+    // and atan2 may not give a reasonable answer depending on the
+    // implementation (use 0 in this case).
+    const double rotationalAngle = nonstd::approx(orthNorm, 0., 1e-8)
+                                 ? 0.
+                                 : std::atan2(orthLocal[1], orthLocal[0]) / PI;
 
     std::cout << "\nChecking angle computations:"
               << "\ntransfomation: " << transformation
               << std::setprecision(4)
               << "\naVec = parent -> joint" << jointNumber << ": " << aVec
               << "\nbVec = joint" << jointNumber << " -> child:  " << bVec
-              << "\northogonal = aVec % bVec:  " << orthogonal
+              << "\northogonal = aHat % bHat:  " << orthogonal
               << "\northLocal:    " << orthLocal
               << "\nx basis:      " << transformation.rotation().getBasis(0)
               << "\ny basis:      " << transformation.rotation().getBasis(1)
