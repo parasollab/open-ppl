@@ -688,12 +688,8 @@ Configure(const vector<double>& _v) {
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
 
-    // Get the connection object.
-    const size_t jointIndex = joint->GetNextBodyIndex();
-    auto& connection = m_bodies[jointIndex].GetBackwardConnection(0);
-    auto& dh = connection.GetDHParameters();
-
-    // Adjust connection to reflect new configuration.
+    // Adjust the joint to reflect new configuration.
+    auto& dh = joint->GetDHParameters();
     dh.m_theta = _v[index++] * PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       dh.m_alpha = _v[index++] * PI;

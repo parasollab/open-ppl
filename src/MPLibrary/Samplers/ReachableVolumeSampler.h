@@ -79,13 +79,22 @@ class ReachableVolumeSampler : public SamplerMethod<MPTraits> {
     /// @param _rvPoints The generated RV sample.
     void AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints);
 
-    /// Makes the RV samples given the joint placements of the joints in RV-space.
-    std::vector<Vector3d> ConstructRVSample(const Vector3d& _center,
+    /// Construct an RV sample from workspace positions for the base,
+    /// end-effector, and each joint.
+    /// @param _basePosition The position of the base in workspace.
+    /// @param _chain The chain structure describing the joint ordering.
+    /// @param _jointPlacements A set of workspace positions for each joint in
+    ///        _chain.
+    /// @param _endEffectorPoint The position of the end-effector in workspace.
+    std::vector<Vector3d> ConstructRVSample(const Vector3d& _basePosition,
         const Chain& _chain, const std::vector<JointPlacement>& _jointPlacements,
         const Vector3d& _endEffectorPoint);
 
-    /// Finds the position of the joint in RV-space if it is already sampled.
-    /// Throws error if joint cannot be found.
+    /// Finds the workspace position of a joint from a set of joint placements.
+    /// @param _points A set of workspace positions for each joint.
+    /// @param _joint The joint of interest.
+    /// @throw An exception if _points has no entry for _joint.
+    /// @return The workspace position of _joint in _points.
     Vector3d FindJointPosition(const std::vector<JointPlacement>& _points,
         const Connection* _joint);
 
@@ -142,6 +151,10 @@ template <typename MPTraits>
 void
 ReachableVolumeSampler<MPTraits>::
 AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
+  // Set the base at the base point.
+  _cfg.SetLinearPosition(_rvPoints.front());
+  _cfg.ConfigureRobot();
+
   // Get the transforms we will need to align the base so that the first joint
   // lands at _rvPoints[1].
   MultiBody* const multibody = _cfg.GetMultiBody();
@@ -179,13 +192,23 @@ AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
   _cfg.ConfigureRobot();
 
   // Check stuff.
-  std::cout << "\nOriginal v_c =                          " << v_c
-            << "\nv_rv =                                  " << v_rv
-            << "\nv_c after manually applying transform = "
-            << deltaRotation * v_c
-            << "\nv_c after applying transform =          "
-            << (baseTransformInWorldFrame.rotation() * baseToFirstJointInBaseFrame.translation()).normalize()
-            << std::endl;
+  //if(this->m_debug) {
+    std::cout << "\nChecking AlignBase"
+              << std::setprecision(4)
+              << "\nOriginal v_c =                          " << v_c
+              << "\nv_rv =                                  " << v_rv
+              << "\nv_c after manually applying transform = "
+              << deltaRotation * v_c
+              << "\nv_c after applying transform =          "
+              << (baseTransformInWorldFrame.rotation() *
+                  baseToFirstJointInBaseFrame.translation()).normalize()
+              << "\nfirst RV point:  " << _rvPoints[0]
+              << "\nbase position:   " << baseTransformInWorldFrame.translation()
+              << "\nsecond RV point: " << _rvPoints[1]
+              << "\njoint0 position: "
+              << (baseTransformInWorldFrame * baseToFirstJointInBaseFrame).translation()
+              << std::endl;
+  //}
 }
 
 
@@ -199,66 +222,100 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
   //the angle is suppose to lie in, or how we determine the quadrants
   //in the first place. This is fundamental.
 
+  // Align the base so that the base is at the first RV point and the first
+  // joint is at the second RV point.
   AlignBase(_cfg, _rvPoints);
 
-  //takes the consecutive points in RV space and computes the joint angles
-  std::vector<double> jointData;
-  //compute articulated angle for every joint
+  // Initialize the joint angles at zero.
+  _cfg.SetJointData(std::vector<double>(_cfg.JointDOF(), 0));
+  _cfg.ConfigureRobot();
+
+  // Keep track of the current DOF we are modifying.
+  size_t dofIndex = _cfg.DOF() - _cfg.JointDOF();
+
+  // Compute the angles for every joint (angle from vertical). The current
+  // layout for spherical joints has the rotational angle first and articulated
+  // angle second.
   for(auto iter1 = _rvPoints.begin(), iter2 = _rvPoints.begin() + 1,
            iter3 = _rvPoints.begin() + 2; iter3 != _rvPoints.end();
-           iter1++, iter2++, iter3++) {
-    //compute length of the sides of triangle
-    double a = (*iter2 - *iter1).norm();
-    double b = (*iter3 - *iter2).norm();
-    double c = (*iter3 - *iter1).norm();
-    std::cout << "a: " << a << std::endl << "b: " << b << std::endl
-              << "c: " << c << std::endl;
+           ++iter1, ++iter2, ++iter3) {
+    // Diagram of what we are doing here:
+    //      iter3
+    //      /  |     The first and last _rvPoints are for the base and end-
+    //    b/   |       effector, so iter2 always represents the position of the
+    //    /    |       current joint for which we are computing the angles.
+    //   /     |     The 'articulated angle' is the angle between sides a and b.
+    // iter2   |c    The 'rotational angle' describes the rotation of side b
+    //   \     |       about the axis (iter2 - iter1) relative to the zero
+    //    \    |       configuration.
+    //    a\   |
+    //      \  |
+    //      iter1
 
-    //use law of cosine to find joint angles and normalize it to be from 0 to 1
-    double jointAngle1 = acos((c*c - a*a - b*b) / (-2 * a * b)) / M_PI;
-    jointData.push_back(jointAngle1);
+    // Compute the relevant vectors from the rv sample.
+    const Vector3d aVec = *iter2 - *iter1,
+                   bVec = *iter3 - *iter2,
+                   cVec = *iter3 - *iter1,
+                   orthogonal = (aVec % bVec).selfNormalize();
+
+    // Get this joint's world transformation.
+    const size_t jointNumber = std::distance(_rvPoints.begin(), iter2) - 1;
+    const Connection* const joint = _cfg.GetMultiBody()->GetJoint(jointNumber);
+    auto transformation = joint->GetPreviousBody()->GetWorldTransformation()
+                        * joint->GetTransformationToDHFrame();
+
+    // Use law of cosines to compute the articulated angle (angle away from
+    // vertical in radians) and divide by PI for PMPL's normalized representation.
+    const double a = aVec.norm(),
+                 b = bVec.norm(),
+                 c = cVec.norm(),
+                 articulatedAngle = std::acos((c*c - a*a - b*b) / (-2. * a * b)) / PI;
+
+    // Compute the rotational angle (rotation about vertical). We will assume
+    // that the articulated angle is positive so that the rotational angle can
+    // be computed by placing u in the joint's local frame. It should not
+    // have any Z component in the local frame!
+    const Vector3d uWorld = bVec.orth(aVec).selfNormalize(),
+                   u      = -(transformation.rotation()) * uWorld;
+
+    std::cout << "\nHunting for the upward vector:"
+              << "\ntransfomation: " << transformation
+              << std::setprecision(4)
+              << "\nv1 = parent -> joint" << jointNumber << ": " << aVec
+              << "\nv2 = joint" << jointNumber << " -> child:  " << bVec
+              << "\northogonal = v1 % v2:  " << orthogonal
+              << "\nx basis:               " << transformation.rotation().getBasis(0)
+              << "\ny basis:               " << transformation.rotation().getBasis(1)
+              << "\nz basis:               " << transformation.rotation().getBasis(2)
+              << "\nuWorld:                " << uWorld
+              << "\nuWorld * orthogonal:   " << uWorld * orthogonal
+              << "\nuWorld * x basis:      " << uWorld * transformation.rotation().getBasis(0)
+              << "\nuWorld * y basis:      " << uWorld * transformation.rotation().getBasis(1)
+              << "\nuWorld * z basis:      " << uWorld * transformation.rotation().getBasis(2)
+              << "\nu:                     " << u
+              << std::endl;
+
+    const double rotationalAngle = std::atan2(u[1], u[0]) / PI;
+
+    // Set the rotational and articulated angles for this joint.
+    _cfg[dofIndex++] = rotationalAngle;
+    _cfg[dofIndex++] = articulatedAngle;
+
+    // Make sure the robot is updated with these joint angles for the next
+    // iteration. We can probably do this more efficiently by adjusting
+    // MultiBody::Configure to resolve lazily, but need to test that carefully.
+    _cfg.ConfigureRobot();
+
+    std::cout << "\nRV point " << jointNumber + 1 << ": " << *iter2
+              << "\nJoint " << jointNumber << " position: "
+              << (joint->GetPreviousBody()->GetWorldTransformation()
+                  * joint->GetTransformationToDHFrame()).translation()
+              << std::endl;
   }
 
-  //compute rotational angle of first link
-  Vector3d vector1(_rvPoints[0] - _rvPoints[1]);
-  Vector3d vector2(_rvPoints[2] - _rvPoints[1]);
-  Vector3d orthogonal = vector1 % vector2;
-
-  //angle between orthogonal std::vector and upward std::vector
-  auto base = _cfg.GetMultiBody()->GetBase();
-  auto& connection = base->GetForwardConnection(0);
-  auto transformation = base->GetWorldTransformation()
-                      * connection.GetTransformationToDHFrame();
-
-  // We aren't sure what the 'upward' direction is supposed to be here, but it
-  // should be one of the basis vectors in the first joint's actuation frame.
-  // The Z basis appears to generate no valid samples, although X and Y do not
-  // appear to put the EE in the right place.
-  const Vector3d upward = transformation.rotation().getBasis(0);
-
-  //compute angle betweem upward and orthogonal
-  double jointAngle2 = acos((upward * orthogonal) /
-                            (upward.norm() * orthogonal.norm()));
-  jointData.insert(jointData.begin(), jointAngle2);
-
-  Vector3d oldOrth = orthogonal;
-  //compute rotational angle for remaining links
-  int i = 2;
-  for(auto iter1 = _rvPoints.begin() + 1, iter2 = _rvPoints.begin() + 2,
-           iter3 = _rvPoints.begin() + 3; iter3 != _rvPoints.end();
-           iter1++, iter2++, iter3++) {
-    //compute length of the sides of triangle
-    vector1 = *iter1 - *iter2;
-    vector2 = *iter3 - *iter2;
-    orthogonal = vector1 % vector2;
-    jointAngle2 = acos((oldOrth * orthogonal) /
-      (oldOrth.norm() * orthogonal.norm())) / M_PI;
-    //use law of cosine to find joint angles
-    jointData.insert(jointData.begin() + i, jointAngle2);
-    i += 2;
-  }
-
-  _cfg.SetJointData(jointData);
+  std::cout << "\nEE position: "
+            << _cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().translation()
+            << std::endl;
 }
 
 
@@ -299,39 +356,45 @@ ComputePointonIntersection(const std::pair<Vector3d, double>& sphere1,
   return point;
 }
 
+
 template <typename MPTraits>
-std::vector<Vector3d>
+std::vector<mathtool::Vector3d>
 ReachableVolumeSampler<MPTraits>::
-ConstructRVSample(const Vector3d& _center, const Chain& _chain,
+ConstructRVSample(const mathtool::Vector3d& _basePosition, const Chain& _chain,
                   const std::vector<JointPlacement>& _jointPlacements,
-                  const Vector3d& _endEffectorPoint) {
-  //constructs the rvSample by making a
-  //std::vector of points corresponding to joints on the chain
+                  const mathtool::Vector3d& _endEffectorPoint) {
+  // Create storage for a reachable volume sample. Reserve space for each link.
   std::vector<Vector3d> rvSample;
   rvSample.reserve(2 + _chain.Size());
-  rvSample.push_back(_center);
-  for(auto iter = _chain.begin(); iter != _chain.end(); ++iter) {
-    for(auto jointIter = _jointPlacements.begin();
-             jointIter != _jointPlacements.end(); ++jointIter) {
-      if(*iter == jointIter->first) {
-        rvSample.push_back(jointIter->second);
-      }
-    }
-  }
+
+  // The first RV point is the location of the base.
+  rvSample.push_back(_basePosition);
+
+  // Find the position for each joint in the chain.
+  /// @todo Fix this, we shouldn't need to search the entire joint placement
+  ///       list each time. We should either force the order of _jointPlacements
+  ///       to match _chain or use a map from Connection* to position.
+  for(auto iter = _chain.begin(); iter != _chain.end(); ++iter)
+    rvSample.push_back(FindJointPosition(_jointPlacements, *iter));
+
+  // The last point is the location of the end-effector.
   rvSample.push_back(_endEffectorPoint);
   return rvSample;
 }
 
+
 template <typename MPTraits>
-Vector3d
+mathtool::Vector3d
 ReachableVolumeSampler<MPTraits>::
 FindJointPosition(const std::vector<JointPlacement>& _points,
-                  const Connection* _joint) {
-    for(size_t i = 0; i < _points.size(); ++i) {
-      if(_points[i].first == _joint)
-  return _points[i].second;
-    }
-    throw RunTimeException(WHERE) << "Joint not found in the list of sampled points";
+    const Connection* _joint) {
+  // Check each joint placement to look for _joint, and return its position if
+  // found.
+  for(size_t i = 0; i < _points.size(); ++i)
+    if(_points[i].first == _joint)
+      return _points[i].second;
+
+  throw RunTimeException(WHERE) << "Joint not found in the list of sampled points.";
 }
 
 /*------------------------------ Sampler Rule --------------------------------*/
@@ -350,7 +413,7 @@ SampleInternal(Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
   if(_chain.IsSingleLink())
     return true;
 
-  std::pair <Chain, Chain> splitChain = _chain.Bisect();
+  std::pair<Chain, Chain> splitChain = _chain.Bisect();
   Chain cl = splitChain.first;
   Chain cr = splitChain.second;
   if(this->m_debug) {
@@ -486,12 +549,12 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   //if(Chain::Decompose(multibody1).size() != 1)
     //throw RunTimeException(WHERE) << "Only chain robots are supported right now.";
   //create a chain that corresponds to the cfg
-  Chain chainCfg(multibody, std::move(joints), multibody->GetBase(),
+  Chain chain(multibody, std::move(joints), multibody->GetBase(),
       multibody->GetBody(multibody->GetNumBodies() - 1), true);
   std::vector<JointPlacement> jointPlacements;
   //set origin as the reference point forparent RV
   WorkspaceBoundingSphericalShell rv =
-    ComputeReachableVolume(dim, std::vector<double>(dim, 0.), chainCfg);
+    ComputeReachableVolume(dim, std::vector<double>(dim, 0.), chain);
 
   //----------------------------------------------------------------------------
   // DO NOT DELETE THIS. This section is for unconstrained planning.
@@ -509,11 +572,11 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   //  pCenter[i] = center[i];
 
   ////generate samples forthe internal joints
-  //SampleInternal(chainCfg, jointPlacements, pCenter, pEnd, dim);
+  //SampleInternal(chain, jointPlacements, pCenter, pEnd, dim);
 
   ////make the RV sample
   //std::vector<Vector3d> rvSample =
-  //  ConstructRVSample(pCenter, chainCfg, jointPlacements, pEnd);
+  //  ConstructRVSample(pCenter, chain, jointPlacements, pEnd);
 
   ////convert RV sample to C-Space sample with random translational and orientation
   //ConvertToCfgSample(_cfg, rvSample);
@@ -540,17 +603,16 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   Vector3d center = constraintCenter - endPoint;
 
   // Generate samples for the internal joints. If it fails, return false.
-  if(!SampleInternal(chainCfg, jointPlacements, center, constraintCenter, dim))
+  if(!SampleInternal(chain, jointPlacements, center, constraintCenter, dim))
     return false;
 
   //make the RV sample
   std::vector<Vector3d> rvSample =
-    ConstructRVSample(center, chainCfg, jointPlacements, constraintCenter);
+    ConstructRVSample(center, chain, jointPlacements, constraintCenter);
 
   // Convert RV sample to C-Space sample with random translational and orientation
   ConvertToCfgSample(_cfg, rvSample);
 
-  _cfg.SetLinearPosition(center);
   _cfg.ConfigureRobot();
   auto mb = _cfg.GetMultiBody();
   Vector3d eePoint = mb->GetBodies().back().GetWorldTransformation().translation();
