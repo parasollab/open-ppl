@@ -20,7 +20,10 @@
 ///          - The robot has volumetric, rotational base movement
 ///          - The robot has only spherical joints, and has at least one.
 ///
-/// @todo Add paper reference.
+/// Paper reference:
+///   Troy McMahon, Shawna Thomas, Nancy M. Amato. "Sampling Based Motion
+///     Planning with Reachable Volumes for High Degree of Freedom
+///     Manipulators." IJRR 2018.
 ///
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,9 +205,9 @@ AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
               << "\nv_c after applying transform =          "
               << (baseTransformInWorldFrame.rotation() *
                   baseToFirstJointInBaseFrame.translation()).normalize()
-              << "\nfirst RV point:  " << _rvPoints[0]
+              << "\nRV point 0:      " << _rvPoints[0]
               << "\nbase position:   " << baseTransformInWorldFrame.translation()
-              << "\nsecond RV point: " << _rvPoints[1]
+              << "\nRV point 1:      " << _rvPoints[1]
               << "\njoint0 position: "
               << (baseTransformInWorldFrame * baseToFirstJointInBaseFrame).translation()
               << std::endl;
@@ -216,11 +219,15 @@ template <typename MPTraits>
 void
 ReachableVolumeSampler<MPTraits>::
 ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
-  //TODO: need to find a way to orient the joint angles.
-  //Since finding the articulated and spherical joint angles
-  //both involve using acos(theta) we don't know which quadrant
-  //the angle is suppose to lie in, or how we determine the quadrants
-  //in the first place. This is fundamental.
+  /// @note We will assume that the articulated angle is always positive to
+  ///       simplify calculation of the rotational angle. We should eventually
+  ///       adjust this to sample the sign of the articulated angle so that we
+  ///       can generate samples from the full configuration space (including
+  ///       negative articulated angles).
+
+  /// @todo This function should probably be extracted to a reachable volume
+  ///       object because it will eventually have to consider additional joint
+  ///       types and base movements.
 
   // Align the base so that the base is at the first RV point and the first
   // joint is at the second RV point.
@@ -240,62 +247,51 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
            iter3 = _rvPoints.begin() + 2; iter3 != _rvPoints.end();
            ++iter1, ++iter2, ++iter3) {
     // Diagram of what we are doing here:
-    //      iter3
-    //      /  |     The first and last _rvPoints are for the base and end-
-    //    b/   |       effector, so iter2 always represents the position of the
-    //    /    |       current joint for which we are computing the angles.
-    //   /     |     The 'articulated angle' is the angle between sides a and b.
-    // iter2   |c    The 'rotational angle' describes the rotation of side b
-    //   \     |       about the axis (iter2 - iter1) relative to the zero
-    //    \    |       configuration.
-    //    a\   |
-    //      \  |
-    //      iter1
+    //        iter3
+    //        /  |     The first and last _rvPoints are for the base and end-
+    // \     /b  |       effector, so iter2 always represents the position of the
+    //  \art/    |       current joint for which we are computing the angles.
+    //   \ /     |     The 'articulated angle' art is the angle between the
+    //   iter2   |c      vectors a and b when both are placed at the same origin.
+    //     \     |       This creates a right-hand rotation of the child link
+    //      \    |       about the joint's local +x axis.
+    //        \  |     The 'rotational angle' describes the rotation of joint's
+    //        iter1      local +x axis relative to the zero configuration.
 
-    // Compute the relevant vectors from the rv sample.
+    // Compute the relevant vectors from the rv sample. The 'orthogonal'
+    // direction here is the rotated +x axis in world coordinates.
     const Vector3d aVec = *iter2 - *iter1,
                    bVec = *iter3 - *iter2,
-                   cVec = *iter3 - *iter1,
                    orthogonal = (aVec % bVec).selfNormalize();
 
-    // Get this joint's world transformation.
+    // Use law of cosines to compute the articulated angle (angle away from
+    // vertical in radians) and divide by PI for PMPL's normalized representation.
+    const double articulatedAngle = std::acos(aVec.normalize()
+                                            * bVec.normalize()) / PI;
+
+    // Transform orthogonal to the joint's local (pre-rotated) frame. It should
+    // not have any Z component in the local frame because this is the axis of
+    // rotation.
     const size_t jointNumber = std::distance(_rvPoints.begin(), iter2) - 1;
     const Connection* const joint = _cfg.GetMultiBody()->GetJoint(jointNumber);
     auto transformation = joint->GetPreviousBody()->GetWorldTransformation()
                         * joint->GetTransformationToDHFrame();
+    const Vector3d orthLocal = -(transformation.rotation()) * orthogonal;
 
-    // Use law of cosines to compute the articulated angle (angle away from
-    // vertical in radians) and divide by PI for PMPL's normalized representation.
-    const double a = aVec.norm(),
-                 b = bVec.norm(),
-                 c = cVec.norm(),
-                 articulatedAngle = std::acos((c*c - a*a - b*b) / (-2. * a * b)) / PI;
+    // Compute the rotational angle (rotation about vertical).
+    const double rotationalAngle = std::atan2(orthLocal[1], orthLocal[0]) / PI;
 
-    // Compute the rotational angle (rotation about vertical). We will assume
-    // that the articulated angle is positive so that the rotational angle can
-    // be computed by placing u in the joint's local frame. It should not
-    // have any Z component in the local frame!
-    const Vector3d uWorld = bVec.orth(aVec).selfNormalize(),
-                   u      = -(transformation.rotation()) * uWorld;
-
-    std::cout << "\nHunting for the upward vector:"
+    std::cout << "\nChecking angle computations:"
               << "\ntransfomation: " << transformation
               << std::setprecision(4)
-              << "\nv1 = parent -> joint" << jointNumber << ": " << aVec
-              << "\nv2 = joint" << jointNumber << " -> child:  " << bVec
-              << "\northogonal = v1 % v2:  " << orthogonal
-              << "\nx basis:               " << transformation.rotation().getBasis(0)
-              << "\ny basis:               " << transformation.rotation().getBasis(1)
-              << "\nz basis:               " << transformation.rotation().getBasis(2)
-              << "\nuWorld:                " << uWorld
-              << "\nuWorld * orthogonal:   " << uWorld * orthogonal
-              << "\nuWorld * x basis:      " << uWorld * transformation.rotation().getBasis(0)
-              << "\nuWorld * y basis:      " << uWorld * transformation.rotation().getBasis(1)
-              << "\nuWorld * z basis:      " << uWorld * transformation.rotation().getBasis(2)
-              << "\nu:                     " << u
+              << "\naVec = parent -> joint" << jointNumber << ": " << aVec
+              << "\nbVec = joint" << jointNumber << " -> child:  " << bVec
+              << "\northogonal = aVec % bVec:  " << orthogonal
+              << "\northLocal:    " << orthLocal
+              << "\nx basis:      " << transformation.rotation().getBasis(0)
+              << "\ny basis:      " << transformation.rotation().getBasis(1)
+              << "\nz basis:      " << transformation.rotation().getBasis(2)
               << std::endl;
-
-    const double rotationalAngle = std::atan2(u[1], u[0]) / PI;
 
     // Set the rotational and articulated angles for this joint.
     _cfg[dofIndex++] = rotationalAngle;
@@ -306,15 +302,17 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
     // MultiBody::Configure to resolve lazily, but need to test that carefully.
     _cfg.ConfigureRobot();
 
-    std::cout << "\nRV point " << jointNumber + 1 << ": " << *iter2
+    std::cout << "\nRV point " << jointNumber + 1 << ":       " << *iter2
               << "\nJoint " << jointNumber << " position: "
               << (joint->GetPreviousBody()->GetWorldTransformation()
                   * joint->GetTransformationToDHFrame()).translation()
               << std::endl;
   }
 
-  std::cout << "\nEE position: "
-            << _cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().translation()
+  std::cout << "\nLast RV point: " << _rvPoints.back()
+            << "\nEE position:   "
+            << _cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().
+               translation()
             << std::endl;
 }
 
