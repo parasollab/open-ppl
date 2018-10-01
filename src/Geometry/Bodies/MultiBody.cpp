@@ -396,6 +396,19 @@ GetBodies() const noexcept {
 }
 
 
+std::vector<const Body*>
+MultiBody::
+GetEndEffectors() const noexcept {
+  std::vector<const Body*> endEffectors;
+
+  for(const auto& body : m_bodies)
+    if(body.ForwardConnectionCount() == 0)
+      endEffectors.push_back(&body);
+
+  return endEffectors;
+}
+
+
 Body*
 MultiBody::
 GetBody(const size_t _i) noexcept {

@@ -10,7 +10,7 @@ class WorkspaceBoundingSphericalShell;
 /// @param _chain The chain.
 /// @return The reachable volume of _chain's end relative to its root.
 WorkspaceBoundingSphericalShell
-ComputeReachableVolume(const size_t _dimension, const vector<double>& _center,
-                       const Chain& _chain);
+ComputeReachableVolume(const size_t _dimension,
+    const std::vector<double>& _center, const Chain& _chain);
 
 #endif

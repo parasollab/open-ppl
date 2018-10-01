@@ -23,9 +23,9 @@ GetJointTypeFromTag(std::string _tag, const std::string& _where) {
   else if(_tag == "nonactuated")
     return Connection::JointType::NonActuated;
   else
-    throw ParseException(_where,
-        "Unknown joint type '" + _tag + "'."
-        " Options are: 'revolute', 'spherical', or 'nonactuated'.");
+    throw ParseException(_where) <<  "Unknown joint type '" << _tag << "'."
+                                 << " Options are: 'revolute', 'spherical', or "
+                                 << "'nonactuated'.";
 }
 
 
@@ -250,22 +250,6 @@ SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
   m_multibody->GetBody(_secondIndex)->LinkAdjacency(this);
 }
 
-
-std::ostream&
-operator<<(std::ostream& _os, const Connection& _c) {
-  _os << _c.m_bodyIndices.first << " "
-      << _c.m_bodyIndices.second << " "
-      << GetTagFromJointType(_c.m_jointType);
-
-  if(_c.IsRevolute() or _c.IsSpherical())
-    _os << " " << _c.GetJointRange(0);
-  _os << std::endl
-      << _c.m_transformationToDHFrame << std::endl
-      << _c.m_dhParameters << std::endl
-      << _c.m_transformationToBody2 << std::endl;
-  return _os;
-}
-
 /*-------------------------- Joint Information -------------------------------*/
 
 Connection::JointType
@@ -400,6 +384,27 @@ GetTransformationToDHFrame() const noexcept {
 std::ostream&
 operator<<(std::ostream& _os, const Connection::JointType& _j) {
   return _os << GetTagFromJointType(_j);
+}
+
+
+std::ostream&
+operator<<(std::ostream& _os, const Connection& _c) {
+  _os << _c.GetPreviousBodyIndex() << " "
+      << _c.GetNextBodyIndex() << " "
+      << _c.GetConnectionType();
+
+  if(_c.IsRevolute() or _c.IsSpherical())
+    _os << " " << _c.GetJointRange(0);
+
+  if(_c.IsSpherical())
+    _os << " " << _c.GetJointRange(1);
+
+  _os << "\n" << _c.GetTransformationToDHFrame()
+      << "\n" << _c.GetDHParameters()
+      << "\n" << _c.GetTransformationToBody2()
+      << std::endl;
+
+  return _os;
 }
 
 /*----------------------------------------------------------------------------*/

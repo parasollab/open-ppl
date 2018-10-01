@@ -8,6 +8,8 @@
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Bodies/Chain.h"
 
+#include "nonstd/io.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a sample in reachable volume (RV) space and translates it into a
@@ -25,6 +27,10 @@
 ///     Planning with Reachable Volumes for High Degree of Freedom
 ///     Manipulators." IJRR 2018.
 ///
+/// @todo Changing Chain::Bisect so that the second chain takes the extra joint
+///       causes this sampler to fail. This is likely an error here, to be
+///       investigated later.
+///
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -36,7 +42,7 @@ class ReachableVolumeSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename std::pair<Connection*, Vector3d> JointPlacement;
+    typedef typename std::pair<const Connection*, Vector3d> JointPlacement;
 
     ///@}
     ///@name Construction
@@ -68,7 +74,7 @@ class ReachableVolumeSampler : public SamplerMethod<MPTraits> {
     /// @return False if we fail to generate a valid RV placement.
     bool SampleInternal(Chain& _chain,
         std::vector<JointPlacement>& _jointPlacements,
-        Vector3d& _center, Vector3d& _endEffectorPoint, const size_t _dim);
+        Vector3d& _center, Vector3d& _endEffectorPoint);
 
     ///@}
     ///@name Helper functions
@@ -161,14 +167,18 @@ AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
   // Get the transforms we will need to align the base so that the first joint
   // lands at _rvPoints[1].
   MultiBody* const multibody = _cfg.GetMultiBody();
-  const std::vector<std::unique_ptr<Connection>>& mbJoints = multibody->GetJoints();
+  const std::vector<std::unique_ptr<Connection>>& mbJoints = multibody->
+      GetJoints();
 
-  const Transformation& baseTransformInWorldFrame = multibody->GetBase()->GetWorldTransformation();
-  const Transformation& baseToFirstJointInBaseFrame = mbJoints[0]->GetTransformationToDHFrame();
+  const Transformation& baseTransformInWorldFrame = multibody->GetBase()->
+      GetWorldTransformation();
+  const Transformation& baseToFirstJointInBaseFrame = mbJoints[0]->
+      GetTransformationToDHFrame();
 
   // Find the normalized vector v_c which points from the base to the first
   // joint (in the world frame) when the robot is at _cfg.
-  const mathtool::Vector3d v_c = (baseTransformInWorldFrame.rotation() * baseToFirstJointInBaseFrame.translation()).normalize();
+  const mathtool::Vector3d v_c = (baseTransformInWorldFrame.rotation()
+      * baseToFirstJointInBaseFrame.translation()).normalize();
 
   // Find the normalized vector v_rv which points from the base to the first
   // joint (in the world frame) when the robot is configured at an RV sample
@@ -189,13 +199,15 @@ AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
 
   // Create a new transformation for the base which aligns v_c with v_rv. This
   // should place the first joint's DH frame at _rvPoints[1].
-  const mathtool::Transformation newBaseTransform(baseTransformInWorldFrame.translation(),
-      mathtool::MatrixOrientation(deltaRotation) * baseTransformInWorldFrame.rotation());
+  const mathtool::Transformation newBaseTransform(
+      baseTransformInWorldFrame.translation(),
+      mathtool::MatrixOrientation(deltaRotation)
+      * baseTransformInWorldFrame.rotation());
   _cfg.SetBaseTransformation(newBaseTransform);
   _cfg.ConfigureRobot();
 
   // Check stuff.
-  //if(this->m_debug) {
+  if(this->m_debug) {
     std::cout << "\nChecking AlignBase"
               << std::setprecision(4)
               << "\nOriginal v_c =                          " << v_c
@@ -209,9 +221,10 @@ AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
               << "\nbase position:   " << baseTransformInWorldFrame.translation()
               << "\nRV point 1:      " << _rvPoints[1]
               << "\njoint0 position: "
-              << (baseTransformInWorldFrame * baseToFirstJointInBaseFrame).translation()
+              << (baseTransformInWorldFrame
+                  * baseToFirstJointInBaseFrame).translation()
               << std::endl;
-  //}
+  }
 }
 
 
@@ -291,18 +304,6 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
                                  ? 0.
                                  : std::atan2(orthLocal[1], orthLocal[0]) / PI;
 
-    std::cout << "\nChecking angle computations:"
-              << "\ntransfomation: " << transformation
-              << std::setprecision(4)
-              << "\naVec = parent -> joint" << jointNumber << ": " << aVec
-              << "\nbVec = joint" << jointNumber << " -> child:  " << bVec
-              << "\northogonal = aHat % bHat:  " << orthogonal
-              << "\northLocal:    " << orthLocal
-              << "\nx basis:      " << transformation.rotation().getBasis(0)
-              << "\ny basis:      " << transformation.rotation().getBasis(1)
-              << "\nz basis:      " << transformation.rotation().getBasis(2)
-              << std::endl;
-
     // Set the rotational and articulated angles for this joint.
     _cfg[dofIndex++] = rotationalAngle;
     _cfg[dofIndex++] = articulatedAngle;
@@ -312,18 +313,36 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
     // MultiBody::Configure to resolve lazily, but need to test that carefully.
     _cfg.ConfigureRobot();
 
-    std::cout << "\nRV point " << jointNumber + 1 << ":       " << *iter2
-              << "\nJoint " << jointNumber << " position: "
-              << (joint->GetPreviousBody()->GetWorldTransformation()
-                  * joint->GetTransformationToDHFrame()).translation()
-              << std::endl;
+
+    if(this->m_debug) {
+      std::cout << "\nChecking angle computations:"
+                << "\ntransfomation: " << transformation
+                << std::setprecision(4)
+                << "\naVec = parent -> joint" << jointNumber << ": " << aVec
+                << "\nbVec = joint" << jointNumber << " -> child:  " << bVec
+                << "\northogonal = aHat % bHat:  " << orthogonal
+                << "\northLocal:    " << orthLocal
+                << "\nx basis:      " << transformation.rotation().getBasis(0)
+                << "\ny basis:      " << transformation.rotation().getBasis(1)
+                << "\nz basis:      " << transformation.rotation().getBasis(2)
+                << "\nrotationalAngle: " << rotationalAngle
+                << "\narticulatedAngle: " << articulatedAngle
+                << "\nRV point " << jointNumber + 1 << ":       " << *iter2
+                << "\nJoint " << jointNumber << " position: "
+                << (joint->GetPreviousBody()->GetWorldTransformation()
+                    * joint->GetTransformationToDHFrame()).translation()
+                << std::endl;
+    }
   }
 
-  std::cout << "\nLast RV point: " << _rvPoints.back()
-            << "\nEE position:   "
-            << _cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().
-               translation()
-            << std::endl;
+  if(this->m_debug) {
+    std::cout << "\nLast RV point: " << _rvPoints.back()
+              << "\nEE position:   "
+              << _cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().
+                 translation()
+              << "\nCfg generated: " << _cfg.PrettyPrint()
+              << std::endl;
+  }
 }
 
 
@@ -373,7 +392,7 @@ ConstructRVSample(const mathtool::Vector3d& _basePosition, const Chain& _chain,
                   const mathtool::Vector3d& _endEffectorPoint) {
   // Create storage for a reachable volume sample. Reserve space for each link.
   std::vector<Vector3d> rvSample;
-  rvSample.reserve(2 + _chain.Size());
+  rvSample.reserve(_chain.Size());
 
   // The first RV point is the location of the base.
   rvSample.push_back(_basePosition);
@@ -411,55 +430,70 @@ template <typename MPTraits>
 bool
 ReachableVolumeSampler<MPTraits>::
 SampleInternal(Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
-            Vector3d& _center, Vector3d& _endEffectorPoint, const size_t _dim) {
+            Vector3d& _center, Vector3d& _endEffectorPoint) {
   //TODO: adapt this code to work with the given dimensions; right now only
   //3 dimensions is supported
 
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "ReachableVolume::SampleInternal");
-  //check ifchain is just one link
+
+  // TODO
+  // If the chain is just one link?
   if(_chain.IsSingleLink())
     return true;
 
+  // Split the chain orient the subchains (left forward-oriented (base -> EE)
+  // and right backward-oriented (EE -> base)).
   std::pair<Chain, Chain> splitChain = _chain.Bisect();
-  Chain cl = splitChain.first;
-  Chain cr = splitChain.second;
-  if(this->m_debug) {
-    std::cout << "left chain size: " << cl.Size() <<  std::endl;
-    std::cout << "right chain size: " << cr.Size() <<  std::endl;
+  Chain* leftChain, * rightChain;
+  if(_chain.IsForward()) {
+    leftChain = &splitChain.first;
+    rightChain = &splitChain.second.Reverse();
+  }
+  else {
+    leftChain = &splitChain.second.Reverse();
+    rightChain = &splitChain.first;
   }
 
-  //make sure the chains are facing each other
-  cl.IsForward() ? cl : cl.Reverse();
-  cr.IsForward() ? cr.Reverse() : cr;
+  if(this->m_debug) {
+    std::cout << "\nleft chain: " << *leftChain
+              << "\nright chain: " << *rightChain
+              <<  std::endl;
+  }
 
-  //find the points to build rv relative to (the base of the chains)
-  const Vector3d& leftPoint = cl.GetBase() ? _center :
-            FindJointPosition(_jointPlacements, *(cl.begin()));
-  const Vector3d& rightPoint = cr.GetBase() ? _endEffectorPoint :
-            FindJointPosition(_jointPlacements, *(cr.begin()));
+  // Find the base point for each chain.
+  const Vector3d& leftPoint = leftChain->GetFrontBody()
+      ? _center
+      : FindJointPosition(_jointPlacements, *(leftChain->begin()));
+  const Vector3d& rightPoint = rightChain->GetFrontBody()
+      ? _endEffectorPoint
+      : FindJointPosition(_jointPlacements, *(rightChain->begin()));
 
-  std::vector<double> pl(_dim);
-  std::vector<double> pr(_dim);
+  const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
+  std::vector<double> pl(dimension);
+  std::vector<double> pr(dimension);
 
-  for(size_t i = 0; i < _dim; ++i) {
+  for(size_t i = 0; i < dimension; ++i) {
     pl[i] = leftPoint[i];
     pr[i] = rightPoint[i];
   }
 
-  //compute reachable volumes for both partitions
-  WorkspaceBoundingSphericalShell rvl = ComputeReachableVolume(_dim, pl, cl);
-  WorkspaceBoundingSphericalShell rvr = ComputeReachableVolume(_dim, pr, cr);
+  // Compute reachable volumes for both chains.
+  WorkspaceBoundingSphericalShell rvl = ComputeReachableVolume(dimension, pl,
+      *leftChain);
+  WorkspaceBoundingSphericalShell rvr = ComputeReachableVolume(dimension, pr,
+      *rightChain);
 
   if(this->m_debug) {
-    std::cout << "Left point: " << leftPoint << std::endl;
-    std::cout << "Right point: " << rightPoint << std::endl;
-    std::cout << "Outer radius left rv: " << rvl.GetOuterRadius() << std::endl;
-    std::cout << "Length of left rv: " <<
-        rvl.GetOuterRadius() - rvl.GetInnerRadius() << std::endl;
-    std::cout << "Outer radius right rv: " << rvr.GetOuterRadius() << std::endl;
-    std::cout << "Length of right rv: " <<
-        rvr.GetOuterRadius() - rvr.GetInnerRadius() << std::endl;
+    std::cout << "\nLeft point: " << leftPoint
+              << "\nRight point: " << rightPoint
+              << "\nOuter radius left rv: " << rvl.GetOuterRadius()
+              << "\nLength of left rv: "
+              << rvl.GetOuterRadius() - rvl.GetInnerRadius()
+              << "\nOuter radius right rv: " << rvr.GetOuterRadius()
+              << "\nLength of right rv: "
+              << rvr.GetOuterRadius() - rvr.GetInnerRadius()
+              << std::endl;
   }
 
 
@@ -489,7 +523,7 @@ SampleInternal(Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
 
   if(overlap < 0)
     throw RunTimeException(WHERE) << "No overlap between RVs! "
-                                  << "This should not be possible";
+                                  << "This should not be possible.";
 
   if(rvr.GetOuterRadius() == rvr.GetInnerRadius() and
      rvl.GetOuterRadius() == rvl.GetInnerRadius()) {
@@ -522,13 +556,17 @@ SampleInternal(Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
 
      for(size_t i = 0; i < jSample.size(); ++i)
        jointSample[i] = jSample[i];
+
+     if(this->m_debug)
+       std::cout << "intersecting point: " << jointSample
+                 << std::endl;
   }
 
   //record where the last joint goes
-  _jointPlacements.push_back(std::make_pair(cl.GetEnd(), jointSample));
+  _jointPlacements.emplace_back(leftChain->GetLastJoint(), jointSample);
 
-  if(!SampleInternal(cl, _jointPlacements, _center, _endEffectorPoint, _dim)
-      or !SampleInternal(cr, _jointPlacements, _center, _endEffectorPoint, _dim))
+  if(!SampleInternal(*leftChain, _jointPlacements, _center, _endEffectorPoint) or
+      !SampleInternal(*rightChain, _jointPlacements, _center, _endEffectorPoint))
     return false;
 
   return true;
@@ -538,10 +576,10 @@ template <typename MPTraits>
 bool
 ReachableVolumeSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        std::vector<CfgType>& _result, std::vector<CfgType>& _collision) {
+    std::vector<CfgType>& _result, std::vector<CfgType>& _collision) {
   const std::string callee = this->GetNameAndLabel() + "::Sampler()";
   auto vcm = this->GetValidityChecker(m_vcLabel);
-  const size_t dim = this->GetEnvironment()->GetBoundary()->GetDimension();
+  const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
 
   MultiBody* const multibody = _cfg.GetMultiBody(); //get multibody of cfg
   const std::vector<std::unique_ptr<Connection>>& mbJoints = multibody->GetJoints();
@@ -550,19 +588,26 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   //assume joints are ordered consecutively based on index
   const size_t numJoints = mbJoints.size();
   std::deque<Connection*> joints(numJoints, nullptr); //initialize empty joint list
-  for(size_t i = 0; i < numJoints; ++i) {
-    joints[i] = (multibody->GetJoints()[i]).get(); //populate joint list
-  }
+  for(size_t i = 0; i < numJoints; ++i)
+    joints[i] = multibody->GetJoint(i); //populate joint list
 
-  //if(Chain::Decompose(multibody1).size() != 1)
-    //throw RunTimeException(WHERE) << "Only chain robots are supported right now.";
-  //create a chain that corresponds to the cfg
-  Chain chain(multibody, std::move(joints), multibody->GetBase(),
-      multibody->GetBody(multibody->GetNumBodies() - 1), true);
+  // Decompose the robot into linear chains. Enforce our present assumption that
+  // the robot is a single chain.
+  std::vector<Chain> chains = Chain::Decompose(multibody);
+  if(chains.size() != 1)
+    throw RunTimeException(WHERE) << "Only single-chain robots are supported "
+                                  << "right now, but Chain::Decompose generated "
+                                  << chains.size() << " chains: "
+                                  << chains
+                                  << std::endl;
+  Chain& chain = chains.front();
+
+  std::cout << "\nChain: " << chain << std::endl;
+
   std::vector<JointPlacement> jointPlacements;
   //set origin as the reference point forparent RV
   WorkspaceBoundingSphericalShell rv =
-    ComputeReachableVolume(dim, std::vector<double>(dim, 0.), chain);
+    ComputeReachableVolume(dimension, std::vector<double>(dimension, 0.), chain);
 
   //----------------------------------------------------------------------------
   // DO NOT DELETE THIS. This section is for unconstrained planning.
@@ -572,15 +617,15 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   //std::vector<double> center = rv.GetCenter();
 
   //Vector3d pEnd;
-  //for(size_t i = 0; i < dim; ++i)
+  //for(size_t i = 0; i < dimension; ++i)
   //  pEnd[i] = endEffectorPoint[i];
 
   //Vector3d pCenter;
-  //for(size_t i = 0; i < dim; ++i)
+  //for(size_t i = 0; i < dimension; ++i)
   //  pCenter[i] = center[i];
 
   ////generate samples forthe internal joints
-  //SampleInternal(chain, jointPlacements, pCenter, pEnd, dim);
+  //SampleInternal(chain, jointPlacements, pCenter, pEnd);
 
   ////make the RV sample
   //std::vector<Vector3d> rvSample =
@@ -611,7 +656,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   Vector3d center = constraintCenter - endPoint;
 
   // Generate samples for the internal joints. If it fails, return false.
-  if(!SampleInternal(chain, jointPlacements, center, constraintCenter, dim))
+  if(!SampleInternal(chain, jointPlacements, center, constraintCenter))
     return false;
 
   //make the RV sample
@@ -620,38 +665,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
 
   // Convert RV sample to C-Space sample with random translational and orientation
   ConvertToCfgSample(_cfg, rvSample);
-
-  _cfg.ConfigureRobot();
-  auto mb = _cfg.GetMultiBody();
-  Vector3d eePoint = mb->GetBodies().back().GetWorldTransformation().translation();
-  Vector3d basePoint = mb->GetBodies().front().GetWorldTransformation().translation();
-
-  if(this->m_debug) {
-    std::cout << "End Effector Random point: " << endEffectorPoint
-              << "\nEE point: " << eePoint
-              << "\nmatches: " << (rvSample.back() == constraintCenter)
-              << std::endl;
-
-    for(size_t i = 0; i < rvSample.size(); ++i)
-      std::cout << "Point " << i << " in rv: " << rvSample[i] << std::endl;
-
-    std::cout << "ee matches: " << (eePoint == rvSample.back())
-              << " ("
-              << (rvSample.back() - eePoint).norm()
-              << " units apart)"
-              << "\nbase matches: " << (basePoint == rvSample.front())
-              << " ("
-              << (rvSample.front() - basePoint).norm()
-              << " units apart)"
-              << std::endl;
-
-    std::cout << "dist between two rv samples: ";
-    for(size_t i = 1; i < rvSample.size(); ++i)
-      std::cout << (rvSample[i] - rvSample[i - 1]).norm() << " ";
-    std::cout << std::endl;
-
-    std::cout << "Cfg generated: " << _cfg.PrettyPrint() << std::endl;
-  }
 
   if(vcm->IsValid(_cfg, callee))
     _result.push_back(_cfg);

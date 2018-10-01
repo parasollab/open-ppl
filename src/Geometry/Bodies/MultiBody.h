@@ -160,6 +160,10 @@ class MultiBody {
     /// Get all of the internal bodies.
     const std::vector<Body>& GetBodies() const noexcept;
 
+    /// Get the set of bodies which are end-effectors (i.e., have no forward
+    /// connections).
+    std::vector<const Body*> GetEndEffectors() const noexcept;
+
     /// Get an internal body.
     /// @param _i The index of the body.
     Body* GetBody(const size_t _i) noexcept;

@@ -8,119 +8,115 @@
 #include "ReachableVolumes.h"
 #include "Transformation.h"
 
-#include <queue>
+#include <algorithm>
 
 
-/// Compute the unconstrained reachable distance of one link in a linear chain
+/// Compute the unconstrained reachable distance of one joint in a linear chain,
+/// relative to its parent.
 /// @param _dimension The workspace dimension.
-/// @param _frontJoint the joint ahead of _backJoint index-wise
-/// @param _backJoint the joint behind _frontJoint index-wise
-/// @param _chain the chain that we wish to construct the overall RV for
-/// @return The reachable volume of a single link of the chain
+/// @param _joint The joint to compute the reachable distance for.
+/// @param _parent The parent of _joint in the current ordering of _chain.
+/// @param _chain The chain which holds _joint and _parent (may be forward or
+///               reverse oriented relative to the multibody).
+/// @return The reachable distance of _joint relative to _parent.
 double
-ComputeReachableVolumeOfSingleLink(const size_t _dimension,
-    const Connection* _frontJoint, const Connection* _backJoint,
-    const Chain* _chain) {
-
+ComputeReachableDistanceOfSingleLink(const size_t _dimension,
+    const Connection* _joint, const Connection* _parent, const Chain* _chain) {
   // Check that the joint type is supported.
-  const Connection::JointType frontJointType = _frontJoint->GetConnectionType();
+  const Connection::JointType frontJointType = _joint->GetConnectionType();
   switch(frontJointType) {
     case Connection::JointType::Revolute:
-      {
-        if(_dimension == 3)
-          throw RunTimeException(WHERE) << "Revolute joints are not supported "
-                                        << "for 3D workspaces (requires "
-                                        << "Directed Reachable Volumes).";
-        break;
-      }
+    {
+      if(_dimension == 3)
+        throw RunTimeException(WHERE) << "Revolute joints are not supported "
+                                      << "for 3D workspaces (requires "
+                                      << "Directed Reachable Volumes).";
+      break;
+    }
     case Connection::JointType::Spherical:
-      {
-        if(_dimension == 2)
-          throw RunTimeException(WHERE) << "Spherical joints are not supported "
-                                        << "for 2D workspaces.";
-        break;
-      }
+    {
+      if(_dimension == 2)
+        throw RunTimeException(WHERE) << "Spherical joints are not supported "
+                                      << "for 2D workspaces.";
+      break;
+    }
     default:
-      {
-        /// @todo We can probably support some non-actuated joints here, but
-        ///       need to verify with the theory.
-        throw RunTimeException(WHERE) << "Unsupported joint type '" << frontJointType
-                                      << "' connecting bodies "
-                                      << _frontJoint->GetPreviousBodyIndex() << " and "
-                                      << _frontJoint->GetNextBodyIndex() << ".";
-      }
+    {
+      /// @todo We can probably support some non-actuated joints here, but
+      ///       need to verify with the theory.
+      throw RunTimeException(WHERE) << "Unsupported joint type '"
+                                    << frontJointType
+                                    << "' connecting bodies "
+                                    << _joint->GetPreviousBodyIndex()
+                                    << " and "
+                                    << _joint->GetNextBodyIndex() << ".";
+    }
   }
 
   // Make sure the joint does not have a translational offset in the DH frame.
-  const auto& dh = _frontJoint->GetDHParameters();
-
+  const auto& dh = _joint->GetDHParameters();
   if(dh.m_a != 0 or dh.m_d != 0)
     throw RunTimeException(WHERE) << "Reachable volumes do not handle joints "
                                   << "with offsets in the DH params. "
                                   << "Connection between bodies "
-                                  << _frontJoint->GetNextBodyIndex()
+                                  << _joint->GetNextBodyIndex()
                                   << " and "
-                                  << _frontJoint->GetPreviousBodyIndex()
+                                  << _joint->GetPreviousBodyIndex()
                                   << " has a = " << dh.m_a
                                   << ", d = " << dh.m_d << ".";
 
-  // Get the distance from one joint to the next. If m_lastBody is valid then use that as the next (and last) joint
-  //the min RD is the max RD in a single link
-  double dist;
-
-  //this segment is needed because when the direction of chain changes,
-  //the next and previous bodies that connection store to do not.
-
-  if (_chain->IsForward())
-    dist =  _frontJoint->GetTransformationToDHFrame().translation().norm() +
-      _backJoint->GetTransformationToBody2().translation().norm();
+  // _joint is OK for reachable volumes. Compute its reachable distance
+  // relative to _parent.
+  if(_chain->IsForward())
+    // If the chain is forward-oriented, then _parent is the parent of
+    // _joint in the multibody.
+    return _joint->GetTransformationToDHFrame().translation().norm() +
+           _parent->GetTransformationToBody2().translation().norm();
   else
-    dist =  _frontJoint->GetTransformationToBody2().translation().norm() +
-      _backJoint->GetTransformationToDHFrame().translation().norm();
-
-  //cout << "dist calculated: " << dist << endl;
-  return dist;
+    // If the chain is backward-oriented, then _joint is the parent of
+    // _parent in the multibody.
+    return _joint->GetTransformationToBody2().translation().norm() +
+           _parent->GetTransformationToDHFrame().translation().norm();
 }
 
 
-///computes the reachable volume of a linear chain
 WorkspaceBoundingSphericalShell
-ComputeReachableVolume(const size_t _dimension, const vector<double>& _center,
-                       const Chain& _chain) {
+ComputeReachableVolume(const size_t _dimension,
+    const std::vector<double>& _center, const Chain& _chain) {
   // Initialize minimum and maximum reachable distances.
   double min = 0,
          max = 0;
 
-  //computes the base to the first joint
-  if(_chain.GetBase()) {
-    max += (*_chain.begin())->GetTransformationToDHFrame().translation().norm();
+  // If the chain includes a front body, include it in the reachable distance
+  // computation.
+  if(_chain.GetFrontBody()) {
+    max += _chain.GetFirstJoint()->GetTransformationToDHFrame().translation().
+           norm();
     min = max;
   }
 
-  //compute RV of internal joint
-  for(auto iter1 = _chain.begin(), iter2 = _chain.begin() + 1;
-      iter2 != _chain.end(); ++iter1, ++iter2) {
-    //start from first joint and stop when front joint is last
+  // Include the reachable distances for each joint in the chain.
+  for(auto parentJoint = _chain.begin(), childJoint = _chain.begin() + 1;
+      childJoint != _chain.end(); ++parentJoint, ++childJoint) {
+    // Compute the unconstrained reachable distance of the child joint relative
+    // to its parent.
+    const double rd = ComputeReachableDistanceOfSingleLink(
+        _dimension, *childJoint, *parentJoint, &_chain);
 
-    // Compute the unconstrained reachable distance of the next link
-    const double rd = ComputeReachableVolumeOfSingleLink(
-        _dimension, *iter2, *iter1, &_chain);
-
-    // Update the chain's minimum and maximum reachable distance with Minknowski sum.
-    min = std::max(0., (min > rd) ? min - rd
-          : rd - max);
+    // Update the chain's minimum and maximum reachable distance with Minknowski
+    // sum.
+    min = std::max(0., (min > rd) ? min - rd : rd - max);
     max += rd;
   }
 
-  if(_chain.GetLastBody() != nullptr) {
-    const double rd = (*(_chain.end() - 1))->
-                GetTransformationToBody2().translation().norm();
-    min = std::max(0., (min > rd) ? min - rd
-                : rd - max);
+  // If the chain includes the end-effector, include it in the reachable
+  // distance computation.
+  if(_chain.GetBackBody()) {
+    const double rd = (*(_chain.end() - 1))->GetTransformationToBody2().
+        translation().norm();
+    min = std::max(0., (min > rd) ? min - rd : rd - max);
     max += rd;
   }
 
   return WorkspaceBoundingSphericalShell(_center, max, min);
 }
-
-/*----------------------------------------------------------------------------*/

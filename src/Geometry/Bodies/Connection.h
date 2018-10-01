@@ -100,8 +100,6 @@ class Connection final {
     void SetAdjacentBodies(MultiBody* const _owner, const size_t _firstIndex,
         const size_t _secondIndex);
 
-    friend std::ostream& operator<<(std::ostream& _os, const Connection& _c);
-
     ///@}
     ///@name Joint Information
     ///@{
@@ -183,7 +181,13 @@ class Connection final {
 
 };
 
-// Debug.
+
+/*---------------------------------- Debug -----------------------------------*/
+
 std::ostream& operator<<(std::ostream&, const Connection::JointType&);
+
+std::ostream& operator<<(std::ostream& _os, const Connection& _c);
+
+/*----------------------------------------------------------------------------*/
 
 #endif
