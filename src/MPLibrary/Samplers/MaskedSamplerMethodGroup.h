@@ -49,29 +49,23 @@ class MaskedSamplerMethodGroup : public SamplerMethod<MPTraits> {
     ///                        attempts.
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
         const Boundary* const _boundary, OutputIterator _result,
-        OutputIterator _collision)
-    { throw RunTimeException(WHERE, "Not Implemented."); }
+        OutputIterator _collision);
 
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
-        const Boundary* const _boundary, OutputIterator _result)
-    { throw RunTimeException(WHERE, "Not Implemented."); }
+        const Boundary* const _boundary, OutputIterator _result);
 
     ///@}
     ///@name Sampler Mask Interface
     ///@{
 
-    void SetStartCfg(const GroupCfgType& _cfg) { m_startCfg = _cfg; }
+    void SetStartCfg(const GroupCfgType& _cfg);
 
-    const GroupCfgType& GetStartCfg() {
-      if(!m_startCfg.GetGroupMap())
-        throw RunTimeException(WHERE, "Accessing invalid start cfg!");
-      return m_startCfg;
-    }
+    const GroupCfgType& GetStartCfg();
 
 
-    void SetActiveRobots(const Formation& _robots){m_activeRobots = _robots;}
+    void SetActiveRobots(const Formation& _robots);
 
-    Formation GetActiveRobots() { return m_activeRobots; }
+    Formation GetActiveRobots();
 
     ///@}
 
@@ -104,6 +98,63 @@ class MaskedSamplerMethodGroup : public SamplerMethod<MPTraits> {
 template <typename MPTraits>
 MaskedSamplerMethodGroup<MPTraits>::
 MaskedSamplerMethodGroup(XMLNode& _node) : SamplerMethod<MPTraits>(_node) { }
+
+
+//-------------------------- Sampler Interface ---------------------------------
+
+template <typename MPTraits>
+void
+MaskedSamplerMethodGroup<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts,
+       const Boundary* const _boundary, OutputIterator _result,
+       OutputIterator _collision) {
+  throw RunTimeException(WHERE, "Not Implemented.");
+}
+
+
+template <typename MPTraits>
+void
+MaskedSamplerMethodGroup<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts,
+       const Boundary* const _boundary, OutputIterator _result) {
+  throw RunTimeException(WHERE, "Not Implemented.");
+}
+
+
+//--------------------- Sampler Mask Interface ---------------------------------
+
+template <typename MPTraits>
+void
+MaskedSamplerMethodGroup<MPTraits>::
+SetStartCfg(const GroupCfgType& _cfg) {
+  m_startCfg = _cfg;
+}
+
+
+template <typename MPTraits>
+const typename MaskedSamplerMethodGroup<MPTraits>::GroupCfgType&
+MaskedSamplerMethodGroup<MPTraits>::
+GetStartCfg() {
+  if(!m_startCfg.GetGroupMap())
+    throw RunTimeException(WHERE, "Accessing invalid start cfg!");
+  return m_startCfg;
+}
+
+
+template <typename MPTraits>
+void
+MaskedSamplerMethodGroup<MPTraits>::
+SetActiveRobots(const Formation& _robots) {
+  m_activeRobots = _robots;
+}
+
+
+template <typename MPTraits>
+typename MaskedSamplerMethodGroup<MPTraits>::Formation
+MaskedSamplerMethodGroup<MPTraits>::
+GetActiveRobots() {
+  return m_activeRobots;
+}
 
 
 /*----------------------------------------------------------------------------*/

@@ -227,13 +227,10 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     enum GraphSearchAlg {DIJKSTRAS, ASTAR}; ///< The supported sssp algorithms.
     GraphSearchAlg m_searchAlg{DIJKSTRAS};  ///< The sssp algorithm to use.
 
-    ///@}
+    std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
+    std::string m_vcLabel;           ///< The ValidityChecker for query generation.
+    std::string m_dmLabel;           ///< The DistanceMetric label.
 
-    std::string m_safeIntervalLabel;    ///< The XML label for the SafeIntervalTool.
-
-    std::string m_vcLabel;             ///< The validity checker for generating the query.
-
-    std::string m_dmLabel;			   ///< The Distance Metric Label.
     ///@}
 
 };
@@ -371,13 +368,13 @@ WritePath() const {
     ::WritePath(base + ".rdmp.path", this->GetPath()->Cfgs());
 }
 
+
 template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 SetDMLabel(string const _dmLabel) {
   m_dmLabel = _dmLabel;
 }
-
 
 
 template <typename MPTraits>
@@ -389,9 +386,11 @@ Reset(RoadmapType* const _r) {
 
   // Reset the goals.
   m_goals.clear();
-  std::copy(m_query.begin() + 1, m_query.end(), back_inserter(m_goals));
+  if(m_query.size() > 1)
+    std::copy(m_query.begin() + 1, m_query.end(), std::back_inserter(m_goals));
 
   // Reset the path.
+  if(this->GetPath())
   this->GetPath()->Clear();
 }
 

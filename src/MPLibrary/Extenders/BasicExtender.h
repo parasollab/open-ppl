@@ -384,7 +384,10 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     if(subassemblyRotation) {
       // Handle subassembly rotation. We must update the delta transformation
       // due to Euler Angles not conforming to linear angle changes between cfgs
-      /// TODO: this can likely be optimized.
+
+      /// TODO: this can likely be optimized. For one, only one Configure call
+      /// should be necessary here. Also a lot of the group Cfgs here could be
+      /// made individual if using the leader, then using Configure on that.
       oneStep += incrUntouched;
 
       // Note we get the 0 body from the robot, as right now it's assumed that
@@ -410,7 +413,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
 
       if(this->m_debug)
         std::cout << "tick after rotation = " << tick.PrettyPrint()
-                  << std::endl;
+                  << std::endl << std::endl;
     }
 
     if(tick.InBounds(env->GetBoundary())) {

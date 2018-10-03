@@ -36,7 +36,8 @@ class RRTQuery : public QueryMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    RRTQuery();
+    RRTQuery(const std::vector<CfgType>& _queryCfgs = std::vector<CfgType>(),
+             const std::vector<CfgType>& _goalCfgs  = std::vector<CfgType>());
     RRTQuery(XMLNode& _node);
     virtual ~RRTQuery() = default;
 
@@ -45,6 +46,12 @@ class RRTQuery : public QueryMethod<MPTraits> {
     ///@{
 
     virtual void Print(ostream& _os) const override;
+
+    ///@}
+    ///@name QueryMethod Overrides
+    ///@{
+
+    virtual void Initialize() override;
 
     ///@}
     ///@name Query Interface
@@ -57,6 +64,18 @@ class RRTQuery : public QueryMethod<MPTraits> {
         override;
 
     virtual void Reset(RoadmapType* const _r) override;
+
+    ///@}
+    ///@name Substrategy helpers
+    ///@{
+    /// @todo Extract query configuration from 'query' evaluators to an object
+    ///       owned by MPSolution. The Query abstraction should support both
+    ///       single-cfg and region-based start/goals, and should
+    ///       compute/maintain the list of satisfying VIDs.
+
+    void SetQuery(const std::vector<CfgType>& _queryCfgs);
+
+    void SetGoals(const std::vector<CfgType>& _goalCfgs);
 
     ///@}
 
@@ -121,8 +140,11 @@ class RRTQuery : public QueryMethod<MPTraits> {
 
 template <typename MPTraits>
 RRTQuery<MPTraits>::
-RRTQuery() : QueryMethod<MPTraits>() {
+RRTQuery(const std::vector<CfgType>& _queryCfgs,
+         const std::vector<CfgType>& _goalCfgs) : QueryMethod<MPTraits>() {
   this->SetName("RRTQuery");
+  this->m_query = _queryCfgs;
+  this->m_goals = _goalCfgs;
 }
 
 
@@ -148,6 +170,31 @@ Print(ostream& _os) const {
   _os << "\n\tNeighborhood Finder: " << m_nfLabel
       << "\n\tExtender: " << m_exLabel
       << "\n\tGoal distance: " << m_goalDist << endl;
+}
+
+
+/*---------------------------- QueryMethod Overrides -------------------------*/
+
+
+template <typename MPTraits>
+void
+RRTQuery<MPTraits>::
+Initialize() {
+  if(this->GetTask()) {
+    // If we have a task set, then use standard behavior.
+    QueryMethod<MPTraits>::Initialize();
+  }
+  else {
+    if(this->m_debug)
+      std::cout << "No task detected for RRTQuery, assuming this will be "
+          "properly set up in runtime. Right now the use case for this is only "
+          "with the RRT LP." << std::endl;
+    // Clear previous state, but don't generate query.
+    this->m_dmLabel.clear();
+    this->m_query.clear();
+    this->m_goals.clear();
+    Reset(nullptr);
+  }
 }
 
 /*--------------------------- Query Interface --------------------------------*/
@@ -229,6 +276,21 @@ Reset(RoadmapType* const _r) {
   if(_r != this->m_roadmap)
     m_highestCheckedVID = 0;
   QueryMethod<MPTraits>::Reset(_r);
+}
+
+
+template <typename MPTraits>
+void
+RRTQuery<MPTraits>::
+SetQuery(const std::vector<CfgType>& _queryCfgs) {
+  this->m_query = _queryCfgs;
+}
+
+template <typename MPTraits>
+void
+RRTQuery<MPTraits>::
+SetGoals(const std::vector<CfgType>& _goalCfgs) {
+  this->m_goals = _goalCfgs;
 }
 
 /*------------------------------- Helpers ------------------------------------*/

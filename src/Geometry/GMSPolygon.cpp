@@ -108,7 +108,7 @@ ComputeNormal() {
 
 /*-------------------------------- Equality ----------------------------------*/
 
-const bool
+bool
 GMSPolygon::
 operator==(const GMSPolygon& _p) const noexcept {
   // We don't check m_pointList as it would prohibit checking if two polyhedrons
@@ -120,10 +120,25 @@ operator==(const GMSPolygon& _p) const noexcept {
 }
 
 
-const bool
+bool
 GMSPolygon::
 operator!=(const GMSPolygon& _p) const noexcept {
   return !(*this == _p);
+}
+
+/*--------------------------------- Ordering ---------------------------------*/
+
+bool
+GMSPolygon::
+operator<(const GMSPolygon& _other) const noexcept {
+  return m_area < _other.m_area;
+}
+
+
+bool
+GMSPolygon::
+operator>(const GMSPolygon& _other) const noexcept {
+  return m_area > _other.m_area;
 }
 
 /*------------------------------- Queries ------------------------------------*/

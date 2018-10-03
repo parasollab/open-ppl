@@ -1,5 +1,5 @@
-#ifndef DISASSEMBLY_THANH_LE_H_
-#define DISASSEMBLY_THANH_LE_H_
+#ifndef DISASSEMBLY_IMLRRT_H_
+#define DISASSEMBLY_IMLRRT_H_
 
 #include "DisassemblyMethod.h"
 #include "nonstd.h"
@@ -9,33 +9,47 @@
 /// @brief Implementation of the I-ML-RRT disassembly method.
 ///
 ///
+/// This is the comparison method from our publication:
+/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
+/// “A general and flexible search framework for disassembly planning,”
+/// in International Conference on Robotics and Automation, May 2018.
+///
+/// The actual paper it is from is:
+/// D. T. Le, J. Cortés, and T. Siméon, “A path planning approach to
+/// (dis) assembly sequencing,” in Automation Science and Engineering,
+/// 2009. CASE 2009. IEEE International Conference on. IEEE, 2009,
+/// pp. 286–291.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
+class DisassemblyIMLRRT : public DisassemblyMethod<MPTraits> {
   public:
-    typedef typename DisassemblyMethod<MPTraits>::VID             VID;
-    typedef typename DisassemblyMethod<MPTraits>::VIDPath         VIDPath;
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+    typedef typename GroupCfgType::Formation     Formation;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename GroupRoadmapType::VID       VID;
+    typedef std::vector<VID>                     VIDPath;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
-    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
+    typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
+    typedef typename DisassemblyMethod<MPTraits>::State           State;
 
-    DisassemblyThanhLe(
-        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::string _vc = "", const std::string _singleVc = "",
-        const std::string _lp = "", const std::string _ex = "",
-        const std::string _dm = "",
-        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
-    DisassemblyThanhLe(XMLNode& _node);
-    virtual ~DisassemblyThanhLe() {}
+    DisassemblyIMLRRT(
+        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
+            map<string, pair<size_t, size_t> >(),
+        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
+            map<string, pair<size_t, size_t> >(),
+        const string _vc = "", const string _singleVc = "",
+        const string _lp = "", const string _ex = "",
+        const string _dm = "",
+        const vector<string>& _evaluatorLabels = vector<string>());
+    DisassemblyIMLRRT(XMLNode& _node);
+    virtual ~DisassemblyIMLRRT() {}
 
     virtual void Iterate();
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
     virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
-    virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
+    virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                    const Formation& _subassembly) override;
 
     DisassemblyNode* m_lastNode{nullptr};
@@ -48,34 +62,34 @@ class DisassemblyThanhLe : public DisassemblyMethod<MPTraits> {
 };
 
 template <typename MPTraits>
-DisassemblyThanhLe<MPTraits>::
-DisassemblyThanhLe(
-    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
-    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
-    const std::string _vc, const std::string _singleVc,
-    const std::string _lp, const std::string _ex,
-    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
+DisassemblyIMLRRT<MPTraits>::
+DisassemblyIMLRRT(
+    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
+    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
+    const string _vc, const string _singleVc,
+    const string _lp, const string _ex,
+    const string _dm, const vector<string>& _evaluatorLabels) :
     DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
       _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
-  this->SetName("DisassemblyThanhLe");
+  this->SetName("DisassemblyIMLRRT");
   this->m_keepBestRRTPathOnFailure = true;
 }
 
 template <typename MPTraits>
-DisassemblyThanhLe<MPTraits>::
-DisassemblyThanhLe(XMLNode& _node) : DisassemblyMethod<MPTraits>(_node) {
-  this->SetName("DisassemblyThanhLe");
+DisassemblyIMLRRT<MPTraits>::
+DisassemblyIMLRRT(XMLNode& _node) : DisassemblyMethod<MPTraits>(_node) {
+  this->SetName("DisassemblyIMLRRT");
   this->m_keepBestRRTPathOnFailure = true;
 }
 
 template <typename MPTraits>
 void
-DisassemblyThanhLe<MPTraits>::
+DisassemblyIMLRRT<MPTraits>::
 Iterate() {
   // check if first iteration
-  if (m_disNodes.empty()) {
-    std::vector<size_t> robotParts;
-    for (size_t i = 0; i < m_numParts; ++i)
+  if(m_disNodes.empty()) {
+    vector<size_t> robotParts;
+    for(size_t i = 0; i < m_numParts; ++i)
       robotParts.push_back(i);
 
     DisassemblyNode node;
@@ -90,7 +104,7 @@ Iterate() {
   }
 
   // check for initialParts of last node; if empty, strategy was successful
-  if (m_lastNode->initialParts.empty()) {
+  if(m_lastNode->initialParts.empty()) {
     this->m_successful = true;
     return;
   }
@@ -134,8 +148,8 @@ Iterate() {
 }
 
 template <typename MPTraits>
-typename DisassemblyThanhLe<MPTraits>::DisassemblyNode*
-DisassemblyThanhLe<MPTraits>::
+typename DisassemblyIMLRRT<MPTraits>::DisassemblyNode*
+DisassemblyIMLRRT<MPTraits>::
 SelectExpansionNode() {
   throw RunTimeException(WHERE,"Unused by this strategy, not implemented");
   return new DisassemblyNode();
@@ -143,23 +157,23 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-std::pair<bool, typename DisassemblyThanhLe<MPTraits>::VIDPath>
-DisassemblyThanhLe<MPTraits>::
+pair<bool, typename DisassemblyIMLRRT<MPTraits>::VIDPath>
+DisassemblyIMLRRT<MPTraits>::
 Expand(DisassemblyNode* _q, const Formation& _subassembly) {
   throw RunTimeException(WHERE,"Not implemented");
-  return std::make_pair(false, VIDPath());
+  return make_pair(false, VIDPath());
 }
 
 
 template <typename MPTraits>
-typename DisassemblyMethod<MPTraits>::Formation
-DisassemblyThanhLe<MPTraits>::
+typename DisassemblyIMLRRT<MPTraits>::Formation
+DisassemblyIMLRRT<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
   // check count of initialParts and return empty Formation if empty
-  if (_q->initialParts.empty()) {
+  if(_q->initialParts.empty()) {
     std::cout << "initialParts are empty!" << std::endl;
     return Formation();
   }

@@ -22,7 +22,14 @@
 ///                             Computer Science Dept., Iowa State Univ., 1998.
 ///
 /// @ingroup MotionPlanningStrategies
-/// @internal This strategy is configured for pausible execution.
+///
+///
+/// This is sub-method used in the below publication. Sub-method because it is
+/// not designed to be used on its own, but rather to be called from a
+/// disassembly method in order to try an RRT removal.
+/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
+/// “A general and flexible search framework for disassembly planning,”
+/// in International Conference on Robotics and Automation, May 2018.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -168,10 +175,8 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name MP Object Labels
     ///@{
 
-//    std::string m_dmLabel;       ///< The distance metric label.
     std::string m_nfLabel;       ///< The neighborhood finder label.
     std::string m_vcLabel;       ///< The validity checker label.
-//    std::string m_ncLabel;       ///< The connector label.
     std::string m_exLabel;       ///< The extender label.
     std::string m_gt;            ///< The graph type.
 
@@ -181,15 +186,14 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     std::string m_strategyLabel; ///< This strategy's label
     std::string m_stateMELabel; ///< The ME label for the StrategyStateEvaluator used
-    std::string m_successfulCheckME; ///< The ME label that determines the successful
-                                ///< flag of this strategy (should be minimum
-                                ///< clearance).
+
+    /// The ME label that determines the successful flag of this strategy
+    /// (should be minimum clearance of the part being removed).
+    std::string m_successfulCheckME;
 
     ///@}
     ///@name RRT Properties
     ///@{
-
-    size_t m_maxTrial;      ///< The number of samples taken for disperse search.
 
     VID m_startGroupCfgVID{0};
     Formation m_activeRobots; //For the extender and neighborhood finder
@@ -197,6 +201,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     ///< Provides path to node with highest clearance if it fails:
     bool m_returnBestPathOnFailure{true};
+    bool m_preserveMinClearance{false};
 
     bool m_doManhattanLike{false};///< The flag for ML-RRT (part perturbations).
     std::vector<size_t> m_collidingParts;///< The list of colliding parts for ML-RRT
@@ -242,10 +247,7 @@ DisassemblyRRTStrategy(std::string _dm, std::string _nf, std::string _vc, std::s
     std::string _ex, std::vector<std::string> _evaluators, std::string _gt, bool _growGoals,
     double _growthFocus, size_t _numRoots, size_t _numDirections,
     size_t _maxTrial) :
-//    m_dmLabel(_dm),
-    m_nfLabel(_nf), m_vcLabel(_vc),
-//    m_ncLabel(_nc),
-    m_exLabel(_ex), m_gt(_gt), m_maxTrial(_maxTrial) {
+        m_nfLabel(_nf), m_vcLabel(_vc), m_exLabel(_ex), m_gt(_gt) {
   this->SetName("DisassemblyRRTStrategy");
   this->m_meLabels = _evaluators;
 }
@@ -258,14 +260,10 @@ DisassemblyRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
 
   // Parse RRT parameters
   m_gt = _node.Read("gtype", true, "", "Graph type dir/undirected tree/graph");
-  m_maxTrial = _node.Read("trial", false, 1, 1, 1000,
-      "Number of trials to get a dispersed direction");
 
   // Parse MP object labels
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
-//  m_dmLabel = _node.Read("dmLabel",true,"","Distance Metric");
-//  m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
   m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
   m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler label (should "
                                                         "be a masked version)");
@@ -284,6 +282,10 @@ DisassemblyRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_returnBestPathOnFailure = _node.Read("returnBestPathOnFailure", false,
       m_returnBestPathOnFailure, "Flag to determine returning of partial RRT "
                                             "progress if no part was removed.");
+
+  m_preserveMinClearance = _node.Read("preserveMinClearance", false,
+      m_preserveMinClearance, "If returning best path on failure, determines "
+          "whether to consider the clearance of the starting node of RRT.");
 
   m_maxPerturbIterations = _node.Read("maxPerterbIterations", false,
                             m_maxPerturbIterations,
@@ -509,10 +511,10 @@ Finalize() {
     // Temp flag to determine whether we're okay "losing" clearance in RRT
     // partial paths. If true, the root's clearance will be considered.
     // Note the maximum clearance will always be taken, regardless of this.
-    const bool preserveMinClearance = false;
+//    const bool m_preserveMinClearance = false;
 
       /// TODO: uncomment when we want the root's clearance considered:
-    if(preserveMinClearance) {
+    if(m_preserveMinClearance) {
       CDInfo cdInfo(true); // For root's clearance info
       GroupCfgType startCfg = *m_startGroupCfg;
       vc->IsValid(startCfg, cdInfo, this->GetNameAndLabel(), m_activeRobots);
@@ -525,7 +527,7 @@ Finalize() {
     double maxClearance = m_vidClearances[m_startGroupCfgVID];
     VID maxClearanceVid = m_startGroupCfgVID;
     std::vector<double> clearances;
-    for(size_t vid = 0; vid < m_vidClearances.size(); ++vid) {
+    for(size_t vid = 0; vid < map->Size(); ++vid) {
       if(m_vidClearances[vid] == 0.
           && vid != m_startGroupCfgVID // TODO: remove this condition if we don't want to lose clearance!
           ) {
@@ -713,8 +715,8 @@ Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
     if(newVID != INVALID_VID) {
       auto vc = this->GetValidityChecker(m_vcLabel);
       vc->IsValid(qNew, cdInfo, label, m_activeRobots);
-      if(newVID > m_vidClearances.size())
-        m_vidClearances.resize((newVID + 1), 0);
+      if(newVID >= m_vidClearances.size())
+        m_vidClearances.resize(newVID * 2, 0);
 
       // Obstacles are included in this distance for clearance:
       m_vidClearances[newVID] = cdInfo.m_minDist;

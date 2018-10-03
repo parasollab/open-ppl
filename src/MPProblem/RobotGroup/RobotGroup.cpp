@@ -98,6 +98,13 @@ GetRobot(const std::string& _label) const noexcept {
 }
 
 
+const std::vector<Robot*>&
+RobotGroup::
+GetRobots() const noexcept {
+  return m_robots;
+}
+
+
 size_t
 RobotGroup::
 GetGroupIndex(Robot* const _robot) const noexcept {
@@ -116,14 +123,8 @@ GetGroupIndex(Robot* const _robot) const noexcept {
 bool
 RobotGroup::
 VerifyRobotInGroup(Robot* const _robot) const noexcept {
-  try {
-    m_indexes.at(_robot);
+  return m_indexes.count(_robot);
   }
-  catch(const std::runtime_error& _e) {
-    return false;
-  }
-  return true;
-}
 
 
 size_t

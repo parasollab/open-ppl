@@ -96,8 +96,16 @@ class GMSPolygon {
     ///@name Equality
     ///@{
 
-    const bool operator==(const GMSPolygon& _p) const noexcept;
-    const bool operator!=(const GMSPolygon& _p) const noexcept;
+    bool operator==(const GMSPolygon& _p) const noexcept;
+    bool operator!=(const GMSPolygon& _p) const noexcept;
+
+    ///@}
+    ///@name Ordering
+    ///@{
+    /// Define an ordering of polygons based on surface area.
+
+    bool operator<(const GMSPolygon& _other) const noexcept;
+    bool operator>(const GMSPolygon& _other) const noexcept;
 
     ///@}
     ///@name Queries

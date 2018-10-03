@@ -201,6 +201,7 @@ class GMSPolyhedron final {
     /// centroid.
     /// @param _scalingFactor The scaling factor
     void Scale(double _scalingFactor);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -240,6 +241,9 @@ class GMSPolyhedron final {
 
     /// Compute the centroid.
     void ComputeCentroid() const;
+
+    /// Sort the polygons by decreasing order.
+    void OrderFacets();
 
     /// Compute the surface area.
     void ComputeSurfaceArea();

@@ -397,6 +397,14 @@ class Body {
 
     const Transformation& (Body::*m_transformFetcher)(void) const noexcept = nullptr;
 
+    ///@}
+    ///@name Display Stuff
+    ///@{
+    /// @TODO Rethink these parts as we move to the new simulator. Perhaps they
+    ///       will move to the visualization department. In any case we should
+    ///       separate the visualization details from the geometric model stored
+    ///       here.
+
     glutils::color m_color{glutils::color::blue}; ///< Body color.
     std::string m_textureFile;                    ///< Optional texture file.
 

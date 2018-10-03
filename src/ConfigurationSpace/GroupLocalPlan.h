@@ -29,7 +29,7 @@ class GroupLocalPlan final {
     typedef double                                         EdgeWeight;
     typedef DefaultWeight<CfgType>                         IndividualEdge;
     typedef GroupRoadmap<GroupCfg, GroupLocalPlan>         GroupRoadmapType;
-    typedef std::vector<GroupCfg>                          CfgPath;
+    typedef std::vector<GroupCfg>                          GroupCfgPath;
     typedef std::vector<size_t>                            Formation;
     typedef size_t                                         GroupVID;
 
@@ -40,7 +40,7 @@ class GroupLocalPlan final {
     ///@{
 
     GroupLocalPlan(GroupRoadmapType* const _g = nullptr, const std::string& _lpLabel = "",
-                   const double _w = 0.0, const CfgPath& _path = CfgPath());
+                   const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
 
     ///@}
     ///@name Ordering and Equality
@@ -67,23 +67,21 @@ class GroupLocalPlan final {
     ///@{
 
     // There is no current use case where this should ever get reset to false.
-    void SetSkipEdge() noexcept { m_skipEdge = true; }
-    bool SkipEdge() const noexcept { return m_skipEdge; }
+    void SetSkipEdge() noexcept;
+    bool SkipEdge() const noexcept;
 
-    void SetActiveRobots(const std::vector<size_t>& _indices)
-        { m_activeRobots = _indices; }
-    std::vector<size_t> GetActiveRobots() const noexcept
-        { return m_activeRobots; }
+    void SetActiveRobots(const std::vector<size_t>& _indices);
+    std::vector<size_t> GetActiveRobots() const noexcept;
 
     void Clear() noexcept;
 
-    CfgPath& GetIntermediates() noexcept { return m_intermediates; }
-    const CfgPath& GetIntermediates() const noexcept { return m_intermediates; }
+    GroupCfgPath& GetIntermediates() noexcept;
+    const GroupCfgPath& GetIntermediates() const noexcept;
 
-    void SetIntermediates(const CfgPath& _cfgs) { m_intermediates = _cfgs; }
+    void SetIntermediates(const GroupCfgPath& _cfgs);
 
-    std::string GetLPLabel() const noexcept { return m_lpLabel; }
-    void SetLPLabel(const std::string _label) noexcept { m_lpLabel = _label; }
+    std::string GetLPLabel() const noexcept;
+    void SetLPLabel(const std::string _label) noexcept;
 
 
     Cfg GetRobotStartCfg(const size_t _index) const;
@@ -131,7 +129,7 @@ class GroupLocalPlan final {
 
     void ClearLocalEdges() noexcept;
 
-    size_t GetNumRobots() const noexcept {return m_groupMap->GetGroup()->Size();}
+    size_t GetNumRobots() const noexcept;
 
     ///@}
     ///@name Stuff for stapl graph interface
@@ -141,7 +139,6 @@ class GroupLocalPlan final {
     virtual GroupLocalPlan operator+(const GroupLocalPlan& _other) const ;
 
     double Weight() const noexcept;
-    static GroupLocalPlan MaxWeight() noexcept; // For Dijkstra's Alg
 
     ///@}
     ///@name Iteration
@@ -171,7 +168,7 @@ class GroupLocalPlan final {
     /// The edge weight.
     double m_weight{std::numeric_limits<double>::infinity()};
 
-    CfgPath m_intermediates; ///< Group cfg intermediates.
+    GroupCfgPath m_intermediates; ///< Group cfg intermediates.
 
     GroupVID m_startCfgVID; ///< Not yet used (will be for handling intermediates)
 
@@ -194,7 +191,7 @@ class GroupLocalPlan final {
 template <typename CfgType>
 GroupLocalPlan<CfgType>::
 GroupLocalPlan(GroupRoadmapType* const _g, const std::string& _lpLabel,
-               const double _w, const CfgPath& _intermediates) : m_groupMap(_g),
+               const double _w, const GroupCfgPath& _intermediates) : m_groupMap(_g),
                m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates),
                m_startCfgVID(INVALID_VID) {
   if(m_groupMap)
@@ -270,6 +267,34 @@ SetWeight(const EdgeWeight _w) noexcept {
 
 /*------------------------- Misc Interface Functions -------------------------*/
 
+template <typename CfgType>
+void
+GroupLocalPlan<CfgType>::
+SetSkipEdge() noexcept {
+  m_skipEdge = true;
+}
+
+template <typename CfgType>
+bool
+GroupLocalPlan<CfgType>::
+SkipEdge() const noexcept {
+  return m_skipEdge;
+}
+
+template <typename CfgType>
+void
+GroupLocalPlan<CfgType>::
+SetActiveRobots(const std::vector<size_t>& _indices) {
+  m_activeRobots = _indices;
+}
+
+template <typename CfgType>
+
+std::vector<size_t>
+GroupLocalPlan<CfgType>::
+GetActiveRobots() const noexcept {
+  return m_activeRobots;
+}
 
 template <typename CfgType>
 void
@@ -279,6 +304,41 @@ Clear() noexcept {
   m_lpLabel.clear();
   m_weight = 0.;
   m_intermediates.clear();
+}
+
+template <typename CfgType>
+typename GroupLocalPlan<CfgType>::GroupCfgPath&
+GroupLocalPlan<CfgType>::
+GetIntermediates() noexcept {
+  return m_intermediates;
+}
+
+template <typename CfgType>
+const typename GroupLocalPlan<CfgType>::GroupCfgPath&
+GroupLocalPlan<CfgType>::
+GetIntermediates() const noexcept {
+  return m_intermediates;
+}
+
+template <typename CfgType>
+void
+GroupLocalPlan<CfgType>::
+SetIntermediates(const GroupCfgPath& _cfgs) {
+  m_intermediates = _cfgs;
+}
+
+template <typename CfgType>
+std::string
+GroupLocalPlan<CfgType>::
+GetLPLabel() const noexcept {
+  return m_lpLabel;
+}
+
+template <typename CfgType>
+void
+GroupLocalPlan<CfgType>::
+SetLPLabel(const std::string _label) noexcept {
+  m_lpLabel = _label;
 }
 
 template <typename CfgType>
@@ -398,6 +458,15 @@ ClearLocalEdges() noexcept {
 }
 
 
+template <typename CfgType>
+size_t
+GroupLocalPlan<CfgType>::
+GetNumRobots() const noexcept {
+  return m_groupMap->GetGroup()->Size();
+}
+
+
+
 /*---------------------- stapl graph interface helpers -----------------------*/
 
 template <typename CfgType>
@@ -414,15 +483,6 @@ double
 GroupLocalPlan<CfgType>::
 Weight() const noexcept {
   return GetWeight();
-}
-
-
-template <typename CfgType>
-GroupLocalPlan<CfgType>
-GroupLocalPlan<CfgType>::
-MaxWeight() noexcept {
-  static constexpr double max = std::numeric_limits<double>::max();
-  return GroupLocalPlan(nullptr, "INVALID", max);
 }
 
 

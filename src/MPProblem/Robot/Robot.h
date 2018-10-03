@@ -12,6 +12,7 @@
 class Actuator;
 class Agent;
 class Battery;
+class Body;
 class Boundary;
 class BulletModel;
 class ControllerMethod;
@@ -76,6 +77,34 @@ class Robot final {
   double m_maxAngularVelocity{1};  ///< Max angular velocity.
   std::string m_capability;        ///< The terrain label that the robot can use.
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// Description of a Robot's end-effector for grasping problems.
+  /// @todo Move to its own file in Geometry/Bodies. Have the MultiBody parse
+  ///       and own these objects (possibly many per robot). Devise some
+  ///       'default' way to compute the contact point if it is not specified
+  ///       (like ray shoot from bbx center) so that we can easily parse
+  ///       problems without grasping using the same code.
+  /// @todo Generalize this abstraction to support multiple types of grasp.
+  ///       Implement this (point-grasping) as a concrete instantiation.
+  //////////////////////////////////////////////////////////////////////////////
+  struct EndEffector {
+    EndEffector() {}
+    EndEffector(XMLNode& _node, MultiBody* const _mb);
+
+    /// The body pointer in the robot's multibody of this end effector.
+    Body* effectorBody{nullptr};
+
+    /// The vertex of the end effector that establishes point contact.
+    mathtool::Vector3d contactPoint;
+
+    /// The direction from the center of the effector's bounding box to the
+    /// contact point. NOT normalized to a unit magnitude.
+    mathtool::Vector3d centerToContactDir;
+  };
+
+  EndEffector m_endEffector;  ///< End-effector information.
+
   ///@}
 
   public:
@@ -122,13 +151,13 @@ class Robot final {
     ///@name I/O
     ///@{
 
-    /// Parse an XML robot file (passes node to ReadXMLNode).
+    /// Parse an XML robot file.
     /// @param _filename The file name.
     void ReadXMLFile(const std::string& _filename);
 
     /// Parse an XML robot node.
     /// @param _node The SML node.
-    void ReadXMLNode(XMLNode& _node, const std::string& _filename = "");
+    void ReadXMLNode(XMLNode& _node);
 
     /// Parse multibody information from robot's XML file.
     /// @param _node The XML node to parse
@@ -185,6 +214,9 @@ class Robot final {
 
     MultiBody* GetMultiBody() noexcept;
     const MultiBody* GetMultiBody() const noexcept;
+
+    /// Access the robot manipulator's end effector, if it exists.
+    const EndEffector& GetEndEffector() const noexcept;
 
     ///@}
     ///@name Agent Accessors

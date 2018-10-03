@@ -10,14 +10,10 @@
 /// @ingroup Samplers
 /// @brief Specialized masked sampler for composite C-Spaces (for diassembly)
 ///
-/// This Sampler takes a random cfg from the roadmap, extends a random distance
-/// away from that cfg, and then returns the cfg to add to the root (VID 0) cfg
-/// of the roadmap in order to get to the sampled cfg. That's to say it's the
-/// CSpace vector from the root to the sample that gets returned.
-///
-/// The general idea of the sampler to have an EST-like sample returned, hence
-/// choosing a node and then extending a certain distance from it.
-///
+/// This sampler extends a random distance from m_startCfg (which must be set,
+/// along with the active robots). The general idea of the sampler to have an
+/// EST-like sample returned, hence choosing a node and then extending a
+/// certain distance from it.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
@@ -147,7 +143,6 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   // from _cfg and return (extendedCfg - roadmap[0]).
   DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
   ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-//  auto map = this->GetGroupRoadmap();
 
   const string callee = this->GetNameAndLabel() + "::Sampler()";
 
@@ -177,9 +172,6 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   dir.selfNormalize();
   dir *= m_maxDist;
 
-//  for(size_t bodyNum : bodyList)
-//    for(size_t i = 0; i < posDofsPerBody; i++)
-//      extendedCfg[bodyNum*dofsPerBody + i] += dir[i];
   extendedCfg.AddDofsForRobots(dir, robotList);
 
   /// Now the translation has been applied to all the bodies. Next, handle
@@ -191,7 +183,6 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   }
   else if(isRotational) {
     // Rotate about the body number in bodyList[0].
-//    random_shuffle(robotList.begin(), robotList.end());
     const size_t randInd = LRand() % robotList.size();
     if(randInd > 0)
       std::swap(robotList[0], robotList[randInd]);
@@ -212,19 +203,29 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
     const mathtool::Orientation rotMat(deltaRot);
 
     if(this->m_debug)
-      std::cout << "m_activeRobots = " << this->m_activeRobots << std::endl;
+      std::cout << "robotList = " << robotList << std::endl
+                << "Cfg before rotation: " << extendedCfg.PrettyPrint()
+                << std::endl;
+
 
     //Preserves any existing translations, as it will undo, rotate, and redo
     // any translation (and additional components due to not rotating about itself)
     extendedCfg.RotateFormationAboutLeader(robotList, rotMat, this->m_debug);
+
+    if(this->m_debug)
+      std::cout << "Cfg after rotation: " << extendedCfg.PrettyPrint()
+                << std::endl;
   }
 
   extendedCfg.NormalizeOrientation(robotList);
 
+  if(this->m_debug)
+    std::cout << "Cfg after orientation normalization: "
+              << extendedCfg.PrettyPrint() << std::endl << std::endl;
+
   //Check that the sample is in bounds and valid:
   if(!extendedCfg.InBounds(_boundary) ||
      !vc->IsValid(extendedCfg, callee, this->m_activeRobots)) {
-//    _collision.push_back(extendedCfg - map->GetVertex(0));
     _collision.push_back(extendedCfg);
     return false;
   }

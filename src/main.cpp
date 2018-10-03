@@ -26,26 +26,19 @@ main(int _argc, char** _argv) {
     // Create storage for the solution and ask the library to solve our problem.
     Robot* const robot = problem->GetRobots().front().get();
     const auto robotTasks = problem->GetTasks(robot);
-    if(!robotTasks.empty()) {
-      //solve for every task
       for(auto task : robotTasks)
         pmpl->Solve(problem, task.get());
-    }
 
-    /// Also solve the group task.
-    /// @TODO Generalize this to handle more than just the first group task.
+    // Also solve the group task(s).
     if(!problem->GetRobotGroups().empty()) {
       RobotGroup* const robotGroup = problem->GetRobotGroups().front().get();
-      const auto groupTasks = problem->GetTasks(robotGroup);
-      if(!groupTasks.empty()) {
-        GroupTask* groupTask = groupTasks.front().get();
-        pmpl->Solve(problem, groupTask);
+      for(auto groupTask : problem->GetTasks(robotGroup))
+        pmpl->Solve(problem, groupTask.get());
       }
-    }
 
-    if(robotTasks.empty() && (problem->GetRobotGroups().empty() ||
+    if(robotTasks.empty() and (problem->GetRobotGroups().empty() or
            problem->GetTasks(problem->GetRobotGroups().front().get()).empty()))
-      throw RunTimeException(WHERE, "No single or group tasks were specified!");
+      throw RunTimeException(WHERE) << "No tasks were specified!";
 
     // Release resources.
     delete problem;

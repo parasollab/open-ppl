@@ -16,6 +16,11 @@
 ///
 /// It holds the main parameters and contains the 3 main functions:
 /// SelectExpansionCfg, SelectSubassembly and Expand
+///
+/// This is the basis for each method in:
+/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
+/// “A general and flexible search framework for disassembly planning,”
+/// in International Conference on Robotics and Automation, May 2018.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
@@ -23,13 +28,11 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename MPTraits::MPSolution        MPSolution;
     typedef typename GroupCfgType::Formation     Formation;
-
-    // Group Types:
     typedef typename MPTraits::GroupPathType     GroupPath;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename GroupRoadmapType::VID       VID;
     typedef typename MPTraits::GroupWeightType   GroupWeightType;
-    typedef std::vector<GroupCfgType>            CfgPath;
+    typedef std::vector<GroupCfgType>            GroupCfgPath;
     typedef std::vector<VID>                     VIDPath;
 
 
@@ -43,7 +46,8 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
       size_t branch = 0;
 
       //Determine whether deterministic strategies have been exhausted for this
-      // node. This is node-specific, but can change given progress made.
+      // node. This is node-specific, but can change given progress made (like
+      // if an RRT fails to remove, but we keep the path's progress).
       bool determinismExhausted = false;
 
       //Two weight members: (best) local weight and best cumulative weight.
@@ -57,15 +61,17 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
       //The remaining parts of the assembly at initial position for this state.
       Formation initialParts;
 
-      //In a node, the removalPaths either matches up with the parent (for
-      // graph methods, where each edge represents only a single part
-      // or subassembly removal) or in preemptive, the removedParts and
+      // removedParts is the vector of parts that were removed to get TO this
+      // node from a parent. The root's will be empty.
+      // For each node, removalPaths either matches up with the parents vector
+      // (for graph methods, where each edge represents only one single part
+      // or subassembly removal) otherwise for preemptive DFS, removedParts and
       // removalPaths matches up, since we can remove many parts in one edge.
       std::vector<size_t> removedParts;
       std::vector<VIDPath> removalPaths;
 
-      //Parent/child relationships for the tree structure:
-      //Note: for the A*-like search, it will be assumed/maintained that the
+      //Parent/child relationships for the graph structure:
+      //Note: for the A*-like search, it will be assumed and maintained that the
       // best path's parent node (what bestCumulativeWeight corresponds to)
       // will be in parents[0]
       std::vector<DisassemblyNode*> parents;
@@ -74,8 +80,49 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
       // the order in this vector, but could also be easily sorted.
       std::vector<std::pair<double, DisassemblyNode*> > children;
 
+      // Since one removal can go between moving multiple parts in the case of
+      // partial RRT progress, keep track of this so that the effector placement
+      // can use this information later on.
+      struct MotionInformation {
+          MotionInformation(const std::vector<VID>& _vids,
+                            const Formation& _moved) :
+                            motionVIDs(_vids), movedFormation(_moved) {}
+          std::string PrettyPrint() const {
+            std::ostringstream out;
+            out << "Motion Info { vids = " << motionVIDs << ", formation = "
+                << movedFormation << "}";
+            return out.str();
+          }
+
+
+          std::vector<VID> motionVIDs;
+          Formation movedFormation;
+      };
+      // It is assumed that the last member of this will be the "set aside"
+      // motion for the removal.
+      // Note this is not designed to work with graph methods yet.
+      std::vector<MotionInformation> formationMotions;
+
+      void AddFormationMotion(const std::vector<VID>& _vids,
+                              const Formation& _formation) {
+        MotionInformation& lastInfo = formationMotions.back();
+        if(!formationMotions.empty() and
+            lastInfo.movedFormation == _formation and
+            lastInfo.motionVIDs.back() == _vids.front()) {
+          // We can compactly add these motion vids to the last motion.
+          // Skip the first vid since it's the same, as just checked.
+          for(size_t i = 1; i < _vids.size(); ++i)
+            lastInfo.motionVIDs.push_back(_vids[i]);
+        }
+        else {
+          // Create new motion info, new formation or there is a discontinuity
+          // between the motion vids.
+          formationMotions.emplace_back(_vids, _formation);
+        }
+      }
+
       std::vector<size_t> GetCompletePartList() const {
-        if(m_completePartList.empty()) {
+        if(m_completeRemainingPartList.empty()) {
           std::vector<size_t> parts = initialParts;
           for (auto &usedSub : usedSubassemblies)
             for (auto &id : usedSub)
@@ -83,19 +130,19 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
           return parts;
         }
         else
-          return m_completePartList;
+          return m_completeRemainingPartList;
       }
 
       //This version will also update the totalRemainingParts member:
-      std::vector<size_t> GetCompletePartList() {
-        if(m_completePartList.empty()) {
-          m_completePartList = initialParts;
+      std::vector<size_t> GetCompleteRemainingPartList() {
+        if(m_completeRemainingPartList.empty()) {
+          m_completeRemainingPartList = initialParts;
           for (auto &usedSub : usedSubassemblies)
             for (auto &id : usedSub)
-              m_completePartList.push_back(id);
-          m_totalRemainingParts = m_completePartList.size();
+              m_completeRemainingPartList.push_back(id);
+          m_totalRemainingParts = m_completeRemainingPartList.size();
         }
-        return m_completePartList;
+        return m_completeRemainingPartList;
       }
 
       size_t NumberOfRemainingParts() const {
@@ -122,8 +169,10 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
       // Some cached data so we only have to calculate it once per node at most.
       size_t m_totalRemainingParts = 0;
-      std::vector<size_t> m_completePartList;
+      std::vector<size_t> m_completeRemainingPartList;
     };
+
+    typedef std::vector<std::pair<size_t, DisassemblyNode*>> DGNodePath;
 
     DisassemblyMethod(
         const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
@@ -170,22 +219,23 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     // passes the equivalent of its map evaluator check for minimum clearance.
     // This is also to check that if parts are embedded in an assembly, as a full
     // mating extension might complete, but not actually remove the part.
-    bool EnsureMinimumClearance(GroupCfgType& _cfg, const Formation& _formation = Formation());
+    bool EnsureMinimumClearance(GroupCfgType& _cfg,
+                                const Formation& _formation = Formation());
 
-    // Create samples for the mating approach and return them as std::vector of cfgs
+    // Create samples for the mating approach and return them as vector of cfgs
     std::vector<GroupCfgType> GetMatingSamples(const Formation& _subassembly);
-    VIDPath ExpandMatingApproach(const VID _q,
-                                               const Formation& _formation,
-                                               VID& _newVid);
-//    GroupCfg FindClosestRemovalCfg(const GroupCfg& _startCfg,
-//                                   const GroupCfg& _endCfg,
-//                                   GroupLPOutput<MPTraits>& _lpOutput);
+    VIDPath ExpandMatingApproach(const VID _q, const Formation& _formation,
+                                 VID& _newVid,
+                                 DisassemblyNode* const _node = nullptr);
+    GroupCfgType FindClosestRemovalCfg(const GroupCfgType& _startCfg,
+        const GroupCfgType& _endCfg, GroupLPOutput<MPTraits>& _lpOutput,
+        const Formation& _formation);
 
     //Creates a new MPSolution and invokes the RRT strategy on a single piece of
     // the assembly. Then adds the path (if successful) to the roadmap.
-    VIDPath ExpandRRTApproach(const VID _q,
-                                            const Formation& _formation,
-                                            VID& _newVid);
+    VIDPath ExpandRRTApproach(const VID _q, const Formation& _formation,
+                              VID& _newVid,
+                              DisassemblyNode* const _node = nullptr);
 
     // Adds a path of Cfgs (nodes and edges) to the roadmap. Aassumed that
     // _startVID is connected to _path[0], and _path[n] is connected to
@@ -281,7 +331,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
     void GetSequenceStats();
     void RecursivePathStats(DisassemblyNode* _node, double _curDist,
-                            VIDPath& _curPath);
+                            VIDPath& _curPath, DGNodePath& _nodePath);
     void VerifyNodes();
 
     void GenerateDotFile();
@@ -359,6 +409,17 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     //The index-aligned paths (vid sequences) that correspond to the leaf of
     // the path (tree only):
     std::vector<std::pair<size_t, VIDPath > > m_pathVids;
+
+    // This corresponds with m_pathVids. The first element of each pair in each
+    // DGNodePath is the index of the first VID in m_pathVids.
+    // For example, m_nodePaths[1][3].first will be the index in m_pathVids for
+    // the second path found, for the start of the 4th DG node in that path, and
+    // the vids in m_pathVids up to the index m_nodePaths[1][4].first will be
+    // the vids to follow, which have already been validated.
+    // This is needed so that we can link together the path information and the
+    // higher level information (like which part was removed for given piece of
+    // the path) needed for manipulator placement.
+    std::vector<DGNodePath> m_nodePaths;
 
     bool m_printFullPath = true;
 
@@ -643,6 +704,7 @@ Finalize() {
   // Output final map.
   this->GetGroupRoadmap()->Write(this->GetBaseFilename() + ".map",
                                  this->GetEnvironment());
+
   //Update the roadmap and goals:
   GroupRoadmapType* const map = this->GetGroupRoadmap();
   const size_t numVertices = map->get_num_vertices();
@@ -663,6 +725,9 @@ Finalize() {
 
   std::vector<size_t> pathIndices; // indices of desired paths from m_pathVids
 
+  // Choose between generating the path or retrieving the vids from the
+  // disassembly graph itself. It's more efficient to have this false, but more
+  // robust to just make sure we get all roadmap cfgs using SSSP (if true).
   const bool generatePath = true;
 
   if(m_printFullPath) {
@@ -808,45 +873,49 @@ GetMatingSamples(const Formation& _subassembly) {
 }
 
 
-//template <typename MPTraits>
-//typename DisassemblyMethod<MPTraits>::GroupCfg
-//DisassemblyMethod<MPTraits>::
-//FindClosestRemovalCfg(const GroupCfg& _startCfg, const GroupCfg& _endCfg,
-//                      GroupLPOutput<MPTraits>& _lpOutput) {
-//  if(this->m_debug)
-//    std::cout << "Finding nearest cfg for successful removal (post "
-//              << "processing step)" << std::endl;
-//  //Finds the closest cfg to m_minMatingDist for the part being moved. Note this
-//  // does not update any body settings, so it's to be used in the context of
-//  // having the VC's body numbers already set and the given cfgs should match.
-//  auto lp = this->GetLocalPlanner(m_lpLabel);
-//  Environment* env = this->GetEnvironment();
-//  auto vc = dynamic_pointer_cast<SpecificBodyCollisionValidity<MPTraits>>(
-//                  this->GetValidityChecker(m_vcLabel));
-//  // go the trajectory backwards to get the minimum distance
-//  // get path from local planner.
-//  GroupCfg col;
-//  lp->IsConnected(_startCfg, _endCfg, col, &_lpOutput,
-//    env->GetPositionRes(), env->GetOrientationRes(), true, true);
-//  // get last valid cfg to the defined mating dist
-//  std::string callee("DisassemblyMethod::ExpandMatingApproach");
-//  CDInfo cdInfo(true);
-//  GroupCfg lastCfg = _lpOutput.m_path.back();
-//
-//  typedef typename std::vector<GroupCfg>::reverse_iterator rIterator;
-//  for (rIterator i = _lpOutput.m_path.rbegin();
-//      i != _lpOutput.m_path.rend(); ++i ) {
-//    vc->IsValid(*i, cdInfo, callee);
-//    if (cdInfo.m_minDist < m_minMatingDist)
-//      break;
-//    else
-//      lastCfg = *i;
-//  }
-//  // recompute the line to get GroupLPOutput
-//  lp->IsConnected(_startCfg, lastCfg, col, &_lpOutput,
-//    env->GetPositionRes(), env->GetOrientationRes(), true);
-//  return lastCfg;
-//}
+template <typename MPTraits>
+typename DisassemblyMethod<MPTraits>::GroupCfgType
+DisassemblyMethod<MPTraits>::
+FindClosestRemovalCfg(const GroupCfgType& _startCfg,
+                      const GroupCfgType& _endCfg,
+                      GroupLPOutput<MPTraits>& _lpOutput,
+                      const Formation& _formation) {
+  std::cout << "Warning: FindClosestRemovalCfg is inefficient and should only "
+            << "be used if it's actually needed." << std::endl << std::endl;
+
+  if(this->m_debug)
+    std::cout << "Finding nearest cfg for successful removal (post "
+              << "processing step)" << std::endl;
+  //Finds the closest cfg to m_minMatingDist for the part being moved. Note this
+  // does not update any body settings, so it's to be used in the context of
+  // having the VC's body numbers already set and the given cfgs should match.
+  auto lp = this->GetLocalPlanner(m_lpLabel);
+  Environment* env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  // go the trajectory backwards to get the minimum distance
+  // get path from local planner.
+  GroupCfgType col;
+  lp->IsConnected(_startCfg, _endCfg, col, &_lpOutput,
+    env->GetPositionRes(), env->GetOrientationRes(), true, true);
+  // get last valid cfg to the defined mating dist
+  string callee("DisassemblyMethod::ExpandMatingApproach");
+  CDInfo cdInfo(true);
+  GroupCfgType lastCfg = _lpOutput.m_path.back();
+
+  typedef typename std::vector<GroupCfg>::reverse_iterator rIterator;
+  for(rIterator i = _lpOutput.m_path.rbegin();
+      i != _lpOutput.m_path.rend(); ++i ) {
+    vc->IsValid(*i, cdInfo, callee, _formation);
+    if(cdInfo.m_minDist < m_minMatingDist)
+      break;
+    else
+      lastCfg = *i;
+  }
+  // recompute the line to get GroupLPOutput
+  lp->IsConnected(_startCfg, lastCfg, col, &_lpOutput,
+    env->GetPositionRes(), env->GetOrientationRes(), true);
+  return lastCfg;
+}
 
 
 template <typename MPTraits>
@@ -898,7 +967,8 @@ EnsureMinimumClearance(GroupCfgType& _cfg, const Formation& _formation) {
 template <typename MPTraits>
 typename DisassemblyMethod<MPTraits>::VIDPath
 DisassemblyMethod<MPTraits>::
-ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid) {
+ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid,
+                     DisassemblyNode* const _node) {
   this->GetStatClass()->StartClock("ExpandMatingApproachClock");
   auto const graph = this->GetGroupRoadmap();
   auto const env = this->GetEnvironment();
@@ -937,9 +1007,9 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid) {
     if(lp->IsConnected(startCfg, sample, col, &lpOutput, posRes,
                        env->GetOrientationRes(), checkCollision, savePath,
                        _formation)) {
-//      if (m_minMatingDist > 0) // only used if mating distance is set (slower!)
-//        newCfg = FindClosestRemovalCfg(startCfg, sample, lpOutput);
-//      else
+      if(m_minMatingDist > 0) // only used if mating distance is set (slower!)
+        newCfg = FindClosestRemovalCfg(startCfg, sample, lpOutput, _formation);
+      else
         newCfg = sample;
 
       if(!EnsureMinimumClearance(newCfg, _formation)) {
@@ -971,6 +1041,10 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid) {
   graph->AddEdge(_q, _newVid, lpOutput.m_edge);
   m_lastAddedVID = _newVid;
   VIDPath path = {_q, _newVid};
+  if(_node && !m_graphMethod) {
+    const std::vector<VID> vids({_q, _newVid});
+    _node->AddFormationMotion(vids, _formation);
+  }
 
   if(this->m_debug) {
     if(!graph->IsEdge(_q, _newVid))
@@ -993,7 +1067,8 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid) {
 template <typename MPTraits>
 typename DisassemblyMethod<MPTraits>::VIDPath
 DisassemblyMethod<MPTraits>::
-ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID) {
+ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID,
+                  DisassemblyNode* const _node) {
   this->GetStatClass()->StartClock("ExpandRRTApproachClock");
   auto const graph = this->GetGroupRoadmap();
   const std::string callee = "DiassemblyMethod::ExpandRRTApproach";
@@ -1090,6 +1165,13 @@ ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID) {
   rrtStrategy->m_startGroupCfg = nullptr;
   delete tempSolution;
 
+  if(_node and pathFound and !m_graphMethod)
+    _node->AddFormationMotion(disassemblyRoadmapPath, _formation);
+
+  m_lastAddedVID = _newVID;
+
+  this->GetStatClass()->StopClock("ExpandRRTApproachClock");
+
   if(m_keepBestRRTPathOnFailure) {
     if(!successfulRemoval) {
       if(pathFound) {
@@ -1101,21 +1183,17 @@ ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID) {
       else {
         if(this->m_debug)
           std::cout << "RRT failed and didn't find any path" << std::endl;
-        if(disassemblyRoadmapPath.size() > 1)//Error, means LP is off from Extender.
+        if(disassemblyRoadmapPath.size() > 1)
           throw RunTimeException(WHERE, "RRT produced a path that the LP"
                                         " couldn't reproduce!");
         _newVID = 0;
       }
-      this->GetStatClass()->StopClock("ExpandRRTApproachClock");
-      return VIDPath();
+
+      return VIDPath(); // Return empty path to tell strategy it wasn't removed.
     }
     else if(this->m_debug)
       std::cout << "ML-RRT removed part " << _formation << std::endl;
   }
-
-  m_lastAddedVID = _newVID;
-
-  this->GetStatClass()->StopClock("ExpandRRTApproachClock");
 
   return disassemblyRoadmapPath;
 }
@@ -1287,6 +1365,14 @@ GenerateNode(DisassemblyNode* const _parent,
               << expansionCfg.PrettyPrint() << std::endl;
 
   node.vid = graph->AddVertex(expansionCfg);
+
+  // For the manipulator placements, keep more explicit track of what's moving
+  // over which vids in the path.
+  if(!m_graphMethod) {
+    const std::vector<VID> vids(
+        {_parent->formationMotions.back().motionVIDs.back(), node.vid});
+    _parent->AddFormationMotion(vids, _removedParts);
+  }
 
   if(m_printFullPath) {
     //If needing a path file, we must create edges here.
@@ -1759,15 +1845,17 @@ GetSequenceStats() {
   osStat << std::endl << "Sequences:" << std::endl << std::endl;
   m_seqList.clear();
   VIDPath pathPlaceHolder;
+  DGNodePath nodePathPlaceHolder;
 
   // computation of all sequence stats
-  for (auto &node : m_disNodes)
+  for(auto &node : m_disNodes) {
     if (node.initialParts.empty() && node.usedSubassemblies.empty()) {
-      RecursivePathStats(&node, 0.0, pathPlaceHolder);
-      if(!pathPlaceHolder.empty())
+      RecursivePathStats(&node, 0.0, pathPlaceHolder, nodePathPlaceHolder);
+      if(!pathPlaceHolder.empty() || !nodePathPlaceHolder.empty())
         throw RunTimeException(WHERE, "After recursion, vid path not empty! "
                                   "Probably did something wrong in recursion!");
     }
+  }
 
   //Sort m_seqList and m_pathVids, as we want that output sorted and we can
   // pull out paths based on stats much easier.
@@ -1857,19 +1945,29 @@ template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
 RecursivePathStats(DisassemblyNode* _node, const double _curDist,
-                   VIDPath& _curPath) {
+                   VIDPath& _curPath, DGNodePath& _nodePath) {
   GroupRoadmapType* const r = this->GetGroupRoadmap();
   _curPath.push_back(_node->vid);
-  size_t numPushes = 1; // TODO: the addition done later could be optimized out
+  // Add the node to the
+  _nodePath.push_back(std::make_pair(_curPath.size()-1, _node));
+  size_t numPushes = 1;
 
   if (_node->parents.empty()) { // Base case: quit at root node
-    const size_t numNodes = _curPath.size();
-    m_seqList.push_back(std::make_pair(numNodes, _curDist));
+    const size_t numVIDs = _curPath.size();
+    m_seqList.push_back(std::make_pair(numVIDs, _curDist));
 
     //Add the path to the list, reverse it so the root is the first vid.
-    m_pathVids.push_back(std::make_pair(numNodes, _curPath));
+    m_pathVids.push_back(std::make_pair(numVIDs, _curPath));
+    m_nodePaths.push_back(_nodePath);
     std::reverse(m_pathVids.back().second.begin(),
                  m_pathVids.back().second.end());
+    std::reverse(m_nodePaths.back().begin(), m_nodePaths.back().end());
+
+    // Since the first element in the pair is the starting index in m_nodePaths,
+    // we need to update all of their values to reflect the reversal:
+    const size_t lastVIDIndex = numVIDs - 1;
+    for(std::pair<size_t, DisassemblyNode*>& nodeVIDPair : m_nodePaths.back())
+      nodeVIDPair.first = lastVIDIndex - nodeVIDPair.first;
   }
   else {
     // _node is not the root node, go deeper in recursion.
@@ -1899,7 +1997,7 @@ RecursivePathStats(DisassemblyNode* _node, const double _curDist,
         }
       }
       else if (numRemovedParts == 1) {
-        //In this case, we know that the parents are indexed with the ,
+        // In this case, we know that the parents are indexed with the
         // removalPaths since in the graph search that's how it's done, and in
         // preemptive there will only be one parent and one removal path due
         // to one removed part.
@@ -1915,13 +2013,16 @@ RecursivePathStats(DisassemblyNode* _node, const double _curDist,
                                       std::to_string(numRemovedParts));
 
       //Recurse deeper (or really, shallower towards the root):
-      RecursivePathStats(_node->parents[parentIndex], dist, _curPath);
+      RecursivePathStats(_node->parents[parentIndex], dist, _curPath, _nodePath);
     }
   }
 
   //When returning, go ahead and remove the added nodes.
   for(size_t i = 0; i < numPushes; ++i)
     _curPath.pop_back();
+
+  // Pop off the single DG node added:
+  _nodePath.pop_back();
 }
 
 template <typename MPTraits>

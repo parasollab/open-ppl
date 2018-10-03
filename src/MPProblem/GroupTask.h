@@ -87,6 +87,12 @@ class GroupTask final {
     /// Get the robot associated with this task.
     RobotGroup* GetRobotGroup() const noexcept;
 
+    /// Get the optional manipulator robot group associated with this task.
+    RobotGroup* GetEndEffectorGroup() const noexcept;
+
+    /// Get the optional manipulator robot group associated with this task.
+    RobotGroup* GetManipulatorGroup() const noexcept;
+
     /// Assign this task to the robot group specified.
     /// @param _r The destination robot which will receive this assignment.
     void SetRobotGroup(RobotGroup* const _r);
@@ -96,6 +102,12 @@ class GroupTask final {
 
     /// Set the semantic label for this task.
     void SetLabel(const std::string& _label) noexcept;
+
+    /// Get the robot pointer for the (optional) end effector for the group task
+    Robot* GetEndEffectorRobot();
+
+    /// Get the robot pointer for the (optional) manipulator for this group task
+    Robot* GetManipulatorRobot();
 
     ///@}
     ///@name Constraint Accessors
@@ -108,15 +120,8 @@ class GroupTask final {
     /// in that group cfg.
     void GetStartConstraintCenter(GroupCfg& _center) const noexcept;
 
-//    void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
-//    void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
-//    void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
-//    void SetArrivalTime(double _arrivalTime);
-
-//    const Constraint* GetStartConstraint() const noexcept;
-//    const ConstraintSet& GetPathConstraints() const noexcept;
-//    const ConstraintSet& GetGoalConstraints() const noexcept;
-//    const double GetArrivalTime() const noexcept;
+    /// TODO More robust constraint functionality may be desired in the future,
+    ///      but isn't supported now as there is no use case for it.
 
     ///@}
     ///@name Constraint Evaluation
@@ -126,21 +131,6 @@ class GroupTask final {
     /// @param _p The path to validate.
     /// @return The status of the task using _p as a solution.
     Status Evaluate(const std::vector<GroupCfg>& _p) const;
-
-//    /// Check if a path's starting point satisfies the start constraints.
-//    /// @param _p The potential solution to check.
-//    /// @return True if the starting point of _p satisfies all start constraints.
-//    bool EvaluateStartConstraint(const std::vector<Cfg>& _p) const;
-//
-//    /// Check if all points in the path satisfy the end constraints.
-//    /// @param _p The potential solution to check.
-//    /// @return True if all points in _p satisfy all path constraints.
-//    bool EvaluatePathConstraints(const std::vector<Cfg>& _p) const;
-//
-//    /// Check if a path's end point satisfies the goal constraints.
-//    /// @param _p The potential solution to check.
-//    /// @return True if the ending point of _p satisfies all goal constraints.
-//    bool EvaluateGoalConstraints(const std::vector<Cfg>& _p) const;
 
     ///@}
     ///@name Task Status
@@ -168,11 +158,19 @@ class GroupTask final {
 
     RobotGroup* m_robotGroup{nullptr}; ///< The robot group assigned to this task.
 
+    // Used in disassembly planning, this group should contain the assembly
+    // along with the manipulator's end effector. Duplicates a little bit of
+    // data, but allows us to most extensibly use group path/cfg output.
+    RobotGroup* m_endEffectorGroup{nullptr}; ///< The optional effector group
+
+    // Used in disassembly planning, this group should contain the group along
+    // with the manipulator. Duplicates a little bit of data, but allows us to
+    // most extensibly use group path/cfg output.
+    RobotGroup* m_manipulatorGroup{nullptr}; ///< The optional manipulator group
+
     mutable Status m_status{OnDeck};      ///< The status of the group task.
 
-//    double m_arrivalTime{0};
-
-    /// TODO: Doesn't this need to be a map between a list of MPTasks??
+    /// TODO: Doesn't this need to be a map between a LIST of MPTasks in the end?
     std::unordered_map<Robot*, MPTask> m_robotTasks; ///< The task for each robot in the group.
 
     ///@}

@@ -35,7 +35,6 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     typedef typename Vertex::IndividualCfg IndividualCfg;
     typedef typename Edge::IndividualEdge  IndividualEdge;
     typedef typename Vertex::VIDSet        VIDSet;
-    typedef Vertex                         CfgType;
 
     // This is just a dependent type when templating Path on RoadmapType.
     // The GroupRoadmap hierarchy doesn't use the outer Roadmap class, so for a
@@ -60,7 +59,6 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     ///@{
 
     /// Construct a group roadmap.
-    /// TODO MPSolution is a templated type I think.
     template <typename MPSolution>
     GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution);
 
@@ -77,10 +75,10 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// This is implemented specifically to get MetricUtils::PrintAllStats and
     /// Path::FullCfgs() to work with this as the template argument.
-    GroupRoadmap* GetGraph() noexcept { return this; }
+    GroupRoadmap* GetGraph() noexcept;
 
     /// Get the number of robots for the group this roadmap is for.
-    size_t GetNumRobots() const noexcept { return m_group->Size(); }
+    size_t GetNumRobots() const noexcept;
 
     ///@}
     ///@name Input/Output
@@ -94,14 +92,12 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// Write the roadmap as a Vizmo-compatible composite C-Space path.
     /// @param _filename The file to write to.
     /// @param _env The environment, to place in the roadmap.
-    void WriteCompositePath(const std::string& _filename,
+    void WriteCompositeGraph(const std::string& _filename,
                             Environment* const _env) const;
 
     std::string PrettyPrint() const;
 
     ///@}
-
-
     ///@name Modifiers
     ///@{
 
@@ -141,6 +137,21 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     virtual void DeleteEdge(EI _iterator) noexcept override;
 
     ///@}
+    ///@name Queries
+    ///@{
+
+    /// Get the number of vertices in the roadmap.
+    size_t Size() const noexcept;
+
+    ///@}
+    ///@name Hooks
+    ///@{
+
+    /// Uninstall all hooks from each individual roadmap. Should only be used at
+    /// the end of a library run to clean the roadmap object.
+    void ClearHooks() noexcept;
+
+    ///@}
 
   protected:
 
@@ -165,10 +176,8 @@ GroupRoadmap<Vertex, Edge>::
 GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
   RoadmapGraph<Vertex, Edge>(nullptr), m_group(_g) {
 
-  // TODO: Ensure that we should be constructing the individual roadmaps in here
   for(Robot* const robot : *m_group)
     m_roadmaps.push_back(_solution->GetRoadmap(robot)->GetGraph());
-//    m_roadmaps.push_back(_solution->GetRoadmap(robot)->GetGraph());
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
@@ -200,19 +209,38 @@ GetRoadmap(const size_t _index) const {
 }
 
 
+template <typename Vertex, typename Edge>
+GroupRoadmap<Vertex, Edge>*
+GroupRoadmap<Vertex, Edge>::
+GetGraph() noexcept {
+  return this;
+}
+
+
+template <typename Vertex, typename Edge>
+size_t
+GroupRoadmap<Vertex, Edge>::
+GetNumRobots() const noexcept {
+  return m_group->Size();
+}
+
+
 /*-------------------------------Input/Output---------------------------------*/
 
 template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 Write(const std::string& _filename, Environment* _env) const {
-  WriteCompositePath(_filename, _env);
+  /// For now, we only support composite C-Space output as vizmo is the only
+  /// vizualiser that has support for groups/composite robots.
+  WriteCompositeGraph(_filename, _env);
 }
+
 
 template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
-WriteCompositePath(const std::string& _filename, Environment* _env) const {
+WriteCompositeGraph(const std::string& _filename, Environment* _env) const {
   #ifndef VIZMO_MAP
     throw RunTimeException(WHERE, "Cannot use this method without the vizmo map"
                                   " option enabled in the Makefile!");
@@ -226,6 +254,7 @@ WriteCompositePath(const std::string& _filename, Environment* _env) const {
   // Pass *this because GroupRoadmap has a unified Graph/Roadmap representation.
   stapl::sequential::write_graph(*this, ofs);
 }
+
 
 template <typename Vertex, typename Edge>
 std::string
@@ -242,14 +271,16 @@ PrettyPrint() const {
   return out.str();
 }
 
-
-
 /*-------------------------------- Modifiers ---------------------------------*/
 
 template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
+  if(_source == _target)
+    throw RunTimeException(WHERE) << "Tried to add edge between same VID "
+                                  << _source;
+
   if(_lp.GetWeight() == 0 or _lp.GetWeight() == 0)
     throw RunTimeException(WHERE, "Tried to add zero weight edge!");
 
@@ -372,8 +403,6 @@ AddVertex(const Vertex& _v) noexcept {
     return vi->descriptor();
   }
 
-//  std::cout << "\nGroupRoadmap::AddVertex(1/3): Adding individual vertices..." << std::endl;
-
   // Add each vid to individual roadmaps if not already present.
   for(size_t i = 0; i < m_group->Size(); ++i) {
     auto roadmap = GetRoadmap(i);
@@ -382,20 +411,16 @@ AddVertex(const Vertex& _v) noexcept {
 
     // If the vid is invalid, we must add the local cfg.
     if(individualVID == INVALID_VID)
-      cfg.SetCfg(robot, roadmap->AddVertex(cfg.GetRobotCfg(i)));
+      cfg.SetRobotCfg(robot, roadmap->AddVertex(cfg.GetRobotCfg(i)));
     // If the vid was valid, make sure it exists.
     else if(roadmap->find_vertex(individualVID) == roadmap->end())
       throw RunTimeException(WHERE, "Individual vertex " +
           std::to_string(individualVID) + " does not exist!");
   }
 
-//  std::cout << "\nGroupRoadmap::AddVertex(2/3): Adding group vertex..." << std::endl;
-
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(cfg);
   ++m_timestamp;
-
-//  std::cout << "\nGroupRoadmap::AddVertex(3/3): Added group vertex as vid " << vid << std::endl;
 
   return vid;
 }
@@ -461,5 +486,26 @@ DeleteEdge(EI _iterator) noexcept {
   this->delete_edge(_iterator->descriptor());
   ++m_timestamp;
 }
+
+/*--------------------------------- Queries ----------------------------------*/
+
+template <typename Vertex, typename Edge>
+size_t
+GroupRoadmap<Vertex, Edge>::
+Size() const noexcept {
+  return this->get_num_vertices();
+}
+
+/*----------------------------------- Hooks ----------------------------------*/
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+ClearHooks() noexcept {
+  for(IndividualRoadmap* const map : m_roadmaps)
+    map->ClearHooks();
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

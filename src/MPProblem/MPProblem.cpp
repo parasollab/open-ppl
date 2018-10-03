@@ -45,6 +45,10 @@ operator=(const MPProblem& _other) {
   if(this == &_other)
     return *this;
 
+  if(!_other.m_groupTaskMap.empty())
+    throw RunTimeException(WHERE, "The other MPProblem has group tasks present,"
+                                  " which cannot yet be copied.");
+
   // Copy environment.
   m_environment = std::unique_ptr<Environment>(
       new Environment(*_other.m_environment)
@@ -286,7 +290,7 @@ GetRobotGroup(const std::string& _label) const {
     if(group->GetLabel() == _label)
       return group.get();
 
-  throw RunTimeException(WHERE, "Requested Robot group with label '" + _label +
+  throw RunTimeException(WHERE, "Requested Robot Group with label '" + _label +
                                 "', but no such robot was found.");
   return nullptr;
 }

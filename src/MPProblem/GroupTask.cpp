@@ -33,6 +33,17 @@ GroupTask(MPProblem* const _problem, XMLNode& _node) {
                             "Label for the robot group assigned to this task.");
   m_robotGroup = _problem->GetRobotGroup(robotGroupLabel);
 
+  const std::string effectorGroupLabel = _node.Read("endEffectorGroupLabel",
+           false, "",
+           "Label for the robot group with manipulator assigned to this task.");
+  if(!effectorGroupLabel.empty()) // Check if provided.
+    m_endEffectorGroup = _problem->GetRobotGroup(effectorGroupLabel);
+
+  const std::string manipGroupLabel = _node.Read("manipulatorGroupLabel", false,
+      "", "Label for the robot group with manipulator assigned to this task.");
+  if(!manipGroupLabel.empty()) // Check if provided.
+    m_manipulatorGroup = _problem->GetRobotGroup(manipGroupLabel);
+
   // Parse constraints.
   for(auto& child : _node) {
     if(child.Name() == "Task") {
@@ -90,6 +101,20 @@ GetRobotGroup() const noexcept {
 }
 
 
+RobotGroup*
+GroupTask::
+GetEndEffectorGroup() const noexcept {
+  return m_endEffectorGroup;
+}
+
+
+RobotGroup*
+GroupTask::
+GetManipulatorGroup() const noexcept {
+  return m_manipulatorGroup;
+}
+
+
 void
 GroupTask::
 SetRobotGroup(RobotGroup* const _r) {
@@ -117,6 +142,30 @@ SetLabel(const std::string& _label) noexcept {
 }
 
 
+Robot*
+GroupTask::
+GetManipulatorRobot() {
+  if(!m_manipulatorGroup)
+    return nullptr;
+
+  // If the manipulator group is present, return the manipulator.
+  return m_manipulatorGroup->GetRobot("manipulator");
+}
+
+
+Robot*
+GroupTask::
+GetEndEffectorRobot() {
+  if(!m_manipulatorGroup)
+    return nullptr;
+
+  // If the manipulator group is present, return the manipulator.
+  return m_endEffectorGroup->GetRobot("effector");
+}
+
+
+/*-------------------------- Constraint Accessors ----------------------------*/
+
 void
 GroupTask::
 GetStartConstraintCenter(GroupCfg& _center) const noexcept {
@@ -124,11 +173,10 @@ GetStartConstraintCenter(GroupCfg& _center) const noexcept {
     Cfg robotCfg(robot);
     robotCfg.SetData(m_robotTasks.at(robot).GetStartConstraint()->
                                                     GetBoundary()->GetCenter());
-    _center.SetCfg(robot, std::move(robotCfg));
+    _center.SetRobotCfg(robot, std::move(robotCfg));
   }
 }
 
-/*-------------------------- Constraint Accessors ----------------------------*/
 
 //void
 //GroupTask::

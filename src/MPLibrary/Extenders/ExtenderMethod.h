@@ -1,5 +1,5 @@
-#ifndef EXTENDER_METHOD_H_
-#define EXTENDER_METHOD_H_
+#ifndef PMPL_EXTENDER_METHOD_H_
+#define PMPL_EXTENDER_METHOD_H_
 
 #include <limits>
 
@@ -7,8 +7,7 @@
 #include "MPLibrary/LocalPlanners/GroupLPOutput.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Base algorithm abstraction for \ref Extenders.
+/// Base algorithm abstraction for \ref Extenders.
 ///
 /// ExtenderMethod has one main method, @c Extend, to grow a simple path from a
 /// starting node in some input direction - note that not all expansion
@@ -21,6 +20,7 @@
 /// LPOutput<MPTraits> lp;
 /// bool pass = e->Extend(start, goal, new, lp);
 /// @endcode
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
@@ -91,13 +91,11 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     /// GroupCfg Overrides:
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
-        const std::vector<size_t>& _robotIndexes = std::vector<size_t>())
-    { throw RunTimeException(WHERE, "Not Implemented!"); }
+        const std::vector<size_t>& _robotIndexes = {});
 
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-        const std::vector<size_t>& _robotIndexes = std::vector<size_t>())
-    { throw RunTimeException(WHERE, "Not Implemented!"); }
+        const std::vector<size_t>& _robotIndexes = {});
 
     ///@}
 };
@@ -129,10 +127,11 @@ ExtenderMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 template <typename MPTraits>
 void
 ExtenderMethod<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   MPBaseObject<MPTraits>::Print(_os);
-  _os << "\tMin distance: " << m_minDist << endl
-      << "\tMax distance: " << m_maxDist << endl;
+  _os << "\tMin distance: " << m_minDist
+      << "\n\tMax distance: " << m_maxDist
+      << std::endl;
 }
 
 /*------------------------- ExtenderMethod Interface -------------------------*/
@@ -152,12 +151,33 @@ GetMaxDistance() const {
   return m_maxDist;
 }
 
+
 template <typename MPTraits>
 bool
 ExtenderMethod<MPTraits>::
-Extend(const CfgType& _start, const CfgType& _end,
-       CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
-  throw RunTimeException(WHERE, "Not implemented for the specific Extender!");
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+bool
+ExtenderMethod<MPTraits>::
+Extend(const GroupCfgType& _start, const GroupCfgType& _end,
+    GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
+    const std::vector<size_t>& _robotIndexes) {
+  throw NotImplementedException(WHERE);
+}
+
+
+template <typename MPTraits>
+bool
+ExtenderMethod<MPTraits>::
+Extend(const GroupCfgType& _start, const GroupCfgType& _end,
+    GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
+    const std::vector<size_t>& _robotIndexes) {
+  throw NotImplementedException(WHERE);
 }
 
 /*----------------------------------------------------------------------------*/

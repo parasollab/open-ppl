@@ -77,13 +77,13 @@ class MPSolutionType final {
 
     GroupRoadmapType* GetGroupRoadmap() const noexcept;
 
-    GroupPathType* GetGroupPath() const noexcept { return m_groupPath; }
+    GroupPathType* GetGroupPath() const noexcept;
 
     StatClass* GetStatClass() const noexcept;
 
-    Robot* GetRobot() const noexcept { return m_robot; }
+    Robot* GetRobot() const noexcept;
 
-    RobotGroup* GetRobotGroup() const noexcept { return m_group; }
+    RobotGroup* GetRobotGroup() const noexcept;
 
     ///@}
 
@@ -110,7 +110,7 @@ class MPSolutionType final {
     std::unique_ptr<GroupRoadmapType> m_groupMap;
 
     /// The group path.
-    GroupPathType* m_groupPath;
+    std::unique_ptr<GroupPathType> m_groupPath;
 
     ///@}
 };
@@ -145,7 +145,7 @@ MPSolutionType(RobotGroup* const _g)
 
   // Must happen after solutions are populated!
   m_groupMap = std::unique_ptr<GroupRoadmapType>(new GroupRoadmapType(_g, this));
-  m_groupPath = new GroupPathType(m_groupMap.get());
+  m_groupPath = std::unique_ptr<GroupPathType>(new GroupPathType(m_groupMap.get()));
 }
 
 /*-------------------------------- Modifiers ---------------------------------*/
@@ -214,12 +214,37 @@ GetGroupRoadmap() const noexcept {
 
 
 template <typename MPTraits>
+typename MPSolutionType<MPTraits>::GroupPathType*
+MPSolutionType<MPTraits>::
+GetGroupPath() const noexcept {
+  return m_groupPath.get();
+}
+
+
+template <typename MPTraits>
 inline
 StatClass*
 MPSolutionType<MPTraits>::
 GetStatClass() const noexcept {
   return m_stats.get();
 }
+
+
+template <typename MPTraits>
+Robot*
+MPSolutionType<MPTraits>::
+GetRobot() const noexcept {
+  return m_robot;
+}
+
+
+template <typename MPTraits>
+RobotGroup*
+MPSolutionType<MPTraits>::
+GetRobotGroup() const noexcept {
+  return m_group;
+}
+
 
 /*--------------------------------- Helpers ----------------------------------*/
 

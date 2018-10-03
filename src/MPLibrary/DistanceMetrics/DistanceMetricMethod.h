@@ -62,8 +62,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
 
     /// GroupCfg Overload
-    virtual double Distance(const GroupCfgType& _c1, const GroupCfgType& _c2)
-        { throw RunTimeException(WHERE, "Not Implemented!"); }
+    virtual double Distance(const GroupCfgType& _c1, const GroupCfgType& _c2);
 
 
     /// @brief Scale a directional configuration to a certain magnitude
@@ -85,11 +84,9 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
     /// Group Cfg Overloads:
     virtual void ScaleCfg(double _length, GroupCfgType& _c,
-              const GroupCfgType& _o)
-        { throw RunTimeException(WHERE, "Not Implemented!"); }
+                          const GroupCfgType& _o);
 
-    void ScaleCfg(double _length, GroupCfgType& _c)
-        { throw RunTimeException(WHERE, "Not Implemented!"); }
+    void ScaleCfg(double _length, GroupCfgType& _c);
 
     ///@}
     ///@name Modifiers
@@ -97,13 +94,21 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
     /// Sets and sorts the active robots, which is used for group cfg comparing.
     void SetActiveRobots(const Formation& _robots);
-    Formation GetActiveRobots() const noexcept { return m_activeRobots; }
+    Formation GetActiveRobots() const noexcept;
 
     ///@}
 
   protected:
 
-    Formation m_activeRobots; ///< Used for group cfgs to ensure valid neighbors
+    /// Used for group cfgs to ensure valid comparison configurations, though
+    /// it could potentially be interpreted differently depending on the metric
+    /// that is implemented. Current implementations consider two group cfgs to
+    /// be an infinite distance apart if any robots that are not in this vector
+    /// have a changed position wrt the two configurations in question.
+    /// This is a natural choice for neighborhood finding distance metrics for
+    /// groups, as we do not want to connect two cfgs that suggest motion of
+    /// robots that should not be moving.
+    Formation m_activeRobots;
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -114,6 +119,14 @@ DistanceMetricMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 }
 
 /*----------------------------- Distance Interface ---------------------------*/
+
+template <typename MPTraits>
+double
+DistanceMetricMethod<MPTraits>::
+Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
+  throw RunTimeException(WHERE, "Not Implemented!");
+}
+
 
 template <typename MPTraits>
 void
@@ -151,6 +164,22 @@ void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, CfgType& _c) {
   ScaleCfg(_length, _c, CfgType(_c.GetRobot()));
+}
+
+
+template <typename MPTraits>
+void
+DistanceMetricMethod<MPTraits>::
+ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
+  throw RunTimeException(WHERE, "Not Implemented!");
+}
+
+
+template <typename MPTraits>
+void
+DistanceMetricMethod<MPTraits>::
+ScaleCfg(double _length, GroupCfgType& _c) {
+  throw RunTimeException(WHERE, "Not Implemented!");
 }
 
 
@@ -194,5 +223,14 @@ SetActiveRobots(const Formation& _robots) {
   if(m_activeRobots.size() > 1)
     std::sort(m_activeRobots.begin(), m_activeRobots.end());
 }
+
+
+template <typename MPTraits>
+typename DistanceMetricMethod<MPTraits>::Formation
+DistanceMetricMethod<MPTraits>::
+GetActiveRobots() const noexcept {
+  return m_activeRobots;
+}
+
 
 #endif

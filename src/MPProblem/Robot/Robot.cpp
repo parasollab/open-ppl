@@ -49,11 +49,14 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   SetCapability(capability);
 
   // Get the multibody file name and make sure it exists.
-  const std::string path = GetPathName(_node.Filename());
-  const std::string file = _node.Read("filename", false, "", "Robot file name");
-  const std::string filename = path + file;
+  const std::string file = _node.Read("filename", false, "", "Robot file name"),
+                    filename = _node.GetPath() + file;
 
-  if(file.empty() or !FileExists(filename)) {
+  if(!file.empty() and !FileExists(filename))
+    throw ParseException(_node.Where()) << "File '" << filename
+                                        << "' does not exist.";
+
+  if(file.empty()) {
     // If we don't get a filename, assume the robot is defined fully in this
     // Robot node, in the same way it would be in the external file.
     ReadXMLNode(_node);
@@ -100,6 +103,8 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   // Initialize the emulated battery.
   m_battery = std::unique_ptr<Battery>(new Battery());
+
+  // Initialize the end effector
 }
 
 
@@ -174,24 +179,48 @@ Robot(MPProblem* const _p, const Robot& _r)
 Robot::
 ~Robot() = default;
 
+
+Robot::EndEffector::
+EndEffector(XMLNode& _node, MultiBody* const _mb) {
+  const size_t bodyIndex = _node.Read("bodyIndex", true,
+      (size_t)0, (size_t)0, std::numeric_limits<size_t>::max(),
+      "The body's index in the robot manipulator's multibody.");
+  effectorBody = _mb->GetBody(bodyIndex);
+
+  const std::string contactPointString = _node.Read("contactPoint", true, "",
+      "The point (model coordinates) which establishes a grip with an object.");
+  std::istringstream ss(contactPointString);
+  ss >> contactPoint;
+
+  // We will align the effector so the vector from the BBox centroid to the
+  // contact point is aligned (but backwards) with the part to move's face
+  // normal.
+  centerToContactDir =
+         contactPoint - _mb->GetBody(bodyIndex)->GetBoundingBox().GetCentroid();
+}
+
 /*---------------------------------- I/O -------------------------------------*/
 
 void
 Robot::
 ReadXMLFile(const std::string& _filename) {
   XMLNode node(_filename, "Robot");
-  ReadXMLNode(node, _filename);
+  ReadXMLNode(node);
 }
 
 
 void
 Robot::
-ReadXMLNode(XMLNode& _node, const std::string& _filename) {
+ReadXMLNode(XMLNode& _node) {
   // Read attributes of the robot node.
   m_maxLinearVelocity = _node.Read("maxLinearVelocity", false, 10., 0.,
       std::numeric_limits<double>::max(), "The robot's maximum linear velocity");
   m_maxAngularVelocity = _node.Read("maxAngularVelocity", false, 1., 0.,
       std::numeric_limits<double>::max(), "The robot's maximum angular velocity");
+
+  // Check for an end-effector node (will be parsed last to ensure that the
+  // multibody is fully constructed).
+  XMLNode* effectorNode = nullptr;
 
   for(auto& child : _node) {
     std::string name = child.Name();
@@ -208,7 +237,7 @@ ReadXMLNode(XMLNode& _node, const std::string& _filename) {
       if(mbFile == "")
         ReadMultiBodyXML(child);
       else
-        ReadMultibodyFile(GetPathName(_filename) + mbFile);
+        ReadMultibodyFile(_node.GetPath() + mbFile);
     }
     else if(name == "actuator") {
       // We need a multibody to parse the actuators.
@@ -224,7 +253,12 @@ ReadXMLNode(XMLNode& _node, const std::string& _filename) {
       auto controller = ControllerMethod::Factory(this, child);
       SetController(std::move(controller));
     }
+    else if(name == "effector")
+      effectorNode = &child;
   }
+
+  if(effectorNode)
+    m_endEffector = EndEffector(*effectorNode, this->GetMultiBody());
 
   // Throw errors for any unrequested attributes or nodes.
   _node.WarnAll(true);
@@ -246,6 +280,7 @@ void
 Robot::
 ReadMultibodyFile(const std::string& _filename) {
   // Open the file.
+  std::cout << "Opening '" << _filename << "'." << std::endl;
   CountingStreamBuffer cbs(_filename);
   std::istream ifs(&cbs);
 
@@ -363,6 +398,15 @@ Robot::
 GetMultiBody() const noexcept {
   return m_multibody.get();
 }
+
+
+
+const Robot::EndEffector&
+Robot::
+GetEndEffector() const noexcept {
+  return m_endEffector;
+}
+
 
 /*------------------------------ Agent Accessors -----------------------------*/
 

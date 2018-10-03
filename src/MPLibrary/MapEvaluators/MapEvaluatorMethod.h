@@ -37,7 +37,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     /// input roadmap to reset the state of the object. Note that most
     /// evaluators do not have state, so this is set to false by default.
     ////////////////////////////////////////////////////////////////////////////
-    virtual bool HasState() const {return false;}
+    virtual bool HasState() const;
 
     ////////////////////////////////////////////////////////////////////////////
     /// @brief Evaluate a roadmap
@@ -57,19 +57,51 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     /// Set the active robots.
-    void SetActiveRobots(const std::vector<size_t> _activeRobots)
-        { m_activeRobots = _activeRobots; }
+    void SetActiveRobots(const std::vector<size_t> _activeRobots);
 
     /// Get the active robots.
-    std::vector<size_t> GetActiveRobots() const { return m_activeRobots; }
+    std::vector<size_t> GetActiveRobots() const;
 
     ///@}
 
 
   protected:
 
-    std::vector<size_t> m_activeRobots; ///< Active robots for group evaluators
+    /// The active robots, used only by group map evaluators. Depending on the
+    /// evaluator, the usage could be different, but the current use case is to
+    /// set the robot(s) that are being moved, then a clearance check is done
+    /// only considering those specified bodies (see MinimumClearanceEvaluator).
+    std::vector<size_t> m_activeRobots;
 
 };
+
+
+//----------------------------- Evaluation Interface ---------------------------
+
+template<typename MPTraits>
+bool
+MapEvaluatorMethod<MPTraits>::
+HasState() const {
+  return false;
+}
+
+
+
+//---------------------------- Accessors and Modifiers -------------------------
+
+template<typename MPTraits>
+void
+MapEvaluatorMethod<MPTraits>::
+SetActiveRobots(const std::vector<size_t> _activeRobots) {
+  m_activeRobots = _activeRobots;
+}
+
+
+template<typename MPTraits>
+std::vector<size_t>
+MapEvaluatorMethod<MPTraits>::
+GetActiveRobots() const {
+  return m_activeRobots;
+}
 
 #endif

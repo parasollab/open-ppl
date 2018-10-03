@@ -47,6 +47,7 @@ class MPBaseObject {
     typedef typename MPTraits::Path                    Path;
     typedef typename MPTraits::GroupPathType           GroupPath;
     typedef typename MPTraits::MPLibrary               MPLibrary;
+    typedef typename MPTraits::MPSolution              MPSolution;
 
     typedef typename MPLibrary::SamplerPointer         SamplerPointer;
     typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
@@ -187,6 +188,8 @@ class MPBaseObject {
     ///@name Solution Accessors
     ///@{
 
+    MPSolution* GetMPSolution() const noexcept;
+
     /// Get the current free-space roadmap.
     RoadmapType* GetRoadmap() const noexcept;
 
@@ -197,6 +200,7 @@ class MPBaseObject {
     RoadmapType* GetBlockRoadmap() const noexcept;
 
     /// Get the current best path.
+    Path* GetPath(Robot* const _r) const noexcept;
     Path* GetPath() const noexcept;
 
     /// Get the current best group path.
@@ -469,6 +473,15 @@ GetGroupTask() const noexcept {
 
 template <typename MPTraits>
 inline
+typename MPTraits::MPSolution*
+MPBaseObject<MPTraits>::
+GetMPSolution() const noexcept {
+  return m_library->GetMPSolution();
+}
+
+
+template <typename MPTraits>
+inline
 typename MPTraits::RoadmapType*
 MPBaseObject<MPTraits>::
 GetRoadmap() const noexcept {
@@ -498,8 +511,18 @@ template <typename MPTraits>
 inline
 typename MPTraits::Path*
 MPBaseObject<MPTraits>::
+GetPath(Robot* const _r) const noexcept {
+  return m_library->GetPath(_r);
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::Path*
+MPBaseObject<MPTraits>::
 GetPath() const noexcept {
-  return m_library->GetPath();
+  auto task = GetTask();
+  return task ? m_library->GetPath(task->GetRobot()) : nullptr;
 }
 
 

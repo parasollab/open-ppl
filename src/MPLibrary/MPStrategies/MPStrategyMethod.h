@@ -84,7 +84,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
     std::vector<std::string> m_meLabels;  ///< The list of map evaluators to use.
 
-    /// This is currently used in Disassembly planning methods.
+    /// This is currently used in disassembly planning methods.
     bool m_successful{false}; ///< A flag to set as true in Finalize() to indicate success.
 
     ///@}

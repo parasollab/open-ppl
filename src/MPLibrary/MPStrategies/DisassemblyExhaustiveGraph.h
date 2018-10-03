@@ -12,18 +12,28 @@
 /// @brief Basic serial disassembly method
 ///
 ///
+/// This is the Exhaustive BFS method that is described in:
+/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
+/// “A general and flexible search framework for disassembly planning,”
+/// in International Conference on Robotics and Automation, May 2018.
+///
+/// This also contains an option to to A* search, which is a future work
+/// that is discussed in the above paper.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
 
   public:
-    typedef typename DisassemblyMethod<MPTraits>::GroupCfgType     GroupCfgType;
-    typedef typename DisassemblyMethod<MPTraits>::GroupRoadmapType RoadmapType;
-    typedef typename DisassemblyMethod<MPTraits>::GroupWeightType  WeightType;
-    typedef typename DisassemblyMethod<MPTraits>::VID              VID;
-    typedef typename DisassemblyMethod<MPTraits>::VIDPath          VIDPath;
+
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+    typedef typename GroupCfgType::Formation     Formation;
+    typedef typename MPTraits::GroupPathType     GroupPath;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename MPTraits::GroupWeightType   GroupWeightType;
+    typedef typename GroupRoadmapType::VID       VID;
+    typedef std::vector<GroupCfgType>            CfgPath;
+    typedef std::vector<VID>                     VIDPath;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode  DisassemblyNode;
-    typedef typename DisassemblyMethod<MPTraits>::Formation        Formation;
     typedef typename DisassemblyMethod<MPTraits>::Approach         Approach;
     typedef typename DisassemblyMethod<MPTraits>::State            State;
     typedef std::pair<Formation, std::map<Approach, bool> >                  AttemptEntry;
@@ -783,7 +793,7 @@ FixRoadmapVids(DisassemblyNode* const _node,
     const std::vector<GroupCfgType> fakePath = {newCfg, existingCfg};
 
 
-    WeightType edge(graph, "", 1., fakePath);
+    GroupWeightType edge(graph, "", 1., fakePath);
     GroupLPOutput<MPTraits> lp(graph, edge);
     lp.SetSkipEdge();// Won't be reproduced.
     graph->AddEdge(newVid, existingVid, lp.m_edge);

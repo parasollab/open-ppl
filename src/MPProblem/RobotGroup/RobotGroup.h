@@ -1,5 +1,5 @@
-#ifndef ROBOT_GROUP_H_
-#define ROBOT_GROUP_H_
+#ifndef PMPL_ROBOT_GROUP_H_
+#define PMPL_ROBOT_GROUP_H_
 
 #include <iostream>
 #include <string>
@@ -55,7 +55,7 @@ class RobotGroup final {
     Robot* GetRobot(const std::string& _label) const noexcept;
 
     /// Get all robots
-    std::vector<Robot*> GetRobots() const noexcept { return m_robots; }
+    const std::vector<Robot*>& GetRobots() const noexcept;
 
     /// Get the group index for a robot.
     /// @note This is NOT the index in the MPProblem.

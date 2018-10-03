@@ -6,17 +6,27 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningStrategies
-/// @brief Stricly for testing a pseudo-parallel subassembly disassembly
+/// @brief This strategy is designed to use predefined subassemblies (supplied
+///        from the XML file) which will be the first attempt. It is meant to
+///        demonstrate the time savings possible if we parallelized the
+///        disassembly of each of the subassemblies after initial removal.
 ///
 ///
+/// This is a modified version of Preemtive DFS from the below publication.
+/// It is modified to show the psuedo-parallel speedup described above. See
+/// Table III in the paper to see the data from this method.
+/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
+/// “A general and flexible search framework for disassembly planning,”
+/// in International Conference on Robotics and Automation, May 2018.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
   public:
-//    typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename DisassemblyMethod<MPTraits>::VID            VID;
-    typedef typename DisassemblyMethod<MPTraits>::VIDPath        VIDPath;
-    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+    typedef typename GroupCfgType::Formation     Formation;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename GroupRoadmapType::VID       VID;
+    typedef std::vector<VID>                     VIDPath;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
@@ -227,7 +237,7 @@ SelectExpansionNode() {
 }
 
 template <typename MPTraits>
-typename DisassemblyMethod<MPTraits>::Formation
+typename DisassemblyParallelizedSAs<MPTraits>::Formation
 DisassemblyParallelizedSAs<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)

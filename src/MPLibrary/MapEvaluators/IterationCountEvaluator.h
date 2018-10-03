@@ -5,13 +5,6 @@
 
 #include <limits>
 
-#include "Utilities/MetricUtils.h"
-
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true once a minimum number of iterations has been achieved.
@@ -22,15 +15,10 @@ template <typename MPTraits>
 class IterationCountEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   public:
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
-    typedef typename RoadmapType::VID            VID;
-
     ///@name Construction
     ///@{
 
-  IterationCountEvaluator(const string& _vcLabel = "", const double minDist = 5);
+    IterationCountEvaluator(const double _minCount = 5);
 
   IterationCountEvaluator(XMLNode& _node);
 
@@ -51,8 +39,6 @@ class IterationCountEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@}
 
   private:
-    bool TestCfg(CfgType &_cfg);
-
     ///@name Internal State
     ///@{
 
@@ -67,8 +53,8 @@ class IterationCountEvaluator : public MapEvaluatorMethod<MPTraits> {
 
 template <typename MPTraits>
 IterationCountEvaluator<MPTraits>::
-IterationCountEvaluator(const string& _vcLabel, const double minCount) :
-                          MapEvaluatorMethod<MPTraits>(), m_minCount(minCount) {
+IterationCountEvaluator(const double _minCount) :
+    MapEvaluatorMethod<MPTraits>(), m_minCount(_minCount) {
   this->SetName("IterationCountEvaluator");
 }
 
@@ -77,7 +63,8 @@ template <typename MPTraits>
 IterationCountEvaluator<MPTraits>::
 IterationCountEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("IterationCountEvaluator");
-  m_minCount = _node.Read("minCount", true, m_minCount,
+  m_minCount = _node.Read("minCount", true, m_minCount, 1U,
+                          std::numeric_limits<unsigned int>::max(),
                           "Number of ME calls before returning true.");
 }
 

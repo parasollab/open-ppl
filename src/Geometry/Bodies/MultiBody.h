@@ -129,7 +129,9 @@ class MultiBody {
     bool IsInternal() const noexcept;
 
     /// Is this MultiBody a composite body, i.e. having multiple decoupled
-    /// bases? (used for assembly planning)
+    /// bases? This is now ONLY used to check if an old version of disassembly
+    /// planning problem modeling is used! Composite C-Space that conforms to
+    /// this check is now depricated, and Group configurations should be used.
     bool IsComposite() const noexcept;
 
     /// Get the number of DOF for this multibody.

@@ -305,7 +305,7 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     // Get the first configuration.
-    const CfgType& node1 = _rmp->GetVertex(it1);
+    const GroupCfgType& node1 = _rmp->GetVertex(it1);
 
     // Compare it to everything in the second set.
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {

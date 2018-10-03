@@ -57,7 +57,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     BasicRRTStrategy(std::string _dm = "euclidean", std::string _nf = "bfnf",
         std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
         std::vector<std::string> _evaluators = std::vector<std::string>(),
-        std::string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
+        std::string _gt = "UNDIRECTED_TREE", bool _writeAllOutputs = true,
+        bool _growGoals = false,
         double _growthFocus = .05, size_t _numRoots = 1,
         size_t _numDirections = 1, size_t _maxTrial = 3);
 
@@ -78,6 +79,14 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Initialize() override;
     virtual void Iterate() override;
     virtual void Finalize() override;
+
+    ///@name Query Modifiers
+    ///@{
+
+    /// Set the query from outside of XML specification. For use with an
+    /// external strategy/module needing to use RRT.
+    /// @todo Remove, use substrategy instead.
+    void SetRRTQuery(RRTQuery<MPTraits>* _query) { m_query = _query; }
 
     ///@}
 
@@ -205,6 +214,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name RRT Properties
     ///@{
 
+    bool   m_writeAllOutputs{true}; ///< Write roadmap/stat output in Finalize.
     bool   m_growGoals;     ///< Grow trees from goals.
     double m_growthFocus;   ///< The fraction of goal-biased expansions.
     size_t m_numRoots;      ///< The number of roots to use without a query.
@@ -241,11 +251,13 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 template <typename MPTraits>
 BasicRRTStrategy<MPTraits>::
 BasicRRTStrategy(std::string _dm, std::string _nf, std::string _vc, std::string _nc,
-    std::string _ex, std::vector<std::string> _evaluators, std::string _gt, bool _growGoals,
+    std::string _ex, std::vector<std::string> _evaluators, std::string _gt,
+    bool _writeAllOutputs, bool _growGoals,
     double _growthFocus, size_t _numRoots, size_t _numDirections,
     size_t _maxTrial) :
     m_dmLabel(_dm), m_nfLabel(_nf), m_vcLabel(_vc), m_ncLabel(_nc),
-    m_exLabel(_ex), m_gt(_gt), m_growGoals(_growGoals),
+    m_exLabel(_ex), m_gt(_gt), m_writeAllOutputs(_writeAllOutputs),
+    m_growGoals(_growGoals),
     m_growthFocus(_growthFocus), m_numRoots(_numRoots),
     m_numDirections(_numDirections), m_maxTrial(_maxTrial) {
   this->SetName("BasicRRTStrategy");
@@ -265,6 +277,8 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
       "Fraction of goal-biased iterations");
   m_numDirections = _node.Read("m", false, 1, 1, 1000,
       "Number of directions to extend");
+  m_writeAllOutputs = _node.Read("writeAllOutputs", false, m_writeAllOutputs,
+      "Whether or not to print the roadmap and stat output in Finalize.");
   m_growGoals = _node.Read("growGoals", false, false,
       "Determines whether or not we grow a tree from the goal");
   m_maxTrial = _node.Read("trial", false, 3, 1, 1000,
@@ -329,13 +343,22 @@ Initialize() {
 
   GraphType* g = this->GetRoadmap()->GetGraph();
 
-  // Check for query info.
-  m_query = nullptr;
+  // If a query was loaded or has already been set, process query cfgs
+  const bool usingQuery = this->UsingQuery();
+  if(m_query or usingQuery) {
+    // If the query is already set, we need to update the ME's query to also
+    // match with what was set (implies it's a runtime-specific query, and so
+    // any xml settings aren't valid).
+    RRTQuery<MPTraits>* const XMLQuery = static_cast<RRTQuery<MPTraits>*>(
+                                       this->GetMapEvaluator("RRTQuery").get());
+    if(m_query) {
+      XMLQuery->SetQuery(m_query->GetQuery());
+      XMLQuery->SetGoals(m_query->GetGoals());
+    }
 
-  // If a query was loaded, process query cfgs
-  if(this->UsingQuery()) {
-    m_query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
-        get());
+    if(usingQuery)
+      m_query = XMLQuery;
+
     const std::vector<CfgType>& queryCfgs = m_query->GetQuery();
 
     // If growing goals, set each query cfg as its own tree
@@ -456,6 +479,7 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Finalize() {
+  if(m_writeAllOutputs) {
   // Output final map
   RoadmapType* map = this->GetRoadmap();
   std::string baseFilename = this->GetBaseFilename();
@@ -464,6 +488,14 @@ Finalize() {
   // Output stats
   std::ofstream osStat(baseFilename + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, map);
+}
+
+  // If a different module is calling RRT (like the RRT LP), this is used to say
+  // whether there was a time out or whether the query was actually successful.
+  if(m_query->GetGoals().empty())
+    this->m_successful = true; // Successful if all goals were reached.
+
+  m_query = nullptr;
 }
 
 /*--------------------------- Direction Helpers ------------------------------*/

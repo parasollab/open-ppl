@@ -258,7 +258,6 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     CfgType& end   = g->GetVertex(*(it+1));
 
     // Construct a resolution-level path along the recreated edge.
-    if(!ei->property().SkipEdge()) {
       std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
       recreatedEdge.insert(recreatedEdge.begin(), start);
       recreatedEdge.push_back(end);
@@ -267,12 +266,6 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
             std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
         out.insert(out.end(), edge.begin(), edge.end());
       }
-    }
-    else {
-      //For assembly planning: Don't reconstruct the edge when it's for a part
-      // that has been placed off to the side, just use the two cfgs.
-      out.push_back(start); // This edge will just be (start, end)
-    }
     out.push_back(end);
   }
   return out;

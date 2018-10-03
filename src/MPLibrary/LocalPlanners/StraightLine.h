@@ -273,9 +273,8 @@ StraightLine<MPTraits>::
 IsConnectedFunc(
     const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
     GroupLPOutput<MPTraits>* _lpOutput,
-    double _positionRes, double _orientationRes,
-    bool _checkCollision, bool _savePath,
-    const Formation& _robotIndexes) {
+    double _positionRes, double _orientationRes, bool _checkCollision,
+    bool _savePath, const Formation& _robotIndexes) {
 
   if(_robotIndexes.empty())
     throw RunTimeException(WHERE, "Need to call this function with valid "
@@ -333,7 +332,10 @@ IsConnectedFunc(
     if(subassemblyRotation) {
       // Handle subassembly rotation. We must update the delta transformation
       // due to Euler Angles not conforming to linear angle changes between cfgs
-      /// TODO: this can likely be optimized.
+
+      /// TODO: this can likely be optimized. For one, only one Configure call
+      /// should be necessary here. Also a lot of the group Cfgs here could be
+      /// made individual if using the leader, then using Configure on that.
       oneStep += incrUntouched;
 
       // Note we get the 0 body from the robot, as right now it's assumed that
@@ -361,7 +363,7 @@ IsConnectedFunc(
 
       if(this->m_debug)
         std::cout << "tick after rotation = " << tick.PrettyPrint()
-                  << std::endl;
+                  << std::endl << std::endl;
     }
     ++cdCounter;
     if(_checkCollision) {

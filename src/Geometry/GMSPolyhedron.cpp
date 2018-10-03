@@ -1,12 +1,5 @@
 #include "GMSPolyhedron.h"
 
-#include <CGAL/Polyhedron_incremental_builder_3.h>
-
-#include <algorithm>
-#include <fstream>
-#include <limits>
-#include <set>
-
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
 #include "ObjLoader.h"
@@ -15,6 +8,13 @@
 #include "Utilities/MPUtils.h"
 
 #include "glutils/triangulated_model.h"
+
+#include <CGAL/Polyhedron_incremental_builder_3.h>
+
+#include <algorithm>
+#include <fstream>
+#include <limits>
+#include <set>
 
 using namespace std;
 
@@ -77,6 +77,7 @@ GMSPolyhedron(glutils::triangulated_model&& _t) {
   }
 
   MarkDirty();
+  OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
 }
@@ -265,6 +266,7 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
     m_polygonList.emplace_back(t[0], t[1], t[2], m_vertexList);
 
   // Compute the surface area and radii.
+  OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
 
@@ -344,7 +346,7 @@ GMSPolyhedron::
 GetBoundaryLines() {
    BuildBoundary();
    return m_boundaryLines;
-};
+}
 
 /*--------------------------- Geometry Functions -----------------------------*/
 
@@ -614,6 +616,10 @@ ComputeBoundingPolyhedron() const {
   polys.emplace_back(0, 4, 1, verts);
   polys.emplace_back(0, 1, 5, verts);
 
+  bbx.OrderFacets();
+  bbx.ComputeSurfaceArea();
+  bbx.ComputeRadii();
+
   return bbx;
 }
 
@@ -702,6 +708,10 @@ ComputeConvexHull() const {
           indexes[2], convexHull.m_vertexList));
   }
 
+  convexHull.OrderFacets();
+  convexHull.ComputeSurfaceArea();
+  convexHull.ComputeRadii();
+
   return convexHull;
 }
 
@@ -761,7 +771,7 @@ BuildBoundary() {
 
   m_boundaryLines.clear();
   m_boundaryLines.reserve(lines.size());
-  copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
+  std::copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
 }
 
 
@@ -774,6 +784,13 @@ ComputeCentroid() const {
     centroid += v;
   centroid /= m_vertexList.size();
   m_centroidCached = true;
+}
+
+
+void
+GMSPolyhedron::
+OrderFacets() {
+  std::sort(m_polygonList.begin(), m_polygonList.end(), std::greater<GMSPolygon>());
 }
 
 

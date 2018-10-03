@@ -24,7 +24,7 @@ struct GroupLPOutput {
   typedef typename MPTraits::WeightType       IndividualEdge;
 
   typedef typename MPTraits::GroupCfgType     GroupCfgType;
-  typedef typename MPTraits::GroupWeightType  GroupWeightType;
+  typedef typename MPTraits::GroupWeightType  GroupWeightType; // GroupLocalPlan
   typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
   typedef std::vector<GroupCfgType>           GroupCfgPath;
 

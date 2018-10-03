@@ -4,7 +4,6 @@
 #include <algorithm>
 
 #include "Roadmap.h"
-#include "Behaviors/Agents/BatteryBreak.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
@@ -70,19 +69,6 @@ class GroupPath final {
     template <typename MPLibrary>
     const std::vector<GroupCfg> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
-
-    /// Find the furthest place and time in a path that an agent can travel to
-    /// before being required to return to a charger.
-    /// @params[in] _batteryLevel Current battery level of the agent.
-    /// @params[in] _rate Rate at which battery levels decrease.
-    /// @params[in] _threshold Lowest level battery can reach before charging.
-    /// @params[in] _currentTime current time for the path to start calculatin
-    ///         from.
-    /// @params[in] _timeRes Resolution of a single timestep.
-    template <typename MPLibrary>
-    BatteryBreak FindBatteryBreak(double _batteryLevel, double _rate,
-        double _theshold, double _currentTime, double _timeRes,
-        MPLibrary* const _lib);
 
     /// Append another path to the end of this one.
     /// @param[in] _p The path to append.
@@ -279,39 +265,6 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     out.push_back(end);
   }
   return out;
-}
-
-
-template <typename MPTraits>
-template <typename MPLibrary>
-BatteryBreak
-GroupPath<MPTraits>::
-FindBatteryBreak(double _batteryLevel, double _rate, double _threshold,
-                 double _currentTime, double _timeRes, MPLibrary* const _lib){
-  std::vector<GroupCfg> fullPath = FullCfgs(_lib);
-  /*std::cout << "Battery Level: " << _batteryLevel << "\nRate: " << _rate <<
-            "\nThreshold: " << _threshold << std::endl;
-  std::cout << "Printing full path" << std::endl;
-  for(auto cfg : fullPath){
-    std::cout << cfg << std::endl;
-  }*/
-  /*
-  //TODO: Figure out if the abstracted path will ever be necessary
-  std::cout << "Printing abstracted path" << std::endl;
-  std::vector<CfgType> path = Cfgs();
-  for(auto cfg : path){
-    std::cout << cfg << std::endl;
-  }*/
-  size_t cfgIt = 0; //keeps track of last path cfg reached before battery break
-  for(auto cfg : fullPath){
-    _batteryLevel -= _rate;
-    //std::cout << "BatteryLevel: " << _batteryLevel << std::endl;
-    if(_batteryLevel <= _threshold)
-      break;
-    _currentTime += _timeRes;
-    cfgIt++;
-  }
-  return BatteryBreak(fullPath[cfgIt], _currentTime);
 }
 
 

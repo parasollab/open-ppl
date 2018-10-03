@@ -10,15 +10,20 @@
 ///        built in as options.
 ///
 ///
+/// This is the Preemptive DFS method in:
+/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
+/// “A general and flexible search framework for disassembly planning,”
+/// in International Conference on Robotics and Automation, May 2018.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 
   public:
-//    typedef typename MPTraits::GroupCfgType                       GroupCfgType;
-    typedef typename DisassemblyMethod<MPTraits>::VID             VID;
-    typedef typename DisassemblyMethod<MPTraits>::VIDPath         VIDPath;
-    typedef typename DisassemblyMethod<MPTraits>::Formation       Formation;
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
+    typedef typename GroupCfgType::Formation     Formation;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename GroupRoadmapType::VID       VID;
+    typedef std::vector<VID>                     VIDPath;
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode DisassemblyNode;
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
@@ -39,10 +44,7 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) override {
-      throw RunTimeException(WHERE, "Unused by this strategy");
-      return Formation();
-    }
+    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
     virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
                                    const Formation& _subassembly) override;
 
@@ -242,6 +244,15 @@ SelectExpansionNode() {
   }
 
   return m_lastNode;
+}
+
+
+template <typename MPTraits>
+typename DisassemblyParallel<MPTraits>::Formation
+DisassemblyParallel<MPTraits>::
+SelectSubassembly(DisassemblyNode* _q) {
+  throw RunTimeException(WHERE, "Unused by this strategy");
+  return Formation();
 }
 
 

@@ -189,10 +189,17 @@ TestCfg(GroupCfgType& _cfg, const Formation& _activeRobots) {
   if (!vc->IsValid(_cfg, cdInfo, callee, _activeRobots))
     return false;
 
-  if(cdInfo.m_minDist == std::numeric_limits<double>::max())
+  const bool hasObstacles = this->GetEnvironment()->NumObstacles() > 0;
+  const bool movingAllRobots =
+          this->GetGroupTask()->GetRobotGroup()->Size() == _activeRobots.size();
+
+  // Check clearance is valid; having obstacles or not moving all robots means
+  // that the clearance value should not be the maximum.
+  if(cdInfo.m_minDist == std::numeric_limits<double>::max()
+      and (hasObstacles or !movingAllRobots))
     throw RunTimeException(WHERE, "Validity checker returned max value for "
-        "minimum clearance! This is not okay unless using an unlimited and "
-        "empty environment with a single robot!");
+        "minimum clearance! This is not okay unless using an "
+        "empty environment and moving all robots simultaneously in _cfg!");
 
   if (cdInfo.m_minDist < m_minDist) {
     if(this->m_debug)

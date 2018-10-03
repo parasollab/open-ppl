@@ -172,10 +172,6 @@ InitializeDOFs(const Boundary* const _b) {
     }
   }
 
-  if(IsComposite())
-    throw RunTimeException(WHERE, "Any composite bodies should be handled "
-                                  "through group cfgs now.");
-
   m_currentDofs.resize(DOF(), 0);
   Configure(m_currentDofs);
   FindMultiBodyInfo();
@@ -691,10 +687,6 @@ Configure(const vector<double>& _v) {
     index = PosDOF() + OrientationDOF();
   }
 
-  if(IsComposite())
-    throw RunTimeException(WHERE) << "Composite bodies should be handled "
-                                  << "through group cfgs.";
-
   // Configure the links.
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
@@ -876,6 +868,10 @@ UpdateLinks() {
 void
 MultiBody::
 FindMultiBodyInfo() {
+  if(IsComposite())
+    throw RunTimeException(WHERE) << "Composite bodies should be handled "
+                                  << "through group cfgs.";
+
   // Find COM
   m_com(0, 0, 0);
   for(auto& body : m_bodies)

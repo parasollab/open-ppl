@@ -79,12 +79,6 @@ class DefaultWeight {
     ControlSet& GetControlSet() noexcept;
     void SetControlSet(const ControlSet& _c) noexcept;
 
-    /// Call this so that Path::FullCfgs() doesn't reproduce intermediates for
-    /// this edge (only used for disassembly planning right now). This creates
-    /// INVALID roadmaps, and should only be used for visualization purposes.
-    void SetSkipEdge() { m_skipEdge = true; }
-    bool SkipEdge() { return m_skipEdge; }
-
     bool IsChecked(const int _mult) const noexcept;
     void SetChecked(const int _mult) noexcept;
 

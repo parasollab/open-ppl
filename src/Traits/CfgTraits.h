@@ -58,7 +58,6 @@
 #include "MPLibrary/Samplers/MaskedProximitySamplerGroup.h"
 #include "MPLibrary/Samplers/MaskedSamplerMethodGroup.h"
 #include "MPLibrary/Samplers/MatingNormalSamplerGroup.h"
-//#include "MPLibrary/Samplers/MatingSphereSampler.h" // TODO re-add once group-ified
 #include "MPLibrary/Samplers/MedialAxisSampler.h"
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
@@ -70,14 +69,15 @@
 #include "MPLibrary/Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
+#include "MPLibrary/LocalPlanners/ApproxSpheres.h"
 #include "MPLibrary/LocalPlanners/AStar.h"
 #include "MPLibrary/LocalPlanners/HierarchicalLP.h"
 #include "MPLibrary/LocalPlanners/MedialAxisLP.h"
 #include "MPLibrary/LocalPlanners/RotateAtS.h"
+#include "MPLibrary/LocalPlanners/RRTLocalPlanner.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/LocalPlanners/ToggleLP.h"
 #include "MPLibrary/LocalPlanners/TransformAtS.h"
-#include "MPLibrary/LocalPlanners/ApproxSpheres.h"
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
@@ -141,10 +141,9 @@
 #include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
 #include "MPLibrary/MPStrategies/DisassemblyParallel.h"
 #include "MPLibrary/MPStrategies/DisassemblyParallelizedSAs.h"
-#include "MPLibrary/MPStrategies/DisassemblyParallelRot.h"
+#include "MPLibrary/MPStrategies/DisassemblyPreemptiveDFSManipulator.h"
 #include "MPLibrary/MPStrategies/DisassemblyRRTStrategy.h"
-#include "MPLibrary/MPStrategies/DisassemblySequential.h"
-#include "MPLibrary/MPStrategies/DisassemblyThanhLe.h"
+#include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/HybridPRM.h"
@@ -247,7 +246,6 @@ struct MPTraits {
     GridSampler<MPTraits>,
     MaskedProximitySamplerGroup<MPTraits>,
     MatingNormalSamplerGroup<MPTraits>,
-//    MatingSphereSampler<MPTraits>, // TODO: re-add once group-ified
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
@@ -266,6 +264,7 @@ struct MPTraits {
     HierarchicalLP<MPTraits>,
     MedialAxisLP<MPTraits>,
     RotateAtS<MPTraits>,
+    RRTLocalPlanner<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
     TransformAtS<MPTraits>,
@@ -365,10 +364,9 @@ struct MPTraits {
     DisassemblyExhaustiveGraph<MPTraits>,
     DisassemblyParallel<MPTraits>,
     DisassemblyParallelizedSAs<MPTraits>,
-    DisassemblyParallelRot<MPTraits>,
+    DisassemblyPreemptiveDFSManipulator<MPTraits>,
     DisassemblyRRTStrategy<MPTraits>,
-    DisassemblySequential<MPTraits>,
-    DisassemblyThanhLe<MPTraits>,
+    DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     HybridPRM<MPTraits>,

@@ -233,7 +233,7 @@ IsValidImpl(GroupCfg& _cfg, CDInfo& _cdInfo, const string& _callName,
   //check collision
   if(this->m_debug) {
     std::cout << "Not using desired active robots " << _robotIndexes
-              << " and instead checking ALL robots in debug mode!" << std::endl;
+              << " and instead checking ALL robots in debug mode." << std::endl;
     // Pass empty vector as that means check all robots exhaustively.
     inCollision = IsInCollision(_cdInfo, _cfg, _callName, {});
   }
@@ -254,6 +254,7 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
 
   const Environment* const env = this->GetEnvironment();
   auto multiBody = _cfg.GetMultiBody();
+  auto robot = _cfg.GetRobot();
 
   //check self collision
   if(!m_ignoreSelfCollision and multiBody->GetNumBodies() > 1 and
@@ -319,24 +320,33 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
   }
 
   // Check against other robots if requested.
-  if(m_interRobotCollision) {
+  if(m_interRobotCollision and !robot->IsVirtual()) {
+    if(this->m_debug)
+      std::cout << "Checking inter-robot collisions with robot "
+                << robot->GetLabel() << std::endl;
+
     const auto& allRobots = this->GetMPProblem()->GetRobots();
-    for(const auto& robot : allRobots) {
+    for(const auto& otherRobot : allRobots) {
       // Skip self-checks and checks against virtual robots.
-      if(_cfg.GetRobot() == robot.get() or robot->IsVirtual())
+      if(robot == otherRobot.get() or otherRobot->IsVirtual())
         continue;
+
+      if(this->m_debug)
+        std::cout << "Checking against robot " << otherRobot->GetLabel()
+                  << std::endl;
 
       // Perform the collision check.
       CDInfo cdInfo(_cdInfo.m_retAllInfo);
       const bool collision = IsMultiBodyCollision(cdInfo,
-          _cfg.GetRobot()->GetMultiBody(), robot->GetMultiBody(), _callName);
+          robot->GetMultiBody(), otherRobot->GetMultiBody(), _callName);
+
       if(collision) {
         if(this->m_debug)
           std::cout << "Inter-robot collision detected:"
                     << "\n\tRobot1: " << _cfg.GetRobot()->GetLabel()
                     << "\n\tCfg1: " << _cfg.PrettyPrint()
-                    << "\n\tRobot2: " << robot->GetLabel()
-                    << "\n\tCfg2: " << robot->GetMultiBody()->GetCurrentDOFs()
+                    << "\n\tRobot2: " << otherRobot->GetLabel()
+                    << "\n\tCfg2: " << otherRobot->GetMultiBody()->GetCurrentDOFs()
                     << std::endl;
         return true;
       }
@@ -409,8 +419,11 @@ IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg, const string& _callName,
               "sets of robot bodies:" << std::endl << "Moving bodies: "
               << movingRobots << "Other bodies: " << otherRobots << std::endl;
 
-  /// Size the self-clearance vector
-  _cdInfo.m_selfClearance.resize(_cfg.GetNumRobots(), numeric_limits<double>::max());
+  // Create a self-clearance vector to track collision info with other robots.
+  /// @todo Replace our disjoint collison storage with something that works for
+  ///       all collision types.
+  std::vector<double> selfClearance(_cfg.GetNumRobots(),
+      numeric_limits<double>::max());
 
   for(const size_t i : movingRobots) {
     MultiBody* const movingMultiBody = _cfg.GetRobot(i)->GetMultiBody();
@@ -420,19 +433,22 @@ IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg, const string& _callName,
 
       MultiBody* const otherMultiBody = _cfg.GetRobot(j)->GetMultiBody();
       CDInfo tempInfo(_cdInfo.m_retAllInfo);
+
       // Use parent's multibody collision check:
       if(this->IsMultiBodyCollision(tempInfo, movingMultiBody, otherMultiBody,
                                     _callName)) {
         _cdInfo.m_collidingObstIndex = -1;
         if(!_cdInfo.m_retAllInfo) {
-          _cdInfo.m_selfClearance[j] = tempInfo.m_minDist;
+          selfClearance[j] = tempInfo.m_minDist;
+          _cdInfo.m_selfClearance = std::move(selfClearance);
           return true; // Short-circuit if we don't need all (clearance) info.
         }
 
         inCollision = true;
       }
+
       // Keep track of same-group distances:
-      _cdInfo.m_selfClearance[j] = tempInfo.m_minDist;
+      selfClearance[j] = std::min(selfClearance[j], tempInfo.m_minDist);
 
       // Whether or not there was a collision, check if clearances need updating
       if(tempInfo < _cdInfo)
@@ -465,11 +481,15 @@ IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg, const string& _callName,
 
         //early quit if we don't care about distance information
         if(!_cdInfo.m_retAllInfo)
+        {
+          _cdInfo.m_selfClearance = std::move(selfClearance);
           return true;
       }
     }
   }
+  }
 
+  _cdInfo.m_selfClearance = selfClearance;
   return inCollision;
 }
 

@@ -498,10 +498,12 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Uninitialize() {
-  // For now, hooks are only supported by single robots (not groups), so that
-  // can be triggered by the robot group pointer being set and the robot pointer
-  // being null.
-  if(!m_solution->GetRobotGroup() && m_solution->GetRobot())
+  GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
+  if(groupMap)
+    groupMap->ClearHooks(); // Clear each individual roadmap's hooks.
+
+  // Also clear hooks for the individual robot if it exists:
+  if(m_solution->GetRobot())
     this->GetRoadmap()->GetGraph()->ClearHooks();
 }
 
