@@ -1,5 +1,5 @@
-#ifndef BOUNDARY_H_
-#define BOUNDARY_H_
+#ifndef PMPL_BOUNDARY_H_
+#define PMPL_BOUNDARY_H_
 
 #include <cstddef>
 #include <iostream>

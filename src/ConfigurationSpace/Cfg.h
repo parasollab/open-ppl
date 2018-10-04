@@ -51,13 +51,13 @@ class Cfg {
     explicit Cfg();
 
     /// Construct a configuration for a given robot.
-    /// @param[in] _robot The robot this represents.
+    /// @param _robot The robot this represents.
     explicit Cfg(Robot* const _robot);
 
     /// Construct a configuration for a given robot at a specified point in
     /// workspace.
-    /// @param[in] _v The workspace location of the robot's reference point.
-    /// @param[in] _robot The robot to represent.
+    /// @param _v The workspace location of the robot's reference point.
+    /// @param _robot The robot to represent.
     explicit Cfg(const mathtool::Vector3d& _v, Robot* const _robot = nullptr);
 
     Cfg(const Cfg& _other);
@@ -215,7 +215,7 @@ class Cfg {
 
     /// Test if a configuration lies within a boundary and also within the
     /// robot's c-space limits.
-    /// @param[in] _boundary The boundary to check.
+    /// @param _boundary The boundary to check.
     /// @return True if the configuration places the robot inside both the
     ///         boundary and its DOF limits.
     bool InBounds(const Boundary* const _b) const noexcept;

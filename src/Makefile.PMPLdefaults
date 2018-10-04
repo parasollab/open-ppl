@@ -416,10 +416,11 @@ PMPL_SRCS := \
   Geometry/Bodies/Connection.cpp \
   Geometry/Bodies/DHParameters.cpp \
   Geometry/Bodies/MultiBody.cpp \
-  Geometry/Boundaries/Boundary.cpp \
   Geometry/Boundaries/AbstractBoundingBox.cpp \
   Geometry/Boundaries/AbstractBoundingSphere.cpp \
   Geometry/Boundaries/AbstractBoundingSphericalShell.cpp \
+  Geometry/Boundaries/Boundary.cpp \
+  Geometry/Boundaries/BoundaryIntersection.cpp \
   Geometry/Boundaries/CSpaceBoundingBox.cpp \
   Geometry/Boundaries/CSpaceBoundingSphere.cpp \
   Geometry/Boundaries/TetrahedralBoundary.cpp \

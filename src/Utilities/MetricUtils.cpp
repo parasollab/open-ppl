@@ -251,6 +251,13 @@ IncStat(const std::string& _s, const double _v) {
 }
 
 
+Average<double>&
+StatClass::
+GetAverage(const std::string& _s) {
+  return m_averages[_s];
+}
+
+
 std::vector<double>&
 StatClass::
 GetHistory(const std::string& _s) {
@@ -349,6 +356,21 @@ PrintAllStats(std::ostream& _os) {
       _os << "  "
           << std::setw(68) << std::left  << stat.first
           << std::setw(10) << std::right << stat.second
+          << std::endl;
+  }
+
+  // Output averages.
+  if(!m_averages.empty()) {
+    _os << "\n\n"
+        << std::setw(60) << std::left  << "Averages"
+        << std::setw(10) << std::right << "Value"
+        << std::setw(10) << std::right << "Count"
+        << "\n\n";
+    for(const auto& stat : m_averages)
+      _os << "  "
+          << std::setw(58) << std::left  << stat.first
+          << std::setw(10) << std::right << stat.second.Get()
+          << std::setw(10) << std::right << stat.second.Count()
           << std::endl;
   }
 

@@ -1,5 +1,5 @@
-#ifndef METRIC_UTILS_H_
-#define METRIC_UTILS_H_
+#ifndef PMPL_METRIC_UTILS_H_
+#define PMPL_METRIC_UTILS_H_
 
 #include <cstddef>
 #include <iomanip>
@@ -14,6 +14,64 @@
 #ifndef _PARALLEL
 #include <containers/sequential/graph/algorithms/connected_components.h>
 #endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Keep a running total and count of any type which supports addition and
+/// division.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+class Average final
+{
+
+  ///@name Internal State
+  ///@{
+
+  size_t m_count{0}; ///< The number of elements summed.
+  T m_total{T()};    ///< The running total.
+
+  ///@}
+
+  public:
+
+    ///@name Construction
+    ///@{
+
+    Average() = default;
+
+    Average(const T& _firstValue, const size_t _count = 1) : m_total(_firstValue),
+        m_count(_count) {}
+
+    ///@}
+    ///@name Interface
+    ///@{
+
+    /// Add an element to the average.
+    /// @param _value The element to add.
+    void operator+=(const T& _value) noexcept {
+      m_total += _value;
+      ++m_count;
+    }
+
+    /// Add one or more elements (pre-summed) to the average.
+    /// @param _sum The summed elements to add.
+    /// @param _count The number of elements.
+    void AddSummedValues(const T& _sum, const size_t _count) noexcept {
+      m_total += _sum;
+      m_count += _count;
+    }
+
+    /// Get the average.
+    T Get() const noexcept {return m_total / m_count;}
+
+    /// Get the total sum.
+    const T& Sum() const noexcept {return m_total;}
+
+    /// Get the number of elements included.
+    size_t Count() const noexcept {return m_count;}
+
+    ///@}
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,6 +168,9 @@ class StatClass final {
     void SetStat(const std::string& _s, const double _v);
     void IncStat(const std::string& _s, const double _v = 1);
 
+    // Average Accessors
+    Average<double>& GetAverage(const std::string& _s);
+
     // Histories
     std::vector<double>& GetHistory(const std::string& _s);
     void AddToHistory(const std::string& _s, double _v);
@@ -153,6 +214,7 @@ class StatClass final {
 
     std::map<std::string, size_t> m_numCollDetCalls;
     std::map<std::string, double> m_stats;
+    std::map<std::string, Average<double>> m_averages;
     std::map<std::string, std::vector<double>> m_histories;
     std::string m_auxFileDest;
 

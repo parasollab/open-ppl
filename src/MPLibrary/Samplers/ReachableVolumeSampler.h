@@ -4,6 +4,7 @@
 #include "SamplerMethod.h"
 #include "Vector.h"
 #include "ConfigurationSpace/ReachableVolumes.h"
+#include "Geometry/Boundaries/BoundaryIntersection.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphericalShell.h"
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Bodies/Chain.h"
@@ -58,33 +59,45 @@ class ReachableVolumeSampler : public SamplerMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
+    virtual void Initialize() override;
+
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
 
   protected:
 
-    ///@name Sampler Rule
+    ///@name SamplerMethod Overrides
     ///@{
 
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         std::vector<CfgType>& _result, std::vector<CfgType>& _collision)
         override;
 
-    /// @return False if we fail to generate a valid RV placement.
-    bool SampleInternal(Chain& _chain,
-        std::vector<JointPlacement>& _jointPlacements,
-        Vector3d& _center, Vector3d& _endEffectorPoint);
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
+        const Boundary* const _eeBoundary,
+        std::vector<CfgType>& _result, std::vector<CfgType>& _collision)
+        override;
 
     ///@}
     ///@name Helper functions
     ///@{
 
+    /// Recursively sample a chain using reachable volumes to generate valid
+    /// workspace positions for each joint.
+    /// @param _chain The chain to sample.
+    /// @param _jointPlacements The workspace point for each joint in _chain.
+    /// @param _basePosition
+    /// @return False if we fail to generate a valid RV placement.
+    bool SampleInternal(const Chain& _chain,
+        std::vector<JointPlacement>& _jointPlacements,
+        const Vector3d& _basePosition, const Vector3d& _eePosition);
+
     /// Align the base of a randomly generated configuration so that the base
     /// and first joint match an RV sample. Must be done prior to computing the
     /// c-space joint angles from the RV sample.
-    /// @param _cfg A randomly generated c-space sample, which will be
-    ///             re-oriented to match _rvPoints.
+    /// @param _cfg A c-space sample. Its base will be reconfigured to match
+    ///             _rvPoints.
     /// @param _rvPoints The generated RV sample.
     void AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints);
 
@@ -94,10 +107,10 @@ class ReachableVolumeSampler : public SamplerMethod<MPTraits> {
     /// @param _chain The chain structure describing the joint ordering.
     /// @param _jointPlacements A set of workspace positions for each joint in
     ///        _chain.
-    /// @param _endEffectorPoint The position of the end-effector in workspace.
+    /// @param _eePosition The position of the end-effector in workspace.
     std::vector<Vector3d> ConstructRVSample(const Vector3d& _basePosition,
         const Chain& _chain, const std::vector<JointPlacement>& _jointPlacements,
-        const Vector3d& _endEffectorPoint);
+        const Vector3d& _eePosition);
 
     /// Finds the workspace position of a joint from a set of joint placements.
     /// @param _points A set of workspace positions for each joint.
@@ -107,12 +120,19 @@ class ReachableVolumeSampler : public SamplerMethod<MPTraits> {
     Vector3d FindJointPosition(const std::vector<JointPlacement>& _points,
         const Connection* _joint);
 
-    Vector3d ComputePointonIntersection(
-        const std::pair<Vector3d, double>& sphere1,
-        const std::pair<Vector3d, double>& sphere2);
+    /// Compute a point in the intersection of two reachable volumes.
+    /// @param _leftRV The reachable volume of the left chain.
+    /// @param _rightRV The reachable volume of the right chain.
+    /// @return A point inside both _leftRV and _rightRV. Second element will be
+    ///         true iff the sampling succeeded..
+    std::pair<Vector3d, bool> ComputePointOnIntersection(
+        const WorkspaceBoundingSphericalShell& _leftRV,
+        const WorkspaceBoundingSphericalShell& _rightRV);
 
-    void ConvertToCfgSample(CfgType& _cfg,
-        const std::vector<Vector3d>& _rvPoints);
+    /// Convert an RV-space sample to its C-space equivalent.
+    /// @param _rvPoints The RV-space sample.
+    /// @return A configuration which places the robot at the RV sample.
+    CfgType ConvertToCfgSample(const std::vector<Vector3d>& _rvPoints);
 
     ///@}
 
@@ -149,9 +169,118 @@ ReachableVolumeSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 ReachableVolumeSampler<MPTraits>::
+Initialize() {
+  // For now we require a three-dimensional environment. Assert that now.
+  const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
+  if(dimension != 3)
+    throw RunTimeException(WHERE) << "Currently requires 3-d environment, but "
+                                  << "this problem has " << dimension
+                                  << " workspace dimensions.";
+}
+
+
+template <typename MPTraits>
+void
+ReachableVolumeSampler<MPTraits>::
 Print(std::ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
   _os << "\tvcLabel = " << m_vcLabel << std::endl;
+}
+
+/*-------------------------- SamplerMethod Overrides -------------------------*/
+
+template <typename MPTraits>
+bool
+ReachableVolumeSampler<MPTraits>::
+Sampler(CfgType& _cfg, const Boundary* const _boundary,
+    std::vector<CfgType>& _result, std::vector<CfgType>& _collision) {
+  return Sampler(_cfg, _boundary, nullptr, _result, _collision);
+}
+
+
+template <typename MPTraits>
+bool
+ReachableVolumeSampler<MPTraits>::
+Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
+    const Boundary* const _eeBoundary,
+    std::vector<CfgType>& _result, std::vector<CfgType>& _collision) {
+  MethodTimer mt(this->GetStatClass(), "ReachableVolumeSampler::Sampler");
+
+  // Decompose the robot into linear chains. Enforce our present assumption that
+  // the robot is a single chain.
+  std::vector<Chain> chains = Chain::Decompose(_cfg.GetMultiBody());
+  if(chains.size() != 1)
+    throw RunTimeException(WHERE) << "Only single-chain robots are supported "
+                                  << "right now, but Chain::Decompose generated "
+                                  << chains.size() << " chains: "
+                                  << chains
+                                  << std::endl;
+  Chain& chain = chains.front();
+
+  if(this->m_debug)
+    std::cout << "\nChain: " << chain << std::endl;
+
+  const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
+  const bool threeD = dimension == 3;
+
+  // Find points for the base and end-effector.
+  Vector3d basePoint(0, 0, 0),
+           eePoint(0, 0, 0);
+
+  // If there is an EE boundary, sample a point from within.
+  if(_eeBoundary) {
+    // Sample an EE position from its boundary.
+    const std::vector<double> eeSample = _eeBoundary->GetRandomPoint();
+
+    // Reverse the chain and find the reachable volume of the base relative to
+    // this EE position.
+    chain.Reverse();
+    const WorkspaceBoundingSphericalShell rv = ComputeReachableVolume(dimension,
+        eeSample, chain);
+    chain.Reverse();
+
+    // Sample a random base point from this reachable volume.
+    const std::vector<double> baseSample = rv.GetRandomPoint();
+
+    basePoint(baseSample[0], baseSample[1], threeD ? baseSample[2] : 0.);
+    eePoint(    eeSample[0],   eeSample[1], threeD ?   eeSample[2] : 0.);
+  }
+  else {
+    // If there is no EE boundary, use the sampled base point.
+    basePoint = _cfg.GetPoint();
+
+    // Compute the RV of the chain relative to the sampled base point.
+    const WorkspaceBoundingSphericalShell rv = ComputeReachableVolume(dimension,
+        std::vector<double>{basePoint[0], basePoint[1], threeD ? basePoint[2] : 0.},
+        chain);
+
+    // Set the end-effector at a point in the chain's RV.
+    const std::vector<double> sample = rv.GetRandomPoint();
+    eePoint(sample[0], sample[1], threeD ? sample[2] : 0.);
+  }
+
+  // Generate samples for the internal joints. If it fails, return false.
+  std::vector<JointPlacement> jointPlacements;
+  if(!SampleInternal(chain, jointPlacements, basePoint, eePoint))
+    return false;
+
+  // Make a sample in RV space.
+  const std::vector<Vector3d> rvSample = ConstructRVSample(basePoint, chain,
+      jointPlacements, eePoint);
+
+  // Convert RV sample to C-space sample. Translation was already randomized
+  // prior to input.
+  _cfg = ConvertToCfgSample(rvSample);
+
+  // Check for validity.
+  auto vcm = this->GetValidityChecker(m_vcLabel);
+  const bool valid = vcm->IsValid(_cfg, this->GetNameAndLabel() + "::Sampler");
+  if(valid)
+    _result.push_back(_cfg);
+  else
+    _collision.push_back(_cfg);
+
+  return valid;
 }
 
 /*----------------------------Helper Functions--------------------------------*/
@@ -229,9 +358,9 @@ AlignBase(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
 
 
 template <typename MPTraits>
-void
+typename MPTraits::CfgType
 ReachableVolumeSampler<MPTraits>::
-ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
+ConvertToCfgSample(const std::vector<Vector3d>& _rvPoints) {
   /// @note We will assume that the articulated angle is always positive to
   ///       simplify calculation of the rotational angle. We should eventually
   ///       adjust this to sample the sign of the articulated angle so that we
@@ -242,16 +371,15 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
   ///       object because it will eventually have to consider additional joint
   ///       types and base movements.
 
+  // Create a zero configuration for the current robot.
+  CfgType cfg(this->GetTask()->GetRobot());
+
   // Align the base so that the base is at the first RV point and the first
   // joint is at the second RV point.
-  AlignBase(_cfg, _rvPoints);
-
-  // Initialize the joint angles at zero.
-  _cfg.SetJointData(std::vector<double>(_cfg.JointDOF(), 0));
-  _cfg.ConfigureRobot();
+  AlignBase(cfg, _rvPoints);
 
   // Keep track of the current DOF we are modifying.
-  size_t dofIndex = _cfg.DOF() - _cfg.JointDOF();
+  size_t dofIndex = cfg.DOF() - cfg.JointDOF();
 
   // Compute the angles for every joint (angle from vertical). The current
   // layout for spherical joints has the rotational angle first and articulated
@@ -288,7 +416,7 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
     // not have any Z component in the local frame because this is the axis of
     // rotation.
     const size_t jointNumber = std::distance(_rvPoints.begin(), iter2) - 1;
-    const Connection* const joint = _cfg.GetMultiBody()->GetJoint(jointNumber);
+    const Connection* const joint = cfg.GetMultiBody()->GetJoint(jointNumber);
     auto transformation = joint->GetPreviousBody()->GetWorldTransformation()
                         * joint->GetTransformationToDHFrame();
 
@@ -305,13 +433,13 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
                                  : std::atan2(orthLocal[1], orthLocal[0]) / PI;
 
     // Set the rotational and articulated angles for this joint.
-    _cfg[dofIndex++] = rotationalAngle;
-    _cfg[dofIndex++] = articulatedAngle;
+    cfg[dofIndex++] = rotationalAngle;
+    cfg[dofIndex++] = articulatedAngle;
 
     // Make sure the robot is updated with these joint angles for the next
     // iteration. We can probably do this more efficiently by adjusting
     // MultiBody::Configure to resolve lazily, but need to test that carefully.
-    _cfg.ConfigureRobot();
+    cfg.ConfigureRobot();
 
 
     if(this->m_debug) {
@@ -338,49 +466,107 @@ ConvertToCfgSample(CfgType& _cfg, const std::vector<Vector3d>& _rvPoints) {
   if(this->m_debug) {
     std::cout << "\nLast RV point: " << _rvPoints.back()
               << "\nEE position:   "
-              << _cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().
+              << cfg.GetMultiBody()->GetBodies().back().GetWorldTransformation().
                  translation()
-              << "\nCfg generated: " << _cfg.PrettyPrint()
+              << "\nCfg generated: " << cfg.PrettyPrint()
               << std::endl;
   }
+
+  return cfg;
 }
 
 
 template <typename MPTraits>
-Vector3d
+std::pair<Vector3d, bool>
 ReachableVolumeSampler<MPTraits>::
-ComputePointonIntersection(const std::pair<Vector3d, double>& sphere1,
-        const std::pair<Vector3d, double>& sphere2) {
-  //calculate the center and radius of intersection circle
-  const Vector3d& center1 = sphere1.first;
-  const Vector3d& center2 = sphere2.first;
+ComputePointOnIntersection(const WorkspaceBoundingSphericalShell& _leftRV,
+    const WorkspaceBoundingSphericalShell& _rightRV) {
+  auto stats = this->GetStatClass();
 
-  double radius1 = sphere1.second;
-  double radius2 = sphere2.second;
+  // Ensure there is some overlap between the reachable volumes.
+  const double leftRadius  = _leftRV.GetOuterRadius(),
+               rightRadius = _rightRV.GetOuterRadius();
 
-  //get distance between centers
-  const Vector3d direction = (center2 - center1);
-  double d = direction.norm();
-  //get center of the intersecting circle
-  double h = (1/2.0) + (radius1*radius1 - radius2*radius2) /
-        (2 * d*d);
+  const Vector3d leftCenter(_leftRV.GetCenter().data()),
+                 rightCenter(_rightRV.GetCenter().data()),
+                 direction(rightCenter - leftCenter);
 
-  double ri = std::sqrt(radius1*radius1 - h*h * d*d); //compute radius of intersecting circle
-  Vector3d ci = center1 + h * direction; //compute center of intersect circle
+  const double distance = direction.norm(),
+               overlap = leftRadius + rightRadius - distance;
+  if(overlap < 0)
+    throw RunTimeException(WHERE) << "No overlap between RVs! "
+                                  << "This should not be possible.";
+  /// @todo If overlap is greater than but close to 0, we should just pick
+  ///       the overlap point as it will be very hard to sample.
 
-  //calculate point on intersecting circle
-  Vector3d axis(0,1,0);
-  const Vector3d normal = direction / d;
-  if(normal * axis > .9) {
-    axis(1,0,0);
+  // Sample the splitting joint placement.
+  std::pair<Vector3d, bool> jointPosition{Vector3d(), false};
+
+  // If either RV has volume, we must presently use rejection sampling.
+  if(_rightRV.GetOuterRadius() != _rightRV.GetInnerRadius() or
+      _leftRV.GetOuterRadius() != _leftRV.GetInnerRadius())
+  {
+    MethodTimer mt(stats, "ReachableVolumeSampler::RejectionSampling");
+
+    constexpr const size_t maxAttempts = 1000;
+    size_t attempts = 0;
+    const std::vector<double> sample = RejectionSampleIntersection(
+        &_leftRV, &_rightRV, maxAttempts, &attempts);
+
+    auto& success = stats->GetAverage(
+        "ReachableVolumeSampler::RejectionSamplingSuccessRate");
+
+    // The sampling failed if the result is empty.
+    if(sample.empty()) {
+      success.AddSummedValues(0, attempts);
+      if(this->m_debug)
+        std::cout << "No valid point in both RVs." << std::endl;
+      return jointPosition;
+    }
+
+    // Otherwise we successfully generated a sample.
+    success.AddSummedValues(1, attempts);
+    jointPosition.first = Vector3d(sample.data());
+    jointPosition.second = true;
   }
-  Vector3d tangent = (axis % normal).normalize();
-  Vector3d bitangent = tangent % normal; //compute perp of tangent and normal
+  // If both RVs have no volume, then they intersect along a single circle.
+  // Compute this directly and sample it.
+  else {
+    MethodTimer mt(stats, "ReachableVolumeSampler::CircleSampling");
 
-  //compute random point on this circle
-  double rad = DRand() * (2.0 * M_PI);
-  Vector3d point = ci + (ri * (tangent * cos(rad) + bitangent * sin(rad)));
-  return point;
+    // Compute the intersecting circle.
+    const double dd  = distance * distance,
+                 lrr = leftRadius * leftRadius,
+                 rrr = rightRadius * rightRadius,
+                 h   = .5 + (lrr - rrr) / (2 * dd),
+                 intersectingRadius  = std::sqrt(lrr - h*h * dd);
+
+    const Vector3d intersectingCenter = leftCenter + h * direction;
+
+    // Find two orthogonal vectors in the plane of the intersecting circle.
+    const Vector3d normal = direction / distance;
+    Vector3d random(0,1,0);
+    if(normal * random > .9)
+      random(1,0,0);
+    const Vector3d localX = (random % normal).selfNormalize(),
+                   localY = (normal % localX).selfNormalize();
+
+    // Sample a random unit vector in the frame of localX, localY.
+    const double radians = DRand() * TWOPI;
+    const Vector3d localUnit = localX * std::cos(radians)
+                             + localY * std::sin(radians);
+
+    // Compute a point on the intersection circle using the center, radius, and
+    // random unit vector.
+    jointPosition.first = intersectingCenter + intersectingRadius * localUnit;
+    jointPosition.second = true;
+  }
+
+  if(this->m_debug)
+    std::cout << "Sampled intersecting point: " << jointPosition.first
+              << std::endl;
+
+  return jointPosition;
 }
 
 
@@ -388,8 +574,8 @@ template <typename MPTraits>
 std::vector<mathtool::Vector3d>
 ReachableVolumeSampler<MPTraits>::
 ConstructRVSample(const mathtool::Vector3d& _basePosition, const Chain& _chain,
-                  const std::vector<JointPlacement>& _jointPlacements,
-                  const mathtool::Vector3d& _endEffectorPoint) {
+    const std::vector<JointPlacement>& _jointPlacements,
+    const mathtool::Vector3d& _eePosition) {
   // Create storage for a reachable volume sample. Reserve space for each link.
   std::vector<Vector3d> rvSample;
   rvSample.reserve(_chain.Size());
@@ -405,7 +591,7 @@ ConstructRVSample(const mathtool::Vector3d& _basePosition, const Chain& _chain,
     rvSample.push_back(FindJointPosition(_jointPlacements, *iter));
 
   // The last point is the location of the end-effector.
-  rvSample.push_back(_endEffectorPoint);
+  rvSample.push_back(_eePosition);
   return rvSample;
 }
 
@@ -424,28 +610,22 @@ FindJointPosition(const std::vector<JointPlacement>& _points,
   throw RunTimeException(WHERE) << "Joint not found in the list of sampled points.";
 }
 
-/*------------------------------ Sampler Rule --------------------------------*/
 
 template <typename MPTraits>
 bool
 ReachableVolumeSampler<MPTraits>::
-SampleInternal(Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
-            Vector3d& _center, Vector3d& _endEffectorPoint) {
-  //TODO: adapt this code to work with the given dimensions; right now only
-  //3 dimensions is supported
-
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "ReachableVolume::SampleInternal");
-
-  // TODO
-  // If the chain is just one link?
+SampleInternal(const Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
+    const Vector3d& _basePosition, const Vector3d& _eePosition) {
+  // If the chain is just one link, we have already placed all of the attached
+  // joints.
   if(_chain.IsSingleLink())
     return true;
 
   // Split the chain orient the subchains (left forward-oriented (base -> EE)
   // and right backward-oriented (EE -> base)).
   std::pair<Chain, Chain> splitChain = _chain.Bisect();
-  Chain* leftChain, * rightChain;
+  Chain* leftChain,
+       * rightChain;
   if(_chain.IsForward()) {
     leftChain = &splitChain.first;
     rightChain = &splitChain.second.Reverse();
@@ -455,224 +635,53 @@ SampleInternal(Chain& _chain, std::vector<JointPlacement>& _jointPlacements,
     rightChain = &splitChain.first;
   }
 
-  if(this->m_debug) {
-    std::cout << "\nleft chain: " << *leftChain
-              << "\nright chain: " << *rightChain
-              <<  std::endl;
-  }
-
-  // Find the base point for each chain.
-  const Vector3d& leftPoint = leftChain->GetFrontBody()
-      ? _center
+  // Find the root point for each chain.
+  const Vector3d& leftRoot = leftChain->GetFrontBody()
+      ? _basePosition
       : FindJointPosition(_jointPlacements, *(leftChain->begin()));
-  const Vector3d& rightPoint = rightChain->GetFrontBody()
-      ? _endEffectorPoint
+  const Vector3d& rightRoot = rightChain->GetFrontBody()
+      ? _eePosition
       : FindJointPosition(_jointPlacements, *(rightChain->begin()));
 
   const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
-  std::vector<double> pl(dimension);
-  std::vector<double> pr(dimension);
+  const bool threeD = dimension == 3;
 
-  for(size_t i = 0; i < dimension; ++i) {
-    pl[i] = leftPoint[i];
-    pr[i] = rightPoint[i];
-  }
-
-  // Compute reachable volumes for both chains.
-  WorkspaceBoundingSphericalShell rvl = ComputeReachableVolume(dimension, pl,
-      *leftChain);
-  WorkspaceBoundingSphericalShell rvr = ComputeReachableVolume(dimension, pr,
-      *rightChain);
+  // Compute reachable volumes for both chains relative to their root points.
+  const WorkspaceBoundingSphericalShell rvl = ComputeReachableVolume(dimension,
+      { leftRoot[0],  leftRoot[1], threeD ?  leftRoot[2] : 0.}, *leftChain);
+  const WorkspaceBoundingSphericalShell rvr = ComputeReachableVolume(dimension,
+      {rightRoot[0], rightRoot[1], threeD ? rightRoot[2] : 0.}, *rightChain);
 
   if(this->m_debug) {
-    std::cout << "\nLeft point: " << leftPoint
-              << "\nRight point: " << rightPoint
-              << "\nOuter radius left rv: " << rvl.GetOuterRadius()
-              << "\nLength of left rv: "
-              << rvl.GetOuterRadius() - rvl.GetInnerRadius()
-              << "\nOuter radius right rv: " << rvr.GetOuterRadius()
-              << "\nLength of right rv: "
-              << rvr.GetOuterRadius() - rvr.GetInnerRadius()
+    std::cout << "\nLeft chain: " << *leftChain
+              << "\nLeft RV:"
+              << "\n\troot: " << leftRoot
+              << "\n\tInner radius: " << rvl.GetInnerRadius()
+              << "\n\tOuter radius: " << rvl.GetOuterRadius()
+              << "\n\tThickness: " << rvl.GetOuterRadius() - rvl.GetInnerRadius()
+              << "\nRight chain: " << *rightChain
+              << "\nRight RV:"
+              << "\n\troot: " << rightRoot
+              << "\n\tInner radius: " << rvr.GetInnerRadius()
+              << "\n\tOuter radius: " << rvr.GetOuterRadius()
+              << "\n\tThickness: " << rvr.GetOuterRadius() - rvr.GetInnerRadius()
               << std::endl;
   }
 
+  // Compute a point which lies in both reachable volumes.
+  const auto jointPosition = ComputePointOnIntersection(rvl, rvr);
 
-  //if the spherical shell has length 0 then do this
-  Vector3d jointSample;
-  // TODO: this style of sampling is temporary and is not efficient. We need a
-  // more precise way to sample in intersections
-  double radius1 = rvl.GetOuterRadius();
-  double radius2 = rvr.GetOuterRadius();
-  std::vector<double> center1 = rvl.GetCenter();
-  std::vector<double> center2 = rvr.GetCenter();
+  // If no point was found, the sampling process has failed.
+  if(!jointPosition.second)
+    return false;
 
-  Vector3d c1;
-  c1[0] = center1[0];
-  c1[1] = center1[1];
-  c1[2] = center1[2];
+  _jointPlacements.emplace_back(leftChain->GetLastJoint(), jointPosition.first);
 
-  Vector3d c2;
-  c2[0] = center2[0];
-  c2[1] = center2[1];
-  c2[2] = center2[2];
-
-  std::pair<Vector3d, double> sphere1 = make_pair(c1, radius1);
-  std::pair<Vector3d, double> sphere2 = make_pair(c2, radius2);
-
-  const double overlap = radius1 + radius2 - (c2 - c1).norm();
-
-  if(overlap < 0)
-    throw RunTimeException(WHERE) << "No overlap between RVs! "
-                                  << "This should not be possible.";
-
-  if(rvr.GetOuterRadius() == rvr.GetInnerRadius() and
-     rvl.GetOuterRadius() == rvl.GetInnerRadius()) {
-    //compute the intersection and sample on that intersection
-    jointSample = ComputePointonIntersection(sphere1, sphere2);
-
-    if(this->m_debug)
-      std::cout << "intersecting point (circle) : " << jointSample << std::endl;
-  }
-  else {
-     std::vector<double> jSample;
-     constexpr const size_t maxAttempts = 1000;
-     size_t attempts = 0;
-     do {
-       jSample = rvl.GetRandomPoint();
-       stats->IncStat("ReachableVolumeSampler::SampleInternalAttempts");
-     }
-     while(!rvr.InBoundary(jSample) and ++attempts < maxAttempts);
-
-     stats->IncStat("ReachableVolumeSampler::SampleInternalCompleted");
-     stats->SetStat("ReachableVolumeSampler::SampleInternalAverage",
-        stats->GetStat("ReachableVolumeSampler::SampleInternalAttempts") /
-        stats->GetStat("ReachableVolumeSampler::SampleInternalCompleted"));
-
-     // If we used up all the attempts, this sample failed.
-     if(attempts == maxAttempts) {
-       std::cout << "No valid point in both RVs." << std::endl;
-       return false;
-     }
-
-     for(size_t i = 0; i < jSample.size(); ++i)
-       jointSample[i] = jSample[i];
-
-     if(this->m_debug)
-       std::cout << "intersecting point: " << jointSample
-                 << std::endl;
-  }
-
-  //record where the last joint goes
-  _jointPlacements.emplace_back(leftChain->GetLastJoint(), jointSample);
-
-  if(!SampleInternal(*leftChain, _jointPlacements, _center, _endEffectorPoint) or
-      !SampleInternal(*rightChain, _jointPlacements, _center, _endEffectorPoint))
+  if(!SampleInternal(*leftChain, _jointPlacements, _basePosition, _eePosition) or
+      !SampleInternal(*rightChain, _jointPlacements, _basePosition, _eePosition))
     return false;
 
   return true;
-}
-
-template <typename MPTraits>
-bool
-ReachableVolumeSampler<MPTraits>::
-Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    std::vector<CfgType>& _result, std::vector<CfgType>& _collision) {
-  const std::string callee = this->GetNameAndLabel() + "::Sampler()";
-  auto vcm = this->GetValidityChecker(m_vcLabel);
-  const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
-
-  MultiBody* const multibody = _cfg.GetMultiBody(); //get multibody of cfg
-  const std::vector<std::unique_ptr<Connection>>& mbJoints = multibody->GetJoints();
-
-
-  //assume joints are ordered consecutively based on index
-  const size_t numJoints = mbJoints.size();
-  std::deque<Connection*> joints(numJoints, nullptr); //initialize empty joint list
-  for(size_t i = 0; i < numJoints; ++i)
-    joints[i] = multibody->GetJoint(i); //populate joint list
-
-  // Decompose the robot into linear chains. Enforce our present assumption that
-  // the robot is a single chain.
-  std::vector<Chain> chains = Chain::Decompose(multibody);
-  if(chains.size() != 1)
-    throw RunTimeException(WHERE) << "Only single-chain robots are supported "
-                                  << "right now, but Chain::Decompose generated "
-                                  << chains.size() << " chains: "
-                                  << chains
-                                  << std::endl;
-  Chain& chain = chains.front();
-
-  std::cout << "\nChain: " << chain << std::endl;
-
-  std::vector<JointPlacement> jointPlacements;
-  //set origin as the reference point forparent RV
-  WorkspaceBoundingSphericalShell rv =
-    ComputeReachableVolume(dimension, std::vector<double>(dimension, 0.), chain);
-
-  //----------------------------------------------------------------------------
-  // DO NOT DELETE THIS. This section is for unconstrained planning.
-
-  //sample a point for the end effector in its reachable volume
-  //std::vector<double> endEffectorPoint = rv.GetRandomPoint();
-  //std::vector<double> center = rv.GetCenter();
-
-  //Vector3d pEnd;
-  //for(size_t i = 0; i < dimension; ++i)
-  //  pEnd[i] = endEffectorPoint[i];
-
-  //Vector3d pCenter;
-  //for(size_t i = 0; i < dimension; ++i)
-  //  pCenter[i] = center[i];
-
-  ////generate samples forthe internal joints
-  //SampleInternal(chain, jointPlacements, pCenter, pEnd);
-
-  ////make the RV sample
-  //std::vector<Vector3d> rvSample =
-  //  ConstructRVSample(pCenter, chain, jointPlacements, pEnd);
-
-  ////convert RV sample to C-Space sample with random translational and orientation
-  //ConvertToCfgSample(_cfg, rvSample);
-  //----------------------------------------------------------------------------
-
-
-  //sample a random end effector point in RV
-  const std::vector<double> endEffectorPoint = rv.GetRandomPoint();
-  const std::vector<double> efCenter(3, 0); //point to constrain end effector on
-
-  //just doing one point (center) for now
-  Vector3d constraintCenter;
-  constraintCenter[0] = efCenter[0];
-  constraintCenter[1] = efCenter[1];
-  constraintCenter[2] = efCenter[2];
-
-  //random end effector point
-  Vector3d endPoint;
-  endPoint[0] = endEffectorPoint[0];
-  endPoint[1] = endEffectorPoint[1];
-  endPoint[2] = endEffectorPoint[2];
-
-  //transform reachable volume
-  Vector3d center = constraintCenter - endPoint;
-
-  // Generate samples for the internal joints. If it fails, return false.
-  if(!SampleInternal(chain, jointPlacements, center, constraintCenter))
-    return false;
-
-  //make the RV sample
-  std::vector<Vector3d> rvSample =
-    ConstructRVSample(center, chain, jointPlacements, constraintCenter);
-
-  // Convert RV sample to C-Space sample with random translational and orientation
-  ConvertToCfgSample(_cfg, rvSample);
-
-  if(vcm->IsValid(_cfg, callee))
-    _result.push_back(_cfg);
-  else
-    _collision.push_back(_cfg);
-
-  return true;
-
 }
 
 /*----------------------------------------------------------------------------*/

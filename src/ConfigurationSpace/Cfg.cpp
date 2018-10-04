@@ -558,7 +558,10 @@ SetJointData(const vector<double>& _data) {
 Point3d
 Cfg::
 GetPoint() const noexcept {
-  return Point3d(m_dofs[0], m_dofs[1], PosDOF() == 3 ? m_dofs[2] : 0);
+  if(GetMultiBody()->GetBase()->GetMovementType() == Body::MovementType::Fixed)
+    return GetMultiBody()->GetBase()->GetWorldTransformation().translation();
+  else
+    return Point3d(m_dofs[0], m_dofs[1], PosDOF() == 3 ? m_dofs[2] : 0);
 }
 
 
