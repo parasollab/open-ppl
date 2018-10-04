@@ -22,6 +22,9 @@ vizmo_map := #-DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
 group_map := #-DGROUP_MAP
+ifeq ($(group_map), -DGROUP_MAP)
+  vizmo_map ?= -DVIZMO_MAP
+endif
 
 # Define robot type if it isn't already set.
 ROBOT_DEF ?= PMPCfg

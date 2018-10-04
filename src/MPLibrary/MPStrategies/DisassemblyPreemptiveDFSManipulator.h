@@ -90,8 +90,7 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
     // provided is valid for the cfg.
     size_t AttemptEffectorPlacement(Body* const _body,
                                     GroupCfgType& _manipulatorCfg,
-                                    const size_t _lastCandidateAttempted = 0,
-                                    const bool _isFirstInPath = false);
+                                    const size_t _lastCandidateAttempted = 0);
 
     Approach m_approach = Approach::mating;
     State m_state = State::singlePart;
@@ -192,7 +191,10 @@ Iterate() {
     this->m_successful = true; // So we stop iterating after placing effector.
     // This no longer means strategy success, it just means we have some motions
     // to match with the manipulator.
+    this->GetMPProblem()->GetRobot("manipulator")->SetVirtual(true);
     PlaceEndEffector();
+    this->GetMPProblem()->GetRobot("manipulator")->SetVirtual(false);
+
     return;
   }
 
@@ -793,9 +795,11 @@ PlaceEffectorAlongRemoval(const Formation& _removedFormation,
     for(size_t& bodyNum = _placementInfo.bodyIndex; bodyNum < mb->GetNumBodies();
             ++bodyNum, _placementInfo.polygonIndex = 0) {
       Body* const body = mb->GetBody(bodyNum);
+      const size_t numPolys = std::min(m_numContactCandidates,
+                            body->GetWorldPolyhedron().GetPolygonList().size());
 
       for(size_t& currentPolygon = _placementInfo.polygonIndex;
-          currentPolygon < m_numContactCandidates; ++currentPolygon) {
+              currentPolygon < numPolys; ++currentPolygon) {
 
         VIDPath removalPath;
 
@@ -820,7 +824,7 @@ PlaceEffectorAlongRemoval(const Formation& _removedFormation,
 
           // Finally, attempt the end effector placement.
           const size_t polygonFound = AttemptEffectorPlacement(
-                                 body, effectorGroupCfg, currentPolygon, false);
+                                        body, effectorGroupCfg, currentPolygon);
 
           if(polygonFound != std::numeric_limits<size_t>::max()) {
             if(this->m_debug)
@@ -932,7 +936,7 @@ template <typename MPTraits>
 size_t
 DisassemblyPreemptiveDFSManipulator<MPTraits>::
 AttemptEffectorPlacement(Body* const _body, GroupCfgType& _manipulatorGroupCfg,
-              const size_t _lastCandidateAttempted, const bool _isFirstInPath) {
+              const size_t _lastCandidateAttempted) {
   //Note: _lastCandidateAttempted has two different uses. If the flag
   //      _isFirstInPath is true, it will attempt starting at the index
   //      provided, otherwise it ONLY attempts that index, since it's mid-path.
@@ -969,13 +973,7 @@ AttemptEffectorPlacement(Body* const _body, GroupCfgType& _manipulatorGroupCfg,
   // tried. Otherwise, we are mid-path and ONLY want to try the current.
   const auto& polys = _body->GetWorldPolyhedron().GetPolygonList();
   std::vector<size_t> candsToAttempt;
-  if(_isFirstInPath) {
-    for(size_t index = _lastCandidateAttempted; index < m_numContactCandidates;
-        ++index)
-      candsToAttempt.push_back(index);
-  }
-  else
-    candsToAttempt = {_lastCandidateAttempted};
+  candsToAttempt = {_lastCandidateAttempted};
 
   for(const size_t candInd : candsToAttempt) {
     const GMSPolygon& cand = polys[candInd];

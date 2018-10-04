@@ -321,19 +321,11 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const string& _callName) {
 
   // Check against other robots if requested.
   if(m_interRobotCollision and !robot->IsVirtual()) {
-    if(this->m_debug)
-      std::cout << "Checking inter-robot collisions with robot "
-                << robot->GetLabel() << std::endl;
-
     const auto& allRobots = this->GetMPProblem()->GetRobots();
     for(const auto& otherRobot : allRobots) {
       // Skip self-checks and checks against virtual robots.
       if(robot == otherRobot.get() or otherRobot->IsVirtual())
         continue;
-
-      if(this->m_debug)
-        std::cout << "Checking against robot " << otherRobot->GetLabel()
-                  << std::endl;
 
       // Perform the collision check.
       CDInfo cdInfo(_cdInfo.m_retAllInfo);

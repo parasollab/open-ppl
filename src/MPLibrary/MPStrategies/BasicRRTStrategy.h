@@ -480,15 +480,15 @@ void
 BasicRRTStrategy<MPTraits>::
 Finalize() {
   if(m_writeAllOutputs) {
-  // Output final map
-  RoadmapType* map = this->GetRoadmap();
-  std::string baseFilename = this->GetBaseFilename();
-  map->Write(baseFilename + ".map", this->GetEnvironment());
+    // Output final map
+    RoadmapType* map = this->GetRoadmap();
+    std::string baseFilename = this->GetBaseFilename();
+    map->Write(baseFilename + ".map", this->GetEnvironment());
 
-  // Output stats
-  std::ofstream osStat(baseFilename + ".stat");
-  this->GetStatClass()->PrintAllStats(osStat, map);
-}
+    // Output stats
+    std::ofstream osStat(baseFilename + ".stat");
+    this->GetStatClass()->PrintAllStats(osStat, map);
+  }
 
   // If a different module is calling RRT (like the RRT LP), this is used to say
   // whether there was a time out or whether the query was actually successful.
