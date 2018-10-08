@@ -90,8 +90,13 @@ ComputeReachableVolume(const size_t _dimension,
   // If the chain includes a front body, include it in the reachable distance
   // computation.
   if(_chain.GetFrontBody()) {
-    max += _chain.GetFirstJoint()->GetTransformationToDHFrame().translation().
-           norm();
+
+    if(_chain.GetFrontBody()->IsBase())
+      max += _chain.GetFirstJoint()->GetTransformationToDHFrame().translation().
+             norm();
+    else
+      max += _chain.GetFirstJoint()->GetTransformationToBody2().translation().
+             norm();
     min = max;
   }
 
@@ -112,8 +117,13 @@ ComputeReachableVolume(const size_t _dimension,
   // If the chain includes the end-effector, include it in the reachable
   // distance computation.
   if(_chain.GetBackBody()) {
-    const double rd = (*(_chain.end() - 1))->GetTransformationToBody2().
-        translation().norm();
+    double rd;
+    if(_chain.GetBackBody()->IsBase())
+      rd = _chain.GetLastJoint()->GetTransformationToDHFrame().translation().
+          norm();
+    else
+      rd = _chain.GetLastJoint()->GetTransformationToBody2().translation().
+          norm();
     min = std::max(0., (min > rd) ? min - rd : rd - max);
     max += rd;
   }

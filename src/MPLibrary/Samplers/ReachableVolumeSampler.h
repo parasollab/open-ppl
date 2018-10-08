@@ -217,8 +217,14 @@ Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
                                   << std::endl;
   Chain& chain = chains.front();
 
-  if(this->m_debug)
-    std::cout << "\nChain: " << chain << std::endl;
+  if(this->m_debug) {
+    std::cout << "ReachableVolumeSampler:"
+              << "\nChain: " << chain
+              << "\nrobotBoundary: " << *_robotBoundary;
+    if(_eeBoundary)
+      std::cout << "\neeBoundary: " << *_eeBoundary;
+    std::cout << std::endl;
+  }
 
   const size_t dimension = this->GetEnvironment()->GetBoundary()->GetDimension();
   const bool threeD = dimension == 3;
@@ -244,6 +250,13 @@ Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
 
     basePoint(baseSample[0], baseSample[1], threeD ? baseSample[2] : 0.);
     eePoint(    eeSample[0],   eeSample[1], threeD ?   eeSample[2] : 0.);
+
+    if(this->m_debug)
+      std::cout << "\nee point: " << eePoint
+                << "\nRV of base relative to EE: " << rv
+                << "\nbase point: " << basePoint
+                << "\ndistance of base to EE: " << (eePoint - basePoint).norm()
+                << std::endl;
   }
   else {
     // If there is no EE boundary, use the sampled base point.
@@ -257,6 +270,13 @@ Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
     // Set the end-effector at a point in the chain's RV.
     const std::vector<double> sample = rv.GetRandomPoint();
     eePoint(sample[0], sample[1], threeD ? sample[2] : 0.);
+
+    if(this->m_debug)
+      std::cout << "\nbase point: " << basePoint
+                << "\nRV of EE relative to base: " << rv
+                << "\nee point: " << eePoint
+                << "\ndistance of base to EE: " << (eePoint - basePoint).norm()
+                << std::endl;
   }
 
   // Generate samples for the internal joints. If it fails, return false.
@@ -494,8 +514,15 @@ ComputePointOnIntersection(const WorkspaceBoundingSphericalShell& _leftRV,
   const double distance = direction.norm(),
                overlap = leftRadius + rightRadius - distance;
   if(overlap < 0)
-    throw RunTimeException(WHERE) << "No overlap between RVs! "
-                                  << "This should not be possible.";
+    throw RunTimeException(WHERE) << "No overlap between RVs, which "
+                                  << "should not be possible."
+                                  << "\n\tleft center: " << leftCenter
+                                  << "\n\tright center: " << rightCenter
+                                  << "\n\tdirection: " << direction
+                                  << "\n\tseparation distance: " << distance
+                                  << "\n\tleft radius: " << leftRadius
+                                  << "\n\tright radius: " << rightRadius
+                                  << "\n\toverlap: " << overlap;
   /// @todo If overlap is greater than but close to 0, we should just pick
   ///       the overlap point as it will be very hard to sample.
 
