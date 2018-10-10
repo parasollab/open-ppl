@@ -4,15 +4,19 @@
 #include "Simulator/Conversions.h"
 
 DrawableCfg::
-DrawableCfg(const std::vector<double>& _data, DrawableMultiBody* _body) :
-  glutils::drawable_display_list(), m_data(_data), m_drawableMultiBody(_body) {
-};
+DrawableCfg(const std::vector<double>& _data, DrawableMultiBody* _body)
+  : glutils::drawable_display_list(),
+    m_data(_data),
+    m_drawableMultiBody(_body)
+{ }
+
 
 glutils::vector3f
 DrawableCfg::
 GetPoint() {
   return m_point;
 }
+
 
 void
 DrawableCfg::
@@ -24,7 +28,8 @@ build() {
   m_point = ToGLUtils(mb->GetBase()->GetWorldTransformation().translation());
 
   for(size_t i = 0; i < m_drawableMultiBody->GetNumBodies(); ++i) {
-    m_drawableMultiBody->PushTransform(i, ToGLUtils(mb->GetBody(i)->GetWorldTransformation()));
+    m_drawableMultiBody->PushTransform(i,
+        ToGLUtils(mb->GetBody(i)->GetWorldTransformation()));
   }
 
   m_drawableMultiBody->UpdateTransform();

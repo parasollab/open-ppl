@@ -102,7 +102,7 @@ HierarchicalNF() : NeighborhoodFinderMethod<MPTraits>() {
 
 template <typename MPTraits>
 HierarchicalNF<MPTraits>::
-HierarchicalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
+HierarchicalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, false) {
   this->SetName("HierarchicalNF");
   this->m_nfType = Type::OTHER;
 

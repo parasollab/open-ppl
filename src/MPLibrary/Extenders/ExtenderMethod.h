@@ -20,6 +20,7 @@
 /// LPOutput<MPTraits> lp;
 /// bool pass = e->Extend(start, goal, new, lp);
 /// @endcode
+///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>

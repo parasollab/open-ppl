@@ -162,7 +162,10 @@ draw() {
   {
     std::lock_guard<std::mutex> lock(m_lock);
 
-    copy(m_bufferCfgs.begin(), m_bufferCfgs.end(), std::back_inserter(m_cfgs));
+    for(const auto& cfg : m_bufferCfgs) {
+      m_cfgs.push_back(cfg);
+      m_cfgs.back().initialize();
+    }
     m_bufferCfgs.clear();
 
     copy(m_bufferEdges.begin(), m_bufferEdges.end(), std::back_inserter(m_edges));
@@ -175,7 +178,7 @@ draw() {
     for(auto& cfg : m_cfgs)
       cfg.render();
   else {
-    glPointSize(8.0);
+    glPointSize(3);
     glDisable(GL_LIGHTING);
     // sets the size of each point (radius in pixels?)
 

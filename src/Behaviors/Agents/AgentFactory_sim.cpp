@@ -5,6 +5,7 @@
 #include "HandoffAgent.h"
 #include "PathFollowingChildAgent.h"
 #include "PathFollowingAgent.h"
+#include "PlanningAgent.h"
 #include "RoadmapFollowingAgent.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -25,6 +26,10 @@ Factory(Robot* const _r, XMLNode& _node) {
   if(type == "pathfollowing")
     output = std::unique_ptr<PathFollowingAgent>(
         new PathFollowingAgent(_r, _node)
+    );
+  else if(type == "planning")
+    output = std::unique_ptr<PlanningAgent>(
+        new PlanningAgent(_r, _node)
     );
   else if(type == "pathfollowingchild")
     output = std::unique_ptr<PathFollowingChildAgent>(
@@ -51,6 +56,6 @@ Factory(Robot* const _r, XMLNode& _node) {
 
   // Read the debug flag.
   output->m_debug = _node.Read("debug", false, false, "Show debug messages.");
-  
+
   return output;
 }

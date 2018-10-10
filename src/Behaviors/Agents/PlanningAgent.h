@@ -7,8 +7,10 @@
 
 #include <memory>
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Abstract base class for agents which will plan paths using PMPL.
+/// Base class for agents which will plan paths using PMPL. This agent only
+/// plans; it does not attempt to execute the plan in the simulation.
 ///
 /// The core behavior is:
 /// 1. If no task, select one (or pass if none is available).
@@ -40,6 +42,8 @@ class PlanningAgent : public Agent {
 
     PlanningAgent(Robot* const _r, XMLNode& _node);
 
+    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const override;
+
     virtual ~PlanningAgent();
 
     ///@}
@@ -60,7 +64,7 @@ class PlanningAgent : public Agent {
 
     /// Does the agent have a plan for its current task.
     /// @return True if the agent has a plan.
-    virtual bool HasPlan() const = 0;
+    virtual bool HasPlan() const;
 
     /// Clear the agent's current plan. If a plan was cleared, the plan version
     /// will be updated. Overrides should always call this base method to update
@@ -74,13 +78,6 @@ class PlanningAgent : public Agent {
     /// Get the current version number for the agent's plan.
     /// @return The plan version number.
     size_t GetPlanVersion() const;
-
-    void SetMPLibrary(MPLibrary* _library);
-
-
-    /// TODO: Generate the utility cost (dependent on some metric) for a given task
-    /// @return The cost of the plan.
-    // virtual double GenerateCost(std::shared_ptr<MPTask> const _task);
 
     ///@}
 
@@ -111,18 +108,18 @@ class PlanningAgent : public Agent {
 
     /// Evaluate the agent's progress on its current task.
     /// @return True if we should continue the current task, false otherwise.
-    virtual bool EvaluateTask() = 0;
+    virtual bool EvaluateTask();
 
     /// Continue executing the agent's current task.
     /// @param _dt The step length.
-    virtual void ExecuteTask(const double _dt) = 0;
+    virtual void ExecuteTask(const double _dt);
 
     ///@}
     ///@name Localization Helpers
     ///@{
 
-    /// Evaluates whether the robot's simulated state is incorrect (beyond some error
-    /// threshold) and sets the simulated state as necessary.
+    /// Evaluates whether the robot's simulated state is incorrect (beyond some
+    /// error threshold) and sets the simulated state as necessary.
     void UpdateSimulatedState();
 
     ///@}
@@ -135,7 +132,8 @@ class PlanningAgent : public Agent {
     std::atomic<bool> m_planning{false};    ///< Is the agent currently planning.
     std::atomic<size_t> m_planVersion{1};   ///< The current plan version.
 
-    size_t m_roadmapVisualID{0}; ///< The ID of the roadmap drawing.
+    size_t m_roadmapVisualID{size_t(-1)};   ///< The ID of the roadmap drawing.
+    size_t m_pathVisualID{size_t(-1)};      ///< The ID of the path drawing.
 
     size_t m_localizePeriod{200};         ///< The number of timesteps between localize calls.
     size_t m_localizeCount{1};            ///< The number of timesteps since the last localize call.

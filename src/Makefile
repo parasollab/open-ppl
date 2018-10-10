@@ -1,11 +1,9 @@
 # Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# Set platform, debug mode, address sanitizer, and parallel compile if not
-# already set.
+# Set platform, debug mode, and address sanitizer if not already set.
 platform ?= LINUX_gcc
 debug    ?= 0
 asan     ?= 0
-parallel ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
 #  variables to get useful output:
@@ -34,6 +32,15 @@ icreate ?= 0
 
 # Build support for aruco detector hardware?
 aruco ?= 0
+
+# Compile with matlab support?
+matlab ?= 0
+
+# Compile the parallel version of PMPL? This is very old and has not been
+# maintained during the simulator refactoring (too many things to manage at
+# once). At this point it likely needs to be rebuilt entirely using the latest
+# work from Matthew Bulluck's parallel branch.
+parallel ?= 0
 
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

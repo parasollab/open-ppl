@@ -17,6 +17,7 @@ class Boundary;
 class BulletModel;
 class ControllerMethod;
 class CSpaceBoundingBox;
+class MatlabMicroSimulator;
 class MicroSimulator;
 class MPProblem;
 class MultiBody;
@@ -63,6 +64,9 @@ class Robot final {
   std::unique_ptr<Agent> m_agent;                 ///< High-level decision agent.
   std::unique_ptr<ControllerMethod> m_controller; ///< Low-level controller.
   std::unique_ptr<MicroSimulator> m_simulator;    ///< Internal simulator.
+#ifdef PMPL_USE_MATLAB
+  std::unique_ptr<MatlabMicroSimulator> m_matlabSimulator; ///< Matlab internal simulator.
+#endif
   BulletModel* m_bulletModel{nullptr};            ///< The bullet simulation model.
 
   std::unique_ptr<RobotCommandQueue> m_hardware;    ///< Hardware command queue.
@@ -252,6 +256,13 @@ class Robot final {
 
     /// Get the robot's micro-simulator to test out controls.
     MicroSimulator* GetMicroSimulator() noexcept;
+
+#ifdef PMPL_USE_MATLAB
+    /// Get the robot's matlab micro-simulator. Currently this is only for the
+    /// matlab-based steerable needle. Always returns null when compiled without
+    /// matlab support.
+    MatlabMicroSimulator* GetMatlabMicroSimulator() noexcept;
+#endif
 
     ///@}
     ///@name Hardware Interface

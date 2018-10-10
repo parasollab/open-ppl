@@ -28,6 +28,13 @@ PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
 }
 
 
+std::unique_ptr<Agent>
+PlanningAgent::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<PlanningAgent>(new PlanningAgent(_r, *this));
+}
+
+
 PlanningAgent::
 ~PlanningAgent() = default;
 
@@ -100,9 +107,8 @@ Step(const double _dt) {
   }
 
   // Evaluate task progress. If task is still valid, continue execution.
-  if(EvaluateTask()){
+  if(EvaluateTask())
     ExecuteTask(_dt);
-  }
   else
     PauseAgent(1);
 }
@@ -124,10 +130,10 @@ Uninitialize() {
   m_library.reset();
   m_solution.reset();
 
-  if(m_roadmapVisualID)
+  if(m_roadmapVisualID != size_t(-1) and Simulation::Get()) {
     Simulation::Get()->RemoveRoadmap(m_roadmapVisualID);
-
-  m_roadmapVisualID = 0;
+    m_roadmapVisualID = size_t(-1);
+  }
 }
 
 
@@ -140,11 +146,29 @@ SetTask(std::shared_ptr<MPTask> const _task) {
 
 /*------------------------------- Planning -----------------------------------*/
 
+bool
+PlanningAgent::
+HasPlan() const {
+  // We have a plan if the solution has cfgs.
+  return m_solution->GetPath()->Size();
+}
+
+
 void
 PlanningAgent::
 ClearPlan() {
   if(HasPlan())
     ++m_planVersion;
+
+  // Remove the path visual if needed.
+  if(m_pathVisualID != size_t(-1) and Simulation::Get()) {
+    Simulation::Get()->RemovePath(m_pathVisualID);
+    m_pathVisualID = size_t(-1);
+  }
+
+  // Clear the path.
+  if(m_solution)
+    m_solution->GetPath()->Clear();
 }
 
 
@@ -159,13 +183,6 @@ size_t
 PlanningAgent::
 GetPlanVersion() const {
   return m_planVersion;
-}
-
-
-void
-PlanningAgent::
-SetMPLibrary(MPLibrary* _library){
-  m_library = std::unique_ptr<MPLibrary>(_library);
 }
 
 /*---------------------------- Planning Helpers ------------------------------*/
@@ -209,6 +226,14 @@ GeneratePlan() {
 void
 PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
+#if 0
+  // How to hard-code display of a goal boundary.
+  const Boundary* tb = GetTask()->GetGoalConstraints().front()->GetBoundary();
+  std::unique_ptr<WorkspaceBoundingSphere> b(new WorkspaceBoundingSphere(
+      tb->GetCenter(), 4));
+  Simulation::Get()->AddBoundary(b.get(), glutils::color::orange);
+#endif
+
   // Initialize the solution.
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 
@@ -218,6 +243,11 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 
   // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());
+
+  // If a path was created, show a visual.
+  const auto& path = m_solution->GetPath()->Cfgs();
+  if(!path.empty())
+    m_pathVisualID = Simulation::Get()->AddPath(path, glutils::color::red);
 }
 
 
@@ -244,6 +274,21 @@ SelectTask() {
   SetTask(tasks.front());
   GetTask()->SetStarted();
   return true;
+}
+
+
+bool
+PlanningAgent::
+EvaluateTask() {
+  // This agent only plans and cannot complete tasks.
+  return false;
+}
+
+
+void
+PlanningAgent::
+ExecuteTask(const double) {
+  // This agent only plans, do nothing.
 }
 
 /*--------------------------- Localization Helpers ---------------------------*/

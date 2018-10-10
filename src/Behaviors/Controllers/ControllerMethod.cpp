@@ -11,6 +11,10 @@
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
+#ifdef PMPL_USE_MATLAB
+#include "Behaviors/Controllers/MatlabNeedleController.h"
+#endif
+
 #include "nonstd/container_ops.h"
 
 #include <algorithm>
@@ -80,6 +84,11 @@ Factory(Robot* const _r, XMLNode& _node) {
   else if(controllerType == "carlikeneedle")
     output = std::unique_ptr<CarlikeNeedleController>(new
         CarlikeNeedleController(_r, _node));
+#ifdef PMPL_USE_MATLAB
+  else if(controllerType == "matlabneedle")
+    output = std::unique_ptr<MatlabNeedleController>(new
+        MatlabNeedleController(_r, _node));
+#endif
   else
     throw ParseException(_node.Where(), "Unknown controller label '" +
         controllerType + "'. Currently only 'simple' is supported.");

@@ -32,6 +32,12 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
     ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename NeighborhoodFinderMethod<MPTraits>::Type;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -155,6 +161,8 @@ TopologicalFilter<MPTraits>::
 TopologicalFilter(XMLNode& _node)
     : NeighborhoodFinderMethod<MPTraits>(_node, false) {
   this->SetName("TopologicalFilter");
+
+  this->m_nfType = Type::OTHER;
 
   m_nfLabel = _node.Read("nfLabel", true, "", "Label for the underlying NF.");
 
@@ -616,6 +624,8 @@ BuildQueryMap() {
   /// @todo Support this without magic XML values.
   auto query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
       get());
+  if(query->GetQuery().empty())
+    query->Initialize();
   const CfgType& start = query->GetQuery()[0];
   const CfgType& goal  = query->GetQuery()[1];
 

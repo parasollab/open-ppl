@@ -1,5 +1,5 @@
-#ifndef BASIC_RRT_STRATEGY_H_
-#define BASIC_RRT_STRATEGY_H_
+#ifndef PMPL_BASIC_RRT_STRATEGY_H_
+#define PMPL_BASIC_RRT_STRATEGY_H_
 
 #include <iomanip>
 #include "MPStrategyMethod.h"
@@ -504,7 +504,7 @@ template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectTarget() {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::SelectDirection");
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::SelectTarget");
 
   CfgType target(this->GetTask()->GetRobot());
 
@@ -684,7 +684,9 @@ Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp) {
 
   const bool success = e->Extend(qNear, _target, qNew, _lp);
   if(this->m_debug)
-    std::cout << "\tExtended "
+    std::cout << "Extending from VID " << _nearVID
+              << "\n\tqNear: " << qNear.PrettyPrint()
+              << "\n\tExtended "
               << std::setprecision(4) << _lp.m_edge.first.GetWeight()
               << " units."
               << std::endl;

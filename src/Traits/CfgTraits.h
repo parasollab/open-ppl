@@ -1,5 +1,5 @@
-#ifndef CFG_TRAITS_H_
-#define CFG_TRAITS_H_
+#ifndef PMPL_CFG_TRAITS_H_
+#define PMPL_CFG_TRAITS_H_
 
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
@@ -83,6 +83,9 @@
 #include "MPLibrary/Extenders/BasicExtender.h"
 #include "MPLibrary/Extenders/KinodynamicExtender.h"
 #include "MPLibrary/Extenders/LimitedDistanceExtender.h"
+#ifdef PMPL_USE_MATLAB
+#include "MPLibrary/Extenders/MatlabNeedleExtender.h"
+#endif
 #include "MPLibrary/Extenders/MedialAxisExtender.h"
 #include "MPLibrary/Extenders/MixExtender.h"
 #include "MPLibrary/Extenders/RandomObstacleVector.h"
@@ -276,6 +279,9 @@ struct MPTraits {
     BasicExtender<MPTraits>,
     KinodynamicExtender<MPTraits>,
     LimitedDistanceExtender<MPTraits>,
+#ifdef PMPL_USE_MATLAB
+    MatlabNeedleExtender<MPTraits>,
+#endif
     MedialAxisExtender<MPTraits>,
     MixExtender<MPTraits>,
     RandomObstacleVector<MPTraits>,

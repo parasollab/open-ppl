@@ -15,13 +15,13 @@
 # Default system variables
 ################################################################################
 UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
-             $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF)
+             $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
-	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL)
+	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB) $(BULLET_LIB) \
-	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS)
+	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS) $(MATLAB_LIBS)
 UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) $(MODELLOADER_LIBFILE) \
 		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE) \
 		$(BULLET_LIBFILE) $(GLVIS_LIBFILE) $(PHYSICAL_ROBOTS_LIBFILE) \
@@ -329,6 +329,43 @@ DLIB_DIR  := $(UTILS_DIR)/dlib
 DLIB_INCL := -I$(DLIB_DIR)
 
 ################################################################################
+## Matlab
+################################################################################
+# Matlab comes with an executable called 'mex' which will help you figure out
+# how to configure this. First find your path for 'mex' and run this to
+# configure it (using the fully-qualified path for 'mex' if needed):
+#   mex -setup -client engine C++
+# mex is basically a script which calls your regular compiler and linker with
+# the right options. To see what it is doing, try to compile a cpp file like
+# this:
+#   mex -v -client engine my_file.cpp
+# This will print out the compile/link commands amongst other things. From
+# that you can extract the includes, libs, and defines that need to be used to
+# build this object with your standard process. However, mex has an error in
+# that it assumes the matlab libraries are installed to a standard system
+# location. To fix this, you will need to replace any 'rpath-link' options
+# with 'rpath' instead.
+
+MATLAB_SRCS :=
+
+ifneq ($(matlab), 0)
+  MATLAB_DIR  := /usr/local/MATLAB/R2018a
+  MATLAB_INCL := -I$(MATLAB_DIR)/extern/include -I$(MATLAB_DIR)/simulink/include
+  MATLAB_DEFS := -DPMPL_USE_MATLAB -DMATLAB_DEFAULT_RELEASE=R2017b \
+                 -DUSE_MEX_CMD -D_GNU_SOURCE -DMATLAB_MEX_FILE -DNDEBUG
+  MATLAB_LIBS := -Wl,-rpath=$(MATLAB_DIR)/extern/bin/glnxa64 \
+			  -L$(MATLAB_DIR)/extern/bin/glnxa64 \
+		 -Wl,-rpath=$(MATLAB_DIR)/bin/glnxa64 \
+			  -L$(MATLAB_DIR)/bin/glnxa64 \
+		 -leng -lMatlabEngine -lMatlabDataArray -lmx -lmat -lm -lpthread
+
+  MATLAB_SRCS := \
+    Behaviors/Controllers/MatlabNeedleController.cpp \
+    Simulator/MatlabMicroSimulator.cpp
+
+endif
+
+################################################################################
 # Simulator
 ################################################################################
 SIM_INCL := $(QT_INCL)
@@ -337,13 +374,13 @@ SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 SIM_SRCS := \
   $(PMPL_DIR)/sim_main.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
-  Behaviors/Agents/PathFollowingAgent.cpp \
-  Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/Coordinator.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
+  Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
+  Behaviors/Agents/PlanningAgent.cpp \
+  Behaviors/Agents/RoadmapFollowingAgent.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
@@ -472,5 +509,6 @@ PMPL_SRCS := \
   Workspace/WorkspaceDecomposition.cpp \
   Workspace/WorkspacePortal.cpp \
   Workspace/WorkspaceRegion.cpp \
-  Workspace/WorkspaceSkeleton.cpp
+  Workspace/WorkspaceSkeleton.cpp \
+  $(MATLAB_SRCS)
   #Behaviors/Controllers/PIDFeedback.cpp \

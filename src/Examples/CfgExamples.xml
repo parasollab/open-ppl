@@ -9,6 +9,9 @@
       frictionCoefficient="0" gravity="0 0 0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot">
+      <!--
+      <Agent type="planning"/>
+      -->
       <Agent type="pathfollowing" waypointDm="euclideanPosition"
         waypointThreshold=".05"/>
     </Robot>
@@ -298,11 +301,11 @@
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
       <RRTQuery label="RRTQuery" goalDist="0"
-        nfLabel="Nearest" exLabel="BERO" vcLabel="pqp_solid" debug="false"/>
+        dmLabel="euclidean" exLabel="BERO" vcLabel="pqp_solid" debug="false"/>
       <RRTQuery label="KinoRRTQuery" goalDist=".3"
-        nfLabel="Nearest" exLabel="KinoExtender" vcLabel="pqp_solid" debug="false"/>
+        dmLabel="euclidean" exLabel="KinoExtender" vcLabel="pqp_solid" debug="false"/>
       <LazyQuery label="LazyQuery"
-        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid" graphSearchAlg="dijkstras"
         debug="false" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
@@ -310,7 +313,8 @@
         <Resolution mult="1"/>
       </LazyQuery>
       <LazyToggleQuery label="LazyToggleQuery"
-        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid"
+        graphSearchAlg="dijkstras"
         iterative="true" debug="false">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="LazyToggleConnect"/>

@@ -14,6 +14,7 @@
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Environment/Environment.h"
 #include "Simulator/BulletModel.h"
+#include "Simulator/MatlabMicroSimulator.h"
 #include "Simulator/MicroSimulator.h"
 #include "Utilities/XMLNode.h"
 
@@ -454,6 +455,25 @@ GetActuators() const noexcept {
 }
 
 /*---------------------------- Dynamics Accessors ----------------------------*/
+
+#ifdef PMPL_USE_MATLAB
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "MatlabEngine.hpp"
+#include "MatlabDataArray.hpp"
+#pragma GCC diagnostic pop
+
+MatlabMicroSimulator*
+Robot::
+GetMatlabMicroSimulator() noexcept {
+  if(!m_matlabSimulator)
+    m_matlabSimulator.reset(new MatlabMicroSimulator(this));
+
+  return m_matlabSimulator.get();
+}
+#endif
+
 
 MicroSimulator*
 Robot::

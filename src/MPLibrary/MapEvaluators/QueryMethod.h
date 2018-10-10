@@ -1,5 +1,5 @@
-#ifndef QUERY_METHOD_H_
-#define QUERY_METHOD_H_
+#ifndef PMPL_QUERY_METHOD_H_
+#define PMPL_QUERY_METHOD_H_
 
 #include "MapEvaluatorMethod.h"
 
@@ -15,62 +15,19 @@
 
 #include "containers/sequential/graph/algorithms/astar.h"
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Heuristic for A* graph search. Uses FindIncrement to estimate the distance
-/// to a given goal configuration.
-////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-struct Heuristic {
-
-  public:
-
-    ///@name Motion Planning Types
-    ///@{
-
-    typedef typename MPTraits::CfgType                     CfgType;
-    typedef typename MPTraits::WeightType                  WeightType;
-
-    ///@}
-    ///@name Construction
-    ///@{
-
-    Heuristic(const CfgType& _goal, double _posRes, double _oriRes) :
-        m_goal(_goal), m_posRes(_posRes), m_oriRes(_oriRes) { }
-
-    ///@}
-    ///@name Interface
-    ///@{
-
-    /// Return the number of ticks as the estimated distance from a given
-    /// configuration to the goal.
-    /// @param[in] _c The configuration of interest.
-    /// @return The estimated distance from _c to m_goal.
-    WeightType operator()(const CfgType& _c) {
-      int tick;
-      CfgType incr(_c.GetRobot());
-      incr.FindIncrement(_c, m_goal, &tick, m_posRes, m_oriRes);
-      return WeightType("", tick / 2);
-    }
-
-    ///@}
-
-  private:
-
-    ///@name Internal State
-    ///@{
-
-    CfgType m_goal;  ///< The goal configuration for this search.
-    double m_posRes; ///< The position resolultion to use.
-    double m_oriRes; ///< The orientation resolution to use.
-
-    ///@}
-};
+#ifdef PMPL_USE_MATLAB
+#include "Simulator/MatlabMicroSimulator.h"
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base class for all query methods. These objects evaluate a roadmap under
 /// construction to see if a planning query has been satisfied.
+///
+/// @todo Reduce the various queries to a single class with a flag controlling
+///       lazy evaluation and a connector or MPStrategy controlling connection
+///       to the goal.
+///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -160,8 +117,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     /// Set the search algorithm choice from a string.
-    /// @param[in] _alg The search algorithm to use ('astar' or 'dijkstras').
-    /// @param[in] _where Error location info in case _alg isn't recognized.
+    /// @param _alg The search algorithm to use ('astar' or 'dijkstras').
+    /// @param _where Error location info in case _alg isn't recognized.
     void SetSearchAlgViaString(string _alg, const string& _where);
 
     /// Check if a two nodes are connected by the roadmap.
@@ -400,14 +357,22 @@ template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
 SetSearchAlgViaString(string _alg, const string& _where) {
-  transform(_alg.begin(), _alg.end(), _alg.begin(), ::tolower);
+  std::transform(_alg.begin(), _alg.end(), _alg.begin(), ::tolower);
+
   if(_alg == "dijkstras")
     m_searchAlg = DIJKSTRAS;
   else if(_alg == "astar")
+  {
+    throw NotImplementedException(_where) << "We do not actually have A* "
+                                          << "implemented since the STAPL "
+                                          << "version does not use the "
+                                          << "heuristic, and the new impl only "
+                                          << "supports dijkstras right now.";
     m_searchAlg = ASTAR;
+  }
   else
-    throw ParseException(_where, "Invalid graph search algorithm '" + _alg +
-        "'. Choices are 'dijkstras' or 'astar'.");
+    throw ParseException(_where) << "Invalid graph search algorithm '" << _alg
+                                 << "'. Choices are 'dijkstras'.";// or 'astar'.";
 }
 
 
@@ -710,6 +675,29 @@ GenerateQuery() {
                                     << " with validity checker '" << m_vcLabel
                                     << "'.";
   } while(!vc->IsValid(start, "QueryMethod::GenerateQuery"));
+
+#ifdef PMPL_USE_MATLAB
+  // Hard-coded setting of initial needle state for now, to be cleaned up later.
+  // Use either a dedicated Cfg or some kind of stat-mapping in the start/goal
+  // constraints.
+  start.SetStat("insertion", .005);
+  start.SetStat("c1-4", 0);
+  start.SetStat("c1-3", 0);
+  start.SetStat("c1-2", 0);
+  start.SetStat("c1-1", 0);
+  start.SetStat("c1-0", 0);
+  start.SetStat("c2-4", 0);
+  start.SetStat("c2-3", 0);
+  start.SetStat("c2-2", 0);
+  start.SetStat("c2-1", 0);
+  start.SetStat("c2-0", 0);
+  start.SetStat("c3-4", 0);
+  start.SetStat("c3-3", 0);
+  start.SetStat("c3-2", 0);
+  start.SetStat("c3-1", 0);
+  start.SetStat("c3-0", 0);
+  robot->GetMatlabMicroSimulator()->SetInsertionCfg(start);
+#endif
 
   if(this->m_debug)
     std::cout << "\tTried " << maxTries - tries << " times to generate the "
