@@ -87,7 +87,7 @@ AddVertex(VI _vi) {
   // Gets Vertex data.
   auto cfg = _vi->property();
   std::lock_guard<std::mutex> lock(m_lock);
-  m_bufferCfgs.push_back(DrawableCfg(cfg.GetData(), m_dmb.get()));
+  m_bufferCfgs.push_back(cfg.GetData());
 }
 
 
@@ -163,7 +163,7 @@ draw() {
     std::lock_guard<std::mutex> lock(m_lock);
 
     for(const auto& cfg : m_bufferCfgs) {
-      m_cfgs.push_back(cfg);
+      m_cfgs.emplace_back(cfg, m_dmb.get());
       m_cfgs.back().initialize();
     }
     m_bufferCfgs.clear();

@@ -1,15 +1,16 @@
 #ifndef PMPL_DRAWABLE_ROADMAP_H_
 #define PMPL_DRAWABLE_ROADMAP_H_
 
-#include <vector>
-#include <chrono>
-#include <thread>
-#include "glutils/drawable.h"
 #include "DrawableCfg.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
+#include "glutils/drawable.h"
+
+#include <chrono>
 #include <mutex>
+#include <thread>
+#include <vector>
 
 class DrawableMultiBody;
 
@@ -90,7 +91,7 @@ class DrawableRoadmap : public glutils::drawable  {
   private:
     std::vector<DrawableCfg> m_cfgs;                ///< The position of cfgs.
     std::vector<std::vector<glutils::vector3f>> m_edges;  ///< the path of each edge.
-    std::vector<DrawableCfg> m_bufferCfgs;                      ///< buffer the cfgs when being added
+    std::vector<std::vector<double>> m_bufferCfgs;                      ///< buffer the cfgs when being added
     std::vector<std::vector<glutils::vector3f>> m_bufferEdges;  ///< buffer the edges when they are being added
     glutils::color m_color;                               ///< The color to be rendered in.
     MultiBody m_multiBody;                 ///< local copy of the graphs multibody.
