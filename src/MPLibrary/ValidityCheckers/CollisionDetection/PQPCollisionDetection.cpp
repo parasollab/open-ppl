@@ -128,7 +128,6 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
 
     collision = IsInsideObstacle(worldPoint, _body2);
   }
-
   return collision;
 }
 

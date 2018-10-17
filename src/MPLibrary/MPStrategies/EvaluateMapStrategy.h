@@ -38,7 +38,7 @@ class EvaluateMapStrategy : public MPStrategyMethod<MPTraits> {
     ///@name MPStrategy Overrides
     ///@{
 
-    virtual void Iterate() override;
+    virtual void Run() override;
     virtual void Finalize() override;
 
     ///@}
@@ -83,7 +83,7 @@ Print(std::ostream& _os) const {
 template <typename MPTraits>
 void
 EvaluateMapStrategy<MPTraits>::
-Iterate() {
+Run() {
   this->EvaluateMap();
 }
 

@@ -166,6 +166,13 @@ SetStartTime(double _startTime){
 }
 
 
+void
+MPTask::
+SetCapability(std::string _capability){
+  m_capability = _capability;
+}
+
+
 const Constraint*
 MPTask::
 GetStartConstraint() const noexcept {

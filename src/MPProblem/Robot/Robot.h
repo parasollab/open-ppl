@@ -80,7 +80,7 @@ class Robot final {
   double m_maxLinearVelocity{10};  ///< Max linear velocity.
   double m_maxAngularVelocity{1};  ///< Max angular velocity.
   std::string m_capability;        ///< The terrain label that the robot can use.
-
+  bool m_manipulator{false};       ///< Is the robot a manipulator?
 
   //////////////////////////////////////////////////////////////////////////////
   /// Description of a Robot's end-effector for grasping problems.
@@ -312,6 +312,8 @@ class Robot final {
     /// Set the capability for this robot.
     void SetCapability(const std::string& _capability);
 
+    /// Check if the robot is a manipulator
+    bool IsManipulator() const noexcept;
     ///@}
 
 

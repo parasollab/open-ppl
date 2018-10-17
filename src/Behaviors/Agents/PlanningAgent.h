@@ -79,6 +79,10 @@ class PlanningAgent : public Agent {
     /// @return The plan version number.
     size_t GetPlanVersion() const;
 
+    /// Get the pointer to this agents solution object.
+    /// @return The MPSolution pointer.
+    MPSolution* GetMPSolution();
+
     ///@}
 
   protected:

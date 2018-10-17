@@ -3,7 +3,9 @@
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Environment/Environment.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Control.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
@@ -55,6 +57,18 @@ GetTask() const noexcept {
   return m_task;
 }
 
+void
+Agent::
+ResetStartConstraint() {
+  if(!GetTask())
+    return;
+  
+  auto pos = m_robot->GetSimulationModel()->GetState();
+  std::unique_ptr<CSpaceConstraint> start = 
+    std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, pos));
+
+  GetTask()->SetStartConstraint(std::move(start));
+}
 
 const std::string&
 Agent::

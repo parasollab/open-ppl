@@ -7,6 +7,7 @@
 
 #include "MPTask.h"
 #include "MPProblem.h"
+#include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/XMLNode.h"
@@ -50,18 +51,30 @@ class MPHandoffTemplate {
     RoadmapGraph<Cfg, DefaultWeight<Cfg>>* GetConnectedRoadmap() const; 
 
     std::vector<std::vector<size_t>>& GetDistinctRoadmaps();
+
+    //Center Point of Handoff Locations
+    std::vector<Cfg> GetLocations();
+
+    //Positions of Robots for Handoff Locations
+    std::vector<Cfg> GetPositions();
+
+    bool SavedPaths();
     
     ///@}    
     ///@name Member Management
     ///@{
     
     void AddRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
+
+    void AddPath(std::vector<Cfg> _path, double _cost);
     
     void AddHandoffCfg(Cfg _cfg, MPProblem* _problem);
 
     void SetHandoffPolyhedron(const Boundary* _boundary);
 
     void ConnectRoadmaps(Robot* _robot, MPProblem* _problem);
+
+    void FindLocations();
 
     ///@} 
 
@@ -91,8 +104,27 @@ class MPHandoffTemplate {
     ///The number of attempts to try and place the template in the environment.
     size_t m_maxAttempts;
 
+    ///The weight of the edge between interaction cfgs
+    size_t m_interactionWeight{0};
+
     ///The set of VIDs from each distinct roadmap in the connected roadmap.
     std::vector<std::vector<size_t>> m_distinctRoadmaps;
+
+    ///The locations for manually placed handoffs
+    std::vector<Cfg> m_handoffLocations;
+
+    bool m_savePaths;
+
+    ///The paths for each of the agents involved in the interaction.
+    std::vector<std::vector<Cfg>> m_distinctPaths;
+
+    ///Costs of the corresponding paths
+    std::vector<double> m_distinctPathCosts;
+
+    ///The set of roadmaps without the corresponding paths
+    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> m_pathlessRoadmaps;
+
+    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> m_pathOnlyRoadmaps;
 };
 
 #endif

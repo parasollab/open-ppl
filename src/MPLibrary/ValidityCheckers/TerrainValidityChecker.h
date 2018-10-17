@@ -59,8 +59,9 @@ template <typename MPTraits>
 bool
 TerrainValidityChecker<MPTraits>::
 IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
+  if(_cfg.GetRobot()->GetLabel() == "coordinator")
+    return true;
   auto env = this->GetEnvironment();
-
 
   /// Check whether the cfg is within a terrain boundary. If so,
   //  Check that the capability of its robot matches the capability of the terrain.

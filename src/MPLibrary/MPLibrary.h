@@ -877,6 +877,7 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 RunSolver(const Solver& _solver) {
+  std::string originalBaseFilename = m_problem->GetBaseFilename();
   Initialize();
 
   // Call solver
@@ -921,6 +922,7 @@ RunSolver(const Solver& _solver) {
     VDClose();
 
   Uninitialize();
+  m_problem->SetBaseFilename(originalBaseFilename);
 }
 
 /*----------------------------------------------------------------------------*/

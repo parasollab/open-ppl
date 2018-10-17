@@ -33,6 +33,8 @@ class PathFollowingAgent : public PlanningAgent {
 
     virtual void Uninitialize() override;
 
+    void ClearVisualGraph();
+
     ///@}
     ///@name Planning
     ///@{
@@ -40,7 +42,6 @@ class PathFollowingAgent : public PlanningAgent {
     virtual bool HasPlan() const override;
 
     virtual void ClearPlan() override;
-
     ///@}
 
   protected:
@@ -74,7 +75,7 @@ class PathFollowingAgent : public PlanningAgent {
 
     size_t m_pathVisualID{size_t(-1)}; ///< The ID of the path drawing.
 
-
+    size_t m_graphVisualID{size_t(-1)}; ///< The ID of the graph drawing.
     ///@}
 
 };

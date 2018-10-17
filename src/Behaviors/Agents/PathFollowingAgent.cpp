@@ -50,9 +50,22 @@ PathFollowingAgent::
 Uninitialize() {
   if(!m_initialized)
     return;
+
+  ClearVisualGraph();
+
   PlanningAgent::Uninitialize();
 
   ClearPlan();
+}
+
+void
+PathFollowingAgent::
+ClearVisualGraph(){
+  if(Simulation::Get() and m_graphVisualID != size_t(-1))
+  {
+    Simulation::Get()->RemoveRoadmap(m_graphVisualID);
+    m_graphVisualID = size_t(-1);
+  }
 }
 
 /*--------------------------------- Planning ---------------------------------*/
@@ -73,7 +86,6 @@ ClearPlan() {
     Simulation::Get()->RemovePath(m_pathVisualID);
     m_pathVisualID = size_t(-1);
   }
-
   // Clear path data.
   PlanningAgent::ClearPlan();
   m_path.clear();

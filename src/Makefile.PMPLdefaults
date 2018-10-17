@@ -381,6 +381,7 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Behaviors/Agents/TaskBreakup.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
@@ -443,6 +444,13 @@ PMPL_SRCS := \
   Behaviors/Controllers/ControlSetGenerators.cpp \
   Behaviors/Controllers/SimpleController.cpp \
   Behaviors/Controllers/ICreateController.cpp \
+  Behaviors/TMP/Actions/Action.cpp \
+  Behaviors/TMP/Actions/HandoffTask.cpp \
+  Behaviors/TMP/Actions/MoveRobot.cpp \
+  Behaviors/TMP/Actions/StartTask.cpp \
+  Behaviors/TMP/EnforcedHillClimbing.cpp \
+  Behaviors/TMP/RelaxedGraphPlan.cpp \
+  Behaviors/TMP/State.cpp \
   ConfigurationSpace/Cfg.cpp \
   ConfigurationSpace/GroupCfg.cpp \
   ConfigurationSpace/ReachableVolumes.cpp \

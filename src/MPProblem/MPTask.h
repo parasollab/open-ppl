@@ -122,6 +122,9 @@ class MPTask final {
 
     /// Stores the expected start time of the task
     void SetStartTime(double _arrivalTime);
+    
+    /// Sets the capability required for this task
+    void SetCapability(std::string _capability);
 
     ///@}
     ///@name Constraint Evaluation

@@ -10,10 +10,33 @@ MPHandoffTemplate(MPProblem* _problem, XMLNode& _node) : m_problem(_problem){
 
   m_maxAttempts = _node.Read("maxAttempts", true, 0, 0, MAX_INT,
       "The number of attempts made to place the template in the real environment");
+  
+  m_interactionWeight = _node.Read("interactionWeight", false, 0, 0, 0,
+      "The weight of the connecting edge between interaction robot configurations");
+
+  m_savePaths = _node.Read("savePaths", false, false, 
+      "Indicates if the handoff requires explicit paths");
 
   for(auto& child : _node) {
     if(child.Name() == "Task") {
       m_tasks.emplace_back(new MPTask(m_problem, child));
+    }
+    if(child.Name() == "Location"){
+      const std::string pointString = child.Read("point", false, "", 
+          "The center point of the handoff template");
+      if(!m_tasks[0])
+        throw RunTimeException(WHERE, "Must declare the handoff task components before the locations");
+
+      Cfg point(m_tasks[0]->GetRobot());
+#ifdef VIZMO_MAP
+      std::istringstream pointStream("0 " + pointString);
+#else
+      std::istringstream pointStream(pointString);
+#endif
+      point.Read(pointStream);
+
+      m_handoffLocations.push_back(point);
+
     }
   }
 }
@@ -68,6 +91,69 @@ MPHandoffTemplate::
 GetDistinctRoadmaps() {
   return m_distinctRoadmaps;
 }
+
+std::vector<Cfg>
+MPHandoffTemplate::
+GetLocations(){
+  return m_handoffLocations;
+}
+
+std::vector<Cfg>
+MPHandoffTemplate::
+GetPositions(){
+  std::vector<Cfg> positions;
+  for(auto center : m_handoffLocations){
+    for(auto cfg : m_handoffCfgs){
+      double x = cfg[0];
+      double y = cfg[1];
+      double theta = center[2];
+
+      double newX = x*cos(theta) - y*sin(theta);
+      double newY = y*sin(theta) + y*cos(theta);
+      double oldTheta = cfg[2];
+
+      Cfg newCfg = cfg;
+      newCfg.SetLinearPosition({newX, newY, oldTheta});
+      newCfg += center;
+      positions.push_back(newCfg);
+    }
+  }
+  return positions;
+}
+
+void
+MPHandoffTemplate::
+FindLocations(){
+  //Assumes that manipulators are all in a problem with a fixed base.
+  //Will need to adjust if experiments are changed
+  if(m_tasks[0]->GetRobot()->GetLabel() == "coordinator_m"){
+    //Place tamplate at the base of the fixed manipulator
+    return;
+  }
+  bool sameCapability = true;
+  for(auto& task : m_tasks){
+    for(auto& task2 : m_tasks){
+      if(task->GetCapability() != task2->GetCapability()){
+        sameCapability = false;
+        break;
+      }
+    }
+  } 
+  if(!sameCapability){
+    //disjoint workspaces within current system
+    return;
+  }
+  //conjunct workspaces within current system
+
+  //potentially use Workspace Decomposition path to place
+
+}
+
+bool 
+MPHandoffTemplate::
+SavedPaths(){
+  return m_savePaths;
+}
 /*------------------------------ Member Management --------------------------------*/
 
 void
@@ -83,6 +169,39 @@ AddRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
     const size_t oldVID = vit->descriptor();
     const size_t newVID = 
   }*/
+}
+
+void
+MPHandoffTemplate::
+AddPath(std::vector<Cfg> _path, double _cost){
+  m_distinctPaths.push_back(_path);
+  auto roadmap = m_roadmaps[m_roadmaps.size()-1];
+  auto robot = roadmap->GetRobot();
+  
+  std::vector<double> pathVIDs;
+  pathVIDs.push_back(roadmap->GetVID(_path[0]));
+
+  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
+  *g = *roadmap;
+  for(size_t i = 1; i < _path.size(); i++){
+    auto cfg = _path[i];
+    auto vid = g->GetVID(cfg);
+    g->DeleteVertex(vid);
+    pathVIDs.push_back(vid);
+  }
+  m_pathlessRoadmaps.push_back(g);
+  
+  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* pg = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
+  std::unordered_map<double, double> oldToNew;
+  for(size_t i = 0; i < _path.size(); i++){
+    auto newVID = pg->AddVertex(_path[i]);
+    oldToNew[pathVIDs[i]] = newVID;
+  }
+  
+
+
+  m_pathOnlyRoadmaps.push_back(pg);
+  m_distinctPathCosts.push_back(_cost);
 }
 
 
@@ -136,7 +255,15 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
         continue;
       auto startVID = m_connectedRoadmap->GetVID(start);
       auto endVID = m_connectedRoadmap->GetVID(end);
-      const DefaultWeight<Cfg> weight;
+      DefaultWeight<Cfg> weight;
+      if(m_savePaths){
+        double cost = 0;
+        for(auto c : m_distinctPathCosts){
+          cost += c;
+        }
+        weight.SetWeight(cost);
+      }
+      weight.SetWeight(m_interactionWeight);
       m_connectedRoadmap->AddEdge(startVID, endVID, weight);
     }
   }

@@ -4,22 +4,30 @@
   <!-- Here we specify input files, such as environment and query. -->
   <Problem baseFilename="CoverageProactive">
 
-    <Environment filename="407office_meters.env" positionRes=".01"/>
+    <Environment filename="407office_meters.env" positionRes=".01">
+      <!--Terrain capability="water">
+        <Boundary limits="[4:5 ; -.75:.75 ; -.1:.1]"
+          space="workspace" shape="box" color="white"/>
+      </Terrain-->
+    </Environment>
 
-    <Robot label="member1" filename="iCreate.xml">
-      <Agent type="handoff" debug="false" waypointDm="positionEuclidean"
-        capability="iCreate1"/>
+    <Robot label="member1" filename="iCreate.xml" capability="iCreate" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean"/>
     </Robot>
 
-    <Robot label="member2" filename="iCreate.xml">
-      <Agent type="handoff" debug="false" waypointDm="positionEuclidean"
-        capability="iCreate2"/>
+    <Robot label="member2" filename="iCreate.xml" capability="iCreate" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean"/>
     </Robot>
 
+    <!--Robot label="member3" filename="iCreate.xml" capability="right">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean"/>
+    </Robot-->
+    
     <Robot label="coordinator" virtual="true" filename="iCreate.xml">
-      <Agent type="coordinator" dmLabel="euclidean" debug="true">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true" tmp="true">
         <Member label="member1"/>
         <Member label="member2"/>
+        <!--Member label="member3"/-->
         <HandoffEnvironment filename="handoff.env" positionRes=".01"/>
       </Agent>
     </Robot>
@@ -32,36 +40,53 @@
 
     <Task label="query" robot="member1">
       <StartConstraints>
-        <CSpaceConstraint point="2 0 0"/>
+        <CSpaceConstraint point="1.5 0 0"/>
       </StartConstraints>
     </Task>
 
     <Task label="query" robot="member2">
       <StartConstraints>
-        <CSpaceConstraint point="5 0 0"/>
+        <CSpaceConstraint point="5.5 0 0"/>
       </StartConstraints>
     </Task>
+
+    <!--Task label="query" robot="member3">
+      <StartConstraints>
+        <CSpaceConstraint point="8 0 0"/>
+      </StartConstraints>
+    </Task-->
 
     <Task label="query" robot="coordinator">
       <StartConstraints>
-        <CSpaceConstraint point="7 0 0"/>
+        <!--Should be turned into workspace constraint but okay for now since
+             everything is an icreate-->
+        <CSpaceConstraint point=".75 0 0"/>
       </StartConstraints>
       <GoalConstraints>
-        <CSpaceConstraint point="1 0 0"/>
+        <CSpaceConstraint point="7.5 0 0"/>
       </GoalConstraints>
     </Task>
 
-    <Task label="query" robot="coordinator">
+    <!--Task label="query" robot="coordinator">
+      <StartConstraints>
+        <CSpaceConstraint point="1 0 0"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="7.5 0 0"/>
+      </GoalConstraints>
+    </Task-->
+
+    <!--Task label="query" robot="coordinator">
       <StartConstraints>
         <CSpaceConstraint point="3 0 0"/>
       </StartConstraints>
       <GoalConstraints>
-        <CSpaceConstraint point="8 1 0"/>
+        <CSpaceConstraint point="-2 1 0"/>
       </GoalConstraints>
-    </Task>
+    </Task-->
     
-    <HandoffTemplate label="robotmatingsequence" maxAttempts="5">
-      <Task label="query" robot="coordinator" capability="iCreate1">
+    <HandoffTemplate label="robotmatingsequence" maxAttempts="12">
+      <Task label="query" robot="coordinator" capability="iCreate">
         <StartConstraints>
           <CSpaceConstraint bbx="[-1.0:-0.8 ; -0.1:0.1]"/>
         </StartConstraints>
@@ -70,7 +95,7 @@
         </GoalConstraints>
       </Task>
 
-      <Task label="query" robot="coordinator" capability="iCreate2">
+      <Task label="query" robot="coordinator" capability="iCreate">
         <StartConstraints>
           <CSpaceConstraint bbx="[0.8:1.0 ; -0.1:0.1]"/>
         </StartConstraints>
@@ -78,8 +103,9 @@
           <CSpaceConstraint point=".2 0 0"/>
         </GoalConstraints>
       </Task>
-    </HandoffTemplate>
 
+      <Location point="4 0 0"/>
+    </HandoffTemplate>
 
   </Problem>
 
@@ -106,6 +132,7 @@
       <CollisionDetection label="pqp" method="PQP"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="pqp_solid_robot" method="PQP_SOLID" interRobotCollision="true"/>
+      <TerrainValidity label="terrain"/>
       <NodeClearanceValidity label="nc" delta="0.3" nfLabel="Nearest"/>
       <NegateValidity label="nv" vcLabel="rapid"/>
       <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp_solid"
@@ -114,6 +141,14 @@
       <ComposeValidity label="cv" operator="AND">
         <ValidityChecker label="pqp_solid"/>
         <ValidityChecker label="mac"/>
+      </ComposeValidity>
+      <ComposeValidity label="terrain_robot" operator="AND">
+        <ValidityChecker label="pqp_solid_robot"/>
+        <ValidityChecker label="terrain"/>
+      </ComposeValidity>
+      <ComposeValidity label="terrain_solid" operator="AND">
+        <ValidityChecker label="pqp_solid"/>
+        <ValidityChecker label="terrain"/>
       </ComposeValidity>
       <AlwaysTrueValidity label="alwaysTrue"/>
       <ObstacleClearance label="oc" clearanceThreshold="1" vcLabel="pqp_solid"/>
@@ -149,6 +184,7 @@
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
       <UniformRandomSampler label="UniformRandomFreeRobot" vcLabel="pqp_solid_robot"/>
+      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_solid"/>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="1" debug="false"/>
@@ -177,8 +213,8 @@
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
-      <StraightLine label="slRobot" binaryEvaluation="true" vcLabel="pqp_solid_robot"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="terrain_solid"/>
+      <StraightLine label="slRobot" binaryEvaluation="true" vcLabel="terrain_robot"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
         vcLabel="alwaysTrue"/>
       <RotateAtS label="ras" binaryEvaluation="true" vcLabel="rapid" s="0.5"
@@ -338,13 +374,24 @@
       <PRMQuery label="PRMQuery" debug="false" vcLabel="pqp_solid">
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
+      <PRMQuery label="TerrainPRMQuery" debug="false" vcLabel="terrain_solid">
+        <NodeConnectionMethod method="Closest"/>
+      </PRMQuery>
       <RRTQuery label="RRTQuery" goalDist="0"
         nfLabel="Nearest" exLabel="BERO" debug="false" vcLabel="pqp_solid"/>
       <RRTQuery label="KinoRRTQuery" goalDist=".3"
         nfLabel="Nearest" exLabel="KinoExtender" debug="false" vcLabel="pqp_solid"/>
+      <LazyQuery label="MegaLazyQuery"
+        lpLabel="slRobot" dmLabel="euclidean" graphSearchAlg="astar"
+        debug="false" numEnhance="0" d="0.5" deleteInvalid="true" vcLabel="terrain_solid">
+        <NodeConnectionMethod method="ClosestRobot"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
       <LazyQuery label="LazyQuery"
         lpLabel="slRobot" dmLabel="euclidean" graphSearchAlg="astar"
-        debug="false" numEnhance="10" d="0.5" deleteInvalid="false" vcLabel="pqp_solid_robot">
+        debug="false" numEnhance="10" d="0.5" deleteInvalid="true" vcLabel="terrain_robot">
         <NodeConnectionMethod method="ClosestRobot"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
@@ -570,8 +617,8 @@
       </UAStrategy-->
 
       <!-- EvaluateMapStrategy -->
-      <EvaluateMapStrategy label="EvaluateMapStrategy" mapFilename="3D/3d.map">
-        <Evaluator label="NodesEval"/>
+      <EvaluateMapStrategy label="EvaluateMapStrategy">
+        <Evaluator label="MegaLazyQuery"/>
       </EvaluateMapStrategy>
 
       <UtilityGuidedGenerator label="UtilityGuided" vcLabel="rapid" nfLabel="BFNF"
@@ -690,7 +737,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="BasicPRM1" seed="88871685"
       baseFilename="handoff" vizmoDebug="true"/>
 
   </Library>

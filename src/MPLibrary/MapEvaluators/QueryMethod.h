@@ -672,8 +672,9 @@ GenerateQuery() {
       throw RunTimeException(WHERE) << "Could not generate valid start "
                                     << "configuration in boundary "
                                     << *startBoundary
-                                    << " with validity checker '" << m_vcLabel
-                                    << "'.";
+                                    << " with validity checker '"
+                                    << m_vcLabel << "' for "
+                                    << robot->GetLabel() << ".";
   } while(!vc->IsValid(start, "QueryMethod::GenerateQuery"));
 
 #ifdef PMPL_USE_MATLAB
@@ -735,7 +736,8 @@ GenerateQuery() {
                                       << "configuration in boundary "
                                       << *goalBoundary
                                       << " with validity checker '"
-                                      << m_vcLabel << "'.";
+                                      << m_vcLabel << "' for "
+                                      << robot->GetLabel() << ".";
     } while(!vc->IsValid(goal, "QueryMethod::GenerateQuery"));
 
     m_query.push_back(goal);

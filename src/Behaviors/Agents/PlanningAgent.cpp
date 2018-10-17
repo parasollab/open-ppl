@@ -171,7 +171,6 @@ ClearPlan() {
     m_solution->GetPath()->Clear();
 }
 
-
 bool
 PlanningAgent::
 IsPlanning() const {
@@ -183,6 +182,12 @@ size_t
 PlanningAgent::
 GetPlanVersion() const {
   return m_planVersion;
+}
+
+MPSolution*
+PlanningAgent::
+GetMPSolution() {
+  return m_solution.get();
 }
 
 /*---------------------------- Planning Helpers ------------------------------*/

@@ -91,6 +91,10 @@ class Agent {
     /// Get the task that the agent is currently working on.
     std::shared_ptr<MPTask> GetTask() const noexcept;
 
+    /// Resets the start constraint of the current task to the robot's current
+    /// position
+    virtual void ResetStartConstraint(); 
+    
     ///@}
     ///@name Simulation Interface
     ///@{

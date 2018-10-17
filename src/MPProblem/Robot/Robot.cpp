@@ -13,6 +13,7 @@
 #include "HardwareInterfaces/StateEstimator.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Environment/Environment.h"
+#include "Simulator/Conversions.h"
 #include "Simulator/BulletModel.h"
 #include "Simulator/MatlabMicroSimulator.h"
 #include "Simulator/MicroSimulator.h"
@@ -43,6 +44,8 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // Check if this robot is flagged as virtual.
   m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
       "and will not be included in the simulation or CD checks.");
+
+  m_manipulator = _node.Read("manipulator", false, false, "Is the robot a manipulator?");
 
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
@@ -105,6 +108,25 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // Initialize the emulated battery.
   m_battery = std::unique_ptr<Battery>(new Battery());
 
+  //Set color of the robot
+  std::string color = _node.Read("color", false, "", "The color of the robot multibody");
+  glutils::color c;
+  //Try to use RGB notation
+  if(color != ""){
+    try{
+      std::stringstream ss(color);
+      ss >> c;
+    }
+    //Otherwise use color name
+    catch(nonstd::exception){
+      c = StringToColor(color);
+    }
+    for(size_t i = 0; i < m_multibody->GetNumBodies(); i++){
+      m_multibody->GetBody(i)->SetColor(c);
+    }
+  }
+
+
   // Initialize the end effector
 }
 
@@ -130,7 +152,8 @@ Robot(MPProblem* const _p, const Robot& _r)
     m_nonholonomic(_r.m_nonholonomic),
     m_carlike(_r.m_carlike),
     m_maxLinearVelocity(_r.m_maxLinearVelocity),
-    m_maxAngularVelocity(_r.m_maxAngularVelocity)
+    m_maxAngularVelocity(_r.m_maxAngularVelocity),
+    m_capability(_r.m_capability)
 {
   // Copy the robot label. If the robot was copied to the same problem, append
   // _copy to the end of the label to make sure it is unique.
@@ -575,6 +598,12 @@ void
 Robot::
 SetCapability(const std::string& _capability) {
   m_capability = _capability;
+}
+
+bool
+Robot::
+IsManipulator() const noexcept {
+  return m_manipulator;
 }
 
 /*---------------------------------- Debug -----------------------------------*/
