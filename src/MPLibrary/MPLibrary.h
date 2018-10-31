@@ -1,5 +1,5 @@
-#ifndef MP_LIBRARY_H_
-#define MP_LIBRARY_H_
+#ifndef PMPL_MP_LIBRARY_H_
+#define PMPL_MP_LIBRARY_H_
 
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <unordered_map>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +54,7 @@ class MPLibraryType final
     typedef typename MPTraits::GroupPathType    GroupPath;
     typedef typename MPTraits::MPTools          MPTools;
     typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
+    typedef typename MPTraits::GoalTracker      GoalTracker;
 
     ///@}
     ///@name Local Types
@@ -107,7 +109,9 @@ class MPLibraryType final
     ///@{
 
     MPLibraryType();
+
     MPLibraryType(const std::string& _filename);
+
     ~MPLibraryType();
 
     ///@}
@@ -115,7 +119,7 @@ class MPLibraryType final
     ///@{
 
     /// Read an XML file to set the algorithms and parameters in this instance.
-    /// @param[in] _filename The XML file name.
+    /// @param _filename The XML file name.
     void ReadXMLFile(const std::string& _filename);
 
     ///@}
@@ -280,6 +284,8 @@ class MPLibraryType final
     Path*             GetPath(Robot* const _r = nullptr) const noexcept;
     GroupPath*        GetGroupPath() const noexcept;
     LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const noexcept;
+
+    GoalTracker*      GetGoalTracker() const noexcept;
     StatClass*        GetStatClass() const noexcept;
 
     ///@}
@@ -369,7 +375,7 @@ class MPLibraryType final
     void Uninitialize();
 
     /// Helper for parsing XML nodes.
-    /// @param[in] _node The child node to be parsed.
+    /// @param _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
 
     ///@}
@@ -406,6 +412,7 @@ class MPLibraryType final
     /// These do not use method sets because the sub-objects are not expected to
     /// share a common interface.
 
+    std::unique_ptr<GoalTracker> m_goalTracker;
     MPTools* m_mpTools{nullptr};
 
     ///@}
@@ -478,6 +485,9 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Initialize() {
+  // Create the goal tracker.
+  m_goalTracker.reset(new GoalTracker(GetRoadmap(), GetTask()));
+
   m_distanceMetrics->Initialize();
   m_validityCheckers->Initialize();
   m_neighborhoodFinders->Initialize();
@@ -498,9 +508,13 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Uninitialize() {
+  // Clear goal tracker.
+  m_goalTracker.reset(nullptr);
+
+  // Clear group hooks.
   GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
   if(groupMap)
-    groupMap->ClearHooks(); // Clear each individual roadmap's hooks.
+    groupMap->ClearHooks();
 
   // Also clear hooks for the individual robot if it exists:
   if(m_solution->GetRobot())
@@ -776,6 +790,15 @@ typename MPTraits::LocalObstacleMap*
 MPLibraryType<MPTraits>::
 GetLocalObstacleMap(Robot* const _r) const noexcept {
   return m_solution->GetLocalObstacleMap(_r);
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::GoalTracker*
+MPLibraryType<MPTraits>::
+GetGoalTracker() const noexcept {
+  return m_goalTracker.get();
 }
 
 

@@ -1,12 +1,10 @@
 #include "HandoffAgent.h"
 
-#include <limits>
-#include <unordered_map>
-#include <algorithm>
 #include "ConfigurationSpace/Cfg.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "Behaviors/Controllers/ICreateController.h"
 #include "Behaviors/Agents/Coordinator.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
@@ -22,6 +20,9 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
+#include <limits>
+#include <unordered_map>
+#include <algorithm>
 
 
 /*------------------------------ Construction --------------------------------*/

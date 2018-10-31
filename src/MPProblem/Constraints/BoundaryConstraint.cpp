@@ -27,15 +27,19 @@ BoundaryConstraint(Robot* const _r, XMLNode& _node)
 
 
 BoundaryConstraint::
+BoundaryConstraint(const BoundaryConstraint& _other)
+  : BoundaryConstraint(_other.m_robot, _other.m_boundary->Clone())
+{ }
+
+
+BoundaryConstraint::
 ~BoundaryConstraint() = default;
 
 
 std::unique_ptr<Constraint>
 BoundaryConstraint::
 Clone() const {
-  return std::unique_ptr<BoundaryConstraint>(
-      new BoundaryConstraint(m_robot, m_boundary->Clone())
-  );
+  return std::unique_ptr<BoundaryConstraint>(new BoundaryConstraint(*this));
 }
 
 /*-------------------------- Constraint Interface ----------------------------*/
@@ -60,7 +64,7 @@ Satisfied(const Cfg& _c) const {
 
 std::ostream&
 operator<<(std::ostream& _os, const BoundaryConstraint& _c) {
-  return _os << *_c.GetBoundary();
+  return _os << "BoundaryConstraint: " << *_c.GetBoundary();
 }
 
 /*----------------------------------------------------------------------------*/

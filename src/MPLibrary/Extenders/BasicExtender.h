@@ -1,15 +1,17 @@
-#ifndef BASIC_EXTENDER_H_
-#define BASIC_EXTENDER_H_
+#ifndef PMPL_BASIC_EXTENDER_H_
+#define PMPL_BASIC_EXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Basic straight-line extension.
+/// Basic straight-line extension.
 ///
 /// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
 /// \f$\Delta q\f$ is extended, or @cobst is reached.
+///
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class BasicExtender : public ExtenderMethod<MPTraits> {
@@ -28,8 +30,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    BasicExtender(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _min = .001, double _max = 1, bool _randomOrientation = true);
+    BasicExtender();
 
     BasicExtender(XMLNode& _node);
 
@@ -39,7 +40,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name ExtenderMethod Overrides
@@ -49,10 +50,8 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
         CfgType& _new, LPOutput<MPTraits>& _lp) override;
 
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
-           CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) override;
+        CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) override;
 
-
-    /// GroupCfg Overrides:
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
         const Formation& _robotIndexes = Formation()) override;
@@ -62,6 +61,9 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
         const Formation& _robotIndexes = Formation()) override;
 
     ///@}
+
+  protected:
+
     ///@name Helpers
     ///@{
 
@@ -81,7 +83,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
         double _posRes, double _oriRes);
 
 
-    /// GroupCfg Overrides:
+    /// GroupCfg Overrides
     bool Expand(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
         double _posRes, double _oriRes,
@@ -92,15 +94,12 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
         const Formation& _robotIndexes = Formation());
 
     ///@}
-
-  protected:
-
     ///@name Internal State
     ///@{
 
-    string m_dmLabel;         ///< The distance metric to use.
-    string m_vcLabel;         ///< The validity checker to use.
-    bool m_randomOrientation; ///< Setting this to false fixes orientation.
+    std::string m_dmLabel;          ///< The distance metric to use.
+    std::string m_vcLabel;          ///< The validity checker to use.
+    bool m_randomOrientation{true}; ///< Setting this to false fixes orientation.
 
     ///@}
 };
@@ -109,10 +108,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 
 template <typename MPTraits>
 BasicExtender<MPTraits>::
-BasicExtender(const string& _dmLabel, const string& _vcLabel, double _min,
-    double _max, bool _randomOrientation) :
-    ExtenderMethod<MPTraits>(_min, _max), m_dmLabel(_dmLabel),
-    m_vcLabel(_vcLabel), m_randomOrientation(_randomOrientation) {
+BasicExtender() {
   this->SetName("BasicExtender");
 }
 
@@ -124,8 +120,8 @@ BasicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
 
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric label");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label");
-  m_randomOrientation = _node.Read("randomOrientation", false, true,
-      "Random orientation");
+  m_randomOrientation = _node.Read("randomOrientation", false,
+      m_randomOrientation, "Use random orientation?");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -133,11 +129,12 @@ BasicExtender(XMLNode& _node) : ExtenderMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 BasicExtender<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   ExtenderMethod<MPTraits>::Print(_os);
-  _os << "\tdistance metric : \"" << m_dmLabel << "\"" << endl
-      << "\tvalidity checker : \"" << m_vcLabel << "\"" << endl
-      << "\trandom orientation : " << (m_randomOrientation ? "y" : "n") << endl;
+  _os << "\tdistance metric: " << m_dmLabel
+      << "\n\tvalidity checker: " << m_vcLabel
+      << "\n\trandom orientation: " << m_randomOrientation
+      << std::endl;
 }
 
 /*------------------------- ExtenderMethod Overrides -------------------------*/
@@ -146,7 +143,7 @@ template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
-       LPOutput<MPTraits>& _lp) {
+    LPOutput<MPTraits>& _lp) {
   Environment* env = this->GetEnvironment();
 
   // If non-random orientation, adjust the end's non-positional DOFs to match
@@ -166,8 +163,8 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
 template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
-Extend(const CfgType& _start, const CfgType& _end,
-       CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
+Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
+    LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
   Environment* env = this->GetEnvironment();
 
   //Clear out all data, retaining whether all CD data was wanted:
@@ -180,10 +177,11 @@ Extend(const CfgType& _start, const CfgType& _end,
     for(size_t i = end.PosDOF(); i < _end.DOF(); i++)
       end[i] = _start[i];
     return Expand(_start, end, _new, this->m_maxDist, _lp, _cdInfo,
-                  env->GetPositionRes(), env->GetOrientationRes());
+        env->GetPositionRes(), env->GetOrientationRes());
   }
+
   return Expand(_start, _end, _new, this->m_maxDist, _lp, _cdInfo,
-                env->GetPositionRes(), env->GetOrientationRes());
+      env->GetPositionRes(), env->GetOrientationRes());
 }
 
 
@@ -192,15 +190,13 @@ bool
 BasicExtender<MPTraits>::
 Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
        GroupLPOutput<MPTraits>& _lp, const Formation& _robotIndexes) {
-  if(_robotIndexes.empty())
-    throw RunTimeException(WHERE, "Need active bodies if using disassembly extender!");
   Environment* env = this->GetEnvironment();
 
-  _lp.SetLPLabel(this->GetLabel());//Not ideal, as this is an extender, but oh well.
+  _lp.SetLPLabel(this->GetLabel());
   _lp.SetActiveRobots(_robotIndexes);
 
   return Expand(_start, _end, _new, this->m_maxDist, _lp,
-                env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
+      env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
 }
 
 
@@ -208,20 +204,17 @@ template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
-       GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-       const Formation& _robotIndexes) {
-  if(_robotIndexes.empty())
-    throw RunTimeException(WHERE, "Need active bodies if using disassembly extender!");
-
+    GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
+    const Formation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
-  _lp.SetLPLabel(this->GetLabel());//Not ideal, as this is an extender, but oh well.
+
+  _lp.SetLPLabel(this->GetLabel());
   _lp.SetActiveRobots(_robotIndexes);
 
-  //Clear out all data, retaining whether all CD data was wanted:
-    _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
+  _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
 
   return Expand(_start, _end, _new, this->m_maxDist, _lp, _cdInfo,
-                env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
+      env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
 }
 
 /*-------------------------------- Helpers? ----------------------------------*/
@@ -230,7 +223,7 @@ template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
-       double _delta, LPOutput<MPTraits>& _lp, double _posRes, double _oriRes) {
+    double _delta, LPOutput<MPTraits>& _lp, double _posRes, double _oriRes) {
   CDInfo cdInfo;
   return Expand(_start, _end, _newCfg, _delta, _lp, cdInfo, _posRes, _oriRes);
 }
@@ -245,9 +238,10 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   _lp.Clear();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
-  const std::string callee("BasicExtender::Expand");
 
-  CfgType incr(this->GetTask()->GetRobot()), tick = _start, previous = _start;
+  CfgType incr(this->GetTask()->GetRobot()),
+          tick = _start,
+          previous = _start;
   bool collision = false;
   int nTicks, ticker = 0;
 
@@ -267,7 +261,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
         ticker <= nTicks) {
     previous = tick;
     tick += incr;
-    if(!vc->IsValid(tick, _cdInfo, callee))
+    if(!vc->IsValid(tick, _cdInfo, "BasicExtender::Expand"))
       collision = true; //return previous tick, as it is collision-free
     ++ticker;
   }
@@ -306,17 +300,16 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   return distance >= this->m_minDist;
 }
 
+
 template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Expand(const GroupCfgType& _start, const GroupCfgType& _end,
-       GroupCfgType& _newCfg,
-       double _delta, GroupLPOutput<MPTraits>& _lp,
-       double _posRes, double _oriRes,
-       const Formation& _robotIndexes) {
+    GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
+    double _posRes, double _oriRes, const Formation& _robotIndexes) {
   CDInfo cdInfo;
   return Expand(_start, _end, _newCfg, _delta, _lp, cdInfo, _posRes, _oriRes,
-                _robotIndexes);
+      _robotIndexes);
 }
 
 
@@ -324,17 +317,20 @@ template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Expand(const GroupCfgType& _start, const GroupCfgType& _end,
-       GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
-       CDInfo& _cdInfo, double _posRes, double _oriRes,
-       const Formation& _robotIndexes) {
+    GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
+    CDInfo& _cdInfo, double _posRes, double _oriRes,
+    const Formation& _robotIndexes) {
   if(_robotIndexes.empty())
-    throw RunTimeException(WHERE, "Need active bodies if using disassembly "
-                                  "extender!");
+    throw RunTimeException(WHERE) << "TODO: Need to fix group Cfg extenders to "
+                                  << "work for the general case and not just "
+                                  << "disassembly. Code needs to be adjusted so "
+                                  << "that an empty formation means all robots "
+                                  << "move without using a formation.";
+
 
   Environment* const env = this->GetEnvironment();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
-  string callee("GroupExtender::Expand");
 
   GroupCfgType tick = _start;
   GroupCfgType previous = _start;
@@ -417,7 +413,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     }
 
     if(tick.InBounds(env->GetBoundary())) {
-      if(!vc->IsValid(tick, _cdInfo, callee, _robotIndexes)) {
+      if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand", _robotIndexes)) {
         collision = true; //return previous tick, as it is collision-free
         if(this->m_debug)
           std::cout << "Collision found for extension tick!" << std::endl;

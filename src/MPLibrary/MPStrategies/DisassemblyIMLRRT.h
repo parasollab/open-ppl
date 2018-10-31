@@ -1,24 +1,17 @@
-#ifndef DISASSEMBLY_IMLRRT_H_
-#define DISASSEMBLY_IMLRRT_H_
+#ifndef PMPL_DISASSEMBLY_IML_RRT_H_
+#define PMPL_DISASSEMBLY_IML_RRT_H_
 
 #include "DisassemblyMethod.h"
 #include "nonstd.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Implementation of the I-ML-RRT disassembly method.
+///
+/// Reference:
+///   D. T. Le, J. Cortés, and T. Siméon, “A path planning approach to
+///   (dis) assembly sequencing,” CASE 2009.
+///
 /// @ingroup MotionPlanningStrategies
-/// @brief Implementation of the I-ML-RRT disassembly method.
-///
-///
-/// This is the comparison method from our publication:
-/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
-/// “A general and flexible search framework for disassembly planning,”
-/// in International Conference on Robotics and Automation, May 2018.
-///
-/// The actual paper it is from is:
-/// D. T. Le, J. Cortés, and T. Siméon, “A path planning approach to
-/// (dis) assembly sequencing,” in Automation Science and Engineering,
-/// 2009. CASE 2009. IEEE International Conference on. IEEE, 2009,
-/// pp. 286–291.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyIMLRRT : public DisassemblyMethod<MPTraits> {

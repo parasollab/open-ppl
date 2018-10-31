@@ -51,7 +51,7 @@ MultiStrategy<MPTraits>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     if(child.Name() == "MPStrategy")
-        m_mpsLabels.push_back(child.Read("method", true, "", "MPStrategy"));
+        m_mpsLabels.push_back(child.Read("label", true, "", "MPStrategy"));
 }
 
 

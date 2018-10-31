@@ -1,5 +1,5 @@
-#ifndef MP_TASK_TYPE_H_
-#define MP_TASK_TYPE_H_
+#ifndef PMPL_MP_TASK_TYPE_H_
+#define PMPL_MP_TASK_TYPE_H_
 
 #include <memory>
 #include <string>

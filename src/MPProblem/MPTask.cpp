@@ -207,6 +207,7 @@ GetStartTime() const noexcept {
   return m_startTime;
 }
 
+
 std::string
 MPTask::
 GetCapability() const {
@@ -276,7 +277,8 @@ Evaluate(const std::vector<Cfg>& _p) const {
 bool
 MPTask::
 EvaluateStartConstraint(const std::vector<Cfg>& _p) const {
-  const bool ok = !m_startConstraint.get() or m_startConstraint->Satisfied(_p.front());
+  const bool ok = !m_startConstraint.get()
+               or m_startConstraint->Satisfied(_p.front());
   if(ok and m_status == OnDeck)
     m_status = InProgress;
   return ok;

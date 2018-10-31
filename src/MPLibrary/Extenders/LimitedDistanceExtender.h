@@ -5,9 +5,11 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Limited Distance Extender for nonholonomic robots.
-/// Extensions are limited by fixed or variable euclidean distance instead of
-/// time steps.
+/// Limited Distance Extender for nonholonomic robots. Extensions are limited by
+/// fixed or variable euclidean distance instead of time steps.
+///
+/// @todo Merge this into Kinodynamic extender. It should require only another
+///       XML option or two.
 ///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,10 +27,7 @@ class LimitedDistanceExtender : public KinodynamicExtender<MPTraits> {
     ///@name Construction
     ///@{
 
-    LimitedDistanceExtender(const string& _dmLabel = "",
-        const string& _vcLabel = "", const size_t _minTimeSteps = 1,
-        const double _min = .001, const size_t _steps = 10,
-        const bool _fixed = true, const bool _best = false);
+    LimitedDistanceExtender();
 
     LimitedDistanceExtender(XMLNode& _node);
 
@@ -83,11 +82,7 @@ class LimitedDistanceExtender : public KinodynamicExtender<MPTraits> {
 
 template <typename MPTraits>
 LimitedDistanceExtender<MPTraits>::
-LimitedDistanceExtender(const string& _dmLabel, const string& _vcLabel,
-    const size_t _minTimeSteps, const double _min, const size_t _steps,
-    const bool _fixed, const bool _best)
-    : KinodynamicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _steps, _fixed,
-        _best), m_minTimeSteps(_minTimeSteps) {
+LimitedDistanceExtender() {
   this->SetName("LimitedDistanceExtender");
 }
 

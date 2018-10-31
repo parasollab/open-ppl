@@ -1,11 +1,14 @@
 #include "TaskBreakup.h"
+
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/MPHandoffTemplate.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
 #include "Traits/CfgTraits.h"
+
 
 TaskBreakup::
 TaskBreakup(Robot* _robot) : m_robot(_robot) {}
@@ -97,13 +100,13 @@ BreakupTask(WholeTask* _wholeTask){
           auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
 
           std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
-              new CSpaceBoundingSphere(subtaskStart.GetPosition(), radius));  
+              new CSpaceBoundingSphere(subtaskStart.GetPosition(), radius));
           auto startConstraint = std::unique_ptr<BoundaryConstraint>
             (new BoundaryConstraint(checkRobot, std::move(boundingSphere)));
 
 
           std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
-              new CSpaceBoundingSphere(subtaskEnd.GetPosition(), radius));  
+              new CSpaceBoundingSphere(subtaskEnd.GetPosition(), radius));
           auto goalConstraint = std::unique_ptr<BoundaryConstraint>
             (new BoundaryConstraint(checkRobot, std::move(boundingSphere2)));
 
@@ -152,7 +155,7 @@ BreakupTask(WholeTask* _wholeTask){
           subtask->AddGoalConstraint(std::move(goalConstraint));
         }
 
-        subtask->SetCapability(subtaskStart.GetRobot()->GetAgent()->GetCapability()); 
+        subtask->SetCapability(subtaskStart.GetRobot()->GetAgent()->GetCapability());
 
         if(m_debug){
           std::cout << "Start of subtask: " << subtaskStart.PrettyPrint() << std::endl;
@@ -167,7 +170,7 @@ BreakupTask(WholeTask* _wholeTask){
         }
         subtaskStart = cfg;
       }
-    } 
+    }
   }
   Simulation::GetStatClass()->StopClock("IT Task Decomposition");
 }

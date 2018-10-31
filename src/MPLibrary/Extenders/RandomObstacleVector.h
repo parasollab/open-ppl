@@ -1,5 +1,5 @@
-#ifndef RANDOM_OBSTACLE_VECTOR_H_
-#define RANDOM_OBSTACLE_VECTOR_H_
+#ifndef PMPL_RANDOM_OBSTACLE_VECTOR_H_
+#define PMPL_RANDOM_OBSTACLE_VECTOR_H_
 
 #include "BasicExtender.h"
 
@@ -12,6 +12,7 @@
 /// In this extend method, \f$q_{dir} = q_{near} + O\f$ where \f$O\f$ is a
 /// random obstacle vector from all of the triangles in the environment. The
 /// oriantation DOFs are set randomly.
+///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -28,8 +29,7 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
     ///@name Construction
     ///@{
 
-    RandomObstacleVector(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _min = .001, double _max = 1, bool _randomOrientation = true);
+    RandomObstacleVector();
 
     RandomObstacleVector(XMLNode& _node);
 
@@ -49,9 +49,7 @@ class RandomObstacleVector : public BasicExtender<MPTraits> {
 
 template <typename MPTraits>
 RandomObstacleVector<MPTraits>::
-RandomObstacleVector(const string& _dmLabel, const string& _vcLabel,
-    double _min, double _max, bool _randomOrientation) :
-    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max, _randomOrientation) {
+RandomObstacleVector() {
   this->SetName("RandomObstacleVector");
 }
 

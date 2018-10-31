@@ -1,10 +1,11 @@
 #ifndef PMPL_EXTENDER_METHOD_H_
 #define PMPL_EXTENDER_METHOD_H_
 
-#include <limits>
-
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/GroupLPOutput.h"
+
+#include <limits>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref Extenders.
@@ -26,16 +27,6 @@
 template <class MPTraits>
 class ExtenderMethod : public MPBaseObject<MPTraits> {
 
-  protected:
-
-    ///@name Extender Properties
-    ///@{
-
-    double m_minDist;  ///< The minimum valid extension distance.
-    double m_maxDist;  ///< The maximum valid extension distance.
-
-    ///@}
-
   public:
 
     ///@name Motion Planning Types
@@ -49,7 +40,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///@name Construction
     ///@{
 
-    ExtenderMethod(const double _min = .001, const double _max = 1);
+    ExtenderMethod() = default;
 
     ExtenderMethod(XMLNode& _node);
 
@@ -59,7 +50,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name Required Interface
@@ -86,7 +77,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
 
     /// An optional version if CDInfo is desired. Not required to implement.
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
-            CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo);
+        CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo);
 
 
     /// GroupCfg Overrides:
@@ -99,15 +90,20 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
         const std::vector<size_t>& _robotIndexes = {});
 
     ///@}
+
+  protected:
+
+    ///@name Extender Properties
+    ///@{
+
+    double m_minDist;  ///< The minimum valid extension distance.
+    double m_maxDist;  ///< The maximum valid extension distance.
+
+    ///@}
+
 };
 
 /*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-ExtenderMethod<MPTraits>::
-ExtenderMethod(const double _min, const double _max) :
-    m_minDist(_min), m_maxDist(_max) { }
-
 
 template <typename MPTraits>
 ExtenderMethod<MPTraits>::
@@ -117,6 +113,7 @@ ExtenderMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   m_maxDist = _node.Read("maxDist", false, 1., 0.,
       std::numeric_limits<double>::max(), "The maximum allowed distance to "
       "expand from the starting node to the target node.");
+
   m_minDist = _node.Read("minDist", false, .1, std::numeric_limits<double>::min(),
       std::numeric_limits<double>::max(), "The minimum valid distance when "
       "expanding from the starting node to the target node (shorter extensions "

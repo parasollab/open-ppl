@@ -11,22 +11,21 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/SSSP.h"
+
 #include "nonstd/io.h"
-
-#include "containers/sequential/graph/algorithms/astar.h"
-
-#ifdef PMPL_USE_MATLAB
-#include "Simulator/MatlabMicroSimulator.h"
-#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base class for all query methods. These objects evaluate a roadmap under
-/// construction to see if a planning query has been satisfied.
+/// construction to see if a planning task has been satisfied.
 ///
-/// @todo Reduce the various queries to a single class with a flag controlling
-///       lazy evaluation and a connector or MPStrategy controlling connection
-///       to the goal.
+/// The planning task is defined by the MPTask's Constraint objects. The query
+/// works on the current MPTask and aims to find a connecting path between
+/// configurations satisfying its start and goal constraints.
+///
+/// @note The query will consider multiple nodes satisfying the goal constraints
+///       and quit after finding the first. This is an incomplete algorithm if
+///       your problem has a sequence of non-point goals.
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,25 +40,34 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::CfgType            CfgType;
     typedef typename MPTraits::WeightType         WeightType;
     typedef typename MPTraits::RoadmapType        RoadmapType;
+    typedef typename MPTraits::GoalTracker        GoalTracker;
     typedef typename RoadmapType::GraphType       GraphType;
     typedef typename GraphType::VID               VID;
     typedef typename GraphType::EID::edge_id_type EID;
+    typedef typename GoalTracker::VIDSet          VIDSet;
 
-    typedef stapl::sequential::map_property_map<GraphType, size_t> ColorMap;
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    enum GraphSearchAlg {DIJKSTRAS, ASTAR}; ///< The supported sssp algorithms.
 
     ///@}
     ///@name Construction
     ///@{
 
     QueryMethod();
+
     QueryMethod(XMLNode& _node);
+
     virtual ~QueryMethod() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
+
     virtual void Initialize() override;
 
     ///@}
@@ -72,42 +80,11 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Query Interface
     ///@{
 
-    const vector<CfgType>& GetQuery() const {return m_query;}
-    const vector<CfgType>& GetGoals() const {return m_goals;}
-
-    /// Check whether a path can be drawn through all query points using the
-    /// configurations in a given roadmap.
-    /// @param[in] _r The roadmap to search.
-    /// @return A bool indicating whether a path in _r traversing all goals was
-    ///         found.
-    virtual bool PerformQuery(RoadmapType* const _r);
-
-    /// Check whether a path connecting a given start and goal exists in the
-    /// roadmap.
-    /// @param[in] _start The starting configuration to use.
-    /// @param[in] _goal  The goal configuration to use.
-    /// @return A bool indicating whether the path was found.
-    virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal) = 0;
-
-    /// Read a Query file.
-    /// @param[in] _filename The query file to read.
-    void ReadQuery(string _filename);
-
-    /// Output the discovered path to file.
-    void WritePath() const;
-
-    /// Takes a string and sets m_dmLabel
-    /// @param[in] _label The Distance Metric being used
-    void SetDMLabel(string _dmLabel);
-
-    /// Reset the path and list of undiscovered goals.
-    virtual void Reset(RoadmapType* const _r);
-
-    /// Generate a path through the roadmap from a start node to an end node.
-    /// Made public for	disassembly planning.
-    /// @param[in] _start The start node.
-    /// @param[in] _end The end node.
-    std::vector<VID> GeneratePath(const VID _start, const VID _end);
+    /// Set an alternate distance metric to use when searching the roadmap
+    /// (instead of the saved edge weights).
+    /// @param _label The Distance Metric label to use. Set to empty string to
+    ///               use the saved edge weights.
+    void SetDMLabel(const std::string& _dmLabel);
 
     ///@}
 
@@ -116,16 +93,25 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
+    /// Reset the path and list of undiscovered goals.
+    virtual void Reset(RoadmapType* const _r);
+
     /// Set the search algorithm choice from a string.
     /// @param _alg The search algorithm to use ('astar' or 'dijkstras').
     /// @param _where Error location info in case _alg isn't recognized.
-    void SetSearchAlgViaString(string _alg, const string& _where);
+    void SetSearchAlgViaString(std::string _alg, const std::string& _where);
 
-    /// Check if a two nodes are connected by the roadmap.
-    /// @param[in] _start The starting node's descriptor.
-    /// @param[in] _end The ending node's descriptor.
-    /// @return True if _start and _goal are connected.
-    bool SameCC(const VID _start, const VID _end) const;
+    /// Check whether a path connecting a start to one of several goals exists
+    /// in the roadmap.
+    /// @param _start The start VID to use.
+    /// @param _goals The goal VIDs to use.
+    /// @return True if a path from _start to one of _goals was generated.
+    virtual bool PerformSubQuery(const VID _start, const VIDSet& _goal);
+
+    /// Generate a path through the roadmap from a start node to an end node.
+    /// @param _start The start node.
+    /// @param _end The end node.
+    std::vector<VID> GeneratePath(const VID _start, const VIDSet& _end);
 
     /// Determine whether a vertex is used or has been marked as ignored somehow
     /// (as in lazy query).
@@ -140,14 +126,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @return True if _eid is considered for paths by this query, false if it
     ///         is marked unused.
     virtual bool IsEdgeUsed(const EID _eid) const;
-
-    /// Generate a color map for CC operations which marks the unused vertices
-    /// as 'black' (already completed), which causes them to be skipped in graph
-    /// operations.
-    ColorMap GetColorMap() const;
-
-    /// Generate query configurations from the task constraints.
-    void GenerateQuery();
 
     /// Define a function for computing a path weight for a specific edge,
     /// ignoring dynamic obstacles.
@@ -174,18 +152,13 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    std::vector<CfgType> m_query;    ///< The start and all goal configurations.
-    std::vector<CfgType> m_goals;    ///< The undiscovered goal configurations.
-
-    bool m_fullRecreatePath{true};     ///< Create full paths or just VIDs?
-
     RoadmapType* m_roadmap{nullptr};   ///< Last roadmap queried.
 
-    enum GraphSearchAlg {DIJKSTRAS, ASTAR}; ///< The supported sssp algorithms.
+    size_t m_goalIndex{0};             ///< Index of next unreached goal.
+
     GraphSearchAlg m_searchAlg{DIJKSTRAS};  ///< The sssp algorithm to use.
 
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
-    std::string m_vcLabel;           ///< The ValidityChecker for query generation.
     std::string m_dmLabel;           ///< The DistanceMetric label.
 
     ///@}
@@ -203,22 +176,19 @@ QueryMethod() : MapEvaluatorMethod<MPTraits>() {
 
 template <typename MPTraits>
 QueryMethod<MPTraits>::
-QueryMethod(XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_node) {
+QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("QueryMethod");
 
-  const string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras",
-                                      "Graph search algorithm");
-  m_fullRecreatePath = _node.Read("fullRecreatePath", false, true, "Whether or "
-                                  "not to recreate path");
-
-  m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
-                                   "Label of the SafeIntervalTool");
-
-  m_vcLabel = _node.Read("vcLabel", true, "",
-                         "Label of the Validity Checker for generating Query");
-
+  // Parse the search algorithm type.
+  const std::string searchAlg = _node.Read("graphSearchAlg", false, "dijkstras",
+      "Graph search algorithm.");
   SetSearchAlgViaString(searchAlg, _node.Where());
+
+  // Parse the other options.
+  m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", false, "",
+      "Label of the SafeIntervalTool");
+  m_dmLabel = _node.Read("dmLabel", false, "",
+      "Alternate distance metric to replace edge weight during search.");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -226,10 +196,12 @@ QueryMethod(XMLNode& _node) :
 template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   _os << this->GetNameAndLabel() << "::"
       << "\n\tSearch Alg: " << m_searchAlg
-      << "\n\tFull Paths: " << m_fullRecreatePath << endl;
+      << "\n\tSI Tool Label: " << m_safeIntervalLabel
+      << "\n\tAlternate DM: " << m_dmLabel
+      << std::endl;
 }
 
 
@@ -239,9 +211,6 @@ QueryMethod<MPTraits>::
 Initialize() {
   // Clear previous state.
   m_dmLabel.clear();
-  m_query.clear();
-  m_goals.clear();
-  GenerateQuery();
   Reset(nullptr);
 }
 
@@ -251,88 +220,78 @@ template <typename MPTraits>
 bool
 QueryMethod<MPTraits>::
 operator()() {
-  return this->PerformQuery(this->GetRoadmap());
+  auto goalTracker = this->GetGoalTracker();
+  const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
+  const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+
+  if(this->m_debug)
+    std::cout << "Evaluating query, " << unreachedGoals.size()
+              << " goals not connected."
+              << std::endl;
+
+  // If no goals remain, then this must be a refinement step (as in optimal
+  // planning). In this case or the roadmap has changed, reinitialize and
+  // rebuild the whole path.
+  auto r = this->GetRoadmap();
+  if(unreachedGoals.empty() || r != m_roadmap)
+    Reset(r);
+
+  // Search for a sequential path through each task constraint in order.
+  auto path = this->GetPath();
+  for(; m_goalIndex < goalConstraints.size(); ++m_goalIndex) {
+    // If this goal constraint is unreached, the query cannot succeed.
+    auto iter = std::find(unreachedGoals.begin(), unreachedGoals.end(),
+        m_goalIndex);
+    const bool unreached = iter != unreachedGoals.end();
+    if(unreached)
+      return false;
+
+    // Get the start VID for this subquery.
+    const VID start = path->Empty() ? *goalTracker->GetStartVIDs().begin()
+                                    : path->VIDs().back();
+
+    // Get the goal VIDs for this subquery.
+    const VIDSet& goals = goalTracker->GetGoalVIDs(m_goalIndex);
+    if(goals.empty())
+      throw RunTimeException(WHERE) << "No VIDs located for reached goal "
+                                    << m_goalIndex << ".";
+
+    if(this->m_debug)
+      std::cout << "Evaluating sub-query from " << start << " to " << goals
+                << "." << std::endl;
+
+    // Warn users if multiple goals are found.
+    if(goals.size() > 1)
+      std::cerr << "Warning: subquery has " << goals.size() << " possible VIDs "
+                << "for goal " << m_goalIndex << ". "
+                << "The algorithm will try its best but isn't complete for "
+                << "this case." << std::endl;
+
+    // Perform this subquery. If it fails, there is no path.
+    const bool success = PerformSubQuery(start, goals);
+    if(!success)
+      return false;
+  }
+
+  // We generated a path successfully: track the path length history.
+  this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
+
+  if(this->m_debug)
+    std::cout << "\tConnected all goals!" << std::endl;
+
+  return true;
 }
 
 /*--------------------------- Query Interface --------------------------------*/
 
 template <typename MPTraits>
-bool
-QueryMethod<MPTraits>::
-PerformQuery(RoadmapType* const _r) {
-  if(this->m_debug)
-    cout << "Evaluating query, " << m_goals.size() << " goals not connected.\n";
-
-  // If no goals remain, then this must be a refinement step (as in optimal
-  // planning). In this case or the roadmap has changed, reinitialize and
-  // rebuild the whole path.
-  if(m_goals.empty() || _r != m_roadmap)
-    Reset(_r);
-
-  // Search for a sequential path through each query point in order.
-  for(auto it = m_goals.begin(); it < m_goals.end();) {
-    // Start from the last reached query point.
-    const auto& start = m_query[m_query.size() - m_goals.size() - 1];
-    if(!PerformSubQuery(start, *it))
-      return false;
-    else
-      it = m_goals.erase(it);
-  }
-  this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
-  WritePath();
-
-  if(this->m_debug)
-    cout << "\tConnected all goals!" << endl;
-
-  return true;
-}
-
-
-template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
-ReadQuery(string _filename) {
-  _filename = MPProblem::GetPath(_filename);
-  auto robot = this->GetTask()->GetRobot();
-  if(this->m_debug)
-    cout << "Reading query file \'" << _filename << "\'. Robot has "
-         << robot->GetMultiBody()->DOF() << " DOFs." << endl;
-
-  ifstream in(_filename);
-  if(!in.good())
-    throw ParseException(WHERE, "Can't open query file '" + _filename + "'.");
-
-  m_query.clear();
-  CfgType tempCfg(robot);
-  while(in >> tempCfg)
-    m_query.push_back(tempCfg);
-
-  if(this->m_debug)
-    cout << "\tWe read " << m_query.size() << " cfgs." << endl;
-}
-
-
-template <typename MPTraits>
-void
-QueryMethod<MPTraits>::
-WritePath() const {
-  if(!this->GetPath())
-    return;
-  const std::string base = this->GetBaseFilename();
-  if(m_fullRecreatePath)
-    ::WritePath(base + ".full.path", this->GetPath()->FullCfgs(this->GetMPLibrary()));
-  else
-    ::WritePath(base + ".rdmp.path", this->GetPath()->Cfgs());
-}
-
-
-template <typename MPTraits>
-void
-QueryMethod<MPTraits>::
-SetDMLabel(string const _dmLabel) {
+SetDMLabel(const std::string& _dmLabel) {
   m_dmLabel = _dmLabel;
 }
 
+/*------------------------------- Helpers ------------------------------------*/
 
 template <typename MPTraits>
 void
@@ -341,22 +300,19 @@ Reset(RoadmapType* const _r) {
   // Set the roadmap.
   m_roadmap = _r;
 
-  // Reset the goals.
-  m_goals.clear();
-  if(m_query.size() > 1)
-    std::copy(m_query.begin() + 1, m_query.end(), std::back_inserter(m_goals));
+  // Reset the goal index.
+  m_goalIndex = 0;
 
   // Reset the path.
   if(this->GetPath())
-  this->GetPath()->Clear();
+    this->GetPath()->Clear();
 }
 
-/*------------------------------- Helpers ------------------------------------*/
 
 template <typename MPTraits>
 void
 QueryMethod<MPTraits>::
-SetSearchAlgViaString(string _alg, const string& _where) {
+SetSearchAlgViaString(std::string _alg, const std::string& _where) {
   std::transform(_alg.begin(), _alg.end(), _alg.begin(), ::tolower);
 
   if(_alg == "dijkstras")
@@ -379,95 +335,51 @@ SetSearchAlgViaString(string _alg, const string& _where) {
 template <typename MPTraits>
 bool
 QueryMethod<MPTraits>::
-SameCC(const VID _start, const VID _end) const {
-  if(this->m_debug)
-    cout << "\tChecking connectivity..." << endl;
+PerformSubQuery(const VID _start, const VIDSet& _goals) {
+  // Try to generate a path from _start to _goal.
+  auto path = this->GeneratePath(_start, _goals);
 
-  auto g = this->GetRoadmap()->GetGraph();
-  auto stats = this->GetStatClass();
+  // If the path isn't empty, we succeeded.
+  if(!path.empty()) {
+    *this->GetPath() += path;
+    const VID goalVID = path.back();
 
-  MethodTimer mt(stats, "QueryMethod::CCTesting");
-  stats->IncStat("CC Operations");
-
-  // If either the start or goal is unused, these nodes cannot be connected.
-  const bool noStart = !IsVertexUsed(_start),
-             noEnd   = !IsVertexUsed(_end);
-  if(noStart or noEnd) {
     if(this->m_debug)
-      std::cout << "\t\t"
-                << (noStart ? "Start" : "")
-                << (noStart and noEnd ? " and " : "")
-                << (noEnd ? "End" : "")
-                << " marked as unused, cannot connect."
+      std::cout << "\tSuccess: reached goal node " << goalVID << "."
                 << std::endl;
-    return false;
+
+    return true;
   }
+  else if(this->m_debug)
+    std::cout << "\tFailed: could not find a path." << std::endl;
 
-  bool connected = _start == _end;
-
-  // We cannot use stapl's is_same_cc because it offers no way to ignore
-  // specific edges. We will instead do a BFS from _start manually and
-  // terminate upon either running out of nodes or finding _end.
-  std::unordered_map<VID, bool> finished;
-  std::queue<VID> queue;
-  queue.push(_start);
-  while(!connected and !queue.empty())
-  {
-    // Get the next node in the queue.
-    const VID current = queue.front();
-    queue.pop();
-    finished[current] = true;
-
-    // Enqueue undiscovered children.
-    auto vi = g->find_vertex(current);
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      const VID child = ei->target();
-      const bool discovered = finished.count(child);
-
-      // Skip if the child is discovered or either child/edge is unused.
-      if(discovered or !this->IsEdgeUsed(ei->id()) or !this->IsVertexUsed(child))
-        continue;
-
-      // If this is the goal, we are done.
-      if(child == _end) {
-        connected = true;
-        break;
-      }
-
-      // Enqueue the child.
-      queue.push(child);
-      finished[child] = false;
-    }
-  }
-
-  if(this->m_debug)
-    std::cout << "\t\tNodes " << _start << " and " << _end
-              << " are " << (connected ? "" : "not ") << "connected."
-              << std::endl;
-
-  return connected;
+  return false;
 }
 
 
 template <typename MPTraits>
 std::vector<typename QueryMethod<MPTraits>::VID>
 QueryMethod<MPTraits>::
-GeneratePath(const VID _start, const VID _end) {
+GeneratePath(const VID _start, const VIDSet& _goals) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "QueryMethod::GeneratePath");
 
+  if(this->m_debug)
+    std::cout << "Generating path from " << _start << " to " << _goals << "."
+              << std::endl;
+
   // Check for trivial path.
-  if(_start == _end)
+  if(_goals.count(_start))
     return {_start};
 
   stats->IncStat("Graph Search");
 
-  // Set up the termination criterion to quit early if we find the _end node.
+  // Set up the termination criterion to quit early if we find a goal node.
   SSSPTerminationCriterion<GraphType> termination(
-      [_end](typename GraphType::vertex_iterator& _vi,
+      [_goals](typename GraphType::vertex_iterator& _vi,
              const SSSPOutput<GraphType>& _sssp) {
-        return _vi->descriptor() == _end ? SSSPTermination::EndSearch
-                                         : SSSPTermination::Continue;
+        return _goals.count(_vi->descriptor()) ? SSSPTermination::EndSearch
+                                               : SSSPTermination::Continue;
       }
   );
 
@@ -495,15 +407,17 @@ GeneratePath(const VID _start, const VID _end) {
   const SSSPOutput<GraphType> sssp = DijkstraSSSP(g, {_start}, weight,
       termination);
 
-  // If the end node has no parent, there is no path.
-  if(!sssp.parent.count(_end))
+  // Find the last discovered node, which should be a goal if there is a valid
+  // path.
+  const VID last = sssp.ordering.back();
+  if(!_goals.count(last))
     return {};
 
   // Extract the path.
   std::vector<VID> path;
-  path.push_back(_end);
+  path.push_back(last);
 
-  VID current = _end;
+  VID current = last;
   do {
     current = sssp.parent.at(current);
     path.push_back(current);
@@ -511,6 +425,22 @@ GeneratePath(const VID _start, const VID _end) {
   std::reverse(path.begin(), path.end());
 
   return path;
+}
+
+
+template <typename MPTraits>
+bool
+QueryMethod<MPTraits>::
+IsVertexUsed(const VID) const {
+  return true;
+}
+
+
+template <typename MPTraits>
+bool
+QueryMethod<MPTraits>::
+IsEdgeUsed(const EID) const {
+  return true;
 }
 
 
@@ -524,15 +454,13 @@ StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
     return std::numeric_limits<double>::infinity();
 
   // Check if Distance Metric has been defined. If so use the Distance Metric's
-  // Edge Weight Function
-  if(!(m_dmLabel.empty())) {
+  // EdgeWeight function to compute the target distance.
+  if(!m_dmLabel.empty()) {
     auto dm = this->GetDistanceMetric(m_dmLabel);
-    const double edgeWeight = dm->EdgeWeight(_ei->source(), _ei->target());
-    return edgeWeight;
+    return dm->EdgeWeight(_ei->source(), _ei->target());
   }
 
-  // Compute the new 'distance', which is the number of timesteps at which
-  // the robot would reach the target node.
+  // Otherwise use the existing edge weight to compute the distance.
   const double edgeWeight  = _ei->property().GetWeight(),
                newDistance = _sourceDistance + edgeWeight;
   return newDistance;
@@ -553,8 +481,8 @@ DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
   const double edgeWeight  = _ei->property().GetTimeSteps(),
                newDistance = _sourceDistance + edgeWeight;
 
-  // If this edge isn't better than the previous, we can return without
-  // checking the dynamic obstacles.
+  // If this edge isn't better than the previous, we won't use it regardless
+  // and can return without checking the dynamic obstacles.
   if(newDistance >= _targetDistance) {
     if(this->m_debug)
       std::cout << "Breaking because the path is not optimal."
@@ -589,164 +517,6 @@ DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
 
   // If we're still here, the edge is OK.
   return newDistance;
-}
-
-
-template <typename MPTraits>
-bool
-QueryMethod<MPTraits>::
-IsVertexUsed(const VID) const {
-  return true;
-}
-
-
-template <typename MPTraits>
-bool
-QueryMethod<MPTraits>::
-IsEdgeUsed(const EID) const {
-  return true;
-}
-
-
-template <typename MPTraits>
-typename QueryMethod<MPTraits>::ColorMap
-QueryMethod<MPTraits>::
-GetColorMap() const {
-  auto g = this->GetRoadmap()->GetGraph();
-
-  // Define a constant for the color marking.
-  static const auto black = stapl::graph_color<size_t>::black(),
-                    white = stapl::graph_color<size_t>::white();
-
-  // Mark unused vertices.
-  ColorMap colorMap;
-  for(auto vi = g->begin(); vi != g->end(); ++vi)
-    colorMap.put(*vi, IsVertexUsed(vi->descriptor()) ? white : black);
-
-  return colorMap;
-}
-
-
-template <typename MPTraits>
-void
-QueryMethod<MPTraits>::
-GenerateQuery() {
-  // Generate the query configurations.
-  /// @TODO Incorporate path constraints when generating the start and goal.
-  ///       This should probably be done in the task's representation of the
-  ///       start/goal boundaries. I.e., GetStartBoundary should return the
-  ///       intersection of the actual start constraint boundary and the path
-  ///       constraint boundaries.
-  /// @TODO Also incorporate env boundaries. That is not a property of the task
-  ///       and should be done here.
-  MethodTimer mt(this->GetStatClass(), "QueryMethod::GeneratingQuery");
-
-  if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::GenerateQuery" << std::endl;
-
-  auto task = this->GetTask();
-  auto robot = task->GetRobot();
-  auto startBoundary = task->GetStartConstraint()->GetBoundary();
-  const auto& goalConstraints = task->GetGoalConstraints();
-  auto vc = this->GetValidityChecker(m_vcLabel);
-
-  // Generate valid query configurations. We will try up to some number of times
-  // before giving up and declaring failure.
-  static constexpr size_t maxTries = 100;
-
-  // Generate a start configuration if we have a start constraint.
-  if(!startBoundary)
-    throw RunTimeException(WHERE) << "A start constraint is required for query "
-                                  << "methods.";
-
-  CfgType start(robot);
-  size_t tries = maxTries;
-  do {
-    if(this->m_debug)
-      std::cout << "\t\tGenerating start cfg with VC '" << m_vcLabel << "'. "
-                << tries << " attempts remain."
-                << std::endl;
-    start.GetRandomCfg(startBoundary);
-    --tries;
-    if(tries == 0)
-      throw RunTimeException(WHERE) << "Could not generate valid start "
-                                    << "configuration in boundary "
-                                    << *startBoundary
-                                    << " with validity checker '"
-                                    << m_vcLabel << "' for "
-                                    << robot->GetLabel() << ".";
-  } while(!vc->IsValid(start, "QueryMethod::GenerateQuery"));
-
-#ifdef PMPL_USE_MATLAB
-  // Hard-coded setting of initial needle state for now, to be cleaned up later.
-  // Use either a dedicated Cfg or some kind of stat-mapping in the start/goal
-  // constraints.
-  start.SetStat("insertion", .005);
-  start.SetStat("c1-4", 0);
-  start.SetStat("c1-3", 0);
-  start.SetStat("c1-2", 0);
-  start.SetStat("c1-1", 0);
-  start.SetStat("c1-0", 0);
-  start.SetStat("c2-4", 0);
-  start.SetStat("c2-3", 0);
-  start.SetStat("c2-2", 0);
-  start.SetStat("c2-1", 0);
-  start.SetStat("c2-0", 0);
-  start.SetStat("c3-4", 0);
-  start.SetStat("c3-3", 0);
-  start.SetStat("c3-2", 0);
-  start.SetStat("c3-1", 0);
-  start.SetStat("c3-0", 0);
-  robot->GetMatlabMicroSimulator()->SetInsertionCfg(start);
-#endif
-
-  if(this->m_debug)
-    std::cout << "\tTried " << maxTries - tries << " times to generate the "
-              << "start configuration."
-              << "\n\tStart cfg: " << start.PrettyPrint()
-              << std::endl;
-  m_query.push_back(start);
-
-  // Generate a goal configuration for each goal constraint.
-  if(goalConstraints.empty())
-    throw RunTimeException(WHERE, "A goal constraint is required for query "
-                                  "methods.");
-
-  if(this->m_debug)
-    std::cout << "\tThere are " << goalConstraints.size()
-              << " goals in this problem."
-              << std::endl;
-
-  for(size_t i = 0; i < goalConstraints.size(); ++i) {
-    if(this->m_debug)
-      std::cout << "\tGenerating configuration for goal " << i << "."
-                << std::endl;
-    auto goalBoundary = goalConstraints[i]->GetBoundary();
-    CfgType goal(robot);
-    tries = maxTries;
-    do {
-      if(this->m_debug)
-        std::cout << "\t\tGenerating goal cfg with VC '" << m_vcLabel << "'. "
-                  << tries << " attempts remain."
-                  << std::endl;
-      goal.GetRandomCfg(goalBoundary);
-      --tries;
-      if(tries == 0)
-        throw RunTimeException(WHERE) << "Could not generate valid goal "
-                                      << "configuration in boundary "
-                                      << *goalBoundary
-                                      << " with validity checker '"
-                                      << m_vcLabel << "' for "
-                                      << robot->GetLabel() << ".";
-    } while(!vc->IsValid(goal, "QueryMethod::GenerateQuery"));
-
-    m_query.push_back(goal);
-    if(this->m_debug)
-      std::cout << "\tTried " << maxTries - tries << " times to generate a "
-                << "goal configuration."
-                << "\n\tGoal " << i << " cfg: " << goal.PrettyPrint()
-                << std::endl;
-  }
 }
 
 /*----------------------------------------------------------------------------*/

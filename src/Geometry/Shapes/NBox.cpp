@@ -141,6 +141,11 @@ Clearance(const std::vector<double>& _p) const noexcept {
 std::vector<double>
 NBox::
 ClearancePoint(std::vector<double> _p) const noexcept {
+  // If _p is inside, the clearance point will be _p pushed to the single nearest
+  // wall.
+  // If _p is outside, the clearance point will be _p with each oob value set to
+  // the nearest wall in that dimension.
+
   // Only consider dimensions that are in both _p and this.
   const size_t maxIndex = std::min(_p.size(), GetDimension());
   _p.resize(maxIndex);
@@ -148,6 +153,7 @@ ClearancePoint(std::vector<double> _p) const noexcept {
   // Find the clearance in each dimension.
   double minClearance = std::numeric_limits<double>::max();
   size_t index = -1;
+  bool isOutside = false;
 
   for(size_t i = 0; i < maxIndex; ++i) {
     const auto& r = m_range[i];
@@ -156,19 +162,19 @@ ClearancePoint(std::vector<double> _p) const noexcept {
     const double clearance = r.Clearance(_p[i]);
 
     // If _p lies outside the range in this dimension, use the closest endpoint.
-    if(clearance < 0)
+    if(clearance < 0) {
       _p[i] = r.ClearancePoint(_p[i]);
-    // If _p lies inside the range in this dimension and is closer than previous
-    // best, update the clearance index.
-    else if(clearance < minClearance) {
+      isOutside = true;
+    }
+    // Otherwise, update the min clearance index if needed.
+    else if(!isOutside and clearance < minClearance) {
       index = i;
       minClearance = clearance;
     }
   }
 
-  // If at least one dimension of _p was inside the range, push _p to the
-  // boundary in the closest dimension.
-  if(index != size_t(-1))
+  // If _p is inside the box, push it to the nearest wall.
+  if(!isOutside and index != size_t(-1))
     _p[index] = m_range[index].ClearancePoint(_p[index]);
 
   return _p;

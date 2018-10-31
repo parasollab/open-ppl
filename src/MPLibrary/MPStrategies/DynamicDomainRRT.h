@@ -1,22 +1,22 @@
-#ifndef DYNAMIC_DOMAIN_RRT_H_
-#define DYNAMIC_DOMAIN_RRT_H_
+#ifndef PMPL_DYNAMIC_DOMAIN_RRT_H_
+#define PMPL_DYNAMIC_DOMAIN_RRT_H_
 
 #include "BasicRRTStrategy.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Dynamic Domain RRT adapts the sampling space of RRTs to better approximate
-/// boundary information.
+/// Implementation of the Dynamic Domain RRT algorithm.
 ///
-/// Dynamic Domain RRT considers a bounding sphere around each configuration.
-/// During RRT sampling only nodes within some \f$q_{near}\f$'s radius. If
-/// extension is unsuccessful then \f$q_{near}\f$'s radius is set to \f$R\f$. If
-/// successful then \f$q_{new}\f$'s radius is set to \f$\inf\f$.
+/// Dynamic Domain RRT is identical to regular RRT, except that the accepted
+/// Voronoi region for extending a node is diminished to some 'dynamic domain
+/// radius' after the first failed extension. I.e., after one failed extension
+/// from a node q, further extensions will be rejected unless the growth target
+/// is within the dynamic domain radius of q.
 ///
-/// Yershova, Anna, Sim, Thierry, and Lavalle, Steven M., "Dynamic-Domain RRTs:
-/// Efficient Exploration by Controlling the Sampling Domain," Proc. of the Int.
-/// Conf. on Robotics and Automation (ICRA), pp. 3856-3861, Barcelona, Spain,
-/// Apr. 2005.
+/// Reference:
+///   Yershova, Anna, Sim, Thierry, and Lavalle, Steven M., "Dynamic-Domain RRTs:
+///   Efficient Exploration by Controlling the Sampling Domain," ICRA 2005.
+///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -37,41 +37,36 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     ///@name Construction
     ///@{
 
-    DynamicDomainRRT(std::string _dm = "euclidean", std::string _nf = "bfnf",
-        std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
-        std::vector<std::string> _evaluators = std::vector<std::string>(),
-        std::string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
-        double _growthFocus = .05, size_t _numRoots = 1,
-        size_t _numDirections = 1, size_t _maxTrial = 3, double _r = 10.);
+    DynamicDomainRRT();
 
     DynamicDomainRRT(XMLNode& _node);
 
     virtual ~DynamicDomainRRT() = default;
 
     ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+
+  protected:
+
     ///@name MPStrategyMethod Overrides
     ///@{
 
     virtual void Initialize() override;
 
     ///@}
-    ///@name MPBaseObject Overrides
-    ///@{
-
-    virtual void Print(std::ostream& _os) const;
-
-    ///@}
-
-  protected:
-
     ///@name RRT Overrides
     ///@{
 
+    virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
+        LPOutput<MPTraits>& _lp, const bool _requireNew = false) override;
+
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target)
         override;
-
-    virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
-        LPOutput<MPTraits>& _lp) override;
 
     ///@}
     ///@name Helpers
@@ -88,7 +83,9 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     /// configuration, its dynamic domain is set to this times the extender max
     /// distance. Future extensions from this node are aborted if the target is
     /// outside its dynamic domain.
-    double m_r;
+    double m_r{2.};
+
+    std::string m_dmLabel; ///< DM for measuring dynamic domain.
 
     ///@}
 
@@ -98,24 +95,21 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
 
 template <typename MPTraits>
 DynamicDomainRRT<MPTraits>::
-DynamicDomainRRT(std::string _dm, std::string _nf, std::string _vc, std::string _nc,
-    std::string _ex, std::vector<std::string> _evaluators, std::string _gt, bool _growGoals,
-    double _growthFocus, size_t _numRoots, size_t _numDirections,
-    size_t _maxTrial, double _r) :
-    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _ex, _evaluators, _gt,
-        _growGoals, _growthFocus, _numRoots, _numDirections, _maxTrial),
-    m_r(_r) {
+DynamicDomainRRT() : BasicRRTStrategy<MPTraits>() {
   this->SetName("DynamicDomainRRT");
 }
 
 
 template <typename MPTraits>
 DynamicDomainRRT<MPTraits>::
-DynamicDomainRRT(XMLNode& _node) :
-    BasicRRTStrategy<MPTraits>(_node) {
+DynamicDomainRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("DynamicDomainRRT");
-  m_r = _node.Read("r", true, 2., 0., numeric_limits<double>::max(),
+
+  m_r = _node.Read("r", true, m_r, 0., std::numeric_limits<double>::max(),
       "Dynamic domain factor. This is a multiple of extender max distance.");
+
+  m_dmLabel = _node.Read("dmLabel", true, "",
+      "Distance metric for measuring dynamic domain inclusion.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -125,7 +119,9 @@ void
 DynamicDomainRRT<MPTraits>::
 Print(std::ostream& _os) const {
   BasicRRTStrategy<MPTraits>::Print(_os);
-  _os << "\tr:: " << m_r << std::endl;
+  _os << "\tDynamic Domain radius: " << m_r
+      << "\n\tDynamic Domain distance metric: " << m_dmLabel
+      << std::endl;
 }
 
 /*-------------------------- MPStrategy Overrides ----------------------------*/
@@ -135,8 +131,8 @@ void
 DynamicDomainRRT<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
-  for(auto v  : *this->GetRoadmap()->GetGraph())
-    v.property().SetStat(RLabel(), numeric_limits<double>::max());
+  for(auto v : *this->GetRoadmap()->GetGraph())
+    v.property().SetStat(RLabel(), std::numeric_limits<double>::max());
 }
 
 /*----------------------------- RRT Overrides --------------------------------*/
@@ -144,17 +140,20 @@ Initialize() {
 template <typename MPTraits>
 typename DynamicDomainRRT<MPTraits>::VID
 DynamicDomainRRT<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp) {
+Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp,
+    const bool _requireNew) {
   // As basic RRT's extend, but do some stuff on failure.
-  VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp);
+  const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp,
+      _requireNew);
 
   if(newVID != INVALID_VID) {
     CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(newVID);
-    cfg.SetStat(RLabel(), numeric_limits<double>::max());
+    cfg.SetStat(RLabel(), std::numeric_limits<double>::max());
   }
   else {
+    auto e = this->GetExtender(this->m_exLabel);
     CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
-    cfg.SetStat(RLabel(), m_r);
+    cfg.SetStat(RLabel(), m_r * e->GetMaxDistance());
   }
   return newVID;
 }
@@ -164,11 +163,10 @@ template <typename MPTraits>
 typename DynamicDomainRRT<MPTraits>::VID
 DynamicDomainRRT<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
-
   const CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(_nearestVID);
 
   // If the nearest node's radius is too small, return failure.
+  auto dm = this->GetDistanceMetric(m_dmLabel);
   if(dm->Distance(cfg, _target) >= cfg.GetStat(RLabel()))
     return INVALID_VID;
   else

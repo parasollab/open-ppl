@@ -1,24 +1,26 @@
-#ifndef SRT_STRATEGY_H_
-#define SRT_STRATEGY_H_
+#ifndef PMPL_SRT_STRATEGY_H_
+#define PMPL_SRT_STRATEGY_H_
 
 #include "MPStrategyMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief This method is the 'Sampling-based Roadmap of Trees', which grows
-///        several RRT trees and connects them together to build the roadmap.
+/// This method is the 'Sampling-based Roadmap of Trees', which grows several
+/// RRT trees and connects them together to build the roadmap.
 ///
 /// The earliest reference to this work is:
 ///   Bekris, Chen, Ladd, Plaku, and Kavraki. "Multiple query probabilistic
 ///     roadmap planning using single query planning primitives". Proc. of the
 ///     International Conference on Intelligent Robots and Systems (IROS), 2003.
+///
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class SRTStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
-    ///\name Motion Planning Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
@@ -28,39 +30,37 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename RoadmapType::VID       VID;
 
     ///@}
-    ///\name Local Types
+    ///@name Local Types
     ///@{
 
     typedef std::pair<CfgType, std::vector<VID> > Tree; ///< Centroid, tree pair.
     typedef std::map<VID, Tree> Trees;             ///< Node->tree mapping.
 
     ///@}
-    ///\name Construction
+    ///@name Construction
     ///@{
 
     SRTStrategy();
     SRTStrategy(XMLNode& _node);
 
     ///@}
-    ///\name MPBaseObject Overrides
+    ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void ParseXML(XMLNode& _node);
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///\name MPStrategyMethod Overrides
+    ///@name MPStrategyMethod Overrides
     ///@{
 
     virtual void Initialize() override;
     virtual void Iterate() override;
-    virtual void Finalize() override;
 
     ///@}
 
   protected:
 
-    ///\name Helpers
+    ///@name Helpers
     ///@{
 
     //general SRT functions
@@ -78,17 +78,16 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual VID ExpandTree(const VID _tree, const CfgType& _dir);
 
     ///@}
-    ///\name MP Object Labels
+    ///@name MP Object Labels
     ///@{
 
-    std::string m_lpLabel{"sl"};
-    std::string m_dmLabel{"euclidean"};
-    std::string m_nfLabel{"Nearest"};
-    std::string m_vcLabel{"pqp_solid"};
-    std::string m_exLabel{"BERO"};
+    std::string m_samplerLabel;
+    std::string m_lpLabel;
+    std::string m_nfLabel;
+    std::string m_exLabel;
 
     ///@}
-    ///\name SRT Parameters
+    ///@name SRT Parameters
     ///@{
 
     size_t m_numSamples;    ///< "k" random trees per iteration
@@ -99,10 +98,9 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     size_t m_numConnIter;   ///< "n_i" tree connection iterations
 
     ///@}
-    ///\name
+    ///@name
     ///@{
 
-    size_t m_iteration{0};  ///< Number of iterations so far.
     Trees m_trees;          ///< The trees in the roadmap.
 
     ///@}
@@ -119,28 +117,18 @@ SRTStrategy() : MPStrategyMethod<MPTraits>() {
 
 template <typename MPTraits>
 SRTStrategy<MPTraits>::
-SRTStrategy(XMLNode& _node) :
-    MPStrategyMethod<MPTraits>(_node) {
+SRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("SRTStrategy");
-  ParseXML(_node);
-}
 
-/*-------------------------- MPBaseObject Overrides --------------------------*/
-
-template <typename MPTraits>
-void
-SRTStrategy<MPTraits>::
-ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
       this->m_meLabels.push_back(
           child.Read("label", true, "", "Evaluation Method"));
 
-  m_vcLabel = _node.Read("vcLabel", false, m_vcLabel, "Validity Test Method");
-  m_nfLabel = _node.Read("nfLabel", false, m_nfLabel, "Neighborhood Finder");
-  m_dmLabel = _node.Read("dmLabel", false, m_dmLabel, "Distance Metric");
-  m_lpLabel = _node.Read("lpLabel", false, m_lpLabel, "Local Planning Method");
-  m_exLabel = _node.Read("exLabel", false, m_exLabel, "Extender Method");
+  m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Method");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local Planning Method");
+  m_exLabel = _node.Read("exLabel", true, "", "Extender Method");
 
   m_numSamples = _node.Read("samples", true, 100, 0, MAX_INT,
       "k random trees per iteration");
@@ -156,20 +144,21 @@ ParseXML(XMLNode& _node) {
       "n_i iterations during tree connection");
 }
 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Print(std::ostream& _os) const {
-  _os << "SRTStrategy::Print" << std::endl;
-  _os << "\tNeighborhood Finder:: " << m_nfLabel << std::endl;
-  _os << "\tDistance Metric:: " << m_dmLabel << std::endl;
-  _os << "\tValidity Checker:: " << m_vcLabel << std::endl;
-  _os << "\tLocal Planner:: " << m_lpLabel << std::endl;
-  _os << "\tExtender:: " << m_exLabel << std::endl;
-  _os << "\tEvaluators:: " << std::endl;
+  _os << "SRTStrategy::Print"
+      << "\n\tNeighborhood Finder:: " << m_nfLabel
+      << "\n\tSampler:: " << m_samplerLabel
+      << "\n\tLocal Planner:: " << m_lpLabel
+      << "\n\tExtender:: " << m_exLabel
+      << "\n\tEvaluators:: ";
   for(const auto& label: this->m_meLabels)
-    _os << "\t\t" << label << std::endl;
+    _os << "\n\t\t" << label;
+  _os << std::endl;
 }
 
 /*------------------------ MPStrategyMethod Overrides ------------------------*/
@@ -178,26 +167,20 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Initialize() {
-  if(this->m_debug)
-    std::cout<<"\nInitializing SRTStrategy"<<std::endl;
+  auto g = this->GetRoadmap()->GetGraph();
 
-  // Setup SRT Variables
-  if(this->UsingQuery()) {
-    auto g = this->GetRoadmap()->GetGraph();
-
-    PRMQuery<MPTraits>* query = static_cast<PRMQuery<MPTraits>*>(
-        this->GetMapEvaluator("PRMQuery").get());
-
-    for(const auto& cfg : query->GetQuery()) {
-      VID v = g->AddVertex(cfg);
-      m_trees[v] = Tree(cfg, std::vector<VID>{v});
-      if(this->m_debug)
-        std::cout << "Adding Cfg::" << cfg << " from query." << std::endl;
-    }
+  // Initialize a tree from the start if there is one.
+  const VID start = this->GenerateStart(m_samplerLabel);
+  if(start != INVALID_VID)
+  {
+    m_trees[start] = Tree(g->GetVertex(start), {start});
   }
 
-  if(this->m_debug)
-    std::cout<<"\nEnding Initializing SRTStrategy"<<std::endl;
+  // Initialize a tree from each goal.
+  const auto goals = this->GenerateGoals(m_samplerLabel);
+  for(const VID vid : goals) {
+    m_trees[vid] = Tree(g->GetVertex(vid), {vid});
+  }
 }
 
 
@@ -205,42 +188,16 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Iterate() {
-  std::cout << "Starting iteration " << ++m_iteration << std::endl;
   //grow "k" randomly placed trees for "m" iterations
   GenerateTrees();
   ExpandTrees();
 
   //determine edge candidates
-  std::vector<std::pair<VID, VID> > connectionCandidates;
+  std::vector<std::pair<VID, VID>> connectionCandidates;
   FindCandidateConnections(connectionCandidates);
 
   //attempt edge candidates
   ConnectTrees(connectionCandidates);
-}
-
-
-template <typename MPTraits>
-void
-SRTStrategy<MPTraits>::
-Finalize() {
-  if(this->m_debug)
-    std::cout<<"\nFinalizing SRTStrategy::"<<std::endl;
-
-  //output final map
-  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map",
-      this->GetEnvironment());
-
-  //output stats
-  StatClass* stats = this->GetStatClass();
-  std::string str = this->GetBaseFilename() + ".stat";
-  std::ofstream  osStat(str.c_str());
-  osStat << "NodeGen+Connection Stats" << std::endl;
-  stats->PrintAllStats(osStat, this->GetRoadmap());
-  stats->PrintClock("SRT Generation", osStat);
-  osStat.close();
-
-  if(this->m_debug)
-    std::cout<<"\nEnd Finalizing SRTStrategy"<<std::endl;
 }
 
 /*------------------------------- Helpers ------------------------------------*/
@@ -249,23 +206,24 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 GenerateTrees() {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::GenerateTrees");
+
   if(this->m_debug)
     std::cout << "\nBegin GenerateTrees" << std::endl;
 
-  Environment* env = this->GetEnvironment();
-  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto boundary = this->GetEnvironment()->GetBoundary();
+  auto sampler = this->GetSampler(m_samplerLabel);
+  auto g = this->GetRoadmap()->GetGraph();
 
-  for(size_t i = 0; i < m_numSamples; ++i) {
-    // Generate random cfg in C-free.
-    CfgType cfg(this->GetTask()->GetRobot());
-    do {
-      cfg.GetRandomCfg(env);
-    } while(!cfg.InBounds(env) ||
-        !vc->IsValid(cfg, "SRTStrategy::GenerateTrees"));
+  std::vector<CfgType> cfgs;
+  cfgs.reserve(m_numSamples);
 
-    // Create a new tree rooted at cfg.
-    VID v = this->GetRoadmap()->GetGraph()->AddVertex(cfg);
-    m_trees[v] = Tree(cfg, std::vector<VID>{v});
+  sampler->Sample(m_numSamples, 1, boundary, std::back_inserter(cfgs));
+
+  // Create a new tree rooted at each successful sample.
+  for(const auto& cfg : cfgs) {
+    const VID vid = g->AddVertex(cfg);
+    m_trees[vid] = Tree(cfg, {vid});
   }
 
   if(this->m_debug)
@@ -277,6 +235,8 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 ExpandTrees() {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::ExpandTrees");
+
   if(this->m_debug)
     std::cout << "\nBegin ExpandTrees" << std::endl;
 
@@ -292,7 +252,9 @@ ExpandTrees() {
 template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
-FindCandidateConnections(std::vector<std::pair<VID, VID> >& _candPairs) {
+FindCandidateConnections(std::vector<std::pair<VID, VID>>& _candPairs) {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::FindCandidateConnections");
+
   if(this->m_debug)
     std::cout << "\nBegin FindCandidateConnections" << std::endl;
 
@@ -337,6 +299,8 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 ConnectTrees(std::vector<std::pair<VID, VID>>& _candPairs) {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::ConnectTrees");
+
   if(this->m_debug)
     std::cout << "\nBegin ConnectTrees" << std::endl;
 
@@ -397,9 +361,10 @@ template <typename MPTraits>
 bool
 SRTStrategy<MPTraits>::
 Connect(VID _t1, VID _t2) {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::Connect");
+
   Environment* env = this->GetEnvironment();
   RoadmapType* rdmp = this->GetRoadmap();
-  auto dm = this->GetDistanceMetric(m_dmLabel);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto lp = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits> lpOutput;
@@ -440,6 +405,8 @@ template <typename MPTraits>
 bool
 SRTStrategy<MPTraits>::
 RRTConnect(VID _t1, VID _t2) {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::RRTConnect");
+
   for(size_t i = 0; i < m_numConnIter; ++i) {
     CfgType dir = this->SelectTarget();
 
@@ -467,6 +434,8 @@ template <typename MPTraits>
 typename MPTraits::CfgType
 SRTStrategy<MPTraits>::
 SelectTarget() {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::SelectTarget");
+
   CfgType target(this->GetTask()->GetRobot());
   target.GetRandomCfg(this->GetEnvironment());
 
@@ -480,8 +449,9 @@ template <typename MPTraits>
 typename SRTStrategy<MPTraits>::VID
 SRTStrategy<MPTraits>::
 ExpandTree(const VID _tree, const CfgType& _dir) {
+  MethodTimer mt(this->GetStatClass(), "SRTStrategy::ExpandTree");
+
   // Setup MP Variables
-  auto dm = this->GetDistanceMetric(m_dmLabel);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   CDInfo cdInfo;
 
@@ -514,21 +484,18 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
   if(this->m_debug)
     std::cout << "RRT expanded to " << newCfg << std::endl;
 
-  // If good to go, add to roadmap
-  if(dm->Distance(newCfg, nearest) >= e->GetMinDistance()) {
-    recentVID = g->AddVertex(newCfg);
-    currentTree.second.push_back(recentVID);
+  recentVID = g->AddVertex(newCfg);
+  currentTree.second.push_back(recentVID);
 
-    //update centroid
-    size_t s = currentTree.second.size();
-    currentTree.first = (currentTree.first * (s-1) + newCfg) / s;
+  //update centroid
+  size_t s = currentTree.second.size();
+  currentTree.first = (currentTree.first * (s-1) + newCfg) / s;
 
-    //add edge
-    std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
-        weight), WeightType("RRTExpand", weight));
-    g->AddEdge(kClosest[0].target, recentVID, weights);
-    g->GetVertex(recentVID).SetStat("Parent", kClosest[0].target);
-  }
+  //add edge
+  std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
+      weight), WeightType("RRTExpand", weight));
+  g->AddEdge(kClosest[0].target, recentVID, weights);
+  g->GetVertex(recentVID).SetStat("Parent", kClosest[0].target);
 
   return recentVID;
 }

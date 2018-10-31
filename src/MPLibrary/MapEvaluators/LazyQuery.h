@@ -1,7 +1,7 @@
-#ifndef LAZY_QUERY_H_
-#define LAZY_QUERY_H_
+#ifndef PMPL_LAZY_QUERY_H_
+#define PMPL_LAZY_QUERY_H_
 
-#include "PRMQuery.h"
+#include "QueryMethod.h"
 
 #include <algorithm>
 #include <functional>
@@ -9,23 +9,20 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Lazy @prm, extract path, validate, and repeat
-///
-/// First assumes all nodes and edges are valid, then checks for validity in the
-/// query phase and deletes nodes and edges found to be invalid.
-///
-/// @TODO Validate that the enhancement edges are working properly. It appears
-///       that once a candidate edge is created, it will never be released. This
-///       looks wrong and should be validated against the paper.
+/// First assumes all nodes and edges are valid, then checks for validity of the
+/// nodes/edges used in the path.
 ///
 /// Reference:
-/// Robert Bohlin and Lydia E. Kavraki. "Path Planning Using Lazy PRM".
+///   Robert Bohlin and Lydia E. Kavraki. "Path Planning Using Lazy PRM".
 ///   ICRA 2000.
+///
+/// @note Node enhancement does not work like in the paper. Here we use a
+///       flat gaussian distribution with fixed distance.
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class LazyQuery : public PRMQuery<MPTraits> {
+class LazyQuery : public QueryMethod<MPTraits> {
 
   public:
 
@@ -37,9 +34,15 @@ class LazyQuery : public PRMQuery<MPTraits> {
     typedef typename RoadmapType::GraphType       GraphType;
     typedef typename GraphType::VID               VID;
     typedef typename GraphType::EID::edge_id_type EID;
+    typedef typename MPTraits::GoalTracker        GoalTracker;
+    typedef typename GoalTracker::VIDSet          VIDSet;
 
-    typedef std::unordered_map<VID, bool>   UnusedVertexMap;
-    typedef std::unordered_map<VID, bool>   UnusedEdgeMap;
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    typedef std::unordered_map<VID, bool>         UnusedVertexMap;
+    typedef std::unordered_map<VID, bool>         UnusedEdgeMap;
 
     ///@}
     ///@name Construction
@@ -53,24 +56,24 @@ class LazyQuery : public PRMQuery<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
+
     virtual void Initialize() override;
 
     ///@}
+
+  protected:
+
     ///@name QueryMethod Overrides
     ///@{
 
-    virtual bool PerformSubQuery(const CfgType& _start, const CfgType& _goal)
-        override;
+    virtual bool PerformSubQuery(const VID _start, const VIDSet& _goals) override;
 
     virtual bool IsVertexUsed(const VID _vid) const override;
 
     virtual bool IsEdgeUsed(const EID _eid) const override;
 
     ///@}
-
-  protected:
-
     ///@name Helpers
     ///@{
 
@@ -93,21 +96,27 @@ class LazyQuery : public PRMQuery<MPTraits> {
     virtual void NodeEnhance();
 
     /// Additional handling of invalid vertices.
-    /// @param[in] _cfg The invalid configuration to handle.
+    /// @param _cfg The invalid configuration to handle.
     virtual void ProcessInvalidNode(const CfgType& _cfg) { }
 
-    /// Mark a roadmap configuration as unused.
-    /// @param _vid The unused vertex's descriptor.
-    void MarkVertexUnused(const VID _vid);
+    /// Invalidate a roadmap configuration.
+    /// @param _vid The vertex descriptor.
+    void InvalidateVertex(const VID _vid);
+
+    /// Invalidate a roadmap edge.
+    /// @param _source The source vertex descriptor.
+    /// @param _target The target vertex descriptor.
+    void InvalidateEdge(const VID _source, const VID _target);
 
     ///@}
     ///@name MP Object Labels
     ///@{
-    /// These objects are used to lazily validate the computed path.
 
-    std::string m_dmLabel{"euclidean"};  ///< The distance metric label.
-    std::string m_lpLabel{"sl"};         ///< The local planner label.
-    using QueryMethod<MPTraits>::m_vcLabel;
+    std::string m_vcLabel;  ///< The lazy validity checker label.
+    std::string m_lpLabel;  ///< The lazy local planner label.
+    std::string m_dmLabel;  ///< The distance metric label for enhance nodes.
+
+    std::vector<std::string> m_ncLabels; ///< The connectors for enhancement.
 
     ///@}
     ///@name Internal State
@@ -120,7 +129,7 @@ class LazyQuery : public PRMQuery<MPTraits> {
     vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
     int m_numEnhance{0};          ///< Number of enhancement nodes to generate.
     double m_d{0};                ///< Gaussian distance for enhancement sampling.
-    vector<pair<CfgType, CfgType>> m_edges; ///< Candidate edges.
+    std::vector<std::pair<CfgType, CfgType>> m_edges; ///< Candidate edges.
 
     ///@}
 
@@ -130,31 +139,37 @@ class LazyQuery : public PRMQuery<MPTraits> {
 
 template <typename MPTraits>
 LazyQuery<MPTraits>::
-LazyQuery() : PRMQuery<MPTraits>() {
+LazyQuery() : QueryMethod<MPTraits>() {
   this->SetName("LazyQuery");
 }
 
 
 template <typename MPTraits>
 LazyQuery<MPTraits>::
-LazyQuery(XMLNode& _node) : PRMQuery<MPTraits>(_node) {
+LazyQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
   this->SetName("LazyQuery");
 
-  m_dmLabel = _node.Read("dmLabel", false, m_dmLabel, "Distance metric method");
-  m_lpLabel = _node.Read("lpLabel", false, m_lpLabel, "Local planner method");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Lazy validity checker method.");
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method.");
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric method.");
 
   m_deleteInvalid = _node.Read("deleteInvalid", false, m_deleteInvalid,
       "Remove invalid vertices from the roadmap?");
 
   m_numEnhance = _node.Read("numEnhance", false, m_numEnhance, 0, MAX_INT,
       "Number of nodes to generate in node enhancement");
-  m_d = _node.Read("d", false, m_d, 0., MAX_DBL, "Gaussian d value for node "
-      "enhancement");
+  m_d = _node.Read("d", false, m_d, 0., MAX_DBL,
+      "Gaussian d value for node enhancement");
 
-  for(auto& child : _node)
+  for(auto& child : _node) {
     if(child.Name() == "Resolution")
       m_resolutions.push_back(child.Read("mult", true, 1, 1, MAX_INT,
-          "Multiple of finest resolution checked"));
+          "Multiple of finest resolution checked, >= 1. Higher resolutions are "
+          "coarser initial checks."));
+    else if(child.Name() == "NodeConnectionMethod")
+      m_ncLabels.push_back(child.Read("label", true, "",
+          "Connector method for enhancement nodes."));
+  }
 
   // Sort resolutions in decreasing order.
   std::sort(m_resolutions.begin(), m_resolutions.end(), std::greater<int>());
@@ -172,18 +187,18 @@ LazyQuery(XMLNode& _node) : PRMQuery<MPTraits>(_node) {
 template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
-Print(ostream& _os) const {
-  PRMQuery<MPTraits>::Print(_os);
+Print(std::ostream& _os) const {
+  QueryMethod<MPTraits>::Print(_os);
   _os << "\tDistance Metric: " << m_dmLabel
-      << "\n\tValidity Checker: " << m_vcLabel
       << "\n\tLocal Planner: " << m_lpLabel
+      << "\n\tValidity Checker: " << m_vcLabel
       << "\n\tDelete Invalid: " << m_deleteInvalid
       << "\n\tnumEnhance: " << m_numEnhance
       << "\n\td: " << m_d
       << "\n\tresolutions:";
   for(const auto r : m_resolutions)
     _os << " " << r;
-  _os << endl;
+  _os << std::endl;
 }
 
 
@@ -202,64 +217,14 @@ Initialize() {
 template <typename MPTraits>
 bool
 LazyQuery<MPTraits>::
-PerformSubQuery(const CfgType& _start, const CfgType& _goal) {
-  if(this->m_debug)
-    cout << "Evaluating sub-query:" << endl
-         << "\tfrom " << _start << endl
-         << "\tto   " << _goal << endl;
+PerformSubQuery(const VID _start, const VIDSet& _goals) {
+  // Begin with the regular query and lazy-validate the path if it succeeds.
+  const bool connected = QueryMethod<MPTraits>::PerformSubQuery(_start, _goals)
+                     and ValidatePath();
 
-  // Find connected components.
-  auto ccs = this->FindCCs();
-
-  // Add start and goal to roadmap (if not already there).
-  auto start = this->EnsureCfgInMap(_start);
-  auto goal  = this->EnsureCfgInMap(_goal);
-
-  // Check each connected component.
-  bool connected = false;
-  for(auto& cc : ccs) {
-    // Try connecting the start and goal to this CC.
-    this->ConnectToCC(start.first, cc.second);
-    this->ConnectToCC(goal.first, cc.second);
-
-    // If start and goal are connected to the same CC, generate path and end.
-    while(!connected && this->SameCC(start.first, goal.first)) {
-      auto path = this->GeneratePath(start.first, goal.first);
-
-      // If a path was generated, try to validate it against the lazy VC.
-      if(!path.empty()) {
-        *this->GetPath() += path;
-        connected = this->ValidatePath();
-      }
-      // Otherwise, dynamic obstacles are occluding all paths through this CC.
-      // Move on to the next one.
-      else
-        break;
-    }
-
-    // Quit when we find a valid path.
-    if(connected)
-      break;
-  }
-
-  if(this->m_debug) {
-    if(connected)
-      cout << "\tSuccess: found path from start node " << start.first
-           << " to goal node " << goal.first << "." << endl;
-    else
-      cout << "\tFailed to connect start node " << start.first
-           << " to goal node " << goal.first << "." << endl;
-  }
-
-  // Use node enhancement.
+  // If not connected, enhanace?
   if(!connected)
     NodeEnhance();
-
-  // Remove start and goal if necessary.
-  if(this->m_deleteNodes) {
-    this->RemoveTempCfg(start);
-    this->RemoveTempCfg(goal);
-  }
 
   return connected;
 }
@@ -280,7 +245,7 @@ IsEdgeUsed(const EID _eid) const {
   return !bool(m_invalidEdges.count(_eid)) or !m_invalidEdges.at(_eid);
 }
 
-/*----------------------------------------------------------------------------*/
+/*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
 bool
@@ -300,12 +265,12 @@ ValidatePath() {
   if(path->Size() == 0 or PruneInvalidVertices() or PruneInvalidEdges()) {
     path->Clear();
     if(this->m_debug)
-      cout << "\tPath is invalid." << endl;
+      std::cout << "\tPath is invalid." << std::endl;
     return false;
   }
 
   if(this->m_debug)
-    cout << "\tPath is valid." << endl;
+    std::cout << "\tPath is valid." << std::endl;
   return true;
 }
 
@@ -315,7 +280,7 @@ bool
 LazyQuery<MPTraits>::
 PruneInvalidVertices() {
   if(this->m_debug)
-    cout << "\t\tChecking vertices..." << endl;
+    std::cout << "\t\tChecking vertices..." << std::endl;
 
   auto g  = this->GetRoadmap()->GetGraph();
   auto vc = this->GetValidityChecker(m_vcLabel);
@@ -338,32 +303,16 @@ PruneInvalidVertices() {
 
     // If we're here, the cfg is invalid.
     if(this->m_debug)
-      cout << "\t\tNode " << vid << " found invalid during path validation.\n"
-           << "\t\t\tAdding enhancement edges:";
-
-    // Collect enhancment info.
-    if(m_numEnhance && !cfg.IsLabel("Enhance")) {
-      auto vertex = g->find_vertex(vid);
-      for(auto edge = vertex->begin(); edge != vertex->end(); ++edge) {
-        CfgType& target = g->GetVertex(edge->target());
-        if(!target.IsLabel("Enhance")) {
-          m_edges.push_back(make_pair(cfg, target));
-          if(this->m_debug)
-            cout << " (" << vid << ", " << edge->target() << ")";
-        }
-      }
-    }
-    if(this->m_debug)
-      cout << endl;
+      std::cout << "\t\tNode " << vid << " found invalid during path validation."
+                << std::endl;
 
     // Delete invalid vertex.
-    this->ProcessInvalidNode(cfg);
-    MarkVertexUnused(vid);
+    InvalidateVertex(vid);
     return true;
   }
 
   if(this->m_debug)
-    cout << "\t\tVertices are ok." << endl;
+    std::cout << "\t\tVertices are ok." << std::endl;
 
   return false;
 }
@@ -379,80 +328,57 @@ PruneInvalidEdges() {
   auto path = this->GetPath();
 
   if(this->m_debug)
-    cout << "\t\tChecking edges..." << endl;
+    std::cout << "\t\tChecking edges..." << std::endl;
 
   // Perform the check for each resolution.
   for(const auto res : m_resolutions) {
     if(this->m_debug)
-      cout << "\t\tChecking with resolution " << res << "...";
+      std::cout << "\t\tChecking with resolution " << res << "...";
 
     for(size_t i = 0; i < path->Size() - 1; ++i) {
       // Check from outside to middle
-      size_t index = i % 2 ? path->Size() - i / 2 - 2 : i / 2;
-      VID v1 = path->VIDs()[index];
-      VID v2 = path->VIDs()[index + 1];
+      const size_t index = i % 2 ? path->Size() - i / 2 - 2 : i / 2;
+      const VID v1 = path->VIDs()[index],
+                v2 = path->VIDs()[index + 1];
 
-      // Get graph edge iterator.
-      typename GraphType::adj_edge_iterator edge;
+      // Skip checks if already checked and valid.
       {
-        typename GraphType::vertex_iterator vi;
         typename GraphType::edge_descriptor ed(v1, v2);
+        typename GraphType::vertex_iterator vi;
+        typename GraphType::adj_edge_iterator edge;
         g->find_edge(ed, vi, edge);
-      }
 
-      // Skip checks if already checked and valid
-      if(edge->property().IsChecked(res))
-        continue;
-      edge->property().SetChecked(res);
+        if(edge->property().IsChecked(res))
+          continue;
+        edge->property().SetChecked(res);
+      }
 
       // Validate edge with local planner.
       CfgType witness;
       LPOutput<MPTraits> lpo;
+      const bool valid = lp->IsConnected(g->GetVertex(v1), g->GetVertex(v2),
+          witness, &lpo,
+          env->GetPositionRes() * res, env->GetOrientationRes() * res, true);
 
-      if(!lp->IsConnected(g->GetVertex(v1), g->GetVertex(v2), witness, &lpo,
-            env->GetPositionRes() * res, env->GetOrientationRes() * res, true)) {
-        // The edge is invalid.
+      // Handle invalid edges.
+      if(!valid) {
         if(this->m_debug)
-          cout << "\n\t\tEdge (" << v1 << ", " << v2 << ") is invalid at "
-               << "resolultion factor " << res << "." << endl;
+          std::cout << "\n\t\tEdge (" << v1 << ", " << v2 << ") is invalid at "
+                    << "resolultion factor " << res << "." << std::endl;
 
-        // Add invalid edge to enhancement sampling list.
-        if(m_numEnhance) {
-          CfgType cfg1 = g->GetVertex(v1);
-          CfgType cfg2 = g->GetVertex(v2);
-          if(!cfg1.IsLabel("Enhance") && !cfg2.IsLabel("Enhance")) {
-            m_edges.push_back(make_pair(cfg1, cfg2));
-            if(this->m_debug)
-              cout << "\t\t\tAdding node enhancement edge (" << v1 << ", " << v2
-                   << ")." << endl;
-          }
-        }
-
-        // Delete invalid (bidirectional) edge.
-        this->ProcessInvalidNode(witness);
-        if(m_deleteInvalid)
-        {
-          g->DeleteEdge(v1, v2);
-          g->DeleteEdge(v2, v1);
-        }
-        else
-        {
-          typename GraphType::EI ei;
-          g->GetEdge(v1, v2, ei);
-          m_invalidEdges[ei->id()] = true;
-          g->GetEdge(v2, v1, ei);
-          m_invalidEdges[ei->id()] = true;
-        }
+        // Delete invalid edge.
+        ProcessInvalidNode(witness);
+        InvalidateEdge(v1, v2);
         return true;
       }
     }
 
     if(this->m_debug)
-      cout << "ok." << endl;
+      std::cout << "ok." << std::endl;
   }
 
   if(this->m_debug)
-    cout << "\t\tEdges are ok." << endl;
+    std::cout << "\t\tEdges are ok." << std::endl;
 
   return false;
 }
@@ -466,19 +392,19 @@ NodeEnhance() {
     return;
 
   if(this->m_debug)
-    cout << "\tLazyQuery is enhancing nodes...\n\t  Generated VIDs:";
+    std::cout << "\tLazyQuery is enhancing nodes...\n\t  Generated VIDs:";
 
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto roadmap = this->GetRoadmap();
 
-  for(int i = 0; i < m_numEnhance; ++i) {
+  for(int i = 0; i < m_numEnhance and !m_edges.empty(); ++i) {
     // Pick a random edge from m_edges.
-    size_t index = LRand() % m_edges.size();
+    const size_t index = LRand() % m_edges.size();
 
     // Get its midpoint and a random ray.
-    CfgType midpoint = (m_edges[index].first + m_edges[index].second) / 2.;
+    const CfgType midpoint = (m_edges[index].first + m_edges[index].second) / 2.;
     CfgType ray(midpoint.GetRobot());
-    ray.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
+    ray.GetRandomRay(std::abs(GaussianDistribution(0, m_d)), dm);
 
     // Create an enhancement cfg by adding the random ray to the midpoint.
     CfgType enhance = midpoint + ray;
@@ -486,36 +412,73 @@ NodeEnhance() {
 
     // If enchancement cfg is in bounds, add it to the roadmap and connect.
     if(enhance.InBounds(this->GetEnvironment())) {
-      VID newVID = roadmap->GetGraph()->AddVertex(enhance);
-      for(auto& label : this->m_ncLabels)
+      const VID newVID = roadmap->GetGraph()->AddVertex(enhance);
+      for(auto& label : m_ncLabels)
         this->GetConnector(label)->Connect(roadmap, newVID);
       if(this->m_debug)
-        cout << " " << newVID;
+        std::cout << " " << newVID;
     }
+
+    // Release the enhancement edge.
+    m_edges.erase(m_edges.begin() + index);
   }
 
   if(this->m_debug)
-    cout << endl;
+    std::cout << std::endl;
 }
 
 
 template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
-MarkVertexUnused(const VID _vid) {
+InvalidateVertex(const VID _vid) {
   auto g = this->GetRoadmap()->GetGraph();
 
-  if(m_deleteInvalid)
-  {
+  const CfgType& cfg = g->GetVertex(_vid);
+  ProcessInvalidNode(cfg);
+
+  // If we are deleting invalid vertices, delete _vid and return.
+  if(m_deleteInvalid) {
     g->DeleteVertex(_vid);
     return;
   }
 
-  // Mark this vertex and its edges as unused.
+  // Otherwise, mark this vertex and its edges as unused.
   m_invalidVertices[_vid] = true;
   auto vi = g->find_vertex(_vid);
   for(auto ei = vi->begin(); ei != vi->end(); ++ei)
     m_invalidEdges[ei->id()] = true;
+}
+
+
+template <typename MPTraits>
+void
+LazyQuery<MPTraits>::
+InvalidateEdge(const VID _source, const VID _target) {
+  auto g = this->GetRoadmap()->GetGraph();
+
+  // Add the invalid edge to enhancement sampling list.
+  if(m_numEnhance) {
+    const CfgType& cfg1 = g->GetVertex(_source),
+                 & cfg2 = g->GetVertex(_target);
+    if(!cfg1.IsLabel("Enhance") and !cfg2.IsLabel("Enhance")) {
+      m_edges.emplace_back(cfg1, cfg2);
+      if(this->m_debug)
+        std::cout << "\t\t\tAdding node enhancement edge (" << _source << ", "
+                  << _target << ")." << std::endl;
+    }
+  }
+
+  // If we are deleting invalid edges, delete (_source, _target) and return.
+  if(m_deleteInvalid) {
+    g->DeleteEdge(_source, _target);
+    return;
+  }
+
+  // Otherwise, mark this edge as unused.
+  typename GraphType::EI ei;
+  g->GetEdge(_source, _target, ei);
+  m_invalidEdges[ei->id()] = true;
 }
 
 /*----------------------------------------------------------------------------*/

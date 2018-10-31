@@ -46,11 +46,10 @@
     </Connectors>
 
     <MapEvaluators>
-      <LazyQuery label="LazyQuery" fullRecreatePath="false" lpLabel="sl"
-        dmLabel="euclidean" vcLabel="pqp_solid" graphSearchAlg="dijkstras"
-        deleteNodes="false" numEnhance="10" d="0.5" deleteInvalid="true"
-        safeIntervalToolLabel="SI">
-        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+      <LazyQuery label="LazyQuery"
+        vcLabel="pqp_solid" lpLabel="sl" dmLabel="euclidean"
+        numEnhance="10" d="0.5" deleteInvalid="true">
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
         <Resolution mult="1"/>
@@ -59,15 +58,11 @@
 
     <MPStrategies>
       <BasicPRM label="LazyPRM">
-        <Sampler method="UniformRandom" number="1" attempts="1"/>
-        <Connector method="ClosestAlwaysTrue"/>
-        <Evaluator method="LazyQuery"/>
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <Evaluator label="LazyQuery"/>
       </BasicPRM>
     </MPStrategies>
-
-    <MPTools>
-      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
-    </MPTools>
 
     <Solver mpStrategyLabel="LazyPRM" seed="0"
       baseFilename="../Scratch/LazyPRM"/>

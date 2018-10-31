@@ -134,7 +134,9 @@ FindNeighbors(RoadmapType* _rmp,
   for(size_t i = 0; i < this->m_k && i < inputSize; ++i) {
     // Try until we find a valid neighbor or run out of choices.
     while(foundVIDs.size() < inputSize) {
-      const VID vid = g->GetVID(_first + LRand() % inputSize);
+      auto iter = _first;
+      std::advance(iter, LRand() % inputSize);
+      const VID vid = g->GetVID(iter);
 
       // Check for invalid conditions.
       const bool alreadyFound = foundVIDs.count(vid),

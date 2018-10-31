@@ -2,3 +2,5 @@ BasicPRM.0.xml BasicPRM.0.map
 QueryPRM.0.xml QueryPRM.0.query.map QueryPRM.0.query.rdmp.path
 LazyPRM.0.xml LazyPRM.0.query.map LazyPRM.0.query.rdmp.path
 LazyTogglePRM.0.xml LazyTogglePRM.0.query.map LazyTogglePRM.0.query.block.map LazyTogglePRM.0.query.rdmp.path
+BasicRRT.0.xml BasicRRT.0.query.map BasicRRT.0.query.rdmp.path
+BasicRRT-oneway.0.xml BasicRRT-oneway.0.query.map BasicRRT-oneway.0.query.rdmp.path

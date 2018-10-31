@@ -6,10 +6,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand CCs out in attempt for better roadmap connectivity.
+///
 /// @TODO This method is incorrectly implemented as a connector when in fact it
 ///       should be an MPStrategy. It needs to be moved to the strategies and to
 ///       have hard-coded things like the unit vector function replaced with
-///       the appropriate generalized implementations.
+///       the appropriate generalized implementations. Direct-instantiated
+///       extenders must also be replaced and update to use the public
+///       ExtenderMethod interface. Method is disabled until someone who needs
+///       it has time to fix it up.
 ///
 /// -- General Overview --
 ///
@@ -31,6 +35,7 @@
 /// 2. ExpandFrom: Expand away from the source CC's centroid.
 /// 3. ExpandTo: Expand to the nearest other CC's centroid.
 /// 4. MedialAxisExpand: Expand along tangents to the medial-axis.
+///
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>

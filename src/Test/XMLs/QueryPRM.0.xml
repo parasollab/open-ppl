@@ -42,17 +42,15 @@
     </Connectors>
 
     <MapEvaluators>
-      <PRMQuery label="PRMQuery" debug="false" fullRecreatePath="false"
-                vcLabel="pqp_solid" safeIntervalToolLabel="SI">
-        <NodeConnectionMethod method="Closest"/>
-      </PRMQuery>
+      <QueryMethod label="Query" debug="false"
+        safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
       <BasicPRM label="QueryPRM">
-        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
-        <Connector method="Closest"/>
-        <Evaluator method="PRMQuery"/>
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="Query"/>
       </BasicPRM>
     </MPStrategies>
 

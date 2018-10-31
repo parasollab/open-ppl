@@ -1,5 +1,5 @@
-#ifndef PATH_H_
-#define PATH_H_
+#ifndef PMPL_PATH_H_
+#define PMPL_PATH_H_
 
 #include <algorithm>
 
@@ -48,6 +48,9 @@ class PathType final {
 
     /// Get the number of cfgs in the path.
     size_t Size() const noexcept;
+
+    /// Check if the path is empty.
+    bool Empty() const noexcept;
 
     /// Get the total edge weight.
     double Length() const;
@@ -159,6 +162,14 @@ Size() const noexcept {
 
 
 template <typename MPTraits>
+bool
+PathType<MPTraits>::
+Empty() const noexcept {
+  return m_vids.empty();
+}
+
+
+template <typename MPTraits>
 double
 PathType<MPTraits>::
 Length() const {
@@ -235,7 +246,8 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     }
 
     if(!validEdge)
-      throw RunTimeException(WHERE) << "Edge from " << *it << " to " << *(it+1) << " doesn't exist in roadmap!";
+      throw RunTimeException(WHERE) << "Edge from " << *it << " to " << *(it+1)
+                                    << " doesn't exist in roadmap!";
 
     // Use the local planner from parameter if specified.
     // If not specified, use the edge lp.

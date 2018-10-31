@@ -1,5 +1,5 @@
-#ifndef CONSTRAINT_H_
-#define CONSTRAINT_H_
+#ifndef PMPL_CONSTRAINT_H_
+#define PMPL_CONSTRAINT_H_
 
 #include <memory>
 #include <vector>
@@ -18,7 +18,6 @@ class XMLNode;
 /// Constraints may apply to specific robots, or they may be more general
 /// criterion on any robot. In the later case, the robot pointer for the
 /// constraint will be null.
-///
 ////////////////////////////////////////////////////////////////////////////////
 class Constraint {
 

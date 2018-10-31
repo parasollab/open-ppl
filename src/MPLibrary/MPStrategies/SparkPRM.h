@@ -1,13 +1,14 @@
-#ifndef SPARK_PRM_H_
-#define SPARK_PRM_H_
+#ifndef PMPL_SPARK_PRM_H_
+#define PMPL_SPARK_PRM_H_
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief Constructs RRTs within narrow passages to quickly plan through them.
-///
 /// Constructs RRTs within narrow passages to quickly plan through them.
 ///
-/// \internal This strategy is configured for pausible execution.
+/// @todo This method manually re-codes many functions from RRT and PRM.
+///       Re-implement it as a PRM method which can call RRT as a substrategy.
+///
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits, template<typename> class Strategy>
 class SparkPRM : public Strategy<MPTraits> {

@@ -1,11 +1,11 @@
-#ifndef STABLE_SPARSE_RRT_H_
-#define STABLE_SPARSE_RRT_H_
-
-#include <vector>
-#include <algorithm>
-#include <unordered_map>
+#ifndef PMPL_STABLE_SPARSE_RRT_H_
+#define PMPL_STABLE_SPARSE_RRT_H_
 
 #include "BasicRRTStrategy.h"
+
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,10 +21,10 @@
 /// configuration. This is distance in holonomic problems and time steps in
 /// nonholonomic problems.
 ///
-/// Paper reference:
-/// Sparse Methods for Efficient Asymptotically Optimal Kinodynamic Planning.
-///   Yanbo Li, Zakary Littlefield, and Kostas Bekris. Algorithmic Foundations
-///   of Robotics XI (WAFR 2014). 2015. 263-282.
+/// Reference:
+///   Yanbo Li, Zakary Littlefield, and Kostas Bekris. "Sparse Methods for
+///   Efficient Asymptotically Optimal Kinodynamic Planning". Algorithmic
+///   Foundations of Robotics XI (WAFR 2014). 2015. 263-282.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
@@ -46,44 +46,34 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     ///@name Construction
     ///@{
 
-    StableSparseRRT(std::string _dm = "euclidean", std::string _nf = "Nearest",
-        std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
-        std::vector<std::string> _evaluators = std::vector<std::string>(),
-        std::string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
-        double _growthFocus = .05, size_t _numRoots = 1,
-        size_t _numDirections = 1, size_t _maxTrial = 3,
-        double _witnessRadius = 0.5, bool _prune = false);
+    StableSparseRRT();
 
     StableSparseRRT(XMLNode& _node);
 
     virtual ~StableSparseRRT() = default;
 
     ///@}
+
+  private:
+
     ///@name MPStrategy Overrides
     ///@{
 
     virtual void Initialize() override;
 
     ///@}
-
-  private:
-
     ///@name BasicRRTStrategy Overrides
     ///@{
 
     /// SST's version of this function requires a radius NF and only searches
     /// the active set.
-#if 0
-    virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree)
-        override;
-#else
-    virtual VID FindNearestNeighbor(const CfgType& _cfg) override;
-#endif
+    virtual VID FindNearestNeighbor(const CfgType& _cfg,
+        const TreeType* const _tree = nullptr) override;
 
     /// SST's version of this function calls the base class version and then
     /// updates metadata specific to this method.
     virtual VID Extend(const VID _nearest, const CfgType& _target,
-        LPOutput<MPTraits>& _lp) override;
+        LPOutput<MPTraits>& _lp, const bool _requireNew = true) override;
 
     ///@}
     ///@name SST Helpers
@@ -117,8 +107,8 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
                                                ///< to a witness.
 
     std::string m_witnessNfLabel; ///< NF to use for finding witness nodes.
-    double m_witnessRadius{.5}; ///< Distance between witness nodes.
 
+    double m_witnessRadius{.5}; ///< Distance between witness nodes.
     bool m_prune{false};
 
     ///@}
@@ -128,13 +118,7 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
 
 template <typename MPTraits>
 StableSparseRRT<MPTraits>::
-StableSparseRRT(std::string _dm, std::string _nf, std::string _vc, std::string _nc, std::string _ex,
-    std::vector<std::string> _evaluators, std::string _gt, bool _growGoals, double _growthFocus,
-    size_t _numRoots, size_t _numDirections, size_t _maxTrial,
-    double _witnessRadius, bool _prune) :
-    BasicRRTStrategy<MPTraits>(_dm, _nf, _vc, _nc, _ex, _evaluators, _gt,
-        _growGoals, _growthFocus, _numRoots, _numDirections, _maxTrial),
-    m_witnessRadius(_witnessRadius), m_prune(_prune) {
+StableSparseRRT() {
   this->SetName("StableSparseRRT");
 }
 
@@ -146,9 +130,9 @@ StableSparseRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
 
   m_witnessNfLabel = _node.Read("witnessNfLabel", false, this->m_nfLabel,
       "Optional different NF to use for witnesses.");
-  m_witnessRadius = _node.Read("witnessRadius", true, 0.5, .01,
+  m_witnessRadius = _node.Read("witnessRadius", true, m_witnessRadius, .01,
       std::numeric_limits<double>::max(), "Distance between witnesses.");
-  m_prune = _node.Read("prune", false, false,
+  m_prune = _node.Read("prune", false, m_prune,
       "Enable/disable pruning inactive leaves");
 }
 
@@ -170,12 +154,16 @@ Initialize() {
   if(this->m_debug)
     std::cout << "Initializing StableSparseRRT" << std::endl;
 
-  const auto graph = this->GetRoadmap()->GetGraph();
-  const VID start = graph->GetVID(this->m_query->GetQuery()[0]);
+  // Find the start node.
+  auto goalTracker = this->GetGoalTracker();
+  const auto& startVIDs = goalTracker->GetStartVIDs();
+  if(startVIDs.empty())
+    throw RunTimeException(WHERE) << "A start VID is required for this method.";
+  const VID start = *startVIDs.begin();
 
   m_active.push_back(start);
   m_witnesses.push_back(start);
-  m_representatives.emplace(std::make_pair(start, start));
+  m_representatives.emplace(start, start);
 }
 
 /*----------------------- BasicRRTStrategy Overrides -------------------------*/
@@ -183,37 +171,27 @@ Initialize() {
 template <typename MPTraits>
 typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
-#if 0
-FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
-#else
-FindNearestNeighbor(const CfgType& _cfg) {
-#endif
+FindNearestNeighbor(const CfgType& _cfg, const TreeType* const _tree) {
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestNeighbor");
   auto g = this->GetRoadmap()->GetGraph();
 
-  std::vector<Neighbor> neighbors;
-
-#if 0
   // The candidate neighbors are those in both the current tree and the active
   // set.
-
   std::vector<VID> candidates;
-  std::set_intersection(_tree.begin(), _tree.end(),
-      m_active.begin(), m_active.end(), std::back_inserter(candidates));
+  candidates.reserve(_tree->size());
+  for(const VID vid : m_active)
+    if(_tree->count(vid))
+      candidates.push_back(vid);
 
   if(candidates.empty())
-    throw RunTimeException(WHERE, "SST can't find any candidates.");
+    throw RunTimeException(WHERE) << "SST can't find any candidates.";
 
   // Search only the candidates using a radius NF.
+  std::vector<Neighbor> neighbors;
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   nf->FindNeighbors(this->GetRoadmap(), candidates.begin(), candidates.end(),
       candidates.size() == g->get_num_vertices(),
       _cfg, std::back_inserter(neighbors));
-#else
-  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  nf->FindNeighbors(this->GetRoadmap(), m_active.begin(), m_active.end(),
-      true, _cfg, std::back_inserter(neighbors));
-#endif
 
   // Of the nodes in the radius, select the one with the best path cost.
   VID bestVID = INVALID_VID;
@@ -222,7 +200,7 @@ FindNearestNeighbor(const CfgType& _cfg) {
   for(const auto& n : neighbors) {
     // Check for invalid neighbors.
     if(n.target == INVALID_VID)
-      throw RunTimeException(WHERE, "NF should not return bogus nodes.");
+      throw RunTimeException(WHERE) << "NF should not return bogus nodes.";
 
     // Check if this neighbor has the best cost so far.
     const double cost = g->GetVertex(n.target).GetStat("cost");
@@ -249,14 +227,23 @@ FindNearestNeighbor(const CfgType& _cfg) {
 template <typename MPTraits>
 typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
-Extend(const VID _nearest, const CfgType& _target, LPOutput<MPTraits>& _lp) {
+Extend(const VID _nearest, const CfgType& _target, LPOutput<MPTraits>& _lp,
+    const bool _requireNew) {
   // Extend using the basic RRT method.
-  const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearest, _target, _lp);
+  const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearest, _target, _lp,
+      _requireNew);
 
   // If we succeeded, update the SST structures before we return.
   const bool success = newVID != INVALID_VID;
-  if(success)
-    UpdateSSTStructures(_nearest, newVID, _lp);
+  if(success) {
+    // Skip this if we are connecting trees and the node wasn't new.
+    auto g = this->GetRoadmap()->GetGraph();
+    const bool connecting = !_requireNew,
+               newNode    = newVID == g->GetLastVID(),
+               update     = newNode or !connecting;
+    if(update);
+      UpdateSSTStructures(_nearest, newVID, _lp);
+  }
 
   return newVID;
 }
@@ -340,8 +327,8 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   ///          set first or use a linear scan.
   auto cit = BinarySearch(m_active.begin(), m_active.end(), representative);
   if(cit == m_active.end())
-    throw RunTimeException(WHERE, "Could not find representative '"
-        + std::to_string(representative) + "' in the active set.");
+    throw RunTimeException(WHERE) << "Could not find representative '"
+                                  << representative << "' in the active set.";
 
   m_active.erase(cit);
   m_active.push_back(_newVID);
@@ -400,6 +387,8 @@ PruneInactiveLeaves() {
 
     // Remove leaf.
     g->DeleteVertex(*leaf);
+    this->RemoveNodeFromTrees(*leaf);
+    m_parent.erase(*leaf);
     m_inactiveLeaves.erase(leaf);
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.

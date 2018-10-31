@@ -1,34 +1,37 @@
 #ifndef PMPL_BASIC_RRT_STRATEGY_H_
 #define PMPL_BASIC_RRT_STRATEGY_H_
 
-#include <iomanip>
 #include "MPStrategyMethod.h"
-#include "MPLibrary/MapEvaluators/RRTQuery.h"
+#include "MPProblem/Constraints/Constraint.h"
+#include "Utilities/XMLNode.h"
+
+#ifdef PMPL_USE_MATLAB
+// Short-term hack until I move this to a dedicated strategy.
+#include "Simulator/MatlabMicroSimulator.h"
+#endif
+
+#include <iomanip>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The RRT algorithm grows one or more trees from a set of root nodes to solve
 /// a single-query planning problem.
 ///
-/// Our not-so-basic RRT offers many variations by setting the appropriate
-/// options:
-/// @arg m_growGoals      Grow from goals?
-/// @arg m_gt             Indicates DIRECTED vs. UNDIRECTED and GRAPH vs. TREE.
-///
-/// The original RRT reference: LaValle, Steven M. "Rapidly-Exploring Random
-///                             Trees: A New Tool for Path Planning." TR 98-11,
-///                             Computer Science Dept., Iowa State Univ., 1998.
-///
-/// @BUG Something is going wrong with the tree tracking, which is causing very
-///      long ValidateTrees() calls in nonholonomic problems. It also ruins the
-///      performance of SST and any other method which prunes roadmap nodes. We
-///      need to re-engineer this and probably also extract graph-based RRT
-///      into its own class. I've disabled this part of the code for ICRA 18 as
-///      we aren't working on any methods that need it. All such changes use
-///      #if 0, #endif to clearly demark them. To be fixed after the deadline.
+/// References:
+///   Original RRT:
+///   LaValle, Steven M. "Rapidly-Exploring Random Trees: A New Tool for Path
+///   Planning." TR 98-11, Computer Science Dept., Iowa State Univ., 1998.
+///   RRT Connect (bi-directional):
+///   James Kuffner and Steven LaValle. "RRT-Connect: An Efficient Approach to
+///   Single-Query Path Planning". ICRA 2000.
+///   Nonholonomic RRT:
+///   Steven LaValle and James Kuffner. "Randomized Kinodynamic Planning." IJRR
+///   2001.
 ///
 /// @ingroup MotionPlanningStrategies
-/// @internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -48,19 +51,13 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef std::vector<VID> TreeType;
+    typedef std::unordered_set<VID> TreeType;
 
     ///@}
     ///@name Construction
     ///@{
 
-    BasicRRTStrategy(std::string _dm = "euclidean", std::string _nf = "bfnf",
-        std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
-        std::vector<std::string> _evaluators = std::vector<std::string>(),
-        std::string _gt = "UNDIRECTED_TREE", bool _writeAllOutputs = true,
-        bool _growGoals = false,
-        double _growthFocus = .05, size_t _numRoots = 1,
-        size_t _numDirections = 1, size_t _maxTrial = 3);
+    BasicRRTStrategy();
 
     BasicRRTStrategy(XMLNode& _node);
 
@@ -73,25 +70,16 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const;
 
     ///@}
+
+  protected:
+
     ///@name MPStrategy Overrides
     ///@{
 
     virtual void Initialize() override;
     virtual void Iterate() override;
-    virtual void Finalize() override;
-
-    ///@name Query Modifiers
-    ///@{
-
-    /// Set the query from outside of XML specification. For use with an
-    /// external strategy/module needing to use RRT.
-    /// @todo Remove, use substrategy instead.
-    void SetRRTQuery(RRTQuery<MPTraits>* _query) { m_query = _query; }
 
     ///@}
-
-  protected:
-
     ///@name Direction Helpers
     ///@{
 
@@ -99,32 +87,24 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual CfgType SelectTarget();
 
     /// Sample a target configuration to grow towards from an existing
-    ///        configuration. m_maxTrial samples are attempted.
+    /// configuration. m_disperseTrials samples are attempted.
     /// @param _v The VID of the existing configuration.
     /// @return The sample who's growth direction yields the greatest separation
     ///         from the existing configuration's neighbors.
-    CfgType SelectDispersedTarget(VID _v);
+    /// @todo Why do we have this? Seems like the better answer is to implement
+    ///       a dispersed extender.
+    CfgType SelectDispersedTarget(const VID _v);
 
     ///@}
     ///@name Neighbor Helpers
     ///@{
 
-    /// Get the configurations that are adjacent to _v in the map.
-    std::vector<CfgType> SelectNeighbors(VID _v);
-
-    /// Find the nearest configuration to the target _cfg within _tree.
-#if 0
-    virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree);
-#else
-    virtual VID FindNearestNeighbor(const CfgType& _cfg);
-#endif
-
-#if 0
-    /// If the graph type is GRAPH, try to connect a configuration to its
-    /// neighbors. No-op for TREE type graph.
-    /// @param _newVID The VID of the configuration to connect.
-    void ConnectNeighbors(VID _newVID);
-#endif
+    /// Find the nearest roadmap configuration to an arbitrary configuration.
+    /// @param _cfg The query configuration.
+    /// @param _tree The tree to search, or null for whole roadmap.
+    /// @return The VID of the roadmap configuration nearest to _cfg.
+    virtual VID FindNearestNeighbor(const CfgType& _cfg,
+        const TreeType* const _tree = nullptr);
 
     ///@}
     ///@name Growth Helpers
@@ -135,133 +115,114 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _nearVID The nearby configuration's VID.
     /// @param _target  The growth target.
     /// @param _lp An LPOutput for returning local planner info.
+    /// @param _requireNew Require the extension to generate a new roadmap node
+    ///                    (true unless connecting trees).
     /// @return The new node's VID.
     virtual VID Extend(const VID _nearVID, const CfgType& _target,
-        LPOutput<MPTraits>& _lp);
+        LPOutput<MPTraits>& _lp, const bool _requireNew = true);
 
     /// @overload
-    VID Extend(const VID _nearVID, const CfgType& _target);
-
-#if 0
-    /// Attempt to connect one roadmap configuration to another with the extender.
-    /// @param _start The starting node.
-    /// @param _target The desired ending node.
-    /// @return True if the edge between _start and _target was created
-    ///         successfully.
-    virtual bool ExtendLP(const VID _start, const VID _target);
-#endif
+    VID Extend(const VID _nearVID, const CfgType& _target,
+        const bool _requireNew = true);
 
     /// Add a new configuration to the roadmap and current tree.
-    /// @param _newCfg    The new configuration to add.
+    /// @param _newCfg The new configuration to add.
     /// @return A pair with the added VID and a bool indicating whether the new
     ///         node was already in the map.
     virtual std::pair<VID, bool> AddNode(const CfgType& _newCfg);
 
     /// Add a new edge to the roadmap.
-    /// @param _source   The source node.
-    /// @param _target   The target node.
+    /// @param _source The source node.
+    /// @param _target The target node.
     /// @param _lpOutput The extender output.
-    void AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput);
+    virtual void AddEdge(const VID _source, const VID _target,
+        const LPOutput<MPTraits>& _lpOutput);
+
+    /// Try to connect a configuration to its neighbors.
+    /// @param _newVID The VID of the configuration to connect.
+    void ConnectNeighbors(const VID _newVID);
+
+    /// Try to extend a new configuration toward each goal region that is within
+    /// the extender's range.
+    /// @param _newVID The VID of a newly extended configuration.
+    /// @note This only applies when not growing goals.
+    void TryGoalExtension(const VID _newVID);
+
+    /// Try to extend a new configuration toward a specific goal region. No-op
+    /// if the goal is outside the extender's range.
+    /// @param _newVID The VID of a newly extended configuration.
+    /// @param _boundary The goal boundary.
+    /// @note This only applies when not growing goals.
+    void TryGoalExtension(const VID _newVID, const Boundary* const _boundary);
 
     ///@}
     ///@name Tree Helpers
     ///@{
 
-    /// Attempt to expand the map by growing towards a target
-    ///        configuration from the nearest existing node in the current tree.
+    /// Attempt to expand the map by growing towards a target configuration from
+    /// the nearest existing node.
     /// @param _target The target configuration.
-    /// @return            The VID of a newly created Cfg if successful,
-    ///                    INVALID_VID otherwise.
-    virtual VID ExpandTree(CfgType& _target);
+    /// @return The VID of a newly created Cfg if successful, INVALID_VID
+    ///         otherwise.
+    VID ExpandTree(const CfgType& _target);
 
-    /// Attempt to expand the map by growing towards a target
-    ///        configuration from an arbitrary node.
+    /// Attempt to expand the map by growing towards a target configuration from
+    /// an arbitrary existing node.
     /// @param _nearestVID The VID to grow from.
-    /// @param _target     The target configuration.
-    /// @return                The VID of a newly created Cfg if successful,
-    ///                        INVALID_VID otherwise.
+    /// @param _target The target configuration.
+    /// @return The VID of a newly created Cfg if successful, INVALID_VID
+    ///         otherwise.
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target);
 
-#if 0
+    /// Handle possible merges when trees are joined by a new edge.
+    /// @param _source The source of the new edge.
+    /// @param _target The target of the new edge.
+    void MergeTrees(const VID _source, const VID _target);
+
     /// If multiple trees exist, try to connect the current tree with the
-    ///        one that is nearest to a recently grown configuration.
+    /// one that is nearest to a recently grown configuration.
     /// @param _recentlyGrown The VID of the recently grown configuration.
-    void ConnectTrees(VID _recentlyGrown);
+    void ConnectTrees(const VID _recentlyGrown);
 
-    /// Check that each node in the graph is also in a tree, and that the
-    ///        number of trees is equal to the number of connected components.
-    ///        Calls RebuildTrees to correct if either check fails.
-    void ValidateTrees();
-
-    /// Reconstruct m_trees from the roadmap CC info.
-    void RebuildTrees();
-#endif
+    /// Remove a node from the tree list.
+    /// @param _node The vertex to remove from the trees list.
+    void RemoveNodeFromTrees(const VID _node);
 
     ///@}
     ///@name MP Object Labels
     ///@{
 
-    /// Note: m_dmLabel is unused and should be removed as extraneous parameter.
-    std::string m_dmLabel;       ///< The distance metric label.
     std::string m_samplerLabel;  ///< The sampler label.
     std::string m_nfLabel;       ///< The neighborhood finder label.
-    std::string m_vcLabel;       ///< The validity checker label.
-    std::string m_ncLabel;       ///< The connector label.
+    std::string m_ncLabel;       ///< The connector label (for RRG).
     std::string m_exLabel;       ///< The extender label.
-    std::string m_gt;            ///< The graph type.
+    std::string m_goalDmLabel;   ///< Dm for checking goal extensions.
 
     ///@}
     ///@name RRT Properties
     ///@{
 
-    bool   m_writeAllOutputs{true}; ///< Write roadmap/stat output in Finalize.
-    bool   m_growGoals;     ///< Grow trees from goals.
+    bool m_growGoals{false};      ///< Grow trees from goals.
     double m_growthFocus;   ///< The fraction of goal-biased expansions.
-    size_t m_numRoots;      ///< The number of roots to use without a query.
     size_t m_numDirections; ///< The number of expansion directions per iteration.
-    size_t m_maxTrial;      ///< The number of samples taken for disperse search.
+    size_t m_disperseTrials;///< The number of samples taken for disperse search.
 
     ///@}
-    ///@name Tree Data
+    ///@name Internal State
     ///@{
 
-#if 0
-    std::vector<TreeType> m_trees;                          ///< The current tree set.
-    typename std::vector<TreeType>::iterator m_currentTree; ///< The working tree.
-#endif
+    std::vector<TreeType> m_trees;        ///< The current tree set.
 
     ///@}
-    ///@name Extension Success Tracking
-    ///@{
 
-    size_t m_successes{0};  ///< The count of successful extensions.
-    size_t m_trials{0};     ///< The count of attempted extensions.
-
-    ///@}
-    ///@name Query
-    ///@{
-
-    RRTQuery<MPTraits>* m_query{nullptr}; ///< The query object.
-
-    ///@}
 };
 
 /*----------------------------- Construction ---------------------------------*/
 
 template <typename MPTraits>
 BasicRRTStrategy<MPTraits>::
-BasicRRTStrategy(std::string _dm, std::string _nf, std::string _vc, std::string _nc,
-    std::string _ex, std::vector<std::string> _evaluators, std::string _gt,
-    bool _writeAllOutputs, bool _growGoals,
-    double _growthFocus, size_t _numRoots, size_t _numDirections,
-    size_t _maxTrial) :
-    m_dmLabel(_dm), m_nfLabel(_nf), m_vcLabel(_vc), m_ncLabel(_nc),
-    m_exLabel(_ex), m_gt(_gt), m_writeAllOutputs(_writeAllOutputs),
-    m_growGoals(_growGoals),
-    m_growthFocus(_growthFocus), m_numRoots(_numRoots),
-    m_numDirections(_numDirections), m_maxTrial(_maxTrial) {
+BasicRRTStrategy() {
   this->SetName("BasicRRTStrategy");
-  this->m_meLabels = _evaluators;
 }
 
 
@@ -271,32 +232,25 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicRRTStrategy");
 
   // Parse RRT parameters
-  m_gt = _node.Read("gtype", true, "", "Graph type dir/undirected tree/graph");
-  m_numRoots = _node.Read("numRoots", false, 1, 0, MAX_INT, "Number of Roots");
   m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
       "Fraction of goal-biased iterations");
   m_numDirections = _node.Read("m", false, 1, 1, 1000,
       "Number of directions to extend");
-  m_writeAllOutputs = _node.Read("writeAllOutputs", false, m_writeAllOutputs,
-      "Whether or not to print the roadmap and stat output in Finalize.");
   m_growGoals = _node.Read("growGoals", false, false,
       "Determines whether or not we grow a tree from the goal");
-  m_maxTrial = _node.Read("trial", false, 3, 1, 1000,
+  m_disperseTrials = _node.Read("trial", false, 3, 1, 1000,
       "Number of trials to get a dispersed direction");
 
   // Parse MP object labels
-  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
-  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
-  m_dmLabel = _node.Read("dmLabel",true,"","Distance Metric");
-  m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
-  m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
   m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Label");
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+  m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
+  m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
+  m_goalDmLabel = _node.Read("goalDmLabel", false, "",
+      "Distance metric for checking goal extensions in uni-directional RRT.");
 
-  // Parse child nodes.
-  for(auto& child : _node)
-    if(child.Name() == "Evaluator")
-      this->m_meLabels.push_back(child.Read("label", true, "",
-          "Evaluation Method"));
+  if(m_growGoals and !m_goalDmLabel.empty())
+    throw ParseException(_node.Where()) << "Cannot use a goal DM with grow goals.";
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/
@@ -305,24 +259,17 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Print(std::ostream& _os) const {
-  _os << "BasicRRTStrategy::Print" << std::endl
-      << "  MP objects:" << std::endl
-      << "\tDistance Metric:: " << m_dmLabel << std::endl
-      << "\tSampler:: " << m_samplerLabel << std::endl
-      << "\tNeighborhood Finder:: " << m_nfLabel << std::endl
-      << "\tValidity Checker:: " << m_vcLabel << std::endl
-      << "\tConnection Method:: " << m_ncLabel << std::endl
-      << "\tExtender:: " << m_exLabel << std::endl
-      << "\tEvaluators:: " << std::endl;
-  for(auto& s : this->m_meLabels)
-    _os << "\t\t" << s << std::endl;
-
-  _os << "  RRT properties:" << std::endl
-      << "\tGraph Type:: " << m_gt << std::endl
-      << "\tGrow Goals:: " << m_growGoals << std::endl
-      << "\tnumber of roots:: " << m_numRoots << std::endl
-      << "\tgrowth focus:: " << m_growthFocus << std::endl
-      << "\tnumber of expansion directions:: " << m_numDirections << std::endl;
+  MPStrategyMethod<MPTraits>::Print(_os);
+  _os << "\tSampler: " << m_samplerLabel
+      << "\n\tNeighborhood Finder: " << m_nfLabel
+      << "\n\tExtender: " << m_exLabel
+      << "\n\tConnection Method: " << m_ncLabel
+      << "\n\tGoal check DM: " << m_goalDmLabel
+      << "\n\tGrow Goals: " << m_growGoals
+      << "\n\tGrowth Focus: " << m_growthFocus
+      << "\n\tExpansion directions / trials: " << m_numDirections
+      << " / " << m_disperseTrials
+      << std::endl;
 }
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
@@ -331,103 +278,79 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Initialize() {
-  if(this->m_debug)
-    std::cout << "Initializing BasicRRTStrategy" << std::endl;
+  // Assert that we are not trying to use bi-directional growth with a
+  // nonholonomic robot.
+  if(m_growGoals and this->GetTask()->GetRobot()->IsNonholonomic())
+    throw RunTimeException(WHERE) << "Bi-directional growth with nonholonomic "
+                                  << "robots is not supported (requires a "
+                                  << "steering function).";
 
-  // Clear all state variables to avoid problems when running multiple times.
-#if 0
   m_trees.clear();
-#endif
-  m_successes = 0;
-  m_trials = 0;
 
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  // Try to generate a start configuration.
+  const VID start = this->GenerateStart(m_samplerLabel);
+  if(start != INVALID_VID) {
+    m_trees.push_back({start});
 
-  // If a query was loaded or has already been set, process query cfgs
-  const bool usingQuery = this->UsingQuery();
-  if(m_query or usingQuery) {
-    // If the query is already set, we need to update the ME's query to also
-    // match with what was set (implies it's a runtime-specific query, and so
-    // any xml settings aren't valid).
-    RRTQuery<MPTraits>* const XMLQuery = static_cast<RRTQuery<MPTraits>*>(
-                                       this->GetMapEvaluator("RRTQuery").get());
-    if(m_query) {
-      XMLQuery->SetQuery(m_query->GetQuery());
-      XMLQuery->SetGoals(m_query->GetGoals());
-    }
-
-    if(usingQuery)
-      m_query = XMLQuery;
-
-    const std::vector<CfgType>& queryCfgs = m_query->GetQuery();
-
-    // If growing goals, set each query cfg as its own tree
-    if(m_growGoals) {
-      for(auto& cfg : queryCfgs) {
-#if 0
-        VID add = g->AddVertex(cfg);
-        m_trees.push_back(std::vector<VID>(1, add));
-#else
-        g->AddVertex(cfg);
-#endif
-      }
-    }
-
-    // If not growing goals, add only the start to map.
-    else {
-#if 0
-      VID start = g->AddVertex(queryCfgs.front());
-      m_trees.push_back(std::vector<VID>(1, start));
-#else
-      g->AddVertex(queryCfgs.front());
-#endif
-    }
-  }
-  // If no query loaded, make m_numRoots random roots
-  else {
-    for(size_t i = 0; i < m_numRoots; ++i) {
-      auto env = this->GetEnvironment();
-      auto vc  = this->GetValidityChecker(m_vcLabel);
-
-      CfgType root(this->GetTask()->GetRobot());
-      do {
-        root.GetRandomCfg(env);
-      } while(!root.InBounds(env) || !vc->IsValid(root, "BasicRRTStrategy"));
-
-#if 0
-      VID rootVID = g->AddVertex(root);
-      m_trees.push_back(std::vector<VID>(1, rootVID));
-#else
-      g->AddVertex(root);
-#endif
-    }
+    #ifdef PMPL_USE_MATLAB
+    /// @todo Hard-coded setting of initial needle state for now, to be cleaned up
+    ///       later by making a dedicated strategy for that which takes the
+    ///       initial parameters via xml.
+    auto g = this->GetRoadmap()->GetGraph();
+    CfgType& cfg = g->GetVertex(start);
+    cfg.SetStat("insertion", .005);
+    cfg.SetStat("c1-4", 0);
+    cfg.SetStat("c1-3", 0);
+    cfg.SetStat("c1-2", 0);
+    cfg.SetStat("c1-1", 0);
+    cfg.SetStat("c1-0", 0);
+    cfg.SetStat("c2-4", 0);
+    cfg.SetStat("c2-3", 0);
+    cfg.SetStat("c2-2", 0);
+    cfg.SetStat("c2-1", 0);
+    cfg.SetStat("c2-0", 0);
+    cfg.SetStat("c3-4", 0);
+    cfg.SetStat("c3-3", 0);
+    cfg.SetStat("c3-2", 0);
+    cfg.SetStat("c3-1", 0);
+    cfg.SetStat("c3-0", 0);
+    cfg.GetRobot()->GetMatlabMicroSimulator()->SetInsertionCfg(cfg);
+    #endif
   }
 
-#if 0
-  // Set initial tree to be grown
-  m_currentTree = m_trees.begin();
-
-  // Output debugging info if requested
-  if(this->m_debug) {
-    std::cout << "There are " << m_trees.size() << " trees"
-         << (m_trees.empty() ? "." : ":") << std::endl;
-    for(size_t i = 0; i < m_trees.size(); ++i) {
-      std::cout << "\tTree " << i << " has " << m_trees[i].size() << " vertices.\n";
-      if(!m_trees[i].empty())
-        std::cout << "\t\tIts root is: " << g->GetVertex(m_trees[i].front()) << std::endl;
-    }
+  // If we are growing goals, try to generate goal configurations.
+  if(m_growGoals) {
+    const std::vector<VID> goals = this->GenerateGoals(m_samplerLabel);
+    for(const VID goal : goals)
+      m_trees.push_back({goal});
   }
-#endif
 
-#if 0
-#else
-  // While I have the trees turned off, bi-directional will not work. Using more
-  // than one root will also not work. Throw an exception if we try to use that
-  // to remind us.
-  if(m_growGoals or m_numRoots > 1)
-    throw RunTimeException(WHERE, "Tree tracking is disabled due to bugs. To be "
-        "fixed after ICRA.");
-#endif
+  // If we have neither start nor goals, generate a random root. Try up to 100
+  // times.
+  if(m_trees.empty())
+  {
+    // Determine which sampler to use.
+    const auto& samplerLabel = this->m_querySampler.empty()
+                             ? m_samplerLabel
+                             : this->m_querySampler;
+
+    auto s = this->GetSampler(m_samplerLabel);
+
+    std::vector<CfgType> samples;
+    s->Sample(1, 100, this->GetEnvironment()->GetBoundary(),
+        std::back_inserter(samples));
+
+    // If we made no samples, throw an error.
+    if(samples.empty())
+      throw RunTimeException(WHERE) << "Failed to generate a random root with "
+                                    << "sampler '" << samplerLabel << "'.";
+
+    // Add the configuration to the graph and trees.
+    auto g = this->GetRoadmap()->GetGraph();
+    const auto& cfg = samples[0];
+    const VID vid = g->AddVertex(cfg);
+    m_trees.push_back({vid});
+  }
 }
 
 
@@ -435,67 +358,20 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Iterate() {
-  ++m_trials;
-  if(this->m_debug)
-    std::cout << "*** Starting iteration " << m_trials << " "
-         << "***************************************************" << std::endl
-         << "Graph has " << this->GetRoadmap()->GetGraph()->get_num_vertices()
-         << " vertices." << std::endl;
+  // Find growth target.
+  const CfgType target = this->SelectTarget();
 
-  // Find my growth direction.
-  CfgType target = this->SelectTarget();
-
-#if 0
-  // Randomize Current Tree
-  m_currentTree = m_trees.begin() + LRand() % m_trees.size();
-  if(this->m_debug)
-    std::cout << "Randomizing current tree:" << std::endl
-         << "\tm_trees.size() = " << m_trees.size() << ", currentTree = "
-         << distance(m_trees.begin(), m_currentTree) << ", |currentTree| = "
-         << m_currentTree->size() << std::endl;
-
-  // Ensure that all nodes in the graph are also in the RRT trees, and that
-  // numTrees == numCCs
-  ValidateTrees();
-#endif
-
-  // Find the nearest configuration to target within the current tree
-#if 0
-  VID nearestVID = FindNearestNeighbor(target, *m_currentTree);
-#else
-  VID nearestVID = FindNearestNeighbor(target);
-#endif
-  if(nearestVID == INVALID_VID)
+  // Expand the tree from nearest neigbor to target.
+  const VID newVID = this->ExpandTree(target);
+  if(newVID == INVALID_VID)
     return;
 
-  // Expand current tree
-  VID newVID = this->ExpandTree(nearestVID, target);
-  if(newVID != INVALID_VID)
-    ++m_successes;
-}
-
-
-template <typename MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-Finalize() {
-  if(m_writeAllOutputs) {
-    // Output final map
-    RoadmapType* map = this->GetRoadmap();
-    std::string baseFilename = this->GetBaseFilename();
-    map->Write(baseFilename + ".map", this->GetEnvironment());
-
-    // Output stats
-    std::ofstream osStat(baseFilename + ".stat");
-    this->GetStatClass()->PrintAllStats(osStat, map);
-  }
-
-  // If a different module is calling RRT (like the RRT LP), this is used to say
-  // whether there was a time out or whether the query was actually successful.
-  if(m_query->GetGoals().empty())
-    this->m_successful = true; // Successful if all goals were reached.
-
-  m_query = nullptr;
+  // If growing goals, try to connect other trees to the new node. Otherwise
+  // check for a goal extension.
+  if(m_growGoals)
+    ConnectTrees(newVID);
+  else
+    TryGoalExtension(newVID);
 }
 
 /*--------------------------- Direction Helpers ------------------------------*/
@@ -508,28 +384,49 @@ SelectTarget() {
 
   CfgType target(this->GetTask()->GetRobot());
 
+  // Get the sampler and boundary.
+  const Boundary* samplingBoundary = this->GetEnvironment()->GetBoundary();
+  const std::string* samplerLabel = &m_samplerLabel;
+
   // Select goal growth with probability m_growthFocus.
-  const bool unreachedGoals = m_query && !m_query->GetGoals().empty();
-  if(unreachedGoals && DRand() < m_growthFocus) {
-    target = m_query->GetRandomGoal();
+  auto goalTracker = this->GetGoalTracker();
+  const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
+
+  if(unreachedGoals.size() and DRand() < m_growthFocus) {
+    // Randomly select a goal constraint boundary.
+    const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+    const size_t index = unreachedGoals[LRand() % unreachedGoals.size()];
+    const Boundary* const b = goalConstraints[index]->GetBoundary();
+
+    // We may eventually support constraints that cannot be described in terms
+    // of a boundary, but that is outside the scope of the present
+    // implementation.
+    if(!b)
+      throw NotImplementedException(WHERE) << "Non-boundary constraints are not "
+                                           << "yet supported.";
+
+    // If there is a query sampler, use that for goal sampling.
+    if(!this->m_querySampler.empty())
+      samplerLabel = &this->m_querySampler;
+
     if(this->m_debug)
-      std::cout << "Goal-biased growth target selected: " << target.PrettyPrint()
+      std::cout << "Sampling growth target from goal " << index
+                << " (sampler '" << *samplerLabel << "'):"
                 << std::endl;
   }
-  // Otherwise, use uniform random sampling.
-  else {
-    auto s = this->GetSampler(m_samplerLabel);
+  // Otherwise, use the designated sampler with the environment boundary.
+  else if(this->m_debug)
+    std::cout << "Random growth target selected (sampler '" << *samplerLabel
+              << "'):" << std::endl;
 
-    std::vector<CfgType> samples;
-    while(samples.empty())
-      s->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
-          std::back_inserter(samples));
-    target = samples.front();
+  std::vector<CfgType> samples;
+  auto s = this->GetSampler(*samplerLabel);
+  while(samples.empty())
+    s->Sample(1, 100, samplingBoundary, std::back_inserter(samples));
+  target = samples.front();
 
-    if(this->m_debug)
-      std::cout << "Random growth target selected: " << target.PrettyPrint()
-                << std::endl;
-  }
+  if(this->m_debug)
+    std::cout << "\t" << target.PrettyPrint() << std::endl;
 
   return target;
 }
@@ -538,18 +435,19 @@ SelectTarget() {
 template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
-SelectDispersedTarget(VID _v) {
+SelectDispersedTarget(const VID _v) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::SelectDispersedTarget");
 
   // Get original cfg with vid _v and its neighbors
-  CfgType originalCfg = this->GetRoadmap()->GetGraph()->GetVertex(_v);
-  std::vector<CfgType> neighbors = SelectNeighbors(_v);
+  auto g = this->GetRoadmap()->GetGraph();
+  const std::vector<VID> neighbors = g->GetChildren(_v);
+  const CfgType& originalCfg = g->GetVertex(_v);
 
-  // Look for the best extension directio, which is the direction with the
+  // Look for the best extension direction, which is the direction with the
   // largest angular separation from any neighbor.
   CfgType bestCfg(this->GetTask()->GetRobot());
-  double maxAngle = -MAX_DBL;
-  for(size_t i = 0; i < m_maxTrial; ++i) {
+  double bestAngle = -MAX_DBL;
+  for(size_t i = 0; i < m_disperseTrials; ++i) {
     // Get a random configuration
     CfgType randCfg(this->GetTask()->GetRobot());
     randCfg.GetRandomCfg(this->GetEnvironment());
@@ -561,7 +459,9 @@ SelectDispersedTarget(VID _v) {
     // Calculate the minimum angular separation between randDir and the
     // unit directions to originalCfg's neighbors
     double minAngle = MAX_DBL;
-    for(auto& neighbor : neighbors) {
+    for(auto& vid : neighbors) {
+      const CfgType& neighbor = g->GetVertex(vid);
+
       // Get the unit direction toward neighbor
       CfgType neighborDir = neighbor - originalCfg;
       neighborDir /= neighborDir.Magnitude();
@@ -570,16 +470,16 @@ SelectDispersedTarget(VID _v) {
       double sum{0};
       for(size_t j = 0; j < originalCfg.DOF(); ++j)
         sum += randDir[j] * neighborDir[j];
-      double angle = acos(sum);
+      const double angle = std::acos(sum);
 
       // Update minimum angle
-      minAngle = min(minAngle, angle);
+      minAngle = std::min(minAngle, angle);
     }
 
     // Now minAngle is the smallest angle between randDir and any neighborDir.
     // Keep the randDir that produces the largest minAngle.
-    if(maxAngle < minAngle) {
-      maxAngle = minAngle;
+    if(bestAngle < minAngle) {
+      bestAngle = minAngle;
       bestCfg = randCfg;
     }
   }
@@ -590,42 +490,28 @@ SelectDispersedTarget(VID _v) {
 /*---------------------------- Neighbor Helpers ------------------------------*/
 
 template <typename MPTraits>
-std::vector<typename MPTraits::CfgType>
-BasicRRTStrategy<MPTraits>::
-SelectNeighbors(VID _v) {
-  GraphType* g = this->GetRoadmap()->GetGraph();
-  typename GraphType::vertex_iterator vi = g->find_vertex(_v);
-  std::vector<CfgType> vec;
-  for(const auto& e : *vi)
-    vec.push_back(g->GetVertex(e.target()));
-  return vec;
-}
-
-
-template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-#if 0
-FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree) {
-#else
-FindNearestNeighbor(const CfgType& _cfg) {
-  auto g = this->GetRoadmap()->GetGraph();
-#endif
+FindNearestNeighbor(const CfgType& _cfg, const TreeType* _tree) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
 
   std::vector<Neighbor> neighbors;
 
+  auto g = this->GetRoadmap()->GetGraph();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  nf->FindNeighbors(this->GetRoadmap(),
-#if 0
-      _tree.begin(), _tree.end(),
-      _tree.size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
-#else
-      g->begin(), g->end(),
-      true,
-#endif
-      _cfg, std::back_inserter(neighbors));
+  if(_tree) {
+    nf->FindNeighbors(this->GetRoadmap(),
+        _tree->begin(), _tree->end(),
+        _tree->size() == g->Size(),
+        _cfg, std::back_inserter(neighbors));
+  }
+  else {
+    nf->FindNeighbors(this->GetRoadmap(),
+        g->begin(), g->end(),
+        true,
+        _cfg, std::back_inserter(neighbors));
+  }
 
   VID nearestVID = INVALID_VID;
 
@@ -639,42 +525,13 @@ FindNearestNeighbor(const CfgType& _cfg) {
   return nearestVID;
 }
 
-
-#if 0
-template <typename MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-ConnectNeighbors(VID _newVID) {
-  // Make sure _newVID is valid and graph type includes GRAPH
-  if(_newVID == INVALID_VID || m_gt.find("GRAPH") == std::string::npos)
-    return;
-
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::ConnectNeighbors");
-
-  std::vector<VID> currentVID(1, _newVID);
-  this->GetConnector(m_ncLabel)->Connect(this->GetRoadmap(),
-      currentVID.begin(), currentVID.end(),
-      m_currentTree->begin(), m_currentTree->end(),
-      m_currentTree->size() ==
-      this->GetRoadmap()->GetGraph()->get_num_vertices());
-}
-#endif
-
 /*----------------------------- Growth Helpers -------------------------------*/
 
 template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _target) {
-  LPOutput<MPTraits> dummyLP;
-  return this->Extend(_nearVID, _target, dummyLP);
-}
-
-
-template <typename MPTraits>
-typename BasicRRTStrategy<MPTraits>::VID
-BasicRRTStrategy<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp) {
+Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp,
+    const bool _requireNew) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::Extend");
   this->GetStatClass()->IncStat("BasicRRTExtend");
 
@@ -701,68 +558,35 @@ Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp) {
   // The extension succeeded. Try to add the node.
   const auto extension = AddNode(qNew);
 
+  const VID& newVID = extension.first;
   const bool nodeIsNew = extension.second;
   if(!nodeIsNew) {
     // The extension reproduced an existing node.
-    if(this->m_debug)
-      std::cout << "\tNode already exists, not adding." << std::endl;
-    return INVALID_VID;
+    if(_requireNew) {
+      if(this->m_debug)
+        std::cout << "\tNode already exists (" << newVID
+                  << "), not adding." << std::endl;
+      return INVALID_VID;
+    }
+    else if(this->m_debug)
+      std::cout << "\tConnected to existing node " << newVID << "."
+                << std::endl;
   }
 
-  // The extension was ok.
-  const VID& newVID = extension.first;
-
+  // The node was ok. Add the edge.
   AddEdge(_nearVID, newVID, _lp);
-#if 0
-  ConnectNeighbors(newVID);
-#endif
 
   return newVID;
 }
 
 
-#if 0
 template <typename MPTraits>
-bool
+typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-ExtendLP(const VID _start, const VID _target) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::ExtendLP");
-  this->GetStatClass()->IncStat("BasicRRTExtendLP");
-
-  auto e = this->GetExtender(m_exLabel);
-  const CfgType& start  = this->GetRoadmap()->GetGraph()->GetVertex(_start);
-  const CfgType& target = this->GetRoadmap()->GetGraph()->GetVertex(_target);
-  CfgType qNew(this->GetTask()->GetRobot());
-  LPOutput<MPTraits> lp;
-
-  const bool success = e->Extend(start, target, qNew, lp);
-  if(this->m_debug)
-    std::cout << "\tExtended "
-              << std::setprecision(4) << lp.m_edge.first.GetWeight()
-              << " units."
-              << std::endl;
-
-  if(!success) {
-    if(this->m_debug)
-      std::cout << "\tLP extension failed." << std::endl;
-    return false;
-  }
-
-  // If we arrived at the goal, this is a valid local plan.
-  const bool validLP = qNew == target;
-
-  if(validLP)
-    AddEdge(_start, _target, lp);
-  else {
-    const auto add = AddNode(qNew);
-    const bool nodeIsNew = add.second;
-    if(nodeIsNew)
-      AddEdge(_start, add.first, lp);
-  }
-
-  return validLP;
+Extend(const VID _nearVID, const CfgType& _target, const bool _requireNew) {
+  LPOutput<MPTraits> dummyLP;
+  return this->Extend(_nearVID, _target, dummyLP, _requireNew);
 }
-#endif
 
 
 template <typename MPTraits>
@@ -778,39 +602,155 @@ AddNode(const CfgType& _newCfg) {
 
   const bool nodeIsNew = lastVID != g->GetLastVID();
   if(nodeIsNew) {
-#if 0
-    m_currentTree->push_back(newVID);
-#endif
     if(this->m_debug)
-      std::cout << "\tAdding VID " << newVID
-#if 0
-           << " to tree "
-           << distance(m_trees.begin(), m_currentTree)
-#endif
-           << "." << std::endl;
+      std::cout << "\tAdding VID " << newVID << "."
+                << std::endl;
   }
-  else if(this->m_debug)
-    std::cout << "\tVID " << newVID << " already exists, not adding." << std::endl;
 
-  return std::make_pair(newVID, nodeIsNew);
+  return {newVID, nodeIsNew};
 }
 
 
 template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
-AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
+AddEdge(const VID _source, const VID _target,
+    const LPOutput<MPTraits>& _lpOutput) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::AddEdge");
 
+  if(this->m_debug)
+    std::cout << "\tAdding Edge (" << _source << ", " << _target << ")."
+              << std::endl;
+
+  // Add the edge.
   GraphType* g = this->GetRoadmap()->GetGraph();
-  if(m_growGoals || m_gt.find("UNDIRECTED") != std::string::npos)
-    g->AddEdge(_source, _target, _lpOutput.m_edge);
-  else
-    g->AddEdge(_source, _target, _lpOutput.m_edge.first);
-  g->GetVertex(_target).SetStat("Parent", _source);
+  g->AddEdge(_source, _target, _lpOutput.m_edge);
+
+  // Set the parent of _target if not already set (we may have already connected
+  // to it from another vertex).
+  CfgType& target = g->GetVertex(_target);
+  if(!target.IsStat("Parent"))
+    target.SetStat("Parent", _source);
+
+  // If we're growing goals, handle the tree merges.
+  if(m_growGoals)
+    MergeTrees(_source, _target);
+}
+
+
+template <typename MPTraits>
+void
+BasicRRTStrategy<MPTraits>::
+ConnectNeighbors(const VID _newVID) {
+  // Make sure _newVID is valid and we have a connector.
+  if(_newVID == INVALID_VID or m_ncLabel.empty())
+    return;
+
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::ConnectNeighbors");
+
+  // Try to connect _newVID to its neighbors using the connector.
+  this->GetConnector(m_ncLabel)->Connect(this->GetRoadmap(), _newVID);
+}
+
+
+template <typename MPTraits>
+void
+BasicRRTStrategy<MPTraits>::
+TryGoalExtension(const VID _newVID) {
+  // Make sure _newVID is valid.
+  if(m_growGoals or m_goalDmLabel.empty() or _newVID == INVALID_VID)
+    return;
+
+  // Make sure we have goals.
+  const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+  if(goalConstraints.empty())
+    return;
+
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::TryGoalExtension");
+
+  if(this->m_debug) {
+    auto g = this->GetRoadmap()->GetGraph();
+    const CfgType& cfg = g->GetVertex(_newVID);
+
+    std::cout << "Checking goal extension for new node " << _newVID << " at "
+              << cfg.PrettyPrint() << "."
+              << std::endl;
+  }
+
+  for(const auto& constraint : goalConstraints)
+    TryGoalExtension(_newVID, constraint->GetBoundary());
+}
+
+
+template <typename MPTraits>
+void
+BasicRRTStrategy<MPTraits>::
+TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
+  if(!_boundary)
+    throw RunTimeException(WHERE) << "Constraints which do not produce a "
+                                  << "boundary are not supported.";
+
+  // First check if _newVID is already in the goal region.
+  auto g = this->GetRoadmap()->GetGraph();
+  const CfgType& cfg = g->GetVertex(_newVID);
+  const bool inGoal = _boundary->InBoundary(cfg);
+  if(inGoal) {
+    if(this->m_debug)
+      std::cout << "\tNode is already in this goal boundary." << std::endl;
+    return;
+  }
+
+  // Get the nearest point to _newVID within this goal region.
+  std::vector<double> data = cfg.GetData();
+  _boundary->PushInside(data);
+  CfgType target(cfg.GetRobot());
+  target.SetData(data);
+
+  // Check the nearest point to _newVID in each goal region. If it lies within
+  // the extender's range, try to extend towards it.
+  auto dm = this->GetDistanceMetric(m_goalDmLabel);
+  const double distance = dm->Distance(cfg, target),
+               range = this->GetExtender(m_exLabel)->GetMaxDistance();
 
   if(this->m_debug)
-    std::cout << "\tAdding Edge (" << _source << ", " << _target << ")." << std::endl;
+    std::cout << "\tNearest configuration is " << distance << " / " << range
+              << " units away at " << target.PrettyPrint() << "."
+              << std::endl;
+
+  // If we are out of range, do not attempt to extend.
+  if(distance > range) {
+    if(this->m_debug)
+      std::cout << "\tNot attempting goal extension." << std::endl;
+    return;
+  }
+
+  // Try to extend towards the target.
+  const VID extended = this->Extend(_newVID, target);
+  if(extended == INVALID_VID)
+    return;
+
+  // Check if we reached the goal boundary.
+  const CfgType& extendedCfg = g->GetVertex(extended);
+  const bool reached = _boundary->InBoundary(extendedCfg);
+  if(reached) {
+    if(this->m_debug)
+      std::cout << "\tExtension reached goal boundary." << std::endl;
+    return;
+  }
+
+  // Some extenders use a variable distance, so retry if we got part-way there.
+  // Note that the original Cfg reference may have been invalidated by the graph
+  // expanding!
+  const double extendedDistance = dm->Distance(g->GetVertex(_newVID),
+      extendedCfg);
+  if(extendedDistance < distance) {
+    if(this->m_debug)
+      std::cout << "\tExtension made progress but did not reach goal, retrying."
+                << std::endl;
+    TryGoalExtension(extended, _boundary);
+  }
+  else if(this->m_debug)
+    std::cout << "\tExtension did not make progress." << std::endl;
 }
 
 /*------------------------------ Tree Helpers --------------------------------*/
@@ -818,15 +758,10 @@ AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
 template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-ExpandTree(CfgType& _target) {
-#if 0
-  const VID nearestVID = FindNearestNeighbor(_target, *m_currentTree);
-#else
+ExpandTree(const CfgType& _target) {
   const VID nearestVID = FindNearestNeighbor(_target);
-#endif
-
   if(nearestVID == INVALID_VID)
-    return false;
+    return INVALID_VID;
 
   return this->ExpandTree(nearestVID, _target);
 }
@@ -842,113 +777,110 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
          << "..." << std::endl;
 
   // Try to extend from the _nearestVID to _target
-  VID newVID = this->Extend(_nearestVID, _target);
+  const VID newVID = this->Extend(_nearestVID, _target);
   if(newVID == INVALID_VID)
     return INVALID_VID;
-
-#if 0
-  ConnectTrees(newVID);
-#endif
 
   // Expand to other directions
   for(size_t i = 1; i < m_numDirections; ++i) {
     if(this->m_debug)
       std::cout << "Expanding to other directions (" << i << "/"
-           << m_numDirections - 1 << "):: ";
-    CfgType randCfg = SelectDispersedTarget(_nearestVID);
-#if 0
-    VID otherVID = this->Extend(_nearestVID, randCfg);
-    if(otherVID != INVALID_VID)
-      ConnectTrees(otherVID);
-#else
+                << m_numDirections - 1 << "):: ";
+
+    const CfgType randCfg = SelectDispersedTarget(_nearestVID);
     this->Extend(_nearestVID, randCfg);
-#endif
   }
+
+  // Connect neighbors if we are using a connector.
+  ConnectNeighbors(newVID);
 
   return newVID;
 }
 
-#if 0
+
 template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
-ConnectTrees(VID _recentlyGrown) {
-  // Return if only one tree
-  if(m_trees.size() == 1)
+MergeTrees(const VID _source, const VID _target) {
+  // Find the trees holding both _source and _target.
+  typename std::vector<TreeType>::iterator sourceTree = m_trees.end(),
+                                           targetTree = m_trees.end();
+  for(auto iter = m_trees.begin(); iter != m_trees.end(); ++iter) {
+    if(iter->count(_source))
+      sourceTree = iter;
+    if(iter->count(_target))
+      targetTree = iter;
+
+    // Move on after locating both trees.
+    if(sourceTree != m_trees.end() and targetTree != m_trees.end())
+      break;
+  }
+
+  // If the source tree wasn't found, this is an error.
+  if(sourceTree == m_trees.end())
+    throw RunTimeException(WHERE) << "Tree for parent node " << _source
+                                  << " was not found.";
+  // If the target tree wasn't found, just add _target to the source tree.
+  else if(targetTree == m_trees.end())
+    sourceTree->insert(_target);
+  // If the source and target tree are the same, there is nothing to do.
+  else if(sourceTree == targetTree)
+    return;
+  // Otherwise we found two different trees which must be merged.
+  else {
+    // Merge the smaller tree into the larger one.
+    typename std::vector<TreeType>::iterator smallTree, largeTree;
+    if(targetTree->size() > sourceTree->size()) {
+      largeTree = targetTree;
+      smallTree = sourceTree;
+    }
+    else {
+      smallTree = targetTree;
+      largeTree = sourceTree;
+    }
+    std::copy(smallTree->begin(), smallTree->end(),
+        std::inserter(*largeTree, largeTree->end()));
+    smallTree->clear();
+    // Don't erase small tree from m_trees because that will invalidate
+    // iterators. This is a small, deliberate sacrifice to make coding the
+    // tree-tracking algorithms much simpler.
+  }
+}
+
+
+template <typename MPTraits>
+void
+BasicRRTStrategy<MPTraits>::
+ConnectTrees(const VID _recentlyGrown) {
+  if(!m_growGoals or _recentlyGrown == INVALID_VID or m_trees.size() == 1)
     return;
 
   MethodTimer mt(this->GetStatClass(), "BasicRRT::ConnectTrees");
 
-  // Setup MP variables
+  // Get the configuration by value in case the graph's vertex vector gets
+  // re-allocated.
   GraphType* g = this->GetRoadmap()->GetGraph();
-  auto dm = this->GetDistanceMetric(m_dmLabel);
+  const CfgType qNew = g->GetVertex(_recentlyGrown);
 
-  // Get qNew from its VID
-  const CfgType& qNew = g->GetVertex(_recentlyGrown);
+  if(this->m_debug)
+    std::cout << "Trying to connect " << m_trees.size() - 1 << " other trees "
+              << "to node " << _recentlyGrown << "."
+              << std::endl;
 
-  // Find the closest neighbor to qNew in all other trees
-  double minDist = MAX_DBL;
-  VID closestVID = INVALID_VID;
-  auto closestTree = m_currentTree;
-  for(auto trit = m_trees.begin(); trit != m_trees.end(); ++trit) {
-    // Skip current tree and empty trees.
-    if(trit == m_currentTree or trit->empty())
+  // Try to connect qNew to the closest neighbor in all other trees.
+  for(const auto& tree : m_trees) {
+    // Skip the current tree.
+    const bool currentTree = tree.count(_recentlyGrown);
+    if(currentTree)
       continue;
 
-    // Find nearest neighbor to qNew in other tree
-    VID nearestVID = FindNearestNeighbor(qNew, *trit);
+    // Find nearest neighbor to qNew in the other tree.
+    const VID nearestVID = FindNearestNeighbor(qNew, &tree);
     if(nearestVID == INVALID_VID)
       continue;
 
-    CfgType nearestCfg = g->GetVertex(nearestVID);
-    double dist = dm->Distance(qNew, nearestCfg);
-
-    // If nearest is the closest to qNew, save it as closest
-    if(dist < minDist) {
-      minDist = dist;
-      closestTree = trit;
-      closestVID = nearestVID;
-    }
-  }
-
-  // If the closest VID is still invalid, abort.
-  if(closestVID == INVALID_VID) {
-    if(this->m_debug)
-      std::cout << "Connecting trees, all trees except current are empty!"
-                << std::endl;
-    return;
-  }
-
-  if(this->m_debug)
-    std::cout << "Connecting trees: from (tree "
-         << distance(m_trees.begin(), closestTree) << ", VID "
-         << closestVID << ") to (tree "
-         << distance(m_trees.begin(), m_currentTree) << ", VID "
-         << _recentlyGrown << "), distance = " << setw(4) << minDist << std::endl;
-
-  // Try to expand from closestVID (in closestTree) to qNew (in m_currentTree)
-  // in order to connect the trees.
-  swap(m_currentTree, closestTree);
-
-  if(this->ExtendLP(closestVID, _recentlyGrown)) {
-    // The extension reached all the way to qNew. Merge the closest and current
-    // trees.
-    if(this->m_debug)
-      std::cout << "\tConnectTrees succeeded!" << std::endl;
-
-    // Merge trees into the lower of the two indexes
-    if(distance(m_trees.begin(), m_currentTree) >
-        distance(m_trees.begin(), closestTree))
-      swap(m_currentTree, closestTree);
-    m_currentTree->insert(m_currentTree->end(), closestTree->begin(),
-        closestTree->end());
-    m_trees.erase(closestTree);
-  }
-  else {
-    // The extension didn't connect the trees. Swap back to the original tree.
-    if(this->m_debug)
-      std::cout << "\tConnectTrees failed: could not expand all the way." << std::endl;
-    swap(m_currentTree, closestTree);
+    // Try to extend from the other tree to qNew.
+    this->Extend(nearestVID, qNew, false);
   }
 }
 
@@ -956,53 +888,18 @@ ConnectTrees(VID _recentlyGrown) {
 template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
-ValidateTrees() {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::ValidateTrees");
+RemoveNodeFromTrees(const VID _node) {
+  MethodTimer mt(this->GetStatClass(), "BasicRRT::RemoveNodeFromTrees");
 
-  // Count nodes in trees
-  size_t numNodesInTrees = 0;
-  for(auto& tree : m_trees)
-    numNodesInTrees += tree.size();
+  for(auto& tree : m_trees) {
+    // Skip this tree if _node isn't present.
+    if(!tree.count(_node))
+      continue;
 
-  // Rebuild if nodes are missing from trees
-  GraphType* g = this->GetRoadmap()->GetGraph();
-  if(numNodesInTrees > g->get_num_vertices()) {
-    RebuildTrees();
-    return;
+    tree.erase(_node);
   }
-
-  // Rebuild if numTrees != numCCs
-  std::vector<std::pair<size_t, VID>> ccs;
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  get_cc_stats(*g, cmap, ccs);
-  if(ccs.size() != m_trees.size())
-    RebuildTrees();
 }
 
-
-template <typename MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-RebuildTrees() {
-  m_trees.clear();
-
-  // Get cc info from roadmap
-  GraphType* g = this->GetRoadmap()->GetGraph();
-  std::vector<std::pair<size_t, VID>> ccs;
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
-  get_cc_stats(*g, cmap, ccs);
-
-  // Rebuild tree list from cc info
-  std::vector<VID> ccVIDs;
-  for(auto& cc : ccs) {
-    cmap.reset();
-    ccVIDs.clear();
-    get_cc(*g, cmap, cc.second, ccVIDs);
-    m_trees.push_back(ccVIDs);
-  }
-
-  m_currentTree = m_trees.begin();
-}
-#endif
+/*----------------------------------------------------------------------------*/
 
 #endif

@@ -28,10 +28,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    KinodynamicExtender(const std::string& _dmLabel = "",
-        const std::string& _vcLabel = "",
-        const double _min = .001, const size_t _steps = 10,
-        const bool _fixed = true, const bool _best = false);
+    KinodynamicExtender();
 
     KinodynamicExtender(XMLNode& _node);
 
@@ -131,10 +128,7 @@ class KinodynamicExtender : public ExtenderMethod<MPTraits> {
 
 template <typename MPTraits>
 KinodynamicExtender<MPTraits>::
-KinodynamicExtender(const std::string& _dmLabel, const std::string& _vcLabel,
-    const double _min, const size_t _steps, const bool _fixed, const bool _best) :
-    ExtenderMethod<MPTraits>(_min), m_dmLabel(_dmLabel), m_vcLabel(_vcLabel),
-    m_numSteps(_steps), m_fixed(_fixed), m_best(_best) {
+KinodynamicExtender() {
   this->SetName("KinodynamicExtender");
 }
 

@@ -73,22 +73,27 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     // Otherwise we got a multibody file, which cannot specify dynamics options
     // like actuators and controls. Assume some defaults for these.
     ReadMultibodyFile(filename);
+    ReadXMLNode(_node);
 
-    // Set up a single, velocity-based actuator for all DOF. As this robot is
-    // holonomic, we will only use the actuator in simulation.
-    std::vector<double> reverse(m_multibody->DOF(), -1),
-                        forward(m_multibody->DOF(),  1);
-    m_actuators["default"] = std::unique_ptr<Actuator>(
-        new Actuator(this, "default",
-          IsNonholonomic() ? Actuator::DynamicsType::Force
-                           : Actuator::DynamicsType::Velocity));
-    m_actuators["default"]->SetLimits(reverse, forward);
-    m_actuators["default"]->SetMaxForce(1);
+    if(m_actuators.empty()) {
+      // Set up a single, velocity-based actuator for all DOF. As this robot is
+      // holonomic, we will only use the actuator in simulation.
+      std::vector<double> reverse(m_multibody->DOF(), -1),
+                          forward(m_multibody->DOF(),  1);
+      m_actuators["default"] = std::unique_ptr<Actuator>(
+          new Actuator(this, "default",
+            IsNonholonomic() ? Actuator::DynamicsType::Force
+                             : Actuator::DynamicsType::Velocity));
+      m_actuators["default"]->SetLimits(reverse, forward);
+      m_actuators["default"]->SetMaxForce(1);
+    }
 
     // Use the simplest controller.
-    m_controller = std::unique_ptr<SimpleController>(
-        new SimpleController(this, 1)
-    );
+    if(m_controller.get() == nullptr) {
+      m_controller = std::unique_ptr<SimpleController>(
+          new SimpleController(this, 1)
+      );
+    }
   }
 
   // Parse hardware and agent child nodes.
@@ -125,9 +130,6 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       m_multibody->GetBody(i)->SetColor(c);
     }
   }
-
-
-  // Initialize the end effector
 }
 
 
@@ -238,19 +240,20 @@ Robot::
 ReadXMLNode(XMLNode& _node) {
   // Read attributes of the robot node.
   m_maxLinearVelocity = _node.Read("maxLinearVelocity", false, 10., 0.,
-      std::numeric_limits<double>::max(), "The robot's maximum linear velocity");
+      std::numeric_limits<double>::max(),
+      "The robot's maximum linear velocity in units/sec.");
   m_maxAngularVelocity = _node.Read("maxAngularVelocity", false, 1., 0.,
-      std::numeric_limits<double>::max(), "The robot's maximum angular velocity");
-
-  // Check for an end-effector node (will be parsed last to ensure that the
-  // multibody is fully constructed).
-  XMLNode* effectorNode = nullptr;
+      std::numeric_limits<double>::max(),
+      "The robot's maximum angular velocity in radians/sec.");
 
   for(auto& child : _node) {
     std::string name = child.Name();
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     if(name == "multibody") {
+      if(m_multibody.get())
+        throw ParseException(_node.Where()) << "Redefinition of multibody.";
+
       // Read the multibody file. Eventually we'll go full XML and pass the
       // child node directly to the multibody instead.
       const std::string mbFile = child.Read("filename", false, "", "Name of the "
@@ -266,8 +269,8 @@ ReadXMLNode(XMLNode& _node) {
     else if(name == "actuator") {
       // We need a multibody to parse the actuators.
       if(!m_multibody)
-        throw ParseException(child.Where(), "A multibody must be specified "
-            "before any actuators.");
+        throw ParseException(child.Where()) << "A multibody must be specified "
+                                            << "before any actuators.";
 
       // Parse the actuator.
       std::unique_ptr<Actuator> actuator(new Actuator(this, child));
@@ -277,15 +280,19 @@ ReadXMLNode(XMLNode& _node) {
       auto controller = ControllerMethod::Factory(this, child);
       SetController(std::move(controller));
     }
-    else if(name == "effector")
-      effectorNode = &child;
+    else if(name == "effector") {
+      // We need a multibody to parse the end-effector.
+      if(!m_multibody)
+        throw ParseException(child.Where()) << "A multibody must be specified "
+                                            << "before an end-effector.";
+
+      std::cerr << "Warning: only one end-effector node is supported in the "
+                << "robot XML."
+                << std::endl;
+
+      m_endEffector = EndEffector(child, this->GetMultiBody());
+    }
   }
-
-  if(effectorNode)
-    m_endEffector = EndEffector(*effectorNode, this->GetMultiBody());
-
-  // Throw errors for any unrequested attributes or nodes.
-  _node.WarnAll(true);
 }
 
 
@@ -304,7 +311,6 @@ void
 Robot::
 ReadMultibodyFile(const std::string& _filename) {
   // Open the file.
-  std::cout << "Opening '" << _filename << "'." << std::endl;
   CountingStreamBuffer cbs(_filename);
   std::istream ifs(&cbs);
 

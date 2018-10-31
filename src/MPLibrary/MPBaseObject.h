@@ -1,8 +1,5 @@
 #ifndef PMPL_MP_BASE_OBJECT_H_
 #define PMPL_MP_BASE_OBJECT_H_
-
-#include <iostream>
-#include <string>
 ///@TODO Remove this everywhere. We should never have 'using namespace'
 ///      directives in header files.
 using namespace std;
@@ -11,6 +8,9 @@ using namespace std;
 #include "Utilities/IOUtils.h"
 #include "Utilities/MethodSet.h"
 #include "Utilities/XMLNode.h"
+
+#include <iostream>
+#include <string>
 
 class Environment;
 class MPTask;
@@ -48,6 +48,7 @@ class MPBaseObject {
     typedef typename MPTraits::GroupPathType           GroupPath;
     typedef typename MPTraits::MPLibrary               MPLibrary;
     typedef typename MPTraits::MPSolution              MPSolution;
+    typedef typename MPTraits::GoalTracker             GoalTracker;
 
     typedef typename MPLibrary::SamplerPointer         SamplerPointer;
     typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
@@ -211,6 +212,9 @@ class MPBaseObject {
 
     /// Get the local obstacle map.
     LocalObstacleMap* GetLocalObstacleMap() const noexcept;
+
+    /// Get the goal tracker.
+    GoalTracker* GetGoalTracker() const noexcept;
 
     ///@}
 
@@ -550,6 +554,15 @@ typename MPTraits::LocalObstacleMap*
 MPBaseObject<MPTraits>::
 GetLocalObstacleMap() const noexcept {
   return m_library->GetLocalObstacleMap();
+}
+
+
+template <typename MPTraits>
+inline
+typename MPTraits::GoalTracker*
+MPBaseObject<MPTraits>::
+GetGoalTracker() const noexcept {
+  return m_library->GetGoalTracker();
 }
 
 /*----------------------------------------------------------------------------*/

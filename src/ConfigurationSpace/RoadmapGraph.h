@@ -1,5 +1,5 @@
-#ifndef ROADMAP_GRAPH_H_
-#define ROADMAP_GRAPH_H_
+#ifndef PMPL_ROADMAP_GRAPH_H_
+#define PMPL_ROADMAP_GRAPH_H_
 
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/RuntimeUtils.h"
@@ -50,10 +50,6 @@ template <typename Vertex, typename Edge>
 class RoadmapGraph : public
 #ifdef _PARALLEL
     stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Vertex, Edge>
-#elif defined(VIZMO)
-    stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Vertex,
-        Edge, stapl::sequential::adj_map_int<stapl::DIRECTED,
-        stapl::NONMULTIEDGES, Vertex, Edge> >
 #else
     stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Vertex,
         Edge>
@@ -68,10 +64,6 @@ class RoadmapGraph : public
     using STAPLGraph =
 #ifdef _PARALLEL
     stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,Vertex, Edge>
-#elif defined(VIZMO)
-    stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Vertex, Edge,
-        stapl::sequential::adj_map_int<stapl::DIRECTED, stapl::NONMULTIEDGES,
-        Vertex, Edge>>
 #else
     stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Vertex, Edge>
 #endif
@@ -132,7 +124,8 @@ class RoadmapGraph : public
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge property.
-    virtual void AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept;
+    virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
+        noexcept;
 
     /// Add edges both ways between source and target vertices.
     /// @param _source The source vertex.
@@ -202,11 +195,19 @@ class RoadmapGraph : public
     ///@name Accessors
     ///@{
 
+    /// Get the robot represented by this roadmap.
+    Robot* GetRobot() const noexcept;
+
     /// Retrieve a reference to a vertex property by descriptor or iterator.
     template <typename T>
     VP GetVertex(T& _t) noexcept;
     VP GetVertex(VI& _t) noexcept;
     VP GetVertex(VID _t) noexcept;
+
+    /// Get the set of VIDs which are children of a given vertex.
+    /// @param _vid The VID of the given vertex.
+    /// @return The VIDs of each node u for which and edge (_vid, u) exists.
+    std::vector<VID> GetChildren(const VID _vid) const noexcept;
 
     /// Retrieve an edge from the graph.
     /// @param _source The source node VID.
@@ -218,8 +219,6 @@ class RoadmapGraph : public
 
     EP GetEdge(const VID _source, const VID _target) noexcept;
     EP GetEdge(const EID _descriptor) noexcept;
-
-    Robot* GetRobot() const noexcept;
 
     ///@}
     ///@name Hooks
@@ -363,8 +362,8 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(IsVertex(_v, vi)) {
-  std::cerr << "\nRoadmapGraph::AddVertex: vertex " << vi->descriptor()
-              << " already in graph"
+    std::cerr << "\nRoadmapGraph::AddVertex: vertex " << vi->descriptor()
+              << " already in graph, not adding again."
               << std::endl;
     return vi->descriptor();
   }
@@ -458,9 +457,6 @@ template <class Vertex, class Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
-#ifdef VIZMO
-  GetVertex(_source).Lock();
-#endif
   // Let the add_edge function handle checking for existance incase we are using
   // a multigraph.
   const auto edgeDescriptor = this->add_edge(_source, _target, _w);
@@ -483,9 +479,6 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
 
     ++m_timestamp;
   }
-#ifdef VIZMO
-  GetVertex(_source).UnLock();
-#endif
 }
 
 
@@ -522,9 +515,6 @@ void
 RoadmapGraph<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
   const Vertex& sourceCfg = GetVertex(_iterator->source());
-#ifdef VIZMO
-  sourceCfg.Lock();
-#endif
   // Execute pre-delete hooks and update vizmo debug.
   ExecuteDeleteEdgeHooks(_iterator);
   VDRemoveEdge(sourceCfg, GetVertex(_iterator->target()));
@@ -532,9 +522,6 @@ DeleteEdge(EI _iterator) noexcept {
   // Delete the edge.
   this->delete_edge(_iterator->descriptor());
   ++m_timestamp;
-#ifdef VIZMO
-  sourceCfg.UnLock();
-#endif
 }
 
 
@@ -653,6 +640,14 @@ GetTimestamp() const noexcept {
 /*------------------------------- Accessors ----------------------------------*/
 
 template <typename Vertex, typename Edge>
+Robot*
+RoadmapGraph<Vertex, Edge>::
+GetRobot() const noexcept {
+  return m_robot;
+}
+
+
+template <typename Vertex, typename Edge>
 template<typename T>
 typename RoadmapGraph<Vertex, Edge>::VP
 RoadmapGraph<Vertex, Edge>::
@@ -675,9 +670,26 @@ RoadmapGraph<Vertex, Edge>::
 GetVertex(VID _t) noexcept {
   auto iter = this->find_vertex(_t);
   if(iter == this->end())
-    throw RunTimeException(WHERE, "Requested node '" + std::to_string(_t) +
-        "' which is not in the graph.");
+    throw RunTimeException(WHERE) << "Requested node '" << _t
+                                  << "', which is not in the graph.";
+
   return iter->property();
+}
+
+
+template <typename Vertex, typename Edge>
+std::vector<typename RoadmapGraph<Vertex, Edge>::VID>
+RoadmapGraph<Vertex, Edge>::
+GetChildren(const VID _vid) const noexcept {
+  auto vi = this->find_vertex(_vid);
+  if(vi == this->end())
+    throw RunTimeException(WHERE) << "Requested children of node '" << _vid
+                                  << "', which is not in the graph.";
+
+  std::vector<VID> output;
+  for(const auto& e : *vi)
+    output.push_back(e.target());
+  return output;
 }
 
 
@@ -699,11 +711,9 @@ typename RoadmapGraph<Vertex, Edge>::EP
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target) noexcept {
   EI ei;
-  if(!GetEdge(_source, _target, ei)) {
-    std::ostringstream oss;
-    oss << "Requested non-existent edge (" << _source << ", " << _target << ").";
-    throw RunTimeException(WHERE, oss.str());
-  }
+  if(!GetEdge(_source, _target, ei))
+    throw RunTimeException(WHERE) << "Requested non-existent edge ("
+                                  << _source << ", " << _target << ").";
 
   return ei->property();
 }
@@ -714,14 +724,6 @@ typename RoadmapGraph<Vertex, Edge>::EP
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const EID _descriptor) noexcept {
   return GetEdge(_descriptor.source(), _descriptor.target());
-}
-
-
-template <typename Vertex, typename Edge>
-Robot*
-RoadmapGraph<Vertex, Edge>::
-GetRobot() const noexcept {
-  return m_robot;
 }
 
 /*--------------------------------- Hooks ------------------------------------*/

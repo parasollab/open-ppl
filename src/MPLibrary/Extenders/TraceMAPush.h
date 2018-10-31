@@ -1,15 +1,20 @@
-#ifndef TRACE_MA_PUSH_H_
-#define TRACE_MA_PUSH_H_
+#ifndef PMPL_TRACE_MA_PUSH_H_
+#define PMPL_TRACE_MA_PUSH_H_
 
 #include "TraceObstacle.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Extend tangent to a workspace obstacle and then push to the medial axis.
+///
+/// @todo This object needs to have its dedicated MA tool removed and replaced
+///       with a label (fetch from MPTools).
 ///
 /// This performs the same as @c TraceObstacle but after the target
 /// configuration has been pushed in the obstacle direction, it is then pushed
 /// toward the medial axis of @cfree. In this way \f$q_{near}\f$ is extended
 /// toward a \f$q_{dir}\f$ which is near the medial axis.
+///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -26,8 +31,7 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
     ///@name Construction
     ///@{
 
-    TraceMAPush(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _min = .001, double _max = 1);
+    TraceMAPush();
 
     TraceMAPush(XMLNode& _node);
 
@@ -57,8 +61,7 @@ class TraceMAPush : public TraceObstacle<MPTraits> {
 
 template <typename MPTraits>
 TraceMAPush<MPTraits>::
-TraceMAPush(const string& _dmLabel, const string& _vcLabel, double _min,
-    double _max) : TraceObstacle<MPTraits>(_dmLabel, _vcLabel, _min, _max) {
+TraceMAPush() {
   this->SetName("TraceMAPush");
 }
 

@@ -1,10 +1,12 @@
-#ifndef MIX_EXTENDER_H_
-#define MIX_EXTENDER_H_
+#ifndef PMPL_MIX_EXTENDER_H_
+#define PMPL_MIX_EXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Randomly choose an extender from a set of extenders.
+///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>

@@ -1,6 +1,7 @@
 #include "EnforcedHillClimbing.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "Simulator/BulletModel.h"
 

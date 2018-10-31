@@ -1,108 +1,135 @@
-#ifndef BASIC_PRM_H_
-#define BASIC_PRM_H_
+#ifndef PMPL_BASIC_PRM_H_
+#define PMPL_BASIC_PRM_H_
 
 #include "MPStrategyMethod.h"
 
+#include "Utilities/XMLNode.h"
+
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
+
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Basic PRM algorithm.
+///
+/// Reference:
+///   Lydia E. Kavraki and Petr Svestka and Jean-Claude Latombe and Mark H.
+///   Overmars. "Probabilistic Roadmaps for Path Planning in High-Dimensional
+///   Configuration Spaces". TRO 1996.
+///
 /// @ingroup MotionPlanningStrategies
-/// @brief Basic PRM approach
-///
-/// BasicPRM essentially combines samplers and connectors to iteratively
-/// construct a roadmap until planning is "done"
-///
-/// \internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class BasicPRM : public MPStrategyMethod<MPTraits> {
+
   public:
 
-    enum Start {Sampling, Connecting, ConnectingComponents, Evaluating};
+    ///@name Motion Planning Types
+    ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
-    BasicPRM(
-        const std::map<std::string, std::pair<size_t, size_t> >& _samplerLabels = std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::vector<std::string>& _connectorLabels = std::vector<std::string>(),
-        const std::vector<std::string>& _componentConnectorLabels = std::vector<std::string>(),
-        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>(),
-        std::string _inputMapFilename = "",
-        Start _startAt = Sampling);
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    enum Start {Sampling, Connecting, ConnectingComponents, Evaluating};
+
+    /// Settings for a specific sampler.
+    struct SamplerSetting {
+      std::string label;
+      size_t count;
+      size_t attempts;
+    };
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    BasicPRM();
+
     BasicPRM(XMLNode& _node);
-    virtual ~BasicPRM() {}
 
-    virtual void Print(std::ostream& _os) const;
+    virtual ~BasicPRM() = default;
 
-    virtual void Initialize();
-    virtual void Iterate();
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name MPStrategyMethod Overrides
+    ///@{
+
+    virtual void Initialize() override;
+    virtual void Iterate() override;
+
+    ///@}
 
   protected:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Sample and add configurations to the roadmap.
-    /// @tparam OutputIterator Output iterator on data structure of VIDs
-    /// @param[out] _thisIterationOut Data structure of VIDs of added nodes.
-    template <typename OutputIterator>
-      void Sample(OutputIterator _thisIterationOut);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Connect nodes and CCs of the roadmap
+    ///@name Helpers
+    ///@{
+
+    /// Sample and add configurations to the roadmap.
+    /// @tparam OutputIterator Output iterator on data structure of VIDs
+    /// @param _out Data structure of VIDs of added nodes.
+    template <typename OutputIterator>
+    void Sample(OutputIterator _out);
+
+    /// Connect nodes and CCs of the roadmap
     /// @tparam InputIterator Iterator on data structure of VIDs/graph nodes
     /// @param _first Begin iterator over VIDs/graph nodes
     /// @param _last End iterator over VIDs/graph nodes
     /// @param _labels Connector labels used in connection
-    template<class InputIterator>
-      void Connect(InputIterator _first, InputIterator _last,
-          const std::vector<std::string>& _labels);
+    template <class InputIterator>
+    void Connect(InputIterator _first, InputIterator _last,
+        const std::vector<std::string>& _labels);
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Iterate over range and check nodes to be within narrow passage
+    /// Iterate over range and check nodes to be within narrow passage
     /// @tparam InputIterator Iterator on data structure of VIDs
     /// @param _first Begin iterator over VIDs
     /// @param _last End iterator over VIDs
-    template<class InputIterator>
-      void CheckNarrowPassageSamples(InputIterator _first, InputIterator _last);
+    template <class InputIterator>
+    void CheckNarrowPassageSamples(InputIterator _first, InputIterator _last);
 
+    ///@}
     ///@name Internal State
     ///@{
 
-    std::map<std::string, std::pair<size_t, size_t> > m_samplerLabels; ///< Sampler labels with number and attempts of sampler
-    std::vector<std::string> m_connectorLabels; ///< Connector labels for node-to-node
-    std::vector<std::string> m_componentConnectorLabels; ///< Connector labels for cc-to-cc
-    size_t m_currentIteration; ///< Current iteration of while-loop of Run function
+    /// Sampler labels with number and attempts of sampler.
+    std::vector<SamplerSetting> m_samplers;
+    /// Connector labels for node-to-node.
+    std::vector<std::string> m_connectorLabels;
+    /// Connector labels for cc-to-cc.
+    std::vector<std::string> m_componentConnectorLabels;
+
     std::string m_inputMapFilename; ///< Input roadmap to initialize map
-    Start m_startAt; ///< When inputting a roadmap, specifies where in algorithm to start
 
-    bool m_fixBase{false};  ///< Keep the base fixed to the start cfg?
-
-    /// An optional sampling boundary for fixing the base.
-    std::unique_ptr<Boundary> m_samplingBoundary;
+    Start m_startAt{Sampling}; ///< When inputting a roadmap, specifies where in algorithm to start
 
     ///@}
 
 };
 
+/*------------------------------- Construction -------------------------------*/
+
 template <typename MPTraits>
 BasicPRM<MPTraits>::
-BasicPRM(const std::map<std::string, std::pair<size_t, size_t> >& _samplerLabels,
-    const std::vector<std::string>& _connectorLabels,
-    const std::vector<std::string>& _componentConnectorLabels,
-    const std::vector<std::string>& _evaluatorLabels,
-    std::string _inputMapFilename, Start _startAt) :
-    m_samplerLabels(_samplerLabels), m_connectorLabels(_connectorLabels),
-    m_componentConnectorLabels(_componentConnectorLabels),
-    m_currentIteration(0), m_inputMapFilename(_inputMapFilename),
-    m_startAt(_startAt) {
-  this->m_meLabels = _evaluatorLabels;
+BasicPRM() {
   this->SetName("BasicPRM");
 }
 
 
 template <typename MPTraits>
 BasicPRM<MPTraits>::
-BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
-    m_currentIteration(0), m_inputMapFilename(""), m_startAt(Sampling) {
+BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicPRM");
 
   m_inputMapFilename = _node.Read("inputMap", false, "",
@@ -119,35 +146,33 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node),
     m_startAt = ConnectingComponents;
   else if(startAt == "evaluating")
     m_startAt = Evaluating;
-  else  {
-    std::string message = "Start at is '" + startAt +
-      "'. Choices are 'sampling', 'connecting', 'connectingComponents', 'evaluating'.";
-    throw ParseException(_node.Where(), message);
-  }
+  else
+    throw ParseException(_node.Where()) << "Start at is '" << startAt << "'. "
+                                        << "Choices are 'sampling', "
+                                        << "'connecting', "
+                                        << "'connectingComponents', "
+                                        << "'evaluating'.";
 
   for(auto& child : _node) {
     if(child.Name() == "Sampler") {
-      std::string s = child.Read("method", true, "", "Sampler Label");
-      size_t num = child.Read("number", true,
+      SamplerSetting s;
+      s.label = child.Read("label", true, "", "Sampler Label");
+      s.count = child.Read("number", true,
           1, 0, MAX_INT, "Number of samples");
-      size_t attempts = child.Read("attempts", false,
+      s.attempts = child.Read("attempts", false,
           1, 0, MAX_INT, "Number of attempts per sample");
-      m_samplerLabels[s] = std::make_pair(num, attempts);
+      m_samplers.push_back(s);
     }
     else if(child.Name() == "Connector")
       m_connectorLabels.push_back(
-          child.Read("method", true, "", "Connector Label"));
+          child.Read("label", true, "", "Connector Label"));
     else if(child.Name() == "ComponentConnector")
       m_componentConnectorLabels.push_back(
-          child.Read("method", true, "", "Component Connector Label"));
-    else if(child.Name() == "Evaluator")
-      this->m_meLabels.push_back(
-          child.Read("method", true, "", "Evaluator Label"));
+          child.Read("label", true, "", "Component Connector Label"));
   }
-
-  m_fixBase = _node.Read("fixBase", false, m_fixBase,
-      "Fix the robot's base position and orientation to the start cfg?");
 }
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
@@ -166,10 +191,10 @@ Print(std::ostream& _os) const {
   std::cout << std::endl;
 
   _os << "\tSamplers" << std::endl;
-  for(const auto& label : m_samplerLabels)
-    _os << "\t\t" << label.first
-        << "\tNumber:"   << label.second.first
-        << "\tAttempts:" << label.second.second
+  for(const auto& sampler : m_samplers)
+    _os << "\t\t" << sampler.label
+        << "\tNumber:"   << sampler.count
+        << "\tAttempts:" << sampler.attempts
         << std::endl;
 
   _os << "\tConnectors" << std::endl;
@@ -179,48 +204,20 @@ Print(std::ostream& _os) const {
   _os << "\tComponentConnectors" << std::endl;
   for(const auto& label : m_componentConnectorLabels)
     _os << "\t\t" << label << std::endl;
-
-  _os<<"\tMapEvaluators" << std::endl;
-  for(const auto& label : this->m_meLabels)
-    _os << "\t\t" << label << std::endl;
-
-  _os << "\tFix base: " << (m_fixBase ? "true" : "false")
-      << std::endl;
 }
+
+/*------------------------ MPStrategyMethod Overrides ------------------------*/
 
 template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Initialize() {
-  if(this->m_debug)
-    std::cout << this->GetName() << "::Initialize"
-              << std::endl;
-
-  // If a query was loaded, process query cfgs
-  m_samplingBoundary.reset();
-  if(m_fixBase and this->UsingQuery()) {
-    // Assume a query named "PRMQuery" is available.
-    auto query = static_cast<PRMQuery<MPTraits>*>(
-        this->GetMapEvaluator("PRMQuery").get());
-
-    const std::vector<CfgType>& queryCfgs = query->GetQuery();
-    const auto& start = queryCfgs.front();
-
-    // Create a version of the robot's cspace where the base
-    // position/translation are fixed.
-    auto robot = this->GetTask()->GetRobot();
-    auto mb = robot->GetMultiBody();
-    m_samplingBoundary = robot->GetCSpace()->Clone();
-    const size_t numDOF = mb->PosDOF() + mb->OrientationDOF();
-
-    // Need to downcast to c-space bounding box to be able to set the range.
-    auto bbx = static_cast<CSpaceBoundingBox*>(m_samplingBoundary.get());
-    for(size_t i = 0; i < numDOF; ++i)
-      bbx->SetRange(i, start[i], start[i]);
-  }
+  // Generate start and goal nodes if possible.
+  this->GenerateStart(m_samplers.front().label);
+  this->GenerateGoals(m_samplers.front().label);
 
   /// @todo Move input map parsing to the MPSolution somehow.
-  //read in and reload roadmap and evaluators
+  //read in and reload roadmap
   if(!m_inputMapFilename.empty()) {
     RoadmapType* r = this->GetRoadmap();
     if(this->m_debug)
@@ -237,14 +234,6 @@ Initialize() {
                 << " nodes and " << g->get_num_edges() << " edges.\n"
                 << "Resetting map evaluator states."
                 << std::endl;
-
-    /// @TODO This cannot be different for PRM than for any other strategy. It
-    ///       must be removed or moved to the base class if needed.
-    for(const auto& label: this->m_meLabels) {
-      auto evaluator = this->GetMapEvaluator(label);
-      if(evaluator->HasState())
-        evaluator->operator()();
-    }
   }
 }
 
@@ -253,12 +242,6 @@ template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Iterate() {
-  m_currentIteration++;
-  if(this->m_debug)
-    std::cout << this->GetName() << ":: starting iteration "
-              << m_currentIteration
-              << std::endl;
-
   std::vector<VID> vids;
 
   switch(m_startAt) {
@@ -293,40 +276,40 @@ Iterate() {
   m_startAt = Sampling;
 }
 
+/*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
 template<typename OutputIterator>
 void
 BasicPRM<MPTraits>::
-Sample(OutputIterator _thisIterationOut) {
+Sample(OutputIterator _out) {
   if(this->m_debug)
-    std::cout << this->GetName() << "::Sample"
-              << std::endl;
+    std::cout << "Sampling new nodes..." << std::endl;
 
-  StatClass* stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetName() + "::Sample");
-
-  auto boundary = m_samplingBoundary.get() ? m_samplingBoundary.get()
-                                        : this->GetEnvironment()->GetBoundary();
+  MethodTimer mt(this->GetStatClass(), "BasicPRM::Sample");
+  GraphType* g = this->GetRoadmap()->GetGraph();
+  const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
 
   // Generate nodes with each sampler.
   std::vector<CfgType> samples;
-  for(auto&  sampler : m_samplerLabels) {
-    auto s = this->GetSampler(sampler.first);
+  for(auto& sampler : m_samplers) {
+    samples.clear();
+    samples.reserve(sampler.count);
 
-    s->Sample(sampler.second.first, sampler.second.second,
-        boundary, std::back_inserter(samples));
-  }
+    auto s = this->GetSampler(sampler.label);
+    s->Sample(sampler.count, sampler.attempts, boundary,
+        std::back_inserter(samples));
 
-  if(this->m_debug)
-    std::cout << "\tGenerated " << samples.size() << " samples."
-              << std::endl;
+    if(this->m_debug)
+      std::cout << "\tSampler '" << sampler.label << "' generated "
+                << samples.size() << " configurations."
+                << std::endl;
 
-  // Add valid samples to roadmap.
-  GraphType* g = this->GetRoadmap()->GetGraph();
-  for(auto& sample: samples) {
-    const VID vid = g->AddVertex(sample);
-    *_thisIterationOut++ = vid;
+    // Add valid samples to roadmap.
+    for(auto& sample : samples) {
+      const VID vid = g->AddVertex(sample);
+      *_out++ = vid;
+    }
   }
 }
 
@@ -338,13 +321,14 @@ BasicPRM<MPTraits>::
 Connect(InputIterator _first, InputIterator _last,
     const std::vector<std::string>& _labels) {
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Connect()"
-              << std::endl;
+    std::cout << "Connecting..." << std::endl;
 
-  StatClass* stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetName() + "::Connect");
+  MethodTimer mt(this->GetStatClass(), "BasicPRM::Connect");
 
   for(const auto& label : _labels) {
+    if(this->m_debug)
+      std::cout << "\tUsing connector '" << label << "'.\n";
+
     auto c = this->GetConnector(label);
     c->Connect(this->GetRoadmap(), _first, _last);
   }
@@ -364,15 +348,19 @@ template<class InputIterator>
 void
 BasicPRM<MPTraits>::
 CheckNarrowPassageSamples(InputIterator _first, InputIterator _last) {
+  /// @todo This adds O(n) to each iteration regardless of whether it is used,
+  ///       try to rework the design.
   if(this->m_debug)
     std::cout << this->GetName() << "::CheckNarrowPassageSamples"
               << std::endl;
 
   for(; _first != _last; _first++) {
-    VID vid = this->GetRoadmap()->GetGraph()->GetVID(_first);
+    const VID vid = this->GetRoadmap()->GetGraph()->GetVID(_first);
     if(this->CheckNarrowPassageSample(vid))
       break;
   }
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

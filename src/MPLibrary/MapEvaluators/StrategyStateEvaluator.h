@@ -3,9 +3,15 @@
 
 #include "MapEvaluatorMethod.h"
 
+template <typename MPTraits> class DisassemblyMethod;
+template <typename MPTraits> class DisassemblyRRTStrategy;
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// A distance evaluator between all bodies of the first robot.
-/// It returns true, if all distances are higher than the specified distance.
+/// @todo This method needs to be removed as it forces MPStrategies to handle
+///       the map evaluator's job. It is retained only for refactoring the
+///       disassembly code to an extensible state - do not use it for anything
+///       else.
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +65,19 @@ operator()() {
         "this ME! Make sure the xml label stateMELabel is set for this "
         "strategy");
 
-  return this->GetMPStrategy(m_strategyLabel)->IsSuccessful();
+  auto method = dynamic_pointer_cast<DisassemblyMethod<MPTraits>> (
+      this->GetMPStrategy(m_strategyLabel));
+  if(method)
+    return method->IsSuccessful();
+
+  auto rrt = dynamic_pointer_cast<DisassemblyRRTStrategy<MPTraits>> (
+      this->GetMPStrategy(m_strategyLabel));
+  if(rrt)
+    return method->IsSuccessful();
+
+  throw RunTimeException(WHERE) << "Strategy '" << m_strategyLabel << "' is "
+                                << "not a supported strategy {DisassemblyMethod, "
+                                << "DisassemblyRRTStrategy}.";
 }
 
 /*----------------------------------------------------------------------------*/

@@ -1,15 +1,17 @@
-#ifndef MAP_EVALUATION_METHOD_H_
-#define MAP_EVALUATION_METHOD_H_
+#ifndef PMPL_MAP_EVALUATOR_METHOD_H_
+#define PMPL_MAP_EVALUATOR_METHOD_H_
 
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/MPUtils.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MapEvaluators
-/// @brief Base algorithm abstraction for \ref MapEvaluators.
+/// Base algorithm abstraction for \ref MapEvaluators.
 ///
-/// MapEvaluatorMethod has one main function, @c operator(), which applies a
-/// boolean pass/fail evaluation to a roadmap.
+/// All \ref MapEvaluators have one main function, @c operator(), which
+/// evaluates the current roadmap and returns true iff it satisfies a specific
+/// set of criteria.
+/// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
@@ -20,79 +22,58 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     MapEvaluatorMethod() = default;
+
     MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+
     virtual ~MapEvaluatorMethod() = default;
 
     ///@}
-    ///@name Evaluation Interface
+    ///@name MapEvaluator Interface
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Having state implies that a new roadmap needs to be loaded and
-    ///        evaluated
-    /// @return state/no state
-    ///
-    /// @c HasState() is called by strategies that start from an existing
-    /// roadmap if HasState returns true, then the evaluator is called on the
-    /// input roadmap to reset the state of the object. Note that most
-    /// evaluators do not have state, so this is set to false by default.
-    ////////////////////////////////////////////////////////////////////////////
-    virtual bool HasState() const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Evaluate a roadmap
-    /// @return pass/failed evaluation
-    ///
-    /// @usage
-    /// @code
-    /// MapEvaluatorPointer me = this->GetMapEvaluator(m_meLabel);
-    /// bool passed = (*me)(); //call as a function object
-    /// bool passed2 = me->operator()(); //call with pointer notation
-    /// @endcode
-    ////////////////////////////////////////////////////////////////////////////
+    /// Evaluate a roadmap.
+    /// @return True if this roadmap meets the evaluation criteria.
     virtual bool operator()() = 0;
 
     ///@}
-    ///@name Accessors and Modifiers
+    ///@name Active Robots
     ///@{
+    /// @todo This is an artifact of developing robot groups. It should be
+    ///       replaced by using a proper subgroup where each robot within is
+    ///       active.
 
     /// Set the active robots.
-    void SetActiveRobots(const std::vector<size_t> _activeRobots);
+    void SetActiveRobots(const std::vector<size_t>& _activeRobots);
 
     /// Get the active robots.
     std::vector<size_t> GetActiveRobots() const;
 
     ///@}
 
-
   protected:
+
+    ///@name Internal State
+    ///@{
 
     /// The active robots, used only by group map evaluators. Depending on the
     /// evaluator, the usage could be different, but the current use case is to
     /// set the robot(s) that are being moved, then a clearance check is done
     /// only considering those specified bodies (see MinimumClearanceEvaluator).
+    /// @todo This is an artifact of developing robot groups. It should be
+    ///       replaced by using a proper subgroup where each robot within is
+    ///       active.
     std::vector<size_t> m_activeRobots;
+
+    ///@}
 
 };
 
-
-//----------------------------- Evaluation Interface ---------------------------
-
-template<typename MPTraits>
-bool
-MapEvaluatorMethod<MPTraits>::
-HasState() const {
-  return false;
-}
-
-
-
-//---------------------------- Accessors and Modifiers -------------------------
+/*----------------------------- Active Robots --------------------------------*/
 
 template<typename MPTraits>
 void
 MapEvaluatorMethod<MPTraits>::
-SetActiveRobots(const std::vector<size_t> _activeRobots) {
+SetActiveRobots(const std::vector<size_t>& _activeRobots) {
   m_activeRobots = _activeRobots;
 }
 
@@ -103,5 +84,7 @@ MapEvaluatorMethod<MPTraits>::
 GetActiveRobots() const {
   return m_activeRobots;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

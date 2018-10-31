@@ -1,6 +1,7 @@
 #ifndef PMPL_CFG_TRAITS_H_
 #define PMPL_CFG_TRAITS_H_
 
+#include "MPLibrary/GoalTracker.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
 #include "MPLibrary/MPTools/MPTools.h"
@@ -103,7 +104,7 @@
 
 //connector includes
 #include "MPLibrary/Connectors/AdaptiveConnector.h"
-#include "MPLibrary/Connectors/CCExpansion.h"
+//#include "MPLibrary/Connectors/CCExpansion.h"
 #include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
@@ -131,8 +132,7 @@
 #include "MPLibrary/MapEvaluators/MinimumDistanceEvaluator.h"
 #include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
-#include "MPLibrary/MapEvaluators/PRMQuery.h"
-#include "MPLibrary/MapEvaluators/RRTQuery.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/MapEvaluators/TrueEvaluation.h"
@@ -192,6 +192,7 @@ struct MPTraits {
   typedef MPSolutionType<MPTraits>        MPSolution;
   typedef MPToolsType<MPTraits>           MPTools;
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
+  typedef GoalTrackerType<RoadmapType>    GoalTracker;
 
   typedef GroupLocalPlan<CfgType>                    GroupWeightType;
   typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
@@ -262,6 +263,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+    ApproxSpheres<MPTraits>,
     AStarClearance<MPTraits>,
     AStarDistance<MPTraits>,
     HierarchicalLP<MPTraits>,
@@ -270,8 +272,7 @@ struct MPTraits {
     RRTLocalPlanner<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
-    TransformAtS<MPTraits>,
-    ApproxSpheres<MPTraits>
+    TransformAtS<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -304,7 +305,7 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     AdaptiveConnector<MPTraits>,
-    CCExpansion<MPTraits>,
+    //CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
@@ -353,8 +354,7 @@ struct MPTraits {
     MinimumDistanceEvaluator<MPTraits>,
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>,
-    PRMQuery<MPTraits>,
-    RRTQuery<MPTraits>,
+    QueryMethod<MPTraits>,
     StrategyStateEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>

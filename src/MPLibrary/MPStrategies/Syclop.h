@@ -1,5 +1,5 @@
-#ifndef SYCLOP_H_
-#define SYCLOP_H_
+#ifndef PMPL_SYCLOP_H_
+#define PMPL_SYCLOP_H_
 
 #include <algorithm>
 #include <iomanip>
@@ -20,10 +20,10 @@
 /// This method is the 'Synergistic Combination of Layers of Planning' technique
 /// that adds workspace guidance to RRT methods.
 ///
-/// Paper reference:
-///
-/// Erion Plaku, Lydia E. Kavraki, Moshe Y. Vardi. "Synergistic Combination of
+/// Reference:
+///   Erion Plaku, Lydia E. Kavraki, Moshe Y. Vardi. "Synergistic Combination of
 ///   Layers of Planning". IEEE Transactions on Robotics. 2010.
+///
 /// @warning This method doesn't support bi-directional growth.
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,41 +58,33 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     virtual ~Syclop() = default;
 
     ///@}
+
+  protected:
+
     ///@name MPStrategy Overrides
     ///@{
 
     virtual void Initialize() override;
 
     ///@}
-
-  protected:
-
-    ///@name Neighbor Helpers
+    ///@name BasicRRTStrategy Overrides
     ///@{
 
     /// As basic RRT, but picks nearest neighbor from only the available
     /// regions.
-#if 0
-    virtual VID FindNearestNeighbor(const CfgType& _cfg, const TreeType& _tree)
-        override;
-#else
-    virtual VID FindNearestNeighbor(const CfgType& _cfg) override;
-#endif
-
-    ///@}
-    ///@name Growth Helpers
-    ///@{
+    virtual VID FindNearestNeighbor(const CfgType& _cfg,
+        const TreeType* const _tree = nullptr) override;
 
     /// As basic RRT, but also logs extension attempts.
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
-        LPOutput<MPTraits>& _lp) override;
+        LPOutput<MPTraits>& _lp, const bool _requireNew = true) override;
 
     /// As basic RRT, but also updates coverage information.
     virtual std::pair<VID, bool> AddNode(const CfgType& _newCfg) override;
 
     /// As basic RRT, but also updates region edge connectivity information.
-    virtual void AddEdge(VID _source, VID _target,
-        const LPOutput<MPTraits>& _lpOutput);
+    virtual void AddEdge(const VID _source, const VID _target,
+        const LPOutput<MPTraits>& _lpOutput) override;
 
     ///@}
     ///@name Syclop Functions
@@ -343,7 +335,11 @@ template <typename MPTraits>
 Syclop<MPTraits>::
 Syclop(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("Syclop");
-  this->m_growGoals = false;
+
+  if(this->m_growGoals)
+    throw ParseException(WHERE) << "Syclop does not support bi-directional "
+                                << "growth.";
+
 
   const size_t min = 1;
   const size_t max = numeric_limits<size_t>::max();
@@ -355,22 +351,22 @@ Syclop(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   m_tmLabel = _node.Read("tmLabel", true, "", "The topological map label.");
 }
 
-/*-------------------------- MPStrategy overrides ----------------------------*/
+/*-------------------------- MPStrategy Overrides ----------------------------*/
 
 template <typename MPTraits>
 void
 Syclop<MPTraits>::
 Initialize() {
+  // Only support single-goal tasks; this is inherent to the method. The problem
+  // is solvable but hasn't been solved yet.
+  const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+  if(goalConstraints.size() != 1)
+    throw RunTimeException(WHERE) << "Only supports single-goal tasks. "
+                                  << "Multi-step tasks will need new skeletons "
+                                  << "for each sub-component.";
+
   // Standard RRT initialization.
   BasicRRTStrategy<MPTraits>::Initialize();
-
-#ifdef VIZMO
-  // Add workspace model if we are in vizmo land.
-  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
-      GetDecomposition();
-  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(regionGraph);
-  GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
-#endif
 
   // Clear algorithm state.
   m_regionData.clear();
@@ -390,22 +386,12 @@ Initialize() {
   m_regionData[startRegion].vertices.push_back(0);
 }
 
-/*---------------------------- Neighbor Helpers ------------------------------*/
+/*------------------------ BasicRRTStrategy Overrides ------------------------*/
 
 template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
-#if 0
-FindNearestNeighbor(const CfgType& _cfg, const TreeType&) {
-  // Select an available region and get the vertices within.
-  const WorkspaceRegion* r = SelectRegion();
-  const auto& vertices = m_regionData[r].vertices;
-
-  // Find the nearest neighbor from within the selected region.
-  return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, vertices);
-}
-#else
-FindNearestNeighbor(const CfgType& _cfg) {
+FindNearestNeighbor(const CfgType& _cfg, const TreeType* const) {
   // Select an available region and get the vertices within.
   const WorkspaceRegion* r = SelectRegion();
   const auto& vertices = m_regionData[r].vertices;
@@ -414,12 +400,14 @@ FindNearestNeighbor(const CfgType& _cfg) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
 
-  std::vector<Neighbor> neighbors;
+  auto roadmap = this->GetRoadmap();
+  auto g = roadmap->GetGraph();
 
+  std::vector<Neighbor> neighbors;
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  nf->FindNeighbors(this->GetRoadmap(),
+  nf->FindNeighbors(roadmap,
       vertices.begin(), vertices.end(),
-      true, _cfg, std::back_inserter(neighbors));
+      vertices.size() == g->Size(), _cfg, std::back_inserter(neighbors));
 
   VID nearestVID = INVALID_VID;
 
@@ -432,21 +420,20 @@ FindNearestNeighbor(const CfgType& _cfg) {
 
   return nearestVID;
 }
-#endif
 
-/*----------------------------- Growth Helpers -------------------------------*/
 
 template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
-Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp) {
+Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp,
+    const bool _requireNew) {
   // Log this extension attempt.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   const WorkspaceRegion* r1 = tm->LocateRegion(_nearVID);
   const WorkspaceRegion* r2 = tm->LocateRegion(_qRand);
   ++(m_regionPairData[std::make_pair(r1, r2)].numAttempts);
 
-  return BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp);
+  return BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp, _requireNew);
 }
 
 
@@ -488,14 +475,15 @@ AddNode(const CfgType& _newCfg) {
 template <typename MPTraits>
 void
 Syclop<MPTraits>::
-AddEdge(VID _source, VID _target, const LPOutput<MPTraits>& _lpOutput) {
+AddEdge(const VID _source, const VID _target, const LPOutput<MPTraits>& _lpOutput)
+{
   BasicRRTStrategy<MPTraits>::AddEdge(_source, _target, _lpOutput);
 
   // Update the list of cells in the target region that were reached by
   // extending from the source region.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  const WorkspaceRegion* r1 = tm->LocateRegion(_source);
-  const WorkspaceRegion* r2 = tm->LocateRegion(_target);
+  const WorkspaceRegion* const r1 = tm->LocateRegion(_source);
+  const WorkspaceRegion* const r2 = tm->LocateRegion(_target);
   const size_t cellIndex = tm->LocateCell(_target);
 
   m_regionPairData[std::make_pair(r1, r2)].AddCell(cellIndex);
@@ -514,19 +502,27 @@ DiscreteLead() {
   if(this->m_debug)
     std::cout << "Generating new discrete lead..." << std::endl;
 
-  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
-      GetDecomposition();
-  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-
-  // Get start and goal configurations from the query.
-  const CfgType& startCfg = this->m_query->GetQuery()[0];
-  const CfgType& goalCfg = this->m_query->GetQuery()[1];
+  // Get the start and goal point from the goal tracker.
+  // Try to prevent non-point tasks by requiring single VIDs for the start and
+  // goal.
+  auto goalTracker = this->GetGoalTracker();
+  const auto& startVIDs = goalTracker->GetStartVIDs();
+  const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
+  if(startVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
+                                  << startVIDs.size() << " were found.";
+  if(goalVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
+                                  << goalVIDs.size() << " were found.";
 
   // Find the start and goal regions.
-  auto startRegion = tm->LocateRegion(startCfg);
-  auto goalRegion = tm->LocateRegion(goalCfg);
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+  auto startRegion = tm->LocateRegion(*startVIDs.begin());
+  auto goalRegion  = tm->LocateRegion(*goalVIDs.begin());
 
   // Find the start and goal in the graph
+  auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+      GetDecomposition();
   const VID start = regionGraph->GetDescriptor(*startRegion),
             goal  = regionGraph->GetDescriptor(*goalRegion);
 
@@ -575,7 +571,9 @@ DiscreteLead() {
     }
 
     if(this->m_debug)
-      std::cout << "\t\tGenerated a parent map of size " << parentMap.size() << ".\n";
+      std::cout << "\t\tGenerated a parent map of size " << parentMap.size()
+                << "."
+                << std::endl;
 
     reverse(path.begin(), path.end());
   }
@@ -592,9 +590,11 @@ DiscreteLead() {
 
   // Sanity check.
   if(this->m_debug)
-    std::cout << "\tGenerated lead of length " << path.size() << "." << std::endl;
+    std::cout << "\tGenerated lead of length " << path.size() << "."
+              << std::endl;
+
   if(path.empty())
-    throw RunTimeException(WHERE, "Path is empty");
+    throw RunTimeException(WHERE) << "Path is empty.";
 
   this->GetStatClass()->StopClock("GenerateDiscreteLead");
   return path;
@@ -634,9 +634,11 @@ FindAvailableRegions(std::vector<VID> _lead) {
 
   // Sanity check.
   if(this->m_debug)
-    std::cout << "\tFound " << m_availableRegions.size() << " available regions.\n";
+    std::cout << "\tFound " << m_availableRegions.size() << " available regions."
+              << std::endl;
+
   if(m_availableRegions.empty())
-    throw RunTimeException(WHERE, "Available regions is empty");
+    throw RunTimeException(WHERE) << "Available regions is empty";
 }
 
 
@@ -647,14 +649,14 @@ SelectRegion() {
   static constexpr double probabilityOfAbandoningLead = .25;
 
   // We need a new region if we don't have one or if no uses remain.
-  const bool needNewRegion = !m_currentRegion ||
-      m_currentRegionUses >= m_maxRegionUses;
+  const bool needNewRegion = !m_currentRegion
+                          or m_currentRegionUses >= m_maxRegionUses;
 
   if(this->m_debug) {
     std::cout << "Selecting a region...\n";
     if(m_currentRegion)
       std::cout << "\tCurrent region has been used " << m_currentRegionUses << "/"
-           << m_maxRegionUses << " times.\n";
+                << m_maxRegionUses << " times.\n";
     std::cout << "\t"
          << (needNewRegion ? "Selecting a new region." : "Using current region.")
          << std::endl;
@@ -712,9 +714,9 @@ SelectRegion() {
 
         if(this->m_debug)
           std::cout << "\tSelected " << count << "th available region with "
-               << "relative weight " << setprecision(4) << relativeWeight
-               << " out of " << m_availableRegions.size() << " candidates."
-               << std::endl;
+                    << "relative weight " << setprecision(4) << relativeWeight
+                    << " out of " << m_availableRegions.size() << " candidates."
+                    << std::endl;
         break;
       }
     }
@@ -722,7 +724,7 @@ SelectRegion() {
 
   // Sanity check.
   if(!m_currentRegion)
-    throw RunTimeException(WHERE, "Failed to select a region!");
+    throw RunTimeException(WHERE) << "Failed to select a region!";
 
   // Update region data.
   ++m_currentRegionUses;
@@ -741,15 +743,15 @@ SelectVertex(const WorkspaceRegion* const _r) {
 
   // Sanity check.
   if(vertices.empty())
-    throw RunTimeException(WHERE, "Tried to select a vertex from a region with "
-        "no vertices.");
+    throw RunTimeException(WHERE) << "Tried to select a vertex from a region "
+                                  << "with no vertices.";
 
   const size_t randomIndex = LRand() % vertices.size();
   const VID selected = vertices[randomIndex];
 
   if(this->m_debug)
     std::cout << "Selected VID " << selected << " out of " << vertices.size()
-         << " vertices in the current region." << std::endl;
+              << " vertices in the current region." << std::endl;
   return selected;
 }
 
@@ -813,6 +815,7 @@ ComputeFreeVolumes() {
   static constexpr size_t numSamples = 5000;
 
   // Make a fixed number of samples.
+  /// @todo Remove dependence on magic XML values.
   auto sampler = this->GetSampler("UniformRandom");
   auto boundary = this->GetEnvironment()->GetBoundary();
 
@@ -821,10 +824,12 @@ ComputeFreeVolumes() {
 
   // Assert that we made the right number of samples.
   if(samples.size() != numSamples)
-    throw RunTimeException(WHERE, "Tried to make " + std::to_string(numSamples) +
-        " samples, but instead produced " + std::to_string(samples.size()));
+    throw RunTimeException(WHERE) << "Tried to make " << numSamples
+                                  << " samples, but instead produced "
+                                  << std::to_string(samples.size()) << ".";
 
   // Count the number of valid and invalid samples in each region.
+  /// @todo Remove dependence on magic XML values.
   auto vc = this->GetValidityChecker("pqp_solid");
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
 
@@ -840,6 +845,16 @@ ComputeFreeVolumes() {
   }
 
   // For each region, compute the approximate free volume using the samples.
+  auto tetrahedronVolume = [](const WorkspaceRegion* const _r) -> double {
+    /// @sa Formula taken from reference:
+    ///     http://mathworld.wolfram.com/Tetrahedron.html
+    const Vector3d& base = _r->GetPoint(0);
+    const Vector3d a = _r->GetPoint(1) - base;
+    const Vector3d b = _r->GetPoint(2) - base;
+    const Vector3d c = _r->GetPoint(3) - base;
+    return std::abs(a * (b % c)) / 6.;
+  };
+
   auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
       GetDecomposition();
   for(auto iter = regionGraph->begin(); iter != regionGraph->end(); ++iter) {
@@ -848,16 +863,6 @@ ComputeFreeVolumes() {
 
     const size_t numValid = results[region].first;
     const size_t numInvalid = results[region].second;
-
-    auto tetrahedronVolume = [](const WorkspaceRegion* const _r) -> double {
-      /// @sa Formula taken from reference:
-      ///     http://mathworld.wolfram.com/Tetrahedron.html
-      const Vector3d& base = _r->GetPoint(0);
-      const Vector3d a = _r->GetPoint(1) - base;
-      const Vector3d b = _r->GetPoint(2) - base;
-      const Vector3d c = _r->GetPoint(3) - base;
-      return std::abs(a * (b % c)) / 6.;
-    };
 
     data.freeVolume = tetrahedronVolume(region) * (eps + numValid) /
         (eps + numValid + numInvalid);

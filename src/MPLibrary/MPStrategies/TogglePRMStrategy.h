@@ -1,308 +1,313 @@
-#ifndef TOGGLE_PRM_STRATEGY_H_
-#define TOGGLE_PRM_STRATEGY_H_
+#ifndef PMPL_TOGGLE_PRM_STRATEGY_H_
+#define PMPL_TOGGLE_PRM_STRATEGY_H_
 
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
 #include "Utilities/MetricUtils.h"
-#include "boost/lambda/lambda.hpp"
+
+#include <deque>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Toggle PRM builds two roadmaps, one free and one obstacle. The information
+/// discovered about each space is used to assist the mapping of the other
+/// space.
+///
+/// Reference:
+///   Jory Denny, Nancy Amato. "Toggle PRM: A Coordinated Mapping of C-free and
+///   C-obstacle in Arbitrary Dimension." WAFR 2012.
+///
+/// @todo This can probably derive from BasicPRM to reduce duplication of common
+///       code.
+///
 /// @ingroup MotionPlanningStrategies
-/// @brief Toggle PRM builds two roadmaps, one free and one obstacle
-///
-/// Toggle PRM. Constructs a free roadmap and an obstacle roadmap and uses
-/// witnesses to aid construction of the two roadmaps.
-///
-/// \todo Configure for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType     CfgType;
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    typedef std::deque<std::pair<bool, CfgType>> ToggleQueue;
+
+    /// Settings for a specific sampler.
+    struct SamplerSetting {
+      std::string label;
+      size_t count;
+      size_t attempts;
+    };
+
+    ///@}
+    ///@name Construction
+    ///@{
+
     TogglePRMStrategy();
+
     TogglePRMStrategy(XMLNode& _node);
-    virtual ~TogglePRMStrategy() { }
 
-    virtual void ParseXML(XMLNode& _node);
-    virtual void Print(std::ostream& _os) const;
+    virtual ~TogglePRMStrategy() = default;
 
-    virtual void Initialize();
-    virtual void Run();
-    virtual void Finalize();
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
 
   protected:
-    // Helper functions for Run()
-    void GenerateNodes(deque<std::pair<std::string, CfgType> >& _queue);
-    void Connect(std::pair<std::string, VID> _vid, std::vector<VID>& _allvids, deque<std::pair<std::string, CfgType> >& _queue);
 
-    std::map<std::string, std::pair<int,int> > m_samplerLabels;  // Maps sampler labels to pair<samples, attempts>
-    std::vector<std::string> m_connectorLabels;             // Connector for free roadmap
-    std::vector<std::string> m_colConnectorLabels;          // Connector for obstacle roadmap
-    std::string m_vcLabel;                             // Validity checker
-    bool m_priority;                              // Give priority to valid nodes in the queue?
+    ///@name MPStrategyMethod Overrides
+    ///@{
+
+    virtual void Initialize() override;
+
+    virtual void Iterate() override;
+
+    ///@}
+    ///@name Helpers
+    ///@{
+
+    /// Sample new nodes and put them into the toggle queue.
+    void GenerateNodes();
+
+    /// Try to connect a new node to the correct roadmap.
+    /// @param _valid Is the new node valid?
+    /// @param _vid The new node's VID.
+    void ConnectHelper(const bool _valid, const VID _vid);
+
+    /// Add a configuration to the toggle queue.
+    /// @param _cfg The configuration to enqueue. Must already be validated by a
+    ///             collision-detection VC.
+    void Enqueue(const CfgType& _cfg);
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    /// Sampler labels with number and attempts of sampler.
+    std::vector<SamplerSetting> m_samplers;
+    /// Connector labels for node-to-node.
+    std::vector<std::string> m_connectorLabels;
+    /// Connectors for obstacle roadmap.
+    std::vector<std::string> m_colConnectorLabels;
+    std::string m_vcLabel;     ///< Validity checker for lazy samplers.
+
+    bool m_priority{false};    ///< Give priority to valid nodes in the queue?
+
+    ToggleQueue m_queue;   ///< Queue for sharing information between maps.
+
+    ///@}
+
 };
 
+/*------------------------------ Construction --------------------------------*/
+
 template <typename MPTraits>
-TogglePRMStrategy<MPTraits>::TogglePRMStrategy() : m_priority(false) {
+TogglePRMStrategy<MPTraits>::
+TogglePRMStrategy() {
   this->SetName("TogglePRMStrategy");
 }
 
-template <typename MPTraits>
-TogglePRMStrategy<MPTraits>::TogglePRMStrategy(XMLNode& _node) :
-MPStrategyMethod<MPTraits>(_node), m_priority(false) {
-  this->SetName("TogglePRMStrategy");
-  ParseXML(_node);
-}
 
 template <typename MPTraits>
-void
-TogglePRMStrategy<MPTraits>::ParseXML(XMLNode& _node) {
-  m_vcLabel = _node.Read("vcLabel", false, "", "Validity checker method");
-  m_priority = _node.Read("priority", false, false, "Whether or not to give priority to valid nodes");
+TogglePRMStrategy<MPTraits>::
+TogglePRMStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
+  this->SetName("TogglePRMStrategy");
+
+  m_vcLabel = _node.Read("vcLabel", false, "",
+      "Validity checker for lazy samples.");
+  m_priority = _node.Read("priority", false, m_priority,
+      "Give priority to valid nodes in the toggle queue?");
 
   for(auto& child : _node) {
     if(child.Name() == "Sampler") {
-      std::string generationMethod = child.Read("methodLabel", true, "", "Node connection method");
-      int numPerIter = child.Read("number", true, 1, 0, MAX_INT, "Number of samples");
-      int attemptsPerIter = child.Read("attempts", false, 1, 0, MAX_INT, "Number of attempts");
-      m_samplerLabels[generationMethod] = std::make_pair(numPerIter, attemptsPerIter);
+      SamplerSetting s;
+      s.label = child.Read("label", true, "", "Sampler Label");
+      s.count = child.Read("number", true,
+          1, 0, MAX_INT, "Number of samples");
+      s.attempts = child.Read("attempts", false,
+          1, 0, MAX_INT, "Number of attempts per sample");
+      m_samplers.push_back(s);
     }
     else if(child.Name() == "Connector")
       m_connectorLabels.push_back(
-          child.Read("methodLabel", true, "", "Node connection method"));
+          child.Read("label", true, "", "Connector Label"));
     else if(child.Name() == "ColConnector")
       m_colConnectorLabels.push_back(
-          child.Read("methodLabel", true, "", "Node connection method"));
-    else if(child.Name() == "Evaluator")
-      this->m_meLabels.push_back(
-          child.Read("methodLabel", true, "", "Evaluation method"));
+          child.Read("label", true, "", "Node connection method"));
   }
 }
 
+/*------------------------- MPBaseObject Overrides ---------------------------*/
+
 template <typename MPTraits>
 void
-TogglePRMStrategy<MPTraits>::Print(std::ostream& _os) const {
-  using boost::lambda::_1;
-  _os << "\nTogglePRMStrategy::ParseXML:\n";
-  _os << "\tSamplers: ";
-  for(std::map<std::string, std::pair<int, int> >::const_iterator i = m_samplerLabels.begin(); i != m_samplerLabels.end(); i++)
-    _os << i->first << ". Number: " << i->second.first << ", Attempts: " << i->second.second << std::endl;
-  _os << "\tConnectors: ";
-  for_each(m_connectorLabels.begin(), m_connectorLabels.end(), _os << _1 << " ");
-  _os << "\n\tColConnectors: ";
-  for_each(m_colConnectorLabels.begin(), m_colConnectorLabels.end(), _os << _1 << " ");
-  _os << "\n\tEvaluators: ";
-  for_each(this->m_meLabels.begin(), this->m_meLabels.end(), _os << _1 << " ");
-  _os << "\n\tvcLabel: " << m_vcLabel;
-  _os << "\n\tpriority: " << m_priority << std::endl;
+TogglePRMStrategy<MPTraits>::
+Print(std::ostream& _os) const {
+  MPStrategyMethod<MPTraits>::Print(_os);
+
+  _os << "\tSamplers";
+  for(const auto& sampler : m_samplers)
+    _os << "\n\t\t" << sampler.label
+        << "\tNumber:"   << sampler.count
+        << "\tAttempts:" << sampler.attempts;
+
+  _os << "\n\tConnectors";
+  for(const auto& label : m_connectorLabels)
+    _os << "\n\t\t" << label;
+
+  _os << "\n\tCollision Connectors";
+  for(const auto& label : m_colConnectorLabels)
+    _os << "\n\t\t" << label;
+
+  _os << "\n\tvcLabel: " << m_vcLabel
+      << "\n\tpriority: " << m_priority
+      << std::endl;
 }
 
+/*----------------------- MPStrategyMethod Overrides -------------------------*/
+
 template <typename MPTraits>
 void
-TogglePRMStrategy<MPTraits>::Initialize() { }
+TogglePRMStrategy<MPTraits>::
+Initialize() {
+  // Generate start and goal nodes if possible.
+  this->GenerateStart(m_samplers.front().label);
+  this->GenerateGoals(m_samplers.front().label);
 
-// Runs the Toggle PRM strategy
+  m_queue.clear();
+}
+
+
 template <typename MPTraits>
 void
-TogglePRMStrategy<MPTraits>::Run() {
-  if(this->m_debug) std::cout << "\nRunning TogglePRMStrategy" << std::endl;
+TogglePRMStrategy<MPTraits>::
+Iterate() {
+  // If the toggle queue is empty, generate more nodes.
+  if(m_queue.empty())
+    GenerateNodes();
 
-  // Set up variables
-  StatClass* stats = this->GetStatClass();
-  std::vector<VID> allNodesVID, allColNodesVID;
-  deque<std::pair<std::string, CfgType> > queue;
+  // Extract the next node from the toggle queue.
+  std::pair<bool, CfgType> p = m_queue.front();
+  m_queue.pop_front();
+  const bool valid = p.first;
+  const CfgType& cfg = p.second;
 
-  stats->StartClock("Map Generation");
+  // If the next node is valid, add to free roadmap.
+  if(valid) {
+    const VID vid = this->GetRoadmap()->GetGraph()->AddVertex(cfg);
 
-  // Loop until map is sufficient for evaluators
-  while(!this->EvaluateMap()) {
-    GenerateNodes(queue);
+    ConnectHelper(true, vid);
 
-    bool validMap;
-    // Loop until map is sufficient, or queue is empty
-    while(!(validMap = this->EvaluateMap()) && queue.size()) {
-      std::pair<std::string, CfgType> p = queue.front();
-      queue.pop_front();
-      std::string validity = p.first;
-      CfgType cfg = p.second;
-      if(this->m_debug) std::cout << "validity - " << validity << std::endl;
-
-      if(validity=="valid") { // Valid, add to free roadmap
-        VID vid = this->GetRoadmap()->GetGraph()->AddVertex(cfg);
-        allNodesVID.push_back(vid);
-        Connect(std::make_pair("valid", vid), allNodesVID, queue);
-
-        this->CheckNarrowPassageSample(vid);
-      }
-      else { // Invalid, add to obstacle roadmap. Toggle validity while connecting
-        VID vid = this->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);
-        allColNodesVID.push_back(vid);
-        this->GetMPLibrary()->ToggleValidity();
-        Connect(std::make_pair("invalid", vid), allColNodesVID, queue);
-        this->GetMPLibrary()->ToggleValidity();
-      }
-    }
-
-    if(validMap)
-      break;
+    this->CheckNarrowPassageSample(vid);
   }
+  // If the next node is invalid, add to obstacle roadmap. Toggle validity
+  // while connecting.
+  else {
+    const VID vid = this->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);
 
-  stats->StopClock("Map Generation");
-
-  if(this->m_debug) {
-    stats->PrintClock("MapGeneration", std::cout);
-    std::cout<<"\nEnd Running TogglePRMStrategy::"<<std::endl;
+    this->GetMPLibrary()->ToggleValidity();
+    ConnectHelper(false, vid);
+    this->GetMPLibrary()->ToggleValidity();
   }
 }
 
-// Outputs data after Toggle PRM strategy finishes
+/*--------------------------------- Helpers ----------------------------------*/
+
 template <typename MPTraits>
 void
-TogglePRMStrategy<MPTraits>::Finalize() {
-  if(this->m_debug) std::cout << "\nFinalizing TogglePRMStrategy::" << std::endl;
+TogglePRMStrategy<MPTraits>::
+GenerateNodes() {
+  const std::string callee = "TogglePRMStrategy::GenerateNodes";
+  MethodTimer mt(this->GetStatClass(), callee);
 
-  // Output two final maps
-  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
-  this->GetBlockRoadmap()->Write(this->GetBaseFilename() + ".block.map", this->GetEnvironment());
+  auto vc = this->GetValidityChecker(m_vcLabel);
 
-  // Output stats
-  std::string str = this->GetBaseFilename() + ".stat";
-  std::ofstream osStat(str.c_str());
-  osStat << "Statistics" << std::endl;
-  StatClass* stats = this->GetStatClass();
-  stats->PrintAllStats(osStat, this->GetRoadmap());
-  stats->PrintClock("Map Generation", osStat);
-  osStat.close();
+  // Use each sampler to generate nodes.
+  std::vector<CfgType> outNodes;
+  for(auto& sampler : this->m_samplers) {
+    outNodes.clear();
 
-  if(this->m_debug) std::cout << "\nEnd Finalizing TogglePRMStrategy" << std::endl;
-}
-
-// Helper method, generates nodes
-template <typename MPTraits>
-void
-TogglePRMStrategy<MPTraits>::GenerateNodes(deque<std::pair<std::string, CfgType> >& _queue) {
-
-  StatClass* stats = this->GetStatClass();
-  std::stringstream clockName;
-  clockName << "Node Generation";
-  stats->StartClock(clockName.str());
-
-  // Go through list of samplers
-  typedef std::map<std::string, std::pair<int,int> >::iterator SIT;
-  for(auto&  sampler : m_samplerLabels) {
-    auto smp = this->GetSampler(sampler.first);
-    std::vector<CfgType> outNodes;
-
-    std::string callee = "TogglePRM::GenerateNodes";
     // Generate nodes for this sampler
-    std::stringstream samplerClockName;
-    samplerClockName << "Sampler::" << sampler.first;
-    stats->StartClock(samplerClockName.str());
-
-    smp->Sample(sampler.second.first, sampler.second.second,
+    auto s = this->GetSampler(sampler.label);
+    s->Sample(sampler.count, sampler.attempts,
         this->GetEnvironment()->GetBoundary(),
         std::back_inserter(outNodes), std::back_inserter(outNodes));
 
-    stats->StopClock(samplerClockName.str());
-
-    if(this->m_debug) {
-      std::cout << "\n\t" << this->GetRoadmap()->GetGraph()->get_num_vertices() << " vertices " << std::endl;
-      std::cout << "\n\t";
-      stats->PrintClock(samplerClockName.str(), std::cout);
-    }
-
     // Add nodes to queue
-    for(auto&  sample : outNodes) {
-
+    for(auto& sample : outNodes) {
       // If not validated yet, determine validity
       if(!sample.IsLabel("VALID"))
-        this->GetValidityChecker(m_vcLabel)->IsValid(sample, callee);
+        vc->IsValid(sample, callee);
 
-      // Put nodes into queue, keeping track of validity
-      if(sample.GetLabel("VALID")) {
-        if(m_priority) // If desired, give valid nodes priority
-          _queue.push_front(std::make_pair("valid", sample));
-        else
-          _queue.push_back(std::make_pair("valid", sample));
-      }
-      else
-        _queue.push_back(std::make_pair("invalid", sample));
+      Enqueue(sample);
     }
   }
-  stats->StopClock(clockName.str());
-  if(this->m_debug) stats->PrintClock(clockName.str(), std::cout);
 }
 
-// Helper method to connect a vertex to correct roadmap
+
 template <typename MPTraits>
 void
-TogglePRMStrategy<MPTraits>::Connect(std::pair<std::string, VID> _vid,
-    std::vector<VID>& _allvids, deque<std::pair<std::string, CfgType> >& _queue) {
-
-  StatClass* stats = this->GetStatClass();
-  std::stringstream clockName;
-  clockName << "Node Connection";
-  stats->StartClock(clockName.str());
+TogglePRMStrategy<MPTraits>::
+ConnectHelper(const bool _valid, const VID _vid) {
+  MethodTimer mt(this->GetStatClass(), "TogglePRMStrategy::ConnectHelper");
 
   // Grab correct set of connectors depending on vertex validity
-  std::vector<std::string> connectorLabels = (_vid.first=="valid" ? m_connectorLabels : m_colConnectorLabels);
+  const auto& connectorLabels = _valid ? this->m_connectorLabels
+                                       : m_colConnectorLabels;
 
   // Loop through each connector
-  for(std::vector<std::string>::iterator i = connectorLabels.begin(); i != connectorLabels.end(); ++i) {
+  std::vector<CfgType> collision;
+  for(const auto& label : connectorLabels) {
+    collision.clear();
 
-    auto connector = this->GetConnector(*i);
-
-    std::stringstream connectorClockName;
-    connectorClockName << "Connector::" << *i;
-    stats->StartClock(connectorClockName.str());
-
-    std::vector<VID> nodesVID;
-    nodesVID.push_back(_vid.second);
-    std::vector<CfgType> collision, valid;
-
-    // Connect vertex using the connector
+    // Try to connect _vid using this connector.
+    auto connector = this->GetConnector(label);
     connector->Connect(
-        _vid.first=="valid" ? this->GetRoadmap() : this->GetBlockRoadmap(),
-        nodesVID.begin(), nodesVID.end(), _allvids.begin(), _allvids.end(),
-        true, std::back_inserter(collision));
+        _valid ? this->GetRoadmap() : this->GetBlockRoadmap(),
+        _vid,
+        std::back_inserter(collision));
 
-    if(this->m_debug) {
-      std::cout << "\n\nCollision Nodes from connecting: " << collision.size() << std::endl;
-      std::cout << "Adding " << collision.size() << " collision nodes" << std::endl;
-    }
-
-    // Add witnesses to queue, saving their validities
-    for(auto cit = collision.begin(); cit != collision.end(); ++cit) {
-      if(cit->IsLabel("VALID") && cit->GetLabel("VALID")) {
-        if(m_priority)
-          _queue.push_front(std::make_pair("valid", *cit));
-        else
-          _queue.push_back(std::make_pair("valid", *cit));
-      }
-      else if(cit->IsLabel("VALID") && !cit->GetLabel("VALID"))
-        _queue.push_back(std::make_pair("invalid", *cit));
-      else if(this->m_debug)
-        std::cerr << "In TogglePRMStrategy::Connect(), collision not yet validated?! (Shouldn't happen)" << std::endl;
-    }
-
-    stats->StopClock(connectorClockName.str());
-    if(this->m_debug) {
-      std::cout << "Freemap: " << this->GetRoadmap()->GetGraph()->get_num_edges() << " edges, "
-        << this->GetRoadmap()->GetGraph()->GetNumCCs() << " connected components" << std::endl;
-      std::cout << "\t";
-      std::cout << "Blockmap: " << this->GetBlockRoadmap()->GetGraph()->get_num_edges() << " edges, "
-        << this->GetBlockRoadmap()->GetGraph()->GetNumCCs() << " connected components" << std::endl;
-      std::cout << "\t";
-      stats->PrintClock(connectorClockName.str(), std::cout);
-    }
+    // Add collision witnesses to queue.
+    for(const auto& cfg : collision)
+      Enqueue(cfg);
   }
-
-  stats->StopClock(clockName.str());
-  if(this->m_debug) stats->PrintClock(clockName.str(), std::cout);
 }
+
+
+template <typename MPTraits>
+void
+TogglePRMStrategy<MPTraits>::
+Enqueue(const CfgType& _cfg) {
+  // Ensure this configuration was validated.
+  if(!_cfg.IsLabel("VALID"))
+    throw RunTimeException(WHERE) << "Collision not yet validated, "
+                                  << "shouldn't happen.";
+
+  // Note: the 'VALID' label doesn't change when the validity is toggled.
+  // Valid always means collision-free here regardless of toggling.
+  if(!_cfg.GetLabel("VALID"))
+    m_queue.emplace_back(false, _cfg);
+  else if(m_priority)
+    m_queue.emplace_front(true, _cfg);
+  else
+    m_queue.emplace_back(true, _cfg);
+}
+
+/*----------------------------------------------------------------------------*/
 
 #endif

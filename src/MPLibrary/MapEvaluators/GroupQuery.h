@@ -1,14 +1,11 @@
-#ifndef GROUP_QUERY_H_
-#define GROUP_QUERY_H_
+#ifndef PMPL_GROUP_QUERY_H_
+#define PMPL_GROUP_QUERY_H_
 
 #include "QueryMethod.h"
 
-#include "MPLibrary/LocalPlanners/LPOutput.h"
-#include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/SSSP.h"
 
-#include "containers/sequential/graph/algorithms/astar.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlike Query Method, GroupQuery is not yet set up to evaluate a group
@@ -19,6 +16,9 @@
 /// Only GeneratePath has been implemented for this, and this is not a valid
 /// query evaluation as it stands. This is intended for path-building
 /// functionality alone.
+///
+/// @todo Fix this so that it works like the other queries, or homogenize
+///       the two.
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -32,10 +32,7 @@ class GroupQuery : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType       CfgType;
     typedef typename MPTraits::GroupRoadmapType   GroupRoadmapType;
     typedef typename MPTraits::GroupWeightType    WeightType;
-
-    typedef typename GroupRoadmapType::VID       VID;
-
-    typedef stapl::sequential::map_property_map<GroupRoadmapType, size_t> ColorMap;
+    typedef typename GroupRoadmapType::VID        VID;
 
     ///@}
     ///@name Construction
@@ -46,24 +43,26 @@ class GroupQuery : public MapEvaluatorMethod<MPTraits> {
     virtual ~GroupQuery() = default;
 
     ///@}
-    ///@name MPBaseObject Overrides
+    ///@name MapEvaluator Overrides
     ///@{
-
-    virtual void Print(ostream& _os) const override;
 
     /// Interface function for MapEvaluatorMethod. The function of GroupQuery
     /// is not to actually evaluate a group roadmap for now, but rather for
     /// building paths with group cfgs/vids.
-    virtual bool operator()() override {
-      throw RunTimeException(WHERE, "Not to be used as a map evaluator in its "
-                                    "current state!");
-    }
+    virtual bool operator()() override;
 
     ///@}
     ///@name Query Interface
     ///@{
 
     std::vector<VID> GeneratePath(const VID _start, const VID _end);
+
+    ///@}
+
+  protected:
+
+    ///@name Helpers
+    ///@{
 
     double StaticPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
@@ -73,9 +72,6 @@ class GroupQuery : public MapEvaluatorMethod<MPTraits> {
 
     ///@}
 
-  protected:
-
-    std::string m_dmLabel;    ///< Distance metric label
 };
 
 /*----------------------------- Construction ---------------------------------*/
@@ -93,13 +89,15 @@ GroupQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("GroupQuery");
 }
 
-/*--------------------------- MPBaseObject Overrides -------------------------*/
+/*-------------------------- MapEvaluator Overrides --------------------------*/
 
 template <typename MPTraits>
-void
+bool
 GroupQuery<MPTraits>::
-Print(ostream& _os) const {
-  MapEvaluatorMethod<MPTraits>::Print(_os);
+operator()() {
+  throw RunTimeException(WHERE) << "Not to be used as a map evaluator in its "
+                                << "current state!";
+  return false;
 }
 
 /*--------------------------- Query Interface --------------------------------*/
@@ -162,21 +160,13 @@ GeneratePath(const VID _start, const VID _end) {
   return path;
 }
 
-
+/*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
 double
 GroupQuery<MPTraits>::
 StaticPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  // Check if Distance Metric has been defined. If so use the Distance Metric's
-  // Edge Weight Function
-  if(!(m_dmLabel.empty())) {
-    auto dm = this->GetDistanceMetric(m_dmLabel);
-    const double edgeWeight = dm->EdgeWeight(_ei->source(), _ei->target());
-    return edgeWeight;
-  }
-
   // Compute the new 'distance', which is the number of timesteps at which
   // the robot would reach the target node.
   const double edgeWeight  = _ei->property().GetWeight(),

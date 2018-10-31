@@ -1,5 +1,5 @@
-#ifndef DISASSEMBLY_METHOD_H_
-#define DISASSEMBLY_METHOD_H_
+#ifndef PMPL_DISASSEMBLY_METHOD_H_
+#define PMPL_DISASSEMBLY_METHOD_H_
 
 #include "MPStrategyMethod.h"
 #include "DisassemblyRRTStrategy.h"
@@ -8,11 +8,12 @@
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/RobotGroup/GroupUtils.h"
-#include <algorithm> //for std::find
+
+#include <algorithm>
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief Interface for disassembly planning
+/// Interface for disassembly planning
 ///
 /// It holds the main parameters and contains the 3 main functions:
 /// SelectExpansionCfg, SelectSubassembly and Expand
@@ -20,7 +21,9 @@
 /// This is the basis for each method in:
 /// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
 /// “A general and flexible search framework for disassembly planning,”
-/// in International Conference on Robotics and Automation, May 2018.
+/// ICRA 2018.
+///
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
@@ -189,20 +192,22 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     virtual ~DisassemblyMethod() {}
 
     ///@}
-    ///@name MPBaseObject Overrides
-    ///@{
-
-    virtual void ParseXML(XMLNode& _node);
-    virtual void Print(std::ostream& _os) const;
-
-    virtual void Initialize() override;
-    virtual void Finalize();
 
     list<DisassemblyNode>& GetDisassemblyNodes() {return m_disNodes;}
+
+    bool IsSuccessful() const {return m_successful;}
 
     void PrintDisassemblyTree();
 
   protected:
+
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+    virtual void Initialize() override;
+    virtual void Finalize() override;
+
     ///@}
     ///@name virtual disassembly methods
     ///@{
@@ -350,7 +355,6 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     std::string m_dmLabel;          ///< The distance metric label.
     std::string m_rrtStrategyLabel; ///< The RRT label for extensions.
 
-    std::string m_strategyLabel;    ///< The strategy label (needed for state ME)
     std::string m_stateMELabel;
 
     size_t m_numParts = 0;       ///< number of free Parts of the robot
@@ -436,6 +440,9 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     /// parts, and then do the matching scheme used for predefined subassemblies
     /// NOTE: This will be superseded by predefined subassemblies!
     bool m_generateSubassembliesOnce{true};
+
+    /// Hack for tracking success.
+    bool m_successful{false};
 };
 
 template <typename MPTraits>
@@ -463,13 +470,6 @@ DisassemblyMethod(
 template <typename MPTraits>
 DisassemblyMethod<MPTraits>::
 DisassemblyMethod(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
-  ParseXML(_node);
-}
-
-template <typename MPTraits>
-void
-DisassemblyMethod<MPTraits>::
-ParseXML(XMLNode& _node) {
   const double doubleLim = numeric_limits<double>::max();
   m_vcLabel = _node.Read("vcLabel", true, m_vcLabel, "Validity Test Method");
   m_singleVcLabel = _node.Read("singleVcLabel", true, m_singleVcLabel,
@@ -482,8 +482,6 @@ ParseXML(XMLNode& _node) {
                              "Contact distance");
   m_neighborDist = _node.Read("neighborDist", false, 0.1, 0., doubleLim,
                               "Neighbor distance");
-
-  m_strategyLabel = _node.Read("label", true, "", "Strategy label");
 
   //This is needed because otherwise we cannot set the strategyLabel that is
   // needed for proper evaluation using this ME.
@@ -621,19 +619,21 @@ Initialize() {
 
   m_nonObstacleDirs.clear();
 
-  this->m_successful = false;
+  m_successful = false;
 
+  /// @todo This shouldn't be needed, everything is initialized at the top of
+  ///       the library's solve call.
   for(std::string& label : this->m_meLabels) {
     auto me = this->GetMapEvaluator(label);
     me->Initialize();
-    if(!m_stateMELabel.empty()) {
-      auto stateME = dynamic_pointer_cast<StrategyStateEvaluator<MPTraits> > (
-                     this->GetMapEvaluator(m_stateMELabel));
-      if(this->m_debug)
-        std::cout << "Setting " << m_stateMELabel << "'s label to "
-                  << m_strategyLabel << std::endl;
-      stateME->m_strategyLabel = m_strategyLabel;
-    }
+  }
+  if(!m_stateMELabel.empty()) {
+    auto stateME = dynamic_pointer_cast<StrategyStateEvaluator<MPTraits> > (
+                   this->GetMapEvaluator(m_stateMELabel));
+    if(this->m_debug)
+      std::cout << "Setting " << m_stateMELabel << "'s label to "
+                << this->GetLabel() << std::endl;
+    stateME->m_strategyLabel = this->GetLabel();
   }
 
   //Initialize everything:
@@ -697,7 +697,7 @@ void
 DisassemblyMethod<MPTraits>::
 Finalize() {
   //Always print out the overall success:
-  const std::string statusString = this->m_successful ? "" : "not ";
+  const std::string statusString = m_successful ? "" : "not ";
   std::cout << std::endl << std::endl << "Disassembling " << statusString
             << " completed!!!" << std::endl << std::endl << std::endl;
 
@@ -1081,7 +1081,7 @@ ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID,
     throw RunTimeException(WHERE, "Error! dynamic pointer cast failed for "
                                   "sampler!");
 
-  auto rrtStrategy = dynamic_pointer_cast<DisassemblyRRTStrategy<MPTraits> >(
+  auto rrtStrategy = dynamic_pointer_cast<DisassemblyRRTStrategy<MPTraits>>(
                        this->GetMPStrategy(m_rrtStrategyLabel));
 
   //1. Make a whole new MPSolution and save the one currently there.

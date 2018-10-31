@@ -1,9 +1,8 @@
-#ifndef DYNAMIC_REGION_SAMPLER_H_
-#define DYNAMIC_REGION_SAMPLER_H_
+#ifndef PMPL_DYNAMIC_REGION_SAMPLER_H_
+#define PMPL_DYNAMIC_REGION_SAMPLER_H_
 
 #include "SamplerMethod.h"
 
-#include "MPLibrary/MapEvaluators/RRTQuery.h"
 #include "MPLibrary/MPTools/ReebGraphConstruction.h"
 #include "MPLibrary/MPTools/RegionKit.h"
 #include "MPLibrary/MPTools/SkeletonClearanceUtility.h"
@@ -26,6 +25,9 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
+    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename GraphType::VID         VID;
 
     using typename SamplerMethod<MPTraits>::InputIterator;
     using typename SamplerMethod<MPTraits>::OutputIterator;
@@ -289,14 +291,33 @@ LazyInitialize() {
     m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
   }
 
-  // Get the start and goal point from the query.
-  /// @TODO Support this for RRT and PRM.
-  auto query = static_cast<RRTQuery<MPTraits>*>(
-                                       this->GetMapEvaluator("RRTQuery").get());
-  if(!query)
-    throw RunTimeException(WHERE, "RRTQuery not in map evaluators.");
-  const Point3d start = query->GetQuery()[0].GetPoint(),
-                goal  = query->GetQuery()[1].GetPoint();
+  // Only support single-goal tasks; this is inherent to the method. The problem
+  // is solvable but hasn't been solved yet.
+  const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+  if(goalConstraints.size() != 1)
+    throw RunTimeException(WHERE) << "Only supports single-goal tasks. "
+                                  << "Multi-step tasks will need new skeletons "
+                                  << "for each sub-component.";
+
+  // Get the start and goal point from the goal tracker.
+  // Try to prevent non-point tasks by requiring single VIDs for the start and
+  // goal.
+  auto goalTracker = this->GetGoalTracker();
+  const auto& startVIDs = goalTracker->GetStartVIDs();
+  const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
+  if(startVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
+                                  << startVIDs.size() << " were found.";
+  if(goalVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
+                                  << goalVIDs.size() << " were found.";
+
+  // Get the start and goal vertices.
+  auto g = this->GetRoadmap()->GetGraph();
+  const VID startVID = *startVIDs.begin(),
+            goalVID  = *goalVIDs.begin();
+  const Point3d start = g->GetVertex(startVID).GetPoint(),
+                goal  = g->GetVertex(goalVID).GetPoint();
 
   // Direct the workspace skeleton outward from the starting point.
   m_skeleton = m_skeleton.Direct(start);

@@ -1,15 +1,20 @@
-#ifndef MEDIAL_AXIS_EXTENDER_H_
-#define MEDIAL_AXIS_EXTENDER_H_
+#ifndef PMPL_MEDIAL_AXIS_EXTENDER_H_
+#define PMPL_MEDIAL_AXIS_EXTENDER_H_
 
 #include "ExtenderMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Extends along medial axis of @cfree.
+/// Extends along medial axis of @cfree.
+///
+/// @todo This method needs to have its dedicated MA tool removed and replaced
+///       with an MA label (fetch from MPTools).
 ///
 /// Extend along the medial axis of @cfree from \f$q_{near}\f$ towards
 /// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
 /// \f$\Delta q\f$ is extended, or no progress is made.
+///
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MedialAxisExtender : public ExtenderMethod<MPTraits> {
@@ -25,10 +30,7 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility =
-        MedialAxisUtility<MPTraits>(),
-        double _min = .001, double _max = 1, double _extendDist = 0.5,
-        size_t _maxIntermediates = 10, const string& _lpLabel = "");
+    MedialAxisExtender();
 
     MedialAxisExtender(XMLNode& _node);
 
@@ -68,12 +70,7 @@ class MedialAxisExtender : public ExtenderMethod<MPTraits> {
 
 template <typename MPTraits>
 MedialAxisExtender<MPTraits>::
-MedialAxisExtender(const MedialAxisUtility<MPTraits>& _medialAxisUtility,
-    double _min, double _max, double _extendDist,
-    size_t _maxIntermediates, const string& _lpLabel) :
-    ExtenderMethod<MPTraits>(_min, _max), m_medialAxisUtility(_medialAxisUtility),
-    m_extendDist(_extendDist), m_maxIntermediates(_maxIntermediates),
-    m_lpLabel(_lpLabel) {
+MedialAxisExtender() {
   this->SetName("MedialAxisExtender");
 }
 

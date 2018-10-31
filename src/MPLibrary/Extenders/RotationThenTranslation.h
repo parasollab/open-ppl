@@ -1,7 +1,8 @@
-#ifndef ROTATION_THEN_TRANSLATION_H_
-#define ROTATION_THEN_TRANSLATION_H_
+#ifndef PMPL_ROTATION_THEN_TRANSLATION_H_
+#define PMPL_ROTATION_THEN_TRANSLATION_H_
 
 #include "BasicExtender.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extend all rotational DOF before extending all translational DOF.
@@ -14,6 +15,7 @@
 /// \f$s = 0\f$. Growing toward \f$q_{dir}\f$ can be seen as extending from
 /// \f$q_{near}\f$ to \f$q_{rand1}\f$ which is only a change in orientation
 /// followed by a translation from \f$q_{rand1}\f$ to \f$q_{rand}\f$.
+///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -30,8 +32,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
     ///@name Construction
     ///@{
 
-    RotationThenTranslation(const string& _dmLabel = "",
-        const string& _vcLabel = "", double _min = .001, double _max = 1);
+    RotationThenTranslation();
 
     RotationThenTranslation(XMLNode& _node);
 
@@ -51,9 +52,7 @@ class RotationThenTranslation : public BasicExtender<MPTraits> {
 
 template <typename MPTraits>
 RotationThenTranslation<MPTraits>::
-RotationThenTranslation(const string& _dmLabel, const string& _vcLabel,
-    double _min, double _max) :
-    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max) {
+RotationThenTranslation() {
   this->SetName("RotationThenTranslation");
 }
 

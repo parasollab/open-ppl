@@ -1,13 +1,14 @@
-#ifndef DISASSEMBLY_RRT_STRATEGY_H_
-#define DISASSEMBLY_RRT_STRATEGY_H_
-
-#include <iomanip>
+#ifndef PMPL_DISASSEMBLY_RRT_STRATEGY_H_
+#define PMPL_DISASSEMBLY_RRT_STRATEGY_H_
 
 #include "MPStrategyMethod.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MPStrategies/DisassemblyMethod.h"
 #include "MPLibrary/Samplers/MaskedSamplerMethodGroup.h"
+
+#include <iomanip>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The RRT algorithm grows one or more trees from a set of root nodes to solve
@@ -21,15 +22,12 @@
 ///                             Trees: A New Tool for Path Planning." TR 98-11,
 ///                             Computer Science Dept., Iowa State Univ., 1998.
 ///
-/// @ingroup MotionPlanningStrategies
 ///
-///
-/// This is sub-method used in the below publication. Sub-method because it is
+/// This is sub-method for disassembly methods. Sub-method because it is
 /// not designed to be used on its own, but rather to be called from a
 /// disassembly method in order to try an RRT removal.
-/// T. Ebinger, S. Kaden, S. Thomas, R. Andre, N. M. Amato, and U. Thomas,
-/// “A general and flexible search framework for disassembly planning,”
-/// in International Conference on Robotics and Automation, May 2018.
+///
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
@@ -77,14 +75,6 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const;
 
     ///@}
-    ///@name MPStrategy Overrides
-    ///@{
-
-    virtual void Initialize() override;
-    virtual void Iterate() override;
-    virtual void Finalize() override;
-
-    ///@}
 
     /// We need the start Cfg just for initializing the tree for disassembly
 //    const CfgType* m_startCfg{nullptr};
@@ -100,8 +90,18 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
       m_returnBestPathOnFailure = _set;
     }
 
+    bool IsSuccessful() const {return m_successful;}
+
   protected:
 
+    ///@name MPStrategy Overrides
+    ///@{
+
+    virtual void Initialize() override;
+    virtual void Iterate() override;
+    virtual void Finalize() override;
+
+    ///@}
     ///@name Direction Helpers
     ///@{
 
@@ -184,7 +184,6 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     //No number or attempts is recorded because we need single
     // disassembly samples.
 
-    std::string m_strategyLabel; ///< This strategy's label
     std::string m_stateMELabel; ///< The ME label for the StrategyStateEvaluator used
 
     /// The ME label that determines the successful flag of this strategy
@@ -217,6 +216,8 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     //Appends some RRT stats to a file if true in Finalize()
     bool m_recordNodeCountGenerated{false};
 
+    bool m_successful{false};
+
     ///@}
     ///@name Tree Data
     ///@{
@@ -229,12 +230,6 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     size_t m_successes{0};  ///< The count of successful extensions.
     size_t m_trials{0};     ///< The count of attempted extensions.
-
-    ///@}
-    ///@name Query
-    ///@{
-
-    RRTQuery<MPTraits>* m_query{nullptr}; ///< The query object.
 
     ///@}
 };
@@ -267,8 +262,6 @@ DisassemblyRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
   m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler label (should "
                                                         "be a masked version)");
-
-  m_strategyLabel = _node.Read("label", true, "NOT SET", "Strategy's label");
 
   m_successfulCheckME = _node.Read("successfulCheckME", true, "NOT SET",
       "ME that determines the setting of the strategy's successful flag (should"
@@ -334,6 +327,7 @@ Initialize() {
   }
 
   // Clear all state variables to avoid problems when running multiple times.
+  m_successful = false;
   m_successes = 0;
   m_trials = 0;
 
@@ -347,31 +341,25 @@ Initialize() {
 
   // Note that this->m_successful gets set to false in MPStrategyMethod.
 
+  /// @todo This shouldn't be needed, everything is initialized at the top of
+  ///       the library's solve call.
   for(string& label : this->m_meLabels) {
-    if(this->m_debug)
-      std::cout << "Setting ME's label to " << m_strategyLabel << std::endl;
     auto me = this->GetMapEvaluator(label);
     me->Initialize();
-    if(!m_stateMELabel.empty()) {
-      auto stateME = dynamic_pointer_cast<StrategyStateEvaluator<MPTraits> > (
-                     this->GetMapEvaluator(m_stateMELabel));
-      if(this->m_debug)
-        std::cout << "Setting " << m_stateMELabel << "'s label to "
-                  << m_strategyLabel << std::endl;
-      stateME->m_strategyLabel = m_strategyLabel;
-    }
+  }
+  if(!m_stateMELabel.empty()) {
+    auto stateME = dynamic_pointer_cast<StrategyStateEvaluator<MPTraits> > (
+                   this->GetMapEvaluator(m_stateMELabel));
+    if(this->m_debug)
+      std::cout << "Setting " << m_stateMELabel << "'s label to "
+                << this->GetLabel() << std::endl;
+    stateME->m_strategyLabel = this->GetLabel();
   }
 
   MapEvaluatorPointer me = this->GetMapEvaluator(m_successfulCheckME);
   me->SetActiveRobots(m_activeRobots);
 
-  // Check for query info.
-  m_query = nullptr;
-
-  if(this->UsingQuery()) { //Kept from original RRT to ensure a query isn't used
-    throw RunTimeException(WHERE, "Not set up to handle queries!");
-  }
-  else if(!m_samplerLabel.empty() && m_startGroupCfg && m_startGroupCfg->DOF() != 0) {
+  if(!m_samplerLabel.empty() && m_startGroupCfg && m_startGroupCfg->DOF() != 0) {
     // the startCfg will be the root in this roadmap, and we only use one tree.
     m_startGroupCfgVID = g->AddVertex(*m_startGroupCfg);
     m_tree = TreeType(1, m_startGroupCfgVID);
@@ -380,6 +368,8 @@ Initialize() {
     throw RunTimeException(WHERE, "RRT strategy for disassembly not "
                                   "initialized correctly!");
 
+  /// @todo This shouldn't be needed, everything is initialized at the top of
+  ///       the library's solve call. It is also done above.
   //There is some state built into our ME's for RRT, so ensure it starts over.
   for(auto label : this->m_meLabels)
     this->GetMapEvaluator(label)->Initialize();
@@ -478,8 +468,8 @@ Finalize() {
 
   // Active robots is set in Initialize() for this:
   MapEvaluatorPointer me = this->GetMapEvaluator(m_successfulCheckME);
-  this->m_successful = me->operator()();
-  if(this->m_successful) {
+  m_successful = me->operator()();
+  if(m_successful) {
     //Create a temp query to make the path through the group's c-space.
     GroupQuery<MPTraits> tempQuery;
 

@@ -1,5 +1,5 @@
-#ifndef BOUNDARY_CONSTRAINT_H_
-#define BOUNDARY_CONSTRAINT_H_
+#ifndef PMPL_BOUNDARY_CONSTRAINT_H_
+#define PMPL_BOUNDARY_CONSTRAINT_H_
 
 #include "Constraint.h"
 
@@ -29,6 +29,8 @@ class BoundaryConstraint : public Constraint {
     /// @param _r The robot to constrain.
     /// @param _node The node to parse.
     explicit BoundaryConstraint(Robot* const _r, XMLNode& _node);
+
+    BoundaryConstraint(const BoundaryConstraint& _other);
 
     virtual ~BoundaryConstraint();
 

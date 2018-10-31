@@ -12,7 +12,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Attempt an RRT local plan between two configurations.
 ///
-/// @todo Change use of this object to a substrategy.
+/// @todo Change use of this object to a substrategy. It does not meet the
+///       criteria for a local planner because it is non-deterministic. It also
+///       does not handle all the ways that MPLibrary can be configured - we
+///       probably need to implement substrategy there.
 ///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,49 +231,53 @@ IsConnectedFunc(
   StatClass* const stats = this->GetStatClass();
 
   stats->IncLPAttempts(this->GetNameAndLabel());
-  int cdCounter = 0;
 
   // TODO note that right now we will assume it will be connected at the end of
   // the RRT. This should probably change since we aren't guaranteed this,
   // though it should be possible is just about every case planned.
 
-  // Create a query using the destination as the goal.
-  RRTQuery<MPTraits> query({_c1, _c2}, {_c2});
-
   auto rrtStrategy = dynamic_pointer_cast< BasicRRTStrategy<MPTraits> >(
                                        this->GetMPStrategy(m_rrtStrategyLabel));
-  rrtStrategy->SetRRTQuery(&query);
+  rrtStrategy->EnableOutputFiles(false);
+
+  // Store the current task and solution.
+  MPTask* const originalTask = this->GetMPLibrary()->GetTask();
+  MPSolution* const originalSolution = this->GetMPLibrary()->GetMPSolution();
 
   // Set the task since the robot won't have one in the solution yet, and RRT
   // will access it.
-  MPTask tempTask(_c1.GetRobot());
-  this->GetMPLibrary()->SetTask(&tempTask);
+  auto robot = _c1.GetRobot();
+  MPTask tempTask(robot);
+  MPSolution tempSolution(robot);
 
-  // Store the current solution.
-  MPSolution* const originalSolution = this->GetMPLibrary()->GetMPSolution();
-  MPSolution* rrtLPSolution = new MPSolution(_c1.GetRobot());
+  using ConstraintPtr = std::unique_ptr<CSpaceConstraint>;
+  tempTask.SetStartConstraint(ConstraintPtr(new CSpaceConstraint(robot, _c1)));
+  tempTask.AddGoalConstraint(ConstraintPtr(new CSpaceConstraint(robot, _c2)));
 
   // Swap the pointer in MPLibrary for the new MPSolution
-  this->GetMPLibrary()->SetMPSolution(rrtLPSolution);
+  this->GetMPLibrary()->SetTask(&tempTask);
+  this->GetMPLibrary()->SetMPSolution(&tempSolution);
+
+  // Reset the goal tracker.
+  this->GetGoalTracker()->Reset(tempSolution.GetRoadmap(robot), &tempTask);
 
   // Call operator() on the MPStrategy, which will solve it and place all
   // needed data in the new MPSolution.
   (*rrtStrategy)();
-  const bool connected = rrtStrategy->IsSuccessful();
 
   // Set the path found in lpOutput.
-  _lpOutput->m_path = rrtLPSolution->GetPath()->Cfgs();
+  _lpOutput->m_path = tempSolution.GetPath()->Cfgs();
 
   // Set the solution back to the original.
   this->GetMPLibrary()->SetMPSolution(originalSolution);
-  this->GetMPLibrary()->SetTask(nullptr);
+  this->GetMPLibrary()->SetTask(originalTask);
+  this->GetGoalTracker()->Reset(
+      originalSolution->GetRoadmap(originalTask->GetRobot()), originalTask);
 
-  if(connected)
-    stats->IncLPConnections(this->GetNameAndLabel());
-
-  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
-
-  return connected;
+  // This used to use the IsSuccessful member, which has been removed from
+  // MPStrategyMethod. I am assuming that finding a path equals success here
+  // based on the comments and my understanding of the method.
+  return !_lpOutput->m_path.empty();
 }
 
 

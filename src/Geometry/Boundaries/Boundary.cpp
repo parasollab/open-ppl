@@ -33,36 +33,33 @@ Factory(XMLNode& _node) {
   std::transform(space.begin(), space.end(), space.begin(), ::tolower);
   std::transform(shape.begin(), shape.end(), shape.begin(), ::tolower);
 
-  // Initialize the boundary object.
-  std::unique_ptr<Boundary> output;
-
   if(space == "cspace") {
     if(shape == "box")
-      output = std::unique_ptr<CSpaceBoundingBox>(
-          new CSpaceBoundingBox(_node));
+      return std::unique_ptr<CSpaceBoundingBox>(
+          new CSpaceBoundingBox(_node)
+      );
     else if(shape == "sphere")
-      output = std::unique_ptr<CSpaceBoundingSphere>(
-          new CSpaceBoundingSphere(_node));
-    else
-      throw ParseException(_node.Where(), "Unrecognized shape option '" + shape +
-          "'.");
+      return std::unique_ptr<CSpaceBoundingSphere>(
+          new CSpaceBoundingSphere(_node)
+      );
   }
   else if(space == "workspace") {
     if(shape == "box")
-      output = std::unique_ptr<WorkspaceBoundingBox>(
-          new WorkspaceBoundingBox(_node));
+      return std::unique_ptr<WorkspaceBoundingBox>(
+          new WorkspaceBoundingBox(_node)
+      );
     else if(shape == "sphere")
-      output = std::unique_ptr<WorkspaceBoundingSphere>(
-          new WorkspaceBoundingSphere(_node));
-    else
-      throw ParseException(_node.Where(), "Unrecognized shape option '" + shape +
-          "'.");
+      return std::unique_ptr<WorkspaceBoundingSphere>(
+          new WorkspaceBoundingSphere(_node)
+      );
   }
   else
-    throw ParseException(_node.Where(), "Unrecognized space option '" + space +
-        "'.");
+    throw ParseException(_node.Where()) << "Unrecognized space option '"
+                                        << space << "'.";
 
-  return output;
+  throw ParseException(_node.Where()) << "Unrecognized shape option '"
+                                      << shape << "'.";
+  return {nullptr};
 }
 
 /*--------------------------------- Scaling ----------------------------------*/

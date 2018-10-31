@@ -1,7 +1,6 @@
 #include "Constraint.h"
 #include "BoundaryConstraint.h"
 #include "CSpaceConstraint.h"
-#include "WorkspaceConstraint.h"
 
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -24,15 +23,12 @@ Factory(Robot* const _r, XMLNode& _node) {
 
   if(_node.Name() == "CSpaceConstraint")
     output = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(_r, _node));
-  else if(_node.Name() == "WorkspaceConstraint")
-    output = std::unique_ptr<WorkspaceConstraint>(
-        new WorkspaceConstraint(_r, _node));
   else if(_node.Name() == "BoundaryConstraint")
     output = std::unique_ptr<BoundaryConstraint>(
         new BoundaryConstraint(_r, _node));
   else
-    throw RunTimeException(WHERE, "Unrecognized constraint type '" +
-        _node.Name() + "'.");
+    throw RunTimeException(_node.Where()) << "Unrecognized constraint type '"
+                                          << _node.Name() << "'.";
 
   return output;
 }

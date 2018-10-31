@@ -8,15 +8,10 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true">
+    <Robot label="boxy" filename="3D/boxy.robot" nonholonomic="true"
+      maxLinearVelocity="3" maxAngularVelocity="1">
       <Agent type="roadmapfollowing"/>
     </Robot>
-
-    <!-- WARNING Support for multiple constraints is not yet implemented! -->
-    <!-- WARNING Workspace constraints are not finished and untested! -->
-    <!-- WARNING CSpace bounding box constraints are supported, but currently
-         the query method will just use the bounding box to sample a specific
-         goal configuration. -->
 
     <Task label="query" robot="boxy">
       <StartConstraints>
@@ -24,7 +19,8 @@
       </StartConstraints>
 
       <GoalConstraints>
-        <CSpaceConstraint point="0 10 0 0.2 0.8 0.5 0 0 0 0 0 0"/>
+        <BoundaryConstraint space="cspace" shape="sphere"
+          limits="[0 10 0 0.2 0.8 0.5 ; 2]"/>
       </GoalConstraints>
     </Task>
 
@@ -125,9 +121,16 @@
     </LocalPlanners>
 
     <Extenders>
-      <KinodynamicExtender label="KinoExtender" debug="true"
+      <KinodynamicExtender label="Best" debug="false"
         dmLabel="euclidean" vcLabel="rapid" fixed="false" best="true"
-        numSteps="10" minDist=".01"/>
+        numSteps="30" minDist=".01"/>
+      <KinodynamicExtender label="Random" debug="false"
+        dmLabel="euclidean" vcLabel="rapid" fixed="false" best="false"
+        numSteps="30" minDist=".01"/>
+      <MixExtender label="KinoExtender">
+        <Extender label="Best" probability=".75"/>
+        <Extender label="Random" probability=".25"/>
+      </MixExtender>
     </Extenders>
 
     <Metrics>
@@ -143,52 +146,50 @@
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
 
-      <RRTQuery label="RRTQuery" goalDist="4"
-        nfLabel="Nearest" exLabel="KinoExtender" vcLabel="pqp_solid" debug="true"/>
-      <ComposeEvaluator label="BoundedRRTQuery" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="RRTQuery"/>
+      <QueryMethod label="Query" debug="true"/>
+      <ComposeEvaluator label="BoundedQuery" operator="or">
+        <Evaluator label="TimeEval"/>
+        <Evaluator label="Query"/>
       </ComposeEvaluator>
     </MapEvaluators>
 
     <MPStrategies>
 
       <!-- Kindodynamic RRT -->
-      <BasicRRTStrategy label="RRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="DIRECTED_TREE" debug="true"
-        growGoals="false" extenderLabel="KinoExtender"
-        samplerLabel="UniformRandom">
-        <Evaluator label="RRTQuery"/>
+      <BasicRRTStrategy label="RRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        goalDmLabel="euclideanPosition" nfLabel="Nearest"
+        extenderLabel="KinoExtender"
+        growGoals="false" growthFocus="0.01">
+        <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
       <!-- DynamicDomainRRT -->
-      <DynamicDomainRRT label="DynamicDomainRRT"
-        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
-        extenderLabel="BERO" samplerLabel="UniformRandom" r="2">
-        <Evaluator label="BoundedRRTQuery"/>
+      <DynamicDomainRRT label="DynamicDomainRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        dmLabel="euclidean" goalDmLabel="euclideanPosition" nfLabel="Nearest"
+        extenderLabel="KinoExtender"
+        growGoals="false" growthFocus="0.01" r="2">
+        <Evaluator label="BoundedQuery"/>
       </DynamicDomainRRT>
 
       <!-- DynamicRegionRRT -->
-      <BasicRRTStrategy label="DynamicRegionRRT"
-        growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO"
-        samplerLabel="DynamicRegionSampler">
-        <Evaluator label="BoundedRRTQuery"/>
+      <BasicRRTStrategy label="DynamicRegionRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
+        goalDmLabel="euclideanPosition" nfLabel="Nearest"
+        extenderLabel="KinoExtender"
+        growthFocus="0.01">
+        <Evaluator label="BoundedQuery"/>
       </BasicRRTStrategy>
 
       <!-- Syclop -->
-      <Syclop label="Syclop"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom"
-        tmLabel="tm">
-        <Evaluator label="RRTQuery"/>
+      <Syclop label="Syclop" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        goalDmLabel="euclideanPosition" nfLabel="Nearest"
+        extenderLabel="KinoExtender"
+        tmLabel="tm"
+        growGoals="false" growthFocus="0.01">
+        <Evaluator label="Query"/>
       </Syclop>
 
       <ScratchStrategy label="scratch"/>

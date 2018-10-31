@@ -1,14 +1,14 @@
-#ifndef TRACE_OBSTACLE_H_
-#define TRACE_OBSTACLE_H_
+#ifndef PMPL_TRACE_OBSTACLE_H_
+#define PMPL_TRACE_OBSTACLE_H_
 
 #include "BasicExtender.h"
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Extend tangent to a workspace obstacle.
+/// Extend tangent to a workspace obstacle.
 ///
 /// Trace workspace obstacle. In this way of extending, the first
 /// colliding triangle is found after extending by @c BasicExtender. An obstacle
@@ -16,6 +16,8 @@
 /// collision. The source configuration is extended in that direction with a
 /// randomly generated orientation. This is useful when growing in areas where
 /// difficult movements are needed.
+///
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TraceObstacle : public BasicExtender<MPTraits> {
@@ -31,8 +33,7 @@ class TraceObstacle : public BasicExtender<MPTraits> {
     ///@name Construction
     ///@{
 
-    TraceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _min = .001, double _max = 1, bool _randomOrientation = true);
+    TraceObstacle();
 
     TraceObstacle(XMLNode& _node);
 
@@ -52,9 +53,7 @@ class TraceObstacle : public BasicExtender<MPTraits> {
 
 template <typename MPTraits>
 TraceObstacle<MPTraits>::
-TraceObstacle(const string& _dmLabel, const string& _vcLabel, double _min,
-    double _max, bool _randomOrientation) :
-    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max, _randomOrientation) {
+TraceObstacle() {
   this->SetName("TraceObstacle");
 }
 

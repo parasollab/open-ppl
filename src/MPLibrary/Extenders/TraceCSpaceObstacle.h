@@ -1,11 +1,11 @@
-#ifndef TRACECSPACEOBSTACLE_H_
-#define TRACECSPACEOBSTACLE_H_
+#ifndef PMPL_TRACE_CSPACE_OBSTACLE_H_
+#define PMPL_TRACE_CSPACE_OBSTACLE_H_
 
 #include "BasicExtender.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Extenders
-/// @brief Extend in a direction tangent to @cobst.
+/// Extend in a direction tangent to @cobst.
 ///
 /// Trace @cobst. In this growth method, we try to find a vector tangent to a
 /// @coboundary. It is not feasible to compute @coboundary, so here we
@@ -14,6 +14,8 @@
 /// collision configurations \f$q_1\f$ and \f$q_2\f$. The @cobst vector is
 /// calculated as the vector connecting the colliding configurations:
 /// \f$C = q_2 - q_1\f$. In this way \f$q_{dir} = q_{near} + C\f$.
+///
+/// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
@@ -29,8 +31,7 @@ class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
     ///@name Construction
     ///@{
 
-    TraceCSpaceObstacle(const string& _dmLabel = "", const string& _vcLabel = "",
-        double _min = .001, double _max = 1);
+    TraceCSpaceObstacle();
 
     TraceCSpaceObstacle(XMLNode& _node);
 
@@ -50,9 +51,7 @@ class TraceCSpaceObstacle : public BasicExtender<MPTraits> {
 
 template <typename MPTraits>
 TraceCSpaceObstacle<MPTraits>::
-TraceCSpaceObstacle(const string& _dmLabel, const string& _vcLabel,
-    double _min, double _max) :
-    BasicExtender<MPTraits>(_dmLabel, _vcLabel, _min, _max) {
+TraceCSpaceObstacle() {
   this->SetName("TraceCSpaceObstacle");
 }
 

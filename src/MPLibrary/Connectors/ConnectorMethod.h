@@ -161,19 +161,6 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///                         NF model for finding neighbors with advanced
     ///                         NFMethods.
     /// @param _collision Output iterator to store collision witnesses
-    ///
-    /// @usage
-    /// @code
-    /// ConnectorPointer c = this->GetConnector(m_cLabel);
-    /// ColorMapType cm;
-    /// std::vector<VID> c1, c2;
-    /// bool b;
-    /// std::vector<CfgType> col;
-    /// c->Connect(this->GetRoadmap(),
-    ///            this->GetStatClass(),
-    ///            cmap, c1.begin(), c1.end(), c2.begin(), c2.end(),
-    ///            b, back_inserter(col));
-    /// @endcode
     template <typename InputIterator1, typename InputIterator2,
               typename OutputIterator = NullOutputIterator>
     void Connect(RoadmapType* _r,

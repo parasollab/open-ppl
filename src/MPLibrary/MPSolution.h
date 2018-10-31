@@ -1,5 +1,5 @@
-#ifndef MP_SOLUTION_TYPE_H_
-#define MP_SOLUTION_TYPE_H_
+#ifndef PMPL_MP_SOLUTION_TYPE_H_
+#define PMPL_MP_SOLUTION_TYPE_H_
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
@@ -17,8 +17,12 @@ class Robot;
 /// roadmaps, a path, and a local obstacle map for each robot. Also includes a
 /// stat class for performance tracking.
 ///
-/// Currently this object can represent a solution for either a single robot or
-/// a group. To be homogenized after the groups code matures.
+/// @todo Currently this object can represent a solution for each single robot
+///       and also a single robot group. Extend support to include multiple
+///       robot groups.
+///
+/// @note This object makes only one stat class, which is shared across all
+///       usees.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MPSolutionType final {
@@ -45,6 +49,8 @@ class MPSolutionType final {
       RobotSolution() = default;
 
       /// Initialize a solution for a single robot.
+      /// @param _robot The robot.
+      /// @param _stats The stats object for timing.
       RobotSolution(Robot* const _robot, StatClass* const _stats);
 
     };
@@ -101,7 +107,7 @@ class MPSolutionType final {
     Robot* m_robot{nullptr};            ///< The robot executing this task.
     RobotGroup* m_group{nullptr};       ///< The robot group.
 
-    std::unique_ptr<StatClass>  m_stats; ///< Performance tracking.
+    std::unique_ptr<StatClass> m_stats; ///< Performance tracking.
 
     /// The solution object for each robot.
     std::unordered_map<Robot*, RobotSolution> m_solutions;
@@ -130,7 +136,7 @@ RobotSolution(Robot* const _robot, StatClass* const _stats)
 template <typename MPTraits>
 MPSolutionType<MPTraits>::
 MPSolutionType(Robot* const _r)
-  : m_robot(_r), m_group(nullptr), m_stats(new StatClass()) {
+  : m_robot(_r), m_stats(new StatClass()) {
   m_solutions[m_robot] = std::move(RobotSolution(m_robot, m_stats.get()));
 }
 
@@ -138,7 +144,7 @@ MPSolutionType(Robot* const _r)
 template <typename MPTraits>
 MPSolutionType<MPTraits>::
 MPSolutionType(RobotGroup* const _g)
-  : m_robot(nullptr), m_group(_g), m_stats(new StatClass()),
+  : m_group(_g), m_stats(new StatClass()),
     m_groupMap(nullptr), m_groupPath(nullptr) {
   for(auto robot : *m_group)
     m_solutions[robot] = std::move(RobotSolution(robot, m_stats.get()));
@@ -255,13 +261,14 @@ MPSolutionType<MPTraits>::
 GetRobotSolution(Robot* _r) const noexcept {
   if(!_r)
     _r = m_robot;
+
   try {
     return m_solutions.at(_r);
   }
   catch(const std::out_of_range& _e) {
-    std::ostringstream oss;
-    oss << "Robot with pointer " << _r << " has no data in this solution.";
-    throw RunTimeException(WHERE, oss.str());
+    throw RunTimeException(WHERE) << "Robot " << _r->GetLabel()
+                                  << " (" << _r << ") "
+                                  << "has no data in this solution.";
   }
 }
 

@@ -4,7 +4,6 @@
 #include "NeighborhoodFinderMethod.h"
 
 #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
-#include "MPLibrary/MapEvaluators/RRTQuery.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,12 +117,17 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
+    /// Lazy-initialize this object on first use.
+    void LazyInitialize();
+
     /// Initialize the query relevance map.
     void BuildQueryMap();
 
     ///@}
     ///@name Internal State
     ///@{
+
+    bool m_initialized{false}; ///< Flag for lazy initialization.
 
     std::string m_nfLabel; ///< The underlying neighborhood finder label.
     std::string m_tmLabel; ///< The topological map label.
@@ -189,14 +193,7 @@ template <typename MPTraits>
 void
 TopologicalFilter<MPTraits>::
 Initialize() {
-  m_goalRegion = nullptr;
-
-  m_ssspCache.clear();
-  m_ssspCache.resize(this->GetTask()->GetRobot()->GetMultiBody()->GetNumBodies());
-
-  m_queryMap.clear();
-  if(m_useQueryMap)
-    BuildQueryMap();
+  m_initialized = false;
 }
 
 
@@ -222,6 +219,9 @@ TopologicalFilter<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
+  if(!m_initialized)
+    LazyInitialize();
+
   auto stats = this->GetStatClass();
 
   // This object only works on the free space roadmap right now. It could be
@@ -307,6 +307,9 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
+  if(!m_initialized)
+    LazyInitialize();
+
   auto g = _rmp->GetGraph();
 
   // This implementation depends on the 'neighbors' vector NOT reallocating.
@@ -604,44 +607,96 @@ ComputeIntersection(InputIterator _first, InputIterator _last,
 template <typename MPTraits>
 void
 TopologicalFilter<MPTraits>::
+LazyInitialize() {
+  m_initialized = true;
+
+  m_goalRegion = nullptr;
+
+  m_ssspCache.clear();
+  m_ssspCache.resize(this->GetTask()->GetRobot()->GetMultiBody()->GetNumBodies());
+
+  m_queryMap.clear();
+  if(m_useQueryMap)
+    BuildQueryMap();
+}
+
+
+template <typename MPTraits>
+void
+TopologicalFilter<MPTraits>::
 BuildQueryMap() {
+  MethodTimer mt(this->GetStatClass(), "TopologicalFilter::BuildQueryMap");
+
   // Only support single-body robots for now (not sure how this would make sense
   // for multibodies).
-  if(this->GetTask()->GetRobot()->GetMultiBody()->GetNumBodies() > 1)
+  auto task = this->GetTask();
+  if(task->GetRobot()->GetMultiBody()->GetNumBodies() > 1)
     throw RunTimeException(WHERE) << "Query relevance option is only supported "
-                                  << "for single-body robots."
-                                  << std::endl;
+                                  << "for single-body robots.";
+
+  // Only support single-goal tasks; this is inherent to the method.
+  const auto& goalConstraints = task->GetGoalConstraints();
+  if(goalConstraints.size() > 1)
+    throw RunTimeException(WHERE) << "Query relevance option is only supported "
+                                  << "for single-goal tasks.";
+
+  // Try to prevent non-point tasks by requiring single VIDs for the start and
+  // goal.
+  auto goalTracker = this->GetGoalTracker();
+  const auto& startVIDs = goalTracker->GetStartVIDs();
+  const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
+  if(startVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
+                                  << startVIDs.size() << " were found.";
+  if(goalVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
+                                  << goalVIDs.size() << " were found.";
+
+  // Warn users about my laziness in not implementing a Boundary::Volume
+  // function to enforce this assumption.
+  std::cerr << "Warning: query relevance option assumes that the task "
+            << "constraints are single points in c-space, but does not enforce "
+            << "this assumption! The algorithm should still work as long as the "
+            << "regions are fairly tight (it is based on a coarse map after all)."
+            << std::endl;
+
+  // Get the start and goal vertices.
+  auto g = this->GetRoadmap()->GetGraph();
+  const VID startVID = *startVIDs.begin(),
+            goalVID  = *goalVIDs.begin();
+  const CfgType& start = g->GetVertex(startVID),
+               & goal  = g->GetVertex(goalVID);
 
   // Build the topological sort pseudo-DAG using SSSP scores as the ordering
   // value.
-  m_queryMap.clear();
-  MethodTimer mt(this->GetStatClass(), "TopologicalFilter::BuildQueryMap");
-
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto decomposition = tm->GetDecomposition();
-
-  // Get the goal configuration from the query.
-  /// @todo Support this without magic XML values.
-  auto query = static_cast<RRTQuery<MPTraits>*>(this->GetMapEvaluator("RRTQuery").
-      get());
-  if(query->GetQuery().empty())
-    query->Initialize();
-  const CfgType& start = query->GetQuery()[0];
-  const CfgType& goal  = query->GetQuery()[1];
-
-  auto g = this->GetRoadmap()->GetGraph();
-  std::cout << "Query: " << query->GetQuery().size()
-            << "\n\t(" << g->GetVID(start) << ") " << start.PrettyPrint()
-            << "\n\t(" << g->GetVID(goal ) << ") " << goal.PrettyPrint()
-            << std::endl;
 
   // Find the goal region and compute its SSSP map. Do not cache it because we
   // will want to recompute on the query-relevant adjacency map.
   m_goalRegion = tm->LocateRegion(goal);
   const auto sssp = tm->ComputeFrontier(m_goalRegion);
 
+  // Finally, build the query map from the sssp data.
+  m_queryMap.clear();
+  for(auto vi = decomposition->begin(); vi != decomposition->end(); ++vi) {
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
+      const VD source = ei->source(),
+               target = ei->target();
+      // If the target has a higher score, it is a child in the successor
+      // pseudo-DAG.
+      if(sssp.distance.count(source) and
+          sssp.distance.count(target) and
+          sssp.distance.at(source) <= sssp.distance.at(target))
+        m_queryMap[source].push_back(target);
+    }
+  }
+
   if(this->m_debug) {
     std::cout << "TopologicalFilter::BuildQueryMap"
+              << "\n\tQuery:"
+              << "\n\t\t(" << startVID << ") " << start.PrettyPrint()
+              << "\n\t\t(" << goalVID  << ") " << goal.PrettyPrint()
               << "\n\tGoal region: " << m_goalRegion
               << "\n\tDescriptor:  "
               << decomposition->GetDescriptor(*m_goalRegion)
@@ -656,19 +711,6 @@ BuildQueryMap() {
       std::cout << "  " << vid;
 
     std::cout << std::endl;
-  }
-
-  for(auto vi = decomposition->begin(); vi != decomposition->end(); ++vi) {
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      const VD source = ei->source(),
-               target = ei->target();
-      // If the target has a higher score, it is a child in the successor
-      // pseudo-DAG.
-      if(sssp.distance.count(source) and
-          sssp.distance.count(target) and
-          sssp.distance.at(source) <= sssp.distance.at(target))
-        m_queryMap[source].push_back(target);
-    }
   }
 }
 

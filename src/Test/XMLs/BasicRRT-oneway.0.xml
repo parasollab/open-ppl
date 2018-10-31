@@ -10,7 +10,7 @@
       </StartConstraints>
 
       <GoalConstraints>
-        <CSpaceConstraint point="10 10"/>
+        <CSpaceConstraint bbx="[9.8:10.2 ; 9.8:10.2]"/>
       </GoalConstraints>
     </Task>
   </Problem>
@@ -26,8 +26,8 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-          k="1"/>
+      <BruteForceNF label="Nearest"
+        dmLabel="euclidean" unconnected="false" k="1"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -36,21 +36,20 @@
     </Samplers>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="true" dmLabel="euclidean" vcLabel="cd"
-        maxDist="1" minDist=".001"/>
+      <BasicExtender label="BERO" debug="false"
+        dmLabel="euclidean" vcLabel="cd" maxDist="1" minDist=".001"/>
     </Extenders>
 
     <MapEvaluators>
-      <RRTQuery label="RRTQuery"
-        nfLabel="Nearest" exLabel="BERO" fullRecreatePath="false" debug="true"/>
+      <QueryMethod label="Query" debug="true"/>
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicRRTStrategy label="BasicRRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="cd" gtype="UNDIRECTED_TREE" debug="true"
-        growGoals="false" extenderLabel="BERO" samplerLabel="UniformRandom">
-        <Evaluator label="RRTQuery"/>
+      <BasicRRTStrategy label="BasicRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO" goalDmLabel="euclidean"
+        growGoals="false" m="1" growthFocus="0.01">
+        <Evaluator label="Query"/>
       </BasicRRTStrategy>
     </MPStrategies>
 
