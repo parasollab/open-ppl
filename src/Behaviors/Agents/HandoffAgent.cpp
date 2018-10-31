@@ -107,7 +107,6 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   setupTask->SetStartConstraint(std::move(start));
   std::unique_ptr<Constraint> setupStart(_task->GetStartConstraint()->Clone());
 
-
   if(m_parentAgent->GetRobot()->IsManipulator()){
 
     auto startBox = setupStart->GetBoundary()->Clone();
@@ -321,7 +320,6 @@ SelectTask(){
     return false;
   }
 
-
   auto subtask = m_queuedSubtasks.front();
   subtask->SetRobot(m_robot);
   auto startConstraint = subtask->GetStartConstraint();
@@ -387,7 +385,6 @@ SelectTask(){
     return GetTask().get();
   }
 }
-
 
 bool
 HandoffAgent::

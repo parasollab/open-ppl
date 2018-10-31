@@ -45,6 +45,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_virtual = _node.Read("virtual", false, false, "Virtual robots are imaginary "
       "and will not be included in the simulation or CD checks.");
 
+  // Check if the robot is a manipulator or not
   m_manipulator = _node.Read("manipulator", false, false, "Is the robot a manipulator?");
 
   // Get the (optional) capability type for the robot.
@@ -130,6 +131,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       m_multibody->GetBody(i)->SetColor(c);
     }
   }
+  // Initialize the end effector
 }
 
 

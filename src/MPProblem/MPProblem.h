@@ -9,7 +9,7 @@
 #include <vector>
 
 class DynamicObstacle;
-class MPHandoffTemplate;
+class InteractionInformation;
 class Environment;
 class MPTask;
 class GroupTask;
@@ -168,7 +168,7 @@ class MPProblem final
 
     /// Return the list of handoff templates defined in the problem
     /// @return vector of handoff templates
-    std::vector<MPHandoffTemplate*> GetHandoffTemplates() const;
+    std::vector<std::unique_ptr<InteractionInformation>>& GetInteractionInformations();
 
     ///@}
   protected:
@@ -191,10 +191,10 @@ class MPProblem final
     std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
     std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot group for problem.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
-
-    std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles; ///< The dynamic obstacles in our problem.
-    std::vector<MPHandoffTemplate*> m_handoffTemplates; ///< All handoff templates for a problem.
-
+    /// The dynamic obstacles in our problem.
+    std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles;
+    /// All handoff templates for a problem.
+    std::vector<std::unique_ptr<InteractionInformation>> m_interactionInformations;
     /// Map the tasks assigned to each robot.
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;
     std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>> m_groupTaskMap;

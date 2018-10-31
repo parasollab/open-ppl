@@ -9,7 +9,7 @@ EnforcedHillClimbing::
 EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
                      std::vector<Robot*> _robots,
                      MPTask* _task,
-                     std::vector<MPHandoffTemplate*> _handoffs,
+                     std::vector<std::unique_ptr<InteractionTemplate>>& _handoffs,
                      MPLibrary* _library,
                      bool _manipulator)
                      : m_capabilityMap(_capabilityMap){
@@ -25,7 +25,7 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
   m_goalLocation = goalConstraints[0]->GetBoundary();
 
   //Extract Handoff Locations from Templates
-  for(auto temp : _handoffs){
+  for(auto& temp : _handoffs){
     //TODO::Find better way to do this
     auto pos = temp->GetPositions();
     auto first = CfgToBoundary(pos[0]);

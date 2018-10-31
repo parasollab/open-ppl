@@ -377,6 +377,14 @@ SIM_SRCS := \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/Coordinator.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
+  Behaviors/Agents/ITPlacement/BallFilling.cpp \
+  Behaviors/Agents/ITPlacement/DisjointWorkspaces.cpp \
+  Behaviors/Agents/ITPlacement/FixedBase.cpp \
+  Behaviors/Agents/ITPlacement/GridFilling.cpp \
+  Behaviors/Agents/ITPlacement/OverlappingWorkspacesDensity.cpp \
+  Behaviors/Agents/ITPlacement/PlacementMethod.cpp \
+  Behaviors/Agents/ITPlacement/PlacementMethodFactory.cpp \
+  Behaviors/Agents/ITPlacement/WorkspaceGuidance.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
@@ -475,6 +483,7 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
+  MPLibrary/MPTools/InteractionTemplate.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
@@ -490,7 +499,7 @@ PMPL_SRCS := \
   MPProblem/MPProblem.cpp \
   MPProblem/MPTask.cpp \
   MPProblem/GroupTask.cpp \
-  MPProblem/MPHandoffTemplate.cpp \
+  MPProblem/InteractionInformation.cpp \
   MPProblem/Constraints/Constraint.cpp \
   MPProblem/Constraints/BoundaryConstraint.cpp \
   MPProblem/Constraints/CSpaceConstraint.cpp \

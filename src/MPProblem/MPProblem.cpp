@@ -7,7 +7,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 #include "MPProblem/DynamicObstacle.h"
-#include "MPProblem/MPHandoffTemplate.h"
+#include "MPProblem/InteractionInformation.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -387,10 +387,10 @@ SetPath(const string& _filename) {
 }
 
 
-std::vector<MPHandoffTemplate*>
+std::vector<std::unique_ptr<InteractionInformation>>&
 MPProblem::
-GetHandoffTemplates() const {
-  return m_handoffTemplates;
+GetInteractionInformations() {
+  return m_interactionInformations;
 }
 
 /*---------------------------- Construction Helpers --------------------------*/
@@ -442,7 +442,8 @@ ParseChild(XMLNode& _node) {
     return true;
   }
   else if(_node.Name() == "HandoffTemplate") {
-    m_handoffTemplates.emplace_back(new MPHandoffTemplate(this, _node));
+    m_interactionInformations.emplace_back(std::unique_ptr<InteractionInformation>(
+                                           new InteractionInformation(this, _node)));
     return true;
   }
   else

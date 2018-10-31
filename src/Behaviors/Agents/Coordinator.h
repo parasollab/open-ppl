@@ -3,7 +3,10 @@
 
 #include "Agent.h"
 #include "PlanningAgent.h"
+#include "HandoffAgent.h"
 #include "WholeTask.h"
+
+#include "ITPlacement/PlacementMethod.h"
 
 #include "Behaviors/TMP/Actions/Action.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -11,6 +14,7 @@
 #include "BatteryBreak.h"
 
 class HandoffAgent;
+class InteractionTemplate;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent represents the task hand-off behavior presented in
@@ -37,7 +41,6 @@ class HandoffAgent;
 class Coordinator : public Agent {
 
   public:
-
 
     ///@name Motion Planning Types
     ///@{
@@ -96,6 +99,8 @@ class Coordinator : public Agent {
     double GetCurrentTime();
 
     bool IsClearToMoveOn(HandoffAgent* _agent);
+
+    HandoffAgent* GetCapabilityAgent(std::string _capability);
 
     ///@}
   private:
@@ -210,6 +215,12 @@ class Coordinator : public Agent {
     //robots
     void TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan);
 
+    /// Temporary Function to call it placement methods during development
+    void FindITLocations(InteractionTemplate* _it);
+
+    /// Temporary Function to add placement method to map during development
+    void AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm);
+
     ///@}
 
   protected:
@@ -275,6 +286,9 @@ class Coordinator : public Agent {
 
     /// List of simulator visualization graph ids
     std::vector<size_t> m_simulatorGraphIDs;
+
+    /// Tempoary Map of IT Placement Method Options to use during development
+    std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
     ///@}
 
 };

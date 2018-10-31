@@ -2,6 +2,7 @@
 #define PMPL_MP_SOLUTION_TYPE_H_
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 #include "Utilities/MetricUtils.h"
 
@@ -91,6 +92,10 @@ class MPSolutionType final {
 
     RobotGroup* GetRobotGroup() const noexcept;
 
+    std::vector<std::unique_ptr<InteractionTemplate>>& GetInteractionTemplates();
+
+    void AddInteractionTemplate(InteractionTemplate*);
+
     ///@}
 
   private:
@@ -117,6 +122,9 @@ class MPSolutionType final {
 
     /// The group path.
     std::unique_ptr<GroupPathType> m_groupPath;
+
+    /// The set of Interaction Templates
+    std::vector<std::unique_ptr<InteractionTemplate>> m_interactionTemplates;
 
     ///@}
 };
@@ -251,6 +259,19 @@ GetRobotGroup() const noexcept {
   return m_group;
 }
 
+template<typename MPTraits>
+std::vector<std::unique_ptr<InteractionTemplate>>&
+MPSolutionType<MPTraits>::
+GetInteractionTemplates(){
+  return m_interactionTemplates;
+}
+
+template<typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+AddInteractionTemplate(InteractionTemplate* _it){
+  m_interactionTemplates.emplace_back(std::unique_ptr<InteractionTemplate>(_it));
+}
 
 /*--------------------------------- Helpers ----------------------------------*/
 

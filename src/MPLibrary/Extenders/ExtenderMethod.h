@@ -3,7 +3,7 @@
 
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/GroupLPOutput.h"
-
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include <limits>
 
 

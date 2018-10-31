@@ -171,6 +171,7 @@ ClearPlan() {
     m_solution->GetPath()->Clear();
 }
 
+
 bool
 PlanningAgent::
 IsPlanning() const {

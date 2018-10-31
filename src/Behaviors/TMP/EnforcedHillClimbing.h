@@ -11,7 +11,7 @@
 #include "Actions/Action.h"
 #include "State.h"
 
-#include "MPProblem/MPHandoffTemplate.h"
+#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPProblem/Robot/Robot.h"
 
 
@@ -48,7 +48,7 @@ class EnforcedHillClimbing {
     EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
                           std::vector<Robot*> _robots,
                           MPTask* _task,
-                          std::vector<MPHandoffTemplate*> _handoffs,
+                          std::vector<std::unique_ptr<InteractionTemplate>>& _handoffs,
                           MPLibrary* _library,
                           bool _manipulator);
 

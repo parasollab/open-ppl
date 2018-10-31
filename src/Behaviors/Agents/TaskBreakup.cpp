@@ -2,7 +2,6 @@
 
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
-#include "MPProblem/MPHandoffTemplate.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "Simulator/Simulation.h"
