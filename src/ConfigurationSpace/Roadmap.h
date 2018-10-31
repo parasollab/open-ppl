@@ -101,7 +101,7 @@ Roadmap(Robot* const _r) : m_graph(new GraphType(_r)) { }
 
 template <typename MPTraits>
 Roadmap<MPTraits>::
-Roadmap(const Roadmap& _r) : m_graph(new GraphType(_r)) {
+Roadmap(const Roadmap& _r) : Roadmap(_r.GetRobot()) {
   AppendRoadmap(_r);
 }
 

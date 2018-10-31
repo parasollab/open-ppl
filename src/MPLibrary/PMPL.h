@@ -1,10 +1,7 @@
 #ifndef PMPL_H_
 #define PMPL_H_
 
-////////////////////////////////////////////////////////////////////////////////
-/// Define the configuration-space model (traits) based on the compile options.
-////////////////////////////////////////////////////////////////////////////////
-
+// Define the configuration-space model (traits) based on the compile options.
 #ifdef PMPCfg
 
 #include "ConfigurationSpace/Cfg.h"
@@ -12,15 +9,19 @@
 typedef MPTraits<Cfg> PMPLTraits;
 
 #else
-
 #error "Error, must define a RobotType for PMPL application"
-
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set the templated types using the chosen traits.
-////////////////////////////////////////////////////////////////////////////////
 
+// Mark the corresponding templates as extern to avoid recompiling them
+// constantly.
+extern template class MPLibraryType<PMPLTraits>;
+extern template class MPSolutionType<PMPLTraits>;
+extern template class Roadmap<PMPLTraits>;
+extern template class PathType<PMPLTraits>;
+
+
+// Set the templated types using the chosen traits.
 typedef PMPLTraits::CfgType     CfgType;
 typedef PMPLTraits::WeightType  WeightType;
 typedef PMPLTraits::RoadmapType RoadmapType;

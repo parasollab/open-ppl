@@ -483,13 +483,14 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
+  MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
+  MPLibrary/LearningModels/RadialKernelGradient.cpp \
   MPLibrary/MPTools/InteractionTemplate.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/NeighborhoodFinders/MPNNWrapper.cpp \
-  MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
-  MPLibrary/LearningModels/RadialKernelGradient.cpp \
+  MPLibrary/PMPL.cpp \
   MPLibrary/Samplers/SimilarStructureSampler.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
