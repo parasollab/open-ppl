@@ -302,13 +302,15 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@name Helpers
     ///@{
 
-    /// Checks that there is no direct edge to potential neighbor
-    /// @param _rmp Roadmap to find neighbor
-    /// @param _c Query configuration
-    /// @param _v Potential neighbor
-    /// @return True if there is already a direct edge from _c to _v.
-    template <typename Roadmap, typename Cfg>
-    bool CheckUnconnected(Roadmap* _rmp, const Cfg& _c, typename Roadmap::VID _v);
+    /// Checks if there is a direct edge to potential neighbor.
+    /// @param _g The roadmap graph we are searching.
+    /// @param _c The query configuration.
+    /// @param _v A potential neighbor for _c.
+    /// @return True if m_unconnected and there is already a direct edge from _c
+    ///         to _v. Always returns false if m_unconnected is false.
+    template <typename RoadmapGraph, typename Cfg>
+    bool DirectEdge(const RoadmapGraph* _g, const Cfg& _c,
+        const typename RoadmapGraph::VID _v) const;
 
     ///@}
     ///@name Internal State
@@ -358,6 +360,7 @@ Print(std::ostream& _os) const {
 /*-------------------------------- Accessors ---------------------------------*/
 
 template <typename MPTraits>
+inline
 typename NeighborhoodFinderMethod<MPTraits>::Type
 NeighborhoodFinderMethod<MPTraits>::
 GetType() const noexcept {
@@ -366,6 +369,7 @@ GetType() const noexcept {
 
 
 template <typename MPTraits>
+inline
 size_t&
 NeighborhoodFinderMethod<MPTraits>::
 GetK() noexcept {
@@ -374,6 +378,7 @@ GetK() noexcept {
 
 
 template <typename MPTraits>
+inline
 double&
 NeighborhoodFinderMethod<MPTraits>::
 GetRadius() noexcept {
@@ -382,6 +387,7 @@ GetRadius() noexcept {
 
 
 template <typename MPTraits>
+inline
 void
 NeighborhoodFinderMethod<MPTraits>::
 SetDMLabel(const std::string& _label) noexcept {
@@ -390,6 +396,7 @@ SetDMLabel(const std::string& _label) noexcept {
 
 
 template <typename MPTraits>
+inline
 const std::string&
 NeighborhoodFinderMethod<MPTraits>::
 GetDMLabel() const noexcept {
@@ -431,7 +438,7 @@ FindNeighbors(RoadmapType* _rmp,
 
   // If all neighbors were requested for a k-nearest type, there is no need to
   // call the derived method.
-  if(GetK() == 0 and GetType() == Type::K)
+  if(GetType() == Type::K and GetK() == 0)
     return NeighborhoodFinderMethod::FindAllNeighbors(_rmp->GetGraph(),
         _first, _last, _cfg, _out);
 
@@ -459,7 +466,7 @@ FindNeighbors(GroupRoadmapType* _rmp,
 
   // If all neighbors were requested for a k-nearest type, there is no need to
   // call the derived method.
-  if(GetK() == 0 and GetType() == Type::K)
+  if(GetType() == Type::K and GetK() == 0)
     return NeighborhoodFinderMethod::FindAllNeighbors(_rmp, _first, _last, _cfg,
         _out);
 
@@ -488,7 +495,7 @@ FindNeighborPairs(RoadmapType* _rmp,
 
   // If all neighbors were requested, there is no need to call the derived
   // method.
-  if(!this->m_k)
+  if(GetType() == Type::K and GetK() == 0)
     return NeighborhoodFinderMethod::FindAllNeighborPairs(_rmp->GetGraph(),
         _first1, _last1, _first2, _last2, _out);
 
@@ -517,7 +524,7 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 
   // If all neighbors were requested, there is no need to call the derived
   // method.
-  if(!this->m_k)
+  if(GetType() == Type::K and GetK() == 0)
     return NeighborhoodFinderMethod::FindAllNeighborPairs(_rmp, _first1, _last1,
         _first2, _last2, _out);
 
@@ -541,6 +548,7 @@ FindAllNeighbors(GraphType* _g,
     InputIterator _first, InputIterator _last,
     const NodeType& _query, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  size_t count = 0;
 
   // Compare the query configuration to each in the input set.
   for(auto it = _first; it != _last; ++it) {
@@ -549,14 +557,23 @@ FindAllNeighbors(GraphType* _g,
     if(node == _query)
       continue;
 
+    // Skip nodes with direct edges if requested.
+    const auto vid = _g->GetVID(it);
+    if(DirectEdge(_g, _query, vid))
+      continue;
+
     // Check distance. If it is infinite, these are not connectable.
     const double distance = dm->Distance(_query, node);
     if(std::isinf(distance))
       continue;
 
-    *_out++ = Neighbor(_g->GetVID(it), distance);
+    *_out++ = Neighbor(vid, distance);
+    ++count;
   }
 
+  if(this->m_debug)
+    std::cout << "\tFound " << count << " neighbors."
+              << std::endl;
   return _out;
 }
 
@@ -570,6 +587,7 @@ FindAllNeighborPairs(GraphType* _g,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  size_t count = 0;
 
   // Compare the two sets of configurations.
   for(InputIterator i1 = _first1; i1 !=_last1; ++i1) {
@@ -578,30 +596,47 @@ FindAllNeighborPairs(GraphType* _g,
       if(i1 == i2)
         continue;
 
+      // Skip nodes with direct edges if requested.
+      const auto vid1 = _g->GetVID(i1),
+                 vid2 = _g->GetVID(i2);
+      const auto& cfg1 = _g->GetVertex(i1),
+                & cfg2 = _g->GetVertex(i2);
+
+      if(DirectEdge(_g, cfg1, vid2))
+        continue;
+
       // Get the distance. If it is infinite, these are not connectable.
-      const double distance = dm->Distance(_g->GetVertex(i1), _g->GetVertex(i2));
+      const double distance = dm->Distance(cfg1, cfg2);
       if(std::isinf(distance))
         continue;
 
-      *_out++ = Neighbor(_g->GetVID(i1), _g->GetVID(i2), distance);
+      *_out++ = Neighbor(vid1, vid2, distance);
+      ++count;
     }
   }
+
+  if(this->m_debug)
+    std::cout << "\tFound " << count << " neighbors."
+              << std::endl;
+
   return _out;
 }
 
 /*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
-template <typename Roadmap, typename Cfg>
+template <typename RoadmapGraph, typename Cfg>
 bool
 NeighborhoodFinderMethod<MPTraits>::
-CheckUnconnected(Roadmap* _r, const Cfg& _c, typename Roadmap::VID _v) {
-  if(this->m_unconnected) {
-    typename Roadmap::VID vid = _r->GetGraph()->GetVID(_c);
-    if(vid != INVALID_VID and _r->GetGraph()->IsEdge(vid, _v))
-      return true;
-  }
-  return false;
+DirectEdge(const RoadmapGraph* _g, const Cfg& _c,
+    typename RoadmapGraph::VID _v) const {
+  // Consider all nodes to be non-neighbors if we aren't using this check.
+  if(!this->m_unconnected)
+    return false;
+
+  // The nodes are neighbors if _c is in the graph and the edge (_c, _v) exists.
+  const typename RoadmapGraph::VID vid = _g->GetVID(_c);
+  return vid != INVALID_VID and _g->IsEdge(vid, _v);
 }
 
 /*----------------------------------------------------------------------------*/

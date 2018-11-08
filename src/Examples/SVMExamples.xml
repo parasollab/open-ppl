@@ -489,16 +489,6 @@
         <Evaluator methodLabel="PRMQuery"/>
       </TogglePRMStrategy>
 
-      <!-- Hybrid PRM -->
-      <HybridPRM label="HybridPRM" percent_random="0.5" bin_size="20"
-        window_percent="0.5" Count_Cost="false" fixed_cost="false"
-        resetting_learning="false" sampler_selection_distribution="window_hybrid">
-        <node_generation_method Method="Uniform" initialCost="1"/>
-        <node_generation_method Method="Gauss" initialCost="1"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="PRMQuery"/>
-      </HybridPRM>
-
       <!-- UAStrategy -->
       <!--UAStrategy label="UAPRM" iterations="10" num_samples="10">
         <training_strategy Strategy="PRM1"/>

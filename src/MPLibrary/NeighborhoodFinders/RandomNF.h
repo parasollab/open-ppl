@@ -141,7 +141,7 @@ FindNeighbors(RoadmapType* _rmp,
       // Check for invalid conditions.
       const bool alreadyFound = foundVIDs.count(vid),
                  isQuery = queryVID == vid,
-                 isConnected = this->CheckUnconnected(_rmp, _cfg, vid);
+                 isConnected = this->DirectEdge(g, _cfg, vid);
 
       // Track this VID.
       foundVIDs.insert(vid);
@@ -188,13 +188,13 @@ FindNeighborPairs(RoadmapType* _rmp,
 
       // Check for invalid conditions.
       const bool alreadyFound = foundPairs.count({vid1, vid2}),
-                 isConnected = this->CheckUnconnected(_rmp, cfg1, vid2);
+                 alreadyConnected = this->DirectEdge(g, cfg1, vid2);
+
+      if(alreadyFound or alreadyConnected)
+        continue;
 
       // Track this pair.
       foundPairs.emplace(vid1, vid2);
-
-      if(alreadyFound or isConnected)
-        continue;
 
       // Check distance.
       const double distance = dm->Distance(cfg1, g->GetVertex(vid2));

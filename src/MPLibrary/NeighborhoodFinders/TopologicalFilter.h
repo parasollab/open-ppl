@@ -5,6 +5,10 @@
 
 #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
 
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Filters the roadmap for a set of topologically relevant candidate neighbors.
@@ -13,9 +17,34 @@
 ///
 /// @WARNING This must receive samples whose reference points are in free space
 ///          to find any neighbors.
+///
+/// @todo Move the SSSP cache into the topological map so that
+///       TopologicalDistance can share it. This is not a major performance hit,
+///       but (a) on principle we should never duplicate data, and (b) it could
+///       become seriously detrimental if used with a very large mesh (i.e., a
+///       fine tetrahedralization with many small cells).
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
+
+  ///@name Internal Types
+  ///@{
+
+  /// A map from region to SSSP data, which describes the sampling frontier
+  /// about the key region.
+  typedef std::unordered_map<const WorkspaceRegion*,
+      SSSPOutput<WorkspaceDecomposition>> SSSPCache;
+
+  /// An iterator to the SSSP order of discovery (ordered by distance,
+  /// ascending).
+  typedef typename SSSPOutput<WorkspaceDecomposition>::Ordering::const_iterator
+      OrderingMarker;
+
+  /// A pair of markers to track the begin and end of a body's population within
+  /// an SSSP ordering.
+  typedef std::pair<OrderingMarker, OrderingMarker> PopulationMarkers;
+
+  ///@}
 
   public:
 
@@ -94,7 +123,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     /// @param _bodyIndex The body to use.
     /// @return The set of regions that hold candidate neighbors for _bodyIndex
     ///         at _cfg.
-    std::vector<const WorkspaceRegion*> FindCandidateRegions(const CfgType& _cfg,
+    PopulationMarkers FindCandidateRegions(const CfgType& _cfg,
         const size_t _bodyIndex);
 
     /// Find the topological candidate vertices for a given configuration.
@@ -123,6 +152,12 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     /// Initialize the query relevance map.
     void BuildQueryMap();
 
+    /// Get the SSSP data for a region, computing it if necessary.
+    /// @param _region The region.
+    /// @return The SSSP data for _region.
+    SSSPOutput<WorkspaceDecomposition>& GetSSSPData(
+        const WorkspaceRegion* _region);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -132,21 +167,19 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     std::string m_nfLabel; ///< The underlying neighborhood finder label.
     std::string m_tmLabel; ///< The topological map label.
 
-    /// The SSSP data cache. There is one for each body.
-    std::vector<std::unordered_map<const WorkspaceRegion*,
-        SSSPOutput<WorkspaceDecomposition>>> m_ssspCache;
+    SSSPCache m_ssspCache; ///< Cache for connectivity data.
 
-    const WorkspaceRegion* m_goalRegion{nullptr}; ///< Query goal region.
-    typename TopologicalMap<MPTraits>::AdjacencyMap m_queryMap; ///< Query-relevant adjacency map.
+    /// Query-relevant adjacency map.
+    typename TopologicalMap<MPTraits>::AdjacencyMap m_queryMap;
 
-    double m_backtrackDistance; ///< The distance to back track along cells.
+    double m_backtrackDistance{0}; ///< The distance to back track along cells.
 
     bool m_fallback{false}; ///< Fall back to the underlying NF on fail?
 
     bool m_useQueryMap{false}; ///< Use a query-relevant adjacency map?
 
-    /// Helper distance metric for working with PRMs.
-    std::shared_ptr<DistanceMetricMethod<MPTraits>> m_dm;
+    /// Return VIDs which are only in some of the body's frontiers?
+    bool m_partialMatches{true};
 
     ///@}
 };
@@ -185,6 +218,10 @@ TopologicalFilter(XMLNode& _node)
   m_useQueryMap = _node.Read("queryRelevance", false, m_useQueryMap,
       "Use a query-relevant adjacency map instead of the full decomposition "
       "edge set?");
+
+  m_partialMatches = _node.Read("partialMatches", false, m_partialMatches,
+      "Return the best partial matches when no VIDs satisfy all of the robot's "
+      "bodies?");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -230,6 +267,10 @@ FindNeighbors(RoadmapType* _rmp,
   if(_rmp != this->GetRoadmap())
     throw RunTimeException(WHERE) << "Only works on the free space at this time.";
 
+  // Track the average input size.
+  const size_t inputSize = std::distance(_first, _last);
+  stats->GetAverage("TopologicalFilter::InputSize") += inputSize;
+
   if(this->m_debug)
     std::cout << "TopologicalFilter::FindNeighbors\n";
 
@@ -237,6 +278,9 @@ FindNeighbors(RoadmapType* _rmp,
 
   // Find the topological candidate vertices.
   std::vector<VID> topologicalCandidates = FindCandidates(_cfg);
+  const size_t numTopologicalCandidates = topologicalCandidates.size();
+  stats->GetAverage("TopologicalFilter::TopologicalCandidates") +=
+      numTopologicalCandidates;
 
   // Find the vertices that are in both the input set and topological
   // candidates.
@@ -249,7 +293,7 @@ FindNeighbors(RoadmapType* _rmp,
   // If we found no candidates, report fail or fall back to underlying NF.
   if(candidates.empty()) {
     // Distinguish between the two types of no-candidate scenarios.
-    if(topologicalCandidates.empty()) {
+    if(numTopologicalCandidates == 0) {
       stats->IncStat("TopologicalFilter::NoTopologicalCandidates");
 
       if(this->m_debug)
@@ -257,18 +301,18 @@ FindNeighbors(RoadmapType* _rmp,
                   << std::endl;
     }
     else {
-      stats->IncStat("TopologicalFilter::NoInputCandidates");
+      stats->IncStat("TopologicalFilter::NoCommonCandidates");
 
       if(this->m_debug)
-        std::cout << "\tFound " << topologicalCandidates.size() << " vertices in "
-                  << "candidate cells, but none were in the input range."
+        std::cout << "\tFound " << topologicalCandidates.size() << " vertices "
+                  << "in candidate cells, but none were in the input range."
                   << std::endl;
     }
 
     // Fall back to underlying NF if that option is selected.
     if(m_fallback) {
       if(this->m_debug)
-        std::cout << "\tFalling back to underlying nf '" + m_nfLabel + "'."
+        std::cout << "\tFalling back to underlying nf '" << m_nfLabel << "'."
                   << std::endl;
 
       nf->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg, _out);
@@ -282,16 +326,11 @@ FindNeighbors(RoadmapType* _rmp,
       _cfg, _out);
 
   // Track information on average candidate set size.
-  const double count = stats->GetStat("TopologicalFilter::UsedCandidates"),
-               avg = stats->GetStat("TopologicalFilter::AvgCandidates");
-
-  stats->IncStat("TopologicalFilter::UsedCandidates");
-  stats->SetStat("TopologicalFilter::AvgCandidates",
-      (avg * count + candidates.size()) / (count + 1));
+  stats->GetAverage("TopologicalFilter::UsedCandidates") += candidates.size();
 
   if(this->m_debug)
     std::cout << "Used candidate set."
-              << "\n\t|Input Vertices|: " << std::distance(_first, _last)
+              << "\n\t|Input Vertices|: " << inputSize
               << "\n\t|Candidates Vertices|: " << candidates.size()
               << std::endl;
 
@@ -309,6 +348,9 @@ FindNeighborPairs(RoadmapType* _rmp,
     OutputIterator _out) {
   if(!m_initialized)
     LazyInitialize();
+
+  if(this->m_debug)
+    std::cout << "TopologicalFilter::FindNeighborPairs\n";
 
   auto g = _rmp->GetGraph();
 
@@ -373,13 +415,14 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 /*---------------------------- Candidate Neighbors ---------------------------*/
 
 template <typename MPTraits>
-std::vector<const WorkspaceRegion*>
+typename TopologicalFilter<MPTraits>::PopulationMarkers
 TopologicalFilter<MPTraits>::
 FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex) {
-  MethodTimer mt(this->GetStatClass(), "TopologicalFilter::FindCandidateRegions");
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, "TopologicalFilter::FindCandidateRegions");
 
   if(this->m_debug)
-    std::cout << "Locating regions for body " << _bodyIndex
+    std::cout << "\tLocating regions for body " << _bodyIndex
               << " at cfg " << _cfg.PrettyPrint()
               << std::endl;
 
@@ -388,116 +431,109 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex) {
   auto decomposition = tm->GetDecomposition();
   const WorkspaceRegion* rootRegion = tm->LocateRegion(_cfg, _bodyIndex);
 
-  // Check for invalid region. If so, _cfg is in obstacle space. Don't bother
-  // trying to locate the nearest - tried that and it's too expensive.
-  /// @todo Figure out a better answer than guessing/failing here.
+  // Check for invalid region. If so, _cfg is in obstacle space. We *can* locate
+  // the nearest region, but this does not really make sense with the multibody
+  // version since it may produce a set of 'root regions' which are not feasible
+  // for the robot.
   if(!rootRegion) {
+    stats->IncStat("TopologicalFilter::NoRegion");
+
     if(this->m_debug)
-      std::cout << "\tRegion not found, sample is in obstacle space."
+      std::cout << "\t\tRegion not found, sample is in obstacle space."
                 << std::endl;
+
     return {};
   }
 
-  // Compute the distance map for this region if it is not cached.
-  auto& ssspCache = m_ssspCache[_bodyIndex];
-  if(!ssspCache.count(rootRegion)) {
-    if(this->m_debug)
-      std::cout << "\tSSSP cache for body " << _bodyIndex << ", region "
-                << decomposition->GetDescriptor(*rootRegion)
-                << " (" << rootRegion << ") is cold."
-                << std::endl;
+  // Get the SSSP data for this cell.
+  const auto& ssspCache = GetSSSPData(rootRegion);
+  const auto& ordering = ssspCache.ordering;
+  const auto& distance = ssspCache.distance;
 
-    ssspCache[rootRegion] = m_useQueryMap ?
-        tm->ComputeFrontier(rootRegion, _bodyIndex, m_backtrackDistance, m_queryMap)
-      : tm->ComputeFrontier(rootRegion, _bodyIndex, m_backtrackDistance);
-  }
-  // Scan the distance map to find the closest occupied cell.
-  auto& ordering = ssspCache[rootRegion].ordering;
-  auto beginIter = ordering.begin();
-  for(; beginIter != ordering.end(); ++beginIter) {
-    auto& region = decomposition->GetRegion(*beginIter);
+  // Find the first marker by scanning the distance map for the closest occupied
+  // cell.
+  PopulationMarkers markers{ordering.begin(), ordering.end()};
+  for(; markers.first != ordering.end(); ++markers.first) {
+    auto& region = decomposition->GetRegion(*markers.first);
 
     if(tm->IsPopulated(&region, _bodyIndex))
       break;
   }
 
-  // If we've reached the end of the ordering and found no populated cells,
-  // there are no candidates.
-  if(beginIter == ordering.end())
-    return {};
+  // Get the number of hops from the end effector. We will increase the frontier
+  // size by 10% for each link going outward.
+  /// @todo This will only work for chain-like bodies. Need to generalize.
+  //auto mb = this->GetTask()->GetRobot()->GetMultiBody();
+  //const size_t hopsFromEE = mb->GetNumBodies() - _bodyIndex;
 
-  // Binary search to check if we can prune the distance map.
-  /// @todo This is disabled for multibodies, see if we can incorporate it.
-  if(m_ssspCache.size() == 1) {
-    const auto& distance = ssspCache[rootRegion].distance;
-    const double maxDistance = distance.at(*beginIter) + m_backtrackDistance;
+  // Compute the max distance between the first and second marker.
+  const double maxDistance = distance.at(*markers.first)
+                           //+ m_backtrackDistance;
+                           //+ (_bodyIndex * 3);
+                           + m_backtrackDistance * std::pow(1.1, _bodyIndex);
+                           //+ m_backtrackDistance * std::pow(1.1, hopsFromEE);
 
-    if(this->m_debug)
-      std::cout << "\tFirst populated cell " << *beginIter
-                << " in order " << std::distance(ordering.begin(), beginIter)
-                << " has distance "
-                << std::setprecision(4) << distance.at(*beginIter)
-                << ", max distance is "
-                << std::setprecision(4) << maxDistance
-                << ".\n\tSearching for new last cell."
-                << std::endl;
+  if(this->m_debug)
+    std::cout << "\t\tFinding populated cells for body " << _bodyIndex
+              << " from region " << *ordering.begin()
+              << "\n\t\t\tFirst populated cell " << *markers.first
+              << " in order " << std::distance(ordering.begin(), markers.first)
+              << " has distance "
+              << std::setprecision(4) << distance.at(*markers.first) << "."
+              << "\n\t\t\tSearching for new last cell with max distance "
+              << std::setprecision(4) << maxDistance << "."
+              << std::endl;
 
-    auto endIter = ordering.end();
-    auto iter = beginIter;
-    while(iter != endIter) {
-      auto midpoint = iter;
-      midpoint += (endIter - iter) / 2;
-
-      if(this->m_debug) {
-        std::cout << "\titer: " << *iter
-                  << ", " << std::setprecision(4) << distance.at(*iter)
-                  << "\tmid:  " << *midpoint
-                  << ", " << std::setprecision(4) << distance.at(*midpoint)
-                  << "\tend:  ";
-        if(endIter == ordering.end())
-          std::cout << "end iter";
-        else
-          std::cout << *endIter
-                    << ", " << std::setprecision(4) << distance.at(*endIter);
-        std::cout << std::endl;
-      }
-
-      if(distance.at(*midpoint) > maxDistance)
-        endIter = midpoint;
-      else if(distance.at(*midpoint) < maxDistance)
-        iter = ++midpoint;
-      else
-        break;
-    }
-
-    // Scan forward until the last node exceeds the max distance.
-    while(iter != ordering.end() and distance.at(*iter) == maxDistance)
-      ++iter;
+  // Binary search from the previous end to find the new end.
+  auto first = markers.first;
+  auto last = markers.second;
+  while(first != last) {
+    auto midpoint = first;
+    midpoint += (last - first) / 2;
 
     if(this->m_debug) {
-      std::cout << "\tPruning " << std::distance(iter, ordering.end())
-                << " cells from the distance map.";
-      if(iter != ordering.end())
-        std::cout << "\tLast retained node has distance "
-                  << std::setprecision(4) << distance.at(*iter) << ".";
+      std::cout << "\t\t\titer: " << *first
+                << ", " << std::setprecision(4) << distance.at(*first)
+                << "\t\t\tmid:  " << *midpoint
+                << ", " << std::setprecision(4) << distance.at(*midpoint)
+                << "\t\t\tend:  ";
+      if(last == ordering.end())
+        std::cout << "end iter";
+      else
+        std::cout << *last
+                  << ", " << std::setprecision(4) << distance.at(*last);
       std::cout << std::endl;
     }
 
-    // Prune nodes beyond iter.
-    if(iter != ordering.end())
-      ordering.erase(iter + 1, ordering.end());
+    if(distance.at(*midpoint) > maxDistance)
+      last = midpoint;
+    else if(distance.at(*midpoint) < maxDistance)
+      first = ++midpoint;
+    else
+      break;
   }
 
-  // Accumulate candidate region.
-  std::vector<const WorkspaceRegion*> candidates;
-  for(auto iter = beginIter; iter != ordering.end(); ++iter)
-    candidates.emplace_back(&decomposition->GetRegion(*iter));
+  markers.second = first;
 
-  if(this->m_debug)
-    std::cout << "\tFound " << candidates.size() << " regions."
+  // Scan forward until the last node exceeds the max distance (there could
+  // be several at this distance).
+  while(markers.second != ordering.end()
+      and distance.at(*markers.second) == maxDistance)
+    ++markers.second;
+
+  if(this->m_debug) {
+    auto last = markers.second - 1;
+    std::cout << "\t\t\tComputed last cell as " << *last
+              << " in order " << std::distance(ordering.begin(), last)
+              << " / " << ordering.size() - 1
+              << " has distance "
+              << std::setprecision(4) << distance.at(*last) << ".\n"
+              << "\t\tFound " << std::distance(markers.first, markers.second)
+              << " regions."
               << std::endl;
+  }
 
-  return candidates;
+  return markers;
 }
 
 
@@ -516,25 +552,22 @@ FindCandidates(const CfgType& _cfg) {
     std::cout << "Searching for candidate VIDs..." << std::endl;
 
   // Find the candidate configurations for each body and intersect them as we go.
-  // Start with the EE and work backward.
-  /// @todo Currently the order doesn't actually matter because we are not
-  ///       yet homogenizing our distance-based search. Add this element to each
-  ///       subsequent call to FindCandidateRegions.
+  // Start with the EE and work backward so that partial matches favor nearby EE
+  // positions.
   /// @todo Figure out how to support tree-like robots here. The current impl
   ///       will only handle chains, and assumes the EE is the last body.
   bool first = true;
   for(size_t i = mb->GetNumBodies() - 1; i != size_t(-1); --i) {
     // Find the candidate regions for this body.
-    const std::vector<const WorkspaceRegion*> regions = FindCandidateRegions(
-        _cfg, i);
+    const PopulationMarkers regions = FindCandidateRegions(_cfg, i);
 
     // Get the sorted candidates for this region.
     newCandidates.clear();
-    newCandidates = tm->GetMappedVIDs(regions, i);
+    newCandidates = tm->GetMappedVIDs(regions.first, regions.second, i);
 
     if(this->m_debug)
-      std::cout << newCandidates.size() << " candidate VIDs found for body "
-                << i << "."
+      std::cout << "\t" << newCandidates.size()
+                << " candidate VIDs found for body " << i << "."
                 << std::endl;
 
     // For the first body, retain all candidates. For each successive body,
@@ -549,12 +582,20 @@ FindCandidates(const CfgType& _cfg) {
       std::set_intersection(candidates.begin(), candidates.end(),
                             newCandidates.begin(), newCandidates.end(),
                             std::back_inserter(buffer));
-      std::swap(buffer, candidates);
 
       if(this->m_debug)
-        std::cout << "\t" << candidates.size()
+        std::cout << "\t" << buffer.size()
                   << " in common with previous bodies."
                   << std::endl;
+
+      // If the buffer is empty, we found no common candidates. If we want
+      // partial matches, return the common VIDs for the previous bodies.
+      if(m_partialMatches and buffer.empty())
+        return candidates;
+
+      // Otherwise, retain the intersection as the new candidate set and
+      // continue.
+      std::swap(buffer, candidates);
     }
 
     // If the candidates are empty, there are no viable neighbors.
@@ -610,10 +651,7 @@ TopologicalFilter<MPTraits>::
 LazyInitialize() {
   m_initialized = true;
 
-  m_goalRegion = nullptr;
-
   m_ssspCache.clear();
-  m_ssspCache.resize(this->GetTask()->GetRobot()->GetMultiBody()->GetNumBodies());
 
   m_queryMap.clear();
   if(m_useQueryMap)
@@ -674,8 +712,8 @@ BuildQueryMap() {
 
   // Find the goal region and compute its SSSP map. Do not cache it because we
   // will want to recompute on the query-relevant adjacency map.
-  m_goalRegion = tm->LocateRegion(goal);
-  const auto sssp = tm->ComputeFrontier(m_goalRegion);
+  auto goalRegion = tm->LocateRegion(goal);
+  const auto sssp = tm->ComputeFrontier(goalRegion);
 
   // Finally, build the query map from the sssp data.
   m_queryMap.clear();
@@ -697,11 +735,11 @@ BuildQueryMap() {
               << "\n\tQuery:"
               << "\n\t\t(" << startVID << ") " << start.PrettyPrint()
               << "\n\t\t(" << goalVID  << ") " << goal.PrettyPrint()
-              << "\n\tGoal region: " << m_goalRegion
+              << "\n\tGoal region: " << goalRegion
               << "\n\tDescriptor:  "
-              << decomposition->GetDescriptor(*m_goalRegion)
+              << decomposition->GetDescriptor(*goalRegion)
               << "\n\tMapped VIDs for base:";
-    for(const auto vid : tm->GetMappedVIDs(m_goalRegion))
+    for(const auto vid : tm->GetMappedVIDs(goalRegion))
       std::cout << "  " << vid;
     auto startRegion = tm->LocateRegion(start);
     std::cout << "\n\tStart region: " << startRegion
@@ -712,6 +750,38 @@ BuildQueryMap() {
 
     std::cout << std::endl;
   }
+}
+
+
+template <typename MPTraits>
+SSSPOutput<WorkspaceDecomposition>&
+TopologicalFilter<MPTraits>::
+GetSSSPData(const WorkspaceRegion* _region) {
+  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+  auto decomposition = tm->GetDecomposition();
+
+  const bool cacheHit = m_ssspCache.count(_region);
+  this->GetStatClass()->GetAverage("TopologicalFilter::CacheHitRate") += cacheHit;
+
+  // Compute the distance map for this region if it is not cached.
+  auto& ssspCache = m_ssspCache[_region];
+  if(!cacheHit) {
+    if(this->m_debug)
+      std::cout << "\t\tSSSP cache for region "
+                << decomposition->GetDescriptor(*_region) << " is cold."
+                << std::endl;
+
+    // Do the entire search for now. We will worry about pruning it later.
+    // With no early-stop condition, the body index doesn't matter.
+    ssspCache = m_useQueryMap ? tm->ComputeFrontier(_region, 0, -1, m_queryMap)
+                              : tm->ComputeFrontier(_region, 0, -1);
+
+    // Remove the data we will not use.
+    ssspCache.parent.clear();
+    ssspCache.successors.clear();
+  }
+
+  return ssspCache;
 }
 
 /*----------------------------------------------------------------------------*/

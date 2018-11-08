@@ -96,9 +96,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@name Local Types
     ///@{
 
-    typedef std::pair<VID, VID>                             ConnectionAttempt;
-    typedef std::vector<std::pair<ConnectionAttempt, bool>> ConnectionAttempts;
-    typedef std::map<ConnectionAttempt, bool>          ConnectionAttemptsCache;
+    typedef std::pair<VID, VID>               ConnectionAttempt;
+    typedef std::map<ConnectionAttempt, bool> ConnectionAttemptsCache;
 
     ///@}
     ///@name Construction
@@ -115,6 +114,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@{
 
     virtual void Print(std::ostream& _os) const override;
+
+    virtual void Initialize() override;
 
     ///@}
     ///@name Connection Interface
@@ -147,11 +148,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
         bool _fromFullRoadmap, OutputIterator _collision = OutputIterator());
 
     /// Generate edges between two sets of nodes.
-    /// @tparam InputIterator1 Iterator type of first set
-    /// @tparam InputIterator2 Iterator type of second set
-    /// @tparam OutputIterator Iterator type of output for collision nodes
     /// @param _r The roadmap to generate edges in and where the input nodes
-    ///        are found
+    ///           are found
     /// @param _itr1First Begin iterator of first set of VIDs
     /// @param _itr1Last End iterator of first set of VIDs
     /// @param _itr2First Begin iterator of second set of VIDs
@@ -170,44 +168,40 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
         OutputIterator _collision = OutputIterator());
 
     ///@}
+
+  protected:
+
     ///@name Connection Caching
     ///@{
 
     /// Add connection attempt to the caches.
-    /// @param _v1 Source VID
-    /// @param _v2 Target VID
-    /// @param _b Success/failed connection attempt
-    void AddConnectionAttempt(VID _v1, VID _v2, bool _b);
-
-    /// @return Begin iterator of this iteration's attempts
-    typename ConnectionAttempts::const_iterator ConnectionAttemptsBegin() const;
-
-    /// @return End iterator of this iteration's attempts
-    typename ConnectionAttempts::const_iterator ConnectionAttemptsEnd() const;
+    /// @param _source The source VID.
+    /// @param _target The target VID.
+    /// @param _success True if the attempt to connect _source to _target
+    ///                 succeeded, false otherwise.
+    void AddConnectionAttempt(const VID _source, const VID _target,
+        const bool _success) noexcept;
 
     /// Check if attempt is in cache
-    /// @param _v1 Source VID
-    /// @param _v2 Target VID
-    /// @return Yes/no attempt is cached
-    bool IsCached(VID _v1, VID _v2);
+    /// @param _source The source VID.
+    /// @param _target The target VID.
+    /// @return True if the attempt to connect _source to _target is cached.
+    bool IsCached(const VID _source, const VID _target) const noexcept;
 
     /// Check value of attempt in cache
-    /// @param _v1 Source VID
-    /// @param _v2 Target VID
-    /// @return Success/failed connection attempt
-    bool GetCached(VID _v1, VID _v2);
+    /// @param _source The source VID.
+    /// @param _target The target VID.
+    /// @return True if the cached attempt to connect _source to _target
+    ///         succeeded.
+    bool GetCached(const VID _source, const VID _target) const noexcept;
 
-    /// Clear this iteration's attempts cache.
+    /// Clear the attempts cache.
     void ClearConnectionAttempts();
 
     ///@}
-
-  protected:
-
     ///@name Internal State
     ///@{
 
-    ConnectionAttempts m_attempts;   ///< Single iteration connection attempts.
     ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts.
     std::string m_nfLabel;                   ///< Neighborhood Finder
     std::string m_lpLabel;                   ///< Local Planner
@@ -221,14 +215,12 @@ template <typename MPTraits>
 ConnectorMethod<MPTraits>::
 ConnectorMethod(std::string _nfLabel, std::string _lpLabel) :
     m_nfLabel(_nfLabel), m_lpLabel(_lpLabel) {
-  this->SetName("ConnectorMethod");
 }
 
 
 template <typename MPTraits>
 ConnectorMethod<MPTraits>::
 ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  this->SetName("ConnectorMethod");
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
 }
@@ -242,6 +234,14 @@ Print(std::ostream& _os) const {
   MPBaseObject<MPTraits>::Print(_os);
   _os << "\tnfLabel: " << m_nfLabel << endl;
   _os << "\tlpLabel: " << m_lpLabel << endl;
+}
+
+
+template <typename MPTraits>
+void
+ConnectorMethod<MPTraits>::
+Initialize() {
+  ClearConnectionAttempts();
 }
 
 /*---------------------------- Connection Interface --------------------------*/
@@ -298,6 +298,8 @@ Connect(RoadmapType* _r,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap, OutputIterator _collision) {
+  MethodTimer mt(this->GetStatClass(), this->GetName() + "::Connect");
+
   typedef typename MPTraits::ConnectorMethodList MethodList;
   boost::mpl::for_each<MethodList>(
       pmpl_detail::VirtualConnect<
@@ -313,44 +315,34 @@ Connect(RoadmapType* _r,
 template <typename MPTraits>
 void
 ConnectorMethod<MPTraits>::
-AddConnectionAttempt(VID _v1, VID _v2, bool _b) {
-  ConnectionAttempt att(_v1, _v2);
-  m_attempts.push_back(make_pair(att, _b));
-  m_attemptsCache[att] = _b;
-}
-
-
-template <typename MPTraits>
-typename ConnectorMethod<MPTraits>::ConnectionAttempts::const_iterator
-ConnectorMethod<MPTraits>::
-ConnectionAttemptsBegin() const {
-  return m_attempts.begin();
-}
-
-
-template <typename MPTraits>
-typename ConnectorMethod<MPTraits>::ConnectionAttempts::const_iterator
-ConnectorMethod<MPTraits>::
-ConnectionAttemptsEnd() const {
-  return m_attempts.end();
+AddConnectionAttempt(const VID _source, const VID _target, const bool _success)
+    noexcept {
+  m_attemptsCache[{_source, _target}] = _success;
 }
 
 
 template <typename MPTraits>
 bool
 ConnectorMethod<MPTraits>::
-IsCached(VID _v1, VID _v2) {
-  ConnectionAttempt att(_v1, _v2);
-  return m_attemptsCache.count(att) > 0;
+IsCached(const VID _source, const VID _target) const noexcept {
+  return m_attemptsCache.count({_source, _target}) > 0;
 }
 
 
 template <typename MPTraits>
 bool
 ConnectorMethod<MPTraits>::
-GetCached(VID _v1, VID _v2) {
-  ConnectionAttempt att(_v1, _v2);
-  return m_attemptsCache[att];
+GetCached(const VID _source, const VID _target) const noexcept {
+  try {
+    return m_attemptsCache.at({_source, _target});
+  }
+  catch(const std::out_of_range&) {
+    // If the attempt isn't in the cache, repropagate the out-of-range error
+    // with WHERE info.
+    throw RunTimeException(WHERE) << "Connection attempt (" << _source << ", "
+                                  << _target << ") is not in the cache for "
+                                  << this->GetNameAndLabel() << ".";
+  }
 }
 
 
@@ -358,7 +350,7 @@ template <typename MPTraits>
 void
 ConnectorMethod<MPTraits>::
 ClearConnectionAttempts() {
-  m_attempts.clear();
+  m_attemptsCache.clear();
 }
 
 /*----------------------------------------------------------------------------*/

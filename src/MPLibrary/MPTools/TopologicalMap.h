@@ -21,7 +21,8 @@
 /// for distance measurement) lies within.
 ///
 /// @WARNING The current implementation assumes that the workspace decomposition
-///          will not change once created. If this occurs, the maps must be reset.
+///          will not change once created. If this occurs, the maps must be
+///          reset.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TopologicalMap final : public MPBaseObject<MPTraits> {
@@ -82,6 +83,16 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
     std::vector<VID> GetMappedVIDs(
         const std::vector<const WorkspaceRegion*>& _regions,
+        const size_t _bodyIndex = 0) const;
+
+    /// Get the set of VIDs that are bucketed within a set of regions.
+    /// @param _begin A begin iterator to the region descriptors of interest.
+    /// @param _end An end iterator to the region descriptors of interest.
+    /// @param _bodyIndex The body to use.
+    /// @return The set of VIDs that have body _bodyIndex mapped to _region.
+    std::vector<VID> GetMappedVIDs(
+        std::vector<VD>::const_iterator _begin,
+        std::vector<VD>::const_iterator _end,
         const size_t _bodyIndex = 0) const;
 
     /// Get the workspace region to which a given VID is mapped.
@@ -236,6 +247,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     std::string m_decompositionLabel; ///< The workspace decomposition to use.
 
+    std::string m_pqpLabel; ///< PQP CD for finding nearest regions.
+
     /// A grid matrix overlaid on the workspace.
     std::unique_ptr<const GridOverlay> m_grid;
 
@@ -278,6 +291,11 @@ TopologicalMap(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 
   m_decompositionLabel = _node.Read("decompositionLabel", true, "",
       "The workspace decomposition to use.");
+
+  m_pqpLabel = _node.Read("cdLabel", false, "pqp_solid",
+      "Optional collision detection method which can be used to locate nearest "
+      "regions for points in obstacle space. This must be a method which "
+      "provides proximity information (like PQP solid).");
 }
 
 
@@ -294,12 +312,13 @@ Initialize() {
   // Initialize the maps.
   ClearMaps();
 
-  auto envBound = this->GetEnvironment()->GetBoundary();
-  auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
-
   // Initialize the grid and decomposition map.
-  m_grid = std::unique_ptr<const GridOverlay>(new GridOverlay(envBound, m_gridSize));
+  m_grid = std::unique_ptr<const GridOverlay>(new GridOverlay(
+      this->GetEnvironment()->GetBoundary(), m_gridSize));
   {
+    auto decomposition = this->GetMPTools()->GetDecomposition(
+        m_decompositionLabel);
+
     MethodTimer mt(this->GetStatClass(), "GridOverlay::ComputeDecompositionMap");
     m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
   }
@@ -310,11 +329,8 @@ Initialize() {
 
   // Install roadmap hooks.
   auto g = this->GetRoadmap()->GetGraph();
-
-  // Map cfgs to workspace regions whenever they are added.
   g->InstallHook(GraphType::HookType::AddVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->MapCfg(_vi);});
-  // Undo the mapping when cfgs are deleted.
   g->InstallHook(GraphType::HookType::DeleteVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->UnmapCfg(_vi);});
 
@@ -334,7 +350,8 @@ GetMappedVIDs(const WorkspaceRegion* const _region, const size_t _bodyIndex)
   ///      ascending VIDs. Things will get confused if we add VIDs out of order.
   ///      Ideally we need to check for this in MapCfg, and maybe also make a
   ///      loaded roadmap compress its VIDs if there are any missing.
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetMappedVIDs");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GetMappedVIDs");
 
   const auto& forwardMap = GetForwardMap(_bodyIndex);
 
@@ -348,7 +365,8 @@ std::vector<typename TopologicalMap<MPTraits>::VID>
 TopologicalMap<MPTraits>::
 GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
     const size_t _bodyIndex) const {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetMappedVIDs");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GetMappedVIDs");
 
   const auto& forwardMap = GetForwardMap(_bodyIndex);
 
@@ -356,9 +374,52 @@ GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
   /// @todo Profile effect of changing all to a std::set and removing the later
   ///       sort/unique calls.
   std::vector<VID> all;
-  for(const auto& region : _regions) {
+  for(const auto region : _regions) {
     // Skip empty regions.
     auto iter = forwardMap.find(region);
+    if(iter == forwardMap.end())
+      continue;
+
+    // Copy these VIDs.
+    const auto& vids = iter->second;
+    std::copy(vids.begin(), vids.end(), std::back_inserter(all));
+  }
+
+  // Sort and make sure list is unique.
+  std::sort(all.begin(), all.end());
+  auto newEnd = std::unique(all.begin(), all.end());
+
+  // Check that we didn't double-add any vertices.
+  if(all.end() != newEnd)
+    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex "
+                                  << "should be mapped to only one region.";
+
+  return all;
+}
+
+
+template <typename MPTraits>
+std::vector<typename TopologicalMap<MPTraits>::VID>
+TopologicalMap<MPTraits>::
+GetMappedVIDs(
+    std::vector<VD>::const_iterator _begin,
+    std::vector<VD>::const_iterator _end,
+    const size_t _bodyIndex) const {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GetMappedVIDs");
+
+  const auto& forwardMap = GetForwardMap(_bodyIndex);
+  auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
+
+  // Find all VIDs that live within the region set.
+  /// @todo Profile effect of changing all to a std::set and removing the later
+  ///       sort/unique calls.
+  std::vector<VID> all;
+  for(auto vidIter = _begin; vidIter != _end; ++vidIter) {
+    const WorkspaceRegion& region = decomposition->GetRegion(*vidIter);
+
+    // Skip empty regions.
+    auto iter = forwardMap.find(&region);
     if(iter == forwardMap.end())
       continue;
 
@@ -410,7 +471,8 @@ template <typename MPTraits>
 const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 GetRandomRegion() const {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::GetRandomRegion");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GetRandomRegion");
 
   auto d = GetDecomposition();
   return &d->GetRegion(LRand() % d->GetNumRegions());
@@ -441,7 +503,8 @@ template <typename MPTraits>
 const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 LocateRegion(const Point3d& _point) const {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::LocateRegion");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::LocateRegion");
 
   // Find the grid cell that contains the new configuration's reference point.
   const size_t cell = m_grid->LocateCell(_point);
@@ -449,12 +512,28 @@ LocateRegion(const Point3d& _point) const {
   // Find the correct region out of the candidates.
   const auto& candidateRegions = m_cellToRegions[cell];
 
-  for(const WorkspaceRegion* region : candidateRegions)
-    if(region->GetBoundary()->InBoundary(_point))
-      return region;
+  const WorkspaceRegion* r = nullptr;
+  for(const WorkspaceRegion* region : candidateRegions) {
+    if(region->GetBoundary()->InBoundary(_point)) {
+      r = region;
+      break;
+    }
+  }
 
-  // If we get here, we didn't find a region.
-  return nullptr;
+  if(this->m_debug) {
+    // If we are debugging, use pqp to check if _point lies within an obstacle.
+    using CDType = CollisionDetectionValidity<MPTraits>;
+    auto vc = static_cast<CDType*>(this->GetValidityChecker(m_pqpLabel).get());
+    const bool inObstacle = vc->IsInsideObstacle(_point);
+
+    std::cout << "TopologicalMap::LocateRegion"
+              << "\n\tPoint " << _point << "is " << (inObstacle ? "" : "not ")
+              << "inside an obstacle."
+              << "\n\tContaining region: " << r
+              << std::endl;
+  }
+
+  return r;
 }
 
 
@@ -473,7 +552,8 @@ template <typename MPTraits>
 const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 LocateNearestRegion(const Point3d& _p) const {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::LocateNearestRegion");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::LocateNearestRegion");
 
   // Put the point robot here.
   auto pointRobot = this->GetMPProblem()->GetRobot("point");
@@ -481,18 +561,17 @@ LocateNearestRegion(const Point3d& _p) const {
 
   // Use PQPSolid to get the CD info. If the check is valid, this was already in
   // free space.
-  /// @TODO This relies on magic strings in the XML. Make it more robust.
   CDInfo cdInfo(true);
-  auto vc = this->GetValidityChecker("pqp_solid");
-  if(vc->IsValid(temp, cdInfo, "TopologicalMap::FindCandidateRegions"))
+  auto vc = this->GetValidityChecker(m_pqpLabel);
+  if(vc->IsValid(temp, cdInfo, this->GetNameAndLabel() + "::LocateNearestRegion"))
     return LocateRegion(_p);
 
   // Compute the vector from the sampled point to the outside of the obstacle.
   const Vector3d delta = cdInfo.m_objectPoint - cdInfo.m_robotPoint;
+  auto env = this->GetEnvironment();
 
   // The nearest possible free point is just outside of the obstacle along
   // delta.
-  auto env = this->GetEnvironment();
   return LocateRegion(cdInfo.m_objectPoint + delta.scale(env->GetPositionRes()));
 }
 
@@ -537,7 +616,8 @@ template <typename MPTraits>
 typename TopologicalMap<MPTraits>::NeighborhoodKey
 TopologicalMap<MPTraits>::
 LocateNeighborhood(const CfgType& _c) const {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::LocateNeighborhood");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::LocateNeighborhood");
 
   // Create a key with storage for each body.
   auto mb = _c.GetMultiBody();
@@ -567,7 +647,7 @@ template <typename MPTraits>
 void
 TopologicalMap<MPTraits>::
 MapCfg(const VI _vertex) {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::MapCfg");
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::MapCfg");
 
   const auto& cfg = _vertex->property();
   const VID vid = _vertex->descriptor();
@@ -589,7 +669,7 @@ template<typename MPTraits>
 void
 TopologicalMap<MPTraits>::
 UnmapCfg(const VI _vertex) {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::UnmapCfg");
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::UnmapCfg");
 
   const VID vid = _vertex->descriptor();
 
@@ -664,7 +744,9 @@ typename TopologicalMap<MPTraits>::SSSPData
 TopologicalMap<MPTraits>::
 ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
     const double _earlyStopDistance, const AdjacencyMap& _adjacency) {
-  MethodTimer mt(this->GetStatClass(), "TopologicalMap::ComputeFrontier");
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeFrontier");
+  stats->IncStat(this->GetNameAndLabel() + "::ComputeFrontier");
 
   // Const cast is required because STAPL has an API error preventing useful
   // iteration over non-const graphs.

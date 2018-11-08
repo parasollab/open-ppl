@@ -149,7 +149,6 @@
 #include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
-#include "MPLibrary/MPStrategies/HybridPRM.h"
 #include "MPLibrary/MPStrategies/LPCompare.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
@@ -375,7 +374,6 @@ struct MPTraits {
     DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
-    HybridPRM<MPTraits>,
     LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,

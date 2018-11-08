@@ -27,11 +27,15 @@ template <typename GraphType>
 struct SSSPOutput {
 
   typedef typename GraphType::vertex_descriptor VD;
+  typedef std::unordered_map<VD, double>        DistanceMap;
+  typedef std::vector<VD>                       Ordering;
+  typedef SSSPAdjacencyMap<GraphType>           Adjacency;
+  typedef std::unordered_map<VD, VD>            ParentMap;
 
-  std::unordered_map<VD, double> distance;  ///< Distance to each cell from start.
-  std::vector<VD> ordering;                 ///< Cell discovery ordering.
-  SSSPAdjacencyMap<GraphType> successors;   ///< Maps predecessor -> successors.
-  std::unordered_map<VD, VD> parent;        ///< Maps successor -> parent.
+  DistanceMap distance;  ///< Distance to each cell from start.
+  Ordering ordering;     ///< Cell discovery ordering.
+  Adjacency successors;  ///< Maps predecessor -> successors.
+  ParentMap parent;      ///< Maps successor -> parent.
 
 };
 

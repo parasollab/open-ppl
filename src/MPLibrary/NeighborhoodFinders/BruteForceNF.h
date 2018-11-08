@@ -143,7 +143,7 @@ FindNeighbors(RoadmapType* _rmp,
   for(InputIterator it = _first; it != _last; it++) {
     // Get the candidate VID and check for connectedness.
     const VID vid = g->GetVID(it);
-    if(this->CheckUnconnected(_rmp, _cfg, vid))
+    if(this->DirectEdge(g, _cfg, vid))
       continue;
 
     // Get the candidate Cfg and check against connection to self.
@@ -166,8 +166,8 @@ FindNeighbors(RoadmapType* _rmp,
     }
   }
 
-  if(this->m_debug and pq.empty())
-    std::cout << "\tNo neighbors located." << std::endl;
+  if(this->m_debug)
+    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
 
   // Write k closest to vector, sorted greatest to least distance.
   std::vector<Neighbor> closest;
@@ -192,12 +192,18 @@ FindNeighborPairs(RoadmapType* _rmp,
   GraphType* g = _rmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
+  if(this->m_debug)
+    std::cout << "Checking for nearest " << this->m_k
+              << " neighbor pairs with dm '" << this->m_dmLabel << "'."
+              << std::endl;
+
   // Find all pairs
   std::priority_queue<Neighbor> pq;
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     // Get the first configuration.
     const CfgType& node1 = g->GetVertex(it1);
+    const VID vid1 = g->GetVID(it1);
 
     // Compare it to everything in the second set.
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
@@ -207,6 +213,11 @@ FindNeighborPairs(RoadmapType* _rmp,
 
       // Get the second configuration.
       const CfgType& node2 = g->GetVertex(it2);
+      const VID vid2 = g->GetVID(it2);
+
+      // Check unconnected.
+      if(this->DirectEdge(g, node1, vid2))
+        continue;
 
       // Check distance. If it is infinite, these are not connectable.
       const double distance = dm->Distance(node1, node2);
@@ -214,15 +225,17 @@ FindNeighborPairs(RoadmapType* _rmp,
         continue;
 
       // Track the best m_k so far.
-      if(pq.size() < this->m_k) {
-        pq.emplace(g->GetVID(it1), g->GetVID(it2), distance);
-      }
+      if(pq.size() < this->m_k)
+        pq.emplace(vid1, vid2, distance);
       else if(distance < pq.top().distance) {
         pq.pop();
-        pq.emplace(g->GetVID(it1), g->GetVID(it2), distance);
+        pq.emplace(vid1, vid2, distance);
       }
     }
   }
+
+  if(this->m_debug)
+    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
 
   // Write k closest to vector, sorted greatest to least distance.
   std::vector<Neighbor> closest;
@@ -246,13 +259,18 @@ FindNeighbors(GroupRoadmapType* _rmp,
     const GroupCfgType& _cfg, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
+  if(this->m_debug)
+    std::cout << "Checking for nearest " << this->m_k
+              << " neighbors with dm '" << this->m_dmLabel << "'."
+              << std::endl;
+
   // Keep sorted list of k best so far
   std::priority_queue<Neighbor> pq;
 
   for(InputIterator it = _first; it != _last; it++) {
     // Check for connectedness.
     const VID vid = _rmp->GetVID(it);
-    if(this->CheckUnconnected(_rmp, _cfg, vid))
+    if(this->DirectEdge(_rmp, _cfg, vid))
       continue;
 
     // Get the configuration and check for connection to self.
@@ -275,8 +293,8 @@ FindNeighbors(GroupRoadmapType* _rmp,
     }
   }
 
-  if(this->m_debug and pq.empty())
-    std::cout << "\tNo neighbors located." << std::endl;
+  if(this->m_debug)
+    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
 
   // Transfer k closest to vector, sorted greatest to least distance
   std::vector<Neighbor> closest;
@@ -300,12 +318,18 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
     InputIterator _first2, InputIterator _last2, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
+  if(this->m_debug)
+    std::cout << "Checking for nearest " << this->m_k
+              << " neighbor pairs with dm '" << this->m_dmLabel << "'."
+              << std::endl;
+
   // Find all pairs
   std::priority_queue<Neighbor> pq;
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     // Get the first configuration.
     const GroupCfgType& node1 = _rmp->GetVertex(it1);
+    const VID vid1 = _rmp->GetVID(it1);
 
     // Compare it to everything in the second set.
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
@@ -315,6 +339,11 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 
       // Get the second configuration.
       const GroupCfgType& node2 = _rmp->GetVertex(it2);
+      const VID vid2 = _rmp->GetVID(it2);
+
+      // Check for connectedness.
+      if(this->DirectEdge(_rmp, node1, vid2))
+        continue;
 
       // Check the distance. If it is infinite, these are not connectable.
       const double distance = dm->Distance(node1, node2);
@@ -323,13 +352,16 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 
       // Track the closest m_k pairs.
       if(pq.size() < this->m_k)
-        pq.emplace(_rmp->GetVID(it1), _rmp->GetVID(it2), distance);
+        pq.emplace(vid1, vid2, distance);
       else if(distance < pq.top().distance) {
         pq.pop();
-        pq.emplace(_rmp->GetVID(it1), _rmp->GetVID(it2), distance);
+        pq.emplace(vid1, vid2, distance);
       }
     }
   }
+
+  if(this->m_debug)
+    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
 
   // Write k closest to vector, sorted greatest to least distance.
   std::vector<Neighbor> closest;

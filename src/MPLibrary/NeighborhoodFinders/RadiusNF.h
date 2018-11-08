@@ -138,7 +138,7 @@ FindNeighbors(RoadmapType* _rmp,
   for(InputIterator it = _first; it != _last; it++) {
     // Check for connectedness.
     const VID vid = g->GetVID(it);
-    if(this->CheckUnconnected(_rmp, _cfg, vid))
+    if(this->DirectEdge(g, _cfg, vid))
       continue;
 
     // Check for connection to self.

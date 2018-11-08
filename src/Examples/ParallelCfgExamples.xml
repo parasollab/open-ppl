@@ -2,7 +2,7 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <MPProblem>
 
-    <Environment filename="2D/2d.env" saveDofs="false"/>
+    <Environment filename="2D/2d.env"/>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>

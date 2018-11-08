@@ -74,23 +74,15 @@ class RoadmapGraph : public
     typedef typename STAPLGraph::vertex_iterator   VI;
     typedef typename STAPLGraph::adj_edge_iterator EI;
 
-#ifndef _PARALLEL
-    ///TODO: Remove guard after const issue is fixed in STAPL
     typedef typename STAPLGraph::const_vertex_iterator                 CVI;
+    typedef typename STAPLGraph::const_adj_edge_iterator               CEI;
     typedef typename STAPLGraph::vertex_property&                      VP;
     typedef typename STAPLGraph::edge_property&                        EP;
-    typedef stapl::sequential::vdata_iterator<VI>                      VPI;
-    typedef stapl::sequential::const_vdata_iterator<VI>                CVPI;
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
-#else
-    typedef typename STAPLGraph::vertex_iterator                       CVI;
-    typedef typename STAPLGraph::vertex_property                       VP;
-    typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
-#endif
 
     typedef std::function<void(VI)> VertexHook;
     typedef std::function<void(EI)> EdgeHook;
-    enum class HookType : char {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
+    enum class HookType {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
 
     ///@}
     ///@name Construction
@@ -156,7 +148,7 @@ class RoadmapGraph : public
     /// Check if a vertex is present in the graph.
     /// @param _v  The vertex property to seek.
     /// @return True if the vertex property was found in the graph.
-    bool IsVertex(const Vertex& _v) noexcept;
+    bool IsVertex(const Vertex& _v) const noexcept;
 
     /// Check if a vertex is present in the graph and retrieve a const iterator
     /// to it if so.
@@ -164,23 +156,23 @@ class RoadmapGraph : public
     /// @param _vi A vertex iterator, set to the located vertex or end if not
     ///            found.
     /// @return True if the vertex property was found in the graph.
-    bool IsVertex(const Vertex& _v, CVI& _vi) noexcept;
+    bool IsVertex(const Vertex& _v, CVI& _vi) const noexcept;
 
     /// Check if an edge is present between two vertices.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @return True if an edge exists from source to target.
-    bool IsEdge(const VID _source, const VID _target) noexcept;
+    bool IsEdge(const VID _source, const VID _target) const noexcept;
 
     /// Get the descriptor of a vertex property if it exists in the graph, or
     /// INVALID_VID otherwise.
     template <typename T>
-    VID GetVID(const T& _t) noexcept;
-    VID GetVID(const VI& _t) noexcept;
-    VID GetVID(const Vertex& _t) noexcept;
+    VID GetVID(const T& _t) const noexcept;
+    VID GetVID(const VI& _t) const noexcept;
+    VID GetVID(const Vertex& _t) const noexcept;
 
     /// Get the descriptor of the last vertex added to the graph.
-    VID GetLastVID() noexcept;
+    VID GetLastVID() const noexcept;
 
 #ifndef _PARALLEL
     /// Get the number of CCs in the graph.
@@ -547,7 +539,7 @@ Size() const noexcept {
 template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
-IsVertex(const Vertex& _v) noexcept {
+IsVertex(const Vertex& _v) const noexcept {
   CVI vi;
   return IsVertex(_v, vi);
 }
@@ -556,7 +548,7 @@ IsVertex(const Vertex& _v) noexcept {
 template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
-IsVertex(const Vertex& _v, CVI& _vi) noexcept {
+IsVertex(const Vertex& _v, CVI& _vi) const noexcept {
 #ifndef _PARALLEL
   for(CVI vi = this->begin(); vi != this->end(); ++vi){
     if(vi->property() == _v){
@@ -574,9 +566,10 @@ IsVertex(const Vertex& _v, CVI& _vi) noexcept {
 template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
-IsEdge(const VID _source, const VID _target) noexcept {
-  EI ei;
-  return GetEdge(_source, _target, ei);
+IsEdge(const VID _source, const VID _target) const noexcept {
+  CEI ei;
+  CVI vi;
+  return this->find_edge(EID(_source, _target), vi, ei);
 }
 
 
@@ -584,7 +577,7 @@ template <typename Vertex, typename Edge>
 template<typename T>
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
-GetVID(const T& _t) noexcept {
+GetVID(const T& _t) const noexcept {
   return *_t;
 }
 
@@ -592,7 +585,7 @@ GetVID(const T& _t) noexcept {
 template <typename Vertex, typename Edge>
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
-GetVID(const VI& _t) noexcept {
+GetVID(const VI& _t) const noexcept {
   return _t->descriptor();
 }
 
@@ -600,7 +593,7 @@ GetVID(const VI& _t) noexcept {
 template <typename Vertex, typename Edge>
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
-GetVID(const Vertex& _t) noexcept {
+GetVID(const Vertex& _t) const noexcept {
   CVI vi;
   if(IsVertex(_t, vi))
     return vi->descriptor();
@@ -611,7 +604,7 @@ GetVID(const Vertex& _t) noexcept {
 template <typename Vertex, typename Edge>
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
-GetLastVID() noexcept {
+GetLastVID() const noexcept {
   if(this->get_num_vertices() == 0)
     return INVALID_VID;
 
@@ -697,12 +690,8 @@ template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
-#ifndef _PARALLEL
   VI vi;
   return this->find_edge(EID(_source, _target), vi, _ei);
-#else
-  return false;
-#endif
 }
 
 

@@ -120,16 +120,16 @@ class GMSPolygon {
     /// Test whether a point lies above or below the polygon plane. A
     /// point is considered above the plane when it is on the side where
     /// the normal faces outward.
-    /// @param[in] _p The point to check.
+    /// @param _p The point to check.
     const bool PointIsAbove(const Point3d& _p) const noexcept;
 
     /// Find a common vertex between two polygons.
-    /// @param[in] _p The other polygon under consideration.
+    /// @param _p The other polygon under consideration.
     /// @return A common vertex index, or -1 if none exists.
     const int CommonVertex(const GMSPolygon& _p) const noexcept;
 
     /// Find the common edge between two polygons.
-    /// @param[in] _p The other polygon under consideration.
+    /// @param _p The other polygon under consideration.
     /// @return A pair of vertex indexes if a common edge exists. If not, at
     ///         least one of the indexes will be -1.
     const std::pair<int, int> CommonEdge(const GMSPolygon& _p) const noexcept;

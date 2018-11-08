@@ -1,5 +1,5 @@
-#ifndef TOPOLOGICAL_DISTANCE_H
-#define TOPOLOGICAL_DISTANCE_H
+#ifndef PMPL_TOPOLOGICAL_DISTANCE_H
+#define PMPL_TOPOLOGICAL_DISTANCE_H
 
 #include "DistanceMetricMethod.h"
 
@@ -34,9 +34,11 @@ namespace std {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Wrapper for another distance metric (termed the underlying DM). The
-/// connected workspace distance is evaluated first - if that is equal, then the
-/// underlying DM will be used.
+/// For two free configurations, determine the distance between their containing
+/// cells in a workspace decomposition using a topological map.
+///
+/// This metric is symmetric. It will produce an infinite distance if either
+/// configuration cannot be located in the topological map.
 ///
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +56,14 @@ class TopologicalDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
+    /// A pair of regions, which act as a hash key when caching the inter-region
+    /// distances. Since this distance metric is symmetric, we will always
+    /// store the lower address first to keep the key space compact.
     typedef std::pair<const WorkspaceRegion*, const WorkspaceRegion*> KeyPair;
+
+    /// The different ways that we may combine the topological distance for each
+    /// body in a multibody.
+    enum class MultiBodyOperator {Sum, Max, Min};
 
     ///@}
     ///@name Construction
@@ -62,15 +71,15 @@ class TopologicalDistance : public DistanceMetricMethod<MPTraits> {
 
     TopologicalDistance();
 
-    /// Construct a distance wrapper for a TopologicalFilter.
-    /// @param _tmLabel The topological map label.
-    /// @param _dmLabel The underlying DM label.
-    TopologicalDistance(const std::string& _tmLabel,
-        const std::string& _dmLabel);
-
     TopologicalDistance(XMLNode& _node);
 
     virtual ~TopologicalDistance() = default;
+
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Initialize() override;
 
     ///@}
     ///@name Distance Metric Overrides
@@ -94,24 +103,33 @@ class TopologicalDistance : public DistanceMetricMethod<MPTraits> {
     /// Update the distance map to include a new key pair. Since we have to
     /// compute an entire SSSP run to do this, we go ahead and save the mapping
     /// from the first cell to each other.
+    /// @param _key The key pair.
     void UpdateMap(const KeyPair& _key);
 
-    /// Make a map key from two region pointers. Since this distance metric is
-    /// symmetric, we will always store the lower address first to keep the
-    /// key space compact.
+    /// Make a map key from two region pointers.
     /// @param _r1 The first region.
     /// @param _r2 The second region.
     /// @return A key pair for {_r1,  _r2} which is identical to the key pair
     ///         for {_r2, _r1}.
-    KeyPair MakeKey(const WorkspaceRegion* _r1, const WorkspaceRegion* _r2)
-        const noexcept;
+    KeyPair MakeKey(const WorkspaceRegion* const _r1,
+        const WorkspaceRegion* const _r2) const noexcept;
+
+    /// Compute the topological distance between two workspace cells.
+    /// @param _r1 The source workspace cell.
+    /// @param _r2 The target workspace cell.
+    /// @return The distance from _r1 to _r2 through free workspace as
+    ///         determined by the topological map.
+    double CellDistance(const WorkspaceRegion* const _r1,
+        const WorkspaceRegion* const _r2);
 
     ///@}
     ///@name Internal State
     ///@{
 
     std::string m_tmLabel; ///< The topological map to use.
-    std::string m_dmLabel; ///< Label for the underlying distance metric.
+
+    /// How to combine distances for multiple bodies.
+    MultiBodyOperator m_operator;
 
     /// Track the distance between each cell.
     std::unordered_map<KeyPair, double> m_distanceMap;
@@ -130,22 +148,35 @@ TopologicalDistance() : DistanceMetricMethod<MPTraits>() {
 
 template <typename MPTraits>
 TopologicalDistance<MPTraits>::
-TopologicalDistance(const std::string& _tmLabel,
-    const std::string& _dmLabel) :
-    DistanceMetricMethod<MPTraits>(), m_tmLabel(_tmLabel), m_dmLabel(_dmLabel) {
-  this->SetName("TopologicalDistance");
-}
-
-
-template <typename MPTraits>
-TopologicalDistance<MPTraits>::
 TopologicalDistance(XMLNode& _node) :
     DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("TopologicalDistance");
 
   m_tmLabel = _node.Read("tmLabel", true, "", "The topological map to use.");
 
-  m_dmLabel = _node.Read("dmLabel", true, "", "The underlying distance metric.");
+  // Parse the operator string.
+  std::string op = _node.Read("operator", true, "",
+      "The operator to use for multibodies {sum, max, min}");
+  std::transform(op.begin(), op.end(), op.begin(), ::tolower);
+
+  if(op == "sum")
+    m_operator = MultiBodyOperator::Sum;
+  else if(op == "max")
+    m_operator = MultiBodyOperator::Max;
+  else if(op == "min")
+    m_operator = MultiBodyOperator::Min;
+  else
+    throw ParseException(_node.Where()) << "Unrecognized operator '" << op
+                                        << "'.";
+}
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
+
+template <typename MPTraits>
+void
+TopologicalDistance<MPTraits>::
+Initialize() {
+  m_distanceMap.clear();
 }
 
 /*---------------------- DistanceMetricMethod Overrides ----------------------*/
@@ -157,31 +188,60 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "TopologicalDistance::Distance");
 
-  // Locate the cells where the cfgs are located.
+  // Locate the neighborhoods where the cfgs are located.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto cell1 = tm->LocateRegion(_c1);
-  auto cell2 = tm->LocateRegion(_c2);
+  auto neighborhood1 = tm->LocateNeighborhood(_c1);
+  auto neighborhood2 = tm->LocateNeighborhood(_c2);
 
-  // If they are the same, their topological distance is 0. Fall back to the
-  // underlying NF.
-  if(cell1 == cell2) {
-    stats->IncStat("TopologicalDistance::Fallback");
-    return this->GetDistanceMetric(m_dmLabel)->Distance(_c1, _c2);
+  auto mb = _c1.GetMultiBody();
+  double output = 0;
+
+  // Compute the distance based on the designated operator.
+  using F = std::function<void(const double)>;
+  F f;
+  switch(m_operator) {
+    case MultiBodyOperator::Sum:
+      f = F([&output](const double _d) {output += _d;});
+      break;
+    case MultiBodyOperator::Max:
+      f = F([&output](const double _d) {output = std::max(output, _d);});
+      break;
+    case MultiBodyOperator::Min:
+      f = F([&output](const double _d) {output = std::min(output, _d);});
+      break;
+    default:
+      throw RunTimeException(WHERE) << "Illegal operator.";
   }
-  stats->IncStat("TopologicalDistance::Used");
 
-  // Topological distance is symmetric, so we can save on the distance map
-  // storage by always using key pairs that are sorted.
-  const KeyPair key = MakeKey(cell1, cell2);
+  // Compute the topological distance between each region in the neighborhood
+  // keys.
+  for(size_t i = 0; i < neighborhood1.size(); ++i) {
+    // Get the topological distance between the decomposition cells for body i.
+    const WorkspaceRegion* const cell1 = neighborhood1[i],
+                         * const cell2 = neighborhood2[i];
+    const double distance = CellDistance(cell1, cell2);
 
-  // If the distance has already been calculated, return it now.
-  auto iter = m_distanceMap.find(key);
-  if(iter != m_distanceMap.end())
-    return iter->second;
+    // If it is infinite, the answer is known.
+    if(std::isinf(distance))
+      return distance;
 
-  // Otherwise, update the distance map to include this key before returning.
-  UpdateMap(key);
-  return m_distanceMap[key];
+    // If it is zero, the bodies are in the same cell. We will use the euclidean
+    // distance between bodies in that case.
+    if(distance == 0.) {
+      _c1.ConfigureRobot();
+      const Vector3d p1 = mb->GetBody(i)->GetWorldTransformation().translation();
+      _c2.ConfigureRobot();
+      const Vector3d p2 = mb->GetBody(i)->GetWorldTransformation().translation();
+
+      const double interBodyDistance = (p1 - p2).norm();
+      f(interBodyDistance);
+    }
+    // Otherwise, apply the operator function.
+    else
+      f(distance);
+  }
+
+  return output;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -208,9 +268,38 @@ UpdateMap(const KeyPair& _key) {
 template <typename MPTraits>
 typename TopologicalDistance<MPTraits>::KeyPair
 TopologicalDistance<MPTraits>::
-MakeKey(const WorkspaceRegion* _r1, const WorkspaceRegion* _r2) const noexcept {
+MakeKey(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2)
+    const noexcept {
   return {std::min(_r1, _r2),
           std::max(_r1, _r2)};
+}
+
+
+template <typename MPTraits>
+double
+TopologicalDistance<MPTraits>::
+CellDistance(const WorkspaceRegion* const _r1,
+    const WorkspaceRegion* const _r2) {
+  // If either cell is null, then one of the configurations is in obstacle
+  // space. Their topological distance is then infinite.
+  if(!_r1 or !_r2)
+    return std::numeric_limits<double>::infinity();
+
+  // If they are the same, their topological distance is 0.
+  if(_r1 == _r2)
+    return 0;
+
+  // Look for the distance between _r1 and _r2 in the distance map.
+  const KeyPair key = MakeKey(_r1, _r2);
+  auto iter = m_distanceMap.find(key);
+
+  // If we found it, we are done.
+  if(iter != m_distanceMap.end())
+    return iter->second;
+
+  // Otherwise, update the distance map to include this key before returning.
+  UpdateMap(key);
+  return m_distanceMap[key];
 }
 
 /*----------------------------------------------------------------------------*/

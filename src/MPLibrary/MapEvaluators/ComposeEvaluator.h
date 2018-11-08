@@ -1,5 +1,5 @@
-#ifndef COMPOSE_EVALUATION_H_
-#define COMPOSE_EVALUATION_H_
+#ifndef PMPL_COMPOSE_EVALUATION_H_
+#define PMPL_COMPOSE_EVALUATION_H_
 
 #include "MapEvaluatorMethod.h"
 #include "EvaluatorFunctor.h"
@@ -31,8 +31,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    ComposeEvaluator(LogicalOperator _logicalOperator = AND,
-        const vector<string>& _evalLabels = vector<string>());
+    ComposeEvaluator();
 
     ComposeEvaluator(XMLNode& _node);
 
@@ -40,7 +39,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     virtual void Initialize() override;
 
@@ -54,7 +53,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     LogicalOperator m_logicalOperator;
-    std::vector<string> m_evalLabels;
+    std::vector<std::string> m_evalLabels;
 
     ///@}
 };
@@ -63,9 +62,7 @@ class ComposeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
 template <typename MPTraits>
 ComposeEvaluator<MPTraits>::
-ComposeEvaluator(LogicalOperator _logicalOperator,
-    const vector<string>& _evalLabels) : MapEvaluatorMethod<MPTraits>(),
-    m_logicalOperator(_logicalOperator), m_evalLabels(_evalLabels) {
+ComposeEvaluator() {
   this->SetName("ComposeEvaluator");
 }
 
@@ -84,15 +81,15 @@ ComposeEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   else if(logicalOperator == "or")
     m_logicalOperator = OR;
   else
-    throw ParseException(_node.Where(), "Operator '" + logicalOperator +
-        "' is unknown.");
+    throw ParseException(_node.Where()) << "Operator '" << logicalOperator
+                                        << "' is unknown.";
 
   for(auto& child : _node)
     if(child.Name() == "Evaluator")
       m_evalLabels.push_back(child.Read("label", true, "", "method"));
 
   if(m_evalLabels.size() < 2)
-    throw ParseException(_node.Where(), "Must specify at least two evaluators.");
+    throw ParseException(_node.Where()) << "Must specify at least two evaluators.";
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -100,11 +97,12 @@ ComposeEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 ComposeEvaluator<MPTraits>::
-Print(ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl;
-  for(auto& l : m_evalLabels)
-    _os << "\n\tevaluation method = \'" << l << "\'";
-  _os << "\n\t operator = " << m_logicalOperator << endl;
+Print(std::ostream& _os) const {
+  _os << this->GetNameAndLabel();
+  for(const auto& l : m_evalLabels)
+    _os << "\n\tevaluation method: " << l;
+  _os << "\n\toperator: " << (m_logicalOperator == AND ? "AND" : "OR")
+      << std::endl;
 }
 
 
@@ -112,47 +110,64 @@ template <typename MPTraits>
 void
 ComposeEvaluator<MPTraits>::
 Initialize() {
-  if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Initialize()" << std::endl;
-  for(string label : m_evalLabels)
+  for(const auto& label : m_evalLabels)
     this->GetMapEvaluator(label)->Initialize();
 }
+
 
 template <typename MPTraits>
 bool
 ComposeEvaluator<MPTraits>::
 operator()() {
-  typedef typename MPLibrary::MapEvaluatorPointer MapEvaluatorPointer;
-  vector<MapEvaluatorPointer> evalMethods;
-  for(auto l : m_evalLabels)
-    evalMethods.push_back(this->GetMapEvaluator(l));
-
   if(this->m_debug)
-    cout << "ComposeEvaluator:: checking evaluators..." << endl;
+    std::cout << "ComposeEvaluator::" << std::endl;
+
   switch(m_logicalOperator) {
     case AND:
-      for(auto e : evalMethods) {
-        bool passed = e->operator()();
+      for(const auto& label : m_evalLabels) {
+        auto e = this->GetMapEvaluator(label);
+
+        // Print the name first so that we can see which evaluator this is if
+        // its debug flag is also on.
         if(this->m_debug)
-          cout << "\t" << e->GetNameAndLabel() << ":"
-               << (passed ? "passed" : "failed") << endl;
+          std::cout << "\t" << e->GetNameAndLabel() << ": "
+                    << std::endl;
+
+        const bool passed = e->operator()();
+
+        if(this->m_debug)
+          std::cout << "\t" << e->GetNameAndLabel() << ": "
+                    << (passed ? "passed" : "failed")
+                    << std::endl;
+
         if(!passed)
           return false;
       }
       return true;
     case OR:
-      for(auto e : evalMethods) {
-        bool passed = e->operator()();
+      for(const auto& label : m_evalLabels) {
+        auto e = this->GetMapEvaluator(label);
+
+        // Print the name first so that we can see which evaluator this is if
+        // its debug flag is also on.
         if(this->m_debug)
-          cout << "\t" << e->GetNameAndLabel() << ":"
-               << (passed ? "passed" : "failed") << endl;
+          std::cout << "\t" << e->GetNameAndLabel() << ": "
+                    << std::endl;
+
+        const bool passed = e->operator()();
+
+        if(this->m_debug)
+          std::cout << "\t" << e->GetNameAndLabel() << ": "
+                    << (passed ? "passed" : "failed")
+                    << std::endl;
         if(passed)
           return true;
       }
       return false;
     default:
-      throw RunTimeException(WHERE, "Unknown operator is stated.");
+      throw RunTimeException(WHERE) << "Unknown operator is stated.";
   }
+
   return false;
 }
 

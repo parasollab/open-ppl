@@ -259,7 +259,6 @@ class Environment {
 
     std::string m_filename;     ///< Which file did this environment come from?
     std::string m_modelDataDir; ///< Directory where environment file is located.
-    bool m_saveDofs{false};     ///< Should we save the dof information to a file?
 
     ///@}
     ///@name Resolution Info

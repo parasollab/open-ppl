@@ -219,7 +219,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetName() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
 
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid;
@@ -262,7 +262,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _robotBoundary, const Boundary* const _eeBoundary,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetName() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
 
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid;
@@ -326,7 +326,7 @@ Sample(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetName() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
 
   std::vector<CfgType> valid;
   std::vector<CfgType> invalid;

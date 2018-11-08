@@ -1,4 +1,5 @@
 #include <exception>
+#include <limits>
 #include <string>
 
 #include "MPLibrary/PMPL.h"
@@ -11,8 +12,14 @@
 int
 main(int _argc, char** _argv) {
   try {
+    // Assert that this platform supports an infinity for doubles.
+    if(!std::numeric_limits<double>::has_infinity)
+      throw RunTimeException(WHERE) << "This platform does not support infinity "
+                                    << "for double-types, which is required for "
+                                    << "pmpl to work properly.";
+
     if(_argc != 3 || std::string(_argv[1]) != "-f")
-      throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
+      throw ParseException(WHERE) << "Incorrect usage. Usage: -f options.xml";
 
     // Get the XML file name from the command line.
     std::string xmlFile = _argv[2];
@@ -34,10 +41,10 @@ main(int _argc, char** _argv) {
       RobotGroup* const robotGroup = problem->GetRobotGroups().front().get();
       for(auto groupTask : problem->GetTasks(robotGroup))
         pmpl->Solve(problem, groupTask.get());
-      }
+    }
 
     if(robotTasks.empty() and (problem->GetRobotGroups().empty() or
-           problem->GetTasks(problem->GetRobotGroups().front().get()).empty()))
+        problem->GetTasks(problem->GetRobotGroups().front().get()).empty()))
       throw RunTimeException(WHERE) << "No tasks were specified!";
 
     // Release resources.

@@ -3,10 +3,9 @@
 
 #include "ConnectorMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Connectors
-/// @brief Connect nearby neighbors together.
-///
+/// Connect nearby neighbors together.
 ///
 /// Connect nodes in map to their neighbors. The following algorithm is used:
 /// -# for evry node, cfg1, in roadmap
@@ -17,49 +16,84 @@
 ///         -# if connected, add this edge to map, _rm.
 ///     -# end for
 /// -# end for
+/// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
     typedef typename RoadmapType::GraphType GraphType;
 
-    NeighborhoodConnector(string _nfLabel = "", string _lpLabel = "",
+    ///@}
+    ///@name Construction
+    ///@{
+
+    NeighborhoodConnector(std::string _nfLabel = "", std::string _lpLabel = "",
         bool _checkIfSameCC = false, bool _countFailures = false,
         size_t _fail = 5);
+
     NeighborhoodConnector(XMLNode& _node);
 
-    virtual void Print(ostream& _os) const;
-    virtual void ParseXML(XMLNode& _node);
+    virtual ~NeighborhoodConnector() = default;
 
-    template<typename InputIterator1, typename InputIterator2,
-      typename OutputIterator>
-        void Connect(RoadmapType* _rm,
-            InputIterator1 _itr1First, InputIterator1 _itr1Last,
-            InputIterator2 _itr2First, InputIterator2 _itr2Last,
-            bool _fromFullRoadmap,
-            OutputIterator _collision) ;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name ConnectorMethod Interface
+    ///@{
+
+    template <typename InputIterator1, typename InputIterator2,
+              typename OutputIterator>
+    void Connect(RoadmapType* _rm,
+        InputIterator1 _itr1First, InputIterator1 _itr1Last,
+        InputIterator2 _itr2First, InputIterator2 _itr2Last,
+        bool _fromFullRoadmap,
+        OutputIterator _collision);
+
+    ///@}
 
   protected:
+
+    ///@name Helpers
+    ///@{
+
     template<typename InputIterator, typename OutputIterator>
-      void ConnectNeighbors(
-          RoadmapType* _rm, VID _vid,
-          InputIterator _first, InputIterator _last,
-          OutputIterator _collision);
+    void ConnectNeighbors(
+        RoadmapType* _rm, VID _vid,
+        InputIterator _first, InputIterator _last,
+        OutputIterator _collision);
+
+    ///@}
 
   private:
-    bool m_checkIfSameCC; //do not test connections inside of a CC if true. Creates a tree.
-    bool m_countFailures; //count and limit the failures per iteration
-    size_t m_fail; //number of allowed failures per iteration
+
+    ///@name Internal State
+    ///@{
+
+    bool m_checkIfSameCC{true};  ///< Skip connections within the same CC?
+    bool m_countFailures{false}; ///< Limit the failures per iteration?
+    size_t m_fail{0};            ///< Number of allowed failures per iteration.
+
+    ///@}
+
 };
+
+/*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
 NeighborhoodConnector<MPTraits>::
-NeighborhoodConnector(string _nfLabel, string _lpLabel,
+NeighborhoodConnector(std::string _nfLabel, std::string _lpLabel,
     bool _checkIfSameCC, bool _countFailures, size_t _fail) :
     ConnectorMethod<MPTraits>(_nfLabel, _lpLabel),
     m_checkIfSameCC(_checkIfSameCC),
@@ -68,32 +102,41 @@ NeighborhoodConnector(string _nfLabel, string _lpLabel,
   this->SetName("NeighborhoodConnector");
 }
 
+
 template <typename MPTraits>
 NeighborhoodConnector<MPTraits>::
 NeighborhoodConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
-  ParseXML(_node);
+  this->SetName("NeighborhoodConnector");
+
+  m_checkIfSameCC = _node.Read("checkIfSameCC", false, m_checkIfSameCC,
+      "If true, do not connect if edges are in the same CC");
+
+  m_countFailures = _node.Read("countFailures", false, m_countFailures,
+      "If false, ignore failure count and just attempt k; if true, attempt k "
+      "neighbors until too many failures detected.");
+
+  m_fail = _node.Read("fail", false, m_fail, size_t(0),
+      std::numeric_limits<size_t>::max(),
+      "Number of failed connections allowed before operation terminates.");
 }
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
 NeighborhoodConnector<MPTraits>::
-ParseXML(XMLNode& _node){
-  this->SetName("NeighborhoodConnector");
-  m_checkIfSameCC = _node.Read("checkIfSameCC", false, true, "If true, do not connect if edges are in the same CC");
-  m_countFailures = _node.Read("countFailures", false, false, "if false, ignore failure count and just attempt k; if true, attempt k neighbors until too many failures detected");
-  m_fail = _node.Read("fail", false, 5, 0, 10000, "amount of failed connections allowed before operation terminates");
-}
-
-template <typename MPTraits>
-void
-NeighborhoodConnector<MPTraits>::Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   ConnectorMethod<MPTraits>::Print(_os);
-  _os << "\tfail = " << m_fail << endl;
-  _os << "\tcountFailures = " << m_countFailures << endl;
+  _os << "\tfail = " << m_fail
+      << "\n\tcountFailures = " << m_countFailures
+      << std::endl;
 }
 
+/*------------------------ ConnectorMethod Interface -------------------------*/
+
 template <typename MPTraits>
-template<typename InputIterator1, typename InputIterator2, typename OutputIterator>
+template <typename InputIterator1, typename InputIterator2,
+          typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
 Connect(RoadmapType* _rm,
@@ -104,124 +147,128 @@ Connect(RoadmapType* _rm,
 
   auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
 
-  // the vertices in this iteration are the source for the connection operation
-  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1){
+  if(this->m_debug)
+    std::cout << this->GetName() << "::Connect"
+              << std::endl;
 
-    // find cfg pointed to by itr1
-    VID vid = _rm->GetGraph()->GetVID(itr1);
-    CfgType& vCfg = _rm->GetGraph()->GetVertex(itr1);
+  // Attempt to connect each element in the first range to each element in the
+  // second.
+  std::vector<Neighbor> closest;
+  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
+    // Get the VID and cfg.
+    const VID vid = _rm->GetGraph()->GetVID(itr1);
+    const CfgType& cfg = _rm->GetGraph()->GetVertex(vid);
 
     if(this->m_debug)
-      cout << distance(_itr1First, itr1)
-        << "\tAttempting connections: VID = "
-        << vid << "  --> Cfg = " << vCfg << endl;
+      std::cout << "\tAttempting connections from node " << vid
+                << " at " << cfg.PrettyPrint()
+                << std::endl;
 
-    //determine nearest neighbors
-    vector<Neighbor> closest;
-    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
-        back_inserter(closest));
+    // Determine nearest neighbors.
+    closest.clear();
+    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
+        std::back_inserter(closest));
 
-    if(this->m_debug){
-      cout << "Neighbors | ";
-      for(auto nit = closest.begin(); nit!=closest.end(); ++nit)
-        cout << nit->target << " ";
-      std::cout << std::endl;
-    }
-
-    //test connections through LP
+    // Attempt connections.
     ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
   }
 }
+
+/*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
 ConnectNeighbors(RoadmapType* _rm, VID _vid,
-                 InputIterator _first, InputIterator _last,
-                 OutputIterator _collision) {
-
-  Environment* env = this->GetEnvironment();
+    InputIterator _first, InputIterator _last, OutputIterator _collision) {
+  auto robot = this->GetTask()->GetRobot();
+  auto env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
-  GraphType* map = _rm->GetGraph();
+  auto g = _rm->GetGraph();
 
   LPOutput<MPTraits> lpOutput;
-  size_t failure = 0;
+  size_t failCount = 0;
 
   // connect the found k-closest to the current iteration's CfgType
-  for(InputIterator itr2 = _first; itr2 != _last; ++itr2){
-
-    VID v2 = itr2->target;
-
-    if(this->m_debug)
-      cout << "\tfailures = " << failure
-           << " | VID = " << v2
-           << " | dist = " << itr2->distance;
-
+  for(InputIterator itr2 = _first; itr2 != _last; ++itr2) {
     // stopping conditions
-    if(this->m_countFailures && failure >= m_fail) {
+    if(this->m_countFailures and failCount >= m_fail) {
       if(this->m_debug)
-        cout << " | stopping... failures exceeded" << endl;
+        std::cout << "\t\tFailures (" << failCount << ") exceed threshold "
+                  << "of " << m_fail << ", stopping."
+                  << std::endl;
       break;
     }
 
-    // don't attempt the connection if it already failed once before
-    if(this->IsCached(_vid, v2) && !this->GetCached(_vid, v2)){
-      if(this->m_debug) {
-        cout << " | skipping... this connection already failed once"
-             << " | failure incremented" << endl;
-      }
-      failure++;
+    const VID v2 = itr2->target;
+    if(this->m_debug)
+      std::cout << "\t\tAttempting connection to " << v2
+                << " at distance " << itr2->distance
+                << std::endl;
+
+    // Check if this attempt is cached.
+    const bool cached = this->IsCached(_vid, v2);
+    this->GetStatClass()->GetAverage(this->GetName() + "::CacheHitRatio") += cached;
+    if(cached) {
+      const bool success = this->GetCached(_vid, v2);
+      if(this->m_debug)
+        std::cout << "\t\t\tConnection already "
+                  << (success ? "passed" : "failed") << ", skipping."
+                  << std::endl;
+      failCount += !success;;
       continue;
     }
 
     // if the edge already exists, so no need to call LP. Count as success.
-    if(map->IsEdge(_vid, v2)) {
+    if(g->IsEdge(_vid, v2)) {
       if(this->m_debug)
-        cout << " | edge already exists in roadmap | skipping" << endl;
+        std::cout << "\t\t\tEdge already exists in roadmap, skipping."
+                  << std::endl;
       continue;
     }
 
+    // If the nodes are in the same connected component, count as success.
     if(m_checkIfSameCC) {
-      // if the nodes are in the same connected component count as success
       typename GraphType::ColorMap colorMap;
-      if(stapl::sequential::is_same_cc(*map, colorMap, _vid, v2)){
+      if(stapl::sequential::is_same_cc(*g, colorMap, _vid, v2)) {
         if(this->m_debug)
-          cout << " | nodes in the same connected component | skipping" << endl;
+          std::cout << "\t\t\tNodes are in the same connected component, "
+                    << "skipping."
+                    << std::endl;
         continue;
       }
     }
 
     // attempt connection with the local planner
-    CfgType& c1 = map->GetVertex(_vid);
-    CfgType& c2 = map->GetVertex(v2);
+    CfgType& c1 = g->GetVertex(_vid);
+    CfgType& c2 = g->GetVertex(v2);
 
-    auto robot = this->GetTask()->GetRobot();
-    CfgType col(robot);
-    bool connectable = lp->IsConnected(c1, c2, col, &lpOutput,
+    CfgType collision(robot);
+    lpOutput.Clear();
+    const bool connectable = lp->IsConnected(c1, c2, collision, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true);
-    if(col != CfgType(robot))
-      *_collision++ = col;
 
-    //add connection attempt to caches
+    if(collision != CfgType(robot))
+      *_collision++ = collision;
+
+    // Track connection attempt.
     this->AddConnectionAttempt(_vid, v2, connectable);
 
-    c1.IncrementStat("totalConnectionAttempts", 1);
-    c2.IncrementStat("totalConnectionAttempts", 1);
-
     if(connectable) {
-      if(this->m_debug) cout << " | connection was successful | success incremented" << endl;
-      // increment # of successful connection attempts
-      c1.IncrementStat("succConnectionAttempts", 1);
-      c2.IncrementStat("succConnectionAttempts", 1);
-      // if connection was made, add edge and record the successful connection
+      if(this->m_debug)
+        std::cout << "\t\tConnection succeeded." << std::endl;
+
       _rm->GetGraph()->AddEdge(_vid, v2, lpOutput.m_edge);
     }
     else {
-      if(this->m_debug) cout << " | connection failed | failure incremented" << endl;
-      failure++;
+      if(this->m_debug)
+        std::cout << "\t\tConnection failed." << std::endl;
+      ++failCount;
     }
   }
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

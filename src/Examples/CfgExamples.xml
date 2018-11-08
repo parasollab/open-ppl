@@ -394,7 +394,7 @@
       <!-- BasicRRT -->
       <BasicRRTStrategy label="BasicRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
-        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="Closest"
+        nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
@@ -402,7 +402,7 @@
       <!-- Kindodynamic RRT -->
       <BasicRRTStrategy label="KinoRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
-        nfLabel="Nearest" extenderLabel="KinoExtender" connectorLabel="Closest"
+        nfLabel="Nearest" extenderLabel="KinoExtender"
         growGoals="false" growthFocus="0.01">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
@@ -436,7 +436,7 @@
       <!-- The extender needs to be MixExtender for OBRRT -->
       <BasicRRTStrategy label="OBRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
-        nfLabel="Nearest" extenderLabel="ME" connectorLabel="Closest"
+        nfLabel="Nearest" extenderLabel="ME"
         growGoals="true" growthFocus="0.01">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
@@ -482,16 +482,6 @@
         <ColConnector label="ToggleConnect"/>
         <Evaluator label="Query"/>
       </TogglePRMStrategy>
-
-      <!-- Hybrid PRM -->
-      <HybridPRM label="HybridPRM" percent_random="0.5" bin_size="20"
-        window_percent="0.5" Count_Cost="false" fixed_cost="false"
-        resetting_learning="false" sampler_selection_distribution="window_hybrid">
-        <node_generation_method Method="Uniform" initialCost="1"/>
-        <node_generation_method Method="Gauss" initialCost="1"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="Query"/>
-      </HybridPRM>
 
       <!-- UAStrategy -->
       <!--UAStrategy label="UAPRM" iterations="10" num_samples="10">
@@ -563,7 +553,7 @@
       <!--
       <Syclop label="Syclop" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
-        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="Closest"
+        nfLabel="Nearest" extenderLabel="BERO"
         tmLabel="tm"
         growGoals="false" growthFocus="0.01">
         <Evaluator label="Query"/>

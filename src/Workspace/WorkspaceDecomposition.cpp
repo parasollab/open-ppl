@@ -1,9 +1,13 @@
 #include "WorkspaceDecomposition.h"
 
 #include "Geometry/Boundaries/TetrahedralBoundary.h"
+#include "Simulator/Conversions.h"
 #include "Utilities/SSSP.h"
 
 #include "containers/sequential/graph/algorithms/dijkstra.h"
+
+#include "glutils/obj_file.h"
+#include "glutils/triangulated_model.h"
 
 #include <unordered_map>
 
@@ -219,6 +223,30 @@ Print(std::ostream& _os) const {
   }
 
   _os << std::endl;
+}
+
+
+void
+WorkspaceDecomposition::
+WriteObj(const std::string& _filename) const {
+  // Create a triangulated model.
+  glutils::triangulated_model t;
+
+  // Add each region.
+  for(auto vi = this->begin(); vi != this->end(); ++vi) {
+    // Get the facets.
+    const std::vector<WorkspaceRegion::Facet>& facets = vi->property().GetFacets();
+
+    // Add each facet to the model.
+    for(const auto& facet : facets)
+      t.add_facet(t.add_point(ToGLUtils(facet.GetPoint(0))),
+                  t.add_point(ToGLUtils(facet.GetPoint(1))),
+                  t.add_point(ToGLUtils(facet.GetPoint(2))));
+  }
+
+  // Output the model to an obj file.
+  glutils::obj_file file(_filename);
+  file << t;
 }
 
 /*------------------------------- Path Finding -------------------------------*/

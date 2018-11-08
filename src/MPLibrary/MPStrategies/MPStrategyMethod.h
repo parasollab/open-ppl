@@ -221,9 +221,9 @@ EvaluateMap() {
     stats->StopClock(evalName);
 
     if(this->m_debug) {
-      std::cout << evalName << (passed ? " Passed" : " Failed") << "\t";
       stats->PrintClock(evalName, std::cout);
-      std::cout << std::endl;
+      std::cout << "\t" << (passed ? "+++Passed+++" : "---Failed---")
+                << std::endl;
     }
 
     if(!passed)
@@ -233,9 +233,9 @@ EvaluateMap() {
   stats->StopClock(clockName);
 
   if(this->m_debug) {
-    std::cout << clockName << (passed ? " Passed" : " Failed") << "\t";
     stats->PrintClock(clockName, std::cout);
-    std::cout << std::endl;
+    std::cout << "\t" << (passed ? "+++Passed+++" : "---Failed---")
+              << std::endl;
   }
 
   return passed;
@@ -287,12 +287,14 @@ GenerateStart(const std::string& _samplerLabel) {
 
   MethodTimer mt(this->GetStatClass(), this->GetName() + "::GenerateStart");
 
-  if(this->m_debug)
-    std::cout << "Generating start configuration:" << std::endl;
-
   // Determine which sampler to use.
   const auto& samplerLabel = m_querySampler.empty() ? _samplerLabel
                                                     : m_querySampler;
+
+  if(this->m_debug)
+    std::cout << "Generating start configuration with sampler " << samplerLabel
+              << ":"
+              << std::endl;
 
   // Generate a valid start configuration. We will try up to 100 times before
   // giving up and declaring failure.
@@ -333,17 +335,17 @@ GenerateGoals(const std::string& _samplerLabel) {
 
   MethodTimer mt(this->GetStatClass(), this->GetName() + "::GenerateGoals");
 
-  if(this->m_debug)
-    std::cout << "There are " << goalConstraints.size()
-              << " goals in this problem."
-              << "\nGenerating goal configurations:"
-              << std::endl;
-
   // Determine which sampler to use.
   const auto& samplerLabel = m_querySampler.empty() ? _samplerLabel
                                                     : m_querySampler;
-
   auto sampler = this->GetSampler(samplerLabel);
+
+  if(this->m_debug)
+    std::cout << "There are " << goalConstraints.size()
+              << " goals in this problem."
+              << "\nGenerating goal configurations with sampler " << samplerLabel
+              << ":"
+              << std::endl;
 
   // Generate a valid goal configuration for each constraint. We will try up to
   // 100 times before giving up and declaring failure.

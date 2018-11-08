@@ -103,8 +103,8 @@ $(MAIN): $(PMPL_LIBFILE)
 DEPS_OUT = $(OBJ_DIR)/$*.d
 DEPS     = -MMD -MF $(DEPS_OUT)
 
-DEPENDENCIES := $(OBJ_DIR)/Dependencies
--include $(DEPENDENCIES)
+DEPENDENCY_FILE := $(OBJ_DIR)/Dependencies
+-include $(DEPENDENCY_FILE)
 
 # Library Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -140,7 +140,7 @@ $(MOC_DIR)/moc_%.cpp: %.h | $(MOC_DIR)
 $(MOC_DIR)/moc_%.o: $(MOC_DIR)/moc_%.cpp %.h | $(MOC_DIR)
 	@echo Compiling Moc\'d source $(shell echo $< | sed 's|.*/||' )...
 	@$(CXX) -c $(CXXFLAGS) $(OPTS) $(DEFS) $(INCL) $(DEPS) $< -o $@
-	@cat $(DEPS_OUT) >> $(DEPENDENCIES)
+	@cat $(DEPS_OUT) >> $(DEPENDENCY_FILE)
 	@rm -f $(DEPS_OUT)
 
 # This recipe is for regular objects.
@@ -148,7 +148,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	@$(MAKE) -s check_platform
 	@echo Compiling $<...
 	@$(CXX) -c $(CXXFLAGS) $(OPTS) $(DEFS) $(INCL) $(DEPS) $< -o $@
-	@cat $(DEPS_OUT) >> $(DEPENDENCIES)
+	@cat $(DEPS_OUT) >> $(DEPENDENCY_FILE)
 	@rm -f $(DEPS_OUT)
 
 # Cleanup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

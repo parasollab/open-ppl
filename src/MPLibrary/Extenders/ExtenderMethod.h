@@ -79,12 +79,18 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
         CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo);
 
-
-    /// GroupCfg Overrides:
+    /// For groups.
+    /// @override
+    /// @param _robotIndexes The indexes of the robots which should move (empty
+    ///                      for all).
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
         const std::vector<size_t>& _robotIndexes = {});
 
+    /// For groups, with CD info.
+    /// @override
+    /// @param _robotIndexes The indexes of the robots which should move (empty
+    ///                      for all).
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
         const std::vector<size_t>& _robotIndexes = {});
@@ -96,8 +102,8 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///@name Extender Properties
     ///@{
 
-    double m_minDist;  ///< The minimum valid extension distance.
-    double m_maxDist;  ///< The maximum valid extension distance.
+    double m_minDist{.1};  ///< The minimum valid extension distance.
+    double m_maxDist{1.};  ///< The maximum valid extension distance.
 
     ///@}
 
@@ -110,14 +116,15 @@ ExtenderMethod<MPTraits>::
 ExtenderMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   // We do not require these to be specified because some extenders don't use
   // them (like KinodynamicExtender).
-  m_maxDist = _node.Read("maxDist", false, 1., 0.,
-      std::numeric_limits<double>::max(), "The maximum allowed distance to "
-      "expand from the starting node to the target node.");
+  m_maxDist = _node.Read("maxDist", false, m_maxDist,
+      std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
+      "The maximum allowed distance to expand from the starting node to the "
+      "target node.");
 
-  m_minDist = _node.Read("minDist", false, .1, std::numeric_limits<double>::min(),
-      std::numeric_limits<double>::max(), "The minimum valid distance when "
-      "expanding from the starting node to the target node (shorter extensions "
-      "are considered invalid).");
+  m_minDist = _node.Read("minDist", false, m_minDist,
+      std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
+      "The minimum valid distance when expanding from the starting node to the "
+      "target node (shorter extensions are considered invalid).");
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/

@@ -7,9 +7,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Basic straight-line extension.
 ///
-/// Extends in straight-line through @cspace from \f$q_{near}\f$ towards
-/// \f$q_{dir}\f$ until either \f$q_{dir}\f$ is reached, a distance of
-/// \f$\Delta q\f$ is extended, or @cobst is reached.
+/// Extends in straight-line through @cspace until either the target is reached,
+/// @cobst is encountered, or the max distance is exceeded.
+/// @ingroup Extenders
 ///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,7 +269,7 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
   // Quit if we didn't expand at all.
   if(previous == _start) {
     if(this->m_debug)
-      std::cout << "Could not expand !" << std::endl;
+      std::cout << "Could not expand!" << std::endl;
     return false;
   }
 

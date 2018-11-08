@@ -64,6 +64,9 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
+
+  protected:
+
     ///@name MPStrategyMethod Overrides
     ///@{
 
@@ -71,9 +74,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     virtual void Iterate() override;
 
     ///@}
-
-  protected:
-
     ///@name Helpers
     ///@{
 
@@ -112,7 +112,8 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
     std::string m_inputMapFilename; ///< Input roadmap to initialize map
 
-    Start m_startAt{Sampling}; ///< When inputting a roadmap, specifies where in algorithm to start
+    /// When inputting a roadmap, specifies where in algorithm to start.
+    Start m_startAt{Sampling};
 
     ///@}
 
@@ -302,7 +303,7 @@ Sample(OutputIterator _out) {
 
     if(this->m_debug)
       std::cout << "\tSampler '" << sampler.label << "' generated "
-                << samples.size() << " configurations."
+                << samples.size() << "/" << sampler.count << " configurations."
                 << std::endl;
 
     // Add valid samples to roadmap.
@@ -320,10 +321,10 @@ void
 BasicPRM<MPTraits>::
 Connect(InputIterator _first, InputIterator _last,
     const std::vector<std::string>& _labels) {
+  MethodTimer mt(this->GetStatClass(), "BasicPRM::Connect");
+
   if(this->m_debug)
     std::cout << "Connecting..." << std::endl;
-
-  MethodTimer mt(this->GetStatClass(), "BasicPRM::Connect");
 
   for(const auto& label : _labels) {
     if(this->m_debug)
@@ -348,6 +349,8 @@ template<class InputIterator>
 void
 BasicPRM<MPTraits>::
 CheckNarrowPassageSamples(InputIterator _first, InputIterator _last) {
+  MethodTimer mt(this->GetStatClass(), "BasicPRM::CheckNarrowPassageSamples");
+
   /// @todo This adds O(n) to each iteration regardless of whether it is used,
   ///       try to rework the design.
   if(this->m_debug)

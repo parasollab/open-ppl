@@ -367,7 +367,7 @@ KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
   for(const auto& p : m_queryInfo->m_projectedPoints) {
     // Get the VID and check connectedness.
     const VID vid = p.first;
-    if(this->CheckUnconnected(_rdmp, _c, vid))
+    if(this->DirectEdge(g, _c, vid))
       continue;
 
     // Get the configuration and check against connection to self.

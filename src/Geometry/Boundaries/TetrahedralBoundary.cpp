@@ -2,8 +2,12 @@
 
 #include "TetrahedralBoundary.h"
 
+#include "Geometry/GMSPolyhedron.h"
+#include "Simulator/Conversions.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
+
+#include "glutils/triangulated_model.h"
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -35,7 +39,7 @@ TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
 
 TetrahedralBoundary::
 TetrahedralBoundary(XMLNode& _node) {
-  throw RunTimeException(WHERE, "Not yet implemented.");
+  throw NotImplementedException(WHERE);
 }
 
 
@@ -146,8 +150,18 @@ GetRandomPoint() const {
 void
 TetrahedralBoundary::
 PushInside(std::vector<double>& _sample) const noexcept {
-  throw RunTimeException(WHERE, "Not yet implemented");
-  // if not in boundary, _sample = clearance point.
+  if(_sample.size() != 3)
+    throw RunTimeException(WHERE) << "Only three dimensional points are "
+                                  << "supported.";
+
+  const Vector3d input(_sample[0], _sample[1], _sample[2]);
+
+  // If _sample is already in the boundary, there is nothing to do.
+  if(InBoundary(input))
+    return;
+
+  const Vector3d output = GetClearancePoint(input);
+  _sample = {output[0], output[1], output[2]};
 }
 
 /*--------------------------- Containment Testing ----------------------------*/
@@ -172,7 +186,11 @@ InBoundary(const Vector3d& _p) const {
 bool
 TetrahedralBoundary::
 InBoundary(const std::vector<double>& _v) const {
-  return InBoundary(Vector3d{_v[0], _v[1], _v.size() > 2 ? _v[2] : 0});
+  if(_v.size() != 3)
+    throw RunTimeException(WHERE) << "Does not make sense for vectors of "
+                                  << "dimension " << _v.size() << " != 3.";
+
+  return InBoundary(Vector3d(_v[0], _v[1], _v[2]));
 }
 
 
@@ -187,15 +205,24 @@ InBoundary(const Cfg& _c) const {
 double
 TetrahedralBoundary::
 GetClearance(const Vector3d& _p) const {
-  throw RunTimeException(WHERE, "Not implemented");
-  return 0;
+  throw NotImplementedException(WHERE);
 }
 
 
 Vector3d
 TetrahedralBoundary::
 GetClearancePoint(const Vector3d& _p) const {
-  throw RunTimeException(WHERE, "Not implemented");
+  // If _p is inside, the clearance point will be _p projected to the nearest
+  // plane.
+  // Otherwise, there are possibilities:
+  // 1. _p is nearest to a vertex. This happens when it is 'in front' of exactly
+  //    three facet planes. The near point is the shared vertex.
+  // 2. _p is nearest to an edge. This happens when it is 'in front' of exactly
+  //    two facet planes. The near point is the nearest point on the edge.
+  // 3. _p is nearest to a facet. This happens when it is 'in front' of exactly
+  //    one facet plane. The near point is the nearest point on the triangle.
+  throw NotImplementedException(WHERE);
+
   return Vector3d();
 }
 
@@ -244,7 +271,7 @@ void
 TetrahedralBoundary::
 ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
     const double _margin) {
-  throw RunTimeException(WHERE, "Not implemented");
+  throw NotImplementedException(WHERE) << "Does not make sense for this object.";
 }
 
 /*------------------------------------ I/O -----------------------------------*/
@@ -252,14 +279,14 @@ ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
 void
 TetrahedralBoundary::
 Read(std::istream& _is, CountingStreamBuffer& _cbs) {
-  throw RunTimeException(WHERE, "Not implemented");
+  throw NotImplementedException(WHERE);
 }
 
 
 void
 TetrahedralBoundary::
 Write(std::ostream& _os) const {
-  throw RunTimeException(WHERE, "Not implemented");
+  _os << *this;
 }
 
 /*------------------------------- CGAL Representation ------------------------*/
@@ -321,9 +348,32 @@ CGAL() const {
   cp.delegate(b);
 
   if(!cp.is_valid())
-    throw RunTimeException(WHERE, "TetrahedralBoundary:: Invalid CGAL polyhedron "
-        "created!");
+    throw RunTimeException(WHERE) << "TetrahedralBoundary:: Invalid CGAL "
+                                  << "polyhedron created!";
   return cp;
+}
+
+
+GMSPolyhedron
+TetrahedralBoundary::
+MakePolyhedron() const {
+  glutils::triangulated_model t;
+
+  // Add the points.
+  const size_t zero  = t.add_point(ToGLUtils(m_points[0])),
+               one   = t.add_point(ToGLUtils(m_points[1])),
+               two   = t.add_point(ToGLUtils(m_points[2])),
+               three = t.add_point(ToGLUtils(m_points[3]));
+
+  // Add each facet to the model.
+  t.add_facet( zero,   one,   two);
+  t.add_facet( zero,   two, three);
+  t.add_facet( zero, three,   one);
+  t.add_facet(  one, three,   two);
+
+  GMSPolyhedron poly(std::move(t));
+  poly.Invert();
+  return poly;
 }
 
 /*-------------------------------- Helpers -----------------------------------*/
@@ -392,6 +442,19 @@ ComputeBBX() const {
   }
 
   return bbx;
+}
+
+/*---------------------------------- I/O -------------------------------------*/
+
+std::ostream&
+operator<<(std::ostream& _os, const TetrahedralBoundary& _b) {
+  _os << "[";
+  bool first = true;
+  for(const auto& point : _b.m_points) {
+    _os << (first ? "" : " ; ") << point;
+    first = false;
+  }
+  return _os << "]";
 }
 
 /*----------------------------------------------------------------------------*/

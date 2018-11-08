@@ -112,7 +112,12 @@ class TetrahedralBoundary : public Boundary {
 
     virtual CGALPolyhedron CGAL() const override;
 
+    virtual GMSPolyhedron MakePolyhedron() const override;
+
     ///@}
+
+    friend std::ostream& operator<<(std::ostream& _os,
+        const TetrahedralBoundary& _b);
 
   protected:
 

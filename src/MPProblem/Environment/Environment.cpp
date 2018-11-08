@@ -123,7 +123,6 @@ Environment::
 operator=(const Environment& _other) {
   m_filename            = _other.m_filename;
   m_modelDataDir        = _other.m_modelDataDir;
-  m_saveDofs            = _other.m_saveDofs;
   m_positionRes         = _other.m_positionRes;
   m_positionResFactor   = _other.m_positionResFactor;
   m_orientationRes      = _other.m_orientationRes;
@@ -163,8 +162,6 @@ GetEnvFileName() const noexcept {
 void
 Environment::
 ReadXMLOptions(XMLNode& _node) {
-  m_saveDofs = _node.Read("saveDofs", false, m_saveDofs, "save DoF flag");
-
   // Read the friction coefficient (to be used uniformly for now)
   m_frictionCoefficient = _node.Read("frictionCoefficient", false, 0., 0.,
       std::numeric_limits<double>::max(), "friction coefficient (uniform)");

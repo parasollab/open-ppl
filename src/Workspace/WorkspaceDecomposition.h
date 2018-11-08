@@ -136,6 +136,11 @@ class WorkspaceDecomposition : public stapl::sequential::graph<stapl::DIRECTED,
     /// Write the decomposition graph to an output stream.
     void Print(std::ostream& _os) const;
 
+    /// Write an OBJ file of the decomposition regions to an output stream. The
+    /// OBJ will include all internal facets. This is primarily for validating
+    /// that a decomposition gave the expected result.
+    void WriteObj(const std::string& _filename) const;
+
     ///@}
     ///@name Path Finding
     ///@{

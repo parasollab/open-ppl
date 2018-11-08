@@ -210,35 +210,43 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   NefPolyhedron boundary(cp);
   boundary = boundary.complement();
 
-  vector<MultiBody*> holes;
+  vector<Vector3d> holes;
   for(size_t i = _env->UsingBoundaryObstacle(); i < _env->NumObstacles(); ++i) {
+    // Skip internal obstacles.
     MultiBody* obst = _env->GetObstacle(i);
-    if(!obst->IsInternal())
-      holes.push_back(obst);
+    if(obst->IsInternal())
+      continue;
+
+    if(_debug)
+      std::cout << "\tAdding " << obst->GetNumBodies() << " holes for obstacle "
+                << i << "."
+                << std::endl;
+
+    // Create each hole with a point just beneath one of the model's facets.
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+      // Get the body's first facet.
+      const Body* const body = obst->GetBody(j);
+      const auto& facet = body->GetWorldPolyhedron().GetPolygonList()[0];
+
+      // Pick a point just beneath this facet's center as the hole.
+      holes.emplace_back(facet.FindCenter() - .0001 * facet.GetNormal());
+
+      if(_debug)
+        std::cout << "\t\tAdded hole at " << holes.back() << "." << std::endl;
+    }
   }
 
-  // Add a hole to the tetgen structure for each obstacle. Use the furthest
-  // convex hull point perturbed slightly towards the center of mass.
+  // Add a hole to the tetgen structure for each obstacle. Use a point just
+  // beneath one of the model's facets.
   _freeModel->numberofholes = holes.size();
   _freeModel->holelist = new double[_freeModel->numberofholes * 3];
 
   size_t num = 0;
-  for(const auto obst : holes) {
-    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
-      const auto body = obst->GetBody(j);
-      const auto& com = body->GetWorldPolyhedron().GetCentroid();
-      mathtool::Vector3d hole = com;
-      const GMSPolyhedron& poly = body->GetPolyhedron();
-      for(auto& v : poly.m_vertexList)
-        if(body->IsConvexHullVertex(v) && (v - com).norm() > (hole - com).norm())
-          hole = v;
-      hole = hole + (com - hole).normalize() * 0.0001;
-      hole = body->GetWorldTransformation() * hole;
-      _freeModel->holelist[3 * num + 0] = hole[0];
-      _freeModel->holelist[3 * num + 1] = hole[1];
-      _freeModel->holelist[3 * num + 2] = hole[2];
-      ++num;
-    }
+  for(const auto& hole : holes) {
+    _freeModel->holelist[3 * num + 0] = hole[0];
+    _freeModel->holelist[3 * num + 1] = hole[1];
+    _freeModel->holelist[3 * num + 2] = hole[2];
+    ++num;
   }
 }
 
