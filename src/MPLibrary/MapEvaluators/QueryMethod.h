@@ -261,10 +261,10 @@ operator()() {
                 << "." << std::endl;
 
     // Warn users if multiple goals are found.
-    if(goals.size() > 1)
+    if(goals.size() > 1 and goalConstraints.size() > 1)
       std::cerr << "Warning: subquery has " << goals.size() << " possible VIDs "
-                << "for goal " << m_goalIndex << ". "
-                << "The algorithm will try its best but isn't complete for "
+                << "for goal " << m_goalIndex << "/" << goalConstraints.size()
+                << ". The algorithm will try its best but isn't complete for "
                 << "this case." << std::endl;
 
     // Perform this subquery. If it fails, there is no path.

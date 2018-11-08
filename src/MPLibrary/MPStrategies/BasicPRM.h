@@ -3,6 +3,7 @@
 
 #include "MPStrategyMethod.h"
 
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Utilities/XMLNode.h"
 
 #include <iostream>
@@ -116,6 +117,16 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     Start m_startAt{Sampling};
 
     ///@}
+    ///@name Fix-base hacks
+    ///@{
+    /// To be removed when we properly implement path constraints or perhaps a
+    /// sampler-method option.
+
+    bool m_fixBase{false};  ///< Keep the base fixed to the start cfg?
+    /// An optional sampling boundary for fixing the base.
+    std::unique_ptr<Boundary> m_samplingBoundary;
+
+    ///@}
 
 };
 
@@ -171,6 +182,10 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
       m_componentConnectorLabels.push_back(
           child.Read("label", true, "", "Component Connector Label"));
   }
+
+  // Temporary hack for fixing the base.
+  m_fixBase = _node.Read("fixBase", false, m_fixBase,
+      "Fix the robot's base position and orientation to the start cfg?");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -236,6 +251,31 @@ Initialize() {
                 << "Resetting map evaluator states."
                 << std::endl;
   }
+
+  // Hacks for fixing the base.
+  if(m_fixBase) {
+    auto g = this->GetRoadmap()->GetGraph();
+    auto goalTracker = this->GetGoalTracker();
+    const auto& startVIDs = goalTracker->GetStartVIDs();
+    if(startVIDs.size() != 1)
+      throw RunTimeException(WHERE) << "Fix-base option is only supported for "
+                                    << "single start nodes, " << startVIDs.size()
+                                    << " were found.";
+
+    const auto& start = g->GetVertex(*startVIDs.begin());
+
+    // Create a version of the robot's cspace where the base
+    // position/translation are fixed.
+    auto robot = this->GetTask()->GetRobot();
+    auto mb = robot->GetMultiBody();
+    m_samplingBoundary = robot->GetCSpace()->Clone();
+    const size_t numDOF = mb->PosDOF() + mb->OrientationDOF();
+
+    // Need to downcast to c-space bounding box to be able to set the range.
+    auto bbx = static_cast<CSpaceBoundingBox*>(m_samplingBoundary.get());
+    for(size_t i = 0; i < numDOF; ++i)
+      bbx->SetRange(i, start[i], start[i]);
+  }
 }
 
 
@@ -289,7 +329,9 @@ Sample(OutputIterator _out) {
 
   MethodTimer mt(this->GetStatClass(), "BasicPRM::Sample");
   GraphType* g = this->GetRoadmap()->GetGraph();
-  const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
+  //const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
+  auto boundary = m_samplingBoundary.get() ? m_samplingBoundary.get()
+                                        : this->GetEnvironment()->GetBoundary();
 
   // Generate nodes with each sampler.
   std::vector<CfgType> samples;

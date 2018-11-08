@@ -51,7 +51,7 @@
       <LPSwept label="LPSwept" posRes="5" oriRes="5" useBBox="true" lpLabel="sl"/>
       <BinaryLPSwept label="BLPSwept" posRes="5" oriRes="5" useBBox="true"
         lpLabel="sl"/>
-      <TopologicalDistance label="connectedFreeSpace" dmLabel="euclidean"
+      <TopologicalDistance label="connectedFreeSpace" operator="sum"
         tmLabel="tm-coarse"/>
     </DistanceMetrics>
 
