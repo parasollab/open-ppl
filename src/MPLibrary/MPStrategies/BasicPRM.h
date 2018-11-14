@@ -228,11 +228,7 @@ template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Initialize() {
-  // Generate start and goal nodes if possible.
-  this->GenerateStart(m_samplers.front().label);
-  this->GenerateGoals(m_samplers.front().label);
-
-  /// @todo Move input map parsing to the MPSolution somehow.
+  /// @todo Move input map parsing to the MPSolution somehow?
   //read in and reload roadmap
   if(!m_inputMapFilename.empty()) {
     RoadmapType* r = this->GetRoadmap();
@@ -276,6 +272,15 @@ Initialize() {
     for(size_t i = 0; i < numDOF; ++i)
       bbx->SetRange(i, start[i], start[i]);
   }
+
+  // Generate start and goal nodes if possible.
+  const VID start = this->GenerateStart(m_samplers.front().label);
+  std::vector<VID> goals = this->GenerateGoals(m_samplers.front().label);
+
+  // Try to connect the starts/goals to any existing nodes.
+  if(start != INVALID_VID)
+    goals.push_back(start);
+  Connect(goals.begin(), goals.end(), m_connectorLabels);
 }
 
 

@@ -192,7 +192,7 @@ operator>>(std::istream& _is, NSphere& _sphere) {
 std::ostream&
 operator<<(std::ostream& _os, const NSphere& _sphere) {
   _os << "[ ";
-  for(size_t i = 0; i < _sphere.GetDimension() - 1; ++i)
+  for(size_t i = 0; i < _sphere.GetDimension(); ++i)
     _os << _sphere.GetCenter()[i] << " ";
   return _os << "; " << _sphere.GetRadius() << " ]";
 }
