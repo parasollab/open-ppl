@@ -299,6 +299,13 @@ class MPLibraryType final
     /// Check to see if the strategy should continue.
     bool IsRunning() const noexcept;
 
+    /// Set the current seed to match the first solver node.
+    void SetSeed() const noexcept;
+
+    /// Set the current seed.
+    /// @param _seed The seed value.
+    void SetSeed(const long _seed) const noexcept;
+
     /// Add an input set to this MPLibrary.
     /// @param _label        The MPStrategy label to use.
     /// @param _seed         The random seed to use.
@@ -831,6 +838,28 @@ IsRunning() const noexcept {
 template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
+SetSeed() const noexcept {
+  if(m_solvers.empty())
+    throw RunTimeException(WHERE) << "No solver nodes.";
+  SetSeed(m_solvers[0].seed);
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+SetSeed(const long _seed) const noexcept {
+#ifdef _PARALLEL
+  SRand(_seed + get_location_id());
+#else
+  SRand(_seed);
+#endif
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
   m_problem = _problem;
   m_task = _task;
@@ -908,11 +937,7 @@ RunSolver(const Solver& _solver) {
             << _solver.label << " using seed " << _solver.seed << "."
             << std::endl;
 
-#ifdef _PARALLEL
-  SRand(_solver.seed + get_location_id());
-#else
-  SRand(_solver.seed);
-#endif
+  SetSeed(_solver.seed);
 
   // If this task has a label, append it to the solver's output file name.
   std::string baseFilename = _solver.baseFilename;
