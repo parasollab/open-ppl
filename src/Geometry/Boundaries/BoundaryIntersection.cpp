@@ -30,7 +30,7 @@ RejectionSampleIntersection(const Boundary* const _b1, const Boundary* const _b2
     sample = first->GetRandomPoint();
     if(second->InBoundary(sample))
       break;
-    if(attempts <= _maxAttempts) {
+    if(attempts >= _maxAttempts) {
       sample.clear();
       break;
     }
