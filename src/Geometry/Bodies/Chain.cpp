@@ -134,15 +134,26 @@ Bisect() const noexcept {
   if(IsSingleLink())
     throw RunTimeException(WHERE) << "Cannot bisect a single-link chain.";
 
-  const size_t halfSize = std::ceil(m_joints.size() / 2.);
+  //This method is called by ReachableVolumeSampler::SampleInternal 
+  //which reverses chain result if m_forward is false creating the assumption
+  //that if only one of m_frontBody or m_backBody not nullptr then it is m_frontBody.
+  //(It does not happen that m_backBody is defined while m_frontBody is not.)
+  //Thus splitting can either take the ceiling of m_joints or the floor of Size()
+  //which counts bodies implied by m_frontBody and m_backBody.
+  //No other adjustments need to be made to loop bounds.
+  //Ceiling splits on the first of the possibly two middle joints while
+  //floor splits on the second of the possibly two middle joints.
+  //Either is correct.
+  const size_t halfSize = std::ceil(m_joints.size() / 2.); // break splitting ties on first joint
+  //const size_t halfSize = std::floor(Size() / 2.);       // break splittin gties on second joint
 
   JointList joints1, joints2;
 
   for(auto iter = m_joints.begin(), end = m_joints.begin() + halfSize;
-      iter != end; ++iter)
+      iter != end; ++iter) 
     joints1.push_back(*iter);
 
-  for(auto iter = m_joints.begin() + halfSize - 1; iter != m_joints.end(); ++iter)
+  for(auto iter = m_joints.begin() + halfSize - 1; iter != m_joints.end(); ++iter) 
     joints2.push_back(*iter);
 
   return {
