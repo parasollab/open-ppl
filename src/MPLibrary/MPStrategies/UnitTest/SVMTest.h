@@ -23,7 +23,6 @@ class SVMTest : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -81,9 +80,9 @@ Iterate() {
       std::back_inserter(trainingBad));
 
   for(const auto& cfg : trainingGood)
-    this->GetRoadmap()->GetGraph()->AddVertex(cfg);
+    this->GetRoadmap()->AddVertex(cfg);
   for(const auto& cfg : trainingBad)
-    this->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);
+    this->GetBlockRoadmap()->AddVertex(cfg);
 
   std::cout << "\nTraining SVM model...\n" << std::endl;
 

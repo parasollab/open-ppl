@@ -1,18 +1,29 @@
-#ifndef LP_SWEPT_DISTANCE_H_
-#define LP_SWEPT_DISTANCE_H_
-
-#include <ctgmath>
+#ifndef PMPL_LP_SWEPT_DISTANCE_H_
+#define PMPL_LP_SWEPT_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/Environment/Environment.h"
-#include "MPLibrary/LocalPlanners/LPOutput.h"
+#include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
+
+#include <ctgmath>
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Measures the distance swept by a robot when moving between two
+/// configurations.
+///
+/// @todo Is this the summed vertex displacement?
+///
+/// @todo Add paper reference.
+///
+/// @todo This implementation is very poor and COPIES ENTIRE POLYHEDRONS
+///       MULTIPLE TIMES (once per intermediate). It will be massively
+///       inefficient until we remove the extraneous copies.
+///
 /// @ingroup DistanceMetrics
-/// @brief TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
@@ -37,7 +48,7 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name Distance Interface
@@ -95,7 +106,7 @@ LPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 LPSweptDistance<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\tpositionRes = " << m_positionRes << endl;
   _os << "\torientationRes = " << m_orientationRes << endl;
@@ -108,31 +119,35 @@ template <typename MPTraits>
 double
 LPSweptDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  if (_c1.GetRobot() != _c2.GetRobot()){
-    cerr << "LPSweptDistance::Distance error - the cfgs reference different "
-         << "robots" << endl;
-    exit(1);
-  }
+  if(_c1.GetRobot() != _c2.GetRobot())
+    throw RunTimeException(WHERE) << "The cfgs cannot reference different robots"
+                                  << "('" << _c1.GetRobot()->GetLabel()
+                                  << "' and '" << _c2.GetRobot()->GetLabel()
+                                  << "').";
 
-  if(std::isnan(m_positionRes))
-    m_positionRes = this->GetEnvironment()->GetPositionRes();
-  if(std::isnan(m_orientationRes))
-    m_orientationRes = this->GetEnvironment()->GetOrientationRes();
+  // Determine the resolution to use.
+  auto env = this->GetEnvironment();
+  const double posRes = std::isnan(m_positionRes) ? env->GetPositionRes()
+                                                  : m_positionRes;
+  const double oriRes = std::isnan(m_orientationRes) ? env->GetOrientationRes()
+                                                     : m_orientationRes;
 
-  StatClass stats;
+  // Local plan from _c1 to _c2.
   auto lpMethod = this->GetLocalPlanner(m_lpLabel);
   LPOutput<MPTraits> lpOutput;
   CfgType dummy;
+  lpMethod->IsConnected(_c1, _c2, dummy, &lpOutput, posRes, oriRes, false, true);
 
-  lpMethod->IsConnected(_c1, _c2, dummy, &lpOutput, m_positionRes,
-      m_orientationRes, false, true);
-
-  //lpPath does not include _c1 and _c2, so adding them manually
-  vector<CfgType> cfgs(1, _c1);
+  // lpPath does not include _c1 and _c2, so adding them manually
+  /// @todo Verify this, I believe m_path does include _c1 and _c2 for some lps.
+  ///       We need to make sure the usage is consistent across all of them.
+  std::vector<CfgType> cfgs{_c1};
   cfgs.insert(cfgs.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());
   cfgs.push_back(_c2);
+
   double d = 0;
-  vector<GMSPolyhedron> poly2;
+
+  std::vector<GMSPolyhedron> poly2;
   auto robot = _c1.GetMultiBody();
   int bodyCount = robot->GetNumBodies();
   cfgs.begin()->ConfigureRobot();
@@ -163,14 +178,14 @@ double
 LPSweptDistance<MPTraits>::
 SweptDistance(const vector<GMSPolyhedron>& _poly1,
     const vector<GMSPolyhedron>& _poly2) {
-  double d = 0;
-  int count = 0;
+  double sum = 0;
+  size_t count = 0;
+
   for(size_t b=0; b<_poly1.size(); ++b)
-    for(size_t i=0; i<_poly1[b].m_vertexList.size(); ++i) {
-      d += (_poly1[b].m_vertexList[i] - _poly2[b].m_vertexList[i]).norm();
-      count++;
-  }
-  return count ? d/(double)count : 0;
+    for(size_t i=0; i<_poly1[b].m_vertexList.size(); ++i, ++count)
+      sum += (_poly1[b].m_vertexList[i] - _poly2[b].m_vertexList[i]).norm();
+
+  return count ? sum / count : 0;
 }
 
 /*----------------------------------------------------------------------------*/

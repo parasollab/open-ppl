@@ -221,9 +221,9 @@ class PreferentialPolicy : public Policy {
     // Probability function
     template<typename RDMP>
       double PrefProb(RDMP* _rm, typename RDMP::VID _vid, size_t _n, size_t _totDegree) {
-        size_t candidateDegree = _rm->GetGraph()->get_degree(_vid);
+        size_t candidateDegree = _rm->get_degree(_vid);
         size_t totalDegree = _totDegree;
-        if (_totDegree == (size_t)-1) totalDegree = _rm->GetGraph()->get_num_edges();
+        if (_totDegree == (size_t)-1) totalDegree = _rm->get_num_edges();
         if (m_debug) std::cout << "PrefProb(" << _vid << ", " << _n << ") = " << 1 + candidateDegree << " / " << _n + totalDegree << std::endl;
         return ((double)(1 + candidateDegree) / (double)(_n + totalDegree));
       }
@@ -234,7 +234,7 @@ class PreferentialPolicy : public Policy {
       size_t CandidateSetDegree(RDMP* _rm, InputIterator _first, InputIterator _last) {
         size_t totalDegree = 0;
         for (InputIterator itr = _first; itr != _last; ++itr) {
-          size_t candidateDegree = _rm->GetGraph()->get_degree(itr->target);
+          size_t candidateDegree = _rm->get_degree(itr->target);
           totalDegree += candidateDegree;
           if (m_debug) std::cout << "CandidateSetDegree += " << candidateDegree << std::endl;
         }
@@ -389,7 +389,6 @@ class Band : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::GraphType           GraphType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
@@ -464,20 +463,19 @@ class Band : public MPBaseObject<MPTraits> {
       if (m_debug)
         std::cout << "Band<MPTraits>:::GetDistList()" << std::endl;
 
-      typename RoadmapType::GraphType* map = _rmp->GetGraph();
       auto dmm = this->GetDistanceMetric(this->m_dmLabel);
 
       std::vector<Neighbor> distList;
 
       // compute sorted neighbor list
       for (InputIterator V1 = _first; V1 != _last; ++V1) {
-        CfgType v1 = map->GetVertex(V1); //same as ??? map->GetCfg(V1);
+        CfgType v1 = _rmp->GetVertex(V1);
 
         if(v1 == _cfg)
           continue; //don't connect same
 
         double dist = dmm->Distance(_cfg, v1);
-        distList.emplace_back(map->GetVID(V1), dist);
+        distList.emplace_back(_rmp->GetVID(V1), dist);
       }
 
       std::sort(distList.begin(), distList.end());
@@ -511,7 +509,6 @@ class DBand : public Band<MPTraits> {
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::GraphType           GraphType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
@@ -679,7 +676,6 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::GraphType           GraphType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 

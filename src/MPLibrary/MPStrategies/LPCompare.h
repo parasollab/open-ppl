@@ -17,7 +17,6 @@ class LPCompare : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
 
     LPCompare<MPTraits>();
     LPCompare(XMLNode& _node);
@@ -64,18 +63,20 @@ Initialize() {
   auto robot = this->GetTask()->GetRobot();
 
   m_rdmp1 = new RoadmapType(robot);
-  m_rdmp1->Read(m_rdmp1in);
+  //m_rdmp1->Read(m_rdmp1in);
+  Read(m_rdmp1, m_rdmp1in);
 
   m_rdmp2 = new RoadmapType(robot);
-  m_rdmp2->Read(m_rdmp2in);
+  //m_rdmp2->Read(m_rdmp2in);
+  Read(m_rdmp2, m_rdmp2in);
 }
 
 template <typename MPTraits>
 void
 LPCompare<MPTraits>::
 Iterate() {
-  GraphType* g1 = m_rdmp1->GetGraph();
-  GraphType* g2 = m_rdmp2->GetGraph();
+  auto g1 = m_rdmp1;
+  auto g2 = m_rdmp2;
 
   std::cout << "LPCompare: " << std::endl
     << "RDMP1: " << g1->get_num_vertices()
@@ -88,8 +89,8 @@ Iterate() {
   //for each edge in g1
   //  find corresponding edge in g2
   //  quality compare the two edges and add to average
-  typedef typename GraphType::edge_iterator EI;
-  typedef typename GraphType::EI AEI;
+  typedef typename RoadmapType::edge_iterator EI;
+  typedef typename RoadmapType::EI AEI;
   for(EI ei1 = g1->edges_begin(); ei1 != g1->edges_end(); ++ei1) {
     AEI ei2;
     if(g2->GetEdge((*ei1).source(), (*ei1).target(), ei2)) {

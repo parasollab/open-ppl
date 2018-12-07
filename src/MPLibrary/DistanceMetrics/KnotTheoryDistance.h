@@ -1,12 +1,17 @@
-#ifndef KNOT_THEORY_DISTANCE_H_
-#define KNOT_THEORY_DISTANCE_H_
+#ifndef PMPL_KNOT_THEORY_DISTANCE_H_
+#define PMPL_KNOT_THEORY_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Computes the knot theory distance between two cfgs, taking the topological
+/// information into perspective.
+///
+/// @todo Document with a meaningful description and paper reference. Knot
+///       function also needs cleanup for clarity and avoiding recomputation.
+///
 /// @ingroup DistanceMetrics
-/// @brief Computes the knot theory distance between two cfgs, taking the
-///        topological information into perspective.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
@@ -39,9 +44,9 @@ class KnotTheoryDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
-    virtual vector<Vector3d> GetCoordinatesForKnot(const CfgType& _c);
+    virtual std::vector<Vector3d> GetCoordinatesForKnot(const CfgType& _c);
 
-    double Knot(vector<Vector3d>& _c1, vector<Vector3d>& _c2);
+    double Knot(std::vector<Vector3d>& _c1, std::vector<Vector3d>& _c2);
 
     ///@}
 };
@@ -67,19 +72,19 @@ template <typename MPTraits>
 double
 KnotTheoryDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3d> c1 = GetCoordinatesForKnot(_c1);
-  vector<Vector3d> c2 = GetCoordinatesForKnot(_c2);
+  auto c1 = GetCoordinatesForKnot(_c1),
+       c2 = GetCoordinatesForKnot(_c2);
   return Knot(c1, c2);
 }
 
 /*---------------------------------- Helpers ---------------------------------*/
 
 template <typename MPTraits>
-vector<Vector3d>
+std::vector<Vector3d>
 KnotTheoryDistance<MPTraits>::
 GetCoordinatesForKnot(const CfgType& _c) {
   _c.ConfigureRobot();
-  vector<Vector3d> coordinates;
+  std::vector<Vector3d> coordinates;
   for(size_t i = 0; i < _c.GetMultiBody()->GetNumBodies(); ++i)
     coordinates.push_back(_c.GetMultiBody()->GetBody(i)->
         GetWorldTransformation().translation());
@@ -90,14 +95,12 @@ GetCoordinatesForKnot(const CfgType& _c) {
 template <typename MPTraits>
 double
 KnotTheoryDistance<MPTraits>::
-Knot(vector<Vector3d>& _c1, vector<Vector3d>& _c2) {
-  if(_c1.size() < 2) {
-    cerr << "\n\nError in KnotTheoryDistance::Distance(), _c1 has too few "
-         << "links, exiting.\n";
-    exit(1);
-  }
+Knot(std::vector<Vector3d>& _c1, std::vector<Vector3d>& _c2) {
+  if(_c1.size() < 2)
+    throw RunTimeException(WHERE) << "_c1 has too few links (" << _c1.size()
+                                  << ")";
 
-  vector<Vector3d> unitVect(_c1.size()), unitVect2(_c2.size());
+  std::vector<Vector3d> unitVect(_c1.size()), unitVect2(_c2.size());
   double sum = 0, sign = 0, signsum = 0;
   for(size_t i = 0; i < _c1.size()-1; ++i) {
 

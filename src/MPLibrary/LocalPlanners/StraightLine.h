@@ -65,14 +65,12 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false) override;
 
-
-    /// GroupCfg version:
     virtual bool IsConnected(
         const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
         GroupLPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false,
-        const Formation& _robotIndexes = Formation());
+        const Formation& _robotIndexes = Formation()) override;
 
     ///@}
 
@@ -87,27 +85,6 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false);
-
-
-    /// GroupCfg version:
-    bool IsConnectedFunc(
-        const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
-        GroupLPOutput<MPTraits>* _lpOutput,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false,
-        const Formation& _robotIndexes = Formation());
-
-    /// Specialization for closed chains
-    /// @deadcode
-    /// This function is ancient and needs to be thoroughly validated before we
-    /// use it again.
-    //template <typename Enable>
-    //bool IsConnectedFunc(
-    //    const CfgType& _c1, const CfgType& _c2, CfgType& _col,
-    //    LPOutput<MPTraits>* _lpOutput,
-    //    double _positionRes, double _orientationRes,
-    //    bool _checkCollision = true, bool _savePath = false,
-    //    typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy = 0);
 
     /// Check if two Cfgs could be connected by straight line.
     /// This method implements straight line connection local planner
@@ -196,6 +173,8 @@ IsConnected(
   const bool connected = IsConnectedFunc(_c1, _c2,
       _col, _lpOutput, _positionRes, _orientationRes, _checkCollision,
       _savePath);
+  /// @todo We should be setting the LP label either way, need to test before
+  ///       removing this check.
   if(connected)
     _lpOutput->SetLPLabel(this->GetLabel());
 
@@ -211,27 +190,130 @@ template <typename MPTraits>
 bool
 StraightLine<MPTraits>::
 IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
-            GroupLPOutput<MPTraits>* _lpOutput,
-            double _positionRes, double _orientationRes,
-            bool _checkCollision, bool _savePath,
-            const Formation& _robotIndexes) {
-  if(_robotIndexes.empty())
-    throw RunTimeException(WHERE, "Need active robots if using group lp!");
+    GroupLPOutput<MPTraits>* _lpOutput, double _positionRes,
+    double _orientationRes, bool _checkCollision, bool _savePath,
+    const Formation& _robotIndexes) {
+  if(this->m_debug) {
+    std::cout << this->GetName() << "::IsConnected"
+              << "\n\tChecking line from " << _c1.PrettyPrint()
+              << " to " << _c2.PrettyPrint()
+              << std::endl;
+    if(!_robotIndexes.empty())
+      std::cout << "\tUsing formation: " << _robotIndexes << std::endl;
+  }
+  _lpOutput->Clear();
+
+  auto stats = this->GetStatClass();
+  stats->IncLPAttempts(this->GetNameAndLabel());
+
+  bool connected = true;
+
+  auto env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto groupMap = _c1.GetGroupRoadmap();
+
+
+  const std::string callee = this->GetNameAndLabel() + "::IsConnectedFunc";
+
+  // Determine whether multiple robots are moving and whether this is a
+  // formation rotation (rotation about some leader robot).
+  const bool multipleParts = _robotIndexes.size() > 1;
+  const bool isRotational = _c1.OriDOF() > 0;
+  const bool formationRotation = multipleParts && isRotational;
+  const size_t leaderRobotIndex = _robotIndexes.empty() ? size_t(-1)
+                                                        : _robotIndexes[0];
+
+  // Will find all the straight-line increments for each robot independently.
+  // (Though the nTicks calculation is coupled with all moving robots).
+  int nTicks;
+  GroupCfgType incr(groupMap);
+  incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
+
+  const GroupCfgType originalIncr = incr;
+
+  // Set up incr for all translating bodies, should there be more than one.
+  if(multipleParts) {
+    // Remove the rotational bits, as incr should only do the translation
+    //  and then RotateFormationAboutLeader() will handle all rotations:
+    incr = GroupCfgType(groupMap, true);
+
+    // Overwrite all positional dofs from the leader's cfg for all active robots
+    incr.OverwriteDofsForRobots(
+        originalIncr.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
+        _robotIndexes);
+  }
+
+  int cdCounter = 0;
+  int nIter = 0;
+  GroupCfgType tick(_c1),
+               leaderTick(_c1),
+               previous(groupMap);
+  for(int i = 1; i < nTicks; ++i, ++nIter) {
+    previous = tick;
+    tick += incr;
+
+    // Handle rotation of a formation. We will determine the rotation applied to
+    // the leader robot and cause the others to rotate about it, maintaining
+    // their realtive formation
+    if(formationRotation) {
+      /// @todo This can likely be optimized. For one, only one Configure call
+      ///       should be necessary here. Also a lot of the group Cfgs here
+      ///       could be made individual if using the leader, then using
+      ///       Configure on that.
+
+      // Advance the leader tick by the original increment (we will only use
+      // data which is set in the leader body).
+      leaderTick += originalIncr;
+
+      // Find the previous transformation of the leader robot's base.
+      previous.ConfigureRobot();
+      mathtool::Transformation initialTransform =
+          previous.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+          GetWorldTransformation();
+
+      // Find the new transformation of the leader robot's base.
+      leaderTick.ConfigureRobot();
+      mathtool::Transformation finalTransform =
+          leaderTick.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+          GetWorldTransformation();
+
+      // Find the relative transformation of the leader robot's base. This holds
+      // the rotation to be applied to tick, which only increments position in
+      // this case.
+      mathtool::Transformation delta = -initialTransform * finalTransform;
+      tick.RotateFormationAboutLeader(_robotIndexes, delta.rotation(),
+          this->m_debug);
+    }
+
+    // Check collision if requested.
+    if(_checkCollision) {
+      ++cdCounter;
+      if(!tick.InBounds(env->GetBoundary()) or !vc->IsValid(tick, callee)) {
+        _col = tick;
+        connected = false;
+        break;
+      }
+    }
+
+    // Save path if requested.
+    if(_savePath)
+      _lpOutput->m_path.push_back(tick);
+  }
+
+  // Set data in the LPOutput object.
+  _lpOutput->m_edge.first.SetWeight(nIter);
+  _lpOutput->m_edge.second.SetWeight(nIter);
+  _lpOutput->SetIndividualEdges(_robotIndexes);
+  _lpOutput->SetActiveRobots(_robotIndexes);
+  _lpOutput->SetLPLabel(this->GetLabel());
+
+  stats->IncLPConnections(this->GetNameAndLabel(), connected);
+  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 
   if(this->m_debug)
-    std::cout << "Performing local plan with active robots " << _robotIndexes
+    std::cout << "\n\tLocal Plan is "
+              << (connected ? "valid" : "invalid at " + _col.PrettyPrint())
               << std::endl;
-
-  _lpOutput->Clear();
-  const bool connected = IsConnectedFunc(_c1, _c2, _col, _lpOutput,
-                                         _positionRes, _orientationRes,
-                                         _checkCollision, _savePath,
-                                         _robotIndexes);
-  _lpOutput->SetActiveRobots(_robotIndexes);
-  _lpOutput->SetIndividualEdges(_robotIndexes);
-  if(connected)
-    _lpOutput->SetLPLabel(this->GetLabel());
-
   return connected;
 }
 
@@ -265,199 +347,6 @@ IsConnectedFunc(
   stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return connected;
 }
-
-
-template <typename MPTraits>
-bool
-StraightLine<MPTraits>::
-IsConnectedFunc(
-    const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
-    GroupLPOutput<MPTraits>* _lpOutput,
-    double _positionRes, double _orientationRes, bool _checkCollision,
-    bool _savePath, const Formation& _robotIndexes) {
-
-  if(_robotIndexes.empty())
-    throw RunTimeException(WHERE, "Need to call this function with valid "
-                                  "robots!");
-
-  StatClass* const stats = this->GetStatClass();
-  stats->IncLPAttempts(this->GetNameAndLabel());
-  int cdCounter = 0;
-
-  bool connected = true;
-
-  Environment* const env = this->GetEnvironment();
-  GroupRoadmapType* const groupMap = _c1.GetGroupMap();
-  auto vc = this->GetValidityChecker(m_vcLabel);
-
-  GroupCfgType tick = _c1;
-  GroupCfgType incr(groupMap), previous(groupMap);
-
-  const string callee = this->GetNameAndLabel() + "::IsConnectedFunc";
-
-  const size_t leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
-
-  /// Set these to true to have single parts treated (less efficiently) as
-  /// multiple parts, which should now be identical.
-  const bool multipleParts = _robotIndexes.size() > 1;
-  const bool isRotational = _c1.OriDOF() > 0;
-  const bool subassemblyRotation = multipleParts && isRotational;
-
-  int nTicks;
-
-  // Will find all the straight-line increments for each robot independently.
-  // (Though the nTicks calculation is coupled with all moving robots).
-  incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
-
-  const GroupCfgType incrUntouched = incr;
-  GroupCfgType oneStep = _c1;// + incr;
-
-  mathtool::Orientation rotation;
-  // Set up incr for all translating bodies, should there be more than one.
-  if(multipleParts) {
-    // Remove the rotational bits, as incr should only do the translation
-    //  and then RotateFormationAboutLeader() will handle all rotations:
-    incr = GroupCfgType(groupMap, true); // Ensure completely zeroed out.
-    // Overwrite all positional dofs from the leader's cfg for all active robots
-    incr.OverwriteDofsForRobots(
-        incrUntouched.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
-        _robotIndexes);
-  }
-
-  int nIter = 0;
-  for(int i = 1; i < nTicks; ++i) { // don't need to check the ends, _c1 and _c2
-    previous = tick;
-    tick += incr;
-
-    if(subassemblyRotation) {
-      // Handle subassembly rotation. We must update the delta transformation
-      // due to Euler Angles not conforming to linear angle changes between cfgs
-
-      /// TODO: this can likely be optimized. For one, only one Configure call
-      /// should be necessary here. Also a lot of the group Cfgs here could be
-      /// made individual if using the leader, then using Configure on that.
-      oneStep += incrUntouched;
-
-      // Note we get the 0 body from the robot, as right now it's assumed that
-      // all robots in a group have multibodies with a single body.
-      // TODO: Implement multi-body support for each robot.
-      previous.ConfigureRobot();
-      mathtool::Transformation initialTransform =
-                          previous.GetRobot(leaderRobotIndex)->GetMultiBody()->
-                          GetBody(0)->GetWorldTransformation();
-
-      oneStep.ConfigureRobot();
-      mathtool::Transformation finalTransform =
-                            oneStep.GetRobot(leaderRobotIndex)->GetMultiBody()->
-                            GetBody(0)->GetWorldTransformation();
-
-      // The desired rotation for this step/increment.
-      mathtool::Transformation delta = -initialTransform * finalTransform;
-      rotation = delta.rotation();
-
-      if(this->m_debug)
-        std::cout << "tick before rotation = " << tick.PrettyPrint()
-                  << std::endl;
-
-      tick.RotateFormationAboutLeader(_robotIndexes, rotation, this->m_debug);
-
-      if(this->m_debug)
-        std::cout << "tick after rotation = " << tick.PrettyPrint()
-                  << std::endl << std::endl;
-    }
-    ++cdCounter;
-    if(_checkCollision) {
-      if(!tick.InBounds(env->GetBoundary()) || !vc->IsValid(tick, callee)) {
-        _col = tick;
-        connected = false;
-        break;
-      }
-    }
-
-    if(_savePath)
-      _lpOutput->m_path.push_back(tick);
-    ++nIter;
-  }
-  _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight() + nIter);
-  _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight() + nIter);
-
-  if(connected) {
-    stats->IncLPConnections(this->GetNameAndLabel());
-    _lpOutput->SetIndividualEdges(_robotIndexes);
-  }
-
-  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
-  return connected;
-}
-
-
-//template <typename MPTraits>
-//template <typename Enable>
-//bool
-//StraightLine<MPTraits>::
-//IsConnectedFunc(
-//    const CfgType& _c1, const CfgType& _c2, CfgType& _col,
-//    LPOutput<MPTraits>* _lpOutput,
-//    double _positionRes, double _orientationRes,
-//    bool _checkCollision, bool _savePath,
-//    typename boost::enable_if<IsClosedChain<Enable> >::type* _dummy) {
-//  /// @note Specialized implementation for closed chains
-//
-//  Environment* env = this->GetEnvironment();
-//  auto vc = this->GetValidityChecker(m_vcLabel);
-//  StatClass* stats = this->GetStatClass();
-//  std::string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
-//
-//  stats->IncLPAttempts(this->GetNameAndLabel());
-//  int cdCounter = 0;
-//
-//  bool connected;
-//  if(CfgType::OrientationsDifferent(_c1, _c2)) {
-//    CfgType intermediate(this->GetTask()->GetRobot());
-//    bool success = intermediate.GetIntermediate(_c1, _c2);
-//    if(_checkCollision) {
-//      cdCounter++;
-//      if(!intermediate.InBounds(env) ||
-//          !vc->IsValid(intermediate, callee)) {
-//        if(intermediate.InBounds(env))
-//          _col = intermediate;
-//        return false;
-//      }
-//    }
-//    if(!success)
-//      return false;
-//
-//    if(m_binaryEvaluation) {
-//      connected = (IsConnectedSLBinary(_c1, intermediate, _col, _lpOutput,
-//            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
-//          and
-//          IsConnectedSLBinary(intermediate, _c2, _col, _lpOutput,
-//            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
-//          );
-//    }
-//    else {
-//      connected = (IsConnectedSLSequential(_c1, intermediate, _col, _lpOutput,
-//            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
-//          and
-//          IsConnectedSLSequential(intermediate, _c2, _col, _lpOutput,
-//            cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath)
-//          );
-//    }
-//  }
-//  else {
-//    if(m_binaryEvaluation)
-//      connected = IsConnectedSLBinary(_c1, _c2, _col, _lpOutput,
-//          cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
-//    else
-//      connected = IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
-//          cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
-//  }
-//  if(connected)
-//    stats->IncLPConnections(this->GetNameAndLabel());
-//
-//  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
-//  return connected;
-//}
 
 
 template <typename MPTraits>

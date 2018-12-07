@@ -1,34 +1,42 @@
-#ifndef MASKED_PROXIMITY_SAMPLER_GROUP_H_
-#define MASKED_PROXIMITY_SAMPLER_GROUP_H_
-
-#include <iostream>
+#ifndef PMPL_MASKED_PROXIMITY_SAMPLER_GROUP_H_
+#define PMPL_MASKED_PROXIMITY_SAMPLER_GROUP_H_
 
 #include "MaskedSamplerMethodGroup.h"
 #include "MPProblem/RobotGroup/GroupUtils.h"
 
+#include <iostream>
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief Specialized masked sampler for composite C-Spaces (for diassembly)
+/// Specialized masked sampler for composite C-Spaces (for diassembly)
 ///
 /// This sampler extends a random distance from m_startCfg (which must be set,
 /// along with the active robots). The general idea of the sampler to have an
 /// EST-like sample returned, hence choosing a node and then extending a
 /// certain distance from it.
+///
+/// @todo This needs to be reimplemented to use the Filter method such that
+///       m_startCfg is passed into it instead of being a class member.
+///
+/// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
 
   public:
-    typedef typename MPTraits::MPLibrary::DistanceMetricPointer  DistanceMetricPointer;
-    typedef typename MPTraits::MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MaskedSamplerMethodGroup<MPTraits>::GroupCfgType GroupCfgType;
+    typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename GroupCfgType::IndividualCfg IndividualCfg;
-    typedef typename std::vector<GroupCfgType>::iterator InputIterator;
-    typedef typename std::back_insert_iterator<std::vector<GroupCfgType>> OutputIterator;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename SamplerMethod<MPTraits>::GroupOutputIterator;
+
     typedef typename std::vector<size_t> Formation;
 
     ///@}
@@ -36,41 +44,30 @@ class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
     ///@{
 
     MaskedProximitySamplerGroup();
+
     MaskedProximitySamplerGroup(XMLNode& _node);
+
     virtual ~MaskedProximitySamplerGroup() = default;
 
     ///@}
 
-    /// Try to sample a set number of new configurations from a given boundary.
-    /// @param[in] _numNodes The number of samples desired.
-    /// @param[in] _maxAttempts The maximum number of attempts for each sample.
-    /// @param[in] _boundary The boundary to sample from.
-    /// @param[out] _result An iterator to storage for the new configurations.
-    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
-            const Boundary* const _boundary, OutputIterator _result) override;
-
   protected:
+
     ///@name Sampler Rule
     ///@{
 
-    /// Takes a single input configuration and applies the sampler rule to
-    /// generate one or more output configurations.
-    /// @param[in] _cfg The input configuration.
-    /// @param[in] _boundary The sampling boundary.
-    /// @param[out] _result The resulting output configurations.
-    /// @param[out] _collision The (optional) return for failed attempts.
     virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
-        vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) override;
+        std::vector<GroupCfgType>& _result,
+        std::vector<GroupCfgType>& _collision) override;
 
     ///@}
-
-    ///@name Parameters
+    ///@name Internal State
     ///@{
 
-    double m_maxDist{1.0}; /// Maximum distance to move away from a cfg.
+    double m_maxDist{1.0}; ///< Maximum distance to move away from a cfg.
 
-    string m_vcLabel;
-    string m_dmLabel;
+    std::string m_vcLabel; ///< The validity checker to use.
+    std::string m_dmLabel; ///< The distance metric to use.
 
     ///@}
 };
@@ -79,17 +76,20 @@ class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
 
 template <typename MPTraits>
 MaskedProximitySamplerGroup<MPTraits>::
-MaskedProximitySamplerGroup(XMLNode& _node) : MaskedSamplerMethodGroup<MPTraits>(_node) {
+MaskedProximitySamplerGroup(XMLNode& _node)
+    : MaskedSamplerMethodGroup<MPTraits>(_node) {
   this->SetName("MaskedProximitySamplerGroup");
+
   m_maxDist = _node.Read("maxDist", false, m_maxDist, 0.,
-                          numeric_limits<double>::max(),
-                         "The maximum distance to move from a cfg.");
+      numeric_limits<double>::max(),
+      "The maximum distance to move from a cfg.");
 
   m_vcLabel = _node.Read("vcLabel", true, "",
-                         "The validity checker to use for sampling");
+      "The validity checker to use for sampling");
   m_dmLabel = _node.Read("dmLabel", true, "",
-                         "The distance metric to use for sampling");
+      "The distance metric to use for sampling");
 }
+
 
 template <typename MPTraits>
 MaskedProximitySamplerGroup<MPTraits>::
@@ -97,54 +97,20 @@ MaskedProximitySamplerGroup() : MaskedSamplerMethodGroup<MPTraits>() {
   this->SetName("MaskedProximitySamplerGroup");
 }
 
-
 /*---------------------------- Sampler Interface -----------------------------*/
-
-template <typename MPTraits>
-void
-MaskedProximitySamplerGroup<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
-       OutputIterator _result) {
-  for(size_t i = 0; i < _numNodes; ++i) {
-    //Get a random vertex from the graph and hand it to Sampler()
-
-    vector<GroupCfgType> result;
-    vector<GroupCfgType> collision;
-    //Terminate when node generated or attempts exhausted
-    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      this->GetStatClass()->IncNodesAttempted(this->GetNameAndLabel());
-      if(this->Sampler(this->m_startCfg, _boundary, result, collision))
-        break;
-    }
-
-    this->GetStatClass()->IncNodesGenerated(this->GetNameAndLabel(),
-        result.size());
-    _result = copy(result.begin(), result.end(), _result);
-    if(this->m_debug)
-      for(const GroupCfgType& cfg : result) {
-        std::cout << "MaskedProximitySamplerGroup::Sample result = "
-                  << cfg.PrettyPrint() << std::endl;
-      }
-  }
-  if(this->m_debug)
-    std::cout << std::endl; // To show where an entire Sample call ends.
-}
-
 
 template <typename MPTraits>
 bool
 MaskedProximitySamplerGroup<MPTraits>::
 Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
         vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
-  if(!this->m_startCfg.GetGroupMap())
+  if(!this->m_startCfg.GetGroupRoadmap())
     throw RunTimeException(WHERE, "Invalid start cfg!");
 
   //The input cfg is a cfg from the roadmap. Extend up to m_maxDist away
   // from _cfg and return (extendedCfg - roadmap[0]).
-  DistanceMetricPointer dm = this->GetDistanceMetric(m_dmLabel);
-  ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-
-  const string callee = this->GetNameAndLabel() + "::Sampler()";
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
 
   Formation robotList = this->m_activeRobots;  // Copy for potential reordering.
 
@@ -224,8 +190,10 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
               << extendedCfg.PrettyPrint() << std::endl << std::endl;
 
   //Check that the sample is in bounds and valid:
+  const std::string callee = this->GetNameAndLabel() + "::Sampler";
   if(!extendedCfg.InBounds(_boundary) ||
-     !vc->IsValid(extendedCfg, callee, this->m_activeRobots)) {
+     //!vc->IsValid(extendedCfg, callee, this->m_activeRobots)) {
+     !vc->IsValid(extendedCfg, callee)) {
     _collision.push_back(extendedCfg);
     return false;
   }

@@ -36,7 +36,6 @@ class VisibilityBasedPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     VisibilityBasedPRM(const std::string _sampler = "",
         const std::string _vc = "", const std::string _lp = "",
@@ -119,7 +118,7 @@ VisibilityBasedPRM<MPTraits>::
 Iterate() {
   if(this->m_debug)
     std::cout << "\nCreating node, currently "
-         << this->GetRoadmap()->GetGraph()->get_num_vertices()
+         << this->GetRoadmap()->get_num_vertices()
          << " nodes and " << m_guards.size() << " guard sets.";
 
   //Sample one node
@@ -206,7 +205,7 @@ bool
 VisibilityBasedPRM<MPTraits>::
 ConnectVisibleGuardSets(std::vector<CfgType>& _outNode) {
   auto lp = this->GetLocalPlanner(m_lpLabel);
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   Environment* env = this->GetEnvironment();
 
   typedef std::pair<WeightType, WeightType> LPEdge;

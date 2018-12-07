@@ -1,5 +1,5 @@
-#ifndef DISASSEMBLY_EXHAUSTIVE_GRAPH_H_
-#define DISASSEMBLY_EXHAUSTIVE_GRAPH_H_
+#ifndef PMPL_DISASSEMBLY_EXHAUSTIVE_GRAPH_H_
+#define PMPL_DISASSEMBLY_EXHAUSTIVE_GRAPH_H_
 
 #include <chrono>
 #include <queue>
@@ -38,15 +38,7 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::State            State;
     typedef std::pair<Formation, std::map<Approach, bool> >                  AttemptEntry;
 
-    DisassemblyExhaustiveGraph(
-        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::string _vc = "", const std::string _singleVc = "",
-        const std::string _lp = "", const std::string _ex = "",
-        const std::string _dm = "",
-        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
+    DisassemblyExhaustiveGraph();
     DisassemblyExhaustiveGraph(XMLNode& _node);
     virtual ~DisassemblyExhaustiveGraph() {}
 
@@ -113,13 +105,7 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyExhaustiveGraph<MPTraits>::
-DisassemblyExhaustiveGraph(
-    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
-    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
-    const std::string _vc, const std::string _singleVc, const std::string _lp,
-    const std::string _ex, const std::string _dm, const std::vector<std::string>& _evaluatorLabels):
-    DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
-      _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
+DisassemblyExhaustiveGraph() {
   this->SetName("DisassemblyExhaustiveGraph");
   this->m_graphMethod = true;
 }
@@ -241,7 +227,6 @@ RunAStarTests() {
   //4- Verify
 
   //1//- Create configurations including sub&parts motion
-//  const auto g = this->GetRoadmap()->GetGraph();
   const auto g = this->GetGroupRoadmap();
 
   const GroupCfgType root = g->GetVertex(0);

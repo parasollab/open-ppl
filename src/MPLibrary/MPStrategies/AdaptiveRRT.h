@@ -40,7 +40,6 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     AdaptiveRRT(double _wallPenalty = 0.5, double _gamma = 0.5,
@@ -155,8 +154,8 @@ AdaptiveRRT<MPTraits>::Initialize(){
   BasicRRTStrategy<MPTraits>::Initialize();
 
   //for each root of the graph, make sure to initialize variables.
-  GraphType* rdmp = this->GetRoadmap()->GetGraph();
-  for(typename GraphType::VI v = rdmp->begin(); v!=rdmp->end(); v++){
+  auto rdmp = this->GetRoadmap();
+  for(auto v = rdmp->begin(); v!=rdmp->end(); v++){
     v->property().SetStat("Parent", 0);
     v->property().SetStat("Success", 1);
     v->property().SetStat("Fail", 0);
@@ -178,10 +177,10 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   nf->FindNeighbors(this->GetRoadmap(),
       this->m_currentTree->begin(), this->m_currentTree->end(),
       this->m_currentTree->size() ==
-      this->GetRoadmap()->GetGraph()->get_num_vertices(),
+      this->GetRoadmap()->get_num_vertices(),
       _dir, std::back_inserter(kClosest));
   CfgType& nearest =
-      this->GetRoadmap()->GetGraph()->GetVertex(kClosest[0].first);
+      this->GetRoadmap()->GetVertex(kClosest[0].first);
 
   //get visibility of near node to decide which growth method to do
   double visibility = GetVisibility(nearest);
@@ -361,7 +360,7 @@ AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
     CfgType& _dir, double _delta){
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
-  CfgType& nearest = this->GetRoadmap()->GetGraph()->GetVertex(_expandNode);
+  CfgType& nearest = this->GetRoadmap()->GetVertex(_expandNode);
 
   double visibility = GetVisibility(nearest);
   double distToNear = dm->Distance(nearest, _newCfg);
@@ -388,7 +387,7 @@ template <typename MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
     bool _againstWall, double _ratio){
-  GraphType* rdmp = this->GetRoadmap()->GetGraph();
+  auto rdmp = this->GetRoadmap();
 
   //add the vertex to the graph
   VID newVID = rdmp->AddVertex(_newCfg);

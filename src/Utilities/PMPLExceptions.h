@@ -75,7 +75,7 @@ struct NotImplementedException : public PMPLException {
 
   NotImplementedException(const std::string& _where) :
       PMPLException("Not Implemented Exception", _where,
-                    "This feature is not yet implemented. ") {}
+                    "This feature is not implemented. ") {}
 
 };
 

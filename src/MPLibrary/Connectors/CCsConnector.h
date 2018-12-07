@@ -31,10 +31,10 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
+    typedef typename MPTraits::CfgType           CfgType;
+    typedef typename MPTraits::RoadmapType       RoadmapType;
+    typedef typename RoadmapType::VID            VID;
+    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
 
     ///@}
     ///@name Local Types
@@ -67,6 +67,15 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     template <typename InputIterator1, typename InputIterator2,
               typename OutputIterator>
     void Connect(RoadmapType* _rm,
+        InputIterator1 _itr1First, InputIterator1 _itr1Last,
+        InputIterator2 _itr2First, InputIterator2 _itr2Last,
+        bool _fromFullRoadmap,
+        OutputIterator _collision);
+
+
+    template <typename InputIterator1, typename InputIterator2,
+              typename OutputIterator>
+    void Connect(GroupRoadmapType* _rm,
         InputIterator1 _itr1First, InputIterator1 _itr1Last,
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
@@ -155,19 +164,16 @@ Connect(RoadmapType* _rm,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,
     OutputIterator _collision) {
-
-  GraphType* g = _rm->GetGraph();
-
   if(this->m_debug) {
     std::cout << "Before connecting CCs:\n";
-    this->GetStatClass()->DisplayCCStats(std::cout, *g);
+    this->GetStatClass()->DisplayCCStats(std::cout, *_rm);
     std::cout << std::endl;
   }
 
   std::vector<ConnectedComponent> ccs;
 
-  typename GraphType::ColorMap colorMap;
-  get_cc_stats(*g, colorMap, ccs);
+  typename RoadmapType::ColorMap colorMap;
+  get_cc_stats(*_rm, colorMap, ccs);
 
   if(ccs.size() <= 1)
     return;
@@ -188,12 +194,12 @@ Connect(RoadmapType* _rm,
 
       //even though this might be inefficient, double check to make sure the CCs
       //are different
-      if(!stapl::sequential::is_same_cc(*g, colorMap, itr1->second, *itr2)) {
+      if(!stapl::sequential::is_same_cc(*_rm, colorMap, itr1->second, *itr2)) {
 
         vector<VID> cc1, cc2;
 
-        get_cc(*g, colorMap, itr1->second, cc1);
-        get_cc(*g, colorMap, *itr2, cc2);
+        get_cc(*_rm, colorMap, itr1->second, cc1);
+        get_cc(*_rm, colorMap, *itr2, cc2);
 
         ConnectCC(_rm, cc1, cc2, _collision);
         colorMap.reset();
@@ -203,9 +209,23 @@ Connect(RoadmapType* _rm,
 
   if(this->m_debug) {
     std::cout << "After connecting CCs:\n";
-    this->GetStatClass()->DisplayCCStats(std::cout, *g);
+    this->GetStatClass()->DisplayCCStats(std::cout, *_rm);
     std::cout << std::endl;
   }
+}
+
+
+template <typename MPTraits>
+template <typename InputIterator1, typename InputIterator2,
+          typename OutputIterator>
+void
+CCsConnector<MPTraits>::
+Connect(GroupRoadmapType* _rm,
+    InputIterator1 _itr1First, InputIterator1 _itr1Last,
+    InputIterator2 _itr2First, InputIterator2 _itr2Last,
+    bool _fromFullRoadmap,
+    OutputIterator _collision) {
+  throw NotImplementedException(WHERE);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -218,7 +238,6 @@ ConnectCC(RoadmapType* _rm,
     std::vector<VID>& _cc1, std::vector<VID>& _cc2,
     OutputIterator _collision) {
   Environment* env = this->GetEnvironment();
-  GraphType* g = _rm->GetGraph();
 
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
@@ -238,10 +257,10 @@ ConnectCC(RoadmapType* _rm,
 
     CfgType _col(robot);
     lpOutput.Clear();
-    if(lp->IsConnected(g->GetVertex(cc1Elem), g->GetVertex(cc2Elem),
+    if(lp->IsConnected(_rm->GetVertex(cc1Elem), _rm->GetVertex(cc2Elem),
           _col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true)) {
-      g->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
+      _rm->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
       return;
     }
     if(_col != CfgType(robot))
@@ -254,20 +273,16 @@ template <typename MPTraits>
 void
 CCsConnector<MPTraits>::
 ComputeAllPairsCCDist(RoadmapType* _rm, std::vector<ConnectedComponent>& _ccs) {
-  // O
-  // O(ccs^2) to make m_ccDist
-  GraphType* g = _rm->GetGraph();
-
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
-  typename GraphType::ColorMap colorMap;
+  typename RoadmapType::ColorMap colorMap;
 
   //compute com of ccs
   std::map<VID, CfgType> coms;
   for(auto cc = _ccs.begin(); cc != _ccs.end(); ++cc) {
     std::vector<VID> ccVIDs;
-    get_cc(*g, colorMap, cc->second, ccVIDs);
-    coms[cc->second] = GetCentroid(g, ccVIDs);
+    get_cc(*_rm, colorMap, cc->second, ccVIDs);
+    coms[cc->second] = GetCentroid(_rm, ccVIDs);
   }
 
   //dist between ccs

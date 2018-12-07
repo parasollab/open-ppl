@@ -31,9 +31,8 @@ class LazyQuery : public QueryMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType            CfgType;
     typedef typename MPTraits::RoadmapType        RoadmapType;
-    typedef typename RoadmapType::GraphType       GraphType;
-    typedef typename GraphType::VID               VID;
-    typedef typename GraphType::EID::edge_id_type EID;
+    typedef typename RoadmapType::VID               VID;
+    typedef typename RoadmapType::EID::edge_id_type EID;
     typedef typename MPTraits::GoalTracker        GoalTracker;
     typedef typename GoalTracker::VIDSet          VIDSet;
 
@@ -282,7 +281,7 @@ PruneInvalidVertices() {
   if(this->m_debug)
     std::cout << "\t\tChecking vertices..." << std::endl;
 
-  auto g  = this->GetRoadmap()->GetGraph();
+  auto g  = this->GetRoadmap();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto path = this->GetPath();
 
@@ -322,7 +321,7 @@ template <typename MPTraits>
 bool
 LazyQuery<MPTraits>::
 PruneInvalidEdges() {
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   auto env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(m_lpLabel);
   auto path = this->GetPath();
@@ -343,9 +342,9 @@ PruneInvalidEdges() {
 
       // Skip checks if already checked and valid.
       {
-        typename GraphType::edge_descriptor ed(v1, v2);
-        typename GraphType::vertex_iterator vi;
-        typename GraphType::adj_edge_iterator edge;
+        typename RoadmapType::edge_descriptor ed(v1, v2);
+        typename RoadmapType::vertex_iterator vi;
+        typename RoadmapType::adj_edge_iterator edge;
         g->find_edge(ed, vi, edge);
 
         if(edge->property().IsChecked(res))
@@ -412,7 +411,7 @@ NodeEnhance() {
 
     // If enchancement cfg is in bounds, add it to the roadmap and connect.
     if(enhance.InBounds(this->GetEnvironment())) {
-      const VID newVID = roadmap->GetGraph()->AddVertex(enhance);
+      const VID newVID = roadmap->AddVertex(enhance);
       for(auto& label : m_ncLabels)
         this->GetConnector(label)->Connect(roadmap, newVID);
       if(this->m_debug)
@@ -432,7 +431,7 @@ template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
 InvalidateVertex(const VID _vid) {
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   const CfgType& cfg = g->GetVertex(_vid);
   ProcessInvalidNode(cfg);
@@ -455,7 +454,7 @@ template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
 InvalidateEdge(const VID _source, const VID _target) {
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // Add the invalid edge to enhancement sampling list.
   if(m_numEnhance) {
@@ -476,7 +475,7 @@ InvalidateEdge(const VID _source, const VID _target) {
   }
 
   // Otherwise, mark this edge as unused.
-  typename GraphType::EI ei;
+  typename RoadmapType::EI ei;
   g->GetEdge(_source, _target, ei);
   m_invalidEdges[ei->id()] = true;
 }

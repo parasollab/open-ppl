@@ -490,8 +490,6 @@ PMPL_SRCS := \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/NeighborhoodFinders/MPNNWrapper.cpp \
-  MPLibrary/PMPL.cpp \
-  MPLibrary/Samplers/SimilarStructureSampler.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \
@@ -527,5 +525,6 @@ PMPL_SRCS := \
   Workspace/WorkspacePortal.cpp \
   Workspace/WorkspaceRegion.cpp \
   Workspace/WorkspaceSkeleton.cpp \
+  MPLibrary/PMPL.cpp \
   $(MATLAB_SRCS)
   #Behaviors/Controllers/PIDFeedback.cpp \

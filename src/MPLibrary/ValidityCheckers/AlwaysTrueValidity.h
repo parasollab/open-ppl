@@ -1,11 +1,12 @@
-#ifndef ALWAYS_TRUE_VALIDITY_H
-#define ALWAYS_TRUE_VALIDITY_H
+#ifndef PMPL_ALWAYS_TRUE_VALIDITY_H_
+#define PMPL_ALWAYS_TRUE_VALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Always report valid and mark the configuration for lazy validation.
 /// @ingroup ValidityCheckers
-/// @brief Always return a configuration is valid.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
@@ -30,7 +31,7 @@ class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const string& _callName) override;
+        const std::string& _callName) override;
 
     ///@}
 };
@@ -55,7 +56,7 @@ AlwaysTrueValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
 template <typename MPTraits>
 bool
 AlwaysTrueValidity<MPTraits>::
-IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const string& _callName) {
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
   _cfg.SetLabel("Lazy", true);
   return true;
 }

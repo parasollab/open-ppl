@@ -1,11 +1,13 @@
-#ifndef BINARY_LP_SWEPT_DISTANCE_H_
-#define BINARY_LP_SWEPT_DISTANCE_H_
+#ifndef PMPL_BINARY_LP_SWEPT_DISTANCE_H_
+#define PMPL_BINARY_LP_SWEPT_DISTANCE_H_
 
 #include "LPSweptDistance.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// @todo This class should be replaced by an option in the base class.
+///
 /// @ingroup DistanceMetrics
-/// @brief TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {

@@ -22,7 +22,6 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
-    typedef typename RoadmapType::GraphType      GraphType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -122,7 +121,7 @@ RandomNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
+  auto g = _rmp;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   std::unordered_set<VID> foundVIDs;
@@ -171,7 +170,7 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
+  auto g = _rmp;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   std::set<std::pair<VID, VID>> foundPairs;

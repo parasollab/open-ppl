@@ -1,5 +1,5 @@
-#ifndef GROUP_LP_OUTPUT_H_
-#define GROUP_LP_OUTPUT_H_
+#ifndef PMPL_GROUP_LP_OUTPUT_H_
+#define PMPL_GROUP_LP_OUTPUT_H_
 
 #include <string>
 #include <utility>
@@ -7,12 +7,17 @@
 
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Computed information from a local plan.
 ///
 /// Stores all information available from local plan computations, including
 /// intermediates along edges (not straight line), the path
 /// generated, and the edge weights to be added to the RoadmapGraph.
+///
+/// @todo Destroy this object and have LPs/Extenders work directly with a
+///       GroupLocalPlan.
+///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -50,8 +55,8 @@ struct GroupLPOutput {
   ///@{
 
   GroupLPOutput(GroupRoadmapType* const _map = nullptr,
-                GroupCfgPath _path = GroupCfgPath(),
-                GroupCfgPath _intermediates = GroupCfgPath());
+      GroupCfgPath _path = GroupCfgPath(),
+      GroupCfgPath _intermediates = GroupCfgPath());
 
   // Copies _edge in to both members of the edge pair, then reverses the
   // m_intermediates vector of the second element.
@@ -81,15 +86,15 @@ struct GroupLPOutput {
 
 };
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
 GroupLPOutput<MPTraits>::
 GroupLPOutput(GroupRoadmapType* const _map, GroupCfgPath _path,
-              GroupCfgPath _intermediates) :
-      m_groupRoadmap(_map), m_path(_path), m_intermediates(_intermediates),
+    GroupCfgPath _intermediates)
+    : m_groupRoadmap(_map), m_path(_path), m_intermediates(_intermediates),
       m_edge(GroupWeightType(_map), GroupWeightType(_map))
-      { }
+{ }
 
 
 template <typename MPTraits>
@@ -153,19 +158,27 @@ template <typename MPTraits>
 void
 GroupLPOutput<MPTraits>::
 SetIndividualEdges(const std::vector<size_t>& _activeRobots) {
-  //NOTE: Only one direction of individual edges are being supported for now!
-
+  /// @todo We need to preserve the intermediates.
+  /// @todo This is not a correct edge for each individual robot - they will not
+  ///       all have the same weight. This needs to be tracked separately.
   if(!m_edge.first.GetIntermediates().empty())
     std::cerr << "GroupLPOutput Warning: intermediates detected in group edge "
-                 "are not being added in the individual edge yet!" << std::endl;
+              << "are not being added in the individual edge yet!"
+              << std::endl;
 
   const std::string label = m_edge.first.GetLPLabel();
   const double weight = m_edge.first.GetWeight();
 
-  for(const size_t robotIndex : _activeRobots) {
-    // TODO: Add in support for extracting the individual cfgs from path (make
-    //       a Roadmap function to do so for a vector of any group cfgs), which
-    //       should be performed in here for each robot.
+  // If there are no active robots, then we need to set the individual edges for
+  // all of them.
+  if(_activeRobots.empty()) {
+    const size_t numRobots = m_groupRoadmap->GetGroup()->Size();
+    for(size_t i = 0; i < numRobots; ++i) {
+      m_edge.first.SetEdge(i, IndividualEdge(label, weight));
+      m_edge.second.SetEdge(i, IndividualEdge(label, weight));
+    }
+  }
+  else for(const size_t robotIndex : _activeRobots) {
     m_edge.first.SetEdge(robotIndex, IndividualEdge(label, weight));
     m_edge.second.SetEdge(robotIndex, IndividualEdge(label, weight));
   }

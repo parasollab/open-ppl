@@ -21,7 +21,6 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -58,7 +57,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     virtual void Modify(vector<CfgType>& _path,
         vector<CfgType>& _newPath);
 
-    virtual void Modify(RoadmapType* _graph, vector<CfgType>& _path, 
+    virtual void Modify(RoadmapType* _graph, vector<CfgType>& _path,
                         vector<CfgType>& _newPath);
 
   protected:
@@ -82,7 +81,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     /// @param _path Path to extract VIDs from
     /// @param _graph RoadmapGraph containing path nodes
     /// @return Path VIDs
-    vector<VID> GetPathVIDs(vector<CfgType>& _path, GraphType* _graph);
+    vector<VID> GetPathVIDs(vector<CfgType>& _path, RoadmapType* _graph);
 
     /// @TODO Figure out what this does and document it.
     void RemoveBranches(const string& _dmLabel, vector<CfgType>& _path,
@@ -152,7 +151,7 @@ AddToPath(vector<CfgType>& _path, LPOutput<MPTraits>* _lpOutput, CfgType& _end) 
 template <typename MPTraits>
 vector<typename MPTraits::RoadmapType::VID>
 PathModifierMethod<MPTraits>::
-GetPathVIDs(vector<CfgType>& _path, GraphType* _graph) {
+GetPathVIDs(vector<CfgType>& _path, RoadmapType* _graph) {
   vector<VID> pathVIDs;
   for(auto&  cfg : _path) {
     VID v = _graph->GetVID(cfg);

@@ -44,7 +44,6 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -296,7 +295,7 @@ Initialize() {
     /// @todo Hard-coded setting of initial needle state for now, to be cleaned up
     ///       later by making a dedicated strategy for that which takes the
     ///       initial parameters via xml.
-    auto g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     CfgType& cfg = g->GetVertex(start);
     cfg.SetStat("insertion", .005);
     cfg.SetStat("c1-4", 0);
@@ -346,7 +345,7 @@ Initialize() {
                                     << "sampler '" << samplerLabel << "'.";
 
     // Add the configuration to the graph and trees.
-    auto g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     const auto& cfg = samples[0];
     const VID vid = g->AddVertex(cfg);
     m_trees.push_back({vid});
@@ -439,7 +438,7 @@ SelectDispersedTarget(const VID _v) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::SelectDispersedTarget");
 
   // Get original cfg with vid _v and its neighbors
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   const std::vector<VID> neighbors = g->GetChildren(_v);
   const CfgType& originalCfg = g->GetVertex(_v);
 
@@ -498,7 +497,7 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType* _tree) {
 
   std::vector<Neighbor> neighbors;
 
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   if(_tree) {
     nf->FindNeighbors(this->GetRoadmap(),
@@ -536,7 +535,7 @@ Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp,
   this->GetStatClass()->IncStat("BasicRRTExtend");
 
   auto e = this->GetExtender(m_exLabel);
-  const CfgType& qNear = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
+  const CfgType& qNear = this->GetRoadmap()->GetVertex(_nearVID);
   CfgType qNew(this->GetTask()->GetRobot());
 
   const bool success = e->Extend(qNear, _target, qNew, _lp);
@@ -595,7 +594,7 @@ BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::AddNode");
 
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   const VID lastVID = g->GetLastVID();
   const VID newVID  = g->AddVertex(_newCfg);
@@ -623,7 +622,7 @@ AddEdge(const VID _source, const VID _target,
               << std::endl;
 
   // Add the edge.
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   g->AddEdge(_source, _target, _lpOutput.m_edge);
 
   // Set the parent of _target if not already set (we may have already connected
@@ -669,7 +668,7 @@ TryGoalExtension(const VID _newVID) {
   MethodTimer mt(this->GetStatClass(), "BasicRRT::TryGoalExtension");
 
   if(this->m_debug) {
-    auto g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     const CfgType& cfg = g->GetVertex(_newVID);
 
     std::cout << "Checking goal extension for new node " << _newVID << " at "
@@ -691,7 +690,7 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
                                   << "boundary are not supported.";
 
   // First check if _newVID is already in the goal region.
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   const CfgType& cfg = g->GetVertex(_newVID);
   const bool inGoal = _boundary->InBoundary(cfg);
   if(inGoal) {
@@ -773,7 +772,7 @@ BasicRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
     std::cout << "Trying expansion from node " << _nearestVID << " "
-         << this->GetRoadmap()->GetGraph()->GetVertex(_nearestVID).PrettyPrint()
+         << this->GetRoadmap()->GetVertex(_nearestVID).PrettyPrint()
          << "..." << std::endl;
 
   // Try to extend from the _nearestVID to _target
@@ -859,7 +858,7 @@ ConnectTrees(const VID _recentlyGrown) {
 
   // Get the configuration by value in case the graph's vertex vector gets
   // re-allocated.
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   const CfgType qNew = g->GetVertex(_recentlyGrown);
 
   if(this->m_debug)

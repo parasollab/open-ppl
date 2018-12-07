@@ -19,7 +19,6 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename RoadmapType::VID           VID;
-    typedef typename RoadmapType::GraphType     GraphType;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
 
@@ -126,7 +125,6 @@ RadiusNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // The neighbor to use as a fallback if m_useFallback is set.
@@ -137,12 +135,12 @@ FindNeighbors(RoadmapType* _rmp,
 
   for(InputIterator it = _first; it != _last; it++) {
     // Check for connectedness.
-    const VID vid = g->GetVID(it);
-    if(this->DirectEdge(g, _cfg, vid))
+    const VID vid = _rmp->GetVID(it);
+    if(this->DirectEdge(_rmp, _cfg, vid))
       continue;
 
     // Check for connection to self.
-    const CfgType& node = g->GetVertex(it);
+    const CfgType& node = _rmp->GetVertex(it);
     if(node == _cfg)
       continue;
 
@@ -176,14 +174,13 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // Find all pairs within radius
   std::multiset<Neighbor> inRadius;
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-    const CfgType& node1 = g->GetVertex(it1);
+    const CfgType& node1 = _rmp->GetVertex(it1);
 
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
       // Check for connection to self.
@@ -191,14 +188,14 @@ FindNeighborPairs(RoadmapType* _rmp,
         continue;
 
       // Check distance.
-      const CfgType& node2 = g->GetVertex(it2);
+      const CfgType& node2 = _rmp->GetVertex(it2);
       const double distance = dm->Distance(node1, node2);
       if(std::isinf(distance))
         continue;
 
       // If within radius, add to list
       if(distance <= this->m_radius)
-        inRadius.emplace(g->GetVID(it1), g->GetVID(it2), distance);
+        inRadius.emplace(_rmp->GetVID(it1), _rmp->GetVID(it2), distance);
     }
   }
 

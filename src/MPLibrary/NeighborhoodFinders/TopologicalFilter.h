@@ -53,8 +53,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::RoadmapType            RoadmapType;
-    typedef typename RoadmapType::GraphType           GraphType;
-    typedef typename GraphType::VID                   VID;
+    typedef typename RoadmapType::VID                 VID;
     typedef WorkspaceDecomposition::vertex_descriptor VD;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
@@ -322,7 +321,7 @@ FindNeighbors(RoadmapType* _rmp,
 
   // Call the underlying NF on the reduced candidate set.
   nf->FindNeighbors(_rmp, candidates.begin(), candidates.end(),
-      candidates.size() == this->GetRoadmap()->GetGraph()->get_num_vertices(),
+      candidates.size() == this->GetRoadmap()->get_num_vertices(),
       _cfg, _out);
 
   // Track information on average candidate set size.
@@ -352,7 +351,7 @@ FindNeighborPairs(RoadmapType* _rmp,
   if(this->m_debug)
     std::cout << "TopologicalFilter::FindNeighborPairs\n";
 
-  auto g = _rmp->GetGraph();
+  auto g = _rmp;
 
   // This implementation depends on the 'neighbors' vector NOT reallocating.
   // Reserve enough space to preclude that possibility.
@@ -538,7 +537,7 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex) {
 
 
 template <typename MPTraits>
-std::vector<typename MPTraits::RoadmapType::GraphType::VID>
+std::vector<typename MPTraits::RoadmapType::VID>
 TopologicalFilter<MPTraits>::
 FindCandidates(const CfgType& _cfg) {
   MethodTimer mt(this->GetStatClass(), "TopologicalFilter::FindCandidates");
@@ -618,7 +617,7 @@ ComputeIntersection(InputIterator _first, InputIterator _last,
 
   MethodTimer mt(this->GetStatClass(), "TopologicalFilter::ComputeIntersection");
 
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // The input range could be VIDs or vertex iterators. Ask the RoadmapGraph for
   // VIDs.
@@ -699,7 +698,7 @@ BuildQueryMap() {
             << std::endl;
 
   // Get the start and goal vertices.
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   const VID startVID = *startVIDs.begin(),
             goalVID  = *goalVIDs.begin();
   const CfgType& start = g->GetVertex(startVID),

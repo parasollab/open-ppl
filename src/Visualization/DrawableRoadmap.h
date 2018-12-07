@@ -25,9 +25,9 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@name Local Types
     ///@{
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> GraphType;
-    typedef typename GraphType::VI VI;
-    typedef typename GraphType::EI EI;
+    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef typename RoadmapType::VI VI;
+    typedef typename RoadmapType::EI EI;
 
     ///@}
     ///@name Constructor
@@ -38,7 +38,7 @@ class DrawableRoadmap : public glutils::drawable  {
     /// @param _graph The graph this DrawableRoadmap represents.
     /// @param _color The color to draw the cfgs and edges.
     /// @param _name A name refering to this DrawableRoadmap
-    DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
+    DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
         const std::string& _name = "");
 
     ~DrawableRoadmap();
@@ -98,7 +98,7 @@ class DrawableRoadmap : public glutils::drawable  {
     std::unique_ptr<DrawableMultiBody> m_dmb;              ///< DrawableMultiBody used by the cfgs.
     std::atomic<bool> m_drawRobot{false};               ///< rendering mode. (defaults to point mode)
     mutable std::mutex m_lock;             ///< Lock for updating the map.
-    GraphType* m_graph;                    ///< a pointer to the RoadmapGraph.
+    RoadmapType* m_graph;                    ///< a pointer to the RoadmapGraph.
 
     std::string m_name;                    ///< A name for this graph.
 };

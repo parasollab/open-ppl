@@ -1,12 +1,19 @@
-#ifndef SCALED_EUCLIDEAN_DISTANCE_H_
-#define SCALED_EUCLIDEAN_DISTANCE_H_
+#ifndef PMPL_SCALED_EUCLIDEAN_DISTANCE_H_
+#define PMPL_SCALED_EUCLIDEAN_DISTANCE_H_
 
 #include "EuclideanDistance.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// A Euclidean distance that supports non-uniform weighting of the positional
+/// and rotational components. Joint components are lumped in with orientation.
+///
+/// @todo Separate the computation of orientation and joint distances.
+///
+/// @todo Replace with WeightedEuclidean, which full encompases this class and
+///       offers more functionality.
+///
 /// @ingroup DistanceMetrics
-/// @brief A Euclidean distance that supports non-uniform weighting of the
-///        positional and rotational components.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ScaledEuclideanDistance : public EuclideanDistance<MPTraits> {
@@ -82,7 +89,7 @@ template <typename MPTraits>
 double
 ScaledEuclideanDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  CfgType c = this->DifferenceCfg(_c1, _c2);
+  const CfgType c = _c2 - _c1;
   return pow(m_scale * this->PositionDistance(c)
       + (1 - m_scale) * this->OrientationDistance(c), this->m_r3);
 }

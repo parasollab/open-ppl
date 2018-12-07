@@ -89,7 +89,7 @@ Initialize() {
     return;
   m_initialized = true;
 
-  m_handoffTemplateRoadmap = std::unique_ptr<GraphType>(new GraphType(m_robot));
+  m_handoffTemplateRoadmap.reset(new RoadmapType(m_robot));
 
   // Get problem info.
   auto problem = m_robot->GetMPProblem();
@@ -173,25 +173,21 @@ Initialize() {
       glutils::color(.4,.4,.4,.5));
   m_simulatorGraphIDs.push_back(id);
 
-  Roadmap<MPTraits<Cfg>> testRm(m_robot);
-  testRm.SetGraph(m_megaRoadmap);
-  testRm.Write("postTranslate.map", m_robot->GetMPProblem()->GetEnvironment());
+  m_megaRoadmap->Write("postTranslate.map", m_robot->GetMPProblem()->GetEnvironment());
 
   SetupWholeTasks();
   if(m_debug){
     std::cout << "Done Setting up Whole Tasks" << std::endl;
   }
 
-  testRm.SetGraph(m_megaRoadmap);
-  testRm.Write("postSetupWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
+  m_megaRoadmap->Write("postSetupWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
 
   GenerateRoadmaps();
   if(m_debug){
     std::cout << "Done Generating Roadmaps" << std::endl;
   }
 
-  testRm.SetGraph(m_megaRoadmap);
-  testRm.Write("postGenerateRoadaps.map", m_robot->GetMPProblem()->GetEnvironment());
+  m_megaRoadmap->Write("postGenerateRoadaps.map", m_robot->GetMPProblem()->GetEnvironment());
 
   // Find group tasks plan with IT method
   if(!m_tmp){
@@ -200,8 +196,7 @@ Initialize() {
       std::cout << "Done Planning Whole Tasks" << std::endl;
     }
 
-    testRm.SetGraph(m_megaRoadmap);
-    testRm.Write("postPlanWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
+    m_megaRoadmap->Write("postPlanWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
 
     CopyCapabilityRoadmaps();
     if(m_debug){
@@ -212,7 +207,6 @@ Initialize() {
     if(m_debug){
       std::cout << "Done Assigning Initial Tasks" << std::endl;
     }
-    testRm.SetGraph(nullptr);
   }
   // FInd group taks plan with TMP method
   else{
@@ -433,7 +427,7 @@ AssignTask(std::shared_ptr<MPTask> _nextTask) {
   std::shared_ptr<MPTask> newSubtask = GetNextSubtask(m_subtaskMap[_nextTask]);
   if(newSubtask){
     m_subtaskMap[newSubtask] = m_subtaskMap[_nextTask];
-    newSubtask->SetStartTime(endTime);
+    newSubtask->SetEstimatedStartTime(endTime);
   }
   return newSubtask;
 }
@@ -480,7 +474,7 @@ CheckFinished() {
   if(!m_unassignedTasks.empty())
     return;
   for(auto wholeTask : m_wholeTasks){
-    if(!wholeTask->m_task->IsCompleted())
+    if(!wholeTask->m_task->GetStatus().is_complete())
       return;
   }
   for(auto agent : m_memberAgents){
@@ -549,8 +543,8 @@ DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
       std::cout << "\t" << *(constraint->GetBoundary()) << std::endl;
   }
 
-  task->SetStarted();
   // Set the member's current task.
+  task->GetStatus().start();
   _member->SetTask(task);
 }
 
@@ -610,7 +604,7 @@ AddSubtask(std::shared_ptr<MPTask> _subtask) {
     return;
   }
   for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
-    if(_subtask->GetStartTime() < it->get()->GetStartTime()){
+    if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
       m_unassignedTasks.insert(it, _subtask);
       return;
     }
@@ -640,7 +634,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
     //checks if it is the last subtask in the whole task and thus no partner is
     //coming to take over the task
     if(index == wholeTask->m_subtasks.end()-1){
-      wholeTask->m_task->SetCompleted();
+      wholeTask->m_task->GetStatus().complete();
       return true;
     }
     // Gets IT partner from the wholeTask
@@ -830,14 +824,11 @@ GenerateHandoffTemplates(){
       }
 
 
-      Roadmap<MPTraits<Cfg>> testRm(m_robot);
-      testRm.SetGraph(handoffSolution->GetRoadmap()->GetGraph());
-      testRm.Write("indHandoffTemplate" + std::to_string(check) + ".map", problemCopy->GetEnvironment());
-      testRm.SetGraph(nullptr);
+      handoffSolution->GetRoadmap()->Write("indHandoffTemplate" + std::to_string(check) + ".map", problemCopy->GetEnvironment());
       check++;
 
       // Store the roadmap for each task in the handoff
-      currentTemplate->AddRoadmapGraph(handoffSolution->GetRoadmap()->GetGraph());
+      currentTemplate->AddRoadmapGraph(handoffSolution->GetRoadmap());
 
       if(currentTemplate->GetInformation()->SavedPaths()){
         currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs(),
@@ -861,10 +852,8 @@ GenerateHandoffTemplates(){
                 + currentTemplate->GetInformation()->GetLabel());
 
     std::cout << "Trying to write handoffTemplate Map" << std::endl;
-    Roadmap<MPTraits<Cfg>> testRm(m_robot);
-    testRm.SetGraph(currentTemplate->GetConnectedRoadmap());
-    testRm.Write("handoffTemplate.map", problemCopy->GetEnvironment());
-    testRm.SetGraph(nullptr);
+    currentTemplate->GetConnectedRoadmap()->Write("handoffTemplate.map",
+        problemCopy->GetEnvironment());
 
     // Reset the agents to non-virtual, since they could be used in the next
     // template.
@@ -1103,7 +1092,7 @@ GenerateRoadmaps() {
 
     std::unordered_map<size_t, size_t> handoffVIDMap;
     std::unordered_map<size_t, size_t> inverseVIDMap;
-    auto graph = dummyAgent->GetMPSolution()->GetRoadmap()->GetGraph();
+    auto graph = dummyAgent->GetMPSolution()->GetRoadmap();
 
     Simulation::GetStatClass()->StartClock("Copy Handoffs to CapabilityMap " + capability);
     // Copy cfgs of handoffs of same capability into corresponding capability map
@@ -1250,9 +1239,9 @@ GenerateRoadmaps() {
 void
 Coordinator::
 PlanWholeTasks() {
-
-
-  m_solution->GetRoadmap(m_robot)->SetGraph(m_megaRoadmap);
+  // Not so efficient, just making a full copy for now until we expand the
+  // MPSolution API.
+  *m_solution->GetRoadmap(m_robot) = *m_megaRoadmap;
 
   //Find path for each whole task in megaRoadmap
   for(auto wholeTask: m_wholeTasks){
@@ -1292,11 +1281,9 @@ CopyCapabilityRoadmaps(){
     *g = *graph;
     agent->SetRoadmapGraph(g);
 
-    auto g2 = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
-    *g2 = *graph;
-    Roadmap<MPTraits<Cfg>> testRm(agent->GetRobot());
-    testRm.SetGraph(g2);
-    testRm.Write(agent->GetRobot()->GetLabel() + ".map", m_robot->GetMPProblem()->GetEnvironment());
+    // Write the capability map.
+    graph->Write(agent->GetRobot()->GetLabel() + ".map",
+        m_robot->GetMPProblem()->GetEnvironment());
   }
 }
 

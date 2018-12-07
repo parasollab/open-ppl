@@ -36,8 +36,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::WeightType             WeightType;
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::GraphType           GraphType;
-    typedef typename GraphType::VI                    VI;
+    typedef typename RoadmapType::VI                  VI;
     typedef WorkspaceDecomposition::vertex_descriptor VD;
     typedef WorkspaceDecomposition::adj_edge_iterator EI;
 
@@ -309,6 +308,11 @@ template <typename MPTraits>
 void
 TopologicalMap<MPTraits>::
 Initialize() {
+  // This object only works for single-robot problems right now.
+  if(this->GetGroupTask())
+    throw NotImplementedException(WHERE) << "Topological map does not yet support "
+                                         << "robot groups.";
+
   // Initialize the maps.
   ClearMaps();
 
@@ -328,10 +332,10 @@ Initialize() {
   m_regionToVIDs.resize(mb->GetNumBodies());
 
   // Install roadmap hooks.
-  auto g = this->GetRoadmap()->GetGraph();
-  g->InstallHook(GraphType::HookType::AddVertex, this->GetNameAndLabel(),
+  auto g = this->GetRoadmap();
+  g->InstallHook(RoadmapType::HookType::AddVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->MapCfg(_vi);});
-  g->InstallHook(GraphType::HookType::DeleteVertex, this->GetNameAndLabel(),
+  g->InstallHook(RoadmapType::HookType::DeleteVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->UnmapCfg(_vi);});
 
   // If the graph has existing vertices, map them now.
@@ -483,8 +487,7 @@ template <typename MPTraits>
 const WorkspaceRegion*
 TopologicalMap<MPTraits>::
 LocateRegion(const VID _vid, const size_t _bodyIndex) const {
-  return LocateRegion(this->GetRoadmap()->GetGraph()->GetVertex(_vid),
-      _bodyIndex);
+  return LocateRegion(this->GetRoadmap()->GetVertex(_vid), _bodyIndex);
 }
 
 
@@ -580,7 +583,7 @@ template <typename MPTraits>
 size_t
 TopologicalMap<MPTraits>::
 LocateCell(const VID _v, const size_t _bodyIndex) const {
-  return LocateCell(this->GetRoadmap()->GetGraph()->GetVertex(_v), _bodyIndex);
+  return LocateCell(this->GetRoadmap()->GetVertex(_v), _bodyIndex);
 }
 
 
@@ -608,7 +611,7 @@ template <typename MPTraits>
 typename TopologicalMap<MPTraits>::NeighborhoodKey
 TopologicalMap<MPTraits>::
 LocateNeighborhood(const VID _v) const {
-  return LocateNeighborhood(this->GetRoadmap()->GetGraph()->GetVertex(_v));
+  return LocateNeighborhood(this->GetRoadmap()->GetVertex(_v));
 }
 
 

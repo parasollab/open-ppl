@@ -14,7 +14,7 @@
 
 RobotGroup::
 RobotGroup(MPProblem* const _problem, const std::string& _label,
-    const std::vector<Robot*> _robots)
+    const std::vector<Robot*>& _robots)
   : m_problem(_problem), m_label(_label), m_robots(_robots) {
   for(size_t i = 0; i < m_robots.size(); ++i)
     m_indexes[m_robots[i]] = i;
@@ -49,10 +49,6 @@ RobotGroup(MPProblem* const _problem, XMLNode& _node) : m_problem(_problem) {
   else {
     // Parse the space-delimited robot label list.
     std::istringstream labelStream(robotLabelList);
-//    std::vector<std::string> labelVector(
-//                                std::istream_iterator<std::string>(labelStream),
-//                                std::istream_iterator<std::string>());
-//    for(auto& robotLabel : labelVector) {
     std::string robotLabel;
     while(labelStream >> robotLabel) {
       Robot* const memberRobot = m_problem->GetRobot(robotLabel);
@@ -61,8 +57,7 @@ RobotGroup(MPProblem* const _problem, XMLNode& _node) : m_problem(_problem) {
   }
 
   if(m_robots.empty())
-    throw ParseException(WHERE, "No robots specified in either robotLabels or "
-                         "in child nodes of robot group with label" + m_label);
+    throw ParseException(_node.Where()) << "The robot group is empty.";
 
   for(size_t i = 0; i < m_robots.size(); ++i)
     m_indexes[m_robots[i]] = i;
@@ -80,11 +75,14 @@ GetLabel() const noexcept {
 Robot*
 RobotGroup::
 GetRobot(const size_t _index) const noexcept {
-  if(_index > m_robots.size())
-    throw RunTimeException(WHERE, "Request for robot " + std::to_string(_index)
-        + " in a group with " + std::to_string(m_robots.size()) + " robots.");
-
-  return m_robots[_index];
+  try {
+    return m_robots.at(_index);
+  }
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Request for robot " << _index
+                                  << " in a group with " << m_robots.size()
+                                  << " robots.";
+  }
 }
 
 
@@ -111,11 +109,9 @@ GetGroupIndex(Robot* const _robot) const noexcept {
   try {
     return m_indexes.at(_robot);
   }
-  catch(const std::runtime_error& _e) {
-    std::ostringstream oss;
-    oss << "Request for index of robot " << _robot
-        << " which is not in the group.";
-    throw RunTimeException(WHERE, oss.str());
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Request for index of robot " << _robot
+                                  << " which is not in the group.";
   }
 }
 
@@ -124,7 +120,7 @@ bool
 RobotGroup::
 VerifyRobotInGroup(Robot* const _robot) const noexcept {
   return m_indexes.count(_robot);
-  }
+}
 
 
 size_t

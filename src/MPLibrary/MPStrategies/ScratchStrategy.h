@@ -19,7 +19,6 @@ class ScratchStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}

@@ -1,5 +1,5 @@
-#ifndef GROUP_CFG_H_
-#define GROUP_CFG_H_
+#ifndef PMPL_GROUP_CFG_H_
+#define PMPL_GROUP_CFG_H_
 
 #include <cstddef>
 #include <iostream>
@@ -27,6 +27,14 @@ class RobotGroup;
 /// storage (m_localCfgs) which stores individual cfgs not yet in a roadmap.
 /// When adding a group cfg to a group roadmap, the VID is used in place after
 /// adding the individual cfg to the individual roadmap.
+///
+/// @note Do not use 'SetRobotCfg' on a roadmap configuration with a non-VID:
+///       The 'set' configuration will be lost since it is not in the individual
+///       roadmap.
+///
+/// @todo Rework so that we only need a robot group to construct this, in which
+///       case it will have all local cfgs. It should only get tied to a roadmap
+///       with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
 class GroupCfg final {
 
@@ -39,18 +47,27 @@ class GroupCfg final {
     typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. Robot roadmaps.
 
     typedef Cfg              IndividualCfg;
-    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<IndividualCfg>> GraphType;
+    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<IndividualCfg>> GroupRoadmapType;
 
+    /// A formation represents a group of robots which are maintaining their
+    /// configurations relative to a leader, such as maintaining a square or
+    /// V-shape while moving. The values are robot indexes (within the group,
+    /// not problem) with the first index denoting the leader robot. These are
+    /// not stored in configurations but may be required for edges.
     typedef std::vector<size_t> Formation;
 
     ///@}
     ///@name Construction
     ///@{
 
-    /// If _init is true, this will construct a new GroupCfg by populating
-    /// m_localCfgs with new default configurations.
-    explicit GroupCfg(GraphType* const _groupMap = nullptr,
-                      const bool _init = false);
+    /// Construct a group configuration.
+    /// @param _groupMap The group roadmap to which this configuration belongs,
+    ///                  or null if it is not in a map.
+    /// @param _init Default-initialize local configurations?
+    /// @todo This object does not work at all without a group map. We should
+    ///       throw relevant exceptions if needed.
+    explicit GroupCfg(GroupRoadmapType* const _groupMap = nullptr,
+        const bool _init = false);
 
     ///@}
     ///@name Equality
@@ -60,7 +77,7 @@ class GroupCfg final {
     bool operator!=(const GroupCfg& _other) const noexcept;
 
     ///@}
-    ///@name Addition and Subtraction
+    ///@name Arithmetic
     ///@{
 
     GroupCfg operator+(const GroupCfg& _other) const;
@@ -70,23 +87,62 @@ class GroupCfg final {
     GroupCfg& operator+=(const GroupCfg& _other);
     GroupCfg& operator-=(const GroupCfg& _other);
 
-    /// Constant multiplication:
     GroupCfg& operator*=(const double& _val);
 
+    ///@}
+    ///@name Robots
+    ///@{
+    /// Access the robots within this group configuration.
+
+    /// Get the number of robots.
+    size_t GetNumRobots() const noexcept;
+
+    /// Get the full vector of robot pointers.
+    const std::vector<Robot*>& GetRobots() const noexcept;
+
+    /// Get the robot pointer for a group member by index.
+    Robot* GetRobot(const size_t _index) const;
 
     ///@}
-    ///@name Accessors
+    ///@name Roadmap Accessors
     ///@{
+    /// These functions provide access to the related group map (if any) and
+    /// descriptors for non-local individual configurations.
+
+    /// Get the group roadmap this group cfg is with respect to.
+    GroupRoadmapType* GetGroupRoadmap() const noexcept;
+
+    /// Change the roadmap that this group is using/in reference to. Also
+    /// performs compatibility/verification tests to see if it's possible.
+    /// Note: Does NOT add this new cfg to any roadmap, but makes all cfg info
+    ///       local (everything will be in m_localCfgs) so that there are no
+    ///       issues when adding to the roadmap later.
+    /// @todo Fix this, it looks like it was meant to be a copy-constructor with
+    ///       a different roadmap. We will still need a roadmap setter in case
+    ///       the roadmap moves.
+    GroupCfg SetGroupRoadmap(GroupRoadmapType* const _newRoadmap) const;
+
+    /// Get the VID for a particular robot.
+    /// @param _index The index (within the group) of the robot.
+    /// @return The VID of the robot's individual configuration, or INVALID_VID
+    ///         if it is a local configuration.
+    VID GetVID(const size_t _index) const noexcept;
+
+    ///@}
+    ///@name Individual Configurations
+    ///@{
+    /// These functions manage the individual configurations that comprise this
+    /// group configuration.
 
     /// Set the individual cfg for a robot to a local copy of an cfg.
     /// @param _robot The robot which the cfg refers to.
     /// @param _cfg The cfg.
-    void SetRobotCfg(Robot* const _robot, Cfg&& _cfg);
+    void SetRobotCfg(Robot* const _robot, IndividualCfg&& _cfg);
 
     /// Set the individual cfg for a robot to a local copy of an cfg.
     /// @param _index The robot's group index which the cfg refers to.
     /// @param _cfg The cfg.
-    void SetRobotCfg(const size_t _index, Cfg&& _cfg);
+    void SetRobotCfg(const size_t _index, IndividualCfg&& _cfg);
 
     /// Set the individual cfg for a robot to a roadmap copy of an cfg.
     /// @param _robot The robot which the cfg refers to.
@@ -99,36 +155,33 @@ class GroupCfg final {
     void SetRobotCfg(const size_t _index, const VID _vid);
 
     /// Get the individual Cfg for a robot in the group.
-    /// @param _index The index of the robot.
+    /// @param _robot The robot which the cfg refers to.
     /// @return The individual configuration for the indexed robot.
-    Cfg& GetRobotCfg(const size_t _index);
+    IndividualCfg& GetRobotCfg(Robot* const _robot);
 
     /// Get the individual Cfg for a robot in the group.
     /// @param _index The index of the robot.
     /// @return The individual configuration for the indexed robot.
-    const Cfg& GetRobotCfg(const size_t _index) const;
+    IndividualCfg& GetRobotCfg(const size_t _index);
+
+    /// Get the individual Cfg for a robot in the group.
+    /// @param _robot The robot which the cfg refers to.
+    /// @return The individual configuration for the indexed robot.
+    const IndividualCfg& GetRobotCfg(Robot* const _robot) const;
+
+    /// Get the individual Cfg for a robot in the group.
+    /// @param _index The index of the robot.
+    /// @return The individual configuration for the indexed robot.
+    const IndividualCfg& GetRobotCfg(const size_t _index) const;
 
     /// Clear the Local Cfg information in the cfg (for after adding to roadmap)
     void ClearLocalCfgs();
 
-    /// Get the robot pointer that is stored at _index
-    Robot* GetRobot(const size_t _index) const;
-
-    /// Get all of the VIDs that this group cfg refers to. Entries will be
-    /// INVALID_VID if individual cfgs are not yet in individual roadmaps.
-    const VIDSet& GetVIDSet() const;
-
-    /// Get the vid stored at _index
-    VID GetVID(const size_t _index) const noexcept;
-
-    /// Get the group roadmap this group cfg is with respect to.
-    GraphType* GetGroupMap() const noexcept;
-
-    /// Get the number of robots for the group of this group cfg.
-    size_t GetNumRobots() const noexcept;
-
-    /// Get the full vector of robot pointers for the group of this group cfg.
-    const std::vector<Robot*>& GetRobots() const noexcept;
+    ///@}
+    ///@name DOF Accessors
+    ///@{
+    /// @todo These should not return any single-robot values, which can always
+    ///       be obtained by accessing the relevant robot.
 
     /// We assume homogeneous robots right now, so the default argument just
     /// grabs the values for the first one.
@@ -136,26 +189,20 @@ class GroupCfg final {
     size_t OriDOF(const size_t _index = 0) const;
     size_t DOF(const size_t _index = 0) const;
 
-    /// Properly loop through the robots in the group and accumulate the DOF
-    /// count for each robot.
-    size_t CompositeDOF() const;
-
-    /// TODO: This should ideally check if ANY robot is nonholonomic in the
-    //        group. Right now it just checks the first.
+    /// Check if there is a nonholonomic robot in the group.
     bool IsNonholonomic() const noexcept;
 
-    /// Returns the square root of the self dot product of two group cfgs,
-    /// summed over all robots, not caring about DOF types.
+    /// Compute the total DOF for this robot group.
+    size_t CompositeDOF() const;
+
+    /// Compute the composite magnitude.
     double Magnitude() const;
 
-    /// Returns the square root of the self dot product of two group cfgs,
-    /// summed over all robots, but only for positional DOF types.
+    /// Compute the composite manitude of the positional components.
     double PositionMagnitude() const;
 
-    /// Returns the square root of the self dot product of two group cfgs,
-    /// summed over all robots, but only for non-positional DOF types.
+    /// Compute the composite magnitude of the orientation components.
     double OrientationMagnitude() const;
-
 
     ///@}
     ///@name Configuration Helpers
@@ -168,8 +215,13 @@ class GroupCfg final {
     void ConfigureRobot() const;
 
     /// Check that another GroupCfg is within a resolution as specified.
+    /// @param _cfg The test configuration.
+    /// @param _posRes The position resolution.
+    /// @param _oriRes The orientation resolution.
+    /// @return True if each individual configuration in this is within a
+    ///         resolution distance of _cfg.
     bool WithinResolution(const GroupCfg& _cfg, const double _posRes,
-                          const double _oriRes) const;
+        const double _oriRes) const;
 
     ///@}
     ///@name DOF Modifiers
@@ -269,7 +321,7 @@ class GroupCfg final {
     /// @param _goal The goal configuration.
     /// @param _nTicks The number of steps to take (NOT computed by this method)
     void FindIncrement(const GroupCfg& _start, const GroupCfg& _goal,
-                       const int _nTicks);
+        const int _nTicks);
 
     /// Find the c-space increment and number of steps needed to move from a
     /// start to a goal, taking steps no larger than the designated resolutions.
@@ -279,31 +331,21 @@ class GroupCfg final {
     /// @param _positionRes The position resolution to use.
     /// @param _orientationRes The orientation resolution to use.
     void FindIncrement(const GroupCfg& _start, const GroupCfg& _goal,
-                       int* const _nTicks,
-                       const double _positionRes, const double _orientationRes);
+        int* const _nTicks, const double _positionRes,
+        const double _orientationRes);
 
     /// Test if a group configuration lies within a boundary and also within the
     /// robot's c-space limits.
-    /// @param[in] _boundary The boundary to check.
+    /// @param _boundary The boundary to check.
     /// @return True if the configuration places the robot inside both the
     ///         boundary and its DOF limits.
     bool InBounds(const Boundary* const _b) const noexcept;
     /// @overload
     bool InBounds(const Environment* const _env) const noexcept;
 
-
     /// Normalize Orientation DOFs for a Group Cfg
-    virtual void NormalizeOrientation(
-                               const Formation& _robots = Formation()) noexcept;
-
-
-    /// Change the roadmap that this group is using/in reference to. Also
-    /// performs compatibility/verification tests to see if it's possible.
-    /// Note: Does NOT add this new cfg to any roadmap, but makes all cfg info
-    ///       local (everything will be in m_localCfgs) so that there are no
-    ///       issues when adding to the roadmap later.
-    GroupCfg ChangeRoadmap(GraphType* const _newRoadmap) const;
-
+    virtual void NormalizeOrientation(const Formation& _robots = Formation())
+        noexcept;
 
     ///@}
     ///@name Output Utilities
@@ -315,17 +357,28 @@ class GroupCfg final {
 
   private:
 
+    ///@name Helpers
+    ///@{
+
     /// Return whether the cfg for the robot is local to the group cfg, or if
     /// it's in an individual roadmap already.
     bool IsLocalCfg(const size_t _robotIndex) const noexcept;
 
+    /// Initialize the set of local configurations if not already done.
+    void InitializeLocalCfgs() noexcept;
+
+    /// Verify that an index is valid. Throw an exception if not.
+    /// @param _robotIndex The (group) index to verify.
+    void VerifyIndex(const size_t _robotIndex) const noexcept;
+
+    ///@}
     ///@name Internal State
     ///@{
 
-    GraphType* m_groupMap{nullptr};  ///< The robot group.
+    GroupRoadmapType* m_groupMap{nullptr};  ///< The robot group.
 
     VIDSet m_vids;   ///< The individual VIDs in this aggregate configuration.
-    std::vector<Cfg> m_localCfgs; ///< Individual cfgs not in a map.
+    std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
 
     ///@}
 

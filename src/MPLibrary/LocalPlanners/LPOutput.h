@@ -1,5 +1,5 @@
-#ifndef LP_OUTPUT_H_
-#define LP_OUTPUT_H_
+#ifndef PMPL_LP_OUTPUT_H_
+#define PMPL_LP_OUTPUT_H_
 
 #include <string>
 #include <utility>
@@ -11,6 +11,11 @@
 /// Stores all information available from local plan computations, including
 /// intermediates along edges (not straight line), the path
 /// generated, and the edge weights to be added to the RoadmapGraph.
+///
+/// @todo Destroy this object and have LPs/Extenders work directly with a
+///       LocalPlan object, which should replace the DefaultWeight class as our
+///       roadmap edge.
+///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>

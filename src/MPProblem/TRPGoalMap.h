@@ -1,10 +1,5 @@
-#ifndef PMPL_GOAL_GRAPH_H
-#define PMPL_GOAL_GRAPH_H
-
-#include <vector>
-
-#include <containers/sequential/graph/graph.h>
-#include "Vector.h"
+#ifndef PMPL_TRP_GOAL_MAP_H_
+#define PMPL_TRP_GOAL_MAP_H_
 
 #include "ConfigurationSpace/Path.h"
 #include "Geometry/Boundaries/Boundary.h"
@@ -13,15 +8,19 @@
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Simulator/BulletModel.h"
-
 #include "Utilities/PMPLExceptions.h"
 
+#include <containers/sequential/graph/graph.h>
+#include "Vector.h"
+
+#include <vector>
+
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// @todo What is this?
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
+class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
                           stapl::NONMULTIEDGES, std::shared_ptr<Constraint>,
                           PathType<MPTraits>>{
 
@@ -55,11 +54,11 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     ///@name Construction
     ///@{
 
-    GoalMap();
+    TRPGoalMap();
 
-    GoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library);
+    TRPGoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library);
 
-    virtual ~GoalMap();
+    virtual ~TRPGoalMap();
 
     ///@}
     ///@name Vertex Accessors
@@ -158,12 +157,12 @@ class GoalMap : public stapl::sequential::graph<stapl::DIRECTED,
 /*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
-GoalMap<MPTraits>::
-GoalMap() = default;
+TRPGoalMap<MPTraits>::
+TRPGoalMap() = default;
 
 template <typename MPTraits>
-GoalMap<MPTraits>::
-GoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library){
+TRPGoalMap<MPTraits>::
+TRPGoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library){
   m_robot = _robot;
   m_queryMethodLabel = _queryMethod;
   m_library = _library;
@@ -171,35 +170,35 @@ GoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library){
 }
 
 template <typename MPTraits>
-GoalMap<MPTraits>::
-~GoalMap() = default;
+TRPGoalMap<MPTraits>::
+~TRPGoalMap() = default;
 
 /*----------------------------- Accessors ------------------------------------*/
 
 template <typename MPTraits>
 const size_t
-GoalMap<MPTraits>::
+TRPGoalMap<MPTraits>::
 GetNumVertices() const noexcept {
   return m_depotDescriptors.size() + m_goalDescriptors.size();
 }
 
 template <typename MPTraits>
 std::vector<size_t>*
-GoalMap<MPTraits>::
+TRPGoalMap<MPTraits>::
 GetGoalDescriptors() {
   return &m_goalDescriptors;
 }
 
 template <typename MPTraits>
 std::vector<size_t>*
-GoalMap<MPTraits>::
+TRPGoalMap<MPTraits>::
 GetDepotDescriptors() {
   return &m_depotDescriptors;
 }
 
 template <typename MPTraits>
-const typename GoalMap<MPTraits>::Path&
-GoalMap<MPTraits>::
+const typename TRPGoalMap<MPTraits>::Path&
+TRPGoalMap<MPTraits>::
 GetPath(const size_t _i1, const size_t _i2) const noexcept {
   const_adj_edge_iterator edge;
   const_iterator vert;
@@ -213,7 +212,7 @@ GetPath(const size_t _i1, const size_t _i2) const noexcept {
 
 template <typename MPTraits>
 void
-GoalMap<MPTraits>::
+TRPGoalMap<MPTraits>::
 AddDepots(std::vector<Robot*> _workers){
   if(m_debug)
     std::cout << "adding depots for " << _workers.size() << " workers" << endl;
@@ -297,7 +296,7 @@ AddDepots(std::vector<Robot*> _workers){
 
 template <typename MPTraits>
 void
-GoalMap<MPTraits>::
+TRPGoalMap<MPTraits>::
 UpdateGoalMap() {
   if(m_debug)
     std::cout << "Updating goal map" << std::endl;

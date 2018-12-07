@@ -34,7 +34,6 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::GraphType           GraphType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
@@ -213,7 +212,7 @@ FindNeighbors(RoadmapType* _rmp,
 
   if(_fromFullRoadmap) {
     m_queryInfo = &m_dpesInfo[_rmp];
-    size_t rdmp = _rmp->GetGraph()->GetTimestamp();
+    size_t rdmp = _rmp->GetTimestamp();
     if(currRdmp == size_t(-1) or currRdmp < rdmp) {
       CreatePivots(_rmp, _first, _last);
       currRdmp = rdmp;
@@ -275,14 +274,13 @@ DPESNF<MPTraits>::
 CreatePivots(RoadmapType* _rdmp,
     InputIterator _first, InputIterator _last) {
 
-  typename RoadmapType::GraphType* g = _rdmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->GetDMLabel());
 
   //Compute more pivots if necessary
   if(m_queryInfo->m_pivots.size() < m_m) {
     //Add all points first
     for(InputIterator i = _first; i != _last; ++i)
-      m_queryInfo->m_points.insert(g->GetVID(i));
+      m_queryInfo->m_points.insert(_rdmp->GetVID(i));
 
     m_queryInfo->m_pivots.clear();
 
@@ -291,7 +289,7 @@ CreatePivots(RoadmapType* _rdmp,
     size_t indx = LRand() % sz;
     auto i = m_queryInfo->m_points.begin();
     std::advance(i, indx);
-    m_queryInfo->m_pivots.push_back(g->GetVertex(i));
+    m_queryInfo->m_pivots.push_back(_rdmp->GetVertex(i));
 
     //pivots 2..m - jth pivot selected by selecting a point in Points
     //which maximizes min_{i=i}^{j-1} d(p_i, p_j)
@@ -301,7 +299,7 @@ CreatePivots(RoadmapType* _rdmp,
       for(auto i = m_queryInfo->m_points.begin();
           i != m_queryInfo->m_points.end(); ++i) {
         double minV = MAX_DBL;
-        CfgType& c = g->GetVertex(i);
+        CfgType& c = _rdmp->GetVertex(i);
         for(auto& p : m_queryInfo->m_pivots)
           minV = min(minV, dm->Distance(p, c));
 
@@ -310,21 +308,21 @@ CreatePivots(RoadmapType* _rdmp,
           maxV = minV;
         }
       }
-      m_queryInfo->m_pivots.push_back(g->GetVertex(maxI));
+      m_queryInfo->m_pivots.push_back(_rdmp->GetVertex(maxI));
     }
 
     //project all input points in R^m
     m_queryInfo->m_projectedPoints.clear();
     for(auto& v : m_queryInfo->m_points)
-      m_queryInfo->m_projectedPoints[v] = Project(g->GetVertex(v));
+      m_queryInfo->m_projectedPoints[v] = Project(_rdmp->GetVertex(v));
   }
   //Otherwise just tack on projected points
   else {
     for(InputIterator i = _first; i != _last; ++i) {
-      VID v = g->GetVID(i);
+      VID v = _rdmp->GetVID(i);
       if(!m_queryInfo->m_points.count(v)) {
         m_queryInfo->m_points.insert(v);
-        m_queryInfo->m_projectedPoints[v] = Project(g->GetVertex(i));
+        m_queryInfo->m_projectedPoints[v] = Project(_rdmp->GetVertex(i));
       }
     }
   }
@@ -350,13 +348,11 @@ DPESNF<MPTraits>::
 KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
   const Projected v = Project(_c);
 
-  auto g = _rdmp->GetGraph();
-
   // If m_k == 0 or query is less than the number of pivots, return all without
   // sorting.
   if(this->m_k == 0 or this->m_k > m_queryInfo->m_points.size()) {
     for(const auto& p : m_queryInfo->m_projectedPoints)
-      if(g->GetVertex(p.first) != _c)
+      if(_rdmp->GetVertex(p.first) != _c)
         *_out++ = Neighbor(p.first, Euclidean(v, p.second));
     return _out;
   }
@@ -367,11 +363,11 @@ KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
   for(const auto& p : m_queryInfo->m_projectedPoints) {
     // Get the VID and check connectedness.
     const VID vid = p.first;
-    if(this->DirectEdge(g, _c, vid))
+    if(this->DirectEdge(_rdmp, _c, vid))
       continue;
 
     // Get the configuration and check against connection to self.
-    const CfgType& node = _rdmp->GetGraph()->GetVertex(vid);
+    const CfgType& node = _rdmp->GetVertex(vid);
     if(node == _c)
       continue;
 

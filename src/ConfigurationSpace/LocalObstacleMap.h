@@ -1,8 +1,6 @@
 #ifndef LOCAL_OBSTACLE_MAP_H_
 #define LOCAL_OBSTACLE_MAP_H_
 
-#include "Roadmap.h"
-
 #include <unordered_map>
 #include <unordered_set>
 

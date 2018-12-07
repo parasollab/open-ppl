@@ -24,7 +24,6 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
-    typedef typename RoadmapType::GraphType      GraphType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 

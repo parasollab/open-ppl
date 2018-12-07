@@ -17,7 +17,6 @@ class ResamplePathModifier : public PathModifierMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -245,7 +244,6 @@ FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
   LPOutput<MPTraits> lpOutput;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
-  GraphType* graph = _graph->GetGraph();
   Environment* env = this->GetEnvironment();
   auto robot = this->GetTask()->GetRobot();
 
@@ -265,13 +263,13 @@ FindNeighbors(CfgType& _previous, CfgType& _current, CfgType& _next,
       secondConnectFlag = lp->IsConnected(c, _next, &lpOutput,
             env->GetPositionRes(), env->GetOrientationRes());
 
-      VID cvid = graph->GetVID(c);
+      VID cvid = _graph->GetVID(c);
       if(cvid == INVALID_VID)
-        cvid = graph->AddVertex(c);// the vertex did not exist
+        cvid = _graph->AddVertex(c);// the vertex did not exist
 
       if(firstConnectFlag && secondConnectFlag) {
-        graph->AddEdge(graph->GetVID(_previous), cvid, lpOutput.m_edge);
-        graph->AddEdge(cvid, graph->GetVID(_next), lpOutput.m_edge);
+        _graph->AddEdge(_graph->GetVID(_previous), cvid, lpOutput.m_edge);
+        _graph->AddEdge(cvid, _graph->GetVID(_next), lpOutput.m_edge);
         result.push_back(pair<CfgType,double>(c, newConfigurationWeight));
         numOfSamples--;
       }

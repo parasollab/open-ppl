@@ -18,6 +18,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// This represents an Interaction Template, which stores the roadmaps for the
 /// robots to perform an interaction (handoff).
+///
+/// @todo This should probably move to the configuration space directory since
+///       it represents a structure which exists purely between two c-spaces.
 ////////////////////////////////////////////////////////////////////////////////
 class InteractionTemplate {
 

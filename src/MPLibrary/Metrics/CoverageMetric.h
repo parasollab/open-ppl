@@ -17,7 +17,6 @@ class CoverageMetric : public MetricMethod<MPTraits> {
 
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     ///@}
     ///@name Construction
@@ -117,33 +116,32 @@ operator()() {
     m_history.open(this->GetBaseFilename() + ".coverage");
 
   RoadmapType* rmap = this->GetRoadmap();
-  GraphType* rgraph = rmap->GetGraph();
 
   m_connections = std::vector<std::vector<VID> >(m_samples.size());
 
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cmap;
   std::vector<std::pair<size_t, VID> > ccs;
   typename std::vector<std::pair<size_t, VID> >::iterator ccit;
-  get_cc_stats(*rgraph, cmap, ccs);
+  get_cc_stats(*rmap, cmap, ccs);
 
   std::vector<VID> sampleList, cc;
   StatClass stats;
 
   // Temporarily disable roadmap hooks while we make some test vertices and
   // edges.
-  rgraph->DisableHooks();
+  rmap->DisableHooks();
   int index = 0;
   for(auto i = m_samples.begin(); i != m_samples.end(); ++i) {
-    VID sampleVID = rgraph->AddVertex(*i);
+    VID sampleVID = rmap->AddVertex(*i);
     sampleList.clear();
     sampleList.push_back(sampleVID);
 
     for(ccit = ccs.begin(); ccit != ccs.end(); ++ccit) {
       cc.clear();
       cmap.reset();
-      get_cc(*rgraph, cmap, ccit->second, cc);
+      get_cc(*rmap, cmap, ccit->second, cc);
 
-      size_t degreeBefore = rgraph->get_out_degree(sampleVID);
+      size_t degreeBefore = rmap->get_out_degree(sampleVID);
 
       for(auto sit = m_connectorLabels.begin(); sit != m_connectorLabels.end();
           ++sit)
@@ -151,16 +149,16 @@ operator()() {
             sampleList.begin(), sampleList.end(),
             cc.begin(), cc.end(), false);
 
-      if((rgraph->get_out_degree(sampleVID)) > degreeBefore) {
+      if((rmap->get_out_degree(sampleVID)) > degreeBefore) {
         m_connections[index].push_back(ccit->second);
         if(!m_allData)
           break;
       }
     }
-    rgraph->DeleteVertex(sampleVID);
+    rmap->DeleteVertex(sampleVID);
     index++;
   }
-  rgraph->EnableHooks();
+  rmap->EnableHooks();
   int numConnections = 0;
   for(size_t i=0; i<m_connections.size(); ++i) {
     if(!(m_connections[i].empty()))

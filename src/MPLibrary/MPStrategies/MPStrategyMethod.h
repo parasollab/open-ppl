@@ -30,7 +30,7 @@
 /// mps->operator()(); //call with pointer notation
 /// @endcode
 ///
-/// @TODO Incorporate path constraints when generating the start and goal.
+/// @todo Incorporate path constraints when generating the start and goal.
 ///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,28 +81,35 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@name Helpers
     ///@{
 
-    virtual void Initialize() {}   ///< Set up the strategy.
     virtual void Run();            ///< Call Iterate until EvaluateMap is true.
     virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.
 
+    /// Virtual method used only in PRMWithRRTStrategy
+    /// @todo Remove this base-class clutter and find a more appropriate way to
+    ///       implement this.
+    virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
+
+    ///@}
+    ///@name Start/Goal Generation
+    ///@{
+
     /// Generate a 'start' node for the task and add it to the roadmap.
     /// @param _samplerLabel The label for the sampler to use if no query
     ///                      sampler was provided.
     /// @return The VID of the generated configuration.
-    virtual VID GenerateStart(const std::string& _samplerLabel);
+    /// @note This returns size_t so that it will work for both individual and
+    ///       group strategies (all VID types are typedefs for size_t).
+    virtual size_t GenerateStart(const std::string& _samplerLabel);
 
     /// Generate 'goal' node(s) for the task and add it(them) to the roadmap.
     /// @param _samplerLabel The label for the sampler to use if no query
     ///                      sampler was provided.
     /// @return The VIDs of the generated configurations.
-    virtual std::vector<VID> GenerateGoals(const std::string& _samplerLabel);
-
-    /// Virtual method used only in PRMWithRRTStrategy
-    /// @TODO Remove this base-class clutter and find a more appropriate way to
-    ///       implement this.
-    virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
+    /// @note This returns size_t so that it will work for both individual and
+    ///       group strategies (all VID types are typedefs for size_t).
+    virtual std::vector<size_t> GenerateGoals(const std::string& _samplerLabel);
 
     ///@}
     ///@name Internal State
@@ -156,7 +163,9 @@ MPStrategyMethod<MPTraits>::
 operator()() {
   m_iterations = 0;
 
-  Initialize();
+  Print(std::cout);
+
+  this->Initialize();
   Run();
   Finalize();
 }
@@ -175,20 +184,24 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
-  std::string clockName = this->GetNameAndLabel() + "::Run";
+  const std::string clockName = this->GetNameAndLabel() + "::Run";
   auto stats = this->GetStatClass();
   stats->StartClock(clockName);
 
-  Print(std::cout);
-
   do {
     ++m_iterations;
-    if(this->m_debug)
+    if(this->m_debug) {
+      const size_t vertices = this->GetGroupTask()
+                            ? this->GetGroupRoadmap()->Size()
+                            : this->GetRoadmap()->Size();
+      const std::string roadmap = this->GetGroupTask()
+                                ? "Group Roadmap"
+                                : "Roadmap";
       std::cout << "\n*** Starting iteration " << m_iterations
                 << " ***************************************************"
-                << "\nGraph has " << this->GetRoadmap()->GetGraph()->Size()
-                << " vertices."
+                << "\n" << roadmap << " has " << vertices << " vertices."
                 << std::endl;
+    }
 
     Iterate();
   } while(!EvaluateMap() and this->IsRunning());
@@ -257,7 +270,7 @@ Finalize() {
 
   // Output the blocked map if it is populated.
   auto blockmap = this->GetBlockRoadmap();
-  if(blockmap->GetGraph()->Size())
+  if(blockmap->Size())
     blockmap->Write(base + ".block.map", this->GetEnvironment());
 
   // Output path vertices. If you want all of the intermediates as well,
@@ -270,9 +283,10 @@ Finalize() {
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
 }
 
+/*--------------------------- Start/Goal Generation --------------------------*/
 
 template <typename MPTraits>
-typename MPStrategyMethod<MPTraits>::VID
+size_t
 MPStrategyMethod<MPTraits>::
 GenerateStart(const std::string& _samplerLabel) {
   // If we have no start constraint, there is nothing to do.
@@ -312,7 +326,7 @@ GenerateStart(const std::string& _samplerLabel) {
 
   // Add the configuration to the roadmap.
   const auto& start = cfgs.front();
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   const VID vid = g->AddVertex(start);
 
   if(this->m_debug)
@@ -324,7 +338,7 @@ GenerateStart(const std::string& _samplerLabel) {
 
 
 template <typename MPTraits>
-std::vector<typename MPStrategyMethod<MPTraits>::VID>
+std::vector<size_t>
 MPStrategyMethod<MPTraits>::
 GenerateGoals(const std::string& _samplerLabel) {
   const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
@@ -372,7 +386,7 @@ GenerateGoals(const std::string& _samplerLabel) {
 
     // Add it to the roadmap.
     auto& goal = cfgs.front();
-    auto g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     const VID vid = g->AddVertex(goal);
 
     vids.push_back(vid);

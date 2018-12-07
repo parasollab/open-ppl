@@ -49,7 +49,6 @@ class CCExpansion: public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::CfgType     CfgType;
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     ///@}
     ///@name Construction
@@ -305,8 +304,8 @@ Connect(RoadmapType* _rm,
 
   // Get the representative VIDs
   vector< pair<size_t,VID> > tmp;
-  typename GraphType::ColorMap colorMap;
-  get_cc_stats(*_rm->GetGraph(), colorMap, tmp);
+  typename RoadmapType::ColorMap colorMap;
+  get_cc_stats(*_rm, colorMap, tmp);
 
   // Test to see if biased expansion is possible
   if(tmp.size() <= 1 && m_expansionMethod == m_ET){
@@ -342,9 +341,9 @@ void
 CCExpansion<MPTraits>::
 PreExpansionSetup(RoadmapType* _rm, int _index, vector<VID>& _allCC) {
   vector<VID> curCC;
-  typename GraphType::ColorMap colorMap;
-  get_cc(*_rm->GetGraph(), colorMap, *(_allCC.begin()+_index), curCC);
-  m_srcCentroid = GetCentroid(_rm->GetGraph(), curCC);
+  typename RoadmapType::ColorMap colorMap;
+  get_cc(*_rm, colorMap, *(_allCC.begin()+_index), curCC);
+  m_srcCentroid = GetCentroid(_rm, curCC);
   SelectCandidates(_rm, curCC);
 
   if(m_expansionMethod == m_ET)
@@ -387,7 +386,7 @@ RandomExpand(RoadmapType* _rm, int _index) {
   be.SetMPLibrary(this->GetMPLibrary());
 
   // Expansion node
-  prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
+  prev = node = _rm->GetVertex(m_expansionChains[_index]);
 
   for(int j = 0; j < m_nIterations; ++j){
     /// PRODUCE FIRST DIRECTIONAL RAY ///////////////////////////
@@ -433,7 +432,7 @@ ExpandFrom(RoadmapType* _rm, int _index) {
   be.SetMPLibrary(this->GetMPLibrary());
 
   // Expansion node
-  prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
+  prev = node = _rm->GetVertex(m_expansionChains[_index]);
 
   for(int j = 0; j < m_nIterations; ++j){
     // CC might contain 1 node, this will handle the initial expansion step
@@ -488,7 +487,7 @@ ExpandTo(RoadmapType* _rm, int _index) {
   be.SetMPLibrary(this->GetMPLibrary());
 
   // Expansion node
-  prev = node = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
+  prev = node = _rm->GetVertex(m_expansionChains[_index]);
 
   for(int j = 0; j < m_nIterations; ++j){
     // Produce first expansion ray to the target node
@@ -536,7 +535,7 @@ MedialAxisExpand(RoadmapType* _rm, int _index) {
   be.SetMPLibrary(this->GetMPLibrary());
 
   /// Kick-Off Expansion history with a random ray
-  prev = _rm->GetGraph()->GetVertex(m_expansionChains[_index]);
+  prev = _rm->GetVertex(m_expansionChains[_index]);
   dir1.GetRandomRay(m_maxStepDistance, dm);
   dir2 = -dir1;
 
@@ -649,7 +648,7 @@ FindDifficultNodes(RoadmapType* _rm, vector<VID>& _cc1, int _k) {
   typedef typename vector<pair<VID,double> >::iterator PIDIT;
   PIDIT it2 = nodeWeights.begin();
   for(auto it = _cc1.begin(); it != _cc1.end(); ++it){
-    CfgType& cfg = _rm->GetGraph()->GetVertex(*it);
+    CfgType& cfg = _rm->GetVertex(*it);
     if(!cfg.IsStat("succConnectionAttempts") ||
         !cfg.IsStat("totalConnectionAttempts")){
       *it2++ = pair<VID,double>(*it,0.0); // Node has never had an attempted
@@ -688,18 +687,18 @@ FindNearestCC(RoadmapType* _rm, VID& _curCC, vector<VID>& _allCCs) {
       continue;
     }
     ccvids.clear();
-    typename GraphType::ColorMap colorMap;
-    get_cc(*_rm->GetGraph(), colorMap, *it, ccvids);
-    CfgType otherCent = GetCentroid(_rm->GetGraph(), ccvids);
+    typename RoadmapType::ColorMap colorMap;
+    get_cc(*_rm, colorMap, *it, ccvids);
+    CfgType otherCent = GetCentroid(_rm, ccvids);
     double dist = dm->Distance(m_srcCentroid, otherCent);
     if(dist < nearestCC.second){
       nearestCC = make_pair(*it, dist);
     }
   }
 
-  typename GraphType::ColorMap colorMap;
-  get_cc(*_rm->GetGraph(), colorMap, nearestCC.first, ccvids);
-  m_goalTargetNode = GetCentroid(_rm->GetGraph(), ccvids);
+  typename RoadmapType::ColorMap colorMap;
+  get_cc(*_rm, colorMap, nearestCC.first, ccvids);
+  m_goalTargetNode = GetCentroid(_rm, ccvids);
   TargetCCInfo(_rm,ccvids);
 }
 
@@ -716,7 +715,7 @@ TargetCCInfo(RoadmapType* _rm, vector<VID>& _curCC){
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
   for(auto it = _curCC.begin(); it != _curCC.end(); ++it){
-    CfgType cfg = _rm->GetGraph()->GetVertex(*it);
+    CfgType cfg = _rm->GetVertex(*it);
     double dist = dm->Distance(cfg, m_goalTargetNode);
     m_avgIntraDistTarget = m_avgIntraDistTarget + dist;
   }
@@ -749,7 +748,7 @@ SelectCandidates(RoadmapType* _rm, vector<VID>& _curCC){
   else if(m_nodeSelectionOption == m_F){
     vector< pair<VID,double> > cc1Mod;
     for(auto it = _curCC.begin(); it != _curCC.end(); ++it){
-      CfgType cfg = _rm->GetGraph()->GetVertex(*it);
+      CfgType cfg = _rm->GetVertex(*it);
       double dist = dm->Distance(cfg, m_srcCentroid);
       cc1Mod.push_back(make_pair(*it,dist));
     }
@@ -837,11 +836,11 @@ template <class MPTraits>
 void
 CCExpansion<MPTraits>::
 UpdateRoadmap(RoadmapType* _rm, CfgType& _prev, CfgType& _bump) {
-  VID node = _rm->GetGraph()->AddVertex(_bump);
+  VID node = _rm->AddVertex(_bump);
   m_allExpansionNodes.push_back(node);
   LPOutput<MPTraits> lpOutput;
-  _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev),
-      _rm->GetGraph()->GetVID(_bump), lpOutput.m_edge);
+  _rm->AddEdge(_rm->GetVID(_prev),
+      _rm->GetVID(_bump), lpOutput.m_edge);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -872,19 +871,19 @@ UpdateRoadmap(RoadmapType* _rm, CfgType& _prev,
   // If (test), ignore the bump point and connect prev to target, otherwise
   // use bump point
   if(test){
-    VID node = _rm->GetGraph()->AddVertex(_target);
+    VID node = _rm->AddVertex(_target);
     m_allExpansionNodes.push_back(node);
-    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev),
-        _rm->GetGraph()->GetVID(_target), lpOutput.m_edge);
+    _rm->AddEdge(_rm->GetVID(_prev),
+        _rm->GetVID(_target), lpOutput.m_edge);
   }
   else {
-    _rm->GetGraph()->AddVertex(_bump);
-    VID node = _rm->GetGraph()->AddVertex(_target);
+    _rm->AddVertex(_bump);
+    VID node = _rm->AddVertex(_target);
     m_allExpansionNodes.push_back(node);
-    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_prev),
-        _rm->GetGraph()->GetVID(_bump), lpOutput.m_edge);
-    _rm->GetGraph()->AddEdge(_rm->GetGraph()->GetVID(_bump),
-        _rm->GetGraph()->GetVID(_target), lpOutput.m_edge);
+    _rm->AddEdge(_rm->GetVID(_prev),
+        _rm->GetVID(_bump), lpOutput.m_edge);
+    _rm->AddEdge(_rm->GetVID(_bump),
+        _rm->GetVID(_target), lpOutput.m_edge);
   }
 }
 
@@ -918,7 +917,7 @@ IsClear(RoadmapType* _rm, CfgType& bumpPoint) {
   // Check to make sure that we are not expanding back into the chain
   for(auto it = m_allExpansionNodes.begin(); it != m_allExpansionNodes.end();
       ++it){
-    CfgType bb = _rm->GetGraph()->GetVertex(*it);
+    CfgType bb = _rm->GetVertex(*it);
     bool test1 = (bb != bumpPoint); // Do not self compare!
     bool test2 = (dm->Distance(bumpPoint, bb) < m_minStepDistance);
     if(test1 && test2 && (++numFails > m_maxFailedExpansions))

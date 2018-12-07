@@ -23,7 +23,6 @@ class CRetractionPathModifier : public PathModifierMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}

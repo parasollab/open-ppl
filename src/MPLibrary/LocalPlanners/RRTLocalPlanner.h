@@ -259,7 +259,7 @@ IsConnectedFunc(
   this->GetMPLibrary()->SetMPSolution(&tempSolution);
 
   // Reset the goal tracker.
-  this->GetGoalTracker()->Reset(tempSolution.GetRoadmap(robot), &tempTask);
+  //this->GetGoalTracker()->Reset(tempSolution.GetRoadmap(robot), &tempTask);
 
   // Call operator() on the MPStrategy, which will solve it and place all
   // needed data in the new MPSolution.
@@ -271,8 +271,8 @@ IsConnectedFunc(
   // Set the solution back to the original.
   this->GetMPLibrary()->SetMPSolution(originalSolution);
   this->GetMPLibrary()->SetTask(originalTask);
-  this->GetGoalTracker()->Reset(
-      originalSolution->GetRoadmap(originalTask->GetRobot()), originalTask);
+  //this->GetGoalTracker()->Reset(
+  //    originalSolution->GetRoadmap(originalTask->GetRobot()), originalTask);
 
   // This used to use the IsSuccessful member, which has been removed from
   // MPStrategyMethod. I am assuming that finding a path equals success here

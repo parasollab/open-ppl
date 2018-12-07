@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="example">
+
+    <Environment filename="3D/3d.xml"/>
+
+    <Robot label="boxy-1" filename="3D/boxy.robot">
+      <Agent type="planning"/>
+    </Robot>
+
+    <Robot label="boxy-2" filename="3D/boxy.robot">
+      <Agent type="planning"/>
+    </Robot>
+
+    <RobotGroup label="robotGroup" robotLabels="boxy-1 boxy-2"/>
+
+    <GroupTask label="groupQuery" group="robotGroup">
+      <Task label="query-1" robot="boxy-1">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+
+        <GoalConstraints>
+          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        </GoalConstraints>
+      </Task>
+
+      <Task label="query-2" robot="boxy-2">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 5 0 0 0"/>
+        </StartConstraints>
+
+        <GoalConstraints>
+          <CSpaceConstraint point="20 -5 10 0.2 0.8 0.5"/>
+        </GoalConstraints>
+      </Task>
+    </GroupTask>
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="40"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+      <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+        vcLabel="alwaysTrue"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="1." minDist=".001"/>
+    </Extenders>
+
+    <PathModifiers>
+      <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
+        debug="false"/>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
+        checkIfSameCC="true" debug="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <TimeEvaluator label="TimeEval" timeout="10"/>
+
+      <GroupQuery label="Query" debug="true"/>
+
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="10000" operator=">="/>
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
+        value="1000" operator=">"/>
+
+      <ComposeEvaluator label="BoundedQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+
+    <MPStrategies>
+      <GroupPRM label="PRM" debug="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="BoundedQuery"/>
+      </GroupPRM>
+    </MPStrategies>
+
+    <MPTools>
+      <!-- We won't need these until the topological tools are updated to
+           support robot groups.
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
+        io="read" baseFilename="3D/coarse"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
+        io="read" baseFilename="3D/quality"/>
+      -->
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="PRM" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
+
+  </Library>
+
+</MotionPlanning>

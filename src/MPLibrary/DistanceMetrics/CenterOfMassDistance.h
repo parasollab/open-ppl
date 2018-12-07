@@ -1,19 +1,20 @@
-#ifndef CENTER_OF_MASS_DISTANCE_H_
-#define CENTER_OF_MASS_DISTANCE_H_
+#ifndef PMPL_CENTER_OF_MASS_DISTANCE_H_
+#define PMPL_CENTER_OF_MASS_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Measure the Euclidean distance between the center of mass for two
+/// configurations.
 /// @ingroup DistanceMetrics
-/// @brief Measure the Euclidean distance between the center of mass for two
-///        configurations.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
@@ -32,6 +33,7 @@ class CenterOfMassDistance : public DistanceMetricMethod<MPTraits> {
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/

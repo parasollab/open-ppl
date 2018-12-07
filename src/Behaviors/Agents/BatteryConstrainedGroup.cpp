@@ -533,7 +533,7 @@ DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
       std::cout << "\t" << *(constraint->GetBoundary()) << std::endl;
   }
 
-  task->SetStarted();
+  task->GetStatus().start();
   // Set the member's current task.
   _member->SetTask(task);
 
@@ -844,8 +844,8 @@ ClearToPlan(Agent* const _member){
   for(auto agentPair : m_helperMap){
     if(agentPair.second != _member)
       continue;
-    return !task->EvaluateGoalConstraints({agentPair.first->GetRobot()->
-                  GetSimulationModel()->GetState()});
+    return !task->EvaluateGoalConstraints(agentPair.first->GetRobot()->
+        GetSimulationModel()->GetState());
   }
   return true;
 }
@@ -862,10 +862,10 @@ AssignTaskWorker(Agent* const _member) {
   if(!_member->GetTask()){
     auto tasks = m_robot->GetMPProblem()->GetTasks(m_robot);
     for(auto& task : tasks){
-       if(task->IsStarted())
+       if(task->GetStatus().is_started())
          continue;
        _member->SetTask(task);
-       task->SetStarted();
+       task->GetStatus().start();
        break;
     }
     if(tasks.size() < 1){
@@ -959,7 +959,7 @@ AssignProactiveHelperTask(Agent* const _member){
   m_helperMap[worker] = _member;
 
   std::shared_ptr<MPTask> task(new MPTask(m_robot));
-  task->SetArrivalTime(bBreak.GetTime());
+  task->SetEstimatedCompletionTime(bBreak.GetTime());
 
   double combinedRadius = 1.5 * (_member->GetRobot()->GetMultiBody()->GetBoundingSphereRadius() +
     worker->GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
@@ -1199,9 +1199,9 @@ BatteryCheck(Agent* const _member){
       PausedTask task;
       task.m_task = _member->GetTask();
 
-      if(task.m_task->EvaluateGoalConstraints({_member->GetRobot()->
-                  GetSimulationModel()->GetState()})){
-        task.m_task->SetCompleted();
+      if(task.m_task->EvaluateGoalConstraints(_member->GetRobot()->
+          GetSimulationModel()->GetState())){
+        task.m_task->GetStatus().complete();
         task.m_task = nullptr;
       }
       else if(this->m_debug) {

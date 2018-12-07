@@ -38,7 +38,6 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -400,12 +399,11 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType* const) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
 
-  auto roadmap = this->GetRoadmap();
-  auto g = roadmap->GetGraph();
+  auto g = this->GetRoadmap();
 
   std::vector<Neighbor> neighbors;
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  nf->FindNeighbors(roadmap,
+  nf->FindNeighbors(g,
       vertices.begin(), vertices.end(),
       vertices.size() == g->Size(), _cfg, std::back_inserter(neighbors));
 
@@ -557,7 +555,7 @@ DiscreteLead() {
     std::map<VID, VID> parentMap;
     parentMap[start] = INVALID_VID;
 
-    stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+    stapl::sequential::vector_property_map<RoadmapType, size_t> cmap;
     auto visitor = DFSVisitor(parentMap);
     stapl::sequential::depth_first_search(
         const_cast<WorkspaceDecomposition&>(*regionGraph), start, visitor, cmap);

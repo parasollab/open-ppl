@@ -1,5 +1,5 @@
-#ifndef WEIGHTED_EUCLIDEAN_DISTANCE_H_
-#define WEIGHTED_EUCLIDEAN_DISTANCE_H_
+#ifndef PMPL_WEIGHTED_EUCLIDEAN_DISTANCE_H_
+#define PMPL_WEIGHTED_EUCLIDEAN_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
@@ -7,6 +7,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Weighted Euclidean distance in State space will have four weight components:
 /// position, rotation, velocity, and angular velocity.
+///
+/// @todo This doesn't work properly for linked robots. An additional weighting
+///       is required for the joint space, which is currently wrapped up with
+///       orientation.
+///
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -28,7 +33,7 @@ class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
     WeightedEuclideanDistance(XMLNode& _node);
 
     WeightedEuclideanDistance(const double _pos, const double _rot,
-                              const double _vel, const double _avl);
+        const double _vel, const double _avl);
 
     virtual ~WeightedEuclideanDistance() = default;
 
@@ -90,31 +95,28 @@ WeightedEuclideanDistance(XMLNode& _node) :
 template <typename MPTraits>
 WeightedEuclideanDistance<MPTraits>::
 WeightedEuclideanDistance(const double _pos, const double _rot,
-                          const double _vel, const double _avl) {
+    const double _vel, const double _avl) {
   this->SetName("WeightedEuclidean");
 
-  m_posW = _pos;
-  m_rotW = _rot;
-  m_velW = _vel;
-  m_avlW = _avl;
-
   // Normalize weights.
-  const double sum = m_posW + m_rotW + m_velW + m_avlW;
+  const double sum = _pos + _rot + _vel + _avl;
   if(sum <= 0)
-    throw ParseException(WHERE, "Sum of weights are non-positive.");
+    throw ParseException(WHERE) << "Sum of weights is non-positive.";
 
-  m_posW /= sum;
-  m_rotW /= sum;
-  m_velW /= sum;
-  m_avlW /= sum;
+
+  m_posW = _pos / sum;
+  m_rotW = _rot / sum;
+  m_velW = _vel / sum;
+  m_avlW = _avl / sum;
 }
+
 /*----------------------------- Distance Interface ---------------------------*/
 
 template <typename MPTraits>
 double
 WeightedEuclideanDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  const CfgType diff = _c1 - _c2;
+  const CfgType diff = _c2 - _c1;
 
   return m_posW * diff.GetLinearPosition().norm()
        + m_rotW * (diff.GetAngularPosition() / PI).norm()

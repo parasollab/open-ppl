@@ -1,5 +1,5 @@
-#ifndef OBSTACLE_CLEARANCE_VALIDITY_H_
-#define OBSTACLE_CLEARANCE_VALIDITY_H_
+#ifndef PMPL_OBSTACLE_CLEARANCE_VALIDITY_H_
+#define PMPL_OBSTACLE_CLEARANCE_VALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
 
@@ -7,6 +7,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Marks configurations as valid iff they are at least some minimum threshold
 /// distance away from the nearest obstacle.
+///
+/// @todo Re-implement this as a derived class of CollisionDetectionValidity and
+///       remove the 'GetCDMethod' function.
 ///
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +39,7 @@ class ObstacleClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual void Initialize() override;
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name ValidityCheckerMethod Overrides
@@ -93,13 +96,17 @@ Initialize() {
   CollisionDetectionValidity<MPTraits>* cd =
       dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc.get());
   if(!cd)
-    throw ParseException(WHERE, "Named validity checker '" + m_vcLabel +
-        "' is not a CollisionDetectionValidity object.");
+    throw ParseException(WHERE) << "Named validity checker '" << m_vcLabel
+                                << "' for ObstacleClearanceValidity '"
+                                << this->GetLabel()
+                                << "' is not a CollisionDetectionValidity object.";
 
   PQPSolid* pqp = dynamic_cast<PQPSolid*>(cd->GetCDMethod());
   if(!pqp)
-    throw ParseException(WHERE, "Named validity checker '" + m_vcLabel +
-        "' to a PQPSolid object.");
+    throw ParseException(WHERE) << "Named validity checker '" << m_vcLabel
+                                << "' for ObstacleClearanceValidity '"
+                                << this->GetLabel()
+                                << "' is not a PQPSolid type.";
 }
 
 

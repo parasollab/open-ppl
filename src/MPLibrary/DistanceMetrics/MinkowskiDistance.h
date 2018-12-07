@@ -1,16 +1,23 @@
-#ifndef MINKOWSKI_DISTANCE_H_
-#define MINKOWSKI_DISTANCE_H_
+#ifndef PMPL_MINKOWSKI_DISTANCE_H_
+#define PMPL_MINKOWSKI_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
 #include "MPProblem/Environment/Environment.h"
-#include "MPProblem/IsClosedChain.h"
 
-#include <boost/utility/enable_if.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Minkowski distance is a generalized L-p norm where the exponents p and 1/p
+/// each have separate values.
+///
+/// @todo Remove m_r2, which isn't part of the Minkowski difference and doesn't
+///       have any valid use.
+///
+/// @todo Move the normalization option up to the base class.
+///
+/// @todo Separate the computation of orientation and joint distances.
+///
 /// @ingroup DistanceMetrics
-/// @brief TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
@@ -20,9 +27,8 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType                         CfgType;
-    typedef typename MPTraits::GroupCfgType                    GroupCfgType;
-    typedef typename DistanceMetricMethod<MPTraits>::Formation Formation;
+    typedef typename MPTraits::CfgType       CfgType;
+    typedef typename MPTraits::GroupCfgType  GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -39,30 +45,16 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const;
+    virtual void Print(std::ostream& _os) const;
 
     ///@}
-    ///@name Distance Interface
+    ///@name DistanceMetricMethod Overrides
     ///@{
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
-    virtual void ScaleCfg(double _length, CfgType& _c,
-                          const CfgType& _o) override;
-
-    static double PositionDistance(Environment *_env, const CfgType& _c,
-                                   double _r1, double _r3, bool _normalize);
-
-
-    /// GroupCfg Overloads:
-    virtual double Distance(const GroupCfgType& _c1,
-                            const GroupCfgType& _c2) override;
-
-    virtual void ScaleCfg(double _length, GroupCfgType& _c,
-                          const GroupCfgType& _o) override;
-
-    static double PositionDistance(Environment *_env, const GroupCfgType& _c,
-                                   double _r1, double _r3, bool _normalize);
+    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o)
+        override;
 
     ///@}
 
@@ -70,21 +62,6 @@ class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
 
     ///@name Helpers
     ///@{
-
-    //default implementation
-    template <typename EnableCfg>
-    EnableCfg DifferenceCfg(const EnableCfg& _c1, const EnableCfg& _c2,
-        typename boost::disable_if<IsClosedChain<EnableCfg> >::type* _dummy = 0) {
-      return _c1 - _c2;
-    }
-
-    //reachable distance implementation
-    template <typename EnableCfg>
-    EnableCfg DifferenceCfg(const EnableCfg& _c1, const EnableCfg& _c2,
-        typename boost::enable_if<IsClosedChain<EnableCfg> >::type* _dummy = 0) {
-      cerr << "Error::DistanceMetrics for ReachableDistance disabled." << endl;
-      exit(1);
-    }
 
     double PositionDistance(const CfgType& _c);
     double OrientationDistance(const CfgType& _c);
@@ -130,7 +107,7 @@ MinkowskiDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
 template <typename MPTraits>
 void
 MinkowskiDistance<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   DistanceMetricMethod<MPTraits>::Print(_os);
   _os << "\tr1 = " << m_r1 << endl
       << "\tr2 = " << m_r2 << endl
@@ -138,16 +115,16 @@ Print(ostream& _os) const {
       << "\tnormalize = " << m_normalize << endl;
 }
 
-/*----------------------------- Distance Interface ---------------------------*/
+/*---------------------- DistanceMetricMethod Overrides ----------------------*/
 
 template <typename MPTraits>
 double
 MinkowskiDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  CfgType diff = DifferenceCfg(_c1, _c2);
-  double pos = PositionDistance(diff);
-  double orient = OrientationDistance(diff);
-  return pow(pos + orient, m_r3);
+  const CfgType diff = _c2 - _c1;
+  const double pos = PositionDistance(diff),
+               ori = OrientationDistance(diff);
+  return std::pow(pos + ori, m_r3);
 }
 
 
@@ -155,6 +132,9 @@ template <typename MPTraits>
 void
 MinkowskiDistance<MPTraits>::
 ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
+  /// @todo This implementation is very poor. Scaling should be a
+  ///       constant-time operation - complexity should not depend on the
+  ///       length of the input vector.
   double originalLength = this->Distance(_o, _c);
   double diff = _length - originalLength;
   do {
@@ -170,26 +150,18 @@ template <typename MPTraits>
 double
 MinkowskiDistance<MPTraits>::
 PositionDistance(const CfgType& _c) {
-  return PositionDistance(this->GetEnvironment(), _c, m_r1, m_r3, m_normalize);
-}
-
-
-template <typename MPTraits>
-double
-MinkowskiDistance<MPTraits>::
-PositionDistance(Environment *_env,
-    const CfgType& _c, double _r1, double _r3, bool _normalize) {
-  const vector<double> p = _c.GetPosition();
+  const std::vector<double> p = _c.GetPosition();
   double distance = 0;
 
-  if(_normalize) {
-    const double diagonal = _env->GetBoundary()->GetMaxDist(_r1, _r3);
+  if(m_normalize) {
+    const double diagonal = this->GetEnvironment()->GetBoundary()->GetMaxDist(
+        m_r1, m_r3);
     for(size_t i = 0; i < p.size(); ++i)
-      distance += pow(fabs(p[i]) / diagonal, _r1);
+      distance += std::pow(fabs(p[i]) / diagonal, m_r1);
   }
   else
     for(size_t i = 0; i < p.size(); ++i)
-      distance += pow(fabs(p[i]), _r1);
+      distance += std::pow(fabs(p[i]), m_r1);
 
   return distance;
 }
@@ -199,72 +171,13 @@ template <typename MPTraits>
 double
 MinkowskiDistance<MPTraits>::
 OrientationDistance(const CfgType& _c) {
-  const vector<double> o = _c.GetOrientation();
+  const std::vector<double> o = _c.GetOrientation();
   double distance = 0;
   for(size_t i = 0; i < o.size(); ++i)
-    distance += pow(fabs(o[i]), m_r2);
+    distance += std::pow(fabs(o[i]), m_r2);
   return distance;
 }
 
 /*----------------------------------------------------------------------------*/
-
-template <typename MPTraits>
-double
-MinkowskiDistance<MPTraits>::
-Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
-  if(this->m_activeRobots.empty())
-    throw RunTimeException(WHERE, "Used group version but didn't provide active"
-                                  " robots!");
-
-  const double closeToZero = std::numeric_limits<double>::epsilon();
-  const bool isMultiPartAllowed = this->m_activeRobots.size() > 1;
-
-  Formation robotsMoved;
-  double compositeDistance = 0.0;
-
-  // Loop through ALL robots, to ensure that we have a valid pair (robots can
-  // only "move" if they are in the activeRobot list, or if they move and no
-  // other robot moves).
-  for(size_t i = 0; i < _c1.GetNumRobots(); ++i) {
-    // Get the robot cfg and use the normal distance metric, but accumulated.
-    const double cfgDist = Distance(_c1.GetRobotCfg(i), _c2.GetRobotCfg(i));
-
-    // Ensure that the robots "moved" between the two cfgs are allowed:
-    if (cfgDist > closeToZero) {
-      compositeDistance += cfgDist; // Accumulate individual distances.
-      robotsMoved.push_back(i);
-
-      // We can quit right away if more than one part is moved and we're not
-      // allowing for a multi-part subassembly.
-      if(!isMultiPartAllowed && robotsMoved.size() > 1)
-        return std::numeric_limits<double>::infinity(); // Invalid neighbors.
-    }
-  }
-
-  if(robotsMoved.empty())
-    return 0;
-
-  // m_activeRobots is sorted ascending when it's set (see SetActiveRobots) and
-  // we know that robotsMoved will be ascending due to the loop above.
-  if(robotsMoved != this->m_activeRobots)
-    return std::numeric_limits<double>::infinity(); // Invalid neighbors.
-
-  return compositeDistance;
-}
-
-template <typename MPTraits>
-void
-MinkowskiDistance<MPTraits>::
-ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-  throw RunTimeException(WHERE, "Not implemented!");
-}
-
-template <typename MPTraits>
-double
-MinkowskiDistance<MPTraits>::
-PositionDistance(Environment *_env, const GroupCfgType& _c,
-                 double _r1, double _r3, bool _normalize) {
-  throw RunTimeException(WHERE, "Not implemented!");
-}
 
 #endif

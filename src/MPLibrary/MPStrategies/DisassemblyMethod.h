@@ -177,17 +177,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
     typedef std::vector<std::pair<size_t, DisassemblyNode*>> DGNodePath;
 
-    DisassemblyMethod(
-        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
-                                          std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
-                                          std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::string _vc = "", const std::string _singleVc = "",
-        const std::string _lp = "", const std::string _ex = "", const std::string _dm = "",
-        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>(),
-        const double _contactDist = 0.1, const double _neighborDist = 1,
-        const double _removePos = 8, const double _subassemblyPos = 5,
-        const double _subassemblyOffset = 2, const double _minMatingDist = 0.0);
+    DisassemblyMethod();
     DisassemblyMethod(XMLNode& _node);
     virtual ~DisassemblyMethod() {}
 
@@ -349,7 +339,6 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     std::string m_rrtDMLabel;
 
     std::string m_vcLabel;          ///< The validity checker label.
-    std::string m_singleVcLabel;
     std::string m_lpLabel;          ///< The local planner label.
     std::string m_exLabel;          ///< The extender label.
     std::string m_dmLabel;          ///< The distance metric label.
@@ -447,33 +436,13 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyMethod<MPTraits>::
-DisassemblyMethod(
-    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
-    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
-    const std::string _vc, const std::string _singleVc, const std::string _lp,
-    const std::string _ex,
-    const std::string _dm, const std::vector<std::string>& _evaluatorLabels,
-    const double _contactDist,
-    const double _neighborDist, const double _removePos,
-    const double _subassemblyPos, const double _subassemblyOffset,
-    const double _minMatingDist) :
-    m_matingSamplerLabels(_matingSamplerLabels),
-    m_rrtSamplerLabels(_rrtSamplerLabels), m_vcLabel(_vc),
-    m_singleVcLabel(_singleVc),
-    m_lpLabel(_lp), m_exLabel(_ex), m_dmLabel(_dm), m_contactDist(_contactDist),
-    m_neighborDist(_neighborDist), m_removePos(_removePos),
-    m_subassemblyPos(_subassemblyPos), m_subassemblyOffset(_subassemblyOffset),
-    m_minMatingDist(_minMatingDist) {
-  this->m_meLabels = _evaluatorLabels;
-}
+DisassemblyMethod() = default;
 
 template <typename MPTraits>
 DisassemblyMethod<MPTraits>::
 DisassemblyMethod(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   const double doubleLim = numeric_limits<double>::max();
   m_vcLabel = _node.Read("vcLabel", true, m_vcLabel, "Validity Test Method");
-  m_singleVcLabel = _node.Read("singleVcLabel", true, m_singleVcLabel,
-      "Single Validity Test Method");
   m_lpLabel = _node.Read("lpLabel", true, m_lpLabel, "Local Planning Method");
   m_exLabel = _node.Read("exLabel", true, m_exLabel, "Extender Method");
   m_dmLabel = _node.Read("dmLabel", true, m_dmLabel, "Distance Metric");
@@ -822,7 +791,7 @@ GenerateFullDisassemblyPath(const VIDPath& _path) {
 //                   "QueryMethod need updating for all functions used in here!");
 
 //    *this->GetPath() += tempQuery.GeneratePath(_path[j], _path[j+1]);
-    *storedPath += tempQuery.GeneratePath(_path[i], _path[i+1]);
+    *storedPath += tempQuery.GeneratePath(_path[i], {_path[i+1]});
 
 //    if(storedPath->VIDs().empty()) {
 ////      throw RunTimeException(WHERE, "Could not find path between vids " +
@@ -905,7 +874,8 @@ FindClosestRemovalCfg(const GroupCfgType& _startCfg,
   typedef typename std::vector<GroupCfg>::reverse_iterator rIterator;
   for(rIterator i = _lpOutput.m_path.rbegin();
       i != _lpOutput.m_path.rend(); ++i ) {
-    vc->IsValid(*i, cdInfo, callee, _formation);
+    //vc->IsValid(*i, cdInfo, callee, _formation);
+    vc->IsValid(*i, cdInfo, callee);
     if(cdInfo.m_minDist < m_minMatingDist)
       break;
     else
@@ -954,7 +924,8 @@ EnsureMinimumClearance(GroupCfgType& _cfg, const Formation& _formation) {
   if(!minDistME)
     throw RunTimeException(WHERE, "Couldn't find and/or cast MinClearanceEval");
   CDInfo cdInfo(true); // Need full clearance info.
-  if(!vc->IsValid(_cfg, cdInfo, this->GetNameAndLabel(), _formation))
+  //if(!vc->IsValid(_cfg, cdInfo, this->GetNameAndLabel(), _formation))
+  if(!vc->IsValid(_cfg, cdInfo, this->GetNameAndLabel()))
     return false;
 
   // Note that minDist == clearance.
@@ -1098,9 +1069,11 @@ ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID,
   // NOTE: in order for this to be correct, the MPSolution change should have
   //       already happened!
   const GroupCfgType startCfgRRTRoadmap = startCfgDisassemblyRoadmap.
-                                  ChangeRoadmap(rrtStrategy->GetGroupRoadmap());
+                                  SetGroupRoadmap(rrtStrategy->GetGroupRoadmap());
 
-  dm->SetActiveRobots(_formation);
+  /// @todo This needs to be replaced by checking distance with the approriate
+  ///       subgroup configuration.
+  //dm->SetActiveRobots(_formation);
   sampler->SetActiveRobots(_formation);
   sampler->SetStartCfg(startCfgRRTRoadmap);
 
@@ -1239,7 +1212,7 @@ AddDissassemblyPathToRoadmap(const VIDPath& _pathVids,
 
     // Group cfgs take into account the roadmap used, so we must change out the
     // roadmap for this one and force all cfg info to be local to the cfg.
-    newCfg = newCfg.ChangeRoadmap(graph);
+    newCfg = newCfg.SetGroupRoadmap(graph);
 
     newAddedCfgVID = graph->AddVertex(newCfg);
     rrtPath.push_back(newAddedCfgVID);
@@ -1488,6 +1461,7 @@ void
 DisassemblyMethod<MPTraits>::
 AnalysePartContacts(const VID _q, const size_t _partIndex) {
   auto graph = this->GetGroupRoadmap();
+  auto group = graph->GetGroup();
   auto env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(this->m_lpLabel);
   auto const vc = this->GetValidityChecker(m_vcLabel);
@@ -1505,18 +1479,20 @@ AnalysePartContacts(const VID _q, const size_t _partIndex) {
     col = startCfg;
 
     CDInfo cdInfo(true);
-    cdInfo.m_selfClearance.resize(m_numParts, numeric_limits<double>::max());
     if (lp->IsConnected(startCfg, newCfg, col, &lpOutput,
                         env->GetPositionRes(), env->GetOrientationRes(), true,
                         false, activeRobots))
       return;
     else
-      vc->IsValid(col, cdInfo, "AnalyzePartContacts", activeRobots);
+      //vc->IsValid(col, cdInfo, "AnalyzePartContacts", activeRobots);
+      vc->IsValid(col, cdInfo, "AnalyzePartContacts");
 
     // append the collision Parts to the list
-    for (size_t bodyInd = 0; bodyInd < m_numParts; ++bodyInd)
-      if (cdInfo.m_selfClearance[bodyInd] < m_contactDist)
-        m_partContacts[_partIndex][dirIndex].push_back(bodyInd);
+    for(size_t i = 0; i < m_numParts; ++i) {
+      auto mb = group->GetRobot(i)->GetMultiBody();
+      if(cdInfo.m_clearanceMap.GetClearance(mb, nullptr) < m_contactDist)
+        m_partContacts[_partIndex][dirIndex].push_back(i);
+    }
 
     // erase the direction, if no collision with an another body
     if (m_partContacts[_partIndex][dirIndex].empty()) {
@@ -1974,7 +1950,9 @@ RecursivePathStats(DisassemblyNode* _node, const double _curDist,
     auto dm = this->GetDistanceMetric(m_dmLabel);
 
     // Set the parts that the distance metric should be in regards to.
-    dm->SetActiveRobots(_node->removedParts);
+    /// @todo This needs to be replaced by checking distance with the approriate
+    ///       subgroup configuration.
+    //dm->SetActiveRobots(_node->removedParts);
 
     for (size_t parentIndex = 0; parentIndex < _node->parents.size(); ++parentIndex) {
       double dist = _curDist;

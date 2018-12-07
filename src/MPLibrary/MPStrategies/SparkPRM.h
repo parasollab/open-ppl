@@ -18,7 +18,6 @@ class SparkPRM : public Strategy<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     SparkPRM(size_t _maxNPCCSize = 3, size_t _initSamples = 30,
@@ -83,7 +82,7 @@ class SparkPRM : public Strategy<MPTraits> {
     /// @param[in] _graph The roadmap graph to analyze.
     /// @param[out] _centroidGraph The output centroid graph. It should be
     ///                            initialized prior to this call.
-    void ComputeCCCentroidGraph(GraphType* _graph, GraphType* _centroidGraph);
+    void ComputeCCCentroidGraph(RoadmapType* _graph, RoadmapType* _centroidGraph);
 
     size_t m_maxNPCCSize;   // The maximum size of CC that we consider to be
                             // within a narrow passage
@@ -222,13 +221,13 @@ template<class MPTraits, template<typename> class Strategy>
 bool
 SparkPRM<MPTraits, Strategy>::
 CheckNarrowPassageSample(VID _vid) {
-  GraphType* graph = this->GetRoadmap()->GetGraph();
+  auto graph = this->GetRoadmap();
 
   // As soon as sufficient initial samples are created, grow from the start and
   // goal
   // TODO NOTE: This step assumes that the start and goal are VIDs 0 and 1!
   if(m_checkStartGoal && graph->get_num_vertices() >= m_initSamples) {
-    stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+    stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
     m_checkStartGoal = false;
     CheckNarrowPassageSample(0);
     if(is_same_cc(*graph, cMap, 0, 1))
@@ -253,17 +252,17 @@ SparkPRM<MPTraits, Strategy>::
 NarrowPassage(VID _vid) {
 
   // Do not start RRTs until sufficient initial samples created
-  if(this->GetRoadmap()->GetGraph()->get_num_vertices() < m_initSamples)
+  if(this->GetRoadmap()->get_num_vertices() < m_initSamples)
     return false;
 
   if(m_maxNPCCSize == 1)
-    return this->GetRoadmap()->GetGraph()->get_degree(_vid) == 0;
+    return this->GetRoadmap()->get_degree(_vid) == 0;
 
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: Narrow Passage");
   std::vector<VID> cc;
-  size_t ccSize = get_cc(*(this->GetRoadmap()->GetGraph()), cMap, _vid, cc);
+  size_t ccSize = get_cc(*this->GetRoadmap(), cMap, _vid, cc);
   stats->StopClock("RRT: Narrow Passage");
   return ccSize <= m_maxNPCCSize;
 }
@@ -275,8 +274,8 @@ bool
 SparkPRM<MPTraits, Strategy>::
 ConstructRRT(VID _root) {
 
-  GraphType* graph = this->GetRoadmap()->GetGraph();
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+  RoadmapType* graph = this->GetRoadmap();
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
 
   if(this->m_rrtDebug)
     std::cout << "\nConstructing an RRT! VID = " << _root << std::endl;
@@ -450,9 +449,9 @@ ComputeCentroids(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _roo
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: ComputeCentroids");
-  GraphType* graph = this->GetRoadmap()->GetGraph();
-  GraphType* centroidGraph = _centroidRdmp->GetGraph();
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+  RoadmapType* graph = this->GetRoadmap();
+  RoadmapType* centroidGraph = _centroidRdmp;
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
   std::vector<std::pair<size_t, VID> > allCCs;
   std::vector<VID> cc;
   get_cc_stats(*graph, cMap, allCCs);
@@ -500,8 +499,8 @@ ConnectVertex(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _recent
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: ConnectVertex");
   auto connector = this->GetConnector(m_cLabel);
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
-  GraphType* centroidGraph = _centroidRdmp->GetGraph();
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
+  RoadmapType* centroidGraph = _centroidRdmp;
 
   // Try to connect RRT to other CCs. If code is not buggy (haha),
   // CheckIfSameCC is redundant and should be "false"
@@ -511,7 +510,7 @@ ConnectVertex(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _recent
 
       stats->StartClock("RRT: BiasConnect");
       auto nf = this->GetNeighborhoodFinder(m_nfVertexLabel);
-      GraphType* graph = this->GetRoadmap()->GetGraph();
+      RoadmapType* graph = this->GetRoadmap();
       std::vector<VID> cc;
       std::vector<Neighbor> closest;
       CfgType recentCfg = graph->GetVertex(_recentVID);
@@ -539,7 +538,7 @@ SparkPRM<MPTraits, Strategy>::
 TrimRRT(std::vector<VID>& _rrt, std::vector<VID>& _important, int _connectedCCs) {
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: TrimRRT");
-  GraphType* graph = this->GetRoadmap()->GetGraph();
+  RoadmapType* graph = this->GetRoadmap();
   std::set<VID> trimmed;
 
   int numDeleted = 0;
@@ -628,9 +627,9 @@ SparkPRM<MPTraits, Strategy>::
 UpdateCentroids(RoadmapType* _centroidRdmp, std::vector<VID>& _notRRT, VID _root) {
   StatClass* stats = this->GetStatClass();
   stats->StartClock("RRT: UpdateCentroids");
-  GraphType* graph = this->GetRoadmap()->GetGraph();
-  GraphType* centroidGraph = _centroidRdmp->GetGraph();
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+  RoadmapType* graph = this->GetRoadmap();
+  RoadmapType* centroidGraph = _centroidRdmp;
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
   bool needUpdate = false;
 
   // Remove any CCs connected to the RRT
@@ -681,8 +680,8 @@ GoalBiasedDirection(VID _rrt) {
 
   StatClass* stats = this->GetStatClass();
   stats->StartClock("Biased Direction");
-  GraphType* graph = this->GetRoadmap()->GetGraph();
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
+  RoadmapType* graph = this->GetRoadmap();
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
   std::vector<std::pair<size_t, VID> > allCCs;
   std::vector<VID> randCC;
   get_cc_stats(*graph, cMap, allCCs);
@@ -726,7 +725,7 @@ SparkPRM<MPTraits, Strategy>::
 ExpandTree(CfgType& _dir, std::vector<VID>& _rrt, std::vector<VID>& _important) {
 
   StatClass* stats = this->GetStatClass();
-  GraphType* graph = this->GetRoadmap()->GetGraph();
+  RoadmapType* graph = this->GetRoadmap();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto robot = this->GetTask()->GetRobot();
@@ -788,8 +787,8 @@ ExpandTree(CfgType& _dir, std::vector<VID>& _rrt, std::vector<VID>& _important) 
 template<class MPTraits, template<typename> class Strategy>
 void
 SparkPRM<MPTraits, Strategy>::
-ComputeCCCentroidGraph(GraphType* _graph, GraphType* _centroidGraph) {
-  stapl::sequential::vector_property_map<GraphType, size_t> cmap;
+ComputeCCCentroidGraph(RoadmapType* _graph, RoadmapType* _centroidGraph) {
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cmap;
   std::vector<std::pair<size_t, VID>> allCCs;
   std::vector<VID> cc;
   get_cc_stats(*_graph, cmap, allCCs);

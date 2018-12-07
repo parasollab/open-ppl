@@ -17,7 +17,6 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ToggleLP(const string& _vcLabel = "", const string& _lpLabel = "",
@@ -76,7 +75,7 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
     double m_iterations;
     bool m_degeneracyReached;
     deque<CfgType> m_colHist;
-    std::unique_ptr<GraphType> m_pathGraph;
+    std::unique_ptr<RoadmapType> m_pathGraph;
     VID m_sVID, m_gVID;
 };
 
@@ -119,7 +118,7 @@ void
 ToggleLP<MPTraits>::
 Initialize() {
   auto robot = this->GetTask()->GetRobot();
-  m_pathGraph = std::unique_ptr<GraphType>(new GraphType(robot));
+  m_pathGraph.reset(new RoadmapType(robot));
 }
 
 template<class MPTraits>

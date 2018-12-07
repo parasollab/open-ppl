@@ -4,7 +4,7 @@
 #include "ConfigurationSpace/Path.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "MPLibrary/MPLibrary.h"
-#include "MPProblem/GoalMap.h"
+#include "MPProblem/TRPGoalMap.h"
 #include "MPProblem/Robot/Robot.h"
 
 
@@ -32,7 +32,7 @@ class TRPTool : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef GoalMap<MPTraits>                         GoalMapType;
+    typedef TRPGoalMap<MPTraits>                      GoalMapType;
     typedef typename GoalMapType::vertex_descriptor   vertex_descriptor;
     typedef std::vector<std::vector<Path>>            PathSets;
 

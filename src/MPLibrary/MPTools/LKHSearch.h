@@ -3,7 +3,7 @@
 
 
 #include "MPLibrary/MPBaseObject.h"
-#include "MPProblem/GoalMap.h"
+#include "MPProblem/TRPGoalMap.h"
 #include "Utilities/XMLNode.h"
 #include <LKHInclude/LKH.h>
 #include <LKHInclude/Genetic.h>
@@ -54,8 +54,8 @@ class LKHSearch final : public MPBaseObject<MPTraits> {
     /// @return Set of path indices for the robots in the group. Index of the
     /// set corresponds to the index of the robot inthe container in the goal map
     /// as input in the TRPTool::Initialize function.
-    std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>> SearchTRP(
-            GoalMap<MPTraits>* _map);
+    std::vector<std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>> SearchTRP(
+            TRPGoalMap<MPTraits>* _map);
 
     ///@}
 
@@ -66,7 +66,7 @@ class LKHSearch final : public MPBaseObject<MPTraits> {
 
     /// generate adjacency matrix
     /// @param _map goal map that the matrix is being dreated for.
-    void CreateAdjacencyMatrix(GoalMap<MPTraits>* _map);
+    void CreateAdjacencyMatrix(TRPGoalMap<MPTraits>* _map);
 
     /// Write graph and parameters to file in LKH Library format from the
     /// adjacency matrix.
@@ -84,10 +84,10 @@ class LKHSearch final : public MPBaseObject<MPTraits> {
     /// Converts the ATSP solution back into a TRP solution for the set of
     /// robots.
     /// @param _nodes List of vertices visted in ATSP solution to the problem.
-    /// @param _map GoalMap that represents the TRP problem being solved.
+    /// @param _map TRPGoalMap that represents the TRP problem being solved.
     /// @return Set of paths that each robot in the group takes.
-    std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>>
-            DeconstructATSPPath(std::vector<size_t> _nodes, GoalMap<MPTraits>* _map);
+    std::vector<std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>>
+            DeconstructATSPPath(std::vector<size_t> _nodes, TRPGoalMap<MPTraits>* _map);
     ///@}
     ///@name Internal State
     ///{
@@ -138,9 +138,9 @@ Initialize() {
 /*------------------------------- Graph Search  -------------------------------*/
 
 template <typename MPTraits>
-std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>>
+std::vector<std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>>
 LKHSearch<MPTraits>::
-SearchTRP(GoalMap<MPTraits>* _map){
+SearchTRP(TRPGoalMap<MPTraits>* _map){
   CreateAdjacencyMatrix(_map);
 
   //make problem file for the LKH Library to take in
@@ -162,7 +162,7 @@ SearchTRP(GoalMap<MPTraits>* _map){
 template <typename MPTraits>
 void
 LKHSearch<MPTraits>::
-CreateAdjacencyMatrix(GoalMap<MPTraits>* _map){
+CreateAdjacencyMatrix(TRPGoalMap<MPTraits>* _map){
 
   if(m_debug){
     std::cout << "creating adjacency matrix" << std::endl;
@@ -437,13 +437,13 @@ ReadPathFile(){
 }
 
 template <typename MPTraits>
-std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>>
+std::vector<std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>>
 LKHSearch<MPTraits>::
-DeconstructATSPPath(std::vector<size_t> _nodes, GoalMap<MPTraits>* _map){
-  std::vector<std::vector<typename GoalMap<MPTraits>::vertex_descriptor>> pathSets;
+DeconstructATSPPath(std::vector<size_t> _nodes, TRPGoalMap<MPTraits>* _map){
+  std::vector<std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>> pathSets;
   for(size_t i = 0; i < _map->GetDepotDescriptors()->size(); i++){
     //find tour from each depot (aka worker location)
-/*    std::vector<typename GoalMap<MPTraits>::vertex_descriptor>* tour;
+/*    std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>* tour;
     for(size_t j = 0; j < _nodes.size(); j++){
       //if not on a tour and at the depot in the set of nodes from the LKH file
       // the + goal descriptors size is bc the Depots are listed after the goals
@@ -451,7 +451,7 @@ DeconstructATSPPath(std::vector<size_t> _nodes, GoalMap<MPTraits>* _map){
       // Might need to re-evaluate if functionality to add goals in is added
       // into library, but it should still be fine.
       if(!tour and _nodes[j] == i+_map->GetGoalDescriptors()->size()){
-        tour = new std::vector<typename GoalMap<MPTraits>::vertex_descriptor>();
+        tour = new std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor>();
         tour->push_back(_map->GetGoalDescriptors()->at(j));
       }
       else if(tour){
@@ -479,7 +479,7 @@ DeconstructATSPPath(std::vector<size_t> _nodes, GoalMap<MPTraits>* _map){
 */
 
     std::cout << "Looking for: " << _map->GetDepotDescriptors()->at(i) << std::endl;
-    std::vector<typename GoalMap<MPTraits>::vertex_descriptor> tour;
+    std::vector<typename TRPGoalMap<MPTraits>::vertex_descriptor> tour;
     bool complete = false;
     bool onTour = false;
     size_t j = 0;

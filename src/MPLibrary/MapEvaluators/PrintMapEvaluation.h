@@ -58,14 +58,14 @@ PrintMapEvaluation<MPTraits>::Print(ostream& _os) const {
 template <typename MPTraits>
 bool
 PrintMapEvaluation<MPTraits>::operator()() {
-  int numNodes = this->GetRoadmap()->GetGraph()->get_num_vertices();
-  int numEdges = this->GetRoadmap()->GetGraph()->get_num_edges();
+  int numNodes = this->GetRoadmap()->get_num_vertices();
+  int numEdges = this->GetRoadmap()->get_num_edges();
   ostringstream osName;
   osName << m_baseName << "." << numNodes << "." << numEdges << ".map";
   this->GetRoadmap()->Write(osName.str(), this->GetEnvironment());
 
-  int numCollNodes = this->GetBlockRoadmap()->GetGraph()->get_num_vertices();
-  int numCollEdges = this->GetBlockRoadmap()->GetGraph()->get_num_edges();
+  int numCollNodes = this->GetBlockRoadmap()->get_num_vertices();
+  int numCollEdges = this->GetBlockRoadmap()->get_num_edges();
   if(numCollNodes) {
     ostringstream osCollName;
     osCollName << m_baseName << "." << numCollNodes << "." << numCollEdges << ".block.map";

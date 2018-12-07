@@ -594,8 +594,8 @@ template <typename MPTraits>
 void
 SVMModel<MPTraits>::
 AddSample(const VID& _vid, const LabelType& _l) {
-  auto g = (_l == 1) ? this->GetRoadmap()->GetGraph():
-                       this->GetBlockRoadmap()->GetGraph();
+  auto g = (_l == 1) ? this->GetRoadmap():
+                       this->GetBlockRoadmap();
   AddSample(g->GetVertex(_vid), _l);
 }
 

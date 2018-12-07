@@ -97,7 +97,6 @@ ifeq ($(parallel), 1)
 else
   MAIN := $(OBJ_DIR)/main.o
 endif
-$(MAIN): $(PMPL_LIBFILE)
 
 # Set up dependency tracking.
 DEPS_OUT = $(OBJ_DIR)/$*.d

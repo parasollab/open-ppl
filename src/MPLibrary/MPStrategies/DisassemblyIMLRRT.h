@@ -25,15 +25,7 @@ class DisassemblyIMLRRT : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
 
-    DisassemblyIMLRRT(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+    DisassemblyIMLRRT();
     DisassemblyIMLRRT(XMLNode& _node);
     virtual ~DisassemblyIMLRRT() {}
 
@@ -56,14 +48,7 @@ class DisassemblyIMLRRT : public DisassemblyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyIMLRRT<MPTraits>::
-DisassemblyIMLRRT(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
-    DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
-      _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
+DisassemblyIMLRRT() {
   this->SetName("DisassemblyIMLRRT");
   this->m_keepBestRRTPathOnFailure = true;
 }

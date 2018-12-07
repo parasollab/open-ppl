@@ -38,7 +38,6 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     typedef typename BasicRRTStrategy<MPTraits>::TreeType TreeType;
 
@@ -173,7 +172,7 @@ typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const TreeType* const _tree) {
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestNeighbor");
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // The candidate neighbors are those in both the current tree and the active
   // set.
@@ -237,7 +236,7 @@ Extend(const VID _nearest, const CfgType& _target, LPOutput<MPTraits>& _lp,
   const bool success = newVID != INVALID_VID;
   if(success) {
     // Skip this if we are connecting trees and the node wasn't new.
-    auto g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     const bool connecting = !_requireNew,
                newNode    = newVID == g->GetLastVID(),
                update     = newNode or !connecting;
@@ -257,7 +256,7 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
     const LPOutput<MPTraits>& _lp) {
   MethodTimer mt(this->GetStatClass(), "SST::UpdateSSTStructures");
 
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // The nearest node is now the parent of the new node.
   m_parent[_newVID] = _nearestVID;
@@ -375,7 +374,7 @@ void
 StableSparseRRT<MPTraits>::
 PruneInactiveLeaves() {
   MethodTimer mt(this->GetStatClass(), "SST::PruneInactiveLeaves");
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // Prune the inactive leaves until there are none.
   while(!m_inactiveLeaves.empty()) {

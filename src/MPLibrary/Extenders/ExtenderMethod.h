@@ -22,6 +22,11 @@
 /// bool pass = e->Extend(start, goal, new, lp);
 /// @endcode
 ///
+/// @todo Local planners and Extenders represent the same concepts and should be
+///       merged into a single class with both an Extend and LocalPlan function.
+///       This will help simplify several other objects within PMPL as well,
+///       such as bi-directional RRT.
+///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>

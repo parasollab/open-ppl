@@ -7,7 +7,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// A path modifier that uses a connector to connect the given 
+/// A path modifier that uses a connector to connect the given
 /// path, then finds a valid path through the connected graph.
 ///
 /// @ingroup PathModifiers
@@ -22,13 +22,12 @@ class ConnectionPathModifier : public PathModifierMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
     ///@name Construction
     ///@{
-  
+
     /// ConnectionPathModifier take the label of the connection method to be
     /// use.
     /// @param _connectionLabel A label to a connection method in the library
@@ -56,9 +55,9 @@ class ConnectionPathModifier : public PathModifierMethod<MPTraits> {
     /// @return Success/failed modification
     virtual bool ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path,
         vector<CfgType>& _newPath) override;
-  
+
   private:
-  
+
     std::string m_connectionLabel;
 };
 
@@ -93,9 +92,9 @@ bool
 ConnectionPathModifier<MPTraits>::
 ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) {
   auto graph = _graph ? _graph : this->GetRoadmap();
-  
-  auto g = graph->GetGraph();
-  
+
+  auto g = graph;
+
   auto start = g->GetVID(_path.front());
   auto end = g->GetVID(_path.back());
 
@@ -103,15 +102,15 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
 
   connector->Connect(graph);
 
-  SSSPTerminationCriterion<GraphType> termination(
-      [end](typename GraphType::vertex_iterator& _vi,
-             const SSSPOutput<GraphType>& _sssp) {
+  SSSPTerminationCriterion<RoadmapType> termination(
+      [end](typename RoadmapType::vertex_iterator& _vi,
+             const SSSPOutput<RoadmapType>& _sssp) {
         return _vi->descriptor() == end ? SSSPTermination::EndSearch
                                          : SSSPTermination::Continue;
       }
   );
 
-  const SSSPOutput<GraphType> sssp = DijkstraSSSP(g, {start}, termination);
+  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(g, {start}, termination);
 
   if(!sssp.parent.count(end))
     throw RunTimeException(WHERE) << "Failed to find complete path";

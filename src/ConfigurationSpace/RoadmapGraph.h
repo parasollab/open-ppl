@@ -1,6 +1,7 @@
 #ifndef PMPL_ROADMAP_GRAPH_H_
 #define PMPL_ROADMAP_GRAPH_H_
 
+#include "MPProblem/Environment/Environment.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/RuntimeUtils.h"
 
@@ -9,11 +10,13 @@
 //#include "graph/view/graph_view_property_adaptor.h"
 //#include <containers/graph/view/graph_view_property_adaptor.hpp>
 #include <containers/sequential/graph/algorithms/connected_components.h>
+#include <containers/graph/algorithms/graph_io.hpp>
 #else
 #include <containers/sequential/graph/graph.h>
 #include <containers/sequential/graph/graph_util.h>
 #include <containers/sequential/graph/vertex_iterator_adaptor.h>
 #include <containers/sequential/graph/algorithms/connected_components.h>
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
 #endif
 
 #ifndef INVALID_VID
@@ -24,7 +27,9 @@
 #define INVALID_EID (std::numeric_limits<size_t>::max())
 #endif
 
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 
@@ -76,8 +81,8 @@ class RoadmapGraph : public
 
     typedef typename STAPLGraph::const_vertex_iterator                 CVI;
     typedef typename STAPLGraph::const_adj_edge_iterator               CEI;
-    typedef typename STAPLGraph::vertex_property&                      VP;
-    typedef typename STAPLGraph::edge_property&                        EP;
+    typedef typename STAPLGraph::vertex_property                       VP;
+    typedef typename STAPLGraph::edge_property                         EP;
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
 
     typedef std::function<void(VI)> VertexHook;
@@ -138,6 +143,11 @@ class RoadmapGraph : public
     /// Set the robot pointer on all configurations in the map.
     void SetRobot(Robot* const _r) noexcept;
 
+    /// Copy the nodes and edges from another roadmap and append them to this.
+    /// Assumes the configurations are compatible with this roadmap's robot.
+    /// @param _r The roadmap to copy from.
+    void AppendRoadmap(const RoadmapGraph& _r);
+
     ///@}
     ///@name Queries
     ///@{
@@ -192,9 +202,9 @@ class RoadmapGraph : public
 
     /// Retrieve a reference to a vertex property by descriptor or iterator.
     template <typename T>
-    VP GetVertex(T& _t) noexcept;
-    VP GetVertex(VI& _t) noexcept;
-    VP GetVertex(VID _t) noexcept;
+    VP& GetVertex(T& _t) noexcept;
+    VP& GetVertex(VI& _t) noexcept;
+    VP& GetVertex(VID _t) noexcept;
 
     /// Get the set of VIDs which are children of a given vertex.
     /// @param _vid The VID of the given vertex.
@@ -209,8 +219,8 @@ class RoadmapGraph : public
     /// @return True if the edge was located.
     bool GetEdge(const VID _source, const VID _target, EI& _ei) noexcept;
 
-    EP GetEdge(const VID _source, const VID _target) noexcept;
-    EP GetEdge(const EID _descriptor) noexcept;
+    EP& GetEdge(const VID _source, const VID _target) noexcept;
+    EP& GetEdge(const EID _descriptor) noexcept;
 
     ///@}
     ///@name Hooks
@@ -267,6 +277,20 @@ class RoadmapGraph : public
     /// Uninstall all hooks. Should only be used at the end of a library run to
     /// clean the roadmap object.
     void ClearHooks() noexcept;
+
+    ///@}
+    ///@name I/O
+    ///@{
+
+    /// Read in a roadmap (.map) file.
+    /// @param _filename The name of the map file to read.
+    /// @note Temporarily moved to non-member function.
+    //virtual void Read(const std::string& _filename);
+
+    /// Write the current roadmap out to a roadmap (.map) file.
+    /// @param _filename The name of the map file to write to.
+    /// @param _env The environment for which this map was constructed.
+    virtual void Write(const std::string& _filename, Environment* _env) const;
 
     ///@}
 
@@ -343,14 +367,12 @@ template <typename Vertex, typename Edge>
 RoadmapGraph<Vertex, Edge>::
 RoadmapGraph(Robot* const _r) : m_robot(_r) { }
 
-
 /*------------------------------- Modifiers ----------------------------------*/
 
 template <typename Vertex, typename Edge>
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
-#ifndef _PARALLEL
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(IsVertex(_v, vi)) {
@@ -364,14 +386,11 @@ AddVertex(const Vertex& _v) noexcept {
   const VID vid = this->add_vertex(_v);
   ++m_timestamp;
 
-  // Execute post-delete hooks and update vizmo debug.
+  // Execute post-add hooks and update vizmo debug.
   ExecuteAddVertexHooks(this->find_vertex(vid));
   VDAddNode(_v);
 
   return vid;
-#else
-  return this->add_vertex(_v);
-#endif
 }
 
 
@@ -391,7 +410,7 @@ AddVertex(const VID _vid, const Vertex& _v) noexcept {
   const VID vid = this->add_vertex(_vid, _v);
   ++m_timestamp;
 
-  // Execute post-delete hooks and update vizmo debug.
+  // Execute post-add hooks and update vizmo debug.
   ExecuteAddVertexHooks(this->find_vertex(vid));
   VDAddNode(_v);
 
@@ -506,10 +525,9 @@ template <class Vertex, class Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
-  const Vertex& sourceCfg = GetVertex(_iterator->source());
   // Execute pre-delete hooks and update vizmo debug.
   ExecuteDeleteEdgeHooks(_iterator);
-  VDRemoveEdge(sourceCfg, GetVertex(_iterator->target()));
+  VDRemoveEdge(GetVertex(_iterator->source()), GetVertex(_iterator->target()));
 
   // Delete the edge.
   this->delete_edge(_iterator->descriptor());
@@ -524,6 +542,30 @@ SetRobot(Robot* const _r) noexcept {
   m_robot = _r;
   for(VI vi = this->begin(); vi != this->end(); ++vi)
     vi->property().SetRobot(_r);
+}
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+AppendRoadmap(const RoadmapGraph& _r) {
+  // Copy vertices and map the change in VIDs.
+  std::unordered_map<VID, VID> oldToNew;
+  for(auto vit = _r.begin(); vit != _r.end(); ++vit) {
+    const VID oldVID = vit->descriptor();
+    const VID newVID = AddVertex(vit->property());
+    oldToNew[oldVID] = newVID;
+  }
+
+  // Copy edges.
+  for(auto vit = _r.begin(); vit != _r.end(); ++vit) {
+    for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
+      const VID source = oldToNew[eit->source()];
+      const VID target = oldToNew[eit->target()];
+      if(!IsEdge(source, target))
+        AddEdge(source, target, eit->property());
+    }
+  }
 }
 
 /*-------------------------------- Queries -----------------------------------*/
@@ -642,7 +684,7 @@ GetRobot() const noexcept {
 
 template <typename Vertex, typename Edge>
 template<typename T>
-typename RoadmapGraph<Vertex, Edge>::VP
+typename RoadmapGraph<Vertex, Edge>::VP&
 RoadmapGraph<Vertex, Edge>::
 GetVertex(T& _t) noexcept {
   return GetVertex(VID(*_t));
@@ -650,7 +692,7 @@ GetVertex(T& _t) noexcept {
 
 
 template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::VP
+typename RoadmapGraph<Vertex, Edge>::VP&
 RoadmapGraph<Vertex, Edge>::
 GetVertex(VI& _t) noexcept {
   return _t->property();
@@ -658,7 +700,7 @@ GetVertex(VI& _t) noexcept {
 
 
 template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::VP
+typename RoadmapGraph<Vertex, Edge>::VP&
 RoadmapGraph<Vertex, Edge>::
 GetVertex(VID _t) noexcept {
   auto iter = this->find_vertex(_t);
@@ -696,7 +738,7 @@ GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
 
 
 template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::EP
+typename RoadmapGraph<Vertex, Edge>::EP&
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target) noexcept {
   EI ei;
@@ -709,7 +751,7 @@ GetEdge(const VID _source, const VID _target) noexcept {
 
 
 template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::EP
+typename RoadmapGraph<Vertex, Edge>::EP&
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const EID _descriptor) noexcept {
   return GetEdge(_descriptor.source(), _descriptor.target());
@@ -845,6 +887,125 @@ ClearHooks() noexcept {
   m_deleteVertexHooks.clear();
   m_addEdgeHooks.clear();
   m_deleteEdgeHooks.clear();
+}
+
+/*----------------------------------- I/O ------------------------------------*/
+
+
+#if 1
+/// Read in a roadmap (.map) file.
+/// @param _g The graph to populate from the map file.
+/// @param _filename The name of the map file to read.
+/// @note This is a non-member to avoid problems with explicit instantiation of
+///       this function for robot groups. It should be returned to a member
+///       function when we have an elegant means for implementing group roadmap
+///       input.
+template <typename RoadmapGraph>
+void
+Read(RoadmapGraph* _g, const std::string& _filename) {
+  std::ifstream ifs(_filename);
+  if(!ifs)
+    throw ParseException(WHERE) << "Cannot open file '" << _filename << "'.";
+
+  std::string tag;
+  bool headerParsed = false;
+  int graphStart = 0;
+  // Read the file until we find the GRAPHSTART tag.
+  while(!headerParsed) {
+    // Mark our position and read the next line.
+    graphStart = ifs.tellg();
+    if(!(ifs >> tag))
+      throw ParseException(WHERE) << "Error reading map file '" << _filename
+                                  << "' - GRAPHSTART tag is missing.";
+
+    // If we find the GRAPHSTART tag, we are done.
+    if(tag.find("GRAPHSTART") != std::string::npos)
+      headerParsed = true;
+  }
+
+  if(!_g->GetRobot())
+    RunTimeException(WHERE) << "Must specify robot when reading in roadmaps.";
+
+  typedef typename RoadmapGraph::STAPLGraph STAPLGraph;
+  typedef typename RoadmapGraph::vertex_property Vertex;
+  typedef typename RoadmapGraph::edge_property Edge;
+
+  // Set the input robot for our edge class.
+  /// @TODO this is a bad way to handle the fact that it's necessary to know
+  /// the robot type (non/holonomic) when reading and writing.
+  Edge::inputRobot = _g->GetRobot();
+  Vertex::inputRobot = _g->GetRobot();
+
+  // Set ifs back to the line with the GRAPHSTART tag and read in the graph.
+  ifs.seekg(graphStart, ifs.beg);
+  stapl::sequential::read_graph<STAPLGraph>(*_g, ifs);
+
+  // Unset the input robot for our edge class.
+  Edge::inputRobot = nullptr;
+  Vertex::inputRobot = nullptr;
+}
+#else
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+Read(const std::string& _filename) {
+  std::ifstream ifs(_filename);
+  if(!ifs)
+    throw ParseException(WHERE) << "Cannot open file '" << _filename << "'.";
+
+  std::string tag;
+  bool headerParsed = false;
+  int graphStart = 0;
+  // Read the file until we find the GRAPHSTART tag.
+  while(!headerParsed) {
+    // Mark our position and read the next line.
+    graphStart = ifs.tellg();
+    if(!(ifs >> tag))
+      throw ParseException(WHERE) << "Error reading map file '" << _filename
+                                  << "' - GRAPHSTART tag is missing.";
+
+    // If we find the GRAPHSTART tag, we are done.
+    if(tag.find("GRAPHSTART") != std::string::npos)
+      headerParsed = true;
+  }
+
+  if(!GetRobot())
+    RunTimeException(WHERE) << "Must specify robot when reading in roadmaps.";
+
+  // Set the input robot for our edge class.
+  /// @TODO this is a bad way to handle the fact that it's necessary to know
+  /// the robot type (non/holonomic) when reading and writing.
+  Edge::inputRobot = GetRobot();
+  Vertex::inputRobot = GetRobot();
+
+  // Set ifs back to the line with the GRAPHSTART tag and read in the graph.
+  ifs.seekg(graphStart, ifs.beg);
+  stapl::sequential::read_graph<STAPLGraph>(*this, ifs);
+
+  // Unset the input robot for our edge class.
+  Edge::inputRobot = nullptr;
+  Vertex::inputRobot = nullptr;
+}
+#endif
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+Write(const std::string& _filename, Environment* _env) const {
+  std::ofstream ofs(_filename);
+  ofs << "#####ENVFILESTART#####" << std::endl
+      << _env->GetEnvFileName() << std::endl
+      << "#####ENVFILESTOP#####" << std::endl;
+
+#ifndef _PARALLEL
+  stapl::sequential::write_graph(*this, ofs);
+#else
+  ofs.close();
+  stapl::graph_view<STAPLGraph> gv(*this);
+  write_PMPL_graph(gv, _filename);
+#endif
+
 }
 
 /*-------------------------------- Helpers -----------------------------------*/

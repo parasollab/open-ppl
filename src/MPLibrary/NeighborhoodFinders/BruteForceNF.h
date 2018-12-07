@@ -25,7 +25,6 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename RoadmapType::VID            VID;
-    typedef typename RoadmapType::GraphType      GraphType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -127,7 +126,6 @@ BruteForceNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(this->m_debug)
@@ -142,12 +140,12 @@ FindNeighbors(RoadmapType* _rmp,
 
   for(InputIterator it = _first; it != _last; it++) {
     // Get the candidate VID and check for connectedness.
-    const VID vid = g->GetVID(it);
-    if(this->DirectEdge(g, _cfg, vid))
+    const VID vid = _rmp->GetVID(it);
+    if(this->DirectEdge(_rmp, _cfg, vid))
       continue;
 
     // Get the candidate Cfg and check against connection to self.
-    const CfgType& node = g->GetVertex(it);
+    const CfgType& node = _rmp->GetVertex(it);
     if(node == _cfg)
       continue;
 
@@ -189,7 +187,6 @@ BruteForceNF<MPTraits>::
 FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2, OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(this->m_debug)
@@ -202,8 +199,8 @@ FindNeighborPairs(RoadmapType* _rmp,
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     // Get the first configuration.
-    const CfgType& node1 = g->GetVertex(it1);
-    const VID vid1 = g->GetVID(it1);
+    const CfgType& node1 = _rmp->GetVertex(it1);
+    const VID vid1 = _rmp->GetVID(it1);
 
     // Compare it to everything in the second set.
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
@@ -212,11 +209,11 @@ FindNeighborPairs(RoadmapType* _rmp,
         continue;
 
       // Get the second configuration.
-      const CfgType& node2 = g->GetVertex(it2);
-      const VID vid2 = g->GetVID(it2);
+      const CfgType& node2 = _rmp->GetVertex(it2);
+      const VID vid2 = _rmp->GetVID(it2);
 
       // Check unconnected.
-      if(this->DirectEdge(g, node1, vid2))
+      if(this->DirectEdge(_rmp, node1, vid2))
         continue;
 
       // Check distance. If it is infinite, these are not connectable.

@@ -272,7 +272,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Set the solution for appending with the parent copy.
   m_solution->SetRobot(copyRobot);
 
-  m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap()->GetGraph(),
+  m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap(),
       glutils::color(0., 1., 0., 0.2));
   // Solve for the plan.
   std::cout << "Calling Solve for " << m_robot->GetLabel() << std::endl;
@@ -450,7 +450,7 @@ GetMPSolution(){
 void
 HandoffAgent::
 SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
-  m_solution->GetRoadmap()->SetGraph(_graph);
+  *m_solution->GetRoadmap() = *_graph;
 }
 
 void

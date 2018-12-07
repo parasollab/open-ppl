@@ -30,7 +30,6 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -131,7 +130,7 @@ void
 DynamicDomainRRT<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
-  for(auto v : *this->GetRoadmap()->GetGraph())
+  for(auto v : *this->GetRoadmap())
     v.property().SetStat(RLabel(), std::numeric_limits<double>::max());
 }
 
@@ -147,12 +146,12 @@ Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp,
       _requireNew);
 
   if(newVID != INVALID_VID) {
-    CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(newVID);
+    CfgType& cfg = this->GetRoadmap()->GetVertex(newVID);
     cfg.SetStat(RLabel(), std::numeric_limits<double>::max());
   }
   else {
     auto e = this->GetExtender(this->m_exLabel);
-    CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(_nearVID);
+    CfgType& cfg = this->GetRoadmap()->GetVertex(_nearVID);
     cfg.SetStat(RLabel(), m_r * e->GetMaxDistance());
   }
   return newVID;
@@ -163,7 +162,7 @@ template <typename MPTraits>
 typename DynamicDomainRRT<MPTraits>::VID
 DynamicDomainRRT<MPTraits>::
 ExpandTree(const VID _nearestVID, const CfgType& _target) {
-  const CfgType& cfg = this->GetRoadmap()->GetGraph()->GetVertex(_nearestVID);
+  const CfgType& cfg = this->GetRoadmap()->GetVertex(_nearestVID);
 
   // If the nearest node's radius is too small, return failure.
   auto dm = this->GetDistanceMetric(m_dmLabel);

@@ -1,12 +1,15 @@
-#ifndef GROUP_TASK_H
-#define GROUP_TASK_H
-
-#include <memory>
-#include <string>
-#include <vector>
-#include <unordered_map>
+#ifndef PMPL_GROUP_TASK_H_
+#define PMPL_GROUP_TASK_H_
 
 #include "MPProblem/MPTask.h"
+
+#include "nonstd/status.h"
+
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class Boundary;
 class GroupCfg;
@@ -18,42 +21,34 @@ class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Describes a motion task with start/end conditions and constraints on
-/// allowable trajectories.
+/// Describes a motion task for a group of robots as a set of individual tasks.
 ///
-/// @details Tasks are defined by a robot group and three sets of constraints:
-///   @arg Start constraints describe the conditions required to start a task.
-///   @arg Path constraints describe restrictions that must be observed
-///        throughout a valid solution.
-///   @arg Goal constraints describe the conditions that must be met to complete
-///        a task.
-/// The robot group is the group assigned to perform the task.
+/// The individual tasks may be assigned to specific robots in the group, or
+/// they may be completable by any robot in the group.
 ///
-/// XML Parsing:
-/// Each task has two required attributes and no optional attributes:
-///   @arg label A unique label for the task.
-///   @arg robot The label for the robot assigned to the task.
-/// Each task also has three child nodes for the start, path, and goal
-/// constraints, respectively. Each contains a set of its own child nodes
-/// describing the appropriate constraints.
+/// @note The goals are 'right-aligned' in that we assume that all robots must
+///       reach their last goal together.
+///
+/// @note Assigning a group task to another group will clear any assignments
+///       of robots to individual tasks because there is no universal way to map
+///       the new robots to the same set of tasks. The new group may be
+///       smaller/larger, have different labels/capabilities, etc.
+///
+/// @todo Move disassembly-specific items to a derived class specifically
+///       for disassembly tasks.
 ////////////////////////////////////////////////////////////////////////////////
-class GroupTask final {
+class GroupTask {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    /// The set of states that describe how well a solution path fulfills a
-    /// task.
-    /// @arg OnDeck The beginning of the path doesn't satisfy the start
-    ///      constraints.
-    /// @arg InProgress The beginning satisfies the start constraints. No path
-    ///      constraints are violated, but the goal constraints are not
-    ///      satisfied.
-    /// @arg Complete All constraints are satisfied.
-    /// @arg Invalid A path constraint is violated.
-    enum Status {OnDeck, InProgress, Complete, Invalid};
+    /// A set of individual tasks.
+    typedef std::vector<MPTask>     TaskSet;
+
+    typedef TaskSet::iterator       iterator;
+    typedef TaskSet::const_iterator const_iterator;
 
     ///@}
     ///@name Construction
@@ -68,17 +63,13 @@ class GroupTask final {
     /// @param _node The XML node to parse.
     explicit GroupTask(MPProblem* const _problem, XMLNode& _node);
 
-    GroupTask(const GroupTask& _other);  ///< Copy.
-    GroupTask(GroupTask&& _other);       ///< Move.
+    virtual ~GroupTask();
 
-    ~GroupTask();
-
-    ///@}
-    ///@name Assignment
-    ///@{
-
-    GroupTask& operator=(const GroupTask& _other); ///< Copy.
-    GroupTask& operator=(GroupTask&& _other);      ///< Move.
+    /// Generate a group task of the appropriate type.
+    /// @param _problem The MPProblem for this task.
+    /// @param _node The XML node to parse.
+    static std::unique_ptr<GroupTask> Factory(MPProblem* const _problem,
+        XMLNode& _node);
 
     ///@}
     ///@name Property Accessors
@@ -87,13 +78,9 @@ class GroupTask final {
     /// Get the robot associated with this task.
     RobotGroup* GetRobotGroup() const noexcept;
 
-    /// Get the optional manipulator robot group associated with this task.
-    RobotGroup* GetEndEffectorGroup() const noexcept;
-
-    /// Get the optional manipulator robot group associated with this task.
-    RobotGroup* GetManipulatorGroup() const noexcept;
-
-    /// Assign this task to the robot group specified.
+    /// Assign this task to another robot group. If the new group is different,
+    /// all individual tasks will have their robot pointers cleared (since there
+    /// is no universal means of mapping the individual tasks to the new robots).
     /// @param _r The destination robot which will receive this assignment.
     void SetRobotGroup(RobotGroup* const _r);
 
@@ -103,49 +90,96 @@ class GroupTask final {
     /// Set the semantic label for this task.
     void SetLabel(const std::string& _label) noexcept;
 
-    /// Get the robot pointer for the (optional) end effector for the group task
-    Robot* GetEndEffectorRobot();
+    /// Get the number of individual tasks within this group task.
+    size_t Size() const noexcept;
 
-    /// Get the robot pointer for the (optional) manipulator for this group task
-    Robot* GetManipulatorRobot();
+    /// Check if there are no individual tasks.
+    bool Empty() const noexcept;
+
+    /// Get the status object for this task.
+    nonstd::status& GetStatus() noexcept;
+    const nonstd::status& GetStatus() const noexcept;
+
+    ///@}
+    ///@name Individual Tasks
+    ///@{
+    /// Access, modify, and iterate over the individual tasks.
+
+    /// Get the number of goals in the longest (most goals) task.
+    size_t GetNumGoals() const noexcept;
+
+    /// Add an individual task.
+    /// @param _t The individual task to add.
+    void AddTask(const MPTask& _t);
+
+    /// Remove an individual task.
+    /// @param _iter An iterator to the task to remove.
+    /// @return An iterator to the following element.
+    iterator RemoveTask(iterator _iter);
+
+    iterator begin() noexcept;
+    iterator end() noexcept;
+
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
 
     ///@}
     ///@name Constraint Accessors
     ///@{
-    /// The task will take ownership of any added constraints and delete them
-    /// when necessary. We require dynamically-allocated objects here because
-    /// exact (derived) type of each constraint will not be known until runtime.
 
     /// Uses the robot group in _center to populate all of the individual cfgs
     /// in that group cfg.
+    /// @todo This is a hack that was needed to move the disassembly work
+    ///       forward before we had flushed out the tasks/groups. To be removed
+    ///       at the earliest opportunity.
     void GetStartConstraintCenter(GroupCfg& _center) const noexcept;
-
-    /// TODO More robust constraint functionality may be desired in the future,
-    ///      but isn't supported now as there is no use case for it.
 
     ///@}
     ///@name Constraint Evaluation
     ///@{
 
-    /// Evaluate a path to see if it meets the constraints.
-    /// @param _p The path to validate.
-    /// @return The status of the task using _p as a solution.
-    Status Evaluate(const std::vector<GroupCfg>& _p) const;
+    /// Evaluate whether a configuration satisfies the start constraints.
+    /// @param _cfg The configuration to check.
+    /// @return True if each robot satsifies its individual start constraints at
+    ///         _cfg.
+    bool EvaluateStartConstraints(const GroupCfg& _cfg) const;
+
+    /// Evaluate whether a configuration satisfies the path constraints.
+    /// @param _cfg The configuration to check.
+    /// @return True if each robot satsifies its individual path constraints at
+    ///         _cfg.
+    bool EvaluatePathConstraints(const GroupCfg& _cfg) const;
+
+    /// Evaluate whether a configuration satisfies the final goal constraints.
+    /// @param _cfg The configuration to check.
+    /// @return True if each robot satsifies its last individual goal constraints
+    ///         at _cfg.
+    bool EvaluateGoalConstraints(const GroupCfg& _cfg) const;
+
+    /// Evaluate whether a configuration satisfies the constraints for a
+    /// designated goal.
+    /// @param _cfg The configuration to check.
+    /// @param _index The goal index to check.
+    /// @return True if each robot satsifies its individual goal constraints at
+    ///         _cfg for goal _index.
+    bool EvaluateGoalConstraints(const GroupCfg& _cfg, const size_t _index) const;
 
     ///@}
-    ///@name Task Status
+    ///@name Disassembly Items
     ///@{
-    /// Check/set the status of this task manually (as opposed to the Evaluate
-    /// function).
+    /// To be moved to a specialized derived class.
 
-    bool IsCompleted() const;
-    void SetCompleted();
+    /// Get the optional manipulator robot group associated with this task.
+    RobotGroup* GetEndEffectorGroup() const noexcept;
 
-    bool IsStarted() const;
-    void SetStarted();
+    /// Get the optional manipulator robot group associated with this task.
+    RobotGroup* GetManipulatorGroup() const noexcept;
 
-    /// Reset the task as not started.
-    void Reset();
+    /// Get the robot pointer for the (optional) end effector for the group task
+    Robot* GetEndEffectorRobot();
+
+    /// Get the robot pointer for the (optional) manipulator for this group task
+    Robot* GetManipulatorRobot();
 
     ///@}
 
@@ -154,9 +188,17 @@ class GroupTask final {
     ///@name Internal State
     ///@{
 
-    std::string m_label;          ///< The task's semantic label.
+    RobotGroup* m_group{nullptr}; ///< The robot group assigned to this task.
 
-    RobotGroup* m_robotGroup{nullptr}; ///< The robot group assigned to this task.
+    std::string m_label;          ///< The task's semantic label.
+    nonstd::status m_status;      ///< The status of the group task.
+
+    TaskSet m_individualTasks;    ///< The individual tasks.
+
+    ///@}
+    ///@name Disassembly Items
+    ///@{
+    /// To be moved to a specialized derived class.
 
     // Used in disassembly planning, this group should contain the assembly
     // along with the manipulator's end effector. Duplicates a little bit of
@@ -167,11 +209,6 @@ class GroupTask final {
     // with the manipulator. Duplicates a little bit of data, but allows us to
     // most extensibly use group path/cfg output.
     RobotGroup* m_manipulatorGroup{nullptr}; ///< The optional manipulator group
-
-    mutable Status m_status{OnDeck};      ///< The status of the group task.
-
-    /// TODO: Doesn't this need to be a map between a LIST of MPTasks in the end?
-    std::unordered_map<Robot*, MPTask> m_robotTasks; ///< The task for each robot in the group.
 
     ///@}
 

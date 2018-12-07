@@ -18,7 +18,6 @@ class DiameterMetric : public MetricMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     DiameterMetric();
     DiameterMetric(XMLNode& _node);
@@ -59,12 +58,11 @@ operator()() {
   vector<double> diameter;
   double ccDiameter;
   RoadmapType* rMap = this->GetRoadmap();
-  GraphType* rGraph = rMap->GetGraph();
 
   //get ccs
   vector<pair<size_t, VID> > ccs;
-  stapl::sequential::vector_property_map<GraphType, size_t> cMap;
-  get_cc_stats(*rGraph, cMap, ccs);
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
+  get_cc_stats(*rMap, cMap, ccs);
 
   //fileter out singletons
   vector<pair<size_t, VID> > filteredCCs;
@@ -82,15 +80,15 @@ operator()() {
     ccVIDs.clear();
     ccData.clear();
     cMap.reset();
-    get_cc(*rGraph, cMap, CC->second, ccVIDs);
+    get_cc(*rMap, cMap, CC->second, ccVIDs);
     for(v = ccVIDs.begin(); v != ccVIDs.end(); ++v)
-      ccData.push_back((*(rGraph->find_vertex(*v))).property());
+      ccData.push_back((*(rMap->find_vertex(*v))).property());
 #ifndef _PARALLEL
     // Beware- this diameter is hop count (weight =1), proper fix is needed
-    diameter.push_back(stapl::sequential::diameter(*rGraph, CC->second));
+    diameter.push_back(stapl::sequential::diameter(*rMap, CC->second));
 #else
     // TODO: this is to be implemented by STAPL team
-    // diameter.push_back(stapl::diameter(*rGraph, CC->second));
+    // diameter.push_back(stapl::diameter(*rMap, CC->second));
 #endif
   }
 

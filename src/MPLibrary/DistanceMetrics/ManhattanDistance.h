@@ -1,16 +1,18 @@
-#ifndef MANHATTAN_DISTANCE_H_
-#define MANHATTAN_DISTANCE_H_
+#ifndef PMPL_MANHATTAN_DISTANCE_H_
+#define PMPL_MANHATTAN_DISTANCE_H_
 
 #include "MinkowskiDistance.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup DistanceMetrics
-/// @brief Compute the Manhattan distance between two configurations.
+/// Compute the Manhattan distance between two configurations.
 ///
 /// The Manhattan distance requires that each basis of the configuration space
 /// be traversed separately. Its name is analogous to how one moves around the
 /// city of Manhattan by following the streets rather than flying over the
 /// buildings.
+///
+/// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ManhattanDistance : public MinkowskiDistance<MPTraits> {
@@ -25,6 +27,7 @@ class ManhattanDistance : public MinkowskiDistance<MPTraits> {
     virtual ~ManhattanDistance() = default;
 
     ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/

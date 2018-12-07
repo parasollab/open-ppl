@@ -25,7 +25,6 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
-    typedef typename RoadmapType::GraphType      GraphType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -138,27 +137,26 @@ HopLimitNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
-  VID v = g->GetVID(_cfg);
-  typename GraphType::vertex_iterator vi = g->find_vertex(v);
+  VID v = _rmp->GetVID(_cfg);
+  typename RoadmapType::vertex_iterator vi = _rmp->find_vertex(v);
   VID parent = vi->property().GetStat("Parent");
 
   vector<VID> vRes;
 
-  typedef stapl::sequential::map_property_map<typename GraphType::STAPLGraph,
+  typedef stapl::sequential::map_property_map<typename RoadmapType::STAPLGraph,
       size_t> ColorMap;
   ColorMap hopMap, colorMap;
   hopMap.put(parent, 0);
 
-  stapl::sequential::hops_detail::hops_visitor<typename GraphType::STAPLGraph>
-      vis(*g, hopMap, m_h, vRes);
-  breadth_first_search_early_quit(*g, parent, vis, colorMap);
+  stapl::sequential::hops_detail::hops_visitor<typename RoadmapType::STAPLGraph>
+      vis(*_rmp, hopMap, m_h, vRes);
+  breadth_first_search_early_quit(*_rmp, parent, vis, colorMap);
 
   nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(),
-      vRes.size() == g->get_num_vertices(), _cfg, _out);
+      vRes.size() == _rmp->get_num_vertices(), _cfg, _out);
 
   return _out;
 }

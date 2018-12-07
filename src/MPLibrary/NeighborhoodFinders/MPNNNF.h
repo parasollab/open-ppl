@@ -23,7 +23,6 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
-    typedef typename RoadmapType::GraphType      GraphType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -138,7 +137,6 @@ OutputIterator
 MPNNNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     const CfgType& _cfg, OutputIterator _out) {
-  GraphType* g = _rmp->GetGraph();
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   this->UpdateInternalModel();
@@ -191,7 +189,7 @@ MPNNNF<MPTraits>::
 UpdateInternalModel() {
   MethodTimer mt(this->GetStatClass(), "MPNNNF::UpdateInternalModel");
 
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // Check if the model is already current.
   const size_t version = g->GetTimestamp();

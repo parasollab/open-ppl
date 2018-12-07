@@ -16,7 +16,6 @@ class CCDistanceMetric : public MetricMethod<MPTraits> {
 
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     CCDistanceMetric(string _dm="");
     CCDistanceMetric(XMLNode& _node);
@@ -61,13 +60,12 @@ operator()() {
 
   vector<double> distance;
   double ccDistance;
-  RoadmapType* rmap = this->GetRoadmap();
-  GraphType* pMap = rmap->GetGraph();
+  auto rmap = this->GetRoadmap();
 
   //get ccs
   vector<pair<size_t, VID> > ccs;
-  stapl::sequential::vector_property_map<GraphType, size_t > cmap;
-  get_cc_stats(*pMap, cmap, ccs);
+  stapl::sequential::vector_property_map<RoadmapType, size_t > cmap;
+  get_cc_stats(*rmap, cmap, ccs);
 
   //filter out singletons
   vector<pair<size_t, VID> > filteredCCs;
@@ -81,17 +79,17 @@ operator()() {
   for(cci = filteredCCs.begin(); cci+1 < filteredCCs.end(); ++cci) {
     vector<VID> cciVids;
     cmap.reset();
-    get_cc(*pMap, cmap, cci->second, cciVids);
+    get_cc(*rmap, cmap, cci->second, cciVids);
 
     for(ccj = cci+1; ccj != filteredCCs.end(); ++ccj) {
       vector<VID> ccjVids;
       cmap.reset();
-      get_cc(*pMap, cmap, ccj->second, ccjVids);
+      get_cc(*rmap, cmap, ccj->second, ccjVids);
 
       vector<pair<VID, VID> > pairs;
       distance.push_back(this->GetDistanceMetric(m_dmLabel)->Distance(
-                                                                                 pMap->GetVertex(pairs[0].first),
-                                                                                 pMap->GetVertex(pairs[0].second)));
+                                                                                 rmap->GetVertex(pairs[0].first),
+                                                                                 rmap->GetVertex(pairs[0].second)));
     }
   }
   ccDistance = *(distance.begin());

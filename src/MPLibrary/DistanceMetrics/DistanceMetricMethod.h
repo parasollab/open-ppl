@@ -1,11 +1,11 @@
-#ifndef DISTANCE_METRIC_METHOD_H
-#define DISTANCE_METRIC_METHOD_H
+#ifndef PMPL_DISTANCE_METRIC_METHOD_H
+#define PMPL_DISTANCE_METRIC_METHOD_H
 
 #include "MPLibrary/MPBaseObject.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup DistanceMetrics
-/// @brief Base algorithm abstraction for \ref DistanceMetrics.
+/// Base algorithm abstraction for \ref DistanceMetrics.
 ///
 /// DistanceMetricMethod has two important methods: @c Distance and @c ScaleCfg.
 ///
@@ -27,19 +27,20 @@
 /// double length;
 /// dm->ScaleCfg(length, ray, origin);
 /// @endcode
+///
+/// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::RoadmapType   RoadmapType;
-    typedef typename RoadmapType::GraphType  GraphType;
-    typedef typename GraphType::VID          VID;
+    typedef typename RoadmapType::VID        VID;
     typedef typename MPTraits::GroupCfgType  GroupCfgType;
     typedef typename GroupCfgType::Formation Formation;
 
@@ -55,60 +56,54 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@name Distance Interface
     ///@{
 
-    /// Compute a distance between two configurations
-    /// @param _c1 Configuration 1
-    /// @param _c2 Configuration 2
-    /// @return Distance value
+    /// Compute a distance between two configurations.
+    /// @param _c1 The first configuration.
+    /// @param _c2 The second configuration.
+    /// @return The computed distance between _c1 and _c2.
     virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
 
-    /// GroupCfg Overload
+    /// This version is for group configurations. The default implementation
+    /// returns the summed individual distances.
+    /// @overload
     virtual double Distance(const GroupCfgType& _c1, const GroupCfgType& _c2);
 
-
-    /// @brief Scale a directional configuration to a certain magnitude
-    /// @param _length Desired magnitude
-    /// @param _c Configuration to be scaled
-    /// @param _o Configuration to scale upon (origin of scaling)
-    /// @return Distance value
-    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o);
-
-
-    /// Compute the weight of an existing roadmap edge
-    /// @param _source VID source/start
-    /// @param _target VID target/end
-    /// @return The total edge weight going through each intermediate.
+    /// Compute the weight of an existing roadmap edge according to this metric.
+    /// @param _source The source vertex descriptor.
+    /// @param _target The target vertex descriptor.
+    /// @return The total edge weight going through each intermediate of the
+    ///         edge (_source, _target), or infinity if the edge does not exist.
+    /// @todo We need to make this work for group roadmaps. Probably it needs to
+    ///       take the roadmap as a templated parameter and not be virtual
+    ///       (there is really only one way to do this).
     virtual double EdgeWeight(const VID _source, const VID _target);
 
+    ///@}
+    ///@name Configuration Scaling
+    ///@{
+    /// These functions rescale a configuration vector based on this distance
+    /// metric.
+
+    /// Scale a directional configuration to a certain magnitude.
+    /// @param _length Desired magnitude.
+    /// @param _c Configuration to be scaled.
+    /// @param _o Origin of scaling.
+    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o);
+
+    /// This vesion uses the default origin.
+    /// @overload
     void ScaleCfg(double _length, CfgType& _c);
 
-
-    /// Group Cfg Overloads:
+    /// This version is for group configurations.
+    /// @overload
     virtual void ScaleCfg(double _length, GroupCfgType& _c,
-                          const GroupCfgType& _o);
+        const GroupCfgType& _o);
 
+    /// This version is for group configurations with default origin.
+    /// @overload
     void ScaleCfg(double _length, GroupCfgType& _c);
 
     ///@}
-    ///@name Modifiers
-    ///@{
 
-    /// Sets and sorts the active robots, which is used for group cfg comparing.
-    void SetActiveRobots(const Formation& _robots);
-    Formation GetActiveRobots() const noexcept;
-
-    ///@}
-
-  protected:
-
-    /// Used for group cfgs to ensure valid comparison configurations, though
-    /// it could potentially be interpreted differently depending on the metric
-    /// that is implemented. Current implementations consider two group cfgs to
-    /// be an infinite distance apart if any robots that are not in this vector
-    /// have a changed position wrt the two configurations in question.
-    /// This is a natural choice for neighborhood finding distance metrics for
-    /// groups, as we do not want to connect two cfgs that suggest motion of
-    /// robots that should not be moving.
-    Formation m_activeRobots;
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -124,21 +119,61 @@ template <typename MPTraits>
 double
 DistanceMetricMethod<MPTraits>::
 Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
-  throw RunTimeException(WHERE, "Not Implemented!");
+  double sum = 0;
+  for(size_t i = 0; i < _c1.GetNumRobots(); ++i)
+    sum += Distance(_c1.GetRobotCfg(i), _c2.GetRobotCfg(i));
+
+  return sum;
 }
 
+
+template <typename MPTraits>
+double
+DistanceMetricMethod<MPTraits>::
+EdgeWeight(const VID _source, const VID _target) {
+  auto g = this->GetRoadmap();
+
+  // If the edge does not exist, report infinite distance.
+  if(!g->IsEdge(_source, _target))
+    return std::numeric_limits<double>::infinity();
+
+  // Get the intermediates. If there aren't any, the weight is just from source
+  // to target.
+  auto& intermediates = g->GetEdge(_source, _target).GetIntermediates();
+  if(intermediates.empty())
+    return Distance(g->GetVertex(_source), g->GetVertex(_target));
+
+  // If we're still here, there are intermediates. Add up the distance through
+  // the intermediates.
+  double totalDistance = Distance(g->GetVertex(_source), intermediates.front())
+                       + Distance(intermediates.back(), g->GetVertex(_target));
+
+  for(size_t i = 0; i < intermediates.size() - 1; ++i)
+    totalDistance += Distance(intermediates[i], intermediates[i + 1]);
+
+  return totalDistance;
+}
+
+/*---------------------------- Configuration Scaling -------------------------*/
 
 template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
+  /// @todo This is a very expensive way to scale a configuration. We should
+  ///       probably remove it and require derived classes to implement a more
+  ///       efficient function (this is the best we can do for a base class that
+  ///       does not know anything about the properties of the metric space).
+
   _length = fabs(_length); //a distance must be positive
   CfgType origin = _o;
   CfgType outsideCfg = _c;
+
   // first find an outsite configuration with sufficient size
   while(Distance(origin, outsideCfg) < 2*_length)
     for(size_t i=0; i<outsideCfg.DOF(); ++i)
       outsideCfg[i] *= 2.0;
+
   // now, using binary search find a configuration with the approximate length
   CfgType aboveCfg = outsideCfg;
   CfgType belowCfg = origin;
@@ -171,7 +206,7 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-  throw RunTimeException(WHERE, "Not Implemented!");
+  throw NotImplementedException(WHERE) << "Not yet implemented.";
 }
 
 
@@ -179,58 +214,10 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c) {
-  throw RunTimeException(WHERE, "Not Implemented!");
-}
-
-
-template <typename MPTraits>
-double
-DistanceMetricMethod<MPTraits>::
-EdgeWeight(const VID _source, const VID _target) {
-  auto g = this->GetRoadmap()->GetGraph();
-
-  // If the edge does not exist, report infinite distance.
-  if(!g->IsEdge(_source, _target))
-    return std::numeric_limits<double>::infinity();
-
-  // Get the intermediates. If there aren't any, the weight is just from source
-  // to target.
-  auto& intermediates = g->GetEdge(_source, _target).GetIntermediates();
-  if(intermediates.empty())
-    return Distance(g->GetVertex(_source), g->GetVertex(_target));
-
-  // If we're still here, there are intermediates. Add up the distance through
-  // the intermediates.
-  double totalDistance = Distance(g->GetVertex(_source), intermediates.front())
-                       + Distance(intermediates.back(), g->GetVertex(_target));
-
-  for(size_t i = 0; i < intermediates.size() - 1; ++i)
-    totalDistance += Distance(intermediates[i], intermediates[i + 1]);
-
-  return totalDistance;
+  const GroupCfgType origin(_c.GetGroupRoadmap(), true);
+  ScaleCfg(_length, _c, origin);
 }
 
 /*----------------------------------------------------------------------------*/
-
-
-template <typename MPTraits>
-void
-DistanceMetricMethod<MPTraits>::
-SetActiveRobots(const Formation& _robots) {
-  m_activeRobots = _robots;
-
-  // Sort it for easy equality checking (order ultimately doesn't matter though)
-  if(m_activeRobots.size() > 1)
-    std::sort(m_activeRobots.begin(), m_activeRobots.end());
-}
-
-
-template <typename MPTraits>
-typename DistanceMetricMethod<MPTraits>::Formation
-DistanceMetricMethod<MPTraits>::
-GetActiveRobots() const noexcept {
-  return m_activeRobots;
-}
-
 
 #endif

@@ -83,10 +83,10 @@ class MPProblem final
     size_t NumRobots() const noexcept;
 
     /// Get a specific robot by index.
-    Robot* GetRobot(size_t _index) const;
+    Robot* GetRobot(const size_t _index) const noexcept;
 
     /// Get a specific robot by label.
-    Robot* GetRobot(const std::string& _label) const;
+    Robot* GetRobot(const std::string& _label) const noexcept;
 
     /// Get all robots in this problem.
     const std::vector<std::unique_ptr<Robot>>& GetRobots() const noexcept;
@@ -96,10 +96,10 @@ class MPProblem final
     size_t NumRobotGroups() const noexcept;
 
     /// Get a specific robot group by index.
-    RobotGroup* GetRobotGroup(size_t _index) const;
+    RobotGroup* GetRobotGroup(const size_t _index) const noexcept;
 
     /// Get a specific robot group by group's label.
-    RobotGroup* GetRobotGroup(const std::string& _label) const;
+    RobotGroup* GetRobotGroup(const std::string& _label) const noexcept;
 
     /// Get all robot groups in this problem.
     const std::vector<std::unique_ptr<RobotGroup>>& GetRobotGroups() const noexcept;
@@ -168,9 +168,11 @@ class MPProblem final
 
     /// Return the list of handoff templates defined in the problem
     /// @return vector of handoff templates
-    std::vector<std::unique_ptr<InteractionInformation>>& GetInteractionInformations();
+    std::vector<std::unique_ptr<InteractionInformation>>&
+        GetInteractionInformations();
 
     ///@}
+
   protected:
 
     ///@name Construction Helpers
@@ -178,7 +180,7 @@ class MPProblem final
 
     /// Helper for parsing XML nodes.
     /// @param _node The child node to be parsed.
-    bool ParseChild(XMLNode& _node);
+    void ParseChild(XMLNode& _node);
 
     /// Create a pseudo-point robot.
     void MakePointRobot();
@@ -188,16 +190,21 @@ class MPProblem final
     ///@{
 
     std::unique_ptr<Environment> m_environment;    ///< The planning environment.
+
     std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
-    std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot group for problem.
+    std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot groups.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
+
     /// The dynamic obstacles in our problem.
     std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles;
+
     /// All handoff templates for a problem.
     std::vector<std::unique_ptr<InteractionInformation>> m_interactionInformations;
+
     /// Map the tasks assigned to each robot.
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;
-    std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>> m_groupTaskMap;
+    std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>>
+        m_groupTaskMap;
 
     ///@}
     ///@name Files

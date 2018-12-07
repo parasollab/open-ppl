@@ -25,7 +25,6 @@ class LazyToggleQuery : public LazyQuery<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
     typedef typename MPTraits::GoalTracker  GoalTracker;
     typedef typename GoalTracker::VIDSet    VIDSet;
@@ -204,7 +203,7 @@ LazyToggleQuery<MPTraits>::
 LazyConnect(const CfgType& _cfg) {
   // Add the configuration to the roadmap.
   auto roadmap = this->GetRoadmap();
-  const VID newVID = roadmap->GetGraph()->AddVertex(_cfg);
+  const VID newVID = roadmap->AddVertex(_cfg);
   if(this->m_debug)
     std::cout << "\t\tAdding a free node " << newVID << " to roadmap:"
               << "\n\t\t" << _cfg.PrettyPrint()
@@ -221,12 +220,11 @@ void
 LazyToggleQuery<MPTraits>::
 ToggleConnect(const CfgType& _cfg) {
   auto blockedMap = this->GetBlockRoadmap();
-  auto g = blockedMap->GetGraph();
 
   // Add the new node to the blocked map if not already there.
-  if(!g->IsVertex(_cfg))
+  if(!blockedMap->IsVertex(_cfg))
     return;
-  const VID newVID = g->AddVertex(_cfg);
+  const VID newVID = blockedMap->AddVertex(_cfg);
 
   const size_t size = m_q.size();
   auto vc = this->GetValidityChecker(this->m_vcLabel);
@@ -258,7 +256,7 @@ Reachable(const VID _start, const VIDSet& _goals) const {
   if(this->m_debug)
     cout << "\tChecking connectivity..." << endl;
 
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   auto stats = this->GetStatClass();
 
   MethodTimer mt(stats, "LazyToggleQuery::Reachable");

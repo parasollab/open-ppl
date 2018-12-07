@@ -1,14 +1,15 @@
-#ifndef EUCLIDEAN_DISTANCE_H_
-#define EUCLIDEAN_DISTANCE_H_
+#ifndef PMPL_EUCLIDEAN_DISTANCE_H_
+#define PMPL_EUCLIDEAN_DISTANCE_H_
 
 #include "MinkowskiDistance.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup DistanceMetrics
-/// @brief Measure the standard Euclidean distance between two configurations.
+/// Measure the standard Euclidean distance between two configurations.
 ///
-/// Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5
-/// This allows us to use Minkowski Distance to calculate Euclidean Distance
+/// Euclidean Distance is Minkowski Distance where r1=r2=2, r3=0.5.
+///
+/// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class EuclideanDistance : public MinkowskiDistance<MPTraits> {
@@ -20,8 +21,10 @@ class EuclideanDistance : public MinkowskiDistance<MPTraits> {
 
     EuclideanDistance(bool _normalize = false);
     EuclideanDistance(XMLNode& _node);
+    virtual ~EuclideanDistance() = default;
 
     ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/

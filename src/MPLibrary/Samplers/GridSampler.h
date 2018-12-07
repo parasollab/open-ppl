@@ -58,7 +58,7 @@ class GridSampler : public SamplerMethod<MPTraits> {
         OutputIterator _collision) override;
 
     /// Not implemented for this method.
-    virtual void Sample(InputIterator _first, InputIterator _last,
+    virtual void Filter(InputIterator _first, InputIterator _last,
         size_t _maxAttempts, const Boundary* const _boundary,
         OutputIterator _result, OutputIterator _collision) override;
 
@@ -216,11 +216,10 @@ Sample(size_t _numNodes, size_t _maxAttempts,
 template <typename MPTraits>
 void
 GridSampler<MPTraits>::
-Sample(InputIterator _first, InputIterator _last,
+Filter(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
     OutputIterator _result, OutputIterator _collision) {
-  throw RunTimeException(WHERE, "GridSampler does not support the filtering "
-      "version of Sample.");
+  throw RunTimeException(WHERE) << "Not supported for GridSampler.";
 }
 
 /*-------------------------------- Helpers -----------------------------------*/

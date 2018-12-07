@@ -28,15 +28,7 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
 
-    DisassemblyParallel(
-        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::string _vc = "", const std::string _singleVc = "",
-        const std::string _lp = "", const std::string _ex = "",
-        const std::string _dm = "",
-        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
+    DisassemblyParallel();
     DisassemblyParallel(XMLNode& _node);
     virtual ~DisassemblyParallel() {}
 
@@ -83,14 +75,7 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyParallel<MPTraits>::
-DisassemblyParallel(
-    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
-    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
-    const std::string _vc, const std::string _singleVc,
-    const std::string _lp, const std::string _ex,
-    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
-    DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
-      _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
+DisassemblyParallel() {
   this->SetName("DisassemblyParallel");
 }
 

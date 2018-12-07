@@ -39,7 +39,7 @@
 
     <RobotGroup label="robotGroup" robotLabels="0 1 2 3 4 5"/>
 
-    <GroupTask label="groupTask" robotGroupLabel="robotGroup">
+    <GroupTask label="groupTask" group="robotGroup">
       <Task label="task0" robot="0">
         <StartConstraints> <CSpaceConstraint point="-0.009666 0.4723035 0.476017 0 0 0"/> </StartConstraints>
       </Task>
@@ -144,7 +144,7 @@
       <DisassemblyParallel label="DisassemblyParallel" debug="true"
         vcLabel="pqp" singleVcLabel="TwoBodyVC"
         lpLabel="sl" exLabel="BERO" dmLabel="euclidean"
-        contactDist="0.000001" neighborDist="1" 
+        contactDist="0.000001" neighborDist="1"
         printFullPath="true" keepBestRRTPathOnFailure="true"
         stateMELabel="stateEval"
         removePos="-30" subassemblyPos="30" subassemblyOffset="20"

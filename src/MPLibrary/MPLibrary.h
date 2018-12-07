@@ -279,10 +279,10 @@ class MPLibraryType final
     void SetMPSolution(MPSolution* _sol) noexcept;
 
     RoadmapType*      GetRoadmap(Robot* const _r = nullptr) const noexcept;
-    GroupRoadmapType* GetGroupRoadmap() const noexcept;
+    GroupRoadmapType* GetGroupRoadmap(RobotGroup* const _g = nullptr) const noexcept;
     RoadmapType*      GetBlockRoadmap(Robot* const _r = nullptr) const noexcept;
     Path*             GetPath(Robot* const _r = nullptr) const noexcept;
-    GroupPath*        GetGroupPath() const noexcept;
+    GroupPath*        GetGroupPath(RobotGroup* const _g = nullptr) const noexcept;
     LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const noexcept;
 
     GoalTracker*      GetGoalTracker() const noexcept;
@@ -460,6 +460,7 @@ MPLibraryType() {
   m_mpStrategies = new MPStrategySet(this,
       typename MPTraits::MPStrategyMethodList(), "MPStrategies");
   m_mpTools = new MPTools(this);
+  m_goalTracker.reset(new GoalTracker(this));
 }
 
 
@@ -492,8 +493,13 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Initialize() {
-  // Create the goal tracker.
-  m_goalTracker.reset(new GoalTracker(GetRoadmap(), GetTask()));
+  // Create the default goal map.
+  if(this->GetTask())
+    m_goalTracker->AddMap(GetRoadmap(), GetTask());
+  else if(this->GetGroupTask())
+    m_goalTracker->AddMap(GetGroupRoadmap(), GetGroupTask());
+  else
+    throw RunTimeException(WHERE) << "No current task was set.";
 
   m_distanceMetrics->Initialize();
   m_validityCheckers->Initialize();
@@ -516,7 +522,7 @@ void
 MPLibraryType<MPTraits>::
 Uninitialize() {
   // Clear goal tracker.
-  m_goalTracker.reset(nullptr);
+  m_goalTracker->Clear();
 
   // Clear group hooks.
   GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
@@ -525,7 +531,7 @@ Uninitialize() {
 
   // Also clear hooks for the individual robot if it exists:
   if(m_solution->GetRobot())
-    this->GetRoadmap()->GetGraph()->ClearHooks();
+    this->GetRoadmap()->ClearHooks();
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -761,8 +767,8 @@ template <typename MPTraits>
 inline
 typename MPTraits::GroupRoadmapType*
 MPLibraryType<MPTraits>::
-GetGroupRoadmap() const noexcept {
-  return m_solution->GetGroupRoadmap();
+GetGroupRoadmap(RobotGroup* const _g) const noexcept {
+  return m_solution->GetGroupRoadmap(_g);
 }
 
 
@@ -786,8 +792,8 @@ GetPath(Robot* const _r) const noexcept {
 template <typename MPTraits>
 typename MPTraits::GroupPathType*
 MPLibraryType<MPTraits>::
-GetGroupPath() const noexcept {
-  return m_solution->GetGroupPath();
+GetGroupPath(RobotGroup* const _g) const noexcept {
+  return m_solution->GetGroupPath(_g);
 }
 
 

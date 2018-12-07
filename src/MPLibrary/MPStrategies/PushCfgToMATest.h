@@ -236,7 +236,7 @@ Iterate() {
       }
 
       //add valid sample to roadmap
-      this->GetRoadmap()->GetGraph()->AddVertex(witness);
+      this->GetRoadmap()->AddVertex(witness);
     }
     else {
       //Finally, push our free cfg to the MA:
@@ -260,7 +260,7 @@ Iterate() {
       }
       stats->StopClock("Push to MA Clock");
       //add valid sample to roadmap
-      this->GetRoadmap()->GetGraph()->AddVertex(cfg);
+      this->GetRoadmap()->AddVertex(cfg);
     }
 
     ++numAdded;

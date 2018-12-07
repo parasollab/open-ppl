@@ -32,7 +32,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -236,10 +235,11 @@ Initialize() {
       std::cout << "Loading roadmap from \"" << m_inputMapFilename << "\"."
                 << std::endl;
 
-    r->Read(m_inputMapFilename.c_str());
+    //r->Read(m_inputMapFilename);
+    Read(r, m_inputMapFilename);
 
-    GraphType* g = r->GetGraph();
-    for(typename GraphType::VI vi = g->begin(); vi != g->end(); ++vi)
+    auto g = r;
+    for(auto vi = g->begin(); vi != g->end(); ++vi)
       VDAddNode(g->GetVertex(vi));
     if(this->m_debug)
       std::cout << "Roadmap has " << g->get_num_vertices()
@@ -250,7 +250,7 @@ Initialize() {
 
   // Hacks for fixing the base.
   if(m_fixBase) {
-    auto g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     auto goalTracker = this->GetGoalTracker();
     const auto& startVIDs = goalTracker->GetStartVIDs();
     if(startVIDs.size() != 1)
@@ -298,7 +298,7 @@ Iterate() {
     case Connecting:
       {
         if(m_startAt == Connecting) {
-          GraphType* g = this->GetRoadmap()->GetGraph();
+          auto g = this->GetRoadmap();
           Connect(g->begin(), g->end(), m_connectorLabels);
           //For spark prm to grow RRT at difficult nodes
           CheckNarrowPassageSamples(g->begin(), g->end());
@@ -312,7 +312,7 @@ Iterate() {
 
     case ConnectingComponents:
       {
-        GraphType* g = this->GetRoadmap()->GetGraph();
+        auto g = this->GetRoadmap();
         Connect(g->begin(), g->end(), m_componentConnectorLabels);
       }
 
@@ -333,7 +333,7 @@ Sample(OutputIterator _out) {
     std::cout << "Sampling new nodes..." << std::endl;
 
   MethodTimer mt(this->GetStatClass(), "BasicPRM::Sample");
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   //const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
   auto boundary = m_samplingBoundary.get() ? m_samplingBoundary.get()
                                         : this->GetEnvironment()->GetBoundary();
@@ -382,7 +382,7 @@ Connect(InputIterator _first, InputIterator _last,
   }
 
   if(this->m_debug) {
-    GraphType* g = this->GetRoadmap()->GetGraph();
+    auto g = this->GetRoadmap();
     std::cout << "\tGraph has "
               << g->get_num_edges() << " edges and "
               << g->GetNumCCs() << " connected components."
@@ -405,7 +405,7 @@ CheckNarrowPassageSamples(InputIterator _first, InputIterator _last) {
               << std::endl;
 
   for(; _first != _last; _first++) {
-    const VID vid = this->GetRoadmap()->GetGraph()->GetVID(_first);
+    const VID vid = this->GetRoadmap()->GetVID(_first);
     if(this->CheckNarrowPassageSample(vid))
       break;
   }

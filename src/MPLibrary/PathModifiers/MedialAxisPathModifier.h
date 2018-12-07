@@ -20,7 +20,6 @@ class MedialAxisPathModifier : public PathModifierMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -136,8 +135,7 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
     path = _path;
 
   //Ensure path comes from the roadmap
-  GraphType* graph = _graph->GetGraph();
-  vector<VID> pathVIDs = this->GetPathVIDs(path, graph);
+  vector<VID> pathVIDs = this->GetPathVIDs(path, _graph);
   if(pathVIDs.empty())
     throw PMPLException("Path Modification", WHERE,
         "pathVIDs in " + this->GetNameAndLabel() + " is empty.");
@@ -145,7 +143,7 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
   //Get Cfgs from pathVIDs
   vector<CfgType> pushed;
   for(auto vit = pathVIDs.begin(); vit != pathVIDs.end(); ++vit)
-    pushed.push_back(graph->GetVertex(*vit));
+    pushed.push_back(_graph->GetVertex(*vit));
 
   //Push all the nodes of the path
   MedialAxisUtility<MPTraits>& mau = malp->GetMedialAxisUtility();
@@ -216,8 +214,8 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
         //and back. This FCM should not fail, unless envLP is very badly chosen
         //Copying the old configurations
         int i = cit1 - pushed.begin();
-        CfgType oldCfg1 = graph->GetVertex(pathVIDs[i]);
-        CfgType oldCfg2 = graph->GetVertex(pathVIDs[i+1]);
+        CfgType oldCfg1 = _graph->GetVertex(pathVIDs[i]);
+        CfgType oldCfg2 = _graph->GetVertex(pathVIDs[i+1]);
 
         if(lp->IsConnected(*cit1, oldCfg1, &tmpOutput,
               posRes, oriRes, true, true)) {

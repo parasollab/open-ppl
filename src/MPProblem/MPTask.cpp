@@ -27,9 +27,11 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
       "robot assigned to this task.");
   m_robot = _problem->GetRobot(robotLabel);
 
+  // Read the required capability, if any.
   m_capability = _node.Read("capability", false, "",
       "Indicates the capability of the robot performing the task.");
-  std::transform(m_capability.begin(), m_capability.end(), m_capability.begin(), ::tolower);
+  std::transform(m_capability.begin(), m_capability.end(), m_capability.begin(),
+      ::tolower);
 
   // Parse constraints.
   for(auto& child : _node) {
@@ -129,6 +131,34 @@ SetLabel(const std::string& _label) noexcept {
   m_label = _label;
 }
 
+
+nonstd::status&
+MPTask::
+GetStatus() noexcept {
+  return m_status;
+}
+
+
+const nonstd::status&
+MPTask::
+GetStatus() const noexcept {
+  return m_status;
+}
+
+
+bool
+MPTask::
+Empty() const noexcept {
+  return !m_startConstraint.get() and m_goalConstraints.empty();
+}
+
+
+size_t
+MPTask::
+GetNumGoals() const noexcept {
+  return m_goalConstraints.size();
+}
+
 /*-------------------------- Constraint Accessors ----------------------------*/
 
 void
@@ -149,27 +179,6 @@ void
 MPTask::
 AddGoalConstraint(std::unique_ptr<Constraint>&& _c) {
   m_goalConstraints.push_back(std::move(_c));
-}
-
-
-void
-MPTask::
-SetArrivalTime(double _arrivalTime){
-  m_arrivalTime = _arrivalTime;
-}
-
-
-void
-MPTask::
-SetStartTime(double _startTime){
-  m_startTime = _startTime;
-}
-
-
-void
-MPTask::
-SetCapability(std::string _capability){
-  m_capability = _capability;
 }
 
 
@@ -194,118 +203,97 @@ GetGoalConstraints() const noexcept {
 }
 
 
-const double
+void
 MPTask::
-GetArrivalTime() const noexcept {
-  return m_arrivalTime;
+SetCapability(const std::string& _capability) {
+  m_capability = _capability;
 }
 
 
-const double
+const std::string&
 MPTask::
-GetStartTime() const noexcept {
-  return m_startTime;
-}
-
-
-std::string
-MPTask::
-GetCapability() const {
+GetCapability() const noexcept {
   return m_capability;
 }
 
-/*------------------------------- Task Status --------------------------------*/
+/*------------------------------ Time Accessors ------------------------------*/
 
-bool
+void
 MPTask::
-IsCompleted() const {
-  return m_status == Complete;
+SetEstimatedStartTime(const double _time) noexcept {
+  m_startTime = _time;
 }
 
 
 void
 MPTask::
-SetCompleted() {
-  m_status = Complete;
+SetEstimatedCompletionTime(const double _time) noexcept {
+  m_finishTime = _time;
 }
 
 
-bool
+double
 MPTask::
-IsStarted() const {
-  return m_status == InProgress or IsCompleted();
+GetEstimatedCompletionTime() const noexcept {
+  return m_finishTime;
 }
 
 
-void
+double
 MPTask::
-SetStarted() {
-  if(!IsStarted())
-    m_status = InProgress;
-}
-
-
-void
-MPTask::
-Reset() {
-  m_status = OnDeck;
+GetEstimatedStartTime() const noexcept {
+  return m_startTime;
 }
 
 /*---------------------------- Constraint Evaluation -------------------------*/
 
-MPTask::Status
-MPTask::
-Evaluate(const std::vector<Cfg>& _p) const {
-  // If start constraints are not satisfied, this task is still on deck.
-  if(m_status == OnDeck and !EvaluateStartConstraint(_p))
-    return OnDeck;
-
-  // If path constraints aren't satisfied, this is an invalid path.
-  if(!EvaluatePathConstraints(_p))
-    return Invalid;
-
-  // If goal constraints are satisfied, task as finished. Otherwise, it's in
-  // progress.
-  if(EvaluateGoalConstraints(_p))
-    return Complete;
-  else
-    return InProgress;
-}
-
-/*--------------------------- Evaluation Helpers -----------------------------*/
-
 bool
 MPTask::
-EvaluateStartConstraint(const std::vector<Cfg>& _p) const {
-  const bool ok = !m_startConstraint.get()
-               or m_startConstraint->Satisfied(_p.front());
-  if(ok and m_status == OnDeck)
-    m_status = InProgress;
-  return ok;
+EvaluateCapability(const Robot* const _r) const {
+  return m_capability.empty()
+      or m_capability == _r->GetCapability();
 }
 
 
 bool
 MPTask::
-EvaluatePathConstraints(const std::vector<Cfg>& _p) const {
-  /// @TODO Consider some kind of caching mechanism to avoid extraneous
-  ///       recomputation.
-  for(const auto& constraint : m_pathConstraints){
-    for(const auto& cfg : _p){
-      if(!constraint->Satisfied(cfg))
-        return false;
-    }
-  }
-  return true;
+EvaluateStartConstraints(const Cfg& _cfg) const {
+  return !m_startConstraint.get()
+      or m_startConstraint->Satisfied(_cfg);
 }
 
 
 bool
 MPTask::
-EvaluateGoalConstraints(const std::vector<Cfg>& _p) const {
-  const auto& cfg = _p.back();
-  for(const auto& constraint : m_goalConstraints)
-    if(!constraint->Satisfied(cfg))
+EvaluatePathConstraints(const Cfg& _cfg) const {
+  for(const auto& constraint : m_pathConstraints)
+    if(!constraint->Satisfied(_cfg))
       return false;
   return true;
 }
+
+
+bool
+MPTask::
+EvaluateGoalConstraints(const Cfg& _cfg) const {
+  if(m_goalConstraints.empty())
+    return true;
+  return EvaluateGoalConstraints(_cfg, m_goalConstraints.size() - 1);
+}
+
+
+bool
+MPTask::
+EvaluateGoalConstraints(const Cfg& _cfg, const size_t _index) const {
+  try {
+    const auto& constraint = m_goalConstraints.at(_index);
+    return constraint->Satisfied(_cfg);
+  }
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Request for goal constraint " << _index
+                                  << " in a task with only "
+                                  << m_goalConstraints.size() << " goals.";
+  }
+}
+
+/*----------------------------------------------------------------------------*/

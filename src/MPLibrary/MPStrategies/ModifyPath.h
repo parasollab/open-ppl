@@ -81,7 +81,8 @@ Initialize() {
       throw ParseException(WHERE,
           "Map file '" + m_mapFile + "' does not exist.");
 
-    this->GetRoadmap()->Read(m_mapFile);
+    //this->GetRoadmap()->Read(m_mapFile);
+    Read(this->GetRoadmap(), m_mapFile);
   }
 }
 

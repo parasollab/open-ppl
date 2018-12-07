@@ -1,5 +1,5 @@
-#ifndef GROUP_LOCAL_PLAN_H_
-#define GROUP_LOCAL_PLAN_H_
+#ifndef PMPL_GROUP_LOCAL_PLAN_H_
+#define PMPL_GROUP_LOCAL_PLAN_H_
 
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/GroupCfg.h"
@@ -17,6 +17,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// A local plan for multiple robots. Each robot will be executing this motion
 /// simultaneously, and the total time is the same for each robot.
+///
+/// @todo Remove the 'active robots'. All robots are always active in a group
+///       edge. We do need to retain formation data for reconstructing edges.
+/// @todo Remove the 'skip edge' stuff. There is no such thing as a skipped
+///       edge: the disassembly code needs to be adjusted to only use the edges
+///       they want.
+/// @todo Rework so that we only need a robot group to construct this, in which
+///       case it will have all local edges. It should only get tied to a
+///       roadmap with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename CfgType>
 class GroupLocalPlan final {
@@ -26,21 +35,22 @@ class GroupLocalPlan final {
     ///@name Local Types
     ///@{
 
-    typedef double                                         EdgeWeight;
-    typedef DefaultWeight<CfgType>                         IndividualEdge;
-    typedef GroupRoadmap<GroupCfg, GroupLocalPlan>         GroupRoadmapType;
-    typedef std::vector<GroupCfg>                          GroupCfgPath;
-    typedef std::vector<size_t>                            Formation;
-    typedef size_t                                         GroupVID;
+    typedef double                                  EdgeWeight;
+    typedef DefaultWeight<CfgType>                  IndividualEdge;
+    typedef GroupRoadmap<GroupCfg, GroupLocalPlan>  GroupRoadmapType;
+    typedef std::vector<GroupCfg>                   GroupCfgPath;
+    typedef std::vector<size_t>                     Formation;
+    typedef size_t                                  GroupVID;
 
-    typedef stapl::edge_descriptor_impl<size_t> ED;
+    typedef stapl::edge_descriptor_impl<size_t>     ED;
 
     ///@}
     ///@name Construction
     ///@{
 
-    GroupLocalPlan(GroupRoadmapType* const _g = nullptr, const std::string& _lpLabel = "",
-                   const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
+    GroupLocalPlan(GroupRoadmapType* const _g = nullptr,
+        const std::string& _lpLabel = "",
+        const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
 
     ///@}
     ///@name Ordering and Equality
@@ -60,7 +70,6 @@ class GroupLocalPlan final {
     EdgeWeight GetWeight() const noexcept;
 
     void SetWeight(const EdgeWeight _w) noexcept;
-
 
     ///@}
     ///@name Misc. Interface Functions
@@ -83,16 +92,9 @@ class GroupLocalPlan final {
     std::string GetLPLabel() const noexcept;
     void SetLPLabel(const std::string _label) noexcept;
 
-
-    Cfg GetRobotStartCfg(const size_t _index) const;
-
     ///@}
     ///@name Individual Local Plans
     ///@{
-
-    // TODO: right now the individual roadmaps are only getting one direction of
-    //       edges in SetEdge. This should be updated in the future but is fine
-    //       for now.
 
     /// Set the individual edge for a robot to a local copy of an edge.
     /// @param _robot The robot which the edge refers to.
@@ -170,8 +172,6 @@ class GroupLocalPlan final {
 
     GroupCfgPath m_intermediates; ///< Group cfg intermediates.
 
-    GroupVID m_startCfgVID; ///< Not yet used (will be for handling intermediates)
-
     // The ordered formation for this local plan with respect to the robots
     // in m_groupMap. The first robot in the list is assumed to be the leader.
     std::vector<size_t> m_activeRobots;
@@ -191,9 +191,9 @@ class GroupLocalPlan final {
 template <typename CfgType>
 GroupLocalPlan<CfgType>::
 GroupLocalPlan(GroupRoadmapType* const _g, const std::string& _lpLabel,
-               const double _w, const GroupCfgPath& _intermediates) : m_groupMap(_g),
-               m_lpLabel(_lpLabel), m_weight(_w), m_intermediates(_intermediates),
-               m_startCfgVID(INVALID_VID) {
+    const double _w, const GroupCfgPath& _intermediates)
+    : m_groupMap(_g), m_lpLabel(_lpLabel), m_weight(_w),
+      m_intermediates(_intermediates)  {
   if(m_groupMap)
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
   else
@@ -264,7 +264,6 @@ SetWeight(const EdgeWeight _w) noexcept {
   m_weight = _w;
 }
 
-
 /*------------------------- Misc Interface Functions -------------------------*/
 
 template <typename CfgType>
@@ -274,12 +273,14 @@ SetSkipEdge() noexcept {
   m_skipEdge = true;
 }
 
+
 template <typename CfgType>
 bool
 GroupLocalPlan<CfgType>::
 SkipEdge() const noexcept {
   return m_skipEdge;
 }
+
 
 template <typename CfgType>
 void
@@ -288,13 +289,14 @@ SetActiveRobots(const std::vector<size_t>& _indices) {
   m_activeRobots = _indices;
 }
 
-template <typename CfgType>
 
+template <typename CfgType>
 std::vector<size_t>
 GroupLocalPlan<CfgType>::
 GetActiveRobots() const noexcept {
   return m_activeRobots;
 }
+
 
 template <typename CfgType>
 void
@@ -306,12 +308,14 @@ Clear() noexcept {
   m_intermediates.clear();
 }
 
+
 template <typename CfgType>
 typename GroupLocalPlan<CfgType>::GroupCfgPath&
 GroupLocalPlan<CfgType>::
 GetIntermediates() noexcept {
   return m_intermediates;
 }
+
 
 template <typename CfgType>
 const typename GroupLocalPlan<CfgType>::GroupCfgPath&
@@ -320,12 +324,14 @@ GetIntermediates() const noexcept {
   return m_intermediates;
 }
 
+
 template <typename CfgType>
 void
 GroupLocalPlan<CfgType>::
 SetIntermediates(const GroupCfgPath& _cfgs) {
   m_intermediates = _cfgs;
 }
+
 
 template <typename CfgType>
 std::string
@@ -334,23 +340,13 @@ GetLPLabel() const noexcept {
   return m_lpLabel;
 }
 
+
 template <typename CfgType>
 void
 GroupLocalPlan<CfgType>::
 SetLPLabel(const std::string _label) noexcept {
   m_lpLabel = _label;
 }
-
-template <typename CfgType>
-Cfg
-GroupLocalPlan<CfgType>::
-GetRobotStartCfg(const size_t _index) const {
-  if(m_startCfgVID == INVALID_VID)
-    throw RunTimeException(WHERE, "Start cfg VID not set!");
-
-  return m_groupMap->GetVertex(m_startCfgVID).GetRobotCfg(_index);
-}
-
 
 /*-------------------------- Individual Local Plans --------------------------*/
 
@@ -417,20 +413,19 @@ GetEdge(Robot* const _robot) const {
   const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
 
   const ED& descriptor = m_edges.at(index);
-  if(descriptor == INVALID_ED) {
-    try {
-      return &m_localEdges.at(index);
-    }
-    catch(const std::out_of_range&) {
-      std::ostringstream oss;
-      oss << "Requested individual edge for robot " << index << " (" << _robot
-          << "), which is either stationary for this LP or not in the group.";
-      throw RunTimeException(WHERE, oss.str());
-    }
-  }
+  if(descriptor != INVALID_ED)
+    return &m_groupMap->GetRoadmap(index)->GetEdge(descriptor.source(),
+                                                   descriptor.target());
 
-  return &m_groupMap->GetRoadmap(index)->GetEdge(descriptor.source(),
-                                                 descriptor.target());
+  try {
+    return &m_localEdges.at(index);
+  }
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Requested individual edge for robot "
+                                  << index << " (" << _robot << "), which is"
+                                  << " either stationary for this LP or not "
+                                  << "in the group.";
+  }
 }
 
 
@@ -465,8 +460,6 @@ GetNumRobots() const noexcept {
   return m_groupMap->GetGroup()->Size();
 }
 
-
-
 /*---------------------- stapl graph interface helpers -----------------------*/
 
 template <typename CfgType>
@@ -484,7 +477,6 @@ GroupLocalPlan<CfgType>::
 Weight() const noexcept {
   return GetWeight();
 }
-
 
 /*-------------------------------- Iteration ---------------------------------*/
 
@@ -523,8 +515,8 @@ end() const noexcept {
 /*------------------------------ Input/Output --------------------------------*/
 
 template<typename CfgType>
-std::ostream& operator<<(std::ostream& _os,
-                         const GroupLocalPlan<CfgType>& _groupLP) {
+std::ostream&
+operator<<(std::ostream& _os, const GroupLocalPlan<CfgType>& _groupLP) {
   //For the group edges, the only caveat is that the intermediates need to line up.
   // Each individual edge within a GroupLocalPlan should have the same number of
   // intermediates (for now) so that we can do this easily. Then for a

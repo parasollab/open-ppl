@@ -209,7 +209,7 @@ Iterate() {
 
   // If the next node is valid, add to free roadmap.
   if(valid) {
-    const VID vid = this->GetRoadmap()->GetGraph()->AddVertex(cfg);
+    const VID vid = this->GetRoadmap()->AddVertex(cfg);
 
     ConnectHelper(true, vid);
 
@@ -218,7 +218,7 @@ Iterate() {
   // If the next node is invalid, add to obstacle roadmap. Toggle validity
   // while connecting.
   else {
-    const VID vid = this->GetBlockRoadmap()->GetGraph()->AddVertex(cfg);
+    const VID vid = this->GetBlockRoadmap()->AddVertex(cfg);
 
     this->GetMPLibrary()->ToggleValidity();
     ConnectHelper(false, vid);

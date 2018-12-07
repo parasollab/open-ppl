@@ -245,7 +245,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 
   // add DrawableRoadmap to be drawn
   m_roadmapVisualID = Simulation::Get()->AddRoadmap(
-      m_solution->GetRoadmap()->GetGraph(), glutils::color::green);
+      m_solution->GetRoadmap(), glutils::color::green);
 
   // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());
@@ -278,7 +278,7 @@ SelectTask() {
 
   // Otherwise, choose the next one.
   SetTask(tasks.front());
-  GetTask()->SetStarted();
+  GetTask()->GetStatus().start();
   return true;
 }
 

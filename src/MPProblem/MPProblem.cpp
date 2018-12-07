@@ -233,18 +233,18 @@ NumRobots() const noexcept {
 
 Robot*
 MPProblem::
-GetRobot(size_t _index) const {
+GetRobot(const size_t _index) const noexcept {
   if(_index >= m_robots.size())
-    throw RunTimeException(WHERE, "Requested Robot " + std::to_string(_index) +
-        ", but only " + std::to_string(m_robots.size()) +
-        " robots are available.");
+    throw RunTimeException(WHERE) << "Requested Robot " << _index
+                                  << ", but only " << m_robots.size()
+                                  << " robots are available.";
   return m_robots[_index].get();
 }
 
 
 Robot*
 MPProblem::
-GetRobot(const std::string& _label) const {
+GetRobot(const std::string& _label) const noexcept {
   if(_label == "point")
     return m_pointRobot.get();
 
@@ -252,9 +252,8 @@ GetRobot(const std::string& _label) const {
     if(robot->GetLabel() == _label)
       return robot.get();
 
-  throw RunTimeException(WHERE, "Requested Robot with label '" + _label + "', "
-                                "but no such robot was found.");
-  return nullptr;
+  throw RunTimeException(WHERE) << "No robot found with label '" << _label
+                                << "'.";
 }
 
 
@@ -274,25 +273,24 @@ NumRobotGroups() const noexcept {
 
 RobotGroup*
 MPProblem::
-GetRobotGroup(size_t _index) const {
+GetRobotGroup(const size_t _index) const noexcept {
   if(_index >= m_robotGroups.size())
-    throw RunTimeException(WHERE, "Requested Robot " + std::to_string(_index) +
-        ", but only " + std::to_string(m_robots.size()) +
-        " robots are available.");
+    throw RunTimeException(WHERE) << "Requested robot group " << _index
+                                  << ", but only " << m_robotGroups.size()
+                                  << " groups are available.";
   return m_robotGroups[_index].get();
 }
 
 
 RobotGroup*
 MPProblem::
-GetRobotGroup(const std::string& _label) const {
+GetRobotGroup(const std::string& _label) const noexcept {
   for(auto& group : m_robotGroups)
     if(group->GetLabel() == _label)
       return group.get();
 
-  throw RunTimeException(WHERE, "Requested Robot Group with label '" + _label +
-                                "', but no such robot was found.");
-  return nullptr;
+  throw RunTimeException(WHERE) << "No robot group found with label '" << _label
+                                << "'.";
 }
 
 
@@ -315,7 +313,7 @@ GetTasks(Robot* const _robot) const noexcept {
   std::vector<std::shared_ptr<MPTask>> output;
 
   for(const auto& task : tasks)
-    if(!task->IsCompleted())
+    if(!task->GetStatus().is_complete())
       output.push_back(task);
 
   return output;
@@ -330,7 +328,7 @@ GetTasks(RobotGroup* const _group) const noexcept {
   std::vector<std::shared_ptr<GroupTask>> output;
 
   for(const auto& task : tasks)
-    if(!task->IsCompleted())
+    if(!task->GetStatus().is_complete())
       output.push_back(task);
 
   return output;
@@ -395,29 +393,26 @@ GetInteractionInformations() {
 
 /*---------------------------- Construction Helpers --------------------------*/
 
-bool
+void
 MPProblem::
 ParseChild(XMLNode& _node) {
+  /// @TODO We currently assume that the environment is parsed first. Need to
+  ///       make sure this always happens regardless of the XML file ordering.
   if(_node.Name() == "Environment") {
     // Ignore this node if we already have an environment.
     if(!m_environment)
       m_environment = std::unique_ptr<Environment>(new Environment(_node));
     MakePointRobot();
-    return true;
   }
   else if(_node.Name() == "Robot") {
-    /// @TODO We currently assume that the environment is parsed first. Need to
-    ///       make sure this always happens regardless of the XML file ordering.
     m_robots.emplace_back(new Robot(this, _node));
-    return true;
   }
   else if(_node.Name() == "RobotGroup") {
     m_robotGroups.emplace_back(new RobotGroup(this, _node));
-    return true;
   }
   else if(_node.Name() == "DynamicObstacle") {
-    // If this is a dynamic obstacle, get the path file name and make sure it exists.
-
+    // If this is a dynamic obstacle, get the path file name and make sure it
+    // exists.
     std::unique_ptr<Robot> robot(new Robot(this, _node));
 
     const std::string filePath = GetPathName(_node.Filename());
@@ -426,28 +421,24 @@ ParseChild(XMLNode& _node) {
     const std::string obstacleFilename = filePath + obstacleFile;
 
     vector<Cfg> path = LoadPath(obstacleFilename, robot.get());
-    m_dynamicObstacles.emplace_back(new DynamicObstacle(std::move(robot), path));
-    return true;
+    m_dynamicObstacles.emplace_back(new DynamicObstacle(std::move(robot),
+          std::move(path)));
   }
   else if(_node.Name() == "Task") {
-    const std::string label = _node.Read("robot", true, "", "Label for the robot "
-        " assigned to this task.");
-    m_taskMap[this->GetRobot(label)].emplace_back(new MPTask(this, _node));
-    return true;
+    const std::string label = _node.Read("robot", true, "",
+        "Label for the robot assigned to this task.");
+    auto robot = this->GetRobot(label);
+    m_taskMap[robot].emplace_back(new MPTask(this, _node));
   }
   else if(_node.Name() == "GroupTask") {
-    const std::string groupLabel = _node.Read("robotGroupLabel", true, "",
-        "Label for the robot group assigned to this task.");
-    m_groupTaskMap[this->GetRobotGroup(groupLabel)].emplace_back(new GroupTask(this, _node));
-    return true;
+    auto task = GroupTask::Factory(this, _node);
+    auto group = this->GetRobotGroup(task->GetRobotGroup()->GetLabel());
+    m_groupTaskMap[group].emplace_back(std::move(task));
   }
   else if(_node.Name() == "HandoffTemplate") {
     m_interactionInformations.emplace_back(std::unique_ptr<InteractionInformation>(
                                            new InteractionInformation(this, _node)));
-    return true;
   }
-  else
-    return false;
 }
 
 

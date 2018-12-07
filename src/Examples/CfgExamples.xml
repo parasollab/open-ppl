@@ -16,18 +16,15 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <!-- WARNING Support for multiple constraints is not yet implemented! -->
-    <!-- WARNING Workspace constraints are not finished and untested! -->
-    <!-- WARNING CSpace bounding box constraints are supported, but currently
-         the query method will just use the bounding box to sample a specific
-         goal configuration. -->
-
     <Task label="query" robot="boxy">
       <StartConstraints>
+        <!-- WARNING Support for multiple constraints is not yet implemented! -->
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
+        <!-- Here multiple constraints indicates a compound goal. Each constraint
+             represents a single intermediate goal. -->
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
@@ -257,7 +254,7 @@
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
         lpLabel="sl" checkIfSameCC="true"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
-        countFailures="true" fail="1" checkIfSameCC="false"/>
+        maxFailures="1" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl"

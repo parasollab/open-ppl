@@ -26,8 +26,11 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename GraphType::VID         VID;
+    typedef typename RoadmapType::VID       VID;
+
+    ///@}
+    ///@name Local Types
+    ///@{
 
     using typename SamplerMethod<MPTraits>::InputIterator;
     using typename SamplerMethod<MPTraits>::OutputIterator;
@@ -313,7 +316,7 @@ LazyInitialize() {
                                   << goalVIDs.size() << " were found.";
 
   // Get the start and goal vertices.
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   const VID startVID = *startVIDs.begin(),
             goalVID  = *goalVIDs.begin();
   const Point3d start = g->GetVertex(startVID).GetPoint(),
@@ -345,13 +348,7 @@ LazyInitialize() {
       GetBoundingSphereRadius();
 
   m_regionKit.Initialize(&m_skeleton, start, robotRadius, this->GetNameAndLabel(),
-      this->GetRoadmap()->GetGraph());
-
-//#ifdef VIZMO
-//  GetVizmo().GetEnv()->AddWorkspaceDecompositionModel(this->GetEnvironment()->
-//      GetDecomposition());
-//  GetMainWindow()->GetModelSelectionWidget()->CallResetLists();
-//#endif
+      this->GetRoadmap());
 }
 
 /*----------------------------------------------------------------------------*/

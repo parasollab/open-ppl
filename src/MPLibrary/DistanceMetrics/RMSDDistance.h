@@ -1,15 +1,16 @@
-#ifndef RMSD_DISTANCE_H_
-#define RMSD_DISTANCE_H_
+#ifndef PMPL_RMSD_DISTANCE_H_
+#define PMPL_RMSD_DISTANCE_H_
 
 #include "DistanceMetricMethod.h"
 
 #include "MPProblem/Environment/Environment.h"
 
-template <typename MPTraits> class SimilarStructureSampler;
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @todo Properly document. This looks like a very complex way to assess RMS
+///       distance between body translations.
+///
 /// @ingroup DistanceMetrics
-/// @brief TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class RMSDDistance : public DistanceMetricMethod<MPTraits> {
@@ -47,7 +48,6 @@ class RMSDDistance : public DistanceMetricMethod<MPTraits> {
 
     ///@}
 
-    friend class SimilarStructureSampler<MPTraits>;
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -71,8 +71,8 @@ template <typename MPTraits>
 double
 RMSDDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  vector<Vector3d> x = GetCoordinatesForRMSD(_c1);
-  vector<Vector3d> y = GetCoordinatesForRMSD(_c2);
+  auto x = GetCoordinatesForRMSD(_c1),
+       y = GetCoordinatesForRMSD(_c2);
   return RMSD(x,y,x.size());
 }
 
@@ -83,7 +83,7 @@ vector<Vector3d>
 RMSDDistance<MPTraits>::
 GetCoordinatesForRMSD(const CfgType& _c) {
   _c.ConfigureRobot();
-  vector<Vector3d> coordinates;
+  std::vector<Vector3d> coordinates;
   for(size_t i = 0; i < _c.GetMultiBody()->GetNumBodies(); ++i)
     coordinates.push_back(_c.GetMultiBody()->GetBody(i)->
         GetWorldTransformation().translation());

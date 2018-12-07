@@ -1,5 +1,5 @@
-#ifndef DISASSEMBLY_PARALLELIZED_SAS_H_
-#define DISASSEMBLY_PARALLELIZED_SAS_H_
+#ifndef PMPL_DISASSEMBLY_PARALLELIZED_SAS_H_
+#define PMPL_DISASSEMBLY_PARALLELIZED_SAS_H_
 
 #include "DisassemblyMethod.h"
 #include "nonstd.h"
@@ -31,15 +31,7 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::Approach        Approach;
     typedef typename DisassemblyMethod<MPTraits>::State           State;
 
-    DisassemblyParallelizedSAs(
-        const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels =
-            std::map<std::string, std::pair<size_t, size_t> >(),
-        const std::string _vc = "", const std::string _singleVc = "",
-        const std::string _lp = "", const std::string _ex = "",
-        const std::string _dm = "",
-        const std::vector<std::string>& _evaluatorLabels = std::vector<std::string>());
+    DisassemblyParallelizedSAs();
     DisassemblyParallelizedSAs(XMLNode& _node);
     virtual ~DisassemblyParallelizedSAs() {}
 
@@ -74,14 +66,7 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyParallelizedSAs<MPTraits>::
-DisassemblyParallelizedSAs(
-    const std::map<std::string, std::pair<size_t, size_t> >& _matingSamplerLabels,
-    const std::map<std::string, std::pair<size_t, size_t> >& _rrtSamplerLabels,
-    const std::string _vc, const std::string _singleVc,
-    const std::string _lp, const std::string _ex,
-    const std::string _dm, const std::vector<std::string>& _evaluatorLabels) :
-    DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
-      _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
+DisassemblyParallelizedSAs() {
   this->SetName("DisassemblyParallelizedSAs");
 }
 

@@ -101,15 +101,14 @@ Run()
   cout << endl;
 
   size_t numVerified = 0;
-  typedef typename RoadmapType::GraphType GraphType;
-  GraphType* g = m_rdmp->GetGraph();
-  for(typename GraphType::VI vi = g->begin();
+  auto g = m_rdmp;
+  for(auto vi = g->begin();
       numVerified < m_numToVerify && vi != g->end();
       ++vi, ++numVerified){
     stats->StartClock("Iteration");
     cout << "testing distances to node: " << g->GetVertex(vi) << endl;
     vector<pair<size_t, double> > d;
-    for(typename GraphType::VI vi2 = g->begin(); vi2!=g->end(); ++vi2){
+    for(auto vi2 = g->begin(); vi2!=g->end(); ++vi2){
       d.push_back(make_pair(distance(g->begin(), vi2),
             dm->Distance(g->GetVertex(vi), g->GetVertex(vi2))));
       cout << "\t" << d.back().second << endl;
@@ -128,7 +127,7 @@ Run()
   cout << endl;
 
   if(g->get_num_vertices() > 1) {
-    typename GraphType::VI vi = g->begin(), vi2 = vi+1;
+    auto vi = g->begin(), vi2 = vi+1;
     typename MPTraits::CfgType& origin = g->GetVertex(vi);
     typename MPTraits::CfgType c = g->GetVertex(vi2);
     double dist = dm->Distance(origin, c);

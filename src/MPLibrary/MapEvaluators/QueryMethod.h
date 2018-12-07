@@ -20,12 +20,16 @@
 /// construction to see if a planning task has been satisfied.
 ///
 /// The planning task is defined by the MPTask's Constraint objects. The query
-/// works on the current MPTask and aims to find a connecting path between
-/// configurations satisfying its start and goal constraints.
+/// searches the current roadmap and aims to find a connecting path between
+/// configurations satisfying the task's start and goal constraints.
 ///
 /// @note The query will consider multiple nodes satisfying the goal constraints
 ///       and quit after finding the first. This is an incomplete algorithm if
 ///       your problem has a sequence of non-point goals.
+///
+/// @todo Implement A* by accepting a distance metric label for the heuristic
+///       function, and expanding the SSSP functions to accept a binary functor
+///       heuristic function.
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,14 +41,11 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType            CfgType;
-    typedef typename MPTraits::WeightType         WeightType;
-    typedef typename MPTraits::RoadmapType        RoadmapType;
-    typedef typename MPTraits::GoalTracker        GoalTracker;
-    typedef typename RoadmapType::GraphType       GraphType;
-    typedef typename GraphType::VID               VID;
-    typedef typename GraphType::EID::edge_id_type EID;
-    typedef typename GoalTracker::VIDSet          VIDSet;
+    typedef typename MPTraits::RoadmapType          RoadmapType;
+    typedef typename RoadmapType::VID               VID;
+    typedef typename RoadmapType::EID::edge_id_type EID;
+    typedef typename MPTraits::GoalTracker          GoalTracker;
+    typedef typename GoalTracker::VIDSet            VIDSet;
 
     ///@}
     ///@name Local Types
@@ -80,6 +81,13 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Query Interface
     ///@{
 
+    /// Generate a path through the roadmap from a start node to an end node.
+    /// @param _start The start node.
+    /// @param _end The set of allowed end nodes.
+    /// @return A path of VIDs which transition from _start to the nearest node
+    ///         in _end.
+    std::vector<VID> GeneratePath(const VID _start, const VIDSet& _end);
+
     /// Set an alternate distance metric to use when searching the roadmap
     /// (instead of the saved edge weights).
     /// @param _label The Distance Metric label to use. Set to empty string to
@@ -108,11 +116,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @return True if a path from _start to one of _goals was generated.
     virtual bool PerformSubQuery(const VID _start, const VIDSet& _goal);
 
-    /// Generate a path through the roadmap from a start node to an end node.
-    /// @param _start The start node.
-    /// @param _end The end node.
-    std::vector<VID> GeneratePath(const VID _start, const VIDSet& _end);
-
     /// Determine whether a vertex is used or has been marked as ignored somehow
     /// (as in lazy query).
     /// @param _vid The vertex ID.
@@ -134,7 +137,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _targetDistance The best known distance to the target node.
     /// @return The distance to the target node via this edge, or infinity if
     ///         the edge isn't used due to lazy invalidation.
-    double StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
+    double StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
     /// Define a function for computing path weights w.r.t. dynamic obstacles.
@@ -145,7 +148,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _targetDistance The best known time to the target node.
     /// @return The time to the target node via this edge, or infinity if taking
     ///         this edge would result in a collision with dynamic obstacles.
-    double DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
+    double DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
     ///@}
@@ -222,29 +225,38 @@ QueryMethod<MPTraits>::
 operator()() {
   auto goalTracker = this->GetGoalTracker();
   const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
-  const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
-
-  if(this->m_debug)
-    std::cout << "Evaluating query, " << unreachedGoals.size()
-              << " goals not connected."
-              << std::endl;
+  auto task = this->GetTask();
+  const size_t numGoals = task->GetNumGoals();
 
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.
   auto r = this->GetRoadmap();
-  if(unreachedGoals.empty() || r != m_roadmap)
+  if(unreachedGoals.empty() or r != m_roadmap)
     Reset(r);
+
+  if(this->m_debug)
+    std::cout << "Querying roadmap for a path satisfying task '"
+              << task->GetLabel()
+              << "', " << unreachedGoals.size() << " / " << numGoals
+              << " goals not reached."
+              << "\n\tTrying to connect goal: " << m_goalIndex
+              << "\n\tUnreached goals: " << unreachedGoals
+              << std::endl;
 
   // Search for a sequential path through each task constraint in order.
   auto path = this->GetPath();
-  for(; m_goalIndex < goalConstraints.size(); ++m_goalIndex) {
+  for(; m_goalIndex < numGoals; ++m_goalIndex) {
     // If this goal constraint is unreached, the query cannot succeed.
     auto iter = std::find(unreachedGoals.begin(), unreachedGoals.end(),
         m_goalIndex);
     const bool unreached = iter != unreachedGoals.end();
-    if(unreached)
+    if(unreached) {
+      if(this->m_debug)
+        std::cout << "\tGoal " << m_goalIndex << " has no satisfying VIDs."
+                  << std::endl;
       return false;
+    }
 
     // Get the start VID for this subquery.
     const VID start = path->Empty() ? *goalTracker->GetStartVIDs().begin()
@@ -257,13 +269,13 @@ operator()() {
                                     << m_goalIndex << ".";
 
     if(this->m_debug)
-      std::cout << "Evaluating sub-query from " << start << " to " << goals
+      std::cout << "\tEvaluating sub-query from " << start << " to " << goals
                 << "." << std::endl;
 
     // Warn users if multiple goals are found.
-    if(goals.size() > 1 and goalConstraints.size() > 1)
-      std::cerr << "Warning: subquery has " << goals.size() << " possible VIDs "
-                << "for goal " << m_goalIndex << "/" << goalConstraints.size()
+    if(goals.size() > 1 and numGoals > 1)
+      std::cerr << "\tWarning: subquery has " << goals.size() << " possible VIDs "
+                << "for goal " << m_goalIndex << "/" << numGoals
                 << ". The algorithm will try its best but isn't complete for "
                 << "this case." << std::endl;
 
@@ -283,6 +295,77 @@ operator()() {
 }
 
 /*--------------------------- Query Interface --------------------------------*/
+
+template <typename MPTraits>
+std::vector<typename QueryMethod<MPTraits>::VID>
+QueryMethod<MPTraits>::
+GeneratePath(const VID _start, const VIDSet& _goals) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, "QueryMethod::GeneratePath");
+
+  if(this->m_debug)
+    std::cout << "Generating path from " << _start << " to " << _goals << "."
+              << std::endl;
+
+  // Check for trivial path.
+  if(_goals.count(_start))
+    return {_start};
+
+  stats->IncStat("Graph Search");
+
+  // Set up the termination criterion to quit early if we find a goal node.
+  SSSPTerminationCriterion<RoadmapType> termination(
+      [_goals](typename RoadmapType::vertex_iterator& _vi,
+             const SSSPOutput<RoadmapType>& _sssp) {
+        return _goals.count(_vi->descriptor()) ? SSSPTermination::EndSearch
+                                               : SSSPTermination::Continue;
+      }
+  );
+
+  // Set up the path weight function depending on whether we have any dynamic
+  // obstacles.
+  SSSPPathWeightFunction<RoadmapType> weight;
+  if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+  else {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->StaticPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+
+
+  // Run dijkstra's algorithm to find the path, if it exists.
+  auto g = this->GetRoadmap();
+  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(g, {_start}, weight,
+      termination);
+
+  // Find the last discovered node, which should be a goal if there is a valid
+  // path.
+  const VID last = sssp.ordering.back();
+  if(!_goals.count(last))
+    return {};
+
+  // Extract the path.
+  std::vector<VID> path;
+  path.push_back(last);
+
+  VID current = last;
+  do {
+    current = sssp.parent.at(current);
+    path.push_back(current);
+  } while(current != _start);
+  std::reverse(path.begin(), path.end());
+
+  return path;
+}
+
 
 template <typename MPTraits>
 void
@@ -358,77 +441,6 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
 
 
 template <typename MPTraits>
-std::vector<typename QueryMethod<MPTraits>::VID>
-QueryMethod<MPTraits>::
-GeneratePath(const VID _start, const VIDSet& _goals) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "QueryMethod::GeneratePath");
-
-  if(this->m_debug)
-    std::cout << "Generating path from " << _start << " to " << _goals << "."
-              << std::endl;
-
-  // Check for trivial path.
-  if(_goals.count(_start))
-    return {_start};
-
-  stats->IncStat("Graph Search");
-
-  // Set up the termination criterion to quit early if we find a goal node.
-  SSSPTerminationCriterion<GraphType> termination(
-      [_goals](typename GraphType::vertex_iterator& _vi,
-             const SSSPOutput<GraphType>& _sssp) {
-        return _goals.count(_vi->descriptor()) ? SSSPTermination::EndSearch
-                                               : SSSPTermination::Continue;
-      }
-  );
-
-  // Set up the path weight function depending on whether we have any dynamic
-  // obstacles.
-  SSSPPathWeightFunction<GraphType> weight;
-  if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
-    weight = [this](typename GraphType::adj_edge_iterator& _ei,
-                    const double _sourceDistance,
-                    const double _targetDistance) {
-      return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
-    };
-  }
-  else {
-    weight = [this](typename GraphType::adj_edge_iterator& _ei,
-                    const double _sourceDistance,
-                    const double _targetDistance) {
-      return this->StaticPathWeight(_ei, _sourceDistance, _targetDistance);
-    };
-  }
-
-
-  // Run dijkstra's algorithm to find the path, if it exists.
-  auto g = this->GetRoadmap()->GetGraph();
-  const SSSPOutput<GraphType> sssp = DijkstraSSSP(g, {_start}, weight,
-      termination);
-
-  // Find the last discovered node, which should be a goal if there is a valid
-  // path.
-  const VID last = sssp.ordering.back();
-  if(!_goals.count(last))
-    return {};
-
-  // Extract the path.
-  std::vector<VID> path;
-  path.push_back(last);
-
-  VID current = last;
-  do {
-    current = sssp.parent.at(current);
-    path.push_back(current);
-  } while(current != _start);
-  std::reverse(path.begin(), path.end());
-
-  return path;
-}
-
-
-template <typename MPTraits>
 bool
 QueryMethod<MPTraits>::
 IsVertexUsed(const VID) const {
@@ -447,7 +459,7 @@ IsEdgeUsed(const EID) const {
 template <typename MPTraits>
 double
 QueryMethod<MPTraits>::
-StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
+StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
   // First check that this edge is used. If not, the distance is infinite.
   if(!IsEdgeUsed(_ei->id()))
@@ -470,7 +482,7 @@ StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
 template <typename MPTraits>
 double
 QueryMethod<MPTraits>::
-DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
+DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
   // First check that this edge is used. If not, the distance is infinite.
   if(!IsEdgeUsed(_ei->id()))
@@ -491,7 +503,7 @@ DynamicPathWeight(typename GraphType::adj_edge_iterator& _ei,
   }
 
   // Get the graph and safe interval tool.
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool(
       m_safeIntervalLabel);
 

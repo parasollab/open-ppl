@@ -30,8 +30,7 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::RoadmapType      RoadmapType;
-    typedef typename RoadmapType::GraphType     GraphType;
-    typedef typename GraphType::VI              VI;
+    typedef typename RoadmapType::VI            VI;
     typedef typename RoadmapType::VID           VID;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
@@ -202,8 +201,8 @@ Initialize() {
     family = MakeHashFamily();
 
   // Each time we add a new vertex, compute its mapping in each hash map.
-  auto g = this->GetRoadmap()->GetGraph();
-  g->InstallHook(GraphType::HookType::AddVertex, this->GetNameAndLabel(),
+  auto g = this->GetRoadmap();
+  g->InstallHook(RoadmapType::HookType::AddVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->InsertIntoMap(_vi);});
 
   /// @todo Create a hook for removing the mapping.
@@ -230,7 +229,7 @@ LSHNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _query, OutputIterator _out) {
-  auto g = _rmp->GetGraph();
+  auto g = _rmp;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // Find the first m_k approximate nearest-neighbors from the hash map.
@@ -346,7 +345,7 @@ InsertIntoMap(const VI _vi) {
   MethodTimer(this->GetStatClass(), "LSHNF::InsertIntoMap");
 
   const VID vid = _vi->descriptor();
-  const CfgType& _cfg = this->GetRoadmap()->GetGraph()->GetVertex(vid);
+  const CfgType& _cfg = this->GetRoadmap()->GetVertex(vid);
 
   // Add this cfg to each hash map.
   for(unsigned int i = 0; i < m_hashMaps.size(); ++i) {

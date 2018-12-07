@@ -1,5 +1,5 @@
-#ifndef MINIMUM_CLEARANCE_EVALUATOR_H_
-#define MINIMUM_CLEARANCE_EVALUATOR_H_
+#ifndef PMPL_MINIMUM_CLEARANCE_EVALUATOR_H_
+#define PMPL_MINIMUM_CLEARANCE_EVALUATOR_H_
 
 #include "MapEvaluatorMethod.h"
 
@@ -28,7 +28,6 @@ class MinimumClearanceEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename RoadmapType::GraphType      GraphType;
     typedef typename RoadmapType::VID            VID;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
@@ -38,9 +37,10 @@ class MinimumClearanceEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-  MinimumClearanceEvaluator(const string& _vcLabel = "", const double minDist = 5);
+    MinimumClearanceEvaluator(const string& _vcLabel = "",
+        const double minDist = 5);
 
-  MinimumClearanceEvaluator(XMLNode& _node);
+    MinimumClearanceEvaluator(XMLNode& _node);
 
     virtual ~MinimumClearanceEvaluator() = default;
 
@@ -128,7 +128,7 @@ operator()() {
     return false;
   }
   else {
-    auto graph = this->GetRoadmap()->GetGraph();
+    auto graph = this->GetRoadmap();
     const size_t numVerts = graph->get_num_vertices();
 
     // start at the last position (m_lastVid), because all previous nodes has been tested
@@ -150,7 +150,7 @@ TestCfg(CfgType& _cfg) {
   string callee("MinimumClearanceEvaluator::TestCfg");
 
   CDInfo cdInfo(true); // Need full collision info.
-  if (!vc->IsValid(_cfg, cdInfo, callee))
+  if(!vc->IsValid(_cfg, cdInfo, callee))
     return false;
 
   if (cdInfo.m_minDist < m_minDist) {
@@ -161,9 +161,6 @@ TestCfg(CfgType& _cfg) {
   }
   else {
     if(this->m_debug) {
-      if(cdInfo.m_nearestObstIndex == -1 && cdInfo.m_selfClearance.empty())
-        std::cout << "Warning: the distance evaluated appears to be set to"
-              " default. This is still considered success for now" << std::endl;
       std::cout << this->GetNameAndLabel() << "Distance check was valid with: "
                 << cdInfo.m_minDist << endl;
     }
@@ -182,11 +179,12 @@ TestCfg(GroupCfgType& _cfg, const Formation& _activeRobots) {
   auto vc = this->GetValidityChecker(m_vcLabel);
   string callee("MinimumClearanceEvaluator::TestCfg");
 
-  if(_cfg.GetGroupMap() != this->GetGroupRoadmap())
+  if(_cfg.GetGroupRoadmap() != this->GetGroupRoadmap())
     throw RunTimeException(WHERE, "The group roadmaps don't match!");
 
   CDInfo cdInfo(true); // Need full collision info.
-  if (!vc->IsValid(_cfg, cdInfo, callee, _activeRobots))
+  //if(!vc->IsValid(_cfg, cdInfo, callee, _activeRobots))
+  if(!vc->IsValid(_cfg, cdInfo, callee))
     return false;
 
   const bool hasObstacles = this->GetEnvironment()->NumObstacles() > 0;
@@ -209,9 +207,6 @@ TestCfg(GroupCfgType& _cfg, const Formation& _activeRobots) {
   }
   else {
     if(this->m_debug) {
-      if(cdInfo.m_nearestObstIndex == -1 && cdInfo.m_selfClearance.empty())
-        std::cout << "Warning: the distance evaluated appears to be set to"
-              " default. This is still considered success for now" << std::endl;
       std::cout << this->GetNameAndLabel() << "Distance check was valid with: "
                 << cdInfo.m_minDist << endl;
     }

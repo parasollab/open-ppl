@@ -8,21 +8,19 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Unlike Query Method, GroupQuery is not yet set up to evaluate a group
-/// roadmap under construction to see if a query has been satisfied. All it can
-/// do currently is generate a path calling SSSP utilities for the roadmap.
+/// Evaluates the current group roadmap to determine whether a (group) path
+/// exists which satisfies the current group task.
 ///
-/// This query is based off of Query Method, modified to work for GroupRoadmaps.
-/// Only GeneratePath has been implemented for this, and this is not a valid
-/// query evaluation as it stands. This is intended for path-building
-/// functionality alone.
+/// @todo There is a lot of copy-pasted code from QueryMethod because that
+///       method calls several other objects which are not ready for groups yet.
+///       We should be able to merge these two after a bit more flush-out of the
+///       group support. I have marked it final to remind us that we should
+///       not extend this as it will be merged.
 ///
-/// @todo Fix this so that it works like the other queries, or homogenize
-///       the two.
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class GroupQuery : public MapEvaluatorMethod<MPTraits> {
+class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
 
   public:
 
@@ -33,6 +31,8 @@ class GroupQuery : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType   GroupRoadmapType;
     typedef typename MPTraits::GroupWeightType    WeightType;
     typedef typename GroupRoadmapType::VID        VID;
+    typedef typename MPTraits::GoalTracker        GoalTracker;
+    typedef typename GoalTracker::VIDSet          VIDSet;
 
     ///@}
     ///@name Construction
@@ -46,16 +46,13 @@ class GroupQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name MapEvaluator Overrides
     ///@{
 
-    /// Interface function for MapEvaluatorMethod. The function of GroupQuery
-    /// is not to actually evaluate a group roadmap for now, but rather for
-    /// building paths with group cfgs/vids.
     virtual bool operator()() override;
 
     ///@}
     ///@name Query Interface
     ///@{
 
-    std::vector<VID> GeneratePath(const VID _start, const VID _end);
+    std::vector<VID> GeneratePath(const VID _start, const VIDSet& _end);
 
     ///@}
 
@@ -64,11 +61,23 @@ class GroupQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
+    void Reset(GroupRoadmapType* const _r);
+
+    bool PerformSubQuery(const VID _start, const VIDSet& _goal);
+
     double StaticPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
     double DynamicPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    GroupRoadmapType* m_roadmap{nullptr};
+
+    size_t m_goalIndex{0};             ///< Index of next unreached goal.
 
     ///@}
 
@@ -95,9 +104,75 @@ template <typename MPTraits>
 bool
 GroupQuery<MPTraits>::
 operator()() {
-  throw RunTimeException(WHERE) << "Not to be used as a map evaluator in its "
-                                << "current state!";
-  return false;
+  auto goalTracker = this->GetGoalTracker();
+  const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
+  auto task = this->GetGroupTask();
+  const size_t numGoals = task->GetNumGoals();
+
+  // If no goals remain, then this must be a refinement step (as in optimal
+  // planning). In this case or the roadmap has changed, reinitialize and
+  // rebuild the whole path.
+  auto r = this->GetGroupRoadmap();
+  if(unreachedGoals.empty() or r != m_roadmap)
+    Reset(r);
+
+  if(this->m_debug)
+    std::cout << "Querying group roadmap for a path satisfying task '"
+              << task->GetLabel()
+              << "', " << unreachedGoals.size() << " / " << numGoals
+              << " goals not reached."
+              << "\n\tTrying to connect goal: " << m_goalIndex
+              << "\n\tUnreached goals: " << unreachedGoals
+              << std::endl;
+
+  // Search for a sequential path through each task constraint in order.
+  auto path = this->GetGroupPath();
+  for(; m_goalIndex < numGoals; ++m_goalIndex) {
+    // If this goal constraint is unreached, the query cannot succeed.
+    auto iter = std::find(unreachedGoals.begin(), unreachedGoals.end(),
+        m_goalIndex);
+    const bool unreached = iter != unreachedGoals.end();
+    if(unreached) {
+      if(this->m_debug)
+        std::cout << "\tGoal " << m_goalIndex << " has no satisfying VIDs."
+                  << std::endl;
+      return false;
+    }
+
+    // Get the start VID for this subquery.
+    const VID start = path->Empty() ? *goalTracker->GetStartVIDs().begin()
+                                    : path->VIDs().back();
+
+    // Get the goal VIDs for this subquery.
+    const VIDSet& goals = goalTracker->GetGoalVIDs(m_goalIndex);
+    if(goals.empty())
+      throw RunTimeException(WHERE) << "No VIDs located for reached goal "
+                                    << m_goalIndex << ".";
+
+    if(this->m_debug)
+      std::cout << "\tEvaluating sub-query from " << start << " to " << goals
+                << "." << std::endl;
+
+    // Warn users if multiple goals are found.
+    if(goals.size() > 1 and numGoals > 1)
+      std::cerr << "\tWarning: subquery has " << goals.size() << " possible VIDs "
+                << "for goal " << m_goalIndex << "/" << numGoals
+                << ". The algorithm will try its best but isn't complete for "
+                << "this case." << std::endl;
+
+    // Perform this subquery. If it fails, there is no path.
+    const bool success = PerformSubQuery(start, goals);
+    if(!success)
+      return false;
+  }
+
+  // We generated a path successfully: track the path length history.
+  this->GetStatClass()->AddToHistory("pathlength", path->Length());
+
+  if(this->m_debug)
+    std::cout << "\tConnected all goals!" << std::endl;
+
+  return true;
 }
 
 /*--------------------------- Query Interface --------------------------------*/
@@ -105,17 +180,26 @@ operator()() {
 template <typename MPTraits>
 std::vector<typename GroupQuery<MPTraits>::VID>
 GroupQuery<MPTraits>::
-GeneratePath(const VID _start, const VID _end) {
+GeneratePath(const VID _start, const VIDSet& _goals) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "GroupQuery::GeneratePath");
+
+  if(this->m_debug)
+    std::cout << "Generating path from " << _start << " to " << _goals << "."
+              << std::endl;
+
+  // Check for trivial path.
+  if(_goals.count(_start))
+    return {_start};
+
   stats->IncStat("Graph Search");
 
   // Set up the termination criterion to quit early if we find the _end node.
   SSSPTerminationCriterion<GroupRoadmapType> termination(
-      [_end](typename GroupRoadmapType::vertex_iterator& _vi,
+      [_goals](typename GroupRoadmapType::vertex_iterator& _vi,
              const SSSPOutput<GroupRoadmapType>& _sssp) {
-        return _vi->descriptor() == _end ? SSSPTermination::EndSearch
-                                         : SSSPTermination::Continue;
+        return _goals.count(_vi->descriptor()) ? SSSPTermination::EndSearch
+                                               : SSSPTermination::Continue;
       }
   );
 
@@ -137,20 +221,22 @@ GeneratePath(const VID _start, const VID _end) {
     };
   }
 
-
   // Run dijkstra's algorithm to find the path, if it exists.
   auto g = this->GetGroupRoadmap();
-  const SSSPOutput<GroupRoadmapType> sssp = DijkstraSSSP(g, {_start}, weight);
+  const SSSPOutput<GroupRoadmapType> sssp = DijkstraSSSP(g, {_start}, weight,
+      termination);
 
-  // If the end node has no parent, there is no path.
-  if(!sssp.parent.count(_end))
+  // Find the last discovered node, which should be a goal if there is a valid
+  // path.
+  const VID last = sssp.ordering.back();
+  if(!_goals.count(last))
     return {};
 
   // Extract the path.
   std::vector<VID> path;
-  path.push_back(_end);
+  path.push_back(last);
 
-  VID current = _end;
+  VID current = last;
   do {
     current = sssp.parent.at(current);
     path.push_back(current);
@@ -163,12 +249,52 @@ GeneratePath(const VID _start, const VID _end) {
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
+void
+GroupQuery<MPTraits>::
+Reset(GroupRoadmapType* const _r) {
+  // Set the roadmap.
+  m_roadmap = _r;
+
+  // Reset the goal index.
+  m_goalIndex = 0;
+
+  // Reset the path.
+  auto path = this->GetGroupPath();
+  if(path)
+    path->Clear();
+}
+
+
+template <typename MPTraits>
+bool
+GroupQuery<MPTraits>::
+PerformSubQuery(const VID _start, const VIDSet& _goals) {
+  // Try to generate a path from _start to _goal.
+  auto path = this->GeneratePath(_start, _goals);
+
+  // If the path isn't empty, we succeeded.
+  if(!path.empty()) {
+    *this->GetGroupPath() += path;
+    const VID goalVID = path.back();
+
+    if(this->m_debug)
+      std::cout << "\tSuccess: reached goal node " << goalVID << "."
+                << std::endl;
+
+    return true;
+  }
+  else if(this->m_debug)
+    std::cout << "\tFailed: could not find a path." << std::endl;
+
+  return false;
+}
+
+
+template <typename MPTraits>
 double
 GroupQuery<MPTraits>::
 StaticPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  // Compute the new 'distance', which is the number of timesteps at which
-  // the robot would reach the target node.
   const double edgeWeight  = _ei->property().GetWeight(),
                newDistance = _sourceDistance + edgeWeight;
   return newDistance;
@@ -180,7 +306,9 @@ double
 GroupQuery<MPTraits>::
 DynamicPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  throw RunTimeException(WHERE, "Not implemented!");
+  throw NotImplementedException(WHERE) << "This needs to be implemented to "
+                                       << "consider planning for a group in the "
+                                       << "presence of dynamic obstacles.";
 }
 
 /*----------------------------------------------------------------------------*/

@@ -1,10 +1,9 @@
 #include "GroupTask.h"
 
-#include "Geometry/Boundaries/Boundary.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/GroupCfg.h"
+#include "Geometry/Boundaries/Boundary.h"
 #include "MPProblem/MPProblem.h"
-#include "MPProblem/MPTask.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
@@ -12,15 +11,14 @@
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
-#include "Vector.h"
-
 
 /*------------------------------ Construction --------------------------------*/
 
+
 GroupTask::
-GroupTask(RobotGroup* const _robot) : m_robotGroup(_robot) {
-  m_label = "null group task";
-}
+GroupTask(RobotGroup* const _robot)
+  : m_group(_robot)
+{ }
 
 
 GroupTask::
@@ -29,75 +27,71 @@ GroupTask(MPProblem* const _problem, XMLNode& _node) {
   m_label = _node.Read("label", true, "", "Unique label for this task");
 
   // Get the robot group by label.
-  const std::string robotGroupLabel = _node.Read("robotGroupLabel", true, "",
-                            "Label for the robot group assigned to this task.");
-  m_robotGroup = _problem->GetRobotGroup(robotGroupLabel);
+  const std::string groupLabel = _node.Read("group", true, "",
+      "Label for the robot group assigned to this task.");
+  m_group = _problem->GetRobotGroup(groupLabel);
 
+  // Parse individual robot tasks.
+  for(auto& child : _node) {
+    if(child.Name() == "Task") {
+      // Parse the individual task.
+      MPTask robotTask(_problem, child);
+
+      // Ensure that the task belongs to a robot in this group.
+      Robot* const robot = robotTask.GetRobot();
+      if(!m_group->VerifyRobotInGroup(robot))
+        throw ParseException(child.Where()) << "Robot '" << robot->GetLabel()
+                                            << "' is not in group '"
+                                            << m_group->GetLabel() << "'.";
+
+      m_individualTasks.emplace_back(std::move(robotTask));
+    }
+  }
+
+  // Disassembly items, to be moved to a specialized subclass.
+
+  // Look for an end-effector group.
   const std::string effectorGroupLabel = _node.Read("endEffectorGroupLabel",
            false, "",
            "Label for the robot group with manipulator assigned to this task.");
-  if(!effectorGroupLabel.empty()) // Check if provided.
+  if(!effectorGroupLabel.empty())
     m_endEffectorGroup = _problem->GetRobotGroup(effectorGroupLabel);
 
+  // Look for a manipulator group.
   const std::string manipGroupLabel = _node.Read("manipulatorGroupLabel", false,
       "", "Label for the robot group with manipulator assigned to this task.");
-  if(!manipGroupLabel.empty()) // Check if provided.
+  if(!manipGroupLabel.empty())
     m_manipulatorGroup = _problem->GetRobotGroup(manipGroupLabel);
-
-  // Parse constraints.
-  for(auto& child : _node) {
-    if(child.Name() == "Task") {
-      MPTask robotTask(_problem, child); /// Build the task
-      Robot* const robot = robotTask.GetRobot();
-      if(!m_robotGroup->VerifyRobotInGroup(robot))
-        throw ParseException(WHERE, "Robot with label " + robot->GetLabel() +
-                                    " not in robot group with label " +
-                                    m_robotGroup->GetLabel());
-      m_robotTasks.emplace(robot, robotTask); /// Keyed on robot pointer
-    }
-    else
-      throw ParseException(WHERE, "Invalid child node in Group Task.");
-  }
 }
-
-
-GroupTask::
-GroupTask(const GroupTask& _other) {
-  *this = _other;
-}
-
-
-GroupTask::
-GroupTask(GroupTask&& _other) = default;
 
 
 GroupTask::
 ~GroupTask() = default;
 
-/*-------------------------------- Assignment --------------------------------*/
 
-GroupTask&
+std::unique_ptr<GroupTask>
 GroupTask::
-operator=(const GroupTask& _other) {
-  if(this != &_other) {
-    m_label = _other.m_label;
-    m_robotGroup = _other.m_robotGroup;
-    m_robotTasks = _other.m_robotTasks;
-  }
-  return *this;
+Factory(MPProblem* const _problem, XMLNode& _node) {
+  // Read the task type.
+  std::string type = _node.Read("type", false, "",
+      "The task type (currently none are supported).");
+  std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+  if(type == "")
+    return std::unique_ptr<GroupTask>(new GroupTask(_problem, _node));
+  else if(type == "disassembly")
+    throw NotImplementedException(_node.Where());
+  else
+    throw ParseException(_node.Where()) << "Unrecognized task type '" << type
+                                        << "'.";
 }
-
-
-GroupTask&
-GroupTask::
-operator=(GroupTask&& _other) = default;
 
 /*--------------------------- Property Accessors -----------------------------*/
 
 RobotGroup*
 GroupTask::
 GetRobotGroup() const noexcept {
-  return m_robotGroup;
+  return m_group;
 }
 
 
@@ -118,13 +112,14 @@ GetManipulatorGroup() const noexcept {
 void
 GroupTask::
 SetRobotGroup(RobotGroup* const _r) {
-  if(m_robotGroup == _r)
+  if(m_group == _r)
     return;
-  else if(!m_robotGroup)
-    throw RunTimeException(WHERE, "Re-assigning of group tasks currently is not"
-                                  " functional!");
 
-  m_robotGroup = _r;
+  // Clear the current robot assigned to each task.
+  for(auto& task : *this)
+    task.SetRobot(nullptr);
+
+  m_group = _r;
 }
 
 
@@ -142,6 +137,96 @@ SetLabel(const std::string& _label) noexcept {
 }
 
 
+size_t
+GroupTask::
+Size() const noexcept {
+  return m_individualTasks.size();
+}
+
+
+bool
+GroupTask::
+Empty() const noexcept {
+  if(m_individualTasks.empty())
+    return true;
+
+  for(const auto& task : m_individualTasks)
+    if(!task.Empty())
+      return false;
+
+  return true;
+}
+
+
+nonstd::status&
+GroupTask::
+GetStatus() noexcept {
+  return m_status;
+}
+
+
+const nonstd::status&
+GroupTask::
+GetStatus() const noexcept {
+  return m_status;
+}
+
+/*----------------------------- Individual Tasks -----------------------------*/
+
+size_t
+GroupTask::
+GetNumGoals() const noexcept {
+  size_t max = 0;
+  for(const auto& task : *this)
+    max = std::max(max, task.GetNumGoals());
+
+  return max;
+}
+
+
+void
+GroupTask::
+AddTask(const MPTask& _t) {
+  m_individualTasks.push_back(_t);
+}
+
+
+GroupTask::iterator
+GroupTask::
+RemoveTask(iterator _iter) {
+  return m_individualTasks.erase(_iter);
+}
+
+
+GroupTask::iterator
+GroupTask::
+begin() noexcept {
+  return m_individualTasks.begin();
+}
+
+
+GroupTask::iterator
+GroupTask::
+end() noexcept {
+  return m_individualTasks.end();
+}
+
+
+GroupTask::const_iterator
+GroupTask::
+begin() const noexcept {
+  return m_individualTasks.begin();
+}
+
+
+GroupTask::const_iterator
+GroupTask::
+end() const noexcept {
+  return m_individualTasks.end();
+}
+
+/*---------------------------- Disassembly Items -----------------------------*/
+
 Robot*
 GroupTask::
 GetManipulatorRobot() {
@@ -149,6 +234,7 @@ GetManipulatorRobot() {
     return nullptr;
 
   // If the manipulator group is present, return the manipulator.
+  /// @todo This uses magic strings in the XML files, let's find a better way.
   return m_manipulatorGroup->GetRobot("manipulator");
 }
 
@@ -160,6 +246,7 @@ GetEndEffectorRobot() {
     return nullptr;
 
   // If the manipulator group is present, return the manipulator.
+  /// @todo This uses magic strings in the XML files, let's find a better way.
   return m_endEffectorGroup->GetRobot("effector");
 }
 
@@ -169,167 +256,107 @@ GetEndEffectorRobot() {
 void
 GroupTask::
 GetStartConstraintCenter(GroupCfg& _center) const noexcept {
-  for(Robot* const robot : _center.GetRobots()) {
-    Cfg robotCfg(robot);
-    robotCfg.SetData(m_robotTasks.at(robot).GetStartConstraint()->
-                                                    GetBoundary()->GetCenter());
-    _center.SetRobotCfg(robot, std::move(robotCfg));
+  for(size_t i = 0; i < _center.GetNumRobots(); ++i) {
+    Cfg robotCfg(_center.GetRobot(i));
+    robotCfg.SetData(m_individualTasks.at(i).GetStartConstraint()->
+        GetBoundary()->GetCenter());
+    _center.SetRobotCfg(i, std::move(robotCfg));
   }
-}
-
-
-//void
-//GroupTask::
-//SetStartConstraint(std::unique_ptr<Constraint>&& _c) {
-//  m_startConstraint = std::move(_c);
-//}
-//
-//
-//void
-//GroupTask::
-//AddPathConstraint(std::unique_ptr<Constraint>&& _c) {
-//  m_pathConstraints.push_back(std::move(_c));
-//}
-//
-//
-//void
-//GroupTask::
-//AddGoalConstraint(std::unique_ptr<Constraint>&& _c) {
-//  m_goalConstraints.push_back(std::move(_c));
-//}
-//
-//
-//void
-//GroupTask::
-//SetArrivalTime(double _arrivalTime){
-//  m_arrivalTime = _arrivalTime;
-//}
-//
-//
-//const Constraint*
-//GroupTask::
-//GetStartConstraint() const noexcept {
-//  return m_startConstraint.get();
-//}
-//
-//
-//const GroupTask::ConstraintSet&
-//GroupTask::
-//GetPathConstraints() const noexcept {
-//  return m_pathConstraints;
-//}
-//
-//
-//const GroupTask::ConstraintSet&
-//GroupTask::
-//GetGoalConstraints() const noexcept {
-//  return m_goalConstraints;
-//}
-//
-//
-//const double
-//GroupTask::
-//GetArrivalTime() const noexcept {
-//  return m_arrivalTime;
-//}
-
-
-/*------------------------------- Task Status --------------------------------*/
-
-bool
-GroupTask::
-IsCompleted() const {
-  return m_status == Complete;
-}
-
-
-void
-GroupTask::
-SetCompleted() {
-  m_status = Complete;
-}
-
-
-bool
-GroupTask::
-IsStarted() const {
-  return m_status == InProgress or IsCompleted();
-}
-
-
-void
-GroupTask::
-SetStarted() {
-  if(!IsStarted())
-    m_status = InProgress;
-}
-
-
-void
-GroupTask::
-Reset() {
-  for(auto& taskPair : m_robotTasks)
-    taskPair.second.Reset(); /// TODO: loop through LIST of MPTasks to reset!
 }
 
 /*---------------------------- Constraint Evaluation -------------------------*/
 
-GroupTask::Status
+bool
 GroupTask::
-Evaluate(const std::vector<GroupCfg>& _p) const {
+EvaluateStartConstraints(const GroupCfg& _cfg) const {
+  for(const auto& task : m_individualTasks) {
+    // For now we will require all individual tasks to be assigned to a robot.
+    auto robot = task.GetRobot();
+    if(!robot)
+      throw NotImplementedException(WHERE) << "Currently each individual task "
+                                           << "must be assigned to a robot( "
+                                           << "task '" << task.GetLabel()
+                                           << "' is not assigned).";
+    const auto& cfg = _cfg.GetRobotCfg(robot);
+    const bool satisfied = task.EvaluateStartConstraints(cfg);
+    if(!satisfied)
+      return false;
+  }
 
-  /// TODO: Loop through all MPTasks after deciding what should be done here!
-  throw RunTimeException(WHERE, "Need to decide what evaluating a group task entails!");
-
-//  // If start constraints are not satisfied, this task is still on deck.
-//  if(m_status == OnDeck and !EvaluateStartConstraint(_p))
-//    return OnDeck;
-//
-//  // If path constraints aren't satisfied, this is an invalid path.
-//  if(!EvaluatePathConstraints(_p))
-//    return Invalid;
-//
-//  // If goal constraints are satisfied, task as finished. Otherwise, it's in
-//  // progress.
-//  if(EvaluateGoalConstraints(_p))
-//    return Complete;
-//  else
-//    return InProgress;
+  return true;
 }
 
-/*--------------------------- Evaluation Helpers -----------------------------*/
 
-//bool
-//GroupTask::
-//EvaluateStartConstraint(const std::vector<Cfg>& _p) const {
-//  const bool ok = !m_startConstraint.get() or m_startConstraint->Satisfied(_p.front());
-//  if(ok and m_status == OnDeck)
-//    m_status = InProgress;
-//  return ok;
-//}
-//
-//
-//bool
-//GroupTask::
-//EvaluatePathConstraints(const std::vector<Cfg>& _p) const {
-//  /// @TODO Consider some kind of caching mechanism to avoid extraneous
-//  ///       recomputation.
-//  for(const auto& constraint : m_pathConstraints){
-//    for(const auto& cfg : _p){
-//      if(!constraint->Satisfied(cfg))
-//        return false;
-//    }
-//  }
-//  return true;
-//}
-//
-//
-//bool
-//GroupTask::
-//EvaluateGoalConstraints(const std::vector<Cfg>& _p) const {
-//  const auto& cfg = _p.back();
-//  for(const auto& constraint : m_goalConstraints)
-//    if(!constraint->Satisfied(cfg))
-//      return false;
-//  return true;
-//}
+bool
+GroupTask::
+EvaluatePathConstraints(const GroupCfg& _cfg) const {
+  for(const auto& task : m_individualTasks) {
+    // For now we will require all individual tasks to be assigned to a robot.
+    auto robot = task.GetRobot();
+    if(!robot)
+      throw NotImplementedException(WHERE) << "Currently each individual task "
+                                           << "must be assigned to a robot ("
+                                           << "task '" << task.GetLabel()
+                                           << "' is not assigned).";
+    const auto& cfg = _cfg.GetRobotCfg(robot);
+    const bool satisfied = task.EvaluatePathConstraints(cfg);
+    if(!satisfied)
+      return false;
+  }
+
+  return true;
+}
+
+
+bool
+GroupTask::
+EvaluateGoalConstraints(const GroupCfg& _cfg) const {
+  for(const auto& task : m_individualTasks) {
+    // For now we will require all individual tasks to be assigned to a robot.
+    auto robot = task.GetRobot();
+    if(!robot)
+      throw NotImplementedException(WHERE) << "Currently each individual task "
+                                           << "must be assigned to a robot( "
+                                           << "task '" << task.GetLabel()
+                                           << "' is not assigned).";
+    const auto& cfg = _cfg.GetRobotCfg(robot);
+    const bool satisfied = task.EvaluateGoalConstraints(cfg);
+    if(!satisfied)
+      return false;
+  }
+
+  return true;
+}
+
+
+bool
+GroupTask::
+EvaluateGoalConstraints(const GroupCfg& _cfg, const size_t _index) const {
+  const size_t maxGoals = GetNumGoals();
+
+  for(const auto& task : m_individualTasks) {
+    // For now we will require all individual tasks to be assigned to a robot.
+    auto robot = task.GetRobot();
+    if(!robot)
+      throw NotImplementedException(WHERE) << "Currently each individual task "
+                                           << "must be assigned to a robot( "
+                                           << "task '" << task.GetLabel()
+                                           << "' is not assigned).";
+    const auto& cfg = _cfg.GetRobotCfg(robot);
+
+    // Determine the index offset so that all goals are right-aligned. If the
+    // index is too early then there is no goal constraint.
+    const size_t offset = maxGoals - task.GetNumGoals();
+    const bool noConstraint = _index < offset;
+    if(noConstraint)
+      continue;
+
+    const bool satisfied = task.EvaluateGoalConstraints(cfg, _index - offset);
+    if(!satisfied)
+      return false;
+  }
+
+  return true;
+}
+
+/*----------------------------------------------------------------------------*/

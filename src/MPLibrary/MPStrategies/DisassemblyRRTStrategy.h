@@ -57,12 +57,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    DisassemblyRRTStrategy(std::string _dm = "euclidean", std::string _nf = "bfnf",
-        std::string _vc = "rapid", std::string _nc = "kClosest", std::string _ex = "BERO",
-        std::vector<std::string> _evaluators = std::vector<std::string>(),
-        std::string _gt = "UNDIRECTED_TREE",  bool _growGoals = false,
-        double _growthFocus = .05, size_t _numRoots = 1,
-        size_t _numDirections = 1, size_t _maxTrial = 3);
+    DisassemblyRRTStrategy();
 
     DisassemblyRRTStrategy(XMLNode& _node);
 
@@ -238,13 +233,8 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyRRTStrategy<MPTraits>::
-DisassemblyRRTStrategy(std::string _dm, std::string _nf, std::string _vc, std::string _nc,
-    std::string _ex, std::vector<std::string> _evaluators, std::string _gt, bool _growGoals,
-    double _growthFocus, size_t _numRoots, size_t _numDirections,
-    size_t _maxTrial) :
-        m_nfLabel(_nf), m_vcLabel(_vc), m_exLabel(_ex), m_gt(_gt) {
+DisassemblyRRTStrategy() {
   this->SetName("DisassemblyRRTStrategy");
-  this->m_meLabels = _evaluators;
 }
 
 
@@ -438,7 +428,7 @@ DisassemblyRRTStrategy<MPTraits>::
 Finalize() {
   GroupRoadmapType* const map = this->GetGroupRoadmap();
   const std::string baseFilename = this->GetBaseFilename();
-  const size_t mapVerts = map->GetGraph()->get_num_vertices();
+  const size_t mapVerts = map->get_num_vertices();
   GroupPathType* const path = this->GetGroupPath();
   ValidityCheckerPointer vc = this->GetValidityChecker(this->m_vcLabel);
 
@@ -448,7 +438,8 @@ Finalize() {
               << std::endl;
     std::vector<VID> invalidVids;
     for(size_t i = 0; i < mapVerts; ++i)
-      if(!vc->IsValid(map->GetVertex(i), "RRTDEBUG", m_activeRobots))
+      //if(!vc->IsValid(map->GetVertex(i), "RRTDEBUG", m_activeRobots))
+      if(!vc->IsValid(map->GetVertex(i), "RRTDEBUG"))
         invalidVids.push_back(i);
 
     if(invalidVids.empty())
@@ -477,10 +468,10 @@ Finalize() {
 
     //Updates the roadmap and goals:
     path->Clear();
-    VID lastAddedVID = map->GetGraph()->get_num_vertices()-1;
+    VID lastAddedVID = map->get_num_vertices()-1;
 
     //Perform the query so that the path is populated:
-    std::vector<VID> nextSubPath = tempQuery.GeneratePath(m_startGroupCfgVID, lastAddedVID);
+    std::vector<VID> nextSubPath = tempQuery.GeneratePath(m_startGroupCfgVID, {lastAddedVID});
     *path += nextSubPath;
 //    if(this->m_debug)
       std::cout << "RRTExtension: Just found path (from startVID = "
@@ -507,7 +498,8 @@ Finalize() {
     if(m_preserveMinClearance) {
       CDInfo cdInfo(true); // For root's clearance info
       GroupCfgType startCfg = *m_startGroupCfg;
-      vc->IsValid(startCfg, cdInfo, this->GetNameAndLabel(), m_activeRobots);
+      //vc->IsValid(startCfg, cdInfo, this->GetNameAndLabel(), m_activeRobots);
+      vc->IsValid(startCfg, cdInfo, this->GetNameAndLabel());
       m_vidClearances[m_startGroupCfgVID] = cdInfo.m_minDist;
     }
     else
@@ -523,7 +515,8 @@ Finalize() {
           ) {
         CDInfo tempInfo(true);
         GroupCfgType& cfg = map->GetVertex(vid);
-        vc->IsValid(cfg, tempInfo, this->GetNameAndLabel(), m_activeRobots);
+        //vc->IsValid(cfg, tempInfo, this->GetNameAndLabel(), m_activeRobots);
+        vc->IsValid(cfg, tempInfo, this->GetNameAndLabel());
         m_vidClearances[vid] = tempInfo.m_minDist;
         if(m_vidClearances[vid] > 0.)
           std::cerr << "RRT Warning: Vid " << vid << " didn't have a correct "
@@ -553,7 +546,7 @@ Finalize() {
       path->Clear();
 
       //Perform the query so that the path is populated:
-      *path += tempQuery.GeneratePath(m_startGroupCfgVID, maxClearanceVid);
+      *path += tempQuery.GeneratePath(m_startGroupCfgVID, {maxClearanceVid});
 //      if(this->m_debug)
         std::cout << "RRTExtension: Just found NON-REMOVAL path "
                   << "(from startVID = " << m_startGroupCfgVID
@@ -648,6 +641,7 @@ DisassemblyRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
   const std::string label = this->GetNameAndLabel() + "::Extend()";
   GroupRoadmapType* const graph = this->GetGroupRoadmap();
+  auto group = graph->GetGroup();
 
   GroupLPOutput<MPTraits> lpOutput(graph);
   std::pair<VID, bool> extension{INVALID_VID, false};
@@ -690,21 +684,23 @@ Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
     // The Extender's CDInfo will be from the last ticked Cfg, not the free one.
     // You can see that this is the case by looking at BasicExtender.h:200.
     m_collidingParts.clear();
-    //The index of m_bodyDists is the body number, the entry is the distance.
-    for(size_t part = 0; part < cdInfo.m_selfClearance.size(); part++)
-      if(cdInfo.m_selfClearance[part] <= std::numeric_limits<double>::epsilon())
+    for(size_t part = 0; part < group->Size(); part++) {
+      auto mb = group->GetRobot(part)->GetMultiBody();
+      if(cdInfo.m_clearanceMap.GetClearance(mb, nullptr) <=
+          std::numeric_limits<double>::epsilon())
         this->m_collidingParts.push_back(part);
+    }
 
     if(this->m_debug)
-     std::cout << "Found colliding parts = " << m_collidingParts << std::endl
-               << "CDInfo bodyDists = " << cdInfo.m_selfClearance << std::endl;
+      std::cout << "Found colliding parts = " << m_collidingParts << std::endl;
   }
 
   if(m_returnBestPathOnFailure) {
     //Update the clearance for this VID (note: resize preserves existing data)
     if(newVID != INVALID_VID) {
       auto vc = this->GetValidityChecker(m_vcLabel);
-      vc->IsValid(qNew, cdInfo, label, m_activeRobots);
+      //vc->IsValid(qNew, cdInfo, label, m_activeRobots);
+      vc->IsValid(qNew, cdInfo, label);
       if(newVID >= m_vidClearances.size())
         m_vidClearances.resize(newVID * 2, 0);
 
@@ -880,7 +876,6 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
     //We just use a random strategy for which part to perturb
     const Formation partToAdjust =
                           {m_collidingParts[LRand() % m_collidingParts.size()]};
-//    vc->SetBodyNumbers(partToAdjust);
     sampler->SetActiveRobots(partToAdjust);
     m_activeRobots = partToAdjust;
 
@@ -950,8 +945,7 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
                 << std::endl;
   }
 
-  // Important! Reset the sampler's mask and VC's active bodies:
-//  vc->Set(prevActiveBodies);
+  // Important! Reset the sampler's mask:
   sampler->SetActiveRobots(prevActiveBodies);
   sampler->SetStartCfg(samplersPrevStartCfg);
   m_activeRobots = prevActiveBodies;

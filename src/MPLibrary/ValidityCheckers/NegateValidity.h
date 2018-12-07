@@ -1,60 +1,80 @@
-#ifndef NEGATEVALIDITY_H
-#define NEGATEVALIDITY_H
+#ifndef PMPL_NEGATE_VALIDITY_H_
+#define PMPL_NEGATE_VALIDITY_H_
 
 #include "ValidityCheckerMethod.h"
-#include "ValidityCheckerFunctor.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Wrapper for another validity checker which reverses its output.
 /// @ingroup ValidityCheckers
-/// @brief TODO
-///
-/// TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NegateValidity : public ValidityCheckerMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
 
-    NegateValidity(string _label = "");
+    ///@}
+    ///@name Construction
+    ///@{
+
+    NegateValidity();
+
     NegateValidity(XMLNode& _node);
+
     virtual ~NegateValidity() = default;
 
+    ///@}
+    ///@name ValidityCheckerMethod Overrides
+    ///@{
+
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const string& _callName);
+        const std::string& _callName) override;
+
+    ///@}
 
   private:
-    string m_vcLabel;
+
+    ///@name Internal State
+    ///@{
+
+    std::string m_vcLabel; ///< The wrapped VC method to call (and negate).
+
+    ///@}
+
 };
 
-template <typename MPTraits>
-NegateValidity<MPTraits>::NegateValidity(string _label) :
-  ValidityCheckerMethod<MPTraits>(), m_vcLabel(_label) {
-    this->SetName("NegateValidity");
-  }
+/*------------------------------- Construction -------------------------------*/
 
 template <typename MPTraits>
-NegateValidity<MPTraits>::NegateValidity(XMLNode& _node) :
-  ValidityCheckerMethod<MPTraits>(_node) {
-    this->SetName("NegateValidity");
-    m_vcLabel = _node.Read("vcLabel", true, "", "validity checker method");
-  }
+NegateValidity<MPTraits>::
+NegateValidity() {
+  this->SetName("NegateValidity");
+}
+
+
+template <typename MPTraits>
+NegateValidity<MPTraits>::
+NegateValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
+  this->SetName("NegateValidity");
+
+  m_vcLabel = _node.Read("vcLabel", true, "", "validity checker method");
+}
+
+/*--------------------- ValidityCheckerMethod Overrides ----------------------*/
 
 template <typename MPTraits>
 bool
 NegateValidity<MPTraits>::
-IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-   const string& _callName) {
-  typedef typename MPTraits::MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
-  vector<ValidityCheckerPointer> vcMethods;
-  typedef typename vector<ValidityCheckerPointer>::iterator VCIterator;
-  vcMethods.push_back(this->GetValidityChecker(m_vcLabel));
-
-  ValidityCheckerFunctor<MPTraits> comFunc(_cfg, _cdInfo, _callName);
-
-  ComposeNegate<VCIterator, ValidityCheckerFunctor<MPTraits> > composeNegate;
-  return composeNegate(vcMethods.begin(), comFunc);
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  return !vc->IsValid(_cfg, _cdInfo, _callName);
 }
 
-#endif// #ifndef NEGATEVALIDITY_H
+/*----------------------------------------------------------------------------*/
+
+#endif

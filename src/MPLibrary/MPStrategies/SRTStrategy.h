@@ -26,7 +26,6 @@ class SRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -167,7 +166,7 @@ template <typename MPTraits>
 void
 SRTStrategy<MPTraits>::
 Initialize() {
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   // Initialize a tree from the start if there is one.
   const VID start = this->GenerateStart(m_samplerLabel);
@@ -213,7 +212,7 @@ GenerateTrees() {
 
   auto boundary = this->GetEnvironment()->GetBoundary();
   auto sampler = this->GetSampler(m_samplerLabel);
-  auto g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   std::vector<CfgType> cfgs;
   cfgs.reserve(m_numSamples);
@@ -264,7 +263,7 @@ FindCandidateConnections(std::vector<std::pair<VID, VID>>& _candPairs) {
   RoadmapType centRdmp(this->GetTask()->GetRobot());
   for(auto& tree : m_trees) {
     reps.push_back(tree.first);
-    centRdmp.GetGraph()->AddVertex(tree.first, tree.second.first);
+    centRdmp.AddVertex(tree.first, tree.second.first);
   }
 
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
@@ -304,9 +303,8 @@ ConnectTrees(std::vector<std::pair<VID, VID>>& _candPairs) {
   if(this->m_debug)
     std::cout << "\nBegin ConnectTrees" << std::endl;
 
-  stapl::sequential::vector_property_map<typename GraphType::STAPLGraph, size_t>
-      cMap;
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  stapl::sequential::vector_property_map<RoadmapType, size_t> cMap;
+  RoadmapType* g = this->GetRoadmap();
   std::vector<std::pair<VID, VID> > succPair;
 
   for(auto& pair : _candPairs) {
@@ -384,15 +382,14 @@ Connect(VID _t1, VID _t2) {
 
   //attempt local plan
   for(auto cit = closest.begin(); cit != closest.end(); ++cit) {
-    CfgType& c1 = rdmp->GetGraph()->GetVertex(cit->source);
-    CfgType& c2 = rdmp->GetGraph()->GetVertex(cit->target);
+    CfgType& c1 = rdmp->GetVertex(cit->source);
+    CfgType& c2 = rdmp->GetVertex(cit->target);
     CfgType col(this->GetTask()->GetRobot());
 
     if(lp->IsConnected(c1, c2, col,
           &lpOutput, env->GetPositionRes(), env->GetOrientationRes())) {
       //successful connection add graph edge
-      rdmp->GetGraph()->AddEdge(cit->source, cit->target,
-          lpOutput.m_edge);
+      rdmp->AddEdge(cit->source, cit->target, lpOutput.m_edge);
       return true;
     }
   }
@@ -414,7 +411,7 @@ RRTConnect(VID _t1, VID _t2) {
     VID v = ExpandTree(_t1, dir);
     if(v != INVALID_VID) {
       //greedily extend t2 towards t1
-      CfgType qNew = this->GetRoadmap()->GetGraph()->GetVertex(v);
+      CfgType qNew = this->GetRoadmap()->GetVertex(v);
       VID v2 = v, v2repeated;
       do {
         v2repeated = v2;
@@ -460,11 +457,10 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
   std::vector<Neighbor> kClosest;
   std::vector<CfgType> cfgs;
 
-  RoadmapType* rdmp = this->GetRoadmap();
-  GraphType* g = rdmp->GetGraph();
+  RoadmapType* g = this->GetRoadmap();
   Tree& currentTree = m_trees[_tree];
 
-  nf->FindNeighbors(rdmp,
+  nf->FindNeighbors(g,
       currentTree.second.begin(), currentTree.second.end(), false,
       _dir, std::back_inserter(kClosest));
 

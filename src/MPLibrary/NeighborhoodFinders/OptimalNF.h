@@ -24,7 +24,6 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::GraphType           GraphType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
@@ -152,7 +151,7 @@ FindNeighbors(RoadmapType* _rmp,
   if(nfptr->GetType() == Type::K) {
     // Calculate k rounding up
     nfptr->GetK() = std::min<size_t>(
-        std::ceil(2*2.71828*log(_rmp->GetGraph()->get_num_vertices())),
+        std::ceil(2*2.71828*log(_rmp->get_num_vertices())),
         std::distance(_first, _last));
     if(this->m_debug)
       cout << "Finding closest neighbors with k = " << nfptr->GetK() << endl;

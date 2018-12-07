@@ -65,6 +65,7 @@ IsInCollision(const Body* const _body1, const Body* const _body2,
       throw RunTimeException(WHERE, "PQP_ERR_COLLIDE_OUT_OF_MEMORY");
 
     _cdInfo.m_minDist = result.Distance();
+    _cdInfo.m_clearanceMap.SetClearance(_body1, _body2, result.Distance());
 
     _cdInfo.m_robotPoint = t1 * Vector3d(result.P1());
     _cdInfo.m_objectPoint = t2 * Vector3d(result.P2());

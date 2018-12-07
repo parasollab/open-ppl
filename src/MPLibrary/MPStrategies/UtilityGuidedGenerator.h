@@ -69,7 +69,6 @@ class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename RoadmapType::GraphType GraphType;
 
     UtilityGuidedGenerator(std::string _vcLabel = "", std::string _nfLabel = "",
         std::string _connector = "", std::vector<std::string> _evaluators = std::vector<std::string>(),
@@ -183,7 +182,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
     CfgType q(this->GetTask()->GetRobot());
 
     //if roadmap empty, simply add a free random sample
-    if(rmap->GetGraph()->get_num_vertices() < 1) {
+    if(rmap->get_num_vertices() < 1) {
       stats->StartClock("Total Sampling Time");
       bool inBBX = false, isValid = false;
       while(!inBBX && !isValid) {
@@ -198,7 +197,7 @@ UtilityGuidedGenerator<MPTraits>::Run() {
       }
       if(this->m_debug) std::cout << "roadmap empty, adding free random sample\n";
       model.AddSample(q, 1);
-      rmap->GetGraph()->AddVertex(q);
+      rmap->AddVertex(q);
       stats->StopClock("Total Sampling Time");
 
     }
@@ -233,13 +232,13 @@ UtilityGuidedGenerator<MPTraits>::Run() {
         stats->IncNodesGenerated(this->GetNameAndLabel());
 
         model.AddSample(q, 1);
-        VID qvid = rmap->GetGraph()->AddVertex(q);
+        VID qvid = rmap->AddVertex(q);
 
         //connect sample
         stats->StartClock("Total Connection Time");
         connector->Connect(rmap, qvid);
         stats->StopClock("Total Connection Time");
-        if(this->m_debug) std::cout << "connecting sample, roadmap now has " << rmap->GetGraph()->get_num_vertices() << " nodes and " << rmap->GetGraph()->get_num_edges() << " edges\n";
+        if(this->m_debug) std::cout << "connecting sample, roadmap now has " << rmap->get_num_vertices() << " nodes and " << rmap->get_num_edges() << " edges\n";
 
       }
       else {
@@ -291,14 +290,14 @@ GenerateEntropyGuidedSample() {
 
   CfgType q1(robot), q2(robot);
 
-  stapl::sequential::vector_property_map<GraphType, size_t > cmap;
+  stapl::sequential::vector_property_map<RoadmapType, size_t > cmap;
   std::vector<std::pair<size_t, VID> > ccs;
-  if(get_cc_stats(*rmap->GetGraph(), cmap, ccs) == 1) {
-    int index = (int)floor((double)DRand()*(double)rmap->GetGraph()->get_num_vertices());
-    q1 = (rmap->GetGraph()->begin() + index)->property();
+  if(get_cc_stats(*rmap, cmap, ccs) == 1) {
+    int index = (int)floor((double)DRand()*(double)rmap->get_num_vertices());
+    q1 = (rmap->begin() + index)->property();
     q2.GetRandomCfg(bb);
     if(this->m_debug)
-      std::cout << "\t\tIn GenerateEntropyGuidedSample: only 1 cc, randomly selected vertex " << (rmap->GetGraph()->begin() + index)->descriptor() << " and a random sample\n";
+      std::cout << "\t\tIn GenerateEntropyGuidedSample: only 1 cc, randomly selected vertex " << (rmap->begin() + index)->descriptor() << " and a random sample\n";
   }
   else {
     //randomly select 2 ccs that are within a threshold m_componentDist of each other
@@ -318,9 +317,9 @@ GenerateEntropyGuidedSample() {
       while (cc1Vid == cc2Vid);
 
       cmap.reset();
-      get_cc(*rmap->GetGraph(), cmap, cc1Vid, cc1);
+      get_cc(*rmap, cmap, cc1Vid, cc1);
       cmap.reset();
-      get_cc(*rmap->GetGraph(), cmap, cc2Vid, cc2);
+      get_cc(*rmap, cmap, cc2Vid, cc2);
 
       std::vector<Neighbor> kp;
       nf->FindNeighborPairs(rmap, cc1.begin(), cc1.end(), cc2.begin(),
@@ -340,16 +339,16 @@ GenerateEntropyGuidedSample() {
       cc2Vid = minCC2Vid;
 
       cmap.reset();
-      get_cc(*rmap->GetGraph(), cmap, cc1Vid, cc1);
+      get_cc(*rmap, cmap, cc1Vid, cc1);
       cmap.reset();
-      get_cc(*rmap->GetGraph(), cmap, cc2Vid, cc2);
+      get_cc(*rmap, cmap, cc2Vid, cc2);
     }
     if(this->m_debug)
       std::cout << "\t\t\tselected cc pair " << cc1Vid << " and " << cc2Vid << std::endl;
 
     //randomly select a node in each cc
-    q1 = rmap->GetGraph()->GetVertex(cc1[(int)floor(DRand()*cc1.size())]);
-    q2 = rmap->GetGraph()->GetVertex(cc2[(int)floor(DRand()*cc2.size())]);
+    q1 = rmap->GetVertex(cc1[(int)floor(DRand()*cc1.size())]);
+    q2 = rmap->GetVertex(cc2[(int)floor(DRand()*cc2.size())]);
   }
 
   //return perturbation of the midpoint between the two nodes

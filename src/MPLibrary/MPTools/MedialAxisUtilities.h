@@ -55,7 +55,6 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType        CfgType;
     typedef typename MPTraits::WeightType     WeightType;
     typedef typename MPTraits::RoadmapType    RoadmapType;
-    typedef typename RoadmapType::GraphType   GraphType;
     typedef typename RoadmapType::VID         VID;
 
     ///@}
@@ -1004,7 +1003,7 @@ template<class MPTraits>
 ClearanceStats
 ClearanceUtility<MPTraits>::
 RoadmapClearance() {
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
 
   //TODO handle case of singleton nodes to be part of roadmap clearance
   //computation.
@@ -1047,12 +1046,12 @@ PathClearance(vector<VID>& _path) {
   if(_path.empty())
     return ClearanceStats();
 
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   auto dm = this->GetDistanceMetric(m_dmLabel);
 
-  typedef typename GraphType::EI EI;
-  typedef typename GraphType::VI VI;
-  typedef typename GraphType::EID EID;
+  typedef typename RoadmapType::EI EI;
+  typedef typename RoadmapType::VI VI;
+  typedef typename RoadmapType::EID EID;
 
   vector<double> clearanceVec;
   double pathLength = 0;
@@ -1095,13 +1094,13 @@ PathClearance(vector<Cfg>& _path) {
   if(_path.empty())
     return ClearanceStats();
 
-  GraphType* g = this->GetRoadmap()->GetGraph();
+  auto g = this->GetRoadmap();
   auto dm = this->GetDistanceMetric(m_dmLabel);
 
-  typedef typename GraphType::EI EI;
-  typedef typename GraphType::VI VI;
-  typedef typename GraphType::EID EID;
-  typedef typename GraphType::const_vertex_iterator CVI;
+  typedef typename RoadmapType::EI EI;
+  typedef typename RoadmapType::VI VI;
+  typedef typename RoadmapType::EID EID;
+  typedef typename RoadmapType::const_vertex_iterator CVI;
 
   double pathLength = 0;
   vector<double> clearanceVec;

@@ -17,7 +17,7 @@ typedef MPTraits<Cfg> PMPLTraits;
 // constantly.
 extern template class MPLibraryType<PMPLTraits>;
 extern template class MPSolutionType<PMPLTraits>;
-extern template class Roadmap<PMPLTraits>;
+extern template class RoadmapGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
 extern template class PathType<PMPLTraits>;
 
 

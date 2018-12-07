@@ -1,68 +1,90 @@
-#ifndef NEGATEEVALUATOR_H_
-#define NEGATEEVALUATOR_H_
+#ifndef PMPL_NEGATE_EVALUATOR_H_
+#define PMPL_NEGATE_EVALUATOR_H_
 
 #include "MapEvaluatorMethod.h"
-#include "EvaluatorFunctor.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Negates the result of another map evaluator.
 /// @ingroup MapEvaluators
-/// @brief TODO.
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NegateEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   public:
 
-    NegateEvaluator(string _label = "");
+    ///@name Construction
+    ///@{
+
+    NegateEvaluator();
+
     NegateEvaluator(XMLNode& _node);
-    ~NegateEvaluator(){}
 
-    virtual void Print(ostream& _os) const;
+    ~NegateEvaluator() = default;
 
-    virtual bool operator()();
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name MapEvaluatorMethod Overrides
+    ///@{
+
+    virtual bool operator()() override;
+
+    ///@}
 
   private:
 
-    string m_evalLabel;
+    ///@name Internal State
+    ///@{
+
+    std::string m_meLabel; ///< The evaluator to negate.
+
+    ///@}
 
 };
 
+/*------------------------------- Construction -------------------------------*/
+
 template <typename MPTraits>
-NegateEvaluator<MPTraits>::NegateEvaluator(string _label) : m_evalLabel(_label){
+NegateEvaluator<MPTraits>::
+NegateEvaluator() {
   this->SetName("NegateEvaluator");
 }
 
+
 template <typename MPTraits>
-NegateEvaluator<MPTraits>::NegateEvaluator(XMLNode& _node) :
-    MapEvaluatorMethod<MPTraits>(_node) {
+NegateEvaluator<MPTraits>::
+NegateEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("NegateEvaluator");
-  m_evalLabel = _node.Read("evalLabel", true, "", "Evaluator Label");
+
+  m_meLabel = _node.Read("evalLabel", true, "", "Evaluator Label");
 }
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
-NegateEvaluator<MPTraits>::Print(ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl << "evaluation method = " << m_evalLabel << endl;
+NegateEvaluator<MPTraits>::
+Print(std::ostream& _os) const {
+  _os << this->GetNameAndLabel()
+      << "\nEvaluation method: " << m_meLabel
+      << std::endl;
 }
+
+/*-------------------------- MapEvaluator Overrides --------------------------*/
 
 template <typename MPTraits>
 bool
-NegateEvaluator<MPTraits>::operator()() {
-  typedef typename MPTraits::MPLibrary::MapEvaluatorPointer MapEvaluatorPointer;
-  typedef typename vector<MapEvaluatorPointer>::iterator MEIterator;
-  typedef EvaluatorFunctor<MapEvaluatorPointer> EvalFunctor;
-
-  vector<MapEvaluatorPointer> evalMethods;
-  evalMethods.push_back(this->GetMapEvaluator(m_evalLabel));
-
-  EvalFunctor comFunc;
-
-  ComposeNegate<MEIterator, EvalFunctor> negate;
-
-  return negate(evalMethods.begin(), comFunc);
+NegateEvaluator<MPTraits>::
+operator()() {
+  auto me = this->GetMapEvaluator(m_meLabel);
+  return !(*me)();
 }
 
+/*----------------------------------------------------------------------------*/
 
 #endif

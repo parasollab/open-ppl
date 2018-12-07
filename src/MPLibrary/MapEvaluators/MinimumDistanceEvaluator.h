@@ -103,7 +103,7 @@ bool
 MinimumDistanceEvaluator<MPTraits>::
 operator()() {
   if(!m_minimumAchieved) {
-    auto const graph = this->GetRoadmap()->GetGraph();
+    auto const graph = this->GetRoadmap();
     auto const dm = this->GetDistanceMetric(m_dmLabel);
     const CfgType& root = graph->GetVertex(0);
     for( ; m_lastNode < graph->get_num_vertices(); ++m_lastNode)

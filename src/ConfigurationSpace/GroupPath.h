@@ -1,13 +1,11 @@
 #ifndef GROUP_PATH_H_
 #define GROUP_PATH_H_
 
-#include <algorithm>
-
-#include "Roadmap.h"
-#include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "Utilities/PMPLExceptions.h"
+
+#include <algorithm>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,9 +23,8 @@ class GroupPath final {
     ///@{
 
     typedef typename MPTraits::GroupCfgType       GroupCfg;
-    typedef typename MPTraits::GroupWeightType    WeightType;
-    typedef typename MPTraits::GroupRoadmapType   RoadmapType;
-    typedef typename RoadmapType::VID             VID;
+    typedef typename MPTraits::GroupRoadmapType   GroupRoadmapType;
+    typedef typename GroupRoadmapType::VID        VID;
     typedef typename GroupCfg::Formation          Formation;
 
     ///@}
@@ -35,18 +32,21 @@ class GroupPath final {
     ///@{
 
     /// Construct an empty path.
-    /// @param[in] _r The roadmap used by this path.
-    GroupPath(RoadmapType* const _r = nullptr);
+    /// @param _r The roadmap used by this path.
+    GroupPath(GroupRoadmapType* const _r = nullptr);
 
     ///@}
     ///@name Path Interface
     ///@{
 
     /// Get the roadmap used by this path.
-    RoadmapType* GetRoadmap() const noexcept;
+    GroupRoadmapType* GetRoadmap() const noexcept;
 
     /// Get the number of cfgs in the path.
     size_t Size() const noexcept;
+
+    /// Check if the path is empty.
+    bool Empty() const noexcept;
 
     /// Get the total edge weight.
     double Length() const;
@@ -62,8 +62,8 @@ class GroupPath final {
     /// Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
     ///        infrequent usage.
-    /// @param[in] _lib The planning library to use.
-    /// @param[in] _lp  The local planner label to use when connecting cfgs.
+    /// @param _lib The planning library to use.
+    /// @param _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
     template <typename MPLibrary>
@@ -71,19 +71,19 @@ class GroupPath final {
         const string& _lp = "") const;
 
     /// Append another path to the end of this one.
-    /// @param[in] _p The path to append.
+    /// @param _p The path to append.
     GroupPath& operator+=(const GroupPath& _p);
 
     /// Add another path to the end of this one and return the result.
-    /// @param[in] _p The path to add.
+    /// @param _p The path to add.
     GroupPath operator+(const GroupPath& _p) const;
 
     /// Append a new set of VIDs to the end of this path.
-    /// @param[in] _vids The VIDs to append.
+    /// @param _vids The VIDs to append.
     GroupPath& operator+=(const std::vector<VID>& _vids);
 
     /// Add a new set of VIDs to the end of this path and return the result.
-    /// @param[in] _vids The VIDs to add.
+    /// @param _vids The VIDs to add.
     GroupPath operator+(const std::vector<VID>& _vids) const;
 
     /// Copy assignment operator.
@@ -108,7 +108,7 @@ class GroupPath final {
     ///@name Internal State
     ///@{
 
-    RoadmapType* const m_roadmap;       ///< The roadmap.
+    GroupRoadmapType* const m_roadmap;       ///< The roadmap.
     std::vector<VID> m_vids;            ///< The vids of the path configurations.
 
     std::vector<GroupCfg> m_cfgs;        ///< The path configurations.
@@ -124,7 +124,7 @@ class GroupPath final {
 
 template <typename MPTraits>
 GroupPath<MPTraits>::
-GroupPath(RoadmapType* const _r) : m_roadmap(_r) { }
+GroupPath(GroupRoadmapType* const _r) : m_roadmap(_r) { }
 
 /*------------------------------ Path Interface ------------------------------*/
 
@@ -145,6 +145,14 @@ Size() const noexcept {
 
 
 template <typename MPTraits>
+bool
+GroupPath<MPTraits>::
+Empty() const noexcept {
+  return m_vids.empty();
+}
+
+
+template <typename MPTraits>
 double
 GroupPath<MPTraits>::
 Length() const {
@@ -154,10 +162,10 @@ Length() const {
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
       if(*start == *(start + 1))
         continue;  // Skip repeated vertices.
-      typename RoadmapType::edge_descriptor ed(*start, *(start + 1));
-      typename RoadmapType::vertex_iterator vi;
-      typename RoadmapType::adj_edge_iterator ei;
-      if(m_roadmap->GetGraph()->find_edge(ed, vi, ei))
+      typename GroupRoadmapType::edge_descriptor ed(*start, *(start + 1));
+      typename GroupRoadmapType::vertex_iterator vi;
+      typename GroupRoadmapType::adj_edge_iterator ei;
+      if(m_roadmap->find_edge(ed, vi, ei))
         length += (*ei).property().GetWeight();
       else
         throw RunTimeException(WHERE, "Tried to compute length for a path "
@@ -188,7 +196,7 @@ Cfgs() const {
     cfgs.clear();
     cfgs.reserve(m_vids.size());
     for(const auto& vid : m_vids)
-      cfgs.push_back(m_roadmap->GetGraph()->GetVertex(vid));
+      cfgs.push_back(m_roadmap->GetVertex(vid));
     m_cfgsCached = true;
   }
   return m_cfgs;
@@ -212,10 +220,10 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.
     bool validEdge = false;
-    typename RoadmapType::adj_edge_iterator ei;
+    typename GroupRoadmapType::adj_edge_iterator ei;
     {
-      typename RoadmapType::edge_descriptor ed(*it, *(it+1));
-      typename RoadmapType::vertex_iterator vi;
+      typename GroupRoadmapType::edge_descriptor ed(*it, *(it+1));
+      typename GroupRoadmapType::vertex_iterator vi;
       validEdge = m_roadmap->find_edge(ed, vi, ei);
 
       if(!validEdge)

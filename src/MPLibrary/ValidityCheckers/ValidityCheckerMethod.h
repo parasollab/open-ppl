@@ -1,5 +1,5 @@
-#ifndef VALIDITY_CHECKER_METHOD_H
-#define VALIDITY_CHECKER_METHOD_H
+#ifndef PMPL_VALIDITY_CHECKER_METHOD_H_
+#define PMPL_VALIDITY_CHECKER_METHOD_H_
 
 #include "MPLibrary/MPBaseObject.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
@@ -17,6 +17,15 @@
 ///
 /// For collision-detection type checkers, a CDInfo object may carry additional
 /// information about the check.
+///
+/// @usage
+/// @code
+/// ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
+/// CfgType c;
+/// CDInfo cdInfo;
+/// string callee("SomeFunc");
+/// bool valid = vc->IsValid(c, cdInfo, callee);
+/// @endcode
 ///
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +52,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     virtual ~ValidityCheckerMethod() = default;
 
     ///@}
-    ///@name ValidityChecker Interface
+    ///@name Validity Accessors
     ///@{
 
     /// Get the current meaning of "valid" (true is default).
@@ -52,38 +61,35 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// Switches the meaning of "valid" to "invalid" and vice versa.
     void ToggleValidity();
 
-    /// Classify a configuration to either @cfree or @cobst. No extra collision
-    /// information is returned.
-    /// @overload
-    bool IsValid(CfgType& _cfg, const std::string& _callName);
-
-    /// Classify a GroupCfg in the same manner.
-    /// @overload
-    bool IsValid(GroupCfgType& _cfg, const std::string& _callName,
-                 const Formation& _robotIndexes = Formation());
+    ///@}
+    ///@name Individual Configuration Validity
+    ///@{
 
     /// Classify a configuration to either @cfree or @cobst.
-    /// @param _cfg Configuration
-    /// @param _cdInfo Extra computed information, e.g., minimum dist to
-    ///        obstacle
-    /// @param _callName Function caller for statistics tracking
-    /// @return boolean valid/invalid. Valid (true) implies @cfree.
-    ///
-    /// @usage
-    /// @code
-    /// ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-    /// CfgType c;
-    /// CDInfo cdInfo;
-    /// string callee("SomeFunc");
-    /// bool valid = vc->IsValid(c, cdInfo, callee);
-    /// @endcode
-    bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName);
+    /// @param _cfg The individual configuration.
+    /// @param _cdInfo Output for extra computed information such as clearance.
+    /// @param _caller Name of the calling function.
+    /// @return True iff _cfg is in @cfree, false otherwise.
+    bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller);
 
-    /// Classify a GroupCfg in the same manner.
+    /// This version does not return extra information.
     /// @overload
-    bool IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo,
-        const std::string& _callName,
-        const Formation& _robotIndexes = Formation());
+    bool IsValid(CfgType& _cfg, const std::string& _caller);
+
+    ///@}
+    ///@name Group Configuration Validity
+    ///@{
+
+    /// Classify a gropu configuration to either @cfree or @cobst.
+    /// @param _cfg The group configuration.
+    /// @param _cdInfo Output for extra computed information such as clearance.
+    /// @param _caller Name of the calling function.
+    /// @return True iff _cfg is in @cfree, false otherwise.
+    bool IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller);
+
+    /// This version does not return extra information.
+    /// @overload
+    bool IsValid(GroupCfgType& _cfg, const std::string& _caller);
 
     ///@}
 
@@ -93,19 +99,21 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     /// Implementation of the classification of a configuration to either @cfree
-    /// or @cobst
-    /// @param _cfg Configuration
-    /// @param _cdInfo Extra computed information, e.g., minimum dist to
-    ///        obstacle
-    /// @param _callName Function caller for statistics tracking
-    /// @return boolean valid/invalid. Valid (true) implies @cfree.
+    /// or @cobst.
+    /// @param _cfg The individual configuration.
+    /// @param _cdInfo Output for extra computed information such as clearance.
+    /// @param _caller Name of the calling function.
+    /// @return True if _cfg is in @cfree.
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const std::string& _callName) = 0;
+        const std::string& _caller) = 0;
 
-    /// We don't want to require VCs implement group behavior, but want the
-    /// default to be an exception thrown.
+    /// Implementation of group cfg classification.
+    /// @param _cfg The group configuration.
+    /// @param _cdInfo Output for extra computed information such as clearance.
+    /// @param _caller Name of the calling function.
+    /// @return True if _cfg is in @cfree.
     virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
-        const std::string& _callName, const Formation& _robotIndexes = 0);
+        const std::string& _caller);
 
     ///@}
     ///@name Internal State
@@ -141,9 +149,18 @@ template <typename MPTraits>
 inline
 bool
 ValidityCheckerMethod<MPTraits>::
-IsValid(CfgType& _cfg, const std::string& _callName) {
+IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+  return m_validity == IsValidImpl(_cfg, _cdInfo, _caller);
+}
+
+
+template <typename MPTraits>
+inline
+bool
+ValidityCheckerMethod<MPTraits>::
+IsValid(CfgType& _cfg, const std::string& _caller) {
   CDInfo cdInfo;
-  return IsValid(_cfg, cdInfo, _callName);
+  return IsValid(_cfg, cdInfo, _caller);
 }
 
 
@@ -151,35 +168,18 @@ template <typename MPTraits>
 inline
 bool
 ValidityCheckerMethod<MPTraits>::
-IsValid(GroupCfgType& _cfg, const std::string& _callName,
-    const Formation& _robotIndexes) {
+IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+  return m_validity == IsValidImpl(_cfg, _cdInfo, _caller);
+}
+
+
+template <typename MPTraits>
+inline
+bool
+ValidityCheckerMethod<MPTraits>::
+IsValid(GroupCfgType& _cfg, const std::string& _caller) {
   CDInfo cdInfo;
-  return IsValid(_cfg, cdInfo, _callName, _robotIndexes);
-}
-
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
-  if(m_validity)
-    return IsValidImpl(_cfg, _cdInfo, _callName);
-  else
-    return !IsValidImpl(_cfg, _cdInfo, _callName);
-}
-
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName,
-    const Formation& _robotIndexes) {
-  if(m_validity)
-    return IsValidImpl(_cfg, _cdInfo, _callName, _robotIndexes);
-  else
-    return !IsValidImpl(_cfg, _cdInfo, _callName, _robotIndexes);
+  return IsValid(_cfg, cdInfo, _caller);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -187,9 +187,9 @@ IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName,
 template <typename MPTraits>
 bool
 ValidityCheckerMethod<MPTraits>::
-IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName,
-    const Formation& _robotIndexes) {
-  throw NotImplementedException(WHERE);
+IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+  throw NotImplementedException(WHERE) << "No base class implementation is "
+                                       << "provided.";
 }
 
 /*----------------------------------------------------------------------------*/

@@ -12,7 +12,7 @@
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/Roadmap.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
@@ -31,7 +31,6 @@
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
-#include "MPLibrary/ValidityCheckers/GroupTwoRobotValidityChecker.h"
 #include "MPLibrary/ValidityCheckers/MedialAxisClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/NegateValidity.h"
 #include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
@@ -62,7 +61,6 @@
 #include "MPLibrary/Samplers/MedialAxisSampler.h"
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
-#include "MPLibrary/Samplers/SimilarStructureSampler.h"
 #include "MPLibrary/Samplers/ReachableVolumeSampler.h"
 #include "MPLibrary/Samplers/UniformMedialAxisSampler.h"
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
@@ -149,6 +147,8 @@
 #include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/LPCompare.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
@@ -185,13 +185,13 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef Roadmap<MPTraits>               RoadmapType;
+  typedef RoadmapGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
   typedef MPToolsType<MPTraits>           MPTools;
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
-  typedef GoalTrackerType<RoadmapType>    GoalTracker;
+  typedef GoalTrackerType<MPTraits>       GoalTracker;
 
   typedef GroupLocalPlan<CfgType>                    GroupWeightType;
   typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
@@ -218,7 +218,6 @@ struct MPTraits {
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
     ComposeValidity<MPTraits>,
-    GroupTwoRobotValidityChecker<MPTraits>,
     MedialAxisClearanceValidity<MPTraits>,
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
@@ -252,7 +251,6 @@ struct MPTraits {
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    SimilarStructureSampler<MPTraits>,
     ReachableVolumeSampler<MPTraits>,
     UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
@@ -374,6 +372,7 @@ struct MPTraits {
     DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
+    GroupPRM<MPTraits>,
     LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,

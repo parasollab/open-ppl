@@ -2,7 +2,6 @@
 #define PMPL_COMPOSE_EVALUATION_H_
 
 #include "MapEvaluatorMethod.h"
-#include "EvaluatorFunctor.h"
 
 #include <algorithm>
 

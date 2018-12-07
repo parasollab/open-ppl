@@ -43,15 +43,7 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
 
     typedef std::pair<VIDPath, EffectorPlacementInfo> EffectorPathInfo;
 
-    DisassemblyPreemptiveDFSManipulator(
-        const map<string, pair<size_t, size_t> >& _matingSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const map<string, pair<size_t, size_t> >& _rrtSamplerLabels =
-            map<string, pair<size_t, size_t> >(),
-        const string _vc = "", const string _singleVc = "",
-        const string _lp = "", const string _ex = "",
-        const string _dm = "",
-        const vector<string>& _evaluatorLabels = vector<string>());
+    DisassemblyPreemptiveDFSManipulator();
     DisassemblyPreemptiveDFSManipulator(XMLNode& _node);
     virtual ~DisassemblyPreemptiveDFSManipulator() {}
 
@@ -134,20 +126,14 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
 
 template <typename MPTraits>
 DisassemblyPreemptiveDFSManipulator<MPTraits>::
-DisassemblyPreemptiveDFSManipulator(
-    const map<string, pair<size_t, size_t> >& _matingSamplerLabels,
-    const map<string, pair<size_t, size_t> >& _rrtSamplerLabels,
-    const string _vc, const string _singleVc,
-    const string _lp, const string _ex,
-    const string _dm, const vector<string>& _evaluatorLabels) :
-    DisassemblyMethod<MPTraits>(_matingSamplerLabels, _rrtSamplerLabels, _vc,
-      _singleVc, _lp, _ex, _dm, _evaluatorLabels) {
+DisassemblyPreemptiveDFSManipulator() {
   this->SetName("DisassemblyPreemptiveDFSManipulator");
 }
 
 template <typename MPTraits>
 DisassemblyPreemptiveDFSManipulator<MPTraits>::
-DisassemblyPreemptiveDFSManipulator(XMLNode& _node) : DisassemblyMethod<MPTraits>(_node) {
+DisassemblyPreemptiveDFSManipulator(XMLNode& _node)
+    : DisassemblyMethod<MPTraits>(_node) {
   this->SetName("DisassemblyPreemptiveDFSManipulator");
 
   m_noSubassemblies = _node.Read("noSubassemblies", false, m_noSubassemblies,
@@ -1060,8 +1046,9 @@ AttemptEffectorPlacement(Body* const _body, GroupCfgType& _manipulatorGroupCfg,
     Formation effectorGroup;
     if(!this->m_debug)
       effectorGroup = {_manipulatorGroupCfg.GetNumRobots() - 1};
-    const bool isValid = vc->IsValid(_manipulatorGroupCfg, cdInfo, label,
-                                     effectorGroup);
+    //const bool isValid = vc->IsValid(_manipulatorGroupCfg, cdInfo, label,
+    //                                 effectorGroup);
+    const bool isValid = vc->IsValid(_manipulatorGroupCfg, cdInfo, label);
     // If it's valid, then we declare success and return.
     if(isValid) {
       if(this->m_debug)

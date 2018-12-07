@@ -63,7 +63,7 @@
 
 
 
-    <GroupTask label="groupTask" robotGroupLabel="robotGroup"
+    <GroupTask label="groupTask" group="robotGroup"
                endEffectorGroupLabel="effectorGroup"
                manipulatorGroupLabel="manipulatorGroup">
       <Task label="task0" robot="0">

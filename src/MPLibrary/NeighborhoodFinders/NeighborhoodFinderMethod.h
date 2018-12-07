@@ -410,8 +410,7 @@ template <typename OutputIterator>
 OutputIterator
 NeighborhoodFinderMethod<MPTraits>::
 FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg, OutputIterator _out) {
-  auto graph = _rmp->GetGraph();
-  return FindNeighbors(_rmp, graph->begin(), graph->end(), true, _cfg, _out);
+  return FindNeighbors(_rmp, _rmp->begin(), _rmp->end(), true, _cfg, _out);
 }
 
 
@@ -439,7 +438,7 @@ FindNeighbors(RoadmapType* _rmp,
   // If all neighbors were requested for a k-nearest type, there is no need to
   // call the derived method.
   if(GetType() == Type::K and GetK() == 0)
-    return NeighborhoodFinderMethod::FindAllNeighbors(_rmp->GetGraph(),
+    return NeighborhoodFinderMethod::FindAllNeighbors(_rmp,
         _first, _last, _cfg, _out);
 
   typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
@@ -496,7 +495,7 @@ FindNeighborPairs(RoadmapType* _rmp,
   // If all neighbors were requested, there is no need to call the derived
   // method.
   if(GetType() == Type::K and GetK() == 0)
-    return NeighborhoodFinderMethod::FindAllNeighborPairs(_rmp->GetGraph(),
+    return NeighborhoodFinderMethod::FindAllNeighborPairs(_rmp,
         _first1, _last1, _first2, _last2, _out);
 
   typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;

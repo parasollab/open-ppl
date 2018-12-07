@@ -259,7 +259,7 @@ SetBatteryBreak() {
     }
   }
 
-  double departureTime = GetTask()->GetArrivalTime() - numSteps*timeRes;
+  double departureTime = GetTask()->GetEstimatedCompletionTime() - numSteps*timeRes;
   double currentTime =m_parentAgent->GetCurrentTime();
   if(departureTime > currentTime){
     m_stepsRemaining = std::ceil((departureTime - currentTime)/timeRes);

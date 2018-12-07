@@ -5,6 +5,9 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This sampler only validity-checks the input sample. It is only a
+/// 'uniform random' sampler if given a uniform random distribution of input
+/// samples.
 ///
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
@@ -16,13 +19,20 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    using typename SamplerMethod<MPTraits>::BoundaryMap;
 
     ///@}
     ///@name Construction
     ///@{
 
-    UniformRandomSampler(string _vcLabel = "");
+    UniformRandomSampler();
 
     UniformRandomSampler(XMLNode& _node);
 
@@ -32,7 +42,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
 
@@ -42,7 +52,16 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) override;
+        std::vector<CfgType>& _valid, std::vector<CfgType>& _invalid)
+        override;
+
+    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+        std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid)
+        override;
+
+    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+        std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid)
+        override;
 
     ///@}
 
@@ -51,7 +70,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    string m_vcLabel;
+    std::string m_vcLabel;  ///< The validity checker to use.
 
     ///@}
 };
@@ -60,7 +79,7 @@ class UniformRandomSampler : public SamplerMethod<MPTraits> {
 
 template <typename MPTraits>
 UniformRandomSampler<MPTraits>::
-UniformRandomSampler(string _vcLabel) : m_vcLabel(_vcLabel) {
+UniformRandomSampler() {
   this->SetName("UniformRandomSampler");
 }
 
@@ -77,9 +96,10 @@ UniformRandomSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
 template <typename MPTraits>
 void
 UniformRandomSampler<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
-  _os << "\tvcLabel = " << m_vcLabel << endl;
+  _os << "\tvcLabel = " << m_vcLabel
+      << std::endl;
 }
 
 /*------------------------------ Sampler Rule --------------------------------*/
@@ -88,18 +108,17 @@ template <typename MPTraits>
 bool
 UniformRandomSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
+    std::vector<CfgType>& _valid, std::vector<CfgType>& _invalid) {
   // Check Validity.
-  auto vcm = this->GetValidityChecker(m_vcLabel);
-  const std::string callee = this->GetNameAndLabel() + "::SampleImpl()";
-
-  const bool isValid = vcm->IsValid(_cfg, callee);
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+  const bool isValid = vc->IsValid(_cfg, callee);
 
   // Store result.
   if(isValid)
-    _result.push_back(_cfg);
+    _valid.push_back(_cfg);
   else
-    _collision.push_back(_cfg);
+    _invalid.push_back(_cfg);
 
   // Debug.
   if(this->m_debug) {
@@ -112,6 +131,43 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     VDAddTempCfg(_cfg, isValid);
     VDComment("UniformSampling::Cfg " + std::string(isValid ? "" : "in") +
         "valid");
+  }
+
+  return isValid;
+}
+
+
+template <typename MPTraits>
+bool
+UniformRandomSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid) {
+  BoundaryMap emptyMap;
+  return Sampler(_cfg, emptyMap, _valid, _invalid);
+}
+
+
+template <typename MPTraits>
+bool
+UniformRandomSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid) {
+  // Check Validity.
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+  const bool isValid = vc->IsValid(_cfg, callee);
+
+  // Store result.
+  if(isValid)
+    _valid.push_back(_cfg);
+  else
+    _invalid.push_back(_cfg);
+
+  // Debug.
+  if(this->m_debug) {
+    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+              << "\n\tValidity:  " << isValid
+              << std::endl;
   }
 
   return isValid;

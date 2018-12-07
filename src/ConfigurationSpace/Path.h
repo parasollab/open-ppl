@@ -3,7 +3,6 @@
 
 #include <algorithm>
 
-#include "Roadmap.h"
 #include "Behaviors/Agents/BatteryBreak.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPLibrary.h"
@@ -26,9 +25,7 @@ class PathType final {
     ///@{
 
     typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::WeightType    WeightType;
     typedef typename MPTraits::RoadmapType   RoadmapType;
-    typedef typename RoadmapType::GraphType  GraphType;
     typedef typename RoadmapType::VID        VID;
 
     ///@}
@@ -36,7 +33,7 @@ class PathType final {
     ///@{
 
     /// Construct an empty path.
-    /// @param[in] _r The roadmap used by this path.
+    /// @param _r The roadmap used by this path.
     PathType(RoadmapType* const _r = nullptr);
 
     ///@}
@@ -66,8 +63,8 @@ class PathType final {
     /// Get the current full Cfg path with steps spaced one environment
     ///        resolution apart. This is not cached due to its size and
     ///        infrequent usage.
-    /// @param[in] _lib The planning library to use.
-    /// @param[in] _lp  The local planner label to use when connecting cfgs.
+    /// @param _lib The planning library to use.
+    /// @param _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
     template <typename MPLibrary>
@@ -76,31 +73,31 @@ class PathType final {
 
     /// Find the furthest place and time in a path that an agent can travel to
     /// before being required to return to a charger.
-    /// @params[in] _batteryLevel Current battery level of the agent.
-    /// @params[in] _rate Rate at which battery levels decrease.
-    /// @params[in] _threshold Lowest level battery can reach before charging.
-    /// @params[in] _currentTime current time for the path to start calculatin
+    /// @params _batteryLevel Current battery level of the agent.
+    /// @params _rate Rate at which battery levels decrease.
+    /// @params _threshold Lowest level battery can reach before charging.
+    /// @params _currentTime current time for the path to start calculating
     ///         from.
-    /// @params[in] _timeRes Resolution of a single timestep.
+    /// @params _timeRes Resolution of a single timestep.
     template <typename MPLibrary>
     BatteryBreak FindBatteryBreak(double _batteryLevel, double _rate,
         double _theshold, double _currentTime, double _timeRes,
         MPLibrary* const _lib);
 
     /// Append another path to the end of this one.
-    /// @param[in] _p The path to append.
+    /// @param _p The path to append.
     PathType& operator+=(const PathType& _p);
 
     /// Add another path to the end of this one and return the result.
-    /// @param[in] _p The path to add.
+    /// @param _p The path to add.
     PathType operator+(const PathType& _p) const;
 
     /// Append a new set of VIDs to the end of this path.
-    /// @param[in] _vids The VIDs to append.
+    /// @param _vids The VIDs to append.
     PathType& operator+=(const std::vector<VID>& _vids);
 
     /// Add a new set of VIDs to the end of this path and return the result.
-    /// @param[in] _vids The VIDs to add.
+    /// @param _vids The VIDs to add.
     PathType operator+(const std::vector<VID>& _vids) const;
 
     /// Copy assignment operator.
@@ -179,10 +176,10 @@ Length() const {
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
       if(*start == *(start + 1))
         continue;  // Skip repeated vertices.
-      typename GraphType::edge_descriptor ed(*start, *(start + 1));
-      typename GraphType::vertex_iterator vi;
-      typename GraphType::adj_edge_iterator ei;
-      if(m_roadmap->GetGraph()->find_edge(ed, vi, ei))
+      typename RoadmapType::edge_descriptor ed(*start, *(start + 1));
+      typename RoadmapType::vertex_iterator vi;
+      typename RoadmapType::adj_edge_iterator ei;
+      if(m_roadmap->find_edge(ed, vi, ei))
         length += (*ei).property().GetWeight();
       else
         throw RunTimeException(WHERE, "Tried to compute length for a path "
@@ -213,7 +210,7 @@ Cfgs() const {
     cfgs.clear();
     cfgs.reserve(m_vids.size());
     for(const auto& vid : m_vids)
-      cfgs.push_back(m_roadmap->GetGraph()->GetVertex(vid));
+      cfgs.push_back(m_roadmap->GetVertex(vid));
     m_cfgsCached = true;
   }
   return m_cfgs;
@@ -228,8 +225,7 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   if(m_vids.empty())
     return std::vector<CfgType>();
 
-  GraphType* g = m_roadmap->GetGraph();
-  std::vector<CfgType> out = {g->GetVertex(m_vids.front())};
+  std::vector<CfgType> out = {m_roadmap->GetVertex(m_vids.front())};
 
   // Set up local planner to recreate edges. If none was provided, use edge
   // planner, or fall back to straight-line.
@@ -238,11 +234,11 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Get the next edge.
     bool validEdge = false;
-    typename GraphType::adj_edge_iterator ei;
+    typename RoadmapType::adj_edge_iterator ei;
     {
-      typename GraphType::edge_descriptor ed(*it, *(it+1));
-      typename GraphType::vertex_iterator vi;
-      validEdge = g->find_edge(ed, vi, ei);
+      typename RoadmapType::edge_descriptor ed(*it, *(it+1));
+      typename RoadmapType::vertex_iterator vi;
+      validEdge = m_roadmap->find_edge(ed, vi, ei);
     }
 
     if(!validEdge)
@@ -266,8 +262,8 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     }
 
     // Recreate this edge, including intermediates.
-    CfgType& start = g->GetVertex(*it);
-    CfgType& end   = g->GetVertex(*(it+1));
+    CfgType& start = m_roadmap->GetVertex(*it);
+    CfgType& end   = m_roadmap->GetVertex(*(it+1));
 
     // Construct a resolution-level path along the recreated edge.
       std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();

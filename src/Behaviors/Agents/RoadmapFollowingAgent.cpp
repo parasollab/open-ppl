@@ -84,7 +84,7 @@ EvaluateTask() {
   if(complete) {
     if(m_debug)
       std::cout << "Reached the end of the path." << std::endl;
-    GetTask()->SetCompleted();
+    GetTask()->GetStatus().complete();
     SetTask(nullptr);
     ClearPlan();
   }
@@ -103,8 +103,7 @@ ExecuteTask(const double) {
 
     // If we are just starting this edge, the robot is at the previous subgoal.
     if(edgeIndex == 0)
-      expected = &m_solution->GetRoadmap()->GetGraph()->
-          GetVertex(*(m_currentSubgoal - 1));
+      expected = &m_solution->GetRoadmap()->GetVertex(*(m_currentSubgoal - 1));
     // Otherwise, the robot should be at an intermediate configuration.
     else
       expected = &(m_edge->GetIntermediates()[edgeIndex - 1]);
@@ -122,11 +121,11 @@ ExecuteTask(const double) {
   // Get the next edge in the roadmap path.
   auto previousSubgoal = m_currentSubgoal - 1;
 
-  typename GraphType::edge_descriptor ed(*previousSubgoal, *m_currentSubgoal);
-  typename GraphType::vertex_iterator vi;
-  typename GraphType::adj_edge_iterator ei;
+  typename RoadmapType::edge_descriptor ed(*previousSubgoal, *m_currentSubgoal);
+  typename RoadmapType::vertex_iterator vi;
+  typename RoadmapType::adj_edge_iterator ei;
 
-  const bool found = m_solution->GetRoadmap()->GetGraph()->find_edge(ed, vi, ei);
+  const bool found = m_solution->GetRoadmap()->find_edge(ed, vi, ei);
 
   // Assert that we found the edge.
   if(!found)

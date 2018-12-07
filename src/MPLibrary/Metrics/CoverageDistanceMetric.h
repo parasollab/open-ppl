@@ -18,7 +18,6 @@ class CoverageDistanceMetric : public MetricMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ///@}
@@ -106,10 +105,9 @@ operator()() {
     bfnf.Initialize();
     bfnf.SetLabel("__CoverageDistanceMetricNF");
     RoadmapType* r = this->GetRoadmap();
-    GraphType* g = r->GetGraph();
-    bfnf.FindNeighbors(r, g->begin(), g->end(), true, *i,
+    bfnf.FindNeighbors(r, r->begin(), r->end(), true, *i,
         std::back_inserter(kClosest));
-    CfgType nearest = g->GetVertex(kClosest[0].target);
+    CfgType nearest = r->GetVertex(kClosest[0].target);
     disVec.push_back(kClosest[0].distance);
   }
   //average of distance vector and standard deviation is calculated

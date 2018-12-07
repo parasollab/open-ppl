@@ -348,7 +348,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   int nTicks;
   const unsigned int leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
 
-  GroupCfgType incr(_start.GetGroupMap());
+  GroupCfgType incr(_start.GetGroupRoadmap());
 
   // Will find all the straight-line increments for each robot independently.
   // (Though the nTicks calculation is coupled with all moving robots).
@@ -358,7 +358,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   if(subassemblyRotation) {
     // Remove the rotational bits, as incr should only do the translation
     // and then RotateFormationAboutLeader() will handle all rotations.
-    incr = GroupCfgType(_start.GetGroupMap(), true); // Ensure zeroed out.
+    incr = GroupCfgType(_start.GetGroupRoadmap(), true); // Ensure zeroed out.
     incr.OverwriteDofsForRobots(
             incrUntouched.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
             _robotIndexes);
@@ -413,7 +413,8 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     }
 
     if(tick.InBounds(env->GetBoundary())) {
-      if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand", _robotIndexes)) {
+      //if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand", _robotIndexes)) {
+      if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand")) {
         collision = true; //return previous tick, as it is collision-free
         if(this->m_debug)
           std::cout << "Collision found for extension tick!" << std::endl;

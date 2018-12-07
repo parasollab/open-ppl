@@ -54,8 +54,7 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::RoadmapType      RoadmapType;
-    typedef typename RoadmapType::GraphType     GraphType;
-    typedef typename GraphType::VI              VI;
+    typedef typename RoadmapType::VI            VI;
     typedef typename RoadmapType::VID           VID;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
@@ -202,11 +201,11 @@ Initialize() {
 
   // Each time we add or remove a vertex, store it in a buffer used to update
   // the roadmap when the NF is called.
-  auto g = this->GetRoadmap()->GetGraph();
-  g->InstallHook(GraphType::HookType::AddVertex, this->GetNameAndLabel(),
+  auto g = this->GetRoadmap();
+  g->InstallHook(RoadmapType::HookType::AddVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->m_added.push_back(_vi->descriptor());});
 
-  g->InstallHook(GraphType::HookType::DeleteVertex, this->GetNameAndLabel(),
+  g->InstallHook(RoadmapType::HookType::DeleteVertex, this->GetNameAndLabel(),
       [this](const VI _vi){this->m_deleted.push_back(_vi->descriptor());});
 }
 
@@ -246,11 +245,9 @@ FindNeighbors(RoadmapType* _rmp,
 
   NeighborSearch search(*m_queryTree, query, this->m_k, m_epsilon);
 
-  auto g = _rmp->GetGraph();
-
   for(auto n : search) {
     VID vid = n.first.m_it;
-    auto& node = g->GetVertex(vid);
+    auto& node = _rmp->GetVertex(vid);
     if(node == _cfg)
       continue;
     auto dmm = this->GetDistanceMetric(this->m_dmLabel);
@@ -269,16 +266,13 @@ void
 KdTreeNF<MPTraits>::
 UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
     InputIterator _last, bool _fromFullRoadmap) {
-
-  auto g = _rmp->GetGraph();
-
   if(!_fromFullRoadmap) {
     delete m_tmpTree;
     m_tmpTree = new Tree();
 
     for(auto vit = _first; vit != _last; ++vit) {
-      auto& node = g->GetVertex(vit);
-      m_tmpTree->insert(PointD(g->GetVID(vit), node.DOF(),
+      auto& node = _rmp->GetVertex(vit);
+      m_tmpTree->insert(PointD(_rmp->GetVID(vit), node.DOF(),
             node.GetData().begin(), node.GetData().end()));
     }
 
@@ -291,7 +285,7 @@ UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
 
     // Update the model with newly added Cfgs.
     for(auto& vid : m_added) {
-      auto& cfg = g->GetVertex(vid);
+      auto& cfg = _rmp->GetVertex(vid);
       vector<double> cfgData = cfg.GetData();
 
       if(m_useScaling)
@@ -313,7 +307,7 @@ UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
     /*
     // Do the same for any deleted Cfgs.
     for(auto& vid : m_deleted) {
-      auto cfg = g->GetVertex(vid);
+      auto cfg = _rmp->GetVertex(vid);
 
       m_trees[_rmp].remove(PointD(vid, cfg.DOF(), cfg.GetData().begin(),
             cfg.GetData().end()), nullptr);

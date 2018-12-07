@@ -45,8 +45,8 @@ class Coordinator : public Agent {
     ///@name Motion Planning Types
     ///@{
 
-    typedef RoadmapGraph<CfgType, WeightType>         GraphType;
-    typedef typename GraphType::vertex_descriptor     VID;
+    typedef RoadmapGraph<CfgType, WeightType>         RoadmapType;
+    typedef typename RoadmapType::vertex_descriptor   VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 
     ///@}
@@ -235,7 +235,7 @@ class Coordinator : public Agent {
     std::unique_ptr<Environment> m_handoffEnvironment;    ///< The handoff template environment.
 
     /// Used to keep IT roadmaps separate for visualization in simulator
-    std::unique_ptr<GraphType> m_handoffTemplateRoadmap;
+    std::unique_ptr<RoadmapType> m_handoffTemplateRoadmap;
 
     std::vector<RoadmapType> m_translatedHandoffs; ///< Translated handoffs
 
@@ -246,9 +246,9 @@ class Coordinator : public Agent {
     /// megaRoadmap
     std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
 
-    std::unordered_map<std::string, GraphType*> m_capabilityRoadmaps;
+    std::unordered_map<std::string, RoadmapType*> m_capabilityRoadmaps;
 
-    GraphType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
+    RoadmapType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
 
     std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
     std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.

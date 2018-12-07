@@ -1,13 +1,13 @@
-#ifndef LOCAL_PLANNER_METHOD_H_
-#define LOCAL_PLANNER_METHOD_H_
+#ifndef PMPL_LOCAL_PLANNER_METHOD_H_
+#define PMPL_LOCAL_PLANNER_METHOD_H_
 
+#include "MPLibrary/LocalPlanners/LPOutput.h"
+#include "MPLibrary/LocalPlanners/GroupLPOutput.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "MPProblem/Environment/Environment.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 
-template <typename MPTraits> struct LPOutput;
-template <typename MPTraits> struct GroupLPOutput;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref LocalPlanners.
@@ -25,6 +25,14 @@ template <typename MPTraits> struct GroupLPOutput;
 /// WeightType object's intermediate configurations. The function takes as input
 /// two configurations, a set of intermediate configurations, and validity
 /// resolutions.
+///
+/// @todo All local planners need to use a distance metric to set their edge
+///       weights properly; currently all of them are simply using the number of
+///       intermediate steps as a weight.
+/// @todo Local planners and Extenders represent the same concepts and should be
+///       merged into a single class with both an Extend and LocalPlan function.
+///       This will help simplify several other objects within PMPL as well,
+///       such as bi-directional RRT.
 ///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +62,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
-    virtual void Print(ostream& _os) const override;
+    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name Local Planner Interface
@@ -84,22 +92,20 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
         CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false) = 0;
 
-    /// Validate a simple path between two nodes without returning a
-    /// witness node on failure.
+    /// This version does not return a collision node.
     /// @overload
     virtual bool IsConnected(const CfgType& _start, const CfgType& _end,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false);
 
-    /// GroupCfg overloads:
+    /// This version is for group configurations.
+    /// @overload
     virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _col, GroupLPOutput<MPTraits>* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false,
-        const Formation& _formation = Formation())
-    { throw RunTimeException(WHERE,"Not implemented!"); }
+        const Formation& _formation = Formation());
 
-    /// Validate a simple path between two nodes without returning a
-    /// witness node on failure.
+    /// This version for group configurations does not return a collision node.
     /// @overload
     virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
@@ -169,7 +175,7 @@ LocalPlannerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 template <typename MPTraits>
 void
 LocalPlannerMethod<MPTraits>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   _os << this->GetNameAndLabel()
       << "\n\tSave intermediates: " << m_saveIntermediates
       << std::endl;
@@ -186,6 +192,17 @@ IsConnected(const CfgType& _start, const CfgType& _end,
   CfgType col(this->GetTask()->GetRobot());
   return IsConnected(_start, _end, col, _lpOutput, _posRes,
       _oriRes, _checkCollision, _savePath);
+}
+
+
+template <typename MPTraits>
+bool
+LocalPlannerMethod<MPTraits>::
+IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
+    GroupCfgType& _col,
+    GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
+    bool _checkCollision, bool _savePath, const Formation& _formation) {
+  throw NotImplementedException(WHERE) << "No default implementation provided.";
 }
 
 
@@ -216,9 +233,9 @@ template <typename MPTraits>
 std::vector<typename MPTraits::GroupCfgType>
 LocalPlannerMethod<MPTraits>::
 ReconstructPath(const GroupCfgType& _start, const GroupCfgType& _end,
-                const std::vector<GroupCfgType>& _intermediates, double _posRes,
-                double _oriRes, const Formation& _formation) {
-  GroupLPOutput<MPTraits> lpOutput(_start.GetGroupMap());
+    const std::vector<GroupCfgType>& _intermediates, double _posRes,
+    double _oriRes, const Formation& _formation) {
+  GroupLPOutput<MPTraits> lpOutput(_start.GetGroupRoadmap());
   IsConnected(_start, _end, &lpOutput, _posRes, _oriRes, false, true, _formation);
   return lpOutput.m_path;
 }

@@ -1,18 +1,19 @@
-#ifndef EXPERIMENTAL_DISTANCE_H_
-#define EXPERIMENTAL_DISTANCE_H_
+#ifndef PMPL_EXPERIMENTAL_DISTANCE_H_
+#define PMPL_EXPERIMENTAL_DISTANCE_H_
 
-#include "DistanceMetricMethod.h"
 #include "WeightedEuclideanDistance.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup DistanceMetrics
-/// @brief These aren't the droids you're looking for.
+/// These aren't the droids you're looking for.
 ///
 /// This metric applies only to nonholonomic robots. It works as a weighted
 /// Euclidean distance between two states, except that it allows the first
 /// state to coast under its present momentum for one timestep before checking
 /// the distance. Thus, it measures how close the first state will be to the
 /// second after drifting.
+///
+/// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ExperimentalDistance : public WeightedEuclideanDistance<MPTraits> {

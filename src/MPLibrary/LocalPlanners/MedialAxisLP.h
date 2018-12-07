@@ -421,6 +421,8 @@ EpsilonClosePath(const CfgType& _c1, const CfgType& _c2, CfgType& _mid,
   maLPOutput.m_path.push_back(_c2);
 
   // Save pushed mid
+  /// @todo This doesn't make any sense - the validity checker doesn't push
+  ///       anything.
   vector<pair<CfgType,CfgType> > history = m_macVC->GetHistory();
 
   if(this->m_debug)
@@ -585,7 +587,7 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
     // checking for progression.
     auto dm = this->GetDistanceMetric(m_dmLabel);
-  
+
     if(dm->Distance(prev, curr) < _posRes) {
       ++failures;
       curr = prev;
@@ -593,9 +595,9 @@ IsConnectedIter(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
       if(this->m_debug)
         std::cout << "Same Point: " << failures << ", " << no_progress << std::endl;
       continue;
-    } 
+    }
     else if(dm->Distance(prev, _c2) < dm->Distance(curr, _c2)) {
-      ++no_progress; 
+      ++no_progress;
       stat->IncStat("Failed to make progress");
       if(this->m_debug)
         std::cout << "No Progress: " << failures << ", " << no_progress << std::endl;
@@ -858,7 +860,7 @@ void
 MedialAxisLP<MPTraits>::
 ReduceNoise(const CfgType& _c1, const CfgType& _c2,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes) {
-  
+
   if(_lpOutput->m_intermediates.empty())
     return;
 
@@ -869,7 +871,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   //    add new intermediate
   //  else
   //    add old intermediate
-  
+
   MethodTimer mt(this->GetStatClass(), "Reduce Noise");
   LPOutput<MPTraits> lpOutput;
 
@@ -925,8 +927,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   MethodTimer mt(this->GetStatClass(), this->GetName() + "::ReduceNoice");
 
   typename MPTraits::RoadmapType tempGraph(_c1.GetRobot());
-  auto g = tempGraph.GetGraph();
-  auto v1 = g->AddVertex(_c1);
+  auto v1 = tempGraph.AddVertex(_c1);
   std::vector<CfgType> path, newPath;
   path.push_back(_c1) ;
   auto dm = this->GetDistanceMetric(m_dmLabel);
@@ -934,8 +935,8 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
   for(auto iter = _lpOutput->m_path.begin() + 1;
       iter < _lpOutput->m_path.end();
       ++iter) {
-    auto next = g->AddVertex(*iter);
-    g->AddEdge(v1, next, typename MPTraits::WeightType("edge", dm->Distance(path.back(), *iter)));
+    auto next = tempGraph.AddVertex(*iter);
+    tempGraph.AddEdge(v1, next, typename MPTraits::WeightType("edge", dm->Distance(path.back(), *iter)));
     path.push_back(*iter);
     v1 = next;
   }

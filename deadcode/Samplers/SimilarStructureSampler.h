@@ -475,4 +475,23 @@ class SimilarStructureSampler : public SamplerMethod<MPTraits> {
 
 };
 
+
+inline
+ostream&
+operator<<(ostream& _os, const DistributionConstant& _d) {
+  return _os << "constant(" << _d.m_value << ")";
+}
+
+inline
+ostream&
+operator<<(ostream& _os, const DistributionUniform& _d) {
+  return _os << "uniform(" << _d.m_low << ", " << _d.m_high << ")";
+}
+
+inline
+ostream&
+operator<<(ostream& _os, const DistributionGaussian& _d) {
+  return _os << "gaussian(" << _d.m_mean << ", " << _d.m_std << ")";
+}
+
 #endif

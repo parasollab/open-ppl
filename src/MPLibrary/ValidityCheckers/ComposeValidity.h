@@ -1,5 +1,5 @@
-#ifndef COMPOSE_VALIDITY_H
-#define COMPOSE_VALIDITY_H
+#ifndef PMPL_COMPOSE_VALIDITY_H_
+#define PMPL_COMPOSE_VALIDITY_H_
 
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
@@ -16,16 +16,16 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
 
   public:
 
-    ///@name Local Types
-    ///@{
-
-    enum LogicalOperator {AND, OR}; ///< The supported logical operators.
-
-    ///@}
     ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    enum LogicalOperator {AND, OR}; ///< The supported logical operators.
 
     ///@}
     ///@name Construction
@@ -81,16 +81,16 @@ ComposeValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
   else if(logicalOperator == "or")
     m_operator = OR;
   else
-    throw ParseException(_node.Where(), "Operator '" + logicalOperator +
-        "' is unknown.");
+    throw ParseException(_node.Where()) << "Operator '" << logicalOperator
+                                        << "' is unknown.";
 
   for(auto& child : _node)
     if(child.Name() == "ValidityChecker")
       m_vcLabels.push_back(child.Read("label", true, "",
-            "ValidityChecker method to include in this set."));
+          "ValidityChecker method to include in this set."));
 
   if(m_vcLabels.size() < 2)
-    throw ParseException(_node.Where(), "Must specify at least two submethods.");
+    throw ParseException(_node.Where()) << "Must specify at least two methods.";
 }
 
 /*---------------------- ValidityCheckerMethod Overrides ---------------------*/

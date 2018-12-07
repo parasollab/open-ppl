@@ -16,7 +16,6 @@ class ShortcuttingPathModifier : public PathModifierMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
     typedef typename RoadmapType::VID       VID;
 
     ShortcuttingPathModifier(const string& _dmLabel = "",
@@ -69,8 +68,8 @@ bool
 ShortcuttingPathModifier<MPTraits>::
 ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPath) {
   if(this->m_debug) cout << "\n*S* Executing ShortcuttingPathModifier::Modifier" << endl;
-  
-  auto graph = _graph ? _graph->GetGraph() : this->GetRoadmap()->GetGraph();
+
+  auto graph = _graph ? _graph : this->GetRoadmap();
 
   vector<VID> originalPathVIDs = this->GetPathVIDs(_path, graph);
 
@@ -173,7 +172,7 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
       << " is empty. Aborting smoothing operation(s)." << endl;
     return false;
   }
-   
+
 }
 
 #endif

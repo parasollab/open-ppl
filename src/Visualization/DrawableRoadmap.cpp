@@ -11,7 +11,7 @@
 
 
 DrawableRoadmap::
-DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
+DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
     const std::string& _name)
   : m_color(_color),
     m_multiBody(*_graph->GetRobot()->GetMultiBody()),
@@ -26,19 +26,19 @@ DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
     m_name = _name;
 
   // Install hooks to update the visualization whenever the roadmap changes.
-  m_graph->InstallHook(GraphType::HookType::AddVertex, m_name,
+  m_graph->InstallHook(RoadmapType::HookType::AddVertex, m_name,
       [this](VI _vi) {
         this->AddVertex(_vi);
       });
-  m_graph->InstallHook(GraphType::HookType::AddEdge, m_name,
+  m_graph->InstallHook(RoadmapType::HookType::AddEdge, m_name,
       [this](EI _ei) {
         this->AddEdge(_ei);
       });
-  m_graph->InstallHook(GraphType::HookType::DeleteVertex, m_name,
+  m_graph->InstallHook(RoadmapType::HookType::DeleteVertex, m_name,
       [this](VI _vi) {
         this->DeleteVertex(_vi);
       });
-  m_graph->InstallHook(GraphType::HookType::DeleteEdge, m_name,
+  m_graph->InstallHook(RoadmapType::HookType::DeleteEdge, m_name,
       [this](EI _ei) {
         this->DeleteEdge(_ei);
       });
@@ -66,14 +66,14 @@ DrawableRoadmap(GraphType* _graph, const glutils::color& _color,
 DrawableRoadmap::
 ~DrawableRoadmap() {
   // Remove the graph hooks if not already done.
-  if(m_graph->IsHook(GraphType::HookType::AddVertex, m_name))
-    m_graph->RemoveHook(GraphType::HookType::AddVertex, m_name);
-  if(m_graph->IsHook(GraphType::HookType::AddEdge, m_name))
-    m_graph->RemoveHook(GraphType::HookType::AddEdge, m_name);
-  if(m_graph->IsHook(GraphType::HookType::DeleteVertex, m_name))
-    m_graph->RemoveHook(GraphType::HookType::DeleteVertex, m_name);
-  if(m_graph->IsHook(GraphType::HookType::DeleteEdge, m_name))
-    m_graph->RemoveHook(GraphType::HookType::DeleteEdge, m_name);
+  if(m_graph->IsHook(RoadmapType::HookType::AddVertex, m_name))
+    m_graph->RemoveHook(RoadmapType::HookType::AddVertex, m_name);
+  if(m_graph->IsHook(RoadmapType::HookType::AddEdge, m_name))
+    m_graph->RemoveHook(RoadmapType::HookType::AddEdge, m_name);
+  if(m_graph->IsHook(RoadmapType::HookType::DeleteVertex, m_name))
+    m_graph->RemoveHook(RoadmapType::HookType::DeleteVertex, m_name);
+  if(m_graph->IsHook(RoadmapType::HookType::DeleteEdge, m_name))
+    m_graph->RemoveHook(RoadmapType::HookType::DeleteEdge, m_name);
 
   // Remove the key mapping.
   if(main_window::get())

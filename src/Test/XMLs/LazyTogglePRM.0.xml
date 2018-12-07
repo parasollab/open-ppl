@@ -44,7 +44,7 @@
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF"
-        lpLabel="sl" countFailures="true" fail="1" checkIfSameCC="false"/>
+        lpLabel="sl" maxFailures="1" checkIfSameCC="false"/>
     </Connectors>
 
     <MapEvaluators>

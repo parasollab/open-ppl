@@ -15,9 +15,8 @@ class RoadmapSet final {
   public:
 
     typedef typename MPTraits::RoadmapType  RoadmapType;
-    typedef typename RoadmapType::GraphType GraphType;
-    typedef typename GraphType::VPI         Iterator;
-    typedef typename GraphType::CVPI        ConstIterator;
+    typedef typename RoadmapType::VPI       Iterator;
+    typedef typename RoadmapType::CVPI      ConstIterator;
 
     RoadmapSet() = default;
 
@@ -33,31 +32,31 @@ class RoadmapSet final {
     /// Returns the number of nodes in m_roadmap
     size_t size() const {
       CheckMap();
-      return m_roadmap->GetGraph()->get_num_vertices();
+      return m_roadmap->get_num_vertices();
     }
 
     /// Returns a cfg iterator from m_roadmap begin
     Iterator begin() {
       CheckMap();
-      return m_roadmap->GetGraph()->begin();
+      return m_roadmap->begin();
     }
 
     /// Returns a cfg iterator from m_roadmap end
     Iterator end() {
       CheckMap();
-      return m_roadmap->GetGraph()->end();
+      return m_roadmap->end();
     }
 
     /// Returns a const cfg iterator from m_roadmap begin
     ConstIterator begin() const {
       CheckMap();
-      return m_roadmap->GetGraph()->begin();
+      return m_roadmap->begin();
     }
 
     /// Returns a const cfg iterator from m_roadmap end
     ConstIterator end() const {
       CheckMap();
-      return m_roadmap->GetGraph()->end();
+      return m_roadmap->end();
     }
 
     static string GetName() { return "RoadmapSet"; }

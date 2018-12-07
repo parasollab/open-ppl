@@ -49,8 +49,8 @@ class BatteryConstrainedGroup : public Agent {
     ///@name Motion Planning Types
     ///@{
 
-    typedef RoadmapGraph<CfgType, WeightType>         GraphType;
-    typedef typename GraphType::vertex_descriptor     VID;
+    typedef RoadmapGraph<CfgType, WeightType>         RoadmapType;
+    typedef typename RoadmapType::vertex_descriptor   VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 
     ///@}
