@@ -192,20 +192,20 @@ class MPBaseObject {
     MPSolution* GetMPSolution() const noexcept;
 
     /// Get the current free-space roadmap.
-    RoadmapType* GetRoadmap() const noexcept;
+    RoadmapType* GetRoadmap(Robot* const _r = nullptr) const noexcept;
 
     /// Get the current free-space group roadmap.
-    GroupRoadmapType* GetGroupRoadmap() const noexcept;
+    GroupRoadmapType* GetGroupRoadmap(RobotGroup* const _g = nullptr) const
+        noexcept;
 
     /// Get the current obstacle-space roadmap.
-    RoadmapType* GetBlockRoadmap() const noexcept;
+    RoadmapType* GetBlockRoadmap(Robot* const _r = nullptr) const noexcept;
 
     /// Get the current best path.
-    Path* GetPath(Robot* const _r) const noexcept;
-    Path* GetPath() const noexcept;
+    Path* GetPath(Robot* const _r = nullptr) const noexcept;
 
     /// Get the current best group path.
-    GroupPath* GetGroupPath() const noexcept;
+    GroupPath* GetGroupPath(RobotGroup* const _g = nullptr) const noexcept;
 
     /// Get the current StatClass.
     StatClass* GetStatClass() const noexcept;
@@ -488,8 +488,8 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPBaseObject<MPTraits>::
-GetRoadmap() const noexcept {
-  return m_library->GetRoadmap();
+GetRoadmap(Robot* const _r) const noexcept {
+  return m_library->GetRoadmap(_r);
 }
 
 
@@ -497,8 +497,8 @@ template <typename MPTraits>
 inline
 typename MPTraits::GroupRoadmapType*
 MPBaseObject<MPTraits>::
-GetGroupRoadmap() const noexcept {
-  return m_library->GetGroupRoadmap();
+GetGroupRoadmap(RobotGroup* const _g) const noexcept {
+  return m_library->GetGroupRoadmap(_g);
 }
 
 
@@ -506,8 +506,8 @@ template <typename MPTraits>
 inline
 typename MPTraits::RoadmapType*
 MPBaseObject<MPTraits>::
-GetBlockRoadmap() const noexcept {
-  return m_library->GetBlockRoadmap();
+GetBlockRoadmap(Robot* const _r) const noexcept {
+  return m_library->GetBlockRoadmap(_r);
 }
 
 
@@ -522,20 +522,10 @@ GetPath(Robot* const _r) const noexcept {
 
 template <typename MPTraits>
 inline
-typename MPTraits::Path*
-MPBaseObject<MPTraits>::
-GetPath() const noexcept {
-  auto task = GetTask();
-  return task ? m_library->GetPath(task->GetRobot()) : nullptr;
-}
-
-
-template <typename MPTraits>
-inline
 typename MPTraits::GroupPathType*
 MPBaseObject<MPTraits>::
-GetGroupPath() const noexcept {
-  return m_library->GetGroupPath();
+GetGroupPath(RobotGroup* const _g) const noexcept {
+  return m_library->GetGroupPath(_g);
 }
 
 

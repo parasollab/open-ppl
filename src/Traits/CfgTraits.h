@@ -122,6 +122,7 @@
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/IterationCountEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
@@ -147,6 +148,7 @@
 #include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
+#include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/LPCompare.h"
@@ -342,6 +344,7 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
+    GroupDecoupledQuery<MPTraits>,
     GroupQuery<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     IterationCountEvaluator<MPTraits>,
@@ -372,6 +375,7 @@ struct MPTraits {
     DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
+    GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
     LPCompare<MPTraits>,
     ModifyPath<MPTraits>,

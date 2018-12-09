@@ -1,11 +1,13 @@
-#ifndef DYNAMIC_OBSTACLE_H_
-#define DYNAMIC_OBSTACLE_H_
+#ifndef PMPL_DYNAMIC_OBSTACLE_H_
+#define PMPL_DYNAMIC_OBSTACLE_H_
 
 #include <memory>
 #include <vector>
 
 #include "ConfigurationSpace/Cfg.h"
+#include "Utilities/XMLNode.h"
 
+class MPProblem;
 class Robot;
 
 
@@ -27,7 +29,12 @@ class DynamicObstacle {
     /// Construct a dynamic obstacle.
     /// @param _robot The robot model for the obstacle.
     /// @param _path The obstacle's known trajectory.
-    DynamicObstacle(std::unique_ptr<Robot>&& _robot, std::vector<Cfg> _path);
+    DynamicObstacle(Robot* const _robot, std::vector<Cfg> _path);
+
+    /// Construct a dynamic obstacle from an XML node.
+    /// @param _node The XML node to parse.
+    /// @param _problem The owning problem.
+    DynamicObstacle(XMLNode& _node, MPProblem* const _problem);
 
     ~DynamicObstacle();
 
@@ -48,7 +55,7 @@ class DynamicObstacle {
     ///@name Internal State
     ///@{
 
-    std::unique_ptr<Robot> m_robot; ///< The obstacle robot.
+    Robot* m_robot{nullptr}; ///< The obstacle robot.
     std::vector<Cfg> m_path; ///< For now, assuming 1 cfg per time resolution.
 
     ///@}

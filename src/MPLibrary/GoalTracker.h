@@ -395,6 +395,17 @@ class GoalTrackerType final : public MPBaseObject<MPTraits> {
     /// @param _task The task.
     void AddMap(GroupRoadmapType* const _roadmap, const GroupTask* const _task);
 
+    /// Check for a goal map for a roadmap/task pair.
+    /// @param _roadmap The roadmap.
+    /// @param _task The task.
+    bool IsMap(RoadmapType* const _roadmap, const MPTask* const _task) const;
+
+    /// Check for a goal map for a group roadmap/task pair.
+    /// @param _roadmap The group roadmap.
+    /// @param _task The task.
+    bool IsMap(GroupRoadmapType* const _roadmap, const GroupTask* const _task)
+        const;
+
     /// Clear all goal maps.
     void Clear();
 
@@ -614,6 +625,24 @@ AddMap(GroupRoadmapType* const _roadmap, const GroupTask* const _task) {
   iter->second.InstallHooks();
 
   /// @todo Should this create maps for individual robots as well?
+}
+
+
+template <typename MPTraits>
+bool
+GoalTrackerType<MPTraits>::
+IsMap(RoadmapType* const _roadmap, const MPTask* const _task) const {
+  IndividualKey key{_roadmap, _task};
+  return m_individualMaps.count(key);
+}
+
+
+template <typename MPTraits>
+bool
+GoalTrackerType<MPTraits>::
+IsMap(GroupRoadmapType* const _roadmap, const GroupTask* const _task) const {
+  GroupKey key{_roadmap, _task};
+  return m_groupMaps.count(key);
 }
 
 

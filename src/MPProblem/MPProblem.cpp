@@ -334,11 +334,26 @@ GetTasks(RobotGroup* const _group) const noexcept {
   return output;
 }
 
+/*---------------------------- Dynamic Obstacles -----------------------------*/
 
-const std::vector<std::unique_ptr<DynamicObstacle>>&
+const std::vector<DynamicObstacle>&
 MPProblem::
 GetDynamicObstacles() const noexcept {
   return m_dynamicObstacles;
+}
+
+
+void
+MPProblem::
+AddDynamicObstacle(DynamicObstacle&& _obstacle) {
+  m_dynamicObstacles.emplace_back(std::move(_obstacle));
+}
+
+
+void
+MPProblem::
+ClearDynamicObstacles() {
+  m_dynamicObstacles.clear();
 }
 
 /*-------------------------------- Debugging ---------------------------------*/
@@ -411,18 +426,7 @@ ParseChild(XMLNode& _node) {
     m_robotGroups.emplace_back(new RobotGroup(this, _node));
   }
   else if(_node.Name() == "DynamicObstacle") {
-    // If this is a dynamic obstacle, get the path file name and make sure it
-    // exists.
-    std::unique_ptr<Robot> robot(new Robot(this, _node));
-
-    const std::string filePath = GetPathName(_node.Filename());
-    const std::string obstacleFile = _node.Read("pathfile", true, "",
-        "DynamicObstacle path file name");
-    const std::string obstacleFilename = filePath + obstacleFile;
-
-    vector<Cfg> path = LoadPath(obstacleFilename, robot.get());
-    m_dynamicObstacles.emplace_back(new DynamicObstacle(std::move(robot),
-          std::move(path)));
+    m_dynamicObstacles.emplace_back(_node, this);
   }
   else if(_node.Name() == "Task") {
     const std::string label = _node.Read("robot", true, "",

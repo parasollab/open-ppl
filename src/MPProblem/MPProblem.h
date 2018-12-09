@@ -133,8 +133,11 @@ class MPProblem final
     ///@{
 
     /// Get all of the dynamic obstacles in this problem.
-    const std::vector<std::unique_ptr<DynamicObstacle>>& GetDynamicObstacles()
-        const noexcept;
+    const std::vector<DynamicObstacle>& GetDynamicObstacles() const noexcept;
+
+    void AddDynamicObstacle(DynamicObstacle&& _obstacle);
+
+    void ClearDynamicObstacles();
 
     ///@}
     ///@name Debugging
@@ -196,7 +199,7 @@ class MPProblem final
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
 
     /// The dynamic obstacles in our problem.
-    std::vector<std::unique_ptr<DynamicObstacle>> m_dynamicObstacles;
+    std::vector<DynamicObstacle> m_dynamicObstacles;
 
     /// All handoff templates for a problem.
     std::vector<std::unique_ptr<InteractionInformation>> m_interactionInformations;

@@ -94,30 +94,55 @@
 
     <MapEvaluators>
       <TimeEvaluator label="TimeEval" timeout="10"/>
-
-      <GroupQuery label="Query" debug="true"/>
-
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="10000" operator=">="/>
+        value="1000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
 
-      <ComposeEvaluator label="BoundedQuery" operator="or">
+      <QueryMethod label="IndividualQuery" debug="true"
+        safeIntervalToolLabel="SI"/>
+      <GroupQuery label="CompositeQuery"/>
+      <GroupDecoupledQuery label="DecoupledQuery" queryLabel="IndividualQuery"
+        debug="true"/>
+
+      <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
         <Evaluator label="NodesEval"/>
-        <Evaluator label="Query"/>
+        <Evaluator label="IndividualQuery"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="BoundedCompositeQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="CompositeQuery"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="BoundedDecoupledQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="DecoupledQuery"/>
       </ComposeEvaluator>
     </MapEvaluators>
 
 
     <MPStrategies>
-      <GroupPRM label="PRM" debug="true">
+      <BasicPRM label="IndividualPRM">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
-        <Evaluator label="BoundedQuery"/>
+        <Evaluator label="BoundedIndividualQuery"/>
+      </BasicPRM>
+
+      <GroupPRM label="CompositePRM" debug="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="BoundedCompositeQuery"/>
       </GroupPRM>
+
+      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="IndividualPRM">
+        <Evaluator label="BoundedDecoupledQuery"/>
+      </GroupDecoupledStrategy>
     </MPStrategies>
 
     <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
+
       <!-- We won't need these until the topological tools are updated to
            support robot groups.
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
@@ -129,8 +154,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="PRM" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="DecoupledPRM" seed="12345678"
+      baseFilename="decoupled" vizmoDebug="true"/>
 
   </Library>
 

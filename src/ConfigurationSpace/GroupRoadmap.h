@@ -300,8 +300,8 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
     // Assert that the individual vertices exist.
     const bool verticesExist =
-      roadmap->find_vertex(individualSourceVID) != roadmap->end() and
-      roadmap->find_vertex(individualTargetVID) != roadmap->end();
+        roadmap->find_vertex(individualSourceVID) != roadmap->end() and
+        roadmap->find_vertex(individualTargetVID) != roadmap->end();
     if(!verticesExist)
       throw RunTimeException(WHERE, "Cannot add edge for non-existent vertices.");
 
@@ -310,13 +310,22 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     const bool edgeExists = roadmap->IsEdge(individualSourceVID,
                                             individualTargetVID);
     if(edgeDescriptors[i] != INVALID_ED) {
+      if(!edgeExists)
+        throw RunTimeException(WHERE) << "Expected edge (" << individualSourceVID
+                                      << ", " << individualTargetVID << ") does "
+                                      << "not exist for robot "
+                                      << roadmap->GetRobot()->GetLabel() << ".";
+
       const bool consistent = edgeDescriptors[i].source() == individualSourceVID
                           and edgeDescriptors[i].target() == individualTargetVID;
-
       if(!consistent)
-        throw RunTimeException(WHERE, "Edge descriptors are not consistent!");
-      if(!edgeExists)
-        throw RunTimeException(WHERE, "Expected edge does not exist!");
+        throw RunTimeException(WHERE) << "Edge descriptors are not consistent. "
+                                      << "Fetched from group cfg: ("
+                                      << individualSourceVID << ", "
+                                      << individualTargetVID << "), fetched from "
+                                      << "group edge: ("
+                                      << edgeDescriptors[i].source() << ", "
+                                      << edgeDescriptors[i].target() << ").";
     }
     // If not, assert that the edge to be added does not already exist and then
     // add it.

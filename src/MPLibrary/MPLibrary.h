@@ -263,10 +263,10 @@ class MPLibraryType final
     void SetMPProblem(MPProblem* const _problem) noexcept;
 
     MPTask* GetTask() const noexcept;
+    void SetTask(MPTask* const _task) noexcept;
 
     GroupTask* GetGroupTask() const noexcept;
-
-    void SetTask(MPTask* const _task) noexcept;
+    void SetGroupTask(GroupTask* const _task) noexcept;
 
     const std::string& GetBaseFilename() const noexcept;
     void SetBaseFilename(const std::string& _s) noexcept;
@@ -702,6 +702,15 @@ GetTask() const noexcept {
 
 template <typename MPTraits>
 inline
+void
+MPLibraryType<MPTraits>::
+SetTask(MPTask* const _task) noexcept {
+  m_task = _task;
+}
+
+
+template <typename MPTraits>
+inline
 GroupTask*
 MPLibraryType<MPTraits>::
 GetGroupTask() const noexcept {
@@ -713,9 +722,10 @@ template <typename MPTraits>
 inline
 void
 MPLibraryType<MPTraits>::
-SetTask(MPTask* const _task) noexcept {
-  m_task = _task;
+SetGroupTask(GroupTask* const _task) noexcept {
+  m_groupTask = _task;
 }
+
 
 template <typename MPTraits>
 inline
@@ -759,7 +769,9 @@ inline
 typename MPTraits::RoadmapType*
 MPLibraryType<MPTraits>::
 GetRoadmap(Robot* const _r) const noexcept {
-  return m_solution->GetRoadmap(_r);
+  if(!_r and !GetTask())
+    return nullptr;
+  return m_solution->GetRoadmap(_r ? _r : GetTask()->GetRobot());
 }
 
 
@@ -768,7 +780,9 @@ inline
 typename MPTraits::GroupRoadmapType*
 MPLibraryType<MPTraits>::
 GetGroupRoadmap(RobotGroup* const _g) const noexcept {
-  return m_solution->GetGroupRoadmap(_g);
+  if(!_g and !GetGroupTask())
+    return nullptr;
+  return m_solution->GetGroupRoadmap(_g ? _g : GetGroupTask()->GetRobotGroup());
 }
 
 
@@ -777,7 +791,9 @@ inline
 typename MPTraits::RoadmapType*
 MPLibraryType<MPTraits>::
 GetBlockRoadmap(Robot* const _r) const noexcept {
-  return m_solution->GetBlockRoadmap(_r);
+  if(!_r and !GetTask())
+    return nullptr;
+  return m_solution->GetBlockRoadmap(_r ? _r : GetTask()->GetRobot());
 }
 
 
@@ -785,7 +801,9 @@ template <typename MPTraits>
 typename MPTraits::Path*
 MPLibraryType<MPTraits>::
 GetPath(Robot* const _r) const noexcept {
-  return m_solution->GetPath(_r);
+  if(!_r and !GetTask())
+    return nullptr;
+  return m_solution->GetPath(_r ? _r : GetTask()->GetRobot());
 }
 
 
@@ -793,7 +811,9 @@ template <typename MPTraits>
 typename MPTraits::GroupPathType*
 MPLibraryType<MPTraits>::
 GetGroupPath(RobotGroup* const _g) const noexcept {
-  return m_solution->GetGroupPath(_g);
+  if(!_g and !GetGroupTask())
+    return nullptr;
+  return m_solution->GetGroupPath(_g ? _g : GetGroupTask()->GetRobotGroup());
 }
 
 
@@ -802,7 +822,9 @@ inline
 typename MPTraits::LocalObstacleMap*
 MPLibraryType<MPTraits>::
 GetLocalObstacleMap(Robot* const _r) const noexcept {
-  return m_solution->GetLocalObstacleMap(_r);
+  if(!_r and !GetTask())
+    return nullptr;
+  return m_solution->GetLocalObstacleMap(_r ? _r : GetTask()->GetRobot());
 }
 
 

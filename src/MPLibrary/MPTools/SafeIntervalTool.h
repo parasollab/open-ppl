@@ -210,13 +210,13 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   for(const auto& obstacle : obstacles) {
     // Determine the obstacle's position at the current timestep. If it is
     // already done moving, use its last position.
-    const auto& path = obstacle->GetPath();
+    const auto& path = obstacle.GetPath();
     const size_t lastStep = path.size(),
                  useStep  = std::min(currentStep, lastStep);
     const CfgType& position = path[useStep];
 
     // Configure the obstacle at the current timestep.
-    auto obstacleMultiBody = obstacle->GetRobot()->GetMultiBody();
+    auto obstacleMultiBody = obstacle.GetRobot()->GetMultiBody();
     obstacleMultiBody->Configure(position);
 
     // If the obstacle is in collision with _cfg at _timestep, return false
@@ -246,8 +246,8 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
   // Find the latest timestep in which a dynamic obstacle is still moving.
   size_t timeFinal = 0;
   for(auto& obstacle : obstacles)
-    if(obstacle->GetPath().size() > timeFinal)
-      timeFinal = obstacle->GetPath().size();
+    if(obstacle.GetPath().size() > timeFinal)
+      timeFinal = obstacle.GetPath().size();
 
   // Determine all of the intervals for which it is safe to start following this
   // set of configurations.

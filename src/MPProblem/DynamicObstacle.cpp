@@ -1,13 +1,30 @@
 #include "DynamicObstacle.h"
 
-#include "Robot/Robot.h"
+#include "MPProblem/MPProblem.h"
+#include "MPProblem/Robot/Robot.h"
+#include "Utilities/IOUtils.h"
+#include "Utilities/MPUtils.h"
 
 
 /*------------------------------- Construction -------------------------------*/
 
 DynamicObstacle::
-DynamicObstacle(std::unique_ptr<Robot>&& _robot, std::vector<Cfg> _path)
-  : m_robot(std::move(_robot)), m_path(_path) {
+DynamicObstacle(Robot* const _robot, std::vector<Cfg> _path)
+  : m_robot(_robot), m_path(_path) {
+}
+
+
+DynamicObstacle::
+DynamicObstacle(XMLNode& _node, MPProblem* const _problem) {
+  const std::string robotLabel = _node.Read("robot", true, "",
+      "The robot which is acting as a dynamic obstacle.");
+  m_robot = _problem->GetRobot(robotLabel);
+
+  const std::string filePath = GetPathName(_node.Filename());
+  const std::string obstacleFile = filePath + _node.Read("pathfile", true, "",
+      "DynamicObstacle path file name");
+
+  m_path = LoadPath(obstacleFile, m_robot);
 }
 
 
@@ -19,7 +36,7 @@ DynamicObstacle::
 Robot*
 DynamicObstacle::
 GetRobot() const noexcept {
-  return m_robot.get();
+  return m_robot;
 }
 
 
