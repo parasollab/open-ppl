@@ -1,11 +1,21 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <Input>
-    <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
-    <Query filename="../Envs/2D/2d.query"/>
-  </Input>
+  <Problem>
+    <Environment filename="../Envs/2D/2d.env"/>
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
 
-  <MPProblem>
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="-10 -10"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="10 10"/>
+      </GoalConstraints>
+    </Task>
+  </Problem>
+
+  <Library>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
@@ -32,21 +42,24 @@
     </Connectors>
 
     <MapEvaluators>
-      <PRMQuery label="PRMQuery" debug="false" fullRecreatePath="false">
-        <NodeConnectionMethod method="Closest"/>
-      </PRMQuery>
+      <QueryMethod label="Query" debug="false"
+        safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
       <BasicPRM label="QueryPRM">
-        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
-        <Connector method="Closest"/>
-        <Evaluator method="PRMQuery"/>
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="Query"/>
       </BasicPRM>
     </MPStrategies>
+
+    <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
+    </MPTools>
 
     <Solver mpStrategyLabel="QueryPRM" seed="0"
       baseFilename="../Scratch/QueryPRM"/>
 
-  </MPProblem>
+  </Library>
 </MotionPlanning>

@@ -1,10 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <Input>
-    <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
-  </Input>
+  <Problem>
+    <Environment filename="../Envs/2D/2d.env"/>
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
+  </Problem>
 
-  <MPProblem>
+  <Library>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
@@ -18,7 +19,7 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd" debug="true"/>
     </Samplers>
 
     <LocalPlanners>
@@ -42,10 +43,10 @@
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM">
-        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
-        <Connector method="Closest"/>
-        <Evaluator method="NodesEval"/>
+      <BasicPRM label="BasicPRM" debug="true">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
       </BasicPRM>
 
     </MPStrategies>
@@ -53,5 +54,5 @@
     <Solver mpStrategyLabel="BasicPRM" seed="0"
       baseFilename="../Scratch/BasicPRM"/>
 
-  </MPProblem>
+  </Library>
 </MotionPlanning>

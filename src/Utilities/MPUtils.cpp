@@ -1,5 +1,7 @@
 #include "MPUtils.h"
 #include "MetricUtils.h"
+#include "ConfigurationSpace/Cfg.h"
+#include "MPProblem/Robot/Robot.h"
 
 /*------------------------- Random Number Generation -------------------------*/
 
@@ -44,58 +46,21 @@ GaussianDistribution(double _mean, double _stdev) {
 }
 
 
-long
-SRand(long _seedVal) {
-  static long oldSeed = _seedVal;
-  if(oldSeed == _seedVal)
-    return SRand("NONE", 0, _seedVal);
-  oldSeed = _seedVal;
-  return SRand("NONE", 0, _seedVal, true);
-}
-
-
-long
-SRand(string _methodName, int _nextNodeIndex, long _base, bool _reset) {
-  static long baseSeed = _base;
-  if(_reset)
-    baseSeed = _base;
-  if(_methodName != "NONE") {
-    long methodID = 0;
-    for(size_t i = 0; i < _methodName.length(); ++i) {
-      int tmp = _methodName[i];
-      methodID += tmp * (i + 1) * (i + 2);
-    }
-    srand48(static_cast<long>(baseSeed * (_nextNodeIndex + 1) + methodID));
-  }
-  else {
-    srand48(baseSeed);
-  }
-  return baseSeed;
+void
+SRand(const unsigned long _seed) {
+  srand(_seed);
+  srand48(_seed);
 }
 
 /*------------------------------ Geometry Utils ------------------------------*/
 
 double
-Normalize(double _a) {
-  _a = fmod(_a + 1., 2.);
-  if(_a < 0.)
-    _a += 2.;
-  return --_a;
-}
-
-
-double
-DirectedAngularDistance(double _a, double _b) {
-  // normalize both a and b to [-1, 1)
-  _a = Normalize(_a);
-  _b = Normalize(_b);
-
-  if( _b - _a  > 1.0 )
-    _a+=2.0;
-  else if ( _a - _b > 1.0 )
-    _b+=2.0;
-
-  return _b-_a;
+Normalize(const double& _a) {
+  // Translate _a right by one so that mod 2 gives a normalized rotation.
+  double a = std::fmod(_a + 1., 2.);
+  // Untranslate _a to the [-1, 1] range. If it was negative we would also have
+  // to add 2 (one whole rotation).
+  return a < 0 ? a + 1 : a - 1;
 }
 
 
@@ -106,8 +71,8 @@ TriangleHeight(const Point3d& _a, const Point3d& _b, const Point3d& _c) {
   double bc = (_b - _c).norm();
   double ac = (_a - _c).norm();
   double p = (ab + bc + ac) / 2; //half of the perimeter
-  double area = sqrt(p * (p - ab) * (p - bc) * (p - ac));
-  double height = 2 * area / (max(max(ab, bc), ac)); //h = 2A/b
+  double area = std::sqrt(p * (p - ab) * (p - bc) * (p - ac));
+  double height = 2 * area / (std::max(std::max(ab, bc), ac)); //h = 2A/b
   return height;
 }
 
@@ -189,3 +154,24 @@ NormalizeTheta(double _theta) {
 }
 
 /*----------------------------------------------------------------------------*/
+
+std::vector<Cfg>
+LoadPath(const std::string &_filename, Robot* _robot) {
+  std::vector<Cfg> result;
+  if(!FileExists(_filename))
+    throw ParseException(WHERE, "File '" + _filename + "' does not exist");
+
+  std::ifstream pathfile(_filename);
+  std::string line;
+  Cfg cfg = Cfg(_robot);
+  std::getline(pathfile, line);
+  std::getline(pathfile, line);
+  std::getline(pathfile, line);
+  while(pathfile) {
+    std::getline(pathfile, line);
+    std::istringstream cfgInput(line);
+    cfg.Read(cfgInput);
+    result.push_back(cfg);
+  }
+  return result;
+}

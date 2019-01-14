@@ -1,134 +1,172 @@
-#ifndef CFG_TRAITS_H_
-#define CFG_TRAITS_H_
+#ifndef PMPL_CFG_TRAITS_H_
+#define PMPL_CFG_TRAITS_H_
 
-#include "MPProblem/Weight.h"
+#include "MPLibrary/GoalTracker.h"
+#include "MPLibrary/MPLibrary.h"
+#include "MPLibrary/MPSolution.h"
+#include "MPLibrary/MPTools/MPTools.h"
+
+#include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/GroupCfg.h"
+#include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupPath.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+#include "ConfigurationSpace/Path.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
-#include "DistanceMetrics/BinaryLPSweptDistance.h"
-#include "DistanceMetrics/CenterOfMassDistance.h"
-#include "DistanceMetrics/EuclideanDistance.h"
-#include "DistanceMetrics/KnotTheoryDistance.h"
-#include "DistanceMetrics/LPSweptDistance.h"
-#include "DistanceMetrics/ManhattanDistance.h"
-#include "DistanceMetrics/ReachableDistance.h"
-#include "DistanceMetrics/RMSDDistance.h"
-#include "DistanceMetrics/ScaledEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
+#include "MPLibrary/DistanceMetrics/CenterOfMassDistance.h"
+#include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/KnotTheoryDistance.h"
+#include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
+#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
+#include "MPLibrary/DistanceMetrics/RMSDDistance.h"
+#include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
-#include "ValidityCheckers/AlwaysTrueValidity.h"
-#include "ValidityCheckers/CollisionDetectionValidity.h"
-#include "ValidityCheckers/ComposeValidity.h"
-#include "ValidityCheckers/MedialAxisClearanceValidity.h"
-#include "ValidityCheckers/NegateValidity.h"
-#include "ValidityCheckers/NodeClearanceValidity.h"
-#include "ValidityCheckers/ObstacleClearanceValidity.h"
+#include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/MedialAxisClearanceValidity.h"
+#include "MPLibrary/ValidityCheckers/NegateValidity.h"
+#include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
+#include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
 //neighborhood finder includes
-#include "NeighborhoodFinders/BandsNF.h"
-#include "NeighborhoodFinders/BruteForceNF.h"
-#include "NeighborhoodFinders/CGALNF.h"
-#include "NeighborhoodFinders/DPESNF.h"
-#include "NeighborhoodFinders/HierarchicalNF.h"
-#include "NeighborhoodFinders/HopLimitNF.h"
-#include "NeighborhoodFinders/OptimalNF.h"
-#include "NeighborhoodFinders/RadiusNF.h"
-#include "NeighborhoodFinders/RandomNF.h"
+#include "MPLibrary/NeighborhoodFinders/BandsNF.h"
+#include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/DPESNF.h"
+#include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
+#include "MPLibrary/NeighborhoodFinders/HopLimitNF.h"
+#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
+#include "MPLibrary/NeighborhoodFinders/LSHNF.h"
+#include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
+#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
+#include "MPLibrary/NeighborhoodFinders/RandomNF.h"
+#include "MPLibrary/NeighborhoodFinders/TopologicalFilter.h"
 
 //sampler includes
-#include "Samplers/BridgeTestSampler.h"
-#include "Samplers/GaussianSampler.h"
-#include "Samplers/GridSampler.h"
-#include "Samplers/MedialAxisSampler.h"
-#include "Samplers/MixSampler.h"
-#include "Samplers/ObstacleBasedSampler.h"
-#include "Samplers/SimilarStructureSampler.h"
-#include "Samplers/UniformMedialAxisSampler.h"
-#include "Samplers/UniformObstacleBasedSampler.h"
-#include "Samplers/UniformRandomSampler.h"
-#include "Samplers/WorkspaceImportanceSampler.h"
+#include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/DynamicRegionSampler.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
+#include "MPLibrary/Samplers/GridSampler.h"
+#include "MPLibrary/Samplers/MaskedProximitySamplerGroup.h"
+#include "MPLibrary/Samplers/MaskedSamplerMethodGroup.h"
+#include "MPLibrary/Samplers/MatingNormalSamplerGroup.h"
+#include "MPLibrary/Samplers/MedialAxisSampler.h"
+#include "MPLibrary/Samplers/MixSampler.h"
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
+#include "MPLibrary/Samplers/ReachableVolumeSampler.h"
+#include "MPLibrary/Samplers/UniformMedialAxisSampler.h"
+#include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
+#include "MPLibrary/Samplers/UniformRandomSampler.h"
+#include "MPLibrary/Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
-#include "LocalPlanners/AStar.h"
-#include "LocalPlanners/HierarchicalLP.h"
-#include "LocalPlanners/MedialAxisLP.h"
-#include "LocalPlanners/RotateAtS.h"
-#include "LocalPlanners/StraightLine.h"
-#include "LocalPlanners/ToggleLP.h"
-#include "LocalPlanners/TransformAtS.h"
-#include "LocalPlanners/ApproxSpheres.h"
+#include "MPLibrary/LocalPlanners/ApproxSpheres.h"
+#include "MPLibrary/LocalPlanners/AStar.h"
+#include "MPLibrary/LocalPlanners/HierarchicalLP.h"
+#include "MPLibrary/LocalPlanners/MedialAxisLP.h"
+#include "MPLibrary/LocalPlanners/RotateAtS.h"
+#include "MPLibrary/LocalPlanners/RRTLocalPlanner.h"
+#include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/ToggleLP.h"
+#include "MPLibrary/LocalPlanners/TransformAtS.h"
 
 //extenders includes
-#include "Extenders/BasicExtender.h"
-#include "Extenders/MedialAxisExtender.h"
-#include "Extenders/MixExtender.h"
-#include "Extenders/RandomObstacleVector.h"
-#include "Extenders/RotationThenTranslation.h"
-#include "Extenders/TraceCSpaceObstacle.h"
-#include "Extenders/TraceMAPush.h"
-#include "Extenders/TraceObstacle.h"
+#include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/KinodynamicExtender.h"
+#include "MPLibrary/Extenders/LimitedDistanceExtender.h"
+#ifdef PMPL_USE_MATLAB
+#include "MPLibrary/Extenders/MatlabNeedleExtender.h"
+#endif
+#include "MPLibrary/Extenders/MedialAxisExtender.h"
+#include "MPLibrary/Extenders/MixExtender.h"
+#include "MPLibrary/Extenders/RandomObstacleVector.h"
+#include "MPLibrary/Extenders/RotationThenTranslation.h"
+#include "MPLibrary/Extenders/TraceCSpaceObstacle.h"
+#include "MPLibrary/Extenders/TraceMAPush.h"
+#include "MPLibrary/Extenders/TraceObstacle.h"
 
 //path smoothing includes
-#include "PathModifiers/CombinedPathModifier.h"
-#include "PathModifiers/CRetractionPathModifier.h"
-#include "PathModifiers/MedialAxisPathModifier.h"
-#include "PathModifiers/ResamplePathModifier.h"
-#include "PathModifiers/ShortcuttingPathModifier.h"
+#include "MPLibrary/PathModifiers/CombinedPathModifier.h"
+#include "MPLibrary/PathModifiers/CRetractionPathModifier.h"
+#include "MPLibrary/PathModifiers/MedialAxisPathModifier.h"
+#include "MPLibrary/PathModifiers/ResamplePathModifier.h"
+#include "MPLibrary/PathModifiers/ShortcuttingPathModifier.h"
 
 //connector includes
-#include "Connectors/AdaptiveConnector.h"
-#include "Connectors/CCExpansion.h"
-#include "Connectors/CCsConnector.h"
-#include "Connectors/ClosestVE.h"
-#include "Connectors/NeighborhoodConnector.h"
-#include "Connectors/RewireConnector.h"
-#include "Connectors/RRTConnect.h"
-#include "Connectors/SpatialAdaptiveConnector.h"
+#include "MPLibrary/Connectors/AdaptiveConnector.h"
+//#include "MPLibrary/Connectors/CCExpansion.h"
+#include "MPLibrary/Connectors/CCsConnector.h"
+#include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
-#include "Metrics/CCDistanceMetric.h"
-#include "Metrics/ConnectivityMetric.h"
-#include "Metrics/CoverageDistanceMetric.h"
-#include "Metrics/CoverageMetric.h"
-#include "Metrics/DiameterMetric.h"
-#include "Metrics/NumEdgesMetric.h"
-#include "Metrics/NumNodesMetric.h"
-#include "Metrics/RoadmapSet.h"
-#include "Metrics/TimeMetric.h"
-#include "Metrics/VectorSet.h"
+#include "MPLibrary/Metrics/CCDistanceMetric.h"
+#include "MPLibrary/Metrics/ConnectivityMetric.h"
+#include "MPLibrary/Metrics/CoverageDistanceMetric.h"
+#include "MPLibrary/Metrics/CoverageMetric.h"
+#include "MPLibrary/Metrics/DiameterMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
+#include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/RoadmapSet.h"
+#include "MPLibrary/Metrics/TimeMetric.h"
+#include "MPLibrary/Metrics/VectorSet.h"
 
 //map evaluator includes
-#include "MapEvaluators/ComposeEvaluator.h"
-#include "MapEvaluators/ConditionalEvaluator.h"
-#include "MapEvaluators/LazyQuery.h"
-#include "MapEvaluators/LazyToggleQuery.h"
-#include "MapEvaluators/NegateEvaluator.h"
-#include "MapEvaluators/PrintMapEvaluation.h"
-#include "MapEvaluators/PRMQuery.h"
-#include "MapEvaluators/RRTQuery.h"
-#include "MapEvaluators/TimeEvaluator.h"
-#include "MapEvaluators/TrueEvaluation.h"
+#include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
+#include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
+#include "MPLibrary/MapEvaluators/IterationCountEvaluator.h"
+#include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/LazyToggleQuery.h"
+#include "MPLibrary/MapEvaluators/MinimumClearanceEvaluator.h"
+#include "MPLibrary/MapEvaluators/MinimumDistanceEvaluator.h"
+#include "MPLibrary/MapEvaluators/NegateEvaluator.h"
+#include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
+#include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/TrueEvaluation.h"
 
 //mp strategies includes
-#include "MPStrategies/AdaptiveRRT.h"
-#include "MPStrategies/BasicPRM.h"
-#include "MPStrategies/BasicRRTStrategy.h"
-#include "MPStrategies/DynamicDomainRRT.h"
-#include "MPStrategies/DynamicRegionRRT.h"
-#include "MPStrategies/EvaluateMapStrategy.h"
-#include "MPStrategies/HybridPRM.h"
-#include "MPStrategies/LocalManeuveringStrategy.h"
-#include "MPStrategies/LPCompare.h"
-#include "MPStrategies/ModifyPath.h"
-#include "MPStrategies/MultiStrategy.h"
-#include "MPStrategies/PushQueryToMA.h"
-#include "MPStrategies/SparkPRM.h"
-#include "MPStrategies/SRTStrategy.h"
-#include "MPStrategies/Syclop.h"
-#include "MPStrategies/TogglePRMStrategy.h"
-#include "MPStrategies/UnitTest/ClearanceTestStrategy.h"
-#include "MPStrategies/UnitTest/DMTestStrategy.h"
-#include "MPStrategies/UtilityGuidedGenerator.h"
-#include "MPStrategies/VisibilityBasedPRM.h"
+#include "MPLibrary/MPStrategies/AdaptiveRRT.h"
+#include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
+#include "MPLibrary/MPStrategies/DisassemblyParallel.h"
+#include "MPLibrary/MPStrategies/DisassemblyParallelizedSAs.h"
+#include "MPLibrary/MPStrategies/DisassemblyPreemptiveDFSManipulator.h"
+#include "MPLibrary/MPStrategies/DisassemblyRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
+#include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
+#include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
+#include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
+#include "MPLibrary/MPStrategies/LPCompare.h"
+#include "MPLibrary/MPStrategies/ModifyPath.h"
+#include "MPLibrary/MPStrategies/MultiStrategy.h"
+#include "MPLibrary/MPStrategies/PushCfgToMATest.h"
+#include "MPLibrary/MPStrategies/PushQueryToMA.h"
+#include "MPLibrary/MPStrategies/ScratchStrategy.h"
+#include "MPLibrary/MPStrategies/SparkPRM.h"
+#include "MPLibrary/MPStrategies/SRTStrategy.h"
+#include "MPLibrary/MPStrategies/StableSparseRRT.h"
+#include "MPLibrary/MPStrategies/Syclop.h"
+#include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+//#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
+//#include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
+//#include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
+#include "MPLibrary/MPStrategies/UtilityGuidedGenerator.h"
+#include "MPLibrary/MPStrategies/VisibilityBasedPRM.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -144,14 +182,23 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ////////////////////////////////////////////////////////////////////////////////
-template<class C, class W = DefaultWeight<C> >
+template <typename C, typename W = DefaultWeight<C>>
 struct MPTraits {
 
-  typedef C CfgType;
-  typedef W WeightType;
-  typedef C& CfgRef;
+  typedef C                               CfgType;
+  typedef W                               WeightType;
+  typedef RoadmapGraph<C, W>              RoadmapType;
+  typedef PathType<MPTraits>              Path;
+  typedef MPLibraryType<MPTraits>         MPLibrary;
+  typedef MPSolutionType<MPTraits>        MPSolution;
+  typedef MPToolsType<MPTraits>           MPTools;
+  typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
+  typedef GoalTrackerType<MPTraits>       GoalTracker;
 
-  typedef MPProblem<MPTraits> MPProblemType;
+  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
+  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
+  typedef GroupPath<MPTraits>                        GroupPathType;
+  typedef GroupCfg                                   GroupCfgType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
@@ -163,7 +210,9 @@ struct MPTraits {
     ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
     RMSDDistance<MPTraits>,
-    ScaledEuclideanDistance<MPTraits>
+    ScaledEuclideanDistance<MPTraits>,
+    TopologicalDistance<MPTraits>,
+    WeightedEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -174,34 +223,37 @@ struct MPTraits {
     MedialAxisClearanceValidity<MPTraits>,
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>
+    ObstacleClearanceValidity<MPTraits>,
+    TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
     BandsNF<MPTraits>,
     BruteForceNF<MPTraits>,
-    CGALNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
     HopLimitNF<MPTraits>,
-    //MetricTreeNF<MPTraits>,
-    //MPNNNF<MPTraits>,
+    KdTreeNF<MPTraits>,
+    LSHNF<MPTraits>,
     OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,
-    RandomNF<MPTraits>//,
-    //SpillTreeNF<MPTraits>
-    > NeighborhoodFinderMethodList;
+    RandomNF<MPTraits>,
+    TopologicalFilter<MPTraits>
+      > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
+    DynamicRegionSampler<MPTraits>,
     GaussianSampler<MPTraits>,
     GridSampler<MPTraits>,
+    MaskedProximitySamplerGroup<MPTraits>,
+    MatingNormalSamplerGroup<MPTraits>,
     MedialAxisSampler<MPTraits>,
     MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    SimilarStructureSampler<MPTraits>,
+    ReachableVolumeSampler<MPTraits>,
     UniformMedialAxisSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>,
@@ -210,20 +262,26 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+    ApproxSpheres<MPTraits>,
     AStarClearance<MPTraits>,
     AStarDistance<MPTraits>,
     HierarchicalLP<MPTraits>,
     MedialAxisLP<MPTraits>,
     RotateAtS<MPTraits>,
+    RRTLocalPlanner<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
-    TransformAtS<MPTraits>,
-    ApproxSpheres<MPTraits>
+    TransformAtS<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
     BasicExtender<MPTraits>,
+    KinodynamicExtender<MPTraits>,
+    LimitedDistanceExtender<MPTraits>,
+#ifdef PMPL_USE_MATLAB
+    MatlabNeedleExtender<MPTraits>,
+#endif
     MedialAxisExtender<MPTraits>,
     MixExtender<MPTraits>,
     RandomObstacleVector<MPTraits>,
@@ -246,22 +304,19 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     AdaptiveConnector<MPTraits>,
-    SpatialAdaptiveConnector<MPTraits>,
-    CCExpansion<MPTraits>,
+    //CCExpansion<MPTraits>,
     CCsConnector<MPTraits>,
-    ClosestVE<MPTraits>,
     NeighborhoodConnector<MPTraits>,
-    //PreferentialAttachment<MPTraits>,
-    RewireConnector<MPTraits>,
-    RRTConnect<MPTraits>
+    RewireConnector<MPTraits>
       > ConnectorMethodList;
 
-  typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
-      ConnectivityMetricRoadmapSet;
-  typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
-      CoverageDistanceMetricRoadmapSet;
-  typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
-      CoverageMetricRoadmapSet;
+  // RoadmapSet must be re-written before use.
+  //typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
+  //    ConnectivityMetricRoadmapSet;
+  //typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
+  //    CoverageDistanceMetricRoadmapSet;
+  //typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
+  //    CoverageMetricRoadmapSet;
 
   typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits>>
       ConnectivityMetricVectorSet;
@@ -273,9 +328,9 @@ struct MPTraits {
   //types of metrics available in our world
   typedef boost::mpl::list<
     CCDistanceMetric<MPTraits>,
-    ConnectivityMetricRoadmapSet,
-    CoverageDistanceMetricRoadmapSet,
-    CoverageMetricRoadmapSet,
+    //ConnectivityMetricRoadmapSet,
+    //CoverageDistanceMetricRoadmapSet,
+    //CoverageMetricRoadmapSet,
     ConnectivityMetricVectorSet,
     CoverageDistanceMetricVectorSet,
     CoverageMetricVectorSet,
@@ -289,39 +344,57 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
+    GroupDecoupledQuery<MPTraits>,
+    GroupQuery<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    IterationCountEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
     LazyToggleQuery<MPTraits>,
+    MinimumClearanceEvaluator<MPTraits>,
+    MinimumDistanceEvaluator<MPTraits>,
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>,
-    PRMQuery<MPTraits>,
-    RRTQuery<MPTraits>,
+    QueryMethod<MPTraits>,
+    StrategyStateEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    AdaptiveRRT<MPTraits>,
+#if 0
+    AdaptiveRRT<MPTraits>, Fix after ICRA 18
+#endif
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
-    ClearanceTestStrategy<MPTraits>,
-    DMTestStrategy<MPTraits>,
+    DisassemblyExhaustiveGraph<MPTraits>,
+    DisassemblyParallel<MPTraits>,
+    DisassemblyParallelizedSAs<MPTraits>,
+    DisassemblyPreemptiveDFSManipulator<MPTraits>,
+    DisassemblyRRTStrategy<MPTraits>,
+    DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
-    DynamicRegionRRT<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
-    HybridPRM<MPTraits>,
+    GroupDecoupledStrategy<MPTraits>,
+    GroupPRM<MPTraits>,
     LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
     PushQueryToMA<MPTraits>,
+    ScratchStrategy<MPTraits>,
     SparkPRM<MPTraits, BasicPRM>,
     SparkPRM<MPTraits, TogglePRMStrategy>,
     SRTStrategy<MPTraits>,
+    StableSparseRRT<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
-    VisibilityBasedPRM<MPTraits>
+    VisibilityBasedPRM<MPTraits>,
+
+    //BoundaryTest<MPTraits>,
+    //DMTestStrategy<MPTraits>,
+    PushCfgToMATest<MPTraits>
+    //SVMTest<MPTraits>
       > MPStrategyMethodList;
 };
 

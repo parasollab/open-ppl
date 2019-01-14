@@ -1,10 +1,9 @@
 \documentclass[12pt]{article}
 
-\usepackage{fullpage}
-
-\usepackage{url}
-
 \usepackage{algorithmic}
+\usepackage{fullpage}
+\usepackage{parskip}
+\usepackage{url}
 
 \usepackage[usenames]{color}
 \usepackage{listings}
@@ -42,7 +41,7 @@
 \newcommand{\gforge}{\texttt{GForge}}
 
 \title{\Large \bf Standards and Procedures of \pmpl}
-\author{Jory Denny and Shawna Thomas and Nancy M. Amato}
+\author{Jory Denny and Read Sandstr\"{o}m and Shawna Thomas and Nancy M. Amato}
 
 \begin{document}
 
@@ -97,16 +96,20 @@ All classes and files will be split between \texttt{.h/.cpp} format when
 possible, i.e., non-template classes/functions. All \texttt{.h} files should
 have \#define guards with the name of the file in all caps, with \texttt{\_}s
 separating words and \texttt{\_H\_} at the end. For example: for
-\texttt{ExampleClass.h} -- \texttt{EXAMPLE\_CLASS\_H\_}.
+\texttt{ExampleClass.h} -- \texttt{PMPL\_EXAMPLE\_CLASS\_H\_}.
 
 \begin{lstlisting}
-#ifndef EXAMPLE_CLASS_H_
-#define EXAMPLE_CLASS_H_
+#ifndef PMPL_EXAMPLE_CLASS_H_
+#define PMPL_EXAMPLE_CLASS_H_
 
 class Class;
 
 #endif
 \end{lstlisting}
+
+Newer files will include `\texttt{PMPL\_}' at the front of the include guard to
+further reduce the possibility of name collision with an external library.
+Please use this prefix in all new include guards.
 
 \subsection{Naming}
 
@@ -274,10 +277,15 @@ if(true)
 Function calls or declarations which are "long" should be split between multiple
 lines when necessary to aid in reading the code.
 
-Definitions of functions should be outside the class definition, except in one-line
-functions. Definitions shall be formatted with the template, return type, class
-name, and function name all on separate lines. The function parameters may span
-multiple lines if necessary.
+Definitions of member functions should be outside the class definition, even for
+one-line functions (this helps fully separate a class's implementation from its
+interface). The exception here is for small classes which serve as containers or
+functors: in these cases, member definitions may be placed directly within the
+class.
+
+Definitions shall be formatted with the template, return type, class name, and
+function name all on separate lines. The function parameters may span multiple
+lines if necessary.
 
 \begin{lstlisting}
 template<class MPTraits>
@@ -286,6 +294,13 @@ ClassName<MPTraits>::
 FunctionName(parameter list which may span multiple lines) {
 }
 \end{lstlisting}
+
+\subsection{Overriding Functions}
+
+All overriding functions must be declared \texttt{virtual} and
+\texttt{override}. This clarifies that the function does override some base
+implementation and allows the compiler to throw an error if we inadvertently
+fail to match the base function's prototype.
 
 \subsection{MPBaseObject inherited variables/functions}
 
@@ -324,10 +339,12 @@ void Print(ostream& _os) const {
 }
 \end{lstlisting}
 
-\subsubsection{ParseXML}
+\subsubsection{XML Parsing}
 
-All derived classes from MPBaseObject have the option to implement ParseXML to
-aid in code clarity for construction of objects from XML nodes.
+All derived classes from MPBaseObject may support constructors that take an
+\texttt{XMLNode} parameter. In all such cases, the \texttt{XMLNode} parameter
+must be passed up the class hierarchy so that parent classes get an opportunity
+to parse their parameters.
 
 \subsection{Throwing Errors}
 
@@ -339,6 +356,16 @@ location of the error. The PMPLException base is nicely formatted.
 
 \begin{lstlisting}
 throw PMPLException(``MyExceptionType'', WHERE, ``My error message'');
+\end{lstlisting}
+
+Our exceptions also support ostream-like usage to help with printing non-string
+data that support \texttt{operator<<}, such as \texttt{Boundary} objects. This
+example shows a \texttt{RunTimeException} for a boundary object:
+
+\begin{lstlisting}
+Boundary b;
+throw RunTimeException(WHERE) << "Something is wrong with this boundary:\n"
+    << b << std::endl;
 \end{lstlisting}
 
 \subsection{STL and External Libraries}
@@ -365,9 +392,9 @@ Example class is located in \texttt{ExampleClass.h} within this same folder:
 
 \section{Documentation}
 All documentation should be done with Doxygen. This style was chosen to make
-them very obvious in the code, in order to facilitate commital code reviews.
-Note that the blank comment lines shown in these templates are required by
-Doxygen in order to introduce paragraphs.
+documentation very obvious in the code, and to support automatic generation of
+web-viewable docs for PMPL. Note that the blank comment lines shown in these
+templates are required by Doxygen in order to introduce paragraphs.
 
 The Doxygen documentation will be compiled nightly and copied onto
 Nancy's group's intranet page on here:
@@ -380,16 +407,13 @@ Nancy's group's intranet page on here:
   \item The function operator of a function object (e.g., std::plus) doesn’t
     need to be documented. The documentation of the class will provide all
     necessary information.
-  \item Getter and setter methods don’t need to be documented.
   \item Constructors, destructors, and assignment operators don’t have to be
     documented, unless they do more than simple initialization and cleanup of
     the data members of the class.
-  \item Template parameters (Other than MPTraits) only have to be documented
-    separately in cases where there is not a 1-to-1 correspondence with method
-    parameters. When there is a 1-to-1 matching of template and method
-    parameters, just mention the expected type in the description of the method
-    parameter. For classes/structs the template parameters should still be
-    documented.
+  \item Template parameters do not need to be documented so long as their name
+    unambiguously describes their semantic meaning. I.e., template parameter
+    names like `FloatingPointType' and `CfgType' are self-documenting in terms
+    of what type is expected.
 \end{enumerate}
 
 \subsection{Class Documentation}
@@ -400,10 +424,7 @@ that the top/bottom commenting lines should extend to the 80th character across.
 
 \begin{lstlisting}[mathescape]
 ///////////////////////////////////////////////////////////////////////////////
-/// $@$ingroup What group of classes does this belong to?
-/// $@$brief What information does this class abstract?
-/// $@$tparam name meaning of this template parameter (other than MPTraits)
-/// $@$tparam ...
+/// What information does this class abstract?
 ///
 /// [details about the purpose of the class, for example:]
 /// [If the class is implemented from a specific paper, cite authors, conference, and year]
@@ -416,13 +437,33 @@ that the top/bottom commenting lines should extend to the 80th character across.
 ///
 /// $@$bug another bug
 /// ...
+///
+/// $@$ingroup What group of classes does this belong to?
 ///////////////////////////////////////////////////////////////////////////////
+\end{lstlisting}
+
+\subsection{Enumeration Types}
+
+Enums and enum classes should also be documented with a doxygen block like
+classes. This should explain the meaning of the enumeration. The allowed values
+should have names which clearly describe their meaning, and may additionally be
+documented with in-line doxygen comments. For example, this enumeration type
+describes early termination conditions for a single-source shortest path search:
+
+\begin{lstlisting}[mathescape]
+////////////////////////////////////////////////////////////////////////////////
+/// The possible early-termination conditions for an SSSP run.
+////////////////////////////////////////////////////////////////////////////////
+enum class SSSPTermination {
+  Continue,   ///< Proceed as usual.
+  EndBranch,  ///< End the branch at this vertex and do not relax its neighbors.
+  EndSearch   ///< End the entire search process.
+};
 \end{lstlisting}
 
 \subsection{Function Documentation}
 
-Place this comment block before the method definition. Note that the top/bottom
-commenting lines should extend to the 80th character across.
+Place this comment block before the method definition.
 
 It is not necessary to include self-evident information in the comment blocks.
 In particular, there is no need to put ”default constructor” or ”destructor” in
@@ -431,20 +472,20 @@ Doxygen comments should not include information on the implementation of the
 method.
 
 \begin{lstlisting}[mathescape]
-///////////////////////////////////////////////////////////////////////////////
-/// [optional $@$ingroup if this is a non-class function which group does it belong?]
-/// $@$brief What does this method do?
-/// $@$tparam name meaning of template parameter
-/// $@$tparam ...
+/// What does this method do?
 /// $@$param name meaning of this parameter?
 /// $@$param ...
 /// $@$return What is the meaning of the return value?
 ///
+/// Optional: if the usage is not obvious, a 'usage' section can be helpful.
 /// $@$usage
 /// $@$code
 /// int i = 0;
 /// MyFunc(i);
 /// $@$endcode
+///
+/// Optional: if this is a non-member function and it belongs to some other semantic group.
+/// $@$ingroup Semantic Group Name
 \end{lstlisting}
 
 For void functions with no parameters the following shorthand can be used (as
@@ -453,6 +494,10 @@ long as it fits nicely on one line):
 void Foo(); ///< My brief description
 \end{lstlisting}
 
+For functions with obvious return values or parameter interpretations (such as
+getters/setters), the \texttt{@param} and \texttt{@return} documentation can be
+omitted. For these types of functions, this usually just repeats what is stated
+in the brief description.
 
 \subsubsection{Member Function Groups}
 
@@ -462,30 +507,28 @@ would be grouping constructors, different types of computations, or different
 sections of accessors. If this is desired, the following standard is enforced:
 
 \begin{lstlisting}[mathescape]
-///////////////////////////////////////////////////////////////////////////////
-/// $@$name My Group Name
-/// $@${
+///$@$name My Group Name
+///$@${
 
 void Foo1();
 void Foo2();
 $\ldots$
 void FooN();
 
-/// $@$}
-///////////////////////////////////////////////////////////////////////////////
+///$@$}
 \end{lstlisting}
 
 Also, grouping functions for common documentation is accepted, and is noted like
 this:
 
 \begin{lstlisting}[mathescape]
-///////////////////////////////////////////////////////////////////////////////
-/// $@${
+///$@${
 /// Common documentation
+
 void Foo1();
 void Foo2();
-/// $@$}
-///////////////////////////////////////////////////////////////////////////////
+
+///$@$}
 \end{lstlisting}
 
 \subsubsection{Overloaded Functions}
@@ -495,12 +538,16 @@ function, then for the others put the following, with the same brief as the
 other overloaded functions and a short description of the differences.
 
 \begin{lstlisting}[mathescape]
-///////////////////////////////////////////////////////////////////////////////
-/// $@$brief Validate a simple path between two nodes
-///
+/// The long brief which appears over each overload.
+/// (params go here)
 /// $@$overload
-/// No witness to failure is returned.
+/// The specific differences for this version of the function.
 \end{lstlisting}
+
+\subsection{Overridden Functions}
+
+Functions which override a base class implementation do not need to be
+documented; Doxygen will use the base class documentation for these.
 
 \subsubsection{Inherited/derived Functions}
 For inherited/derived functions, if the comment block is in the parent class,
@@ -517,25 +564,32 @@ purpose.
 
 For class variables:
 \begin{lstlisting}
-m_myVar; ///< Brief description after the member variable
+bool m_myVar; ///< Brief description after the member variable.
+
+/// This variable has a very long description which doesn't fit after the declaration.
+std::vector<double> m_myVarWithLongDescription;
 \end{lstlisting}
 
 For global variables:
 \begin{lstlisting}[mathescape]
-///////////////////////////////////////////////////////////////////////////////
-/// $@$ingroup Which group does this variable belong?
-/// $@$brief Brief description of variable
-///////////////////////////////////////////////////////////////////////////////
+/// Brief description of variable
+/// $@$ingroup Which group does this variable belong (optional)?
 \end{lstlisting}
 
-Documentation of temporary variables is highly encouraged, but is up to the
-discretion of the programmer.
+The best documentation of temporary variables is in how they are named. If
+additional documentation for temporaries is required, this should not use the
+doxygen format (use a regular comment instead).
 
 \subsection{Algorithm Documentation}
 
 Any other documentation is up to the discretion of the programmer, but C++ style
 comments should be used. This should be for commenting algorithms and
 non-obvious code sections.
+
+In general, comments within function implementations should be non-doxygen type
+and should refer to \emph{what} the code is doing rather than \emph{how} it is
+being done. The code itself is the best descriptor of the \emph{how}; comments
+can help other programmers quickly understand the meaning of the code.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Testing Standards
@@ -544,6 +598,6 @@ non-obvious code sections.
 \section{Testing}
 Currently only nightly compilation testing occurs nightly. This should be
 expanded in the future. However, there should be one up-to-date (working)
-example of each method in the \texttt{TestRigid/PMPLExamples.xml} file.
+example of each method in the \texttt{Examples/CfgExamples.xml} file.
 
 \end{document}

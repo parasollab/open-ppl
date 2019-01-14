@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. -->
+  <Problem>
+
+    <Environment          filename="box.env"/>
+
+    <Robot label="0">
+      <MultiBody type="active">
+        <Base filename="0.obj" color="0 1 0 1" type="volumetric" movement="rotational"/>
+      </MultiBody>
+    </Robot>
+    <Robot label="1">
+      <MultiBody type="active">
+        <Base filename="1.obj" color="0 1 0 1" type="volumetric" movement="rotational"/>
+      </MultiBody>
+    </Robot>
+    <Robot label="2">
+      <MultiBody type="active">
+        <Base filename="2.obj" color="0 1 0 1" type="volumetric" movement="rotational"/>
+      </MultiBody>
+    </Robot>
+    <Robot label="3">
+      <MultiBody type="active">
+        <Base filename="3.obj" color="0 1 0 1" type="volumetric" movement="rotational"/>
+      </MultiBody>
+    </Robot>
+    <Robot label="4">
+      <MultiBody type="active">
+        <Base filename="4.obj" color="0 1 0 1" type="volumetric" movement="rotational"/>
+      </MultiBody>
+    </Robot>
+    <Robot label="5">
+      <MultiBody type="active">
+        <Base filename="5.obj" color="0 1 0 1" type="volumetric" movement="rotational"/>
+      </MultiBody>
+    </Robot>
+
+    <RobotGroup label="robotGroup" robotLabels="0 1 2 3 4 5"/>
+
+    <GroupTask label="groupTask" group="robotGroup">
+      <Task label="task0" robot="0">
+        <StartConstraints> <CSpaceConstraint point="-0.009666 0.4723035 0.476017 0 0 0"/> </StartConstraints>
+      </Task>
+      <Task label="task1" robot="1">
+        <StartConstraints> <CSpaceConstraint point="-0.499666 0.472304 0.476017 0 0 0"/> </StartConstraints>
+      </Task>
+      <Task label="task2" robot="2">
+        <StartConstraints> <CSpaceConstraint point="0.480334 0.472304 0.476017 0 0 0"/> </StartConstraints>
+      </Task>
+      <Task label="task3" robot="3">
+        <StartConstraints> <CSpaceConstraint point="-0.009666 0.4723035 -0.523983 0 0 0"/> </StartConstraints>
+      </Task>
+      <Task label="task4" robot="4">
+        <StartConstraints> <CSpaceConstraint point="0.480334 0.472304 -0.523983 0 0 0"/> </StartConstraints>
+      </Task>
+      <Task label="task5" robot="5">
+        <StartConstraints> <CSpaceConstraint point="-0.499666 0.472304 -0.523983 0 0 0"/> </StartConstraints>
+      </Task>
+    </GroupTask>
+
+  </Problem>
+  <Library>
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <GroupTwoRobotValidityChecker label="TwoBodyVC" method="PQP" debug="false"/>
+      <CollisionDetection label="pqp" method="PQP" debug="false"/>
+
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <MatingNormalSamplerGroup label="MatingNormalSampler" dist="8"
+                                duplicateThreshold="0.001" debug="false"/>
+
+      <MaskedProximitySamplerGroup label="MaskedProximitySampler"
+          vcLabel="pqp" dmLabel="euclidean" maxDist="5" debug="false" />
+
+      <MaskedProximitySamplerGroup label="MaskedProximitySamplerIMLRRT"
+          vcLabel="pqp" dmLabel="euclidean" maxDist="50" debug="false" />
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" vcLabel="pqp"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+                     vcLabel="pqp" maxDist="100.0" minDist=".00005"/>
+    </Extenders>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <DiameterMetric label="Diameter"/>
+      <CCDistanceMetric label="CCDistance" dmLabel="euclidean"/>
+      <TimeMetric label="TimeInSec"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <StrategyStateEvaluator label="stateEval"/>
+
+<!-- Note: 200 is the number specified in Thanh Le's paper for Max Tree Size -->
+      <ConditionalEvaluator label="NodeEval" metric_method="NumNodes"
+                            value="200" operator=">="/>
+
+      <MinimumClearanceEvaluator label="MinClearanceEval" vcLabel="pqp"
+                         minDist="4" debug="false"/>
+
+      <TimeEvaluator label="TimeEvalRRT" timeout="4"/>
+      <TimeEvaluator label="TimeEvalDisassembly" timeout="3600"/>
+
+      <TimeEvaluator label="TimeEvalIMLRRTRRT" timeout="0.5"/>
+
+      <IterationCountEvaluator label="IterationEvalRRT" minCount="200"/>
+
+      <ComposeEvaluator label="RRTIterationEval" operator="or" debug="false">
+        <Evaluator label="MinClearanceEval"/>
+        <Evaluator label="IterationEvalRRT"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="RRTNodesEval" operator="or" debug="false">
+        <Evaluator label="MinClearanceEval"/>
+        <Evaluator label="NodeEval"/>
+        <Evaluator label="TimeEvalIMLRRTRRT"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="ComposeDisassembly" operator="or" debug="false">
+        <Evaluator label="stateEval"/>
+        <Evaluator label="TimeEvalDisassembly"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <DisassemblyParallel label="DisassemblyParallel" debug="true"
+        vcLabel="pqp" singleVcLabel="TwoBodyVC"
+        lpLabel="sl" exLabel="BERO" dmLabel="euclidean"
+        contactDist="0.000001" neighborDist="1"
+        printFullPath="true" keepBestRRTPathOnFailure="true"
+        stateMELabel="stateEval"
+        removePos="-30" subassemblyPos="30" subassemblyOffset="20"
+        useParallelRemoval="false"
+        rrtDMLabel="euclidean">
+        <MatingSampler method="MatingNormalSampler" number="1" attempts="1"/>
+        <RRTSampler method="MaskedProximitySampler" number="1" attempts="1"/>
+        <Evaluator label="ComposeDisassembly"/>
+        <ExpandRRTStrategy method="BasicRRT"/>
+      </DisassemblyParallel>
+
+      <DisassemblyIMLRRT label="DisassemblyIMLRRT"
+        vcLabel="pqp" singleVcLabel="TwoBodyVC"
+        lpLabel="sl" exLabel="BERO" dmLabel="euclidean"
+        contactDist="0.0001" neighborDist=".25" debug="false"
+        removePos="-30" subassemblyPos="30" subassemblyOffset="20"
+        printFullPath="true" keepBestRRTPathOnFailure="true"
+        stateMELabel="stateEval"
+        rrtDMLabel="activeBodyEuclidean">
+        <MatingSampler method="MatingNormalSampler" number="1" attempts="1"/>
+<!--         <RRTSampler method="MaskedRandomSampler" number="1" attempts="1"/> -->
+        <RRTSampler method="MaskedProximitySamplerIMLRRT" number="1" attempts="1"/>
+        <Evaluator label="ComposeDisassembly"/>
+        <ExpandRRTStrategy method="BasicRRTIMLRRT"/>
+      </DisassemblyIMLRRT>
+
+       <DisassemblyRRTStrategy label="BasicRRTIMLRRT"
+        nfLabel="Nearest" vcLabel="pqp"
+        gtype="UNDIRECTED_TREE" debug="false"
+        samplerLabel="MaskedProximitySamplerIMLRRT"
+        extenderLabel="BERO" manhattanLike="true"
+        successfulCheckME="MinClearanceEval">
+        <Evaluator label="RRTNodesEval"/>
+      </DisassemblyRRTStrategy>
+
+
+      <DisassemblyRRTStrategy label="BasicRRT" debug="false"
+        nfLabel="Nearest" vcLabel="pqp"
+        gtype="UNDIRECTED_TREE"  samplerLabel="MaskedProximitySampler"
+        extenderLabel="BERO"
+        successfulCheckME="MinClearanceEval">
+<!--  NOTE: the vc from the non-TimeEval of the two evaluators should match up
+            with the disassembly strategy's vc label (should be pqp)
+            Also, using an evalutaor with "query" in the label won't work. -->
+        <Evaluator label="RRTIterationEval"/>
+      </DisassemblyRRTStrategy>
+
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="DisassemblyParallel" seed="456741357"
+       baseFilename="preemptiveDFS" vizmoDebug="true"/>
+
+  </Library>
+
+</MotionPlanning>

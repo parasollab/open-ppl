@@ -1,78 +1,61 @@
-/* PMPL main function. Instantiates a problem from an input xml
- * filename. Then solves based upon the problem.
- */
+#include <exception>
+#include <limits>
+#include <string>
 
-
+#include "MPLibrary/PMPL.h"
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/MPTask.h"
+#include "MPProblem/GroupTask.h"
+#include "Utilities/PMPLExceptions.h"
 
-#if (defined(PMPReachDistCC) || defined(PMPReachDistCCFixed))
-#include "MPProblem/ClosedChainProblem.h"
-#include "MPStrategies/ClosedChainStrategy.h"
-#endif
-
-
-
-#ifdef PMPCfg
-#include "Cfg/Cfg.h"
-#include "Traits/CfgTraits.h"
-typedef MPTraits<Cfg> PMPLTraits;
-
-#elif (defined(PMPState))
-#include "Cfg/State.h"
-#include "Traits/StateTraits.h"
-typedef StateTraits PMPLTraits;
-
-#elif (defined(PMPCfgMultiRobot))
-#include "Cfg/CfgMultiRobot.h"
-#include "Traits/CfgTraits.h"
-typedef MPTraits<CfgMultiRobot> PMPLTraits;
-
-#elif (defined(PMPCfgSurface))
-#include "Cfg/CfgSurface.h"
-#include "Traits/SurfaceTraits.h"
-typedef SurfaceTraits PMPLTraits;
-
-#elif (defined(PMPReachDistCC))
-#include "Cfg/Cfg_reach_cc.h"
-typedef MPTraits<Cfg_reach_cc> PMPLTraits;
-
-#elif (defined(PMPReachDistCCFixed))
-#include "Cfg/Cfg_reach_cc_fixed.h"
-typedef MPTraits<Cfg_reach_cc_fixed> PMPLTraits;
-
-#elif (defined(PMPSSSurfaceMult))
-#include "Cfg/SSSurfaceMult.h"
-#include "Traits/SurfaceTraits.h"
-typedef SSSurfaceMultTraits PMPLTraits;
-
-#elif (defined(PMPReachableVolume))
-#include "Cfg/CfgReachableVolume.h"
-#include "Traits/ReachableVolumeTraits.h"
-typedef CfgReachableVolumeTraits PMPLTraits;
-#else
-#error "Error, must define a RobotType for PMPL application"
-#endif
-
-using namespace std;
 
 int
 main(int _argc, char** _argv) {
-
   try {
-    if(_argc < 3 || string(_argv[1]) != "-f")
-      throw ParseException(WHERE, "Incorrect usage. Usage: -f options.xml");
+    // Assert that this platform supports an infinity for doubles.
+    if(!std::numeric_limits<double>::has_infinity)
+      throw RunTimeException(WHERE) << "This platform does not support infinity "
+                                    << "for double-types, which is required for "
+                                    << "pmpl to work properly.";
 
-    typedef PMPLTraits::MPProblemType MPProblemType;
-    MPProblemType* problem = new MPProblemType(_argv[2]);
-    problem->Solve();
+    if(_argc != 3 || std::string(_argv[1]) != "-f")
+      throw ParseException(WHERE) << "Incorrect usage. Usage: -f options.xml";
 
+    // Get the XML file name from the command line.
+    std::string xmlFile = _argv[2];
+
+    // Parse the Problem node into an MPProblem object.
+    MPProblem* problem = new MPProblem(xmlFile);
+
+    // Parse the Library node into an MPLibrary object.
+    MPLibrary* pmpl = new MPLibrary(xmlFile);
+
+    // Create storage for the solution and ask the library to solve our problem.
+    Robot* const robot = problem->GetRobots().front().get();
+    const auto robotTasks = problem->GetTasks(robot);
+      for(auto task : robotTasks)
+        pmpl->Solve(problem, task.get());
+
+    // Also solve the group task(s).
+    if(!problem->GetRobotGroups().empty()) {
+      RobotGroup* const robotGroup = problem->GetRobotGroups().front().get();
+      for(auto groupTask : problem->GetTasks(robotGroup))
+        pmpl->Solve(problem, groupTask.get());
+    }
+
+    if(robotTasks.empty() and (problem->GetRobotGroups().empty() or
+        problem->GetTasks(problem->GetRobotGroups().front().get()).empty()))
+      throw RunTimeException(WHERE) << "No tasks were specified!";
+
+    // Release resources.
     delete problem;
+    delete pmpl;
 
     return 0;
   }
-  catch(const std::runtime_error& e) {
-    cerr << endl << e.what() << endl;
+  catch(const std::runtime_error& _e) {
+    // Write exceptions to cout so that we still get them when piping stdout.
+    std::cout << std::endl << _e.what() << std::endl;
     return 1;
   }
 }
-

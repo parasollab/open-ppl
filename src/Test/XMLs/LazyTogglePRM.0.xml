@@ -1,11 +1,21 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
-  <Input>
-    <Environment filename="../Envs/2D/2d.env" saveDofs="false"/>
-    <Query filename="../Envs/2D/2d.query"/>
-  </Input>
+  <Problem>
+    <Environment filename="../Envs/2D/2d.env"/>
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
 
-  <MPProblem>
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="-10 -10"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="10 10"/>
+      </GoalConstraints>
+    </Task>
+  </Problem>
+
+  <Library>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
     </DistanceMetrics>
@@ -21,6 +31,7 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
@@ -33,15 +44,15 @@
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF"
-        lpLabel="sl" countFailures="true" fail="1" checkIfSameCC="false"/>
+        lpLabel="sl" maxFailures="1" checkIfSameCC="false"/>
     </Connectors>
 
     <MapEvaluators>
-      <LazyToggleQuery label="LazyToggleQuery" fullRecreatePath="false"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="pqp_solid" graphSearchAlg="astar"
-        deleteNodes="false" iterative="true">
-        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
-        <ToggleConnectionMethod method="ToggleConnect"/>
+      <LazyToggleQuery label="LazyToggleQuery"
+        vcLabel="pqp_solid" lpLabel="sl" dmLabel="euclidean"
+        deleteInvalid="true" iterative="true">
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod label="ToggleConnect"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
         <Resolution mult="1"/>
@@ -50,15 +61,15 @@
 
     <MPStrategies>
       <TogglePRMStrategy label="LazyTogglePRM" priority="true">
-        <Sampler methodLabel="UniformRandom" number="10" attempts="1"/>
-        <Connector methodLabel="ClosestAlwaysTrue"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="LazyToggleQuery"/>
+        <Sampler label="UniformRandom" number="10" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <ColConnector label="ToggleConnect"/>
+        <Evaluator label="LazyToggleQuery"/>
       </TogglePRMStrategy>
     </MPStrategies>
 
     <Solver mpStrategyLabel="LazyTogglePRM" seed="0"
       baseFilename="../Scratch/LazyTogglePRM"/>
 
-  </MPProblem>
+  </Library>
 </MotionPlanning>

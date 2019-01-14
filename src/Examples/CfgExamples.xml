@@ -1,18 +1,44 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
 
-  <!-- Here we specify input files, such as environment and query. -->
-  <Input>
-    <Environment filename="2D/2d.env" saveDofs="false"/>
-    <Query filename="2D/2d.query"/>
-  </Input>
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="example">
+
+    <Environment filename="3D/3d.env"
+      frictionCoefficient="0" gravity="0 0 0"/>
+
+    <Robot label="boxy" filename="3D/boxy.robot">
+      <!--
+      <Agent type="planning"/>
+      -->
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <!-- WARNING Support for multiple constraints is not yet implemented! -->
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <!-- Here multiple constraints indicates a compound goal. Each constraint
+             represents a single intermediate goal. -->
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </GoalConstraints>
+    </Task>
+
+  </Problem>
 
   <!-- Set available algorithms and parameters. -->
-  <MPProblem>
+  <Library>
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-      <ScaledEuclidean label= "scaledEuclidean" scale ="0.5"/>
+      <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
+      <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
+        velWeight="0" avlWeight="0"/>
       <CenterOfMass label="com"/>
       <KnotTheory label="knot"/>
       <Manhattan label="manhattan"/>
@@ -22,6 +48,8 @@
       <LPSwept label="LPSwept" posRes="5" oriRes="5" useBBox="true" lpLabel="sl"/>
       <BinaryLPSwept label="BLPSwept" posRes="5" oriRes="5" useBBox="true"
         lpLabel="sl"/>
+      <TopologicalDistance label="connectedFreeSpace" operator="sum"
+        tmLabel="tm-coarse"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -32,15 +60,13 @@
       <NegateValidity label="nv" vcLabel="rapid"/>
       <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true" epsilon="0.01" historyLength="5"/>
+        useBBX="true" positional="true"/>
       <ComposeValidity label="cv" operator="AND">
         <ValidityChecker label="pqp_solid"/>
         <ValidityChecker label="mac"/>
       </ComposeValidity>
       <AlwaysTrueValidity label="alwaysTrue"/>
-      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="pqp_solid"
-        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true"/>
+      <ObstacleClearance label="oc" clearanceThreshold="1" vcLabel="pqp_solid"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -57,9 +83,6 @@
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
            use_scaling="0"/-->
-      <CGALNF label="CGALNF" dmLabel="euclidean" k="5"/>
-      <!--SpillTreeNF label="BFNF" dmLabel="euclidean"/-->
-      <!--MetricTreeNF label="BFNF" dmLabel="euclidean"/-->
       <BandsNF label="RbandNF_2bands_4k" debug="false" dmLabel="euclidean">
         <RBand label="first" max = '8' k='8' policy='closest'
           dmLabel="euclidean"/>
@@ -70,11 +93,19 @@
         <DBand label="first" min='.1' max='.3' k='16' policy='closest'
           dmLabel="euclidean"/>
       </BandsNF>
+      <TopologicalFilter label="TopologicalNF" nfLabel="BFNF" tmLabel="tm-coarse"
+        backtrackDistance="6" debug="false"/>
+      <LSHNF label="LSHNF"
+        k="8" hashDimension="3" hashFamilies="8" hashRadius="9"
+        dmLabel="euclidean"/>
+      <KdTreeNF label="KdTreeNF"
+        k="5" epsilon=".01" useScaling="true"
+        dmLabel="euclidean"/>
     </NeighborhoodFinders>
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="1" debug="false"/>
@@ -84,13 +115,9 @@
         dmLabel="euclidean" useBBX="true"/>
       <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact"
-        useBBX="true" debug="false" positional="true"
-        epsilon="0.01" historyLength="100"/>
-      <GridSampler label="Grid" vcLabel="rapid">
-        <Dimension index="0" points="10"/>
-        <Dimension index="1" points="5"/>
-        <Dimension index="2" points="5"/>
-      </GridSampler>
+        useBBX="true" debug="false" positional="true"/>
+      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+        debug="false"/>
       <MixSampler label="MixSampler">
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>
@@ -100,7 +127,12 @@
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
         penetrationType="exact" debug="false" positional="true"/>
-      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"/>
+      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+        decompositionLabel="fine"/>
+      <DynamicRegionSampler label="DynamicRegionSampler"
+        samplerLabel="UniformRandom"
+        explore=".2" regionFactor="2.5" penetration="1"
+        velocityBiasing="false" velocityAlignment=".4" decompositionLabel="fine"/>
     </Samplers>
 
     <LocalPlanners>
@@ -115,25 +147,25 @@
         maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
       <AStarClearance label="asc" vcLabel="pqp_solid" maxTries="6" numNeighbors="3"
         histLength="10" dmLabel="euclidean" clearanceType="exact"
-        penetrationType="exact" clearanceRays="2" penetrationRays="2"
-        useBBX="true" positional="true" debug="false"/>
+        penetrationType="exact" useBBX="true" positional="true" debug="false"/>
       <MedialAxisLP label="malpr" controller="recursive"
         macEpsilon="0.1" maxIter="10"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <MedialAxisLP label="malpi" controller="iterative"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
-        debug="true" saveIntermediates="true"/>
+        positional="true"
+        debug="true" saveIntermediates="true" maxFailures="100" noProgress="1"
+        pathModifier="ShortcuttingPathModifier"/>
       <MedialAxisLP label="malpb" controller="binary"
         resFactor="20" maxIter="100"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"
+        positional="true"
         debug="true" saveIntermediates="true"/>
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
@@ -149,13 +181,16 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="10." minDist=".01"/>
+        vcLabel="rapid" maxDist="1." minDist=".001"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="10." minDist=".01" randomOrientation="false"/>
+        vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
+      <KinodynamicExtender label="KinoExtender" debug="false"
+        dmLabel="euclidean" vcLabel="rapid" fixed="false" best="true"
+        numSteps="10" minDist=".01"/>
       <MedialAxisExtender label="MAE" maxDist="10.0" minDist="0.01"
         extendDist="0.5" maxIntermediates="10" lpLabel="sl" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" epsilon="0.01" historyLength="5" positional="true"/>
+        useBBX="true" positional="true"/>
       <RandomObstacleVector label="ROVRO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10.0" minDist=".001"/>
       <RandomObstacleVector label="ROVSO" debug="false" dmLabel="euclidean"
@@ -206,7 +241,7 @@
 
     <Connectors>
       <AdaptiveConnector label="AdaptiveCS" nfLabel="" lpLabel="sl"
-        percentRandom="0.5" checkIfSameCC="false" debug="true"
+        percentRandom="0.5" checkIfSameCC="false" debug="false"
         uniformProbability="false" fixedCost="false" fixedReward="false">
         <NeighborFinder Method="BFNF"/>
         <NeighborFinder Method="Nearest"/>
@@ -214,52 +249,40 @@
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
       <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
-      <ClosestVE label="ClosestVE" kClosest="3" nfLabel="BFNF" lpLabel="sl"/>
-      <SpatialAdaptiveConnector label="SpatialANC" nfLabel="" lpLabel="sl"
-        percentRandom="0.5" checkIfSameCC="false" debug="true"
-        uniformProbability="false" fixedCost="false" fixedReward="false"
-        LocalNeighborFinder="BFNF" LocalLocalPlanner="sl">
-        <ConnectionMethod NeighborFinder="BFNF" LocalPlanner="sl"/>
-        <ConnectionMethod NeighborFinder="BFNF" LocalPlanner="ras"/>
-        <ConnectionMethod NeighborFinder="LargeBFNF" LocalPlanner="sl"/>
-        <ConnectionMethod NeighborFinder="LargeBFNF" LocalPlanner="ras"/>
-        <ConnectionMethod NeighborFinder="SweptBFNF" LocalPlanner="ras"/>
-      </SpatialAdaptiveConnector>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
         lpLabel="sl" checkIfSameCC="true"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
-        countFailures="true" fail="1" checkIfSameCC="false"/>
+        maxFailures="1" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl"
         checkIfSameCC="false"/>
-      <!--PreferentialAttachment label="Preferential" lp_method="sl" nf="BFNF"
-           k="2" fail="5" unconnected="true"
-        random="true" dm_method="euclidean" CheckIfSameCC="false"/-->
+      <NeighborhoodConnector label="KdTree" nfLabel="KdTreeNF" lpLabel="sl"
+        checkIfSameCC="false"/>
       <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
-      <RRTConnect label="RRTConnect" nfLabel="BFNF" lpLabel="sl" eLabel="BERO"
-        minDist="0.0" iterations="10000"/>
     </Connectors>
 
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
       <NumEdgesMetric label="NumEdges"/>
-      <CoverageMetricRoadmapSet label="CoverageRoadmapSet" filename="2D/2d.map"
+      <!--
+      <CoverageMetricRoadmapSet label="CoverageRoadmapSet" filename="3D/3d.map"
         computeAllCCs="false">
         <Connector label="Closest"/>
       </CoverageMetricRoadmapSet>
+      <CoverageDistanceMetricRoadmapSet label="CoverageDistance"
+        filename="3D/3d.map" dmLabel="euclidean"/>
+      <ConnectivityMetricRoadmapSet label="ConnectivityRoadmapSet"
+        filename="3D/3d.map">
+        <Connector label="Closest"/>
+      </ConnectivityMetricRoadmapSet>
+      -->
       <CoverageMetricVectorSet label="CoverageVectorSet" filename="coverage"
         computeAllCCs="false">
         <Connector label="Closest"/>
       </CoverageMetricVectorSet>
-      <CoverageDistanceMetricRoadmapSet label="CoverageDistance"
-        filename="2D/2d.map" dmLabel="euclidean"/>
-      <ConnectivityMetricRoadmapSet label="ConnectivityRoadmapSet"
-        filename="2D/2d.map">
-        <Connector label="Closest"/>
-      </ConnectivityMetricRoadmapSet>
       <ConnectivityMetricVectorSet label="ConnectivityVectorSet"
         filename="connectivity">
         <Connector label="Closest"/>
@@ -271,31 +294,30 @@
 
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
-      <PRMQuery label="PRMQuery" debug="false">
-        <NodeConnectionMethod method="Closest"/>
-      </PRMQuery>
-      <RRTQuery label="RRTQuery" goalDist=".3"
-        nfLabel="Nearest" exLabel="BERO" debug="false"/>
-      <LazyQuery label="LazyQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
-        debug="false" numEnhance="10" d="0.5">
-        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras"/>
+      <LazyQuery label="LazyQuery" debug="false"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="pqp_solid"
+        graphSearchAlg="dijkstras"
+        numEnhance="10" d="0.5" deleteInvalid="true">
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
       <LazyToggleQuery label="LazyToggleQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcLabel="rapid"
+        graphSearchAlg="dijkstras"
         iterative="true" debug="false">
-        <NodeConnectionMethod method="ClosestAlwaysTrue"/>
-        <ToggleConnectionMethod method="LazyToggleConnect"/>
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
+        <ToggleConnectionMethod label="LazyToggleConnect"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyToggleQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="5000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -303,15 +325,7 @@
       <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
       <ComposeEvaluator label="BoundedQuery" operator="or">
         <Evaluator label="NodesEval"/>
-        <Evaluator label="PRMQuery"/>
-      </ComposeEvaluator>
-      <ComposeEvaluator label="BoundedRRTQuery" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="RRTQuery"/>
-      </ComposeEvaluator>
-      <ComposeEvaluator label="ModQuery" operator="and">
-        <Evaluator label="FreqNodeEval"/>
-        <Evaluator label="PRMQuery"/>
+        <Evaluator label="Query"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
     </MapEvaluators>
@@ -354,88 +368,83 @@
 
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="BasicPRM1">
-        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
-        <Connector method="Closest"/>
-        <!--ComponentConnector method="ConnectCCs"/-->
-        <Evaluator method="PRMQuery"/>
+        <Connector label="Closest"/>
+        <!--Connector label="KdTree"/-->
+        <!--ComponentConnector label="ConnectCCs"/-->
+        <Evaluator label="Query"/>
       </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map at the beginning
            of node connection -->
       <BasicPRM label="BasicPRM2"
         inputMap="input.map" startAt="connecting">
-        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
-        <Connector method="Closest"/>
-        <ComponentConnector method="ConnectCCs"/>
-        <Evaluator method="NodesEval"/>
-      </BasicPRM>
-
-      <!-- PRM* -->
-      <BasicPRM label="OptimalPRM">
-        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
-        <Connector method="OptimalConnector"/>
-        <Evaluator method="NodesEval"/>
+        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+        <Connector label="Closest"/>
+        <ComponentConnector label="ConnectCCs"/>
+        <Evaluator label="NodesEval"/>
       </BasicPRM>
 
       <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="BERO">
-        <Evaluator label="RRTQuery"/>
+      <BasicRRTStrategy label="BasicRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1">
+        <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
-      <Syclop label="Syclop"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false" extenderLabel="BERO">
-        <Evaluator label="RRTQuery"/>
-      </Syclop>
-
+      <!-- Kindodynamic RRT -->
+      <BasicRRTStrategy label="KinoRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="KinoExtender"
+        growGoals="false" growthFocus="0.01">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
 
       <!-- If optimal connection is wanted, the correct connector needs to be
            selected -->
       <BasicRRTStrategy label="RRG"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalConnector" gtype="UNDIRECTED_GRAPH">
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="OptimalConnector"
+        growGoals="false" growthFocus="0.01">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
       <!-- The connector needs to be OptimalRewire for RRT* -->
       <BasicRRTStrategy label="RRTstar"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" extenderLabel="BERO"
-        connectorLabel="OptimalRewire" gtype="UNDIRECTED_GRAPH">
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        growGoals="false" growthFocus="0.01"
+        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="OptimalRewire">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
-      <SRTStrategy label="SRT"
-        lpLabel="sl" dmLabel="euclidean" nfLabel="Nearest"
-        vcLabel="rapid" exLabel="BERO" debug="false" samples="5"
-        expansions="10" closeCent="1" randCent="2" closePairs="2" connIter="5">
-        <Evaluator label="ModQuery"/>
+      <SRTStrategy label="SRT" debug="false"
+        samplerLabel="UniformRandomFree"
+        lpLabel="sl"  nfLabel="Nearest" exLabel="BERO"
+        samples="5" expansions="10" closeCent="1" randCent="2" closePairs="2"
+        connIter="5">
+        <Evaluator label="Query"/>
       </SRTStrategy>
 
       <!-- ObstacleBasedRRT -->
       <!-- The extender needs to be MixExtender for OBRRT -->
-      <BasicRRTStrategy label="OBRRT"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" connectorLabel="Closest"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="true" extenderLabel="ME">
+      <BasicRRTStrategy label="OBRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="ME"
+        growGoals="true" growthFocus="0.01">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
       <!-- Adaptive RRT -->
+      <!-- Broken, disabled.
       <AdaptiveRRT label="AdaptiveRRT"
-        numRoots="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="BFNF" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" gamma="0.1" cost="reward" debug="true">
+        growthFocus="0.01"
+        nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
+        gamma="0.1" cost="reward" debug="true"
+        samplerLabel="UniformRandom">
         <Evaluator label="NodesEval"/>
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>
@@ -443,41 +452,33 @@
           <Extender label="ROVRO"/>
         </GrowthSet>
       </AdaptiveRRT>
+      -->
 
       <!-- DynamicDomainRRT -->
-      <DynamicDomainRRT label="DynamicDomainRRT"
-        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false" growGoals="false"
-        extenderLabel="BERO" r="2">
-        <Evaluator label="BoundedRRTQuery"/>
+      <!--
+      <DynamicDomainRRT label="DynamicDomainRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" r="2">
+        <Evaluator label="BoundedQuery"/>
       </DynamicDomainRRT>
+      -->
 
       <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DynamicRegionRRT"
-        growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="false"
-        growGoals="false" extenderLabel="BERO">
-        <Evaluator label="BoundedRRTQuery"/>
-      </DynamicRegionRRT>
+      <BasicRRTStrategy label="DynamicRegionRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01">
+        <Evaluator label="BoundedQuery"/>
+      </BasicRRTStrategy>
 
       <!-- Toggle PRM -->
       <TogglePRMStrategy label="TogglePRM" priority="true">
-        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
-        <Connector methodLabel="Closest"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="PRMQuery"/>
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <ColConnector label="ToggleConnect"/>
+        <Evaluator label="Query"/>
       </TogglePRMStrategy>
-
-      <!-- Hybrid PRM -->
-      <HybridPRM label="HybridPRM" percent_random="0.5" bin_size="20"
-        window_percent="0.5" Count_Cost="false" fixed_cost="false"
-        resetting_learning="false" sampler_selection_distribution="window_hybrid">
-        <node_generation_method Method="Uniform" initialCost="1"/>
-        <node_generation_method Method="Gauss" initialCost="1"/>
-        <node_connection_method Method="Closest"/>
-        <evaluation_method Method="PRMQuery"/>
-      </HybridPRM>
 
       <!-- UAStrategy -->
       <!--UAStrategy label="UAPRM" iterations="10" num_samples="10">
@@ -486,11 +487,11 @@
         <distribution_feature Feature="visibility"/>
         <region_strategy Strategy="Hybrid"/>
         <evaluation_method Method="NodesEval"/>
-        <evaluation_method Method="PRMQuery"/>
+        <evaluation_method Method="Query"/>
       </UAStrategy-->
 
       <!-- EvaluateMapStrategy -->
-      <EvaluateMapStrategy label="EvaluateMapStrategy" mapFilename="2D/2d.map">
+      <EvaluateMapStrategy label="EvaluateMapStrategy">
         <Evaluator label="NodesEval"/>
       </EvaluateMapStrategy>
 
@@ -501,13 +502,13 @@
 
       <!-- Push Query to MA -->
       <PushQueryToMA label="PushQueryToMA"
-        inFilename="2D/2d.query" outFilename="2D/2d.ma.query"
+        inFilename="3D/3d.query" outFilename="3D/3d.ma.query"
         vcLabel="pqp_solid" dmLabel="euclidean"
         clearanceType="exact" penetrationType="exact" useBBX="true"
-        epsilon="0.01" historyLength="5" positional="true"/>
+        positional="true"/>
 
       <!-- Modify Path -->
-      <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="2D/2d.path"/>
+      <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>
 
       <!-- LP Compare - Compare edges between two roadmaps. -->
       <LPCompare label="LPCompare" dmLabel="euclidean"
@@ -516,66 +517,100 @@
 
       <!-- MultiStrategy -->
       <MultiStrategy label="MultiStrategy">
-        <MPStrategy method="BasicPRM1"/>
-        <MPStrategy method="AdaptiveRRT"/>
+        <MPStrategy label="BasicPRM1"/>
+        <MPStrategy label="AdaptiveRRT"/>
       </MultiStrategy>
 
-      <!-- BlindRRT
-      <BlindRRT label="BlindRRT" delta="2.0" minDist="0.1"
-        CCconnection="NodeToNode" lpLabel="sl" dmLabel="euclidean"
-        initialSamples="200" ccIters="100" nfLabel="BFNF" vcLabel="rapid"
-        connectorLabel="RRTConnect" debug="false"/>-->
-
       <!-- Spark PRM Examples -->
-      <TogglePRMStrategyWithRRT label="SparkToggle" maxNPCCSize="2"
+      <SparkTogglePRMStrategy label="SparkToggle" maxNPCCSize="2"
         initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
         minDist="0.1" vcLabel="rapid" nfLabel="BFNF" nfVertexLabel="Nearest"
         trimDepth="2" dmLabel="euclidean" cLabel="SparkPRMConnector"
         eLabel="BERO" priority="false" growthFocus="0.25" checkEdgeCases="true"
         checkImportant="true" trimAll="true" biasConnect="true"
         rrtDebug="false">
-        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
-        <Connector methodLabel="ToggleConnect"/>
-        <ColConnector methodLabel="ToggleConnect"/>
-        <Evaluator methodLabel="ModQuery"/>
-      </TogglePRMStrategyWithRRT>
+        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+        <Connector label="ToggleConnect"/>
+        <ColConnector label="ToggleConnect"/>
+        <Evaluator label="Query"/>
+      </SparkTogglePRMStrategy>
 
-      <BasicPRMWithRRT label="SparkUniform" maxNPCCSize="2" initSamples="10"
+      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
         maxRRTSize="100" attemptRatio="10" delta="5" minDist="0.1" vcLabel="rapid"
         nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2" dmLabel="euclidean"
         cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
         checkEdgeCases="true" checkImportant="true" trimAll="true"
         biasConnect="true" rrtDebug="false">
-        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
-        <Connector method="Closest"/>
-        <Evaluator method="ModQuery"/>
-      </BasicPRMWithRRT>
+        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+        <Connector label="Closest"/>
+        <Evaluator label="Query"/>
+      </SparkBasicPRM>
+
+      <!-- Syclop -->
+      <!--
+      <Syclop label="Syclop" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        tmLabel="tm"
+        growGoals="false" growthFocus="0.01">
+        <Evaluator label="Query"/>
+      </Syclop>
+      -->
 
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"
         vcLabel="rapid" lpLabel="sl"
         maxFailedIterations="20" debug="false"/>
 
-      <!-- Unit Tests -->
-
-      <!-- Clearance Test -->
-      <ClearanceTest label="ClearanceTest" dmLabel="euclidean" debug="true">
-        <Sampler label="UniformRandomFree" number="5" attempts="100"/>
-        <Clearance label="c1" vcLabel="pqp_solid" dmLabel="euclidean"
-          clearanceType="exact" penetrationType="exact"
-          useBBX="true" positional="false"/>
-        <Clearance label="c2" vcLabel="pqp_solid" dmLabel="euclidean"
-          clearanceType="approx" clearanceRays="10"
-          penetrationType="approx" penetrationRays="10"
-          useBBX="true" positional="false"/>
-      </ClearanceTest>
+      <ScratchStrategy label="scratch"/>
 
     </MPStrategies>
 
+    <MPTools>
+      <!-- Example nodes for a workspace decomposition with tetgen. Be aware
+           that each decomposition defined will be created immediately upon
+           initialization. If you don't need them, comment them out to save
+           pre-processing time. These examples would create new decompositions.
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
+      -->
+
+      <!-- The same workspace decomposition nodes, this time reading in from
+           saved files like 'coarse.ele' and 'coarse.node'. This is preferred as
+           we cannot completely control the randomness in the CGAL functions
+           which generate the decompositions. -->
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
+        io="read" baseFilename="3D/coarse"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
+        io="read" baseFilename="3D/quality"/>
+
+      <!-- Different objects need to work with different granularities when it
+           comes to decomposition-based tools. You can define multiple
+           topological maps for this purpose. -->
+      <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
+        gridSize="1"/>
+      <TopologicalMap label="tm-fine" decompositionLabel="fine"
+        gridSize="1"/>
+
+      <ReebGraphConstruction debug="false" write="false" filename=""/>
+
+      <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" positional="true"/>
+
+      <MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" positional="true"/>
+
+      <SVMModel kernel="radial" c="10" epsilon=".001" gamma="1"/>
+
+    </MPTools>
+
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicRRT" seed="12345678"
-      baseFilename="RRT" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
 
-  </MPProblem>
+  </Library>
+
 </MotionPlanning>
