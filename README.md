@@ -18,14 +18,26 @@ If you are working on a branch other than trunk, you may have issues with the ut
 
 In addition to the dedicated utilities, PMPL requires several other libraries:
 - gcc
-- CGAL
 - boost
 - bash (for testing script)
+- CGAL v4.6 - 4.11
+- OpenCV (for marker detection only)
+- Qt4 (for simulator only)
 
 **TODO**: Determine supported versions for each utility.
 
 **TODO**: List libraries from the dedicated utilities to facilitate converting to pulling from their home repos.
+- aruco
 - bullet v2.87
+- dlib
+- gl\_visualizer (nonstd, glutils, sandbox)
+- MPNN
+- player
+- PQP
+- RAPID
+- stapl
+- tetgen
+- tinyxml
 
 ## Build
 
