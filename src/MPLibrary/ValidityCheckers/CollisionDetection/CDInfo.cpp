@@ -12,7 +12,7 @@
 /// @param _key The key.
 /// @param _value The value. It will be set if _key was not already in _map, or
 ///               if it is lower than the value currently mapped to _key.
-template <template <typename...> typename MapType, typename KeyType,
+template <template <typename...> class MapType, typename KeyType,
           typename ValueType>
 void
 UpdateMinimum(MapType<KeyType, ValueType>& _map, const KeyType _key,
