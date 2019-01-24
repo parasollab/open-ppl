@@ -32,7 +32,7 @@ Terrain(XMLNode& _node) {
     std::stringstream ss(color);
     ss >> this->m_color;
   }
-  catch(nonstd::exception) {
+  catch(const nonstd::exception&) {
     std::transform(color.begin(), color.end(), color.begin(), ::tolower);
     m_color = StringToColor(color);
   }

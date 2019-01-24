@@ -124,7 +124,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       ss >> c;
     }
     //Otherwise use color name
-    catch(nonstd::exception){
+    catch(const nonstd::exception&) {
       c = StringToColor(color);
     }
     for(size_t i = 0; i < m_multibody->GetNumBodies(); i++){
