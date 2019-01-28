@@ -194,6 +194,12 @@ GetGoalConstraints() const noexcept {
 }
 
 
+void
+MPTask::
+ClearGoalConstraints(){
+  m_goalConstraints.clear();
+}
+
 const double
 MPTask::
 GetArrivalTime() const noexcept {

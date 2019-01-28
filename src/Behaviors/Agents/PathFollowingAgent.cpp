@@ -92,6 +92,12 @@ ClearPlan() {
   m_pathIndex = 0;
 }
 
+void
+PathFollowingAgent::
+SetPlan(std::vector<Cfg> _path){
+  m_path = _path;
+}
+
 /*----------------------------- Planning Helpers -----------------------------*/
 
 void

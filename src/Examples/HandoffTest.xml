@@ -24,11 +24,13 @@
     </Robot-->
 
     <Robot label="coordinator" virtual="true" filename="iCreate.xml">
-      <Agent type="coordinator" dmLabel="euclidean" debug="true" tmp="true">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true" tmp="false">
         <Member label="member1"/>
         <Member label="member2"/>
         <!--Member label="member3"/-->
         <HandoffEnvironment filename="handoff.env" positionRes=".01"/>
+        <PlacementMethod type="gridfilling" label="GridFilling"/>
+        <PlacementMethod type="owdensity" label="ow" proximity="3" density="3" dmLabel="euclidean"/>
       </Agent>
     </Robot>
 
@@ -104,7 +106,7 @@
         </GoalConstraints>
       </Task>
 
-      <Location point="4 0 0"/>
+      <!--Location point="4 0 0"/-->
     </HandoffTemplate>
 
   </Problem>
@@ -378,11 +380,11 @@
         <NodeConnectionMethod method="Closest"/>
       </PRMQuery>
       <RRTQuery label="RRTQuery" goalDist="0"
-        nfLabel="Nearest" exLabel="BERO" debug="false" vcLabel="pqp_solid"/>
+        exLabel="BERO" debug="false" vcLabel="pqp_solid"/>
       <RRTQuery label="KinoRRTQuery" goalDist=".3"
-        nfLabel="Nearest" exLabel="KinoExtender" debug="false" vcLabel="pqp_solid"/>
+        exLabel="KinoExtender" debug="false" vcLabel="pqp_solid"/>
       <LazyQuery label="MegaLazyQuery"
-        lpLabel="slRobot" dmLabel="euclidean" graphSearchAlg="astar"
+        lpLabel="slRobot" dmLabel="euclidean" graphSearchAlg="dijkstras"
         debug="false" numEnhance="0" d="0.5" deleteInvalid="true" vcLabel="terrain_solid">
         <NodeConnectionMethod method="ClosestRobot"/>
         <Resolution mult="27"/>
@@ -390,7 +392,7 @@
         <Resolution mult="1"/>
       </LazyQuery>
       <LazyQuery label="LazyQuery"
-        lpLabel="slRobot" dmLabel="euclidean" graphSearchAlg="astar"
+        lpLabel="slRobot" dmLabel="euclidean" graphSearchAlg="dijkstras"
         debug="false" numEnhance="10" d="0.5" deleteInvalid="true" vcLabel="terrain_robot">
         <NodeConnectionMethod method="ClosestRobot"/>
         <Resolution mult="27"/>
@@ -398,7 +400,7 @@
         <Resolution mult="1"/>
       </LazyQuery>
       <!--LazyToggleQuery label="LazyToggleQuery"
-        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="astar"
+        lpLabel="sl" dmLabel="euclidean" vcMethod="rapid" graphSearchAlg="dijkstras"
         iterative="true" debug="false">
         <NodeConnectionMethod method="ClosestAlwaysTrue"/>
         <ToggleConnectionMethod method="LazyToggleConnect"/>
@@ -727,7 +729,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="88871685"
+    <Solver mpStrategyLabel="BasicPRM1" seed="89971685"
       baseFilename="handoff" vizmoDebug="true"/>
 
   </Library>

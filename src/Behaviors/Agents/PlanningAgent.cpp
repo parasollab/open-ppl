@@ -158,7 +158,7 @@ void
 PlanningAgent::
 ClearPlan() {
   if(HasPlan())
-    ++m_planVersion;
+    //++m_planVersion;
 
   // Remove the path visual if needed.
   if(m_pathVisualID != size_t(-1) and Simulation::Get()) {
@@ -244,8 +244,8 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 
   // add DrawableRoadmap to be drawn
-  m_roadmapVisualID = Simulation::Get()->AddRoadmap(
-      m_solution->GetRoadmap()->GetGraph(), glutils::color::green);
+  //m_roadmapVisualID = Simulation::Get()->AddRoadmap(
+  //    m_solution->GetRoadmap()->GetGraph(), glutils::color::green);
 
   // Create a plan with PMPL.
   m_library->Solve(_problem.get(), GetTask().get(), m_solution.get());

@@ -248,6 +248,15 @@ Initialize() {
                 << std::endl;
   }
 
+  // Generate start and goal nodes if possible.
+  const VID start = this->GenerateStart(m_samplers.front().label);
+  std::vector<VID> goals = this->GenerateGoals(m_samplers.front().label);
+
+  // Try to connect the starts/goals to any existing nodes.
+  if(start != INVALID_VID)
+    goals.push_back(start);
+  Connect(goals.begin(), goals.end(), m_connectorLabels);
+
   // Hacks for fixing the base.
   if(m_fixBase) {
     auto g = this->GetRoadmap()->GetGraph();
@@ -272,15 +281,6 @@ Initialize() {
     for(size_t i = 0; i < numDOF; ++i)
       bbx->SetRange(i, start[i], start[i]);
   }
-
-  // Generate start and goal nodes if possible.
-  const VID start = this->GenerateStart(m_samplers.front().label);
-  std::vector<VID> goals = this->GenerateGoals(m_samplers.front().label);
-
-  // Try to connect the starts/goals to any existing nodes.
-  if(start != INVALID_VID)
-    goals.push_back(start);
-  Connect(goals.begin(), goals.end(), m_connectorLabels);
 }
 
 

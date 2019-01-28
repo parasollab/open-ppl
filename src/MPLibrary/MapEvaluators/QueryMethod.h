@@ -229,6 +229,9 @@ operator()() {
               << " goals not connected."
               << std::endl;
 
+  if(goalTracker->GetStartVIDs().empty()){
+    return false;
+  }
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.
@@ -457,7 +460,7 @@ StaticPathWeight(typename GraphType::adj_edge_iterator& _ei,
   // EdgeWeight function to compute the target distance.
   if(!m_dmLabel.empty()) {
     auto dm = this->GetDistanceMetric(m_dmLabel);
-    return dm->EdgeWeight(_ei->source(), _ei->target());
+    return _sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target());
   }
 
   // Otherwise use the existing edge weight to compute the distance.

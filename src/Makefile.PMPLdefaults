@@ -195,6 +195,18 @@ $(TETGEN_LIBFILE):
 	@cd $(TETGEN_DIR) && $(MAKE) platform=$(platform) debug=$(debug)
 
 ################################################################################
+# Triangle
+################################################################################
+#TRIAGNLE_DIR  := $(UTILS_DIR)/triangle
+#TRIANGLE_LIB  := $(TETGEN_DIR)/libtet.a
+#TRIANGLE_INCL := -I$(TETGEN_DIR)
+#
+#TRIANGLE_LIBFILE := $(TETGEN_LIB)
+#$(TETGEN_LIBFILE):
+#	@echo Building triangle library...
+#	@cd $(TRAINGLE_DIR) && $(MAKE) platform=$(platform) debug=$(debug)
+
+################################################################################
 ## STAPL
 ################################################################################
 STAPL_DIR ?= $(UTILS_DIR)/stapl_release
@@ -377,26 +389,30 @@ SIM_SRCS := \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/Coordinator.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
-  Behaviors/Agents/ITPlacement/BallFilling.cpp \
-  Behaviors/Agents/ITPlacement/DisjointWorkspaces.cpp \
-  Behaviors/Agents/ITPlacement/FixedBase.cpp \
-  Behaviors/Agents/ITPlacement/GridFilling.cpp \
-  Behaviors/Agents/ITPlacement/OverlappingWorkspacesDensity.cpp \
-  Behaviors/Agents/ITPlacement/PlacementMethod.cpp \
-  Behaviors/Agents/ITPlacement/PlacementMethodFactory.cpp \
-  Behaviors/Agents/ITPlacement/WorkspaceGuidance.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/TaskBreakup.cpp \
-  Behaviors/TMP/Actions/Action.cpp \
-  Behaviors/TMP/Actions/HandoffTask.cpp \
-  Behaviors/TMP/Actions/MoveRobot.cpp \
-  Behaviors/TMP/Actions/StartTask.cpp \
-  Behaviors/TMP/EnforcedHillClimbing.cpp \
-  Behaviors/TMP/RelaxedGraphPlan.cpp \
-  Behaviors/TMP/State.cpp \
+  Behaviors/TMPStrategies/Actions/Action.cpp \
+  Behaviors/TMPStrategies/Actions/HandoffTask.cpp \
+  Behaviors/TMPStrategies/Actions/MoveRobot.cpp \
+  Behaviors/TMPStrategies/Actions/StartTask.cpp \
+  Behaviors/TMPStrategies/ITConnector.cpp \
+  Behaviors/TMPStrategies/ITConstructor.cpp \
+  Behaviors/TMPStrategies/ITPlacement/BallFilling.cpp \
+  Behaviors/TMPStrategies/ITPlacement/DisjointWorkspaces.cpp \
+  Behaviors/TMPStrategies/ITPlacement/FixedBase.cpp \
+  Behaviors/TMPStrategies/ITPlacement/GridFilling.cpp \
+  Behaviors/TMPStrategies/ITPlacement/OverlappingWorkspacesDensity.cpp \
+  Behaviors/TMPStrategies/ITPlacement/PlacementMethod.cpp \
+  Behaviors/TMPStrategies/ITPlacement/PlacementMethodFactory.cpp \
+  Behaviors/TMPStrategies/ITPlacement/WorkspaceGuidance.cpp \
+  Behaviors/TMPStrategies/TaskPlan.cpp \
+  Behaviors/TMPStrategies/TMPHelperAlgorithms/EnforcedHillClimbing.cpp \
+  Behaviors/TMPStrategies/TMPHelperAlgorithms/RelaxedGraphPlan.cpp \
+  Behaviors/TMPStrategies/TMPStrategyMethod.cpp \
+  Behaviors/TMPStrategies/State.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
   Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \

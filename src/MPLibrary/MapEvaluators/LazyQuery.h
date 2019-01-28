@@ -112,9 +112,9 @@ class LazyQuery : public QueryMethod<MPTraits> {
     ///@name MP Object Labels
     ///@{
 
-    std::string m_vcLabel;  ///< The lazy validity checker label.
-    std::string m_lpLabel;  ///< The lazy local planner label.
-    std::string m_dmLabel;  ///< The distance metric label for enhance nodes.
+    std::string m_vcLabel;         ///< The lazy validity checker label.
+    std::string m_lpLabel;         ///< The lazy local planner label.
+    std::string m_enhanceDmLabel;  ///< The distance metric for enhancement.
 
     std::vector<std::string> m_ncLabels; ///< The connectors for enhancement.
 
@@ -151,7 +151,6 @@ LazyQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
 
   m_vcLabel = _node.Read("vcLabel", true, "", "Lazy validity checker method.");
   m_lpLabel = _node.Read("lpLabel", true, "", "Local planner method.");
-  m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric method.");
 
   m_deleteInvalid = _node.Read("deleteInvalid", false, m_deleteInvalid,
       "Remove invalid vertices from the roadmap?");
@@ -160,6 +159,8 @@ LazyQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
       "Number of nodes to generate in node enhancement");
   m_d = _node.Read("d", false, m_d, 0., MAX_DBL,
       "Gaussian d value for node enhancement");
+  m_enhanceDmLabel = _node.Read("enhanceDmLabel", m_numEnhance, "",
+      "Distance metric method for generating enhancement nodes.");
 
   for(auto& child : _node) {
     if(child.Name() == "Resolution")
@@ -189,7 +190,7 @@ void
 LazyQuery<MPTraits>::
 Print(std::ostream& _os) const {
   QueryMethod<MPTraits>::Print(_os);
-  _os << "\tDistance Metric: " << m_dmLabel
+  _os << "\tEnhancement distance Metric: " << m_enhanceDmLabel
       << "\n\tLocal Planner: " << m_lpLabel
       << "\n\tValidity Checker: " << m_vcLabel
       << "\n\tDelete Invalid: " << m_deleteInvalid
@@ -218,15 +219,15 @@ template <typename MPTraits>
 bool
 LazyQuery<MPTraits>::
 PerformSubQuery(const VID _start, const VIDSet& _goals) {
-  // Begin with the regular query and lazy-validate the path if it succeeds.
-  const bool connected = QueryMethod<MPTraits>::PerformSubQuery(_start, _goals)
-                     and ValidatePath();
+  // Extract paths and validate them until there are no more left to try.
+  while(QueryMethod<MPTraits>::PerformSubQuery(_start, _goals)) {
+    if(ValidatePath())
+      return true;
+  }
 
-  // If not connected, enhanace?
-  if(!connected)
-    NodeEnhance();
-
-  return connected;
+  // There are no valid paths, enhance and return false.
+  NodeEnhance();
+  return false;
 }
 
 
@@ -394,7 +395,7 @@ NodeEnhance() {
   if(this->m_debug)
     std::cout << "\tLazyQuery is enhancing nodes...\n\t  Generated VIDs:";
 
-  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetDistanceMetric(m_enhanceDmLabel);
   auto roadmap = this->GetRoadmap();
 
   for(int i = 0; i < m_numEnhance and !m_edges.empty(); ++i) {

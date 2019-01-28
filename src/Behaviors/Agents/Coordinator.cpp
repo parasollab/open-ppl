@@ -1,17 +1,19 @@
 #include "Coordinator.h"
 
 #include <limits>
+#include <queue>
 
 #include "nonstd/numerics.h"
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
+#include "Behaviors/TMPStrategies/ITConnector.h"
 
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Agents/TaskBreakup.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
-#include "Behaviors/TMP/Actions/Action.h"
-#include "Behaviors/TMP/EnforcedHillClimbing.h"
+#include "Behaviors/TMPStrategies/Actions/Action.h"
+#include "Behaviors/TMPStrategies/TMPHelperAlgorithms/EnforcedHillClimbing.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPLibrary/MPTools/TRPTool.h"
 #include "MPLibrary/MPTools/InteractionTemplate.h"
@@ -59,6 +61,9 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
       "nearest agents and charging locations.");
 
   m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
+
+  m_connectionThreshold = _node.Read("connectionThreshold",false,nan(""), 0., 1000.,
+      "Acceptable variabliltiy in IT paths.");
 
   // This is a coordinator agent, which does not make sense without some group
   // members to coordinate. Throw an exception if it has no members.
@@ -161,7 +166,7 @@ Initialize() {
   // Setting library task to set robot
   auto task = m_library->GetMPProblem()->GetTasks(m_robot).front();
   m_library->SetTask(task.get());
-
+  /*
   TranslateHandoffTemplates();
   if(m_debug){
     std::cout << "Done Translating Handoff Templates" << std::endl;
@@ -169,9 +174,9 @@ Initialize() {
 
   *(m_handoffTemplateRoadmap.get()) = *m_megaRoadmap;
 
-  size_t id = Simulation::Get()->AddRoadmap(m_handoffTemplateRoadmap.get(),
-      glutils::color(.4,.4,.4,.5));
-  m_simulatorGraphIDs.push_back(id);
+  //size_t id = Simulation::Get()->AddRoadmap(m_handoffTemplateRoadmap.get(),
+  //    glutils::color(.4,.4,.4,.5));
+  //m_simulatorGraphIDs.push_back(id);
 
   Roadmap<MPTraits<Cfg>> testRm(m_robot);
   testRm.SetGraph(m_megaRoadmap);
@@ -189,9 +194,14 @@ Initialize() {
   if(m_debug){
     std::cout << "Done Generating Roadmaps" << std::endl;
   }
+  */
+  CreateCapabilityMaps();
+  Roadmap<MPTraits<Cfg>> testRm(m_robot);
 
-  testRm.SetGraph(m_megaRoadmap);
-  testRm.Write("postGenerateRoadaps.map", m_robot->GetMPProblem()->GetEnvironment());
+  RoadmapGraph<Cfg,DefaultWeight<Cfg>>* copyMap = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
+  *copyMap = *m_megaRoadmap;
+  testRm.SetGraph(copyMap);
+  testRm.Write("postGenerateRoadmaps.map", m_robot->GetMPProblem()->GetEnvironment());
 
   // Find group tasks plan with IT method
   if(!m_tmp){
@@ -214,7 +224,7 @@ Initialize() {
     }
     testRm.SetGraph(nullptr);
   }
-  // FInd group taks plan with TMP method
+  // Find group taks plan with TMP method
   else{
     for(auto& robot : m_robot->GetMPProblem()->GetRobots()){
       robot->SetVirtual(true);
@@ -366,6 +376,10 @@ Uninitialize() {
   for(auto id : m_simulatorGraphIDs){
     Simulation::Get()->RemoveRoadmap(id);
   }
+
+  for(auto& graph : m_capabilityRoadmaps){
+    delete graph.second;
+  }
 }
 
 /*-------------------------- Coordinator Interface ---------------------------*/
@@ -390,7 +404,9 @@ AssignTask(std::shared_ptr<MPTask> _nextTask) {
       continue;
     if(agent == lastAgent)
       continue;
+    agent->GetRobot()->SetVirtual(false);
     agent->GenerateCost(_nextTask);
+    agent->GetRobot()->SetVirtual(true);
     /*auto tempThread = std::thread([agent, _nextTask](){
       agent->GenerateCost(_nextTask);
     });
@@ -425,8 +441,26 @@ AssignTask(std::shared_ptr<MPTask> _nextTask) {
   // Assign subtask to min agent
   _nextTask->SetRobot(minAgent->GetRobot());
   minAgent->AddSubtask(_nextTask);
-  m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
-
+  //check if prior subtask was assigned to the same robot and merge them if so
+  if(!m_subtaskMap[_nextTask]->m_agentAssignment.empty()){
+    auto previousAgent = m_subtaskMap[_nextTask]->m_agentAssignment.back();
+    if(previousAgent == minAgent){
+      m_subtaskMap[_nextTask]->m_subtaskIterator--;
+      auto lastTask = m_subtaskMap[_nextTask]->m_subtasks[m_subtaskMap[_nextTask]->m_subtaskIterator];
+      lastTask->ClearGoalConstraints();
+      for(auto& constraint : _nextTask->GetGoalConstraints()){
+        lastTask->AddGoalConstraint(constraint->Clone());
+      }
+      m_subtaskMap[_nextTask]->m_subtasks.erase(m_subtaskMap[_nextTask]->m_subtasks.begin()
+                                        + m_subtaskMap[_nextTask]->m_subtaskIterator + 1);
+    }
+    else{
+      m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
+    }
+  }
+  else{
+    m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
+  }
   // See how long this agent will take to complete the subtask and if it
   // ends in a handoff add the next subtask to the queue
   double endTime = minAgent->GetTaskTime() + m_currentTime;
@@ -469,6 +503,8 @@ ArbitrateCollision() {
       UpdateVersionMap(groupAgent, group);
     }
     else{
+      Cfg currentPosition = groupAgent->GetRobot()->GetSimulationModel()->GetState();
+      groupAgent->SetPlan({currentPosition});
       groupAgent->PauseAgent(5);
     }
   }
@@ -484,7 +520,16 @@ CheckFinished() {
       return;
   }
   for(auto agent : m_memberAgents){
+    if(!agent->GetQueuedSubtasks().empty())
+      return;
+  }
+  for(auto agent : m_memberAgents){
     agent->ClearVisualGraph();
+  }
+  if(m_debug){
+    for(auto wholeTask : m_wholeTasks){
+      std::cout << wholeTask << std::endl;
+    }
   }
   m_clock.stop();
   Simulation::GetStatClass()->SetStat("SimulationTime", m_clock.elapsed());
@@ -712,33 +757,34 @@ GenerateDummyAgents(){
 void
 Coordinator::
 GenerateHandoffTemplates(){
+  std::cout << "Finding Handoff Locations" << std::endl;
+  auto originalProblem = m_robot->GetMPProblem();
+  m_library->SetMPProblem(originalProblem);
+
+  for(auto& info : originalProblem->GetInteractionInformations()){
+    auto it = new InteractionTemplate(info.get());
+    m_solution->AddInteractionTemplate(it);
+    //FindITLocations(it);
+  }
+
+  std::cout << "Found Handoff Locations" << std::endl;
+
   // Loop through handoff templates, set start constraints for handoff, set
   // dummy robot for handoff task by capability, and solve handoff task.
-  auto originalProblem = m_robot->GetMPProblem();
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
   problemCopy->SetEnvironment(std::move(m_handoffEnvironment));
   m_library->SetMPProblem(problemCopy.get());
   // Set robots to virtual so that planning handoffs does not cause collisions
   std::list<HandoffAgent*> unusedAgents;
 
-  std::cout << "Finding Handoff Locations" << std::endl;
 
-  for(auto& info : originalProblem->GetInteractionInformations()){
-    auto it = new InteractionTemplate(info.get());
-    //m_solution->AddInteractionTemplate(it);
-    FindITLocations(it);
-  }
-
-  std::cout << "Found Handoff Locations" << std::endl;
-
-  // Loop through all handoff templates
   for(auto& currentTemplate : m_solution->GetInteractionTemplates()){
     Simulation::GetStatClass()->StartClock("Construct InteractionTemplate "
               + currentTemplate->GetInformation()->GetLabel());
 
     unusedAgents.clear();
     std::copy(m_memberAgents.begin(), m_memberAgents.end(), std::back_inserter(unusedAgents));
-    auto handoffTasks = currentTemplate->GetInformation()->GetTasks();
+    auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
     std::unordered_map<std::shared_ptr<MPTask>, HandoffAgent*> agentTasks;
     // Loop through all tasks and assign a robot of matching capability to the
     // task, then configuring the robot at the goal constraint.
@@ -762,14 +808,52 @@ GenerateHandoffTemplates(){
           m_library->SetTask(task.get());
           auto sampler = m_library->GetSampler("UniformRandomFree");
           size_t numNodes = 1, numAttempts = 100;
+          tempRobot->SetVirtual(true);
           sampler->Sample(numNodes, numAttempts, boundingBox,
               std::back_inserter(goalPoints));
+
+          tempRobot->SetVirtual(false);
+          if(goalPoints.empty())
+            throw RunTimeException(WHERE, "No valid final handoff position for the robot.");
+
+          goalPoints[0].ConfigureRobot();
+          break;
+          /*
+
+          std::vector<Cfg> goalPoints;
+          auto sampler = m_library->GetSampler("UniformRandomFree");
+          size_t numNodes = 1, numAttempts = 100;
+          MPSolution* sol = new MPSolution(m_robot);
+          m_library->SetMPSolution(sol);
+          m_library->SetTask(task.get());
+
+          if(m_robot->IsManipulator()){
+
+            auto startBox = task->GetGoalConstraints()[0]->GetBoundary()->Clone();
+            auto ptr = startBox.get();
+            auto box = static_cast<CSpaceBoundingBox*>(ptr);
+            auto ranges = box->GetRanges();
+            for(size_t i = 0; i < 3; i++){
+              auto range = ranges[i];
+              auto center = range.Center();
+              box->SetRange(i, center-.005, center+.005);
+            }
+            sampler->Sample(numNodes, numAttempts, box,
+                std::back_inserter(goalPoints));
+          }
+          else{
+            auto boundingBox = task->GetGoalConstraints()[0]->GetBoundary();
+            sampler->Sample(numNodes, numAttempts, boundingBox,
+                std::back_inserter(goalPoints));
+          }
 
           if(goalPoints.empty())
             throw RunTimeException(WHERE, "No valid final handoff position for the robot.");
 
           goalPoints[0].ConfigureRobot();
           break;
+
+          */
         }
       }
     }
@@ -837,6 +921,8 @@ GenerateHandoffTemplates(){
       check++;
 
       // Store the roadmap for each task in the handoff
+      auto rob = handoffSolution->GetRoadmap()->GetGraph()->GetRobot();
+      handoffSolution->GetRoadmap()->GetGraph()->SetRobot(originalProblem->GetRobot(rob->GetLabel()));
       currentTemplate->AddRoadmapGraph(handoffSolution->GetRoadmap()->GetGraph());
 
       if(currentTemplate->GetInformation()->SavedPaths()){
@@ -882,6 +968,17 @@ GenerateHandoffTemplates(){
 void
 Coordinator::
 TranslateHandoffTemplates() {
+
+  std::cout << "Finding Handoff Locations" << std::endl;
+  auto originalProblem = m_robot->GetMPProblem();
+  m_library->SetMPProblem(originalProblem);
+
+  for(auto& it : m_solution->GetInteractionTemplates()){
+    //m_solution->AddInteractionTemplate(it);
+    FindITLocations(it.get());
+  }
+
+  std::cout << "Found Handoff Locations" << std::endl;
   Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
   auto vcm = m_library->GetValidityChecker("terrain_solid");
   for(auto& currentTemplate : m_solution->GetInteractionTemplates()){
@@ -1043,9 +1140,13 @@ SetupWholeTasks(){
     // configuration.
     auto coordinatorStartVID = m_megaRoadmap->AddVertex(
                     wholeTask->m_startPoints[m_robot->GetLabel()][0]);
+
     wholeTask->m_startVIDs[m_robot->GetLabel()] = {coordinatorStartVID};
+
     auto coordinatorGoalVID = m_megaRoadmap->AddVertex(wholeTask->m_goalPoints[m_robot->GetLabel()][0]);
+
     wholeTask->m_goalVIDs[m_robot->GetLabel()] = {coordinatorGoalVID};
+
     const DefaultWeight<Cfg> weight;
 
     Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
@@ -1061,7 +1162,7 @@ SetupWholeTasks(){
         // roadmaps
         m_wholeTaskStartEndPoints.push_back({agentStartVID});
         wholeTask->m_startVIDs[elem.first].push_back(agentStartVID);
-        m_megaRoadmap->AddEdge(coordinatorStartVID, agentStartVID, weight);
+        m_megaRoadmap->AddEdge(coordinatorStartVID, agentStartVID, {weight,weight});
       }
 
     }
@@ -1078,7 +1179,7 @@ SetupWholeTasks(){
         // roadmaps
         m_wholeTaskStartEndPoints.push_back({agentGoalVID});
         wholeTask->m_goalVIDs[elem.first].push_back(agentGoalVID);
-        m_megaRoadmap->AddEdge(coordinatorGoalVID, agentGoalVID, weight);
+        m_megaRoadmap->AddEdge(coordinatorGoalVID, agentGoalVID, {weight,weight});
       }
 
     }
@@ -1095,6 +1196,17 @@ GenerateRoadmaps() {
   for(auto& r : m_robot->GetMPProblem()->GetRobots()){
     r->SetVirtual(true);
   }
+
+  //Add robot start locations if using tmp method
+  if(m_tmp){
+    for(auto agent : m_memberAgents){
+      auto robot = agent->GetRobot();
+      auto cfg = robot->GetSimulationModel()->GetState();
+      auto vid = m_megaRoadmap->AddVertex(cfg);
+      m_wholeTaskStartEndPoints.push_back({vid});
+    }
+  }
+
   for(auto const& elem : m_dummyMap){
     auto capability = elem.first;
     Simulation::GetStatClass()->StartClock("Construct CapabilityMap " + capability);
@@ -1195,6 +1307,23 @@ GenerateRoadmaps() {
       }
     }
 
+    // Attempt to connect the start/end points
+    for(size_t i = 0; i < m_wholeTaskStartEndPoints.size(); i++){
+      auto roadmap = m_wholeTaskStartEndPoints[i];
+      if(capability == m_megaRoadmap->GetVertex(roadmap[0]).GetRobot()->
+          GetAgent()->GetCapability()){
+        for(size_t j = 0; j < m_wholeTaskStartEndPoints.size(); j++){
+          if(i == j) continue;
+          auto roadmap2 = m_wholeTaskStartEndPoints[j];
+          if(capability == m_megaRoadmap->GetVertex(roadmap2[0]).GetRobot()->
+              GetAgent()->GetCapability()){
+            // Find point in both roadmaps and try to connect them
+            ConnectDistinctRoadmaps(roadmap, roadmap2, dummyAgent);
+          }
+        }
+      }
+    }
+
     m_capabilityRoadmaps[capability] = graph;
 
     Simulation::GetStatClass()->StopClock("Construct CapabilityMap " + capability);
@@ -1259,6 +1388,8 @@ PlanWholeTasks() {
     Simulation::GetStatClass()->StartClock("IT MegaRoadmap Query");
     wholeTask->m_task->SetRobot(m_robot);
     m_library->SetTask(wholeTask->m_task.get());
+    auto& c = wholeTask->m_task->GetGoalConstraints()[0];
+    c->Clone();
     m_library->Solve(m_robot->GetMPProblem(), wholeTask->m_task.get(), m_solution, "EvaluateMapStrategy",
       LRand(), "PlanWholeTask");
     //Save cfg path in the handoff class
@@ -1267,7 +1398,7 @@ PlanWholeTasks() {
   }
 
   TaskBreakup tb(m_robot);
-  for(auto wholeTask : m_wholeTasks){
+  for(auto& wholeTask : m_wholeTasks){
     tb.BreakupTask(wholeTask);
     Simulation::GetStatClass()->StopClock("IT Task Decomposition");
   }
@@ -1290,6 +1421,7 @@ CopyCapabilityRoadmaps(){
     auto graph = m_capabilityRoadmaps[agent->GetCapability()];
     auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
     *g = *graph;
+    g->SetRobot(agent->GetRobot());
     agent->SetRoadmapGraph(g);
 
     auto g2 = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
@@ -1312,7 +1444,9 @@ AssignInitialTasks() {
       m_subtaskMap[subtask] = wholeTask;
     }
   }
-
+  for(auto agent : m_memberAgents){
+    agent->GetRobot()->SetVirtual(true);
+  }
   // Assign all of the tasks (and their subtasks) to different agents.
   int numSubTs = 0;
   while(!m_unassignedTasks.empty()){
@@ -1324,6 +1458,9 @@ AssignInitialTasks() {
     if(newSubtask){
       AddSubtask(newSubtask);
     }
+  }
+  for(auto agent : m_memberAgents){
+    agent->GetRobot()->SetVirtual(false);
   }
   Simulation::GetStatClass()->StopClock("IT Task Assignment");
 }
@@ -1512,14 +1649,21 @@ TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan){
 void
 Coordinator::
 FindITLocations(InteractionTemplate* _it){
-  if(m_robot->GetMultiBody()->GetBaseType() == Body::Type::Fixed){
+  /*if(m_robot->GetMultiBody()->GetBaseType() == Body::Type::Fixed){
 
   }
   else {
     std::cout << "Calling placement methods" << std::endl;
     //TODO::Implement check/call for disjoint and overlapping workspaces
-    m_ITPlacementMethods["ow"]->PlaceIT(_it, m_solution, m_library);
+    //m_ITPlacementMethods["ow"]->PlaceIT(_it, m_solution, m_library);
+    m_ITPlacementMethods["djw"]->PlaceIT(_it, m_solution, m_library, this);
+    m_ITPlacementMethods["ow"]->PlaceIT(_it, m_solution, m_library, this);
     std::cout << "Used placement methods" << std::endl;
+  }*/
+  for(auto& method : m_ITPlacementMethods){
+    Simulation::GetStatClass()->StartClock("Placing Templates with: " + method.second->GetLabel());
+    method.second->PlaceIT(_it, m_solution, m_library, this);
+    Simulation::GetStatClass()->StopClock("Placing Templates with: " + method.second->GetLabel());
   }
 }
 
@@ -1527,4 +1671,168 @@ void
 Coordinator::
 AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm){
   m_ITPlacementMethods[_pm->GetLabel()] = std::move(_pm);
+}
+
+void
+Coordinator::
+CreateCapabilityMaps(){
+  for(auto agent : m_memberAgents){
+    agent->GetRobot()->SetVirtual(true);
+  }
+  std::cout << "Finding Handoff Locations" << std::endl;
+  auto originalProblem = m_robot->GetMPProblem();
+  //m_library->InitializeMPProblem(originalProblem);
+  m_library->SetMPProblem(originalProblem);
+
+  for(auto& it : m_solution->GetInteractionTemplates()){
+    //m_solution->AddInteractionTemplate(it);
+    FindITLocations(it.get());
+  }
+
+  std::cout << "Found Handoff Locations" << std::endl;
+
+  TranslateHandoffTemplates();
+  SetupWholeTasks();
+
+  ITConnector connector(m_connectionThreshold,m_library);
+  auto dm = m_library->GetDistanceMetric(m_dmLabel);
+
+  if(true){
+    for(auto agent : m_memberAgents){
+      auto robot = agent->GetRobot();
+      auto cfg = robot->GetSimulationModel()->GetState();
+      auto vid = m_megaRoadmap->AddVertex(cfg);
+      m_wholeTaskStartEndPoints.push_back({vid});
+    }
+  }
+
+  std::vector<Cfg> startAndGoal;
+  for(auto vid : m_wholeTaskStartEndPoints){
+    startAndGoal.push_back(m_megaRoadmap->GetVertex(vid[0]));
+  }
+
+  for(auto it = m_dummyMap.begin(); it != m_dummyMap.end(); it++){
+    const std::string capability = it->first;
+    auto graph = connector.ConnectInteractionTemplates(
+                          m_solution->GetInteractionTemplates(),
+                          capability,
+                          startAndGoal,
+                          m_megaRoadmap);
+
+    auto robot = it->second->GetRobot();
+    Roadmap<MPTraits<Cfg,DefaultWeight<Cfg>>> testRm(robot);
+    auto copyGraph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(robot);
+    *copyGraph = *graph;
+    testRm.SetGraph(copyGraph);
+    testRm.Write("CoordinatorTemplates.map", robot->GetMPProblem()->GetEnvironment());
+
+    std::priority_queue<std::pair<size_t,size_t>> pq;
+
+    /*for(size_t i = 0; i < m_wholeTaskStartEndPoints.size(); i++){
+      auto roadmap = m_wholeTaskStartEndPoints[i];
+      if(it->first == m_megaRoadmap->GetVertex(roadmap[0]).GetRobot()->
+            GetAgent()->GetCapability()){
+        for(size_t j = 0; j < roadmap.size(); j++){
+          auto vid = roadmap[j];
+          const auto newVID = graph->AddVertex(m_megaRoadmap->GetVertex(vid));
+          for(auto iter = graph->begin(); iter != graph->end(); iter++){
+            if(iter->descriptor() == newVID)
+              continue;
+            auto distance = dm->Distance(iter->property(), graph->GetVertex(newVID));
+
+            size_t k = 5;//Number of neighbors
+            if(pq.size() < k){
+              pq.emplace(newVID,distance);
+            }
+            else if(distance < pq.top().second){
+              pq.pop();
+              pq.emplace(newVID,distance);
+            }
+
+            bool canConnect = false;
+            while(!pq.empty()){
+              auto neighbor = pq.top();
+              pq.pop();
+              if(graph->IsEdge(neighbor.first,newVID))
+                continue;
+              Cfg collision(graph->GetRobot());
+              LPOutput<MPTraits<Cfg,DefaultWeight<Cfg>>> lpOutput;
+              auto lp = m_library->GetLocalPlanner("slRobot");
+              const bool connectable = lp->IsConnected(iter->property(),
+                                        graph->GetVertex(newVID),
+                                        collision,
+                                        &lpOutput,
+                                        m_library->GetMPProblem()->GetEnvironment()->GetPositionRes(),
+                                        m_library->GetMPProblem()->GetEnvironment()->GetOrientationRes(),
+                                          true);
+              if(connectable){
+                canConnect = true;
+                graph->AddEdge(newVID, iter->descriptor(), lpOutput.m_edge.first);
+                graph->AddEdge(iter->descriptor(), newVID, lpOutput.m_edge.second);
+                break;
+              }
+            }
+            if(!canConnect){
+              throw RunTimeException(WHERE, "No connections to start/goal and capability roadmap "
+                                     + it->first + ".");
+            }
+          }
+        }
+      }
+    }*/
+
+    Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
+    // Copy over newly found vertices
+    std::unordered_map<size_t,size_t> handoffVIDMap;
+    for(auto vit = graph->begin(); vit != graph->end(); ++vit){
+      // Add vertices found in building the capability map to the mega roadmap
+      // without copying over the handoff vertices that already exist
+      if(handoffVIDMap.find(vit->descriptor()) == handoffVIDMap.end()){
+        auto megaVID = m_megaRoadmap->AddVertex(vit->property());
+        handoffVIDMap[vit->descriptor()] = megaVID;
+      }
+    }
+
+    if(m_debug){
+      std::cout << "Done copying over vertices" << std::endl;
+    }
+
+    m_capabilityRoadmaps[capability] = graph;
+    // Copy over newly found edges in capability to mega roadmap
+    for(auto vit = graph->begin(); vit != graph->end(); ++vit){
+      for(auto eit = vit->begin(); eit != vit->end(); ++eit){
+        auto source = handoffVIDMap[eit->source()];
+        auto target = handoffVIDMap[eit->target()];
+        // Won't copy over existing edges to the mega roadmap
+        if(!m_megaRoadmap->IsEdge(source, target)){
+          m_megaRoadmap->AddEdge(source, target, eit->property());
+        }
+      }
+    }
+
+    Roadmap<MPTraits<Cfg,DefaultWeight<Cfg>>> testRm2(robot);
+    auto copyGraph2 = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(robot);
+    *copyGraph2 = *m_megaRoadmap;
+    testRm.SetGraph(copyGraph2);
+    testRm.Write("MegaTemplates.map", robot->GetMPProblem()->GetEnvironment());
+    Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
+  }
+  //Adding interaction edge
+  /*for(auto& it : m_solution->GetInteractionTemplates()){
+    auto eit = it->GetConnectingEdge();
+    auto source = it->GetConnectedRoadmap()->GetVertex(eit.first);
+    auto target = it->GetConnectedRoadmap()->GetVertex(eit.second);
+    for(auto location : it->GetInformation()->GetTemplateLocations()){
+      auto cfg1 = source;
+      auto cfg2 = target;
+      TranslateCfg(location,cfg1);
+      TranslateCfg(location,cfg2);
+      if(m_megaRoadmap->IsVertex(cfg1) and m_megaRoadmap->IsVertex(cfg2)){
+        auto s_vid = m_megaRoadmap->GetVID(cfg1);
+        auto t_vid = m_megaRoadmap->GetVID(cfg2);
+        DefaultWeight<Cfg> weight;
+        m_megaRoadmap->AddEdge(s_vid, t_vid, weight);
+      }
+    }
+  }*/
 }

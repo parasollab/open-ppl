@@ -1,5 +1,6 @@
 #include "MPLibrary/PMPL.h"
 #include "Simulator/Simulation.h"
+#include "Utilities/MPUtils.h"
 #include "Visualization/Gui/Setup.h"
 
 #include "sandbox/gui/main_window.h"

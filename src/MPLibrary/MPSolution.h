@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 class Robot;
+//class InteractionTemplate;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +170,9 @@ void
 MPSolutionType<MPTraits>::
 SetRobot(Robot* const _r) noexcept {
   // Move m_robot's solution to match the new pointer.
+  if(m_robot == _r){
+    return;
+  }
   auto iter = m_solutions.find(m_robot);
   m_solutions[_r] = std::move(iter->second);
   m_solutions.erase(iter);

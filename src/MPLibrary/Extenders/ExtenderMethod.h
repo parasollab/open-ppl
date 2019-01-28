@@ -6,7 +6,6 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include <limits>
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref Extenders.
 ///

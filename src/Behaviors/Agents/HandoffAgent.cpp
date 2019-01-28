@@ -59,6 +59,11 @@ InitializeRoadmap() {
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 }
 
+Coordinator*
+HandoffAgent::
+GetParentAgent(){
+  return m_parentAgent;
+}
 
 void
 HandoffAgent::
@@ -134,57 +139,62 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   setupTask->AddGoalConstraint(std::move(setupStart));
   SetTask(setupTask);
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
-  WorkFunction(problemCopy);
-  if(!m_solution->GetPath()->Cfgs().empty()){
-    auto setupPath = m_path;
-    m_potentialCost += m_solution->GetPath()->Length();
-
-    // Compute cost to travel from start constraint to goal constraint
-    SetTask(_task);
-    std::shared_ptr<MPProblem> problemCopyDos(new MPProblem(*m_robot->GetMPProblem()));
-    WorkFunction(problemCopyDos);
-
+  try{
+    WorkFunction(problemCopy);
     if(!m_solution->GetPath()->Cfgs().empty()){
-      auto goalPath = m_path;
+      auto setupPath = m_path;
       m_potentialCost += m_solution->GetPath()->Length();
 
-      // Save the computed paths in case this robot is selected to perform the task.
-      m_potentialPath = currentPath;
-      m_potentialPath.insert(m_potentialPath.end(), setupPath.begin(), setupPath.end());
-      m_potentialPath.insert(m_potentialPath.end(), goalPath.begin(), goalPath.end());
+      // Compute cost to travel from start constraint to goal constraint
+      SetTask(_task);
+      std::shared_ptr<MPProblem> problemCopyDos(new MPProblem(*m_robot->GetMPProblem()));
+      WorkFunction(problemCopyDos);
+
+      if(!m_solution->GetPath()->Cfgs().empty()){
+        auto goalPath = m_path;
+        m_potentialCost += m_solution->GetPath()->Length();
+
+        // Save the computed paths in case this robot is selected to perform the task.
+        m_potentialPath = currentPath;
+        m_potentialPath.insert(m_potentialPath.end(), setupPath.begin(), setupPath.end());
+        m_potentialPath.insert(m_potentialPath.end(), goalPath.begin(), goalPath.end());
 
 
-      const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-      auto controller  = m_robot->GetController();
-      auto dynamics    = m_robot->GetMicroSimulator();
-      auto dm          = m_library->GetDistanceMetric(m_waypointDm);
+        const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
+        auto controller  = m_robot->GetController();
+        auto dynamics    = m_robot->GetMicroSimulator();
+        auto dm          = m_library->GetDistanceMetric(m_waypointDm);
 
-      double numSteps = 0;
+        double numSteps = 0;
 
-      for(size_t i = 1; i < m_potentialPath.size(); ++i) {
-        // Get the next pair of configurations.
-        Cfg         current  = m_potentialPath[i - 1];
-        const auto& waypoint = m_potentialPath[i];
+        for(size_t i = 1; i < m_potentialPath.size(); ++i) {
+          // Get the next pair of configurations.
+          Cfg         current  = m_potentialPath[i - 1];
+          const auto& waypoint = m_potentialPath[i];
 
-        // While current is too far from way point, use the controller to generate
-        // a control and test it with the dynamics model.
-        while(dm->Distance(current, waypoint) > m_waypointThreshold) {
-          // Apply the next control.
-          Control nextControl = (*controller)(current, waypoint, timeRes);
-          current = dynamics->Test(current, nextControl, timeRes);
-          numSteps += 1;
+          // While current is too far from way point, use the controller to generate
+          // a control and test it with the dynamics model.
+          while(dm->Distance(current, waypoint) > m_waypointThreshold) {
+            // Apply the next control.
+            Control nextControl = (*controller)(current, waypoint, timeRes);
+            current = dynamics->Test(current, nextControl, timeRes);
+            numSteps += 1;
+          }
         }
-      }
-      double time = numSteps*timeRes;
-      double currentTime = m_parentAgent->GetCurrentTime();
-      m_potentialCost = time + currentTime;
+        double time = numSteps*timeRes;
+        double currentTime = m_parentAgent->GetCurrentTime();
+        m_potentialCost = time + currentTime;
 
+      }
+      else{ // Robot cannot complete the task
+        m_potentialCost = std::numeric_limits<size_t>::max();
+      }
     }
-    else{ // Robot cannot complete the task
+    else { // Robot cannot get to the start location of the task
       m_potentialCost = std::numeric_limits<size_t>::max();
     }
   }
-  else { // Robot cannot get to the start location of the task
+  catch(...){
     m_potentialCost = std::numeric_limits<size_t>::max();
   }
   // Restore the task/path state to currentTask/currentPath
@@ -254,12 +264,14 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
       robot->SetVirtual(false);
     }
   }
+  m_robot->SetVirtual(true);
   // Create a task for the parent robot copy (because this is a shared roadmap
   // method).
 
-  auto copyRobot = _problem->GetRobot(m_robot->GetLabel());
+  //auto copyRobot = _problem->GetRobot(m_robot->GetLabel());
 
-  GetTask()->SetRobot(copyRobot);
+  //GetTask()->SetRobot(copyRobot);
+  GetTask()->SetRobot(m_robot);
   std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
   std::cout << "Currently at: " << m_robot->GetSimulationModel()->GetState()
             << std::endl;
@@ -268,20 +280,55 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   }
   else {
     m_solution = unique_ptr<MPSolution>(new MPSolution(m_robot));
+    //m_solution = m_library->GetMPSolution();
   }
   // Set the solution for appending with the parent copy.
-  m_solution->SetRobot(copyRobot);
+  //m_solution->SetRobot(copyRobot);
+  m_solution->SetRobot(m_robot);
 
-  m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap()->GetGraph(),
+  if(m_debug){
+    m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap()->GetGraph(),
       glutils::color(0., 1., 0., 0.2));
+  }
   // Solve for the plan.
   std::cout << "Calling Solve for " << m_robot->GetLabel() << std::endl;
 
   if(!m_parentAgent->GetRobot()->IsManipulator()){
+    //m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
+    //    "LazyPRM", LRand(), "LazyCollisionAvoidance");
     m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
-        "LazyPRM", LRand(), "LazyCollisionAvoidance");
+        "EvaluateMapStrategy", LRand(), "LazyCollisionAvoidance");
   }
   else {
+    auto startBox = GetTask()->GetStartConstraint()->GetBoundary()->Clone();
+    auto box = static_cast<CSpaceBoundingBox*>(startBox.get());
+    auto ranges = box->GetRanges();
+    for(size_t i = 0; i < 3; i++){
+      box->SetRange(i, box->GetRange(i).min-.005, box->GetRange(i).max+.005);
+    }
+    for(size_t i = 3; i < ranges.size(); i++){
+      box->SetRange(i, box->GetRange(i).min-.05, box->GetRange(i).max+.05);
+    }
+
+    std::cout << "Ranges for start constraint" << std::endl;
+    for(auto r : box->GetRanges()){
+      std::cout << r << std::endl;
+    }
+
+    auto startConstraint = std::unique_ptr<BoundaryConstraint>
+      (new BoundaryConstraint(m_robot, std::move(startBox)));
+    auto g = m_solution->GetRoadmap(m_robot)->GetGraph();
+    for(auto vit = g->begin(); vit != g->end(); vit++){
+      std::cout << vit->property().PrettyPrint() << " : "
+                << vit->descriptor() << " : "
+                << vit->property().GetRobot() << std::endl;
+      auto start = GetTask()->GetStartConstraint();
+      std::cout << "Satisfied: " << start->Satisfied(vit->property()) << std::endl;
+    }
+
+    std::cout << g->GetVertex(0).PrettyPrint();
+    std::cout << g->GetVertex(1).PrettyPrint();
+
     m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
         "EvaluateMapStrategy", LRand(), "LazyCollisionAvoidance");
   }
@@ -309,7 +356,6 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   m_planning = false;
 }
 
-
 bool
 HandoffAgent::
 SelectTask(){
@@ -335,7 +381,7 @@ SelectTask(){
     for(size_t i = 0; i < 3; i++){
       auto range = ranges[i];
       auto center = range.Center();
-      box->SetRange(i, center-.005, center+.005);
+      box->SetRange(i, center-.05, center+.05);
     }
 
     std::cout << "Ranges for start constraint" << std::endl;
@@ -450,7 +496,7 @@ GetMPSolution(){
 void
 HandoffAgent::
 SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
-  m_solution->GetRoadmap()->SetGraph(_graph);
+  m_solution->GetRoadmap(m_robot)->SetGraph(_graph);
 }
 
 void

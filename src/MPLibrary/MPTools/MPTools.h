@@ -69,6 +69,7 @@ class MPToolsType final {
   LabelMap<ReachabilityUtil>         m_reachabilityUtils;
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
+  //std::unordered_map<std::string, TriangleDecomposition> m_triangulations;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
 
   ///@}
@@ -88,6 +89,9 @@ class MPToolsType final {
 
     /// Initialize the clearance and MA tools prior to use.
     void Initialize();
+
+    /// Uninitialize the clearance and MA tools.
+    void Uninitialize();
 
     ~MPToolsType();
 
@@ -342,6 +346,17 @@ ParseXML(XMLNode& _node) {
       m_tetgens[label] = TetGenDecomposition(child);
       SetDecomposition(label, nullptr);
     }
+    /*else if(child.Name() == "WorkspaceTriangulation"){
+      const std::string label = child.Read("label",true,"",
+            "The label for this decomposition.");
+      if(m_decompositions.count(label))
+        throw ParseException(child.Where(), "Second decomposition node "
+            "with the label " + label + ". Labels must be unique across all "
+            "types of decomposition.");
+
+      m_triangulations[label] = TriangleDecomposition(child);
+      SetDecomposition(label, nullptr);
+    }*/
     else if(child.Name() == "SafeIntervalTool") {
       auto utility = new SafeIntervalTool<MPTraits>(child);
 
@@ -405,6 +420,7 @@ template <typename MPTraits>
 void
 MPToolsType<MPTraits>::
 Initialize() {
+  //Uninitialize();
   for(auto& pair : m_clearanceUtils)
     pair.second->Initialize();
   for(auto& pair : m_medialAxisUtils)
@@ -424,6 +440,15 @@ Initialize() {
     pair.second->Initialize();
 }
 
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+Uninitialize() {
+  for(auto& pair : m_decompositions){
+    delete pair.second;
+    pair.second = nullptr;
+  }
+}
 
 template <typename MPTraits>
 MPToolsType<MPTraits>::

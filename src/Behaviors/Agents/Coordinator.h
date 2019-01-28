@@ -6,9 +6,9 @@
 #include "HandoffAgent.h"
 #include "WholeTask.h"
 
-#include "ITPlacement/PlacementMethod.h"
+#include "Behaviors/TMPStrategies/ITPlacement/PlacementMethod.h"
 
-#include "Behaviors/TMP/Actions/Action.h"
+#include "Behaviors/TMPStrategies/Actions/Action.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
 #include "BatteryBreak.h"
@@ -221,6 +221,9 @@ class Coordinator : public Agent {
     /// Temporary Function to add placement method to map during development
     void AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm);
 
+    /// Temporary Function to use new ITConnector Code
+    void CreateCapabilityMaps();
+
     ///@}
 
   protected:
@@ -289,6 +292,8 @@ class Coordinator : public Agent {
 
     /// Tempoary Map of IT Placement Method Options to use during development
     std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
+
+    double m_connectionThreshold{1.5};
     ///@}
 
 };

@@ -1086,7 +1086,7 @@ Cfg::
 DirectionInLocalFrame(const Cfg& _target) const {
   // Compute direction from here to there.
   const Cfg dir = _target - *this;
-  Cfg output(m_robot);
+  Cfg output = dir;
 
   // Get the world rotation of here.
   const QuaternionOrientation worldRotation(GetEulerAngle());
