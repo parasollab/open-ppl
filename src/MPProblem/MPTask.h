@@ -110,6 +110,8 @@ class MPTask final {
     const ConstraintSet& GetPathConstraints() const noexcept;
     const ConstraintSet& GetGoalConstraints() const noexcept;
 
+    void ClearGoalConstraints();
+
     /// A task is considered to be 'empty' if it has neither start nor goal
     /// constraints.
     bool Empty() const noexcept;

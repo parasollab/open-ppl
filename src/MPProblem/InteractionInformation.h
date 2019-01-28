@@ -1,5 +1,5 @@
-#ifndef MP_HANDOFF_TEMPLATE_H_
-#define MP_HANDOFF_TEMPLATE_H_
+#ifndef INTERACTION_INFORMATION_H_
+#define INTERACTION_INFORMATION_H_
 
 #include <memory>
 #include <string>
@@ -36,8 +36,6 @@ class InteractionInformation {
     ///@name Accessors
     ///@{
 
-    std::vector<std::shared_ptr<MPTask>> GetTasks() const;
-
     std::string GetLabel() const;
 
     size_t GetMaxAttempts() const;
@@ -57,7 +55,13 @@ class InteractionInformation {
     /// Gets the final position of robots at each of the IT locations
     std::vector<Cfg> GetInteractionPositions();
 
+    /// Get the final position of robot of input capability.
+    std::vector<Cfg> GetInteractionPosition(std::string _capability);
+
     bool SavedPaths();
+
+    /// Gets the environment to plan the interaction in.
+    Environment* GetInteractionEnvironment();
 
     ///@}
 
@@ -80,9 +84,11 @@ class InteractionInformation {
     ///The locations for manually placed handoffs
     std::vector<Cfg> m_handoffLocations;
 
+    ///Environment to plan the interaction in
+    std::unique_ptr<Environment> m_interactionEnvironment;
+
     ///Indicates if the interaction template should save the entire paths of the
     ///interaction or just the final configurations.
     bool m_savePaths;
 };
-
 #endif

@@ -8,8 +8,8 @@
 
 
 #include "RelaxedGraphPlan.h"
-#include "Actions/Action.h"
-#include "State.h"
+#include "../Actions/Action.h"
+#include "../State.h"
 
 #include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPProblem/Robot/Robot.h"

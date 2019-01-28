@@ -11,8 +11,8 @@
 #include "MPLibrary/PMPL.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Robot.h"
-#include "Actions/Action.h"
-#include "State.h"
+#include "../Actions/Action.h"
+#include "../State.h"
 
 
 class Cfg;

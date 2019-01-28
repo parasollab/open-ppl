@@ -1,7 +1,7 @@
 #include "RelaxedGraphPlan.h"
-#include "Actions/MoveRobot.h"
-#include "Actions/HandoffTask.h"
-#include "Actions/StartTask.h"
+#include "../Actions/MoveRobot.h"
+#include "../Actions/HandoffTask.h"
+#include "../Actions/StartTask.h"
 #include <list>
 
 #include "Behaviors/Agents/Agent.h"

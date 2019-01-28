@@ -1,4 +1,5 @@
 #include "InteractionInformation.h"
+#include "MPProblem/Environment/Environment.h"
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -21,7 +22,7 @@ InteractionInformation(MPProblem* _problem, XMLNode& _node) : m_problem(_problem
     if(child.Name() == "Task") {
       m_tasks.emplace_back(new MPTask(m_problem, child));
     }
-    if(child.Name() == "Location"){
+    else if(child.Name() == "Location"){
       const std::string pointString = child.Read("point", false, "",
           "The center point of the handoff template");
       if(!m_tasks[0])
@@ -38,17 +39,16 @@ InteractionInformation(MPProblem* _problem, XMLNode& _node) : m_problem(_problem
       m_handoffLocations.push_back(point);
 
     }
+    else if(child.Name() == "InteractionEnvironment"){
+      if(!m_interactionEnvironment){
+        m_interactionEnvironment = std::unique_ptr<Environment>(new Environment(child));
+      }
+    }
   }
 }
 
 
 /*------------------------------ Accessors --------------------------------*/
-
-std::vector<std::shared_ptr<MPTask>>
-InteractionInformation::
-GetTasks() const {
-  return m_tasks;
-}
 
 std::string
 InteractionInformation::
@@ -96,4 +96,10 @@ bool
 InteractionInformation::
 SavedPaths(){
   return m_savePaths;
+}
+
+Environment*
+InteractionInformation::
+GetInteractionEnvironment(){
+  return m_interactionEnvironment.get();
 }

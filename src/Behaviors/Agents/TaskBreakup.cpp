@@ -26,13 +26,18 @@ BreakupTask(WholeTask* _wholeTask){
     std::cout << "Splitting up next whole task: " << _wholeTask << std::endl;
     std::cout << "Printing out path of whole task" << std::endl;
     for(auto cfg : _wholeTask->m_wholePath){
-      std::cout << cfg.PrettyPrint() << " : : " << cfg.GetRobot()->GetCapability() << std::endl;
+      std::cout << cfg.PrettyPrint()
+                << " : : "
+                << cfg.GetRobot()->GetCapability()
+                << " : : "
+                << cfg.GetRobot() << std::endl;
     }
   }
   // Loop through path to find cfgs where robot pointer changes
   // When the robot pointer changes, create a new subtask
   // TODO: Maybe check based on capability rather than robot pointer
   Robot* checkRobot = nullptr;
+  Robot* previousRobot = nullptr; //used for instances of same capability interaction
   Cfg subtaskStart;
   Cfg subtaskEnd;
   // First cfg in the path is the coordinator configurations at the
@@ -81,11 +86,19 @@ BreakupTask(WholeTask* _wholeTask){
           subtaskStart = cfg;
         }
       }
+      // If interaction is between homogenous robots, don't create false
+      // interaction point
+      else if(previousRobot == cfg.GetRobot() and checkRobot != previousRobot){
+        checkRobot = previousRobot;
+      }
       // If we have reached a handoff or end of the path, create a subtask of
       // the wholetask
       else {
         if(m_debug){
           std::cout << "End of subtask" << std::endl;
+        }
+        if(i == (_wholeTask->m_wholePath.size()-1)){
+          subtaskEnd = cfg;
         }
         std::shared_ptr<MPTask> subtask = std::shared_ptr<MPTask>(new MPTask(m_robot));
         // Make start and goal constrants from start and end cfgs
@@ -163,6 +176,8 @@ BreakupTask(WholeTask* _wholeTask){
 
         // Push task back into whole task object
         _wholeTask->m_subtasks.push_back(subtask);
+        previousRobot = checkRobot;
+        //previousRobot = cfg.GetRobot();
         checkRobot = nullptr;
         if(m_debug){
           std::cout << "Start of new subtask" << std::endl;

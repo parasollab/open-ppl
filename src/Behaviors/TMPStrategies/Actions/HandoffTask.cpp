@@ -1,5 +1,5 @@
 #include "HandoffTask.h"
-#include "../RelaxedGraphPlan.h"
+#include "../TMPHelperAlgorithms/RelaxedGraphPlan.h"
 
 HandoffTask::
 HandoffTask(Robot* _passer, Robot* _receiver,

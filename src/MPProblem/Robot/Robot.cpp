@@ -131,7 +131,6 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
       m_multibody->GetBody(i)->SetColor(c);
     }
   }
-  // Initialize the end effector
 }
 
 
@@ -614,6 +613,12 @@ IsManipulator() const noexcept {
   return m_manipulator;
 }
 
+
+bool
+Robot::
+IsFixed() const noexcept {
+  return m_fixed;
+}
 /*---------------------------------- Debug -----------------------------------*/
 
 std::ostream&

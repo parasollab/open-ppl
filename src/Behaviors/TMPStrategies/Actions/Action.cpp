@@ -1,5 +1,5 @@
 #include "Action.h"
-#include "../RelaxedGraphPlan.h"
+#include "../TMPHelperAlgorithms/RelaxedGraphPlan.h"
 
 Action::
 Action(){

@@ -36,6 +36,7 @@ class HandoffAgent : public PathFollowingAgent {
     ///@name Child Interface
     ///@{
 
+    Coordinator* GetParentAgent();
     ///Set m_parentAgent to the an agent of the same capability.
     ///@param _parent The parent agent.
     void SetParentAgent(Coordinator* const _parent);

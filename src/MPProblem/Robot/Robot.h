@@ -80,6 +80,7 @@ class Robot final {
   double m_maxLinearVelocity{10};  ///< Max linear velocity.
   double m_maxAngularVelocity{1};  ///< Max angular velocity.
   std::string m_capability;        ///< The terrain label that the robot can use.
+  bool m_fixed{false};
   bool m_manipulator{false};       ///< Is the robot a manipulator?
 
   //////////////////////////////////////////////////////////////////////////////
@@ -314,6 +315,9 @@ class Robot final {
 
     /// Check if the robot is a manipulator
     bool IsManipulator() const noexcept;
+
+    /// Check if the robot has a fixed base
+    bool IsFixed() const noexcept;
     ///@}
 
 

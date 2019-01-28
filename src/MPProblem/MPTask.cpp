@@ -205,6 +205,12 @@ GetGoalConstraints() const noexcept {
 
 void
 MPTask::
+ClearGoalConstraints(){
+  m_goalConstraints.clear();
+}
+
+void
+MPTask::
 SetCapability(const std::string& _capability) {
   m_capability = _capability;
 }

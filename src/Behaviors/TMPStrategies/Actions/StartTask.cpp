@@ -1,5 +1,5 @@
 #include "StartTask.h"
-#include "../RelaxedGraphPlan.h"
+#include "../TMPHelperAlgorithms/RelaxedGraphPlan.h"
 
 StartTask::
 StartTask(Robot* _robot, const Boundary* _location){
@@ -46,7 +46,7 @@ CheckPreConditions(const FactLayer* _factLayer){
   return true;
 }
 
-std::vector<Robot*> 
+std::vector<Robot*>
 StartTask::
 GetRobots(){
   return {m_robot};

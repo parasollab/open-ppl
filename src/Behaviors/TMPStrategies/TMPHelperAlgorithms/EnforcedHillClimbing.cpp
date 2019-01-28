@@ -27,7 +27,7 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
   //Extract Handoff Locations from Templates
   for(auto& temp : _handoffs){
     //TODO::Find better way to do this
-    auto pos = temp->GetPositions();
+    auto pos = temp->GetTranslatedPositions();
     auto first = CfgToBoundary(pos[0]);
     auto second = CfgToBoundary(pos[1]);
 

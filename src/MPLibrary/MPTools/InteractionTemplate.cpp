@@ -1,12 +1,10 @@
 #include "InteractionTemplate.h"
-
 /*------------------------------ Construction --------------------------------*/
 
 InteractionTemplate::
 InteractionTemplate(InteractionInformation* _info) {
   m_information = _info;
 }
-
 
 /*------------------------------ Accessors --------------------------------*/
 
@@ -43,7 +41,15 @@ GetDistinctRoadmaps() {
 std::vector<Cfg>
 InteractionTemplate::
 GetPositions(){
-  std::vector<Cfg> positions;
+  return m_handoffCfgs;
+}
+
+std::vector<Cfg>&
+InteractionTemplate::
+GetTranslatedPositions(){
+  if(!m_translatedInteractionPositions.empty()){
+    return m_translatedInteractionPositions;
+  }
   for(auto center : m_information->GetTemplateLocations()){
     for(auto cfg : m_handoffCfgs){
       double x = cfg[0];
@@ -57,10 +63,10 @@ GetPositions(){
       Cfg newCfg = cfg;
       newCfg.SetLinearPosition({newX, newY, oldTheta});
       newCfg += center;
-      positions.push_back(newCfg);
+      m_translatedInteractionPositions.push_back(newCfg);
     }
   }
-  return positions;
+  return m_translatedInteractionPositions;
 }
 
 /*------------------------------ Member Management --------------------------------*/
@@ -168,7 +174,13 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
       }
       weight.SetWeight(m_information->GetInteractionWeight());
       m_connectedRoadmap->AddEdge(startVID, endVID, weight);
+      m_connectingEdge = std::pair<size_t,size_t>(startVID, endVID);
     }
   }
 }
 
+std::pair<size_t,size_t>
+InteractionTemplate::
+GetConnectingEdge(){
+  return m_connectingEdge;
+}

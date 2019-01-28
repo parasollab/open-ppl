@@ -354,6 +354,9 @@ class MPLibraryType final
         const std::string& _label, const long _seed,
         const std::string& _baseFilename);
 
+    /// Set the MPProblem and initialize the algorithms.
+    void InitializeMPProblem(MPProblem* _problem);
+
     ///@}
     ///@name Debugging
     ///@{
@@ -493,6 +496,7 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Initialize() {
+  Uninitialize();
   // Create the default goal map.
   if(this->GetTask())
     m_goalTracker->AddMap(GetRoadmap(), GetTask());
@@ -952,6 +956,13 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
   RunSolver(s);
 }
 
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+InitializeMPProblem(MPProblem* _problem){
+  SetMPProblem(_problem);
+  Initialize();
+}
 
 template <typename MPTraits>
 void

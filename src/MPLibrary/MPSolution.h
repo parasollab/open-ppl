@@ -81,6 +81,8 @@ class MPSolutionType final {
 
     void SetRobot(Robot* const _r) noexcept;
 
+    void SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept;
+
     ///@}
     ///@name Accessors
     ///@{
@@ -200,6 +202,9 @@ template <typename MPTraits>
 void
 MPSolutionType<MPTraits>::
 SetRobot(Robot* const _r) noexcept {
+  if(m_robot == _r){
+    return;
+  }
   // Move m_robot's solution to match the new pointer.
   auto iter = m_individualSolutions.find(m_robot);
   m_individualSolutions[_r] = std::move(iter->second);
@@ -210,6 +215,17 @@ SetRobot(Robot* const _r) noexcept {
   m_individualSolutions[_r].freeMap->SetRobot(_r);
   m_individualSolutions[_r].obstMap->SetRobot(_r);
   m_individualSolutions[_r].path->FlushCache();
+}
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
+  auto robotSolution = GetRobotSolution(_r);
+  if(robotSolution){
+    throw RunTimeException(WHERE) << "Cannot set roadmap for robot that does not have a solution.";
+  }
+  m_individualSolutions[_r].freeMap.reset(_roadmap);
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/

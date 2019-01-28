@@ -1,5 +1,5 @@
 #include "MoveRobot.h"
-#include "../RelaxedGraphPlan.h"
+#include "../TMPHelperAlgorithms/RelaxedGraphPlan.h"
 
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
@@ -39,8 +39,15 @@ CheckPreConditions(const FactLayer* _factLayer){
 
   auto possibleLocationsIter = _factLayer->m_possibleRobotLocations.find(m_robot);
   auto possibleLocations = possibleLocationsIter->second;
-  auto it = std::find(possibleLocations.begin(), possibleLocations.end(), m_start);
-  if(it == possibleLocations.end())
+  //auto it = std::find(possibleLocations.begin(), possibleLocations.end(), m_start);
+  bool match = false;
+  for(auto location : possibleLocations){
+    if(location->GetCenter() == m_start->GetCenter()){
+      match = true;
+    }
+  }
+  //if(it == possibleLocations.end())
+  if(!match)
     return false;
 
   MPTask* originalTask = m_library->GetTask();
@@ -81,6 +88,7 @@ CheckPreConditions(const FactLayer* _factLayer){
 
     task->SetStartConstraint(std::move(startConstraint));
     task->AddGoalConstraint(std::move(goalConstraint));
+
   }
   else{
     auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
@@ -120,9 +128,17 @@ CheckPreConditions(const FactLayer* _factLayer){
   agent->SetRoadmapGraph(m_roadmapGraph);
   auto solution = agent->GetMPSolution();
   try{
+    m_roadmapGraph->SetRobot(m_robot);
+
+    //for(auto vit = m_roadmapGraph->begin(); vit != m_roadmapGraph->end(); vit++){
+    //  std::cout << vit->property().PrettyPrint() << " : " << vit->property().GetRobot() << std::endl;
+    //  auto start = task->GetStartConstraint();
+    //  std::cout << "Satisfied: " << start->Satisfied(vit->property()) << std::endl;
+    //}
+
     m_library->Solve(m_robot->GetMPProblem(), task, solution, "EvaluateMapStrategy",
         LRand(), "CheckPreCondition");
-    if(solution->GetPath()->Cfgs().size() < 1){
+    if(solution->GetPath()->Cfgs().empty()){
       if(m_manipulator and !m_hasObject)
         m_used = true;
       return false;

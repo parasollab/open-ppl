@@ -89,6 +89,9 @@ class MPToolsType final {
     /// Initialize the clearance and MA tools prior to use.
     void Initialize();
 
+    /// Uninitialize the clearance and MA tools.
+    void Uninitialize();
+
     ~MPToolsType();
 
     ///@}
@@ -405,6 +408,7 @@ template <typename MPTraits>
 void
 MPToolsType<MPTraits>::
 Initialize() {
+  //Uninitialize();
   for(auto& pair : m_clearanceUtils)
     pair.second->Initialize();
   for(auto& pair : m_medialAxisUtils)
@@ -424,6 +428,15 @@ Initialize() {
     pair.second->Initialize();
 }
 
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+Uninitialize() {
+  for(auto& pair : m_decompositions){
+    delete pair.second;
+    pair.second = nullptr;
+  }
+}
 
 template <typename MPTraits>
 MPToolsType<MPTraits>::
