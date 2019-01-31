@@ -11,7 +11,7 @@ RelaxedGraphPlan::
 RelaxedGraphPlan(State _start,
                  State _goal,
                  std::vector<Robot*> _robots,
-                 std::vector<std::pair<const Boundary*, const Boundary*>> _handoffLocations,
+                 std::set<std::pair<const Boundary*, const Boundary*>> _handoffLocations,
                  const Boundary* _initialLocation,
                  const Boundary* _goalLocation,
                  const CapabilityMap& _capabilityMap,
@@ -46,17 +46,17 @@ RelaxedGraphPlan(State _start,
   m_allLocations.push_back(_goalLocation);
 
   m_finalGoalLayer = new FactLayer();
-  m_finalGoalLayer->m_possibleObjectLocations.push_back(_goalLocation);
+  m_finalGoalLayer->m_possibleObjectLocations.insert(_goalLocation);
 
   //Indicates that no robot has intiated the task yet
   if(m_start.m_taskOwners.size() == 0){
     m_allLocations.push_back(_initialLocation);
   }
 
-  facts->m_possibleObjectLocations.push_back(_start.m_objectLocations[0]);
+  facts->m_possibleObjectLocations.insert(*(_start.m_objectLocations.begin()));
 
   if(_start.m_taskOwners.size() > 0){
-    facts->m_possibleRobotPayloads.push_back(_start.m_taskOwners[0]);
+    facts->m_possibleRobotPayloads.insert(*(_start.m_taskOwners.begin()));
   }
 
 
@@ -273,9 +273,9 @@ AddRobotLocation(Robot* _robot, const Boundary* _location, FactLayer* _newFacts)
   //If its a new location, add it to the set of all possible facts and
   //this fact layer
   if(it == priorLocations.end()){
-    priorLocations.push_back(_location);
+    priorLocations.insert(_location);
     auto& layerLocations = _newFacts->m_possibleRobotLocations[_robot];
-    layerLocations.push_back(_location);
+    layerLocations.insert(_location);
 
     //Check if it was possible that the robot had the object at this point
     //and moved it
@@ -286,8 +286,8 @@ AddRobotLocation(Robot* _robot, const Boundary* _location, FactLayer* _newFacts)
       //Checks if moving to this location achieved the goal state
       if(_location == m_goal.m_objectLocations[0]){
         m_goalLayers[m_goalLayers.size()-1]->m_possibleRobotLocations[_robot] = {_location};
-        m_goalLayers[m_goalLayers.size()-1]->m_possibleObjectLocations.push_back(_location);
-        m_goalLayers[m_goalLayers.size()-1]->m_possibleRobotPayloads.push_back(_robot);
+        m_goalLayers[m_goalLayers.size()-1]->m_possibleObjectLocations.insert(_location);
+        m_goalLayers[m_goalLayers.size()-1]->m_possibleRobotPayloads.insert(_robot);
       }
     }
   }
@@ -303,9 +303,9 @@ AddObjectLocation(const Boundary* _location, FactLayer* _newFacts){
   //If its a new location, add it to the set of all possible facts and
   //this fact layer
   if(it == priorObjectLocations.end()){
-    priorObjectLocations.push_back(_location);
+    priorObjectLocations.insert(_location);
     auto& layerObjectLocations = _newFacts->m_possibleObjectLocations;
-    layerObjectLocations.push_back(_location);
+    layerObjectLocations.insert(_location);
   }
 }
 
@@ -319,9 +319,9 @@ AddObjectOwner(Robot* _robot, FactLayer* _newFacts){
   //If it a new ownership possibility add it to all possible facts and
   //this fact layer
   if(it == priorOwners.end()){
-    priorOwners.push_back(_robot);
+    priorOwners.insert(_robot);
     auto& layerOwners = _newFacts->m_possibleRobotPayloads;
-    layerOwners.push_back(_robot);
+    layerOwners.insert(_robot);
   }
 }
 
@@ -448,10 +448,10 @@ BackTrace(){
 
     for(auto& robotLocations : goalLayer->m_possibleRobotLocations){
       auto robot = robotLocations.first;
-      auto location = robotLocations.second[0];
+      auto location = *(robotLocations.second.begin());
 
       if(goalLayer->m_possibleRobotPayloads.size() and
-          goalLayer->m_possibleRobotPayloads[0] == robot) continue;
+          *(goalLayer->m_possibleRobotPayloads.begin()) == robot) continue;
 
       if(!(m_actionPlan[i-1]->m_actions.empty()) and
           m_actionPlan[i-1]->m_actions[0]->GetRobots()[0] == robot) continue;
@@ -602,8 +602,7 @@ LinearizePlan(){
       std::cout << "Converting map into list" << std::endl;
     }
     std::list<std::shared_ptr<Action>> layerOrder;
-    for(size_t i = 0; i < layer->m_actions.size(); i++){
-      auto action = layer->m_actions[i];
+    for(auto& action : layer->m_actions){
       auto dependencySet = dependencyMap[action];
       if(dependencySet.size() == 0){
         layerOrder.push_front(action);

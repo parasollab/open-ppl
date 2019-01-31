@@ -112,7 +112,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   setupTask->SetStartConstraint(std::move(start));
   std::unique_ptr<Constraint> setupStart(_task->GetStartConstraint()->Clone());
 
-  if(m_parentAgent->GetRobot()->IsManipulator()){
+  if(m_robot->IsManipulator()){
 
     auto startBox = setupStart->GetBoundary()->Clone();
     auto box = static_cast<CSpaceBoundingBox*>(startBox.get());
@@ -294,7 +294,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   // Solve for the plan.
   std::cout << "Calling Solve for " << m_robot->GetLabel() << std::endl;
 
-  if(!m_parentAgent->GetRobot()->IsManipulator()){
+  if(!m_robot->IsManipulator()){
     m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
         "LazyPRM", LRand(), "LazyCollisionAvoidance");
     //m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
@@ -318,6 +318,9 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 
     auto startConstraint = std::unique_ptr<BoundaryConstraint>
       (new BoundaryConstraint(m_robot, std::move(startBox)));
+
+    GetTask()->SetStartConstraint(std::move(startConstraint));
+
     auto g = m_solution->GetRoadmap(m_robot);
     for(auto vit = g->begin(); vit != g->end(); vit++){
       std::cout << vit->property().PrettyPrint() << " : "
@@ -326,6 +329,37 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
       auto start = GetTask()->GetStartConstraint();
       std::cout << "Satisfied: " << start->Satisfied(vit->property()) << std::endl;
     }
+
+
+    auto goalBox = GetTask()->GetGoalConstraints()[0]->GetBoundary()->Clone();
+    auto gbox = static_cast<CSpaceBoundingBox*>(goalBox.get());
+    ranges = gbox->GetRanges();
+    for(size_t i = 0; i < 3; i++){
+      gbox->SetRange(i, gbox->GetRange(i).Center()-.005, gbox->GetRange(i).Center()+.005);
+    }
+    for(size_t i = 3; i < ranges.size(); i++){
+      gbox->SetRange(i, gbox->GetRange(i).Center()-.0005, gbox->GetRange(i).Center()+.0005);
+    }
+
+    std::cout << "Ranges for goal constraint" << std::endl;
+    for(auto r : gbox->GetRanges()){
+      std::cout << r << std::endl;
+    }
+
+    auto goalConstraint = std::unique_ptr<BoundaryConstraint>
+      (new BoundaryConstraint(m_robot, std::move(goalBox)));
+
+    GetTask()->ClearGoalConstraints();
+    GetTask()->AddGoalConstraint(std::move(goalConstraint));
+
+    for(auto vit = g->begin(); vit != g->end(); vit++){
+      std::cout << vit->property().PrettyPrint() << " : "
+                << vit->descriptor() << " : "
+                << vit->property().GetRobot() << std::endl;
+      auto& goal = GetTask()->GetGoalConstraints()[0];
+      std::cout << "Satisfied: " << goal->Satisfied(vit->property()) << std::endl;
+    }
+
 
     std::cout << g->GetVertex(0).PrettyPrint();
     std::cout << g->GetVertex(1).PrettyPrint();
@@ -343,10 +377,12 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   m_path = m_solution->GetPath()->Cfgs();
   // Throw if PMPL failed to generate a solution.
   // TODO: Determine what to do when failing to produce a solution.
-  if(m_path.empty())
+  if(m_path.empty()){
+    m_solution->GetRoadmap()->Write("FailedPlanMap.map",_problem->GetEnvironment());
     throw RunTimeException(WHERE, "PMPL failed to produce a solution.");
     //ResetStartConstraint();
     //return;
+  }
 
   std::cout << "Printing out full path" << std::endl;
   for(auto cfg : m_solution->GetPath()->FullCfgs(m_library.get(), "slRobot")){
@@ -376,7 +412,7 @@ SelectTask(){
   auto pos = m_robot->GetSimulationModel()->GetState();
   std::cout << pos.PrettyPrint() << std::endl;
 
-  if(m_parentAgent->GetRobot()->IsManipulator()){
+  if(m_robot->IsManipulator()){
 
     auto startBox = startConstraint->GetBoundary()->Clone();
     auto box = static_cast<CSpaceBoundingBox*>(startBox.get());

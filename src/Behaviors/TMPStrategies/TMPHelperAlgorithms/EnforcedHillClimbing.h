@@ -91,7 +91,7 @@ class EnforcedHillClimbing {
     std::vector<Robot*> m_robots; ///< Set of robots available to solve the task
 
     /// Set of ITs in the system
-    std::vector<std::pair<const Boundary*, const Boundary*>> m_handoffLocations;
+    std::set<std::pair<const Boundary*, const Boundary*>> m_handoffLocations;
 
     const Boundary* m_initialLocation{nullptr}; ///< Initial location of the task
     const Boundary* m_goalLocation{nullptr};    ///< Goal location of the task

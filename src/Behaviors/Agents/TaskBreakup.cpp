@@ -108,7 +108,7 @@ BreakupTask(WholeTask* _wholeTask){
         }
 
         // Create new subtask for a non-manipulator robot
-        if(!m_robot->IsManipulator()){
+        if(!subtaskEnd.GetRobot()->IsManipulator()){
           auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
 
           std::unique_ptr<CSpaceBoundingSphere> boundingSphere(

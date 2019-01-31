@@ -14,7 +14,17 @@ ConnectInteractionTemplates(std::vector<std::unique_ptr<InteractionTemplate>>& _
                             const std::string& _capability,
                             std::vector<Cfg>& _startAndGoal,
                             RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap){
+
+  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = new RoadmapGraph<
+                                      Cfg,DefaultWeight<Cfg>>(_megaRoadmap->GetRobot());
+
   auto cfgs = CalculateBaseDistances(_ITs,_capability, _startAndGoal);
+
+  if(cfgs.empty())
+    return graph;
+
+  graph->SetRobot(cfgs[0]->GetRobot());
+
   for(auto cfg1 : cfgs){
     for(auto cfg2 : cfgs){
       if(cfg1 == cfg2)
@@ -29,13 +39,10 @@ ConnectInteractionTemplates(std::vector<std::unique_ptr<InteractionTemplate>>& _
 
   FindAlternativeConnections(cfgs);
 
-  //TODO::Need to plan between the various cfg pairs in connections and create
-  //the RoadmapGraph to return.
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = new RoadmapGraph<
-                                      Cfg,DefaultWeight<Cfg>>(cfgs[0]->GetRobot());
 
   CopyInTemplates(graph, _ITs, _capability, _startAndGoal);
-  ConnectTemplates(graph);
+  if(!cfgs[0]->GetRobot()->IsManipulator())
+    ConnectTemplates(graph);
 
   return graph;
 }

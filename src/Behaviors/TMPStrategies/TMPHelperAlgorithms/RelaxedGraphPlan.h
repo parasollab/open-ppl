@@ -30,13 +30,13 @@ class XMLNode;
 
 
 struct FactLayer {
-  std::unordered_map<Robot*, std::vector<const Boundary*>> m_possibleRobotLocations;
+  std::unordered_map<Robot*, std::set<const Boundary*>> m_possibleRobotLocations;
 
   //TODO:: Adjust for multiple objects
-  std::vector<const Boundary*>                             m_possibleObjectLocations;
+  std::set<const Boundary*>                             m_possibleObjectLocations;
 
   //TODO:: Adjust for multiple objects
-  std::vector<Robot*>                                      m_possibleRobotPayloads;
+  std::set<Robot*>                                      m_possibleRobotPayloads;
 };
 
 struct ActionLayer {
@@ -64,7 +64,7 @@ class RelaxedGraphPlan {
     RelaxedGraphPlan(State _start,
                      State _goal,
                      std::vector<Robot*> _robots,
-                     std::vector<std::pair<const Boundary*, const Boundary*>> _handoffLocations,
+                     std::set<std::pair<const Boundary*, const Boundary*>> _handoffLocations,
                      const Boundary* _initialLocation,
                      const Boundary* _goalLocation,
                      const CapabilityMap& _capabilityMap,

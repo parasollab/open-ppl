@@ -192,6 +192,7 @@ Initialize() {
     std::cout << "Done Generating Roadmaps" << std::endl;
   }
   */
+
   CreateCapabilityMaps();
   m_megaRoadmap->Write("postGenerateRoadaps.map", m_robot->GetMPProblem()->GetEnvironment());
 
@@ -430,26 +431,27 @@ AssignTask(std::shared_ptr<MPTask> _nextTask) {
   }
   // Assign subtask to min agent
   _nextTask->SetRobot(minAgent->GetRobot());
-  minAgent->AddSubtask(_nextTask);
   //check if prior subtask was assigned to the same robot and merge them if so
   if(!m_subtaskMap[_nextTask]->m_agentAssignment.empty()){
     auto previousAgent = m_subtaskMap[_nextTask]->m_agentAssignment.back();
     if(previousAgent == minAgent){
       m_subtaskMap[_nextTask]->m_subtaskIterator--;
-      auto lastTask = m_subtaskMap[_nextTask]->m_subtasks[m_subtaskMap[_nextTask]->m_subtaskIterator];
+      auto lastTask = m_subtaskMap[_nextTask]->m_subtasks[m_subtaskMap[_nextTask]->m_subtaskIterator-1];
       lastTask->ClearGoalConstraints();
       for(auto& constraint : _nextTask->GetGoalConstraints()){
         lastTask->AddGoalConstraint(constraint->Clone());
       }
       m_subtaskMap[_nextTask]->m_subtasks.erase(m_subtaskMap[_nextTask]->m_subtasks.begin()
-                                        + m_subtaskMap[_nextTask]->m_subtaskIterator + 1);
+                                        + m_subtaskMap[_nextTask]->m_subtaskIterator);
     }
     else{
       m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
+      minAgent->AddSubtask(_nextTask);
     }
   }
   else{
     m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
+    minAgent->AddSubtask(_nextTask);
   }
   // See how long this agent will take to complete the subtask and if it
   // ends in a handoff add the next subtask to the queue
@@ -526,7 +528,7 @@ CheckFinished() {
   //no incomplete tasks and no agent still performing a task
   //std::string statName = "STAT-"+m_robot->GetMPProblem()->GetHandoffTemplates()[0]->GetLabel();
   Simulation::Get()->PrintStatFile();
-  exit(0);
+  //exit(0);
 
 }
 
@@ -869,7 +871,7 @@ GenerateHandoffTemplates(){
 
       task->SetRobot(taskRobot);
       // Solve for non-mainpulator robot teams
-      if(!m_robot->IsManipulator()){
+      if(!taskRobot->IsManipulator()){
         m_library->Solve(problemCopy.get(), task.get(), handoffSolution.get());
       }
       // Solve for manipulator robot teams
@@ -1059,6 +1061,8 @@ void
 Coordinator::
 SetupWholeTasks(){
   for(auto task : m_robot->GetMPProblem()->GetTasks(m_robot)){
+    if(task->GetGoalConstraints().size() == 0)
+      continue;
     WholeTask* wholeTask = new WholeTask();
     wholeTask->m_task = task;
     for(auto const& elem : m_dummyMap){
@@ -1560,7 +1564,7 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
       auto goal = boundaryIt->second;
 
       //Non-Manipulator Constraints
-      if(!m_robot->IsManipulator()){
+      if(!robots[0]->IsManipulator()){
         auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
         std::unique_ptr<CSpaceBoundingSphere> startBoundary = std::unique_ptr<CSpaceBoundingSphere>(
                       new CSpaceBoundingSphere(start->GetCenter(), radius));
@@ -1680,7 +1684,7 @@ CreateCapabilityMaps(){
   ITConnector connector(m_connectionThreshold,m_library);
   auto dm = m_library->GetDistanceMetric(m_dmLabel);
 
-  if(true){
+  if(!m_robot->IsManipulator()){
     for(auto agent : m_memberAgents){
       auto robot = agent->GetRobot();
       auto cfg = robot->GetSimulationModel()->GetState();

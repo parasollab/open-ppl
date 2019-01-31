@@ -32,7 +32,7 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
     auto second = CfgToBoundary(pos[1]);
 
     std::pair<const Boundary*, const Boundary*> p(first,second);
-    m_handoffLocations.push_back(p);
+    m_handoffLocations.insert(p);
   }
 
 

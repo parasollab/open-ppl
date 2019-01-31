@@ -86,7 +86,7 @@ ConstructIT(InteractionTemplate* _it){
 
     task->SetRobot(taskRobot);
     // Solve for non-mainpulator robot teams
-    if(!m_superRobot->IsManipulator()){
+    if(!taskRobot->IsManipulator()){
       m_library->Solve(m_problemCopy.get(), task.get(), handoffSolution.get());
     }
     // Solve for manipulator robot teams

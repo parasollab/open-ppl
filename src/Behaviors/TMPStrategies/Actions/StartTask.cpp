@@ -22,7 +22,7 @@ StartTask::
 CheckPreConditions(const FactLayer* _factLayer){
   std::cout << "CHECKING PRE CONDITIONS FOR START TASK FOR " << m_robot->GetLabel() << std::endl;
   //Checks that the location is the starting point of the task
-  auto initialLocation = _factLayer->m_possibleObjectLocations[0];
+  auto initialLocation = *(_factLayer->m_possibleObjectLocations.begin());
   if(initialLocation != m_location)
     return false;
 
