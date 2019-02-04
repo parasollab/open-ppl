@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 class Robot;
 
@@ -43,9 +44,9 @@ class Robot;
 /// We often want to do some extra stuff whenever the roadmap is modified. To
 /// support that, this object can install hook functions for each of the four
 /// modifying events (add/delete a vertex/edge). Note that there is no
-/// particular ordering to the hook execution - this is deliberate because we will
-/// create a maintenance nightmare if hooks are allowed to depend on each other.
-/// As such, no two hooks should modify the same data. Terrible and
+/// particular ordering to the hook execution - this is deliberate because we
+/// will create a maintenance nightmare if hooks are allowed to depend on each
+/// other. As such, no two hooks should modify the same data. Terrible and
 /// unpredictable things will happen if you do this!
 ///
 /// @tparam Vertex The vertex or configuration type.
@@ -74,20 +75,25 @@ class RoadmapGraph : public
 #endif
     ;
 
-    typedef typename STAPLGraph::vertex_descriptor VID;
-    typedef typename STAPLGraph::edge_descriptor   EID;
-    typedef typename STAPLGraph::vertex_iterator   VI;
-    typedef typename STAPLGraph::adj_edge_iterator EI;
+    typedef typename STAPLGraph::vertex_descriptor        VID;
+    typedef typename STAPLGraph::edge_descriptor          EID;
+    typedef typename EID::edge_id_type                    EdgeID;
+    typedef typename STAPLGraph::vertex_iterator          VI;
+    typedef typename STAPLGraph::adj_edge_iterator        EI;
+    typedef typename STAPLGraph::const_vertex_iterator    CVI;
+    typedef typename STAPLGraph::const_adj_edge_iterator  CEI;
 
-    typedef typename STAPLGraph::const_vertex_iterator                 CVI;
-    typedef typename STAPLGraph::const_adj_edge_iterator               CEI;
-    typedef typename STAPLGraph::vertex_property                       VP;
-    typedef typename STAPLGraph::edge_property                         EP;
+    typedef typename STAPLGraph::vertex_property          VP;
+    typedef typename STAPLGraph::edge_property            EP;
+
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
 
     typedef std::function<void(VI)> VertexHook;
     typedef std::function<void(EI)> EdgeHook;
     enum class HookType {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
+
+    typedef std::unordered_set<VID> InvalidVertexSet;
+    typedef std::unordered_set<VID> InvalidEdgeSet;
 
     ///@}
     ///@name Construction
@@ -223,6 +229,38 @@ class RoadmapGraph : public
     EP& GetEdge(const EID _descriptor) noexcept;
 
     ///@}
+    ///@name Lazy Invalidation
+    ///@{
+    /// Each roadmap can track a list of lazily-invalidated vertices and edges.
+    /// These are components which are temporarily invalid - they should remain
+    /// in the roadmap but not be used for path search.
+
+    /// Clear all lazy invalidations.
+    void ClearInvalidated() noexcept;
+
+    /// Check if a vertex is lazily invalidated.
+    /// @param _vid The vertex descriptor.
+    /// @return     True if _vid is lazily invalidated.
+    bool IsVertexInvalidated(const VID _vid) const noexcept;
+
+    /// Check if an edge is lazily invalidated.
+    /// @param _eid The edge ID.
+    /// @return     True if _eid is lazily invalidated.
+    bool IsEdgeInvalidated(const EdgeID _eid) const noexcept;
+
+    /// Set the lazy invalidation status of a vertex.
+    /// @param _vid     The vertex descriptor.
+    /// @param _invalid The invalid status to set.
+    void SetVertexInvalidated(const VID _vid, const bool _invalid = true)
+        noexcept;
+
+    /// Set the lazy invalidation status of an edge.
+    /// @param _eid     The edge ID.
+    /// @param _invalid The invalid status to set.
+    void SetEdgeInvalidated(const EdgeID _eid, const bool _invalid = true)
+        noexcept;
+
+    ///@}
     ///@name Hooks
     ///@{
     /// Hooks are arbitrary functions that are attached to roadmap events. I.e.,
@@ -351,11 +389,18 @@ class RoadmapGraph : public
 
     bool m_enableHooks{true}; ///< Use hook functions?
 
+    /// Hook functions to call when adding a vertex.
     std::unordered_map<std::string, VertexHook> m_addVertexHooks;
+    /// Hook functions to call when deleting a vertex.
     std::unordered_map<std::string, VertexHook> m_deleteVertexHooks;
 
+    /// Hook functions to call when adding an edge.
     std::unordered_map<std::string, EdgeHook> m_addEdgeHooks;
+    /// Hook functions to call when deleting an edge.
     std::unordered_map<std::string, EdgeHook> m_deleteEdgeHooks;
+
+    InvalidVertexSet m_invalidVertices; ///< Set of lazy-invalidated vertices.
+    InvalidEdgeSet m_invalidEdges;      ///< Set of lazy-invalidated edges.
 
     ///@}
 
@@ -756,6 +801,55 @@ RoadmapGraph<Vertex, Edge>::
 GetEdge(const EID _descriptor) noexcept {
   return GetEdge(_descriptor.source(), _descriptor.target());
 }
+
+/*----------------------------- Lazy Invalidation ----------------------------*/
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+ClearInvalidated() noexcept {
+  m_invalidVertices.clear();
+  m_invalidEdges.clear();
+}
+
+
+template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+IsVertexInvalidated(const VID _vid) const noexcept {
+  return m_invalidVertices.count(_vid);
+}
+
+
+template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+IsEdgeInvalidated(const EdgeID _eid) const noexcept {
+  return m_invalidEdges.count(_eid);
+}
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+SetVertexInvalidated(const VID _vid, const bool _invalid) noexcept {
+  if(_invalid)
+    m_invalidVertices.insert(_vid);
+  else
+    m_invalidVertices.erase(_vid);
+}
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+SetEdgeInvalidated(const EdgeID _eid, const bool _invalid) noexcept {
+  if(_invalid)
+    m_invalidEdges.insert(_eid);
+  else
+    m_invalidEdges.erase(_eid);
+}
+
 
 /*--------------------------------- Hooks ------------------------------------*/
 

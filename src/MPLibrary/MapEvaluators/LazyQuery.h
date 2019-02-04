@@ -29,19 +29,12 @@ class LazyQuery : public QueryMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType            CfgType;
-    typedef typename MPTraits::RoadmapType        RoadmapType;
+    typedef typename MPTraits::CfgType              CfgType;
+    typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
     typedef typename RoadmapType::EID::edge_id_type EID;
-    typedef typename MPTraits::GoalTracker        GoalTracker;
-    typedef typename GoalTracker::VIDSet          VIDSet;
-
-    ///@}
-    ///@name Local Types
-    ///@{
-
-    typedef std::unordered_map<VID, bool>         UnusedVertexMap;
-    typedef std::unordered_map<VID, bool>         UnusedEdgeMap;
+    typedef typename MPTraits::GoalTracker          GoalTracker;
+    typedef typename GoalTracker::VIDSet            VIDSet;
 
     ///@}
     ///@name Construction
@@ -67,10 +60,6 @@ class LazyQuery : public QueryMethod<MPTraits> {
     ///@{
 
     virtual bool PerformSubQuery(const VID _start, const VIDSet& _goals) override;
-
-    virtual bool IsVertexUsed(const VID _vid) const override;
-
-    virtual bool IsEdgeUsed(const EID _eid) const override;
 
     ///@}
     ///@name Helpers
@@ -122,8 +111,6 @@ class LazyQuery : public QueryMethod<MPTraits> {
     ///@{
 
     bool m_deleteInvalid{true};   ///< Remove invalid vertices from the roadmap?
-    UnusedVertexMap m_invalidVertices; ///< The non-removed invalid vertices.
-    UnusedEdgeMap m_invalidEdges;      ///< The non-removed invalid vertices.
 
     vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
     int m_numEnhance{0};          ///< Number of enhancement nodes to generate.
@@ -207,8 +194,6 @@ void
 LazyQuery<MPTraits>::
 Initialize() {
   QueryMethod<MPTraits>::Initialize();
-  m_invalidVertices.clear();
-  m_invalidEdges.clear();
   m_edges.clear();
 }
 
@@ -227,22 +212,6 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
   // There are no valid paths, enhance and return false.
   NodeEnhance();
   return false;
-}
-
-
-template <typename MPTraits>
-bool
-LazyQuery<MPTraits>::
-IsVertexUsed(const VID _vid) const {
-  return !bool(m_invalidVertices.count(_vid)) or !m_invalidVertices.at(_vid);
-}
-
-
-template <typename MPTraits>
-bool
-LazyQuery<MPTraits>::
-IsEdgeUsed(const EID _eid) const {
-  return !bool(m_invalidEdges.count(_eid)) or !m_invalidEdges.at(_eid);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -443,11 +412,11 @@ InvalidateVertex(const VID _vid) {
     return;
   }
 
-  // Otherwise, mark this vertex and its edges as unused.
-  m_invalidVertices[_vid] = true;
+  // Otherwise, mark this vertex and its edges as lazy invalid.
+  g->SetVertexInvalidated(_vid, true);
   auto vi = g->find_vertex(_vid);
   for(auto ei = vi->begin(); ei != vi->end(); ++ei)
-    m_invalidEdges[ei->id()] = true;
+    g->SetEdgeInvalidated(ei->id(), true);
 }
 
 
@@ -475,10 +444,10 @@ InvalidateEdge(const VID _source, const VID _target) {
     return;
   }
 
-  // Otherwise, mark this edge as unused.
+  // Otherwise, mark this edge as lazy invalid.
   typename RoadmapType::EI ei;
   g->GetEdge(_source, _target, ei);
-  m_invalidEdges[ei->id()] = true;
+  g->SetEdgeInvalidated(ei->id(), true);
 }
 
 /*----------------------------------------------------------------------------*/
