@@ -263,22 +263,24 @@ Reachable(const VID _start, const VIDSet& _goals) const {
   stats->IncStat("CC Operations");
 
   // If either the start or goal is unused, these nodes cannot be connected.
-  const bool noStart = !this->IsVertexUsed(_start);
+  const bool noStart = this->m_roadmap->IsVertexInvalidated(_start);
   if(noStart) {
     if(this->m_debug)
-      std::cout << "\t\tStart " << _start << " marked as unused, cannot connect."
+      std::cout << "\t\tStart " << _start << " marked as lazy invalidated, "
+                << "cannot connect."
                 << std::endl;
     return false;
   }
   bool oneGoodGoal = false;
   for(const VID goal : _goals) {
-    oneGoodGoal = this->IsVertexUsed(goal);
+    oneGoodGoal = !this->m_roadmap->IsVertexInvalidated(goal);
     if(oneGoodGoal)
       break;
   }
   if(!oneGoodGoal) {
     if(this->m_debug)
-      std::cout << "\t\tGoals " << _goals << " marked as unused, cannot connect."
+      std::cout << "\t\tGoals " << _goals << " marked as lazy invalidated, "
+                << "cannot connect."
                 << std::endl;
     return false;
   }
@@ -308,10 +310,10 @@ Reachable(const VID _start, const VIDSet& _goals) const {
     for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
       const VID child = ei->target();
 
-      // Skip if the child is discovered or either child/edge is unused.
+      // Skip if the child is discovered or either child/edge is lazy invalid.
       if(discovered.count(child)
-          or !this->IsEdgeUsed(ei->id())
-          or !this->IsVertexUsed(child))
+          or this->m_roadmap->IsEdgeInvalidated(ei->id())
+          or this->m_roadmap->IsVertexInvalidated(child))
         continue;
 
       // If this is the goal, we are done.

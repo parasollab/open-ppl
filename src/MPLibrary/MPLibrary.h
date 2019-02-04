@@ -530,12 +530,16 @@ Uninitialize() {
 
   // Clear group hooks.
   GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
-  if(groupMap)
+  if(groupMap) {
     groupMap->ClearHooks();
+    groupMap->ClearInvalidated();
+  }
 
   // Also clear hooks for the individual robot if it exists:
-  if(m_solution->GetRobot())
+  if(m_solution->GetRobot()) {
     this->GetRoadmap()->ClearHooks();
+    this->GetRoadmap()->ClearInvalidated();
+  }
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/

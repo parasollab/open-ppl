@@ -47,7 +47,7 @@
 
     <MapEvaluators>
       <LazyQuery label="LazyQuery"
-        vcLabel="pqp_solid" lpLabel="sl" dmLabel="euclidean"
+        vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>

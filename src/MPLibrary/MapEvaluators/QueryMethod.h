@@ -43,7 +43,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
-    typedef typename RoadmapType::EID::edge_id_type EID;
+    typedef typename RoadmapType::EdgeID            EdgeID;
     typedef typename MPTraits::GoalTracker          GoalTracker;
     typedef typename GoalTracker::VIDSet            VIDSet;
 
@@ -115,20 +115,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _goals The goal VIDs to use.
     /// @return True if a path from _start to one of _goals was generated.
     virtual bool PerformSubQuery(const VID _start, const VIDSet& _goal);
-
-    /// Determine whether a vertex is used or has been marked as ignored somehow
-    /// (as in lazy query).
-    /// @param _vid The vertex ID.
-    /// @return True if _vid is considered for paths by this query, false if it
-    ///         is marked unused.
-    virtual bool IsVertexUsed(const VID _vid) const;
-
-    /// Determine whether an edge is used or has been marked as ignored somehow
-    /// (as in lazy query).
-    /// @param _eid The edge ID.
-    /// @return True if _eid is considered for paths by this query, false if it
-    ///         is marked unused.
-    virtual bool IsEdgeUsed(const EID _eid) const;
 
     /// Define a function for computing a path weight for a specific edge,
     /// ignoring dynamic obstacles.
@@ -444,28 +430,13 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
 
 
 template <typename MPTraits>
-bool
-QueryMethod<MPTraits>::
-IsVertexUsed(const VID) const {
-  return true;
-}
-
-
-template <typename MPTraits>
-bool
-QueryMethod<MPTraits>::
-IsEdgeUsed(const EID) const {
-  return true;
-}
-
-
-template <typename MPTraits>
 double
 QueryMethod<MPTraits>::
 StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  // First check that this edge is used. If not, the distance is infinite.
-  if(!IsEdgeUsed(_ei->id()))
+  // First check if the edge is lazily invalidated. If so, the distance is
+  // infinite.
+  if(m_roadmap->IsEdgeInvalidated(_ei->id()))
     return std::numeric_limits<double>::infinity();
 
   // Check if Distance Metric has been defined. If so use the Distance Metric's
@@ -487,8 +458,9 @@ double
 QueryMethod<MPTraits>::
 DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  // First check that this edge is used. If not, the distance is infinite.
-  if(!IsEdgeUsed(_ei->id()))
+  // First check if the edge is lazily invalidated. If so, the distance is
+  // infinite.
+  if(m_roadmap->IsEdgeInvalidated(_ei->id()))
     return std::numeric_limits<double>::infinity();
 
   // Compute the new 'distance', which is the number of timesteps at which

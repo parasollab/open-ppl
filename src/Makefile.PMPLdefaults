@@ -493,7 +493,6 @@ PMPL_SRCS := \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
-  MPLibrary/NeighborhoodFinders/MPNNWrapper.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \
