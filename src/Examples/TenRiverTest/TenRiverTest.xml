@@ -89,76 +89,77 @@
       <Terrain capability="land">
         <Boundary limits="[120:130 ; 0:60 ; -.1:.1]"
           space="workspace" shape="box" color="white"/>
+      </Terrain>
     </Environment>
 
-    <Robot label="member1" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member1" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member3" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member3" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member5" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member5" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member7" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member7" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member9" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member9" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member11" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member11" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member13" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member13" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member15" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member15" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member17" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member17" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member19" filename="iCreate.xml" capability="land" color="red">
+    <Robot label="member19" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
-    <Robot label="member21" filename="iCreate.xml" capability="land" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-
-
-    <Robot label="member2" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member4" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member6" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member8" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member10" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member12" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member14" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member16" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member18" filename="iCreate.xml" capability="water" color="red">
-      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
-    </Robot>
-    <Robot label="member20" filename="iCreate.xml" capability="water" color="red">
+    <Robot label="member21" filename="../iCreate.xml" capability="land" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
     </Robot>
 
 
-    <Robot label="coordinator" virtual="true" filename="iCreate.xml" manipulator="false">
+    <Robot label="member2" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member4" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member6" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member8" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member10" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member12" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member14" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member16" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member18" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+    <Robot label="member20" filename="../iCreate.xml" capability="water" color="red">
+      <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+    </Robot>
+
+
+    <Robot label="coordinator" virtual="true" filename="../iCreate.xml" manipulator="false">
       <Agent type="coordinator" dmLabel="euclidean" debug="true" tmp="false">
         <Member label="member1"/>
         <Member label="member2"/>
@@ -181,7 +182,7 @@
         <Member label="member19"/>
         <Member label="member20"/>
         <Member label="member21"/>        
-        <HandoffEnvironment filename="handoff.env" positionRes=".01"/>
+        <HandoffEnvironment filename="../handoff.env" positionRes=".01"/>
         <PlacementMethod type="disjointworkspaces" label="djw" precision="2"/>
         <!--PlacementMethod type="owdensity" label="ow" proximity="2" density="75" dmLabel="euclidean"
                          numNodes="200"/-->
@@ -283,22 +284,22 @@
     <Task label="query" robot="member18">    
       <StartConstraints>        
         <CSpaceConstraint point="107 38 0"/> 
-      </StartConstrain ts>
+      </StartConstraints>
     </Task>
     <Task label="query" robot="member19">    
       <StartConstraints>        
         <CSpaceConstraint point="113 42 0"/> 
-      </StartConstrain ts>
+      </StartConstraints>
     </Task>
     <Task label="query" robot="member20">    
       <StartConstraints>        
         <CSpaceConstraint point="119 23 0"/> 
-      </StartConstrain ts>
+      </StartConstraints>
     </Task>
     <Task label="query" robot="member21">    
       <StartConstraints>        
         <CSpaceConstraint point="125 18 0"/> 
-      </StartConstrain ts>
+      </StartConstraints>
     </Task>
 
 
@@ -310,7 +311,7 @@
         <CSpaceConstraint point="5 5 0"/>
       </StartConstraints>
       <GoalConstraints>
-        <CSpaceConstraint point="127 55 0"/>
+        <CSpaceConstraint point="129 55 0"/>
       </GoalConstraints>
     </Task>
 
