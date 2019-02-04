@@ -1,29 +1,61 @@
-#ifndef TIME_METRIC_H
-#define TIME_METRIC_H
+#ifndef PMPL_TIME_METRIC_H_
+#define PMPL_TIME_METRIC_H_
 
 #include "MetricMethod.h"
 #include "Utilities/MetricUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This metric measures the r-usage time for the entire MPLibrary run.
 /// @ingroup Metrics
-/// @brief TODO.
-///
-/// TODO.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TimeMetric : public MetricMethod<MPTraits> {
 
   public:
 
+    ///@name Construction
+    ///@{
+
     TimeMetric();
+
     TimeMetric(XMLNode& _node);
-    virtual ~TimeMetric() {}
 
-    virtual void Print(ostream& _os) const;
+    virtual ~TimeMetric() = default;
 
-    double operator()();
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Initialize() override;
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name MetricMethod Overrides
+    ///@{
+
+    virtual double operator()() override;
+
+    ///@}
+
+  private:
+
+    ///@name Internal State
+    ///@{
+
+    static std::string s_clockName; ///< The clock name.
+
+    ///@}
 
 };
+
+/*------------------------------ Construction --------------------------------*/
+
+template <typename MPTraits>
+std::string
+TimeMetric<MPTraits>::
+s_clockName("Total Running Time");
+
 
 template <typename MPTraits>
 TimeMetric<MPTraits>::
@@ -31,35 +63,48 @@ TimeMetric() {
   this->SetName("TimeMetric");
 }
 
+
 template <typename MPTraits>
 TimeMetric<MPTraits>::
-TimeMetric(XMLNode& _node)
-  : MetricMethod<MPTraits>(_node) {
-    this->SetName("TimeMetric");
+TimeMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node) {
+  this->SetName("TimeMetric");
 }
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
 TimeMetric<MPTraits>::
-Print(ostream& _os) const {
-  _os << "Time allowed" << endl;
+Initialize() {
+  // Clear the previous clock (if any) and start again.
+  auto stats =  this->GetStatClass();
+  stats->ClearClock(s_clockName);
+  stats->StartClock(s_clockName);
 }
 
+
+template <typename MPTraits>
+void
+TimeMetric<MPTraits>::
+Print(std::ostream& _os) const {
+  _os << "Time metric" << std::endl;
+}
+
+/*-------------------------- MetricMethod Overrides --------------------------*/
 
 template <typename MPTraits>
 double
 TimeMetric<MPTraits>::
 operator()() {
-  StatClass* timeStatClass = this->GetStatClass();
-  static int flag=0;
-  string timeClockName = "Total running time";
-  if(flag==0){
-    timeStatClass->StartClock(timeClockName);
-    flag=1;
-  }
-  timeStatClass->StopClock(timeClockName);
-  timeStatClass->StartClock(timeClockName);
-  return (double)timeStatClass->GetSeconds(timeClockName);
+  auto stats = this->GetStatClass();
+
+  // Report the elapsed time.
+  stats->StopClock(s_clockName);
+  stats->StartClock(s_clockName);
+
+  return (double)stats->GetSeconds(s_clockName);
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif
