@@ -226,11 +226,6 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
   _graph->Write("ConnectingTemplates-"+robot->GetCapability()+".map",
                robot->GetMPProblem()->GetEnvironment());
 
-  std::cout << "Printing graph robot pointers." << std::endl;
-  for(auto it = _graph->begin(); it != _graph->end(); it++){
-    std::cout << it->property().GetRobot() << std::endl;
-  }
-
   for(auto connection : m_connections){
     auto start = *(connection.first);
     auto goal = *(connection.second);

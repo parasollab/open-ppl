@@ -5,6 +5,7 @@
 #include "Behaviors/Controllers/ICreateController.h"
 #include "Behaviors/Agents/Coordinator.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
+#include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
@@ -82,6 +83,7 @@ IsChild() const noexcept {
 void
 HandoffAgent::
 GenerateCost(std::shared_ptr<MPTask> const _task) {
+  m_generatingCost = true;
   std::cout << "Starting generate cost function" << std::endl;
   // Save current state in case the robot has not finished its current task.
   auto currentTask = GetTask();
@@ -99,26 +101,28 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   Cfg position;
   // If the robot currently has a path, set its position to the end of that path
   // Otherwise, the robot will start the task from its current position
-  if(!currentPath.empty())
+  if(!currentPath.empty()){
     position = m_path.back();
-  else
+  }
+  else{
     position = m_robot->GetSimulationModel()->GetState();
+  }
 
   std::shared_ptr<MPTask> setupTask(new MPTask(m_robot));
-  auto start = std::unique_ptr<CSpaceConstraint>(
-      new CSpaceConstraint(m_robot, position));
 
-
-  setupTask->SetStartConstraint(std::move(start));
   std::unique_ptr<Constraint> setupStart(_task->GetStartConstraint()->Clone());
+  //setupStart->SetRobot(m_robot);
 
   if(m_robot->IsManipulator()){
 
     auto startBox = setupStart->GetBoundary()->Clone();
     auto box = static_cast<CSpaceBoundingBox*>(startBox.get());
     auto ranges = box->GetRanges();
+    for(size_t i = 0; i < 3; i++){
+      box->SetRange(i, -0.005, 0.005);
+    }
     for(size_t i = 3; i < ranges.size(); i++){
-      box->SetRange(i, -1, 1);
+      box->SetRange(i, box->GetRange(i).Center()-0.05,box->GetRange(i).Center() +0.05);
     }
 
     std::cout << "Ranges for start constraint" << std::endl;
@@ -133,7 +137,26 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
       currentPos.ConfigureRobot();
       return;
     }
+    setupTask->SetStartConstraint(std::move(startConstraint));
 
+  }
+  else {
+
+    auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
+
+    std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
+        new CSpaceBoundingSphere(position.GetPosition(), radius));
+    auto startConstraint = std::unique_ptr<BoundaryConstraint>
+      (new BoundaryConstraint(m_robot, std::move(boundingSphere)));
+
+    /*
+    std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
+        new CSpaceBoundingSphere(subtaskEnd.GetPosition(), radius));
+    auto goalConstraint = std::unique_ptr<BoundaryConstraint>
+      (new BoundaryConstraint(checkRobot, std::move(boundingSphere2)));
+    */
+    setupTask->SetStartConstraint(std::move(startConstraint));
+    //subtask->AddGoalConstraint(std::move(goalConstraint));
   }
 
   setupTask->AddGoalConstraint(std::move(setupStart));
@@ -203,6 +226,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   m_path = currentPath;
   currentPos.ConfigureRobot();
   std::cout << "Finishing generate cost function" << std::endl;
+  m_generatingCost = false;
 }
 
 double
@@ -275,7 +299,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   std::cout << "Calling Solve for " << m_robot->GetLabel() <<  std::endl;
   std::cout << "Currently at: " << m_robot->GetSimulationModel()->GetState()
             << std::endl;
-  std::cout << GetTask()->GetStartConstraint()->GetBoundary()->GetCenter() << std::endl;
+  //std::cout << GetTask()->GetStartConstraint()->GetBoundary()->GetCenter() << std::endl;
   if(m_solution){
     m_solution->GetPath()->Clear();
   }
@@ -295,10 +319,14 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   std::cout << "Calling Solve for " << m_robot->GetLabel() << std::endl;
 
   if(!m_robot->IsManipulator()){
-    m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
-        "LazyPRM", LRand(), "LazyCollisionAvoidance");
-    //m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
-    //    "EvaluateMapStrategy", LRand(), "LazyCollisionAvoidance");
+    if(!m_generatingCost){
+      m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
+          "LazyPRM", LRand(), "LazyCollisionAvoidance");
+    }
+    else{
+      m_library->Solve(_problem.get(), GetTask().get(), m_solution.get(),
+          "TimedLazyPRM", LRand(), "LazyCollisionAvoidance");
+    }
   }
   else {
     auto startBox = GetTask()->GetStartConstraint()->GetBoundary()->Clone();
@@ -448,9 +476,39 @@ SelectTask(){
 
     setupTask->SetStartConstraint(std::move(start));
 
-    std::unique_ptr<Constraint> goal = startConstraint->Clone();
+    //std::unique_ptr<Constraint> goal = startConstraint->Clone();
 
-    setupTask->AddGoalConstraint(std::move(goal));
+    if(!m_robot->IsManipulator()){
+      auto radius = 1 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
+      std::unique_ptr<CSpaceBoundingSphere> goalBoundary = std::unique_ptr<CSpaceBoundingSphere>(
+          new CSpaceBoundingSphere(startConstraint->GetBoundary()->GetCenter(), radius));
+      std::unique_ptr<BoundaryConstraint> goalConstraint(
+          new BoundaryConstraint(m_robot, std::move(goalBoundary)));
+      setupTask->AddGoalConstraint(std::move(goalConstraint));
+    }
+    else{
+
+      auto goalBox = startConstraint->GetBoundary()->Clone();
+      auto box = static_cast<CSpaceBoundingBox*>(goalBox.get());
+      auto ranges = box->GetRanges();
+
+      for(size_t i = 0; i < 3; i++){
+        box->SetRange(i, box->GetRange(i).Center()-.005, box->GetRange(i).Center()+.005);
+      }
+      for(size_t i = 3; i < ranges.size(); i++){
+        box->SetRange(i, box->GetRange(i).Center()-.0005, box->GetRange(i).Center()+.0005);
+      }
+
+      std::cout << "Ranges for setuptask goal constraint" << std::endl;
+      for(auto r : box->GetRanges()){
+        std::cout << r << std::endl;
+      }
+
+      auto goalConstraint = std::unique_ptr<BoundaryConstraint>
+        (new BoundaryConstraint(m_robot, std::move(goalBox)));
+      setupTask->AddGoalConstraint(std::move(goalConstraint));
+    }
+    //setupTask->AddGoalConstraint(std::move(goal));
 
     this->SetTask(setupTask);
     m_performingSubtask = false;

@@ -146,6 +146,8 @@ class HandoffAgent : public PathFollowingAgent {
 
     /// List of simulator visualization graph ids
     std::vector<size_t> m_simulatorGraphIDs;
+
+    bool m_generatingCost{false}; ///< Flag so work function knows which query method to use.
     ///@}
 
 };

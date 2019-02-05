@@ -37,7 +37,7 @@ BreakupTask(WholeTask* _wholeTask){
   // When the robot pointer changes, create a new subtask
   // TODO: Maybe check based on capability rather than robot pointer
   Robot* checkRobot = nullptr;
-  Robot* previousRobot = nullptr; //used for instances of same capability interaction
+  //Robot* previousRobot = nullptr; //used for instances of same capability interaction
   Cfg subtaskStart;
   Cfg subtaskEnd;
   // First cfg in the path is the coordinator configurations at the
@@ -88,9 +88,9 @@ BreakupTask(WholeTask* _wholeTask){
       }
       // If interaction is between homogenous robots, don't create false
       // interaction point
-      else if(previousRobot == cfg.GetRobot() and checkRobot != previousRobot){
-        checkRobot = previousRobot;
-      }
+      //else if(previousRobot == cfg.GetRobot() and checkRobot != previousRobot){
+      //  checkRobot = previousRobot;
+      //}
       // If we have reached a handoff or end of the path, create a subtask of
       // the wholetask
       else {
@@ -176,7 +176,7 @@ BreakupTask(WholeTask* _wholeTask){
 
         // Push task back into whole task object
         _wholeTask->m_subtasks.push_back(subtask);
-        previousRobot = checkRobot;
+        //previousRobot = checkRobot;
         //previousRobot = cfg.GetRobot();
         checkRobot = nullptr;
         if(m_debug){

@@ -528,7 +528,7 @@ CheckFinished() {
   //no incomplete tasks and no agent still performing a task
   //std::string statName = "STAT-"+m_robot->GetMPProblem()->GetHandoffTemplates()[0]->GetLabel();
   Simulation::Get()->PrintStatFile();
-  //exit(0);
+  exit(0);
 
 }
 
@@ -1566,17 +1566,19 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
       //Non-Manipulator Constraints
       if(!robots[0]->IsManipulator()){
         auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
-        std::unique_ptr<CSpaceBoundingSphere> startBoundary = std::unique_ptr<CSpaceBoundingSphere>(
-                      new CSpaceBoundingSphere(start->GetCenter(), radius));
-        std::unique_ptr<BoundaryConstraint> startConstraint(
-                      new BoundaryConstraint(m_robot, std::move(startBoundary)));
+
+        std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
+            new CSpaceBoundingSphere(start->GetCenter(), radius));
+        auto startConstraint = std::unique_ptr<BoundaryConstraint>
+          (new BoundaryConstraint(robots[0], std::move(boundingSphere)));
+
+
+        std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
+            new CSpaceBoundingSphere(goal->GetCenter(), radius));
+        auto goalConstraint = std::unique_ptr<BoundaryConstraint>
+          (new BoundaryConstraint(robots[0], std::move(boundingSphere2)));
+
         task->SetStartConstraint(std::move(startConstraint));
-
-
-        std::unique_ptr<CSpaceBoundingSphere> goalBoundary = std::unique_ptr<CSpaceBoundingSphere>(
-                      new CSpaceBoundingSphere(goal->GetCenter(), radius));
-        std::unique_ptr<BoundaryConstraint> goalConstraint(
-                      new BoundaryConstraint(m_robot, std::move(goalBoundary)));
         task->AddGoalConstraint(std::move(goalConstraint));
       }
       //Manipulator Constraints
