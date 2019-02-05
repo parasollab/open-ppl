@@ -36,6 +36,8 @@ class DisjointWorkspaces : public PlacementMethod {
 
   private:
     double m_precision;
+    double GetRandomDouble(double _min, double _max);
+    int m_maxAttempts;
 
 };
 

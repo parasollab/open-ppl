@@ -2,6 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
+#include <random>
 
 DisjointWorkspaces::
 DisjointWorkspaces(MPProblem* _problem) : PlacementMethod(_problem) {}
@@ -12,6 +13,7 @@ DisjointWorkspaces(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_probl
   m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
   m_precision = _node.Read("precision", false, 4., 1., 100.,
               "How many divisions around each edge of the boundary do you want to sample?");
+  m_maxAttempts = _node.Read("maxAttempts", true, nan(""), 0., 1000., "Max number of attempts to place a CFG");
 }
 
 void
@@ -68,12 +70,16 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
         }
         //Sample sides of box
         auto width = box->GetRange(0).Length();
-        auto xSize = width / (m_precision + 1);
+        auto xSize = width / m_precision;
         auto height = box->GetRange(1).Length();
-        auto ySize = height / ( m_precision + 1);
+        auto ySize = height / m_precision;
 
         std::cout << "Width: " << width << " Height: " << height << std::endl
                   << "xSize: " << xSize << " ySize: " << ySize << std::endl;
+
+        double toaddX = 0;
+        double toaddY = 0;
+
         for(size_t i = 1; i <= m_precision; i++){
           /*auto borderBoxLeft = new WorkspaceBoundingBox(box->GetDimension());
           auto borderBoxRight = new WorkspaceBoundingBox(box->GetDimension());
@@ -96,6 +102,58 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
 
           sampleSpaces
           */
+
+          auto x = box->GetRange(0).min;
+          auto yMin = box->GetRange(1).min + toaddY;
+          auto yMax = box->GetRange(1).min + ySize*i;
+          auto z = 0.0;
+          for(int i=0; i < m_maxAttempts; i++){
+            double y = GetRandomDouble(yMin,yMax);
+            Cfg sampleLeft({x,y,z},_coordinator->GetRobot());
+            if(CheckLocation(sampleLeft, _library, _it)){
+              samplePoints.push_back(sampleLeft);
+              break;
+            }
+          }
+
+          x = box->GetRange(0).max;
+
+          for(int i=0; i < m_maxAttempts; i++){
+            double y = GetRandomDouble(yMin,yMax);
+            Cfg sampleRight({x,y,z},_coordinator->GetRobot());
+            if(CheckLocation(sampleRight, _library, _it)){
+              samplePoints.push_back(sampleRight);
+              break;
+            }
+          }
+
+          auto y = box->GetRange(1).min;
+          auto xMin = box->GetRange(0).min + toaddX;
+          auto xMax = box->GetRange(0).min + xSize*i;
+          for(int i=0; i < m_maxAttempts; i++){
+            double x = GetRandomDouble(xMin,xMax);
+            Cfg sampleBottom({x,y,z},_coordinator->GetRobot());
+            if(CheckLocation(sampleBottom, _library, _it)){
+              samplePoints.push_back(sampleBottom);
+              break;
+            }
+          }
+
+          y = box->GetRange(1).max;
+
+          for(int i=0; i < m_maxAttempts; i++){
+            double x = GetRandomDouble(xMin,xMax);
+            Cfg sampleTop({x,y,z},_coordinator->GetRobot());
+            if(CheckLocation(sampleTop, _library, _it)){
+              samplePoints.push_back(sampleTop);
+              break;
+            }
+          }
+
+          toaddX += xSize;
+          toaddY += ySize;
+
+          /*
           auto x = box->GetRange(0).min;
           auto y = box->GetRange(1).min + ySize*i; // + ySize/2;
           auto z = 0.0;
@@ -116,16 +174,22 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
 
           samplePoints.push_back(sampleBottom);
           samplePoints.push_back(sampleTop);
+
+          */
+
         }
       }
       std::cout << "Sample Points" << std::endl;
       for(auto cfg : samplePoints){
         std::cout << "Robot Label: " << cfg.GetRobot()->GetLabel() << std::endl;
         std::cout << cfg.PrettyPrint() << std::endl;
+        /*
         bool valid = CheckLocation(cfg, _library, _it);//, capabilityAgents);
         if(valid){
           _it->GetInformation()->AddTemplateLocation(cfg);
         }
+        */
+        _it->GetInformation()->AddTemplateLocation(cfg);
       }
     }
   }
@@ -195,4 +259,13 @@ CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
     std::cout << "Valid" << std::endl;
   }
   return valid;
+}
+
+
+double
+DisjointWorkspaces::
+GetRandomDouble(double _min, double _max){
+  std::uniform_real_distribution<double> unif(_min, _max);
+  std::default_random_engine re;
+  return unif(re);
 }
