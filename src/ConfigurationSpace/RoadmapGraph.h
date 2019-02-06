@@ -225,6 +225,9 @@ class RoadmapGraph : public
     /// @return True if the edge was located.
     bool GetEdge(const VID _source, const VID _target, EI& _ei) noexcept;
 
+    /// @overload For const edge iterator.
+    bool GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept;
+
     EP& GetEdge(const VID _source, const VID _target) noexcept;
     EP& GetEdge(const EID _descriptor) noexcept;
 
@@ -248,6 +251,12 @@ class RoadmapGraph : public
     /// @return     True if _eid is lazily invalidated.
     bool IsEdgeInvalidated(const EdgeID _eid) const noexcept;
 
+    /// @overload This version takes the source and target VIDs for an edge.
+    /// @param _source The VID of the source vertex.
+    /// @param _target The VID of the target vertex.
+    /// @return        True if (_source, _target) is lazily invalidated.
+    bool IsEdgeInvalidated(const VID _source, const VID _target) const noexcept;
+
     /// Set the lazy invalidation status of a vertex.
     /// @param _vid     The vertex descriptor.
     /// @param _invalid The invalid status to set.
@@ -259,6 +268,13 @@ class RoadmapGraph : public
     /// @param _invalid The invalid status to set.
     void SetEdgeInvalidated(const EdgeID _eid, const bool _invalid = true)
         noexcept;
+
+    /// @overload This version takes the source and target VIDs for an edge.
+    /// @param _source  The VID of the source vertex.
+    /// @param _target  The VID of the target vertex.
+    /// @param _invalid The invalid status to set.
+    void SetEdgeInvalidated(const VID _source, const VID _target,
+        const bool _invalid = true) noexcept;
 
     ///@}
     ///@name Hooks
@@ -503,6 +519,9 @@ DeleteVertex(const VID _v) noexcept {
   ExecuteDeleteVertexHooks(vi);
   VDRemoveNode(vi->property());
 
+  // Remove this vertex's lazy invalid status.
+  SetVertexInvalidated(vi->descriptor(), false);
+
   // Delete the vertex.
   this->delete_vertex(vi->descriptor());
   ++m_timestamp;
@@ -573,6 +592,9 @@ DeleteEdge(EI _iterator) noexcept {
   // Execute pre-delete hooks and update vizmo debug.
   ExecuteDeleteEdgeHooks(_iterator);
   VDRemoveEdge(GetVertex(_iterator->source()), GetVertex(_iterator->target()));
+
+  // Remove the lazy-invalid status on this edge if present.
+  SetEdgeInvalidated(_iterator->id(), false);
 
   // Delete the edge.
   this->delete_edge(_iterator->descriptor());
@@ -783,6 +805,15 @@ GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
 
 
 template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept {
+  CVI vi;
+  return this->find_edge(EID(_source, _target), vi, _ei);
+}
+
+
+template <typename Vertex, typename Edge>
 typename RoadmapGraph<Vertex, Edge>::EP&
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target) noexcept {
@@ -830,6 +861,16 @@ IsEdgeInvalidated(const EdgeID _eid) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+IsEdgeInvalidated(const VID _source, const VID _target) const noexcept {
+  CEI ei;
+  GetEdge(_source, _target, ei);
+  return IsEdgeInvalidated(ei->id());
+}
+
+
+template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 SetVertexInvalidated(const VID _vid, const bool _invalid) noexcept {
@@ -848,6 +889,17 @@ SetEdgeInvalidated(const EdgeID _eid, const bool _invalid) noexcept {
     m_invalidEdges.insert(_eid);
   else
     m_invalidEdges.erase(_eid);
+}
+
+
+template <typename Vertex, typename Edge>
+void
+RoadmapGraph<Vertex, Edge>::
+SetEdgeInvalidated(const VID _source, const VID _target, const bool _invalid)
+    noexcept {
+  EI ei;
+  GetEdge(_source, _target, ei);
+  SetEdgeInvalidated(ei->id(), _invalid);
 }
 
 
