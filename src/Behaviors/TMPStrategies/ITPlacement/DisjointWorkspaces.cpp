@@ -95,6 +95,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
           borderBoxLeft->SetRange(0, leftW);
           borderBoxLeft->SetRange(1, h);
           borderBoxLeft->SetRange(2,z);
+}
 
           borderBoxRight->SetRange(0, rightW);
           borderBoxRight->SetRange(1, h);
@@ -258,6 +259,7 @@ CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
   else {
     std::cout << "Valid" << std::endl;
   }
+  std::cout << "Done checking validity for" + _cfg.PrettyPrint() << std::endl;
   return valid;
 }
 
@@ -265,7 +267,9 @@ CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
 double
 DisjointWorkspaces::
 GetRandomDouble(double _min, double _max){
-  std::uniform_real_distribution<double> unif(_min, _max);
-  std::default_random_engine re;
-  return unif(re);
+  //std::uniform_real_distribution<double> unif(_min, _max);
+  //std::default_random_engine re;
+  double re = (double)rand() / RAND_MAX;
+  return _min + re * (_max - _min);
+  //return unif(re);
 }
