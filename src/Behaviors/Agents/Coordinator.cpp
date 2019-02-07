@@ -960,10 +960,10 @@ TranslateHandoffTemplates() {
   auto originalProblem = m_robot->GetMPProblem();
   m_library->SetMPProblem(originalProblem);
 
-  for(auto& it : m_solution->GetInteractionTemplates()){
+  //for(auto& it : m_solution->GetInteractionTemplates()){
     //m_solution->AddInteractionTemplate(it);
-    FindITLocations(it.get());
-  }
+    //FindITLocations(it.get());
+  //}
 
   std::cout << "Found Handoff Locations" << std::endl;
   Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
@@ -1108,6 +1108,7 @@ SetupWholeTasks(){
       size_t numNodes = 1, numAttempts = 100;
       sampler->Sample(numNodes, numAttempts, startBox,
           std::back_inserter(startPoints));
+
 
       if(!startPoints.empty())
         wholeTask->m_startPoints[elem.second->GetCapability()].push_back(startPoints[0]);
