@@ -38,7 +38,9 @@ ConnectInteractionTemplates(std::vector<std::unique_ptr<InteractionTemplate>>& _
   }
 
   FindAlternativeConnections(cfgs);
-
+  if(true){
+    std::cout << "Number of connections:" << m_connections.size() << std::endl;
+  }
 
   CopyInTemplates(graph, _ITs, _capability, _startAndGoal);
   if(!cfgs[0]->GetRobot()->IsManipulator())
@@ -124,9 +126,13 @@ FindAlternativeConnections(std::vector<Cfg*>& _cfgs){
         }
       }
       if(neighbor != cfg1){
-        m_connections.push_back(std::pair<Cfg*,Cfg*>(cfg1,neighbor));
-        UpdateAdjustedDistances(cfg1,neighbor,_cfgs);
-        newConnection = true;
+        std::pair<Cfg*,Cfg*> oppositePath(neighbor,cfg1);
+        auto iter = std::find(m_connections.begin(), m_connections.end(), oppositePath);
+        if(iter == m_connections.end()){
+          m_connections.push_back(std::pair<Cfg*,Cfg*>(cfg1,neighbor));
+          UpdateAdjustedDistances(cfg1,neighbor,_cfgs);
+          newConnection = true;
+        }
       }
     }
   }

@@ -110,7 +110,8 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
           auto z = 0.0;
           for(int i=0; i < m_maxAttempts; i++){
             double y = GetRandomDouble(yMin,yMax);
-            Cfg sampleLeft({x,y,z},_coordinator->GetRobot());
+            Cfg sampleLeft({x,y,z},agent->GetRobot());
+            sampleLeft[2] = z;
             if(CheckLocation(sampleLeft, _library, _it)){
               samplePoints.push_back(sampleLeft);
               break;
@@ -118,22 +119,24 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
           }
 
           x = box->GetRange(0).max;
-
+          z = 1;
           for(int i=0; i < m_maxAttempts; i++){
             double y = GetRandomDouble(yMin,yMax);
-            Cfg sampleRight({x,y,z},_coordinator->GetRobot());
+            Cfg sampleRight({x,y,z},agent->GetRobot());
+            sampleRight[2] = z;
             if(CheckLocation(sampleRight, _library, _it)){
               samplePoints.push_back(sampleRight);
               break;
             }
           }
-
+          z = .5;
           auto y = box->GetRange(1).min;
           auto xMin = box->GetRange(0).min + toaddX;
           auto xMax = box->GetRange(0).min + xSize*i;
           for(int i=0; i < m_maxAttempts; i++){
             double x = GetRandomDouble(xMin,xMax);
-            Cfg sampleBottom({x,y,z},_coordinator->GetRobot());
+            Cfg sampleBottom({x,y,z},agent->GetRobot());
+            sampleBottom[2] = z;
             if(CheckLocation(sampleBottom, _library, _it)){
               samplePoints.push_back(sampleBottom);
               break;
@@ -141,10 +144,11 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
           }
 
           y = box->GetRange(1).max;
-
+          z = -.5;
           for(int i=0; i < m_maxAttempts; i++){
             double x = GetRandomDouble(xMin,xMax);
-            Cfg sampleTop({x,y,z},_coordinator->GetRobot());
+            Cfg sampleTop({x,y,z},agent->GetRobot());
+            sampleTop[2] = z;
             if(CheckLocation(sampleTop, _library, _it)){
               samplePoints.push_back(sampleTop);
               break;
@@ -182,15 +186,20 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
       }
       std::cout << "Sample Points" << std::endl;
       for(auto cfg : samplePoints){
-        std::cout << "Robot Label: " << cfg.GetRobot()->GetLabel() << std::endl;
-        std::cout << cfg.PrettyPrint() << std::endl;
-        /*
-        bool valid = CheckLocation(cfg, _library, _it);//, capabilityAgents);
-        if(valid){
-          _it->GetInformation()->AddTemplateLocation(cfg);
+        if(m_debug){
+          std::cout << "Robot Label: " << cfg.GetRobot()->GetLabel() << std::endl;
+          std::cout << cfg.PrettyPrint() << std::endl;
         }
-        */
+        /*
+           bool valid = CheckLocation(cfg, _library, _it);//, capabilityAgents);
+           if(valid){
+           _it->GetInformation()->AddTemplateLocation(cfg);
+           }
+           */
         _it->GetInformation()->AddTemplateLocation(cfg);
+      }
+      if(m_debug and samplePoints.empty()){
+        std::cout << "No locations found for: " << terrain.GetBoundary()->GetCenter() << std::endl;
       }
     }
     break;

@@ -62,7 +62,7 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
 
   m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
 
-  m_connectionThreshold = _node.Read("connectionThreshold",false,nan(""), 0., 1000.,
+  m_connectionThreshold = _node.Read("connectionThreshold",true,1.2, 0., 1000.,
       "Acceptable variabliltiy in IT paths.");
 
   // This is a coordinator agent, which does not make sense without some group
@@ -1672,11 +1672,9 @@ CreateCapabilityMaps(){
   }
   std::cout << "Finding Handoff Locations" << std::endl;
   auto originalProblem = m_robot->GetMPProblem();
-  //m_library->InitializeMPProblem(originalProblem);
   m_library->SetMPProblem(originalProblem);
 
   for(auto& it : m_solution->GetInteractionTemplates()){
-    //m_solution->AddInteractionTemplate(it);
     FindITLocations(it.get());
   }
 
@@ -1704,69 +1702,18 @@ CreateCapabilityMaps(){
 
   for(auto it = m_dummyMap.begin(); it != m_dummyMap.end(); it++){
     const std::string capability = it->first;
+
+    Simulation::GetStatClass()->StartClock("ConstructCapabilityMap::"+capability);
     auto graph = connector.ConnectInteractionTemplates(
                           m_solution->GetInteractionTemplates(),
                           capability,
                           startAndGoal,
                           m_megaRoadmap);
 
+    Simulation::GetStatClass()->StopClock("ConstructCapabilityMap::"+capability);
     auto robot = it->second->GetRobot();
     graph->Write("CoordinatorTemplates.map", robot->GetMPProblem()->GetEnvironment());
 
-    std::priority_queue<std::pair<size_t,size_t>> pq;
-
-    /*for(size_t i = 0; i < m_wholeTaskStartEndPoints.size(); i++){
-      auto roadmap = m_wholeTaskStartEndPoints[i];
-      if(it->first == m_megaRoadmap->GetVertex(roadmap[0]).GetRobot()->
-            GetAgent()->GetCapability()){
-        for(size_t j = 0; j < roadmap.size(); j++){
-          auto vid = roadmap[j];
-          const auto newVID = graph->AddVertex(m_megaRoadmap->GetVertex(vid));
-          for(auto iter = graph->begin(); iter != graph->end(); iter++){
-            if(iter->descriptor() == newVID)
-              continue;
-            auto distance = dm->Distance(iter->property(), graph->GetVertex(newVID));
-
-            size_t k = 5;//Number of neighbors
-            if(pq.size() < k){
-              pq.emplace(newVID,distance);
-            }
-            else if(distance < pq.top().second){
-              pq.pop();
-              pq.emplace(newVID,distance);
-            }
-
-            bool canConnect = false;
-            while(!pq.empty()){
-              auto neighbor = pq.top();
-              pq.pop();
-              if(graph->IsEdge(neighbor.first,newVID))
-                continue;
-              Cfg collision(graph->GetRobot());
-              LPOutput<MPTraits<Cfg,DefaultWeight<Cfg>>> lpOutput;
-              auto lp = m_library->GetLocalPlanner("slRobot");
-              const bool connectable = lp->IsConnected(iter->property(),
-                                        graph->GetVertex(newVID),
-                                        collision,
-                                        &lpOutput,
-                                        m_library->GetMPProblem()->GetEnvironment()->GetPositionRes(),
-                                        m_library->GetMPProblem()->GetEnvironment()->GetOrientationRes(),
-                                          true);
-              if(connectable){
-                canConnect = true;
-                graph->AddEdge(newVID, iter->descriptor(), lpOutput.m_edge.first);
-                graph->AddEdge(iter->descriptor(), newVID, lpOutput.m_edge.second);
-                break;
-              }
-            }
-            if(!canConnect){
-              throw RunTimeException(WHERE, "No connections to start/goal and capability roadmap "
-                                     + it->first + ".");
-            }
-          }
-        }
-      }
-    }*/
 
     Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
     // Copy over newly found vertices
@@ -1800,22 +1747,4 @@ CreateCapabilityMaps(){
     m_megaRoadmap->Write("MegaTemplates.map", robot->GetMPProblem()->GetEnvironment());
     Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
   }
-  //Adding interaction edge
-  /*for(auto& it : m_solution->GetInteractionTemplates()){
-    auto eit = it->GetConnectingEdge();
-    auto source = it->GetConnectedRoadmap()->GetVertex(eit.first);
-    auto target = it->GetConnectedRoadmap()->GetVertex(eit.second);
-    for(auto location : it->GetInformation()->GetTemplateLocations()){
-      auto cfg1 = source;
-      auto cfg2 = target;
-      TranslateCfg(location,cfg1);
-      TranslateCfg(location,cfg2);
-      if(m_megaRoadmap->IsVertex(cfg1) and m_megaRoadmap->IsVertex(cfg2)){
-        auto s_vid = m_megaRoadmap->GetVID(cfg1);
-        auto t_vid = m_megaRoadmap->GetVID(cfg2);
-        DefaultWeight<Cfg> weight;
-        m_megaRoadmap->AddEdge(s_vid, t_vid, weight);
-      }
-    }
-  }*/
 }

@@ -75,7 +75,7 @@ class ITConnector{
 
     MPLibrary* m_library;
 
-    size_t m_threshold;
+    double m_threshold;
 
     bool m_debug{false};
 
