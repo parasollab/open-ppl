@@ -44,6 +44,12 @@ GetPositions(){
   return m_handoffCfgs;
 }
 
+std::vector<std::vector<Cfg>>
+InteractionTemplate::
+GetPaths(){
+  return m_interactionPaths;
+}
+
 std::vector<Cfg>&
 InteractionTemplate::
 GetTranslatedPositions(){
@@ -69,11 +75,39 @@ GetTranslatedPositions(){
   return m_translatedInteractionPositions;
 }
 
+std::vector<std::vector<Cfg>>&
+InteractionTemplate::
+GetTranslatedPaths(){
+  if(!m_translatedInteractionPaths.empty()){
+    return m_translatedInteractionPaths;
+  }
+  for(auto center : m_information->GetTemplateLocations()){
+    for(auto& path : m_interactionPaths){
+      std::vector<Cfg> translatedPath;
+      for(auto cfg : path){
+        double x = cfg[0];
+        double y = cfg[1];
+        double theta = center[2];
+
+        double newX = x*cos(theta) - y*sin(theta);
+        double newY = y*sin(theta) + y*cos(theta);
+        double oldTheta = cfg[2];
+
+        Cfg newCfg = cfg;
+        newCfg.SetLinearPosition({newX, newY, oldTheta});
+        newCfg += center;
+        translatedPath.push_back(newCfg);
+      }
+      m_translatedInteractionPaths.push_back(translatedPath);
+    }
+  }
+  return m_translatedInteractionPaths;
+}
 /*------------------------------ Member Management --------------------------------*/
 
 void
 InteractionTemplate::
-AddRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
+AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
   //auto robot = _roadmap->begin()->property().GetRobot();
   //RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(*_roadmap);
   RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap =
@@ -88,9 +122,17 @@ AddRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
 
 void
 InteractionTemplate::
-AddPath(std::vector<Cfg> _path, double _cost){
-  m_distinctPaths.push_back(_path);
-  auto roadmap = m_roadmaps[m_roadmaps.size()-1];
+AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem){
+  for(auto& cfg : _path){
+    cfg.SetRobot(_problem->GetRobot(cfg.GetRobot()->GetLabel()));
+  }
+  if(m_information->SavedPaths()){
+    m_interactionPaths.push_back(_path);
+  }
+  else{
+    m_interactionPaths.push_back({_path[_path.size()-1]});
+  }
+  /*auto roadmap = m_roadmaps[m_roadmaps.size()-1];
   auto robot = roadmap->GetRobot();
 
   std::vector<double> pathVIDs;
@@ -116,7 +158,7 @@ AddPath(std::vector<Cfg> _path, double _cost){
 
 
   m_pathOnlyRoadmaps.push_back(pg);
-  m_distinctPathCosts.push_back(_cost);
+  m_distinctPathCosts.push_back(_cost);*/
 }
 
 

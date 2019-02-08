@@ -912,11 +912,12 @@ GenerateHandoffTemplates(){
       // Store the roadmap for each task in the handoff
       auto rob = handoffSolution->GetRoadmap()->GetRobot();
       handoffSolution->GetRoadmap()->SetRobot(originalProblem->GetRobot(rob->GetLabel()));
-      currentTemplate->AddRoadmapGraph(handoffSolution->GetRoadmap());
+      currentTemplate->AddRoadmap(handoffSolution->GetRoadmap());
+      currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs(), originalProblem);
 
       if(currentTemplate->GetInformation()->SavedPaths()){
-        currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs(),
-            handoffSolution->GetPath()->Length());
+        //currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs()),
+           // handoffSolution->GetPath()->Length());
         std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
         currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().front(), originalProblem);
         std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().front() << std::endl;

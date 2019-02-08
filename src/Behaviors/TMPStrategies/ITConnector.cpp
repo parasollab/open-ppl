@@ -58,12 +58,14 @@ CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
   auto dm = m_library->GetDistanceMetric("euclidean");
   std::vector<Cfg*> cfgs;
   for(auto& it1 : _ITs){
-    for(auto& cfg1 : it1->GetTranslatedPositions()){
+    for(auto& path1 : it1->GetTranslatedPaths()){
+      Cfg& cfg1 = path1[0];
       if(cfg1.GetRobot()->GetCapability() != _capability)
         continue;
       cfgs.push_back(&cfg1);
       for(auto& it2 : _ITs){
-        for(auto& cfg2 : it2->GetTranslatedPositions()){
+        for(auto& path2 : it2->GetTranslatedPaths()){
+          Cfg& cfg2 = path2[0];
           if(cfg2.GetRobot()->GetCapability() != _capability or cfg1 == cfg2)
             continue;
           auto distance = dm->Distance(cfg1,cfg2);
@@ -83,7 +85,8 @@ CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
       continue;
     cfgs.push_back(&cfg1);
     for(auto& it2 : _ITs){
-      for(auto& cfg2 : it2->GetTranslatedPositions()){
+      for(auto& path : it2->GetTranslatedPaths()){
+        auto& cfg2 = path[0];
         if(cfg2.GetRobot()->GetCapability() != _capability or cfg1 == cfg2)
           continue;
         auto distance = dm->Distance(cfg1,cfg2);

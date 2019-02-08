@@ -113,7 +113,7 @@ ConstructIT(InteractionTemplate* _it){
 
     taskRobot->GetMultiBody()->Configure(currentConfig);
 
-    if(m_debug){
+    if(true){
       std::cout << "Size of path: " << handoffSolution->GetPath()->Cfgs().size() << std::endl;
       for(auto cfg : handoffSolution->GetPath()->Cfgs()){
         std::cout << cfg.PrettyPrint() << std::endl;
@@ -126,11 +126,12 @@ ConstructIT(InteractionTemplate* _it){
     check++;
 
     // Store the roadmap for each task in the handoff
-    _it->AddRoadmapGraph(handoffSolution->GetRoadmap());
+    _it->AddRoadmap(handoffSolution->GetRoadmap());
+    _it->AddPath(handoffSolution->GetPath()->Cfgs(), m_problem);
 
     if(_it->GetInformation()->SavedPaths()){
-      _it->AddPath(handoffSolution->GetPath()->Cfgs(),
-          handoffSolution->GetPath()->Length());
+      //_it->AddPath(handoffSolution->GetPath()->Cfgs(),
+      //    handoffSolution->GetPath()->Length());
       std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
       _it->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().front(), m_problem);
       std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().front() << std::endl;

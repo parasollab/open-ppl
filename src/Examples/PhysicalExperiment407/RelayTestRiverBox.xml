@@ -4,7 +4,7 @@
   <!-- Here we specify input files, such as environment and query. -->
   <Problem baseFilename="RelayTestRiverBox">
 
-    <Environment filename="407office_meters_water_box.env" positionRes=".01">
+    <Environment filename="407office_meters.env" positionRes=".01">
       <!--Terrain capability="left">
         <Boundary limits="[-3.77342:9.09828 ; -2.69748:4.29768 ; -.1:.1]"
           space="workspace" shape="box" color="white"/>
@@ -15,19 +15,33 @@
       </Terrain>
     </Environment>
 
-    <Robot label="member1" filename="iCreate.xml" capability="left" color="red">
+    <Robot label="member1" filename="../iCreate.xml" capability="left" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+      <Hardware>
+        <HardwareInterface hardware="icreate"
+          ip="10.231.185.241" port="6665"/>
+        <!--
+        <HardwareInterface hardware="aruco" mapfile="marker_data.xml"
+          ip="10.231.167.182" port="4002"/>
+      -->
+      </Hardware>
     </Robot>
 
-    <Robot label="member2" filename="iCreate.xml" capability="water" color="red">
+    <Robot label="member2" filename="../iCreate.xml" capability="water" color="red">
       <Agent type="handoff" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.01"/>
+      <Hardware>
+        <HardwareInterface hardware="icreate"
+          ip="10.231.157.179" port="6665"/>
+        <!--HardwareInterface hardware="aruco" mapfile="marker_data.xml"
+          ip="10.231.167.182" port="4002"/-->
+      </Hardware>
     </Robot>
 
-    <Robot label="coordinator" virtual="true" filename="iCreate.xml" manipulator="false">
+    <Robot label="coordinator" virtual="true" filename="../iCreate.xml" manipulator="false">
       <Agent type="coordinator" dmLabel="euclidean" debug="true" tmp="false">
         <Member label="member1"/>
         <Member label="member2"/>
-        <HandoffEnvironment filename="handoff.env" positionRes=".01"/>
+        <HandoffEnvironment filename="../handoff.env" positionRes=".01"/>
         <PlacementMethod type="disjointworkspaces" label="djw" precision="1"/>
         <!--PlacementMethod type="owdensity" label="ow" proximity="2" density="75" dmLabel="euclidean"
                          numNodes="300"/-->
@@ -44,13 +58,13 @@
 
     <Task label="query" robot="member1">
       <StartConstraints>
-        <CSpaceConstraint point="-2 0 0"/>
+        <CSpaceConstraint point="4.5 -2 0"/>
       </StartConstraints>
     </Task>
 
     <Task label="query" robot="member2">
       <StartConstraints>
-        <CSpaceConstraint point="2.0 -1.5 0"/>
+        <CSpaceConstraint point="2.0 -1.75 0"/>
       </StartConstraints>
     </Task>
 

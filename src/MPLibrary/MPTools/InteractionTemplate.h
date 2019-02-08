@@ -52,16 +52,22 @@ class InteractionTemplate {
     /// Positions of Robots for Handoff Locations in base template
     std::vector<Cfg> GetPositions();
 
+    /// Paths of Robots for Handoff Locations in base template
+    std::vector<std::vector<Cfg>> GetPaths();
+
     /// Positions of Robots for Handoff Locations at each handoff location
     std::vector<Cfg>& GetTranslatedPositions();
+
+    /// Paths of Robots for Handoff Locations at each handoff location
+    std::vector<std::vector<Cfg>>& GetTranslatedPaths();
 
     ///@}
     ///@name Member Management
     ///@{
 
-    void AddRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
+    void AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
 
-    void AddPath(std::vector<Cfg> _path, double _cost);
+    void AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem);
 
     void AddHandoffCfg(Cfg _cfg, MPProblem* _problem);
 
@@ -80,6 +86,9 @@ class InteractionTemplate {
     ///The set of end configurations for each task.
     std::vector<Cfg> m_handoffCfgs;
 
+    ///The paths for each of the agents involved in the interaction.
+    std::vector<std::vector<Cfg>> m_interactionPaths;
+
     ///The set of paths created from solving each task.
     std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> m_roadmaps;
 
@@ -88,9 +97,6 @@ class InteractionTemplate {
 
     ///The set of VIDs from each distinct roadmap in the connected roadmap.
     std::vector<std::vector<size_t>> m_distinctRoadmaps;
-
-    ///The paths for each of the agents involved in the interaction.
-    std::vector<std::vector<Cfg>> m_distinctPaths;
 
     ///Costs of the corresponding paths
     std::vector<double> m_distinctPathCosts;
@@ -103,6 +109,8 @@ class InteractionTemplate {
     bool m_debug{false};
 
     std::vector<Cfg> m_translatedInteractionPositions;
+
+    std::vector<std::vector<Cfg>> m_translatedInteractionPaths;
 
     std::pair<size_t,size_t> m_connectingEdge;
 };
