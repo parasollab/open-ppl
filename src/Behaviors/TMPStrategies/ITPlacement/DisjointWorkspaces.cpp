@@ -193,6 +193,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
         _it->GetInformation()->AddTemplateLocation(cfg);
       }
     }
+    break;
   }
 
   // Testing to see if Coordinator interface works
