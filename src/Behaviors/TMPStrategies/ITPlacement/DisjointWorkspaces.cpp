@@ -222,6 +222,12 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
   else{
     _library->SetTask(nullptr);
   }
+  if(m_debug){
+    std::cout << "OUTPUTTING ALL TEMPLATE LOCATIONS FOUND." << std::endl;
+    for(auto location : _it->GetInformation()->GetTemplateLocations()){
+      std::cout << location.PrettyPrint() << std::endl;
+    }
+  }
 }
 
 void
