@@ -439,15 +439,11 @@ InvalidateEdge(const VID _source, const VID _target) {
   }
 
   // If we are deleting invalid edges, delete (_source, _target) and return.
-  if(m_deleteInvalid) {
+  if(m_deleteInvalid)
     g->DeleteEdge(_source, _target);
-    return;
-  }
-
   // Otherwise, mark this edge as lazy invalid.
-  typename RoadmapType::EI ei;
-  g->GetEdge(_source, _target, ei);
-  g->SetEdgeInvalidated(ei->id(), true);
+  else
+    g->SetEdgeInvalidated(_source, _target, true);
 }
 
 /*----------------------------------------------------------------------------*/
