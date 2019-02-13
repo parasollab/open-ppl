@@ -211,7 +211,7 @@ BreakupTask(WholeTask* _wholeTask){
     }
   }
   Cfg blank;
-  if(m_robot and start.DOF() > 0 and goal.DOF() > 0){
+  if(m_robot and start.GetRobot() and goal.GetRobot() > 0){
     auto subtask = MakeSubtask(currentRobot,start,goal);
     _wholeTask->m_subtasks.push_back(subtask);
   }

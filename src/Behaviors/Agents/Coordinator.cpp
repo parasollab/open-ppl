@@ -1374,6 +1374,10 @@ PlanWholeTasks() {
   // MPSolution API.
   *m_solution->GetRoadmap(m_robot) = *m_megaRoadmap;
 
+  if(m_debug){
+    Simulation::Get()->AddRoadmap(m_megaRoadmap,
+      glutils::color(1., 0., 1., 0.2));
+  }
   //Find path for each whole task in megaRoadmap
   for(auto wholeTask: m_wholeTasks){
     Simulation::GetStatClass()->StartClock("IT MegaRoadmap Query");

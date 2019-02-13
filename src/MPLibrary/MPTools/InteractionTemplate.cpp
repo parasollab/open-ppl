@@ -60,7 +60,7 @@ GetTranslatedPositions(){
     for(auto cfg : m_handoffCfgs){
       double x = cfg[0];
       double y = cfg[1];
-      double theta = center[2];
+      double theta = center[2]*PI;
 
       double newX = x*cos(theta) - y*sin(theta);
       double newY = y*sin(theta) + y*cos(theta);
@@ -87,7 +87,7 @@ GetTranslatedPaths(){
       for(auto cfg : path){
         double x = cfg[0];
         double y = cfg[1];
-        double theta = center[2];
+        double theta = center[2]*PI;
 
         double newX = x*cos(theta) - y*sin(theta);
         double newY = y*sin(theta) + y*cos(theta);
