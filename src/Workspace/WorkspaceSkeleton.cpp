@@ -20,6 +20,12 @@ FindNearestVertex(const Point3d& _target) {
   return closestVI;
 }
 
+WorkspaceSkeleton::vertex_iterator
+WorkspaceSkeleton::
+find_vertex(WorkspaceSkeleton::VD _vd){
+  return m_graph.find_vertex(_vd);
+}
+
 
 WorkspaceSkeleton::adj_edge_iterator
 WorkspaceSkeleton::

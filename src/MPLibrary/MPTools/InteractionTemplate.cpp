@@ -207,13 +207,13 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
       auto startVID = m_connectedRoadmap->GetVID(start);
       auto endVID = m_connectedRoadmap->GetVID(end);
       DefaultWeight<Cfg> weight;
-      if(m_information->SavedPaths()){
+      /*if(m_information->SavedPaths()){
         double cost = 0;
         for(auto c : m_distinctPathCosts){
           cost += c;
         }
         weight.SetWeight(cost);
-      }
+      }*/
       weight.SetWeight(m_information->GetInteractionWeight());
       m_connectedRoadmap->AddEdge(startVID, endVID, weight);
       m_connectingEdge = std::pair<size_t,size_t>(startVID, endVID);

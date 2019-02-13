@@ -7,6 +7,7 @@
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "Traits/CfgTraits.h"
+#include "Workspace/WorkspaceSkeleton.h"
 
 class ITConnector{
   public:
@@ -24,6 +25,7 @@ class ITConnector{
       Cfg*   m_connection;
       double m_summedDistance;
       bool   m_directConnection;
+      bool   m_changed;
     };
 
     ITConnector(double _threshold, MPLibrary* _library);
@@ -63,6 +65,15 @@ class ITConnector{
     void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 
     void ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph);
+
+    void BuildSkeletons();
+
+
+    double SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const;
+
+    /// Checks the capability skeleton of the corresponding type to see if the
+    /// two cfgs are in connected free space.
+    bool InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2);
     ///@}
     ///@name Member Variables
     ///@{
@@ -78,6 +89,8 @@ class ITConnector{
     double m_threshold;
 
     bool m_debug{false};
+
+    std::unordered_map<std::string,std::shared_ptr<WorkspaceSkeleton>> m_capabilitySkeletons;
 
 
     ///@}

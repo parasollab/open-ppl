@@ -129,7 +129,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
               break;
             }
           }
-          z = .5;
+          z = -.5;
           auto y = box->GetRange(1).min;
           auto xMin = box->GetRange(0).min + toaddX;
           auto xMax = box->GetRange(0).min + xSize*i;
@@ -144,7 +144,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
           }
 
           y = box->GetRange(1).max;
-          z = -.5;
+          z = .5;
           for(int i=0; i < m_maxAttempts; i++){
             double x = GetRandomDouble(xMin,xMax);
             Cfg sampleTop({x,y,z},agent->GetRobot());
@@ -229,7 +229,7 @@ DisjointWorkspaces::
 TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
   double x = _relativeCfg[0];
   double y = _relativeCfg[1];
-  double theta = _centerCfg[2];
+  double theta = _centerCfg[2]*PI;
 
   double newX = x*cos(theta) - y*sin(theta);
   double newY = x*sin(theta) + y*cos(theta);
@@ -255,16 +255,22 @@ CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
     TranslateCfg(_cfg, relativeCfg);
     if(!vcm->IsValid(relativeCfg, "ValidateITCfg")){
       valid = false;
+      if(m_debug){
+        std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+      }
       break;
     }
     auto envBoundary = m_problem->GetEnvironment()->GetBoundary();
     if(!envBoundary->InBoundary(relativeCfg)){
+      if(m_debug){
+        std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+      }
       valid = false;
       break;
     }
   }
   if(!valid){
-    std::cout << "FAILING TO FIND STUFF HERE" << std::endl << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
+    std::cout << "FAILING TO FIND STUFF HERE" << std::endl;
   }
   else {
     std::cout << "Valid" << std::endl;

@@ -33,6 +33,7 @@ class WorkspaceSkeleton {
     typedef GraphType::vertex_descriptor             VD;
     typedef GraphType::edge_descriptor               ED;
     typedef typename GraphType::vertex_iterator      vertex_iterator;
+    typedef typename GraphType::vertex_descriptor    vertex_descriptor;
     typedef typename GraphType::adj_edge_iterator    adj_edge_iterator;
 
     ///@}
@@ -93,7 +94,9 @@ class WorkspaceSkeleton {
     /// Writes the graph to a file
     /// @param _file the output file name
     void Write(const string& _file);
-  
+
+    vertex_iterator find_vertex(VD _vd);
+
   private:
 
     ///@name Internal State

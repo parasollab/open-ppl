@@ -354,6 +354,10 @@ GetSkeleton(size_t _t) {
     // Put the clearance info as vector of clearance info -
     // clearance and witness
     edgeMap.insert(make_pair(ed,AnnotateSegment(eit->property())));
+    // Add the bidirectional edge for the opposite direction
+    std::reverse(edge.begin(), edge.end());
+    ed = g.add_edge(eit->target(),eit->source(),edge);
+    //TODO:: figure out if this needs to be added to the edge map or not.
   }
 
   // Delete isolated vertices for free space or obstacle space
