@@ -297,9 +297,9 @@
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
       <LazyQuery label="LazyQuery" debug="false"
-        lpLabel="sl" dmLabel="euclidean" vcLabel="pqp_solid"
         graphSearchAlg="dijkstras"
-        numEnhance="10" d="0.5" deleteInvalid="true">
+        lpLabel="sl" vcLabel="pqp_solid"
+        enhanceDmLabel="euclidean" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
