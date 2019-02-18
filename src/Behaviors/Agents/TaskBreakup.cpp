@@ -197,6 +197,7 @@ BreakupTask(WholeTask* _wholeTask){
     }
     else if(!currentRobot){
       start = cfg;
+      currentRobot = cfg.GetRobot();
     }
     else if(currentRobot == cfg.GetRobot()){
       goal = cfg;

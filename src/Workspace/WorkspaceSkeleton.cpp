@@ -228,6 +228,54 @@ Prune(const Point3d& _goal) {
               << std::endl;
 }
 
+void
+WorkspaceSkeleton::
+RefineEdges(double _maxLength){
+  std::vector<std::vector<Point3d>> refinedVertices;
+  //std::vector<WorkspaceSkeleton::ED> originalEdges;
+  //for(auto vi = m_graph.begin(); vi != m_graph.end(); vi++){
+    //for(auto ei = vi->begin(); ei != vi->end(); ei++){
+    for(auto ei = m_graph.edges_begin(); ei != m_graph.edges_end(); ei++){
+      auto source = m_graph.find_vertex(ei->source())->property();
+      auto target = m_graph.find_vertex(ei->target())->property();
+      //original_edges.emplace_back(source,target);
+      //if(target[2] != 0 or source[2] != 0)
+      //  continue; //This is a hack because invalid edges are being examined
+      const double distance = (source - target).norm();
+      if(distance < _maxLength)
+        continue;
+      //size_t divisions = (size_t)std::ceil(distance/_maxLength);
+      std::vector<Point3d> newVertices = {m_graph.find_vertex(ei->source())->property()};
+      auto& intermediates = ei->property();
+      double currentDistance = 0;
+      for(size_t i = 1; i < intermediates.size(); i++){
+        double step = (intermediates[i-1] - intermediates[i]).norm();
+        currentDistance += step;
+        //newVertices.push_back(m_graph.add_vertex(intermediates[i*divisions]));
+        if(currentDistance > _maxLength){
+          newVertices.push_back(intermediates[i-1]);
+          currentDistance = step;
+        }
+      }
+      newVertices.push_back(m_graph.find_vertex(ei->target())->property());
+      refinedVertices.push_back(newVertices);
+    }
+  //}
+  for(auto edge : refinedVertices){
+    size_t firstVID = FindNearestVertex(edge[0])->descriptor();
+    size_t vd1 = firstVID;
+    size_t vd2 = firstVID;
+    for(size_t i = 1; i < edge.size()-1; i++){
+      vd2 = m_graph.add_vertex(edge[i]);
+      m_graph.add_edge(vd1,vd2);
+      vd1 = vd2;;
+    }
+    size_t lastVID = FindNearestVertex(edge.back())->descriptor();
+    m_graph.add_edge(vd2,lastVID);
+    m_graph.delete_edge(firstVID,lastVID);
+  }
+}
+
 /*--------------------------- Setters & Getters ------------------------------*/
 
 void

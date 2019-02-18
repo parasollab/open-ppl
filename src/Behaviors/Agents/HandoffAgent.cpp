@@ -83,6 +83,7 @@ IsChild() const noexcept {
 void
 HandoffAgent::
 GenerateCost(std::shared_ptr<MPTask> const _task) {
+  std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
   m_generatingCost = true;
   std::cout << "Starting generate cost function" << std::endl;
   // Save current state in case the robot has not finished its current task.
@@ -90,6 +91,15 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   auto currentPath = m_path;
 
   Cfg currentPos = m_robot->GetSimulationModel()->GetState();
+  auto env = problemCopy->GetEnvironment();
+  auto goalCenter = _task->GetGoalConstraints()[0]->GetBoundary()->GetCenter();
+  Cfg goalCfg({goalCenter[0],goalCenter[1],0}, m_robot);
+  env->SaveBoundary();
+  if(!env->IsolateTerrain(currentPos,goalCfg)){
+    m_potentialCost = std::numeric_limits<size_t>::max();
+    return;
+  }
+
   // TODO: Create cost functions for the path (adjust edge weights according to
   // metric and agent type).
   m_potentialCost = 0.0;
@@ -135,6 +145,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
     if(!startConstraint->Satisfied(position)){
       m_potentialCost = std::numeric_limits<size_t>::max();
       currentPos.ConfigureRobot();
+      env->RestoreBoundary();
       return;
     }
     setupTask->SetStartConstraint(std::move(startConstraint));
@@ -161,7 +172,6 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
 
   setupTask->AddGoalConstraint(std::move(setupStart));
   SetTask(setupTask);
-  std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
   try{
     WorkFunction(problemCopy);
     if(!m_solution->GetPath()->Cfgs().empty()){
@@ -227,6 +237,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   currentPos.ConfigureRobot();
   std::cout << "Finishing generate cost function" << std::endl;
   m_generatingCost = false;
+  env->RestoreBoundary();
 }
 
 double

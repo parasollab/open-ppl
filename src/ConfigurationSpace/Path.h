@@ -176,16 +176,8 @@ Length() const {
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
       if(*start == *(start + 1))
         continue;  // Skip repeated vertices.
-      typename RoadmapType::edge_descriptor ed(*start, *(start + 1));
-      typename RoadmapType::vertex_iterator vi;
-      typename RoadmapType::adj_edge_iterator ei;
-      if(m_roadmap->find_edge(ed, vi, ei))
-        length += (*ei).property().GetWeight();
-      else
-        throw RunTimeException(WHERE, "Tried to compute length for a path "
-            "containing the edge (" + to_string(*start) + "," +
-            to_string(*(start + 1)) + "), but that edge was not found in the "
-            "graph.");
+      const auto& edge = m_roadmap->GetEdge(*start, *(start+1));
+      length += edge.GetWeight();
     }
     m_lengthCached = true;
   }

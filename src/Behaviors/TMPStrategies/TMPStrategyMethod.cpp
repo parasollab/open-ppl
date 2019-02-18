@@ -383,7 +383,7 @@ TMPStrategyMethod::
 TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
   double x = _relativeCfg[0];
   double y = _relativeCfg[1];
-  double theta = _centerCfg[2];
+  double theta = _centerCfg[2]*PI;
 
   double newX = x*cos(theta) - y*sin(theta);
   double newY = x*sin(theta) + y*cos(theta);

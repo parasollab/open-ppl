@@ -77,6 +77,9 @@ class WorkspaceSkeleton {
     /// @param _goal A workspace goal point.
     void Prune(const Point3d& _goal);
 
+    /// Divide existing edges into sizes of at most _maxLength.
+    void RefineEdges(double _maxLength);
+
     ///@}
     ///@name Accessors
     ///@{

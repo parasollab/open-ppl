@@ -385,7 +385,7 @@ AssignTask(std::shared_ptr<MPTask> _nextTask) {
   // Generate the cost of a task for each agent
   // TODO: Thread this
   //std::vector<std::thread> costThreads(m_memberAgents.size());
-  auto lastAgent = GetLastAgent(m_subtaskMap[_nextTask]);
+  //auto lastAgent = GetLastAgent(m_subtaskMap[_nextTask]);
   for(auto agent : m_memberAgents){
     if(m_debug){
       std::cout << "Agent capability: " << agent->GetCapability() << std::endl;
@@ -393,8 +393,8 @@ AssignTask(std::shared_ptr<MPTask> _nextTask) {
     }
     if(agent->GetCapability() != _nextTask->GetCapability() and _nextTask->GetCapability() != "")
       continue;
-    if(agent == lastAgent)
-      continue;
+    //if(agent == lastAgent)
+    //  continue;
     agent->GetRobot()->SetVirtual(false);
     agent->GenerateCost(_nextTask);
     agent->GetRobot()->SetVirtual(true);
@@ -1023,6 +1023,12 @@ TranslateHandoffTemplates() {
         }
       }
 
+      m_megaRoadmap->InstallHook(RoadmapType::HookType::AddEdge, "debug",
+          [](RoadmapType::EI _ei) {
+          if(_ei->property().GetWeight()==0){
+          std::cout << "Zero weight edge" << std::endl;
+          }
+          });
       // Copy edges into the mega roadmap
       for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
         for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
@@ -1040,6 +1046,7 @@ TranslateHandoffTemplates() {
           }
         }
       }
+      m_megaRoadmap->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
     }
     Simulation::GetStatClass()->StopClock("Placement InteractionTemplate "
               + currentTemplate->GetInformation()->GetLabel());
@@ -1151,9 +1158,16 @@ SetupWholeTasks(){
         // Add the start points as in the same containter as the transformed
         // roadmaps so that it is connected to the rest of the transformed
         // roadmaps
+        m_megaRoadmap->InstallHook(RoadmapType::HookType::AddEdge, "debug",
+            [](RoadmapType::EI _ei) {
+            if(_ei->property().GetWeight()==0){
+            std::cout << "Zero weight edge" << std::endl;
+            }
+            });
         m_wholeTaskStartEndPoints.push_back({agentStartVID});
         wholeTask->m_startVIDs[elem.first].push_back(agentStartVID);
         m_megaRoadmap->AddEdge(coordinatorStartVID, agentStartVID, {weight,weight});
+        m_megaRoadmap->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
       }
 
     }
@@ -1168,9 +1182,16 @@ SetupWholeTasks(){
         // Add the end points as in the same containter as the transformed
         // roadmaps so that it is connected to the rest of the transformed
         // roadmaps
+        m_megaRoadmap->InstallHook(RoadmapType::HookType::AddEdge, "debug",
+            [](RoadmapType::EI _ei) {
+            if(_ei->property().GetWeight()==0){
+            std::cout << "Zero weight edge" << std::endl;
+            }
+            });
         m_wholeTaskStartEndPoints.push_back({agentGoalVID});
         wholeTask->m_goalVIDs[elem.first].push_back(agentGoalVID);
         m_megaRoadmap->AddEdge(coordinatorGoalVID, agentGoalVID, {weight,weight});
+        m_megaRoadmap->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
       }
 
     }
@@ -1193,6 +1214,8 @@ GenerateRoadmaps() {
     for(auto agent : m_memberAgents){
       auto robot = agent->GetRobot();
       auto cfg = robot->GetSimulationModel()->GetState();
+      auto capabilityRobot = m_dummyMap[robot->GetCapability()]->GetRobot();
+      cfg.SetRobot(capabilityRobot);
       auto vid = m_megaRoadmap->AddVertex(cfg);
       m_wholeTaskStartEndPoints.push_back({vid});
     }
@@ -1372,7 +1395,16 @@ Coordinator::
 PlanWholeTasks() {
   // Not so efficient, just making a full copy for now until we expand the
   // MPSolution API.
-  *m_solution->GetRoadmap(m_robot) = *m_megaRoadmap;
+  //*m_solution->GetRoadmap(m_robot) = *m_megaRoadmap;
+
+  //TODO::Probably don't need intitial task
+  auto initTask = m_robot->GetMPProblem()->GetTasks(m_robot)[0];
+  m_library->SetTask(initTask.get());
+
+  m_library->Solve(m_robot->GetMPProblem(), initTask.get(), m_solution, "EvaluateMapStrategy",
+      LRand(), "InitTask");
+
+  m_solution->SetRoadmap(m_robot, m_megaRoadmap);
 
   if(m_debug){
     Simulation::Get()->AddRoadmap(m_megaRoadmap,
@@ -1465,7 +1497,7 @@ Coordinator::
 TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
   double x = _relativeCfg[0];
   double y = _relativeCfg[1];
-  double theta = _centerCfg[2];
+  double theta = _centerCfg[2]*PI;
 
   double newX = x*cos(theta) - y*sin(theta);
   double newY = x*sin(theta) + y*cos(theta);
@@ -1694,6 +1726,8 @@ CreateCapabilityMaps(){
     for(auto agent : m_memberAgents){
       auto robot = agent->GetRobot();
       auto cfg = robot->GetSimulationModel()->GetState();
+      auto capabilityRobot = m_dummyMap[agent->GetCapability()]->GetRobot();
+      cfg.SetRobot(capabilityRobot);
       auto vid = m_megaRoadmap->AddVertex(cfg);
       m_wholeTaskStartEndPoints.push_back({vid});
     }
@@ -1735,6 +1769,13 @@ CreateCapabilityMaps(){
       std::cout << "Done copying over vertices" << std::endl;
     }
 
+    typedef RoadmapGraph<Cfg,DefaultWeight<Cfg>> RoadmapType;
+    graph->InstallHook(RoadmapType::HookType::AddEdge, "debug",
+        [](RoadmapType::EI _ei) {
+        if(_ei->property().GetWeight()==0){
+          std::cout << "Zero weight edge" << std::endl;
+        }
+        });
     m_capabilityRoadmaps[capability] = graph;
     // Copy over newly found edges in capability to mega roadmap
     for(auto vit = graph->begin(); vit != graph->end(); ++vit){
@@ -1747,6 +1788,8 @@ CreateCapabilityMaps(){
         }
       }
     }
+
+    graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
 
     m_megaRoadmap->Write("MegaTemplates.map", robot->GetMPProblem()->GetEnvironment());
     Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");

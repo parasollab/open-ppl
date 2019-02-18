@@ -49,7 +49,6 @@ class Terrain {
     const Boundary* GetBoundary() const noexcept;
 
     bool IsWired() const noexcept;
-
     ///@}
   private:
     glutils::color m_color{glutils::color::green}; ///< the color of the boundary when rendering
@@ -240,6 +239,15 @@ class Environment {
     const mathtool::Transformation& GetInitialCameraTransformation() const
         noexcept;
 
+    ///IROS Hacks
+
+    bool IsolateTerrain(Cfg start, Cfg goal);
+
+    void RestoreBoundary();
+
+    void SaveBoundary();
+
+    std::unique_ptr<Boundary> m_originalBoundary;
     ///@}
 
   protected:

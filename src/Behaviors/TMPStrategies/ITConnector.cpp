@@ -1,3 +1,4 @@
+#include "ConfigurationSpace/Cfg.h"
 #include "ITConnector.h"
 #include "Utilities/SSSP.h"
 
@@ -287,7 +288,7 @@ ITConnector::
 TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
   double x = _relativeCfg[0];
   double y = _relativeCfg[1];
-  double theta = _centerCfg[2];
+  double theta = _centerCfg[2]*PI;
 
   double newX = x*cos(theta) - y*sin(theta);
   double newY = y*sin(theta) + y*cos(theta);
@@ -303,6 +304,8 @@ ITConnector::
 ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
   auto robot = _graph->GetRobot();
   auto solution = new MPSolution(robot);
+  auto env = robot->GetMPProblem()->GetEnvironment();
+  env->SaveBoundary();
   // TODO:: Do not want to double copy, but we have to right now until MPSolution
   // API is more advanced.
   *solution->GetRoadmap(robot) = *_graph;
@@ -310,9 +313,27 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
   _graph->Write("ConnectingTemplates-"+robot->GetCapability()+".map",
                robot->GetMPProblem()->GetEnvironment());
 
+
   for(auto connection : m_connections){
     auto start = *(connection.first);
     auto goal = *(connection.second);
+
+/*    std::unique_ptr<Boundary> terrainBoundary;
+    for(auto& terrain : env->GetTerrains()){
+      bool match = false;
+      for(auto elem : terrain.second){
+        if(elem.GetBoundary()->InBoundary(start) and elem.GetBoundary()->InBoundary(goal)){
+          env->SetBoundary(std::move(elem.GetBoundary()->Clone()));
+          match = true;
+          break;
+        }
+      }
+      if(match)
+        break;
+    }
+    */
+
+    env->IsolateTerrain(start,goal);
 
     start.SetRobot(robot);
     goal.SetRobot(robot);
@@ -329,6 +350,16 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
 
     m_library->SetTask(task);
 
+    typedef RoadmapGraph<Cfg,DefaultWeight<Cfg>> RoadmapType;
+    _graph->InstallHook(RoadmapType::HookType::AddEdge, "debug",
+        [](RoadmapType::EI _ei) {
+        if(_ei->property().GetWeight()==0){
+          std::cout << "Zero weight edge" << std::endl;
+        }
+        });
+
+
+
     if(robot->IsManipulator()){
       m_library->Solve(m_library->GetMPProblem(), task, solution, "EvaluateMapStrategy",
                        LRand(), "ConnectingDistinctRoadmaps");
@@ -337,19 +368,23 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
       m_library->Solve(m_library->GetMPProblem(), task, solution, "BasicPRM1",
                        LRand(), "ConnectingDistinctRoadmaps");
     }
-    if(m_debug){
-      if(solution->GetPath()->Cfgs().empty()){
-        std::cout << "No path between templates." << std::endl;
-      }
+
+    _graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
+
+    if(solution->GetPath()->Cfgs().empty()){
+      throw RunTimeException(WHERE, "Could not connect " + start.PrettyPrint() + " to "
+                             + goal.PrettyPrint());
     }
     for(auto cfg : solution->GetPath()->Cfgs()){
       std::cout << cfg.PrettyPrint() << std::endl;
     }
 
   }
+  env->RestoreBoundary();
   *_graph = *solution->GetRoadmap(robot);
   _graph->Write("ConnectedTemplates-"+robot->GetCapability()+".map",
                 robot->GetMPProblem()->GetEnvironment());
+
 }
 
 
@@ -413,7 +448,20 @@ BuildSkeletons(){
     ma.BuildMedialAxis();
     m_capabilitySkeletons[terrainType.first] = std::shared_ptr<WorkspaceSkeleton>(
                         new WorkspaceSkeleton(get<0>(ma.GetSkeleton(1)))); // 1 for free space
+    m_capabilitySkeletons[terrainType.first]->RefineEdges(0.5);
     auto& g = m_capabilitySkeletons[terrainType.first]->GetGraph();
+    std::cout << "Printing graph for: " << terrainType.first << std::endl;
+    for(auto vi = g.begin(); vi != g.end(); vi++){
+      std::cout << vi->property() << std::endl;
+    }
+    for(auto vi = g.begin(); vi != g.end(); vi++){
+      for(auto ei = vi->begin(); ei != vi->end(); ei++){
+        std::cout << g.find_vertex(ei->source())->property()
+                  << ":"
+                  << g.find_vertex(ei->target())->property()
+                  << std::endl;
+      }
+    }
     std::vector<size_t> deletionVertices;
     for(auto vi = g.begin(); vi != g.end(); vi++){
       if(env->GetBoundary()->InBoundary(vi->property())){
@@ -464,7 +512,7 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
       _cfg2.GetRobot()->GetCapability()){
     return false;
   }
-  auto g = m_capabilitySkeletons[_cfg1.GetRobot()->GetCapability()];
+  auto& g = m_capabilitySkeletons[_cfg1.GetRobot()->GetCapability()];
 
   Point3d start = _cfg1.GetPoint();
   auto startVertex = g->FindNearestVertex(start);
@@ -507,9 +555,9 @@ SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const {
   auto intermediates = _ei->property();
   auto dm = m_library->GetDistanceMetric("euclidean");
   double distance = 0.0;
-  for(size_t i = 0; i < intermediates.size()-2; i++){
-    distance += dm->Distance(Cfg(intermediates[i],m_library->GetMPProblem()->GetRobots()[0].get()),
-                             Cfg(intermediates[i+1],m_library->GetMPProblem()->GetRobots()[0].get()));
+  for(size_t i = 1; i < intermediates.size(); i++){
+    double step = (intermediates[i-1]-intermediates[i]).norm();
+    distance += step;
   }
   return distance;
 }

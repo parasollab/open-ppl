@@ -668,3 +668,33 @@ CreateBoundaryObstacle() {
 }
 
 /*----------------------------------------------------------------------------*/
+
+
+//IROS Hacks
+
+bool
+Environment::
+IsolateTerrain(Cfg start, Cfg goal){
+  if(start.GetRobot()->GetCapability() != goal.GetRobot()->GetCapability() or
+      start.GetRobot()->GetCapability() == "")
+    return false;
+  for(auto& terrain : m_terrains[start.GetRobot()->GetCapability()]){
+    if(terrain.GetBoundary()->InBoundary(start) and terrain.GetBoundary()->InBoundary(goal)){
+      this->SetBoundary(std::move(terrain.GetBoundary()->Clone()));
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+Environment::
+RestoreBoundary(){
+  this->SetBoundary(std::move(m_originalBoundary));
+}
+
+void
+Environment::
+SaveBoundary(){
+  m_originalBoundary = this->GetBoundary()->Clone();
+}
