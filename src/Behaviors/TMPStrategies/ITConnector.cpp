@@ -516,10 +516,10 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
 
   Point3d start = _cfg1.GetPoint();
   auto startVertex = g->FindNearestVertex(start);
-  std::cout << "Start: " << start << std::endl;
+  std::cout << "Start: " << startVertex->property() << std::endl;
   Point3d goal =  _cfg2.GetPoint();
   auto goalVertex = g->FindNearestVertex(goal);
-  std::cout << "Goal: " << goal << std::endl;
+  std::cout << "Goal: " << goalVertex->property() << std::endl;
   std::unordered_set<size_t> goalSet;
   goalSet.insert(goalVertex->descriptor());
   //std::unordered_set<WorkspaceSkeleton::vertex_iterator> goals = {goalVertex};

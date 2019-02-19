@@ -935,6 +935,21 @@ GenerateHandoffTemplates(){
 
     Simulation::GetStatClass()->StopClock("Construct InteractionTemplate "
                 + currentTemplate->GetInformation()->GetLabel());
+    Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+                            +"::Vertices", currentTemplate->GetConnectedRoadmap()->get_num_vertices());
+    Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+                            +"::Edges", currentTemplate->GetConnectedRoadmap()->get_num_vertices());
+
+    size_t count = 0;
+    for(auto rm : currentTemplate->GetRoadmaps()){
+      count++;
+      Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+          +"::"+std::to_string(count)
+          +"::Vertices", rm->get_num_vertices());
+      Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+          +"::"+std::to_string(count)
+          +"::Edges", rm->get_num_vertices());
+    }
 
     std::cout << "Trying to write handoffTemplate Map" << std::endl;
     currentTemplate->GetConnectedRoadmap()->Write("handoffTemplate.map",
@@ -1791,7 +1806,13 @@ CreateCapabilityMaps(){
 
     graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
 
-    m_megaRoadmap->Write("MegaTemplates.map", robot->GetMPProblem()->GetEnvironment());
     Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
+
+    m_megaRoadmap->Write("MegaTemplates.map", robot->GetMPProblem()->GetEnvironment());
+    Simulation::GetStatClass()->SetStat("MegaRoadMap::Vertices", m_megaRoadmap->get_num_vertices());
+    Simulation::GetStatClass()->SetStat("MegaRoadMap::Edges", m_megaRoadmap->get_num_edges());
+    Simulation::GetStatClass()->SetStat(capability+"::Vertices", graph->get_num_vertices());
+    Simulation::GetStatClass()->SetStat(capability+"::Edges", graph->get_num_edges());
   }
+
 }
