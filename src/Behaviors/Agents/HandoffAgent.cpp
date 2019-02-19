@@ -95,7 +95,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   auto goalCenter = _task->GetGoalConstraints()[0]->GetBoundary()->GetCenter();
   Cfg goalCfg({goalCenter[0],goalCenter[1],0}, m_robot);
   env->SaveBoundary();
-  if(!env->IsolateTerrain(currentPos,goalCfg)){
+  if(!env->IsolateTerrain(currentPos,goalCfg) and m_robot->GetCapability() != ""){
     m_potentialCost = std::numeric_limits<size_t>::max();
     return;
   }
