@@ -1,6 +1,13 @@
 #ifndef PMPL_METRIC_UTILS_H_
 #define PMPL_METRIC_UTILS_H_
 
+#include "Utilities/Average.h"
+#include "Utilities/ClockClass.h"
+
+#ifndef _PARALLEL
+#include <containers/sequential/graph/algorithms/connected_components.h>
+#endif
+
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
@@ -10,121 +17,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#ifndef _PARALLEL
-#include <containers/sequential/graph/algorithms/connected_components.h>
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Keep a running total and count of any type which supports addition and
-/// division.
-////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-class Average final
-{
-
-  ///@name Internal State
-  ///@{
-
-  size_t m_count{0}; ///< The number of elements summed.
-  T m_total{T()};    ///< The running total.
-
-  ///@}
-
-  public:
-
-    ///@name Construction
-    ///@{
-
-    Average() = default;
-
-    Average(const T& _firstValue, const size_t _count = 1) : m_total(_firstValue),
-        m_count(_count) {}
-
-    ///@}
-    ///@name Interface
-    ///@{
-
-    /// Add an element to the average.
-    /// @param _value The element to add.
-    void operator+=(const T& _value) noexcept {
-      m_total += _value;
-      ++m_count;
-    }
-
-    /// Add one or more elements (pre-summed) to the average.
-    /// @param _sum The summed elements to add.
-    /// @param _count The number of elements.
-    void AddSummedValues(const T& _sum, const size_t _count) noexcept {
-      m_total += _sum;
-      m_count += _count;
-    }
-
-    /// Get the average.
-    T Get() const noexcept {return m_total / m_count;}
-
-    /// Get the total sum.
-    const T& Sum() const noexcept {return m_total;}
-
-    /// Get the number of elements included.
-    size_t Count() const noexcept {return m_count;}
-
-    ///@}
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// This class is used to measure the running time between @c StartClock and
-/// @c StopClock. Client side could provide clock name.
-///
-/// @ingroup MetricUtils
-////////////////////////////////////////////////////////////////////////////////
-class ClockClass {
-
-  public:
-
-    ClockClass();
-
-    /// Set the clock name.
-    /// @param _name The name to use.
-    void SetName(const std::string& _name);
-
-    /// Reset the clock.
-    void ClearClock();
-
-    /// Start the clock and the name is identity of this clock.
-    void StartClock();
-
-    /// Stop the clock and calculate the total running time.
-    void StopClock();
-
-    /// Call StopClock and PrintClock.
-    void StopPrintClock(std::ostream& _os);
-
-    /// Print clock name and time in seconds to an outstream.
-    /// @param _os The outstream to print to.
-    void PrintClock(std::ostream& _os);
-
-    /// Get the recorded time in seconds.
-    double GetSeconds() const;
-
-    /// Get the recorded time in microseconds.
-    int GetUSeconds() const;
-
-  private:
-
-    ///@name Internal State
-    ///@{
-
-    int m_sTime, m_uTime;
-    int m_suTime, m_uuTime;
-
-    std::string m_clockName;
-
-    ///@}
-
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,8 +124,8 @@ class MethodTimer final {
   ///@name Internal State
   ///@{
 
-  StatClass* const m_stats;
-  const std::string m_label;
+  StatClass* const m_stats;    ///< The stat class which owns the clock.
+  const std::string m_label;   ///< The clock label.
 
   ///@}
 
@@ -242,8 +134,12 @@ class MethodTimer final {
     ///@name Construction
     ///@{
 
+    /// Construct a method timer, which starts the named clock.
+    /// @param _stats The stat class which owns the clock.
+    /// @param _label The clock label.
     MethodTimer(StatClass* const _stats, const std::string& _label);
 
+    /// Destruction stops the named clock.
     ~MethodTimer();
 
     ///@}
