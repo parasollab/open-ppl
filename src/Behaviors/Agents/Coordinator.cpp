@@ -1129,9 +1129,14 @@ SetupWholeTasks(){
       std::vector<Cfg> startPoints;
       auto sampler = m_library->GetSampler("UniformRandomFreeTerrain");
       size_t numNodes = 1, numAttempts = 100;
+      try{
       sampler->Sample(numNodes, numAttempts, startBox,
           std::back_inserter(startPoints));
-
+      }
+      catch(...){
+        std::cout << "Didn't find any valid configurations for "
+          + elem.second->GetRobot()->GetCapability() << std::endl;
+      }
 
       if(!startPoints.empty())
         wholeTask->m_startPoints[elem.second->GetCapability()].push_back(startPoints[0]);

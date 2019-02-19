@@ -512,7 +512,13 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
       _cfg2.GetRobot()->GetCapability()){
     return false;
   }
+  else if(_cfg1.GetRobot()->IsManipulator()){
+    return true;
+  }
   auto& g = m_capabilitySkeletons[_cfg1.GetRobot()->GetCapability()];
+
+  if(!g) //indicates that no terrains are present to constrict the agent type
+    return true;
 
   Point3d start = _cfg1.GetPoint();
   auto startVertex = g->FindNearestVertex(start);
