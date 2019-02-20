@@ -13,7 +13,14 @@ MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _ha
   m_start = _start;
   m_goal = _goal;
   m_hasObject = _hasObject;
-  m_roadmapGraph = _roadmap;
+  if(_roadmap){
+    m_roadmapGraph = _roadmap;
+    m_providedRoadmap = true;
+  }
+  else{
+    m_roadmapGraph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
+    m_providedRoadmap = false;
+  }
   m_library = _library;
   m_manipulator = _manipulator;
 
@@ -136,10 +143,16 @@ CheckPreConditions(const FactLayer* _factLayer){
     //  std::cout << "Satisfied: " << start->Satisfied(vit->property()) << std::endl;
     //}
 
-    m_library->Solve(m_robot->GetMPProblem(), task, solution, "EvaluateMapStrategy",
-        LRand(), "CheckPreCondition");
+    if(m_providedRoadmap){
+      m_library->Solve(m_robot->GetMPProblem(), task, solution, "EvaluateMapStrategy",
+          LRand(), "CheckPreCondition-Provided");
+    }
+    else {
+      m_library->Solve(m_robot->GetMPProblem(), task, solution, "LazyQuery",
+          LRand(), "CheckPreCondition-Generating");
+    }
     if(solution->GetPath()->Cfgs().empty()){
-      if(m_manipulator and !m_hasObject)
+      //if(m_manipulator and !m_hasObject)
         m_used = true;
       return false;
     }

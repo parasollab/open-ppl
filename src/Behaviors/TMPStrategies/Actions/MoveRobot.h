@@ -63,6 +63,8 @@ class MoveRobot : public Action {
     const Boundary* m_goal{nullptr}; ///< Goal location of move action
 
     bool m_hasObject{false}; ///< Indicates if the robot is moving with the task
+
+    bool m_providedRoadmap{false};
 };
 
 #endif

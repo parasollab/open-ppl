@@ -2,7 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
-#include <random>
+#include "Utilities/MPUtils.h"
 
 DisjointWorkspaces::
 DisjointWorkspaces(MPProblem* _problem) : PlacementMethod(_problem) {}
@@ -291,7 +291,7 @@ DisjointWorkspaces::
 GetRandomDouble(double _min, double _max){
   //std::uniform_real_distribution<double> unif(_min, _max);
   //std::default_random_engine re;
-  double re = (double)rand() / RAND_MAX;
+  double re = (double)DRand();// RAND_MAX;
   return _min + re * (_max - _min);
   //return unif(re);
 }

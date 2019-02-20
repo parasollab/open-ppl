@@ -25,7 +25,7 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
   m_goalLocation = goalConstraints[0]->GetBoundary();
 
   //Extract Handoff Locations from Templates
-  for(auto& temp : _handoffs){
+  /*for(auto& temp : _handoffs){
     //TODO::Find better way to do this
     auto pos = temp->GetTranslatedPositions();
     auto first = CfgToBoundary(pos[0]);
@@ -33,6 +33,16 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
 
     std::pair<const Boundary*, const Boundary*> p(first,second);
     m_handoffLocations.insert(p);
+  }*/
+  for(auto& temp : _handoffs){
+    auto& transPos = temp->GetTranslatedPositions();
+    for(size_t i = 0; i < temp->GetTranslatedPositions().size(); i+=2){
+      auto first = CfgToBoundary(transPos[i]);
+      auto second = CfgToBoundary(transPos[i+1]);
+
+      std::pair<const Boundary*, const Boundary*> p(first,second);
+      m_handoffLocations.insert(p);
+    }
   }
 
 
