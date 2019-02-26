@@ -506,17 +506,47 @@ DiscreteLead() {
   auto goalTracker = this->GetGoalTracker();
   const auto& startVIDs = goalTracker->GetStartVIDs();
   const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
+  Point3d goalPoint;
+
   if(startVIDs.size() != 1)
     throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
                                   << startVIDs.size() << " were found.";
-  if(goalVIDs.size() != 1)
-    throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
-                                  << goalVIDs.size() << " were found.";
+  if(goalVIDs.size() == 1) {
+    const VID goalVID = *goalVIDs.begin();
+    goalPoint = this->GetRoadmap()->GetVertex(goalVID).GetPoint();
+  }
+  else {
+    // Check for a goal boundary. We already checked that there is one goal
+    // constraint, so it is safe to assume it exists here.
+    const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+    const Boundary* const boundary = goalConstraints[0]->GetBoundary();
+    if(!boundary)
+      throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
+                                    << goalVIDs.size() << " were found and no "
+                                    << "constraint boundary was available.";
+
+    // Try to sample a configuration in the boundary.
+    auto sampler = this->GetSampler(this->m_samplerLabel);
+    const size_t count    = 1,
+                 attempts = 100;
+    std::vector<CfgType> samples;
+    sampler->Sample(count, attempts, boundary, std::back_inserter(samples));
+
+    // If we couldn't generate a configuration here, the goal boundary isn't
+    // realistic.
+    if(samples.empty())
+      throw RunTimeException(WHERE) << "Could not generate a sample within the "
+                                    << "goal boundary " << *boundary
+                                    << " after " << attempts << " attempts.";
+
+    // We got a sample, take its point as the center point.
+    goalPoint = samples.front().GetPoint();
+  }
 
   // Find the start and goal regions.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto startRegion = tm->LocateRegion(*startVIDs.begin());
-  auto goalRegion  = tm->LocateRegion(*goalVIDs.begin());
+  auto goalRegion  = tm->LocateRegion(goalPoint);
 
   // Find the start and goal in the graph
   auto regionGraph = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->

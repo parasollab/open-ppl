@@ -549,15 +549,14 @@
       </SparkBasicPRM>
 
       <!-- Syclop -->
-      <!--
       <Syclop label="Syclop" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
-        tmLabel="tm"
-        growGoals="false" growthFocus="0.01">
+        tmLabel="tm-fine"
+        growGoals="false" growthFocus="0.01"
+        goalDmLabel="euclideanPosition" goalThreshold="4">
         <Evaluator label="Query"/>
       </Syclop>
-      -->
 
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"
