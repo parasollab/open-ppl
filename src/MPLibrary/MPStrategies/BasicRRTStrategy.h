@@ -31,6 +31,21 @@
 ///   Steven LaValle and James Kuffner. "Randomized Kinodynamic Planning." IJRR
 ///   2001.
 ///
+/// This method supports both uni-directional and bi-directional variants.
+/// Nonholonomic problems are supported with the appropriate extender and
+/// uni-directional growth.
+///
+/// For uni-directional methods, we support an additional 'goal extension'
+/// heuristic which attempts to connect configurations near the goal to the goal
+/// region. This is necessary to get RRT to terminate - the alternative is to
+/// rely on goal-biased sampling to eventually complete the problem, which is
+/// not an efficient solution.
+///
+/// For bi-directional methods, the algorithm will attempt to connect trees
+/// after each successful extension. The new node will be extended toward the
+/// nearest neighbor in each other tree. If the extension reaches its
+/// destination, the two trees will merge.
+///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -202,9 +217,10 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     bool m_growGoals{false};      ///< Grow trees from goals.
-    double m_growthFocus;   ///< The fraction of goal-biased expansions.
-    size_t m_numDirections; ///< The number of expansion directions per iteration.
-    size_t m_disperseTrials;///< The number of samples taken for disperse search.
+    double m_growthFocus{0};      ///< The fraction of goal-biased expansions.
+    double m_goalThreshold{0};    ///< Distance threshold for goal extension.
+    size_t m_numDirections{1};    ///< Expansion directions per iteration.
+    size_t m_disperseTrials{3};   ///< Sample attempts for disperse search.
 
     ///@}
     ///@name Internal State
@@ -231,25 +247,46 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicRRTStrategy");
 
   // Parse RRT parameters
-  m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
+  m_growGoals = _node.Read("growGoals", false, m_growGoals,
+      "Grow a tree each goal in addition to the start?");
+
+  m_growthFocus = _node.Read("growthFocus", false,
+      m_growthFocus, 0.0, 1.0,
       "Fraction of goal-biased iterations");
-  m_numDirections = _node.Read("m", false, 1, 1, 1000,
+  m_numDirections = _node.Read("m", false,
+      m_numDirections, size_t(1), size_t(1000),
       "Number of directions to extend");
-  m_growGoals = _node.Read("growGoals", false, false,
-      "Determines whether or not we grow a tree from the goal");
-  m_disperseTrials = _node.Read("trial", false, 3, 1, 1000,
+  m_disperseTrials = _node.Read("trial", m_numDirections > 1,
+      m_disperseTrials, size_t(1), size_t(1000),
       "Number of trials to get a dispersed direction");
 
   // Parse MP object labels
   m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Label");
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
-  m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
+  m_ncLabel = _node.Read("connectorLabel", false, "",
+      "Connection Method for RRG-like behavior.");
+
   m_goalDmLabel = _node.Read("goalDmLabel", false, "",
       "Distance metric for checking goal extensions in uni-directional RRT.");
+  m_goalThreshold = _node.Read("goalThreshold", false,
+      m_goalThreshold, 0., std::numeric_limits<double>::max(),
+      "For each extension that ends within this distance of the goal (according "
+      "to the goal DM), attempt to extend towards the goal. If the value is 0, "
+      "the extender's max range will be used instead.");
 
-  if(m_growGoals and !m_goalDmLabel.empty())
-    throw ParseException(_node.Where()) << "Cannot use a goal DM with grow goals.";
+
+  // Some options only apply when growing goals
+  if(m_growGoals) {
+    const std::string when(" with bi-directional growth.");
+
+    if(!m_goalDmLabel.empty())
+      throw ParseException(_node.Where()) << "Cannot use goal DM" << when;
+    if(m_goalThreshold)
+      throw ParseException(_node.Where()) << "Cannot use goal threshold" << when;
+    if(m_growthFocus)
+      throw ParseException(_node.Where()) << "Cannot use growth focus" << when;
+  }
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/
@@ -706,14 +743,18 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
   target.SetData(data);
 
   // Check the nearest point to _newVID in each goal region. If it lies within
-  // the extender's range, try to extend towards it.
+  // the goal threshold, try to extend towards it.
   auto dm = this->GetDistanceMetric(m_goalDmLabel);
   const double distance = dm->Distance(cfg, target),
-               range = this->GetExtender(m_exLabel)->GetMaxDistance();
+               range = m_goalThreshold == 0.
+                     ? this->GetExtender(m_exLabel)->GetMaxDistance()
+                     : m_goalThreshold;
+
 
   if(this->m_debug)
-    std::cout << "\tNearest configuration is " << distance << " / " << range
-              << " units away at " << target.PrettyPrint() << "."
+    std::cout << "\tNearest goal configuration is " << distance << " / "
+              << range << " units away at " << target.PrettyPrint()
+              << "."
               << std::endl;
 
   // If we are out of range, do not attempt to extend.

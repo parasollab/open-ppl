@@ -392,7 +392,8 @@
       <BasicRRTStrategy label="BasicRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
-        growGoals="false" growthFocus="0.01" m="1">
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
@@ -400,7 +401,8 @@
       <BasicRRTStrategy label="KinoRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="KinoExtender"
-        growGoals="false" growthFocus="0.01">
+        growGoals="false" growthFocus="0.01"
+        goalDmLabel="euclidean" goalThreshold="6">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
@@ -434,7 +436,7 @@
       <BasicRRTStrategy label="OBRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="ME"
-        growGoals="true" growthFocus="0.01">
+        growGoals="true">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 

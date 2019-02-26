@@ -201,6 +201,9 @@ Initialize() {
   // Clear previous state.
   m_dmLabel.clear();
   Reset(nullptr);
+
+  this->GetStatClass()->SetStat(
+      "QueryMethod::" + this->GetLabel() + "::FoundPath", 0);
 }
 
 /*-------------------------- MapEvaluator Interface --------------------------*/
@@ -277,7 +280,8 @@ operator()() {
   // We generated a path successfully: track the path length history.
   this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
 
-  this->GetStatClass()->SetStat("QueryMethod::FoundPath", 1);
+  this->GetStatClass()->SetStat(
+      "QueryMethod::" + this->GetLabel() + "::FoundPath", 1);
 
   if(this->m_debug)
     std::cout << "\tConnected all goals!" << std::endl;
