@@ -44,7 +44,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     ///@name Local Types
     ///@{
 
-    using typename BasicRRTStrategy<MPTraits>::TreeType;
+    using typename BasicRRTStrategy<MPTraits>::VertexSet;
 
     ///@}
     ///@name Construction
@@ -72,7 +72,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// As basic RRT, but picks nearest neighbor from only the available
     /// regions.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const TreeType* const _tree = nullptr) override;
+        const VertexSet* const _tree = nullptr) override;
 
     /// As basic RRT, but also logs extension attempts.
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
@@ -390,7 +390,7 @@ Initialize() {
 template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const TreeType* const) {
+FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const) {
   // Select an available region and get the vertices within.
   const WorkspaceRegion* r = SelectRegion();
   const auto& vertices = m_regionData[r].vertices;

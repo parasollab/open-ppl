@@ -78,7 +78,7 @@
         dmLabel=""/>
       <HopLimitNF label="HLNF" hoplimit="2" dmLabel="" nfLabel="BFNF"/>
       <OptimalNF label="OptimalK" nfLabel="BFNF"/>
-      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="5"/>
+      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="10"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
@@ -181,7 +181,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="1." minDist=".001"/>
+        vcLabel="rapid" maxDist="4." minDist=".01"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
@@ -389,7 +389,7 @@
       </BasicPRM>
 
       <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT" debug="false"
+      <BasicRRTStrategy label="RRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
@@ -557,6 +557,16 @@
         goalDmLabel="euclideanPosition" goalThreshold="4">
         <Evaluator label="Query"/>
       </Syclop>
+
+      <!-- SST -->
+      <StableSparseRRT label="SST" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="RadiusNF" extenderLabel="BERO"
+        goalDmLabel="euclideanPosition" goalThreshold="4"
+        growthFocus="0.01"
+        witnessNfLabel="Nearest" witnessRadius=".5" prune="true">
+        <Evaluator label="BoundedQuery"/>
+      </StableSparseRRT>
 
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"

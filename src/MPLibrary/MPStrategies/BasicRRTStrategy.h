@@ -65,7 +65,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef std::unordered_set<VID> TreeType;
+    typedef std::unordered_set<VID> VertexSet;
 
     ///@}
     ///@name Construction
@@ -118,7 +118,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _tree The tree to search, or null for whole roadmap.
     /// @return The VID of the roadmap configuration nearest to _cfg.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const TreeType* const _tree = nullptr);
+        const VertexSet* const _tree = nullptr);
 
     ///@}
     ///@name Growth Helpers
@@ -226,7 +226,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    std::vector<TreeType> m_trees;        ///< The current tree set.
+    std::vector<VertexSet> m_trees;  ///< The current tree set.
 
     ///@}
 
@@ -528,9 +528,17 @@ SelectDispersedTarget(const VID _v) {
 template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const TreeType* _tree) {
+FindNearestNeighbor(const CfgType& _cfg, const VertexSet* _tree) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
+
+  if(this->m_debug)
+    std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
+              << " with '" << m_nfLabel << "' from "
+              << (_tree ? "a tree of size " + std::to_string(_tree->size())
+                        : "the full roadmap")
+              << "."
+              << std::endl;
 
   std::vector<Neighbor> neighbors;
 
@@ -551,12 +559,23 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType* _tree) {
 
   VID nearestVID = INVALID_VID;
 
-  if(!neighbors.empty())
+  if(!neighbors.empty()) {
     nearestVID = neighbors[0].target;
-  else
+
+    if(this->m_debug)
+      std::cout << "\tFound nearest neighbor " << nearestVID << " at distance "
+                << neighbors[0].distance << "."
+                << std::endl;
+  }
+  else {
     // We really don't want this to happen. If you see high numbers for this,
     // you likely have problems with parameter or algorithm selection.
     stats->IncStat("BasicRRT::FailedNF");
+
+    if(this->m_debug)
+      std::cout << "\tFailed to find a nearest neighbor."
+                << std::endl;
+  }
 
   return nearestVID;
 }
@@ -843,8 +862,8 @@ void
 BasicRRTStrategy<MPTraits>::
 MergeTrees(const VID _source, const VID _target) {
   // Find the trees holding both _source and _target.
-  typename std::vector<TreeType>::iterator sourceTree = m_trees.end(),
-                                           targetTree = m_trees.end();
+  typename std::vector<VertexSet>::iterator sourceTree = m_trees.end(),
+                                            targetTree = m_trees.end();
   for(auto iter = m_trees.begin(); iter != m_trees.end(); ++iter) {
     if(iter->count(_source))
       sourceTree = iter;
@@ -869,7 +888,7 @@ MergeTrees(const VID _source, const VID _target) {
   // Otherwise we found two different trees which must be merged.
   else {
     // Merge the smaller tree into the larger one.
-    typename std::vector<TreeType>::iterator smallTree, largeTree;
+    typename std::vector<VertexSet>::iterator smallTree, largeTree;
     if(targetTree->size() > sourceTree->size()) {
       largeTree = targetTree;
       smallTree = sourceTree;

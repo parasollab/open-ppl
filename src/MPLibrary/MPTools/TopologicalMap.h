@@ -310,8 +310,8 @@ TopologicalMap<MPTraits>::
 Initialize() {
   // This object only works for single-robot problems right now.
   if(this->GetGroupTask())
-    throw NotImplementedException(WHERE) << "Topological map does not yet support "
-                                         << "robot groups.";
+    throw NotImplementedException(WHERE) << "Topological map does not yet "
+                                         << "support robot groups.";
 
   // Initialize the maps.
   ClearMaps();
