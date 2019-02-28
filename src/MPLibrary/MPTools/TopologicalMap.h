@@ -323,6 +323,12 @@ Initialize() {
     auto decomposition = this->GetMPTools()->GetDecomposition(
         m_decompositionLabel);
 
+    // If we are debugging, write the decomposition file to OBJ for inspection.
+    ///@todo Move this to the decomposition class, which currently cannot do
+    ///      this job because it does not know its own label.
+    if(this->m_debug)
+      decomposition->WriteObj(this->GetLabel() + ".obj");
+
     MethodTimer mt(this->GetStatClass(), "GridOverlay::ComputeDecompositionMap");
     m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
   }

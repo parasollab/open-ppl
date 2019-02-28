@@ -83,6 +83,9 @@ class TetGenDecomposition final {
     static void ValidateSwitches(std::string& _switches);
 
     /// Output free workspace TetGen model
+    ///@note This produces tetgen files for the original PLC of the freespace
+    ///      that we generated as input to tetgen. It does not output the
+    ///      decomposition.
     void SaveFreeModel();
 
     /// Output tetrahedralization TetGen model

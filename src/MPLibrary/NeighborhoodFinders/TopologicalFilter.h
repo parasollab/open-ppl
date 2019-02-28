@@ -180,6 +180,9 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     /// Return VIDs which are only in some of the body's frontiers?
     bool m_partialMatches{true};
 
+    /// Try to find the nearest neighborhood for queries in obstacle space?
+    bool m_recoverObstSamples{false};
+
     ///@}
 };
 
@@ -221,6 +224,9 @@ TopologicalFilter(XMLNode& _node)
   m_partialMatches = _node.Read("partialMatches", false, m_partialMatches,
       "Return the best partial matches when no VIDs satisfy all of the robot's "
       "bodies?");
+
+  m_recoverObstSamples = _node.Read("recoverObst", false, m_recoverObstSamples,
+      "Try to find the nearest neighborhood for queries in obstacle space?");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -435,13 +441,17 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex) {
   // version since it may produce a set of 'root regions' which are not feasible
   // for the robot.
   if(!rootRegion) {
-    stats->IncStat("TopologicalFilter::NoRegion");
+    if(m_recoverObstSamples)
+      rootRegion = tm->LocateNearestRegion(_cfg, _bodyIndex);
+    if(!rootRegion) {
+      stats->IncStat("TopologicalFilter::NoRegion");
 
-    if(this->m_debug)
-      std::cout << "\t\tRegion not found, sample is in obstacle space."
-                << std::endl;
+      if(this->m_debug)
+        std::cout << "\t\tRegion not found, sample is in obstacle space."
+                  << std::endl;
 
-    return {};
+      return {};
+    }
   }
 
   // Get the SSSP data for this cell.
@@ -467,9 +477,9 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex) {
 
   // Compute the max distance between the first and second marker.
   const double maxDistance = distance.at(*markers.first)
-                           //+ m_backtrackDistance;
+                           + m_backtrackDistance;
                            //+ (_bodyIndex * 3);
-                           + m_backtrackDistance * std::pow(1.1, _bodyIndex);
+                           //+ m_backtrackDistance * std::pow(1.1, _bodyIndex);
                            //+ m_backtrackDistance * std::pow(1.1, hopsFromEE);
 
   if(this->m_debug)
