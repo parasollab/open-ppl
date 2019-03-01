@@ -415,6 +415,10 @@ GetMappedVIDs(
     std::vector<VD>::const_iterator _begin,
     std::vector<VD>::const_iterator _end,
     const size_t _bodyIndex) const {
+  // Do nothing on an empty range.
+  if(_begin == _end)
+    return {};
+
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::GetMappedVIDs");
 

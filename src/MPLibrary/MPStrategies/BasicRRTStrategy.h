@@ -545,16 +545,14 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* _tree) {
   auto g = this->GetRoadmap();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   if(_tree) {
-    nf->FindNeighbors(this->GetRoadmap(),
-        _tree->begin(), _tree->end(),
-        _tree->size() == g->Size(),
-        _cfg, std::back_inserter(neighbors));
+    //nf->FindNeighbors(g,
+    //    _tree->begin(), _tree->end(),
+    //    _tree->size() == g->Size(),
+    //    _cfg, std::back_inserter(neighbors));
+    nf->FindNeighbors(g, _cfg, *_tree, neighbors);
   }
   else {
-    nf->FindNeighbors(this->GetRoadmap(),
-        g->begin(), g->end(),
-        true,
-        _cfg, std::back_inserter(neighbors));
+    nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
   }
 
   VID nearestVID = INVALID_VID;
