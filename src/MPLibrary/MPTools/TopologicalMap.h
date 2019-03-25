@@ -1,6 +1,7 @@
 #ifndef PMPL_TOPOLOGICAL_MAP_H_
 #define PMPL_TOPOLOGICAL_MAP_H_
 
+#include <algorithm>
 #include <map>
 #include <vector>
 
@@ -437,19 +438,22 @@ GetMappedVIDs(
     if(iter == forwardMap.end())
       continue;
 
-    // Copy these VIDs.
+    // Copy these VIDs into all.
     const auto& vids = iter->second;
+    const size_t size = all.size();
     std::copy(vids.begin(), vids.end(), std::back_inserter(all));
+
+    // In-place merge the all VIDs list.
+    auto mid = all.begin();
+    std::advance(mid, size);
+    std::inplace_merge(all.begin(), mid, all.end());
   }
 
-  // Sort and make sure list is unique.
-  std::sort(all.begin(), all.end());
-  auto newEnd = std::unique(all.begin(), all.end());
-
   // Check that we didn't double-add any vertices.
+  auto newEnd = std::unique(all.begin(), all.end());
   if(all.end() != newEnd)
-    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex should "
-                                  << "be mapped to only one region.";
+    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex "
+                                  << "should be mapped to only one region.";
 
   return all;
 }
