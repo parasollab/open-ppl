@@ -20,6 +20,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/InteractionInformation.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
@@ -61,6 +62,8 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
       "nearest agents and charging locations.");
 
   m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
+
+  m_it = _node.Read("it", false, true, "Generate the Capability and Combined Roadmaps.");
 
   m_connectionThreshold = _node.Read("connectionThreshold",true,1.2, 0., 1000.,
       "Acceptable variabliltiy in IT paths.");
@@ -690,8 +693,8 @@ IsClearToMoveOn(HandoffAgent* _agent){
       return true;
 
     // Lets the partner know that the first agent has arrived at the handoff
-    partner->SetClearToMove(true);
-    partner->SetPerformingSubtask(true);
+    //partner->SetClearToMove(true);
+    //partner->SetPerformingSubtask(true);
 
     if(m_debug){
       std::cout << "Partner: " << partner->GetRobot()->GetLabel() << std::endl;
@@ -700,6 +703,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
     // Checks if the other agent is there to hand the task off to
     if(!partner->GetTask() or partner->ReachedHandoff()){
       partner->SetPerformingSubtask(true);
+      partner->SetClearToMove(true);
       // Allows the first agent to move on from the IT
       return true;
     }
@@ -919,8 +923,8 @@ GenerateHandoffTemplates(){
         //currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs()),
            // handoffSolution->GetPath()->Length());
         std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
-        currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().front(), originalProblem);
-        std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().front() << std::endl;
+        currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().back(), originalProblem);
+        std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().back() << std::endl;
       }
       else{
         // Add final configuration of path to template
@@ -1219,6 +1223,18 @@ SetupWholeTasks(){
     m_wholeTasks.push_back(wholeTask);
   }
   m_library->SetTask(m_robot->GetMPProblem()->GetTasks(m_robot)[0].get());
+  //TODO Find a better way to do this and a better home
+  std::unordered_map<Cfg*,std::vector<Cfg>*> interactionPoints;
+  for(auto& currentTemplate : m_solution->GetInteractionTemplates()){
+    for(auto& path : currentTemplate->GetTranslatedPaths()){
+      Cfg& interactionPoint = path[path.size()-1];
+      interactionPoints[&interactionPoint] = &path;
+    }
+  }
+
+  for(auto wholeTask : m_wholeTasks){
+    wholeTask->m_interactionPoints = interactionPoints;
+  }
 }
 
 
@@ -1448,6 +1464,7 @@ PlanWholeTasks() {
   for(auto& wholeTask : m_wholeTasks){
     tb.BreakupTask(wholeTask);
     Simulation::GetStatClass()->StopClock("IT Task Decomposition");
+    Simulation::GetStatClass()->SetStat("Subtasks", wholeTask->m_subtasks.size());
   }
 }
 
@@ -1599,7 +1616,7 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
   WholeTask* wholeTask = m_wholeTasks[0];
 
   std::vector<std::shared_ptr<MPTask>> taskPlan;
-  // COnvert each of the actions into appropriate tasks
+  // Convert each of the actions into appropriate tasks
   for(auto action : _actionPlan){
     auto robots = action->GetRobots();
     //Check if action is move or handoff
@@ -1623,20 +1640,40 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
 
       //Non-Manipulator Constraints
       if(!robots[0]->IsManipulator()){
-        auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
+        auto radius = 1.2 * (robots[0]->GetMultiBody()->GetBoundingSphereRadius());
 
-        std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
+        /*std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
             new CSpaceBoundingSphere(start->GetCenter(), radius));
         auto startConstraint = std::unique_ptr<BoundaryConstraint>
           (new BoundaryConstraint(robots[0], std::move(boundingSphere)));
+*/
+        std::unique_ptr<CSpaceBoundingBox> boundingBox(
+            new CSpaceBoundingBox({start->GetRange(0).Center(),start->GetRange(1).Center(),0}));
+        boundingBox->SetRange(0,(start->GetRange(0).Center()-radius),
+                                (start->GetRange(0).Center()+radius));
+        boundingBox->SetRange(1,(start->GetRange(1).Center()-radius),
+                                (start->GetRange(1).Center()+radius));
+        boundingBox->SetRange(2,-1,1);
+        auto startConstraint = std::unique_ptr<BoundaryConstraint>
+          (new BoundaryConstraint(robots[0], std::move(boundingBox)));
 
-
-        std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
+       /* std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
             new CSpaceBoundingSphere(goal->GetCenter(), radius));
         auto goalConstraint = std::unique_ptr<BoundaryConstraint>
           (new BoundaryConstraint(robots[0], std::move(boundingSphere2)));
+*/
+        std::unique_ptr<CSpaceBoundingBox> boundingBox2(
+            new CSpaceBoundingBox({goal->GetRange(0).Center(),goal->GetRange(1).Center(),0}));
+        boundingBox2->SetRange(0,(goal->GetRange(0).Center()-radius/2),
+                                (goal->GetRange(0).Center()+radius/2));
+        boundingBox2->SetRange(1,(goal->GetRange(1).Center()-radius/2),
+                                (goal->GetRange(1).Center()+radius/2));
+        boundingBox2->SetRange(2,-1,1);
+        auto goalConstraint = std::unique_ptr<BoundaryConstraint>
+          (new BoundaryConstraint(robots[0], std::move(boundingBox2)));
 
         task->SetStartConstraint(std::move(startConstraint));
+        task->ClearGoalConstraints();
         task->AddGoalConstraint(std::move(goalConstraint));
       }
       //Manipulator Constraints
@@ -1691,6 +1728,7 @@ TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan){
     HandoffAgent* agent = dynamic_cast<HandoffAgent*>(task->GetRobot()->GetAgent());
     agent->AddSubtask(task);
   }
+  Simulation::GetStatClass()->SetStat("Subtasks", _taskPlan.size());
 }
 
 void
@@ -1739,9 +1777,6 @@ CreateCapabilityMaps(){
   TranslateHandoffTemplates();
   SetupWholeTasks();
 
-  ITConnector connector(m_connectionThreshold,m_library);
-  auto dm = m_library->GetDistanceMetric(m_dmLabel);
-
   if(!m_robot->IsManipulator()){
     for(auto agent : m_memberAgents){
       auto robot = agent->GetRobot();
@@ -1752,6 +1787,12 @@ CreateCapabilityMaps(){
       m_wholeTaskStartEndPoints.push_back({vid});
     }
   }
+
+  if(!m_it)
+    return;
+
+  ITConnector connector(m_connectionThreshold,m_library);
+  auto dm = m_library->GetDistanceMetric(m_dmLabel);
 
   std::vector<Cfg> startAndGoal;
   for(auto vid : m_wholeTaskStartEndPoints){
@@ -1820,4 +1861,10 @@ CreateCapabilityMaps(){
     Simulation::GetStatClass()->SetStat(capability+"::Edges", graph->get_num_edges());
   }
 
+}
+
+WholeTask*
+Coordinator::
+GetWholeTask(std::shared_ptr<MPTask> _subtask){
+  return m_subtaskMap[_subtask];
 }

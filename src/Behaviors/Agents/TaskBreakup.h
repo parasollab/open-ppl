@@ -28,7 +28,7 @@ class TaskBreakup {
     ///@{
 
     /// Makes the subtask for the given robot, start and goal
-    std::shared_ptr<MPTask> MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal);
+    std::shared_ptr<MPTask> MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask);
 
     ///@}
 

@@ -253,26 +253,54 @@ CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
   std::cout << "Checking Location" << std::endl;
   std::cout << _cfg.PrettyPrint() << std::endl;
   bool valid = true;
-  for(auto position : _it->GetPositions()){
-    Cfg relativeCfg = position;
-    std::cout << "Relative Cfg" << std::endl;
-    std::cout << relativeCfg.PrettyPrint() << std::endl;
-    //TODO::Change robot to appropriate robot capability
-    TranslateCfg(_cfg, relativeCfg);
-    if(!vcm->IsValid(relativeCfg, "ValidateITCfg")){
-      valid = false;
-      if(m_debug){
-        std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+  if(!_it->GetInformation()->SavedPaths()){
+    for(auto position : _it->GetPositions()){
+      Cfg relativeCfg = position;
+      std::cout << "Relative Cfg" << std::endl;
+      std::cout << relativeCfg.PrettyPrint() << std::endl;
+      //TODO::Change robot to appropriate robot capability
+      TranslateCfg(_cfg, relativeCfg);
+      if(!vcm->IsValid(relativeCfg, "ValidateITCfg")){
+        valid = false;
+        if(m_debug){
+          std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+        }
+        break;
       }
-      break;
+      auto envBoundary = m_problem->GetEnvironment()->GetBoundary();
+      if(!envBoundary->InBoundary(relativeCfg)){
+        if(m_debug){
+          std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+        }
+        valid = false;
+        break;
+      }
     }
-    auto envBoundary = m_problem->GetEnvironment()->GetBoundary();
-    if(!envBoundary->InBoundary(relativeCfg)){
-      if(m_debug){
-        std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+  }
+  else {
+    for(auto& path : _it->GetPaths()){
+      for(auto relativeCfg : path){
+        //Cfg relativeCfg = position;
+        std::cout << "Relative Cfg" << std::endl;
+        std::cout << relativeCfg.PrettyPrint() << std::endl;
+        //TODO::Change robot to appropriate robot capability
+        TranslateCfg(_cfg, relativeCfg);
+        if(!vcm->IsValid(relativeCfg, "ValidateITCfg")){
+          valid = false;
+          if(m_debug){
+            std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+          }
+          break;
+        }
+        auto envBoundary = m_problem->GetEnvironment()->GetBoundary();
+        if(!envBoundary->InBoundary(relativeCfg)){
+          if(m_debug){
+            std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;
+          }
+          valid = false;
+          break;
+        }
       }
-      valid = false;
-      break;
     }
   }
   if(!valid){

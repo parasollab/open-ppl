@@ -451,25 +451,31 @@ SelectTask(){
   auto pos = m_robot->GetSimulationModel()->GetState();
   std::cout << pos.PrettyPrint() << std::endl;
 
+  auto startBox = startConstraint->GetBoundary()->Clone();
+  auto box = static_cast<CSpaceBoundingBox*>(startBox.get());
+  auto ranges = box->GetRanges();
   if(m_robot->IsManipulator()){
-
-    auto startBox = startConstraint->GetBoundary()->Clone();
-    auto box = static_cast<CSpaceBoundingBox*>(startBox.get());
-    auto ranges = box->GetRanges();
     for(size_t i = 0; i < 3; i++){
       auto range = ranges[i];
       auto center = range.Center();
       box->SetRange(i, center-.05, center+.05);
     }
-
-    std::cout << "Ranges for start constraint" << std::endl;
-    for(auto r : box->GetRanges()){
-      std::cout << r << std::endl;
-    }
-
-    startConstraint = new BoundaryConstraint(m_robot, std::move(startBox));
-
   }
+  else{
+    for(size_t i = 0; i < 2; i++){
+      auto range = ranges[i];
+      auto center = range.Center();
+      box->SetRange(i, center-.1, center+.1);
+    }
+    box->SetRange(2, -1, 1);
+  }
+  std::cout << "Ranges for start constraint" << std::endl;
+  for(auto r : box->GetRanges()){
+    std::cout << r << std::endl;
+  }
+
+  startConstraint = new BoundaryConstraint(m_robot, std::move(startBox));
+
 
   if(m_debug){
     std::cout << "CHECKING IF START CONSTRAINT IS SATISFIED: " << m_robot->GetLabel() << std::endl;
@@ -487,15 +493,20 @@ SelectTask(){
 
     setupTask->SetStartConstraint(std::move(start));
 
-    //std::unique_ptr<Constraint> goal = startConstraint->Clone();
+    std::unique_ptr<Constraint> goalConstraint = startConstraint->Clone();
 
     if(!m_robot->IsManipulator()){
-      auto radius = 1 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
+      /*auto radius = 1 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
       std::unique_ptr<CSpaceBoundingSphere> goalBoundary = std::unique_ptr<CSpaceBoundingSphere>(
-          new CSpaceBoundingSphere(startConstraint->GetBoundary()->GetCenter(), radius));
+          new CSpaceBoundingSphere(startConstraint->GetBoundary()->GetCenter(), 1.2*radius));
+
       std::unique_ptr<BoundaryConstraint> goalConstraint(
           new BoundaryConstraint(m_robot, std::move(goalBoundary)));
       setupTask->AddGoalConstraint(std::move(goalConstraint));
+      */
+      setupTask->ClearGoalConstraints();
+      setupTask->AddGoalConstraint(std::move(goalConstraint));
+
     }
     else{
 
@@ -543,6 +554,17 @@ SelectTask(){
 bool
 HandoffAgent::
 EvaluateTask(){
+  if(m_CUSTOM_PATH){
+    //Check if custom path is finished
+    //m_clearToMove = true;
+    if(!this->PathFollowingAgent::EvaluateTask()){
+      SetTask(nullptr);
+      m_path.clear();
+      m_CUSTOM_PATH=false;
+      return false;
+    }
+    return true;
+  }
   auto task = GetTask();
   if(!this->PathFollowingAgent::EvaluateTask()){
     if(m_debug){
@@ -555,9 +577,10 @@ EvaluateTask(){
       if(m_debug){
         std::cout << "AND I AM CLEAR TO MOVE ON";
       }
-      SetTask(nullptr);
+      CheckInteractionPath();
+      //SetTask(nullptr);
 
-      m_clearToMove = false;
+      //m_clearToMove = false;
 
       return false;
     }
@@ -610,6 +633,30 @@ SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
 void
 HandoffAgent::
 AddSubtask(std::shared_ptr<MPTask> _task){
+  auto deliveringPath = m_parentAgent->GetWholeTask(_task)->m_interactionPathsDelivering[_task];
+  auto receivingPath = m_parentAgent->GetWholeTask(_task)->m_interactionPathsReceiving[_task];
+
+  if(receivingPath.size() > 0){
+    //update start constraint to front of path
+    auto start = receivingPath[0];
+    start.SetRobot(m_robot);
+    std::unique_ptr<CSpaceConstraint> startConstraint = std::unique_ptr<CSpaceConstraint>(
+                                              new CSpaceConstraint(m_robot, start));
+
+    _task->SetStartConstraint(std::move(startConstraint));
+
+  }
+  if(deliveringPath.size() > 0){
+    //update goal constraint to front of path
+    auto goal = deliveringPath[0];
+    goal.SetRobot(m_robot);
+    std::unique_ptr<CSpaceConstraint> goalConstraint = std::unique_ptr<CSpaceConstraint>(
+                                              new CSpaceConstraint(m_robot, goal));
+
+    _task->ClearGoalConstraints();
+    _task->AddGoalConstraint(std::move(goalConstraint));
+  }
+
   m_queuedSubtasks.push_back(_task);
 }
 
@@ -648,4 +695,52 @@ void
 HandoffAgent::
 SetClearToMove(bool _clear){
   m_clearToMove = _clear;
+}
+
+void
+HandoffAgent::
+CheckInteractionPath(){
+  std::shared_ptr<MPTask> subtask;
+  subtask = GetTask();
+  auto wholeTask = m_parentAgent->GetWholeTask(subtask);
+  if(wholeTask){
+    auto deliveringPath = wholeTask->m_interactionPathsDelivering[subtask];
+    m_path = deliveringPath;
+  }
+  else{
+    subtask = m_queuedSubtasks.front();
+    wholeTask = m_parentAgent->GetWholeTask(subtask);
+    auto receivingPath = wholeTask->m_interactionPathsReceiving[subtask];
+    m_path = receivingPath;
+  }
+  if(m_path.size() > 0){
+    for(auto& cfg : m_path){
+      cfg.SetRobot(m_robot);
+    }
+    m_CUSTOM_PATH = true;
+    auto customTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
+
+    auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
+
+    std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
+        new CSpaceBoundingSphere(m_path[0].GetPosition(), radius));
+    auto startConstraint = std::unique_ptr<BoundaryConstraint>
+      (new BoundaryConstraint(m_robot, std::move(boundingSphere)));
+
+
+    //std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
+    //    new CSpaceBoundingSphere(m_path[m_path.size()-1].GetPosition(), radius));
+    //auto goalConstraint = std::unique_ptr<BoundaryConstraint>
+    //  (new BoundaryConstraint(m_robot, std::move(boundingSphere2)));
+
+    auto goalConstraint = std::unique_ptr<CSpaceConstraint>(
+                            new CSpaceConstraint(m_robot,m_path[m_path.size()-1]));
+
+    customTask->SetStartConstraint(std::move(startConstraint));
+    customTask->AddGoalConstraint(std::move(goalConstraint));
+
+  }
+  else {
+    SetTask(nullptr);
+  }
 }

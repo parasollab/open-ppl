@@ -222,9 +222,6 @@ GenerateCapabilityRoadmaps(MPLibrary* _library, vector<HandoffAgent*> _agents,
 void
 TMPStrategyMethod::
 GenerateInteractionTemplates(MPLibrary* _library, vector<HandoffAgent*> _agents, Robot* _superRobot){
-  if(m_debug){
-    std::cout << "Finding Handoff Locations" << std::endl;
-  }
   for(auto& info : _library->GetMPProblem()->GetInteractionInformations()){
     auto it = new InteractionTemplate(info.get());
     _library->GetMPSolution()->AddInteractionTemplate(it);
@@ -244,7 +241,7 @@ PlaceInteractionTemplates(MPLibrary* _library, Robot* _superRobot,
                           _ITPlacementMethods){
 
   if(m_debug){
-    std::cout << "Finding Handoff Locations" << std::endl;
+    std::cout << "Finding IT Locations" << std::endl;
   }
   auto originalProblem = _superRobot->GetMPProblem();
   _library->SetMPProblem(originalProblem);

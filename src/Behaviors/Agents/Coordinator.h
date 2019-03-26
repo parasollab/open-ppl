@@ -102,6 +102,10 @@ class Coordinator : public Agent {
 
     HandoffAgent* GetCapabilityAgent(std::string _capability);
 
+    WholeTask* GetWholeTask(std::shared_ptr<MPTask> _subtask);
+
+    std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
+    std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
     ///@}
   private:
 
@@ -284,6 +288,7 @@ class Coordinator : public Agent {
     /// Indicates which method is used for task decomposition and allocation
     bool m_tmp{false};
 
+    bool m_it{true};
     /// Timer used for experiment timing
     nonstd::timer m_clock;
 
@@ -294,6 +299,7 @@ class Coordinator : public Agent {
     std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
 
     double m_connectionThreshold{1.5};
+
     ///@}
 
 };

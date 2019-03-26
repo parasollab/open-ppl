@@ -95,6 +95,8 @@ class HandoffAgent : public PathFollowingAgent {
     /// Allows the agent to move on from an interaction
     /// @param _clear New value for m_clearToMove
     void SetClearToMove(bool _clear);
+
+    void CheckInteractionPath();
     ///@}
   protected:
 

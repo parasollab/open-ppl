@@ -32,7 +32,7 @@ class TMPStrategyMethod {
     virtual TaskPlan PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
                                vector<std::shared_ptr<MPTask>> _tasks, Robot* _superRobot,
                                std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
-                                                               _ITPlacementMethods = nullptr);
+                                                               _ITPlacementMethods = nullptr) override;
 
     /// Removes all of the capability roadmaps currently stored if replanning is
     /// needed. TODO::LazyQuery may remove the need for this.

@@ -113,6 +113,7 @@ Solve(){
   // "point" per action
   double score = 0;
   for(auto& action : actions){
+    std::cout << "COST OF: " << action->PrintAction() << " ==== " << action->GetCost() << std::endl;
     score += action->GetCost();
   }
 
@@ -156,9 +157,15 @@ Solve(){
       std::cout << std::endl;
     }
 
+    //Temporary fix for duplicate actions::
+    std::unordered_set<std::shared_ptr<Action>> uniquePossibleActions;
+    for(auto& action : possibleActions){
+      uniquePossibleActions.insert(action);
+    }
     //Check if action produces better state
     double newScore = 0;
-    for(auto& action : possibleActions){
+    //TODO:: Figure out what the issue is here
+    for(auto& action : uniquePossibleActions){
       newScore += action->GetCost();
     }
     // Update to new state

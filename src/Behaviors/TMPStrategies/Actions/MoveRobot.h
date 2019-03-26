@@ -65,6 +65,8 @@ class MoveRobot : public Action {
     bool m_hasObject{false}; ///< Indicates if the robot is moving with the task
 
     bool m_providedRoadmap{false};
+
+    static size_t countChecked;
 };
 
 #endif

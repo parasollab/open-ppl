@@ -124,6 +124,8 @@ class RelaxedGraphPlan {
     /// action plan
     std::list<std::shared_ptr<Action>> LinearizePlan();
 
+    std::vector<std::shared_ptr<Action>> SortActions(std::vector<std::shared_ptr<Action>>);
+
     ///@}
 
     ///@name Internal State
@@ -165,6 +167,10 @@ class RelaxedGraphPlan {
     std::list<std::shared_ptr<Action>> m_linearActions; ///< Linear action plan
 
     bool m_manipulator; ///< Indicates the type of robot available
+
+    std::unordered_set<std::shared_ptr<Action>> m_firstOptions;
+
+    std::vector<Robot*> m_robots;
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include "../Actions/StartTask.h"
 #include <list>
 
+#include <math.h>
 #include "Behaviors/Agents/Agent.h"
 
 
@@ -23,6 +24,7 @@ RelaxedGraphPlan(State _start,
   m_goal  = _goal;
   m_library = _library;
   m_manipulator = _manipulator;
+  m_robots = _robots;
 
   FactLayer* facts = new FactLayer();
 
@@ -94,18 +96,6 @@ RelaxedGraphPlan(State _start,
     }
   }
 
-  // Create all handoff actions
-  for(auto passer : _robots){
-    for(auto receiver : _robots){
-      if(passer == receiver) continue;
-      for(auto location : _handoffLocations){
-        std::shared_ptr<HandoffTask> handoff(new
-            HandoffTask(passer, receiver, location.first, location.second, m_library));
-      m_allActions.push_back(handoff);
-      }
-    }
-  }
-
   // Create all start task actions if task has not been started
   if(m_start.m_taskOwners.size() == 0){
     for(auto robot : _robots){
@@ -113,6 +103,22 @@ RelaxedGraphPlan(State _start,
       m_allActions.push_back(startTask);
     }
   }
+
+  // Create all handoff actions
+  for(auto passer : _robots){
+    for(auto receiver : _robots){
+      if(passer == receiver) continue;
+      for(auto location : _handoffLocations){
+        std::shared_ptr<HandoffTask> handoff(new
+            HandoffTask(passer, receiver, location.first, location.second, m_library));
+        std::shared_ptr<HandoffTask> handoff2(new
+            HandoffTask(receiver, passer, location.second, location.first, m_library));
+      m_allActions.push_back(handoff);
+      m_allActions.push_back(handoff2);
+      }
+    }
+  }
+
 }
 
 RelaxedGraphPlan::
@@ -158,8 +164,9 @@ void RelaxedGraphPlan::
 CreateGraphLayers(){
   size_t iter = 0;
 
+  auto currentFactLayer   =  m_layerGraph[iter].first;
   while(!IsAtGoal()){
-    auto currentFactLayer   =  m_layerGraph[iter].first;
+    currentFactLayer   =  m_layerGraph[iter].first;
     if(m_debug){
       std::cout << "FACT LAYER " << iter << std::endl << std::endl;
       for(auto& robotLocations : currentFactLayer->m_possibleRobotLocations){
@@ -250,6 +257,13 @@ CreateGraphLayers(){
     //Create next layer in the graph
     ActionLayer* newActions = new ActionLayer();
     newActions->m_actions = actions->m_actions;
+
+    if(iter == 0){
+      for(auto& action : actions->m_actions){
+        m_firstOptions.insert(action);
+      }
+    }
+
     std::pair<FactLayer*, ActionLayer*> newLayer(newFacts, newActions);
     m_layerGraph.push_back(newLayer);
     //TODO:: Add check for various goals along the way.
@@ -260,6 +274,35 @@ CreateGraphLayers(){
   }
 
   m_goalLayers.push_back(m_finalGoalLayer);
+  if(m_debug){
+    std::cout << "FACT LAYER " << iter << std::endl << std::endl;
+    for(auto& robotLocations : currentFactLayer->m_possibleRobotLocations){
+      std::cout << robotLocations.first->GetLabel() << std::endl;
+      for(auto location : robotLocations.second){
+        for(auto d : location->GetCenter()){
+          std::cout << d << ":";
+        }
+        std::cout << endl;
+      }
+      std::cout << std::endl;
+    }
+    std::cout << endl;
+
+    std::cout << "Object/Task Locations" << std::endl;
+    for(auto& location : currentFactLayer->m_possibleObjectLocations){
+      for(auto d : location->GetCenter()){
+        std::cout << d << ":";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+
+    std::cout << "Object/Task Owners" << std::endl;
+    for(auto& robot : currentFactLayer->m_possibleRobotPayloads){
+      std::cout << robot->GetLabel();
+      std::cout << endl;
+    }
+  }
 
 }
 
@@ -337,14 +380,21 @@ BackTrace(){
 
   //Shuffle Order of actions to produce different plans and not have it be
   //decided by order of initialized actions
-  for(auto& layer : m_layerGraph){
+  /*for(auto& layer : m_layerGraph){
     std::random_shuffle(layer.second->m_actions.begin(), layer.second->m_actions.end());
+  }*/
+  for(auto& layer : m_layerGraph){
+    layer.second->m_actions = SortActions(layer.second->m_actions);
   }
+
 
   for(size_t i = 0; i < m_actionPlan.size(); i++){
     m_actionPlan[i] = new ActionLayer();
   }
 
+  for(auto& robot : m_robots){
+    m_goalLayers[m_goalLayers.size()-1]->m_possibleRobotPayloads.insert(robot);
+  }
   for(size_t i = m_actionPlan.size()-1; i > 0; i--){
     auto& goalLayer = m_goalLayers[i];
 
@@ -381,6 +431,7 @@ BackTrace(){
       }
     }
 
+
     bool found = false;
     for(auto& location : goalLayer->m_possibleObjectLocations){
 
@@ -390,36 +441,65 @@ BackTrace(){
         //Should execute only once
         for(auto& location2 : result.m_objectLocations){
           if(location != location2) continue;
-          found = true;
+          //found = true;
           auto it = std::find(m_actionPlan[i-1]->m_actions.begin(),
                   m_actionPlan[i-1]->m_actions.end(), action);
           if(it != m_actionPlan[i-1]->m_actions.end()){
             continue;
           }
-          m_actionPlan[i-1]->m_actions.push_back(action);
+          //m_actionPlan[i-1]->m_actions.push_back(action);
           auto state = action->GetStartState();
           //Check for Start Task
           if(state.m_taskOwners.size() < result.m_taskOwners.size()){
+            //EDIT
+            if(goalLayer->m_possibleRobotPayloads.count(result.m_taskOwners[0])) {
+              m_actionPlan[i-1]->m_actions.push_back(action);
+              found = true;
+            }
+            else{
+              continue;
+            }
             auto startRobot = result.m_taskOwners[0];
             if(m_start.m_robotLocations[startRobot] != location){
               AddRobotLocation(startRobot, location, m_goalLayers[i-1]);
             }
           }
+          if(found){
+            break;
+          }
 
-          for(size_t j = 0; j < state.m_objectLocations.size(); j++){
+          //EDIT:: MOVING BELOW OTHER CHECKS
+          /*for(size_t j = 0; j < state.m_objectLocations.size(); j++){
             auto objectLocation = state.m_objectLocations[j];
             //TODO::Add check to see if parallel action needs results of
             //this action to be performed.
             //Shouldn't be necessary in simplistic implementation
 
             AddObjectLocation(objectLocation, m_goalLayers[i-1]);
-          }
+          }*/
 
           //Indicates MoveRobot was selected
           //Should only execute once with current action options
           for(auto& robotLocation : state.m_robotLocations){
             auto robot = robotLocation.first;
-            auto location = robotLocation.second;
+            if(state.m_robotLocations[robot] == result.m_robotLocations[robot]){
+              continue;
+            }
+            //EDIT BEGIN
+            if(result.m_taskOwners.size() > 0 and !goalLayer->m_possibleRobotPayloads.count(robot)){
+              continue;
+            }
+
+            m_actionPlan[i-1]->m_actions.push_back(action);
+            if(!found){//found indicates that a start task action was already added
+              AddObjectOwner(robot, m_goalLayers[i-1]);
+            }
+            found = true;
+            //EDIT END
+
+            AddObjectLocation(state.m_objectLocations[0], m_goalLayers[i-1]);
+
+            auto location = state.m_robotLocations[robot];
             //TODO::Add check to see if parallel action needs results of
             //this action to be performed.
 
@@ -436,13 +516,37 @@ BackTrace(){
             //TODO::Add check to see if parallel action needs results of
             //this action to be performed.
             //Shouldn't be necessary in simplistic implementation
-            if(m_start.m_taskOwners.size()==0 or
-                m_start.m_taskOwners[0] != taskOwner){
+            //EDIT
+            //if(m_start.m_taskOwners.size()==0 or
+            //if(m_start.m_taskOwners.size()>0 and
+            //    m_start.m_taskOwners[0] != taskOwner){
               AddObjectOwner(taskOwner, m_goalLayers[i-1]);
+              if(m_start.m_robotLocations[taskOwner] != state.m_robotLocations[taskOwner]){
+                AddRobotLocation(taskOwner, state.m_robotLocations[taskOwner], m_goalLayers[i-1]);
+              }
+              auto newOwner = result.m_taskOwners[0];
+              if(m_start.m_robotLocations[newOwner] != result.m_robotLocations[newOwner]){
+                AddRobotLocation(newOwner,result.m_robotLocations[newOwner],m_goalLayers[i-1]);
+              }
+              m_actionPlan[i-1]->m_actions.push_back(action);
+              found = true;
+            //}
+          }
+          if(found){
+            for(size_t j = 0; j < state.m_objectLocations.size(); j++){
+              auto objectLocation = state.m_objectLocations[j];
+              //TODO::Add check to see if parallel action needs results of
+              //this action to be performed.
+              //Shouldn't be necessary in simplistic implementation
+
+              AddObjectLocation(objectLocation, m_goalLayers[i-1]);
             }
+            break;
           }
         }
-        if(found) break;
+        if(found){
+          break;
+        }
       }
     }
 
@@ -632,20 +736,102 @@ LinearizePlan(){
 std::vector<std::shared_ptr<Action>>
 RelaxedGraphPlan::
 RecommendedActions(){
+  std::unordered_set<std::shared_ptr<Action>> linearSet;
+  //if(m_debug){
+  if(true){
+    std::cout << "LINEAR PLAN" << std::endl;
+    for(auto& action : m_linearActions){
+      linearSet.insert(action);
+      std::cout << action->PrintAction() << std::endl;
+    }
+  }
+
+
+  if(m_debug){
+    std::cout << "FIRST OPTIONS" << std::endl;
+    for(auto& action : m_firstOptions){
+      std::cout << action->PrintAction() << std::endl;
+    }
+  }
+
   if(m_debug){
     std::cout << "RecommendedActions" << std::endl;
   }
   std::vector<std::shared_ptr<Action>> ret;
-  for(auto action : m_layerGraph[0].second->m_actions){
-    auto it = std::find(m_linearActions.begin(), m_linearActions.end(), action);
-    if(it != m_linearActions.end()){
+  //for(auto action : m_layerGraph[0].second->m_actions){
+  /*for(auto& action : m_linearActions){
+    //auto it = std::find(m_linearActions.begin(), m_linearActions.end(), action);
+    //if(it != m_linearActions.end()){
+    if(m_firstOptions.find(action.get()) != m_firstOptions.end()){
       if(m_debug){
         std::cout << action->PrintAction() << std::endl;
       }
       ret.push_back(action);
     }
+  }*/
+  for(auto& action : m_firstOptions){
+    if(linearSet.count(action)){
+      ret.push_back(action);
+      std::cout << action->PrintAction() << std::endl;
+    }
   }
+  //if(m_linearActions.size() > 0)
+  //  ret.push_back(m_linearActions.front());
   //srand(m_library->m_solvers.front().seed);
-  std::random_shuffle(ret.begin(), ret.end());
+  //std::random_shuffle(ret.begin(), ret.end());
+  ret = SortActions(ret);
   return ret;
+}
+
+std::vector<std::shared_ptr<Action>>
+RelaxedGraphPlan::
+SortActions(std::vector<std::shared_ptr<Action>> _actions){
+  if(_actions.size() <= 1)
+    return _actions;
+  size_t pivot = LRand()%_actions.size();
+  auto pivotAction = _actions[pivot];
+  std::vector<std::shared_ptr<Action>> lowerActions;
+  std::vector<std::shared_ptr<Action>> upperActions;
+  for(auto& action : _actions){
+    if(action == pivotAction)
+      continue;
+    if(action->GetCost() > pivotAction->GetCost()){
+      upperActions.push_back(action);
+    }
+    else if(action->GetCost() < pivotAction->GetCost()){
+      lowerActions.push_back(action);
+    }
+    else{//tie breaker
+      double distance1 = 0;
+      for(auto robotLocation : action->GetStartState().m_robotLocations){
+        auto initialLocation = m_start.m_robotLocations[robotLocation.first]->GetCenter();
+        auto startLocation = robotLocation.second->GetCenter();
+        distance1 = sqrt(pow((initialLocation[0]-startLocation[0]),2.0) +
+                         pow((initialLocation[1]-startLocation[1]),2.0));
+      }
+      double distance2 = 0;
+      for(auto robotLocation : pivotAction->GetStartState().m_robotLocations){
+        auto initialLocation = m_start.m_robotLocations[robotLocation.first]->GetCenter();
+        auto startLocation = robotLocation.second->GetCenter();
+        distance2 = sqrt(((initialLocation[0]-startLocation[0])*(initialLocation[0]-startLocation[0])) +
+                         ((initialLocation[1]-startLocation[1])*(initialLocation[1]-startLocation[1])));
+      }
+      std::cout << "Distance1: " << distance1 << std::endl;
+      std::cout << "Distance2: " << distance2 << std::endl;
+      if(distance1>distance2){
+        upperActions.push_back(action);
+      }
+      else{
+        lowerActions.push_back(action);
+      }
+    }
+  }
+
+  auto sorted = SortActions(lowerActions);
+  sorted.push_back(pivotAction);
+  for(auto& action : SortActions(upperActions)){
+    sorted.push_back(action);
+  }
+
+  return sorted;
 }

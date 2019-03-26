@@ -126,6 +126,11 @@ AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem){
   for(auto& cfg : _path){
     cfg.SetRobot(_problem->GetRobot(cfg.GetRobot()->GetLabel()));
   }
+  if(_path.size() == 1){
+    for(size_t i = 0; i < 200; i ++){
+      _path.push_back(_path[0]);
+    }
+  }
   if(m_information->SavedPaths()){
     m_interactionPaths.push_back(_path);
   }

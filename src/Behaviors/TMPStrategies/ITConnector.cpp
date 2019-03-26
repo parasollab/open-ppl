@@ -372,8 +372,9 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
     _graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
 
     if(solution->GetPath()->Cfgs().empty()){
-      throw RunTimeException(WHERE, "Could not connect " + start.PrettyPrint() + " to "
-                             + goal.PrettyPrint());
+      //throw RunTimeException(WHERE, "Could not connect " + start.PrettyPrint() + " to "
+      //                       + goal.PrettyPrint());
+      std::cout << "COULDN'T CONNECT LOCATIONS." << std::endl;
     }
     for(auto cfg : solution->GetPath()->Cfgs()){
       std::cout << cfg.PrettyPrint() << std::endl;
@@ -448,7 +449,7 @@ BuildSkeletons(){
     ma.BuildMedialAxis();
     m_capabilitySkeletons[terrainType.first] = std::shared_ptr<WorkspaceSkeleton>(
                         new WorkspaceSkeleton(get<0>(ma.GetSkeleton(1)))); // 1 for free space
-    m_capabilitySkeletons[terrainType.first]->RefineEdges(0.5);
+    m_capabilitySkeletons[terrainType.first]->RefineEdges(0.5);//TODO set as xml paramater
     auto& g = m_capabilitySkeletons[terrainType.first]->GetGraph();
     std::cout << "Printing graph for: " << terrainType.first << std::endl;
     for(auto vi = g.begin(); vi != g.end(); vi++){
@@ -551,9 +552,16 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
   auto last = sssp.ordering.back();
   if(!goalSet.count(last))
     return false;
-  else
-    return true;
+  //else
+  //  return true;
+  auto env = m_library->GetMPProblem()->GetEnvironment();
+  env->SaveBoundary();
+  bool connected = env->IsolateTerrain(_cfg1,_cfg2);
+  env->RestoreBoundary();
+  return connected;
 }
+
+
 
 double
 ITConnector::

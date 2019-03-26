@@ -6,6 +6,8 @@
 #include "MPLibrary/MPSolution.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 
+//MoveRobot::countChecked = 0;
+
 MoveRobot::
 MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _hasObject,
           RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator) {
@@ -43,7 +45,7 @@ bool
 MoveRobot::
 CheckPreConditions(const FactLayer* _factLayer){
   //Check that robot is in the start location
-
+  //MoveRobot::countChecked++;
   auto possibleLocationsIter = _factLayer->m_possibleRobotLocations.find(m_robot);
   auto possibleLocations = possibleLocationsIter->second;
   //auto it = std::find(possibleLocations.begin(), possibleLocations.end(), m_start);
@@ -169,7 +171,7 @@ CheckPreConditions(const FactLayer* _factLayer){
         }
       }
     }
-    if(m_hasObject)
+    //if(m_hasObject)
       m_cost = solution->GetPath()->Length() + 100;
     std::cout << "Finished planning in MOVEROBOT" << std::endl;
   }

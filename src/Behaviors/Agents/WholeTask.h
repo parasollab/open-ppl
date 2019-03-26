@@ -17,6 +17,11 @@ struct WholeTask{
   std::unordered_map<std::string, std::vector<Cfg>> m_goalPoints;
   std::unordered_map<std::string, std::vector<size_t>> m_goalVIDs;
 
+  std::unordered_map<Cfg*,std::vector<Cfg>*> m_interactionPoints;
+
+  std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
+  std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
+
   size_t m_subtaskIterator{0}; ///< Keeps track of which subtasks have been performed
 
   std::vector<Cfg> m_wholePath; ///< Path across all capabilities solving m_task
