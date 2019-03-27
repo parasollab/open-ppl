@@ -48,7 +48,7 @@ BreakupTask(WholeTask* _wholeTask){
     else if(currentRobot == cfg.GetRobot()){
       goal = cfg;
     }
-    else if(currentRobot != cfg.GetRobot()){
+    else if(currentRobot != cfg.GetRobot() and goal.GetRobot()){
       auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
       _wholeTask->m_subtasks.push_back(subtask);
       if(currentRobot->GetAgent()->GetCapability() != cfg.GetRobot()->GetAgent()->GetCapability()){
@@ -58,7 +58,7 @@ BreakupTask(WholeTask* _wholeTask){
     }
   }
   Cfg blank;
-  if(m_robot and start.GetRobot() and goal.GetRobot() > 0){
+  if(m_robot and start.GetRobot() and goal.GetRobot()){
     auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
     _wholeTask->m_subtasks.push_back(subtask);
   }
