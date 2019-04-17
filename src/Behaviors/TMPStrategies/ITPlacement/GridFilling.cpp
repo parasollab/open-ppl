@@ -56,57 +56,74 @@ CreateGrid(/*Space _spaceType*/) {
   	Range<double> yDimension = m_boundary->GetRange(1);
   	//Range<double> zDimension = m_boundary->GetRange(2);
     vector<double> center = m_boundary->GetCenter();
+    double centerX = center[0];
+    double centerY = center[1];
 
     double xSpan = xDimension.Length()/m_squaresX;
     double ySpan = yDimension.Length()/m_squaresY;
-    double distX = xDimension.max+xDimension.min;
-    double distY = yDimension.max+yDimension.min;
     double oddXCorrection = m_squaresX%2 == 0 ? 0 : xSpan/2.0;
     double oddYCorrection = m_squaresY%2 == 0 ? 0 : ySpan/2.0;
     bool isOddX = oddXCorrection == 0 ? false : true;
     bool isOddY = oddYCorrection == 0 ? false : true;
-    bool xToken = oddXCorrection ? true : false;;
-    // int zSpan = zDimension.Length()/m_squares;
+    bool xToken = oddXCorrection ? true : false;
+    bool squaresXOne = m_squaresX == 1 ? true : false;
+    bool squaresYOne = m_squaresY == 1 ? true : false;
+    oddXCorrection = squaresXOne ? -oddXCorrection : oddXCorrection;
+    oddYCorrection = squaresYOne ? -oddYCorrection : oddYCorrection;
+    bool squaresXOrYOne = squaresXOne || squaresYOne ? true : false;
+
+    int loopX = 0;
+    int loopY = 0;
 
     auto robot = m_problem->GetRobot(0);
     
-    for(double i=xDimension.min+(xSpan/2.0); i<(xDimension.max/2.0)-oddXCorrection; i=i+xSpan){
-        for(double j=yDimension.min+(ySpan/2.0); j<(yDimension.max/2.0)-oddYCorrection; j=j+ySpan){
-        	// cout << "\n" << "X: " << i << " / Y: " << j << "\n";          
+    if(squaresXOne && squaresYOne){
+      Cfg position({centerX,centerY,0}, robot);
+      m_locations.push_back(position);
+    }
+    else{
+      for(double i=xDimension.min+(xSpan/2.0); i<(center[0])-oddXCorrection; i=i+xSpan){
+        loopX++;
+        for(double j=yDimension.min+(ySpan/2.0); j<(center[1])-oddYCorrection; j=j+ySpan){
+          loopY++;
+          // cout << "\n" << "X: " << i << " / Y: " << j << "\n";          
           Cfg position({i,j,0}, robot);
-        	m_locations.push_back(position);
-          Cfg position2({i,distY-j,0}, robot);
+          m_locations.push_back(position);
+          Cfg position2({i,yDimension.max-(yDimension.max-abs(j)),0}, robot);
           m_locations.push_back(position2);
-          Cfg position3({distX-i,j,0}, robot);
-          m_locations.push_back(position3);
-          Cfg position4({distX-i,distY-j,0}, robot);
-          m_locations.push_back(position4);
+          
+          if(!squaresXOne){
+            Cfg position3({xDimension.max-(xDimension.max-abs(i)),j,0}, robot);
+            m_locations.push_back(position3);
+            Cfg position4({xDimension.max-(xDimension.max-abs(i)),yDimension.max-(yDimension.max-abs(j)),0}, robot);
+            m_locations.push_back(position4);
+          }
 
-          if(isOddX && xToken){
-            double coord = xDimension.max-(distX/2.0);
-            Cfg position({coord,j,0}, robot);
+          if(isOddX && xToken && !squaresXOne){
+            double coordX = center[0];
+            Cfg position({coordX,j,0}, robot);
             m_locations.push_back(position);
-            Cfg position2({coord,distY-j,0}, robot);
+            Cfg position2({coordX,yDimension.max-(yDimension.max-abs(j)),0}, robot);
             m_locations.push_back(position2);
           }
         }
         xToken = false;
-        if(isOddY){
-          double coord = yDimension.max-(distY/2.0);
-          Cfg position({i,coord,0}, robot);
+
+        if(isOddY && !squaresYOne){
+          double coordY = center[1];
+          Cfg position({i,coordY,0}, robot);
           m_locations.push_back(position);  
-          Cfg position2({distX-i,coord,0}, robot);
+          Cfg position2({xDimension.max-(xDimension.max-abs(i)),coordY,0}, robot);
           m_locations.push_back(position2);          
         }
+      }
+      if(isOddX && isOddY && !squaresXOrYOne){
+        double x = center[0];
+        double y = center[1];
+        Cfg position({x,y,0}, robot);
+        m_locations.push_back(position);
+      }  
     }
-    if(isOddX && isOddY){
-      double x = xDimension.max-(distX/2.0);
-      double y = yDimension.max-(distY/2.0);
-      Cfg position({x,y,0}, robot);
-      m_locations.push_back(position);
-
-    }
-
   }
   else if(1!=1/*_spaceType == "CSpace"*/){
   	//TODO
