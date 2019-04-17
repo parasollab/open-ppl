@@ -7,6 +7,7 @@
 #include <limits>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 
@@ -164,7 +165,7 @@ DijkstraSSSP(
   // Initialize visited and temporary distance maps. The later holds an *exact*
   // copy of the most up-to-date distance for each node. The absence of an entry
   // will be taken as the initial state.
-  std::unordered_map<VD, bool> visited;
+  std::unordered_set<VD> visited;
   std::unordered_map<VD, double> distance;
 
   // Initialize the output object.
@@ -205,7 +206,7 @@ DijkstraSSSP(
     // If we are done with this node, the element is stale. Discard.
     if(visited.count(current.vd))
       continue;
-    visited[current.vd] = true;
+    visited.insert(current.vd);
 
     // Save this score and successor relationship.
     output.ordering.push_back(current.vd);

@@ -58,7 +58,7 @@
       <BasicRRTStrategy label="BasicRRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
-        growGoals="true" growthFocus="0.01">
+        growGoals="true">
         <Evaluator label="BoundedQuery"/>
       </BasicRRTStrategy>
     </MPStrategies>

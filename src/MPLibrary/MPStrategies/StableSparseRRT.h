@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 
@@ -39,7 +40,7 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
 
-    typedef typename BasicRRTStrategy<MPTraits>::TreeType TreeType;
+    using typename BasicRRTStrategy<MPTraits>::VertexSet;
 
     ///@}
     ///@name Construction
@@ -67,7 +68,7 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     /// SST's version of this function requires a radius NF and only searches
     /// the active set.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const TreeType* const _tree = nullptr) override;
+        const VertexSet* const _tree = nullptr) override;
 
     /// SST's version of this function calls the base class version and then
     /// updates metadata specific to this method.
@@ -96,14 +97,16 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     ///@name Internal State
     ///@{
 
-    std::vector<VID> m_active; ///< The active set represents the 'sparse' tree.
-    std::vector<VID> m_witnesses; ///< Set of witnesses for enforcing sparseness.
-
-    std::vector<VID> m_inactiveLeaves; ///< The inactive nodes with no children.
-    std::unordered_map<VID, VID> m_parent; ///< The parent map.
-
-    std::unordered_map<VID, VID> m_representatives; ///< Maps a representative node
-                                               ///< to a witness.
+    /// The active set represents the 'sparse' tree.
+    VertexSet m_active;
+    /// Set of witnesses for enforcing sparseness.
+    std::vector<VID> m_witnesses;
+    /// The inactive nodes with no children.
+    VertexSet m_inactiveLeaves;
+    /// A map from child VID to parent VID for each roadmap vertex.
+    std::unordered_map<VID, VID> m_parent;
+    /// Maps a representative node to a witness.
+    std::unordered_map<VID, VID> m_representatives;
 
     std::string m_witnessNfLabel; ///< NF to use for finding witness nodes.
 
@@ -160,7 +163,7 @@ Initialize() {
     throw RunTimeException(WHERE) << "A start VID is required for this method.";
   const VID start = *startVIDs.begin();
 
-  m_active.push_back(start);
+  m_active.insert(start);
   m_witnesses.push_back(start);
   m_representatives.emplace(start, start);
 }
@@ -170,32 +173,55 @@ Initialize() {
 template <typename MPTraits>
 typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const TreeType* const _tree) {
+FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _tree) {
+  /// @note This needs to use a radius-NF type to make the proofs work.
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestNeighbor");
   auto g = this->GetRoadmap();
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
 
-  // The candidate neighbors are those in both the current tree and the active
-  // set.
-  std::vector<VID> candidates;
-  candidates.reserve(_tree->size());
-  for(const VID vid : m_active)
-    if(_tree->count(vid))
-      candidates.push_back(vid);
+  if(this->m_debug)
+    std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
+              << " with '" << this->m_nfLabel << "' from "
+              << (_tree ? "a tree of size " + std::to_string(_tree->size())
+                        : "the full roadmap")
+              << "."
+              << std::endl;
 
-  if(candidates.empty())
-    throw RunTimeException(WHERE) << "SST can't find any candidates.";
+  std::vector<Neighbor> neighbors;
+
+  // If we are not interested in one particular tree, search the entire active
+  // set for neighbors.
+  if(!_tree) {
+    nf->FindNeighbors(g, m_active.begin(), m_active.end(),
+        m_active.size() == g->get_num_vertices(),
+        _cfg, std::back_inserter(neighbors));
+  }
+  // Otherwise we need to select only nodes that are both active and in the
+  // tree.
+  else {
+    // Find the intersection of the active set with the current tree. Usually
+    // the three should be larger.
+    std::vector<VID> candidates;
+    candidates.reserve(std::min(_tree->size(), m_active.size()));
+    std::copy_if(m_active.begin(), m_active.end(),
+        std::back_inserter(candidates),
+        [_tree](const VID _vid){return _tree->count(_vid);}
+    );
+
+    // Ensure we found some candidates.
+    if(candidates.empty())
+      throw RunTimeException(WHERE) << "SST can't find any candidates.";
+
+    nf->FindNeighbors(g, candidates.begin(), candidates.end(),
+        candidates.size() == g->get_num_vertices(),
+        _cfg, std::back_inserter(neighbors));
+  }
 
   // Search only the candidates using a radius NF.
-  std::vector<Neighbor> neighbors;
-  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  nf->FindNeighbors(this->GetRoadmap(), candidates.begin(), candidates.end(),
-      candidates.size() == g->get_num_vertices(),
-      _cfg, std::back_inserter(neighbors));
 
   // Of the nodes in the radius, select the one with the best path cost.
   VID bestVID = INVALID_VID;
   double bestCost = std::numeric_limits<double>::max();
-
   for(const auto& n : neighbors) {
     // Check for invalid neighbors.
     if(n.target == INVALID_VID)
@@ -208,9 +234,11 @@ FindNearestNeighbor(const CfgType& _cfg, const TreeType* const _tree) {
       bestVID = n.target;
     }
   }
+
+  // Debug.
   if(this->m_debug and !neighbors.empty()) {
     const VID nearest = neighbors[0].target;
-    std::cout << "Found best active neighbor " << bestVID
+    std::cout << "\tFound best active neighbor " << bestVID
               << " with path cost "
               << std::setprecision(4) << bestCost << ".\n"
               << "\tNearest was " << nearest << " with path cost "
@@ -262,12 +290,7 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   m_parent[_newVID] = _nearestVID;
 
   // If the parent node was an inactive leaf, it isn't any longer.
-  {
-    auto iter = std::find(m_inactiveLeaves.begin(), m_inactiveLeaves.end(),
-        _nearestVID);
-    if(iter != m_inactiveLeaves.end())
-      m_inactiveLeaves.erase(iter);
-  }
+  m_inactiveLeaves.erase(_nearestVID);
 
   // Set the cost of the new node based on the previous node plus lp info.
   CfgType& nearest = g->GetVertex(_nearestVID);
@@ -290,10 +313,9 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
 
   // If nearest witness is invalid or more than m_witnessRadius away from
   // newNode, then newNode is a new witness and its own representative.
-
   if(witness == INVALID_VID or distance > m_witnessRadius) {
     m_witnesses.push_back(_newVID);
-    m_active.push_back(_newVID);
+    m_active.insert(_newVID);
     m_representatives[_newVID] = _newVID;
 
     if(this->m_debug)
@@ -315,22 +337,18 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
                 << cost << " >= " << representativeCost
                 << " not better than previous representative " << representative
                 << "." << std::endl;
-    m_inactiveLeaves.push_back(_newVID);
+    m_inactiveLeaves.insert(_newVID);
     return;
   }
 
   // The new node is a better representative.
-  /// @WARNING This depends on the active set being in sorted order. That is
-  ///          guaranteed for now because new configurations always have the
-  ///          largest VID. If STAPL changes that, we need to sort the active
-  ///          set first or use a linear scan.
-  auto cit = BinarySearch(m_active.begin(), m_active.end(), representative);
+  auto cit = m_active.find(representative);
   if(cit == m_active.end())
     throw RunTimeException(WHERE) << "Could not find representative '"
                                   << representative << "' in the active set.";
 
   m_active.erase(cit);
-  m_active.push_back(_newVID);
+  m_active.insert(_newVID);
   m_representatives[witness] = _newVID;
 
   // Prune leaf nodes that are inactive.
@@ -379,7 +397,7 @@ PruneInactiveLeaves() {
   // Prune the inactive leaves until there are none.
   while(!m_inactiveLeaves.empty()) {
     // Get the next leaf.
-    auto leaf = m_inactiveLeaves.end() - 1;
+    auto leaf = m_inactiveLeaves.begin();
 
     // Find parent.
     const VID parent = m_parent[*leaf];
@@ -392,10 +410,9 @@ PruneInactiveLeaves() {
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.
     if(g->get_out_degree(parent) == 0) {
-      auto iter = BinarySearch(m_active.begin(), m_active.end(), parent);
-      const bool inactive = iter == m_active.end();
-      if(inactive)
-        m_inactiveLeaves.push_back(parent);
+      const bool active = m_active.count(parent);
+      if(!active)
+        m_inactiveLeaves.insert(parent);
     }
   }
 }

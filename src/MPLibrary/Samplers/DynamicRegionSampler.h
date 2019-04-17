@@ -302,25 +302,53 @@ LazyInitialize() {
                                   << "Multi-step tasks will need new skeletons "
                                   << "for each sub-component.";
 
-  // Get the start and goal point from the goal tracker.
-  // Try to prevent non-point tasks by requiring single VIDs for the start and
-  // goal.
+  // Find the workspace points which are nearest to the start and goal.
+  auto g = this->GetRoadmap();
   auto goalTracker = this->GetGoalTracker();
   const auto& startVIDs = goalTracker->GetStartVIDs();
   const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
-  if(startVIDs.size() != 1)
+  Point3d start, goal;
+  if(startVIDs.size() == 1) {
+    const VID startVID = *startVIDs.begin();
+    start = g->GetVertex(startVID).GetPoint();
+  }
+  else {
+    // Probably we can just take the center of the start constraint boundary if
+    // applicable, although we have no cases requiring that right now.
     throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
                                   << startVIDs.size() << " were found.";
-  if(goalVIDs.size() != 1)
-    throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
-                                  << goalVIDs.size() << " were found.";
+  }
 
-  // Get the start and goal vertices.
-  auto g = this->GetRoadmap();
-  const VID startVID = *startVIDs.begin(),
-            goalVID  = *goalVIDs.begin();
-  const Point3d start = g->GetVertex(startVID).GetPoint(),
-                goal  = g->GetVertex(goalVID).GetPoint();
+  if(goalVIDs.size() == 1) {
+    const VID goalVID = *goalVIDs.begin();
+    goal = g->GetVertex(goalVID).GetPoint();
+  }
+  else {
+    // Check for a goal boundary. We already checked that there is one goal
+    // constraint, so it is safe to assume it exists here.
+    const Boundary* const boundary = goalConstraints[0]->GetBoundary();
+    if(!boundary)
+      throw RunTimeException(WHERE) << "Exactly one goal VID is required, but "
+                                    << goalVIDs.size() << " were found and no "
+                                    << "constraint boundary was available.";
+
+    // Try to sample a configuration in the boundary.
+    auto sampler = this->GetSampler(m_samplerLabel);
+    const size_t count    = 1,
+                 attempts = 100;
+    std::vector<CfgType> samples;
+    sampler->Sample(count, attempts, boundary, std::back_inserter(samples));
+
+    // If we couldn't generate a configuration here, the goal boundary isn't
+    // realistic.
+    if(samples.empty())
+      throw RunTimeException(WHERE) << "Could not generate a sample within the "
+                                    << "goal boundary " << *boundary
+                                    << " after " << attempts << " attempts.";
+
+    // We got a sample, take its point as the center point.
+    goal = samples.front().GetPoint();
+  }
 
   // Direct the workspace skeleton outward from the starting point.
   m_skeleton = m_skeleton.Direct(start);
