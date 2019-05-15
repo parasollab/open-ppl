@@ -254,7 +254,7 @@ CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
           const size_t oldVID = vit->descriptor();
           auto relativeCfg = vit->property();
           //relativeCfg.SetRobot(_graph->GetRobot());
-          TranslateCfg(location, relativeCfg);
+          relativeCfg.TransformCfg(location);
 
           const size_t newVID = _graph->AddVertex(relativeCfg);
           oldToNew[oldVID] = newVID;
@@ -267,7 +267,7 @@ CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
             if(!_graph->IsEdge(source,target)){
               auto intermediates = eit->property().GetIntermediates();
               for(auto cfg : intermediates){
-                TranslateCfg(location, cfg);
+                cfg.TransformCfg(location);
               }
               _graph->AddEdge(source,target,eit->property());
             }

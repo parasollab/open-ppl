@@ -190,6 +190,8 @@ class Cfg {
     void SetAngularVelocity(const mathtool::Vector3d&);
     void SetBaseTransformation(const mathtool::Transformation&);
 
+    void TransformCfg(const Cfg& _cfg);
+
     ///@}
     ///@name Labels and Stats
     ///@{

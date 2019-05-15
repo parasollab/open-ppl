@@ -276,7 +276,7 @@ PlaceInteractionTemplates(MPLibrary* _library, Robot* _superRobot,
       for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
         const VID oldVID = vit->descriptor();
         auto relativeCfg = vit->property();
-        TranslateCfg(centerCfg, relativeCfg);
+        relativeCfg.TransformCfg(centerCfg);
 
         //bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
         //if(isValid){
@@ -318,7 +318,7 @@ PlaceInteractionTemplates(MPLibrary* _library, Robot* _superRobot,
             // before storing it in the megaRoadmap
             std::vector<Cfg> intermediates = eit->property().GetIntermediates();
             for(auto cfg : intermediates){
-              TranslateCfg(centerCfg, cfg);
+              cfg.TransformCfg(centerCfg);
             }
             m_megaRoadmap->AddEdge(source, target, eit->property());
           }

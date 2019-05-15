@@ -1011,7 +1011,7 @@ TranslateHandoffTemplates() {
       for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
         const VID oldVID = vit->descriptor();
         auto relativeCfg = vit->property();
-        TranslateCfg(centerCfg, relativeCfg);
+        relativeCfg.TransformCfg(centerCfg);
 
         //bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
         //if(isValid){
@@ -1059,7 +1059,7 @@ TranslateHandoffTemplates() {
             // before storing it in the megaRoadmap
             std::vector<Cfg> intermediates = eit->property().GetIntermediates();
             for(auto cfg : intermediates){
-              TranslateCfg(centerCfg, cfg);
+              cfg.TransformCfg(centerCfg);
             }
             m_megaRoadmap->AddEdge(source, target, eit->property());
           }
@@ -1458,9 +1458,12 @@ PlanWholeTasks() {
     //Save cfg path in the handoff class
     wholeTask->m_wholePath = m_solution->GetPath()->Cfgs();
     Simulation::GetStatClass()->StopClock("IT MegaRoadmap Query");
+    //TODO:: Need to update for multiple tasks
+    Simulation::GetStatClass()->SetStat("WholePathLength", m_solution->GetPath()->Length());
   }
 
   TaskBreakup tb(m_robot);
+
   for(auto& wholeTask : m_wholeTasks){
     tb.BreakupTask(wholeTask);
     Simulation::GetStatClass()->StopClock("IT Task Decomposition");
@@ -1775,6 +1778,9 @@ CreateCapabilityMaps(){
   std::cout << "Found Handoff Locations" << std::endl;
 
   TranslateHandoffTemplates();
+  auto tempG = m_megaRoadmap;
+  tempG->Write("CoordinatorJustTemplates.map", m_robot->GetMPProblem()->GetEnvironment());
+  std::cout << "Writing template map." << std::endl;
   SetupWholeTasks();
 
   if(!m_robot->IsManipulator()){
