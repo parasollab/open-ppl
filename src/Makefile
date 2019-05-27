@@ -165,6 +165,7 @@ reallyclean: clean
 .PHONY: reallyreallyclean
 reallyreallyclean: reallyclean
 	@echo Cleaning all utilities...
+	@cd $(CGAL_DIR) && $(MAKE) clean
 	@cd $(CD_DIR) && $(MAKE) clean
 	@cd $(TINYXML_DIR) && $(MAKE) clean
 	@cd $(MPNN_SRC) && $(MAKE) clean
