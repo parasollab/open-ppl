@@ -52,9 +52,12 @@ class InteractionInformation {
     /// Gets the set of locations to place ITs
     std::vector<Cfg>& GetTemplateLocations();
 
-    /*
     /// Gets the final position of robots at each of the IT locations
     std::vector<Cfg> GetInteractionPositions();
+
+    /// Gets the final position of robot pairs at each of the IT locations. 
+    /// First is the robot handing off. Second is robot receving.
+    std::vector<std::pair<Cfg>> GetInteractionPositionPairs();
 
     /// Gets the paths of robots at each of the IT locations
     std::vector<std::vector<Cfg>> GetInteractionPaths();
@@ -64,7 +67,7 @@ class InteractionInformation {
 
     /// Get the paths of robot of input capability.
     std::vector<std::vector<Cfg>> GetInteractionPath(std::string _capability);
-*/
+
     bool SavedPaths();
 
     /// Gets the environment to plan the interaction in.

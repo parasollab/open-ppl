@@ -58,6 +58,10 @@ class InteractionTemplate {
     /// Positions of Robots for Handoff Locations at each handoff location
     std::vector<Cfg>& GetTranslatedPositions();
 
+    /// Gets the transformed position of robot pairs at each of the IT locations. 
+    /// First is the robot handing off. Second is robot receving.
+    std::vector<std::pair<Cfg,Cfg>> GetTransformedPositionPairs();
+
     /// Paths of Robots for Handoff Locations at each handoff location
     std::vector<std::vector<Cfg>>& GetTranslatedPaths();
 
@@ -109,6 +113,8 @@ class InteractionTemplate {
     bool m_debug{false};
 
     std::vector<Cfg> m_translatedInteractionPositions;
+
+    std::vector<std::pair<Cfg,Cfg>> m_transformedInteractionPositionPairs
 
     std::vector<std::vector<Cfg>> m_translatedInteractionPaths;
 

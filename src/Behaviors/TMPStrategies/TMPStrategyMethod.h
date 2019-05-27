@@ -23,7 +23,7 @@ class TMPStrategyMethod {
     virtual ~TMPStrategyMethod() = default;
 
     ///@}
-    ///@name
+    ///@name Call Method
     ///@{
 
     /// Get plan for the input agents to perform the input tasks.
@@ -40,10 +40,12 @@ class TMPStrategyMethod {
 
     ///@}
 
-  private:
+  protected:
 
     ///@name
     ///@{
+
+
 
     /// Generate roadmaps for each capability present in the agent set.
     void GenerateCapabilityRoadmaps(MPLibrary* _library, vector<HandoffAgent*> _agents,
@@ -74,10 +76,35 @@ class TMPStrategyMethod {
 
     void ConnectDistinctRoadmaps(vector<size_t> _roadmap1, vector<size_t> _roadmap2,
                                  HandoffAgent* _agent, Robot* _superRobot, MPLibrary* _library);
+
+    /// Randomly transforms the handoff template and attempts to validate it in
+    /// the environment
+    void TranslateHandoffTemplates();
+
+    /// Initiallizes configurations for each capability at the start and end
+    /// constriants of each whole task and adds them to the megaRoadmap
+    void SetupWholeTasks();
+
+    void CreateCombinedRoadmap();
+
+    void Initialize();
+
+    /// Makes sure all of the agents are ready to execute the plans
+    void InitializeAgents();
+
+    /// Generates the dummy agents of each capabiltiy used for planning
+    void GenerateDummyAgents();
+
+    void GenerateHandoffTemplates();
+
+
     ///@}
     ///@name Member Variables
     ///@{
 
+    MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
+
+    MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
 
     /// Map from each capability to an agent of that capability.
     std::unordered_map<std::string, HandoffAgent*> m_dummyAgentMap;

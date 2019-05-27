@@ -75,6 +75,35 @@ GetTranslatedPositions(){
   return m_translatedInteractionPositions;
 }
 
+
+std::vector<std::pair<Cfg>> 
+InteractionTemplate::
+GetTransformedPositionPairs(){
+  if(!m_transformedInteractionPositionPairs.empty()){
+    return m_transformedInteractionPositionPairs;
+  }
+  for(auto center : m_information->GetTemplateLocations()){
+    std::vector<Cfg> positions;
+    for(auto cfg : m_handoffCfgs){
+      double x = cfg[0];
+      double y = cfg[1];
+      double theta = center[2];
+
+      double newX = x*cos(theta) - y*sin(theta);
+      double newY = y*sin(theta) + y*cos(theta);
+      double oldTheta = cfg[2];
+
+      Cfg newCfg = cfg;
+      newCfg.SetLinearPosition({newX, newY, oldTheta});
+      newCfg += center;
+      positions.push_back(newCfg);
+    }
+    m_transformedInteractionPositionPairs.push_back(std::pair<Cfg,Cfg>(positions[0],positions[1]));
+  }
+  return m_transformedInteractionPositionPairs;
+}
+
+
 std::vector<std::vector<Cfg>>&
 InteractionTemplate::
 GetTranslatedPaths(){
@@ -103,6 +132,7 @@ GetTranslatedPaths(){
   }
   return m_translatedInteractionPaths;
 }
+
 /*------------------------------ Member Management --------------------------------*/
 
 void
