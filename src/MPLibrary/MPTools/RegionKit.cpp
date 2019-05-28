@@ -10,6 +10,7 @@
 #ifdef PMPL_USE_SIMULATOR
 #include "Simulator/Simulation.h"
 static const glutils::color regionColor{0, 0, 1, .5};
+static constexpr unsigned int sleepTime = 10000;
 #endif
 
 #include "nonstd/io.h"
@@ -232,7 +233,8 @@ InitRegions(const Point3d& _start) {
   // Set up the skeleton visualization.
 #ifdef PMPL_USE_SIMULATOR
   Simulation::Get()->AddWorkspaceSkeleton(m_skeleton, glutils::color::orange);
-  usleep(100000);
+  usleep(sleepTime);
+  m_skeleton->Write("skeleton");
 #endif
 }
 
@@ -275,7 +277,7 @@ CreateRegions(const WorkspaceSkeleton::vertex_iterator _iter) {
     // Show visualization if we are using the simulator.
     m_regionData[r].visualizationID = Simulation::Get()->AddBoundary(r,
         regionColor, true);
-    usleep(100000);
+    usleep(sleepTime);
 #endif
 
     if(m_debug)
@@ -383,8 +385,9 @@ AdvanceRegionToCompletion(const Cfg& _cfg, Boundary* const _region) {
 
       // Remove visualization if we are using it.
       #ifdef PMPL_USE_SIMULATOR
+      usleep(sleepTime);
       Simulation::Get()->RemoveBoundary(data.visualizationID);
-      usleep(100000);
+      usleep(sleepTime);
       #endif
 
       return true;
@@ -403,13 +406,12 @@ AdvanceRegionToCompletion(const Cfg& _cfg, Boundary* const _region) {
 
     // Advance visualization if we are using it.
     #ifdef PMPL_USE_SIMULATOR
-    const Point3d d = next - current;
-    const glutils::transform t{0, 0, 0, 0,
-                               0, 0, 0, 0,
-                               0, 0, 0, 0,
-                               float(d[0]), float(d[1]), float(d[2]), 1};
+    const glutils::transform t{1, 0, 0, 0,
+                               0, 1, 0, 0,
+                               0, 0, 1, 0,
+                               float(next[0]), float(next[1]), float(next[2]), 1};
     Simulation::Get()->TransformBoundary(data.visualizationID, t);
-    usleep(100000);
+    usleep(sleepTime);
     #endif
   }
 
@@ -426,9 +428,9 @@ IsTouching(const Cfg& _cfg, const Boundary* const _region) const {
   // Compute the penetration distance required. We want the robot's bounding
   // sphere to penetrate the region by the fraction m_penetrationThreshold.
   const double robotRadius  = _cfg.GetMultiBody()->GetBoundingSphereRadius(),
-               threshold    = robotRadius * m_penetrationFactor;
+               threshold    = 2 * robotRadius * m_penetrationFactor;
 
-  // Compute the penetration distance.
+  // Compute the penetration distance (maximally enclosed bounding diameter).
   const Point3d robotCenter = _cfg.GetPoint();
   const double penetration = _region->GetClearance(robotCenter) + robotRadius;
 

@@ -373,6 +373,9 @@ AddBoundary(const Boundary* const _boundary, const glutils::color& _color,
   if(!_boundary)
     throw RunTimeException(WHERE) << "Cannot draw a null boundary.";
 
+  if(_boundary->Type() == Boundary::CSpace)
+    throw RunTimeException(WHERE) << "Cannot draw a cspace boundary.";
+
   auto draw = new DrawableBoundary(_boundary, _color, _wired);
   m_selector->add_drawable(draw);
   m_highlighter->add_drawable(draw);
@@ -400,6 +403,7 @@ void
 Simulation::
 TransformBoundary(const size_t _id, const glutils::transform& _t)
 {
+  std::lock_guard<std::mutex> lock(m_guard);
   DrawableBoundary* boundary = m_boundaries[_id];
   boundary->push_transform(_t);
 }

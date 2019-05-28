@@ -92,13 +92,15 @@ $(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
+# Set which object defines the main function.
 ifeq ($(parallel), 1)
   MAIN := $(OBJ_DIR)/parallel_main.o
 else
   MAIN := $(OBJ_DIR)/main.o
 endif
 
-# Set up dependency tracking.
+# Dependency Tracking ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 DEPS_OUT = $(OBJ_DIR)/$*.d
 DEPS     = -MMD -MF $(DEPS_OUT)
 

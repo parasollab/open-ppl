@@ -212,6 +212,9 @@ Initialize(WorkspaceSkeleton* const _skeleton, const Point3d& _point,
   // On each new sample, check if we need to advance our regions and generate
   // new ones. Add a roadmap hook to achieve this.
   auto addVertex = [this](typename RoadmapGraph::VI _vi) {
+    if(this->m_debug)
+      std::cout << "RegionKit:: checking region advancement..." << std::endl;
+
     this->CreateRegions(_vi->property().GetPoint());
     this->AdvanceRegions(_vi->property());
   };

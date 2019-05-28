@@ -1,6 +1,8 @@
 #include "WorkspaceSkeleton.h"
 
-//#include <containers/sequential/graph/algorithms/graph_input_output.h>
+#include <containers/sequential/graph/algorithms/graph_input_output.h>
+
+#include "nonstd/io.h"
 
 /*--------------------------------- Locators ---------------------------------*/
 
@@ -254,21 +256,21 @@ GetGraph() const noexcept {
 void
 WorkspaceSkeleton::
 Write(const std::string& _file) {
-  // stapl::sequential::write_graph(m_graph, _file.c_str());
+  stapl::sequential::write_graph(m_graph, _file.c_str());
   /// @Todo: Replace with stapl version.
-  std::ofstream ff(_file);
-  auto& g = m_graph;
-  ff << g.get_num_vertices() << " " << g.get_num_edges() << std::endl;
-  for(auto vit = g.begin(); vit != g.end(); ++vit)
-    ff << vit->descriptor() << " " << vit->property() << std::endl;
-  for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)	{
-    ff << eit->source() << " " << eit->target();
-    auto prop = eit->property();
-    ff << " " << prop.size();
-    for(auto v: prop)
-      ff << " " << v;
-    ff << std::endl;
-  }
+  //std::ofstream ff(_file);
+  //auto& g = m_graph;
+  //ff << g.get_num_vertices() << " " << g.get_num_edges() << std::endl;
+  //for(auto vit = g.begin(); vit != g.end(); ++vit)
+  //  ff << vit->descriptor() << " " << vit->property() << std::endl;
+  //for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)	{
+  //  ff << eit->source() << " " << eit->target();
+  //  auto prop = eit->property();
+  //  ff << " " << prop.size();
+  //  for(auto v: prop)
+  //    ff << " " << v;
+  //  ff << std::endl;
+  //}
 }
 
 /*----------------------------------------------------------------------------*/
