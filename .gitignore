@@ -1,0 +1,9 @@
+*.o
+libobprm.a
+pmpl
+*.swo
+*.swp
+*.map
+*.path
+*.stat
+Dependencies

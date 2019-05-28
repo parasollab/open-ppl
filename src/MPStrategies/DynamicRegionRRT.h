@@ -345,13 +345,13 @@ SelectDirection() {
     return mySample;
   }
   //catch Boundary too small exception
-  catch(PMPLException _e) {
+  catch(const PMPLException& _e) {
     CfgType mySample;
     mySample.GetRandomCfg(env);
     return mySample;
   }
   //catch all others and exit
-  catch(exception _e) {
+  catch(const exception& _e) {
     cerr << _e.what() << endl;
     exit(1);
   }
