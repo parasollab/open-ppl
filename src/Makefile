@@ -1,102 +1,144 @@
-# set default platform
-ifndef platform
-  platform = LINUX_gcc
-endif
+# Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# set default debug
-ifndef debug
-  debug = 0
-endif
+# Set platform, debug mode, and address sanitizer if not already set.
+platform ?= LINUX_gcc
+debug    ?= 0
+asan     ?= 0
 
-ifndef parallel
-  parallel = 0
-endif
+#! Important note about ASAN: you will also need to set these environment
+#  variables to get useful output:
+#  export ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer"
+#  export ASAN_OPTIONS="symbolize=1"
+#! You may instead want to set this option since the lab machines' version of
+#  ASAN has at least one malloc which is later deleted instead of freed (thereby
+#  terminating your program with a bogus error):
+#  export ASAN_OPTIONS="symbolize=1:alloc_dealloc_mismatch=0"
 
-# set directory paths
-ifndef PMPL_DIR
-  PMPL_DIR = .
-endif
+# Define robot type if it isn't already set.
+ROBOT_DEF ?= PMPCfg
 
-ifndef UTILS_DIR
-  UTILS_DIR = ../utils
-endif
+# Build support for iCreate hardware?
+icreate ?= 0
 
-ifndef STAPL_DIR
-  STAPL_DIR = ${UTILS_DIR}/stapl_release
-endif
+# Build support for aruco detector hardware?
+aruco ?= 0
 
-ifndef STL_LIB
-  STL_LIB = 4.8.2
-endif
+# Compile with matlab support?
+matlab ?= 0
 
-ifndef ROBOT_DEF
-  # define robot type
-  ROBOT_DEF = PMPCfg
-  #ROBOT_DEF = PMPCfgMultiRobot
-  #ROBOT_DEF = PMPCfgSurface
-  #ROBOT_DEF = PMPState
-  #ROBOT_DEF = PMPSSSurfaceMult
-  #ROBOT_DEF = PMPReachDistCC
-  #ROBOT_DEF = PMPReachDistCCFixed
-  #ROBOT_DEF = PMPReachableVolume
-endif
+# Compile the parallel version of PMPL? This is very old and has not been
+# maintained during the simulator refactoring (too many things to manage at
+# once). At this point it likely needs to be rebuilt entirely using the latest
+# work from Matthew Bulluck's parallel branch.
+parallel ?= 0
 
-# include makefile defaults
-include ${UTILS_DIR}/makefile_includes/Makefile.defaults
-include ${PMPL_DIR}/Makefile.PMPLdefaults
+# Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# macros
-DEFS += -D${ROBOT_DEF} ${UTILS_DEF} ${CGAL_DEF} ${STAPL_DEF} ${BOOST_DEF}
-INCL =  ${PMPL_INCL} ${UTILS_INCL} ${STAPL_INCL} ${BOOST_INCL}
-LIBS =  ${PMPL_LIB} ${UTILS_LIB} ${STAPL_LIB} ${BOOST_LIB}
+PMPL_DIR  := .
+UTILS_DIR := ../pmpl_utils
 
-# targets
-.DEFAULT_GOAL := library
+# The OBJ_DIR is the landing zone for our object files. Create it with a
+# directory structure to match our source tree.
+OBJ_DIR := build
 
-${PMPL_OBJS}: ${UTILS_LIBFILE} ${STAPL_LIBFILE}
+# Treat all sub-directories except the build tree as possible source locations.
+SRC_DIRS  := $(patsubst ./%,%, $(shell find . -type d \
+               ! \( -path "./$(OBJ_DIR)*" -o -name '.' \) ))
 
-${PMPL_LIBFILE}: ${PMPL_OBJS}
-	${AR} ${PMPL_LIBFILE} ${PMPL_OBJS}
+# Always try to rebuild the build directory to catch newly added dirs.
+#.PHONY: $(OBJ_DIR)
+$(OBJ_DIR):
+	@mkdir -p $@ $(patsubst %,$(OBJ_DIR)/%,$(SRC_DIRS))
 
-library: ${PMPL_LIBFILE}
+# Look for files in the source directories.
+vpath %.h       $(SRC_DIRS)
+vpath %.cpp     $(SRC_DIRS)
 
-ifeq (${parallel}, 1)
-  MAIN = parallel_main.o
+# External Makefiles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+include $(UTILS_DIR)/makefile_includes/Makefile.defaults
+include $(PMPL_DIR)/Makefile.PMPLdefaults
+
+# Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+DEFS = $(PMPL_DEF) $(UTILS_DEF)
+INCL = $(PMPL_INCL) $(UTILS_INCL)
+LIBS = $(PMPL_LIB) $(UTILS_LIB)
+
+# Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+# Pre-pend the build directory to the object file names.
+PMPL_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
+
+# Make the object files depend on updated utility libraries so the libs are
+# built first.
+$(PMPL_OBJS): $(UTILS_LIBFILE)
+
+ifeq ($(parallel), 1)
+  MAIN := $(OBJ_DIR)/parallel_main.o
 else
-  MAIN = main.o
+  MAIN := $(OBJ_DIR)/main.o
 endif
-${MAIN}: ${PMPL_LIBFILE}
 
-pmpl: ${PMPL_LIBFILE} ${MAIN}
-	${CXX} ${CXXFLAGS} ${OPTS} ${MAIN} ${LIBS} -o $@
+# Set up dependency tracking.
+DEPS_OUT = $(OBJ_DIR)/$*.d
+DEPS     = -MMD -MF $(DEPS_OUT)
 
-%.o: %.cpp
-	@${MAKE} -s check_platform
-	${CXX} -c ${CXXFLAGS} ${OPTS} ${DEFS} ${INCL} ${DEPS} $< -o $@
-	cat $*.d >> Dependencies
-	rm -f $*.d
+DEPENDENCY_FILE := $(OBJ_DIR)/Dependencies
+-include $(DEPENDENCY_FILE)
 
+# Library Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# clean targets
+# Default is to build the library object.
+.DEFAULT_GOAL := $(PMPL_LIBFILE)
+
+$(PMPL_LIBFILE): $(PMPL_OBJS)
+	@echo Linking pmpl library...
+	@$(AR) $@ $^
+
+# Executable Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+# Build the traditional pmpl executable.
+pmpl: $(MAIN) $(PMPL_LIBFILE)
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $< $(LIBS) -o $@
+
+# Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+# This recipe is for regular objects.
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
+	@$(MAKE) -s check_platform
+	@echo Compiling $<...
+	@$(CXX) -c $(CXXFLAGS) $(OPTS) $(DEFS) $(INCL) $(DEPS) $< -o $@
+	@cat $(DEPS_OUT) >> $(DEPENDENCY_FILE)
+	@rm -f $(DEPS_OUT)
+
+# Cleanup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+.PHONY: clean
 clean:
-	rm -rf ${PMPL_LIBFILE} ${MAIN} pmpl
+	@echo Cleaning pmpl library and executables...
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim
 
-reallyclean:
-	@${MAKE} clean
-	rm -f ${PMPL_OBJS} *.d
-	rm -f Dependencies
-	touch Dependencies
+.PHONY: reallyclean
+reallyclean: clean
+	@echo Cleaning all pmpl objects...
+	@rm -rf $(OBJ_DIR)
 
-reallyreallyclean:
-	@${MAKE} reallyclean
-	cd ${STAPL_DIR}; ${MAKE} platform=${platform} stl=${STL_LIB} clean
-	cd ${CD_DIR}; ${MAKE} clean
-	cd ${TINYXML_DIR}; ${MAKE} clean
-	cd ${MPNN_SRC}; ${MAKE} clean
-	cd ${MODELLOADER_DIR}; ${MAKE} clean
-	cd ${KMEANS_DIR}; ${MAKE} clean
-	cd ${TETGEN_DIR}; ${MAKE} clean
+.PHONY: reallyreallyclean
+reallyreallyclean: reallyclean
+	@echo Cleaning all utilities...
+	@cd $(CD_DIR) && $(MAKE) clean
+	@cd $(TINYXML_DIR) && $(MAKE) clean
+	@cd $(MPNN_SRC) && $(MAKE) clean
+	@cd $(MODELLOADER_DIR) && $(MAKE) clean
+	@cd $(KMEANS_DIR) && $(MAKE) clean
+	@cd $(TETGEN_DIR) && $(MAKE) clean
+ifneq ("$(CGAL_DIR)","")
+	@cd $(CGAL_DIR) && $(MAKE) clean
+endif
+ifeq ($(parallel), 1)
+	@cd $(STAPL_DIR) && $(MAKE) platform=$(platform) stl=$(STL_LIB) clean
+endif
 
-
-# include automatically generated dependencies
--include Dependencies
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

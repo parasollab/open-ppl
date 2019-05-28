@@ -1,9 +1,12 @@
 *.o
 libobprm.a
 pmpl
+pmpl_utils
 *.swo
 *.swp
 *.map
 *.path
 *.stat
+*.hist
+*.vd
 Dependencies
