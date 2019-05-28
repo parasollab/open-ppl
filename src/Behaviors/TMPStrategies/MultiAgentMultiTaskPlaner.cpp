@@ -57,7 +57,9 @@ CreateHighLevelGraph(Robot* _superRobot){
   		m_deliveringVIDs[pair.first->GetRobot()->GetCapability()];
   		m_receivingVIDs[pair.second->GetRobot()->GetCapability()];
   		
-  		virtCfg = Cfg(_superRobot);
+  		//TODO::Change this to just copy over the x,y,z position of the cfg for virtual superRobot
+  		virtCfg = pair.second;
+  		virtCfg.SetRobot(_superRobot);
   		virt = m_highLevelGraph.AddVertex(virtCfg);
   		
   		DefaultWeight<Cfg> interactionWeight;
@@ -88,15 +90,21 @@ CreateHighLevelGraph(Robot* _superRobot){
 TaskPlan
 MultiAgentMultiTaskPlanner::
 MAMTDijkstra(WholeTask& _wholeTask){
-
+	SSSPPathWeightFunction<TaskGraph> weight;
+	weight = [this](typename TaskGraph::adj_edge_iterator& _ei,
+                   const double _sourceDistance,
+                   const double _targetDistance) {
+            return this->MAMTPathWeight(_ei);
+        };
 }
 
 void
 MultiAgentMultiTaskPlanner::
 AddTaskToGraph(WholeTask& _wholeTask, Robot* _superRobot){
 
-	Cfg start(_suoerRobot);
-	Cfg goal(_superRobot);
+	//TODO::Put a check here to make sure these are valid cfgs and already exist in the map
+	Cfg start = wholeTask.m_startPoints[_suoerRobot->GetLabel()];
+	Cfg goal = wholeTask.m_goalPoints[_suoerRobot->GetLabel()];
 
 	auto virtStart = m_highLevelGraph->AddVertex(start);
 	auto virtGoal = m_highLevelGraph->AddVertex(goal);
@@ -108,6 +116,8 @@ AddTaskToGraph(WholeTask& _wholeTask, Robot* _superRobot){
 	virtEdge.SetWeight(-1);
 
 	for(auto& cfg : _wholeTask.m_startPoints){
+		if(cfg.GetRobot() == _superRobot)
+			continue;
 		auto vid1 = m_highLevelGraph->AddVertex(cfg);
 		m_currentTaskVIDs.push_back(vid1);
 		m_highLevelGraph->AddEdge(virtStart,vid1,virtEdge)
@@ -124,6 +134,8 @@ AddTaskToGraph(WholeTask& _wholeTask, Robot* _superRobot){
 
 	//TODO::Double check that this is implemented corectly (copied and pasted then changed from above block)
 	for(auto& cfg : _wholeTask.m_goalPoints){
+		if(cfg.GetRobot() == _superRobot)
+			continue;
 		auto vid1 = m_highLevelGraph->AddVertex(cfg);
 		m_currentTaskVIDs.push_back(vid1);
 		m_highLevelGraph->AddEdge(vid1,virtGoal,virtEdge)
@@ -194,8 +206,79 @@ LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
     return m_library->GetPath()->Length();
 }
 
+double
+MultiAgentMultiTaskPlanner::
+MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
+	const double _sourceDistance, const double _targetDistance) const {
+  //TODO::Check if edge is virtual and if so find the next robot and keep track of current robot in a map in this class
+  
+  const double edgeWeight  = _ei->property().GetWeight();
+  bool virt = (edgeWeight == -1);
+  double readyTime = 0;
+  Agent* newAgent = nullptr;
+  
+  if(virt){
+  	readyTime = RobotSelection(_ei,newAgent);
+  }
+  else{
+  	newAgent = m_nodeAgentMap[_ei->source()];
+  }
 
+  //TODO::Then do the rest of the regular dijkstra stuff
+  // Compute the new 'distance', which is the number of timesteps at which
+  // the robot would reach the target node.
+  double newDistance;
+  if(virt){
+  	//Check if the robot will need extra time to reach the location
+  	if(readyTime > _sourceDistance){
+  		newDistance = readyTime;
+  	}
+  	//Or if it can be there when the previous robot reaches the interaction point
+  	else{
+  		newDistance = _sourceDistance;
+  	}
+  }
+  else{
+  	newDistance = _sourceDistance + edgeWeight;
+  }
 
+  // If this edge is better than the previous we update the robot at the node
+  if(newDistance < _targetDistance) {
+  	m_nodeAgentMap[_ei->target()] = newAgent;
+  }
+  return newDistance;
+}
+
+double 
+MultiAgentMultiTaskPlanner::
+RobotSelection(typename TaskGraph::adj_edge_iterator& _ei, (Agent*)& _minAgent){
+	//Agent* minAgent = nullptr;
+	double minTime = MAX_DBL;
+	
+	auto subtaskStart = _ei->target()->property();
+
+	for(auto agentInfo : m_RAT){
+		auto agent = agentInfo.first;
+		//Check that robot is of the right type
+		if(agent->GetRobot()->GetCapability() != subtaskStart->GetRobot()->GetCapability()){
+			continue;
+		}
+
+		auto location = agentInfo.second.first
+		auto availTime = agentInfo.second.second
+		
+		auto travelTime = LowLevelGraphPathWeight(location,subtaskStart)
+
+		auto readyTime = availTime + travelTime;
+
+		if(readyTime < minTime){
+			_minAgent = agent;
+			minTime = readyTime;
+		}
+	}
+	//m_nodeAgentMap[_ei->target()] = minAgent;
+	return minTime;
+}
 
 
 
