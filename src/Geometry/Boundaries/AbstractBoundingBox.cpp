@@ -91,8 +91,14 @@ GetRandomPoint() const {
 void
 AbstractBoundingBox::
 PushInside(std::vector<double>& _sample) const noexcept {
-  if(!NBox::Contains(_sample))
-    _sample = NBox::ClearancePoint(_sample);
+  if(NBox::Contains(_sample))
+    return;
+
+  auto clearancePoint = NBox::ClearancePoint(_sample);
+
+  const size_t dimension = std::min(_sample.size(), clearancePoint.size());
+  for(size_t i = 0; i < dimension; ++i)
+    _sample[i] = clearancePoint[i];
 }
 
 /*----------------------------- Containment Testing --------------------------*/

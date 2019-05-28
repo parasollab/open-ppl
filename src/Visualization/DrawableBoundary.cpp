@@ -4,9 +4,11 @@
 
 
 DrawableBoundary::
-DrawableBoundary(const Boundary* _boundary, const glutils::color& _color, bool _wire) :
+DrawableBoundary(const Boundary* _boundary, const glutils::color& _color,
+    const bool _wire) :
   DrawablePolyhedron(m_polyhedron, _color, _wire),
-  m_polyhedron(_boundary->MakePolyhedron()) {}
+  m_polyhedron(_boundary->MakePolyhedron())
+{}
 
 
 void

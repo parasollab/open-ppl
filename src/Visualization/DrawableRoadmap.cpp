@@ -135,7 +135,7 @@ DeleteVertex(VI _vi) {
 void
 DrawableRoadmap::
 DeleteEdge(EI _ei) {
-//  throw NotImplementedException(WHERE);
+  throw NotImplementedException(WHERE);
 }
 
 

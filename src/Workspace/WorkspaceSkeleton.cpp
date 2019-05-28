@@ -6,8 +6,8 @@
 
 WorkspaceSkeleton::vertex_iterator
 WorkspaceSkeleton::
-FindNearestVertex(const Point3d& _target) {
-  double closestDistance = numeric_limits<double>::max();
+FindNearestVertex(const mathtool::Point3d& _target) {
+  double closestDistance = std::numeric_limits<double>::max();
   vertex_iterator closestVI;
 
   for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
@@ -18,6 +18,13 @@ FindNearestVertex(const Point3d& _target) {
     }
   }
   return closestVI;
+}
+
+
+WorkspaceSkeleton::vertex_iterator
+WorkspaceSkeleton::
+FindVertex(const VD _vertexDescriptor) {
+  return m_graph.find_vertex(_vertexDescriptor);
 }
 
 
@@ -62,7 +69,7 @@ FindInboundEdges(const vertex_iterator& _vertexIter) {
 
 WorkspaceSkeleton
 WorkspaceSkeleton::
-Direct(const Point3d& _start) {
+Direct(const mathtool::Point3d& _start) {
   GraphType skeletonGraph;
 
   // Define coloring for the breadth-first direction algorithm.
@@ -71,7 +78,7 @@ Direct(const Point3d& _start) {
     Gray,  // The vertex is discovered but not visited.
     Black  // The vertex is visited.
   };
-  unordered_map<VD, Color> visited;
+  std::unordered_map<VD, Color> visited;
 
   // Copy nodes into the new directed skeleton, preserving the descriptors.
   // Also mark each node as undiscovered.
@@ -94,7 +101,7 @@ Direct(const Point3d& _start) {
   // skeleton so that all flow away from it.
   VD closest = FindNearestVertex(_start)->descriptor();
 
-  queue<VD> q;
+  std::queue<VD> q;
   q.push(closest);
   while(!q.empty()) {
     // Get the next node in the queue and visit it.
@@ -141,9 +148,9 @@ Direct(const Point3d& _start) {
             // Node was previously discovered but hasn't been visited yet.
             // Copy the reversed edge (from source to current) into the
             // directed skeleton.
-            const vector<Point3d>& path = pit->property();
+            const std::vector<mathtool::Point3d>& path = pit->property();
             skeletonGraph.add_edge(ED(current, source),
-                vector<Point3d>(path.rbegin(), path.rend()));
+                std::vector<mathtool::Point3d>(path.rbegin(), path.rend()));
             break;
           }
         default:
@@ -164,7 +171,7 @@ Direct(const Point3d& _start) {
 
 void
 WorkspaceSkeleton::
-Prune(const Point3d& _goal) {
+Prune(const mathtool::Point3d& _goal) {
   // This function only makes sense after calling Direct. Ensure that we've set
   // m_start to something valid.
   if(m_start == std::numeric_limits<VD>::max())
@@ -184,7 +191,7 @@ Prune(const Point3d& _goal) {
               << std::endl;
 
   // Initialize a list of vertices to prune with every vertex in the graph.
-  vector<VD> toPrune;
+  std::vector<VD> toPrune;
   toPrune.reserve(m_graph.get_num_vertices());
   for(const auto& v : m_graph)
     toPrune.push_back(v.descriptor());
@@ -192,7 +199,7 @@ Prune(const Point3d& _goal) {
   // Remove vertices from the prune list by starting from the goal and working
   // backwards up the incoming edges. Don't prune any vertex that is an ancestor
   // of the goal.
-  queue<VD> q;
+  std::queue<VD> q;
   q.push(iter->descriptor());
   do {
     // back track every vertex in the flow graph
@@ -201,7 +208,7 @@ Prune(const Point3d& _goal) {
     // try to find current vertex in the toPrune list
     // i.e., the list in which all vertices are not currently found to be an
     // ancestor yet
-    auto iter = find(toPrune.begin(), toPrune.end(), current);
+    auto iter = std::find(toPrune.begin(), toPrune.end(), current);
     // if found, we can erase it from the list so that we won't be pruning it
     if(iter != toPrune.end())
       toPrune.erase(iter);
@@ -249,18 +256,18 @@ WorkspaceSkeleton::
 Write(const std::string& _file) {
   // stapl::sequential::write_graph(m_graph, _file.c_str());
   /// @Todo: Replace with stapl version.
-  ofstream ff(_file);
+  std::ofstream ff(_file);
   auto& g = m_graph;
-  ff << g.get_num_vertices() << " " << g.get_num_edges() << endl;
+  ff << g.get_num_vertices() << " " << g.get_num_edges() << std::endl;
   for(auto vit = g.begin(); vit != g.end(); ++vit)
-    ff << vit->descriptor() << " " << vit->property() << endl;
+    ff << vit->descriptor() << " " << vit->property() << std::endl;
   for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)	{
     ff << eit->source() << " " << eit->target();
     auto prop = eit->property();
     ff << " " << prop.size();
     for(auto v: prop)
       ff << " " << v;
-    ff << endl;
+    ff << std::endl;
   }
 }
 

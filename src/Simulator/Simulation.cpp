@@ -14,6 +14,7 @@
 #include "Visualization/DrawablePath.h"
 #include "Visualization/DrawableRoadmap.h"
 #include "Visualization/DrawableBoundary.h"
+#include "Visualization/DrawableWorkspaceSkeleton.h"
 
 #include "nonstd/io.h"
 #include "nonstd/numerics.h"
@@ -232,6 +233,9 @@ render() {
         static_cast<DrawableMultiBody*>(d)->UpdateTransform();
     }
 
+    for(auto d : m_boundaries.get_all())
+      d->update_transform();
+
     for(auto d : m_removedDrawables) {
       d->uninitialize();
       delete d;
@@ -249,6 +253,9 @@ render() {
     d->render();
 
   for(auto d : m_boundaries.get_all())
+    d->render();
+
+  for(auto d : m_skeletons.get_all())
     d->render();
 }
 
@@ -386,6 +393,30 @@ RemoveBoundary(const size_t _id) {
   m_highlighter->remove_drawable(boundary);
 
   m_removedDrawables.push_back(boundary);
+}
+
+
+void
+Simulation::
+TransformBoundary(const size_t _id, const glutils::transform& _t)
+{
+  DrawableBoundary* boundary = m_boundaries[_id];
+  boundary->push_transform(_t);
+}
+
+
+size_t
+Simulation::
+AddWorkspaceSkeleton(WorkspaceSkeleton* const _skeleton,
+    const glutils::color& _c) {
+  std::lock_guard<std::mutex> lock(m_guard);
+
+  if(!_skeleton)
+    throw RunTimeException(WHERE) << "Cannot draw a null skeleton.";
+
+  auto draw = new DrawableWorkspaceSkeleton(_skeleton, _c);
+
+  return m_skeletons.add(draw);
 }
 
 /*--------------------------------- Editing ----------------------------------*/

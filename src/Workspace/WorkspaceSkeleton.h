@@ -1,10 +1,5 @@
-#ifndef WORKSPACE_SKELETON_H_
-#define WORKSPACE_SKELETON_H_
-
-#include <queue>
-#include <set>
-#include <unordered_map>
-#include <string>
+#ifndef PMPL_WORKSPACE_SKELETON_H_
+#define PMPL_WORKSPACE_SKELETON_H_
 
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Boundaries/Boundary.h"
@@ -13,8 +8,10 @@
 
 #include "Vector.h"
 
-using namespace mathtool;
-using namespace std;
+#include <queue>
+#include <set>
+#include <unordered_map>
+#include <string>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +26,8 @@ class WorkspaceSkeleton {
 
     /// Graph type is a directed multiedge graph of points and paths.
     typedef stapl::sequential::directed_preds_graph<
-        stapl::MULTIEDGES, Point3d, vector<Point3d>> GraphType;
+        stapl::MULTIEDGES, mathtool::Point3d, std::vector<mathtool::Point3d>>
+        GraphType;
     typedef GraphType::vertex_descriptor             VD;
     typedef GraphType::edge_descriptor               ED;
     typedef typename GraphType::vertex_iterator      vertex_iterator;
@@ -43,7 +41,12 @@ class WorkspaceSkeleton {
     /// workspace point.
     /// @param _target The workspace point.
     /// @return An iterator to the nearest skeleton vertex.
-    vertex_iterator FindNearestVertex(const Point3d& _target);
+    vertex_iterator FindNearestVertex(const mathtool::Point3d& _target);
+
+    /// Find a vertex iterator in the skeleton by descriptor.
+    /// @param _vertexDescriptor The descriptor of the vertex to search for.
+    /// @return An iterator to the desired vertex.
+    vertex_iterator FindVertex(const VD _vertexDescriptor);
 
     /// Find an edge iterator in the skeleton by descriptor.
     /// @param _edgeDescriptor The descriptor of the edge to search for.
@@ -68,13 +71,13 @@ class WorkspaceSkeleton {
     /// nearest to a given starting point.
     /// @param _start A workspace point from which the direction should eminate.
     /// @return A directed skeleton with flow pointing outward from _start.
-    WorkspaceSkeleton Direct(const Point3d& _start);
+    WorkspaceSkeleton Direct(const mathtool::Point3d& _start);
 
     /// Prune the skeleton by removing vertices and edges that are not reachable
     /// by back-tracking the edges from the vertex nearst to a goal point. Only
     /// makes sense after calling Direct.
     /// @param _goal A workspace goal point.
-    void Prune(const Point3d& _goal);
+    void Prune(const mathtool::Point3d& _goal);
 
     ///@}
     ///@name Accessors
@@ -89,11 +92,15 @@ class WorkspaceSkeleton {
     const GraphType& GetGraph() const noexcept;
 
     ///@}
+    ///@name IO
+    ///@{
 
     /// Writes the graph to a file
     /// @param _file the output file name
-    void Write(const string& _file);
-  
+    void Write(const std::string& _file);
+
+    ///@}
+
   private:
 
     ///@name Internal State

@@ -496,8 +496,8 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Initialize() {
-  Uninitialize();
-  // Create the default goal map.
+  // Set up the goal tracker.
+  m_goalTracker->Clear();
   if(this->GetTask())
     m_goalTracker->AddMap(GetRoadmap(), GetTask());
   else if(this->GetGroupTask())
@@ -559,8 +559,8 @@ ReadXMLFile(const std::string& _filename) {
 
   // Throw exception if we can't find it.
   if(!planningLibrary)
-    throw ParseException(WHERE, "Cannot find MPLibrary node in XML file '"
-        + _filename + "'.");
+    throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
+                                << _filename << "'.";
 
   // Parse the library node to set algorithms and parameters.
   for(auto& child : *planningLibrary)
@@ -568,8 +568,8 @@ ReadXMLFile(const std::string& _filename) {
 
   // Ensure we have at least one solver.
   if(m_solvers.empty())
-    throw ParseException(WHERE, "Cannot find Solver node in XML file '" +
-        _filename + "'.");
+    throw ParseException(WHERE) << "Cannot find Solver node in XML file '"
+                                << _filename << "'.";
 
   // Print XML details if requested.
   bool print = mpNode.Read("print", false, false, "Print all XML input");

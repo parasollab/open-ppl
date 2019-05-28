@@ -2,6 +2,7 @@
 #define PMPL_REGION_KIT_H_
 
 #include <iostream>
+#include <limits>
 #include <map>
 #include <vector>
 
@@ -44,6 +45,9 @@ class RegionKit final {
       size_t successes{0};   ///< Number of valid samples in this region.
       size_t attempts{1};    ///< Number of sampling attempts in this region.
       double weight{0};      ///< Ratio of successful samples to total samples.
+
+      /// Drawable ID when using simulator.
+      size_t visualizationID{std::numeric_limits<size_t>::max()};
 
       ///@}
       ///@name Construction
@@ -160,10 +164,23 @@ class RegionKit final {
     /// @param _p The point.
     void CreateRegions(const Point3d& _p);
 
-    /// Test regions for containment of new configuration and advance if
-    /// necessary
-    /// @param _cfg the new configuration
+    /// Create new regions along outgoing edges at an unvisted vertex.
+    /// @param _iter The vertex iterator.
+    /// @return The set of created regions.
+    std::vector<Boundary*> CreateRegions(
+        const WorkspaceSkeleton::vertex_iterator _iter);
+
+    /// Test all regions for containment of new configuration and advance if
+    /// necessary. Any completed regions will spawn new ones at their
+    /// destinations outbound edges, which will also be advanced if necessary.
+    /// @param _cfg The new configuration.
     void AdvanceRegions(const Cfg& _cfg);
+
+    /// Advance a single region until it no longer touches a configuration.
+    /// @param _cfg The configuration.
+    /// @param _region The region to advance.
+    /// @return True iff _region has reached the end of its edge.
+    bool AdvanceRegionToCompletion(const Cfg& _cfg, Boundary* const _region);
 
     /// Test if a configuration is inside a region
     /// @param _cfg The configuration to test.
@@ -195,8 +212,8 @@ Initialize(WorkspaceSkeleton* const _skeleton, const Point3d& _point,
   // On each new sample, check if we need to advance our regions and generate
   // new ones. Add a roadmap hook to achieve this.
   auto addVertex = [this](typename RoadmapGraph::VI _vi) {
-    this->AdvanceRegions(_vi->property());
     this->CreateRegions(_vi->property().GetPoint());
+    this->AdvanceRegions(_vi->property());
   };
   _graph->InstallHook(RoadmapGraph::HookType::AddVertex, _label, addVertex);
 }
