@@ -1,12 +1,6 @@
 #ifndef PMPL_SIMULATION_H_
 #define PMPL_SIMULATION_H_
 
-#include <atomic>
-#include <cstddef>
-#include <memory>
-#include <mutex>
-#include <thread>
-
 #include "sandbox/base_visualization.h"
 #include "nonstd/collection.h"
 #include "Utilities/PMPLExceptions.h"
@@ -14,15 +8,23 @@
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 
+#include <atomic>
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <thread>
+
 class BulletEngine;
 class Cfg;
+class DrawableBoundary;
 class DrawableMultiBody;
 class DrawablePath;
 class DrawableRoadmap;
-class DrawableBoundary;
+class DrawableWorkspaceSkeleton;
 class MPProblem;
 class MultiBody;
 class StatClass;
+class WorkspaceSkeleton;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,16 +127,28 @@ class Simulation : public base_visualization {
     void RemoveRoadmap(const size_t _id);
 
     /// Add a boundary graphic to the scene.
-    /// @param _boundary the boundary to be rendered
-    /// @param _c The rendering color.
-    /// @param _wired Render in wireframe if true, solid if false.
+    /// @param _boundary The boundary to be rendered
+    /// @param _c        The rendering color.
+    /// @param _wired    Render in wireframe if true, solid if false.
     /// @return The ID of the boundary
     size_t AddBoundary(const Boundary* const _boundary, const glutils::color& _c,
         const bool _wired = true);
 
     /// Remove a boundary graphic from the scene.
-    /// @param _id The path ID.
+    /// @param _id The boundary ID.
     void RemoveBoundary(const size_t _id);
+
+    /// Update a boundary graphic.
+    /// @param _id The boundary ID.
+    /// @param _t  The transformation to apply.
+    void TransformBoundary(const size_t _id, const glutils::transform& _t);
+
+    /// Add a workspace skeleton rendering to to the scene.
+    /// @param _skeleton The workspace skeleton.
+    /// @param _c The rendering color.
+    /// @return The skeleton rendering's ID.
+    size_t AddWorkspaceSkeleton(WorkspaceSkeleton* const _skeleton,
+        const glutils::color& _c);
 
     ///@}
     ///@name Editing
@@ -197,6 +211,7 @@ class Simulation : public base_visualization {
     nonstd::collection<DrawablePath> m_paths; ///< Paths we are drawing.
     nonstd::collection<DrawableRoadmap> m_roadmaps; ///< Roadmaps to be drawn.
     nonstd::collection<DrawableBoundary> m_boundaries; ///< Boundaries to be drawn.
+    nonstd::collection<DrawableWorkspaceSkeleton> m_skeletons; ///< Skeletons to be drawn.
 
     std::vector<glutils::drawable*> m_removedDrawables; ///< Drawables to remove.
 

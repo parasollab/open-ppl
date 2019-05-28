@@ -110,7 +110,8 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    std::string m_vcLabel;
+    std::string m_dmLabel;          ///< The metric for measuring edge length.
+    std::string m_vcLabel;          ///< The validity checker.
     bool m_binaryEvaluation{false}; ///< Use binary search?
 
     ///@}
@@ -136,6 +137,9 @@ StraightLine(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node) {
   m_binaryEvaluation = _node.Read("binaryEvaluation", false, m_binaryEvaluation,
       "Use binary search to evaluate the edge, or linear scan if false.");
 
+  m_dmLabel = _node.Read("dmLabel", false, "euclidean",
+      "The distance metric for computing edge length.");
+
   m_vcLabel = _node.Read("vcLabel", true, "", "The validity checker to use.");
 }
 
@@ -147,6 +151,7 @@ StraightLine<MPTraits>::
 Print(std::ostream& _os) const {
   LocalPlannerMethod<MPTraits>::Print(_os);
   _os << "\tbinary evaluation = " << (m_binaryEvaluation ? "true" : "false")
+      << "\n\tdmLabel = " << m_dmLabel
       << "\n\tvcLabel = " << m_vcLabel
       << std::endl;
 }
@@ -364,9 +369,10 @@ IsConnectedSLSequential(
   if(!robot)
     return true;
   auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   int nTicks;
-  CfgType tick(robot), incr(robot);
+  CfgType tick(robot), incr(robot), prev(robot);
   tick = _c1;
   incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
   std::string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
@@ -375,26 +381,27 @@ IsConnectedSLSequential(
     std::cout << "\n\tComputed increment for " << nTicks << " ticks: "
               << incr.PrettyPrint() << std::endl;
   int nIter = 0;
-  for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
+  double distance = 0;
+  for(int i = 1; i < nTicks; ++i) { //don't need to check the ends _c1, _c2
+    prev = tick;
     tick += incr;
+    distance += dm->Distance(prev, tick);
     _cdCounter++;
+
     if(_checkCollision) {
       if(this->m_debug)
         std::cout << "\n\t\tChecking " << tick.PrettyPrint();
 
       const bool inBounds = tick.InBounds(env);
       if(!inBounds || !vc->IsValid(tick, callee)) {
-        /// @TODO This looks wrong - we should be setting _col regardless of
-        ///       whether we hit the boundary or obstacle.
-        if(inBounds)
-          _col = tick;
-        /// @TODO This is definitely wrong. The number of ticks does not equal
-        ///       the cspace distance. We need to adjust ALL LocalPlanners to
-        ///       take a distance metric for measuring the true edge length.
-        _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight()
-            + nIter);
-        _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight()
-            + nIter);
+        _col = tick;
+        auto& edge1 = _lpOutput->m_edge.first,
+            & edge2 = _lpOutput->m_edge.second;
+
+        edge1.SetWeight(edge1.GetWeight() + distance);
+        edge2.SetWeight(edge2.GetWeight() + distance);
+        edge1.SetTimeSteps(edge1.GetTimeSteps() + nIter);
+        edge2.SetTimeSteps(edge2.GetTimeSteps() + nIter);
 
         if(this->m_debug)
           std::cout << " INVALID";
@@ -408,8 +415,16 @@ IsConnectedSLSequential(
     nIter++;
   }
 
-  _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight() + nIter);
-  _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight() + nIter);
+  // The edge is valid, now add the distance to the final configuration.
+  distance += dm->Distance(tick, _c2);
+
+  auto& edge1 = _lpOutput->m_edge.first,
+      & edge2 = _lpOutput->m_edge.second;
+
+  edge1.SetWeight(edge1.GetWeight() + distance);
+  edge2.SetWeight(edge2.GetWeight() + distance);
+  edge1.SetTimeSteps(edge1.GetTimeSteps() + nTicks);
+  edge2.SetTimeSteps(edge2.GetTimeSteps() + nTicks);
 
   return true;
 }
@@ -426,6 +441,7 @@ IsConnectedSLBinary(
 
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
 
   if(!_checkCollision)
     return IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
@@ -480,23 +496,31 @@ IsConnectedSLBinary(
         Q.push_back(make_pair(i, mid));
       if(mid + 1 != j)
         Q.push_back(make_pair(mid, j));
+
       if(this->m_debug)
         std::cout << " OK";
     }
   }
 
-  if(_savePath) {
-    CfgType tick = _c1;
-    for(int n = 1; n < nTicks; ++n) {
-      tick += incr;
+  // Compute the distance and path.
+  double distance = 0;
+  CfgType tick = _c1, prev;
+  for(int n = 1; n < nTicks; ++n) {
+    prev = tick;
+    tick += incr;
+    distance += dm->Distance(prev, tick);
+    if(_savePath)
       _lpOutput->m_path.push_back(tick);
-    }
   }
+  distance += dm->Distance(tick, _c2);
 
-  _lpOutput->m_edge.first.SetWeight(_lpOutput->m_edge.first.GetWeight()
-      + nTicks - 1);
-  _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.second.GetWeight()
-      + nTicks - 1);
+  auto& edge1 = _lpOutput->m_edge.first,
+      & edge2 = _lpOutput->m_edge.second;
+
+  edge1.SetWeight(edge1.GetWeight() + distance);
+  edge2.SetWeight(edge2.GetWeight() + distance);
+  edge1.SetTimeSteps(edge1.GetTimeSteps() + nTicks);
+  edge2.SetTimeSteps(edge2.GetTimeSteps() + nTicks);
 
   return true;
 }

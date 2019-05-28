@@ -78,7 +78,7 @@
         dmLabel=""/>
       <HopLimitNF label="HLNF" hoplimit="2" dmLabel="" nfLabel="BFNF"/>
       <OptimalNF label="OptimalK" nfLabel="BFNF"/>
-      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="5"/>
+      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="10"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
@@ -181,7 +181,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="1." minDist=".001"/>
+        vcLabel="rapid" maxDist="4." minDist=".01"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
@@ -297,9 +297,9 @@
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
       <LazyQuery label="LazyQuery" debug="false"
-        lpLabel="sl" dmLabel="euclidean" vcLabel="pqp_solid"
         graphSearchAlg="dijkstras"
-        numEnhance="10" d="0.5" deleteInvalid="true">
+        lpLabel="sl" vcLabel="pqp_solid"
+        enhanceDmLabel="euclidean" numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
@@ -389,10 +389,11 @@
       </BasicPRM>
 
       <!-- BasicRRT -->
-      <BasicRRTStrategy label="BasicRRT" debug="false"
+      <BasicRRTStrategy label="RRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
-        growGoals="false" growthFocus="0.01" m="1">
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
@@ -400,7 +401,8 @@
       <BasicRRTStrategy label="KinoRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="KinoExtender"
-        growGoals="false" growthFocus="0.01">
+        growGoals="false" growthFocus="0.01"
+        goalDmLabel="euclidean" goalThreshold="6">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
@@ -434,7 +436,7 @@
       <BasicRRTStrategy label="OBRRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="ME"
-        growGoals="true" growthFocus="0.01">
+        growGoals="true">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
@@ -547,15 +549,24 @@
       </SparkBasicPRM>
 
       <!-- Syclop -->
-      <!--
       <Syclop label="Syclop" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
-        tmLabel="tm"
-        growGoals="false" growthFocus="0.01">
+        tmLabel="tm-fine"
+        growGoals="false" growthFocus="0.01"
+        goalDmLabel="euclideanPosition" goalThreshold="4">
         <Evaluator label="Query"/>
       </Syclop>
-      -->
+
+      <!-- SST -->
+      <StableSparseRRT label="SST" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="RadiusNF" extenderLabel="BERO"
+        goalDmLabel="euclideanPosition" goalThreshold="4"
+        growthFocus="0.01"
+        witnessNfLabel="Nearest" witnessRadius=".5" prune="true">
+        <Evaluator label="BoundedQuery"/>
+      </StableSparseRRT>
 
       <!-- Visibility Based PRM Strategy -->
       <VisibilityBasedPRM label="VBPRM" sampler="UniformRandomFree"

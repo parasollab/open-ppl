@@ -20,6 +20,7 @@ class DrawableMultiBody;
 /// and edge insertion.
 ////////////////////////////////////////////////////////////////////////////////
 class DrawableRoadmap : public glutils::drawable  {
+
   public:
 
     ///@name Local Types
@@ -44,35 +45,41 @@ class DrawableRoadmap : public glutils::drawable  {
     ~DrawableRoadmap();
 
     ///@}
+
+  protected:
+
     ///@name Modifiers
     ///@{
+    /// These functions should be installed as roadmap hooks to update the
+    /// rendering whenever the map changes.
 
-    /// Adds vertices to be rendered
+    /// Add a vertex to the rendering.
     /// @param _vi Vertex iterator to the vertex just added.
     void AddVertex(VI _vi);
 
-    /// Adds edges to be rendered
+    /// Add an edge to the rendering.
     /// @param _ei edge iterator to the edge just added.
     void AddEdge(EI _ei);
 
-    /// Removes vertices from graph
+    /// Remove a vertex from the rendering.
     /// @param _vi Vertex iterator to the vertex just added.
     void DeleteVertex(VI _vi);
 
-    /// Removes an edges from graph
+    /// Remove an edge from the rendering.
     /// @param _ei edge iterator to the edge just added.
     void DeleteEdge(EI _ei);
 
     ///@}
-    ///@name Rendering Property
+    ///@name Rendering Options
     ///@{
+    /// These functions should be installed as key press hooks to change the
+    /// way the maps are rendered.
+    /// @todo Apply these only to the selected roadmap.
 
+    /// Switch between drawing the robots and drawing points for Cfgs.
     void ToggleRobot();
 
     ///@}
-
-  protected:
-
     ///@name Drawable Overloads
     ///@{
 
@@ -89,18 +96,29 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@}
 
   private:
-    std::vector<DrawableCfg> m_cfgs;                ///< The position of cfgs.
-    std::vector<std::vector<glutils::vector3f>> m_edges;  ///< the path of each edge.
-    std::vector<std::vector<double>> m_bufferCfgs;                      ///< buffer the cfgs when being added
-    std::vector<std::vector<glutils::vector3f>> m_bufferEdges;  ///< buffer the edges when they are being added
-    glutils::color m_color;                               ///< The color to be rendered in.
-    MultiBody m_multiBody;                 ///< local copy of the graphs multibody.
-    std::unique_ptr<DrawableMultiBody> m_dmb;              ///< DrawableMultiBody used by the cfgs.
-    std::atomic<bool> m_drawRobot{false};               ///< rendering mode. (defaults to point mode)
-    mutable std::mutex m_lock;             ///< Lock for updating the map.
-    RoadmapType* m_graph;                    ///< a pointer to the RoadmapGraph.
 
-    std::string m_name;                    ///< A name for this graph.
+    ///@name Internal State
+    ///@{
+
+    std::vector<DrawableCfg> m_cfgs;                     ///< Cfg renderings.
+    std::vector<std::vector<glutils::vector3f>> m_edges; ///< Edge renderings.
+
+    /// Buffer for added configurations.
+    std::vector<std::vector<double>> m_bufferCfgs;
+    /// Buffer for added edges.
+    std::vector<std::vector<glutils::vector3f>> m_bufferEdges;
+
+    glutils::color m_color;                   ///< The rendering color.
+    MultiBody m_multiBody;                    ///< Local copy of the multibody.
+    std::unique_ptr<DrawableMultiBody> m_dmb; ///< The drawable multibody.
+    std::atomic<bool> m_drawRobot{false};     ///< Draw the robots or a point?
+    mutable std::mutex m_lock;                ///< Lock for updating the rendering.
+    RoadmapType* m_graph;                     ///< Pointer to the RoadmapGraph.
+
+    std::string m_name;                       ///< A name for this rendering.
+
+    ///@}
+
 };
 
 #endif

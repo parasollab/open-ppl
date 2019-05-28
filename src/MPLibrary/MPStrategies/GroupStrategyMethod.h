@@ -34,7 +34,7 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
-
+    typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename MPTraits::GroupPathType     GroupPath;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
@@ -51,6 +51,8 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
     GroupStrategyMethod(XMLNode& _node);
 
     virtual ~GroupStrategyMethod() = default;
+
+    vector<CfgType> FullPath(vector<CfgType> _rdmpPath);
 
     ///@}
 
@@ -101,6 +103,45 @@ Finalize() {
   if(!this->m_writeOutput)
     return;
 
+  // auto groupTask = this->GetGroupTask();
+  //auto group = groupTask->GetRobotGroup();
+  //auto groupRoadmap = this->GetGroupRoadmap();
+
+  // Collect the full cfg paths for each robot.
+  //size_t longestPath = 0;
+  //std::vector<std::vector<CfgType>> paths;
+  //std::vector<std::vector<VID>> paths;
+  //paths.reserve(groupTask->Size());
+  // size_t i = 0;
+  // std::cout << "Printing individual paths" << std::endl;
+  // for(auto& task : *groupTask) {
+  //   auto robot = task.GetRobot();
+  //   auto path = this->GetPath(robot);
+
+  //   // If the path is empty, we didn't solve the problem.
+  //   if(path->Empty())
+  //     return;
+
+  //   // Collect the path.
+  //   //paths.push_back(path->VIDs());
+  //   //longestPath = std::max(longestPath, paths.back().size());
+
+  //   std::cout << "VID Path for robot " << robot->GetLabel() << ": " << path->VIDs()
+  //             << std::endl;
+
+  //   if(path and path->Size()) {
+  //     const std::string base = this->GetBaseFilename();
+  //     ::WritePath(base +"robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
+  //     ::WritePath(base +"robot"+ std::to_string(i) + ".path", FullPath(path->Cfgs()));
+  //     vector<CfgType> dummy = path->Cfgs();
+  //     auto roadmap = this->GetRoadmap(dummy[0].GetRobot());
+  //     roadmap->Write(base +"robot"+ std::to_string(i) + ".map", this->GetEnvironment());
+  //   }
+  //   ++i;
+
+  // }
+
+
   const std::string base = this->GetBaseFilename();
 
   // Output final map.
@@ -126,8 +167,9 @@ Finalize() {
   // Output stats.
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
-}
 
+
+}
 
 template <typename MPTraits>
 size_t
@@ -401,6 +443,36 @@ GetGoalBoundaryMaps() const noexcept {
   return maps;
 }
 
+template <typename MPTraits>
+vector<typename MPTraits::CfgType>
+GroupStrategyMethod<MPTraits>::
+FullPath(vector<CfgType> _rdmpPath) {
+  auto robot = _rdmpPath[0].GetRobot();
+  vector<CfgType> path;
+  if(_rdmpPath.empty()) return path;
+  if(_rdmpPath.size() == 1) return _rdmpPath;
+
+  path.push_back(_rdmpPath[0]);
+  size_t i = 0;
+  while(i < _rdmpPath.size()-1) { 
+    int nTicks = 0;
+    CfgType tick(robot), incr(robot);
+    tick = _rdmpPath[i];
+    auto positionRes = this->GetEnvironment()->GetPositionRes();
+    auto orientationRes = this->GetEnvironment()->GetOrientationRes();
+    incr.FindIncrement(_rdmpPath[i], _rdmpPath[i+1], &nTicks, positionRes, orientationRes);
+
+    for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
+      tick += incr;
+      path.push_back(tick);
+    }
+    ++i;
+    path.push_back(_rdmpPath[i]);
+
+  }
+
+  return path; 
+}
 /*----------------------------------------------------------------------------*/
 
 #endif

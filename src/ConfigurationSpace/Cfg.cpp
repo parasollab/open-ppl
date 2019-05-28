@@ -935,7 +935,7 @@ GetRandomCfg(const Boundary* const _b) {
     numVel = 0;
   }
 
-  for(size_t tries = 100; tries > 0; --tries) {
+  for(size_t tries = 1000; tries > 0; --tries) {
     // Generate a point in the boundary.
     auto sample = _b->GetRandomPoint();
 

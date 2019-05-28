@@ -1,6 +1,7 @@
 #ifndef PMPL_TOPOLOGICAL_MAP_H_
 #define PMPL_TOPOLOGICAL_MAP_H_
 
+#include <algorithm>
 #include <map>
 #include <vector>
 
@@ -310,8 +311,8 @@ TopologicalMap<MPTraits>::
 Initialize() {
   // This object only works for single-robot problems right now.
   if(this->GetGroupTask())
-    throw NotImplementedException(WHERE) << "Topological map does not yet support "
-                                         << "robot groups.";
+    throw NotImplementedException(WHERE) << "Topological map does not yet "
+                                         << "support robot groups.";
 
   // Initialize the maps.
   ClearMaps();
@@ -322,6 +323,12 @@ Initialize() {
   {
     auto decomposition = this->GetMPTools()->GetDecomposition(
         m_decompositionLabel);
+
+    // If we are debugging, write the decomposition file to OBJ for inspection.
+    ///@todo Move this to the decomposition class, which currently cannot do
+    ///      this job because it does not know its own label.
+    if(this->m_debug)
+      decomposition->WriteObj(this->GetLabel() + ".obj");
 
     MethodTimer mt(this->GetStatClass(), "GridOverlay::ComputeDecompositionMap");
     m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
@@ -409,6 +416,10 @@ GetMappedVIDs(
     std::vector<VD>::const_iterator _begin,
     std::vector<VD>::const_iterator _end,
     const size_t _bodyIndex) const {
+  // Do nothing on an empty range.
+  if(_begin == _end)
+    return {};
+
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::GetMappedVIDs");
 
@@ -427,19 +438,22 @@ GetMappedVIDs(
     if(iter == forwardMap.end())
       continue;
 
-    // Copy these VIDs.
+    // Copy these VIDs into all.
     const auto& vids = iter->second;
+    const size_t size = all.size();
     std::copy(vids.begin(), vids.end(), std::back_inserter(all));
+
+    // In-place merge the all VIDs list.
+    auto mid = all.begin();
+    std::advance(mid, size);
+    std::inplace_merge(all.begin(), mid, all.end());
   }
 
-  // Sort and make sure list is unique.
-  std::sort(all.begin(), all.end());
-  auto newEnd = std::unique(all.begin(), all.end());
-
   // Check that we didn't double-add any vertices.
+  auto newEnd = std::unique(all.begin(), all.end());
   if(all.end() != newEnd)
-    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex should "
-                                  << "be mapped to only one region.";
+    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex "
+                                  << "should be mapped to only one region.";
 
   return all;
 }

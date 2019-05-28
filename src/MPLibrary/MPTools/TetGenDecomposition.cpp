@@ -315,11 +315,6 @@ operator()(const Environment* _env) {
 
     MakeFreeModel(_env);
 
-    // We usually don't want to write the free space - only do this in debug
-    // mode.
-    if(writeFile and m_debug)
-      SaveFreeModel();
-
     if(m_debug)
       std::cout << "\tRunning tetgen with switches '" << m_switches
                 << "'..." << std::endl;

@@ -156,6 +156,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename RoadmapType::VID                 VID;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
@@ -214,6 +215,13 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@}
     ///@name NeighborhoodFinder Interface
     ///@{
+
+    /// Hax
+    /// @param _candidates The set of allowed VIDs.
+    /// @param _out Output location.
+    virtual void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+        const std::unordered_set<VID>& _candidates,
+        std::vector<Neighbor>& _out);
 
     /// Finds all vertices in the graph as neighbors.
     /// @param _rmp The roadmap.
@@ -404,6 +412,17 @@ GetDMLabel() const noexcept {
 }
 
 /*----------------------- NeighborhoodFinder Interface -----------------------*/
+
+template <typename MPTraits>
+void
+NeighborhoodFinderMethod<MPTraits>::
+FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+    const std::unordered_set<VID>& _candidates, std::vector<Neighbor>& _out) {
+  // Default impl should do the same as regular FindNeighbors.
+  FindNeighbors(_rmp, _candidates.begin(), _candidates.end(),
+      _candidates.size() == _rmp->Size(), _cfg, std::back_inserter(_out));
+}
+
 
 template <typename MPTraits>
 template <typename OutputIterator>

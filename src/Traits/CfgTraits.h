@@ -123,6 +123,7 @@
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupCBSQuery.h"
 #include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/IterationCountEvaluator.h"
@@ -346,6 +347,7 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
+    GroupCBSQuery<MPTraits>,
     GroupDecoupledQuery<MPTraits>,
     GroupQuery<MPTraits>,
     ConditionalEvaluator<MPTraits>,

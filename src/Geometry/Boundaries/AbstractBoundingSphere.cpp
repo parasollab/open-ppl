@@ -84,8 +84,14 @@ GetRandomPoint() const {
 void
 AbstractBoundingSphere::
 PushInside(std::vector<double>& _sample) const noexcept {
-  if(!NSphere::Contains(_sample))
-    _sample = NSphere::ClearancePoint(_sample);
+  if(NSphere::Contains(_sample))
+    return;
+
+  auto clearancePoint = NSphere::ClearancePoint(_sample);
+
+  const size_t dimension = std::min(_sample.size(), clearancePoint.size());
+  for(size_t i = 0; i < dimension; ++i)
+    _sample[i] = clearancePoint[i];
 }
 
 /*----------------------------- Containment Testing --------------------------*/

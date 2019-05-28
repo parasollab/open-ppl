@@ -31,6 +31,21 @@
 ///   Steven LaValle and James Kuffner. "Randomized Kinodynamic Planning." IJRR
 ///   2001.
 ///
+/// This method supports both uni-directional and bi-directional variants.
+/// Nonholonomic problems are supported with the appropriate extender and
+/// uni-directional growth.
+///
+/// For uni-directional methods, we support an additional 'goal extension'
+/// heuristic which attempts to connect configurations near the goal to the goal
+/// region. This is necessary to get RRT to terminate - the alternative is to
+/// rely on goal-biased sampling to eventually complete the problem, which is
+/// not an efficient solution.
+///
+/// For bi-directional methods, the algorithm will attempt to connect trees
+/// after each successful extension. The new node will be extended toward the
+/// nearest neighbor in each other tree. If the extension reaches its
+/// destination, the two trees will merge.
+///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -50,7 +65,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef std::unordered_set<VID> TreeType;
+    typedef std::unordered_set<VID> VertexSet;
 
     ///@}
     ///@name Construction
@@ -103,7 +118,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _tree The tree to search, or null for whole roadmap.
     /// @return The VID of the roadmap configuration nearest to _cfg.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const TreeType* const _tree = nullptr);
+        const VertexSet* const _tree = nullptr);
 
     ///@}
     ///@name Growth Helpers
@@ -202,15 +217,16 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     bool m_growGoals{false};      ///< Grow trees from goals.
-    double m_growthFocus;   ///< The fraction of goal-biased expansions.
-    size_t m_numDirections; ///< The number of expansion directions per iteration.
-    size_t m_disperseTrials;///< The number of samples taken for disperse search.
+    double m_growthFocus{0};      ///< The fraction of goal-biased expansions.
+    double m_goalThreshold{0};    ///< Distance threshold for goal extension.
+    size_t m_numDirections{1};    ///< Expansion directions per iteration.
+    size_t m_disperseTrials{3};   ///< Sample attempts for disperse search.
 
     ///@}
     ///@name Internal State
     ///@{
 
-    std::vector<TreeType> m_trees;        ///< The current tree set.
+    std::vector<VertexSet> m_trees;  ///< The current tree set.
 
     ///@}
 
@@ -231,25 +247,46 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("BasicRRTStrategy");
 
   // Parse RRT parameters
-  m_growthFocus = _node.Read("growthFocus", false, 0.0, 0.0, 1.0,
+  m_growGoals = _node.Read("growGoals", false, m_growGoals,
+      "Grow a tree each goal in addition to the start?");
+
+  m_growthFocus = _node.Read("growthFocus", false,
+      m_growthFocus, 0.0, 1.0,
       "Fraction of goal-biased iterations");
-  m_numDirections = _node.Read("m", false, 1, 1, 1000,
+  m_numDirections = _node.Read("m", false,
+      m_numDirections, size_t(1), size_t(1000),
       "Number of directions to extend");
-  m_growGoals = _node.Read("growGoals", false, false,
-      "Determines whether or not we grow a tree from the goal");
-  m_disperseTrials = _node.Read("trial", false, 3, 1, 1000,
+  m_disperseTrials = _node.Read("trial", m_numDirections > 1,
+      m_disperseTrials, size_t(1), size_t(1000),
       "Number of trials to get a dispersed direction");
 
   // Parse MP object labels
   m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Label");
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
-  m_ncLabel = _node.Read("connectorLabel", false, "", "Node Connection Method");
+  m_ncLabel = _node.Read("connectorLabel", false, "",
+      "Connection Method for RRG-like behavior.");
+
   m_goalDmLabel = _node.Read("goalDmLabel", false, "",
       "Distance metric for checking goal extensions in uni-directional RRT.");
+  m_goalThreshold = _node.Read("goalThreshold", false,
+      m_goalThreshold, 0., std::numeric_limits<double>::max(),
+      "For each extension that ends within this distance of the goal (according "
+      "to the goal DM), attempt to extend towards the goal. If the value is 0, "
+      "the extender's max range will be used instead.");
 
-  if(m_growGoals and !m_goalDmLabel.empty())
-    throw ParseException(_node.Where()) << "Cannot use a goal DM with grow goals.";
+
+  // Some options only apply when growing goals
+  if(m_growGoals) {
+    const std::string when(" with bi-directional growth.");
+
+    if(!m_goalDmLabel.empty())
+      throw ParseException(_node.Where()) << "Cannot use goal DM" << when;
+    if(m_goalThreshold)
+      throw ParseException(_node.Where()) << "Cannot use goal threshold" << when;
+    if(m_growthFocus)
+      throw ParseException(_node.Where()) << "Cannot use growth focus" << when;
+  }
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/
@@ -491,35 +528,52 @@ SelectDispersedTarget(const VID _v) {
 template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const TreeType* _tree) {
+FindNearestNeighbor(const CfgType& _cfg, const VertexSet* _tree) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
+
+  if(this->m_debug)
+    std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
+              << " with '" << m_nfLabel << "' from "
+              << (_tree ? "a tree of size " + std::to_string(_tree->size())
+                        : "the full roadmap")
+              << "."
+              << std::endl;
 
   std::vector<Neighbor> neighbors;
 
   auto g = this->GetRoadmap();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   if(_tree) {
-    nf->FindNeighbors(this->GetRoadmap(),
-        _tree->begin(), _tree->end(),
-        _tree->size() == g->Size(),
-        _cfg, std::back_inserter(neighbors));
+    //nf->FindNeighbors(g,
+    //    _tree->begin(), _tree->end(),
+    //    _tree->size() == g->Size(),
+    //    _cfg, std::back_inserter(neighbors));
+    nf->FindNeighbors(g, _cfg, *_tree, neighbors);
   }
   else {
-    nf->FindNeighbors(this->GetRoadmap(),
-        g->begin(), g->end(),
-        true,
-        _cfg, std::back_inserter(neighbors));
+    nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
   }
 
   VID nearestVID = INVALID_VID;
 
-  if(!neighbors.empty())
+  if(!neighbors.empty()) {
     nearestVID = neighbors[0].target;
-  else
+
+    if(this->m_debug)
+      std::cout << "\tFound nearest neighbor " << nearestVID << " at distance "
+                << neighbors[0].distance << "."
+                << std::endl;
+  }
+  else {
     // We really don't want this to happen. If you see high numbers for this,
     // you likely have problems with parameter or algorithm selection.
     stats->IncStat("BasicRRT::FailedNF");
+
+    if(this->m_debug)
+      std::cout << "\tFailed to find a nearest neighbor."
+                << std::endl;
+  }
 
   return nearestVID;
 }
@@ -706,14 +760,18 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
   target.SetData(data);
 
   // Check the nearest point to _newVID in each goal region. If it lies within
-  // the extender's range, try to extend towards it.
+  // the goal threshold, try to extend towards it.
   auto dm = this->GetDistanceMetric(m_goalDmLabel);
   const double distance = dm->Distance(cfg, target),
-               range = this->GetExtender(m_exLabel)->GetMaxDistance();
+               range = m_goalThreshold == 0.
+                     ? this->GetExtender(m_exLabel)->GetMaxDistance()
+                     : m_goalThreshold;
+
 
   if(this->m_debug)
-    std::cout << "\tNearest configuration is " << distance << " / " << range
-              << " units away at " << target.PrettyPrint() << "."
+    std::cout << "\tNearest goal configuration is " << distance << " / "
+              << range << " units away at " << target.PrettyPrint()
+              << "."
               << std::endl;
 
   // If we are out of range, do not attempt to extend.
@@ -802,8 +860,8 @@ void
 BasicRRTStrategy<MPTraits>::
 MergeTrees(const VID _source, const VID _target) {
   // Find the trees holding both _source and _target.
-  typename std::vector<TreeType>::iterator sourceTree = m_trees.end(),
-                                           targetTree = m_trees.end();
+  typename std::vector<VertexSet>::iterator sourceTree = m_trees.end(),
+                                            targetTree = m_trees.end();
   for(auto iter = m_trees.begin(); iter != m_trees.end(); ++iter) {
     if(iter->count(_source))
       sourceTree = iter;
@@ -828,7 +886,7 @@ MergeTrees(const VID _source, const VID _target) {
   // Otherwise we found two different trees which must be merged.
   else {
     // Merge the smaller tree into the larger one.
-    typename std::vector<TreeType>::iterator smallTree, largeTree;
+    typename std::vector<VertexSet>::iterator smallTree, largeTree;
     if(targetTree->size() > sourceTree->size()) {
       largeTree = targetTree;
       smallTree = sourceTree;

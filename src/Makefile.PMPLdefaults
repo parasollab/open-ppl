@@ -18,11 +18,12 @@ UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
              $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
-	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL)
+	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL) $(CGAL_INC)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB) $(BULLET_LIB) \
 	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS) $(MATLAB_LIBS)
-UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) $(MODELLOADER_LIBFILE) \
+UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) \
+		$(CGAL_LIBFILE) $(MODELLOADER_LIBFILE) \
 		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE) \
 		$(BULLET_LIBFILE) $(GLVIS_LIBFILE) $(PHYSICAL_ROBOTS_LIBFILE) \
 		$(LKH_LIBFILE)
@@ -39,25 +40,6 @@ endif
 # platform specific overrides
 ################################################################################
 
-#linux/gcc on Manhattan
-ifeq ($(platform), LINUX_gcc_mh)
-  #use same boost as used in STAPL
-  BOOST_ROOT = /usr/local
-  BOOST_INCL = -I$(BOOST_ROOT)/include
-  BOOST_LIBRARY_DIRS = $(BOOST_ROOT)/lib
-  BOOST_LIB = -L$(BOOST_LIBRARY_DIRS) -lboost_thread -lboost_serialization -lboost_date_time
-endif
-
-#linuc/gcc on brazos (brazos.tamu.edu)
-ifeq ($(platform), LINUX_gcc_brazos)
-  #use same boost as used in STAPL -
-  #TODO Remove hardcoding of Yanis's directory and verify boost options
-  BOOST_ROOT = /home/ipapadop/usr/boost_1_48
-  BOOST_INCL = -I$(BOOST_ROOT)/include
-  BOOST_LIBRARY_DIRS = $(BOOST_ROOT)/lib
-  BOOST_LIB = -L$(BOOST_LIBRARY_DIRS) -lboost_serialization
-endif
-
 #linux/gcc Cray - hopper.nersc.gov || edison.nersc.gov || rain.cse.tamu.edu
 ifeq ($(platform), CRAY_gcc)
   # first boost for rain, second for nersc machines
@@ -65,19 +47,6 @@ ifeq ($(platform), CRAY_gcc)
   BOOST_INCL = -I$(BOOST_ROOT)/include
   BOOST_LIBRARY_DIRS = $(BOOST_ROOT)/lib
   BOOST_LIB = -L$(BOOST_LIBRARY_DIRS) -lboost_serialization
-endif
-
-#aix/64-bit/gcc - (e.g., hydra.tamu.edu)
-ifeq ($(platform), AIX_64_gcc)
-  #TODO Remove hardcoding
-  BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
-endif
-
-#aix/64-bit/native compiler - (e.g., hydra.tamu.edu)
-ifeq ($(platform), AIX_64_xlC)
-  #TODO Remove hardcoding, check DEPS to see if change is needed
-  BOOST_INCL = -I/scratch/shawnat/usr/include/boost-1_33_1
-  DEPS = -M -MF $*.d
 endif
 
 #fink/gcc on 64 bit MAC
@@ -124,8 +93,24 @@ CD_LIBFILE := $(PQP_LIBFILE) $(RAPID_LIBFILE)
 ################################################################################
 ## CGAL
 ################################################################################
+CGAL_INC :=
 CGAL_DEF := -DCGAL_NO_ASSERTIONS -DCGAL_NO_PRECONDITIONS -DCGAL_NO_POSTCONDITIONS
 CGAL_LIB := -lCGAL -lmpfr -lgmp
+CGAL_LIBFILE :=
+
+# Check if CGAL is available on the system. If not, we need to build it.
+ifeq ("$(wildcard /usr/lib64/libCGAL.so)","")
+  CGAL_DIR := $(CURDIR)/$(UTILS_DIR)/CGAL
+  CGAL_INC := -I$(CGAL_DIR)/install/include
+  CGAL_LIB := -Wl,-rpath=$(CGAL_DIR)/install/lib64 \
+              -L$(CGAL_DIR)/install/lib64 $(CGAL_LIB)
+
+  CGAL_LIBFILE := $(CGAL_DIR)/install
+$(CGAL_LIBFILE):
+	@echo Building CGAL library...
+	@cd $(CGAL_DIR) && $(MAKE)
+endif
+
 
 ################################################################################
 ## Tiny XML
@@ -153,9 +138,10 @@ MODELLOADER_LIB  := -L$(MODELLOADER_DIR) -lmodloader
 MODELLOADER_INCL := -I$(MODELLOADER_DIR)
 
 MODELLOADER_LIBFILE := $(MODELLOADER_DIR)/libmodloader.a
-$(MODELLOADER_LIBFILE):
+$(MODELLOADER_LIBFILE): $(CGAL_LIBFILE)
 	@echo Building modelloader library...
-	@cd $(MODELLOADER_DIR) && $(MAKE) platform=$(platform) debug=$(debug)
+	@cd $(MODELLOADER_DIR) && $(MAKE) platform=$(platform) debug=$(debug) \
+	  CGAL_DEF="$(CGAL_DEF)" CGAL_INCL="$(CGAL_INC)" CGAL_LIB="$(CGAL_LIB)"
 
 ################################################################################
 ## MPNN
@@ -349,7 +335,7 @@ DLIB_INCL := -I$(DLIB_DIR)
 MATLAB_SRCS :=
 
 ifneq ($(matlab), 0)
-  MATLAB_DIR  := /usr/local/MATLAB/R2018a
+  MATLAB_DIR  := /usr/local/MATLAB/R2019a
   MATLAB_INCL := -I$(MATLAB_DIR)/extern/include -I$(MATLAB_DIR)/simulink/include
   MATLAB_DEFS := -DPMPL_USE_MATLAB -DMATLAB_DEFAULT_RELEASE=R2017b \
                  -DUSE_MEX_CMD -D_GNU_SOURCE -DMATLAB_MEX_FILE -DNDEBUG
@@ -368,10 +354,30 @@ endif
 ################################################################################
 # Simulator
 ################################################################################
+SIM_DEF  :=
+sim: SIM_DEF += -DPMPL_USE_SIMULATOR
 SIM_INCL := $(QT_INCL)
 SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_SRCS := \
+  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
+  Simulator/Simulation.cpp \
+  Visualization/DrawableBody.cpp \
+  Visualization/DrawableBoundary.cpp \
+  Visualization/DrawableCfg.cpp \
+  Visualization/DrawableMultiBody.cpp \
+  Visualization/DrawablePath.cpp \
+  Visualization/DrawablePolyhedron.cpp \
+  Visualization/DrawableRoadmap.cpp \
+  Visualization/DrawableWorkspaceSkeleton.cpp \
+  Visualization/Gui/EditBodyDialog.cpp \
+  Visualization/Gui/EditCfgDialog.cpp \
+  Visualization/Gui/EditConnectionDialog.cpp \
+  Visualization/Gui/EditMultiBodyDialog.cpp \
+  Visualization/Gui/EditWidgets.cpp \
+  Visualization/Gui/Setup.cpp \
+  Visualization/Gui/SliderTextWidget.cpp \
+  Visualization/Gui/TestWidget.cpp \
   $(PMPL_DIR)/sim_main.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
@@ -400,24 +406,7 @@ SIM_SRCS := \
   Behaviors/TMPStrategies/TMPHelperAlgorithms/EnforcedHillClimbing.cpp \
   Behaviors/TMPStrategies/TMPHelperAlgorithms/RelaxedGraphPlan.cpp \
   Behaviors/TMPStrategies/TMPStrategyMethod.cpp \
-  Behaviors/TMPStrategies/State.cpp \
-  MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
-  Simulator/Simulation.cpp \
-  Visualization/DrawableBody.cpp \
-  Visualization/DrawableBoundary.cpp \
-  Visualization/DrawableCfg.cpp \
-  Visualization/DrawableMultiBody.cpp \
-  Visualization/DrawablePath.cpp \
-  Visualization/DrawablePolyhedron.cpp \
-  Visualization/DrawableRoadmap.cpp \
-  Visualization/Gui/EditBodyDialog.cpp \
-  Visualization/Gui/EditCfgDialog.cpp \
-  Visualization/Gui/EditConnectionDialog.cpp \
-  Visualization/Gui/EditMultiBodyDialog.cpp \
-  Visualization/Gui/EditWidgets.cpp \
-  Visualization/Gui/Setup.cpp \
-  Visualization/Gui/SliderTextWidget.cpp \
-  Visualization/Gui/TestWidget.cpp
+  Behaviors/TMPStrategies/State.cpp
 
 ################################################################################
 # Hardware
@@ -516,6 +505,7 @@ PMPL_SRCS := \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
+  Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \
   Utilities/MedialAxis2D.cpp \

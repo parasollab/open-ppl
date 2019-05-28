@@ -7,6 +7,14 @@
 #include "Utilities/MPUtils.h"
 #include "Utilities/XMLNode.h"
 
+#ifdef PMPL_USE_SIMULATOR
+#include "Simulator/Simulation.h"
+static const glutils::color regionColor{0, 0, 1, .5};
+static constexpr unsigned int sleepTime = 10000;
+#endif
+
+#include "nonstd/io.h"
+
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -49,7 +57,7 @@ const Boundary*
 RegionKit::
 SelectRegion() {
   // Update all region probabilities.
-  vector<double> probabilities = ComputeProbabilities();
+  std::vector<double> probabilities = ComputeProbabilities();
 
   // Construct with random number generator with the region probabilities.
   static std::default_random_engine generator(0);
@@ -102,11 +110,9 @@ IncrementFailure(const Boundary* const _region, const size_t _count) {
 
   // Ensure that this region exists.
   auto iter = m_regionData.find(region);
-  if(iter == m_regionData.end()) {
-    ostringstream oss;
-    oss << "Cannot increment success for non-existing region '" << region << "'";
-    throw RunTimeException(WHERE, oss.str());
-  }
+  if(iter == m_regionData.end())
+    throw RunTimeException(WHERE) << "Cannot increment success for non-existing "
+                                  << "region '" << region << "'";
 
   iter->second.attempts += _count;
 }
@@ -121,11 +127,9 @@ IncrementSuccess(const Boundary* const _region, const size_t _count) {
 
   // Ensure that this region exists.
   auto iter = m_regionData.find(region);
-  if(iter == m_regionData.end()) {
-    ostringstream oss;
-    oss << "Cannot increment attempts for non-existing region '" << region << "'";
-    throw RunTimeException(WHERE, oss.str());
-  }
+  if(iter == m_regionData.end())
+    throw RunTimeException(WHERE) << "Cannot increment attempts for "
+                                  << "non-existing region '" << region << "'";
 
   iter->second.successes += _count;
   iter->second.attempts  += _count;
@@ -217,26 +221,21 @@ RegionKit::
 InitRegions(const Point3d& _start) {
   // Mark all nodes unvisited.
   m_visited.clear();
-  WorkspaceSkeleton::GraphType& g = m_skeleton->GetGraph();
+  auto& g = m_skeleton->GetGraph();
   for(auto vit = g.begin(); vit != g.end(); ++vit)
     m_visited[vit->descriptor()] = false;
 
-  // Find the vertex nearest to start.
-  auto sit = m_skeleton->FindNearestVertex(_start);
+  // Find the vertex nearest to start and create regions for each outgoing
+  // edge.
+  auto iter = m_skeleton->FindNearestVertex(_start);
+  CreateRegions(iter);
 
-  // Spark a region for each outgoing edge from _start.
-  for(auto eit = sit->begin(); eit != sit->end(); ++eit) {
-    auto r = new WorkspaceBoundingSphere(sit->property(), m_regionRadius);
-    m_regionData.emplace(r, RegionData(eit->descriptor()));
-  }
-  m_visited[sit->descriptor()] = true;
-
-  if(m_debug)
-    std::cout << "RegionKit:: initialized new region with radius "
-              << std::setprecision(4) << m_regionRadius
-              << " at vertex " << sit->descriptor()
-              << " nearest to point " << _start << "."
-              << std::endl;
+  // Set up the skeleton visualization.
+#ifdef PMPL_USE_SIMULATOR
+  Simulation::Get()->AddWorkspaceSkeleton(m_skeleton, glutils::color::orange);
+  usleep(sleepTime);
+  m_skeleton->Write("skeleton");
+#endif
 }
 
 
@@ -246,95 +245,180 @@ CreateRegions(const Point3d& _p) {
   auto& g = m_skeleton->GetGraph();
 
   // Check each skeleton node to see if a new region should be created.
-  for(auto vit = g.begin(); vit != g.end(); ++vit) {
-    // Skip skeleton nodes that are already visited.
-    if(m_visited[vit->descriptor()])
-      continue;
-
+  for(auto iter = g.begin(); iter != g.end(); ++iter) {
     // Skip skeleton nodes that are too far away.
-    const double dist = (vit->property() - _p).norm();
+    const double dist = (iter->property() - _p).norm();
     if(dist >= m_regionRadius)
       continue;
 
-    // If we're still here, the region is in range and unvisited.
-    // Create a new region for each outgoing edge of this skeleton node.
-    for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
-      auto r = new WorkspaceBoundingSphere(vit->property(), m_regionRadius);
-      m_regionData.emplace(r, RegionData{eit->descriptor()});
-
-      if(m_debug)
-        std::cout << "RegionKit:: created new region with radius "
-                  << std::setprecision(4) << m_regionRadius
-                  << " on edge (" << eit->source() << ", "
-                  << eit->target() << ", " << eit->id() << ") "
-                  << "nearest to point " << _p << "."
-                  << std::endl;
-    }
-    m_visited[vit->descriptor()] = true;
+    CreateRegions(iter);
   }
+}
+
+
+std::vector<Boundary*>
+RegionKit::
+CreateRegions(const WorkspaceSkeleton::vertex_iterator _iter) {
+  // Skip skeleton nodes that are already visited.
+  if(m_visited[_iter->descriptor()])
+    return {};
+  m_visited[_iter->descriptor()] = true;
+
+  // Save the set of created regions to return.
+  std::vector<Boundary*> newRegions;
+
+  // Create a new region for each outgoing edge of this skeleton node.
+  for(auto eit = _iter->begin(); eit != _iter->end(); ++eit) {
+    auto r = new WorkspaceBoundingSphere(_iter->property(), m_regionRadius);
+    m_regionData.emplace(r, RegionData(eit->descriptor()));
+    newRegions.push_back(r);
+
+#ifdef PMPL_USE_SIMULATOR
+    // Show visualization if we are using the simulator.
+    m_regionData[r].visualizationID = Simulation::Get()->AddBoundary(r,
+        regionColor, true);
+    usleep(sleepTime);
+#endif
+
+    if(m_debug)
+      std::cout << "RegionKit:: created new region " << r << " with radius "
+                << std::setprecision(4) << m_regionRadius
+                << " on edge (" << eit->source() << ", "
+                << eit->target() << ", " << eit->id() << ") "
+                << "at skeleton vertex " << _iter->descriptor()
+                << "(" << _iter->property() << ")."
+                << std::endl;
+  }
+
+  return newRegions;
 }
 
 
 void
 RegionKit::
 AdvanceRegions(const Cfg& _cfg) {
-  // Iterate all regions and see if any regions contain the new cfg
-  // If a region contains the new cfg, advance it along the flow edge and
-  // until the new region we get from this is at the end of the flow edge or
-  // it no longer contains the cfg
-
   if(m_debug)
     std::cout << "RegionKit:: checking " << m_regionData.size()
-              << " regions for contact with new configuration."
+              << " regions for contact with new configuration "
+              << _cfg.PrettyPrint() << "."
               << std::endl;
 
-  // Iterate through all regions to see which should be advanced.
+  // Keep track of any newly reached vertices to spawn regions on their outbound
+  // edges.
+  std::queue<WorkspaceSkeleton::VD> newlyReachedVertices;
+
+  // Iterate through all existing regions to see which should be advanced.
   for(auto iter = m_regionData.begin(); iter != m_regionData.end(); ) {
     Boundary* region = iter->first;
-    bool increment = true;
 
     // Advance this region until the robot at _cfg is no longer touching it.
-    while(IsTouching(_cfg, region)) {
-      // Get region data and the edge path it is traversing.
-      auto& data = m_regionData[region];
-      const vector<Point3d>& path = m_skeleton->FindEdge(data.edgeDescriptor)->
-          property();
-      size_t& i = data.edgeIndex;
-
-      // If there are more points left on this edge, advance the region and
-      // index.
-      if(i < path.size() - 1) {
-        const Point3d& current = path[i];
-        const Point3d& next = path[++i];
-        region->SetCenter({next[0], next[1], next[2]});
-
-        if(m_debug)
-          std::cout << "\tAdvancing region " << region << " from index "
-                    << i - 1 << " to " << i << " / " << path.size()
-                    << "(" << (next - current).norm() << " units)."
-                    << std::endl;
-      }
-      // If not, the region has finished traversing its edge and must be
-      // deleted.
-      else {
-        if(m_debug)
-          std::cout << "\tRegion " << region << " has reached the end of its "
-                    << "path, erasing it now. " << m_regionData.size() - 1
-                    << " regions remain."
-                    << std::endl;
-
-        iter = m_regionData.erase(iter);
-
-        delete region;
-        region = nullptr;
-        increment = false;
-
-        break;
-      }
-    }
-    if(increment && iter != m_regionData.end())
+    if(!AdvanceRegionToCompletion(_cfg, region)) {
       ++iter;
+      continue;
+    }
+
+    // We have reached the end of this region's edge. Delete it and save the
+    // target vertex. to spawn new regions.
+    auto edgeIter = m_skeleton->FindEdge(iter->second.edgeDescriptor);
+    const auto target = edgeIter->target();
+    if(!m_visited[target])
+      newlyReachedVertices.push(target);
+    iter = m_regionData.erase(iter);
   }
+
+  if(m_debug)
+    std::cout << newlyReachedVertices.size()
+              << " new vertices reached while advancing regions."
+              << std::endl;
+
+  // Create new regions for each newly reached vertex.
+  while(!newlyReachedVertices.empty()) {
+    // Pop the next vertex off the queue.
+    WorkspaceSkeleton::VD targetVD = newlyReachedVertices.front();
+    WorkspaceSkeleton::vertex_iterator target = m_skeleton->FindVertex(targetVD);
+    newlyReachedVertices.pop();
+
+    // Create regions at this vertex.
+    std::vector<Boundary*> newRegions = CreateRegions(target);
+
+    // Advance each new region.
+    for(auto region : newRegions) {
+      // Advance this region until the robot at _cfg is no longer touching it.
+      if(!AdvanceRegionToCompletion(_cfg, region))
+        continue;
+
+      // We have reached the end of this region's edge. Delete it and save the
+      // target vertex. to spawn new regions.
+      auto iter = m_regionData.find(region);
+      auto edgeIter = m_skeleton->FindEdge(iter->second.edgeDescriptor);
+      newlyReachedVertices.push(edgeIter->target());
+      m_regionData.erase(iter);
+    }
+  }
+}
+
+
+bool
+RegionKit::
+AdvanceRegionToCompletion(const Cfg& _cfg, Boundary* const _region) {
+  // Find the edge path this region is traversing.
+  auto& data = m_regionData[_region];
+  auto edgeIter = m_skeleton->FindEdge(data.edgeDescriptor);
+  const std::vector<Point3d>& path = edgeIter->property();
+  size_t& i = data.edgeIndex;
+
+  if(m_debug)
+    std::cout << "\tChecking region " << _region << " at "
+              << _region->GetCenter() << "."
+              << "\n\t Region is at index " << i << " / " << path.size() - 1
+              << std::endl;
+
+  while(IsTouching(_cfg, _region)) {
+
+    // If there are no more points left on this edge, this region is completed.
+    if(i == path.size() - 1) {
+      if(m_debug)
+        std::cout << "\t Region has reached the end of its "
+                  << "path, erasing it now. " << m_regionData.size() - 1
+                  << " regions remain."
+                  << std::endl;
+
+      // Remove visualization if we are using it.
+      #ifdef PMPL_USE_SIMULATOR
+      usleep(sleepTime);
+      Simulation::Get()->RemoveBoundary(data.visualizationID);
+      usleep(sleepTime);
+      #endif
+
+      return true;
+    }
+
+    // Otherwise there are still points left; advance the region and index.
+    const Point3d& current = path[i];
+    const Point3d& next = path[++i];
+    _region->SetCenter({next[0], next[1], next[2]});
+
+    if(m_debug)
+      std::cout << "\t Advancing region from index "
+                << i - 1 << " to " << i << " / " << path.size() - 1
+                << " (" << (next - current).norm() << " units)."
+                << std::endl;
+
+    // Advance visualization if we are using it.
+    #ifdef PMPL_USE_SIMULATOR
+    const glutils::transform t{1, 0, 0, 0,
+                               0, 1, 0, 0,
+                               0, 0, 1, 0,
+                               float(next[0]), float(next[1]), float(next[2]), 1};
+    Simulation::Get()->TransformBoundary(data.visualizationID, t);
+    usleep(sleepTime);
+    #endif
+  }
+
+  if(m_debug)
+    std::cout << "\t Region is still traversing this edge." << std::endl;
+
+  return false;
 }
 
 
@@ -346,7 +430,7 @@ IsTouching(const Cfg& _cfg, const Boundary* const _region) const {
   const double robotRadius  = _cfg.GetMultiBody()->GetBoundingSphereRadius(),
                threshold    = 2 * robotRadius * m_penetrationFactor;
 
-  // Compute the penetration distance.
+  // Compute the penetration distance (maximally enclosed bounding diameter).
   const Point3d robotCenter = _cfg.GetPoint();
   const double penetration = _region->GetClearance(robotCenter) + robotRadius;
 
@@ -354,16 +438,13 @@ IsTouching(const Cfg& _cfg, const Boundary* const _region) const {
   const bool touching = penetration >= threshold;
 
   if(m_debug)
-    std::cout << "\tNew Cfg's center penetrates "
-              << std::setprecision(4) << _region->GetClearance(robotCenter)
-              << " units into the region center."
-              << "\n\t  Bounding sphere radius: " << robotRadius
-              << "\n\t  Region radius: " << m_regionRadius
+    std::cout << "\t Touch test: " << (touching ? "passed" : "failed")
+              << "\n\t  Bounding sphere: " << robotCenter << " ; " << robotRadius
+              << "\n\t  Region:          " << _region->GetCenter() << " ; "
+              << m_regionRadius
               << "\n\t  Bounding sphere penetrates by "
-              << std::setprecision(4) << penetration << " units."
-              << "\n\t  Robot is" << (touching ? "" : " not")
-              << " within 'touching' threshold of "
-              << std::setprecision(4) << threshold
+              << std::setprecision(4)
+              << penetration << (touching ? " >= " : " < ") << threshold
               << " units."
               << std::endl;
 

@@ -201,6 +201,9 @@ Initialize() {
   // Clear previous state.
   m_dmLabel.clear();
   Reset(nullptr);
+
+  this->GetStatClass()->SetStat(
+      "QueryMethod::" + this->GetLabel() + "::FoundPath", 0);
 }
 
 /*-------------------------- MapEvaluator Interface --------------------------*/
@@ -276,6 +279,9 @@ operator()() {
 
   // We generated a path successfully: track the path length history.
   this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
+
+  this->GetStatClass()->SetStat(
+      "QueryMethod::" + this->GetLabel() + "::FoundPath", 1);
 
   if(this->m_debug)
     std::cout << "\tConnected all goals!" << std::endl;
@@ -436,8 +442,32 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
   // First check if the edge is lazily invalidated. If so, the distance is
   // infinite.
+
   if(m_roadmap->IsEdgeInvalidated(_ei->id()))
     return std::numeric_limits<double>::infinity();
+
+#if 0 // Irving to move this to its own method.
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
+    std::cout << "EDGE INVALIDATED!!!" << std::endl;
+    return std::numeric_limits<double>::infinity();
+  }
+  else {
+    const std::vector<std::pair<CfgType,double>>& conflictCfgsAt = m_roadmap->m_conflictCfgsAt;
+    double conflictTimestep = 0;
+    for(size_t i = 0 ; i <  conflictCfgsAt.size() ; ++i){
+      conflictTimestep = conflictCfgsAt[i].second;
+      if(conflictTimestep*1.1 > _sourceDistance && conflictTimestep < (_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))*1.1){
+        SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool("SI");
+        if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
+          std::cout << "***************** Invalidating conflicting edge (" << _ei->source() << "," << _ei->target() << ")" <<  "at timestep " << conflictTimestep <<std::endl;
+          m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(), conflictTimestep, true);
+          return std::numeric_limits<double>::infinity();
+        }
+      }
+    }
+  }
+#endif
 
   // Check if Distance Metric has been defined. If so use the Distance Metric's
   // EdgeWeight function to compute the target distance.
