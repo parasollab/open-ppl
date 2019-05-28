@@ -402,6 +402,7 @@ SIM_SRCS := \
   Behaviors/TMPStrategies/ITPlacement/PlacementMethod.cpp \
   Behaviors/TMPStrategies/ITPlacement/PlacementMethodFactory.cpp \
   Behaviors/TMPStrategies/ITPlacement/WorkspaceGuidance.cpp \
+  Behaviors/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   Behaviors/TMPStrategies/TaskPlan.cpp \
   Behaviors/TMPStrategies/TMPHelperAlgorithms/EnforcedHillClimbing.cpp \
   Behaviors/TMPStrategies/TMPHelperAlgorithms/RelaxedGraphPlan.cpp \

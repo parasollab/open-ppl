@@ -114,7 +114,7 @@ class InteractionTemplate {
 
     std::vector<Cfg> m_translatedInteractionPositions;
 
-    std::vector<std::pair<Cfg,Cfg>> m_transformedInteractionPositionPairs
+    std::vector<std::pair<Cfg,Cfg>> m_transformedInteractionPositionPairs;
 
     std::vector<std::vector<Cfg>> m_translatedInteractionPaths;
 

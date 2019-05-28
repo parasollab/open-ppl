@@ -76,7 +76,7 @@ GetTranslatedPositions(){
 }
 
 
-std::vector<std::pair<Cfg>> 
+std::vector<std::pair<Cfg,Cfg>> 
 InteractionTemplate::
 GetTransformedPositionPairs(){
   if(!m_transformedInteractionPositionPairs.empty()){

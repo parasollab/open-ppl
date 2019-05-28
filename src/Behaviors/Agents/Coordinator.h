@@ -219,7 +219,7 @@ class Coordinator : public Agent {
     //robots
     void TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan);
 
-    /// Temporary Function to call it placement methods during development
+    /// Calls it placement methods listed in XML
     void FindITLocations(InteractionTemplate* _it);
 
     /// Temporary Function to add placement method to map during development

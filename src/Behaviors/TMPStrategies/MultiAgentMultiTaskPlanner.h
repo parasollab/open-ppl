@@ -23,7 +23,7 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     ///@name Construction
     ///@{
 
-    MultiAgentMultiTaskPlanner() = default;
+    MultiAgentMultiTaskPlanner(XMLNode& _node);
 
     ~MultiAgentMultiTaskPlanner() = default;
 
@@ -85,16 +85,16 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     /// @param _minAgent is input as a nullptr and used to return the new agent/robot
     ///        selected by the function
     /// @return Returns the time the new robot is ready to start the next subtask
-    double RobotSelection(typename TaskGraph::adj_edge_iterator& _ei, (Agent*)& _minAgent);
+    double RobotSelection(typename TaskGraph::adj_edge_iterator& _ei, Agent*& _minAgent);
 
     ///@}
 
 
   private:
 
-    TaskGraph m_highLevelGraph;
+    TaskGraph* m_highLevelGraph;
 
-    std::unordered_map<agent*,std::pair<Cfg,double>> m_RAT; ///< Robot Availability Table
+    std::unordered_map<Agent*,std::pair<Cfg,double>> m_RAT; ///< Robot Availability Table
 
     std::vector<TaskPlan*> m_taskPlans;
 
@@ -105,7 +105,7 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     std::vector<size_t> m_currentTaskVIDs;
 
     // Keeps track of the robot assigned to each node during the dijkstra search
-    std::unordered_map<size_t,agent*> m_nodeAgentMap; 
+    std::unordered_map<size_t,Agent*> m_nodeAgentMap; 
 };
 
 #endif
