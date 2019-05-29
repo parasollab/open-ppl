@@ -238,7 +238,10 @@ QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
 QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
 
 # Moc setup
-QT_MOC  := moc
+QT_MOC  := $(shell find /usr/lib64/qt4/bin/moc 2> /dev/null)
+ifndef QT_MOC
+  $(error Qt moc not found at /usr/lib64/qt4/bin/moc.)
+endif
 
 # Find the header files with Q_OBJECT.
 MOC_SRCS := $(patsubst ./%.h,moc_%.cpp, $(shell find . -type f \
