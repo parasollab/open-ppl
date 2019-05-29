@@ -39,23 +39,19 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     /// _library needs to have the solution and problem set to the coordinator's
     /// values for these.
     virtual TaskPlan PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
-                               vector<std::shared_ptr<MPTask>> _tasks, 
-                               Robot* _superRobot,
-                               std::unordered_map<std::string, 
-                               std::unique_ptr<PlacementMethod>>* _ITPlacementMethods = nullptr) 
-                               override;
+                               vector<std::shared_ptr<MPTask>> _tasks) override;
        
     ///@}
     ///@name TaskGrap Functions
     ///@{
 
-    void CreateHighLevelGraph(Robot* _superRobot);
+    void CreateHighLevelGraph();
 
-    TaskPlan MAMTDijkstra(WholeTask& _wholeTask);
+    TaskPlan MAMTDijkstra(WholeTask* _wholeTask);
 
-    void AddTaskToGraph(WholeTask& _wholeTask, Robot* _superRobot);
+    void AddTaskToGraph(WholeTask* _wholeTask);
 
-    void RemoveTaskFromGraph(WholeTask& _wholeTask);
+    void RemoveTaskFromGraph(WholeTask* _wholeTask);
 
     ///@}
     ///@name RAT Functions
@@ -79,13 +75,13 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     double LowLevelGraphPathWeight(Cfg _start, Cfg _goal);
 
     double MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
-        const double _sourceDistance, const double _targetDistance) const;
+        const double _sourceDistance, const double _targetDistance);
 
     /// @param _ei is the edge representing the selection of the new robot
     /// @param _minAgent is input as a nullptr and used to return the new agent/robot
     ///        selected by the function
     /// @return Returns the time the new robot is ready to start the next subtask
-    double RobotSelection(typename TaskGraph::adj_edge_iterator& _ei, Agent*& _minAgent);
+    double RobotSelection(size_t _target, Agent** _minAgent);
 
     ///@}
 

@@ -24,6 +24,16 @@ class TMPStrategyMethod {
     virtual ~TMPStrategyMethod() = default;
 
     ///@}
+    ///@name Configure
+    ///@{
+
+    void Initialize(Robot* _superRobot);
+
+    /// Removes all of the capability roadmaps currently stored if replanning is
+    /// needed. 
+    void ResetCapabilityRoadmaps();
+
+	///@}
     ///@name Call Method
     ///@{
 
@@ -31,23 +41,41 @@ class TMPStrategyMethod {
     /// _library needs to have the solution and problem set to the coordinator's
     /// values for these.
     virtual TaskPlan PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
-                               vector<std::shared_ptr<MPTask>> _tasks, Robot* _superRobot,
-                               std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
-                                                               _ITPlacementMethods = nullptr);
-
-    /// Removes all of the capability roadmaps currently stored if replanning is
-    /// needed. TODO::LazyQuery may remove the need for this.
-    void ResetCapabilityRoadmaps();
+                               vector<std::shared_ptr<MPTask>> _tasks);
 
     ///@}
 
-  protected:
+  //protected:
 
-    ///@name
+    ///@name Combined Roadmap Methods
+    ///@{
+	
+    void CreateCombinedRoadmap();
+
+    void GenerateITs();
+
+    void FindITLocations(InteractionTemplate* _it);
+    
+	/// Transforms the ITs into the disovered locations
+	void TransformITs();
+    
+	/// Initiallizes configurations for each capability at the start and end
+    /// constriants of each whole task and adds them to the megaRoadmap
+    void SetupWholeTasks();
+
+	///@}
+    ///@name Helper Methods
     ///@{
 
+    /// Generates the dummy agents of each capabiltiy used for planning
+    void GenerateDummyAgents();
 
-
+	/// Generates the whole task object for each input task
+	void CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks);
+	
+	///@}
+	
+	/*
     /// Generate roadmaps for each capability present in the agent set.
     void GenerateCapabilityRoadmaps(MPLibrary* _library, vector<HandoffAgent*> _agents,
                                     vector<std::shared_ptr<MPTask>> _tasks, Robot* _superRobot,
@@ -66,53 +94,33 @@ class TMPStrategyMethod {
     void PlaceInteractionTemplates(MPLibrary* _library, Robot* _superRobot,
                                    std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
                                    _ITPlacementMethods);
-
-    void FindITLocations(InteractionTemplate* _it, Robot* _superRobot);
-
-    void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
+    
+	void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 
     void ConnectDistinctRoadmaps(vector<size_t> _roadmap1, vector<size_t> _roadmap2,
                                  HandoffAgent* _agent, Robot* _superRobot, MPLibrary* _library);
 
-    /// Randomly transforms the handoff template and attempts to validate it in
-    /// the environment
-    void TranslateHandoffTemplates(Robot* _superRobot);
-
-    /// Initiallizes configurations for each capability at the start and end
-    /// constriants of each whole task and adds them to the megaRoadmap
-    void SetupWholeTasks(Robot* _superRobot);
-
-    void CreateCombinedRoadmap(Robot* _superRobot);
-
-    void Initialize(Robot* _superRobot);
-
     /// Makes sure all of the agents are ready to execute the plans
     void InitializeAgents();
 
-    /// Generates the dummy agents of each capabiltiy used for planning
-    void GenerateDummyAgents();
-
-    void GenerateHandoffTemplates(Robot* _superRobot);
-
     /// Calls it placement methods listed in XML
     void FindITLocations(InteractionTemplate* _it);
-
+	*/
 
     ///@}
     ///@name Member Variables
     ///@{
 
+	Robot* m_robot;
+
     MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
 
-    MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
+    std::unique_ptr<MPSolution> m_solution{nullptr}; ///< The shared-roadmap solution.
 
     std::unique_ptr<Environment> m_handoffEnvironment;    ///< The handoff template environment.
 
-    /// Map from each capability to an agent of that capability.
-    std::unordered_map<std::string, HandoffAgent*> m_dummyAgentMap;
-
     /// Map from each capability to the roadmap for that capability.
-    std::unordered_map<std::string, GraphType*> m_capabilityRoadmaps;
+    std::unordered_map<std::string, std::shared_ptr<GraphType>> m_capabilityRoadmaps;
 
     /// The combined roadmap of all heterogenous robots and handoffs.
     GraphType* m_megaRoadmap{nullptr};
@@ -147,6 +155,8 @@ class TMPStrategyMethod {
 	std::string m_dmLabel;
     
 	double m_connectionThreshold{1.5};
+
+	bool m_initialized{false};
     ///@}
 };
 

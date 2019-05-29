@@ -12,6 +12,8 @@ struct WholeTask{
   std::vector<HandoffAgent*> m_agentAssignment; ///< corresponding agents assigned to each subtask
   /// Maps of capabilities to cfgs/vids of start and end points for corresponding
   /// capability
+  /// vectors of these so that they can be treated the same as stored roadmaps 
+  /// in combined roadmap construction
   std::unordered_map<std::string, std::vector<Cfg>> m_startPoints;
   std::unordered_map<std::string, std::vector<size_t>> m_startVIDs;
   std::unordered_map<std::string, std::vector<Cfg>> m_goalPoints;
