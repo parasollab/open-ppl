@@ -1,4 +1,5 @@
 #include "ObstacleBased.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 
 ObstacleBased::
 ObstacleBased(MPProblem* _problem) : PlacementMethod(_problem) {}

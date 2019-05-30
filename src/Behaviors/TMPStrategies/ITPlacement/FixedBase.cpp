@@ -1,4 +1,5 @@
 #include "FixedBase.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 
 FixedBase::
@@ -12,7 +13,7 @@ FixedBase(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
 
 void
 FixedBase::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   auto tasks = _it->GetInformation()->GetInteractionTasks();
   CSpaceBoundingBox* standard = new CSpaceBoundingBox(1);
   *standard = *(static_cast<const CSpaceBoundingBox*>(tasks[0]->GetStartConstraint()->GetBoundary()));

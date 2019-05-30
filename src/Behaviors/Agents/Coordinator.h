@@ -15,6 +15,8 @@
 
 class HandoffAgent;
 class InteractionTemplate;
+class TaskPlan;
+class ITMethod;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent represents the task hand-off behavior presented in
@@ -103,6 +105,8 @@ class Coordinator : public Agent {
     HandoffAgent* GetCapabilityAgent(std::string _capability);
 
     WholeTask* GetWholeTask(std::shared_ptr<MPTask> _subtask);
+
+		TMPStrategyMethod* GetCurrentStrategy();
 
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
@@ -228,6 +232,8 @@ class Coordinator : public Agent {
     /// Temporary Function to use new ITConnector Code
     void CreateCapabilityMaps();
 
+		void DistributeTaskPlan(TaskPlan* _taskPlan);
+
     ///@}
 
   protected:
@@ -299,6 +305,9 @@ class Coordinator : public Agent {
     std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
 
     double m_connectionThreshold{1.5};
+
+		//TODO:: make this more formal and not specifically ITMethod
+		ITMethod* m_tmpMethod{nullptr};
 
     ///@}
 

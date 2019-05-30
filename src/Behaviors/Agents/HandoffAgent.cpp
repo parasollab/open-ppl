@@ -4,6 +4,7 @@
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "Behaviors/Controllers/ICreateController.h"
 #include "Behaviors/Agents/Coordinator.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
@@ -633,8 +634,10 @@ SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
 void
 HandoffAgent::
 AddSubtask(std::shared_ptr<MPTask> _task){
-  auto deliveringPath = m_parentAgent->GetWholeTask(_task)->m_interactionPathsDelivering[_task];
-  auto receivingPath = m_parentAgent->GetWholeTask(_task)->m_interactionPathsReceiving[_task];
+  auto deliveringPath = m_parentAgent->GetCurrentStrategy()->GetWholeTask(
+																		_task)->m_interactionPathsDelivering[_task];
+  auto receivingPath = m_parentAgent->GetCurrentStrategy()->GetWholeTask(
+																		_task)->m_interactionPathsReceiving[_task];
 
   if(receivingPath.size() > 0){
     //update start constraint to front of path
@@ -702,14 +705,14 @@ HandoffAgent::
 CheckInteractionPath(){
   std::shared_ptr<MPTask> subtask;
   subtask = GetTask();
-  auto wholeTask = m_parentAgent->GetWholeTask(subtask);
+  auto wholeTask = m_parentAgent->GetCurrentStrategy()->GetWholeTask(subtask);
   if(wholeTask){
     auto deliveringPath = wholeTask->m_interactionPathsDelivering[subtask];
     m_path = deliveringPath;
   }
   else{
     subtask = m_queuedSubtasks.front();
-    wholeTask = m_parentAgent->GetWholeTask(subtask);
+    wholeTask = m_parentAgent->GetCurrentStrategy()->GetWholeTask(subtask);
     auto receivingPath = wholeTask->m_interactionPathsReceiving[subtask];
     m_path = receivingPath;
   }

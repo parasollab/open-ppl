@@ -1,4 +1,5 @@
 #include "GridFilling.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 #include <chrono>
 
 GridFilling::
@@ -28,7 +29,7 @@ GridFilling(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
 
 void
 GridFilling::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator) {
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod) {
   //_solution->AddInteractionTemplate(_it);
   auto vcm = _library->GetValidityChecker("pqp_solid");
   for(auto location : m_locations){

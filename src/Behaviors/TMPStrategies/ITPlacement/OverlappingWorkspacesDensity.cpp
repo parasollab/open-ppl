@@ -2,6 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 
 OverlappingWorkspacesDensity::
 OverlappingWorkspacesDensity(MPProblem* _problem) : PlacementMethod(_problem) {}
@@ -19,7 +20,7 @@ OverlappingWorkspacesDensity(MPProblem* _problem, XMLNode& _node) : PlacementMet
 
 void
 OverlappingWorkspacesDensity::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   //_solution->AddInteractionTemplate(_it);
 
   auto tasks = _it->GetInformation()->GetInteractionTasks();
@@ -31,7 +32,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
 
   std::vector<HandoffAgent*> capabilityAgents;
   for(auto& task : tasks){
-    auto agent = _coordinator->GetCapabilityAgent(task->GetCapability());
+    auto agent = _tmpMethod->GetCapabilityAgent(task->GetCapability());
     capabilityAgents.push_back(agent);
   }
 
@@ -41,7 +42,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
     oldRobot = _library->GetTask()->GetRobot();
   }
   else {
-    auto task = new MPTask(_coordinator->GetRobot());
+    auto task = new MPTask(_tmpMethod->GetRobot());
     _library->SetTask(task);
   }
   auto sampler = _library->GetSampler("UniformRandomFree");

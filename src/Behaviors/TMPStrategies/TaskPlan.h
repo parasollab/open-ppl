@@ -34,6 +34,12 @@ class TaskPlan {
     /// completed.
     std::list<std::shared_ptr<MPTask>> GetTaskDependencies(std::shared_ptr<MPTask> _task);
 
+		void AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task);
+
+		void AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second);
+
+		void RemoveLastDependency(std::shared_ptr<MPTask> _task);
+
     ///@}
 
 

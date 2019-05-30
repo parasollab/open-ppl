@@ -31,19 +31,21 @@ class WorkspaceGuidance : public PlacementMethod {
 
     ~WorkspaceGuidance() = default;
 
+		std::unique_ptr<PlacementMethod> Clone() override;
+
     ///@}
     ///@name Interface
     ///@{
 
     void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
-                         Coordinator* _coordinator) override;
+                         TMPStrategyMethod* _tmpMethod) override;
 
     ///@}
 
 
   private:
 
-    void BuildSkeleton(MPLibrary* _library, Coordinator* _coordinator);
+    void BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod);
 
 
     std::string m_dmLabel;

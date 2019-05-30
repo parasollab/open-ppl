@@ -38,8 +38,8 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     /// Get plan for the input agents to perform the input tasks.
     /// _library needs to have the solution and problem set to the coordinator's
     /// values for these.
-    virtual TaskPlan PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
-                               vector<std::shared_ptr<MPTask>> _tasks) override;
+    virtual TaskPlan* PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
+                                vector<std::shared_ptr<MPTask>> _tasks) override;
        
     ///@}
     ///@name TaskGrap Functions

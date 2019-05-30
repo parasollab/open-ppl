@@ -24,7 +24,7 @@ class OverlappingWorkspacesDensity : public PlacementMethod {
     ///@{
 
     void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
-                         Coordinator* _coordinator) override;
+                          TMPStrategyMethod* _tmpMethod) override;
 
     ///@}
 

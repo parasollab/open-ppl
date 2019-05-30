@@ -2,6 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 #include "Utilities/MPUtils.h"
 
 DisjointWorkspaces::
@@ -16,9 +17,15 @@ DisjointWorkspaces(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_probl
   m_maxAttempts = _node.Read("maxAttempts", true, nan(""), 0., 1000., "Max number of attempts to place a CFG");
 }
 
+std::unique_ptr<PlacementMethod>
+DisjointWorkspaces::
+Clone(){
+	return std::unique_ptr<PlacementMethod>(new DisjointWorkspaces(*this));	
+}
+
 void
 DisjointWorkspaces::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   //_solution->AddInteractionTemplate(_it);
 
   auto tasks = _it->GetInformation()->GetInteractionTasks();
@@ -30,7 +37,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
 
   std::vector<HandoffAgent*> capabilityAgents;
   for(auto& task : tasks){
-    auto agent = _coordinator->GetCapabilityAgent(task->GetCapability());
+    auto agent = _tmpMethod->GetCapabilityAgent(task->GetCapability());
     capabilityAgents.push_back(agent);
   }
 
@@ -40,7 +47,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
     oldRobot = _library->GetTask()->GetRobot();
   }
   else {
-    auto task = new MPTask(_coordinator->GetRobot());
+    auto task = new MPTask(_tmpMethod->GetRobot());
     _library->SetTask(task);
   }
 

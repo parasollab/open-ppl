@@ -9,6 +9,7 @@
 #include "Utilities/XMLNode.h"
 
 class Coordinator;
+class TMPStrategyMethod;
 
 class PlacementMethod {
 
@@ -19,11 +20,15 @@ class PlacementMethod {
     ///@name Construction
     ///@{
 
+		PlacementMethod() = default;
+
     PlacementMethod(MPProblem* _problem);
 
     //PlacementMethod(MPProblem* _problem, XMLNode& _node);
 
     ~PlacementMethod() = default;
+		
+		virtual std::unique_ptr<PlacementMethod> Clone();
 
     /// Create a dynamically-allocated placement method from an XML node.
     /// @param _p The problem which this method will be applied to.
@@ -36,7 +41,7 @@ class PlacementMethod {
     ///@{
 
     void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
-                         Coordinator* _coordinator);
+                         TMPStrategyMethod* _tmpMethod);
 
     std::string GetLabel();
 

@@ -13,7 +13,11 @@
 #include "Behaviors/Agents/TaskBreakup.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "Behaviors/TMPStrategies/Actions/Action.h"
+#include "Behaviors/TMPStrategies/ITMethod.h"
+#include "Behaviors/TMPStrategies/TaskPlan.h"
 #include "Behaviors/TMPStrategies/TMPHelperAlgorithms/EnforcedHillClimbing.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+#include "Behaviors/TMPStrategies/ITMethod.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPLibrary/MPTools/TRPTool.h"
 #include "MPLibrary/MPTools/InteractionTemplate.h"
@@ -104,11 +108,11 @@ Initialize() {
   const std::string& xmlFile = problem->GetXMLFilename();
 
   // Create a new solution object to hold a plan for this agent.
-  m_solution = new MPSolution(m_robot);
+  //m_solution = new MPSolution(m_robot);
 
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
-  m_library->SetMPSolution(m_solution);
+  //m_library->SetMPSolution(m_solution);
 
   // Set up the group members.
   int priority = 1;
@@ -155,70 +159,61 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
-  GenerateDummyAgents();
+  m_tmpMethod = new ITMethod(true, m_debug, m_dmLabel, m_connectionThreshold, 
+													m_handoffEnvironment.get(), m_ITPlacementMethods);
+	m_tmpMethod->Initialize(m_robot);
+  TaskPlan* taskPlan = m_tmpMethod->PlanTasks(m_library, m_memberAgents, 
+																							m_robot->GetMPProblem()->GetTasks(m_robot));
+	DistributeTaskPlan(taskPlan);
+
+  //m_tmpMethod->GenerateDummyAgents();
+  //GenerateDummyAgents();
   if(m_debug){
     std::cout << "Done Generating Dummy Agents" << std::endl;
   }
 
-  GenerateHandoffTemplates();
+  //m_tmpMethod->GenerateITs();
+	//GenerateHandoffTemplates();
   if(m_debug){
     std::cout << "Done Generating Handoff Templates" << std::endl;
   }
 
-  m_megaRoadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(m_robot);
+  //m_megaRoadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(m_robot);
   // Setting library task to set robot
-  auto task = m_library->GetMPProblem()->GetTasks(m_robot).front();
-  m_library->SetTask(task.get());
-  /*
-  TranslateHandoffTemplates();
-  if(m_debug){
-    std::cout << "Done Translating Handoff Templates" << std::endl;
-  }
+  //auto task = m_library->GetMPProblem()->GetTasks(m_robot).front();
+  //m_library->SetTask(task.get());
+  
 
-  *(m_handoffTemplateRoadmap.get()) = *m_megaRoadmap;
-
-  //size_t id = Simulation::Get()->AddRoadmap(m_handoffTemplateRoadmap.get(),
-  //    glutils::color(.4,.4,.4,.5));
-  //m_simulatorGraphIDs.push_back(id);
-
-  m_megaRoadmap->Write("postTranslate.map", m_robot->GetMPProblem()->GetEnvironment());
-
-  SetupWholeTasks();
-  if(m_debug){
-    std::cout << "Done Setting up Whole Tasks" << std::endl;
-  }
-
-  m_megaRoadmap->Write("postSetupWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
-
-  GenerateRoadmaps();
-  if(m_debug){
-    std::cout << "Done Generating Roadmaps" << std::endl;
-  }
-  */
-
-  CreateCapabilityMaps();
-  m_megaRoadmap->Write("postGenerateRoadaps.map", m_robot->GetMPProblem()->GetEnvironment());
+	//m_tmpMethod->CreateCombinedRoadmap();
+  //CreateCapabilityMaps();
+  //m_megaRoadmap = m_tmpMethod->m_combinedRoadmap;
+  //m_megaRoadmap->Write("postGenerateRoadaps.map", m_robot->GetMPProblem()->GetEnvironment());
 
   // Find group tasks plan with IT method
   if(!m_tmp){
-    PlanWholeTasks();
+		//m_tmpMethod->QueryCombinedRoadmap();
+    //PlanWholeTasks();
     if(m_debug){
       std::cout << "Done Planning Whole Tasks" << std::endl;
     }
 
-    m_megaRoadmap->Write("postPlanWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
+    //m_megaRoadmap->Write("postPlanWholeTask.map", m_robot->GetMPProblem()->GetEnvironment());
 
-    CopyCapabilityRoadmaps();
+		//m_tmpMethod->QueryCombinedRoadmap();
+		//m_tmpMethod->DecomposeTasks();
+    //CopyCapabilityRoadmaps();
     if(m_debug){
       std::cout << "Done Copying Capability Roadmaps" << std::endl;
     }
 
-    AssignInitialTasks();
+		//TaskPlan* taskPlan = m_tmpMethod->AssignTasks();
+		//DistributeTaskPlan(taskPlan);
+    //AssignInitialTasks();
     if(m_debug){
       std::cout << "Done Assigning Initial Tasks" << std::endl;
     }
   }
-  // Find group taks plan with TMP method
+  // Find group taks plan with FFRob
   else{
     for(auto& robot : m_robot->GetMPProblem()->GetRobots()){
       robot->SetVirtual(true);
@@ -674,7 +669,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
   //checks if agent is the one executing the subtask or the one coming to take
   //over the task
   if(_agent->IsPerformingSubtask()){
-    auto wholeTask = m_subtaskMap[subtask];
+    auto wholeTask = m_tmpMethod->GetWholeTask(subtask);
     auto index = std::find(wholeTask->m_subtasks.begin(),
       wholeTask->m_subtasks.end(), subtask);
     //checks if it is the last subtask in the whole task and thus no partner is
@@ -711,7 +706,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
   // Indicates that the agent is the one receiving the handoff
   else {
     subtask = _agent->GetQueuedSubtasks().front();
-    auto wholeTask = m_subtaskMap[subtask];
+    auto wholeTask = m_tmpMethod->GetWholeTask(subtask);
     // Checks if the current task is a setup for the initial subtask in a whole
     // Task so there won't be a partner to take the task from
     if(wholeTask->m_subtasks[0] == subtask)
@@ -1750,7 +1745,7 @@ FindITLocations(InteractionTemplate* _it){
   }*/
   for(auto& method : m_ITPlacementMethods){
     Simulation::GetStatClass()->StartClock("Placing Templates with: " + method.second->GetLabel());
-    method.second->PlaceIT(_it, m_solution, m_library, this);
+    //method.second->PlaceIT(_it, m_solution, m_library, this);
     Simulation::GetStatClass()->StopClock("Placing Templates with: " + method.second->GetLabel());
   }
 }
@@ -1873,4 +1868,20 @@ WholeTask*
 Coordinator::
 GetWholeTask(std::shared_ptr<MPTask> _subtask){
   return m_subtaskMap[_subtask];
+}
+
+void
+Coordinator::
+DistributeTaskPlan(TaskPlan* _taskPlan){
+	for(auto agent : m_memberAgents){
+		for(auto& task : _taskPlan->GetAgentTasks(agent)){
+			agent->AddSubtask(task);
+		}
+	}		
+}
+
+TMPStrategyMethod*
+Coordinator::
+GetCurrentStrategy(){
+	return m_tmpMethod;
 }

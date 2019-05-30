@@ -19,12 +19,14 @@ class DisjointWorkspaces : public PlacementMethod {
 
     ~DisjointWorkspaces() = default;
 
+		std::unique_ptr<PlacementMethod> Clone() override;
+
     ///@}
     ///@name Interface
     ///@{
 
     void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution,
-                         MPLibrary* _library, Coordinator* _coordinator) override;
+                         MPLibrary* _library, TMPStrategyMethod* _tmpMethod) override;
 
     void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 

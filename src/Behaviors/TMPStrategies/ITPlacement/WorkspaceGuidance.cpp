@@ -1,4 +1,5 @@
 #include "WorkspaceGuidance.h"
+#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 
 WorkspaceGuidance::
 WorkspaceGuidance(MPProblem* _problem) : PlacementMethod(_problem) {}
@@ -14,12 +15,18 @@ WorkspaceGuidance(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_proble
 
 }
 
+std::unique_ptr<PlacementMethod>
+WorkspaceGuidance::
+Clone(){
+	return std::unique_ptr<WorkspaceGuidance>(new WorkspaceGuidance(*this));	
+}
+
 void
 WorkspaceGuidance::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator){
-  BuildSkeleton(_library, _coordinator);
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+  BuildSkeleton(_library, _tmpMethod);
 
-  auto robot = _coordinator->GetRobot();
+  auto robot = _tmpMethod->GetRobot();
   auto g = m_skeleton.GetGraph();
   auto dm = _library->GetDistanceMetric(m_dmLabel);
 
@@ -43,7 +50,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Co
 
 void
 WorkspaceGuidance::
-BuildSkeleton(MPLibrary* _library, Coordinator* _coordinator){
+BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
 
   if(m_initialized)
     return;
@@ -53,7 +60,7 @@ BuildSkeleton(MPLibrary* _library, Coordinator* _coordinator){
 
   // Determine if we need a 2d or 3d skeleton.
   auto env = m_problem->GetEnvironment();
-  auto robot = _coordinator->GetRobot();
+  auto robot = _tmpMethod->GetRobot();
   //const bool threeD = robot->GetMultiBody()->GetBaseType() ==
   //    Body::Type::Volumetric;
 

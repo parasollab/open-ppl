@@ -23,7 +23,8 @@ class BallFilling : public PlacementMethod {
     ///@name Interface
     ///@{
 
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator);
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
+                         TMPStrategyMethod* _tmpMethod) override;
 
     ///@}
 

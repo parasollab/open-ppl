@@ -394,6 +394,7 @@ SIM_SRCS := \
   Behaviors/TMPStrategies/Actions/StartTask.cpp \
   Behaviors/TMPStrategies/ITConnector.cpp \
   Behaviors/TMPStrategies/ITConstructor.cpp \
+  Behaviors/TMPStrategies/ITMethod.cpp \
   Behaviors/TMPStrategies/ITPlacement/BallFilling.cpp \
   Behaviors/TMPStrategies/ITPlacement/DisjointWorkspaces.cpp \
   Behaviors/TMPStrategies/ITPlacement/FixedBase.cpp \
