@@ -15,17 +15,11 @@ class PoIPlacementMethod : public TMPBaseObject {
 
   	PoIPlacementMethod() = default;
 
-	  PoIPlacementMethod(XMLNode& _node);
+	PoIPlacementMethod(XMLNode& _node);
 
-	  virtual ~PoIPlacementMethod() = default;  	
+	virtual ~PoIPlacementMethod() = default;  	
 
     ///@}
-}
-
-/*------------------------------ Construction --------------------------------*/
-
-PoIPlacementMethod::
-PoIPlacementMethod(XMLNode& _node) : TMPBaseObject(_node) {
 }
 
 /*----------------------------------------------------------------------------*/

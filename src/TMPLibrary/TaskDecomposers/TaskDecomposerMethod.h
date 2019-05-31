@@ -22,12 +22,6 @@ class TaskDecomposerMethod : public TMPBaseObject {
     ///@}
 }
 
-/*------------------------------ Construction --------------------------------*/
-
-TaskDecomposerMethod::
-TaskDecomposerMethod(XMLNode& _node) : TMPBaseObject(_node) {
-}
-
 /*----------------------------------------------------------------------------*/
 
 #endif

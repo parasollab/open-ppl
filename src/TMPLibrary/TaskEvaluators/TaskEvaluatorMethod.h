@@ -30,12 +30,6 @@ class TaskEvaluatorMethod : public TMPBaseObject {
     ///@}
 }
 
-/*------------------------------ Construction --------------------------------*/
-
-TaskEvaluatorMethod::
-TaskEvaluatorMethod(XMLNode& _node) : TMPBaseObject(_node) {
-}
-
 /*----------------------------------------------------------------------------*/
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef PMPL_TASK_ALLOCATOR_METHOD_H_
-#define PMPL_TASK_ALLOCATOR_METHOD_H_
+#ifndef PMPL_STATE_GRAPH_H_
+#define PMPL_STATE_GRAPH_H_
 
 #include "TMPLibrary/TMPBaseObject.h"
 #include "Utilities/MetricUtils.h"
@@ -7,17 +7,17 @@
 
 #include <iostream>
 
-class TaskAllocatorMethod : public TMPBaseObject {
+class StateGraph : public TMPBaseObject {
   public:
 
   	///@name Construction
     ///@{
 
-  	TaskAllocatorMethod() = default;
+  	StateGraph() = default;
 
-	TaskAllocatorMethod(XMLNode& _node);
+	StateGraph(XMLNode& _node);
 
-	virtual ~TaskAllocatorMethod() = default;  	
+	virtual ~StateGraph() = default;  	
 
     ///@}
 }
