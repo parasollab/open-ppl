@@ -3,7 +3,7 @@
 
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Agents/WholeTask.h"
-#include "Behaviors/TMPStrategies/ITPlacement/PlacementMethod.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 #include "Behaviors/TMPStrategies/TaskPlan.h"
 #include "MPProblem/MPTask.h"
 

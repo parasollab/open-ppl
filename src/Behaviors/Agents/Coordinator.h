@@ -6,7 +6,7 @@
 #include "HandoffAgent.h"
 #include "WholeTask.h"
 
-#include "Behaviors/TMPStrategies/ITPlacement/PlacementMethod.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 
 #include "Behaviors/TMPStrategies/Actions/Action.h"
 #include "ConfigurationSpace/Cfg.h"
