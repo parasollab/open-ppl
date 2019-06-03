@@ -6,13 +6,15 @@
 #include "ConfigurationSpace/Weight.h"
 
 #include "MPLibrary/MPLibrary.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 
 #include "Traits/CfgTraits.h"
 
+#include "TMPLibrary/TMPBaseObject.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+
 #include "Workspace/WorkspaceSkeleton.h"
 
-class CombinedRoadmap{
+class CombinedRoadmap : public StateGraph {
   public:
     ///@name Typenames
     ///@{

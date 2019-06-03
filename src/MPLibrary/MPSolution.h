@@ -2,8 +2,8 @@
 #define PMPL_MP_SOLUTION_TYPE_H_
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "Utilities/MetricUtils.h"
 
 #include <map>

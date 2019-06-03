@@ -4,15 +4,19 @@
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "Behaviors/Controllers/ICreateController.h"
 #include "Behaviors/Agents/Coordinator.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
+
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
+
 #include "Simulator/BulletModel.h"
 #include "Simulator/MicroSimulator.h"
 #include "Simulator/Simulation.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+
 #include "Utilities/IOUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"

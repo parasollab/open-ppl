@@ -1,13 +1,13 @@
 #ifndef ENFORCED_HILL_CLIMBING_H_
 #define ENFORCED_HILL_CLIMBING_H_
 
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 
 #include "MPProblem/Robot/Robot.h"
 
 #include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/State.h"
 #include "TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 #include "Vector.h"
 #include <containers/sequential/graph/graph.h>

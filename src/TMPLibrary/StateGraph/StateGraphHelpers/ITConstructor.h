@@ -5,10 +5,11 @@
 #include "Behaviors/Agents/HandoffAgent.h"
 
 #include "MPLibrary/MPLibrary.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
+
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 class ITConstructor{
   public:

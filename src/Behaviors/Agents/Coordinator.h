@@ -7,8 +7,8 @@
 #include "WholeTask.h"
 
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
+#include "TMPLibrary/TMPStrategies/Actions/Action.h"
 
-#include "Behaviors/TMPStrategies/Actions/Action.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
 #include "BatteryBreak.h"
