@@ -86,3 +86,12 @@ AddSubtask(std::shared_ptr<MPTask> _subtask){
   }
   m_unassignedTasks.push_back(_subtask);
 }
+
+Agent*
+TaskPlan::
+GetLastAgent(WholeTask* _wholeTask){
+  if(_wholeTask->m_subtaskIterator == 0)
+    return nullptr;
+  auto lastSubtask = _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator - 1];
+  return static_cast<HandoffAgent*>(lastSubtask->GetRobot()->GetAgent());
+}

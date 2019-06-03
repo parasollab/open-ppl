@@ -57,6 +57,12 @@ class TaskPlan {
 
     void AddSubtasktoWholeTask(std::shared_ptr<MPTask> _subtask);
 
+    /// Returns the agent that as assiged the prior subtask in the whole task
+    /// @param _wholeTask The WholeTask object containing the subtasks in
+    /// question
+    /// @return The HandoffAgent assigned to the preceeding subtask
+    HandoffAgent* GetLastAgent(WholeTask* _wholeTask);
+
     ///@}
 
   private:

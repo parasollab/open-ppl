@@ -1,6 +1,8 @@
 #ifndef PMPL_TMP_LIBRARY_H_
 #define PMPL_TMP_LIBRARY_H_
 
+#include "MPLibrary/MPLibrary.h"
+
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/GroupTask.h"
@@ -13,8 +15,6 @@
 #include "Utilities/XMLNode.h"
 
 #include "Traits/TMPTraits.h"
-
-#include "MPLibrary/MPLibrary.h"
 
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
@@ -204,7 +204,7 @@ class TMPLibrary {
   	///@name Inputs
     ///@{
 
-    MPLibrary 								m_library	  ///< The underlying MPLibrary
+    MPLibrary* 								m_library	  ///< The underlying MPLibrary
   	MPProblem* 								m_problem;	  ///< The current MPProblem
   	std::vector<std::shared_ptr<MPTask>> 	m_tasks; 	  ///< Current set of tasks
   	std::vector<std::shared_ptr<GroupTask>> m_groupTasks; ///< Current set of group tasks
@@ -248,6 +248,7 @@ TMPLibrary(){
 
 TMPLibrary::
 TMPLibrary(const std::string& _filename) : TMPLibrary() {
+  m_library = new MPLibrary(_filename);
   ReadXMLFile(_filename);
 }
 
