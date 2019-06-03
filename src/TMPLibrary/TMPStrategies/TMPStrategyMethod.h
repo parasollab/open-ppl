@@ -6,9 +6,10 @@
 #include "MPProblem/MPTask.h"
 
 #include "TMPLibrary/TMPBaseObject.h"
-#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 #include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/WholeTask.h"
+
+class ITPlacementMethod;
 
 
 class TMPStrategyMethod : public TMPBaseObject {

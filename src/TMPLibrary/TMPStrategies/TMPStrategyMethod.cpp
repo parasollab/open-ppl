@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Agents/Coordinator.h"
 
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 #include "TMPLibrary/StateGraph/CombinedRoadmap.h"
 #include "TMPLibrary/StateGraph/StateGraphHelpers/ITConstructor.h"
 

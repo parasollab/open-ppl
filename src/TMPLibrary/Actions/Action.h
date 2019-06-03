@@ -6,6 +6,7 @@
 #include "MPProblem/Robot/Robot.h"
 
 #include "TMPLibrary/State.h"
+#include "TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.h"
 
 #include <vector>
 

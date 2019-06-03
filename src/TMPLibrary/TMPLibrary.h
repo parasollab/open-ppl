@@ -11,11 +11,11 @@
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
-#include "Utilities/TMPMethodSet.h"
+//#include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
 #include "Traits/TMPTraits.h"
-
+/*
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
@@ -24,10 +24,12 @@
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 #include "TMPLibrary/TMPTools/TMPTools.h"
-
+*/
 #include <algorithm>
 #include <atomic>
 #include <unordered_map>
+
+template<typename TMPMethod>TMPMethodSet;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of TMP planning algorithms that can operate on a specific

@@ -2,6 +2,7 @@
 
 #include "Behaviors/Agents/Agent.h"
 
+#include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/Actions/MoveRobot.h"
 #include "TMPLibrary/Actions/HandoffTask.h"
 #include "TMPLibrary/Actions/StartTask.h"

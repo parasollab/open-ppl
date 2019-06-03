@@ -14,7 +14,7 @@
 #include "MPProblem/MPTask.h"
 #include "MPProblem/Robot/Robot.h"
 
-#include "TMPLibrary/Actions/Action.h"
+//#include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/State.h"
 
 
@@ -22,7 +22,7 @@ class Cfg;
 class MPTask;
 class Robot;
 class XMLNode;
-
+class Action;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of the Relaxed GRAPHPLAN as described in the

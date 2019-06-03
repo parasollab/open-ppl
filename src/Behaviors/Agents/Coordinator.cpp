@@ -27,7 +27,7 @@
 
 #include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/TaskPlan.h"
-#include "TMPLibrary/TMPStrategyMethod/ITMethod.h"
+#include "TMPLibrary/TMPStrategies/ITMethod.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 #include "sandbox/gui/main_window.h"

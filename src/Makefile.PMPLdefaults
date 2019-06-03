@@ -379,15 +379,6 @@ SIM_SRCS := \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp \
   $(PMPL_DIR)/sim_main.cpp \
-  Behaviors/Agents/AgentFactory_sim.cpp \
-  Behaviors/Agents/BatteryConstrainedGroup.cpp \
-  Behaviors/Agents/Coordinator.cpp \
-  Behaviors/Agents/HandoffAgent.cpp \
-  Behaviors/Agents/PathFollowingAgent.cpp \
-  Behaviors/Agents/PathFollowingChildAgent.cpp \
-  Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp \
-  Behaviors/Agents/TaskBreakup.cpp \
   TMPLibrary/Actions/Action.cpp \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
@@ -410,12 +401,23 @@ SIM_SRCS := \
   TMPlibrary/TaskEvaluators/Heuristic/RelaxedGraphPlan.cpp \
   TMPLibrary/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluatorMethod.cpp \
+  TMPLibrary/TMPLibrary.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
   TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
   TMPLibrary/State.cpp \
-  TMPLibrary/TaskPlan.cpp
+  TMPLibrary/TaskPlan.cpp \
+  Utilities/TMPMethodSet.cpp \
+  Behaviors/Agents/AgentFactory_sim.cpp \
+  Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/Coordinator.cpp \
+  Behaviors/Agents/HandoffAgent.cpp \
+  Behaviors/Agents/PathFollowingAgent.cpp \
+  Behaviors/Agents/PathFollowingChildAgent.cpp \
+  Behaviors/Agents/PlanningAgent.cpp \
+  Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Behaviors/Agents/TaskBreakup.cpp 
 
 ################################################################################
 # Hardware
@@ -520,7 +522,6 @@ PMPL_SRCS := \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \
   Utilities/SSSP.cpp \
-  Utilities/TMPMethodSet.cpp \
   Utilities/XMLNode.cpp \
   Workspace/GridOverlay.cpp \
   Workspace/WorkspaceDecomposition.cpp \
