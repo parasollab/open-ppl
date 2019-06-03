@@ -17,9 +17,7 @@ GridFilling(MPProblem* _problem) : PlacementMethod(_problem) {
 
 //
 GridFilling::
-GridFilling(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
-  m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
-
+GridFilling(XMLNode& _node) : ITPlacementMethod(_node) {
   m_squaresX = _node.Read("xSquares", true, nan(""), 0., 1000., "number of squares on X axis for grid");
   m_squaresY = _node.Read("ySquares", true, nan(""), 0., 1000., "number of squares on Y axis for grid");
   m_locations.reserve(m_squaresX*m_squaresY);

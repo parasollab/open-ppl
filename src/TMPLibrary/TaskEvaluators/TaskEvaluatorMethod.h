@@ -28,7 +28,7 @@ class TaskEvaluatorMethod : public TMPBaseObject {
     virtual bool operator()() = 0;
 
     ///@}
-}
+};
 
 /*----------------------------------------------------------------------------*/
 

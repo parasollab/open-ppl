@@ -16,7 +16,7 @@ class GridFilling : public PlacementMethod {
 
     GridFilling(MPProblem* _problem);
 
-    GridFilling(MPProblem* _problem, XMLNode& _node);
+    GridFilling(XMLNode& _node);
 
     ~GridFilling() = default;
 

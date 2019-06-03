@@ -9,7 +9,7 @@ using namespace std::chrono;
 //<PlacementMethod type="ballfilling" label="BallFilling" radius="0.8" dimension="2" step=".2" precision=".0001"/>
 
 BallFilling::
-BallFilling(MPProblem* _problem) : PlacementMethod(_problem) {
+BallFilling(MPProblem* _problem) : ITPlacementMethod(_problem) {
 	m_environment = m_problem->GetEnvironment();
 	m_boundary = m_environment->GetBoundary();
 	CreateBalls();
@@ -17,8 +17,8 @@ BallFilling(MPProblem* _problem) : PlacementMethod(_problem) {
 
 
 BallFilling::
-BallFilling(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
-  m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
+BallFilling(XMLNode& _node) : ITPlacementMethod(_node) {
+  //m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
   m_environment = m_problem->GetEnvironment();
 	m_boundary = m_environment->GetBoundary();
 	m_radius = _node.Read("radius", true, nan(""), 0., 1000., "Radius of a ball");

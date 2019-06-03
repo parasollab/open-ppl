@@ -6,8 +6,7 @@ ObstacleBased::
 ObstacleBased(MPProblem* _problem) : PlacementMethod(_problem) {}
 
 ObstacleBased::
-ObstacleBased(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
-  m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
+ObstacleBased(XMLNode& _node) : PlacementMethod(_node) {
   m_dimensions = _node.Read("dimensions", true, nan(""), 0., 1000., "number of dimensions (2D, 3D)");
   m_precision = _node.Read("precision", true, nan(""), 0., 1000., "precision for ball filling");
   m_startCornerAngle = _node.Read("startCornerAngle", true, nan(""), 0., 1000., "start angle to check around corners"); 

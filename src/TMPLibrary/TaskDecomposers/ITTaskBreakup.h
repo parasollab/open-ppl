@@ -2,14 +2,20 @@
 #ifndef TASK_BREAKUP_H_
 #define TASK_BREAKUP_H_
 
+#include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
 #include "TMPLibrary/WholeTask.h"
 
 class Robot;
 
-class ITTaskBreakup {
+class ITTaskBreakup : public TaskDecomposerMethod {
   public:
     ///@name Construction
     ///@{
+
+		ITTaskBreakup(XMLNode& _node);
+
+		ITTaskBreakup() = default;
+
     ITTaskBreakup(Robot* _robot);
 
     ~ITTaskBreakup();

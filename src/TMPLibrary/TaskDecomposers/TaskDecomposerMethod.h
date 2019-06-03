@@ -21,7 +21,7 @@ class TaskDecomposerMethod : public TMPBaseObject {
 	virtual ~TaskDecomposerMethod() = default;  	
 
     ///@}
-}
+};
 
 /*----------------------------------------------------------------------------*/
 

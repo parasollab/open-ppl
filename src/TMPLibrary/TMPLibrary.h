@@ -50,8 +50,26 @@ class TMPLibrary {
     ///@}
     ///@name Method Set Types
     ///@{
+  	
+		typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
+  	typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
+  	typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
+  	typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
+  	typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
+  	typedef TMPMethodSet<StateGraph>			   			 StateGraphSet;
 
     ///@}
+    ///@name Method Pointer Types
+    ///@{
+    
+		typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
+  	typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
+  	typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
+  	typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
+  	typedef typename TaskAllocatorMethodSet::TMPMethodPointer 	TaskAllocatorMethodPointer;
+  	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
+		
+		///@}
     ///@name Construction
     ///@{
 
@@ -74,11 +92,11 @@ class TMPLibrary {
     ///@{
 
     /// Get a TMPStrategyMethod method 
-    TMPStrategyMethod* GetTMPStrategyMethod(const std::string& _l){
+    TMPStrategyMethodPointer GetTMPStrategy(const std::string& _l){
     	return m_tmpStrategies->GetMethod(_l);
     }
 
-    void AddTMPStrategy(TMPStrategyMethod* _sm, const std::string& _l) {
+    void AddTMPStrategy(TMPStrategyMethodPointer _sm, const std::string& _l) {
     	m_tmpStrategies->AddMethod(_sm,_l);
     }
 
@@ -87,11 +105,11 @@ class TMPLibrary {
     ///@{
 
     /// Get a Point-of-Interest placement method 
-    PoIPlacementMethod* GetPoIPlacementMethod(const std::string& _l){
+    PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string& _l){
     	return m_poiPlacementMethods->GetMethod(_l);
     }
 
-    void AddPoIPlacementMethod(PoIPlacementMethod* _pm, const std::string& _l) {
+    void AddPoIPlacementMethod(PoIPlacementMethodPointer _pm, const std::string& _l) {
     	m_poiPlacementMethods->AddMethod(_pm,_l);
     }
 
@@ -99,11 +117,11 @@ class TMPLibrary {
     ///@name TaskEvaluator Accessors
     ///@{
 
-    TaskEvaluatorMethod* GetTaskEvaluator(const std::string& _l){
+    TaskEvaluatorMethodPointer GetTaskEvaluator(const std::string& _l){
     	return m_taskEvaluators->GetMethod(_l);
     }
 
-    void AddTaskEvaluator(TaskEvaluatorMethod* _te, const std::string& _l) {
+    void AddTaskEvaluator(TaskEvaluatorMethodPointer _te, const std::string& _l) {
     	m_taskEvaluators->AddMethod(_te,_l);
     }
 
@@ -112,11 +130,11 @@ class TMPLibrary {
     ///@{
 
     /// Get a TaskDecomposition 
-    TaskDecomposerMethod* GetTaskDecomposer(const std::string& _l){
+    TaskDecomposerMethodPointer GetTaskDecomposer(const std::string& _l){
     	return m_taskDecomposers->GetMethod(_l);
     }
 
-    void AddTaskDecomposer(TaskDecomposerMethod* _td, const std::string& _l) {
+    void AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l) {
     	m_taskDecomposers->AddMethod(_td,_l);
     }
 
@@ -125,11 +143,11 @@ class TMPLibrary {
     ///@{
 
     /// Get a TaskAllocator 
-    TaskAllocatorMethod* GetTaskAllocator(const std::string& _l){
+    TaskAllocatorMethodPointer GetTaskAllocator(const std::string& _l){
     	return m_taskAllocators->GetMethod(_l);
     }
 
-    void AddTaskAllocator(TaskAllocatorMethod* _ta, const std::string& _l) {
+    void AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
     	m_taskAllocators->AddMethod(_ta,_l);
     }
 
@@ -146,6 +164,8 @@ class TMPLibrary {
     ///@name Input Accessors
     ///@{
 
+		MPLibrary* GetMPLibrary() const noexcept;
+		void SetMPLibrary(MPLibrary* _l) noexcept;
     MPProblem* GetMPProblem() const noexcept;
     void SetMPProblem(MPProblem* const _problem) noexcept;
 
@@ -154,7 +174,7 @@ class TMPLibrary {
     void AddTask(std::shared_ptr<MPTask> const _task) noexcept;
     void ClearTasks();
 
-    std::vector<std::shared_ptr<GroupTask>>& GetGroupTasks() const noexcept;
+    std::vector<std::shared_ptr<GroupTask>> GetGroupTasks() const noexcept;
     void AddGroupTask(GroupTask* const _task) noexcept;
     void AddGroupTask(std::shared_ptr<GroupTask> const _task) noexcept;
     void ClearGroupTasks();
@@ -170,12 +190,38 @@ class TMPLibrary {
     	return m_taskPlan;
     }
 
-    StateGraph* GetStateGraph(const std::string& _l){
+    StateGraphPointer GetStateGraph(const std::string& _l){
     	return m_stateGraphs->GetMethod(_l);
     }
-    StateGraph* AddStateGraph(StateGraph* _sg, const std::string& _l){
+    void AddStateGraph(StateGraphPointer _sg, const std::string& _l){
     	m_stateGraphs->AddMethod(_sg,_l);
     }
+
+		///@}
+		///@name Execution
+		///@{
+
+		
+		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
+	  					 TaskPlan* _taskPlan);
+
+		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks);
+
+		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks);
+
+		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
+							 TaskPlan* _taskPlan, const std::string& _label, const long _seed,
+    					 const std::string& _baseFilename);
+
+		void InitializeMPProblem(MPProblem* _problem);
+
+		///@
+		///@name Debug
+		///@{
+
+		void Print(std::ostream&) const;
+
+		///@}
 
   private:
   	///@name Execution Helpers
@@ -204,45 +250,48 @@ class TMPLibrary {
   	///@name Inputs
     ///@{
 
-    MPLibrary* 								m_library	  ///< The underlying MPLibrary
-  	MPProblem* 								m_problem;	  ///< The current MPProblem
-  	std::vector<std::shared_ptr<MPTask>> 	m_tasks; 	  ///< Current set of tasks
+    MPLibrary* 															m_library;	  ///< The underlying MPLibrary
+  	MPProblem* 															m_problem;	  ///< The current MPProblem
+  	std::vector<std::shared_ptr<MPTask>> 		m_tasks; 	  	///< Current set of tasks
   	std::vector<std::shared_ptr<GroupTask>> m_groupTasks; ///< Current set of group tasks
-  	TaskPlan* 								m_taskPlan;   ///< Current task plan
-  	std::vector<Solver> 					m_solvers;    ///< Set of inputs to execute
+  	std::vector<Solver> 										m_solvers;    ///< Set of inputs to execute
+		TMPTools*															  m_tmpTools;   ///< TMPTools container
 
   	///@}
   	///@name TMPMethod Sets
     ///@{
     /// Method sets hold and offer access to the tmp planning objects of the
     /// corresponding type.
-  	TMPMethodSet<TMPStrategyMethod>        m_tmpStrategies;
-  	TMPMethodSet<PoIPlacementMethod>       m_poiPlacementMethods;
-  	TMPMethodSet<TaskEvaluatorMethod>      m_taskEvaluators;
-  	TMPMethodSet<TaskDecomposerMethod>     m_taskDecomposers;
-  	TMPMethodSet<TaskAllocatorMethod>      m_taskAllocators;
-  	TMPMethodSet<StateGraph>			   m_stateGraphs;
+  	TMPStrategyMethodSet*     m_tmpStrategies;
+  	PoIPlacementMethodSet*    m_poiPlacementMethods;
+  	TaskEvaluatorMethodSet*   m_taskEvaluators;
+  	TaskDecomposerMethodSet*  m_taskDecomposers;
+  	TaskAllocatorMethodSet*   m_taskAllocators;
+  	StateGraphSet*  		  		m_stateGraphs;
 
   	///@}
+  	///@name Solution
+  	///@{
 
-  }
+  	TaskPlan* m_taskPlan;   ///< Current task plan
 
-}
+  	///@}
+};
 
 /*---------------------------- Construction ----------------------------------*/
 
 TMPLibrary::
 TMPLibrary(){
-  m_tmpStrategies = new TMPMethodSet<TMPStrategyMethod>(this,
-  	TMPTraits::TMPStrategyMethodList(), "TMPStrategies");
-  m_poiPlacementMethods = new TMPMethodSet<PoIPlacementMethod>(this,
-  	TMPTraits::PoIPlacementMethodList(), "PoIPlacementMethods");
-  m_taskEvaluators = new TMPMethodSet<TaskEvaluatorMethod>(this,
-  	TMPTraits::TaskEvaluator(), "TaskEvaluators");
-  m_taskDecomposer = new TMPMethodSet<TaskDecomposerMethod>(this,
-  	TMPTraits::TaskDecomposer(), "TaskDecomposers");
-  m_taskAllocators = new TMPMethodSet<TaskAllocatorMethod>(this,
-  	TMPTraits::TaskAllocators(), "TaskAllocators");
+  m_tmpStrategies = new TMPStrategyMethodSet(this,
+  	typename TMPTraits::TMPStrategyMethodList(), "TMPStrategies");
+  m_poiPlacementMethods = new PoIPlacementMethodSet(this,
+  	typename TMPTraits::PoIPlacementMethodList(), "PoIPlacementMethods");
+  m_taskAllocators = new TaskAllocatorMethodSet(this,
+  	typename TMPTraits::TaskAllocatorMethodList(), "TaskAllocators");
+  m_taskDecomposers = new TaskDecomposerMethodSet(this,
+  	typename TMPTraits::TaskDecomposerMethodList(), "TaskDecomposers");
+  m_taskEvaluators = new TaskEvaluatorMethodSet(this,
+  	typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
 }
 
 
@@ -258,23 +307,25 @@ TMPLibrary::
   delete m_tmpStrategies;
   delete m_poiPlacementMethods;
   delete m_taskEvaluators;
-  delete m_taskDecomposer;
+  delete m_taskDecomposers;
   delete m_taskAllocators;
   delete m_stateGraphs;
 }
 
+void
 TMPLibrary::
 Initialize(){
   m_tmpStrategies->Initialize();
   m_poiPlacementMethods->Initialize();
   m_taskEvaluators->Initialize();
-  m_taskDecomposer->Initialize();
+  m_taskDecomposers->Initialize();
   m_taskAllocators->Initialize();
   m_stateGraphs->Initialize();
 }
 
+void
 TMPLibrary::
-Unitialize(){}
+Uninitialize(){}
 
 /*---------------------------- XML Helpers -----------------------------------*/
 
@@ -286,7 +337,7 @@ ReadXMLFile(const std::string& _filename) {
 
   // Find the 'TMPLibrary' node.
   XMLNode* tmpLibrary = nullptr;
-  for(auto& child : mpNode)
+  for(auto& child : tmpNode)
     if(child.Name() == "TMPLibrary")
       tmpLibrary = &child;
 
@@ -350,7 +401,7 @@ ParseChild(XMLNode& _node) {
         "The strategy to use.");
 
     const std::string baseFilename = _node.Read("baseFilename", true, "",
-        "BaseFilename for the solver.") + "." + std::to_string(seed);
+        "BaseFilename for the solver.");// + "." + std::to_string(seed);
 
     const bool vdOutput = _node.Read("vizmoDebug", false, false,
         "True yields VizmoDebug output for the solver.");
@@ -364,15 +415,14 @@ ParseChild(XMLNode& _node) {
 
 /*-------------------------------- Debugging ---------------------------------*/
 
-template <typename MPTraits>
 void
-MPLibraryType<MPTraits>::
+TMPLibrary::
 Print(ostream& _os) const {
   _os << "TMPLibrary" << std::endl;
   m_tmpStrategies->Print(_os);
   m_poiPlacementMethods->Print(_os);
   m_taskEvaluators->Print(_os);
-  m_taskDecomposer->Print(_os);
+  m_taskDecomposers->Print(_os);
   m_taskAllocators->Print(_os);
   m_stateGraphs->Print(_os);
 }
@@ -384,6 +434,13 @@ MPLibrary*
 TMPLibrary::
 GetMPLibrary() const noexcept {
   return m_library;
+}
+
+inline
+void
+TMPLibrary::
+SetMPLibrary(MPLibrary* _l) noexcept {
+  m_library = _l;
 }
 
 inline
@@ -428,7 +485,7 @@ ClearTasks(){
 }
 
 inline
-std::vector<std::shared_ptr<GroupTask>>& 
+std::vector<std::shared_ptr<GroupTask>> 
 TMPLibrary::
 GetGroupTasks() const noexcept {
   return m_groupTasks;
@@ -471,12 +528,6 @@ SetBaseFilename(const std::string& _s) noexcept {
 
 /*---------------------------- Solution Accessors ----------------------------*/
 
-inline
-TaskPlan* 
-GetTaskPlan(){
-  return m_taskPlan;
-}
-
 /*--------------------------- Execution Interface ----------------------------*/
 
 void
@@ -492,7 +543,6 @@ Solve(MPProblem* _problem,
   for(auto& solver : m_solvers)
     RunSolver(solver);
 }
-
 
 void
 TMPLibrary::
@@ -512,8 +562,6 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks) {
   m_taskPlan = nullptr;
 }
 
-
-template <typename MPTraits>
 void
 TMPLibrary::
 Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
@@ -522,7 +570,7 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
 
   for(auto& solver : m_solvers) {
     // Create storage for the solution.
-    m_taskPlan = new TaskPaln();
+    m_taskPlan = new TaskPlan();
 
     RunSolver(solver);
 
@@ -532,11 +580,10 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
   m_taskPlan = nullptr;
 }
 
-
 void
 TMPLibrary::
 Solve(MPProblem* _problem, 
-	std::vector<std::shared_ptr<MPTask>> _task, 
+	std::vector<std::shared_ptr<MPTask>> _tasks, 
 	TaskPlan* _taskPlan,
     const std::string& _label, const long _seed,
     const std::string& _baseFilename) {
@@ -545,10 +592,9 @@ Solve(MPProblem* _problem,
   m_tasks = _tasks;
   m_taskPlan = _taskPlan;
 
-  Solver s{_label, _seed, _baseFilename, false};
+  Solver s{_label, _baseFilename, false};
   RunSolver(s);
 }
-
 
 void
 TMPLibrary::
@@ -571,12 +617,12 @@ RunSolver(const Solver& _solver) {
   // If this task has a label, append it to the solver's output file name.
   std::string baseFilename = _solver.baseFilename;
 
-  if(m_groupTasks) {
-    if(!m_groupTasks.emtpy() and !m_groupTasks[0]->GetLabel().empty())
-      baseFilename += "." + m_groupTasks->GetLabel();
+  if(!m_groupTasks.empty()) {
+    if(!m_groupTasks.empty() and !m_groupTasks[0]->GetLabel().empty())
+      baseFilename += "." + m_groupTasks[0]->GetLabel();
   }
   else if(!m_tasks.empty() and !m_tasks[0]->GetLabel().empty())
-    baseFilename += "." + m_tasks->GetLabel();
+    baseFilename += "." + m_tasks[0]->GetLabel();
 
   // Remove spaces to keep file names nice.
   {
@@ -586,17 +632,17 @@ RunSolver(const Solver& _solver) {
   }
 
   SetBaseFilename(GetMPProblem()->GetPath(baseFilename));
-  GetStatClass()->SetAuxDest(GetBaseFilename());
+  m_library->GetStatClass()->SetAuxDest(GetBaseFilename());
 
   // Initialize vizmo debug if there is a valid filename
-  if(_solver.vizmoDebug)
-    VDInit(GetBaseFilename() + ".vd");
+  //if(_solver.vizmoDebug)
+  //  VDInit(GetBaseFilename() + ".vd");
 
   GetTMPStrategy(_solver.label)->operator()();
 
   // Close vizmo debug if necessary
-  if(_solver.vizmoDebug)
-    VDClose();
+  //if(_solver.vizmoDebug)
+  //  VDClose();
 
   Uninitialize();
   m_problem->SetBaseFilename(originalBaseFilename);
@@ -604,27 +650,4 @@ RunSolver(const Solver& _solver) {
 
 /*----------------------------------------------------------------------------*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif

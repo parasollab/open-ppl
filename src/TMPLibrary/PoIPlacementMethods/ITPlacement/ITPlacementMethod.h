@@ -15,7 +15,7 @@
 class Coordinator;
 class TMPStrategyMethod;
 
-class ITPlacementMethod : PoIPlacementMethod {
+class ITPlacementMethod : public PoIPlacementMethod {
 
   public:
 
@@ -24,7 +24,9 @@ class ITPlacementMethod : PoIPlacementMethod {
     ///@name Construction
     ///@{
 
-	ITPlacementMethod() = default;
+		ITPlacementMethod(XMLNode& _node);
+	
+		ITPlacementMethod() = default;
 
     ITPlacementMethod(MPProblem* _problem);
 

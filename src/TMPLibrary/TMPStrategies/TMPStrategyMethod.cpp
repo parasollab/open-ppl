@@ -60,6 +60,12 @@ TMPStrategyMethod::
 
 /******************************************Configure*****************************************************/
 
+void
+TMPStrategyMethod::
+Initialize(){
+
+}
+
 void 
 TMPStrategyMethod::
 Initialize(Robot* _robot){

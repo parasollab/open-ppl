@@ -5,8 +5,10 @@
 #include <unordered_map>
 
 #include "Behaviors/Agents/Agent.h"
+
 #include "MPProblem/MPTask.h"
 
+#include "TMPLibrary/WholeTask.h"
 
 class TaskPlan {
 

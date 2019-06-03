@@ -11,6 +11,8 @@
 
 #include "Traits/CfgTraits.h"
 
+ITTaskBreakup::
+ITTaskBreakup(XMLNode& _node) : TaskDecomposerMethod(_node){}
 
 ITTaskBreakup::
 ITTaskBreakup(Robot* _robot) : m_robot(_robot) {}

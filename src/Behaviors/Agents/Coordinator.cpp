@@ -14,7 +14,6 @@
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
 #include "MPLibrary/MPTools/TRPTool.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"

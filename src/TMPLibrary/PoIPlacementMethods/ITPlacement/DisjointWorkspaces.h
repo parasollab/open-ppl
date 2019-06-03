@@ -13,14 +13,16 @@ class DisjointWorkspaces : public ITPlacementMethod {
 
     ///@name Construction
     ///@{
+    
+		DisjointWorkspaces() = default;
 
     DisjointWorkspaces(MPProblem* _problem);
 
-    DisjointWorkspaces(MPProblem* _problem, XMLNode& _node);
+    DisjointWorkspaces(XMLNode& _node);
 
     ~DisjointWorkspaces() = default;
 
-		std::unique_ptr<PlacementMethod> Clone() override;
+		std::unique_ptr<ITPlacementMethod> Clone() override;
 
     ///@}
     ///@name Interface

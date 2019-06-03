@@ -13,14 +13,13 @@
 #include "IOUtils.h"
 #include "XMLNode.h"
 
-#include "TMPLibrary/TMPLibrary.h"
-
+class TMPLibrary;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Creates new TMPMethod instances from an XML node.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename TMPMethod>
-struct TMPMethodFactory final {
+struct TMPMethodFactory {
 
   ///@name Local Types
   ///@{
@@ -55,7 +54,7 @@ struct TMPMethodFactory final {
 /// can be added to its map of available TMPMethods by calling 'AddTMPMethod'.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename TMPMethod>
-class TMPMethodSet final {
+class TMPMethodSet {
 
   public:
 
@@ -66,7 +65,7 @@ class TMPMethodSet final {
     typedef typename std::map<std::string, TMPMethodPointer> TMPMethodMap;
 
     typedef std::function<TMPMethodPointer(XMLNode&)>        FactoryType;
-    typedef typename std::map<std::string, FactoryType>   FactoryMap;
+    typedef typename std::map<std::string, FactoryType>      FactoryMap;
 
     typedef typename TMPMethodMap::iterator                  iterator;
     typedef typename TMPMethodMap::const_iterator            const_iterator;
@@ -89,19 +88,19 @@ class TMPMethodSet final {
     /// Add the appropriate TMPMethods from an XML node.
     void ParseXML(XMLNode& _node);
 
-    void AddTMPMethod(XMLNode& _node);
+    void AddMethod(XMLNode& _node);
 
-    void AddTMPMethod(TMPMethodPointer _e, const std::string& _label);
+    void AddMethod(TMPMethodPointer _e, const std::string& _label);
 
     /// Get a TMPMethod by label.
     /// @param _label The TMPMethod label.
     /// @return The corresponding TMPMethod pointer.
-    TMPMethodPointer GetTMPMethod(const std::string& _label);
+    TMPMethodPointer GetMethod(const std::string& _label);
 
     /// Find a TMPMethod iterator.
     /// @param _label The TMPMethod label.
     /// @return The iterator to that TMPMethod, or nullptr if it is not found.
-    iterator FindTMPMethod(std::string _label);
+    iterator FindMethod(std::string _label);
 
     /// Prepare all TMPMethods in this set for execution on the owning MPLibrary's
     /// current MPProblem.
@@ -141,7 +140,7 @@ class TMPMethodSet final {
     ///@name Internal State
     ///@{
 
-    TMPLibrary* const m_tmpLibrary; ///< The owning tmp planning library.
+    TMPLibrary* m_tmpLibrary; ///< The owning tmp planning library.
 
     std::string m_name;     ///< The name of this set of TMPMethods.
     std::string m_default;  ///< The name of the default TMPMethod in this set.
@@ -152,177 +151,6 @@ class TMPMethodSet final {
     ///@}
 
 };
-
-/*------------------------------- TMPMethod Set ---------------------------------*/
-
-template <typename TMPMethod>
-template <typename TMPMethodTypeList>
-TMPMethodSet<TMPMethod>::
-TMPMethodSet(TMPLibrary* const _p, const TMPMethodTypeList& _mtl,
-    const std::string& _name) : m_library(_p), m_name(_name) {
-  AddToUniverse(typename boost::mpl::begin<TMPMethodTypeList>::type(),
-                typename boost::mpl::end<TMPMethodTypeList>::type());
-}
-
-
-template <typename TMPMethod>
-void
-TMPMethodSet<TMPMethod>::
-ParseXML(XMLNode& _node) {
-  for(auto& child : _node)
-    AddTMPMethod(child);
-}
-
-
-template <typename TMPMethod>
-void
-TMPMethodSet<TMPMethod>::
-AddTMPMethod(XMLNode& _node) {
-  auto iter = m_universe.find(_node.Name());
-
-  // Skip if TMPMethod isn't in universe.
-  if(iter == m_universe.end())
-    return;
-
-  TMPMethodPointer e = iter->second(_node);
-  AddTMPMethod(e, e->m_label);
-}
-
-
-template <typename TMPMethod>
-void
-TMPMethodSet<TMPMethod>::
-AddTMPMethod(TMPMethodPointer _e, const std::string& _label) {
-  auto iter = m_universe.find(_e->m_name);
-
-  // Throw exception if TMPMethod isn't in universe.
-  if(iter == m_universe.end())
-    throw ParseException(WHERE, "TMPMethod '" + _e->m_name +
-        "' is not contained within the motion planning universe.");
-
-  _e->SetMPLibrary(m_tmpLibrary);
-  _e->SetLabel(_label);
-  if(m_elements.empty())
-    m_default = _label;
-  if(m_elements.find(_label) == m_elements.end())
-    m_elements[_label] = _e;
-  else
-    cerr << "\nWarning, TMPMethod list already has a pointer associated with "
-         << "\"" << _label << "\", not added\n";
-}
-
-
-template <typename TMPMethod>
-typename TMPMethodSet<TMPMethod>::TMPMethodPointer
-TMPMethodSet<TMPMethod>::
-GetTMPMethod(const std::string& _label) {
-  TMPMethodPointer element = (_label == "") ? m_elements[m_default] :
-                                           m_elements[_label];
-  if(element.get() == nullptr) {
-    std::string err = "Element '" + _label + "' does not exist in " + m_name +
-        ". Choices are: ";
-    for(auto& elem : m_elements)
-      if(elem.second.get())
-        err += " '" + elem.first + "',";
-    err.pop_back();
-    throw RunTimeException(WHERE, err);
-  }
-  return element;
-}
-
-
-template <typename TMPMethod>
-typename TMPMethodSet<MPTraits, TMPMethod>::iterator
-TMPMethodSet<TMPMethod>::
-FindTMPMethod(std::string _label) {
-  if(_label == "")
-    _label = m_default;
-  return m_elements.find(_label);
-}
-
-
-template <typename TMPMethod>
-void
-TMPMethodSet<TMPMethod>::
-Initialize() {
-  for(auto& elem : m_elements)
-    elem.second->Initialize();
-}
-
-
-template <typename TMPMethod>
-void
-TMPMethodSet<TMPMethod>::
-Print(ostream& _os) const {
-  size_t count = 0;
-
-  _os << "\n" << m_name << " has these TMPMethods available::\n\n";
-
-  for(auto& elem : m_elements) {
-    _os << ++count << ") \"" << elem.first << "\" (" << elem.second->m_name
-        << ")\n";
-    elem.second->Print(_os);
-    _os << std::endl;
-  }
-  _os << std::endl;
-}
-
-/*--------------------------------- Iteration --------------------------------*/
-
-template <typename TMPMethod>
-inline
-typename TMPMethodSet<TMPMethod>::iterator
-TMPMethodSet<TMPMethod>::
-begin() noexcept {
-  return m_elements.begin();
-}
-
-
-template <typename TMPMethod>
-inline
-typename TMPMethodSet<TMPMethod>::iterator
-TMPMethodSet<TMPMethod>::
-end() noexcept {
-  return m_elements.end();
-}
-
-
-template <typename TMPMethod>
-inline
-typename TMPMethodSet<TMPMethod>::const_iterator
-TMPMethodSet<TMPMethod>::
-begin() const noexcept {
-  return m_elements.begin();
-}
-
-
-template <typename TMPMethod>
-inline
-typename TMPMethodSet<TMPMethod>::const_iterator
-TMPMethodSet<TMPMethod>::
-end() const noexcept {
-  return m_elements.end();
-}
-
-/*-------------------------- Initialization Helpers --------------------------*/
-
-template <typename TMPMethod>
-template <typename First, typename Last>
-void
-TMPMethodSet<TMPMethod>::
-AddToUniverse(First, Last) {
-  using FirstType = typename boost::mpl::deref<First>::type;
-  FirstType first;
-  m_universe[first.m_name] = TMPMethodFactory<FirstType>();
-  AddToUniverse(typename boost::mpl::next<First>::type(), Last());
-}
-
-
-template <typename TMPMethod>
-template <typename Last>
-void
-TMPMethodSet<TMPMethod>::
-AddToUniverse(Last, Last) {}
 
 /*----------------------------------------------------------------------------*/
 

@@ -31,7 +31,7 @@ class ITMethod : public TMPStrategyMethod {
 
 		ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
 									Environment* _interactionEnvironment, 
-									std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>& _ITPlacementMethods);
+									std::unordered_map<std::string, std::unique_ptr<ITPlacementMethod>>& _ITPlacementMethods);
 
     ITMethod() = default;
 

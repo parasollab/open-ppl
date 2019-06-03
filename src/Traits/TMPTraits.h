@@ -9,8 +9,8 @@
 
 // PoIPlacementMethods to include
 
-#include "TMPLibrary/PoIPlacementMethods/ITPlacementMethods/DisjointWorkspaces.h"
-#include "TMPLibrary/PoIPlacementMethods/ITPlacementMethods/WorkspaceGuidance.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.h"
 
 // TaskEvaluators to include
 
@@ -18,7 +18,7 @@
 
 // TaskDecomposers to include
 
-#include "TMPLibrary/TaskDecomposers/InteractionTaskBreakup.h"
+#include "TMPLibrary/TaskDecomposers/ITTaskBreakup.h"
 
 // TaskAllocators to include 
 
@@ -53,7 +53,7 @@ struct TMPTraits {
 
   //types of task decomposers available in our world
   typedef boost::mpl::list<
-    InteractionTaskBreakup
+    ITTaskBreakup
       > TaskDecomposerMethodList;
 
   //types of task allocators available in our world

@@ -2,7 +2,7 @@
 #define WHOLE_TASK_H_
 
 #include <vector>
-#include "HandoffAgent.h"
+#include "Behaviors/Agents/HandoffAgent.h"
 #include "MPProblem/MPTask.h"
 
 struct WholeTask{

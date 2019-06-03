@@ -4,7 +4,6 @@
 #include "Agent.h"
 #include "PlanningAgent.h"
 #include "HandoffAgent.h"
-#include "WholeTask.h"
 
 #include "TMPLibrary/TMPLibrary.h"
 
@@ -13,7 +12,7 @@
 #include "BatteryBreak.h"
 
 //TODO remove dependency on these
-#include "TMPLibrary/TMPStrategies/Actions/Action.h"
+#include "TMPLibrary/Actions/Action.h"
 
 class HandoffAgent;
 class InteractionTemplate;

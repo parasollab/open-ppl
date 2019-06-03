@@ -20,7 +20,7 @@ class StateGraph : public TMPBaseObject {
 	virtual ~StateGraph() = default;  	
 
     ///@}
-}
+};
 
 /*----------------------------------------------------------------------------*/
 

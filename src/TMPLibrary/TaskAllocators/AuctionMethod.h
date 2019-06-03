@@ -16,7 +16,7 @@ class AuctionMethod : public TaskAllocatorMethod {
 	virtual ~AuctionMethod() = default;  	
 
     ///@}
-}
+};
 
 /*----------------------------------------------------------------------------*/
 

@@ -7,6 +7,7 @@
 #include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/State.h"
 #include "TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.h"
+#include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 #include "Vector.h"
@@ -24,7 +25,7 @@
 
 
 
-class EnforcedHillClimbing {
+class EnforcedHillClimbing : public TaskEvaluatorMethod {
 
   public:
 
@@ -37,6 +38,9 @@ class EnforcedHillClimbing {
 
     ///@name Construction
     ///@{
+
+		EnforcedHillClimbing();
+		EnforcedHillClimbing(XMLNode& _node);
 
     /// @param _capabilityMap Set of roadmaps for each cabaility to be used in
     /// @param _robots Set of robots available to solve task
@@ -55,6 +59,8 @@ class EnforcedHillClimbing {
 
     ///Returns a sequence of actions to solve the problem
     std::vector<std::shared_ptr<Action>> Solve();
+
+		virtual bool operator()() override;
 
     ///@}
 

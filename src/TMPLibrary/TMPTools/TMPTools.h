@@ -15,16 +15,16 @@ class TMPTools : public TMPBaseObject {
 
   	TMPTools() = default;
 
-	TMPTools(XMLNode& _node);
+		TMPTools(XMLNode& _node);
 
-	virtual ~TMPTools() = default;  	
+		virtual ~TMPTools() = default;  	
 
     ///@}
-}
+};
 
 /*----------------------------------------------------------------------------*/
 
 #endif
 
 TMPTools::
-TMPTools(XMLNode _node) : TMPBaseObject(_node) {}
+TMPTools(XMLNode& _node) : TMPBaseObject(_node) {}

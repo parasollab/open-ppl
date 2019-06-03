@@ -15,7 +15,7 @@ class ObstacleBased : public ITPlacementMethod {
 
     ObstacleBased(MPProblem* _problem);
 
-    ObstacleBased(MPProblem* _problem, XMLNode& _node);
+    ObstacleBased(XMLNode& _node);
 
     ~ObstacleBased() = default;
 

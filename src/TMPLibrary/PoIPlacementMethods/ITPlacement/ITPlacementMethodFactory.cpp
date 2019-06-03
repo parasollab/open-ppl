@@ -15,36 +15,36 @@
 
 std::unique_ptr<PlacementMethod>
 ITPlacementMethod::
-Factory(MPProblem* _p, XMLNode& _node) {
+Factory(XMLNode& _node) {
   // Read the node and mark it as visited.
   std::string type = _node.Read("type", true, "", "The IT Placement Method name.");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
-  std::unique_ptr<PlacementMethod> output;
+  std::unique_ptr<ITPlacementMethod> output;
 
   if(type == "fixedbase")
     output = std::unique_ptr<FixedBase>(
-        new FixedBase(_p, _node)
+        new FixedBase(_node)
     );
   else if(type == "disjointworkspaces")
     output = std::unique_ptr<DisjointWorkspaces>(
-        new DisjointWorkspaces(_p, _node)
+        new DisjointWorkspaces(_node)
     );
   else if(type == "owdensity")
     output = std::unique_ptr<OverlappingWorkspacesDensity>(
-        new OverlappingWorkspacesDensity(_p, _node)
+        new OverlappingWorkspacesDensity(_node)
     );
   else if(type == "workspaceguidance")
     output = std::unique_ptr<WorkspaceGuidance>(
-        new WorkspaceGuidance(_p, _node)
+        new WorkspaceGuidance(_node)
     );
   else if(type == "ballfilling")
     output = std::unique_ptr<BallFilling>(
-        new BallFilling(_p, _node)
+        new BallFilling(_node)
     );
   else if(type == "gridfilling")
     output = std::unique_ptr<GridFilling>(
-        new GridFilling(_p, _node)
+        new GridFilling(_node)
     );
   else
     throw ParseException(_node.Where(), "IT Placement Method type '" + type + "'.");

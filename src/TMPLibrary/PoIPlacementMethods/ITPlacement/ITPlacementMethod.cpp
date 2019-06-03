@@ -5,7 +5,7 @@
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 ITPlacementMethod::
-ITPlacementMethod(MPProblem* _problem) : m_problem(_problem) {}
+ITPlacementMethod(XMLNode& _node) : PoIPlacementMethod(_node) {}
 
 std::unique_ptr<PlacementMethod>
 ITPlacementMethod::

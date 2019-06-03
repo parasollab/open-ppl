@@ -16,7 +16,7 @@ class OverlappingWorkspacesDensity : public ITPlacementMethod {
 
     OverlappingWorkspacesDensity(MPProblem* _problem);
 
-    OverlappingWorkspacesDensity(MPProblem* _problem, XMLNode& _node);
+    OverlappingWorkspacesDensity(XMLNode& _node);
 
     ~OverlappingWorkspacesDensity() = default;
 

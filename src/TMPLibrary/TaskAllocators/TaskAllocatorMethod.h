@@ -21,7 +21,7 @@ class TaskAllocatorMethod : public TMPBaseObject {
 	virtual ~TaskAllocatorMethod() = default;  	
 
     ///@}
-}
+};
 
 /*----------------------------------------------------------------------------*/
 

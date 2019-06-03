@@ -5,13 +5,11 @@
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 FixedBase::
-FixedBase(MPProblem* _problem) : PlacementMethod(_problem) {}
+FixedBase(MPProblem* _problem) : ITPlacementMethod(_problem) {}
 
 
 FixedBase::
-FixedBase(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
-  m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
-}
+FixedBase(XMLNode& _node) : ITPlacementMethod(_node) {}
 
 void
 FixedBase::

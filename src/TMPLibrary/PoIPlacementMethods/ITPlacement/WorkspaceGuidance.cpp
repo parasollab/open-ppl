@@ -7,8 +7,7 @@ WorkspaceGuidance(MPProblem* _problem) : PlacementMethod(_problem) {}
 
 
 WorkspaceGuidance::
-WorkspaceGuidance(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
-  m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
+WorkspaceGuidance(XMLNode& _node) : PlacementMethod(_node) {
   m_dmLabel = _node.Read("dmLabel", false, "positionEuclidean",
                          "distance metric to track distance between interaction templates");
   m_distanceThreshold = _node.Read("distanceThreshold", true, nan(""), 0., 1000.,

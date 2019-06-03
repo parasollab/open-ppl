@@ -5,7 +5,7 @@
 
 #include "MPProblem/MPTask.h"
 
-#include "TMPBaseObject.h"
+#include "TMPLibrary/TMPBaseObject.h"
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 #include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/WholeTask.h"
@@ -27,13 +27,21 @@ class TMPStrategyMethod : public TMPBaseObject {
  	
 	TMPStrategyMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
 										Environment* _interactionEnvironment, 
-										std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>& _ITPlacementMethods);
+										std::unordered_map<std::string, std::unique_ptr<ITPlacementMethod>>& _ITPlacementMethods);
 
     virtual ~TMPStrategyMethod();
+
+		///@}
+		///@name Interface
+		///@{
+
+		void operator()();
 
     ///@}
     ///@name Configure
     ///@{
+
+		void Initialize() override;
 
     void Initialize(Robot* _superRobot);
 
@@ -41,7 +49,7 @@ class TMPStrategyMethod : public TMPBaseObject {
     /// needed. 
     void ResetCapabilityRoadmaps();
 
-	///@}
+		///@}
     ///@name Call Method
     ///@{
 
@@ -101,7 +109,7 @@ class TMPStrategyMethod : public TMPBaseObject {
 		//Moved to TaskPlan
         //void CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks);
 
-		void AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm);
+		void AddPlacementMethod(std::unique_ptr<ITPlacementMethod> _pm);
 	
 		///@}
 	
@@ -134,7 +142,7 @@ class TMPStrategyMethod : public TMPBaseObject {
     /// Maps agent capabilities to a dummy agent used for planning.
     std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
     
-	std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
+		std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
 
     /// The list of WholeTasks, which need to be divided into subtasks
     //Moved to TaskPlan
@@ -157,9 +165,9 @@ class TMPStrategyMethod : public TMPBaseObject {
 
     bool m_debug{false};
 
-	std::string m_dmLabel;
+		std::string m_dmLabel;
     
-	double m_connectionThreshold{1.5};
+		double m_connectionThreshold{1.5};
 
 	bool m_initialized{false};
     ///@}

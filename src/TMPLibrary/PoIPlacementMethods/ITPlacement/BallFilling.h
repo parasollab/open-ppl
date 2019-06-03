@@ -1,7 +1,7 @@
 #ifndef BALL_FILLING_H_
 #define BALL_FILLING_H_
 
-#include "TMPLibrary/PoIPlacementMethods/ITPlacementMethods/ITPlacementMethod.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 #include "Utilities/XMLNode.h"
@@ -15,7 +15,7 @@ class BallFilling : public ITPlacementMethod {
 
     BallFilling(MPProblem* _problem); 
 
-    BallFilling(MPProblem* _problem, XMLNode& _node);
+    BallFilling(XMLNode& _node);
 
     ~BallFilling() = default;
 

@@ -9,6 +9,15 @@
 #include "Simulator/BulletModel.h"
 
 EnforcedHillClimbing::
+EnforcedHillClimbing(){
+	m_robots= {};
+	m_library = this->GetTMPLibrary()->GetMPLibrary();
+}
+
+EnforcedHillClimbing::
+EnforcedHillClimbing(XMLNode& _node) : TaskEvaluatorMethod(_node){}
+
+EnforcedHillClimbing::
 EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
                      std::vector<Robot*> _robots,
                      MPTask* _task,
@@ -64,6 +73,12 @@ EnforcedHillClimbing::
     delete boundary.first;
     delete boundary.second;
   }
+}
+
+bool 
+EnforcedHillClimbing::
+operator()(){
+	//TODO::put the actual solve stuff here
 }
 
 Boundary*

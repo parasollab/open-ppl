@@ -8,12 +8,11 @@
 #include "Utilities/MPUtils.h"
 
 DisjointWorkspaces::
-DisjointWorkspaces(MPProblem* _problem) : PlacementMethod(_problem) {}
+DisjointWorkspaces(MPProblem* _problem) : ITPlacementMethod(_problem) {}
 
 
 DisjointWorkspaces::
-DisjointWorkspaces(MPProblem* _problem, XMLNode& _node) : PlacementMethod(_problem) {
-  m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
+DisjointWorkspaces(XMLNode& _node) : ITPlacementMethod(_node) {
   m_precision = _node.Read("precision", false, 4., 1., 100.,
               "How many divisions around each edge of the boundary do you want to sample?");
   m_maxAttempts = _node.Read("maxAttempts", true, nan(""), 0., 1000., "Max number of attempts to place a CFG");

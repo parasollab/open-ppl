@@ -16,7 +16,7 @@ class FixedBase : public ITPlacementMethod {
 
     FixedBase(MPProblem* _problem);
 
-    FixedBase(MPProblem* _problem, XMLNode& _node);
+    FixedBase(XMLNode& _node);
 
     ~FixedBase() = default;
 

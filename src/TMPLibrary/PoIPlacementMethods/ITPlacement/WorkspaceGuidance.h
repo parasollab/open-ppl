@@ -29,13 +29,15 @@ class WorkspaceGuidance : public ITPlacementMethod {
     ///@name Construction
     ///@{
 
+		WorkspaceGuidance() = default;
+
     WorkspaceGuidance(MPProblem* _problem);
 
-    WorkspaceGuidance(MPProblem* _problem, XMLNode& _node);
+    WorkspaceGuidance(XMLNode& _node);
 
     ~WorkspaceGuidance() = default;
 
-		std::unique_ptr<PlacementMethod> Clone() override;
+		std::unique_ptr<ITPlacementMethod> Clone() override;
 
     ///@}
     ///@name Interface
