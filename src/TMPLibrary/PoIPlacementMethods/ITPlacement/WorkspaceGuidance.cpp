@@ -1,5 +1,6 @@
 #include "WorkspaceGuidance.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 WorkspaceGuidance::
 WorkspaceGuidance(MPProblem* _problem) : PlacementMethod(_problem) {}

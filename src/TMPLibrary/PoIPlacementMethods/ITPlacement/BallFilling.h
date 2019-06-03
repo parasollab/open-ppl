@@ -1,9 +1,9 @@
 #ifndef BALL_FILLING_H_
 #define BALL_FILLING_H_
 
-#include "ITPlacementMethod.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacementMethods/ITPlacementMethod.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "Utilities/XMLNode.h"
 
 class BallFilling : public ITPlacementMethod {

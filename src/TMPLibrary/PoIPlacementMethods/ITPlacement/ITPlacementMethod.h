@@ -1,13 +1,15 @@
 #ifndef IT_PLACEMENT_METHOD_H_
 #define IT_PLACEMENT_METHOD_H_
 
-#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 
 //#include "Behaviors/Agents/Coordinator.h"
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPLibrary/PMPL.h"
+
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
+
 #include "Utilities/XMLNode.h"
 
 class Coordinator;

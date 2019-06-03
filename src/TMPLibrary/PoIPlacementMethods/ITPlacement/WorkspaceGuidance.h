@@ -1,14 +1,18 @@
 #ifndef WORKSAPCE_GUIDANCE_H_
 #define WORKSPACE_GUIDANCE_H_
 
-#include "PlacementMethod.h"
+#include "ITPlacementMethod.h"
 
 #include "Behaviors/Agents/Coordinator.h"
+
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
+
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+
 #include "Utilities/XMLNode.h"
+
 #include "Workspace/WorkspaceSkeleton.h"
 
 class WorkspaceGuidance : public ITPlacementMethod {

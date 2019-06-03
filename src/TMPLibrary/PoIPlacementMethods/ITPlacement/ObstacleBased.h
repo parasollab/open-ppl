@@ -3,7 +3,7 @@
 
 #include "ITPlacementMethod.h"
 
-#include "MPLibrary/MPTools/InteractionTemplate.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "Utilities/XMLNode.h"
 
 class ObstacleBased : public ITPlacementMethod {

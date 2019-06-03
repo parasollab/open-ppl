@@ -1,12 +1,13 @@
 #ifndef FIXED_BASE_H_
 #define FIXED_BASE_H_
 
-#include "PlacementMethod.h"
+#include "ITPlacementMethod.h"
 
-#include "MPLibrary/MPTools/InteractionTemplate.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+
 #include "Utilities/XMLNode.h"
 
-class FixedBase : public PlacementMethod {
+class FixedBase : public ITPlacementMethod {
 
   public:
 

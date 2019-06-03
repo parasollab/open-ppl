@@ -7,6 +7,14 @@
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
+class PoIPlacementMethod;
+class StateGraph;
+class TaskAllocatorMethod;
+class TaskDecomposerMethod;
+class TaskEvaluator;
+class TMPStrategyMethod;
+class TaskPlan;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for all TMP algorithm abstractions in PMPL.
 ///

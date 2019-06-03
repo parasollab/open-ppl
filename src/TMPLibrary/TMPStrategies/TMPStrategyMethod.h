@@ -2,12 +2,16 @@
 #define TMP_STRATEGY_METHOD_H
 
 #include "Behaviors/Agents/HandoffAgent.h"
-#include "Behaviors/Agents/WholeTask.h"
-#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
-#include "Behaviors/TMPStrategies/TaskPlan.h"
+
 #include "MPProblem/MPTask.h"
 
-class TMPStrategyMethod {
+#include "TMPBaseObject.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
+#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/WholeTask.h"
+
+
+class TMPStrategyMethod : public TMPBaseObject {
   public:
 
     typedef RoadmapGraph<CfgType, WeightType>         GraphType;
@@ -21,9 +25,9 @@ class TMPStrategyMethod {
 
     TMPStrategyMethod(XMLNode& _node);
  	
-		TMPStrategyMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
-											Environment* _interactionEnvironment, 
-											std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>& _ITPlacementMethods);
+	TMPStrategyMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
+										Environment* _interactionEnvironment, 
+										std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>& _ITPlacementMethods);
 
     virtual ~TMPStrategyMethod();
 
@@ -51,15 +55,16 @@ class TMPStrategyMethod {
     ///@name Accessors
     ///@{
 
-		Robot* GetRobot();
+	Robot* GetRobot();
 
-		HandoffAgent* GetCapabilityAgent(std::string _robotType);
+	HandoffAgent* GetCapabilityAgent(std::string _robotType);
 
-		WholeTask* GetWholeTask(std::shared_ptr<MPTask> _subtask);
+    //Moved to TaskPlan
+	//WholeTask* GetWholeTask(std::shared_ptr<MPTask> _subtask);
 
     ///@}
 
-  //protected:
+    //protected:
 
     ///@name Combined Roadmap Methods
     ///@{
@@ -77,13 +82,13 @@ class TMPStrategyMethod {
     /// constriants of each whole task and adds them to the megaRoadmap
     void SetupWholeTasks();
 		
-		///@}
+    ///@}
     ///@name Task Assignment
     ///@{
 
-		virtual TaskPlan* AssignTasks();
+	virtual TaskPlan* AssignTasks();
 
-		virtual void DecomposeTasks();
+	virtual void DecomposeTasks();
 
 		///@}
     ///@name Helper Methods
@@ -93,7 +98,8 @@ class TMPStrategyMethod {
     void GenerateDummyAgents();
 
 		/// Generates the whole task object for each input task
-		void CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks);
+		//Moved to TaskPlan
+        //void CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks);
 
 		void AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm);
 	
@@ -128,17 +134,20 @@ class TMPStrategyMethod {
     /// Maps agent capabilities to a dummy agent used for planning.
     std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
     
-		std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
+	std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
 
     /// The list of WholeTasks, which need to be divided into subtasks
-    std::vector<WholeTask*> m_wholeTasks;
+    //Moved to TaskPlan
+    //std::vector<WholeTask*> m_wholeTasks;
     
 		/// Map of IT Placement Method Options
-    std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
+    //Moved to TMPLibrary
+    //std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
 
 		/// Map subtasks to the WholeTask that they are included in to access the
     /// next subtask.
-    std::unordered_map<std::shared_ptr<MPTask>, WholeTask*> m_subtaskMap;
+    //Moved to TaskPlan
+    //std::unordered_map<std::shared_ptr<MPTask>, WholeTask*> m_subtaskMap;
 
     //TODO:: Figure out if I need to keep track of robot and task start and end
     //points
@@ -148,11 +157,11 @@ class TMPStrategyMethod {
 
     bool m_debug{false};
 
-		std::string m_dmLabel;
+	std::string m_dmLabel;
     
-		double m_connectionThreshold{1.5};
+	double m_connectionThreshold{1.5};
 
-		bool m_initialized{false};
+	bool m_initialized{false};
     ///@}
 };
 

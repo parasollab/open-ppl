@@ -1,9 +1,11 @@
 #include "TMPStrategyMethod.h"
-#include "ITConstructor.h"
 
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Agents/Coordinator.h"
-#include "Behaviors/TMPStrategies/ITConnector.h"
+
+#include "TMPLibrary/StateGraph/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraph/StateGraphHelpers/ITConstructor.h"
+
 #include "Simulator/Simulation.h"
 
 
@@ -71,8 +73,8 @@ Initialize(Robot* _robot){
   
   ResetCapabilityRoadmaps();
 
-  m_wholeTasks.clear();
-  m_wholeTaskStartEndPoints.clear();
+  //m_wholeTasks.clear();
+  //m_wholeTaskStartEndPoints.clear();
 
   if(m_combinedRoadmap){
 		delete m_combinedRoadmap;
@@ -108,7 +110,7 @@ PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
 
   m_memberAgents = _agents;
 
-  CreateWholeTasks(_tasks);
+  this->GetTaskPlan()->CreateWholeTasks(_tasks);
 
   return new TaskPlan();
 }
@@ -126,13 +128,13 @@ TMPStrategyMethod::
 GetCapabilityAgent(std::string _robotType){
 	return m_dummyMap[_robotType];
 }
-
+/*
 WholeTask*
 TMPStrategyMethod::
 GetWholeTask(std::shared_ptr<MPTask> _subtask){
 	return m_subtaskMap[_subtask];
 }
-
+*/
 /**************************************Combined Roadmap**************************************************/
 
 void
@@ -520,7 +522,7 @@ TransformITs(){
 void
 TMPStrategyMethod::
 SetupWholeTasks(){
-  for(auto wholeTask : m_wholeTasks){
+  for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
     // find a start and goal configuration for the coordinator
     auto task = wholeTask->m_task;
 	m_library->SetTask(task.get());
@@ -653,7 +655,7 @@ GenerateDummyAgents(){
     }
   }
 }
-
+/*
 void
 TMPStrategyMethod::
 CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks){
@@ -669,7 +671,7 @@ CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks){
     m_wholeTasks.push_back(wholeTask);
   }
 }
-
+*/
 void
 TMPStrategyMethod::
 AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm){

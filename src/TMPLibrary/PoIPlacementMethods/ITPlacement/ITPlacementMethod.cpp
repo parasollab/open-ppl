@@ -1,7 +1,8 @@
 #include "ITPlacementMethod.h"
 
 #include "Behaviors/Agents/Coordinator.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 ITPlacementMethod::
 ITPlacementMethod(MPProblem* _problem) : m_problem(_problem) {}

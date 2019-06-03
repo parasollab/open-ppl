@@ -1,5 +1,7 @@
 #include "GridFilling.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+
 #include <chrono>
 
 GridFilling::

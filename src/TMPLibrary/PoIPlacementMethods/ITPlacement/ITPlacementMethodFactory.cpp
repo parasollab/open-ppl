@@ -5,6 +5,7 @@
 #include "OverlappingWorkspacesDensity.h"
 #include "ITPlacementMethod.h"
 #include "WorkspaceGuidance.h"
+
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 

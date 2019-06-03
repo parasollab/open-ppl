@@ -1,6 +1,8 @@
 #include "FixedBase.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 FixedBase::
 FixedBase(MPProblem* _problem) : PlacementMethod(_problem) {}

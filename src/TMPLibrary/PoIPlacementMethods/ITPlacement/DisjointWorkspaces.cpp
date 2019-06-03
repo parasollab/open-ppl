@@ -2,7 +2,9 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+
 #include "Utilities/MPUtils.h"
 
 DisjointWorkspaces::

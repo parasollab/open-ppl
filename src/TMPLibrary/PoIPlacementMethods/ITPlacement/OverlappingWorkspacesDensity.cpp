@@ -2,7 +2,8 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
-#include "Behaviors/TMPStrategies/TMPStrategyMethod.h"
+
+#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 OverlappingWorkspacesDensity::
 OverlappingWorkspacesDensity(MPProblem* _problem) : PlacementMethod(_problem) {}
