@@ -15,6 +15,8 @@
 #include "Simulator/MicroSimulator.h"
 #include "Simulator/Simulation.h"
 
+#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/TMPLibrary.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 #include "Utilities/IOUtils.h"
@@ -75,6 +77,7 @@ void
 HandoffAgent::
 SetParentAgent(Coordinator* const _parent) {
   m_parentAgent = _parent;
+	m_tmpLibrary = _parent->GetTMPLibrary();
 }
 
 
@@ -638,9 +641,9 @@ SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
 void
 HandoffAgent::
 AddSubtask(std::shared_ptr<MPTask> _task){
-  auto deliveringPath = m_parentAgent->GetCurrentStrategy()->GetWholeTask(
+  auto deliveringPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
 																		_task)->m_interactionPathsDelivering[_task];
-  auto receivingPath = m_parentAgent->GetCurrentStrategy()->GetWholeTask(
+  auto receivingPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
 																		_task)->m_interactionPathsReceiving[_task];
 
   if(receivingPath.size() > 0){
@@ -709,14 +712,14 @@ HandoffAgent::
 CheckInteractionPath(){
   std::shared_ptr<MPTask> subtask;
   subtask = GetTask();
-  auto wholeTask = m_parentAgent->GetCurrentStrategy()->GetWholeTask(subtask);
+  auto wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTask(subtask);
   if(wholeTask){
     auto deliveringPath = wholeTask->m_interactionPathsDelivering[subtask];
     m_path = deliveringPath;
   }
   else{
     subtask = m_queuedSubtasks.front();
-    wholeTask = m_parentAgent->GetCurrentStrategy()->GetWholeTask(subtask);
+    wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTask(subtask);
     auto receivingPath = wholeTask->m_interactionPathsReceiving[subtask];
     m_path = receivingPath;
   }

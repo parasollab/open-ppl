@@ -1,13 +1,11 @@
 #ifndef GRID_FILLING_H_
 #define GRID_FILLING_H_
 
-#include "ITPlacementMethod.h"
-
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 
 #include "Utilities/XMLNode.h"
 
-class GridFilling : public PlacementMethod {
+class GridFilling : public ITPlacementMethod {
 
   public:
 
@@ -24,8 +22,7 @@ class GridFilling : public PlacementMethod {
     ///@name Interface
     ///@{
 
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
-                         TMPStrategyMethod* _tmpMethod) override;
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution) override;
 
     ///@}
   protected:

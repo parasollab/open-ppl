@@ -383,32 +383,29 @@ SIM_SRCS := \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
   TMPLibrary/Actions/StartTask.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/BallFilling.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/FixedBase.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/GridFilling.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
+  TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethodFactory.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
-  TMPLibrary/StateGraph/StateGraph.cpp \
-  TMPLibrary/StateGraph/StateGraphHelpers/ITConstructor.cpp \
-  TMPLibrary/StateGraph/CombinedRoadmap.cpp \
-  TMPLibrary/TaskAllocators/TaskAllocators/AuctionMethod.cpp \
-  TMPLibrary/TaskAllocators/TaskAllocators/TaskAllocatorMethod.cpp \
+  TMPLibrary/State.cpp \
+  TMPLibrary/StateGraphs/StateGraph.cpp \
+  TMPLibrary/StateGraphs/StateGraphHelpers/ITConstructor.cpp \
+  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/TaskAllocators/AuctionMethod.cpp \
+  TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
-  TMPlibrary/TaskEvaluators/Heuristic/RelaxedGraphPlan.cpp \
-  TMPLibrary/EnforcedHillClimbing.cpp \
-  TMPLibrary/TaskEvaluatorMethod.cpp \
+  TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
+  TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
+  TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
+  TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPLibrary.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
   TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
-  TMPLibrary/State.cpp \
   TMPLibrary/TaskPlan.cpp \
-  Utilities/TMPMethodSet.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/Coordinator.cpp \
@@ -416,8 +413,7 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp \
-  Behaviors/Agents/TaskBreakup.cpp 
+  Behaviors/Agents/RoadmapFollowingAgent.cpp 
 
 ################################################################################
 # Hardware

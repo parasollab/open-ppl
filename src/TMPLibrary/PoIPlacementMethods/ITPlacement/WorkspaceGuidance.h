@@ -1,17 +1,7 @@
 #ifndef WORKSAPCE_GUIDANCE_H_
 #define WORKSPACE_GUIDANCE_H_
 
-#include "ITPlacementMethod.h"
-
-#include "Behaviors/Agents/Coordinator.h"
-
-#include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/Weight.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
-
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
-
-#include "Utilities/XMLNode.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 
 #include "Workspace/WorkspaceSkeleton.h"
 
@@ -31,8 +21,6 @@ class WorkspaceGuidance : public ITPlacementMethod {
 
 		WorkspaceGuidance() = default;
 
-    WorkspaceGuidance(MPProblem* _problem);
-
     WorkspaceGuidance(XMLNode& _node);
 
     ~WorkspaceGuidance() = default;
@@ -43,15 +31,14 @@ class WorkspaceGuidance : public ITPlacementMethod {
     ///@name Interface
     ///@{
 
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
-                         TMPStrategyMethod* _tmpMethod) override;
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution) override;
 
     ///@}
 
 
   private:
 
-    void BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod);
+    void BuildSkeleton();
 
 
     std::string m_dmLabel;

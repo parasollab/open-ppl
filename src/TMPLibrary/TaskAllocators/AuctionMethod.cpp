@@ -3,6 +3,6 @@
 /*------------------------------ Construction --------------------------------*/
 
 AuctionMethod::
-AcutionMethod(XMLNode& _node) : TaskAllocatorMethod(_node){
+AuctionMethod(XMLNode& _node) : TaskAllocatorMethod(_node){
 
 }

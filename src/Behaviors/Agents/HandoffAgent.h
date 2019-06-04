@@ -3,7 +3,9 @@
 
 #include "PathFollowingAgent.h"
 
+
 class Coordinator;
+class TMPLibrary;
 
 class NetbookInterface;
 
@@ -124,7 +126,9 @@ class HandoffAgent : public PathFollowingAgent {
     ///@name Internal State
     ///@{
 
-    /// The parent group to which this agent belongs.
+		TMPLibrary* m_tmpLibrary;
+    
+		/// The parent group to which this agent belongs.
     Coordinator* m_parentAgent{nullptr};
 
     double m_distance{0.0}; ///< The distance traveled since localizing.

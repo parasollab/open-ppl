@@ -1,8 +1,9 @@
 #include "FixedBase.h"
+#include "Behaviors/Agents/Coordinator.h"
 
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "TMPLibrary/TaskPlan.h"
 
 FixedBase::
 FixedBase(MPProblem* _problem) : ITPlacementMethod(_problem) {}
@@ -13,12 +14,12 @@ FixedBase(XMLNode& _node) : ITPlacementMethod(_node) {}
 
 void
 FixedBase::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   auto tasks = _it->GetInformation()->GetInteractionTasks();
   CSpaceBoundingBox* standard = new CSpaceBoundingBox(1);
   *standard = *(static_cast<const CSpaceBoundingBox*>(tasks[0]->GetStartConstraint()->GetBoundary()));
 
-  auto& robots = m_problem->GetRobots();
+  auto& robots = this->GetMPProblem()->GetRobots();
 
   for(auto& robot : robots){
     auto mb = robot->GetMultiBody();
@@ -38,12 +39,12 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
     //TODO convert bbx into a cfg
     //probably just sample with the robot (change library task)
 
-    auto oldRobot = _library->GetTask()->GetRobot();
-    _library->GetTask()->SetRobot(robot.get());
+    auto oldRobot = this->GetMPLibrary()->GetTask()->GetRobot();
+    this->GetMPLibrary()->GetTask()->SetRobot(robot.get());
 
 
     std::vector<Cfg> basePoints;
-    auto sampler = _library->GetSampler("UniformRandomFree");
+    auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
     size_t numNodes = 1, numAttempts = 100;
     sampler->Sample(numNodes, numAttempts, bbx,
         std::back_inserter(basePoints));
@@ -56,7 +57,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
 
     std::cout << "IT Location: " << basePoints[0].PrettyPrint() << std::endl;
 
-    _library->GetTask()->SetRobot(oldRobot);
+    this->GetMPLibrary()->GetTask()->SetRobot(oldRobot);
   }
 
   //_solution->AddInteractionTemplate(_it);

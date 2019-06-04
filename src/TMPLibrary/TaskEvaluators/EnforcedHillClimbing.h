@@ -2,7 +2,7 @@
 #define ENFORCED_HILL_CLIMBING_H_
 
 
-#include "MPProblem/Robot/Robot.h"
+//#include "MPProblem/Robot/Robot.h"
 
 #include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/State.h"
@@ -88,7 +88,7 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
 
     ///@}
 
-    const CapabilityMap& m_capabilityMap; ///< Set of capability maps for the robot team
+    CapabilityMap m_capabilityMap; ///< Set of capability maps for the robot team
 
     State m_start; ///< Start state of the problem
     State m_goal;  ///< Goal state of the problem

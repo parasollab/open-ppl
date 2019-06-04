@@ -1,7 +1,7 @@
 #ifndef PMPL_TMP_LIBRARY_H_
 #define PMPL_TMP_LIBRARY_H_
 
-#include "MPLibrary/MPLibrary.h"
+#include "MPLibrary/PMPL.h"
 
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
@@ -9,12 +9,13 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
+#include "Traits/CfgTraits.h"
+
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
-//#include "Utilities/TMPMethodSet.h"
+#include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
-#include "Traits/TMPTraits.h"
 /*
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
@@ -29,7 +30,16 @@
 #include <atomic>
 #include <unordered_map>
 
-template<typename TMPMethod>TMPMethodSet;
+
+class PoIPlacementMethod;
+class StateGraph;
+class TaskAllocatorMethod;
+class TaskDecomposerMethod;
+class TaskEvaluatorMethod;
+class TaskPlan;
+class TMPStrategyMethod;
+class TMPTools;
+//template<typename TMPMethod>TMPMethodSet;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of TMP planning algorithms that can operate on a specific
@@ -41,7 +51,8 @@ class TMPLibrary {
   	///@name Local Types
     ///@{
 
-    /// Solver represents an input set to MPLibraryType. It includes an
+    ///@}
+		/// Solver represents an input set to MPLibraryType. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
     struct Solver {
       std::string label;         ///< The XML label for the strategy to use.

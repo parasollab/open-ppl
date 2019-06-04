@@ -9,7 +9,6 @@
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
-#include "MPLibrary/MPBaseObject.h"
 #include "MPProblem/InteractionInformation.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/MPProblem.h"

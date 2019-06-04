@@ -11,9 +11,9 @@ class AuctionMethod : public TaskAllocatorMethod {
 
   	AuctionMethod() = default;
 
-	AuctionMethod(XMLNode& _node);
+		AuctionMethod(XMLNode& _node);
 
-	virtual ~AuctionMethod() = default;  	
+		virtual ~AuctionMethod() = default;  	
 
     ///@}
 };

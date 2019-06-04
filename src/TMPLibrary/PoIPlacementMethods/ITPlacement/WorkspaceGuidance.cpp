@@ -1,13 +1,11 @@
 #include "WorkspaceGuidance.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "Behaviors/Agents/Coordinator.h"
+
+#include "TMPLibrary/TaskPlan.h"
 
 WorkspaceGuidance::
-WorkspaceGuidance(MPProblem* _problem) : PlacementMethod(_problem) {}
-
-
-WorkspaceGuidance::
-WorkspaceGuidance(XMLNode& _node) : PlacementMethod(_node) {
+WorkspaceGuidance(XMLNode& _node) : ITPlacementMethod(_node) {
   m_dmLabel = _node.Read("dmLabel", false, "positionEuclidean",
                          "distance metric to track distance between interaction templates");
   m_distanceThreshold = _node.Read("distanceThreshold", true, nan(""), 0., 1000.,
@@ -15,7 +13,7 @@ WorkspaceGuidance(XMLNode& _node) : PlacementMethod(_node) {
 
 }
 
-std::unique_ptr<PlacementMethod>
+std::unique_ptr<ITPlacementMethod>
 WorkspaceGuidance::
 Clone(){
 	return std::unique_ptr<WorkspaceGuidance>(new WorkspaceGuidance(*this));	
@@ -23,12 +21,12 @@ Clone(){
 
 void
 WorkspaceGuidance::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
-  BuildSkeleton(_library, _tmpMethod);
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
+  BuildSkeleton();
 
-  auto robot = _tmpMethod->GetRobot();
+  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
   auto g = m_skeleton.GetGraph();
-  auto dm = _library->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
   for(auto vi = g.begin(); vi != g.end(); vi++){
     std::cout << vi->property() << std::endl;
@@ -50,7 +48,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
 
 void
 WorkspaceGuidance::
-BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+BuildSkeleton(){
 
   if(m_initialized)
     return;
@@ -59,8 +57,8 @@ BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   //MethodTimer mt(this->GetStatClass(), "BuildSkeleton");
 
   // Determine if we need a 2d or 3d skeleton.
-  auto env = m_problem->GetEnvironment();
-  auto robot = _tmpMethod->GetRobot();
+  auto env = this->GetMPProblem()->GetEnvironment();
+  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
   //const bool threeD = robot->GetMultiBody()->GetBaseType() ==
   //    Body::Type::Volumetric;
 
@@ -69,7 +67,7 @@ BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   if(false){
     // Create a workspace skeleton using a reeb graph.
 
-    /*auto decomposition = _library->GetMPTools()->GetDecomposition(m_decompositionLabel);
+    /*auto decomposition = this->GetMPLibrary()->GetMPTools()->GetDecomposition(m_decompositionLabel);
     ReebGraphConstruction reeb;
     reeb.Construct(decomposition);
 
@@ -93,13 +91,13 @@ BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   }
 
 
-  const auto& startConstraint = m_problem->GetTasks(robot)[0]->GetStartConstraint();
+  const auto& startConstraint = this->GetMPProblem()->GetTasks(robot)[0]->GetStartConstraint();
   auto startCenter = startConstraint->GetBoundary()->GetCenter();
   Point3d start(startCenter[0], startCenter[1], 0);
 
   // Only support single-goal tasks; this is inherent to the method. The problem
   // is solvable but hasn't been solved yet.
-  const auto& goalConstraints = m_problem->GetTasks(robot)[0]->GetGoalConstraints();
+  const auto& goalConstraints = this->GetMPProblem()->GetTasks(robot)[0]->GetGoalConstraints();
   if(goalConstraints.size() != 1)
     throw RunTimeException(WHERE) << "Only supports single-goal tasks. "
                                   << "Multi-step tasks will need new skeletons "
@@ -111,8 +109,8 @@ BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
   // Get the start and goal point from the goal tracker.
   // Try to prevent non-point tasks by requiring single VIDs for the start and
   // goal.
-  /*auto goalTracker = _library->GetGoalTracker();
-  goalTracker.reset(new GoalTracker(_library->GetRoadmap(robot),_library->GetTask()));
+  /*auto goalTracker = this->GetMPLibrary()->GetGoalTracker();
+  goalTracker.reset(new GoalTracker(this->GetMPLibrary()->GetRoadmap(robot),this->GetMPLibrary()->GetTask()));
   const auto& startVIDs = goalTracker->GetStartVIDs();
   const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
   if(startVIDs.size() != 1)
@@ -123,7 +121,7 @@ BuildSkeleton(MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
                                   << goalVIDs.size() << " were found.";
 
   // Get the start and goal vertices.
-  auto g = _library->GetRoadmap(robot)->GetGraph();
+  auto g = this->GetMPLibrary()->GetRoadmap(robot)->GetGraph();
   const size_t startVID = *startVIDs.begin(),
             goalVID  = *goalVIDs.begin();
   const Point3d start = g->GetVertex(startVID).GetPoint(),

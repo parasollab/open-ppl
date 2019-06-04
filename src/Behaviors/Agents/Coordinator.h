@@ -102,7 +102,9 @@ class Coordinator : public Agent {
 
     HandoffAgent* GetCapabilityAgent(std::string _capability);
 
-	TMPStrategyMethod* GetCurrentStrategy();
+	  std::string GetCurrentStrategy();
+
+		TMPLibrary* GetTMPLibrary();
 
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
@@ -178,7 +180,8 @@ class Coordinator : public Agent {
     ///@name Internal State
     ///@{
 
-    TMPLibrary* m_tmpLibrary{nullptr};   ///< The shared-roadmap planning library.
+    MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
+    TMPLibrary* m_tmpLibrary{nullptr};   ///< The task and motion planning library.
 
     MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
 
@@ -244,8 +247,7 @@ class Coordinator : public Agent {
     //double m_connectionThreshold{1.5};
 
 	//TODO:: make this more formal and not specifically ITMethod
-	ITMethod* m_tmpStrategy;
-    //std::string m_tmpStrategy;
+    std::string m_tmpStrategyLabel;
 
     ///@}
 

@@ -4,19 +4,8 @@
 #include <list>
 #include <unordered_map>
 
-#include "Behaviors/Agents/Agent.h"
-
-#include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
-
-#include "MPLibrary/PMPL.h"
-
-#include "MPProblem/MPTask.h"
-
-#include "TMPLibrary/TMPStrategies/TaskPlan.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
-
-
+#include "TMPLibrary/WholeTask.h"
 
 class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
 

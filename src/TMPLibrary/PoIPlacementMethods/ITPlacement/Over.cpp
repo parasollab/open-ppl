@@ -3,7 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "TMPLibrary/TaskPlan.h"
 
 OverlappingWorkspacesDensity::
 OverlappingWorkspacesDensity(MPProblem* _problem) : PlacementMethod(_problem) {}
@@ -18,7 +18,7 @@ OverlappingWorkspacesDensity(XMLNode& _node) : PlacementMethod(_node) {
 
 void
 OverlappingWorkspacesDensity::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   _solution->AddInteractionTemplate(_it);
 
   auto tasks = _it->GetInformation()->GetTasks();
@@ -36,19 +36,19 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library){
 
   // Sample over the workspace and find density of configurations
   Robot* oldRobot = nullptr;
-  if(_library->GetTask()){
-    oldRobot = _library->GetTask()->GetRobot();
+  if(this->GetMPLibrary()->GetTask()){
+    oldRobot = this->GetMPLibrary()->GetTask()->GetRobot();
   }
   else {
     auto task = new MPTask(coordinator->GetRobot());
-    _library->SetTask(task);
+    this->GetMPLibrary()->SetTask(task);
   }
-  auto sampler = _library->GetSampler("UniformRandomFreeTerrain");
+  auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFreeTerrain");
   auto numNodes = 1000, numAttempts = 100;
   for(auto agent : capabilityAgents){
     //TODO::probably need a check if it uses robots of the same capability
     std::vector<Cfg> samplePoints;
-    _library->GetTask()->SetRobot(agent->GetRobot());
+    this->GetMPLibrary()->GetTask()->SetRobot(agent->GetRobot());
     sampler->Sample(numNodes, numAttempts, m_problem->GetEnvironment()->GetBoundary(),
                     std::back_inserter(samplePoints));
     // Save sampled points to the robot's roadmap
@@ -62,15 +62,15 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library){
     }
   }
   if(oldRobot){
-    _library->GetTask()->SetRobot(oldRobot);
+    this->GetMPLibrary()->GetTask()->SetRobot(oldRobot);
   }
   else{
-    _library->SetTask(nullptr);
+    this->GetMPLibrary()->SetTask(nullptr);
   }
   auto graph1 = capabilityAgents[0]->GetMPSolution()->GetRoadmap(capabilityAgents[0]->GetRobot());
   auto graph2 = capabilityAgents[1]->GetMPSolution()->GetRoadmap(capabilityAgents[1]->GetRobot());
   std::vector<Cfg> ITLocations;
-  auto dm = _library->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
   for(auto vit1 = graph1->begin(); vit1 != graph1->end(); ++vit1) {
     size_t count1 = 0;

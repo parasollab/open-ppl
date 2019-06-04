@@ -1,4 +1,4 @@
-#include "BallFilling.h"
+//#include "BallFilling.h"
 #include "FixedBase.h"
 #include "GridFilling.h"
 #include "DisjointWorkspaces.h"
@@ -13,7 +13,7 @@
 #include <string>
 
 
-std::unique_ptr<PlacementMethod>
+std::unique_ptr<ITPlacementMethod>
 ITPlacementMethod::
 Factory(XMLNode& _node) {
   // Read the node and mark it as visited.
@@ -38,10 +38,10 @@ Factory(XMLNode& _node) {
     output = std::unique_ptr<WorkspaceGuidance>(
         new WorkspaceGuidance(_node)
     );
-  else if(type == "ballfilling")
+  /*else if(type == "ballfilling")
     output = std::unique_ptr<BallFilling>(
         new BallFilling(_node)
-    );
+    );*/
   else if(type == "gridfilling")
     output = std::unique_ptr<GridFilling>(
         new GridFilling(_node)

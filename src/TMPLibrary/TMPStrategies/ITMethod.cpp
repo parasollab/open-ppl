@@ -1,19 +1,19 @@
 #include "ITMethod.h"
 
 #include "TMPLibrary/TaskDecomposers/ITTaskBreakup.h"
+#include "TMPLibrary/TaskPlan.h"
+
 #include "Simulator/Simulation.h"
 /**********************************Construction********************************/
 
 ITMethod::
 ITMethod(XMLNode& _node) : TMPStrategyMethod(_node) {}
 
-ITMethod::
+/*ITMethod::
 ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
-									Environment* _interactionEnvironment, 
-									std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>& _ITPlacementMethods) :
-									TMPStrategyMethod(_useITs, _debug, _dmLabel, _connectionThreshold, _interactionEnvironment,
-																		_ITPlacementMethods){}
-
+									Environment* _interactionEnvironment) :
+									TMPStrategyMethod(_useITs, _debug, _dmLabel, _connectionThreshold, _interactionEnvironment){}
+*/
 /***********************************Call Method********************************/
 
 TaskPlan* 
@@ -23,7 +23,9 @@ PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
 
 	TMPStrategyMethod::PlanTasks(_library, _agents, _tasks);
 
-	GenerateDummyAgents();
+	//LoadAgents
+
+	this->GetTaskPlan()->GenerateDummyAgents();
 
 	GenerateITs();
 
@@ -60,7 +62,7 @@ QueryCombinedRoadmap(){
       glutils::color(1., 0., 1., 0.2));
   }
   //Find path for each whole task in megaRoadmap
-  for(auto wholeTask: m_wholeTasks){
+  for(auto& wholeTask: this->GetTaskPlan()->GetWholeTasks()){
     Simulation::GetStatClass()->StartClock("IT MegaRoadmap Query");
     wholeTask->m_task->SetRobot(m_robot);
     m_library->SetTask(wholeTask->m_task.get());
@@ -86,13 +88,13 @@ AssignTasks(){
   // Load m_unassignedTasks with the initial subtasks for all tasks.
   Simulation::GetStatClass()->StartClock("IT Task Assignment");
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
-    auto subtask = GetNextSubtask(wholeTask);
+    auto subtask = this->GetTaskPlan()->GetNextSubtask(wholeTask);
     if(subtask){
       m_unassignedTasks.push_back(subtask);
-      this->GetTaskPlan()->GetWholeTask(subtask) = wholeTask;
+      this->GetTaskPlan()->SetWholeTaskOwner(subtask, wholeTask);
     }
   }
-  for(auto agent : m_memberAgents){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
     agent->GetRobot()->SetVirtual(true);
   }
   // Assign all of the tasks (and their subtasks) to different agents.
@@ -101,14 +103,14 @@ AssignTasks(){
     std::cout << "SubTask: " << numSubTs << std::endl;
     numSubTs++;
     std::shared_ptr<MPTask> nextTask = m_unassignedTasks.front();
-    auto newSubtask = AuctionTask(nextTask,taskPlan);
+    auto newSubtask = AuctionTask(nextTask);
     
 		m_unassignedTasks.pop_front();
     if(newSubtask){
       AddSubtask(newSubtask);
     }
   }
-  for(auto agent : m_memberAgents){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
     agent->GetRobot()->SetVirtual(false);
   }
   Simulation::GetStatClass()->StopClock("IT Task Assignment");
@@ -120,7 +122,7 @@ void
 ITMethod::
 DecomposeTasks(){
   
-	TaskBreakup tb(m_robot);
+	ITTaskBreakup tb(m_robot);
 
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
     tb.BreakupTask(wholeTask);
@@ -131,7 +133,7 @@ DecomposeTasks(){
 
 std::shared_ptr<MPTask> 
 ITMethod::
-AuctionTask(std::shared_ptr<MPTask> _nextTask, TaskPlan* _taskPlan){
+AuctionTask(std::shared_ptr<MPTask> _nextTask){
 
 
   HandoffAgent* minAgent = nullptr;
@@ -139,9 +141,9 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask, TaskPlan* _taskPlan){
 
   // Generate the cost of a task for each agent
   // TODO: Thread this
-  //std::vector<std::thread> costThreads(m_memberAgents.size());
+  //std::vector<std::thread> costThreads(this->GetTaskPlan()->GetTeam().size());
   //auto lastAgent = GetLastAgent(m_subtaskMap[_nextTask]);
-  for(auto agent : m_memberAgents){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
     if(m_debug){
       std::cout << "Agent capability: " << agent->GetCapability() << std::endl;
       std::cout << "Task capability: " << _nextTask->GetCapability() << std::endl;
@@ -163,7 +165,7 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask, TaskPlan* _taskPlan){
   }*/
 
   // Assign the task to the agent with the lowest cost.
-  for(auto agent : m_memberAgents){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
     if(m_debug){
       std::cout << "Agent capability: " << agent->GetCapability() << std::endl;
       std::cout << "Task capability: " << _nextTask->GetCapability() << std::endl;
@@ -186,39 +188,40 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask, TaskPlan* _taskPlan){
   }
   // Assign subtask to min agent
   _nextTask->SetRobot(minAgent->GetRobot());
-  if(!m_subtaskMap[_nextTask]->m_agentAssignment.empty()){
-    auto previousAgent = m_subtaskMap[_nextTask]->m_agentAssignment.back();
+	auto wholeTask = this->GetTaskPlan()->GetWholeTask(_nextTask);
+  if(!this->GetTaskPlan()->GetWholeTask(_nextTask)->m_agentAssignment.empty()){
+    auto previousAgent = wholeTask->m_agentAssignment.back();
     //check if prior subtask was assigned to the same robot and merge them if so
     if(previousAgent == minAgent){
-      m_subtaskMap[_nextTask]->m_subtaskIterator--;
-      auto lastTask = m_subtaskMap[_nextTask]->m_subtasks[m_subtaskMap[_nextTask]->m_subtaskIterator-1];
+      wholeTask->m_subtaskIterator--;
+      auto lastTask = wholeTask->m_subtasks[wholeTask->m_subtaskIterator-1];
       lastTask->ClearGoalConstraints();
       for(auto& constraint : _nextTask->GetGoalConstraints()){
         lastTask->AddGoalConstraint(constraint->Clone());
       }
-      m_subtaskMap[_nextTask]->m_subtasks.erase(m_subtaskMap[_nextTask]->m_subtasks.begin()
-                                        + m_subtaskMap[_nextTask]->m_subtaskIterator);
-			_taskPlan->RemoveLastDependency(_nextTask);
+      wholeTask->m_subtasks.erase(wholeTask->m_subtasks.begin()
+                                        + wholeTask->m_subtaskIterator);
+			this->GetTaskPlan()->RemoveLastDependency(_nextTask);
     }
     else{
-      m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
-			_taskPlan->AddSubtask(minAgent,_nextTask);
+      wholeTask->m_agentAssignment.push_back(minAgent);
+			this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
     }
   }
   else{
-    m_subtaskMap[_nextTask]->m_agentAssignment.push_back(minAgent);
-		_taskPlan->AddSubtask(minAgent,_nextTask);
+    wholeTask->m_agentAssignment.push_back(minAgent);
+		this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
   }
   // See how long this agent will take to complete the subtask and if it
   // ends in a handoff add the next subtask to the queue
   // TODO::Figure out how to keep track of time in a way accessible to everything
   double endTime = minAgent->GetTaskTime();// + m_currentTime;
-  std::shared_ptr<MPTask> newSubtask = GetNextSubtask(m_subtaskMap[_nextTask]);
+  std::shared_ptr<MPTask> newSubtask = this->GetTaskPlan()->GetNextSubtask(wholeTask);
   if(newSubtask){
-    m_subtaskMap[newSubtask] = m_subtaskMap[_nextTask];
+    this->GetTaskPlan()->SetWholeTaskOwner(newSubtask,wholeTask);
     newSubtask->SetEstimatedStartTime(endTime);
 		//NEW
-		_taskPlan->AddDependency(_nextTask,newSubtask);
+		this->GetTaskPlan()->AddDependency(_nextTask,newSubtask);
   }
   return newSubtask;
 }
@@ -229,7 +232,7 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask, TaskPlan* _taskPlan){
 void
 ITMethod::
 CopyRobotTypeRoadmaps(){
-  for(auto agent : m_memberAgents){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
     //Copy corresponding capability roadmap into agent
     auto graph = m_capabilityRoadmaps[agent->GetCapability()];
     auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
@@ -242,28 +245,19 @@ CopyRobotTypeRoadmaps(){
         m_robot->GetMPProblem()->GetEnvironment());
   }
 }
-/*
-std::shared_ptr<MPTask> 
-ITMethod::
-GetNextSubtask(WholeTask* _wholeTask){
-  if(_wholeTask->m_subtaskIterator == _wholeTask->m_subtasks.size())
-    return nullptr;
-  return _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator++];
-}
 
 void 
 ITMethod::
 AddSubtask(std::shared_ptr<MPTask> _subtask){
-  if(m_unassignedTasks.empty()){
-    m_unassignedTasks.push_back(_subtask);
-    return;
-  }
-  for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
-    if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
-      m_unassignedTasks.insert(it, _subtask);
-      return;
-    }
-  }
-  m_unassignedTasks.push_back(_subtask);
+	if(m_unassignedTasks.empty()){
+		m_unassignedTasks.push_back(_subtask);
+		return;
+	}
+	for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
+		if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
+			m_unassignedTasks.insert(it, _subtask);
+			return;
+		}
+	}
+	m_unassignedTasks.push_back(_subtask);
 }
-*/

@@ -1,5 +1,6 @@
 #include "MultiAgentMultiTaskPlanner.h"
 
+#include "TMPLibrary/TaskPlan.h"
 
 /*****************************************Constructor****************************************************/
 MultiAgentMultiTaskPlanner::
@@ -24,7 +25,7 @@ PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
 	
 	InitializeRAT();
 
-	for(auto& wholeTask : m_wholeTasks){
+	for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
 		AddTaskToGraph(wholeTask);
 		TaskPlan* taskPlan = new TaskPlan();
 
@@ -67,7 +68,8 @@ CreateHighLevelGraph(){
   	}
   }
 
-  for(auto dummy = m_dummyMap.begin(); dummy != m_dummyMap.end(); dummy++){
+	auto dummyMap = this->GetTaskPlan()->GetDummyMap();
+  for(auto dummy = dummyMap.begin(); dummy != dummyMap.end(); dummy++){
   	for(auto& vid1 : m_receivingVIDs[dummy->first]){
   		for(auto& vid2 : m_deliveringVIDs[dummy->first]){
   			auto w = ExtractPathWeight(vid1, vid2);
@@ -169,7 +171,8 @@ RemoveTaskFromGraph(WholeTask* _wholeTask){
 void
 MultiAgentMultiTaskPlanner::
 InitializeRAT(){
-	for(auto dummy = m_dummyMap.begin(); dummy != m_dummyMap.end(); dummy++){
+	auto dummyMap = this->GetTaskPlan()->GetDummyMap();
+	for(auto dummy = dummyMap.begin(); dummy != dummyMap.end(); dummy++){
 		m_RAT[dummy->second] = std::pair<Cfg,double>(
 										dummy->second->GetRobot()->GetSimulationModel()->GetState(),
 										0.0);
@@ -204,7 +207,7 @@ LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
 
     m_library->SetTask(task.get());
 
-	auto dummyAgent = m_dummyMap[robot->GetCapability()];
+	auto dummyAgent = this->GetTaskPlan()->GetCapabilityAgent(robot->GetCapability());
 	auto solution = new MPSolution(dummyAgent->GetRobot());
 	solution->SetRoadmap(dummyAgent->GetRobot(),m_capabilityRoadmaps[robot->GetCapability()].get());
 

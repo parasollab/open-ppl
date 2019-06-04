@@ -3,14 +3,10 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "TMPLibrary/TaskPlan.h"
 
 OverlappingWorkspacesDensity::
-OverlappingWorkspacesDensity(MPProblem* _problem) : PlacementMethod(_problem) {}
-
-
-OverlappingWorkspacesDensity::
-OverlappingWorkspacesDensity(XMLNode& _node) : PlacementMethod(_node) {
+OverlappingWorkspacesDensity(XMLNode& _node) : ITPlacementMethod(_node) {
   m_proximity = _node.Read("proximity", true, nan(""), 0., 1000., "distance to check for proximity of other configurations");
   m_density = _node.Read("density", true, nan(""), 0., 1000., "number of cfgs required within proximity to place IT");
   m_dmLabel = _node.Read("dmLabel", true, "", "distance metric to compute proximity");
@@ -20,7 +16,7 @@ OverlappingWorkspacesDensity(XMLNode& _node) : PlacementMethod(_node) {
 
 void
 OverlappingWorkspacesDensity::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   //_solution->AddInteractionTemplate(_it);
 
   auto tasks = _it->GetInformation()->GetInteractionTasks();
@@ -32,30 +28,30 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
 
   std::vector<HandoffAgent*> capabilityAgents;
   for(auto& task : tasks){
-    auto agent = _tmpMethod->GetCapabilityAgent(task->GetCapability());
+    auto agent = this->GetTaskPlan()->GetCapabilityAgent(task->GetCapability());
     capabilityAgents.push_back(agent);
   }
 
   // Sample over the workspace and find density of configurations
   Robot* oldRobot = nullptr;
-  if(_library->GetTask()){
-    oldRobot = _library->GetTask()->GetRobot();
+  if(this->GetMPLibrary()->GetTask()){
+    oldRobot = this->GetMPLibrary()->GetTask()->GetRobot();
   }
   else {
-    auto task = new MPTask(_tmpMethod->GetRobot());
-    _library->SetTask(task);
+    auto task = new MPTask(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+    this->GetMPLibrary()->SetTask(task);
   }
-  auto sampler = _library->GetSampler("UniformRandomFree");
+  auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
   auto numAttempts = 20;
   for(auto agent : capabilityAgents){
     //TODO::probably need a check if it uses robots of the same capability
     std::vector<Cfg> samplePoints;
-    _library->GetTask()->SetRobot(agent->GetRobot());
+    this->GetMPLibrary()->GetTask()->SetRobot(agent->GetRobot());
     std::cout << "Size of environment" << std::endl;
-    for(size_t k = 0; k < m_problem->GetEnvironment()->GetBoundary()->GetDimension(); k++){
-      std::cout << m_problem->GetEnvironment()->GetBoundary()->GetRange(k) << std::endl;
+    for(size_t k = 0; k < this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetDimension(); k++){
+      std::cout << this->GetMPProblem()->GetEnvironment()->GetBoundary()->GetRange(k) << std::endl;
     }
-    sampler->Sample(m_numNodes, numAttempts, m_problem->GetEnvironment()->GetBoundary(),
+    sampler->Sample(m_numNodes, numAttempts, this->GetMPProblem()->GetEnvironment()->GetBoundary(),
                     std::back_inserter(samplePoints));
     // Save sampled points to the robot's roadmap
     std::cout << "Sample Points: " << std::endl;
@@ -68,15 +64,15 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
     }
   }
   if(oldRobot){
-    _library->GetTask()->SetRobot(oldRobot);
+    this->GetMPLibrary()->GetTask()->SetRobot(oldRobot);
   }
   else{
-    _library->SetTask(nullptr);
+    this->GetMPLibrary()->SetTask(nullptr);
   }
   auto graph1 = capabilityAgents[0]->GetMPSolution()->GetRoadmap(capabilityAgents[0]->GetRobot());
   auto graph2 = capabilityAgents[1]->GetMPSolution()->GetRoadmap(capabilityAgents[1]->GetRobot());
   std::vector<Cfg> ITLocations;
-  auto dm = _library->GetDistanceMetric(m_dmLabel);
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
   for(auto vit1 = graph1->begin(); vit1 != graph1->end(); ++vit1) {
     size_t count1 = 0;

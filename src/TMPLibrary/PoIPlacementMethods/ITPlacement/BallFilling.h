@@ -2,7 +2,6 @@
 #define BALL_FILLING_H_
 
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 #include "Utilities/XMLNode.h"
 
@@ -23,8 +22,7 @@ class BallFilling : public ITPlacementMethod {
     ///@name Interface
     ///@{
 
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library,
-                         TMPStrategyMethod* _tmpMethod) override;
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution) override;
 
     ///@}
 

@@ -2,7 +2,12 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
+#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+
 #include "Utilities/SSSP.h"
+
+#include "Workspace/WorkspaceSkeleton.h"
 
 #include <limits>
 #include <unordered_set>
@@ -11,6 +16,12 @@ CombinedRoadmap::
 CombinedRoadmap(double _threshold, MPLibrary* _library) : m_threshold(_threshold){
   m_library = _library;
   BuildSkeletons();
+}
+
+CombinedRoadmap::
+CombinedRoadmap(XMLNode& _node) : StateGraph(_node){
+	//TODO::ParseXML
+	BuildSkeletons();
 }
 
 

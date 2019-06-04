@@ -1,9 +1,7 @@
 #ifndef DISJOINT_WORKSPACES_H_
 #define DISJOINT_WORKSPACES_H_
 
-#include "ITPlacementMethod.h"
-
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.h"
 
 #include "Utilities/XMLNode.h"
 
@@ -16,8 +14,6 @@ class DisjointWorkspaces : public ITPlacementMethod {
     
 		DisjointWorkspaces() = default;
 
-    DisjointWorkspaces(MPProblem* _problem);
-
     DisjointWorkspaces(XMLNode& _node);
 
     ~DisjointWorkspaces() = default;
@@ -28,12 +24,11 @@ class DisjointWorkspaces : public ITPlacementMethod {
     ///@name Interface
     ///@{
 
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution,
-                         MPLibrary* _library, TMPStrategyMethod* _tmpMethod) override;
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution) override;
 
     void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 
-    bool CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it);//,
+    bool CheckLocation(Cfg _cfg, InteractionTemplate* _it);//,
                        //std::unordered_map<std::string, HandoffAgent*> _capabilityAgents);
 
     ///@}

@@ -79,6 +79,7 @@ bool
 EnforcedHillClimbing::
 operator()(){
 	//TODO::put the actual solve stuff here
+	return false;
 }
 
 Boundary*

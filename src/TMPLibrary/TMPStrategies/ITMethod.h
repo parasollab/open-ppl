@@ -9,11 +9,6 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 
-#include "MPLibrary/PMPL.h"
-
-#include "MPProblem/MPTask.h"
-
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
 
@@ -29,9 +24,8 @@ class ITMethod : public TMPStrategyMethod {
 
     ITMethod(XMLNode& _node);
 
-		ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
-									Environment* _interactionEnvironment, 
-									std::unordered_map<std::string, std::unique_ptr<ITPlacementMethod>>& _ITPlacementMethods);
+		//ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
+		//							Environment* _interactionEnvironment);
 
     ITMethod() = default;
 
@@ -66,7 +60,7 @@ class ITMethod : public TMPStrategyMethod {
 
 		virtual void DecomposeTasks() override;
 
-		std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask, TaskPlan* _taskPlan);
+		std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask);
 
     ///@}
 		///@name Helper Functions
@@ -77,8 +71,8 @@ class ITMethod : public TMPStrategyMethod {
         //Moved to task plan
 		//std::shared_ptr<MPTask> GetNextSubtask(WholeTask* _wholeTask);
 
-        //moved to task plan
-		//void AddSubtask(std::shared_ptr<MPTask> _subtask);
+    /// Inserts the subtask into the unassignedTasks list at the appropriate point
+		void AddSubtask(std::shared_ptr<MPTask> _subtask);
 
     ///@}
     //@name Member Variables

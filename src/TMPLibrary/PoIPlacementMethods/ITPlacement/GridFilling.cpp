@@ -1,16 +1,17 @@
 #include "GridFilling.h"
+#include "Behaviors/Agents/Coordinator.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "TMPLibrary/TaskPlan.h"
 
 #include <chrono>
 
 GridFilling::
-GridFilling(MPProblem* _problem) : PlacementMethod(_problem) {
+GridFilling(MPProblem* _problem) : ITPlacementMethod(_problem) {
 
   m_squaresX = 4;
   m_squaresY = 4;
   m_locations.reserve(m_squaresX*m_squaresY);
-  m_environment = m_problem->GetEnvironment();
+  m_environment = this->GetMPProblem()->GetEnvironment();
   m_boundary = m_environment->GetBoundary();
   CreateGrid(/*m_boundary->Type()*/);
 }
@@ -21,7 +22,7 @@ GridFilling(XMLNode& _node) : ITPlacementMethod(_node) {
   m_squaresX = _node.Read("xSquares", true, nan(""), 0., 1000., "number of squares on X axis for grid");
   m_squaresY = _node.Read("ySquares", true, nan(""), 0., 1000., "number of squares on Y axis for grid");
   m_locations.reserve(m_squaresX*m_squaresY);
-  m_environment = m_problem->GetEnvironment();
+  m_environment = this->GetMPProblem()->GetEnvironment();
   m_boundary = m_environment->GetBoundary();
 
   CreateGrid(/*m_boundary->Type()*/);
@@ -29,9 +30,9 @@ GridFilling(XMLNode& _node) : ITPlacementMethod(_node) {
 
 void
 GridFilling::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod) {
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution) {
   //_solution->AddInteractionTemplate(_it);
-  auto vcm = _library->GetValidityChecker("pqp_solid");
+  auto vcm = this->GetMPLibrary()->GetValidityChecker("pqp_solid");
   for(auto location : m_locations){
   	bool valid = true;
   	for(auto cfg : _it->GetPositions()){
@@ -76,7 +77,7 @@ CreateGrid(/*Space _spaceType*/) {
     int loopX = 0;
     int loopY = 0;
 
-    auto robot = m_problem->GetRobot(0);
+    auto robot = this->GetMPProblem()->GetRobot(0);
     
     if(squaresXOne && squaresYOne){
       Cfg position({centerX,centerY,0}, robot);

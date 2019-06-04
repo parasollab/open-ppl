@@ -1,6 +1,8 @@
 #include "BallFilling.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "Behaviors/Agents/Coordinator.h"
+
+#include "TMPLibrary/TaskPlan.h"
 
 #include <chrono> 
 using namespace std::chrono; 
@@ -10,7 +12,7 @@ using namespace std::chrono;
 
 BallFilling::
 BallFilling(MPProblem* _problem) : ITPlacementMethod(_problem) {
-	m_environment = m_problem->GetEnvironment();
+	m_environment = this->GetMPProblem()->GetEnvironment();
 	m_boundary = m_environment->GetBoundary();
 	CreateBalls();
 }
@@ -19,7 +21,7 @@ BallFilling(MPProblem* _problem) : ITPlacementMethod(_problem) {
 BallFilling::
 BallFilling(XMLNode& _node) : ITPlacementMethod(_node) {
   //m_label = _node.Read("label", true, "", "label for a fixed base it placement method");
-  m_environment = m_problem->GetEnvironment();
+  m_environment = this->GetMPProblem()->GetEnvironment();
 	m_boundary = m_environment->GetBoundary();
 	m_radius = _node.Read("radius", true, nan(""), 0., 1000., "Radius of a ball");
 	m_dimension = _node.Read("dimension", true, nan(""), 0., 1000., "Number of dimensions, 2 for 2D and 3 for 3D");
@@ -47,7 +49,7 @@ BallFilling(XMLNode& _node) : ITPlacementMethod(_node) {
 
 void
 BallFilling::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   _solution->AddInteractionTemplate(_it);
 
   for(auto location : m_locations){
@@ -62,7 +64,7 @@ CreateBalls() {
 
 	Range<double> xDimension = m_boundary->GetRange(0); 
 	Range<double> yDimension = m_boundary->GetRange(1);  
-	auto robot = m_problem->GetRobot(0);
+	auto robot = this->GetMPProblem()->GetRobot(0);
 	vector<vector<double>> vertices = GetObstaclesVertices();
 	bool isObstacle = false;
 	bool moveI = false;

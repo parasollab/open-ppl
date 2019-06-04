@@ -2,26 +2,21 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "TMPLibrary/TaskPlan.h"
 
 ITPlacementMethod::
 ITPlacementMethod(XMLNode& _node) : PoIPlacementMethod(_node) {}
 
-std::unique_ptr<PlacementMethod>
+std::unique_ptr<ITPlacementMethod>
 ITPlacementMethod::
 Clone(){
-	return std::unique_ptr<PlacementMethod>(new ITPlacementMethod(*this));	
+	return std::unique_ptr<ITPlacementMethod>(new ITPlacementMethod(*this));	
 }
 
 void
 ITPlacementMethod::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   //_solution->AddInteractionTemplate(_it);
   std::cout << "Base Type" << std::endl;
 }
 
-std::string
-ITPlacementMethod::
-GetLabel(){
-  return m_label;
-}

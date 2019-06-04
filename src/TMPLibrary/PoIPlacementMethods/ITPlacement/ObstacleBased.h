@@ -1,10 +1,7 @@
 #ifndef OBSTACLE_BASED_H_
 #define OBSTACLE_BASED_H_
 
-#include "ITPlacementMethod.h"
-
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
-#include "Utilities/XMLNode.h"
+#include "TMPLibrary/PoIPlacement/ITPlacement/ITPlacementMethod.h"
 
 class ObstacleBased : public ITPlacementMethod {
 
@@ -23,7 +20,7 @@ class ObstacleBased : public ITPlacementMethod {
     ///@name Interface
     ///@{
 
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator) override;
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution) override;
 
     ///@}
 

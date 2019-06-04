@@ -2,8 +2,6 @@
 #define PMPL_TASK_EVALUATOR_METHOD_H_
 
 #include "TMPLibrary/TMPBaseObject.h"
-#include "Utilities/MetricUtils.h"
-#include "Utilities/MPUtils.h"
 
 #include <iostream>
 

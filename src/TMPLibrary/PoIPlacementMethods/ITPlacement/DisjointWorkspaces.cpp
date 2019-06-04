@@ -3,13 +3,9 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "TMPLibrary/TaskPlan.h"
 
 #include "Utilities/MPUtils.h"
-
-DisjointWorkspaces::
-DisjointWorkspaces(MPProblem* _problem) : ITPlacementMethod(_problem) {}
-
 
 DisjointWorkspaces::
 DisjointWorkspaces(XMLNode& _node) : ITPlacementMethod(_node) {
@@ -18,15 +14,15 @@ DisjointWorkspaces(XMLNode& _node) : ITPlacementMethod(_node) {
   m_maxAttempts = _node.Read("maxAttempts", true, nan(""), 0., 1000., "Max number of attempts to place a CFG");
 }
 
-std::unique_ptr<PlacementMethod>
+std::unique_ptr<ITPlacementMethod>
 DisjointWorkspaces::
 Clone(){
-	return std::unique_ptr<PlacementMethod>(new DisjointWorkspaces(*this));	
+	return std::unique_ptr<ITPlacementMethod>(new DisjointWorkspaces(*this));	
 }
 
 void
 DisjointWorkspaces::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TMPStrategyMethod* _tmpMethod){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   //_solution->AddInteractionTemplate(_it);
 
   auto tasks = _it->GetInformation()->GetInteractionTasks();
@@ -38,25 +34,26 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
 
   std::vector<HandoffAgent*> capabilityAgents;
   for(auto& task : tasks){
-    auto agent = _tmpMethod->GetCapabilityAgent(task->GetCapability());
+    auto agent = this->GetTaskPlan()->GetCapabilityAgent(task->GetCapability());
     capabilityAgents.push_back(agent);
   }
 
   // Sample over the workspace and find density of configurations
   Robot* oldRobot = nullptr;
-  if(_library->GetTask()){
-    oldRobot = _library->GetTask()->GetRobot();
+  if(this->GetMPLibrary()->GetTask()){
+    oldRobot = this->GetMPLibrary()->GetTask()->GetRobot();
   }
   else {
-    auto task = new MPTask(_tmpMethod->GetRobot());
-    _library->SetTask(task);
+		//TODO::Kind of a hack and need to evaluate
+    auto task = new MPTask(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+    this->GetMPLibrary()->SetTask(task);
   }
 
   // Sample over the workspace and find density of configurations
   // Look at terrain boundaries and density around those
   // Maybe sample around the boundaries
 
-  auto terrainMap = m_problem->GetEnvironment()->GetTerrains();
+  auto terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
   for(auto& agent : capabilityAgents){
     std::string cap = agent->GetRobot()->GetCapability();
     auto& terrains = terrainMap[cap];
@@ -120,7 +117,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
             double y = GetRandomDouble(yMin,yMax);
             Cfg sampleLeft({x,y,z},agent->GetRobot());
             sampleLeft[2] = z;
-            if(CheckLocation(sampleLeft, _library, _it)){
+            if(CheckLocation(sampleLeft, _it)){
               samplePoints.push_back(sampleLeft);
               break;
             }
@@ -132,7 +129,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
             double y = GetRandomDouble(yMin,yMax);
             Cfg sampleRight({x,y,z},agent->GetRobot());
             sampleRight[2] = z;
-            if(CheckLocation(sampleRight, _library, _it)){
+            if(CheckLocation(sampleRight, _it)){
               samplePoints.push_back(sampleRight);
               break;
             }
@@ -145,7 +142,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
             double x = GetRandomDouble(xMin,xMax);
             Cfg sampleBottom({x,y,z},agent->GetRobot());
             sampleBottom[2] = z;
-            if(CheckLocation(sampleBottom, _library, _it)){
+            if(CheckLocation(sampleBottom, _it)){
               samplePoints.push_back(sampleBottom);
               break;
             }
@@ -157,7 +154,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
             double x = GetRandomDouble(xMin,xMax);
             Cfg sampleTop({x,y,z},agent->GetRobot());
             sampleTop[2] = z;
-            if(CheckLocation(sampleTop, _library, _it)){
+            if(CheckLocation(sampleTop, _it)){
               samplePoints.push_back(sampleTop);
               break;
             }
@@ -199,7 +196,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
           std::cout << cfg.PrettyPrint() << std::endl;
         }
         /*
-           bool valid = CheckLocation(cfg, _library, _it);//, capabilityAgents);
+           bool valid = CheckLocation(cfg, this->GetMPLibrary(), _it);//, capabilityAgents);
            if(valid){
            _it->GetInformation()->AddTemplateLocation(cfg);
            }
@@ -225,10 +222,10 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, TM
   }*/
 
   if(oldRobot){
-    _library->GetTask()->SetRobot(oldRobot);
+    this->GetMPLibrary()->GetTask()->SetRobot(oldRobot);
   }
   else{
-    _library->SetTask(nullptr);
+    this->GetMPLibrary()->SetTask(nullptr);
   }
   if(m_debug){
     std::cout << "OUTPUTTING ALL TEMPLATE LOCATIONS FOUND." << std::endl;
@@ -256,8 +253,8 @@ TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
 
 bool
 DisjointWorkspaces::
-CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
-  auto vcm = _library->GetValidityChecker("terrain_solid");
+CheckLocation(Cfg _cfg, InteractionTemplate* _it){
+  auto vcm = this->GetMPLibrary()->GetValidityChecker("terrain_solid");
   std::cout << "Checking Location" << std::endl;
   std::cout << _cfg.PrettyPrint() << std::endl;
   bool valid = true;
@@ -275,7 +272,7 @@ CheckLocation(Cfg _cfg, MPLibrary* _library, InteractionTemplate* _it){
       }
       break;
     }
-    auto envBoundary = m_problem->GetEnvironment()->GetBoundary();
+    auto envBoundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
     if(!envBoundary->InBoundary(relativeCfg)){
       if(m_debug){
         std::cout << "Invalid Cfg: " <<  relativeCfg.PrettyPrint() << std::endl;

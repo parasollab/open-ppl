@@ -1,5 +1,8 @@
 #include "TaskPlan.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+#include "Behaviors/Agents/HandoffAgent.h"
+
 std::list<std::shared_ptr<MPTask>>
 TaskPlan::
 GetAgentTasks(Agent* _agent){
@@ -42,7 +45,7 @@ GetWholeTasks(){
 }
 
 void
-TMPStrategyMethod::
+TaskPlan::
 CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks){
   for(auto task : _tasks){
     WholeTask* wholeTask = new WholeTask();
@@ -57,8 +60,14 @@ CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks){
   }
 }
 
+void
+TaskPlan::
+SetWholeTaskOwner(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
+	m_subtaskMap[_subtask] = _wholeTask;
+}
+
 WholeTask*
-TMPStrategyMethod::
+TaskPlan::
 GetWholeTask(std::shared_ptr<MPTask> _subtask){
 	return m_subtaskMap[_subtask];
 }
@@ -71,27 +80,62 @@ GetNextSubtask(WholeTask* _wholeTask){
   return _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator++];
 }
 
-void 
-TaskPlan::
-AddSubtask(std::shared_ptr<MPTask> _subtask){
-  if(m_unassignedTasks.empty()){
-    m_unassignedTasks.push_back(_subtask);
-    return;
-  }
-  for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
-    if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
-      m_unassignedTasks.insert(it, _subtask);
-      return;
-    }
-  }
-  m_unassignedTasks.push_back(_subtask);
-}
-
-Agent*
+HandoffAgent*
 TaskPlan::
 GetLastAgent(WholeTask* _wholeTask){
   if(_wholeTask->m_subtaskIterator == 0)
     return nullptr;
   auto lastSubtask = _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator - 1];
   return static_cast<HandoffAgent*>(lastSubtask->GetRobot()->GetAgent());
+}
+
+/***********************************Agent Accessors*******************************/
+
+void
+TaskPlan::
+SetCoordinator(Coordinator* _c){
+	m_coordinator = _c;
+}
+
+Coordinator*
+TaskPlan::
+GetCoordinator(){
+	return m_coordinator;
+}
+
+void
+TaskPlan::
+LoadTeam(std::vector<HandoffAgent*> _team){
+	m_memberAgents = _team;
+}
+
+std::vector<HandoffAgent*>& 
+TaskPlan::
+GetTeam(){
+	return m_memberAgents;
+}
+
+void
+TaskPlan::
+GenerateDummyAgents(){
+  m_dummyMap.clear();
+  // Load the dummyMap, which stores a dummy agent for each agent capability.
+  for(auto agent : m_memberAgents){
+    std::string capability = agent->GetCapability();
+    if(m_dummyMap.find(capability) == m_dummyMap.end()){
+      m_dummyMap[capability] = agent;
+    }
+  }
+}
+
+HandoffAgent*
+TaskPlan::
+GetCapabilityAgent(std::string _robotType){
+	return m_dummyMap[_robotType];
+}
+
+std::unordered_map<std::string,HandoffAgent*>&
+TaskPlan::
+GetDummyMap(){
+	return m_dummyMap;
 }

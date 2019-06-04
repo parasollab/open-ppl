@@ -107,6 +107,7 @@ Initialize() {
 
   // Initialize the agent's planning library.
   m_tmpLibrary = new TMPLibrary(xmlFile);
+  m_library = m_tmpLibrary->GetMPLibrary();
   //m_library->SetMPSolution(m_solution);
 
   // Set up the group members.
@@ -154,12 +155,12 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
-  m_tmpMethod = new ITMethod(true, m_debug, m_dmLabel, m_connectionThreshold, 
-													m_handoffEnvironment.get(), m_ITPlacementMethods);
-	m_tmpMethod->Initialize(m_robot);
-  TaskPlan* taskPlan = m_tmpMethod->PlanTasks(m_library, m_memberAgents, 
-																							m_robot->GetMPProblem()->GetTasks(m_robot));
-	DistributeTaskPlan(taskPlan);
+  //m_tmpMethod = new ITMethod(true, m_debug, m_dmLabel, m_connectionThreshold, 
+	//												m_handoffEnvironment.get(), m_ITPlacementMethods);
+	//m_tmpMethod->Initialize(m_robot);
+  //TaskPlan* taskPlan = m_tmpMethod->PlanTasks(m_library, m_memberAgents, 
+	//																						m_robot->GetMPProblem()->GetTasks(m_robot));
+	//DistributeTaskPlan(taskPlan);
 
   if(m_debug){
     std::cout << "OTUPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
@@ -232,19 +233,20 @@ Uninitialize() {
 
   delete m_solution;
   delete m_library;
-  delete m_megaRoadmap;
+	delete m_tmpLibrary;  
+//delete m_megaRoadmap;
 
   m_solution = nullptr;
   m_library  = nullptr;
-  m_megaRoadmap = nullptr;
+  //m_megaRoadmap = nullptr;
 
   for(auto id : m_simulatorGraphIDs){
     Simulation::Get()->RemoveRoadmap(id);
   }
 
-  for(auto& graph : m_capabilityRoadmaps){
-    delete graph.second;
-  }
+  //for(auto& graph : m_capabilityRoadmaps){
+  //  delete graph.second;
+  //}
 }
 
 /*-------------------------- Coordinator Interface ---------------------------*/
@@ -290,8 +292,8 @@ ArbitrateCollision() {
 void
 Coordinator::
 CheckFinished() {
-  if(!m_unassignedTasks.empty())
-    return;
+  //if(!m_unassignedTasks.empty())
+  //  return;
   for(auto& wholeTask : m_tmpLibrary->GetTaskPlan()->GetWholeTasks()){
     if(!wholeTask->m_task->GetStatus().is_complete())
       return;
@@ -299,6 +301,8 @@ CheckFinished() {
   for(auto agent : m_memberAgents){
     if(!agent->GetQueuedSubtasks().empty())
       return;
+		if(agent->GetTask())
+			return;
   }
   for(auto agent : m_memberAgents){
     agent->ClearVisualGraph();
@@ -422,7 +426,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
   //checks if agent is the one executing the subtask or the one coming to take
   //over the task
   if(_agent->IsPerformingSubtask()){
-    auto wholeTask = m_tmpMethod->GetWholeTask(subtask);
+    auto wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTask(subtask);
     auto index = std::find(wholeTask->m_subtasks.begin(),
       wholeTask->m_subtasks.end(), subtask);
     //checks if it is the last subtask in the whole task and thus no partner is
@@ -459,7 +463,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
   // Indicates that the agent is the one receiving the handoff
   else {
     subtask = _agent->GetQueuedSubtasks().front();
-    auto wholeTask = m_tmpMethod->GetWholeTask(subtask);
+    auto wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTask(subtask);
     // Checks if the current task is a setup for the initial subtask in a whole
     // Task so there won't be a partner to take the task from
     if(wholeTask->m_subtasks[0] == subtask)
@@ -477,13 +481,6 @@ IsClearToMoveOn(HandoffAgent* _agent){
   return false;
 }
 
-HandoffAgent*
-Coordinator::
-GetCapabilityAgent(std::string _capability){
-  return m_dummyMap.at(_capability);
-}
-
-
 /*--------------------------- Initialize Functions ------------------------------*/
 
 void
@@ -500,7 +497,7 @@ InitializeAgents(){
 std::vector<std::shared_ptr<MPTask>>
 Coordinator::
 ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
-
+/*
   WholeTask* wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTasks()[0];
 
   std::vector<std::shared_ptr<MPTask>> taskPlan;
@@ -530,11 +527,6 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
       if(!robots[0]->IsManipulator()){
         auto radius = 1.2 * (robots[0]->GetMultiBody()->GetBoundingSphereRadius());
 
-        /*std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
-            new CSpaceBoundingSphere(start->GetCenter(), radius));
-        auto startConstraint = std::unique_ptr<BoundaryConstraint>
-          (new BoundaryConstraint(robots[0], std::move(boundingSphere)));
-*/
         std::unique_ptr<CSpaceBoundingBox> boundingBox(
             new CSpaceBoundingBox({start->GetRange(0).Center(),start->GetRange(1).Center(),0}));
         boundingBox->SetRange(0,(start->GetRange(0).Center()-radius),
@@ -544,13 +536,8 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
         boundingBox->SetRange(2,-1,1);
         auto startConstraint = std::unique_ptr<BoundaryConstraint>
           (new BoundaryConstraint(robots[0], std::move(boundingBox)));
-
-       /* std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
-            new CSpaceBoundingSphere(goal->GetCenter(), radius));
-        auto goalConstraint = std::unique_ptr<BoundaryConstraint>
-          (new BoundaryConstraint(robots[0], std::move(boundingSphere2)));
-*/
-        std::unique_ptr<CSpaceBoundingBox> boundingBox2(
+        
+				std::unique_ptr<CSpaceBoundingBox> boundingBox2(
             new CSpaceBoundingBox({goal->GetRange(0).Center(),goal->GetRange(1).Center(),0}));
         boundingBox2->SetRange(0,(goal->GetRange(0).Center()-radius/2),
                                 (goal->GetRange(0).Center()+radius/2));
@@ -607,16 +594,20 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
 
   }
   return taskPlan;
+	*/
+	return {};
 }
 
 void
 Coordinator::
 TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan){
+	/*
   for(auto& task : _taskPlan){
     HandoffAgent* agent = dynamic_cast<HandoffAgent*>(task->GetRobot()->GetAgent());
     agent->AddSubtask(task);
   }
   Simulation::GetStatClass()->SetStat("Subtasks", _taskPlan.size());
+	*/
 }
 
 void
@@ -629,8 +620,15 @@ DistributeTaskPlan(TaskPlan* _taskPlan){
 	}		
 }
 
-TMPStrategyMethod*
+//TMPStrategyMethod*
+std::string
 Coordinator::
 GetCurrentStrategy(){
-	return m_tmpMethod;
+	return m_tmpStrategyLabel;
+}
+
+TMPLibrary*
+Coordinator::
+GetTMPLibrary(){
+	return m_tmpLibrary;
 }

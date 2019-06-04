@@ -5,14 +5,13 @@
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
-#include "MPLibrary/MPLibrary.h"
+#include "TMPLibrary/StateGraphs/StateGraph.h"
 
 #include "Traits/CfgTraits.h"
 
-#include "TMPLibrary/TMPBaseObject.h"
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
-#include "Workspace/WorkspaceSkeleton.h"
+class InteractionTemplate;
+class WorkspaceSkeleton;
 
 class CombinedRoadmap : public StateGraph {
   public:
@@ -34,6 +33,8 @@ class CombinedRoadmap : public StateGraph {
     };
 
     CombinedRoadmap(double _threshold, MPLibrary* _library);
+
+		CombinedRoadmap(XMLNode& _node);
 
     ~CombinedRoadmap() = default;
 

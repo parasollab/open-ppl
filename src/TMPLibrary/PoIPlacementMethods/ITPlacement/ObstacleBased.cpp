@@ -1,6 +1,8 @@
 #include "ObstacleBased.h"
 
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
+#include "Behaviors/Agents/Coordinator.h"
+
+#include "TMPLibrary/TaskPlan.h"
 
 ObstacleBased::
 ObstacleBased(MPProblem* _problem) : PlacementMethod(_problem) {}
@@ -33,9 +35,9 @@ ObstacleBased(XMLNode& _node) : PlacementMethod(_node) {
 
 void
 ObstacleBased::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution, MPLibrary* _library, Coordinator* _coordinator) {
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution) {
 
-  m_library=_library;
+  mthis->GetMPLibrary()=this->GetMPLibrary();
 
   Fill();
 
@@ -242,7 +244,7 @@ IsInObstacle(vector<double> point, int method){
 	if(method==0){
 	  auto& robot = m_problem->GetRobots()[0];
 	  Cfg check({point[0], point[1], 0}, robot.get());
-	  auto vcm = m_library->GetValidityChecker("pqp_solid");
+	  auto vcm = mthis->GetMPLibrary()->GetValidityChecker("pqp_solid");
 	  return !vcm->IsValid(check, "ValidateITCfg");
 	}
 

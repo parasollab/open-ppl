@@ -3,9 +3,6 @@
 
 #include "TMPLibrary/TMPBaseObject.h"
 
-#include "Utilities/MetricUtils.h"
-#include "Utilities/MPUtils.h"
-
 #include <iostream>
 
 class TaskDecomposerMethod : public TMPBaseObject {
@@ -16,9 +13,9 @@ class TaskDecomposerMethod : public TMPBaseObject {
 
   	TaskDecomposerMethod() = default;
 
-	TaskDecomposerMethod(XMLNode& _node);
+		TaskDecomposerMethod(XMLNode& _node);
 
-	virtual ~TaskDecomposerMethod() = default;  	
+		virtual ~TaskDecomposerMethod() = default;  	
 
     ///@}
 };
