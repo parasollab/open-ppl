@@ -45,6 +45,7 @@ class Agent {
 
   public:
 
+    bool m_CUSTOM_PATH{false}; //TODO FIX THIS HACK
     ///@name Construction
     ///@{
 
@@ -93,8 +94,8 @@ class Agent {
 
     /// Resets the start constraint of the current task to the robot's current
     /// position
-    virtual void ResetStartConstraint(); 
-    
+    virtual void ResetStartConstraint();
+
     ///@}
     ///@name Simulation Interface
     ///@{

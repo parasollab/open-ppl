@@ -12,7 +12,7 @@ InteractionInformation(MPProblem* _problem, XMLNode& _node) : m_problem(_problem
   m_maxAttempts = _node.Read("maxAttempts", true, 0, 0, MAX_INT,
       "The number of attempts made to place the template in the real environment");
 
-  m_interactionWeight = _node.Read("interactionWeight", false, 0, 0, 0,
+  m_interactionWeight = _node.Read("interactionWeight", false, 0, 0, 9999,
       "The weight of the connecting edge between interaction robot configurations");
 
   m_savePaths = _node.Read("savePaths", false, false,

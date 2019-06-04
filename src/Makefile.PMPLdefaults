@@ -382,6 +382,33 @@ SIM_SRCS := \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp \
   $(PMPL_DIR)/sim_main.cpp \
+  TMPLibrary/Actions/Action.cpp \
+  TMPLibrary/Actions/HandoffTask.cpp \
+  TMPLibrary/Actions/MoveRobot.cpp \
+  TMPLibrary/Actions/StartTask.cpp \
+  TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
+  TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
+  TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
+  TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
+  TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
+  TMPLibrary/State.cpp \
+  TMPLibrary/StateGraphs/StateGraph.cpp \
+  TMPLibrary/StateGraphs/StateGraphHelpers/ITConstructor.cpp \
+  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/TaskAllocators/AuctionMethod.cpp \
+  TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
+  TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
+  TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
+  TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
+  TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
+  TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
+  TMPLibrary/TMPBaseObject.cpp \
+  TMPLibrary/TMPLibrary.cpp \
+  TMPLibrary/TMPStrategies/ITMethod.cpp \
+  TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
+  TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
+  TMPLibrary/TMPTools/InteractionTemplate.cpp \
+  TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/Coordinator.cpp \
@@ -389,27 +416,7 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp \
-  Behaviors/Agents/TaskBreakup.cpp \
-  Behaviors/TMPStrategies/Actions/Action.cpp \
-  Behaviors/TMPStrategies/Actions/HandoffTask.cpp \
-  Behaviors/TMPStrategies/Actions/MoveRobot.cpp \
-  Behaviors/TMPStrategies/Actions/StartTask.cpp \
-  Behaviors/TMPStrategies/ITConnector.cpp \
-  Behaviors/TMPStrategies/ITConstructor.cpp \
-  Behaviors/TMPStrategies/ITPlacement/BallFilling.cpp \
-  Behaviors/TMPStrategies/ITPlacement/DisjointWorkspaces.cpp \
-  Behaviors/TMPStrategies/ITPlacement/FixedBase.cpp \
-  Behaviors/TMPStrategies/ITPlacement/GridFilling.cpp \
-  Behaviors/TMPStrategies/ITPlacement/OverlappingWorkspacesDensity.cpp \
-  Behaviors/TMPStrategies/ITPlacement/PlacementMethod.cpp \
-  Behaviors/TMPStrategies/ITPlacement/PlacementMethodFactory.cpp \
-  Behaviors/TMPStrategies/ITPlacement/WorkspaceGuidance.cpp \
-  Behaviors/TMPStrategies/TaskPlan.cpp \
-  Behaviors/TMPStrategies/TMPHelperAlgorithms/EnforcedHillClimbing.cpp \
-  Behaviors/TMPStrategies/TMPHelperAlgorithms/RelaxedGraphPlan.cpp \
-  Behaviors/TMPStrategies/TMPStrategyMethod.cpp \
-  Behaviors/TMPStrategies/State.cpp
+  Behaviors/Agents/RoadmapFollowingAgent.cpp 
 
 ################################################################################
 # Hardware
@@ -481,7 +488,6 @@ PMPL_SRCS := \
   Geometry/Shapes/NSphericalShell.cpp \
   MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
   MPLibrary/LearningModels/RadialKernelGradient.cpp \
-  MPLibrary/MPTools/InteractionTemplate.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \

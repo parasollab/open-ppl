@@ -2,8 +2,8 @@
 #define PMPL_MP_SOLUTION_TYPE_H_
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "Utilities/MetricUtils.h"
 
 #include <map>
@@ -222,11 +222,13 @@ void
 MPSolutionType<MPTraits>::
 SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
   auto robotSolution = GetRobotSolution(_r);
-  if(robotSolution){
+  if(!robotSolution){//master had without the not !
     throw RunTimeException(WHERE) << "Cannot set roadmap for robot that does not "
                                   << "have a solution.";
   }
+
   m_individualSolutions[_r].freeMap.reset(_roadmap);
+  m_individualSolutions[_r].path.reset(new Path(_roadmap));
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/

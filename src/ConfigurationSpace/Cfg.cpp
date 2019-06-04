@@ -806,6 +806,34 @@ SetBaseTransformation(const Transformation& _t) {
   SetEulerAngle(e);
 }
 
+void
+Cfg::
+TransformCfg(const Cfg& _cfg) {
+  if(this->PosDOF() != 2 or this->OriDOF() != 1){
+    throw RunTimeException(WHERE, "The DOFs for this robot are not yet supported. Only works for 2D robots with rotation about z-axis.");
+  }
+  else if(_cfg.PosDOF() != 2 or _cfg.OriDOF() != 1){
+    throw RunTimeException(WHERE, "The DOFs for this robot are not yet supported. Only works for 2D robots with rotation about z-axis.");
+  }
+  else if(this->DOF() != _cfg.DOF()){
+    throw RunTimeException(WHERE, "The DOFs of the input cfg do not match this cfg.");
+  }
+  auto x = GetLinearPosition()[0];
+  auto y = GetLinearPosition()[1];
+  auto rotation = _cfg[_cfg.PosDOF()] * PI;
+
+  auto new_x = x*cos(rotation) - y*sin(rotation);
+  auto new_y = x*sin(rotation) + y*cos(rotation);
+  new_x += _cfg.GetLinearPosition()[0];
+  new_y += _cfg.GetLinearPosition()[1];
+
+  m_dofs[0] = new_x;
+  m_dofs[1] = new_y;
+
+  m_dofs[PosDOF()] += _cfg[PosDOF()];
+}
+
+
 /*------------------------- Labels and Stats ---------------------------------*/
 
 bool
