@@ -4,7 +4,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
-#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/Helpers/ITConnector.h"
 #include "TMPLibrary/TaskPlan.h"
 
 #include "Simulator/Simulation.h"
@@ -171,7 +171,7 @@ CreateCombinedRoadmap(){
   TransformITs();
   SetupWholeTasks();
 
-  CombinedRoadmap connector(m_connectionThreshold,this->GetMPLibrary());
+  ITConnector connector(m_connectionThreshold,this->GetMPLibrary());
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
   if(true){

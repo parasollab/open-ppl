@@ -1,104 +1,52 @@
-#ifndef COMBINED_ROADMAP_H_
-#define COMBINED_ROADMAP_H_
-
-#include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
-#include "ConfigurationSpace/Weight.h"
+#ifndef PMPL_STATE_GRAPH_H_
+#define PMPL_STATE_GRAPH_H_
 
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 
-#include "Traits/CfgTraits.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 
-
-class InteractionTemplate;
-class WorkspaceSkeleton;
+#include <iostream>
 
 class CombinedRoadmap : public StateGraph {
   public:
-    ///@name Typenames
+
+  	///@name Construction
     ///@{
 
-    typedef MPLibraryType<MPTraits<Cfg,DefaultWeight<Cfg>>>  MPLibrary;
-    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
-
-    ///@}
-    ///@name Construction
-    ///@{
-
-    struct AdjustedInfo{
-      Cfg*   m_connection;
-      double m_summedDistance;
-      bool   m_directConnection;
-      bool   m_changed;
-    };
-
-    CombinedRoadmap(double _threshold, MPLibrary* _library);
+  	CombinedRoadmap() = default;
 
 		CombinedRoadmap(XMLNode& _node);
 
-    ~CombinedRoadmap() = default;
+		virtual ~CombinedRoadmap() = default;  	
 
     ///@}
-    ///@name
+    ///@name Initialization
     ///@{
 
-    /// Assumes that all ITs provided contain the given capability.
-    RoadmapGraph<Cfg, DefaultWeight<Cfg>>* ConnectInteractionTemplates(
-                 std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                 const std::string& _capability,
-                 std::vector<Cfg>& _startAndGoal,
-                 RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap);
+		virtual void Initialize() override;
 
     ///@}
-
-  private:
-    ///@name Helper Functions
+    ///@name Accessors
     ///@{
 
-    std::vector<Cfg*> CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                                             const std::string& _capability,
-                                             std::vector<Cfg>& _startAndGoal);
-
-    void FindAlternativeConnections(std::vector<Cfg*>& _cfgs);
-
-    void UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs);
-
-    void CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
-                         std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                         const std::string& _capability,
-                         std::vector<Cfg>& _startAndGoal);
-
-    void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
-
-    void ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph);
-
-    void BuildSkeletons();
-
-
-    double SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const;
-
-    /// Checks the capability skeleton of the corresponding type to see if the
-    /// two cfgs are in connected free space.
-    bool InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2);
     ///@}
-    ///@name Member Variables
-    ///@{
 
-    std::unordered_map<Cfg*,std::unordered_map<Cfg*,double>> m_baseDistances;
+  protected:
 
-    std::list<std::pair<Cfg*,Cfg*>> m_connections;
+		///@name Helpers
+		///@{
+		
+		virtual void ConstructGraph() override;
 
-    std::unordered_map<Cfg*,std::unordered_map<Cfg*,AdjustedInfo>> m_adjDist;
+		///@}
+		///@name member variables
+		///@{
 
-    MPLibrary* m_library;
+		
+		///@}
 
-    double m_threshold;
-
-    bool m_debug{false};
-
-    std::unordered_map<std::string,std::shared_ptr<WorkspaceSkeleton>> m_capabilitySkeletons;
-
-
-    ///@}
 };
+
+/*----------------------------------------------------------------------------*/
+
 #endif
