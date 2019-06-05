@@ -45,6 +45,9 @@ class StateGraph : public TMPBaseObject {
 		///@{
 
 		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* m_graph;
+
+		std::string m_placementMethod;
+
 		
 		///@}
 

@@ -8,6 +8,7 @@
 #include "MPProblem/MPTask.h"
 
 #include "TMPLibrary/TMPBaseObject.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "TMPLibrary/WholeTask.h"
 
 class Coordinator;
@@ -91,6 +92,21 @@ class TaskPlan : public TMPBaseObject {
 
 		std::unordered_map<std::string,HandoffAgent*>& GetDummyMap();
 
+        ///@}
+    ///@name Interaction Templates
+    ///@{
+    /// @todo Document what these are. Does it include one copy of each abstract
+    ///       IT, or each transformed instance (or something else)? If the
+    ///       information is duplicated in the roadmaps, we should annotate the
+    ///       roadmap cfgs instead to avoid duplicating data (which we then have
+    ///       to keep synchronized).
+
+    std::vector<std::unique_ptr<InteractionTemplate>>& GetInteractionTemplates();
+
+    void AddInteractionTemplate(InteractionTemplate*);
+
+
+
     ///@}
 
   private:
@@ -121,9 +137,11 @@ class TaskPlan : public TMPBaseObject {
     std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
     
 		/// All robots available for the task..
-		std::vector<HandoffAgent*> m_memberAgents;       
+		std::vector<HandoffAgent*> m_memberAgents;   
 
-
+        /// The set of Interaction Templates
+    std::vector<std::unique_ptr<InteractionTemplate>> m_interactionTemplates;
+    
 };
 
 #endif

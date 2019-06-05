@@ -72,21 +72,6 @@ class TMPStrategyMethod : public TMPBaseObject {
 
     //protected:
 
-    ///@name Combined Roadmap Methods
-    ///@{
-	
-    void CreateCombinedRoadmap();
-
-    void GenerateITs();
-
-    void FindITLocations(InteractionTemplate* _it);
-    
-		/// Transforms the ITs into the disovered locations
-		void TransformITs();
-    
-		/// Initiallizes configurations for each capability at the start and end
-    /// constriants of each whole task and adds them to the megaRoadmap
-    void SetupWholeTasks();
 		
     ///@}
     ///@name Task Assignment
@@ -117,33 +102,19 @@ class TMPStrategyMethod : public TMPBaseObject {
     ///@name Member Variables
     ///@{
 
-		Robot* m_robot;
-
-    MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
-
-    std::unique_ptr<MPSolution> m_solution{nullptr}; ///< The shared-roadmap solution.
-
     std::unique_ptr<Environment> m_interactionEnvironment;    ///< The handoff template environment.
-
-    /// Map from each capability to the roadmap for that capability.
-    std::unordered_map<std::string, std::shared_ptr<GraphType>> m_capabilityRoadmaps;
-
-    /// The combined roadmap of all heterogenous robots and handoffs.
-    GraphType* m_combinedRoadmap{nullptr};
 
     /// The VIDs of all individual agent roadmaps in each transformed handoff template.
     std::vector<std::vector<size_t>> m_transformedRoadmaps;
 
-    /// The VIDs of the start and end points of the whole tasks in the
-    /// megaRoadmap
-    std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
+    
 
     /// Maps agent capabilities to a dummy agent used for planning.
     //Moved to task plan
 		//std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
     
 		//Moved to task plan
-		std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
+		//std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
 
     /// The list of WholeTasks, which need to be divided into subtasks
     //Moved to TaskPlan
@@ -153,8 +124,7 @@ class TMPStrategyMethod : public TMPBaseObject {
     //Moved to TMPLibrary
     //std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
 
-		std::string m_placementMethod;
-
+		
 		/// Map subtasks to the WholeTask that they are included in to access the
     /// next subtask.
     //Moved to TaskPlan
@@ -166,11 +136,9 @@ class TMPStrategyMethod : public TMPBaseObject {
     /// Determines if capability roadmaps include ITs
     bool m_useITs{true};
 
-    bool m_debug{false};
+    //bool m_debug{false};
 
 		std::string m_dmLabel;
-    
-		double m_connectionThreshold{1.5};
 
 	bool m_initialized{false};
     ///@}

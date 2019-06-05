@@ -139,3 +139,18 @@ TaskPlan::
 GetDummyMap(){
 	return m_dummyMap;
 }
+
+/***********************************IT Accessors*******************************/
+
+std::vector<std::unique_ptr<InteractionTemplate>>&
+TaskPlan::
+GetInteractionTemplates(){
+  return m_interactionTemplates;
+}
+
+void
+TaskPlan::
+AddInteractionTemplate(InteractionTemplate* _it){
+  m_interactionTemplates.emplace_back(std::unique_ptr<InteractionTemplate>(_it));
+}
+
