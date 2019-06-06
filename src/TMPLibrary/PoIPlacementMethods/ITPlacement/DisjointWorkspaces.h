@@ -12,7 +12,7 @@ class DisjointWorkspaces : public ITPlacementMethod {
     ///@name Construction
     ///@{
     
-		DisjointWorkspaces() = default;
+		DisjointWorkspaces();
 
     DisjointWorkspaces(XMLNode& _node);
 

@@ -7,8 +7,14 @@
 
 /*****************************************Constructor****************************************************/
 MultiAgentMultiTaskPlanner::
-MultiAgentMultiTaskPlanner(XMLNode& _node) : TMPStrategyMethod(_node){}
+MultiAgentMultiTaskPlanner(){
+	this->SetName("MultiAgentMultiTaskPlanner");
+}
 
+MultiAgentMultiTaskPlanner::
+MultiAgentMultiTaskPlanner(XMLNode& _node) : TMPStrategyMethod(_node){
+	this->SetName("MultiAgentMultiTaskPlanner");
+}
 
 /******************************************Configure*****************************************************/
 

@@ -7,10 +7,14 @@
 /************************************ Construction *************************************/
 
 MultiTaskGraph::
-MultiTaskGraph(){}
+MultiTaskGraph(){
+	this->SetName("MultiTaskGraph");
+}
 
 MultiTaskGraph::
-MultiTaskGraph(XMLNode& _node) : CombinedRoadmap(_node){}
+MultiTaskGraph(XMLNode& _node) : CombinedRoadmap(_node){
+	this->SetName("MultiTaskGraph");
+}
 
 /************************************ Initialization *************************************/
 

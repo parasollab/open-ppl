@@ -11,10 +11,13 @@
 
 /*------------------------------ Construction --------------------------------*/
 CombinedRoadmap::
-CombinedRoadmap(){};
+CombinedRoadmap(){
+	this->SetName("CombinedRoadmap");
+};
 
 CombinedRoadmap::
 CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {
+	this->SetName("CombinedRoadmap");
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
       "nearest agents and charging locations.");
   m_connectionThreshold = _node.Read("connectionThreshold",true,1.2, 0., 1000.,

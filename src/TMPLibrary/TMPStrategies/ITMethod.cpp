@@ -10,7 +10,14 @@
 /**********************************Construction********************************/
 
 ITMethod::
-ITMethod(XMLNode& _node) : TMPStrategyMethod(_node) {}
+ITMethod(){
+	this->SetName("ITMethod");
+}
+
+ITMethod::
+ITMethod(XMLNode& _node) : TMPStrategyMethod(_node) {
+	this->SetName("ITMethod");
+}
 
 /*ITMethod::
 ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,

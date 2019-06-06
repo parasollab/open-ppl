@@ -9,7 +9,7 @@ class AuctionMethod : public TaskAllocatorMethod {
   	///@name Construction
     ///@{
 
-  	AuctionMethod() = default;
+  	AuctionMethod();
 
 		AuctionMethod(XMLNode& _node);
 

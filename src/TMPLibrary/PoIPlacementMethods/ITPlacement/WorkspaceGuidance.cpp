@@ -5,7 +5,13 @@
 #include "TMPLibrary/TaskPlan.h"
 
 WorkspaceGuidance::
+WorkspaceGuidance(){
+	this->SetName("WorkspaceGuidance");
+}
+
+WorkspaceGuidance::
 WorkspaceGuidance(XMLNode& _node) : ITPlacementMethod(_node) {
+	this->SetName("WorkspaceGuidance");
   m_dmLabel = _node.Read("dmLabel", false, "positionEuclidean",
                          "distance metric to track distance between interaction templates");
   m_distanceThreshold = _node.Read("distanceThreshold", true, nan(""), 0., 1000.,

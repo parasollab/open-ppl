@@ -16,7 +16,7 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     ///@name Construction
     ///@{
 
-		MultiAgentMultiTaskPlanner() = default;
+		MultiAgentMultiTaskPlanner();
 
     MultiAgentMultiTaskPlanner(XMLNode& _node);
 

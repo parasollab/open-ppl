@@ -11,10 +11,10 @@ class ITTaskBreakup : public TaskDecomposerMethod {
   public:
     ///@name Construction
     ///@{
+		
+		ITTaskBreakup();
 
 		ITTaskBreakup(XMLNode& _node);
-
-		ITTaskBreakup() = default;
 
     ~ITTaskBreakup();
 

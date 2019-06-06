@@ -16,7 +16,14 @@
 #include "Traits/CfgTraits.h"
 
 ITTaskBreakup::
-ITTaskBreakup(XMLNode& _node) : TaskDecomposerMethod(_node){}
+ITTaskBreakup(){
+	this->SetName("ITTaskBreakup");
+}
+
+ITTaskBreakup::
+ITTaskBreakup(XMLNode& _node) : TaskDecomposerMethod(_node){
+	this->SetName("ITTaskBreakup");
+}
 
 ITTaskBreakup::
 ~ITTaskBreakup() = default;

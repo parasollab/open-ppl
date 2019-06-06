@@ -13,7 +13,7 @@
 
 /*****************************************Constructor*****************************************************/
 TMPStrategyMethod::
-TMPStrategyMethod(XMLNode& _node){
+TMPStrategyMethod(XMLNode& _node) : TMPBaseObject(_node){
   m_sgLabel = _node.Read("sgLabel", true, "",
 												 "Label for the state graph used by the TMPStrategy");
   m_teLabel = _node.Read("teLabel", false, "",

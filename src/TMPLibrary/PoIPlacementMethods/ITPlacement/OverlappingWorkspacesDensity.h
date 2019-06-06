@@ -10,6 +10,8 @@ class OverlappingWorkspacesDensity : public ITPlacementMethod {
     ///@name Construction
     ///@{
 
+		OverlappingWorkspacesDensity();
+
     OverlappingWorkspacesDensity(XMLNode& _node);
 
     ~OverlappingWorkspacesDensity() = default;
