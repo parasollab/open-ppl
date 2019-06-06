@@ -7,7 +7,7 @@
 
 /*****************************************Constructor****************************************************/
 MultiAgentMultiTaskPlanner::
-MultiAgentMultiTaskPlanner(XMLNode& _node) : TMPStrategyMethod(_node){ }
+MultiAgentMultiTaskPlanner(XMLNode& _node) : TMPStrategyMethod(_node){}
 
 
 /******************************************Configure*****************************************************/
@@ -51,6 +51,7 @@ MAMTDijkstra(WholeTask* _wholeTask){
 	//TODO::Actually call dijkstras
   return new TaskPlan();	
 }
+
 /*****************************************Helper Functions****************************************************/
 
 double
@@ -98,14 +99,3 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   }
   return newDistance;
 }
-
-
-
-
-
-
-
-
-
-
-

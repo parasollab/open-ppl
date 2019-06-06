@@ -68,7 +68,7 @@ void
 TMPLibrary::
 ReadXMLFile(const std::string& _filename) {
 				// Open the XML and get the root node.
-				XMLNode tmpNode(_filename, "TaskAndMotionPlanning");
+				XMLNode tmpNode(_filename, "MotionPlanning");
 
 				// Find the 'TMPLibrary' node.
 				XMLNode* tmpLibrary = nullptr;
@@ -78,7 +78,7 @@ ReadXMLFile(const std::string& _filename) {
 
 				// Throw exception if we can't find it.
 				if(!tmpLibrary)
-								throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
+								throw ParseException(WHERE) << "Cannot find TMPLibrary node in XML file '"
 												<< _filename << "'.";
 
 				// Parse the library node to set algorithms and parameters.

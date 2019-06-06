@@ -10,8 +10,6 @@
 
 EnforcedHillClimbing::
 EnforcedHillClimbing(){
-	m_robots= {};
-	m_library = this->GetTMPLibrary()->GetMPLibrary();
 }
 
 EnforcedHillClimbing::

@@ -13,7 +13,7 @@ class StateGraph : public TMPBaseObject {
   	///@name Construction
     ///@{
 
-  	StateGraph() = default;
+  	StateGraph();
 
 		StateGraph(XMLNode& _node);
 

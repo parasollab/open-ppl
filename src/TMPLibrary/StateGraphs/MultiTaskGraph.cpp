@@ -7,6 +7,9 @@
 /************************************ Construction *************************************/
 
 MultiTaskGraph::
+MultiTaskGraph(){}
+
+MultiTaskGraph::
 MultiTaskGraph(XMLNode& _node) : CombinedRoadmap(_node){}
 
 /************************************ Initialization *************************************/

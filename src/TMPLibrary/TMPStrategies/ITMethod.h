@@ -1,5 +1,5 @@
-#ifndef MULTI_AGENT_MULTI_TASK_PLANNER_H_
-#define MULTI_AGENT_MULTI_TASK_PLANNER_H_
+#ifndef IT_METHOD_H_
+#define IT_METHOD_H_
 
 #include <list>
 #include <unordered_map>

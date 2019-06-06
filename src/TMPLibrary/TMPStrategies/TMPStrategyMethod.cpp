@@ -16,6 +16,12 @@ TMPStrategyMethod::
 TMPStrategyMethod(XMLNode& _node){
   m_sgLabel = _node.Read("sgLabel", true, "",
 												 "Label for the state graph used by the TMPStrategy");
+  m_teLabel = _node.Read("teLabel", false, "",
+												 "Label for the task evaluator used by the TMPStrategy");
+  m_tdLabel = _node.Read("tdLabel", false, "",
+												 "Label for the task decomposer used by the TMPStrategy");
+  m_taLabel = _node.Read("taLabel", false, "",
+												 "Label for the task allocator used by the TMPStrategy");
 }
 
 TMPStrategyMethod::

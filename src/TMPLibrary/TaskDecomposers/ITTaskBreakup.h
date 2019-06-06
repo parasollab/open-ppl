@@ -3,7 +3,6 @@
 #define TASK_BREAKUP_H_
 
 #include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
-#include "TMPLibrary/WholeTask.h"
 
 
 class Robot;
@@ -25,7 +24,7 @@ class ITTaskBreakup : public TaskDecomposerMethod {
 
     /// Breaks up whole task into subtasks at each robot interaction and stores
     /// the subtasks in the whole task's set
-    void BreakupTask(WholeTask* _wholeTask);
+    virtual void BreakupTask(WholeTask* _wholeTask) override;
 
     ///@}
 

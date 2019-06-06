@@ -1,10 +1,14 @@
 #include "ITTaskBreakup.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
+
+#include "TMPLibrary/TaskPlan.h"
 
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"

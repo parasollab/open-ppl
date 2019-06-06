@@ -6,6 +6,7 @@
 // TMPStrategyMethods to include
 
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
+#include "TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.h"
 
 // PoIPlacementMethods to include
 
@@ -23,6 +24,11 @@
 // TaskAllocators to include 
 
 #include "TMPLibrary/TaskAllocators/AuctionMethod.h"
+
+// StateGraphs to include
+
+#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup TaskAndMotionPlanningUniverse

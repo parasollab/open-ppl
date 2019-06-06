@@ -108,11 +108,11 @@ AssignTasks(){
 void
 ITMethod::
 DecomposeTasks(){
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot(); 
-	ITTaskBreakup tb(robot);
+	auto td = this->GetTaskDecomposer(m_tdLabel);
 
+	Simulation::GetStatClass()->StartClock("IT Task Decomposition");
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
-    tb.BreakupTask(wholeTask);
+    td->BreakupTask(wholeTask);
     Simulation::GetStatClass()->StopClock("IT Task Decomposition");
     Simulation::GetStatClass()->SetStat("Subtasks", wholeTask->m_subtasks.size());
   }

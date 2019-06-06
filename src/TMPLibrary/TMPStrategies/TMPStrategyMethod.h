@@ -51,7 +51,13 @@ class TMPStrategyMethod : public TMPBaseObject {
     ///@name Member Variables
     ///@{
 
-		std::string m_sgLabel;
+		std::string m_sgLabel; ///< State Graph Label
+
+		std::string m_teLabel; ///< Task Evaluator Label
+
+		std::string m_tdLabel; ///< Task Decomposer Label
+		
+		std::string m_taLabel; ///< Task Allocator Label
 
     ///@}
 };

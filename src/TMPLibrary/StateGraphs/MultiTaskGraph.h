@@ -20,7 +20,7 @@ class MultiTaskGraph : public CombinedRoadmap {
   	///@name Construction
     ///@{
 
-  	MultiTaskGraph() = default;
+  	MultiTaskGraph();
 
 		MultiTaskGraph(XMLNode& _node);
 

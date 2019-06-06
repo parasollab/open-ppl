@@ -405,7 +405,6 @@ SIM_SRCS := \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
-  TMPLibrary/TMPLibrary.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
   TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
@@ -418,7 +417,8 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp 
+  Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  TMPLibrary/TMPLibrary.cpp 
 
 ################################################################################
 # Hardware

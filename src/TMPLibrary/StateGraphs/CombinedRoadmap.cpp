@@ -10,6 +10,8 @@
 #include "Simulator/Simulation.h"
 
 /*------------------------------ Construction --------------------------------*/
+CombinedRoadmap::
+CombinedRoadmap(){};
 
 CombinedRoadmap::
 CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {

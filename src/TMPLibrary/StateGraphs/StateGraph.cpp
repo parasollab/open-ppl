@@ -7,6 +7,9 @@
 /*------------------------------ Construction --------------------------------*/
 
 StateGraph::
+StateGraph(){}
+
+StateGraph::
 StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
 	m_pmLabel = _node.Read("pmLabel",false,"",
 								"The placement method used for points of interests (i.e. ITs)");

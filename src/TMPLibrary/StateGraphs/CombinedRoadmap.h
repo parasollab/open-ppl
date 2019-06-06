@@ -20,7 +20,7 @@ class CombinedRoadmap : public StateGraph {
   	///@name Construction
     ///@{
 
-  	CombinedRoadmap() = default;
+  	CombinedRoadmap();
 
 		CombinedRoadmap(XMLNode& _node);
 
