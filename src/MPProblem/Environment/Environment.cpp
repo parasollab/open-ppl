@@ -116,6 +116,12 @@ Environment(Environment&& _other) = default;
 Environment::
 ~Environment() = default;
 
+std::unique_ptr<Environment>
+Environment::
+Clone(){
+	return std::unique_ptr<Environment>(new Environment(*this));
+}
+
 /*-------------------------------- Assignment --------------------------------*/
 
 Environment&

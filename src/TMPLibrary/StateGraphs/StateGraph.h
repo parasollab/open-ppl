@@ -47,7 +47,7 @@ class StateGraph : public TMPBaseObject {
 		///@name member variables
 		///@{
 
-		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* m_graph;
+		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
 
 		std::string m_pmLabel;
 

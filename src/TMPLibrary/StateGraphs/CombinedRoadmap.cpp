@@ -26,9 +26,9 @@ CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {
   for(auto& child : _node){
 		// Load the environment file used to create ITs
 		if(child.Name() == "InteractionEnvironment"){
-			if(!m_interactionEnvironment){
+			//if(!m_interactionEnvironment){
 				m_interactionEnvironment = std::unique_ptr<Environment>(new Environment(child));
-			}
+			//}
 		}
 	}
 }
@@ -43,6 +43,8 @@ Initialize(){
 
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot()));
 	m_solution->SetRoadmap(this->GetTaskPlan()->GetCoordinator()->GetRobot(),m_graph);
+
+	GenerateITs();
 
 	StateGraph::Initialize();
 }
@@ -190,7 +192,7 @@ GenerateITs(){
   // Loop through handoff templates, set start constraints for handoff, set
   // dummy robot for handoff task by capability, and solve handoff task.
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*this->GetMPProblem()));
-  problemCopy->SetEnvironment(std::move(m_interactionEnvironment));
+  problemCopy->SetEnvironment(std::move(m_interactionEnvironment->Clone()));
   this->GetMPLibrary()->SetMPProblem(problemCopy.get());
   // Set robots to virtual so that planning handoffs does not cause collisions
   std::list<HandoffAgent*> unusedAgents;
@@ -472,6 +474,7 @@ TransformITs(){
 void
 CombinedRoadmap::
 SetupWholeTasks(){
+	this->GetMPLibrary()->SetMPSolution(m_solution.get());
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
     // find a start and goal configuration for the coordinator
     auto task = wholeTask->m_task;
@@ -578,7 +581,8 @@ SetupWholeTasks(){
     }
     Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
   }
-  this->GetMPLibrary()->SetTask(this->GetMPProblem()->GetTasks(this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
+  this->GetMPLibrary()->SetTask(this->GetMPProblem()->GetTasks(
+												this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
 }
 
 

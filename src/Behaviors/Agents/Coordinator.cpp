@@ -108,6 +108,7 @@ Initialize() {
   // Initialize the agent's planning library.
   m_tmpLibrary = new TMPLibrary(xmlFile);
   m_library = m_tmpLibrary->GetMPLibrary();
+	m_solution = new MPSolution(m_robot);
   //m_library->SetMPSolution(m_solution);
 
   // Set up the group members.

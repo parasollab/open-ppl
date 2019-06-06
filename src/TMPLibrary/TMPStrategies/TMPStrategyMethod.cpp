@@ -33,8 +33,8 @@ TMPStrategyMethod::
 void
 TMPStrategyMethod::
 Initialize(){
-	this->GetTaskPlan()->Initialize();
-	this->GetStateGraph(m_sgLabel)->Initialize();
+	//this->GetTaskPlan()->Initialize();
+	//this->GetStateGraph(m_sgLabel)->Initialize();
 }
 
 /****************************************Call Method*****************************************************/

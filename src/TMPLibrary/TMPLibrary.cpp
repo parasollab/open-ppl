@@ -50,12 +50,13 @@ TMPLibrary::
 void
 TMPLibrary::
 Initialize(){
-				m_tmpStrategies->Initialize();
-				m_poiPlacementMethods->Initialize();
-				m_taskEvaluators->Initialize();
-				m_taskDecomposers->Initialize();
-				m_taskAllocators->Initialize();
-				m_stateGraphs->Initialize();
+	m_taskPlan->Initialize();
+	m_tmpStrategies->Initialize();
+	m_poiPlacementMethods->Initialize();
+	m_taskEvaluators->Initialize();
+	m_taskDecomposers->Initialize();
+	m_taskAllocators->Initialize();
+	m_stateGraphs->Initialize();
 }
 
 void
