@@ -42,7 +42,7 @@ class ITConnector {
 
     /// Assumes that all ITs provided contain the given capability.
     RoadmapGraph<Cfg, DefaultWeight<Cfg>>* ConnectInteractionTemplates(
-                 std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
+                 std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                  const std::string& _capability,
                  std::vector<Cfg>& _startAndGoal,
                  RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap);
@@ -53,7 +53,7 @@ class ITConnector {
     ///@name Helper Functions
     ///@{
 
-    std::vector<Cfg*> CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
+    std::vector<Cfg*> CalculateBaseDistances(std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                                              const std::string& _capability,
                                              std::vector<Cfg>& _startAndGoal);
 
@@ -62,7 +62,7 @@ class ITConnector {
     void UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs);
 
     void CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
-                         std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
+                         std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                          const std::string& _capability,
                          std::vector<Cfg>& _startAndGoal);
 

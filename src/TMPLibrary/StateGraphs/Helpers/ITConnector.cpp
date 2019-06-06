@@ -27,7 +27,7 @@ ITConnector(XMLNode& _node) {
 
 RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
 ITConnector::
-ConnectInteractionTemplates(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
+ConnectInteractionTemplates(std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                             const std::string& _capability,
                             std::vector<Cfg>& _startAndGoal,
                             RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap){
@@ -83,7 +83,7 @@ ConnectInteractionTemplates(std::vector<std::unique_ptr<InteractionTemplate>>& _
 
 std::vector<Cfg*>
 ITConnector::
-CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
+CalculateBaseDistances(std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                        const std::string& _capability, std::vector<Cfg>& _startAndGoal){
   //TODO::Give dmLabel in an XML node constructor.
   //auto dm = m_library->GetDistanceMetric("connectedFreeSpace");
@@ -253,7 +253,7 @@ UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs){
 void
 ITConnector::
 CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
-                std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
+                std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                 const std::string& _capability,
                 std::vector<Cfg>& _startAndGoal){
   for(auto& it : _ITs){

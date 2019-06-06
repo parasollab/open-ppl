@@ -393,6 +393,7 @@ SIM_SRCS := \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \

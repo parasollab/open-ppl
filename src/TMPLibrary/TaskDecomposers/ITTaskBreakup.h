@@ -17,9 +17,8 @@ class ITTaskBreakup : public TaskDecomposerMethod {
 
 		ITTaskBreakup() = default;
 
-    ITTaskBreakup(Robot* _robot);
-
     ~ITTaskBreakup();
+
     ///@}
     ///@name Interface
     ///@{
@@ -31,7 +30,6 @@ class ITTaskBreakup : public TaskDecomposerMethod {
     ///@}
 
   private:
-
     ///@name Helper Functions
     ///@{
 
@@ -39,11 +37,6 @@ class ITTaskBreakup : public TaskDecomposerMethod {
     std::shared_ptr<MPTask> MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask);
 
     ///@}
-
-    Robot* m_robot; ///< Coordinator Robot
-
-    bool m_debug{true};
-
 };
 
 #endif

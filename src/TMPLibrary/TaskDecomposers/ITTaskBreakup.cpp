@@ -15,9 +15,6 @@ ITTaskBreakup::
 ITTaskBreakup(XMLNode& _node) : TaskDecomposerMethod(_node){}
 
 ITTaskBreakup::
-ITTaskBreakup(Robot* _robot) : m_robot(_robot) {}
-
-ITTaskBreakup::
 ~ITTaskBreakup() = default;
 
 void
@@ -26,6 +23,7 @@ BreakupTask(WholeTask* _wholeTask){
   // Break the wholeTasks into subtasks based on when the robot pointer changes
   // in the wholeTask path. This change indicates that the robot capability
   // changed along the path in the megaRoadmap
+  Robot* virtualRobot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
   if(m_debug){
     std::cout << "Splitting up next whole task: " << _wholeTask << std::endl;
     std::cout << "Printing out path of whole task" << std::endl;
@@ -43,7 +41,7 @@ BreakupTask(WholeTask* _wholeTask){
   Cfg start;
   Cfg goal;
   for(auto cfg : _wholeTask->m_wholePath){
-    if(cfg.GetRobot() == m_robot){
+    if(cfg.GetRobot() == virtualRobot){
       continue;
     }
     else if(!currentRobot){
@@ -63,7 +61,7 @@ BreakupTask(WholeTask* _wholeTask){
     }
   }
   Cfg blank;
-  if(m_robot and start.GetRobot() and goal.GetRobot()){
+  if(virtualRobot and start.GetRobot() and goal.GetRobot()){
     auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
     _wholeTask->m_subtasks.push_back(subtask);
   }

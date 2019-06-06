@@ -37,7 +37,8 @@ struct TMPTraits {
 
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
-    ITMethod
+    ITMethod,
+		MultiAgentMultiTaskPlanner
       > TMPStrategyMethodList;
 
   //types of points of interest placement methods available in our world
@@ -60,6 +61,11 @@ struct TMPTraits {
   typedef boost::mpl::list<
     AuctionMethod
       > TaskAllocatorMethodList;
+
+	typedef boost::mpl::list<
+		CombinedRoadmap,
+		MultiTaskGraph
+			> StateGraphList;
 };
 
 #endif

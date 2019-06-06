@@ -8,6 +8,8 @@
 
 StateGraph::
 StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
+	m_pmLabel = _node.Read("pmLabel",false,"",
+								"The placement method used for points of interests (i.e. ITs)");
 }
 
 /*------------------------------ Construction --------------------------------*/
@@ -29,6 +31,12 @@ RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
 StateGraph::
 GetGraph(){
 	return m_graph;
+}
+
+void
+StateGraph::
+LoadStateGraph(){
+	this->GetTaskPlan()->GetCoordinator()->SetRoadmapGraph(m_graph);
 }
 
 /*------------------------------ Helpers --------------------------------*/

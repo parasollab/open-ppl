@@ -2,34 +2,80 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
+#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
+#include "TMPLibrary/StateGraphs/Helpers/ITConnector.h"
+#include "TMPLibrary/StateGraphs/Helpers/ITConstructor.h"
 #include "TMPLibrary/TaskPlan.h"
+
+#include "Simulator/Simulation.h"
 
 /*------------------------------ Construction --------------------------------*/
 
 CombinedRoadmap::
 CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
+      "nearest agents and charging locations.");
+  m_connectionThreshold = _node.Read("connectionThreshold",true,1.2, 0., 1000.,
+      "Acceptable variabliltiy in IT paths.");
+
+  for(auto& child : _node){
+		// Load the environment file used to create ITs
+		if(child.Name() == "InteractionEnvironment"){
+			if(!m_interactionEnvironment){
+				m_interactionEnvironment = std::unique_ptr<Environment>(new Environment(child));
+			}
+		}
+	}
 }
 
 /*------------------------------ Construction --------------------------------*/
 
 void
 CombinedRoadmap::
-Initialize() {
+Initialize(){
+
+	ResetRobotTypeRoadmaps();
+
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot()));
+	m_solution->SetRoadmap(this->GetTaskPlan()->GetCoordinator()->GetRobot(),m_graph);
 
 	StateGraph::Initialize();
 }
 
 /*------------------------------ Accessors --------------------------------*/
 
+void
+CombinedRoadmap::
+LoadStateGraph(){
+	StateGraph::LoadStateGraph();
+	CopyRobotTypeRoadmaps();
+}
 
 /*------------------------------ Helpers --------------------------------*/
 
 
 void
 CombinedRoadmap::
-ResetCapabilityRoadmaps(){
+ResetRobotTypeRoadmaps(){
   m_capabilityRoadmaps.clear();
   m_transformedRoadmaps.clear();;
+}
+
+void
+CombinedRoadmap::
+CopyRobotTypeRoadmaps(){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
+    //Copy corresponding capability roadmap into agent
+    auto graph = m_capabilityRoadmaps[agent->GetCapability()];
+    auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
+    *g = *graph;
+    g->SetRobot(agent->GetRobot());
+    agent->SetRoadmapGraph(g);
+
+    // Write the capability map.
+    graph->Write(agent->GetRobot()->GetLabel() + ".map",
+        this->GetMPProblem()->GetEnvironment());
+  }
 }
 
 /*------------------------------ Construction Helpers --------------------------------*/
@@ -47,7 +93,7 @@ ConstructGraph(){
   //this->GetMPLibrary()->InitializeMPProblem(originalProblem);
   this->GetMPLibrary()->SetMPProblem(originalProblem);
 
-  for(auto& it : m_solution->GetInteractionTemplates()){
+  for(auto& it : this->GetTaskPlan()->GetInteractionTemplates()){
     FindITLocations(it.get());
   }
 
@@ -150,7 +196,8 @@ GenerateITs(){
               + currentTemplate->GetInformation()->GetLabel());
 
     unusedAgents.clear();
-    std::copy(this->GetTaskPlan()->GetTeam().begin(), this->GetTaskPlan()->GetTeam().end(), std::back_inserter(unusedAgents));
+    std::copy(this->GetTaskPlan()->GetTeam().begin(), this->GetTaskPlan()->GetTeam().end(), 	
+							std::back_inserter(unusedAgents));
     auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
     std::unordered_map<std::shared_ptr<MPTask>, HandoffAgent*> agentTasks;
     // Loop through all tasks and assign a robot of matching capability to the
@@ -303,8 +350,7 @@ GenerateITs(){
 
 
   this->GetMPLibrary()->SetMPProblem(originalProblem);
-  auto sol = this->GetMPLibrary()->GetMPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot());
-  this->GetMPLibrary()->SetMPSolution(sol);
+  this->GetMPLibrary()->SetMPSolution(m_solution.get());
   this->GetMPLibrary()->SetTask(originalProblem->GetTasks(this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
 }
 
@@ -312,12 +358,12 @@ void
 CombinedRoadmap::
 FindITLocations(InteractionTemplate* _it){
   //for(auto& method : m_ITPlacementMethods){
-		std::cout << "Calling " + m_placementMethod << std::endl;
-    Simulation::GetStatClass()->StartClock("Placing Templates with: " + m_placementMethod);
-    auto method = this->GetPoIPlacementMethod(m_placementMethod);
+		std::cout << "Calling " + m_pmLabel << std::endl;
+    Simulation::GetStatClass()->StartClock("Placing Templates with: " + m_pmLabel);
+    auto method = this->GetPoIPlacementMethod(m_pmLabel);
 		method->PlaceIT(_it, this->GetMPLibrary()->GetMPSolution());
-    Simulation::GetStatClass()->StopClock("Placing Templates with: " + m_placementMethod);
-		std::cout << "Finished " + m_placementMethod << std::endl;
+    Simulation::GetStatClass()->StopClock("Placing Templates with: " + m_pmLabel);
+		std::cout << "Finished " + m_pmLabel << std::endl;
   //}
 }
 
@@ -484,7 +530,8 @@ SetupWholeTasks(){
 
     wholeTask->m_startVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorStartVID};
 
-    auto coordinatorGoalVID = m_graph->AddVertex(wholeTask->m_goalPoints[m_robot->GetLabel()][0]);
+    auto coordinatorGoalVID = m_graph->AddVertex(wholeTask->m_goalPoints[
+															this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
 
     wholeTask->m_goalVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorGoalVID};
 

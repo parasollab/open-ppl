@@ -155,12 +155,10 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
-  //m_tmpMethod = new ITMethod(true, m_debug, m_dmLabel, m_connectionThreshold, 
-	//												m_handoffEnvironment.get(), m_ITPlacementMethods);
-	//m_tmpMethod->Initialize(m_robot);
-  //TaskPlan* taskPlan = m_tmpMethod->PlanTasks(m_library, m_memberAgents, 
-	//																						m_robot->GetMPProblem()->GetTasks(m_robot));
-	//DistributeTaskPlan(taskPlan);
+	//USE TMPLIBRARY TO GET TASK ASSIGNMENTS
+	TaskPlan* taskPlan = new TaskPlan();
+	m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), taskPlan, this, m_memberAgents);
+  DistributeTaskPlan(taskPlan);
 
   if(m_debug){
     std::cout << "OTUPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
@@ -631,4 +629,10 @@ TMPLibrary*
 Coordinator::
 GetTMPLibrary(){
 	return m_tmpLibrary;
+}
+
+void
+Coordinator::
+SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+  *m_solution->GetRoadmap(m_robot) = *_graph;
 }

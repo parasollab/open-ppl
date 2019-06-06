@@ -7,14 +7,13 @@
 
 #include "MPProblem/MPTask.h"
 
-#include "TMPLibrary/TMPBaseObject.h"
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "TMPLibrary/WholeTask.h"
 
 class Coordinator;
 class HandoffAgent;
 
-class TaskPlan : public TMPBaseObject {
+class TaskPlan {
 
   public:
 
@@ -27,7 +26,9 @@ class TaskPlan : public TMPBaseObject {
 
     TaskPlan() = default;
 
-    ~TaskPlan() = default;
+    ~TaskPlan();
+
+		void Initialize();
 
     ///@}
     ///@name Accessors
@@ -45,6 +46,16 @@ class TaskPlan : public TMPBaseObject {
 		void AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second);
 
 		void RemoveLastDependency(std::shared_ptr<MPTask> _task);
+    
+		///@}
+    ///@name RAT Functions
+    ///@{
+
+    void InitializeRAT();
+
+		std::unordered_map<HandoffAgent*,std::pair<Cfg,double>>& GetRAT();
+
+		std::pair<Cfg,double> GetRobotAvailability(HandoffAgent* _agent);
 
 		///@}
 		///@name WholeTask interactions
@@ -101,7 +112,7 @@ class TaskPlan : public TMPBaseObject {
     ///       roadmap cfgs instead to avoid duplicating data (which we then have
     ///       to keep synchronized).
 
-    std::vector<std::unique_ptr<InteractionTemplate>>& GetInteractionTemplates();
+    std::vector<std::shared_ptr<InteractionTemplate>>& GetInteractionTemplates();
 
     void AddInteractionTemplate(InteractionTemplate*);
 
@@ -112,7 +123,7 @@ class TaskPlan : public TMPBaseObject {
   private:
 
 		///Cordinator for the task plan.//TODO::make a distributed option where this is a leader
-		Coordinator* m_coordinator;
+		Coordinator* m_coordinator{nullptr};
 
     /// The list of WholeTasks, which need to be divided into subtasks
     std::vector<WholeTask*> m_wholeTasks;
@@ -139,8 +150,8 @@ class TaskPlan : public TMPBaseObject {
 		/// All robots available for the task..
 		std::vector<HandoffAgent*> m_memberAgents;   
 
-        /// The set of Interaction Templates
-    std::vector<std::unique_ptr<InteractionTemplate>> m_interactionTemplates;
+		/// The set of Interaction Templates
+    std::vector<std::shared_ptr<InteractionTemplate>> m_interactionTemplates;
     
 };
 

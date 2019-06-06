@@ -25,6 +25,8 @@ TMPLibrary(){
 												typename TMPTraits::TaskDecomposerMethodList(), "TaskDecomposers");
 				m_taskEvaluators = new TaskEvaluatorMethodSet(this,
 												typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
+				m_stateGraphs = new StateGraphSet(this,
+												typename TMPTraits::StateGraphList(), "StateGraphs");
 }
 
 
@@ -136,10 +138,10 @@ ParseChild(XMLNode& _node) {
 								const std::string baseFilename = _node.Read("baseFilename", true, "",
 																"BaseFilename for the solver.");// + "." + std::to_string(seed);
 
-								const bool vdOutput = _node.Read("vizmoDebug", false, false,
-																"True yields VizmoDebug output for the solver.");
+								//const bool vdOutput = _node.Read("vizmoDebug", false, false,
+								//								"True yields VizmoDebug output for the solver.");
 
-								m_solvers.emplace_back(Solver{label, baseFilename, vdOutput});
+								m_solvers.emplace_back(Solver{label, baseFilename});
 								return true;
 				}
 				else
@@ -214,6 +216,12 @@ TaskPlan*
 TMPLibrary::
 GetTaskPlan(){
 				return m_taskPlan;
+}
+
+void
+TMPLibrary::
+SetTaskPlan(TaskPlan* _taskPlan){
+	m_taskPlan = _taskPlan;
 }
 
 TMPLibrary::StateGraphPointer  
@@ -337,6 +345,25 @@ void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
+								TaskPlan* _taskPlan,
+								Coordinator* _coordinator,
+								std::vector<HandoffAgent*> _team) {
+
+				m_problem = _problem;
+				m_tasks = _tasks;
+				m_taskPlan = _taskPlan;
+				m_taskPlan->SetCoordinator(_coordinator);
+				m_taskPlan->LoadTeam(_team);
+				m_taskPlan->CreateWholeTasks(_tasks);
+
+				for(auto& solver : m_solvers)
+								RunSolver(solver);
+}
+
+void
+TMPLibrary::
+Solve(MPProblem* _problem, 
+								std::vector<std::shared_ptr<MPTask>> _tasks, 
 								TaskPlan* _taskPlan) {
 
 				m_problem = _problem;
@@ -419,14 +446,6 @@ RunSolver(const Solver& _solver) {
 
 				// If this task has a label, append it to the solver's output file name.
 				std::string baseFilename = _solver.baseFilename;
-
-				if(!m_groupTasks.empty()) {
-								if(!m_groupTasks.empty() and !m_groupTasks[0]->GetLabel().empty())
-												baseFilename += "." + m_groupTasks[0]->GetLabel();
-				}
-				else if(!m_tasks.empty() and !m_tasks[0]->GetLabel().empty())
-								baseFilename += "." + m_tasks[0]->GetLabel();
-
 				// Remove spaces to keep file names nice.
 				{
 								auto newEnd = std::remove_if(baseFilename.begin(), baseFilename.end(),

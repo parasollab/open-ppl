@@ -1,5 +1,8 @@
 #include "ITMethod.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
+#include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskDecomposers/ITTaskBreakup.h"
 #include "TMPLibrary/TaskPlan.h"
 
@@ -16,28 +19,10 @@ ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThre
 */
 /***********************************Call Method********************************/
 
-TaskPlan* 
+void
 ITMethod::
-PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
-          vector<std::shared_ptr<MPTask>> _tasks){
-
-	TMPStrategyMethod::PlanTasks(_library, _agents, _tasks);
-
-	//LoadAgents
-
-	this->GetTaskPlan()->GenerateDummyAgents();
-
-	GenerateITs();
-
-	CreateCombinedRoadmap();
-
+PlanTasks(){
 	QueryCombinedRoadmap();
-
-	CopyRobotTypeRoadmaps();
-
-	DecomposeTasks();
-
-	return AssignTasks();
 }
 
 /***********************************Configure**********************************/
@@ -48,53 +33,56 @@ PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
 void 
 ITMethod::
 QueryCombinedRoadmap(){
-  //TODO::Probably don't need intitial task
-  auto initTask = m_robot->GetMPProblem()->GetTasks(m_robot)[0];
-  m_library->SetTask(initTask.get());
+  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+	auto solution = new MPSolution(robot);
+	solution->SetRoadmap(robot,this->GetStateGraph(m_sgLabel)->GetGraph());
 
-  m_library->Solve(m_robot->GetMPProblem(), initTask.get(), m_solution.get(), "EvaluateMapStrategy",
+  //TODO::Probably don't need intitial task
+  auto initTask = this->GetMPProblem()->GetTasks(robot)[0];
+  this->GetMPLibrary()->SetTask(initTask.get());
+  this->GetMPLibrary()->Solve(this->GetMPProblem(), initTask.get(), solution, "EvaluateMapStrategy",
       LRand(), "InitTask");
 
   //m_solution->SetRoadmap(m_robot, m_combinedRoadmap);
 
   if(m_debug){
-    Simulation::Get()->AddRoadmap(m_combinedRoadmap,
+    Simulation::Get()->AddRoadmap(this->GetStateGraph(m_sgLabel)->GetGraph(),
       glutils::color(1., 0., 1., 0.2));
   }
   //Find path for each whole task in megaRoadmap
   for(auto& wholeTask: this->GetTaskPlan()->GetWholeTasks()){
     Simulation::GetStatClass()->StartClock("IT MegaRoadmap Query");
-    wholeTask->m_task->SetRobot(m_robot);
-    m_library->SetTask(wholeTask->m_task.get());
+    wholeTask->m_task->SetRobot(robot);
+    this->GetMPLibrary()->SetTask(wholeTask->m_task.get());
     auto& c = wholeTask->m_task->GetGoalConstraints()[0];
     c->Clone();
-    m_library->Solve(m_robot->GetMPProblem(), wholeTask->m_task.get(), m_solution.get(), "EvaluateMapStrategy",
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), wholeTask->m_task.get(), solution, "EvaluateMapStrategy",
       LRand(), "PlanWholeTask");
     //Save cfg path in the handoff class
-    wholeTask->m_wholePath = m_solution->GetPath()->Cfgs();
+    wholeTask->m_wholePath = solution->GetPath()->Cfgs();
     Simulation::GetStatClass()->StopClock("IT MegaRoadmap Query");
     //TODO:: Need to update for multiple tasks
-    Simulation::GetStatClass()->SetStat("WholePathLength", m_solution->GetPath()->Length());
+    Simulation::GetStatClass()->SetStat("WholePathLength", solution->GetPath()->Length());
   }
 }
 
 /*********************************Task Assignment******************************/
  
-TaskPlan*
+void
 ITMethod:: 
 AssignTasks(){
-	TaskPlan* taskPlan = new TaskPlan();
+	TaskPlan* taskPlan = this->GetTaskPlan();
 	//TODO::Abstract this and AuctionTask Function to an auction class that this calls in stead
   // Load m_unassignedTasks with the initial subtasks for all tasks.
   Simulation::GetStatClass()->StartClock("IT Task Assignment");
-  for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
-    auto subtask = this->GetTaskPlan()->GetNextSubtask(wholeTask);
+  for(auto& wholeTask : taskPlan->GetWholeTasks()){
+    auto subtask = taskPlan->GetNextSubtask(wholeTask);
     if(subtask){
       m_unassignedTasks.push_back(subtask);
-      this->GetTaskPlan()->SetWholeTaskOwner(subtask, wholeTask);
+      taskPlan->SetWholeTaskOwner(subtask, wholeTask);
     }
   }
-  for(auto agent : this->GetTaskPlan()->GetTeam()){
+  for(auto agent : taskPlan->GetTeam()){
     agent->GetRobot()->SetVirtual(true);
   }
   // Assign all of the tasks (and their subtasks) to different agents.
@@ -110,19 +98,18 @@ AssignTasks(){
       AddSubtask(newSubtask);
     }
   }
-  for(auto agent : this->GetTaskPlan()->GetTeam()){
+  for(auto agent : taskPlan->GetTeam()){
     agent->GetRobot()->SetVirtual(false);
   }
   Simulation::GetStatClass()->StopClock("IT Task Assignment");
 	
-	return taskPlan;
 }
 
 void
 ITMethod::
 DecomposeTasks(){
-  
-	ITTaskBreakup tb(m_robot);
+  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot(); 
+	ITTaskBreakup tb(robot);
 
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
     tb.BreakupTask(wholeTask);
@@ -228,23 +215,6 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
 
 
 /*********************************Helper Functions******************************/
-
-void
-ITMethod::
-CopyRobotTypeRoadmaps(){
-  for(auto agent : this->GetTaskPlan()->GetTeam()){
-    //Copy corresponding capability roadmap into agent
-    auto graph = m_capabilityRoadmaps[agent->GetCapability()];
-    auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
-    *g = *graph;
-    g->SetRobot(agent->GetRobot());
-    agent->SetRoadmapGraph(g);
-
-    // Write the capability map.
-    graph->Write(agent->GetRobot()->GetLabel() + ".map",
-        m_robot->GetMPProblem()->GetEnvironment());
-  }
-}
 
 void 
 ITMethod::
