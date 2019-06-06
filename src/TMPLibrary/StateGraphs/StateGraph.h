@@ -3,6 +3,8 @@
 
 #include "TMPLibrary/TMPBaseObject.h"
 
+#include "ConfigurationSpace/RoadmapGraph.h"
+
 #include <iostream>
 
 class StateGraph : public TMPBaseObject {
@@ -11,13 +13,47 @@ class StateGraph : public TMPBaseObject {
   	///@name Construction
     ///@{
 
-  	StateGraph() = default;
+  	StateGraph();
 
 		StateGraph(XMLNode& _node);
 
 		virtual ~StateGraph() = default;  	
 
     ///@}
+    ///@name Initialization
+    ///@{
+
+		virtual void Initialize() override;
+
+    ///@}
+    ///@name Accessors
+    ///@{
+
+		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
+
+		/// Copies the state graph into the coordinator solution object.
+		virtual void LoadStateGraph();
+
+    ///@}
+
+  protected:
+
+		///@name Helpers
+		///@{
+		
+		virtual void ConstructGraph();
+
+		///@}
+		///@name member variables
+		///@{
+
+		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
+
+		std::string m_pmLabel;
+
+		
+		///@}
+
 };
 
 /*----------------------------------------------------------------------------*/

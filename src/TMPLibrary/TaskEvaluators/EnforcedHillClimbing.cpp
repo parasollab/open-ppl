@@ -10,12 +10,13 @@
 
 EnforcedHillClimbing::
 EnforcedHillClimbing(){
-	m_robots= {};
-	m_library = this->GetTMPLibrary()->GetMPLibrary();
+	this->SetName("EnforcedHillClimbing");
 }
 
 EnforcedHillClimbing::
-EnforcedHillClimbing(XMLNode& _node) : TaskEvaluatorMethod(_node){}
+EnforcedHillClimbing(XMLNode& _node) : TaskEvaluatorMethod(_node){
+	this->SetName("EnforcedHillClimbing");
+}
 
 EnforcedHillClimbing::
 EnforcedHillClimbing(const CapabilityMap& _capabilityMap,

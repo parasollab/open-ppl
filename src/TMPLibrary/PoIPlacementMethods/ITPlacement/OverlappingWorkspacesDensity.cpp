@@ -6,7 +6,13 @@
 #include "TMPLibrary/TaskPlan.h"
 
 OverlappingWorkspacesDensity::
+OverlappingWorkspacesDensity(){
+	this->SetName("OverlappingWorkspaceDensity");
+}
+
+OverlappingWorkspacesDensity::
 OverlappingWorkspacesDensity(XMLNode& _node) : ITPlacementMethod(_node) {
+	this->SetName("OverlappingWorkspaceDensity");
   m_proximity = _node.Read("proximity", true, nan(""), 0., 1000., "distance to check for proximity of other configurations");
   m_density = _node.Read("density", true, nan(""), 0., 1000., "number of cfgs required within proximity to place IT");
   m_dmLabel = _node.Read("dmLabel", true, "", "distance metric to compute proximity");

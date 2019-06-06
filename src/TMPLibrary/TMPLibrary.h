@@ -39,6 +39,8 @@ class TaskEvaluatorMethod;
 class TaskPlan;
 class TMPStrategyMethod;
 class TMPTools;
+class Coordinator;
+class HandoffAgent;
 //template<typename TMPMethod>TMPMethodSet;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,6 +183,8 @@ class TMPLibrary {
 
     TaskPlan* GetTaskPlan();
 
+		void SetTaskPlan(TaskPlan* _taskPlan);
+
     StateGraphPointer GetStateGraph(const std::string& _l);
 
     void AddStateGraph(StateGraphPointer _sg, const std::string& _l);
@@ -189,6 +193,8 @@ class TMPLibrary {
 		///@name Execution
 		///@{
 
+		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks,
+							 TaskPlan* _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
 		
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
 	  					 TaskPlan* _taskPlan);

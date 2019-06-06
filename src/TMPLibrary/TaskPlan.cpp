@@ -3,6 +3,30 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 
+
+TaskPlan::
+~TaskPlan(){
+	for(auto wholeTask : m_wholeTasks){
+		delete wholeTask;
+	}
+}
+
+void
+TaskPlan::
+Initialize(){
+	if(!m_coordinator){
+		throw RunTimeException(WHERE, "TaskPlan has no coordinator.");
+	}
+	else if(m_memberAgents.empty()){
+		throw RunTimeException(WHERE, "TaskPlan has no member agents.");
+	}
+	else if(m_wholeTasks.empty()){
+		throw RunTimeException(WHERE, "TaskPlan has no tasks to plan for.");
+	}	
+	InitializeRAT();
+	GenerateDummyAgents();
+}
+
 std::list<std::shared_ptr<MPTask>>
 TaskPlan::
 GetAgentTasks(Agent* _agent){
@@ -36,6 +60,29 @@ RemoveLastDependency(std::shared_ptr<MPTask> _task){
 	dependencies.pop_back();
 }
 
+/*****************************************RAT Functions****************************************************/
+
+void
+TaskPlan::
+InitializeRAT(){
+	for(auto dummy = m_dummyMap.begin(); dummy != m_dummyMap.end(); dummy++){
+		m_RAT[dummy->second] = std::pair<Cfg,double>(
+										dummy->second->GetRobot()->GetSimulationModel()->GetState(),
+										0.0);
+	}
+}
+
+std::unordered_map<HandoffAgent*,std::pair<Cfg,double>>& 
+TaskPlan::
+GetRAT(){
+	return m_RAT;
+}
+
+std::pair<Cfg,double>
+TaskPlan::
+GetRobotAvailability(HandoffAgent* _agent){
+	return m_RAT[_agent];
+}
 /***********************************WholeTask Interactions*******************************/
 
 std::vector<WholeTask*>&
@@ -139,3 +186,18 @@ TaskPlan::
 GetDummyMap(){
 	return m_dummyMap;
 }
+
+/***********************************IT Accessors*******************************/
+
+std::vector<std::shared_ptr<InteractionTemplate>>&
+TaskPlan::
+GetInteractionTemplates(){
+  return m_interactionTemplates;
+}
+
+void
+TaskPlan::
+AddInteractionTemplate(InteractionTemplate* _it){
+  m_interactionTemplates.emplace_back(std::unique_ptr<InteractionTemplate>(_it));
+}
+

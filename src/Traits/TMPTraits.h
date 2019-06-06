@@ -6,6 +6,7 @@
 // TMPStrategyMethods to include
 
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
+#include "TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.h"
 
 // PoIPlacementMethods to include
 
@@ -24,6 +25,11 @@
 
 #include "TMPLibrary/TaskAllocators/AuctionMethod.h"
 
+// StateGraphs to include
+
+#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup TaskAndMotionPlanningUniverse
 /// @brief Defines available methods in the Task and Motion Planning Universe
@@ -37,7 +43,8 @@ struct TMPTraits {
 
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
-    ITMethod
+    ITMethod,
+		MultiAgentMultiTaskPlanner
       > TMPStrategyMethodList;
 
   //types of points of interest placement methods available in our world
@@ -60,6 +67,11 @@ struct TMPTraits {
   typedef boost::mpl::list<
     AuctionMethod
       > TaskAllocatorMethodList;
+
+	typedef boost::mpl::list<
+		CombinedRoadmap,
+		MultiTaskGraph
+			> StateGraphList;
 };
 
 #endif

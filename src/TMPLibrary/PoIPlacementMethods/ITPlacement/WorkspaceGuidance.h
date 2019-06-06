@@ -19,7 +19,7 @@ class WorkspaceGuidance : public ITPlacementMethod {
     ///@name Construction
     ///@{
 
-		WorkspaceGuidance() = default;
+		WorkspaceGuidance();
 
     WorkspaceGuidance(XMLNode& _node);
 

@@ -1,104 +1,97 @@
-#ifndef COMBINED_ROADMAP_H_
-#define COMBINED_ROADMAP_H_
-
-#include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
-#include "ConfigurationSpace/Weight.h"
+#ifndef PMPL_COMBINED_ROADMAP_H_
+#define PMPL_COMBINED_ROADMAP_H_
 
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 
-#include "Traits/CfgTraits.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 
+#include "MPLibrary/MPSolution.h"
 
-class InteractionTemplate;
-class WorkspaceSkeleton;
+#include <iostream>
 
 class CombinedRoadmap : public StateGraph {
   public:
-    ///@name Typenames
+
+    typedef RoadmapGraph<CfgType, WeightType>         GraphType;
+    typedef typename GraphType::vertex_descriptor     VID;
+    typedef typename std::vector<VID>::const_iterator VIDIterator;
+
+
+  	///@name Construction
     ///@{
 
-    typedef MPLibraryType<MPTraits<Cfg,DefaultWeight<Cfg>>>  MPLibrary;
-    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
-
-    ///@}
-    ///@name Construction
-    ///@{
-
-    struct AdjustedInfo{
-      Cfg*   m_connection;
-      double m_summedDistance;
-      bool   m_directConnection;
-      bool   m_changed;
-    };
-
-    CombinedRoadmap(double _threshold, MPLibrary* _library);
+  	CombinedRoadmap();
 
 		CombinedRoadmap(XMLNode& _node);
 
-    ~CombinedRoadmap() = default;
+		virtual ~CombinedRoadmap() = default;  	
 
     ///@}
-    ///@name
+    ///@name Initialization
     ///@{
 
-    /// Assumes that all ITs provided contain the given capability.
-    RoadmapGraph<Cfg, DefaultWeight<Cfg>>* ConnectInteractionTemplates(
-                 std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                 const std::string& _capability,
-                 std::vector<Cfg>& _startAndGoal,
-                 RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap);
+		virtual void Initialize() override;
 
     ///@}
-
-  private:
-    ///@name Helper Functions
+    ///@name Accessors
     ///@{
 
-    std::vector<Cfg*> CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                                             const std::string& _capability,
-                                             std::vector<Cfg>& _startAndGoal);
-
-    void FindAlternativeConnections(std::vector<Cfg*>& _cfgs);
-
-    void UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs);
-
-    void CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
-                         std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                         const std::string& _capability,
-                         std::vector<Cfg>& _startAndGoal);
-
-    void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
-
-    void ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph);
-
-    void BuildSkeletons();
-
-
-    double SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const;
-
-    /// Checks the capability skeleton of the corresponding type to see if the
-    /// two cfgs are in connected free space.
-    bool InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2);
-    ///@}
-    ///@name Member Variables
-    ///@{
-
-    std::unordered_map<Cfg*,std::unordered_map<Cfg*,double>> m_baseDistances;
-
-    std::list<std::pair<Cfg*,Cfg*>> m_connections;
-
-    std::unordered_map<Cfg*,std::unordered_map<Cfg*,AdjustedInfo>> m_adjDist;
-
-    MPLibrary* m_library;
-
-    double m_threshold;
-
-    bool m_debug{false};
-
-    std::unordered_map<std::string,std::shared_ptr<WorkspaceSkeleton>> m_capabilitySkeletons;
-
+		/// Copies the state graph into the coordinator solution, and copies the individual
+		/// robot-type roadmaps into robots of the respective type.
+		virtual void LoadStateGraph() override;
 
     ///@}
+
+  protected:
+
+		///@name Helpers
+		///@{
+
+		void ResetRobotTypeRoadmaps();
+
+		void CopyRobotTypeRoadmaps();
+
+		///@}
+		///@name Construction Helpers
+		///@{
+
+		virtual void ConstructGraph() override;
+
+		void GenerateITs();
+
+		void FindITLocations(InteractionTemplate* _it);
+
+		/// Transforms the ITs into the disovered locations
+		void TransformITs();
+
+		/// Initiallizes configurations for each capability at the start and end
+		/// constriants of each whole task and adds them to the megaRoadmap
+		void SetupWholeTasks();
+
+		///@}
+		///@name member variables
+		///@{
+
+		/// Map from each capability to the roadmap for that capability.
+		std::unordered_map<std::string, std::shared_ptr<GraphType>> m_capabilityRoadmaps;
+    
+		/// The VIDs of all individual agent roadmaps in each transformed handoff template.
+    std::vector<std::vector<size_t>> m_transformedRoadmaps;
+
+
+		/// The VIDs of the start and end points of the whole tasks in the
+		/// megaRoadmap
+		std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
+
+		double m_connectionThreshold{1.5};
+		std::string m_dmLabel;
+    std::unique_ptr<Environment> m_interactionEnvironment;    ///< The handoff template environment.
+
+		std::unique_ptr<MPSolution> m_solution;
+		///@}
+
 };
+
+/*----------------------------------------------------------------------------*/
+
 #endif

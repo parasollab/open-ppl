@@ -106,6 +106,8 @@ class Coordinator : public Agent {
 
 		TMPLibrary* GetTMPLibrary();
 
+		void SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
     ///@}

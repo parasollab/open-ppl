@@ -1,590 +1,594 @@
 #include "CombinedRoadmap.h"
 
-#include "ConfigurationSpace/Cfg.h"
+#include "Behaviors/Agents/Coordinator.h"
 
+#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
+#include "TMPLibrary/StateGraphs/Helpers/ITConnector.h"
+#include "TMPLibrary/StateGraphs/Helpers/ITConstructor.h"
 #include "TMPLibrary/TaskPlan.h"
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
-#include "Utilities/SSSP.h"
+#include "Simulator/Simulation.h"
 
-#include "Workspace/WorkspaceSkeleton.h"
-
-#include <limits>
-#include <unordered_set>
+/*------------------------------ Construction --------------------------------*/
+CombinedRoadmap::
+CombinedRoadmap(){
+	this->SetName("CombinedRoadmap");
+};
 
 CombinedRoadmap::
-CombinedRoadmap(double _threshold, MPLibrary* _library) : m_threshold(_threshold){
-  m_library = _library;
-  BuildSkeletons();
+CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {
+	this->SetName("CombinedRoadmap");
+  m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
+      "nearest agents and charging locations.");
+  m_connectionThreshold = _node.Read("connectionThreshold",true,1.2, 0., 1000.,
+      "Acceptable variabliltiy in IT paths.");
+
+  for(auto& child : _node){
+		// Load the environment file used to create ITs
+		if(child.Name() == "InteractionEnvironment"){
+			//if(!m_interactionEnvironment){
+				m_interactionEnvironment = std::unique_ptr<Environment>(new Environment(child));
+			//}
+		}
+	}
 }
 
+/*------------------------------ Construction --------------------------------*/
+
+void
 CombinedRoadmap::
-CombinedRoadmap(XMLNode& _node) : StateGraph(_node){
-	//TODO::ParseXML
-	BuildSkeletons();
+Initialize(){
+
+	ResetRobotTypeRoadmaps();
+
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot()));
+	m_solution->SetRoadmap(this->GetTaskPlan()->GetCoordinator()->GetRobot(),m_graph);
+
+	GenerateITs();
+
+	StateGraph::Initialize();
 }
 
+/*------------------------------ Accessors --------------------------------*/
 
-RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+void
 CombinedRoadmap::
-ConnectInteractionTemplates(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                            const std::string& _capability,
-                            std::vector<Cfg>& _startAndGoal,
-                            RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap){
+LoadStateGraph(){
+	StateGraph::LoadStateGraph();
+	CopyRobotTypeRoadmaps();
+}
 
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = new RoadmapGraph<
-                                      Cfg,DefaultWeight<Cfg>>(_megaRoadmap->GetRobot());
+/*------------------------------ Helpers --------------------------------*/
 
-  auto cfgs = CalculateBaseDistances(_ITs,_capability, _startAndGoal);
 
-  if(cfgs.empty())
-    return graph;
+void
+CombinedRoadmap::
+ResetRobotTypeRoadmaps(){
+  m_capabilityRoadmaps.clear();
+  m_transformedRoadmaps.clear();;
+}
 
-  graph->SetRobot(cfgs[0]->GetRobot());
+void
+CombinedRoadmap::
+CopyRobotTypeRoadmaps(){
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
+    //Copy corresponding capability roadmap into agent
+    auto graph = m_capabilityRoadmaps[agent->GetCapability()];
+    auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
+    *g = *graph;
+    g->SetRobot(agent->GetRobot());
+    agent->SetRoadmapGraph(g);
 
-  for(auto cfg1 : cfgs){
-    for(auto cfg2 : cfgs){
-      if(cfg1 == cfg2)
-        continue;
-      AdjustedInfo info;
-      info.m_connection = cfg1;
-      info.m_summedDistance = m_baseDistances[cfg1][cfg2];
-      info.m_directConnection = false;
-      info.m_changed = false;
-      m_adjDist[cfg1][cfg2] = info;
-    }
+    // Write the capability map.
+    graph->Write(agent->GetRobot()->GetLabel() + ".map",
+        this->GetMPProblem()->GetEnvironment());
+  }
+}
+
+/*------------------------------ Construction Helpers --------------------------------*/
+
+
+void
+CombinedRoadmap::
+ConstructGraph(){
+  std::cout << "Creating combined roadmap and robot-type roadmaps." << std::endl;
+  for(auto agent : this->GetTaskPlan()->GetTeam()){
+    agent->GetRobot()->SetVirtual(true);
+  }
+  std::cout << "Finding Handoff Locations" << std::endl;
+  auto originalProblem = this->GetMPProblem();
+  //this->GetMPLibrary()->InitializeMPProblem(originalProblem);
+  this->GetMPLibrary()->SetMPProblem(originalProblem);
+
+  for(auto& it : this->GetTaskPlan()->GetInteractionTemplates()){
+    FindITLocations(it.get());
   }
 
-  FindAlternativeConnections(cfgs);
+  std::cout << "Found Handoff Locations" << std::endl;
+
+  TransformITs();
+  SetupWholeTasks();
+
+  ITConnector connector(m_connectionThreshold,this->GetMPLibrary());
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
+
   if(true){
-    std::cout << "Number of connections:" << m_connections.size() << std::endl;
-    for(auto connection : m_connections){
-      std::cout << connection.first->PrettyPrint()
-                << "->"
-                << connection.second->PrettyPrint()
-                << std::endl;
-      std::cout << "Base: " << m_baseDistances[connection.first][connection.second] << std::endl;
-      std::cout << "Adj: " << m_adjDist[connection.first][connection.second].m_summedDistance
-                           << std::endl;
-
+    for(auto agent : this->GetTaskPlan()->GetTeam()){
+      auto robot = agent->GetRobot();
+      auto cfg = robot->GetSimulationModel()->GetState();
+      auto vid = m_graph->AddVertex(cfg);
+	  std::vector<size_t> vids = {vid};
+      m_wholeTaskStartEndPoints.push_back(vids);
     }
   }
 
-  CopyInTemplates(graph, _ITs, _capability, _startAndGoal);
-  if(!cfgs[0]->GetRobot()->IsManipulator())
-    ConnectTemplates(graph);
-  m_connections = {};
-  m_baseDistances = {};
-  m_adjDist = {};
-  return graph;
+  std::vector<Cfg> startAndGoal;
+  for(auto vid : m_wholeTaskStartEndPoints){
+    startAndGoal.push_back(m_graph->GetVertex(vid[0]));
+  }
+	auto dummyMap = this->GetTaskPlan()->GetDummyMap();
+  for(auto it = dummyMap.begin(); it != dummyMap.end(); it++){
+    const std::string capability = it->first;
+    auto graph = connector.ConnectInteractionTemplates(
+                          this->GetTaskPlan()->GetInteractionTemplates(),
+                          capability,
+                          startAndGoal,
+                          m_graph);
+
+    auto robot = it->second->GetRobot();
+    graph->Write("CoordinatorTemplates.map", robot->GetMPProblem()->GetEnvironment());
+
+    std::priority_queue<std::pair<size_t,size_t>> pq;
+
+    Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
+    // Copy over newly found vertices
+    std::unordered_map<size_t,size_t> handoffVIDMap;
+    for(auto vit = graph->begin(); vit != graph->end(); ++vit){
+      // Add vertices found in building the capability map to the mega roadmap
+      // without copying over the handoff vertices that already exist
+      if(handoffVIDMap.find(vit->descriptor()) == handoffVIDMap.end()){
+        auto megaVID = m_graph->AddVertex(vit->property());
+        handoffVIDMap[vit->descriptor()] = megaVID;
+      }
+    }
+
+    if(m_debug){
+      std::cout << "Done copying over vertices" << std::endl;
+    }
+
+    m_capabilityRoadmaps[capability] = std::shared_ptr<GraphType>(graph);
+    // Copy over newly found edges in capability to mega roadmap
+    for(auto vit = graph->begin(); vit != graph->end(); ++vit){
+      for(auto eit = vit->begin(); eit != vit->end(); ++eit){
+        auto source = handoffVIDMap[eit->source()];
+        auto target = handoffVIDMap[eit->target()];
+        // Won't copy over existing edges to the mega roadmap
+        if(!m_graph->IsEdge(source, target)){
+          m_graph->AddEdge(source, target, eit->property());
+        }
+      }
+    }
+
+    m_graph->Write("MegaTemplates.map", robot->GetMPProblem()->GetEnvironment());
+    Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
+  }
 }
 
-/******************************Helper Functions*************************/
-
-std::vector<Cfg*>
+void
 CombinedRoadmap::
-CalculateBaseDistances(std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                       const std::string& _capability, std::vector<Cfg>& _startAndGoal){
-  //TODO::Give dmLabel in an XML node constructor.
-  //auto dm = m_library->GetDistanceMetric("connectedFreeSpace");
-  auto dm = m_library->GetDistanceMetric("positionEuclidean");
-  std::vector<Cfg*> cfgs;
-  for(auto& it1 : _ITs){
-    for(auto& path1 : it1->GetTranslatedPaths()){
-      Cfg& cfg1 = path1[0];
-      if(cfg1.GetRobot()->GetCapability() != _capability)
-        continue;
-      cfgs.push_back(&cfg1);
-      for(auto& it2 : _ITs){
-        for(auto& path2 : it2->GetTranslatedPaths()){
-          Cfg& cfg2 = path2[0];
-          if(cfg2.GetRobot()->GetCapability() != _capability or cfg1 == cfg2)
-            continue;
-          if(InConnectedWorkspace(cfg1,cfg2)){
-            auto distance = dm->Distance(cfg1,cfg2);
-            m_baseDistances[&cfg1][&cfg2] = distance;
-          }
-          else {
-            //auto distance = std::numeric_limits<double>::max();
-            double distance = -1;
-            m_baseDistances[&cfg1][&cfg2] = distance;
-          }
-        }
-      }
-      for(auto& cfg2 : _startAndGoal){
-        if(cfg2.GetRobot()->GetCapability() != _capability or cfg1 == cfg2)
-          continue;
-        if(InConnectedWorkspace(cfg1,cfg2)){
-          auto distance = dm->Distance(cfg1,cfg2);
-          m_baseDistances[&cfg1][&cfg2] = distance;
-        }
-        else {
-          //auto distance = std::numeric_limits<double>::max();
-          double distance = -1;
-          m_baseDistances[&cfg1][&cfg2] = distance;
-        }
-      }
-    }
+GenerateITs(){
+  std::cout << "Finding Handoff Locations" << std::endl;
+  auto originalProblem = this->GetMPProblem();
+  this->GetMPLibrary()->SetMPProblem(originalProblem);
+
+  for(auto& info : originalProblem->GetInteractionInformations()){
+    auto it = new InteractionTemplate(info.get());
+    this->GetTaskPlan()->AddInteractionTemplate(it);
+    //FindITLocations(it);
   }
-  for(auto& cfg1 : _startAndGoal){
-    if(cfg1.GetRobot()->GetCapability() != _capability)
-      continue;
-    cfgs.push_back(&cfg1);
-    for(auto& it2 : _ITs){
-      for(auto& path : it2->GetTranslatedPaths()){
-        auto& cfg2 = path[0];
-        if(cfg2.GetRobot()->GetCapability() != _capability or cfg1 == cfg2)
-          continue;
-        if(InConnectedWorkspace(cfg1,cfg2)){
-          auto distance = dm->Distance(cfg1,cfg2);
-          m_baseDistances[&cfg1][&cfg2] = distance;
-        }
-        else {
-          //auto distance = std::numeric_limits<double>::max();
-          double distance = -1;
-          m_baseDistances[&cfg1][&cfg2] = distance;
+
+  std::cout << "Found Handoff Locations" << std::endl;
+
+  // Loop through handoff templates, set start constraints for handoff, set
+  // dummy robot for handoff task by capability, and solve handoff task.
+  std::shared_ptr<MPProblem> problemCopy(new MPProblem(*this->GetMPProblem()));
+  problemCopy->SetEnvironment(std::move(m_interactionEnvironment->Clone()));
+  this->GetMPLibrary()->SetMPProblem(problemCopy.get());
+  // Set robots to virtual so that planning handoffs does not cause collisions
+  std::list<HandoffAgent*> unusedAgents;
+
+
+  for(auto& currentTemplate : this->GetTaskPlan()->GetInteractionTemplates()){
+    Simulation::GetStatClass()->StartClock("Construct InteractionTemplate "
+              + currentTemplate->GetInformation()->GetLabel());
+
+    unusedAgents.clear();
+    std::copy(this->GetTaskPlan()->GetTeam().begin(), this->GetTaskPlan()->GetTeam().end(), 	
+							std::back_inserter(unusedAgents));
+    auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
+    std::unordered_map<std::shared_ptr<MPTask>, HandoffAgent*> agentTasks;
+    // Loop through all tasks and assign a robot of matching capability to the
+    // task, then configuring the robot at the goal constraint.
+    for(auto task : handoffTasks){
+      this->GetMPLibrary()->SetTask(task.get());
+      for(auto agent : unusedAgents){
+        if(agent->GetCapability() == task->GetCapability()){
+          agentTasks[task] = agent;
+          Robot* tempRobot = problemCopy->GetRobot(agent->GetRobot()->GetLabel());
+          task->SetRobot(tempRobot);
+          unusedAgents.remove(agent);
+          // Confiure tempRobot at the goal constraint for the task
+          //        - Sample at the point of the goal constraint
+          //        - Get CFG from sample and place tempRobot there
+          auto boundingBox = task->GetGoalConstraints().front()->
+              GetBoundary();
+          std::vector<Cfg> goalPoints;
+
+          MPSolution* sol = new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+          this->GetMPLibrary()->SetMPSolution(sol);
+          this->GetMPLibrary()->SetTask(task.get());
+          auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
+          size_t numNodes = 1, numAttempts = 100;
+          tempRobot->SetVirtual(true);
+          sampler->Sample(numNodes, numAttempts, boundingBox,
+              std::back_inserter(goalPoints));
+
+          tempRobot->SetVirtual(false);
+          if(goalPoints.empty())
+            throw RunTimeException(WHERE, "No valid final handoff position for the robot.");
+
+          goalPoints[0].ConfigureRobot();
+          break;
         }
       }
     }
-    for(auto& cfg2 : _startAndGoal){
-      if(cfg2.GetRobot()->GetCapability() != _capability or cfg1 == cfg2)
-        continue;
-      if(InConnectedWorkspace(cfg1,cfg2)){
-        auto distance = dm->Distance(cfg1,cfg2);
-        m_baseDistances[&cfg1][&cfg2] = distance;
+    // Set the unused agents to virtual before planning.
+    for(auto agent : unusedAgents){
+      auto robot = problemCopy->GetRobot(agent->GetRobot()->GetLabel());
+      robot->SetVirtual(true);
+    }
+    int check = 0;
+    for(auto task : handoffTasks){
+      Robot* taskRobot = problemCopy->GetRobot(agentTasks[task]->GetRobot()->GetLabel());
+      std::unique_ptr<MPSolution> handoffSolution(new MPSolution(taskRobot));
+      // Store the current configuration of the robot, since the multibody
+      // will be moved while solving.
+      auto currentConfig = taskRobot->GetMultiBody()->GetCurrentDOFs();
+      if(m_debug){
+        for(auto& robot : problemCopy->GetRobots()){
+          std::cout << robot->GetLabel() << " - " << robot.get()
+                    << ": " << robot->GetMultiBody()->GetCurrentDOFs()
+                    << " - " << robot->IsVirtual() << std::endl;
+        }
       }
+
+      task->SetRobot(taskRobot);
+      // Solve for non-mainpulator robot teams
+      if(!taskRobot->IsManipulator()){
+        this->GetMPLibrary()->Solve(problemCopy.get(), task.get(), handoffSolution.get());
+      }
+      // Solve for manipulator robot teams
       else {
-        //auto distance = std::numeric_limits<double>::max();
-        double distance = -1;
-        m_baseDistances[&cfg1][&cfg2] = distance;
+        std::vector<Cfg> startPoints;
+        MPSolution* sol = new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+        this->GetMPLibrary()->SetMPSolution(sol);
+        auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
+        size_t numNodes = 1, numAttempts = 100;
+        auto boundingBox = task->GetStartConstraint()->GetBoundary();
+        this->GetMPLibrary()->SetTask(task.get());
+        sampler->Sample(numNodes, numAttempts, boundingBox,
+            std::back_inserter(startPoints));
+
+        if(startPoints.empty())
+          throw RunTimeException(WHERE, "No valid start handoff position for the robot.");
+
+        startPoints[0].ConfigureRobot();
+        std::cout << startPoints[0].PrettyPrint() << std::endl;
+
+        this->GetMPLibrary()->Solve(problemCopy.get(), task.get(),
+            handoffSolution.get(), "FixedPRM", LRand(), "FixedPRM");
+      }
+
+      taskRobot->GetMultiBody()->Configure(currentConfig);
+
+      if(m_debug){
+        std::cout << "Size of path: " << handoffSolution->GetPath()->Cfgs().size() << std::endl;
+        for(auto cfg : handoffSolution->GetPath()->Cfgs()){
+          std::cout << cfg.PrettyPrint() << std::endl;
+        }
+      }
+
+
+      handoffSolution->GetRoadmap()->Write("indHandoffTemplate" + std::to_string(check) + ".map", problemCopy->GetEnvironment());
+      check++;
+
+      // Store the roadmap for each task in the handoff
+      auto rob = handoffSolution->GetRoadmap()->GetRobot();
+      handoffSolution->GetRoadmap()->SetRobot(originalProblem->GetRobot(rob->GetLabel()));
+      currentTemplate->AddRoadmap(handoffSolution->GetRoadmap());
+      currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs(), originalProblem);
+
+      if(currentTemplate->GetInformation()->SavedPaths()){
+        //currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs()),
+           // handoffSolution->GetPath()->Length());
+        std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
+        currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().back(), originalProblem);
+        std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().back() << std::endl;
+      }
+      else{
+        // Add final configuration of path to template
+        std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
+        currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().back(), originalProblem);
+        std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().back() << std::endl;
       }
     }
+
+
+    currentTemplate->ConnectRoadmaps(this->GetTaskPlan()->GetCoordinator()->GetRobot(), originalProblem);
+
+    Simulation::GetStatClass()->StopClock("Construct InteractionTemplate "
+                + currentTemplate->GetInformation()->GetLabel());
+    Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+                            +"::Vertices", currentTemplate->GetConnectedRoadmap()->get_num_vertices());
+    Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+                            +"::Edges", currentTemplate->GetConnectedRoadmap()->get_num_vertices());
+
+    size_t count = 0;
+    for(auto rm : currentTemplate->GetRoadmaps()){
+      count++;
+      Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+          +"::"+std::to_string(count)
+          +"::Vertices", rm->get_num_vertices());
+      Simulation::GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
+          +"::"+std::to_string(count)
+          +"::Edges", rm->get_num_vertices());
+    }
+
+    std::cout << "Trying to write handoffTemplate Map" << std::endl;
+    currentTemplate->GetConnectedRoadmap()->Write("handoffTemplate.map",
+        problemCopy->GetEnvironment());
+
+    // Reset the agents to non-virtual, since they could be used in the next
+    // template.
+    for(auto agent : unusedAgents){
+      problemCopy->GetRobot(agent->GetRobot()->GetLabel())->SetVirtual(false);
+    }
   }
-  return cfgs;
+
+
+  this->GetMPLibrary()->SetMPProblem(originalProblem);
+  this->GetMPLibrary()->SetMPSolution(m_solution.get());
+  this->GetMPLibrary()->SetTask(originalProblem->GetTasks(this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
 }
 
 void
 CombinedRoadmap::
-FindAlternativeConnections(std::vector<Cfg*>& _cfgs){
-  bool newConnection = true;
-  while(newConnection){
-    newConnection = false;
-    for(auto cfg1 : _cfgs){
-      double minDistance = std::numeric_limits<double>::max();
-      auto neighbor = cfg1;
-      for(auto cfg2 : _cfgs){
-        if(cfg1 == cfg2)
-          continue;
-        if(m_baseDistances[cfg1][cfg2] < 0){
-          continue;
-        }
-        auto info = m_adjDist[cfg1][cfg2];
-        if(info.m_connection == cfg1
-           and info.m_summedDistance < minDistance
-           and info.m_directConnection == false){
-          neighbor = cfg2;
-          minDistance = info.m_summedDistance;
-        }
-      }
-      if(neighbor != cfg1){
-        std::pair<Cfg*,Cfg*> oppositePath(neighbor,cfg1);
-        auto iter = std::find(m_connections.begin(), m_connections.end(), oppositePath);
-        if(iter == m_connections.end()){
-          m_connections.push_back(std::pair<Cfg*,Cfg*>(cfg1,neighbor));
-          UpdateAdjustedDistances(cfg1,neighbor,_cfgs);
-          newConnection = true;
-        }
-      }
-    }
-  }
+FindITLocations(InteractionTemplate* _it){
+  //for(auto& method : m_ITPlacementMethods){
+		std::cout << "Calling " + m_pmLabel << std::endl;
+    Simulation::GetStatClass()->StartClock("Placing Templates with: " + m_pmLabel);
+    auto method = this->GetPoIPlacementMethod(m_pmLabel);
+		method->PlaceIT(_it, this->GetMPLibrary()->GetMPSolution());
+    Simulation::GetStatClass()->StopClock("Placing Templates with: " + m_pmLabel);
+		std::cout << "Finished " + m_pmLabel << std::endl;
+  //}
 }
 
 void
 CombinedRoadmap::
-UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs){
-  for(auto cfg3 : _cfgs){
-    if(m_baseDistances[_cfg1][cfg3] < 0 or m_baseDistances[_cfg2][cfg3] < 0){
-      continue;
-    }
-    //1->2->3
-    double connectingDistance1 = m_adjDist[_cfg2][cfg3].m_summedDistance
-                               + m_adjDist[_cfg1][_cfg2].m_summedDistance;
-    //2->1->3
-    double connectingDistance2 = m_adjDist[_cfg1][cfg3].m_summedDistance
-                               + m_adjDist[_cfg2][_cfg1].m_summedDistance;
+TransformITs(){
 
-    auto& info1 = m_adjDist[_cfg1][cfg3];
-    auto& info2 = m_adjDist[_cfg2][cfg3];
-    double summedDistance1, summedDistance2;
-    if(info1.m_changed){
-      summedDistance1 = info1.m_summedDistance;
-    }
-    else{
-      summedDistance1 = m_threshold * info1.m_summedDistance;
-    }
-    if(info2.m_changed){
-      summedDistance2 = info2.m_summedDistance;
-    }
-    else{
-      summedDistance2 = m_threshold * info2.m_summedDistance;
+  std::cout << "Finding Handoff Locations" << std::endl;
+  auto originalProblem = this->GetMPProblem();
+  this->GetMPLibrary()->SetMPProblem(originalProblem);
+
+  std::cout << "Found Handoff Locations" << std::endl;
+  Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
+  auto vcm = this->GetMPLibrary()->GetValidityChecker("terrain_solid");
+  for(auto& currentTemplate : this->GetTaskPlan()->GetInteractionTemplates()){
+
+    if(m_debug){
+      auto g = currentTemplate->GetConnectedRoadmap();
+      std::cout << "Original handoff position" << std::endl;
+      for(auto vit = g->begin(); vit!=g->end(); vit++){
+        std::cout << vit->property().PrettyPrint() << std::endl;
+      }
     }
 
-    if(summedDistance1 > connectingDistance1
-        and (m_baseDistances[_cfg1][cfg3] * m_threshold) > connectingDistance1){
-      info1.m_directConnection = false;
-      info1.m_connection = _cfg2;
-      info1.m_summedDistance = connectingDistance1;
-      info1.m_changed = true;
-    }
-    else if(summedDistance2 > connectingDistance2
-        and (m_baseDistances[_cfg2][cfg3] * m_threshold) > connectingDistance2){
-      info2.m_directConnection = false;
-      info2.m_connection = _cfg1;
-      info2.m_summedDistance = connectingDistance2;
-      info2.m_changed = true;
-    }
-  }
-  m_adjDist[_cfg1][_cfg2].m_directConnection = true;
-  m_adjDist[_cfg2][_cfg1].m_changed = true;
-  m_adjDist[_cfg2][_cfg1].m_directConnection = true;
-  m_adjDist[_cfg1][_cfg2].m_changed = true;
-}
+    Simulation::GetStatClass()->StartClock("Placement InteractionTemplate "
+              + currentTemplate->GetInformation()->GetLabel());
+    for(auto centerCfg : currentTemplate->GetInformation()->GetTemplateLocations()){
+      Simulation::GetStatClass()->StartClock("Placement InteractionTemplate "
+                + currentTemplate->GetInformation()->GetLabel());
 
-void
-CombinedRoadmap::
-CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
-                std::vector<std::unique_ptr<InteractionTemplate>>& _ITs,
-                const std::string& _capability,
-                std::vector<Cfg>& _startAndGoal){
-  for(auto& it : _ITs){
-    for(auto roadmap : it->GetRoadmaps()){
-      if(roadmap->begin()->property().GetRobot()->GetCapability() != _capability)
-        continue;
-      for(auto location : it->GetInformation()->GetTemplateLocations()){
-        //Copy in vertices
-        std::unordered_map<size_t,size_t> oldToNew;
-        for(auto vit = roadmap->begin(); vit != roadmap->end(); vit++){
-          const size_t oldVID = vit->descriptor();
-          auto relativeCfg = vit->property();
-          //relativeCfg.SetRobot(_graph->GetRobot());
-          relativeCfg.TransformCfg(location);
+      RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = currentTemplate->GetConnectedRoadmap();
 
-          const size_t newVID = _graph->AddVertex(relativeCfg);
+      // Copy vertices and map the change in VIDs.
+      std::unordered_map<VID, VID> oldToNew;
+      for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
+        const VID oldVID = vit->descriptor();
+        auto relativeCfg = vit->property();
+        relativeCfg.TransformCfg(centerCfg);
+
+        //bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
+        //if(isValid){
+          const VID newVID = m_graph->AddVertex(relativeCfg);
           oldToNew[oldVID] = newVID;
-        }
-        //Copy in edges
-        for(auto vit = roadmap->begin(); vit != roadmap->end(); vit++){
-          for(auto eit = vit->begin(); eit != vit->end(); eit++){
-            const size_t source = oldToNew[eit->source()];
-            const size_t target = oldToNew[eit->target()];
-            if(!_graph->IsEdge(source,target)){
-              auto intermediates = eit->property().GetIntermediates();
-              for(auto cfg : intermediates){
-                cfg.TransformCfg(location);
-              }
-              _graph->AddEdge(source,target,eit->property());
-            }
-          }
-        }
-      }
-    }
-  }
-  for(auto cfg : _startAndGoal){
-    if(cfg.GetRobot()->GetCapability() == _capability){
-      _graph->AddVertex(cfg);
-    }
-  }
-}
-
-void
-CombinedRoadmap::
-TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
-  double x = _relativeCfg[0];
-  double y = _relativeCfg[1];
-  double theta = _centerCfg[2]*PI;
-
-  double newX = x*cos(theta) - y*sin(theta);
-  double newY = y*sin(theta) + y*cos(theta);
-  double oldTheta = _relativeCfg[2];
-
-  _relativeCfg.SetLinearPosition({newX,newY,oldTheta});
-
-  _relativeCfg += _centerCfg;
-}
-
-void
-CombinedRoadmap::
-ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
-  auto robot = _graph->GetRobot();
-  auto solution = new MPSolution(robot);
-  auto env = robot->GetMPProblem()->GetEnvironment();
-  env->SaveBoundary();
-  // TODO:: Do not want to double copy, but we have to right now until MPSolution
-  // API is more advanced.
-  *solution->GetRoadmap(robot) = *_graph;
-
-  _graph->Write("ConnectingTemplates-"+robot->GetCapability()+".map",
-               robot->GetMPProblem()->GetEnvironment());
-
-
-  for(auto connection : m_connections){
-    auto start = *(connection.first);
-    auto goal = *(connection.second);
-
-/*    std::unique_ptr<Boundary> terrainBoundary;
-    for(auto& terrain : env->GetTerrains()){
-      bool match = false;
-      for(auto elem : terrain.second){
-        if(elem.GetBoundary()->InBoundary(start) and elem.GetBoundary()->InBoundary(goal)){
-          env->SetBoundary(std::move(elem.GetBoundary()->Clone()));
-          match = true;
-          break;
-        }
-      }
-      if(match)
-        break;
-    }
-    */
-
-    env->IsolateTerrain(start,goal);
-
-    start.SetRobot(robot);
-    goal.SetRobot(robot);
-    if(!m_library->GetValidityChecker("terrain_solid")->IsValid(start,"start"))
-      continue;
-    if(!m_library->GetValidityChecker("terrain_solid")->IsValid(goal,"goal"))
-      continue;
-
-    MPTask* task = new MPTask(robot);
-    std::unique_ptr<CSpaceConstraint> startConstraint(new CSpaceConstraint(robot, start));
-    std::unique_ptr<CSpaceConstraint> goalConstraint(new CSpaceConstraint(robot, goal));
-    task->SetStartConstraint(std::move(startConstraint));
-    task->AddGoalConstraint(std::move(goalConstraint));
-
-    m_library->SetTask(task);
-
-    typedef RoadmapGraph<Cfg,DefaultWeight<Cfg>> RoadmapType;
-    _graph->InstallHook(RoadmapType::HookType::AddEdge, "debug",
-        [](RoadmapType::EI _ei) {
-        if(_ei->property().GetWeight()==0){
-          std::cout << "Zero weight edge" << std::endl;
-        }
-        });
-
-
-
-    if(robot->IsManipulator()){
-      m_library->Solve(m_library->GetMPProblem(), task, solution, "EvaluateMapStrategy",
-                       LRand(), "ConnectingDistinctRoadmaps");
-    }
-    else {
-      m_library->Solve(m_library->GetMPProblem(), task, solution, "BasicPRM1",
-                       LRand(), "ConnectingDistinctRoadmaps");
-    }
-
-    _graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
-
-    if(solution->GetPath()->Cfgs().empty()){
-      //throw RunTimeException(WHERE, "Could not connect " + start.PrettyPrint() + " to "
-      //                       + goal.PrettyPrint());
-      std::cout << "COULDN'T CONNECT LOCATIONS." << std::endl;
-    }
-    for(auto cfg : solution->GetPath()->Cfgs()){
-      std::cout << cfg.PrettyPrint() << std::endl;
-    }
-
-  }
-  env->RestoreBoundary();
-  *_graph = *solution->GetRoadmap(robot);
-  _graph->Write("ConnectedTemplates-"+robot->GetCapability()+".map",
-                robot->GetMPProblem()->GetEnvironment());
-
-}
-
-
-void
-CombinedRoadmap::
-BuildSkeletons(){
-  auto env = m_library->GetMPProblem()->GetEnvironment();
-
-  for(auto& terrainType : env->GetTerrains()){
-    std::vector<GMSPolyhedron> polyhedra;
-    for(size_t i = 0; i < env->NumObstacles(); ++i) {
-      MultiBody* const obstacle = env->GetObstacle(i);
-      for(size_t j = 0; j < obstacle->GetNumBodies(); ++j)
-        polyhedra.emplace_back(obstacle->GetBody(j)->GetWorldPolyhedron());
-    }
-
-    for(auto& otherTerrainType : env->GetTerrains()){
-      if(otherTerrainType.first == terrainType.first){
-        continue;
-      }
-      auto terrains = otherTerrainType.second;
-      for(auto terrain : terrains){
-        auto boundary = terrain.GetBoundary();
-        auto polyhedron = boundary->MakePolyhedron();
-        polyhedron.Invert();
-        polyhedra.push_back(polyhedron);
-      }
-    }
-    //MedialAxis2D ma(polyhedra, nullptr);
-
-    auto fakeEnv = env->GetBoundary()->Clone();
-    double minx, miny, minz, maxx, maxy, maxz;
-    minx = miny = minz = std::numeric_limits<double>::max();
-    maxx = maxy = maxz = std::numeric_limits<double>::lowest();
-    for(auto terrain : terrainType.second){
-      minx = std::min(minx, terrain.GetBoundary()->GetRange(0).min);
-      maxx = std::max(maxx, terrain.GetBoundary()->GetRange(0).max);
-      miny = std::min(miny, terrain.GetBoundary()->GetRange(1).min);
-      maxy = std::max(maxy, terrain.GetBoundary()->GetRange(1).max);
-      minz = std::min(minz, terrain.GetBoundary()->GetRange(2).min);
-      maxz = std::max(maxz, terrain.GetBoundary()->GetRange(2).max);
-    }
-    for(size_t i = 0; i < env->NumObstacles(); i++){
-      auto obstacle = env->GetObstacle(i);
-      const double* tmp = obstacle->GetBoundingBox();
-      minx = std::min(minx, tmp[0]);
-      maxx = std::max(maxx, tmp[1]);
-      miny = std::min(miny, tmp[2]);
-      maxy = std::max(maxy, tmp[3]);
-      minz = std::min(minz, tmp[4]);
-      maxz = std::max(maxz, tmp[5]);
-    }
-
-    std::vector<std::pair<double,double>> obstBBX(3);
-    obstBBX[0] = std::make_pair(minx, maxx);
-    obstBBX[1] = std::make_pair(miny, maxy);
-    obstBBX[2] = std::make_pair(minz, maxz);
-    fakeEnv->ResetBoundary(obstBBX, .01);
-
-    MedialAxis2D ma(polyhedra, fakeEnv.get());
-    ma.BuildMedialAxis();
-    m_capabilitySkeletons[terrainType.first] = std::shared_ptr<WorkspaceSkeleton>(
-                        new WorkspaceSkeleton(get<0>(ma.GetSkeleton(1)))); // 1 for free space
-    m_capabilitySkeletons[terrainType.first]->RefineEdges(0.5);//TODO set as xml paramater
-    auto& g = m_capabilitySkeletons[terrainType.first]->GetGraph();
-    std::cout << "Printing graph for: " << terrainType.first << std::endl;
-    for(auto vi = g.begin(); vi != g.end(); vi++){
-      std::cout << vi->property() << std::endl;
-    }
-    for(auto vi = g.begin(); vi != g.end(); vi++){
-      for(auto ei = vi->begin(); ei != vi->end(); ei++){
-        std::cout << g.find_vertex(ei->source())->property()
-                  << ":"
-                  << g.find_vertex(ei->target())->property()
-                  << std::endl;
-      }
-    }
-    std::vector<size_t> deletionVertices;
-    for(auto vi = g.begin(); vi != g.end(); vi++){
-      if(env->GetBoundary()->InBoundary(vi->property())){
-          continue;
-      }
-      deletionVertices.push_back(vi->descriptor());
-    }
-    for(auto vd : deletionVertices){
-      g.delete_vertex(vd);
-    }
-    std::vector<WorkspaceSkeleton::ED> deletionEdges;
-    for(auto vi = g.begin(); vi != g.end(); vi++){
-      for(auto ei = vi->begin(); ei != vi->end(); ei++){
-        //if(!g.find_edge(ei->descriptor, ei->source(), ei->target())){
-        //  continue;
         //}
-        for(auto point : ei->property()){
-          if(env->GetBoundary()->InBoundary(point)){
-            continue;
-          }
-          deletionEdges.push_back(ei->descriptor());
-          break;
+      }
+
+      // Keep track of the distinct transformed handoff roadmaps
+      for(auto distinctRoadmap : currentTemplate->GetDistinctRoadmaps()) {
+        std::vector<size_t> transformedRoadmap;
+        for(auto vid : distinctRoadmap) {
+          transformedRoadmap.push_back(oldToNew[vid]);
+        }
+        m_transformedRoadmaps.push_back(transformedRoadmap);
+      }
+
+
+      if(m_debug){
+        auto r = m_transformedRoadmaps.front();
+        std::cout << "Transformed Postion of Roadmap" << std::endl;
+        for(auto vit = m_graph->begin(); vit != m_graph->end(); vit++){
+          std::cout << vit->descriptor() << std::endl;
+          std::cout << vit->property().PrettyPrint() << std::endl;
+        }
+        for(auto v : r){
+          std::cout << m_graph->GetVertex(v).PrettyPrint() << std::endl;
         }
       }
-    }
-    for(auto ed : deletionEdges){
-      g.delete_edge(ed);
-    }
-    std::cout << "Printing graph for: " << terrainType.first << std::endl;
-    for(auto vi = g.begin(); vi != g.end(); vi++){
-      std::cout << vi->property() << std::endl;
-    }
-    for(auto vi = g.begin(); vi != g.end(); vi++){
-      for(auto ei = vi->begin(); ei != vi->end(); ei++){
-        std::cout << g.find_vertex(ei->source())->property()
-                  << ":"
-                  << g.find_vertex(ei->target())->property()
-                  << std::endl;
+
+      m_graph->InstallHook(RoadmapType::HookType::AddEdge, "debug",
+          [](RoadmapType::EI _ei) {
+          if(_ei->property().GetWeight()==0){
+          std::cout << "Zero weight edge" << std::endl;
+          }
+          });
+      // Copy edges into the mega roadmap
+      for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
+        for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
+          const VID source = oldToNew[eit->source()];
+          const VID target = oldToNew[eit->target()];
+          if(!m_graph->IsEdge(source, target)){
+            // Call translate cfg on the all the intermediates and built
+            // up a new vector of intermediates to store in the edge property
+            // before storing it in the megaRoadmap
+            std::vector<Cfg> intermediates = eit->property().GetIntermediates();
+            for(auto cfg : intermediates){
+              cfg.TransformCfg(centerCfg);
+            }
+            m_graph->AddEdge(source, target, eit->property());
+          }
+        }
       }
+      m_graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
     }
+    Simulation::GetStatClass()->StopClock("Placement InteractionTemplate "
+              + currentTemplate->GetInformation()->GetLabel());
   }
+  
+  Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
 }
 
-bool
+void
 CombinedRoadmap::
-InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
-  if(_cfg1.GetRobot()->GetCapability() !=
-      _cfg2.GetRobot()->GetCapability()){
-    return false;
-  }
-  else if(_cfg1.GetRobot()->IsManipulator()){
-    return true;
-  }
-  auto& g = m_capabilitySkeletons[_cfg1.GetRobot()->GetCapability()];
+SetupWholeTasks(){
+	this->GetMPLibrary()->SetMPSolution(m_solution.get());
+  for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
+    // find a start and goal configuration for the coordinator
+    auto task = wholeTask->m_task;
+	this->GetMPLibrary()->SetTask(task.get());
+    auto startBox = task->GetStartConstraint()->GetBoundary();
+    std::vector<Cfg> startPoints;
+    auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
+    size_t numNodes = 1, numAttempts = 100;
+    sampler->Sample(numNodes, numAttempts, startBox,
+        std::back_inserter(startPoints));
 
-  if(!g) //indicates that no terrains are present to constrict the agent type
-    return true;
+    if(startPoints.empty())
+      throw RunTimeException(WHERE, "No valid initial position for the robot.");
 
-  Point3d start = _cfg1.GetPoint();
-  auto startVertex = g->FindNearestVertex(start);
-  std::cout << "Start: " << startVertex->property() << std::endl;
-  Point3d goal =  _cfg2.GetPoint();
-  auto goalVertex = g->FindNearestVertex(goal);
-  std::cout << "Goal: " << goalVertex->property() << std::endl;
-  std::unordered_set<size_t> goalSet;
-  goalSet.insert(goalVertex->descriptor());
-  //std::unordered_set<WorkspaceSkeleton::vertex_iterator> goals = {goalVertex};
-  SSSPTerminationCriterion<WorkspaceSkeleton> termination(
-      [goalSet](typename WorkspaceSkeleton::vertex_iterator& _vi,
-              const SSSPOutput<WorkspaceSkeleton>& _sssp) {
-        //return (goalVertex->descriptor() == _vi->descriptor()) ? SSSPTermination::EndSearch
-        return goalSet.count(_vi->descriptor()) ? SSSPTermination::EndSearch
-                                              : SSSPTermination::Continue;
+    auto goalBox = task->GetGoalConstraints().front()->GetBoundary();
+    std::vector<Cfg> goalPoints;
+    sampler->Sample(numNodes, numAttempts, goalBox,
+        std::back_inserter(goalPoints));
+
+    if(goalPoints.empty())
+      throw RunTimeException(WHERE, "No valid goal position for the robot.");
+
+    wholeTask->m_startPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startPoints[0]};
+    wholeTask->m_goalPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalPoints[0]};
+
+    // Loop through each type of capability then push start/goal constraints
+    // into vectors in WholeTask
+    auto dummyMap = this->GetTaskPlan()->GetDummyMap();
+    for(auto const& elem : dummyMap) {
+      // Set library robot to the corresponding capability
+      task->SetRobot(elem.second->GetRobot());
+      this->GetMPLibrary()->SetTask(task.get());
+      // Sample to find valid start and goal points in the environment
+      auto startBox = task->GetStartConstraint()->GetBoundary();
+      std::vector<Cfg> startPoints;
+      auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFreeTerrain");
+      size_t numNodes = 1, numAttempts = 100;
+      sampler->Sample(numNodes, numAttempts, startBox,
+          std::back_inserter(startPoints));
+
+      if(!startPoints.empty())
+        wholeTask->m_startPoints[elem.second->GetCapability()].push_back(startPoints[0]);
+
+      auto goalBox = task->GetGoalConstraints().front()->GetBoundary();
+      std::vector<Cfg> goalPoints;
+      sampler->Sample(numNodes, numAttempts, goalBox,
+          std::back_inserter(goalPoints));
+
+      if(!goalPoints.empty())
+        wholeTask->m_goalPoints[elem.second->GetCapability()].push_back(goalPoints[0]);
+
+    }
+
+    task->SetRobot(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+    this->GetMPLibrary()->SetTask(task.get());
+
+    // Create 0 weight edges between each capability and the coordinator
+    // configuration.
+    auto coordinatorStartVID = m_graph->AddVertex(
+                    wholeTask->m_startPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
+
+    wholeTask->m_startVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorStartVID};
+
+    auto coordinatorGoalVID = m_graph->AddVertex(wholeTask->m_goalPoints[
+															this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
+
+    wholeTask->m_goalVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorGoalVID};
+
+    const DefaultWeight<Cfg> weight;
+
+    Simulation::GetStatClass()->StartClock("Construction MegaRoadmap");
+    for(auto const& elem : wholeTask->m_startPoints){
+      if(elem.first == this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel())
+        continue;
+
+      for(auto start : elem.second) {
+        auto agentStartVID = m_graph->AddVertex(start);
+
+        // Add the start points as in the same containter as the transformed
+        // roadmaps so that it is connected to the rest of the transformed
+        // roadmaps
+        m_wholeTaskStartEndPoints.push_back({agentStartVID});
+        wholeTask->m_startVIDs[elem.first].push_back(agentStartVID);
+        m_graph->AddEdge(coordinatorStartVID, agentStartVID, {weight,weight});
       }
-  );
 
-  SSSPPathWeightFunction<WorkspaceSkeleton> weight;
-  weight = [this](typename WorkspaceSkeleton::adj_edge_iterator& _ei,
-                   const double _sourceDistance,
-                   const double _targetDistance) {
-            return this->SkeletonPathWeight(_ei);
-        };
+    }
 
-  const SSSPOutput<WorkspaceSkeleton> sssp = DijkstraSSSP(g.get(),
-          {startVertex->descriptor()}, weight, termination);
+    for(auto const& elem : wholeTask->m_goalPoints){
+      if(elem.first == this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel())
+        continue;
 
-  auto last = sssp.ordering.back();
-  if(!goalSet.count(last))
-    return false;
-  //else
-  //  return true;
-  auto env = m_library->GetMPProblem()->GetEnvironment();
-  env->SaveBoundary();
-  bool connected = env->IsolateTerrain(_cfg1,_cfg2);
-  env->RestoreBoundary();
-  return connected;
-}
+      for(auto goal : elem.second) {
+        auto agentGoalVID = m_graph->AddVertex(goal);
 
+        // Add the end points as in the same containter as the transformed
+        // roadmaps so that it is connected to the rest of the transformed
+        // roadmaps
+        m_wholeTaskStartEndPoints.push_back({agentGoalVID});
+        wholeTask->m_goalVIDs[elem.first].push_back(agentGoalVID);
+        m_graph->AddEdge(coordinatorGoalVID, agentGoalVID, {weight,weight});
+      }
 
-
-double
-CombinedRoadmap::
-SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const {
-  auto intermediates = _ei->property();
-  auto dm = m_library->GetDistanceMetric("euclidean");
-  double distance = 0.0;
-  for(size_t i = 1; i < intermediates.size(); i++){
-    double step = (intermediates[i-1]-intermediates[i]).norm();
-    distance += step;
+    }
+    Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
   }
-  return distance;
+  this->GetMPLibrary()->SetTask(this->GetMPProblem()->GetTasks(
+												this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
 }
+
+
+
+
+
+
+
+

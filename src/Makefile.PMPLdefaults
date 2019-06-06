@@ -392,9 +392,11 @@ SIM_SRCS := \
   TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
   TMPLibrary/State.cpp \
-  TMPLibrary/StateGraphs/StateGraph.cpp \
-  TMPLibrary/StateGraphs/StateGraphHelpers/ITConstructor.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
+  TMPLibrary/StateGraphs/StateGraph.cpp \
+  TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
+  TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
   TMPLibrary/TaskAllocators/AuctionMethod.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
@@ -403,7 +405,6 @@ SIM_SRCS := \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
-  TMPLibrary/TMPLibrary.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
   TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
@@ -416,7 +417,8 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp 
+  Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  TMPLibrary/TMPLibrary.cpp 
 
 ################################################################################
 # Hardware

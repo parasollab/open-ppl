@@ -1,5 +1,5 @@
-#ifndef MULTI_AGENT_MULTI_TASK_PLANNER_H_
-#define MULTI_AGENT_MULTI_TASK_PLANNER_H_
+#ifndef IT_METHOD_H_
+#define IT_METHOD_H_
 
 #include <list>
 #include <unordered_map>
@@ -21,55 +21,37 @@ class ITMethod : public TMPStrategyMethod {
 
     ///@name Construction
     ///@{
+    ITMethod();
 
     ITMethod(XMLNode& _node);
 
 		//ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
 		//							Environment* _interactionEnvironment);
 
-    ITMethod() = default;
+		~ITMethod() = default;
 
     ///@}
-    ///@name Accessors
+  
+	protected:
+	
+		///@name Helper Functions
     ///@{
-
-    ///@}
-    ///@name Call Method
-    ///@{
-
-    /// Get plan for the input agents to perform the input tasks.
+    
+		/// Get plan for the input agents to perform the input tasks.
     /// _library needs to have the solution and problem set to the coordinator's
     /// values for these.
-    virtual TaskPlan* PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
-                               vector<std::shared_ptr<MPTask>> _tasks) override;
+    virtual void PlanTasks() override;
        
-    ///@}
 
-
-  //private:
-		///@name Combined Roadmap
-    ///@{
-
-		void QueryCombinedRoadmap();
-
-    ///@}
-		///@name Task Assignment
-    ///@{
-
-		virtual TaskPlan* AssignTasks() override;
+		virtual void AssignTasks() override;
 
 		virtual void DecomposeTasks() override;
+		
+		void QueryCombinedRoadmap();
 
 		std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask);
 
-    ///@}
-		///@name Helper Functions
-    ///@{
-
 		void CopyRobotTypeRoadmaps();
-
-        //Moved to task plan
-		//std::shared_ptr<MPTask> GetNextSubtask(WholeTask* _wholeTask);
 
     /// Inserts the subtask into the unassignedTasks list at the appropriate point
 		void AddSubtask(std::shared_ptr<MPTask> _subtask);
@@ -84,7 +66,6 @@ class ITMethod : public TMPStrategyMethod {
 		//TODO this needs to be changed to a priority queue to allow for multiple tasks
 		std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
     
-
     ///@}
 
 };

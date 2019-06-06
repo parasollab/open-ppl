@@ -8,7 +8,13 @@
 #include "Utilities/MPUtils.h"
 
 DisjointWorkspaces::
+DisjointWorkspaces(){
+	this->SetName("DisjointWorkspaces");
+}
+
+DisjointWorkspaces::
 DisjointWorkspaces(XMLNode& _node) : ITPlacementMethod(_node) {
+	this->SetName("DisjointWorkspaces");
   m_precision = _node.Read("precision", false, 4., 1., 100.,
               "How many divisions around each edge of the boundary do you want to sample?");
   m_maxAttempts = _node.Read("maxAttempts", true, nan(""), 0., 1000., "Max number of attempts to place a CFG");
