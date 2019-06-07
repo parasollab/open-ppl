@@ -86,12 +86,14 @@ AddTaskToGraph(WholeTask* _wholeTask){
 	DefaultWeight<Cfg> virtEdge;
 	virtEdge.SetWeight(-1);
 
+	// Add robot-type start nodes
 	for(auto& pair : _wholeTask->m_startPoints){
 		auto cfg = pair.second[0];
 		if(cfg.GetRobot() == robot)
 			continue;
 		auto vid1 = m_highLevelGraph->AddVertex(cfg);
 		m_currentTaskVIDs.push_back(vid1);
+		//Connect robot-type start node to the virtual start node
 		m_highLevelGraph->AddEdge(virtStart,vid1,virtEdge);
 
 		for(auto& vid2 : m_deliveringVIDs[cfg.GetRobot()->GetCapability()]){
@@ -105,15 +107,17 @@ AddTaskToGraph(WholeTask* _wholeTask){
 	}
 
 	//TODO::Double check that this is implemented corectly (copied and pasted then changed from above block)
+	//Add robot-type goal nodes
 	for(auto& pair : _wholeTask->m_goalPoints){
 		auto cfg = pair.second[0];
 		if(cfg.GetRobot() == robot)
 			continue;
 		auto vid1 = m_highLevelGraph->AddVertex(cfg);
 		m_currentTaskVIDs.push_back(vid1);
+		//Connect robot-type goal node to the virtual goal node
 		m_highLevelGraph->AddEdge(vid1,virtGoal,virtEdge);
 
-		for(auto& vid2 : m_deliveringVIDs[cfg.GetRobot()->GetCapability()]){
+		for(auto& vid2 : m_receivingVIDs[cfg.GetRobot()->GetCapability()]){
 			auto w = ExtractPathWeight(vid2,vid1);
 			if(w == -1)
 				continue;
@@ -122,6 +126,10 @@ AddTaskToGraph(WholeTask* _wholeTask){
 			m_highLevelGraph->AddEdge(vid2,vid1,weight);
 		}
 	}
+	if(m_debug){
+		std::cout << "Adding Task." << std::endl;
+		PrintGraph();
+	}	
 }
 
 void
@@ -133,6 +141,10 @@ RemoveTaskFromGraph(WholeTask* _wholeTask){
 	}
 
 	m_currentTaskVIDs = {};
+	if(m_debug){
+		std::cout << "Removing Task." << std::endl;
+		PrintGraph();
+	}	
 }
 
 
@@ -167,7 +179,7 @@ LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
 	//restore library task
     this->GetMPLibrary()->SetTask(oldTask);
     
-	return this->GetMPLibrary()->GetPath()->Length();
+	return solution->GetPath()->Length();
 }
 
 /*------------------------------ Construction Helpers --------------------------------*/
@@ -178,16 +190,8 @@ ConstructGraph(){
 	CombinedRoadmap::ConstructGraph();
 	CreateHighLevelGraph();
 	if(m_debug){
-		std::cout << "Printing high level vertices:" << std::endl;
-		for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
-			std::cout << vit->descriptor() << " : " << vit->property().PrettyPrint() << std::endl;
-		}
-		std::cout << "Printing high level edges:" << std::endl;
-		for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
-			for(auto eit = vit->begin(); eit != vit->end(); eit++){
-				std::cout << eit->source() << " -> " << eit->target() << std::endl;
-			}
-		}
+		std::cout << "Initial construction." << std::endl;
+		PrintGraph();
 	}	
 }
 
@@ -200,40 +204,58 @@ CreateHighLevelGraph(){
 
   for(auto& it : this->GetTaskPlan()->GetInteractionTemplates()){
   	for(auto pair : it->GetTransformedPositionPairs()){
-  		auto vid1 = m_highLevelGraph->AddVertex(pair.first);
-  		auto vid2 = m_highLevelGraph->AddVertex(pair.second);
+			auto cfgR = pair.first;//receiving
+			auto cfgD = pair.second;//delivering
+  		auto vidR = m_highLevelGraph->AddVertex(cfgR);
+  		auto vidD = m_highLevelGraph->AddVertex(cfgD);
 
-  		m_deliveringVIDs[pair.first.GetRobot()->GetCapability()].push_back(vid2);
-  		m_receivingVIDs[pair.second.GetRobot()->GetCapability()].push_back(vid1);
+  		m_deliveringVIDs[cfgD.GetRobot()->GetCapability()].push_back(vidD);
+  		m_receivingVIDs[cfgR.GetRobot()->GetCapability()].push_back(vidR);
   		
   		//TODO::Change this to just copy over the x,y,z position of the cfg for virtual superRobot
-  		auto virtCfg = pair.second;
+  		auto virtCfg = pair.first;
   		virtCfg.SetRobot(robot);
   		auto virtVID = m_highLevelGraph->AddVertex(virtCfg);
   		
   		DefaultWeight<Cfg> interactionWeight;
   		interactionWeight.SetWeight(it->GetInformation()->GetInteractionWeight());
-  		m_highLevelGraph->AddEdge(vid1,virtVID,interactionWeight);
+  		m_highLevelGraph->AddEdge(vidD,virtVID,interactionWeight);
   		
   		DefaultWeight<Cfg> virtWeight;
   		virtWeight.SetWeight(-1);
-  		m_highLevelGraph->AddEdge(virtVID,vid2,virtWeight);
+  		m_highLevelGraph->AddEdge(virtVID,vidR,virtWeight);
   	}
   }
 
 	auto dummyMap = this->GetTaskPlan()->GetDummyMap();
   for(auto dummy = dummyMap.begin(); dummy != dummyMap.end(); dummy++){
-  	for(auto& vid1 : m_receivingVIDs[dummy->first]){
-  		for(auto& vid2 : m_deliveringVIDs[dummy->first]){
-  			auto w = ExtractPathWeight(vid1, vid2);
-  			if(w == -1) //indicates there is no path betweenthe two in the lower level graph
+  	for(auto& vidR : m_receivingVIDs[dummy->first]){
+  		for(auto& vidD : m_deliveringVIDs[dummy->first]){
+  			auto w = ExtractPathWeight(vidR, vidD);
+  			if(w == -1) //indicates there is no path between the two in the lower level graph
   				continue;
   			DefaultWeight<Cfg> weight;
   			weight.SetWeight(w);
-  			m_highLevelGraph->AddEdge(vid1, vid2, weight);
+  			m_highLevelGraph->AddEdge(vidR, vidD, weight);
   		}
   	}
   }
 
 }
 
+/********************************* Debug ******************************************/
+
+void
+MultiTaskGraph::
+PrintGraph(){
+	std::cout << "Printing high level vertices:" << std::endl;
+	for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
+		std::cout << vit->descriptor() << " : " << vit->property().PrettyPrint() << std::endl;
+	}
+	std::cout << "Printing high level edges:" << std::endl;
+	for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
+		for(auto eit = vit->begin(); eit != vit->end(); eit++){
+			std::cout << eit->source() << " -> " << eit->target() << std::endl;
+		}
+	}
+}

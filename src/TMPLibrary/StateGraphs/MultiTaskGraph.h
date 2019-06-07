@@ -75,6 +75,12 @@ class MultiTaskGraph : public CombinedRoadmap {
     double LowLevelGraphPathWeight(Cfg _start, Cfg _goal);
 
 		///@}
+		///@name Debug
+		///@{
+		
+		void PrintGraph();
+
+		///@}
 		///@name member variables
 		///@{
 		

@@ -6,6 +6,8 @@
 #include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/WholeTask.h"
 
+#include "Utilities/SSSP.h"
+
 /*****************************************Constructor****************************************************/
 MultiAgentMultiTaskPlanner::
 MultiAgentMultiTaskPlanner(){
@@ -35,16 +37,16 @@ Initialize(){
 void
 MultiAgentMultiTaskPlanner::
 PlanTasks(){
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();	
-	this->GetMPLibrary()->GetTask()->SetRobot(robot);
+  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+	auto dummyTask = new MPTask(robot);	
+	this->GetMPLibrary()->SetTask(dummyTask);
 	
 	auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
 
 	for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
 		sg->AddTaskToGraph(wholeTask);
-		TaskPlan* taskPlan = new TaskPlan();
 
-		//Find Task Plan
+		TaskPlan* taskPlan = MAMTDijkstra(wholeTask);
 
 		m_taskPlans.push_back(taskPlan);
 		sg->RemoveTaskFromGraph(wholeTask);
