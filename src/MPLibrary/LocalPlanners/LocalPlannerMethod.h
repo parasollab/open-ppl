@@ -145,24 +145,6 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///@}
 
   protected:
-    ///@name Helper
-    //@{
-
-    /// How to determine which robot to use when validating an edge.
-    /// @param _start Configuration 1
-    /// @param _end Configuration 2
-    /// @return If start and end have the same robot, return this robot.
-    ///         Otherwise return null.
-    Robot* GetRobot(const CfgType& _start, const CfgType& _end) const noexcept;
-
-    /// How to determine which robot to use when validating an edge.
-    /// @param _start Configuration 1
-    /// @param _end Configuration 2
-    /// @return If start and end have the same robot group, return this robot
-    ///         group. Otherwise return null.
-    RobotGroup* GetRobotGroup(const GroupCfgType& _start, const GroupCfgType& _end) const noexcept;
-
-    ///@}
 
     ///@name Internal State
     ///@{
@@ -259,25 +241,4 @@ ReconstructPath(const GroupCfgType& _start, const GroupCfgType& _end,
 }
 
 /*----------------------------------------------------------------------------*/
-template <typename MPTraits>
-Robot*
-LocalPlannerMethod<MPTraits>::
-GetRobot(const CfgType& _start, const CfgType& _end) const noexcept {
-  auto robot1 = _start.GetRobot();
-  auto robot2 = _end.GetRobot();
-  if(robot1 == robot2)
-    return robot1;
-  return nullptr;
-}
-
-template <typename MPTraits>
-RobotGroup*
-LocalPlannerMethod<MPTraits>::
-GetRobotGroup(const GroupCfgType& _start, const GroupCfgType& _end) const noexcept {
-  auto group1 = _start.GetRobotGroup();
-  auto group2 = _end.GetRobotGroup();
-  if(group1 == group2)
-    return group1;
-  return nullptr;
-}
 #endif

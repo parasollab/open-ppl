@@ -378,6 +378,8 @@ void
 CombinedRoadmap::
 TransformITs(){
 
+	std::vector<size_t> invalidVIDs;
+
   std::cout << "Finding Handoff Locations" << std::endl;
   auto originalProblem = this->GetMPProblem();
   this->GetMPLibrary()->SetMPProblem(originalProblem);
@@ -410,11 +412,12 @@ TransformITs(){
         auto relativeCfg = vit->property();
         relativeCfg.TransformCfg(centerCfg);
 
-        //bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
-        //if(isValid){
-          const VID newVID = m_graph->AddVertex(relativeCfg);
-          oldToNew[oldVID] = newVID;
-        //}
+        bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
+				const VID newVID = m_graph->AddVertex(relativeCfg);
+				oldToNew[oldVID] = newVID;
+        if(!isValid){
+        	invalidVIDs.push_back(newVID);
+				}
       }
 
       // Keep track of the distinct transformed handoff roadmaps
@@ -458,6 +461,7 @@ TransformITs(){
             for(auto cfg : intermediates){
               cfg.TransformCfg(centerCfg);
             }
+						//TODO validate the edge if its not an interaction edge
             m_graph->AddEdge(source, target, eit->property());
           }
         }
@@ -467,7 +471,10 @@ TransformITs(){
     Simulation::GetStatClass()->StopClock("Placement InteractionTemplate "
               + currentTemplate->GetInformation()->GetLabel());
   }
-  
+ 
+	for(auto vid : invalidVIDs){
+		m_graph->DeleteVertex(vid);
+	} 
   Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
 }
 
