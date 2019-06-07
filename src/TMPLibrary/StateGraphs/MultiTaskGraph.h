@@ -36,7 +36,6 @@ class MultiTaskGraph : public CombinedRoadmap {
     ///@name Accessors
     ///@{
 
-
 		//TODO::move some of this down to the StateGraphLevel with appropriate inherited variations
     /// @param _vid1 VID of start vertex in higher level graph
     /// @param _vid2 VID of goal vertex in higher level graph
@@ -58,9 +57,16 @@ class MultiTaskGraph : public CombinedRoadmap {
 
   protected:
 
+		///@name Construction Helpers
+		///@{
+
+		virtual void ConstructGraph() override;
+
+		void CreateHighLevelGraph();
+
+		///@}
 		///@name Helpers
 		///@{
-		void CreateHighLevelGraph();
 
     /// @param _start Cfg of start vertex in lowerer level graph
     /// @param _goal Cfg of goal vertex in lowerer level graph

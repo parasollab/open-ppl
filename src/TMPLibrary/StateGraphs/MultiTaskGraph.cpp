@@ -21,6 +21,8 @@ MultiTaskGraph(XMLNode& _node) : CombinedRoadmap(_node){
 void
 MultiTaskGraph::
 Initialize(){
+	auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+	m_highLevelGraph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(robot);
 	CombinedRoadmap::Initialize();
 }
 
@@ -135,52 +137,6 @@ RemoveTaskFromGraph(WholeTask* _wholeTask){
 
 
 /**************************************** Helpers ****************************************/
-void 
-MultiTaskGraph::
-CreateHighLevelGraph(){
-
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();	
-  m_highLevelGraph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
-
-  for(auto& it : this->GetTaskPlan()->GetInteractionTemplates()){
-  	for(auto pair : it->GetTransformedPositionPairs()){
-  		auto vid1 = m_highLevelGraph->AddVertex(pair.first);
-  		auto vid2 = m_highLevelGraph->AddVertex(pair.second);
-
-  		m_deliveringVIDs[pair.first.GetRobot()->GetCapability()];
-  		m_receivingVIDs[pair.second.GetRobot()->GetCapability()];
-  		
-  		//TODO::Change this to just copy over the x,y,z position of the cfg for virtual superRobot
-  		auto virtCfg = pair.second;
-  		virtCfg.SetRobot(robot);
-  		auto virtVID = m_highLevelGraph->AddVertex(virtCfg);
-  		
-  		DefaultWeight<Cfg> interactionWeight;
-  		interactionWeight.SetWeight(it->GetInformation()->GetInteractionWeight());
-  		m_highLevelGraph->AddEdge(vid1,virtVID,interactionWeight);
-  		
-  		DefaultWeight<Cfg> virtWeight;
-  		virtWeight.SetWeight(-1);
-  		m_highLevelGraph->AddEdge(virtVID,vid2,virtWeight);
-  	}
-  }
-
-	auto dummyMap = this->GetTaskPlan()->GetDummyMap();
-  for(auto dummy = dummyMap.begin(); dummy != dummyMap.end(); dummy++){
-  	for(auto& vid1 : m_receivingVIDs[dummy->first]){
-  		for(auto& vid2 : m_deliveringVIDs[dummy->first]){
-  			auto w = ExtractPathWeight(vid1, vid2);
-  			if(w == -1) //indicates there is no path betweenthe two in the lower level graph
-  				continue;
-  			DefaultWeight<Cfg> weight;
-  			weight.SetWeight(w);
-  			m_highLevelGraph->AddEdge(vid1, vid2, weight);
-  		}
-  	}
-  }
-
-}
-
 double
 MultiTaskGraph::
 LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
@@ -212,5 +168,72 @@ LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
     this->GetMPLibrary()->SetTask(oldTask);
     
 	return this->GetMPLibrary()->GetPath()->Length();
+}
+
+/*------------------------------ Construction Helpers --------------------------------*/
+
+void
+MultiTaskGraph::
+ConstructGraph(){
+	CombinedRoadmap::ConstructGraph();
+	CreateHighLevelGraph();
+	if(m_debug){
+		std::cout << "Printing high level vertices:" << std::endl;
+		for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
+			std::cout << vit->descriptor() << " : " << vit->property().PrettyPrint() << std::endl;
+		}
+		std::cout << "Printing high level edges:" << std::endl;
+		for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
+			for(auto eit = vit->begin(); eit != vit->end(); eit++){
+				std::cout << eit->source() << " -> " << eit->target() << std::endl;
+			}
+		}
+	}	
+}
+
+void 
+MultiTaskGraph::
+CreateHighLevelGraph(){
+
+  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();	
+  m_highLevelGraph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
+
+  for(auto& it : this->GetTaskPlan()->GetInteractionTemplates()){
+  	for(auto pair : it->GetTransformedPositionPairs()){
+  		auto vid1 = m_highLevelGraph->AddVertex(pair.first);
+  		auto vid2 = m_highLevelGraph->AddVertex(pair.second);
+
+  		m_deliveringVIDs[pair.first.GetRobot()->GetCapability()].push_back(vid2);
+  		m_receivingVIDs[pair.second.GetRobot()->GetCapability()].push_back(vid1);
+  		
+  		//TODO::Change this to just copy over the x,y,z position of the cfg for virtual superRobot
+  		auto virtCfg = pair.second;
+  		virtCfg.SetRobot(robot);
+  		auto virtVID = m_highLevelGraph->AddVertex(virtCfg);
+  		
+  		DefaultWeight<Cfg> interactionWeight;
+  		interactionWeight.SetWeight(it->GetInformation()->GetInteractionWeight());
+  		m_highLevelGraph->AddEdge(vid1,virtVID,interactionWeight);
+  		
+  		DefaultWeight<Cfg> virtWeight;
+  		virtWeight.SetWeight(-1);
+  		m_highLevelGraph->AddEdge(virtVID,vid2,virtWeight);
+  	}
+  }
+
+	auto dummyMap = this->GetTaskPlan()->GetDummyMap();
+  for(auto dummy = dummyMap.begin(); dummy != dummyMap.end(); dummy++){
+  	for(auto& vid1 : m_receivingVIDs[dummy->first]){
+  		for(auto& vid2 : m_deliveringVIDs[dummy->first]){
+  			auto w = ExtractPathWeight(vid1, vid2);
+  			if(w == -1) //indicates there is no path betweenthe two in the lower level graph
+  				continue;
+  			DefaultWeight<Cfg> weight;
+  			weight.SetWeight(w);
+  			m_highLevelGraph->AddEdge(vid1, vid2, weight);
+  		}
+  	}
+  }
+
 }
 

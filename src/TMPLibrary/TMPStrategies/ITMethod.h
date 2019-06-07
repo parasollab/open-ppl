@@ -28,7 +28,7 @@ class ITMethod : public TMPStrategyMethod {
 		//ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
 		//							Environment* _interactionEnvironment);
 
-		~ITMethod() = default;
+		virtual ~ITMethod() = default;
 
     ///@}
   

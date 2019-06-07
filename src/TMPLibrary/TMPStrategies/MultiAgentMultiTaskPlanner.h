@@ -5,7 +5,8 @@
 #include <unordered_map>
 
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
-#include "TMPLibrary/WholeTask.h"
+
+class WholeTask;
 
 class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
 
@@ -20,7 +21,9 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
 
     MultiAgentMultiTaskPlanner(XMLNode& _node);
 
-    ~MultiAgentMultiTaskPlanner() = default;
+    ~MultiAgentMultiTaskPlanner();
+
+		virtual void Initialize();
 
     ///@}
     ///@name Accessors
@@ -36,26 +39,18 @@ class MultiAgentMultiTaskPlanner : public TMPStrategyMethod {
     virtual void PlanTasks() override;
        
     ///@}
-    ///@name TaskGrap Functions
-    ///@{
 
-    void CreateHighLevelGraph();
+  private:
 
-    TaskPlan* MAMTDijkstra(WholeTask* _wholeTask);
-
-    void AddTaskToGraph(WholeTask* _wholeTask);
-
-    void RemoveTaskFromGraph(WholeTask* _wholeTask);
-
-    ///@}
     ///@name Helper Functions
+    
+		TaskPlan* MAMTDijkstra(WholeTask* _wholeTask);
 
     double MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance);
 
     ///@}
 
-  private:
 
     std::vector<TaskPlan*> m_taskPlans;
 
