@@ -410,7 +410,7 @@ TransformITs(){
       for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
         const VID oldVID = vit->descriptor();
         auto relativeCfg = vit->property();
-        relativeCfg.TransformCfg(centerCfg);
+        relativeCfg.TransformCfg(centerCfg.GetBaseTransformation());
 
         bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
 				const VID newVID = m_graph->AddVertex(relativeCfg);
@@ -459,7 +459,7 @@ TransformITs(){
             // before storing it in the megaRoadmap
             std::vector<Cfg> intermediates = eit->property().GetIntermediates();
             for(auto cfg : intermediates){
-              cfg.TransformCfg(centerCfg);
+              cfg.TransformCfg(centerCfg.GetBaseTransformation());
             }
 						//TODO validate the edge if its not an interaction edge
             m_graph->AddEdge(source, target, eit->property());

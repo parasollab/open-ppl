@@ -267,7 +267,7 @@ CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
           const size_t oldVID = vit->descriptor();
           auto relativeCfg = vit->property();
           //relativeCfg.SetRobot(_graph->GetRobot());
-          relativeCfg.TransformCfg(location);
+          relativeCfg.TransformCfg(location.GetBaseTransformation());
 
           const size_t newVID = _graph->AddVertex(relativeCfg);
           oldToNew[oldVID] = newVID;
@@ -280,7 +280,7 @@ CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
             if(!_graph->IsEdge(source,target)){
               auto intermediates = eit->property().GetIntermediates();
               for(auto cfg : intermediates){
-                cfg.TransformCfg(location);
+                cfg.TransformCfg(location.GetBaseTransformation());
               }
               _graph->AddEdge(source,target,eit->property());
             }
@@ -294,22 +294,6 @@ CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
       _graph->AddVertex(cfg);
     }
   }
-}
-
-void
-ITConnector::
-TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
-  double x = _relativeCfg[0];
-  double y = _relativeCfg[1];
-  double theta = _centerCfg[2]*PI;
-
-  double newX = x*cos(theta) - y*sin(theta);
-  double newY = y*sin(theta) + y*cos(theta);
-  double oldTheta = _relativeCfg[2];
-
-  _relativeCfg.SetLinearPosition({newX,newY,oldTheta});
-
-  _relativeCfg += _centerCfg;
 }
 
 void

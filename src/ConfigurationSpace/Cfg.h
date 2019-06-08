@@ -190,7 +190,8 @@ class Cfg {
     void SetAngularVelocity(const mathtool::Vector3d&);
     void SetBaseTransformation(const mathtool::Transformation&);
 
-    void TransformCfg(const Cfg& _cfg);
+		/// Transforms the cfg about a new frame of reference
+    void TransformCfg(const mathtool::Transformation&);
 
     ///@}
     ///@name Labels and Stats
