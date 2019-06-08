@@ -112,13 +112,14 @@ ConstructGraph(){
   ITConnector connector(m_connectionThreshold,this->GetMPLibrary());
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
-  if(true){
+  if(true){//Adds robot starting locations to combined roadmap
     for(auto agent : this->GetTaskPlan()->GetTeam()){
       auto robot = agent->GetRobot();
       auto cfg = robot->GetSimulationModel()->GetState();
-      auto vid = m_graph->AddVertex(cfg);
-	  std::vector<size_t> vids = {vid};
-      m_wholeTaskStartEndPoints.push_back(vids);
+			cfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(robot->GetCapability())->GetRobot());
+			auto vid = m_graph->AddVertex(cfg);
+			std::vector<size_t> vids = {vid};
+			m_wholeTaskStartEndPoints.push_back(vids);
     }
   }
 
