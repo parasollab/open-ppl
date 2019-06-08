@@ -193,7 +193,7 @@ GenerateITs(){
   // Loop through handoff templates, set start constraints for handoff, set
   // dummy robot for handoff task by capability, and solve handoff task.
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*this->GetMPProblem()));
-  problemCopy->SetEnvironment(std::move(m_interactionEnvironment->Clone()));
+  problemCopy->SetEnvironment(std::move(m_interactionEnvironment));
   this->GetMPLibrary()->SetMPProblem(problemCopy.get());
   // Set robots to virtual so that planning handoffs does not cause collisions
   std::list<HandoffAgent*> unusedAgents;
@@ -379,6 +379,8 @@ void
 CombinedRoadmap::
 TransformITs(){
 
+	std::vector<size_t> invalidVIDs;
+
   std::cout << "Finding Handoff Locations" << std::endl;
   auto originalProblem = this->GetMPProblem();
   this->GetMPLibrary()->SetMPProblem(originalProblem);
@@ -409,13 +411,14 @@ TransformITs(){
       for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
         const VID oldVID = vit->descriptor();
         auto relativeCfg = vit->property();
-        relativeCfg.TransformCfg(centerCfg);
+        relativeCfg.TransformCfg(centerCfg.GetBaseTransformation());
 
-        //bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
-        //if(isValid){
-          const VID newVID = m_graph->AddVertex(relativeCfg);
-          oldToNew[oldVID] = newVID;
-        //}
+        bool isValid = vcm->IsValid(relativeCfg, "ValidateITCfg");
+				const VID newVID = m_graph->AddVertex(relativeCfg);
+				oldToNew[oldVID] = newVID;
+        if(!isValid){
+        	invalidVIDs.push_back(newVID);
+				}
       }
 
       // Keep track of the distinct transformed handoff roadmaps
@@ -457,8 +460,9 @@ TransformITs(){
             // before storing it in the megaRoadmap
             std::vector<Cfg> intermediates = eit->property().GetIntermediates();
             for(auto cfg : intermediates){
-              cfg.TransformCfg(centerCfg);
+              cfg.TransformCfg(centerCfg.GetBaseTransformation());
             }
+						//TODO validate the edge if its not an interaction edge
             m_graph->AddEdge(source, target, eit->property());
           }
         }
@@ -468,7 +472,10 @@ TransformITs(){
     Simulation::GetStatClass()->StopClock("Placement InteractionTemplate "
               + currentTemplate->GetInformation()->GetLabel());
   }
-  
+ 
+	for(auto vid : invalidVIDs){
+		m_graph->DeleteVertex(vid);
+	} 
   Simulation::GetStatClass()->StopClock("Construction MegaRoadmap");
 }
 

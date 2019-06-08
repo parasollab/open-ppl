@@ -364,7 +364,7 @@ IsConnectedSLSequential(
     bool _checkCollision, bool _savePath) {
 
   Environment* env = this->GetEnvironment();
-  auto robot = this->GetRobot(_c1, _c2);
+  auto robot = _c1.GetRobot();//this->GetRobot(_c1, _c2);
   // Assumes if robot pointers don't match, then it is an interaction edge.
   if(!robot)
     return true;
@@ -450,7 +450,7 @@ IsConnectedSLBinary(
   std::string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
 
   int nTicks;
-  auto robot = this->GetRobot(_c1, _c2);
+  auto robot = _c1.GetRobot();// this->GetRobot(_c1, _c2);
   // Assumes if robot pointers don't match, then it is an interaction edge.
   if(!robot)
     return true;

@@ -87,8 +87,6 @@ class Environment {
 
     virtual ~Environment();
 
-		std::unique_ptr<Environment> Clone();
-
     ///@}
     ///@name Assignment
     ///@{

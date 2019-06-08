@@ -241,21 +241,6 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   }
 }
 
-void
-DisjointWorkspaces::
-TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg){
-  double x = _relativeCfg[0];
-  double y = _relativeCfg[1];
-  double theta = _centerCfg[2]*PI;
-
-  double newX = x*cos(theta) - y*sin(theta);
-  double newY = x*sin(theta) + y*cos(theta);
-  double oldTheta = _relativeCfg[2];
-
-  _relativeCfg.SetLinearPosition({newX, newY, oldTheta});
-
-  _relativeCfg += _centerCfg;
-}
 
 bool
 DisjointWorkspaces::
@@ -270,7 +255,7 @@ CheckLocation(Cfg _cfg, InteractionTemplate* _it){
     std::cout << relativeCfg.PrettyPrint() << std::endl;
     //TODO::Change robot to appropriate robot capability
     //TranslateCfg(_cfg, relativeCfg);
-    relativeCfg.TransformCfg(_cfg);
+    relativeCfg.TransformCfg(_cfg.GetBaseTransformation());
     if(!vcm->IsValid(relativeCfg, "ValidateITCfg")){
       valid = false;
       if(m_debug){
