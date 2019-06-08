@@ -192,7 +192,7 @@ GenerateITs(){
   // Loop through handoff templates, set start constraints for handoff, set
   // dummy robot for handoff task by capability, and solve handoff task.
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*this->GetMPProblem()));
-  problemCopy->SetEnvironment(std::move(m_interactionEnvironment->Clone()));
+  problemCopy->SetEnvironment(std::move(m_interactionEnvironment));
   this->GetMPLibrary()->SetMPProblem(problemCopy.get());
   // Set robots to virtual so that planning handoffs does not cause collisions
   std::list<HandoffAgent*> unusedAgents;
