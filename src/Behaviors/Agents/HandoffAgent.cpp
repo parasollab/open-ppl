@@ -494,8 +494,23 @@ SelectTask(){
       std::cout << "Not satisfied" << std::endl;
       std::cout << "Generating Setup task for: " << m_robot->GetLabel() << std::endl;
     }
+		if(m_robot->IsManipulator()){
+			for(size_t i = 0; i < 3; i++){
+				auto range = ranges[i];
+				auto center = range.Center();
+				box->SetRange(i, center-.05, center+.05);
+			}
+		}
+		else{
+			for(size_t i = 0; i < 2; i++){
+				auto range = ranges[i];
+				auto center = range.Center();
+				box->SetRange(i, center-.005, center+.005);
+			}
+			box->SetRange(2, -1, 1);
+		}
 
-    std::shared_ptr<MPTask> setupTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
+		std::shared_ptr<MPTask> setupTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
     std::unique_ptr<CSpaceConstraint> start = std::unique_ptr<CSpaceConstraint>(
                                               new CSpaceConstraint(m_robot, pos));
 

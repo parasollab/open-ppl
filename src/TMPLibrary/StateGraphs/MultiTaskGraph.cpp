@@ -28,6 +28,12 @@ Initialize(){
 
 /*************************************** Accessors ***************************************/
 
+RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+MultiTaskGraph::
+GetGraph(){
+	return m_highLevelGraph;
+}
+
 double
 MultiTaskGraph::
 ExtractPathWeight(size_t _vid1, size_t _vid2){
@@ -39,7 +45,8 @@ ExtractPathWeight(size_t _vid1, size_t _vid2){
 
 double 
 MultiTaskGraph::
-RobotSelection(size_t _target, HandoffAgent** _minAgent){
+RobotSelection(size_t _target, Agent** _minAgent,
+							std::unordered_map<Agent*,std::pair<Cfg,double>>& _RATCache){
 	//Agent* minAgent = nullptr;
 	double minTime = MAX_DBL;
 	
@@ -51,11 +58,16 @@ RobotSelection(size_t _target, HandoffAgent** _minAgent){
 			continue;
 		}
 
-		auto info = this->GetTaskPlan()->GetRobotAvailability(agent);
+		std::pair<Cfg,double> info;
+		auto cache = _RATCache.find(agent); 
+		(cache != _RATCache.end()) ? info = cache->second 
+															 : info = this->GetTaskPlan()->GetRobotAvailability(agent);
 		auto location = info.first;
 		auto availTime = info.second;
 		
 		auto travelTime = LowLevelGraphPathWeight(location,subtaskStart);
+		if(travelTime == -1)
+			continue;
 
 		auto readyTime = availTime + travelTime;
 
@@ -65,10 +77,12 @@ RobotSelection(size_t _target, HandoffAgent** _minAgent){
 		}
 	}
 	//m_nodeAgentMap[_ei->target()] = minAgent;
+	if(!*_minAgent)
+		throw RunTimeException(WHERE, "No viable agent was found in Robot Selection.");
 	return minTime;
 }
 
-void
+std::pair<size_t,size_t>
 MultiTaskGraph::
 AddTaskToGraph(WholeTask* _wholeTask){
 
@@ -86,6 +100,7 @@ AddTaskToGraph(WholeTask* _wholeTask){
 	DefaultWeight<Cfg> virtEdge;
 	virtEdge.SetWeight(-1);
 
+	std::unordered_map<std::string,size_t> startVIDs;
 	// Add robot-type start nodes
 	for(auto& pair : _wholeTask->m_startPoints){
 		auto cfg = pair.second[0];
@@ -93,6 +108,7 @@ AddTaskToGraph(WholeTask* _wholeTask){
 			continue;
 		auto vid1 = m_highLevelGraph->AddVertex(cfg);
 		m_currentTaskVIDs.push_back(vid1);
+		startVIDs[cfg.GetRobot()->GetCapability()] = vid1;
 		//Connect robot-type start node to the virtual start node
 		m_highLevelGraph->AddEdge(virtStart,vid1,virtEdge);
 
@@ -125,11 +141,22 @@ AddTaskToGraph(WholeTask* _wholeTask){
 			weight.SetWeight(w);
 			m_highLevelGraph->AddEdge(vid2,vid1,weight);
 		}
+		//Attempt to directly connect the goal to the start
+		auto vit = startVIDs.find(cfg.GetRobot()->GetCapability());
+		if(vit != startVIDs.end()){
+			auto w = ExtractPathWeight(vit->second,vid1);
+			if(w == -1)
+				continue;
+			DefaultWeight<Cfg> weight;
+			weight.SetWeight(w);
+			m_highLevelGraph->AddEdge(vit->second,vid1,weight);
+		}
 	}
 	if(m_debug){
 		std::cout << "Adding Task." << std::endl;
 		PrintGraph();
-	}	
+	}
+	return std::pair<size_t,size_t>(virtStart,virtGoal);	
 }
 
 void
@@ -152,33 +179,42 @@ RemoveTaskFromGraph(WholeTask* _wholeTask){
 double
 MultiTaskGraph::
 LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
+
+	if(_start.GetRobot()->GetCapability() != _goal.GetRobot()->GetCapability()){
+		throw RunTimeException(WHERE, "start and goal are of mismatched robot types.");
+	}
+
 	//save current library task
 	auto oldTask = this->GetMPLibrary()->GetTask();
 	
-	auto robot = _start.GetRobot();
+	auto dummyAgent = this->GetTaskPlan()->GetCapabilityAgent(_start.GetRobot()->GetCapability());
+	auto robot = dummyAgent->GetRobot();
+
+	_start.SetRobot(robot);
+	_goal.SetRobot(robot);
+
 	std::shared_ptr<MPTask> task = std::shared_ptr<MPTask>(new MPTask(robot));
 
-	std::unique_ptr<CSpaceConstraint> startConstraint(new CSpaceConstraint(_start.GetRobot(), _start));
-    std::unique_ptr<CSpaceConstraint> goalConstraint(new CSpaceConstraint(_goal.GetRobot(), _goal));
-    
-    task->SetStartConstraint(std::move(startConstraint));
-    task->AddGoalConstraint(std::move(goalConstraint));
+	std::unique_ptr<CSpaceConstraint> startConstraint(new CSpaceConstraint(robot, _start));
+	std::unique_ptr<CSpaceConstraint> goalConstraint(new CSpaceConstraint(robot, _goal));
 
-    this->GetMPLibrary()->SetTask(task.get());
+	task->SetStartConstraint(std::move(startConstraint));
+	task->AddGoalConstraint(std::move(goalConstraint));
 
-	auto dummyAgent = this->GetTaskPlan()->GetCapabilityAgent(robot->GetCapability());
+	this->GetMPLibrary()->SetTask(task.get());
+
 	auto solution = new MPSolution(dummyAgent->GetRobot());
 	solution->SetRoadmap(dummyAgent->GetRobot(),m_capabilityRoadmaps[robot->GetCapability()].get());
 
 	this->GetMPLibrary()->Solve(this->GetMPLibrary()->GetMPProblem(), task.get(), solution, "EvaluateMapStrategy",
-                       LRand(), "LowerLevelGraphWeight");
-    
-    if(this->GetMPLibrary()->GetPath()->Cfgs().empty())
-    	return -1;
+									LRand(), "LowerLevelGraphWeight");
+
+	if(this->GetMPLibrary()->GetPath()->Cfgs().empty())
+		return -1;
 
 	//restore library task
-    this->GetMPLibrary()->SetTask(oldTask);
-    
+	this->GetMPLibrary()->SetTask(oldTask);
+
 	return solution->GetPath()->Length();
 }
 
@@ -213,7 +249,7 @@ CreateHighLevelGraph(){
   		m_receivingVIDs[cfgR.GetRobot()->GetCapability()].push_back(vidR);
   		
   		//TODO::Change this to just copy over the x,y,z position of the cfg for virtual superRobot
-  		auto virtCfg = pair.first;
+  		auto virtCfg = pair.second;
   		virtCfg.SetRobot(robot);
   		auto virtVID = m_highLevelGraph->AddVertex(virtCfg);
   		
@@ -250,12 +286,22 @@ MultiTaskGraph::
 PrintGraph(){
 	std::cout << "Printing high level vertices:" << std::endl;
 	for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
-		std::cout << vit->descriptor() << " : " << vit->property().PrettyPrint() << std::endl;
+		std::cout << vit->descriptor() << " : " 
+							<< vit->property().PrettyPrint() << " : " 
+							<< vit->property().GetRobot()->GetLabel() << std::endl;
 	}
 	std::cout << "Printing high level edges:" << std::endl;
 	for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++){
 		for(auto eit = vit->begin(); eit != vit->end(); eit++){
-			std::cout << eit->source() << " -> " << eit->target() << std::endl;
+			std::cout << eit->source() << " -> " 
+								<< eit->target() << " : " 
+								<< eit->property().GetWeight() << std::endl;
 		}
+	}
+	std::cout << "Robot Availability Table:" << std::endl;
+	for(auto& ra : this->GetTaskPlan()->GetRAT()){
+		std::cout << ra.first << std::endl
+							<< "Time: " << ra.second.second << std::endl
+							<< "Location: " << ra.second.first << std::endl << std::endl;
 	}
 }

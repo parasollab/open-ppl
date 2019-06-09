@@ -48,11 +48,16 @@ class Terrain {
 
     const Boundary* GetBoundary() const noexcept;
 
+		bool IsVirtual() const noexcept;
+
     bool IsWired() const noexcept;
     ///@}
   private:
     glutils::color m_color{glutils::color::green}; ///< the color of the boundary when rendering
     std::unique_ptr<Boundary> m_boundary; ///< represents where the terrain is located.
+
+		bool m_virtual{false}; ///< indicates a boundary limit for robots of the same capability
+													 ///< but does not invalidate robots of other capabiilties inside it.
 
     /// A rendering property, if true then the boundary is
     /// rendered as a solid mesh; otherwise, it is rendered in wire frame.

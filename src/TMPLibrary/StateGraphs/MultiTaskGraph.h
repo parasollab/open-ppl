@@ -36,6 +36,8 @@ class MultiTaskGraph : public CombinedRoadmap {
     ///@name Accessors
     ///@{
 
+		virtual TaskGraph* GetGraph() override;
+
 		//TODO::move some of this down to the StateGraphLevel with appropriate inherited variations
     /// @param _vid1 VID of start vertex in higher level graph
     /// @param _vid2 VID of goal vertex in higher level graph
@@ -46,10 +48,16 @@ class MultiTaskGraph : public CombinedRoadmap {
     /// @param _ei is the edge representing the selection of the new robot
     /// @param _minAgent is input as a nullptr and used to return the new agent/robot
     ///        selected by the function
+    /// @param _RATCache holds any updates to the RAT along the path to this node
     /// @return Returns the time the new robot is ready to start the next subtask
-    double RobotSelection(size_t _target, HandoffAgent** _minAgent);
+    double RobotSelection(size_t _target, Agent** _minAgent,
+								std::unordered_map<Agent*,std::pair<Cfg,double>>& _RATCache);
 
-		void AddTaskToGraph(WholeTask* _wholeTask);
+		/// @param _wholeTask is the task being appended to the high level graph in order
+		//				 to be planned next.
+		//	@return Returns the start and goal VIDs in the high level graph for the input
+		//					task.
+		std::pair<size_t,size_t> AddTaskToGraph(WholeTask* _wholeTask);
 
 		void RemoveTaskFromGraph(WholeTask* _wholeTask);
 

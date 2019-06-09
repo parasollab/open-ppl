@@ -77,6 +77,9 @@ IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
     bool inBoundary = false;
 
     for(auto& terrain : elem.second) {
+			if(terrain.IsVirtual() and this->m_debug){
+				std::cout << "virtual boundary" << std::endl; //remove this line
+			}
       inBoundary |= terrain.GetBoundary()->InBoundary(_cfg.GetPoint()) ||
                     terrain.GetBoundary()->InBoundary(_cfg);
 
@@ -86,7 +89,7 @@ IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
         break;
       // Else if we do not have the capability, we cannot be inside this
       // boundary.
-      else if(!hasCapability and inBoundary)
+      else if(!hasCapability and inBoundary and !terrain.IsVirtual())
         return false;
     }
 

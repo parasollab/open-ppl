@@ -128,14 +128,14 @@ AddEdge(EI _ei) {
 void
 DrawableRoadmap::
 DeleteVertex(VI _vi) {
-  throw NotImplementedException(WHERE);
+  //throw NotImplementedException(WHERE);
 }
 
 
 void
 DrawableRoadmap::
 DeleteEdge(EI _ei) {
-  throw NotImplementedException(WHERE);
+  //throw NotImplementedException(WHERE);
 }
 
 

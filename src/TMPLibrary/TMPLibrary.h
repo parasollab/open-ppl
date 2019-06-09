@@ -16,20 +16,12 @@
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
-/*
-#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
-#include "TMPLibrary/StateGraphs/StateGraph.h"
-#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
-#include "TMPLibrary/TaskPlan.h"
-#include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
-#include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
-#include "TMPLibrary/TMPTools/TMPTools.h"
-*/
 #include <algorithm>
 #include <atomic>
 #include <unordered_map>
 
+//TMPLibrary TODOs::
+//Save the ITs in a single location so they only need to be constructed once
 
 class PoIPlacementMethod;
 class StateGraph;

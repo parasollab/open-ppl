@@ -41,8 +41,11 @@ class TaskPlan {
 		/// completed.
 		std::list<std::shared_ptr<MPTask>> GetTaskDependencies(std::shared_ptr<MPTask> _task);
 
-		void AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task);
+		void AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task);
+		
+		void AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask);
 
+		/// first must occur before second
 		void AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second);
 
 		void RemoveLastDependency(std::shared_ptr<MPTask> _task);
@@ -53,13 +56,18 @@ class TaskPlan {
 
     void InitializeRAT();
 
-		std::unordered_map<HandoffAgent*,std::pair<Cfg,double>>& GetRAT();
+		std::unordered_map<std::string,std::pair<Cfg,double>>& GetRAT();
 
 		std::pair<Cfg,double> GetRobotAvailability(HandoffAgent* _agent);
+
+		void UpdateRAT(HandoffAgent* _agent, std::pair<Cfg,double> _avail);
 
 		///@}
 		///@name WholeTask interactions
     ///@{
+	
+		/// Adds a whole task to the set of wholeTasks
+		void AddWholeTask(WholeTask* _wholeTask);
 
     /// Gets the whole set of wholeTasks
     std::vector<WholeTask*>& GetWholeTasks();
@@ -75,7 +83,7 @@ class TaskPlan {
 
     std::shared_ptr<MPTask> GetNextSubtask(WholeTask* _wholeTask);
 
-    void AddSubtasktoWholeTask(std::shared_ptr<MPTask> _subtask);
+    void AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask);
 
     /// Returns the agent that as assiged the prior subtask in the whole task
     /// @param _wholeTask The WholeTask object containing the subtasks in
@@ -134,7 +142,7 @@ class TaskPlan {
 
     /// Robot Availablility Table keeps track of where/when each robot will finish
     /// its last assigned subtask and be available again
-    std::unordered_map<HandoffAgent*,std::pair<Cfg,double>> m_RAT; 
+    std::unordered_map<std::string,std::pair<Cfg,double>> m_RAT; 
 
     /// TODO::Adapt to robot groups later
     /// Maps each agent to the set of tasks assigned to it.

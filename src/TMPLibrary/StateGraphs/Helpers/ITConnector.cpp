@@ -405,6 +405,9 @@ BuildSkeletons(){
       }
       auto terrains = otherTerrainType.second;
       for(auto terrain : terrains){
+				if(terrain.IsVirtual()){
+					continue;
+				}
         auto boundary = terrain.GetBoundary();
         auto polyhedron = boundary->MakePolyhedron();
         polyhedron.Invert();
@@ -513,6 +516,17 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
   else if(_cfg1.GetRobot()->IsManipulator()){
     return true;
   }
+
+	auto envTemp = m_library->GetMPProblem()->GetEnvironment();
+	for(auto& terrain : envTemp->GetTerrains()){
+		if(terrain.first != _cfg1.GetRobot()->GetCapability())
+			continue;
+		for(auto& t : terrain.second)
+			if(t.GetBoundary()->InBoundary(_cfg1) and t.GetBoundary()->InBoundary(_cfg2))
+				return true;	
+	}
+	return false;
+
   auto& g = m_capabilitySkeletons[_cfg1.GetRobot()->GetCapability()];
 
   if(!g) //indicates that no terrains are present to constrict the agent type

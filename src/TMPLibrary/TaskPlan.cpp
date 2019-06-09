@@ -41,9 +41,18 @@ GetTaskDependencies(std::shared_ptr<MPTask> _task){
 
 void
 TaskPlan::
-AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task){
+AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task){
 	auto& tasks = m_agentTaskMap[_agent];
 	tasks.push_back(_task);
+}
+
+void
+TaskPlan::
+AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask){
+	auto& tasks = m_agentTaskMap[_agent];
+	tasks.push_back(_task);
+	AddSubtaskToWholeTask(_task,_wholeTask);
+	_wholeTask->m_agentAssignment.push_back(_agent);
 }
 
 void 
@@ -65,14 +74,13 @@ RemoveLastDependency(std::shared_ptr<MPTask> _task){
 void
 TaskPlan::
 InitializeRAT(){
-	for(auto dummy = m_dummyMap.begin(); dummy != m_dummyMap.end(); dummy++){
-		m_RAT[dummy->second] = std::pair<Cfg,double>(
-										dummy->second->GetRobot()->GetSimulationModel()->GetState(),
-										0.0);
+	for(auto agent : m_memberAgents){
+		auto cfg = agent->GetRobot()->GetSimulationModel()->GetState();
+		m_RAT[agent->GetRobot()->GetLabel()] = std::pair<Cfg,double>(cfg, 0.0);
 	}
 }
 
-std::unordered_map<HandoffAgent*,std::pair<Cfg,double>>& 
+std::unordered_map<std::string,std::pair<Cfg,double>>& 
 TaskPlan::
 GetRAT(){
 	return m_RAT;
@@ -81,9 +89,21 @@ GetRAT(){
 std::pair<Cfg,double>
 TaskPlan::
 GetRobotAvailability(HandoffAgent* _agent){
-	return m_RAT[_agent];
+	return m_RAT.at(_agent->GetRobot()->GetLabel());
+}
+
+void
+TaskPlan::
+UpdateRAT(HandoffAgent* _agent, std::pair<Cfg,double> _avail){
+	m_RAT[_agent->GetRobot()->GetLabel()] = _avail;
 }
 /***********************************WholeTask Interactions*******************************/
+
+void
+TaskPlan::
+AddWholeTask(WholeTask* _wholeTask){
+	m_wholeTasks.push_back(_wholeTask);
+}
 
 std::vector<WholeTask*>&
 TaskPlan::
@@ -134,6 +154,13 @@ GetLastAgent(WholeTask* _wholeTask){
     return nullptr;
   auto lastSubtask = _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator - 1];
   return static_cast<HandoffAgent*>(lastSubtask->GetRobot()->GetAgent());
+}
+
+void
+TaskPlan::
+AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
+	_wholeTask->m_subtasks.push_back(_subtask);
+	SetWholeTaskOwner(_subtask, _wholeTask);
 }
 
 /***********************************Agent Accessors*******************************/

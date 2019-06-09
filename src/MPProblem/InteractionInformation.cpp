@@ -19,9 +19,19 @@ InteractionInformation(MPProblem* _problem, XMLNode& _node) : m_problem(_problem
       "Indicates if the handoff requires explicit paths");
 
   for(auto& child : _node) {
-    if(child.Name() == "Task") {
-      m_tasks.emplace_back(new MPTask(m_problem, child));
+    if(child.Name() == "Receiving") {
+      m_tasks.emplace_back(new MPTask(m_problem, *child.begin()));
+			m_taskType["receiving"].push_back(m_tasks.back());
     }
+		else if(child.Name() == "Delivering"){
+      m_tasks.emplace_back(new MPTask(m_problem, *child.begin()));
+			m_taskType["delivering"].push_back(m_tasks.back());
+		}
+		else if(child.Name() == "Auxiliary"){
+			throw RunTimeException(WHERE, "Auxiliary interactions are not yet supported.");
+      m_tasks.emplace_back(new MPTask(m_problem, *child.begin()));
+			m_taskType["auxiliary"].push_back(m_tasks.back());
+		}
     else if(child.Name() == "Location"){
       const std::string pointString = child.Read("point", false, "",
           "The center point of the handoff template");
@@ -72,6 +82,14 @@ std::vector<std::shared_ptr<MPTask>>&
 InteractionInformation::
 GetInteractionTasks(){
   return m_tasks;
+}
+
+std::vector<std::shared_ptr<MPTask>>&
+InteractionInformation::
+GetTypeTasks(const std::string& _s){
+	if(_s != "receiving" and _s != "delivering" and _s != "auxiliary")
+		throw RunTimeException(WHERE, _s + " is not a recognized interaction task type.");
+  return m_taskType[_s];
 }
 
 double

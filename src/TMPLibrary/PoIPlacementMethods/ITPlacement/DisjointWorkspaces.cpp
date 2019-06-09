@@ -63,8 +63,13 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   for(auto& agent : capabilityAgents){
     std::string cap = agent->GetRobot()->GetCapability();
     auto& terrains = terrainMap[cap];
+		
+		bool receiving = (cap == _it->GetInformation()->GetTypeTasks("receiving")[0]->GetCapability());
+
     for(auto& terrain : terrains){
-      // Boundaries around the terrain to sample for the other capability
+      if(terrain.IsVirtual())
+				continue;
+			// Boundaries around the terrain to sample for the other capability
       // involved in the interaction
       //std::vector<WorkspaceBoundingBox*> sampleSpaces;
 
@@ -118,8 +123,10 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
           auto x = box->GetRange(0).min;
           auto yMin = box->GetRange(1).min + toaddY;
           auto yMax = box->GetRange(1).min + ySize*i;
-          auto z = 0.0;
-          for(int i=0; i < m_maxAttempts; i++){
+          auto z = 1.0;
+          if(!receiving)
+						z = 0;	
+					for(int i=0; i < m_maxAttempts; i++){
             double y = GetRandomDouble(yMin,yMax);
             Cfg sampleLeft({x,y,z},agent->GetRobot());
             sampleLeft[2] = z;
@@ -130,8 +137,8 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
           }
 
           x = box->GetRange(0).max;
-          z = 1;
-          for(int i=0; i < m_maxAttempts; i++){
+          (receiving) ? z = 0 : z = 1;
+					for(int i=0; i < m_maxAttempts; i++){
             double y = GetRandomDouble(yMin,yMax);
             Cfg sampleRight({x,y,z},agent->GetRobot());
             sampleRight[2] = z;
@@ -140,7 +147,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
               break;
             }
           }
-          z = .5;
+          (receiving) ? z = -.5 : z = .5;
           auto y = box->GetRange(1).min;
           auto xMin = box->GetRange(0).min + toaddX;
           auto xMax = box->GetRange(0).min + xSize*i;
@@ -155,7 +162,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
           }
 
           y = box->GetRange(1).max;
-          z = -.5;//was positive
+          (receiving) ? z = .5 : z = -.5;
           for(int i=0; i < m_maxAttempts; i++){
             double x = GetRandomDouble(xMin,xMax);
             Cfg sampleTop({x,y,z},agent->GetRobot());
@@ -195,7 +202,8 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
 
         }
       }
-      std::cout << "Sample Points" << std::endl;
+      if(m_debug) 
+				std::cout << "Sample Points" << std::endl;
       for(auto cfg : samplePoints){
         if(m_debug){
           std::cout << "Robot Label: " << cfg.GetRobot()->GetLabel() << std::endl;
@@ -213,7 +221,6 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
         std::cout << "No locations found for: " << terrain.GetBoundary()->GetCenter() << std::endl;
       }
     }
-    break;
   }
 
   // Testing to see if Coordinator interface works

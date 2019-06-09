@@ -26,6 +26,7 @@ Terrain(XMLNode& _node) {
   m_boundary = std::move(Boundary::Factory(_node));
 
   std::string color = _node.Read("color", false, "blue", "Color of the Terrain");
+	m_virtual = _node.Read("virtual", false, false, "Does not invalidate other capabilites within.");
   m_wire = _node.Read("wire", false, true, "Render type");
 
   try {
@@ -43,6 +44,7 @@ Terrain::
 Terrain(const Terrain& _terrain) {
   m_color = _terrain.m_color;
   m_boundary = _terrain.m_boundary->Clone();
+	m_virtual = _terrain.m_virtual;
   m_wire = _terrain.m_wire;
 }
 
@@ -60,6 +62,11 @@ GetBoundary() const noexcept {
   return m_boundary.get();
 }
 
+bool
+Terrain::
+IsVirtual() const noexcept {
+	return m_virtual;
+}	
 
 bool
 Terrain::
