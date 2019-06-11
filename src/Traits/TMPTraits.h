@@ -11,6 +11,7 @@
 // PoIPlacementMethods to include
 
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.h"
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.h"
 
 // TaskEvaluators to include
@@ -50,7 +51,8 @@ struct TMPTraits {
   //types of points of interest placement methods available in our world
   typedef boost::mpl::list<
     DisjointWorkspaces,
-    WorkspaceGuidance
+    WorkspaceGuidance,
+		OverlappingWorkspacesDensity
       > PoIPlacementMethodList;
 
   //types of task evaluators available in our world

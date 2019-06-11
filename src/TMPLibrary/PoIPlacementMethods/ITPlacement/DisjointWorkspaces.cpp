@@ -221,6 +221,8 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
         std::cout << "No locations found for: " << terrain.GetBoundary()->GetCenter() << std::endl;
       }
     }
+		if(!_it->GetInformation()->GetTemplateLocations().empty())
+			break;
   }
 
   // Testing to see if Coordinator interface works
