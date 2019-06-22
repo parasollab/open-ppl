@@ -404,6 +404,10 @@ class RoadmapGraph : public
     /// @note Temporarily moved to non-member function.
     //virtual void Read(const std::string& _filename);
 
+    // Temporary work-around for calling the add vertex/edge hooks.
+    template <typename RG>
+    friend void Read(RG* _g, const std::string& _filename);
+
     /// Write the current roadmap out to a roadmap (.map) file.
     /// @param _filename The name of the map file to write to.
     /// @param _env The environment for which this map was constructed.
@@ -1296,6 +1300,12 @@ Read(RoadmapGraph* _g, const std::string& _filename) {
   // Unset the input robot for our edge class.
   Edge::inputRobot = nullptr;
   Vertex::inputRobot = nullptr;
+
+  for(auto vi = _g->begin(); vi != _g->end(); ++vi)
+    _g->ExecuteAddVertexHooks(vi);
+  for(auto vi = _g->begin(); vi != _g->end(); ++vi)
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+      _g->ExecuteAddEdgeHooks(ei);
 }
 #else
 template <typename Vertex, typename Edge>
