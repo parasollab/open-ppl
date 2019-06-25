@@ -95,6 +95,21 @@ class PropertyMap {
     EdgeProperty& GetEdgeProperty(const ED& _e);
     ///@}
 
+    ///@name IO
+    ///@{
+
+    /// Writes the graph to a file
+    /// @param _file the output file name
+
+    void Write(const std::string& _file);
+
+    /// Reads the graph from a file
+    /// @param _file the output file name
+
+    void Read(const std::string& _file);
+    ///@}
+
+
 
   private:
 
@@ -247,5 +262,93 @@ ClearanceFilteredSkeleton(double _t, MPBaseObject<MPTraits>* _mp,
   auto clearanceMap = ClearanceAnnotatedSkeleton(_mp, _ws, _boundary);
   _ws = clearanceMap->GetEdgeFilteredSkeleton(ClearanceFiltration(_t));
 }
+
+/*------------------------------------- I/O helpers ---------------------------------*/
+
+template<typename EdgeProperty, typename VertexProperty>
+void
+PropertyMap<EdgeProperty, VertexProperty>::
+Write(const std::string& _file) {
+  std::ofstream ofs(_file);
+
+  ofs << m_vertexMap.size() <<" "<< m_edgeMap.size() << std::endl;
+  for(auto vit : m_vertexMap){
+    auto spk = this->GetVertexProperty(vit.first);
+    ofs << vit.first <<" "<< spk.size() <<" ";
+    for(auto s : spk)
+      ofs << s <<" ";
+    ofs << std::endl;
+  }
+
+  for(auto eit : m_edgeMap)	{
+   auto spks = this->GetEdgeProperty(eit.first);
+
+    ofs << eit.first.id() << " ";
+    ofs << eit.first.source() << " " << eit.first.target() << " " << spks.size() << std::endl;
+
+    for(auto spk : spks) {
+      ofs << spk.size() << " ";
+      for(auto s : spk) {
+        ofs << s << " ";
+      }
+      ofs << std::endl;
+    }
+  }
+
+  ofs.close();
+}
+
+template<typename EdgeProperty, typename VertexProperty>
+void
+PropertyMap<EdgeProperty, VertexProperty>::
+Read(const std::string& _file) {
+  typedef WorkspaceSkeleton::VD VD;
+  typedef WorkspaceSkeleton::ED ED;
+
+  std::fstream ifs(_file);
+  size_t nVerts, nEdges;
+
+  ifs >> nVerts >> nEdges;
+
+  for(size_t vit = 0; vit < nVerts; vit++) {
+    size_t propSize;
+    VD vid;
+    std::vector<Point3d> vertexProperty;
+
+    ifs >> vid >> propSize;
+    for (size_t propit = 0; propit < propSize; propit++) {
+      Point3d prop;
+      ifs >> prop;
+      vertexProperty.push_back(prop);
+    }
+    this->SetVertexProperty(vid, vertexProperty);
+  }
+
+  for(size_t eit = 0; eit < nEdges; eit++) {
+
+    size_t proSize, eSource, eTarget, eDesID;
+    std::vector<vector<Point3d> > intermediateWitnesses;
+
+    ifs >> eDesID;
+    ifs >> eSource >> eTarget >> proSize;
+    for (size_t pit = 0; pit < proSize; pit++) {
+
+      std::vector<Point3d> edgeProperty;
+      size_t eSize;
+      ifs >> eSize;
+      for(size_t it = 0; it < eSize; it++) {
+        Point3d prop;
+        ifs >> prop;
+        edgeProperty.push_back(prop);
+      }
+
+      intermediateWitnesses.push_back(edgeProperty);
+    }
+
+    auto ed =  ED(eSource, eTarget, eDesID);
+    this->SetEdgeProperty(ed, intermediateWitnesses);
+  }
+}
+
 /*------------------------------------------------------------------------*/
 #endif

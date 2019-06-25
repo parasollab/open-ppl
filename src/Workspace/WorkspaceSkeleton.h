@@ -104,8 +104,12 @@ class WorkspaceSkeleton {
 
     void Write(const std::string& _file);
 
+    /// Reads the graph from a file
+    /// @param _file the output file name
+
+    void Read(const std::string& _file);
+
     ///@}
-    
 	vertex_iterator find_vertex(VD _vd);
 
   private:
