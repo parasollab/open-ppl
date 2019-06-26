@@ -38,6 +38,9 @@ SetDefaultParameters(XMLNode& _node) {
   m_defaultParams.write = _node.Read("write", false, m_defaultParams.write,
       "Write Reeb Graph to file");
 
+  m_defaultParams.read = _node.Read("read", false, m_defaultParams.read,
+      "Read in Reeb Graph to file");
+
   m_defaultParams.debug = _node.Read("debug", false, m_defaultParams.debug,
       "Show debug messages?");
 }
@@ -47,16 +50,16 @@ SetDefaultParameters(XMLNode& _node) {
 void
 ReebGraphConstruction::
 Construct(const WorkspaceDecomposition* _decomposition) {
-  if(m_params.filename.empty()) {
+  if(!m_params.filename.empty() && m_params.read)
+    Read(m_params.filename);
+  else {
     Initialize(_decomposition);
     Construct();
     Embed(_decomposition);
 
-    if(m_params.write)
+    if(!m_params.filename.empty() && m_params.write)
       Write(m_params.filename);
   }
-  else
-    Read(m_params.filename);
 }
 
 
