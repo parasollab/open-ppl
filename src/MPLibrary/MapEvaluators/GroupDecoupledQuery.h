@@ -127,10 +127,13 @@ operator()() {
     // Success: add this robot/path as a dynamic obstacle for the remaining
     // robots.
 
-    SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool("SI");
+    //SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool("SI");
     this->GetMPProblem()->AddDynamicObstacle(
-        DynamicObstacle(robot, siTool->FullPath(this->GetPath(robot))
-    ));
+        DynamicObstacle(robot, this->GetPath(robot)->FullCfgs(this->GetMPLibrary()))
+          );
+    // this->GetMPProblem()->AddDynamicObstacle(
+    //     DynamicObstacle(robot, siTool->FullPath(this->GetPath(robot))
+    //       ));
     // this->GetMPProblem()->AddDynamicObstacle(
     //     DynamicObstacle(robot, this->GetPath(robot)->FullCfgs(this->GetMPLibrary()))
     // );

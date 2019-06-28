@@ -271,6 +271,8 @@ class MPLibraryType final
     const std::string& GetBaseFilename() const noexcept;
     void SetBaseFilename(const std::string& _s) noexcept;
 
+
+
     ///@}
     ///@name Solution Accessors
     ///@{
@@ -282,6 +284,7 @@ class MPLibraryType final
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* const _g = nullptr) const noexcept;
     RoadmapType*      GetBlockRoadmap(Robot* const _r = nullptr) const noexcept;
     Path*             GetPath(Robot* const _r = nullptr) const noexcept;
+    void              SetPath(Robot* const _r, Path* &_path) noexcept;
     GroupPath*        GetGroupPath(RobotGroup* const _g = nullptr) const noexcept;
     LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const noexcept;
 
@@ -812,6 +815,14 @@ GetPath(Robot* const _r) const noexcept {
   if(!_r and !GetTask())
     return nullptr;
   return m_solution->GetPath(_r ? _r : GetTask()->GetRobot());
+}
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+SetPath(Robot* const _r, Path* &_path)  noexcept {
+    //std::cout << "MPLibrary path " << _path->VIDs() << std::endl;
+    m_solution->SetPath(_r,_path);
 }
 
 

@@ -9,6 +9,7 @@ template <typename MPTraits>
 class CBSNode  : public MPBaseObject<MPTraits> {
 
 	typedef typename MPTraits::CfgType    CfgType;
+	typedef typename MPTraits::Path                 Path;
 	public:
 		//typedef typename MPTraits::Path Path;
 		// typedef int Path;
@@ -28,6 +29,8 @@ class CBSNode  : public MPBaseObject<MPTraits> {
 		std::vector<std::vector<pair<pair<size_t,size_t>,double>>> m_invalidEdgesAt;
 
 		std::vector<std::vector<pair<CfgType,double>>> m_conflictCfgsAt;
+
+		//std::vector<Path*> m_safeCopyPaths;
 
 		void PrintInvalidEdges() {
 			std::cout << "Invalid Edges: ";

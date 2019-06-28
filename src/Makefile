@@ -16,7 +16,7 @@ asan     ?= 0
 
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
-vizmo_map := #-DVIZMO_MAP
+vizmo_map := -DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
 group_map := #-DGROUP_MAP

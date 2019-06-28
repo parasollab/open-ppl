@@ -28,6 +28,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
+  	typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename MPTraits::CfgType    CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::Path Path; 
@@ -77,18 +78,24 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @param _timestep The timestep to check.
     bool ContainsTimestep(const Intervals& _intervals, const double _timestep);
 
-    Conflict<MPTraits> FindConflictType(Path* _path, Robot*& _conflictRobot1, Robot*& _conflictRobot2, double& _conflictTimestep, vector<CfgType> _obstacle);    
+    //Conflict<MPTraits> FindConflictType(Path* _path, Robot*& _conflictRobot1,
+    // Robot*& _conflictRobot2, double& _conflictTimestep, 
+    // vector<CfgType> _obstacle);    
 
  
-    Conflict<MPTraits> FindConflict(Path* _path, Path* _obstacle);
+    //Conflict<MPTraits> FindConflict(Path* _path, Path* _obstacle);
 
-    vector<CfgType> Intermediates(CfgType _c1, CfgType _c2);
+    /// Checking if an edge is collision-free with an external cfg
+    /// @param _source The cfg source of the edge.
+    /// @param _target The cfg target of the edge.
+    /// @param _timestep The external cfg to check.
+    bool IsEdgeSafe(const CfgType _source, const CfgType _target, 
+    	const CfgType _conflictCfg);
 
-    vector<CfgType> FullPath(Path* _obstacle); 
-
-    bool IsEdgeSafe(const CfgType _source, const CfgType _target, const CfgType _conflictCfg);
-
-    pair<pair<size_t,pair<CfgType,double>>,pair<size_t,pair<CfgType,double>>> FindConflict(vector<Path*> _paths) ;
+    /// Checking if a set of paths has inter-robot collisions.
+    /// @param _paths The set f paths to check.
+    pair<pair<size_t,pair<CfgType,double>>,pair<size_t,pair<CfgType,
+    	double>>> FindConflict(vector<Path*> _paths) ;
 
     ///@}
 
@@ -110,12 +117,16 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     ///         following the configuration sequence.
     Intervals ComputeSafeIntervals(const std::vector<Cfg>& _cfgs);
 
-    bool IsSafe(const CfgType& _cfg, const double _timestep, Robot*& _conflictRobot2, vector<CfgType> _obstacle, CfgType& _conflictCfg);
+    //bool IsSafe(const CfgType& _cfg, const double _timestep, 
+    //	Robot*& _conflictRobot2, vector<CfgType> _obstacle, 
+    //	CfgType& _conflictCfg);
 
-    bool FindConflictCfg(const std::vector<Cfg>& _cfgs, CfgType& _conflictCfg, Robot*& _conflictRobot1, Robot*& _conflictRobot2, double& _conflictTimestep, vector<CfgType> _obstacle);
+    //bool FindConflictCfg(const std::vector<Cfg>& _cfgs, 
+    // CfgType& _conflictCfg,
+    // Robot*& _conflictRobot1, Robot*& _conflictRobot2, 
+    // double& _conflictTimestep, vector<CfgType> _obstacle);
 
-    
-
+ 
     ///@}
     ///@name Internal State
     ///@{
@@ -318,10 +329,14 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
   return safeIntervals;
 }
 
+// Next commented function are not used anymore in the conflict checking 
+// process of the CBS work, we may get rid of them soon
+/*-------------------------------------------------------------------------
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-IsSafe(const CfgType& _cfg, const double _timestep, Robot*& _conflictRobot2, vector<CfgType> _obstacle, CfgType& _conflictCfg) {
+IsSafe(const CfgType& _cfg, const double _timestep, Robot*& _conflictRobot2,
+ vector<CfgType> _obstacle, CfgType& _conflictCfg) {
 
   auto robotMultiBody = _cfg.GetRobot()->GetMultiBody();
   robotMultiBody->Configure(_cfg);
@@ -330,51 +345,41 @@ IsSafe(const CfgType& _cfg, const double _timestep, Robot*& _conflictRobot2, vec
   /// @TODO Figure out how to avoid needing this downcast so that we can
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
-  //std::cout << "m_vcLabel: " << m_vcLabel << std::endl;
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  //std::cout << "GetValidityChecker()" << std::endl;
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
-  //auto vc = this->GetValidityChecker("pqp_solid");
-
+  
   // Compute the step number associated with _timestep.
   const double timeRes = this->GetEnvironment()->GetTimeRes();
   //double timeRes = 1;
   const size_t currentStep = std::lround(_timestep / timeRes);
 
   // Check this configuration against each dynamic obstacle.
-  //const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
-  //std::cout << "obstacles.size()" << obstacles.size() << std::endl;
-  //for(const auto& obstacle : obstacles) {
-    // Determine the obstacle's position at the current timestep. If it is
-    // already done moving, use its last position.
-    const auto& path = _obstacle;
-    //std::cout  << "_obstacle.size(): " << _obstacle.size() << std::endl;
-    _conflictRobot2 = _obstacle[0].GetRobot();
-    const size_t lastStep = path.size(),
-                 useStep  = std::min(currentStep, lastStep);
-    //std::cout  << "useStep: " << useStep << std::endl;
-    if (useStep > _obstacle.size()-1)
-      return true; 
-    //std::cout << "obstacle timestep: " << useStep << std::endl;
-    const CfgType& position = path[useStep];
-    // std::cout<< "robot cfg:" << _cfg.PrettyPrint();
-    // std::cout << "\tobstacle cfg:" << position.PrettyPrint() << std::endl;
+  // Determine the obstacle's position at the current timestep. If it is
+  // already done moving, use its last position.
+  const auto& path = _obstacle;
+  _conflictRobot2 = _obstacle[0].GetRobot();
+  const size_t lastStep = path.size(),
+               useStep  = std::min(currentStep, lastStep);
+  if (useStep > _obstacle.size()-1)
+    return true; 
+  const CfgType& position = path[useStep];
 
-    // Configure the obstacle at the current timestep.
-    auto obstacleMultiBody = _obstacle[0].GetRobot()->GetMultiBody();
-    obstacleMultiBody->Configure(position);
+  // Configure the obstacle at the current timestep.
+  auto obstacleMultiBody = _obstacle[0].GetRobot()->GetMultiBody();
+  obstacleMultiBody->Configure(position);
 
-    // If the obstacle is in collision with _cfg at _timestep, return false
-    CDInfo cdInfo;
-    if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
-        this->GetNameAndLabel())) {
-      std::cout<< "robot cfg:" << _cfg.PrettyPrint() << std::endl;
-      std::cout << "obstacle cfg:" << position.PrettyPrint() << std::endl;
-      std::cout << "Conflict at timestep " << _timestep << std::endl;
-      _conflictCfg = position;
-      return false;
+  // If the obstacle is in collision with _cfg at _timestep, return false
+  CDInfo cdInfo;
+  if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
+      this->GetNameAndLabel())) {
+    if(this->m_debug) {
+      std::cout<< "robot cfg:" << _cfg.PrettyPrint() 
+      << "\nobstacle cfg:" << position.PrettyPrint() 
+      << "\nConflict at timestep " << _timestep << std::endl;
     }
-  //}
+    _conflictCfg = position;
+    return false;
+  }
 
   // If we haven't detected a collision, the configuration is safe.
   return true;
@@ -383,27 +388,26 @@ IsSafe(const CfgType& _cfg, const double _timestep, Robot*& _conflictRobot2, vec
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-FindConflictCfg(const std::vector<Cfg>& _cfgs, CfgType& _conflictCfg, Robot*& _conflictRobot1, Robot*& _conflictRobot2, double& _conflictTimestep, vector<CfgType> _obstacle) {
-  //MethodTimer mt(this->GetStatClass(), "SafeIntervalTool::FindConflictCfg");
+FindConflictCfg(const std::vector<Cfg>& _cfgs, CfgType& _conflictCfg, 
+	Robot*& _conflictRobot1, Robot*& _conflictRobot2, 
+	double& _conflictTimestep, vector<CfgType> _obstacle) {
   //If there is no cfgs to check, there is no conflict
-  //std::cout << "cfgs.size: " << _cfgs.size() << std::endl;
   if(_cfgs.empty())
     return false;
 
   const double timeRes = this->GetEnvironment()->GetTimeRes();
-  //double timeRes = 1; //Temporaly set to 1
-
-  ////We are checking both robot and obstacles at same current time
-  ////_conflictTimestep will have track of each cgf intermediate of the agents'path
+  
+  // We are checking both robot and obstacles at same current time
+  // _conflictTimestep will have track of each cgf intermediate 
+  // of the agents'path
   bool safe = true;
   for(const CfgType& cfg : _cfgs) {
-    //std::cout << "robot timestep: " << _conflictTimestep << std::endl;
-    safe &= IsSafe(cfg, _conflictTimestep * timeRes, _conflictRobot2, _obstacle, _conflictCfg);
+    safe &= IsSafe(cfg, _conflictTimestep * timeRes, _conflictRobot2, 
+    	_obstacle, _conflictCfg);
     if(!safe) {
       // If cfg is not safe, we have found a conflict
       _conflictTimestep = _conflictTimestep * timeRes;
       _conflictRobot1 = cfg.GetRobot();
-      //_conflictCfg = cfg;
       return true;
     }
     ++_conflictTimestep;
@@ -414,15 +418,18 @@ FindConflictCfg(const std::vector<Cfg>& _cfgs, CfgType& _conflictCfg, Robot*& _c
 template <typename MPTraits>
 Conflict<MPTraits>
 SafeIntervalTool<MPTraits>::
-FindConflictType(SafeIntervalTool<MPTraits>::Path* _path, Robot*& _conflictRobot1, Robot*& _conflictRobot2, double& _conflictTimestep, vector<CfgType> _obstacle) {
-  //MethodTimer mt(this->GetStatClass(), "SafeIntervalTool::FindConflictType");
+FindConflictType(SafeIntervalTool<MPTraits>::Path* _path, 
+	Robot*& _conflictRobot1, Robot*& _conflictRobot2, double& _conflictTimestep,
+	 vector<CfgType> _obstacle) {
   Conflict<MPTraits> conflict;
   CfgType conflictCfg(nullptr);
   auto vids = _path->VIDs();
-  /////We just check the first vertex
+  // /We just check the first vertex
   std::vector<CfgType> cfg{_path->GetRoadmap()->GetVertex(vids[0])};
-  if(FindConflictCfg(cfg, conflictCfg, _conflictRobot1, _conflictRobot2, _conflictTimestep, _obstacle)) {
-    std::cout << "Conflict found in Vertex: " << vids[0] <<std::endl;
+  if(FindConflictCfg(cfg, conflictCfg, _conflictRobot1, _conflictRobot2,
+   _conflictTimestep, _obstacle)) {
+  	if(this->m_debug)
+    	std::cout << "Conflict found in Vertex: " << vids[0] <<std::endl;
     conflict.r1 = _conflictRobot1;
     conflict.r2 = _conflictRobot2;
     conflict.conflictTimestep = _conflictTimestep;
@@ -433,30 +440,21 @@ FindConflictType(SafeIntervalTool<MPTraits>::Path* _path, Robot*& _conflictRobot
     return conflict;
   } 
   size_t i = 1;
-  //////We check one edge and then one vertex per iteration until we chek the full path or find a conflict
+  // We check one edge and then one vertex per iteration until we 
+  // check the full path or find a conflict
   while( i < vids.size()){
-    //auto edge = _path->GetRoadmap()->GetEdge(vids[i-1],vids[i]);
     auto c1 = _path->GetRoadmap()->GetVertex(vids[i-1]);
     auto c2 = _path->GetRoadmap()->GetVertex(vids[i]);
-    //std::vector<CfgType> cfgs = edge.GetIntermediates();
     std::vector<CfgType> cfgs = Intermediates(c1,c2);
-    // std::cout << "Intermediates() c1: "<< c1.PrettyPrint() << "\tc2: " << c2.PrettyPrint() << std::endl;
-    // std::cout << "cfgs.size()" << cfgs.size() << std::endl;
     ///Checking an edge
-    if(FindConflictCfg(cfgs, conflictCfg, _conflictRobot1, _conflictRobot2, _conflictTimestep, _obstacle)) {
-      std::cout << "Conflict found in Edge (" << vids[i-1]  << "," << vids[i]<< ")  "<< cfgs.size() <<std::endl;
+    if(FindConflictCfg(cfgs, conflictCfg, _conflictRobot1,
+    	 _conflictRobot2, _conflictTimestep, _obstacle)) {
+    	if(this->m_debug)
+      	std::cout << "Conflict found in Edge (" << vids[i-1]  << "," 
+      		<< vids[i]<< ")  "<< cfgs.size() <<std::endl;
       conflict.conflictTimestep = _conflictTimestep;
-      //if(i == 1) {
-      //std::cout << "We randomly erase the edge  (" << vids[i-1]  << "," << vids[i]<< ")  "<< cfgs.size() <<std::endl;
       conflict.id1 = vids[i-1];
       conflict.id2 = vids[i];
-      //} else {
-      //  size_t rand = std::rand()%i;
-      //  std::cout << "We randomly erase the edge  (" << vids[rand]  << "," << vids[rand+1]<< ")  "<< cfgs.size() <<std::endl;
-      //  conflict.id1 = vids[rand];
-      //  conflict.id2 = vids[rand+1];
-      //}
-      //std::cout << "Conflict found in Edge (" << vids[i-1]  << "," << vids[i]<< ")  "<< cfgs.size() <<std::endl;
       conflict.r1 = _conflictRobot1;
       conflict.r2 = _conflictRobot2;
       conflict.t1 = Conflict<MPTraits>::Type::Edge;
@@ -466,8 +464,10 @@ FindConflictType(SafeIntervalTool<MPTraits>::Path* _path, Robot*& _conflictRobot
     }     
     std::vector<CfgType> cfg{_path->GetRoadmap()->GetVertex(vids[i])};
     ///Checking a vertex 
-    if(FindConflictCfg(cfg, conflictCfg, _conflictRobot1, _conflictRobot2, _conflictTimestep, _obstacle)) {
-      std::cout << "Conflict found in Vertex: " << vids[i] <<std::endl;
+    if(FindConflictCfg(cfg, conflictCfg, _conflictRobot1, 
+    	_conflictRobot2, _conflictTimestep, _obstacle)) {
+    	if(this->m_debug)
+      	std::cout << "Conflict found in Vertex: " << vids[i] <<std::endl;
       conflict.conflictTimestep = _conflictTimestep;
       conflict.id1 = vids[i-1];
       conflict.id2 = vids[i];
@@ -476,12 +476,6 @@ FindConflictType(SafeIntervalTool<MPTraits>::Path* _path, Robot*& _conflictRobot
       conflict.t1 = Conflict<MPTraits>::Type::Edge;
       conflict.emptyConflict = false;
       conflict.conflictCfg = conflictCfg;
-      // conflict.r1 = _conflictRobot1;
-      // conflict.r2 = _conflictRobot2;
-      // conflict.conflictTimestep = _conflictTimestep;
-      // conflict.id1 = vids[i];
-      // conflict.t1 = Conflict::Type::Vertex;
-      // conflict.emptyConflict = false;
       return conflict;
     }
     ++i;
@@ -489,15 +483,13 @@ FindConflictType(SafeIntervalTool<MPTraits>::Path* _path, Robot*& _conflictRobot
   return conflict;
 }
 
-
 template <typename MPTraits>
 Conflict<MPTraits>
 SafeIntervalTool<MPTraits>::
-FindConflict(SafeIntervalTool<MPTraits>::Path* _path, SafeIntervalTool<MPTraits>::Path* _obstacle){
-  // MethodTimer mt(this->GetStatClass(), "SafeIntervalTool::FindConflict");
+FindConflict(SafeIntervalTool<MPTraits>::Path* _path, 
+	SafeIntervalTool<MPTraits>::Path* _obstacle){
   auto cfgs = _path->Cfgs();
   auto cfg = cfgs[0];
-  // std::cout << "VIDs.size(): " << _path->VIDs().size() << std::endl;
   Robot* conflictRobot1 = cfg.GetRobot(); 
   Robot* conflictRobot2 = cfg.GetRobot();
   double conflictTimestep{0};
@@ -505,70 +497,49 @@ FindConflict(SafeIntervalTool<MPTraits>::Path* _path, SafeIntervalTool<MPTraits>
   auto obstacle = FullPath(_obstacle);
   if(obstacle.empty())
     return conflict;
-  conflict = FindConflictType(_path, conflictRobot1, conflictRobot2, conflictTimestep, obstacle);
+  conflict = FindConflictType(_path, conflictRobot1, 
+  	conflictRobot2, conflictTimestep, obstacle);
   return conflict;
 }
-
-template <typename MPTraits>
-vector<typename MPTraits::CfgType>
-SafeIntervalTool<MPTraits>::
-Intermediates(CfgType _c1, CfgType _c2) {
-  vector<CfgType> intermediates;
-  int nTicks;
-  auto robot = _c1.GetRobot();
-  CfgType tick(robot), incr(robot);
-  tick = _c1;
-  auto positionRes = this->GetEnvironment()->GetPositionRes();
-  auto orientationRes = this->GetEnvironment()->GetOrientationRes();
-  incr.FindIncrement(_c1, _c2, &nTicks, positionRes, orientationRes);
-  for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
-    tick += incr;
-    intermediates.push_back(tick);
-  }
-  return intermediates;
-}
-
-template <typename MPTraits>
-vector<typename MPTraits::CfgType>
-SafeIntervalTool<MPTraits>::
-FullPath(SafeIntervalTool<MPTraits>::Path* _obstacle) {
-  vector<CfgType> _rdmpPath = _obstacle->Cfgs();
-  auto robot = _rdmpPath[0].GetRobot();
-  vector<CfgType> path;
-  if(_rdmpPath.empty()) return path;
-  if(_rdmpPath.size() == 1) return _rdmpPath;
-
-  path.push_back(_rdmpPath[0]);
-  size_t i = 0;
-  while(i < _rdmpPath.size()-1) { 
-    int nTicks = 0;
-    CfgType tick(robot), incr(robot);
-    tick = _rdmpPath[i];
-    auto positionRes = this->GetEnvironment()->GetPositionRes();
-    auto orientationRes = this->GetEnvironment()->GetOrientationRes();
-    incr.FindIncrement(_rdmpPath[i], _rdmpPath[i+1], &nTicks, positionRes, orientationRes);
-
-    for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
-      tick += incr;
-      path.push_back(tick);
-    }
-    ++i;
-    path.push_back(_rdmpPath[i]);
-
-  }
-
-  return path; 
-}
+------------------------------------------------------------------*/
 
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-IsEdgeSafe(const CfgType _source, const CfgType _target, const CfgType _conflictCfg) {
+IsEdgeSafe(const CfgType _source, const CfgType _target, 
+	const CfgType _conflictCfg) {
 
   std::vector<CfgType> path;
   path.push_back(_source);
-  std::vector<CfgType> intermediates = Intermediates(_source,_target);
-  path.insert(path.end(),intermediates.begin(),intermediates.end());
+  auto robot = _source.GetRobot();
+  auto roadmap = this->GetRoadmap(robot);
+  typename RoadmapType::EI ei;
+
+  // Reconstructing edge 
+  roadmap->GetEdge(roadmap->GetVID(_source),roadmap->GetVID(_target),ei);
+
+  // Use the local planner from p the edge lp.
+  // Fall back to straight-line if edge lp is not available (this will always
+  // happen if it was grown with an extender).
+  typename MPTraits::MPLibrary::LocalPlannerPointer lp;
+  auto lib = this->GetMPLibrary();
+  auto env = lib->GetMPProblem()->GetEnvironment();
+  try {
+    lp = lib->GetLocalPlanner(ei->property().GetLPLabel());
+  }
+  catch(...) {
+    lp = lib->GetLocalPlanner("sl");
+  }
+  // Construct a resolution-level path along the recreated edge.
+  std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+  recreatedEdge.insert(recreatedEdge.begin(), _source);
+  recreatedEdge.push_back(_target);
+  for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+    std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
+        std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+    path.insert(path.end(), edge.begin(), edge.end());
+  }
+
   path.push_back(_target);
 
   auto robotMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
@@ -595,27 +566,26 @@ IsEdgeSafe(const CfgType _source, const CfgType _target, const CfgType _conflict
     CDInfo cdInfo;
     if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
         this->GetNameAndLabel())) {
-      //std::cout<< "robot cfg:" << _cfg.PrettyPrint() << std::endl;
-      //std::cout << "obstacle cfg:" << position.PrettyPrint() << std::endl;
-      //std::cout << "Conflict at timestep " << _timestep << std::endl;
       return false;
     }
   }
 
-  // If we haven't detected a collision, the configuration is safe.
+  // If we haven't detected a collision, the edge is safe.
   return true;
 
 }
 
 template <typename MPTraits>
-pair<pair<size_t,pair<typename MPTraits::CfgType,double>>,pair<size_t,pair<typename MPTraits::CfgType,double>>>
+pair<pair<size_t,pair<typename MPTraits::CfgType,double>>,
+	pair<size_t,pair<typename MPTraits::CfgType,double>>>
 SafeIntervalTool<MPTraits>::
 FindConflict(vector<SafeIntervalTool<MPTraits>::Path*> _paths) {
 
   vector<vector<CfgType>> paths;
 
   for(auto& path : _paths)
-    paths.push_back(FullPath(path));
+    //paths.push_back(FullPath(path));
+  	paths.push_back(path->FullCfgs(this->GetMPLibrary()));
 
   // Find the latest timestep in which a robot is still moving.
   size_t timeFinal = 0;
@@ -628,7 +598,7 @@ FindConflict(vector<SafeIntervalTool<MPTraits>::Path*> _paths) {
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
 
   for(size_t t = 0 ; t < timeFinal ; ++t) {
-
+    const double timeRes = this->GetEnvironment()->GetTimeRes();
     for(size_t i = 0 ; i < paths.size() ; ++i ) {
       size_t t1 = t;
       if(t > paths[i].size()-1)
@@ -647,14 +617,16 @@ FindConflict(vector<SafeIntervalTool<MPTraits>::Path*> _paths) {
         CDInfo cdInfo;
         if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
             this->GetNameAndLabel())) {
-          const double timeRes = this->GetEnvironment()->GetTimeRes();
           double ti = timeRes * static_cast<double>(t1);
           double tj = timeRes * static_cast<double>(t2);
-          auto cfgConflict1 = make_pair(i,make_pair(paths[i][t1],ti));
-          auto cfgConflict2 = make_pair(j,make_pair(paths[j][t2],tj));
+          auto cfgConflict1 = make_pair(i,make_pair(paths[j][t2],ti));
+          auto cfgConflict2 = make_pair(j,make_pair(paths[i][t1],tj));
           auto pairCfgConflicts = make_pair(cfgConflict1,cfgConflict2);
-          std::cout << "Conflict on robot " << i << " at timestep " << ti << std::endl;
-          std::cout << "Conflict on robot " << j << " at timestep " << tj << std::endl;
+          if(this->m_debug) {
+            std::cout << "Conflict on robot " << i << " at timestep " << ti << " at cfg " << paths[i][t1].PrettyPrint() 
+            << "\nConflict on robot " << j << " at timestep "<< tj <<" at cfg " << paths[j][t2].PrettyPrint() 
+            << std::endl;
+          }
           return pairCfgConflicts;         
         }
       }

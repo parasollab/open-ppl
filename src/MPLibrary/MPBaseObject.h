@@ -204,6 +204,8 @@ class MPBaseObject {
     /// Get the current best path.
     Path* GetPath(Robot* const _r = nullptr) const noexcept;
 
+    void SetPath(Robot* const _r, Path* _path) noexcept;
+
     /// Get the current best group path.
     GroupPath* GetGroupPath(RobotGroup* const _g = nullptr) const noexcept;
 
@@ -519,6 +521,14 @@ GetPath(Robot* const _r) const noexcept {
   return m_library->GetPath(_r);
 }
 
+template <typename MPTraits>
+inline
+void
+MPBaseObject<MPTraits>::
+SetPath(Robot* const _r, Path* _path)  noexcept {
+  //std::cout << "MPBaseObject path " << _path->VIDs() << std::endl;
+  m_library->SetPath(_r,_path);
+}
 
 template <typename MPTraits>
 inline

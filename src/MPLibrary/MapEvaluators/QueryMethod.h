@@ -137,6 +137,17 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     double DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
+    /// Define a function for computing path weights w.r.t. multi-robot
+    /// problems. Here the metric is the number of time steps, and we return
+    /// infinity if taking an edge would result in a inter-robot collision.
+    /// @param _ei An iterator to the edge we are checking.
+    /// @param _sourceDistance The shortest time to the source node.
+    /// @param _targetDistance The best known time to the target node.
+    /// @return The time to the target node via this edge, or infinity if taking
+    ///         this edge would result in a collision with dynamic obstacles.
+    double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
+        const double _sourceDistance, const double _targetDistance) const;
+
     ///@}
     ///@name Internal State
     ///@{
@@ -327,8 +338,14 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
                     const double _targetDistance) {
       return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
     };
-  }
-  else {
+  } else if(this->GetMPProblem()->GetDynamicObstacles().empty() and 
+  	this->GetMPProblem()->NumRobots()) {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  } else {
     weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
                     const double _sourceDistance,
                     const double _targetDistance) {
@@ -415,7 +432,6 @@ template <typename MPTraits>
 bool
 QueryMethod<MPTraits>::
 PerformSubQuery(const VID _start, const VIDSet& _goals) {
-  std::cout << "just individual query is called "<< std::endl;
   // Try to generate a path from _start to _goal.
   auto path = this->GeneratePath(_start, _goals);
 
@@ -436,7 +452,6 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
   return false;
 }
 
-
 template <typename MPTraits>
 double
 QueryMethod<MPTraits>::
@@ -444,50 +459,14 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
   // First check if the edge is lazily invalidated. If so, the distance is
   // infinite.
-  //if(m_roadmap->IsEdgeInvalidated(_ei->id()))
-   // return std::numeric_limits<double>::infinity();
-  auto dm = this->GetDistanceMetric(m_dmLabel);
-  if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
-    std::cout << "EDGE INVALIDATED!!!" << std::endl;
-    return std::numeric_limits<double>::infinity();
-    //return _sourceDistance + 10*(dm->EdgeWeight(_ei->source(), _ei->target()));
-  } else {
 
-    const std::vector<std::pair<CfgType,double>>& conflictCfgsAt = m_roadmap->m_conflictCfgsAt;
-    double conflictTimestep = 0;
-    for(size_t i = 0 ; i <  conflictCfgsAt.size() ; ++i){
-        conflictTimestep = conflictCfgsAt[i].second;
-        // std::cout << "_sourceDistance: " << _sourceDistance << std::endl;
-        
-        // std::cout << "__edgeDistance: " << (_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target())) << std::endl;
-      
-        // std::cout << "_conflictTimestep: " << conflictTimestep << std::endl;
-        //std::cout << "CHECK RBT POINTER: " << i << " : " << conflictCfgsAt[i].first.GetRobot() << " : " << m_roadmap->GetRobot() << std::endl;
-        if(conflictTimestep*1.1 > _sourceDistance && conflictTimestep < (_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))*1.1){
-           //&& m_roadmap->GetRobot() != conflictCfgsAt[i].first.GetRobot()) {
-          SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool("SI");
-          //std::cout << "RIGHT HERE" << std::endl;
-          if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
-            std::cout << "***************** Invalidating conflicting edge (" << _ei->source() << "," << _ei->target() << ")" <<  "at timestep " << conflictTimestep <<std::endl;
-            m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(), conflictTimestep, true);
-            return std::numeric_limits<double>::infinity();
-            //return _sourceDistance + 10*(dm->EdgeWeight(_ei->source(), _ei->target()));
-          }
-        }  
-    }
-    //get set of conflict cfgs from roadmap
-    //get safe interval tool
-    //get source and target vertices from roadmap from edge iterator
-    //for each cnflict cfg: 
-      //check that the conflict cfg time interval overlaps with the edge time interval
-      //check edge (source,target) against conflict cfg with safe interval tool
-      //if any are in conflict, set as invalid in roadmap and in CBS node
-  }
+  if(m_roadmap->IsEdgeInvalidated(_ei->id()))
+    return std::numeric_limits<double>::infinity();
 
   // Check if Distance Metric has been defined. If so use the Distance Metric's
   // EdgeWeight function to compute the target distance.
   if(!m_dmLabel.empty()) {
-    //auto dm = this->GetDistanceMetric(m_dmLabel);
+    auto dm = this->GetDistanceMetric(m_dmLabel);
     return _sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target());
   }
 
@@ -496,7 +475,6 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
                newDistance = _sourceDistance + edgeWeight;
   return newDistance;
 }
-
 
 template <typename MPTraits>
 double
@@ -550,6 +528,66 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // If we're still here, the edge is OK.
   return newDistance;
 }
+
+
+template <typename MPTraits>
+double
+QueryMethod<MPTraits>::
+MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
+    const double _sourceDistance, const double _targetDistance) const {
+  // Checking if the edge is already invalidated
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance +
+   dm->EdgeWeight(_ei->source(), _ei->target()))) {
+   	if(this->m_debug)
+    	std::cout << "EDGE INVALIDATED!!!" << std::endl;
+    return std::numeric_limits<double>::infinity();
+  } else {
+  	// If the edge is not invalidated, we will go trough the ConflictCfg List 
+  	// to obtain all the conflicting timesteps 
+    const std::vector<std::pair<CfgType,double>>& conflictCfgsAt = m_roadmap->
+    	m_conflictCfgsAt;
+    double conflictTimestep = 0;
+    for(size_t i = 0 ; i <  conflictCfgsAt.size() ; ++i){
+        conflictTimestep = conflictCfgsAt[i].second;
+        // If the edge contains one of the conflicting timesteps we perform a 
+        // collision checking over the whole edge agains the corresponding 
+        // conflicting cfg
+        if(conflictTimestep*1.1 > _sourceDistance && conflictTimestep < (
+        		_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))*1.1
+        	) {
+          SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->
+        		GetSafeIntervalTool("SI");
+          if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap
+          	->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
+          	if(this->m_debug) {
+            	std::cout << "Invalidating conflicting edge (" << _ei->source()
+            	 << "," << _ei->target() << ")" << "at timestep " 
+            	 << conflictTimestep << std::endl;
+          	}
+          	// If the edge gets invalidadted we add it to the EdgeInvalidated 
+          	// List to avoid future collision checkings
+            m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(), 
+            	conflictTimestep, true);
+            return std::numeric_limits<double>::infinity();
+          }
+        }  
+    }
+  }
+
+  // Check if Distance Metric has been defined. If so use the Distance Metric's
+  // EdgeWeight function to compute the target distance.
+  if(!m_dmLabel.empty()) {
+    //auto dm = this->GetDistanceMetric(m_dmLabel);
+    return _sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target());
+  }
+
+  // Otherwise use the existing edge weight to compute the distance.
+  const double edgeWeight  = _ei->property().GetWeight(),
+               newDistance = _sourceDistance + edgeWeight;
+  return newDistance;
+}
+
 
 /*----------------------------------------------------------------------------*/
 

@@ -180,8 +180,6 @@ IsConnected(
       _savePath);
   /// @todo We should be setting the LP label either way, need to test before
   ///       removing this check.
-  if(connected)
-    _lpOutput->SetLPLabel(this->GetLabel());
 
   if(this->m_debug)
     std::cout << "\n\tLocal Plan is "
@@ -312,6 +310,9 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   _lpOutput->SetActiveRobots(_robotIndexes);
   _lpOutput->SetLPLabel(this->GetLabel());
 
+  if(connected)
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
+
   stats->IncLPConnections(this->GetNameAndLabel(), connected);
   stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
 
@@ -364,7 +365,8 @@ IsConnectedSLSequential(
     bool _checkCollision, bool _savePath) {
 
   Environment* env = this->GetEnvironment();
-  auto robot = this->GetTask()->GetRobot();
+  //auto robot = this->GetTask()->GetRobot();
+  auto robot = _c1.GetRobot();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
 

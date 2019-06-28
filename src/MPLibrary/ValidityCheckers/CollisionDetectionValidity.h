@@ -181,6 +181,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     bool m_ignoreAdjacentLinks{false};    ///< Ignore adj links in self collisions
     bool m_ignoreSiblingCollisions{false}; ///< Ignore sibling links in self collisions
 
+    bool m_ignoreBaseInterRobot{false}; ///< Ignore base collisions for fixed base multirobot problems
+
     ///@}
 
 };
@@ -212,6 +214,9 @@ CollisionDetectionValidity(XMLNode& _node)
   m_ignoreSiblingCollisions = _node.Read("ignoreSiblingCollisions", false,
       m_ignoreSiblingCollisions,
       "Ignore bodies that share a parent in self-collision checks.");
+  m_ignoreBaseInterRobot = _node.Read("ignoreBaseInterRobot", false,
+      m_ignoreSiblingCollisions,
+      "Ignore collisions between the bases of two robots");
 
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
@@ -336,6 +341,13 @@ IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
       collision |= m_cdMethod->IsInCollision(_a->GetBody(i),
                                              _b->GetBody(j),
                                              cdInfo);
+      //if(m_ignoreBaseInterRobot and i == 0 and j == 0)
+      //  collision = false;
+
+      //if(collision) {
+      //  std::cout << "Collision of first robot in body " << i << std::endl;
+      //  std::cout << "Collision of second robot in body " << j << std::endl;
+      //}
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _caller);
 
       // Retain minimum distance information.

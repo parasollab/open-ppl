@@ -241,6 +241,7 @@ const std::vector<CfgType>&
 DefaultWeight<CfgType>::
 GetIntermediates() const noexcept {
   return m_intermediates;
+
 }
 
 
