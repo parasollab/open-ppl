@@ -80,8 +80,8 @@ IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
 			if(terrain.IsVirtual() and this->m_debug){
 				std::cout << "virtual boundary" << std::endl; //remove this line
 			}
-      inBoundary |= terrain.GetBoundary()->InBoundary(_cfg.GetPoint()) ||
-                    terrain.GetBoundary()->InBoundary(_cfg);
+      inBoundary |= terrain.InTerrain(_cfg.GetPoint()) ||
+                    terrain.InTerrain(_cfg);
 
       // If the cfg is within the terrain boundary and has the same capability
       // then move on to check the other terrains.

@@ -27,6 +27,7 @@ TMPLibrary(){
 												typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
 				m_stateGraphs = new StateGraphSet(this,
 												typename TMPTraits::StateGraphList(), "StateGraphs");
+				m_tmpTools = new TMPTools(this);
 }
 
 
@@ -109,28 +110,32 @@ bool
 TMPLibrary::
 ParseChild(XMLNode& _node) {
 				if(_node.Name() == "TMPStrategies") {
-								m_tmpStrategies->ParseXML(_node);
-								return true;
+					m_tmpStrategies->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "PoIPlacementMethods") {
-								m_poiPlacementMethods->ParseXML(_node);
-								return true;
+					m_poiPlacementMethods->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "TaskEvaluators") {
-								m_taskEvaluators->ParseXML(_node);
-								return true;
+					m_taskEvaluators->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "TaskDecomposers") {
-								m_taskDecomposers->ParseXML(_node);
-								return true;
+					m_taskDecomposers->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "TaskAllocators") {
-								m_taskAllocators->ParseXML(_node);
-								return true;
+					m_taskAllocators->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "StateGraphs") {
-								m_stateGraphs->ParseXML(_node);
-								return true;
+					m_stateGraphs->ParseXML(_node);
+					return true;
+				}
+				else if(_node.Name() == "TMPTools") {
+					m_tmpTools->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "Solver") {
 								const std::string label = _node.Read("tmpStrategyLabel", true, "",

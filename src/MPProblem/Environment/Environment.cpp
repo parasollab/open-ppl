@@ -23,11 +23,14 @@ Terrain() = default;
 Terrain::
 Terrain(XMLNode& _node) {
 
-  m_boundary = std::move(Boundary::Factory(_node));
-
-  std::string color = _node.Read("color", false, "blue", "Color of the Terrain");
-	m_virtual = _node.Read("virtual", false, false, "Does not invalidate other capabilites within.");
-  m_wire = _node.Read("wire", false, true, "Render type");
+  //m_boundary = std::move(Boundary::Factory(_node));
+	std::string color;
+  for(auto& child : _node) {
+		m_boundaries.push_back(std::move(Boundary::Factory(child)));
+		color = child.Read("color", false, "blue", "Color of the Terrain");
+		m_virtual = child.Read("virtual", false, false, "Does not invalidate other capabilites within.");
+		m_wire = child.Read("wire", false, true, "Render type");
+	}
 
   try {
     std::stringstream ss(color);
@@ -43,7 +46,11 @@ Terrain(XMLNode& _node) {
 Terrain::
 Terrain(const Terrain& _terrain) {
   m_color = _terrain.m_color;
-  m_boundary = _terrain.m_boundary->Clone();
+	if(_terrain.m_boundary)
+	  m_boundary = _terrain.m_boundary->Clone();
+	for(auto& boundary : _terrain.m_boundaries){
+		m_boundaries.push_back(std::move(boundary->Clone()));
+	}
 	m_virtual = _terrain.m_virtual;
   m_wire = _terrain.m_wire;
 }
@@ -60,6 +67,32 @@ const Boundary*
 Terrain::
 GetBoundary() const noexcept {
   return m_boundary.get();
+}
+
+const std::vector<std::unique_ptr<Boundary>>&
+Terrain::
+GetBoundaries() const noexcept {
+	return m_boundaries;
+}
+
+bool
+Terrain::
+InTerrain(const Point3d _p) const noexcept {
+	for(auto& boundary : m_boundaries){
+		if(boundary->InBoundary(_p))
+			return true;
+	}
+	return false;
+}
+
+bool
+Terrain::
+InTerrain(const Cfg _cfg) const noexcept {
+	for(auto& boundary : m_boundaries){
+		if(boundary->InBoundary(_cfg))
+			return true;
+	}
+	return false;
 }
 
 bool
@@ -205,7 +238,7 @@ ReadXMLOptions(XMLNode& _node) {
       for(auto& grandChild : child) {
         if(grandChild.Name() == "Boundary") {
 
-          Terrain terrain(grandChild);
+          Terrain terrain(child);
 
           m_terrains[capability].push_back(std::move(terrain));
         }
@@ -692,6 +725,19 @@ IsolateTerrain(Cfg start, Cfg goal){
     }
   }
   return false;
+}
+
+bool 
+Environment::
+SameTerrain(Cfg _start, Cfg _goal) {
+	if(_start.GetRobot()->GetCapability() != _goal.GetRobot()->GetCapability() or
+			_start.GetRobot()->GetCapability() == "")
+		return false;
+	for(auto & terrain : m_terrains[_start.GetRobot()->GetCapability()]) {
+		if(terrain.InTerrain(_start) and terrain.InTerrain(_goal))
+			return true;
+	}
+	return false;
 }
 
 void

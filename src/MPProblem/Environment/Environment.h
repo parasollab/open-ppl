@@ -48,6 +48,12 @@ class Terrain {
 
     const Boundary* GetBoundary() const noexcept;
 
+		const std::vector<std::unique_ptr<Boundary>>& GetBoundaries() const noexcept;
+
+		bool InTerrain(const Point3d _p) const noexcept;
+
+		bool InTerrain(const Cfg _cfg) const noexcept;
+
 		bool IsVirtual() const noexcept;
 
     bool IsWired() const noexcept;
@@ -55,6 +61,8 @@ class Terrain {
   private:
     glutils::color m_color{glutils::color::green}; ///< the color of the boundary when rendering
     std::unique_ptr<Boundary> m_boundary; ///< represents where the terrain is located.
+
+		std::vector<std::unique_ptr<Boundary>> m_boundaries; ///< represent the space occupied by the terrain
 
 		bool m_virtual{false}; ///< indicates a boundary limit for robots of the same capability
 													 ///< but does not invalidate robots of other capabiilties inside it.
@@ -247,6 +255,8 @@ class Environment {
     ///IROS Hacks
 
     bool IsolateTerrain(Cfg start, Cfg goal);
+
+		bool SameTerrain(Cfg _start, Cfg _goal);
 
     void RestoreBoundary();
 

@@ -78,7 +78,7 @@ EnforcedHillClimbing::
 
 bool 
 EnforcedHillClimbing::
-operator()(){
+Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
 	//TODO::put the actual solve stuff here
 	return false;
 }

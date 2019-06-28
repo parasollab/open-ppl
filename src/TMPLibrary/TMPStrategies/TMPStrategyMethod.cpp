@@ -14,7 +14,7 @@
 /*****************************************Constructor*****************************************************/
 TMPStrategyMethod::
 TMPStrategyMethod(XMLNode& _node) : TMPBaseObject(_node){
-  m_sgLabel = _node.Read("sgLabel", true, "",
+  m_sgLabel = _node.Read("sgLabel", false, "",
 												 "Label for the state graph used by the TMPStrategy");
   m_teLabel = _node.Read("teLabel", false, "",
 												 "Label for the task evaluator used by the TMPStrategy");

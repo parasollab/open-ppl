@@ -15,13 +15,13 @@
 ITConnector::
 ITConnector(double _threshold, MPLibrary* _library) : m_threshold(_threshold){
   m_library = _library;
-  BuildSkeletons();
+  //BuildSkeletons();
 }
 
 ITConnector::
 ITConnector(XMLNode& _node) {
 	//TODO::ParseXML
-	BuildSkeletons();
+	//BuildSkeletons();
 }
 
 
@@ -330,7 +330,9 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
     }
     */
 
-    env->IsolateTerrain(start,goal);
+    //env->IsolateTerrain(start,goal);
+		if(!env->SameTerrain(start,goal))	
+			continue;
 
     start.SetRobot(robot);
     goal.SetRobot(robot);
@@ -355,8 +357,6 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
         }
         });
 
-
-
     if(robot->IsManipulator()){
       m_library->Solve(m_library->GetMPProblem(), task, solution, "EvaluateMapStrategy",
                        LRand(), "ConnectingDistinctRoadmaps");
@@ -378,7 +378,7 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
     }
 
   }
-  env->RestoreBoundary();
+  //env->RestoreBoundary();
   *_graph = *solution->GetRoadmap(robot);
   _graph->Write("ConnectedTemplates-"+robot->GetCapability()+".map",
                 robot->GetMPProblem()->GetEnvironment());
@@ -509,6 +509,13 @@ BuildSkeletons(){
 bool
 ITConnector::
 InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
+
+	auto e = m_library->GetMPProblem()->GetEnvironment();
+	if(e->SameTerrain(_cfg1,_cfg2))
+		return true;
+	else
+		return false;
+
   if(_cfg1.GetRobot()->GetCapability() !=
       _cfg2.GetRobot()->GetCapability()){
     return false;

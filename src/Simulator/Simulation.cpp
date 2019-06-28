@@ -546,7 +546,10 @@ AddTerrain() {
   auto env = m_problem->GetEnvironment();
   for(const auto& elem : env->GetTerrains()) {
     for(const auto& terrain : elem.second) {
-      AddBoundary(terrain.GetBoundary(), terrain.Color(), terrain.IsWired());
+      //AddBoundary(terrain.GetBoundary(), terrain.Color(), terrain.IsWired());
+      for(auto& boundary : terrain.GetBoundaries()){
+      	AddBoundary(boundary.get(), terrain.Color(), terrain.IsWired());
+			}
     }
   }
 }

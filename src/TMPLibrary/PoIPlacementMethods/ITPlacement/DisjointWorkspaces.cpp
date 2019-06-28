@@ -75,28 +75,29 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
 
       std::vector<Cfg> samplePoints;
 
-      auto boundary = terrain.GetBoundary();
-      //TODO::Implement checks for other types of boundaries
-      if(boundary->Name() == "WorkspaceBoundingBox"){
-        auto box = static_cast<const WorkspaceBoundingBox*>(boundary);
-        auto center = box->GetCenter();
-        std::cout << cap << " RANGES: " << std::endl;;
-        for(size_t range = 0; range < box->GetDimension(); range++){
-          std::cout << box->GetRange(range) << std::endl;
-        }
-        //Sample sides of box
-        auto width = box->GetRange(0).Length();
-        auto xSize = width / m_precision;
-        auto height = box->GetRange(1).Length();
-        auto ySize = height / m_precision;
+      //auto boundary = terrain.GetBoundary();
+			for(auto& boundary : terrain.GetBoundaries()){
+      	//TODO::Implement checks for other types of boundaries
+      	if(boundary->Name() == "WorkspaceBoundingBox"){
+        	auto box = static_cast<const WorkspaceBoundingBox*>(boundary.get());
+        	auto center = box->GetCenter();
+        	std::cout << cap << " RANGES: " << std::endl;;
+        	for(size_t range = 0; range < box->GetDimension(); range++){
+          	std::cout << box->GetRange(range) << std::endl;
+        	}
+        	//Sample sides of box
+        	auto width = box->GetRange(0).Length();
+        	auto xSize = width / m_precision;
+        	auto height = box->GetRange(1).Length();
+        	auto ySize = height / m_precision;
 
-        std::cout << "Width: " << width << " Height: " << height << std::endl
+        	std::cout << "Width: " << width << " Height: " << height << std::endl
                   << "xSize: " << xSize << " ySize: " << ySize << std::endl;
 
-        double toaddX = 0;
-        double toaddY = 0;
+        	double toaddX = 0;
+        	double toaddY = 0;
 
-        for(size_t i = 1; i <= m_precision; i++){
+        	for(size_t i = 1; i <= m_precision; i++){
           /*auto borderBoxLeft = new WorkspaceBoundingBox(box->GetDimension());
           auto borderBoxRight = new WorkspaceBoundingBox(box->GetDimension());
           Range<double> h(box->GetRange(1).min + i*size, box->GetRange(1).min + (i+1)*size);
@@ -120,88 +121,64 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
           sampleSpaces
           */
 
-          auto x = box->GetRange(0).min;
-          auto yMin = box->GetRange(1).min + toaddY;
-          auto yMax = box->GetRange(1).min + ySize*i;
-          auto z = 1.0;
-          if(!receiving)
-						z = 0;	
-					for(int i=0; i < m_maxAttempts; i++){
-            double y = GetRandomDouble(yMin,yMax);
-            Cfg sampleLeft({x,y,z},agent->GetRobot());
-            sampleLeft[2] = z;
-            if(CheckLocation(sampleLeft, _it)){
-              samplePoints.push_back(sampleLeft);
-              break;
-            }
-          }
+          	auto x = box->GetRange(0).min;
+          	auto yMin = box->GetRange(1).min + toaddY;
+          	auto yMax = box->GetRange(1).min + ySize*i;
+          	auto z = 1.0;
+          	if(!receiving)
+							z = 0;	
+						for(int i=0; i < m_maxAttempts; i++){
+            	double y = GetRandomDouble(yMin,yMax);
+            	Cfg sampleLeft({x,y,z},agent->GetRobot());
+            	sampleLeft[2] = z;
+            	if(CheckLocation(sampleLeft, _it)){
+              	samplePoints.push_back(sampleLeft);
+              	break;
+            	}
+          	}
 
-          x = box->GetRange(0).max;
-          (receiving) ? z = 0 : z = 1;
-					for(int i=0; i < m_maxAttempts; i++){
-            double y = GetRandomDouble(yMin,yMax);
-            Cfg sampleRight({x,y,z},agent->GetRobot());
-            sampleRight[2] = z;
-            if(CheckLocation(sampleRight, _it)){
-              samplePoints.push_back(sampleRight);
-              break;
-            }
-          }
-          (receiving) ? z = -.5 : z = .5;
-          auto y = box->GetRange(1).min;
-          auto xMin = box->GetRange(0).min + toaddX;
-          auto xMax = box->GetRange(0).min + xSize*i;
-          for(int i=0; i < m_maxAttempts; i++){
-            double x = GetRandomDouble(xMin,xMax);
-            Cfg sampleBottom({x,y,z},agent->GetRobot());
-            sampleBottom[2] = z;
-            if(CheckLocation(sampleBottom, _it)){
-              samplePoints.push_back(sampleBottom);
-              break;
-            }
-          }
+          	x = box->GetRange(0).max;
+          	(receiving) ? z = 0 : z = 1;
+						for(int i=0; i < m_maxAttempts; i++){
+            	double y = GetRandomDouble(yMin,yMax);
+            	Cfg sampleRight({x,y,z},agent->GetRobot());
+            	sampleRight[2] = z;
+            	if(CheckLocation(sampleRight, _it)){
+              	samplePoints.push_back(sampleRight);
+              	break;
+            	}
+          	}
+          	(receiving) ? z = -.5 : z = .5;
+          	auto y = box->GetRange(1).min;
+          	auto xMin = box->GetRange(0).min + toaddX;
+          	auto xMax = box->GetRange(0).min + xSize*i;
+          	for(int i=0; i < m_maxAttempts; i++){
+            	double x = GetRandomDouble(xMin,xMax);
+            	Cfg sampleBottom({x,y,z},agent->GetRobot());
+            	sampleBottom[2] = z;
+            	if(CheckLocation(sampleBottom, _it)){
+              	samplePoints.push_back(sampleBottom);
+              	break;
+            	}
+          	}
 
-          y = box->GetRange(1).max;
-          (receiving) ? z = .5 : z = -.5;
-          for(int i=0; i < m_maxAttempts; i++){
-            double x = GetRandomDouble(xMin,xMax);
-            Cfg sampleTop({x,y,z},agent->GetRobot());
-            sampleTop[2] = z;
-            if(CheckLocation(sampleTop, _it)){
-              samplePoints.push_back(sampleTop);
-              break;
-            }
-          }
+          	y = box->GetRange(1).max;
+          	(receiving) ? z = .5 : z = -.5;
+          	for(int i=0; i < m_maxAttempts; i++){
+            	double x = GetRandomDouble(xMin,xMax);
+            	Cfg sampleTop({x,y,z},agent->GetRobot());
+            	sampleTop[2] = z;
+            	if(CheckLocation(sampleTop, _it)){
+              	samplePoints.push_back(sampleTop);
+              	break;
+            	}
+          	}
 
-          toaddX += xSize;
-          toaddY += ySize;
-
-          /*
-          auto x = box->GetRange(0).min;
-          auto y = box->GetRange(1).min + ySize*i; // + ySize/2;
-          auto z = 0.0;
-          Cfg sampleLeft({x,y,z},_coordinator->GetRobot());
-
-          x = box->GetRange(0).max;
-          Cfg sampleRight({x,y,z},_coordinator->GetRobot());
-
-          samplePoints.push_back(sampleLeft);
-          samplePoints.push_back(sampleRight);
-
-          x = box->GetRange(0).min + xSize*i; // - xSize/2;
-          y = box->GetRange(1).min;
-          Cfg sampleBottom({x,y,z},_coordinator->GetRobot());
-
-          y = box->GetRange(1).max;
-          Cfg sampleTop({x,y,z},_coordinator->GetRobot());
-
-          samplePoints.push_back(sampleBottom);
-          samplePoints.push_back(sampleTop);
-
-          */
-
-        }
-      }
+          	toaddX += xSize;
+          	toaddY += ySize;
+        	}
+      	}
+			}
       if(m_debug) 
 				std::cout << "Sample Points" << std::endl;
       for(auto cfg : samplePoints){

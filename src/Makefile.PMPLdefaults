@@ -403,12 +403,15 @@ SIM_SRCS := \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
+  TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
+  TMPLibrary/TMPTools/MultiAgentDijkstra.cpp \
+  TMPLibrary/TMPTools/TMPTools.cpp \
   TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \

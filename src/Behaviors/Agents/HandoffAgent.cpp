@@ -103,7 +103,8 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   auto goalCenter = _task->GetGoalConstraints()[0]->GetBoundary()->GetCenter();
   Cfg goalCfg({goalCenter[0],goalCenter[1],0}, m_robot);
   env->SaveBoundary();
-  if(!env->IsolateTerrain(currentPos,goalCfg) and m_robot->GetCapability() != ""){
+  //if(!env->IsolateTerrain(currentPos,goalCfg) and m_robot->GetCapability() != ""){
+  if(!env->SameTerrain(currentPos,goalCfg)) {
     m_potentialCost = std::numeric_limits<size_t>::max();
     return;
   }
@@ -153,7 +154,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
     if(!startConstraint->Satisfied(position)){
       m_potentialCost = std::numeric_limits<size_t>::max();
       currentPos.ConfigureRobot();
-      env->RestoreBoundary();
+      //env->RestoreBoundary();
       return;
     }
     setupTask->SetStartConstraint(std::move(startConstraint));
@@ -245,7 +246,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   currentPos.ConfigureRobot();
   std::cout << "Finishing generate cost function" << std::endl;
   m_generatingCost = false;
-  env->RestoreBoundary();
+  //env->RestoreBoundary();
 }
 
 double

@@ -3,5 +3,25 @@
 /*------------------------------ Construction --------------------------------*/
 
 TaskEvaluatorMethod::
+TaskEvaluatorMethod(){}
+
+TaskEvaluatorMethod::
 TaskEvaluatorMethod(XMLNode& _node) : TMPBaseObject(_node) {
+  m_sgLabel = _node.Read("sgLabel", false, "",
+												 "Label for the state graph used by the TMPStrategy");
+}
+
+TaskEvaluatorMethod::
+~TaskEvaluatorMethod(){}
+
+bool 
+TaskEvaluatorMethod::
+operator()(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
+	return Run( _wholeTasks, _plan);
+}
+
+bool
+TaskEvaluatorMethod::
+Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
+	return false;
 }
