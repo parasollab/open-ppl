@@ -3,6 +3,140 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 
+OccupiedInterval::
+OccupiedInterval(Robot* _r, Cfg _sL, Cfg _eL, double _sT, double _eT) : m_robot(_r),
+m_startLocation(_sL), m_endLocation(_eL), m_startTime(_sT), m_endTime(_eT){ }
+
+Robot*
+OccupiedInterval::
+GetRobot(){
+  return m_robot;
+}
+
+Cfg
+OccupiedInterval::
+GetStartLocation(){
+  return m_startLocation;
+}
+
+Cfg
+OccupiedInterval::
+GetEndLocation(){
+  return m_endLocation;
+}
+
+double
+OccupiedInterval::
+GetStartTime(){
+  return m_startTime;
+}
+
+double
+OccupiedInterval::
+GetEndTime(){
+  return m_endTime;
+}
+
+std::pair<Cfg, double>
+OccupiedInterval::
+GetStart(){
+  return std::make_pair(m_startLocation, m_startTime);
+}
+
+std::pair<Cfg, double>
+OccupiedInterval::
+GetEnd(){
+  return std::make_pair(m_endLocation, m_endTime);
+}
+
+void
+OccupiedInterval::
+SetStartLocation (Cfg _start)
+{
+  m_startLocation = _start;
+}
+
+void
+OccupiedInterval::
+SetEndLocation (Cfg _end)
+{
+  m_endLocation = _end;
+}
+void
+OccupiedInterval::
+SetStartTime (double _start)
+{
+  m_startTime = _start;
+}
+void
+OccupiedInterval::
+SetEndTime (double _end)
+{
+  m_endTime = _end;
+}
+void
+OccupiedInterval::
+SetStart(Cfg _startLoc, double _startTime)
+{
+  m_startLocation = _startLoc;
+  m_startTime = _startTime;
+}
+
+void
+OccupiedInterval::
+SetEnd(Cfg _endLoc, double _endTime)
+{
+  m_endLocation = _endLoc;
+  m_endTime = _endTime;
+}
+
+bool
+OccupiedInterval::
+CheckTimeOverlap(OccupiedInterval _interval){
+  if (m_robot != _interval.GetRobot()){
+    if (_interval.GetStartTime() >= m_startTime || _interval.GetStartTime() < m_endTime)
+      return true;
+    else if (_interval.GetEndTime() > m_startTime || _interval.GetEndTime() <= m_endTime)
+      return true;
+  }
+  else{
+    if (_interval.GetStartTime() >= m_startTime || _interval.GetStartTime() >= m_endTime)
+      return true;
+    else if (_interval.GetEndTime() >= m_startTime || _interval.GetEndTime() >= m_endTime)
+      return true;
+  }
+  return false;
+}
+
+void
+OccupiedInterval::
+MergeIntervals(std::list <OccupiedInterval>& _intervals){
+  std::list<OccupiedInterval>::iterator it = _intervals.begin();
+  while (it != _intervals.end()){
+    auto next = std::next(it);
+    double nextTime = next -> GetStartTime();
+    if (it -> GetRobot() != next -> GetRobot()){
+      throw std::runtime_error("Merge Intervals - Different robots exist within set of occupied intervals");
+    }
+
+    if (nextTime >= it->GetStartTime() && nextTime <= it -> GetEndTime()){
+      if(next->GetEndTime() > it->GetEndTime()){
+        it -> SetEndTime(next -> GetEndTime());
+        _intervals.erase(next);
+      }
+      else
+        _intervals.erase(next);
+    }
+    else
+      it ++;
+  }
+}
+
+bool
+OccupiedInterval::
+operator<(OccupiedInterval _interval){
+  return m_startTime < _interval.GetStartTime();
+}
 
 TaskPlan::
 ~TaskPlan(){
@@ -22,7 +156,7 @@ Initialize(){
 	}
 	else if(m_wholeTasks.empty()){
 		throw RunTimeException(WHERE, "TaskPlan has no tasks to plan for.");
-	}	
+	}
 	InitializeRAT();
 	GenerateDummyAgents();
 }
@@ -55,14 +189,14 @@ AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _whol
 	_wholeTask->m_agentAssignment.push_back(_agent);
 }
 
-void 
+void
 TaskPlan::
 AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second){
 	auto& dependencies = m_taskDependencyMap[_second];
 	dependencies.push_back(_first);
 }
 
-void 
+void
 TaskPlan::
 RemoveLastDependency(std::shared_ptr<MPTask> _task){
 	auto& dependencies = m_taskDependencyMap[_task];
@@ -80,7 +214,7 @@ InitializeRAT(){
 	}
 }
 
-std::unordered_map<std::string,std::pair<Cfg,double>>& 
+std::unordered_map<std::string,std::pair<Cfg,double>>&
 TaskPlan::
 GetRAT(){
 	return m_RAT;
@@ -139,7 +273,7 @@ GetWholeTask(std::shared_ptr<MPTask> _subtask){
 	return m_subtaskMap[_subtask];
 }
 
-std::shared_ptr<MPTask> 
+std::shared_ptr<MPTask>
 TaskPlan::
 GetNextSubtask(WholeTask* _wholeTask){
   if(_wholeTask->m_subtaskIterator == _wholeTask->m_subtasks.size())
@@ -183,7 +317,7 @@ LoadTeam(std::vector<HandoffAgent*> _team){
 	m_memberAgents = _team;
 }
 
-std::vector<HandoffAgent*>& 
+std::vector<HandoffAgent*>&
 TaskPlan::
 GetTeam(){
 	return m_memberAgents;

@@ -10,8 +10,45 @@
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "TMPLibrary/WholeTask.h"
 
+#include "ConfigurationSpace/Cfg.h"
+
 class Coordinator;
 class HandoffAgent;
+
+class OccupiedInterval{
+  public:
+    OccupiedInterval(Robot* _r, Cfg _sL, Cfg _eL, double _sT, double _eT);
+
+    Robot* GetRobot();
+    Cfg GetStartLocation();
+    Cfg GetEndLocation();
+    double GetStartTime();
+    double GetEndTime();
+    std::pair<Cfg, double> GetStart();
+    std::pair<Cfg, double> GetEnd();
+
+    void SetStartTime(double _start);
+    void SetEndTime(double _end);
+    void SetStartLocation(Cfg _start);
+    void SetEndLocation(Cfg _end);
+    void SetStart(Cfg _startLoc, double _startTime);
+    void SetEnd(Cfg _endLoc, double _endTime);
+
+    bool CheckTimeOverlap(OccupiedInterval _interval);
+    static void MergeIntervals(std::list<OccupiedInterval>& _intervals);
+    bool operator<(OccupiedInterval _interval);
+
+
+  private:
+    Robot* m_robot;
+    Cfg m_startLocation;
+    Cfg m_endLocation;
+    double m_startTime;
+    double m_endTime;
+
+
+};
+
 
 class TaskPlan {
 
@@ -42,14 +79,14 @@ class TaskPlan {
 		std::list<std::shared_ptr<MPTask>> GetTaskDependencies(std::shared_ptr<MPTask> _task);
 
 		void AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task);
-		
+
 		void AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask);
 
 		/// first must occur before second
 		void AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second);
 
 		void RemoveLastDependency(std::shared_ptr<MPTask> _task);
-    
+
 		///@}
     ///@name RAT Functions
     ///@{
@@ -65,7 +102,7 @@ class TaskPlan {
 		///@}
 		///@name WholeTask interactions
     ///@{
-	
+
 		/// Adds a whole task to the set of wholeTasks
 		void AddWholeTask(WholeTask* _wholeTask);
 
@@ -77,7 +114,7 @@ class TaskPlan {
 
 		/// Sets the wholeTask owner of the subtask in the subtask map
 		void SetWholeTaskOwner(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask);
-    
+
 		/// Returns the owning wholeTask of the input subtask
     WholeTask* GetWholeTask(std::shared_ptr<MPTask> _subtask);
 
@@ -98,12 +135,12 @@ class TaskPlan {
 		void SetCoordinator(Coordinator* _c);
 
 		Coordinator* GetCoordinator();
- 
+
 		void LoadTeam(std::vector<HandoffAgent*> _team);
- 
-		/// Returns the set of all the agents available for the task 
+
+		/// Returns the set of all the agents available for the task
 		std::vector<HandoffAgent*>& GetTeam();
- 
+
 		/// Generates the dummy agents of each capabiltiy used for planning
     void GenerateDummyAgents();
 
@@ -142,7 +179,7 @@ class TaskPlan {
 
     /// Robot Availablility Table keeps track of where/when each robot will finish
     /// its last assigned subtask and be available again
-    std::unordered_map<std::string,std::pair<Cfg,double>> m_RAT; 
+    std::unordered_map<std::string,std::pair<Cfg,double>> m_RAT;
 
     /// TODO::Adapt to robot groups later
     /// Maps each agent to the set of tasks assigned to it.
@@ -151,16 +188,16 @@ class TaskPlan {
     /// TODO:: Adapt to task groups later
     /// Maps each task to the tasks that must be completed before it.
     TaskDependencyMap m_taskDependencyMap;
-    
+
 		/// Maps agent capabilities to a dummy agent used for planning.
     std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
-    
+
 		/// All robots available for the task..
-		std::vector<HandoffAgent*> m_memberAgents;   
+		std::vector<HandoffAgent*> m_memberAgents;
 
 		/// The set of Interaction Templates
     std::vector<std::shared_ptr<InteractionTemplate>> m_interactionTemplates;
-    
+
 };
 
 #endif
