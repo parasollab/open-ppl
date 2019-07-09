@@ -138,6 +138,18 @@ operator<(OccupiedInterval _interval){
   return m_startTime < _interval.GetStartTime();
 }
 
+std::string
+OccupiedInterval::
+Print(){
+	std::string output = "Start time: " + std::to_string(m_startTime) +
+											 " Start Location: " + m_startLocation.PrettyPrint() +
+											 "\nEnd Time: " + std::to_string(m_endTime) + 
+											 " End Location: " + m_endLocation.PrettyPrint();
+	return output;
+}
+
+/**************************************Task Plan****************************/
+
 TaskPlan::
 ~TaskPlan(){
 	for(auto wholeTask : m_wholeTasks){
@@ -210,17 +222,18 @@ TaskPlan::
 InitializeRAT(){
 	for(auto agent : m_memberAgents){
 		auto cfg = agent->GetRobot()->GetSimulationModel()->GetState();
-		m_RAT[agent->GetRobot()->GetLabel()] = std::pair<Cfg,double>(cfg, 0.0);
+		OccupiedInterval* start = new OccupiedInterval(agent->GetRobot(), cfg, cfg, 0.0, 0.0);
+		m_RAT[agent->GetRobot()->GetLabel()].push_back(start);
 	}
 }
 
-std::unordered_map<std::string,std::pair<Cfg,double>>&
+std::unordered_map<std::string,std::list<OccupiedInterval*>>&
 TaskPlan::
 GetRAT(){
 	return m_RAT;
 }
 
-std::pair<Cfg,double>
+std::list<OccupiedInterval*>
 TaskPlan::
 GetRobotAvailability(HandoffAgent* _agent){
 	return m_RAT.at(_agent->GetRobot()->GetLabel());
@@ -228,9 +241,47 @@ GetRobotAvailability(HandoffAgent* _agent){
 
 void
 TaskPlan::
-UpdateRAT(HandoffAgent* _agent, std::pair<Cfg,double> _avail){
-	m_RAT[_agent->GetRobot()->GetLabel()] = _avail;
+UpdateRAT(HandoffAgent* _agent, OccupiedInterval* _interval){
+	auto& avail = m_RAT[_agent->GetRobot()->GetLabel()];
+	for(auto it = avail.begin(); it != avail.end(); it++){
+		if(_interval < *it){
+			avail.insert(it,_interval);
+			return;
+		}
+	}
+	avail.push_back(_interval);
 }
+
+/*****************************************TIM Functions****************************************************/
+
+std::unordered_map<WholeTask*,std::list<OccupiedInterval*>>&
+TaskPlan::
+GetTIM() {
+	return m_TIM;
+}
+
+std::list<OccupiedInterval*>
+TaskPlan::
+GetTaskIntervals(WholeTask* _wholeTask){
+	return m_TIM[_wholeTask];
+}
+
+void
+TaskPlan::
+UpdateTIM(WholeTask* _wholeTask, OccupiedInterval* _interval){
+	auto& plan = m_TIM[_wholeTask];
+	if(*plan.end() < _interval){
+		plan.push_back(_interval);
+		return;
+	}
+	for(auto it = plan.begin(); it != plan.end(); it++){
+		if(_interval < *it){
+			plan.insert(it, _interval);
+			return;
+		}
+	}
+}
+
 /***********************************WholeTask Interactions*******************************/
 
 void

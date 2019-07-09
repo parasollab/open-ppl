@@ -17,36 +17,77 @@ class HandoffAgent;
 
 class OccupiedInterval{
   public:
+
+		///@name Construction
+		///@{
     OccupiedInterval(Robot* _r, Cfg _sL, Cfg _eL, double _sT, double _eT);
 
+		///@}
+		///@name Accessors
+		///@{
+
     Robot* GetRobot();
+
     Cfg GetStartLocation();
+
     Cfg GetEndLocation();
+
     double GetStartTime();
+
     double GetEndTime();
+
     std::pair<Cfg, double> GetStart();
+
     std::pair<Cfg, double> GetEnd();
 
     void SetStartTime(double _start);
+
     void SetEndTime(double _end);
+
     void SetStartLocation(Cfg _start);
+
     void SetEndLocation(Cfg _end);
+
     void SetStart(Cfg _startLoc, double _startTime);
+
     void SetEnd(Cfg _endLoc, double _endTime);
 
+		///@}
+		///@name
+		///@{
+
+		/// Checks if the time of the input interval overlaps with its own time interval.
     bool CheckTimeOverlap(OccupiedInterval _interval);
+
+		/// Merges any intersecting intervals in the input list.
     static void MergeIntervals(std::list<OccupiedInterval>& _intervals);
+
+		/// Compares the start time of intervals.
     bool operator<(OccupiedInterval _interval);
 
+		///@}
+		///@name Debug
+		///@{
 
+		std::string Print();
+
+		///@}
   private:
-    Robot* m_robot;
-    Cfg m_startLocation;
-    Cfg m_endLocation;
-    double m_startTime;
-    double m_endTime;
 
+		///@name Local State
+		///@{
+		
+    Robot* m_robot; ///< Robot that is occupied for the interval.
 
+    Cfg m_startLocation; ///< Physical start of the interval.
+
+    Cfg m_endLocation; ///< Physical end of the interval.
+
+    double m_startTime; ///< Start time of the interval.
+    
+		double m_endTime; ///< End time of the interval.
+
+		///@}
 };
 
 
@@ -93,11 +134,22 @@ class TaskPlan {
 
     void InitializeRAT();
 
-		std::unordered_map<std::string,std::pair<Cfg,double>>& GetRAT();
+		std::unordered_map<std::string,std::list<OccupiedInterval*>>& GetRAT();
 
-		std::pair<Cfg,double> GetRobotAvailability(HandoffAgent* _agent);
+		std::list<OccupiedInterval*> GetRobotAvailability(HandoffAgent* _agent);
 
-		void UpdateRAT(HandoffAgent* _agent, std::pair<Cfg,double> _avail);
+		void UpdateRAT(HandoffAgent* _agent, OccupiedInterval* _interval);
+
+		///@}
+    ///@name TIM Functions
+    ///@{
+
+		std::unordered_map<WholeTask*, std::list<OccupiedInterval*>>& GetTIM();
+
+		std::list<OccupiedInterval*> GetTaskIntervals(WholeTask* _wholeTask);
+
+		void UpdateTIM(WholeTask* _wholeTask, OccupiedInterval* _interval);
+
 
 		///@}
 		///@name WholeTask interactions
@@ -179,7 +231,10 @@ class TaskPlan {
 
     /// Robot Availablility Table keeps track of where/when each robot will finish
     /// its last assigned subtask and be available again
-    std::unordered_map<std::string,std::pair<Cfg,double>> m_RAT;
+    std::unordered_map<std::string,std::list<OccupiedInterval*>> m_RAT;
+
+		/// Task Interval Map keeps track of the sequence of intervals that complete a task
+		std::unordered_map<WholeTask*,std::list<OccupiedInterval*>> m_TIM;
 
     /// TODO::Adapt to robot groups later
     /// Maps each agent to the set of tasks assigned to it.

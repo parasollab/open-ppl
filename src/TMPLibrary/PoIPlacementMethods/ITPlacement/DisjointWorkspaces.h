@@ -31,13 +31,17 @@ class DisjointWorkspaces : public ITPlacementMethod {
     bool CheckLocation(Cfg _cfg, InteractionTemplate* _it);//,
                        //std::unordered_map<std::string, HandoffAgent*> _capabilityAgents);
 
+		void SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, HandoffAgent* _agent);
+
     ///@}
 
 
   private:
     double m_precision;
     double GetRandomDouble(double _min, double _max);
-    int m_maxAttempts;
+    size_t m_maxAttempts;
+
+		std::unordered_map<Boundary*,bool> m_sampled;
 
 };
 

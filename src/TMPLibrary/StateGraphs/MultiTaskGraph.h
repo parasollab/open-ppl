@@ -8,6 +8,7 @@
 #include "MPLibrary/MPSolution.h"
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/WholeTask.h"
 
 #include <iostream>
@@ -50,8 +51,9 @@ class MultiTaskGraph : public CombinedRoadmap {
     ///        selected by the function
     /// @param _RATCache holds any updates to the RAT along the path to this node
     /// @return Returns the time the new robot is ready to start the next subtask
-    double RobotSelection(size_t _target, Agent** _minAgent,
-								std::unordered_map<Agent*,std::pair<Cfg,double>>& _RATCache);
+    double RobotSelection(size_t _source, size_t _target, Agent** _minAgent,
+								std::unordered_map<Agent*,std::list<OccupiedInterval*>>& _RATCache,
+								size_t parent, double _previousEdge);
 
 		/// @param _wholeTask is the task being appended to the high level graph in order
 		//				 to be planned next.

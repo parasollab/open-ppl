@@ -50,10 +50,13 @@ class MultiAgentDijkstra : public TMPBaseObject {
 		std::string m_sgLabel;
 
 		// Keeps track of the robot assigned to each node during the dijkstra search
-    std::unordered_map<size_t,Agent*> m_nodeAgentMap; 
+    std::unordered_map<size_t,Agent*> m_nodeAgentMap;
+
+		std::unordered_map<size_t,double> m_incomingEdgeMap;
+		std::unordered_map<size_t,size_t> m_parentMap; 
 
 		// Keeps track of RAT changes during searches through the high level graph
-		std::unordered_map<size_t,std::unordered_map<Agent*,std::pair<Cfg,double>>> m_nodeRATCache;
+		std::unordered_map<size_t,std::unordered_map<Agent*,std::list<OccupiedInterval*>>> m_nodeRATCache;
 		// Probably shouldn't need this for handoff tasks because if an agent is the cheapest option 
 		// to receive a task that it already passed off, it should have just kept it.
 		

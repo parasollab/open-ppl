@@ -43,27 +43,28 @@ Run(WholeTask* _wholeTask, TaskPlan* _plan){
 
 	m_nodeAgentMap[start] = this->GetTaskPlan()->GetCoordinator();
 
+	//Search backwards from goal to start
 	SSSPPathWeightFunction<TaskGraph> weight;
-	weight = [this,goal](typename TaskGraph::adj_edge_iterator& _ei,
+	weight = [this,start](typename TaskGraph::adj_edge_iterator& _ei,
                    const double _sourceDistance,
                    const double _targetDistance) {
-            return this->MAMTPathWeight(_ei,_sourceDistance,_targetDistance,goal);
+            return this->MAMTPathWeight(_ei,_sourceDistance,_targetDistance,start);
         };
 
 	//TODO::Actually call dijkstras
 	
 	SSSPTerminationCriterion<TaskGraph> termination(
-		[goal](typename TaskGraph::vertex_iterator& _vi,
+		[start](typename TaskGraph::vertex_iterator& _vi,
 						const SSSPOutput<TaskGraph>& _sssp) {
-					return goal == _vi->descriptor() ? SSSPTermination::EndSearch
+					return start == _vi->descriptor() ? SSSPTermination::EndSearch
 																						: SSSPTermination::Continue;
 			}
 	);
 	auto g = this->GetStateGraph(m_sgLabel)->GetGraph();
-	const SSSPOutput<TaskGraph> sssp = DijkstraSSSP(g, {start}, weight, termination);
+	const SSSPOutput<TaskGraph> sssp = DijkstraSSSP(g, {goal}, weight, termination);
 
 	const size_t last = sssp.ordering.back();
-	if(goal != last){
+	if(start != last){
 		return new TaskPlan();	
 	}	
 
@@ -75,12 +76,15 @@ Run(WholeTask* _wholeTask, TaskPlan* _plan){
 	do {
 		current = sssp.parent.at(current);
 		path.push_back(current);
-	} while(current != start);
-	std::reverse(path.begin(), path.end());
+	} while(current != goal);
+	//std::reverse(path.begin(), path.end());
 
 	ExtractTaskPlan(path,_wholeTask,sssp.distance);
 	sg->RemoveTaskFromGraph(_wholeTask);
 	m_nodeAgentMap.clear();
+	m_nodeRATCache.clear();
+	m_parentMap.clear();
+	m_incomingEdgeMap.clear();
 	if(savedPlan)
 		this->GetTMPLibrary()->SetTaskPlan(savedPlan);
 	return true;
@@ -138,12 +142,19 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 				vid = _path[i-1];
 			}
 			goal.SetRobot(currentAgent->GetRobot());
-			auto avail = std::pair<Cfg,double>(goal,_distance[vid]);//May need to set robot pointer for goal
-			this->GetTaskPlan()->UpdateRAT(static_cast<HandoffAgent*>(currentAgent),avail);
+			//TODO::Update to occupied interval logic
+			//auto avail = std::pair<Cfg,double>(goal,_distance[vid]);//May need to set robot pointer for goal
+			//this->GetTaskPlan()->UpdateRAT(static_cast<HandoffAgent*>(currentAgent),avail);
 			currentAgent = m_nodeAgentMap[vid];
 		}
 		else{
 			last = vid;
+		}
+	}
+	//Update RAT
+	for(auto avail : m_nodeRATCache[_path.back()]){
+		for(auto interval : avail.second){
+			this->GetTaskPlan()->UpdateRAT(static_cast<HandoffAgent*>(avail.first),interval);
 		}
 	}
 }
@@ -208,9 +219,22 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   
   //Check if edge is virtual and if so find the next robot and keep track of current robot in a map in this class
   bool virt = (edgeWeight == -1);
+	size_t parent = -1;
+	double incomingEdge = -1;
+	if(virt){
+		if(m_parentMap.empty())//virtual goal node in backwards search
+			return 0;
+		// TODO::figure out if these checks are actually needed-may be the case that these always exist given 
+		// its a virtual node
+		//if(std::find(m_parentMap.begin(),m_parentMap.end(),source) != m_parentMap.end()) {
+			parent = m_parentMap[source];
+			incomingEdge = m_incomingEdgeMap[source];
+		//}
+	}
   if(virt and target !=_goal){
 		auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
-  	readyTime = sg->RobotSelection(target,&newAgent,m_nodeRATCache[source]);
+		readyTime = sg->RobotSelection(source,target,&newAgent,m_nodeRATCache[source],
+																	 parent, incomingEdge);
   }
   else{
   	newAgent = m_nodeAgentMap[source];
@@ -220,7 +244,8 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   // the robot would reach the target node.
   double newDistance;
   if(virt){
-  	//Check if the robot will need extra time to reach the location
+  	/*//This is the old forward implementation
+		//Check if the robot will need extra time to reach the location
   	if(readyTime > _sourceDistance){
   		newDistance = readyTime;
   	}
@@ -228,6 +253,30 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   	else{
   		newDistance = _sourceDistance;
   	}
+		*/
+		// receiving < delivering
+		// The agent on the delivering end of the previously evaluated interaction can arrive before the 
+		// just discovered agent can deliver the task to the IT.
+		// We over compensated the readyTime of the previous agent and need to subtract it. 
+		// This does not ruin the dijkstra search because only robots of the specified type can use the edge,
+		// and this is still the first robot that can get there.  
+		if(_sourceDistance < readyTime) {
+			double oldReadyTime = 0;
+			// If the subtask is dirent from start to goal, there is no oldReadyTime to account for.
+			auto it = m_incomingEdgeMap.find(parent);
+			if(it	!= m_incomingEdgeMap.end())	{
+				oldReadyTime = m_incomingEdgeMap[parent];
+			}	
+			newDistance = _sourceDistance - oldReadyTime + readyTime;
+		}
+		// receiving > delivering
+		// The agent on the receiving end of the previously evaluated interaction arrives after the 
+		// just discovered agent delivers the task.
+		// We have already accounted for the readyTime of the just discovered agent in the readyTime of the
+		// previous agent.
+		else {
+			newDistance = _sourceDistance - readyTime;
+		}
   }
   else{
   	newDistance = _sourceDistance + edgeWeight;
@@ -236,11 +285,28 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   // If this edge is better than the previous we update the robot at the node
   if(newDistance < _targetDistance) {
   	m_nodeAgentMap[target] = newAgent;
-		m_nodeRATCache[target] = m_nodeRATCache[source];
-		Cfg location = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(source);
-		location.SetRobot(m_nodeAgentMap[source]->GetRobot());
-	  m_nodeRATCache[target][m_nodeAgentMap[source]] = std::make_pair(location,_sourceDistance);	
-  }
+		if(virt){
+			m_nodeAgentMap[source] = newAgent;
+			if(!m_nodeAgentMap[parent])//checks the initial motion
+				m_nodeAgentMap[parent] = newAgent;
+			m_nodeRATCache[target] = m_nodeRATCache[source];
+			Cfg endLocation = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(parent);
+			endLocation.SetRobot(newAgent->GetRobot());
+			double endTime = readyTime + incomingEdge;
+			Cfg startLocation = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(source);
+			startLocation.SetRobot(newAgent->GetRobot());
+
+			auto interval = new OccupiedInterval(newAgent->GetRobot(), startLocation, endLocation,
+																					 readyTime, endTime);
+	
+	  	m_nodeRATCache[target][newAgent].push_back(interval);	
+  	}
+		m_parentMap[target] = source;
+		m_incomingEdgeMap[target] = newDistance - _sourceDistance;
+
+	}
+	if(!m_nodeAgentMap[target])
+		std::cout << "problem here" << std::endl;
   return newDistance;
 }
 
