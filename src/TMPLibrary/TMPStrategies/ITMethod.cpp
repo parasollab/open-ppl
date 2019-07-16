@@ -78,6 +78,8 @@ QueryCombinedRoadmap(){
 void
 ITMethod:: 
 AssignTasks(){
+  this->GetTaskAllocator(m_taLabel)->AllocateTasks();
+  /*
 	TaskPlan* taskPlan = this->GetTaskPlan();
 	//TODO::Abstract this and AuctionTask Function to an auction class that this calls in stead
   // Load m_unassignedTasks with the initial subtasks for all tasks.
@@ -109,7 +111,7 @@ AssignTasks(){
     agent->GetRobot()->SetVirtual(false);
   }
   Simulation::GetStatClass()->StopClock("IT Task Assignment");
-	
+	*/
 }
 
 void

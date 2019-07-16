@@ -11,11 +11,31 @@ class AuctionMethod : public TaskAllocatorMethod {
 
   	AuctionMethod();
 
-		AuctionMethod(XMLNode& _node);
+	AuctionMethod(XMLNode& _node);
 
-		virtual ~AuctionMethod() = default;  	
+	virtual ~AuctionMethod() = default;  	
 
     ///@}
+    ///@name Call Method
+    ///@{
+
+	virtual void AllocateTasks() override;
+
+	///@}
+  private:
+  	///@name Helpers
+  	///@{
+
+  	void AuctionSubtasks(WholeTask* _wholeTask);
+
+  	///@}
+  	///@name Internal State
+  	///@{
+
+  	std::vector<std::shared_ptr<MPTask>> m_unassignedTasks;
+
+  	///@}
+  }
 };
 
 /*----------------------------------------------------------------------------*/
