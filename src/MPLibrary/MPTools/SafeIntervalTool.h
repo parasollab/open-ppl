@@ -32,6 +32,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::CfgType    CfgType;
     typedef typename MPTraits::WeightType WeightType;
     typedef typename MPTraits::Path Path; 
+    typedef typename RoadmapType::VID               VID;
 
     ///@}
     ///@name Local Types
@@ -64,10 +65,18 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @return The set of safe intervals for _cfg.
     Intervals ComputeIntervals(const CfgType& _cfg);
 
-    /// Compute the safe intervals for a given Edge.
+    // /// Compute the safe intervals for a given Edge.
+    // /// @param _weight The edge to compute safeIntervals's for.
+    // /// @return The set of safe intervals for _weight.
+    // Intervals ComputeIntervals(const WeightType& _weight);
+
+    /// Compute the safe intervals for a given Edge, a source and a target.
     /// @param _weight The edge to compute safeIntervals's for.
+    /// @param _weight The source VID to compute safeIntervals's for.
+    /// @param _weight The target VID to compute safeIntervals's for.
     /// @return The set of safe intervals for _weight.
-    Intervals ComputeIntervals(const WeightType& _weight);
+    Intervals ComputeIntervals(const WeightType& _weight, const VID _source, 
+      const VID _target, const CfgType& _dummyCfg);
 
     ///@}
     ///@name Interval Checking
@@ -193,10 +202,45 @@ ComputeIntervals(const CfgType& _cfg) {
 template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
-ComputeIntervals(const WeightType& _weight) {
+ComputeIntervals(const WeightType& _weight, const VID _source, 
+  const VID _target, const CfgType& _dummyCfg) {
   if(m_edgeIntervals[&_weight].empty()) {
-    const vector<CfgType>& cfgs = _weight.GetIntermediates();
-    m_edgeIntervals[&_weight] = ComputeSafeIntervals(cfgs);
+
+    auto robot = _dummyCfg.GetRobot();
+    auto roadmap = this->GetRoadmap(robot);
+    std::vector<CfgType> edge;
+    edge.push_back(roadmap->GetVertex(_source));
+    typename RoadmapType::EI ei;
+
+    // Reconstructing edge 
+    roadmap->GetEdge(_source,_target,ei);
+
+    // Use the local planner from p the edge lp.
+    // Fall back to straight-line if edge lp is not available (this will always
+    // happen if it was grown with an extender).
+    typename MPTraits::MPLibrary::LocalPlannerPointer lp;
+    auto lib = this->GetMPLibrary();
+    auto env = lib->GetMPProblem()->GetEnvironment();
+    try {
+      lp = lib->GetLocalPlanner(ei->property().GetLPLabel());
+    }
+    catch(...) {
+      lp = lib->GetLocalPlanner("sl");
+    }
+    // Construct a resolution-level path along the recreated edge.
+    std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+    recreatedEdge.insert(recreatedEdge.begin(), roadmap->GetVertex(_source));
+    recreatedEdge.push_back(roadmap->GetVertex(_target));
+    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+      std::vector<CfgType> tempEdge = lp->ReconstructPath(*cit, *(cit+1),
+          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+      edge.insert(edge.end(), tempEdge.begin(), tempEdge.end());
+    }
+
+    edge.push_back(roadmap->GetVertex(_target));
+    //const vector<CfgType>& cfgs = _weight.GetIntermediates();
+    std::cout << "ComputeIntervals, intermediates size: " << edge.size() << std::endl;
+    m_edgeIntervals[&_weight] = ComputeSafeIntervals(edge);
   }
 
   return m_edgeIntervals[&_weight];
@@ -623,8 +667,9 @@ FindConflict(vector<SafeIntervalTool<MPTraits>::Path*> _paths) {
           auto cfgConflict2 = make_pair(j,make_pair(paths[i][t1],tj));
           auto pairCfgConflicts = make_pair(cfgConflict1,cfgConflict2);
           if(this->m_debug) {
-            std::cout << "Conflict on robot " << i << " at timestep " << ti << " at cfg " << paths[i][t1].PrettyPrint() 
-            << "\nConflict on robot " << j << " at timestep "<< tj <<" at cfg " << paths[j][t2].PrettyPrint() 
+            std::cout << "Conflict on robot " << i << " at timestep " << ti 
+            << " at cfg " << paths[i][t1].PrettyPrint() << "\nConflict on robot " 
+            << j << " at timestep "<< tj <<" at cfg " << paths[j][t2].PrettyPrint() 
             << std::endl;
           }
           return pairCfgConflicts;         

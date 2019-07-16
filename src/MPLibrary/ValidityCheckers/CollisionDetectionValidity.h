@@ -341,13 +341,9 @@ IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
       collision |= m_cdMethod->IsInCollision(_a->GetBody(i),
                                              _b->GetBody(j),
                                              cdInfo);
-      //if(m_ignoreBaseInterRobot and i == 0 and j == 0)
-      //  collision = false;
+      if(m_ignoreBaseInterRobot and i == 0 and j == 0)
+        collision = false;
 
-      //if(collision) {
-      //  std::cout << "Collision of first robot in body " << i << std::endl;
-      //  std::cout << "Collision of second robot in body " << j << std::endl;
-      //}
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _caller);
 
       // Retain minimum distance information.

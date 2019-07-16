@@ -132,6 +132,7 @@ void
 GroupDecoupledStrategy<MPTraits>::
 Finalize() {
 
+  double totalCost = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
   auto groupRoadmap = this->GetGroupRoadmap();
@@ -149,7 +150,7 @@ Finalize() {
     // If the path is empty, we didn't solve the problem.
     if(path->Empty())
       return;
-
+    totalCost += path->Length();
     // Collect the path.
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
@@ -170,6 +171,9 @@ Finalize() {
     ++i;
 
   }
+
+  StatClass* stats = this->GetStatClass();
+  stats->SetStat("GroupDecoupledQuery::TotalCost",totalCost);
 
   // Add each path configuration to the group roadmap.
   const size_t numRobots = groupTask->Size();

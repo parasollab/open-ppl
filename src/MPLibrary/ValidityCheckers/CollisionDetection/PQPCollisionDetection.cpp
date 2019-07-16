@@ -154,7 +154,11 @@ IsInsideObstacle(const Vector3d& _pt, const Body* const _body) {
 
   // Sort collisions by relative X-value.
 
-  static const double tolerance = 10 * numeric_limits<double>::epsilon();
+  // Had to increase tolerance because we were coming in 1 or 2e-15 above the tolerance 
+  // and detecting a collision between robots that were no where close to each other.
+  // It could be that this is just a floating point issue on Irving's laptop and not on
+  // the lab machines.
+  static const double tolerance = 100 * numeric_limits<double>::epsilon();
   static const Vector3d r(10e6, 0, 0); // Vector-representation of the ray.
   const auto& vertices = _body->GetWorldPolyhedron().GetVertexList();
   const auto& polygons = _body->GetWorldPolyhedron().GetPolygonList();
