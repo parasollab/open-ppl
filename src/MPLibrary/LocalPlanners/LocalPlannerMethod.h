@@ -190,7 +190,6 @@ IsConnected(const CfgType& _start, const CfgType& _end,
     LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath) {
   CfgType col(_start.GetRobot());
-  //CfgType col(this->GetTask()->GetRobot());
   return IsConnected(_start, _end, col, _lpOutput, _posRes,
       _oriRes, _checkCollision, _savePath);
 }
@@ -242,5 +241,4 @@ ReconstructPath(const GroupCfgType& _start, const GroupCfgType& _end,
 }
 
 /*----------------------------------------------------------------------------*/
-
 #endif

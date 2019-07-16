@@ -23,8 +23,8 @@ class DrawableBoundary : public DrawablePolyhedron {
     /// @param _boundary Boundary to be drawn
     /// @param _color The color to render the boundary.
     /// @param _wire Draw the boundary in wire frame?
-    DrawableBoundary(const Boundary* _boundary, const glutils::color& _color,
-        const bool _wire = false);
+    DrawableBoundary(const Boundary* const _boundary,
+        const glutils::color& _color, const bool _wire = false);
 
     ///@}
 

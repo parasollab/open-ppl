@@ -4,17 +4,21 @@
 #include "Agent.h"
 #include "PlanningAgent.h"
 #include "HandoffAgent.h"
-#include "WholeTask.h"
 
-#include "Behaviors/TMPStrategies/ITPlacement/PlacementMethod.h"
+#include "TMPLibrary/TMPLibrary.h"
 
-#include "Behaviors/TMPStrategies/Actions/Action.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPLibrary/PMPL.h"
 #include "BatteryBreak.h"
 
+//TODO remove dependency on these
+#include "TMPLibrary/Actions/Action.h"
+
 class HandoffAgent;
 class InteractionTemplate;
+class TaskPlan;
+class TMPStrategyMethod;
+class ITMethod;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent represents the task hand-off behavior presented in
@@ -79,10 +83,6 @@ class Coordinator : public Agent {
     ///@name Coordinator Interface
     ///@{
 
-    /// Assign a new task to a group member.
-    /// @param _member The member which is requesting a new task.
-    std::shared_ptr<MPTask> AssignTask(std::shared_ptr<MPTask> _nextTask);
-
     /// Decide what to do when some group of agents are facing a potential
     /// collision. Send a command to each agent in this group to resolve the
     /// potential collision.
@@ -102,6 +102,14 @@ class Coordinator : public Agent {
 
     HandoffAgent* GetCapabilityAgent(std::string _capability);
 
+	  std::string GetCurrentStrategy();
+
+		TMPLibrary* GetTMPLibrary();
+
+		void SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+
+    std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
+    std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
     ///@}
   private:
 
@@ -146,66 +154,16 @@ class Coordinator : public Agent {
     /// @return True if the versions are up-to-date, false otherwise.
     bool ValidateVersionMap(Agent* const _member, std::vector<Agent*> _agents);
 
-    /// Return the next subtask for a given WholeTask
-    /// @param _wholeTask The WholeTask object containing subtasks
-    /// @return A shared_ptr to the next subtask to be assigned.
-    std::shared_ptr<MPTask> GetNextSubtask(WholeTask* _wholeTask);
-
-    /// Returns the agent that as assiged the prior subtask in the whole task
-    /// @param _wholeTask The WholeTask object containing the subtasks in
-    /// question
-    /// @return The HandoffAgent assigned to the preceeding subtask
-    HandoffAgent* GetLastAgent(WholeTask* _wholeTask);
-
-    /// Pushes a new subtask onto the unassigned task priority queue.
-    /// @param _subtask The new subtask being added to the priority queue
-    void AddSubtask(std::shared_ptr<MPTask> _subtask);
-
     ///@}
     ///@name Initialize Functions
     ///@{
 
-    /// Generates the dummy agents of each capabiltiy used for planning
-    void GenerateDummyAgents();
-
-    /// Generates the handoff templates from the input hand off templates in the
-    /// XML file.
-    void GenerateHandoffTemplates();
-
-    /// Randomly transforms the handoff template and attempts to validate it in
-    /// the environment
-    void TranslateHandoffTemplates();
-
-    /// Initiallizes configurations for each capability at the start and end
-    /// constriants of each whole task and adds them to the megaRoadmap
-    void SetupWholeTasks();
-
-    /// Generates the initial roadmaps for each capability type
-    void GenerateRoadmaps();
-
-    /// Creates the WholeTask objects that will be divided into subtasks
-    void PlanWholeTasks();
-
     /// Makes sure all of the agents are ready to execute the plans
     void InitializeAgents();
-
-    /// Copy over the cabaility roadmaps to each of the corresponding agents
-    void CopyCapabilityRoadmaps();
-
-    /// Assigns tasks through the auction system concept
-    void AssignInitialTasks();
 
     ///@}
     ///@name Helpers
     ///@{
-
-    /// Transforms a Cfg by a given Cfg
-    void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
-
-    /// Connects two roadmaps by sampling random points and planning between
-    /// them
-    void ConnectDistinctRoadmaps(vector<size_t> _roadmap1, vector<size_t> _roadmap2,
-      HandoffAgent* _agent);
 
     /// Converts the action plan returned by the TMP method into a task plan
     std::vector<std::shared_ptr<MPTask>> ConvertActionsToTasks
@@ -215,14 +173,7 @@ class Coordinator : public Agent {
     //robots
     void TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan);
 
-    /// Temporary Function to call it placement methods during development
-    void FindITLocations(InteractionTemplate* _it);
-
-    /// Temporary Function to add placement method to map during development
-    void AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm);
-
-    /// Temporary Function to use new ITConnector Code
-    void CreateCapabilityMaps();
+	void DistributeTaskPlan(TaskPlan* _taskPlan);
 
     ///@}
 
@@ -232,26 +183,27 @@ class Coordinator : public Agent {
     ///@{
 
     MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
+    TMPLibrary* m_tmpLibrary{nullptr};   ///< The task and motion planning library.
 
     MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
 
-    std::unique_ptr<Environment> m_handoffEnvironment;    ///< The handoff template environment.
+    //std::unique_ptr<Environment> m_handoffEnvironment;    ///< The handoff template environment.
 
     /// Used to keep IT roadmaps separate for visualization in simulator
-    std::unique_ptr<RoadmapType> m_handoffTemplateRoadmap;
+    //std::unique_ptr<RoadmapType> m_handoffTemplateRoadmap;
 
-    std::vector<RoadmapType> m_translatedHandoffs; ///< Translated handoffs
+    //std::vector<RoadmapType> m_translatedHandoffs; ///< Translated handoffs
 
     /// The VIDs of all individual agent roadmaps in each transformed handoff template.
-    std::vector<std::vector<size_t>> m_transformedRoadmaps;
+    //std::vector<std::vector<size_t>> m_transformedRoadmaps;
 
     /// The VIDs of the start and end points of the whole tasks in the
     /// megaRoadmap
-    std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
+    //std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
 
-    std::unordered_map<std::string, RoadmapType*> m_capabilityRoadmaps;
+    //std::unordered_map<std::string, RoadmapType*> m_capabilityRoadmaps;
 
-    RoadmapType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
+    //RoadmapType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
 
     std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
     std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
@@ -266,24 +218,25 @@ class Coordinator : public Agent {
     double m_currentTime{0.0};
 
     /// The list of WholeTasks, which need to be divided into subtasks
-    std::vector<WholeTask*> m_wholeTasks;
+    //std::vector<WholeTask*> m_wholeTasks;
 
     /// The list of unassigned tasks, starting with all initial subtasks.
-    std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
+    //std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
 
     /// Map agents to their current knowledge of other agents' plan versions.
     std::unordered_map<Agent*, std::unordered_map<PlanningAgent*, size_t>> m_versionMap;
 
     /// Map subtasks to the WholeTask that they are included in to access the
     /// next subtask.
-    std::unordered_map<std::shared_ptr<MPTask>, WholeTask*> m_subtaskMap;
+    //std::unordered_map<std::shared_ptr<MPTask>, WholeTask*> m_subtaskMap;
 
     /// Maps agent capabilities to a dummy agent used for planning.
-    std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
+    //std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
 
     /// Indicates which method is used for task decomposition and allocation
-    bool m_tmp{false};
+    //bool m_tmp{false};
 
+    //bool m_it{true};
     /// Timer used for experiment timing
     nonstd::timer m_clock;
 
@@ -291,9 +244,13 @@ class Coordinator : public Agent {
     std::vector<size_t> m_simulatorGraphIDs;
 
     /// Tempoary Map of IT Placement Method Options to use during development
-    std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
+    //std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
 
-    double m_connectionThreshold{1.5};
+    //double m_connectionThreshold{1.5};
+
+	//TODO:: make this more formal and not specifically ITMethod
+    std::string m_tmpStrategyLabel;
+
     ///@}
 
 };

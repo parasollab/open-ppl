@@ -40,7 +40,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
-    typedef typename MPTraits::CfgType              CfgType;
+
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
     typedef typename RoadmapType::EdgeID            EdgeID;
@@ -223,7 +223,6 @@ template <typename MPTraits>
 bool
 QueryMethod<MPTraits>::
 operator()() {
-  //std::cout << "------------------- Individual query is called here" << std::endl;
   auto goalTracker = this->GetGoalTracker();
   const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
   auto task = this->GetTask();
@@ -239,8 +238,8 @@ operator()() {
   if(unreachedGoals.empty() or r != m_roadmap)
     Reset(r);
 
-  //if(this->m_debug)
-  std::cout << "Querying roadmap for a path satisfying task '"
+  if(this->m_debug)
+    std::cout << "Querying roadmap for a path satisfying task '"
               << task->GetLabel()
               << "', " << unreachedGoals.size() << " / " << numGoals
               << " goals not reached."

@@ -40,6 +40,9 @@ class PathType final {
     ///@name Path Interface
     ///@{
 
+    /// Get the robot which travels this path.
+    Robot* GetRobot() const noexcept;
+
     /// Get the roadmap used by this path.
     RoadmapType* GetRoadmap() const noexcept;
 
@@ -143,6 +146,14 @@ PathType(RoadmapType* const _r) : m_roadmap(_r) { }
 /*------------------------------ Path Interface ------------------------------*/
 
 template <typename MPTraits>
+Robot*
+PathType<MPTraits>::
+GetRobot() const noexcept {
+  return m_roadmap->GetRobot();
+}
+
+
+template <typename MPTraits>
 typename MPTraits::RoadmapType*
 PathType<MPTraits>::
 GetRoadmap() const noexcept {
@@ -176,16 +187,8 @@ Length() const {
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
       if(*start == *(start + 1))
         continue;  // Skip repeated vertices.
-      typename RoadmapType::edge_descriptor ed(*start, *(start + 1));
-      typename RoadmapType::vertex_iterator vi;
-      typename RoadmapType::adj_edge_iterator ei;
-      if(m_roadmap->find_edge(ed, vi, ei))
-        length += (*ei).property().GetWeight();
-      else
-        throw RunTimeException(WHERE, "Tried to compute length for a path "
-            "containing the edge (" + to_string(*start) + "," +
-            to_string(*(start + 1)) + "), but that edge was not found in the "
-            "graph.");
+      const auto& edge = m_roadmap->GetEdge(*start, *(start+1));
+      length += edge.GetWeight();
     }
     m_lengthCached = true;
   }
@@ -266,14 +269,14 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     CfgType& end   = m_roadmap->GetVertex(*(it+1));
 
     // Construct a resolution-level path along the recreated edge.
-      std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
-      recreatedEdge.insert(recreatedEdge.begin(), start);
-      recreatedEdge.push_back(end);
-      for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-        std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-            std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
-        out.insert(out.end(), edge.begin(), edge.end());
-      }
+    std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
+    recreatedEdge.insert(recreatedEdge.begin(), start);
+    recreatedEdge.push_back(end);
+    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+      std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
+          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
+      out.insert(out.end(), edge.begin(), edge.end());
+    }
     out.push_back(end);
   }
   return out;

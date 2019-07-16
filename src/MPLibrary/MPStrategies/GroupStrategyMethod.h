@@ -52,8 +52,6 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
 
     virtual ~GroupStrategyMethod() = default;
 
-    vector<CfgType> FullPath(vector<CfgType> _rdmpPath);
-
     ///@}
 
   protected:
@@ -132,7 +130,6 @@ Finalize() {
   //   if(path and path->Size()) {
   //     const std::string base = this->GetBaseFilename();
   //     ::WritePath(base +"robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
-  //     ::WritePath(base +"robot"+ std::to_string(i) + ".path", FullPath(path->Cfgs()));
   //     vector<CfgType> dummy = path->Cfgs();
   //     auto roadmap = this->GetRoadmap(dummy[0].GetRobot());
   //     roadmap->Write(base +"robot"+ std::to_string(i) + ".map", this->GetEnvironment());
@@ -443,36 +440,6 @@ GetGoalBoundaryMaps() const noexcept {
   return maps;
 }
 
-template <typename MPTraits>
-vector<typename MPTraits::CfgType>
-GroupStrategyMethod<MPTraits>::
-FullPath(vector<CfgType> _rdmpPath) {
-  auto robot = _rdmpPath[0].GetRobot();
-  vector<CfgType> path;
-  if(_rdmpPath.empty()) return path;
-  if(_rdmpPath.size() == 1) return _rdmpPath;
-
-  path.push_back(_rdmpPath[0]);
-  size_t i = 0;
-  while(i < _rdmpPath.size()-1) { 
-    int nTicks = 0;
-    CfgType tick(robot), incr(robot);
-    tick = _rdmpPath[i];
-    auto positionRes = this->GetEnvironment()->GetPositionRes();
-    auto orientationRes = this->GetEnvironment()->GetOrientationRes();
-    incr.FindIncrement(_rdmpPath[i], _rdmpPath[i+1], &nTicks, positionRes, orientationRes);
-
-    for(int i = 1; i < nTicks; i++) { //don't need to check the ends, _c1 and _c2
-      tick += incr;
-      path.push_back(tick);
-    }
-    ++i;
-    path.push_back(_rdmpPath[i]);
-
-  }
-
-  return path; 
-}
 /*----------------------------------------------------------------------------*/
 
 #endif

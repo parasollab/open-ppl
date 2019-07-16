@@ -219,7 +219,7 @@ bool
 DynamicRegionSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
-  throw RunTimeException(WHERE, "Does not make sense for this object");
+  throw RunTimeException(WHERE) << "Does not make sense for this object";
   return false;
 }
 

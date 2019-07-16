@@ -9,6 +9,8 @@
 #include <chrono>
 #include <iostream>
 
+#include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
+
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -68,6 +70,13 @@ PlanningAgent::
 Step(const double _dt) {
   Initialize();
 
+  /*if(HasPlan() and m_CUSTOM_PATH){
+    ExecuteTask(_dt);
+    return;
+  }
+  else{
+    m_CUSTOM_PATH = false;
+  }*/
   // If the agent is planning or localizing, skip this step.
   if(IsPlanning() or IsLocalizing())
     return;
@@ -244,7 +253,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
 
   // add DrawableRoadmap to be drawn
-  if(m_debug){
+  if(m_debug) {
     m_roadmapVisualID = Simulation::Get()->AddRoadmap(
         m_solution->GetRoadmap(m_robot), glutils::color::green);
   }

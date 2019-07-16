@@ -2,8 +2,8 @@
 #define PMPL_MP_SOLUTION_TYPE_H_
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
-#include "MPLibrary/MPTools/InteractionTemplate.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "Utilities/MetricUtils.h"
 
 #include <map>
@@ -108,19 +108,6 @@ class MPSolutionType final {
     RobotGroup* GetRobotGroup() const noexcept;
 
     ///@}
-    ///@name Interaction Templates
-    ///@{
-    /// @todo Document what these are. Does it include one copy of each abstract
-    ///       IT, or each transformed instance (or something else)? If the
-    ///       information is duplicated in the roadmaps, we should annotate the
-    ///       roadmap cfgs instead to avoid duplicating data (which we then have
-    ///       to keep synchronized).
-
-    std::vector<std::unique_ptr<InteractionTemplate>>& GetInteractionTemplates();
-
-    void AddInteractionTemplate(InteractionTemplate*);
-
-    ///@}
 
   private:
 
@@ -149,10 +136,7 @@ class MPSolutionType final {
     /// The solution object for each robot and group.
     std::unordered_map<Robot*, RobotSolution> m_individualSolutions;
     std::unordered_map<RobotGroup*, GroupSolution> m_groupSolutions;
-
-    /// The set of Interaction Templates
-    std::vector<std::unique_ptr<InteractionTemplate>> m_interactionTemplates;
-
+    
     ///@}
 };
 
@@ -224,10 +208,13 @@ void
 MPSolutionType<MPTraits>::
 SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
   auto robotSolution = GetRobotSolution(_r);
-  if(robotSolution){
-    throw RunTimeException(WHERE) << "Cannot set roadmap for robot that does not have a solution.";
+  if(!robotSolution){//master had without the not !
+    throw RunTimeException(WHERE) << "Cannot set roadmap for robot that does not "
+                                  << "have a solution.";
   }
+
   m_individualSolutions[_r].freeMap.reset(_roadmap);
+  m_individualSolutions[_r].path.reset(new Path(_roadmap));
 }
 
 template <typename MPTraits>
@@ -334,22 +321,6 @@ RobotGroup*
 MPSolutionType<MPTraits>::
 GetRobotGroup() const noexcept {
   return m_group;
-}
-
-
-template<typename MPTraits>
-std::vector<std::unique_ptr<InteractionTemplate>>&
-MPSolutionType<MPTraits>::
-GetInteractionTemplates(){
-  return m_interactionTemplates;
-}
-
-
-template<typename MPTraits>
-void
-MPSolutionType<MPTraits>::
-AddInteractionTemplate(InteractionTemplate* _it){
-  m_interactionTemplates.emplace_back(std::unique_ptr<InteractionTemplate>(_it));
 }
 
 /*--------------------------------- Helpers ----------------------------------*/

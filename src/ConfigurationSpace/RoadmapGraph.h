@@ -88,8 +88,6 @@ class RoadmapGraph : public
     typedef typename STAPLGraph::vertex_property          VP;
     typedef typename STAPLGraph::edge_property            EP;
 
-    typedef  Vertex    CfgType;
-
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
 
     typedef std::function<void(VI)> VertexHook;
@@ -101,6 +99,7 @@ class RoadmapGraph : public
 
     typedef std::unordered_map<VID,double> InvalidVertexAtSet;
     typedef std::unordered_map<VID,double> InvalidEdgeAtSet;
+
     ///@}
     ///@name Construction
     ///@{
@@ -168,7 +167,7 @@ class RoadmapGraph : public
     size_t Size() const noexcept;
 
     /// Check if a vertex is present in the graph.
-    /// @param _vid  The vertex descriptor 
+    /// @param _vid  The vertex descriptor
     /// @return True if the vertex descriptor was found in the graph.
     bool IsVertex(const VID _vid) const noexcept;
 
@@ -270,20 +269,25 @@ class RoadmapGraph : public
     /// Check if a vertex is lazily invalidated at certain timestep
     /// @param _vid The vertex descriptor.
     /// @return     True if _vid is lazily invalidated.
-    bool IsVertexInvalidatedAt(const VID _vid, double _sourceDistance, double _targetDistance) const noexcept;
+    bool IsVertexInvalidatedAt(const VID _vid, double _sourceDistance,
+        double _targetDistance) const noexcept;
 
-    /// @overload This version takes the source and target VIDs for an edge at certain timestep.
+    /// @overload This version takes the source and target VIDs for an edge at
+    ///           certain timestep.
     /// @param _source The VID of the source vertex.
     /// @param _target The VID of the target vertex.
     /// @return        True if (_source, _target) is lazily invalidated.
-    bool IsEdgeInvalidatedAt(const VID _source, const VID _target, double _sourceDistance, double _edgeDistance) const noexcept;
+    bool IsEdgeInvalidatedAt(const VID _source, const VID _target,
+        double _sourceDistance, double _edgeDistance) const noexcept;
 
     /// Check if an edge is lazily invalidated.
     /// @param _eid The edge ID.
     /// @return     True if _eid is lazily invalidated.
-    bool IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance, double _targetDistance) const noexcept;
+    bool IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance,
+        double _targetDistance) const noexcept;
 
-    bool IsEdgeInConflictAt(const EdgeID _eid, double _sourceDistance, double _targetDistance) const noexcept;
+    bool IsEdgeInConflictAt(const EdgeID _eid, double _sourceDistance,
+        double _targetDistance) const noexcept;
 
 
     /// @overload This version takes the source and target VIDs for an edge.
@@ -295,21 +299,21 @@ class RoadmapGraph : public
     /// Set the lazy invalidation status of a vertex.
     /// @param _vid     The vertex descriptor.
     /// @param _invalid The invalid status to set.
-    void SetVertexInvalidatedAt(const VID _vid,double _conflictTimestep, const bool _invalid = true)
-        noexcept;
+    void SetVertexInvalidatedAt(const VID _vid,double _conflictTimestep,
+        const bool _invalid = true) noexcept;
 
     /// Set the lazy invalidation status of an edge.
     /// @param _eid     The edge ID.
     /// @param _invalid The invalid status to set.
-    void SetEdgeInvalidatedAt(const EdgeID _eid, double _conflictTimestep, const bool _invalid = true)
-        noexcept;
+    void SetEdgeInvalidatedAt(const EdgeID _eid, double _conflictTimestep,
+        const bool _invalid = true) noexcept;
 
     /// @overload This version takes the source and target VIDs for an edge.
     /// @param _source  The VID of the source vertex.
     /// @param _target  The VID of the target vertex.
     /// @param _invalid The invalid status to set.
-    void SetEdgeInvalidatedAt(const VID _source, const VID _target, double _conflictTimestep,
-        const bool _invalid = true) noexcept;
+    void SetEdgeInvalidatedAt(const VID _source, const VID _target,
+        double _conflictTimestep, const bool _invalid = true) noexcept;
 
     /// Set the lazy invalidation status of a vertex.
     /// @param _vid     The vertex descriptor.
@@ -330,7 +334,8 @@ class RoadmapGraph : public
     void SetEdgeInvalidated(const VID _source, const VID _target,
         const bool _invalid = true) noexcept;
 
-    void SetConflictCfgAt(Vertex _v, double _conflictTimestep, const bool _invalid) noexcept;
+    void SetConflictCfgAt(Vertex _v, double _conflictTimestep,
+        const bool _invalid) noexcept;
 
     std::vector<std::pair<Vertex,double>> m_conflictCfgsAt;
 
@@ -398,6 +403,10 @@ class RoadmapGraph : public
     /// @param _filename The name of the map file to read.
     /// @note Temporarily moved to non-member function.
     //virtual void Read(const std::string& _filename);
+
+    // Temporary work-around for calling the add vertex/edge hooks.
+    template <typename RG>
+    friend void Read(RG* _g, const std::string& _filename);
 
     /// Write the current roadmap out to a roadmap (.map) file.
     /// @param _filename The name of the map file to write to.
@@ -479,8 +488,6 @@ class RoadmapGraph : public
     InvalidVertexAtSet m_invalidVerticesAt; ///< Set of lazy-invalidated vertices.
     InvalidEdgeAtSet m_invalidEdgesAt;      ///< Set of lazy-invalidated edges.
 
-    //std::vector<std::pair<Vertex,double>> m_conflictCfgsAt;
-
     ///@}
 
 };
@@ -549,8 +556,7 @@ DeleteVertex(const VID _v) noexcept {
   // Find the vertex and crash if it doesn't exist.
   VI vi = this->find_vertex(_v);
   if(vi == this->end())
-    throw RunTimeException(WHERE, "VID " + std::to_string(_v) +
-        " is not in the graph.");
+    throw RunTimeException(WHERE) << "VID " << _v << " is not in the graph.";
 
   // We must manually delete the edges rather than letting STAPL do this in
   // order to call the DeleteEdge hooks.
@@ -712,7 +718,7 @@ template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
 IsVertex(const VID _vid) const noexcept {
-  return this->find_vertex(_vid) != this->end(); 
+  return this->find_vertex(_vid) != this->end();
 }
 
 template <typename Vertex, typename Edge>
@@ -913,6 +919,7 @@ ClearInvalidated() noexcept {
   m_invalidEdges.clear();
 }
 
+
 template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
@@ -921,6 +928,7 @@ ClearInvalidatedAt() noexcept {
   m_invalidEdgesAt.clear();
 }
 
+
 template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
@@ -928,12 +936,16 @@ ClearConflictCfgsAt() noexcept {
   m_conflictCfgsAt.clear();
 }
 
+
 template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
-IsVertexInvalidatedAt(const VID _vid, double _sourceDistance, double _targetDistance) const noexcept {
+IsVertexInvalidatedAt(const VID _vid, double _sourceDistance,
+    double _targetDistance) const noexcept {
   double conflictTimestep  = m_invalidVerticesAt.at(_vid);
-  return m_invalidVerticesAt.count(_vid) and conflictTimestep > _sourceDistance and conflictTimestep < _targetDistance;
+  return m_invalidVerticesAt.count(_vid)
+     and conflictTimestep > _sourceDistance
+     and conflictTimestep < _targetDistance;
 }
 
 
@@ -946,52 +958,34 @@ IsEdgeInvalidatedAt(const VID _source, const VID _target, double _sourceDistance
   return IsEdgeInvalidatedAt(ei->id(),_sourceDistance,_targetDistance);
 }
 
+
 template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
-IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance, double _edgeDistance) const noexcept {
-    //std::cout << "Calling IsEdgeInvalidatedAt()" << std::endl;
-    double conflictTimestep; 
-    if(m_invalidEdgesAt.count(_eid)) {
-        std::cout << "_sourceDistance: " << _sourceDistance << std::endl;
-        
-        std::cout << "__edgeDistance: " << _edgeDistance << std::endl;
-        conflictTimestep = m_invalidEdgesAt.at(_eid);
-        std::cout << "_conflictTimestep: " << conflictTimestep << std::endl;
-        if( conflictTimestep*1.2 > _sourceDistance && conflictTimestep < _edgeDistance*1.2) {
+IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance,
+    double _edgeDistance) const noexcept {
+  double conflictTimestep;
+  if(m_invalidEdgesAt.count(_eid)) {
+    std::cout << "_sourceDistance: " << _sourceDistance << std::endl;
 
-            std::cout << "Invalidating edge " << _eid << " at timestep " << conflictTimestep << std::endl;
-            //std::cout << "Invalidating pre-edge " << _eid << " at to avoit timestep " << conflictTimestep << std::endl;
-            return true;
-        } else {
-            std::cout << "Edge " << _eid << " valid at timestep " << conflictTimestep << std::endl;
-        }
+    std::cout << "__edgeDistance: " << _edgeDistance << std::endl;
+    conflictTimestep = m_invalidEdgesAt.at(_eid);
+    std::cout << "_conflictTimestep: " << conflictTimestep << std::endl;
+    if(conflictTimestep * 1.2 > _sourceDistance and
+        conflictTimestep < _edgeDistance * 1.2) {
+      std::cout << "Invalidating edge " << _eid << " at timestep "
+                << conflictTimestep << std::endl;
+      return true;
     }
-    
-    return false; 
-    //return m_invalidEdgesAt.count(_eid) and conflictTimestep > _sourceDistance and conflictTimestep < _targetDistance;
-    //++conflictTimestep;
-    //return m_invalidEdgesAt.count(_eid);
+    else {
+      std::cout << "Edge " << _eid << " valid at timestep " << conflictTimestep
+                << std::endl;
+    }
+  }
+
+  return false;
 }
 
-// template <typename Vertex, typename Edge>
-// bool
-// RoadmapGraph<Vertex, Edge>::
-// IsEdgeInConflictAt(const EdgeID _eid, double _sourceDistance, double _edgeDistance) const noexcept {
-//     //std::cout << "Calling IsEdgeInvalidatedAt()" << std::endl;
-    
-//     double conflictTimestep;
-//     for(size_t i = 0 ; i <  m_conflictCfgsAt.size() ; ++i){
-//         conflictTimestep = m_conflictCfgsAt[i].second;
-//         if(conflictTimestep*1.2 > _sourceDistance && conflictTimestep < _edgeDistance*1.2) {
-
-
-
-//         }  
-//     }
-
-    
-// }
 
 template <typename Vertex, typename Edge>
 bool
@@ -1018,12 +1012,14 @@ IsEdgeInvalidated(const VID _source, const VID _target) const noexcept {
   return IsEdgeInvalidated(ei->id());
 }
 
+
 template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
-SetVertexInvalidatedAt(const VID _vid, double _conflictTimestep, const bool _invalid) noexcept {
+SetVertexInvalidatedAt(const VID _vid, double _conflictTimestep,
+    const bool _invalid) noexcept {
   if(_invalid) {
-    std::pair<size_t,double> invalidVertex = std::make_pair(_vid,_conflictTimestep);
+    std::pair<size_t, double> invalidVertex{_vid, _conflictTimestep};
     m_invalidVerticesAt.insert(invalidVertex);
   }
   else
@@ -1034,7 +1030,8 @@ SetVertexInvalidatedAt(const VID _vid, double _conflictTimestep, const bool _inv
 template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
-SetEdgeInvalidatedAt(const EdgeID _eid, double _conflictTimestep, const bool _invalid) noexcept {
+SetEdgeInvalidatedAt(const EdgeID _eid, double _conflictTimestep,
+    const bool _invalid) noexcept {
   if(_invalid) {
     std::pair<size_t,double> invalidEdge = std::make_pair(_eid,_conflictTimestep);
     m_invalidEdgesAt.insert(invalidEdge);
@@ -1047,8 +1044,8 @@ SetEdgeInvalidatedAt(const EdgeID _eid, double _conflictTimestep, const bool _in
 template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
-SetEdgeInvalidatedAt(const VID _source, const VID _target, double _conflictTimestep, const bool _invalid)
-    noexcept {
+SetEdgeInvalidatedAt(const VID _source, const VID _target,
+    double _conflictTimestep, const bool _invalid) noexcept {
   EI ei;
   GetEdge(_source, _target, ei);
   SetEdgeInvalidatedAt(ei->id(), _conflictTimestep,  _invalid);
@@ -1087,19 +1084,23 @@ SetEdgeInvalidated(const VID _source, const VID _target, const bool _invalid)
   SetEdgeInvalidated(ei->id(), _invalid);
 }
 
-//TODO: Should store these as invlaid regions (boundary objects) so its more general.
+
+//TODO: Should store these as invalid regions (boundary objects) so its more
+//      general.
 template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
-SetConflictCfgAt(Vertex _v, double _conflictTimestep, const bool _invalid) noexcept {
+SetConflictCfgAt(Vertex _v, double _conflictTimestep, const bool _invalid)
+    noexcept {
   std::pair<Vertex,double> conflictCfg = std::make_pair(_v,_conflictTimestep);
-  if(_invalid) {  
+  if(_invalid) {
     m_conflictCfgsAt.push_back(conflictCfg);
   }
-  else{
-    auto it = std::find(m_conflictCfgsAt.begin(), m_conflictCfgsAt.end(), conflictCfg);
+  else {
+    auto it = std::find(m_conflictCfgsAt.begin(), m_conflictCfgsAt.end(),
+        conflictCfg);
     if(it != m_conflictCfgsAt.end()){
-        m_conflictCfgsAt.erase(it);
+      m_conflictCfgsAt.erase(it);
     }
   }
 }
@@ -1122,9 +1123,8 @@ IsHook(const HookType _type, const std::string& _label) const {
     case HookType::DeleteEdge:
       return m_deleteEdgeHooks.count(_label);
     default:
-      throw RunTimeException(WHERE, "Unrecognized hook type '" +
-          ToString(_type) + "'.");
-      return false;
+      throw RunTimeException(WHERE) << "Unrecognized hook type '"
+                                    << ToString(_type) << "'.";
   }
 }
 
@@ -1136,8 +1136,9 @@ InstallHook(const HookType _type, const std::string& _label,
     const VertexHook& _h) {
   // Ensure that the hook does not already exist.
   if(IsHook(_type, _label))
-    throw RunTimeException(WHERE, "Hook of type '" + ToString(_type) +
-        "' with label '" + _label + "' already exists.");
+    throw RunTimeException(WHERE) << "Hook of type '" << ToString(_type)
+                                  << "' with label '" << _label
+                                  << "' already exists.";
 
   switch(_type) {
     case HookType::AddVertex:
@@ -1148,11 +1149,13 @@ InstallHook(const HookType _type, const std::string& _label,
       break;
     case HookType::AddEdge:
     case HookType::DeleteEdge:
-      throw RunTimeException(WHERE, "Edge hook type '" + ToString(_type) +
-          "' used with vertex hook function labeled '" + _label + "'.");
+      throw RunTimeException(WHERE) << "Edge hook type '" << ToString(_type)
+                                    << "' used with vertex hook function "
+                                    << "labeled '" << _label << "'.";
     default:
-      throw RunTimeException(WHERE, "Unrecognized hook type '" +
-          ToString(_type) + "' with label '" + _label + "'.");
+      throw RunTimeException(WHERE) << "Unrecognized hook type '"
+                                    << ToString(_type)
+                                    << "' with label '" << _label << "'.";
   }
 }
 
@@ -1163,8 +1166,9 @@ RoadmapGraph<Vertex, Edge>::
 InstallHook(const HookType _type, const std::string& _label, const EdgeHook& _h) {
   // Ensure that the hook does not already exist.
   if(IsHook(_type, _label))
-    throw RunTimeException(WHERE, "Hook of type '" + ToString(_type) +
-        "' with label '" + _label + "' already exists.");
+    throw RunTimeException(WHERE) << "Hook of type '" << ToString(_type)
+                                  << "' with label '" << _label
+                                  << "' already exists.";
 
   switch(_type) {
     case HookType::AddEdge:
@@ -1175,11 +1179,13 @@ InstallHook(const HookType _type, const std::string& _label, const EdgeHook& _h)
       break;
     case HookType::AddVertex:
     case HookType::DeleteVertex:
-      throw RunTimeException(WHERE, "Vertex hook type '" + ToString(_type) +
-          "' used with edge hook function labeled '" + _label + "'.");
+      throw RunTimeException(WHERE) << "Vertex hook type '" << ToString(_type)
+                                    << "' used with edge hook function labeled '"
+                                    << _label << "'.";
     default:
-      throw RunTimeException(WHERE, "Unrecognized hook type '" +
-          ToString(_type) + "' with label '" + _label + "'.");
+      throw RunTimeException(WHERE) << "Unrecognized hook type '"
+                                    << ToString(_type)
+                                    << "' with label '" << _label << "'.";
   }
 }
 
@@ -1189,8 +1195,9 @@ void
 RoadmapGraph<Vertex, Edge>::
 RemoveHook(const HookType _type, const std::string& _label) {
   if(!IsHook(_type, _label))
-    throw RunTimeException(WHERE, "Hook of type '" + ToString(_type) +
-        "' with label '" + _label + "' does not exist.");
+    throw RunTimeException(WHERE) << "Hook of type '" << ToString(_type)
+                                  << "' with label '" << _label
+                                  << "' does not exist.";
 
   switch(_type) {
     case HookType::AddVertex:
@@ -1206,8 +1213,9 @@ RemoveHook(const HookType _type, const std::string& _label) {
       m_deleteEdgeHooks.erase(_label);
       break;
     default:
-      throw RunTimeException(WHERE, "Unrecognized hook type '" +
-          ToString(_type) + "' with label '" + _label + "'.");
+      throw RunTimeException(WHERE) << "Unrecognized hook type '"
+                                    << ToString(_type)
+                                    << "' with label '" << _label << "'.";
   }
 }
 
@@ -1292,6 +1300,12 @@ Read(RoadmapGraph* _g, const std::string& _filename) {
   // Unset the input robot for our edge class.
   Edge::inputRobot = nullptr;
   Vertex::inputRobot = nullptr;
+
+  for(auto vi = _g->begin(); vi != _g->end(); ++vi)
+    _g->ExecuteAddVertexHooks(vi);
+  for(auto vi = _g->begin(); vi != _g->end(); ++vi)
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+      _g->ExecuteAddEdgeHooks(ei);
 }
 #else
 template <typename Vertex, typename Edge>
@@ -1363,9 +1377,11 @@ template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteAddVertexHooks(const VI _iterator) noexcept {
-  if(m_enableHooks)
-    for(auto& hook : m_addVertexHooks)
-      hook.second(_iterator);
+  if(!m_enableHooks)
+    return;
+
+  for(auto& hook : m_addVertexHooks)
+    hook.second(_iterator);
 }
 
 

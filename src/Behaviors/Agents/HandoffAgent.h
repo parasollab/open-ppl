@@ -3,7 +3,9 @@
 
 #include "PathFollowingAgent.h"
 
+
 class Coordinator;
+class TMPLibrary;
 
 class NetbookInterface;
 
@@ -95,6 +97,8 @@ class HandoffAgent : public PathFollowingAgent {
     /// Allows the agent to move on from an interaction
     /// @param _clear New value for m_clearToMove
     void SetClearToMove(bool _clear);
+
+    void CheckInteractionPath();
     ///@}
   protected:
 
@@ -122,7 +126,9 @@ class HandoffAgent : public PathFollowingAgent {
     ///@name Internal State
     ///@{
 
-    /// The parent group to which this agent belongs.
+		TMPLibrary* m_tmpLibrary;
+    
+		/// The parent group to which this agent belongs.
     Coordinator* m_parentAgent{nullptr};
 
     double m_distance{0.0}; ///< The distance traveled since localizing.
@@ -146,6 +152,8 @@ class HandoffAgent : public PathFollowingAgent {
 
     /// List of simulator visualization graph ids
     std::vector<size_t> m_simulatorGraphIDs;
+
+    bool m_generatingCost{false}; ///< Flag so work function knows which query method to use.
     ///@}
 
 };

@@ -1,6 +1,8 @@
 #ifndef LOCAL_OBSTACLE_MAP_H_
 #define LOCAL_OBSTACLE_MAP_H_
 
+#include "Utilities/MetricUtils.h"
+
 #include <unordered_map>
 #include <unordered_set>
 

@@ -106,18 +106,23 @@ DrawablePolyhedron::
 BuildAdjacencyMap() {
   std::set<std::pair<size_t, size_t>> triangleList;
   const auto& triangles = m_polyhedron.GetPolygonList();
+
   for(auto triangle = triangles.begin(); triangle != triangles.end(); ++triangle) {
     const auto& n1 = triangle->GetNormal();
     for(auto iter = triangle + 1; iter < triangles.end(); ++iter) {
+      // Skip triangle pairs with identical normals since these represent a
+      // continuous surface.
       const auto& n2 = iter->GetNormal();
+      if(n1 == n2)
+        continue;
 
-      if(n1 != n2) {
-        auto commonEdge = triangle->CommonEdge(*iter);
-        if(commonEdge.first != -1 and commonEdge.second != -1)
-          triangleList.emplace((size_t) commonEdge.first, (size_t) commonEdge.second);
-      }
+      auto commonEdge = triangle->CommonEdge(*iter);
+      if(commonEdge.first != -1 and commonEdge.second != -1)
+        triangleList.emplace((size_t)commonEdge.first,
+                             (size_t)commonEdge.second);
     }
   }
+
   return triangleList;
 }
 

@@ -806,6 +806,15 @@ SetBaseTransformation(const Transformation& _t) {
   SetEulerAngle(e);
 }
 
+void
+Cfg::
+TransformCfg(const Transformation& _t) {
+	auto current = GetBaseTransformation();
+	auto newTrans = _t * current;
+	SetBaseTransformation(newTrans);
+}
+
+
 /*------------------------- Labels and Stats ---------------------------------*/
 
 bool

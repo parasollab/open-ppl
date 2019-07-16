@@ -2,6 +2,7 @@
 #define TMP_STRATEGY_METHOD_H
 
 #include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/WholeTask.h"
 #include "Behaviors/TMPStrategies/ITPlacement/PlacementMethod.h"
 #include "Behaviors/TMPStrategies/TaskPlan.h"
 #include "MPProblem/MPTask.h"
@@ -19,74 +20,103 @@ class TMPStrategyMethod {
     TMPStrategyMethod() = default;
 
     TMPStrategyMethod(XMLNode& _node);
+ 	
+		TMPStrategyMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
+											Environment* _interactionEnvironment, 
+											std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>& _ITPlacementMethods);
 
-    virtual ~TMPStrategyMethod() = default;
+    virtual ~TMPStrategyMethod();
 
     ///@}
-    ///@name
+    ///@name Configure
+    ///@{
+
+    void Initialize(Robot* _superRobot);
+
+    /// Removes all of the capability roadmaps currently stored if replanning is
+    /// needed. 
+    void ResetCapabilityRoadmaps();
+
+	///@}
+    ///@name Call Method
     ///@{
 
     /// Get plan for the input agents to perform the input tasks.
     /// _library needs to have the solution and problem set to the coordinator's
     /// values for these.
-    virtual TaskPlan PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
-                               vector<std::shared_ptr<MPTask>> _tasks, Robot* _superRobot,
-                               std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
-                                                               _ITPlacementMethods = nullptr);
+    virtual TaskPlan* PlanTasks(MPLibrary* _library, vector<HandoffAgent*> _agents,
+                                vector<std::shared_ptr<MPTask>> _tasks);
 
-    /// Removes all of the capability roadmaps currently stored if replanning is
-    /// needed. TODO::LazyQuery may remove the need for this.
-    void ResetCapabilityRoadmaps();
+    ///@}
+    ///@name Accessors
+    ///@{
+
+		Robot* GetRobot();
+
+		HandoffAgent* GetCapabilityAgent(std::string _robotType);
+
+		WholeTask* GetWholeTask(std::shared_ptr<MPTask> _subtask);
 
     ///@}
 
-  private:
+  //protected:
 
-    ///@name
+    ///@name Combined Roadmap Methods
+    ///@{
+	
+    void CreateCombinedRoadmap();
+
+    void GenerateITs();
+
+    void FindITLocations(InteractionTemplate* _it);
+    
+		/// Transforms the ITs into the disovered locations
+		void TransformITs();
+    
+		/// Initiallizes configurations for each capability at the start and end
+    /// constriants of each whole task and adds them to the megaRoadmap
+    void SetupWholeTasks();
+		
+		///@}
+    ///@name Task Assignment
     ///@{
 
-    /// Generate roadmaps for each capability present in the agent set.
-    void GenerateCapabilityRoadmaps(MPLibrary* _library, vector<HandoffAgent*> _agents,
-                                    vector<std::shared_ptr<MPTask>> _tasks, Robot* _superRobot,
-                                    std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
-                                                                    _ITPlacementMethods);
+		virtual TaskPlan* AssignTasks();
 
-    /// Copy the generated capability roadmaps into each agent of the
-    /// capability.
-    void CopyCapabilityRoadmaps(std::vector<HandoffAgent*> _agents, Robot* _superRobot);
+		virtual void DecomposeTasks();
 
-    void GenerateInteractionTemplates(MPLibrary* _library,
-                                      vector<HandoffAgent*> _agents,
-                                      Robot* _superRobot);
+		///@}
+    ///@name Helper Methods
+    ///@{
 
+    /// Generates the dummy agents of each capabiltiy used for planning
+    void GenerateDummyAgents();
 
-    void PlaceInteractionTemplates(MPLibrary* _library, Robot* _superRobot,
-                                   std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
-                                   _ITPlacementMethods);
+		/// Generates the whole task object for each input task
+		void CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks);
 
-    void FindITLocations(InteractionTemplate* _it, MPLibrary* _library, Robot* _superRobot,
-                         std::unordered_map<std::string, std::unique_ptr<PlacementMethod>>*
-                                                         _ITPlacementMethods);
+		void AddPlacementMethod(std::unique_ptr<PlacementMethod> _pm);
+	
+		///@}
+	
 
-    void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
-
-    void GenerateDummyAgents(std::vector<HandoffAgent*> _agents);
-
-    void ConnectDistinctRoadmaps(vector<size_t> _roadmap1, vector<size_t> _roadmap2,
-                                 HandoffAgent* _agent, Robot* _superRobot, MPLibrary* _library);
     ///@}
     ///@name Member Variables
     ///@{
 
+		Robot* m_robot;
 
-    /// Map from each capability to an agent of that capability.
-    std::unordered_map<std::string, HandoffAgent*> m_dummyAgentMap;
+    MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
+
+    std::unique_ptr<MPSolution> m_solution{nullptr}; ///< The shared-roadmap solution.
+
+    std::unique_ptr<Environment> m_interactionEnvironment;    ///< The handoff template environment.
 
     /// Map from each capability to the roadmap for that capability.
-    std::unordered_map<std::string, GraphType*> m_capabilityRoadmaps;
+    std::unordered_map<std::string, std::shared_ptr<GraphType>> m_capabilityRoadmaps;
 
     /// The combined roadmap of all heterogenous robots and handoffs.
-    GraphType* m_megaRoadmap{nullptr};
+    GraphType* m_combinedRoadmap{nullptr};
 
     /// The VIDs of all individual agent roadmaps in each transformed handoff template.
     std::vector<std::vector<size_t>> m_transformedRoadmaps;
@@ -97,6 +127,18 @@ class TMPStrategyMethod {
 
     /// Maps agent capabilities to a dummy agent used for planning.
     std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
+    
+		std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
+
+    /// The list of WholeTasks, which need to be divided into subtasks
+    std::vector<WholeTask*> m_wholeTasks;
+    
+		/// Map of IT Placement Method Options
+    std::unordered_map<std::string, std::unique_ptr<PlacementMethod>> m_ITPlacementMethods;
+
+		/// Map subtasks to the WholeTask that they are included in to access the
+    /// next subtask.
+    std::unordered_map<std::shared_ptr<MPTask>, WholeTask*> m_subtaskMap;
 
     //TODO:: Figure out if I need to keep track of robot and task start and end
     //points
@@ -105,6 +147,12 @@ class TMPStrategyMethod {
     bool m_useITs{true};
 
     bool m_debug{false};
+
+		std::string m_dmLabel;
+    
+		double m_connectionThreshold{1.5};
+
+		bool m_initialized{false};
     ///@}
 };
 

@@ -156,7 +156,8 @@ Robot(MPProblem* const _p, const Robot& _r)
     m_carlike(_r.m_carlike),
     m_maxLinearVelocity(_r.m_maxLinearVelocity),
     m_maxAngularVelocity(_r.m_maxAngularVelocity),
-    m_capability(_r.m_capability)
+    m_capability(_r.m_capability),
+    m_manipulator(_r.m_manipulator)
 {
   // Copy the robot label. If the robot was copied to the same problem, append
   // _copy to the end of the label to make sure it is unique.
