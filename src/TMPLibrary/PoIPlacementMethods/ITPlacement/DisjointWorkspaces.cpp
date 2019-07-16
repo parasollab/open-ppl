@@ -62,18 +62,17 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   // Maybe sample around the boundaries
 
   auto terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
-  
-	for(auto& agent1 : capabilityAgents) {
-		for(auto& agent2 : capabilityAgents) {
+  for(size_t i = 0; i < capabilityAgents.size(); i++){
+		for(size_t j = 0; j < capabilityAgents.size(); j++){
+			auto agent1 = capabilityAgents[i]; 
+			auto agent2 = capabilityAgents[j]; 
 			if(agent1 == agent2)
 				continue;
 			for(auto& terrain1 : terrainMap[agent1->GetRobot()->GetCapability()]){
 				for(auto& terrain2 : terrainMap[agent2->GetRobot()->GetCapability()]){
-					//if(!terrain1.IsNeighbor(terrain2))
-					if(true);
+					if(!terrain1.IsNeighbor(terrain2))
 						continue;
-					//if(terrain1.GetPerimeter() < terrain2.GetPerimeter())
-					if(true) {
+					if(terrain1.GetPerimeter() < terrain2.GetPerimeter()){
 						bool receiving = (agent1->GetRobot()->GetCapability() 
 															== _it->GetInformation()->GetTypeTasks("receiving")[0]->GetCapability());
 						SampleBorder(terrain1, receiving, _it, agent1);
@@ -81,7 +80,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
 					else {
 						bool receiving = (agent2->GetRobot()->GetCapability() 
 															== _it->GetInformation()->GetTypeTasks("receiving")[0]->GetCapability());
-						SampleBorder(terrain2, receiving, _it, agent2);
+						SampleBorder(terrain2, receiving, _it, agent1);
 					}
 				}
 			}
@@ -313,6 +312,6 @@ SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, Hando
         _it->GetInformation()->AddTemplateLocation(cfg);
       }
       if(m_debug and samplePoints.empty()){
-        std::cout << "No locations found for: " << _terrain.GetBoundary()->GetCenter() << std::endl;
+        std::cout << "No locations found for: " << _terrain.GetBoundaries()[0]->GetCenter() << std::endl;
       }
 }

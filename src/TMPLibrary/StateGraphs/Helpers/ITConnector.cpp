@@ -529,7 +529,7 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
 		if(terrain.first != _cfg1.GetRobot()->GetCapability())
 			continue;
 		for(auto& t : terrain.second)
-			if(t.GetBoundary()->InBoundary(_cfg1) and t.GetBoundary()->InBoundary(_cfg2))
+			if(t.InTerrain(_cfg1) and t.InTerrain(_cfg2))
 				return true;	
 	}
 	return false;

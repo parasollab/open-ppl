@@ -157,6 +157,8 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 			this->GetTaskPlan()->UpdateRAT(static_cast<HandoffAgent*>(avail.first),interval);
 		}
 	}
+	//TODO::Update TIM
+	this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.front()]);
 }
 
 std::shared_ptr<MPTask>

@@ -22,7 +22,6 @@ Terrain() = default;
 
 Terrain::
 Terrain(XMLNode& _node) {
-
   //m_boundary = std::move(Boundary::Factory(_node));
 	std::string color;
   for(auto& child : _node) {
@@ -54,6 +53,151 @@ Terrain(const Terrain& _terrain) {
 	m_virtual = _terrain.m_virtual;
   m_wire = _terrain.m_wire;
 }
+
+bool
+Terrain::
+IsNeighbor(const Terrain& _terrain) {
+  Axis type = Z;
+  // iterate through the individual boundaries for both of the terrains
+  for(auto& boundary1: m_boundaries){
+    for(auto& boundary2: _terrain.m_boundaries){
+      // if the boundaries are touching then return true
+      if(IsTouching(boundary1.get(), boundary2.get(), type)){
+          return true;
+      }
+    }
+  }
+
+  // if the boundaries aren't touching return false
+  return false;
+}
+
+bool
+Terrain::
+IsTouching(Boundary* _b1, Boundary* _b2, Axis& _type) {
+
+  double b1maxX = _b1->GetRange(0).max;
+  double b1minX = _b1->GetRange(0).min;
+  double b2maxX = _b2->GetRange(0).max;
+  double b2minX = _b2->GetRange(0).min;
+
+  double b1maxY = _b1->GetRange(1).max;
+  double b1minY = _b1->GetRange(1).min;
+  double b2maxY = _b2->GetRange(1).max;
+  double b2minY = _b2->GetRange(1).min;
+
+  if((b1maxX == b2minX || b2maxX == b1minX)) {
+     if(_b1->GetRange(1).Contains(b2maxY) ||
+      			_b1->GetRange(1).Contains(b2minY) ||
+      			_b2->GetRange(1).Contains(b1maxY) ||
+      			_b2->GetRange(1).Contains(b1minY)) {
+      _type = X;
+      return true;
+		}
+  }
+  if(( b1maxY == b2minY || b2maxY == b1minY)) {
+     if(_b1->GetRange(0).Contains(b2maxX) ||
+      			 _b1->GetRange(0).Contains(b2minX) ||
+      		 	 _b2->GetRange(0).Contains(b1maxX) ||
+      			 _b2->GetRange(0).Contains(b1minX)) {
+      _type = Y;
+      return true;
+		}
+  }
+
+  return false;
+}
+
+double
+Terrain::
+GetPerimeter() {
+  /* 
+  double maxX = 0.0;
+  double minX = 0.0;
+  double maxY = 0.0;
+  double minY = 0.0;
+
+  // goes through all of the boundaries in the terrain and finds the max and
+  // paramaters of the edges
+  for(auto& boundary: _terrain.m_boundaries) {
+    Range<double> xRange = boundary->GetRange(0);
+    Range<double> yRange = boundary->GetRange(1);
+    if(xRange.max > maxX) {
+      maxX = xRange.max;
+    }
+
+    if(yRange.max > maxY) {
+      maxY = yRange.max;
+    }
+
+    if(xRange.min < minX){
+      minX = xRange.min;
+    }
+
+    if(yRange.min < minY){
+      minY = yRange.min;
+    }
+  }
+	*/
+
+  // determines the total perimeter as if the boundaries form one large box
+  //double total = (2 * (maxX - minX)) + (2 * (maxY - minY));
+
+	// Sum the perimeter of the individual boundaries 
+  double total = 0;
+	for(auto& boundary : m_boundaries){
+		total += 2*boundary->GetRange(0).Length();
+		total += 2*boundary->GetRange(1).Length();
+	}
+
+  // Subtract the overlap of the boundaries
+
+  for(auto& boundary1: m_boundaries) {
+    for(auto& boundary2: m_boundaries) {
+      if(boundary1 == boundary2) {
+        continue;
+      }
+
+      total -= 2 * Overlap(boundary1.get(), boundary2.get());
+    }
+  }
+
+  return total;
+}
+
+double
+Terrain::
+Overlap(Boundary* _b1, Boundary* _b2) {
+	Axis type = Z;
+  if(!IsTouching(_b1, _b2, type)) {
+    std::cout << "ERROR: The two boundaries are not touching." << '\n';
+    return 0;
+  }
+
+  double max1 = 0.0;
+  double max2 = 0.0;
+  double min1 = 0.0;
+  double min2 = 0.0;
+
+  switch(type) {
+    case X:
+      max1 = _b1->GetRange(1).max;
+      min1 = _b1->GetRange(1).min;
+      max2 = _b2->GetRange(1).max;
+      min2 = _b2->GetRange(1).min;
+    case Y:
+      max1 = _b1->GetRange(0).max;
+      min1 = _b1->GetRange(0).min;
+      max2 = _b2->GetRange(0).max;
+      min2 = _b2->GetRange(0).min;
+    case Z:
+      std::cout << "ERROR: The two boundaries are not touching." << '\n';
+  }
+
+  // this will calculate the overlap of the two borders
+  return std::min(max1, max2) - std::max(min1, min2);
+}
+
 
 
 const glutils::color&
@@ -99,7 +243,7 @@ bool
 Terrain::
 IsVirtual() const noexcept {
 	return m_virtual;
-}	
+}
 
 bool
 Terrain::
@@ -235,14 +379,14 @@ ReadXMLOptions(XMLNode& _node) {
           "agents that can be within the terrain boundaries.");
       std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
 
-      for(auto& grandChild : child) {
+			Terrain terrain(child);
+
+			m_terrains[capability].push_back(std::move(terrain));
+      /*for(auto& grandChild : child) {
         if(grandChild.Name() == "Boundary") {
 
-          Terrain terrain(child);
-
-          m_terrains[capability].push_back(std::move(terrain));
         }
-      }
+      }*/
     }
   }
 
@@ -727,7 +871,7 @@ IsolateTerrain(Cfg start, Cfg goal){
   return false;
 }
 
-bool 
+bool
 Environment::
 SameTerrain(Cfg _start, Cfg _goal) {
 	if(_start.GetRobot()->GetCapability() != _goal.GetRobot()->GetCapability() or

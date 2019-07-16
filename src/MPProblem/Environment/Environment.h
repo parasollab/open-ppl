@@ -28,6 +28,13 @@ class XMLNode;
 class Terrain {
   public:
 
+    ///@name Local Types
+    ///@{
+
+    enum Axis {X, Y, Z};
+
+		///@}
+
     ///@name Construction
     ///@{
 
@@ -40,6 +47,9 @@ class Terrain {
     /// Copy constructor
     Terrain(const Terrain& _terrain);
 
+    bool IsNeighbor(const Terrain& _terrain);
+
+    double GetPerimeter();
     ///@}
     ///@name Accessors
     ///@{
@@ -59,6 +69,17 @@ class Terrain {
     bool IsWired() const noexcept;
     ///@}
   private:
+		///@name Helpers
+		///@{
+
+    bool IsTouching(Boundary* _bound1, Boundary* _bound2, Axis& _type);
+
+    double Overlap(Boundary* _b1, Boundary* _b2);
+
+		///@}
+		///@name Internal State
+		///@{
+
     glutils::color m_color{glutils::color::green}; ///< the color of the boundary when rendering
     std::unique_ptr<Boundary> m_boundary; ///< represents where the terrain is located.
 
@@ -70,6 +91,8 @@ class Terrain {
     /// A rendering property, if true then the boundary is
     /// rendered as a solid mesh; otherwise, it is rendered in wire frame.
     bool m_wire{true};
+
+		///@}
 };
 
 
