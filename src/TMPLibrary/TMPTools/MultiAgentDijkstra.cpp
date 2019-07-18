@@ -158,7 +158,7 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 		}
 	}
 	//TODO::Update TIM
-	this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.front()]);
+	//this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.front()]);
 }
 
 std::shared_ptr<MPTask>

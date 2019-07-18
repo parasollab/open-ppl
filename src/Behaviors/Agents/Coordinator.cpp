@@ -26,7 +26,6 @@
 #include "Traits/CfgTraits.h"
 
 #include "TMPLibrary/Actions/Action.h"
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
@@ -65,6 +64,8 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
       "nearest agents and charging locations.");
 
+  m_numRandTasks = _node.Read("numRandTasks", false, 0, 0, MAX_INT, "number of "
+      "random tasks to generate");
   //m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
 
   //m_it = _node.Read("it", false, true, "Generate the Capability and Combined Roadmaps.");
@@ -157,9 +158,9 @@ Initialize() {
   }
 
 	//USE TMPLIBRARY TO GET TASK ASSIGNMENTS
-	TaskPlan* taskPlan = new TaskPlan();
-	m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), taskPlan, this, m_memberAgents);
-  DistributeTaskPlan(taskPlan);
+	m_taskPlan = new TaskPlan();
+	m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), m_taskPlan, this, m_memberAgents);
+  DistributeTaskPlan(m_taskPlan);
 
   if(m_debug){
     std::cout << "OTUPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
@@ -300,7 +301,7 @@ CheckFinished() {
   for(auto agent : m_memberAgents){
     if(!agent->GetQueuedSubtasks().empty())
       return;
-		if(agent->GetTask())
+		if(agent->GetSubtask())
 			return;
   }
   for(auto agent : m_memberAgents){
@@ -451,8 +452,11 @@ IsClearToMoveOn(HandoffAgent* _agent){
       std::cout << "Partner: " << partner->GetRobot()->GetLabel() << std::endl;
       std::cout << "Partner task: " << partner->GetTask() << std::endl;
     }
+		// Checks that partner is not performing a different subtask
+		if(m_taskPlan->GetWholeTask(partner->GetSubtask()) != wholeTask)
+			return false;	
     // Checks if the other agent is there to hand the task off to
-    if(!partner->GetTask() or partner->ReachedHandoff()){
+    if((!partner->GetTask() or partner->ReachedHandoff()) and !partner->IsPlanning()){
       partner->SetPerformingSubtask(true);
       partner->SetClearToMove(true);
       // Allows the first agent to move on from the IT
@@ -636,4 +640,45 @@ void
 Coordinator::
 SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
   *m_solution->GetRoadmap(m_robot) = *_graph;
+}
+
+void
+Coordinator::
+GenerateRandomTasks(){
+  auto problem = m_robot->GetMPProblem();
+  auto env = problem->GetEnvironment();
+
+  auto sampler = m_library->GetSampler("UniformRandomFree");
+  auto numAttempts = 100;
+
+  auto numNodes = 2;
+
+  size_t numTasks = 0;
+
+  while(numTasks < m_numRandTasks) {
+    std::vector<Cfg> samplePoints;
+
+    // sample random start and goal
+    sampler->Sample(numNodes, numAttempts, env->GetBoundary(),
+        std::back_inserter(samplePoints));
+
+    if(samplePoints.size() < 2)
+      continue;
+
+    // create tasks from sample start and goal
+    std::unique_ptr<CSpaceConstraint> start =
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, samplePoints[0]));
+    std::unique_ptr<CSpaceConstraint> goal =
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, samplePoints[1]));
+
+    std::unique_ptr<MPTask> task =
+      std::unique_ptr<MPTask>(new MPTask(m_robot));
+
+    task->SetStartConstraint(std::move(start));
+    task->AddGoalConstraint(std::move(goal));
+
+    problem->AddTask(std::move(task));
+
+    numTasks++;
+  }
 }

@@ -1,5 +1,8 @@
 #include "AuctionMethod.h"
 
+#include "TMPLibrary/TaskPlan.h"
+
+#include "Simulator/Simulation.h"
 /*------------------------------ Construction --------------------------------*/
 
 AuctionMethod::
@@ -24,11 +27,11 @@ AllocateTasks(){
 		}
 	}*/
 
-	for(auto agent : taskPlan->GetTeam()){
+	for(auto agent : this->GetTaskPlan()->GetTeam()){
     agent->GetRobot()->SetVirtual(true);
   }
 	for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
-		AuctionSubtasks(WholeTask* wholeTask);
+		AuctionSubtasks(wholeTask);
 	}
 
 
@@ -46,6 +49,7 @@ AuctionSubtasks(WholeTask* _wholeTask){
 	if(!subtask)
 		return;
 	m_unassignedTasks.push_back(subtask);
+	this->GetTaskPlan()->SetWholeTaskOwner(subtask,_wholeTask);
 
 	while(!m_unassignedTasks.empty()){
     std::shared_ptr<MPTask> nextTask = m_unassignedTasks.front();
@@ -59,7 +63,7 @@ AuctionSubtasks(WholeTask* _wholeTask){
 }
 
 std::shared_ptr<MPTask> 
-ITMethod::
+AuctionMethod::
 AuctionTask(std::shared_ptr<MPTask> _nextTask){
 
 
@@ -133,11 +137,13 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
     else{
       wholeTask->m_agentAssignment.push_back(minAgent);
 			this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
+			minAgent->SavePotentialPath();
     }
   }
   else{
     wholeTask->m_agentAssignment.push_back(minAgent);
 		this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
+		minAgent->SavePotentialPath();
   }
   // See how long this agent will take to complete the subtask and if it
   // ends in a handoff add the next subtask to the queue
@@ -155,7 +161,7 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
 
 
 void 
-ITMethod::
+AuctionMethod::
 AddSubtask(std::shared_ptr<MPTask> _subtask){
 	if(m_unassignedTasks.empty()){
 		m_unassignedTasks.push_back(_subtask);

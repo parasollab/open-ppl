@@ -255,6 +255,11 @@ GetPotentialCost() const {
   return m_potentialCost;
 }
 
+void
+HandoffAgent::
+SavePotentialPath(){
+	m_path = m_potentialPath;
+}
 
 double
 HandoffAgent::
@@ -450,7 +455,11 @@ SelectTask(){
     return true;
   if(m_queuedSubtasks.size() == 0){
     m_priority = 0;
-    return false;
+		if(m_returningHome)
+    	return false;
+		m_returningHome = true;
+		GoHome();
+		return GetTask().get();
   }
 
   auto subtask = m_queuedSubtasks.front();
@@ -589,6 +598,14 @@ EvaluateTask(){
     }
     return true;
   }
+	else if(m_returningHome){
+		if(!this->PathFollowingAgent::EvaluateTask()){
+			SetTask(nullptr);
+			m_path.clear();
+			return false;
+		}
+		return true;
+	}
   auto task = GetTask();
   if(!this->PathFollowingAgent::EvaluateTask()){
     if(m_debug){
@@ -770,3 +787,22 @@ CheckInteractionPath(){
     SetTask(nullptr);
   }
 }
+
+void
+HandoffAgent::
+GoHome(){
+	m_performingSubtask = false;
+	auto tasks = m_robot->GetMPProblem()->GetTasks(m_robot);
+	if(tasks.size() > 0)
+		SetTask(tasks[0]);
+}
+
+std::shared_ptr<MPTask> 
+HandoffAgent::
+GetSubtask(){
+	if(m_performingSubtask)
+		return GetTask();
+	if(m_queuedSubtasks.empty())
+		return nullptr;
+	return m_queuedSubtasks.front();
+}	

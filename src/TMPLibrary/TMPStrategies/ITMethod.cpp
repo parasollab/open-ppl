@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 
 #include "TMPLibrary/StateGraphs/StateGraph.h"
+#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
 #include "TMPLibrary/TaskDecomposers/ITTaskBreakup.h"
 #include "TMPLibrary/TaskPlan.h"
 
