@@ -110,7 +110,11 @@ Initialize() {
   m_tmpLibrary = new TMPLibrary(xmlFile);
   m_library = m_tmpLibrary->GetMPLibrary();
 	m_solution = new MPSolution(m_robot);
-  //m_library->SetMPSolution(m_solution);
+  m_library->SetMPSolution(m_solution);
+  m_library->SetMPProblem(problem);
+
+  MPTask* task = new MPTask(m_robot);
+  m_library->SetTask(task);
 
   // Set up the group members.
   int priority = 1;
@@ -157,9 +161,13 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
-	//USE TMPLIBRARY TO GET TASK ASSIGNMENTS
-	m_taskPlan = new TaskPlan();
-	m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), m_taskPlan, this, m_memberAgents);
+  if(m_numRandTasks > 0)
+    GenerateRandomTasks();
+
+
+  //USE TMPLIBRARY TO GET TASK ASSIGNMENTS
+  m_taskPlan = new TaskPlan();
+  m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), m_taskPlan, this, m_memberAgents);
   DistributeTaskPlan(m_taskPlan);
 
   if(m_debug){
@@ -233,7 +241,7 @@ Uninitialize() {
 
   delete m_solution;
   delete m_library;
-	delete m_tmpLibrary;  
+	delete m_tmpLibrary;
 //delete m_megaRoadmap;
 
   m_solution = nullptr;
@@ -454,7 +462,7 @@ IsClearToMoveOn(HandoffAgent* _agent){
     }
 		// Checks that partner is not performing a different subtask
 		if(m_taskPlan->GetWholeTask(partner->GetSubtask()) != wholeTask)
-			return false;	
+			return false;
     // Checks if the other agent is there to hand the task off to
     if((!partner->GetTask() or partner->ReachedHandoff()) and !partner->IsPlanning()){
       partner->SetPerformingSubtask(true);
@@ -539,7 +547,7 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
         boundingBox->SetRange(2,-1,1);
         auto startConstraint = std::unique_ptr<BoundaryConstraint>
           (new BoundaryConstraint(robots[0], std::move(boundingBox)));
-        
+
 				std::unique_ptr<CSpaceBoundingBox> boundingBox2(
             new CSpaceBoundingBox({goal->GetRange(0).Center(),goal->GetRange(1).Center(),0}));
         boundingBox2->SetRange(0,(goal->GetRange(0).Center()-radius/2),
@@ -620,7 +628,7 @@ DistributeTaskPlan(TaskPlan* _taskPlan){
 		for(auto& task : _taskPlan->GetAgentTasks(agent)){
 			agent->AddSubtask(task);
 		}
-	}		
+	}
 }
 
 //TMPStrategyMethod*
@@ -664,6 +672,10 @@ GenerateRandomTasks(){
 
     if(samplePoints.size() < 2)
       continue;
+
+    std::cout << "Sampled task" << std::endl
+              << "Start: " << samplePoints[0].PrettyPrint() << std::endl
+              << "Goal: " << samplePoints[1].PrettyPrint() << std::endl;
 
     // create tasks from sample start and goal
     std::unique_ptr<CSpaceConstraint> start =

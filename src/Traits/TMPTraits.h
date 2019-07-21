@@ -18,6 +18,7 @@
 
 #include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
 #include "TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.h"
+#include "TMPLibrary/TaskEvaluators/TaskCBSPlanner.h"
 
 // TaskDecomposers to include
 
@@ -59,6 +60,7 @@ struct TMPTraits {
   //types of task evaluators available in our world
   typedef boost::mpl::list<
 		OrderedMultiTaskEvaluator,
+		TaskCBSPlanner,
     EnforcedHillClimbing
       > TaskEvaluatorMethodList;
 

@@ -7,13 +7,13 @@
 
 OrderedMultiTaskEvaluator::
 OrderedMultiTaskEvaluator() {
-	this->SetName("OrderedMultiTaskEvaluator");
+  this->SetName("OrderedMultiTaskEvaluator");
 }
 
 OrderedMultiTaskEvaluator::
 OrderedMultiTaskEvaluator(XMLNode& _node) : TaskEvaluatorMethod(_node) {
-	this->SetName("OrderedMultiTaskEvaluator");
-	m_madLabel = _node.Read("madLabel", true, "", "MultiAgentDijkstra search to use.");
+  this->SetName("OrderedMultiTaskEvaluator");
+  m_madLabel = _node.Read("madLabel", true, "", "MultiAgentDijkstra search to use.");
 }
 
 OrderedMultiTaskEvaluator::
@@ -22,25 +22,25 @@ OrderedMultiTaskEvaluator::
 bool
 OrderedMultiTaskEvaluator::
 Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
-	if(_wholeTasks.empty()){
-		_wholeTasks = this->GetTaskPlan()->GetWholeTasks();
-	}
+  if(_wholeTasks.empty()){
+    _wholeTasks = this->GetTaskPlan()->GetWholeTasks();
+  }
 
-	TaskPlan* savedPlan = nullptr;
-	if(_plan){
-		savedPlan = this->GetTaskPlan();
-		this->GetTMPLibrary()->SetTaskPlan(_plan);
-	}
-	
-	for(auto& wholeTask : _wholeTasks){
+  TaskPlan* savedPlan = nullptr;
+  if(_plan){
+    savedPlan = this->GetTaskPlan();
+    this->GetTMPLibrary()->SetTaskPlan(_plan);
+  }
 
-		//TaskPlan* taskPlan = MAMTDijkstra(wholeTask,query.first,query.second);
-		this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(wholeTask);
-		//*this->GetTaskPlan() = *taskPlan;
-		//m_taskPlans.push_back(taskPlan);
-	}
-	//TODO::Compress into a singular taskplan
-	if(savedPlan)
-		this->GetTMPLibrary()->SetTaskPlan(savedPlan);
-	return true;
+  for(auto& wholeTask : _wholeTasks){
+
+    //TaskPlan* taskPlan = MAMTDijkstra(wholeTask,query.first,query.second);
+    this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(wholeTask);
+    //*this->GetTaskPlan() = *taskPlan;
+    //m_taskPlans.push_back(taskPlan);
+  }
+  //TODO::Compress into a singular taskplan
+  if(savedPlan)
+    this->GetTMPLibrary()->SetTaskPlan(savedPlan);
+  return true;
 }

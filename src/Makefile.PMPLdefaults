@@ -386,6 +386,7 @@ SIM_SRCS := \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
   TMPLibrary/Actions/StartTask.cpp \
+  TMPLibrary/OccupiedInterval.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
@@ -404,6 +405,7 @@ SIM_SRCS := \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/TaskCBSPlanner.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
@@ -421,7 +423,7 @@ SIM_SRCS := \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
-  TMPLibrary/TMPLibrary.cpp 
+  TMPLibrary/TMPLibrary.cpp
 
 ################################################################################
 # Hardware

@@ -124,6 +124,11 @@ class RoadmapGraph : public
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
 
+    /// Add a vertex to the graph without checking for uniqueness.
+    /// @param _v The vertex to add.
+    /// @return A new VID of the added vertex, or the VID of the existing vertex.
+    virtual VID AddDuplicateVertex(const Vertex& _v) noexcept;
+
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
     virtual void DeleteVertex(const VID _v) noexcept;
@@ -544,6 +549,20 @@ AddVertex(const VID _vid, const Vertex& _v) noexcept {
   return vid;
 }
 
+template <typename Vertex, typename Edge>
+typename RoadmapGraph<Vertex, Edge>::VID
+RoadmapGraph<Vertex, Edge>::
+AddDuplicateVertex(const Vertex& _v) noexcept {
+  
+	const VID vid = this->add_vertex(_v);
+  ++m_timestamp;
+
+  // Execute post-add hooks and update vizmo debug.
+  ExecuteAddVertexHooks(this->find_vertex(vid));
+  VDAddNode(_v);
+
+  return vid;
+}
 
 template <typename Vertex, typename Edge>
 void

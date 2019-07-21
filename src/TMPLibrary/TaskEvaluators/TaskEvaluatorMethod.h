@@ -10,14 +10,14 @@ class WholeTask;
 class TaskEvaluatorMethod : public TMPBaseObject {
   public:
 
-  	///@name Construction
+    ///@name Construction
     ///@{
 
-  	TaskEvaluatorMethod();
+    TaskEvaluatorMethod();
 
-		TaskEvaluatorMethod(XMLNode& _node);
+    TaskEvaluatorMethod(XMLNode& _node);
 
-		virtual ~TaskEvaluatorMethod();  	
+    virtual ~TaskEvaluatorMethod();
 
     ///@}
     ///@name MapEvaluator Interface
@@ -25,15 +25,15 @@ class TaskEvaluatorMethod : public TMPBaseObject {
 
     /// Evaluate a stateGraph.
     /// @return True if this stateGraph meets the evaluation criteria.
-		bool operator()(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr);
+    bool operator()(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr);
 
     ///@}
   protected:
-		
-		virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr);
-		
-		std::string m_sgLabel; ///< StateGraph Label
-		
+
+    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr);
+
+    std::string m_sgLabel; ///< StateGraph Label
+
 };
 
 /*----------------------------------------------------------------------------*/

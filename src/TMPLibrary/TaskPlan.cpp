@@ -3,175 +3,77 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 
-OccupiedInterval::
-OccupiedInterval(Robot* _r, Cfg _sL, Cfg _eL, double _sT, double _eT) : m_robot(_r),
-m_startLocation(_sL), m_endLocation(_eL), m_startTime(_sT), m_endTime(_eT){ }
-
-Robot*
-OccupiedInterval::
-GetRobot(){
-  return m_robot;
-}
-
-Cfg
-OccupiedInterval::
-GetStartLocation(){
-  return m_startLocation;
-}
-
-Cfg
-OccupiedInterval::
-GetEndLocation(){
-  return m_endLocation;
-}
-
-double
-OccupiedInterval::
-GetStartTime(){
-  return m_startTime;
-}
-
-double
-OccupiedInterval::
-GetEndTime(){
-  return m_endTime;
-}
-
-std::pair<Cfg, double>
-OccupiedInterval::
-GetStart(){
-  return std::make_pair(m_startLocation, m_startTime);
-}
-
-std::pair<Cfg, double>
-OccupiedInterval::
-GetEnd(){
-  return std::make_pair(m_endLocation, m_endTime);
-}
-
-void
-OccupiedInterval::
-SetStartLocation (Cfg _start)
-{
-  m_startLocation = _start;
-}
-
-void
-OccupiedInterval::
-SetEndLocation (Cfg _end)
-{
-  m_endLocation = _end;
-}
-void
-OccupiedInterval::
-SetStartTime (double _start)
-{
-  m_startTime = _start;
-}
-void
-OccupiedInterval::
-SetEndTime (double _end)
-{
-  m_endTime = _end;
-}
-void
-OccupiedInterval::
-SetStart(Cfg _startLoc, double _startTime)
-{
-  m_startLocation = _startLoc;
-  m_startTime = _startTime;
-}
-
-void
-OccupiedInterval::
-SetEnd(Cfg _endLoc, double _endTime)
-{
-  m_endLocation = _endLoc;
-  m_endTime = _endTime;
-}
-
-bool
-OccupiedInterval::
-CheckTimeOverlap(OccupiedInterval _interval){
-  if (m_robot != _interval.GetRobot()){
-    if (_interval.GetStartTime() >= m_startTime || _interval.GetStartTime() < m_endTime)
-      return true;
-    else if (_interval.GetEndTime() > m_startTime || _interval.GetEndTime() <= m_endTime)
-      return true;
-  }
-  else{
-    if (_interval.GetStartTime() >= m_startTime || _interval.GetStartTime() >= m_endTime)
-      return true;
-    else if (_interval.GetEndTime() >= m_startTime || _interval.GetEndTime() >= m_endTime)
-      return true;
-  }
-  return false;
-}
-
-void
-OccupiedInterval::
-MergeIntervals(std::list <OccupiedInterval>& _intervals){
-  std::list<OccupiedInterval>::iterator it = _intervals.begin();
-  while (it != _intervals.end()){
-    auto next = std::next(it);
-    double nextTime = next -> GetStartTime();
-    if (it -> GetRobot() != next -> GetRobot()){
-      throw std::runtime_error("Merge Intervals - Different robots exist within set of occupied intervals");
-    }
-
-    if (nextTime >= it->GetStartTime() && nextTime <= it -> GetEndTime()){
-      if(next->GetEndTime() > it->GetEndTime()){
-        it -> SetEndTime(next -> GetEndTime());
-        _intervals.erase(next);
-      }
-      else
-        _intervals.erase(next);
-    }
-    else
-      it ++;
-  }
-}
-
-bool
-OccupiedInterval::
-operator<(OccupiedInterval _interval){
-  return m_startTime < _interval.GetStartTime();
-}
-
-std::string
-OccupiedInterval::
-Print(){
-	std::string output = "Start time: " + std::to_string(m_startTime) +
-											 " Start Location: " + m_startLocation.PrettyPrint() +
-											 "\nEnd Time: " + std::to_string(m_endTime) + 
-											 " End Location: " + m_endLocation.PrettyPrint();
-	return output;
-}
-
 /**************************************Task Plan****************************/
+TaskPlan::
+TaskPlan(){}
+
+TaskPlan::
+TaskPlan(const TaskPlan& _other){
+  m_coordinator = _other.m_coordinator;
+  m_wholeTasks = _other.m_wholeTasks;
+  m_subtaskMap = _other.m_subtaskMap;
+  m_RAT = _other.m_RAT;
+  m_TIM = _other.m_TIM;
+  m_agentTaskMap = _other.m_agentTaskMap;
+  m_taskDependencyMap = _other.m_taskDependencyMap;
+  m_dummyMap = _other.m_dummyMap;
+  m_memberAgents = _other.m_memberAgents;
+  m_interactionTemplates = _other.m_interactionTemplates;
+  m_taskCostMap = _other.m_taskCostMap;
+}
 
 TaskPlan::
 ~TaskPlan(){
-	for(auto wholeTask : m_wholeTasks){
-		delete wholeTask;
-	}
+  for(auto wholeTask : m_wholeTasks){
+    delete wholeTask;
+  }
+}
+
+TaskPlan&
+TaskPlan::
+operator=(const TaskPlan& _other){
+  m_coordinator = _other.m_coordinator;
+  m_wholeTasks = _other.m_wholeTasks;
+  m_subtaskMap = _other.m_subtaskMap;
+  m_RAT = _other.m_RAT;
+  m_TIM = _other.m_TIM;
+  m_agentTaskMap = _other.m_agentTaskMap;
+  m_taskDependencyMap = _other.m_taskDependencyMap;
+  m_dummyMap = _other.m_dummyMap;
+  m_memberAgents = _other.m_memberAgents;
+  m_interactionTemplates = _other.m_interactionTemplates;
+  m_taskCostMap = _other.m_taskCostMap;
+  return *this;
 }
 
 void
 TaskPlan::
 Initialize(){
-	if(!m_coordinator){
-		throw RunTimeException(WHERE, "TaskPlan has no coordinator.");
-	}
-	else if(m_memberAgents.empty()){
-		throw RunTimeException(WHERE, "TaskPlan has no member agents.");
-	}
-	else if(m_wholeTasks.empty()){
-		throw RunTimeException(WHERE, "TaskPlan has no tasks to plan for.");
-	}
-	InitializeRAT();
-	GenerateDummyAgents();
+  if(!m_coordinator){
+    throw RunTimeException(WHERE, "TaskPlan has no coordinator.");
+  }
+  else if(m_memberAgents.empty()){
+    throw RunTimeException(WHERE, "TaskPlan has no member agents.");
+  }
+  else if(m_wholeTasks.empty()){
+    throw RunTimeException(WHERE, "TaskPlan has no tasks to plan for.");
+  }
+  InitializeCostMap();
+  InitializeRAT();
+  GenerateDummyAgents();
+  InitializeAgentTaskMap();
 }
+
+/***********************************Accessors*************************/
+
+void
+TaskPlan::
+InitializeAgentTaskMap(){
+  for(auto agent : m_memberAgents){
+    m_agentTaskMap[agent] = {};
+  }
+}
+
 
 std::list<std::shared_ptr<MPTask>>
 TaskPlan::
@@ -188,31 +90,68 @@ GetTaskDependencies(std::shared_ptr<MPTask> _task){
 void
 TaskPlan::
 AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task){
-	auto& tasks = m_agentTaskMap[_agent];
-	tasks.push_back(_task);
+  auto& tasks = m_agentTaskMap[_agent];
+  tasks.push_back(_task);
 }
 
 void
 TaskPlan::
 AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask){
-	auto& tasks = m_agentTaskMap[_agent];
-	tasks.push_back(_task);
-	AddSubtaskToWholeTask(_task,_wholeTask);
-	_wholeTask->m_agentAssignment.push_back(_agent);
+  auto& tasks = m_agentTaskMap[_agent];
+  tasks.push_back(_task);
+  AddSubtaskToWholeTask(_task,_wholeTask);
+  _wholeTask->m_agentAssignment.push_back(_agent);
+
 }
 
 void
 TaskPlan::
 AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second){
-	auto& dependencies = m_taskDependencyMap[_second];
-	dependencies.push_back(_first);
+  auto& dependencies = m_taskDependencyMap[_second];
+  dependencies.push_back(_first);
 }
 
 void
 TaskPlan::
 RemoveLastDependency(std::shared_ptr<MPTask> _task){
-	auto& dependencies = m_taskDependencyMap[_task];
-	dependencies.pop_back();
+  auto& dependencies = m_taskDependencyMap[_task];
+  dependencies.pop_back();
+}
+
+void
+TaskPlan::
+RemoveAllDependencies(){
+  m_taskDependencyMap.clear();
+}
+
+double
+TaskPlan::
+GetPlanCost(WholeTask* _wholeTask){
+  return m_taskCostMap[_wholeTask];
+}
+
+void
+TaskPlan::
+SetPlanCost(WholeTask* _wholeTask, double cost){
+  m_taskCostMap[_wholeTask] = cost;
+}
+
+std::unordered_map<WholeTask*,double>&
+TaskPlan::
+GetTaskCostMap(){
+  return m_taskCostMap;
+}
+
+double
+TaskPlan::
+GetEntireCost(){
+  // TODO: make this adaptive!
+  double max = 0;
+  for (auto kv : m_taskCostMap){
+    if (m_taskCostMap[kv.first] > max)
+      max = m_taskCostMap[kv.first];
+  }
+  return max;
 }
 
 /*****************************************RAT Functions****************************************************/
@@ -220,80 +159,95 @@ RemoveLastDependency(std::shared_ptr<MPTask> _task){
 void
 TaskPlan::
 InitializeRAT(){
-	for(auto agent : m_memberAgents){
-		auto cfg = agent->GetRobot()->GetSimulationModel()->GetState();
-		OccupiedInterval* start = new OccupiedInterval(agent->GetRobot(), cfg, cfg, 0.0, 0.0);
-		m_RAT[agent->GetRobot()->GetLabel()].push_back(start);
-	}
+  m_RAT.clear();
+  for(auto agent : m_memberAgents){
+    auto cfg = agent->GetRobot()->GetSimulationModel()->GetState();
+    OccupiedInterval start(agent, cfg, cfg, 0.0, 0.0);
+    m_RAT[agent].push_back(start);
+  }
 }
 
-std::unordered_map<std::string,std::list<OccupiedInterval*>>&
+std::unordered_map<Agent*,std::list<OccupiedInterval>>&
 TaskPlan::
 GetRAT(){
-	return m_RAT;
+  return m_RAT;
 }
 
-std::list<OccupiedInterval*>
+std::list<OccupiedInterval>
 TaskPlan::
-GetRobotAvailability(HandoffAgent* _agent){
-	return m_RAT.at(_agent->GetRobot()->GetLabel());
+GetRobotAvailability(Agent* _agent){
+  return m_RAT.at(_agent);
 }
 
 void
 TaskPlan::
-UpdateRAT(HandoffAgent* _agent, OccupiedInterval* _interval){
-	auto& avail = m_RAT[_agent->GetRobot()->GetLabel()];
-	for(auto it = avail.begin(); it != avail.end(); it++){
-		if(_interval < *it){
-			avail.insert(it,_interval);
-			return;
-		}
-	}
-	avail.push_back(_interval);
+UpdateRAT(HandoffAgent* _agent, OccupiedInterval _interval){
+  auto& avail = m_RAT[_agent];
+  for(auto it = avail.begin(); it != avail.end(); it++){
+    if(_interval < *it){
+      avail.insert(it,_interval);
+      return;
+    }
+  }
+  avail.push_back(_interval);
 }
 
+void
+TaskPlan::
+ClearRobotAvailability(HandoffAgent* _agent){
+  m_RAT[_agent].clear();
+}
 /*****************************************TIM Functions****************************************************/
 
-std::unordered_map<WholeTask*,std::list<OccupiedInterval*>>&
+std::unordered_map<WholeTask*,std::list<OccupiedInterval>>&
 TaskPlan::
 GetTIM() {
-	return m_TIM;
+  return m_TIM;
 }
 
-std::list<OccupiedInterval*>
+std::list<OccupiedInterval>
 TaskPlan::
 GetTaskIntervals(WholeTask* _wholeTask){
-	return m_TIM[_wholeTask];
+  return m_TIM[_wholeTask];
 }
 
 void
 TaskPlan::
-UpdateTIM(WholeTask* _wholeTask, OccupiedInterval* _interval){
-	auto& plan = m_TIM[_wholeTask];
-	if(*plan.end() < _interval){
-		plan.push_back(_interval);
-		return;
-	}
-	for(auto it = plan.begin(); it != plan.end(); it++){
-		if(_interval < *it){
-			plan.insert(it, _interval);
-			return;
-		}
-	}
+UpdateTIM(WholeTask* _wholeTask, OccupiedInterval _interval){
+  auto& plan = m_TIM[_wholeTask];
+  if(plan.empty()){
+    plan.push_back(_interval);
+    return;
+  }
+  if(*plan.end() < _interval){
+    plan.push_back(_interval);
+    return;
+  }
+  for(auto it = plan.begin(); it != plan.end(); it++){
+    if(_interval < *it){
+      plan.insert(it, _interval);
+      return;
+    }
+  }
 }
 
+void
+TaskPlan::
+ClearTaskIntervals(WholeTask* _wholeTask){
+  m_TIM[_wholeTask].clear();
+}
 /***********************************WholeTask Interactions*******************************/
 
 void
 TaskPlan::
 AddWholeTask(WholeTask* _wholeTask){
-	m_wholeTasks.push_back(_wholeTask);
+  m_wholeTasks.push_back(_wholeTask);
 }
 
 std::vector<WholeTask*>&
 TaskPlan::
 GetWholeTasks(){
-	return m_wholeTasks;
+  return m_wholeTasks;
 }
 
 void
@@ -315,13 +269,19 @@ CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks){
 void
 TaskPlan::
 SetWholeTaskOwner(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
-	m_subtaskMap[_subtask] = _wholeTask;
+  m_subtaskMap[_subtask] = _wholeTask;
+}
+
+std::unordered_map<std::shared_ptr<MPTask>, WholeTask*>&
+TaskPlan::
+GetSubtaskMap(){
+  return m_subtaskMap;
 }
 
 WholeTask*
 TaskPlan::
 GetWholeTask(std::shared_ptr<MPTask> _subtask){
-	return m_subtaskMap[_subtask];
+  return m_subtaskMap[_subtask];
 }
 
 std::shared_ptr<MPTask>
@@ -344,8 +304,8 @@ GetLastAgent(WholeTask* _wholeTask){
 void
 TaskPlan::
 AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
-	_wholeTask->m_subtasks.push_back(_subtask);
-	SetWholeTaskOwner(_subtask, _wholeTask);
+  _wholeTask->m_subtasks.push_back(_subtask);
+  SetWholeTaskOwner(_subtask, _wholeTask);
 }
 
 /***********************************Agent Accessors*******************************/
@@ -353,25 +313,25 @@ AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
 void
 TaskPlan::
 SetCoordinator(Coordinator* _c){
-	m_coordinator = _c;
+  m_coordinator = _c;
 }
 
 Coordinator*
 TaskPlan::
 GetCoordinator(){
-	return m_coordinator;
+  return m_coordinator;
 }
 
 void
 TaskPlan::
 LoadTeam(std::vector<HandoffAgent*> _team){
-	m_memberAgents = _team;
+  m_memberAgents = _team;
 }
 
 std::vector<HandoffAgent*>&
 TaskPlan::
 GetTeam(){
-	return m_memberAgents;
+  return m_memberAgents;
 }
 
 void
@@ -390,13 +350,13 @@ GenerateDummyAgents(){
 HandoffAgent*
 TaskPlan::
 GetCapabilityAgent(std::string _robotType){
-	return m_dummyMap[_robotType];
+  return m_dummyMap[_robotType];
 }
 
 std::unordered_map<std::string,HandoffAgent*>&
 TaskPlan::
 GetDummyMap(){
-	return m_dummyMap;
+  return m_dummyMap;
 }
 
 /***********************************IT Accessors*******************************/
@@ -413,3 +373,12 @@ AddInteractionTemplate(InteractionTemplate* _it){
   m_interactionTemplates.emplace_back(std::unique_ptr<InteractionTemplate>(_it));
 }
 
+/***********************************Helpers*******************************/
+
+void
+TaskPlan::
+InitializeCostMap(){
+  for(auto task : m_wholeTasks){
+    m_taskCostMap[task] = MAX_DBL;
+  }
+}

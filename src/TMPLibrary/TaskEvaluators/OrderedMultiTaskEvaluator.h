@@ -7,27 +7,27 @@
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
 class OrderedMultiTaskEvaluator : public TaskEvaluatorMethod {
-	public:
-		
-		///@name Constructor
-		///@{
+  public:
 
-		OrderedMultiTaskEvaluator();
-		
-		OrderedMultiTaskEvaluator(XMLNode& _node);
+    ///@name Constructor
+    ///@{
 
-		~OrderedMultiTaskEvaluator();
+    OrderedMultiTaskEvaluator();
 
-		///@}
-		///@name Call method
-		///@{
+    OrderedMultiTaskEvaluator(XMLNode& _node);
 
-		///@}
-	private:
+    ~OrderedMultiTaskEvaluator();
 
-		virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr) override;	
+    ///@}
+    ///@name Call method
+    ///@{
 
-		std::string m_madLabel;
+    ///@}
+  private:
+
+    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr) override;
+
+    std::string m_madLabel;
 };
 
 #endif
