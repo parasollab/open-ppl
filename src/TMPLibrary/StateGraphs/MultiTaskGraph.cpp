@@ -441,7 +441,8 @@ GetAgentAvailableIntervals(size_t _source, size_t _target,
 
 		std::list<OccupiedInterval> cache = _RATCache[agentRAT.first];
     auto intervals = this->GetTaskPlan()->GetRobotAvailability(agentRAT.first);
-    intervals.merge(cache);
+		if(!cache.empty())
+    	intervals.merge(cache);
 
 		for(auto iter = intervals.begin(); iter != intervals.end(); iter++){
 			auto arrivalTime = iter->GetEndTime() + LowLevelGraphPathWeight(iter->GetEndLocation(),sourceCfg);

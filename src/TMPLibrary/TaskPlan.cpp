@@ -132,8 +132,8 @@ GetPlanCost(WholeTask* _wholeTask){
 
 void
 TaskPlan::
-SetPlanCost(WholeTask* _wholeTask, double cost){
-  m_taskCostMap[_wholeTask] = cost;
+SetPlanCost(WholeTask* _wholeTask, double _cost){
+  m_taskCostMap[_wholeTask] = _cost;
 }
 
 std::unordered_map<WholeTask*,double>&
@@ -235,6 +235,9 @@ void
 TaskPlan::
 ClearTaskIntervals(WholeTask* _wholeTask){
   m_TIM[_wholeTask].clear();
+	for(auto& wholeTask : m_wholeTasks){
+		wholeTask->m_agentAssignment.clear();
+	}
 }
 /***********************************WholeTask Interactions*******************************/
 

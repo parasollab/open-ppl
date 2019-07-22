@@ -233,7 +233,8 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
     }
   }*/
   //TODO::Update TIM
-  this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.front()]);
+//  this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.front()]);
+  this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.back()]);
 }
 
 std::shared_ptr<MPTask>
@@ -389,6 +390,7 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   // If this edge is better than the previous we update the robot at the node
   if(newDistance < _targetDistance) {
     //m_usedAgents[target] = m_usedAgents[source];
+		m_nodeRATCache[target] = m_nodeRATCache[source];
     if(virt){
       //m_usedAgents[target].insert(static_cast<HandoffAgent*>(newAgent));
       m_nodeAgentMap[target] = newAgent;
@@ -408,6 +410,18 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
           endLocation, readyTime, endTime);
 
       m_nodeRATCache[target][newAgent].push_back(interval);*/
+		
+      Cfg startLocation = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(source);
+      startLocation.SetRobot(newAgent->GetRobot());
+      Cfg endLocation = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(target);
+      endLocation.SetRobot(newAgent->GetRobot());
+			double startTime = readyTime;
+			double endTime = readyTime + incomingEdge;
+
+			OccupiedInterval interval(static_cast<HandoffAgent*>(newAgent), startLocation,
+					endLocation, startTime, endTime);
+
+			m_nodeRATCache[target][newAgent].push_back(interval);	
       m_extractionCostMap[target] = readyTime;
     }
     else {

@@ -94,11 +94,19 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
         node->GetTaskPlan());
 
     conflictMap = FindConflict(node);
+
+		if(m_debug){
+			std::cout << "Found conflicts: " << std::endl;
+			for(auto conflict : conflictMap){
+				std::cout << conflict.first << std::endl
+									<< conflict.second->GetConstraint().Print() << std::endl;
+			}
+		}
     /*if (!conflictMap.empty()){
       GrowTree(node, tree);
       continue;
     }*/
-    if (!conflictMap.empty()){
+    if (!conflictMap.empty() and node->GetCost() < minPlanCost){
 			GrowTree(node, tree,conflictMap);
       //for(auto node : GrowTree(initialNode, tree,conflictMap)){
       //  auto toReplan = node->GetToReplan();
@@ -106,8 +114,10 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
       //}
       continue;
     }
-    minPlanCost = node->GetCost();
-    minPlan = node->GetTaskPlan();
+		if(node->GetCost() < minPlanCost){
+    	minPlanCost = node->GetCost();
+    	minPlan = node->GetTaskPlan();
+		}
   }
 
   FinalizeTaskPlan(minPlan);
