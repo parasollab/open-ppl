@@ -13,6 +13,7 @@ class NewCBSNode{
 
     NewCBSNode(double _c, std::unordered_map<T*, std::list<NewConflict<U>*>>* _m, T* _t);
 
+		virtual ~NewCBSNode();
     /// Copy constructor
 
     NewCBSNode& operator=(const NewCBSNode& _other);
@@ -78,6 +79,13 @@ NewCBSNode<T, U>::
 operator=(const NewCBSNode& _other){
   m_cost = _other.GetCost();
   m_conflicts = _other.GetConflicts();
+}
+
+template <typename T, typename U>
+NewCBSNode<T, U>::
+~NewCBSNode(){
+	if(m_conflicts)
+		delete m_conflicts;
 }
 
 /*--------------------------------- Accessors --------------------------------*/

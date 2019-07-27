@@ -26,7 +26,7 @@ MultiAgentDijkstra::
 
 bool
 MultiAgentDijkstra::
-Run(WholeTask* _wholeTask, TaskPlan* _plan){
+Run(WholeTask* _wholeTask, TaskPlan* _plan, std::set<size_t> _validVIDs){
   if(!_wholeTask){
     throw RunTimeException(WHERE, "MultiAgentDijkstra needs a wholeTask to solve.");
   }
@@ -37,21 +37,27 @@ Run(WholeTask* _wholeTask, TaskPlan* _plan){
   }
 
   auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto query = sg->AddTaskToGraph(_wholeTask);
+  auto query = sg->AddTaskToGraph(_wholeTask,_validVIDs);
 
   m_overage = 0;
 
   auto start = query.first;
   auto goal = query.second;
 
+  for(auto agent : this->GetTaskPlan()->GetTeam()) {
+    Cfg cfg(agent->GetRobot());
+    m_robotUpdates[start][agent] = std::make_pair(0,cfg);
+  }
+
   m_nodeAgentMap[start] = this->GetTaskPlan()->GetCoordinator();
 
   //Search backwards from goal to start
   SSSPPathWeightFunction<TaskGraph> weight;
-  weight = [this,start,goal](typename TaskGraph::adj_edge_iterator& _ei,
+  weight = [this,start,goal](typename AvailableIntervalGraph::adj_edge_iterator& _ei,
       const double _sourceDistance,
       const double _targetDistance) {
-    return this->MAMTPathWeight(_ei,_sourceDistance,_targetDistance,goal,start);
+    //return this->MAMTPathWeight(_ei,_sourceDistance,_targetDistance,goal,start);
+    return this->AvailableIntervalPathWeight(_ei,_sourceDistance,_targetDistance,start,goal);
   };
 
   //TODO::Actually call dijkstras
@@ -60,15 +66,17 @@ Run(WholeTask* _wholeTask, TaskPlan* _plan){
       [goal](typename TaskGraph::vertex_iterator& _vi,
         const SSSPOutput<TaskGraph>& _sssp) {
       return goal == _vi->descriptor() ? SSSPTermination::EndSearch
-      																 : SSSPTermination::Continue;
+      : SSSPTermination::Continue;
       }
       );
-  auto g = this->GetStateGraph(m_sgLabel)->GetGraph();
-  const SSSPOutput<TaskGraph> sssp = DijkstraSSSP(g, {start}, weight, termination);
+  //auto g = this->GetStateGraph(m_sgLabel)->GetGraph();
+  auto g = sg->GetAvailableIntervalGraph();
+  const SSSPOutput<TaskGraph> sssp = DijkstraSSSP(g.get(), {start}, weight, termination);
 
   const size_t last = sssp.ordering.back();
   if(goal != last){
-    return new TaskPlan();
+    return false;
+    //return new TaskPlan();
   }
 
   //Extract path
@@ -98,20 +106,25 @@ void
 MultiAgentDijkstra::
 ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
     std::unordered_map<size_t,double> _distance){
+  auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetAvailableIntervalGraph();
   if(m_debug){
+  	sg->PrintAvailabilityGraph();
     std::cout << "Print path." << std::endl;
     for(auto vid : _path){
       std::string label;
       if(vid == _path.front() or vid == _path.back()){
         label = "Virtual";
       }
-      else if(m_nodeAgentMap[vid]){
-        label = m_nodeAgentMap.at(vid)->GetRobot()->GetLabel();
+      else {
+        label = g->GetVertex(vid).GetRobot()->GetLabel();
+				if(_distance[vid] == MAX_DBL)
+					std::cout << "This is a problem" << std::endl;
       }
-      std::cout << vid << " : " << label << std::endl;
+      std::cout << vid << " : " << _distance[vid] << " : " << label <<std::endl;
     }
   }
-  auto g = this->GetStateGraph(m_sgLabel)->GetGraph();
+  //auto g = this->GetStateGraph(m_sgLabel)->GetGraph();
   //TaskPlan* taskPlan = new TaskPlan();
   auto taskPlan = this->GetTaskPlan();
   //taskPlan->AddWholeTask(_wholeTask);
@@ -121,23 +134,75 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
   size_t first;
   size_t last;
   //double currentTime = 0;
-  //double startTime = 0;
+  double startTime = 0;
+  //TODO::Think about if we want to back the first subtask up to the start of
+  //the second one so the robot is available up until the wait time is 0.
+  //Also, maybe look at reducing wait time across everything as a metric later.
+  double endTime = sg->GetInterval(_path[1]).second.first;
 
-	for(size_t i = 2; i < _path.size(); i++){
-		auto vid = _path[i];
-		if(currentAgent and !m_nodeAgentMap[vid]){
-			auto start = g->GetVertex(first);
-			auto goal = g->GetVertex(last);
-			start.SetRobot(goal.GetRobot());
-		
+	taskPlan->GetTIM()[_wholeTask] = {};
+
+  for(size_t i = 1; i < _path.size(); i++) {
+    auto interval = sg->GetInterval(_path[i]);
+    if(currentAgent != interval.first) {
+      if(currentAgent) {//skips first index
+        auto start = g->GetVertex(first);
+        auto goal = g->GetVertex(last);
+				//Account for waiting time unless for the final virtual node
+        if(i == _path.size()-1)
+					endTime = _distance[last];
+				else
+					endTime = _distance[_path[i]];
+	
+				if(endTime == 0)
+					std::cout << "THIS IS A PROBLEM" << std::endl;
+
+        auto task = CreateMPTask(currentAgent->GetRobot(), start, goal,_wholeTask);
+        taskPlan->AddSubtask(static_cast<HandoffAgent*>(currentAgent),task,_wholeTask);
+
+        OccupiedInterval interval(static_cast<HandoffAgent*>(currentAgent),
+                                  start,goal,startTime,endTime);
+        interval.SetTask(task);
+
+        if(m_debug){
+          std::cout << interval.Print() << std::endl;
+        }
+
+        taskPlan->UpdateTIM(_wholeTask,interval);
+        taskPlan->UpdateRAT(static_cast<HandoffAgent*>(currentAgent),interval);
+
+        if(previousTask){
+          taskPlan->AddDependency(task,previousTask);
+        }
+
+        previousTask = task;
+      }
+      first = _path[i];
+      currentAgent = interval.first;
+      startTime = endTime;
+    }
+    else {
+      last = _path[i];
+    }
+  }
+
+  this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path[1]],_distance[_path[_path.size()-2]]);
+/*
+  for(size_t i = 2; i < _path.size(); i++){
+    auto vid = _path[i];
+    if(currentAgent and !m_nodeAgentMap[vid]){
+      auto start = g->GetVertex(first);
+      auto goal = g->GetVertex(last);
+      start.SetRobot(goal.GetRobot());
+
       auto task = CreateMPTask(currentAgent->GetRobot(), start, goal,_wholeTask);
       taskPlan->AddSubtask(static_cast<HandoffAgent*>(currentAgent),task,_wholeTask);
 
-			auto endTime = _distance[last];
-			auto startTime = endTime - m_incomingEdgeMap[first];
+      auto endTime = _distance[last];
+      auto startTime = endTime - m_incomingEdgeMap[first];
 
-			if(i < _path.size()-2)//buffer to account for wait time to interact
-				endTime = _distance[_path[i+2]] - m_incomingEdgeMap[_path[i+1]];
+      if(i < _path.size()-2)//buffer to account for wait time to interact
+        endTime = _distance[_path[i+2]] - m_incomingEdgeMap[_path[i+1]];
 
       OccupiedInterval interval(static_cast<HandoffAgent*>(currentAgent),start,goal,startTime,endTime);
       interval.SetTask(task);
@@ -154,18 +219,18 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
         vid = _path[i-1];
       }
 
-			currentAgent = nullptr;
-			continue;
-		}
-		else if(!currentAgent){
-			currentAgent = m_nodeAgentMap[vid];
-			first = vid;
-		}
-		else if(currentAgent == m_nodeAgentMap[vid]){
-			last = vid;
-		}
-	}
-
+      currentAgent = nullptr;
+      continue;
+    }
+    else if(!currentAgent){
+      currentAgent = m_nodeAgentMap[vid];
+      first = vid;
+    }
+    else if(currentAgent == m_nodeAgentMap[vid]){
+      last = vid;
+    }
+  }
+*/
 
   /*for(size_t i = 0; i < _path.size(); i++){
     auto vid = _path[i];
@@ -234,7 +299,6 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
   }*/
   //TODO::Update TIM
 //  this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.front()]);
-  this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path.back()]);
 }
 
 std::shared_ptr<MPTask>
@@ -300,6 +364,7 @@ CreateMPTask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask){
   return task;
 }
 
+
 double
 MultiAgentDijkstra::
 MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
@@ -336,7 +401,7 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
 
   // Compute the new 'distance', which is the number of timesteps at which
   // the robot would reach the target node.
-  double newDistance;
+  double newDistance = MAX_DBL;
   if(virt){
     //This is the old forward implementation
     //Check if the robot will need extra time to reach the location
@@ -347,12 +412,12 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
     //else{
     //	newDistance = _sourceDistance + incomingEdge;
     //}
-   
+
 		if(readyTime < _sourceDistance - incomingEdge)
 			newDistance = _sourceDistance;
-		else 
+		else
 			newDistance = readyTime + incomingEdge;
- 
+
     // receiving < delivering
     // The agent on the delivering end of the previously evaluated interaction can arrive before the
     // just discovered agent can deliver the task to the IT.
@@ -410,7 +475,7 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
           endLocation, readyTime, endTime);
 
       m_nodeRATCache[target][newAgent].push_back(interval);*/
-		
+
       Cfg startLocation = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(source);
       startLocation.SetRobot(newAgent->GetRobot());
       Cfg endLocation = this->GetStateGraph(m_sgLabel)->GetGraph()->GetVertex(target);
@@ -421,7 +486,7 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
 			OccupiedInterval interval(static_cast<HandoffAgent*>(newAgent), startLocation,
 					endLocation, startTime, endTime);
 
-			m_nodeRATCache[target][newAgent].push_back(interval);	
+			m_nodeRATCache[target][newAgent].push_back(interval);
       m_extractionCostMap[target] = readyTime;
     }
     else {
@@ -437,3 +502,41 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
   return newDistance;
 }
 
+
+double
+MultiAgentDijkstra::
+AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& _ei,
+    const double _sourceDistance, const double _targetDistance, size_t _start, size_t _goal) {
+
+  const double edgeWeight  = _ei->property().GetWeight();
+  size_t source = _ei->source();
+  size_t target = _ei->target();
+
+  double newDistance = std::numeric_limits<double>::infinity();
+
+  auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+
+  if(sg->GetAvailableIntervalGraph()->IsVertexInvalidated(target)){
+					if(source == 1517 and target == 45)
+									std::cout << "THIS SHOULD BE WORKING" << std::endl;
+
+    return newDistance;
+	}
+
+  auto cfg = sg->GetAvailableIntervalGraph()->GetVertex(target);
+
+  auto transition = sg->ValidTransition(source,target,edgeWeight,_sourceDistance,
+                    m_robotUpdates[source][cfg.GetRobot()->GetAgent()]);
+
+  if(transition >= 0)
+      newDistance = _sourceDistance + transition;
+
+  if(newDistance < _targetDistance) {
+    m_robotUpdates[target] = m_robotUpdates[source];
+    m_robotUpdates[target][cfg.GetRobot()->GetAgent()] = std::make_pair(newDistance,cfg);
+  }
+	if(source == 1517 and target == 45 and newDistance == std::numeric_limits<double>::infinity())
+		std::cout << "THIS SHOULD BE WORKING" << std::endl;
+
+  return newDistance;
+}

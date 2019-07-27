@@ -57,11 +57,11 @@ class TaskPlan {
 
     void RemoveAllDependencies();
 
-    double GetPlanCost(WholeTask* _wholeTask);
+    std::pair<double,double> GetPlanCost(WholeTask* _wholeTask);
 
-    void SetPlanCost(WholeTask* _wholeTask, double cost);
+    void SetPlanCost(WholeTask* _wholeTask, double _start,double _end);
 
-    std::unordered_map<WholeTask*,double>& GetTaskCostMap();
+    std::unordered_map<WholeTask*,std::pair<double,double>>& GetTaskCostMap();
 
     double GetEntireCost();
 
@@ -204,7 +204,7 @@ class TaskPlan {
     std::vector<std::shared_ptr<InteractionTemplate>> m_interactionTemplates;
 
     /// Maps the cost of any solved plans
-    std::unordered_map<WholeTask*,double> m_taskCostMap;
+    std::unordered_map<WholeTask*,std::pair<double,double>> m_taskCostMap;
 
 };
 

@@ -124,7 +124,7 @@ RemoveAllDependencies(){
   m_taskDependencyMap.clear();
 }
 
-double
+std::pair<double,double>
 TaskPlan::
 GetPlanCost(WholeTask* _wholeTask){
   return m_taskCostMap[_wholeTask];
@@ -132,11 +132,11 @@ GetPlanCost(WholeTask* _wholeTask){
 
 void
 TaskPlan::
-SetPlanCost(WholeTask* _wholeTask, double _cost){
-  m_taskCostMap[_wholeTask] = _cost;
+SetPlanCost(WholeTask* _wholeTask, double _start, double _end){
+  m_taskCostMap[_wholeTask] = std::make_pair(_start,_end);
 }
 
-std::unordered_map<WholeTask*,double>&
+std::unordered_map<WholeTask*,std::pair<double,double>>&
 TaskPlan::
 GetTaskCostMap(){
   return m_taskCostMap;
@@ -146,12 +146,16 @@ double
 TaskPlan::
 GetEntireCost(){
   // TODO: make this adaptive!
+  // max = makespan
+  // sum = SOC (sum of costs)
   double max = 0;
+  double sum = 0;
   for (auto kv : m_taskCostMap){
-    if (m_taskCostMap[kv.first] > max)
-      max = m_taskCostMap[kv.first];
+    sum += kv.second.second - kv.second.first;
+    if (kv.second.second > max)
+      max = kv.second.second;
   }
-  return max;
+  return sum;
 }
 
 /*****************************************RAT Functions****************************************************/
@@ -219,7 +223,7 @@ UpdateTIM(WholeTask* _wholeTask, OccupiedInterval _interval){
     plan.push_back(_interval);
     return;
   }
-  if(*plan.end() < _interval){
+  if(plan.back() < _interval){
     plan.push_back(_interval);
     return;
   }
@@ -235,9 +239,9 @@ void
 TaskPlan::
 ClearTaskIntervals(WholeTask* _wholeTask){
   m_TIM[_wholeTask].clear();
-	for(auto& wholeTask : m_wholeTasks){
-		wholeTask->m_agentAssignment.clear();
-	}
+  for(auto& wholeTask : m_wholeTasks){
+    wholeTask->m_agentAssignment.clear();
+  }
 }
 /***********************************WholeTask Interactions*******************************/
 
@@ -382,6 +386,6 @@ void
 TaskPlan::
 InitializeCostMap(){
   for(auto task : m_wholeTasks){
-    m_taskCostMap[task] = MAX_DBL;
+    m_taskCostMap[task] = std::make_pair(0,MAX_DBL);
   }
 }

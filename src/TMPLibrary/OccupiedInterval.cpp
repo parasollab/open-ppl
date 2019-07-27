@@ -171,14 +171,29 @@ operator<(OccupiedInterval _interval){
   return m_startTime < _interval.GetStartTime();
 }
 
+bool
+OccupiedInterval::
+operator==(const OccupiedInterval& _interval) const {
+  return (m_startTime == _interval.m_startTime
+       && m_endTime == _interval.m_endTime
+       && m_startLocation == _interval.m_startLocation
+       && m_endLocation == _interval.m_endLocation
+       && m_agent == _interval.m_agent);
+}
+
 std::string
 OccupiedInterval::
 Print(){
-  std::string output = m_agent->GetRobot()->GetLabel() +
+  std::string output;
+  if(m_agent)
+    output = m_agent->GetRobot()->GetLabel() +
     "\nStart time: " + std::to_string(m_startTime) +
     " Start Location: " + m_startLocation.PrettyPrint() +
     "\nEnd Time: " + std::to_string(m_endTime) +
     " End Location: " + m_endLocation.PrettyPrint();
+  else
+    output = "No robot"
+    "\nStart time: " + std::to_string(m_startTime);
   return output;
 }
 

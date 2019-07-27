@@ -161,8 +161,11 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
-  if(m_numRandTasks > 0)
+  if(m_numRandTasks > 0){
+    if(problem->GetTasks(m_robot).size() == 1)
+      problem->ReassignTask(problem->GetTasks(m_robot)[0].get(),m_memberAgents[0]->GetRobot());
     GenerateRandomTasks();
+  }
 
 
   //USE TMPLIBRARY TO GET TASK ASSIGNMENTS
@@ -171,7 +174,7 @@ Initialize() {
   DistributeTaskPlan(m_taskPlan);
 
   if(m_debug){
-    std::cout << "OTUPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
+    std::cout << "OUTPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
     for(auto agent : m_memberAgents){
       std::cout << agent->GetRobot()->GetLabel() << std::endl;
       auto list = agent->GetQueuedSubtasks();

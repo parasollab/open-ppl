@@ -12,6 +12,7 @@ class MultiAgentDijkstra : public TMPBaseObject {
   public:
 
     typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
+    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> AvailableIntervalGraph;
 
     ///@name Constructor
     ///@{
@@ -26,7 +27,7 @@ class MultiAgentDijkstra : public TMPBaseObject {
     ///@name Call method
     ///@{
 
-    bool Run(WholeTask* _wholeTask, TaskPlan* _plan = nullptr);
+    bool Run(WholeTask* _wholeTask, TaskPlan* _plan = nullptr, std::set<size_t> _validVIDs = {});
 
     ///@}
   private:
@@ -41,6 +42,9 @@ class MultiAgentDijkstra : public TMPBaseObject {
     std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask);
 
     double MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
+        const double _sourceDistance, const double _targetDistance, size_t start, size_t _goal);
+
+    double AvailableIntervalPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance, size_t start, size_t _goal);
 
     ///@}
@@ -68,6 +72,10 @@ class MultiAgentDijkstra : public TMPBaseObject {
     std::unordered_map<size_t,set<HandoffAgent*>> m_usedAgents;
 
     double m_overage;
+
+    //Tracks robot updates down different explorations of the availability graph
+    std::unordered_map<size_t,std::unordered_map<
+                       Agent*,std::pair<double,Cfg>>> m_robotUpdates;
 
     ///@}
 };

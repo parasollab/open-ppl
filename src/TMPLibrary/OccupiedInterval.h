@@ -71,6 +71,8 @@ class OccupiedInterval{
     /// Compares the start time of intervals.
     bool operator<(OccupiedInterval _interval);
 
+    bool operator==(const OccupiedInterval& _interval) const;
+
     ///@}
     ///@name Debug
     ///@{
@@ -83,7 +85,7 @@ class OccupiedInterval{
     ///@name Internal State
     ///@{
 
-    HandoffAgent* m_agent; ///< HandoffAgent that is occupied for the interval.
+    HandoffAgent* m_agent{nullptr}; ///< HandoffAgent that is occupied for the interval.
 
     Cfg m_startLocation; ///< Physical start of the interval.
 

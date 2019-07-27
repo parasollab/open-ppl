@@ -23,6 +23,7 @@ class NewConflict{
     ///@{
 
     T GetConstraint();
+    T& GetConstraintRef();
 
     ///@}
     ///@name Helpers
@@ -60,6 +61,13 @@ template <typename T>
 T
 NewConflict<T>::
 GetConstraint(){
+  return m_constraint;
+}
+
+template <typename T>
+T&
+NewConflict<T>::
+GetConstraintRef(){
   return m_constraint;
 }
 
