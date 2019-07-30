@@ -67,7 +67,7 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     ///@name Helper Functions
     ///@{
 		
-		virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan= nullptr) override;
+		virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan= nullptr) override;
 
     /// Converts a cfg to a bundary that can be used as a location for the TP
     /// logic

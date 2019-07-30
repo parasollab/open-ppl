@@ -66,6 +66,8 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
 
   m_numRandTasks = _node.Read("numRandTasks", false, 0, 0, MAX_INT, "number of "
       "random tasks to generate");
+
+	m_runSimulator = _node.Read("runSim", false, m_runSimulator, "Flag to execute the plan or not.");
   //m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
 
   //m_it = _node.Read("it", false, true, "Generate the Capability and Combined Roadmaps.");
@@ -169,8 +171,14 @@ Initialize() {
 
 
   //USE TMPLIBRARY TO GET TASK ASSIGNMENTS
-  m_taskPlan = new TaskPlan();
+  m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
   m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), m_taskPlan, this, m_memberAgents);
+
+  if(!m_runSimulator) {
+		Simulation::Get()->PrintStatFile();
+  	exit(0);
+	}
+
   DistributeTaskPlan(m_taskPlan);
 
   if(m_debug){
@@ -626,7 +634,7 @@ TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan){
 
 void
 Coordinator::
-DistributeTaskPlan(TaskPlan* _taskPlan){
+DistributeTaskPlan(std::shared_ptr<TaskPlan> _taskPlan){
 	for(auto agent : m_memberAgents){
 		for(auto& task : _taskPlan->GetAgentTasks(agent)){
 			agent->AddSubtask(task);
@@ -658,6 +666,8 @@ Coordinator::
 GenerateRandomTasks(){
   auto problem = m_robot->GetMPProblem();
   auto env = problem->GetEnvironment();
+
+	m_library->SetSeed();
 
   auto sampler = m_library->GetSampler("UniformRandomFree");
   auto numAttempts = 100;

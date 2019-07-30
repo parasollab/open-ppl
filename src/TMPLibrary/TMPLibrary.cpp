@@ -218,7 +218,7 @@ AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
 
 /*---------------------------- Solution Accessors -----------------------------------*/
 
-TaskPlan*  
+std::shared_ptr<TaskPlan>
 TMPLibrary::
 GetTaskPlan(){
 				return m_taskPlan;
@@ -226,7 +226,7 @@ GetTaskPlan(){
 
 void
 TMPLibrary::
-SetTaskPlan(TaskPlan* _taskPlan){
+SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan){
 	m_taskPlan = _taskPlan;
 }
 
@@ -351,7 +351,7 @@ void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								TaskPlan* _taskPlan,
+								std::shared_ptr<TaskPlan> _taskPlan,
 								Coordinator* _coordinator,
 								std::vector<HandoffAgent*> _team) {
 
@@ -370,7 +370,7 @@ void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								TaskPlan* _taskPlan) {
+								std::shared_ptr<TaskPlan> _taskPlan) {
 
 				m_problem = _problem;
 				m_tasks = _tasks;
@@ -388,11 +388,9 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks) {
 
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
-								m_taskPlan = new TaskPlan();
+								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
 
 								RunSolver(solver);
-
-								delete m_taskPlan;
 				}
 
 				m_taskPlan = nullptr;
@@ -406,11 +404,9 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
 
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
-								m_taskPlan = new TaskPlan();
+								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
 
 								RunSolver(solver);
-
-								delete m_taskPlan;
 				}
 
 				m_taskPlan = nullptr;
@@ -420,7 +416,7 @@ void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								TaskPlan* _taskPlan,
+								std::shared_ptr<TaskPlan> _taskPlan,
 								const std::string& _label, const long _seed,
 								const std::string& _baseFilename) {
 

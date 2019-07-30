@@ -22,16 +22,16 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
     ///@name Helpers
     ///@{
 
-    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr) override;
+    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr) override;
 
     /// Adds new nodes that stem from a parent node to the CBS tree.
     std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*>
-    GrowTree(TaskCBSNode<WholeTask, OccupiedInterval>* _node,
-        NewCBSTree<WholeTask, OccupiedInterval>& _tree,
-				std::unordered_map<WholeTask*,NewConflict<OccupiedInterval>*> _conflictMap);
+    GrowTree(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _parentNode,
+        //NewCBSTree<WholeTask, OccupiedInterval>& _tree,
+        std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>> _conflictMap);
 
     /// Determines whether a node contains a conflict
-    std::unordered_map<WholeTask*,NewConflict<OccupiedInterval>*>
+    std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>>
     FindConflict(TaskCBSNode<WholeTask, OccupiedInterval>* _node);
 
     /// compares two intervals to determine if a conflict exists
@@ -51,7 +51,17 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
 
     std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, Cfg _start, Cfg _goal);
 
-    void FinalizeTaskPlan(TaskPlan* _plan);
+    void FinalizeTaskPlan(std::shared_ptr<TaskPlan> _plan);
+
+    ///@}
+    ///@name CBS Variant functions
+    ///@{
+
+		size_t Bypass1(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _node,
+									 std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*> _children,
+									 NewCBSTree<WholeTask, OccupiedInterval>& _tree,
+									 size_t _numConflicts);
+
 
     ///@}
 
@@ -60,6 +70,10 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
     //@{
 
     std::string m_madLabel; ///< multi-agent dijkstra label
+
+		bool m_bypass1;
+
+		bool m_makespan{false};
 
     ///@}
 

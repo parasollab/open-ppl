@@ -63,7 +63,9 @@ class TaskPlan {
 
     std::unordered_map<WholeTask*,std::pair<double,double>>& GetTaskCostMap();
 
-    double GetEntireCost();
+		/// @param _makespan indicates that the desired cost is the max cost. 
+		//				 The alternative is the sum of costs
+    double GetEntireCost(bool _makespan = false);
 
 
     ///@}

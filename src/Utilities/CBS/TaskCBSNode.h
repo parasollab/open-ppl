@@ -18,10 +18,12 @@ class TaskCBSNode : public NewCBSNode<T, U> {
     ///@name Construction
     ///@{
 
-    TaskCBSNode(TaskPlan* _plan, TaskPlan* _basePlan);
+		TaskCBSNode();
+
+    TaskCBSNode(std::shared_ptr<TaskPlan> _plan, std::shared_ptr<TaskPlan> _basePlan);
 
     TaskCBSNode(TaskCBSNode<WholeTask, OccupiedInterval>* _parentNode,
-        TaskPlan* _plan, T* _toReplan);
+        std::shared_ptr<TaskPlan> _plan, T* _toReplan);
 
 		virtual ~TaskCBSNode();
 
@@ -29,11 +31,11 @@ class TaskCBSNode : public NewCBSNode<T, U> {
     ///@name Accessors
     ///@{
 
-    double GetCost() const override;
+    double GetCost(bool _makespan = false) const override;
 
-    TaskPlan* GetTaskPlan();
+    std::shared_ptr<TaskPlan> GetTaskPlan();
 
-    void SetTaskPlan(TaskPlan* _p);
+    void SetTaskPlan(std::shared_ptr<TaskPlan> _p);
 
 		void UpdateValidVIDs(std::vector<size_t> _invalids, std::vector<size_t> _valids, WholeTask* _wholeTask); 
     ///@}
@@ -45,8 +47,11 @@ class TaskCBSNode : public NewCBSNode<T, U> {
     void AddConflict(T* _t, NewConflict<U>* _c);
 
     size_t GetDepth();
+    void SetDepth(size_t _depth);
 
     std::unordered_map<WholeTask*,std::set<size_t>>& GetValidVIDs();
+
+		void SetValidVIDs(std::set<size_t> _validVIDs);
 
     ///@}
 
@@ -56,7 +61,7 @@ class TaskCBSNode : public NewCBSNode<T, U> {
     ///@{
 
 		//TODO::Make all of these shared_ptr
-    TaskPlan* m_plan; ///< Node's task plan
+    std::shared_ptr<TaskPlan> m_plan; ///< Node's task plan
 
     size_t m_depth{0};
 
@@ -70,11 +75,17 @@ class TaskCBSNode : public NewCBSNode<T, U> {
 
 template<typename T, typename U>
 TaskCBSNode<T, U>::
-TaskCBSNode(TaskPlan* _plan, TaskPlan* _basePlan){
+TaskCBSNode() {
+	m_plan = nullptr;
+}
 
-  m_plan = new TaskPlan();
+template<typename T, typename U>
+TaskCBSNode<T, U>::
+TaskCBSNode(std::shared_ptr<TaskPlan> _plan, std::shared_ptr<TaskPlan> _basePlan){
 
-  *m_plan = *_basePlan;
+  m_plan = std::shared_ptr<TaskPlan>(new TaskPlan());
+
+  *(m_plan.get()) = *(_basePlan.get());
   m_plan->InitializeRAT();
 
   //m_plan->GetTIM() = _plan->GetTIM();
@@ -109,10 +120,10 @@ TaskCBSNode(TaskPlan* _plan, TaskPlan* _basePlan){
 template<typename T, typename U>
 TaskCBSNode<T, U>::
 TaskCBSNode(TaskCBSNode<WholeTask, OccupiedInterval>* _parentNode,
-    TaskPlan* _basePlan, T* _toReplan){
+    std::shared_ptr<TaskPlan> _basePlan, T* _toReplan){
   // copy base plan
-  m_plan = new TaskPlan();
-  *m_plan = *_basePlan;
+  m_plan = std::shared_ptr<TaskPlan>(new TaskPlan());
+  *(m_plan.get()) = *(_basePlan.get());
   m_plan->InitializeRAT();
 
   m_validVIDs = _parentNode->m_validVIDs;
@@ -182,12 +193,12 @@ TaskCBSNode<T,U>::
 template <typename T, typename U>
 double
 TaskCBSNode<T, U>::
-GetCost() const{
-  return m_plan->GetEntireCost();
+GetCost(bool _makespan) const{
+  return m_plan->GetEntireCost(_makespan);
 }
 
 template<typename T, typename U>
-TaskPlan*
+std::shared_ptr<TaskPlan>
 TaskCBSNode<T, U>::
 GetTaskPlan(){
   return m_plan;
@@ -196,7 +207,7 @@ GetTaskPlan(){
 template<typename T, typename U>
 void
 TaskCBSNode<T, U>::
-SetTaskPlan(TaskPlan* _plan){
+SetTaskPlan(std::shared_ptr<TaskPlan> _plan){
   m_plan = _plan;
 }
 
@@ -243,6 +254,20 @@ size_t
 TaskCBSNode<T, U>::
 GetDepth() {
   return m_depth;
+}
+
+template<typename T, typename U>
+void
+TaskCBSNode<T, U>::
+SetDepth(size_t _depth) {
+  m_depth = _depth;
+}
+
+template<typename T, typename U>
+void
+TaskCBSNode<T,U>::
+SetValidVIDs(std::set<size_t> _validVIDs) { 
+	m_validVIDs = _validVIDs;
 }
 
 template<typename T, typename U>

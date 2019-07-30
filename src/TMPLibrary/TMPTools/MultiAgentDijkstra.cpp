@@ -26,11 +26,11 @@ MultiAgentDijkstra::
 
 bool
 MultiAgentDijkstra::
-Run(WholeTask* _wholeTask, TaskPlan* _plan, std::set<size_t> _validVIDs){
+Run(WholeTask* _wholeTask, std::shared_ptr<TaskPlan> _plan, std::set<size_t> _validVIDs){
   if(!_wholeTask){
     throw RunTimeException(WHERE, "MultiAgentDijkstra needs a wholeTask to solve.");
   }
-  TaskPlan* savedPlan = nullptr;
+  std::shared_ptr<TaskPlan> savedPlan = nullptr;
   if(_plan){
     savedPlan = this->GetTaskPlan();
     this->GetTMPLibrary()->SetTaskPlan(_plan);

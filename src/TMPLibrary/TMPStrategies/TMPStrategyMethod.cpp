@@ -41,11 +41,13 @@ Initialize(){
 void
 TMPStrategyMethod::
 operator()(){
+	Simulation::GetStatClass()->StartClock("TotalTMPStrategyTime");
 	Initialize();	
 	PlanTasks();
 	this->GetStateGraph(m_sgLabel)->LoadStateGraph();
 	DecomposeTasks();
 	AssignTasks();
+	Simulation::GetStatClass()->StopClock("TotalTMPStrategyTime");
 }
 
 /*****************************************Accessors******************************************************/

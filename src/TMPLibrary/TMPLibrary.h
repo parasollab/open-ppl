@@ -173,9 +173,9 @@ class TMPLibrary {
     ///@name Solution Accessors
     ///@{
 
-    TaskPlan* GetTaskPlan();
+    std::shared_ptr<TaskPlan> GetTaskPlan();
 
-		void SetTaskPlan(TaskPlan* _taskPlan);
+		void SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan);
 
     StateGraphPointer GetStateGraph(const std::string& _l);
 
@@ -186,17 +186,17 @@ class TMPLibrary {
 		///@{
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks,
-							 TaskPlan* _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
+							 std::shared_ptr<TaskPlan> _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
 		
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
-	  					 TaskPlan* _taskPlan);
+	  					 std::shared_ptr<TaskPlan> _taskPlan);
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks);
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks);
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
-							 TaskPlan* _taskPlan, const std::string& _label, const long _seed,
+							 std::shared_ptr<TaskPlan> _taskPlan, const std::string& _label, const long _seed,
     					 const std::string& _baseFilename);
 
 		void InitializeMPProblem(MPProblem* _problem);
@@ -259,7 +259,7 @@ class TMPLibrary {
   	///@name Solution
   	///@{
 
-  	TaskPlan* m_taskPlan;   ///< Current task plan
+  	std::shared_ptr<TaskPlan> m_taskPlan;   ///< Current task plan
 
   	///@}
 };

@@ -24,9 +24,10 @@ TaskPlan(const TaskPlan& _other){
 
 TaskPlan::
 ~TaskPlan(){
-  for(auto wholeTask : m_wholeTasks){
+	//TODO::turn these into shared_ptr
+  /*for(auto wholeTask : m_wholeTasks){
     delete wholeTask;
-  }
+  }*/
 }
 
 TaskPlan&
@@ -144,17 +145,19 @@ GetTaskCostMap(){
 
 double
 TaskPlan::
-GetEntireCost(){
+GetEntireCost(bool _makespan){
   // TODO: make this adaptive!
   // max = makespan
   // sum = SOC (sum of costs)
   double max = 0;
   double sum = 0;
   for (auto kv : m_taskCostMap){
-    sum += kv.second.second - kv.second.first;
+    sum += kv.second.second;// - kv.second.first;
     if (kv.second.second > max)
       max = kv.second.second;
   }
+	if(_makespan)
+		return max;
   return sum;
 }
 

@@ -27,7 +27,7 @@ class MultiAgentDijkstra : public TMPBaseObject {
     ///@name Call method
     ///@{
 
-    bool Run(WholeTask* _wholeTask, TaskPlan* _plan = nullptr, std::set<size_t> _validVIDs = {});
+    bool Run(WholeTask* _wholeTask, std::shared_ptr<TaskPlan> _plan = nullptr, std::set<size_t> _validVIDs = {});
 
     ///@}
   private:

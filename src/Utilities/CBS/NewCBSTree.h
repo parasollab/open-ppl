@@ -15,7 +15,7 @@ class NewLessThanByCost {
   public:
 
     bool operator()(const NewCBSNode<T, U>* _low, const NewCBSNode<T, U>* _high) {
-      return _low->GetCost()  > _high->GetCost();
+      return _low->GetCost(true)  > _high->GetCost(true);
     }
 };
 

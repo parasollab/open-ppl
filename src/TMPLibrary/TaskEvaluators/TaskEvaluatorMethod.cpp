@@ -1,5 +1,7 @@
 #include "TaskEvaluatorMethod.h"
 
+#include "Simulator/Simulation.h"
+
 /*------------------------------ Construction --------------------------------*/
 
 TaskEvaluatorMethod::
@@ -16,12 +18,15 @@ TaskEvaluatorMethod::
 
 bool 
 TaskEvaluatorMethod::
-operator()(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
-	return Run( _wholeTasks, _plan);
+operator()(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
+	Simulation::GetStatClass()->StartClock("TaskEvaluationTime");
+	auto ret = Run( _wholeTasks, _plan);
+	Simulation::GetStatClass()->StartClock("TaskEvaluationTime");
+	return ret;
 }
 
 bool
 TaskEvaluatorMethod::
-Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
+Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
 	return false;
 }

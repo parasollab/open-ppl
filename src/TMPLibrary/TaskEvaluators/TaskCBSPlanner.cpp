@@ -1,10 +1,13 @@
 #include "TaskCBSPlanner.h"
 
-#include"TMPLibrary/TaskPlan.h"
+#include "Simulator/Simulation.h"
+
+#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPTools/MultiAgentDijkstra.h"
 #include "TMPLibrary/TMPTools/TMPTools.h"
 #include "TMPLibrary/WholeTask.h"
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
+
 #include "Utilities/CBS/NewCBSTree.h"
 
 TaskCBSPlanner::
@@ -17,6 +20,8 @@ TaskCBSPlanner(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("TaskCBSPlanner");
   m_madLabel = _node.Read("madLabel", true, "", "MultiAgentDijkstra search to use.");
   m_sgLabel = _node.Read("sgLabel",true,"","State graph to use.");
+	m_bypass1 = _node.Read("bypass1",false,false,"Flag to use bypass type 1 or not.");
+	m_makespan = _node.Read("makespan",false,false,"Flag to use makespan vs sum of cost.");
 }
 
 TaskCBSPlanner::
@@ -24,29 +29,44 @@ TaskCBSPlanner::
 
 bool
 TaskCBSPlanner::
-Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
+Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
   if(_wholeTasks.empty()){
     _wholeTasks = this->GetTaskPlan()->GetWholeTasks();
   }
 
-  TaskPlan* savedPlan = nullptr;
+	size_t totalNodes = 1;
+	size_t maxDepth = 0;
+	size_t minNodeDepth = 0;
+	size_t nodesExplored = 1;
+
+  std::shared_ptr<TaskPlan> savedPlan = nullptr;
   if(_plan){
-    savedPlan = this->GetTaskPlan();
+		savedPlan = this->GetTaskPlan();
     this->GetTMPLibrary()->SetTaskPlan(_plan);
   }
 
-  TaskPlan* initialPlan = new TaskPlan();
-  *initialPlan = *(this->GetTaskPlan());
+  std::shared_ptr<TaskPlan> initialPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
+  *(initialPlan.get()) = *(this->GetTaskPlan().get());
 
   for (auto& wholeTask : _wholeTasks){
     this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(wholeTask, initialPlan);
     initialPlan->InitializeRAT();
   }
+	if(m_debug) {
+		std::cout << "Initial Plan" << std::endl;
+  	for(auto& tv: initialPlan->GetTIM()){
+    	std::cout << std::endl << "whole task pointer: " << tv.first << std::endl;
+    	for(auto interval : tv.second){
+      		std::cout << interval.Print() << std::endl;
+    	}
+  	}
+	}
 
   //auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
   // create initial node to grow tree from.
-  TaskCBSNode<WholeTask, OccupiedInterval>* initialNode = new TaskCBSNode<WholeTask,
-    OccupiedInterval>(initialPlan, this->GetTaskPlan());//,sg->GetAvailableIntervalGraph().get());
+  std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> initialNode = 
+		std::shared_ptr<TaskCBSNode<WholeTask,OccupiedInterval>>(new TaskCBSNode<WholeTask,
+    OccupiedInterval>(initialPlan, this->GetTaskPlan()));//,sg->GetAvailableIntervalGraph().get());
 
   auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
   std::unordered_map<WholeTask*,std::set<size_t>>& validVIDs = initialNode->GetValidVIDs();
@@ -65,23 +85,39 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
   NewCBSTree<WholeTask, OccupiedInterval> tree = NewCBSTree<WholeTask, OccupiedInterval>();
 
   // if the initial plan has a conflict, update conflict map and grow tree.
-  auto conflictMap = FindConflict(initialNode);
+  auto conflictMap = FindConflict(initialNode.get());
+	size_t numConflicts = 0;
+	for(auto kv : conflictMap) {
+		numConflicts += kv.second.size();
+	}
+	numConflicts = numConflicts/2;
   if (!conflictMap.empty()){
-    GrowTree(initialNode, tree, conflictMap);
+		auto newNodes = GrowTree(initialNode,conflictMap);
+		if(m_bypass1)
+			totalNodes += Bypass1(initialNode,newNodes,tree,numConflicts);
+		else {
+			totalNodes += newNodes.size();
+			for(auto newNode : newNodes) {
+				tree.Insert(newNode);
+			}
+		}
 		//delete initialNode;
     //for(auto node : GrowTree(initialNode, tree, conflictMap)){
     //  auto toReplan = node->GetToReplan();
     //  InsertConflict((*(node->GetConflicts()))[toReplan],conflictMap[toReplan]);
     //}
   }
+	
+	//GrowTree(initialNode,conflictMap);
 
   double minPlanCost = std::numeric_limits<double>::max();
-  TaskPlan* minPlan = initialPlan;
+  std::shared_ptr<TaskPlan> minPlan = initialPlan;
 
   while(!tree.Empty()){
     // grab minimum cost node, cast NewCBSNode as a TaskCBSNode.
-    TaskCBSNode<WholeTask, OccupiedInterval>* node =
-      static_cast<TaskCBSNode<WholeTask, OccupiedInterval>*>(tree.GetMinNode());
+    std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> node =
+      std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>>(
+			static_cast<TaskCBSNode<WholeTask, OccupiedInterval>*>(tree.GetMinNode()));
 
     if(m_debug){
       std::cout << "Tree size: " << tree.Length() << std::endl;
@@ -93,42 +129,62 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
     }
     // if the node's cost is greater than the current minimum plan's cost,
     // do not search further down that node.
-    if(node->GetCost() >= minPlanCost and minPlan!=initialPlan)
-      continue;
+    if(node->GetCost(m_makespan) >= minPlanCost and minPlan!=initialPlan)
+      //continue;
+      break;//Should only reach this point once all nodes are >= current plan cost bc of pq
+
+		if(node->GetDepth() > maxDepth)
+			maxDepth = node->GetDepth();
+		nodesExplored += 1;
 
     // set the current plan to the current node's task plan.
     //TaskPlan* currentPlan = node->GetTaskPlan();
 
-    // create a RAT from the current node's plan and conflict map.
-    // CreateRAT will update the task plan's RAT.
-    node->CreateRAT();
-
-    if(m_debug){
-      std::cout << "Node depth: " << node->GetDepth() << std::endl;
-      std::cout << "Robot Availability Table:" << std::endl;
-      for(auto& ra : node->GetTaskPlan()->GetRAT()){
-        std::cout << ra.first << std::endl;
-        for(auto inter : ra.second) {
-          std::cout << inter.Print() << std::endl;
-        }
-      }
-    }
 
 		std::set<size_t> validVIDs = node->GetValidVIDs()[node->GetToReplan()];
     // replan based on the new RAT.
-    if(!this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(node->GetToReplan(),
-        node->GetTaskPlan(),validVIDs)){
-			//delete node;
-			continue;
+    if(!node->HasReplanned()) { 
+    	// create a RAT from the current node's plan and conflict map.
+    	// CreateRAT will update the task plan's RAT.
+    	node->CreateRAT();
+    	if(m_debug){
+      	std::cout << "Node depth: " << node->GetDepth() << std::endl;
+      	std::cout << "Robot Availability Table:" << std::endl;
+      	for(auto& ra : node->GetTaskPlan()->GetRAT()){
+        	std::cout << ra.first << std::endl;
+        	for(auto inter : ra.second) {
+          	std::cout << inter.Print() << std::endl;
+        	}
+      	}
+    	}
+
+			auto validSolution = this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(node->GetToReplan(),
+        										 node->GetTaskPlan(),validVIDs);
+			node->SetReplanned(true);
+			if(!validSolution)
+				continue;
+		}
+		else {
+			if(m_debug) {
+  			for (auto& tv: node->GetTaskPlan()->GetTIM()){
+    			std::cout << std::endl << "whole task pointer: " << tv.first << std::endl;
+    			for (auto interval : tv.second){
+      			std::cout << interval.Print() << std::endl;
+    			}
+  			}
+			}
 		}
 
-    conflictMap = FindConflict(node);
-
-    if(m_debug){
+		conflictMap = FindConflict(node.get());
+			
+    if(!m_makespan and m_debug) {//m_debug){
       std::cout << "Found conflicts: " << std::endl;
-      for(auto conflict : conflictMap){
-        std::cout << conflict.first << std::endl
-          << conflict.second->GetConstraint().Print() << std::endl;
+      for(auto kv : conflictMap){
+				std::cout << "WholeTask: " << kv.first << std::endl;
+				for(auto conflict : kv.second) {
+        	std::cout << conflict << std::endl
+          					<< conflict->GetConstraint().Print() << std::endl;
+				}
       }
     }
     /*if (!conflictMap.empty()){
@@ -137,10 +193,47 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
       }*/
     if(m_debug){
       std::cout << "Min Plan Cost: " << minPlanCost << std::endl;
-      std::cout << "Current Plan Cost: " << node->GetCost() << std::endl;
+      std::cout << "Current Plan Cost: " << node->GetCost(m_makespan) << std::endl;
+
+			if(minPlan != initialPlan) {
+				std::cout << "Min Plan Lengths" << std::endl;
+				for(auto ti : minPlan->GetTIM()) {
+					std::cout << ti.first << " : " << ti.second.size() << std::endl;
+				}
+			}
+			std::cout << "Current Plan Lengths" << std::endl;
+			for(auto ti : node->GetTaskPlan()->GetTIM()) {
+				std::cout << ti.first << " : " 
+									<< ti.second.size() << " : " 
+									<< node->GetTaskPlan()->GetPlanCost(ti.first) << std::endl;
+				//for(auto i : ti.second){
+				//	std::cout << i.Print() << std::endl;
+				//}	
+				//std::cout << std::endl;
+			}
     }
-    if (!conflictMap.empty() and (node->GetCost() < minPlanCost or minPlan==initialPlan)){
-      GrowTree(node, tree,conflictMap);
+		bool noConflicts = true;
+		for(auto kv : conflictMap) {
+			if(!kv.second.empty())
+				noConflicts = false;
+		}
+    if (!noConflicts and (node->GetCost(m_makespan) < minPlanCost or minPlan==initialPlan)){
+      
+			auto newNodes = GrowTree(node,conflictMap);
+			if(m_bypass1) {
+				size_t numConflicts = 0;
+				for(auto kv : conflictMap) {
+					numConflicts += kv.second.size();
+				}
+				numConflicts = numConflicts/2;
+				totalNodes += Bypass1(node,newNodes,tree,numConflicts);
+			}
+			else {
+				totalNodes += newNodes.size();
+				for(auto newNode : newNodes) {
+					tree.Insert(newNode);
+				}
+			}
 			//delete node->GetTaskPlan();
       //for(auto node : GrowTree(initialNode, tree,conflictMap)){
       //  auto toReplan = node->GetToReplan();
@@ -149,24 +242,32 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
 			//delete node;
       continue;
     }
-    if(node->GetCost() < minPlanCost){
-      minPlanCost = node->GetCost();
+    if(node->GetCost(m_makespan) < minPlanCost){
+      minPlanCost = node->GetCost(m_makespan);
 			//delete minPlan;
       minPlan = node->GetTaskPlan();
+			minNodeDepth = node->GetDepth();
     }
 		//delete node;
   }
-
+/*
   for (auto& tv: minPlan->GetTIM()){
     std::cout << std::endl << "whole task pointer: " << tv.first << std::endl;
     for (auto interval : tv.second){
       std::cout << interval.Print() << std::endl;
     }
   }
-
+*/
 
   FinalizeTaskPlan(minPlan);
-  *(this->GetTaskPlan()) = *minPlan;
+  *(this->GetTaskPlan()) = *(minPlan.get());
+
+	//Simulation::GetStatClass()->SetStat("TotalNodes", totalNodes);
+	Simulation::GetStatClass()->SetStat("TotalNodes", nodesExplored+tree.Length());
+	Simulation::GetStatClass()->SetStat("MaxDepth", maxDepth);
+	Simulation::GetStatClass()->SetStat("MinNodeDepth", minNodeDepth);
+	Simulation::GetStatClass()->SetStat("NodesExplored", nodesExplored);
+	Simulation::GetStatClass()->SetStat("PlanCost", minPlanCost);
 
   //Restore initial library task plan pointer if a different plan was passed in.
   if(savedPlan)
@@ -177,77 +278,73 @@ Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan) {
 
 std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*>
 TaskCBSPlanner::
-GrowTree(TaskCBSNode<WholeTask, OccupiedInterval>* _parentNode,
-    NewCBSTree<WholeTask, OccupiedInterval>& _tree,
-    std::unordered_map<WholeTask*,NewConflict<OccupiedInterval>*> _conflictMap){
+GrowTree(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _parentNode,
+    //NewCBSTree<WholeTask, OccupiedInterval>& _tree,
+    std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>> _conflictMap){
+
+	std::set<WholeTask*> conflictedTasks;
 
   std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*> newNodes;
 	auto count = _conflictMap.size();
 	auto index = 0;
-  for (std::pair<WholeTask*, NewConflict<OccupiedInterval>*> kv :
+  for (std::pair<WholeTask*, std::vector<NewConflict<OccupiedInterval>*>> kv :
     // *(_parentNode->GetConflicts())) {
   	_conflictMap) {
-
-		index++;
+		for(auto conflict : kv.second){
+			index++;
 		
-		if(m_debug)
-			std::cout << "HERE 1" << std::endl;
+			if(m_debug)
+				std::cout << "HERE 1" << std::endl;
+			
+			WholeTask* task = kv.first;
 
-		WholeTask* task = kv.first;
-		TaskCBSNode<WholeTask, OccupiedInterval>* newNode = new TaskCBSNode<WholeTask,
-						OccupiedInterval>(_parentNode, this->GetTaskPlan(),task);
+			if(conflictedTasks.count(task))
+				continue;
+			conflictedTasks.insert(task);
 
-		if(m_debug)
-			std::cout << "HERE 2" << std::endl;
-   /*for (NewConflict<OccupiedInterval>* conflict :
-    ((*(_parentNode->GetConflicts()))[task])){
+			TaskCBSNode<WholeTask, OccupiedInterval>* newNode = new TaskCBSNode<WholeTask,
+							OccupiedInterval>(_parentNode.get(), this->GetTaskPlan(),task);
 
-    newNode->AddConflict(task, conflict);
-    }*/
-    InsertConflict((*(newNode->GetConflicts()))[task],kv.second);
+   	/*for (NewConflict<OccupiedInterval>* conflict :
+    	((*(_parentNode->GetConflicts()))[task])){
+	
+    	newNode->AddConflict(task, conflict);
+    	}*/
+    	InsertConflict((*(newNode->GetConflicts()))[task],conflict);
 
-		if(m_debug)
-			std::cout << "HERE 3" << std::endl;
+    	auto interval = conflict->GetConstraint();
+    	auto agent = interval.GetAgent();
+    	std::unordered_map<Agent*,std::vector<OccupiedInterval>> updates;
 
-    auto interval = kv.second->GetConstraint();
-    auto agent = interval.GetAgent();
-    std::unordered_map<Agent*,std::vector<OccupiedInterval>> updates;
+    	updates[agent].push_back(interval);
 
-		if(m_debug)
-			std::cout << "HERE 4" << std::endl;
-
-
-    updates[agent].push_back(interval);
-		if(m_debug)
-			std::cout << "HERE 5" << std::endl;
-
-
-    auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
-    auto vidSets = sg->UpdateAvailableIntervalGraph(updates,newNode->GetToReplan(),
+    	auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+    	auto vidSets = sg->UpdateAvailableIntervalGraph(updates,newNode->GetToReplan(),
 																										newNode->GetValidVIDs()[newNode->GetToReplan()]);
 
-		if(m_debug) {
-			std::cout << "Updating vids for task " << index << " out of " << count << ": " << task << std::endl;
+			if(m_debug) {
+				std::cout << "Updating vids for task " << index << " out of " << count << ": " << task << std::endl;
+			}
+			newNode->UpdateValidVIDs(vidSets.first,vidSets.second,newNode->GetToReplan());
+			if(m_debug) {
+				std::cout << "Updated vids for task " << index << " out of " << count << ": " << task << std::endl;
+			}
+    	newNodes.push_back(newNode);
 		}
-		newNode->UpdateValidVIDs(vidSets.first,vidSets.second,newNode->GetToReplan());
-		if(m_debug) {
-			std::cout << "Updated vids for task " << index << " out of " << count << ": " << task << std::endl;
-		}
-    _tree.Insert(newNode);
-    newNodes.push_back(newNode);
-  }
-  if(m_debug){
-    std::cout << "Tree Size: " << _tree.Length() << std::endl;
   }
   return newNodes;
 }
 
 
-std::unordered_map<WholeTask*,NewConflict<OccupiedInterval>*>
+std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>>
 TaskCBSPlanner::
 FindConflict(TaskCBSNode<WholeTask, OccupiedInterval>* _node){
-  std::unordered_map<WholeTask*,NewConflict<OccupiedInterval>*> conflictMap;
+  std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>> conflictMap;
   int size = _node->GetTaskPlan()->GetWholeTasks().size();
+  for (int i = 0; i < size; i++){
+    WholeTask* task = (_node->GetTaskPlan()->GetWholeTasks())[i];
+		conflictMap[task] = {};
+	}
   for (int i = 0; i < size - 1; i++){
     WholeTask* firstTask = (_node->GetTaskPlan()->GetWholeTasks())[i];
     for (int j = i + 1; j < size; j ++){
@@ -271,14 +368,14 @@ FindConflict(TaskCBSNode<WholeTask, OccupiedInterval>* _node){
         // insert conflicts into the conflict map.
         //InsertConflict((*(_node->GetConflicts()))[firstTask], firstConflict);
         //InsertConflict((*(_node->GetConflicts()))[secondTask], secondConflict);
-        conflictMap[firstTask] = firstConflict;
-        conflictMap[secondTask] = secondConflict;
-        return conflictMap;
+        conflictMap[firstTask].push_back(firstConflict);
+        conflictMap[secondTask].push_back(secondConflict);
+        //if(!m_bypass1)
+					return conflictMap;
       }
 
     }
   }
-
   return conflictMap;
 }
 
@@ -331,16 +428,10 @@ TaskCBSPlanner::
 InsertConflict(std::list<NewConflict<OccupiedInterval>*>& _conflicts,
     NewConflict<OccupiedInterval>* _newConflict){
   // if the conflict map is empty, insert the new conflict and exit function.
-	if(m_debug)
-		std::cout << "HERE A" << std::endl;
-
   //if(_conflicts.empty()){
     _conflicts.push_back(_newConflict);
     return;
   //}
-
-	if(m_debug)
-		std::cout << "HERE B" << std::endl;
 
   OccupiedInterval& newInterval = _newConflict->GetConstraintRef();
 
@@ -350,23 +441,17 @@ InsertConflict(std::list<NewConflict<OccupiedInterval>*>& _conflicts,
   while(it != _conflicts.end() and
       (*it)->GetConstraint().GetAgent() != newInterval.GetAgent()){
     it++;
-		if(m_debug)
-			std::cout << "HERE C" << std::endl;
 
 	}
 
   while(it != _conflicts.end()){
     OccupiedInterval& currentInterval = (*it)->GetConstraintRef();
-		if(m_debug)
-			std::cout << "HERE D" << std::endl;
 
     // nextIterator is the first iterator after the current iterator that is
     auto nextIterator = std::next(it);
     while(nextIterator != _conflicts.end() &&
         (*nextIterator)->GetConstraint().GetAgent() != newInterval.GetAgent()){
       nextIterator = std::next(nextIterator);
-			if(m_debug)
-				std::cout << "HERE E" << std::endl;
     }
 
     // if the next iterator is the end of the conflicts list, then add the
@@ -387,8 +472,6 @@ InsertConflict(std::list<NewConflict<OccupiedInterval>*>& _conflicts,
       return;
     }
 
-		if(m_debug)
-			std::cout << "HERE D.2" << std::endl;
     OccupiedInterval& nextInterval = (*nextIterator)->GetConstraintRef();
     // if the new interval has a time overlap with the current interval...
     if(newInterval.CheckTimeOverlap(currentInterval)){
@@ -411,27 +494,19 @@ InsertConflict(std::list<NewConflict<OccupiedInterval>*>& _conflicts,
 
       // while the new interval overlaps with the next same agent interval...
       while (newInterval.CheckTimeOverlap((*nextIterator)->GetConstraint())){
-				if(m_debug)
-				std::cout << "HERE F" << std::endl;
         // add the current valid nextIterator to be removed
         removeConflicts.push_back(nextIterator);
 
         // set last iterator, which will be later modified, to next iterator
         lastIterator = nextIterator;
 
-				if (nextIterator == _conflicts.end())
-					std::cout << "end heeere" << std::endl; 
         // find next iterator
         nextIterator = std::next(nextIterator);
-				if (nextIterator == _conflicts.end())
-					std::cout << "end here" << std::endl; 
         // while the next iterator's agent is not equivalent to the new
         // interval's agent, continue incrementing next agent.
         while(nextIterator != _conflicts.end() &&
             (*nextIterator)->GetConstraint().GetAgent() != newInterval.GetAgent()){
           nextIterator == std::next(nextIterator);
-					if(m_debug)
-						std::cout << "HERE G" << std::endl;
 				}
 
         // if the next iterator reaches the end of the list, continue to
@@ -471,14 +546,8 @@ InsertConflict(std::list<NewConflict<OccupiedInterval>*>& _conflicts,
     while(it != _conflicts.end() &&
         (*it)->GetConstraint().GetAgent() != newInterval.GetAgent()){
       it++;
-			if(m_debug)
-				std::cout << "HERE H" << std::endl;
 		}
-		if(m_debug)
-			std::cout << "HERE I" << std::endl;
   }
-	if(m_debug)
-		std::cout << "HERE J" << std::endl;
   _conflicts.push_back(_newConflict);
   return;
 }
@@ -533,7 +602,7 @@ CreateMPTask(Robot* _robot, Cfg _start, Cfg _goal){
 
 void
 TaskCBSPlanner::
-FinalizeTaskPlan(TaskPlan* _plan){
+FinalizeTaskPlan(std::shared_ptr<TaskPlan> _plan){
   // TODO: Setup task dependency map.
   std::unordered_map<HandoffAgent*, std::list<std::pair<double,
     std::shared_ptr<MPTask>>>> trashMap;
@@ -566,7 +635,71 @@ FinalizeTaskPlan(TaskPlan* _plan){
   for (auto& t : trashMap){
     t.second.sort();
     for(auto kv : t.second){
-      _plan -> AddSubtask(t.first, kv.second);
+      _plan->AddSubtask(t.first, kv.second);
     }
   }
+}
+
+size_t
+TaskCBSPlanner::
+Bypass1(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _node,
+				std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*> _children,
+				NewCBSTree<WholeTask, OccupiedInterval>& _tree,
+				size_t _numConflicts) {
+
+	std::set<TaskCBSNode<WholeTask,OccupiedInterval>*> badNodes;
+
+	for(auto child : _children) {
+		
+		std::set<size_t> validVIDs = child->GetValidVIDs()[child->GetToReplan()];
+		auto validSolution = this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(child->GetToReplan(),
+        									child->GetTaskPlan(),validVIDs);
+		child->SetReplanned(true);
+
+		if(!validSolution)	
+			badNodes.insert(child);
+		
+		if(child->GetCost(m_makespan) > _node->GetCost(m_makespan))
+			continue;
+
+		auto conflictMap = FindConflict(child);
+		size_t childConflicts = 0;
+		for(auto kv : conflictMap)
+			childConflicts += kv.second.size();
+		childConflicts = childConflicts/2;
+
+		if(childConflicts < _numConflicts) {
+			auto copy = new TaskCBSNode<WholeTask,OccupiedInterval>();
+			*copy = *(_node.get());
+
+			copy->SetReplanned(true);
+			copy->SetTaskPlan(child->GetTaskPlan());
+			copy->SetDepth(_node->GetDepth());
+			copy->SetToReplan(_node->GetToReplan());
+			
+
+
+			_tree.Insert(copy);
+
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+			std::cout << "BYPASSING CONFLICTS" << std::endl;
+
+			return 0;
+		}
+	}  		
+
+	for(auto child : _children) {
+		if(badNodes.count(child)) {
+			delete child;
+			continue;
+		}
+		_tree.Insert(child);
+	}
+
+	return _children.size() - badNodes.size();
 }

@@ -21,12 +21,12 @@ OrderedMultiTaskEvaluator::
 
 bool
 OrderedMultiTaskEvaluator::
-Run(std::vector<WholeTask*> _wholeTasks, TaskPlan* _plan){
+Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
   if(_wholeTasks.empty()){
     _wholeTasks = this->GetTaskPlan()->GetWholeTasks();
   }
 
-  TaskPlan* savedPlan = nullptr;
+  std::shared_ptr<TaskPlan> savedPlan = nullptr;
   if(_plan){
     savedPlan = this->GetTaskPlan();
     this->GetTMPLibrary()->SetTaskPlan(_plan);

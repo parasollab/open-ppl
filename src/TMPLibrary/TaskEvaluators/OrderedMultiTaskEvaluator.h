@@ -25,7 +25,7 @@ class OrderedMultiTaskEvaluator : public TaskEvaluatorMethod {
     ///@}
   private:
 
-    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, TaskPlan* _plan = nullptr) override;
+    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr) override;
 
     std::string m_madLabel;
 };

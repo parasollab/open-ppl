@@ -13,6 +13,8 @@ class NewCBSNode{
 
     NewCBSNode(double _c, std::unordered_map<T*, std::list<NewConflict<U>*>>* _m, T* _t);
 
+		NewCBSNode(const NewCBSNode<T,U>& _other);
+
 		virtual ~NewCBSNode();
     /// Copy constructor
 
@@ -22,11 +24,13 @@ class NewCBSNode{
     ///@name Getters
     ///@{
 
-    virtual double GetCost() const;
+    virtual double GetCost(bool _makespan = false) const;
 
     std::unordered_map<T*, std::list<NewConflict<U>*>>* GetConflicts();
 
     T* GetToReplan();
+
+		bool HasReplanned();
 
     ///@}
     ///@name Setters
@@ -35,6 +39,8 @@ class NewCBSNode{
     void SetCost(double _c);
 
     void SetToReplan(T* _t);
+	
+		void SetReplanned(bool _hasReplanned);		
 
     ///@}
     ///@name Helpers
@@ -56,6 +62,8 @@ class NewCBSNode{
 
     std::unordered_map<T*, std::list<NewConflict<U>*>>* m_conflicts; ///< conflict map
 
+		bool m_hasReplanned{false};
+
     ///@}
 };
 
@@ -74,18 +82,30 @@ NewCBSNode(double _c, std::unordered_map<T*, std::list<NewConflict<U>*>>* _m, T*
 }
 
 template <typename T, typename U>
-NewCBSNode<T, U>&
-NewCBSNode<T, U>::
-operator=(const NewCBSNode& _other){
-  m_cost = _other.GetCost();
-  m_conflicts = _other.GetConflicts();
-}
-
-template <typename T, typename U>
 NewCBSNode<T, U>::
 ~NewCBSNode(){
 	if(m_conflicts)
 		delete m_conflicts;
+}
+
+template <typename T, typename U>
+NewCBSNode<T, U>::
+NewCBSNode(const NewCBSNode<T,U>& _other){
+  m_cost( _other.GetCost());
+  m_conflicts = new std::unordered_map<T*, std::list<NewConflict<U>*>>();
+  *m_conflicts = *(_other.m_conflicts);
+}
+
+template <typename T, typename U>
+NewCBSNode<T, U>&
+NewCBSNode<T, U>::
+operator=(const NewCBSNode<T,U>& _other){
+  m_cost = _other.GetCost();
+	if(m_conflicts)
+		delete m_conflicts;
+	m_conflicts = new std::unordered_map<T*, std::list<NewConflict<U>*>>();
+  *m_conflicts = *(_other.m_conflicts);
+	return *this;
 }
 
 /*--------------------------------- Accessors --------------------------------*/
@@ -93,7 +113,7 @@ NewCBSNode<T, U>::
 template <typename T, typename U>
 double
 NewCBSNode<T, U>::
-GetCost() const{
+GetCost(bool _makespan) const{
   return 0;
 }
 
@@ -126,6 +146,19 @@ SetToReplan(T* _t){
   m_toReplan = _t;
 }
 
+template <typename T, typename U>
+bool
+NewCBSNode<T, U>::
+HasReplanned(){
+  return m_hasReplanned;
+}
+
+template <typename T, typename U>
+void
+NewCBSNode<T, U>::
+SetReplanned(bool _hasReplanned){
+	m_hasReplanned = _hasReplanned;
+}
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename T, typename U>
