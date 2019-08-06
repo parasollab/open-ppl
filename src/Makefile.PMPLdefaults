@@ -417,7 +417,9 @@ SIM_SRCS := \
   TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/CentralPlanner.cpp \
   Behaviors/Agents/Coordinator.cpp \
+  Behaviors/Agents/DummyAgent.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
@@ -524,7 +526,6 @@ PMPL_SRCS := \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \
-  Utilities/MeanCurvatureSkeleton3D.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \
