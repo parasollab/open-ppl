@@ -56,7 +56,7 @@ Step(const double _dt) {
 	//If the agent has a path, it will follow it. Otherwise it's just chillin
   if(!this->m_path.empty() and EvaluateTask()) {
 		if(m_pathID == MAX_INT) {
-			m_pathID = Simulation::Get()->AddPath(m_path,glutils::color(0, 0, 1, 0.5));
+			m_pathID = Simulation::Get()->AddPath(m_path,glutils::color(1, 0, 0, 0.5));
 		}
     ExecuteTask(_dt);
 	}
@@ -101,6 +101,7 @@ EvaluateTask() {
         std::cout << "Reached the end of the path." << std::endl;
 			Simulation::Get()->RemovePath(m_pathID);
 			m_pathID = MAX_INT;
+			m_path = {};
       return false;
     }
 

@@ -71,6 +71,9 @@ Initialize() {
 		a->Initialize();
   }
 
+	//auto group = problem->GetRobotGroup(0);
+	//auto groupTask = problem->GetTasks(group)[0];
+
 	//Do whatever solving you want here
 	//This gets the first task assigned to the central planner in the XML file
 	auto task = problem->GetTasks(m_robot)[0];
