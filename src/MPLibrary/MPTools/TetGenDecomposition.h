@@ -74,6 +74,14 @@ class TetGenDecomposition final {
     void MakeFreeModel(const Environment* _env);
 
     ///@}
+    ///@name Internal Void Creation
+    ///@}
+
+    /// Get the free space inside of the obstacle by subtracting it from its
+    /// convex hull.
+    void MakeInternalVoidModel(const Environment* _env);
+
+    ///@}
     ///@name IO Helpers
     ///@{
 
@@ -108,6 +116,9 @@ class TetGenDecomposition final {
 
     tetgenio* m_freeModel{nullptr};    ///< TetGen model of free workspace.
     tetgenio* m_decompModel{nullptr};  ///< TetGen model of tetrahedralization.
+
+    bool m_useConvex{false};              ///< Use convex hull to get obstacle voids
+    double m_convexHullScaleFactor{1.0};  ///< The scaling factor of the obstacle's convex hull
 
     ///@}
 };
