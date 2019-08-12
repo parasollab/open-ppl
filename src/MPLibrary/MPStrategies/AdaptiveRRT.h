@@ -13,8 +13,7 @@ static inline uint64_t GetCycles(){
 #include "BasicRRTStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup MotionPlanningStrategies
-/// @brief Adaptively select growth methods in RRT
+/// Adaptively selects growth methods in RRT.
 ///
 /// AdaptiveRRT employs structural filtering to the RRT paradigm by providing a
 /// two-level cost-adaptive strategy to select the RRT growth method. First,
@@ -23,7 +22,7 @@ static inline uint64_t GetCycles(){
 /// distribution is updated based upon the success/fail of the growth and its
 /// cost.
 ///
-/// \internal This strategy is configured for pausible execution.
+/// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {

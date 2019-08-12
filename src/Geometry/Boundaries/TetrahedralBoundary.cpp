@@ -102,6 +102,13 @@ GetCenter() const noexcept {
   return m_bbx.GetCenter();
 }
 
+
+double
+TetrahedralBoundary::
+GetVolume() const noexcept {
+  throw NotImplementedException(WHERE);
+}
+
 /*--------------------------------- Sampling ---------------------------------*/
 
 std::vector<double>

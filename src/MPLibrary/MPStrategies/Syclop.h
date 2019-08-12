@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "BasicRRTStrategy.h"
@@ -72,7 +73,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
     /// As basic RRT, but picks nearest neighbor from only the available
     /// regions.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const VertexSet* const _tree = nullptr) override;
+        const VertexSet* const _candidates = nullptr) override;
 
     /// As basic RRT, but also logs extension attempts.
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
@@ -97,9 +98,6 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
 
     /// Select a region from a set of available regions.
     const WorkspaceRegion* SelectRegion();
-
-    /// Select a vertex from within a given region.
-    VID SelectVertex(const WorkspaceRegion* const _r);
 
     ///@}
     ///@name Syclop Helpers
@@ -149,7 +147,7 @@ class Syclop : public BasicRRTStrategy<MPTraits> {
       /// The number of times this region has been selected.
       size_t numTimesSelected{0};
 
-      std::vector<VID> vertices; ///< The VID's of the configurations in this region.
+      VertexSet vertices; ///< The VID's of the configurations in this region.
 
       std::set<size_t> cells; ///< The set of coverage cells in the target that
                          ///< were reached from the source.
@@ -380,9 +378,16 @@ Initialize() {
   ComputeFreeVolumes();
 
   // Add start vertex to regionData.
+  auto goalTracker = this->GetGoalTracker();
+  const auto& startVIDs = goalTracker->GetStartVIDs();
+  if(startVIDs.size() != 1)
+    throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
+                                  << startVIDs.size() << " were found.";
+
+  const VID start = *startVIDs.begin();
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto startRegion = tm->LocateRegion(0);
-  m_regionData[startRegion].vertices.push_back(0);
+  auto startRegion = tm->LocateRegion(start);
+  m_regionData[startRegion].vertices.insert(start);
 }
 
 /*------------------------ BasicRRTStrategy Overrides ------------------------*/
@@ -391,32 +396,16 @@ template <typename MPTraits>
 typename Syclop<MPTraits>::VID
 Syclop<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const) {
+  /// @todo This is our special holonomic version which uses an NF. It should be
+  ///       made to follow the original paper for nonholonomic robots (I think
+  ///       randomly selects from the region vertices?).
+
   // Select an available region and get the vertices within.
   const WorkspaceRegion* r = SelectRegion();
   const auto& vertices = m_regionData[r].vertices;
 
   // Find the nearest neighbor from within the selected region.
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
-
-  auto g = this->GetRoadmap();
-
-  std::vector<Neighbor> neighbors;
-  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  nf->FindNeighbors(g,
-      vertices.begin(), vertices.end(),
-      vertices.size() == g->Size(), _cfg, std::back_inserter(neighbors));
-
-  VID nearestVID = INVALID_VID;
-
-  if(!neighbors.empty())
-    nearestVID = neighbors[0].target;
-  else
-    // We really don't want this to happen. If you see high numbers for this,
-    // you likely have problems with parameter or algorithm selection.
-    stats->IncStat("BasicRRT::FailedNF");
-
-  return nearestVID;
+  return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, &vertices);
 }
 
 
@@ -452,7 +441,7 @@ AddNode(const CfgType& _newCfg) {
     size_t previousCoverage = data.Coverage();
 
     // Add this node to the appropriate region and update coverage.
-    data.vertices.push_back(added.first);
+    data.vertices.insert(added.first);
     data.AddCell(cellIndex);
 
     // If we extended into a region that wasn't previously available, add it
@@ -760,27 +749,6 @@ SelectRegion() {
   m_regionData[m_currentRegion].UpdateWeight();
 
   return m_currentRegion;
-}
-
-
-template <typename MPTraits>
-typename Syclop<MPTraits>::VID
-Syclop<MPTraits>::
-SelectVertex(const WorkspaceRegion* const _r) {
-  const auto& vertices = m_regionData[_r].vertices;
-
-  // Sanity check.
-  if(vertices.empty())
-    throw RunTimeException(WHERE) << "Tried to select a vertex from a region "
-                                  << "with no vertices.";
-
-  const size_t randomIndex = LRand() % vertices.size();
-  const VID selected = vertices[randomIndex];
-
-  if(this->m_debug)
-    std::cout << "Selected VID " << selected << " out of " << vertices.size()
-              << " vertices in the current region." << std::endl;
-  return selected;
 }
 
 /*------------------------------ Syclop Helpers ------------------------------*/

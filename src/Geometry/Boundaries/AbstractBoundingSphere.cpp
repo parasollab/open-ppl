@@ -72,6 +72,13 @@ GetCenter() const noexcept {
   return NSphere::GetCenter();
 }
 
+
+double
+AbstractBoundingSphere::
+GetVolume() const noexcept {
+  return NSphere::GetVolume();
+}
+
 /*-------------------------------- Sampling ----------------------------------*/
 
 std::vector<double>

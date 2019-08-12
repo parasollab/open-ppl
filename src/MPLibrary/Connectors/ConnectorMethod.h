@@ -72,11 +72,9 @@ namespace pmpl_detail {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base algorithm abstraction for \ref Connectors.
-///
-/// ConnectorMethod essentially has one important function, @c Connect which can
-/// be called in a multitude of ways. In its basic forms it takes two sets of
-/// configurations and generates edges in the roadmap between them.
+/// Base algorithm abstraction for \ref Connectors. Connectors attempt to
+/// connect each of a first set of roadmap vertices to each of a second set of
+/// roadmap vertices (successes generate new edges in the roadmap).
 ///
 /// @todo Adjust connection caching so that it considers the originating roadmap
 ///       as well. Currently it will give incorrect results if we use the same
@@ -85,11 +83,7 @@ namespace pmpl_detail {
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-#ifdef _PARALLEL
-class ConnectorMethod : public MPBaseObject<MPTraits>, public stapl::p_object
-#else
 class ConnectorMethod : public MPBaseObject<MPTraits>
-#endif
 {
   public:
 
@@ -113,7 +107,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@name Construction
     ///@{
 
-    ConnectorMethod(std::string _lpLabel = "", std::string _nfLabel = "");
+    ConnectorMethod();
 
     ConnectorMethod(XMLNode& _node);
 
@@ -133,12 +127,20 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
     /// Generate edges between two sets of nodes. Uses the entire roadmap as the
     /// first and second set of nodes.
+    /// @param _r The roadmap to connect.
+    /// @param _collision Output for obstacle cfgs discovered during connection
+    ///                   attempts.
     template <typename AbstractRoadmapType,
               typename OutputIterator = NullOutputIterator>
-    void Connect(AbstractRoadmapType* _r, OutputIterator _collision = OutputIterator());
+    void Connect(AbstractRoadmapType* _r,
+        OutputIterator _collision = OutputIterator());
 
     /// Generate edges between two sets of nodes. Uses a single node as the
     /// first set of nodes and the entire roadmap as second set of nodes.
+    /// @param _r The roadmap to connect.
+    /// @param _vid The vertex to connect to the rest of the roadmap.
+    /// @param _collision Output for obstacle cfgs discovered during connection
+    ///                   attempts.
     template <typename AbstractRoadmapType,
               typename OutputIterator = NullOutputIterator>
     void Connect(AbstractRoadmapType* _r, VID _vid,
@@ -146,6 +148,11 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
     /// Generate edges between two sets of nodes. Uses entire roadmap as second
     /// set of nodes.
+    /// @param _r The roadmap to connect.
+    /// @param _itrFirst Begin iterator to the first set of nodes.
+    /// @param _itrLast  End iterator to the first set of nodes.
+    /// @param _collision Output for obstacle cfgs discovered during connection
+    ///                   attempts.
     template <typename AbstractRoadmapType, typename InputIterator,
               typename OutputIterator = NullOutputIterator>
     void Connect(AbstractRoadmapType* _r, InputIterator _itrFirst,
@@ -153,6 +160,16 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
     /// Generate edges between two sets of nodes. Uses a single VID as the first
     /// set of nodes.
+    /// @param _r The roadmap to connect.
+    /// @param _vid The vertex to connect to the second set of nodes.
+    /// @param _itrFirst Begin iterator to the second set of nodes.
+    /// @param _itrLast  End iterator to the second set of nodes.
+    /// @param _fromFullRoadmap True if [_itrFirst, _itrLast) is the full
+    ///                         roadmap. This implies using the saved internal
+    ///                         NF model for finding neighbors with advanced
+    ///                         NFMethods.
+    /// @param _collision Output for obstacle cfgs discovered during connection
+    ///                   attempts.
     template <typename AbstractRoadmapType, typename InputIterator,
               typename OutputIterator = NullOutputIterator>
     void Connect(AbstractRoadmapType* _r, VID _vid,
@@ -169,7 +186,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     /// @param _fromFullRoadmap True if [_itr2First, _itr2Last) is the full
     ///                         roadmap. This implies using the saved internal
     ///                         NF model for finding neighbors with advanced
-    ///                         NFMethods.
+    ///                         NF methods.
     /// @param _collision Output iterator to store collision witnesses
     template <typename AbstractRoadmapType, typename InputIterator1,
               typename InputIterator2,
@@ -179,6 +196,10 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
         OutputIterator _collision = OutputIterator());
+
+    /// Check whether this is a rewiring connector (which may delete edges).
+    /// @return True if this is a rewiring connector.
+    bool IsRewiring() const noexcept;
 
     ///@}
 
@@ -252,12 +273,13 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@name Internal State
     ///@{
 
-    ConnectionAttemptsCache m_attemptsCache; ///< All time connection attempts.
-    std::string m_nfLabel;                   ///< Neighborhood Finder
+    ConnectionAttemptsCache m_attemptsCache; ///< All failed connection attempts.
     std::string m_lpLabel;                   ///< Local Planner
 
     bool m_skipIfSameCC{true};  ///< Skip connections within the same CC?
     size_t m_maxFailures{0};    ///< Maximum allowed failures per iteration.
+
+    bool m_rewiring{false};     ///< Does this connector delete edges?
 
     ///@}
 
@@ -267,15 +289,13 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
 template <typename MPTraits>
 ConnectorMethod<MPTraits>::
-ConnectorMethod(std::string _nfLabel, std::string _lpLabel) :
-    m_nfLabel(_nfLabel), m_lpLabel(_lpLabel) {
-}
+ConnectorMethod()
+{ }
 
 
 template <typename MPTraits>
 ConnectorMethod<MPTraits>::
 ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
   m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
 
   m_skipIfSameCC = _node.Read("checkIfSameCC", false, m_skipIfSameCC,
@@ -293,8 +313,7 @@ void
 ConnectorMethod<MPTraits>::
 Print(std::ostream& _os) const {
   MPBaseObject<MPTraits>::Print(_os);
-  _os << "\tnfLabel: " << m_nfLabel
-      << "\n\tlpLabel: " << m_lpLabel
+  _os << "\n\tlpLabel: " << m_lpLabel
       << "\n\tskip if same cc: " << m_skipIfSameCC
       << "\n\tmax failures: " << m_maxFailures
       << std::endl;
@@ -372,6 +391,15 @@ Connect(AbstractRoadmapType* _r,
         this, _r, _itr1First, _itr1Last,
         _itr2First, _itr2Last, _fromFullRoadmap, _collision)
       );
+}
+
+
+template <typename MPTraits>
+inline
+bool
+ConnectorMethod<MPTraits>::
+IsRewiring() const noexcept {
+  return m_rewiring;
 }
 
 /*--------------------------- Connection Helpers -----------------------------*/

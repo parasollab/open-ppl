@@ -112,7 +112,7 @@ RadiusNF<MPTraits>::
 Print(std::ostream& _os) const {
   NeighborhoodFinderMethod<MPTraits>::Print(_os);
   _os << "\tradius: " << this->m_radius
-      << "\n\tuse nearest: " << m_useFallback
+      << "\n\tfallback to nearest: " << m_useFallback
       << std::endl;
 }
 

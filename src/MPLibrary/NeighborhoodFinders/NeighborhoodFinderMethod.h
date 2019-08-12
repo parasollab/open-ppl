@@ -169,7 +169,6 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     enum class Type {
       K,       ///< k-closest neighbors
       RADIUS,  ///< All neighbors within a radius
-      OPTIMAL, ///< Optimal neighbors
       APPROX,  ///< Approximate nearest neighbors
       OTHER    ///< Something else
     };
@@ -216,8 +215,12 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@name NeighborhoodFinder Interface
     ///@{
 
-    /// Hax
-    /// @param _candidates The set of allowed VIDs.
+    /// Some methods can be implemented more efficiently if the candidates are
+    /// provided in a hash set. This function is to support that; the default
+    /// implementation forwards to the iterator version.
+    /// @param _rmp The roadmap.
+    /// @param _cfg The query configuration.
+    /// @param _candidates The set of candidate VIDs.
     /// @param _out Output location.
     virtual void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
         const std::unordered_set<VID>& _candidates,
@@ -323,6 +326,9 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@}
     ///@name Internal State
     ///@{
+    /// @todo Remove m_k and m_radius - these don't apply to all NFs so it
+    ///       doesn't make sense to have them here. Fix design errors in
+    ///       SRT method which require this.
 
     Type m_nfType{Type::OTHER}; ///< Type of neighborhood finder.
     size_t m_k{0};              ///< How many closest neighbors to find?

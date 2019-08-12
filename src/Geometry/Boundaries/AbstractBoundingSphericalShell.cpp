@@ -74,6 +74,13 @@ GetCenter() const noexcept {
   return NSphericalShell::GetCenter();
 }
 
+
+double
+AbstractBoundingSphericalShell::
+GetVolume() const noexcept {
+  return NSphericalShell::GetVolume();
+}
+
 /*-------------------------------- Sampling ----------------------------------*/
 
 std::vector<double>

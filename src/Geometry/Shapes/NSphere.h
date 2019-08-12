@@ -61,6 +61,9 @@ class NSphere {
     /// @param _v The translation vector to apply.
     void Translate(const std::vector<double>& _v) noexcept;
 
+    /// Compute the (hyper)volume or Lebesgue measure.
+    double GetVolume() const noexcept;
+
     ///@}
     ///@name Point Testing
     ///@{

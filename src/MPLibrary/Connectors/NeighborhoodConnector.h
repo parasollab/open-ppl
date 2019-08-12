@@ -5,7 +5,9 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Connect nearby neighbors together.
+/// Connect nearby neighbors together. In this method, the 'second set' of
+/// vertices referred to by ConnectorMethod is determined by a earest neighbors
+/// method.
 ///
 /// Connect nodes in map to their neighbors. The following algorithm is used:
 /// - for each node, cfg1, in roadmap
@@ -41,6 +43,12 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     virtual ~NeighborhoodConnector() = default;
 
     ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
     ///@name ConnectorMethod Interface
     ///@{
 
@@ -51,6 +59,15 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
         OutputIterator _collision);
+
+    ///@}
+
+  protected:
+
+    ///@name Internal State
+    ///@{
+
+    std::string m_nfLabel;   ///< NeighborhoodFinder for selecting connections.
 
     ///@}
 
@@ -69,6 +86,20 @@ template <typename MPTraits>
 NeighborhoodConnector<MPTraits>::
 NeighborhoodConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   this->SetName("NeighborhoodConnector");
+
+  m_nfLabel = _node.Read("nfLabel", true, "",
+      "The neighborhood finder for identifying connections to attempt.");
+}
+
+/*------------------------- MPBaseObject Overrides ---------------------------*/
+
+template <typename MPTraits>
+void
+NeighborhoodConnector<MPTraits>::
+Print(std::ostream& _os) const {
+  ConnectorMethod<MPTraits>::Print(_os);
+  _os << "\tnfLabel: " << m_nfLabel
+      << std::endl;
 }
 
 /*------------------------ ConnectorMethod Interface -------------------------*/
@@ -84,7 +115,7 @@ Connect(AbstractRoadmapType* _rm,
     bool _fromFullRoadmap,
     OutputIterator _collision) {
 
-  auto nfptr = this->GetNeighborhoodFinder(this->m_nfLabel);
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
 
   if(this->m_debug)
     std::cout << this->GetName() << "::Connect"
@@ -105,7 +136,7 @@ Connect(AbstractRoadmapType* _rm,
 
     // Determine nearest neighbors.
     closest.clear();
-    nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
+    nf->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
         std::back_inserter(closest));
 
     // Attempt connections.

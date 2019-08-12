@@ -49,6 +49,8 @@ class AbstractBoundingSphere : public Boundary, public NSphere {
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
+    virtual double GetVolume() const noexcept override;
+
     ///@}
     ///@name Sampling
     ///@{

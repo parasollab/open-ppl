@@ -67,6 +67,16 @@ Translate(const std::vector<double>& _v) noexcept {
     m_center[i] += _v[i];
 }
 
+
+double
+NSphere::
+GetVolume() const noexcept {
+  // Ref: https://en.wikipedia.org/wiki/Volume_of_an_n-ball
+  const double d     = GetDimension(),
+               halfD = d / 2.;
+  return std::pow(m_radius, d) * std::pow(PI, halfD) / std::tgamma(halfD + 1);
+}
+
 /*--------------------------------- Testing ----------------------------------*/
 
 bool
