@@ -271,8 +271,6 @@ class MPLibraryType final
     const std::string& GetBaseFilename() const noexcept;
     void SetBaseFilename(const std::string& _s) noexcept;
 
-
-
     ///@}
     ///@name Solution Accessors
     ///@{
@@ -817,11 +815,11 @@ GetPath(Robot* const _r) const noexcept {
   return m_solution->GetPath(_r ? _r : GetTask()->GetRobot());
 }
 
+
 template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 SetPath(Robot* const _r, Path* &_path)  noexcept {
-    //std::cout << "MPLibrary path " << _path->VIDs() << std::endl;
     m_solution->SetPath(_r,_path);
 }
 

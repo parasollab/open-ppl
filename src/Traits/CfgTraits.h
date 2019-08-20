@@ -23,7 +23,6 @@
 #include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
 #include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/RMSDDistance.h"
-#include "MPLibrary/DistanceMetrics/RotationTime.h"
 #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"

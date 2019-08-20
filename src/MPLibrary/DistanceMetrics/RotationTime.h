@@ -1,5 +1,5 @@
 #ifndef PMPL_ROTATION_TIME_H_
-#define PMPL_rOTATION_TIME_H_
+#define PMPL_ROTATION_TIME_H_
 
 #include "DistanceMetricMethod.h"
 

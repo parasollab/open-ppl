@@ -227,57 +227,16 @@ PathType<MPTraits>::
 FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   if(m_vids.empty())
     return std::vector<CfgType>();
-
+  // Inserting first vertex cfg
   std::vector<CfgType> out = {m_roadmap->GetVertex(m_vids.front())};
 
-  // Set up local planner to recreate edges. If none was provided, use edge
-  // planner, or fall back to straight-line.
-  auto env = _lib->GetMPProblem()->GetEnvironment();
-
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
-    // Get the next edge.
-    bool validEdge = false;
-    typename RoadmapType::adj_edge_iterator ei;
-    {
-      typename RoadmapType::edge_descriptor ed(*it, *(it+1));
-      typename RoadmapType::vertex_iterator vi;
-      validEdge = m_roadmap->find_edge(ed, vi, ei);
-    }
-
-    if(!validEdge)
-      throw RunTimeException(WHERE) << "Edge from " << *it << " to " << *(it+1)
-                                    << " doesn't exist in roadmap!";
-
-    // Use the local planner from parameter if specified.
-    // If not specified, use the edge lp.
-    // Fall back to straight-line if edge lp is not available (this will always
-    // happen if it was grown with an extender).
-    typename MPLibrary::LocalPlannerPointer lp;
-    if(!_lp.empty())
-      lp = _lib->GetLocalPlanner(_lp);
-    else {
-      try {
-        lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
-      }
-      catch(...) {
-        lp = _lib->GetLocalPlanner("sl");
-      }
-    }
-
-    // Recreate this edge, including intermediates.
-    CfgType& start = m_roadmap->GetVertex(*it);
-    CfgType& end   = m_roadmap->GetVertex(*(it+1));
-
-    // Construct a resolution-level path along the recreated edge.
-    std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
-    recreatedEdge.insert(recreatedEdge.begin(), start);
-    recreatedEdge.push_back(end);
-    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-      std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
-      out.insert(out.end(), edge.begin(), edge.end());
-    }
-    out.push_back(end);
+    // Inserting intermediates between vertices
+    std::vector<CfgType> edge = m_roadmap->ReconstructEdge(_lib, 
+      *it, *(it+1));
+    out.insert(out.end(), edge.begin(), edge.end());
+    //Inserting next vertex cfg
+    out.push_back(this->GetRoadmap()->GetVertex(*(it+1)));
   }
   return out;
 }

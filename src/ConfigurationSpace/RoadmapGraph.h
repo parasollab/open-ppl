@@ -142,6 +142,17 @@ class RoadmapGraph : public
     virtual void AddEdge(const VID _source, const VID _target,
         const std::pair<Edge, Edge>& _w) noexcept;
 
+    /// Reconstruct the intermediates of an edge by calling a local planner 
+    /// method(just intermediates, source and target cfgs are not included).
+    /// @param _lib The MPLibrary pointer.
+    /// @param _source The source VID.
+    /// @param _target The target VID.
+    /// @param _lp The local planner.
+    template<typename MPLibrary>
+    std::vector<Vertex> ReconstructEdge(MPLibrary* const _lib, 
+      const VID _source, const VID _target, const std::string& _lp = "") ;
+
+
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
@@ -167,7 +178,7 @@ class RoadmapGraph : public
     size_t Size() const noexcept;
 
     /// Check if a vertex is present in the graph.
-    /// @param _vid  The vertex descriptor
+    /// @param _vid  The vertex descriptorE 424 Principles of Mobile Robotic
     /// @return True if the vertex descriptor was found in the graph.
     bool IsVertex(const VID _vid) const noexcept;
 
@@ -251,9 +262,10 @@ class RoadmapGraph : public
     /// Clear all lazy invalidations.
     void ClearInvalidated() noexcept;
 
-     /// Clear all lazy invalidations.
+    /// Clear all lazy invalidations.
     void ClearInvalidatedAt() noexcept;
 
+    /// Clear all cfg lazy invalidations.
     void ClearConflictCfgsAt() noexcept;
 
     /// Check if a vertex is lazily invalidated.
@@ -285,10 +297,6 @@ class RoadmapGraph : public
     /// @return     True if _eid is lazily invalidated.
     bool IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance,
         double _targetDistance) const noexcept;
-
-    bool IsEdgeInConflictAt(const EdgeID _eid, double _sourceDistance,
-        double _targetDistance) const noexcept;
-
 
     /// @overload This version takes the source and target VIDs for an edge.
     /// @param _source The VID of the source vertex.
@@ -334,10 +342,14 @@ class RoadmapGraph : public
     void SetEdgeInvalidated(const VID _source, const VID _target,
         const bool _invalid = true) noexcept;
 
+    /// @param _v  The cfg we want to invalidate.
+    /// @param _conflictTimestep The timestep when cfg is invalid
+    /// @param _invalid The invalid status to set.
     void SetConflictCfgAt(Vertex _v, double _conflictTimestep,
         const bool _invalid) noexcept;
 
-    std::vector<std::pair<Vertex,double>> m_conflictCfgsAt;
+    /// @return All pair of conflicting cfgs and conflicting timesteps.
+    const vector<pair<Vertex, double>>& GetAllConflictsCfgAt();
 
     ///@}
     ///@name Hooks
@@ -487,6 +499,9 @@ class RoadmapGraph : public
 
     InvalidVertexAtSet m_invalidVerticesAt; ///< Set of lazy-invalidated vertices.
     InvalidEdgeAtSet m_invalidEdgesAt;      ///< Set of lazy-invalidated edges.
+
+    std::vector<std::pair<Vertex,double>> m_conflictCfgsAt; ///< Set of invalid 
+    /// pairs (cfg timestep)
 
     ///@}
 
@@ -651,6 +666,61 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
         std::to_string(_target) + ") does not exist.");
 
   DeleteEdge(edgeIterator);
+}
+
+
+template <typename Vertex, typename Edge>
+template< typename MPLibrary>
+std::vector<Vertex>
+RoadmapGraph<Vertex, Edge>::
+ReconstructEdge(MPLibrary* const _lib, const VID _source, 
+    const VID _target, const std::string& _lp ) {
+  std::vector<Vertex> out;
+  // First check that an actual edge exists in this roadmap
+  bool validEdge = false;
+  EI ei;
+  {
+    EID ed(_source, _target);
+    VI vi;
+    validEdge = this->find_edge(ed, vi, ei);
+  }
+
+  if(!validEdge)
+    throw RunTimeException(WHERE) << "Edge from " << _source << " to " << _target
+                                  << " doesn't exist in roadmap!";
+  // Recreate this edge, including intermediates.
+  Vertex& start = this->GetVertex(_source);
+  Vertex& end   = this->GetVertex(_target);
+
+  // Set up local planner to recreate edges. If none was provided, use edge
+  // planner, or fall back to straight-line.
+  auto env = _lib->GetMPProblem()->GetEnvironment();
+
+  // Use the local planner from parameter if specified.
+  // If not specified, use the edge lp.
+  // Fall back to straight-line if edge lp is not available (this will always
+  // happen if it was grown with an extender).
+  typename MPLibrary::LocalPlannerPointer lp;
+  if(!_lp.empty())
+    lp = _lib->GetLocalPlanner(_lp);
+  else {
+    try {
+      lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
+    }
+    catch(...) {
+      lp = _lib->GetLocalPlanner("sl");
+    }
+  }
+  // Construct a resolution-level path along the recreated edge.
+  std::vector<Vertex> recreatedEdge = ei->property().GetIntermediates();
+  recreatedEdge.insert(recreatedEdge.begin(), start);
+  recreatedEdge.push_back(end);
+  for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
+    std::vector<Vertex> edge = lp->ReconstructPath(*cit, *(cit+1),
+        std::vector<Vertex>(), env->GetPositionRes(), env->GetOrientationRes());
+    out.insert(out.end(), edge.begin(), edge.end());
+  }
+  return out;
 }
 
 
@@ -1105,7 +1175,12 @@ SetConflictCfgAt(Vertex _v, double _conflictTimestep, const bool _invalid)
   }
 }
 
-
+template <typename Vertex, typename Edge>
+const vector<pair<Vertex, double>>&
+RoadmapGraph<Vertex, Edge>::
+GetAllConflictsCfgAt() {
+    return m_conflictCfgsAt;
+}
 
 /*--------------------------------- Hooks ------------------------------------*/
 

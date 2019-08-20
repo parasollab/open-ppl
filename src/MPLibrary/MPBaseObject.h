@@ -204,6 +204,7 @@ class MPBaseObject {
     /// Get the current best path.
     Path* GetPath(Robot* const _r = nullptr) const noexcept;
 
+    /// Set a new valid path.
     void SetPath(Robot* const _r, Path* _path) noexcept;
 
     /// Get the current best group path.
@@ -526,7 +527,6 @@ inline
 void
 MPBaseObject<MPTraits>::
 SetPath(Robot* const _r, Path* _path)  noexcept {
-  //std::cout << "MPBaseObject path " << _path->VIDs() << std::endl;
   m_library->SetPath(_r,_path);
 }
 

@@ -83,7 +83,7 @@ class MPSolutionType final {
 
     void SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept;
 
-    void SetPath(Robot* const _r, Path* &_path) noexcept;
+    void SetPath(Robot* const _r, Path* _path) noexcept;
 
     ///@}
     ///@name Accessors
@@ -220,22 +220,14 @@ SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
 template <typename MPTraits>
 void
 MPSolutionType<MPTraits>::
-SetPath(Robot* const _r, Path*  &_path) noexcept {
-  //std::cout << "MPSolution path " << _path->VIDs() << std::endl;
-  //auto robotSolution = GetRobotSolution(_r);
-  // Forces the destructor call of the current path.
-  //if(robotSolution->path.get())
-    //robotSolution->path.~std::unique_ptr<Path>();
-  //robotSolution->path.reset(_path);
+SetPath(Robot* const _r, Path*  _path) noexcept {
+  auto robotSolution = GetRobotSolution(_r);
+  if(!robotSolution){//master had without the not !
+    throw RunTimeException(WHERE) << "Cannot set path for robot that does not "
+                                  << "have a solution.";
+  }
   m_individualSolutions[_r].path.release();
   m_individualSolutions[_r].path.reset(_path);
-  //*(m_individualSolutions[_r].path) = *_path;
-  //m_individualSolutions[_r].path = _path;
-  //auto s = GetRobotSolution(_r);
-  //auto p = s->path.get();
-  //std::cout << "MPSolution path " << p->VIDs() << std::endl;
-
-  //robotSolution->path = std::make_unique(_path);
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/

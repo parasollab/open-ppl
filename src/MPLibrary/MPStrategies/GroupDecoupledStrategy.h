@@ -160,13 +160,12 @@ Finalize() {
 
     if(path and path->Size()) {
       const std::string base = this->GetBaseFilename();
-      ::WritePath(base +"robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
-      // Check to make sure this works.
-      ::WritePath(base +"robot"+ std::to_string(i) + ".path",
+      ::WritePath(base +".robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
+      ::WritePath(base +".robot"+ std::to_string(i) + ".path",
         path->FullCfgs(this->GetMPLibrary()));
       vector<CfgType> dummy = path->Cfgs();
       auto roadmap = this->GetRoadmap(dummy[0].GetRobot());
-      roadmap->Write(base +"robot"+ std::to_string(i) + ".map", this->GetEnvironment());
+      roadmap->Write(base +".robot"+ std::to_string(i) + ".map", this->GetEnvironment());
     }
     ++i;
 

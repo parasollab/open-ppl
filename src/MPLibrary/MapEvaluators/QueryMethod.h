@@ -42,6 +42,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::RoadmapType          RoadmapType;
+    typedef typename MPTraits::CfgType              CfgType;
     typedef typename RoadmapType::VID               VID;
     typedef typename RoadmapType::EdgeID            EdgeID;
     typedef typename MPTraits::GoalTracker          GoalTracker;
@@ -337,8 +338,7 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
                     const double _targetDistance) {
       return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
     };
-  } else if(this->GetMPProblem()->GetDynamicObstacles().empty() and
-  	this->GetMPProblem()->NumRobots()) {
+  } else if(this->GetMPProblem()->NumRobots() >= 2) {
     weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
                     const double _sourceDistance,
                     const double _targetDistance) {
@@ -451,6 +451,7 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
   return false;
 }
 
+
 template <typename MPTraits>
 double
 QueryMethod<MPTraits>::
@@ -475,12 +476,12 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   return newDistance;
 }
 
+
 template <typename MPTraits>
 double
 QueryMethod<MPTraits>::
 DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-
   // First check if the edge is lazily invalidated. If so, the distance is
   // infinite.
   if(m_roadmap->IsEdgeInvalidated(_ei->id()))
@@ -493,37 +494,56 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
   // If this edge isn't better than the previous, we won't use it regardless
   // and can return without checking the dynamic obstacles.
-  if(newDistance >= _targetDistance) {
-    if(this->m_debug)
-      std::cout << "Breaking because the path is not optimal."
-                << std::endl;
-    return newDistance;
-  }
+  // if(newDistance >= _targetDistance) {
+  //   if(this->m_debug)
+  //     std::cout << "Breaking because the path is not optimal."
+  //               << std::endl;
+  //   return newDistance;
+  // }
 
   // Get the graph and safe interval tool.
-  auto g = this->GetRoadmap();
+  //auto g = this->GetRoadmap();
   SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool(
       m_safeIntervalLabel);
 
-  // Ensure that the target vertex is contained within a SafeInterval when
-  // arriving.
-  auto vertexIntervals = siTool->ComputeIntervals(g->GetVertex(_ei->target()));
-  if(!(siTool->ContainsTimestep(vertexIntervals, newDistance))) {
-    if(this->m_debug)
-      std::cout << "Breaking because the target vertex is dynamically invalid."
-                << "\n\tvertexIntervals: " << vertexIntervals
-                << std::endl;
+  if(!siTool->IsEdgeDynamicallySafe(m_roadmap->GetVertex(_ei->source()),m_roadmap
+            ->GetVertex(_ei->target()), _sourceDistance, _targetDistance)) {
+    // if(this->m_debug) {
+    //   std::cout << "Invalidating conflicting edge (" << _ei->source()
+    //    << "," << _ei->target() << ")" << "at timestep "
+    //    << conflictTimestep << std::endl;
+    // }
+    // If the edge gets invalidadted we add it to the EdgeInvalidated
+    // List to avoid future collision checkings
+    // m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(),
+    //   conflictTimestep, true);
     return std::numeric_limits<double>::infinity();
   }
 
-  // Ensure that the edge is contained within a SafeInterval if leaving now.
-  auto edgeIntervals = siTool->ComputeIntervals(_ei->property(),_ei->source(),_ei->target(),g->GetVertex(_ei->source()) );
-  if(!(siTool->ContainsTimestep(edgeIntervals, _sourceDistance))){
-    if(this->m_debug)
-      std::cout << "Breaking because the edge is dynamically invalid."
-                << std::endl;
-    return std::numeric_limits<double>::infinity();
-  }
+  // ------------------------------------------------------------------------
+  // This part is commented beacause don't want to compute the safe intervals
+  //------------------------------------------------------------------------
+  // Ensure that the target vertex is contained within a SafeInterval when
+  // arriving.
+  // auto vertexIntervals = siTool->ComputeIntervals(g->GetVertex(_ei->target()));
+  // if(!(siTool->ContainsTimestep(vertexIntervals, newDistance))) {
+  //   if(this->m_debug)
+  //     std::cout << "Breaking because the target vertex is dynamically invalid."
+  //               << "\n\tvertexIntervals: " << vertexIntervals
+  //               << std::endl;
+  //   return std::numeric_limits<double>::infinity();
+  // }
+
+  // // Ensure that the edge is contained within a SafeInterval if leaving now.
+  // auto edgeIntervals = siTool->ComputeIntervals(_ei->property(),_ei->source(),
+  // _ei->target(),g->GetVertex(_ei->source()) );
+  // if(!(siTool->ContainsTimestep(edgeIntervals, _sourceDistance))){
+  //   if(this->m_debug)
+  //     std::cout << "Breaking because the edge is dynamically invalid."
+  //               << std::endl;
+  //   return std::numeric_limits<double>::infinity();
+  // }
+  // --------------------------------------------------------------------------
 
   // If we're still here, the edge is OK.
   return newDistance;
@@ -542,51 +562,40 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
    	if(this->m_debug)
     	std::cout << "EDGE INVALIDATED!!!" << std::endl;
     return std::numeric_limits<double>::infinity();
-  } else {
-  	// If the edge is not invalidated, we will go trough the ConflictCfg List
-  	// to obtain all the conflicting timesteps
-    const std::vector<std::pair<CfgType,double>>& conflictCfgsAt = m_roadmap->
-    	m_conflictCfgsAt;
-    double conflictTimestep = 0;
-    for(size_t i = 0 ; i <  conflictCfgsAt.size() ; ++i){
-        conflictTimestep = conflictCfgsAt[i].second;
-        // If the edge contains one of the conflicting timesteps we perform a
-        // collision checking over the whole edge against the corresponding
-        // conflicting cfg
-        if(conflictTimestep*1.1 > _sourceDistance && conflictTimestep < (
-        		_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))*1.1
-        	) {
-          SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->
-        		GetSafeIntervalTool("SI");
-          if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap
-          	->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
-          	if(this->m_debug) {
-            	std::cout << "Invalidating conflicting edge (" << _ei->source()
-            	 << "," << _ei->target() << ")" << "at timestep "
-            	 << conflictTimestep << std::endl;
-          	}
-          	// If the edge gets invalidadted we add it to the EdgeInvalidated
-          	// List to avoid future collision checkings
-            m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(),
-            	conflictTimestep, true);
-            return std::numeric_limits<double>::infinity();
-          }
+  } 
+	// If the edge is not invalidated, we will go trough the ConflictCfg List
+	// to obtain all the conflicting timesteps
+  const std::vector<std::pair<CfgType,double>>& conflictCfgsAt = m_roadmap->
+  	GetAllConflictsCfgAt();
+  double conflictTimestep = 0;
+  for(size_t i = 0 ; i <  conflictCfgsAt.size() ; ++i){
+      conflictTimestep = conflictCfgsAt[i].second;
+      // If the edge contains one of the conflicting timesteps we perform a
+      // collision checking over the whole edge against the corresponding
+      // conflicting cfg
+      if(conflictTimestep > _sourceDistance && conflictTimestep < (
+      		_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))
+      	) {
+        SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->
+      		GetSafeIntervalTool("SI");
+        if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap
+        	->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
+        	if(this->m_debug) {
+          	std::cout << "Invalidating conflicting edge (" << _ei->source()
+          	 << "," << _ei->target() << ")" << "at timestep "
+          	 << conflictTimestep << std::endl;
+        	}
+        	// If the edge gets invalidadted we add it to the EdgeInvalidated
+        	// List to avoid future collision checkings
+          m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(),
+          	conflictTimestep, true);
+          return std::numeric_limits<double>::infinity();
         }
-    }
+      }
   }
-
-  // Check if Distance Metric has been defined. If so use the Distance Metric's
-  // EdgeWeight function to compute the target distance.
-  if(!m_dmLabel.empty()) {
-    //auto dm = this->GetDistanceMetric(m_dmLabel);
-    return _sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target());
-  }
-
-  // Otherwise use the existing edge weight to compute the distance.
-  const double edgeWeight  = _ei->property().GetWeight(),
-               newDistance = _sourceDistance + edgeWeight;
-  return newDistance;
-}
+  
+  return StaticPathWeight(_ei, _sourceDistance, _targetDistance);
+} 
 
 
 /*----------------------------------------------------------------------------*/
