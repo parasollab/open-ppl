@@ -20,6 +20,8 @@ TaskPlan(const TaskPlan& _other){
   m_memberAgents = _other.m_memberAgents;
   m_interactionTemplates = _other.m_interactionTemplates;
   m_taskCostMap = _other.m_taskCostMap;
+	m_positiveConstraints = _other.m_positiveConstraints;
+	m_posInstantConstraints = _other.m_posInstantConstraints;
 }
 
 TaskPlan::
@@ -44,6 +46,8 @@ operator=(const TaskPlan& _other){
   m_memberAgents = _other.m_memberAgents;
   m_interactionTemplates = _other.m_interactionTemplates;
   m_taskCostMap = _other.m_taskCostMap;
+	m_positiveConstraints = _other.m_positiveConstraints;
+	m_posInstantConstraints = _other.m_posInstantConstraints;
   return *this;
 }
 
@@ -61,6 +65,7 @@ Initialize(){
   }
   InitializeCostMap();
   InitializeRAT();
+	InitializePositiveConstraints();
   GenerateDummyAgents();
   InitializeAgentTaskMap();
 }
@@ -391,4 +396,80 @@ InitializeCostMap(){
   for(auto task : m_wholeTasks){
     m_taskCostMap[task] = std::make_pair(0,MAX_DBL);
   }
+}
+
+/***********************************Positive Constraints*********************/
+
+void 
+TaskPlan::
+InitializePositiveConstraints() {
+	for(auto task : m_wholeTasks) {
+		m_positiveConstraints[task] = {};
+		m_posInstantConstraints[task] = {};
+	}
+}
+
+void 
+TaskPlan::
+AddPositiveConstraint(WholeTask* _task, OccupiedInterval _constraint) {
+	auto& constraints = m_positiveConstraints[_task];
+  if(constraints.empty()){
+    constraints.push_back(_constraint);
+    return;
+  }
+  if(constraints.back() < _constraint){
+    constraints.push_back(_constraint);
+    return;
+  }
+  for(auto it = constraints.begin(); it != constraints.end(); it++){
+    if(_constraint < *it){
+      constraints.insert(it, _constraint);
+      return;
+    }
+  }
+}
+
+std::list<OccupiedInterval>&
+TaskPlan::
+GetPositiveTaskConstraints(WholeTask* _task) {
+	return m_positiveConstraints[_task];
+}
+
+std::unordered_map<WholeTask*,std::list<OccupiedInterval>>&
+TaskPlan::
+GetPositiveConstraints() {
+	return m_positiveConstraints;
+}
+
+void 
+TaskPlan::
+AddPositiveInstantConstraint(WholeTask* _task, HandoffAgent* _agent, double _instant) {
+	auto pair = std::make_pair(_agent,_instant);
+	auto& instants = m_posInstantConstraints[_task];
+  if(instants.empty()){
+    instants.push_back(pair);
+    return;
+  }
+  if(instants.back().second < _instant){
+    instants.push_back(pair);
+    return;
+  }
+  for(auto it = instants.begin(); it != instants.end(); it++){
+    if(_instant < (*it).second){
+      instants.insert(it, pair);
+      return;
+    }
+  }
+}
+
+std::list<std::pair<HandoffAgent*,double>>&
+TaskPlan::
+GetPositiveInstantTaskConstraints(WholeTask* _task) {
+	return m_posInstantConstraints[_task];
+}
+
+std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>>&
+TaskPlan::
+GetPositiveInstantConstraints() {
+	return m_posInstantConstraints;
 }

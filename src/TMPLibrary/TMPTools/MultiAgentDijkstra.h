@@ -45,7 +45,8 @@ class MultiAgentDijkstra : public TMPBaseObject {
         const double _sourceDistance, const double _targetDistance, size_t start, size_t _goal);
 
     double AvailableIntervalPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
-        const double _sourceDistance, const double _targetDistance, size_t start, size_t _goal);
+        const double _sourceDistance, const double _targetDistance, size_t start, size_t _goal,
+				WholeTask* _task);
 
     ///@}
     ///@name member variables

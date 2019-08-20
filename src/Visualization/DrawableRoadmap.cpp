@@ -59,7 +59,8 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
       }
   };
 
-  main_window::get()->add_key_mapping(m_name, std::move(fn));
+  if(main_window::get())
+  	main_window::get()->add_key_mapping(m_name, std::move(fn));
 }
 
 

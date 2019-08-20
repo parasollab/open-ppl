@@ -93,7 +93,7 @@ class InteractionInformation {
     size_t m_maxAttempts;
 
     ///The weight of the edge between interaction cfgs
-    size_t m_interactionWeight{0};
+    double m_interactionWeight{0};
 
     ///The locations for manually placed handoffs
     std::vector<Cfg> m_handoffLocations;

@@ -550,6 +550,14 @@ CreateHighLevelGraph(){
     for(auto pair : it->GetTransformedPositionPairs()){
       auto cfgR = pair.first;//receiving
       auto cfgD = pair.second;//delivering
+			if(this->m_discrete) {
+				int x = int(cfgR[0]+.5);
+				int y = int(cfgR[1] + .5);
+				cfgR.SetData({double(x), double(y), 0});
+				x = int(cfgD[0]+.5);
+				y = int(cfgD[1] + .5);
+				cfgD.SetData({double(x), double(y), 0});
+			}
 
       auto vidR = m_highLevelGraph->AddVertex(cfgR);
       auto vidD = m_highLevelGraph->AddVertex(cfgD);
@@ -733,8 +741,12 @@ CreateAvailableIntervalGraph(){
         continue;
       std::list<OccupiedInterval> rat = agentRAT.second;
       for(auto iter = rat.begin(); iter != rat.end(); iter++) {
-        double startTime = iter->GetEndTime()
-                         + LowLevelGraphPathWeight(iter->GetEndLocation(),cfg);
+				double setupTime = LowLevelGraphPathWeight(iter->GetEndLocation(),cfg);
+		
+				if(setupTime == -1)
+					break;
+	
+        double startTime = iter->GetEndTime() + setupTime; 
 
         auto next = iter;
         next++;

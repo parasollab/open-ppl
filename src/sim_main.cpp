@@ -10,8 +10,8 @@ int
 main(int _argc, char** _argv) {
   try {
     const std::string flag = std::string(_argv[1]);
-    if(_argc < 3 || (flag != "-f" and flag != "-e"))
-      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e} options.xml");
+    if(_argc < 3 || (flag != "-f" and flag != "-e" and flag != "-h"))
+      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e|-h} options.xml");
 
     // Make problem object.
     std::shared_ptr<MPProblem> problem(new MPProblem(_argv[2]));
@@ -35,9 +35,11 @@ main(int _argc, char** _argv) {
 
     // Make simulation object.
     const bool editMode = flag == "-e";
+		const bool hidden = flag == "-h";
     Simulation::Create(problem, editMode);
     Simulation* simulation = Simulation::Get();
 
+		simulation->start();
     // Make visualizer object.
     QApplication app(_argc, _argv);
     main_window window;
@@ -48,7 +50,8 @@ main(int _argc, char** _argv) {
 
     // Load the simulation into the visualizer and start it.
     window.visualization(simulation);
-    window.show();
+    if(!hidden)
+			window.show();
     window.gl()->start();
     app.exec();
 

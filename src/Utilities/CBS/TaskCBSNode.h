@@ -151,6 +151,17 @@ TaskCBSNode(TaskCBSNode<WholeTask, OccupiedInterval>* _parentNode,
       m_plan->UpdateTIM(ti.first,*it);
     }
   }
+	for(auto agentCon : _parentNode->GetTaskPlan()->GetPositiveConstraints()) {
+		for(auto con : agentCon.second) {
+			m_plan->AddPositiveConstraint(agentCon.first, con);
+		}
+	}
+
+	for(auto agentInst : _parentNode->GetTaskPlan()->GetPositiveInstantConstraints()) {
+		for(auto inst : agentInst.second) {
+			m_plan->AddPositiveInstantConstraint(agentInst.first, inst.first, inst.second);
+		}
+	}
   //m_plan->ClearTaskIntervals(this->m_toReplan);
 
   //delete later

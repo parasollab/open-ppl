@@ -158,7 +158,23 @@ class TaskPlan {
 
     void AddInteractionTemplate(InteractionTemplate*);
 
+		///@}
+		///@name Positive Constraints
+		///@{
 
+		void InitializePositiveConstraints();
+
+		void AddPositiveConstraint(WholeTask* _task, OccupiedInterval);
+
+		std::list<OccupiedInterval>& GetPositiveTaskConstraints(WholeTask* _task);
+
+		std::unordered_map<WholeTask*,std::list<OccupiedInterval>>& GetPositiveConstraints();
+
+		void AddPositiveInstantConstraint(WholeTask* _task, HandoffAgent* _agent, double _instant);
+
+		std::list<std::pair<HandoffAgent*,double>>& GetPositiveInstantTaskConstraints(WholeTask* _task);
+
+		std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>>& GetPositiveInstantConstraints();
 
     ///@}
 
@@ -207,6 +223,9 @@ class TaskPlan {
 
     /// Maps the cost of any solved plans
     std::unordered_map<WholeTask*,std::pair<double,double>> m_taskCostMap;
+
+		std::unordered_map<WholeTask*,std::list<OccupiedInterval>> m_positiveConstraints;
+		std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>> m_posInstantConstraints;
 
 };
 

@@ -690,11 +690,17 @@ GenerateRandomTasks(){
               << "Start: " << samplePoints[0].PrettyPrint() << std::endl
               << "Goal: " << samplePoints[1].PrettyPrint() << std::endl;
 
+		//Temporary for icra discrete stuff
+		auto startCfg = samplePoints[0];
+		startCfg.SetData({std::floor(startCfg[0]),std::floor(startCfg[1]),0});
+		auto goalCfg = samplePoints[1];
+		goalCfg.SetData({std::floor(goalCfg[0]),std::floor(goalCfg[1]),0});
+
     // create tasks from sample start and goal
     std::unique_ptr<CSpaceConstraint> start =
-      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, samplePoints[0]));
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, startCfg));
     std::unique_ptr<CSpaceConstraint> goal =
-      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, samplePoints[1]));
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, goalCfg));
 
     std::unique_ptr<MPTask> task =
       std::unique_ptr<MPTask>(new MPTask(m_robot));

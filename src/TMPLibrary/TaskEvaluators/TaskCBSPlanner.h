@@ -19,10 +19,12 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
     virtual ~TaskCBSPlanner();
 
     ///}@
+    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr) override;
+
+
+  private:
     ///@name Helpers
     ///@{
-
-    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr) override;
 
     /// Adds new nodes that stem from a parent node to the CBS tree.
     std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*>
@@ -53,6 +55,8 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
 
     void FinalizeTaskPlan(std::shared_ptr<TaskPlan> _plan);
 
+		bool IsCardinal(TaskConflict<OccupiedInterval>* _conflict, TaskCBSNode<WholeTask, OccupiedInterval>* _node);
+
     ///@}
     ///@name CBS Variant functions
     ///@{
@@ -62,10 +66,13 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
 									 NewCBSTree<WholeTask, OccupiedInterval>& _tree,
 									 size_t _numConflicts);
 
+		std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>>
+		PrioritizeConflict(std::vector<std::pair<TaskConflict<OccupiedInterval>*,TaskConflict<OccupiedInterval>*>>& _conflictPairs,
+											 TaskCBSNode<WholeTask, OccupiedInterval>* _node);
+
+		void DisjointBranching(std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>> _conflictMap);
 
     ///@}
-
-  private:
     ///@name Internal State
     //@{
 
@@ -73,7 +80,13 @@ class TaskCBSPlanner : public TaskEvaluatorMethod {
 
 		bool m_bypass1;
 
+		bool m_prioritizeConflict;
+
 		bool m_makespan{false};
+
+		bool m_foundCardinal{false};
+
+		bool m_disjointBranching{false};
 
     ///@}
 

@@ -107,8 +107,8 @@ Initialize() {
     throw RunTimeException(WHERE) << "Cannot initialize with a null problem!";
 
   // Require a non-null main window to initialize.
-  if(!main_window::get())
-    throw RunTimeException(WHERE) << "Cannot initialize without a main window!";
+  //if(!main_window::get())
+  //  throw RunTimeException(WHERE) << "Cannot initialize without a main window!";
 
   // Create a bullet engine.
   m_engine = new BulletEngine(m_problem.get());
@@ -125,7 +125,8 @@ Initialize() {
                           at  = ToGLUtils(t * Vector3d(0, 0, -1)),
                           up  = ToGLUtils(t.rotation() * Vector3d(0, 1, 0));
 
-  main_window::get()->gl()->camera()->position(pos, at, up);
+  if(main_window::get())
+		main_window::get()->gl()->camera()->position(pos, at, up);
 }
 
 

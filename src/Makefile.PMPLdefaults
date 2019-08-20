@@ -406,6 +406,7 @@ SIM_SRCS := \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskCBSPlanner.cpp \
+  TMPLibrary/TaskEvaluators/TCBS.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \

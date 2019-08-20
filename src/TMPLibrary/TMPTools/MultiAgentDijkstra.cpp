@@ -53,11 +53,11 @@ Run(WholeTask* _wholeTask, std::shared_ptr<TaskPlan> _plan, std::set<size_t> _va
 
   //Search backwards from goal to start
   SSSPPathWeightFunction<TaskGraph> weight;
-  weight = [this,start,goal](typename AvailableIntervalGraph::adj_edge_iterator& _ei,
+  weight = [this,start,goal,_wholeTask](typename AvailableIntervalGraph::adj_edge_iterator& _ei,
       const double _sourceDistance,
       const double _targetDistance) {
     //return this->MAMTPathWeight(_ei,_sourceDistance,_targetDistance,goal,start);
-    return this->AvailableIntervalPathWeight(_ei,_sourceDistance,_targetDistance,start,goal);
+    return this->AvailableIntervalPathWeight(_ei,_sourceDistance,_targetDistance,start,goal,_wholeTask);
   };
 
   //TODO::Actually call dijkstras
@@ -506,7 +506,8 @@ MAMTPathWeight(typename TaskGraph::adj_edge_iterator& _ei,
 double
 MultiAgentDijkstra::
 AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& _ei,
-    const double _sourceDistance, const double _targetDistance, size_t _start, size_t _goal) {
+    const double _sourceDistance, const double _targetDistance, size_t _start, size_t _goal,
+		WholeTask* _task) {
 
   const double edgeWeight  = _ei->property().GetWeight();
   size_t source = _ei->source();
@@ -524,12 +525,45 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 	}
 
   auto cfg = sg->GetAvailableIntervalGraph()->GetVertex(target);
+  auto sourceCfg = sg->GetAvailableIntervalGraph()->GetVertex(source);
 
   auto transition = sg->ValidTransition(source,target,edgeWeight,_sourceDistance,
                     m_robotUpdates[source][cfg.GetRobot()->GetAgent()]);
 
-  if(transition >= 0)
-      newDistance = _sourceDistance + transition;
+  if(transition >= 0){
+		//TODO::Check if this violates a positive constraint
+		double end = _sourceDistance + transition;
+  	newDistance = end;
+		if(cfg.GetRobot() == sourceCfg.GetRobot()){
+			/*for(auto constraint : this->GetTaskPlan()->GetPositiveTaskConstraints(_task)) {
+				if((_sourceDistance >= constraint.GetStartTime() and _sourceDistance < constraint.GetStartTime())){
+					//or (end <= constraint.GetEndTime() and end > constraint.GetStartTime())) {
+					if(cfg.GetRobot()->GetAgent() != constraint.GetAgent() or
+						 cfg != constraint.GetEndLocation() or 
+							sg->GetAvailableIntervalGraph()->GetVertex(source) != constraint.GetStartLocation()) {
+
+						newDistance = std::numeric_limits<double>::infinity();	
+					}
+					break;
+				}
+			}*/
+			for(auto instant : this->GetTaskPlan()->GetPositiveInstantTaskConstraints(_task)) {
+				if(instant.second >= _sourceDistance and instant.second <= _sourceDistance + transition){
+					if(cfg.GetRobot() != instant.first->GetRobot())
+						newDistance = std::numeric_limits<double>::infinity();
+					break;
+				}
+			}
+		}
+		/*
+		for(auto inst : this->GetTaskPlan()->GetPositiveInstantTaskConstraints(_task)) {
+			if(inst.second >= _sourceDistance and inst.second <= _sourceDistance+transition and
+				 inst.first->GetRobot() != cfg.GetRobot() and inst.first->GetRobot() != sourceCfg.GetRobot())
+				newDistance = std::numeric_limits<double>::infinity();
+		}
+		*/
+  	//newDistance = end;
+	}	
 
   if(newDistance < _targetDistance) {
     m_robotUpdates[target] = m_robotUpdates[source];

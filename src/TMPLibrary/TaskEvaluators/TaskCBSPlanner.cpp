@@ -21,6 +21,8 @@ TaskCBSPlanner(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   m_madLabel = _node.Read("madLabel", true, "", "MultiAgentDijkstra search to use.");
   m_sgLabel = _node.Read("sgLabel",true,"","State graph to use.");
 	m_bypass1 = _node.Read("bypass1",false,false,"Flag to use bypass type 1 or not.");
+	m_prioritizeConflict = _node.Read("prioritize",false,false,"Flag to use prioritize conflict variant.");
+	m_disjointBranching = _node.Read("disjoint",false,false,"Flag to use disjoint branching variant.");
 	m_makespan = _node.Read("makespan",false,false,"Flag to use makespan vs sum of cost.");
 }
 
@@ -93,7 +95,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	numConflicts = numConflicts/2;
   if (!conflictMap.empty()){
 		auto newNodes = GrowTree(initialNode,conflictMap);
-		if(m_bypass1)
+		if(m_bypass1 and !m_foundCardinal)
 			totalNodes += Bypass1(initialNode,newNodes,tree,numConflicts);
 		else {
 			totalNodes += newNodes.size();
@@ -132,6 +134,18 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
     if(node->GetCost(m_makespan) >= minPlanCost and minPlan!=initialPlan)
       //continue;
       break;//Should only reach this point once all nodes are >= current plan cost bc of pq
+
+		if(m_debug) {
+
+			for(auto kv : node->GetTaskPlan()->GetPositiveInstantConstraints()) {
+				std::cout << "Positive instant constraint for : " << kv.first << std::endl;
+				for(auto constraint : kv.second) {
+					std::cout << constraint.first->GetRobot()->GetLabel() << " : " << constraint.second << std::endl;
+				}
+				std::cout << std::endl;
+			}
+		}
+	
 
 		if(node->GetDepth() > maxDepth)
 			maxDepth = node->GetDepth();
@@ -220,7 +234,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
     if (!noConflicts and (node->GetCost(m_makespan) < minPlanCost or minPlan==initialPlan)){
       
 			auto newNodes = GrowTree(node,conflictMap);
-			if(m_bypass1) {
+			if(m_bypass1 and !m_foundCardinal) {
 				size_t numConflicts = 0;
 				for(auto kv : conflictMap) {
 					numConflicts += kv.second.size();
@@ -267,7 +281,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	Simulation::GetStatClass()->SetStat("MaxDepth", maxDepth);
 	Simulation::GetStatClass()->SetStat("MinNodeDepth", minNodeDepth);
 	Simulation::GetStatClass()->SetStat("NodesExplored", nodesExplored);
-	Simulation::GetStatClass()->SetStat("PlanCost", minPlanCost);
+	Simulation::GetStatClass()->SetStat("PlanCost", minPlan->GetEntireCost(m_makespan));
 
   //Restore initial library task plan pointer if a different plan was passed in.
   if(savedPlan)
@@ -287,51 +301,141 @@ GrowTree(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _parentNode,
   std::vector<TaskCBSNode<WholeTask, OccupiedInterval>*> newNodes;
 	auto count = _conflictMap.size();
 	auto index = 0;
-  for (std::pair<WholeTask*, std::vector<NewConflict<OccupiedInterval>*>> kv :
-    // *(_parentNode->GetConflicts())) {
-  	_conflictMap) {
-		for(auto conflict : kv.second){
-			index++;
+
+	if(!m_disjointBranching){
+  	for (std::pair<WholeTask*, std::vector<NewConflict<OccupiedInterval>*>> kv :
+    	// *(_parentNode->GetConflicts())) {
+  		_conflictMap) {
+			for(auto conflict : kv.second){
+				index++;
 		
-			if(m_debug)
-				std::cout << "HERE 1" << std::endl;
 			
-			WholeTask* task = kv.first;
+				WholeTask* task = kv.first;
+	
+				if(conflictedTasks.count(task))
+					continue;
+				conflictedTasks.insert(task);
 
-			if(conflictedTasks.count(task))
-				continue;
-			conflictedTasks.insert(task);
-
-			TaskCBSNode<WholeTask, OccupiedInterval>* newNode = new TaskCBSNode<WholeTask,
-							OccupiedInterval>(_parentNode.get(), this->GetTaskPlan(),task);
+				TaskCBSNode<WholeTask, OccupiedInterval>* newNode = new TaskCBSNode<WholeTask,
+								OccupiedInterval>(_parentNode.get(), this->GetTaskPlan(),task);
 
    	/*for (NewConflict<OccupiedInterval>* conflict :
     	((*(_parentNode->GetConflicts()))[task])){
 	
     	newNode->AddConflict(task, conflict);
     	}*/
-    	InsertConflict((*(newNode->GetConflicts()))[task],conflict);
+    		InsertConflict((*(newNode->GetConflicts()))[task],conflict);
 
-    	auto interval = conflict->GetConstraint();
-    	auto agent = interval.GetAgent();
-    	std::unordered_map<Agent*,std::vector<OccupiedInterval>> updates;
+    		auto interval = conflict->GetConstraint();
+    		auto agent = interval.GetAgent();
+    		std::unordered_map<Agent*,std::vector<OccupiedInterval>> updates;
 
-    	updates[agent].push_back(interval);
+    		updates[agent].push_back(interval);
 
-    	auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
-    	auto vidSets = sg->UpdateAvailableIntervalGraph(updates,newNode->GetToReplan(),
-																										newNode->GetValidVIDs()[newNode->GetToReplan()]);
+    		auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+    		auto vidSets = sg->UpdateAvailableIntervalGraph(updates,newNode->GetToReplan(),
+																											newNode->GetValidVIDs()[newNode->GetToReplan()]);
 
-			if(m_debug) {
-				std::cout << "Updating vids for task " << index << " out of " << count << ": " << task << std::endl;
+				if(m_debug) {
+					std::cout << "Updating vids for task " << index << " out of " << count << ": " << task << std::endl;
+				}
+				newNode->UpdateValidVIDs(vidSets.first,vidSets.second,newNode->GetToReplan());
+				if(m_debug) {
+					std::cout << "Updated vids for task " << index << " out of " << count << ": " << task << std::endl;
+				}
+    		newNodes.push_back(newNode);
 			}
-			newNode->UpdateValidVIDs(vidSets.first,vidSets.second,newNode->GetToReplan());
-			if(m_debug) {
-				std::cout << "Updated vids for task " << index << " out of " << count << ": " << task << std::endl;
-			}
-    	newNodes.push_back(newNode);
+  	}
+	}
+	else {
+		auto conflict = _conflictMap.begin()->second[0];
+		auto task = _conflictMap.begin()->first;
+		
+		TaskCBSNode<WholeTask, OccupiedInterval>* negNode = new TaskCBSNode<WholeTask,
+			OccupiedInterval>(_parentNode.get(), this->GetTaskPlan(),task);
+
+		auto interval = conflict->GetConstraint();
+		auto agent = interval.GetAgent();
+		std::unordered_map<Agent*,std::vector<OccupiedInterval>> updates;
+
+		updates[agent].push_back(interval);
+
+		auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+		auto vidSets = sg->UpdateAvailableIntervalGraph(updates,negNode->GetToReplan(),
+										negNode->GetValidVIDs()[negNode->GetToReplan()]);
+		negNode->UpdateValidVIDs(vidSets.first,vidSets.second,negNode->GetToReplan());
+
+		std::set<size_t> validVIDs = negNode->GetValidVIDs()[negNode->GetToReplan()];
+		auto validSolution = this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(negNode->GetToReplan(),
+        									negNode->GetTaskPlan(),validVIDs);
+		negNode->SetReplanned(true);
+		
+		if(validSolution)
+			newNodes.push_back(negNode);
+
+		auto conflict2 = (_conflictMap.begin()++)->second[0];
+		auto interval2 = conflict2->GetConstraint();
+
+		TaskCBSNode<WholeTask, OccupiedInterval>* posNode = new TaskCBSNode<WholeTask,
+			OccupiedInterval>(_parentNode.get(), this->GetTaskPlan(),task);
+
+		posNode->GetTaskPlan()->AddPositiveConstraint(posNode->GetToReplan(),interval2);
+
+		double instant;
+		if(interval.GetStartTime() >= interval2.GetStartTime() and interval.GetStartTime() <= interval2.GetEndTime())
+			instant = interval.GetStartTime();
+		else if(interval2.GetStartTime() > interval.GetStartTime() and interval2.GetStartTime() < interval.GetStartTime())
+			instant = interval2.GetStartTime();
+		else if(interval2.GetStartTime() > interval.GetEndTime())
+			instant = interval2.GetStartTime();
+		else if(interval2.GetEndTime() > interval.GetStartTime())
+			instant = interval2.GetEndTime();
+		else
+			throw RunTimeException(WHERE,"This is a problem.");
+		
+		posNode->GetTaskPlan()->AddPositiveInstantConstraint(posNode->GetToReplan(),agent,instant);
+
+		for(auto taskInterval : _parentNode->GetTaskPlan()->GetTaskIntervals(task)){
+			posNode->GetTaskPlan()->UpdateTIM(task,taskInterval);
 		}
-  }
+
+		/*for(auto t : posNode->GetTaskPlan()->GetWholeTasks()) {
+			if(t == task)
+				continue;
+
+			for(auto inter : posNode->GetTaskPlan()->GetTaskIntervals(t)) {
+				updates = {};
+				updates[inter.GetAgent()].push_back(inter);
+				vidSets = sg->UpdateAvailableIntervalGraph(updates,t,posNode->GetValidVIDs()[t]);
+				posNode->UpdateValidVIDs(vidSets.first,vidSets.second,t);
+
+      	if (inter.GetAgent() != interval2.GetAgent())
+        	continue;
+
+      	// if intervals do not overlap and are reachable, go to next iteration
+      	if (!(inter.CheckTimeOverlap(interval2))){
+        	if(inter.GetStartTime() < interval2.GetStartTime()){
+          	if(CheckReachable(inter, interval2))
+            	continue;
+        	}
+        	else{
+          	if(CheckReachable(inter, interval2))
+            	continue;
+        	}
+      	}
+				//task plan violates new positive contraint
+				
+				std::set<size_t> validVIDs = posNode->GetValidVIDs()[t];
+				auto validSolution = this->GetTMPTools()->GetMultiAgentDijkstra(m_madLabel)->Run(t,
+        									posNode->GetTaskPlan(),validVIDs);
+				posNode->SetReplanned(true);
+				if(!validSolution)
+					return newNodes;
+				
+			}
+		}*/	
+		newNodes.push_back(posNode);
+	}
   return newNodes;
 }
 
@@ -340,11 +444,15 @@ std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>>
 TaskCBSPlanner::
 FindConflict(TaskCBSNode<WholeTask, OccupiedInterval>* _node){
   std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>> conflictMap;
+
+	std::vector<std::pair<TaskConflict<OccupiedInterval>*,TaskConflict<OccupiedInterval>*>> conflictPairs;
+
   int size = _node->GetTaskPlan()->GetWholeTasks().size();
   for (int i = 0; i < size; i++){
     WholeTask* task = (_node->GetTaskPlan()->GetWholeTasks())[i];
 		conflictMap[task] = {};
 	}
+
   for (int i = 0; i < size - 1; i++){
     WholeTask* firstTask = (_node->GetTaskPlan()->GetWholeTasks())[i];
     for (int j = i + 1; j < size; j ++){
@@ -371,11 +479,17 @@ FindConflict(TaskCBSNode<WholeTask, OccupiedInterval>* _node){
         conflictMap[firstTask].push_back(firstConflict);
         conflictMap[secondTask].push_back(secondConflict);
         //if(!m_bypass1)
+        if(!m_prioritizeConflict)
 					return conflictMap;
+				else {
+					conflictPairs.emplace_back(std::make_pair(firstConflict,secondConflict));
+				}
       }
 
     }
   }
+	if(m_prioritizeConflict)
+		return PrioritizeConflict(conflictPairs,_node);
   return conflictMap;
 }
 
@@ -626,11 +740,30 @@ FinalizeTaskPlan(std::shared_ptr<TaskPlan> _plan){
       previous = subtask;
       ti.first->m_subtasks.push_back(subtask);
       ti.first->m_agentAssignment.push_back(inter.GetAgent());
-      if(m_debug){
+      if(true){
         std::cout << inter.Print() << std::endl;
       }
     }
   }
+
+	if(true) {
+		std::cout << std::endl;
+		for(auto kv : _plan->GetPositiveConstraints()) {
+			std::cout << "Positive constraint for : " << kv.first << std::endl;
+			for(auto constraint : kv.second) {
+				std::cout << constraint.Print() << std::endl;
+			}
+			std::cout << std::endl;
+		}
+		for(auto kv : _plan->GetPositiveInstantConstraints()) {
+			std::cout << "Positive instant constraint for : " << kv.first << std::endl;
+			for(auto constraint : kv.second) {
+				std::cout << constraint.first->GetRobot()->GetLabel() << " : " << constraint.second << std::endl;
+			}
+			std::cout << std::endl;
+		}
+	}
+
   _plan->InitializeAgentTaskMap();
   for (auto& t : trashMap){
     t.second.sort();
@@ -664,8 +797,9 @@ Bypass1(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _node,
 
 		auto conflictMap = FindConflict(child);
 		size_t childConflicts = 0;
-		for(auto kv : conflictMap)
+		for(auto kv : conflictMap) {
 			childConflicts += kv.second.size();
+		}
 		childConflicts = childConflicts/2;
 
 		if(childConflicts < _numConflicts) {
@@ -702,4 +836,133 @@ Bypass1(std::shared_ptr<TaskCBSNode<WholeTask, OccupiedInterval>> _node,
 	}
 
 	return _children.size() - badNodes.size();
+}
+
+std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>>
+TaskCBSPlanner::
+PrioritizeConflict(std::vector<std::pair<TaskConflict<OccupiedInterval>*,TaskConflict<OccupiedInterval>*>>& _conflictPairs,
+									 TaskCBSNode<WholeTask, OccupiedInterval>* _node) {
+
+	std::unordered_map<WholeTask*,std::vector<NewConflict<OccupiedInterval>*>> prioritized;
+	m_foundCardinal = false;	
+	
+	if(_conflictPairs.empty())
+		return prioritized;
+
+	if(m_debug) {	
+  	std::cout << "Robot Availability Table:" << std::endl;
+  	for(auto& ra : _node->GetTaskPlan()->GetRAT()){
+    	std::cout << ra.first << std::endl;
+    	for(auto inter : ra.second) {
+      	std::cout << inter.Print() << std::endl;
+    	}
+  	}
+	}
+
+
+	std::pair<TaskConflict<OccupiedInterval>*,TaskConflict<OccupiedInterval>*> semiCardinal = std::make_pair(nullptr,nullptr);
+	for(auto pair : _conflictPairs) {
+		
+		auto first = IsCardinal(pair.first, _node);
+		auto second = IsCardinal(pair.second, _node);
+		
+		if(first and second) {
+			prioritized[pair.first->GetTask()] = {pair.first};	
+			prioritized[pair.second->GetTask()] = {pair.second};
+			m_foundCardinal = true;	
+			return prioritized;
+		}
+		else if((first or second) and !semiCardinal.first) {
+			semiCardinal = pair;
+		}
+	}
+	
+	if(semiCardinal.first) {
+		prioritized[semiCardinal.first->GetTask()] = {semiCardinal.first};	
+		prioritized[semiCardinal.second->GetTask()] = {semiCardinal.second};	
+		return prioritized;
+	}
+	//TODO:: If no cardinal or semi cardinal conflict, then set prioritized to be first element in _conflictPairs
+	auto pair = _conflictPairs[0];
+	prioritized[pair.first->GetTask()] = {pair.first};	
+	prioritized[pair.second->GetTask()] = {pair.second};	
+	return prioritized;	
+}
+
+bool 
+TaskCBSPlanner::
+IsCardinal(TaskConflict<OccupiedInterval>* _conflict, TaskCBSNode<WholeTask, OccupiedInterval>* _node) {
+
+	auto conflictingAgent = _conflict->GetAgent();
+
+	_node->SetToReplan(_conflict->GetTask());
+	_node->CreateRAT(); 
+
+  auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+
+  double deliveringAvailability = std::numeric_limits<double>::infinity();
+
+	double earliestDelivery = 0;
+
+	auto interval = _conflict->GetConstraint();
+	auto taskIntervals = _node->GetTaskPlan()->GetTaskIntervals(_conflict->GetTask());
+	for(auto iter = taskIntervals.begin(); iter != taskIntervals.end(); iter++) {
+		if(*iter == interval) {
+			if(iter == taskIntervals.end())
+				break;
+			auto previous = *(iter--);
+			double deliveryTime = previous.GetEndTime();
+			auto agent = previous.GetAgent();
+			for(auto constraint : _node->GetTaskPlan()->GetRobotAvailability(agent)) {
+				if(deliveryTime < constraint.GetStartTime())
+					deliveringAvailability = constraint.GetStartTime() - sg->LowLevelGraphPathWeight(previous.GetEndLocation(),constraint.GetStartLocation());
+			}
+
+			earliestDelivery = previous.GetStartTime() + sg->LowLevelGraphPathWeight(previous.GetStartLocation(), previous.GetEndLocation());
+
+			break;
+		}
+	}
+	
+	auto team = _node->GetTaskPlan()->GetTeam();
+
+	for(auto agent : team) {
+		if(agent->GetCapability() != conflictingAgent->GetCapability() or agent == conflictingAgent)
+			continue;
+
+		auto constraints = _node->GetTaskPlan()->GetRobotAvailability(agent);
+		for(auto iter = constraints.begin(); iter != constraints.end(); iter++) {
+			auto constraint = *iter;
+			//check if agent can get there before partner has to leave
+			if(constraint.GetEndTime() > deliveringAvailability) 
+				continue;
+			auto arrivalTime = constraint.GetEndTime() + sg->LowLevelGraphPathWeight(constraint.GetEndLocation(),interval.GetStartLocation());
+			if(arrivalTime > deliveringAvailability)
+				continue;
+
+			auto travelTime = sg->LowLevelGraphPathWeight(interval.GetStartLocation(),interval.GetEndLocation());
+
+			auto startTime = std::max(arrivalTime,earliestDelivery);
+
+			//if(travelTime + startTime > interval.GetEndTime())
+			//	continue;
+
+			auto endAvailability = std::numeric_limits<double>::infinity();
+			auto next = iter;
+			next++;
+			if(next != constraints.end()){
+				auto next = iter;
+				next++;
+				endAvailability = next->GetEndTime() - 
+					sg->LowLevelGraphPathWeight(interval.GetEndLocation(),next->GetEndLocation());
+			}
+
+			if(startTime + travelTime > endAvailability)
+				continue;
+
+			if(startTime + travelTime <= interval.GetEndTime())
+				return false;
+		}		
+	}
+	return true;
 }
