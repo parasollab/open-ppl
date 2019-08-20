@@ -71,16 +71,33 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
+    /// Extracting conflict info from CBSNode, for computing new 
+    /// individual paths.
+    /// @param _currentCBSNode The current CBSNode.
+    /// @param _num_robot An index for the current robot.
+    /// @param _roadmap The current roadmap.
     void SetNewConflictInfo(CBSNode<MPTraits>*& _currentCBSNode, size_t _num_robot, 
       RoadmapType*& _roadmap);
+    
+    /// Adding the new CBSNodes by extrating the conflict info of _pairCfg
+    /// @param _cbsTree The conflict tree.
+    /// @param _pairCfg The pair of conflicting cfgs within their timesteps.
+    /// @param _cbsNodeCost The total cost of the node.
+    void AddingChildCBSNodes(CBSTree<MPTraits>& _cbsTree, 
+      CBSNode<MPTraits>*& _currentCBSNode, PairConflict _pairCfg, double _cbsNodeCost);
 
-    void AddingChildCBSNodes(CBSTree<MPTraits>& _cbsTree, CBSNode<MPTraits>*& _currentCBSNode, 
-      PairConflict _pairCfg, double cbsNodeCost);
-
+    /// Computing the total cost of the paths in GroupTask.
+    /// @param The group task.
+    /// @return The total cost.
     double TotalCost(GroupTask* groupTask); 
 
+    /// Collecting the paths in GroupTask.
+    /// @param The group task.
+    /// @return A vector of paths.
     vector<Path*> CollectPaths(GroupTask* groupTask); 
 
+    ///  Printing the VID Paths in GroupTask
+    /// @param The group task.
     void PrintPaths(GroupTask* groupTask);
 
     ///@}
