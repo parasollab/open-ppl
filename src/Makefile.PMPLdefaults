@@ -18,7 +18,8 @@ UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
              $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
-	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL) $(CGAL_INC)
+	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL) $(CGAL_INC) \
+	     $(EIGEN_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB) $(BULLET_LIB) \
 	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS) $(MATLAB_LIBS)
@@ -90,6 +91,10 @@ CD_INCL    := $(PQP_INCL) $(RAPID_INCL)
 CD_LIB     := $(PQP_LIB) $(RAPID_LIB)
 CD_LIBFILE := $(PQP_LIBFILE) $(RAPID_LIBFILE)
 
+################################################################################
+## EIGEN
+################################################################################
+EIGEN_INCL := -I/usr/include/eigen3
 ################################################################################
 ## CGAL
 ################################################################################
@@ -418,7 +423,9 @@ SIM_SRCS := \
   TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/CentralPlanner.cpp \
   Behaviors/Agents/Coordinator.cpp \
+  Behaviors/Agents/DummyAgent.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \

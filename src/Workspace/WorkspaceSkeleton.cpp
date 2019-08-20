@@ -3,7 +3,6 @@
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 #include "nonstd/io.h"
-
 /*--------------------------------- Locators ---------------------------------*/
 
 WorkspaceSkeleton::vertex_iterator
@@ -307,24 +306,57 @@ GetGraph() const noexcept {
   return m_graph;
 }
 
+/*------------------------------------- I/O helpers ---------------------------------*/
+
 void
 WorkspaceSkeleton::
 Write(const std::string& _file) {
-  stapl::sequential::write_graph(m_graph, _file.c_str());
-  /// @Todo: Replace with stapl version.
-  //std::ofstream ff(_file);
-  //auto& g = m_graph;
-  //ff << g.get_num_vertices() << " " << g.get_num_edges() << std::endl;
-  //for(auto vit = g.begin(); vit != g.end(); ++vit)
-  //  ff << vit->descriptor() << " " << vit->property() << std::endl;
-  //for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)	{
-  //  ff << eit->source() << " " << eit->target();
-  //  auto prop = eit->property();
-  //  ff << " " << prop.size();
-  //  for(auto v: prop)
-  //    ff << " " << v;
-  //  ff << std::endl;
-  //}
+  std::ofstream ofs(_file);
+
+  ofs << m_graph.get_num_vertices() << " " << m_graph.get_num_edges() << std::endl;
+
+  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit)
+    ofs << vit->descriptor() << " " << vit->property() << std::endl;
+
+  for(auto eit = m_graph.edges_begin(); eit != m_graph.edges_end(); ++eit)	{
+    ofs << eit->source() << " " << eit->target() << " ";
+    auto prop = eit->property();
+    ofs << prop.size() << " ";
+    for(auto v: prop)
+      ofs << v << " ";
+    ofs << std::endl;
+  }
+  ofs.close();
+}
+
+void
+WorkspaceSkeleton::
+Read(const std::string& _file) {
+  std::ifstream ifs(_file);
+
+  size_t nVerts, nEdges;
+
+  ifs >> nVerts >> nEdges;
+
+  for(size_t vit = 0 ; vit != nVerts; ++vit) {
+    size_t id;
+    Point3d data;
+    ifs >> id >> data;
+    m_graph.add_vertex(data);
+  }
+
+  for(size_t eit = 0; eit != nEdges; ++eit) {
+    size_t source, target, propSize;
+    std::vector<Point3d> edgeProperty;
+    ifs >> source >> target >> propSize;
+    for (size_t propit = 0; propit < propSize; ++propit) {
+      Point3d prop;
+      ifs >> prop;
+      edgeProperty.push_back(prop);
+    }
+    m_graph.add_edge(source, target, edgeProperty);
+    edgeProperty.clear();
+  }
 }
 
 /*----------------------------------------------------------------------------*/

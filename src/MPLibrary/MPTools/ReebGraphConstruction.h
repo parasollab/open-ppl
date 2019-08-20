@@ -45,6 +45,7 @@ class ReebGraphConstruction {
     struct Parameters {
       std::string filename;  ///< Input/output filename for embedded reeb graph.
       bool write{false};     ///< Output embedded reeb graph?
+      bool read{false};     ///< Read in embedded reeb graph?
       bool debug{false};     ///< Show debug messages?
     };
 
