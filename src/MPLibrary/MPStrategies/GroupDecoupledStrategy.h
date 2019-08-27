@@ -131,6 +131,8 @@ template <typename MPTraits>
 void
 GroupDecoupledStrategy<MPTraits>::
 Finalize() {
+
+  double totalCost = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
   auto groupRoadmap = this->GetGroupRoadmap();
@@ -148,7 +150,7 @@ Finalize() {
     // If the path is empty, we didn't solve the problem.
     if(path->Empty())
       return;
-
+    totalCost += path->Length();
     // Collect the path.
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
@@ -158,17 +160,19 @@ Finalize() {
 
     if(path and path->Size()) {
       const std::string base = this->GetBaseFilename();
-      ::WritePath(base +"robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
-      // Check to make sure this works.
-      //::WritePath(base +"robot"+ std::to_string(i) + ".path",
-      //    path->FullCfgs(this->GetMPLibrary()));
+      ::WritePath(base +".robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
+      ::WritePath(base +".robot"+ std::to_string(i) + ".path",
+        path->FullCfgs(this->GetMPLibrary()));
       vector<CfgType> dummy = path->Cfgs();
       auto roadmap = this->GetRoadmap(dummy[0].GetRobot());
-      roadmap->Write(base +"robot"+ std::to_string(i) + ".map", this->GetEnvironment());
+      roadmap->Write(base +".robot"+ std::to_string(i) + ".map", this->GetEnvironment());
     }
     ++i;
 
   }
+
+  StatClass* stats = this->GetStatClass();
+  stats->SetStat("GroupDecoupledQuery::TotalCost",totalCost);
 
   // Add each path configuration to the group roadmap.
   const size_t numRobots = groupTask->Size();

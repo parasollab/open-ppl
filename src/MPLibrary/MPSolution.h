@@ -83,6 +83,8 @@ class MPSolutionType final {
 
     void SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept;
 
+    void SetPath(Robot* const _r, Path* _path) noexcept;
+
     ///@}
     ///@name Accessors
     ///@{
@@ -213,6 +215,19 @@ SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
 
   m_individualSolutions[_r].freeMap.reset(_roadmap);
   m_individualSolutions[_r].path.reset(new Path(_roadmap));
+}
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+SetPath(Robot* const _r, Path*  _path) noexcept {
+  auto robotSolution = GetRobotSolution(_r);
+  if(!robotSolution){//master had without the not !
+    throw RunTimeException(WHERE) << "Cannot set path for robot that does not "
+                                  << "have a solution.";
+  }
+  m_individualSolutions[_r].path.release();
+  m_individualSolutions[_r].path.reset(_path);
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/

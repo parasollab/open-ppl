@@ -336,6 +336,7 @@ IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
       collision |= m_cdMethod->IsInCollision(_a->GetBody(i),
                                              _b->GetBody(j),
                                              cdInfo);
+
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _caller);
 
       // Retain minimum distance information.

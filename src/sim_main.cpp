@@ -20,17 +20,40 @@ main(int _argc, char** _argv) {
     /// @TODO Decide on a way to declare the starting configuration either
     ///       explicitly or from a specific task. For now we will assume that
     ///       the first task is a query and its start boundary is a single point.
-    for(const auto& robot : problem->GetRobots()) {
-      Robot* const r = robot.get();
-      if(r->IsVirtual())
-        continue;
+    if(!problem->GetRobotGroups().empty()) {
+      for(const auto& group : problem->GetRobotGroups()) {
+        //TODO needs to be updated to track which robots have been given a
+        //starting position and which ones have not when considering multiple
+        //grouptasks
+        auto groupTask = problem->GetTasks(group.get()).front();
+        for(auto it = groupTask->begin(); it != groupTask->end(); it++){
+          Robot* const r = it->GetRobot();
+          if(r->IsVirtual())
+            continue;
 
-      // Position the robot at zero, or at the task center if one exists.
-      std::vector<double> dofs(r->GetMultiBody()->DOF(), 0);
-      if(problem->GetTasks(r).front()->GetStartConstraint())
-        dofs = problem->GetTasks(r).front()->GetStartConstraint()->
-               GetBoundary()->GetCenter();
-      r->GetMultiBody()->Configure(dofs);
+          // Position the robot at zero, or at the task center if one exists.
+          std::vector<double> dofs(r->GetMultiBody()->DOF(), 0);
+          if(it->GetStartConstraint())
+            dofs = it->GetStartConstraint()->
+              GetBoundary()->GetCenter();
+          r->GetMultiBody()->Configure(dofs);
+
+        }
+      }
+    }
+    else {
+      for(const auto& robot : problem->GetRobots()) {
+        Robot* const r = robot.get();
+        if(r->IsVirtual())
+          continue;
+
+        // Position the robot at zero, or at the task center if one exists.
+        std::vector<double> dofs(r->GetMultiBody()->DOF(), 0);
+        if(problem->GetTasks(r).front()->GetStartConstraint())
+          dofs = problem->GetTasks(r).front()->GetStartConstraint()->
+                 GetBoundary()->GetCenter();
+        r->GetMultiBody()->Configure(dofs);
+      }
     }
 
     // Make simulation object.

@@ -127,17 +127,15 @@ operator()() {
     // Success: add this robot/path as a dynamic obstacle for the remaining
     // robots.
 
-    SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool("SI");
     this->GetMPProblem()->AddDynamicObstacle(
-        DynamicObstacle(robot, siTool->FullPath(this->GetPath(robot))
-    ));
-    // this->GetMPProblem()->AddDynamicObstacle(
-    //     DynamicObstacle(robot, this->GetPath(robot)->FullCfgs(this->GetMPLibrary()))
-    // );
+        DynamicObstacle(robot, this->GetPath(robot)->FullCfgs(this->GetMPLibrary()))
+          );
+
   }
 
   if(this->m_debug)
     std::cout << "\tDone." << std::endl;
+
 
   // Restore the group task.
   this->GetMPLibrary()->SetTask(nullptr);
