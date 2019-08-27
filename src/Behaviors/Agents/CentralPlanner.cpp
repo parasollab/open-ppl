@@ -71,12 +71,12 @@ Initialize() {
 		a->Initialize();
   }
 
-	//auto group = problem->GetRobotGroup(0);
-	//auto groupTask = problem->GetTasks(group)[0];
+	auto group = problem->GetRobotGroup(0);
+	auto groupTask = problem->GetTasks(group)[0];
 
 	//Do whatever solving you want here
 	//This gets the first task assigned to the central planner in the XML file
-	auto task = problem->GetTasks(m_robot)[0];
+	//auto task = problem->GetTasks(m_robot)[0];
 	//The library will use whatever robot the task is assigned. If you want to use a specific member 
 	//agent's robot then set the task robot to that specific robot.
 	//task->SetRobot(m_memberAgents[0]->GetRobot());
@@ -88,7 +88,7 @@ Initialize() {
 	
 	
 	//This will use the default solver 
-	m_library->Solve(problem, task.get(), m_solution);
+	m_library->Solve(problem, groupTask.get(), m_solution);
   //You can also manually specify what you want to use
   //Make sure these labels are in your xml or replace them with member variables set in the xml file
   //Example:
@@ -103,10 +103,15 @@ Initialize() {
 void
 CentralPlanner::
 LoadMemberPlans() {
+	auto group = m_robot->GetMPProblem()->GetRobotGroup(0);
 	for(auto agent : m_memberAgents) {
 		//Get whatever path you want from the solution object
 		//Example: assuimg just the one member agent that was planner with
-		std::vector<Cfg> path = m_solution->GetPath()->FullCfgs(m_library);
+		std::vector<Cfg> path;
+
+		for(auto groupCfg : m_library->GetMPSolution()->GetGroupPath(group)->FullCfgs(m_library)) {
+			path.push_back(groupCfg.GetRobotCfg(agent->GetRobot()));
+		}
 		
 		agent->SetPlan(path);
 		//The agents are set to visualize their path while in debug. You can add other paths or roadmaps 
