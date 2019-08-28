@@ -49,7 +49,8 @@ Initialize() {
 
   // Initialize the agent's planning library.
   m_library = new MPLibrary(xmlFile);
-	m_solution = new MPSolution(m_robot);
+	auto group = problem->GetRobotGroup(0);
+	m_solution = new MPSolution(group);
   m_library->SetMPSolution(m_solution);
 
   // Set up the group members.
@@ -71,7 +72,6 @@ Initialize() {
 		a->Initialize();
   }
 
-	auto group = problem->GetRobotGroup(0);
 	auto groupTask = problem->GetTasks(group)[0];
 
 	//Do whatever solving you want here
@@ -103,19 +103,24 @@ Initialize() {
 void
 CentralPlanner::
 LoadMemberPlans() {
-	auto group = m_robot->GetMPProblem()->GetRobotGroup(0);
+	//auto group = m_robot->GetMPProblem()->GetRobotGroup(0);
 	for(auto agent : m_memberAgents) {
 		//Get whatever path you want from the solution object
 		//Example: assuimg just the one member agent that was planner with
-		std::vector<Cfg> path;
+		//std::vector<Cfg> path;
 
-		for(auto groupCfg : m_library->GetMPSolution()->GetGroupPath(group)->FullCfgs(m_library)) {
-			path.push_back(groupCfg.GetRobotCfg(agent->GetRobot()));
-		}
+		std::cout << "Loading path for " << agent->GetRobot()->GetLabel() << std::endl;
+
+		//for(auto groupCfg : m_library->GetMPSolution(group)->GetGroupPath(group)->FullCfgs(m_library)) {
+		//	path.push_back(groupCfg.GetRobotCfg(agent->GetRobot()));
+		//}
+		auto path = m_library->GetPath(agent->GetRobot());
 		
-		agent->SetPlan(path);
+		//agent->SetPlan(path->FullCfgs(m_library));
+		agent->SetPlan(path->Cfgs());
 		//The agents are set to visualize their path while in debug. You can add other paths or roadmaps 
 		//with the Simulator interfaces (ie. AddPath, AddRoadmap) described in the Simulator class.
+
 
 	}
 }
