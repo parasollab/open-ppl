@@ -5,7 +5,10 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <list>
+#include <memory>
 #include <queue>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -318,5 +321,88 @@ DijkstraSSSP(
   return DijkstraSSSP(_g, _starts, weight, stop, _adjacencyMap);
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// The output of a two variable SSSP run. Iterate back through the list 
+/// nodes to construct the path.
+////////////////////////////////////////////////////////////////////////////
+
+struct TwoVariableSSSPNode {
+	size_t m_vid;
+	double m_distance;
+	std::shared_ptr<TwoVariableSSSPNode> m_parent;
+
+	TwoVariableSSSPNode(size_t _vid, double _distance, std::shared_ptr<TwoVariableSSSPNode> _parent)
+			: m_vid(_vid), m_distance(_distance), m_parent(_parent) {}	
+
+};
+
+template <typename GraphType>
+std::shared_ptr<TwoVariableSSSPNode>
+TwoVariableDijkstraSSSP(
+    GraphType* const _g,
+    const std::vector<typename GraphType::vertex_descriptor>& _starts,
+		std::unordered_set<size_t> _goals,
+		double _lastConstraint,
+    SSSPPathWeightFunction<GraphType>& _weight,
+    const SSSPAdjacencyMap<GraphType>& _adjacencyMap = {})
+{
+
+	std::list<std::shared_ptr<TwoVariableSSSPNode>> pq;
+	
+	for(auto vid : _starts) {
+		auto node = std::shared_ptr<TwoVariableSSSPNode>(new TwoVariableSSSPNode(vid,0,nullptr));
+		pq.push_back(node);
+	}
+	
+	auto current = pq.front();
+	pq.pop_front();
+
+	std::unordered_map<double,std::set<size_t>> discoveredVertices;
+	std::set<size_t> visitedPostConstraints;
+
+	while(!_goals.count(current->m_vid)) {
+
+		if(current->m_distance >= _lastConstraint) { 
+			if(visitedPostConstraints.count(current->m_vid)){
+				if(pq.empty())
+					return nullptr;
+				current = pq.front();
+				pq.pop_front();
+				continue;
+			}
+			else 
+				visitedPostConstraints.insert(current->m_vid);
+		}
+
+		auto vit = _g->find_vertex(current->m_vid);
+	
+		//TODO::If we want to add waiting it should be added as a self edge here
+
+		for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+			auto sourceDistance = current->m_distance;
+			auto targetDistance = std::numeric_limits<double>::infinity();
+			auto newDistance = _weight(eit,sourceDistance,targetDistance);
+
+			if(newDistance < targetDistance and !discoveredVertices[newDistance].count(eit->target())) {
+				auto newNode = std::shared_ptr<TwoVariableSSSPNode>(
+													new TwoVariableSSSPNode(eit->target(),newDistance,current));
+				discoveredVertices[newDistance].insert(eit->target());
+				auto iter = pq.begin();
+				while(iter != pq.end()) {
+					if((*iter)->m_distance > newDistance)
+						break;
+					iter++;
+				}
+				pq.insert(iter,newNode);
+			}
+		}
+		if(pq.empty())
+			return nullptr;
+		current = pq.front();
+		pq.pop_front();
+	} 
+	
+	return current;
+}
 
 #endif
