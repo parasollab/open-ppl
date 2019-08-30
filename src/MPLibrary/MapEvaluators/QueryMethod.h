@@ -494,12 +494,12 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
   // If this edge isn't better than the previous, we won't use it regardless
   // and can return without checking the dynamic obstacles.
-  // if(newDistance >= _targetDistance) {
-  //   if(this->m_debug)
-  //     std::cout << "Breaking because the path is not optimal."
-  //               << std::endl;
-  //   return newDistance;
-  // }
+  if(newDistance >= _targetDistance) {
+    if(this->m_debug)
+      std::cout << "Breaking because the path is not optimal."
+                << std::endl;
+    return newDistance;
+  }
 
   // Get the graph and safe interval tool.
   //auto g = this->GetRoadmap();
@@ -574,8 +574,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
       // collision checking over the whole edge against the corresponding
       // conflicting cfg
       if(conflictTimestep > _sourceDistance && conflictTimestep < (
-      		_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))
-      	) {
+      	_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
         SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->
       		GetSafeIntervalTool("SI");
         if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap

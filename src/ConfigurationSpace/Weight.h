@@ -34,6 +34,7 @@ template <class CfgType>
 class DefaultWeight {
 
   public:
+    
     ///@name Construction
     ///@{
 

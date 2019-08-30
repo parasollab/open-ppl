@@ -82,6 +82,7 @@ class Robot final {
   std::string m_capability;        ///< The terrain label that the robot can use.
   bool m_fixed{false};
   bool m_manipulator{false};       ///< Is the robot a manipulator?
+  std::string m_defaultStrategyLabel; ///< The robot's default MP Strategy.
 
   //////////////////////////////////////////////////////////////////////////////
   /// Description of a Robot's end-effector for grasping problems.
@@ -306,6 +307,9 @@ class Robot final {
 
     /// Get the unique label for this robot.
     const std::string& GetLabel() const noexcept;
+
+        /// Get the default strategy label for this robot.
+    const std::string& GetDefaultStrategyLabel() const noexcept;
 
     /// Get the capability for this robot.
     const std::string& GetCapability() const noexcept;

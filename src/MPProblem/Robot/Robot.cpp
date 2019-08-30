@@ -48,6 +48,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // Check if the robot is a manipulator or not
   m_manipulator = _node.Read("manipulator", false, false, "Is the robot a manipulator?");
 
+  // Check if the robot uses a default MP Strategy.
+  m_defaultStrategyLabel = _node.Read("defaultStrategyLabel", false, "", "The robot individual strategy");
+
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
   std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
@@ -592,6 +595,12 @@ const std::string&
 Robot::
 GetLabel() const noexcept {
   return m_label;
+}
+
+const std::string&
+Robot::
+GetDefaultStrategyLabel() const noexcept {
+  return m_defaultStrategyLabel;
 }
 
 

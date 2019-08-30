@@ -8,6 +8,7 @@
 #include "MPProblem/DynamicObstacle.h"
 #include "MPLibrary/Conflict.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/CBSTree.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,19 +30,30 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-  	typedef typename MPTraits::RoadmapType      RoadmapType;
-    typedef typename MPTraits::CfgType              CfgType;
-    typedef typename MPTraits::WeightType        WeightType;
-    typedef typename MPTraits::Path                    Path; 
-    typedef typename RoadmapType::VID                   VID;
+  	typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename MPTraits::CfgType                CfgType;
+    typedef typename MPTraits::WeightType             WeightType;
+    typedef typename MPTraits::Path                   Path; 
+    typedef typename RoadmapType::VID                 VID;
+    typedef typename CBSNode<MPTraits>::ConflictCfg   ConflictCfg;
 
     ///@}
     ///@name Local Types
     ///@{
 
     typedef std::vector<Range<double>> Intervals; ///< A set of time intervals.
-    typedef pair<pair<size_t,pair<CfgType,double>>,pair<size_t,pair<CfgType,
-      double>>> PairConflict; ///< A pair of conflicts
+
+    struct ConflictRobot {
+      ConflictCfg conflictCfg;
+      size_t num_robot;
+
+    }; 
+
+    struct PairConflict {
+      ConflictRobot conflict1;
+      ConflictRobot conflict2;
+    };
+
 
     ///@}
     ///@name Construction
@@ -89,8 +101,8 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @param _source The cfg source of the edge.
     /// @param _target The cfg target of the edge.
     /// @param _conflictCfg The external cfg to check.
-    bool IsEdgeSafe(const CfgType _source, const CfgType _target, 
-    	const CfgType _conflictCfg);
+    bool IsEdgeSafe(const CfgType& _source, const CfgType& _target, 
+    	const CfgType& _conflictCfg);
 
     /// Checking if an edge is dynamically collision-free against a set of
     /// dynamic obstacles
@@ -337,14 +349,14 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-IsEdgeSafe(const CfgType _source, const CfgType _target, 
-	const CfgType _conflictCfg) {
+IsEdgeSafe(const CfgType& _source, const CfgType& _target, 
+	const CfgType& _conflictCfg) {
   //Reconstructing edge "path"
   std::vector<CfgType> path;
   path.push_back(_source);
   auto robot = _source.GetRobot();
   auto roadmap = this->GetRoadmap(robot);
-  std::vector<CfgType> edge = roadmap->ReconstructEdge(this->GetMPLibrary(), 
+  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(roadmap, 
     roadmap->GetVID(_source), roadmap->GetVID(_target));
   path.insert(path.end(), edge.begin(), edge.end());
   path.push_back(_target);
@@ -416,23 +428,30 @@ FindConflict(const std::vector<Path*>& _paths) {
             this->GetNameAndLabel())) {
           double ti = timeRes * static_cast<double>(t1);
           double tj = timeRes * static_cast<double>(t2);
-          auto cfgConflict1 = make_pair(i,make_pair(paths[j][t2],ti));
-          auto cfgConflict2 = make_pair(j,make_pair(paths[i][t1],tj));
-          auto pairCfgConflicts = make_pair(cfgConflict1,cfgConflict2);
           if(this->m_debug) {
             std::cout << "Conflict on robot " << i << " at timestep " << ti 
             << " at cfg " << paths[i][t1].PrettyPrint() << "\nConflict on robot " 
             << j << " at timestep "<< tj <<" at cfg " << paths[j][t2].PrettyPrint() 
             << std::endl;
           }
-          return pairCfgConflicts;         
+
+          PairConflict pairConflict;
+          pairConflict.conflict1.conflictCfg.conflictCfg = paths[j][t2];
+          pairConflict.conflict1.conflictCfg.timestep = ti;
+          pairConflict.conflict1.num_robot = i;
+          pairConflict.conflict2.conflictCfg.conflictCfg = paths[i][t1];
+          pairConflict.conflict2.conflictCfg.timestep = tj;
+          pairConflict.conflict2.num_robot = j;
+
+
+          return pairConflict;         
         }
       }
     }
   }
-
-  return make_pair(make_pair(-1,make_pair(paths[0][0],-1)),
-    make_pair(-1,make_pair(paths[0][0],-1))); 
+  PairConflict nullPair;
+  nullPair.conflict1.num_robot = INVALID_VID;
+  return nullPair;
 }
 
 
@@ -446,7 +465,7 @@ IsEdgeDynamicallySafe(const CfgType _source, const CfgType _target,
   path.push_back(_source);
   auto robot = _source.GetRobot();
   auto roadmap = this->GetRoadmap(robot);
-  std::vector<CfgType> edge = roadmap->ReconstructEdge(this->GetMPLibrary(), 
+  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(roadmap, 
     roadmap->GetVID(_source), roadmap->GetVID(_target));
   path.insert(path.end(), edge.begin(), edge.end());
   path.push_back(_target);

@@ -232,11 +232,11 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
 
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Inserting intermediates between vertices
-    std::vector<CfgType> edge = m_roadmap->ReconstructEdge(_lib, 
+    std::vector<CfgType> edge = _lib->ReconstructEdge(m_roadmap, 
       *it, *(it+1));
     out.insert(out.end(), edge.begin(), edge.end());
     //Inserting next vertex cfg
-    out.push_back(this->GetRoadmap()->GetVertex(*(it+1)));
+    out.push_back(m_roadmap->GetVertex(*(it+1)));
   }
   return out;
 }

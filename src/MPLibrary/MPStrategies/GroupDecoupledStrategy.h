@@ -2,7 +2,6 @@
 #define PMPL_GROUP_DECOUPLED_STRATEGY_H_
 
 #include "GroupStrategyMethod.h"
-
 #include "MPProblem/GroupTask.h"
 
 
@@ -76,7 +75,6 @@ template <typename MPTraits>
 GroupDecoupledStrategy<MPTraits>::
 GroupDecoupledStrategy(XMLNode& _node) : GroupStrategyMethod<MPTraits>(_node) {
   this->SetName("GroupDecoupledStrategy");
-
   m_strategyLabel = _node.Read("strategyLabel", true, "",
       "The indiviudal strategy to run for each robot.");
 }
@@ -109,7 +107,7 @@ Iterate() {
   // - Set the individual task
   // - run the designated single-robot planner
   // Clear the individual task
-  auto s = this->GetMPStrategy(m_strategyLabel);
+  //auto s = this->GetMPStrategy(m_strategyLabel);
 
   // Save the group task and unset it.
   auto groupTask = this->GetGroupTask();
@@ -117,7 +115,14 @@ Iterate() {
 
   // Set the library to this individual task and initialize.
   for(auto& task : *groupTask) {
+    auto robot = task.GetRobot();
+    std::cout << "Running indiviudal strategy on robot " 
+      << robot->GetLabel() << std::endl;
+    auto s = this->GetMPStrategy(m_strategyLabel);
+    if(robot->GetDefaultStrategyLabel() != "")
+      s = this->GetMPStrategy(robot->GetDefaultStrategyLabel());
     this->GetMPLibrary()->SetTask(&task);
+
     (*s)();
   }
 
@@ -155,20 +160,20 @@ Finalize() {
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
 
-    std::cout << "VID Path for robot " << robot->GetLabel() << ": " << path->VIDs()
+    std::cout << "VID Path for robot " << robot->GetLabel() 
+      << ": " << path->VIDs()
               << std::endl;
 
     if(path and path->Size()) {
       const std::string base = this->GetBaseFilename();
-      ::WritePath(base +".robot"+ std::to_string(i) + ".rdmp.path", path->Cfgs());
-      ::WritePath(base +".robot"+ std::to_string(i) + ".path",
+      ::WritePath(base +"."+ robot->GetLabel() + ".rdmp.path", path->Cfgs());
+      ::WritePath(base +"."+ robot->GetLabel()  + ".path",
         path->FullCfgs(this->GetMPLibrary()));
-      vector<CfgType> dummy = path->Cfgs();
-      auto roadmap = this->GetRoadmap(dummy[0].GetRobot());
-      roadmap->Write(base +".robot"+ std::to_string(i) + ".map", this->GetEnvironment());
+      auto roadmap = path->GetRoadmap();
+      roadmap->Write(base +"."+ robot->GetLabel() + ".map", 
+        this->GetEnvironment());
     }
     ++i;
-
   }
 
   StatClass* stats = this->GetStatClass();
@@ -194,7 +199,8 @@ Finalize() {
 
     // If the last VID was valid, add an edge between the nodes.
     if(lastVID != INVALID_VID) {
-      std::cout << "Creating group edge from " << lastVID << " to " << vid << "."
+      std::cout << "Creating group edge from " << lastVID 
+        << " to " << vid << "."
                 << std::endl;
       GroupWeightType lp(groupRoadmap);
 
