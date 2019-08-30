@@ -358,6 +358,7 @@ class MPLibraryType final
 
     /// Group overload:
     void Solve(MPProblem* _problem, GroupTask* _task);
+		void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
 
     /// Run a specific MPStrategy from the XML file with a designated seed and
     /// base output file name. This is intended for use with the simulator where
@@ -1028,6 +1029,19 @@ Solve(MPProblem* _problem, GroupTask* _task) {
   m_solution = nullptr;
 }
 
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution) {
+  m_problem = _problem;
+  m_groupTask = _task;
+  m_solution = _solution;
+
+  for(auto& solver : m_solvers) {
+    RunSolver(solver);
+  }
+
+}
 
 template <typename MPTraits>
 void

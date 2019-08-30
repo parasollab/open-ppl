@@ -349,6 +349,7 @@ class RoadmapGraph : public
     void SetConflictCfgAt(Vertex _v, double _conflictTimestep,
         const bool _invalid) noexcept;
 
+		//James: I think that Cfg should be plural and not Conflict.
     /// @return All pair of conflicting cfgs and conflicting timesteps.
     const vector<pair<Vertex, double>>& GetAllConflictsCfgAt();
 
