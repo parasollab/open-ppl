@@ -54,7 +54,7 @@ Step(const double _dt) {
     return;
 
 	//If the agent has a path, it will follow it. Otherwise it's just chillin
-  if(!this->m_path.empty() and EvaluateTask()) {
+  if(!this->m_path.empty() and DummyAgent::EvaluateTask()) {
 		if(m_pathID == MAX_INT) {
 			m_pathID = Simulation::Get()->AddPath(m_path,glutils::color(1, 0, 0, 0.5));
 		}
@@ -93,6 +93,8 @@ EvaluateTask() {
 
     // Move to next cfg in path since the distance is within the threshold.
     ++m_pathIndex;
+		if(m_path[m_pathIndex-1] == m_path[m_pathIndex])
+			break;
 
     // Check if we have completed the path. If so, this task is complete.
     if(m_pathIndex == m_path.size())

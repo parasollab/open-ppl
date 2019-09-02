@@ -399,6 +399,7 @@ SIM_SRCS := \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/DiscreteIntervalGraph.cpp \
   TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
@@ -412,12 +413,14 @@ SIM_SRCS := \
   TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskCBSPlanner.cpp \
   TMPLibrary/TaskEvaluators/TCBS.cpp \
+  TMPLibrary/TaskEvaluators/TMPCBS.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
+  TMPLibrary/TMPTools/DiscreteMAD.cpp \
   TMPLibrary/TMPTools/MultiAgentDijkstra.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
   TMPLibrary/TaskPlan.cpp \

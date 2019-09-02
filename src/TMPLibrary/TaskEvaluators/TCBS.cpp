@@ -52,29 +52,36 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 
 	auto nodes = Expand(initialNode, _wholeTasks);	
 	for(auto node : nodes) {
-		UpdatePlan(node);
-		tree.Insert(node);
+		if(UpdatePlan(node)) {
+			tree.Insert(node);
+			totalNodes++;
+		}
 	}
 
 	while(!tree.Empty()) {
 
 		std::shared_ptr<Node> node = std::shared_ptr<Node>(static_cast<Node*>(tree.GetMinNode()));
+
+		if(node->GetCost(m_makespan) > minCost)
+			break;
+
 		nodesExplored++;
 		if(node->GetDepth() > maxDepth)
 			maxDepth = node->GetDepth();
 	
 		if(m_debug) {
 			std::cout << "Tree size : " << tree.Length() << std::endl;
-			std::cout << "Node depth : " << node->GetDepth();
+			std::cout << "Node depth : " << node->GetDepth() << std::endl;
 		}
 
 		auto newNodes = FindConflict(node);
 
 		if(!newNodes.empty()) {
 			for(auto node : newNodes) {
-				UpdatePlan(node);
-				tree.Insert(node);
-				totalNodes++;
+				if(UpdatePlan(node)) {
+					tree.Insert(node);
+					totalNodes++;
+				}
 			}
 		}
 		else if(node->GetAssignedTasks().size() == _wholeTasks.size()) {
@@ -88,9 +95,10 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		else {
 			newNodes = Expand(node, _wholeTasks);
 			for(auto node : newNodes) {
-				UpdatePlan(node);
-				tree.Insert(node);
-				totalNodes++;
+				if(UpdatePlan(node)) {
+					tree.Insert(node);
+					totalNodes++;
+				}
 			}
 		}
 	}
@@ -137,10 +145,11 @@ SplitVertexConflict(std::shared_ptr<Node> _node, size_t _conflict,
 	
 	auto path = _node->GetAgentEntirePath(_firstAgent);
 	size_t vid;
-	if(_conflict < path.size())
+	if(_conflict < path.size() and !path.empty()) {
 		vid = path[_conflict];
-	else if(!path.empty()) {
-		vid = path.back();
+	//else if(!path.empty())  
+		//vid = path.back();
+	//if(!path.empty()) {
 		auto conflict = new MotionConflict(_firstAgent, std::make_pair(_conflict,std::make_pair(vid,MAX_INT)));
 
 		Node* newNode = new Node(_node.get(),_firstAgent);
@@ -149,17 +158,18 @@ SplitVertexConflict(std::shared_ptr<Node> _node, size_t _conflict,
 	}
 
 	path = _node->GetAgentEntirePath(_secondAgent);
-	if(_conflict < path.size())
+	if(_conflict < path.size() and !path.empty()) { 
 		vid = path[_conflict];
-	else if(!path.empty()){
-		vid = path.back();
+	//else if(!path.empty())
+		//vid = path.back();
+	//if(!path.empty()) {
 		auto conflict = new MotionConflict(_secondAgent, std::make_pair(_conflict,std::make_pair(vid,MAX_INT)));
 	
 		auto newNode = new Node(_node.get(), _secondAgent);
 		newNode->AddConflict(_secondAgent, conflict);
 		newNodes.push_back(newNode);
 	}
-
+	
 	return newNodes;
 }
 		
@@ -185,7 +195,6 @@ SplitEdgeConflict(std::shared_ptr<Node> _node, size_t _conflict,
 	Node* newNode = new Node(_node.get(),_firstAgent);
 	newNode->AddConflict(_firstAgent, conflict);
 	newNodes.push_back(newNode);
-
 	vid2 = MAX_INT;
 
 	path = _node->GetAgentEntirePath(_secondAgent);
@@ -201,7 +210,7 @@ SplitEdgeConflict(std::shared_ptr<Node> _node, size_t _conflict,
 	newNode = new Node(_node.get(), _secondAgent);
 	newNode->AddConflict(_secondAgent, conflict);
 	newNodes.push_back(newNode);
-
+	
 	return newNodes;
 }
  
@@ -216,8 +225,9 @@ FindConflict(std::shared_ptr<Node> _node) {
 		originalPositions[agent] = agent->GetRobot()->GetSimulationModel()->GetState();
 	}
 
-	auto basevc = this->GetMPLibrary()->GetValidityChecker(m_vcLabel).get();
-	auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits<Cfg>>*>(basevc);
+	//auto basevc = this->GetMPLibrary()->GetValidityChecker(m_vcLabel).get();
+	//auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits<Cfg>>*>(basevc);
+	auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
 
 	for(size_t i = 0; i < team.size(); i++) {
 		for(size_t j = i+1; j < team.size(); j++) {
@@ -226,7 +236,6 @@ FindConflict(std::shared_ptr<Node> _node) {
 			auto path1 = _node->GetAgentEntirePath(agent1);	
 			auto path2 = _node->GetAgentEntirePath(agent2);
 			
-			auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
 			auto roadmap1 = sg->GetCapabilityRoadmap(agent1);
 			auto roadmap2 = sg->GetCapabilityRoadmap(agent2);
 
@@ -244,15 +253,21 @@ FindConflict(std::shared_ptr<Node> _node) {
 					cfg2 = roadmap2->GetVertex(path2[k]);
 				cfg2.SetRobot(agent2->GetRobot());
 				
-				auto mb1 = cfg1.GetRobot()->GetMultiBody();
-				mb1->Configure(cfg1);
+				//auto mb1 = cfg1.GetRobot()->GetMultiBody();
+				//mb1->Configure(cfg1);
 
-				auto mb2 = cfg2.GetRobot()->GetMultiBody();
-				mb2->Configure(cfg2);
+				//auto mb2 = cfg2.GetRobot()->GetMultiBody();
+				//mb2->Configure(cfg2);
 
-				CDInfo cdInfo;
+				//CDInfo cdInfo;
 				//check vertex conflict
-				if(vc->IsMultiBodyCollision(cdInfo, mb1, mb2, "Discrete cbs collision check.")) {
+				//if(vc->IsMultiBodyCollision(cdInfo, mb1, mb2, "Discrete cbs collision check.")) {
+				//	for(auto agent : team) {
+				//		originalPositions[agent].GetRobot()->GetMultiBody()->Configure(originalPositions[agent]);				
+				//	}
+				//	return SplitVertexConflict(_node, k, agent1, agent2);
+				//}
+				if(cfg1[0] == cfg2[0] and cfg1[1] == cfg2[1]) {
 					for(auto agent : team) {
 						originalPositions[agent].GetRobot()->GetMultiBody()->Configure(originalPositions[agent]);				
 					}
@@ -267,10 +282,10 @@ FindConflict(std::shared_ptr<Node> _node) {
 					cfg2b = roadmap2->GetVertex(path2[k+1]);
 				cfg2b.SetRobot(agent2->GetRobot());
 					
-				mb1->Configure(cfg1b);
+				//mb1->Configure(cfg1b);
 			
 					
-				if(vc->IsMultiBodyCollision(cdInfo, mb1, mb2, "Discrete cbs collision check.")) {
+				/*if(vc->IsMultiBodyCollision(cdInfo, mb1, mb2, "Discrete cbs collision check.")) {
 					for(auto agent : team) {
 						originalPositions[agent].GetRobot()->GetMultiBody()->Configure(originalPositions[agent]);				
 					}
@@ -283,11 +298,14 @@ FindConflict(std::shared_ptr<Node> _node) {
 						}
 						return SplitEdgeConflict(_node, k, agent1, agent2);
 					}
+				}*/
+				if(cfg1b[0] == cfg2[0] and cfg1b[1] == cfg2[1] and cfg1[0] == cfg2b[0] and cfg1[1] == cfg2b[1]) {
+					for(auto agent : team) {
+						originalPositions[agent].GetRobot()->GetMultiBody()->Configure(originalPositions[agent]);				
+					}
+					return SplitEdgeConflict(_node, k, agent1, agent2);
 				}
-
 			}
-			
-			
 		}
 	}
 	for(auto agent : team) {
@@ -298,7 +316,7 @@ FindConflict(std::shared_ptr<Node> _node) {
 
 std::vector<size_t>
 TCBS::
-DiscreteSearch(Node* _node, size_t _start, size_t _goal) {
+DiscreteSearch(Node* _node, size_t _start, size_t _goal, size_t _startTime, size_t _minEndTime) {
 	size_t maxConstraint = 0;
 
 	HandoffAgent* agent = _node->GetToReplan();
@@ -310,7 +328,12 @@ DiscreteSearch(Node* _node, size_t _start, size_t _goal) {
 	auto conflicts = _node->GetConflicts();
 	for(auto constraint : (*conflicts)[agent]) {
 		auto timeConstraint = constraint->GetConstraint();	
-		pathConstraints[timeConstraint.first].insert(timeConstraint.second);
+		if(timeConstraint.second.second == MAX_INT) {
+			pathConstraints[timeConstraint.first-1].insert(timeConstraint.second);
+		}
+		else {
+			pathConstraints[timeConstraint.first].insert(timeConstraint.second);
+		}
 		if(timeConstraint.first > maxConstraint) {
 			maxConstraint = timeConstraint.first;
 		}
@@ -318,48 +341,67 @@ DiscreteSearch(Node* _node, size_t _start, size_t _goal) {
 
 	struct Vertex {
 		size_t m_vid;
-		size_t m_distance{0};
-		Vertex* m_parent{nullptr};
+		size_t m_distance;
+		std::shared_ptr<Vertex> m_parent{nullptr};
 
-		Vertex(size_t _vid, size_t _distance, Vertex* _parent) 
+		Vertex(size_t _vid, size_t _distance, std::shared_ptr<Vertex> _parent) 
 			: m_vid(_vid), m_distance(_distance), m_parent(_parent) {}
 	};
 
-	Vertex* current = new Vertex(_start,0,nullptr);
-
-	std::list<Vertex*> pq;
-	pq.push_back(current);
-
-	while(current->m_vid != _goal) {
+	auto current = std::shared_ptr<Vertex>(new Vertex(_start,_startTime,nullptr));
 	
+	std::list<std::shared_ptr<Vertex>> pq;
+	size_t currentDistance = _startTime+1;
+	std::set<size_t> discoveredVertices;
+	while(current->m_vid != _goal or current->m_distance < _minEndTime) {	
+
 		if(current->m_distance > roadmap->Size() + maxConstraint)
 			return {};
 	
+		if(current->m_distance == currentDistance) {
+			currentDistance++;
+			discoveredVertices.clear();
+		}
+
 		auto vit = roadmap->find_vertex(current->m_vid);
 		
 		auto constraints = pathConstraints[current->m_distance];
+		if(!constraints.count(std::make_pair(current->m_vid,MAX_INT))) {
+			auto vert = std::shared_ptr<Vertex>(new Vertex(current->m_vid,current->m_distance+1,current));
+			pq.push_back(vert);
+			discoveredVertices.insert(current->m_vid);
+		}
+
 		for(auto eit = vit->begin(); eit != vit->end(); eit++) {
 			auto source = eit->source();
 			auto target = eit->target();
 			if(constraints.count(std::make_pair(target,MAX_INT))
 			or constraints.count(std::make_pair(source, target))) {
+				if(m_debug) {
+					std::cout << "Constrained vertex/time: " << target << " : " << current->m_distance+1 << std::endl;
+				}
 				continue;
 			}
-			auto vert = new Vertex(target, current->m_distance+1, current);
-			
-			/*if(pq.empty())
-				pq.push_back(vert);
-			else 
-				for(auto iter = pq.begin(); iter != pq.end(); iter++) {
-					
+			else if(target == _goal) {
+				auto taskSwitchingConstraints = pathConstraints[current->m_distance+2];
+				if(taskSwitchingConstraints.count(std::make_pair(target,MAX_INT))) {
+					continue;
 				}
-			*/
-			//Just going to push back since each will increment by one each time
-			pq.push_back(vert);
-		}
-		if(!constraints.count(std::make_pair(current->m_vid,MAX_INT))) {
-			auto vert = new Vertex(current->m_vid,current->m_distance+1,current);
-			pq.push_back(vert);
+			}
+			if(!discoveredVertices.count(target)) {
+				auto vert = std::shared_ptr<Vertex>(new Vertex(target, current->m_distance+1, current));
+			
+				/*if(pq.empty())
+					pq.push_back(vert);
+				else 
+					for(auto iter = pq.begin(); iter != pq.end(); iter++) {
+					
+					}
+				*/
+				//Just going to push back since each will increment by one each time
+				pq.push_back(vert);
+				discoveredVertices.insert(target);
+			}
 		}
 
 		current = pq.front();
@@ -367,7 +409,7 @@ DiscreteSearch(Node* _node, size_t _start, size_t _goal) {
 	}
 
 	std::vector<size_t> path;
-	while(current->m_vid != _start) {
+	while(current->m_vid != _start or current->m_distance != _startTime) {
 		path.push_back(current->m_vid);
 		current = current->m_parent;
 	}
@@ -378,10 +420,12 @@ DiscreteSearch(Node* _node, size_t _start, size_t _goal) {
 	return path;
 }
 
-void
+bool
 TCBS::
 UpdatePlan(Node* _node) {
 	auto agent = _node->GetToReplan();
+
+	_node->ClearPaths(agent);
 
 	auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
 	auto roadmap = sg->GetCapabilityRoadmap(agent);
@@ -395,6 +439,15 @@ UpdatePlan(Node* _node) {
 	size_t originVID = roadmap->GetVID(start);	
 
 	auto tasks = _node->GetAgentAllocations(agent);
+
+	if(m_debug) {
+		std::cout << "Path for: " << agent->GetRobot()->GetLabel() << std::endl;
+	}
+
+
+	auto conflicts = _node->GetConflicts();
+
+	size_t startTime = 0;
 	for(auto task : tasks) {
 
 		auto startCfg = task->m_startPoints[agent->GetCapability()][0];
@@ -402,9 +455,19 @@ UpdatePlan(Node* _node) {
 
 		auto startVID = roadmap->GetVID(startCfg);
 		auto goalVID = roadmap->GetVID(goalCfg);
+
+		size_t minEndTime = 0;
+		for(auto constraint : (*conflicts)[agent]) {
+			auto timeConstraint = constraint->GetConstraint();	
+			if(timeConstraint.first > minEndTime)
+				minEndTime = timeConstraint.first;
+		}
 		
 		//Move to start
-		auto setup = DiscreteSearch(_node, originVID, startVID);	
+		auto setup = DiscreteSearch(_node, originVID, startVID, startTime);	
+		if(setup.size() == 1) { //already at the destination and don't want to wait an extra count
+			setup = {};
+		}
 		if(m_debug) {
 			std::cout << "Printing setup path." << std::endl;
 			for(auto vid : setup) {
@@ -412,9 +475,8 @@ UpdatePlan(Node* _node) {
 				std::cout << cfg.PrettyPrint() << std::endl;
 			}
 		}		
-
 		//Execute Task
-		auto execute = DiscreteSearch(_node, startVID, goalVID);
+		auto execute = DiscreteSearch(_node, startVID, goalVID, startTime + setup.size(),minEndTime);
 		if(m_debug) {
 			std::cout << "Printing execution path." << std::endl;
 			for(auto vid : execute) {
@@ -424,16 +486,20 @@ UpdatePlan(Node* _node) {
 		}		
 
 		if(setup.empty() or execute.empty()) {
-			_node->DeallocateTask(agent,task);
-			continue;
+			//_node->DeallocateTask(agent,task);
+			return false;
+			//continue;
 		}
 
 		auto path = setup;
-		for(size_t i = 1; i < execute.size(); i++) {
+		for(size_t i = 0; i < execute.size(); i++) {
 			path.push_back(execute[i]);
 		}
 		_node->AddAgentPath(agent, path);
+		originVID = goalVID;
+		startTime += path.size();
 	}
+	return true;
 }
 
 void

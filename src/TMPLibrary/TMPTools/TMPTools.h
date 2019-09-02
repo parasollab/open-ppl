@@ -1,6 +1,7 @@
 #ifndef PMPL_TMP_TOOLS_H_
 #define PMPL_TMP_TOOLS_H_
 
+#include "TMPLibrary/TMPTools/DiscreteMAD.h"
 #include "TMPLibrary/TMPTools/MultiAgentDijkstra.h"
 
 #include <iostream>
@@ -39,6 +40,10 @@ class TMPTools {
 		void SetMultiAgentDijkstra(const std::string& _label,
 							MultiAgentDijkstra* _utility);
 
+		DiscreteMAD* GetDiscreteMAD(const std::string& _label);
+
+		void SetDiscreteMAD(const std::string& _label,
+							DiscreteMAD* _utility);
 		///@}
     
 	private:
@@ -61,6 +66,7 @@ class TMPTools {
 		TMPLibrary* const m_tmpLibrary; ///< The owning library.
 
 		LabelMap<MultiAgentDijkstra> 		m_multiAgentDijkstras;
+		LabelMap<DiscreteMAD> 					m_discreteMADs;
 		LabelMap<InteractionTemplate>   m_interactionTemplates;
 
 		///@}

@@ -56,9 +56,10 @@ class TCBS : public TaskEvaluatorMethod {
 		/// @param _node Node containing potential solution
 		std::vector<Node*> FindConflict(std::shared_ptr<Node> _node);
 
-		std::vector<size_t> DiscreteSearch(Node* _node, size_t _start, size_t _goal);
+		std::vector<size_t> DiscreteSearch(Node* _node, size_t _start, size_t _goal, 
+																			 size_t _startTime, size_t _minEndTime = 0);
 
-		void UpdatePlan(Node* _node);
+		bool UpdatePlan(Node* _node);
 
 		void FinalizePlan(Node* _node);
 

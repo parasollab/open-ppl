@@ -36,13 +36,13 @@
 /*------------------------------ Construction --------------------------------*/
 
 HandoffAgent::
-HandoffAgent(Robot* const _r) : PathFollowingAgent(_r) {
+HandoffAgent(Robot* const _r) : DummyAgent(_r) {
 }
 
 
 HandoffAgent::
 HandoffAgent(Robot* const _r, XMLNode& _node)
-  : PathFollowingAgent(_r, _node) {
+  : DummyAgent(_r, _node) {
   // Parse XML parameters.
 }
 
@@ -634,6 +634,12 @@ EvaluateTask(){
   }
   return true;
 
+}
+
+void
+HandoffAgent::
+Step(const double _dt) {
+	PlanningAgent::Step(_dt);
 }
 
 bool

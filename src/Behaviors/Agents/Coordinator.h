@@ -260,6 +260,8 @@ class Coordinator : public Agent {
 
 		bool m_runSimulator{true};
 
+		bool m_runDummies;
+
     ///@}
 
 };

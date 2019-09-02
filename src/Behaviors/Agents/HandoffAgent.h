@@ -2,7 +2,7 @@
 #define HANDOFF_AGENT_H_
 
 #include "PathFollowingAgent.h"
-
+#include "DummyAgent.h"
 
 class Coordinator;
 class TMPLibrary;
@@ -13,7 +13,7 @@ class NetbookInterface;
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent follows a set of tasks and executes the helper worker behavior.
 ////////////////////////////////////////////////////////////////////////////////
-class HandoffAgent : public PathFollowingAgent {
+class HandoffAgent : public DummyAgent {
 
   public:
 
@@ -88,6 +88,8 @@ class HandoffAgent : public PathFollowingAgent {
     /// False means select a new task.
     /// True means continue performing currrent task.
     virtual bool EvaluateTask() override;
+
+    virtual void Step(const double _dt) override;
 
     /// Returns agent collision priority
     size_t GetPriority();

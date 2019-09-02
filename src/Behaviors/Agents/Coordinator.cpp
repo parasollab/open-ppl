@@ -7,6 +7,7 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
+#include "Behaviors/Agents/DummyAgent.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
@@ -68,6 +69,7 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
       "random tasks to generate");
 
 	m_runSimulator = _node.Read("runSim", false, m_runSimulator, "Flag to execute the plan or not.");
+	m_runDummies = _node.Read("runDummies", false, false, "Flag to use dummy agents that only follow input paths.");
   //m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
 
   //m_it = _node.Read("it", false, true, "Generate the Capability and Combined Roadmaps.");
@@ -220,7 +222,7 @@ Step(const double _dt) {
     std::cout << "___________________________________________________________"
               << std::endl;
   for(auto agent : m_memberAgents)  {
-    if(this->m_debug)
+    if(this->m_debug and !m_runDummies)
       std::cout << agent->GetRobot()->GetLabel()
                 << " has plan: "
                 << agent->HasPlan()
@@ -230,11 +232,17 @@ Step(const double _dt) {
                 << std::endl;
   }
 
-  if(!m_robot->IsManipulator())
-    ArbitrateCollision();
+  //if(!m_robot->IsManipulator())
+    //ArbitrateCollision();
 
   for(auto agent : m_memberAgents){
-    agent->Step(_dt);
+		if(m_runDummies) {
+			auto dummy = static_cast<DummyAgent*>(agent);
+			dummy->DummyAgent::Step(_dt);
+		}
+		else {
+    	agent->Step(_dt);
+		}
   }
 
   CheckFinished();
@@ -670,7 +678,7 @@ GenerateRandomTasks(){
 	m_library->SetSeed();
 
   auto sampler = m_library->GetSampler("UniformRandomFree");
-  auto numAttempts = 100;
+  auto numAttempts = 1000000;
 
   auto numNodes = 2;
 
@@ -686,15 +694,23 @@ GenerateRandomTasks(){
     if(samplePoints.size() < 2)
       continue;
 
-    std::cout << "Sampled task" << std::endl
-              << "Start: " << samplePoints[0].PrettyPrint() << std::endl
-              << "Goal: " << samplePoints[1].PrettyPrint() << std::endl;
 
 		//Temporary for icra discrete stuff
 		auto startCfg = samplePoints[0];
-		startCfg.SetData({std::floor(startCfg[0]),std::floor(startCfg[1]),0});
+		int x = int(startCfg[0]+.5);
+		int y = int(startCfg[1]+.5);
+		startCfg.SetData({double(x),double(y),0});
 		auto goalCfg = samplePoints[1];
-		goalCfg.SetData({std::floor(goalCfg[0]),std::floor(goalCfg[1]),0});
+		x = int(goalCfg[0]+.5);
+		y = int(goalCfg[1]+.5);
+		goalCfg.SetData({double(x),double(y),0});
+
+		if(!env->GetBoundary()->InBoundary(startCfg) 
+		or !env->GetBoundary()->InBoundary(goalCfg))
+			continue;
+    std::cout << "Sampled task" << std::endl
+              << "Start: " << startCfg.PrettyPrint() << std::endl
+              << "Goal: " << goalCfg.PrettyPrint() << std::endl;
 
     // create tasks from sample start and goal
     std::unique_ptr<CSpaceConstraint> start =

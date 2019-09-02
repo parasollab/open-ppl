@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include "MPProblem/MPTask.h"
 
+#include "Utilities/CBS/DiscreteAgentAllocation.h"
+
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "TMPLibrary/WholeTask.h"
 #include "TMPLibrary/OccupiedInterval.h"
@@ -21,6 +23,9 @@ class TaskPlan {
     typedef typename std::unordered_map<std::shared_ptr<MPTask>,
             std::list<std::shared_ptr<MPTask>>>        TaskDependencyMap;
 
+
+		//Discrete Stuff
+		typedef std::unordered_map<HandoffAgent*,std::list<DiscreteAgentAllocation>> AgentAllocationMap;
     ///@name Construction
     ///@{
 
@@ -177,6 +182,16 @@ class TaskPlan {
 		std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>>& GetPositiveInstantConstraints();
 
     ///@}
+    ///@name Discrete Stuff
+    ///@{
+
+		void AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation);
+
+		AgentAllocationMap& GetAllAgentAllocations();
+
+		std::list<DiscreteAgentAllocation> GetAgentAllocations(HandoffAgent* _agent);
+
+    ///@}
 
   private:
 
@@ -226,6 +241,9 @@ class TaskPlan {
 
 		std::unordered_map<WholeTask*,std::list<OccupiedInterval>> m_positiveConstraints;
 		std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>> m_posInstantConstraints;
+
+		//Discrete Stuff 
+		AgentAllocationMap m_agentAllocationMap;
 
 };
 
