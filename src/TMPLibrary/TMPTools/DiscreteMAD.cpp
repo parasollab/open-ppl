@@ -51,7 +51,17 @@ Run(WholeTask* _wholeTask, std::set<size_t> _validVIDs, ConstraintMap _constrain
       const double _sourceDistance,
       const double _targetDistance) {
     //return this->MAMTPathWeight(_ei,_sourceDistance,_targetDistance,goal,start);
-    return this->AvailableIntervalPathWeight(_ei,size_t(_sourceDistance),size_t(_targetDistance),
+    size_t sourceDistance;
+		size_t targetDistance;
+    if(_sourceDistance == std::numeric_limits<double>::infinity())
+			sourceDistance = MAX_INT;
+		else 
+			sourceDistance = size_t(_sourceDistance);
+    if(_targetDistance == std::numeric_limits<double>::infinity())
+			targetDistance = MAX_INT;
+		else 
+			targetDistance = size_t(_targetDistance);
+    return this->AvailableIntervalPathWeight(_ei,size_t(sourceDistance),size_t(targetDistance),
 																						 start,goal,_wholeTask,_constraints);
   };
 
@@ -92,6 +102,7 @@ Run(WholeTask* _wholeTask, std::set<size_t> _validVIDs, ConstraintMap _constrain
   m_parentMap.clear();
   m_incomingEdgeMap.clear();
   m_usedAgents.clear();
+	m_robotUpdates.clear();
   return subtaskPlans;
 }
 

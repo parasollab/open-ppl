@@ -67,6 +67,8 @@ ValidTransition(size_t _source, size_t _target, size_t _edge,
 
 	if(sourceCfg.GetRobot()->GetCapability() == targetCfg.GetRobot()->GetCapability()) {
 		auto path = LowLevelGraphPath(sourceCfg,targetCfg,_constraints,_sourceDistance+1);
+		if(path.size() == 0)
+			return MAX_INT;
 		transitionWeight = path.size();
 	}
 	
@@ -87,6 +89,8 @@ ValidTransition(size_t _source, size_t _target, size_t _edge,
   else {
     availTime = _update.first
 								+ LowLevelGraphPathWeight(_update.second,targetCfg,_constraints,_update.first+1);
+		if(availTime == _update.first)
+			return MAX_INT;
     //          + LowLevelGraphPathWeight(_update.second,targetCfg);
 	}
 
@@ -470,6 +474,9 @@ LowLevelGraphPath(HandoffAgent* _agent, size_t _start, size_t _goal, ConstraintM
 			}
 		}
 
+		if(pq.empty())
+			return {};
+
 		current = pq.front();
 		pq.pop_front();
 	}
@@ -559,10 +566,15 @@ ValidIntervalEdge(size_t _source, size_t _target, size_t _edge) {
   //If the edge is moving between ITs or start/goal then it should be the same
   //robot. If the edge is across an IT or a virtual start/goal then it can be
   //different.
-  if(sourceInterval.first != targetInterval.first and
-     (m_mainDelivering.count(m_parentIntervalMap[_target])
-      or m_goalDelivering.count(m_parentIntervalMap[_target])))
-    return false;
+  //if(sourceInterval.first != targetInterval.first and
+     //(m_mainDelivering.count(m_parentIntervalMap[_target])
+      //or m_goalDelivering.count(m_parentIntervalMap[_target])))
+    //return false;
+
+	//Prevents homogeneous interactions at the moment
+	if(sourceInterval.first->GetCapability() == targetInterval.first->GetCapability()
+		 and sourceInterval.first != targetInterval.first)
+		return false;
 
   if(sourceInterval.second.first + _edge > targetInterval.second.second)
     return false;
@@ -584,29 +596,65 @@ CreateAvailableIntervalGraph(){
   //Add a vertex for every interval location pair
   for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++) {
     auto cfg = vit->property();
-    if(cfg.GetRobot() == robot){
-      size_t startTime = 0;
-      size_t endTime = MAX_INT;
+    //if(cfg.GetRobot() == robot){
+    for(auto agent : this->GetTaskPlan()->GetTeam()) {
+			if(agent->GetCapability() != cfg.GetRobot()->GetCapability())
+				continue;
 
-      auto vid = m_availableIntervalGraph->AddDuplicateVertex(cfg);
-      m_agentAvailableIntervalMap[vid] = std::make_pair(robot->GetAgent(),
-                                         std::make_pair(startTime,endTime));
-      m_intervalMap[vit->descriptor()].push_back(vid);
-      m_parentIntervalMap[vid] = vit->descriptor();
+			auto allocations = this->GetTaskPlan()->GetRobotAvailability(agent);
+
+			for(auto iter = allocations.begin(); iter != allocations.end(); iter++) {
+				auto alloc = *(iter);
+      	size_t beginTime = size_t(alloc.GetEndTime());
+				if(beginTime > 0)
+					beginTime++;
+
+				Cfg beginCfg = alloc.GetStartLocation();
+				int x = int(beginCfg[0]+.5);
+				int y = int(beginCfg[1]+.5);
+				beginCfg.SetData({double(x),double(y),0});
+				beginCfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(agent->GetCapability())->GetRobot());
+
+      	size_t arriveTime = LowLevelGraphPathWeight(beginCfg,cfg,{},beginTime);
+
+				size_t endTime = MAX_INT;
+				auto next = iter;
+				next++;
+				if(next != allocations.end()) {
+					Cfg nextCfg = next->GetStartLocation();
+					x = int(nextCfg[0]+.5);
+					y = int(nextCfg[1]+.5);
+					nextCfg.SetData({double(x),double(y),0});
+					nextCfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(agent->GetCapability())->GetRobot());
+
+					endTime = size_t(next->GetStartTime()) - LowLevelGraphPathWeight(cfg,nextCfg);
+				}
+
+				cfg.SetRobot(agent->GetRobot());
+      	auto vid = m_availableIntervalGraph->AddDuplicateVertex(cfg);
+      	m_agentAvailableIntervalMap[vid] = std::make_pair(agent,
+                                         std::make_pair(arriveTime,endTime));
+      	m_intervalMap[vit->descriptor()].push_back(vid);
+      	m_parentIntervalMap[vid] = vit->descriptor();
+			}
     }
   }
+	if(m_debug)
+		PrintAvailabilityGraph();
   for(auto vit = m_highLevelGraph->begin(); vit != m_highLevelGraph->end(); vit++) {
     for(auto eit = vit->begin(); eit != vit->end(); eit++) {
       for(auto s : m_intervalMap[eit->source()]) {
         for(auto t : m_intervalMap[eit->target()]) {
           if(ValidIntervalEdge(s,t,eit->property().GetWeight())) {
             m_availableIntervalGraph->AddEdge(s,t,eit->property());
-						m_availableIntervalEdgePaths[s][t] = m_highLevelEdgePaths[eit->source()][eit->target()];
+						//m_availableIntervalEdgePaths[s][t] = m_highLevelEdgePaths[eit->source()][eit->target()];
 					}
         }
       }
     }
   }
+	if(m_debug)
+		PrintAvailabilityGraph();
 }
 
 /********************************* Debug ******************************************/
@@ -1042,7 +1090,8 @@ UpdateMotionConstraint(HandoffAgent* _agent,WholeTask* _wholeTask,
 				path = LowLevelGraphPath(sourceCfg,targetCfg,
 									_constraints,sourceInterval.second.first,
 									targetInterval.second.first);
-				
+			if(path.size() == 0)
+				continue;	
       if(ValidIntervalEdge(source,target,path.size())) {
 				DefaultWeight<Cfg> edge;
 				if(!path.empty())

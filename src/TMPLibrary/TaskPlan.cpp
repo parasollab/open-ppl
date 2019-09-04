@@ -502,3 +502,9 @@ TaskPlan::
 GetAgentAllocations(HandoffAgent* _agent) {
 	return m_agentAllocationMap[_agent];
 }
+
+void
+TaskPlan::
+SetAgentAllocations(AgentAllocationMap _allocs) {
+	m_agentAllocationMap = _allocs;
+}

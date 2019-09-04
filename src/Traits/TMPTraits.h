@@ -20,6 +20,7 @@
 #include "TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/TaskCBSPlanner.h"
 #include "TMPLibrary/TaskEvaluators/TCBS.h"
+#include "TMPLibrary/TaskEvaluators/TMPCBS.h"
 
 // TaskDecomposers to include
 
@@ -32,6 +33,7 @@
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/DiscreteIntervalGraph.h"
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +65,7 @@ struct TMPTraits {
 		OrderedMultiTaskEvaluator,
 		TaskCBSPlanner,
 		TCBS,
+		TMPCBS,
     EnforcedHillClimbing
       > TaskEvaluatorMethodList;
 
@@ -78,6 +81,7 @@ struct TMPTraits {
 
 	typedef boost::mpl::list<
 		CombinedRoadmap,
+		DiscreteIntervalGraph,
 		MultiTaskGraph
 			> StateGraphList;
 };

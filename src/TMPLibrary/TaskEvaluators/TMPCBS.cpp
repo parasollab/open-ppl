@@ -313,7 +313,7 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 	auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
 
 	auto tasks = this->GetTaskPlan()->GetWholeTasks();
-	for(size_t i = 0; i < tasks.size(); i++) {
+	for(size_t i = 0; i < tasks.size()-1; i++) {
 		auto plan1 = _node->GetTaskPlan(tasks[i]);
 		for(size_t j = i+1; j < tasks.size(); j++) {
 			auto plan2 = _node->GetTaskPlan(tasks[j]);
@@ -504,9 +504,17 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 					continue;
 				
 				agent1 = path1[index].first;
-				auto vid1b = path1[index].second;
 				agent2 = path2[index].first;
+
+				auto vid1b = path1[index].second;
 				auto vid2b = path2[index].second;
+
+				if(!agent1 or !agent2){
+					vid1 = vid1b;
+					vid2 = vid2b;
+					continue;
+				}
+
 			
 				Cfg cfg1b = sg->GetCapabilityRoadmap(agent1)->GetVertex(vid1b);
 				Cfg cfg2b = sg->GetCapabilityRoadmap(agent2)->GetVertex(vid2b);
@@ -553,6 +561,8 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 			std::unordered_map<HandoffAgent*,size_t> step;
 			bool any = false;
 			for(auto path : paths) {
+				if(index >= path.size())
+					continue;
 				if(path[index].first) {
 					any = true;
 					step[path[index].first] = path[index].second;
@@ -596,6 +606,10 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 					//Check if paths continues and if so check for edge conflict
 					if(index == execPath.size()-1 or index == setupPath.size()-1)
 						continue;
+
+					if(!execPath[index+1].first)
+						continue;
+
 					auto iter = setupPath[index+1].find(setupAgent);
 					if(iter == setupPath[index+1].end())
 						continue;
@@ -883,10 +897,42 @@ TMPCBS::
 UpdatePlan(Node* _node) {
 
 	auto task = _node->GetToReplan();
-	
+
+	this->GetTaskPlan()->SetAgentAllocations({});
+
+	auto allocs = _node->GetAgentAllocationConstraints(task);
+
+	auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
+	for(auto member : this->GetTaskPlan()->GetTeam()) {
+		auto cfg = member->GetRobot()->GetSimulationModel()->GetState();
+		int x = int(cfg[0]+.5);
+		int y = int(cfg[1]+.5);
+		cfg.SetData({double(x),double(y),0});
+		cfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(member->GetCapability())->GetRobot());
+		auto vid = sg->GetCapabilityRoadmap(member)->GetVID(cfg);
+		DiscreteAgentAllocation allocation(member, 0, 0, vid, vid);
+		this->GetTaskPlan()->AddAgentAllocation(member, allocation);
+		for(auto alloc : allocs[member]) {
+			this->GetTaskPlan()->AddAgentAllocation(member,alloc);
+		}
+	}
+
 	auto plan = this->GetTMPTools()->GetDiscreteMAD(m_dmadLabel)->Run(task, _node->GetValidVIDs()[task],
 																																		_node->GetTaskMotionConstraints(task));
 	_node->SetTaskPlan(task,plan);
+
+	this->GetTaskPlan()->SetAgentAllocations({});
+
+	for(auto member : this->GetTaskPlan()->GetTeam()) {
+		auto cfg = member->GetRobot()->GetSimulationModel()->GetState();
+		int x = int(cfg[0]+.5);
+		int y = int(cfg[1]+.5);
+		cfg.SetData({double(x),double(y),0});
+		cfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(member->GetCapability())->GetRobot());
+		auto vid = sg->GetCapabilityRoadmap(member)->GetVID(cfg);
+		DiscreteAgentAllocation allocation(member, 0, 0, vid, vid);
+		this->GetTaskPlan()->AddAgentAllocation(member, allocation);
+	}
 
 	return true;
 }

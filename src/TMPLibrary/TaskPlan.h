@@ -191,6 +191,7 @@ class TaskPlan {
 
 		std::list<DiscreteAgentAllocation> GetAgentAllocations(HandoffAgent* _agent);
 
+		void SetAgentAllocations(AgentAllocationMap _allocs);
     ///@}
 
   private:

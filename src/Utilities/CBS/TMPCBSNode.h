@@ -34,6 +34,7 @@ class TMPCBSNode : public NewCBSNode<T, U> {
 		typedef std::pair<size_t,std::pair<size_t,size_t>>	 		 Motion;
 		typedef DiscreteMotionConflict<Motion>						 			 MotionConflict;
 		typedef AgentAllocationConflict<DiscreteAgentAllocation> TaskConflict;
+		typedef std::unordered_map<HandoffAgent*,std::list<DiscreteAgentAllocation>> AgentAllocationMap;
 
 		///@}
     ///@name Construction
@@ -80,6 +81,8 @@ class TMPCBSNode : public NewCBSNode<T, U> {
 		void SetTaskPlan(WholeTask* _task, std::vector<SubtaskPlan> _plan);
 
 		std::unordered_map<T*,std::vector<SubtaskPlan>>& GetTaskPlans();
+
+		AgentAllocationMap CreateAllocations();
 
     ///@}
 
@@ -178,7 +181,6 @@ AddTaskConflict(T* _t, TaskConflict* _c){
 			current.insert(iter,_c);
 			return;
 		}
-		iter++;
 	}
 	current.push_back(_c);
 	//current.push_back(_c);
@@ -262,7 +264,7 @@ GetAgentAllocationConstraints(T* _task) {
 	
 	for(auto allocationConflict : m_taskConflicts[_task]) {
 		auto allocation = allocationConflict->GetConstraint();
-		constraintMap[allocation->m_agent].push_back(allocation);
+		constraintMap[allocation.m_agent].push_back(allocation);
 	}
 	return constraintMap;
 }
@@ -289,4 +291,18 @@ GetTaskPlans() {
 	return m_taskPlans;
 }
 
+template<typename T, typename U>
+std::unordered_map<HandoffAgent*,std::list<DiscreteAgentAllocation>>
+TMPCBSNode<T,U>::
+CreateAllocations() {
+	AgentAllocationMap allocs;
+
+	for(auto taskConflicts : m_taskConflicts) {
+		for(auto allocationConflict : taskConflicts.second) {
+			auto allocation = allocationConflict->GetConstraint();
+			allocs[allocation.m_agent].push_back(allocation);
+		}
+	}
+	return allocs;
+}
 #endif
