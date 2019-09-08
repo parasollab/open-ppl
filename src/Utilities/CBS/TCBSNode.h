@@ -121,7 +121,7 @@ template <typename T, typename U>
 double
 TCBSNode<T, U>::
 GetCost(bool _makespan) const{
-  double sum = 0;
+  /*double sum = 0;
 	double max = 0;
 	for(auto agentPath : m_agentEntirePaths) {
 		double length = agentPath.second.size();
@@ -133,7 +133,8 @@ GetCost(bool _makespan) const{
 
 	if(_makespan)
 		return max;
-	return sum;
+	return sum;*/
+	return double(GetDiscreteCost(_makespan));
 }
 
 template <typename T, typename U>

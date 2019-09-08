@@ -233,7 +233,7 @@ ConstructDiscreteRoadmap() {
 
 		DefaultWeight<Cfg> weight;
 		weight.SetWeight(1);
-		for(size_t i = 1 ; i < vidMatrix.size(); i++) {
+		for(size_t i = 0 ; i < vidMatrix.size(); i++) {
 			for(size_t j = 0 ; j < vidMatrix[i].size(); j++) {
 				if(vidMatrix[i][j] == MAX_INT)
 					continue;
@@ -241,6 +241,9 @@ ConstructDiscreteRoadmap() {
 					roadmap->AddEdge(vidMatrix[i][j],vidMatrix[i][j+1],weight);
 					roadmap->AddEdge(vidMatrix[i][j+1],vidMatrix[i][j],weight);
 				}
+				
+				if(i == 0)
+					continue;
 
 				//Connect left
 				if(vidMatrix[i-1][j] != MAX_INT) {

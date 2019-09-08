@@ -329,6 +329,8 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
 
 	auto setupStart = iter->m_endLocation;
 	auto setupBegin = iter->m_endTime;
+	if(setupBegin > 0)
+		setupBegin++;
 
 	Cfg setupCfg = roadmap->GetVertex(setupStart);
 	setupCfg.SetRobot(_agent->GetRobot());
@@ -339,7 +341,7 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
 	Cfg goalCfg = sg->GetAvailableIntervalGraph()->GetVertex(_end);
 	goalCfg.SetRobot(_agent->GetRobot());
 	
-	auto setupPath = sg->LowLevelGraphPath(setupCfg, startCfg, _constraints, setupBegin, _startTime);
+	auto setupPath = sg->LowLevelGraphPath(setupCfg, startCfg, _constraints, setupBegin, _startTime-1);
 	if(setupPath.size() + setupBegin > _startTime+1)
 		throw RunTimeException(WHERE,"This should never happen due to the available interval concept of "
 																 "the availability graph.");
@@ -349,7 +351,7 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
 	plan.m_setupStartTime = setupBegin;
 
 	//Execution Path
-	auto executionPath = sg->LowLevelGraphPath(startCfg, goalCfg, _constraints, _startTime+1, _endTime);
+	auto executionPath = sg->LowLevelGraphPath(startCfg, goalCfg, _constraints, _startTime, _endTime);
 	if(executionPath.size() + _startTime > _endTime+1)
 		throw RunTimeException(WHERE, "The execution path violates the task path found in the "
 																	"availability graph search.");

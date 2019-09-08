@@ -477,7 +477,7 @@ GetPositiveInstantConstraints() {
 void 
 TaskPlan::
 AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation) {
-	auto& allocations = m_agentAllocationMap[_agent];
+/*	auto& allocations = m_agentAllocationMap[_agent];
 	if(allocations.empty() or allocations.back().m_startTime < _allocation.m_startTime) {
 		allocations.push_back(_allocation);
 		return;
@@ -488,16 +488,17 @@ AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation) {
 			allocations.insert(iter,_allocation);
 			return;
 		}
-	}
+	}*/
+	m_agentAllocationMap[_agent].push_back(_allocation);
 }
 
-std::unordered_map<HandoffAgent*,std::list<DiscreteAgentAllocation>>&
+std::unordered_map<HandoffAgent*,std::vector<DiscreteAgentAllocation>>&
 TaskPlan::
 GetAllAgentAllocations() {
 	return m_agentAllocationMap;
 }
 
-std::list<DiscreteAgentAllocation>
+std::vector<DiscreteAgentAllocation>
 TaskPlan::
 GetAgentAllocations(HandoffAgent* _agent) {
 	return m_agentAllocationMap[_agent];

@@ -25,7 +25,7 @@ class TaskPlan {
 
 
 		//Discrete Stuff
-		typedef std::unordered_map<HandoffAgent*,std::list<DiscreteAgentAllocation>> AgentAllocationMap;
+		typedef std::unordered_map<HandoffAgent*,std::vector<DiscreteAgentAllocation>> AgentAllocationMap;
     ///@name Construction
     ///@{
 
@@ -189,7 +189,7 @@ class TaskPlan {
 
 		AgentAllocationMap& GetAllAgentAllocations();
 
-		std::list<DiscreteAgentAllocation> GetAgentAllocations(HandoffAgent* _agent);
+		std::vector<DiscreteAgentAllocation> GetAgentAllocations(HandoffAgent* _agent);
 
 		void SetAgentAllocations(AgentAllocationMap _allocs);
     ///@}

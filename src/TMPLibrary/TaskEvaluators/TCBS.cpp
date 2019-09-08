@@ -28,6 +28,9 @@ TCBS::
 bool 
 TCBS::
 Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
+
+	Simulation::GetStatClass()->StartClock("PlanningTime");	
+
 	if(_wholeTasks.empty()) {
 		_wholeTasks = this->GetTaskPlan()->GetWholeTasks();
 	}
@@ -103,13 +106,17 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		}
 	}
 	
+	Simulation::GetStatClass()->StopClock("PlanningTime");	
+
 	FinalizePlan(minNode.get());
 
 	Simulation::GetStatClass()->SetStat("TotalNodes", totalNodes);
 	Simulation::GetStatClass()->SetStat("MaxDepth", maxDepth);
 	Simulation::GetStatClass()->SetStat("SolutionDepth", solutionDepth);
 	Simulation::GetStatClass()->SetStat("NodesExplored", nodesExplored);
-	Simulation::GetStatClass()->SetStat("PlanCost", minNode->GetDiscreteCost(m_makespan));
+	Simulation::GetStatClass()->SetStat("Makespan", minNode->GetDiscreteCost(true));
+	Simulation::GetStatClass()->SetStat("SOC", minNode->GetDiscreteCost(false));
+  Simulation::Get()->PrintStatFile();
 
 	if(savedPlan)
 		this->GetTMPLibrary()->SetTaskPlan(_plan);

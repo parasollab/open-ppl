@@ -159,7 +159,7 @@ GetDiscreteCost(bool _makespan) const{
 
 	for(auto taskPlan : m_taskPlans) {
 		auto lastSubtask = taskPlan.second.back();
-		size_t endTime = lastSubtask.m_subtaskStartTime + lastSubtask.m_subtaskPath.size();
+		size_t endTime = lastSubtask.m_subtaskStartTime + lastSubtask.m_subtaskPath.size()-1;
 		sum += endTime;
 		if(max < endTime)
 			max = endTime;

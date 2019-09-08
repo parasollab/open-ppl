@@ -30,6 +30,9 @@ TMPCBS::
 bool 
 TMPCBS::
 Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
+
+	Simulation::GetStatClass()->StartClock("PlanningTime");	
+
 	if(_wholeTasks.empty()) {
 		_wholeTasks = this->GetTaskPlan()->GetWholeTasks();
 	}
@@ -129,7 +132,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 
 		size_t nodeCost = node->GetDiscreteCost(m_makespan);
 
-		if(nodeCost > minCost)
+		if(nodeCost >= minCost)
 			break;
 
 		nodesExplored++;
@@ -158,13 +161,16 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		}
 	}
 	
+	Simulation::GetStatClass()->StopClock("PlanningTime");	
 	FinalizePlan(minNode.get());
 
 	Simulation::GetStatClass()->SetStat("TotalNodes", totalNodes);
 	Simulation::GetStatClass()->SetStat("MaxDepth", maxDepth);
 	Simulation::GetStatClass()->SetStat("SolutionDepth", solutionDepth);
 	Simulation::GetStatClass()->SetStat("NodesExplored", nodesExplored);
-	Simulation::GetStatClass()->SetStat("PlanCost", minNode->GetDiscreteCost(m_makespan));
+	Simulation::GetStatClass()->SetStat("Makespan", minNode->GetDiscreteCost(true));
+	Simulation::GetStatClass()->SetStat("SOC", minNode->GetDiscreteCost(false));
+  Simulation::Get()->PrintStatFile();
 
 	if(savedPlan)
 		this->GetTMPLibrary()->SetTaskPlan(_plan);
@@ -332,18 +338,29 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 					continue;
 				}
 				//Subtask 1 starts after subtask 2 is complete
-				if(iter1->m_setupStartTime > iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()) {
+				if(iter1->m_setupStartTime >= iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()) {
 					iter2++;
 					continue;
 				}
-				else if(iter2->m_setupStartTime > iter1->m_subtaskStartTime + iter1->m_subtaskPath.size()) {
+				else if(iter2->m_setupStartTime >= iter1->m_subtaskStartTime + iter1->m_subtaskPath.size()) {
 					iter1++;
 					continue;
 				}
+				//Subtask 2 start at the same location that subtask 1 ends
+				/*else if(iter2->m_setupStartTime == iter1->m_subtaskStartTime + iter1->m_subtaskPath.size()
+								and iter1->m_setupPath.front() == iter2->m_subtaskPath.back()) {
+					iter1++;
+					continue;
+				}
+				else if(iter1->m_setupStartTime == iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()
+								and iter2->m_setupPath.front() == iter1->m_subtaskPath.back()) {
+					iter1++;
+					continue;
+				}*/
 				else {
 					auto newNode1 = new Node(_node.get(),tasks[i]);
 					DiscreteAgentAllocation alloc1(iter2->m_agent, iter2->m_subtaskStartTime,
-																				 iter2->m_subtaskStartTime + iter2->m_subtaskPath.size(), 
+																				 iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()-1,//+1, 
 																				 iter2->m_subtaskPath[0],
 																				 iter2->m_subtaskPath.back());
 					auto taskConflict1 = new TaskConflict(tasks[i],alloc1);
@@ -351,7 +368,7 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 
 					auto validVIDs = sg->UpdateAvailableIntervalConstraint(iter2->m_agent,
 																								iter2->m_subtaskStartTime,
-																				 				iter2->m_subtaskStartTime + iter2->m_subtaskPath.size(), 
+																				 				iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()-1,//+1, 
 																				 				iter2->m_subtaskPath[0],
 																				 				iter2->m_subtaskPath.back(),
 																								tasks[i],
@@ -362,14 +379,14 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 	
 					auto newNode2 = new Node(_node.get(),tasks[j]);
 					DiscreteAgentAllocation alloc2(iter1->m_agent, iter1->m_subtaskStartTime,
-																				 iter1->m_subtaskStartTime + iter1->m_subtaskPath.size(), 
+																				 iter1->m_subtaskStartTime + iter1->m_subtaskPath.size()-1,//+1, 
 																				 iter1->m_subtaskPath[0],
 																				 iter1->m_subtaskPath.back());
 					auto taskConflict2 = new TaskConflict(tasks[j],alloc2);
 					newNode2->AddTaskConflict(tasks[j],taskConflict2);
 					validVIDs = sg->UpdateAvailableIntervalConstraint(iter1->m_agent,
 																								iter1->m_subtaskStartTime,
-																				 				iter1->m_subtaskStartTime + iter2->m_subtaskPath.size(), 
+																				 				iter1->m_subtaskStartTime + iter1->m_subtaskPath.size()-1,//+1, 
 																				 				iter1->m_subtaskPath[0],
 																				 				iter1->m_subtaskPath.back(),
 																								tasks[j],
@@ -587,7 +604,8 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 			size_t index = 0;
 			
 			while(index < std::min(execPath.size(),setupPath.size())) {
-				if(!execPath[index].first or setupPath[index].size() == 0) {
+				if(!execPath[index].first or setupPath[index].size() == 0
+					or !setupPath[index].begin()->first) {
 					index++;
 					continue;
 				}
@@ -597,6 +615,8 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 					auto execCfg = sg->GetCapabilityRoadmap(execAgent)->GetVertex(execVID);
 
 					auto setupAgent = agentVID.first;
+					if(!setupAgent) 
+						continue;
 					auto setupVID = agentVID.second;	
 					auto setupCfg = sg->GetCapabilityRoadmap(setupAgent)->GetVertex(setupVID);
 
@@ -643,7 +663,9 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 			size_t index = 0;
 			
 			while(index < std::min(execPath.size(),setupPath.size())) {
-				if(execPath[index].size() == 0 or setupPath[index].size() == 0) {
+				if(execPath[index].size() == 0 or setupPath[index].size() == 0
+					or !setupPath[index].begin()->first 
+					or !execPath[index].begin()->first) {
 					index++;
 					continue;
 				}
@@ -654,6 +676,9 @@ FindMotionConflicts(std::shared_ptr<Node> _node) {
 
 					for(auto agentVID : setupPath[index]) {
 						auto setupAgent = agentVID.first;
+						if(!setupAgent)
+							continue;
+
 						auto setupVID = agentVID.second;	
 						auto setupCfg = sg->GetCapabilityRoadmap(setupAgent)->GetVertex(setupVID);
 
@@ -913,12 +938,15 @@ UpdatePlan(Node* _node) {
 		DiscreteAgentAllocation allocation(member, 0, 0, vid, vid);
 		this->GetTaskPlan()->AddAgentAllocation(member, allocation);
 		for(auto alloc : allocs[member]) {
+			//alloc.m_endTime = alloc.m_endTime+1;
 			this->GetTaskPlan()->AddAgentAllocation(member,alloc);
 		}
 	}
 
 	auto plan = this->GetTMPTools()->GetDiscreteMAD(m_dmadLabel)->Run(task, _node->GetValidVIDs()[task],
 																																		_node->GetTaskMotionConstraints(task));
+	if(plan.empty())
+		return false;
 	_node->SetTaskPlan(task,plan);
 
 	this->GetTaskPlan()->SetAgentAllocations({});
@@ -951,6 +979,79 @@ FinalizePlan(Node* _node) {
 		}
 		agent->SetPlan(path);
 	}*/
+
+	size_t max = 0;
+	for(auto taskPlan : _node->GetTaskPlans()) {
+		auto end = taskPlan.second.back().m_subtaskStartTime + taskPlan.second.back().m_subtaskPath.size()+1;
+		if(end > max)
+			max = end;
+	}
+
+	std::unordered_map<HandoffAgent*,std::vector<Cfg>> agentPaths;
+	for(auto agent : this->GetTaskPlan()->GetTeam()) {
+		agentPaths[agent] = std::vector<Cfg>(max);
+	}	
+
+	auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
+	for(auto taskPlan : _node->GetTaskPlans()) {
+		for(auto subtask : taskPlan.second) {
+			auto agent = subtask.m_agent;
+			auto index = subtask.m_setupStartTime;
+			auto roadmap = sg->GetCapabilityRoadmap(agent);
+
+			for(auto vid : subtask.m_setupPath) {
+				auto cfg = roadmap->GetVertex(vid);
+				agentPaths[agent][index] = cfg;
+				index++;
+			}
+
+			for(auto vid : subtask.m_subtaskPath) {
+				auto cfg = roadmap->GetVertex(vid);
+				agentPaths[agent][index] = cfg;
+				index++;
+			}
+		}
+	}
+
+	for(auto& agentPath : agentPaths) {
+		auto& path = agentPath.second;
+
+		auto last = path.front();
+		if(!last.GetRobot()) {
+			path = {};
+		}
+		
+		for(auto& cfg : path) {
+			if(!cfg.GetRobot()) {
+				cfg = last;
+				continue;
+			}
+			last = cfg;
+		}
+
+		agentPath.first->SetPlan(agentPath.second);
+	}
+
+	for(auto agent : this->GetTaskPlan()->GetTeam()) {
+		auto roadmap = sg->GetCapabilityRoadmap(agent).get();
+		if(agent->GetCapability() == "land")
+  		Simulation::Get()->AddRoadmap(roadmap, glutils::color::green);
+		else if(agent->GetCapability() == "water")
+  		Simulation::Get()->AddRoadmap(roadmap, glutils::color::blue);
+	}	
+	if(m_debug) {
+		for(auto agentPath : agentPaths) {
+			std::cout << "Path for " << agentPath.first->GetRobot()->GetLabel() << std::endl;
+			for(auto cfg : agentPath.second) {
+				std::cout << cfg.PrettyPrint() << std::endl;
+			}
+			std::cout << std::endl;
+		}
+	}
+
+	auto combinedRoadmap = sg->CombinedRoadmap::GetGraph();
+  Simulation::Get()->AddRoadmap(combinedRoadmap, glutils::color::brown);
+
 }
 
 std::vector<size_t>
