@@ -81,8 +81,8 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
     MultiBody* const obst = env->GetObstacle(obstIndex);
     const unsigned int body = LRand() % obst->GetNumBodies(); // Any random body
     const GMSPolyhedron& poly = obst->GetBody(body)->GetWorldPolyhedron();
-    const vector<Vector3d>& vertexList    = poly.m_vertexList;
-    const vector<GMSPolygon>& polygonList = poly.m_polygonList;
+    const vector<Vector3d>& vertexList    = poly.GetVertexList();
+    const vector<GMSPolygon>& polygonList = poly.GetPolygonList();
 
     // Random polygon
     int randPolyInd = LRand() % polygonList.size();

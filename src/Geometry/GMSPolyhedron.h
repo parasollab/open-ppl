@@ -1,10 +1,7 @@
-#ifndef GMS_POLYHEDRON_H_
-#define GMS_POLYHEDRON_H_
+#ifndef PMPL_GMS_POLYHEDRON_H_
+#define PMPL_GMS_POLYHEDRON_H_
 
-#include <iostream>
-#include <string>
-#include <utility>
-#include <vector>
+#include "GMSPolygon.h"
 
 #include "Transformation.h"
 #include "Vector.h"
@@ -13,9 +10,14 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
 
-class IModel;
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "GMSPolygon.h"
+class IModel;
+class PQP_Model;
+class RAPID_model;
 
 using namespace mathtool;
 namespace glutils {
@@ -24,11 +26,13 @@ namespace glutils {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometric structure for polyhedra including vertices, faces, and surface area.
+/// Geometric structure for polyhedra including vertices, faces, and surface
+/// area.
 ///
-/// @TODO Migrate vertex/facet representation to glutils::triangulated_model to
-///       separate concerns regarding geometric computations (here) from
-///       polygonal mesh issues (there).
+/// @TODO Replace this object with CGAL::Polyhedron_3 or at least extend from
+///       it. We really do not need three different classes to represent
+///       polyhedrons, and CGAL's representation is the most mature.
+///
 /// @ingroup Geometry
 ////////////////////////////////////////////////////////////////////////////////
 class GMSPolyhedron final {
@@ -41,7 +45,6 @@ class GMSPolyhedron final {
     typedef CGAL::Exact_predicates_exact_constructions_kernel CGALKernel;
     typedef CGALKernel::Point_3                               CGALPoint;
     typedef CGAL::Polyhedron_3<CGALKernel>                    CGALPolyhedron;
-    typedef CGALPolyhedron::Halfedge_around_facet_circulator  HalfedgeFacetCirculator;
 
     ////////////////////////////////////////////////////////////////////////////
     /// Center of mass adjustment approaches
@@ -50,6 +53,10 @@ class GMSPolyhedron final {
     /// subtract the center of mass (com) from all vertices. 'Surface' will
     /// subtract only x and z components of the com from all vertices. 'None'
     /// will not perform any adjustment.
+    ///
+    /// @todo This has been a major source of bugs for a long time and should be
+    ///       removed entirely. All polyhedrons should be bounding-box centered
+    ///       without exception.
     ////////////////////////////////////////////////////////////////////////////
     enum class COMAdjust {COM, Surface, None};
 
@@ -57,13 +64,15 @@ class GMSPolyhedron final {
     ///@name Construction
     ///@{
 
-    GMSPolyhedron() = default;
+    GMSPolyhedron();
 
     GMSPolyhedron(const GMSPolyhedron& _p);
 
     GMSPolyhedron(GMSPolyhedron&& _p);
 
     GMSPolyhedron(glutils::triangulated_model&& _t);
+
+    ~GMSPolyhedron();
 
     ///@}
     ///@name Assignment
@@ -135,52 +144,23 @@ class GMSPolyhedron final {
     /// Get a random point on the surface of the polyhedron.
     Point3d GetRandPtOnSurface() const;
 
-    /// Check if a 2d point lies on the surface of the polyhedron.
-    /// @param _p The point of interest.
-    bool IsOnSurface(const Point2d& _p) const;
-
-    /// Get the height (y-coord) of the polyhedron at a designated point on the
-    /// xz-plane.
-    /// @param _p The xz point.
-    /// @param _valid Does the polyhedron have a point at _p?
-    /// @return The height of the polyhedron at _p, or -19999 if invalid.
-    double HeightAtPt(const Point2d& _p, bool& _valid) const;
-
-    /// Compute the closest point on a boundary edge of the polyhedron to a
-    /// reference point _p.
-    /// @param _p The reference point of interest.
-    /// @param _closest The closest point on the bounding edges.
-    /// @return The distance from _p to _closest.
-    /// @warning This function doesn't compute the clearance to the polyhedron:
-    ///          instead, it computes the clearance to the closest point on a
-    ///          boundary edge.
-    double GetClearance(const Point3d& _p, Point3d& _closest);
-
-    /// Push a point to the (surface) medial axis.
-    /// @param _p The point to push.
-    /// @return The pushed point's clearance from the nearest obstacle.
-    /// @warning This function is mis-named: it is actually a push to to the
-    ///          'surface' medial axis on the xz plane. GB people, please correct
-    ///          this as soon as convenience allows.
-    double PushToMedialAxis(Point3d& _p);
-
     /// Get the centroid of the polyhedron (average of the vertices).
     const Vector3d& GetCentroid() const;
 
     /// Mark all cached objects as requiring an update.
-    void MarkDirty() const;
+    void MarkDirty();
 
     /// Compute a GMSPolyhedron representation of an axis-aligned bounding box
     /// for this.
     ///
     /// Vertex diagram:
     ///
-    ///     4-----7    +Y
+    ///     2-----6    +Y
     ///    /|    /|     |
-    ///   0-----3 |     |---+X
-    ///   | 5---|-6    /
+    ///   3-----7 |     |---+X
+    ///   | 0---|-4    /
     ///   |/    |/   +Z
-    ///   1-----2
+    ///   1-----5
     ///
     GMSPolyhedron ComputeBoundingPolyhedron() const;
 
@@ -202,29 +182,27 @@ class GMSPolyhedron final {
     /// @param _scalingFactor The scaling factor
     void Scale(double _scalingFactor);
 
+    /// Get the total surface area of the polyhedron.
+    double GetSurfaceArea() const noexcept;
+
+    /// Get the maximum radius relative to the polyhedron's center.
+    double GetMaxRadius() const noexcept;
+
+    /// Get the minimum radius relative to the polyhedron's center.
+    double GetMinRadius() const noexcept;
+
     ///@}
-    ///@name Internal State
+    ///@name Collision Detection Models
     ///@{
-    /// @TODO Move this into private for proper encapsulation. Requires quite a
-    ///       bit of adjustments to other code since people have been doing this
-    ///       wrong for a very long time. Also need to mark centroid as uncached
-    ///       whenver vertex list changes.
 
-    std::vector<Vector3d> m_vertexList;    ///< Vertices in this polyhedron.
-    std::vector<CGALPoint> m_cgalPoints;   ///< Exact representation of vertices.
-    std::vector<GMSPolygon> m_polygonList; ///< Boundary faces of this polyhedron.
+    /// Build rapid and PQP models of this polyhedron.
+    void BuildCDModels();
 
-    Vector3d m_centroid;          ///< The polyhedron centroid (avg of vertices).
-    mutable bool m_centroidCached{false}; ///< Is the centroid cached?
+    /// Get the rapid CD model.
+    RAPID_model* GetRapidModel() const noexcept;
 
-    double m_area{0};      ///< The total area of polygons in this polyhedron.
-    double m_maxRadius{0}; ///< The maximum distance from a vertex to COM.
-    double m_minRadius{0}; ///< The minimum distance from a vertex to COM.
-
-    std::vector<std::pair<int,int>> m_boundaryLines; ///< Surface edges.
-
-    mutable bool m_boundaryCached{false};  ///< Is the boundary cached?
-    bool m_force2DBoundary{false};  ///< Require a 2d boundary.
+    /// Get the pqp CD model.
+    PQP_Model* GetPQPModel() const noexcept;
 
     ///@}
 
@@ -234,10 +212,7 @@ class GMSPolyhedron final {
     ///@{
 
     /// Construct the list of external edges.
-    void BuildBoundary();
-
-    /// As BuildBoundary, but saving only edges near to the XZ plane.
-    void BuildBoundary2D();
+    void BuildBoundaryLines();
 
     /// Compute the centroid.
     void ComputeCentroid() const;
@@ -253,6 +228,27 @@ class GMSPolyhedron final {
     void ComputeRadii();
 
     ///@}
+    ///@name Internal State
+    ///@{
+
+    std::vector<Vector3d> m_vertexList;    ///< Vertices in this polyhedron.
+    std::vector<CGALPoint> m_cgalPoints;   ///< Exact representation of vertices.
+    std::vector<GMSPolygon> m_polygonList; ///< Boundary faces of this polyhedron.
+
+    double m_area{0};      ///< The total area of polygons in this polyhedron.
+    double m_maxRadius{0}; ///< The maximum distance from a vertex to COM.
+    double m_minRadius{0}; ///< The minimum distance from a vertex to COM.
+
+    Vector3d m_centroid;          ///< The polyhedron centroid (avg of vertices).
+    mutable bool m_centroidCached{false}; ///< Is the centroid cached?
+
+    std::vector<std::pair<int,int>> m_boundaryLines; ///< Surface edges.
+
+    std::unique_ptr<RAPID_model> m_rapidModel;  ///< RAPID model
+    std::unique_ptr<PQP_Model> m_pqpModel;      ///< PQP model
+
+    ///@}
+
 };
 
 /*----------------------------- Transformation -------------------------------*/

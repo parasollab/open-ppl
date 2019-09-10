@@ -528,11 +528,11 @@ GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
     // from obstacles
     for(size_t m = 0; m < multiBody->GetNumBodies(); ++m) {
       const GMSPolyhedron& poly = multiBody->GetBody(m)->GetWorldPolyhedron();
-      for(size_t j = 0; j < poly.m_vertexList.size(); ++j) {
-        const double clr = _b->GetClearance(poly.m_vertexList[j]);
+      for(size_t j = 0; j < poly.GetVertexList().size(); ++j) {
+        const double clr = _b->GetClearance(poly.GetVertexList()[j]);
         if(clr < _cdInfo.m_minDist) {
-          _cdInfo.m_robotPoint = poly.m_vertexList[j];
-          _cdInfo.m_objectPoint = _b->GetClearancePoint(poly.m_vertexList[j]);
+          _cdInfo.m_robotPoint = poly.GetVertexList()[j];
+          _cdInfo.m_objectPoint = _b->GetClearancePoint(poly.GetVertexList()[j]);
           _cdInfo.m_minDist = clr;
           _cdInfo.m_nearestObstIndex = -1;
         }

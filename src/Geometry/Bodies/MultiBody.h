@@ -206,13 +206,6 @@ class MultiBody {
     /// Get the bounding box.
     const double* GetBoundingBox() const noexcept;
 
-    /// Compute some kind of polygonal approximation of this multibody.
-    /// @TODO This function is ancient and needs to be tested/cleaned up. It
-    ///       should also return the result rather than using a c-style output
-    ///       parameter.
-    /// @param _result Polygonal Approximation
-    void PolygonalApproximation(std::vector<Vector3d>& _result);
-
     ///@}
     ///@name Connections
     ///@{

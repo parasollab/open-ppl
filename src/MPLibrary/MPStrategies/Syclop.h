@@ -10,7 +10,6 @@
 
 #include "BasicRRTStrategy.h"
 #include "MPLibrary/MPTools/TetGenDecomposition.h"
-#include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
 #include "Workspace/WorkspaceRegion.h"
 

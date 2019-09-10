@@ -1,5 +1,5 @@
-#ifndef UNIFORM_MEDIAL_AXIS_SAMPLER_H_
-#define UNIFORM_MEDIAL_AXIS_SAMPLER_H_
+#ifndef PMPL_UNIFORM_MEDIAL_AXIS_SAMPLER_H_
+#define PMPL_UNIFORM_MEDIAL_AXIS_SAMPLER_H_
 
 #include "SamplerMethod.h"
 
@@ -8,8 +8,9 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
 /// TODO
+///
+/// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
@@ -243,8 +244,7 @@ CheckMedialAxisCrossing(const CfgType& _c1, int _w1,
       }
       //tiangle-triangle
       else if(tempID >= 0 && tickID >= 0) {
-        bool tt = CheckTriTri(_w1, tempID, tickID);
-        return tt;
+        return CheckTriTri(_w1, tempID, tickID);
       }
       //triangle-vertex
       else {
@@ -283,8 +283,8 @@ FindVertex(int _witness, const CfgType& _c) {
       GetBody(0)->GetWorldTransformation();
 
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
-  for(size_t i=0; i < polyhedron.m_vertexList.size(); ++i) {
-    const Vector3d& vert = polyhedron.m_vertexList[i];
+  for(size_t i=0; i < polyhedron.GetVertexList().size(); ++i) {
+    const Vector3d& vert = polyhedron.GetVertexList()[i];
 
     if(witnessPoint == vert) {
       stat->StopClock("FindVertex");
@@ -315,9 +315,9 @@ FindTriangle(int _witness, const CfgType& _c) {
   Vector3d witnessPoint = -t * _c.m_clearanceInfo.m_objectPoint;
 
   int id = -1;
-  for(size_t i=0; i < polyhedron.m_polygonList.size(); ++i) {
+  for(size_t i=0; i < polyhedron.GetPolygonList().size(); ++i) {
 
-    const GMSPolygon& poly = polyhedron.m_polygonList[i];
+    const GMSPolygon& poly = polyhedron.GetPolygonList()[i];
     const Vector3d& normal = poly.GetNormal();
 
     //Find the max dimension among the normal vector so we know which
@@ -375,7 +375,7 @@ CheckVertVert(int _w, int _v1, int _v2) {
   MultiBody* const obst = env->GetObstacle(_w);
   for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
     const GMSPolyhedron& polyhedron = obst->GetBody(j)->GetPolyhedron();
-    const vector<GMSPolygon>& polygons = polyhedron.m_polygonList;
+    const vector<GMSPolygon>& polygons = polyhedron.GetPolygonList();
 
     for(auto pit = polygons.begin(); pit != polygons.end(); ++pit) {
       const bool v1Found = (find(pit->begin(), pit->end(), _v1) != pit->end());
@@ -392,66 +392,51 @@ template <typename MPTraits>
 bool
 UniformMedialAxisSampler<MPTraits>::
 CheckTriTri(int _w, int _t1, int _t2) {
+  throw RunTimeException(WHERE) << "This function isn't self-consistent: it "
+                                << "checks for locally convex pairs if the "
+                                << "triangle shares an edge and used to check "
+                                << "for convex hull vertices if the triangles "
+                                << "share only a vertex (which aren't "
+                                << "equivalent). The other checks don't "
+                                << "look at convexity at all. Please re-read "
+                                << "paper and validate before using.";
+
   Environment* env = this->GetEnvironment();
-  //Check if two triangles are adjacent to each other
 
   ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   MultiBody* const obst = env->GetObstacle(_w);
   const GMSPolyhedron& polyhedron = obst->GetBody(0)->GetPolyhedron();
+  const auto& facets = polyhedron.GetPolygonList();
+  const auto& facet1 = facets[_t1];
+  const auto& facet2 = facets[_t2];
 
   //test if there is a common edge (v0, v1) between the triangles
-  pair<int, int> edge = polyhedron.m_polygonList[_t1].
-      CommonEdge(polyhedron.m_polygonList[_t2]);
-
-  if(edge.first != -1 && edge.second != -1) {
-    //Get vertex information for two facets
-    const Vector3d& v0 = polyhedron.m_vertexList[edge.first];
-    const Vector3d& v1 = polyhedron.m_vertexList[edge.second];
-    Vector3d v2;
-    for(auto I = polyhedron.m_polygonList[_t1].begin();
-        I != polyhedron.m_polygonList[_t1].end(); I++) {
-      if((*I != edge.first) && (*I != edge.second))
-        v2 = polyhedron.m_vertexList[*I];
-    }
-    //Find out which triangle is on the left and which is on the right
-    Vector3d va = v1 - v0;  //Common edge (v0, v1)
-    Vector3d vb = v2 - v0;  //The other edge (v0, v2)
-    int left, right;
-    //The face is on the left of the common edge if (va x vb).normal
-    //vector of the face > 0
-    //If < 0, the face is on the right
-    if(((va % vb) * polyhedron.m_polygonList[_t1].GetNormal()) > 0) {
-      left = _t1;
-      right = _t2;
-    }
-    else {
-      left = _t2;
-      right = _t1;
-    }
-    //Check if the two triangles form a concave face
-    //If (normal vector of left) x (normal vector of right) is the
-    //opposite direction of the common edge, they form a concave face
-    if(((polyhedron.m_polygonList[left].GetNormal() % polyhedron.
-            m_polygonList[right].GetNormal()) * va) < -0.0001) {  //Concave
-      return true;
-    }
-    else {  //Convex
-      return false;
-    }
+  pair<int, int> edge = facet1.CommonEdge(facet2);
+  if(edge.first != -1 and edge.second != -1) {
+    // There is a common edge. Return true if the triangles form a concave face
+    // or false otherwise.
+    return facet1.PointIsAbove(facet2.FindCenter());
   }
 
   //test if there is one common vertex between the triangles
-  const int vert = polyhedron.m_polygonList[_t1].
-      CommonVertex(polyhedron.m_polygonList[_t2]);
+  const int vert = facet1.CommonVertex(facet2);
   if(vert != -1) {
+    // There is a common vertex. Check if it is a
     ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
-    return !env->GetObstacle(_w)->GetBody(0)->
-        IsConvexHullVertex(polyhedron.m_vertexList[vert]);
+
+    // Old version: this doesn't make sense. Also IsConvexHullVertex (and
+    // convex hull storage) has been removed from Body to reduce
+    // overcomplication of that class.
+    //const auto& vertices = polyhedron.GetVertexList();
+    //return !env->GetObstacle(_w)->GetBody(0)->
+    //    IsConvexHullVertex(vertices[vert]);
+    // New version matches the shared-edge check: return true if the triangles
+    // form a concave pair and false otherwise.
+    return facet1.PointIsAbove(facet2.FindCenter());
   }
+
   //no common edge or vertex, triangles are not adjacent
-  else {
-    return true;
-  }
+  return true;
 }
 
 
@@ -465,8 +450,8 @@ CheckVertTri(int _w, int _v, int _t) {
   ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   MultiBody* const obst = env->GetObstacle(_w);
   const GMSPolyhedron& polyhedron = obst->GetBody(0)->GetPolyhedron();
-  const Vector3d& vert = polyhedron.m_vertexList[_v];
-  const GMSPolygon& poly = polyhedron.m_polygonList[_t];
+  const Vector3d& vert = polyhedron.GetVertexList()[_v];
+  const GMSPolygon& poly = polyhedron.GetPolygonList()[_t];
   for(size_t i = 0; i < poly.GetNumVertices(); ++i) {
     //shares a common vertex, return false!
     if(vert == poly.GetPoint(i))

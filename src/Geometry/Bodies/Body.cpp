@@ -1,21 +1,17 @@
 #include "Body.h"
 
 #include "Connection.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/Color.h"
 #include "Utilities/XMLNode.h"
-
-#include <algorithm>
-
-#include <PQP.h>
-#include <RAPID.H>
 
 #include <CGAL/Quotient.h>
 #include <CGAL/MP_Float.h>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/Polyhedron_3.h>
+
+#include <algorithm>
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Local Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -226,22 +222,13 @@ operator=(const Body& _other) {
   m_movementType          = _other.m_movementType;
   m_polyhedron            = _other.m_polyhedron;
   m_boundingBox           = _other.m_boundingBox;
-  m_convexHull            = _other.m_convexHull;
-  m_convexHullCached      = _other.m_convexHullCached;
   m_transform             = _other.m_transform;
   m_transformCached       = _other.m_transformCached;
   m_worldPolyhedron       = _other.m_worldPolyhedron;
   m_worldPolyhedronCached = _other.m_worldPolyhedronCached;
-  m_worldConvexHull       = _other.m_worldConvexHull;
-  m_worldConvexHullCached = _other.m_worldConvexHullCached;
   m_mass                  = _other.m_mass;
   m_moment                = _other.m_moment;
   m_comAdjust             = _other.m_comAdjust;
-
-  // PQP and RAPID do not properly implement copying, so there is no way to copy
-  // those objects without later triggering a double-free. Rebuild the models
-  // instead.
-  BuildCDModels();
 
   m_forwardConnections.clear();
   m_backwardConnections.clear();
@@ -272,13 +259,14 @@ Validate() const {
     mesh = m_polyhedron.CGAL();
   }
   catch(std::exception& _e) {
-//    throw ParseException(WHERE)
-    std::cerr
-                                << "Warning: invalid polyhedron detected from "
+    throw ParseException(WHERE) << "Invalid polyhedron detected from "
                                 << "file '" << m_filename << "'."
                                 << "\n\tCould not build a CGAL model of this, "
                                 << "which usually means that the normals are "
                                 << "inconsistent or the file is corrupted."
+                                << "\nThis is not ignorable! The CD algorithms "
+                                << "yield undefined behavior on ill-formed "
+                                << "polyhedrons."
                                 << std::endl;
   }
 
@@ -290,14 +278,15 @@ Validate() const {
   bool outward = true;
   {
     PQPSolid pqp;
-    const auto& t = this->GetWorldTransformation();
+
+    mathtool::Transformation t;
 
     // For each facet, make sure that the point just behind the center is inside.
     for(const auto& poly : m_polyhedron.GetPolygonList())
     {
       const Vector3d point = poly.FindCenter() - (1e-6 * poly.GetNormal());
 
-      outward &= pqp.IsInsideObstacle(t * point, this);
+      outward &= pqp.IsInsideObstacle(point, m_polyhedron, t);
       if(!outward)
         break;
     }
@@ -309,9 +298,7 @@ Validate() const {
     return;
 
   // Something isn't good - report errors if requested.
-//  throw ParseException(WHERE)
-  std::cerr
-                              << "Warning: invalid polyhedron detected from "
+  throw ParseException(WHERE) << "Invalid polyhedron detected from "
                               << "file '" << m_filename << "'."
                               << "\n\tnum vertices: " << mesh.size_of_vertices()
                               << "\n\tnum facets: " << mesh.size_of_facets()
@@ -319,6 +306,9 @@ Validate() const {
                               << "\n\ttriangular: " << triangular
                               << "\n\tclosed: " << closed
                               << "\n\toutward: " << outward
+                              << "\nThis is not ignorable! The CD algorithms "
+                              << "yield undefined behavior on ill-formed "
+                              << "polyhedrons."
                               << std::endl;
 }
 
@@ -412,31 +402,15 @@ GetMoment() const {
 
 /*--------------------------- Geometric Properties ---------------------------*/
 
-double
-Body::
-GetBoundingSphereRadius() const {
-  return m_polyhedron.m_maxRadius;
-}
-
-
-double
-Body::
-GetInsideSphereRadius() const {
-  return m_polyhedron.m_minRadius;
-}
-
-
 void
 Body::
 SetPolyhedron(GMSPolyhedron&& _poly) {
   _poly.UpdateCGALPoints();
-  m_polyhedron = _poly;
-  m_worldPolyhedron = _poly;
+  m_polyhedron = std::move(_poly);
 
   ComputeMomentOfInertia();
   ComputeBoundingBox();
   MarkDirty();
-  BuildCDModels();
 }
 
 
@@ -451,7 +425,7 @@ const GMSPolyhedron&
 Body::
 GetWorldPolyhedron() const {
   if(!m_worldPolyhedronCached) {
-    ComputeWorldPolyhedron(m_polyhedron, m_worldPolyhedron);
+    m_worldPolyhedron = GetWorldTransformation() * m_polyhedron;
     m_worldPolyhedronCached = true;
   }
   return m_worldPolyhedron;
@@ -471,29 +445,14 @@ GetWorldBoundingBox() const {
   return GetWorldTransformation() * m_boundingBox;
 }
 
-
-bool
-Body::
-IsConvexHullVertex(const Vector3d& _v) const {
-  if(!m_convexHullCached)
-    ComputeConvexHull();
-
-  for(const auto& vert : m_convexHull.m_vertexList)
-    if(_v == vert)
-      return true;
-  return false;
-}
-
 /*---------------------------- Transform Functions ---------------------------*/
 
 void
 Body::
-MarkDirty() const {
-  m_convexHullCached = false;
-  m_worldConvexHullCached = false;
+MarkDirty() {
   m_transformCached = false;
   m_worldPolyhedronCached = false;
-  m_worldPolyhedron.MarkDirty(); /// Must do so for the polyhedron too.
+  m_worldPolyhedron.MarkDirty();
 }
 
 
@@ -509,43 +468,6 @@ const Transformation&
 Body::
 GetWorldTransformation() const {
   return (this->*m_transformFetcher)();
-}
-
-/*------------------------ Collision Detection Helpers -----------------------*/
-
-void
-Body::
-BuildCDModels() {
-  Rapid::Build(this);
-  PQP::Build(this);
-}
-
-
-RAPID_model*
-Body::
-GetRapidBody() const noexcept {
-  return m_rapidBody.get();
-}
-
-
-void
-Body::
-SetRapidBody(std::unique_ptr<RAPID_model>&& _r) {
-  m_rapidBody = std::move(_r);
-}
-
-
-PQP_Model*
-Body::
-GetPQPBody() const noexcept {
-  return m_pqpBody.get();
-}
-
-
-void
-Body::
-SetPQPBody(std::unique_ptr<PQP_Model>&& _p) {
-  m_pqpBody = std::move(_p);
 }
 
 /*--------------------------- Connection Properties --------------------------*/
@@ -726,13 +648,6 @@ Unlink(Connection* const _c) {
 
 /*------------------------------------ I/O -----------------------------------*/
 
-GMSPolyhedron::COMAdjust
-Body::
-GetCOMAdjust() const {
-  return m_comAdjust;
-}
-
-
 const std::string&
 Body::
 GetFileName() const {
@@ -743,8 +658,9 @@ GetFileName() const {
 std::string
 Body::
 GetFilePath() const {
-  return m_modelDataDir == "/" || m_filename[0] == '/' ? m_filename :
-      m_modelDataDir + m_filename;
+  return m_modelDataDir == "/" || m_filename[0] == '/'
+         ? m_filename
+         : m_modelDataDir + m_filename;
 }
 
 
@@ -762,15 +678,13 @@ ReadGeometryFile(GMSPolyhedron::COMAdjust _comAdjust) {
   std::string filename = GetFilePath();
 
   if(!FileExists(filename))
-    throw ParseException(WHERE, "File \'" + filename + "\' not found.");
+    throw ParseException(WHERE) << "File \'" << filename << "\' not found.";
 
   m_polyhedron.Read(filename, _comAdjust);
-  m_worldPolyhedron = m_polyhedron;
 
   ComputeMomentOfInertia();
   ComputeBoundingBox();
   MarkDirty();
-  BuildCDModels();
   Validate();
 }
 
@@ -911,7 +825,7 @@ void
 Body::
 ComputeMomentOfInertia() const {
   const Vector3d centroid = m_polyhedron.GetCentroid();
-  const std::vector<Vector3d>& vertices = m_polyhedron.m_vertexList;
+  const std::vector<Vector3d>& vertices = m_polyhedron.GetVertexList();
   const double massPerVert = m_mass / vertices.size();
   auto& moment = const_cast<Matrix3x3&>(m_moment);
 
@@ -940,37 +854,6 @@ ComputeBoundingBox() const {
 }
 
 
-void
-Body::
-ComputeConvexHull() const {
-  auto& convexHull = const_cast<GMSPolyhedron&>(m_convexHull);
-  convexHull = GetPolyhedron().ComputeConvexHull();
-  m_convexHullCached = true;
-}
-
-
-GMSPolyhedron&
-Body::
-GetConvexHull() {
-  if(!m_convexHullCached) {
-    ComputeConvexHull();
-    m_worldConvexHull = m_convexHull;
-  }
-  return m_convexHull;
-}
-
-
-const GMSPolyhedron&
-Body::
-GetWorldConvexHull() {
-  if(!m_worldConvexHullCached) {
-    ComputeWorldPolyhedron(GetConvexHull(), m_worldConvexHull);
-    m_worldConvexHullCached = true;
-  }
-  return m_worldConvexHull;
-}
-
-
 const Transformation&
 Body::
 FetchBaseTransform() const noexcept {
@@ -994,55 +877,28 @@ ComputeWorldTransformation(std::set<size_t>& _visited) const {
   // If this link has already been visited, no need to do anything.
   if(_visited.find(m_index) != _visited.end())
     return m_transform;
-
-  // The transform is already correct if there are no backward connections
-  // (this is a base link) or if we have already computed it. Otherwise, compute
-  // the transform of this link from its backward connection.
-  if(!m_backwardConnections.empty() and !m_transformCached) {
-    const Connection& back = *m_backwardConnections[0];
-    auto& transform = const_cast<Transformation&>(m_transform);
-    transform =
-        back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
-        back.GetTransformationToDHFrame() *
-        back.GetDHParameters().GetTransformation() *
-        back.GetTransformationToBody2();
-  }
-
-  // Mark this link as visited.
   _visited.insert(m_index);
+
+  // If the transform is already cached, return it.
+  if(m_transformCached)
+    return m_transform;
   m_transformCached = true;
 
+  // If there are no backward connections (i.e. this is a base link), the
+  // transform is already correct.
+  if(m_backwardConnections.empty())
+    return m_transform;
+
+  // Compute the transform of this link from its backward connection.
+  const Connection& back = *m_backwardConnections[0];
+  auto& transform = const_cast<Transformation&>(m_transform);
+  transform =
+      back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
+      back.GetTransformationToDHFrame() *
+      back.GetDHParameters().GetTransformation() *
+      back.GetTransformationToBody2();
+
   return m_transform;
-}
-
-
-void
-Body::
-ComputeWorldPolyhedron(const GMSPolyhedron& _polyhedron, const GMSPolyhedron& _worldPolyhedron) const {
-  auto& poly = const_cast<GMSPolyhedron&>(_worldPolyhedron);
-
-  using CGAL::to_double;
-  using Kernel = GMSPolyhedron::CGALKernel;
-
-  const auto& transformation = GetWorldTransformation();
-  const auto& r = transformation.rotation().matrix();
-  const auto& t = transformation.translation();
-
-  CGAL::Aff_transformation_3<Kernel> cgalTrans(r[0][0], r[0][1], r[0][2], t[0],
-                                               r[1][0], r[1][1], r[1][2], t[1],
-                                               r[2][0], r[2][1], r[2][2], t[2]);
-
-  const auto& c = _polyhedron.m_cgalPoints;
-  for(size_t i = 0; i < c.size(); ++i)
-    poly.m_cgalPoints[i] = cgalTrans(c[i]);
-
-  auto& vertices = _polyhedron.m_vertexList;
-  for(size_t i = 0; i < vertices.size(); ++i)
-    poly.m_vertexList[i] = transformation * vertices[i];
-
-  auto& polygons = _polyhedron.m_polygonList;
-  for(size_t i = 0; i < polygons.size(); ++i)
-    poly.m_polygonList[i].ComputeNormal();
 }
 
 /*------------------------------- Display Stuff ------------------------------*/

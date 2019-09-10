@@ -263,7 +263,10 @@ IsInsideObstacle(const Point3d& _p) {
     for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(),
           "IsInsideObstacle");
-      if(m_cdMethod->IsInsideObstacle(_p, obst->GetBody(j)))
+
+      const Body* const b = obst->GetBody(j);
+      if(m_cdMethod->IsInsideObstacle(_p, b->GetPolyhedron(),
+            b->GetWorldTransformation()))
         return true;
     }
   }
@@ -286,37 +289,36 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   else
     p = _a + Vector3d(0,1e-8,0);
 
-  // Create a new free body with a nullptr as owning multibody
-  Body lineBody(nullptr);
   // Create body geometry with a single triangle
-  GMSPolyhedron poly;
-  poly.GetVertexList() = vector<Vector3d>{{_a[0], _a[1], _a[2]},
+  GMSPolyhedron line;
+  line.GetVertexList() = std::vector<Vector3d>{{_a[0], _a[1], _a[2]},
       {_b[0], _b[1], _b[2]}, p};
-  poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
-      poly.GetVertexList())};
-  lineBody.SetPolyhedron(std::move(poly));
+  line.GetPolygonList() = std::vector<GMSPolygon>{GMSPolygon(0, 1, 2,
+      line.GetVertexList())};
+  mathtool::Transformation t; // I think this is identity?
 
-  // Default behaviour do not store the cd info
-  CDInfo cdInfo;
   // Check collision of the triangle against every obstacle in the environment
   Environment* env = this->GetEnvironment();
   const size_t num = env->NumObstacles();
-
-  bool visible = true;
+  CDInfo cdInfo;
 
   for(size_t i = 0; i < num; ++i) {
     auto obst = env->GetObstacle(i);
+
     for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(),
           "WorkspaceVisibility");
-      if(m_cdMethod->IsInCollision(&lineBody, obst->GetBody(j), cdInfo)) {
-        visible = false;
-        break;
-      }
+
+      const Body* const b = obst->GetBody(j);
+      if(m_cdMethod->IsInCollision(line, t,
+                                   b->GetPolyhedron(),
+                                   b->GetWorldTransformation(),
+                                   cdInfo))
+        return false;
     }
   }
 
-  return visible;
+  return true;
 }
 
 
@@ -331,10 +333,15 @@ IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
 
   // Check each body in _a against each body in _b.
   for(size_t i = 0; i < _a->GetNumBodies(); ++i) {
+    const Body* const b1 = _a->GetBody(i);
+
     for(unsigned int j = 0; j < _b->GetNumBodies(); ++j) {
       cdInfo.ResetVars(allInfo);
-      collision |= m_cdMethod->IsInCollision(_a->GetBody(i),
-                                             _b->GetBody(j),
+      const Body* const b2 = _b->GetBody(j);
+      collision |= m_cdMethod->IsInCollision(b1->GetPolyhedron(),
+                                             b1->GetWorldTransformation(),
+                                             b2->GetPolyhedron(),
+                                             b2->GetWorldTransformation(),
                                              cdInfo);
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _caller);
 
@@ -551,9 +558,9 @@ IsInSelfCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
   bool collision = false;
 
   for(size_t i = 0; i < numBody - 1; ++i) {
+    const Body* const body1 = _multibody->GetBody(i);
     for(size_t j = i + 1; j < numBody; ++j) {
-      auto body1 = _multibody->GetBody(i);
-      auto body2 = _multibody->GetBody(j);
+      const Body* const body2 = _multibody->GetBody(j);
 
       // Check for ignoring adjacent links.
       if(m_ignoreAdjacentLinks and body1->IsAdjacent(body2))
@@ -564,7 +571,11 @@ IsInSelfCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
         continue;
 
       CDInfo cdInfo(allInfo);
-      const bool c = m_cdMethod->IsInCollision(body1, body2, cdInfo);
+      const bool c = m_cdMethod->IsInCollision(body1->GetPolyhedron(),
+                                               body1->GetWorldTransformation(),
+                                               body2->GetPolyhedron(),
+                                               body2->GetWorldTransformation(),
+                                               cdInfo);
       collision |= c;
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _caller);
 

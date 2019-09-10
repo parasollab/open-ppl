@@ -93,8 +93,8 @@ Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
   ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
   const GMSPolyhedron& poly =
       env->GetObstacle(cIndex)->GetBody(0)->GetWorldPolyhedron();
-  const vector<Vector3d>& vertexList    = poly.m_vertexList;
-  const vector<GMSPolygon>& polygonList = poly.m_polygonList;
+  const vector<Vector3d>& vertexList    = poly.GetVertexList();
+  const vector<GMSPolygon>& polygonList = poly.GetPolygonList();
 
   int polyIndex;
   if( obsContactIndex != -1 )

@@ -3,25 +3,32 @@
 #include "Geometry/Bodies/Body.h"
 
 
+/*----------------------------- BoundingSpheres ------------------------------*/
+
 BoundingSpheres::
 BoundingSpheres() : CollisionDetectionMethod("BoundingSpheres") { }
 
 
 bool
 BoundingSpheres::
-IsInCollision(const Body* const _body1, const Body* const _body2,
+IsInCollision(
+    const GMSPolyhedron& _polyhedron1,
+    const mathtool::Transformation& _transformation1,
+    const GMSPolyhedron& _polyhedron2,
+    const mathtool::Transformation& _transformation2,
     CDInfo& _cdInfo) {
-  // Get distance between the bodies.
-  const Vector3d& body1Com = _body1->GetWorldPolyhedron().GetCentroid();
-  const Vector3d& body2Com = _body2->GetWorldPolyhedron().GetCentroid();
-  const double dist = (body1Com - body2Com).norm();
+  const Vector3d& center1 = _transformation1 * _polyhedron1.GetCentroid();
+  const Vector3d& center2 = _transformation2 * _polyhedron2.GetCentroid();
 
-  const double body1Radius = _body1->GetBoundingSphereRadius();
-  const double body2Radius = _body2->GetBoundingSphereRadius();
+  const double distance = (center1 - center2).norm();
 
-  return dist <= body1Radius + body2Radius;
+  const double radius1 = _polyhedron1.GetMaxRadius();
+  const double radius2 = _polyhedron2.GetMaxRadius();
+
+  return distance <= radius1 + radius2;
 }
 
+/*------------------------------- InsideSpheres ------------------------------*/
 
 InsideSpheres::
 InsideSpheres() : CollisionDetectionMethod("InsideSpheres") { }
@@ -29,15 +36,21 @@ InsideSpheres() : CollisionDetectionMethod("InsideSpheres") { }
 
 bool
 InsideSpheres::
-IsInCollision(const Body* const _body1, const Body* const _body2,
+IsInCollision(
+    const GMSPolyhedron& _polyhedron1,
+    const mathtool::Transformation& _transformation1,
+    const GMSPolyhedron& _polyhedron2,
+    const mathtool::Transformation& _transformation2,
     CDInfo& _cdInfo) {
-  // Get distance between the bodies.
-  const Vector3d& body1Com = _body1->GetWorldPolyhedron().GetCentroid();
-  const Vector3d& body2Com = _body2->GetWorldPolyhedron().GetCentroid();
-  const double dist = (body1Com - body2Com).norm();
+  const Vector3d& center1 = _transformation1 * _polyhedron1.GetCentroid();
+  const Vector3d& center2 = _transformation2 * _polyhedron2.GetCentroid();
 
-  const double body1Radius = _body1->GetInsideSphereRadius();
-  const double body2Radius = _body2->GetInsideSphereRadius();
+  const double distance = (center1 - center2).norm();
 
-  return dist <= body1Radius + body2Radius;
+  const double radius1 = _polyhedron1.GetMinRadius();
+  const double radius2 = _polyhedron2.GetMinRadius();
+
+  return distance <= radius1 + radius2;
 }
+
+/*----------------------------------------------------------------------------*/

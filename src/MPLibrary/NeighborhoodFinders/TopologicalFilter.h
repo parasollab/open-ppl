@@ -15,6 +15,11 @@
 /// Choosing from amongst the candidates is then delegated to another
 /// neighborhood finder.
 ///
+/// Reference:
+///   Read Sandstrom, Andrew Bregger, Ben Smith, Shawna Thomas, and Nancy M.
+///   Amato. "Topological Nearest-Neighbor Filtering for Sampling-based
+///   Planners". ICRA 2018.
+///
 /// @todo Move the SSSP cache into the topological map so that
 ///       TopologicalDistance can share it. This is not a major performance hit,
 ///       but (a) on principle we should never duplicate data, and (b) it could

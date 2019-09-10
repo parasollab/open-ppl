@@ -445,7 +445,7 @@ MakeInternalVoidModel(const Environment* _env) {
 
   // Subtract each obstacle from the convex hull.
   MultiBody* obst = _env->GetObstacle(0);
-  auto poly = obst->GetBody(0)->GetWorldConvexHull();
+  auto poly = obst->GetBody(0)->GetWorldPolyhedron().ComputeConvexHull();
 
   //scale the convex hull to avoid degenerate triangles.
   poly.Scale(m_convexHullScaleFactor);

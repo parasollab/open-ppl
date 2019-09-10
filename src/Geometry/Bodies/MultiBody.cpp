@@ -182,6 +182,9 @@ InitializeDOFs(const Boundary* const _b) {
 MultiBody&
 MultiBody::
 operator=(const MultiBody& _other) {
+  if(this == &_other)
+    return *this;
+
   m_multiBodyType = _other.m_multiBodyType;
   m_com           = _other.m_com;
   m_radius        = _other.m_radius;
@@ -211,6 +214,9 @@ operator=(const MultiBody& _other) {
 MultiBody&
 MultiBody::
 operator=(MultiBody&& _other) {
+  if(this == &_other)
+    return *this;
+
   m_multiBodyType = std::move(_other.m_multiBodyType);
   m_com           = std::move(_other.m_com);
   m_radius        = std::move(_other.m_radius);
@@ -427,9 +433,9 @@ AddBody(Body&& _body) {
   m_bodies.push_back(std::move(_body));
   auto& body = m_bodies.back();
   if(body.GetIndex() != m_bodies.size() - 1)
-    throw ParseException(WHERE, "Added body with index " +
-        std::to_string(body.GetIndex()) + ", but it landed in slot " +
-        std::to_string(m_bodies.size()) + ".");
+    throw ParseException(WHERE) << "Added body with index "
+                                << body.GetIndex() << ", but it landed in slot "
+                                << m_bodies.size() << ".";
   body.SetMultiBody(this);
 
   return body.GetIndex();
@@ -509,102 +515,6 @@ const double*
 MultiBody::
 GetBoundingBox() const noexcept {
   return m_boundingBox.data();
-}
-
-
-void
-MultiBody::
-PolygonalApproximation(std::vector<Vector3d>& _result) {
-  _result.clear();
-
-  size_t nfree = GetNumBodies();
-
-  //If rigid body then return the line between the first 4 vertices and the
-  //second 4 vertices of the world bounding box
-  if(nfree == 1) {
-    ///@TODO This needs to be fixed to go through all of each obstacle's bodies.
-    const GMSPolyhedron bbox = GetBody(0)->GetWorldBoundingBox();
-
-    Vector3d joint;
-    for(size_t i = 0; i < 4; ++i)
-      joint += bbox.m_vertexList[i];
-    joint /= 4;
-    _result.push_back(joint);
-
-    joint(0, 0, 0);
-    for(size_t i = 4; i < 8; ++i)
-      joint += bbox.m_vertexList[i];
-    joint /= 4;
-    _result.push_back(joint);
-  }
-  else {
-    for(size_t i = 0; i < nfree - 1; ++i) {
-      const GMSPolyhedron bbox1 = m_bodies[i].GetWorldBoundingBox();
-      const GMSPolyhedron bbox2 = m_bodies[i].GetForwardConnection(0).
-          GetNextBody()->GetWorldBoundingBox();
-
-      //find the four closest pairs of points between bbox1 and bbox2
-      const vector<Vector3d>& vertices1 = bbox1.m_vertexList;
-      const vector<Vector3d>& vertices2 = bbox2.m_vertexList;
-      typedef tuple<size_t, size_t, double> VertexIndexDistance;
-      vector<VertexIndexDistance> closestDists;
-      for(int num = 0; num < 4; ++num) {
-        vector<VertexIndexDistance> distances;
-        for(size_t j=0; j < vertices1.size(); ++j)
-          for(size_t k=0; k < vertices2.size(); ++k)
-            distances.push_back(VertexIndexDistance(j, k,
-                  (vertices1[j] - vertices2[k]).norm()));
-        closestDists.push_back(*min_element(distances.begin(), distances.end(),
-              [](const VertexIndexDistance& _v1, const VertexIndexDistance& _v2) {
-              return get<2>(_v1) < get<2>(_v2);
-              }));
-      }
-
-      //if first body in linkage then
-      //add the endpoint of linkage 1 that is not closest to linkage 2
-      if(i == 0) {
-        Vector3d otherJoint;
-        int num = 0;
-        for(size_t k = 0; num < 4 && k < bbox1.m_vertexList.size(); ++k)
-          if(find_if(closestDists.begin(), closestDists.end(),
-                [&](const VertexIndexDistance& _v) {
-                return get<0>(_v) == k;
-                }) == closestDists.end()) {
-            otherJoint += bbox1.m_vertexList[k];
-            num++;
-          }
-        otherJoint /= num;
-        _result.push_back(otherJoint);
-      }
-
-      //compute the joint as the closest 4 vertices from linkage 1 and linkage 2
-      Vector3d joint;
-      for(size_t k = 0; k < 4; ++k) {
-        joint += bbox1.m_vertexList[get<0>(closestDists[k])];
-        joint += bbox2.m_vertexList[get<1>(closestDists[k])];
-      }
-      joint /= 8;
-      _result.push_back(joint);
-
-      //if last body in linkage then
-      //add endpoint of linkage 2 that is not closest to linkage 1
-      if(i == nfree - 2) {
-        Vector3d otherJoint;
-        int num = 0;
-        for(size_t k = 0; num < 4 && k < bbox2.m_vertexList.size(); ++k)
-          if(find_if(closestDists.begin(), closestDists.end(),
-                [&](const VertexIndexDistance& _v) {
-                return get<1>(_v) == k;
-                }) == closestDists.end()) {
-            otherJoint += bbox2.m_vertexList[k];
-            num++;
-          }
-        otherJoint = otherJoint / num;
-
-        _result.push_back(otherJoint);
-      }
-    }
-  }
 }
 
 /*------------------------------- Connections --------------------------------*/
@@ -885,8 +795,8 @@ FindMultiBodyInfo() {
 
   for(auto& body : m_bodies) {
     const auto bbx = body.GetWorldBoundingBox();
-    const auto& minVertex = bbx.m_vertexList[0];
-    const auto& maxVertex = bbx.m_vertexList[7];
+    const auto& minVertex = bbx.GetVertexList()[0];
+    const auto& maxVertex = bbx.GetVertexList()[7];
 
     minX = std::min(minX, minVertex[0]);
     maxX = std::max(maxX, maxVertex[0]);
@@ -911,9 +821,9 @@ FindMultiBodyInfo() {
 
   // Roughly approximate the maximum bounding radius by assuming that all links
   // are chained sequentially end-to-end away from the base.
-  m_radius = m_bodies[0].GetPolyhedron().m_maxRadius;
+  m_radius = m_bodies[0].GetPolyhedron().GetMaxRadius();
   for(size_t i = 1; i < m_bodies.size(); ++i)
-    m_radius += m_bodies[i].GetPolyhedron().m_maxRadius * 2.0;
+    m_radius += m_bodies[i].GetPolyhedron().GetMaxRadius() * 2.0;
 }
 
 

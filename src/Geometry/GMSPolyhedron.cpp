@@ -1,11 +1,15 @@
 #include "GMSPolyhedron.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
+#include "Utilities/IOUtils.h"
+#include "Utilities/MPUtils.h"
+
+#include "PQP.h"
+#include "RAPID.H"
 
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
 #include "ObjLoader.h"
-
-#include "Utilities/IOUtils.h"
-#include "Utilities/MPUtils.h"
 
 #include "glutils/triangulated_model.h"
 
@@ -22,34 +26,42 @@ using namespace std;
 /*------------------------------ Construction --------------------------------*/
 
 GMSPolyhedron::
+GMSPolyhedron() = default;
+
+
+GMSPolyhedron::
 GMSPolyhedron(const GMSPolyhedron& _p) :
     m_vertexList(_p.m_vertexList),
     m_cgalPoints(_p.m_cgalPoints),
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
-    m_boundaryLines(_p.m_boundaryLines),
-    m_boundaryCached(_p.m_boundaryCached),
-    m_force2DBoundary(_p.m_force2DBoundary)
+    m_boundaryLines(_p.m_boundaryLines)
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
   m_polygonList.reserve(_p.m_polygonList.size());
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
+
+  // PQP and RAPID do not properly implement copying, so there is no way to copy
+  // those objects without later triggering a double-free. Rebuild the models
+  // instead.
+  if(m_polygonList.size())
+    BuildCDModels();
 }
 
 
 GMSPolyhedron::
 GMSPolyhedron(GMSPolyhedron&& _p) :
-    m_vertexList(move(_p.m_vertexList)),
-    m_cgalPoints(move(_p.m_cgalPoints)),
+    m_vertexList(std::move(_p.m_vertexList)),
+    m_cgalPoints(std::move(_p.m_cgalPoints)),
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
-    m_boundaryLines(move(_p.m_boundaryLines)),
-    m_boundaryCached(_p.m_boundaryCached),
-    m_force2DBoundary(_p.m_force2DBoundary)
+    m_boundaryLines(std::move(_p.m_boundaryLines)),
+    m_rapidModel(std::move(_p.m_rapidModel)),
+    m_pqpModel(std::move(_p.m_pqpModel))
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -61,16 +73,15 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
 
 GMSPolyhedron::
 GMSPolyhedron(glutils::triangulated_model&& _t) {
-  m_vertexList.reserve(_t.num_points());
-  m_polygonList.reserve(_t.num_facets());
-
   // Copy vertices.
+  m_vertexList.reserve(_t.num_points());
   for(auto iter = _t.points_begin(); iter != _t.points_end(); ++iter) {
     const glutils::vector3f& v = *iter;
     m_vertexList.emplace_back(v[0], v[1], v[2]);
   }
 
   // Copy facets.
+  m_polygonList.reserve(_t.num_facets());
   for(auto iter = _t.facets_begin(); iter != _t.facets_end(); ++iter) {
     const glutils::triangle_facet& f = *iter;
     m_polygonList.emplace_back(f[0], f[1], f[2], m_vertexList);
@@ -80,21 +91,29 @@ GMSPolyhedron(glutils::triangulated_model&& _t) {
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
+  BuildCDModels();
 }
+
+
+GMSPolyhedron::
+~GMSPolyhedron() = default;
 
 /*------------------------------- Assignment ---------------------------------*/
 
 GMSPolyhedron&
 GMSPolyhedron::
 operator=(const GMSPolyhedron& _p) {
+  if(this == &_p)
+    return *this;
+
   m_vertexList = _p.m_vertexList;
   m_cgalPoints = _p.m_cgalPoints;
   m_area = _p.m_area;
   m_maxRadius = _p.m_maxRadius;
   m_minRadius = _p.m_minRadius;
+  m_centroid = _p.m_centroid;
+  m_centroidCached = _p.m_centroidCached;
   m_boundaryLines = _p.m_boundaryLines;
-  m_boundaryCached = _p.m_boundaryCached;
-  m_force2DBoundary = _p.m_force2DBoundary;
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -103,6 +122,12 @@ operator=(const GMSPolyhedron& _p) {
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
 
+  // PQP and RAPID do not properly implement copying, so there is no way to copy
+  // those objects without later triggering a double-free. Rebuild the models
+  // instead.
+  if(m_polygonList.size())
+    BuildCDModels();
+
   return *this;
 }
 
@@ -110,14 +135,19 @@ operator=(const GMSPolyhedron& _p) {
 GMSPolyhedron&
 GMSPolyhedron::
 operator=(GMSPolyhedron&& _p) {
-  m_vertexList = move(_p.m_vertexList);
-  m_cgalPoints = move(_p.m_cgalPoints);
+  if(this == &_p)
+    return *this;
+
+  m_vertexList = std::move(_p.m_vertexList);
+  m_cgalPoints = std::move(_p.m_cgalPoints);
   m_area = _p.m_area;
   m_maxRadius = _p.m_maxRadius;
   m_minRadius = _p.m_minRadius;
-  m_boundaryLines = move(_p.m_boundaryLines);
-  m_boundaryCached = _p.m_boundaryCached;
-  m_force2DBoundary = _p.m_force2DBoundary;
+  m_centroid = std::move(_p.m_centroid);
+  m_centroidCached = _p.m_centroidCached;
+  m_boundaryLines = std::move(_p.m_boundaryLines);
+  m_rapidModel = std::move(_p.m_rapidModel);
+  m_pqpModel = std::move(_p.m_pqpModel);
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -269,6 +299,7 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
+  BuildCDModels();
 
   return com;
 }
@@ -294,20 +325,19 @@ GMSPolyhedron::
 WriteObj(ostream& _os) const {
  _os << "#Number of vertices: " << m_vertexList.size() << endl;
  _os << "#Number of triangles: " << m_polygonList.size() << endl;
- for(auto v : m_vertexList) {
-   _os << "v " << v << endl;
- }
- for(auto p: m_polygonList) {
-   p.ComputeNormal();
-   _os << "vn " << p.GetNormal() << endl;
- }
+ for(const auto& v : m_vertexList)
+   _os << "v " << v << std::endl;
+ for(const auto& p: m_polygonList)
+   _os << "vn " << p.GetNormal() << std::endl;
 
- for(auto p: m_polygonList) {
-   _os << "f ";
-   for(auto i = p.begin(); i != p.end(); i++) {
-     _os << *i + 1 << "//" << *i + 1 << " ";
-   }
-   _os << endl;
+ size_t count = 1;
+ for(const auto& p: m_polygonList) {
+   _os << "f";
+   for(const auto index : p)
+     _os << " " << index + 1 << "//" << count;
+   _os << std::endl;
+
+   ++count;
  }
 }
 
@@ -344,8 +374,8 @@ GetPolygonList() const noexcept {
 vector<pair<int,int>>&
 GMSPolyhedron::
 GetBoundaryLines() {
-   BuildBoundary();
-   return m_boundaryLines;
+  BuildBoundaryLines();
+  return m_boundaryLines;
 }
 
 /*--------------------------- Geometry Functions -----------------------------*/
@@ -393,140 +423,6 @@ GetRandPtOnSurface() const {
 }
 
 
-bool
-GMSPolyhedron::
-IsOnSurface(const Point2d& _p) const {
-  for(const auto& poly : m_polygonList) {
-    if(!poly.IsTriangle())
-      continue;
-    const Vector3d& v0 = poly.GetPoint(0);
-    const Vector3d& v1 = poly.GetPoint(1);
-    const Vector3d& v2 = poly.GetPoint(2);
-    const Point2d p0(v0[0], v0[2]);
-    const Point2d p1(v1[0], v1[2]);
-    const Point2d p2(v2[0], v2[2]);
-    if(PtInTriangle(p0, p1, p2, _p))
-      return true;
-  }
-  return false;
-}
-
-
-double
-GMSPolyhedron::
-HeightAtPt(const Point2d& _p, bool& _valid) const {
-  for(const auto& poly : m_polygonList) {
-    if(!poly.IsTriangle())
-      continue;
-    const Vector3d& v0 = poly.GetPoint(0);
-    const Vector3d& v1 = poly.GetPoint(1);
-    const Vector3d& v2 = poly.GetPoint(2);
-    Point2d p0(v0[0], v0[2]);
-    Point2d p1(v1[0], v1[2]);
-    Point2d p2(v2[0], v2[2]);
-    double u, v;
-    if(PtInTriangle(p0, p1, p2, _p, u, v)) {
-      _valid = true;
-      Point3d pt3d = GetPtFromBarycentricCoords(v0, v1, v2, u, v);
-      return pt3d[1];
-    }
-  }
-  // After checking all triangles, inconsistency found in iscollision check
-  _valid = false;
-  return -19999.0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Given a reference point and a line segment, find the point on the
-///        segment nearest to the reference and return the squared distance
-///        between them.
-/// \param[in] _p The reference point.
-/// \param[in] _s The start of the line segment.
-/// \param[in] _e The end of the line segment.
-/// \param[in/out] _closest The point on the segment that is closest to _p.
-/// \return The squared distance between _p and _closest.
-inline double
-distanceSqrFromSegment(const Point3d& _p, const Point3d& _s, const Point3d& _e,
-    Point3d& _closest) {
-  const Vector3d n = _e - _s;
-  const Vector3d q = _p - _s;
-  double len = q.comp(n);
-  if(len <= 0)
-    _closest = _s;
-  else if(len >= n.norm())
-    _closest = _e;
-  else
-    _closest = q.proj(n);
-  return (_closest - _p).normsqr();
-}
-
-
-double
-GMSPolyhedron::
-GetClearance(const Point3d& _p, Point3d& _closest) {
-  double closestDist = 1e10;
-
-  // Go through all boundary edges and find the closest point on any edge to _p.
-  for(const auto& bl : GetBoundaryLines()) {
-    const Vector3d& v1 =  m_vertexList[bl.first];
-    const Vector3d& v2 =  m_vertexList[bl.second];
-
-    // Find the point on this boundary line closest to p.
-    Point3d c;
-    double dist = distanceSqrFromSegment(_p, v1, v2, c);
-    if(dist < closestDist) {
-      closestDist = dist;
-      _closest = c;
-    }
-  }
-
-  return sqrt(closestDist);
-}
-
-
-double
-GMSPolyhedron::
-PushToMedialAxis(Point3d& _p) {
-  Point3d orig = _p;
-
-  // Compute clearance and closest point.
-  Point3d closest;
-  double clearance = GetClearance(_p, closest);
-
-  // Compute the direction in the xz plane from closest to _p.
-  Vector3d dir = (_p - closest).normalize();
-  dir[1] = 0;
-  dir = dir.normalize() * .5;
-
-  Point3d newClosest = closest;
-  size_t iteration = 0;
-  do {
-    // Push point along dir.
-    _p += dir;
-
-    // Project pushed point to xz plane.
-    Point2d proj(_p[0], _p[2]);
-
-    // Find height (y-coordinate) of polyhedron at this xz point.
-    bool valid = true;
-    double newH = HeightAtPt(proj, valid);
-
-    // If polyhedron doesn't extend to this xz point, return original point.
-    if(!valid) {
-      _p = orig;
-      break;
-    }
-
-    // Otherwise, set pushed point's y-coordinate to the polyhedron height.
-    _p[1] = newH;
-    clearance = GetClearance(_p, newClosest);
-  } while((newClosest - closest).normsqr() < 0.1 && iteration < 1000000);
-
-  return clearance;
-}
-
-
 const Vector3d&
 GMSPolyhedron::
 GetCentroid() const {
@@ -561,9 +457,9 @@ ComputeRadii() {
 
 void
 GMSPolyhedron::
-MarkDirty() const {
+MarkDirty() {
   m_centroidCached = false;
-  m_boundaryCached = false;
+  m_boundaryLines.clear();
 }
 
 
@@ -577,12 +473,12 @@ ComputeBoundingPolyhedron() const {
   minZ = maxZ = m_vertexList[0][2];
 
   for(const auto& v : m_vertexList) {
-    minX = min(minX, v[0]);
-    maxX = max(maxX, v[0]);
-    minY = min(minY, v[1]);
-    maxY = max(maxY, v[1]);
-    minZ = min(minZ, v[2]);
-    maxZ = max(maxZ, v[2]);
+    minX = std::min(minX, v[0]);
+    maxX = std::max(maxX, v[0]);
+    minY = std::min(minY, v[1]);
+    maxY = std::max(maxY, v[1]);
+    minZ = std::min(minZ, v[2]);
+    maxZ = std::max(maxZ, v[2]);
   }
 
   // Make output polyhedron.
@@ -613,8 +509,8 @@ ComputeBoundingPolyhedron() const {
   polys.emplace_back(1, 7, 3, verts);
   polys.emplace_back(3, 7, 6, verts);
   polys.emplace_back(3, 6, 2, verts);
-  polys.emplace_back(0, 4, 1, verts);
-  polys.emplace_back(0, 1, 5, verts);
+  polys.emplace_back(0, 4, 5, verts);
+  polys.emplace_back(0, 5, 1, verts);
 
   bbx.OrderFacets();
   bbx.ComputeSurfaceArea();
@@ -665,8 +561,7 @@ CGAL() const {
   builder b(*this);
   cp.delegate(b);
   if(!cp.is_valid())
-    throw RunTimeException(WHERE, "GMSPolyhedron:: Invalid CGAL polyhedron "
-        "created!");
+    throw RunTimeException(WHERE) << "Invalid CGAL polyhedron created!";
   return cp;
 }
 
@@ -692,7 +587,7 @@ ComputeConvexHull() const {
       fit != poly.facets_end(); ++fit) {
     // Each facet is described by a set of half-edges. Get the vertex/point
     // indexes in each facet.
-    HalfedgeFacetCirculator he = fit->facet_begin();
+    CGALPolyhedron::Halfedge_around_facet_circulator he = fit->facet_begin();
     vector<int> indexes;
     do {
       indexes.push_back(std::distance(poly.vertices_begin(), he->vertex()));
@@ -719,35 +614,14 @@ ComputeConvexHull() const {
 
 void
 GMSPolyhedron::
-BuildBoundary2D() {
-  m_boundaryLines.clear();
-  m_boundaryCached = false;
-  m_force2DBoundary = true;
-  BuildBoundary();
-}
-
-
-void
-GMSPolyhedron::
-BuildBoundary() {
+BuildBoundaryLines() {
   // If the boundary is already cached, we do not need to compute it again.
-  if(m_boundaryCached)
+  if(m_boundaryLines.size())
     return;
-  m_boundaryCached = true;
-
-  // Create function for determining if a polygon is near the XZ surface plane.
-  auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
-    const double tolerance = 0.3; // Tolerance for considering points near-plane.
-    return fabs(_p.GetPoint(0)[1]) <= tolerance
-        && fabs(_p.GetPoint(1)[1]) <= tolerance
-        && fabs(_p.GetPoint(2)[1]) <= tolerance;
-  };
 
   // Get all of the edges from every triangle.
   multiset<pair<int, int>> lines;
   for(const auto& tri : m_polygonList) {
-    if(m_force2DBoundary && !NearXZPlane(tri))
-      continue;
     for(unsigned short i = 0; i < 3; ++i) {
       // Always put the lower vertex index first to make finding duplicates
       // easier.
@@ -771,7 +645,7 @@ BuildBoundary() {
 
   m_boundaryLines.clear();
   m_boundaryLines.reserve(lines.size());
-  std::copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
+  std::copy(lines.begin(), lines.end(), std::back_inserter(m_boundaryLines));
 }
 
 
@@ -790,7 +664,8 @@ ComputeCentroid() const {
 void
 GMSPolyhedron::
 OrderFacets() {
-  std::sort(m_polygonList.begin(), m_polygonList.end(), std::greater<GMSPolygon>());
+  std::sort(m_polygonList.begin(), m_polygonList.end(),
+      std::greater<GMSPolygon>());
 }
 
 
@@ -850,4 +725,49 @@ Scale(double _scalingFactor) {
 
   *(this) *= t;
 }
+
+
+double
+GMSPolyhedron::
+GetSurfaceArea() const noexcept {
+  return m_area;
+}
+
+
+double
+GMSPolyhedron::
+GetMaxRadius() const noexcept {
+  return m_maxRadius;
+}
+
+
+double
+GMSPolyhedron::
+GetMinRadius() const noexcept {
+  return m_minRadius;
+}
+
+/*------------------------ Collision Detection Helpers -----------------------*/
+
+void
+GMSPolyhedron::
+BuildCDModels() {
+  m_rapidModel.reset(Rapid::Build(*this));
+  m_pqpModel.reset(PQP::Build(*this));
+}
+
+
+RAPID_model*
+GMSPolyhedron::
+GetRapidModel() const noexcept {
+  return m_rapidModel.get();
+}
+
+
+PQP_Model*
+GMSPolyhedron::
+GetPQPModel() const noexcept {
+  return m_pqpModel.get();
+}
+
 /*----------------------------------------------------------------------------*/

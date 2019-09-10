@@ -117,7 +117,7 @@ InWorkspace(const Cfg& _cfg) const {
     // First check if the body's bounding box intersects the boundary.
     bool bbxGood = true;
     const GMSPolyhedron bbx = body->GetWorldBoundingBox();
-    for(const auto& v : bbx.m_vertexList) {
+    for(const auto& v : bbx.GetVertexList()) {
       if(!InBoundary(v)) {
         bbxGood = false;
         break;
@@ -134,7 +134,7 @@ InWorkspace(const Cfg& _cfg) const {
     // extraneously transforming the remaining vertices.
     const GMSPolyhedron& poly = body->GetPolyhedron();
     const Transformation& trans = body->GetWorldTransformation();
-    for(const auto& v : poly.m_vertexList)
+    for(const auto& v : poly.GetVertexList())
       if(!InBoundary(trans * v))
         return false;
   }

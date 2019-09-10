@@ -646,7 +646,9 @@ CreateBoundaryObstacle() {
   // Make the boundary body.
   Body body(mb.get());
   body.SetBodyType(Body::Type::Fixed);
-  body.SetPolyhedron(m_boundary->MakePolyhedron());
+  GMSPolyhedron poly = m_boundary->MakePolyhedron();
+  poly.BuildCDModels();
+  body.SetPolyhedron(std::move(poly));
 
   // Add the body to the multibody and finish initialization.
   const size_t index = mb->AddBody(std::move(body));

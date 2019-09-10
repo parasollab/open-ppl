@@ -262,7 +262,7 @@ ObstacleBasedSampler<MPTraits>::
 ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
-  Vector3d x = polyhedron.m_vertexList[(int)(DRand()*polyhedron.m_vertexList.size())];
+  Vector3d x = polyhedron.GetVertexList()[(int)(DRand()*polyhedron.GetVertexList().size())];
   return GetCfgWithParams(x);
 }
 
@@ -291,15 +291,15 @@ ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   // A random fraction of the area
-  double targetArea = polyhedron.m_area * DRand();
+  double targetArea = polyhedron.GetSurfaceArea() * DRand();
   double sum = 0.0;
   int index;
 
   // Choose index as the triangle that first makes sum > targetArea
   for(index = -1; sum <= targetArea; index++)
-    sum += polyhedron.m_polygonList[index + 1].GetArea();
+    sum += polyhedron.GetPolygonList()[index + 1].GetArea();
   // Choose the triangle of the MultiBody with that index
-  const GMSPolygon& poly = polyhedron.m_polygonList[index];
+  const GMSPolygon& poly = polyhedron.GetPolygonList()[index];
   // Choose a random point in that triangle
   const Vector3d& p = poly.GetPoint(0);
   const Vector3d& q = poly.GetPoint(1);
@@ -318,7 +318,7 @@ ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
 
   // Choose a random triangle
-  const GMSPolygon& poly = polyhedron.m_polygonList[(int)(DRand()*polyhedron.m_polygonList.size())];
+  const GMSPolygon& poly = polyhedron.GetPolygonList()[(int)(DRand()*polyhedron.GetPolygonList().size())];
   const Vector3d& p = poly.GetPoint(0);
   const Vector3d& q = poly.GetPoint(1);
   const Vector3d& r = poly.GetPoint(2);
@@ -339,12 +339,12 @@ ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
   int x = 0; // Index of extreme value
 
   // Find extreme value
-  for(size_t i = 1; i < polyhedron.m_vertexList.size(); i++)
+  for(size_t i = 1; i < polyhedron.GetVertexList().size(); i++)
     // minMax is an optional negation
-    if(((polyhedron.m_vertexList[i][xyz] < polyhedron.m_vertexList[x][xyz]) + minMax) % 2)
+    if(((polyhedron.GetVertexList()[i][xyz] < polyhedron.GetVertexList()[x][xyz]) + minMax) % 2)
       x = i;
 
-  return GetCfgWithParams(polyhedron.m_vertexList[x]);
+  return GetCfgWithParams(polyhedron.GetVertexList()[x]);
 }
 
 // Checks m_pointSelection and returns an appropriate CfgType
