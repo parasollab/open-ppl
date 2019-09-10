@@ -143,11 +143,21 @@ TCBSNode<T, U>::
 GetDiscreteCost(bool _makespan) const{
   size_t sum = 0;
 	size_t max = 0;
+	/*
 	for(auto agentPath : m_agentEntirePaths) {
 		size_t length = agentPath.second.size();
 		sum += length;
 		if(length > max) {
 			max = length;
+		}
+	}*/
+	for(auto agentPaths : m_agentPaths) {
+		size_t time = 0;
+		for(auto path : agentPaths.second) {
+			time += (path.size() -1);
+			if(time > max)
+				max = time;
+			sum += time;
 		}
 	}
 	if(_makespan)
