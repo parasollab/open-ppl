@@ -399,6 +399,10 @@ DiscreteIntervalGraph::
 LowLevelGraphPath(HandoffAgent* _agent, size_t _start, size_t _goal, ConstraintMap _constraints,
 												size_t _startTime, size_t _minEndTime){
 
+	if(_minEndTime == 0) {
+		_minEndTime = _startTime;
+	}
+
   //auto dummyAgent = this->GetTaskPlan()->GetCapabilityAgent(_agent->GetCapability());
 	auto roadmap = this->GetCapabilityRoadmap(_agent);
 
@@ -433,7 +437,7 @@ LowLevelGraphPath(HandoffAgent* _agent, size_t _start, size_t _goal, ConstraintM
 	std::set<size_t> discoveredVertices;
 	while(current->m_vid != _goal or current->m_distance < _minEndTime) {	
 
-		if(current->m_distance > roadmap->Size() + maxConstraint)
+		if(current->m_distance > roadmap->Size() + std::max(maxConstraint,_minEndTime))
 			return {};
 	
 		if(current->m_distance == currentDistance) {
@@ -819,6 +823,14 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
       for(auto busyInterval : busyIntervalMap[agent]) {
         const auto& availInterval = agentAvail.second;
 
+				if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
+					//busyInterval.first = busyInterval.first - 1;
+					busyInterval.second = busyInterval.second + 1;
+				}
+				else {
+					busyInterval.first = busyInterval.first - 1;
+				}
+
         if(busyInterval.first > availInterval.second or
            busyInterval.second < availInterval.first)
           continue; // no overlap
@@ -841,10 +853,13 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           invalid.push_back(vid);
 					m_availableIntervalGraph->SetVertexInvalidated(vid);
 
-					if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
+					/*if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
 						//busyInterval.first = busyInterval.first - 1;
 						busyInterval.second = busyInterval.second + 1;
 					}
+					else {
+						busyInterval.first = busyInterval.first - 1;
+					}*/
 
           auto firstInterval = std::make_pair(availInterval.first,busyInterval.first);
           auto secondInterval = std::make_pair(busyInterval.second,availInterval.second);
@@ -889,10 +904,10 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           invalid.push_back(vid);
 					m_availableIntervalGraph->SetVertexInvalidated(vid);
 
-					if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
+					/*if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
 						//busyInterval.first = busyInterval.first - 1;
 						busyInterval.second = busyInterval.second + 1;
-					}
+					}*/
           auto newInterval = std::make_pair(busyInterval.second,availInterval.second);
 					if(newInterval.first > newInterval.second)
 						throw RunTimeException(WHERE, "This is bad.");
@@ -922,10 +937,13 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
 					m_availableIntervalGraph->SetVertexInvalidated(vid);
-					if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
+					/*if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
 						//busyInterval.first = busyInterval.first - 1;
 						busyInterval.second = busyInterval.second + 1;
 					}
+					else {
+						busyInterval.first = busyInterval.first - 1;
+					}*/
 
           auto newInterval = std::make_pair(availInterval.first,busyInterval.first);
 					if(newInterval.first > newInterval.second)

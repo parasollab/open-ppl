@@ -59,6 +59,12 @@ class TMPCBS : public TaskEvaluatorMethod {
 		std::vector<Node*> FindConflict(std::shared_ptr<Node> _node);
 
 		std::vector<Node*> FindTaskConflicts(std::shared_ptr<Node> _node);
+
+
+		std::vector<Node*> CreateTaskConflictNodes(std::shared_ptr<Node> _node, 
+												WholeTask* _task1, WholeTask* _task2,
+												SubtaskPlan _subtask1, SubtaskPlan _subtask2, bool _setup = false);
+
 		std::vector<Node*> FindMotionConflicts(std::shared_ptr<Node> _node);
 
 		std::vector<size_t> DiscreteSearch(Node* _node, size_t _start, size_t _goal, 
@@ -68,6 +74,10 @@ class TMPCBS : public TaskEvaluatorMethod {
 
 		void FinalizePlan(Node* _node);
 
+		bool CheckSetupPath(std::shared_ptr<Node> _node, WholeTask* _task, 
+							 size_t _startTime, size_t _endTime, size_t _startVID, size_t _endVID, HandoffAgent* _agent);
+
+		void PatchSetupPaths(std::shared_ptr<Node> _node);
 		///@}
 		bool m_makespan{false}; ///<Flag indicating evaluation metric to use	
 

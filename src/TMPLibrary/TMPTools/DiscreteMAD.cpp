@@ -129,6 +129,8 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 					std::cout << "This is a problem" << std::endl;
       }
       std::cout << vid << " : " << _distance[vid] << " : " << label <<std::endl;
+			if(_distance[vid] == MAX_INT)
+				throw RunTimeException(WHERE,"Invalid Plan.");
     }
   }
 
@@ -152,7 +154,7 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 		}
 		else if(previousRobot and previousRobot != this->GetTaskPlan()->GetCoordinator()->GetRobot()){
 			SubtaskPlan plan = CreateSubtaskPlan(static_cast<HandoffAgent*>(previousRobot->GetAgent()),
-																					 first, last,_distance[first], _distance[last],
+																					 first, last,_distance[first], _distance[vid],//_distance[last],
 																					 _constraints);
 			taskPlan.push_back(plan);
 		}
@@ -302,6 +304,9 @@ DiscreteMAD::
 CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _startTime, size_t _endTime,
 									ConstraintMap _constraints) {
 
+	if(_endTime == MAX_INT or _startTime == MAX_INT)
+		throw RunTimeException(WHERE,"Invalid Plan.");
+
 	SubtaskPlan plan;
 	plan.m_agent = _agent;
 	plan.m_taskStartVID = _start;
@@ -346,13 +351,15 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
 		throw RunTimeException(WHERE,"This should never happen due to the available interval concept of "
 																 "the availability graph.");
 		//may be off by one so double check that it doesn't need to be path.size() - 1
-
-	plan.m_setupPath = setupPath;
+	if(setupPath.size() == 1)
+		plan.m_setupPath = {};
+	else
+		plan.m_setupPath = setupPath;
 	plan.m_setupStartTime = setupBegin;
 
 	//Execution Path
 	auto executionPath = sg->LowLevelGraphPath(startCfg, goalCfg, _constraints, _startTime, _endTime);
-	if(executionPath.size() + _startTime > _endTime+1)
+	if(executionPath.size() + _startTime > _endTime+1 or executionPath.empty())
 		throw RunTimeException(WHERE, "The execution path violates the task path found in the "
 																	"availability graph search.");
 
