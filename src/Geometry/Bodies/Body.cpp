@@ -1,6 +1,7 @@
 #include "Body.h"
 
 #include "Connection.h"
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/Color.h"
 #include "Utilities/XMLNode.h"
@@ -850,7 +851,8 @@ void
 Body::
 ComputeBoundingBox() const {
   auto& bbx = const_cast<GMSPolyhedron&>(m_boundingBox);
-  bbx = GetPolyhedron().ComputeBoundingPolyhedron();
+  bbx = GetPolyhedron().ComputeBoundingBox()->MakePolyhedron();
+  bbx.Invert();
 }
 
 

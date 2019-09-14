@@ -1,4 +1,6 @@
 #include "GMSPolyhedron.h"
+
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/IOUtils.h"
@@ -18,7 +20,6 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
-#include <set>
 
 using namespace std;
 
@@ -195,6 +196,9 @@ GMSPolyhedron::
 Invert() {
   for(auto& facet : m_polygonList)
     facet.Reverse();
+
+  // Rebuild CD models to get the normals facing the right way.
+  BuildCDModels();
 }
 
 /*-------------------------------- Equality ----------------------------------*/
@@ -370,14 +374,6 @@ GetPolygonList() const noexcept {
   return m_polygonList;
 }
 
-
-vector<pair<int,int>>&
-GMSPolyhedron::
-GetBoundaryLines() {
-  BuildBoundaryLines();
-  return m_boundaryLines;
-}
-
 /*--------------------------- Geometry Functions -----------------------------*/
 
 Point3d
@@ -463,58 +459,27 @@ MarkDirty() {
 }
 
 
-GMSPolyhedron
+std::unique_ptr<WorkspaceBoundingBox>
 GMSPolyhedron::
-ComputeBoundingPolyhedron() const {
-  // Find Extreme values.
-  double minX, minY, minZ, maxX, maxY, maxZ;
-  minX = maxX = m_vertexList[0][0];
-  minY = maxY = m_vertexList[0][1];
-  minZ = maxZ = m_vertexList[0][2];
+ComputeBoundingBox() const {
+  // Initialize point-ranges in each dimension on the first vertex.
+  const auto& vo = m_vertexList[0];
+  Range<double> x(vo[0], vo[0]),
+                y(vo[1], vo[1]),
+                z(vo[2], vo[2]);
 
+  // Find Extreme values.
   for(const auto& v : m_vertexList) {
-    minX = std::min(minX, v[0]);
-    maxX = std::max(maxX, v[0]);
-    minY = std::min(minY, v[1]);
-    maxY = std::max(maxY, v[1]);
-    minZ = std::min(minZ, v[2]);
-    maxZ = std::max(maxZ, v[2]);
+    x.ExpandToInclude(v[0]);
+    y.ExpandToInclude(v[1]);
+    z.ExpandToInclude(v[2]);
   }
 
-  // Make output polyhedron.
-  GMSPolyhedron bbx;
-  auto& verts = bbx.m_vertexList;
-  auto& polys = bbx.m_polygonList;
-
-  // Add vertices.
-  verts.reserve(8);
-  verts.emplace_back(minX, minY, minZ);
-  verts.emplace_back(minX, minY, maxZ);
-  verts.emplace_back(minX, maxY, minZ);
-  verts.emplace_back(minX, maxY, maxZ);
-  verts.emplace_back(maxX, minY, minZ);
-  verts.emplace_back(maxX, minY, maxZ);
-  verts.emplace_back(maxX, maxY, minZ);
-  verts.emplace_back(maxX, maxY, maxZ);
-
-  // Add polygons.
-  polys.reserve(12);
-  polys.emplace_back(0, 1, 3, verts);
-  polys.emplace_back(0, 3, 2, verts);
-  polys.emplace_back(4, 0, 2, verts);
-  polys.emplace_back(4, 2, 6, verts);
-  polys.emplace_back(5, 4, 6, verts);
-  polys.emplace_back(5, 6, 7, verts);
-  polys.emplace_back(1, 5, 7, verts);
-  polys.emplace_back(1, 7, 3, verts);
-  polys.emplace_back(3, 7, 6, verts);
-  polys.emplace_back(3, 6, 2, verts);
-  polys.emplace_back(0, 4, 5, verts);
-  polys.emplace_back(0, 5, 1, verts);
-
-  bbx.OrderFacets();
-  bbx.ComputeSurfaceArea();
-  bbx.ComputeRadii();
+  // Make workspace bounding box.
+  std::unique_ptr<WorkspaceBoundingBox> bbx(new WorkspaceBoundingBox(3));
+  bbx->SetRange(0, x);
+  bbx->SetRange(1, y);
+  bbx->SetRange(2, z);
 
   return bbx;
 }
@@ -611,43 +576,6 @@ ComputeConvexHull() const {
 }
 
 /*-------------------------- Initialization Helpers --------------------------*/
-
-void
-GMSPolyhedron::
-BuildBoundaryLines() {
-  // If the boundary is already cached, we do not need to compute it again.
-  if(m_boundaryLines.size())
-    return;
-
-  // Get all of the edges from every triangle.
-  multiset<pair<int, int>> lines;
-  for(const auto& tri : m_polygonList) {
-    for(unsigned short i = 0; i < 3; ++i) {
-      // Always put the lower vertex index first to make finding duplicates
-      // easier.
-      const int& a = tri[i];
-      const int& b = tri[(i + 1) % 3];
-      lines.emplace(min(a, b), max(a, b));
-    }
-  }
-
-  // Store the edges that occurred exactly once as the boundary lines.
-  for(auto iter = lines.begin(), next = ++lines.begin();
-      iter != lines.end() && next != lines.end(); ++iter, ++next) {
-    if(*iter != *next)
-      continue;
-    do {
-      ++next;
-    } while(next != lines.end() && *iter == *next);
-    iter = lines.erase(iter, next);
-    --iter;
-  }
-
-  m_boundaryLines.clear();
-  m_boundaryLines.reserve(lines.size());
-  std::copy(lines.begin(), lines.end(), std::back_inserter(m_boundaryLines));
-}
-
 
 void
 GMSPolyhedron::
@@ -768,6 +696,51 @@ PQP_Model*
 GMSPolyhedron::
 GetPQPModel() const noexcept {
   return m_pqpModel.get();
+}
+
+/*------------------------------- Common Shapes ------------------------------*/
+
+GMSPolyhedron
+GMSPolyhedron::
+MakeBox(const Range<double>& _x, const Range<double>& _y,
+    const Range<double>& _z) {
+  // Make output polyhedron.
+  GMSPolyhedron bbx;
+  auto& verts = bbx.m_vertexList;
+  auto& polys = bbx.m_polygonList;
+
+  // Add vertices.
+  verts.reserve(8);
+  verts.emplace_back(_x.min, _y.min, _z.min);
+  verts.emplace_back(_x.min, _y.min, _z.max);
+  verts.emplace_back(_x.min, _y.max, _z.min);
+  verts.emplace_back(_x.min, _y.max, _z.max);
+  verts.emplace_back(_x.max, _y.min, _z.min);
+  verts.emplace_back(_x.max, _y.min, _z.max);
+  verts.emplace_back(_x.max, _y.max, _z.min);
+  verts.emplace_back(_x.max, _y.max, _z.max);
+
+  // Add polygons.
+  polys.reserve(12);
+  polys.emplace_back(0, 1, 3, verts);
+  polys.emplace_back(0, 3, 2, verts);
+  polys.emplace_back(4, 0, 2, verts);
+  polys.emplace_back(4, 2, 6, verts);
+  polys.emplace_back(5, 4, 6, verts);
+  polys.emplace_back(5, 6, 7, verts);
+  polys.emplace_back(1, 5, 7, verts);
+  polys.emplace_back(1, 7, 3, verts);
+  polys.emplace_back(3, 7, 6, verts);
+  polys.emplace_back(3, 6, 2, verts);
+  polys.emplace_back(0, 4, 5, verts);
+  polys.emplace_back(0, 5, 1, verts);
+
+  bbx.OrderFacets();
+  bbx.ComputeSurfaceArea();
+  bbx.ComputeRadii();
+  bbx.BuildCDModels();
+
+  return bbx;
 }
 
 /*----------------------------------------------------------------------------*/

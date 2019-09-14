@@ -1,10 +1,15 @@
-#include <cmath>
-
 #include "GridOverlay.h"
 
 #include "Geometry/Boundaries/Boundary.h"
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
+#include "Geometry/GMSPolyhedron.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/MPUtils.h"
 #include "Workspace/WorkspaceDecomposition.h"
+
+#include "nonstd/timer.h"
+
+#include <cmath>
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -21,7 +26,18 @@ GridOverlay(const Boundary* const _b, const double _length):
               << "(" << Size(0) << "x" << Size(1) << "x" << Size(2) << ") "
               << "of length " << m_length << "."
               << std::endl;
+
+  // Build a GMSPolyhedron model of a single grid cell.
+  const double halfLength = m_length / 2.;
+  const Range<double> range(-halfLength, halfLength);
+  m_polyhedron.reset(new GMSPolyhedron(
+      GMSPolyhedron::MakeBox(range, range, range)
+  ));
 }
+
+
+GridOverlay::
+~GridOverlay() noexcept = default;
 
 /*------------------------------- Cell Finding -------------------------------*/
 
@@ -53,7 +69,53 @@ LocateCell(const Point3d& _p) const {
 }
 
 
-std::vector<size_t>
+std::unordered_set<size_t>
+GridOverlay::
+LocateCells(const Boundary* const _b, const bool _interior) const {
+  GMSPolyhedron polyhedron = _b->MakePolyhedron();
+  polyhedron.Invert();
+  return this->LocateCells(polyhedron, mathtool::Transformation(), _interior);
+}
+
+
+std::unordered_set<size_t>
+GridOverlay::
+LocateCells(const GMSPolyhedron& _polyhedron, const mathtool::Transformation& _t,
+    const bool _interior) const {
+  /// @todo Can make the !_interior version more efficient by computing bbx
+  ///       cells for each facet.
+  /// @todo Can make both versions more efficient by avoiding re-building the
+  ///       _polyhedron's BBX each time. Add min/max pts and transform them with
+  ///       the poly, use here.
+  static PQP pqp;
+  static PQPSolid pqpSolid;
+
+  // Find the BBX cells for this polyhedron.
+  std::unordered_set<size_t> bbxCells = LocateBBXCells(
+      _polyhedron.ComputeBoundingBox().get());
+
+  CDInfo cdInfo;
+  std::unordered_set<size_t> cells;
+  cells.reserve(bbxCells.size());
+
+  for(const size_t cell : bbxCells) {
+    Point3d center = CellCenter(cell);
+    mathtool::Transformation t(center);
+    const bool touching = _interior
+                        ? pqpSolid.IsInCollision(_polyhedron, _t,
+                                                 *m_polyhedron, t, cdInfo)
+                        :      pqp.IsInCollision(_polyhedron, _t,
+                                                 *m_polyhedron, t, cdInfo);
+
+    if(touching)
+      cells.insert(cell);
+  }
+
+  return cells;
+}
+
+
+std::unordered_set<size_t>
 GridOverlay::
 LocateBBXCells(const Boundary* const _b) const {
   Point3d min, max;
@@ -68,14 +130,14 @@ LocateBBXCells(const Boundary* const _b) const {
 }
 
 
-std::vector<size_t>
+std::unordered_set<size_t>
 GridOverlay::
 LocateBBXCells(const Point3d& _min, const Point3d& _max) const {
   const auto min = Cell(_min);
   const auto max = Cell(_max);
 
   // Create space for the appropriate number of cells.
-  std::vector<size_t> output;
+  std::unordered_set<size_t> output;
   output.reserve((max[0] - min[0] + 1) *
                  (max[1] - min[1] + 1) *
                  (max[2] - min[2] + 1));
@@ -86,27 +148,153 @@ LocateBBXCells(const Point3d& _min, const Point3d& _max) const {
       const size_t first = CellIndex(min[0], y, z);
       const size_t last  = CellIndex(max[0], y, z);
       for(size_t i = first; i <= last; ++i)
-        output.push_back(i);
+        output.insert(i);
     }
   }
 
   return output;
 }
 
+
+std::unordered_set<size_t>
+GridOverlay::
+LocateFacetNeighbors(const size_t _index) const {
+  // Find the x/y/z indexes for this cell.
+  const size_t x = XIndex(_index),
+               y = YIndex(_index),
+               z = ZIndex(_index);
+
+  // There are six possible facet neighbors.
+  // Each neighbor has one x/y/z index incremented or decremented.
+  std::array<IndexSet, 6> indexes{IndexSet{x + 1, y    , z    },
+                                  IndexSet{x - 1, y    , z    },
+                                  IndexSet{x    , y + 1, z    },
+                                  IndexSet{x    , y - 1, z    },
+                                  IndexSet{x    , y    , z + 1},
+                                  IndexSet{x    , y    , z - 1}};
+
+  // Test each possible neighbor to ensure it's in the grid.
+  std::unordered_set<size_t> output;
+  output.reserve(6);
+
+  for(const auto& i : indexes)
+    if(InGrid(i))
+      output.insert(CellIndex(i));
+  return output;
+}
+
+
+std::unordered_set<size_t>
+GridOverlay::
+LocateEdgeNeighbors(const size_t _index) const {
+  // Find the x/y/z indexes for this cell.
+  const size_t x = XIndex(_index),
+               y = YIndex(_index),
+               z = ZIndex(_index);
+
+  // There are twelve possible facet neighbors.
+  // Each neighbor has two x/y/z indexes incremented or decremented.
+  std::array<IndexSet, 12> indexes{IndexSet{x    , y + 1, z + 1},
+                                   IndexSet{x    , y + 1, z - 1},
+                                   IndexSet{x    , y - 1, z + 1},
+                                   IndexSet{x    , y - 1, z - 1},
+                                   IndexSet{x + 1, y    , z + 1},
+                                   IndexSet{x + 1, y    , z - 1},
+                                   IndexSet{x - 1, y    , z + 1},
+                                   IndexSet{x - 1, y    , z - 1},
+                                   IndexSet{x + 1, y + 1, z    },
+                                   IndexSet{x + 1, y - 1, z    },
+                                   IndexSet{x - 1, y + 1, z    },
+                                   IndexSet{x - 1, y - 1, z    }};
+
+  // Test each possible neighbor to ensure it's in the grid.
+  std::unordered_set<size_t> output;
+  output.reserve(12);
+
+  for(const auto& i : indexes)
+    if(InGrid(i))
+      output.insert(CellIndex(i));
+  return output;
+}
+
+
+std::unordered_set<size_t>
+GridOverlay::
+LocateVertexNeighbors(const size_t _index) const {
+  // Find the x/y/z indexes for this cell.
+  const size_t x = XIndex(_index),
+               y = YIndex(_index),
+               z = ZIndex(_index);
+
+  // There are eight possible vertex neighbors.
+  // Each neighbor has all three x/y/z indexes incremented or decremented.
+  std::array<IndexSet, 8> indexes{IndexSet{x + 1, y + 1, z + 1},
+                                  IndexSet{x + 1, y + 1, z - 1},
+                                  IndexSet{x + 1, y - 1, z + 1},
+                                  IndexSet{x + 1, y - 1, z - 1},
+                                  IndexSet{x - 1, y + 1, z + 1},
+                                  IndexSet{x - 1, y + 1, z - 1},
+                                  IndexSet{x - 1, y - 1, z + 1},
+                                  IndexSet{x - 1, y - 1, z - 1}};
+
+  // Test each possible neighbor to ensure it's in the grid.
+  std::unordered_set<size_t> output;
+  output.reserve(8);
+
+  for(const auto& i : indexes)
+    if(InGrid(i))
+      output.insert(CellIndex(i));
+  return output;
+}
+
+/*------------------------------- Cell Finders -------------------------------*/
+
+double
+GridOverlay::
+CellLength() const noexcept {
+  return m_length;
+}
+
+
+Point3d
+GridOverlay::
+CellCenter(const size_t _index) const noexcept {
+  // Find the dimensional indexes of each cell. Each should be in the range of 0
+  // to m_num - 1.
+  const IndexSet index{this->XIndex(_index),
+                       this->YIndex(_index),
+                       this->ZIndex(_index)};
+
+  Point3d center;
+  const double halfLength = m_length / 2.;
+
+  // Find the value of the minimum corner in each dimension and add the
+  // half-length to get the center.
+  for(size_t i = 0; i < 3; ++i) {
+    const auto range = m_boundary->GetRange(i);
+    center[i] = index[i] * m_length + range.min + halfLength;
+  }
+
+  return center;
+}
+
 /*-------------------------- Decomposition Mapping ---------------------------*/
 
 GridOverlay::DecompositionMap
 GridOverlay::
-ComputeDecompositionMap(const WorkspaceDecomposition* const _decomposition) const
+ComputeDecompositionMap(const WorkspaceDecomposition* const _decomposition,
+    const bool _useCollisionDetection) const
 {
   DecompositionMap map(this->Size());
 
   // For each region, find the grid cells that are associated with it.
   for(auto iter = _decomposition->begin(); iter != _decomposition->end(); ++iter)
   {
-    auto region = &iter->property();
-    /// @TODO Support locating the colliding cells using PQP Solid.
-    auto cells = LocateBBXCells(region->GetBoundary());
+    auto region   = &iter->property();
+    auto boundary = region->GetBoundary();
+    auto cells    = _useCollisionDetection ? LocateCells(boundary, true)
+                                           : LocateBBXCells(boundary);
+
     for(auto index : cells)
       map[index].push_back(region);
   }
@@ -116,10 +304,10 @@ ComputeDecompositionMap(const WorkspaceDecomposition* const _decomposition) cons
 
 /*------------------------------- Helpers ------------------------------------*/
 
-std::array<size_t, 3>
+GridOverlay::IndexSet
 GridOverlay::
 Cell(const Point3d& _p) const noexcept {
-  std::array<size_t, 3> cell;
+  IndexSet cell;
 
   for(size_t i = 0; i < 3; ++i) {
     const auto range = m_boundary->GetRange(i);
@@ -141,7 +329,7 @@ CellIndex(const size_t _x, const size_t _y, const size_t _z) const noexcept {
 
 size_t
 GridOverlay::
-CellIndex(const std::array<size_t, 3>& _indexes) const noexcept {
+CellIndex(const IndexSet& _indexes) const noexcept {
   return CellIndex(_indexes[0], _indexes[1], _indexes[2]);
 }
 
@@ -170,36 +358,117 @@ XIndex(const size_t _index) const noexcept {
   return _index % (m_num[0] * m_num[1]) % m_num[0];
 }
 
+
+bool
+GridOverlay::
+InGrid(const IndexSet& _indexes) const noexcept {
+  return 0 <= _indexes[0] and _indexes[0] <= m_num[0] - 1
+     and 0 <= _indexes[1] and _indexes[1] <= m_num[1] - 1
+     and 0 <= _indexes[2] and _indexes[2] <= m_num[2] - 1;
+}
+
 /*-------------------------------- Testing -----------------------------------*/
 
 void
 GridOverlay::
 Test(const size_t _trials) const {
+  // If we asked for 0 trials, do not sample. Check each grid cell in this case.
+  const bool sampling = _trials != 0;
+  const size_t trials = sampling ? _trials : this->Size();
+  const size_t fivePercent = .05 * trials;
+  size_t percentComplete = 0;
+  nonstd::timer t;
+  t.start();
+
+  std::cout << "Testing GridOverlay."
+            << "\n\tSampling:  " << (sampling ? "yes" : "no")
+            << "\n\tTrials:    " << trials
+            << "\n\tNum cells: " << this->Size()
+            << "\n\tNum X:     " << m_num[0]
+            << "\n\tNum Y:     " << m_num[1]
+            << "\n\tNum Z:     " << m_num[2]
+            << std::endl;
+
+  // Compute a value that is just slightly smaller than the half-length of the
+  // cell.
+  const double halfLength = .98 * (m_length / 2.);
+
+  // Compute a displacement of one 'halfLength' in each dimension for testing
+  // cell centers.
+  const Point3d testDisplacement(halfLength, halfLength, halfLength);
+
   // Generate a ton of cell indexes. For each index, get the x,y,z indexes and
   // confirm that they return the original cell index.
-  for(size_t i = 0; i < _trials; ++i)
+  for(size_t i = 0; i < trials; ++i)
   {
-    const size_t cell = LRand() % Size(),
-                 x    = XIndex(cell),
-                 y    = YIndex(cell),
-                 z    = ZIndex(cell),
-                 test = CellIndex(x, y, z);
+    // Get the next cell index.
+    const size_t cell = sampling ? LRand() % Size()
+                                 : i;
 
-    const bool ok = test == cell;
+    // Test that we can get the dimensional indices and recover the original
+    // index.
+    const size_t x          = XIndex(cell),
+                 y          = YIndex(cell),
+                 z          = ZIndex(cell),
+                 testIndex  = CellIndex(x, y, z);
+    const bool indexTranslationOK = x < m_num[0]
+                                and y < m_num[1]
+                                and z < m_num[2]
+                                and testIndex == cell;
 
-    if(!ok) {
-      std::cout << "GridOverlay::Test failed on trial " << i << ":"
+    // Test that we can get the cell center and determine it belongs in the
+    // original cell.
+    const Point3d center = CellCenter(cell);
+    const size_t centerIndex = LocateCell(center);
+    const bool centerOK = centerIndex == cell;
+
+    // Test that we can apply the ~half length displacement to the cell center
+    // in either direction and get back the same cell.
+    const size_t addIndex = LocateCell(center + testDisplacement),
+                 subIndex = LocateCell(center - testDisplacement);
+    const bool addOK = addIndex == cell,
+               subOK = subIndex == cell;
+
+
+
+    if(!indexTranslationOK or !centerOK or !addOK or !subOK) {
+      std::cout << "GridOverlay: test failed on trial " << i << ":"
                 << "\n\tcell: " << cell
                 << "\n\tx:    " << x
                 << "\n\ty:    " << y
                 << "\n\tz:    " << z
-                << "\n\ttest: " << test << " != cell"
+                << "\n\ttestIndex: " << testIndex
+                << "\n\tcenter:      " << center
+                << "\n\tcenterIndex: " << centerIndex
+                << "\n\tadd:         " << center + testDisplacement
+                << "\n\taddIndex:    " << addIndex
+                << "\n\tsub:         " << center - testDisplacement
+                << "\n\tsubIndex:    " << subIndex
                 << std::endl;
-      throw RunTimeException(WHERE, "Test failed.");
+      if(!indexTranslationOK)
+        std::cout << "Index translation failed." << std::endl;
+      if(!centerOK)
+        std::cout << "Center test failed." << std::endl;
+      if(!addOK)
+        std::cout << "Add test failed." << std::endl;
+      if(!subOK)
+        std::cout << "Subtract test failed." << std::endl;
+      throw RunTimeException(WHERE) << "Test failed.";
+    }
+
+    if((i + 1) % fivePercent == 0) {
+      percentComplete += 5;
+      std::cout << percentComplete << "% complete. ("
+                << t.elapsed()
+                << " seconds)"
+                << std::endl;
     }
   }
 
-  std::cout << "GridOverlay::Test passed." << std::endl;
+  std::cout << "GridOverlay::Test passed. ("
+            << t.elapsed()
+            << " seconds)"
+            << std::endl;
 }
 
 /*----------------------------------------------------------------------------*/

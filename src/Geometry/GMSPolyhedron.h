@@ -3,6 +3,8 @@
 
 #include "GMSPolygon.h"
 
+#include "Geometry/Boundaries/Range.h"
+
 #include "Transformation.h"
 #include "Vector.h"
 
@@ -11,6 +13,7 @@
 #include <CGAL/convex_hull_3.h>
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -18,6 +21,7 @@
 class IModel;
 class PQP_Model;
 class RAPID_model;
+class WorkspaceBoundingBox;
 
 using namespace mathtool;
 namespace glutils {
@@ -133,10 +137,6 @@ class GMSPolyhedron final {
     const std::vector<Vector3d>& GetVertexList() const noexcept;
     const std::vector<GMSPolygon>& GetPolygonList() const noexcept;
 
-    /// Get the boundary edges for this polyhedron. The edges will be computed
-    /// if they haven't been already.
-    std::vector<std::pair<int,int>>& GetBoundaryLines();
-
     ///@}
     ///@name Geometry Functions
     ///@{
@@ -150,23 +150,10 @@ class GMSPolyhedron final {
     /// Mark all cached objects as requiring an update.
     void MarkDirty();
 
-    /// Compute a GMSPolyhedron representation of an axis-aligned bounding box
-    /// for this.
-    ///
-    /// Vertex diagram:
-    ///
-    ///     2-----6    +Y
-    ///    /|    /|     |
-    ///   3-----7 |     |---+X
-    ///   | 0---|-4    /
-    ///   |/    |/   +Z
-    ///   1-----5
-    ///
-    GMSPolyhedron ComputeBoundingPolyhedron() const;
+    /// Compute an axis-aligned bounding box for this polyhedron.
+    std::unique_ptr<WorkspaceBoundingBox> ComputeBoundingBox() const;
 
     /// Compute the polyhedron's convex hull vertices and facets
-    /// @param _convexHull convexhull container.
-    ///
     GMSPolyhedron ComputeConvexHull() const;
 
     /// Get a CGAL polyhedron representation of this object.
@@ -203,6 +190,22 @@ class GMSPolyhedron final {
 
     /// Get the pqp CD model.
     PQP_Model* GetPQPModel() const noexcept;
+
+    ///@}
+    ///@name Build Common Shapes
+    ///@{
+
+    /// Vertex diagram:
+    ///
+    ///     2-----6    +Y
+    ///    /|    /|     |
+    ///   3-----7 |     |---+X
+    ///   | 0---|-4    /
+    ///   |/    |/   +Z
+    ///   1-----5
+    ///
+    static GMSPolyhedron MakeBox(const Range<double>& _x,
+        const Range<double>& _y, const Range<double>& _z);
 
     ///@}
 

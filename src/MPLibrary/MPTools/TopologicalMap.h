@@ -1,15 +1,24 @@
 #ifndef PMPL_TOPOLOGICAL_MAP_H_
 #define PMPL_TOPOLOGICAL_MAP_H_
 
-#include <algorithm>
-#include <map>
-#include <vector>
-
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
+
+#include <algorithm>
+#include <map>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+
+#ifdef PMPL_USE_SIMULATOR
+#include "Simulator/Simulation.h"
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,6 +29,11 @@
 /// 'contained' within a workspace region or grid cell. In this context, a
 /// configuration is contained by a region or cell if it's reference point (used
 /// for distance measurement) lies within.
+///
+/// Reference:
+///   Read Sandstrom, Andrew Bregger, Ben Smith, Shawna Thomas, and Nancy M.
+///   Amato. "Topological Nearest-Neighbor Filtering for Sampling-based
+///   Planners". ICRA 2018.
 ///
 /// @WARNING The current implementation assumes that the workspace decomposition
 ///          will not change once created. If this occurs, the maps must be
@@ -212,6 +226,19 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
         const AdjacencyMap& _adjacency = {});
 
     ///@}
+    ///@name Inter-Region Distance
+    ///@{
+
+    /// Approximate the minimum inner distance between two regions. This
+    /// estimates the shortest-path distance through free space.
+    /// @param _source The source region.
+    /// @param _target The target region.
+    /// @return The approximate minimum distance from _source to _target
+    ///         measured through free workspace.
+    double ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
+        const WorkspaceRegion* const _target);
+
+    ///@}
 
   private:
 
@@ -263,6 +290,9 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     /// An inverse mapping from VID to the containing neighborhood.
     std::unordered_map<VID, NeighborhoodKey> m_vidToNeighborhood;
+
+    /// A set of cells which lie on the boundary of obstacle space.
+    std::unordered_set<size_t> m_boundaryCells;
 
     ///@}
 
@@ -318,8 +348,10 @@ Initialize() {
   ClearMaps();
 
   // Initialize the grid and decomposition map.
+  auto env = this->GetEnvironment();
   m_grid = std::unique_ptr<const GridOverlay>(new GridOverlay(
-      this->GetEnvironment()->GetBoundary(), m_gridSize));
+      env->GetBoundary(), m_gridSize));
+  const std::string gridLabel = this->GetNameAndLabel() + "::GridOverlay";
   {
     auto decomposition = this->GetMPTools()->GetDecomposition(
         m_decompositionLabel);
@@ -330,9 +362,74 @@ Initialize() {
     if(this->m_debug)
       decomposition->WriteObj(this->GetLabel() + ".obj");
 
-    MethodTimer mt(this->GetStatClass(), "GridOverlay::ComputeDecompositionMap");
+    MethodTimer mt(this->GetStatClass(), gridLabel + "::ComputeDecompositionMap");
     m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
+
+    this->GetStatClass()->SetStat(gridLabel + "::Size", m_grid->Size());
   }
+  // Compute the set of boundary cells.
+  {
+    if(this->m_debug)
+      std::cout << "Computing boundary grid cells." << std::endl;
+
+    /// @TODO This exception should probably be a check on whether the robot's
+    ///       largest minimum body radius is larger than the grid resolution, I
+    ///       think probably at least 3x?
+    if(env->UsingBoundaryObstacle())
+      throw RunTimeException(WHERE) << "I'm pretty sure that using a boundary "
+                                    << "obstacle with this won't work right, "
+                                    << "unless your cell resolution is "
+                                    << "significantly finer than the minimum "
+                                    << "robot radius. Uncomment this exception "
+                                    << "at your own peril!";
+
+    MethodTimer mt(this->GetStatClass(), gridLabel + "::ComputeBoundary");
+
+    m_boundaryCells.clear();
+    const size_t numObstacles = env->NumObstacles();
+    for(size_t i = 0; i < numObstacles; ++i) {
+      const MultiBody* const obst = env->GetObstacle(i);
+      for(const Body& b : obst->GetBodies()) {
+        const auto& poly = b.GetWorldPolyhedron();
+        const std::unordered_set<size_t> cells = m_grid->LocateCells(poly);
+
+        if(this->m_debug)
+          std::cout << "\tFound " << cells.size() << " cells for obstacle "
+                    << i << ", body " << b.GetIndex() << "."
+                    << std::endl;
+
+        std::copy(cells.begin(), cells.end(),
+            std::inserter(m_boundaryCells, m_boundaryCells.end()));
+      }
+    }
+
+    if(this->m_debug)
+      std::cout << "Found " << m_boundaryCells.size() << " boundary cells."
+                << std::endl;
+  }
+
+#ifdef PMPL_USE_SIMULATOR
+  // Show visualization if we are using the simulator.
+  std::cout << "Making " << m_boundaryCells.size()  << " boundary cell models."
+            << std::endl;
+
+  // Make a boundary model of the grid cell.
+  const double halfLength = m_gridSize / 2.;
+  const Range<double> range(-halfLength, halfLength);
+  WorkspaceBoundingBox bbx(3);
+  bbx.SetRange(0, range);
+  bbx.SetRange(1, range);
+  bbx.SetRange(2, range);
+
+  const glutils::color cellColor{1, 1, 0, 1};
+
+  for(const size_t cell : m_boundaryCells) {
+    const Vector3d center = m_grid->CellCenter(cell);
+    bbx.Translate(center);
+    Simulation::Get()->AddBoundary(&bbx, cellColor, true);
+    bbx.Translate(-center);
+  }
+#endif
 
   // Set the size of the mapping.
   auto mb = this->GetTask()->GetRobot()->GetMultiBody();
@@ -826,6 +923,221 @@ ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
   const VD root = wd->GetDescriptor(*_region);
 
   return DijkstraSSSP(wd, {root}, stop, _adjacency);
+}
+
+
+template <typename MPTraits>
+double
+TopologicalMap<MPTraits>::
+ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
+    const WorkspaceRegion* const _target) {
+  /// @todo Refactor this and SSSP code to unify implementations.
+
+#if 1
+  // First check for the trivial case.
+  if(_source == _target)
+    return 0;
+
+  /// A search element in the priority queue.
+  struct element {
+    size_t cell;      ///< The visited cell.
+    double distance;  ///< The distance to the nearest search root from cell.
+
+    element(const size_t _target, const double _distance)
+      : cell(_target), distance(_distance) {}
+
+    /// Total ordering by increasing distance.
+    bool operator>(const element& _other) const noexcept {
+      return distance > _other.distance;
+    }
+  };
+
+  // Set up a best-first search through the grid overlay to estimate the minimum
+  // inner distance.
+  std::unordered_set<size_t> visited;
+  std::unordered_map<size_t, double> distance;
+  std::unordered_map<size_t, size_t> parent;
+  std::priority_queue<element,
+                      std::vector<element>,
+                      std::greater<element>> pq;
+
+  // Define a relax edge function.
+  const double cellLength = this->m_grid->CellLength();
+  auto relax = [&distance, &pq, &cellLength, &parent, this](
+      const size_t _source, const size_t _target)
+  {
+    // If the target cell is a boundary cell, quit.
+    if(m_boundaryCells.count(_target))
+      return;
+
+    // Compute the new distance.
+    const double sourceDistance = distance[_source],
+                 targetDistance = distance.count(_target)
+                                ? distance[_target]
+                                : std::numeric_limits<double>::infinity(),
+                 newDistance    = sourceDistance + cellLength;
+
+    // If the new distance isn't better, quit.
+    if(newDistance >= targetDistance)
+      return;
+
+    // Otherwise, update target distance and add the target to the queue.
+    distance[_target] = newDistance;
+    parent[_target]   = _source;
+    pq.emplace(_target, newDistance);
+  };
+
+  // Find the source and target cells.
+  const Boundary* const sourceBoundary = _source->GetBoundary();
+  const Boundary* const targetBoundary = _target->GetBoundary();
+  const std::unordered_set<size_t> sourceCells = m_grid->LocateCells(sourceBoundary);
+  const std::unordered_set<size_t> targetCells = m_grid->LocateCells(targetBoundary);
+
+  // Mark all source cells as visited and distance 0.
+  for(const size_t cell : sourceCells) {
+    visited.insert(cell);
+    distance[cell] = 0;
+  }
+
+  // Find all neighbors of the source cells and put them in the queue at 0
+  // distance.
+  for(const size_t cell : sourceCells) {
+    for(size_t i = 0; i < 3; ++i) {
+      std::unordered_set<size_t> neighbors;
+      switch(i) {
+        case 0:
+          neighbors = m_grid->LocateFacetNeighbors(cell);
+          break;
+        case 1:
+          neighbors = m_grid->LocateEdgeNeighbors(cell);
+          break;
+        case 2:
+          neighbors = m_grid->LocateVertexNeighbors(cell);
+          break;
+      }
+      for(const size_t neighbor : neighbors) {
+        // Skip visited cells.
+        if(visited.count(neighbor))
+          continue;
+        // Skip boundary cells.
+        if(m_boundaryCells.count(cell))
+          continue;
+        visited.insert(cell);
+        distance[neighbor] = 0;
+        parent[neighbor]   = cell;
+        pq.emplace(neighbor, 0);
+      }
+    }
+  }
+
+  bool found = false;
+  size_t foundTarget;
+  while(!pq.empty()) {
+    // Get the next element.
+    const element current = pq.top();
+    pq.pop();
+
+    // If we are done with this node, the element is stale. Discard.
+    if(visited.count(current.cell))
+      continue;
+    visited.insert(current.cell);
+
+    // Check for early termination.
+    found |= targetCells.count(current.cell);
+
+#if 1
+    std::cout << "\tVertex: " << current.cell
+              << ", parent: " << parent[current.cell]
+              << ", score: " << std::setprecision(4) << distance[current.cell]
+              << ", stop: " << found
+              << std::endl;
+#endif
+
+    if(found) {
+      foundTarget = current.cell;
+      break;
+    }
+
+    // Relax each outgoing edge.
+    const std::unordered_set<size_t> neighbors = m_grid->LocateFacetNeighbors(
+        current.cell);
+    for(const size_t n : neighbors)
+      relax(current.cell, n);
+  }
+#endif
+
+  if(!found)
+    throw RunTimeException(WHERE) << "No path found!";
+
+#ifdef PMPL_USE_SIMULATOR
+  static const glutils::color regionColor{1, 0, 1, .5};
+  static const glutils::color cellColor{1, 0, 0, 1};
+  static const glutils::color pathColor{0, 0, 1, 1};
+
+  // Draw everything, wait, then clear everything.
+  std::vector<size_t> ids;
+
+  // Make a boundary model of the grid cell.
+  const double halfLength = m_gridSize / 2.;
+  const Range<double> range(-halfLength, halfLength);
+  WorkspaceBoundingBox bbx(3);
+  bbx.SetRange(0, range);
+  bbx.SetRange(1, range);
+  bbx.SetRange(2, range);
+
+  // Draw source and target regions.
+  ids.push_back(Simulation::Get()->AddBoundary(sourceBoundary, regionColor, false));
+  ids.push_back(Simulation::Get()->AddBoundary(targetBoundary, regionColor, false));
+
+  auto drawCell = [&bbx, &ids](const Vector3d& _center,
+                               const glutils::color& _color) {
+    bbx.Translate(_center);
+    ids.push_back(Simulation::Get()->AddBoundary(&bbx, _color));
+    bbx.Translate(-_center);
+  };
+
+  // Draw source and target cells.
+  for(const size_t cell : sourceCells) {
+    const Vector3d center = m_grid->CellCenter(cell);
+    drawCell(center, cellColor);
+  }
+  for(const size_t cell : targetCells) {
+    const Vector3d center = m_grid->CellCenter(cell);
+    drawCell(center, cellColor);
+  }
+
+  // Draw path.
+  Robot* const point = this->GetMPProblem()->GetRobot("point");
+  std::vector<CfgType> cfgs;
+  size_t current = foundTarget;
+  while(true)
+  {
+    const Vector3d center = m_grid->CellCenter(current);
+    drawCell(center, pathColor);
+    cfgs.emplace_back(center, point);
+    if(!parent.count(current))
+      break;
+    current = parent[current];
+  }
+  const size_t pathID = Simulation::Get()->AddPath(cfgs, pathColor);
+
+  // Sleeeeep before undrawing.
+  std::cout << "Drawing path through " << cfgs.size() << " cells with length "
+            << distance[foundTarget] << "."
+            << std::endl;
+  //usleep(5000000); // 5 seconds to see
+  std::cin.ignore(); // Press button to go on.
+  std::cout << "Undrawing." << std::endl;
+
+  for(const size_t id : ids)
+    Simulation::Get()->RemoveBoundary(id);
+  Simulation::Get()->RemovePath(pathID);
+
+  // Give it time to clear.
+  usleep(10000);
+#endif
+
+  return found ? distance[foundTarget] : std::numeric_limits<double>::infinity();
 }
 
 /*----------------------------------------------------------------------------*/

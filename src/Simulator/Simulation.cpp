@@ -494,11 +494,6 @@ AddBBX() {
   btBoxShape* box = new btBoxShape(btVector3(x, thickness, z));
   if(!m_editMode)
     m_engine->AddMultiBody(box, trans, 0.);
-
-  /// @TODO Add visual for the bounding box/floor.
-  /// @TODO Support other boundary types.
-  //auto d = new Drawable(?);
-  //this->add_drawable(d);
 #endif
 }
 

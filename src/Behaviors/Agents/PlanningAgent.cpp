@@ -70,13 +70,6 @@ PlanningAgent::
 Step(const double _dt) {
   Initialize();
 
-  /*if(HasPlan() and m_CUSTOM_PATH){
-    ExecuteTask(_dt);
-    return;
-  }
-  else{
-    m_CUSTOM_PATH = false;
-  }*/
   // If the agent is planning or localizing, skip this step.
   if(IsPlanning() or IsLocalizing())
     return;
@@ -89,8 +82,6 @@ Step(const double _dt) {
   // If the simulation has passed a set number of timesteps, localize.
   ++m_localizeCount;
   if(m_localizeCount > m_localizePeriod) {
-    if(m_debug)
-      std::cout << "Enqueueing localize command." << std::endl;
     Localize();
     m_localizeCount = 0;
   }

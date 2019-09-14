@@ -2,8 +2,6 @@
 
 #include "Geometry/GMSPolyhedron.h"
 
-#include "glutils/triangulated_model.h"
-
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -220,28 +218,22 @@ MakePolyhedron() const {
   // We will use a short 3d box to approximate a 2d box boundary. Define its
   // height here.
   const double height = .02;
-
-  glutils::triangulated_model t;
-  const auto& center = GetCenter();
+  Range<double> x, y, z(-height,height);
 
   switch(NBox::GetDimension())
   {
     case 3:
-      t = glutils::triangulated_model::make_box(GetRange(0).Length(),
-          GetRange(1).Length(), GetRange(2).Length());
-      t.translate({(float)center[0], (float)center[1], (float)center[2]});
-      break;
+      z = GetRange(2);
     case 2:
-      t = glutils::triangulated_model::make_box(GetRange(0).Length(),
-          GetRange(1).Length(), height);
-      t.translate({(float)center[0], (float)center[1], 0.});
+      x = GetRange(0);
+      y = GetRange(1);
       break;
     default:
-      throw RunTimeException(WHERE, "GMSPolyhedron doesn't make sense for "
-          + std::to_string(NBox::GetDimension()) + "-d boundaries.");
+      throw RunTimeException(WHERE) << "GMSPolyhedron doesn't make sense for "
+                                    << NBox::GetDimension() << "-d boundaries.";
   }
 
-  GMSPolyhedron poly(std::move(t));
+  GMSPolyhedron poly = GMSPolyhedron::MakeBox(x, y, z);
   poly.Invert();
   return poly;
 }
