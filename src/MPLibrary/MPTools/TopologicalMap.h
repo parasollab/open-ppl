@@ -21,6 +21,30 @@
 #endif
 
 
+namespace std {
+
+  //////////////////////////////////////////////////////////////////////////////
+  /// Define a hasher for a pair of region pointers for use with unordered maps.
+  //////////////////////////////////////////////////////////////////////////////
+  template <>
+  struct hash<std::pair<const WorkspaceRegion*, const WorkspaceRegion*>> {
+
+    typedef std::pair<const WorkspaceRegion*, const WorkspaceRegion*> RegionPair;
+
+    /// @TODO This is a guess at a good hashing function. We need to validate
+    ///       that it is a reasonable assumption.
+    static constexpr size_t magicOffset = std::numeric_limits<size_t>::max() / 7;
+
+    size_t operator()(const RegionPair& _key) const {
+      static constexpr std::hash<const WorkspaceRegion*> hasher;
+      return (hasher(_key.first) + magicOffset) ^ hasher(_key.second);
+    }
+
+  };
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// A topological map from roadmap vertices to decomposition cells. The map is
 /// updated whenever a vertex is added or removed.
@@ -63,6 +87,10 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     typedef SSSPOutput<WorkspaceDecomposition>       SSSPData;
 
     typedef std::vector<const WorkspaceRegion*>      NeighborhoodKey;
+
+    /// A pair of regions, which act as a hash key when caching the inter-region
+    /// distances.
+    typedef std::pair<const WorkspaceRegion*, const WorkspaceRegion*> RegionPair;
 
     ///@}
     ///@name Construction
@@ -254,8 +282,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _vertex A roadmap graph iterator to the to-be-deleted vertex.
     void UnmapCfg(const VI _vertex);
 
-    /// Clear the maps.
-    void ClearMaps();
+    /// Clear the cfg maps.
+    void ClearCfgMaps();
 
     /// Get the forward map from region -> VIDs for a given body.
     /// @param _bodyIndex The body index.
@@ -267,6 +295,19 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _vid The VID to unmap.
     /// @return The neighborhood key for this configuration.
     const NeighborhoodKey& GetInverseMap(const VID _vid) const;
+
+    ///@}
+    ///@name Distance Caching
+    ///@{
+
+    /// Make a map key from two region pointers. The lower-address region will
+    /// always go first to compress the key space.
+    /// @param _r1 The first region.
+    /// @param _r2 The second region.
+    /// @return A key pair for {_r1,  _r2} which is identical to the key pair
+    ///         for {_r2, _r1}.
+    RegionPair MakeKey(const WorkspaceRegion* const _r1,
+        const WorkspaceRegion* const _r2) const noexcept;
 
     ///@}
     ///@name Internal State
@@ -291,8 +332,11 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// An inverse mapping from VID to the containing neighborhood.
     std::unordered_map<VID, NeighborhoodKey> m_vidToNeighborhood;
 
-    /// A set of cells which lie on the boundary of obstacle space.
+    /// A set of grid cells which lie on the boundary of obstacle space.
     std::unordered_set<size_t> m_boundaryCells;
+
+    /// A cache for approximate inner-distance between regions.
+    std::unordered_map<RegionPair, double> m_innerDistanceMap;
 
     ///@}
 
@@ -345,30 +389,38 @@ Initialize() {
                                          << "support robot groups.";
 
   // Initialize the maps.
-  ClearMaps();
+  ClearCfgMaps();
+
+  auto env = this->GetEnvironment();
+  auto decomposition = this->GetDecomposition();
+
+  // If we are debugging, write the decomposition file to OBJ for inspection.
+  /// @todo Move this to the decomposition class, which currently cannot do
+  ///       this job because it does not know its own label.
+  if(this->m_debug)
+    decomposition->WriteObj(this->GetLabel() + ".obj");
+
 
   // Initialize the grid and decomposition map.
-  auto env = this->GetEnvironment();
-  m_grid = std::unique_ptr<const GridOverlay>(new GridOverlay(
-      env->GetBoundary(), m_gridSize));
   const std::string gridLabel = this->GetNameAndLabel() + "::GridOverlay";
+  if(!m_grid.get())
   {
-    auto decomposition = this->GetMPTools()->GetDecomposition(
-        m_decompositionLabel);
-
-    // If we are debugging, write the decomposition file to OBJ for inspection.
-    ///@todo Move this to the decomposition class, which currently cannot do
-    ///      this job because it does not know its own label.
-    if(this->m_debug)
-      decomposition->WriteObj(this->GetLabel() + ".obj");
-
-    MethodTimer mt(this->GetStatClass(), gridLabel + "::ComputeDecompositionMap");
-    m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition);
-
+    m_grid = std::unique_ptr<const GridOverlay>(new GridOverlay(
+        env->GetBoundary(), m_gridSize));
     this->GetStatClass()->SetStat(gridLabel + "::Size", m_grid->Size());
-  }
-  // Compute the set of boundary cells.
-  {
+
+    // Compute the mapping from grid cell to region.
+    if(this->m_debug)
+      std::cout << "Computing grid to region map." << std::endl;
+    {
+      /// @todo We could probably do this lazily if we use something like a
+      ///       segment tree to find the regions which intersect a cell.
+      MethodTimer mt(this->GetStatClass(),
+          gridLabel + "::ComputeDecompositionMap");
+      m_cellToRegions = m_grid->ComputeDecompositionMap(decomposition, true);
+    }
+
+    // Compute the set of boundary cells.
     if(this->m_debug)
       std::cout << "Computing boundary grid cells." << std::endl;
 
@@ -409,25 +461,27 @@ Initialize() {
   }
 
 #ifdef PMPL_USE_SIMULATOR
-  // Show visualization if we are using the simulator.
-  std::cout << "Making " << m_boundaryCells.size()  << " boundary cell models."
-            << std::endl;
+  // Show visualization if we are using the simulator in debug mode.
+  if(this->m_debug) {
+    std::cout << "Making " << m_boundaryCells.size()  << " boundary cell models."
+              << std::endl;
 
-  // Make a boundary model of the grid cell.
-  const double halfLength = m_gridSize / 2.;
-  const Range<double> range(-halfLength, halfLength);
-  WorkspaceBoundingBox bbx(3);
-  bbx.SetRange(0, range);
-  bbx.SetRange(1, range);
-  bbx.SetRange(2, range);
+    // Make a boundary model of the grid cell.
+    const double halfLength = m_gridSize / 2.;
+    const Range<double> range(-halfLength, halfLength);
+    WorkspaceBoundingBox bbx(3);
+    bbx.SetRange(0, range);
+    bbx.SetRange(1, range);
+    bbx.SetRange(2, range);
 
-  const glutils::color cellColor{1, 1, 0, 1};
+    const glutils::color cellColor{1, 1, 0, 1};
 
-  for(const size_t cell : m_boundaryCells) {
-    const Vector3d center = m_grid->CellCenter(cell);
-    bbx.Translate(center);
-    Simulation::Get()->AddBoundary(&bbx, cellColor, true);
-    bbx.Translate(-center);
+    for(const size_t cell : m_boundaryCells) {
+      const Vector3d center = m_grid->CellCenter(cell);
+      bbx.Translate(center);
+      Simulation::Get()->AddBoundary(&bbx, cellColor, true);
+      bbx.Translate(-center);
+    }
   }
 #endif
 
@@ -521,7 +575,7 @@ GetMappedVIDs(
       this->GetNameAndLabel() + "::GetMappedVIDs");
 
   const auto& forwardMap = GetForwardMap(_bodyIndex);
-  auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
+  auto decomposition = this->GetDecomposition();
 
   // Find all VIDs that live within the region set.
   /// @todo Profile effect of changing all to a std::set and removing the later
@@ -749,6 +803,7 @@ LocateNeighborhood(const CfgType& _c) const {
 /*--------------------------- Decomposition Access ---------------------------*/
 
 template <typename MPTraits>
+inline
 const WorkspaceDecomposition*
 TopologicalMap<MPTraits>::
 GetDecomposition() const {
@@ -818,13 +873,14 @@ UnmapCfg(const VI _vertex) {
 template <typename MPTraits>
 void
 TopologicalMap<MPTraits>::
-ClearMaps() {
+ClearCfgMaps() {
   m_regionToVIDs.clear();
   m_vidToNeighborhood.clear();
 }
 
 
 template <typename MPTraits>
+inline
 const std::map<const WorkspaceRegion*,
                std::vector<typename MPTraits::RoadmapType::VID>>&
 TopologicalMap<MPTraits>::
@@ -840,6 +896,7 @@ GetForwardMap(const size_t _bodyIndex) const {
 
 
 template <typename MPTraits>
+inline
 const typename TopologicalMap<MPTraits>::NeighborhoodKey&
 TopologicalMap<MPTraits>::
 GetInverseMap(const VID _vid) const {
@@ -851,7 +908,19 @@ GetInverseMap(const VID _vid) const {
   }
 }
 
-/*----------------------------------- SSSP -----------------------------------*/
+/*----------------------------- Distance Caching -----------------------------*/
+
+template <typename MPTraits>
+inline
+typename TopologicalMap<MPTraits>::RegionPair
+TopologicalMap<MPTraits>::
+MakeKey(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2)
+    const noexcept {
+  return {std::min(_r1, _r2),
+          std::max(_r1, _r2)};
+}
+
+/*-------------------------------- Frontiers ---------------------------------*/
 
 template <typename MPTraits>
 typename TopologicalMap<MPTraits>::SSSPData
@@ -863,9 +932,8 @@ ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
   stats->IncStat(this->GetNameAndLabel() + "::ComputeFrontier");
 
   // Const cast is required because STAPL has an API error preventing useful
-  // iteration over non-const graphs.
-  auto wd = const_cast<WorkspaceDecomposition*>(
-      this->GetMPTools()->GetDecomposition(m_decompositionLabel));
+  // iteration over const graphs.
+  auto wd = const_cast<WorkspaceDecomposition*>(this->GetDecomposition());
 
   if(this->m_debug)
     std::cout << "TopologicalMap::ComputeFrontier"
@@ -925,18 +993,34 @@ ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
   return DijkstraSSSP(wd, {root}, stop, _adjacency);
 }
 
+/*--------------------------- Inter-Region Distance --------------------------*/
 
 template <typename MPTraits>
 double
 TopologicalMap<MPTraits>::
 ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     const WorkspaceRegion* const _target) {
-  /// @todo Refactor this and SSSP code to unify implementations.
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ApproximateMinimumInnerDistance");
 
-#if 1
+  /// @todo Refactor this and SSSP code to unify implementations. I think it
+  ///       should be feasible to make an adaptor class to give our grid (which
+  ///       represents an implicit graph) an API that is compatible with the
+  ///       STAPL (explicit) graph.
+
   // First check for the trivial case.
   if(_source == _target)
     return 0;
+
+  // Next check if we've alreay cached this inner distance.
+  const RegionPair key = MakeKey(_source, _target);
+  {
+    auto iter = m_innerDistanceMap.find(key);
+    if(iter != m_innerDistanceMap.end())
+      return iter->second;
+  }
+
+  // The distance isn't cached.
 
   /// A search element in the priority queue.
   struct element {
@@ -990,8 +1074,10 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
   // Find the source and target cells.
   const Boundary* const sourceBoundary = _source->GetBoundary();
   const Boundary* const targetBoundary = _target->GetBoundary();
-  const std::unordered_set<size_t> sourceCells = m_grid->LocateCells(sourceBoundary);
-  const std::unordered_set<size_t> targetCells = m_grid->LocateCells(targetBoundary);
+  const std::unordered_set<size_t> sourceCells = m_grid->LocateCells(
+      sourceBoundary);
+  const std::unordered_set<size_t> targetCells = m_grid->LocateCells(
+      targetBoundary);
 
   // Mark all source cells as visited and distance 0.
   for(const size_t cell : sourceCells) {
@@ -1045,7 +1131,8 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     // Check for early termination.
     found |= targetCells.count(current.cell);
 
-#if 1
+#if 0
+    // This part is for debugging the search over the grid.
     std::cout << "\tVertex: " << current.cell
               << ", parent: " << parent[current.cell]
               << ", score: " << std::setprecision(4) << distance[current.cell]
@@ -1064,80 +1151,89 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     for(const size_t n : neighbors)
       relax(current.cell, n);
   }
-#endif
 
+  // If we didn't find a connection, the two regions are not connected through
+  // our grid approximation of free workspace. They might really be connected,
+  // but we can't tell that with the current grid resolution.
   if(!found)
-    throw RunTimeException(WHERE) << "No path found!";
+    return m_innerDistanceMap[key] = std::numeric_limits<double>::infinity();
+  m_innerDistanceMap[key] = distance[foundTarget];
 
 #ifdef PMPL_USE_SIMULATOR
-  static const glutils::color regionColor{1, 0, 1, .5};
-  static const glutils::color cellColor{1, 0, 0, 1};
-  static const glutils::color pathColor{0, 0, 1, 1};
+  if(this->m_debug) {
+    static const glutils::color regionColor{1, 0, 1, .5};
+    static const glutils::color cellColor{1, 0, 0, 1};
+    static const glutils::color pathColor{0, 0, 1, 1};
 
-  // Draw everything, wait, then clear everything.
-  std::vector<size_t> ids;
+    // Draw everything, wait, then clear everything.
+    std::vector<size_t> ids;
 
-  // Make a boundary model of the grid cell.
-  const double halfLength = m_gridSize / 2.;
-  const Range<double> range(-halfLength, halfLength);
-  WorkspaceBoundingBox bbx(3);
-  bbx.SetRange(0, range);
-  bbx.SetRange(1, range);
-  bbx.SetRange(2, range);
+    // Make a boundary model of the grid cell.
+    const double halfLength = m_gridSize / 2.;
+    const Range<double> range(-halfLength, halfLength);
+    WorkspaceBoundingBox bbx(3);
+    bbx.SetRange(0, range);
+    bbx.SetRange(1, range);
+    bbx.SetRange(2, range);
 
-  // Draw source and target regions.
-  ids.push_back(Simulation::Get()->AddBoundary(sourceBoundary, regionColor, false));
-  ids.push_back(Simulation::Get()->AddBoundary(targetBoundary, regionColor, false));
+    // Draw source and target regions.
+    ids.push_back(Simulation::Get()->AddBoundary(sourceBoundary, regionColor,
+          false));
+    ids.push_back(Simulation::Get()->AddBoundary(targetBoundary, regionColor,
+          false));
 
-  auto drawCell = [&bbx, &ids](const Vector3d& _center,
-                               const glutils::color& _color) {
-    bbx.Translate(_center);
-    ids.push_back(Simulation::Get()->AddBoundary(&bbx, _color));
-    bbx.Translate(-_center);
-  };
+    auto drawCell = [&bbx, &ids](const Vector3d& _center,
+                                 const glutils::color& _color) {
+      bbx.Translate(_center);
+      ids.push_back(Simulation::Get()->AddBoundary(&bbx, _color));
+      bbx.Translate(-_center);
+    };
 
-  // Draw source and target cells.
-  for(const size_t cell : sourceCells) {
-    const Vector3d center = m_grid->CellCenter(cell);
-    drawCell(center, cellColor);
+    // Draw source and target cells.
+    for(const size_t cell : sourceCells) {
+      const Vector3d center = m_grid->CellCenter(cell);
+      drawCell(center, cellColor);
+    }
+    for(const size_t cell : targetCells) {
+      const Vector3d center = m_grid->CellCenter(cell);
+      drawCell(center, cellColor);
+    }
+
+    // Draw path.
+    Robot* const point = this->GetMPProblem()->GetRobot("point");
+    std::vector<CfgType> cfgs;
+    size_t current = foundTarget;
+    while(true)
+    {
+      const Vector3d center = m_grid->CellCenter(current);
+      drawCell(center, pathColor);
+      cfgs.emplace_back(center, point);
+      if(!parent.count(current))
+        break;
+      current = parent[current];
+    }
+    const size_t pathID = Simulation::Get()->AddPath(cfgs, pathColor);
+
+    // Sleeeeep before undrawing.
+    std::cout << "Drawing path through " << cfgs.size() << " cells with length "
+              << distance[foundTarget] << "."
+              << std::endl;
+    // Use one of these two options to control the delay for viewing the
+    // visualization.
+    usleep(5000000); // 5 seconds to see
+    //std::cin.ignore(); // Press button to go on.
+    std::cout << "Undrawing." << std::endl;
+
+    for(const size_t id : ids)
+      Simulation::Get()->RemoveBoundary(id);
+    Simulation::Get()->RemovePath(pathID);
+
+    // Give it time to clear.
+    usleep(10000);
   }
-  for(const size_t cell : targetCells) {
-    const Vector3d center = m_grid->CellCenter(cell);
-    drawCell(center, cellColor);
-  }
-
-  // Draw path.
-  Robot* const point = this->GetMPProblem()->GetRobot("point");
-  std::vector<CfgType> cfgs;
-  size_t current = foundTarget;
-  while(true)
-  {
-    const Vector3d center = m_grid->CellCenter(current);
-    drawCell(center, pathColor);
-    cfgs.emplace_back(center, point);
-    if(!parent.count(current))
-      break;
-    current = parent[current];
-  }
-  const size_t pathID = Simulation::Get()->AddPath(cfgs, pathColor);
-
-  // Sleeeeep before undrawing.
-  std::cout << "Drawing path through " << cfgs.size() << " cells with length "
-            << distance[foundTarget] << "."
-            << std::endl;
-  //usleep(5000000); // 5 seconds to see
-  std::cin.ignore(); // Press button to go on.
-  std::cout << "Undrawing." << std::endl;
-
-  for(const size_t id : ids)
-    Simulation::Get()->RemoveBoundary(id);
-  Simulation::Get()->RemovePath(pathID);
-
-  // Give it time to clear.
-  usleep(10000);
 #endif
 
-  return found ? distance[foundTarget] : std::numeric_limits<double>::infinity();
+  return distance[foundTarget];
 }
 
 /*----------------------------------------------------------------------------*/
