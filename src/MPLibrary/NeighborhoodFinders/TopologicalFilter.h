@@ -602,7 +602,7 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
   // be considered a soft-error. Usually we should not be searching for
   // neighbors until we know there are nodes to search, however.
   if(markers.first == markers.second) {
-    throw RunTimeException(WHERE) << "No populated cells found!" << std::endl;
+    //throw RunTimeException(WHERE) << "No populated cells found!" << std::endl;
     return markers;
   }
 
@@ -753,7 +753,10 @@ FindCandidatesNew(const CfgType& _cfg, const VertexSet& _inputCandidates) {
 
   // We hve counted all of the descriptors in each body's frontier. Determine
   // the best set to return. Ask the underlying NF how many vertices it wants.
-  const size_t desiredVertices = this->GetNeighborhoodFinder(m_nfLabel)->GetK();
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  const size_t desiredVertices = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::K
+    ? nf->GetK()
+    : std::numeric_limits<size_t>::max();
   newCandidates.clear();
   for(auto iter = countSets.rbegin();
       iter != countSets.rend() and newCandidates.size() < desiredVertices;
@@ -1041,15 +1044,14 @@ template <typename MPTraits>
 SSSPOutput<WorkspaceDecomposition>&
 TopologicalFilter<MPTraits>::
 GetSSSPData(const WorkspaceRegion* _region) {
-  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto decomposition = tm->GetDecomposition();
-
   const bool cacheHit = m_ssspCache.count(_region);
   this->GetStatClass()->GetAverage("TopologicalFilter::CacheHitRate") += cacheHit;
 
   // Compute the distance map for this region if it is not cached.
   auto& ssspCache = m_ssspCache[_region];
   if(!cacheHit) {
+    auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+    auto decomposition = tm->GetDecomposition();
     if(this->m_debug)
       std::cout << "\t\tSSSP cache for region "
                 << decomposition->GetDescriptor(*_region) << " is cold."
@@ -1057,8 +1059,11 @@ GetSSSPData(const WorkspaceRegion* _region) {
 
     // Do the entire search for now. We will worry about pruning it later.
     // With no early-stop condition, the body index doesn't matter.
-    ssspCache = m_useQueryMap ? tm->ComputeFrontier(_region, 0, -1, m_queryMap)
-                              : tm->ComputeFrontier(_region, 0, -1);
+    auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+
+    ssspCache = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS
+              ? tm->ComputeFrontierNew(_region, nf->GetRadius(), m_queryMap)
+              : tm->ComputeFrontier(_region, 0, -1, m_queryMap);
 
     // Remove the data we will not use.
     ssspCache.parent.clear();

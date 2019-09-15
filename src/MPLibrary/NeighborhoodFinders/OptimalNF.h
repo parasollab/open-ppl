@@ -123,6 +123,9 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
     throw ParseException(_node.Where()) << "OptimalNF requires unconnected = "
                                         << "false.";
 
+  std::string exLabel = _node.Read("exLabel", true, "",
+      "The RRT extender label.");
+
   // Parse the type (radius or k).
   const std::string choices = "Choices are 'radius' or 'k'.";
   std::string nfType = _node.Read("nfType", true, "",
@@ -141,7 +144,7 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
 
     // Define the parameter function to set K based on the roadmap size and
     // dimension.
-    m_setParameters = [this, e](const RoadmapType* const _r) {
+    m_setParameters = [this, e, exLabel](const RoadmapType* const _r) {
       auto robot  = _r->GetRobot();
       auto cspace = robot->GetCSpace();
       auto vspace = robot->GetVSpace();
@@ -172,7 +175,8 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
       const double gamma = 2. * std::pow(1. + rd, rd) * std::pow(volumeRatio, rd);
       const double optimalR = gamma
                             * std::pow(std::log(_r->Size()) / _r->Size(), rd);
-      this->m_nf->GetRadius() = optimalR;
+      auto ex = this->GetExtender(exLabel);
+      this->m_nf->GetRadius() = std::min(optimalR, ex->GetMaxDistance());
       if(this->m_debug)
         std::cout << "Finding closest neighbors with radius = "
                   << this->m_nf->GetRadius() << "."

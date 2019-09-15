@@ -253,6 +253,19 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
         const double _earlyStopDistance = -1,
         const AdjacencyMap& _adjacency = {});
 
+    /// The AO-compatible verison.
+    /// @param _region    The starting region.
+    /// @param _radius    The desired frontier radius, measured by
+    ///                   inner-distance in workspace. The actual frontier will
+    ///                   be larger due to approximations.
+    /// @param _adjacency An optional adjacency map to use instead of the
+    ///                   decomposition's.
+    /// @return The SSSP results that describe the discovered frontier
+    ///         (including populated and unpopulated cells).
+    SSSPData
+    ComputeFrontierNew(const WorkspaceRegion* const _region,
+        const double _radius, const AdjacencyMap& _adjacency = {});
+
     ///@}
     ///@name Inter-Region Distance
     ///@{
@@ -993,6 +1006,65 @@ ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
   return DijkstraSSSP(wd, {root}, stop, _adjacency);
 }
 
+
+template <typename MPTraits>
+typename TopologicalMap<MPTraits>::SSSPData
+TopologicalMap<MPTraits>::
+ComputeFrontierNew(const WorkspaceRegion* const _region,
+    const double _radius, const AdjacencyMap& _adjacency) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeFrontierNew");
+  stats->IncStat(this->GetNameAndLabel() + "::ComputeFrontierNew");
+
+  // Const cast is required because STAPL has an API error preventing useful
+  // iteration over const graphs.
+  auto wd = const_cast<WorkspaceDecomposition*>(this->GetDecomposition());
+
+  // We will use the approximate inner distance which is based on a manhattan
+  // search through our grid. The 3-ball using manhattan distance is an
+  // octahedron, so we must increase radius by a factor of sqrt(3) to account
+  // for this (ensures we get all cells within _radius).
+  const double radius = std::sqrt(3) * _radius;
+
+  if(this->m_debug)
+    std::cout << "TopologicalMap::ComputeFrontierNew"
+              << "\n\tSearching from region " << wd->GetDescriptor(*_region)
+              << "\n\tManhattan Radius: " << radius
+              << std::endl;
+
+  // Get the descriptor of the root node.
+  const VD root = wd->GetDescriptor(*_region);
+
+  // Create a weight function which uses the approx min inner distance, measured
+  // from the root region (not the source region - that would be zero in all
+  // cases since the source and target are adjacent).
+  SSSPPathWeightFunction<WorkspaceDecomposition> weight = [wd, _region, this](
+      typename WorkspaceDecomposition::adj_edge_iterator& _ei,
+      const double _sourceDistance,
+      const double _targetDistance)
+  {
+    const WorkspaceRegion* const target = &wd->GetRegion(_ei->target());
+
+    return this->ApproximateMinimumInnerDistance(_region, target);
+  };
+
+  // Create an early stop criterion to terminate the search after we exceed the
+  // radius.
+  SSSPTerminationCriterion<WorkspaceDecomposition> stop = [radius](
+      typename WorkspaceDecomposition::vertex_iterator& _vi,
+      const SSSPOutput<WorkspaceDecomposition>& _sssp)
+  {
+    const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
+    const double distance = _sssp.distance.at(vd);
+
+    return distance > radius
+      ? SSSPTermination::EndSearch
+      : SSSPTermination::Continue;
+  };
+
+  return DijkstraSSSP(wd, {root}, weight, stop, _adjacency);
+}
+
 /*--------------------------- Inter-Region Distance --------------------------*/
 
 template <typename MPTraits>
@@ -1081,6 +1153,11 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
 
   // Mark all source cells as visited and distance 0.
   for(const size_t cell : sourceCells) {
+    // If this cell is a goal, we're done.
+    if(targetCells.count(cell)) {
+      m_innerDistanceMap[key] = 0;
+      return 0;
+    }
     visited.insert(cell);
     distance[cell] = 0;
   }
@@ -1108,6 +1185,11 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
         // Skip boundary cells.
         if(m_boundaryCells.count(cell))
           continue;
+        // If this neighbor is a goal, we're done.
+        if(targetCells.count(neighbor)) {
+          m_innerDistanceMap[key] = 0;
+          return 0;
+        }
         visited.insert(cell);
         distance[neighbor] = 0;
         parent[neighbor]   = cell;
@@ -1127,6 +1209,15 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     if(visited.count(current.cell))
       continue;
     visited.insert(current.cell);
+
+    // Update the inner distance map for all regions touched by this cell.
+    const auto& regions = m_cellToRegions[current.cell];
+    for(const WorkspaceRegion* const region : regions) {
+      const RegionPair key = MakeKey(_source, region);
+      if(m_innerDistanceMap.count(key))
+        continue;
+      m_innerDistanceMap[key] = distance[current.cell];
+    }
 
     // Check for early termination.
     found |= targetCells.count(current.cell);
@@ -1160,7 +1251,7 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
   m_innerDistanceMap[key] = distance[foundTarget];
 
 #ifdef PMPL_USE_SIMULATOR
-  if(this->m_debug) {
+  if(false and this->m_debug) {
     static const glutils::color regionColor{1, 0, 1, .5};
     static const glutils::color cellColor{1, 0, 0, 1};
     static const glutils::color pathColor{0, 0, 1, 1};
@@ -1220,7 +1311,7 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
               << std::endl;
     // Use one of these two options to control the delay for viewing the
     // visualization.
-    usleep(5000000); // 5 seconds to see
+    usleep(5000000); // Time delay.
     //std::cin.ignore(); // Press button to go on.
     std::cout << "Undrawing." << std::endl;
 

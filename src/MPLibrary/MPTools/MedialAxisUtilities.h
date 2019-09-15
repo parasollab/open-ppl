@@ -877,7 +877,7 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
 
   //For 2d:
   //initial ray starts at rand angle, then all others are uniformly distributed:
-  double angleRad = 2.*PI*rand()/(double)RAND_MAX;//Note 2d case only currently
+  double angleRad = 2.*PI*DRand();//Note 2d case only currently
 
   for(size_t i = 0; i < _numRays; ++i) {
     CfgType tmpDirection(this->GetTask()->GetRobot());
