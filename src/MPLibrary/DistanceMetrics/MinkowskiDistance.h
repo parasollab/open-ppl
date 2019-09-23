@@ -121,8 +121,6 @@ template <typename MPTraits>
 double
 MinkowskiDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  MethodTimer mt(this->GetStatClass(), this->GetName() + "::Distance");
-
   const CfgType diff = _c2 - _c1;
   const double pos = PositionDistance(diff),
                ori = OrientationDistance(diff);

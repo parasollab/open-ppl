@@ -113,9 +113,6 @@ template <typename MPTraits>
 double
 TopologicalDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "TopologicalDistance::Distance");
-
   // Locate the neighborhoods where the cfgs are located.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto neighborhood1 = tm->LocateNeighborhood(_c1);

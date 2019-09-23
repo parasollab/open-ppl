@@ -1023,7 +1023,8 @@ ComputeFrontierNew(const WorkspaceRegion* const _region,
   // We will use the approximate inner distance which is based on a manhattan
   // search through our grid. The 3-ball using manhattan distance is an
   // octahedron, so we must increase radius by a factor of sqrt(3) to account
-  // for this (ensures we get all cells within _radius).
+  // for this (ensures we get all cells within _radius, at the expense of
+  // including some extras).
   const double radius = std::sqrt(3) * _radius;
 
   if(this->m_debug)

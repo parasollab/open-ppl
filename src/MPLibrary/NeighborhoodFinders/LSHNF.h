@@ -13,10 +13,10 @@
 /// neigborhood finder.
 ///
 /// Reference:
-/// Mayur Datar and Nicloe Immorlica and Piotr Indyk and Vahab S. Mirronki.
-/// "Locality-sensitive Hashing Scheme Based on P-stable Distributions".
-/// Proceedings of the Twentieth Annual Symposium on Computational Geometry,
-/// 2004.
+///   Mayur Datar and Nicloe Immorlica and Piotr Indyk and Vahab S. Mirronki.
+///   "Locality-sensitive Hashing Scheme Based on P-stable Distributions".
+///   Proceedings of the Twentieth Annual Symposium on Computational Geometry,
+///   2004.
 ///
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +40,7 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     /// The a vector and b scalar that define our hash functions.
     typedef std::pair<std::vector<double>,double> hash_parameters;
@@ -75,13 +76,13 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinder Methods
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
@@ -223,8 +224,8 @@ Print(std::ostream& _os) const {
 /*-------------------- NeighborhoodFinderMethod Interface--------------------*/
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 LSHNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
@@ -272,13 +273,13 @@ FindNeighbors(RoadmapType* _rmp,
     std::cout << "Found " << neighbors.size() << " neighbors."
               << std::endl;
 
-  return std::copy(neighbors.begin(), neighbors.end(), _out);
+  std::copy(neighbors.begin(), neighbors.end(), _out);
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 LSHNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,

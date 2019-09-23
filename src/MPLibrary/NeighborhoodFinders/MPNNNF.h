@@ -42,6 +42,7 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     ///@}
     ///@name Construction
@@ -65,24 +66,24 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinder Interface
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighborPairs(RoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighborPairs(GroupRoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -187,8 +188,8 @@ Print(std::ostream& _os) const {
 /*----------------------- NeighborhoodFinder Interface -----------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 MPNNNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
     bool _fromFullRoadmap, const CfgType& _cfg, OutputIterator _out) {
@@ -219,14 +220,12 @@ FindNeighbors(RoadmapType* _rmp, InputIterator _first, InputIterator _last,
       ++_out;
     }
   }
-
-  return _out;
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 MPNNNF<MPTraits>::
 FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
@@ -237,8 +236,8 @@ FindNeighborPairs(RoadmapType* _rmp,
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 MPNNNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
@@ -248,8 +247,8 @@ FindNeighbors(GroupRoadmapType* _rmp,
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 MPNNNF<MPTraits>::
 FindNeighborPairs(GroupRoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,

@@ -64,6 +64,7 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     ///@}
     ///@name Construction
@@ -89,36 +90,33 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinder Functions
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighbors(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-          const CfgType& _cfg, OutputIterator _out);
-
-    /// K-closest that operate over two ranges of VIDS. K total pair<VID,VID>
-    /// are returned that represent the k-closest pairs of VIDs between the two
-    /// ranges.
-    template <typename InputIterator, typename OutputIterator>
-      OutputIterator FindNeighborPairs(RoadmapType* _rmp,
-          InputIterator _first1, InputIterator _last1,
-          InputIterator _first2, InputIterator _last2,
-          OutputIterator _out) {
-        throw RunTimeException(WHERE, "FindNeighborPairs is not yet implemented.");
-      }
-
-    /// Group overloads
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
-    }
+        const CfgType& _cfg, OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighborPairs(RoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out) {
-      throw RunTimeException(WHERE, "Not Supported for groups!");
+      throw NotImplementedException(WHERE);
+    }
+
+    /// Group overloads
+    template <typename InputIterator>
+    void FindNeighbors(GroupRoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
+        const GroupCfgType& _cfg, OutputIterator _out) {
+      throw NotImplementedException(WHERE);
+    }
+
+    template <typename InputIterator>
+    void FindNeighborPairs(GroupRoadmapType* _rmp,
+        InputIterator _first1, InputIterator _last1,
+        InputIterator _first2, InputIterator _last2,
+        OutputIterator _out) {
+      throw NotImplementedException(WHERE);
     }
 
     ///@}
@@ -129,10 +127,12 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-      void UpdateInternalModel(RoadmapType* _rmp,
-          InputIterator _first, InputIterator _last, bool _fromFullRoadmap);
+    void UpdateInternalModel(RoadmapType* _rmp,
+        InputIterator _first, InputIterator _last, bool _fromFullRoadmap);
 
     ///@}
+    ///@name Internal State
+    ///@{
 
     // Buffer of added VIDs. Used to update roadmap before NF is called.
     vector<VID> m_added;
@@ -148,6 +148,9 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
     Tree* m_queryTree{nullptr};
     Tree* m_tmpTree{nullptr};
     double m_maxBBXRange{0.};
+
+    ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -223,8 +226,8 @@ Print(std::ostream& _os) const {
 /*----------------------- NeighborhoodFinder Functions -----------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 KdTreeNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
@@ -254,8 +257,6 @@ FindNeighbors(RoadmapType* _rmp,
     double dist = dmm->Distance(_cfg, node);
     *_out++ = Neighbor(vid, dist);
   }
-
-  return _out;
 }
 
 /*----------------------------- Update Function ------------------------------*/

@@ -42,10 +42,7 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
-
-    ///@}
-    ///@name Local Types
-    ///@{
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     typedef std::vector<double> Projected; ///< Projected point of dim m
 
@@ -79,24 +76,24 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinder Interface
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(RoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighborPairs(RoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighbors(GroupRoadmapType* _rmp,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+    template <typename InputIterator>
+    void FindNeighborPairs(GroupRoadmapType* _rmp,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -130,13 +127,10 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
 
     /// Brute force computation of the K-closest elements in the
     /// projected space.
-    /// @tparam OutputIterator Output of nearest Neighbor elements
     /// @param _rdmp Roadmap
     /// @param _c Query point
     /// @param _out Output iterator
-    template <typename OutputIterator>
-    OutputIterator KClosest(RoadmapType* _rdmp, const CfgType& _c,
-        OutputIterator _out);
+    void KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out);
 
     /// Euclidean distance in R^m
     /// @param _v1 Projected point 1
@@ -202,8 +196,8 @@ Print(std::ostream& _os) const {
 /*----------------------- NeighborhoodFinder Interface -----------------------*/
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
+template<typename InputIterator>
+void
 DPESNF<MPTraits>::
 FindNeighbors(RoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
@@ -225,15 +219,13 @@ FindNeighbors(RoadmapType* _rmp,
     CreatePivots(_rmp, _first, _last);
   }
 
-  _out = KClosest(_rmp, _cfg, _out);
-
-  return _out;
+  KClosest(_rmp, _cfg, _out);
 }
 
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
+template<typename InputIterator>
+void
 DPESNF<MPTraits>::
 FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
@@ -244,8 +236,8 @@ FindNeighborPairs(RoadmapType* _rmp,
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 DPESNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* _rmp,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
@@ -255,8 +247,8 @@ FindNeighbors(GroupRoadmapType* _rmp,
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename InputIterator>
+void
 DPESNF<MPTraits>::
 FindNeighborPairs(GroupRoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
@@ -342,8 +334,7 @@ Project(const CfgType& _c) {
 
 
 template <typename MPTraits>
-template <typename OutputIterator>
-OutputIterator
+void
 DPESNF<MPTraits>::
 KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
   const Projected v = Project(_c);
@@ -354,7 +345,7 @@ KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
     for(const auto& p : m_queryInfo->m_projectedPoints)
       if(_rdmp->GetVertex(p.first) != _c)
         *_out++ = Neighbor(p.first, Euclidean(v, p.second));
-    return _out;
+    return;
   }
 
   // Keep sorted list of k best so far
@@ -394,7 +385,7 @@ KClosest(RoadmapType* _rdmp, const CfgType& _c, OutputIterator _out) {
   }
 
   // Reverse order
-  return std::copy(closest.rbegin(), closest.rend(), _out);
+  std::copy(closest.rbegin(), closest.rend(), _out);
 }
 
 

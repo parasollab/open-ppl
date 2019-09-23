@@ -71,8 +71,6 @@ template <typename MPTraits>
 double
 WorkspaceTranslationDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
-  MethodTimer mt(this->GetStatClass(), this->GetName() + "::Distance");
-
   auto x = GetBodyCoordinates(_c1),
        y = GetBodyCoordinates(_c2);
 
