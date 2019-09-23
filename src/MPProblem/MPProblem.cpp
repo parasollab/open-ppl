@@ -470,7 +470,6 @@ MakePointRobot() {
   const Vector3d center = poly.GetPolygonList()[0].FindCenter();
   for(auto& vertex : poly.GetVertexList())
     vertex -= center;
-  poly.BuildCDModels();
   body.SetPolyhedron(std::move(poly));
 
   // Add body geometry to multibody.

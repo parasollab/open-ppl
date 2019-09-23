@@ -36,20 +36,13 @@ GMSPolyhedron(const GMSPolyhedron& _p) :
     m_cgalPoints(_p.m_cgalPoints),
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
-    m_minRadius(_p.m_minRadius),
-    m_boundaryLines(_p.m_boundaryLines)
+    m_minRadius(_p.m_minRadius)
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
   m_polygonList.reserve(_p.m_polygonList.size());
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
-
-  // PQP and RAPID do not properly implement copying, so there is no way to copy
-  // those objects without later triggering a double-free. Rebuild the models
-  // instead.
-  if(m_polygonList.size())
-    BuildCDModels();
 }
 
 
@@ -60,7 +53,6 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
-    m_boundaryLines(std::move(_p.m_boundaryLines)),
     m_rapidModel(std::move(_p.m_rapidModel)),
     m_pqpModel(std::move(_p.m_pqpModel))
 {
@@ -88,11 +80,9 @@ GMSPolyhedron(glutils::triangulated_model&& _t) {
     m_polygonList.emplace_back(f[0], f[1], f[2], m_vertexList);
   }
 
-  MarkDirty();
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
-  BuildCDModels();
 }
 
 
@@ -114,7 +104,6 @@ operator=(const GMSPolyhedron& _p) {
   m_minRadius = _p.m_minRadius;
   m_centroid = _p.m_centroid;
   m_centroidCached = _p.m_centroidCached;
-  m_boundaryLines = _p.m_boundaryLines;
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -122,12 +111,6 @@ operator=(const GMSPolyhedron& _p) {
   m_polygonList.reserve(_p.m_polygonList.size());
   for(const auto& p : _p.m_polygonList)
     m_polygonList.emplace_back(p[0], p[1], p[2], m_vertexList);
-
-  // PQP and RAPID do not properly implement copying, so there is no way to copy
-  // those objects without later triggering a double-free. Rebuild the models
-  // instead.
-  if(m_polygonList.size())
-    BuildCDModels();
 
   return *this;
 }
@@ -146,7 +129,6 @@ operator=(GMSPolyhedron&& _p) {
   m_minRadius = _p.m_minRadius;
   m_centroid = std::move(_p.m_centroid);
   m_centroidCached = _p.m_centroidCached;
-  m_boundaryLines = std::move(_p.m_boundaryLines);
   m_rapidModel = std::move(_p.m_rapidModel);
   m_pqpModel = std::move(_p.m_pqpModel);
 
@@ -187,6 +169,11 @@ operator*=(const Transformation& _t) {
       point = cgalTransform(point);
   }
 
+  // Trigger rebuild of CD models.
+  m_rapidModel.release();
+  m_pqpModel.release();
+  m_centroidCached = false;
+
   return *this;
 }
 
@@ -197,8 +184,47 @@ Invert() {
   for(auto& facet : m_polygonList)
     facet.Reverse();
 
-  // Rebuild CD models to get the normals facing the right way.
-  BuildCDModels();
+  // Trigger rebuild of CD models to get the normals facing the right way.
+  m_rapidModel.release();
+  m_pqpModel.release();
+}
+
+
+void
+GMSPolyhedron::
+Scale(double _scalingFactor) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_scalingFactor, 0.0 , 0.0},
+    {0.0, _scalingFactor, 0.0},
+    {0.0, 0.0, _scalingFactor}};
+
+  Vector3d toCenter = -(GetCentroid());
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  const Transformation center(toCenter, Orientation(unitM)),
+                       scale(Vector3d(0,0,0), Orientation(scaleM)),
+                       recenter(-toCenter, Orientation(unitM)),
+                       t = center * scale * recenter;
+
+  *(this) *= t;
+}
+
+
+GMSPolyhedron
+operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
+  GMSPolyhedron poly = _poly;
+  return poly *= _t;
 }
 
 /*-------------------------------- Equality ----------------------------------*/
@@ -303,7 +329,6 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
-  BuildCDModels();
 
   return com;
 }
@@ -374,6 +399,36 @@ GetPolygonList() const noexcept {
   return m_polygonList;
 }
 
+
+const Vector3d&
+GMSPolyhedron::
+GetCentroid() const {
+  if(!m_centroidCached)
+    ComputeCentroid();
+  return m_centroid;
+}
+
+
+double
+GMSPolyhedron::
+GetSurfaceArea() const noexcept {
+  return m_area;
+}
+
+
+double
+GMSPolyhedron::
+GetMaxRadius() const noexcept {
+  return m_maxRadius;
+}
+
+
+double
+GMSPolyhedron::
+GetMinRadius() const noexcept {
+  return m_minRadius;
+}
+
 /*--------------------------- Geometry Functions -----------------------------*/
 
 Point3d
@@ -419,15 +474,6 @@ GetRandPtOnSurface() const {
 }
 
 
-const Vector3d&
-GMSPolyhedron::
-GetCentroid() const {
-  if(!m_centroidCached)
-    ComputeCentroid();
-  return m_centroid;
-}
-
-
 void
 GMSPolyhedron::
 ComputeSurfaceArea() {
@@ -448,14 +494,6 @@ ComputeRadii() {
     m_maxRadius = std::max(m_maxRadius, distance);
     m_minRadius = std::min(m_minRadius, distance);
   }
-}
-
-
-void
-GMSPolyhedron::
-MarkDirty() {
-  m_centroidCached = false;
-  m_boundaryLines.clear();
 }
 
 
@@ -612,82 +650,13 @@ UpdateCGALPoints() {
     m_cgalPoints.emplace_back(v[0], v[1], v[2]);
 }
 
-/*----------------------------- Transformation -------------------------------*/
-
-GMSPolyhedron
-operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
-  GMSPolyhedron poly = _poly;
-  return poly *= _t;
-}
-
-
-void
-GMSPolyhedron::
-Scale(double _scalingFactor) {
-  //to make sure that the centroid is not moved, center the model before scaling
-  //and bring it back to its center afterwards
-
-  double scaleVec[3][3] = {
-    {_scalingFactor, 0.0 , 0.0},
-    {0.0, _scalingFactor, 0.0},
-    {0.0, 0.0, _scalingFactor}};
-
-  Vector3d toCenter = -(GetCentroid());
-
-  Matrix3x3 scaleM(scaleVec);
-
-  double unitOrientation[3][3] = {
-    {1, 0, 0},
-    {0, 1, 0},
-    {0, 0, 1}};
-
-  Matrix3x3 unitM(unitOrientation);
-
-  Transformation center(toCenter, Orientation(unitM));
-
-  Transformation scale(Vector3d(0,0,0), Orientation(scaleM));
-
-  Transformation recenter(-toCenter, Orientation(unitM));
-
-  Transformation t = center * scale * recenter;
-
-  *(this) *= t;
-}
-
-
-double
-GMSPolyhedron::
-GetSurfaceArea() const noexcept {
-  return m_area;
-}
-
-
-double
-GMSPolyhedron::
-GetMaxRadius() const noexcept {
-  return m_maxRadius;
-}
-
-
-double
-GMSPolyhedron::
-GetMinRadius() const noexcept {
-  return m_minRadius;
-}
-
 /*------------------------ Collision Detection Helpers -----------------------*/
-
-void
-GMSPolyhedron::
-BuildCDModels() {
-  m_rapidModel.reset(Rapid::Build(*this));
-  m_pqpModel.reset(PQP::Build(*this));
-}
-
 
 RAPID_model*
 GMSPolyhedron::
 GetRapidModel() const noexcept {
+  if(!m_rapidModel)
+    m_rapidModel.reset(Rapid::Build(*this));
   return m_rapidModel.get();
 }
 
@@ -695,6 +664,8 @@ GetRapidModel() const noexcept {
 PQP_Model*
 GMSPolyhedron::
 GetPQPModel() const noexcept {
+  if(!m_pqpModel)
+    m_pqpModel.reset(PQP::Build(*this));
   return m_pqpModel.get();
 }
 
@@ -738,7 +709,6 @@ MakeBox(const Range<double>& _x, const Range<double>& _y,
   bbx.OrderFacets();
   bbx.ComputeSurfaceArea();
   bbx.ComputeRadii();
-  bbx.BuildCDModels();
 
   return bbx;
 }

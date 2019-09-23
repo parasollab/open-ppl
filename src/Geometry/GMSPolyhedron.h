@@ -95,6 +95,11 @@ class GMSPolyhedron final {
     /// Invert the polyhedron so that normals face the opposite direction.
     void Invert();
 
+    /// Scale a polyhedron by a factor and keep it centered at its original
+    /// centroid.
+    /// @param _scalingFactor The scaling factor
+    void Scale(double _scalingFactor);
+
     ///@}
     ///@name Equality
     ///@{
@@ -137,18 +142,24 @@ class GMSPolyhedron final {
     const std::vector<Vector3d>& GetVertexList() const noexcept;
     const std::vector<GMSPolygon>& GetPolygonList() const noexcept;
 
+    /// Get the centroid of the polyhedron (average of the vertices).
+    const Vector3d& GetCentroid() const;
+
+    /// Get the total surface area of the polyhedron.
+    double GetSurfaceArea() const noexcept;
+
+    /// Get the maximum radius relative to the polyhedron's center.
+    double GetMaxRadius() const noexcept;
+
+    /// Get the minimum radius relative to the polyhedron's center.
+    double GetMinRadius() const noexcept;
+
     ///@}
     ///@name Geometry Functions
     ///@{
 
     /// Get a random point on the surface of the polyhedron.
     Point3d GetRandPtOnSurface() const;
-
-    /// Get the centroid of the polyhedron (average of the vertices).
-    const Vector3d& GetCentroid() const;
-
-    /// Mark all cached objects as requiring an update.
-    void MarkDirty();
 
     /// Compute an axis-aligned bounding box for this polyhedron.
     std::unique_ptr<WorkspaceBoundingBox> ComputeBoundingBox() const;
@@ -164,37 +175,27 @@ class GMSPolyhedron final {
     /// not be exact as they are copied from doubles.
     void UpdateCGALPoints();
 
-    /// Scale a polyhedron by a factor and keep it centered at its original
-    /// centroid.
-    /// @param _scalingFactor The scaling factor
-    void Scale(double _scalingFactor);
-
-    /// Get the total surface area of the polyhedron.
-    double GetSurfaceArea() const noexcept;
-
-    /// Get the maximum radius relative to the polyhedron's center.
-    double GetMaxRadius() const noexcept;
-
-    /// Get the minimum radius relative to the polyhedron's center.
-    double GetMinRadius() const noexcept;
-
     ///@}
     ///@name Collision Detection Models
     ///@{
 
-    /// Build rapid and PQP models of this polyhedron.
-    void BuildCDModels();
-
-    /// Get the rapid CD model.
+    /// Get the rapid CD model. It will be constructed if it doesn't already
+    /// exist.
     RAPID_model* GetRapidModel() const noexcept;
 
-    /// Get the pqp CD model.
+    /// Get the pqp CD model. It will be constructed if it doesn't already
+    /// exist.
     PQP_Model* GetPQPModel() const noexcept;
 
     ///@}
     ///@name Build Common Shapes
     ///@{
 
+    /// Build an axis-aligned box polyhedron.
+    /// @param _x The min/max range in the x direction.
+    /// @param _y The min/max range in the y direction.
+    /// @param _z The min/max range in the z direction.
+    /// @return The polyhedron object.
     /// Vertex diagram:
     ///
     ///     2-----6    +Y
@@ -213,9 +214,6 @@ class GMSPolyhedron final {
 
     ///@name Initialization Helpers
     ///@{
-
-    /// Construct the list of external edges.
-    void BuildBoundaryLines();
 
     /// Compute the centroid.
     void ComputeCentroid() const;
@@ -245,10 +243,11 @@ class GMSPolyhedron final {
     Vector3d m_centroid;          ///< The polyhedron centroid (avg of vertices).
     mutable bool m_centroidCached{false}; ///< Is the centroid cached?
 
-    std::vector<std::pair<int,int>> m_boundaryLines; ///< Surface edges.
 
-    std::unique_ptr<RAPID_model> m_rapidModel;  ///< RAPID model
-    std::unique_ptr<PQP_Model> m_pqpModel;      ///< PQP model
+    /// @warning PQP and RAPID do not properly implement copying, so there is no
+    ///          way to copy these objects without later triggering a double-free.
+    mutable std::unique_ptr<RAPID_model> m_rapidModel;  ///< RAPID model
+    mutable std::unique_ptr<PQP_Model> m_pqpModel;      ///< PQP model
 
     ///@}
 

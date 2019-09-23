@@ -54,8 +54,6 @@ IsInCollision(
     const GMSPolyhedron& _polyhedron2,
     const mathtool::Transformation& _transformation2,
     CDInfo& _cdInfo) {
-  std::lock_guard<std::mutex> guard(s_lock);
-
   auto model1 = _polyhedron1.GetRapidModel();
   auto model2 = _polyhedron2.GetRapidModel();
 
@@ -67,6 +65,7 @@ IsInCollision(
   const int flag = _cdInfo.m_retAllInfo ? RAPID_ALL_CONTACTS
                                         : RAPID_FIRST_CONTACT;
 
+  std::lock_guard<std::mutex> guard(s_lock);
   if(RAPID_Collide(
         t1.rotation().matrix(), t1.translation(), model1,
         t2.rotation().matrix(), t2.translation(), model2,
