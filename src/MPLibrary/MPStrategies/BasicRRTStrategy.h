@@ -222,6 +222,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     std::string m_exLabel;       ///< The extender label.
     std::string m_goalDmLabel;   ///< Dm for checking goal extensions.
 
+    std::string m_fallbackNfLabel; ///< NF for searching the active set, used if the main one fails.
+
     ///@}
     ///@name RRT Properties
     ///@{
@@ -276,6 +278,8 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_exLabel = _node.Read("extenderLabel", true, "", "Extender label");
   m_ncLabel = _node.Read("connectorLabel", false, "",
       "Connection Method for RRG-like behavior.");
+  m_fallbackNfLabel = _node.Read("fallbackNfLabel", false, "",
+      "Fall back NF in case the main one fails.");
 
   m_goalDmLabel = _node.Read("goalDmLabel", false, "",
       "Distance metric for checking goal extensions in uni-directional RRT.");
@@ -572,6 +576,15 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
     nf->FindNeighbors(g, _cfg, *_candidates, neighbors);
   else
     nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
+
+  // If we found no neighbors, try the fallback NF if we have one.
+  if(neighbors.empty() and !m_fallbackNfLabel.empty()) {
+    auto nf = this->GetNeighborhoodFinder(m_fallbackNfLabel);
+    if(_candidates)
+      nf->FindNeighbors(g, _cfg, *_candidates, neighbors);
+    else
+      nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
+  }
 
   // Check for no neighbors. We really don't want this to happen - if you see
   // high numbers for this, you likely have problems with parameter or algorithm

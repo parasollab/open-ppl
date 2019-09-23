@@ -277,9 +277,6 @@ operator()() {
       return false;
   }
 
-  // We generated a path successfully: track the path length history.
-  this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
-
   this->GetStatClass()->SetStat(
       "QueryMethod::" + this->GetLabel() + "::FoundPath", 1);
 

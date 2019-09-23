@@ -228,16 +228,20 @@ SelectNeighbor(const CfgType& _cfg, const std::vector<Neighbor>& _neighbors) {
   auto g = this->GetRoadmap();
 
   // Select the node with the best path cost.
-  Neighbor best;
+  Neighbor best = _neighbors[0];
+  double bestCost = g->GetVertex(best.target).GetStat("cost");
   for(const auto& n : _neighbors) {
     // Check for invalid neighbors.
     if(n.target == INVALID_VID)
       throw RunTimeException(WHERE) << "NF should not return bogus nodes.";
 
-    // Check if this neighbor has the best cost so far.
+    // Skip if this neighbor isn't better than the best.
     const double pathCost = g->GetVertex(n.target).GetStat("cost");
-    if(pathCost < best.distance)
-      best = n;
+    if(pathCost >= bestCost)
+      continue;
+
+    best = n;
+    bestCost = pathCost;
   }
 
   return best;

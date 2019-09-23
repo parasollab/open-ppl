@@ -143,10 +143,6 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     std::vector<VID> FindCandidates(const CfgType& _cfg,
         const VertexSet& _inputCandidates = {});
 
-    /// Experimental descriptor-counting impl.
-    std::vector<VID> FindCandidatesNew(const CfgType& _cfg,
-        const VertexSet& _inputCandidates = {});
-
     /// Compute the intersection of an input set with a set of candidate
     /// neighbors.
     /// @param _first The beginning of the input range.
@@ -276,10 +272,12 @@ void
 TopologicalFilter<MPTraits>::
 FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
     const std::unordered_set<VID>& _candidates, std::vector<Neighbor>& _out) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetName() + "::FindNeighbors");
+  stats->IncStat(this->GetName() + "::NumQueries");
+
   if(!m_initialized)
     LazyInitialize();
-
-  auto stats = this->GetStatClass();
 
   // This object only works on the free space roadmap right now. It could be
   // expanded to handle other maps if we want, but for now we will crash if this
@@ -297,7 +295,7 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
 
   // Find the topological candidate vertices.
-  std::vector<VID> topologicalCandidates = FindCandidatesNew(_cfg, _candidates);
+  std::vector<VID> topologicalCandidates = FindCandidates(_cfg, _candidates);
   const size_t numTopologicalCandidates = topologicalCandidates.size();
   stats->GetAverage("TopologicalFilter::TopologicalCandidates") +=
       numTopologicalCandidates;
@@ -381,7 +379,7 @@ FindNeighbors(RoadmapType* _rmp,
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
 
   // Find the topological candidate vertices.
-  std::vector<VID> topologicalCandidates = FindCandidatesNew(_cfg);
+  std::vector<VID> topologicalCandidates = FindCandidates(_cfg);
   const size_t numTopologicalCandidates = topologicalCandidates.size();
   stats->GetAverage("TopologicalFilter::TopologicalCandidates") +=
       numTopologicalCandidates;
@@ -677,18 +675,19 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
 template <typename MPTraits>
 std::vector<typename MPTraits::RoadmapType::VID>
 TopologicalFilter<MPTraits>::
-FindCandidatesNew(const CfgType& _cfg, const VertexSet& _inputCandidates) {
+FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
   MethodTimer mt(this->GetStatClass(), "TopologicalFilter::FindCandidates");
 
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto mb = this->GetTask()->GetRobot()->GetMultiBody();
 
-  std::vector<VID> newCandidates;
+  std::vector<VID> candidates;
 
   // For n bodies, make n vertex sets to track the descriptors which have been
   // seen n + 1 times.
   const size_t bodyCount = mb->GetNumBodies();
   std::vector<VertexSet> countSets(bodyCount);
+
   // Make a map from descriptor to count. Elements not present have zero count.
   std::unordered_map<VID, size_t> descriptorCounts;
 
@@ -703,33 +702,33 @@ FindCandidatesNew(const CfgType& _cfg, const VertexSet& _inputCandidates) {
         _inputCandidates);
 
     // Get the sorted candidates for this region.
-    newCandidates.clear();
-    newCandidates = tm->GetMappedVIDs(regions.first, regions.second, i);
+    candidates.clear();
+    candidates = tm->GetMappedVIDs(regions.first, regions.second, i);
 
     if(this->m_debug)
-      std::cout << "\t" << newCandidates.size()
+      std::cout << "\t" << candidates.size()
                 << " candidate VIDs found for body " << i << "."
                 << std::endl;
 
     // If we are selecting only from a set of input candidates, discard any new
     // candidates that aren't in the input set.
     if(_inputCandidates.size()) {
-      for(auto iter = newCandidates.begin(); iter != newCandidates.end(); ) {
+      for(auto iter = candidates.begin(); iter != candidates.end(); ) {
         // If this vertex is allowed, move on.
         if(_inputCandidates.count(*iter))
           ++iter;
         else
-          iter = newCandidates.erase(iter);
+          iter = candidates.erase(iter);
       }
 
       if(this->m_debug)
-        std::cout << "\t" << newCandidates.size()
+        std::cout << "\t" << candidates.size()
                   << " candidates found in the input set."
                   << std::endl;
     }
 
     // Count the new candidates.
-    for(const auto vid : newCandidates) {
+    for(const auto vid : candidates) {
       // Check if this vertex has already been seen.
       auto iter = descriptorCounts.find(vid);
       const bool seen = iter != descriptorCounts.end();
@@ -751,146 +750,61 @@ FindCandidatesNew(const CfgType& _cfg, const VertexSet& _inputCandidates) {
     }
   }
 
-  // We hve counted all of the descriptors in each body's frontier. Determine
-  // the best set to return. Ask the underlying NF how many vertices it wants.
-  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  const size_t desiredVertices = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::K
-    ? nf->GetK()
-    : std::numeric_limits<size_t>::max();
-  newCandidates.clear();
-  for(auto iter = countSets.rbegin();
-      iter != countSets.rend() and newCandidates.size() < desiredVertices;
-      ++iter)
-  {
-    // Copy the next count set to the end of the new candidates.
-    const auto& countSet = *iter;
-    newCandidates.reserve(newCandidates.size() + countSet.size());
-    auto oldEnd = newCandidates.end();
-    newCandidates.insert(oldEnd, countSet.begin(), countSet.end());
-    auto newEnd = newCandidates.end();
+  // Define a function for joining the descriptors in a count set with the
+  // output candidates.
+  candidates.clear();
+  auto join = [&candidates](const VertexSet& _countSet) {
+    // Reserve space for the incoming descriptors.
+    candidates.reserve(candidates.size() + _countSet.size());
+
+    // Copy the count set to the end of the new candidates.
+    auto oldEnd = candidates.end();
+    candidates.insert(oldEnd, _countSet.begin(), _countSet.end());
+    auto newEnd = candidates.end();
 
     /// @todo Do we need to sort the returned descriptors?
     // Sort the newly copied candidates.
     std::sort(oldEnd, newEnd);
     // Merge the two sorted lists.
-    std::inplace_merge(newCandidates.begin(), oldEnd, newEnd);
+    std::inplace_merge(candidates.begin(), oldEnd, newEnd);
+  };
+
+  // We have counted all of the descriptors in each body's frontier. Determine
+  // the best set to return for the underlying NF.
+  // For k-nearest, add candidates from the best to worst count set until we
+  // have at least k.
+  // For radius, include the two best count sets?
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  switch(nf->GetType()) {
+    case NeighborhoodFinderMethod<MPTraits>::Type::K:
+      {
+        const size_t desiredVertices = nf->GetK();
+        for(auto iter = countSets.rbegin();
+            iter != countSets.rend() and candidates.size() < desiredVertices;
+            ++iter)
+          join(*iter);
+      }
+      break;
+    case NeighborhoodFinderMethod<MPTraits>::Type::RADIUS:
+      {
+        size_t count = 0;
+        const size_t maxCount = 2;
+        for(auto iter = countSets.rbegin();
+            iter != countSets.rend() and count < maxCount;
+            ++iter, ++count)
+          join(*iter);
+      }
+      break;
+    default:
+      throw RunTimeException(WHERE) << "Underlying NF is not a supported type.";
   }
 
 
   if(this->m_debug)
-    std::cout << "\tReturning " << newCandidates.size()
+    std::cout << "\tReturning " << candidates.size()
               << " candidates."
               << std::endl;
-  return newCandidates;
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::RoadmapType::VID>
-TopologicalFilter<MPTraits>::
-FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
-  MethodTimer mt(this->GetStatClass(), "TopologicalFilter::FindCandidates");
-
-  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto mb = this->GetTask()->GetRobot()->GetMultiBody();
-
-  std::vector<VID> candidateIntersection, candidateUnion, newCandidates, buffer;
-
-  if(this->m_debug)
-    std::cout << "Searching for candidate VIDs..." << std::endl;
-
-  // Find the candidate configurations for each body and intersect them as we go.
-  // Start with the EE and work backward so that partial matches favor nearby EE
-  // positions.
-  // OR
-  // Start with the base and work outward because it is usually easier to match
-  // base positions and move the EE as opposed to matching the EE position and
-  // moving the base.
-  /// @todo Figure out how to support tree-like robots here. The current impl
-  ///       will only handle chains, and assumes the EE is the last body.
-  bool first = true;
-  for(size_t i = 0; i < mb->GetNumBodies(); ++i) {
-    // Find the candidate regions for this body.
-    const PopulationMarkers regions = FindCandidateRegions(_cfg, i,
-        _inputCandidates);
-
-    // Get the sorted candidates for this region.
-    newCandidates.clear();
-    newCandidates = tm->GetMappedVIDs(regions.first, regions.second, i);
-
-    if(this->m_debug)
-      std::cout << "\t" << newCandidates.size()
-                << " candidate VIDs found for body " << i << "."
-                << std::endl;
-
-    // If we are selecting only from a set of input candidates, discard any new
-    // candidates that aren't in the input set.
-    if(_inputCandidates.size()) {
-      for(auto iter = newCandidates.begin(); iter != newCandidates.end(); ) {
-        // If this vertex is allowed, move on.
-        if(_inputCandidates.count(*iter))
-          ++iter;
-        else
-          iter = newCandidates.erase(iter);
-      }
-
-      if(this->m_debug)
-        std::cout << "\t" << newCandidates.size()
-                  << " candidates found in the input set."
-                  << std::endl;
-    }
-
-    // Track partial matches if needed.
-    if(m_partialMatches) {
-      buffer.clear();
-      buffer.reserve(std::max(candidateUnion.size(), newCandidates.size()));
-
-      std::set_union(candidateUnion.begin(), candidateUnion.end(),
-                     newCandidates.begin(),  newCandidates.end(),
-                     std::back_inserter(buffer));
-      std::swap(buffer, candidateUnion);
-    }
-
-    // For the first body, retain all candidates.
-    if(first) {
-      first = false;
-      std::swap(candidateIntersection, newCandidates);
-    }
-    // For each successive body, intersect with existing candidates.
-    else {
-      buffer.clear();
-      buffer.reserve(std::max(candidateIntersection.size(),
-                              newCandidates.size()));
-      std::set_intersection(
-          candidateIntersection.begin(), candidateIntersection.end(),
-          newCandidates.begin(),         newCandidates.end(),
-          std::back_inserter(buffer));
-      std::swap(buffer, candidateIntersection);
-
-      if(this->m_debug)
-        std::cout << "\t" << candidateIntersection.size()
-                  << " in common with previous bodies."
-                  << std::endl;
-    }
-
-    // If the candidates are empty, there are no ideal neighbors.
-    if(candidateIntersection.empty())
-      break;
-  }
-
-  // Check for partial match return.
-  if(m_partialMatches and candidateIntersection.empty()) {
-    if(this->m_debug)
-      std::cout << "\tReturning " << candidateUnion.size() << " partial matches."
-                << std::endl;
-    return candidateUnion;
-  }
-
-  if(this->m_debug)
-    std::cout << "\tReturning " << candidateIntersection.size()
-              << " full matches."
-              << std::endl;
-  return candidateIntersection;
+  return candidates;
 }
 
 

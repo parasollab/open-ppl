@@ -100,7 +100,8 @@ RadiusNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("RadiusNF");
   this->m_nfType = Type::RADIUS;
   this->m_radius = _node.Read("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
-  m_useFallback = _node.Read("useFallback", false, false,
+
+  m_useFallback = _node.Read("useFallback", false, m_useFallback,
       "Use nearest node if none are found within the radius.");
 }
 

@@ -580,7 +580,8 @@ IsInSelfCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
       this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(), _caller);
 
       if(this->m_debug and c)
-        std::cout << "\tSelf-collision detected." << std::endl;
+        std::cout << "\tSelf-collision detected between bodies " << i << " and "
+                  << j << "." << std::endl;
 
       // Retain minimum distance information.
       if(cdInfo < _cdInfo) {

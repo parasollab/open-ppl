@@ -188,8 +188,8 @@ IsInsideObstacle(const Vector3d& _point, const GMSPolyhedron& _polyhedron,
   collisions.clear();
   for(int i = 0; i < result.NumPairs(); ++i) {
     const auto& triangle = polygons[result.Id2(i)];
-    const auto& v = vertices[triangle[0]];
-    const auto& n = triangle.GetNormal();
+    const auto& v = _transformation * vertices[triangle[0]];
+    const auto& n = _transformation.rotation() * triangle.GetNormal();
 
     // Skip collisions against triangles whose normals are perpendicular to the
     // ray: these are scrapes and don't affect inside/outside-ness.
