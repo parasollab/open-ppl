@@ -77,7 +77,7 @@ class TMPCBS : public TaskEvaluatorMethod {
 		bool CheckSetupPath(std::shared_ptr<Node> _node, WholeTask* _task, 
 							 size_t _startTime, size_t _endTime, size_t _startVID, size_t _endVID, HandoffAgent* _agent);
 
-		void PatchSetupPaths(std::shared_ptr<Node> _node);
+		void PatchSetupPaths(Node* _node);
 		///@}
 		bool m_makespan{false}; ///<Flag indicating evaluation metric to use	
 

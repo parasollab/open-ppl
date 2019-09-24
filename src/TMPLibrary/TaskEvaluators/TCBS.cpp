@@ -77,6 +77,9 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 			std::cout << "Node depth : " << node->GetDepth() << std::endl;
 		}
 
+		if(nodesExplored > 100000)
+			break;
+
 		auto newNodes = FindConflict(node);
 
 		if(!newNodes.empty()) {
@@ -323,7 +326,7 @@ FindConflict(std::shared_ptr<Node> _node) {
 
 std::vector<size_t>
 TCBS::
-DiscreteSearch(Node* _node, size_t _start, size_t _goal, size_t _startTime, size_t _minEndTime) {
+DiscreteSearch(Node* _node, size_t _start, size_t _goal, size_t _startTime, size_t _minEndTime, bool _setup) {
 	size_t maxConstraint = 0;
 
 	HandoffAgent* agent = _node->GetToReplan();
@@ -360,10 +363,16 @@ DiscreteSearch(Node* _node, size_t _start, size_t _goal, size_t _startTime, size
 	std::list<std::shared_ptr<Vertex>> pq;
 	size_t currentDistance = _startTime+1;
 	std::set<size_t> discoveredVertices;
-	while(current->m_vid != _goal or current->m_distance < _minEndTime) {	
+	while((current->m_vid != _goal or current->m_distance < _minEndTime) or _setup) {	
 
-		if(current->m_distance > roadmap->Size() + maxConstraint)
+		if(_setup and current->m_vid == _goal and current->m_distance >= _minEndTime) {
+			if(!pathConstraints[current->m_distance].count(std::make_pair(_goal,MAX_INT)))
+				break;
+		}
+
+		if(current->m_distance > roadmap->Size() + maxConstraint) {
 			return {};
+		}
 	
 		if(current->m_distance == currentDistance) {
 			currentDistance++;
@@ -471,7 +480,7 @@ UpdatePlan(Node* _node) {
 		}
 		
 		//Move to start
-		auto setup = DiscreteSearch(_node, originVID, startVID, startTime);	
+		auto setup = DiscreteSearch(_node, originVID, startVID, startTime,0,true);	
 		if(setup.size() == 1) { //already at the destination and don't want to wait an extra count
 			setup = {};
 		}

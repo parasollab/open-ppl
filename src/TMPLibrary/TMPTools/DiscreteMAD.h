@@ -58,6 +58,8 @@ class DiscreteMAD : public TMPBaseObject {
 
 		SubtaskPlan CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, 
 																	size_t _startTime, size_t _endTime, ConstraintMap _constraints = ConstraintMap());
+
+		void InitializeRobotUpdates(size_t _start);
     ///@}
     ///@name member variables
     ///@{

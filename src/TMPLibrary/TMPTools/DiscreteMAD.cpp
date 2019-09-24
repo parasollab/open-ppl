@@ -38,10 +38,7 @@ Run(WholeTask* _wholeTask, std::set<size_t> _validVIDs, ConstraintMap _constrain
   auto start = query.first;
   auto goal = query.second;
 
-  for(auto agent : this->GetTaskPlan()->GetTeam()) {
-    Cfg cfg(agent->GetRobot());
-    m_robotUpdates[start][agent] = std::make_pair(0,cfg);
-  }
+	InitializeRobotUpdates(start);
 
   m_nodeAgentMap[start] = this->GetTaskPlan()->GetCoordinator();
 
@@ -236,7 +233,7 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
     size_t _sourceDistance, size_t _targetDistance, size_t _start, size_t _goal,
 		WholeTask* _task, ConstraintMap _constraints) {
 
-  const size_t edgeWeight  = size_t(_ei->property().GetWeight() + 0.5);
+  size_t edgeWeight  = size_t(_ei->property().GetWeight() + 0.5);
   size_t source = _ei->source();
   size_t target = _ei->target();
 
@@ -251,7 +248,10 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
   auto cfg = sg->GetAvailableIntervalGraph()->GetVertex(target);
   auto sourceCfg = sg->GetAvailableIntervalGraph()->GetVertex(source);
 
-
+	/*if(target == _goal) {
+		target = MAX_INT;
+		edgeWeight = MAX_INT;
+	}	*/
   auto transition = sg->ValidTransition(source,target,edgeWeight,_sourceDistance,
                     m_robotUpdates[source][cfg.GetRobot()->GetAgent()], _constraints);
 
@@ -366,4 +366,23 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
 	plan.m_subtaskPath = executionPath;
 
 	return plan;
+}
+
+void
+DiscreteMAD::
+InitializeRobotUpdates(size_t _start) {
+
+  for(auto agent : this->GetTaskPlan()->GetTeam()) {
+    //Cfg cfg(agent->GetRobot());
+		auto occInt = this->GetTaskPlan()->GetRobotAvailability(agent).front();
+		auto cfg = occInt.GetEndLocation();
+
+		int x = int(cfg[0] + .5);
+		int y = int(cfg[1] + .5);
+
+		cfg.SetData({double(x),double(y),0});
+	
+		cfg.SetRobot(agent->GetRobot());
+    m_robotUpdates[_start][agent] = std::make_pair(0,cfg);
+  }
 }

@@ -684,6 +684,8 @@ GenerateRandomTasks(){
 
   size_t numTasks = 0;
 
+	std::set<Cfg> samples;
+
   while(numTasks < m_numRandTasks) {
     std::vector<Cfg> samplePoints;
 
@@ -704,6 +706,12 @@ GenerateRandomTasks(){
 		x = int(goalCfg[0]+.5);
 		y = int(goalCfg[1]+.5);
 		goalCfg.SetData({double(x),double(y),0});
+
+		if(startCfg == goalCfg)
+			continue;
+
+		if(samples.count(startCfg) or samples.count(goalCfg))
+			continue;
 
 		if(!env->GetBoundary()->InBoundary(startCfg) 
 		or !env->GetBoundary()->InBoundary(goalCfg))
@@ -727,5 +735,7 @@ GenerateRandomTasks(){
     problem->AddTask(std::move(task));
 
     numTasks++;
+		samples.insert(startCfg);
+		samples.insert(goalCfg);
   }
 }

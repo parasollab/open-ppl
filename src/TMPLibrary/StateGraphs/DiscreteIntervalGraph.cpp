@@ -58,6 +58,10 @@ ValidTransition(size_t _source, size_t _target, size_t _edge,
      _sourceDistance < sourceInterval.second.first)
     return MAX_INT;
 
+	/*if(_target == MAX_INT and _edge == MAX_INT) {
+		return 0;
+	}*/
+
   auto targetInterval = m_agentAvailableIntervalMap.at(_target);
 
   auto sourceCfg = m_availableIntervalGraph->GetVertex(_source);
@@ -92,8 +96,20 @@ ValidTransition(size_t _source, size_t _target, size_t _edge,
   //Interaction and transition between subtasks - may have waiting time
   //TODO::Figure out how to update the transition time when considering path constraints
   size_t availTime;
-  if(_update.first == 0)
+  if(_update.first == 0){
     availTime = targetInterval.second.first;
+    /*Cfg startCfg = this->GetTaskPlan()->GetRobotAvailability(
+										targetCfg.GetRobot()->GetAgent()).front().GetEndLocation();
+
+		int x = int(startCfg[0]+.5);
+		int y = int(startCfg[1]+.5);
+
+		startCfg.SetData({double(x),double(y),0});
+		startCfg.SetRobot(targetCfg.GetRobot());
+
+    availTime = _update.first
+								+ LowLevelGraphPathWeight(startCfg,targetCfg,_constraints,0);*/
+	}
   else {
     availTime = _update.first
 								+ LowLevelGraphPathWeight(_update.second,targetCfg,_constraints,_update.first+1);
@@ -431,11 +447,20 @@ LowLevelGraphPath(HandoffAgent* _agent, size_t _start, size_t _goal, ConstraintM
 	};
 
 	auto current = std::shared_ptr<Vertex>(new Vertex(_start,_startTime,nullptr));
+
+	bool safeAfterPath = false;
 	
 	std::list<std::shared_ptr<Vertex>> pq;
 	size_t currentDistance = _startTime+1;
 	std::set<size_t> discoveredVertices;
-	while(current->m_vid != _goal or current->m_distance < _minEndTime) {	
+	while(current->m_vid != _goal or current->m_distance < _minEndTime or !safeAfterPath) {	
+
+		if(current->m_vid == _goal and current->m_distance >= _minEndTime) {
+			if(!pathConstraints[current->m_distance].count(std::make_pair(_goal,MAX_INT))) {
+				safeAfterPath = true;
+				break;
+			}
+		}
 
 		if(current->m_distance > roadmap->Size() + std::max(maxConstraint,_minEndTime))
 			return {};
@@ -491,6 +516,8 @@ LowLevelGraphPath(HandoffAgent* _agent, size_t _start, size_t _goal, ConstraintM
 
 		current = pq.front();
 		pq.pop_front();
+
+
 	}
 
 	std::vector<size_t> path;
@@ -1072,16 +1099,27 @@ UpdateMotionConstraint(HandoffAgent* _agent,WholeTask* _wholeTask,
 			cfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(_agent->GetCapability())->GetRobot());
 
 			auto lowLevelVID = this->GetCapabilityRoadmap(_agent)->GetVID(cfg);
+
+			auto sTime = iter->m_endTime;
+			if(sTime != 0) {
+				sTime++;
+			}
 	
 			auto setupPath = LowLevelGraphPath(_agent, iter->m_endLocation,lowLevelVID,
 															 			_constraints,
-																		iter->m_endTime,
+																		//iter->m_endTime,
+																		sTime,
+																		//agentInterval.second.first);
 																		agentInterval.second.first);
 	
 			//if(iter->m_endTime + setuPath.size() - 1 != agentInterval.second.first)
 			//	modifiedVertices.insert(vid);
 
 			newInterval.first = iter->m_endTime + setupPath.size();//-1
+
+			if(!m_mainDelivering.count(hvit->descriptor()) and !m_goalDelivering.count(hvit->descriptor())) {
+				newInterval.first = newInterval.first + 1;
+			}
 
 			if(next != allocations.end()){
 				auto departurePath = LowLevelGraphPath(_agent, next->m_endLocation,lowLevelVID,
@@ -1147,6 +1185,27 @@ UpdateMotionConstraint(HandoffAgent* _agent,WholeTask* _wholeTask,
 				path = LowLevelGraphPath(sourceCfg,targetCfg,
 									_constraints,sourceInterval.second.first,
 									targetInterval.second.first);
+			else if(sourceCfg.GetRobot() == this->GetTaskPlan()->GetCoordinator()->GetRobot()) {
+				
+				auto iter = allocations.begin();
+
+				auto cfg = m_availableIntervalGraph->GetVertex(target);
+				cfg.SetRobot(this->GetTaskPlan()->GetCapabilityAgent(_agent->GetCapability())->GetRobot());
+
+				auto lowLevelVID = this->GetCapabilityRoadmap(_agent)->GetVID(cfg);
+
+				auto sTime = iter->m_endTime;
+				if(sTime != 0) {
+					sTime++;
+				}
+	
+				path = LowLevelGraphPath(_agent, iter->m_endLocation,lowLevelVID,
+															 			_constraints,
+																		//iter->m_endTime,
+																		sTime,
+																		//agentInterval.second.first);
+																		targetInterval.second.first);
+			}
 			if(path.size() == 0)
 				continue;	
       if(ValidIntervalEdge(source,target,path.size())) {

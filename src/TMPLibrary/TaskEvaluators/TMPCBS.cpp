@@ -138,6 +138,9 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		nodesExplored++;
 		if(node->GetDepth() > maxDepth)
 			maxDepth = node->GetDepth();
+
+		if(nodesExplored > 100000)
+			break;
 	
 		if(m_debug) {
 			std::cout << "Tree size : " << tree.Length() << std::endl;
@@ -360,7 +363,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 						for(auto pre = plan1.begin(); pre != iter1; pre++) {
 							if(pre->m_agent != iter2->m_agent)
 								continue;
-							if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							//if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							if(iter2->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 								return CreateTaskConflictNodes(_node,tasks[i],tasks[j],*pre,*iter2, true);
 							}
 							/*else if(iter2->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -384,7 +388,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 						for(auto pre = plan2.begin(); pre != iter2; pre++) {
 							if(pre->m_agent != iter1->m_agent)
 								continue;
-							if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							//if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							if(iter1->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 								return CreateTaskConflictNodes(_node,tasks[j],tasks[i],*pre,*iter1, true);
 							}
 							/*else if(iter1->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -412,7 +417,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 							for(auto pre = plan2.begin(); pre != iter2; pre++) {
 								if(pre->m_agent != iter1->m_agent)
 									continue;
-								if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+								//if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+								if(iter1->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 									return CreateTaskConflictNodes(_node,tasks[j],tasks[i],*pre,*iter1, true);
 								}
 								/*else if(iter1->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -435,7 +441,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 							for(auto pre = plan1.begin(); pre != iter1; pre++) {
 								if(pre->m_agent != iter2->m_agent)
 									continue;
-								if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+								//if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+								if(iter2->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 									return CreateTaskConflictNodes(_node,tasks[i],tasks[j],*pre,*iter2, true);
 								}
 								/*else if(iter2->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -461,7 +468,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 						for(auto pre = plan2.begin(); pre != iter2; pre++) {
 							if(pre->m_agent != iter1->m_agent)
 								continue;
-							if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							//if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							if(iter1->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 								return CreateTaskConflictNodes(_node,tasks[j],tasks[i],*pre,*iter1, true);
 							}
 							/*else if(iter1->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -483,7 +491,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 						for(auto pre = plan1.begin(); pre != iter1; pre++) {
 							if(pre->m_agent != iter2->m_agent)
 								continue;
-							if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							//if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+							if(iter2->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 								return CreateTaskConflictNodes(_node,tasks[i],tasks[j],*pre,*iter2, true);
 							}
 							/*else if(iter2->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -504,12 +513,14 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 					continue;
 				}
 				//Subtask 1 starts after subtask 2 is complete
+				//if(iter1->m_setupStartTime >= iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()) {
 				if(iter1->m_setupStartTime >= iter2->m_subtaskStartTime + iter2->m_subtaskPath.size()) {
 					//check if the setup path for iter2 intersects with any previous plan1 allocations
 					for(auto pre = plan1.begin(); pre != iter1; pre++) {
 						if(pre->m_agent != iter2->m_agent)
 							continue;
-						if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+						//if(iter2->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+						if(iter2->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 							return CreateTaskConflictNodes(_node,tasks[i],tasks[j],*pre,*iter2, true);
 						}
 						/*else if(iter2->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -532,7 +543,8 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 					for(auto pre = plan2.begin(); pre != iter2; pre++) {
 						if(pre->m_agent != iter1->m_agent)
 							continue;
-						if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+						//if(iter1->m_setupStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
+						if(iter1->m_subtaskStartTime  < pre->m_subtaskStartTime + pre->m_subtaskPath.size()) {
 							return CreateTaskConflictNodes(_node,tasks[j],tasks[i],*pre,*iter1, true);
 						}
 						/*else if(iter1->m_setupStartTime  == pre->m_subtaskStartTime + pre->m_subtaskPath.size()
@@ -563,6 +575,33 @@ FindTaskConflicts(std::shared_ptr<Node> _node) {
 					continue;
 				}*/
 				else {
+					
+					if(iter1->m_subtaskStartTime > iter2->m_subtaskStartTime + iter2->m_subtaskPath.size() - 1) {
+						//check setup path
+						if(CheckSetupPath(_node, tasks[i], 
+																	 iter2->m_subtaskStartTime + iter2->m_subtaskPath.size(),
+																		iter1->m_subtaskStartTime-1,
+																		iter2->m_subtaskPath.back(),iter1->m_subtaskPath.front(),
+																		iter1->m_agent)) {
+
+							iter1++;
+							continue;
+						}
+					}
+					else if(iter2->m_subtaskStartTime > iter1->m_subtaskStartTime + iter1->m_subtaskPath.size() - 1) {
+						//check setup path
+						if(CheckSetupPath(_node, tasks[j], 
+																		 iter1->m_subtaskStartTime + iter1->m_subtaskPath.size(),
+																			iter2->m_subtaskStartTime-1,
+																			iter1->m_subtaskPath.back(),iter2->m_subtaskPath.front(),
+																			iter2->m_agent)) {
+
+
+							iter2++;
+							continue;
+						}
+					}					
+
 					return CreateTaskConflictNodes(_node,tasks[i],tasks[j],*iter1,*iter2);
 					/*auto newNode1 = new Node(_node.get(),tasks[i]);
 					DiscreteAgentAllocation alloc1(iter2->m_agent, iter2->m_subtaskStartTime,
@@ -1194,7 +1233,7 @@ FindConflict(std::shared_ptr<Node> _node) {
 	if(!taskConflicts.empty())
 		return taskConflicts;
 
-	PatchSetupPaths(_node);
+	PatchSetupPaths(_node.get());
 
 	return FindMotionConflicts(_node);
 	/*
@@ -1472,6 +1511,7 @@ FinalizePlan(Node* _node) {
 		agent->SetPlan(path);
 	}*/
 
+	//PatchSetupPaths(_node);
 	size_t max = 0;
 	for(auto taskPlan : _node->GetTaskPlans()) {
 		auto end = taskPlan.second.back().m_subtaskStartTime + taskPlan.second.back().m_subtaskPath.size()+1;
@@ -1593,7 +1633,7 @@ CheckSetupPath(std::shared_ptr<Node> _node, WholeTask* _task,
 
 void
 TMPCBS::
-PatchSetupPaths(std::shared_ptr<Node> _node) {
+PatchSetupPaths(Node* _node) {
 
 	std::unordered_map<HandoffAgent*,std::list<SubtaskPlan*>> subtaskAssignments;
 
@@ -1615,7 +1655,7 @@ PatchSetupPaths(std::shared_ptr<Node> _node) {
 			}
 			auto iter = assignments.begin();
 			for(; iter != assignments.end(); iter++) {
-				if((*iter)->m_setupStartTime > subtask.m_subtaskStartTime + subtask.m_subtaskPath.size() - 1) {
+				if((*iter)->m_subtaskStartTime > subtask.m_subtaskStartTime + subtask.m_subtaskPath.size() - 1) {
 					assignments.insert(iter,&subtask);
 					break;
 				}
@@ -1633,7 +1673,56 @@ PatchSetupPaths(std::shared_ptr<Node> _node) {
 		auto assignments = agentAssignments.second;
 		auto agent = agentAssignments.first;
 
+		if(assignments.empty()) {
+			continue;
+		}
+
 		auto iter = assignments.begin();
+
+		auto startVID = this->GetTaskPlan()->GetAgentAllocations(agent)[0].m_endLocation;
+		auto goalVID = (*iter)->m_subtaskPath.front();
+
+		size_t startTime = 0;
+		size_t endTime = (*iter)->m_subtaskStartTime - 1;
+
+		auto startCfg = sg->GetCapabilityRoadmap(agent)->GetVertex(startVID);
+		auto goalCfg = sg->GetCapabilityRoadmap(agent)->GetVertex(goalVID);
+
+		auto task = subtaskWholeTask[(*iter)];
+
+		startCfg.SetRobot(agent->GetRobot());
+		goalCfg.SetRobot(agent->GetRobot());
+
+		auto path = sg->LowLevelGraphPath(startCfg, goalCfg, _node->GetTaskMotionConstraints(task),
+																		startTime, endTime);
+		
+		if(path.size() == 1 and startTime -1 == endTime) {
+			path = {};
+		}
+
+		if(path.size() - 1 + startTime > endTime) {
+			throw RunTimeException(WHERE,"Setup path invalid. Missed task conflict.");
+		}
+
+		(*iter)->m_setupPath = path;
+		(*iter)->m_setupStartTime = 0;
+		if(m_debug) {
+			std::cout << "Rewriting setup path for agent: " << agent->GetRobot()->GetLabel() <<std::endl;
+			std::cout << "Starting point: " << startVID
+								<< " at time: 0"
+								<< std::endl;
+			
+			std::cout << "Begin of subtask1: " << (*iter)->m_subtaskPath.front()
+								<< " at time: " << (*iter)->m_subtaskStartTime << std::endl;
+
+			std::cout << "Setup path: " << std::endl;
+			for(auto vid : path) {
+				std::cout << vid << " -> ";
+			}
+			std::cout << std::endl << "Length: " << path.size() << std::endl;
+		}
+
+
 		auto next = iter;
 		next++;
 		for(; next != assignments.end(); next++) {
@@ -1664,6 +1753,7 @@ PatchSetupPaths(std::shared_ptr<Node> _node) {
 			}
 
 			subtask2->m_setupPath = path;
+			subtask2->m_setupStartTime = startTime;
 
 			if(m_debug) {
 				std::cout << "Rewriting setup path for agent: " << agent->GetRobot()->GetLabel() <<std::endl;
