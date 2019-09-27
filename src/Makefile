@@ -135,6 +135,8 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 # This recipe runs headers with Q_OBJECT through the qt MOC.
 $(MOC_DIR)/moc_%.cpp: %.h | $(MOC_DIR)
 	@echo Moc\'ing $(shell echo $< | sed 's|.*/||' )...
+	#@mkdir -p $(MOC_DIR)/moc_$(shell dirname $<) #needed for MACOS support
+	@echo $(QT_MOC) $< -o $@
 	@$(QT_MOC) $< -o $@
 
 # This recipe is for MOC sources.
