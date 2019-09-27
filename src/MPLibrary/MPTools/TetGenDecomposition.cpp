@@ -15,10 +15,16 @@
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/IO/io.h>
+#include <CGAL/IO/Polyhedron_iostream.h>
+#include <CGAL/IO/Nef_polyhedron_iostream_3.h>
+#include <CGAL/IO/print_wavefront.h>
 #include <CGAL/Nef_polyhedron_3.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Nef_3/SNC_indexed_items.h>
 
 using CGALKernel    = CGAL::Exact_predicates_exact_constructions_kernel;
 using NefPolyhedron = CGAL::Nef_polyhedron_3<CGALKernel>;
+using Polyhedron    = CGAL::Polyhedron_3<CGALKernel>;
 
 using namespace std;
 
@@ -250,6 +256,17 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   }
 }
 
+
+
+void
+OutputNefPolyhedron(const NefPolyhedron& _p, const string _filename) {
+  ofstream objFile(_filename);
+  Polyhedron output;
+  _p.convert_to_polyhedron(output);
+  CGAL::print_polyhedron_wavefront(objFile, output);
+  objFile.close();
+}
+
 /*------------------------------- Construction -------------------------------*/
 
 TetGenDecomposition::
@@ -269,6 +286,17 @@ TetGenDecomposition(XMLNode& _node) {
       "files for a decomposition with .node and .ele extensions. This is the "
       "base name for those files.");
 
+  m_useConvex = _node.Read("useConvex", false, false,
+      "Use obstacle convex hull or environment boundary to get "
+      "free space decomposition. Note: This option only supports "
+      "one obstacle. In case of multiple obstacles, it will pick "
+      "the first in the list.");
+  m_convexHullScaleFactor = _node.Read("convexScale", false, 1.2, 1.0, MAX_DBL,
+      "How much to scale the convex hull by in order to avoid degenerate "
+      "decomposition at the intersection of the convex hull and the "
+      "obstacle. Note: This option only supports "
+      "one obstacle. In case of multiple obstacles, it will pick "
+      "the first in the list.");
   std::string ioType = _node.Read("io", false, "none", "The I/O operation to use "
       "(read, write, none).");
 
@@ -313,7 +341,15 @@ operator()(const Environment* _env) {
       cout << "Decomposing environment with tetgen..."
            << endl;
 
-    MakeFreeModel(_env);
+    if(m_useConvex)
+      MakeInternalVoidModel(_env);
+    else
+      MakeFreeModel(_env);
+
+    // We usually don't want to write the free space - only do this in debug
+    // mode.
+    if(writeFile and m_debug)
+      SaveFreeModel();
 
     if(m_debug)
       std::cout << "\tRunning tetgen with switches '" << m_switches
@@ -330,6 +366,11 @@ operator()(const Environment* _env) {
     cout << "Decomposition complete." << endl;
 
   auto decomposition = MakeDecomposition();
+
+  if(writeFile and m_debug) {
+    ostringstream os;
+    decomposition->WriteObj("decomposition.map");
+  }
 
   // Release tetgen structures.
   delete m_freeModel;
@@ -389,6 +430,57 @@ MakeDecomposition() {
 
 /*------------------------ Freespace Model Creation --------------------------*/
 
+/*----------------------------make internal void model--------------------*/
+
+void
+TetGenDecomposition::
+MakeInternalVoidModel(const Environment* _env) {
+  //this function can only handle one obstacle for now. Throw an error if the
+  //environment has more
+  if(_env->NumObstacles() > 1)
+    throw RunTimeException(WHERE, "This option only supports environments with one obstacle.");
+  if(m_debug)
+    cout << "Creating cavity model..." << endl
+         << "\tAdding convex hull..." << endl;
+
+  // Subtract each obstacle from the convex hull.
+  MultiBody* obst = _env->GetObstacle(0);
+  auto poly = obst->GetBody(0)->GetWorldConvexHull();
+
+  //scale the convex hull to avoid degenerate triangles.
+  poly.Scale(m_convexHullScaleFactor);
+
+  if(m_debug) {
+    cout << "convex hull com: " << poly.GetCentroid() << endl;
+    ofstream out("convex.obj");
+    poly.WriteObj(out);
+  }
+
+  auto cp = poly.CGAL();
+
+  NefPolyhedron freespace(cp);
+
+  if(!obst->IsInternal()) {
+
+    auto ocp = obst->GetBody(0)->GetWorldPolyhedron().CGAL();
+
+    if(m_debug)
+      cout << "\t\tobstacle is " << (ocp.is_closed() ? "" : "not ")
+           << "closed" << endl;
+
+    freespace -= NefPolyhedron(ocp);
+
+    if(m_debug)
+      OutputNefPolyhedron(freespace, "convex_freespace.obj");
+
+    // Add free model to tetgen structure.
+    AddVertices(m_freeModel, freespace, m_debug);
+    AddFacets(m_freeModel, freespace, m_debug);
+    AddHoles(m_freeModel, freespace, _env, m_debug);
+  }
+}
+
+
 void
 TetGenDecomposition::
 MakeFreeModel(const Environment* _env) {
@@ -422,6 +514,10 @@ MakeFreeModel(const Environment* _env) {
     }
   }
 
+  //display free space
+  if(m_debug)
+    OutputNefPolyhedron(freespace, "full_freespace.obj");
+
   // Add free model to tetgen structure.
   AddVertices(m_freeModel, freespace, m_debug);
   AddFacets(m_freeModel, freespace, m_debug);
@@ -452,7 +548,6 @@ SaveFreeModel() {
 
   char* b = const_cast<char*>(basename.c_str());
   m_freeModel->save_nodes(b);
-  m_freeModel->save_poly(b);
 }
 
 
