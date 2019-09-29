@@ -1,5 +1,5 @@
-#ifndef MULTI_BODY_H_
-#define MULTI_BODY_H_
+#ifndef PMPL_MULTI_BODY_H_
+#define PMPL_MULTI_BODY_H_
 
 #include <memory>
 #include <string>
@@ -200,12 +200,6 @@ class MultiBody {
     /// Get the bounding sphere radius.
     double GetBoundingSphereRadius() const noexcept;
 
-    /// Get the maximum distance in X, Y, or Z direction.
-    double GetMaxAxisRange() const noexcept;
-
-    /// Get the bounding box.
-    const double* GetBoundingBox() const noexcept;
-
     ///@}
     ///@name Connections
     ///@{
@@ -295,11 +289,7 @@ class MultiBody {
 
     std::vector<Body> m_bodies;           ///< The sub-parts.
 
-    Vector3d m_com;                       ///< Center of mass
-
     double m_radius{0};                   ///< Bounding Sphere
-    std::array<double, 6> m_boundingBox;  ///< Bounding Box
-    double m_maxAxisRange{0};             ///< Max axis range
 
     size_t m_baseIndex{0};                ///< Free body index for base
     Body* m_baseBody{nullptr};            ///< Body of base

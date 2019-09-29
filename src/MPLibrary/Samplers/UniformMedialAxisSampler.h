@@ -26,9 +26,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    UniformMedialAxisSampler(string _vcLabel = "", string _dmLabel = "",
-        double _length = 0, double _stepSize = 0, bool _useBoundary = false,
-        const ClearanceUtility<MPTraits>& _clearanceUtility = ClearanceUtility<MPTraits>());
+    UniformMedialAxisSampler();
 
     UniformMedialAxisSampler(XMLNode& _node);
 
@@ -88,12 +86,7 @@ class UniformMedialAxisSampler : public SamplerMethod<MPTraits> {
 
 template <typename MPTraits>
 UniformMedialAxisSampler<MPTraits>::
-UniformMedialAxisSampler(string _vcLabel, string _dmLabel,
-    double _length, double _stepSize, bool _useBoundary,
-    const ClearanceUtility<MPTraits>& _clearanceUtility) :
-    m_length(_length), m_stepSize(_stepSize), m_useBoundary(_useBoundary),
-    m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
-    m_clearanceUtility(_clearanceUtility) {
+UniformMedialAxisSampler() {
   this->SetName("UniformMedialAxisSampler");
 }
 
@@ -149,17 +142,12 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   bool generated = false;
   int cfg1Witness;
 
-  double length = m_length ? m_length : multiBody->GetMaxAxisRange();
-
-  //extend boundary
-  env->ExpandBoundary(length, multiBody);
+  double length = m_length != 0.
+                ? m_length
+                : multiBody->GetBase()->GetPolyhedron().GetMaxRadius();
 
   //Generate first cfg
   CfgType& cfg1 = _cfg;
-
-  //restore boundary
-  env->ExpandBoundary(-length - 2 * multiBody->GetBoundingSphereRadius(),
-      multiBody);
 
   CfgType tmp(robot);
   m_clearanceUtility.CollisionInfo(cfg1, tmp, _boundary, cfg1.m_clearanceInfo);

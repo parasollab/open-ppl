@@ -453,7 +453,6 @@ Body::
 MarkDirty() {
   m_transformCached = false;
   m_worldPolyhedronCached = false;
-  m_worldPolyhedron.MarkDirty();
 }
 
 
@@ -493,6 +492,7 @@ AdjacencyConnectionCount() const noexcept {
   return m_adjacencyConnections.size();
 }
 
+
 Connection&
 Body::
 GetForwardConnection(const size_t _index) const noexcept {
@@ -522,6 +522,7 @@ GetBackwardConnection(const size_t _index) const noexcept {
   }
 }
 
+
 Connection&
 Body::
 GetAdjacencyConnection(const size_t _index) const noexcept {
@@ -535,6 +536,7 @@ GetAdjacencyConnection(const size_t _index) const noexcept {
         ::to_string(AdjacencyConnectionCount()) + ".");
   }
 }
+
 
 Connection*
 Body::

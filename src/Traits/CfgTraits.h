@@ -17,7 +17,6 @@
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
-#include "MPLibrary/DistanceMetrics/CenterOfMassDistance.h"
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/KnotTheoryDistance.h"
 #include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
@@ -206,7 +205,6 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     BinaryLPSweptDistance<MPTraits>,
-    CenterOfMassDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
     KnotTheoryDistance<MPTraits>,
     LPSweptDistance<MPTraits>,

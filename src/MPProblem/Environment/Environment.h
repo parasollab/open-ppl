@@ -1,5 +1,5 @@
-#ifndef ENVIRONMENT_H_
-#define ENVIRONMENT_H_
+#ifndef PMPL_ENVIRONMENT_H_
+#define PMPL_ENVIRONMENT_H_
 
 #include "Geometry/Boundaries/Boundary.h"
 #include "Utilities/MPUtils.h"
@@ -26,18 +26,16 @@ class XMLNode;
 /// Workspace representation of terrain within the world.
 ////////////////////////////////////////////////////////////////////////////////
 class Terrain {
+
   public:
 
     ///@name Construction
     ///@{
 
-    /// Default constructor
     Terrain();
 
-    /// Constructor for xml parsing
     Terrain(XMLNode& _node);
 
-    /// Copy constructor
     Terrain(const Terrain& _terrain);
 
     ///@}
@@ -49,14 +47,23 @@ class Terrain {
     const Boundary* GetBoundary() const noexcept;
 
     bool IsWired() const noexcept;
+
     ///@}
+
   private:
-    glutils::color m_color{glutils::color::green}; ///< the color of the boundary when rendering
-    std::unique_ptr<Boundary> m_boundary; ///< represents where the terrain is located.
+
+    ///@name Internal State
+    ///@{
+
+    glutils::color m_color{glutils::color::green}; ///< Color for visualization.
+    std::unique_ptr<Boundary> m_boundary;          ///< The enclosing boundary.
 
     /// A rendering property, if true then the boundary is
     /// rendered as a solid mesh; otherwise, it is rendered in wire frame.
     bool m_wire{true};
+
+    ///@}
+
 };
 
 
@@ -126,12 +133,7 @@ class Environment {
     ///@name Resolutions
     ///@{
 
-    /// Automatically compute resolutions.
-    ///
-    /// ComputeResolution, if m_posRes is < 0 then auto compute the resolutions
-    /// based on minimum of max body spans multiplied by @c m_positionResFactor.
-    /// Reachable distance resolution is computed based upon input res
-    /// multiplied by the number of joints.
+    /// Automatically compute position resolution when not specified.
     void ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots);
 
     double GetPositionRes() const noexcept;
@@ -149,33 +151,6 @@ class Environment {
     const Boundary* GetBoundary() const noexcept;
 
     void SetBoundary(std::unique_ptr<Boundary>&& _b) noexcept;
-
-    /// Resize the boundary to the minimum bounding box surrounding the obstacles
-    /// increased by a margin of _d + multibody radius.
-    /// @param _d Margin to increase minimum bounding box
-    /// @param _multibody MultiBody to base the margin off of
-    /// @TODO This is a temporary hack to be removed after cloning functions are
-    ///       implemented in the boundary class hierarchy. Rather than changing
-    ///       the environment boundary, methods wishing to use a modified
-    ///       version of it should clone it and adjust the clone.
-    void ResetBoundary(double _d, const MultiBody* const _multibody);
-
-    /// Forward to the boundary reset.
-    /// @TODO This is a temporary hack to be removed after cloning functions are
-    ///       implemented in the boundary class hierarchy. Rather than changing
-    ///       the environment boundary, methods wishing to use a modified
-    ///       version of it should clone it and adjust the clone.
-    void ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
-        const double _margin);
-
-    /// Expand the boundary by a margin of _d + multibody radius
-    /// @param _d Margin to increase bounding box
-    /// @param _multibody MultiBody to base the margin off of
-    /// @TODO This is a temporary hack to be removed after cloning functions are
-    ///       implemented in the boundary class hierarchy. Rather than changing
-    ///       the environment boundary, methods wishing to use a modified
-    ///       version of it should clone it and adjust the clone.
-    void ExpandBoundary(double _d, const MultiBody* const _multibody);
 
     ///@}
     ///@name Obstacle Functions
@@ -272,11 +247,7 @@ class Environment {
     ///@name Resolution Info
     ///@{
 
-    /// The position resolution is set below 0 to trigger a formal computation
-    /// of it, if it's not provided in either the XML or env file.
     double m_positionRes{-1.};       ///< Positional resolution of movement.
-    double m_positionResFactor{.01}; ///< Factor of body span to use as auto-
-                                     ///< computed positional resolution.
     double m_orientationRes{.05};    ///< Rotational resolution of movement.
     double m_timeRes{.05};           ///< Resolution for time.
 
