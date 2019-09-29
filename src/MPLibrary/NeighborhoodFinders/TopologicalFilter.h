@@ -94,7 +94,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     /// An efficient implementation of this NF requires the ability to check
     /// whether a vertex is in the candidate set in constant time.
     virtual void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
-        const VertexSet& _candidates, std::vector<Neighbor>& _out) override;
+        const VertexSet& _candidates, OutputIterator _out) override;
 
     /// Filter the candidate range. Pass only the topologically relevant
     /// candidates to the underlying NF.
@@ -259,7 +259,7 @@ template <typename MPTraits>
 void
 TopologicalFilter<MPTraits>::
 FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
-    const std::unordered_set<VID>& _candidates, std::vector<Neighbor>& _out) {
+    const std::unordered_set<VID>& _candidates, OutputIterator _out) {
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
   MethodTimer mt(stats, id + "::FindNeighbors");
@@ -335,7 +335,7 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
   // Call the underlying NF on the reduced candidate set.
   nf->FindNeighbors(_rmp, candidates.begin(), candidates.end(),
       candidates.size() == this->GetRoadmap()->Size(),
-      _cfg, std::back_inserter(_out));
+      _cfg, _out);
 }
 
 
@@ -357,10 +357,7 @@ FindNeighbors(RoadmapType* _rmp,
   for(auto iter = _first; iter != _last; ++iter)
     candidates.insert(_rmp->GetVID(iter));
 
-  std::vector<Neighbor> out;
-  this->FindNeighbors(_rmp, _cfg, candidates, out);
-
-  std::copy(out.begin(), out.end(), _out);
+  this->FindNeighbors(_rmp, _cfg, candidates, _out);
 }
 
 

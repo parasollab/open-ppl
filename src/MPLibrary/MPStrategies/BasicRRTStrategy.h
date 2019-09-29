@@ -573,7 +573,7 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   auto g = this->GetRoadmap();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   if(_candidates)
-    nf->FindNeighbors(g, _cfg, *_candidates, neighbors);
+    nf->FindNeighbors(g, _cfg, *_candidates, std::back_inserter(neighbors));
   else
     nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
 
@@ -581,7 +581,7 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   if(neighbors.empty() and !m_fallbackNfLabel.empty()) {
     auto nf = this->GetNeighborhoodFinder(m_fallbackNfLabel);
     if(_candidates)
-      nf->FindNeighbors(g, _cfg, *_candidates, neighbors);
+      nf->FindNeighbors(g, _cfg, *_candidates, std::back_inserter(neighbors));
     else
       nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
   }

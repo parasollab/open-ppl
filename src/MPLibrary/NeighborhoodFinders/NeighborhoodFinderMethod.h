@@ -232,10 +232,9 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _rmp The roadmap.
     /// @param _cfg The query configuration.
     /// @param _candidates The set of candidate VIDs.
-    /// @param _out Output location.
+    /// @param _out Output iterator.
     virtual void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
-        const std::unordered_set<VID>& _candidates,
-        std::vector<Neighbor>& _out);
+        const std::unordered_set<VID>& _candidates, OutputIterator _out);
 
     /// Finds all vertices in the graph as neighbors.
     /// @param _rmp The roadmap.
@@ -431,10 +430,10 @@ template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::
 FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
-    const std::unordered_set<VID>& _candidates, std::vector<Neighbor>& _out) {
+    const std::unordered_set<VID>& _candidates, OutputIterator _out) {
   // Default impl should do the same as regular FindNeighbors.
   FindNeighbors(_rmp, _candidates.begin(), _candidates.end(),
-      _candidates.size() == _rmp->Size(), _cfg, std::back_inserter(_out));
+      _candidates.size() == _rmp->Size(), _cfg, _out);
 }
 
 

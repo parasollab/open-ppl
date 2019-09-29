@@ -369,7 +369,7 @@ FindNearestWitness(const CfgType& _cfg) {
   // Search with the witness NF.
   const auto nf = this->GetNeighborhoodFinder(this->m_witnessNfLabel);
   nf->FindNeighbors(this->GetRoadmap(), _cfg, m_witnesses,
-      witnessNeighbors);
+      std::back_inserter(witnessNeighbors));
 
   // If that failed, return a null result.
   if(witnessNeighbors.empty())
