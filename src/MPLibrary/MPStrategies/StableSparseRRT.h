@@ -68,7 +68,12 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     /// SST's version of this function requires a radius NF and only searches
     /// the active set.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const VertexSet* const _tree = nullptr) override;
+        const VertexSet* const _candidates = nullptr) override;
+
+    /// SST selects the neighbor with best path cost rather than closest
+    /// distance.
+    virtual Neighbor SelectNeighbor(const CfgType& _cfg,
+        const std::vector<Neighbor>& _neighbors) override;
 
     /// SST's version of this function calls the base class version and then
     /// updates metadata specific to this method.
@@ -100,12 +105,12 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     /// The active set represents the 'sparse' tree.
     VertexSet m_active;
     /// Set of witnesses for enforcing sparseness.
-    std::vector<VID> m_witnesses;
+    VertexSet m_witnesses;
     /// The inactive nodes with no children.
     VertexSet m_inactiveLeaves;
     /// A map from child VID to parent VID for each roadmap vertex.
     std::unordered_map<VID, VID> m_parent;
-    /// Maps a representative node to a witness.
+    /// Maps witness nodes to the best-cost representative for their region.
     std::unordered_map<VID, VID> m_representatives;
 
     std::string m_witnessNfLabel; ///< NF to use for finding witness nodes.
@@ -156,6 +161,14 @@ Initialize() {
   if(this->m_debug)
     std::cout << "Initializing StableSparseRRT" << std::endl;
 
+  // Issue a warning if we aren't using a radius NF.
+  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  if(nf->GetType() != NeighborhoodFinderMethod<MPTraits>::Type::RADIUS)
+    std::cout << "Warning: neighborhood finder '" << this->m_nfLabel
+              << "' is not of type 'RADIUS'. A radius-based NF is needed "
+              << "to make SST's proofs work out."
+              << std::endl;
+
   // Find the start node.
   auto goalTracker = this->GetGoalTracker();
   const auto& startVIDs = goalTracker->GetStartVIDs();
@@ -163,8 +176,17 @@ Initialize() {
     throw RunTimeException(WHERE) << "A start VID is required for this method.";
   const VID start = *startVIDs.begin();
 
+  // We need to check each of the start nodes for active/witnesss/rep status to
+  // make SST work with multiple roots.
+  if(startVIDs.size() > 1)
+    throw RunTimeException(WHERE) << "SST needs modification to support multiple "
+                                  << "start nodes (" << startVIDs.size()
+                                  << " detected)."
+                                  << std::endl;
+
+  // Add the start node to the SST structures.
   m_active.insert(start);
-  m_witnesses.push_back(start);
+  m_witnesses.insert(start);
   m_representatives.emplace(start, start);
 }
 
@@ -173,81 +195,52 @@ Initialize() {
 template <typename MPTraits>
 typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _tree) {
-  /// @note This needs to use a radius-NF type to make the proofs work.
+FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestNeighbor");
-  auto g = this->GetRoadmap();
-  auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
 
-  if(this->m_debug)
-    std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
-              << " with '" << this->m_nfLabel << "' from "
-              << (_tree ? "a tree of size " + std::to_string(_tree->size())
-                        : "the full roadmap")
-              << "."
-              << std::endl;
+  // If we are not interested in a particular candidate set, search the entire
+  // active set for neighbors.
+  if(!_candidates)
+    return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, &m_active);
 
-  std::vector<Neighbor> neighbors;
-
-  // If we are not interested in one particular tree, search the entire active
-  // set for neighbors.
-  if(!_tree) {
-    nf->FindNeighbors(g, m_active.begin(), m_active.end(),
-        m_active.size() == g->get_num_vertices(),
-        _cfg, std::back_inserter(neighbors));
-  }
   // Otherwise we need to select only nodes that are both active and in the
-  // tree.
-  else {
-    // Find the intersection of the active set with the current tree. Usually
-    // the three should be larger.
-    std::vector<VID> candidates;
-    candidates.reserve(std::min(_tree->size(), m_active.size()));
-    std::copy_if(m_active.begin(), m_active.end(),
-        std::back_inserter(candidates),
-        [_tree](const VID _vid){return _tree->count(_vid);}
-    );
+  // candidate set. Find the intersection of the active set with the candidates.
+  VertexSet activeCandidates;
+  activeCandidates.reserve(std::min(_candidates->size(), m_active.size()));
+  std::copy_if(m_active.begin(), m_active.end(),
+      std::inserter(activeCandidates, activeCandidates.end()),
+      [_candidates](const VID _vid){return _candidates->count(_vid);}
+  );
 
-    // Ensure we found some candidates.
-    if(candidates.empty())
-      throw RunTimeException(WHERE) << "SST can't find any candidates.";
+  // Ensure we found some active candidates.
+  if(activeCandidates.empty())
+    throw RunTimeException(WHERE) << "SST can't find any active candidates.";
 
-    nf->FindNeighbors(g, candidates.begin(), candidates.end(),
-        candidates.size() == g->get_num_vertices(),
-        _cfg, std::back_inserter(neighbors));
-  }
+  // Search only the active candidates using a radius NF.
+  return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, &activeCandidates);
+}
 
-  // Search only the candidates using a radius NF.
 
-  // Of the nodes in the radius, select the one with the best path cost.
-  VID bestVID = INVALID_VID;
-  double bestCost = std::numeric_limits<double>::max();
-  for(const auto& n : neighbors) {
+template <typename MPTraits>
+Neighbor
+StableSparseRRT<MPTraits>::
+SelectNeighbor(const CfgType& _cfg, const std::vector<Neighbor>& _neighbors) {
+  auto g = this->GetRoadmap();
+
+  // Select the node with the best path cost.
+  Neighbor best;
+  for(const auto& n : _neighbors) {
     // Check for invalid neighbors.
     if(n.target == INVALID_VID)
       throw RunTimeException(WHERE) << "NF should not return bogus nodes.";
 
     // Check if this neighbor has the best cost so far.
-    const double cost = g->GetVertex(n.target).GetStat("cost");
-    if(cost < bestCost) {
-      bestCost = cost;
-      bestVID = n.target;
-    }
+    const double pathCost = g->GetVertex(n.target).GetStat("cost");
+    if(pathCost < best.distance)
+      best = n;
   }
 
-  // Debug.
-  if(this->m_debug and !neighbors.empty()) {
-    const VID nearest = neighbors[0].target;
-    std::cout << "\tFound best active neighbor " << bestVID
-              << " with path cost "
-              << std::setprecision(4) << bestCost << ".\n"
-              << "\tNearest was " << nearest << " with path cost "
-              << std::setprecision(4) << g->GetVertex(nearest).GetStat("cost")
-              << "."
-              << std::endl;
-  }
-
-  return bestVID;
+  return best;
 }
 
 
@@ -256,21 +249,24 @@ typename StableSparseRRT<MPTraits>::VID
 StableSparseRRT<MPTraits>::
 Extend(const VID _nearest, const CfgType& _target, LPOutput<MPTraits>& _lp,
     const bool _requireNew) {
+  /// @todo Add support for connecting extensions to enable bi-directional SST
+  ///       and more options for path refinement. This also requires managing
+  ///       the updates to path cost that occur when trees merge.
+  const bool connecting = !_requireNew;
+  if(connecting)
+    throw RunTimeException(WHERE) << "SST can't yet support connection because "
+                                  << "reconnecting to an existing node would "
+                                  << "require updating all path costs."
+                                  << std::endl;
+
   // Extend using the basic RRT method.
   const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearest, _target, _lp,
       _requireNew);
 
   // If we succeeded, update the SST structures before we return.
   const bool success = newVID != INVALID_VID;
-  if(success) {
-    // Skip this if we are connecting trees and the node wasn't new.
-    auto g = this->GetRoadmap();
-    const bool connecting = !_requireNew,
-               newNode    = newVID == g->GetLastVID(),
-               update     = newNode or !connecting;
-    if(update);
-      UpdateSSTStructures(_nearest, newVID, _lp);
-  }
+  if(success)
+    UpdateSSTStructures(_nearest, newVID, _lp);
 
   return newVID;
 }
@@ -293,16 +289,16 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   m_inactiveLeaves.erase(_nearestVID);
 
   // Set the cost of the new node based on the previous node plus lp info.
-  CfgType& nearest = g->GetVertex(_nearestVID);
+  const CfgType& nearest = g->GetVertex(_nearestVID);
   CfgType& newNode = g->GetVertex(_newVID);
 
   // Cost of new node is the cost from root to parent plus cost from parent to
   // new node.
   double cost = nearest.GetStat("cost");
   if(this->GetTask()->GetRobot()->IsNonholonomic())
-    cost += _lp.m_edge.second.GetTimeSteps();
+    cost += _lp.m_edge.first.GetTimeSteps();
   else
-    cost += _lp.m_edge.second.GetWeight();
+    cost += _lp.m_edge.first.GetWeight();
   newNode.SetStat("cost", cost);
 
   // Find the nearest witness to newNode and the separation distance.
@@ -314,7 +310,7 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   // If nearest witness is invalid or more than m_witnessRadius away from
   // newNode, then newNode is a new witness and its own representative.
   if(witness == INVALID_VID or distance > m_witnessRadius) {
-    m_witnesses.push_back(_newVID);
+    m_witnesses.insert(_newVID);
     m_active.insert(_newVID);
     m_representatives[_newVID] = _newVID;
 
@@ -368,8 +364,8 @@ FindNearestWitness(const CfgType& _cfg) {
 
   // Search with the witness NF.
   const auto nf = this->GetNeighborhoodFinder(this->m_witnessNfLabel);
-  nf->FindNeighbors(this->GetRoadmap(), m_witnesses.begin(), m_witnesses.end(),
-      false, _cfg, std::back_inserter(witnessNeighbors));
+  nf->FindNeighbors(this->GetRoadmap(), _cfg, m_witnesses,
+      witnessNeighbors);
 
   // If that failed, return a null result.
   if(witnessNeighbors.empty())
@@ -398,14 +394,15 @@ PruneInactiveLeaves() {
   while(!m_inactiveLeaves.empty()) {
     // Get the next leaf.
     auto leaf = m_inactiveLeaves.begin();
+    const VID leafVID = *leaf;
 
     // Find parent.
-    const VID parent = m_parent[*leaf];
+    const VID parent = m_parent[leafVID];
 
     // Remove leaf.
-    g->DeleteVertex(*leaf);
-    this->RemoveNodeFromTrees(*leaf);
-    m_parent.erase(*leaf);
+    g->DeleteVertex(leafVID);
+    this->RemoveNodeFromTrees(leafVID);
+    m_parent.erase(leafVID);
     m_inactiveLeaves.erase(leaf);
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.

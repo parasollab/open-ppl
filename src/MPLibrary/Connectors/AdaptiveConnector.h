@@ -45,7 +45,7 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
 
     template <typename InputIterator1, typename InputIterator2,
               typename OutputIterator>
-    void Connect(RoadmapType* _rm,
+    void Connect(RoadmapType* _r,
         InputIterator1 _itr1First, InputIterator1 _itr1Last,
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
@@ -54,7 +54,7 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
 
     template <typename InputIterator1, typename InputIterator2,
               typename OutputIterator>
-    void Connect(GroupRoadmapType* _rm,
+    void Connect(GroupRoadmapType* _r,
         InputIterator1 _itr1First, InputIterator1 _itr1Last,
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
@@ -190,7 +190,7 @@ template <typename InputIterator1, typename InputIterator2,
           typename OutputIterator>
 void
 AdaptiveConnector<MPTraits>::
-Connect(RoadmapType* _rm,
+Connect(RoadmapType* _r,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,
@@ -232,8 +232,8 @@ Connect(RoadmapType* _rm,
      m_nfConnected[this->m_lastUse]++;
 
      // find cfg pointed to by itr1
-     VID vid = _rm->GetVID(itr1);
-     CfgType& vCfg = _rm->GetVertex(itr1);
+     VID vid = _r->GetVID(itr1);
+     CfgType& vCfg = _r->GetVertex(itr1);
      if(this->m_debug)
        std::cout << (itr1 - _itr1First)
          << "\tAttempting connections: VID = "
@@ -242,7 +242,7 @@ Connect(RoadmapType* _rm,
      //determine nearest neighbors
      std::vector<Neighbor> closest;
      auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
-     nfptr->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
+     nfptr->FindNeighbors(_r, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
          std::back_inserter(closest));
      if(this->m_debug){
        std::cout << "Neighbors | ";
@@ -251,7 +251,7 @@ Connect(RoadmapType* _rm,
      }
 
      //test connections through LP
-     this->ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
+     this->ConnectNeighbors(_r, vid, closest.begin(), closest.end(), _collision);
   }
 }
 
@@ -261,7 +261,7 @@ template <typename InputIterator1, typename InputIterator2,
           typename OutputIterator>
 void
 AdaptiveConnector<MPTraits>::
-Connect(GroupRoadmapType* _rm,
+Connect(GroupRoadmapType* _r,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,

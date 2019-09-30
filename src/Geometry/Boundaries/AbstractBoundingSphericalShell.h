@@ -53,6 +53,8 @@ class AbstractBoundingSphericalShell : public Boundary, public NSphericalShell {
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
+    virtual double GetVolume() const noexcept override;
+
     ///@}
     ///@name Sampling
     ///@{

@@ -344,8 +344,11 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   // Find the last discovered node, which should be a goal if there is a valid
   // path.
   const VID last = sssp.ordering.back();
-  if(!_goals.count(last))
+  if(!_goals.count(last)) {
+    if(this->m_debug)
+      std::cout << "\tFailed: could not find a path." << std::endl;
     return {};
+  }
 
   // Extract the path.
   std::vector<VID> path;
@@ -357,6 +360,11 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
     path.push_back(current);
   } while(current != _start);
   std::reverse(path.begin(), path.end());
+
+  if(this->m_debug)
+    std::cout << "\tSuccess: reached goal node " << last << " with path cost "
+              << sssp.distance.at(last) << "."
+              << std::endl;
 
   return path;
 }
@@ -417,21 +425,13 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
   // Try to generate a path from _start to _goal.
   auto path = this->GeneratePath(_start, _goals);
 
-  // If the path isn't empty, we succeeded.
-  if(!path.empty()) {
-    *this->GetPath() += path;
-    const VID goalVID = path.back();
+  // If the path is empty, we failed.
+  if(path.empty())
+    return false;
 
-    if(this->m_debug)
-      std::cout << "\tSuccess: reached goal node " << goalVID << "."
-                << std::endl;
-
-    return true;
-  }
-  else if(this->m_debug)
-    std::cout << "\tFailed: could not find a path." << std::endl;
-
-  return false;
+  // Otherwise, add this segment to the full solution path.
+  *this->GetPath() += path;
+  return true;
 }
 
 
@@ -448,7 +448,7 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
 #if 0 // Irving to move this to its own method.
   auto dm = this->GetDistanceMetric(m_dmLabel);
-  if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
+  if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance + dm->EdgeWeight(m_roadmap, _ei))) {
     std::cout << "EDGE INVALIDATED!!!" << std::endl;
     return std::numeric_limits<double>::infinity();
   }
@@ -457,7 +457,7 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     double conflictTimestep = 0;
     for(size_t i = 0 ; i <  conflictCfgsAt.size() ; ++i){
       conflictTimestep = conflictCfgsAt[i].second;
-      if(conflictTimestep*1.1 > _sourceDistance && conflictTimestep < (_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))*1.1){
+      if(conflictTimestep*1.1 > _sourceDistance && conflictTimestep < (_sourceDistance + dm->EdgeWeight(m_roadmap, _ei))*1.1){
         SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool("SI");
         if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
           std::cout << "***************** Invalidating conflicting edge (" << _ei->source() << "," << _ei->target() << ")" <<  "at timestep " << conflictTimestep <<std::endl;
@@ -473,7 +473,7 @@ StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // EdgeWeight function to compute the target distance.
   if(!m_dmLabel.empty()) {
     auto dm = this->GetDistanceMetric(m_dmLabel);
-    return _sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target());
+    return _sourceDistance + dm->EdgeWeight(m_roadmap, _ei);
   }
 
   // Otherwise use the existing edge weight to compute the distance.

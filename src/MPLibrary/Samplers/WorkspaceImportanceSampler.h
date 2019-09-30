@@ -65,26 +65,22 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Make sure the decomposition is available and compute tetrahedron
-    ///        importances.
+    /// Make sure the decomposition is available and compute tetrahedron
+    /// importances.
     void InitDecomposition();
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute the height of a tetraherdon relative to a specified facet.
+    /// Compute the height of a tetraherdon relative to a specified facet.
     double ComputeTetrahedronHeight(const WorkspaceRegion& _tetra,
         const WorkspaceRegion::Facet& _f) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Compute the importance of a given tetrahedron.
+    /// Compute the importance of a given tetrahedron.
     double ComputeTetrahedronImportance(const size_t _i) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    /// @brief Get a random point within the tetrahedron defined by four points.
-    /// @param[in] _base The base of the tetrahedron in absolute coordinates.
-    /// @param[in] _p1 Another point, relative to _base.
-    /// @param[in] _p2 Another point, relative to _base.
-    /// @param[in] _p3 Another point, relative to _base.
+    /// Get a random point within the tetrahedron defined by four points.
+    /// @param _base The base of the tetrahedron in absolute coordinates.
+    /// @param _p1   Another point, relative to _base.
+    /// @param _p2   Another point, relative to _base.
+    /// @param _p3   Another point, relative to _base.
     /// @return A point inside the tetrahedron defined by {_base, _base + _p1,
     ///         _base + _p2, _base + _p3}.
     const Point3d RandomPointInTetrahedron(const Point3d& _base,
@@ -99,8 +95,8 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
 
     vector<size_t> m_numAttempts;  ///< Number of attempts per tetrahedron
 
-    double m_alpha{.2}; ///< The "eagerness in obtaining one milestone for
-                        ///< each tetrahedron".
+    /// The "eagerness in obtaining one milestone for each tetrahedron".
+    double m_alpha{.2};
 
     bool m_initialized{false};    ///< Is the decomposition initialized?
 

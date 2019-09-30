@@ -49,23 +49,23 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    OutputIterator FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+    OutputIterator FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -112,7 +112,7 @@ RadiusNF<MPTraits>::
 Print(std::ostream& _os) const {
   NeighborhoodFinderMethod<MPTraits>::Print(_os);
   _os << "\tradius: " << this->m_radius
-      << "\n\tuse nearest: " << m_useFallback
+      << "\n\tfallback to nearest: " << m_useFallback
       << std::endl;
 }
 
@@ -122,7 +122,7 @@ template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 RadiusNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
@@ -135,12 +135,12 @@ FindNeighbors(RoadmapType* _rmp,
 
   for(InputIterator it = _first; it != _last; it++) {
     // Check for connectedness.
-    const VID vid = _rmp->GetVID(it);
-    if(this->DirectEdge(_rmp, _cfg, vid))
+    const VID vid = _r->GetVID(it);
+    if(this->DirectEdge(_r, _cfg, vid))
       continue;
 
     // Check for connection to self.
-    const CfgType& node = _rmp->GetVertex(it);
+    const CfgType& node = _r->GetVertex(it);
     if(node == _cfg)
       continue;
 
@@ -170,7 +170,7 @@ template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 RadiusNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -180,7 +180,7 @@ FindNeighborPairs(RoadmapType* _rmp,
   std::multiset<Neighbor> inRadius;
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-    const CfgType& node1 = _rmp->GetVertex(it1);
+    const CfgType& node1 = _r->GetVertex(it1);
 
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
       // Check for connection to self.
@@ -188,14 +188,14 @@ FindNeighborPairs(RoadmapType* _rmp,
         continue;
 
       // Check distance.
-      const CfgType& node2 = _rmp->GetVertex(it2);
+      const CfgType& node2 = _r->GetVertex(it2);
       const double distance = dm->Distance(node1, node2);
       if(std::isinf(distance))
         continue;
 
       // If within radius, add to list
       if(distance <= this->m_radius)
-        inRadius.emplace(_rmp->GetVID(it1), _rmp->GetVID(it2), distance);
+        inRadius.emplace(_r->GetVID(it1), _r->GetVID(it2), distance);
     }
   }
 
@@ -207,7 +207,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 RadiusNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);
@@ -218,7 +218,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 RadiusNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {

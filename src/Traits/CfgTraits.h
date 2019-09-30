@@ -308,7 +308,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     AdaptiveConnector<MPTraits>,
     //CCExpansion<MPTraits>,
-    CCsConnector<MPTraits>,
+    //CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;

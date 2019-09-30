@@ -77,7 +77,7 @@
       <HierarchicalNF label="HierarchicalNF" nfLabel="BFNF" nfLabel2="RandomNF"
         dmLabel=""/>
       <HopLimitNF label="HLNF" hoplimit="2" dmLabel="" nfLabel="BFNF"/>
-      <OptimalNF label="OptimalK" nfLabel="BFNF"/>
+      <OptimalNF label="OptimalK" nfType="k" dmLabel="euclidean"/>
       <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="10"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
@@ -248,7 +248,9 @@
         <NeighborFinder Method="RandomNF"/>
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
+      <!--
       <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
+      -->
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
@@ -261,7 +263,7 @@
         checkIfSameCC="false"/>
       <NeighborhoodConnector label="KdTree" nfLabel="KdTreeNF" lpLabel="sl"
         checkIfSameCC="false"/>
-      <RewireConnector label="OptimalRewire" nfLabel="OptimalK" lpLabel="sl"/>
+      <RewireConnector label="Rewire" nfLabel="OptimalK" lpLabel="sl"/>
     </Connectors>
 
     <Metrics>
@@ -415,11 +417,11 @@
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
-      <!-- The connector needs to be OptimalRewire for RRT* -->
+      <!-- The connector needs to be Rewire for RRT* -->
       <BasicRRTStrategy label="RRTstar"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         growGoals="false" growthFocus="0.01"
-        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="OptimalRewire">
+        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="Rewire">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 

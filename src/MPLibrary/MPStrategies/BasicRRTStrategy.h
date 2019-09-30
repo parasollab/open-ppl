@@ -11,6 +11,7 @@
 #endif
 
 #include <iomanip>
+#include <iterator>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -105,8 +106,8 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _v The VID of the existing configuration.
     /// @return The sample who's growth direction yields the greatest separation
     ///         from the existing configuration's neighbors.
-    /// @todo Why do we have this? Seems like the better answer is to implement
-    ///       a dispersed extender.
+    /// @todo This functionality can probably be moved into a dispersed
+    ///       extender, which we could call several times here.
     CfgType SelectDispersedTarget(const VID _v);
 
     ///@}
@@ -115,10 +116,19 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     /// Find the nearest roadmap configuration to an arbitrary configuration.
     /// @param _cfg The query configuration.
-    /// @param _tree The tree to search, or null for whole roadmap.
+    /// @param _candidates The candidate set to search, or null for whole
+    ///                    roadmap.
     /// @return The VID of the roadmap configuration nearest to _cfg.
     virtual VID FindNearestNeighbor(const CfgType& _cfg,
-        const VertexSet* const _tree = nullptr);
+        const VertexSet* const _candidates = nullptr);
+
+    /// Select the best neighbor from the set of candidates returned by the NF.
+    /// Default implementation selects the nearest.
+    /// @param _cfg The query configuration.
+    /// @param _neighbors The set of neighbors returned by the NF.
+    /// @return The best of _neighbors to extend from for this method.
+    virtual Neighbor SelectNeighbor(const CfgType& _cfg,
+        const std::vector<Neighbor>& _neighbors);
 
     ///@}
     ///@name Growth Helpers
@@ -272,8 +282,8 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_goalThreshold = _node.Read("goalThreshold", false,
       m_goalThreshold, 0., std::numeric_limits<double>::max(),
       "For each extension that ends within this distance of the goal (according "
-      "to the goal DM), attempt to extend towards the goal. If the value is 0, "
-      "the extender's max range will be used instead.");
+      "to the goal DM), attempt to extend towards the goal. If the value is 0 or"
+      " not set, the extender's max range will be used instead.");
 
 
   // Some options only apply when growing goals
@@ -314,12 +324,25 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Initialize() {
-  // Assert that we are not trying to use bi-directional growth with a
-  // nonholonomic robot.
-  if(m_growGoals and this->GetTask()->GetRobot()->IsNonholonomic())
-    throw RunTimeException(WHERE) << "Bi-directional growth with nonholonomic "
-                                  << "robots is not supported (requires a "
-                                  << "steering function).";
+  // Sanity checks on grow goals option.
+  if(m_growGoals) {
+    // Assert that we are not using a nonholonomic robot.
+    if(this->GetTask()->GetRobot()->IsNonholonomic())
+      throw RunTimeException(WHERE) << "Bi-directional growth with nonholonomic "
+                                    << "robots is not supported (requires a "
+                                    << "steering function).";
+
+    // Assert that we are not using a rewiring connector.
+    const bool rewiring = !m_ncLabel.empty()
+                      and this->GetConnector(m_ncLabel)->IsRewiring();
+    if(rewiring)
+      throw RunTimeException(WHERE) << "Bi-directional growth is not supported "
+                                    << "with rewiring connectors (rewiring "
+                                    << "connectors need to follow the parent "
+                                    << "trail which doesn't make sense for a "
+                                    << "non-tree roadmap.";
+  }
+
 
   m_trees.clear();
 
@@ -416,7 +439,7 @@ template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectTarget() {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::SelectTarget");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::SelectTarget");
 
   CfgType target(this->GetTask()->GetRobot());
 
@@ -472,7 +495,7 @@ template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectDispersedTarget(const VID _v) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::SelectDispersedTarget");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::SelectDispersedTarget");
 
   // Get original cfg with vid _v and its neighbors
   auto g = this->GetRoadmap();
@@ -528,54 +551,63 @@ SelectDispersedTarget(const VID _v) {
 template <typename MPTraits>
 typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
-FindNearestNeighbor(const CfgType& _cfg, const VertexSet* _tree) {
+FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "BasicRRT::FindNearestNeighbor");
+  MethodTimer mt(stats, "BasicRRTStrategy::FindNearestNeighbor");
 
   if(this->m_debug)
     std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
               << " with '" << m_nfLabel << "' from "
-              << (_tree ? "a tree of size " + std::to_string(_tree->size())
-                        : "the full roadmap")
+              << (_candidates
+                  ? "a set of size " + std::to_string(_candidates->size())
+                  : "the full roadmap")
               << "."
               << std::endl;
 
+  // Search for the nearest neighbors according to the NF.
   std::vector<Neighbor> neighbors;
-
   auto g = this->GetRoadmap();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  if(_tree) {
-    //nf->FindNeighbors(g,
-    //    _tree->begin(), _tree->end(),
-    //    _tree->size() == g->Size(),
-    //    _cfg, std::back_inserter(neighbors));
-    nf->FindNeighbors(g, _cfg, *_tree, neighbors);
-  }
-  else {
+  if(_candidates)
+    nf->FindNeighbors(g, _cfg, *_candidates, neighbors);
+  else
     nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
-  }
 
-  VID nearestVID = INVALID_VID;
-
-  if(!neighbors.empty()) {
-    nearestVID = neighbors[0].target;
-
-    if(this->m_debug)
-      std::cout << "\tFound nearest neighbor " << nearestVID << " at distance "
-                << neighbors[0].distance << "."
-                << std::endl;
-  }
-  else {
-    // We really don't want this to happen. If you see high numbers for this,
-    // you likely have problems with parameter or algorithm selection.
-    stats->IncStat("BasicRRT::FailedNF");
-
+  // Check for no neighbors. We really don't want this to happen - if you see
+  // high numbers for this, you likely have problems with parameter or algorithm
+  // selection.
+  if(neighbors.empty()) {
+    stats->IncStat("BasicRRTStrategy::FailedNF");
     if(this->m_debug)
       std::cout << "\tFailed to find a nearest neighbor."
                 << std::endl;
+    return INVALID_VID;
   }
 
-  return nearestVID;
+  const Neighbor best = SelectNeighbor(_cfg, neighbors);
+
+  if(this->m_debug) {
+    const Neighbor& nearest = neighbors[0];
+    std::cout << "\tFound " << neighbors.size() << " candidate neighbors."
+              << std::endl
+              << "\tNearest is VID " << nearest.target << " at distance "
+              << std::setprecision(4) << nearest.distance << "."
+              << std::endl
+              << "\tBest is VID " << best.target << " at distance "
+              << std::setprecision(4) << best.distance << "."
+              << std::endl;
+  }
+
+  return best.target;
+}
+
+
+template <typename MPTraits>
+Neighbor
+BasicRRTStrategy<MPTraits>::
+SelectNeighbor(const CfgType& _cfg, const std::vector<Neighbor>& _neighbors) {
+  // Return the nearest (first).
+  return _neighbors[0];
 }
 
 /*----------------------------- Growth Helpers -------------------------------*/
@@ -585,7 +617,7 @@ typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp,
     const bool _requireNew) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::Extend");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::Extend");
   this->GetStatClass()->IncStat("BasicRRTExtend");
 
   auto e = this->GetExtender(m_exLabel);
@@ -646,7 +678,7 @@ template <typename MPTraits>
 std::pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
 BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::AddNode");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::AddNode");
 
   auto g = this->GetRoadmap();
 
@@ -669,7 +701,7 @@ void
 BasicRRTStrategy<MPTraits>::
 AddEdge(const VID _source, const VID _target,
     const LPOutput<MPTraits>& _lpOutput) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::AddEdge");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::AddEdge");
 
   if(this->m_debug)
     std::cout << "\tAdding Edge (" << _source << ", " << _target << ")."
@@ -677,15 +709,36 @@ AddEdge(const VID _source, const VID _target,
 
   // Add the edge.
   auto g = this->GetRoadmap();
-  g->AddEdge(_source, _target, _lpOutput.m_edge);
 
-  // Set the parent of _target if not already set (we may have already connected
-  // to it from another vertex).
-  CfgType& target = g->GetVertex(_target);
-  if(!target.IsStat("Parent"))
-    target.SetStat("Parent", _source);
+  // If we are growing goals, we need to add bi-directional edges for the query
+  // to work (otherwise the trees join at fruitless junctions with no weak
+  // connectivity between them). This also applies if we are using a
+  // non-rewiring connector as in with RRG.
+  const bool biDirectionalEdges = m_growGoals or
+      (!m_ncLabel.empty() and !this->GetConnector(m_ncLabel)->IsRewiring());
+  if(biDirectionalEdges)
+    g->AddEdge(_source, _target, _lpOutput.m_edge);
+  else {
+    // Use a one-way edge for uni-directional RRT because superfluous back edges
+    // serve no useful purpose and increase query time. This is also needed for
+    // problems with one-way extenders like kinodynamic and
+    // asymptotically-optimal planners.:
+    g->AddEdge(_source, _target, _lpOutput.m_edge.first);
 
-  // If we're growing goals, handle the tree merges.
+    // Set the parent of _target. We may have already connected to it from
+    // another vertex and this may change the value, so the "Parent" stat
+    // shouldn't be used for RRG or bi-directional growth. We will always set it
+    // here because creating an extension from a copied node could inadvertantly
+    // copy the wrong parent, so checking if the parent is already set leads to
+    // subtle errors.
+    /// @todo Move parent tracking outside the Cfg class to avoid this problem. It
+    ///       needs to be accessible at least by RRT methods and the
+    ///       RewireConnector. Maybe we can move it to the roadmap or a connected
+    ///       component object?
+    g->GetVertex(_target).SetStat("Parent", _source);
+  }
+
+  // Try to join trees.
   if(m_growGoals)
     MergeTrees(_source, _target);
 }
@@ -699,7 +752,7 @@ ConnectNeighbors(const VID _newVID) {
   if(_newVID == INVALID_VID or m_ncLabel.empty())
     return;
 
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::ConnectNeighbors");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::ConnectNeighbors");
 
   // Try to connect _newVID to its neighbors using the connector.
   this->GetConnector(m_ncLabel)->Connect(this->GetRoadmap(), _newVID);
@@ -719,7 +772,7 @@ TryGoalExtension(const VID _newVID) {
   if(goalConstraints.empty())
     return;
 
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::TryGoalExtension");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::TryGoalExtension");
 
   if(this->m_debug) {
     auto g = this->GetRoadmap();
@@ -838,18 +891,26 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(newVID == INVALID_VID)
     return INVALID_VID;
 
+  // Connect neighbors if we are using a connector.
+  ConnectNeighbors(newVID);
+
   // Expand to other directions
   for(size_t i = 1; i < m_numDirections; ++i) {
     if(this->m_debug)
       std::cout << "Expanding to other directions (" << i << "/"
                 << m_numDirections - 1 << "):: ";
 
+    // Select a dispersed target and expand towards it.
     const CfgType randCfg = SelectDispersedTarget(_nearestVID);
-    this->Extend(_nearestVID, randCfg);
-  }
+    const VID additionalNewVID = this->Extend(_nearestVID, randCfg);
 
-  // Connect neighbors if we are using a connector.
-  ConnectNeighbors(newVID);
+    // If we failed, move on to the next attempt.
+    if(additionalNewVID == INVALID_VID)
+      continue;
+
+    // Connect neighbors if we are using a connector.
+    ConnectNeighbors(additionalNewVID);
+  }
 
   return newVID;
 }
@@ -912,7 +973,7 @@ ConnectTrees(const VID _recentlyGrown) {
   if(!m_growGoals or _recentlyGrown == INVALID_VID or m_trees.size() == 1)
     return;
 
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::ConnectTrees");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::ConnectTrees");
 
   // Get the configuration by value in case the graph's vertex vector gets
   // re-allocated.
@@ -946,7 +1007,7 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 RemoveNodeFromTrees(const VID _node) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRT::RemoveNodeFromTrees");
+  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::RemoveNodeFromTrees");
 
   for(auto& tree : m_trees) {
     // Skip this tree if _node isn't present.
