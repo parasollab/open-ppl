@@ -28,7 +28,8 @@
     <NeighborhoodFinders>
       <BruteForceNF label="Nearest"
         dmLabel="euclidean" unconnected="false" k="1"/>
-      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="3"/>
+      <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="3"
+        useFallback="true"/>
     </NeighborhoodFinders>
 
     <Samplers>

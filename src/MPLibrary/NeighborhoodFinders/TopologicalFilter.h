@@ -288,29 +288,13 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
   stats->GetAverage(id + "::TopologicalCandidates") +=
       topologicalCandidates.size();
 
-  // Find the vertices that are in both the input set and topological
-  // candidates.
-  std::vector<VID> candidates;
-  candidates = std::move(topologicalCandidates);
-
   // If we found no candidates, report fail or fall back to underlying NF.
-  if(candidates.empty()) {
-    // Distinguish between the two types of no-candidate scenarios.
-    if(topologicalCandidates.empty()) {
-      stats->IncStat(id + "::NoTopologicalCandidates");
+  if(topologicalCandidates.empty()) {
+    stats->IncStat(id + "::NoTopologicalCandidates");
 
-      if(this->m_debug)
-        std::cout << "\tNo vertices found in candidate cells."
-                  << std::endl;
-    }
-    else {
-      stats->IncStat(id + "::NoCommonCandidates");
-
-      if(this->m_debug)
-        std::cout << "\tFound " << topologicalCandidates.size() << " vertices "
-                  << "in candidate cells, but none were in the input range."
-                  << std::endl;
-    }
+    if(this->m_debug)
+      std::cout << "\tNo vertices found in candidate cells."
+                << std::endl;
 
     // Fall back to underlying NF if that option is selected.
     if(m_fallback) {
@@ -324,17 +308,18 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
   }
 
   // Track information on average candidate set size.
-  stats->GetAverage(id + "::UsedCandidates") += candidates.size();
+  stats->GetAverage(id + "::UsedCandidates") += topologicalCandidates.size();
 
   if(this->m_debug)
     std::cout << "Used candidate set."
               << "\n\t|Input Vertices|: " << inputSize
-              << "\n\t|Candidates Vertices|: " << candidates.size()
+              << "\n\t|Candidates Vertices|: " << topologicalCandidates.size()
               << std::endl;
 
   // Call the underlying NF on the reduced candidate set.
-  nf->FindNeighbors(_rmp, candidates.begin(), candidates.end(),
-      candidates.size() == this->GetRoadmap()->Size(),
+  nf->FindNeighbors(_rmp,
+      topologicalCandidates.begin(), topologicalCandidates.end(),
+      topologicalCandidates.size() == this->GetRoadmap()->Size(),
       _cfg, _out);
 }
 
@@ -369,47 +354,7 @@ FindNeighborPairs(RoadmapType* _rmp,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  throw NotImplementedException(WHERE) << "This impl isn't right for underlying "
-                                       << "NF's of non-radius type.";
-  if(!m_initialized)
-    LazyInitialize();
-
-  if(this->m_debug)
-    std::cout << this->GetNameAndLabel() + "::FindNeighborPairs\n";
-
-  auto g = _rmp;
-
-  // This implementation depends on the 'neighbors' vector NOT reallocating.
-  // Reserve enough space to preclude that possibility.
-  std::vector<Neighbor> neighbors;
-  neighbors.reserve(2 * this->GetK());
-
-  // For each vertex in the first set, find the candidates in the last set.
-  for(auto iter = _first1; iter != _last1; ++iter) {
-    // Track the last used position for neighbors.
-    auto oldEnd = neighbors.end();
-
-    // Find up to m_k neighbors of this vertex (appended to the end of
-    // neighbors).
-    this->FindNeighbors(_rmp, _first2, _last2, false, g->GetVertex(*iter),
-        std::back_inserter(neighbors));
-
-    // Set the source VID for the newly found neighbors.
-    const VID vid = g->GetVID(iter);
-    for(auto iter = oldEnd; iter < neighbors.end(); ++iter)
-      iter->source = vid;
-
-    // We now have two sorted ranges of at most m_k elements each and need to
-    // merge them.
-    std::inplace_merge(neighbors.begin(), oldEnd, neighbors.end());
-
-    // Erase any extra neighbors exceeding m_k.
-    if(neighbors.size() > this->GetK())
-      neighbors.erase(neighbors.begin() + this->GetK(), neighbors.end());
-  }
-
-  // Write the neighbor pairs to the out iterator.
-  std::copy(neighbors.begin(), neighbors.end(), _out);
+  throw NotImplementedException(WHERE);
 }
 
 
