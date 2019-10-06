@@ -102,10 +102,10 @@ LocateCells(const GMSPolyhedron& _polyhedron, const mathtool::Transformation& _t
     Point3d center = CellCenter(cell);
     mathtool::Transformation t(center);
     const bool touching = _interior
-                        ? pqpSolid.IsInCollision(_polyhedron, _t,
-                                                 *m_polyhedron, t, cdInfo)
-                        :      pqp.IsInCollision(_polyhedron, _t,
-                                                 *m_polyhedron, t, cdInfo);
+                        ? pqpSolid.IsInCollision(*m_polyhedron, t,
+                                                 _polyhedron, _t, cdInfo)
+                        :      pqp.IsInCollision(*m_polyhedron, t,
+                                                 _polyhedron, _t, cdInfo);
 
     if(touching)
       cells.insert(cell);

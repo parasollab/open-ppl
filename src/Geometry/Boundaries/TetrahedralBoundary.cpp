@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "TetrahedralBoundary.h"
 
 #include "Geometry/GMSPolyhedron.h"
@@ -7,7 +5,7 @@
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 
-#include "glutils/triangulated_model.h"
+#include <algorithm>
 
 
 /*------------------------------- Construction -------------------------------*/
@@ -364,21 +362,22 @@ CGAL() const {
 GMSPolyhedron
 TetrahedralBoundary::
 MakePolyhedron() const {
-  glutils::triangulated_model t;
+  GMSPolyhedron poly;
 
-  // Add the points.
-  const size_t zero  = t.add_point(ToGLUtils(m_points[0])),
-               one   = t.add_point(ToGLUtils(m_points[1])),
-               two   = t.add_point(ToGLUtils(m_points[2])),
-               three = t.add_point(ToGLUtils(m_points[3]));
+  // Add vertices.
+  auto& v = poly.GetVertexList();
+  v = {m_points[0],
+       m_points[1],
+       m_points[2],
+       m_points[3]};
 
-  // Add each facet to the model.
-  t.add_facet( zero,   one,   two);
-  t.add_facet( zero,   two, three);
-  t.add_facet( zero, three,   one);
-  t.add_facet(  one, three,   two);
+  // Add facets.
+  auto& f = poly.GetPolygonList();
+  f.emplace_back(0, 1, 2, v);
+  f.emplace_back(0, 2, 3, v);
+  f.emplace_back(0, 3, 1, v);
+  f.emplace_back(1, 3, 2, v);
 
-  GMSPolyhedron poly(std::move(t));
   poly.Invert();
   return poly;
 }

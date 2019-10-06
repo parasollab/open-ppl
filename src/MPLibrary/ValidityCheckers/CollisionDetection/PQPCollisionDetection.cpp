@@ -136,10 +136,11 @@ IsInCollision(
       _polyhedron2, _transformation2, _cdInfo);
   if(!collision)
   {
-    const auto& modelPoint = _polyhedron1.GetVertexList()[0];
-    const auto  worldPoint = _transformation1 * modelPoint;
+    const auto point1 = _transformation1 * _polyhedron1.GetVertexList()[0];
+    const auto point2 = _transformation2 * _polyhedron2.GetVertexList()[0];
 
-    collision = IsInsideObstacle(worldPoint, _polyhedron2, _transformation2);
+    collision = IsInsideObstacle(point1, _polyhedron2, _transformation2)
+             or IsInsideObstacle(point2, _polyhedron1, _transformation1);
   }
   return collision;
 }
