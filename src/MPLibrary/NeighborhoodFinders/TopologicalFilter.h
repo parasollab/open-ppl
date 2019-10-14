@@ -268,12 +268,6 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
   if(!m_initialized)
     LazyInitialize();
 
-  // This object only works on the free space roadmap right now. It could be
-  // expanded to handle other maps if we want, but for now we will crash if this
-  // isn't the free space.
-  if(_rmp != this->GetRoadmap())
-    throw RunTimeException(WHERE) << "Only works on the free space at this time.";
-
   // Track the average input size.
   const size_t inputSize = _candidates.size();
   stats->GetAverage(id + "::InputSize") += inputSize;

@@ -275,9 +275,19 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _source The source region.
     /// @param _target The target region.
     /// @return The approximate minimum distance from _source to _target
-    ///         measured through free workspace.
+    ///         measured through free workspace. If it hasn't already been
+    ///         computed, infinity will be returned. Passing null as one of the
+    ///         regions will return the max computed frontier distance (0 for
+    ///         none).
     double ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
         const WorkspaceRegion* const _target);
+
+    /// Compute approximate minimum inner cell distances from a source region
+    /// out to a given radius.
+    /// @param _source The source cell.
+    /// @param _radius Compute inner distances for cells within this radius.
+    void ComputeApproximateMinimumInnerDistances(
+        const WorkspaceRegion* const _source, const double _radius);
 
     ///@}
 
@@ -710,8 +720,13 @@ LocateRegion(const Point3d& _point) const {
     std::cout << "TopologicalMap::LocateRegion"
               << "\n\tPoint " << _point << "is " << (inObstacle ? "" : "not ")
               << "inside an obstacle."
+              << "\n\tCandidate regions: " << candidateRegions.size()
               << "\n\tContaining region: " << r
               << std::endl;
+
+    if(!inObstacle and !r)
+      throw RunTimeException(WHERE) << "Freespace point " << _point
+                                    << " is not in any region.";
   }
 
   return r;
@@ -1036,6 +1051,9 @@ ComputeFrontierNew(const WorkspaceRegion* const _region,
   // Get the descriptor of the root node.
   const VD root = wd->GetDescriptor(*_region);
 
+  // Compute the approximate inner distances to each region within the radius.
+  ComputeApproximateMinimumInnerDistances(_region, radius);
+
   // Create a weight function which uses the approx min inner distance, measured
   // from the root region (not the source region - that would be zero in all
   // cases since the source and target are adjacent).
@@ -1059,8 +1077,8 @@ ComputeFrontierNew(const WorkspaceRegion* const _region,
     const double distance = _sssp.distance.at(vd);
 
     return distance > radius
-      ? SSSPTermination::EndSearch
-      : SSSPTermination::Continue;
+         ? SSSPTermination::EndSearch
+         : SSSPTermination::Continue;
   };
 
   return DijkstraSSSP(wd, {root}, weight, stop, _adjacency);
@@ -1087,13 +1105,53 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
 
   // Next check if we've alreay cached this inner distance.
   const RegionPair key = MakeKey(_source, _target);
+  auto iter = m_innerDistanceMap.find(key);
+  const bool cached = iter != m_innerDistanceMap.end();
+
+  return cached
+       ? iter->second
+       : std::numeric_limits<double>::infinity();
+}
+
+
+template <typename MPTraits>
+void
+TopologicalMap<MPTraits>::
+ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
+    const double _radius) {
+  // Check if we've already computed for this source.
   {
+    const RegionPair key = MakeKey(_source, nullptr);
     auto iter = m_innerDistanceMap.find(key);
-    if(iter != m_innerDistanceMap.end())
-      return iter->second;
+    const bool alreadyComputed = iter != m_innerDistanceMap.end();
+
+    // If we already computed this cell, don't do it again unless the radius is
+    // bigger.
+    if(alreadyComputed) {
+      const double lastRadius = iter->second;
+      if(lastRadius > _radius)
+        return;
+    }
+
+    // Set the computed radius.
+    m_innerDistanceMap[key] = _radius;
   }
 
-  // The distance isn't cached.
+  // Define a function for updating the minimum inner distance to the regions
+  // touching a given cell.
+  auto updateInnerDistance = [_source, this](const size_t _cell,
+                                             const double _distance) {
+    // Find all regions touching the cell.
+    const auto& regions = this->m_cellToRegions[_cell];
+
+    // Set the distance if it isn't already set.
+    for(const WorkspaceRegion* const region : regions) {
+      const RegionPair key = MakeKey(_source, region);
+      if(this->m_innerDistanceMap.count(key))
+        continue;
+      this->m_innerDistanceMap[key] = _distance;
+    }
+  };
 
   /// A search element in the priority queue.
   struct element {
@@ -1117,6 +1175,57 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
   std::priority_queue<element,
                       std::vector<element>,
                       std::greater<element>> pq;
+
+  // Find the source and target cells.
+  const Boundary* const sourceBoundary = _source->GetBoundary();
+  const std::unordered_set<size_t> sourceCells = m_grid->LocateCells(
+      sourceBoundary);
+
+  // Initialize visited and distance maps.
+  {
+    // Mark all source cells as visited and distance 0.
+    for(const size_t cell : sourceCells) {
+      visited.insert(cell);
+      distance[cell] = 0;
+      updateInnerDistance(cell, 0);
+    }
+
+    // Find all neighbors of the source cells.
+    std::unordered_set<size_t> allNeighbors;
+    for(const size_t cell : sourceCells) {
+      for(size_t i = 0; i < 3; ++i) {
+        std::unordered_set<size_t> neighbors;
+        switch(i) {
+          case 0:
+            neighbors = m_grid->LocateFacetNeighbors(cell);
+            break;
+          case 1:
+            neighbors = m_grid->LocateEdgeNeighbors(cell);
+            break;
+          case 2:
+            neighbors = m_grid->LocateVertexNeighbors(cell);
+            break;
+        }
+        allNeighbors.insert(neighbors.begin(), neighbors.end());
+      }
+    }
+
+    // Put the neighbors in the queue as visited @ distance 0.
+    for(const size_t neighbor : allNeighbors) {
+      // Skip visited cells.
+      if(visited.count(neighbor))
+        continue;
+      // Skip boundary cells.
+      if(m_boundaryCells.count(neighbor))
+        continue;
+
+      updateInnerDistance(neighbor, 0);
+      visited.insert(neighbor);
+      distance[neighbor] = 0;
+      parent[neighbor]   = neighbor;
+      pq.emplace(neighbor, 0);
+    }
+  }
 
   // Define a relax edge function.
   const double cellLength = this->m_grid->CellLength();
@@ -1144,63 +1253,8 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     pq.emplace(_target, newDistance);
   };
 
-  // Find the source and target cells.
-  const Boundary* const sourceBoundary = _source->GetBoundary();
-  const Boundary* const targetBoundary = _target->GetBoundary();
-  const std::unordered_set<size_t> sourceCells = m_grid->LocateCells(
-      sourceBoundary);
-  const std::unordered_set<size_t> targetCells = m_grid->LocateCells(
-      targetBoundary);
-
-  // Mark all source cells as visited and distance 0.
-  for(const size_t cell : sourceCells) {
-    // If this cell is a goal, we're done.
-    if(targetCells.count(cell)) {
-      m_innerDistanceMap[key] = 0;
-      return 0;
-    }
-    visited.insert(cell);
-    distance[cell] = 0;
-  }
-
-  // Find all neighbors of the source cells and put them in the queue at 0
-  // distance.
-  for(const size_t cell : sourceCells) {
-    for(size_t i = 0; i < 3; ++i) {
-      std::unordered_set<size_t> neighbors;
-      switch(i) {
-        case 0:
-          neighbors = m_grid->LocateFacetNeighbors(cell);
-          break;
-        case 1:
-          neighbors = m_grid->LocateEdgeNeighbors(cell);
-          break;
-        case 2:
-          neighbors = m_grid->LocateVertexNeighbors(cell);
-          break;
-      }
-      for(const size_t neighbor : neighbors) {
-        // Skip visited cells.
-        if(visited.count(neighbor))
-          continue;
-        // Skip boundary cells.
-        if(m_boundaryCells.count(cell))
-          continue;
-        // If this neighbor is a goal, we're done.
-        if(targetCells.count(neighbor)) {
-          m_innerDistanceMap[key] = 0;
-          return 0;
-        }
-        visited.insert(cell);
-        distance[neighbor] = 0;
-        parent[neighbor]   = cell;
-        pq.emplace(neighbor, 0);
-      }
-    }
-  }
-
-  bool found = false;
-  size_t foundTarget;
+  // Run Dijkstra's algorithm until discovering a cell with min distance >
+  // _radius.
   while(!pq.empty()) {
     // Get the next element.
     const element current = pq.top();
@@ -1212,30 +1266,20 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     visited.insert(current.cell);
 
     // Update the inner distance map for all regions touched by this cell.
-    const auto& regions = m_cellToRegions[current.cell];
-    for(const WorkspaceRegion* const region : regions) {
-      const RegionPair key = MakeKey(_source, region);
-      if(m_innerDistanceMap.count(key))
-        continue;
-      m_innerDistanceMap[key] = distance[current.cell];
-    }
+    updateInnerDistance(current.cell, current.distance);
 
     // Check for early termination.
-    found |= targetCells.count(current.cell);
-
-#if 0
+    const bool stop = current.distance > _radius;
+#if 1
     // This part is for debugging the search over the grid.
     std::cout << "\tVertex: " << current.cell
               << ", parent: " << parent[current.cell]
-              << ", score: " << std::setprecision(4) << distance[current.cell]
-              << ", stop: " << found
+              << ", distance: " << std::setprecision(4) << current.distance
+              << (stop ? ">" : "<=") << " radius " << _radius
               << std::endl;
 #endif
-
-    if(found) {
-      foundTarget = current.cell;
+    if(stop)
       break;
-    }
 
     // Relax each outgoing edge.
     const std::unordered_set<size_t> neighbors = m_grid->LocateFacetNeighbors(
@@ -1244,21 +1288,20 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
       relax(current.cell, n);
   }
 
-  // If we didn't find a connection, the two regions are not connected through
-  // our grid approximation of free workspace. They might really be connected,
-  // but we can't tell that with the current grid resolution.
-  if(!found)
-    return m_innerDistanceMap[key] = std::numeric_limits<double>::infinity();
-  m_innerDistanceMap[key] = distance[foundTarget];
-
+#if 0
+  // Visualization for examining the discovered cells in the simulator.
 #ifdef PMPL_USE_SIMULATOR
-  if(false and this->m_debug) {
+  if(this->m_debug) {
     static const glutils::color regionColor{1, 0, 1, .5};
-    static const glutils::color cellColor{1, 0, 0, 1};
-    static const glutils::color pathColor{0, 0, 1, 1};
+    static const glutils::color sourceCellColor{1, 0, 0, 1};
+    static const glutils::color visitedCellColor{0, 0, 1, 1};
 
     // Draw everything, wait, then clear everything.
     std::vector<size_t> ids;
+
+    // Draw source region.
+    ids.push_back(Simulation::Get()->AddBoundary(sourceBoundary, regionColor,
+          false));
 
     // Make a boundary model of the grid cell.
     const double halfLength = m_gridSize / 2.;
@@ -1268,12 +1311,6 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
     bbx.SetRange(1, range);
     bbx.SetRange(2, range);
 
-    // Draw source and target regions.
-    ids.push_back(Simulation::Get()->AddBoundary(sourceBoundary, regionColor,
-          false));
-    ids.push_back(Simulation::Get()->AddBoundary(targetBoundary, regionColor,
-          false));
-
     auto drawCell = [&bbx, &ids](const Vector3d& _center,
                                  const glutils::color& _color) {
       bbx.Translate(_center);
@@ -1281,51 +1318,34 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
       bbx.Translate(-_center);
     };
 
-    // Draw source and target cells.
+    // Draw source cells.
     for(const size_t cell : sourceCells) {
       const Vector3d center = m_grid->CellCenter(cell);
-      drawCell(center, cellColor);
-    }
-    for(const size_t cell : targetCells) {
-      const Vector3d center = m_grid->CellCenter(cell);
-      drawCell(center, cellColor);
+      drawCell(center, sourceCellColor);
     }
 
-    // Draw path.
-    Robot* const point = this->GetMPProblem()->GetRobot("point");
-    std::vector<CfgType> cfgs;
-    size_t current = foundTarget;
-    while(true)
-    {
-      const Vector3d center = m_grid->CellCenter(current);
-      drawCell(center, pathColor);
-      cfgs.emplace_back(center, point);
-      if(!parent.count(current))
-        break;
-      current = parent[current];
+    // Draw other visited cells.
+    for(const size_t cell : visited) {
+      if(sourceCells.count(cell))
+        continue;
+      const Vector3d center = m_grid->CellCenter(cell);
+      drawCell(center, visitedCellColor);
     }
-    const size_t pathID = Simulation::Get()->AddPath(cfgs, pathColor);
 
     // Sleeeeep before undrawing.
-    std::cout << "Drawing path through " << cfgs.size() << " cells with length "
-              << distance[foundTarget] << "."
-              << std::endl;
     // Use one of these two options to control the delay for viewing the
     // visualization.
     usleep(5000000); // Time delay.
     //std::cin.ignore(); // Press button to go on.
-    std::cout << "Undrawing." << std::endl;
 
     for(const size_t id : ids)
       Simulation::Get()->RemoveBoundary(id);
-    Simulation::Get()->RemovePath(pathID);
 
     // Give it time to clear.
     usleep(10000);
   }
 #endif
-
-  return distance[foundTarget];
+#endif
 }
 
 /*----------------------------------------------------------------------------*/
