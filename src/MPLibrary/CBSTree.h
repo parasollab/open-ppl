@@ -3,7 +3,6 @@
 #include "MPLibrary/MPBaseObject.h"
 #include<queue>
 
-
 template <typename MPTraits>
 class CBSNode  : public MPBaseObject<MPTraits> {
 
@@ -16,7 +15,7 @@ class CBSNode  : public MPBaseObject<MPTraits> {
 		typedef typename MPTraits::Path                 Path;
 		typedef typename MPTraits::RoadmapType          RoadmapType;
 		typedef typename RoadmapType::VID          			VID;
-		
+
 	  ///@}
     ///@name Local Types
     ///@{
@@ -24,12 +23,12 @@ class CBSNode  : public MPBaseObject<MPTraits> {
 		struct ConflictEdge{
       VID sourceVID;
       VID taregetVID;
-      double timestep; 
+      double timestep;
     };
 
     struct ConflictCfg{
       CfgType conflictCfg;
-      double timestep; 
+      double timestep;
     };
 
     ///@}
@@ -45,10 +44,8 @@ class CBSNode  : public MPBaseObject<MPTraits> {
     ///@{
 
 		double m_cost; /// The total cost of individual robot paths
-
-		std::vector<std::vector<ConflictEdge>> m_invalidEdgesAt;
-
-		std::vector<std::vector<ConflictCfg>> m_conflictCfgsAt;
+		std::vector<std::vector<ConflictEdge>> m_edgeConflicts;
+		std::vector<std::vector<ConflictCfg>> m_cfgConflicts;
 
 		///@}
 };

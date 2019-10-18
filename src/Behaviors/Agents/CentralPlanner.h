@@ -1,5 +1,5 @@
-#ifndef CENTRAL_PLANNER_H_
-#define CENTRAL_PLANNER_H_
+#ifndef PMPL_CENTRAL_PLANNER_H_
+#define PMPL_CENTRAL_PLANNER_H_
 
 #include "Agent.h"
 #include "DummyAgent.h"
@@ -10,7 +10,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is a template for loading paths into member path following agents to
-/// enable physical experiments for non-simulator regulars
+/// enable physical experiments. Constructs a plan for multiple agents using 
+/// a multi-robot planning algorithm.
 ////////////////////////////////////////////////////////////////////////////////
 class CentralPlanner : public Agent {
 
@@ -36,6 +37,7 @@ class CentralPlanner : public Agent {
     virtual ~CentralPlanner();
 
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const;
+
     ///@}
     ///@name Agent Interface
     ///@{
@@ -49,12 +51,14 @@ class CentralPlanner : public Agent {
     /// Clean up.
     virtual void Uninitialize() override;
     ///@}
+
   private:
+
     ///@{
 
-		void LoadMemberPlans();
+	void LoadMemberPlans();
 
-		///@}
+	///@}
 
   protected:
 
@@ -62,15 +66,12 @@ class CentralPlanner : public Agent {
     ///@{
 
     MPLibrary* m_library{nullptr};   ///< The shared-roadmap planning library.
-
     MPSolution* m_solution{nullptr}; ///< The shared-roadmap solution.
     std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
     std::vector<DummyAgent*> m_memberAgents;       ///< All robots in the group.
-
-		bool m_initialized{false};
+	bool m_initialized{false};
 
     ///@}
-
 };
 
 #endif

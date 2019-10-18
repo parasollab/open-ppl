@@ -50,9 +50,6 @@ class MPLibraryType final
     typedef typename MPTraits::MPSolution       MPSolution;
     typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename RoadmapType::VID           VID;
-    typedef typename RoadmapType::EID           EID;
-    typedef typename RoadmapType::VI            VI;
-    typedef typename RoadmapType::EI            EI;
     typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::Path             Path;
@@ -358,6 +355,7 @@ class MPLibraryType final
 
     /// Group overload:
     void Solve(MPProblem* _problem, GroupTask* _task);
+    
 		void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
 
     /// Run a specific MPStrategy from the XML file with a designated seed and
@@ -890,6 +888,9 @@ std::vector<typename MPTraits::CfgType>
 MPLibraryType<MPTraits>::
 ReconstructEdge(RoadmapType* const _roadmap, const VID _source, 
     const VID _target, const std::string& _lp ) {
+  typedef typename RoadmapType::EID           EID;
+  typedef typename RoadmapType::VI            VI;
+  typedef typename RoadmapType::EI            EI;
   std::vector<CfgType> out;
   // First check that an actual edge exists in this roadmap
   bool validEdge = false;
@@ -901,8 +902,8 @@ ReconstructEdge(RoadmapType* const _roadmap, const VID _source,
   }
 
   if(!validEdge)
-    throw RunTimeException(WHERE) << "Edge from " << _source << " to " << _target
-                                  << " doesn't exist in roadmap!";
+    throw RunTimeException(WHERE) << "Edge from " << _source << " to " <<
+     _target << " doesn't exist in roadmap!";
   // Recreate this edge, including intermediates.
   CfgType& start = _roadmap->GetVertex(_source);
   CfgType& end   = _roadmap->GetVertex(_target);

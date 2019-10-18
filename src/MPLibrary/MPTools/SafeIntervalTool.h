@@ -33,7 +33,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
   	typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::WeightType             WeightType;
-    typedef typename MPTraits::Path                   Path; 
+    typedef typename MPTraits::Path                   Path;
     typedef typename RoadmapType::VID                 VID;
     typedef typename CBSNode<MPTraits>::ConflictCfg   ConflictCfg;
 
@@ -42,18 +42,6 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     ///@{
 
     typedef std::vector<Range<double>> Intervals; ///< A set of time intervals.
-
-    struct ConflictRobot {
-      ConflictCfg conflictCfg;
-      size_t num_robot;
-
-    }; 
-
-    struct PairConflict {
-      ConflictRobot conflict1;
-      ConflictRobot conflict2;
-    };
-
 
     ///@}
     ///@name Construction
@@ -85,7 +73,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @param _weight The source VID to compute safeIntervals's for.
     /// @param _weight The target VID to compute safeIntervals's for.
     /// @return The set of safe intervals for _weight.
-    Intervals ComputeIntervals(const WeightType& _weight, const VID _source, 
+    Intervals ComputeIntervals(const WeightType& _weight, const VID _source,
       const VID _target, const CfgType& _dummyCfg);
 
     ///@}
@@ -95,13 +83,13 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// Determine if a timestep is contained within a SafeInterval
     /// @param _intervals The safe intervals to check in.
     /// @param _timestep The timestep to check.
-    bool ContainsTimestep(const Intervals& _intervals, const double _timestep);  
+    bool ContainsTimestep(const Intervals& _intervals, const double _timestep);
 
     /// Checking if an edge is collision-free with an external cfg
     /// @param _source The cfg source of the edge.
     /// @param _target The cfg target of the edge.
     /// @param _conflictCfg The external cfg to check.
-    bool IsEdgeSafe(const CfgType& _source, const CfgType& _target, 
+    bool IsEdgeSafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
     	const CfgType& _conflictCfg);
 
     /// Checking if an edge is dynamically collision-free against a set of
@@ -109,12 +97,8 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @param _source The cfg source of the edge.
     /// @param _target The cfg target of the edge.
     /// @param _timestep The external cfg to check.
-    bool IsEdgeDynamicallySafe(const CfgType _source, const CfgType _target, 
+    bool IsEdgeDynamicallySafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
     const double _sourceDistance, const double _targetDistance);
-
-    /// Checking if a set of paths has inter-robot collisions.
-    /// @param _paths The set f paths to check.
-    PairConflict FindConflict(const vector<Path*>& _paths) ;
 
     ///@}
 
@@ -135,7 +119,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @return The set of time intervals for which it is safe to start
     ///         following the configuration sequence.
     Intervals ComputeSafeIntervals(const std::vector<Cfg>& _cfgs);
- 
+
     ///@}
     ///@name Internal State
     ///@{
@@ -202,7 +186,7 @@ ComputeIntervals(const CfgType& _cfg) {
 template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
-ComputeIntervals(const WeightType& _weight, const VID _source, 
+ComputeIntervals(const WeightType& _weight, const VID _source,
   const VID _target, const CfgType& _dummyCfg) {
   if(m_edgeIntervals[&_weight].empty()) {
 
@@ -210,7 +194,7 @@ ComputeIntervals(const WeightType& _weight, const VID _source,
     auto roadmap = this->GetRoadmap(robot);
     std::vector<CfgType> edge;
     edge.push_back(roadmap->GetVertex(_source));
-    std::vector<CfgType> intermediates = roadmap->ReconstructEdge(this->GetMPLibrary(), 
+    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(roadmap,
       _source, _target);
     edge.insert(edge.end(), intermediates.begin(), intermediates.end());
     edge.push_back(roadmap->GetVertex(_target));
@@ -349,17 +333,15 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-IsEdgeSafe(const CfgType& _source, const CfgType& _target, 
+IsEdgeSafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
 	const CfgType& _conflictCfg) {
   //Reconstructing edge "path"
   std::vector<CfgType> path;
-  path.push_back(_source);
-  auto robot = _source.GetRobot();
-  auto roadmap = this->GetRoadmap(robot);
-  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(roadmap, 
-    roadmap->GetVID(_source), roadmap->GetVID(_target));
+  path.push_back(_roadmap->GetVertex(_source));
+  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(_roadmap,
+    _source, _target);
   path.insert(path.end(), edge.begin(), edge.end());
-  path.push_back(_target);
+  path.push_back(_roadmap->GetVertex(_target));
 
   // Get the valididty checker and make sure it has type
   // CollisionDetectionValidity.
@@ -388,87 +370,19 @@ IsEdgeSafe(const CfgType& _source, const CfgType& _target,
   return true;
 }
 
-template <typename MPTraits>
-typename SafeIntervalTool<MPTraits>::PairConflict
-SafeIntervalTool<MPTraits>::
-FindConflict(const std::vector<Path*>& _paths) {
-  vector<vector<CfgType>> paths;
-  for(const auto& path : _paths)
-    //paths.push_back(FullPath(path));
-  	paths.push_back(path->FullCfgs(this->GetMPLibrary()));
-
-  // Find the latest timestep in which a robot is still moving.
-  size_t timeFinal = 0;
-  for(auto& path : paths)
-    if(path.size() > timeFinal)
-      timeFinal = path.size();
-
-  auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
-
-  for(size_t t = 0 ; t < timeFinal ; ++t) {
-    const double timeRes = this->GetEnvironment()->GetTimeRes();
-    for(size_t i = 0 ; i < paths.size() ; ++i ) {
-      size_t t1 = t;
-      if(t > paths[i].size()-1)
-        t1 = paths[i].size()-1;
-      auto robotMultiBody = paths[i][0].GetRobot()->GetMultiBody();
-      robotMultiBody->Configure(paths[i][t1]);
-      for(size_t j = 0 ; j < paths.size() ; ++j) {
-        if ( i == j)
-          continue;
-        size_t t2 = t;
-        if(t > paths[j].size()-1)
-          t2 = paths[j].size()-1;
-        auto obstacleMultiBody = paths[j][0].GetRobot()->GetMultiBody();
-        obstacleMultiBody->Configure(paths[j][t2]);
-
-        CDInfo cdInfo;
-        if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
-            this->GetNameAndLabel())) {
-          double ti = timeRes * static_cast<double>(t1);
-          double tj = timeRes * static_cast<double>(t2);
-          if(this->m_debug) {
-            std::cout << "Conflict on robot " << i << " at timestep " << ti 
-            << " at cfg " << paths[i][t1].PrettyPrint() << "\nConflict on robot " 
-            << j << " at timestep "<< tj <<" at cfg " << paths[j][t2].PrettyPrint() 
-            << std::endl;
-          }
-
-          PairConflict pairConflict;
-          pairConflict.conflict1.conflictCfg.conflictCfg = paths[j][t2];
-          pairConflict.conflict1.conflictCfg.timestep = ti;
-          pairConflict.conflict1.num_robot = i;
-          pairConflict.conflict2.conflictCfg.conflictCfg = paths[i][t1];
-          pairConflict.conflict2.conflictCfg.timestep = tj;
-          pairConflict.conflict2.num_robot = j;
-
-
-          return pairConflict;         
-        }
-      }
-    }
-  }
-  PairConflict nullPair;
-  nullPair.conflict1.num_robot = INVALID_VID;
-  return nullPair;
-}
-
 
 template <typename MPTraits>
 bool
 SafeIntervalTool<MPTraits>::
-IsEdgeDynamicallySafe(const CfgType _source, const CfgType _target, 
+IsEdgeDynamicallySafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
   const double _sourceDistance, const double _targetDistance) {
 
   std::vector<CfgType> path;
-  path.push_back(_source);
-  auto robot = _source.GetRobot();
-  auto roadmap = this->GetRoadmap(robot);
-  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(roadmap, 
-    roadmap->GetVID(_source), roadmap->GetVID(_target));
+  path.push_back(_roadmap->GetVertex(_source));
+  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(_roadmap,
+    _source, _target);
   path.insert(path.end(), edge.begin(), edge.end());
-  path.push_back(_target);
+  path.push_back(_roadmap->GetVertex(_target));
   // Getting dynamic obstacles.
   const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   if(obstacles.empty())
@@ -488,7 +402,7 @@ IsEdgeDynamicallySafe(const CfgType _source, const CfgType _target,
   auto dm = this->GetDistanceMetric("euclidean");
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
   // Checking the edge "path" against its corresponding sections of the obsctacles
-  // trajetories w.r.t. the traversed time/distance 
+  // trajetories w.r.t. the traversed time/distance
   for(auto& obstacle : obstacles) {
     auto obstaclePath = obstacle.GetPath();
     size_t sourceCounter = 0;
@@ -524,7 +438,7 @@ IsEdgeDynamicallySafe(const CfgType _source, const CfgType _target,
             this->GetNameAndLabel())) {
           return false;
         }
-      }    
+      }
     }
   }
   // If we haven't detected a collision, the edge is safe.

@@ -116,8 +116,9 @@ Iterate() {
   // Set the library to this individual task and initialize.
   for(auto& task : *groupTask) {
     auto robot = task.GetRobot();
-    std::cout << "Running indiviudal strategy on robot " 
-      << robot->GetLabel() << std::endl;
+    if(this->m_debug)
+      std::cout << "Running indiviudal strategy on robot " 
+        << robot->GetLabel() << std::endl;
     auto s = this->GetMPStrategy(m_strategyLabel);
     if(robot->GetDefaultStrategyLabel() != "")
       s = this->GetMPStrategy(robot->GetDefaultStrategyLabel());
@@ -159,19 +160,18 @@ Finalize() {
     // Collect the path.
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
-
-    std::cout << "VID Path for robot " << robot->GetLabel() 
-      << ": " << path->VIDs()
-              << std::endl;
-
+    if(this->m_debug)
+      std::cout << "VID Path for robot " << robot->GetLabel() 
+        << ": " << path->VIDs() << std::endl;
+    
+    auto roadmap = path->GetRoadmap();
+    const std::string base = this->GetBaseFilename();
+    roadmap->Write(base +"."+ robot->GetLabel() + ".map", 
+      this->GetEnvironment());
     if(path and path->Size()) {
-      const std::string base = this->GetBaseFilename();
       ::WritePath(base +"."+ robot->GetLabel() + ".rdmp.path", path->Cfgs());
       ::WritePath(base +"."+ robot->GetLabel()  + ".path",
         path->FullCfgs(this->GetMPLibrary()));
-      auto roadmap = path->GetRoadmap();
-      roadmap->Write(base +"."+ robot->GetLabel() + ".map", 
-        this->GetEnvironment());
     }
     ++i;
   }
@@ -183,24 +183,28 @@ Finalize() {
   const size_t numRobots = groupTask->Size();
   size_t lastVID = INVALID_VID;
   for(size_t i = 0; i < longestPath; ++i) {
-    std::cout << "Creating group path vertex " << i << std::endl;
+    if(this->m_debug)
+      std::cout << "Creating group path vertex " << i << std::endl;
 
     // Add the next node to the group map.
     GroupCfg cfg(groupRoadmap);
     for(size_t j = 0; j < numRobots; ++j) {
       const VID vid = i >= paths[j].size() ? paths[j].back() : paths[j][i];
-      std::cout << "\tSetting robot " << j << "'s cfg to VID " << vid << "."
+      if(this->m_debug)
+        std::cout << "\tSetting robot " << j << "'s cfg to VID " << vid << "."
                 << std::endl;
       cfg.SetRobotCfg(j, vid);
     }
     const VID vid = groupRoadmap->AddVertex(cfg);
 
-    std::cout << "Created group VID " << vid << "." << std::endl;
+    if(this->m_debug)
+      std::cout << "Created group VID " << vid << "." << std::endl;
 
     // If the last VID was valid, add an edge between the nodes.
     if(lastVID != INVALID_VID) {
-      std::cout << "Creating group edge from " << lastVID 
-        << " to " << vid << "."
+      if(this->m_debug)
+        std::cout << "Creating group edge from " << lastVID 
+          << " to " << vid << "."
                 << std::endl;
       GroupWeightType lp(groupRoadmap);
 
@@ -220,10 +224,11 @@ Finalize() {
 
         roadmap->GetEdge(prevVID, thisVID, iter);
 
-        std::cout << "\tSetting robot " << j << "'s edge to ("
-                  << iter->descriptor().source() << ", "
-                  << iter->descriptor().target() << ")."
-                  << std::endl;
+        if(this->m_debug)
+          std::cout << "\tSetting robot " << j << "'s edge to ("
+              << iter->descriptor().source() << ", "
+              << iter->descriptor().target() << ")."
+              << std::endl;
 
         lp.SetEdge(robot, iter->descriptor());
         lp.SetWeight(std::max(lp.GetWeight(), iter->property().GetWeight()));

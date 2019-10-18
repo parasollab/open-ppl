@@ -48,7 +48,8 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // Check if the robot is a manipulator or not
   m_manipulator = _node.Read("manipulator", false, false, "Is the robot a manipulator?");
 
-  // Check if the robot uses a default MP Strategy.
+  // Check if the robot uses a default MP Strategy, it is used for setting different
+  // MPStrategies in group decoupled planners. 
   m_defaultStrategyLabel = _node.Read("defaultStrategyLabel", false, "", "The robot individual strategy");
 
   // Get the (optional) capability type for the robot.

@@ -142,18 +142,6 @@ class RoadmapGraph : public
     virtual void AddEdge(const VID _source, const VID _target,
         const std::pair<Edge, Edge>& _w) noexcept;
 
-    // /// Recompute the full edge path at resolution(source and target cfgs 
-    // /// are not included).
-    // /// @param _lib The MPLibrary pointer.
-    // /// @param _source The source VID.
-    // /// @param _target The target VID.
-    // /// @param _lp The local planner to use, if not specified, edge lp is used.
-    // /// @return A vector of Cfgs representing the reconstructed edge.
-    // template<typename MPLibrary>
-    // std::vector<Vertex> ReconstructEdge(MPLibrary* const _lib, 
-    //   const VID _source, const VID _target, const std::string& _lp = "") ;
-
-
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
@@ -500,9 +488,9 @@ class RoadmapGraph : public
     InvalidEdgeSet m_invalidEdges;      ///< Set of lazy-invalidated edges.
 
     InvalidVertexAtSet m_invalidVerticesAt; ///< Set of lazy-invalidated vertices.
-    InvalidEdgeAtSet m_invalidEdgesAt;      ///< Set of lazy-invalidated edges.
+    InvalidEdgeAtSet m_edgeConflicts;      ///< Set of lazy-invalidated edges.
 
-    std::vector<std::pair<Vertex,double>> m_conflictCfgsAt; ///< Set of invalid 
+    std::vector<std::pair<Vertex,double>> m_cfgConflicts; ///< Set of invalid
     /// pairs (cfg timestep)
 
     ///@}
@@ -669,61 +657,6 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
 
   DeleteEdge(edgeIterator);
 }
-
-
-// template <typename Vertex, typename Edge>
-// template< typename MPLibrary>
-// std::vector<Vertex>
-// RoadmapGraph<Vertex, Edge>::
-// ReconstructEdge(MPLibrary* const _lib, const VID _source, 
-//     const VID _target, const std::string& _lp ) {
-//   std::vector<Vertex> out;
-//   // First check that an actual edge exists in this roadmap
-//   bool validEdge = false;
-//   EI ei;
-//   {
-//     EID ed(_source, _target);
-//     VI vi;
-//     validEdge = this->find_edge(ed, vi, ei);
-//   }
-
-//   if(!validEdge)
-//     throw RunTimeException(WHERE) << "Edge from " << _source << " to " << _target
-//                                   << " doesn't exist in roadmap!";
-//   // Recreate this edge, including intermediates.
-//   Vertex& start = this->GetVertex(_source);
-//   Vertex& end   = this->GetVertex(_target);
-
-//   // Set up local planner to recreate edges. If none was provided, use edge
-//   // planner, or fall back to straight-line.
-//   auto env = _lib->GetMPProblem()->GetEnvironment();
-
-//   // Use the local planner from parameter if specified.
-//   // If not specified, use the edge lp.
-//   // Fall back to straight-line if edge lp is not available (this will always
-//   // happen if it was grown with an extender).
-//   typename MPLibrary::LocalPlannerPointer lp;
-//   if(!_lp.empty())
-//     lp = _lib->GetLocalPlanner(_lp);
-//   else {
-//     try {
-//       lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
-//     }
-//     catch(...) {
-//       lp = _lib->GetLocalPlanner("sl");
-//     }
-//   }
-//   // Construct a resolution-level path along the recreated edge.
-//   std::vector<Vertex> recreatedEdge = ei->property().GetIntermediates();
-//   recreatedEdge.insert(recreatedEdge.begin(), start);
-//   recreatedEdge.push_back(end);
-//   for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-//     std::vector<Vertex> edge = lp->ReconstructPath(*cit, *(cit+1),
-//         std::vector<Vertex>(), env->GetPositionRes(), env->GetOrientationRes());
-//     out.insert(out.end(), edge.begin(), edge.end());
-//   }
-//   return out;
-// }
 
 
 template <class Vertex, class Edge>
@@ -997,7 +930,7 @@ void
 RoadmapGraph<Vertex, Edge>::
 ClearInvalidatedAt() noexcept {
   m_invalidVerticesAt.clear();
-  m_invalidEdgesAt.clear();
+  m_edgeConflicts.clear();
 }
 
 
@@ -1005,7 +938,7 @@ template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 ClearConflictCfgsAt() noexcept {
-  m_conflictCfgsAt.clear();
+  m_cfgConflicts.clear();
 }
 
 
@@ -1037,8 +970,8 @@ RoadmapGraph<Vertex, Edge>::
 IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance,
     double _edgeDistance) const noexcept {
   double conflictTimestep;
-  if(m_invalidEdgesAt.count(_eid)) {
-    conflictTimestep = m_invalidEdgesAt.at(_eid);
+  if(m_edgeConflicts.count(_eid)) {
+    conflictTimestep = m_edgeConflicts.at(_eid);
     if(conflictTimestep > _sourceDistance and
         conflictTimestep < _edgeDistance ) {
       return true;
@@ -1095,10 +1028,10 @@ SetEdgeInvalidatedAt(const EdgeID _eid, double _conflictTimestep,
     const bool _invalid) noexcept {
   if(_invalid) {
     std::pair<size_t,double> invalidEdge = std::make_pair(_eid,_conflictTimestep);
-    m_invalidEdgesAt.insert(invalidEdge);
+    m_edgeConflicts.insert(invalidEdge);
   }
   else
-    m_invalidEdgesAt.erase(_eid);
+    m_edgeConflicts.erase(_eid);
 }
 
 
@@ -1155,13 +1088,13 @@ SetConflictCfgAt(Vertex _v, double _conflictTimestep, const bool _invalid)
     noexcept {
   std::pair<Vertex,double> conflictCfg = std::make_pair(_v,_conflictTimestep);
   if(_invalid) {
-    m_conflictCfgsAt.push_back(conflictCfg);
+    m_cfgConflicts.push_back(conflictCfg);
   }
   else {
-    auto it = std::find(m_conflictCfgsAt.begin(), m_conflictCfgsAt.end(),
+    auto it = std::find(m_cfgConflicts.begin(), m_cfgConflicts.end(),
         conflictCfg);
-    if(it != m_conflictCfgsAt.end()){
-      m_conflictCfgsAt.erase(it);
+    if(it != m_cfgConflicts.end()){
+      m_cfgConflicts.erase(it);
     }
   }
 }
@@ -1170,7 +1103,7 @@ template <typename Vertex, typename Edge>
 const vector<pair<Vertex, double>>&
 RoadmapGraph<Vertex, Edge>::
 GetAllConflictsCfgAt() {
-    return m_conflictCfgsAt;
+    return m_cfgConflicts;
 }
 
 /*--------------------------------- Hooks ------------------------------------*/

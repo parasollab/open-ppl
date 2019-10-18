@@ -165,7 +165,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
     std::string m_dmLabel;           ///< The DistanceMetric label.
 
-		bool m_twoVariable{false}; ///< Temporary flag to use two variable state search
+		bool m_searchAllPaths{false}; ///< Temporary flag to use two variable state search
 
     ///@}
 
@@ -195,8 +195,8 @@ QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "Label of the SafeIntervalTool");
   m_dmLabel = _node.Read("dmLabel", false, "",
       "Alternate distance metric to replace edge weight during search.");
-	m_twoVariable = _node.Read("twoVariableSS", false, m_twoVariable,
-			"Flag to use two variable state search.");
+	m_searchAllPaths = _node.Read("twoVariableSS", false, m_searchAllPaths,
+			"Flag for searching all the paths");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -337,7 +337,7 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   );
 
 	//TODO::Temporary redirect for two variable state search
-	if(m_twoVariable)
+	if(m_searchAllPaths)
 		return TwoVariableQuery(_start, _goals);
   // Set up the path weight function depending on whether we have any dynamic
   // obstacles.
@@ -566,48 +566,30 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   }
 
   // Get the graph and safe interval tool.
-  //auto g = this->GetRoadmap();
+  auto g = this->GetRoadmap();
   SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool(
       m_safeIntervalLabel);
 
-  if(!siTool->IsEdgeDynamicallySafe(m_roadmap->GetVertex(_ei->source()),m_roadmap
-            ->GetVertex(_ei->target()), _sourceDistance, _targetDistance)) {
-    // if(this->m_debug) {
-    //   std::cout << "Invalidating conflicting edge (" << _ei->source()
-    //    << "," << _ei->target() << ")" << "at timestep "
-    //    << conflictTimestep << std::endl;
-    // }
-    // If the edge gets invalidadted we add it to the EdgeInvalidated
-    // List to avoid future collision checkings
-    // m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(),
-    //   conflictTimestep, true);
+  // Ensure that the target vertex is contained within a SafeInterval when
+  // arriving.
+  auto vertexIntervals = siTool->ComputeIntervals(g->GetVertex(_ei->target()));
+  if(!(siTool->ContainsTimestep(vertexIntervals, newDistance))) {
+    if(this->m_debug)
+      std::cout << "Breaking because the target vertex is dynamically invalid."
+                << "\n\tvertexIntervals: " << vertexIntervals
+                << std::endl;
     return std::numeric_limits<double>::infinity();
   }
 
-  // ------------------------------------------------------------------------
-  // This part is commented beacause don't want to compute the safe intervals
-  //------------------------------------------------------------------------
-  // Ensure that the target vertex is contained within a SafeInterval when
-  // arriving.
-  // auto vertexIntervals = siTool->ComputeIntervals(g->GetVertex(_ei->target()));
-  // if(!(siTool->ContainsTimestep(vertexIntervals, newDistance))) {
-  //   if(this->m_debug)
-  //     std::cout << "Breaking because the target vertex is dynamically invalid."
-  //               << "\n\tvertexIntervals: " << vertexIntervals
-  //               << std::endl;
-  //   return std::numeric_limits<double>::infinity();
-  // }
-
-  // // Ensure that the edge is contained within a SafeInterval if leaving now.
-  // auto edgeIntervals = siTool->ComputeIntervals(_ei->property(),_ei->source(),
-  // _ei->target(),g->GetVertex(_ei->source()) );
-  // if(!(siTool->ContainsTimestep(edgeIntervals, _sourceDistance))){
-  //   if(this->m_debug)
-  //     std::cout << "Breaking because the edge is dynamically invalid."
-  //               << std::endl;
-  //   return std::numeric_limits<double>::infinity();
-  // }
-  // --------------------------------------------------------------------------
+  // Ensure that the edge is contained within a SafeInterval if leaving now.
+  auto edgeIntervals = siTool->ComputeIntervals(_ei->property(),_ei->source(),
+  _ei->target(),g->GetVertex(_ei->source()) );
+  if(!(siTool->ContainsTimestep(edgeIntervals, _sourceDistance))){
+    if(this->m_debug)
+      std::cout << "Breaking because the edge is dynamically invalid."
+                << std::endl;
+    return std::numeric_limits<double>::infinity();
+  }
 
   // If we're still here, the edge is OK.
   return newDistance;
@@ -641,8 +623,8 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
       	_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
         SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->
       		GetSafeIntervalTool("SI");
-        if(!siTool->IsEdgeSafe(m_roadmap->GetVertex(_ei->source()),m_roadmap
-        	->GetVertex(_ei->target()), conflictCfgsAt[i].first)) {
+        if(!siTool->IsEdgeSafe(m_roadmap, _ei->source(), _ei->target(), 
+          conflictCfgsAt[i].first)) {
         	if(this->m_debug) {
           	std::cout << "Invalidating conflicting edge (" << _ei->source()
           	 << "," << _ei->target() << ")" << "at timestep "
