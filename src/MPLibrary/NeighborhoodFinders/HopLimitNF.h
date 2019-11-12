@@ -56,23 +56,23 @@ class HopLimitNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _rmp,
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _rmp,
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _rmp,
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _rmp,
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -135,14 +135,14 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 HopLimitNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
-  VID v = _rmp->GetVID(_cfg);
-  typename RoadmapType::vertex_iterator vi = _rmp->find_vertex(v);
+  VID v = _r->GetVID(_cfg);
+  typename RoadmapType::vertex_iterator vi = _r->find_vertex(v);
   VID parent = vi->property().GetStat("Parent");
 
   vector<VID> vRes;
@@ -153,11 +153,11 @@ FindNeighbors(RoadmapType* _rmp,
   hopMap.put(parent, 0);
 
   stapl::sequential::hops_detail::hops_visitor<typename RoadmapType::STAPLGraph>
-      vis(*_rmp, hopMap, m_h, vRes);
-  breadth_first_search_early_quit(*_rmp, parent, vis, colorMap);
+      vis(*_r, hopMap, m_h, vRes);
+  breadth_first_search_early_quit(*_r, parent, vis, colorMap);
 
-  nf->FindNeighbors(_rmp, vRes.begin(), vRes.end(),
-      vRes.size() == _rmp->get_num_vertices(), _cfg, _out);
+  nf->FindNeighbors(_r, vRes.begin(), vRes.end(),
+      vRes.size() == _r->get_num_vertices(), _cfg, _out);
 }
 
 
@@ -165,7 +165,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 HopLimitNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -177,7 +177,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 HopLimitNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);
@@ -188,7 +188,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 HopLimitNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {

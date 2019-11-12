@@ -53,23 +53,23 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _rmp,
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _rmp,
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _rmp,
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _rmp,
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -119,10 +119,10 @@ template <class MPTraits>
 template <typename InputIterator>
 void
 RandomNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  auto g = _rmp;
+  auto g = _r;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   std::unordered_set<VID> foundVIDs;
@@ -165,11 +165,11 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 RandomNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
-  auto g = _rmp;
+  auto g = _r;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   std::set<std::pair<VID, VID>> foundPairs;
@@ -210,7 +210,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 RandomNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);
@@ -221,7 +221,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 RandomNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {

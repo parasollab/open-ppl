@@ -209,7 +209,7 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     ///@{
 
     /// Try to connect a given configuration to each cfg in an input set.
-    /// @param _rm The roadmap.
+    /// @param _r The roadmap.
     /// @param _source The configuration.
     /// @param _first The begin iterator in the range of other cfgs.
     /// @param _last The end iterator in the range of other cfgs.
@@ -217,37 +217,37 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     template <typename AbstractRoadmapType, typename InputIterator,
               typename OutputIterator>
     void ConnectNeighbors(
-        AbstractRoadmapType* _rm, VID _source,
+        AbstractRoadmapType* _r, VID _source,
         InputIterator _first, InputIterator _last,
         OutputIterator _collision);
 
     /// Attempt a connection between two individual configurations.
-    /// @param _rm The roadmap.
+    /// @param _r The roadmap.
     /// @param _source The source configuration's VID.
     /// @param _target The target configuration's VID.
     /// @param _collision Output for invalid configurations.
     /// @return True if the connection succeeded.
     template <typename OutputIterator>
-    bool ConnectNodes(RoadmapType* _rm, const VID _source, const VID _target,
+    bool ConnectNodes(RoadmapType* _r, const VID _source, const VID _target,
         OutputIterator _collision);
 
     /// Attempt a connection between two group configurations.
-    /// @param _rm The group roadmap.
+    /// @param _r The group roadmap.
     /// @param _source The source configuration's VID.
     /// @param _target The target configuration's VID.
     /// @param _collision Output for invalid configurations.
     /// @return True if the connection succeeded.
     template <typename OutputIterator>
-    bool ConnectNodes(GroupRoadmapType* _rm, const VID _source,
+    bool ConnectNodes(GroupRoadmapType* _r, const VID _source,
         const VID _target, OutputIterator _collision);
 
     /// Check whether a connection should be attempted.
-    /// @param _rm The roadmap.
+    /// @param _r The roadmap.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @return True if the connection should not be attempted.
     template <typename AbstractRoadmapType>
-    bool DoNotCheck(AbstractRoadmapType* _rm, const VID _source,
+    bool DoNotCheck(AbstractRoadmapType* _r, const VID _source,
         const VID _target) const;
 
     ///@}
@@ -409,7 +409,7 @@ template <typename AbstractRoadmapType, typename InputIterator,
           typename OutputIterator>
 void
 ConnectorMethod<MPTraits>::
-ConnectNeighbors(AbstractRoadmapType* _rm, VID _source,
+ConnectNeighbors(AbstractRoadmapType* _r, VID _source,
     InputIterator _first, InputIterator _last, OutputIterator _collision) {
   size_t failCount = 0;
 
@@ -432,11 +432,11 @@ ConnectNeighbors(AbstractRoadmapType* _rm, VID _source,
                 << std::endl;
 
     // Check if this attempt should be skipped.
-    if(DoNotCheck(_rm, _source, target))
+    if(DoNotCheck(_r, _source, target))
       continue;
 
     // Attempt connection with the local planner.
-    const bool connected = this->ConnectNodes(_rm, _source, target, _collision);
+    const bool connected = this->ConnectNodes(_r, _source, target, _collision);
     failCount += !connected;
 
     if(this->m_debug)
@@ -450,14 +450,14 @@ template <typename MPTraits>
 template <typename OutputIterator>
 bool
 ConnectorMethod<MPTraits>::
-ConnectNodes(RoadmapType* _rm, const VID _source, const VID _target,
+ConnectNodes(RoadmapType* _r, const VID _source, const VID _target,
     OutputIterator _collision) {
   auto env = this->GetEnvironment();
   auto robot = this->GetTask()->GetRobot();
   auto lp = this->GetLocalPlanner(m_lpLabel);
 
-  const CfgType& c1 = _rm->GetVertex(_source),
-               & c2 = _rm->GetVertex(_target);
+  const CfgType& c1 = _r->GetVertex(_source),
+               & c2 = _r->GetVertex(_target);
 
   CfgType collision(robot);
   LPOutput<MPTraits> lpOutput;
@@ -465,7 +465,7 @@ ConnectNodes(RoadmapType* _rm, const VID _source, const VID _target,
         env->GetPositionRes(), env->GetOrientationRes(), true);
 
   if(connected)
-    _rm->AddEdge(_source, _target, lpOutput.m_edge);
+    _r->AddEdge(_source, _target, lpOutput.m_edge);
   else {
     CacheFailedConnection(_source, _target);
     *_collision++ = collision;
@@ -479,21 +479,21 @@ template <typename MPTraits>
 template <typename OutputIterator>
 bool
 ConnectorMethod<MPTraits>::
-ConnectNodes(GroupRoadmapType* _rm, const VID _source, const VID _target,
+ConnectNodes(GroupRoadmapType* _r, const VID _source, const VID _target,
     OutputIterator _collision) {
   auto env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(m_lpLabel);
 
-  const GroupCfgType& c1 = _rm->GetVertex(_source),
-                    & c2 = _rm->GetVertex(_target);
+  const GroupCfgType& c1 = _r->GetVertex(_source),
+                    & c2 = _r->GetVertex(_target);
 
-  GroupCfgType collision(_rm);
-  GroupLPOutput<MPTraits> lpOutput(_rm);
+  GroupCfgType collision(_r);
+  GroupLPOutput<MPTraits> lpOutput(_r);
   const bool connected = lp->IsConnected(c1, c2, collision, &lpOutput,
         env->GetPositionRes(), env->GetOrientationRes(), true);
 
   if(connected)
-    _rm->AddEdge(_source, _target, lpOutput.m_edge);
+    _r->AddEdge(_source, _target, lpOutput.m_edge);
   else {
     CacheFailedConnection(_source, _target);
     *_collision++ = collision;
@@ -507,7 +507,7 @@ template <typename MPTraits>
 template <typename AbstractRoadmapType>
 bool
 ConnectorMethod<MPTraits>::
-DoNotCheck(AbstractRoadmapType* _rm, const VID _source, const VID _target) const {
+DoNotCheck(AbstractRoadmapType* _r, const VID _source, const VID _target) const {
   const std::string indent = "\t\t\t";
 
   std::string connection;
@@ -543,7 +543,7 @@ DoNotCheck(AbstractRoadmapType* _rm, const VID _source, const VID _target) const
   }
 
   // Check if the edge already exists.
-  if(_rm->IsEdge(_source, _target)) {
+  if(_r->IsEdge(_source, _target)) {
     if(this->m_debug)
       std::cout << indent
                 << "Skipping existing connection " << connection << "."
@@ -554,7 +554,7 @@ DoNotCheck(AbstractRoadmapType* _rm, const VID _source, const VID _target) const
   // Check if the nodes are in the same connected component.
   if(m_skipIfSameCC) {
     typename AbstractRoadmapType::ColorMap colorMap;
-    if(stapl::sequential::is_same_cc(*_rm, colorMap, _source, _target)) {
+    if(stapl::sequential::is_same_cc(*_r, colorMap, _source, _target)) {
       if(this->m_debug)
         std::cout << indent
                   << "Skipping connection within the same connected component "

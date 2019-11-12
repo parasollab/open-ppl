@@ -57,23 +57,23 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _rmp,
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _rmp,
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _rmp,
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _rmp,
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -124,7 +124,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 BruteForceNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
@@ -141,12 +141,12 @@ FindNeighbors(RoadmapType* _rmp,
 
   for(InputIterator it = _first; it != _last; it++) {
     // Get the candidate VID and check for connectedness.
-    const VID vid = _rmp->GetVID(it);
-    if(this->DirectEdge(_rmp, _cfg, vid))
+    const VID vid = _r->GetVID(it);
+    if(this->DirectEdge(_r, _cfg, vid))
       continue;
 
     // Get the candidate Cfg and check against connection to self.
-    const CfgType& node = _rmp->GetVertex(it);
+    const CfgType& node = _r->GetVertex(it);
     if(node == _cfg)
       continue;
 
@@ -185,7 +185,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 BruteForceNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
@@ -200,8 +200,8 @@ FindNeighborPairs(RoadmapType* _rmp,
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     // Get the first configuration.
-    const CfgType& node1 = _rmp->GetVertex(it1);
-    const VID vid1 = _rmp->GetVID(it1);
+    const CfgType& node1 = _r->GetVertex(it1);
+    const VID vid1 = _r->GetVID(it1);
 
     // Compare it to everything in the second set.
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
@@ -210,11 +210,11 @@ FindNeighborPairs(RoadmapType* _rmp,
         continue;
 
       // Get the second configuration.
-      const CfgType& node2 = _rmp->GetVertex(it2);
-      const VID vid2 = _rmp->GetVID(it2);
+      const CfgType& node2 = _r->GetVertex(it2);
+      const VID vid2 = _r->GetVID(it2);
 
       // Check unconnected.
-      if(this->DirectEdge(_rmp, node1, vid2))
+      if(this->DirectEdge(_r, node1, vid2))
         continue;
 
       // Check distance. If it is infinite, these are not connectable.
@@ -252,7 +252,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 BruteForceNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
@@ -267,12 +267,12 @@ FindNeighbors(GroupRoadmapType* _rmp,
 
   for(InputIterator it = _first; it != _last; it++) {
     // Check for connectedness.
-    const VID vid = _rmp->GetVID(it);
-    if(this->DirectEdge(_rmp, _cfg, vid))
+    const VID vid = _r->GetVID(it);
+    if(this->DirectEdge(_r, _cfg, vid))
       continue;
 
     // Get the configuration and check for connection to self.
-    const GroupCfgType& node = _rmp->GetVertex(it);
+    const GroupCfgType& node = _r->GetVertex(it);
     if(node == _cfg)
       continue;
 
@@ -311,7 +311,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 BruteForceNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
@@ -326,8 +326,8 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 
   for(InputIterator it1 = _first1; it1 != _last1; it1++) {
     // Get the first configuration.
-    const GroupCfgType& node1 = _rmp->GetVertex(it1);
-    const VID vid1 = _rmp->GetVID(it1);
+    const GroupCfgType& node1 = _r->GetVertex(it1);
+    const VID vid1 = _r->GetVID(it1);
 
     // Compare it to everything in the second set.
     for(InputIterator it2 = _first2; it2 != _last2; it2++) {
@@ -336,11 +336,11 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
         continue;
 
       // Get the second configuration.
-      const GroupCfgType& node2 = _rmp->GetVertex(it2);
-      const VID vid2 = _rmp->GetVID(it2);
+      const GroupCfgType& node2 = _r->GetVertex(it2);
+      const VID vid2 = _r->GetVID(it2);
 
       // Check for connectedness.
-      if(this->DirectEdge(_rmp, node1, vid2))
+      if(this->DirectEdge(_r, node1, vid2))
         continue;
 
       // Check the distance. If it is infinite, these are not connectable.

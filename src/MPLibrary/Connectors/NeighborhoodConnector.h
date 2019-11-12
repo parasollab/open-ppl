@@ -6,7 +6,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect nearby neighbors together. In this method, the 'second set' of
-/// vertices referred to by ConnectorMethod is determined by a earest neighbors
+/// vertices referred to by ConnectorMethod is determined by a nearest neighbors
 /// method.
 ///
 /// Connect nodes in map to their neighbors. The following algorithm is used:
@@ -15,7 +15,7 @@
 ///     - lp is a local planner
 ///     - for each node cfg2 in N and numFailures < m_fail
 ///         - test lp.IsConnected(cfg1, cfg2)
-///         - if connected, add this edge to map, _rm.
+///         - if connected, add this edge to map, _r.
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -54,7 +54,7 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
 
     template <typename AbstractRoadmapType, typename InputIterator1,
               typename InputIterator2, typename OutputIterator>
-    void Connect(AbstractRoadmapType* _rm,
+    void Connect(AbstractRoadmapType* _r,
         InputIterator1 _itr1First, InputIterator1 _itr1Last,
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
@@ -109,7 +109,7 @@ template <typename AbstractRoadmapType, typename InputIterator1,
           typename InputIterator2, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
-Connect(AbstractRoadmapType* _rm,
+Connect(AbstractRoadmapType* _r,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,
@@ -126,8 +126,8 @@ Connect(AbstractRoadmapType* _rm,
   std::vector<Neighbor> closest;
   for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
     // Get the VID and cfg.
-    const VID vid = _rm->GetVID(itr1);
-    const auto& cfg = _rm->GetVertex(vid);
+    const VID vid = _r->GetVID(itr1);
+    const auto& cfg = _r->GetVertex(vid);
 
     if(this->m_debug)
       std::cout << "\tAttempting connections from node " << vid
@@ -136,11 +136,11 @@ Connect(AbstractRoadmapType* _rm,
 
     // Determine nearest neighbors.
     closest.clear();
-    nf->FindNeighbors(_rm, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
+    nf->FindNeighbors(_r, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
         std::back_inserter(closest));
 
     // Attempt connections.
-    this->ConnectNeighbors(_rm, vid, closest.begin(), closest.end(), _collision);
+    this->ConnectNeighbors(_r, vid, closest.begin(), closest.end(), _collision);
   }
 }
 

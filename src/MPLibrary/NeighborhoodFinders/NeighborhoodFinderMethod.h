@@ -229,29 +229,29 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// Some methods can be implemented more efficiently if the candidates are
     /// provided in a hash set. This function is to support that; the default
     /// implementation forwards to the iterator version.
-    /// @param _rmp The roadmap.
+    /// @param _r The roadmap.
     /// @param _cfg The query configuration.
     /// @param _candidates The set of candidate VIDs.
     /// @param _out Output iterator.
-    virtual void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+    virtual void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
         const std::unordered_set<VID>& _candidates, OutputIterator _out);
 
     /// Finds all vertices in the graph as neighbors.
-    /// @param _rmp The roadmap.
+    /// @param _r The roadmap.
     /// @param _cfg The query configuration.
     /// @param _out Output iterator to the neighbor set.
-    void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+    void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
         OutputIterator _out);
 
     /// Finds all vertices in the graph as neighbors.
-    /// @param _rmp The group roadmap.
+    /// @param _r The group roadmap.
     /// @param _cfg The query group configuration.
     /// @param _out Output iterator to the neighbor set.
-    void FindNeighbors(GroupRoadmapType* _rmp, const GroupCfgType& _cfg,
+    void FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
         OutputIterator _out);
 
     /// Finds "closest" neighbors in a set of nodes to an input configuration.
-    /// @param _rmp The roadmap when input nodes are found
+    /// @param _r The roadmap when input nodes are found
     /// @param _first Begin iterator of the set of VIDs
     /// @param _last End iterator of the set of VIDs
     /// @param _fromFullRoadmap If true, saved internal NF model will be used
@@ -263,18 +263,18 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///        _cfg
     /// @return The final output iterator _out
     template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _rmp,
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     /// Group overload
     template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _rmp,
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     /// Finds "closest" pairs of neighbors between two set of nodes
-    /// @param _rmp The roadmap when input nodes are found
+    /// @param _r The roadmap when input nodes are found
     /// @param _first1 Begin iterator of the first set of VIDs
     /// @param _last1 End iterator of the first set of VIDs
     /// @param _first2 Begin iterator of the second set of VIDs
@@ -284,14 +284,14 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///        and its corresponing distance
     /// @return The final output iterator _out
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _rmp,
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     /// Group overload
     template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _rmp,
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -429,28 +429,28 @@ GetDMLabel() const noexcept {
 template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
     const std::unordered_set<VID>& _candidates, OutputIterator _out) {
   // Default impl should do the same as regular FindNeighbors.
-  FindNeighbors(_rmp, _candidates.begin(), _candidates.end(),
-      _candidates.size() == _rmp->Size(), _cfg, _out);
+  FindNeighbors(_r, _candidates.begin(), _candidates.end(),
+      _candidates.size() == _r->Size(), _cfg, _out);
 }
 
 
 template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg, OutputIterator _out) {
-  FindNeighbors(_rmp, _rmp->begin(), _rmp->end(), true, _cfg, _out);
+FindNeighbors(RoadmapType* _r, const CfgType& _cfg, OutputIterator _out) {
+  FindNeighbors(_r, _r->begin(), _r->end(), true, _cfg, _out);
 }
 
 
 template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp, const GroupCfgType& _cfg,
+FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
     OutputIterator _out) {
-  FindNeighbors(_rmp, _rmp->begin(), _rmp->end(), true, _cfg, _out);
+  FindNeighbors(_r, _r->begin(), _r->end(), true, _cfg, _out);
 }
 
 
@@ -458,7 +458,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   auto stats = this->GetStatClass();
@@ -470,7 +470,7 @@ FindNeighbors(RoadmapType* _rmp,
   boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
       NeighborhoodFinderMethod, RoadmapType,
       InputIterator, CfgType, OutputIterator>(
-        this, _rmp, _first, _last, _fromFullRoadmap, _cfg, _out));
+        this, _r, _first, _last, _fromFullRoadmap, _cfg, _out));
 }
 
 
@@ -478,7 +478,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   auto stats = this->GetStatClass();
@@ -490,7 +490,7 @@ FindNeighbors(GroupRoadmapType* _rmp,
   boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
       NeighborhoodFinderMethod, GroupRoadmapType,
       InputIterator, GroupCfgType, OutputIterator>(
-        this, _rmp, _first, _last, _fromFullRoadmap, _cfg, _out));
+        this, _r, _first, _last, _fromFullRoadmap, _cfg, _out));
 }
 
 
@@ -498,7 +498,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -510,7 +510,7 @@ FindNeighborPairs(RoadmapType* _rmp,
 
   boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighborPairs<
       NeighborhoodFinderMethod, RoadmapType,
-      InputIterator, OutputIterator>(this, _rmp, _first1, _last1, _first2,
+      InputIterator, OutputIterator>(this, _r, _first1, _last1, _first2,
           _last2, _out));
 }
 
@@ -519,7 +519,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -531,7 +531,7 @@ FindNeighborPairs(GroupRoadmapType* _rmp,
 
   boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighborPairs<
       NeighborhoodFinderMethod, GroupRoadmapType,
-      InputIterator, OutputIterator>(this, _rmp, _first1, _last1, _first2,
+      InputIterator, OutputIterator>(this, _r, _first1, _last1, _first2,
           _last2, _out));
 }
 

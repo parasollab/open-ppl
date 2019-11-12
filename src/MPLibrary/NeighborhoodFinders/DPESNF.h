@@ -77,23 +77,23 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _rmp,
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _rmp,
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _rmp,
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _rmp,
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -199,16 +199,16 @@ template <typename MPTraits>
 template<typename InputIterator>
 void
 DPESNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
-  size_t& currRdmp = m_dpesInfo[_rmp].m_currentRoadmapVersion;
+  size_t& currRdmp = m_dpesInfo[_r].m_currentRoadmapVersion;
 
   if(_fromFullRoadmap) {
-    m_queryInfo = &m_dpesInfo[_rmp];
-    size_t rdmp = _rmp->GetTimestamp();
+    m_queryInfo = &m_dpesInfo[_r];
+    size_t rdmp = _r->GetTimestamp();
     if(currRdmp == size_t(-1) or currRdmp < rdmp) {
-      CreatePivots(_rmp, _first, _last);
+      CreatePivots(_r, _first, _last);
       currRdmp = rdmp;
     }
   }
@@ -216,10 +216,10 @@ FindNeighbors(RoadmapType* _rmp,
     delete m_tmpInfo;
     m_tmpInfo = new DPESInfo;
     m_queryInfo = m_tmpInfo;
-    CreatePivots(_rmp, _first, _last);
+    CreatePivots(_r, _first, _last);
   }
 
-  KClosest(_rmp, _cfg, _out);
+  KClosest(_r, _cfg, _out);
 }
 
 
@@ -227,7 +227,7 @@ template <typename MPTraits>
 template<typename InputIterator>
 void
 DPESNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -239,7 +239,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 DPESNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);
@@ -250,7 +250,7 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 DPESNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {

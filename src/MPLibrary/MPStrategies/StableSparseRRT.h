@@ -215,13 +215,13 @@ StableSparseRRT<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   MethodTimer mt(this->GetStatClass(), "SST::FindNearestNeighbor");
 
-  // If we are not interested in one particular tree, search the entire active
-  // set for neighbors.
+  // If we are not interested in a particular candidate set, search the entire
+  // active set for neighbors.
   if(!_candidates)
     return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, &m_active);
 
   // Otherwise we need to select only nodes that are both active and in the
-  // tree. Find the intersection of the active set with the current tree.
+  // candidate set. Find the intersection of the active set with the candidates.
   VertexSet activeCandidates;
   activeCandidates.reserve(std::min(_candidates->size(), m_active.size()));
   std::copy_if(m_active.begin(), m_active.end(),

@@ -91,12 +91,12 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _rmp,
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _rmp,
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out) {
@@ -105,14 +105,14 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
 
     /// Group overloads
     template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _rmp,
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out) {
       throw NotImplementedException(WHERE);
     }
 
     template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _rmp,
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out) {
@@ -127,7 +127,7 @@ class KdTreeNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator>
-    void UpdateInternalModel(RoadmapType* _rmp,
+    void UpdateInternalModel(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap);
 
     ///@}
@@ -229,12 +229,12 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 KdTreeNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
 
   // First, check for roadmap changes and update the Kd tree model.
-  UpdateInternalModel(_rmp, _first, _last, _fromFullRoadmap);
+  UpdateInternalModel(_r, _first, _last, _fromFullRoadmap);
 
   size_t dim = _cfg.DOF();
 
@@ -250,7 +250,7 @@ FindNeighbors(RoadmapType* _rmp,
 
   for(auto n : search) {
     VID vid = n.first.m_it;
-    auto& node = _rmp->GetVertex(vid);
+    auto& node = _r->GetVertex(vid);
     if(node == _cfg)
       continue;
     auto dmm = this->GetDistanceMetric(this->m_dmLabel);
@@ -265,15 +265,15 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 KdTreeNF<MPTraits>::
-UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
+UpdateInternalModel(RoadmapType* _r, InputIterator _first,
     InputIterator _last, bool _fromFullRoadmap) {
   if(!_fromFullRoadmap) {
     delete m_tmpTree;
     m_tmpTree = new Tree();
 
     for(auto vit = _first; vit != _last; ++vit) {
-      auto& node = _rmp->GetVertex(vit);
-      m_tmpTree->insert(PointD(_rmp->GetVID(vit), node.DOF(),
+      auto& node = _r->GetVertex(vit);
+      m_tmpTree->insert(PointD(_r->GetVID(vit), node.DOF(),
             node.GetData().begin(), node.GetData().end()));
     }
 
@@ -286,14 +286,14 @@ UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
 
     // Update the model with newly added Cfgs.
     for(auto& vid : m_added) {
-      auto& cfg = _rmp->GetVertex(vid);
+      auto& cfg = _r->GetVertex(vid);
       vector<double> cfgData = cfg.GetData();
 
       if(m_useScaling)
         for(size_t i = 0; i < cfg.PosDOF(); ++i)
           cfgData[i] /= m_maxBBXRange;
 
-      m_trees[_rmp].insert(PointD(vid, cfg.DOF(), cfgData.begin(),
+      m_trees[_r].insert(PointD(vid, cfg.DOF(), cfgData.begin(),
             cfgData.end()));
     }
 
@@ -308,9 +308,9 @@ UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
     /*
     // Do the same for any deleted Cfgs.
     for(auto& vid : m_deleted) {
-      auto cfg = _rmp->GetVertex(vid);
+      auto cfg = _r->GetVertex(vid);
 
-      m_trees[_rmp].remove(PointD(vid, cfg.DOF(), cfg.GetData().begin(),
+      m_trees[_r].remove(PointD(vid, cfg.DOF(), cfg.GetData().begin(),
             cfg.GetData().end()), nullptr);
     }
 
@@ -318,7 +318,7 @@ UpdateInternalModel(RoadmapType* _rmp, InputIterator _first,
     */
 
     // Should not be included if using the roadmap version.
-    m_queryTree = &m_trees[_rmp];
+    m_queryTree = &m_trees[_r];
   }
 }
 
