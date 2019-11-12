@@ -66,7 +66,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
 
     template <typename InputIterator1, typename InputIterator2,
               typename OutputIterator>
-    void Connect(RoadmapType* _rm,
+    void Connect(RoadmapType* _r,
         InputIterator1 _itr1First, InputIterator1 _itr1Last,
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
@@ -75,7 +75,7 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
 
     template <typename InputIterator1, typename InputIterator2,
               typename OutputIterator>
-    void Connect(GroupRoadmapType* _rm,
+    void Connect(GroupRoadmapType* _r,
         InputIterator1 _itr1First, InputIterator1 _itr1Last,
         InputIterator2 _itr2First, InputIterator2 _itr2Last,
         bool _fromFullRoadmap,
@@ -89,19 +89,19 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     ///@{
 
     /// Attempt to create a single connection between two connected components.
-    /// @param _rm The roadmap.
+    /// @param _r The roadmap.
     /// @param _cc1 The VIDs in the first connected component.
     /// @param _cc2 The VIDs in the second connected component.
     /// @param _collision Output for invalid nodes discovered during connection
     ///                   attempts.
     template <typename OutputIterator>
-    void ConnectCC(RoadmapType* _rm,
+    void ConnectCC(RoadmapType* _r,
         std::vector<VID>& _cc1, std::vector<VID>& _cc2,
         OutputIterator _collision);
 
     /// Compute all pair distance between ccs, approximated using coms of ccs
-    /// @param _rm The roadmap.
-    void ComputeAllPairsCCDist(RoadmapType* _rm,
+    /// @param _r The roadmap.
+    void ComputeAllPairsCCDist(RoadmapType* _r,
         std::vector<ConnectedComponent>& _ccs);
 
     /// Find the nearest K connected components to a source component.
@@ -159,21 +159,21 @@ template <typename InputIterator1, typename InputIterator2,
           typename OutputIterator>
 void
 CCsConnector<MPTraits>::
-Connect(RoadmapType* _rm,
+Connect(RoadmapType* _r,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,
     OutputIterator _collision) {
   if(this->m_debug) {
     std::cout << "Before connecting CCs:\n";
-    this->GetStatClass()->DisplayCCStats(std::cout, *_rm);
+    this->GetStatClass()->DisplayCCStats(std::cout, *_r);
     std::cout << std::endl;
   }
 
   std::vector<ConnectedComponent> ccs;
 
   typename RoadmapType::ColorMap colorMap;
-  get_cc_stats(*_rm, colorMap, ccs);
+  get_cc_stats(*_r, colorMap, ccs);
 
   if(ccs.size() <= 1)
     return;
@@ -183,7 +183,7 @@ Connect(RoadmapType* _rm,
   if(this->m_debug)
     std::cout << "Connecting " << m_k << "-closest CCs" << std::endl;
 
-  ComputeAllPairsCCDist(_rm, ccs);
+  ComputeAllPairsCCDist(_r, ccs);
 
   for(auto itr1 = ccs.begin(); itr1 != ccs.end(); ++itr1) {
 
@@ -194,14 +194,14 @@ Connect(RoadmapType* _rm,
 
       //even though this might be inefficient, double check to make sure the CCs
       //are different
-      if(!stapl::sequential::is_same_cc(*_rm, colorMap, itr1->second, *itr2)) {
+      if(!stapl::sequential::is_same_cc(*_r, colorMap, itr1->second, *itr2)) {
 
         vector<VID> cc1, cc2;
 
-        get_cc(*_rm, colorMap, itr1->second, cc1);
-        get_cc(*_rm, colorMap, *itr2, cc2);
+        get_cc(*_r, colorMap, itr1->second, cc1);
+        get_cc(*_r, colorMap, *itr2, cc2);
 
-        ConnectCC(_rm, cc1, cc2, _collision);
+        ConnectCC(_r, cc1, cc2, _collision);
         colorMap.reset();
       }
     }
@@ -209,7 +209,7 @@ Connect(RoadmapType* _rm,
 
   if(this->m_debug) {
     std::cout << "After connecting CCs:\n";
-    this->GetStatClass()->DisplayCCStats(std::cout, *_rm);
+    this->GetStatClass()->DisplayCCStats(std::cout, *_r);
     std::cout << std::endl;
   }
 }
@@ -220,7 +220,7 @@ template <typename InputIterator1, typename InputIterator2,
           typename OutputIterator>
 void
 CCsConnector<MPTraits>::
-Connect(GroupRoadmapType* _rm,
+Connect(GroupRoadmapType* _r,
     InputIterator1 _itr1First, InputIterator1 _itr1Last,
     InputIterator2 _itr2First, InputIterator2 _itr2Last,
     bool _fromFullRoadmap,
@@ -234,7 +234,7 @@ template <typename MPTraits>
 template <typename OutputIterator>
 void
 CCsConnector<MPTraits>::
-ConnectCC(RoadmapType* _rm,
+ConnectCC(RoadmapType* _r,
     std::vector<VID>& _cc1, std::vector<VID>& _cc2,
     OutputIterator _collision) {
   Environment* env = this->GetEnvironment();
@@ -246,7 +246,7 @@ ConnectCC(RoadmapType* _rm,
 
   // Find neighbor pairs between the two CCs.
   std::vector<Neighbor> neighborPairs;
-  nf->FindNeighborPairs(_rm, _cc1.begin(), _cc1.end(), _cc2.begin(), _cc2.end(),
+  nf->FindNeighborPairs(_r, _cc1.begin(), _cc1.end(), _cc2.begin(), _cc2.end(),
       std::back_inserter(neighborPairs));
 
   // Begin the connection attempts
@@ -257,10 +257,10 @@ ConnectCC(RoadmapType* _rm,
 
     CfgType _col(robot);
     lpOutput.Clear();
-    if(lp->IsConnected(_rm->GetVertex(cc1Elem), _rm->GetVertex(cc2Elem),
+    if(lp->IsConnected(_r->GetVertex(cc1Elem), _r->GetVertex(cc2Elem),
           _col, &lpOutput,
           env->GetPositionRes(), env->GetOrientationRes(), true)) {
-      _rm->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
+      _r->AddEdge(cc1Elem, cc2Elem, lpOutput.m_edge);
       return;
     }
     if(_col != CfgType(robot))
@@ -272,7 +272,7 @@ ConnectCC(RoadmapType* _rm,
 template <typename MPTraits>
 void
 CCsConnector<MPTraits>::
-ComputeAllPairsCCDist(RoadmapType* _rm, std::vector<ConnectedComponent>& _ccs) {
+ComputeAllPairsCCDist(RoadmapType* _r, std::vector<ConnectedComponent>& _ccs) {
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
   auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   typename RoadmapType::ColorMap colorMap;
@@ -281,8 +281,8 @@ ComputeAllPairsCCDist(RoadmapType* _rm, std::vector<ConnectedComponent>& _ccs) {
   std::map<VID, CfgType> coms;
   for(auto cc = _ccs.begin(); cc != _ccs.end(); ++cc) {
     std::vector<VID> ccVIDs;
-    get_cc(*_rm, colorMap, cc->second, ccVIDs);
-    coms[cc->second] = GetCentroid(_rm, ccVIDs);
+    get_cc(*_r, colorMap, cc->second, ccVIDs);
+    coms[cc->second] = GetCentroid(_r, ccVIDs);
   }
 
   //dist between ccs

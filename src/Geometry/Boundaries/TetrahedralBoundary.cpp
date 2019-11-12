@@ -19,6 +19,7 @@ TetrahedralBoundary(const std::array<Point3d, 4>& _pts, const bool _check) :
     OrderPoints();
   m_normals = ComputeNormals();
   m_bbx = ComputeBBX();
+  m_volume = ComputeVolume();
 }
 
 
@@ -34,6 +35,7 @@ TetrahedralBoundary(const std::vector<Point3d>& _pts, const bool _check) {
     OrderPoints();
   m_normals = ComputeNormals();
   m_bbx = ComputeBBX();
+  m_volume = ComputeVolume();
 }
 
 
@@ -100,6 +102,13 @@ const std::vector<double>&
 TetrahedralBoundary::
 GetCenter() const noexcept {
   return m_bbx.GetCenter();
+}
+
+
+double
+TetrahedralBoundary::
+GetVolume() const noexcept {
+  throw NotImplementedException(WHERE);
 }
 
 /*--------------------------------- Sampling ---------------------------------*/
@@ -442,6 +451,20 @@ ComputeBBX() const {
   }
 
   return bbx;
+}
+
+
+double
+TetrahedralBoundary::
+ComputeVolume() const {
+  const mathtool::Vector3d v1 = m_points[2] - m_points[0],
+                           v2 = m_points[1] - m_points[0],
+                           v3 = m_points[3] - m_points[0],
+                           n  = v1 % v2,
+                           h  = v3.proj(n);
+  const double baseArea = n.norm() / 2.,
+               height   = h.norm();
+  return baseArea * height / 3.;
 }
 
 /*---------------------------------- I/O -------------------------------------*/

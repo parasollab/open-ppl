@@ -77,19 +77,24 @@ class RoadmapGraph : public
 #endif
     ;
 
+    // Descriptor types.
     typedef typename STAPLGraph::vertex_descriptor        VID;
     typedef typename STAPLGraph::edge_descriptor          EID;
     typedef typename EID::edge_id_type                    EdgeID;
+
+    // Iterator types.
     typedef typename STAPLGraph::vertex_iterator          VI;
     typedef typename STAPLGraph::adj_edge_iterator        EI;
     typedef typename STAPLGraph::const_vertex_iterator    CVI;
     typedef typename STAPLGraph::const_adj_edge_iterator  CEI;
 
+    // Property types.
     typedef typename STAPLGraph::vertex_property          VP;
     typedef typename STAPLGraph::edge_property            EP;
 
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
 
+    // Hook function types.
     typedef std::function<void(VI)> VertexHook;
     typedef std::function<void(EI)> EdgeHook;
     enum class HookType {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
@@ -221,6 +226,13 @@ class RoadmapGraph : public
     VP& GetVertex(T& _t) noexcept;
     VP& GetVertex(VI& _t) noexcept;
     VP& GetVertex(VID _t) noexcept;
+
+    /// Retrieve a constant reference to a vertex property by descriptor or
+    /// iterator.
+    template <typename T>
+    const VP& GetVertex(T& _t) const noexcept;
+    const VP& GetVertex(CVI& _t) const noexcept;
+    const VP& GetVertex(VID _t) const noexcept;
 
     /// Get the set of VIDs which are children of a given vertex.
     /// @param _vid The VID of the given vertex.
@@ -712,6 +724,7 @@ AppendRoadmap(const RoadmapGraph& _r) {
 /*-------------------------------- Queries -----------------------------------*/
 
 template <typename Vertex, typename Edge>
+inline
 size_t
 RoadmapGraph<Vertex, Edge>::
 Size() const noexcept {
@@ -720,6 +733,7 @@ Size() const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 bool
 RoadmapGraph<Vertex, Edge>::
 IsVertex(const VID _vid) const noexcept {
@@ -727,6 +741,7 @@ IsVertex(const VID _vid) const noexcept {
 }
 
 template <typename Vertex, typename Edge>
+inline
 bool
 RoadmapGraph<Vertex, Edge>::
 IsVertex(const Vertex& _v) const noexcept {
@@ -736,6 +751,7 @@ IsVertex(const Vertex& _v) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 bool
 RoadmapGraph<Vertex, Edge>::
 IsVertex(const Vertex& _v, CVI& _vi) const noexcept {
@@ -754,6 +770,7 @@ IsVertex(const Vertex& _v, CVI& _vi) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 bool
 RoadmapGraph<Vertex, Edge>::
 IsEdge(const VID _source, const VID _target) const noexcept {
@@ -764,7 +781,8 @@ IsEdge(const VID _source, const VID _target) const noexcept {
 
 
 template <typename Vertex, typename Edge>
-template<typename T>
+template <typename T>
+inline
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
 GetVID(const T& _t) const noexcept {
@@ -773,6 +791,7 @@ GetVID(const T& _t) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
 GetVID(const VI& _t) const noexcept {
@@ -781,6 +800,7 @@ GetVID(const VI& _t) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
 GetVID(const Vertex& _t) const noexcept {
@@ -792,6 +812,7 @@ GetVID(const Vertex& _t) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
 GetLastVID() const noexcept {
@@ -804,6 +825,7 @@ GetLastVID() const noexcept {
 
 #ifndef _PARALLEL
 template <typename Vertex, typename Edge>
+inline
 size_t
 RoadmapGraph<Vertex, Edge>::
 GetNumCCs() noexcept {
@@ -814,6 +836,7 @@ GetNumCCs() noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 size_t
 RoadmapGraph<Vertex, Edge>::
 GetTimestamp() const noexcept {
@@ -823,6 +846,7 @@ GetTimestamp() const noexcept {
 /*------------------------------- Accessors ----------------------------------*/
 
 template <typename Vertex, typename Edge>
+inline
 Robot*
 RoadmapGraph<Vertex, Edge>::
 GetRobot() const noexcept {
@@ -831,7 +855,8 @@ GetRobot() const noexcept {
 
 
 template <typename Vertex, typename Edge>
-template<typename T>
+template <typename T>
+inline
 typename RoadmapGraph<Vertex, Edge>::VP&
 RoadmapGraph<Vertex, Edge>::
 GetVertex(T& _t) noexcept {
@@ -840,6 +865,7 @@ GetVertex(T& _t) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::VP&
 RoadmapGraph<Vertex, Edge>::
 GetVertex(VI& _t) noexcept {
@@ -848,15 +874,49 @@ GetVertex(VI& _t) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::VP&
 RoadmapGraph<Vertex, Edge>::
 GetVertex(VID _t) noexcept {
-  auto iter = this->find_vertex(_t);
+  VI iter = this->find_vertex(_t);
   if(iter == this->end())
     throw RunTimeException(WHERE) << "Requested node '" << _t
                                   << "', which is not in the graph.";
 
   return iter->property();
+}
+
+
+template <typename Vertex, typename Edge>
+template <typename T>
+inline
+const typename RoadmapGraph<Vertex, Edge>::VP&
+RoadmapGraph<Vertex, Edge>::
+GetVertex(T& _t) const noexcept {
+  return GetVertex(VID(*_t));
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+const typename RoadmapGraph<Vertex, Edge>::VP&
+RoadmapGraph<Vertex, Edge>::
+GetVertex(CVI& _t) const noexcept {
+  return (*_t).property();
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+const typename RoadmapGraph<Vertex, Edge>::VP&
+RoadmapGraph<Vertex, Edge>::
+GetVertex(VID _t) const noexcept {
+  CVI iter = this->find_vertex(_t);
+  if(iter == this->end())
+    throw RunTimeException(WHERE) << "Requested node '" << _t
+                                  << "', which is not in the graph.";
+
+  return (*iter).property();
 }
 
 
@@ -877,6 +937,7 @@ GetChildren(const VID _vid) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 bool
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
@@ -886,6 +947,7 @@ GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 bool
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept {
@@ -895,6 +957,7 @@ GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::EP&
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target) noexcept {
@@ -908,6 +971,7 @@ GetEdge(const VID _source, const VID _target) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::EP&
 RoadmapGraph<Vertex, Edge>::
 GetEdge(const EID _descriptor) noexcept {
@@ -1220,6 +1284,7 @@ RemoveHook(const HookType _type, const std::string& _label) {
 
 
 template <typename Vertex, typename Edge>
+inline
 void
 RoadmapGraph<Vertex, Edge>::
 DisableHooks() noexcept {
@@ -1228,6 +1293,7 @@ DisableHooks() noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 void
 RoadmapGraph<Vertex, Edge>::
 EnableHooks() noexcept {
@@ -1373,6 +1439,7 @@ Write(const std::string& _filename, Environment* _env) const {
 /*-------------------------------- Helpers -----------------------------------*/
 
 template <typename Vertex, typename Edge>
+inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteAddVertexHooks(const VI _iterator) noexcept {
@@ -1385,6 +1452,7 @@ ExecuteAddVertexHooks(const VI _iterator) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteDeleteVertexHooks(const VI _iterator) noexcept {
@@ -1395,6 +1463,7 @@ ExecuteDeleteVertexHooks(const VI _iterator) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteAddEdgeHooks(const EI _iterator) noexcept {
@@ -1405,6 +1474,7 @@ ExecuteAddEdgeHooks(const EI _iterator) noexcept {
 
 
 template <typename Vertex, typename Edge>
+inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteDeleteEdgeHooks(const EI _iterator) noexcept {

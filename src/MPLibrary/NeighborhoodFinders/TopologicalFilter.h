@@ -86,29 +86,29 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     /// Hax.
-    virtual void FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+    virtual void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
         const VertexSet& _candidates, std::vector<Neighbor>& _out) override;
 
     /// Filter the candidate range. Pass only the topologically relevant
     /// candidates to the underlying NF.
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    OutputIterator FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+    OutputIterator FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -269,7 +269,7 @@ Print(std::ostream& _os) const {
 template <typename MPTraits>
 void
 TopologicalFilter<MPTraits>::
-FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
+FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
     const std::unordered_set<VID>& _candidates, std::vector<Neighbor>& _out) {
   if(!m_initialized)
     LazyInitialize();
@@ -279,7 +279,7 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
   // This object only works on the free space roadmap right now. It could be
   // expanded to handle other maps if we want, but for now we will crash if this
   // isn't the free space.
-  if(_rmp != this->GetRoadmap())
+  if(_r != this->GetRoadmap())
     throw RunTimeException(WHERE) << "Only works on the free space at this time.";
 
   // Track the average input size.
@@ -327,13 +327,13 @@ FindNeighbors(RoadmapType* _rmp, const CfgType& _cfg,
         std::cout << "\tFalling back to underlying nf '" << m_nfLabel << "'."
                   << std::endl;
 
-      nf->FindNeighbors(_rmp, _cfg, _candidates, _out);
+      nf->FindNeighbors(_r, _cfg, _candidates, _out);
     }
     return;
   }
 
   // Call the underlying NF on the reduced candidate set.
-  nf->FindNeighbors(_rmp, candidates.begin(), candidates.end(),
+  nf->FindNeighbors(_r, candidates.begin(), candidates.end(),
       candidates.size() == this->GetRoadmap()->Size(),
       _cfg, std::back_inserter(_out));
 
@@ -352,7 +352,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 TopologicalFilter<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   if(!m_initialized)
@@ -363,7 +363,7 @@ FindNeighbors(RoadmapType* _rmp,
   // This object only works on the free space roadmap right now. It could be
   // expanded to handle other maps if we want, but for now we will crash if this
   // isn't the free space.
-  if(_rmp != this->GetRoadmap())
+  if(_r != this->GetRoadmap())
     throw RunTimeException(WHERE) << "Only works on the free space at this time.";
 
   // Track the average input size.
@@ -414,13 +414,13 @@ FindNeighbors(RoadmapType* _rmp,
         std::cout << "\tFalling back to underlying nf '" << m_nfLabel << "'."
                   << std::endl;
 
-      nf->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg, _out);
+      nf->FindNeighbors(_r, _first, _last, _fromFullRoadmap, _cfg, _out);
     }
     return _out;
   }
 
   // Call the underlying NF on the reduced candidate set.
-  nf->FindNeighbors(_rmp, candidates.begin(), candidates.end(),
+  nf->FindNeighbors(_r, candidates.begin(), candidates.end(),
       candidates.size() == this->GetRoadmap()->get_num_vertices(),
       _cfg, _out);
 
@@ -441,7 +441,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 TopologicalFilter<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -451,7 +451,7 @@ FindNeighborPairs(RoadmapType* _rmp,
   if(this->m_debug)
     std::cout << "TopologicalFilter::FindNeighborPairs\n";
 
-  auto g = _rmp;
+  auto g = _r;
 
   // This implementation depends on the 'neighbors' vector NOT reallocating.
   // Reserve enough space to preclude that possibility.
@@ -465,7 +465,7 @@ FindNeighborPairs(RoadmapType* _rmp,
 
     // Find up to m_k neighbors of this vertex (appended to the end of
     // neighbors).
-    this->FindNeighbors(_rmp, _first2, _last2, false, g->GetVertex(*iter),
+    this->FindNeighbors(_r, _first2, _last2, false, g->GetVertex(*iter),
         std::back_inserter(neighbors));
 
     // Set the source VID for the newly found neighbors.
@@ -493,7 +493,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 TopologicalFilter<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);
@@ -504,7 +504,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 TopologicalFilter<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {

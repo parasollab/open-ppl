@@ -59,6 +59,8 @@ class TetrahedralBoundary : public Boundary {
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
+    virtual double GetVolume() const noexcept override;
+
     ///@}
     ///@name Sampling
     ///@{
@@ -137,6 +139,9 @@ class TetrahedralBoundary : public Boundary {
     /// Compute the bounding box.
     NBox ComputeBBX() const;
 
+    /// Compute the volume.
+    double ComputeVolume() const;
+
     ///@}
     ///@name Internal State
     ///@{
@@ -144,6 +149,7 @@ class TetrahedralBoundary : public Boundary {
     std::array<Point3d, 4> m_points;   ///< The vertices of the tetrahedron.
     std::array<Vector3d, 4> m_normals; ///< The normals of the tetrahedron.
     NBox m_bbx{3};                     ///< The bounding box of the tetrahedron.
+    double m_volume{0};                ///< The volume of the tetrahedron.
 
     ///@}
 };

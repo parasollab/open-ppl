@@ -50,18 +50,10 @@ ifeq ($(platform), CRAY_gcc)
   BOOST_LIB = -L$(BOOST_LIBRARY_DIRS) -lboost_serialization
 endif
 
-#fink/gcc on 64 bit MAC
+##gcc on 64 bit MAC
 ifeq ($(platform), MACOS_gcc)
-  #TODO Verify with and without parallel
-  BOOST_ROOT = /sw
-  BOOST_INCL = -I$(BOOST_ROOT)/include
-  ifeq ($(parallel), 1)
-    BOOST_LIBRARY_DIRS = $(BOOST_ROOT)/lib
-    BOOST_LIB = -L$(BOOST_LIBRARY_DIRS) -lboost_serialization
-  else
-    BOOST_LIBRARY_DIRS = $(BOOST_ROOT)/lib64
-    BOOST_LIB = -L$(BOOST_LIBRARY_DIRS) -lboost_thread -lboost_serialization
-  endif
+#  #TODO Verify with and without parallel
+  BOOST_LIB := -lboost_thread-mt -lboost_system
 endif
 
 ################################################################################
@@ -94,7 +86,12 @@ CD_LIBFILE := $(PQP_LIBFILE) $(RAPID_LIBFILE)
 ################################################################################
 ## EIGEN
 ################################################################################
-EIGEN_INCL := -I/usr/include/eigen3
+ifeq ($(platform), MACOS_gcc)
+  EIGEN_INCL := -I/usr/local/include/eigen3
+else
+  EIGEN_INCL := -I/usr/include/eigen3
+endif
+
 ################################################################################
 ## CGAL
 ################################################################################
@@ -107,13 +104,16 @@ CGAL_LIBFILE :=
 ifeq ("$(wildcard /usr/lib64/libCGAL.so)","")
   CGAL_DIR := $(CURDIR)/$(UTILS_DIR)/CGAL
   CGAL_INC := -I$(CGAL_DIR)/install/include
-  CGAL_LIB := -Wl,-rpath=$(CGAL_DIR)/install/lib64 \
-              -L$(CGAL_DIR)/install/lib64 $(CGAL_LIB)
-
+  ifeq ($(platform), MACOS_gcc)
+    CGAL_LIB := -L$(CGAL_DIR)/install/lib64 $(CGAL_LIB)
+  else
+    CGAL_LIB := -Wl,-rpath=$(CGAL_DIR)/install/lib64 \
+                -L$(CGAL_DIR)/install/lib64 $(CGAL_LIB)
+  endif
   CGAL_LIBFILE := $(CGAL_DIR)/install
 $(CGAL_LIBFILE):
 	@echo Building CGAL library...
-	@cd $(CGAL_DIR) && $(MAKE)
+	@cd $(CGAL_DIR) && $(MAKE) platform=$(platform)
 endif
 
 
@@ -227,30 +227,53 @@ BULLET_DEF  := -DBT_USE_DOUBLE_PRECISION
 
 BULLET_LIBFILE := $(BULLET_DIR)/build
 $(BULLET_LIBFILE):
-	cd $(BULLET_DIR) && make
+	@cd $(BULLET_DIR) && $(MAKE) platform=$(platform)
 
 ################################################################################
 # GL
 ################################################################################
+GL_INCL := -I/usr/include/GL
 GL_LIBS := -lGLU -lGL
+ifeq ($(platform), MACOS_gcc)
+  GL_LIBS := -framework GLUT -framework OpenGL
+endif
 
 ################################################################################
 # Qt4
 ################################################################################
 QT_BASE := /usr/include
+ifeq ($(platform), MACOS_gcc)
+  QT_BASE := /usr/local/opt/qt/include
+endif
+
 QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
            -I$(QT_BASE)/QtOpenGL
 QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
+ifeq ($(platform), MACOS_gcc)
+  QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
+             -I$(QT_BASE)/QtOpenGL -I$(QT_BASE)/QtWidgets
+  QT_LIBS := -F/usr/local/opt/qt/Frameworks -framework QtCore -framework QtGui -framework QtOpenGL -framework QtWidgets
+endif
 
 # Moc setup
-QT_MOC  := $(shell find /usr/lib64/qt4/bin/moc 2> /dev/null)
+QT_MOC_BASE = /usr/lib64/qt4/bin
+ifeq ($(platform), MACOS_gcc)
+  QT_MOC_BASE = /usr/local/opt/qt/bin
+endif
+QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
 ifndef QT_MOC
-  $(error Qt moc not found at /usr/lib64/qt4/bin/moc.)
+  $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
 endif
 
 # Find the header files with Q_OBJECT.
-MOC_SRCS := $(patsubst ./%.h,moc_%.cpp, $(shell find . -type f \
-		    -name '*.h' -execdir grep -rl Q_OBJECT \{} + ))
+ifeq ($(platform), MACOS_gcc)
+  MOC_SRCS := $(patsubst ./%.h,moc_%.cpp, $(shell find . -type f \
+  		    -name '*.h' -exec grep -rl Q_OBJECT \{} + ))
+else
+  MOC_SRCS := $(patsubst ./%.h,moc_%.cpp, $(shell find . -type f \
+  		    -name '*.h' -execdir grep -rl Q_OBJECT \{} + ))
+endif
+
 # Create the list of objects which must be built from MOC_SRCS.
 MOC_OBJS := $(patsubst %.cpp,$(MOC_DIR)/%.o, $(MOC_SRCS))
 
@@ -262,11 +285,11 @@ SANDBOX_DIR := $(GLVIS_DIR)/sandbox
 GLVIS_INCL  := -I$(GLVIS_DIR)/nonstd -I$(GLVIS_DIR)/glutils -I$(GLVIS_DIR)
 GLVIS_LIBS  := -L$(GLVIS_DIR)/nonstd -L$(GLVIS_DIR)/glutils -L$(SANDBOX_DIR) \
                -lglsandbox -lglutils -lnonstd
-
+ 
 GLVIS_LIBFILE := $(SANDBOX_DIR)/libglsandbox.a
 $(GLVIS_LIBFILE):
 	@echo Building gl_visualizer library...
-	@cd $(SANDBOX_DIR) && $(MAKE)
+	@cd $(SANDBOX_DIR) && $(MAKE) platform=$(platform)
 
 ################################################################################
 # physicalrobots

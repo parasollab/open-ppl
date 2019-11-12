@@ -79,6 +79,13 @@ GetCenter() const noexcept {
   return NBox::GetCenter();
 }
 
+
+double
+AbstractBoundingBox::
+GetVolume() const noexcept {
+  return NBox::GetVolume();
+}
+
 /*-------------------------------- Sampling ----------------------------------*/
 
 std::vector<double>
