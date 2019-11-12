@@ -615,7 +615,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // Checking if the edge is already invalidated
   auto dm = this->GetDistanceMetric(m_dmLabel);
   if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance +
-   dm->EdgeWeight(_ei->source(), _ei->target()))) {
+   dm->EdgeWeight(m_roadmap, _ei->source(), _ei->target()))) {
    	if(this->m_debug)
     	std::cout << "EDGE INVALIDATED!!!" << std::endl;
     return std::numeric_limits<double>::infinity();
@@ -631,7 +631,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
       // collision checking over the whole edge against the corresponding
       // conflicting cfg
       if(conflictTimestep > _sourceDistance && conflictTimestep < (
-      	_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
+      	_sourceDistance + dm->EdgeWeight(m_roadmap,_ei->source(), _ei->target()))) {
         if(!IsEdgeSafe(m_roadmap, _ei->source(), _ei->target(), 
           conflictCfgsAt[i].first)) {
         	if(this->m_debug) {
