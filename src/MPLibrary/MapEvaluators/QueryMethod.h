@@ -152,6 +152,14 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
+        /// Checking if an edge is collision-free with an external cfg
+    /// @param _source The cfg source of the edge.
+    /// @param _target The cfg target of the edge.
+    /// @param _conflictCfg The external cfg to check.
+    bool IsEdgeSafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
+      const CfgType& _conflictCfg) const;
+
+
     ///@}
     ///@name Internal State
     ///@{
@@ -166,6 +174,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     std::string m_dmLabel;           ///< The DistanceMetric label.
 
 		bool m_searchAllPaths{false}; ///< Temporary flag to use two variable state search
+
+    std::string m_vcLabel; ///< The validity checker to use.
 
     ///@}
 
@@ -197,6 +207,7 @@ QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "Alternate distance metric to replace edge weight during search.");
 	m_searchAllPaths = _node.Read("twoVariableSS", false, m_searchAllPaths,
 			"Flag for searching all the paths");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -621,9 +632,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
       // conflicting cfg
       if(conflictTimestep > _sourceDistance && conflictTimestep < (
       	_sourceDistance + dm->EdgeWeight(_ei->source(), _ei->target()))) {
-        SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->
-      		GetSafeIntervalTool("SI");
-        if(!siTool->IsEdgeSafe(m_roadmap, _ei->source(), _ei->target(), 
+        if(!IsEdgeSafe(m_roadmap, _ei->source(), _ei->target(), 
           conflictCfgsAt[i].first)) {
         	if(this->m_debug) {
           	std::cout << "Invalidating conflicting edge (" << _ei->source()
@@ -641,6 +650,47 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   
   return StaticPathWeight(_ei, _sourceDistance, _targetDistance);
 } 
+
+
+template <typename MPTraits>
+bool
+QueryMethod<MPTraits>::
+IsEdgeSafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
+  const CfgType& _conflictCfg) const {
+  //Reconstructing edge "path"
+  std::vector<CfgType> path;
+  path.push_back(_roadmap->GetVertex(_source));
+  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(_roadmap,
+    _source, _target);
+  path.insert(path.end(), edge.begin(), edge.end());
+  path.push_back(_roadmap->GetVertex(_target));
+
+  // Get the valididty checker and make sure it has type
+  // CollisionDetectionValidity.
+  /// @TODO Figure out how to avoid needing this downcast so that we can
+  ///       leverage more efficient compose checks (like checking the bounding
+  ///       spheres first).
+  auto basevc = this->GetValidityChecker(m_vcLabel);
+  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
+
+  auto robotMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
+  robotMultiBody->Configure(_conflictCfg);
+
+  for(size_t i = 0 ; i < path.size() ; ++i ) {
+    const CfgType& position = path[i];
+    // Configure the obstacle at the current timestep.
+    auto obstacleMultiBody = path[0].GetRobot()->GetMultiBody();
+    obstacleMultiBody->Configure(position);
+    // If the obstacle is in collision with _cfg at _timestep, return false
+    CDInfo cdInfo;
+    if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
+        this->GetNameAndLabel())) {
+      return false;
+    }
+  }
+  // If we haven't detected a collision, the edge is safe.
+  return true;
+}
 
 
 /*----------------------------------------------------------------------------*/
