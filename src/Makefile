@@ -16,7 +16,7 @@ asan     ?= 0
 
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
-vizmo_map := -DVIZMO_MAP
+vizmo_map := #-DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
 group_map := #-DGROUP_MAP
@@ -45,7 +45,7 @@ parallel ?= 0
 # Directory Layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 PMPL_DIR  := .
-UTILS_DIR := ../pmpl_utils/
+UTILS_DIR := ../pmpl_utils
 
 # The OBJ_DIR is the landing zone for our object files. Create it with a
 # directory structure to match our source tree.

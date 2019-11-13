@@ -89,9 +89,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///         in _end.
     std::vector<VID> GeneratePath(const VID _start, const VIDSet& _end);
 
-		std::vector<typename QueryMethod<MPTraits>::VID>
-		TwoVariableQuery(const VID _start, const VIDSet& _goals);
-
     /// Set an alternate distance metric to use when searching the roadmap
     /// (instead of the saved edge weights).
     /// @param _label The Distance Metric label to use. Set to empty string to
@@ -173,8 +170,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
     std::string m_dmLabel;           ///< The DistanceMetric label.
 
-		bool m_searchAllPaths{false}; ///< Temporary flag to use two variable state search
-
     std::string m_vcLabel; ///< The validity checker to use.
 
     ///@}
@@ -205,8 +200,6 @@ QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "Label of the SafeIntervalTool");
   m_dmLabel = _node.Read("dmLabel", false, "",
       "Alternate distance metric to replace edge weight during search.");
-	m_searchAllPaths = _node.Read("twoVariableSS", false, m_searchAllPaths,
-			"Flag for searching all the paths");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
 }
 
@@ -347,9 +340,6 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
       }
   );
 
-	//TODO::Temporary redirect for two variable state search
-	if(m_searchAllPaths)
-		return TwoVariableQuery(_start, _goals);
   // Set up the path weight function depending on whether we have any dynamic
   // obstacles.
   SSSPPathWeightFunction<RoadmapType> weight;
@@ -405,60 +395,6 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
               << std::endl;
 
   return path;
-}
-
-template <typename MPTraits>
-std::vector<typename QueryMethod<MPTraits>::VID>
-QueryMethod<MPTraits>::
-TwoVariableQuery(const VID _start, const VIDSet& _goals) {
-
-  SSSPPathWeightFunction<RoadmapType> weight;
-  if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
-    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
-                    const double _sourceDistance,
-                    const double _targetDistance) {
-      return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
-    };
-  } else if(this->GetMPProblem()->NumRobots() >= 2) {
-    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
-                    const double _sourceDistance,
-                    const double _targetDistance) {
-      return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
-    };
-  } else {
-    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
-                    const double _sourceDistance,
-                    const double _targetDistance) {
-      return this->StaticPathWeight(_ei, _sourceDistance, _targetDistance);
-    };
-  }
-	
-  auto g = this->GetRoadmap();
-
-	double lastConflict = 0;
-	for(auto conflict : g->GetAllConflictsCfgAt()) {
-		if(conflict.second > lastConflict) {
-			lastConflict = conflict.second;
-		}
-	}
-
-	auto node = TwoVariableDijkstraSSSP(g,{_start},_goals,lastConflict,weight);
-
-	if(!node)
-		return {};
-
-	std::vector<typename QueryMethod<MPTraits>::VID> path;
-	while(node->m_vid != _start) {
-		path.push_back(node->m_vid);
-		node = node->m_parent;
-		if(!node)
-			return {};
-	}
-
-	path.push_back(node->m_vid);
-	std::reverse(path.begin(),path.end());
-
-	return path;
 }
 
 

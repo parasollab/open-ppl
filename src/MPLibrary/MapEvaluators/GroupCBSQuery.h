@@ -435,7 +435,7 @@ SetBestGroupPlan(GroupTask* _groupTask, vector<Path>& _optimalPaths) {
     auto robot = optimalPath.GetRobot();
     auto currentPath = this->GetPath(robot);
     *currentPath = optimalPath;
-    this->SetPath(robot,currentPath);
+    this->GetMPSolution()->SetPath(robot,currentPath);
   } 
 }
 
