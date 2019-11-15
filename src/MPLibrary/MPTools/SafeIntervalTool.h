@@ -8,7 +8,6 @@
 #include "MPProblem/DynamicObstacle.h"
 #include "MPLibrary/Conflict.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
-#include "MPLibrary/CBSTree.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +34,6 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::WeightType             WeightType;
     typedef typename MPTraits::Path                   Path;
     typedef typename RoadmapType::VID                 VID;
-    typedef typename CBSNode<MPTraits>::ConflictCfg   ConflictCfg;
 
     ///@}
     ///@name Local Types
@@ -70,11 +68,11 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
 
     /// Compute the safe intervals for a given Edge, a source and a target.
     /// @param _weight The edge to compute safeIntervals's for.
-    /// @param _weight The source VID to compute safeIntervals's for.
-    /// @param _weight The target VID to compute safeIntervals's for.
+    /// @param _source The source VID to compute safeIntervals's for.
+    /// @param _target The target VID to compute safeIntervals's for.
     /// @return The set of safe intervals for _weight.
     Intervals ComputeIntervals(const WeightType& _weight, const VID _source,
-      const VID _target, const CfgType& _dummyCfg);
+      const VID _target, RoadmapType* _roadmap);
 
     ///@}
     ///@name Interval Checking
@@ -172,18 +170,16 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const WeightType& _weight, const VID _source,
-  const VID _target, const CfgType& _dummyCfg) {
+  const VID _target, RoadmapType* _roadmap) {
   if(m_edgeIntervals[&_weight].empty()) {
-
-    auto robot = _dummyCfg.GetRobot();
-    auto roadmap = this->GetRoadmap(robot);
     std::vector<CfgType> edge;
-    edge.push_back(roadmap->GetVertex(_source));
-    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(roadmap,
+    edge.push_back(_roadmap->GetVertex(_source));
+    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(_roadmap,
       _source, _target);
     edge.insert(edge.end(), intermediates.begin(), intermediates.end());
-    edge.push_back(roadmap->GetVertex(_target));
-    std::cout << "ComputeIntervals, intermediates size: " << edge.size() << std::endl;
+    edge.push_back(_roadmap->GetVertex(_target));
+    if(this->m_debug)
+      std::cout << "ComputeIntervals, intermediates size: " << edge.size() << std::endl;
     m_edgeIntervals[&_weight] = ComputeSafeIntervals(edge);
   }
   return m_edgeIntervals[&_weight];

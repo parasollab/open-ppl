@@ -180,7 +180,8 @@ IsConnected(
       _savePath);
   /// @todo We should be setting the LP label either way, need to test before
   ///       removing this check.
-
+  if(connected)
+    _lpOutput->SetLPLabel(this->GetLabel());
   if(this->m_debug)
     std::cout << "\n\tLocal Plan is "
               << (connected ? "valid" : "invalid at " + _col.PrettyPrint())

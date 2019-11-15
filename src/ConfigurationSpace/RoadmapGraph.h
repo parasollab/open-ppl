@@ -279,12 +279,6 @@ class RoadmapGraph : public
     /// @return     True if _eid is lazily invalidated.
     bool IsEdgeInvalidated(const EdgeID _eid) const noexcept;
 
-    /// Check if a vertex is lazily invalidated at certain timestep
-    /// @param _vid The vertex descriptor.
-    /// @return     True if _vid is lazily invalidated.
-    bool IsVertexInvalidatedAt(const VID _vid, double _sourceDistance,
-        double _targetDistance) const noexcept;
-
     /// @overload This version takes the source and target VIDs for an edge at
     ///           certain timestep.
     /// @param _source The VID of the source vertex.
@@ -304,12 +298,6 @@ class RoadmapGraph : public
     /// @param _target The VID of the target vertex.
     /// @return        True if (_source, _target) is lazily invalidated.
     bool IsEdgeInvalidated(const VID _source, const VID _target) const noexcept;
-
-    /// Set the lazy invalidation status of a vertex.
-    /// @param _vid     The vertex descriptor.
-    /// @param _invalid The invalid status to set.
-    void SetVertexInvalidatedAt(const VID _vid,double _conflictTimestep,
-        const bool _invalid = true) noexcept;
 
     /// Set the lazy invalidation status of an edge.
     /// @param _eid     The edge ID.
@@ -351,7 +339,7 @@ class RoadmapGraph : public
 
 		//James: I think that Cfg should be plural and not Conflict.
     /// @return All pair of conflicting cfgs and conflicting timesteps.
-    const vector<pair<Vertex, double>>& GetAllConflictsCfgAt();
+    const vector<pair<Vertex, double>>& GetAllConflictsCfgAt() const;
 
     ///@}
     ///@name Hooks
@@ -499,7 +487,6 @@ class RoadmapGraph : public
     InvalidVertexSet m_invalidVertices; ///< Set of lazy-invalidated vertices.
     InvalidEdgeSet m_invalidEdges;      ///< Set of lazy-invalidated edges.
 
-    InvalidVertexAtSet m_invalidVerticesAt; ///< Set of lazy-invalidated vertices.
     InvalidEdgeAtSet m_edgeConflicts;      ///< Set of lazy-invalidated edges.
 
     std::vector<std::pair<Vertex,double>> m_cfgConflicts; ///< Set of invalid
@@ -993,7 +980,6 @@ template <typename Vertex, typename Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 ClearInvalidatedAt() noexcept {
-  m_invalidVerticesAt.clear();
   m_edgeConflicts.clear();
 }
 
@@ -1009,19 +995,8 @@ ClearConflictCfgsAt() noexcept {
 template <typename Vertex, typename Edge>
 bool
 RoadmapGraph<Vertex, Edge>::
-IsVertexInvalidatedAt(const VID _vid, double _sourceDistance,
-    double _targetDistance) const noexcept {
-  double conflictTimestep  = m_invalidVerticesAt.at(_vid);
-  return m_invalidVerticesAt.count(_vid)
-     and conflictTimestep > _sourceDistance
-     and conflictTimestep < _targetDistance;
-}
-
-
-template <typename Vertex, typename Edge>
-bool
-RoadmapGraph<Vertex, Edge>::
-IsEdgeInvalidatedAt(const VID _source, const VID _target, double _sourceDistance, double _targetDistance) const noexcept {
+IsEdgeInvalidatedAt(const VID _source, const VID _target, 
+    double _sourceDistance, double _targetDistance) const noexcept {
   CEI ei;
   GetEdge(_source, _target, ei);
   return IsEdgeInvalidatedAt(ei->id(),_sourceDistance,_targetDistance);
@@ -1035,6 +1010,10 @@ IsEdgeInvalidatedAt(const EdgeID _eid, double _sourceDistance,
     double _edgeDistance) const noexcept {
   double conflictTimestep;
   if(m_edgeConflicts.count(_eid)) {
+    /// @TODO: There is a mix-match between using the edge distance provided 
+    /// by the distance metric and using the number of intermediates provided 
+    /// by ReconstructEdge(), we have to fix this issue and determine which 
+    /// concept we should use.
     conflictTimestep = m_edgeConflicts.at(_eid);
     if(conflictTimestep > _sourceDistance and
         conflictTimestep < _edgeDistance ) {
@@ -1068,20 +1047,6 @@ IsEdgeInvalidated(const VID _source, const VID _target) const noexcept {
   CEI ei;
   GetEdge(_source, _target, ei);
   return IsEdgeInvalidated(ei->id());
-}
-
-
-template <typename Vertex, typename Edge>
-void
-RoadmapGraph<Vertex, Edge>::
-SetVertexInvalidatedAt(const VID _vid, double _conflictTimestep,
-    const bool _invalid) noexcept {
-  if(_invalid) {
-    std::pair<size_t, double> invalidVertex{_vid, _conflictTimestep};
-    m_invalidVerticesAt.insert(invalidVertex);
-  }
-  else
-    m_invalidVerticesAt.erase(_vid);
 }
 
 
@@ -1166,7 +1131,7 @@ SetConflictCfgAt(Vertex _v, double _conflictTimestep, const bool _invalid)
 template <typename Vertex, typename Edge>
 const vector<pair<Vertex, double>>&
 RoadmapGraph<Vertex, Edge>::
-GetAllConflictsCfgAt() {
+GetAllConflictsCfgAt() const {
     return m_cfgConflicts;
 }
 

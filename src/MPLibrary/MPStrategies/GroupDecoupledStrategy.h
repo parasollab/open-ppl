@@ -138,6 +138,9 @@ void
 GroupDecoupledStrategy<MPTraits>::
 Finalize() {
 
+  if(!this->m_writeOutput)
+    return;
+  
   double totalCost = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();

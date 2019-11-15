@@ -17,7 +17,7 @@
 /// Reference:
 ///  Guni Sharon et. al., "Conflict-based search for optimal multi-agent
 ///  pathfinding", Proceedings of the Twenty-Sixth AAAI Conference
-///  on Artificial Intelligence
+///  on Artificial Intelligence, 2015
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,8 +89,8 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     /// Adding the new CBSNodes by extrating the conflict info of _pairCfg
     /// @param _cbsTree The conflict tree.
-    /// @param _pairCfg The pair of conflicting cfgs within their timesteps.
     /// @param _currentNodeCost The total cost of the node.
+    /// @param _pairCfg The pair of conflicting cfgs within their timesteps.
     void AddingChildCBSNodes(CBSTree<MPTraits>& _cbsTree,
       const CBSNode<MPTraits>& _currentCBSNode, PairConflict _pairCfg);
 
@@ -120,7 +120,6 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// group task.
     /// @param The group task.
     /// @param The current best set of paths.
-    /// @param A boolean flag for set or not the paths.
     void SetBestGroupPlan(GroupTask* _groupTask, vector<Path>& _optimalPaths);
 
     /// When a better solution is found, this function updates the current
@@ -130,8 +129,6 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @param The current best set of paths.
     /// @param The current best total cost.
     /// @param The current total cost of the current CBS node.
-    /// @oaram The nubmer of feasible solutions.
-    /// @param A boolean flag for update or not the paths.
     void UpdateBestGroupPlan(GroupTask* _groupTask, vector<Path>&
       _optimalPaths,double& _optimalCost, double _currentNodeCost);
 
@@ -139,19 +136,13 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @param The group task.
     /// @param _cbsTree The conflict tree.
     /// @param The current CBS node.
-    /// @param The safe interval tool.
-    /// @param A conflict on an edge, defined by the VIDs of the edge and the
-    /// conflicting timestep.
-    /// @param A conflict on a cfg, defined by the conflicting cfg if the
-    /// other robot and the conflicting timestep.
-    /// @param A boolean flag for the coming functions of the algorithm.
-    /// @param The cost to update if the plan gets validated.
-    /// @param A boolean flag to state when feasible a solution is found.
+    /// @param The current set of paths.
     bool ValidateGroupPlan(GroupTask* _groupTask, CBSTree<MPTraits>& _cbsTree,
       CBSNode<MPTraits>& _currentCBSNode, vector<Path*> _paths);
 
     /// Checking if a set of paths has inter-robot collisions.
     /// @param _paths The set f paths to check.
+    /// @return A pair of conflicts
     PairConflict FindConflict(const vector<Path*>& _paths) ;
 
     ///@}
@@ -162,8 +153,6 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     std::string m_queryLabel;  ///< Label for an individual query method.
 
     std::string m_vcLabel; ///< The validity checker to use.
-
-    size_t m_numIter; // The maximum iterations we will run in the CBS Tree
 
     bool m_firstSol{false}; // Return the first solution we found
     ///@}
@@ -186,9 +175,6 @@ GroupCBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
 
   m_queryLabel = _node.Read("queryLabel", true, "",
       "The individual query method.");
-
-  m_numIter = _node.Read("numIter", true,
-          1, 0, MAX_INT, "Number of iterations");
 
   m_firstSol = _node.Read("firstSol", true, m_firstSol,
       "Return the first solution we found");
@@ -278,7 +264,7 @@ operator()() {
 
     if(m_firstSol)
       break;
-  } while (!cbsTree.empty() and m_numIter > counter );
+  } while (!cbsTree.empty());
   if(this->m_debug)
     std::cout << "\nCBSTree fully explored, Number of solutions: "
   		<< solutionCount << std::endl;
@@ -463,19 +449,20 @@ GroupCBSQuery<MPTraits>::
 ValidateGroupPlan(GroupTask* _groupTask, CBSTree<MPTraits>& _cbsTree,
   CBSNode<MPTraits>& _currentCBSNode, vector<Path*> _paths) {
 
-  std::vector<typename CBSNode<MPTraits>::ConflictEdge> edgeConflicts;
-  std::vector<typename CBSNode<MPTraits>::ConflictCfg> cfgConflicts;
-  // Reserving the size for the containers of invalidated Cfgs,
-  if(_currentCBSNode.m_cfgConflicts.empty()) {
-    for(size_t i = 0 ; i <=  _groupTask->GetRobotGroup()->Size()  ; ++i) {
-      _currentCBSNode.m_edgeConflicts.push_back(edgeConflicts);
-      _currentCBSNode.m_cfgConflicts.push_back(cfgConflicts);
-    }
-  }
+  std::vector<ConflictEdge> edgeConflicts;
+  std::vector<ConflictCfg> cfgConflicts;
+
   //Here we check the paths for conflicts
   auto pairCfg = FindConflict(_paths);
 
   if( pairCfg.first.numRobot != INVALID_VID) {
+      // Reserving the size for the containers of invalidated Cfgs,
+    if(_currentCBSNode.m_cfgConflicts.empty()) {
+      for(size_t i = 0 ; i < _groupTask->GetRobotGroup()->Size() ; ++i) {
+        _currentCBSNode.m_edgeConflicts.push_back(edgeConflicts);
+        _currentCBSNode.m_cfgConflicts.push_back(cfgConflicts);
+      }
+    }
     //Collision found adding two new cbsNodes
     AddingChildCBSNodes(_cbsTree, _currentCBSNode, pairCfg);
     _paths.clear();

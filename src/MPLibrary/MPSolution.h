@@ -119,6 +119,11 @@ class MPSolutionType final {
     /// @return The solution object for _r.
     const RobotSolution* GetRobotSolution(Robot* _r) const noexcept;
 
+    /// Get the solution for a robot.
+    /// @param _r The robot.
+    /// @return The solution object for _r.
+    RobotSolution* GetRobotSolution(Robot* _r) noexcept;
+
     /// Get the solution for a robot group.
     /// @param _g The robot group.
     /// @return The solution object for _g.
@@ -213,21 +218,22 @@ SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
                                   << "have a solution.";
   }
 
-  m_individualSolutions[_r].freeMap.reset(_roadmap);
-  m_individualSolutions[_r].path.reset(new Path(_roadmap));
+  robotSolution->freeMap.reset(_roadmap);
+  robotSolution->path.reset(new Path(_roadmap));
 }
 
 template <typename MPTraits>
 void
 MPSolutionType<MPTraits>::
-SetPath(Robot* const _r, Path*  _path) noexcept {
+SetPath(Robot* const _r, Path* _path) noexcept {
   auto robotSolution = GetRobotSolution(_r);
   if(!robotSolution){//master had without the not !
     throw RunTimeException(WHERE) << "Cannot set path for robot that does not "
                                   << "have a solution.";
   }
-  m_individualSolutions[_r].path.release();
-  m_individualSolutions[_r].path.reset(_path);
+
+  robotSolution->path.release();
+  robotSolution->path.reset(_path);
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/
@@ -322,6 +328,20 @@ inline
 const typename MPSolutionType<MPTraits>::RobotSolution*
 MPSolutionType<MPTraits>::
 GetRobotSolution(Robot* _r) const noexcept {
+  if(!_r)
+    _r = m_robot;
+
+  auto iter = m_individualSolutions.find(_r);
+  const bool found = iter != m_individualSolutions.end();
+  return found ? &iter->second : nullptr;
+}
+
+
+template <typename MPTraits>
+inline
+typename MPSolutionType<MPTraits>::RobotSolution*
+MPSolutionType<MPTraits>::
+GetRobotSolution(Robot* _r) noexcept {
   if(!_r)
     _r = m_robot;
 

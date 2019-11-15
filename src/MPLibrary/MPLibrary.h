@@ -296,7 +296,7 @@ class MPLibraryType final
 
     /// Recompute the full edge path at resolution(source and target cfgs 
     /// are not included).
-    /// @param _lib The MPLibrary pointer.
+    /// @param _roadmap The roadmap pointer.
     /// @param _source The source VID.
     /// @param _target The target VID.
     /// @param _lp The local planner to use, if not specified, edge lp is used.
@@ -355,7 +355,7 @@ class MPLibraryType final
     /// Group overload:
     void Solve(MPProblem* _problem, GroupTask* _task);
     
-		void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
+	void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
 
     /// Run a specific MPStrategy from the XML file with a designated seed and
     /// base output file name. This is intended for use with the simulator where
