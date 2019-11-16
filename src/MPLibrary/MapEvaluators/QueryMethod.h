@@ -365,7 +365,6 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
     };
   }
 
-
   // Run dijkstra's algorithm to find the path, if it exists.
   auto g = this->GetRoadmap();
   const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(g, {_start}, weight,

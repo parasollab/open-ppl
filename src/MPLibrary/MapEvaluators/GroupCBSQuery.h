@@ -95,48 +95,48 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
       const CBSNode<MPTraits>& _currentCBSNode, PairConflict _pairCfg);
 
     /// Computing the total cost of the paths in GroupTask.
-    /// @param The group task.
+    /// @param _groupTask The group task.
     /// @return The total cost.
     double TotalCost(GroupTask* groupTask);
 
     /// Collecting the paths in GroupTask.
-    /// @param The group task.
+    /// @param _groupTask The group task.
     /// @return A vector of paths.
-    vector<Path*> CollectPaths(GroupTask* groupTask);
+    vector<Path*> CollectPaths(GroupTask* _groupTask);
 
     ///  Printing the VID Paths in GroupTask
-    /// @param The group task.
-    void PrintPaths(GroupTask* groupTask);
+    /// @param _groupTask The group task.
+    void PrintPaths(GroupTask* _groupTask);
 
     /// Computes individual paths for each robot, they are consistent with
     /// the current conflicts
-    /// @param The group task.
-    /// @param The current CBS node.
+    /// @param _groupTask The group task.
+    /// @param _currentCBSNode The current CBS node.
     /// @return True if all the paths were successfully computed
-    bool MakeIndividualPlans(GroupTask* groupTask,
+    bool MakeIndividualPlans(GroupTask* _groupTask,
       CBSNode<MPTraits>& _currentCBSNode);
 
     /// Once the best solution is found, this function set it back to the
     /// group task.
-    /// @param The group task.
-    /// @param The current best set of paths.
+    /// @param _groupTask The group task.
+    /// @param _optimalPaths The current best set of paths.
     void SetBestGroupPlan(GroupTask* _groupTask, vector<Path>& _optimalPaths);
 
     /// When a better solution is found, this function updates the current
     /// best solution
     /// group task.
-    /// @param The group task.
-    /// @param The current best set of paths.
-    /// @param The current best total cost.
-    /// @param The current total cost of the current CBS node.
+    /// @param _groupTask The group task.
+    /// @param _optimalPaths The current best set of paths.
+    /// @param _optimalCost The current best total cost.
+    /// @param _currentNodeCost The current total cost of the current CBS node.
     void UpdateBestGroupPlan(GroupTask* _groupTask, vector<Path>&
       _optimalPaths,double& _optimalCost, double _currentNodeCost);
 
     /// Validates a group plan, it determines if the plan is conflict free, if /// not it creates new CBS nodes for future iterations.
-    /// @param The group task.
+    /// @param _groupTask The group task.
     /// @param _cbsTree The conflict tree.
-    /// @param The current CBS node.
-    /// @param The current set of paths.
+    /// @param _currentCBSNode The current CBS node.
+    /// @param _paths The current set of paths.
     bool ValidateGroupPlan(GroupTask* _groupTask, CBSTree<MPTraits>& _cbsTree,
       CBSNode<MPTraits>& _currentCBSNode, vector<Path*> _paths);
 
@@ -154,7 +154,10 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     std::string m_vcLabel; ///< The validity checker to use.
 
-    bool m_firstSol{false}; // Return the first solution we found
+    bool m_firstSol{false}; //< Return the first solution we found
+
+    //< The maximum iterations we will run in the CBS Tree
+    size_t m_numIter{std::numeric_limits<size_t>::infinity()};
     ///@}
 
 };
@@ -176,8 +179,12 @@ GroupCBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   m_queryLabel = _node.Read("queryLabel", true, "",
       "The individual query method.");
 
-  m_firstSol = _node.Read("firstSol", true, m_firstSol,
+  m_firstSol = _node.Read("firstSol", false, m_firstSol,
       "Return the first solution we found");
+
+  m_numIter = _node.Read("numIter", false,
+        1, 0, MAX_INT, "Number of iterations");
+
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -264,7 +271,8 @@ operator()() {
 
     if(m_firstSol)
       break;
-  } while (!cbsTree.empty());
+
+  } while (!cbsTree.empty() and m_numIter > counter);
   if(this->m_debug)
     std::cout << "\nCBSTree fully explored, Number of solutions: "
   		<< solutionCount << std::endl;
@@ -350,9 +358,9 @@ TotalCost(GroupTask* groupTask) {
 template <typename MPTraits>
 vector<typename MPTraits::Path*>
 GroupCBSQuery<MPTraits>::
-CollectPaths(GroupTask* groupTask) {
+CollectPaths(GroupTask* _groupTask) {
   vector<Path*> paths;
-  for(auto& task : *groupTask) {
+  for(auto& task : *_groupTask) {
     auto robot = task.GetRobot();
     auto path = this->GetPath(robot);
     paths.push_back(path);
@@ -364,8 +372,8 @@ CollectPaths(GroupTask* groupTask) {
 template <typename MPTraits>
 void
 GroupCBSQuery<MPTraits>::
-PrintPaths(GroupTask* groupTask) {
- for(auto& task : *groupTask) {
+PrintPaths(GroupTask* _groupTask) {
+ for(auto& task : *_groupTask) {
     auto robot = task.GetRobot();
     auto path = this->GetPath(robot);
     if(this->m_debug)
@@ -422,7 +430,7 @@ SetBestGroupPlan(GroupTask* _groupTask, vector<Path>& _optimalPaths) {
     auto currentPath = this->GetPath(robot);
     *currentPath = optimalPath;
     this->GetMPSolution()->SetPath(robot,currentPath);
-  } 
+  }
 }
 
 

@@ -29,7 +29,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-  	typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::WeightType             WeightType;
     typedef typename MPTraits::Path                   Path;
@@ -70,6 +70,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     /// @param _weight The edge to compute safeIntervals's for.
     /// @param _source The source VID to compute safeIntervals's for.
     /// @param _target The target VID to compute safeIntervals's for.
+    /// @param _roadmap The current roadmap.
     /// @return The set of safe intervals for _weight.
     Intervals ComputeIntervals(const WeightType& _weight, const VID _source,
       const VID _target, RoadmapType* _roadmap);
