@@ -20,8 +20,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base algorithm abstraction for \ref MotionPlanningStrategies that plan for
-/// robot groups.
+/// Base algorithm abstraction for MPStrategies that plan for robot groups.
 ///
 /// @todo Incorporate path constraints when generating the start and goal.
 ///
@@ -88,8 +87,6 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
 template <typename MPTraits>
 GroupStrategyMethod<MPTraits>::
 GroupStrategyMethod(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
-  // Disassembly specific things to do?
-  // - Composite vs decoupled approaches?
 }
 
 /*------------------------ MPStrategyMethod Overrides ------------------------*/
@@ -141,11 +138,10 @@ Finalize() {
 
   const std::string base = this->GetBaseFilename();
 
+#ifdef GROUP_MAP
   // Output final map.
   auto roadmap = this->GetGroupRoadmap();
   roadmap->Write(base + ".map", this->GetEnvironment());
-
-  /// @todo Should we print individual robot maps?
 
   /// @todo Add a group blocked map and output it here if populated. There is
   ///       storage for it in the MPSolution but no accessor yet.
@@ -164,9 +160,13 @@ Finalize() {
   // Output stats.
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
-
-
+#else
+  // Output stats.
+  std::ofstream osStat(base + ".stat");
+  this->GetStatClass()->PrintAllStats(osStat);
+#endif
 }
+
 
 template <typename MPTraits>
 size_t

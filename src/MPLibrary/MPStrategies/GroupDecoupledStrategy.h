@@ -39,8 +39,6 @@ class GroupDecoupledStrategy : public GroupStrategyMethod<MPTraits> {
 
     virtual void Print(std::ostream& _os) const override;
 
-    virtual void Initialize() override;
-
     ///@}
     ///@name MPStrategyMethod Overrides
     ///@{
@@ -90,13 +88,6 @@ Print(std::ostream& _os) const {
       << std::endl;
 }
 
-
-template <typename MPTraits>
-void
-GroupDecoupledStrategy<MPTraits>::
-Initialize() {
-}
-
 /*------------------------ MPStrategyMethod Overrides ------------------------*/
 
 template <typename MPTraits>
@@ -113,18 +104,23 @@ Iterate() {
   auto groupTask = this->GetGroupTask();
   this->GetMPLibrary()->SetGroupTask(nullptr);
 
-  // Set the library to this individual task and initialize.
+  // Set the library to this individual task and execute.
   for(auto& task : *groupTask) {
     auto robot = task.GetRobot();
-    if(this->m_debug)
-      std::cout << "Running indiviudal strategy on robot " 
-        << robot->GetLabel() << std::endl;
-    auto s = this->GetMPStrategy(m_strategyLabel);
-    if(robot->GetDefaultStrategyLabel() != "")
-      s = this->GetMPStrategy(robot->GetDefaultStrategyLabel());
-    this->GetMPLibrary()->SetTask(&task);
+    const std::string strategy = robot->GetDefaultStrategyLabel().empty()
+                               ? m_strategyLabel
+                               : robot->GetDefaultStrategyLabel();
 
+    if(this->m_debug)
+      std::cout << "Running indiviudal strategy '" << strategy << "' for "
+                << "robot '" << robot->GetLabel() << "' (" << robot << ")."
+                << std::endl;
+
+    this->GetMPLibrary()->SetTask(&task);
+    auto s = this->GetMPStrategy(strategy);
+    s->EnableOutputFiles(false);
     (*s)();
+    s->EnableOutputFiles(true);
   }
 
   // Restore the group task.
@@ -137,10 +133,9 @@ template <typename MPTraits>
 void
 GroupDecoupledStrategy<MPTraits>::
 Finalize() {
-
   if(!this->m_writeOutput)
     return;
-  
+
   double totalCost = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
@@ -148,7 +143,6 @@ Finalize() {
 
   // Collect the full cfg paths for each robot.
   size_t longestPath = 0;
-  //std::vector<std::vector<CfgType>> paths;
   std::vector<std::vector<VID>> paths;
   paths.reserve(groupTask->Size());
   size_t i = 0;
@@ -164,12 +158,12 @@ Finalize() {
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
     if(this->m_debug)
-      std::cout << "VID Path for robot " << robot->GetLabel() 
+      std::cout << "VID Path for robot " << robot->GetLabel()
         << ": " << path->VIDs() << std::endl;
-    
+
     auto roadmap = path->GetRoadmap();
     const std::string base = this->GetBaseFilename();
-    roadmap->Write(base +"."+ robot->GetLabel() + ".map", 
+    roadmap->Write(base +"."+ robot->GetLabel() + ".map",
       this->GetEnvironment());
     if(path and path->Size()) {
       ::WritePath(base +"."+ robot->GetLabel() + ".rdmp.path", path->Cfgs());
@@ -180,7 +174,7 @@ Finalize() {
   }
 
   StatClass* stats = this->GetStatClass();
-  stats->SetStat("GroupDecoupledQuery::TotalCost",totalCost);
+  stats->SetStat("GroupDecoupledQuery::TotalCost", totalCost);
 
   // Add each path configuration to the group roadmap.
   const size_t numRobots = groupTask->Size();
@@ -206,7 +200,7 @@ Finalize() {
     // If the last VID was valid, add an edge between the nodes.
     if(lastVID != INVALID_VID) {
       if(this->m_debug)
-        std::cout << "Creating group edge from " << lastVID 
+        std::cout << "Creating group edge from " << lastVID
           << " to " << vid << "."
                 << std::endl;
       GroupWeightType lp(groupRoadmap);

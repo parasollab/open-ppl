@@ -41,10 +41,9 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename MPTraits::CfgType              CfgType;
+    typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
-    typedef typename RoadmapType::EdgeID            EdgeID;
     typedef typename MPTraits::GoalTracker          GoalTracker;
     typedef typename GoalTracker::VIDSet            VIDSet;
 
@@ -95,6 +94,10 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///               use the saved edge weights.
     void SetDMLabel(const std::string& _dmLabel);
 
+    /// Set an alternate path weight function to use when searching the roadmap.
+    /// @param The path weight function object to use.
+    virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f);
+
     ///@}
 
   protected:
@@ -124,7 +127,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _targetDistance The best known distance to the target node.
     /// @return The distance to the target node via this edge, or infinity if
     ///         the edge isn't used due to lazy invalidation.
-    double StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
+    virtual double StaticPathWeight(
+        typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
     /// Define a function for computing path weights w.r.t. dynamic obstacles.
@@ -135,27 +139,9 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _targetDistance The best known time to the target node.
     /// @return The time to the target node via this edge, or infinity if taking
     ///         this edge would result in a collision with dynamic obstacles.
-    double DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
+    virtual double DynamicPathWeight(
+        typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
-
-    /// Define a function for computing path weights w.r.t. multi-robot
-    /// problems. Here the metric is the number of time steps, and we return
-    /// infinity if taking an edge would result in a inter-robot collision.
-    /// @param _ei An iterator to the edge we are checking.
-    /// @param _sourceDistance The shortest time to the source node.
-    /// @param _targetDistance The best known time to the target node.
-    /// @return The time to the target node via this edge, or infinity if taking
-    ///         this edge would result in a collision with dynamic obstacles.
-    double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-        const double _sourceDistance, const double _targetDistance) const;
-
-        /// Checking if an edge is collision-free with an external cfg
-    /// @param _source The cfg source of the edge.
-    /// @param _target The cfg target of the edge.
-    /// @param _conflictCfg The external cfg to check.
-    bool IsEdgeSafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
-      const CfgType& _conflictCfg) const;
-
 
     ///@}
     ///@name Internal State
@@ -169,8 +155,9 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
     std::string m_dmLabel;           ///< The DistanceMetric label.
-    std::string m_vcLabel; ///< The validity checker to use.
-    bool m_multiAgentMP{false}; ///< A boolean flag for multiagent mp problems
+
+    /// The function for computing total path weight.
+    SSSPPathWeightFunction<RoadmapType> m_weightFunction;
 
     ///@}
 
@@ -200,9 +187,6 @@ QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "Label of the SafeIntervalTool");
   m_dmLabel = _node.Read("dmLabel", false, "",
       "Alternate distance metric to replace edge weight during search.");
-  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
-  m_multiAgentMP = _node.Read("multiAgentMP", false, m_multiAgentMP, 
-    "Flag to allow work on multiagent mp problems");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -345,19 +329,17 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   // Set up the path weight function depending on whether we have any dynamic
   // obstacles.
   SSSPPathWeightFunction<RoadmapType> weight;
-  if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
+  if(m_weightFunction) {
+    weight = m_weightFunction;
+  }
+  else if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
     weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
                     const double _sourceDistance,
                     const double _targetDistance) {
       return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
     };
-  } else if(m_multiAgentMP) {
-    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
-                    const double _sourceDistance,
-                    const double _targetDistance) {
-      return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
-    };
-  } else {
+  }
+  else {
     weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
                     const double _sourceDistance,
                     const double _targetDistance) {
@@ -366,8 +348,7 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   }
 
   // Run dijkstra's algorithm to find the path, if it exists.
-  auto g = this->GetRoadmap();
-  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(g, {_start}, weight,
+  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(m_roadmap, {_start}, weight,
       termination);
 
   // Find the last discovered node, which should be a goal if there is a valid
@@ -404,6 +385,14 @@ void
 QueryMethod<MPTraits>::
 SetDMLabel(const std::string& _dmLabel) {
   m_dmLabel = _dmLabel;
+}
+
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f) {
+  m_weightFunction = _f;
 }
 
 /*------------------------------- Helpers ------------------------------------*/
@@ -469,12 +458,6 @@ double
 QueryMethod<MPTraits>::
 StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  // First check if the edge is lazily invalidated. If so, the distance is
-  // infinite.
-
-  if(m_roadmap->IsEdgeInvalidated(_ei->id()))
-    return std::numeric_limits<double>::infinity();
-
   // Check if Distance Metric has been defined. If so use the Distance Metric's
   // EdgeWeight function to compute the target distance.
   if(!m_dmLabel.empty()) {
@@ -494,11 +477,6 @@ double
 QueryMethod<MPTraits>::
 DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  // First check if the edge is lazily invalidated. If so, the distance is
-  // infinite.
-  if(m_roadmap->IsEdgeInvalidated(_ei->id()))
-    return std::numeric_limits<double>::infinity();
-
   // Compute the new 'distance', which is the number of timesteps at which
   // the robot would reach the target node.
   const double edgeWeight  = _ei->property().GetTimeSteps(),
@@ -513,14 +491,12 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     return newDistance;
   }
 
-  // Get the graph and safe interval tool.
-  auto g = this->GetRoadmap();
-  SafeIntervalTool<MPTraits>* siTool = this->GetMPTools()->GetSafeIntervalTool(
-      m_safeIntervalLabel);
+  auto siTool = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
 
   // Ensure that the target vertex is contained within a SafeInterval when
   // arriving.
-  auto vertexIntervals = siTool->ComputeIntervals(g->GetVertex(_ei->target()));
+  const auto& target = m_roadmap->GetVertex(_ei->target());
+  auto vertexIntervals = siTool->ComputeIntervals(target);
   if(!(siTool->ContainsTimestep(vertexIntervals, newDistance))) {
     if(this->m_debug)
       std::cout << "Breaking because the target vertex is dynamically invalid."
@@ -530,8 +506,8 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   }
 
   // Ensure that the edge is contained within a SafeInterval if leaving now.
-  auto edgeIntervals = siTool->ComputeIntervals(_ei->property(),_ei->source(),
-  _ei->target(), g);
+  auto edgeIntervals = siTool->ComputeIntervals(_ei->property(), _ei->source(),
+      _ei->target(), m_roadmap);
   if(!(siTool->ContainsTimestep(edgeIntervals, _sourceDistance))){
     if(this->m_debug)
       std::cout << "Breaking because the edge is dynamically invalid."
@@ -542,90 +518,6 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // If we're still here, the edge is OK.
   return newDistance;
 }
-
-
-template <typename MPTraits>
-double
-QueryMethod<MPTraits>::
-MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-    const double _sourceDistance, const double _targetDistance) const {
-  // Checking if the edge is already invalidated
-  auto dm = this->GetDistanceMetric(m_dmLabel);
-  if(m_roadmap->IsEdgeInvalidatedAt(_ei->id(),_sourceDistance,_sourceDistance +
-   dm->EdgeWeight(m_roadmap, _ei->source(), _ei->target()))) {
-   	if(this->m_debug)
-    	std::cout << "EDGE INVALIDATED!!!" << std::endl;
-    return std::numeric_limits<double>::infinity();
-  } 
-	// If the edge is not invalidated, we will go trough the ConflictCfg List
-	// to obtain all the conflicting timesteps
-  const std::vector<std::pair<CfgType,double>>& conflictCfgsAt = m_roadmap->
-  	GetAllConflictsCfgAt();
-
-  for(const auto& conflictCfg : conflictCfgsAt) {
-    const double& conflictTimestep = conflictCfg.second;
-    const CfgType& cfg = conflictCfg.first;
-
-    // Check if the conflict occurs during this edge transition.
-    const bool rightTime = conflictTimestep > _sourceDistance
-                       and conflictTimestep < StaticPathWeight(_ei, _sourceDistance, _targetDistance);
-    if(!rightTime)
-      continue;
-
-    // Check if the conflict cfg hits this edge.
-    const bool hitsEdge = !IsEdgeSafe(m_roadmap, _ei->source(), _ei->target(), cfg);
-    if(!hitsEdge)
-      continue;
-
-    // The conflict blocks this edge.
-    m_roadmap->SetEdgeInvalidatedAt(_ei->source(), _ei->target(), conflictTimestep, true);
-    return std::numeric_limits<double>::infinity();
-  }
-  
-  return StaticPathWeight(_ei, _sourceDistance, _targetDistance);
-} 
-
-
-template <typename MPTraits>
-bool
-QueryMethod<MPTraits>::
-IsEdgeSafe(RoadmapType* _roadmap, const VID& _source, const VID& _target,
-  const CfgType& _conflictCfg) const {
-  //Reconstructing edge "path"
-  std::vector<CfgType> path;
-  path.push_back(_roadmap->GetVertex(_source));
-  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(_roadmap,
-    _source, _target);
-  path.insert(path.end(), edge.begin(), edge.end());
-  path.push_back(_roadmap->GetVertex(_target));
-
-  // Get the valididty checker and make sure it has type
-  // CollisionDetectionValidity.
-  /// @TODO Figure out how to avoid needing this downcast so that we can
-  ///       leverage more efficient compose checks (like checking the bounding
-  ///       spheres first).
-  auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
-
-  auto robotMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
-  robotMultiBody->Configure(_conflictCfg);
-
-  for(size_t i = 0 ; i < path.size() ; ++i ) {
-    const CfgType& position = path[i];
-    // Configure the obstacle at the current timestep.
-    auto obstacleMultiBody = path[0].GetRobot()->GetMultiBody();
-    obstacleMultiBody->Configure(position);
-    // If the obstacle is in collision with _cfg at _timestep, return false
-    CDInfo cdInfo;
-    if(vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
-        this->GetNameAndLabel())) {
-      return false;
-    }
-  }
-  // If we haven't detected a collision, the edge is safe.
-  return true;
-}
-
 
 /*----------------------------------------------------------------------------*/
 

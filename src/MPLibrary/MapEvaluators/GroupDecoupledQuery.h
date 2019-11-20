@@ -26,12 +26,6 @@ class GroupDecoupledQuery : public MapEvaluatorMethod<MPTraits> {
     virtual ~GroupDecoupledQuery() = default;
 
     ///@}
-    ///@name MPBaseObject Overrides
-    ///@{
-
-    virtual void Initialize() override;
-
-    ///@}
     ///@name MapEvaluator Overrides
     ///@{
 
@@ -66,23 +60,6 @@ GroupDecoupledQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
 
   m_queryLabel = _node.Read("queryLabel", true, "",
       "The individual query method.");
-}
-
-/*-------------------------- MPBaseObject Overrides --------------------------*/
-
-template <typename MPTraits>
-void
-GroupDecoupledQuery<MPTraits>::
-Initialize() {
-  std::cout << "INITIALIZE '" << this->GetLabel() << "'" << std::endl;
-  // Add maps to the goal tracker for the individual maps.
-  auto goalTracker = this->GetGoalTracker();
-  auto groupTask = this->GetGroupTask();
-  for(auto& task : *groupTask) {
-    auto roadmap = this->GetRoadmap(task.GetRobot());
-    if(!goalTracker->IsMap(roadmap, &task))
-      goalTracker->AddMap(roadmap, &task);
-  }
 }
 
 /*-------------------------- MapEvaluator Overrides --------------------------*/

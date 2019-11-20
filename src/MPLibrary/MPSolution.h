@@ -141,8 +141,9 @@ class MPSolutionType final {
     /// The solution object for each robot and group.
     std::unordered_map<Robot*, RobotSolution> m_individualSolutions;
     std::unordered_map<RobotGroup*, GroupSolution> m_groupSolutions;
-    
+
     ///@}
+
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -193,9 +194,9 @@ template <typename MPTraits>
 void
 MPSolutionType<MPTraits>::
 SetRobot(Robot* const _r) noexcept {
-  if(m_robot == _r){
+  if(m_robot == _r)
     return;
-  }
+
   // Move m_robot's solution to match the new pointer.
   auto iter = m_individualSolutions.find(m_robot);
   m_individualSolutions[_r] = std::move(iter->second);
@@ -213,10 +214,9 @@ void
 MPSolutionType<MPTraits>::
 SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept {
   auto robotSolution = GetRobotSolution(_r);
-  if(!robotSolution){//master had without the not !
+  if(!robotSolution)
     throw RunTimeException(WHERE) << "Cannot set roadmap for robot that does not "
                                   << "have a solution.";
-  }
 
   robotSolution->freeMap.reset(_roadmap);
   robotSolution->path.reset(new Path(_roadmap));
@@ -227,10 +227,9 @@ void
 MPSolutionType<MPTraits>::
 SetPath(Robot* const _r, Path* _path) noexcept {
   auto robotSolution = GetRobotSolution(_r);
-  if(!robotSolution){//master had without the not !
+  if(!robotSolution)
     throw RunTimeException(WHERE) << "Cannot set path for robot that does not "
                                   << "have a solution.";
-  }
 
   robotSolution->path.release();
   robotSolution->path.reset(_path);
