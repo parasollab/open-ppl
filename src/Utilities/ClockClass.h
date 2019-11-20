@@ -6,8 +6,12 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This class is used to measure the running time between @c StartClock and
-/// @c StopClock. Client side could provide clock name.
+/// This class is used to measure the processor time used between StartClock and
+/// StopClock calls. This includes both user and system time.
+///
+/// @note Instances of this class are not thread-safe and should only be used by
+///       a single thread. It is safe to run separate instances in differnet
+///       threads.
 ///
 /// @ingroup MetricUtils
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,7 +19,14 @@ class ClockClass {
 
   public:
 
+    ///@name Construction
+    ///@{
+
     ClockClass();
+
+    ///@}
+    ///@name Interface
+    ///@{
 
     /// Set the clock name.
     /// @param _name The name to use.
@@ -25,9 +36,11 @@ class ClockClass {
     void ClearClock();
 
     /// Start the clock and the name is identity of this clock.
+    /// @throw If the clock is already started.
     void StartClock();
 
     /// Stop the clock and calculate the total running time.
+    /// @throw If the clock is already stopped.
     void StopClock();
 
     /// Call StopClock and PrintClock.
@@ -41,17 +54,21 @@ class ClockClass {
     double GetSeconds() const;
 
     /// Get the recorded time in microseconds.
-    int GetUSeconds() const;
+    double GetUSeconds() const;
+
+    ///@}
 
   private:
 
     ///@name Internal State
     ///@{
 
-    int m_sTime, m_uTime;
-    int m_suTime, m_uuTime;
+    struct timeval m_startTimeval; ///< The total usage at last start.
+    struct timeval m_usedTimeval;  ///< The summed usage measured by this clock.
 
-    std::string m_clockName;  ///< The clock label.
+    bool m_running{false};         ///< Is the clock currently running?
+
+    std::string m_clockName;       ///< The clock label.
 
     ///@}
 
