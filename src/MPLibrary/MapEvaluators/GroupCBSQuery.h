@@ -299,6 +299,7 @@ operator()() {
   // Test the next best solution for conflicts until we find a path that is
   // simultaneously valid for all robots.
   while(!tree.empty() and m_nodeLimit > counter) {
+  // while(m_nodeLimit > counter) {
     // Increment iteration count.
     ++counter;
     if(this->m_debug)
@@ -344,6 +345,7 @@ operator()() {
   m_conflictCache.clear();
 
   return success;
+  //return true;
 }
 
 /*--------------------------------- Helpers ---------------------------------*/
@@ -408,12 +410,37 @@ CreateChildNode(Robot* const _robot, CfgType&& _cfg, const double _time,
   if(this->m_debug)
     std::cout << "\t\tAttempting to create CBS node with conflict on robot "
               << _robot->GetLabel() << " at time "
-              << _time << "."
+              << _time << " colliding against robot " << _cfg.GetRobot()->GetLabel()
               << std::endl;
 
   // Initialize the child node by copying the parent.
   CBSNode child = _parent;
-  child.conflicts[_robot].emplace(_time, std::move(_cfg));
+
+  // Checking if the particular conflict we just found, already exists in the cbsnode
+  auto robotConflicts = child.conflicts[_robot];
+  bool existingConflict = true;
+
+  for(auto iter = robotConflicts.begin() ; iter != robotConflicts.end() ; ++iter) 
+    if(iter->first == _time and iter->second == _cfg) {
+      existingConflict = false;
+      if(this->m_debug)
+        std::cout << "\t\t\tThis conflict is already in the conflict set, skipping."
+                << std::endl;
+    }
+ 
+  if(existingConflict)
+    child.conflicts[_robot].emplace(_time, std::move(_cfg));
+
+  auto conflicts = child.conflicts;
+
+  for(auto conflictSet : conflicts) {
+    for(auto conflict : conflictSet.second) {
+      std::cout << "\t\t\t\t\tConflict on robot " << conflictSet.first->GetLabel() 
+        << " at time " << conflict.first << " against robot " 
+        << conflict.second.GetRobot()->GetLabel() << " at cfg "
+        << conflict.second.PrettyPrint() << std::endl;
+    }
+  }
 
   // If we've already seen this set of conflicts, don't check them again.
   if(m_conflictCache.count(child.conflicts)) {
@@ -577,7 +604,7 @@ FindConflict(const Solution& _solution) {
         Conflict newConflict;
         newConflict.cfg1 = cfg1;
         newConflict.cfg2 = cfg2;
-        newConflict.time = time;
+        newConflict.time = t;
 
         return newConflict;
       }
@@ -597,6 +624,7 @@ double
 GroupCBSQuery<MPTraits>::
 MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _startTime, const double _bestEndTime) const {
+
   // Compute the time when we will end this edge.
   const double endTime = _startTime + _ei->property().GetTimeSteps();
 
@@ -641,6 +669,10 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const bool hitsEdge = !IsEdgeSafe(_ei->source(), _ei->target(), cfg);
     if(!hitsEdge)
       continue;
+
+    std::cout << "\t\t\t\t\tInvalidating edge (" << _ei->source() << "," << _ei->target() 
+      << ") colliding against robot " << cfg.GetRobot()->GetLabel() 
+      << " at " << cfg.PrettyPrint() << std::endl;
 
     // The conflict blocks this edge.
     return std::numeric_limits<double>::infinity();
