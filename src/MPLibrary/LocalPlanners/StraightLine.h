@@ -1,5 +1,5 @@
-#ifndef STRAIGHT_LINE_H_
-#define STRAIGHT_LINE_H_
+#ifndef PMPL_STRAIGHT_LINE_H_
+#define PMPL_STRAIGHT_LINE_H_
 
 #include "ConfigurationSpace/GroupRoadmap.h"
 
@@ -11,7 +11,7 @@
 #include "Vector.h"
 #include "nonstd.h"
 
-#include <deque>
+#include <queue>
 
 #include <boost/utility/enable_if.hpp>
 
@@ -228,33 +228,33 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
                                                         : _robotIndexes[0];
 
   // Will find all the straight-line increments for each robot independently.
-  // (Though the nTicks calculation is coupled with all moving robots).
-  int nTicks;
-  GroupCfgType incr(groupMap);
-  incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
+  // (Though the numSteps calculation is coupled with all moving robots).
+  int numSteps;
+  GroupCfgType increment(groupMap);
+  increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
 
-  const GroupCfgType originalIncr = incr;
+  const GroupCfgType originalIncrement = increment;
 
-  // Set up incr for all translating bodies, should there be more than one.
+  // Set up increment for all translating bodies, should there be more than one.
   if(multipleParts) {
-    // Remove the rotational bits, as incr should only do the translation
-    //  and then RotateFormationAboutLeader() will handle all rotations:
-    incr = GroupCfgType(groupMap, true);
+    // Remove the rotational bits, as increment should only do the translation
+    // and then RotateFormationAboutLeader() will handle all rotations:
+    increment = GroupCfgType(groupMap, true);
 
     // Overwrite all positional dofs from the leader's cfg for all active robots
-    incr.OverwriteDofsForRobots(
-        originalIncr.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
+    increment.OverwriteDofsForRobots(
+        originalIncrement.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
         _robotIndexes);
   }
 
   int cdCounter = 0;
   int nIter = 0;
-  GroupCfgType tick(_c1),
-               leaderTick(_c1),
-               previous(groupMap);
-  for(int i = 1; i < nTicks; ++i, ++nIter) {
-    previous = tick;
-    tick += incr;
+  GroupCfgType currentStep(_c1),
+               leaderStep(_c1),
+               previousStep(groupMap);
+  for(int i = 1; i < numSteps; ++i, ++nIter) {
+    previousStep = currentStep;
+    currentStep += increment;
 
     // Handle rotation of a formation. We will determine the rotation applied to
     // the leader robot and cause the others to rotate about it, maintaining
@@ -265,35 +265,36 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
       ///       could be made individual if using the leader, then using
       ///       Configure on that.
 
-      // Advance the leader tick by the original increment (we will only use
+      // Advance the leader currentStep by the original increment (we will only use
       // data which is set in the leader body).
-      leaderTick += originalIncr;
+      leaderStep += originalIncrement;
 
-      // Find the previous transformation of the leader robot's base.
-      previous.ConfigureRobot();
+      // Find the previousStep transformation of the leader robot's base.
+      previousStep.ConfigureRobot();
       mathtool::Transformation initialTransform =
-          previous.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+          previousStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
           GetWorldTransformation();
 
       // Find the new transformation of the leader robot's base.
-      leaderTick.ConfigureRobot();
+      leaderStep.ConfigureRobot();
       mathtool::Transformation finalTransform =
-          leaderTick.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+          leaderStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
           GetWorldTransformation();
 
       // Find the relative transformation of the leader robot's base. This holds
-      // the rotation to be applied to tick, which only increments position in
-      // this case.
+      // the rotation to be applied to currentStep, which only increments
+      // position in this case.
       mathtool::Transformation delta = -initialTransform * finalTransform;
-      tick.RotateFormationAboutLeader(_robotIndexes, delta.rotation(),
+      currentStep.RotateFormationAboutLeader(_robotIndexes, delta.rotation(),
           this->m_debug);
     }
 
     // Check collision if requested.
     if(_checkCollision) {
       ++cdCounter;
-      if(!tick.InBounds(env->GetBoundary()) or !vc->IsValid(tick, callee)) {
-        _col = tick;
+      const bool inBounds = currentStep.InBounds(env->GetBoundary());
+      if(!inBounds or !vc->IsValid(currentStep, callee)) {
+        _col = currentStep;
         connected = false;
         break;
       }
@@ -301,7 +302,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
 
     // Save path if requested.
     if(_savePath)
-      _lpOutput->m_path.push_back(tick);
+      _lpOutput->m_path.push_back(currentStep);
   }
 
   // Set data in the LPOutput object.
@@ -364,70 +365,77 @@ IsConnectedSLSequential(
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
-
-  Environment* env = this->GetEnvironment();
-  auto robot = _c1.GetRobot();//this->GetRobot(_c1, _c2);
-  // Assumes if robot pointers don't match, then it is an interaction edge.
+  auto robot = _c1.GetRobot();
+  // If there is no robot pointer, this is assumed to be an interaction edge.
+  /// @todo Why are we running a local planner on an interaction edge? That
+  ///       shouldn't be necessary since we need neither intermediates nor CD
+  ///       information in that case?
   if(!robot)
     return true;
 
+  Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  const std::string id = this->GetNameAndLabel() + "::IsConnectedSLSequential";
 
-  int nTicks;
-  CfgType tick(robot), incr(robot), prev(robot);
-  tick = _c1;
-  incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
-  std::string callee = this->GetNameAndLabel() + "::IsConnectedSLSequential";
-
+  // Compute the number of resolution-level steps required to transition from
+  // _c1 to _c2.
+  int numSteps;
+  CfgType increment(robot);
+  increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
   if(this->m_debug)
-    std::cout << "\n\tComputed increment for " << nTicks << " ticks: "
-              << incr.PrettyPrint() << std::endl;
-  int nIter = 0;
+    std::cout << "\n\tComputed increment for " << numSteps << " steps: "
+              << increment.PrettyPrint() << std::endl;
+
+  // Step from _c1 by a distance increment, either numSteps - 1 times or until a
+  // collision is detected (-1 because we the final step will land at _c2, which
+  // we don't need to check).
+  CfgType currentStep = _c1,
+          previousStep;
   double distance = 0;
-  for(int i = 1; i < nTicks; ++i) { //don't need to check the ends _c1, _c2
-    prev = tick;
-    tick += incr;
-    distance += dm->Distance(prev, tick);
-    _cdCounter++;
+  for(int i = 1; i < numSteps; ++i) {
+    // Update the current step.
+    previousStep = currentStep;
+    currentStep += increment;
 
+    // Add the step distance to the total distance.
+    distance += dm->Distance(previousStep, currentStep);
+
+    // Check for collisions.
     if(_checkCollision) {
+      _cdCounter++;
       if(this->m_debug)
-        std::cout << "\n\t\tChecking " << tick.PrettyPrint();
+        std::cout << "\n\t\tChecking step " << i << " at "
+                  << currentStep.PrettyPrint()
+                  << std::endl;
 
-      const bool inBounds = tick.InBounds(env);
-      if(!inBounds || !vc->IsValid(tick, callee)) {
-        _col = tick;
-        auto& edge1 = _lpOutput->m_edge.first,
-            & edge2 = _lpOutput->m_edge.second;
-
-        edge1.SetWeight(edge1.GetWeight() + distance);
-        edge2.SetWeight(edge2.GetWeight() + distance);
-        edge1.SetTimeSteps(edge1.GetTimeSteps() + nIter);
-        edge2.SetTimeSteps(edge2.GetTimeSteps() + nIter);
+      const bool inBounds = currentStep.InBounds(env);
+      if(!inBounds || !vc->IsValid(currentStep, id)) {
+        _col = currentStep;
 
         if(this->m_debug)
-          std::cout << " INVALID";
+          std::cout << "\n\t\t\tINVALID" << std::endl;
         return false;
       }
       else if(this->m_debug)
-        std::cout << " OK";
+        std::cout << "\n\t\t\tOK" << std::endl;
     }
+
+    // Save the resolution-level path if requested.
     if(_savePath)
-      _lpOutput->m_path.push_back(tick);
-    nIter++;
+      _lpOutput->m_path.push_back(currentStep);
   }
 
-  // The edge is valid, now add the distance to the final configuration.
-  distance += dm->Distance(tick, _c2);
+  // The edge is valid. Add the distance to the final configuration.
+  distance += dm->Distance(currentStep, _c2);
 
   auto& edge1 = _lpOutput->m_edge.first,
       & edge2 = _lpOutput->m_edge.second;
 
   edge1.SetWeight(edge1.GetWeight() + distance);
   edge2.SetWeight(edge2.GetWeight() + distance);
-  edge1.SetTimeSteps(edge1.GetTimeSteps() + nTicks);
-  edge2.SetTimeSteps(edge2.GetTimeSteps() + nTicks);
+  edge1.SetTimeSteps(edge1.GetTimeSteps() + numSteps);
+  edge2.SetTimeSteps(edge2.GetTimeSteps() + numSteps);
 
   return true;
 }
@@ -441,89 +449,101 @@ IsConnectedSLBinary(
     LPOutput<MPTraits>* _lpOutput, int& _cdCounter,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
+  // If there is no robot pointer, this is assumed to be an interaction edge.
+  /// @todo Why are we running a local planner on an interaction edge? That
+  ///       shouldn't be necessary since we need neither intermediates nor CD
+  ///       information in that case?
+  auto robot = _c1.GetRobot();
+  if(!robot)
+    return true;
 
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
+  const std::string id = this->GetNameAndLabel() + "::IsConnectedSLBinary";
 
-  if(!_checkCollision)
-    return IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
-        _cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
-
-  std::string callee = this->GetNameAndLabel() + "::IsConnectedSLBinary";
-
-  int nTicks;
-  auto robot = _c1.GetRobot();// this->GetRobot(_c1, _c2);
-  // Assumes if robot pointers don't match, then it is an interaction edge.
-  if(!robot)
-    return true;
-  CfgType incr(robot);
-  incr.FindIncrement(_c1, _c2, &nTicks, _positionRes, _orientationRes);
-
+  // Compute the number of resolution-level steps required to transition from
+  // _c1 to _c2.
+  int numSteps;
+  CfgType increment(robot);
+  increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
   if(this->m_debug)
-    std::cout << "\n\tComputed increment for " << nTicks << " ticks: "
-              << incr.PrettyPrint()
+    std::cout << "\n\tComputed increment for " << numSteps << " steps: "
+              << increment.PrettyPrint()
               << std::endl;
 
-  std::deque<std::pair<int,int> > Q;
+  // Create a queue of step intervals. Each one represents a set of steps from
+  // (low step number) to (high step number), with the step numbers ranging from
+  // 0 (source cfg) to numSteps (target cfg). We will check the midpoint of each
+  // interval until a collision is found or all have been checked.
+  std::queue<std::pair<int,int>> queue;
 
-  //only perform binary evaluation when the nodes are further apart than the
-  //resolution
-  if(nTicks > 1)
-    Q.push_back(make_pair(0, nTicks));
+  // Only perform binary evaluation when the nodes are further apart than a
+  // resolution step.
+  if(numSteps > 1)
+    queue.emplace(0, numSteps);
 
-  while(!Q.empty()) {
-    std::pair<int,int> p = Q.front();
-    int i = p.first;
-    int j = p.second;
-    Q.pop_front();
+  while(!queue.empty()) {
+    // Get the next interval to check.
+    std::pair<int,int> interval = queue.front();
+    queue.pop();
 
-    int mid = i + (j - i) / 2;
+    // Extract the low and high step.
+    int low = interval.first;
+    int high = interval.second;
 
-    CfgType midCfg = incr * mid + _c1;
+    // Compute the middle step and corresponding configuration.
+    int mid = low + (high - low) / 2;
+    CfgType midCfg = increment * mid + _c1;
 
-    if(this->m_debug)
-      std::cout << "\n\t\tChecking " << midCfg.PrettyPrint();
+    // Check collision if requested.
+    if(_checkCollision) {
+      _cdCounter++;
+      if(this->m_debug)
+        std::cout << "\n\t\tChecking step " << mid << " at "
+                  << midCfg.PrettyPrint()
+                  << std::endl;
 
-    _cdCounter++;
-
-    if(!midCfg.InBounds(env) || !vc->IsValid(midCfg, callee) ) {
-      if(midCfg.InBounds(env))
+      const bool inBounds = midCfg.InBounds(env);
+      if(!inBounds or !vc->IsValid(midCfg, id)) {
         _col = midCfg;
-      if(this->m_debug)
-        std::cout << " INVALID";
-      return false;
+        if(this->m_debug)
+          std::cout << "\n\t\t\tINVALID" << std::endl;
+        return false;
+      }
     }
-    else {
-      if(i + 1 != mid)
-        Q.push_back(make_pair(i, mid));
-      if(mid + 1 != j)
-        Q.push_back(make_pair(mid, j));
+    else if(this->m_debug)
+      std::cout << "\n\t\t\tOK" << std::endl;
 
-      if(this->m_debug)
-        std::cout << " OK";
-    }
+    // If there is at least one step between low and mid, add the interval from
+    // low to mid to the queue.
+    if(low + 1 != mid)
+      queue.emplace(low, mid);
+    // Same for the mid to high interval.
+    if(mid + 1 != high)
+      queue.emplace(mid, high);
   }
 
-  // Compute the distance and path.
+  // All steps have been validated. Compute the distance and path.
   double distance = 0;
-  CfgType tick = _c1, prev;
-  for(int n = 1; n < nTicks; ++n) {
-    prev = tick;
-    tick += incr;
-    distance += dm->Distance(prev, tick);
+  CfgType currentStep = _c1,
+          previousStep;
+  for(int n = 1; n < numSteps; ++n) {
+    previousStep = currentStep;
+    currentStep += increment;
+    distance += dm->Distance(previousStep, currentStep);
     if(_savePath)
-      _lpOutput->m_path.push_back(tick);
+      _lpOutput->m_path.push_back(currentStep);
   }
-  distance += dm->Distance(tick, _c2);
+  distance += dm->Distance(currentStep, _c2);
 
   auto& edge1 = _lpOutput->m_edge.first,
       & edge2 = _lpOutput->m_edge.second;
 
   edge1.SetWeight(edge1.GetWeight() + distance);
   edge2.SetWeight(edge2.GetWeight() + distance);
-  edge1.SetTimeSteps(edge1.GetTimeSteps() + nTicks);
-  edge2.SetTimeSteps(edge2.GetTimeSteps() + nTicks);
+  edge1.SetTimeSteps(edge1.GetTimeSteps() + numSteps);
+  edge2.SetTimeSteps(edge2.GetTimeSteps() + numSteps);
 
   return true;
 }
