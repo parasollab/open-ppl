@@ -78,12 +78,18 @@ class TMPCBS : public TaskEvaluatorMethod {
 							 size_t _startTime, size_t _endTime, size_t _startVID, size_t _endVID, HandoffAgent* _agent);
 
 		void PatchSetupPaths(Node* _node);
+
+		Decomposition* CreateDecomposition(std::vector<WholeTask*> _wholeTasks);
+
 		///@}
+		///@name Internal State
+		///@{
 		bool m_makespan{false}; ///<Flag indicating evaluation metric to use	
 
 		std::string m_vcLabel;	
 		std::string m_dmadLabel;	
 
+		///@}
 };
 
 #endif

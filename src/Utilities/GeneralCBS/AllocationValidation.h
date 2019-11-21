@@ -5,7 +5,7 @@
 
 #include "TMPLibrary/TMPLibrary.h"
 
-class AllocationValidation : Validation {
+class AllocationValidation : public Validation {
   public:
 
 	///@name Local Types
@@ -19,7 +19,7 @@ class AllocationValidation : Validation {
 
 	AllocationValidation();
 
-	AllocationValidation(MPLibrary* _library, LowLevelSearch* _lowLevelSearch);
+	AllocationValidation(MPLibrary* _library, LowLevelSearch* _lowLevelSearch, TMPLibrary* _tmpLibrary);
 
 	~AllocationValidation();
 
@@ -46,8 +46,8 @@ class AllocationValidation : Validation {
 
 	///@input _node CBSNode containing the solution that is checked for conflict
 	///@output if a conflict is found, return pair of allocation constraints 
-				generated from this conflict
-				otherwise, return a pair of empty constraints
+	///			generated from this conflict
+	///			otherwise, return a pair of empty constraints
 	AllocationConstraintPair FindAllocationConflict(GeneralCBSNode& _node);
 
 	///@input _node parent CBSNode

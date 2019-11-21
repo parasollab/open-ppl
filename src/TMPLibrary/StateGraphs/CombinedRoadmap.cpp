@@ -596,6 +596,10 @@ void
 CombinedRoadmap::
 FindITLocations(InteractionTemplate* _it){
   //for(auto& method : m_ITPlacementMethods){
+
+		if(m_pmLabel == "")
+			return;
+
 		std::cout << "Calling " + m_pmLabel << std::endl;
     Simulation::GetStatClass()->StartClock("Placing Templates with: " + m_pmLabel);
     auto method = this->GetPoIPlacementMethod(m_pmLabel);

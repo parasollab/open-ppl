@@ -11,7 +11,7 @@ MotionValidation::
 
 bool
 MotionValidation::
-IntialPlan(Decomposition* _decomposition) {
+InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 	return true;
 }
 

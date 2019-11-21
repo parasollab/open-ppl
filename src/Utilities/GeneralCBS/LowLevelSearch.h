@@ -1,7 +1,7 @@
 #ifndef LOW_LEVEL_SEARCH_H_
 #define LOW_LEVEL_SEARCH_H_
 
-#include "Utilites/GeneralCBS/GeneralCBS.h"
+#include "Utilities/GeneralCBS/GeneralCBS.h"
 
 class LowLevelSearch {
   public:
@@ -22,7 +22,7 @@ class LowLevelSearch {
 	
 	//@}
 
-  private:	
+  protected:	
 
 };
 

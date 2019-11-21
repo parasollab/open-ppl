@@ -8,6 +8,11 @@
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 #include "TMPLibrary/TMPTools/TMPTools.h"
 
+#include "Utilities/GeneralCBS/AllocationValidation.h"
+#include "Utilities/GeneralCBS/ComposeValidation.h"
+#include "Utilities/GeneralCBS/GeneralCBS.h"
+#include "Utilities/GeneralCBS/MotionValidation.h"
+#include "Utilities/GeneralCBS/TMPLowLevelSearch.h"
 #include "Utilities/SSSP.h"
 
 TMPCBS::
@@ -36,6 +41,38 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	if(_wholeTasks.empty()) {
 		_wholeTasks = this->GetTaskPlan()->GetWholeTasks();
 	}
+
+	std::shared_ptr<TaskPlan> savedPlan = nullptr;
+	if(_plan) { 
+		savedPlan = this->GetTaskPlan();
+		this->GetTMPLibrary()->SetTaskPlan(_plan);
+	}
+
+	auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+
+	sg->PrintGraph();
+
+	//TODO::Create decomposition out of task plan
+	auto decomp = CreateDecomposition(_wholeTasks);
+	//auto decomp = new Decomposition(std::shared_ptr<SemanticTask>(new SemanticTask()));
+	
+	TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel);
+
+	auto alloc = new AllocationValidation(this->GetMPLibrary(), &lowLevel, this->GetTMPLibrary());
+	auto motion = new MotionValidation(this->GetMPLibrary(), &lowLevel);
+	auto compose = new ComposeValidation({alloc, motion});
+
+	InitialPlanFunction init = [this,compose](Decomposition* _decomp, GeneralCBSTree& _tree) {
+		return compose->InitialPlan(_decomp, _tree);
+	};
+
+	ValidationFunction valid = [this,compose](GeneralCBSNode& _node, GeneralCBSTree& _tree) {
+		return compose->ValidatePlan(_node, _tree);
+	};
+
+	CBSSolution solution = ConflictBasedSearch(decomp, init, valid);	
+
+/*
 	auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
 
 	size_t totalNodes = 1;
@@ -88,7 +125,9 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 				initialVIDs[kv.first].insert(vit->descriptor());
 		}
 	}
+*/
 
+	//initially commented iout
 	/*
 	auto motionConflict = new MotionConflict(this->GetTaskPlan()->GetTeam()[0],
 																								   std::make_pair(1,std::make_pair(7,MAX_INT)));
@@ -118,6 +157,10 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	//std::cout << "Just updated graph." << std::endl;
 	//sg->PrintGraph();
 	//sg->PrintAvailabilityGraph();
+	
+
+	//end of intially commented out
+	/*
 	auto nodes = FindConflict(initialNode);
 	for(auto node : nodes) {
 		if(UpdatePlan(node)) {
@@ -178,6 +221,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	Simulation::GetStatClass()->SetStat("SOC", minNode->GetDiscreteCost(false));
   Simulation::Get()->PrintStatFile();
 
+	*/
 	if(savedPlan)
 		this->GetTMPLibrary()->SetTaskPlan(_plan);
 	return true;
@@ -1775,4 +1819,20 @@ PatchSetupPaths(Node* _node) {
 		}
 	}	
 
+}
+
+Decomposition* 
+TMPCBS::
+CreateDecomposition(std::vector<WholeTask*> _wholeTasks) {
+	auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
+
+	auto decomp = new Decomposition(top);
+
+	for(auto wholeTask : _wholeTasks) {
+		auto semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(wholeTask->m_task,top));
+		top->AddSubtask(semanticTask);
+		decomp->AddSimpleTask(semanticTask);
+	}
+
+	return decomp;
 }

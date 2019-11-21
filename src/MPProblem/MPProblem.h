@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+class Decomposition;
 class DynamicObstacle;
 class InteractionInformation;
 class Environment;
@@ -208,6 +209,8 @@ class MPProblem final
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;
     std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>>
         m_groupTaskMap;
+
+		std::unique_ptr<Decomposition> m_taskDecomposition;
 
     ///@}
     ///@name Files

@@ -532,7 +532,7 @@ MultiTaskGraph::
 ConstructGraph(){
   CombinedRoadmap::ConstructGraph();
   CreateHighLevelGraph();
-  CreateAvailableIntervalGraph();
+  //CreateAvailableIntervalGraph();
   if(m_debug){
     std::cout << "Initial construction." << std::endl;
     PrintGraph();

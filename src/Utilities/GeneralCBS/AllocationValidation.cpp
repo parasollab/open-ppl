@@ -1,11 +1,13 @@
 #include "AllocationValidation.h"
 
+#include "Utilities/MPUtils.h"
+
 AllocationValidation::
 AllocationValidation() {}	
 
 AllocationValidation::
 AllocationValidation(MPLibrary* _library, LowLevelSearch* _lowLevel, TMPLibrary* _tmpLibrary) : 
-		Validation(_library, _lowLevel) 
+		Validation(_library, _lowLevel), 
 		m_tmpLibrary(_tmpLibrary) {}	
 
 AllocationValidation::
@@ -13,7 +15,20 @@ AllocationValidation::
 
 bool
 AllocationValidation::
-IntialPlan(Decomposition* _decomposition) {
+InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
+
+	CBSSolution solution;
+	solution.m_decomposition = _decomposition;
+	GeneralCBSNode node(solution);
+
+
+	//temp for RA-L problem structure
+
+	for(auto& semanticTask : _decomposition->GetSimpleTasks()) {
+		m_lowLevel->UpdateSolution(node, semanticTask);	
+	}
+
+	_tree.push(node);
 	return true;
 }
 
@@ -22,7 +37,7 @@ AllocationValidation::
 ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 	auto constraints = FindAllocationConflict(_node);
 
-	if(constraints.first.m_startTime != Max_DBL) {
+	if(constraints.first.m_startTime != MAX_DBL) {
 		AddAllocationChildren(_node, _tree, constraints);
 		return false;
 	}

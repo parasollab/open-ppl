@@ -1,5 +1,7 @@
 #include "Decomposition.h"
 
+#include "Utilities/XMLNode.h"
+
 /*---------------------------- Construction ---------------------------*/
 
 Decomposition::
@@ -18,7 +20,7 @@ Decomposition(XMLNode& _node) {
 
 	// create all the semantic tasks
 	for(auto child : _node) {
-		auto task = std::shared_ptr<SemanticTask>(new SemanticTask(child);
+		auto task = std::shared_ptr<SemanticTask>(new SemanticTask(child));
 		labelMap[task->GetLabel()] = task;
 	}
 
@@ -83,3 +85,8 @@ GetSimpleTasks() {
 	return m_simpleTasks;
 }
 
+void 
+Decomposition::
+AddSimpleTask(std::shared_ptr<SemanticTask> _task) {
+	m_simpleTasks.push_back(_task);
+}

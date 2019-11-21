@@ -14,7 +14,7 @@ class Decomposition {
 	
 		Decomposition(XMLNode& _node);
 
-		~Decomposion();
+		~Decomposition();
 
 		///@}
 		///@name Accessors
@@ -24,6 +24,8 @@ class Decomposition {
 
 		std::vector<std::shared_ptr<SemanticTask>>& GetSimpleTasks();
 
+		void AddSimpleTask(std::shared_ptr<SemanticTask> _task);
+
 		///@}
 		
 	private:
@@ -32,7 +34,7 @@ class Decomposition {
 		///@{
 
 		///< Keeps track of smallest unit of decomposition
-		vector<std::shared_ptr<SemanticTask>> m_simpleTasks;
+		std::vector<std::shared_ptr<SemanticTask>> m_simpleTasks;
 
 		///< highest task in the decomposition
 		std::shared_ptr<SemanticTask>		  m_mainTask;

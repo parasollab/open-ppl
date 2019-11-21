@@ -6,6 +6,7 @@
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/DynamicObstacle.h"
 #include "MPProblem/InteractionInformation.h"
 #include "Utilities/MPUtils.h"
@@ -443,6 +444,9 @@ ParseChild(XMLNode& _node) {
     m_interactionInformations.emplace_back(std::unique_ptr<InteractionInformation>(
                                            new InteractionInformation(this, _node)));
   }
+	else if(_node.Name() == "Decomposition") {
+		m_taskDecomposition = std::unique_ptr<Decomposition>(new Decomposition(_node));
+	}
 }
 
 

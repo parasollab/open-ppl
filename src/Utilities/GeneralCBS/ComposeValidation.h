@@ -1,12 +1,9 @@
-#ifndef VALIDATION_H_
-#define VALIDATION_H_
+#ifndef COMPOSE_VALIDATION_H_
+#define COMPOSE_VALIDATION_H_
 
-#include "MPLibrary/PMPL.h"
-#include "MPProblem/TaskHierarchy/Decomposition.h"
-#include "Utilities/GeneralCBS/GeneralCBS.h"
-#include "Utilities/GeneralCBS/LowLevelSearch.h"
+#include "Utilities/GeneralCBS/Validation.h"
 
-class Validation {
+class ComposeValidation : public Validation {
   public:
 
 	///@name Local Types
@@ -16,11 +13,11 @@ class Validation {
 	///@name Construction
 	///@{
 
-	Validation();
+	ComposeValidation();
 
-	Validation(MPLibrary* _library, LowLevelSearch* _lowLevel);
+	ComposeValidation(std::vector<Validation*> _validations);
 
-	~Validation();
+	~ComposeValidation();
 
 	///@}
 	///@name Interface
@@ -29,23 +26,21 @@ class Validation {
 	///@input _decomposition Contatins the problem information
 	///@input _tree CBS tree to which a root node with the initial plan is added
 	///@output bool indicates if there is a valid plan for each simple task in the decomp
-	virtual bool InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree);
+	virtual bool InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) override;
 
 	///@input _node the CBS node for which the solution is being validated
 	///@input _tree the CBS tree to which any child nodes will be added
 	///@output bool indicates if the node's solution is valid
-	virtual bool ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree);
+	virtual bool ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) override;
 	
 	///@}
 
-  protected:
+  private:
 
 	///@name Internal State
 	///@{
 	
-	MPLibrary* m_library;
-
-	LowLevelSearch* m_lowLevel;
+	std::vector<Validation*> m_validations;
 
 	///@}
 };

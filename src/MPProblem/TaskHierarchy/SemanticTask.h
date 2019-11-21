@@ -3,6 +3,8 @@
 
 #include "MPProblem/MPTask.h"
 
+#include <unordered_map>
+
 class SemanticTask {
 
 	public:
@@ -22,7 +24,8 @@ class SemanticTask {
 			Asynchronous
 		};
 
-		typedef std::unordered_map<DependencyType,std::vector<std::shared_ptr<SemanticTask>>> DependencyMap;
+		typedef std::unordered_map<DependencyType, std::vector<std::shared_ptr<SemanticTask>>, 
+															 std::hash<int>> DependencyMap;
 
 		///@}
 		///@name Construction
@@ -32,11 +35,16 @@ class SemanticTask {
 
 		SemanticTask(XMLNode& _node);
 
+		SemanticTask(std::shared_ptr<MPTask> _simpleTask, std::shared_ptr<SemanticTask> _parent,
+								 bool _decomposable = true);
+
 		~SemanticTask();
 
 		///@}
 		///@name Accessors
 		///@{
+
+		std::string GetLabel() const;
 
 		///< Sets the dependencies of all the semantic tasks below this in the hierarchy
 		std::vector<std::shared_ptr<SemanticTask>> SetDependencies();
@@ -48,30 +56,48 @@ class SemanticTask {
 
 		std::shared_ptr<SemanticTask> GetParent();
 
+		void SetParent(std::shared_ptr<SemanticTask> _parent);
+
 		void AddDependency(std::shared_ptr<SemanticTask> _task, DependencyType _type);
+
+		DependencyMap& GetDependencies();
+
+		bool IsFixedAssignment();
+
+		void AddSubtask(std::shared_ptr<SemanticTask> _task);
 
 		///@}
 
 	private:
 
+		///@name Internal State
+		///@{
+
+		///< Label distinguishing this semantic task
+		std::string m_label;
+
 		///< Parent SemanticTask that includes this task in its decomposition
-		std::shared_ptr<SemanticTask> 				m_parent;
+		std::shared_ptr<SemanticTask> m_parent;
 
 		///< Set of subtasks that make up this task's decomposition
-		std::vector<std::shared_ptr<SemanticTask>>  m_subtasks;
+		std::vector<std::shared_ptr<SemanticTask>> m_subtasks;
 
 		///< Relationship between the subtasks indicating if they're alternatives or all required
-		SubtaskRelation								m_subtasksRelation;
+		SubtaskRelation m_subtasksRelation;
 
 		///< Keeps track of all the semantic tasks for each dependency type
-		DependencyMap								m_dependencyMap;
+		DependencyMap	m_dependencyMap;
 		
 		///< If this SemanticTask is a simple task, this holds the corresponding motion task
-		std::shared_ptr<MPTask>						m_simpleTask{nullptr};
+		std::shared_ptr<MPTask>	m_simpleTask{nullptr};
 
 		///< Indicates if the assignment of the simple task is fixed
-		bool 										m_fixedAssignment{false};
+		bool m_fixedAssignment{false};
 
+		//< Indicates if the task can be decomposed into subtasks
+		bool m_decomposable{true};
+
+		///@}
 };
 
 #endif

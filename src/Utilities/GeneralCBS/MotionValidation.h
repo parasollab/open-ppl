@@ -3,7 +3,7 @@
 
 #include "Validation.h"
 
-class MotionValidation : Validation {
+class MotionValidation : public Validation {
   public:
 
 	///@name Local Types
@@ -44,8 +44,8 @@ class MotionValidation : Validation {
 
 	///@input _node CBSNode containing the solution that is checked for conflict
 	///@output if a conflict is found, return pair of motion constraints generated
-				from this conflict
-				otherwise, return a pair of empty constraints
+	///			from this conflict
+	///			otherwise, return a pair of empty constraints
 	MotionConstraintPair FindMotionConflict(GeneralCBSNode& _node);
 
 	///@input _node parent CBSNode

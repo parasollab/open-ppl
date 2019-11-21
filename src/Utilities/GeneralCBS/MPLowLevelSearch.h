@@ -1,10 +1,11 @@
 #ifndef MP_LOW_LEVEL_SEARCH_H_
 #define MP_LOW_LEVEL_SEARCH_H_
 
-#include "MPLibrary/MPLibrary.h"
-#include "Utilites/GeneralCBS/GeneralCBS.h"
+#include "LowLevelSearch.h"
 
-class MPLowLevelSearch {
+#include "MPLibrary/PMPL.h"
+
+class MPLowLevelSearch : public LowLevelSearch {
   public:
 
 	///@name Construction
