@@ -94,7 +94,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     /// This version does not return a collision node.
     /// @overload
-    virtual bool IsConnected(const CfgType& _start, const CfgType& _end,
+    bool IsConnected(const CfgType& _start, const CfgType& _end,
         LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false);
 
@@ -107,7 +107,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     /// This version for group configurations does not return a collision node.
     /// @overload
-    virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
+    bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false,
         const Formation& _formation = Formation());
@@ -136,7 +136,12 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
         double _posRes, double _oriRes);
 
 
-    /// GroupCfg overload:
+    /// This version is for group configurations.
+    /// @overload
+    /// @param _formation A (possibly improper) subset of the robot group which
+    ///                   should remain in its relative formation while moving.
+    ///                   Only makes sense if these robots are in the same
+    ///                   formation at both _start and _end.
     virtual std::vector<GroupCfgType> ReconstructPath(const GroupCfgType& _start,
         const GroupCfgType& _end, const std::vector<GroupCfgType>& _intermediates,
         double _posRes, double _oriRes,
@@ -184,6 +189,7 @@ Print(std::ostream& _os) const {
 /*------------------------ LocalPlanner Interface ----------------------------*/
 
 template <typename MPTraits>
+inline
 bool
 LocalPlannerMethod<MPTraits>::
 IsConnected(const CfgType& _start, const CfgType& _end,
@@ -207,12 +213,13 @@ IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
 
 
 template <typename MPTraits>
+inline
 bool
 LocalPlannerMethod<MPTraits>::
 IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
     GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath, const Formation& _formation) {
-  GroupCfgType col(this->GetGroupRoadmap());
+  GroupCfgType col(_start.GetGroupRoadmap());
   return IsConnected(_start, _end, col, _lpOutput, _posRes,
                      _oriRes, _checkCollision, _savePath, _formation);
 }
