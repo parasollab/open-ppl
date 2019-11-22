@@ -623,8 +623,8 @@ GroupCBSQuery<MPTraits>::
 MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _startTime, const double _bestEndTime) const {
   // Compute the time when we will end this edge.
-  const size_t endTime = std::llround(_startTime)
-                       + _ei->property().GetTimeSteps();
+  const size_t startTime = static_cast<size_t>(std::llround(_startTime)),
+               endTime   = startTime + _ei->property().GetTimeSteps();
 
   // If this end time isn't better than the current best, we won't use it. Return
   // without checking conflicts to save computation.
@@ -637,7 +637,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
   // There is at least one conflict. Find the set which occurs between this
   // edge's start and end time.
-  auto lower = m_currentConflicts->lower_bound(_startTime),
+  auto lower = m_currentConflicts->lower_bound(startTime),
        upper = m_currentConflicts->upper_bound(endTime);
 
   // If all of the conflicts happen before or after now, there is nothing to
@@ -658,7 +658,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
     // Assert that the conflict occurs during this edge transition (remove this
     // later once we're sure it works right).
-    const bool rightTime = _startTime <= timestep and timestep <= endTime;
+    const bool rightTime = startTime <= timestep and timestep <= endTime;
     if(!rightTime)
       throw RunTimeException(WHERE) << "The conflict set should only include "
                                     << "conflicts that occur during this range.";
