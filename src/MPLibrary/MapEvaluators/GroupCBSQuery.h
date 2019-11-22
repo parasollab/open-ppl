@@ -660,7 +660,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
     // Assert that the conflict occurs during this edge transition (remove this
     // later once we're sure it works right).
-    const bool rightTime = _startTime < time and time < endTime;
+    const bool rightTime = _startTime <= time and time <= endTime;
     if(!rightTime)
       throw RunTimeException(WHERE) << "The conflict set should only include "
                                     << "conflicts that occur during this range.";
