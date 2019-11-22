@@ -51,13 +51,18 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// A conflict decribes an inter-robot collision between two different
     /// robots at a given time.
     struct Conflict {
-      CfgType cfg1;      ///< The first robot's configuration.
-      CfgType cfg2;      ///< The second robot's configuration.
-      double  time{-1};  ///< The time when the collision occurred.
+      CfgType cfg1{nullptr};  ///< The first robot's configuration.
+      CfgType cfg2{nullptr};  ///< The second robot's configuration.
+      size_t  timestep{0};    ///< The timestep when the collision occurred.
+
+      /// @return True if this is an empty conflict.
+      bool Empty() const noexcept {
+        return !cfg1.GetRobot();
+      }
     };
 
-    /// A set of conflicts for a single robot, keyed on time.
-    typedef std::multimap<double, CfgType> ConflictSet;
+    /// A set of conflicts for a single robot, keyed on timestep.
+    typedef std::multimap<size_t, CfgType> ConflictSet;
 
     /// A mapping from robot to conflict set.
     typedef std::map<Robot*, ConflictSet> ConflictMap;
@@ -133,13 +138,13 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     /// Try to create a new child node which resolves a single conflict in the
     /// parent solution.
-    /// @param _robot  The robot which is avoiding the conflict.
-    /// @param _cfg    The cfg that _robot should avoid.
-    /// @param _time   The time when _cfg must be avoided.
-    /// @param _parent The parent CBS node (its conflicts will be copied).
-    /// @param _tree   The CBS tree to add new nodes.
+    /// @param _robot    The robot which is avoiding the conflict.
+    /// @param _cfg      The cfg that _robot should avoid.
+    /// @param _timestep The timestep when _cfg must be avoided.
+    /// @param _parent   The parent CBS node (its conflicts will be copied).
+    /// @param _tree     The CBS tree to add new nodes.
     void CreateChildNode(Robot* const _robot, CfgType&& _cfg,
-        const double _time, const CBSNode& _parent, CBSTree& _tree);
+        const size_t _timestep, const CBSNode& _parent, CBSTree& _tree);
 
     /// Compute the total cost of the paths in a solution.
     /// @return The total cost of the solution.
@@ -162,15 +167,15 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     Conflict FindConflict(const Solution& _solution);
 
     /// Define a function for computing path weights w.r.t. multi-robot
-    /// problems. Here the metric is the number of time steps, and we return
+    /// problems. Here the metric is the number of timesteps, and we return
     /// infinity if taking an edge would result in a inter-robot collision.
-    /// @param _ei An iterator to the edge we are checking.
-    /// @param _sourceDistance The shortest time to the source node.
-    /// @param _targetDistance The best known time to the target node.
+    /// @param _ei             An iterator to the edge we are checking.
+    /// @param _sourceTimestep The shortest time to the source node.
+    /// @param _bestTimestep   The best known time to the target node.
     /// @return The time to the target node via this edge, or infinity if taking
     ///         this edge would result in a collision with dynamic obstacles.
     double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-        const double _sourceDistance, const double _targetDistance) const;
+        const double _sourceTimestep, const double _bestTimestep) const;
 
     /// Check if an edge is collision-free with respect to another robot's cfg.
     /// @param _source The cfg source of the edge.
@@ -192,8 +197,6 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     /// The maximum number of CBS tree nodes that will be expanded.
     size_t m_nodeLimit{std::numeric_limits<size_t>::max()};
-
-    std::multimap<EdgeID, double> m_edgeConflicts; ///< Set of edge conflicts.
 
     /// The current set of conflicts to avoid.
     const ConflictSet* m_currentConflicts{nullptr};
@@ -299,7 +302,6 @@ operator()() {
   // Test the next best solution for conflicts until we find a path that is
   // simultaneously valid for all robots.
   while(!tree.empty() and m_nodeLimit > counter) {
-  // while(m_nodeLimit > counter) {
     // Increment iteration count.
     ++counter;
     if(this->m_debug)
@@ -315,7 +317,7 @@ operator()() {
 
     // If we detected a conflict, this solution isn't valid. Add new child nodes
     // to the tree and move on to the next node.
-    const bool conflictDetected = conflict.time != -1;
+    const bool conflictDetected = !conflict.Empty();
     if(conflictDetected) {
       CreateChildNodes(std::move(conflict), currentCBSNode, tree);
       continue;
@@ -345,7 +347,6 @@ operator()() {
   m_conflictCache.clear();
 
   return success;
-  //return true;
 }
 
 /*--------------------------------- Helpers ---------------------------------*/
@@ -395,52 +396,52 @@ CreateChildNodes(Conflict&& _conflict, const CBSNode& _parent, CBSTree& _tree) {
        robot2 = _conflict.cfg2.GetRobot();
 
   // Assign the conflict to each robot.
-  CreateChildNode(robot1, std::move(_conflict.cfg2), _conflict.time, _parent,
-      _tree);
-  CreateChildNode(robot2, std::move(_conflict.cfg1), _conflict.time, _parent,
-      _tree);
+  CreateChildNode(robot1, std::move(_conflict.cfg2), _conflict.timestep,
+      _parent, _tree);
+  CreateChildNode(robot2, std::move(_conflict.cfg1), _conflict.timestep,
+      _parent, _tree);
 }
 
 
 template <typename MPTraits>
 void
 GroupCBSQuery<MPTraits>::
-CreateChildNode(Robot* const _robot, CfgType&& _cfg, const double _time,
+CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
     const CBSNode& _parent, CBSTree& _tree) {
   if(this->m_debug)
     std::cout << "\t\tAttempting to create CBS node with conflict on robot "
-              << _robot->GetLabel() << " at time "
-              << _time << " colliding against robot " << _cfg.GetRobot()->GetLabel()
+              << _robot->GetLabel() << " at timestep "
+              << _timestep << " colliding against robot "
+              << _cfg.GetRobot()->GetLabel()
               << std::endl;
 
   // Initialize the child node by copying the parent.
   CBSNode child = _parent;
 
-  // Checking if the particular conflict we just found, already exists in the cbsnode
-  auto robotConflicts = child.conflicts[_robot];
-  bool existingConflict = true;
-
-  for(auto iter = robotConflicts.begin() ; iter != robotConflicts.end() ; ++iter) 
-    if(iter->first == _time and iter->second == _cfg) {
-      existingConflict = false;
+  // Assert that we aren't adding a duplicate conflict, which should be
+  // impossible with a correct implementation.
+  auto bounds = child.conflicts[_robot].equal_range(_timestep);
+  for(auto iter = bounds.first; iter != bounds.second; ++iter)
+    if(iter->second == _cfg) {
       if(this->m_debug)
-        std::cout << "\t\t\tThis conflict is already in the conflict set, skipping."
-                << std::endl;
+        std::cout << "\t\t\tConflict double-assigned to robot "
+                  << _robot->GetLabel() << ", skipping."
+                  << std::endl;
+      return;
     }
- 
-  if(existingConflict)
-    child.conflicts[_robot].emplace(_time, std::move(_cfg));
 
-  auto conflicts = child.conflicts;
+  child.conflicts[_robot].emplace(_timestep, std::move(_cfg));
 
-  for(auto conflictSet : conflicts) {
+#if 0
+  for(auto conflictSet : child.conflicts) {
     for(auto conflict : conflictSet.second) {
-      std::cout << "\t\t\t\t\tConflict on robot " << conflictSet.first->GetLabel() 
-        << " at time " << conflict.first << " against robot " 
+      std::cout << "\t\t\t\t\tConflict on robot " << conflictSet.first->GetLabel()
+        << " at time " << conflict.first << " against robot "
         << conflict.second.GetRobot()->GetLabel() << " at cfg "
         << conflict.second.PrettyPrint() << std::endl;
     }
   }
+#endif
 
   // If we've already seen this set of conflicts, don't check them again.
   if(m_conflictCache.count(child.conflicts)) {
@@ -558,13 +559,9 @@ FindConflict(const Solution& _solution) {
   auto vc = static_cast<CollisionDetectionValidity<MPTraits>*>(
       this->GetValidityChecker(m_vcLabel).get()
   );
-  const double timeRes = this->GetEnvironment()->GetTimeRes();
 
   // Step through each timestep.
   for(size_t t = 0; t < lastTimestep; ++t) {
-    // Compute the time value from the time step and resolution.
-    const double time = t * timeRes;
-
     // Collision check each robot path against all others at this timestep.
     for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end();) {
       // Configure the first robot at the approriate configuration.
@@ -594,7 +591,8 @@ FindConflict(const Solution& _solution) {
 
         if(this->m_debug)
           std::cout << "\t\tConflict detected at timestemp " << t
-                    << " (time " << time << ")."
+                    << " (time " << this->GetEnvironment()->GetTimeRes() * t
+                    << ")."
                     << "\n\t\t\tRobot " << robot1->GetLabel() << ": "
                     << cfg1.PrettyPrint()
                     << "\n\t\t\tRobot " << robot2->GetLabel() << ": "
@@ -602,9 +600,9 @@ FindConflict(const Solution& _solution) {
                     << std::endl;
 
         Conflict newConflict;
-        newConflict.cfg1 = cfg1;
-        newConflict.cfg2 = cfg2;
-        newConflict.time = t;
+        newConflict.cfg1     = cfg1;
+        newConflict.cfg2     = cfg2;
+        newConflict.timestep = t;
 
         return newConflict;
       }
@@ -624,13 +622,13 @@ double
 GroupCBSQuery<MPTraits>::
 MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _startTime, const double _bestEndTime) const {
-
   // Compute the time when we will end this edge.
-  const double endTime = _startTime + _ei->property().GetTimeSteps();
+  const size_t endTime = std::llround(_startTime)
+                       + _ei->property().GetTimeSteps();
 
   // If this end time isn't better than the current best, we won't use it. Return
   // without checking conflicts to save computation.
-  if(endTime >= _bestEndTime)
+  if(endTime >= static_cast<size_t>(std::llround(_bestEndTime)))
     return endTime;
 
   // If there are no current conflicts, there is nothing to check.
@@ -655,12 +653,12 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // Check the conflict set to see if this edge hits any of them.
   for(auto iter = lower; iter != upper; ++iter) {
     // Unpack the conflict data.
-    const double& time = iter->first;
-    const CfgType& cfg = iter->second;
+    const size_t timestep = iter->first;
+    const CfgType& cfg    = iter->second;
 
     // Assert that the conflict occurs during this edge transition (remove this
     // later once we're sure it works right).
-    const bool rightTime = _startTime <= time and time <= endTime;
+    const bool rightTime = _startTime <= timestep and timestep <= endTime;
     if(!rightTime)
       throw RunTimeException(WHERE) << "The conflict set should only include "
                                     << "conflicts that occur during this range.";
@@ -670,9 +668,12 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     if(!hitsEdge)
       continue;
 
-    std::cout << "\t\t\t\t\tInvalidating edge (" << _ei->source() << "," << _ei->target() 
-      << ") colliding against robot " << cfg.GetRobot()->GetLabel() 
-      << " at " << cfg.PrettyPrint() << std::endl;
+    if(this->m_debug)
+      std::cout << "\t\t\t\t\tEdge (" << _ei->source() << ","
+                << _ei->target() << ") collides against robot "
+                << cfg.GetRobot()->GetLabel()
+                << " at " << cfg.PrettyPrint()
+                << std::endl;
 
     // The conflict blocks this edge.
     return std::numeric_limits<double>::infinity();
