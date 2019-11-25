@@ -56,6 +56,11 @@ class AllocationValidation : public Validation {
 	void AddAllocationChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, 
 								AllocationConstraintPair _constraints);
 
+	///@input _a1 The assignment which the robot is completing before transitioning
+	///@input _a2 The assignment which the robot is transitioning to start
+	///@output bool indicating if the robot is able to make the transition before the 
+	///					expected start of _a2. If feasible, the setup path of _a2 is updated.
+	bool CanReach(Assignment& _a1, Assignment& _a2);
 	///@}
 	///@name Internal State
 	///@{

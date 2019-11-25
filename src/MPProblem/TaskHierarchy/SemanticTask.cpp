@@ -20,12 +20,8 @@ SemanticTask(XMLNode& _node) {
 }
 
 SemanticTask::
-SemanticTask(std::shared_ptr<MPTask> _simpleTask, std::shared_ptr<SemanticTask> _parent, 
-						 bool _decomposable) {
-	m_simpleTask = _simpleTask;
-	m_parent = _parent;
-	m_decomposable = _decomposable;
-}
+SemanticTask(std::shared_ptr<SemanticTask> _parent, std::shared_ptr<MPTask> _simpleTask,
+						 bool _decomposable) : m_parent(_parent), m_simpleTask(_simpleTask), m_decomposable(_decomposable) {}
 
 
 SemanticTask::

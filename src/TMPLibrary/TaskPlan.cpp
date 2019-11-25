@@ -323,6 +323,17 @@ AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
   SetWholeTaskOwner(_subtask, _wholeTask);
 }
 
+void 
+TaskPlan::
+SetSemanticWholeTask(SemanticTask* _s, WholeTask* _w) {
+	m_semanticWholeMap[_s] = _w;
+}
+
+WholeTask* 
+TaskPlan::
+GetWholeTask(SemanticTask* _s) {
+	return m_semanticWholeMap[_s];
+}
 /***********************************Agent Accessors*******************************/
 
 void

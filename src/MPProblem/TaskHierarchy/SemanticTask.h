@@ -35,7 +35,7 @@ class SemanticTask {
 
 		SemanticTask(XMLNode& _node);
 
-		SemanticTask(std::shared_ptr<MPTask> _simpleTask, std::shared_ptr<SemanticTask> _parent,
+		SemanticTask(std::shared_ptr<SemanticTask> _parent, std::shared_ptr<MPTask> _simpleTask, 
 								 bool _decomposable = true);
 
 		~SemanticTask();
@@ -89,7 +89,7 @@ class SemanticTask {
 		DependencyMap	m_dependencyMap;
 		
 		///< If this SemanticTask is a simple task, this holds the corresponding motion task
-		std::shared_ptr<MPTask>	m_simpleTask{nullptr};
+		std::shared_ptr<MPTask>	m_simpleTask;
 
 		///< Indicates if the assignment of the simple task is fixed
 		bool m_fixedAssignment{false};

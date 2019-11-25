@@ -235,17 +235,17 @@ std::pair<size_t,size_t>
 MultiTaskGraph::
 AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs){
 
-  if(m_currentTask) {
+  /*if(m_currentTask) {
     for(auto vid : m_hlgTaskVIDs[m_currentTask]) {
       m_highLevelGraph->SetVertexInvalidated(vid);
     }
     for(auto vid : m_aigTaskVIDs[m_currentTask]) {
       m_availableIntervalGraph->SetVertexInvalidated(vid);
     }
-  }
+ 	} */
   m_currentTask = _wholeTask;
   if(!m_hlgTaskVIDs[_wholeTask].empty()) {
-    for(auto vid : m_hlgTaskVIDs[_wholeTask]) {
+    /*for(auto vid : m_hlgTaskVIDs[_wholeTask]) {
       m_highLevelGraph->SetVertexInvalidated(vid,false);
     }
     for(auto vid : m_aigTaskVIDs[_wholeTask]) {
@@ -262,10 +262,11 @@ AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs){
   	if(m_debug){
     	std::cout << "Adding Task." << std::endl;
     	PrintGraph();
-    	PrintAvailabilityGraph();
-  	}
-    return std::pair<size_t,size_t>(m_intervalMap[m_hlgTaskVIDs[_wholeTask][0]][0],
-                                    m_intervalMap[m_hlgTaskVIDs[_wholeTask][1]][0]);
+    	//PrintAvailabilityGraph();
+  	}*/
+  	return m_taskQuery[_wholeTask];
+    //return std::pair<size_t,size_t>(m_hlgTaskVIDs[_wholeTask][0],
+    //                                m_hlgTaskVIDs[_wholeTask][1]);
   }
 
   auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
@@ -275,6 +276,8 @@ AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs){
 
   auto virtStart = m_highLevelGraph->AddDuplicateVertex(start);
   auto virtGoal = m_highLevelGraph->AddDuplicateVertex(goal);
+
+	m_taskQuery[_wholeTask] = std::make_pair(virtStart,virtGoal);
 
   m_currentTaskVIDs.push_back(virtStart);
   m_currentTaskVIDs.push_back(virtGoal);
@@ -335,112 +338,18 @@ AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs){
     }
   }
 
-/*
-  std::unordered_map<std::string,size_t> startVIDs;
-  // Add robot-type start nodes
-  for(auto& pair : _wholeTask->m_startPoints){
-    auto cfg = pair.second[0];
-    if(cfg.GetRobot() == robot)
-      continue;
-    auto vid1 = m_highLevelGraph->AddVertex(cfg);
-    m_currentTaskVIDs.push_back(vid1);
-    startVIDs[cfg.GetRobot()->GetCapability()] = vid1;
-    //Connect robot-type start node to the virtual start node
-    m_highLevelGraph->AddEdge(virtStart,vid1,startEdge);
-    //m_highLevelGraph->AddEdge(vid1,virtStart,virtEdge);
-
-    auto robotSelectionNode = cfg;
-    robotSelectionNode.SetRobot(robot);
-
-    for(auto& vid2 : m_deliveringVIDs[cfg.GetRobot()->GetCapability()]){
-      auto w = ExtractPathWeight(vid1,vid2);
-      if(w == -1)
-        continue;
-      DefaultWeight<Cfg> weight;
-      weight.SetWeight(w);
-      //m_highLevelGraph->AddEdge(vid1,vid2,weight);
-      //m_highLevelGraph->AddEdge(vid2,vid1,weight);
-
-      //m_highLevelGraph->AddEdge(vid1,robotSelectionVID,virtEdge);
-
-      //Effectively inserts virtual node along the edge between the robot start and the delivering
-      //vertex to allow for the robot selection to occur
-      auto robotSelectionVID = m_highLevelGraph->AddDuplicateVertex(robotSelectionNode);
-      m_currentTaskVIDs.push_back(robotSelectionVID);
-
-      m_virtualVIDs.insert(robotSelectionVID);
-
-      m_highLevelGraph->AddEdge(vid1,robotSelectionVID,weight);
-      m_highLevelGraph->AddEdge(robotSelectionVID,vid2,virtEdge);
-    }
-  }
-
-  //TODO::Double check that this is implemented corectly (copied and pasted then changed from above block)
-  //Add robot-type goal nodes
-  for(auto& pair : _wholeTask->m_goalPoints){
-    auto cfg = pair.second[0];
-    if(cfg.GetRobot() == robot)
-      continue;
-    auto vid1 = m_highLevelGraph->AddVertex(cfg);
-    m_currentTaskVIDs.push_back(vid1);
-    //Connect robot-type goal node to the virtual goal node
-    m_highLevelGraph->AddEdge(vid1,virtGoal,startEdge);
-    //m_highLevelGraph->AddEdge(virtGoal,vid1,virtEdge);
-
-    for(auto& vid2 : m_receivingVIDs[cfg.GetRobot()->GetCapability()]){
-      auto w = ExtractPathWeight(vid2,vid1,true);
-      if(w == -1)
-        continue;
-      DefaultWeight<Cfg> weight;
-      weight.SetWeight(w);
-
-      auto robotSelectionNode = m_highLevelGraph->GetVertex(vid2);
-      robotSelectionNode.SetRobot(robot);
-
-      auto robotSelectionVID = m_highLevelGraph->AddDuplicateVertex(robotSelectionNode);
-      m_currentTaskVIDs.push_back(robotSelectionVID);
-
-      m_virtualVIDs.insert(robotSelectionVID);
-      //m_highLevelGraph->AddEdge(vid2,vid1,weight);
-      //m_highLevelGraph->AddEdge(vid1,vid2,weight);
-
-      m_highLevelGraph->AddEdge(vid2,robotSelectionVID,weight);
-      m_highLevelGraph->AddEdge(robotSelectionVID,vid1,virtEdge);
-    }
-    //Attempt to directly connect the goal to the start
-    auto vit = startVIDs.find(cfg.GetRobot()->GetCapability());
-    if(vit != startVIDs.end()){
-      auto w = ExtractPathWeight(vit->second,vid1);
-      if(w == -1)
-        continue;
-      DefaultWeight<Cfg> weight;
-      weight.SetWeight(w);
-
-      auto robotSelectionNode = m_highLevelGraph->GetVertex(vit->second);
-      robotSelectionNode.SetRobot(robot);
-
-      auto robotSelectionVID = m_highLevelGraph->AddDuplicateVertex(robotSelectionNode);
-      m_currentTaskVIDs.push_back(robotSelectionVID);
-
-      m_virtualVIDs.insert(robotSelectionVID);
-
-      //m_highLevelGraph->AddEdge(vit->second,vid1,weight);
-      //m_highLevelGraph->AddEdge(vid1,vit->second,weight);
-
-      m_highLevelGraph->AddEdge(vit->second,robotSelectionVID,weight);
-      m_highLevelGraph->AddEdge(robotSelectionVID,vid1,virtEdge);
-    }
-  }*/
 
   m_hlgTaskVIDs[_wholeTask] = m_currentTaskVIDs;
 
-  AddTaskToAvailableIntervalGraph(_wholeTask);
+  //AddTaskToAvailableIntervalGraph(_wholeTask);
   if(m_debug){
     std::cout << "Adding Task." << std::endl;
     PrintGraph();
-    PrintAvailabilityGraph();
+    //PrintAvailabilityGraph();
   }
-  return std::pair<size_t,size_t>(m_intervalMap[virtStart][0],m_intervalMap[virtGoal][0]);
+  //return std::pair<size_t,size_t>(m_intervalMap[virtStart][0],m_intervalMap[virtGoal][0]);
+  //return std::pair<size_t,size_t>(virtStart,virtGoal);
+  return m_taskQuery[_wholeTask];
 }
 
 void

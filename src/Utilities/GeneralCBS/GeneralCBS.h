@@ -12,14 +12,35 @@ struct Assignment {
 	std::shared_ptr<SemanticTask>		m_task;
 	std::vector<size_t>							m_setupPath;
 	std::vector<size_t>							m_execPath;
+	double													m_setupStartTime;
+	double													m_execStartTime;
+	double													m_execEndTime;
+
+	Assignment() {}
+
+	Assignment(Agent* _agent, std::shared_ptr<SemanticTask> _task, 
+							std::vector<size_t> _setup, std::vector<size_t> _exec,
+							double _setupStart, double _startTime, double _endTime) :
+							m_agent(_agent), m_task(_task), m_setupPath(_setup), m_execPath(_exec),
+							m_setupStartTime(_setupStart), m_execStartTime(_startTime), m_execEndTime(_endTime) {}
+
+	bool operator>(const Assignment& _other) const {
+		//return m_setupStartTime > _other.m_setupStartTime;
+		return m_execStartTime > _other.m_execStartTime;
+	}
+	bool operator<(const Assignment& _other) const {
+		//return m_setupStartTime < _other.m_setupStartTime;
+		return m_execStartTime < _other.m_execStartTime;
+	}
+
 };
 
 
 struct CBSSolution {
 
-	Decomposition* 																						m_decomposition;
-	std::unordered_map<std::shared_ptr<SemanticTask>,Agent*>	m_allocationMap;
-	std::unordered_map<Agent*,std::shared_ptr<Assignment>>		m_agentAssignments;
+	Decomposition* 																														m_decomposition;
+	std::unordered_map<std::shared_ptr<SemanticTask>,Agent*>									m_allocationMap;
+	std::unordered_map<Agent*,std::vector<Assignment>>												m_agentAssignments;
 	std::unordered_map<std::shared_ptr<SemanticTask>,std::vector<Assignment>> m_taskPlans;
 
 };
@@ -29,15 +50,37 @@ struct MotionConstraint {
 	Cfg															m_conflictCfg;
 	double													m_time{MAX_DBL};
 	std::shared_ptr<SemanticTask>		m_task{nullptr};
+
+	bool operator==(const MotionConstraint& _c) {
+		return m_conflictCfg == _c.m_conflictCfg 
+				and m_time == _c.m_time
+				and m_task == _c.m_task;
+	}
 };
 
 
 struct AllocationConstraint {
+	Agent* 													m_agent;
 	Cfg															m_startLocation;
 	Cfg 														m_endLocation;
 	double													m_startTime{MAX_DBL};
 	double													m_endTime{MAX_DBL};
 	std::shared_ptr<SemanticTask>		m_task{nullptr};
+
+	AllocationConstraint() {}
+
+	AllocationConstraint(Agent* _agent, Cfg _startL, Cfg _endL, double _startT=MAX_DBL, 
+												double _endT=MAX_DBL, std::shared_ptr<SemanticTask> _task = nullptr) :
+												m_agent(_agent), m_startLocation(_startL), m_endLocation(_endL),
+												m_startTime(_startT), m_endTime(_endT), m_task(_task) {}
+
+	bool operator==(const AllocationConstraint& _c) {
+		return m_startLocation == _c.m_startLocation
+				and m_endLocation == _c.m_endLocation
+				and m_startTime == _c.m_startTime 
+				and m_endTime == _c.m_endTime
+				and m_task == _c.m_task;
+	}
 };
 
 
@@ -57,7 +100,7 @@ class GeneralCBSNode {
 
 	GeneralCBSNode(const CBSSolution _solution);
 
-	GeneralCBSNode(const GeneralCBSNode& _parent, const CBSSolution _solution);
+	GeneralCBSNode(const GeneralCBSNode& _parent);
 
 	~GeneralCBSNode() = default;
 
@@ -74,7 +117,13 @@ class GeneralCBSNode {
 
 	void AddMotionConstraint(MotionConstraint& _c, Agent* _agent);
 
+	const std::vector<MotionConstraint>& GetMotionConstraints(
+														std::shared_ptr<SemanticTask> _task, Agent* _agent);
+
 	void AddAllocationConstraint(AllocationConstraint& _c, Agent* _agent);
+
+	const std::vector<AllocationConstraint>& GetAllocationConstraints(
+														std::shared_ptr<SemanticTask> _task, Agent* _agent);
 
 	void UpdateTaskPlan(std::shared_ptr<SemanticTask> _task, std::vector<Assignment> _assignments);
 

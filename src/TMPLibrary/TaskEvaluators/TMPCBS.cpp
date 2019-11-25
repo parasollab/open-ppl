@@ -1829,9 +1829,10 @@ CreateDecomposition(std::vector<WholeTask*> _wholeTasks) {
 	auto decomp = new Decomposition(top);
 
 	for(auto wholeTask : _wholeTasks) {
-		auto semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(wholeTask->m_task,top));
+		auto semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(top,wholeTask->m_task));
 		top->AddSubtask(semanticTask);
 		decomp->AddSimpleTask(semanticTask);
+		this->GetTaskPlan()->SetSemanticWholeTask(semanticTask.get(),wholeTask);
 	}
 
 	return decomp;

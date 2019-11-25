@@ -3,6 +3,8 @@
 
 #include "LowLevelSearch.h"
 
+#include <unordered_set>
+
 class TMPLibrary;
 
 class TMPLowLevelSearch : public LowLevelSearch {
@@ -39,10 +41,10 @@ class TMPLowLevelSearch : public LowLevelSearch {
 
 	struct AvailElemHasher {
 		std::size_t operator()(const AvailElem& _elem) const {
-			return ((std::hash<size_t>()(_elem.m_vid)
-							^ (std::hash<Agent*>()(_elem.m_agent) << 1)) >> 1)
-							^ (std::hash<size_t>()(_elem.m_availInt.first) << 1)
-							^ (std::hash<size_t>()(_elem.m_availInt.second));
+			return ((std::hash<size_t>()(_elem.m_vid))
+							^ (std::hash<Agent*>()(_elem.m_agent))
+							^ (std::hash<size_t>()(_elem.m_availInt.first))
+							^ (std::hash<size_t>()(_elem.m_availInt.second)));
 		}
 	};
 
@@ -61,6 +63,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 	///@output bool indicating if there is a valid plan for the task being updated
 	virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
 	
+	std::pair<double,std::vector<size_t>> MotionPlan(Cfg _start, Cfg _goal);
 	//@}
 
   private:
@@ -70,26 +73,29 @@ class TMPLowLevelSearch : public LowLevelSearch {
 	
 	void Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task);
 
-	std::vector<AvailInterval> ComputeIntervals(GeneralCBSNode& _node, size_t vid, Agent* _agent); 
+	std::vector<AvailInterval> ComputeIntervals(GeneralCBSNode& _node, size_t vid, 
+														std::shared_ptr<SemanticTask> _task, Agent* _agent); 
 
 	void Uninitialize();
 
-	std::vector<Assignment> Search(size_t _start, size_t _goal);
+	std::vector<Assignment> Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query);
 
 	std::vector<std::pair<double,AvailElem>> ValidNeighbors(const AvailElem& _elem, 
 															size_t _vid, double _currentCost, double _edgeCost);
 
-	PathInfo ComputeSetup(Agent* _agent, AvailInterval _avail, double _minTime, size_t _endVID);
+	PathInfo ComputeSetup(AvailElem _elem, double _minTime);
 
-	PathInfo ComputeExec(AvailElem& _elem, size_t _endVID);
+	PathInfo ComputeExec(AvailElem _elem, size_t _endVID, double _startTime);
 
-	std::vector<Assignment> PlanDetails(std::vector<AvailElem> _plan);
+	std::vector<Assignment> PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task);
 
-	Assignment CreateAssignment(AvailElem _start, AvailElem _end);
+	Assignment CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask> _parentTask, double _endTime);
 
 	///@}
 	///@name Internal State
 	///@{
+
+	bool m_debug{true};//TODO::add this to constructor
 
 	TMPLibrary* m_tmpLibrary;
 
@@ -100,6 +106,18 @@ class TMPLowLevelSearch : public LowLevelSearch {
 	std::unordered_map<AvailElem,AvailElem,AvailElemHasher> m_parentMap;
 
 	std::unordered_map<AvailElem,double,AvailElemHasher> m_distance;
+
+	std::unordered_set<AvailElem,AvailElemHasher> m_seen;
+
+	std::unordered_set<AvailElem,AvailElemHasher> m_visited;
+
+	std::unordered_map<AvailElem,AllocationConstraint,AvailElemHasher> m_availSourceMap;
+
+	std::unordered_map<AvailElem,std::vector<size_t>,AvailElemHasher> m_execPathMap;
+	
+	std::unordered_map<AvailElem,std::vector<size_t>,AvailElemHasher> m_setupPathMap;
+
+	std::unordered_map<AvailElem,double,AvailElemHasher> m_setupStartTimes;
 
 	///@}
 

@@ -4,6 +4,7 @@
 #include <list>
 #include <unordered_map>
 #include "MPProblem/MPTask.h"
+#include "MPProblem/TaskHierarchy/SemanticTask.h"
 
 #include "Utilities/CBS/DiscreteAgentAllocation.h"
 
@@ -130,6 +131,10 @@ class TaskPlan {
     /// @return The HandoffAgent assigned to the preceeding subtask
     HandoffAgent* GetLastAgent(WholeTask* _wholeTask);
 
+		void SetSemanticWholeTask(SemanticTask* _s, WholeTask* _w);
+
+		WholeTask* GetWholeTask(SemanticTask* _s);
+
     ///@}
     ///@name Agent Accessors
     ///@{
@@ -245,6 +250,9 @@ class TaskPlan {
 
 		//Discrete Stuff 
 		AgentAllocationMap m_agentAllocationMap;
+
+		//temp for RA-L
+		std::unordered_map<SemanticTask*,WholeTask*> m_semanticWholeMap;
 
 };
 

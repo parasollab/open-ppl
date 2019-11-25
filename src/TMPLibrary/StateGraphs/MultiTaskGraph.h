@@ -175,6 +175,8 @@ class MultiTaskGraph : public CombinedRoadmap {
     WholeTask* m_currentTask{nullptr};
     std::unordered_map<WholeTask*,std::vector<size_t>> m_hlgTaskVIDs;
     std::unordered_map<WholeTask*,std::vector<size_t>> m_aigTaskVIDs;
+
+		std::unordered_map<WholeTask*,std::pair<size_t,size_t>> m_taskQuery;
     ///@}
 
 };
