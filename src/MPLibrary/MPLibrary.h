@@ -513,8 +513,11 @@ MPLibraryType<MPTraits>::
 Initialize() {
   // Set up the goal tracker.
   m_goalTracker->Clear();
-  if(this->GetTask())
+  if(this->GetTask()) {
     m_goalTracker->AddMap(GetRoadmap(), GetTask());
+    if(!this->GetRoadmap()->GetCCTracker())
+      this->GetRoadmap()->SetCCTracker(this->GetStatClass());
+  }
   else if(this->GetGroupTask())
     m_goalTracker->AddMap(GetGroupRoadmap(), GetGroupTask());
   else

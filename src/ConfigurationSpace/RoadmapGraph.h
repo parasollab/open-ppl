@@ -28,6 +28,7 @@
 #endif
 
 #include "MPLibrary/MPBaseObject.h"
+#include "Utilities/CCTracker.h"
 
 #include <fstream>
 #include <functional>
@@ -115,14 +116,6 @@ class RoadmapGraph : public
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept;
 
-    /// Add a new unique vertex to the graph with a designated descriptor. If it
-    /// already exists or the descriptor is already in use, a warning will be
-    /// printed to cerr.
-    /// @param _vid The desired descriptor.
-    /// @param _v The vertex property.
-    /// @return A new VID of the added vertex, or the VID of the existing vertex.
-    virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
-
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
     virtual void DeleteVertex(const VID _v) noexcept;
@@ -157,6 +150,10 @@ class RoadmapGraph : public
     /// Assumes the configurations are compatible with this roadmap's robot.
     /// @param _r The roadmap to copy from.
     void AppendRoadmap(const RoadmapGraph& _r);
+
+    /// Set the CC tracker.
+    /// @param _stats Optional stat class for performance profiling.
+    void SetCCTracker(StatClass* const _stats = nullptr);
 
     ///@}
     ///@name Queries
@@ -199,12 +196,6 @@ class RoadmapGraph : public
     /// Get the descriptor of the last vertex added to the graph.
     VID GetLastVID() const noexcept;
 
-#ifndef _PARALLEL
-    /// Get the number of CCs in the graph.
-    /// @return The CC count.
-    size_t GetNumCCs() noexcept;
-#endif
-
     /// Each time the roadmap is modified, we update the timestamp.
     size_t GetTimestamp() const noexcept;
 
@@ -214,6 +205,9 @@ class RoadmapGraph : public
 
     /// Get the robot represented by this roadmap.
     Robot* GetRobot() const noexcept;
+
+    /// Get the connected component tracker.
+    const CCTracker<RoadmapGraph<Vertex, Edge>>* GetCCTracker() const noexcept;
 
     /// Retrieve a reference to a vertex property by descriptor or iterator.
     template <typename T>
@@ -390,6 +384,9 @@ class RoadmapGraph : public
     /// Hook functions to call when deleting an edge.
     std::unordered_map<std::string, EdgeHook> m_deleteEdgeHooks;
 
+    /// This object tracks weak CCs within the roadmap.
+    std::unique_ptr<CCTracker<RoadmapGraph<Vertex, Edge>>> m_ccTracker;
+
     ///@}
 
 };
@@ -417,30 +414,6 @@ AddVertex(const Vertex& _v) noexcept {
 
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(_v);
-  ++m_timestamp;
-
-  // Execute post-add hooks and update vizmo debug.
-  ExecuteAddVertexHooks(this->find_vertex(vid));
-  VDAddNode(_v);
-
-  return vid;
-}
-
-
-template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
-AddVertex(const VID _vid, const Vertex& _v) noexcept {
-  // Find the vertex and ensure it does not already exist.
-  auto iter = this->find_vertex(_vid);
-  const bool exists = iter != this->end();
-  if(exists or IsVertex(_v)) {
-    std::cerr << "\nRoadmapGraph::AddVertex: already in graph" << std::endl;
-    return iter->descriptor();
-  }
-
-  // The vertex does not exist. Add it now.
-  const VID vid = this->add_vertex(_vid, _v);
   ++m_timestamp;
 
   // Execute post-add hooks and update vizmo debug.
@@ -600,6 +573,17 @@ AppendRoadmap(const RoadmapGraph& _r) {
   }
 }
 
+
+template <typename Vertex, typename Edge>
+inline
+void
+RoadmapGraph<Vertex, Edge>::
+SetCCTracker(StatClass* const _stats) {
+  m_ccTracker.reset(new CCTracker<RoadmapGraph<Vertex, Edge>>(this));
+  if(_stats)
+    m_ccTracker->SetStatClass(_stats);
+}
+
 /*-------------------------------- Queries -----------------------------------*/
 
 template <typename Vertex, typename Edge>
@@ -702,18 +686,6 @@ GetLastVID() const noexcept {
 }
 
 
-#ifndef _PARALLEL
-template <typename Vertex, typename Edge>
-inline
-size_t
-RoadmapGraph<Vertex, Edge>::
-GetNumCCs() noexcept {
-  ColorMap c;
-  return get_cc_count(*this, c);
-}
-#endif
-
-
 template <typename Vertex, typename Edge>
 inline
 size_t
@@ -730,6 +702,15 @@ Robot*
 RoadmapGraph<Vertex, Edge>::
 GetRobot() const noexcept {
   return m_robot;
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+const CCTracker<RoadmapGraph<Vertex, Edge>>*
+RoadmapGraph<Vertex, Edge>::
+GetCCTracker() const noexcept {
+  return m_ccTracker.get();
 }
 
 

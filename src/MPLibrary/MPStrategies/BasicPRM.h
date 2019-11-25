@@ -385,7 +385,7 @@ Connect(InputIterator _first, InputIterator _last,
     auto g = this->GetRoadmap();
     std::cout << "\tGraph has "
               << g->get_num_edges() << " edges and "
-              << g->GetNumCCs() << " connected components."
+              << g->GetCCTracker()->GetNumCCs() << " connected components."
               << std::endl;
   }
 }

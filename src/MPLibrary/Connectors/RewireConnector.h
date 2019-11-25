@@ -544,8 +544,8 @@ RewireConnector<MPTraits>::
 ChangeParent(RoadmapType* const _r, const VID _vid, const VID _oldParent,
     const VID _newParent, const WeightType& _newLp, const double _newCost)
     const noexcept {
-  _r->AddEdge(_newParent, _vid, _newLp);
   _r->DeleteEdge(_oldParent, _vid);
+  _r->AddEdge(_newParent, _vid, _newLp);
   _r->GetVertex(_vid).SetStat("Parent", _newParent);
   if(this->m_debug)
     std::cout << "\t\tRewiring node " << _vid << " through " << _newParent
