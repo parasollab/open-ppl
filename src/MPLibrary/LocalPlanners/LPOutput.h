@@ -77,8 +77,8 @@ LPOutput<MPTraits>::
 Clear() {
   m_path.clear();
   m_intermediates.clear();
-  m_edge.first.SetWeight(0);
-  m_edge.second.SetWeight(0);
+  m_edge.first.Clear();
+  m_edge.second.Clear();
 }
 
 

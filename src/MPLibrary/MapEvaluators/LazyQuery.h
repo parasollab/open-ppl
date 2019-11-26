@@ -32,7 +32,7 @@ class LazyQuery : public QueryMethod<MPTraits> {
     typedef typename MPTraits::CfgType              CfgType;
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
-    typedef typename RoadmapType::EID::edge_id_type EID;
+    typedef typename RoadmapType::EdgeID            EdgeID;
     typedef typename MPTraits::GoalTracker          GoalTracker;
     typedef typename GoalTracker::VIDSet            VIDSet;
 
@@ -53,13 +53,40 @@ class LazyQuery : public QueryMethod<MPTraits> {
     virtual void Initialize() override;
 
     ///@}
-
-  protected:
-
     ///@name QueryMethod Overrides
     ///@{
 
-    virtual bool PerformSubQuery(const VID _start, const VIDSet& _goals) override;
+    virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f)
+        override;
+
+    ///@}
+
+  protected:
+
+    ///@name Internal Types
+    ///@{
+
+    typedef std::unordered_set<VID>    VertexSet;
+    typedef std::unordered_set<EdgeID> EdgeSet;
+
+    ///@}
+    ///@name QueryMethod Overrides
+    ///@{
+
+    virtual void Reset(RoadmapType* const _r) override;
+
+    virtual bool PerformSubQuery(const VID _start, const VIDSet& _goals)
+        override;
+
+    virtual double StaticPathWeight(
+        typename RoadmapType::adj_edge_iterator& _ei,
+        const double _sourceDistance, const double _targetDistance) const
+        override;
+
+    virtual double DynamicPathWeight(
+        typename RoadmapType::adj_edge_iterator& _ei,
+        const double _sourceDistance, const double _targetDistance) const
+        override;
 
     ///@}
     ///@name Helpers
@@ -87,14 +114,48 @@ class LazyQuery : public QueryMethod<MPTraits> {
     /// @param _cfg The invalid configuration to handle.
     virtual void ProcessInvalidNode(const CfgType& _cfg) { }
 
-    /// Invalidate a roadmap configuration.
+    /// Invalidate or delete a roadmap configuration according to the deletion
+    /// option.
     /// @param _vid The vertex descriptor.
     void InvalidateVertex(const VID _vid);
 
-    /// Invalidate a roadmap edge.
+    /// Invalidate or delete a roadmap edge according to the deletion option.
     /// @param _source The source vertex descriptor.
     /// @param _target The target vertex descriptor.
     void InvalidateEdge(const VID _source, const VID _target);
+
+    ///@}
+    ///@name Lazy Invalidation
+    ///@{
+
+    /// Set a vertex as invalidated.
+    /// @param _vid The vertex descriptor.
+    void SetVertexInvalidated(const VID _vid) noexcept;
+
+    /// Check if a vertex is lazily invalidated.
+    /// @param _vid The vertex descriptor.
+    /// @return     True if _vid is lazily invalidated.
+    bool IsVertexInvalidated(const VID _vid) const noexcept;
+
+    /// Check if an edge is lazily invalidated.
+    /// @param _eid The edge ID.
+    /// @return     True if _eid is lazily invalidated.
+    bool IsEdgeInvalidated(const EdgeID _eid) const noexcept;
+
+    /// @overload This version takes the source and target VIDs for an edge.
+    /// @param _source The VID of the source vertex.
+    /// @param _target The VID of the target vertex.
+    /// @return        True if (_source, _target) is lazily invalidated.
+    bool IsEdgeInvalidated(const VID _source, const VID _target) const noexcept;
+
+    /// Set an edge as invalidated.
+    /// @param _eid The edge ID.
+    void SetEdgeInvalidated(const EdgeID _eid) noexcept;
+
+    /// @overload
+    /// @param _source  The VID of the source vertex.
+    /// @param _target  The VID of the target vertex.
+    void SetEdgeInvalidated(const VID _source, const VID _target) noexcept;
 
     ///@}
     ///@name MP Object Labels
@@ -112,10 +173,17 @@ class LazyQuery : public QueryMethod<MPTraits> {
 
     bool m_deleteInvalid{true};   ///< Remove invalid vertices from the roadmap?
 
-    vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
+    std::vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
     int m_numEnhance{0};          ///< Number of enhancement nodes to generate.
     double m_d{0};                ///< Gaussian distance for enhancement sampling.
-    std::vector<std::pair<CfgType, CfgType>> m_edges; ///< Candidate edges.
+
+    /// Candidate edges for enhancement sampling.
+    std::vector<std::pair<CfgType, CfgType>> m_edges;
+
+    /// Lazy-invalidated vertices.
+    std::unordered_map<RoadmapType*, VertexSet> m_invalidVertices;
+    /// Lazy-invalidated edges.
+    std::unordered_map<RoadmapType*, EdgeSet> m_invalidEdges;
 
     ///@}
 
@@ -195,9 +263,40 @@ LazyQuery<MPTraits>::
 Initialize() {
   QueryMethod<MPTraits>::Initialize();
   m_edges.clear();
+  m_invalidVertices.clear();
+  m_invalidEdges.clear();
 }
 
 /*--------------------------- QueryMethod Overrides --------------------------*/
+
+template <typename MPTraits>
+void
+LazyQuery<MPTraits>::
+SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f) {
+  using EI = typename RoadmapType::adj_edge_iterator;
+
+  // Wrap the requested weight function with a preceding check on invalidation.
+  this->m_weightFunction = [this, _f](EI& _ei,
+                                      const double _sourceDistance,
+                                      const double _targetDistance) {
+    if(this->IsEdgeInvalidated(_ei->id()))
+      return std::numeric_limits<double>::infinity();
+    return _f(_ei, _sourceDistance, _targetDistance);
+  };
+}
+
+
+template <typename MPTraits>
+void
+LazyQuery<MPTraits>::
+Reset(RoadmapType* const _r) {
+  QueryMethod<MPTraits>::Reset(_r);
+
+  // Create storage for this roadmap's invalidations.
+  m_invalidVertices[_r];
+  m_invalidEdges[_r];
+}
+
 
 template <typename MPTraits>
 bool
@@ -212,6 +311,36 @@ PerformSubQuery(const VID _start, const VIDSet& _goals) {
   // There are no valid paths, enhance and return false.
   NodeEnhance();
   return false;
+}
+
+
+template <typename MPTraits>
+double
+LazyQuery<MPTraits>::
+StaticPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
+    const double _sourceDistance, const double _targetDistance) const {
+  // First check if the edge is lazily invalidated. If so, the distance is
+  // infinite.
+  if(this->IsEdgeInvalidated(_ei->id()))
+    return std::numeric_limits<double>::infinity();
+
+  return QueryMethod<MPTraits>::StaticPathWeight(_ei, _sourceDistance,
+      _targetDistance);
+}
+
+
+template <typename MPTraits>
+double
+LazyQuery<MPTraits>::
+DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
+    const double _sourceDistance, const double _targetDistance) const {
+  // First check if the edge is lazily invalidated. If so, the distance is
+  // infinite.
+  if(this->IsEdgeInvalidated(_ei->id()))
+    return std::numeric_limits<double>::infinity();
+
+  return QueryMethod<MPTraits>::DynamicPathWeight(_ei, _sourceDistance,
+      _targetDistance);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -251,7 +380,6 @@ PruneInvalidVertices() {
   if(this->m_debug)
     std::cout << "\t\tChecking vertices..." << std::endl;
 
-  auto g  = this->GetRoadmap();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto path = this->GetPath();
 
@@ -262,7 +390,7 @@ PruneInvalidVertices() {
     const VID vid = path->VIDs()[index];
 
     // Skip checks if already validated.
-    CfgType& cfg = g->GetVertex(vid);
+    CfgType& cfg = this->m_roadmap->GetVertex(vid);
     if(cfg.IsLabel("VALID") && cfg.GetLabel("VALID"))
       continue;
 
@@ -275,7 +403,7 @@ PruneInvalidVertices() {
       std::cout << "\t\tNode " << vid << " found invalid during path validation."
                 << std::endl;
 
-    // Delete invalid vertex.
+    // Invalidate the cfg.
     InvalidateVertex(vid);
     return true;
   }
@@ -291,7 +419,6 @@ template <typename MPTraits>
 bool
 LazyQuery<MPTraits>::
 PruneInvalidEdges() {
-  auto g = this->GetRoadmap();
   auto env = this->GetEnvironment();
   auto lp = this->GetLocalPlanner(m_lpLabel);
   auto path = this->GetPath();
@@ -315,7 +442,7 @@ PruneInvalidEdges() {
         typename RoadmapType::edge_descriptor ed(v1, v2);
         typename RoadmapType::vertex_iterator vi;
         typename RoadmapType::adj_edge_iterator edge;
-        g->find_edge(ed, vi, edge);
+        this->m_roadmap->find_edge(ed, vi, edge);
 
         if(edge->property().IsChecked(res))
           continue;
@@ -325,21 +452,23 @@ PruneInvalidEdges() {
       // Validate edge with local planner.
       CfgType witness;
       LPOutput<MPTraits> lpo;
-      const bool valid = lp->IsConnected(g->GetVertex(v1), g->GetVertex(v2),
+      const bool valid = lp->IsConnected(
+          this->m_roadmap->GetVertex(v1), this->m_roadmap->GetVertex(v2),
           witness, &lpo,
           env->GetPositionRes() * res, env->GetOrientationRes() * res, true);
 
-      // Handle invalid edges.
-      if(!valid) {
-        if(this->m_debug)
-          std::cout << "\n\t\tEdge (" << v1 << ", " << v2 << ") is invalid at "
-                    << "resolultion factor " << res << "." << std::endl;
+      // If the edge is valid, move on.
+      if(valid)
+        continue;
 
-        // Delete invalid edge.
-        ProcessInvalidNode(witness);
-        InvalidateEdge(v1, v2);
-        return true;
-      }
+      if(this->m_debug)
+        std::cout << "\n\t\tEdge (" << v1 << ", " << v2 << ") is invalid at "
+                  << "resolultion factor " << res << "." << std::endl;
+
+      // Invalidate the edge.
+      ProcessInvalidNode(witness);
+      InvalidateEdge(v1, v2);
+      return true;
     }
 
     if(this->m_debug)
@@ -401,22 +530,20 @@ template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
 InvalidateVertex(const VID _vid) {
-  auto g = this->GetRoadmap();
-
-  const CfgType& cfg = g->GetVertex(_vid);
+  const CfgType& cfg = this->m_roadmap->GetVertex(_vid);
   ProcessInvalidNode(cfg);
 
   // If we are deleting invalid vertices, delete _vid and return.
   if(m_deleteInvalid) {
-    g->DeleteVertex(_vid);
+    this->m_roadmap->DeleteVertex(_vid);
     return;
   }
 
   // Otherwise, mark this vertex and its edges as lazy invalid.
-  g->SetVertexInvalidated(_vid, true);
-  auto vi = g->find_vertex(_vid);
+  SetVertexInvalidated(_vid);
+  auto vi = this->m_roadmap->find_vertex(_vid);
   for(auto ei = vi->begin(); ei != vi->end(); ++ei)
-    g->SetEdgeInvalidated(ei->id(), true);
+    SetEdgeInvalidated(ei->id());
 }
 
 
@@ -424,12 +551,10 @@ template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
 InvalidateEdge(const VID _source, const VID _target) {
-  auto g = this->GetRoadmap();
-
   // Add the invalid edge to enhancement sampling list.
   if(m_numEnhance) {
-    const CfgType& cfg1 = g->GetVertex(_source),
-                 & cfg2 = g->GetVertex(_target);
+    const CfgType& cfg1 = this->m_roadmap->GetVertex(_source),
+                 & cfg2 = this->m_roadmap->GetVertex(_target);
     if(!cfg1.IsLabel("Enhance") and !cfg2.IsLabel("Enhance")) {
       m_edges.emplace_back(cfg1, cfg2);
       if(this->m_debug)
@@ -440,10 +565,73 @@ InvalidateEdge(const VID _source, const VID _target) {
 
   // If we are deleting invalid edges, delete (_source, _target) and return.
   if(m_deleteInvalid)
-    g->DeleteEdge(_source, _target);
+    this->m_roadmap->DeleteEdge(_source, _target);
   // Otherwise, mark this edge as lazy invalid.
   else
-    g->SetEdgeInvalidated(_source, _target, true);
+    SetEdgeInvalidated(_source, _target);
+}
+
+/*---------------------------- Lazy Invalidation -----------------------------*/
+
+template <typename MPTraits>
+inline
+bool
+LazyQuery<MPTraits>::
+IsVertexInvalidated(const VID _vid) const noexcept {
+  return m_invalidVertices.at(this->m_roadmap).count(_vid);
+}
+
+
+template <typename MPTraits>
+inline
+void
+LazyQuery<MPTraits>::
+SetVertexInvalidated(const VID _vid) noexcept {
+  m_invalidVertices.at(this->m_roadmap).insert(_vid);
+}
+
+
+template <typename MPTraits>
+inline
+bool
+LazyQuery<MPTraits>::
+IsEdgeInvalidated(const EdgeID _eid) const noexcept {
+  return m_invalidEdges.at(this->m_roadmap).count(_eid);
+}
+
+
+template <typename MPTraits>
+inline
+bool
+LazyQuery<MPTraits>::
+IsEdgeInvalidated(const VID _source, const VID _target) const noexcept {
+  typename RoadmapType::CEI ei;
+  if(!this->m_roadmap->GetEdge(_source, _target, ei))
+    throw RunTimeException(WHERE) << "Requested non-existent edge ("
+                                  << _source << ", " << _target << ").";
+  return IsEdgeInvalidated(ei->id());
+}
+
+
+template <typename MPTraits>
+inline
+void
+LazyQuery<MPTraits>::
+SetEdgeInvalidated(const EdgeID _eid) noexcept {
+  m_invalidEdges.at(this->m_roadmap).insert(_eid);
+}
+
+
+template <typename MPTraits>
+inline
+void
+LazyQuery<MPTraits>::
+SetEdgeInvalidated(const VID _source, const VID _target) noexcept {
+  typename RoadmapType::EI ei;
+  if(!this->m_roadmap->GetEdge(_source, _target, ei))
+    throw RunTimeException(WHERE) << "Requested non-existent edge ("
+                                  << _source << ", " << _target << ").";
+  SetEdgeInvalidated(ei->id());
 }
 
 /*----------------------------------------------------------------------------*/

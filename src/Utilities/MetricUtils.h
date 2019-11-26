@@ -151,12 +151,14 @@ template <typename RoadmapType>
 void
 StatClass::
 PrintAllStats(std::ostream& _os, RoadmapType* _rmap) {
-  // Output roadmap statistics.
-  _os << "Roadmap Statistics:\n"
-      << "\n  Number of Nodes: " << _rmap->get_num_vertices()
-      << "\n  Number of Edges: " << _rmap->get_num_edges()
-      << std::endl;
-  DisplayCCStats(_os, *_rmap);
+  if(_rmap) {
+    // Output roadmap statistics.
+    _os << "Roadmap Statistics:\n"
+        << "\n  Number of Nodes: " << _rmap->get_num_vertices()
+        << "\n  Number of Edges: " << _rmap->get_num_edges()
+        << std::endl;
+    DisplayCCStats(_os, *_rmap);
+  }
 
   PrintAllStats(_os);
 }

@@ -43,6 +43,8 @@ class AbstractBoundingBox :  public Boundary, public NBox {
 
     virtual const std::vector<double>& GetCenter() const noexcept override;
 
+    virtual double GetVolume() const noexcept override;
+
     ///@}
     ///@name Sampling
     ///@{

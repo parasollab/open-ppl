@@ -4,9 +4,9 @@ The PMPL library is a general code base for studying motion planning algorithms.
 
 ## Migration from SVN
 
-As part of the migration from SVN, we have separated our examples into their own repository at [pmpl\_envs](). If you find that an input file you need is missing, please import it from the archived SVN repo to the new envs repo or ask Read for help.
+As part of the migration from SVN, we have separated our examples into their own repository at [pmpl\_envs](https://gitlab.engr.illinois.edu/parasol/envs.git). If you find that an input file you need is missing, please import it from the archived SVN repo to the new envs repo or ask Read for help.
 
-Another important change is the removal of SVN externals. Our utilities now live at [pmpl\_utils](https://github.tamu.edu/parasol/pmpl_utils.git), and must be cloned separately. We will likely move to either git submodules or subtress eventually, but for now here is how to set up your utilities:
+Another important change is the removal of SVN externals. Our utilities now live at [pmpl\_utils](https://gitlab.engr.illinois.edu/parasol/pmpl_utils.git), and must be cloned separately. We will likely move to either git submodules or subtress eventually, but for now here is how to set up your utilities:
 - Clone the utilities repo, which will produce a directory called `pmpl_utils`.
 - Go to the root of your PMPL checkout and create a soft-link to the `pmpl_utils` directory with `ln -s /my/path/to/pmpl_utils`.
 - Make PMPL.

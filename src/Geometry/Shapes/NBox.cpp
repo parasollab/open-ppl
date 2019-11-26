@@ -104,6 +104,16 @@ Translate(const std::vector<double>& _v) noexcept {
   }
 }
 
+
+double
+NBox::
+GetVolume() const noexcept {
+  double volume = 1;
+  for(const auto& range : m_range)
+    volume *= range.Length();
+  return volume;
+}
+
 /*------------------------------ Point Testing -------------------------------*/
 
 bool

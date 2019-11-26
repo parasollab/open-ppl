@@ -61,9 +61,13 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     ///@name RRT Overrides
     ///@{
 
+    /// As basic RRT, but set a limiting dynamic domain on the source node
+    /// whenever the extension fails.
     virtual VID Extend(const VID _nearVID, const CfgType& _qRand,
         LPOutput<MPTraits>& _lp, const bool _requireNew = false) override;
 
+    /// As basic RRT, but reject attempts to extend towards targets beyond the
+    /// dynamic domain.
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target)
         override;
 
@@ -130,6 +134,8 @@ void
 DynamicDomainRRT<MPTraits>::
 Initialize() {
   BasicRRTStrategy<MPTraits>::Initialize();
+
+  // Label any input vertices with unrestricted domain.
   for(auto v : *this->GetRoadmap())
     v.property().SetStat(RLabel(), std::numeric_limits<double>::max());
 }
@@ -141,7 +147,6 @@ typename DynamicDomainRRT<MPTraits>::VID
 DynamicDomainRRT<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp,
     const bool _requireNew) {
-  // As basic RRT's extend, but do some stuff on failure.
   const VID newVID = BasicRRTStrategy<MPTraits>::Extend(_nearVID, _qRand, _lp,
       _requireNew);
 

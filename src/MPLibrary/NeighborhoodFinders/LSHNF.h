@@ -76,12 +76,12 @@ class LSHNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    OutputIterator FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
@@ -226,10 +226,10 @@ template <typename MPTraits>
 template<typename InputIterator, typename OutputIterator>
 OutputIterator
 LSHNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _query, OutputIterator _out) {
-  auto g = _rmp;
+  auto g = _r;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // Find the first m_k approximate nearest-neighbors from the hash map.
@@ -280,7 +280,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 LSHNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);

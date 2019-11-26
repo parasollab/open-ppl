@@ -132,12 +132,11 @@ class DefaultWeight {
     double m_weight{0.};                  ///< The edge length.
     std::vector<CfgType> m_intermediates; ///< Intermediate configurations.
 
-    // TODO: remove this from here.
-    bool m_skipEdge{false}; ///< Don't compute intermediates in Path::FullCfgs()
+    /// The checked resolution multiple (for lazy query), or max if none.
+    int m_checkedMult{std::numeric_limits<int>::max()};
 
-    int m_checkedMult;
-    bool m_hasClearance{false};
-    double m_clearance;
+    /// The clearance value, or inf if not evaluated.
+    double m_clearance{std::numeric_limits<double>::infinity()};
 
     // For nonholonomic robots.
     ControlSet m_controls;   ///< The controls used.
@@ -163,8 +162,8 @@ template <typename CfgType>
 DefaultWeight<CfgType>::
 DefaultWeight(const std::string& _label, const double _w,
     const std::vector<CfgType>& _intermediates) :
-    m_lpLabel(_label), m_weight(_w), m_intermediates(_intermediates),
-    m_checkedMult(std::numeric_limits<int>::max()), m_hasClearance(false) { }
+    m_lpLabel(_label), m_weight(_w), m_intermediates(_intermediates) {
+}
 
 /*------------------------------- Assignment ---------------------------------*/
 
@@ -173,14 +172,13 @@ const DefaultWeight<CfgType>&
 DefaultWeight<CfgType>::
 operator=(const DefaultWeight<CfgType>& _w) {
   if(this != &_w) {
-    m_lpLabel = _w.GetLPLabel();
-    m_weight = _w.GetWeight();
+    m_lpLabel       = _w.GetLPLabel();
+    m_weight        = _w.GetWeight();
     m_intermediates = _w.GetIntermediates();
-    m_checkedMult = _w.m_checkedMult;
-    m_hasClearance = _w.HasClearance();
-    m_clearance = _w.GetClearance();
-    m_controls = _w.GetControlSet();
-    m_timeSteps = _w.GetTimeSteps();
+    m_checkedMult   = _w.m_checkedMult;
+    m_clearance     = _w.GetClearance();
+    m_controls      = _w.GetControlSet();
+    m_timeSteps     = _w.GetTimeSteps();
   }
   return *this;
 }
@@ -344,14 +342,6 @@ SetChecked(const int _mult) noexcept {
 
 
 template <typename CfgType>
-bool
-DefaultWeight<CfgType>::
-HasClearance() const noexcept {
-  return m_hasClearance;
-}
-
-
-template <typename CfgType>
 double
 DefaultWeight<CfgType>::
 GetClearance() const noexcept {
@@ -363,7 +353,6 @@ template <typename CfgType>
 void
 DefaultWeight<CfgType>::
 SetClearance(const double _c) noexcept {
-  m_hasClearance = true;
   m_clearance = _c;
 }
 
@@ -378,15 +367,12 @@ DefaultWeight<CfgType>::
 Clear() {
   // Reset the initial state variables of this object:
   m_lpLabel.clear();
-  m_weight = 0.;
   m_intermediates.clear();
   m_controls.clear();
-
-  m_checkedMult = 0;
-  m_hasClearance = false;
-  m_clearance = 0.;
-
-  m_timeSteps = 0;
+  m_weight      = 0.;
+  m_checkedMult = std::numeric_limits<int>::max();
+  m_clearance   = std::numeric_limits<double>::infinity();
+  m_timeSteps   = 0;
 }
 
 // Initialize the input robot (a placeholder for not knowing the robot when

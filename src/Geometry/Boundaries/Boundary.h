@@ -82,6 +82,9 @@ class Boundary {
     /// Get the boundary's center point.
     virtual const std::vector<double>& GetCenter() const noexcept = 0;
 
+    /// Get the boundary's volume (Lebesgue Measure).
+    virtual double GetVolume() const noexcept = 0;
+
     ///@}
     ///@name Sampling
     ///@{

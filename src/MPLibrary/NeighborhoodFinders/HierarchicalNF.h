@@ -54,23 +54,23 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _rmp,
+    OutputIterator FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _rmp,
+    OutputIterator FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _rmp,
+    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
@@ -132,14 +132,14 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 HierarchicalNF<MPTraits>::
-FindNeighbors(RoadmapType* _rmp,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   auto nf2 = this->GetNeighborhoodFinder(m_nfLabel2);
 
   std::vector<Neighbor> closest;
-  nf->FindNeighbors(_rmp, _first, _last, _fromFullRoadmap, _cfg,
+  nf->FindNeighbors(_r, _first, _last, _fromFullRoadmap, _cfg,
       std::back_inserter(closest));
 
   std::vector<VID> closestVID;
@@ -147,7 +147,7 @@ FindNeighbors(RoadmapType* _rmp,
   for(const auto& p : closest)
     closestVID.push_back(p.target);
 
-  nf2->FindNeighbors(_rmp, closestVID.begin(), closestVID.end(), false,
+  nf2->FindNeighbors(_r, closestVID.begin(), closestVID.end(), false,
       _cfg, _out);
 
   return _out;
@@ -158,7 +158,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 HierarchicalNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _rmp,
+FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
@@ -170,7 +170,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 HierarchicalNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _rmp,
+FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
   throw NotImplementedException(WHERE);
@@ -181,7 +181,7 @@ template <typename MPTraits>
 template <typename InputIterator, typename OutputIterator>
 OutputIterator
 HierarchicalNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _rmp,
+FindNeighborPairs(GroupRoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
