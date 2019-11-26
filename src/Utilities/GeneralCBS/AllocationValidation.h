@@ -60,7 +60,7 @@ class AllocationValidation : public Validation {
 	///@input _a2 The assignment which the robot is transitioning to start
 	///@output bool indicating if the robot is able to make the transition before the 
 	///					expected start of _a2. If feasible, the setup path of _a2 is updated.
-	bool CanReach(Assignment& _a1, Assignment& _a2);
+	bool CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node);
 	///@}
 	///@name Internal State
 	///@{

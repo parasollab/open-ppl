@@ -241,9 +241,9 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 
   auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
 
-  if(sg->GetAvailableIntervalGraph()->IsVertexInvalidated(target)){
-    return std::numeric_limits<double>::infinity();
-	}
+  //if(sg->GetAvailableIntervalGraph()->IsVertexInvalidated(target)){
+  //  return std::numeric_limits<double>::infinity();
+	//}
 
   auto cfg = sg->GetAvailableIntervalGraph()->GetVertex(target);
   auto sourceCfg = sg->GetAvailableIntervalGraph()->GetVertex(source);

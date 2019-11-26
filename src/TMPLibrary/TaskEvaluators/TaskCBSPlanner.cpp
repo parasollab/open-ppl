@@ -79,7 +79,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
     }
     for(auto vit = sg->GetAvailableIntervalGraph()->begin();
         vit != sg->GetAvailableIntervalGraph()->end(); vit++) {
-      if(!sg->GetAvailableIntervalGraph()->IsVertexInvalidated(vit->descriptor()))
+      //if(!sg->GetAvailableIntervalGraph()->IsVertexInvalidated(vit->descriptor()))
         validVIDs[kv.first].insert(vit->descriptor());
     }
   }

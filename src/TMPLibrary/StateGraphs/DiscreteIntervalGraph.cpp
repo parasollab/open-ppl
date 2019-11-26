@@ -177,16 +177,17 @@ std::pair<size_t,size_t>
 DiscreteIntervalGraph::
 AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs) {
 
-  if(m_currentTask) {
+  /*if(m_currentTask) {
     for(auto vid : m_hlgTaskVIDs[m_currentTask]) {
       m_highLevelGraph->SetVertexInvalidated(vid);
     }
     for(auto vid : m_aigTaskVIDs[m_currentTask]) {
       m_availableIntervalGraph->SetVertexInvalidated(vid);
     }
-  }
+  }*/
   m_currentTask = _wholeTask;
   if(!m_hlgTaskVIDs[_wholeTask].empty()) {
+		/*
     for(auto vid : m_hlgTaskVIDs[_wholeTask]) {
       m_highLevelGraph->SetVertexInvalidated(vid,false);
     }
@@ -201,6 +202,7 @@ AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs) {
 				else
 					m_availableIntervalGraph->SetVertexInvalidated(vit->descriptor(),true);
 			}
+		*/
   	if(m_debug){
     	std::cout << "Adding Task." << std::endl;
     	PrintGraph();
@@ -315,17 +317,17 @@ AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs) {
   }
 	size_t queryStart;
 	for(auto vid : m_intervalMap[virtStart]) {
-		if(!m_availableIntervalGraph->IsVertexInvalidated(vid)) {
+		//if(!m_availableIntervalGraph->IsVertexInvalidated(vid)) {
 			queryStart = vid;
 			break;
-		}
+		//}
 	}
 	size_t queryGoal;
 	for(auto vid : m_intervalMap[virtGoal]) {
-		if(!m_availableIntervalGraph->IsVertexInvalidated(vid)) {
+		//if(!m_availableIntervalGraph->IsVertexInvalidated(vid)) {
 			queryGoal = vid;
 			break;
-		}
+		//}
 	}
 	return std::make_pair(queryStart,queryGoal);
   //return std::pair<size_t,size_t>(m_intervalMap[virtStart][0],m_intervalMap[virtGoal][0]);
@@ -335,11 +337,11 @@ void
 DiscreteIntervalGraph::
 RemoveTaskFromGraph(WholeTask* _wholeTask){
 
-  for(auto& vid : m_currentTaskVIDs){
+  /*for(auto& vid : m_currentTaskVIDs){
     //m_highLevelGraph->DeleteVertex(vid);
     m_highLevelGraph->SetVertexInvalidated(vid);
-  }
-
+  }*/
+/*
   for(auto vid : m_currentTaskVIDs) {
     for(auto v : m_intervalMap[vid]) {
       //m_availableIntervalGraph->DeleteVertex(v);
@@ -347,13 +349,14 @@ RemoveTaskFromGraph(WholeTask* _wholeTask){
     }
     //m_intervalMap.erase(vid);
     //m_agentAvailableIntervalMap.erase(vid);
-  }
+  }*/
+	/*
   for(auto vid : m_hlgTaskVIDs[_wholeTask]) {
     m_highLevelGraph->SetVertexInvalidated(vid);
   }
   for(auto vid : m_aigTaskVIDs[_wholeTask]) {
     m_availableIntervalGraph->SetVertexInvalidated(vid);
-  }
+  }*/
   //TODO::create the interval map and update it with changes to the rat
   //and task start goal instead of starting from 0
   //m_intervalMap.clear();
@@ -746,8 +749,8 @@ DiscreteIntervalGraph::
 PrintAvailabilityGraph(){
   std::cout << "Printing availability vertices" << std::endl;
   for(auto vit = m_availableIntervalGraph->begin(); vit != m_availableIntervalGraph->end(); vit++) {
-		if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
-			continue;
+		//if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
+		//	continue;
     std::cout << vit->descriptor()
               << " : "
               << vit->property().PrettyPrint()
@@ -761,12 +764,12 @@ PrintAvailabilityGraph(){
   }
   std::cout << "Printing availability edges" << std::endl;
   for(auto vit = m_availableIntervalGraph->begin(); vit != m_availableIntervalGraph->end(); vit++) {
-		if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
-			continue;
+		//if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
+		//	continue;
     for(auto eit = vit->begin(); eit != vit->end(); eit++) {
-			if(m_availableIntervalGraph->IsVertexInvalidated(eit->target()) or
-				 m_availableIntervalGraph->IsVertexInvalidated(eit->source()))
-				continue;
+			//if(m_availableIntervalGraph->IsVertexInvalidated(eit->target()) or
+			//	 m_availableIntervalGraph->IsVertexInvalidated(eit->source()))
+			//	continue;
       std::cout << eit->source()
                 << " -> "
                 << eit->target()
@@ -841,8 +844,8 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
 		size_t size = m_intervalMap[desc].size();
     for(size_t i = 0; i < size; i++) {
 			auto vid = m_intervalMap[desc][i];
-			if(m_availableIntervalGraph->IsVertexInvalidated(vid))
-				continue;
+			//if(m_availableIntervalGraph->IsVertexInvalidated(vid))
+			//	continue;
       auto agentAvail = m_agentAvailableIntervalMap.at(vid);
       auto agent = agentAvail.first;
 			if(agent->GetCapability() != cfg.GetRobot()->GetCapability())
@@ -868,7 +871,7 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           //Change to just mark invalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
           continue;
         }
         else if(availInterval.first < busyInterval.first and
@@ -878,7 +881,7 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           //Change to mark invalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
 
 					/*if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
 						//busyInterval.first = busyInterval.first - 1;
@@ -929,7 +932,7 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           //Change to just marking invalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
 
 					/*if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
 						//busyInterval.first = busyInterval.first - 1;
@@ -963,7 +966,7 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           //Change to just markinginvalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
 					/*if(!m_goalDelivering.count(vit->descriptor()) and !m_mainDelivering.count(vit->descriptor())){
 						//busyInterval.first = busyInterval.first - 1;
 						busyInterval.second = busyInterval.second + 1;
@@ -1017,9 +1020,9 @@ UpdateAvailableIntervalConstraint(HandoffAgent* _agent, size_t _startTime, size_
           //  continue;
           if(!newValidSet.count(s) and !newValidSet.count(t))
 						continue;
-					if(m_availableIntervalGraph->IsVertexInvalidated(s) or
-						 m_availableIntervalGraph->IsVertexInvalidated(t))
-						continue;
+					//if(m_availableIntervalGraph->IsVertexInvalidated(s) or
+					//	 m_availableIntervalGraph->IsVertexInvalidated(t))
+					//	continue;
 					
   				auto sourceInterval = m_agentAvailableIntervalMap.at(s);
   				auto targetInterval = m_agentAvailableIntervalMap.at(t);
@@ -1078,8 +1081,8 @@ UpdateMotionConstraint(HandoffAgent* _agent,WholeTask* _wholeTask,
 		auto next = iter;
 		next++;
 		for(auto vid : m_intervalMap[hvit->descriptor()]) {
-			if(m_availableIntervalGraph->IsVertexInvalidated(vid))
-				continue;
+			//if(m_availableIntervalGraph->IsVertexInvalidated(vid))
+			//	continue;
 		
 			auto agentInterval = m_agentAvailableIntervalMap[vid];
 			if(_agent != agentInterval.first)
@@ -1145,8 +1148,8 @@ UpdateMotionConstraint(HandoffAgent* _agent,WholeTask* _wholeTask,
 
 
 	for(auto vit = m_availableIntervalGraph->begin(); vit != m_availableIntervalGraph->end(); vit++) {
-		if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
-			continue;
+		//if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
+		//	continue;
 
 		//std::cout << "new vit: " << vit->descriptor() << std::endl;
 
@@ -1226,7 +1229,7 @@ UpdateMotionConstraint(HandoffAgent* _agent,WholeTask* _wholeTask,
 	for(auto vid : modifiedVertices) {
 		invalids.push_back(vid);
 		newValid.push_back(newVertices[vid]);
-		m_availableIntervalGraph->SetVertexInvalidated(vid);
+		//m_availableIntervalGraph->SetVertexInvalidated(vid);
 	}
 
 	if(m_debug) {

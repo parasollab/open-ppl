@@ -2,6 +2,7 @@
 #define MOTION_VALIDATION_H_
 
 #include "Validation.h"
+#include "TMPLibrary/TMPLibrary.h"
 
 class MotionValidation : public Validation {
   public:
@@ -17,7 +18,8 @@ class MotionValidation : public Validation {
 
 	MotionValidation();
 
-	MotionValidation(MPLibrary* _library,LowLevelSearch* _lowLevel);
+	MotionValidation(MPLibrary* _library,LowLevelSearch* _lowLevel, 
+									 TMPLibrary* _tmpLibrary, std::string _vcLabel, std::string _sgLabel);
 
 	~MotionValidation();
 
@@ -53,6 +55,20 @@ class MotionValidation : public Validation {
 	///@input _constraints pair of motion constraints with which to spawn the children
 	void AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraintPair _constraints);
 	
+	///@}
+	///@name Internal State
+	///@{
+	
+	TMPLibrary* m_tmpLibrary;
+
+	///< State Graph Label
+	std::string m_sgLabel;
+
+	///< Validity Checker Label
+	std::string m_vcLabel;
+
+	bool m_debug{true};
+
 	///@}
 
 };

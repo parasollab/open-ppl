@@ -21,7 +21,7 @@ TaskEvaluatorMethod::
 operator()(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
 	Simulation::GetStatClass()->StartClock("TaskEvaluationTime");
 	auto ret = Run( _wholeTasks, _plan);
-	Simulation::GetStatClass()->StartClock("TaskEvaluationTime");
+	Simulation::GetStatClass()->StopClock("TaskEvaluationTime");
 	return ret;
 }
 

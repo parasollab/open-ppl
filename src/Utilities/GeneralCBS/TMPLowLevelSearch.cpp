@@ -7,8 +7,8 @@
 #include "TMPLibrary/TMPLibrary.h"
 
 TMPLowLevelSearch::
-TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel) : 
-									m_tmpLibrary(_tmpLibrary), m_sgLabel(_sgLabel) {}
+TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel) : 
+									LowLevelSearch(_tmpLibrary,_sgLabel,_vcLabel) {}
 
 /*----------------------------------- Interface -----------------------------------*/
 bool
@@ -41,7 +41,15 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 void
 TMPLowLevelSearch::
 Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
+
 	auto team = m_tmpLibrary->GetTaskPlan()->GetTeam();
+
+	for(auto agent : team) {
+		auto& constraints = _node.GetMotionConstraints(_task,agent);
+		for(auto& c : constraints) {
+			m_motionConstraintMap[agent].insert(std::make_pair(c.m_timestep,c.m_conflictCfg));
+		}
+	}
 	
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 
@@ -114,6 +122,12 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 		auto iter = intervals.begin();
 		//for(auto iter = intervals.begin(); iter != intervals.end(); iter++) {
 		while(iter != intervals.end()) {
+			if(*iter == elem.m_availInt) {
+				m_availSourceMap[elem] = constraint;
+				iter++;
+				continue;
+			}
+
 			if(iter->second < departTime) { // depart time occurs after the interval ends
 				iter++;
 				continue;
@@ -477,45 +491,16 @@ CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask>
 
 std::pair<double,std::vector<size_t>>
 TMPLowLevelSearch::
-MotionPlan(Cfg _start, Cfg _goal) {
-  if(_start.GetRobot()->GetCapability() != _goal.GetRobot()->GetCapability()){
-    throw RunTimeException(WHERE, "start and goal are of mismatched robot types.");
-  }
-	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 
-  //save current library task
-  auto oldTask = m_tmpLibrary->GetMPLibrary()->GetTask();
-
-  auto dummyAgent = m_tmpLibrary->GetTaskPlan()->GetCapabilityAgent(_start.GetRobot()->GetCapability());
-  auto robot = dummyAgent->GetRobot();
-
-  _start.SetRobot(robot);
-  _goal.SetRobot(robot);
-
-  std::shared_ptr<MPTask> task = std::shared_ptr<MPTask>(new MPTask(robot));
-
-  std::unique_ptr<CSpaceConstraint> startConstraint(new CSpaceConstraint(robot, _start));
-  std::unique_ptr<CSpaceConstraint> goalConstraint(new CSpaceConstraint(robot, _goal));
-
-  task->SetStartConstraint(std::move(startConstraint));
-  task->AddGoalConstraint(std::move(goalConstraint));
-
-  m_tmpLibrary->GetMPLibrary()->SetTask(task.get());
-
-  auto solution = new MPSolution(dummyAgent->GetRobot());
-
-	auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(robot->GetAgent()));
-
-  solution->SetRoadmap(dummyAgent->GetRobot(),roadmap.get());
-
-  m_tmpLibrary->GetMPLibrary()->Solve(m_tmpLibrary->GetMPLibrary()->GetMPProblem(), task.get(), solution, "EvaluateMapStrategy",
-      LRand(), "LowerLevelGraphWeight");
-
-  if(m_tmpLibrary->GetMPLibrary()->GetPath()->Cfgs().empty())
-    return {};
-
-  //restore library task
-  m_tmpLibrary->GetMPLibrary()->SetTask(oldTask);
+	m_currentRobot = _start.GetRobot();
+	auto agent = m_currentRobot->GetAgent();
+	m_currentMotionConstraints = &(m_motionConstraintMap[agent]);
 	
-	return std::make_pair(solution->GetPath()->Length(),solution->GetPath(robot)->VIDs());
+	auto plan = this->LowLevelSearch::MotionPlan(_start,_goal);
+
+	m_currentRobot = nullptr;
+	m_currentMotionConstraints = nullptr;
+
+	return plan;
 }

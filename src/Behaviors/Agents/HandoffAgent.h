@@ -2,7 +2,7 @@
 #define HANDOFF_AGENT_H_
 
 #include "PathFollowingAgent.h"
-#include "DummyAgent.h"
+//#include "DummyAgent.h"
 
 class Coordinator;
 class TMPLibrary;
@@ -13,7 +13,7 @@ class NetbookInterface;
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent follows a set of tasks and executes the helper worker behavior.
 ////////////////////////////////////////////////////////////////////////////////
-class HandoffAgent : public DummyAgent {
+class HandoffAgent : public PathFollowingAgent {
 
   public:
 

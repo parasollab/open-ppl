@@ -7,7 +7,7 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
-#include "Behaviors/Agents/DummyAgent.h"
+//#include "Behaviors/Agents/DummyAgent.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
@@ -237,8 +237,8 @@ Step(const double _dt) {
 
   for(auto agent : m_memberAgents){
 		if(m_runDummies) {
-			auto dummy = static_cast<DummyAgent*>(agent);
-			dummy->DummyAgent::Step(_dt);
+			auto dummy = static_cast<HandoffAgent*>(agent);
+			dummy->HandoffAgent::Step(_dt);
 		}
 		else {
     	agent->Step(_dt);

@@ -566,7 +566,6 @@ PMPL_SRCS := \
 	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/Validation.cpp \
   Utilities/IOUtils.cpp \
-  Utilities/MeanCurvatureSkeleton3D.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \

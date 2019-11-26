@@ -355,12 +355,13 @@ AddTaskToGraph(WholeTask* _wholeTask,std::set<size_t> _validAigVIDs){
 void
 MultiTaskGraph::
 RemoveTaskFromGraph(WholeTask* _wholeTask){
-
+/*
   for(auto& vid : m_currentTaskVIDs){
     //m_highLevelGraph->DeleteVertex(vid);
     m_highLevelGraph->SetVertexInvalidated(vid);
   }
-
+*/
+/*
   for(auto vid : m_currentTaskVIDs) {
     for(auto v : m_intervalMap[vid]) {
       //m_availableIntervalGraph->DeleteVertex(v);
@@ -374,7 +375,7 @@ RemoveTaskFromGraph(WholeTask* _wholeTask){
   }
   for(auto vid : m_aigTaskVIDs[_wholeTask]) {
     m_availableIntervalGraph->SetVertexInvalidated(vid);
-  }
+  }*/
   //TODO::create the interval map and update it with changes to the rat
   //and task start goal instead of starting from 0
   //m_intervalMap.clear();
@@ -780,8 +781,8 @@ MultiTaskGraph::
 PrintAvailabilityGraph(){
   std::cout << "Printing availability vertices" << std::endl;
   for(auto vit = m_availableIntervalGraph->begin(); vit != m_availableIntervalGraph->end(); vit++) {
-		if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
-			continue;
+		//if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
+		//	continue;
     std::cout << vit->descriptor()
               << " : "
               << vit->property().PrettyPrint()
@@ -795,12 +796,12 @@ PrintAvailabilityGraph(){
   }
   std::cout << "Printing availability edges" << std::endl;
   for(auto vit = m_availableIntervalGraph->begin(); vit != m_availableIntervalGraph->end(); vit++) {
-		if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
-			continue;
+		//if(m_availableIntervalGraph->IsVertexInvalidated(vit->descriptor()))
+		//	continue;
     for(auto eit = vit->begin(); eit != vit->end(); eit++) {
-			if(m_availableIntervalGraph->IsVertexInvalidated(eit->target()) or
-				 m_availableIntervalGraph->IsVertexInvalidated(eit->source()))
-				continue;
+			//if(m_availableIntervalGraph->IsVertexInvalidated(eit->target()) or
+			//	 m_availableIntervalGraph->IsVertexInvalidated(eit->source()))
+			//	continue;
       std::cout << eit->source()
                 << " -> "
                 << eit->target()
@@ -847,8 +848,8 @@ UpdateAvailableIntervalGraph(std::unordered_map<Agent*,
 		size_t size = m_intervalMap[desc].size();
     for(size_t i = 0; i < size; i++) {
 			auto vid = m_intervalMap[desc][i];
-			if(m_availableIntervalGraph->IsVertexInvalidated(vid))
-				continue;
+			//if(m_availableIntervalGraph->IsVertexInvalidated(vid))
+			//	continue;
       auto agentAvail = m_agentAvailableIntervalMap.at(vid);
       auto agent = agentAvail.first;
 			if(agent->GetCapability() != cfg.GetRobot()->GetCapability())
@@ -866,7 +867,7 @@ UpdateAvailableIntervalGraph(std::unordered_map<Agent*,
           //Change to just mark invalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
           continue;
         }
         else if(availInterval.first < busyInterval.first and
@@ -876,7 +877,7 @@ UpdateAvailableIntervalGraph(std::unordered_map<Agent*,
           //Change to mark invalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
 
           auto firstInterval = std::make_pair(availInterval.first,busyInterval.first);
           auto secondInterval = std::make_pair(busyInterval.second,availInterval.second);
@@ -919,7 +920,7 @@ UpdateAvailableIntervalGraph(std::unordered_map<Agent*,
           //Change to just marking invalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
 
           auto newInterval = std::make_pair(busyInterval.second,availInterval.second);
 					if(newInterval.first > newInterval.second)
@@ -949,7 +950,7 @@ UpdateAvailableIntervalGraph(std::unordered_map<Agent*,
           //Change to just markinginvalid
           //m_availableIntervalGraph->DeleteVertex(vid);
           invalid.push_back(vid);
-					m_availableIntervalGraph->SetVertexInvalidated(vid);
+					//m_availableIntervalGraph->SetVertexInvalidated(vid);
 
           auto newInterval = std::make_pair(availInterval.first,busyInterval.first);
 					if(newInterval.first > newInterval.second)
@@ -998,9 +999,9 @@ UpdateAvailableIntervalGraph(std::unordered_map<Agent*,
 						continue;
 					if((vit->descriptor() == 31 or vit->descriptor() == 29) and (s == 166 or t ==166))
 									std::cout << "Also right here." << std::endl;
-					if(m_availableIntervalGraph->IsVertexInvalidated(s) or
-						 m_availableIntervalGraph->IsVertexInvalidated(t))
-						continue;
+					//if(m_availableIntervalGraph->IsVertexInvalidated(s) or
+					//	 m_availableIntervalGraph->IsVertexInvalidated(t))
+					//	continue;
           if(ValidIntervalEdge(s,t,eit->property().GetWeight()))
             m_availableIntervalGraph->AddEdge(s,t,eit->property());
         }

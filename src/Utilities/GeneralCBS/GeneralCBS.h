@@ -47,14 +47,15 @@ struct CBSSolution {
 
 
 struct MotionConstraint {
+	Agent* 													m_agent;
 	Cfg															m_conflictCfg;
-	double													m_time{MAX_DBL};
+	size_t													m_timestep{MAX_INT};
 	std::shared_ptr<SemanticTask>		m_task{nullptr};
 
 	bool operator==(const MotionConstraint& _c) {
-		return m_conflictCfg == _c.m_conflictCfg 
-				and m_time == _c.m_time
-				and m_task == _c.m_task;
+		return m_conflictCfg 	== _c.m_conflictCfg 
+				and m_timestep 		== _c.m_timestep
+				and m_task 				== _c.m_task;
 	}
 };
 
@@ -108,12 +109,16 @@ class GeneralCBSNode {
 	///@{
 	
 	bool operator>(const GeneralCBSNode& _other) const noexcept;
+	bool operator<(const GeneralCBSNode& _other) const noexcept;
 
 	///@}
 	//@name Accessors
 	///@{
 	
 	CBSSolution GetSolution() const;
+	
+	//TODO::Find a different way to do this - only use it for one purpose rn
+	CBSSolution& GetSolutionRef();
 
 	void AddMotionConstraint(MotionConstraint& _c, Agent* _agent);
 
@@ -126,6 +131,8 @@ class GeneralCBSNode {
 														std::shared_ptr<SemanticTask> _task, Agent* _agent);
 
 	void UpdateTaskPlan(std::shared_ptr<SemanticTask> _task, std::vector<Assignment> _assignments);
+
+	void Debug();
 
 	///@}
 
@@ -152,6 +159,6 @@ using ValidationFunction = std::function<bool(GeneralCBSNode& _node, GeneralCBST
 
 CBSSolution
 ConflictBasedSearch(Decomposition* _decomposition, InitialPlanFunction _initial, 
-										ValidationFunction _validation, size_t _numIterations = MAX_INT);
+										ValidationFunction _validation, size_t _numIterations = MAX_INT, bool _debug=false);
 
 #endif

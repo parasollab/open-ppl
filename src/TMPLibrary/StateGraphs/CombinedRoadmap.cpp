@@ -632,8 +632,8 @@ TransformITs(){
       }
     }
 
-    Simulation::GetStatClass()->StartClock("Placement InteractionTemplate "
-              + currentTemplate->GetInformation()->GetLabel());
+    //Simulation::GetStatClass()->StartClock("Placement InteractionTemplate "
+    //          + currentTemplate->GetInformation()->GetLabel());
     for(auto centerCfg : currentTemplate->GetInformation()->GetTemplateLocations()){
       Simulation::GetStatClass()->StartClock("Placement InteractionTemplate "
                 + currentTemplate->GetInformation()->GetLabel());
@@ -706,9 +706,9 @@ TransformITs(){
         }
       }
       m_graph->RemoveHook(RoadmapType::HookType::AddEdge, "debug");
-    }
-    Simulation::GetStatClass()->StopClock("Placement InteractionTemplate "
+    	Simulation::GetStatClass()->StopClock("Placement InteractionTemplate "
               + currentTemplate->GetInformation()->GetLabel());
+    }
   }
  
 	for(auto vid : invalidVIDs){

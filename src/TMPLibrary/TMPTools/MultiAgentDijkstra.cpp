@@ -517,12 +517,12 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 
   auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
 
-  if(sg->GetAvailableIntervalGraph()->IsVertexInvalidated(target)){
-					if(source == 1517 and target == 45)
-									std::cout << "THIS SHOULD BE WORKING" << std::endl;
+  //if(sg->GetAvailableIntervalGraph()->IsVertexInvalidated(target)){
+	//				if(source == 1517 and target == 45)
+	//								std::cout << "THIS SHOULD BE WORKING" << std::endl;
 
-    return newDistance;
-	}
+  //  return newDistance;
+	//}
 
   auto cfg = sg->GetAvailableIntervalGraph()->GetVertex(target);
   auto sourceCfg = sg->GetAvailableIntervalGraph()->GetVertex(source);

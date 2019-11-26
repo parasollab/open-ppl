@@ -56,21 +56,44 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	auto decomp = CreateDecomposition(_wholeTasks);
 	//auto decomp = new Decomposition(std::shared_ptr<SemanticTask>(new SemanticTask()));
 	
-	TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel);
+	TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel);
 
-	auto alloc = new AllocationValidation(this->GetMPLibrary(), &lowLevel, this->GetTMPLibrary());
-	auto motion = new MotionValidation(this->GetMPLibrary(), &lowLevel);
+	auto alloc = new AllocationValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary());
+	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
 	auto compose = new ComposeValidation({alloc, motion});
 
-	InitialPlanFunction init = [this,compose](Decomposition* _decomp, GeneralCBSTree& _tree) {
-		return compose->InitialPlan(_decomp, _tree);
+	InitialPlanFunction init = [this,compose](Decomposition* _decomp,GeneralCBSTree& _tree) {
+		return compose->InitialPlan(_decomp,_tree);
 	};
 
-	ValidationFunction valid = [this,compose](GeneralCBSNode& _node, GeneralCBSTree& _tree) {
+	ValidationFunction valid = [this,compose](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
 		return compose->ValidatePlan(_node, _tree);
 	};
 
-	CBSSolution solution = ConflictBasedSearch(decomp, init, valid);	
+	CBSSolution solution = ConflictBasedSearch(decomp, init, valid,MAX_INT,true);	
+
+	//TODO::make a debug output with path files
+
+	if(m_debug) {
+		for(auto plan : solution.m_taskPlans) {
+			auto task = plan.first;
+			auto assignments = plan.second;
+			std::cout << std::endl << std::endl << "Task: " << task << std::endl;
+			for(auto a : assignments) {
+				auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(a.m_agent)).get();
+				std::cout << "\tAgent: " << a.m_agent->GetRobot()->GetLabel() << std::endl;
+				std::cout << "\t\tSetup Path" << std::endl;
+				for(auto vid : a.m_setupPath) {
+					std::cout << "\t\t\t" << roadmap->GetVertex(vid).PrettyPrint() << std::endl;
+				}
+				std::cout << "\t\tExec Path    (" << a.m_execStartTime << "->"  << a.m_execEndTime << ")" << std::endl;
+				for(auto vid : a.m_execPath) {
+					std::cout << "\t\t\t" << roadmap->GetVertex(vid).PrettyPrint() << std::endl;
+				}
+			}
+		}
+	}
+	
 
 /*
 	auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());

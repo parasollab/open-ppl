@@ -55,6 +55,11 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
       CfgType cfg2{nullptr};  ///< The second robot's configuration.
       size_t  timestep{0};    ///< The timestep when the collision occurred.
 
+			Conflict() {}
+
+			Conflict(CfgType _cfg1, CfgType _cfg2, size_t _t) : 
+					cfg1(_cfg1), cfg2(_cfg2), timestep(_t) {}
+
       /// @return True if this is an empty conflict.
       bool Empty() const noexcept {
         return !cfg1.GetRobot();
@@ -599,10 +604,11 @@ FindConflict(const Solution& _solution) {
                     << cfg2.PrettyPrint()
                     << std::endl;
 
-        Conflict newConflict;
-        newConflict.cfg1     = cfg1;
-        newConflict.cfg2     = cfg2;
-        newConflict.timestep = t;
+				//TODO::Was getting some weird complication bug about explicit construction
+        Conflict newConflict(cfg1,cfg2,t);
+        //newConflict.cfg1     = cfg1;
+        //newConflict.cfg2     = cfg2;
+        //newConflict.timestep = t;
 
         return newConflict;
       }
@@ -613,7 +619,9 @@ FindConflict(const Solution& _solution) {
     std::cout << "\t\tNo conflict detected." << std::endl;
 
   // We didn't find a conflict, return an empty one.
-  return {};
+  // Again weird compilation - I'll figure these out later
+  Conflict c;
+  return c;
 }
 
 

@@ -20,3 +20,4 @@ Validation::
 ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 	return true;
 }
+

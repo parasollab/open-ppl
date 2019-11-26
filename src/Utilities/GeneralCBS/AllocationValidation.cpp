@@ -75,7 +75,7 @@ FindAllocationConflict(GeneralCBSNode& _node) {
 	conf1.m_execStartTime = MAX_DBL;
 	Agent* confAgent{nullptr};
 
-	auto solution = _node.GetSolution();
+	auto& solution = _node.GetSolutionRef();
 	//step through all agent assignments and see if any overlap, 
 	//if so, look at the assignment's task's parent to get conflicting task
 	//TODO::find a more clever way to do this that simultaneosuly iteratively looks at agent plans
@@ -92,7 +92,7 @@ FindAllocationConflict(GeneralCBSNode& _node) {
 
 			if(a1.m_execStartTime == a2.m_execStartTime or
 					a1.m_execEndTime > a2.m_execStartTime or 
-					!CanReach(a1,a2)) {
+					!CanReach(a1,a2,_node)) {
 				if(a1.m_execStartTime < conf1.m_execStartTime) {
 					conf1 = a1;
 					conf2 = a2;
@@ -143,7 +143,7 @@ AddAllocationChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, AllocationCo
 
 bool
 AllocationValidation::
-CanReach(Assignment& _a1, Assignment& _a2) {
+CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node) {
 
 	size_t startVID = _a1.m_execPath.back();
 	size_t goalVID = _a2.m_execPath.front();
@@ -161,6 +161,16 @@ CanReach(Assignment& _a1, Assignment& _a2) {
 	}
 
 	_a2.m_setupPath = plan.second;
+
+	auto& taskPlan = _node.GetSolutionRef().m_taskPlans[_a2.m_task->GetParent()];
+	for(auto& assign : taskPlan) {
+		if(assign.m_agent != _a2.m_agent or
+			 assign.m_execStartTime != _a2.m_execStartTime or
+			 assign.m_execEndTime != _a2.m_execEndTime) {
+			continue;
+		}
+		assign.m_setupPath = plan.second;
+	}
 
 	return true;
 }
