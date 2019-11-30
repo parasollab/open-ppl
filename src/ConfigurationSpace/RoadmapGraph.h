@@ -35,6 +35,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class Robot;
@@ -82,6 +83,7 @@ class RoadmapGraph : public
     typedef typename STAPLGraph::vertex_descriptor        VID;
     typedef typename STAPLGraph::edge_descriptor          EID;
     typedef typename EID::edge_id_type                    EdgeID;
+    typedef typename std::unordered_set<VID>              VertexSet;
 
     // Iterator types.
     typedef typename STAPLGraph::vertex_iterator          VI;
@@ -192,6 +194,9 @@ class RoadmapGraph : public
     VID GetVID(const T& _t) const noexcept;
     VID GetVID(const VI& _t) const noexcept;
     VID GetVID(const Vertex& _t) const noexcept;
+
+    /// Get the set of predecessors for a given VID.
+    const VertexSet& GetPredecessors(const VID _vid) const noexcept;
 
     /// Get the descriptor of the last vertex added to the graph.
     VID GetLastVID() const noexcept;
@@ -384,8 +389,15 @@ class RoadmapGraph : public
     /// Hook functions to call when deleting an edge.
     std::unordered_map<std::string, EdgeHook> m_deleteEdgeHooks;
 
-    /// This object tracks weak CCs within the roadmap.
+    /// Tracks weak CCs within the roadmap.
     std::unique_ptr<CCTracker<RoadmapGraph<Vertex, Edge>>> m_ccTracker;
+
+    /// Tracks predecessor information. We use this instead of switching to a
+    /// STAPL directed_preds graph because (a) directed_preds uses a vector for
+    /// storage of VIDs, making all changes linear-time operations in the
+    /// in-degree of each vertex, and (b) the STAPL API is not interchangable as
+    /// it should be, so switching causes ridiculous compiler errors.
+    std::unordered_map<VID, VertexSet> m_predecessors;
 
     ///@}
 
@@ -414,6 +426,7 @@ AddVertex(const Vertex& _v) noexcept {
 
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(_v);
+  m_predecessors[vid];
   ++m_timestamp;
 
   // Execute post-add hooks and update vizmo debug.
@@ -441,22 +454,11 @@ DeleteVertex(const VID _v) noexcept {
     DeleteEdge(edge);
 
   // Delete the inbound edges.
-  /// @TODO This could be done faster with a directed preds graph, but I want to
-  ///       profile it both ways to be sure of the costs before doing that. We
-  ///       rarely delete vertices, so right now this is an edge case. If we
-  ///       start working with methods that delete a lot of vertices, we will
-  ///       likely need to switch to the directed preds graph.
-  for(VI vertex = this->begin(); vertex != this->end(); ++vertex) {
-    while(true) {
-      // Jump to the next edge that targets this vertex.
-      EI edge = stapl::graph_find(vertex->begin(), vertex->end(),
-          stapl::eq_target<VID>(_v));
-      if(edge == vertex->end())
-        break;
-
-      // If we found one, delete it.
-      DeleteEdge(edge);
-    }
+  auto predIter = m_predecessors.find(_v);
+  VertexSet& preds = predIter->second;
+  while(!preds.empty()) {
+    const VID predecessor = *preds.begin();
+    DeleteEdge(predecessor, _v);
   }
 
   // Execute pre-delete hooks and update vizmo debug.
@@ -465,6 +467,7 @@ DeleteVertex(const VID _v) noexcept {
 
   // Delete the vertex.
   this->delete_vertex(vi->descriptor());
+  m_predecessors.erase(predIter);
   ++m_timestamp;
 }
 
@@ -482,19 +485,22 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
     std::cerr << "\nRoadmapGraph::AddEdge: edge (" << _source << ", "
               << _target << ") already exists, not adding."
               << std::endl;
+    return;
   }
-  else {
-    // Find the edge iterator.
-    VI vi;
-    EI ei;
-    this->find_edge(edgeDescriptor, vi, ei);
 
-    // Execute post-add hooks and update vizmo debug.
-    ExecuteAddEdgeHooks(ei);
-    VDAddEdge(vi->property(), GetVertex(_target));
+  // Add the source as a predecessor of target.
+  m_predecessors[_target].insert(_source);
 
-    ++m_timestamp;
-  }
+  // Find the edge iterator.
+  VI vi;
+  EI ei;
+  this->find_edge(edgeDescriptor, vi, ei);
+
+  // Execute post-add hooks and update vizmo debug.
+  ExecuteAddEdgeHooks(ei);
+  VDAddEdge(vi->property(), GetVertex(_target));
+
+  ++m_timestamp;
 }
 
 
@@ -519,8 +525,8 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
 
   const bool found = this->find_edge(edgeDescriptor, dummy, edgeIterator);
   if(!found)
-    throw RunTimeException(WHERE, "Edge (" + std::to_string(_source) + ", " +
-        std::to_string(_target) + ") does not exist.");
+    throw RunTimeException(WHERE) << "Edge (" << _source << ", " << _target
+                                  << ") does not exist.";
 
   DeleteEdge(edgeIterator);
 }
@@ -531,8 +537,13 @@ void
 RoadmapGraph<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
   // Execute pre-delete hooks and update vizmo debug.
+  const VID source = _iterator->source(),
+            target = _iterator->target();
   ExecuteDeleteEdgeHooks(_iterator);
-  VDRemoveEdge(GetVertex(_iterator->source()), GetVertex(_iterator->target()));
+  VDRemoveEdge(GetVertex(source), GetVertex(target));
+
+  // Remove the source from target's predecessors.
+  m_predecessors[target].erase(source);
 
   // Delete the edge.
   this->delete_edge(_iterator->descriptor());
@@ -671,6 +682,15 @@ GetVID(const Vertex& _t) const noexcept {
   if(IsVertex(_t, vi))
     return vi->descriptor();
   return INVALID_VID;
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+const typename RoadmapGraph<Vertex, Edge>::VertexSet&
+RoadmapGraph<Vertex, Edge>::
+GetPredecessors(const VID _vid) const noexcept {
+  return m_predecessors.at(_vid);
 }
 
 

@@ -42,7 +42,6 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #include "MPLibrary/NeighborhoodFinders/DPESNF.h"
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
-#include "MPLibrary/NeighborhoodFinders/HopLimitNF.h"
 #include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
 #include "MPLibrary/NeighborhoodFinders/LSHNF.h"
 #include "MPLibrary/NeighborhoodFinders/MPNNNF.h"
@@ -159,7 +158,7 @@
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/PushQueryToMA.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
-#include "MPLibrary/MPStrategies/SparkPRM.h"
+//#include "MPLibrary/MPStrategies/SparkPRM.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -234,7 +233,6 @@ struct MPTraits {
     BruteForceNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
-    HopLimitNF<MPTraits>,
     KdTreeNF<MPTraits>,
     LSHNF<MPTraits>,
     MPNNNF<MPTraits>,
@@ -385,8 +383,8 @@ struct MPTraits {
     MultiStrategy<MPTraits>,
     PushQueryToMA<MPTraits>,
     ScratchStrategy<MPTraits>,
-    SparkPRM<MPTraits, BasicPRM>,
-    SparkPRM<MPTraits, TogglePRMStrategy>,
+//    SparkPRM<MPTraits, BasicPRM>,
+//    SparkPRM<MPTraits, TogglePRMStrategy>,
     StableSparseRRT<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,

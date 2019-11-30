@@ -155,7 +155,6 @@ AdaptiveRRT<MPTraits>::Initialize(){
   //for each root of the graph, make sure to initialize variables.
   auto rdmp = this->GetRoadmap();
   for(auto v = rdmp->begin(); v!=rdmp->end(); v++){
-    v->property().SetStat("Parent", 0);
     v->property().SetStat("Success", 1);
     v->property().SetStat("Fail", 0);
     v->property().SetStat("Visibility", 1);
@@ -406,7 +405,6 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
 
   //update the visibility at the new node and near node
   CfgType& newcfg = rdmp->GetVertex(newVID);
-  newcfg.SetStat("Parent", _nearVID);
 
   //The new node is against a wall. Set visibility of new node to wall penalty.
   //Update parent with expansion ratio

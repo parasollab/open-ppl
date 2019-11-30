@@ -39,8 +39,7 @@ class CCTracker {
     typedef typename RoadmapType::VID               VID;
     typedef typename RoadmapType::vertex_iterator   vertex_iterator;
     typedef typename RoadmapType::adj_edge_iterator edge_iterator;
-
-    typedef std::unordered_set<VID> VertexSet;
+    typedef typename RoadmapType::VertexSet         VertexSet;
 
     /// A map from a unique ID to a vertex set representing a CC.
     typedef std::unordered_map<size_t, std::shared_ptr<VertexSet>> CCMap;
@@ -83,6 +82,10 @@ class CCTracker {
     /// @param _vid The representative's descriptor.
     /// @return The CC which contains _vid.
     const VertexSet& GetCC(const VID _vid) const noexcept;
+
+    /// Get a set of representative VIDs for each CC.
+    /// @return The descriptor for one vertex from each CC.
+    VertexSet GetRepresentatives() const noexcept;
 
     /// Check if two vertices are in the same CC.
     /// @param _vid1 The descriptor of the first vertex.
@@ -168,7 +171,7 @@ class CCTracker {
     mutable std::function<void(const std::string&)> m_clockStart;
     mutable std::function<void(const std::string&)> m_clockStop;
 
-    static constexpr const bool s_debug = false;   ///< Enable debug messages.
+    static constexpr const bool s_debug = true;   ///< Enable debug messages.
 
     ///@}
 };
@@ -232,6 +235,20 @@ const typename CCTracker<RoadmapType>::VertexSet&
 CCTracker<RoadmapType>::
 GetCC(const VID _vid) const noexcept {
   return *FindCC(_vid);
+}
+
+
+
+template <typename RoadmapType>
+typename CCTracker<RoadmapType>::VertexSet
+CCTracker<RoadmapType>::
+GetRepresentatives() const noexcept {
+  VertexSet representatives;
+  for(const auto& cc : m_ccs) {
+    const VertexSet& vids = *cc.second.get();
+    representatives.insert(*vids.begin());
+  }
+  return representatives;
 }
 
 

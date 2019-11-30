@@ -6,8 +6,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Re-wires a tree for optimal RRT planners. This only makes sense for
-/// tree-like planners and will break any that track information about
-/// the paths or tree structure.
+/// tree-like planners. It will change the structure of the tree; ensure that
+/// your algorithm can handle this before using.
 ///
 /// Reference:
 ///   Sertac Karaman and Emilio Frazzoli. "Sampling-based algorithms for optimal
@@ -123,7 +123,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
         const VID _potentialParent, const double _potentialParentCost,
         OutputIterator _collision) noexcept;
 
-    /// Trace the path from one vertex to another using the "Parent" stats to
+    /// Trace the path from one vertex to another through the parent chain to
     /// determine the shortest path.
     /// @param _r    The roadmap.
     /// @param _vid  The vertex.
@@ -304,8 +304,7 @@ RewireVertex(RoadmapType* const _r, const VID _vid,
     const std::vector<Neighbor>& _neighbors, OutputIterator _collision) {
   // Check the current best path cost from the root to _vid.
   double    bestCost      = ShortestPathWeight(_r, _vid);
-  auto&     cfg           = _r->GetVertex(_vid);
-  const VID oldParentVID  = cfg.GetStat("Parent");
+  const VID oldParentVID  = *_r->GetPredecessors(_vid).begin();
   VID       bestParentVID = oldParentVID;
   LPOutput<MPTraits> bestLP;
 
@@ -370,18 +369,31 @@ RewireNeighbors(RoadmapType* const _r, const VID _vid,
 
   // Check if any of the neighbors can get better paths through this node.
   for(const auto& neighbor : _neighbors) {
-    // Skip neighbors which have no parent as they are roots.
+    // Check for roots and non-tree graphs.
     const VID neighborVID = neighbor.target;
-    auto& neighborCfg = _r->GetVertex(neighborVID);
-    if(!neighborCfg.IsStat("Parent")) {
-      if(this->m_debug)
-        std::cout << "\t\tSkipping node " << neighborVID << " which is a root."
-                  << std::endl;
-      continue;
+    const auto& predecessors = _r->GetPredecessors(neighborVID);
+
+    switch(predecessors.size()) {
+      case 0:
+        // This is a root.
+        if(this->m_debug)
+          std::cout << "\t\tSkipping node " << neighborVID << " which is a root."
+                    << std::endl;
+        continue;
+      case 1:
+        // There is one parent. Continue processing.
+        break;
+      default:
+        // The graph is not a tree.
+        throw RunTimeException(WHERE) << "Node " << neighborVID << " has "
+                                      << predecessors.size() << " parents and is "
+                                      << "therefore not a tree. RewireConnector "
+                                      << "only works for tree graphs."
+                                      << std::endl;
     }
 
     // Test to see if this node should be rewired through _vid.
-    const VID neighborCurrentParent = neighborCfg.GetStat("Parent");
+    const VID neighborCurrentParent = *predecessors.begin();
     const double currentCost = ShortestPathWeight(_r, neighborVID);
     const RewireTestOutput test = RewireTest(_r, neighborVID,
         neighborCurrentParent, currentCost, _vid, vidCost, _collision);
@@ -488,27 +500,42 @@ double
 RewireConnector<MPTraits>::
 ShortestPathWeight(const RoadmapType* const _r, const VID _vid)
     const noexcept {
-  // Backtrack the path from _vid to its root by following the "Parent"
-  // stat which is populated by RRT methods.
+  // Backtrack the path from _vid to its root by following the predecessor chain.
   VID currentVID = _vid;
   double pathWeight = 0;
-  while(true) {
-    // Fetch the this cfg and find its parent. If it doesn't have one, it's a
-    // root.
-    const auto& cfg = _r->GetVertex(currentVID);
-    if(!cfg.IsStat("Parent"))
-      break;
-    const VID parentVID = cfg.GetStat("Parent");
 
-    // Include the weight of edge (parentVID, currentVID) in the path weight.
+  while(true) {
+    // Get the predecessor list and check if we're done.
+    const auto& predecessors = _r->GetPredecessors(currentVID);
+    switch(predecessors.size()) {
+      case 0:
+        // This node is a root. We've traced the whole path and can return the
+        // weight now.
+        return pathWeight;
+      case 1:
+        // This node has a parent. Continue processing.
+        break;
+      default:
+        // The graph is not a tree.
+        throw RunTimeException(WHERE) << "Node " << currentVID << " has "
+                                      << predecessors.size() << " parents and "
+                                      << "is therefore not a tree. "
+                                      << "RewireConnector only works for tree "
+                                      << "graphs."
+                                      << std::endl;
+    }
+
+    // Add the edge weight to our path length and continue up the chain.
+    const VID parentVID = *predecessors.begin();
+
     const double edgeWeight = EdgeWeight(_r, parentVID, currentVID);
     pathWeight = m_operator(pathWeight, edgeWeight);
 
-    // Move on to the parent vertex.
     currentVID = parentVID;
   }
 
-  return pathWeight;
+  throw RunTimeException(WHERE) << "We've arrived at an unreachable state. "
+                                << "https://xkcd.com/2200/";
 }
 
 
@@ -546,7 +573,6 @@ ChangeParent(RoadmapType* const _r, const VID _vid, const VID _oldParent,
     const noexcept {
   _r->DeleteEdge(_oldParent, _vid);
   _r->AddEdge(_newParent, _vid, _newLp);
-  _r->GetVertex(_vid).SetStat("Parent", _newParent);
   if(this->m_debug)
     std::cout << "\t\tRewiring node " << _vid << " through " << _newParent
               << " at new cost " << _newCost << "."

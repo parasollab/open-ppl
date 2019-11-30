@@ -108,8 +108,6 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     VertexSet m_witnesses;
     /// The inactive nodes with no children.
     VertexSet m_inactiveLeaves;
-    /// A map from child VID to parent VID for each roadmap vertex.
-    std::unordered_map<VID, VID> m_parent;
     /// Maps witness nodes to the best-cost representative for their region.
     std::unordered_map<VID, VID> m_representatives;
 
@@ -155,7 +153,6 @@ Initialize() {
   m_active.clear();
   m_witnesses.clear();
   m_inactiveLeaves.clear();
-  m_parent.clear();
   m_representatives.clear();
 
   if(this->m_debug)
@@ -282,9 +279,6 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
 
   auto g = this->GetRoadmap();
 
-  // The nearest node is now the parent of the new node.
-  m_parent[_newVID] = _nearestVID;
-
   // If the parent node was an inactive leaf, it isn't any longer.
   m_inactiveLeaves.erase(_nearestVID);
 
@@ -397,12 +391,21 @@ PruneInactiveLeaves() {
     const VID leafVID = *leaf;
 
     // Find parent.
-    const VID parent = m_parent[leafVID];
+    const VertexSet& predecessors = g->GetPredecessors(leafVID);
+    switch(predecessors.size()) {
+      case 0:
+        throw RunTimeException(WHERE) << "Node " << leafVID << " is a root.";
+      case 1:
+        break;
+      default:
+        throw RunTimeException(WHERE) << "Node " << leafVID << " has "
+                                      << predecessors.size() << " parents. "
+                                      << "Graph is not a tree.";
+    }
+    const VID parent = *predecessors.begin();
 
     // Remove leaf.
     g->DeleteVertex(leafVID);
-    this->RemoveNodeFromTrees(leafVID);
-    m_parent.erase(leafVID);
     m_inactiveLeaves.erase(leaf);
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.
