@@ -252,10 +252,6 @@
       -->
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
-      <!--
-      <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
-        lpLabel="sl" checkIfSameCC="true"/>
-      -->
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
@@ -270,28 +266,6 @@
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
       <NumEdgesMetric label="NumEdges"/>
-      <!--
-      <CoverageMetricRoadmapSet label="CoverageRoadmapSet" filename="3D/3d.map"
-        computeAllCCs="false">
-        <Connector label="Closest"/>
-      </CoverageMetricRoadmapSet>
-      <CoverageDistanceMetricRoadmapSet label="CoverageDistance"
-        filename="3D/3d.map" dmLabel="euclidean"/>
-      <ConnectivityMetricRoadmapSet label="ConnectivityRoadmapSet"
-        filename="3D/3d.map">
-        <Connector label="Closest"/>
-      </ConnectivityMetricRoadmapSet>
-      -->
-      <CoverageMetricVectorSet label="CoverageVectorSet" filename="coverage"
-        computeAllCCs="false">
-        <Connector label="Closest"/>
-      </CoverageMetricVectorSet>
-      <ConnectivityMetricVectorSet label="ConnectivityVectorSet"
-        filename="connectivity">
-        <Connector label="Closest"/>
-      </ConnectivityMetricVectorSet>
-      <DiameterMetric label="Diameter"/>
-      <CCDistanceMetric label="CCDistance" dmLabel="euclidean"/>
       <TimeMetric label="TimeInSec"/>
     </Metrics>
 
