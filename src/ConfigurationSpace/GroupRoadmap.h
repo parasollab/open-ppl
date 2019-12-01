@@ -100,13 +100,6 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept override;
 
-    /// Add a new unique vertex to the graph with a designated descriptor. This
-    /// is NOT supported for GroupRoadmap and simply throws an exception!
-    /// @param _vid The desired descriptor.
-    /// @param _v The vertex property.
-    /// @return A new VID of the added vertex, or the VID of the existing vertex.
-//    virtual VID AddVertex(const VID _vid, const Vertex& _v) override;
-
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
     virtual void DeleteVertex(const VID _v) noexcept override;
@@ -118,12 +111,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
         noexcept override;
 
-    /// Add edges both ways between source and target vertices.
-    /// @param _source The source vertex.
-    /// @param _target The target vertex.
-    /// @param _w  The edge properties (source to target first).
-    virtual void AddEdge(const VID _source, const VID _target,
-                         const std::pair<Edge, Edge>& _w) noexcept;
+    /// Import the base-class version for this (required because we've
+    /// overridden one of the overloads).
+    using RoadmapGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
@@ -135,7 +125,7 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// Uninstall all hooks from each individual roadmap. Should only be used at
     /// the end of a library run to clean the roadmap object.
-    void ClearHooks() noexcept;
+    virtual void ClearHooks() noexcept override;
 
     ///@}
 
@@ -369,16 +359,6 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
     ++m_timestamp;
   }
-}
-
-
-template <class Vertex, class Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-AddEdge(const VID _source, const VID _target, const std::pair<Edge, Edge>& _w)
-    noexcept {
-  AddEdge(_source, _target, _w.first);
-  AddEdge(_target, _source, _w.second);
 }
 
 

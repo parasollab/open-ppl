@@ -265,7 +265,6 @@ ApplyControl(const CfgType& _start, const CfgType&, CfgType& _new,
     _new = temp;
   }
 
-  _lp.SetLPLabel("RRTExpand");
   _lp.AddIntermediatesToWeights(true);
   _lp.m_edge.first.SetWeight(distance);
   _lp.m_edge.first.SetControl(_control);

@@ -743,7 +743,7 @@ Finalize() {
         const std::string filename = this->GetBaseFilename() + "." +
                                 std::to_string(ind) + ".path";
         const std::vector<GroupCfgType> fullCfgs =
-                                        path.FullCfgs(this->GetMPLibrary(), "");
+                                        path.FullCfgs(this->GetMPLibrary());
         WritePath(filename, fullCfgs);
       }
       else

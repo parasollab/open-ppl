@@ -175,12 +175,14 @@ ComputeIntervals(const WeightType& _weight, const VID _source,
   if(m_edgeIntervals[&_weight].empty()) {
     std::vector<CfgType> edge;
     edge.push_back(_roadmap->GetVertex(_source));
-    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(_roadmap,
-      _source, _target);
+    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(
+        _roadmap, _source, _target);
     edge.insert(edge.end(), intermediates.begin(), intermediates.end());
     edge.push_back(_roadmap->GetVertex(_target));
+
     if(this->m_debug)
-      std::cout << "ComputeIntervals, intermediates size: " << edge.size() << std::endl;
+      std::cout << "ComputeIntervals, intermediates size: " << edge.size()
+                << std::endl;
     m_edgeIntervals[&_weight] = ComputeSafeIntervals(edge);
   }
   return m_edgeIntervals[&_weight];

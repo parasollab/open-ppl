@@ -166,26 +166,34 @@ IsConnected(
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
+  const std::string id = this->GetNameAndLabel();
+  MethodTimer mt(this->GetStatClass(), id + "::IsConnected");
+
   if(this->m_debug)
-    std::cout << this->GetName() << "::IsConnected"
+    std::cout << id
               << "\n\tChecking line from " << _c1.PrettyPrint()
               << " to " << _c2.PrettyPrint()
               << "\n\tUsing " << (m_binaryEvaluation ? "binary" : "sequential")
               << " evaluation."
               << std::endl;
 
+  // Initialize the LPOutput object.
   _lpOutput->Clear();
+  _lpOutput->SetLPLabel(this->GetLabel());
+
   const bool connected = IsConnectedFunc(_c1, _c2,
       _col, _lpOutput, _positionRes, _orientationRes, _checkCollision,
       _savePath);
-  /// @todo We should be setting the LP label either way, need to test before
-  ///       removing this check.
-  if(connected)
-    _lpOutput->SetLPLabel(this->GetLabel());
+
+  auto stats = this->GetStatClass();
+  stats->IncLPAttempts(id);
+  stats->IncLPConnections(id, connected);
+
   if(this->m_debug)
     std::cout << "\n\tLocal Plan is "
               << (connected ? "valid" : "invalid at " + _col.PrettyPrint())
               << std::endl;
+
   return connected;
 }
 
@@ -197,27 +205,26 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
     GroupLPOutput<MPTraits>* _lpOutput, double _positionRes,
     double _orientationRes, bool _checkCollision, bool _savePath,
     const Formation& _robotIndexes) {
+  const std::string id = this->GetNameAndLabel();
+  auto stats = this->GetStatClass();
+  MethodTimer(stats, id + "::IsConnectedFunc");
+
   if(this->m_debug) {
-    std::cout << this->GetName() << "::IsConnected"
+    std::cout << id
               << "\n\tChecking line from " << _c1.PrettyPrint()
               << " to " << _c2.PrettyPrint()
               << std::endl;
     if(!_robotIndexes.empty())
       std::cout << "\tUsing formation: " << _robotIndexes << std::endl;
   }
+
+  // Initialize the LPOutput object.
   _lpOutput->Clear();
-
-  auto stats = this->GetStatClass();
-  stats->IncLPAttempts(this->GetNameAndLabel());
-
-  bool connected = true;
+  _lpOutput->SetLPLabel(this->GetLabel());
 
   auto env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto groupMap = _c1.GetGroupRoadmap();
-
-
-  const std::string callee = this->GetNameAndLabel() + "::IsConnectedFunc";
 
   // Determine whether multiple robots are moving and whether this is a
   // formation rotation (rotation about some leader robot).
@@ -247,12 +254,12 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
         _robotIndexes);
   }
 
+  bool connected = true;
   int cdCounter = 0;
-  int nIter = 0;
   GroupCfgType currentStep(_c1),
                leaderStep(_c1),
                previousStep(groupMap);
-  for(int i = 1; i < numSteps; ++i, ++nIter) {
+  for(int i = 1; i < numSteps; ++i) {
     previousStep = currentStep;
     currentStep += increment;
 
@@ -293,30 +300,31 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
     if(_checkCollision) {
       ++cdCounter;
       const bool inBounds = currentStep.InBounds(env->GetBoundary());
-      if(!inBounds or !vc->IsValid(currentStep, callee)) {
+      if(!inBounds or !vc->IsValid(currentStep, id)) {
         _col = currentStep;
         connected = false;
         break;
       }
     }
 
-    // Save path if requested.
+    // Save the resolution-level path if requested.
     if(_savePath)
       _lpOutput->m_path.push_back(currentStep);
   }
 
   // Set data in the LPOutput object.
-  _lpOutput->m_edge.first.SetWeight(nIter);
-  _lpOutput->m_edge.second.SetWeight(nIter);
+  _lpOutput->m_edge.first.SetWeight(numSteps);
+  _lpOutput->m_edge.second.SetWeight(numSteps);
   _lpOutput->SetIndividualEdges(_robotIndexes);
   _lpOutput->SetActiveRobots(_robotIndexes);
-  _lpOutput->SetLPLabel(this->GetLabel());
 
   if(connected)
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
 
-  stats->IncLPConnections(this->GetNameAndLabel(), connected);
-  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+  // Track usage stats.
+  stats->IncLPAttempts(id);
+  stats->IncLPConnections(id, connected);
+  stats->IncLPCollDetCalls(id, cdCounter);
 
   if(this->m_debug)
     std::cout << "\n\tLocal Plan is "
@@ -335,12 +343,7 @@ IsConnectedFunc(
     LPOutput<MPTraits>* _lpOutput,
     double _positionRes, double _orientationRes,
     bool _checkCollision, bool _savePath) {
-
-  StatClass* const stats = this->GetStatClass();
-
-  stats->IncLPAttempts(this->GetNameAndLabel());
   int cdCounter = 0;
-
   bool connected;
   if(m_binaryEvaluation)
     connected = IsConnectedSLBinary(_c1, _c2, _col, _lpOutput,
@@ -349,10 +352,7 @@ IsConnectedFunc(
     connected = IsConnectedSLSequential(_c1, _c2, _col, _lpOutput,
         cdCounter, _positionRes, _orientationRes, _checkCollision, _savePath);
 
-  if(connected)
-    stats->IncLPConnections(this->GetNameAndLabel());
-
-  stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+  this->GetStatClass()->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
   return connected;
 }
 
@@ -532,6 +532,8 @@ IsConnectedSLBinary(
     previousStep = currentStep;
     currentStep += increment;
     distance += dm->Distance(previousStep, currentStep);
+
+    // Save the resolution-level path if requested.
     if(_savePath)
       _lpOutput->m_path.push_back(currentStep);
   }

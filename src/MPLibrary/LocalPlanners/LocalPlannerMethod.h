@@ -12,8 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref LocalPlanners.
 ///
-/// LocalPlannerMethod has two main functions: @c IsConnected and
-/// @c ReconstructPath.
+/// LocalPlannerMethod has two main functions: @c IsConnected and @c BlindPath.
 ///
 /// @c IsConnected takes as input two configurations \f$c_1\f$, \f$c_2\f$, an
 /// LPOutput, validation resolutions, and optional booleans dictating whether to
@@ -21,14 +20,12 @@
 /// to validate the simple path between \f$c_1\f$ and \f$c_2\f$, but also
 /// populates the LPOutput structure with useful information.
 ///
-/// @c ReconstructPath is used to reconstruct a specific polygonal chain from a
-/// WeightType object's intermediate configurations. The function takes as input
-/// two configurations, a set of intermediate configurations, and validity
-/// resolutions.
+/// @c BlindPath is a helper to plan between waypoints without collision
+/// checking. This is useful for working with pre-validated paths.
 ///
 /// @todo All local planners need to use a distance metric to set their edge
-///       weights properly; currently all of them are simply using the number of
-///       intermediate steps as a weight.
+///       weights properly; currently many of them are simply using the number
+///       of intermediate steps as a weight.
 /// @todo Local planners and Extenders represent the same concepts and should be
 ///       merged into a single class with both an Extend and LocalPlan function.
 ///       This will help simplify several other objects within PMPL as well,
@@ -112,39 +109,40 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
         bool _checkCollision = true, bool _savePath = false,
         const Formation& _formation = Formation());
 
-    /// Reconstruct a previously computed simple path between two nodes
-    /// @param _start Configuration 1
-    /// @param _end Configuration 2
-    /// @param _intermediates Intermediate configurations along simple path's
-    ///        polygonal chain
-    /// @param _posRes Positional DOF resolution
-    /// @param _oriRes Rotational DOF resolution
-    /// @return Configurations along path from _start to _end up to a resolution
-    ///         (_posRes, _oriRes)
+    /// Blind-plan between a set of waypoints. Also useful for reconstructing
+    /// previously validated edges.
+    /// @param _waypoints The waypoint configurations.
+    /// @param _posRes    Positional DOF resolution.
+    /// @param _oriRes    Rotational DOF resolution.
+    /// @return Configurations along path through _waypoints up to a resolution
+    ///         (_posRes, _oriRes). Does not include the first or last
+    ///         configuration.
     ///
     /// @usage
     /// @code
     /// LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
     /// Environment* env = this->GetEnvironment();
     /// CfgType c1, c2;
-    /// std::vector<CfgType> intermediates;
-    /// lp->ReconstructPath(c1, c2, intermediates, env->GetPositionRes(),
-    ///     env->GetOrientationRes());
+    /// lp->BlindPath({c1, c2}, env->GetPositionRes(), env->GetOrientationRes());
     /// @endcode
-    virtual std::vector<CfgType> ReconstructPath(const CfgType& _start,
-        const CfgType& _end, const std::vector<CfgType>& _intermediates,
-        double _posRes, double _oriRes);
+    std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints,
+        const double _posRes, const double _oriRes);
 
+    /// @overload This version assumes the environment's resolution values.
+    std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints);
 
-    /// This version is for group configurations.
-    /// @overload
+    /// @overload This version is for group configurations.
     /// @param _formation A (possibly improper) subset of the robot group which
     ///                   should remain in its relative formation while moving.
     ///                   Only makes sense if these robots are in the same
     ///                   formation at both _start and _end.
-    virtual std::vector<GroupCfgType> ReconstructPath(const GroupCfgType& _start,
-        const GroupCfgType& _end, const std::vector<GroupCfgType>& _intermediates,
-        double _posRes, double _oriRes,
+    std::vector<GroupCfgType> BlindPath(
+        const std::vector<GroupCfgType>& _waypoints, const double _posRes,
+        const double _oriRes, const Formation& _formation = Formation());
+
+    /// @overload This version assumes the environment's resolution values.
+    std::vector<GroupCfgType> BlindPath(
+        const std::vector<GroupCfgType>& _waypoints,
         const Formation& _formation = Formation());
 
     ///@}
@@ -228,23 +226,72 @@ IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
 template <typename MPTraits>
 std::vector<typename MPTraits::CfgType>
 LocalPlannerMethod<MPTraits>::
-ReconstructPath(const CfgType& _start, const CfgType& _end,
-    const std::vector<CfgType>& _intermediates, double _posRes, double _oriRes) {
+BlindPath(const std::vector<CfgType>& _waypoints,
+    const double _posRes, const double _oriRes) {
+  // Blind local-plan between each intermediate,
+  bool first = true;
+  std::vector<CfgType> out;
   LPOutput<MPTraits> lpOutput;
-  IsConnected(_start, _end, &lpOutput, _posRes, _oriRes, false, true);
-  return lpOutput.m_path;
+  for(auto iter = _waypoints.begin(); iter + 1 != _waypoints.end(); ++iter) {
+    // If this isn't the first configuration, then its an intermediate and must
+    // be added to the path.
+    if(!first)
+      out.push_back(*iter);
+    else
+      first = false;
+
+    // Reconstruct the resolution-level edge and append it to the output.
+    lpOutput.Clear();
+    IsConnected(*iter, *(iter + 1), &lpOutput, _posRes, _oriRes, false, true);
+    out.insert(out.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());
+  }
+  return out;
+}
+
+
+template <typename MPTraits>
+std::vector<typename MPTraits::CfgType>
+LocalPlannerMethod<MPTraits>::
+BlindPath(const std::vector<CfgType>& _waypoints) {
+  auto env = this->GetEnvironment();
+  return BlindPath(_waypoints, env->GetPositionRes(), env->GetOrientationRes());
 }
 
 
 template <typename MPTraits>
 std::vector<typename MPTraits::GroupCfgType>
 LocalPlannerMethod<MPTraits>::
-ReconstructPath(const GroupCfgType& _start, const GroupCfgType& _end,
-    const std::vector<GroupCfgType>& _intermediates, double _posRes,
-    double _oriRes, const Formation& _formation) {
-  GroupLPOutput<MPTraits> lpOutput(_start.GetGroupRoadmap());
-  IsConnected(_start, _end, &lpOutput, _posRes, _oriRes, false, true, _formation);
-  return lpOutput.m_path;
+BlindPath(const std::vector<GroupCfgType>& _waypoints, const double _posRes,
+    const double _oriRes, const Formation& _formation) {
+  // Blind local-plan between each intermediate,
+  bool first = true;
+  std::vector<GroupCfgType> out;
+  GroupLPOutput<MPTraits> lpOutput(_waypoints.at(0).GetGroupRoadmap());
+  for(auto iter = _waypoints.begin(); iter + 1 != _waypoints.end(); ++iter) {
+    // If this isn't the first configuration, then its an intermediate and must
+    // be added to the path.
+    if(!first)
+      out.push_back(*iter);
+    else
+      first = false;
+
+    // Reconstruct the resolution-level edge and append it to the output.
+    lpOutput.Clear();
+    IsConnected(*iter, *(iter + 1), &lpOutput, _posRes, _oriRes, false, true);
+    out.insert(out.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());
+  }
+  return out;
+}
+
+
+template <typename MPTraits>
+std::vector<typename MPTraits::GroupCfgType>
+LocalPlannerMethod<MPTraits>::
+BlindPath(const std::vector<GroupCfgType>& _waypoints,
+    const Formation& _formation) {
+  auto env = this->GetEnvironment();
+  return BlindPath(_waypoints, env->GetPositionRes(), env->GetOrientationRes(),
+      _formation);
 }
 
 /*----------------------------------------------------------------------------*/
