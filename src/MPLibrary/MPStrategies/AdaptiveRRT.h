@@ -399,8 +399,8 @@ AdaptiveRRT<MPTraits>::UpdateTree(CfgType& _newCfg, VID _nearVID,
   Environment* env = this->GetEnvironment();
   incr.FindIncrement(parentcfg, _newCfg, &weight, env->GetPositionRes(),
       env->GetOrientationRes());
-  std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
-      weight), WeightType("RRTExpand", weight));
+  std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("",
+      weight), WeightType("", weight));
   rdmp->AddEdge(_nearVID, newVID, weights);
 
   //update the visibility at the new node and near node

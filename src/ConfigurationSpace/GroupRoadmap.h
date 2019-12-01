@@ -124,12 +124,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
         noexcept override;
 
-    /// Add edges both ways between source and target vertices.
-    /// @param _source The source vertex.
-    /// @param _target The target vertex.
-    /// @param _w  The edge properties (source to target first).
-    virtual void AddEdge(const VID _source, const VID _target,
-                         const std::pair<Edge, Edge>& _w) noexcept;
+    /// Import the base-class version for this (required because we've
+    /// overridden one of the overloads).
+    using RoadmapGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
@@ -141,7 +138,7 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// Uninstall all hooks from each individual roadmap. Should only be used at
     /// the end of a library run to clean the roadmap object.
-    void ClearHooks() noexcept;
+    virtual void ClearHooks() noexcept override;
 
     ///@}
 
@@ -374,16 +371,6 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
     ++m_timestamp;
   }
-}
-
-
-template <class Vertex, class Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-AddEdge(const VID _source, const VID _target, const std::pair<Edge, Edge>& _w)
-    noexcept {
-  AddEdge(_source, _target, _w.first);
-  AddEdge(_target, _source, _w.second);
 }
 
 

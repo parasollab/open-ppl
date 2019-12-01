@@ -1,5 +1,5 @@
-#ifndef ROTATE_AT_S_H_
-#define ROTATE_AT_S_H_
+#ifndef PMPL_ROTATE_AT_S_H_
+#define PMPL_ROTATE_AT_S_H_
 
 #include "TransformAtS.h"
 

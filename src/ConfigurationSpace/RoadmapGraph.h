@@ -316,7 +316,7 @@ class RoadmapGraph : public
 
     /// Uninstall all hooks. Should only be used at the end of a library run to
     /// clean the roadmap object.
-    void ClearHooks() noexcept;
+    virtual void ClearHooks() noexcept;
 
     ///@}
     ///@name I/O

@@ -291,18 +291,33 @@ class MPLibraryType final
     StatClass*        GetStatClass() const noexcept;
 
     ///@}
-    ///@name Roadmap Modifiers
+    ///@name Edge Reconstruction
     ///@{
 
-    /// Recompute the full edge path at resolution(source and target cfgs
+    /// Recompute a roadmap edge path at full resolution (source and target cfgs
     /// are not included).
     /// @param _roadmap The roadmap pointer.
     /// @param _source The source VID.
     /// @param _target The target VID.
-    /// @param _lp The local planner to use, if not specified, edge lp is used.
-    /// @return A vector of Cfgs representing the reconstructed edge.
-    std::vector<CfgType> ReconstructEdge(RoadmapType* const _roadmap,
-      const VID _source, const VID _target, const std::string& _lp = "");
+    /// @param _posRes The position resolution to use.
+    /// @param _oriRes The orientation resolution to use.
+    /// @return A vector of cfgs along the edge, spaced at resolution intervals.
+    std::vector<typename RoadmapType::VP> ReconstructEdge(
+        RoadmapType* const _roadmap,
+        const VID _source, const VID _target,
+        const double _posRes, const double _oriRes);
+
+    /// @overload This version is for groups.
+    std::vector<typename GroupRoadmapType::VP> ReconstructEdge(
+        GroupRoadmapType* const _roadmap,
+        const VID _source, const VID _target,
+        const double _posRes, const double _oriRes);
+
+    /// @overload This version uses the Environment's resolutions.
+    template <typename AbstractRoadmapType>
+    std::vector<typename AbstractRoadmapType::VP> ReconstructEdge(
+        AbstractRoadmapType* const _roadmap,
+        const VID _source, const VID _target);
 
     ///@}
     ///@name Execution Interface
@@ -866,62 +881,77 @@ GetStatClass() const noexcept {
   return m_solution->GetStatClass();
 }
 
-/*--------------------------- Roadmap Modifiers ----------------------------*/
+/*--------------------------- Edge Reconstruction ----------------------------*/
 
-template< typename MPTraits>
-std::vector<typename MPTraits::CfgType>
+template <typename MPTraits>
+std::vector<typename MPTraits::RoadmapType::VP>
 MPLibraryType<MPTraits>::
 ReconstructEdge(RoadmapType* const _roadmap, const VID _source,
-    const VID _target, const std::string& _lp ) {
-  typedef typename RoadmapType::EID           EID;
-  typedef typename RoadmapType::VI            VI;
-  typedef typename RoadmapType::EI            EI;
-  std::vector<CfgType> out;
-  // First check that an actual edge exists in this roadmap
-  bool validEdge = false;
-  EI ei;
-  {
-    EID ed(_source, _target);
-    VI vi;
-    validEdge = _roadmap->find_edge(ed, vi, ei);
-  }
+    const VID _target, const double _posRes,
+    const double _oriRes) {
+  const auto& start         = _roadmap->GetVertex(_source);
+  const auto& end           = _roadmap->GetVertex(_target);
+  const auto& edge          = _roadmap->GetEdge(_source, _target);
+  const auto& intermediates = edge.GetIntermediates();
 
-  if(!validEdge)
-    throw RunTimeException(WHERE) << "Edge from " << _source << " to "
-                                  << _target << " doesn't exist in roadmap!";
-  // Recreate this edge, including intermediates.
-  CfgType& start = _roadmap->GetVertex(_source);
-  CfgType& end   = _roadmap->GetVertex(_target);
+  // Construct the set of start, intermediates, and end waypoints as needed.
+  auto waypoints = intermediates;
+  waypoints.insert(waypoints.begin(), start);
+  waypoints.push_back(end);
 
-  // Set up local planner to recreate edges. If none was provided, use edge
-  // planner, or fall back to straight-line.
-  auto env = this->GetMPProblem()->GetEnvironment();
+  // Check for intermediates. If there are any, we will use straight-line to
+  // recompute the path. Otherwise use the lp label if available, and fall back
+  // to straight-line if not (this will always happen with extenders).
+  const std::string lpLabel = !intermediates.size()
+                            and !edge.GetLPLabel().empty()
+                            ? edge.GetLPLabel()
+                            : "sl";
 
-  // Use the local planner from parameter if specified.
-  // If not specified, use the edge lp.
-  // Fall back to straight-line if edge lp is not available (this will always
-  // happen if it was grown with an extender).
-  LocalPlannerPointer lp;
-  if(!_lp.empty())
-    lp = this->GetLocalPlanner(_lp);
-  else {
-    try {
-      lp = this->GetLocalPlanner(ei->property().GetLPLabel());
-    }
-    catch(...) {
-      lp = this->GetLocalPlanner("sl");
-    }
-  }
   // Construct a resolution-level path along the recreated edge.
-  std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
-  recreatedEdge.insert(recreatedEdge.begin(), start);
-  recreatedEdge.push_back(end);
-  for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-    std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-        std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
-    out.insert(out.end(), edge.begin(), edge.end());
-  }
-  return out;
+  auto lp = this->GetLocalPlanner(lpLabel);
+  return lp->BlindPath(waypoints, _posRes, _oriRes);
+}
+
+
+template <typename MPTraits>
+std::vector<typename MPTraits::GroupRoadmapType::VP>
+MPLibraryType<MPTraits>::
+ReconstructEdge(GroupRoadmapType* const _roadmap, const VID _source,
+    const VID _target, const double _posRes,
+    const double _oriRes) {
+  const auto& start         = _roadmap->GetVertex(_source);
+  const auto& end           = _roadmap->GetVertex(_target);
+  const auto& edge          = _roadmap->GetEdge(_source, _target);
+  const auto& intermediates = edge.GetIntermediates();
+
+  // Construct the set of start, intermediates, and end waypoints as needed.
+  auto waypoints = intermediates;
+  waypoints.insert(waypoints.begin(), start);
+  waypoints.push_back(end);
+
+  // Check for intermediates. If there are any, we will use straight-line to
+  // recompute the path. Otherwise use the lp label if available, and fall back
+  // to straight-line if not (this will always happen with extenders).
+  const std::string lpLabel = !intermediates.size()
+                            and !edge.GetLPLabel().empty()
+                            ? edge.GetLPLabel()
+                            : "sl";
+
+  // Construct a resolution-level path along the recreated edge.
+  auto lp = this->GetLocalPlanner(lpLabel);
+  return lp->BlindPath(waypoints, _posRes, _oriRes, edge.GetActiveRobots());
+}
+
+
+template< typename MPTraits>
+template <typename AbstractRoadmapType>
+std::vector<typename AbstractRoadmapType::VP>
+MPLibraryType<MPTraits>::
+ReconstructEdge(AbstractRoadmapType* const _roadmap, const VID _source,
+    const VID _target) {
+  auto env = this->GetMPProblem()->GetEnvironment();
+  return this->ReconstructEdge(_roadmap, _source, _target,
+                               env->GetPositionRes(), env->GetOrientationRes());
 }
 
 /*--------------------------- Execution Interface ----------------------------*/

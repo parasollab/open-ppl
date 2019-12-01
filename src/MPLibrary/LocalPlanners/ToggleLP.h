@@ -37,11 +37,6 @@ class ToggleLP: public LocalPlannerMethod<MPTraits> {
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false);
 
-    virtual vector<CfgType> ReconstructPath(
-        const CfgType& _c1, const CfgType& _c2,
-        const vector<CfgType>& _intermediates,
-        double _posRes, double _oriRes);
-
   protected:
 
     // Default for non closed chains - alters midpoint to a distance delta away
@@ -475,47 +470,6 @@ ToggleLP<MPTraits>::ToggleConnect(
     return ToggleConnect(_n1, c, _s, _g, !_toggle, _lpOutput,
         _positionRes, _orientationRes, _depth+1) || ToggleConnect(_n2, c, _s,
           _g, !_toggle, _lpOutput, _positionRes, _orientationRes, _depth+1);
-}
-
-template<class MPTraits>
-vector<typename MPTraits::CfgType>
-ToggleLP<MPTraits>::ReconstructPath(
-    const CfgType& _c1, const CfgType& _c2,
-    const vector<CfgType>& _intermediates,
-    double _posRes, double _oriRes) {
-  auto lp = this->GetLocalPlanner(m_lpLabel);
-  LPOutput<MPTraits>* lpOutput = new LPOutput<MPTraits>();
-  LPOutput<MPTraits>* dummyLPOutput = new LPOutput<MPTraits>();
-  auto robot = this->GetTask()->GetRobot();
-  CfgType col(robot);
-  if(_intermediates.size() > 0) {
-    lp->IsConnected(_c1, _intermediates[0], col,
-        dummyLPOutput, _posRes, _oriRes, false, true);
-    for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-      lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
-    for(size_t i = 0; i < _intermediates.size() - 1; i++) {
-      lpOutput->m_path.push_back(_intermediates[i]);
-      lp->IsConnected(_intermediates[i], _intermediates[i + 1],
-          col, dummyLPOutput, _posRes, _oriRes, false, true);
-      for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-        lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
-    }
-    lpOutput->m_path.push_back(_intermediates[_intermediates.size() - 1]);
-    lp->IsConnected(_intermediates[_intermediates.size() - 1],
-        _c2, col, dummyLPOutput, _posRes, _oriRes, false, true);
-    for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-      lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
-  }
-  else {
-    lp->IsConnected(_c1, _c2, col, dummyLPOutput,
-        _posRes, _oriRes, false, true);
-    for(size_t j = 0; j < dummyLPOutput->m_path.size(); j++)
-      lpOutput->m_path.push_back(dummyLPOutput->m_path[j]);
-  }
-  vector<CfgType> path = lpOutput->m_path;
-  delete lpOutput;
-  delete dummyLPOutput;
-  return path;
 }
 
 #endif

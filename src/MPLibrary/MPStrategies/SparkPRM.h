@@ -775,8 +775,8 @@ ExpandTree(CfgType& _dir, std::vector<VID>& _rrt, std::vector<VID>& _important) 
     recentVID = graph->AddVertex(newCfg);
     _rrt.push_back(recentVID);
 
-    std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
-        weight), WeightType("RRTExpand", weight));
+    std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("",
+        weight), WeightType("", weight));
     graph->AddEdge(kClosest[0].target, recentVID, weights);
     graph->GetVertex(recentVID).SetStat("Parent", kClosest[0].target);
   }
