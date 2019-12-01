@@ -27,6 +27,8 @@
 ///          errors) on a non-tree directed graph!
 /// @todo Add support for non-tree directed graphs. We need to use predecessor
 ///       information to do this, which requires improving
+/// @todo The stat class tracking adds a lot of complication. Remove it once
+///       we're sure the performance is fast enough to forgo tracking.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename RoadmapType>
 class CCTracker {
@@ -56,19 +58,33 @@ class CCTracker {
     CCTracker(RoadmapType* const _r);
 
     ///@}
-    ///@name Disabled Functions
+    ///@name Move and Copy
     ///@{
-    /// Copy is not allowed.
+    /// @note If this object is moved/copied as part of a move/copy on the
+    ///       roadmap, we must also update the roadmap pointer and hooks.
+    /// @note Move will retain stat class tracking but copying does not. This is
+    ///       because moving generally pertains to an internal re-organization
+    ///       of the same roadmap, while copying usually indicates moving a
+    ///       roadmap to another solution.
 
-    CCTracker(const CCTracker&) = delete;
-    CCTracker& operator=(const CCTracker&) = delete;
+    CCTracker(const CCTracker&);
+    CCTracker(CCTracker&&);
+
+    CCTracker& operator=(const CCTracker&);
+    CCTracker& operator=(CCTracker&&);
 
     ///@}
     ///@name Modifiers
     ///@{
 
+    /// Set the roadmap object.
+    void SetRoadmap(RoadmapType* const _r) noexcept;
+
     /// Set the stat class pointer if we wish to do performance profiling.
     void SetStatClass(StatClass* const _stats) const noexcept;
+
+    /// Install hooks in the roadmap.
+    void InstallHooks() noexcept;
 
     ///@}
     ///@name Query Functions
@@ -163,7 +179,7 @@ class CCTracker {
     ///@name Internal State
     ///@{
 
-    RoadmapType* const m_roadmap;              ///< The roadmap.
+    RoadmapType* m_roadmap{nullptr};           ///< The roadmap.
     size_t m_nextID{0};                        ///< The next unused CC id.
     CCMap m_ccs;                               ///< Maps CC id to CC.
     std::unordered_map<VID, size_t> m_vidToCC; ///< Maps descriptor to CC id.
@@ -171,7 +187,7 @@ class CCTracker {
     mutable std::function<void(const std::string&)> m_clockStart;
     mutable std::function<void(const std::string&)> m_clockStop;
 
-    static constexpr const bool s_debug = true;   ///< Enable debug messages.
+    static constexpr const bool s_debug = false;  ///< Enable debug messages.
 
     ///@}
 };
@@ -184,21 +200,71 @@ CCTracker(RoadmapType* const _r) : m_roadmap(_r) {
   RecomputeCCs();
 
   // Install roadmap hooks.
-  const std::string label = "CCTracker";
-  m_roadmap->InstallHook(RoadmapType::HookType::AddVertex, label,
-      [this](const vertex_iterator _vi){this->AddVertex(_vi);});
-  m_roadmap->InstallHook(RoadmapType::HookType::DeleteVertex, label,
-      [this](const vertex_iterator _vi){this->DeleteVertex(_vi);});
-  m_roadmap->InstallHook(RoadmapType::HookType::AddEdge, label,
-      [this](const edge_iterator _vi){this->AddEdge(_vi);});
-  m_roadmap->InstallHook(RoadmapType::HookType::DeleteEdge, label,
-      [this](const edge_iterator _vi){this->DeleteEdge(_vi);});
+  InstallHooks();
 
   // Initialize the clock start/stoppers.
   SetStatClass(nullptr);
 }
 
+/*------------------------------ Move and Copy -------------------------------*/
+
+template <typename RoadmapType>
+CCTracker<RoadmapType>::
+CCTracker(const CCTracker& _other)
+  : m_roadmap(_other.m_roadmap),
+    m_nextID(_other.m_nextID),
+    m_ccs(_other.m_ccs),
+    m_vidToCC(_other.m_vidToCC) {
+  SetStatClass(nullptr);
+}
+
+
+template <typename RoadmapType>
+CCTracker<RoadmapType>::
+CCTracker(CCTracker&& _other)
+  : m_roadmap(_other.m_roadmap),
+    m_nextID(_other.m_nextID),
+    m_ccs(std::move(_other.m_ccs)),
+    m_vidToCC(std::move(_other.m_vidToCC)),
+    m_clockStart(std::move(_other.m_clockStart)),
+    m_clockStop(std::move(_other.m_clockStop)) {
+}
+
+
+template <typename RoadmapType>
+CCTracker<RoadmapType>&
+CCTracker<RoadmapType>::
+operator=(const CCTracker& _other) {
+  m_roadmap    = _other.m_roadmap;
+  m_nextID     = _other.m_nextID;
+  m_ccs        = _other.m_ccs;
+  m_vidToCC    = _other.m_vidToCC;
+  SetStatClass(nullptr);
+}
+
+
+template <typename RoadmapType>
+CCTracker<RoadmapType>&
+CCTracker<RoadmapType>::
+operator=(CCTracker&& _other) {
+  m_roadmap    = _other.m_roadmap;
+  m_nextID     = _other.m_nextID;
+  m_ccs        = std::move(_other.m_ccs);
+  m_vidToCC    = std::move(_other.m_vidToCC);
+  m_clockStart = std::move(_other.m_clockStart);
+  m_clockStop  = std::move(_other.m_clockStop);
+}
+
 /*--------------------------------- Queries ----------------------------------*/
+
+template <typename RoadmapType>
+inline
+void
+CCTracker<RoadmapType>::
+SetRoadmap(RoadmapType* const _r) noexcept {
+  m_roadmap = _r;
+}
+
 
 template <typename RoadmapType>
 inline
@@ -220,6 +286,24 @@ SetStatClass(StatClass* const _stats) const noexcept {
   };
 }
 
+
+template <typename RoadmapType>
+inline
+void
+CCTracker<RoadmapType>::
+InstallHooks() noexcept {
+  const std::string label = "CCTracker";
+  m_roadmap->InstallHook(RoadmapType::HookType::AddVertex, label,
+      [this](const vertex_iterator _i){this->AddVertex(_i);});
+  m_roadmap->InstallHook(RoadmapType::HookType::DeleteVertex, label,
+      [this](const vertex_iterator _i){this->DeleteVertex(_i);});
+  m_roadmap->InstallHook(RoadmapType::HookType::AddEdge, label,
+      [this](const edge_iterator _i){this->AddEdge(_i);});
+  m_roadmap->InstallHook(RoadmapType::HookType::DeleteEdge, label,
+      [this](const edge_iterator _i){this->DeleteEdge(_i);});
+}
+
+/*--------------------------------- Queries ----------------------------------*/
 
 template <typename RoadmapType>
 inline

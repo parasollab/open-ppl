@@ -95,9 +95,11 @@ class MPSolutionType final {
 
     Path* GetPath(Robot* const _r = nullptr) const noexcept;
 
-    LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const noexcept;
+    LocalObstacleMap* GetLocalObstacleMap(Robot* const _r = nullptr) const
+        noexcept;
 
-    GroupRoadmapType* GetGroupRoadmap(RobotGroup* const _g = nullptr) const noexcept;
+    GroupRoadmapType* GetGroupRoadmap(RobotGroup* const _g = nullptr) const
+        noexcept;
 
     GroupPathType* GetGroupPath(RobotGroup* const _g = nullptr) const noexcept;
 
@@ -155,7 +157,10 @@ RobotSolution(Robot* const _robot, StatClass* const _stats)
   : freeMap(new RoadmapType(_robot)),
     obstMap(new RoadmapType(_robot)),
     path   (new Path(freeMap.get())),
-    lom    (new LocalObstacleMap(_stats)) { }
+    lom    (new LocalObstacleMap(_stats)) {
+  freeMap->SetCCTracker(_stats);
+  obstMap->SetCCTracker(_stats);
+}
 
 
 template <typename MPTraits>

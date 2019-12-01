@@ -102,11 +102,25 @@ class RoadmapGraph : public
     typedef std::function<void(EI)> EdgeHook;
     enum class HookType {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
 
+    // CC Tracker.
+    typedef CCTracker<RoadmapGraph<Vertex, Edge>> CCTrackerType;
+
     ///@}
     ///@name Construction
     ///@{
 
     RoadmapGraph(Robot* const _r);
+
+    ///@}
+    ///@name Move and Copy
+    ///@{
+    /// Move and copy operations do not copy hook functions.
+
+    RoadmapGraph(const RoadmapGraph& _r);
+    RoadmapGraph(RoadmapGraph&& _r);
+
+    RoadmapGraph& operator=(const RoadmapGraph& _r);
+    RoadmapGraph& operator=(RoadmapGraph&& _r);
 
     ///@}
     ///@name Modifiers
@@ -195,7 +209,9 @@ class RoadmapGraph : public
     VID GetVID(const VI& _t) const noexcept;
     VID GetVID(const Vertex& _t) const noexcept;
 
-    /// Get the set of predecessors for a given VID.
+    /// Get the set of predecessors for a given vertex.
+    /// @param _vid The vertex descriptor.
+    /// @return The set of VIDs which have _vid as a child node.
     const VertexSet& GetPredecessors(const VID _vid) const noexcept;
 
     /// Get the descriptor of the last vertex added to the graph.
@@ -212,7 +228,7 @@ class RoadmapGraph : public
     Robot* GetRobot() const noexcept;
 
     /// Get the connected component tracker.
-    const CCTracker<RoadmapGraph<Vertex, Edge>>* GetCCTracker() const noexcept;
+    const CCTrackerType* GetCCTracker() const noexcept;
 
     /// Retrieve a reference to a vertex property by descriptor or iterator.
     template <typename T>
@@ -390,7 +406,7 @@ class RoadmapGraph : public
     std::unordered_map<std::string, EdgeHook> m_deleteEdgeHooks;
 
     /// Tracks weak CCs within the roadmap.
-    std::unique_ptr<CCTracker<RoadmapGraph<Vertex, Edge>>> m_ccTracker;
+    std::unique_ptr<CCTrackerType> m_ccTracker;
 
     /// Tracks predecessor information. We use this instead of switching to a
     /// STAPL directed_preds graph because (a) directed_preds uses a vector for
@@ -408,6 +424,69 @@ class RoadmapGraph : public
 template <typename Vertex, typename Edge>
 RoadmapGraph<Vertex, Edge>::
 RoadmapGraph(Robot* const _r) : m_robot(_r) { }
+
+/*------------------------------ Move and Copy -------------------------------*/
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>::
+RoadmapGraph(const RoadmapGraph& _r) : RoadmapGraph(_r.m_robot) {
+  *this = _r;
+}
+
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>::
+RoadmapGraph(RoadmapGraph&& _r) : RoadmapGraph(_r.m_robot) {
+  *this = std::move(_r);
+}
+
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>&
+RoadmapGraph<Vertex, Edge>::
+operator=(const RoadmapGraph& _r) {
+  // Clear any hooks installed on this map.
+  ClearHooks();
+
+  // Copy the stapl graph and our add-ons.
+  STAPLGraph::operator=(_r);
+  m_robot        = _r.m_robot;
+  m_timestamp    = _r.m_timestamp;
+  m_predecessors = _r.m_predecessors;
+
+  // If the other graph had a CC tracker, copy it and point at this roadmap.
+  if(_r.m_ccTracker) {
+    m_ccTracker.reset(new CCTrackerType(*_r.m_ccTracker));
+    m_ccTracker->SetRoadmap(this);
+    m_ccTracker->InstallHooks();
+  }
+
+  return *this;
+}
+
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>&
+RoadmapGraph<Vertex, Edge>::
+operator=(RoadmapGraph&& _r) {
+  // Clear any hooks installed on this map.
+  ClearHooks();
+
+  // Move the stapl graph and our add-ons.
+  STAPLGraph::operator=(std::move(_r));
+  m_robot        = _r.m_robot;
+  m_timestamp    = _r.m_timestamp;
+  m_predecessors = std::move(_r.m_predecessors);
+
+  // If the other graph had a CC tracker, move it and point at this roadmap.
+  if(_r.m_ccTracker) {
+    m_ccTracker.reset(new CCTrackerType(std::move(*_r.m_ccTracker)));
+    m_ccTracker->SetRoadmap(this);
+    m_ccTracker->InstallHooks();
+  }
+
+  return *this;
+}
 
 /*------------------------------- Modifiers ----------------------------------*/
 
@@ -431,7 +510,6 @@ AddVertex(const Vertex& _v) noexcept {
 
   // Execute post-add hooks and update vizmo debug.
   ExecuteAddVertexHooks(this->find_vertex(vid));
-  VDAddNode(_v);
 
   return vid;
 }
@@ -461,9 +539,8 @@ DeleteVertex(const VID _v) noexcept {
     DeleteEdge(predecessor, _v);
   }
 
-  // Execute pre-delete hooks and update vizmo debug.
+  // Execute pre-delete hooks.
   ExecuteDeleteVertexHooks(vi);
-  VDRemoveNode(vi->property());
 
   // Delete the vertex.
   this->delete_vertex(vi->descriptor());
@@ -490,17 +567,13 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
 
   // Add the source as a predecessor of target.
   m_predecessors[_target].insert(_source);
+  ++m_timestamp;
 
-  // Find the edge iterator.
+  // Execute post-add hooks.
   VI vi;
   EI ei;
   this->find_edge(edgeDescriptor, vi, ei);
-
-  // Execute post-add hooks and update vizmo debug.
   ExecuteAddEdgeHooks(ei);
-  VDAddEdge(vi->property(), GetVertex(_target));
-
-  ++m_timestamp;
 }
 
 
@@ -536,17 +609,14 @@ template <class Vertex, class Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
-  // Execute pre-delete hooks and update vizmo debug.
+  // Execute pre-delete hooks.
   const VID source = _iterator->source(),
             target = _iterator->target();
   ExecuteDeleteEdgeHooks(_iterator);
-  VDRemoveEdge(GetVertex(source), GetVertex(target));
-
-  // Remove the source from target's predecessors.
-  m_predecessors[target].erase(source);
 
   // Delete the edge.
   this->delete_edge(_iterator->descriptor());
+  m_predecessors[target].erase(source);
   ++m_timestamp;
 }
 
@@ -590,7 +660,7 @@ inline
 void
 RoadmapGraph<Vertex, Edge>::
 SetCCTracker(StatClass* const _stats) {
-  m_ccTracker.reset(new CCTracker<RoadmapGraph<Vertex, Edge>>(this));
+  m_ccTracker.reset(new CCTrackerType(this));
   if(_stats)
     m_ccTracker->SetStatClass(_stats);
 }
@@ -727,7 +797,7 @@ GetRobot() const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-const CCTracker<RoadmapGraph<Vertex, Edge>>*
+const typename RoadmapGraph<Vertex, Edge>::CCTrackerType*
 RoadmapGraph<Vertex, Edge>::
 GetCCTracker() const noexcept {
   return m_ccTracker.get();
@@ -997,6 +1067,10 @@ ClearHooks() noexcept {
   m_deleteVertexHooks.clear();
   m_addEdgeHooks.clear();
   m_deleteEdgeHooks.clear();
+
+  // We always want the CC tracker's hooks, re-install them if needed.
+  if(m_ccTracker)
+    m_ccTracker->InstallHooks();
 }
 
 /*----------------------------------- I/O ------------------------------------*/

@@ -553,12 +553,16 @@ DoNotCheck(AbstractRoadmapType* _r, const VID _source, const VID _target) const 
 
   // Check if the nodes are in the same connected component.
   if(m_skipIfSameCC) {
-    typename AbstractRoadmapType::ColorMap colorMap;
-    if(stapl::sequential::is_same_cc(*_r, colorMap, _source, _target)) {
+    auto ccTracker = _r->GetCCTracker();
+    if(!ccTracker)
+      throw RunTimeException(WHERE) << "A CCTracker is required for checking "
+                                    << "same CCs.";
+    const bool sameCC = ccTracker->InSameCC(_source, _target);
+    if(sameCC) {
       if(this->m_debug)
         std::cout << indent
-                  << "Skipping connection within the same connected component "
-                  << connection << "."
+                  << "Skipping connection " << connection
+                  << " within the same connected component."
                   << std::endl;
       return true;
     }

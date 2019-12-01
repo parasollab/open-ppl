@@ -314,7 +314,6 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     else if(this->m_debug && b2)
       VDAddEdge(_c2, n);
     if(b1 && b2 && this->m_debug) {
-      VDQuery(_c1, _c2);
       VDClearAll();
       VDAddTempCfg(_c1, true);
       VDAddTempCfg(_c2, true);
@@ -328,7 +327,6 @@ ToggleLP<MPTraits>::IsConnectedToggle(
     bool b = ToggleConnect(_col, n, _c1, _c2, false, _lpOutput,
         _positionRes, _orientationRes);
     if(b && this->m_debug) {
-      VDQuery(_c1, _c2);
       VDClearAll();
       VDAddTempCfg(_c1, true);
       VDAddTempCfg(_c2, true);

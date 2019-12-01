@@ -57,6 +57,19 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution);
 
     ///@}
+    ///@name Disabled Functions
+    ///@{
+    /// Move and copy are disabled because the group cfgs and edges need to know
+    /// their group roadmap pointer. To implement these, we'll need to update
+    /// the pointer on every component.
+
+    GroupRoadmap(const GroupRoadmap&) = delete;
+    GroupRoadmap(GroupRoadmap&&)      = delete;
+
+    GroupRoadmap& operator=(const GroupRoadmap&) = delete;
+    GroupRoadmap& operator=(GroupRoadmap&&)      = delete;
+
+    ///@}
     ///@name Accessors
     ///@{
 
@@ -99,13 +112,6 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// @param _v The vertex to add.
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept override;
-
-    /// Add a new unique vertex to the graph with a designated descriptor. This
-    /// is NOT supported for GroupRoadmap and simply throws an exception!
-    /// @param _vid The desired descriptor.
-    /// @param _v The vertex property.
-    /// @return A new VID of the added vertex, or the VID of the existing vertex.
-//    virtual VID AddVertex(const VID _vid, const Vertex& _v) override;
 
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
@@ -264,10 +270,10 @@ GroupRoadmap<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   if(_source == _target)
     throw RunTimeException(WHERE) << "Tried to add edge between same VID "
-                                  << _source;
+                                  << _source << ".";
 
   if(_lp.GetWeight() == 0 or _lp.GetWeight() == 0)
-    throw RunTimeException(WHERE, "Tried to add zero weight edge!");
+    throw RunTimeException(WHERE) << "Tried to add zero weight edge!";
 
   // We need to adjust _lp, but we still want to override the base class
   // function, so make a local copy of the edge.
@@ -335,7 +341,6 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
                   << "'s individual edge (" << individualSourceVID << ", "
                   << individualTargetVID << ") already exists, "
                   << "not adding to its roadmap." << std::endl;
-//        throw RunTimeException(WHERE, "Cannot re-add existing edge.");
 
       // NOTE: If you are getting a seg fault here, it's most likely due to not
       //       calling GroupLPOutput::SetIndividualEdges() before calling this!
@@ -345,7 +350,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   }
 
   if(numInactiveRobots >= GetNumRobots())
-    throw RunTimeException(WHERE, "No robots were moved in this edge!");
+    throw RunTimeException(WHERE) << "No robots were moved in this edge!";
 
   // Now all of the individual edges are in the local maps. Clear out the local
   // copies in edge before we add it to the group map.
@@ -389,7 +394,7 @@ AddVertex(const Vertex& _v) noexcept {
   Vertex cfg; // Will be a copy of the const Vertex
   // Check that the group map is correct, if not, try and change it.
   if(_v.GetGroupRoadmap() != this) {
-    std::cerr << std::endl << "GroupRoadmap::AddVertex: Warning! Group roadmap "
+    std::cerr << "GroupRoadmap::AddVertex: Warning! Group roadmap "
               << "doesn't match this, attempting to exchange the roadmap..."
               << std::endl;
     cfg = _v.SetGroupRoadmap(this);
@@ -401,7 +406,7 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(this->IsVertex(cfg, vi)) {
-    std::cerr << "\nGroupRoadmap::AddVertex(1/1): vertex " << vi->descriptor()
+    std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
               << " already in graph"
               << std::endl;
     return vi->descriptor();
