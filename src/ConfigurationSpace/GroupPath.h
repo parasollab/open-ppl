@@ -1,11 +1,11 @@
-#ifndef GROUP_PATH_H_
-#define GROUP_PATH_H_
+#ifndef PMPL_GROUP_PATH_H_
+#define PMPL_GROUP_PATH_H_
 
 #include "MPLibrary/MPLibrary.h"
-#include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "Utilities/PMPLExceptions.h"
 
 #include <algorithm>
+#include <vector>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,12 +63,10 @@ class GroupPath final {
     ///        resolution apart. This is not cached due to its size and
     ///        infrequent usage.
     /// @param _lib The planning library to use.
-    /// @param _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
     template <typename MPLibrary>
-    const std::vector<GroupCfg> FullCfgs(MPLibrary* const _lib,
-        const string& _lp = "") const;
+    const std::vector<GroupCfg> FullCfgs(MPLibrary* const _lib) const;
 
     /// Append another path to the end of this one.
     /// @param _p The path to append.
@@ -108,14 +106,14 @@ class GroupPath final {
     ///@name Internal State
     ///@{
 
-    GroupRoadmapType* const m_roadmap;       ///< The roadmap.
-    std::vector<VID> m_vids;            ///< The vids of the path configurations.
+    GroupRoadmapType* const m_roadmap;     ///< The roadmap.
+    std::vector<VID> m_vids;               ///< The vids of the path configurations.
 
-    std::vector<GroupCfg> m_cfgs;        ///< The path configurations.
-    mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
+    mutable std::vector<GroupCfg> m_cfgs;  ///< The path configurations.
+    mutable bool m_cfgsCached{false};      ///< Are the current cfgs correct?
 
-    double m_length{0};                 ///< The path length.
-    mutable bool m_lengthCached{false}; ///< Is the current path length correct?
+    mutable double m_length{0};            ///< The path length.
+    mutable bool m_lengthCached{false};    ///< Is the current path length correct?
 
     ///@}
 };
@@ -156,25 +154,24 @@ template <typename MPTraits>
 double
 GroupPath<MPTraits>::
 Length() const {
-  if(!m_lengthCached) {
-    double& length = const_cast<double&>(m_length);
-    length = 0;
-    for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
-      if(*start == *(start + 1))
-        continue;  // Skip repeated vertices.
-      typename GroupRoadmapType::edge_descriptor ed(*start, *(start + 1));
-      typename GroupRoadmapType::vertex_iterator vi;
-      typename GroupRoadmapType::adj_edge_iterator ei;
-      if(m_roadmap->find_edge(ed, vi, ei))
-        length += (*ei).property().GetWeight();
-      else
-        throw RunTimeException(WHERE, "Tried to compute length for a path "
-            "containing the edge (" + to_string(*start) + "," +
-            to_string(*(start + 1)) + "), but that edge was not found in the "
-            "graph.");
-    }
-    m_lengthCached = true;
+  // If the length is cached, we don't need to recompute.
+  if(m_lengthCached)
+    return m_length;
+  m_lengthCached = true;
+
+  // Recompute the length by summing the edge weights.
+  m_length = 0;
+  for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
+    // Skip repeated vertices.
+    /// @todo This will be an error if we allow self-edges.
+    if(*start == *(start + 1))
+      continue;
+
+    // Add this edge's weight to the sum.
+    const auto& edge = m_roadmap->GetEdge(*start, *(start + 1));
+    m_length += edge.GetWeight();
   }
+
   return m_length;
 }
 
@@ -191,14 +188,16 @@ template <typename MPTraits>
 const std::vector<typename MPTraits::GroupCfgType>&
 GroupPath<MPTraits>::
 Cfgs() const {
-  if(!m_cfgsCached) {
-    std::vector<GroupCfg>& cfgs = const_cast<std::vector<GroupCfg>&>(m_cfgs);
-    cfgs.clear();
-    cfgs.reserve(m_vids.size());
-    for(const auto& vid : m_vids)
-      cfgs.push_back(m_roadmap->GetVertex(vid));
-    m_cfgsCached = true;
-  }
+  // If the cfgs are cached, we don't need to recompute.
+  if(m_cfgsCached)
+    return m_cfgs;
+  m_cfgsCached = true;
+
+  m_cfgs.clear();
+  m_cfgs.reserve(m_vids.size());
+  for(const auto& vid : m_vids)
+    m_cfgs.push_back(m_roadmap->GetVertex(vid));
+
   return m_cfgs;
 }
 
@@ -207,70 +206,28 @@ template <typename MPTraits>
 template <typename MPLibrary>
 const std::vector<typename MPTraits::GroupCfgType>
 GroupPath<MPTraits>::
-FullCfgs(MPLibrary* const _lib, const string& _lp) const {
+FullCfgs(MPLibrary* const _lib) const {
   if(m_vids.empty())
     return std::vector<GroupCfg>();
 
+  // Insert the first vertex.
   std::vector<GroupCfg> out = {m_roadmap->GetVertex(m_vids.front())};
 
-  // Set up local planner to recreate edges. If none was provided, use edge
-  // planner, or fall back to straight-line.
-  auto env = _lib->GetMPProblem()->GetEnvironment();
-
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
-    // Get the next edge.
-    bool validEdge = false;
-    typename GroupRoadmapType::adj_edge_iterator ei;
-    {
-      typename GroupRoadmapType::edge_descriptor ed(*it, *(it+1));
-      typename GroupRoadmapType::vertex_iterator vi;
-      validEdge = m_roadmap->find_edge(ed, vi, ei);
+    const VID source = *it,
+              target = *(it + 1);
+    const auto& edge = m_roadmap->GetEdge(source, target);
 
-      if(!validEdge)
-        throw RunTimeException(WHERE) << "Edge " << *it << ", " << *(it+1)
-                                      << " doesn't exist in roadmap!";
+    // Insert intermediates between vertices. For assembly planning (skip edge):
+    // don't reconstruct the edge when it's for a part that has been placed off
+    // to the side, just use the two cfgs. This edge will just be (start, end).
+    if(!edge.SkipEdge()) {
+      std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, source, target);
+      out.insert(out.end(), edge.begin(), edge.end());
     }
 
-    // Use the local planner from parameter if specified.
-    // If not specified, use the edge lp.
-    // Fall back to straight-line if edge lp is not available (this will always
-    // happen if it was grown with an extender).
-    typename MPLibrary::LocalPlannerPointer lp;
-    if(!_lp.empty())
-      lp = _lib->GetLocalPlanner(_lp);
-    else {
-      try {
-        lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
-      }
-      catch(...) {
-          lp = _lib->GetLocalPlanner("sl");
-      }
-    }
-
-    Formation formation = ei->property().GetActiveRobots();
-
-    // Recreate this edge, including intermediates.
-    GroupCfg& start = m_roadmap->GetVertex(*it);
-    GroupCfg& end   = m_roadmap->GetVertex(*(it+1));
-
-    // Construct a resolution-level path along the recreated edge.
-    if(!ei->property().SkipEdge()) {
-      std::vector<GroupCfg> recreatedEdge = ei->property().GetIntermediates();
-      recreatedEdge.insert(recreatedEdge.begin(), start);
-      recreatedEdge.push_back(end);
-      for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-        std::vector<GroupCfg> edge = lp->ReconstructPath(*cit, *(cit+1),
-                                std::vector<GroupCfg>(), env->GetPositionRes(),
-                                env->GetOrientationRes(), formation);
-        out.insert(out.end(), edge.begin(), edge.end());
-      }
-    }
-    else {
-      //For assembly planning: Don't reconstruct the edge when it's for a part
-      // that has been placed off to the side, just use the two cfgs.
-      out.push_back(start); // This edge will just be (start, end)
-    }
-    out.push_back(end);
+    // Insert the next vertex.
+    out.push_back(m_roadmap->GetVertex(target));
   }
   return out;
 }
@@ -299,9 +256,8 @@ GroupPath<MPTraits>&
 GroupPath<MPTraits>::
 operator+=(const std::vector<VID>& _vids) {
   if(_vids.size()) {
-    std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
-    m_lengthCached = false;
-    m_cfgsCached = false;
+    FlushCache();
+    std::copy(_vids.begin(), _vids.end(), std::back_inserter(m_vids));
   }
   return *this;
 }
@@ -322,7 +278,7 @@ GroupPath<MPTraits>&
 GroupPath<MPTraits>::
 operator=(const GroupPath& _p) {
   if(m_roadmap != _p.m_roadmap)
-    throw RunTimeException(WHERE, "Can't assign path from another roadmap");
+    throw RunTimeException(WHERE) << "Can't assign path from another roadmap";
 
   m_vids         = _p.m_vids;
   m_cfgs         = _p.m_cfgs;
@@ -338,9 +294,7 @@ template <typename MPTraits>
 void
 GroupPath<MPTraits>::
 Clear() {
-  m_lengthCached = false;
-  m_cfgsCached = false;
-  m_cfgs.clear();
+  FlushCache();
   m_vids.clear();
 }
 
@@ -361,7 +315,9 @@ void
 GroupPath<MPTraits>::
 AssertSameMap(const GroupPath& _p) const {
   if(m_roadmap != _p.m_roadmap)
-    throw RunTimeException(WHERE, "Can't add paths from different roadmaps!");
+    throw RunTimeException(WHERE) << "Can't add paths from different roadmaps "
+                                  << "(source = " << _p.m_roadmap << ","
+                                  << " target = " << m_roadmap << ").";
 }
 
 /*----------------------------------------------------------------------------*/

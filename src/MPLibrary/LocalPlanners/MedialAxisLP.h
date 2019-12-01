@@ -5,9 +5,11 @@
 #include "StraightLine.h"
 #include "MPLibrary/ValidityCheckers/MedialAxisClearanceValidity.h"
 
+#include <memory>
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup LocalPlanners
-/// @brief Plan along the medial axis between two medial axis configurations
+/// Plan along the medial axis between two medial axis configurations
 ///
 /// This class defines the medial axis local planner which performs a
 /// push of the pathway connecting two medial axis configurations along
@@ -17,6 +19,7 @@
 ///     epsilon-closeness,
 ///   - iterative - step along medial axis, and
 ///   - binary - push midpoint to medial axis upto resolution
+/// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
@@ -43,11 +46,6 @@ class MedialAxisLP : public LocalPlannerMethod<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = true);
-
-    virtual vector<CfgType> ReconstructPath(
-        const CfgType& _c1, const CfgType& _c2,
-        const vector<CfgType>& _intermediates,
-        double _posRes, double _oriRes);
 
   private:
     void Init();
@@ -739,57 +737,6 @@ IsConnectedBin(const CfgType& _c1, const CfgType& _c2, CfgType& _col,
 
 
 template<class MPTraits>
-vector<typename MPTraits::CfgType>
-MedialAxisLP<MPTraits>::
-ReconstructPath(const CfgType& _c1, const CfgType& _c2,
-    const vector<CfgType>& _intermediates,
-    double _posRes, double _oriRes) {
-  if(!m_initialized)
-    Init();
-  LPOutput<MPTraits> lpOutput, dummyLPO;
-  auto& path = lpOutput.m_path;
-  auto robot = this->GetTask()->GetRobot();
-  CfgType col(robot);
-
-  // If there are no intermediates, just replan from start to end.
-  if(_intermediates.empty()) {
-    m_envLP.IsConnected(_c1, _c2, col, &lpOutput, _posRes, _oriRes, false, true);
-  }
-  // Otherwise we must plan through the intermediates in order.
-  else {
-    // Plan from start to the first intermediate.
-    m_envLP.IsConnected(_c1, _intermediates[0], col, &dummyLPO, _posRes, _oriRes,
-        false, true);
-    std::copy(dummyLPO.m_path.begin(), dummyLPO.m_path.end(),
-        std::back_inserter(path));
-
-    // Plan between intermediates.
-    for(size_t i = 0; i < _intermediates.size() - 1; i++) {
-      const auto& current = _intermediates[i],
-                & next    = _intermediates[i + 1];
-
-      path.push_back(current);
-
-      dummyLPO.Clear();
-      m_envLP.IsConnected(current, next, col, &dummyLPO, _posRes, _oriRes,
-          false, true);
-      std::copy(dummyLPO.m_path.begin(), dummyLPO.m_path.end(),
-          std::back_inserter(path));
-    }
-    path.push_back(_intermediates.back());
-
-    // Plan from last intermediate to end.
-    dummyLPO.Clear();
-    m_envLP.IsConnected(_intermediates.back(), _c2, col, &dummyLPO, _posRes,
-        _oriRes, false, true);
-    std::copy(dummyLPO.m_path.begin(), dummyLPO.m_path.end(),
-        std::back_inserter(path));
-  }
-
-  return path;
-}
-
-template<class MPTraits>
 void
 MedialAxisLP<MPTraits>::
 RemoveBranches(LPOutput<MPTraits>* _lpOutput) {
@@ -851,73 +798,7 @@ RemoveBranches(LPOutput<MPTraits>* _lpOutput) {
   _lpOutput->m_intermediates = newIntermediates;
 }
 
-/*
 
-   I am leaving this just in case it is needed later.
-
-template<class MPTraits>
-void
-MedialAxisLP<MPTraits>::
-ReduceNoise(const CfgType& _c1, const CfgType& _c2,
-    LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes) {
-
-  if(_lpOutput->m_intermediates.empty())
-    return;
-
-  //for each segment on polygonal chain
-  //  get midpoint between intermediates along path
-  //  test connection between previous and new intermediate
-  //  if(success)
-  //    add new intermediate
-  //  else
-  //    add old intermediate
-
-  MethodTimer mt(this->GetStatClass(), "Reduce Noise");
-  LPOutput<MPTraits> lpOutput;
-
-  CfgType col(this->GetTask()->GetRobot());
-  CfgType prevMid = (_c1 + _lpOutput->m_intermediates[0])/2;
-
-  vector<CfgType> newIntermediates;
-
-  typedef typename vector<CfgType>::iterator CIT;
-  for(CIT cit1 = _lpOutput->m_intermediates.begin(), cit2 = cit1 + 1;
-      cit2 != _lpOutput->m_intermediates.end(); ++cit1, ++cit2) {
-
-    CfgType mid = (*cit1 + *cit2)/2;
-
-    if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput,
-          _posRes, _oriRes, true, true)) {
-      if(newIntermediates.empty() || newIntermediates.back() != prevMid)
-        newIntermediates.push_back(prevMid);
-      newIntermediates.push_back(mid);
-    }
-    else
-      newIntermediates.push_back(*cit1);
-
-    prevMid = mid;
-  }
-
-  //check last goal
-  CfgType mid = (_c2 + _lpOutput->m_intermediates.back())/2;
-
-  if(m_envLP.IsConnected(prevMid, mid, col, &lpOutput,
-        _posRes, _oriRes, true, true)) {
-    if(newIntermediates.empty() || newIntermediates.back() != prevMid)
-      newIntermediates.push_back(prevMid);
-    newIntermediates.push_back(mid);
-  }
-  else
-    newIntermediates.push_back(_lpOutput->m_intermediates.back());
-
-  //reconstruct new path
-  _lpOutput->m_path = ReconstructPath(_c1, _c2, newIntermediates,
-      _posRes, _oriRes);
-  _lpOutput->m_intermediates = newIntermediates;
-}
-*/
-
-#include <memory>
 template<class MPTraits>
 void
 MedialAxisLP<MPTraits>::
@@ -948,7 +829,7 @@ ReduceNoise(const CfgType& _c1, const CfgType& _c2,
 
   smoother->Modify(&tempGraph, path, newPath);
 
-  _lpOutput->m_path = ReconstructPath(_c1, _c2, newPath, _posRes, _oriRes);
+  _lpOutput->m_path = m_envLP.BlindPath(newPath, _posRes, _oriRes);
 }
 
 #endif
