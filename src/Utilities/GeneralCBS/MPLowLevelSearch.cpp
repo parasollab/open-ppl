@@ -1,7 +1,8 @@
 #include "MPLowLevelSearch.h"
 
 MPLowLevelSearch::
-MPLowLevelSearch(MPLibrary* _library) : m_library(_library) {}
+MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel) : 
+									LowLevelSearch(_tmpLibrary,_sgLabel,_vcLabel) {}
 
 bool
 MPLowLevelSearch::

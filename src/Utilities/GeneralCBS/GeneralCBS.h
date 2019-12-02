@@ -33,6 +33,20 @@ struct Assignment {
 		return m_execStartTime < _other.m_execStartTime;
 	}
 
+	bool operator==(const Assignment& _other) const {
+		return (m_agent 					== _other.m_agent and
+						m_task  					== _other.m_task and
+						m_setupPath 			== _other.m_setupPath and
+						m_execPath  			== _other.m_execPath and
+						m_setupStartTime 	== _other.m_setupStartTime and
+						m_execStartTime 	== _other.m_execStartTime and 
+						m_execEndTime 		== _other.m_execEndTime);
+	}
+
+	bool operator!=(const Assignment& _other) const {
+		return !((*this) == _other);
+	}
+
 };
 
 

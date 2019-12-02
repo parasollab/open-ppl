@@ -120,8 +120,8 @@ ITMethod::
 DecomposeTasks(){
 	auto td = this->GetTaskDecomposer(m_tdLabel);
 
-	Simulation::GetStatClass()->StartClock("IT Task Decomposition");
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
+		Simulation::GetStatClass()->StartClock("IT Task Decomposition");
     td->BreakupTask(wholeTask);
     Simulation::GetStatClass()->StopClock("IT Task Decomposition");
     Simulation::GetStatClass()->SetStat("Subtasks", wholeTask->m_subtasks.size());

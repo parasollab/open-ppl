@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "ConfigurationSpace/Path.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 #include "Traits/CfgTraits.h"
 
@@ -53,7 +54,7 @@ FindMotionConflict(GeneralCBSNode& _node) {
 	std::unordered_map<Agent*,std::vector<std::pair<
 					std::pair<size_t,size_t>,std::shared_ptr<SemanticTask>>>> m_pathTaskMap;
 
-	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+	auto sg = static_cast<CombinedRoadmap*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 
 	for(auto kv : agentAssignments) {
 		auto agent = kv.first;

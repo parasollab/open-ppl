@@ -66,6 +66,8 @@ class SemanticTask {
 
 		void AddSubtask(std::shared_ptr<SemanticTask> _task);
 
+		std::vector<std::shared_ptr<SemanticTask>> GetSubtasks();
+
 		///@}
 
 	private:

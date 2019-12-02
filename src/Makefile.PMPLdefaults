@@ -429,6 +429,7 @@ SIM_SRCS := \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
   TMPLibrary/TaskAllocators/AuctionMethod.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
+  TMPLibrary/TaskAllocators/TCBSAllocator.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
@@ -563,6 +564,7 @@ PMPL_SRCS := \
 	Utilities/GeneralCBS/LowLevelSearch.cpp \
 	Utilities/GeneralCBS/MotionValidation.cpp \
 	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/TCBSValidation.cpp \
 	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/Validation.cpp \
   Utilities/IOUtils.cpp \

@@ -11,7 +11,7 @@ class MPLowLevelSearch : public LowLevelSearch {
 	///@name Construction
 	///@{
 
-	MPLowLevelSearch(MPLibrary* _library);
+	MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel);
 
 	///@}
 	///@name Interface

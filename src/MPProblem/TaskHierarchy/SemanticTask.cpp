@@ -129,3 +129,9 @@ SemanticTask::
 AddSubtask(std::shared_ptr<SemanticTask> _task) {
 	m_subtasks.push_back(_task);
 }
+
+std::vector<std::shared_ptr<SemanticTask>> 
+SemanticTask::
+GetSubtasks() {
+	return m_subtasks;
+}
