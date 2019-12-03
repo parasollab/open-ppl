@@ -100,7 +100,7 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 		//	departTime = startTime - edge.GetWeight();
 		//}
 		//else {
-			auto plan = MotionPlan(g->GetVertex(_vid),startCfg);
+			auto plan = MotionPlan(g->GetVertex(_vid),startCfg,startTime);
 			departTime = startTime - plan.first;
 		//}
 
@@ -113,7 +113,7 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 		//	returnTime = endTime + edge.GetWeight();
 		//}
 		//else {
-			plan = MotionPlan(endCfg,g->GetVertex(_vid));
+			plan = MotionPlan(endCfg,g->GetVertex(_vid));//May need to perform a backwards search for this one
 			returnTime = endTime + plan.first;
 		//}
 
@@ -379,7 +379,7 @@ ComputeSetup(AvailElem _elem, double _minTime) {
 	//make sure the cost accounts for the start time and the transition time
 	
 	//temp until motion stuff is ready
-	auto plan = MotionPlan(startCfg,g->GetVertex(goalVID));
+	auto plan = MotionPlan(startCfg,g->GetVertex(goalVID),startTime, _minTime);
 
 	path = plan.second;
 
@@ -412,7 +412,7 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 
 	//make sure double in return pair is the arrival time including the initial start time cost
 
-	auto plan  = MotionPlan(g->GetVertex(startVID),g->GetVertex(_endVID));
+	auto plan  = MotionPlan(g->GetVertex(startVID),g->GetVertex(_endVID),_startTime);
 
 	path = plan.second; 
 
@@ -493,14 +493,15 @@ std::pair<double,std::vector<size_t>>
 TMPLowLevelSearch::
 MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 
-	m_currentRobot = _start.GetRobot();
+	//moved this stuff into low level search
+	/*m_currentRobot = _start.GetRobot();
 	auto agent = m_currentRobot->GetAgent();
 	m_currentMotionConstraints = &(m_motionConstraintMap[agent]);
-	
-	auto plan = this->LowLevelSearch::MotionPlan(_start,_goal);
-
+	*/
+	auto plan = this->LowLevelSearch::MotionPlan(_start,_goal,_startTime,_minEndTime);
+/*
 	m_currentRobot = nullptr;
 	m_currentMotionConstraints = nullptr;
-
+*/
 	return plan;
 }

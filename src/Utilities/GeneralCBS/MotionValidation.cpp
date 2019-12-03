@@ -161,6 +161,8 @@ FindMotionConflict(GeneralCBSNode& _node) {
 	
 	//Reset multibodies at initial location - not sure if this affects SimulatedState
 	for(auto kv : agentPaths) {
+		if(kv.second.empty())
+			continue;
 		auto cfg = kv.second[0];
 		auto robot = kv.first->GetRobot();
 		cfg.SetRobot(robot);

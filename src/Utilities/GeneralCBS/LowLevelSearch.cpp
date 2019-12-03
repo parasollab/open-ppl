@@ -16,14 +16,30 @@ LowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLab
 	auto query = dynamic_cast<QueryMethod<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
 									m_tmpLibrary->GetMPLibrary()->GetMapEvaluator(m_queryLabel).get());
 
+	auto query2 = dynamic_cast<QueryMethod<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
+									m_tmpLibrary->GetMPLibrary()->GetMapEvaluator("TwoVariableQuery").get());
+
 	if(!query) {
 		throw RunTimeException(WHERE) << "Query method " << m_queryLabel
 																	<< " is not of type QueryMethod."
 																	<< std::endl;
 	}
 
+	if(!query2) {
+		throw RunTimeException(WHERE) << "Query method " << "TwoVariableQuery"
+																	<< " is not of type QueryMethod."
+																	<< std::endl;
+	}
 	// Set the query method's path weight function.
 	query->SetPathWeightFunction(
+		[this](typename Roadmap::adj_edge_iterator& _ei,
+					 const double _sourceDistance,
+					 const double _targetDistance) { 
+			return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
+		}
+	);
+
+	query2->SetPathWeightFunction(
 		[this](typename Roadmap::adj_edge_iterator& _ei,
 					 const double _sourceDistance,
 					 const double _targetDistance) { 
@@ -41,9 +57,34 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 std::pair<double,std::vector<size_t>>
 LowLevelSearch::
 MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
+
+	
+	m_currentRobot = _start.GetRobot();
+	auto agent = m_currentRobot->GetAgent();
+	m_currentMotionConstraints = &(m_motionConstraintMap[agent]);
+
+
   if(_start.GetRobot()->GetCapability() != _goal.GetRobot()->GetCapability()){
     throw RunTimeException(WHERE, "start and goal are of mismatched robot types.");
   }
+
+	//Setup Query info
+	//auto query = dynamic_cast<QueryMethod<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
+	//								m_tmpLibrary->GetMPLibrary()->GetMapEvaluator(m_queryLabel).get());
+
+	auto query2 = dynamic_cast<QueryMethod<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
+									m_tmpLibrary->GetMPLibrary()->GetMapEvaluator("TwoVariableQuery").get());
+
+  auto upper = m_currentMotionConstraints->upper_bound(MAX_DBL);
+	double lastConstraint = upper->first * m_tmpLibrary->GetMPProblem()->GetEnvironment()->GetTimeRes();
+
+	//query->SetStartTime(_startTime);
+	//query->SetEndTime(_minEndTime);
+	//query->SetLastConstraintTime(lastConstraint);
+	query2->SetStartTime(_startTime);
+	query2->SetEndTime(_minEndTime);
+	query2->SetLastConstraintTime(lastConstraint);
+
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 /*
 	// adjust constraints to account for starting time
@@ -79,8 +120,16 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 
   solution->SetRoadmap(dummyAgent->GetRobot(),roadmap.get());
 
-  m_tmpLibrary->GetMPLibrary()->Solve(m_tmpLibrary->GetMPLibrary()->GetMPProblem(), task.get(), solution, "EvaluateMapStrategy",
-      LRand(), "LowerLevelGraphWeight");
+	
+	//Try to solve it without considering time first
+  //m_tmpLibrary->GetMPLibrary()->Solve(m_tmpLibrary->GetMPLibrary()->GetMPProblem(), 
+	//		task.get(), solution, "EvaluateMapStrategy", LRand(), "LowerLevelGraphWeight");
+
+	//If no solution is found, use the two varibale state search
+  //if(m_tmpLibrary->GetMPLibrary()->GetPath()->Cfgs().empty())
+  	m_tmpLibrary->GetMPLibrary()->Solve(m_tmpLibrary->GetMPLibrary()->GetMPProblem(), 
+				task.get(), solution, "TwoVariableStrategy", LRand(), "LowerLevelGraphWeight");
+		
 
   if(m_tmpLibrary->GetMPLibrary()->GetPath()->Cfgs().empty())
     return {};
@@ -89,6 +138,10 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
   m_tmpLibrary->GetMPLibrary()->SetTask(oldTask);
 	//m_currentMotionConstraints = unadjustedConstraints;
 	
+
+	m_currentRobot = nullptr;
+	m_currentMotionConstraints = nullptr;
+
 	return std::make_pair(solution->GetPath()->Length(),solution->GetPath(robot)->VIDs());
 }
 

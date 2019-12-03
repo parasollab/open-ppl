@@ -281,6 +281,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
     bool m_rewiring{false};     ///< Does this connector delete edges?
 
+		bool m_selfEdges{false}; 		///< Indicates if roadmap vertices should have self-edges.
+
     ///@}
 
 };
@@ -304,6 +306,9 @@ ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   m_maxFailures = _node.Read("maxFailures", false, m_maxFailures,
       size_t(0), std::numeric_limits<size_t>::max(),
       "Terminate Connect operations after this many failures (0 to disable).");
+	
+	m_selfEdges = _node.Read("selfEdges", false, m_selfEdges,
+			"Indicates if the connector should allow self edges.");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -443,6 +448,11 @@ ConnectNeighbors(AbstractRoadmapType* _r, VID _source,
       std::cout << "\t\tConnection " << (connected ? "succeeded" : "failed")
                 << "." << std::endl;
   }
+
+	//Connect vertices to themselves
+	if(m_selfEdges) {
+		this->ConnectNodes(_r, _source, _source, _collision);
+	}
 }
 
 

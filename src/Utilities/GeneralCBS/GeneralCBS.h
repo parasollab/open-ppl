@@ -8,7 +8,7 @@
 
 
 struct Assignment {
-	Agent* 													m_agent;
+	Agent* 													m_agent{nullptr};
 	std::shared_ptr<SemanticTask>		m_task;
 	std::vector<size_t>							m_setupPath;
 	std::vector<size_t>							m_execPath;

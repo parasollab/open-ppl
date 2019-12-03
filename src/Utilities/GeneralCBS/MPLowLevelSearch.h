@@ -8,30 +8,43 @@
 class MPLowLevelSearch : public LowLevelSearch {
   public:
 
-	///@name Construction
-	///@{
+		///@name Construction
+		///@{
 
-	MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel);
+		MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel);
 
-	///@}
-	///@name Interface
-	///@{
+		///@}
+		///@name Interface
+		///@{
 
-	///@input _node contains the solution we are trying to update
-	///@input _task is the task which has a new constraint and needs updating
-	///@output bool indicating if there is a valid plan for the task being updated
-	virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
+		///@input _node contains the solution we are trying to update
+		///@input _task is the task which has a new constraint and needs updating
+		///@output bool indicating if there is a valid plan for the task being updated
+		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
 	
-	//@}
+		//@}
 
   private:
-	
-	///@name Internal State
-	///@{
 
-	MPLibrary* m_library;
+		///@name Helper Functions
+		///@{
 
-	///@}
+		void ClearTaskPlan(Assignment& _assign, GeneralCBSNode& _node);
+
+		void ClearAgentAssignments(Assignment& _assign, GeneralCBSNode& _node);
+
+		bool PlanAssignments(GeneralCBSNode& _node);
+
+		bool PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous,
+												double _startTime = 0, double _minEndTime = 0);
+
+		///@}	
+		///@name Internal State
+		///@{
+
+		MPLibrary* m_library;
+
+		///@}
 
 };
 
