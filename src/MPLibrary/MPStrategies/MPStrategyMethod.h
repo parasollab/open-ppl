@@ -88,11 +88,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.
 
-    /// Virtual method used only in PRMWithRRTStrategy
-    /// @todo Remove this base-class clutter and find a more appropriate way to
-    ///       implement this.
-    virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
-
     ///@}
     ///@name Start/Goal Generation
     ///@{

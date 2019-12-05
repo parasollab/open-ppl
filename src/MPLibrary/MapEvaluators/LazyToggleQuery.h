@@ -231,10 +231,16 @@ ToggleConnect(const CfgType& _cfg) {
   auto tc = this->GetConnector(m_toggleConnect);
 
   vc->ToggleValidity();
-  if(m_iterative)
-    tc->Connect(blockedMap, newVID, std::front_inserter(m_q));
-  else
-    tc->Connect(blockedMap, newVID, std::back_inserter(m_q));
+  {
+    std::vector<CfgType> collisions;
+    auto iter = std::back_inserter(collisions);
+    tc->Connect(blockedMap, newVID, nullptr, &iter);
+
+    if(m_iterative)
+      std::copy(collisions.begin(), collisions.end(), std::front_inserter(m_q));
+    else
+      std::copy(collisions.begin(), collisions.end(), std::back_inserter(m_q));
+  }
   vc->ToggleValidity();
 
   if(this->m_debug) {

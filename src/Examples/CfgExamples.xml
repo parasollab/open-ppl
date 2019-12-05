@@ -239,7 +239,7 @@
     </PathModifiers>
 
     <Connectors>
-      <AdaptiveConnector label="AdaptiveCS" nfLabel="" lpLabel="sl"
+      <AdaptiveConnector label="AdaptiveCS" lpLabel="sl"
         percentRandom="0.5" checkIfSameCC="false" debug="false"
         uniformProbability="false" fixedCost="false" fixedReward="false">
         <NeighborFinder Method="BFNF"/>
@@ -247,11 +247,10 @@
         <NeighborFinder Method="RandomNF"/>
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
-      <!--
-      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
-      -->
-      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
-        checkIfSameCC="false" debug="false"/>
+      <CCsConnector label="ConnectCCs" debug="true"
+        nfLabel="BFNF" lpLabel="sl"/>
+      <NeighborhoodConnector label="Closest" debug="true"
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
@@ -344,24 +343,21 @@
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1">
+      <BasicPRM label="BasicPRM1" debug="true">
         <Sampler label="UniformRandomFree" number="1" attempts="1"/>
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="KdTree"/-->
-        <!--ComponentConnector label="ConnectCCs"/-->
         <Evaluator label="Query"/>
       </BasicPRM>
 
-      <!-- Basic PRM restarted from an input roadmap input.map at the beginning
-           of node connection -->
+      <!-- Basic PRM restarted from an input roadmap input.map. -->
       <BasicPRM label="BasicPRM2"
-        inputMap="input.map" startAt="connecting">
+        inputMap="input.map">
         <Sampler label="UniformRandomFree" number="10" attempts="10"/>
         <Connector label="Closest"/>
-        <ComponentConnector label="ConnectCCs"/>
         <Evaluator label="NodesEval"/>
       </BasicPRM>
 
@@ -470,13 +466,6 @@
         connectorLabel="Closest">
         <Evaluator label="NodesEval"/>
       </UtilityGuidedGenerator>
-
-      <!-- Push Query to MA -->
-      <PushQueryToMA label="PushQueryToMA"
-        inFilename="3D/3d.query" outFilename="3D/3d.ma.query"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"/>
 
       <!-- Modify Path -->
       <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>

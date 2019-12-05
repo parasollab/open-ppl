@@ -28,6 +28,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
 
     ///@}
     ///@name Local Types
@@ -48,6 +49,15 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
       { }
     };
 
+    /// @todo Figure out how to inherit this from the base class. No kind of
+    ///       using declaration/directive I could come up with will allow this.
+    template <typename AbstractRoadmapType>
+    using OutputIterator = std::back_insert_iterator<
+                             std::vector<
+                               typename AbstractRoadmapType::VP
+                             >
+                           >;
+
     ///@}
     ///@name Construction
     ///@{
@@ -59,24 +69,17 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     virtual ~RewireConnector() = default;
 
     ///@}
-    ///@name Connector Interface
+
+  protected:
+
+    ///@name ConnectorMethod Overrides
     ///@{
 
-    template <typename InputIterator1, typename InputIterator2,
-              typename OutputIterator>
-    void Connect(RoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
+    virtual void ConnectImpl(RoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<RoadmapType>* const _collision = nullptr) override;
 
-    template <typename InputIterator1, typename InputIterator2,
-              typename OutputIterator>
-    void Connect(GroupRoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
+    using ConnectorMethod<MPTraits>::m_neighborBuffer;
 
     ///@}
 
@@ -90,22 +93,20 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     /// @param _r         The containing roadmap.
     /// @param _vid       The vertex whos shortest path may be re-routed.
     /// @param _neighbors The set of potential new parents for _vid.
-    /// @param _collision Output iterator for collisions detected during
-    ///                   connection attempts.
-    template <typename OutputIterator>
+    /// @param _collision Optional output iterator for collisions.
     void RewireVertex(RoadmapType* const _r, const VID _vid,
-        const std::vector<Neighbor>& _neighbors, OutputIterator _collision);
+        const std::vector<Neighbor>& _neighbors,
+        OutputIterator<RoadmapType>* const _collision);
 
     /// Attempt to rewire the nearest-neighbors of a vertex _vid through itself
     /// if doing so results in a shorter path to the nearest root vertex.
     /// @param _r         The containing roadmap.
     /// @param _vid       The vertex whos shortest path may be re-routed.
     /// @param _neighbors The set of potential new parents for _vid.
-    /// @param _collision Output iterator for collisions detected during
-    ///                   connection attempts.
-    template <typename OutputIterator>
+    /// @param _collision Output iterator for collisions.
     void RewireNeighbors(RoadmapType* const _r, const VID _vid,
-        const std::vector<Neighbor>& _neighbors, OutputIterator _collision);
+        const std::vector<Neighbor>& _neighbors,
+        OutputIterator<RoadmapType>* const _collision);
 
     /// Check if a vertex should be rewired through a new parent.
     /// @param _r                   The containing roadmap.
@@ -114,14 +115,12 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     /// @param _currentCost         The vertex's current cost.
     /// @param _potentialParent     The potential parent to check.
     /// @param _potentialParentCost The cost to reach the potential parent.
-    /// @param _collision           Output iterator for collisions detected
-    ///                             during connection attempts.
+    /// @param _collision           Output iterator for collisions.
     /// @return A rewire test output indicating success and generated lp/cost.
-    template <typename OutputIterator>
     RewireTestOutput RewireTest(RoadmapType* const _r, const VID _vid,
         const VID _currentParent, const double _currentCost,
         const VID _potentialParent, const double _potentialParentCost,
-        OutputIterator _collision) noexcept;
+        OutputIterator<RoadmapType>* const _collision) noexcept;
 
     /// Trace the path from one vertex to another through the parent chain to
     /// determine the shortest path.
@@ -220,7 +219,6 @@ RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
                                           << std::endl;
   }
 
-
   // Parse the objective function.
   {
     const std::string choices = "Choices are 'min' (minimum) or 'max' (maximum).";
@@ -242,66 +240,37 @@ RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   }
 }
 
-/*--------------------------- Connector Interface ----------------------------*/
+/*------------------------ ConnectorMethod Overrides -------------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator1, typename InputIterator2,
-          typename OutputIterator>
 void
 RewireConnector<MPTraits>::
-Connect(RoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
-  if(this->m_debug)
-    std::cout << this->GetName() << "::Connect"
-              << std::endl;
-
+ConnectImpl(RoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<RoadmapType>* const _collision) {
+  // Determine nearest neighbors.
+  const auto& cfg = _r->GetVertex(_source);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  m_neighborBuffer.clear();
+  if(_targetSet)
+    nf->FindNeighbors(_r, cfg, *_targetSet, m_neighborBuffer);
+  else
+    nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
 
-  // Attempt to connect each element in the first range to each element in the
-  // second.
-  std::vector<Neighbor> closest;
-  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
-    // Get the VID and cfg.
-    const VID vid = _r->GetVID(itr1);
-    const auto& cfg = _r->GetVertex(vid);
-
-    // Determine nearest neighbors.
-    closest.clear();
-    nf->FindNeighbors(_r, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
-        std::back_inserter(closest));
-
-    // Attempt to rewire this vertex with a better parent.
-    RewireVertex(_r, vid, closest, _collision);
-    // Attempt to rewire the closest through vid.
-    RewireNeighbors(_r, vid, closest, _collision);
-  }
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator1, typename InputIterator2,
-          typename OutputIterator>
-void
-RewireConnector<MPTraits>::
-Connect(GroupRoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
-  throw NotImplementedException(WHERE);
+  // Attempt to rewire this vertex with a better parent.
+  RewireVertex(_r, _source, m_neighborBuffer, _collision);
+  // Attempt to rewire the neighbors through _source.
+  RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
-template <typename OutputIterator>
 void
 RewireConnector<MPTraits>::
 RewireVertex(RoadmapType* const _r, const VID _vid,
-    const std::vector<Neighbor>& _neighbors, OutputIterator _collision) {
+    const std::vector<Neighbor>& _neighbors,
+    OutputIterator<RoadmapType>* const _collision) {
   // Check the current best path cost from the root to _vid.
   double    bestCost      = ShortestPathWeight(_r, _vid);
   const VID oldParentVID  = *_r->GetPredecessors(_vid).begin();
@@ -354,11 +323,11 @@ RewireVertex(RoadmapType* const _r, const VID _vid,
 
 
 template <typename MPTraits>
-template <typename OutputIterator>
 void
 RewireConnector<MPTraits>::
 RewireNeighbors(RoadmapType* const _r, const VID _vid,
-    const std::vector<Neighbor>& _neighbors, OutputIterator _collision) {
+    const std::vector<Neighbor>& _neighbors,
+    OutputIterator<RoadmapType>* const _collision) {
   const double vidCost = ShortestPathWeight(_r, _vid);
 
   if(this->m_debug)
@@ -410,13 +379,12 @@ RewireNeighbors(RoadmapType* const _r, const VID _vid,
 
 
 template <typename MPTraits>
-template <typename OutputIterator>
 typename RewireConnector<MPTraits>::RewireTestOutput
 RewireConnector<MPTraits>::
 RewireTest(RoadmapType* const _r, const VID _vid,
     const VID _currentParent,   const double _currentCost,
     const VID _potentialParent, const double _potentialParentCost,
-    OutputIterator _collision) noexcept {
+    OutputIterator<RoadmapType>* const _collision) noexcept {
   // Skip rewiring through the same parent.
   if(_potentialParent == _currentParent) {
     if(this->m_debug)
@@ -438,7 +406,7 @@ RewireTest(RoadmapType* const _r, const VID _vid,
   }
 
   // Check for previous failures to generate this local plan.
-  const bool previouslyFailed = this->IsCached(_potentialParent, _vid);
+  const bool previouslyFailed = this->IsCached(_r, _potentialParent, _vid);
   if(previouslyFailed) {
     if(this->m_debug)
       std::cout << "\t\tNot rewiring node " << _vid << " because the path ("
@@ -460,10 +428,11 @@ RewireTest(RoadmapType* const _r, const VID _vid,
       env->GetOrientationRes());
 
   if(!success) {
-    _collision++ = collision;
+    if(_collision)
+      *_collision = collision;
     // Cache both directions since LPs must generate symmetric plans.
-    this->CacheFailedConnection(_potentialParent, _vid);
-    this->CacheFailedConnection(_vid, _potentialParent);
+    this->CacheFailedConnection(_r, _potentialParent, _vid);
+    this->CacheFailedConnection(_r, _vid, _potentialParent);
     if(this->m_debug)
       std::cout << "\t\tNot rewiring node " << _vid << " because the path ("
                 << _potentialParent << ", " << _vid

@@ -1264,6 +1264,37 @@ ToString(const HookType& _t) const noexcept {
   }
 }
 
+/*----------------------------------------------------------------------------*/
+
+/// Find the intersection of two vertex sets.
+/// @param _a The first set.
+/// @param _b The second set.
+/// @return The intersection of _a and _b.
+inline
+std::unordered_set<size_t>
+IntersectVertexSets(const std::unordered_set<size_t>& _a,
+                    const std::unordered_set<size_t>& _b) {
+  using VertexSet = std::unordered_set<size_t>;
+
+  // Find the smaller of the two sets.
+  const VertexSet* smaller,
+                 * larger;
+  if(_a.size() < _b.size()) {
+    smaller = &_a;
+    larger  = &_b;
+  }
+  else {
+    smaller = &_b;
+    larger  = &_a;
+  }
+
+  // Test each element in the smaller set for membership in the larger one.
+  VertexSet intersection;
+  std::copy_if(smaller->begin(), smaller->end(),
+               std::inserter(intersection, intersection.end()),
+               [larger](const size_t _vid) {return larger->count(_vid);});
+  return intersection;
+}
 
 /*----------------------------------------------------------------------------*/
 

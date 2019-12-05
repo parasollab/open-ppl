@@ -38,8 +38,6 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    enum Start {Sampling, Connecting, ConnectingComponents, Evaluating};
-
     /// Settings for a specific sampler.
     struct SamplerSetting {
       std::string label;
@@ -78,26 +76,12 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     ///@{
 
     /// Sample and add configurations to the roadmap.
-    /// @tparam OutputIterator Output iterator on data structure of VIDs
-    /// @param _out Data structure of VIDs of added nodes.
-    template <typename OutputIterator>
-    void Sample(OutputIterator _out);
+    /// @return The generated VIDs for the successful samples.
+    std::vector<VID> Sample();
 
-    /// Connect nodes and CCs of the roadmap
-    /// @tparam InputIterator Iterator on data structure of VIDs/graph nodes
-    /// @param _first Begin iterator over VIDs/graph nodes
-    /// @param _last End iterator over VIDs/graph nodes
-    /// @param _labels Connector labels used in connection
-    template <class InputIterator>
-    void Connect(InputIterator _first, InputIterator _last,
-        const std::vector<std::string>& _labels);
-
-    /// Iterate over range and check nodes to be within narrow passage
-    /// @tparam InputIterator Iterator on data structure of VIDs
-    /// @param _first Begin iterator over VIDs
-    /// @param _last End iterator over VIDs
-    template <class InputIterator>
-    void CheckNarrowPassageSamples(InputIterator _first, InputIterator _last);
+    /// Connect nodes in the roadmap.
+    /// @param _vids A set of node VIDs to connect to the rest of the roadmap.
+    void Connect(const std::vector<VID>& _vids);
 
     ///@}
     ///@name Internal State
@@ -107,13 +91,8 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     std::vector<SamplerSetting> m_samplers;
     /// Connector labels for node-to-node.
     std::vector<std::string> m_connectorLabels;
-    /// Connector labels for cc-to-cc.
-    std::vector<std::string> m_componentConnectorLabels;
 
     std::string m_inputMapFilename; ///< Input roadmap to initialize map
-
-    /// When inputting a roadmap, specifies where in algorithm to start.
-    Start m_startAt{Sampling};
 
     ///@}
     ///@name Fix-base hacks
@@ -145,24 +124,6 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
 
   m_inputMapFilename = _node.Read("inputMap", false, "",
       "filename of roadmap to start from");
-  std::string startAt = _node.Read("startAt", false, "sampling",
-      "point of algorithm where to begin at: \
-      \"sampling\" (default), \"connecting\", \
-      \"connectingcomponents\", \"evaluating\"");
-  if(startAt == "sampling")
-    m_startAt = Sampling;
-  else if(startAt == "connecting")
-    m_startAt = Connecting;
-  else if(startAt == "connectingcomponents")
-    m_startAt = ConnectingComponents;
-  else if(startAt == "evaluating")
-    m_startAt = Evaluating;
-  else
-    throw ParseException(_node.Where()) << "Start at is '" << startAt << "'. "
-                                        << "Choices are 'sampling', "
-                                        << "'connecting', "
-                                        << "'connectingComponents', "
-                                        << "'evaluating'.";
 
   for(auto& child : _node) {
     if(child.Name() == "Sampler") {
@@ -177,9 +138,6 @@ BasicPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
     else if(child.Name() == "Connector")
       m_connectorLabels.push_back(
           child.Read("label", true, "", "Connector Label"));
-    else if(child.Name() == "ComponentConnector")
-      m_componentConnectorLabels.push_back(
-          child.Read("label", true, "", "Component Connector Label"));
   }
 
   // Temporary hack for fixing the base.
@@ -196,15 +154,6 @@ Print(std::ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
   _os << "\tInput Map: " << m_inputMapFilename << std::endl;
 
-  _os << "\tStart At: ";
-  switch(m_startAt) {
-    case Sampling: _os << "sampling"; break;
-    case Connecting: _os << "connecting"; break;
-    case ConnectingComponents: _os << "connectingcomponents"; break;
-    case Evaluating: _os << "evaluating"; break;
-  }
-  std::cout << std::endl;
-
   _os << "\tSamplers" << std::endl;
   for(const auto& sampler : m_samplers)
     _os << "\t\t" << sampler.label
@@ -214,10 +163,6 @@ Print(std::ostream& _os) const {
 
   _os << "\tConnectors" << std::endl;
   for(const auto& label : m_connectorLabels)
-    _os << "\t\t" << label << std::endl;
-
-  _os << "\tComponentConnectors" << std::endl;
-  for(const auto& label : m_componentConnectorLabels)
     _os << "\t\t" << label << std::endl;
 }
 
@@ -255,7 +200,7 @@ Initialize() {
   // Try to connect the starts/goals to any existing nodes.
   if(start != INVALID_VID)
     goals.push_back(start);
-  Connect(goals.begin(), goals.end(), m_connectorLabels);
+  Connect(goals);
 
   // Hacks for fixing the base.
   if(m_fixBase) {
@@ -288,57 +233,32 @@ template <typename MPTraits>
 void
 BasicPRM<MPTraits>::
 Iterate() {
-  std::vector<VID> vids;
+  // Sample new configurations.
+  const std::vector<VID> vids = Sample();
 
-  switch(m_startAt) {
-
-    case Sampling:
-      Sample(std::back_inserter(vids));
-
-    case Connecting:
-      {
-        if(m_startAt == Connecting) {
-          auto g = this->GetRoadmap();
-          Connect(g->begin(), g->end(), m_connectorLabels);
-          //For spark prm to grow RRT at difficult nodes
-          CheckNarrowPassageSamples(g->begin(), g->end());
-        }
-        else {
-          Connect(vids.begin(), vids.end(), m_connectorLabels);
-          //For spark prm to grow RRT at difficult nodes
-          CheckNarrowPassageSamples(vids.begin(), vids.end());
-        }
-      }
-
-    case ConnectingComponents:
-      {
-        auto g = this->GetRoadmap();
-        Connect(g->begin(), g->end(), m_componentConnectorLabels);
-      }
-
-    default:
-      break;
-  }
-  m_startAt = Sampling;
+  // If we sampled any valid configurations, try to connect them to the roadmap.
+  if(vids.size())
+    Connect(vids);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
-template<typename OutputIterator>
-void
+std::vector<typename MPTraits::RoadmapType::VID>
 BasicPRM<MPTraits>::
-Sample(OutputIterator _out) {
+Sample() {
   if(this->m_debug)
     std::cout << "Sampling new nodes..." << std::endl;
 
-  MethodTimer mt(this->GetStatClass(), "BasicPRM::Sample");
-  auto g = this->GetRoadmap();
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::Sample");
+
   //const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
   auto boundary = m_samplingBoundary.get() ? m_samplingBoundary.get()
                                         : this->GetEnvironment()->GetBoundary();
 
   // Generate nodes with each sampler.
+  auto g = this->GetRoadmap();
+  std::vector<VID> out;
   std::vector<CfgType> samples;
   for(auto& sampler : m_samplers) {
     samples.clear();
@@ -354,61 +274,37 @@ Sample(OutputIterator _out) {
                 << std::endl;
 
     // Add valid samples to roadmap.
-    for(auto& sample : samples) {
-      const VID vid = g->AddVertex(sample);
-      *_out++ = vid;
-    }
+    out.reserve(out.size() + samples.size());
+    for(auto& sample : samples)
+      out.push_back(g->AddVertex(sample));
   }
+
+  return out;
 }
 
 
 template <typename MPTraits>
-template<class InputIterator>
 void
 BasicPRM<MPTraits>::
-Connect(InputIterator _first, InputIterator _last,
-    const std::vector<std::string>& _labels) {
-  MethodTimer mt(this->GetStatClass(), "BasicPRM::Connect");
+Connect(const std::vector<VID>& _vids) {
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::Connect");
 
   if(this->m_debug)
     std::cout << "Connecting..." << std::endl;
 
-  for(const auto& label : _labels) {
+  auto r = this->GetRoadmap();
+  for(const auto& label : m_connectorLabels) {
     if(this->m_debug)
-      std::cout << "\tUsing connector '" << label << "'.\n";
+      std::cout << "\tUsing connector '" << label << "'." << std::endl;
 
-    auto c = this->GetConnector(label);
-    c->Connect(this->GetRoadmap(), _first, _last);
+    this->GetConnector(label)->Connect(r, _vids.begin(), _vids.end());
   }
 
-  if(this->m_debug) {
-    auto g = this->GetRoadmap();
-    std::cout << "\tGraph has "
-              << g->get_num_edges() << " edges and "
-              << g->GetCCTracker()->GetNumCCs() << " connected components."
-              << std::endl;
-  }
-}
-
-
-template <typename MPTraits>
-template<class InputIterator>
-void
-BasicPRM<MPTraits>::
-CheckNarrowPassageSamples(InputIterator _first, InputIterator _last) {
-  MethodTimer mt(this->GetStatClass(), "BasicPRM::CheckNarrowPassageSamples");
-
-  /// @todo This adds O(n) to each iteration regardless of whether it is used,
-  ///       try to rework the design.
   if(this->m_debug)
-    std::cout << this->GetName() << "::CheckNarrowPassageSamples"
+    std::cout << "\tGraph has "
+              << r->get_num_edges() << " edges and "
+              << r->GetCCTracker()->GetNumCCs() << " connected components."
               << std::endl;
-
-  for(; _first != _last; _first++) {
-    const VID vid = this->GetRoadmap()->GetVID(_first);
-    if(this->CheckNarrowPassageSample(vid))
-      break;
-  }
 }
 
 /*----------------------------------------------------------------------------*/

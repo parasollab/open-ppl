@@ -5,7 +5,11 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO
+/// Adaptively selects from a set of neighborhood finders with probability
+/// weighted by success rate.
+///
+/// @todo Add paper reference, I think it was Chinwe's ANC work?
+///
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -13,13 +17,27 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    /// @todo Figure out how to inherit this from the base class. No kind of
+    ///       using declaration/directive I could come up with will allow this.
+    template <typename AbstractRoadmapType>
+    using OutputIterator = std::back_insert_iterator<
+                             std::vector<
+                               typename AbstractRoadmapType::VP
+                             >
+                           >;
 
     ///@}
     ///@name Construction
@@ -40,30 +58,19 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     virtual void Initialize() override;
 
     ///@}
-    ///@name Connector Interface
-    ///@{
-
-    template <typename InputIterator1, typename InputIterator2,
-              typename OutputIterator>
-    void Connect(RoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
-
-
-    template <typename InputIterator1, typename InputIterator2,
-              typename OutputIterator>
-    void Connect(GroupRoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
-
-    ///@}
 
   protected:
 
+    ///@name ConnectorMethod Overrides
+    ///@{
+
+    virtual void ConnectImpl(RoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<RoadmapType>* const _collision = nullptr) override;
+
+    using ConnectorMethod<MPTraits>::m_neighborBuffer;
+
+    ///@}
     ///@name Helpers
     ///@{
 
@@ -79,7 +86,7 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    std::vector<std::string> m_neigborGenLabels;
+    std::vector<std::string> m_nfLabels;
     bool m_setUniform;
     double m_percentageRandom;
     bool m_fixedCost;
@@ -120,7 +127,7 @@ AdaptiveConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   for(auto& child : _node) {
     if(child.Name() == "NeighborFinder"){
       std::string nodeNfMethod = child.Read("Method",true,"","Method");
-      m_neigborGenLabels.push_back(nodeNfMethod);
+      m_nfLabels.push_back(nodeNfMethod);
       int initialCost = child.Read("initialCost", false, 1, 1, MAX_INT,
           "initialCost at the start of the learn phase");
       m_nfCosts[nodeNfMethod] = initialCost;
@@ -129,9 +136,6 @@ AdaptiveConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
       m_nfWeights[nodeNfMethod] = initialWeight;
     }
   }
-
-  if(_node.Read("nfLabel", true, "", "Neighborhood Finder") != "")
-    throw ParseException(_node.Where(), "nfLabel should be specified as ''.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -146,11 +150,11 @@ Print(std::ostream& _os) const {
       << "\tfixedCost = " << m_fixedCost
       << "\tfixedReward = " << m_fixedReward
       << "\tNeighborFinders Used = ";
-  for(const auto& label : m_neigborGenLabels)
+  for(const auto& label : m_nfLabels)
     _os << " " << label;
 
   _os << "\nmethod\tprob\tprob_no_cost\tweight\tavg_cost\ttimes_used\n";
-  for(const auto& label : m_neigborGenLabels) {
+  for(const auto& label : m_nfLabels) {
     _os << label << "\t"
         << m_nfProbabilities.at(label) << "\t"
         << m_nfProbabilitiesWithNoCost.at(label) << "\t"
@@ -167,6 +171,8 @@ template <typename MPTraits>
 void
 AdaptiveConnector<MPTraits>::
 Initialize() {
+  ConnectorMethod<MPTraits>::Initialize();
+
   m_lastUse.clear();
   m_nfProbabilities.clear();
   m_nfWeights.clear();
@@ -174,99 +180,67 @@ Initialize() {
   m_nfProbabilitiesWithNoCost.clear();
   m_nfCosts.clear();
 
-  for(const auto& label : m_neigborGenLabels) {
+  for(const auto& label : m_nfLabels) {
     m_nfCosts[label] = 1;
     m_nfWeights[label] = 1;
-    // all the probalities are assigned one at the beginning.
-    m_nfProbabilities[label] = 1. / m_neigborGenLabels.size();
-    m_nfProbabilitiesWithNoCost[label] = 1. / m_neigborGenLabels.size();
+    // all the probalities are equal at the beginning.
+    m_nfProbabilities[label] = 1. / m_nfLabels.size();
+    m_nfProbabilitiesWithNoCost[label] = 1. / m_nfLabels.size();
   }
 }
 
 /*--------------------------- Connector Interface ----------------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator1, typename InputIterator2,
-          typename OutputIterator>
 void
 AdaptiveConnector<MPTraits>::
-Connect(RoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
-  if(m_nfProbabilities.empty() ||
-      m_neigborGenLabels.size() != m_nfProbabilities.size())
-    Initialize();
+ConnectImpl(RoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<RoadmapType>* const _collision) {
+  /// @todo No static data are allowed within our algorithms, this breaks both
+  ///       thread-safety and correct operation with multiple roadmaps.
+  static double prevConnectionAttempt = 0, prevConnectionSuccess = 0;
+  static unsigned long int prevConnectionCollision = 0;
 
-  // the vertices in this iteration are the source for the connection operation
-  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
-     static double prevConnectionAttempt = 0, prevConnectionSuccess = 0;
-     static unsigned long int prevConnectionCollision = 0;
+  double currAttempts = get<0>(this->GetStatClass()->m_lpInfo.begin()->second);
+  double currSuccess  = get<1>(this->GetStatClass()->m_lpInfo.begin()->second);
+  unsigned long int currCollision = this->GetStatClass()->GetIsCollTotal();
 
-     double currAttempts = get<0>(this->GetStatClass()->m_lpInfo.begin()->second);
-     double currSuccess  = get<1>(this->GetStatClass()->m_lpInfo.begin()->second);
-     unsigned long int currCollision = this->GetStatClass()->GetIsCollTotal();
-
-     double reward = 0;
-     unsigned long int cost=0;
-     if(m_lastUse !=""){
-       reward = currSuccess/currAttempts;
-       if(prevConnectionAttempt != 0)
-         reward = (currSuccess - prevConnectionSuccess) /
-           (currAttempts - prevConnectionAttempt);
-       cost = (double)(currCollision - prevConnectionCollision);
-     }
-
-     if(this->m_debug){
-       std::cout << "curr collision" << currCollision << std::endl;
-       std::cout << "pre collision" << prevConnectionCollision << std::endl;
-     }
-     prevConnectionAttempt = currAttempts;
-     prevConnectionSuccess = currSuccess;
-     prevConnectionCollision= currCollision;
-     if(m_nfConnected[this->m_lastUse] !=0){
-       RewardUpdateProbability(reward, cost,prevConnectionAttempt);
-     }
-     this->m_lastUse = UpdateNFChoice();
-     m_nfConnected[this->m_lastUse]++;
-
-     // find cfg pointed to by itr1
-     VID vid = _r->GetVID(itr1);
-     CfgType& vCfg = _r->GetVertex(itr1);
-     if(this->m_debug)
-       std::cout << (itr1 - _itr1First)
-         << "\tAttempting connections: VID = "
-         << vid << "  --> Cfg = " << vCfg << std::endl;
-
-     //determine nearest neighbors
-     std::vector<Neighbor> closest;
-     auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
-     nfptr->FindNeighbors(_r, _itr2First, _itr2Last, _fromFullRoadmap, vCfg,
-         std::back_inserter(closest));
-     if(this->m_debug){
-       std::cout << "Neighbors | ";
-       for(auto nit = closest.begin(); nit != closest.end(); ++nit)
-         std::cout << nit->target << " ";
-     }
-
-     //test connections through LP
-     this->ConnectNeighbors(_r, vid, closest.begin(), closest.end(), _collision);
+  double reward = 0;
+  unsigned long int cost=0;
+  if(m_lastUse !=""){
+    reward = currSuccess/currAttempts;
+    if(prevConnectionAttempt != 0)
+      reward = (currSuccess - prevConnectionSuccess) /
+        (currAttempts - prevConnectionAttempt);
+    cost = (double)(currCollision - prevConnectionCollision);
   }
-}
 
+  if(this->m_debug){
+    std::cout << "curr collision" << currCollision << std::endl;
+    std::cout << "pre collision" << prevConnectionCollision << std::endl;
+  }
+  prevConnectionAttempt = currAttempts;
+  prevConnectionSuccess = currSuccess;
+  prevConnectionCollision= currCollision;
+  if(m_nfConnected[this->m_lastUse] !=0){
+    RewardUpdateProbability(reward, cost,prevConnectionAttempt);
+  }
+  this->m_lastUse = UpdateNFChoice();
+  m_nfConnected[this->m_lastUse]++;
 
-template <typename MPTraits>
-template <typename InputIterator1, typename InputIterator2,
-          typename OutputIterator>
-void
-AdaptiveConnector<MPTraits>::
-Connect(GroupRoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
-  throw NotImplementedException(WHERE);
+  const CfgType& vCfg = _r->GetVertex(_source);
+
+  //determine nearest neighbors
+  m_neighborBuffer.clear();
+  auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
+  if(_targetSet)
+    nfptr->FindNeighbors(_r, vCfg, *_targetSet, m_neighborBuffer);
+  else
+    nfptr->FindNeighbors(_r, vCfg, std::back_inserter(m_neighborBuffer));
+
+  //test connections through LP
+  this->ConnectNeighbors(_r, _source, m_neighborBuffer, _collision);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -281,15 +255,15 @@ UpdateNFChoice() {
 
   if(this->m_debug)
     std::cout << "\nmethod\tprob\trange_min\trange_max\n";
-  for(auto NF = m_neigborGenLabels.begin();
-      NF != m_neigborGenLabels.end(); ++NF) {
+  for(auto NF = m_nfLabels.begin();
+      NF != m_nfLabels.end(); ++NF) {
     if(m_setUniform)
-      nfProb = double(1.0/m_neigborGenLabels.size());
+      nfProb = double(1.0/m_nfLabels.size());
     else
       nfProb = m_nfProbabilities[*NF];
 
     double upperBound = 0;
-    if(NF +1 != m_neigborGenLabels.end())
+    if(NF +1 != m_nfLabels.end())
       upperBound = proSum + nfProb;
     else
       upperBound = 1.0; // do this only in the last number
@@ -304,15 +278,15 @@ UpdateNFChoice() {
 
   if(m_setUniform) {
     std::string maxGen = "";
-    int rand =int(DRand() * m_neigborGenLabels.size()) ;
-    maxGen= m_neigborGenLabels[rand];
+    int rand =int(DRand() * m_nfLabels.size()) ;
+    maxGen= m_nfLabels[rand];
     return maxGen;
   }
   else {
     //select NF based on probability ranges
     double randomNum = DRand();
-    for(auto NF = m_neigborGenLabels.begin();
-        NF != m_neigborGenLabels.end(); ++NF){
+    for(auto NF = m_nfLabels.begin();
+        NF != m_nfLabels.end(); ++NF){
       if(mapProRange[*NF].first <=randomNum && randomNum < mapProRange[*NF].second) {
         if(this->m_debug)
           std::cout << "randomNum = " << randomNum << "\tselecting method "
@@ -330,7 +304,7 @@ void
 AdaptiveConnector<MPTraits>::
 RewardUpdateProbability(double _reward, unsigned long int _cost,
     int _prevConnectionAttempt) {
-  int neigborSize = m_neigborGenLabels.size();
+  int neigborSize = m_nfLabels.size();
 
   //update costs
   if(!m_fixedCost){
@@ -353,18 +327,18 @@ RewardUpdateProbability(double _reward, unsigned long int _cost,
 
   //update probability
   double weightTotal= 0;
-  for(auto NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF)
+  for(auto NF = m_nfLabels.begin(); NF != m_nfLabels.end(); ++NF)
     weightTotal +=m_nfWeights[*NF];
 
   double probCostTotal = 0.0;
-  for(auto NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF){
+  for(auto NF = m_nfLabels.begin(); NF != m_nfLabels.end(); ++NF){
     m_nfProbabilitiesWithNoCost[*NF] = (1 - m_percentageRandom) * (m_nfWeights[*NF] / weightTotal) + (m_percentageRandom /neigborSize);
     probCostTotal += double(m_nfProbabilitiesWithNoCost[*NF]/ double(m_nfCosts[*NF]));
   }
 
   if(this->m_debug)
     std::cout << "new probabilities: ";
-  for(auto NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF) {
+  for(auto NF = m_nfLabels.begin(); NF != m_nfLabels.end(); ++NF) {
     m_nfProbabilities[*NF] =  (m_nfProbabilitiesWithNoCost[*NF]/double(m_nfCosts[*NF]) )/ probCostTotal;
     if(this->m_debug){
       std::cout<<m_nfProbabilities[*NF]<<" ";
@@ -375,13 +349,13 @@ RewardUpdateProbability(double _reward, unsigned long int _cost,
 
   if(!m_fixedReward) {
     double smallestWeight = -1;
-    for(auto NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF){
+    for(auto NF = m_nfLabels.begin(); NF != m_nfLabels.end(); ++NF){
       double weight = m_nfWeights[*NF];
 
       if(weight < smallestWeight || smallestWeight == -1)
         smallestWeight = weight;
     }
-    for(auto NF = m_neigborGenLabels.begin(); NF != m_neigborGenLabels.end(); ++NF)
+    for(auto NF = m_nfLabels.begin(); NF != m_nfLabels.end(); ++NF)
       m_nfWeights[*NF] = m_nfWeights[*NF] / smallestWeight;
   }
 }
