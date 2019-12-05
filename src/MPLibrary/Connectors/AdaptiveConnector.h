@@ -30,14 +30,9 @@ class AdaptiveConnector: public ConnectorMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    /// @todo Figure out how to inherit this from the base class. No kind of
-    ///       using declaration/directive I could come up with will allow this.
     template <typename AbstractRoadmapType>
-    using OutputIterator = std::back_insert_iterator<
-                             std::vector<
-                               typename AbstractRoadmapType::VP
-                             >
-                           >;
+    using OutputIterator = typename ConnectorMethod<MPTraits>::template
+                           OutputIterator<AbstractRoadmapType>;
 
     ///@}
     ///@name Construction
