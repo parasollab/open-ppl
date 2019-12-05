@@ -11,7 +11,7 @@ class MPLowLevelSearch : public LowLevelSearch {
 		///@name Construction
 		///@{
 
-		MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel);
+		MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel, bool _debug=false);
 
 		///@}
 		///@name Interface
@@ -38,6 +38,8 @@ class MPLowLevelSearch : public LowLevelSearch {
 		bool PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous,
 												double _startTime = 0, double _minEndTime = 0);
 
+		bool PatchPaths(GeneralCBSNode& _node, Assignment& _assign, Cfg _setupCfg, 
+										Cfg _startCfg, double _setupStart);
 		///@}	
 		///@name Internal State
 		///@{

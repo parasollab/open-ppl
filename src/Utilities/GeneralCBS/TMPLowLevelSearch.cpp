@@ -7,8 +7,8 @@
 #include "TMPLibrary/TMPLibrary.h"
 
 TMPLowLevelSearch::
-TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel) : 
-									LowLevelSearch(_tmpLibrary,_sgLabel,_vcLabel) {}
+TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel, bool _debug) : 
+									LowLevelSearch(_tmpLibrary,_sgLabel,_vcLabel,_debug) {}
 
 /*----------------------------------- Interface -----------------------------------*/
 bool

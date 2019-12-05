@@ -22,6 +22,7 @@ TCBSAllocator(XMLNode& _node) : TaskAllocatorMethod(_node) {
 	this->SetName("TCBSAllocator");
 	m_sgLabel = _node.Read("sgLabel", true, "", "State graph label for TCBSAllocator.");
 	m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label for TCBSAllocator.");
+	m_lowLevelDebug = _node.Read("llDebug", false, false, "Debug flag for low level search.");
 }
 
 TCBSAllocator::
@@ -33,7 +34,7 @@ AllocateTasks() {
 
 	auto decomp = CreateDecomposition(this->GetTaskPlan()->GetWholeTasks());
 	
-	MPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel);
+	MPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_lowLevelDebug);
 
 	auto tcbs = new TCBSValidation(this->GetMPLibrary(),&lowLevel, this->GetTMPLibrary());
 	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);

@@ -70,8 +70,9 @@ ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 	if(unallocated.empty())
 		return true;
 
+	std::cout << "Creating TCBS Children" << std::endl;
 	CreateAllocationChildren(_node, _tree, unallocated, occupied);
-
+	std::cout << "Created TCBS Children" << std::endl;
 	return false;
 }
 
@@ -87,13 +88,18 @@ CreateAllocationChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree,
 				continue;
 
 			GeneralCBSNode child(_node);
-			for(auto& a : child.GetSolutionRef().m_taskPlans[assign.m_task->GetParent()]) {
+			auto& solution = child.GetSolutionRef();
+			auto& taskPlan = solution.m_taskPlans[assign.m_task->GetParent()];
+
+			for(auto& a : taskPlan) {
 				if(a != assign) 
 					continue;
 				a.m_agent = agent;
+				auto& assignments = solution.m_agentAssignments[a.m_agent];
+				assignments.push_back(a);
+				if(m_lowLevel->UpdateSolution(child,assign.m_task->GetParent()))
+					_tree.push(child);
 				break;
-				m_lowLevel->UpdateSolution(child,assign.m_task);
-				_tree.push(child);
 			}
 		}
 	}

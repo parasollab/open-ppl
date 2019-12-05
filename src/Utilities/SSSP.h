@@ -322,6 +322,8 @@ DijkstraSSSP(
   return DijkstraSSSP(_g, _starts, weight, stop, _adjacencyMap);
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////
 ///// The output of a two variable SSSP run. Iterate back through the list 
 ///// nodes to construct the path.
@@ -347,6 +349,7 @@ TwoVariableDijkstraSSSP(
 		const double _minEndTime,
 		double _lastConstraint,
     SSSPPathWeightFunction<GraphType>& _weight,
+		double _minStep = 0.1,
     const SSSPAdjacencyMap<GraphType>& _adjacencyMap = {})
 {
 
@@ -367,14 +370,37 @@ TwoVariableDijkstraSSSP(
 
 		if(current->m_distance >= _lastConstraint) { 
 			if(visitedPostConstraints.count(current->m_vid)){
+				if(_goals.count(current->m_vid)) {
+					auto waitNode = std::shared_ptr<TwoVariableSSSPNode>(
+											new TwoVariableSSSPNode(current->m_vid,current->m_distance+_minStep,current));
+					auto iter = pq.begin();
+					while(iter != pq.end()) {
+						if((*iter)->m_distance > current->m_distance+_minStep)
+							break;
+						iter++;
+					}
+					pq.insert(iter,waitNode);
+				}
 				if(pq.empty())
 					return nullptr;
 				current = pq.front();
 				pq.pop_front();
 				continue;
 			}
-			else 
+			else {
 				visitedPostConstraints.insert(current->m_vid);
+				if(_goals.count(current->m_vid)) {
+					auto waitNode = std::shared_ptr<TwoVariableSSSPNode>(
+											new TwoVariableSSSPNode(current->m_vid,current->m_distance+_minStep,current));
+					auto iter = pq.begin();
+					while(iter != pq.end()) {
+						if((*iter)->m_distance > current->m_distance+_minStep)
+							break;
+						iter++;
+					}
+					pq.insert(iter,waitNode);
+				}
+			}
 		}
 
 		auto vit = _g->find_vertex(current->m_vid);

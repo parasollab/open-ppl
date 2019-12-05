@@ -105,7 +105,9 @@ TaskPlan::
 AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask){
   auto& tasks = m_agentTaskMap[_agent];
   tasks.push_back(_task);
-  AddSubtaskToWholeTask(_task,_wholeTask);
+	Cfg temp1;
+	Cfg temp2;
+  AddSubtaskToWholeTask(_task,_wholeTask, temp1, temp2);
   _wholeTask->m_agentAssignment.push_back(_agent);
 
 }
@@ -318,9 +320,10 @@ GetLastAgent(WholeTask* _wholeTask){
 
 void
 TaskPlan::
-AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
+AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask, Cfg _start, Cfg _end){
   _wholeTask->m_subtasks.push_back(_subtask);
   SetWholeTaskOwner(_subtask, _wholeTask);
+	_wholeTask->m_subtaskStartEndCfgs[_subtask] = std::make_pair(_start,_end);
 }
 
 void 

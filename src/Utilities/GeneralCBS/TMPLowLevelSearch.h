@@ -54,7 +54,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		///@name Construction
 		///@{
 
-		TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel);
+		TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel, bool _debug = false);
 
 		///@}
 		///@name Interface

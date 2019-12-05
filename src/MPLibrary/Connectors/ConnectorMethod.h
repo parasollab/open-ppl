@@ -535,7 +535,7 @@ DoNotCheck(AbstractRoadmapType* _r, const VID _source, const VID _target) const 
   }
 
   // Check for self-connection.
-  if(_source == _target) {
+  if(_source == _target and !m_selfEdges) {
     if(this->m_debug)
       std::cout << indent
                 << "Skipping self-connection " << connection << "."

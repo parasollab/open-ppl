@@ -163,6 +163,7 @@ ConflictBasedSearch(Decomposition* _decomposition, InitialPlanFunction _initial,
 
 		if(_debug) {
 			current.Debug();
+			std::cout << "Total Nodes Explored: " << counter << std::endl;
 		}
 
 		return current.GetSolution();

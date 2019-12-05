@@ -41,6 +41,8 @@ class TCBSAllocator : public TaskAllocatorMethod {
 
 		std::string m_vcLabel;
 
+		bool m_lowLevelDebug;
+
 		///@}
 
 };

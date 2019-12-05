@@ -123,7 +123,8 @@ class TaskPlan {
 
     std::shared_ptr<MPTask> GetNextSubtask(WholeTask* _wholeTask);
 
-    void AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask);
+    void AddSubtaskToWholeTask(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask,
+																Cfg _start, Cfg _end);
 
     /// Returns the agent that as assiged the prior subtask in the whole task
     /// @param _wholeTask The WholeTask object containing the subtasks in

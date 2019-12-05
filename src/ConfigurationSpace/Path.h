@@ -58,6 +58,9 @@ class PathType final {
     /// Get the VIDs in the path.
     const std::vector<VID>& VIDs() const noexcept;
 
+		/// Get the VIDs and timesteps waiting in the path.
+		const std::pair<std::vector<VID>,std::vector<size_t>> VIDsWaiting() const noexcept;		
+
     /// Get a copy of the Cfgs in the path.
     /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
     ///          values or labels are edited), this copy will be out-of-date.
@@ -73,6 +76,8 @@ class PathType final {
     template <typename MPLibrary>
     const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
         const string& _lp = "") const;
+
+		size_t TimeSteps() const;
 
     /// Find the furthest place and time in a path that an agent can travel to
     /// before being required to return to a charger.
@@ -125,14 +130,15 @@ class PathType final {
     ///@name Internal State
     ///@{
 
-    RoadmapType* const m_roadmap;       ///< The roadmap.
-    std::vector<VID> m_vids;            ///< The vids of the path configurations.
+    RoadmapType* const m_roadmap;         ///< The roadmap.
+    std::vector<VID> m_vids;              ///< The vids of the path configurations.
+		std::vector<size_t> m_waitingTimesteps; ///< The number of timesteps to wait at each vid.
 
-    std::vector<CfgType> m_cfgs;        ///< The path configurations.
-    mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
+    std::vector<CfgType> m_cfgs;        	///< The path configurations.
+    mutable bool m_cfgsCached{false};   	///< Are the current cfgs correct?
 
-    double m_length{0};                 ///< The path length.
-    mutable bool m_lengthCached{false}; ///< Is the current path length correct?
+    double m_length{0};                 	///< The path length.
+    mutable bool m_lengthCached{false}; 	///< Is the current path length correct?
 
     ///@}
 };
@@ -185,8 +191,8 @@ Length() const {
     double& length = const_cast<double&>(m_length);
     length = 0;
     for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
-      if(*start == *(start + 1))
-        continue;  // Skip repeated vertices.
+      //if(*start == *(start + 1))
+      //  continue;  // Skip repeated vertices.
       const auto& edge = m_roadmap->GetEdge(*start, *(start+1));
       length += edge.GetWeight();
     }
@@ -203,6 +209,12 @@ VIDs() const noexcept {
   return m_vids;
 }
 
+template <typename MPTraits>
+const std::pair<std::vector<typename PathType<MPTraits>::VID>,std::vector<size_t>> 
+PathType<MPTraits>::
+VIDsWaiting() const noexcept {
+	return std::make_pair(m_vids,m_waitingTimesteps);
+}	
 
 template <typename MPTraits>
 const std::vector<typename MPTraits::CfgType>&
@@ -241,6 +253,25 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
   return out;
 }
 
+template <typename MPTraits>
+size_t
+PathType<MPTraits>::
+TimeSteps() const {
+  if(m_vids.empty())
+    return 0;
+
+	size_t timesteps = 0;
+
+  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
+		if(*it == *(it+1)) {
+			timesteps++;
+			continue;
+		}
+		auto edge = m_roadmap->GetEdge(*it, *(it+1));
+		timesteps += edge.GetTimeSteps();
+  }
+  return timesteps;
+}
 
 template <typename MPTraits>
 template <typename MPLibrary>

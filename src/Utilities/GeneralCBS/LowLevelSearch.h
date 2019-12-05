@@ -24,7 +24,7 @@ class LowLevelSearch {
 
 		LowLevelSearch() = default;
 
-		LowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel); 
+		LowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel, bool _debug = false); 
 
 		///@}
 		///@name Interface
@@ -68,13 +68,13 @@ class LowLevelSearch {
 		///@name Internal State
 		///@{
 
-		bool m_debug{true};//TODO::add this to constructor
-
 		TMPLibrary* m_tmpLibrary;
 
 		std::string m_sgLabel;
 
 		std::string m_vcLabel;
+
+		bool m_debug;//TODO::add this to constructor
 
     /// The current set of conflicts to avoid.
     const MotionConstraintSet* m_currentMotionConstraints{nullptr};

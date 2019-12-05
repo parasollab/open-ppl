@@ -609,8 +609,11 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
 		}
 	}*/
 
+	//double minStep = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+	double minStep = g->GetEdge(*(_goals.begin()),*(_goals.begin())).GetTimeSteps();
+
 	auto node = TwoVariableDijkstraSSSP(g,{_start},_goals,m_startTime,m_endTime,
-																			m_lastConstraint,weight);
+																			m_lastConstraint,weight,minStep);
 
 	if(!node)
 		return {};
@@ -646,8 +649,8 @@ SetStartTime(double _start) {
 template <typename MPTraits>
 void 
 QueryMethod<MPTraits>::
-SetEndTime(double _start) {
-	m_startTime = _start;
+SetEndTime(double _end) {
+	m_endTime = _end;
 }
 /*----------------------------------------------------------------------------*/
 

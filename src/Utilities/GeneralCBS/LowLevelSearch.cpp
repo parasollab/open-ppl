@@ -7,8 +7,8 @@
 #include "Traits/CfgTraits.h"
 
 LowLevelSearch::
-LowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel) : 
-								m_tmpLibrary(_tmpLibrary), m_sgLabel(_sgLabel), m_vcLabel(_vcLabel) {
+LowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel, bool _debug) : 
+								m_tmpLibrary(_tmpLibrary), m_sgLabel(_sgLabel), m_vcLabel(_vcLabel), m_debug(_debug){
 
 	//TODO::Update this to a parameter and make an initialize function
 	std::string m_queryLabel = "MegaQuery";
@@ -81,8 +81,9 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 	//query->SetStartTime(_startTime);
 	//query->SetEndTime(_minEndTime);
 	//query->SetLastConstraintTime(lastConstraint);
-	query2->SetStartTime(_startTime);
-	query2->SetEndTime(_minEndTime);
+	//auto timeRes = m_tmpLibrary->GetMPProblem()->GetEnvironment()->GetTimeRes();
+	query2->SetStartTime(_startTime);///timeRes);
+	query2->SetEndTime(_minEndTime);///timeRes);
 	query2->SetLastConstraintTime(lastConstraint);
 
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
@@ -142,7 +143,8 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 	m_currentRobot = nullptr;
 	m_currentMotionConstraints = nullptr;
 
-	return std::make_pair(solution->GetPath()->Length(),solution->GetPath(robot)->VIDs());
+	return std::make_pair(double(solution->GetPath()->TimeSteps())+_startTime,
+												solution->GetPath(robot)->VIDs());
 }
 
 
@@ -157,6 +159,7 @@ MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
   const size_t startTime = static_cast<size_t>(std::llround(_startTime)),
                endTime   = startTime + _ei->property().GetTimeSteps();
 
+#include "Utilities/SSSP.h"
   // If this end time isn't better than the current best, we won't use it. Return
   // without checking conflicts to save computation.
   if(endTime >= static_cast<size_t>(std::llround(_bestEndTime)))
