@@ -47,10 +47,10 @@ ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 	std::vector<Assignment> unallocated;
 	std::unordered_set<Agent*> occupied;
 
-	Agent* previous = nullptr;
 
 	const auto& taskPlans = _node.GetSolution().m_taskPlans;
 	for(auto plan : taskPlans) {
+		Agent* previous = nullptr;
 		//Assume tasks are sequential in the subtask list for now
 		for(auto assign : plan.second) {
 			if(assign.m_agent) {

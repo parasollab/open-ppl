@@ -442,6 +442,9 @@ MultiTaskGraph::
 ConstructGraph(){
   CombinedRoadmap::ConstructGraph();
   CreateHighLevelGraph();
+
+	m_nonTaskNodes = m_highLevelGraph->Size();
+
   //CreateAvailableIntervalGraph();
   if(m_debug){
     std::cout << "Initial construction." << std::endl;
@@ -1104,4 +1107,10 @@ std::unordered_map<WholeTask*,std::vector<size_t>>&
 MultiTaskGraph::
 GetTaskAigVIDs() {
   return m_aigTaskVIDs;
+}
+		
+size_t 
+MultiTaskGraph::
+NonTaskNodes() {
+	return m_nonTaskNodes;
 }

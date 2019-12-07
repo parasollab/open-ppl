@@ -22,6 +22,55 @@ MotionValidation::
 bool
 MotionValidation::
 InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
+
+	CBSSolution solution;
+	solution.m_decomposition = _decomposition;
+
+	std::unordered_map<Agent*,std::list<Assignment>> agentAssignments;
+
+	auto top = _decomposition->GetMainTask();
+	for(auto task : top->GetSubtasks()) {
+		for(auto subtask : task->GetSubtasks()) {
+			Assignment a;
+			a.m_task = subtask;
+			a.m_agent = subtask->GetMotionTask()->GetRobot()->GetAgent();
+			solution.m_taskPlans[task].push_back(a);
+
+			// Looking for correct ordering of agent assignments.
+			
+			if(agentAssignments[a.m_agent].empty()) {
+				agentAssignments[a.m_agent].push_back(a);
+				continue;
+			}
+
+			bool found = false;
+			auto iter = agentAssignments[a.m_agent].begin();
+			for(;iter != agentAssignments[a.m_agent].end(); iter++) {
+				auto depends = (*iter).m_task->GetDependencies()[SemanticTask::Completion];
+				for(auto d : depends) {
+					if(d == subtask) {
+						found = true;
+						break;
+					}	
+				}
+				if(found)
+					break;
+			}
+			if(iter == agentAssignments[a.m_agent].end())
+				agentAssignments[a.m_agent].push_back(a);
+			else 
+				agentAssignments[a.m_agent].insert(iter,a);
+		}
+	}
+
+	for(auto& kv : agentAssignments) {
+		for(auto iter = kv.second.begin(); iter != kv.second.end(); iter++) {
+			solution.m_agentAssignments[kv.first].push_back(*iter);
+		}
+	}
+
+	GeneralCBSNode node(solution);
+	_tree.push(node);
 	return true;
 }
 
@@ -179,6 +228,24 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 	if(_constraints.first.m_task.get()) {
 		GeneralCBSNode one(_node);
 		one.AddMotionConstraint(_constraints.first,_constraints.first.m_agent);
+
+		auto& tp = one.GetSolutionRef().m_taskPlans[_constraints.first.m_task];
+		auto& aa = one.GetSolutionRef().m_agentAssignments[_constraints.first.m_agent];
+		for(auto& a : tp) {
+			if(a.m_agent != _constraints.first.m_agent)
+				continue;
+
+			for(auto& assign : aa) {
+				if(assign == a) {
+					assign.m_execPath = {};
+				}
+			}
+
+			a.m_execPath = {};
+			
+			break;
+		}
+
 		if(m_lowLevel->UpdateSolution(one, _constraints.first.m_task))
 			_tree.push(one);
  	}
@@ -186,6 +253,23 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 	if(_constraints.second.m_task.get()) {
 		GeneralCBSNode two(_node);
 		two.AddMotionConstraint(_constraints.second,_constraints.second.m_agent);
+
+		auto& tp = two.GetSolutionRef().m_taskPlans[_constraints.second.m_task];
+		auto& aa = two.GetSolutionRef().m_agentAssignments[_constraints.second.m_agent];
+		for(auto& a : tp) {
+			if(a.m_agent != _constraints.second.m_agent)
+				continue;
+
+			for(auto& assign : aa) {
+				if(assign == a) {
+					assign.m_execPath = {};
+				}
+			}
+
+			a.m_execPath = {};
+			break;
+		}
+
 		if(m_lowLevel->UpdateSolution(two, _constraints.second.m_task))
 			_tree.push(two);
 	}

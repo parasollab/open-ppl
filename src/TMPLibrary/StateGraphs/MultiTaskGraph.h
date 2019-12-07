@@ -60,6 +60,8 @@ class MultiTaskGraph : public CombinedRoadmap {
 
     virtual TaskGraph* GetGraph() override;
 
+		size_t NonTaskNodes();
+
     std::shared_ptr<AvailableIntervalGraph> GetAvailableIntervalGraph();
 
     std::pair<Agent*,std::pair<double,double>> GetInterval(size_t _vid);
@@ -177,6 +179,8 @@ class MultiTaskGraph : public CombinedRoadmap {
     std::unordered_map<WholeTask*,std::vector<size_t>> m_aigTaskVIDs;
 
 		std::unordered_map<WholeTask*,std::pair<size_t,size_t>> m_taskQuery;
+
+		size_t m_nonTaskNodes;
     ///@}
 
 };

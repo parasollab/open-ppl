@@ -56,7 +56,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	auto decomp = CreateDecomposition(_wholeTasks);
 	//auto decomp = new Decomposition(std::shared_ptr<SemanticTask>(new SemanticTask()));
 	
-	TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel);
+	TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_debug);
 
 	auto alloc = new AllocationValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary());
 	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
@@ -66,11 +66,14 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		return compose->InitialPlan(_decomp,_tree);
 	};
 
-	ValidationFunction valid = [this,compose](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+	ValidationFunction valid = [this,compose,alloc](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
 		return compose->ValidatePlan(_node, _tree);
 	};
 
-	CBSSolution solution = ConflictBasedSearch(decomp, init, valid,MAX_INT,true);	
+	//size_t total;
+	//size_t explored;
+	//double cost;
+	CBSSolution solution = ConflictBasedSearch(decomp, init, valid,MAX_INT,true);//,total,explored,cost);	
 
 	//TODO::make a debug output with path files
 
@@ -83,8 +86,14 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 				auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(a.m_agent)).get();
 				std::cout << "\tAgent: " << a.m_agent->GetRobot()->GetLabel() << std::endl;
 				std::cout << "\t\tSetup Path" << std::endl;
+				size_t setupVIDs = 0;
 				for(auto vid : a.m_setupPath) {
 					std::cout << "\t\t\t" << roadmap->GetVertex(vid).PrettyPrint() << std::endl;
+					setupVIDs++;
+					if(setupVIDs > 10) {
+						std::cout << "Waiting......Total Setup: " << a.m_setupPath.size() << std::endl;
+						break;
+					}
 				}
 				std::cout << "\t\tExec Path    (" << a.m_execStartTime << "->"  << a.m_execEndTime << ")" << std::endl;
 				for(auto vid : a.m_execPath) {
@@ -94,6 +103,13 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		}
 	}
 	
+	
+	//Simulation::GetStatClass()->SetStat("TotalNodes", total);
+	//Simulation::GetStatClass()->SetStat("NodesExplored", explored);
+	//Simulation::GetStatClass()->SetStat("SOC", cost);
+	Simulation::GetStatClass()->StopClock("PlanningTime");	
+
+  Simulation::Get()->PrintStatFile();
 
 /*
 	auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());

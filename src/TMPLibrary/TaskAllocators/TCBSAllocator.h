@@ -43,6 +43,9 @@ class TCBSAllocator : public TaskAllocatorMethod {
 
 		bool m_lowLevelDebug;
 
+		///< Indicates if the allocation and motion planning are coupled or decoupled.
+		bool m_decoupled{false};
+
 		///@}
 
 };

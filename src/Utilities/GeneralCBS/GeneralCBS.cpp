@@ -1,6 +1,8 @@
 #include "GeneralCBS.h"
 
 #include "MPProblem/Robot/Robot.h"
+#include "Simulator/Simulation.h"
+#include "Utilities/MetricUtils.h"
 
 GeneralCBSNode::
 GeneralCBSNode(const CBSSolution _solution) {
@@ -112,30 +114,53 @@ UpdateTaskPlan(std::shared_ptr<SemanticTask> _task, std::vector<Assignment> _ass
 void
 GeneralCBSNode::
 Debug() {
-		std::cout << "Allocation Constraints" << std::endl;
-		for(auto tACs : m_allocationConstraints) {
-			std::cout << "Task: " << tACs.first << std::endl;
-			for(auto aCs : tACs.second) {
-				std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
-				for(auto c : aCs.second) {
-					std::cout << c.m_startLocation.PrettyPrint() << std::endl;
-					std::cout << c.m_endLocation.PrettyPrint() << std::endl;
-					std::cout << c.m_startTime << std::endl;
-					std::cout << c.m_endTime << std::endl;
-				}
+	std::cout << "Allocation Constraints" << std::endl;
+	for(auto tACs : m_allocationConstraints) {
+		std::cout << "Task: " << tACs.first << std::endl;
+		for(auto aCs : tACs.second) {				std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
+			std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
+			for(auto c : aCs.second) {
+				std::cout << c.m_startLocation.PrettyPrint() << std::endl;
+				std::cout << c.m_endLocation.PrettyPrint() << std::endl;
+				std::cout << c.m_startTime << std::endl;
+				std::cout << c.m_endTime << std::endl;
 			}
 		}
-		std::cout << "Motion Constraints" << std::endl;
-		for(auto tACs : m_motionConstraints) {
-			std::cout << "Task: " << tACs.first << std::endl;
-			for(auto aCs : tACs.second) {
-				std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
-				for(auto c : aCs.second) {
-					std::cout << c.m_conflictCfg.PrettyPrint() << std::endl;
-					std::cout << c.m_timestep << std::endl;
-				}
+	}
+	std::cout << "Motion Constraints" << std::endl;
+	for(auto tACs : m_motionConstraints) {
+		std::cout << "Task: " << tACs.first << std::endl;
+		for(auto aCs : tACs.second) {
+			std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
+			for(auto c : aCs.second) {
+				std::cout << c.m_conflictCfg.PrettyPrint() << std::endl;
+				std::cout << c.m_timestep << std::endl;
 			}
 		}
+	}
+	std::cout << "Task Plans" << std::endl;
+	for(auto tp : m_solution.m_taskPlans) {
+		std::cout << std::endl << "\tTask: " << tp.first << std::endl;
+		for(auto a : tp.second) {
+			if(!a.m_agent)
+				continue;
+			std::cout << "\t\t" << a.m_agent->GetRobot()->GetLabel() << std::endl;
+			std::cout << "\t\t\t" << a.m_setupStartTime << "-------->" 
+								<< a.m_execStartTime << "---->" << a.m_execEndTime << std::endl;
+		}
+	}	
+}
+
+void
+GeneralCBSNode::
+SetCost(double _cost) {
+	m_cost = _cost;
+}
+
+double
+GeneralCBSNode::
+GetCost() {
+	return m_cost;
 }
 
 /*-------------------------- Conflict Based Search -------------------------*/
@@ -151,25 +176,33 @@ ConflictBasedSearch(Decomposition* _decomposition, InitialPlanFunction _initial,
 	if(!_initial(_decomposition, tree))
 		return CBSSolution();
 
+	GeneralCBSNode current;
+
 	do {
 
-		GeneralCBSNode current = tree.top();
+		current = tree.top();
 		tree.pop();
 
 		counter++;
 	
-		if(!_validation(current, tree))
-			continue;
-
 		if(_debug) {
 			current.Debug();
 			std::cout << "Total Nodes Explored: " << counter << std::endl;
 		}
 
+		if(!_validation(current, tree))
+			continue;
+
+		Simulation::GetStatClass()->SetStat("TotalNodes", counter + tree.size());
+		Simulation::GetStatClass()->SetStat("NodesExplored", counter);
+		Simulation::GetStatClass()->SetStat("SOC", current.GetCost());
 		return current.GetSolution();
 
 	} while(!tree.empty() and counter < _numIterations);
 
+	Simulation::GetStatClass()->SetStat("TotalNodes", counter + tree.size());
+	Simulation::GetStatClass()->SetStat("NodesExplored", counter);
+	Simulation::GetStatClass()->SetStat("SOC", current.GetCost());
 	return CBSSolution();
 	
 }

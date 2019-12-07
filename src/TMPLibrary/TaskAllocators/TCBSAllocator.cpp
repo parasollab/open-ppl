@@ -23,6 +23,8 @@ TCBSAllocator(XMLNode& _node) : TaskAllocatorMethod(_node) {
 	m_sgLabel = _node.Read("sgLabel", true, "", "State graph label for TCBSAllocator.");
 	m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label for TCBSAllocator.");
 	m_lowLevelDebug = _node.Read("llDebug", false, false, "Debug flag for low level search.");
+	m_decoupled = _node.Read("decoupled", false, m_decoupled, 
+														"Indicates decoupled allocation and motion planning.");
 }
 
 TCBSAllocator::
@@ -44,11 +46,50 @@ AllocateTasks() {
 		return tcbs->InitialPlan(_decomp,_tree);
 	};
 
-	ValidationFunction valid = [this,compose](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
-		return compose->ValidatePlan(_node, _tree);
-	};
+	CBSSolution solution;
 
-	CBSSolution solution = ConflictBasedSearch(decomp, init, valid,MAX_INT,true);	
+	if(!m_decoupled) {
+		ValidationFunction composeValid = [this,compose](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+			return compose->ValidatePlan(_node, _tree);
+		};
+
+		solution = ConflictBasedSearch(decomp, init, composeValid,MAX_INT,m_debug);	
+	}
+	else {
+		InitialPlanFunction motionInit = [this,motion](Decomposition* _decomp,GeneralCBSTree& _tree) {
+			return motion->InitialPlan(_decomp,_tree);
+		};
+		ValidationFunction tcbsValid = [this,tcbs](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+			return tcbs->ValidatePlan(_node, _tree);
+		};
+
+		ValidationFunction motionValid = [this,motion](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+			return motion->ValidatePlan(_node, _tree);
+		};
+
+		solution = ConflictBasedSearch(decomp, init, tcbsValid,MAX_INT,m_debug);
+		
+		auto top = decomp->GetMainTask();
+		for(auto task : top->GetSubtasks()) {
+			auto taskPlan = solution.m_taskPlans[task];
+			auto subtasks = task->GetSubtasks();
+			for(size_t i = 0; i < taskPlan.size(); i++) {
+				if(subtasks[i] != taskPlan[i].m_task)
+					throw RunTimeException(WHERE,"Mismatched subtask orderings.");
+				subtasks[i]->GetMotionTask()->SetRobot(taskPlan[i].m_agent->GetRobot());
+			}
+		}
+
+		for(auto agentAssignments : solution.m_agentAssignments) {
+			auto assigns = agentAssignments.second;
+			for(size_t i = 1; i < assigns.size(); i++) {
+				assigns[i].m_task->AddDependency(assigns[i-1].m_task,SemanticTask::DependencyType::Completion);
+			}
+		}
+
+		solution = ConflictBasedSearch(decomp,motionInit,motionValid, MAX_INT,m_debug);
+
+	}
 
 	if(m_debug) {
 		auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());

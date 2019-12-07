@@ -20,7 +20,7 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 
 	std::cout << "Starting query: " << query << std::endl;
 
-	Initialize(_node, _task);
+	Initialize(_node, _task, query);
 
 	auto plan = Search(_task,query);
 
@@ -32,6 +32,11 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 	//TODO::change solution object within node
 	_node.UpdateTaskPlan(_task,plan);
 
+	if(m_debug) {
+		std::cout << "Updated Plan for: " << _task << std::endl;
+		_node.Debug();
+	}
+
 	return true;
 }
 
@@ -40,7 +45,7 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 
 void
 TMPLowLevelSearch::
-Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
+Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
 
 	auto team = m_tmpLibrary->GetTaskPlan()->GetTeam();
 
@@ -54,6 +59,11 @@ Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 
 	for(auto vit = sg->GetGraph()->begin(); vit != sg->GetGraph()->end(); vit++) {
+
+		if(vit->descriptor() > sg->NonTaskNodes() and 
+						(vit->descriptor() < _query.first or vit->descriptor() > _query.second+2))
+			continue;
+
 		auto& cfg = vit->property();
 		size_t vid = vit->descriptor();
 		if(cfg.GetRobot() == m_tmpLibrary->GetTaskPlan()->GetCoordinator()->GetRobot()) {
@@ -76,6 +86,8 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 	auto g = sg->GetGraph();
 
+	//auto dummy = m_tmpLibrary->GetTaskPlan()->GetCapabilityAgent(_agent->GetCapability());
+
 	auto constraints = _node.GetAllocationConstraints(_task,_agent);
 
 	AvailInterval init(0,MAX_DBL);
@@ -93,26 +105,42 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 	for(auto constraint : constraints) {
 		auto startCfg = constraint.m_startLocation;
 		auto startTime = constraint.m_startTime;
+		/*
+		startCfg.SetRobot(dummy->GetRobot());
 
-		//auto targetVID = g->GetVID(startCfg);
-		//if(targetVID != INVALID_VID) {
-		//	RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EP& edge = g->GetEdge(_vid,targetVID);
-		//	departTime = startTime - edge.GetWeight();
-		//}
-		//else {
-			auto plan = MotionPlan(g->GetVertex(_vid),startCfg,startTime);
-			departTime = startTime - plan.first;
+		auto targetVID = g->GetVID(startCfg);
+		if(targetVID != INVALID_VID) {
+
+			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EI eit;
+			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::VI vit;
+
+			if(!g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(_vid,targetVID),vit,eit))
+				g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(targetVID,_vid),vit,eit);
+
+			departTime = startTime - eit->property().GetWeight();
+		}
+		else {*/
+			auto plan = MotionPlan(g->GetVertex(_vid),startCfg,0,0);
+			departTime = std::max(0.0,(startTime - plan.first));
 		//}
 
 		auto endCfg = constraint.m_endLocation;
 		auto endTime = constraint.m_endTime;
-		
-		//auto sourceVID = g->GetVID(endCfg);
-		//if(sourceVID != INVALID_VID) {
-		//	RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EP& edge = g->GetEdge(sourceVID,_vid);
-		//	returnTime = endTime + edge.GetWeight();
-		//}
-		//else {
+		/*
+		endCfg.SetRobot(dummy->GetRobot());
+
+		auto sourceVID = g->GetVID(endCfg);
+		if(sourceVID != INVALID_VID) {
+			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EI eit;
+			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::VI vit;
+
+			if(!g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(sourceVID,_vid),vit,eit))
+				g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(_vid,sourceVID),vit,eit);
+			
+			//RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EP& edge = g->GetEdge(sourceVID,_vid);
+			returnTime = endTime + eit->property().GetWeight();
+		}
+		else {*/
 			plan = MotionPlan(endCfg,g->GetVertex(_vid));//May need to perform a backwards search for this one
 			returnTime = endTime + plan.first;
 		//}
@@ -122,11 +150,11 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 		auto iter = intervals.begin();
 		//for(auto iter = intervals.begin(); iter != intervals.end(); iter++) {
 		while(iter != intervals.end()) {
-			if(*iter == elem.m_availInt) {
+			/*if(*iter == elem.m_availInt) {
 				m_availSourceMap[elem] = constraint;
 				iter++;
 				continue;
-			}
+			}*/
 
 			if(iter->second < departTime) { // depart time occurs after the interval ends
 				iter++;
@@ -210,12 +238,14 @@ Uninitialize() {
 	m_seen.clear();
 	m_visited.clear();
 	m_distance.clear();
+	m_usedAgents.clear();
 }
 
 std::vector<Assignment>
 TMPLowLevelSearch::
 Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
 
+	m_usedAgents.clear();
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 
 	size_t start = _query.first;
@@ -229,6 +259,7 @@ Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
 	for(auto agentAvailInts : m_intervalMap[start]) {
 		for(auto avail : agentAvailInts.second) {
 			AvailElem elem(start, agentAvailInts.first, avail);
+			//m_usedAgents[elem].insert(agentAvailInts.first);
 			pq.push(std::make_pair(0,elem));
 		}
 	}
@@ -249,9 +280,14 @@ Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
 
 		auto vit = sg->GetGraph()->find_vertex(current.second.m_vid);
 		for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+			if(eit->target() > sg->NonTaskNodes() and 
+						(eit->target() < _query.first or eit->target() > _query.second+2))
+			continue;
 			auto elems = ValidNeighbors(current.second, eit->target(), current.first, eit->property().GetWeight());
 			for(auto elem : elems) {
 				pq.push(elem);
+				m_usedAgents[elem.second] = m_usedAgents[current.second];
+				m_usedAgents[elem.second].insert(elem.second.m_agent);
 				debug.insert(elem.second.m_vid);
 			} 
 		}
@@ -288,6 +324,8 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 
 	for(auto kv : m_intervalMap[_vid]) {
 		auto agent = kv.first;
+		if(m_usedAgents[_elem].count(agent) and agent != _elem.m_agent)
+			continue;
 		for(auto avail : kv.second) {
 			if(arrivalTime > avail.second)// or // too late
 				//arrivalTime < avail.first)     // too early
@@ -385,7 +423,7 @@ ComputeSetup(AvailElem _elem, double _minTime) {
 
 	m_setupPathMap[_elem] = path;
 	m_setupStartTimes[_elem] = startTime;
-	return std::make_pair(std::max(plan.first+startTime,_minTime),path);
+	return std::make_pair(std::max(plan.first,_minTime),path);
 }
 
 std::pair<double,std::vector<size_t>>
@@ -417,7 +455,7 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 	path = plan.second; 
 
 	m_execPathMap[_elem] = path;
-	return std::make_pair(plan.first+_startTime,path);
+	return std::make_pair(plan.first,path);
 }
 
 std::vector<Assignment> 

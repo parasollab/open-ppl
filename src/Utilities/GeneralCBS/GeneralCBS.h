@@ -148,6 +148,10 @@ class GeneralCBSNode {
 
 	void Debug();
 
+	void SetCost(double _cost);
+
+	double GetCost();
+
 	///@}
 
   private:

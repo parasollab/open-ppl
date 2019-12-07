@@ -74,7 +74,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		///@name Helper Functions
 		///@{
 	
-		void Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task);
+		void Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query);
 
 		std::vector<AvailInterval> ComputeIntervals(GeneralCBSNode& _node, size_t vid, 
 														std::shared_ptr<SemanticTask> _task, Agent* _agent); 
@@ -115,6 +115,8 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		std::unordered_map<AvailElem,std::vector<size_t>,AvailElemHasher> m_setupPathMap;
 
 		std::unordered_map<AvailElem,double,AvailElemHasher> m_setupStartTimes;
+
+		std::unordered_map<AvailElem,std::unordered_set<Agent*>,AvailElemHasher> m_usedAgents;
 
 		///@}
 };

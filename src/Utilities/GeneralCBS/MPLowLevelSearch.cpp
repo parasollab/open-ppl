@@ -201,7 +201,9 @@ PlanAssignments(GeneralCBSNode& _node) {
 					resolved.insert(kv.first.get());
 			}
 		}
-		std::cout << resolved << " tasks resolved out of " << taskPlans.size() << std::endl;
+		if(m_debug) {
+			std::cout << resolved << " tasks resolved out of " << taskPlans.size() << std::endl;
+		}
 	}
 
 	if(m_debug) {
@@ -228,6 +230,20 @@ PlanAssignments(GeneralCBSNode& _node) {
 			}
 		}
 	}
+
+	double cost = 0;
+	for(auto tp : _node.GetSolution().m_taskPlans) {
+		double taskCost = 0;
+		for(auto a : tp.second) {
+ 			if(!a.m_agent) {
+				break;
+			}
+			taskCost = a.m_execEndTime;	
+		}
+		cost += taskCost;
+	}
+
+	_node.SetCost(cost);
 	return true;
 }
 
@@ -235,6 +251,11 @@ bool
 MPLowLevelSearch::
 PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous, 
 							  double _startTime, double _endTime) {
+
+	auto& constraints = _node.GetMotionConstraints(_assign.m_task->GetParent(),_assign.m_agent);
+	for(auto& c : constraints) {
+		m_motionConstraintMap[_assign.m_agent].insert(std::make_pair(c.m_timestep,c.m_conflictCfg));
+	}
 
 	auto agent = _assign.m_agent;
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
@@ -248,6 +269,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	}
 	else {
 		setupCfg = roadmap->GetVertex(_previous.m_execPath.back());
+		setupCfg.SetRobot(agent->GetRobot());
 		setupStart = _previous.m_execEndTime;
 	}
 
@@ -265,6 +287,9 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	//Agent is does not have a configuration at task start.
 	if(query.first.GetRobot()->GetCapability() != agent->GetCapability())
 		return false;
+
+	query.first.SetRobot(agent->GetRobot());
+	query.second.SetRobot(agent->GetRobot());
 
 	auto setup = this->MotionPlan(setupCfg,query.first,setupStart,_startTime);
 

@@ -157,7 +157,7 @@ CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node) {
 	auto plan = tmp->MotionPlan(roadmap->GetVertex(startVID),roadmap->GetVertex(goalVID),
 															_a1.m_execEndTime,_a2.m_execStartTime);
 
-	if(plan.first + _a1.m_execEndTime > _a2.m_execStartTime) {
+	if(plan.first > _a2.m_execStartTime) {
 		return false;
 	}
 
