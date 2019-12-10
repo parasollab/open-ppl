@@ -40,7 +40,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 			}
 
 		};
-
+		/*
 		struct AvailElemHasher {
 			std::size_t operator()(const AvailElem& _elem) const {
 				return ((std::hash<size_t>()(_elem.m_vid))
@@ -49,7 +49,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 								^ (std::hash<size_t>()(_elem.m_availInt.second)));
 			}
 		};
-
+		*/
 		///@}
 		///@name Construction
 		///@{
@@ -66,7 +66,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
 	
 		virtual std::pair<double,std::vector<size_t>> MotionPlan(Cfg _start, Cfg _goal,
-														double _startTime = 0, double _minEndTime = 0) override;
+						double _startTime = 0, double _minEndTime = 0, SemanticTask* _currentTask = nullptr) override;
 		//@}
 
   private:
@@ -99,7 +99,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		///@{
 
 		IntervalMap m_intervalMap;
-
+		/*
 		std::unordered_map<AvailElem,AvailElem,AvailElemHasher> m_parentMap;
 
 		std::unordered_map<AvailElem,double,AvailElemHasher> m_distance;
@@ -117,7 +117,24 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		std::unordered_map<AvailElem,double,AvailElemHasher> m_setupStartTimes;
 
 		std::unordered_map<AvailElem,std::unordered_set<Agent*>,AvailElemHasher> m_usedAgents;
+		*/
+		std::map<AvailElem,AvailElem> m_parentMap;
 
+		std::map<AvailElem,double> m_distance;
+		
+		std::set<AvailElem> m_seen;
+
+		std::set<AvailElem> m_visited;
+
+		std::map<AvailElem,AllocationConstraint> m_availSourceMap;
+
+		std::map<AvailElem,std::vector<size_t>> m_execPathMap;
+	
+		std::map<AvailElem,std::vector<size_t>> m_setupPathMap;
+
+		std::map<AvailElem,double> m_setupStartTimes;
+
+		std::map<AvailElem,std::unordered_set<Agent*>> m_usedAgents;
 		///@}
 };
 

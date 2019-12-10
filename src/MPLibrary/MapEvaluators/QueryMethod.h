@@ -619,7 +619,8 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
 		return {};
 
 	std::vector<typename QueryMethod<MPTraits>::VID> path;
-	while(node->m_vid != _start) {
+	//while(node->m_vid != _start) {
+	while(node->m_parent) {
 		path.push_back(node->m_vid);
 		node = node->m_parent;
 		if(!node)

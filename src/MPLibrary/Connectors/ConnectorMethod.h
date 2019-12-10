@@ -1,6 +1,8 @@
 #ifndef PMPL_CONNECTION_METHOD_H_
 #define PMPL_CONNECTION_METHOD_H_
 
+#include "ConfigurationSpace/Weight.h"
+
 #include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
 #include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "MPLibrary/MPBaseObject.h"

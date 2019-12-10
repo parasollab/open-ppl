@@ -33,8 +33,8 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 	for(auto agent : m_tmpLibrary->GetTaskPlan()->GetTeam()) {
 		Cfg location = agent->GetRobot()->GetSimulationModel()->GetState();
 
-		auto dummy = m_tmpLibrary->GetTaskPlan()->GetCapabilityAgent(agent->GetCapability());
-		location.SetRobot(dummy->GetRobot());
+		//auto dummy = m_tmpLibrary->GetTaskPlan()->GetCapabilityAgent(agent->GetCapability());
+		//location.SetRobot(dummy->GetRobot());
 
 		AllocationConstraint constraint(nullptr,location,location,0,0,nullptr);
 
@@ -110,15 +110,30 @@ FindAllocationConflict(GeneralCBSNode& _node) {
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph("MTGraph").get());
 	auto r = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(conf1.m_agent));
 
+	Cfg startCfg = r->GetVertex(conf2.m_execPath.front());
+	startCfg.SetRobot(confAgent->GetRobot());
+	Cfg endCfg = r->GetVertex(conf2.m_execPath.back());
+	endCfg.SetRobot(confAgent->GetRobot());
+
 	AllocationConstraint one(confAgent,
-														r->GetVertex(conf2.m_execPath.front()),
-														r->GetVertex(conf2.m_execPath.back()),
+														//r->GetVertex(conf2.m_execPath.front()),
+														//r->GetVertex(conf2.m_execPath.back()),
+														startCfg,
+														endCfg,
 														conf2.m_execStartTime,
 														conf2.m_execEndTime,
 														conf1.m_task->GetParent());
+
+	startCfg = r->GetVertex(conf1.m_execPath.front());
+	startCfg.SetRobot(confAgent->GetRobot());
+	endCfg = r->GetVertex(conf1.m_execPath.back());
+	endCfg.SetRobot(confAgent->GetRobot());
+
 	AllocationConstraint two(confAgent,
-														r->GetVertex(conf1.m_execPath.front()),
-														r->GetVertex(conf1.m_execPath.back()),
+														//r->GetVertex(conf1.m_execPath.front()),
+														//r->GetVertex(conf1.m_execPath.back()),
+														startCfg,
+														endCfg,
 														conf1.m_execStartTime,
 														conf1.m_execEndTime,
 														conf2.m_task->GetParent());
@@ -154,8 +169,25 @@ CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node) {
 
 	auto tmp = static_cast<TMPLowLevelSearch*>(m_lowLevel);
 
-	auto plan = tmp->MotionPlan(roadmap->GetVertex(startVID),roadmap->GetVertex(goalVID),
-															_a1.m_execEndTime,_a2.m_execStartTime);
+	auto team = m_tmpLibrary->GetTaskPlan()->GetTeam();
+
+	for(auto agent : team) {
+		auto& constraints = _node.GetMotionConstraints(_a2.m_task->GetParent(),agent);
+		for(auto& c : constraints) {
+			tmp->m_motionConstraintMap[agent].insert(std::make_pair(c.m_timestep,
+																					std::make_pair(c.m_conflictCfg,c.m_duration)));
+		}
+	}
+
+	Cfg startCfg = roadmap->GetVertex(startVID);
+	startCfg.SetRobot(_a1.m_agent->GetRobot());
+	Cfg endCfg = roadmap->GetVertex(goalVID);
+	endCfg.SetRobot(_a1.m_agent->GetRobot());
+
+	auto plan = tmp->MotionPlan(startCfg,endCfg,
+															_a1.m_execEndTime,_a2.m_execStartTime,_a2.m_task->GetParent().get());
+
+	tmp->m_motionConstraintMap.clear();
 
 	if(plan.first > _a2.m_execStartTime) {
 		return false;

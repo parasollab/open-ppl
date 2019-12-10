@@ -432,7 +432,8 @@ LowLevelGraphPathWeight(Cfg _start, Cfg _goal){
   //restore library task
   this->GetMPLibrary()->SetTask(oldTask);
 
-  return solution->GetPath()->Length();
+  //return solution->GetPath()->Length();
+  return solution->GetPath()->TimeSteps();
 }
 
 /*------------------------------ Construction Helpers --------------------------------*/

@@ -47,7 +47,7 @@ Decomposition(XMLNode& _node) {
 				std::string dependencyType = grandchild.Read("type", true, "",
 													"Type of dependency");
 
-				SemanticTask::DependencyType type;
+				SemanticTask::DependencyType type = SemanticTask::DependencyType::None;
 
 				if(dependencyType == "Initiation")
 					type = SemanticTask::DependencyType::Initiation;

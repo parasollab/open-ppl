@@ -122,7 +122,7 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			path += a.m_execPath;
 			auto cfgs = path.FullCfgs(m_library);
 
-			size_t start = agentPaths.size();
+			size_t start = agentPaths[agent].size();
 			size_t end = start+cfgs.size()-1;
 			agentPaths[agent].insert(agentPaths[agent].end(),cfgs.begin(),cfgs.end());
 
@@ -195,6 +195,10 @@ FindMotionConflict(GeneralCBSNode& _node) {
 					}
 				}
 
+				if(t >= path2.size()-1) {
+					one.m_duration = std::numeric_limits<size_t>::infinity();
+				}
+
 				two.m_agent = robot2->GetAgent();
 				two.m_conflictCfg = cfg1;
 				two.m_timestep = t;
@@ -203,6 +207,10 @@ FindMotionConflict(GeneralCBSNode& _node) {
 						two.m_task = task.second;
 					}
 				}
+				if(t >= path1.size()-1) {
+					two.m_duration = std::numeric_limits<size_t>::infinity();
+				}
+
 				return std::make_pair(one,two);
 			}
 		}

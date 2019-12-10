@@ -38,8 +38,7 @@ class MPLowLevelSearch : public LowLevelSearch {
 		bool PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous,
 												double _startTime = 0, double _minEndTime = 0);
 
-		bool PatchPaths(GeneralCBSNode& _node, Assignment& _assign, Cfg _setupCfg, 
-										Cfg _startCfg, double _setupStart);
+		bool PatchPaths(GeneralCBSNode& _node, Assignment& _assign, double _endTime);
 		///@}	
 		///@name Internal State
 		///@{

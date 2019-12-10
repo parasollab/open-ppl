@@ -65,11 +65,13 @@ struct MotionConstraint {
 	Cfg															m_conflictCfg;
 	size_t													m_timestep{MAX_INT};
 	std::shared_ptr<SemanticTask>		m_task{nullptr};
+	size_t 													m_duration{0};
 
 	bool operator==(const MotionConstraint& _c) {
 		return m_conflictCfg 	== _c.m_conflictCfg 
 				and m_timestep 		== _c.m_timestep
-				and m_task 				== _c.m_task;
+				and m_task 				== _c.m_task
+				and m_duration		== _c.m_duration;
 	}
 };
 

@@ -47,14 +47,10 @@ void
 TMPLowLevelSearch::
 Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
 
+	m_currentTask = _task.get();
+
 	auto team = m_tmpLibrary->GetTaskPlan()->GetTeam();
 
-	for(auto agent : team) {
-		auto& constraints = _node.GetMotionConstraints(_task,agent);
-		for(auto& c : constraints) {
-			m_motionConstraintMap[agent].insert(std::make_pair(c.m_timestep,c.m_conflictCfg));
-		}
-	}
 	
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 
@@ -74,6 +70,13 @@ Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair
 			if(cfg.GetRobot()->GetCapability() == agent->GetRobot()->GetCapability()) {
 				m_intervalMap[vid][agent] = ComputeIntervals(_node, vid, _task, agent);
 			}
+		}
+	}
+	for(auto agent : team) {
+		auto& constraints = _node.GetMotionConstraints(_task,agent);
+		for(auto& c : constraints) {
+			m_motionConstraintMap[agent].insert(std::make_pair(c.m_timestep,
+																					std::make_pair(c.m_conflictCfg,c.m_duration)));
 		}
 	}
 }
@@ -118,9 +121,11 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 				g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(targetVID,_vid),vit,eit);
 
 			departTime = startTime - eit->property().GetWeight();
-		}
-		else {*/
-			auto plan = MotionPlan(g->GetVertex(_vid),startCfg,0,0);
+		}*/
+		auto vertexCfg = g->GetVertex(_vid);
+		vertexCfg.SetRobot(_agent->GetRobot());
+		//else {
+			auto plan = MotionPlan(vertexCfg,startCfg,0,0);
 			departTime = std::max(0.0,(startTime - plan.first));
 		//}
 
@@ -141,7 +146,7 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 			returnTime = endTime + eit->property().GetWeight();
 		}
 		else {*/
-			plan = MotionPlan(endCfg,g->GetVertex(_vid));//May need to perform a backwards search for this one
+			plan = MotionPlan(endCfg,vertexCfg);//May need to perform a backwards search for this one
 			returnTime = endTime + plan.first;
 		//}
 
@@ -239,6 +244,8 @@ Uninitialize() {
 	m_visited.clear();
 	m_distance.clear();
 	m_usedAgents.clear();
+	m_motionConstraintMap.clear();
+	m_currentTask = nullptr;
 }
 
 std::vector<Assignment>
@@ -402,7 +409,7 @@ ComputeSetup(AvailElem _elem, double _minTime) {
 	
 	if(m_debug) {
 		std::cout << "Computing setup path from " 
-							<< startVID 
+							<< startVID << startCfg.PrettyPrint() 
 							<< " to " 
 							<< goalVID 
 							<< " for " 
@@ -417,7 +424,9 @@ ComputeSetup(AvailElem _elem, double _minTime) {
 	//make sure the cost accounts for the start time and the transition time
 	
 	//temp until motion stuff is ready
-	auto plan = MotionPlan(startCfg,g->GetVertex(goalVID),startTime, _minTime);
+	Cfg goalCfg = g->GetVertex(goalVID);
+	goalCfg.SetRobot(startCfg.GetRobot());
+	auto plan = MotionPlan(startCfg,goalCfg,startTime, _minTime);
 
 	path = plan.second;
 
@@ -437,7 +446,7 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 	auto startVID = _elem.m_vid;
 
 	if(m_debug) {
-		std::cout << "Computing setup path from " 
+		std::cout << "Computing exec path from " 
 							<< startVID 
 							<< " to " 
 							<< _endVID 
@@ -450,7 +459,12 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 
 	//make sure double in return pair is the arrival time including the initial start time cost
 
-	auto plan  = MotionPlan(g->GetVertex(startVID),g->GetVertex(_endVID),_startTime);
+	Cfg startCfg = g->GetVertex(startVID);
+	startCfg.SetRobot(_elem.m_agent->GetRobot());
+	Cfg goalCfg = g->GetVertex(_endVID);
+	goalCfg.SetRobot(_elem.m_agent->GetRobot());
+	
+	auto plan  = MotionPlan(startCfg,goalCfg,_startTime);
 
 	path = plan.second; 
 
@@ -529,14 +543,14 @@ CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask>
 
 std::pair<double,std::vector<size_t>>
 TMPLowLevelSearch::
-MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
+MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, SemanticTask* _currentTask) {
 
 	//moved this stuff into low level search
 	/*m_currentRobot = _start.GetRobot();
 	auto agent = m_currentRobot->GetAgent();
 	m_currentMotionConstraints = &(m_motionConstraintMap[agent]);
 	*/
-	auto plan = this->LowLevelSearch::MotionPlan(_start,_goal,_startTime,_minEndTime);
+	auto plan = this->LowLevelSearch::MotionPlan(_start,_goal,_startTime,_minEndTime,_currentTask);
 /*
 	m_currentRobot = nullptr;
 	m_currentMotionConstraints = nullptr;

@@ -13,10 +13,28 @@ class LowLevelSearch {
 		typedef RoadmapGraph<Cfg,DefaultWeight<Cfg>> Roadmap;
 
     /// A set of conflicts for a single robot, keyed on timestep.
-    typedef std::multimap<size_t, Cfg> MotionConstraintSet;
+    typedef std::multimap<size_t, std::pair<Cfg,double>> MotionConstraintSet;
 
     /// A mapping from robot to conflict set.
     typedef std::map<Agent*, MotionConstraintSet> MotionConstraintMap;
+
+		struct CfgHasher {
+			std::size_t operator()(const Cfg& _cfg) const {
+				auto value = std::hash<Robot*>()(_cfg.GetRobot());
+				//size_t value = 0;
+				for(size_t i = 0; i < _cfg.DOF(); i++) {
+					const double dof = _cfg[i];
+					value = value ^ std::hash<double>()(dof);
+				}
+				return value;
+			}
+		};
+
+		struct EdgeHasher {
+			std::size_t operator()(const std::pair<size_t,size_t>& _p) const {
+				return std::hash<size_t>()(_p.first) ^ std::hash<size_t>()(_p.second);
+			}
+		};
 
 		///@}
 		///@name Construction
@@ -36,7 +54,9 @@ class LowLevelSearch {
 		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task);
 	
 		virtual std::pair<double,std::vector<size_t>> MotionPlan(Cfg _start, Cfg _goal, 
-																		double _startTime=0, double _minEndTime=0);
+																		double _startTime=0, double _minEndTime=0, SemanticTask* _currentTask=nullptr);
+
+		MotionConstraintMap m_motionConstraintMap;
 		//@}
 
   protected:	
@@ -53,7 +73,7 @@ class LowLevelSearch {
     /// @return The time to the target node via this edge, or infinity if taking
     ///         this edge would result in a collision with dynamic obstacles.
     double MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
-        const double _sourceTimestep, const double _bestTimestep) const;
+        const double _sourceTimestep, const double _bestTimestep);
 
     /// Check if an edge is collision-free with respect to another robot's cfg.
     /// @param _source The cfg source of the edge.
@@ -77,11 +97,42 @@ class LowLevelSearch {
 		bool m_debug;//TODO::add this to constructor
 
     /// The current set of conflicts to avoid.
-    const MotionConstraintSet* m_currentMotionConstraints{nullptr};
+    MotionConstraintSet* m_currentMotionConstraints{nullptr};
 
 		Robot* m_currentRobot{nullptr};
 
-		MotionConstraintMap m_motionConstraintMap;
+		SemanticTask* m_currentTask{nullptr};
+/*
+		//Need to add an additionally mapping layer cfg->planning_robot->edge
+		//Okay for now bc use shared roadmap
+		std::unordered_map<SemanticTask*,
+					std::unordered_map<Agent*,
+							std::unordered_map<Cfg,
+									std::set<std::pair<size_t,size_t>>,CfgHasher>>> m_invalidEdges;
+		//std::unordered_map<Cfg,std::unordered_set<std::pair<size_t,size_t>,EdgeHasher>,CfgHasher>
+		std::unordered_map<SemanticTask*,
+				std::unordered_map<Agent*,
+						std::unordered_map<Cfg,
+								std::set<std::pair<size_t,size_t>>,CfgHasher>>> m_validEdges;
+*/
+		//std::unordered_map<SemanticTask*,
+		//			std::unordered_map<Agent*,
+		//					std::map<Cfg,
+		//							std::set<std::pair<size_t,size_t>>>>> m_invalidEdges;
+
+		std::unordered_map<SemanticTask*,
+					std::unordered_map<Agent*,
+							std::map<Cfg,
+									std::unordered_map<size_t,std::unordered_set<size_t>>>>> m_invalidEdges;
+		//std::unordered_map<Cfg,std::unordered_set<std::pair<size_t,size_t>,EdgeHasher>,CfgHasher>
+		//std::unordered_map<SemanticTask*,
+		//		std::unordered_map<Agent*,
+		//				std::map<Cfg,
+		//						std::set<std::pair<size_t,size_t>>>>> m_validEdges;
+		std::unordered_map<SemanticTask*,
+				std::unordered_map<Agent*,
+						std::map<Cfg,
+								std::unordered_map<size_t,std::unordered_set<size_t>>>>> m_validEdges;
 		///@}
 
 };

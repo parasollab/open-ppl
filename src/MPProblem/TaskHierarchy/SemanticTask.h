@@ -21,7 +21,8 @@ class SemanticTask {
 			Completion,
 			Initiation,
 			Synchronous,
-			Asynchronous
+			Asynchronous,
+			None
 		};
 
 		typedef std::unordered_map<DependencyType, std::vector<std::shared_ptr<SemanticTask>>, 

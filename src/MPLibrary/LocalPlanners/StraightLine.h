@@ -114,6 +114,8 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
     std::string m_vcLabel;          ///< The validity checker.
     bool m_binaryEvaluation{false}; ///< Use binary search?
 
+		double m_selfEdgeSteps{1};
+
     ///@}
 
 };
@@ -141,6 +143,9 @@ StraightLine(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node) {
       "The distance metric for computing edge length.");
 
   m_vcLabel = _node.Read("vcLabel", true, "", "The validity checker to use.");
+
+	m_selfEdgeSteps = _node.Read("selfEdgeSteps", false, m_selfEdgeSteps,0.0,10000.0, 
+																"Number of increments in a self edge.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -382,7 +387,13 @@ IsConnectedSLSequential(
   // _c1 to _c2.
   int numSteps;
   CfgType increment(robot);
-  increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
+	if(_c1 == _c2) {
+		numSteps = m_selfEdgeSteps;
+		increment.FindIncrement(_c1, _c2, m_selfEdgeSteps);
+	}
+	else {
+  	increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
+	}
   if(this->m_debug)
     std::cout << "\n\tComputed increment for " << numSteps << " steps: "
               << increment.PrettyPrint() << std::endl;
@@ -466,7 +477,13 @@ IsConnectedSLBinary(
   // _c1 to _c2.
   int numSteps;
   CfgType increment(robot);
-  increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
+	if(_c1 == _c2) {
+		numSteps = m_selfEdgeSteps;
+		increment.FindIncrement(_c1, _c2, m_selfEdgeSteps);
+	}
+	else {
+  	increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
+	}
   if(this->m_debug)
     std::cout << "\n\tComputed increment for " << numSteps << " steps: "
               << increment.PrettyPrint()

@@ -368,7 +368,7 @@ TwoVariableDijkstraSSSP(
 
 	while(!_goals.count(current->m_vid) or current->m_distance < _minEndTime) {
 
-		if(current->m_distance >= _lastConstraint) { 
+		if(current->m_distance > _lastConstraint and current->m_distance > _minEndTime) { 
 			if(visitedPostConstraints.count(current->m_vid)){
 				if(_goals.count(current->m_vid)) {
 					auto waitNode = std::shared_ptr<TwoVariableSSSPNode>(
@@ -411,6 +411,11 @@ TwoVariableDijkstraSSSP(
 		for(auto eit = vit->begin(); eit != vit->end(); eit++) {
 			auto sourceDistance = current->m_distance;
 			auto targetDistance = std::numeric_limits<double>::infinity();
+
+			//double sanity = eit->property().GetTimeSteps() + sourceDistance;
+			//if(discoveredVertices[sanity].count(eit->target()))
+			//	continue;		
+
 			auto newDistance = _weight(eit,sourceDistance,targetDistance);
 
 			if(newDistance < targetDistance and !discoveredVertices[newDistance].count(eit->target())) {

@@ -254,7 +254,8 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 
 	auto& constraints = _node.GetMotionConstraints(_assign.m_task->GetParent(),_assign.m_agent);
 	for(auto& c : constraints) {
-		m_motionConstraintMap[_assign.m_agent].insert(std::make_pair(c.m_timestep,c.m_conflictCfg));
+		m_motionConstraintMap[_assign.m_agent].insert(std::make_pair(c.m_timestep,
+																				std::make_pair(c.m_conflictCfg,c.m_duration)));
 	}
 
 	auto agent = _assign.m_agent;
@@ -291,7 +292,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	query.first.SetRobot(agent->GetRobot());
 	query.second.SetRobot(agent->GetRobot());
 
-	auto setup = this->MotionPlan(setupCfg,query.first,setupStart,_startTime);
+	auto setup = this->MotionPlan(setupCfg,query.first,setupStart,_startTime,_assign.m_task->GetParent().get());
 
 	if(setup.second.empty())
 		return false;
@@ -299,10 +300,10 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	//TODO::Check if preceeding task needs to be patched to account for waiting time
 	if(_startTime > 0 
 			and setup.first > _startTime 
-			and !PatchPaths(_node,_assign,setupCfg,query.first,setupStart))
+			and !PatchPaths(_node,_assign,setup.first))
 		return false;
 
-	auto exec = this->MotionPlan(query.first,query.second,setup.first,0);
+	auto exec = this->MotionPlan(query.first,query.second,setup.first,0,_assign.m_task->GetParent().get());
 
 	if(exec.second.empty())
 		return false;
@@ -320,6 +321,35 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 
 bool
 MPLowLevelSearch::
-PatchPaths(GeneralCBSNode& _node, Assignment& _assign, Cfg _setupCfg, Cfg _startCfg, double _setupStart) {
+PatchPaths(GeneralCBSNode& _node, Assignment& _assign, double _endTime) {
+
+	Assignment* previous = nullptr;
+	auto& tp = _node.GetSolutionRef().m_taskPlans[_assign.m_task->GetParent()];
+	for(auto& a : tp) {
+		if(a == _assign) 
+			break;
+		previous = &a;
+	}
+	if(!previous)
+		return true;
+
+	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+	auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(previous->m_agent)).get();
+	
+	Cfg startCfg = roadmap->GetVertex(previous->m_execPath.front());
+	Cfg endCfg = roadmap->GetVertex(previous->m_execPath.back());
+
+	startCfg.SetRobot(previous->m_agent->GetRobot());
+	endCfg.SetRobot(previous->m_agent->GetRobot());
+
+	auto plan = this->MotionPlan(startCfg, endCfg, previous->m_execStartTime, 
+																_endTime,_assign.m_task->GetParent().get());
+
+	if(plan.first > _endTime)
+		return false;
+
+	previous->m_execPath = plan.second;
+	previous->m_execEndTime = plan.first;
+
 	return true;
 }

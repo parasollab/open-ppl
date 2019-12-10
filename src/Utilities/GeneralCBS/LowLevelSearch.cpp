@@ -56,9 +56,15 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 
 std::pair<double,std::vector<size_t>>
 LowLevelSearch::
-MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
+MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, SemanticTask* _currentTask) {
 
-	
+	if(_currentTask)
+		m_currentTask = _currentTask;
+
+	if(!m_currentTask)
+		throw RunTimeException(WHERE, "LowLevelSearch must have the current task set.");
+
+
 	m_currentRobot = _start.GetRobot();
 	auto agent = m_currentRobot->GetAgent();
 	m_currentMotionConstraints = &(m_motionConstraintMap[agent]);
@@ -75,8 +81,13 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 	auto query2 = dynamic_cast<QueryMethod<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
 									m_tmpLibrary->GetMPLibrary()->GetMapEvaluator("TwoVariableQuery").get());
 
-  auto upper = m_currentMotionConstraints->upper_bound(MAX_DBL);
-	double lastConstraint = upper->first * m_tmpLibrary->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  //auto upper = m_currentMotionConstraints->upper_bound(MAX_DBL);
+	//double lastConstraint = upper->first;
+	double lastConstraint = 0;
+	for(auto iter = m_currentMotionConstraints->begin(); iter != m_currentMotionConstraints->end(); iter++) {
+		if(iter->first > lastConstraint)
+			lastConstraint = iter->first;
+	}
 
 	//query->SetStartTime(_startTime);
 	//query->SetEndTime(_minEndTime);
@@ -143,6 +154,7 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 	m_currentRobot = nullptr;
 	m_currentMotionConstraints = nullptr;
 
+
 	return std::make_pair(double(solution->GetPath()->TimeSteps())+_startTime,
 												solution->GetPath(robot)->VIDs());
 }
@@ -153,13 +165,12 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime) {
 double
 LowLevelSearch::
 MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
-    const double _startTime, const double _bestEndTime) const {
+    const double _startTime, const double _bestEndTime) {
 	
   // Compute the time when we will end this edge.
   const size_t startTime = static_cast<size_t>(std::llround(_startTime)),
                endTime   = startTime + _ei->property().GetTimeSteps();
 
-#include "Utilities/SSSP.h"
   // If this end time isn't better than the current best, we won't use it. Return
   // without checking conflicts to save computation.
   if(endTime >= static_cast<size_t>(std::llround(_bestEndTime)))
@@ -171,8 +182,9 @@ MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
 
   // There is at least one conflict. Find the set which occurs between this
   // edge's start and end time.
-  auto lower = m_currentMotionConstraints->lower_bound(startTime),
-       upper = m_currentMotionConstraints->upper_bound(endTime);
+  /*auto lower = m_currentMotionConstraints->lower_bound(startTime),
+       //upper = m_currentMotionConstraints->upper_bound(endTime);
+       upper = m_currentMotionConstraints->upper_bound(startTime);
 
   // If all of the conflicts happen before or after now, there is nothing to
   // check.
@@ -180,15 +192,21 @@ MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
   if(beforeNow)
     return endTime;
 
-  const bool afterNow = upper == m_currentMotionConstraints->begin();
+  const bool afterNow = upper->first > endTime;
+//upper == m_currentMotionConstraints->begin();
   if(afterNow)
     return endTime;
-
+*/
   // Check the conflict set to see if this edge hits any of them.
-  for(auto iter = lower; iter != upper; ++iter) {
+  //for(auto iter = lower; iter != upper; ++iter) {
+  for(auto iter = m_currentMotionConstraints->begin(); iter != m_currentMotionConstraints->end(); ++iter) {
     // Unpack the conflict data.
     const size_t timestep = iter->first;
-    const Cfg& cfg    = iter->second;
+
+		if(timestep < startTime or timestep+iter->second.second > endTime)
+			continue;
+
+    Cfg cfg    = iter->second.first;
 
     // Assert that the conflict occurs during this edge transition (remove this
     // later once we're sure it works right).
@@ -197,16 +215,32 @@ MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
       throw RunTimeException(WHERE) << "The conflict set should only include "
                                     << "conflicts that occur during this range.";
 
+		//Try to cache these computations
+		auto p = std::make_pair(_ei->source(),_ei->target());
+		auto invalids = m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first];
+		bool invalid = invalids.count(p.second);
+		bool valid = m_validEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first].count(p.second);
+		if(valid) {
+			if(invalid)
+				throw RunTimeException(WHERE,"Something is seriously wrong.");
+			continue;
+		}
     // Check if the conflict cfg hits this edge.
-    const bool hitsEdge = !IsEdgeSafe(_ei->source(), _ei->target(), cfg);
-    if(!hitsEdge)
+    const bool hitsEdge = invalid
+								or !IsEdgeSafe(_ei->source(), _ei->target(), cfg);
+    if(!hitsEdge) {
+			m_validEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first].insert(p.second);
       continue;
+		}
+		m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first].insert(p.second);
 
-    if(this->m_debug)
-      std::cout << "\t\t\t\t\tEdge (" << _ei->source() << ","
+    //if(this->m_debug)
+    if(false)
+      std::cout << "\t\t\t\tEdge (" << _ei->source() << ","
                 << _ei->target() << ") collides against robot "
                 << cfg.GetRobot()->GetLabel()
                 << " at " << cfg.PrettyPrint()
+								<< " at time " << _startTime
                 << std::endl;
 
     // The conflict blocks this edge.
