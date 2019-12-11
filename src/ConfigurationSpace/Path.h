@@ -117,6 +117,10 @@ class PathType final {
     /// Clear cached data, but leave the VIDs.
     void FlushCache();
 
+		void SetFinalWaitTimeSteps(const size_t& _timeSteps);
+
+		const size_t GetFinalWaitTimeSteps() const;
+
     ///@}
 
   private:
@@ -139,6 +143,8 @@ class PathType final {
 
     double m_length{0};                 	///< The path length.
     mutable bool m_lengthCached{false}; 	///< Is the current path length correct?
+
+		size_t m_finalWaitTimeSteps; ///< Temp - need to move this logic into the waiting timesteps.
 
     ///@}
 };
@@ -250,6 +256,10 @@ FullCfgs(MPLibrary* const _lib, const string& _lp) const {
     //Inserting next vertex cfg
     out.push_back(m_roadmap->GetVertex(*(it+1)));
   }
+	auto last = out.back();
+	for(size_t i = 0; i < m_finalWaitTimeSteps; i++) {
+		out.push_back(last);
+	}
   return out;
 }
 
@@ -270,6 +280,7 @@ TimeSteps() const {
 		auto edge = m_roadmap->GetEdge(*it, *(it+1));
 		timesteps += edge.GetTimeSteps();
   }
+	timesteps += m_finalWaitTimeSteps;
   return timesteps;
 }
 
@@ -384,6 +395,19 @@ FlushCache() {
   m_cfgs.clear();
 }
 
+template <typename MPTraits>
+void 
+PathType<MPTraits>::
+SetFinalWaitTimeSteps(const size_t& _timeSteps) {
+	m_finalWaitTimeSteps = _timeSteps;
+}
+
+template <typename MPTraits>
+const size_t 
+PathType<MPTraits>::
+GetFinalWaitTimeSteps() const {
+	return m_finalWaitTimeSteps;
+}
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
