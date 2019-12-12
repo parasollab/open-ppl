@@ -106,7 +106,7 @@ void
 MultiAgentDijkstra::
 ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
     std::unordered_map<size_t,double> _distance){
-  auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
+/*  auto sg = static_cast<MultiTaskGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetAvailableIntervalGraph();
   if(m_debug){
   	sg->PrintAvailabilityGraph();
@@ -153,7 +153,7 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 					endTime = _distance[last];
 				else
 					endTime = _distance[_path[i]];
-	
+
 				if(endTime == 0)
 					std::cout << "THIS IS A PROBLEM" << std::endl;
 
@@ -187,7 +187,7 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
   }
 
   this->GetTaskPlan()->SetPlanCost(_wholeTask,_distance[_path[1]],_distance[_path[_path.size()-2]]);
-/*
+*//*
   for(size_t i = 2; i < _path.size(); i++){
     auto vid = _path[i];
     if(currentAgent and !m_nodeAgentMap[vid]){
@@ -539,10 +539,10 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 				if((_sourceDistance >= constraint.GetStartTime() and _sourceDistance < constraint.GetStartTime())){
 					//or (end <= constraint.GetEndTime() and end > constraint.GetStartTime())) {
 					if(cfg.GetRobot()->GetAgent() != constraint.GetAgent() or
-						 cfg != constraint.GetEndLocation() or 
+						 cfg != constraint.GetEndLocation() or
 							sg->GetAvailableIntervalGraph()->GetVertex(source) != constraint.GetStartLocation()) {
 
-						newDistance = std::numeric_limits<double>::infinity();	
+						newDistance = std::numeric_limits<double>::infinity();
 					}
 					break;
 				}
@@ -563,7 +563,7 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 		}
 		*/
   	//newDistance = end;
-	}	
+	}
 
   if(newDistance < _targetDistance) {
     m_robotUpdates[target] = m_robotUpdates[source];

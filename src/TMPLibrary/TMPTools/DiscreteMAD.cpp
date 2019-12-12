@@ -52,11 +52,11 @@ Run(WholeTask* _wholeTask, std::set<size_t> _validVIDs, ConstraintMap _constrain
 		size_t targetDistance;
     if(_sourceDistance == std::numeric_limits<double>::infinity())
 			sourceDistance = MAX_INT;
-		else 
+		else
 			sourceDistance = size_t(_sourceDistance);
     if(_targetDistance == std::numeric_limits<double>::infinity())
 			targetDistance = MAX_INT;
-		else 
+		else
 			targetDistance = size_t(_targetDistance);
     return this->AvailableIntervalPathWeight(_ei,size_t(sourceDistance),size_t(targetDistance),
 																						 start,goal,_wholeTask,_constraints);
@@ -107,7 +107,8 @@ std::vector<SubtaskPlan>
 DiscreteMAD::
 ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
     std::unordered_map<size_t,double> _distance, ConstraintMap _constraints){
-
+return {};
+/*
 	std::vector<SubtaskPlan> taskPlan;
 
   auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
@@ -132,12 +133,12 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
   }
 
 	Robot* previousRobot = nullptr;
-	size_t first;
-	size_t last;
+	size_t first = 0;
+	size_t last = 0;
 	for(size_t i = 0; i < _path.size(); i++) {
 		auto vid = _path[i];
 		Robot* robot;
-		
+
 		if(i == 0 or i == _path.size()-1) {
 			robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
 		}
@@ -147,7 +148,7 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 		//Check if continueing the same subtask
 		if(robot == previousRobot) {
 			last = vid;
-			continue;	
+			continue;
 		}
 		else if(previousRobot and previousRobot != this->GetTaskPlan()->GetCoordinator()->GetRobot()){
 			SubtaskPlan plan = CreateSubtaskPlan(static_cast<HandoffAgent*>(previousRobot->GetAgent()),
@@ -160,7 +161,7 @@ ExtractTaskPlan(const std::vector<size_t>& _path, WholeTask* _wholeTask,
 		previousRobot = robot;
 	}
 
-	return taskPlan;
+	return taskPlan;*/
 }
 
 std::shared_ptr<MPTask>
@@ -264,10 +265,10 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 				if((_sourceDistance >= constraint.GetStartTime() and _sourceDistance < constraint.GetStartTime())){
 					//or (end <= constraint.GetEndTime() and end > constraint.GetStartTime())) {
 					if(cfg.GetRobot()->GetAgent() != constraint.GetAgent() or
-						 cfg != constraint.GetEndLocation() or 
+						 cfg != constraint.GetEndLocation() or
 							sg->GetAvailableIntervalGraph()->GetVertex(source) != constraint.GetStartLocation()) {
 
-						newDistance = std::numeric_limits<double>::infinity();	
+						newDistance = std::numeric_limits<double>::infinity();
 					}
 					break;
 				}
@@ -289,7 +290,7 @@ AvailableIntervalPathWeight(typename AvailableIntervalGraph::adj_edge_iterator& 
 		}
 		*/
   	//newDistance = end;
-	}	
+	}
 
   if(newDistance < _targetDistance) {
     m_robotUpdates[target] = m_robotUpdates[source];
@@ -316,20 +317,20 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
   auto sg = static_cast<DiscreteIntervalGraph*>(this->GetStateGraph(m_sgLabel).get());
 	auto roadmap = sg->GetCapabilityRoadmap(_agent);
 
-	auto allocations =	this->GetTaskPlan()->GetAgentAllocations(_agent);	
+	auto allocations =	this->GetTaskPlan()->GetAgentAllocations(_agent);
 
 	auto iter = allocations.begin();
 	while(iter != allocations.end()) {
 		if(iter->m_endTime > _startTime)
 			break;
 		iter++;
-	}	
+	}
 	if(iter == allocations.begin())
-		throw RunTimeException(WHERE, 
+		throw RunTimeException(WHERE,
 							"This should never happen because the first end time should be 0"
 							" from the initial positioning of the robots.");
 	iter--;
-	
+
 	//Setup path
 
 	auto setupStart = iter->m_endLocation;
@@ -345,7 +346,7 @@ CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _star
 
 	Cfg goalCfg = sg->GetAvailableIntervalGraph()->GetVertex(_end);
 	goalCfg.SetRobot(_agent->GetRobot());
-	
+
 	auto setupPath = sg->LowLevelGraphPath(setupCfg, startCfg, _constraints, setupBegin, _startTime-1);
 	if(setupPath.size() + setupBegin > _startTime+1)
 		throw RunTimeException(WHERE,"This should never happen due to the available interval concept of "
@@ -381,7 +382,7 @@ InitializeRobotUpdates(size_t _start) {
 		int y = int(cfg[1] + .5);
 
 		cfg.SetData({double(x),double(y),0});
-	
+
 		cfg.SetRobot(agent->GetRobot());
     m_robotUpdates[_start][agent] = std::make_pair(0,cfg);
   }
