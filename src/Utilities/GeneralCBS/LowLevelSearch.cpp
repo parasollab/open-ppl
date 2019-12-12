@@ -54,7 +54,7 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 }
 
 
-std::pair<double,std::vector<size_t>>
+std::pair<double,std::pair<std::vector<size_t>,size_t>>
 LowLevelSearch::
 MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, SemanticTask* _currentTask) {
 
@@ -156,7 +156,8 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, Semanti
 
 
 	return std::make_pair(double(solution->GetPath()->TimeSteps())+_startTime,
-												solution->GetPath(robot)->VIDs());
+												std::make_pair(solution->GetPath(robot)->VIDs(),
+																			solution->GetPath()->GetFinalWaitTimeSteps()));
 }
 
 

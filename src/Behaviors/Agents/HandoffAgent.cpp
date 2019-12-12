@@ -438,7 +438,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   }
 
   std::cout << "Printing out full path" << std::endl;
-  for(auto cfg : m_solution->GetPath()->FullCfgs(m_library.get(), "slRobot")){
+  for(auto cfg : m_solution->GetPath()->FullCfgs(m_library.get())){
     std::cout << cfg.PrettyPrint() << std::endl;
   }
 

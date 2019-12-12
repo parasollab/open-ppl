@@ -17,7 +17,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 	
 		typedef std::pair<double,double> AvailInterval;
 		typedef std::unordered_map<size_t,std::unordered_map<Agent*,std::vector<AvailInterval>>> IntervalMap;
-		typedef std::pair<double,std::vector<size_t>> PathInfo;
+		//typedef std::pair<double,std::pair<std::vector<size_t>,size_t>> PathInfo;
 
 		struct AvailElem{
 			size_t 				m_vid;
@@ -65,8 +65,10 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		///@output bool indicating if there is a valid plan for the task being updated
 		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
 	
-		virtual std::pair<double,std::vector<size_t>> MotionPlan(Cfg _start, Cfg _goal,
+		virtual std::pair<double,std::pair<std::vector<size_t>,size_t>> MotionPlan(Cfg _start, Cfg _goal,
 						double _startTime = 0, double _minEndTime = 0, SemanticTask* _currentTask = nullptr) override;
+
+		bool CheckDeliveringAgentFutureConstraints(double _interactionTime, AvailElem _elem);
 		//@}
 
   private:
@@ -86,14 +88,17 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		std::vector<std::pair<double,AvailElem>> ValidNeighbors(const AvailElem& _elem, 
 															size_t _vid, double _currentCost, double _edgeCost);
 
-		PathInfo ComputeSetup(AvailElem _elem, double _minTime);
+		std::pair<double,std::pair<std::vector<size_t>,size_t>>
+	 	ComputeSetup(AvailElem _elem, double _minTime, AvailElem _parent);
 
-		PathInfo ComputeExec(AvailElem _elem, size_t _endVID, double _startTime);
+		std::pair<double,std::pair<std::vector<size_t>,size_t>>
+		ComputeExec(AvailElem _elem, size_t _endVID, double _startTime);
 
 		std::vector<Assignment> PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task);
 
 		Assignment CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask> _parentTask, double _endTime);
 
+		bool CheckExec(AvailElem _elem, double _endTime, AvailElem _post);
 		///@}
 		///@name Internal State
 		///@{
@@ -128,13 +133,17 @@ class TMPLowLevelSearch : public LowLevelSearch {
 
 		std::map<AvailElem,AllocationConstraint> m_availSourceMap;
 
-		std::map<AvailElem,std::vector<size_t>> m_execPathMap;
+		std::map<AvailElem,AllocationConstraint> m_availEndMap;
+
+		std::map<AvailElem,std::pair<std::vector<size_t>,size_t>> m_execPathMap;
 	
-		std::map<AvailElem,std::vector<size_t>> m_setupPathMap;
+		std::map<AvailElem,std::pair<std::vector<size_t>,size_t>> m_setupPathMap;
 
 		std::map<AvailElem,double> m_setupStartTimes;
 
 		std::map<AvailElem,std::unordered_set<Agent*>> m_usedAgents;
+
+		std::map<AvailElem,std::map<AvailElem,std::pair<std::vector<size_t>,size_t>>> m_reExecPathMap;
 		///@}
 };
 

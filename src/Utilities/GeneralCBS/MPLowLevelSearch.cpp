@@ -86,6 +86,7 @@ ClearTaskPlan(Assignment& _assign, GeneralCBSNode& _node) {
 		return;
 	
 	_assign.m_execPath = {};
+	_assign.m_finalWaitTimeSteps = 0;
 
 	std::vector<Assignment>& assignments = _node.GetSolutionRef().m_taskPlans[_assign.m_task->GetParent()];
 	bool before = true;
@@ -108,6 +109,7 @@ ClearAgentAssignments(Assignment& _assign, GeneralCBSNode& _node) {
 		return;
 	
 	_assign.m_execPath = {};
+	_assign.m_finalWaitTimeSteps = 0;
 
 	std::vector<Assignment>& assignments = _node.GetSolutionRef().m_agentAssignments[_assign.m_agent];
 	bool before = true;
@@ -195,6 +197,8 @@ PlanAssignments(GeneralCBSNode& _node) {
 					assignments[j].m_execStartTime = assign.m_execStartTime;
 					assignments[j].m_execEndTime = assign.m_execEndTime;
 					assignments[j].m_setupStartTime = assign.m_setupStartTime;
+					assignments[j].m_setupWaitTimeSteps = assign.m_setupWaitTimeSteps;
+					assignments[j].m_finalWaitTimeSteps = assign.m_finalWaitTimeSteps;
 				}
 
 				if(i == kv.second.size()-1)
@@ -294,7 +298,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 
 	auto setup = this->MotionPlan(setupCfg,query.first,setupStart,_startTime,_assign.m_task->GetParent().get());
 
-	if(setup.second.empty())
+	if(setup.second.first.empty())
 		return false;
 
 	//TODO::Check if preceeding task needs to be patched to account for waiting time
@@ -305,11 +309,14 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 
 	auto exec = this->MotionPlan(query.first,query.second,setup.first,0,_assign.m_task->GetParent().get());
 
-	if(exec.second.empty())
+	if(exec.second.first.empty())
 		return false;
 
-	_assign.m_setupPath = setup.second;
-	_assign.m_execPath = exec.second;
+	_assign.m_setupPath = setup.second.first;
+	_assign.m_setupWaitTimeSteps = setup.second.second;
+
+	_assign.m_execPath = exec.second.first;
+	_assign.m_finalWaitTimeSteps = exec.second.second;
 
 	_assign.m_execStartTime = setup.first;
 	_assign.m_execEndTime = exec.first;
@@ -348,7 +355,8 @@ PatchPaths(GeneralCBSNode& _node, Assignment& _assign, double _endTime) {
 	if(plan.first > _endTime)
 		return false;
 
-	previous->m_execPath = plan.second;
+	previous->m_execPath = plan.second.first;
+	previous->m_finalWaitTimeSteps = plan.second.second;
 	previous->m_execEndTime = plan.first;
 
 	return true;

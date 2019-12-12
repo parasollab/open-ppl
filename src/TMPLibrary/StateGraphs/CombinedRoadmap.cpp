@@ -640,6 +640,8 @@ TransformITs(){
 
       RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = currentTemplate->GetConnectedRoadmap();
 
+			std::unordered_set<size_t> invalids;
+
       // Copy vertices and map the change in VIDs.
       std::unordered_map<VID, VID> oldToNew;
       for(auto vit = graph->begin(); vit != graph->end(); ++vit) {
@@ -656,6 +658,7 @@ TransformITs(){
 				oldToNew[oldVID] = newVID;
         if(!isValid){
         	invalidVIDs.push_back(newVID);
+					invalids.insert(newVID);
 				}
       }
 
@@ -663,7 +666,11 @@ TransformITs(){
       for(auto distinctRoadmap : currentTemplate->GetDistinctRoadmaps()) {
         std::vector<size_t> transformedRoadmap;
         for(auto vid : distinctRoadmap) {
-          transformedRoadmap.push_back(oldToNew[vid]);
+					auto newVID = oldToNew[vid];
+					if(invalids.count(newVID))
+						continue;
+          //transformedRoadmap.push_back(oldToNew[vid]);
+          transformedRoadmap.push_back(newVID);
         }
         m_transformedRoadmaps.push_back(transformedRoadmap);
       }

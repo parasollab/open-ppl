@@ -53,8 +53,10 @@ class LowLevelSearch {
 		///@output bool indicating if there is a valid plan for the task being updated
 		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task);
 	
-		virtual std::pair<double,std::vector<size_t>> MotionPlan(Cfg _start, Cfg _goal, 
-																		double _startTime=0, double _minEndTime=0, SemanticTask* _currentTask=nullptr);
+		virtual std::pair<double,std::pair<std::vector<size_t>,size_t>> 
+									MotionPlan(Cfg _start, Cfg _goal, 
+														double _startTime=0, double _minEndTime=0, 
+														SemanticTask* _currentTask=nullptr);
 
 		MotionConstraintMap m_motionConstraintMap;
 		//@}

@@ -618,6 +618,8 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
 	if(!node)
 		return {};
 
+	this->GetPath()->SetFinalWaitTimeSteps(node->m_waitTimeSteps);
+
 	std::vector<typename QueryMethod<MPTraits>::VID> path;
 	//while(node->m_vid != _start) {
 	while(node->m_parent) {

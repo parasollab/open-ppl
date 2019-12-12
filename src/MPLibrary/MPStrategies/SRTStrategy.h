@@ -488,8 +488,8 @@ ExpandTree(const VID _tree, const CfgType& _dir) {
   currentTree.first = (currentTree.first * (s-1) + newCfg) / s;
 
   //add edge
-  std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("RRTExpand",
-      weight), WeightType("RRTExpand", weight));
+  std::pair<WeightType, WeightType> weights = std::make_pair(WeightType("",
+      weight), WeightType("", weight));
   g->AddEdge(kClosest[0].target, recentVID, weights);
   g->GetVertex(recentVID).SetStat("Parent", kClosest[0].target);
 

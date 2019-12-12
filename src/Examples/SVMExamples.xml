@@ -519,11 +519,6 @@
       <!-- Modify Path -->
       <ModifyPath label="ModifyPath" pmLabel="CR" pathFile="3D/3d.path"/>
 
-      <!-- LP Compare - Compare edges between two roadmaps. -->
-      <LPCompare label="LPCompare" dmLabel="euclidean"
-        rdmp1="Map1.map" lpLabel1="sl"
-        rdmp2="Map2.map" lpLabel2="malpi"/>
-
       <!-- MultiStrategy -->
       <MultiStrategy label="MultiStrategy">
         <MPStrategy method="BasicPRM1"/>

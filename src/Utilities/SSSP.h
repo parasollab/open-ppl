@@ -333,6 +333,7 @@ struct TwoVariableSSSPNode {
 	size_t m_vid;
 	double m_distance;
 	std::shared_ptr<TwoVariableSSSPNode> m_parent;
+	double m_waitTimeSteps{0};
 
 	TwoVariableSSSPNode(size_t _vid, double _distance, std::shared_ptr<TwoVariableSSSPNode> _parent)
 			: m_vid(_vid), m_distance(_distance), m_parent(_parent) {}	
@@ -368,7 +369,11 @@ TwoVariableDijkstraSSSP(
 
 	while(!_goals.count(current->m_vid) or current->m_distance < _minEndTime) {
 
-		if(current->m_distance > _lastConstraint and current->m_distance > _minEndTime) { 
+		if(current->m_distance > _lastConstraint){ // and current->m_distance > _minEndTime) {
+			if(_goals.count(current->m_vid)) {
+				current->m_waitTimeSteps = _minEndTime - current->m_distance;
+				return current;
+			} 
 			if(visitedPostConstraints.count(current->m_vid)){
 				if(_goals.count(current->m_vid)) {
 					auto waitNode = std::shared_ptr<TwoVariableSSSPNode>(

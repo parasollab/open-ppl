@@ -63,6 +63,7 @@ ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 		return false;
 	}
 
+	//PatchPaths(_node);
 	return true;
 }
 
@@ -193,7 +194,8 @@ CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node) {
 		return false;
 	}
 
-	_a2.m_setupPath = plan.second;
+	_a2.m_setupPath = plan.second.first;
+	_a2.m_setupWaitTimeSteps = plan.second.second;
 
 	auto& taskPlan = _node.GetSolutionRef().m_taskPlans[_a2.m_task->GetParent()];
 	for(auto& assign : taskPlan) {
@@ -202,8 +204,51 @@ CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node) {
 			 assign.m_execEndTime != _a2.m_execEndTime) {
 			continue;
 		}
-		assign.m_setupPath = plan.second;
+		assign.m_setupPath = plan.second.first;
+		assign.m_setupWaitTimeSteps = plan.second.second;
 	}
 
 	return true;
+}
+	
+void
+AllocationValidation::
+PatchPaths(GeneralCBSNode& _node) {
+	//Check to make sure that setup paths all line up since they can be changed to match a constraint
+	//that no longer exists.
+	auto& solution = _node.GetSolutionRef();
+	auto& agentAssigns = solution.m_agentAssignments;
+
+	auto tmp = static_cast<TMPLowLevelSearch*>(m_lowLevel);
+	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph("MTGraph").get());
+
+	for(auto& kv : agentAssigns) {
+		auto agent = kv.first;
+		for(size_t i = 0; i < kv.second.size(); i++) {
+			auto& a = kv.second[i];
+			if(i == 0) {
+				if(a.m_setupStartTime > 0) {
+					auto g = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(a.m_agent));
+					auto& constraints = _node.GetMotionConstraints(a.m_task->GetParent(),agent);
+					for(auto& c : constraints) {
+						tmp->m_motionConstraintMap[agent].insert(std::make_pair(c.m_timestep,
+																					std::make_pair(c.m_conflictCfg,c.m_duration)));
+
+						auto startCfg = agent->GetRobot()->GetSimulationModel()->GetState();
+						startCfg.SetRobot(agent->GetRobot());
+						auto endCfg = g->GetVertex(a.m_execPath.front());
+						endCfg.SetRobot(agent->GetRobot());
+
+						auto plan = tmp->MotionPlan(startCfg,endCfg,
+										0,a.m_execStartTime,a.m_task->GetParent().get());
+
+						if(plan.first > a.m_execStartTime)
+							throw RunTimeException(WHERE, "James you broke something again.");
+
+						
+					}
+				}
+			}
+		}
+	}
 }

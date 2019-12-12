@@ -70,9 +70,9 @@ ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 	if(unallocated.empty())
 		return true;
 
-	std::cout << "Creating TCBS Children" << std::endl;
+	//std::cout << "Creating TCBS Children" << std::endl;
 	CreateAllocationChildren(_node, _tree, unallocated, occupied);
-	std::cout << "Created TCBS Children" << std::endl;
+	//std::cout << "Created TCBS Children" << std::endl;
 	return false;
 }
 

@@ -112,21 +112,61 @@ FindMotionConflict(GeneralCBSNode& _node) {
 		auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(agent));
 
 		auto& assigns = kv.second;
-		
-		for(auto a : assigns ) {
-			PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> path(roadmap.get());
+	
+		Cfg previousCfg = agent->GetRobot()->GetSimulationModel()->GetState();
+		size_t previousTimeStep = 0;
+	
+		for(size_t i = 0; i < assigns.size(); i++) {
+			auto a = assigns[i];
+
+			std::vector<Cfg> interim;
+
+
+			PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> setupPath(roadmap.get());
 			//remove last element of setup as it is the same as the exec path
 			auto setup = a.m_setupPath;
-			setup.pop_back();
-			path += setup;
-			path += a.m_execPath;
-			auto cfgs = path.FullCfgs(m_library);
+			//setup.pop_back();
+			setupPath += setup;
+			setupPath.SetFinalWaitTimeSteps(a.m_setupWaitTimeSteps);
+			//path += a.m_execPath;
+			auto cfgs = setupPath.FullCfgs(m_library);
+
+			for(size_t j = 0; j < a.m_execStartTime - (cfgs.size()-1+previousTimeStep); j++) {
+				interim.push_back(previousCfg);
+			}
+
+			cfgs.pop_back();
+
+			PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> execPath(roadmap.get());
+			execPath += a.m_execPath;
+			execPath.SetFinalWaitTimeSteps(a.m_finalWaitTimeSteps);
+
+			auto execCfgs = execPath.FullCfgs(m_library);
+
+			previousCfg = execCfgs.back();
+
+			if(i < assigns.size()-1) {
+				execCfgs.pop_back();
+				//previousTimeStep = 1;
+			}	
 
 			size_t start = agentPaths[agent].size();
-			size_t end = start+cfgs.size()-1;
-			agentPaths[agent].insert(agentPaths[agent].end(),cfgs.begin(),cfgs.end());
+			size_t end = start+interim.size()+cfgs.size()+execCfgs.size();
 
-			m_pathTaskMap[agent].push_back(std::make_pair(std::make_pair(start,end),a.m_task->GetParent()));
+			if(i == assigns.size()-1)
+				end = end-1;
+
+			previousTimeStep = end;
+
+			if(end != a.m_execEndTime)
+				throw RunTimeException(WHERE, "Path lengths do not match up in Motion Validation for ." +
+																			agent->GetRobot()->GetLabel());
+			
+			agentPaths[agent].insert(agentPaths[agent].end(),interim.begin(),interim.end());
+			agentPaths[agent].insert(agentPaths[agent].end(),cfgs.begin(),cfgs.end());
+			agentPaths[agent].insert(agentPaths[agent].end(),execCfgs.begin(),execCfgs.end());
+
+			m_pathTaskMap[agent].push_back(std::make_pair(std::make_pair(start,end-1),a.m_task->GetParent()));
 		}
 	}
 

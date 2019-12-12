@@ -48,13 +48,6 @@ class AStar : public LocalPlannerMethod<MPTraits> {
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false);
 
-    virtual vector<CfgType> ReconstructPath(
-        const CfgType& _c1, const CfgType& _c2, const vector<CfgType>& _intermediates,
-        double _posRes, double _oriRes) {
-      vector<CfgType> tmp = _intermediates;
-      return tmp;
-    }
-
   protected:
 
     virtual bool IsConnectedOneWay(

@@ -15,14 +15,18 @@ struct Assignment {
 	double													m_setupStartTime;
 	double													m_execStartTime;
 	double													m_execEndTime;
+	size_t													m_setupWaitTimeSteps;
+	size_t													m_finalWaitTimeSteps;
 
 	Assignment() {}
 
 	Assignment(Agent* _agent, std::shared_ptr<SemanticTask> _task, 
 							std::vector<size_t> _setup, std::vector<size_t> _exec,
-							double _setupStart, double _startTime, double _endTime) :
+							double _setupStart, double _startTime, double _endTime,
+							size_t _setupWaitTimeSteps = 0, size_t _waitTimeSteps = 0) :
 							m_agent(_agent), m_task(_task), m_setupPath(_setup), m_execPath(_exec),
-							m_setupStartTime(_setupStart), m_execStartTime(_startTime), m_execEndTime(_endTime) {}
+							m_setupStartTime(_setupStart), m_execStartTime(_startTime), m_execEndTime(_endTime), 
+							m_setupWaitTimeSteps(_setupWaitTimeSteps), m_finalWaitTimeSteps(_waitTimeSteps) {}
 
 	bool operator>(const Assignment& _other) const {
 		//return m_setupStartTime > _other.m_setupStartTime;
@@ -40,7 +44,9 @@ struct Assignment {
 						m_execPath  			== _other.m_execPath and
 						m_setupStartTime 	== _other.m_setupStartTime and
 						m_execStartTime 	== _other.m_execStartTime and 
-						m_execEndTime 		== _other.m_execEndTime);
+						m_execEndTime 		== _other.m_execEndTime and
+						m_finalWaitTimeSteps == _other.m_finalWaitTimeSteps and
+						m_setupWaitTimeSteps == _other.m_setupWaitTimeSteps);
 	}
 
 	bool operator!=(const Assignment& _other) const {
@@ -77,7 +83,7 @@ struct MotionConstraint {
 
 
 struct AllocationConstraint {
-	Agent* 													m_agent;
+	Agent* 													m_agent{nullptr};
 	Cfg															m_startLocation;
 	Cfg 														m_endLocation;
 	double													m_startTime{MAX_DBL};

@@ -37,10 +37,30 @@ ConnectInteractionTemplates(std::vector<std::shared_ptr<InteractionTemplate>>& _
 
   auto cfgs = CalculateBaseDistances(_ITs,_capability, _startAndGoal);
 
+	auto robot = cfgs[0]->GetRobot();
+
+	if(robot->GetCapability() != _capability)
+		throw RunTimeException(WHERE,"Mismatched robot types.");
+
+  //graph->SetRobot(cfgs[0]->GetRobot());
+  graph->SetRobot(robot);
+
+  auto vcm = m_library->GetValidityChecker("terrain_solid");
+	std::vector<size_t> invalids;
+	for(auto vit = graph->begin(); vit != graph->end(); vit++) {
+		Cfg cfg = vit->property();
+		cfg.SetRobot(robot);
+		bool isValid = vcm->IsValid(cfg, "ValidateITCfg");
+		if(!isValid) {
+			invalids.push_back(vit->descriptor());
+		}
+	}
+	for(auto vid : invalids) {
+		graph->DeleteVertex(vid);
+	}
+
   if(cfgs.empty())
     return graph;
-
-  graph->SetRobot(cfgs[0]->GetRobot());
 
   for(auto cfg1 : cfgs){
     for(auto cfg2 : cfgs){
@@ -73,6 +93,9 @@ ConnectInteractionTemplates(std::vector<std::shared_ptr<InteractionTemplate>>& _
   CopyInTemplates(graph, _ITs, _capability, _startAndGoal);
   if(!cfgs[0]->GetRobot()->IsManipulator())
     ConnectTemplates(graph);
+
+	DirectionConnections(graph, _capability, cfgs);
+
   m_connections = {};
   m_baseDistances = {};
   m_adjDist = {};
@@ -592,4 +615,24 @@ SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const {
     distance += step;
   }
   return distance;
+}
+	
+void
+ITConnector::
+DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
+											std::vector<Cfg*> _cfgs) {
+	std::vector<size_t> vids;
+
+	for(auto cfg : _cfgs) {
+		if(cfg->GetRobot()->GetCapability() == _capability) {
+			auto vid = _graph->GetVID(*cfg);
+			if(vid != MAX_INT)
+				vids.push_back(vid);
+		}
+	}
+
+	auto cm = m_library->GetConnector("Closest");
+	cm->Connect(_graph, vids.begin(), vids.end(),
+										 vids.begin(), vids.end(),
+										false); 
 }

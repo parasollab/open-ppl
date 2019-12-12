@@ -18,9 +18,28 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 	auto query = sg->AddTaskToGraph(m_tmpLibrary->GetTaskPlan()->GetWholeTask(_task.get()));
 
+	if(m_debug) {
+		std::cout << "Updating Plan for: " << _task << std::endl;
+		_node.Debug();
 	std::cout << "Starting query: " << query << std::endl;
+	}
 
 	Initialize(_node, _task, query);
+
+	if(m_debug) {
+		for(auto inter : m_intervalMap) {
+			auto vid = inter.first;
+			auto cfg = sg->GetGraph()->GetVertex(vid);
+			std::cout << "Intervals for " << vid << " : " << cfg.PrettyPrint() << std::endl;
+			for(auto ai : inter.second) {
+				std::cout << "\t" << ai.first->GetRobot()->GetLabel() << std::endl;
+				for(auto i : ai.second) {
+					std::cout << "\t\t\t" << i.first << "--->" << i.second << std::endl;
+				}
+			}
+		}
+	}
+
 
 	auto plan = Search(_task,query);
 
@@ -185,10 +204,10 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 				frontElem.m_availInt = front;
 
 				m_availSourceMap[frontElem] = m_availSourceMap[elem];
+				m_availEndMap[frontElem] = constraint;
 
 				elem.m_availInt = *iter;
 				m_availSourceMap[elem] = constraint;
-				std::cout << "Here1" << std::endl;
 				iter++;
 				continue;
 			}
@@ -196,7 +215,6 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 				auto temp = iter;
 				iter++;
 				intervals.erase(temp);
-				std::cout << "Here2" << std::endl;
 				continue;
 			}
 			else if(iter->second > departTime and iter->first < departTime) { //overlap is at the back of interval
@@ -204,8 +222,8 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 
 				//update which constraint is the source which interval
 				elem.m_availInt = *iter;
-				m_availSourceMap[elem] = constraint;	
-				std::cout << "Here3" << std::endl;
+				//m_availSourceMap[elem] = constraint;	
+				m_availEndMap[elem] = constraint;
 				iter++;
 				continue;
 			}
@@ -215,7 +233,6 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTas
 				//update which constraint is the source which interval
 				elem.m_availInt = *iter;
 				m_availSourceMap[elem] = constraint;	
-				std::cout << "Here4" << std::endl;
 				iter++;
 				continue;
 			}
@@ -334,6 +351,7 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 		if(m_usedAgents[_elem].count(agent) and agent != _elem.m_agent)
 			continue;
 		for(auto avail : kv.second) {
+
 			if(arrivalTime > avail.second)// or // too late
 				//arrivalTime < avail.first)     // too early
 				continue;
@@ -342,25 +360,28 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 				continue;
 
 			AvailElem target(_vid,agent,avail);
-			std::pair<double,std::vector<size_t>> transition;
+			std::pair<double,std::pair<std::vector<size_t>,size_t>> transition;
 
 			if(agent->GetRobot() == m_tmpLibrary->GetTaskPlan()->GetCoordinator()->GetRobot()) {
+				//if(!CheckDeliveringAgentFutureConstraints(transition.first,_elem))  
+				//	continue;
 				transition.first = arrivalTime;
 			}
 			// interaction edge
 			else if(agent->GetRobot()->GetCapability() != _elem.m_agent->GetRobot()->GetCapability()) { 
-				transition = ComputeSetup(target,arrivalTime);
-				if(transition.second.empty())
+				transition = ComputeSetup(target,arrivalTime,_elem);
+				if(transition.second.first.empty())
 					continue;
 
 				if(transition.first > _elem.m_availInt.second or // delivering agent has to leave
-						transition.first > avail.second) // receiving agent has other obligations 
+						transition.first > avail.second or // receiving agent has other obligations
+						!CheckDeliveringAgentFutureConstraints(transition.first,_elem))  
 					continue;
 
 			}
 			else if(agent == _elem.m_agent){ // motion subtask edge
 				transition = ComputeExec(_elem, _vid, _currentCost);
-				if(transition.second.empty())
+				if(transition.second.first.empty())
 					continue;
 
 				if(transition.first > avail.second) // transition takes too long and violates a constraint
@@ -392,10 +413,9 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 	return validNeighbors;
 }
 
-std::pair<double,std::vector<size_t>>
+std::pair<double,std::pair<std::vector<size_t>,size_t>>
 TMPLowLevelSearch::
-ComputeSetup(AvailElem _elem, double _minTime) {	
-	vector<size_t> path;
+ComputeSetup(AvailElem _elem, double _minTime, AvailElem _parent) {	
 
 	auto constraint = m_availSourceMap[_elem];
 	auto startCfg = constraint.m_endLocation;
@@ -428,17 +448,31 @@ ComputeSetup(AvailElem _elem, double _minTime) {
 	goalCfg.SetRobot(startCfg.GetRobot());
 	auto plan = MotionPlan(startCfg,goalCfg,startTime, _minTime);
 
-	path = plan.second;
+	auto path = plan.second;
 
 	m_setupPathMap[_elem] = path;
 	m_setupStartTimes[_elem] = startTime;
+
+
+	if(plan.first > _minTime and _parent.m_agent != m_tmpLibrary->GetTaskPlan()->GetCoordinator()) {
+
+		bool valid = CheckExec(_parent,plan.first,_elem);
+
+		if(!valid) {
+			path.first = {};
+			path.second = 0;
+			return std::make_pair(0,path);
+		}
+	}
+
+
+
 	return std::make_pair(std::max(plan.first,_minTime),path);
 }
 
-std::pair<double,std::vector<size_t>>
+std::pair<double,std::pair<std::vector<size_t>,size_t>>
 TMPLowLevelSearch::
 ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
-	vector<size_t> path;
 
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 	auto g = sg->GetGraph();
@@ -466,7 +500,20 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 	
 	auto plan  = MotionPlan(startCfg,goalCfg,_startTime);
 
-	path = plan.second; 
+	auto path = plan.second; 
+
+	if(_elem.m_availInt.second != MAX_DBL) {
+		auto constraint = m_availEndMap[_elem];
+		auto endCfg = constraint.m_endLocation;
+		if(endCfg.GetRobot() != goalCfg.GetRobot())
+			throw RunTimeException(WHERE,"Mismatched robot types in constraint in exec path planning.");
+		auto nextJobPlan = MotionPlan(goalCfg,endCfg,plan.first,constraint.m_startTime);
+		if(nextJobPlan.first > constraint.m_startTime) {
+			path.first = {};
+			path.second = 0;
+			return std::make_pair(0,path);
+		}
+	}	
 
 	m_execPathMap[_elem] = path;
 	return std::make_pair(plan.first,path);
@@ -485,6 +532,16 @@ PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task) {
 		AvailElem elem = _plan[i];
 
 		if(elem.m_agent != agent) {
+
+			if(!planDetails.empty()) {
+				auto& previous = planDetails.back();
+				if(previous.m_execEndTime != m_distance[_plan[i-1]]) {
+					auto rePath = m_reExecPathMap[elem][_plan[i-1]];
+					previous.m_execPath = rePath.first;
+					previous.m_finalWaitTimeSteps = rePath.second;
+				}
+			}
+
 			agent = elem.m_agent;
 			start = elem;
 			continue;
@@ -536,12 +593,15 @@ CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask>
 
 	std::shared_ptr<SemanticTask> semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(_parentTask,motionTask));
 
-	Assignment assign(_start.m_agent, semanticTask, m_setupPathMap[_start], m_execPathMap[_end], 
-										m_setupStartTimes[_start], m_distance[_start], _endTime);
+	auto setup = m_setupPathMap[_start];
+	auto exec = m_execPathMap[_end];
+
+	Assignment assign(_start.m_agent, semanticTask, setup.first, exec.first, 
+										m_setupStartTimes[_start], m_distance[_start], _endTime, setup.second, exec.second);
 	return assign;
 }
 
-std::pair<double,std::vector<size_t>>
+std::pair<double,std::pair<std::vector<size_t>,size_t>>
 TMPLowLevelSearch::
 MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, SemanticTask* _currentTask) {
 
@@ -556,4 +616,81 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, Semanti
 	m_currentMotionConstraints = nullptr;
 */
 	return plan;
+}
+
+bool 
+TMPLowLevelSearch::
+CheckDeliveringAgentFutureConstraints(double _interactionTime, AvailElem _elem) {
+
+	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+	auto g = sg->GetGraph();
+
+	if(_elem.m_availInt.second != MAX_DBL) {
+		auto startVID = _elem.m_vid;
+		Cfg startCfg = g->GetVertex(startVID);
+		startCfg.SetRobot(_elem.m_agent->GetRobot());
+
+		auto constraint = m_availEndMap[_elem];
+
+		if(!constraint.m_agent and !constraint.m_task)
+			return true;
+
+		auto endCfg = constraint.m_endLocation;
+		if(endCfg.GetRobot() != startCfg.GetRobot())
+			throw RunTimeException(WHERE,"Mismatched robot types in constraint in exec path planning.");
+		auto nextJobPlan = MotionPlan(startCfg,endCfg,_interactionTime,constraint.m_startTime);
+		if(nextJobPlan.first > constraint.m_startTime) {
+			return false;
+		}
+	}	
+	return true;
+}
+
+bool
+TMPLowLevelSearch::
+CheckExec(AvailElem _elem, double _endTime, AvailElem _post) {
+	auto parent = m_parentMap[_elem];
+	auto startTime = m_distance[parent];
+	
+	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+	auto g = sg->GetGraph();
+ 
+	auto startVID = parent.m_vid;
+
+	if(m_debug) {
+		std::cout << "Re-computing exec path from " 
+							<< startVID 
+							<< " to " 
+							<< _elem.m_vid
+							<< " for " 
+							<< _elem.m_agent->GetRobot()->GetLabel() 
+							<< std::endl;
+	}	
+	//Use motion planning low level approach here
+	//Take in startVID, startTime, endVID, minEndTime
+
+	//make sure double in return pair is the arrival time including the initial start time cost
+
+	Cfg startCfg = g->GetVertex(startVID);
+	startCfg.SetRobot(_elem.m_agent->GetRobot());
+	Cfg goalCfg = g->GetVertex(_elem.m_vid);
+	goalCfg.SetRobot(_elem.m_agent->GetRobot());
+	
+	auto plan  = MotionPlan(startCfg,goalCfg,startTime,_endTime);
+
+	auto path = plan.second; 
+
+	if(_elem.m_availInt.second != MAX_DBL) {
+		auto constraint = m_availEndMap[_elem];
+		auto endCfg = constraint.m_endLocation;
+		if(endCfg.GetRobot() != goalCfg.GetRobot())
+			throw RunTimeException(WHERE,"Mismatched robot types in constraint in exec path planning.");
+		auto nextJobPlan = MotionPlan(goalCfg,endCfg,plan.first,constraint.m_startTime);
+		if(nextJobPlan.first > constraint.m_startTime) {
+			return false;
+		}
+	}	
+
+	m_reExecPathMap[_post][_elem] = path;
+	return true;
 }
