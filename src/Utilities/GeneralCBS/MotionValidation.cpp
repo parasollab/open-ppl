@@ -70,8 +70,12 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 	}
 
 	GeneralCBSNode node(solution);
-	_tree.push(node);
-	return true;
+	if(m_lowLevel->UpdateSolution(node,top->GetSubtasks()[0])) {
+		_tree.push(node);
+		return true;
+	}
+	else 
+		return false;
 }
 
 bool 
@@ -129,7 +133,11 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			setupPath += setup;
 			setupPath.SetFinalWaitTimeSteps(a.m_setupWaitTimeSteps);
 			//path += a.m_execPath;
-			auto cfgs = setupPath.FullCfgs(m_library);
+			std::vector<Cfg> cfgs;
+			if(!sg->m_discrete) 
+				cfgs = setupPath.FullCfgs(m_library);
+			else 
+				cfgs = setupPath.Cfgs();
 
 			for(size_t j = 0; j < a.m_execStartTime - (cfgs.size()-1+previousTimeStep); j++) {
 				interim.push_back(previousCfg);
@@ -141,7 +149,11 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			execPath += a.m_execPath;
 			execPath.SetFinalWaitTimeSteps(a.m_finalWaitTimeSteps);
 
-			auto execCfgs = execPath.FullCfgs(m_library);
+			std::vector<Cfg> execCfgs;
+			if(!sg->m_discrete)
+				execCfgs = execPath.FullCfgs(m_library);
+			else
+				execCfgs = execPath.Cfgs();
 
 			previousCfg = execCfgs.back();
 

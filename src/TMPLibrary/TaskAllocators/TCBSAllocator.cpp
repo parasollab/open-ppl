@@ -1,5 +1,7 @@
 #include "TCBSAllocator.h"
 
+#include "Simulator/Simulation.h"
+
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
@@ -111,6 +113,7 @@ AllocateTasks() {
 			}
 		}
 	}
+  Simulation::Get()->PrintStatFile();
 }
 
 Decomposition* 

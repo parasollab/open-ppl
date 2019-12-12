@@ -44,6 +44,7 @@ class CombinedRoadmap : public StateGraph {
 
     ///@}
 
+		bool m_discrete{false}; ///< Flag for operating in a discrete gride world
   protected:
 
 		///@name Helpers
@@ -93,7 +94,6 @@ class CombinedRoadmap : public StateGraph {
 
 		std::unique_ptr<MPSolution> m_solution;
 
-		bool m_discrete{false}; ///< Flag for operating in a discrete gride world
 		///@}
 
 };
