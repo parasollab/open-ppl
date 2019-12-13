@@ -147,8 +147,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
         typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
-		std::vector<typename QueryMethod<MPTraits>::VID>
-		TwoVariableQuery(const VID _start, const VIDSet& _goals);
+    std::vector<typename QueryMethod<MPTraits>::VID>
+        TwoVariableQuery(const VID _start, const VIDSet& _goals);
 
     ///@}
     ///@name Internal State
@@ -331,8 +331,8 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
 
   stats->IncStat("Graph Search");
 
-	if(m_twoVariable)
-		return TwoVariableQuery(_start,_goals);
+  if(m_twoVariable)
+    return TwoVariableQuery(_start,_goals);
 
   // Set up the termination criterion to quit early if we find a goal node.
   SSSPTerminationCriterion<RoadmapType> termination(
@@ -545,7 +545,7 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
   SSSPTerminationCriterion<RoadmapType> termination(
       [minEnd,_goals](typename RoadmapType::vertex_iterator& _vi,
              const SSSPOutput<RoadmapType>& _sssp) {
-        return (_goals.count(_vi->descriptor()) or _sssp.distance.at(_vi->descriptor()) > minEnd) 
+        return (_goals.count(_vi->descriptor()) or _sssp.distance.at(_vi->descriptor()) > minEnd)
 																							? SSSPTermination::EndSearch
                                               : SSSPTermination::Continue;
       }
@@ -570,7 +570,7 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
     };
   }
 
-	
+
   auto g = this->GetRoadmap();
 /*
   // Run dijkstra's algorithm to find the path, if it exists.
@@ -610,47 +610,46 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
 	}*/
 
 	//double minStep = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
-	double minStep = g->GetEdge(*(_goals.begin()),*(_goals.begin())).GetTimeSteps();
+  //double minStep = g->GetEdge(*(_goals.begin()), *(_goals.begin())).GetTimeSteps();
 
-	auto node = TwoVariableDijkstraSSSP(g,{_start},_goals,m_startTime,m_endTime,
-																			m_lastConstraint,weight,minStep);
+  auto node = TwoVariableDijkstraSSSP(g, {_start}, _goals, m_startTime,
+      m_endTime, m_lastConstraint, weight);
 
-	if(!node)
-		return {};
+  if(!node)
+    return {};
 
-	this->GetPath()->SetFinalWaitTimeSteps(node->m_waitTimeSteps);
+  this->GetPath()->SetFinalWaitTimeSteps(node->m_waitTimeSteps);
 
-	std::vector<typename QueryMethod<MPTraits>::VID> path;
-	//while(node->m_vid != _start) {
-	while(node->m_parent) {
-		path.push_back(node->m_vid);
-		node = node->m_parent;
-		if(!node)
-			return {};
-	}
+  std::vector<typename QueryMethod<MPTraits>::VID> path;
+  while(node->m_parent) {
+    path.push_back(node->m_vid);
+    node = node->m_parent;
+    if(!node)
+      return {};
+  }
 
-	path.push_back(node->m_vid);
-	std::reverse(path.begin(),path.end());
+  path.push_back(node->m_vid);
+  std::reverse(path.begin(),path.end());
 
-	return path;
+  return path;
 }
 
 template <typename MPTraits>
-void 
+void
 QueryMethod<MPTraits>::
 SetLastConstraintTime(double _last) {
 	m_lastConstraint = _last;
 }
 
 template <typename MPTraits>
-void 
+void
 QueryMethod<MPTraits>::
 SetStartTime(double _start) {
 	m_startTime = _start;
 }
 
 template <typename MPTraits>
-void 
+void
 QueryMethod<MPTraits>::
 SetEndTime(double _end) {
 	m_endTime = _end;

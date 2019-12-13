@@ -324,19 +324,19 @@ DijkstraSSSP(
 
 
 
-////////////////////////////////////////////////////////////////////////////
-///// The output of a two variable SSSP run. Iterate back through the list 
-///// nodes to construct the path.
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// The output of a two variable SSSP run. Iterate back through the list
+/// nodes to construct the path.
+////////////////////////////////////////////////////////////////////////////////
 
 struct TwoVariableSSSPNode {
-	size_t m_vid;
-	double m_distance;
-	std::shared_ptr<TwoVariableSSSPNode> m_parent;
-	double m_waitTimeSteps{0};
+  size_t m_vid;
+  double m_distance;
+  std::shared_ptr<TwoVariableSSSPNode> m_parent;
+  double m_waitTimeSteps{0};
 
-	TwoVariableSSSPNode(size_t _vid, double _distance, std::shared_ptr<TwoVariableSSSPNode> _parent)
-			: m_vid(_vid), m_distance(_distance), m_parent(_parent) {}	
+  TwoVariableSSSPNode(size_t _vid, double _distance, std::shared_ptr<TwoVariableSSSPNode> _parent)
+    : m_vid(_vid), m_distance(_distance), m_parent(_parent) {}
 
 };
 
@@ -345,104 +345,96 @@ std::shared_ptr<TwoVariableSSSPNode>
 TwoVariableDijkstraSSSP(
     GraphType* const _g,
     const std::vector<typename GraphType::vertex_descriptor>& _starts,
-		std::unordered_set<size_t> _goals,
-		const double _startTime,
-		const double _minEndTime,
-		double _lastConstraint,
-    SSSPPathWeightFunction<GraphType>& _weight,
-		double _minStep = 0.1,
-    const SSSPAdjacencyMap<GraphType>& _adjacencyMap = {})
+    std::unordered_set<size_t> _goals,
+    const double _startTime,
+    const double _minEndTime,
+    const double _lastConstraint,
+    SSSPPathWeightFunction<GraphType>& _weight)
 {
+  using NodePtr = std::shared_ptr<TwoVariableSSSPNode>;
 
-	std::list<std::shared_ptr<TwoVariableSSSPNode>> pq;
-	
-	for(auto vid : _starts) {
-		auto node = std::shared_ptr<TwoVariableSSSPNode>(new TwoVariableSSSPNode(vid,_startTime,nullptr));
-		pq.push_back(node);
-	}
-	
-	auto current = pq.front();
-	pq.pop_front();
+  // Set up a priority queue for the elements.
+  auto compare = [](const NodePtr& _a, const NodePtr& _b) {
+    return _a->m_distance > _b->m_distance;
+  };
+  std::priority_queue<NodePtr,
+                      std::deque<NodePtr>,
+                      decltype(compare)> pq(compare);
 
-	std::unordered_map<double,std::set<size_t>> discoveredVertices;
-	std::set<size_t> visitedPostConstraints;
+  // Set up structures to track visitation and distance.
+  std::unordered_set<size_t> visitedPostConstraints;
+  std::unordered_map<double, std::unordered_set<size_t>> discoveredVertices;
 
-	while(!_goals.count(current->m_vid) or current->m_distance < _minEndTime) {
+  for(const size_t vid : _starts)
+  {
+    pq.emplace(new TwoVariableSSSPNode(vid, _startTime, nullptr));
+    discoveredVertices[_startTime].insert(vid);
+  }
 
-		if(current->m_distance > _lastConstraint){ // and current->m_distance > _minEndTime) {
-			if(_goals.count(current->m_vid)) {
-				current->m_waitTimeSteps = _minEndTime - current->m_distance;
-				return current;
-			} 
-			if(visitedPostConstraints.count(current->m_vid)){
-				if(_goals.count(current->m_vid)) {
-					auto waitNode = std::shared_ptr<TwoVariableSSSPNode>(
-											new TwoVariableSSSPNode(current->m_vid,current->m_distance+_minStep,current));
-					auto iter = pq.begin();
-					while(iter != pq.end()) {
-						if((*iter)->m_distance > current->m_distance+_minStep)
-							break;
-						iter++;
-					}
-					pq.insert(iter,waitNode);
-				}
-				if(pq.empty())
-					return nullptr;
-				current = pq.front();
-				pq.pop_front();
-				continue;
-			}
-			else {
-				visitedPostConstraints.insert(current->m_vid);
-				if(_goals.count(current->m_vid)) {
-					auto waitNode = std::shared_ptr<TwoVariableSSSPNode>(
-											new TwoVariableSSSPNode(current->m_vid,current->m_distance+_minStep,current));
-					auto iter = pq.begin();
-					while(iter != pq.end()) {
-						if((*iter)->m_distance > current->m_distance+_minStep)
-							break;
-						iter++;
-					}
-					pq.insert(iter,waitNode);
-				}
-			}
-		}
+  NodePtr current;
 
-		auto vit = _g->find_vertex(current->m_vid);
-	
+  //while(!_goals.count(current->m_vid) or current->m_distance < _minEndTime)
+  while(!pq.empty())
+  {
+    // Get the next node.
+    current = pq.top();
+    pq.pop();
 
-		//TODO::If we want to add waiting it should be added as a self edge here
+    // Extract the current VID and distance.
+    const size_t vid      = current->m_vid;
+    const double distance = current->m_distance;
 
-		for(auto eit = vit->begin(); eit != vit->end(); eit++) {
-			auto sourceDistance = current->m_distance;
-			auto targetDistance = std::numeric_limits<double>::infinity();
+    // Check if we're past the last constraint.
+    const bool pastLastConstraint = distance > _lastConstraint;
 
-			//double sanity = eit->property().GetTimeSteps() + sourceDistance;
-			//if(discoveredVertices[sanity].count(eit->target()))
-			//	continue;		
+    // If this is a goal and we're past the last constraint, we're done (we need
+    // to continue searching otherwise to ensure we don't violate a constraint
+    // while sitting on the goal).
+    if(pastLastConstraint and _goals.count(vid))
+    {
+      // Wait until the minimum end time if needed.
+      current->m_waitTimeSteps = std::max(0., _minEndTime - distance);
+      return current;
+    }
 
-			auto newDistance = _weight(eit,sourceDistance,targetDistance);
+    // If we're past the last constraint, we start tracking visited status since
+    // we can no longer benefit from revisitation.
+    if(pastLastConstraint)
+    {
+      // Skip this node if we've already visited after the last constraint.
+      if(visitedPostConstraints.count(vid))
+        continue;
+      // Mark this node as visited.
+      visitedPostConstraints.insert(vid);
+    }
 
-			if(newDistance < targetDistance and !discoveredVertices[newDistance].count(eit->target())) {
-				auto newNode = std::shared_ptr<TwoVariableSSSPNode>(
-													new TwoVariableSSSPNode(eit->target(),newDistance,current));
-				discoveredVertices[newDistance].insert(eit->target());
-				auto iter = pq.begin();
-				while(iter != pq.end()) {
-					if((*iter)->m_distance > newDistance)
-						break;
-					iter++;
-				}
-				pq.insert(iter,newNode);
-			}
-		}
-		if(pq.empty())
-			return nullptr;
-		current = pq.front();
-		pq.pop_front();
-	} 
-	
-	return current;
+    /// @todo If we want to add waiting it should be added as a self edge here
+    // Add children of the current node to the queue.
+    auto vit = _g->find_vertex(vid);
+    for(auto eit = vit->begin(); eit != vit->end(); eit++)
+    {
+      const size_t target = eit->target();
+      // TODO When we're past the last constraint we might know the best
+      //      distance to this target, which could avoid extraneous conflict
+      //      checking.
+      // Use a dummy infinite distance to force revisiting this node regardless
+      // of the prior best path.
+      const double bestTargetDistance = std::numeric_limits<double>::infinity();
+
+      // Compute the distance to the target through this path and edge.
+      const double newDistance = _weight(eit, distance, bestTargetDistance);
+
+      // If the new distance is better and we haven't tried it already.
+      if(newDistance < bestTargetDistance and
+          !discoveredVertices[newDistance].count(target))
+      {
+        discoveredVertices[newDistance].insert(target);
+        pq.emplace(new TwoVariableSSSPNode(target, newDistance, current));
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 
