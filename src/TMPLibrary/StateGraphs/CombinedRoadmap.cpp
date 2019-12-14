@@ -233,13 +233,26 @@ ConstructDiscreteRoadmap() {
 
 		DefaultWeight<Cfg> weight;
 		weight.SetWeight(1);
-		weight.SetTimeSteps(1);
+		weight.SetTimeSteps(2);
 		for(size_t i = 0 ; i < vidMatrix.size(); i++) {
 			for(size_t j = 0 ; j < vidMatrix[i].size(); j++) {
 				if(vidMatrix[i][j] == MAX_INT)
 					continue;
 				if(j < vidMatrix[i].size()-1 and vidMatrix[i][j+1] != MAX_INT) {//connect up
+
+					Cfg source = roadmap->GetVertex(vidMatrix[i][j]);
+					Cfg target = roadmap->GetVertex(vidMatrix[i][j+1]);
+					Cfg middle = target;
+					middle.SetData({(source[0]+target[0])/2, (source[1]+target[1])/2, (source[2]+target[2])/2});
+
+					std::vector<Cfg> intermediates = {source,middle,target};
+					weight.SetIntermediates(intermediates);
+
 					roadmap->AddEdge(vidMatrix[i][j],vidMatrix[i][j+1],weight);
+
+					intermediates = {target, middle, source};
+					weight.SetIntermediates(intermediates);
+
 					roadmap->AddEdge(vidMatrix[i][j+1],vidMatrix[i][j],weight);
 				}
 				
@@ -248,7 +261,20 @@ ConstructDiscreteRoadmap() {
 
 				//Connect left
 				if(vidMatrix[i-1][j] != MAX_INT) {
+
+					Cfg source = roadmap->GetVertex(vidMatrix[i][j]);
+					Cfg target = roadmap->GetVertex(vidMatrix[i-1][j]);
+					Cfg middle = target;
+					middle.SetData({(source[0]+target[0])/2, (source[1]+target[1])/2, (source[2]+target[2])/2});
+
+					std::vector<Cfg> intermediates = {source,middle,target};
+					weight.SetIntermediates(intermediates);
+
 					roadmap->AddEdge(vidMatrix[i][j],vidMatrix[i-1][j],weight);
+
+					intermediates = {target, middle, source};
+					weight.SetIntermediates(intermediates);
+
 					roadmap->AddEdge(vidMatrix[i-1][j],vidMatrix[i][j],weight);
 				}
 			}
