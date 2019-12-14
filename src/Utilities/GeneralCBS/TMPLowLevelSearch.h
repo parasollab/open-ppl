@@ -40,6 +40,21 @@ class TMPLowLevelSearch : public LowLevelSearch {
 			}
 
 		};
+		struct AvailElemCompare  {
+			bool operator()(const AvailElem& _one, const AvailElem& _two) const {
+				if(_one.m_vid != _two.m_vid) 
+					return _one.m_vid > _two.m_vid;
+
+				if(_one.m_agent != _two.m_agent) 
+					return _one.m_agent > _two.m_agent;
+
+				if(_one.m_availInt.first != _two.m_availInt.first) 
+					return _one.m_availInt.first > _two.m_availInt.first;
+
+				//if(_one.m_availInt.second != _two.m_availInt.second) 
+					return _one.m_availInt.second > _two.m_availInt.second;
+			}
+		};
 		/*
 		struct AvailElemHasher {
 			std::size_t operator()(const AvailElem& _elem) const {
@@ -123,27 +138,27 @@ class TMPLowLevelSearch : public LowLevelSearch {
 
 		std::unordered_map<AvailElem,std::unordered_set<Agent*>,AvailElemHasher> m_usedAgents;
 		*/
-		std::map<AvailElem,AvailElem> m_parentMap;
+		std::map<AvailElem,AvailElem,AvailElemCompare> m_parentMap;
 
-		std::map<AvailElem,double> m_distance;
+		std::map<AvailElem,double,AvailElemCompare> m_distance;
 		
-		std::set<AvailElem> m_seen;
+		std::set<AvailElem,AvailElemCompare> m_seen;
 
-		std::set<AvailElem> m_visited;
+		std::set<AvailElem,AvailElemCompare> m_visited;
 
-		std::map<AvailElem,AllocationConstraint> m_availSourceMap;
+		std::map<AvailElem,AllocationConstraint,AvailElemCompare> m_availSourceMap;
 
-		std::map<AvailElem,AllocationConstraint> m_availEndMap;
+		std::map<AvailElem,AllocationConstraint,AvailElemCompare> m_availEndMap;
 
-		std::map<AvailElem,std::pair<std::vector<size_t>,size_t>> m_execPathMap;
+		std::map<AvailElem,std::pair<std::vector<size_t>,size_t>,AvailElemCompare> m_execPathMap;
 	
-		std::map<AvailElem,std::pair<std::vector<size_t>,size_t>> m_setupPathMap;
+		std::map<AvailElem,std::pair<std::vector<size_t>,size_t>,AvailElemCompare> m_setupPathMap;
 
-		std::map<AvailElem,double> m_setupStartTimes;
+		std::map<AvailElem,double,AvailElemCompare> m_setupStartTimes;
 
-		std::map<AvailElem,std::unordered_set<Agent*>> m_usedAgents;
+		std::map<AvailElem,std::unordered_set<Agent*>,AvailElemCompare> m_usedAgents;
 
-		std::map<AvailElem,std::map<AvailElem,std::pair<std::vector<size_t>,size_t>>> m_reExecPathMap;
+		std::map<AvailElem,std::map<AvailElem,std::pair<std::vector<size_t>,size_t>>,AvailElemCompare> m_reExecPathMap;
 		///@}
 };
 

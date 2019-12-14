@@ -15,14 +15,18 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 
 	Assignment assign;
 
+	bool firstEmpty = false;
 	for(auto& a : assignments) {
-		if(!a.m_execPath.empty() and a.m_agent != nullptr) {
+		if(!a.m_execPath.empty() and a.m_agent != nullptr and !firstEmpty) {
 			continue;	
 		}
 		if(!a.m_agent)
-			throw RunTimeException(WHERE,"Task plan to update has no cleared assignment plans.");
-		assign = a;
-		break;
+			continue;
+			//throw RunTimeException(WHERE,"Task plan to update has no cleared assignment plans.");
+		//assign = a;
+		//break;
+		firstEmpty = true;
+		ClearTaskPlan(a,_node);
 	}
 
 	if(m_debug) {
@@ -160,9 +164,14 @@ PlanAssignments(GeneralCBSNode& _node) {
 					ready = true;
 
 				for(j=0; j < assignments.size(); j++) {
-					if(assign != assignments[j])
+					//if(assign != assignments[j])
+					if(assign.m_agent != assignments[j].m_agent 
+							or assign.m_task != assignments[j].m_task 
+							or assign.m_setupStartTime != assignments[j].m_setupStartTime
+							or assign.m_execStartTime != assignments[j].m_execStartTime
+							or assign.m_execEndTime != assignments[j].m_execEndTime)
 						continue;
-					if(j == 0 and assign == assignments[j])
+					if(j == 0)// and assign == assignments[j])
 						ready = true;
 					else if(!assignments[j-1].m_execPath.empty())
 						ready = true;
@@ -321,7 +330,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	_assign.m_execStartTime = setup.first;
 	_assign.m_execEndTime = exec.first;
 
-	_assign.m_setupStartTime = _startTime;	
+	_assign.m_setupStartTime = setupStart;	
 
 	return true;	
 } 

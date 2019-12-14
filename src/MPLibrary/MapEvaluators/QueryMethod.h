@@ -99,6 +99,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f);
 
 		void SetLastConstraintTime(double _last);
+		void SetLastGoalConstraintTime(double _time);
 		void SetStartTime(double _start);
 		void SetEndTime(double _end);
 
@@ -168,6 +169,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     SSSPPathWeightFunction<RoadmapType> m_weightFunction;
 
 		double m_lastConstraint{0};
+		double m_lastGoalConstraint{0};
 		double m_startTime{0};
 		double m_endTime{0};
 
@@ -613,7 +615,7 @@ TwoVariableQuery(const VID _start, const VIDSet& _goals) {
   //double minStep = g->GetEdge(*(_goals.begin()), *(_goals.begin())).GetTimeSteps();
 
   auto node = TwoVariableDijkstraSSSP(g, {_start}, _goals, m_startTime,
-      m_endTime, m_lastConstraint, weight);
+      m_endTime, m_lastConstraint, m_lastGoalConstraint, weight);
 
   if(!node)
     return {};
@@ -639,6 +641,13 @@ void
 QueryMethod<MPTraits>::
 SetLastConstraintTime(double _last) {
 	m_lastConstraint = _last;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetLastGoalConstraintTime(double _time) {
+	m_lastGoalConstraint = _time;
 }
 
 template <typename MPTraits>

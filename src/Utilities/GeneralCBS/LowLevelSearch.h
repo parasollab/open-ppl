@@ -122,19 +122,38 @@ class LowLevelSearch {
 		//					std::map<Cfg,
 		//							std::set<std::pair<size_t,size_t>>>>> m_invalidEdges;
 
-		std::unordered_map<SemanticTask*,
+		//std::unordered_map<SemanticTask*,
+		//			std::unordered_map<Agent*,
+		//					std::map<Cfg,
+		//							std::unordered_map<size_t,std::unordered_set<size_t>>>>> m_invalidEdges;
+
+		std::unordered_map<SemanticTask*, 
 					std::unordered_map<Agent*,
-							std::map<Cfg,
-									std::unordered_map<size_t,std::unordered_set<size_t>>>>> m_invalidEdges;
+						std::unordered_map<size_t,
+							std::unordered_map<size_t,std::set<Cfg>>>>> m_invalidEdges;
 		//std::unordered_map<Cfg,std::unordered_set<std::pair<size_t,size_t>,EdgeHasher>,CfgHasher>
 		//std::unordered_map<SemanticTask*,
 		//		std::unordered_map<Agent*,
 		//				std::map<Cfg,
 		//						std::set<std::pair<size_t,size_t>>>>> m_validEdges;
+		//std::unordered_map<SemanticTask*,
+		//		std::unordered_map<Agent*,
+		//				std::map<Cfg,
+		//						std::unordered_map<size_t,std::unordered_set<size_t>>>>> m_validEdges;
+
+		std::unordered_map<SemanticTask*, 
+					std::unordered_map<Agent*,
+						std::unordered_map<size_t,
+							std::unordered_map<size_t,std::set<Cfg>>>>> m_validEdges;
+
+
+		// USed to see if goals have constraints on the lcoation or not
 		std::unordered_map<SemanticTask*,
-				std::unordered_map<Agent*,
-						std::map<Cfg,
-								std::unordered_map<size_t,std::unordered_set<size_t>>>>> m_validEdges;
+					std::unordered_map<Agent*,
+						std::unordered_map<size_t,std::set<std::pair<size_t,Cfg>>>>> m_invalidVertices;
+		std::unordered_map<SemanticTask*,
+					std::unordered_map<Agent*,
+						std::unordered_map<size_t,std::set<std::pair<size_t,Cfg>>>>> m_validVertices;
 		///@}
 
 };

@@ -349,6 +349,7 @@ TwoVariableDijkstraSSSP(
     const double _startTime,
     const double _minEndTime,
     const double _lastConstraint,
+    const double _lastGoalConstraint,
     SSSPPathWeightFunction<GraphType>& _weight)
 {
   using NodePtr = std::shared_ptr<TwoVariableSSSPNode>;
@@ -384,18 +385,22 @@ TwoVariableDijkstraSSSP(
     const size_t vid      = current->m_vid;
     const double distance = current->m_distance;
 
-    // Check if we're past the last constraint.
-    const bool pastLastConstraint = distance > _lastConstraint;
+    // Check if we're past the last constraint on the goal location.
+    const bool pastLastGoalConstraint = distance > _lastGoalConstraint;
 
-    // If this is a goal and we're past the last constraint, we're done (we need
-    // to continue searching otherwise to ensure we don't violate a constraint
-    // while sitting on the goal).
-    if(pastLastConstraint and _goals.count(vid))
+    // If this is a goal and we're past the last constraint on the goal location, 
+    // we're done (we need to continue searching otherwise to ensure we don't violate 
+    // a constraint while sitting on the goal).
+    //if(pastLastConstraint and _goals.count(vid))
+    if(pastLastGoalConstraint and _goals.count(vid))
     {
       // Wait until the minimum end time if needed.
       current->m_waitTimeSteps = std::max(0., _minEndTime - distance);
       return current;
     }
+
+    // Check if we're past the last constraint.
+    const bool pastLastConstraint = distance > _lastConstraint;
 
     // If we're past the last constraint, we start tracking visited status since
     // we can no longer benefit from revisitation.

@@ -295,6 +295,10 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 			if(a.m_agent != _constraints.first.m_agent)
 				continue;
 
+			if(a.m_setupStartTime > _constraints.first.m_timestep
+					or a.m_execEndTime < _constraints.first.m_timestep)
+				continue;
+
 			for(auto& assign : aa) {
 				if(assign == a) {
 					assign.m_execPath = {};
@@ -318,6 +322,10 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 		auto& aa = two.GetSolutionRef().m_agentAssignments[_constraints.second.m_agent];
 		for(auto& a : tp) {
 			if(a.m_agent != _constraints.second.m_agent)
+				continue;
+
+			if(a.m_setupStartTime > _constraints.second.m_timestep
+					or a.m_execEndTime < _constraints.second.m_timestep)
 				continue;
 
 			for(auto& assign : aa) {

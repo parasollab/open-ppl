@@ -110,6 +110,8 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, Semanti
   //save current library task
   auto oldTask = m_tmpLibrary->GetMPLibrary()->GetTask();
 
+	auto originalRobot = _start.GetRobot();
+
   auto dummyAgent = m_tmpLibrary->GetTaskPlan()->GetCapabilityAgent(_start.GetRobot()->GetCapability());
   auto robot = dummyAgent->GetRobot();
 
@@ -132,7 +134,26 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, Semanti
 
   solution->SetRoadmap(dummyAgent->GetRobot(),roadmap.get());
 
-	
+	size_t goalLastConstraint = 0;
+
+	_goal.SetRobot(originalRobot);
+	auto goalVID = roadmap->GetVID(_goal);
+  for(auto iter = m_currentMotionConstraints->begin(); iter != m_currentMotionConstraints->end(); ++iter) {
+    const size_t timestep = iter->first;
+		auto cfg = iter->second.first;
+		bool valid = m_validVertices[_currentTask][originalRobot->GetAgent()][goalVID].count(
+															std::make_pair(timestep,cfg));
+		if(valid) {
+			continue;
+		}
+		bool invalid = m_invalidVertices[_currentTask][originalRobot->GetAgent()][goalVID].count(
+														std::make_pair(timestep,cfg));
+		if(invalid and timestep > goalLastConstraint and timestep <= _minEndTime) {
+			goalLastConstraint = timestep;
+		}
+	}
+
+	query2->SetLastGoalConstraintTime(goalLastConstraint);
 	//Try to solve it without considering time first
   //m_tmpLibrary->GetMPLibrary()->Solve(m_tmpLibrary->GetMPLibrary()->GetMPProblem(), 
 	//		task.get(), solution, "EvaluateMapStrategy", LRand(), "LowerLevelGraphWeight");
@@ -218,9 +239,12 @@ MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
 
 		//Try to cache these computations
 		auto p = std::make_pair(_ei->source(),_ei->target());
-		auto invalids = m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first];
-		bool invalid = invalids.count(p.second);
-		bool valid = m_validEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first].count(p.second);
+
+		//auto invalids = m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first];
+		auto invalids = m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][p.first][p.second];
+		bool invalid = invalids.count(cfg);
+
+		bool valid = m_validEdges[m_currentTask][m_currentRobot->GetAgent()][p.first][p.second].count(cfg);
 		if(valid) {
 			if(invalid)
 				throw RunTimeException(WHERE,"Something is seriously wrong.");
@@ -230,10 +254,10 @@ MultiRobotPathWeight(typename Roadmap::adj_edge_iterator& _ei,
     const bool hitsEdge = invalid
 								or !IsEdgeSafe(_ei->source(), _ei->target(), cfg);
     if(!hitsEdge) {
-			m_validEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first].insert(p.second);
+			m_validEdges[m_currentTask][m_currentRobot->GetAgent()][p.first][p.second].insert(cfg);
       continue;
 		}
-		m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][cfg][p.first].insert(p.second);
+		m_invalidEdges[m_currentTask][m_currentRobot->GetAgent()][p.first][p.second].insert(cfg);
 
     //if(this->m_debug)
     if(false)

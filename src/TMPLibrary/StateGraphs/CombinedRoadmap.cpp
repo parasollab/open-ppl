@@ -233,6 +233,7 @@ ConstructDiscreteRoadmap() {
 
 		DefaultWeight<Cfg> weight;
 		weight.SetWeight(1);
+		weight.SetTimeSteps(1);
 		for(size_t i = 0 ; i < vidMatrix.size(); i++) {
 			for(size_t j = 0 ; j < vidMatrix[i].size(); j++) {
 				if(vidMatrix[i][j] == MAX_INT)

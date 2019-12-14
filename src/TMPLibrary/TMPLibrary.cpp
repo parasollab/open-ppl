@@ -2,6 +2,7 @@
 
 #include "Traits/TMPTraits.h"
 
+#include "Simulator/Simulation.h"
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
@@ -34,6 +35,7 @@ TMPLibrary(){
 TMPLibrary::
 TMPLibrary(const std::string& _filename) : TMPLibrary() {
 				m_library = new MPLibrary(_filename);
+				m_library->SetSeed();
 				ReadXMLFile(_filename);
 }
 
@@ -57,7 +59,9 @@ Initialize(){
 	m_taskEvaluators->Initialize();
 	m_taskDecomposers->Initialize();
 	m_taskAllocators->Initialize();
+	Simulation::GetStatClass()->StartClock("StateGraphConstruction");
 	m_stateGraphs->Initialize();
+	Simulation::GetStatClass()->StopClock("StateGraphConstruction");
 }
 
 void

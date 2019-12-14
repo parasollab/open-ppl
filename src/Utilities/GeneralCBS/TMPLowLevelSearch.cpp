@@ -393,6 +393,8 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 
 			//auto iter = m_seen.find(target);
 
+			//TODO::Add custom ordering
+
 			//if(iter == m_seen.end() or m_distance[target] > transition.first) {
 			if(!m_seen.count(target) or m_distance[target] > transition.first) {
 			//if(!m_distance[target] == 0 or m_distance[target] > transition.first) {
