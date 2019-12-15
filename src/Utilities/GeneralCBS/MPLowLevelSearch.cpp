@@ -168,8 +168,7 @@ PlanAssignments(GeneralCBSNode& _node) {
 					if(assign.m_agent != assignments[j].m_agent 
 							or assign.m_task != assignments[j].m_task 
 							or assign.m_setupStartTime != assignments[j].m_setupStartTime
-							or assign.m_execStartTime != assignments[j].m_execStartTime
-							or assign.m_execEndTime != assignments[j].m_execEndTime)
+							or assign.m_execStartTime != assignments[j].m_execStartTime)
 						continue;
 					if(j == 0)// and assign == assignments[j])
 						ready = true;
@@ -367,6 +366,15 @@ PatchPaths(GeneralCBSNode& _node, Assignment& _assign, double _endTime) {
 	previous->m_execPath = plan.second.first;
 	previous->m_finalWaitTimeSteps = plan.second.second;
 	previous->m_execEndTime = plan.first;
+
+	auto& aa = _node.GetSolutionRef().m_agentAssignments[previous->m_agent];
+	for(auto& a : aa) {
+		if(a.m_setupStartTime != previous->m_setupStartTime
+				or a.m_execStartTime != previous->m_execStartTime)
+			continue;
+		a = *previous;
+		break;
+	}
 
 	return true;
 }
