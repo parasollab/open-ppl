@@ -293,11 +293,30 @@ IsEdgeSafe(const size_t _source, const size_t _target, const Cfg& _conflictCfg)
 
   // Reconstruct the edge path at resolution-level.
   std::vector<Cfg> path;
-  path.push_back(roadmap->GetVertex(_source));
-  std::vector<Cfg> edge = m_tmpLibrary->GetMPLibrary()->ReconstructEdge(
-      roadmap, _source, _target);
-  path.insert(path.end(), edge.begin(), edge.end());
-  path.push_back(roadmap->GetVertex(_target));
+	Cfg s = roadmap->GetVertex(_source);
+	Cfg t = roadmap->GetVertex(_target);
+  path.push_back(s);
+	if(!sg->m_discrete) {
+  	std::vector<Cfg> edge = m_tmpLibrary->GetMPLibrary()->ReconstructEdge(
+    	  roadmap, _source, _target);
+  	path.insert(path.end(), edge.begin(), edge.end());
+	}
+	else {
+		Cfg middle = s;
+		middle.SetData({(s[0]+t[0])/2,(s[1]+t[1])/2,(s[2]+t[2])/2});
+		path.push_back(middle);
+	}
+  path.push_back(t);
+
+	if(sg->m_discrete) {
+		for(auto c : path) {
+			if(c[0] == _conflictCfg[0]
+				and c[1] == _conflictCfg[1]
+				and c[2] == _conflictCfg[2])
+				return false;
+		}
+	}
+
 
   // Get the valididty checker and make sure it has type
   // CollisionDetectionValidity.

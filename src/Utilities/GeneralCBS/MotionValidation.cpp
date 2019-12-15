@@ -136,8 +136,18 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			std::vector<Cfg> cfgs;
 			if(!sg->m_discrete) 
 				cfgs = setupPath.FullCfgs(m_library);
-			else 
-				cfgs = setupPath.Cfgs();
+			else { 
+				auto verts = setupPath.Cfgs();
+
+				cfgs.push_back(verts[0]);
+				for(size_t j = 1; j < verts.size(); j++) {
+					Cfg middle = verts[j];
+					middle.SetData({(verts[j-1][0]+verts[j][0])/2, (verts[j-1][1]+verts[j][1])/2, 
+													(verts[j-1][2]+verts[j][2])/2});
+					cfgs.push_back(middle);
+					cfgs.push_back(verts[j]);
+				}
+			}
 
 			for(size_t j = 0; j < a.m_execStartTime - (cfgs.size()-1+previousTimeStep); j++) {
 				interim.push_back(previousCfg);
@@ -152,8 +162,18 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			std::vector<Cfg> execCfgs;
 			if(!sg->m_discrete)
 				execCfgs = execPath.FullCfgs(m_library);
-			else
-				execCfgs = execPath.Cfgs();
+			else {
+				auto verts = execPath.Cfgs();
+
+				execCfgs.push_back(verts[0]);
+				for(size_t j = 1; j < verts.size(); j++) {
+					Cfg middle = verts[j];
+					middle.SetData({(verts[j-1][0]+verts[j][0])/2, (verts[j-1][1]+verts[j][1])/2, 
+													(verts[j-1][2]+verts[j][2])/2});
+					execCfgs.push_back(middle);
+					execCfgs.push_back(verts[j]);
+				}
+			}
 
 			previousCfg = execCfgs.back();
 
@@ -221,11 +241,20 @@ FindMotionConflict(GeneralCBSNode& _node) {
 				multibody2->Configure(cfg2);
 
 				// Check for collitision. If none, move on.
-				CDInfo cdInfo;
-				const bool collision = vc->IsMultiBodyCollision(cdInfo,
-					multibody1, multibody2, "MotionValidation");
-				if(!collision)
-					continue;
+				if(!sg->m_discrete) {
+					CDInfo cdInfo;
+					const bool collision = vc->IsMultiBodyCollision(cdInfo,
+						multibody1, multibody2, "MotionValidation");
+					if(!collision)
+						continue;
+				}
+				else {
+					const bool collision = (cfg1[0] == cfg2[0]
+											and cfg1[1] == cfg2[1]
+											and cfg1[2] == cfg2[2]);
+					if(!collision)
+						continue;
+				}
 
 				if(m_debug) {
 					std::cout << "\t\tConflict detected at timestep " << t
