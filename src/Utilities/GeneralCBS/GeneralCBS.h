@@ -123,6 +123,8 @@ class GeneralCBSNode {
 
 	GeneralCBSNode(const CBSSolution _solution);
 
+	GeneralCBSNode(const CBSSolution _solution, const CBSSolution _postAssignment);
+
 	GeneralCBSNode(const GeneralCBSNode& _parent);
 
 	~GeneralCBSNode() = default;
@@ -160,6 +162,7 @@ class GeneralCBSNode {
 
 	double GetCost();
 
+	CBSSolution& GetPostAssignmentRef();
 	///@}
 
   private:
@@ -170,6 +173,8 @@ class GeneralCBSNode {
 	double m_cost{MAX_DBL};
 	MotionConstraints m_motionConstraints;
 	AllocationConstraints m_allocationConstraints;
+
+	CBSSolution m_postAssignment;
 
 	///@}
 

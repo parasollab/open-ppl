@@ -10,11 +10,18 @@ GeneralCBSNode(const CBSSolution _solution) {
 }
 
 GeneralCBSNode::
+GeneralCBSNode(const CBSSolution _solution, const CBSSolution _postAssignment) {
+	m_solution = _solution;
+	m_postAssignment = _postAssignment;
+}
+
+GeneralCBSNode::
 GeneralCBSNode(const GeneralCBSNode& _parent) {
 	m_solution = _parent.m_solution;
 	m_motionConstraints = _parent.m_motionConstraints;
 	m_allocationConstraints = _parent.m_allocationConstraints;
 	m_cost = _parent.m_cost;
+	m_postAssignment = _parent.m_postAssignment;
 }
 
 bool 
@@ -39,6 +46,12 @@ CBSSolution&
 GeneralCBSNode::
 GetSolutionRef() {
 	return m_solution;
+}
+
+CBSSolution&
+GeneralCBSNode::
+GetPostAssignmentRef() {
+	return m_postAssignment;
 }
 
 void 
@@ -189,6 +202,9 @@ ConflictBasedSearch(Decomposition* _decomposition, InitialPlanFunction _initial,
 			current.Debug();
 			std::cout << "Total Nodes Explored: " << counter << std::endl;
 		}
+
+		if(counter == 2753)
+			std::cout << "Debug" << std::endl;
 
 		if(!_validation(current, tree))
 			continue;

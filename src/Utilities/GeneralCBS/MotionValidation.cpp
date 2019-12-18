@@ -13,7 +13,7 @@ MotionValidation() {}
 MotionValidation::
 MotionValidation(MPLibrary* _library, LowLevelSearch* _lowLevel, TMPLibrary* _tmpLibrary, 
 								std::string _sgLabel, std::string _vcLabel) :
-								Validation(_library,_lowLevel), m_tmpLibrary(_tmpLibrary), 
+								Validation(_library,_lowLevel, _tmpLibrary), 
 								m_sgLabel(_sgLabel), m_vcLabel(_vcLabel) {}	
 
 MotionValidation::
@@ -82,6 +82,8 @@ bool
 MotionValidation::
 ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 
+	AvoidancePaths(_node);
+
 	auto constraints = FindMotionConflict(_node);
 	
 	if(constraints.first.m_timestep != MAX_INT){
@@ -115,7 +117,9 @@ FindMotionConflict(GeneralCBSNode& _node) {
 
 		auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(agent));
 
-		auto& assigns = kv.second;
+		auto assigns = kv.second;
+		auto postAssignment = _node.GetPostAssignmentRef().m_agentAssignments[agent][0];
+		assigns.push_back(postAssignment);
 	
 		Cfg previousCfg = agent->GetRobot()->GetSimulationModel()->GetState();
 		size_t previousTimeStep = 0;
@@ -139,7 +143,8 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			else { 
 				auto verts = setupPath.Cfgs();
 
-				cfgs.push_back(verts[0]);
+				if(!verts.empty())
+					cfgs.push_back(verts[0]);
 				for(size_t j = 1; j < verts.size(); j++) {
 					Cfg middle = verts[j];
 					middle.SetData({(verts[j-1][0]+verts[j][0])/2, (verts[j-1][1]+verts[j][1])/2, 
@@ -147,17 +152,33 @@ FindMotionConflict(GeneralCBSNode& _node) {
 					cfgs.push_back(middle);
 					cfgs.push_back(verts[j]);
 				}
+				for(size_t j = 0; j < a.m_setupWaitTimeSteps; j++) {
+					cfgs.push_back(cfgs.back());
+				}
 			}
 
-			for(size_t j = 0; j < a.m_execStartTime - (cfgs.size()-1+previousTimeStep); j++) {
+			size_t interimSteps = 0;
+			if(a.m_execStartTime != a.m_setupStartTime)
+				interimSteps = a.m_execStartTime - (cfgs.size()+previousTimeStep);
+			if(!cfgs.empty() and interimSteps > 0)
+				interimSteps++;
+
+			if(m_debug) 
+				std::cout << "Interim Steps: " << interimSteps << std::endl;
+
+			//for(size_t j = 0; j < a.m_execStartTime - (cfgs.size()-1+previousTimeStep); j++) {
+			for(size_t j = 0; j < interimSteps; j++) {
 				interim.push_back(previousCfg);
 			}
 
-			cfgs.pop_back();
+			if(!cfgs.empty())
+				cfgs.pop_back();
 
 			PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> execPath(roadmap.get());
+			//if(a.m_execStartTime != a.m_execEndTime and a.m_finalWaitTimeSteps > 0) {
 			execPath += a.m_execPath;
 			execPath.SetFinalWaitTimeSteps(a.m_finalWaitTimeSteps);
+			//}
 
 			std::vector<Cfg> execCfgs;
 			if(!sg->m_discrete)
@@ -165,7 +186,8 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			else {
 				auto verts = execPath.Cfgs();
 
-				execCfgs.push_back(verts[0]);
+				if(!verts.empty())
+					execCfgs.push_back(verts[0]);
 				for(size_t j = 1; j < verts.size(); j++) {
 					Cfg middle = verts[j];
 					middle.SetData({(verts[j-1][0]+verts[j][0])/2, (verts[j-1][1]+verts[j][1])/2, 
@@ -173,19 +195,22 @@ FindMotionConflict(GeneralCBSNode& _node) {
 					execCfgs.push_back(middle);
 					execCfgs.push_back(verts[j]);
 				}
+				for(size_t j = 0; j < a.m_finalWaitTimeSteps; j++) {
+					execCfgs.push_back(execCfgs.back());
+				}
 			}
 
 			previousCfg = execCfgs.back();
 
-			if(i < assigns.size()-1) {
+			//if(i < assigns.size()-1) {
 				execCfgs.pop_back();
 				//previousTimeStep = 1;
-			}	
+			//}	
 
 			size_t start = agentPaths[agent].size();
 			size_t end = start+interim.size()+cfgs.size()+execCfgs.size();
 
-			if(i == assigns.size()-1)
+			if(i == assigns.size()-1 and a.m_execStartTime != a.m_execEndTime)
 				end = end-1;
 
 			previousTimeStep = end;
@@ -200,6 +225,7 @@ FindMotionConflict(GeneralCBSNode& _node) {
 
 			m_pathTaskMap[agent].push_back(std::make_pair(std::make_pair(start,end-1),a.m_task->GetParent()));
 		}
+		
 	}
 
 	//Find the last timestep a robot is moving.
@@ -341,6 +367,11 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 
 		if(m_lowLevel->UpdateSolution(one, _constraints.first.m_task))
 			_tree.push(one);
+
+		if(one.GetCost() < _node.GetCost())
+			throw RunTimeException(WHERE,"Child node cost less than parnt.");
+
+
  	}
 
 	if(_constraints.second.m_task.get()) {
@@ -369,5 +400,69 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 
 		if(m_lowLevel->UpdateSolution(two, _constraints.second.m_task))
 			_tree.push(two);
+
+		if(two.GetCost() < _node.GetCost())
+			throw RunTimeException(WHERE,"Child node cost less than parnt.");
+
 	}
 }
+
+void
+MotionValidation::
+AvoidancePaths(GeneralCBSNode& _node) {
+
+	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+	
+	auto solution = _node.GetSolution();
+	auto agentAssigns = solution.m_agentAssignments;
+
+	auto& post = _node.GetPostAssignmentRef();
+	auto& postAA = post.m_agentAssignments;
+
+	for(auto aa : agentAssigns) {
+		auto agent = aa.first;
+		auto& assign = postAA[agent][0];
+
+		size_t start = 0;
+		if(!aa.second.empty())
+			start = aa.second.back().m_execEndTime;
+
+		auto g = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(agent));
+
+		double maxTime = 0;
+
+		auto& constraints = _node.GetMotionConstraints(assign.m_task->GetParent(),agent);
+		for(auto& c : constraints) {
+			m_lowLevel->m_motionConstraintMap[agent].insert(std::make_pair(c.m_timestep,
+				std::make_pair(c.m_conflictCfg,c.m_duration)));
+			if(c.m_timestep > maxTime)
+				maxTime = c.m_timestep;
+		}
+	
+		Cfg lastCfg(agent->GetRobot());
+		if(start == 0) {
+				lastCfg = agent->GetRobot()->GetSimulationModel()->GetState();
+		}
+		else {
+				lastCfg = g->GetVertex(aa.second.back().m_execPath.back());
+		}	
+		lastCfg.SetRobot(agent->GetRobot());
+
+		auto plan = m_lowLevel->LowLevelSearch::MotionPlan(lastCfg, lastCfg, start, maxTime, 
+																			assign.m_task->GetParent().get());
+
+		m_lowLevel->m_motionConstraintMap.clear();	
+
+		if(plan.second.first.empty())
+			throw RunTimeException(WHERE, "Problem with post assignment path.");
+
+		assign.m_setupStartTime = start;
+		assign.m_execStartTime = start;
+		assign.m_execEndTime = plan.first;
+
+		assign.m_setupPath = {};		
+		assign.m_execPath = plan.second.first;
+		assign.m_finalWaitTimeSteps = plan.second.second;
+	}	
+}
+

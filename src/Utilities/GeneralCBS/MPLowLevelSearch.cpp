@@ -11,24 +11,6 @@ bool
 MPLowLevelSearch::
 UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 
-	std::vector<Assignment>& assignments = _node.GetSolutionRef().m_taskPlans[_task];
-
-	Assignment assign;
-
-	bool firstEmpty = false;
-	for(auto& a : assignments) {
-		if(!a.m_execPath.empty() and a.m_agent != nullptr and !firstEmpty) {
-			continue;	
-		}
-		if(!a.m_agent)
-			continue;
-			//throw RunTimeException(WHERE,"Task plan to update has no cleared assignment plans.");
-		//assign = a;
-		//break;
-		firstEmpty = true;
-		ClearTaskPlan(a,_node);
-	}
-
 	if(m_debug) {
 		std::cout << "Pre-Clearing task plan" << std::endl;
 		auto solution = _node.GetSolution();
@@ -53,7 +35,32 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 			}
 		}
 	}
-	ClearTaskPlan(assign,_node);
+
+	std::vector<Assignment>& assignments = _node.GetSolutionRef().m_taskPlans[_task];
+
+	Assignment assign;
+
+	bool firstEmpty = false;
+	Assignment* previous = nullptr;
+	for(auto& a : assignments) {
+		if(!a.m_execPath.empty() and a.m_agent != nullptr and !firstEmpty) {
+			previous = &a;
+			continue;	
+		}
+		if(!a.m_agent)
+			continue;
+			//throw RunTimeException(WHERE,"Task plan to update has no cleared assignment plans.");
+		//assign = a;
+		//break;
+		if(!firstEmpty and previous) {
+			ClearAgentAssignments(*previous,_node);
+		}
+		firstEmpty = true;
+		a.m_execPath.push_back(0);
+		//ClearTaskPlan(a,_node);
+		ClearAgentAssignments(a,_node);
+	}
+	//ClearTaskPlan(assign,_node);
 	if(m_debug) {
 		std::cout << "Post-Clearing task plan" << std::endl;
 		auto solution = _node.GetSolution();
@@ -79,7 +86,23 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 		}
 	}
 
-	return PlanAssignments(_node);
+	auto valid = PlanAssignments(_node);
+	if(m_debug)		
+		_node.Debug();
+
+	
+	//check plan for valdity
+	if(valid) {
+		for(auto aa : _node.GetSolution().m_agentAssignments) {
+			size_t end = 0;
+			for(auto a : aa.second) {
+				if(a.m_setupStartTime != end)
+					throw RunTimeException(WHERE,"Invalid plan.");
+				end = a.m_execEndTime;
+			}
+		}
+	}
+	return valid;
 }
 
 void
@@ -95,8 +118,16 @@ ClearTaskPlan(Assignment& _assign, GeneralCBSNode& _node) {
 	std::vector<Assignment>& assignments = _node.GetSolutionRef().m_taskPlans[_assign.m_task->GetParent()];
 	bool before = true;
 	for(auto& a : assignments) {
-		if(a == _assign)
+		if(a.m_task == _assign.m_task
+			and a.m_setupStartTime == _assign.m_setupStartTime
+			and a.m_execStartTime == _assign.m_execStartTime 
+			and a.m_setupPath == _assign.m_setupPath) {
+
+			//if(a.m_execPath.empty())
+			//	return;
+
 			before = false;
+		}
 		if(before)
 			continue;
 		if(!a.m_agent)
@@ -118,8 +149,16 @@ ClearAgentAssignments(Assignment& _assign, GeneralCBSNode& _node) {
 	std::vector<Assignment>& assignments = _node.GetSolutionRef().m_agentAssignments[_assign.m_agent];
 	bool before = true;
 	for(auto& a : assignments) {
-		if(a == _assign) 
+		if(a.m_task == _assign.m_task
+			and a.m_setupStartTime == _assign.m_setupStartTime
+			and a.m_execStartTime == _assign.m_execStartTime 
+			and a.m_setupPath == _assign.m_setupPath) {
+
+			//if(a.m_execPath.empty())
+				//return;
+
 			before = false;
+		}
 		if(before) 
 			continue;
 		ClearTaskPlan(a, _node);
@@ -356,6 +395,12 @@ PatchPaths(GeneralCBSNode& _node, Assignment& _assign, double _endTime) {
 
 	startCfg.SetRobot(previous->m_agent->GetRobot());
 	endCfg.SetRobot(previous->m_agent->GetRobot());
+
+	auto& constraints = _node.GetMotionConstraints(previous->m_task->GetParent(),previous->m_agent);
+	for(auto& c : constraints) {
+		m_motionConstraintMap[previous->m_agent].insert(std::make_pair(c.m_timestep,
+																				std::make_pair(c.m_conflictCfg,c.m_duration)));
+	}
 
 	auto plan = this->MotionPlan(startCfg, endCfg, previous->m_execStartTime, 
 																_endTime,_assign.m_task->GetParent().get());

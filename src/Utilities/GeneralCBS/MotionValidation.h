@@ -55,11 +55,11 @@ class MotionValidation : public Validation {
 	///@input _constraints pair of motion constraints with which to spawn the children
 	void AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraintPair _constraints);
 	
+	void AvoidancePaths(GeneralCBSNode& _node);
+
 	///@}
 	///@name Internal State
 	///@{
-	
-	TMPLibrary* m_tmpLibrary;
 
 	///< State Graph Label
 	std::string m_sgLabel;

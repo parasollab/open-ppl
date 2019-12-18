@@ -452,9 +452,9 @@ ConnectNeighbors(AbstractRoadmapType* _r, VID _source,
   }
 
 	//Connect vertices to themselves
-	if(m_selfEdges) {
-		this->ConnectNodes(_r, _source, _source, _collision);
-	}
+	//if(m_selfEdges) {
+		//this->ConnectNodes(_r, _source, _source, _collision);
+	//}
 }
 
 

@@ -10,7 +10,7 @@ TCBSValidation() {}
 
 TCBSValidation::
 TCBSValidation(MPLibrary* _library, LowLevelSearch* _lowLevel, TMPLibrary* _tmpLibrary) : 
-								Validation(_library,_lowLevel), m_tmpLibrary(_tmpLibrary) {}
+								Validation(_library,_lowLevel, _tmpLibrary) {}
 
 TCBSValidation::
 ~TCBSValidation() {}
@@ -21,6 +21,8 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 	
 	CBSSolution solution;
 	solution.m_decomposition = _decomposition;
+	
+	CBSSolution postAssignment = this->CreatePostAssignment();
 
 	auto top = _decomposition->GetMainTask();
 
@@ -33,7 +35,7 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 		}
 	}
 
-	GeneralCBSNode node(solution);
+	GeneralCBSNode node(solution, postAssignment);
 	
 	_tree.push(node);
 

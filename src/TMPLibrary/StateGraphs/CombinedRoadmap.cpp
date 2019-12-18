@@ -52,6 +52,11 @@ Initialize(){
 		GenerateITs();
 
 	StateGraph::Initialize();
+	
+	if(m_debug) {
+    Simulation::Get()->AddRoadmap(m_graph,
+      glutils::color(0., 1., 0., 0.2));
+	}
 }
 
 /*------------------------------ Accessors --------------------------------*/

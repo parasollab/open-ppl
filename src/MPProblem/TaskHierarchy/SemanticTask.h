@@ -80,7 +80,7 @@ class SemanticTask {
 		std::string m_label;
 
 		///< Parent SemanticTask that includes this task in its decomposition
-		std::shared_ptr<SemanticTask> m_parent;
+		std::shared_ptr<SemanticTask> m_parent{nullptr};
 
 		///< Set of subtasks that make up this task's decomposition
 		std::vector<std::shared_ptr<SemanticTask>> m_subtasks;

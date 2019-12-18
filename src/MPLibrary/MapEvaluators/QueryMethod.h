@@ -328,7 +328,7 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
               << std::endl;
 
   // Check for trivial path.
-  if(_goals.count(_start))
+  if(_goals.count(_start) and m_startTime >= m_endTime)
     return {_start};
 
   stats->IncStat("Graph Search");

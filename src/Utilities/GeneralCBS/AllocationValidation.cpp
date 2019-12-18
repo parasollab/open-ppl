@@ -10,8 +10,7 @@ AllocationValidation() {}
 
 AllocationValidation::
 AllocationValidation(MPLibrary* _library, LowLevelSearch* _lowLevel, TMPLibrary* _tmpLibrary) : 
-		Validation(_library, _lowLevel), 
-		m_tmpLibrary(_tmpLibrary) {}	
+		Validation(_library, _lowLevel, _tmpLibrary) { }	
 
 AllocationValidation::
 ~AllocationValidation() {}
@@ -22,7 +21,10 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 
 	CBSSolution solution;
 	solution.m_decomposition = _decomposition;
-	GeneralCBSNode node(solution);
+
+	CBSSolution postAssignment = this->CreatePostAssignment();
+
+	GeneralCBSNode node(solution,postAssignment);
 
 
 	//temp for RA-L problem structure
@@ -252,3 +254,4 @@ PatchPaths(GeneralCBSNode& _node) {
 		}
 	}
 }
+

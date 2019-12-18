@@ -386,6 +386,9 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 
 				if(transition.first > avail.second) // transition takes too long and violates a constraint
 					continue;
+	
+				if(transition.first < avail.first) // transition arrives during an occupied interval
+					continue;
 			}
 			else {
 				continue;
@@ -452,8 +455,8 @@ ComputeSetup(AvailElem _elem, double _minTime, AvailElem _parent) {
 
 	auto path = plan.second;
 
-	m_setupPathMap[_elem] = path;
-	m_setupStartTimes[_elem] = startTime;
+	//m_setupPathMap[_elem] = path;
+	//m_setupStartTimes[_elem] = startTime;
 
 
 	if(plan.first > _minTime and _parent.m_agent != m_tmpLibrary->GetTaskPlan()->GetCoordinator()) {
@@ -467,7 +470,9 @@ ComputeSetup(AvailElem _elem, double _minTime, AvailElem _parent) {
 		}
 	}
 
-
+	if(!m_seen.count(_elem) or m_distance[_elem] > plan.first) {
+		m_setupStartTimes[_elem] = startTime;
+	}
 
 	return std::make_pair(std::max(plan.first,_minTime),path);
 }
@@ -517,7 +522,7 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 		}
 	}	
 
-	m_execPathMap[_elem] = path;
+	//m_execPathMap[_elem] = path;
 	return std::make_pair(plan.first,path);
 }
 
@@ -600,6 +605,15 @@ CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask>
 
 	Assignment assign(_start.m_agent, semanticTask, setup.first, exec.first, 
 										m_setupStartTimes[_start], m_distance[_start], _endTime, setup.second, exec.second);
+
+	if(!assign.m_setupPath.empty()
+			and !assign.m_execPath.empty()
+			and assign.m_setupPath.back() != assign.m_execPath.front())
+		throw RunTimeException(WHERE, "Disconnected setup and exec paths.");
+
+	if(setup.second + m_setupStartTimes[_start] > m_distance[_start])
+		throw RunTimeException(WHERE, "Jank waiting timesteps.");
+
 	return assign;
 }
 

@@ -18,7 +18,7 @@ class Validation {
 
 		Validation();
 
-		Validation(MPLibrary* _library, LowLevelSearch* _lowLevel);
+		Validation(MPLibrary* _library, LowLevelSearch* _lowLevel, TMPLibrary* _tmpLibrary);
 
 		~Validation();
 
@@ -41,6 +41,9 @@ class Validation {
   protected:
 		///@name Helper Functions
 		///@{
+
+		CBSSolution CreatePostAssignment();
+
 		///@}
 		///@name Internal State
 		///@{
@@ -49,6 +52,7 @@ class Validation {
 
 		LowLevelSearch* m_lowLevel;
 
+		TMPLibrary* m_tmpLibrary;
 		///@}
 };
 

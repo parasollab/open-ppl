@@ -148,9 +148,44 @@ MotionPlan(Cfg _start, Cfg _goal, double _startTime, double _minEndTime, Semanti
 		}
 		bool invalid = m_invalidVertices[_currentTask][originalRobot->GetAgent()][goalVID].count(
 														std::make_pair(timestep,cfg));
-		if(invalid and timestep > goalLastConstraint and timestep <= _minEndTime) {
+
+
+  	// Get the valididty checker and make sure it has type
+  	// CollisionDetectionValidity.
+  	/// @TODO Figure out how to avoid needing this downcast so that we can
+  	///       leverage more efficient compose checks (like checking the bounding
+  	///       spheres first).
+  	auto basevc = m_tmpLibrary->GetMPLibrary()->GetValidityChecker(m_vcLabel);
+  	auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(basevc.get());
+
+  	// Configure the other robot at _conflictCfg.
+  	auto otherMultiBody = cfg.GetRobot()->GetMultiBody();
+  	otherMultiBody->Configure(cfg);
+
+  	// Check each configuration in the resolution-level path for collision with
+  	// _conflictCfg.
+  	CDInfo cdInfo;
+  	auto thisMultiBody = robot->GetMultiBody();
+    thisMultiBody->Configure(_goal);
+    const bool collision = vc->IsMultiBodyCollision(cdInfo, thisMultiBody, otherMultiBody,
+      	  "Edge validaiton in General CBS low level search.");
+      	
+
+		if((invalid or collision) and timestep > goalLastConstraint and timestep <= _minEndTime) {
 			goalLastConstraint = timestep;
 		}
+	}
+
+	//Planning for a post assignment task.
+	if(goalLastConstraint > _startTime and !m_currentTask->GetParent()) {
+		auto goalCfg = agent->GetRobot()->GetSimulationModel()->GetState();
+	
+		auto boundary = m_tmpLibrary->GetMPProblem()->GetEnvironment()->GetBoundary()->Clone();
+	
+  	std::unique_ptr<BoundaryConstraint> goalConstraint(new BoundaryConstraint(robot, std::move(boundary)));
+		task->ClearGoalConstraints();
+  	task->AddGoalConstraint(std::move(goalConstraint));
+		goalLastConstraint = lastConstraint;
 	}
 
 	query2->SetLastGoalConstraintTime(goalLastConstraint);

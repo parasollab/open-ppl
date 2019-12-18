@@ -473,8 +473,8 @@ CreateHighLevelGraph(){
 				cfgD.SetData({double(x), double(y), 0});
 			}
 
-      auto vidR = m_highLevelGraph->AddVertex(cfgR);
-      auto vidD = m_highLevelGraph->AddVertex(cfgD);
+      auto vidR = m_highLevelGraph->AddDuplicateVertex(cfgR);
+      auto vidD = m_highLevelGraph->AddDuplicateVertex(cfgD);
 
       m_deliveringVIDs[cfgD.GetRobot()->GetCapability()].push_back(vidD);
       m_mainDelivering.insert(vidD);

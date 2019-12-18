@@ -67,8 +67,6 @@ class AllocationValidation : public Validation {
 	///@name Internal State
 	///@{
 	
-	TMPLibrary* m_tmpLibrary;
-	
 	///@}
 
 };
