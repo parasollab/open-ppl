@@ -631,7 +631,7 @@ BasicRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp,
     const bool _requireNew) {
   MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::Extend");
-  this->GetStatClass()->IncStat("BasicRRTExtend");
+  this->GetStatClass()->IncStat("BasicRRTStrategy::Extend");
 
   auto e = this->GetExtender(m_exLabel);
   const CfgType& qNear = this->GetRoadmap()->GetVertex(_nearVID);
