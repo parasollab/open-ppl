@@ -57,6 +57,8 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
     ///@name ConnectorMethod Overrides
     ///@{
 
+    /// @note If a target set is provided, we only attempt to connect to CCs
+    ///       containing at least one of its members.
     virtual void ConnectImpl(RoadmapType* const _r, const VID _source,
         const VertexSet* const _targetSet = nullptr,
         OutputIterator<RoadmapType>* const _collision = nullptr) override;
