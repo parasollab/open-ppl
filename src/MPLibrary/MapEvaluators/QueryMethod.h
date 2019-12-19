@@ -208,11 +208,9 @@ void
 QueryMethod<MPTraits>::
 Initialize() {
   // Clear previous state.
-  m_dmLabel.clear();
   Reset(nullptr);
 
-  this->GetStatClass()->SetStat(
-      "QueryMethod::" + this->GetLabel() + "::FoundPath", 0);
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 0);
 }
 
 /*-------------------------- MapEvaluator Interface --------------------------*/
@@ -226,9 +224,14 @@ operator()() {
   auto task = this->GetTask();
   const size_t numGoals = task->GetNumGoals();
 
-  if(goalTracker->GetStartVIDs().empty()){
+  // Record the path length history when this function exits.
+  nonstd::call_on_destruct trackHistory([this](){
+      this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
+  });
+
+  if(goalTracker->GetStartVIDs().empty())
     return false;
-  }
+
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.
@@ -286,8 +289,7 @@ operator()() {
       return false;
   }
 
-  this->GetStatClass()->SetStat(
-      "QueryMethod::" + this->GetLabel() + "::FoundPath", 1);
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 1);
 
   if(this->m_debug)
     std::cout << "\tConnected all goals!" << std::endl;
