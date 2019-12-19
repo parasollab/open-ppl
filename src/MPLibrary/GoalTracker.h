@@ -624,7 +624,12 @@ AddMap(GroupRoadmapType* const _roadmap, const GroupTask* const _task) {
       GoalMap<GroupRoadmapType, GroupTask>(_roadmap, _task)).first;
   iter->second.InstallHooks();
 
-  /// @todo Should this create maps for individual robots as well?
+  // Create maps for individual robots if needed.
+  for(auto& task : *_task) {
+    auto roadmap = this->GetRoadmap(task.GetRobot());
+    if(!IsMap(roadmap, &task))
+      AddMap(roadmap, &task);
+  }
 }
 
 

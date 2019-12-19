@@ -1168,40 +1168,27 @@ EdgeClearance(const CfgType& _c1, const CfgType& _c2,
   //is already available, return it here.
 
   Environment* env = this->GetEnvironment();
-  auto dm = this->GetDistanceMetric(m_dmLabel);
   auto robot = this->GetTask()->GetRobot();
 
-  //Reconstruct the path given the two nodes
-  vector<CfgType> intermediates = _weight.GetIntermediates();
-  vector<CfgType> reconEdge;
+  // Find the LP to use.
+  const auto& intermediates = _weight.GetIntermediates();
+  const std::string lpLabel = !intermediates.size()
+                            and !_weight.GetLPLabel().empty()
+                            ? _weight.GetLPLabel()
+                            : "sl";
 
-  if(_weight.GetLPLabel() != "RRTExpand") {
-    reconEdge = this->GetLocalPlanner(_weight.GetLPLabel())->
-      ReconstructPath(_c1, _c2, intermediates,
-          m_rayTickResolution, m_orientationResolution);
-          //env->GetPositionRes(), env->GetOrientationRes());
-  }
-  else {
-    StraightLine<MPTraits> sl;
-    sl.SetMPLibrary(this->GetMPLibrary());
-    sl.Initialize();
-    intermediates.insert(intermediates.begin(), _c1);
-    intermediates.push_back(_c2);
-    for(auto cit = intermediates.begin(); cit + 1 != intermediates.end();
-        ++cit) {
-      StatClass dummyStats;
-      LPOutput<MPTraits> lpOutput;
-      CfgType col(robot);
-      vector<CfgType> edge = sl.ReconstructPath(*cit, *(cit + 1), intermediates,
-          m_rayTickResolution, m_orientationResolution);
-          //env->GetPositionRes(), env->GetOrientationRes());
-      reconEdge.insert(reconEdge.end(), edge.begin(), edge.end());
-    }
-  }
+  std::vector<CfgType> waypoints = intermediates;
+  waypoints.insert(waypoints.begin(), _c1);
+  waypoints.push_back(_c2);
 
-  reconEdge.insert(reconEdge.begin(), _c1);
-  reconEdge.push_back(_c2);
-  vector<double> clearance;
+  // Reconstruct the path between the waypoint nodes.
+  auto lp = this->GetLocalPlanner(lpLabel);
+  std::vector<CfgType> reconEdge = lp->BlindPath(waypoints,
+      m_rayTickResolution, m_orientationResolution);
+
+  // Compute the clearance for each configuration.
+  std::vector<double> clearance;
+  clearance.reserve(reconEdge.size());
   for(auto it = reconEdge.begin(); it != reconEdge.end(); ++it) {
     CDInfo collInfo;
     CfgType clrCfg(robot);

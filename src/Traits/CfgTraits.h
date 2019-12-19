@@ -153,7 +153,6 @@
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
-#include "MPLibrary/MPStrategies/LPCompare.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
@@ -381,7 +380,6 @@ struct MPTraits {
     EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
-    LPCompare<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
     PushQueryToMA<MPTraits>,

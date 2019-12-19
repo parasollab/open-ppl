@@ -80,7 +80,7 @@ class GroupLocalPlan final {
     bool SkipEdge() const noexcept;
 
     void SetActiveRobots(const std::vector<size_t>& _indices);
-    std::vector<size_t> GetActiveRobots() const noexcept;
+    const std::vector<size_t>& GetActiveRobots() const noexcept;
 
     void Clear() noexcept;
 
@@ -89,7 +89,7 @@ class GroupLocalPlan final {
 
     void SetIntermediates(const GroupCfgPath& _cfgs);
 
-    std::string GetLPLabel() const noexcept;
+    const std::string& GetLPLabel() const noexcept;
     void SetLPLabel(const std::string _label) noexcept;
 
     ///@}
@@ -291,7 +291,7 @@ SetActiveRobots(const std::vector<size_t>& _indices) {
 
 
 template <typename CfgType>
-std::vector<size_t>
+const std::vector<size_t>&
 GroupLocalPlan<CfgType>::
 GetActiveRobots() const noexcept {
   return m_activeRobots;
@@ -334,7 +334,7 @@ SetIntermediates(const GroupCfgPath& _cfgs) {
 
 
 template <typename CfgType>
-std::string
+const std::string&
 GroupLocalPlan<CfgType>::
 GetLPLabel() const noexcept {
   return m_lpLabel;

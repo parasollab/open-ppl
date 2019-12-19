@@ -37,10 +37,18 @@ struct LPOutput {
   ///@name Internal State
   ///@{
 
-  std::vector<CfgType> m_path;           // Path found by local planner.
+  /// The resolution-level path computed by a local planner. Does not include
+  /// the start or goal configurations.
+  std::vector<CfgType> m_path;
+
+  /// The set of 'intermediate' configurations, between each of which is a
+  /// straight-line path in c-space (i.e. these are the vertices of a polygonal
+  /// chain). Does not include the start or goal configurations.
   std::vector<CfgType> m_intermediates;
 
-  LPEdge m_edge;                    // Contains weights of edges defined in path.
+  /// A pair of weight objects. The first is in the forward direction and the
+  /// second is its reverse.
+  LPEdge m_edge;
 
   ///@}
   ///@name Construction
@@ -77,8 +85,8 @@ LPOutput<MPTraits>::
 Clear() {
   m_path.clear();
   m_intermediates.clear();
-  m_edge.first.SetWeight(0);
-  m_edge.second.SetWeight(0);
+  m_edge.first.Clear();
+  m_edge.second.Clear();
 }
 
 

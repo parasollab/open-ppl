@@ -736,7 +736,7 @@ WriteAllOutputs(const GroupPath<MPTraits>& _path, const size_t _pathIndex) {
   // Note, we are forcing sl to be the LP because it will try to use the RRT LP
   // again which won't show us the intermediates.
   const std::vector<GroupCfgType> fullCfgs =
-                                     _path.FullCfgs(this->GetMPLibrary(), "sl");
+                                     _path.FullCfgs(this->GetMPLibrary());
   WritePath(filename, fullCfgs);
 }
 

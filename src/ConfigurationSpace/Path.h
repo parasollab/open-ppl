@@ -1,13 +1,11 @@
 #ifndef PMPL_PATH_H_
 #define PMPL_PATH_H_
 
-#include <algorithm>
-
-#include "Behaviors/Agents/BatteryBreak.h"
 #include "MPLibrary/MPLibrary.h"
-#include "MPLibrary/MPLibrary.h"
-#include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "Utilities/PMPLExceptions.h"
+
+#include <algorithm>
+#include <vector>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,25 +65,10 @@ class PathType final {
     ///        resolution apart. This is not cached due to its size and
     ///        infrequent usage.
     /// @param _lib The planning library to use.
-    /// @param _lp  The local planner label to use when connecting cfgs.
     /// @return The full path of configurations, including local-plan
     ///         intermediates between the roadmap nodes.
     template <typename MPLibrary>
-    const std::vector<CfgType> FullCfgs(MPLibrary* const _lib,
-        const string& _lp = "") const;
-
-    /// Find the furthest place and time in a path that an agent can travel to
-    /// before being required to return to a charger.
-    /// @params _batteryLevel Current battery level of the agent.
-    /// @params _rate Rate at which battery levels decrease.
-    /// @params _threshold Lowest level battery can reach before charging.
-    /// @params _currentTime current time for the path to start calculating
-    ///         from.
-    /// @params _timeRes Resolution of a single timestep.
-    template <typename MPLibrary>
-    BatteryBreak FindBatteryBreak(double _batteryLevel, double _rate,
-        double _theshold, double _currentTime, double _timeRes,
-        MPLibrary* const _lib);
+    const std::vector<CfgType> FullCfgs(MPLibrary* const _lib) const;
 
     /// Append another path to the end of this one.
     /// @param _p The path to append.
@@ -119,20 +102,20 @@ class PathType final {
     ///@name Helpers
     ///@{
 
-    void AssertSameMap(const PathType& _p) const;
+    void AssertSameMap(const PathType& _p) const noexcept;
 
     ///@}
     ///@name Internal State
     ///@{
 
-    RoadmapType* const m_roadmap;       ///< The roadmap.
-    std::vector<VID> m_vids;            ///< The vids of the path configurations.
+    RoadmapType* const m_roadmap;        ///< The roadmap.
+    std::vector<VID> m_vids;             ///< The VIDs in the path.
 
-    std::vector<CfgType> m_cfgs;        ///< The path configurations.
-    mutable bool m_cfgsCached{false};   ///< Are the current cfgs correct?
+    mutable std::vector<CfgType> m_cfgs; ///< The path configurations.
+    mutable bool m_cfgsCached{false};    ///< Are the current cfgs correct?
 
-    double m_length{0};                 ///< The path length.
-    mutable bool m_lengthCached{false}; ///< Is the current path length correct?
+    mutable double m_length{0};          ///< The path length.
+    mutable bool m_lengthCached{false};  ///< Is the current length correct?
 
     ///@}
 };
@@ -181,17 +164,24 @@ template <typename MPTraits>
 double
 PathType<MPTraits>::
 Length() const {
-  if(!m_lengthCached) {
-    double& length = const_cast<double&>(m_length);
-    length = 0;
-    for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
-      if(*start == *(start + 1))
-        continue;  // Skip repeated vertices.
-      const auto& edge = m_roadmap->GetEdge(*start, *(start+1));
-      length += edge.GetWeight();
-    }
-    m_lengthCached = true;
+  // If the length is cached, we don't need to recompute.
+  if(m_lengthCached)
+    return m_length;
+  m_lengthCached = true;
+
+  // Recompute the length by summing the edge weights.
+  m_length = 0;
+  for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
+    // Skip repeated vertices.
+    /// @todo This will be an error if we allow self-edges.
+    if(*start == *(start + 1))
+      continue;
+
+    // Add this edge's weight to the sum.
+    const auto& edge = m_roadmap->GetEdge(*start, *(start + 1));
+    m_length += edge.GetWeight();
   }
+
   return m_length;
 }
 
@@ -208,14 +198,16 @@ template <typename MPTraits>
 const std::vector<typename MPTraits::CfgType>&
 PathType<MPTraits>::
 Cfgs() const {
-  if(!m_cfgsCached) {
-    std::vector<CfgType>& cfgs = const_cast<std::vector<CfgType>&>(m_cfgs);
-    cfgs.clear();
-    cfgs.reserve(m_vids.size());
-    for(const auto& vid : m_vids)
-      cfgs.push_back(m_roadmap->GetVertex(vid));
-    m_cfgsCached = true;
-  }
+  // If the cfgs are cached, we don't need to recompute.
+  if(m_cfgsCached)
+    return m_cfgs;
+  m_cfgsCached = true;
+
+  m_cfgs.clear();
+  m_cfgs.reserve(m_vids.size());
+  for(const auto& vid : m_vids)
+    m_cfgs.push_back(m_roadmap->GetVertex(vid));
+
   return m_cfgs;
 }
 
@@ -224,95 +216,22 @@ template <typename MPTraits>
 template <typename MPLibrary>
 const std::vector<typename MPTraits::CfgType>
 PathType<MPTraits>::
-FullCfgs(MPLibrary* const _lib, const string& _lp) const {
+FullCfgs(MPLibrary* const _lib) const {
   if(m_vids.empty())
     return std::vector<CfgType>();
 
+  // Insert the first vertex.
   std::vector<CfgType> out = {m_roadmap->GetVertex(m_vids.front())};
 
-  // Set up local planner to recreate edges. If none was provided, use edge
-  // planner, or fall back to straight-line.
-  auto env = _lib->GetMPProblem()->GetEnvironment();
-
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
-    // Get the next edge.
-    bool validEdge = false;
-    typename RoadmapType::adj_edge_iterator ei;
-    {
-      typename RoadmapType::edge_descriptor ed(*it, *(it+1));
-      typename RoadmapType::vertex_iterator vi;
-      validEdge = m_roadmap->find_edge(ed, vi, ei);
-    }
+    // Insert intermediates between vertices.
+    std::vector<CfgType> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    out.insert(out.end(), edge.begin(), edge.end());
 
-    if(!validEdge)
-      throw RunTimeException(WHERE) << "Edge from " << *it << " to " << *(it+1)
-                                    << " doesn't exist in roadmap!";
-
-    // Use the local planner from parameter if specified.
-    // If not specified, use the edge lp.
-    // Fall back to straight-line if edge lp is not available (this will always
-    // happen if it was grown with an extender).
-    typename MPLibrary::LocalPlannerPointer lp;
-    if(!_lp.empty())
-      lp = _lib->GetLocalPlanner(_lp);
-    else {
-      try {
-        lp = _lib->GetLocalPlanner(ei->property().GetLPLabel());
-      }
-      catch(...) {
-        lp = _lib->GetLocalPlanner("sl");
-      }
-    }
-
-    // Recreate this edge, including intermediates.
-    CfgType& start = m_roadmap->GetVertex(*it);
-    CfgType& end   = m_roadmap->GetVertex(*(it+1));
-
-    // Construct a resolution-level path along the recreated edge.
-    std::vector<CfgType> recreatedEdge = ei->property().GetIntermediates();
-    recreatedEdge.insert(recreatedEdge.begin(), start);
-    recreatedEdge.push_back(end);
-    for(auto cit = recreatedEdge.begin(); cit + 1 != recreatedEdge.end(); ++cit) {
-      std::vector<CfgType> edge = lp->ReconstructPath(*cit, *(cit+1),
-          std::vector<CfgType>(), env->GetPositionRes(), env->GetOrientationRes());
-      out.insert(out.end(), edge.begin(), edge.end());
-    }
-    out.push_back(end);
+    // Insert the next vertex.
+    out.push_back(m_roadmap->GetVertex(*(it + 1)));
   }
   return out;
-}
-
-
-template <typename MPTraits>
-template <typename MPLibrary>
-BatteryBreak
-PathType<MPTraits>::
-FindBatteryBreak(double _batteryLevel, double _rate, double _threshold,
-                 double _currentTime, double _timeRes, MPLibrary* const _lib){
-  std::vector<CfgType> fullPath = FullCfgs(_lib);
-  /*std::cout << "Battery Level: " << _batteryLevel << "\nRate: " << _rate <<
-            "\nThreshold: " << _threshold << std::endl;
-  std::cout << "Printing full path" << std::endl;
-  for(auto cfg : fullPath){
-    std::cout << cfg << std::endl;
-  }*/
-  /*
-  //TODO: Figure out if the abstracted path will ever be necessary
-  std::cout << "Printing abstracted path" << std::endl;
-  std::vector<CfgType> path = Cfgs();
-  for(auto cfg : path){
-    std::cout << cfg << std::endl;
-  }*/
-  size_t cfgIt = 0; //keeps track of last path cfg reached before battery break
-  for(auto cfg : fullPath){
-    _batteryLevel -= _rate;
-    //std::cout << "BatteryLevel: " << _batteryLevel << std::endl;
-    if(_batteryLevel <= _threshold)
-      break;
-    _currentTime += _timeRes;
-    cfgIt++;
-  }
-  return BatteryBreak(fullPath[cfgIt], _currentTime);
 }
 
 
@@ -339,9 +258,8 @@ PathType<MPTraits>&
 PathType<MPTraits>::
 operator+=(const std::vector<VID>& _vids) {
   if(_vids.size()) {
-    std::copy(_vids.begin(), _vids.end(), back_inserter(m_vids));
-    m_lengthCached = false;
-    m_cfgsCached = false;
+    FlushCache();
+    std::copy(_vids.begin(), _vids.end(), std::back_inserter(m_vids));
   }
   return *this;
 }
@@ -362,7 +280,7 @@ PathType<MPTraits>&
 PathType<MPTraits>::
 operator=(const PathType& _p) {
   if(m_roadmap != _p.m_roadmap)
-    throw RunTimeException(WHERE, "Can't assign path from another roadmap");
+    throw RunTimeException(WHERE) << "Can't assign path from another roadmap";
 
   m_vids         = _p.m_vids;
   m_cfgs         = _p.m_cfgs;
@@ -378,9 +296,7 @@ template <typename MPTraits>
 void
 PathType<MPTraits>::
 Clear() {
-  m_lengthCached = false;
-  m_cfgsCached = false;
-  m_cfgs.clear();
+  FlushCache();
   m_vids.clear();
 }
 
@@ -397,11 +313,14 @@ FlushCache() {
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
+inline
 void
 PathType<MPTraits>::
-AssertSameMap(const PathType& _p) const {
+AssertSameMap(const PathType& _p) const noexcept {
   if(m_roadmap != _p.m_roadmap)
-    throw RunTimeException(WHERE, "Can't add paths from different roadmaps!");
+    throw RunTimeException(WHERE) << "Can't add paths from different roadmaps "
+                                  << "(source = " << _p.m_roadmap << ","
+                                  << " target = " << m_roadmap << ").";
 }
 
 /*----------------------------------------------------------------------------*/

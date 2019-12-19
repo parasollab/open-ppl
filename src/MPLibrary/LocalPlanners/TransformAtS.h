@@ -1,7 +1,8 @@
-#ifndef TRANSFORM_AT_S_H_
-#define TRANSFORM_AT_S_H_
+#ifndef PMPL_TRANSFORM_AT_S_H_
+#define PMPL_TRANSFORM_AT_S_H_
 
 #include "StraightLine.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Translates to the location \f$s\f$ percent along the straight line path,
@@ -46,11 +47,6 @@ class TransformAtS : public StraightLine<MPTraits> {
         LPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false) override;
-
-    virtual std::vector<CfgType> ReconstructPath(
-        const CfgType& _c1, const CfgType& _c2,
-        const std::vector<CfgType>& _intermediates,
-        double _posRes, double _oriRes) override;
 
     ///@}
 
@@ -106,8 +102,9 @@ void
 TransformAtS<MPTraits>::
 Initialize() {
   // This doesn't work for composite c-space.
-  if(this->GetTask()->GetRobot()->GetMultiBody()->IsComposite())
-    throw RunTimeException(WHERE, "Does not work for composite c-space.");
+  auto task = this->GetTask();
+  if(task and task->GetRobot()->GetMultiBody()->IsComposite())
+    throw RunTimeException(WHERE) << "Does not work for composite c-space.";
 }
 
 
@@ -131,102 +128,83 @@ IsConnected(
     LPOutput<MPTraits>* _lpOutput,
     double _posRes, double _oriRes,
     bool _checkCollision, bool _savePath) {
-  StatClass* stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetName() + "::IsConnected");
+  const std::string id     = this->GetNameAndLabel(),
+                    callee = id + "::IsConnected";
+  StatClass* const stats = this->GetStatClass();
+  MethodTimer mt(stats, callee);
 
+  // Initialize the LPOutput object.
   _lpOutput->Clear();
+  _lpOutput->SetLPLabel(this->GetLabel());
 
-  // Generate the sequence of intermediate nodes.
+  // Generate the sequence of intermediate nodes, including the start and goal.
   std::vector<CfgType> sequence = GetSequenceNodes(_c1, _c2, true);
-  if(this->m_debug) {
-    std::cout << "Start CFG positional DOF: " << _c1.PosDOF() << std::endl;
-    for(auto iter = sequence.begin(); iter != sequence.end(); iter++)
-      std::cout << "C" << std::distance(sequence.begin(), iter) << ": "
-                << iter->PrettyPrint()
-                << std::endl;
-  }
-
-  bool connected = true;
 
   // Check sequence nodes (skip start/end as they are already validated).
+  bool connected = true;
   if(_checkCollision) {
     size_t cdCounter = 0;
     auto vc = this->GetValidityChecker(this->m_vcLabel);
-    const std::string callee = this->GetNameAndLabel() + "::IsConnected";
 
     for(auto iter = sequence.begin() + 1; iter != sequence.end() - 1; ++iter) {
       ++cdCounter;
-      if(!vc->IsValid(*iter, callee)) {
-        _col = *iter;
-        connected = false;
-        break;
-      }
+      if(vc->IsValid(*iter, callee))
+        continue;
+
+      _col = *iter;
+      connected = false;
+      break;
     }
-    stats->IncLPCollDetCalls(this->GetNameAndLabel(), cdCounter);
+    stats->IncLPCollDetCalls(id, cdCounter);
   }
+
+  auto& forward = _lpOutput->m_edge.first;
 
   // Plan between sequence nodes.
   for(auto iter = sequence.begin(); connected and iter != sequence.end() - 1;
       ++iter) {
     LPOutput<MPTraits> lpo;
-    connected = this->IsConnectedFunc(*iter, *(iter + 1), _col, &lpo,
-        _posRes, _oriRes, _checkCollision, _savePath);
+    const CfgType& c1 = *iter,
+                 & c2 = *(iter + 1);
+
+    // Plan between these intermediates.
+    connected = this->IsConnectedFunc(c1, c2, _col, &lpo, _posRes, _oriRes,
+                                      _checkCollision, _savePath);
+    if(!connected)
+      break;
+
     // Add this weight to the lpOutput.
-    if(connected) {
-      auto& w = _lpOutput->m_edge.first;
-      w.SetWeight(w.GetWeight() + lpo.m_edge.first.GetWeight());
+    auto& f = lpo.m_edge.first;
+    forward.SetWeight(forward.GetWeight() + f.GetWeight());
+    forward.SetTimeSteps(forward.GetTimeSteps() + f.GetTimeSteps());
+
+    // Add the sequence node as an intermediate of the path.
+    const bool first = iter == sequence.begin();
+    if(!first)
+      _lpOutput->m_intermediates.push_back(c1);
+
+    // Save the resolution-level path if needed.
+    if(_savePath) {
+      auto& p1       = _lpOutput->m_path;
+      const auto& p2 = lpo.m_path;
+      if(!first)
+        p1.push_back(c1);
+      p1.insert(p1.end(), p2.begin(), p2.end());
     }
   }
 
   // If the plan is good, set lpoutput data.
   if(connected) {
-    stats->IncLPConnections(this->GetNameAndLabel());
-    _lpOutput->m_edge.second.SetWeight(_lpOutput->m_edge.first.GetWeight());
+    stats->IncLPConnections(id);
+    auto& backward = _lpOutput->m_edge.second;
+    backward.SetWeight(forward.GetWeight());
+    backward.SetTimeSteps(forward.GetTimeSteps());
 
-    // Save intermediates if needed.
-    if(_savePath)
-      for(auto iter = sequence.begin() + 1; iter != sequence.end() - 1; ++iter)
-        _lpOutput->m_intermediates.push_back(*iter);
-
-    _lpOutput->SetLPLabel(this->GetLabel());
-    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
+    if(this->m_saveIntermediates)
+      _lpOutput->AddIntermediatesToWeights(true);
   }
 
   return connected;
-}
-
-
-template <class MPTraits>
-std::vector<typename MPTraits::CfgType>
-TransformAtS<MPTraits>::
-ReconstructPath(
-    const CfgType& _c1, const CfgType& _c2,
-    const std::vector<CfgType>& _intermediates,
-    double _posRes, double _oriRes) {
-
-  int dummyCntr;
-  LPOutput<MPTraits> lpOutput;
-  CfgType col;
-
-  // Generate path between start, intermediates, and goal
-  std::vector<CfgType> cfgList;
-  cfgList.push_back(_c1);
-  cfgList.insert(cfgList.end(), _intermediates.begin(), _intermediates.end());
-  cfgList.push_back(_c2);
-
-  for(auto iter = cfgList.begin(); iter != cfgList.end() - 1; iter++) {
-    if(this->m_binaryEvaluation)
-      this->IsConnectedSLBinary(*iter, *(iter + 1), col, &lpOutput,
-          dummyCntr, _posRes, _oriRes, false, true);
-    else
-      this->IsConnectedSLSequential(*iter, *(iter + 1), col, &lpOutput,
-          dummyCntr, _posRes, _oriRes, false, true);
-    if(distance(cfgList.begin(), iter) != (int)cfgList.size() - 2)
-      lpOutput.m_intermediates.push_back(*(iter + 1));
-  }
-
-  // Return final path
-  return lpOutput.m_intermediates;
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -237,8 +215,8 @@ TransformAtS<MPTraits>::
 GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, const bool _reverse) {
   // Assert the robot makes sense for this LP.
   if(_c1.PosDOF() == 0)
-    throw RunTimeException(WHERE, "This LP doesn't make sense for robots that "
-        "can't translate.");
+    throw RunTimeException(WHERE) << "This LP doesn't make sense for robots "
+                                  << "that can't translate.";
 
   // Push the start node into the sequence.
   std::vector<CfgType> sequence;
@@ -260,7 +238,7 @@ GetSequenceNodes(const CfgType& _c1, const CfgType& _c2, const bool _reverse) {
     }
   }
   else {
-    for(size_t i = _c1.DOF() - 1; i > _c1.PosDOF() - 1; --i) {
+    for(size_t i = _c1.DOF() - 1; i >= _c1.PosDOF(); --i) {
       transformPoint[i] = _c2[i];
       sequence.push_back(transformPoint);
     }

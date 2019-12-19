@@ -49,6 +49,8 @@ class MPLibraryType final
 
     typedef typename MPTraits::MPSolution       MPSolution;
     typedef typename MPTraits::RoadmapType      RoadmapType;
+    typedef typename RoadmapType::VID           VID;
+    typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::Path             Path;
     typedef typename MPTraits::GroupPathType    GroupPath;
@@ -289,6 +291,35 @@ class MPLibraryType final
     StatClass*        GetStatClass() const noexcept;
 
     ///@}
+    ///@name Edge Reconstruction
+    ///@{
+
+    /// Recompute a roadmap edge path at full resolution (source and target cfgs
+    /// are not included).
+    /// @param _roadmap The roadmap pointer.
+    /// @param _source The source VID.
+    /// @param _target The target VID.
+    /// @param _posRes The position resolution to use.
+    /// @param _oriRes The orientation resolution to use.
+    /// @return A vector of cfgs along the edge, spaced at resolution intervals.
+    std::vector<typename RoadmapType::VP> ReconstructEdge(
+        RoadmapType* const _roadmap,
+        const VID _source, const VID _target,
+        const double _posRes, const double _oriRes);
+
+    /// @overload This version is for groups.
+    std::vector<typename GroupRoadmapType::VP> ReconstructEdge(
+        GroupRoadmapType* const _roadmap,
+        const VID _source, const VID _target,
+        const double _posRes, const double _oriRes);
+
+    /// @overload This version uses the Environment's resolutions.
+    template <typename AbstractRoadmapType>
+    std::vector<typename AbstractRoadmapType::VP> ReconstructEdge(
+        AbstractRoadmapType* const _roadmap,
+        const VID _source, const VID _target);
+
+    ///@}
     ///@name Execution Interface
     ///@{
 
@@ -339,6 +370,8 @@ class MPLibraryType final
     /// Group overload:
     void Solve(MPProblem* _problem, GroupTask* _task);
 
+	void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
+
     /// Run a specific MPStrategy from the XML file with a designated seed and
     /// base output file name. This is intended for use with the simulator where
     /// agents may need to call various strategies within a single execution.
@@ -353,9 +386,6 @@ class MPLibraryType final
     void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
         const std::string& _label, const long _seed,
         const std::string& _baseFilename);
-
-    /// Set the MPProblem and initialize the algorithms.
-    void InitializeMPProblem(MPProblem* _problem);
 
     ///@}
     ///@name Debugging
@@ -530,16 +560,12 @@ Uninitialize() {
 
   // Clear group hooks.
   GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
-  if(groupMap) {
+  if(groupMap)
     groupMap->ClearHooks();
-    groupMap->ClearInvalidated();
-  }
 
   // Also clear hooks for the individual robot if it exists:
-  if(m_solution->GetRobot()) {
+  if(m_solution->GetRobot())
     this->GetRoadmap()->ClearHooks();
-    this->GetRoadmap()->ClearInvalidated();
-  }
 }
 
 /*---------------------------- XML Helpers -----------------------------------*/
@@ -853,6 +879,79 @@ GetStatClass() const noexcept {
   return m_solution->GetStatClass();
 }
 
+/*--------------------------- Edge Reconstruction ----------------------------*/
+
+template <typename MPTraits>
+std::vector<typename MPTraits::RoadmapType::VP>
+MPLibraryType<MPTraits>::
+ReconstructEdge(RoadmapType* const _roadmap, const VID _source,
+    const VID _target, const double _posRes,
+    const double _oriRes) {
+  const auto& start         = _roadmap->GetVertex(_source);
+  const auto& end           = _roadmap->GetVertex(_target);
+  const auto& edge          = _roadmap->GetEdge(_source, _target);
+  const auto& intermediates = edge.GetIntermediates();
+
+  // Construct the set of start, intermediates, and end waypoints as needed.
+  auto waypoints = intermediates;
+  waypoints.insert(waypoints.begin(), start);
+  waypoints.push_back(end);
+
+  // Check for intermediates. If there are any, we will use straight-line to
+  // recompute the path. Otherwise use the lp label if available, and fall back
+  // to straight-line if not (this will always happen with extenders).
+  const std::string lpLabel = !intermediates.size()
+                            and !edge.GetLPLabel().empty()
+                            ? edge.GetLPLabel()
+                            : "sl";
+
+  // Construct a resolution-level path along the recreated edge.
+  auto lp = this->GetLocalPlanner(lpLabel);
+  return lp->BlindPath(waypoints, _posRes, _oriRes);
+}
+
+
+template <typename MPTraits>
+std::vector<typename MPTraits::GroupRoadmapType::VP>
+MPLibraryType<MPTraits>::
+ReconstructEdge(GroupRoadmapType* const _roadmap, const VID _source,
+    const VID _target, const double _posRes,
+    const double _oriRes) {
+  const auto& start         = _roadmap->GetVertex(_source);
+  const auto& end           = _roadmap->GetVertex(_target);
+  const auto& edge          = _roadmap->GetEdge(_source, _target);
+  const auto& intermediates = edge.GetIntermediates();
+
+  // Construct the set of start, intermediates, and end waypoints as needed.
+  auto waypoints = intermediates;
+  waypoints.insert(waypoints.begin(), start);
+  waypoints.push_back(end);
+
+  // Check for intermediates. If there are any, we will use straight-line to
+  // recompute the path. Otherwise use the lp label if available, and fall back
+  // to straight-line if not (this will always happen with extenders).
+  const std::string lpLabel = !intermediates.size()
+                            and !edge.GetLPLabel().empty()
+                            ? edge.GetLPLabel()
+                            : "sl";
+
+  // Construct a resolution-level path along the recreated edge.
+  auto lp = this->GetLocalPlanner(lpLabel);
+  return lp->BlindPath(waypoints, _posRes, _oriRes, edge.GetActiveRobots());
+}
+
+
+template< typename MPTraits>
+template <typename AbstractRoadmapType>
+std::vector<typename AbstractRoadmapType::VP>
+MPLibraryType<MPTraits>::
+ReconstructEdge(AbstractRoadmapType* const _roadmap, const VID _source,
+    const VID _target) {
+  auto env = this->GetMPProblem()->GetEnvironment();
+  return this->ReconstructEdge(_roadmap, _source, _target,
+                               env->GetPositionRes(), env->GetOrientationRes());
+}
+
 /*--------------------------- Execution Interface ----------------------------*/
 
 template <typename MPTraits>
@@ -949,6 +1048,21 @@ Solve(MPProblem* _problem, GroupTask* _task) {
 template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution) {
+  m_problem = _problem;
+  m_groupTask = _task;
+  m_solution = _solution;
+
+  for(auto& solver : m_solvers) {
+    RunSolver(solver);
+  }
+
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
     const std::string& _label, const long _seed,
     const std::string& _baseFilename) {
@@ -960,13 +1074,6 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
   RunSolver(s);
 }
 
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-InitializeMPProblem(MPProblem* _problem){
-  SetMPProblem(_problem);
-  Initialize();
-}
 
 template <typename MPTraits>
 void
