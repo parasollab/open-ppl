@@ -61,12 +61,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-
-    ///@}
-    ///@name Local Types
-    ///@{
-
-    typedef std::unordered_set<VID> VertexSet;
+    typedef typename RoadmapType::VertexSet VertexSet;
 
     ///@}
     ///@name Construction
@@ -198,19 +193,10 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///         otherwise.
     virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target);
 
-    /// Handle possible merges when trees are joined by a new edge.
-    /// @param _source The source of the new edge.
-    /// @param _target The target of the new edge.
-    void MergeTrees(const VID _source, const VID _target);
-
     /// If multiple trees exist, try to connect the current tree with the
     /// one that is nearest to a recently grown configuration.
     /// @param _recentlyGrown The VID of the recently grown configuration.
     void ConnectTrees(const VID _recentlyGrown);
-
-    /// Remove a node from the tree list.
-    /// @param _node The vertex to remove from the trees list.
-    void RemoveNodeFromTrees(const VID _node);
 
     ///@}
     ///@name MP Object Labels
@@ -347,50 +333,45 @@ Initialize() {
                                     << "non-tree roadmap.";
   }
 
-
-  m_trees.clear();
-
-  // Try to generate a start configuration.
+  // Try to generate a start configuration if we have start constraints.
   const VID start = this->GenerateStart(m_samplerLabel);
-  if(start != INVALID_VID) {
-    m_trees.push_back({start});
-
-    #ifdef PMPL_USE_MATLAB
-    /// @todo Hard-coded setting of initial needle state for now, to be cleaned up
-    ///       later by making a dedicated strategy for that which takes the
-    ///       initial parameters via xml.
-    auto g = this->GetRoadmap();
-    CfgType& cfg = g->GetVertex(start);
-    cfg.SetStat("insertion", .005);
-    cfg.SetStat("c1-4", 0);
-    cfg.SetStat("c1-3", 0);
-    cfg.SetStat("c1-2", 0);
-    cfg.SetStat("c1-1", 0);
-    cfg.SetStat("c1-0", 0);
-    cfg.SetStat("c2-4", 0);
-    cfg.SetStat("c2-3", 0);
-    cfg.SetStat("c2-2", 0);
-    cfg.SetStat("c2-1", 0);
-    cfg.SetStat("c2-0", 0);
-    cfg.SetStat("c3-4", 0);
-    cfg.SetStat("c3-3", 0);
-    cfg.SetStat("c3-2", 0);
-    cfg.SetStat("c3-1", 0);
-    cfg.SetStat("c3-0", 0);
-    cfg.GetRobot()->GetMatlabMicroSimulator()->SetInsertionCfg(cfg);
-    #endif
-  }
+  const bool noStart = start == INVALID_VID;
+  #ifdef PMPL_USE_MATLAB
+  if(noStart)
+    throw RunTimeException(WHERE) << "A start configuration is required for "
+                                  << "jointed needle planning."
+                                  << std::endl;
+  /// @todo Hard-coded setting of initial needle state for now, to be cleaned up
+  ///       later by making a dedicated strategy for that which takes the
+  ///       initial parameters via xml.
+  auto g = this->GetRoadmap();
+  CfgType& cfg = g->GetVertex(start);
+  cfg.SetStat("insertion", .005);
+  cfg.SetStat("c1-4", 0);
+  cfg.SetStat("c1-3", 0);
+  cfg.SetStat("c1-2", 0);
+  cfg.SetStat("c1-1", 0);
+  cfg.SetStat("c1-0", 0);
+  cfg.SetStat("c2-4", 0);
+  cfg.SetStat("c2-3", 0);
+  cfg.SetStat("c2-2", 0);
+  cfg.SetStat("c2-1", 0);
+  cfg.SetStat("c2-0", 0);
+  cfg.SetStat("c3-4", 0);
+  cfg.SetStat("c3-3", 0);
+  cfg.SetStat("c3-2", 0);
+  cfg.SetStat("c3-1", 0);
+  cfg.SetStat("c3-0", 0);
+  cfg.GetRobot()->GetMatlabMicroSimulator()->SetInsertionCfg(cfg);
+  #endif
 
   // If we are growing goals, try to generate goal configurations.
-  if(m_growGoals) {
-    const std::vector<VID> goals = this->GenerateGoals(m_samplerLabel);
-    for(const VID goal : goals)
-      m_trees.push_back({goal});
-  }
+  if(m_growGoals)
+    this->GenerateGoals(m_samplerLabel);
 
   // If we have neither start nor goals, generate a random root. Try up to 100
   // times.
-  if(m_trees.empty())
+  if(noStart and !m_growGoals)
   {
     // Determine which sampler to use.
     const auto& samplerLabel = this->m_querySampler.empty()
@@ -408,11 +389,10 @@ Initialize() {
       throw RunTimeException(WHERE) << "Failed to generate a random root with "
                                     << "sampler '" << samplerLabel << "'.";
 
-    // Add the configuration to the graph and trees.
+    // Add the configuration to the graph.
     auto g = this->GetRoadmap();
     const auto& cfg = samples[0];
-    const VID vid = g->AddVertex(cfg);
-    m_trees.push_back({vid});
+    g->AddVertex(cfg);
   }
 }
 
@@ -724,36 +704,18 @@ AddEdge(const VID _source, const VID _target,
   auto g = this->GetRoadmap();
 
   // If we are growing goals, we need to add bi-directional edges for the query
-  // to work (otherwise the trees join at fruitless junctions with no weak
+  // to work (otherwise the trees join at fruitless junctions with no strong
   // connectivity between them). This also applies if we are using a
   // non-rewiring connector as in with RRG.
   const bool biDirectionalEdges = m_growGoals or
       (!m_ncLabel.empty() and !this->GetConnector(m_ncLabel)->IsRewiring());
   if(biDirectionalEdges)
     g->AddEdge(_source, _target, _lpOutput.m_edge);
-  else {
-    // Use a one-way edge for uni-directional RRT because superfluous back edges
-    // serve no useful purpose and increase query time. This is also needed for
-    // problems with one-way extenders like kinodynamic and
-    // asymptotically-optimal planners.:
+  // Use a one-way edge for uni-directional RRT because superfluous back edges
+  // serve no useful purpose and increase query time. This is also required for
+  // problems with one-way extenders such as KinodynamicExtender.
+  else
     g->AddEdge(_source, _target, _lpOutput.m_edge.first);
-
-    // Set the parent of _target. We may have already connected to it from
-    // another vertex and this may change the value, so the "Parent" stat
-    // shouldn't be used for RRG or bi-directional growth. We will always set it
-    // here because creating an extension from a copied node could inadvertantly
-    // copy the wrong parent, so checking if the parent is already set leads to
-    // subtle errors.
-    /// @todo Move parent tracking outside the Cfg class to avoid this problem. It
-    ///       needs to be accessible at least by RRT methods and the
-    ///       RewireConnector. Maybe we can move it to the roadmap or a connected
-    ///       component object?
-    g->GetVertex(_target).SetStat("Parent", _source);
-  }
-
-  // Try to join trees.
-  if(m_growGoals)
-    MergeTrees(_source, _target);
 }
 
 
@@ -932,102 +894,48 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
 template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
-MergeTrees(const VID _source, const VID _target) {
-  // Find the trees holding both _source and _target.
-  typename std::vector<VertexSet>::iterator sourceTree = m_trees.end(),
-                                            targetTree = m_trees.end();
-  for(auto iter = m_trees.begin(); iter != m_trees.end(); ++iter) {
-    if(iter->count(_source))
-      sourceTree = iter;
-    if(iter->count(_target))
-      targetTree = iter;
-
-    // Move on after locating both trees.
-    if(sourceTree != m_trees.end() and targetTree != m_trees.end())
-      break;
-  }
-
-  // If the source tree wasn't found, this is an error.
-  if(sourceTree == m_trees.end())
-    throw RunTimeException(WHERE) << "Tree for parent node " << _source
-                                  << " was not found.";
-  // If the target tree wasn't found, just add _target to the source tree.
-  else if(targetTree == m_trees.end())
-    sourceTree->insert(_target);
-  // If the source and target tree are the same, there is nothing to do.
-  else if(sourceTree == targetTree)
-    return;
-  // Otherwise we found two different trees which must be merged.
-  else {
-    // Merge the smaller tree into the larger one.
-    typename std::vector<VertexSet>::iterator smallTree, largeTree;
-    if(targetTree->size() > sourceTree->size()) {
-      largeTree = targetTree;
-      smallTree = sourceTree;
-    }
-    else {
-      smallTree = targetTree;
-      largeTree = sourceTree;
-    }
-    std::copy(smallTree->begin(), smallTree->end(),
-        std::inserter(*largeTree, largeTree->end()));
-    smallTree->clear();
-    // Don't erase small tree from m_trees because that will invalidate
-    // iterators. This is a small, deliberate sacrifice to make coding the
-    // tree-tracking algorithms much simpler.
-  }
-}
-
-
-template <typename MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
 ConnectTrees(const VID _recentlyGrown) {
-  if(!m_growGoals or _recentlyGrown == INVALID_VID or m_trees.size() == 1)
+  auto g = this->GetRoadmap();
+  auto ccTracker = g->GetCCTracker();
+  const size_t ccCount = ccTracker->GetNumCCs();
+
+  if(!m_growGoals or _recentlyGrown == INVALID_VID or ccCount == 1)
     return;
 
   MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::ConnectTrees");
 
   // Get the configuration by value in case the graph's vertex vector gets
   // re-allocated.
-  auto g = this->GetRoadmap();
   const CfgType qNew = g->GetVertex(_recentlyGrown);
 
   if(this->m_debug)
-    std::cout << "Trying to connect " << m_trees.size() - 1 << " other trees "
+    std::cout << "Trying to connect " << ccCount - 1 << " other trees "
               << "to node " << _recentlyGrown << "."
               << std::endl;
 
-  // Try to connect qNew to the closest neighbor in all other trees.
-  for(const auto& tree : m_trees) {
-    // Skip the current tree.
-    const bool currentTree = tree.count(_recentlyGrown);
-    if(currentTree)
+  // Try to connect qNew to each other CC.
+  VertexSet representatives = ccTracker->GetRepresentatives();
+  while(representatives.size())
+  {
+    // Get the next representative and remove it from the set.
+    const VID representative = *representatives.begin();
+    representatives.erase(representatives.begin());
+
+    // If the new vertex and this are in the same CC, there is nothing to do.
+    const bool sameCC = ccTracker->InSameCC(_recentlyGrown, representative);
+    if(sameCC)
       continue;
 
+    // Get the CC associated with this representative.
+    const VertexSet& cc = ccTracker->GetCC(representative);
+
     // Find nearest neighbor to qNew in the other tree.
-    const VID nearestVID = FindNearestNeighbor(qNew, &tree);
+    const VID nearestVID = FindNearestNeighbor(qNew, &cc);
     if(nearestVID == INVALID_VID)
       continue;
 
     // Try to extend from the other tree to qNew.
     this->Extend(nearestVID, qNew, false);
-  }
-}
-
-
-template <typename MPTraits>
-void
-BasicRRTStrategy<MPTraits>::
-RemoveNodeFromTrees(const VID _node) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::RemoveNodeFromTrees");
-
-  for(auto& tree : m_trees) {
-    // Skip this tree if _node isn't present.
-    if(!tree.count(_node))
-      continue;
-
-    tree.erase(_node);
   }
 }
 

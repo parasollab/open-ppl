@@ -1,12 +1,11 @@
-#ifndef MP_UTILS_H_
-#define MP_UTILS_H_
+#ifndef PMPL_MP_UTILS_H_
+#define PMPL_MP_UTILS_H_
 
 #include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
-using std::shared_ptr;
 
 #ifndef _PARALLEL
 #include <algorithm> // Apparently STAPL missed this in the file below.
@@ -106,38 +105,6 @@ Point3d GetPtFromBarycentricCoords(const Point3d& _a, const Point3d& _b,
 /// @return Normalized representation of _theta in the range -PI to PI.
 double NormalizeTheta(double _theta);
 
-/*---------------------------- Comparators -----------------------------------*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compare the second of a pair.
-/// @tparam T Type 1 of pair
-/// @tparam U Type 2 of pair
-////////////////////////////////////////////////////////////////////////////////
-template <typename T, typename U>
-struct CompareSecond {
-
-  const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
-      const noexcept {
-    return _a.second < _b.second;
-  }
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compare the second of a pair reversed.
-/// @tparam T Type 1 of pair
-/// @tparam U Type 2 of pair
-////////////////////////////////////////////////////////////////////////////////
-template <typename T, typename U>
-struct CompareSecondReverse {
-
-  const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
-      const noexcept {
-    return _a.second > _b.second;
-  }
-
-};
-
 /*------------------------------ Cfg Utilities -------------------------------*/
 
 /// Determine whether two configurations are within a resolution unit of each
@@ -185,27 +152,6 @@ ClosestPtOnLineSegment(const CfgType& _ref, const CfgType& _p1,
   else
     return b * (bDotC / bSquared) + _p1;
 }
-
-/*------------------------------ Centroid Utils ------------------------------*/
-
-/// Compute the C-space centroid of the configurations in a specific connected
-/// component of the roadmap.
-/// @param _graph A pointer to the roadmap graph.
-/// @param _cc The connected component.
-/// @return The centroid configuration of _cc.
-template<template<typename, typename> class RoadmapGraph, class CfgType,
-    class Weight>
-CfgType
-GetCentroid(RoadmapGraph<CfgType, Weight>* _graph,
-    std::vector<typename RoadmapGraph<CfgType, Weight>::VID>& _cc) {
-  CfgType center(_graph->begin()->property().GetRobot());
-  for(size_t i = 0; i < _cc.size(); i++) {
-    CfgType cfg = _graph->GetVertex(_cc[i]);
-    center += cfg;
-  }
-  center /= _cc.size();
-  return center;
-};
 
 /*----------------------------- Other Random Stuff ---------------------------*/
 

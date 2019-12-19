@@ -36,7 +36,7 @@
 
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" k="10" CheckIfSameCC="true" lpLabel="sl" unconnected="true"/>
-      <CCsConnector label="ConnectCCs" smallcc="5" kpairs="2" kclosest="0" nfLabel="BFNF" lpLabel="sl" dm_method="euclidean" k="5"/>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl"/>
       <NeighborhoodConnector label="ConnectFirst" nfLabel="BFNF" k="5" CheckIfSameCC="false" lpLabel="sl" unconnected="true"/>
     </Connectors>
 
@@ -61,7 +61,6 @@
       <BasicPRM label="BasicPRM1">
         <Sampler method="UniformRandomFree" Number="100" Attempts="10"/>
         <Connector method="Closest"/>
-        <ComponentConnector method="ConnectCCs"/>
         <Evaluator method="PrintMap"/>
         <Evaluator method="NodesEval"/>
       </BasicPRM>

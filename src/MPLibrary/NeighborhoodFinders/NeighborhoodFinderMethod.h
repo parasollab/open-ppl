@@ -164,6 +164,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::VertexSet           VertexSet;
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
@@ -234,7 +235,11 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _candidates The set of candidate VIDs.
     /// @param _out Output iterator.
     virtual void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
-        const std::unordered_set<VID>& _candidates, OutputIterator _out);
+        const VertexSet& _candidates, OutputIterator _out);
+
+    /// @overload This version is for group roadmaps
+    virtual void FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out);
 
     /// Finds all vertices in the graph as neighbors.
     /// @param _r The roadmap.
@@ -430,7 +435,18 @@ template <typename MPTraits>
 void
 NeighborhoodFinderMethod<MPTraits>::
 FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
-    const std::unordered_set<VID>& _candidates, OutputIterator _out) {
+    const VertexSet& _candidates, OutputIterator _out) {
+  // Default impl should do the same as regular FindNeighbors.
+  FindNeighbors(_r, _candidates.begin(), _candidates.end(),
+      _candidates.size() == _r->Size(), _cfg, _out);
+}
+
+
+template <typename MPTraits>
+void
+NeighborhoodFinderMethod<MPTraits>::
+FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   // Default impl should do the same as regular FindNeighbors.
   FindNeighbors(_r, _candidates.begin(), _candidates.end(),
       _candidates.size() == _r->Size(), _cfg, _out);

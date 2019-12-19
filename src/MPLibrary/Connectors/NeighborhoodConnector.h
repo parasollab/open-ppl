@@ -1,5 +1,5 @@
-#ifndef PMPL_NEIGHBORHOOD_CONNECTOR_H
-#define PMPL_NEIGHBORHOOD_CONNECTOR_H
+#ifndef PMPL_NEIGHBORHOOD_CONNECTOR_H_
+#define PMPL_NEIGHBORHOOD_CONNECTOR_H_
 
 #include "ConnectorMethod.h"
 
@@ -31,6 +31,15 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    template <typename AbstractRoadmapType>
+    using OutputIterator = typename ConnectorMethod<MPTraits>::template
+                           OutputIterator<AbstractRoadmapType>;
 
     ///@}
     ///@name Construction
@@ -49,21 +58,32 @@ class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name ConnectorMethod Interface
-    ///@{
-
-    template <typename AbstractRoadmapType, typename InputIterator1,
-              typename InputIterator2, typename OutputIterator>
-    void Connect(AbstractRoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
-
-    ///@}
 
   protected:
 
+    ///@name ConnectorMethod Overrides
+    ///@{
+
+    virtual void ConnectImpl(RoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<RoadmapType>* const _collision = nullptr) override;
+
+    virtual void ConnectImpl(GroupRoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<GroupRoadmapType>* const _collision = nullptr) override;
+
+    using ConnectorMethod<MPTraits>::m_neighborBuffer;
+
+    ///@}
+    ///@name Helpers
+    ///@{
+
+    template <typename AbstractRoadmapType>
+    void ConnectImplImpl(AbstractRoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<AbstractRoadmapType>* const _collision = nullptr);
+
+    ///@}
     ///@name Internal State
     ///@{
 
@@ -105,43 +125,46 @@ Print(std::ostream& _os) const {
 /*------------------------ ConnectorMethod Interface -------------------------*/
 
 template <typename MPTraits>
-template <typename AbstractRoadmapType, typename InputIterator1,
-          typename InputIterator2, typename OutputIterator>
 void
 NeighborhoodConnector<MPTraits>::
-Connect(AbstractRoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
+ConnectImpl(RoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<RoadmapType>* const _collision) {
+  ConnectImplImpl(_r, _source, _targetSet, _collision);
+}
 
+
+template <typename MPTraits>
+void
+NeighborhoodConnector<MPTraits>::
+ConnectImpl(GroupRoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<GroupRoadmapType>* const _collision) {
+  ConnectImplImpl(_r, _source, _targetSet, _collision);
+}
+
+/*---------------------------------- Helpers ---------------------------------*/
+
+template <typename MPTraits>
+template <typename AbstractRoadmapType>
+void
+NeighborhoodConnector<MPTraits>::
+ConnectImplImpl(AbstractRoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<AbstractRoadmapType>* const _collision) {
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
+  const auto& cfg = _r->GetVertex(_source);
 
-  if(this->m_debug)
-    std::cout << this->GetName() << "::Connect"
-              << std::endl;
+  // Determine nearest neighbors.
+  m_neighborBuffer.clear();
+  if(_targetSet)
+    nf->FindNeighbors(_r, cfg, *_targetSet,
+        std::back_inserter(m_neighborBuffer));
+  else
+    nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
 
-  // Attempt to connect each element in the first range to each element in the
-  // second.
-  std::vector<Neighbor> closest;
-  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
-    // Get the VID and cfg.
-    const VID vid = _r->GetVID(itr1);
-    const auto& cfg = _r->GetVertex(vid);
-
-    if(this->m_debug)
-      std::cout << "\tAttempting connections from node " << vid
-                << " at " << cfg.PrettyPrint()
-                << std::endl;
-
-    // Determine nearest neighbors.
-    closest.clear();
-    nf->FindNeighbors(_r, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
-        std::back_inserter(closest));
-
-    // Attempt connections.
-    this->ConnectNeighbors(_r, vid, closest.begin(), closest.end(), _collision);
-  }
+  // Attempt connections.
+  this->ConnectNeighbors(_r, _source, m_neighborBuffer, _collision);
 }
 
 /*----------------------------------------------------------------------------*/

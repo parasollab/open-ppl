@@ -1,5 +1,5 @@
-#ifndef IO_UTILS_H_
-#define IO_UTILS_H_
+#ifndef PMPL_IO_UTILS_H_
+#define PMPL_IO_UTILS_H_
 
 #include <string>
 #include <iostream>
@@ -140,18 +140,37 @@ void
 VDAddTempEdge<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
 
 
-/// @TODO
-template <typename CfgType>
+/// Add hook functions to track roadmap changes in the vizmo debug file.
+/// @param _r The roadmap to track.
+template <typename AbstractRoadmapType>
 void
-VDQuery(const CfgType& _cfg1, const CfgType& _cfg2) {
-  if(vdo)
-    (*vdo) << "Query " << _cfg1 << " " << _cfg2 << std::endl;
+VDTrackRoadmap(AbstractRoadmapType* const _r) {
+  if(!vdo)
+    return;
+
+  const std::string label = "VizmoDebug";
+  _r->InstallHook(AbstractRoadmapType::HookType::AddVertex, label,
+      [_r](const typename AbstractRoadmapType::vertex_iterator _vi){
+        VDAddNode(_vi->property());
+      });
+  _r->InstallHook(AbstractRoadmapType::HookType::DeleteVertex, label,
+      [_r](const typename AbstractRoadmapType::vertex_iterator _vi) {
+        VDRemoveNode(_vi->property());
+      });
+  _r->InstallHook(AbstractRoadmapType::HookType::AddEdge, label,
+      [_r](const typename AbstractRoadmapType::adj_edge_iterator _ei) {
+        const auto source = (*_ei).source(),
+                   target = (*_ei).target();
+        VDAddEdge(_r->GetVertex(source), _r->GetVertex(target));
+      });
+  _r->InstallHook(AbstractRoadmapType::HookType::DeleteEdge, label,
+      [_r](const typename AbstractRoadmapType::adj_edge_iterator _ei) {
+        const auto source = (*_ei).source(),
+                   target = (*_ei).target();
+        VDRemoveEdge(_r->GetVertex(source), _r->GetVertex(target));
+      });
 }
 
-template <>
-inline
-void
-VDQuery<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
 
 /*----------------------------- Other IO Utils -------------------------------*/
 
@@ -240,14 +259,6 @@ ReadField(std::istream& _is, CountingStreamBuffer& _cbs,
 /// @return Data string
 std::string ReadFieldString(std::istream& _is, CountingStreamBuffer& _cbs,
     const std::string& _desc, const bool _toUpper = true);
-
-
-/*
-/// Read color from a comment line
-/// @param _is Stream
-/// @return Color
-Color4 GetColorFromComment(std::istream& _is);
-*/
 
 
 /// Split string based on delimiter.

@@ -187,7 +187,7 @@
         <NeighborFinder Method="RandomNF"/>
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector-->
-      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl"/>
       <!--ClosestVE label="ClosestVE" kClosest="3" nfLabel="BFNF"
            lpLabel="sl"/-->
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>

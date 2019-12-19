@@ -46,7 +46,7 @@
     </Connectors>
 
     <MapEvaluators>
-      <LazyQuery label="LazyQuery"
+      <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
@@ -57,7 +57,7 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicPRM label="LazyPRM">
+      <BasicPRM label="LazyPRM" debug="true">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>

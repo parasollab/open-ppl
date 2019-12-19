@@ -11,21 +11,13 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The RRT algorithm grows one or more trees from a set of root nodes to solve
-/// a single-query planning problem.
-///
-/// Our not-so-basic RRT offers many variations by setting the appropriate
-/// options:
-/// @arg m_gt             Indicates DIRECTED vs. UNDIRECTED and GRAPH vs. TREE.
-///
-/// The original RRT reference: LaValle, Steven M. "Rapidly-Exploring Random
-///                             Trees: A New Tool for Path Planning." TR 98-11,
-///                             Computer Science Dept., Iowa State Univ., 1998.
-///
-///
 /// This is sub-method for disassembly methods. Sub-method because it is
 /// not designed to be used on its own, but rather to be called from a
 /// disassembly method in order to try an RRT removal.
+///
+/// @todo This needs to be removed and replaced with an appropriate substrategy
+///       call (i.e. create an appropriate task, switch to it, and call standard
+///       RRT).
 ///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
@@ -784,7 +776,6 @@ AddEdge(VID _source, VID _target, const GroupLPOutput<MPTraits>& _lpOutput) {
     g->AddEdge(_source, _target, _lpOutput.m_edge);
   else
     g->AddEdge(_source, _target, _lpOutput.m_edge.first);
-//  g->GetVertex(_target).SetStat("Parent", _source);
 
   if(this->m_debug)
     std::cout << "\tAdding Edge (" << _source << ", " << _target << ")." << std::endl;
