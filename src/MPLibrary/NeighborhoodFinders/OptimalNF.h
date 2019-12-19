@@ -124,8 +124,9 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
     throw ParseException(_node.Where()) << "OptimalNF requires unconnected = "
                                         << "false.";
 
-  std::string exLabel = _node.Read("exLabel", true, "",
-      "The RRT extender label.");
+  std::string exLabel = _node.Read("exLabel", false, "",
+      "The RRT extender label if used with an RRT method. If supplied, the "
+      "optimal radius will not exceed the extender's max distance.");
 
   // Parse the type (radius or k).
   const std::string choices = "Choices are 'radius' or 'k'.";
@@ -176,11 +177,17 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
       const double gamma = 2. * std::pow(1. + rd, rd) * std::pow(volumeRatio, rd);
       const double optimalR = gamma
                             * std::pow(std::log(_r->Size()) / _r->Size(), rd);
-      auto ex = this->GetExtender(exLabel);
-      this->m_nf->GetRadius() = std::min(optimalR, ex->GetMaxDistance());
+      if(exLabel.empty())
+        this->m_nf->GetRadius() = optimalR;
+      else {
+        auto ex = this->GetExtender(exLabel);
+        this->m_nf->GetRadius() = std::min(optimalR, ex->GetMaxDistance());
+      }
+
       if(this->m_debug)
         std::cout << "Finding closest neighbors with radius = "
-                  << this->m_nf->GetRadius() << "."
+                  << this->m_nf->GetRadius() << " (extender: "
+                  << (exLabel.empty() ? "none" : exLabel) << ")."
                   << std::endl;
     };
   }

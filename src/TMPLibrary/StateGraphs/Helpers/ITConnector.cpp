@@ -413,36 +413,7 @@ BuildSkeletons(){
     }
     //MedialAxis2D ma(polyhedra, nullptr);
 
-    auto fakeEnv = env->GetBoundary()->Clone();
-    double minx, miny, minz, maxx, maxy, maxz;
-    minx = miny = minz = std::numeric_limits<double>::max();
-    maxx = maxy = maxz = std::numeric_limits<double>::lowest();
-    for(auto terrain : terrainType.second){
-      minx = std::min(minx, terrain.GetBoundary()->GetRange(0).min);
-      maxx = std::max(maxx, terrain.GetBoundary()->GetRange(0).max);
-      miny = std::min(miny, terrain.GetBoundary()->GetRange(1).min);
-      maxy = std::max(maxy, terrain.GetBoundary()->GetRange(1).max);
-      minz = std::min(minz, terrain.GetBoundary()->GetRange(2).min);
-      maxz = std::max(maxz, terrain.GetBoundary()->GetRange(2).max);
-    }
-    for(size_t i = 0; i < env->NumObstacles(); i++){
-      auto obstacle = env->GetObstacle(i);
-      const double* tmp = obstacle->GetBoundingBox();
-      minx = std::min(minx, tmp[0]);
-      maxx = std::max(maxx, tmp[1]);
-      miny = std::min(miny, tmp[2]);
-      maxy = std::max(maxy, tmp[3]);
-      minz = std::min(minz, tmp[4]);
-      maxz = std::max(maxz, tmp[5]);
-    }
-
-    std::vector<std::pair<double,double>> obstBBX(3);
-    obstBBX[0] = std::make_pair(minx, maxx);
-    obstBBX[1] = std::make_pair(miny, maxy);
-    obstBBX[2] = std::make_pair(minz, maxz);
-    fakeEnv->ResetBoundary(obstBBX, .01);
-
-    MedialAxis2D ma(polyhedra, fakeEnv.get());
+    MedialAxis2D ma(polyhedra, env->GetBoundary());
     ma.BuildMedialAxis();
     m_capabilitySkeletons[terrainType.first] = std::shared_ptr<WorkspaceSkeleton>(
                         new WorkspaceSkeleton(get<0>(ma.GetSkeleton(1)))); // 1 for free space
