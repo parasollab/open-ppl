@@ -21,9 +21,9 @@ namespace std {
     typedef std::pair<size_t, size_t> KeyPair;
 
     static constexpr size_t magicOffset = 0x9e3779b99e3779b9;
-    static constexpr std::hash<size_t> hasher{};
 
     size_t operator()(const KeyPair& _key) const noexcept {
+      static constexpr std::hash<size_t> hasher;
       auto h1 = hasher(_key.first),
            h2 = hasher(_key.second);
       return h2 + magicOffset + (h1 << 6) + (h1 >> 2);
