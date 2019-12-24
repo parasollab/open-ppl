@@ -6,8 +6,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Re-wires a tree for optimal RRT planners. This only makes sense for
-/// tree-like planners and will break any that track information about
-/// the paths or tree structure.
+/// tree-like planners. It will change the structure of the tree; ensure that
+/// your algorithm can handle this before using.
 ///
 /// Reference:
 ///   Sertac Karaman and Emilio Frazzoli. "Sampling-based algorithms for optimal
@@ -28,6 +28,7 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
 
     ///@}
     ///@name Local Types
@@ -48,6 +49,10 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
       { }
     };
 
+    template <typename AbstractRoadmapType>
+    using OutputIterator = typename ConnectorMethod<MPTraits>::template
+                           OutputIterator<AbstractRoadmapType>;
+
     ///@}
     ///@name Construction
     ///@{
@@ -59,24 +64,17 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     virtual ~RewireConnector() = default;
 
     ///@}
-    ///@name Connector Interface
+
+  protected:
+
+    ///@name ConnectorMethod Overrides
     ///@{
 
-    template <typename InputIterator1, typename InputIterator2,
-              typename OutputIterator>
-    void Connect(RoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
+    virtual void ConnectImpl(RoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<RoadmapType>* const _collision = nullptr) override;
 
-    template <typename InputIterator1, typename InputIterator2,
-              typename OutputIterator>
-    void Connect(GroupRoadmapType* _r,
-        InputIterator1 _itr1First, InputIterator1 _itr1Last,
-        InputIterator2 _itr2First, InputIterator2 _itr2Last,
-        bool _fromFullRoadmap,
-        OutputIterator _collision);
+    using ConnectorMethod<MPTraits>::m_neighborBuffer;
 
     ///@}
 
@@ -90,22 +88,20 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     /// @param _r         The containing roadmap.
     /// @param _vid       The vertex whos shortest path may be re-routed.
     /// @param _neighbors The set of potential new parents for _vid.
-    /// @param _collision Output iterator for collisions detected during
-    ///                   connection attempts.
-    template <typename OutputIterator>
+    /// @param _collision Optional output iterator for collisions.
     void RewireVertex(RoadmapType* const _r, const VID _vid,
-        const std::vector<Neighbor>& _neighbors, OutputIterator _collision);
+        const std::vector<Neighbor>& _neighbors,
+        OutputIterator<RoadmapType>* const _collision);
 
     /// Attempt to rewire the nearest-neighbors of a vertex _vid through itself
     /// if doing so results in a shorter path to the nearest root vertex.
     /// @param _r         The containing roadmap.
     /// @param _vid       The vertex whos shortest path may be re-routed.
     /// @param _neighbors The set of potential new parents for _vid.
-    /// @param _collision Output iterator for collisions detected during
-    ///                   connection attempts.
-    template <typename OutputIterator>
+    /// @param _collision Output iterator for collisions.
     void RewireNeighbors(RoadmapType* const _r, const VID _vid,
-        const std::vector<Neighbor>& _neighbors, OutputIterator _collision);
+        const std::vector<Neighbor>& _neighbors,
+        OutputIterator<RoadmapType>* const _collision);
 
     /// Check if a vertex should be rewired through a new parent.
     /// @param _r                   The containing roadmap.
@@ -114,16 +110,14 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     /// @param _currentCost         The vertex's current cost.
     /// @param _potentialParent     The potential parent to check.
     /// @param _potentialParentCost The cost to reach the potential parent.
-    /// @param _collision           Output iterator for collisions detected
-    ///                             during connection attempts.
+    /// @param _collision           Output iterator for collisions.
     /// @return A rewire test output indicating success and generated lp/cost.
-    template <typename OutputIterator>
     RewireTestOutput RewireTest(RoadmapType* const _r, const VID _vid,
         const VID _currentParent, const double _currentCost,
         const VID _potentialParent, const double _potentialParentCost,
-        OutputIterator _collision) noexcept;
+        OutputIterator<RoadmapType>* const _collision) noexcept;
 
-    /// Trace the path from one vertex to another using the "Parent" stats to
+    /// Trace the path from one vertex to another through the parent chain to
     /// determine the shortest path.
     /// @param _r    The roadmap.
     /// @param _vid  The vertex.
@@ -220,7 +214,6 @@ RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
                                           << std::endl;
   }
 
-
   // Parse the objective function.
   {
     const std::string choices = "Choices are 'min' (minimum) or 'max' (maximum).";
@@ -242,70 +235,40 @@ RewireConnector(XMLNode& _node) : ConnectorMethod<MPTraits>(_node) {
   }
 }
 
-/*--------------------------- Connector Interface ----------------------------*/
+/*------------------------ ConnectorMethod Overrides -------------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator1, typename InputIterator2,
-          typename OutputIterator>
 void
 RewireConnector<MPTraits>::
-Connect(RoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
-  if(this->m_debug)
-    std::cout << this->GetName() << "::Connect"
-              << std::endl;
-
+ConnectImpl(RoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<RoadmapType>* const _collision) {
+  // Determine nearest neighbors.
+  const auto& cfg = _r->GetVertex(_source);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  m_neighborBuffer.clear();
+  if(_targetSet)
+    nf->FindNeighbors(_r, cfg, *_targetSet, m_neighborBuffer);
+  else
+    nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
 
-  // Attempt to connect each element in the first range to each element in the
-  // second.
-  std::vector<Neighbor> closest;
-  for(InputIterator1 itr1 = _itr1First; itr1 != _itr1Last; ++itr1) {
-    // Get the VID and cfg.
-    const VID vid = _r->GetVID(itr1);
-    const auto& cfg = _r->GetVertex(vid);
-
-    // Determine nearest neighbors.
-    closest.clear();
-    nf->FindNeighbors(_r, _itr2First, _itr2Last, _fromFullRoadmap, cfg,
-        std::back_inserter(closest));
-
-    // Attempt to rewire this vertex with a better parent.
-    RewireVertex(_r, vid, closest, _collision);
-    // Attempt to rewire the closest through vid.
-    RewireNeighbors(_r, vid, closest, _collision);
-  }
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator1, typename InputIterator2,
-          typename OutputIterator>
-void
-RewireConnector<MPTraits>::
-Connect(GroupRoadmapType* _r,
-    InputIterator1 _itr1First, InputIterator1 _itr1Last,
-    InputIterator2 _itr2First, InputIterator2 _itr2Last,
-    bool _fromFullRoadmap,
-    OutputIterator _collision) {
-  throw NotImplementedException(WHERE);
+  // Attempt to rewire this vertex with a better parent.
+  RewireVertex(_r, _source, m_neighborBuffer, _collision);
+  // Attempt to rewire the neighbors through _source.
+  RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
-template <typename OutputIterator>
 void
 RewireConnector<MPTraits>::
 RewireVertex(RoadmapType* const _r, const VID _vid,
-    const std::vector<Neighbor>& _neighbors, OutputIterator _collision) {
+    const std::vector<Neighbor>& _neighbors,
+    OutputIterator<RoadmapType>* const _collision) {
   // Check the current best path cost from the root to _vid.
   double    bestCost      = ShortestPathWeight(_r, _vid);
-  auto&     cfg           = _r->GetVertex(_vid);
-  const VID oldParentVID  = cfg.GetStat("Parent");
+  const VID oldParentVID  = *_r->GetPredecessors(_vid).begin();
   VID       bestParentVID = oldParentVID;
   LPOutput<MPTraits> bestLP;
 
@@ -355,11 +318,11 @@ RewireVertex(RoadmapType* const _r, const VID _vid,
 
 
 template <typename MPTraits>
-template <typename OutputIterator>
 void
 RewireConnector<MPTraits>::
 RewireNeighbors(RoadmapType* const _r, const VID _vid,
-    const std::vector<Neighbor>& _neighbors, OutputIterator _collision) {
+    const std::vector<Neighbor>& _neighbors,
+    OutputIterator<RoadmapType>* const _collision) {
   const double vidCost = ShortestPathWeight(_r, _vid);
 
   if(this->m_debug)
@@ -370,18 +333,31 @@ RewireNeighbors(RoadmapType* const _r, const VID _vid,
 
   // Check if any of the neighbors can get better paths through this node.
   for(const auto& neighbor : _neighbors) {
-    // Skip neighbors which have no parent as they are roots.
+    // Check for roots and non-tree graphs.
     const VID neighborVID = neighbor.target;
-    auto& neighborCfg = _r->GetVertex(neighborVID);
-    if(!neighborCfg.IsStat("Parent")) {
-      if(this->m_debug)
-        std::cout << "\t\tSkipping node " << neighborVID << " which is a root."
-                  << std::endl;
-      continue;
+    const auto& predecessors = _r->GetPredecessors(neighborVID);
+
+    switch(predecessors.size()) {
+      case 0:
+        // This is a root.
+        if(this->m_debug)
+          std::cout << "\t\tSkipping node " << neighborVID << " which is a root."
+                    << std::endl;
+        continue;
+      case 1:
+        // There is one parent. Continue processing.
+        break;
+      default:
+        // The graph is not a tree.
+        throw RunTimeException(WHERE) << "Node " << neighborVID << " has "
+                                      << predecessors.size() << " parents and is "
+                                      << "therefore not a tree. RewireConnector "
+                                      << "only works for tree graphs."
+                                      << std::endl;
     }
 
     // Test to see if this node should be rewired through _vid.
-    const VID neighborCurrentParent = neighborCfg.GetStat("Parent");
+    const VID neighborCurrentParent = *predecessors.begin();
     const double currentCost = ShortestPathWeight(_r, neighborVID);
     const RewireTestOutput test = RewireTest(_r, neighborVID,
         neighborCurrentParent, currentCost, _vid, vidCost, _collision);
@@ -398,13 +374,12 @@ RewireNeighbors(RoadmapType* const _r, const VID _vid,
 
 
 template <typename MPTraits>
-template <typename OutputIterator>
 typename RewireConnector<MPTraits>::RewireTestOutput
 RewireConnector<MPTraits>::
 RewireTest(RoadmapType* const _r, const VID _vid,
     const VID _currentParent,   const double _currentCost,
     const VID _potentialParent, const double _potentialParentCost,
-    OutputIterator _collision) noexcept {
+    OutputIterator<RoadmapType>* const _collision) noexcept {
   // Skip rewiring through the same parent.
   if(_potentialParent == _currentParent) {
     if(this->m_debug)
@@ -426,7 +401,7 @@ RewireTest(RoadmapType* const _r, const VID _vid,
   }
 
   // Check for previous failures to generate this local plan.
-  const bool previouslyFailed = this->IsCached(_potentialParent, _vid);
+  const bool previouslyFailed = this->IsCached(_r, _potentialParent, _vid);
   if(previouslyFailed) {
     if(this->m_debug)
       std::cout << "\t\tNot rewiring node " << _vid << " because the path ("
@@ -448,10 +423,11 @@ RewireTest(RoadmapType* const _r, const VID _vid,
       env->GetOrientationRes());
 
   if(!success) {
-    _collision++ = collision;
+    if(_collision)
+      *_collision = collision;
     // Cache both directions since LPs must generate symmetric plans.
-    this->CacheFailedConnection(_potentialParent, _vid);
-    this->CacheFailedConnection(_vid, _potentialParent);
+    this->CacheFailedConnection(_r, _potentialParent, _vid);
+    this->CacheFailedConnection(_r, _vid, _potentialParent);
     if(this->m_debug)
       std::cout << "\t\tNot rewiring node " << _vid << " because the path ("
                 << _potentialParent << ", " << _vid
@@ -488,27 +464,42 @@ double
 RewireConnector<MPTraits>::
 ShortestPathWeight(const RoadmapType* const _r, const VID _vid)
     const noexcept {
-  // Backtrack the path from _vid to its root by following the "Parent"
-  // stat which is populated by RRT methods.
+  // Backtrack the path from _vid to its root by following the predecessor chain.
   VID currentVID = _vid;
   double pathWeight = 0;
-  while(true) {
-    // Fetch the this cfg and find its parent. If it doesn't have one, it's a
-    // root.
-    const auto& cfg = _r->GetVertex(currentVID);
-    if(!cfg.IsStat("Parent"))
-      break;
-    const VID parentVID = cfg.GetStat("Parent");
 
-    // Include the weight of edge (parentVID, currentVID) in the path weight.
+  while(true) {
+    // Get the predecessor list and check if we're done.
+    const auto& predecessors = _r->GetPredecessors(currentVID);
+    switch(predecessors.size()) {
+      case 0:
+        // This node is a root. We've traced the whole path and can return the
+        // weight now.
+        return pathWeight;
+      case 1:
+        // This node has a parent. Continue processing.
+        break;
+      default:
+        // The graph is not a tree.
+        throw RunTimeException(WHERE) << "Node " << currentVID << " has "
+                                      << predecessors.size() << " parents and "
+                                      << "is therefore not a tree. "
+                                      << "RewireConnector only works for tree "
+                                      << "graphs."
+                                      << std::endl;
+    }
+
+    // Add the edge weight to our path length and continue up the chain.
+    const VID parentVID = *predecessors.begin();
+
     const double edgeWeight = EdgeWeight(_r, parentVID, currentVID);
     pathWeight = m_operator(pathWeight, edgeWeight);
 
-    // Move on to the parent vertex.
     currentVID = parentVID;
   }
 
-  return pathWeight;
+  throw RunTimeException(WHERE) << "We've arrived at an unreachable state. "
+                                << "https://xkcd.com/2200/";
 }
 
 
@@ -544,9 +535,8 @@ RewireConnector<MPTraits>::
 ChangeParent(RoadmapType* const _r, const VID _vid, const VID _oldParent,
     const VID _newParent, const WeightType& _newLp, const double _newCost)
     const noexcept {
-  _r->AddEdge(_newParent, _vid, _newLp);
   _r->DeleteEdge(_oldParent, _vid);
-  _r->GetVertex(_vid).SetStat("Parent", _newParent);
+  _r->AddEdge(_newParent, _vid, _newLp);
   if(this->m_debug)
     std::cout << "\t\tRewiring node " << _vid << " through " << _newParent
               << " at new cost " << _newCost << "."

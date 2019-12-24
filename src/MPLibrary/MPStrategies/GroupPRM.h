@@ -74,19 +74,12 @@ class GroupPRM : public GroupStrategyMethod<MPTraits> {
     ///@{
 
     /// Sample and add configurations to the roadmap.
-    /// @tparam OutputIterator Output iterator on data structure of VIDs
-    /// @param _out Data structure of VIDs of added nodes.
-    template <typename OutputIterator>
-    void Sample(OutputIterator _out);
+    /// @return The generated VIDs for the successful samples.
+    std::vector<VID> Sample();
 
-    /// Connect nodes and CCs of the roadmap
-    /// @tparam InputIterator Iterator on data structure of VIDs/graph nodes
-    /// @param _first Begin iterator over VIDs/graph nodes
-    /// @param _last End iterator over VIDs/graph nodes
-    /// @param _labels Connector labels used in connection
-    template <typename InputIterator>
-    void Connect(InputIterator _first, InputIterator _last,
-        const std::vector<std::string>& _labels);
+    /// Connect nodes in the roadmap.
+    /// @param _vids A set of node VIDs to connect to the rest of the roadmap.
+    void Connect(const std::vector<VID>& _vids);
 
     ///@}
     ///@name Internal State
@@ -96,8 +89,6 @@ class GroupPRM : public GroupStrategyMethod<MPTraits> {
     std::vector<SamplerSetting> m_samplers;
     /// Connector labels for node-to-node.
     std::vector<std::string> m_connectorLabels;
-    /// Connector labels for cc-to-cc.
-    std::vector<std::string> m_componentConnectorLabels;
 
     ///@}
 
@@ -130,9 +121,6 @@ GroupPRM(XMLNode& _node) : GroupStrategyMethod<MPTraits>(_node) {
     else if(child.Name() == "Connector")
       m_connectorLabels.push_back(
           child.Read("label", true, "", "Connector Label"));
-    else if(child.Name() == "ComponentConnector")
-      m_componentConnectorLabels.push_back(
-          child.Read("label", true, "", "Component Connector Label"));
   }
 }
 
@@ -154,10 +142,6 @@ Print(std::ostream& _os) const {
   _os << "\tConnectors" << std::endl;
   for(const auto& label : m_connectorLabels)
     _os << "\t\t" << label << std::endl;
-
-  _os << "\tComponentConnectors" << std::endl;
-  for(const auto& label : m_componentConnectorLabels)
-    _os << "\t\t" << label << std::endl;
 }
 
 
@@ -172,7 +156,7 @@ Initialize() {
   // Try to connect the starts/goals to any existing nodes.
   if(start != INVALID_VID)
     goals.push_back(start);
-  Connect(goals.begin(), goals.end(), m_connectorLabels);
+  Connect(goals);
 }
 
 /*------------------------ MPStrategyMethod Overrides ------------------------*/
@@ -181,33 +165,29 @@ template <typename MPTraits>
 void
 GroupPRM<MPTraits>::
 Iterate() {
-  // Sample.
-  std::vector<VID> vids;
-  Sample(std::back_inserter(vids));
+  // Sample new configurations.
+  const std::vector<VID> vids = Sample();
 
-  // Connect.
-  Connect(vids.begin(), vids.end(), m_connectorLabels);
-
-  // Connect CCs.
-  auto g = this->GetGroupRoadmap();
-  Connect(g->begin(), g->end(), m_componentConnectorLabels);
+  // If we sampled any valid configurations, try to connect them to the roadmap.
+  if(vids.size())
+    Connect(vids);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
-template <typename OutputIterator>
-void
+std::vector<typename MPTraits::GroupRoadmapType::VID>
 GroupPRM<MPTraits>::
-Sample(OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(), "GroupPRM::Sample");
+Sample() {
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::Sample");
   if(this->m_debug)
     std::cout << "Sampling new nodes..." << std::endl;
 
-  auto g = this->GetGroupRoadmap();
+  auto r = this->GetGroupRoadmap();
   const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
 
   // Generate nodes with each sampler.
+  std::vector<VID> out;
   std::vector<GroupCfgType> samples;
   for(auto& sampler : m_samplers) {
     samples.clear();
@@ -223,44 +203,39 @@ Sample(OutputIterator _out) {
                 << std::endl;
 
     // Add valid samples to roadmap.
-    for(auto& sample : samples) {
-      const VID vid = g->AddVertex(sample);
-      *_out++ = vid;
-    }
+    out.reserve(out.size() + samples.size());
+    for(auto& sample : samples)
+      out.push_back(r->AddVertex(sample));
   }
+
+  return out;
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 GroupPRM<MPTraits>::
-Connect(InputIterator _first, InputIterator _last,
-    const std::vector<std::string>& _labels) {
-  MethodTimer mt(this->GetStatClass(), "GroupPRM::Connect");
-
-  if(_labels.empty())
-    return;
-
-  auto g = this->GetGroupRoadmap();
+Connect(const std::vector<VID>& _vids) {
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::Connect");
 
   if(this->m_debug)
     std::cout << "Connecting..." << std::endl;
 
-  for(const auto& label : _labels) {
+  auto r = this->GetGroupRoadmap();
+  for(const auto& label : m_connectorLabels) {
     if(this->m_debug)
-      std::cout << "\tUsing connector '" << label << "'.\n";
+      std::cout << "\tUsing connector '" << label << "'." << std::endl;
 
-    auto c = this->GetConnector(label);
-    c->Connect(g, _first, _last);
+    this->GetConnector(label)->Connect(r, _vids.begin(), _vids.end());
   }
 
-  if(this->m_debug) {
+  if(this->m_debug)
     std::cout << "\tGraph has "
-              << g->get_num_edges() << " edges and "
-              << g->GetNumCCs() << " connected components."
+              << r->get_num_edges() << " edges and "
+              //<< r->GetCCTracker()->GetNumCCs()
+              << "?" /// @todo Setup CC tracker for groups to fix this.
+              << " connected components."
               << std::endl;
-  }
 }
 
 /*----------------------------------------------------------------------------*/
