@@ -55,6 +55,16 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
       CfgType cfg2;     ///< The second robot's configuration.
       size_t  timestep; ///< The timestep when the collision occurred.
 
+      /// @todo This is to support old gcc v4.x, replace with
+      ///       default-constructed class members after we upgrade.
+      Conflict(const CfgType& _cfg1 = CfgType(nullptr),
+          const CfgType& _cfg2 = CfgType(nullptr),
+          const size_t _timestep = 0) :
+          cfg1(_cfg1),
+          cfg2(_cfg2),
+          timestep(_timestep)
+      {}
+
       /// @return True if this is an empty conflict.
       bool Empty() const noexcept {
         return !cfg1.GetRobot();
