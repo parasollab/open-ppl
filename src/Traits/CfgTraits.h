@@ -38,7 +38,6 @@
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
 //neighborhood finder includes
-#include "MPLibrary/NeighborhoodFinders/BandsNF.h"
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #include "MPLibrary/NeighborhoodFinders/DPESNF.h"
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
@@ -69,12 +68,9 @@
 #include "MPLibrary/Samplers/WorkspaceImportanceSampler.h"
 
 //local planner includes
-#include "MPLibrary/LocalPlanners/ApproxSpheres.h"
-#include "MPLibrary/LocalPlanners/AStar.h"
 #include "MPLibrary/LocalPlanners/HierarchicalLP.h"
 #include "MPLibrary/LocalPlanners/MedialAxisLP.h"
 #include "MPLibrary/LocalPlanners/RotateAtS.h"
-#include "MPLibrary/LocalPlanners/RRTLocalPlanner.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/LocalPlanners/ToggleLP.h"
 #include "MPLibrary/LocalPlanners/TransformAtS.h"
@@ -230,7 +226,6 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BandsNF<MPTraits>,
     BruteForceNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
@@ -264,13 +259,9 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    ApproxSpheres<MPTraits>,
-    AStarClearance<MPTraits>,
-    AStarDistance<MPTraits>,
     HierarchicalLP<MPTraits>,
     MedialAxisLP<MPTraits>,
     RotateAtS<MPTraits>,
-    RRTLocalPlanner<MPTraits>,
     StraightLine<MPTraits>,
     ToggleLP<MPTraits>,
     TransformAtS<MPTraits>

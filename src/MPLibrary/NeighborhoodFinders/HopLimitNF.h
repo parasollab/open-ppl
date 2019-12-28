@@ -138,7 +138,6 @@ FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
 
   VID v = _r->GetVID(_cfg);
   typename RoadmapType::vertex_iterator vi = _r->find_vertex(v);

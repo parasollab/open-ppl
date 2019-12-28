@@ -92,9 +92,7 @@ ObstacleClearanceValidity<MPTraits>::
 Initialize() {
   // Ensure that the named validity checker is a PQP solid collision detector.
   auto vc = this->GetValidityChecker(m_vcLabel);
-
-  CollisionDetectionValidity<MPTraits>* cd =
-      dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc.get());
+  auto cd = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc);
   if(!cd)
     throw ParseException(WHERE) << "Named validity checker '" << m_vcLabel
                                 << "' for ObstacleClearanceValidity '"

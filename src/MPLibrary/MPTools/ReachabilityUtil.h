@@ -101,7 +101,7 @@ void
 ReachabilityUtil<MPTraits>::
 Initialize() {
   // Ensure we got a valid extender.
-  auto extender = static_pointer_cast<KinodynamicExtender<MPTraits>>(
+  auto extender = dynamic_cast<KinodynamicExtender<MPTraits>*>(
       this->GetExtender(m_extenderLabel));
   if(!extender)
     throw RunTimeException(WHERE) << "Extender for ReachabilityUtil must be a "
@@ -132,7 +132,7 @@ operator() (const CfgType& _cfg) {
 
   // Get the extender, environment, robot, and controls
   auto extender = static_cast<KinodynamicExtender<MPTraits>*>(
-      this->GetExtender(m_extenderLabel).get());
+      this->GetExtender(m_extenderLabel));
   auto robot = _cfg.GetRobot();
   const auto& controls = robot->GetController()->GetControlSet();
 

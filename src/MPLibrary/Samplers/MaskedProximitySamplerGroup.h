@@ -109,7 +109,6 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
 
   //The input cfg is a cfg from the roadmap. Extend up to m_maxDist away
   // from _cfg and return (extendedCfg - roadmap[0]).
-  auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 
   Formation robotList = this->m_activeRobots;  // Copy for potential reordering.

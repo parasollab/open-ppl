@@ -385,8 +385,7 @@ GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) 
     m_dofs[i] = 2. * DRand() - 1.;
 
   // Scale to appropriate length.
-  _dm->ScaleCfg(_length,
-      static_cast<typename DistanceMetricPointer::element_type::CfgType&>(*this));
+  _dm->ScaleCfg(_length, *this);
 
   // Normalize if requested.
   if(_norm)

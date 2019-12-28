@@ -424,7 +424,6 @@ PlaceEndEffector() {
   const size_t effectorRobotIndex = effectorGroup->Size() - 1;
 
   GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
-  auto const lp = this->GetLocalPlanner(this->m_lpLabel);
 
   // Iterates through the DG and builds paths with VIDs and DG nodes, which then
   // will be iterated through to place the effector.

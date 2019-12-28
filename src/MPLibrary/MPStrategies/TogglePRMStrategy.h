@@ -128,7 +128,7 @@ TogglePRMStrategy<MPTraits>::
 TogglePRMStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("TogglePRMStrategy");
 
-  m_vcLabel = _node.Read("vcLabel", false, "",
+  m_vcLabel = _node.Read("vcLabel", true, "",
       "Validity checker for lazy samples.");
   m_priority = _node.Read("priority", false, m_priority,
       "Give priority to valid nodes in the toggle queue?");
