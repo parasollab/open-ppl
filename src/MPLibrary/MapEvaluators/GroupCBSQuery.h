@@ -51,9 +51,9 @@ class GroupCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// A conflict decribes an inter-robot collision between two different
     /// robots at a given time.
     struct Conflict {
-      CfgType cfg1{nullptr};  ///< The first robot's configuration.
-      CfgType cfg2{nullptr};  ///< The second robot's configuration.
-      size_t  timestep{0};    ///< The timestep when the collision occurred.
+      CfgType cfg1;     ///< The first robot's configuration.
+      CfgType cfg2;     ///< The second robot's configuration.
+      size_t  timestep; ///< The timestep when the collision occurred.
 
       /// @return True if this is an empty conflict.
       bool Empty() const noexcept {
@@ -599,10 +599,7 @@ FindConflict(const Solution& _solution) {
                     << cfg2.PrettyPrint()
                     << std::endl;
 
-        Conflict newConflict;
-        newConflict.cfg1     = cfg1;
-        newConflict.cfg2     = cfg2;
-        newConflict.timestep = t;
+        Conflict newConflict{cfg1, cfg2, t};
 
         return newConflict;
       }

@@ -41,7 +41,6 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #include "MPLibrary/NeighborhoodFinders/DPESNF.h"
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
-#include "MPLibrary/NeighborhoodFinders/HopLimitNF.h"
 #include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
 #include "MPLibrary/NeighborhoodFinders/LSHNF.h"
 #include "MPLibrary/NeighborhoodFinders/MPNNNF.h"
@@ -99,22 +98,14 @@
 
 //connector includes
 #include "MPLibrary/Connectors/AdaptiveConnector.h"
-//#include "MPLibrary/Connectors/CCExpansion.h"
 #include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
-#include "MPLibrary/Metrics/CCDistanceMetric.h"
-#include "MPLibrary/Metrics/ConnectivityMetric.h"
-#include "MPLibrary/Metrics/CoverageDistanceMetric.h"
-#include "MPLibrary/Metrics/CoverageMetric.h"
-#include "MPLibrary/Metrics/DiameterMetric.h"
 #include "MPLibrary/Metrics/NumEdgesMetric.h"
 #include "MPLibrary/Metrics/NumNodesMetric.h"
-#include "MPLibrary/Metrics/RoadmapSet.h"
 #include "MPLibrary/Metrics/TimeMetric.h"
-#include "MPLibrary/Metrics/VectorSet.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
@@ -152,10 +143,7 @@
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
-#include "MPLibrary/MPStrategies/PushQueryToMA.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
-#include "MPLibrary/MPStrategies/SparkPRM.h"
-#include "MPLibrary/MPStrategies/SRTStrategy.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -229,7 +217,6 @@ struct MPTraits {
     BruteForceNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
-    HopLimitNF<MPTraits>,
     KdTreeNF<MPTraits>,
     LSHNF<MPTraits>,
     MPNNNF<MPTraits>,
@@ -297,37 +284,13 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     AdaptiveConnector<MPTraits>,
-    //CCExpansion<MPTraits>,
-    //CCsConnector<MPTraits>,
+    CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;
 
-  // RoadmapSet must be re-written before use.
-  //typedef ConnectivityMetric<MPTraits, RoadmapSet<MPTraits>>
-  //    ConnectivityMetricRoadmapSet;
-  //typedef CoverageDistanceMetric<MPTraits, RoadmapSet<MPTraits>>
-  //    CoverageDistanceMetricRoadmapSet;
-  //typedef CoverageMetric<MPTraits, RoadmapSet<MPTraits>>
-  //    CoverageMetricRoadmapSet;
-
-  typedef ConnectivityMetric<MPTraits, VectorSet<MPTraits>>
-      ConnectivityMetricVectorSet;
-  typedef CoverageDistanceMetric<MPTraits, VectorSet<MPTraits>>
-      CoverageDistanceMetricVectorSet;
-  typedef CoverageMetric<MPTraits, VectorSet<MPTraits>>
-      CoverageMetricVectorSet;
-
   //types of metrics available in our world
   typedef boost::mpl::list<
-    CCDistanceMetric<MPTraits>,
-    //ConnectivityMetricRoadmapSet,
-    //CoverageDistanceMetricRoadmapSet,
-    //CoverageMetricRoadmapSet,
-    ConnectivityMetricVectorSet,
-    CoverageDistanceMetricVectorSet,
-    CoverageMetricVectorSet,
-    DiameterMetric<MPTraits>,
     NumEdgesMetric<MPTraits>,
     NumNodesMetric<MPTraits>,
     TimeMetric<MPTraits>
@@ -373,11 +336,7 @@ struct MPTraits {
     GroupPRM<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
-    PushQueryToMA<MPTraits>,
     ScratchStrategy<MPTraits>,
-    SparkPRM<MPTraits, BasicPRM>,
-    SparkPRM<MPTraits, TogglePRMStrategy>,
-    SRTStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,

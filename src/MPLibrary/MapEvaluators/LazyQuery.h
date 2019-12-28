@@ -530,20 +530,26 @@ template <typename MPTraits>
 void
 LazyQuery<MPTraits>::
 InvalidateVertex(const VID _vid) {
+  // This part for LazyToggleQuery.
   const CfgType& cfg = this->m_roadmap->GetVertex(_vid);
   ProcessInvalidNode(cfg);
 
-  // If we are deleting invalid vertices, delete _vid and return.
-  if(m_deleteInvalid) {
-    this->m_roadmap->DeleteVertex(_vid);
-    return;
-  }
-
-  // Otherwise, mark this vertex and its edges as lazy invalid.
-  SetVertexInvalidated(_vid);
+  // Collect the edge list (deleting as we go will invalidate our iterators).
   auto vi = this->m_roadmap->find_vertex(_vid);
+  std::vector<std::pair<VID, VID>> edgeList;
+  edgeList.reserve(vi->size());
   for(auto ei = vi->begin(); ei != vi->end(); ++ei)
-    SetEdgeInvalidated(ei->id());
+    edgeList.emplace_back(ei->source(), ei->target());
+
+  // Invalidate the edges.
+  for(auto ei = edgeList.begin(); ei != edgeList.end(); ++ei)
+    InvalidateEdge(ei->first, ei->second);
+
+  // Delete or invalidate the vertex as appropriate.
+  if(m_deleteInvalid)
+    this->m_roadmap->DeleteVertex(_vid);
+  else
+    SetVertexInvalidated(_vid);
 }
 
 
@@ -564,11 +570,19 @@ InvalidateEdge(const VID _source, const VID _target) {
   }
 
   // If we are deleting invalid edges, delete (_source, _target) and return.
-  if(m_deleteInvalid)
+  // Also delete the reverse edge if it exists.
+  if(m_deleteInvalid) {
     this->m_roadmap->DeleteEdge(_source, _target);
-  // Otherwise, mark this edge as lazy invalid.
-  else
+    if(this->m_roadmap->IsEdge(_target, _source))
+      this->m_roadmap->DeleteEdge(_target, _source);
+  }
+  // Otherwise, mark this edge (and its counterpart if applicable) as lazy
+  // invalid.
+  else {
     SetEdgeInvalidated(_source, _target);
+    if(this->m_roadmap->IsEdge(_target, _source))
+      SetEdgeInvalidated(_target, _source);
+  }
 }
 
 /*---------------------------- Lazy Invalidation -----------------------------*/

@@ -370,7 +370,7 @@ class MPLibraryType final
     /// Group overload:
     void Solve(MPProblem* _problem, GroupTask* _task);
 
-	void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
+    void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution);
 
     /// Run a specific MPStrategy from the XML file with a designated seed and
     /// base output file name. This is intended for use with the simulator where
@@ -526,6 +526,8 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 Initialize() {
+  MethodTimer mt(this->GetStatClass(), "MPLibrary::Initialize");
+
   // Set up the goal tracker.
   m_goalTracker->Clear();
   if(this->GetTask())
@@ -1079,19 +1081,18 @@ template <typename MPTraits>
 void
 MPLibraryType<MPTraits>::
 RunSolver(const Solver& _solver) {
-  std::string originalBaseFilename = m_problem->GetBaseFilename();
-  Initialize();
-
-  // Call solver
+  // Announce the method label and seed.
   std::cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
             << _solver.label << " using seed " << _solver.seed << "."
             << std::endl;
 
-  SetSeed(_solver.seed);
+  // Save the original prefix for output files (base name).
+  const std::string originalBaseFilename = m_problem->GetBaseFilename();
 
-  // If this task has a label, append it to the solver's output file name.
+  // Use the solver node to set the base name for output files.
   std::string baseFilename = _solver.baseFilename;
 
+  // If this task has a label, append it to the solver's output file name.
   if(m_groupTask) {
     if(!m_groupTask->GetLabel().empty())
       baseFilename += "." + m_groupTask->GetLabel();
@@ -1106,12 +1107,25 @@ RunSolver(const Solver& _solver) {
     baseFilename.erase(newEnd, baseFilename.end());
   }
 
+  // Set the output file locations.
   SetBaseFilename(GetMPProblem()->GetPath(baseFilename));
   GetStatClass()->SetAuxDest(GetBaseFilename());
 
-  // Initialize vizmo debug if there is a valid filename
-  if(_solver.vizmoDebug)
+  // Initialize vizmo debug if requested.
+  if(_solver.vizmoDebug) {
     VDInit(GetBaseFilename() + ".vd");
+    if(m_groupTask)
+      VDTrackRoadmap(this->GetGroupRoadmap());
+    else
+      VDTrackRoadmap(this->GetRoadmap());
+  }
+
+  // Initialize the library's algorithms.
+  SetSeed(_solver.seed);
+  Initialize();
+
+  // Reset the seed
+  SetSeed(_solver.seed);
 
   GetMPStrategy(_solver.label)->operator()();
 

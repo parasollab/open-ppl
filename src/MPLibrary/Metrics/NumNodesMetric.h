@@ -1,5 +1,5 @@
-#ifndef NUM_NODES_METRIC_H
-#define NUM_NODES_METRIC_H
+#ifndef PMPL_NUM_NODES_METRIC_H
+#define PMPL_NUM_NODES_METRIC_H
 
 #include "MetricMethod.h"
 

@@ -4,6 +4,7 @@
 #include "MetricMethod.h"
 #include "Utilities/MetricUtils.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This metric measures the r-usage time for the entire MPLibrary run.
 /// @ingroup Metrics
@@ -27,8 +28,6 @@ class TimeMetric : public MetricMethod<MPTraits> {
     ///@{
 
     virtual void Initialize() override;
-
-    virtual void Print(std::ostream& _os) const override;
 
     ///@}
     ///@name MetricMethod Overrides
@@ -80,14 +79,6 @@ Initialize() {
   auto stats =  this->GetStatClass();
   stats->ClearClock(s_clockName);
   stats->StartClock(s_clockName);
-}
-
-
-template <typename MPTraits>
-void
-TimeMetric<MPTraits>::
-Print(std::ostream& _os) const {
-  _os << "Time metric" << std::endl;
 }
 
 /*-------------------------- MetricMethod Overrides --------------------------*/

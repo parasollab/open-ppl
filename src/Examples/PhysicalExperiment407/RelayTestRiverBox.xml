@@ -298,7 +298,7 @@
     </PathModifiers>
 
     <Connectors>
-      <AdaptiveConnector label="AdaptiveCS" nfLabel="" lpLabel="sl"
+      <AdaptiveConnector label="AdaptiveCS" lpLabel="sl"
         percentRandom="0.5" checkIfSameCC="false" debug="false"
         uniformProbability="false" fixedCost="false" fixedReward="false">
         <NeighborFinder Method="BFNF"/>
@@ -306,7 +306,7 @@
         <NeighborFinder Method="RandomNF"/>
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
-      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl"/>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="ClosestRobot" nfLabel="BFNF" lpLabel="slRobot"
@@ -449,7 +449,6 @@
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
-        <!--<ComponentConnector method="ConnectCCs"/>-->
         <Evaluator label="PRMQuery"/>
       </BasicPRM>
 
@@ -470,7 +469,6 @@
         inputMap="input.map" startAt="connecting">
         <Sampler method="UniformRandomFree" number="10" attempts="10"/>
         <Connector method="Closest"/>
-        <ComponentConnector method="ConnectCCs"/>
         <Evaluator method="NodesEval"/>
       </BasicPRM>
 

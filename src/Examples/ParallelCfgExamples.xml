@@ -45,7 +45,7 @@
     </Extenders>
 
     <Connectors>
-      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl"/>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="SparkPRMConnector" nfLabel="Nearest"
         lpLabel="sl" checkIfSameCC="true"/>

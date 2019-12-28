@@ -212,8 +212,6 @@ Iterate() {
     const VID vid = this->GetRoadmap()->AddVertex(cfg);
 
     ConnectHelper(true, vid);
-
-    this->CheckNarrowPassageSample(vid);
   }
   // If the next node is invalid, add to obstacle roadmap. Toggle validity
   // while connecting.
@@ -272,6 +270,7 @@ ConnectHelper(const bool _valid, const VID _vid) {
 
   // Loop through each connector
   std::vector<CfgType> collision;
+  auto iter = std::back_inserter(collision);
   for(const auto& label : connectorLabels) {
     collision.clear();
 
@@ -279,8 +278,7 @@ ConnectHelper(const bool _valid, const VID _vid) {
     auto connector = this->GetConnector(label);
     connector->Connect(
         _valid ? this->GetRoadmap() : this->GetBlockRoadmap(),
-        _vid,
-        std::back_inserter(collision));
+        _vid, nullptr, &iter);
 
     // Add collision witnesses to queue.
     for(const auto& cfg : collision)

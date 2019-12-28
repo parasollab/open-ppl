@@ -66,6 +66,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@name Interface
     ///@{
 
+    using MPBaseObject<MPTraits>::Initialize;
+
     /// Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
 
@@ -85,11 +87,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.
-
-    /// Virtual method used only in PRMWithRRTStrategy
-    /// @todo Remove this base-class clutter and find a more appropriate way to
-    ///       implement this.
-    virtual bool CheckNarrowPassageSample(VID _vid) {return false;}
 
     ///@}
     ///@name Start/Goal Generation
@@ -165,8 +162,25 @@ operator()() {
 
   Print(std::cout);
 
-  this->Initialize();
-  Run();
+  auto stats = this->GetStatClass();
+  const std::string id = this->GetNameAndLabel();
+
+  MethodTimer* mt = new MethodTimer(stats, id + "::InitAndRun");
+  {
+    MethodTimer mt(stats, id + "::Initialize");
+    Initialize();
+  }
+  stats->PrintClock(id + "::Initialize", std::cout);
+  {
+    MethodTimer mt(stats, id + "::Run");
+    Run();
+  }
+  stats->PrintClock(id + "::Run", std::cout);
+  delete mt;
+  stats->PrintClock(id + "::InitAndRun", std::cout);
+
+  // Don't count finalize in the time because file io isn't relevant to
+  // algorithmic performance.
   Finalize();
 }
 
@@ -184,10 +198,6 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
-  const std::string clockName = this->GetNameAndLabel() + "::Run";
-  auto stats = this->GetStatClass();
-  stats->StartClock(clockName);
-
   do {
     ++m_iterations;
     if(this->m_debug) {
@@ -205,9 +215,6 @@ Run() {
 
     Iterate();
   } while(!EvaluateMap() and this->IsRunning());
-
-  stats->StopClock(clockName);
-  stats->PrintClock(clockName, std::cout);
 }
 
 
@@ -219,12 +226,11 @@ EvaluateMap() {
   if(m_meLabels.empty())
     return true;
 
-  StatClass* stats = this->GetStatClass();
-
-  bool passed = true;
   const std::string clockName = this->GetNameAndLabel() + "::EvaluateMap";
+  StatClass* stats = this->GetStatClass();
   stats->StartClock(clockName);
 
+  bool passed = true;
   for(auto& label : m_meLabels) {
     auto evaluator = this->GetMapEvaluator(label);
     const std::string& evalName = evaluator->GetNameAndLabel();
@@ -299,7 +305,8 @@ GenerateStart(const std::string& _samplerLabel) {
   if(!startBoundary)
     return INVALID_VID;
 
-  MethodTimer mt(this->GetStatClass(), this->GetName() + "::GenerateStart");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GenerateStart");
 
   // Determine which sampler to use.
   const auto& samplerLabel = m_querySampler.empty() ? _samplerLabel
@@ -347,7 +354,8 @@ GenerateGoals(const std::string& _samplerLabel) {
   if(goalConstraints.empty())
     return {};
 
-  MethodTimer mt(this->GetStatClass(), this->GetName() + "::GenerateGoals");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GenerateGoals");
 
   // Determine which sampler to use.
   const auto& samplerLabel = m_querySampler.empty() ? _samplerLabel
