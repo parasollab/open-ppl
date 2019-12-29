@@ -393,7 +393,7 @@ AddVertex(const vertex_iterator _vi) noexcept {
     throw RunTimeException(WHERE) << "Vertex " << vid << " is already in a CC.";
 
   // Create a new CC for this vertex.
-  m_ccs.emplace(m_nextID, new VertexSet{vid});
+  m_ccs.emplace(m_nextID, std::shared_ptr<VertexSet>(new VertexSet{vid}));
   m_vidToCC.emplace(vid, m_nextID);
 
   if(s_debug)
@@ -659,7 +659,8 @@ RecomputeCCs() noexcept {
   while(!unmappedDescriptors.empty()) {
     // Get the next descriptor and compute its CC.
     const VID current = *unmappedDescriptors.begin();
-    auto ccIter = m_ccs.emplace(m_nextID, new VertexSet(BFS(current)));
+    auto ccIter = m_ccs.emplace(m_nextID,
+        std::shared_ptr<VertexSet>(new VertexSet(BFS(current))));
 
     // Remove the discovered CC from the unmapped vertex set.
     const VertexSet& cc = *ccIter.first->second.get(); // Wow!
