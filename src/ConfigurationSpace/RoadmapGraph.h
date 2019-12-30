@@ -1296,6 +1296,49 @@ IntersectVertexSets(const std::unordered_set<size_t>& _a,
   return intersection;
 }
 
+
+/// Select a random element from a vertex set (or other unordered set).
+/// @param _set The set.
+/// @return A random element from within.
+/// @note This is a two-stage random process that is far more efficient than
+///       simply std::advancing the begin iterator, which costs linear time. The
+///       solution here is to randomly select a bucket and then choose a random
+///       element within. This is linear in the bucket size (much smaller than
+///       the whole container).
+template <typename T, typename... Rest>
+inline
+const T&
+RandomElement(const std::unordered_set<T, Rest...>& _set) noexcept {
+  if(_set.empty())
+    throw RunTimeException(WHERE) << "Can't select a random element from an "
+                                  << "empty set.";
+#if 1
+  // Pick a random bucket within the set.
+  size_t bucketIndex, bucketSize, tries = 0;
+  do {
+    ++tries;
+    bucketIndex = DRand() * _set.bucket_count();
+    bucketSize  = _set.bucket_size(bucketIndex);
+  }
+  while(bucketSize == 0);
+
+  const size_t elementIndex = DRand() * bucketSize;
+  std::cout << "\nset size = " << _set.size()
+            << "\ntries = " << tries
+            << "\nbucketIndex = "  << bucketIndex
+            << "\nbucketSize  = "  << bucketSize
+            << "\nelementIndex = " << elementIndex
+            << "\nelement = " << *std::next(_set.begin(bucketIndex), elementIndex)
+            << std::endl;
+  return *std::next(_set.begin(bucketIndex), elementIndex);
+#else
+  // This is the fully linear solution, which works better for very small sets.
+  // It is retained here for reference.
+  return *std::next(_set.begin(), DRand() * _set.size());
+#endif
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #endif

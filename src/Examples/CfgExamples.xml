@@ -275,7 +275,7 @@
       </LazyToggleQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="5000" operator=">="/>
+        value="1000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -422,7 +422,7 @@
       </BasicRRTStrategy>
 
       <!-- Toggle PRM -->
-      <TogglePRMStrategy label="TogglePRM" priority="true">
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <ColConnector label="ToggleConnect"/>
@@ -444,7 +444,8 @@
         <Evaluator label="NodesEval"/>
       </EvaluateMapStrategy>
 
-      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="rapid" nfLabel="BFNF"
+      <UtilityGuidedGenerator label="UtilityGuided" debug="true"
+        querySampler="UniformRandomFree" vcLabel="pqp_solid" nfLabel="BFNF"
         connectorLabel="Closest">
         <Evaluator label="NodesEval"/>
       </UtilityGuidedGenerator>
