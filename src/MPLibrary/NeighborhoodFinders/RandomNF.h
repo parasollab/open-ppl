@@ -58,21 +58,9 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
-
-    template <typename InputIterator>
     void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
-
-    template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
 
     ///@}
 
@@ -165,66 +153,9 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 RandomNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  auto g = _r;
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
-
-  std::set<std::pair<VID, VID>> foundPairs;
-
-  const size_t inputSize1 = std::distance(_first1, _last1),
-               inputSize2 = std::distance(_first2, _last2);
-
-  for(size_t i = 0; i < this->m_k and i < inputSize1 and i < inputSize2; ++i) {
-    // Try until we find a valid neighbor or run out of choices.
-    while(foundPairs.size() < inputSize1 * inputSize2) {
-      const VID vid1 = g->GetVID(_first1 + LRand() % inputSize1),
-                vid2 = g->GetVID(_first2 + LRand() % inputSize2);
-      const CfgType& cfg1 = g->GetVertex(vid1);
-
-      // Check for invalid conditions.
-      const bool alreadyFound = foundPairs.count({vid1, vid2}),
-                 alreadyConnected = this->DirectEdge(g, cfg1, vid2);
-
-      if(alreadyFound or alreadyConnected)
-        continue;
-
-      // Track this pair.
-      foundPairs.emplace(vid1, vid2);
-
-      // Check distance.
-      const double distance = dm->Distance(cfg1, g->GetVertex(vid2));
-      if(std::isinf(distance))
-        continue;
-
-      *_out++ = Neighbor(vid1, vid2, distance);
-      break;
-    }
-  }
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-RandomNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-RandomNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
   throw NotImplementedException(WHERE);
 }
 

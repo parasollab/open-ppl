@@ -438,7 +438,8 @@ EntropyGuidedSample() {
       for(const VID vid : firstCC) {
         // Find neighbors to this vid.
         neighbors.clear();
-        nf->FindNeighbors(r, r->GetVertex(vid), secondCC, neighbors);
+        nf->FindNeighbors(r, r->GetVertex(vid), secondCC,
+            std::back_inserter(neighbors));
 
         if(neighbors.empty())
           continue;

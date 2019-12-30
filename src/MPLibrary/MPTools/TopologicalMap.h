@@ -2,6 +2,7 @@
 #define PMPL_TOPOLOGICAL_MAP_H_
 
 #include "MPLibrary/MPBaseObject.h"
+#include "Utilities/Hash.h"
 #include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/GridOverlay.h"
@@ -19,30 +20,6 @@
 #include "Simulator/Simulation.h"
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #endif
-
-
-namespace std {
-
-  //////////////////////////////////////////////////////////////////////////////
-  /// Define a hasher for a pair of region pointers for use with unordered maps.
-  //////////////////////////////////////////////////////////////////////////////
-  template <>
-  struct hash<std::pair<const WorkspaceRegion*, const WorkspaceRegion*>> {
-
-    typedef std::pair<const WorkspaceRegion*, const WorkspaceRegion*> RegionPair;
-
-    /// @TODO This is a guess at a good hashing function. We need to validate
-    ///       that it is a reasonable assumption.
-    static constexpr size_t magicOffset = std::numeric_limits<size_t>::max() / 7;
-
-    size_t operator()(const RegionPair& _key) const {
-      static constexpr std::hash<const WorkspaceRegion*> hasher;
-      return (hasher(_key.first) + magicOffset) ^ hasher(_key.second);
-    }
-
-  };
-
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////

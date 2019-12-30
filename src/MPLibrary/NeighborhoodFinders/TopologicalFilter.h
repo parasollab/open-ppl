@@ -19,12 +19,6 @@
 ///   Read Sandstrom, Andrew Bregger, Ben Smith, Shawna Thomas, and Nancy M.
 ///   Amato. "Topological Nearest-Neighbor Filtering for Sampling-based
 ///   Planners". ICRA 2018.
-///
-/// @todo Move the SSSP cache into the topological map so that
-///       TopologicalDistance can share it. This is not a major performance hit,
-///       but (a) on principle we should never duplicate data, and (b) it could
-///       become seriously detrimental if used with a very large mesh (i.e., a
-///       fine tetrahedralization with many small cells).
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
@@ -56,11 +50,10 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::VertexSet           VertexSet;
     typedef WorkspaceDecomposition::vertex_descriptor VD;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
-
-    typedef std::unordered_set<VID> VertexSet;
 
     ///@}
     ///@name Local Types
@@ -103,26 +96,11 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    /// Calls the single-source version using each vertex in the first range as
-    /// the source.
-    template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
-
     /// Not implemented.
     template <typename InputIterator>
     void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
-
-    /// Not implemented.
-    template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
 
     ///@}
 
@@ -259,7 +237,7 @@ template <typename MPTraits>
 void
 TopologicalFilter<MPTraits>::
 FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
-    const std::unordered_set<VID>& _candidates, OutputIterator _out) {
+    const VertexSet& _candidates, OutputIterator _out) {
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
   MethodTimer mt(stats, id + "::FindNeighbors");
@@ -344,33 +322,9 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 TopologicalFilter<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-TopologicalFilter<MPTraits>::
 FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-TopologicalFilter<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
   throw NotImplementedException(WHERE);
 }
 

@@ -82,21 +82,9 @@ class DPESNF : public NeighborhoodFinderMethod<MPTraits> {
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
-
-    template <typename InputIterator>
     void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
-
-    template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
 
     ///@}
 
@@ -224,36 +212,12 @@ FindNeighbors(RoadmapType* _r,
 
 
 template <typename MPTraits>
-template<typename InputIterator>
-void
-DPESNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
 template <typename InputIterator>
 void
 DPESNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-DPESNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
   throw NotImplementedException(WHERE);
 }
 

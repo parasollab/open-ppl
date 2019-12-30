@@ -62,21 +62,9 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
         const CfgType& _cfg, OutputIterator _out);
 
     template <typename InputIterator>
-    void FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
-
-    template <typename InputIterator>
     void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out);
-
-    template <typename InputIterator>
-    void FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
 
     ///@}
 
@@ -185,73 +173,6 @@ template <typename MPTraits>
 template <typename InputIterator>
 void
 BruteForceNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2, OutputIterator _out) {
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
-
-  if(this->m_debug)
-    std::cout << "Checking for nearest " << this->m_k
-              << " neighbor pairs with dm '" << this->m_dmLabel << "'."
-              << std::endl;
-
-  // Find all pairs
-  std::priority_queue<Neighbor> pq;
-
-  for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-    // Get the first configuration.
-    const CfgType& node1 = _r->GetVertex(it1);
-    const VID vid1 = _r->GetVID(it1);
-
-    // Compare it to everything in the second set.
-    for(InputIterator it2 = _first2; it2 != _last2; it2++) {
-      // Skip connection to self.
-      if(*it1 == *it2)
-        continue;
-
-      // Get the second configuration.
-      const CfgType& node2 = _r->GetVertex(it2);
-      const VID vid2 = _r->GetVID(it2);
-
-      // Check unconnected.
-      if(this->DirectEdge(_r, node1, vid2))
-        continue;
-
-      // Check distance. If it is infinite, these are not connectable.
-      const double distance = dm->Distance(node1, node2);
-      if(std::isinf(distance))
-        continue;
-
-      // Track the best m_k so far.
-      if(pq.size() < this->m_k)
-        pq.emplace(vid1, vid2, distance);
-      else if(distance < pq.top().distance) {
-        pq.pop();
-        pq.emplace(vid1, vid2, distance);
-      }
-    }
-  }
-
-  if(this->m_debug)
-    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
-
-  // Write k closest to vector, sorted greatest to least distance.
-  std::vector<Neighbor> closest;
-  closest.reserve(pq.size());
-  while(!pq.empty()) {
-    closest.push_back(pq.top());
-    pq.pop();
-  }
-
-  // Reverse order
-  std::copy(closest.rbegin(), closest.rend(), _out);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-BruteForceNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const GroupCfgType& _cfg, OutputIterator _out) {
@@ -297,72 +218,6 @@ FindNeighbors(GroupRoadmapType* _r,
   // Transfer k closest to vector, sorted greatest to least distance
   std::vector<Neighbor> closest;
   closest.reserve(pq.size());
-  while(!pq.empty()) {
-    closest.push_back(pq.top());
-    pq.pop();
-  }
-
-  // Reverse order
-  std::copy(closest.rbegin(), closest.rend(), _out);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-BruteForceNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2, OutputIterator _out) {
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
-
-  if(this->m_debug)
-    std::cout << "Checking for nearest " << this->m_k
-              << " neighbor pairs with dm '" << this->m_dmLabel << "'."
-              << std::endl;
-
-  // Find all pairs
-  std::priority_queue<Neighbor> pq;
-
-  for(InputIterator it1 = _first1; it1 != _last1; it1++) {
-    // Get the first configuration.
-    const GroupCfgType& node1 = _r->GetVertex(it1);
-    const VID vid1 = _r->GetVID(it1);
-
-    // Compare it to everything in the second set.
-    for(InputIterator it2 = _first2; it2 != _last2; it2++) {
-      // Check for connection to self.
-      if(*it1 == *it2)
-        continue;
-
-      // Get the second configuration.
-      const GroupCfgType& node2 = _r->GetVertex(it2);
-      const VID vid2 = _r->GetVID(it2);
-
-      // Check for connectedness.
-      if(this->DirectEdge(_r, node1, vid2))
-        continue;
-
-      // Check the distance. If it is infinite, these are not connectable.
-      const double distance = dm->Distance(node1, node2);
-      if(std::isinf(distance))
-        continue;
-
-      // Track the closest m_k pairs.
-      if(pq.size() < this->m_k)
-        pq.emplace(vid1, vid2, distance);
-      else if(distance < pq.top().distance) {
-        pq.pop();
-        pq.emplace(vid1, vid2, distance);
-      }
-    }
-  }
-
-  if(this->m_debug)
-    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
-
-  // Write k closest to vector, sorted greatest to least distance.
-  std::vector<Neighbor> closest;
   while(!pq.empty()) {
     closest.push_back(pq.top());
     pq.pop();
