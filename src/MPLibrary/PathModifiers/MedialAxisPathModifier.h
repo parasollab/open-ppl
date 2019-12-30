@@ -119,7 +119,7 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
 
   //Ensure malp is proper type
   MedialAxisLP<MPTraits>* malp = dynamic_cast<MedialAxisLP<MPTraits>*>(
-      this->GetLocalPlanner(m_malpLabel).get());
+      this->GetLocalPlanner(m_malpLabel));
   if(!malp)
     throw RunTimeException(WHERE,
         "m_malpLabel: \"" + m_malpLabel + "\" in " + this->GetNameAndLabel() +

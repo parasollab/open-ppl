@@ -597,8 +597,8 @@ Initialize() {
     me->Initialize();
   }
   if(!m_stateMELabel.empty()) {
-    auto stateME = dynamic_pointer_cast<StrategyStateEvaluator<MPTraits> > (
-                   this->GetMapEvaluator(m_stateMELabel));
+    auto stateME = dynamic_cast<StrategyStateEvaluator<MPTraits>*>(
+        this->GetMapEvaluator(m_stateMELabel));
     if(this->m_debug)
       std::cout << "Setting " << m_stateMELabel << "'s label to "
                 << this->GetLabel() << std::endl;
@@ -831,8 +831,8 @@ GetMatingSamples(const Formation& _subassembly) {
   std::vector<GroupCfgType> samples;
 
   auto const sampler = m_matingSamplerLabels.begin();
-  auto const s = dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits> >(
-            this->GetSampler(sampler->first));
+  auto const s = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+      this->GetSampler(sampler->first));
 
   s->SetActiveRobots(_subassembly);
 
@@ -918,8 +918,8 @@ bool
 DisassemblyMethod<MPTraits>::
 EnsureMinimumClearance(GroupCfgType& _cfg, const Formation& _formation) {
   /// TODO Remove hardcoding of this.
-  auto const minDistME = std::dynamic_pointer_cast<MinimumClearanceEvaluator<
-                         MPTraits> >(this->GetMapEvaluator("MinClearanceEval"));
+  auto const minDistME = dynamic_cast<MinimumClearanceEvaluator<MPTraits>*>(
+      this->GetMapEvaluator("MinClearanceEval"));
   auto const vc = this->GetValidityChecker(this->m_vcLabel);
   if(!minDistME)
     throw RunTimeException(WHERE, "Couldn't find and/or cast MinClearanceEval");
@@ -944,7 +944,6 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid,
   auto const graph = this->GetGroupRoadmap();
   auto const env = this->GetEnvironment();
   auto const lp = this->GetLocalPlanner(this->m_lpLabel);
-  auto const vc = this->GetValidityChecker(m_vcLabel);
 
   if(this->m_debug)
     std::cout << "Mating approach expanding from VID " << _q
@@ -953,8 +952,8 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid,
   auto startCfg = graph->GetVertex(_q);
 
   const std::string samplerLabel = m_matingSamplerLabels.begin()->first;
-  auto const s = dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits> >(
-                                              this->GetSampler(samplerLabel));
+  auto const s = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+      this->GetSampler(samplerLabel));
   s->SetStartCfg(startCfg);//Masked entries are set to the values in startCfg
   s->SetActiveRobots(_formation);
 
@@ -1044,16 +1043,15 @@ ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID,
   auto const graph = this->GetGroupRoadmap();
   const std::string callee = "DiassemblyMethod::ExpandRRTApproach";
 
-  auto sampler = dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits> >(
-                 this->GetSampler(m_rrtSamplerLabels.begin()->first));
-  auto dm = this->GetDistanceMetric(m_rrtDMLabel);
+  auto sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+      this->GetSampler(m_rrtSamplerLabels.begin()->first));
 
   if(!sampler)
     throw RunTimeException(WHERE, "Error! dynamic pointer cast failed for "
                                   "sampler!");
 
-  auto rrtStrategy = dynamic_pointer_cast<DisassemblyRRTStrategy<MPTraits>>(
-                       this->GetMPStrategy(m_rrtStrategyLabel));
+  auto rrtStrategy = dynamic_cast<DisassemblyRRTStrategy<MPTraits>*>(
+      this->GetMPStrategy(m_rrtStrategyLabel));
 
   //1. Make a whole new MPSolution and save the one currently there.
   MPSolution* const originalSolution = this->GetMPLibrary()->GetMPSolution();
@@ -1739,8 +1737,8 @@ template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
 GenerateAdjacencyMats() {
-  auto vc = dynamic_pointer_cast<CollisionDetectionValidity<MPTraits>>(
-                                           this->GetValidityChecker(m_vcLabel));
+  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(
+      this->GetValidityChecker(m_vcLabel));
 
   // clear and initialize adjacency mats
   m_contactMat.clear();

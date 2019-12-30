@@ -420,11 +420,12 @@ IsInCollision(CDInfo& _cdInfo, const CfgType& _cfg, const std::string& _caller) 
     return true;
 
   // Check for containment within the environment boundary.
-  if(collision |= IsInBoundaryCollision(_cdInfo, _cfg) and !allInfo)
+  if((collision |= IsInBoundaryCollision(_cdInfo, _cfg)) and !allInfo)
     return true;
 
   // Check for obstacle collisions.
-  if(collision |= IsInObstacleCollision(_cdInfo, multibody, _caller) and !allInfo)
+  if((collision |= IsInObstacleCollision(_cdInfo, multibody, _caller))
+      and !allInfo)
     return true;
 
   // Check for collision with all other robots.

@@ -714,7 +714,7 @@ LocateRegion(const Point3d& _point) const {
   if(this->m_debug) {
     // If we are debugging, use pqp to check if _point lies within an obstacle.
     using CDType = CollisionDetectionValidity<MPTraits>;
-    auto vc = static_cast<CDType*>(this->GetValidityChecker(m_pqpLabel).get());
+    auto vc = static_cast<CDType*>(this->GetValidityChecker(m_pqpLabel));
     const bool inObstacle = vc->IsInsideObstacle(_point);
 
     std::cout << "TopologicalMap::LocateRegion"

@@ -256,7 +256,7 @@ Initialize() {
   // Assert that the validity checker is an instance of collision detection
   // validity.
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(
-      this->GetValidityChecker(m_vcLabel).get()
+      this->GetValidityChecker(m_vcLabel)
   );
   if(!vc)
     throw RunTimeException(WHERE) << "Validity checker " << m_vcLabel
@@ -265,7 +265,7 @@ Initialize() {
 
   // Assert that the query evaluator is an instance of query method.
   auto query = dynamic_cast<QueryMethod<MPTraits>*>(
-      this->GetMapEvaluator(m_queryLabel).get()
+      this->GetMapEvaluator(m_queryLabel)
   );
   if(!query)
     throw RunTimeException(WHERE) << "Query method " << m_queryLabel
@@ -567,7 +567,7 @@ FindConflict(const Solution& _solution) {
     lastTimestep = std::max(lastTimestep, path.second.size());
 
   auto vc = static_cast<CollisionDetectionValidity<MPTraits>*>(
-      this->GetValidityChecker(m_vcLabel).get()
+      this->GetValidityChecker(m_vcLabel)
   );
 
   // Step through each timestep.
@@ -713,7 +713,7 @@ IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
+  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
 
   // Configure the other robot at _conflictCfg.
   auto otherMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
