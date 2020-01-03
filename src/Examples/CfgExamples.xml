@@ -254,10 +254,9 @@
       <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
-      <LazyQuery label="LazyQuery" debug="false"
-        graphSearchAlg="dijkstras"
-        lpLabel="sl" vcLabel="pqp_solid"
-        enhanceDmLabel="euclidean" numEnhance="10" d="0.5" deleteInvalid="true">
+      <LazyQuery label="LazyQuery" debug="true"
+        vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
+        numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
         <Resolution mult="27"/>
         <Resolution mult="16"/>
@@ -341,6 +340,13 @@
         <Sampler label="UniformRandomFree" number="10" attempts="10"/>
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
+      </BasicPRM>
+
+      <!-- LazyPRM -->
+      <BasicPRM label="LazyPRM" debug="true">
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <Evaluator label="LazyQuery"/>
       </BasicPRM>
 
       <!-- BasicRRT -->
