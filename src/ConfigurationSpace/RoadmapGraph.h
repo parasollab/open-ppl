@@ -228,7 +228,7 @@ class RoadmapGraph : public
     Robot* GetRobot() const noexcept;
 
     /// Get the connected component tracker.
-    const CCTrackerType* GetCCTracker() const noexcept;
+    CCTrackerType* GetCCTracker() const noexcept;
 
     /// Retrieve a reference to a vertex property by descriptor or iterator.
     template <typename T>
@@ -480,10 +480,13 @@ operator=(RoadmapGraph&& _r) {
 
   // If the other graph had a CC tracker, move it and point at this roadmap.
   if(_r.m_ccTracker) {
-    m_ccTracker.reset(new CCTrackerType(std::move(*_r.m_ccTracker)));
+    m_ccTracker = std::move(_r.m_ccTracker);
     m_ccTracker->SetRoadmap(this);
     m_ccTracker->InstallHooks();
   }
+
+  // Clear any hooks on the other to prevent cross-talk with the CCTracker.
+  _r.ClearHooks();
 
   return *this;
 }
@@ -797,7 +800,7 @@ GetRobot() const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-const typename RoadmapGraph<Vertex, Edge>::CCTrackerType*
+typename RoadmapGraph<Vertex, Edge>::CCTrackerType*
 RoadmapGraph<Vertex, Edge>::
 GetCCTracker() const noexcept {
   return m_ccTracker.get();
