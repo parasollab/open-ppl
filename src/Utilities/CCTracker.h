@@ -20,22 +20,24 @@
 /// the typical usage for RRT and nonholonomic robots. One should recall however
 /// that in such cases, shared CC membership does not imply connectivity.
 ///
-/// For this to work correctly with directed trees, one must
+/// For this to work correctly with directed trees, one must ensure that the
+/// graph always remains a tree. I.e., if you rewire the tree by switching a
+/// vertex's parent, you must delete the old edge before adding the new one.
 ///
 /// @warning This class assumes that either all edges are bidirectional, or the
 ///          roadmap is a single tree. It will not work correctly (silent
 ///          errors) on a non-tree directed graph!
 /// @todo Add support for non-tree directed graphs. We need to use predecessor
-///       information to do this, which requires improving
+///       information to do this, which we now have in the roadmap graph.
 /// @todo The stat class tracking adds a lot of complication. Remove it once
 ///       we're sure the performance is fast enough to forgo tracking.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename RoadmapType>
-class CCTracker {
+class CCTracker final {
 
-  private:
+  public:
 
-    ///@name Internal Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename RoadmapType::VID               VID;
@@ -43,19 +45,54 @@ class CCTracker {
     typedef typename RoadmapType::adj_edge_iterator edge_iterator;
     typedef typename RoadmapType::VertexSet         VertexSet;
 
-    /// A map from a unique ID to a vertex set representing a CC.
-    typedef std::unordered_map<size_t, std::shared_ptr<VertexSet>> CCMap;
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    typedef CCTracker<RoadmapType>         CCTrackerType;
+    typedef std::unordered_set<VertexSet*> ComponentSet;
+
+    /// An event hook for component creation. Called after creation.
+    /// @param Pointer to this.
+    /// @param The newly created component.
+    typedef std::function<void(const CCTrackerType* const,
+        const VertexSet* const)>
+        CreatedHook;
+
+    /// An event hook for component deletion. Called prior to deletion.
+    /// @param Pointer to this.
+    /// @param The to-be deleted component.
+    typedef std::function<void(const CCTrackerType* const,
+        const VertexSet* const)>
+        DeletedHook;
+
+    /// An event hook for component breaks. Called after breaking.
+    /// @param Pointer to this.
+    /// @param The component which is now broken.
+    /// @param The new component split off from the old (does not trigger a
+    ///        create event).
+    typedef std::function<void(const CCTrackerType* const,
+        const VertexSet* const, const VertexSet* const)>
+        BrokenHook;
+
+    /// An event hook for component merges. Called prior to merging.
+    /// @param Pointer to this.
+    /// @param The component which will be merged into.
+    /// @param The component which will be removed after merging (does not
+    ///        trigger a delete event).
+    typedef std::function<void(const CCTrackerType* const,
+        const VertexSet* const, const VertexSet* const)>
+        MergedHook;
 
     ///@}
-
-  public:
-
     ///@name Construction
     ///@{
 
     /// Constructor.
     /// @param _r The roadmap for which we will track CCs.
     CCTracker(RoadmapType* const _r);
+
+    ~CCTracker();
 
     ///@}
     ///@name Move and Copy
@@ -114,8 +151,20 @@ class CCTracker {
     ///@{
     /// Iterate over the CCs.
 
-    typename CCMap::const_iterator begin() const noexcept;
-    typename CCMap::const_iterator end() const noexcept;
+    typename ComponentSet::const_iterator begin() const noexcept;
+    typename ComponentSet::const_iterator end() const noexcept;
+
+    ///@}
+    ///@name Event Hooks
+    ///@{
+    /// These functions install and manage hook functions which are called in
+    /// response to changes in the components. Each has a unique label;
+    /// duplicates will trigger exceptions.
+
+    void InstallCreatedHook(const std::string& _label, const CreatedHook& _h);
+    void InstallDeletedHook(const std::string& _label, const DeletedHook& _h);
+    void InstallBrokenHook(const std::string& _label, const BrokenHook& _h);
+    void InstallMergedHook(const std::string& _label, const MergedHook& _h);
 
     ///@}
     ///@name Debug
@@ -130,7 +179,7 @@ class CCTracker {
 
   private:
 
-    ///@name Update Functions
+    ///@name Roadmap Callback Functions
     ///@{
     /// These functions accept graph updates and adjust the internal CCs
     /// accordingly. They should be installed as hooks in the roadmap.
@@ -179,13 +228,19 @@ class CCTracker {
     ///@name Internal State
     ///@{
 
-    RoadmapType* m_roadmap{nullptr};           ///< The roadmap.
-    size_t m_nextID{0};                        ///< The next unused CC id.
-    CCMap m_ccs;                               ///< Maps CC id to CC.
-    std::unordered_map<VID, size_t> m_vidToCC; ///< Maps descriptor to CC id.
+    RoadmapType* m_roadmap{nullptr};                ///< The roadmap.
+    ComponentSet m_components;                      ///< The set of components.
+    std::unordered_map<VID, VertexSet*> m_vidToCC;  ///< Maps descriptor to CC.
 
+    // Clock helpers
     mutable std::function<void(const std::string&)> m_clockStart;
     mutable std::function<void(const std::string&)> m_clockStop;
+
+    // Hooks
+    std::unordered_map<std::string, CreatedHook> m_createdHooks;
+    std::unordered_map<std::string, DeletedHook> m_deletedHooks;
+    std::unordered_map<std::string, BrokenHook>  m_brokenHooks;
+    std::unordered_map<std::string, MergedHook>  m_mergedHooks;
 
     static constexpr const bool s_debug = false;  ///< Enable debug messages.
 
@@ -206,28 +261,27 @@ CCTracker(RoadmapType* const _r) : m_roadmap(_r) {
   SetStatClass(nullptr);
 }
 
+
+template <typename RoadmapType>
+CCTracker<RoadmapType>::
+~CCTracker() {
+  for(VertexSet* const cc : m_components)
+    delete cc;
+}
+
 /*------------------------------ Move and Copy -------------------------------*/
 
 template <typename RoadmapType>
 CCTracker<RoadmapType>::
-CCTracker(const CCTracker& _other)
-  : m_roadmap(_other.m_roadmap),
-    m_nextID(_other.m_nextID),
-    m_ccs(_other.m_ccs),
-    m_vidToCC(_other.m_vidToCC) {
-  SetStatClass(nullptr);
+CCTracker(const CCTracker& _other) {
+  *this = _other;
 }
 
 
 template <typename RoadmapType>
 CCTracker<RoadmapType>::
-CCTracker(CCTracker&& _other)
-  : m_roadmap(_other.m_roadmap),
-    m_nextID(_other.m_nextID),
-    m_ccs(std::move(_other.m_ccs)),
-    m_vidToCC(std::move(_other.m_vidToCC)),
-    m_clockStart(std::move(_other.m_clockStart)),
-    m_clockStop(std::move(_other.m_clockStop)) {
+CCTracker(CCTracker&& _other) {
+  *this = std::move(_other);
 }
 
 
@@ -236,10 +290,25 @@ CCTracker<RoadmapType>&
 CCTracker<RoadmapType>::
 operator=(const CCTracker& _other) {
   m_roadmap    = _other.m_roadmap;
-  m_nextID     = _other.m_nextID;
-  m_ccs        = _other.m_ccs;
-  m_vidToCC    = _other.m_vidToCC;
-  SetStatClass(nullptr);
+  m_clockStart = _other.m_clockStart;
+  m_clockStop  = _other.m_clockStop;
+
+  // Copy the components. This must be done manually or we'll be sharing
+  // pointed-to VertexSets with _other.
+  m_components.clear();
+  m_components.reserve(_other.m_components.size());
+  m_vidToCC.clear();
+  m_vidToCC.reserve(_other.m_vidToCC.size());
+  for(const VertexSet* const otherCC : _other.m_components) {
+    VertexSet* const myCC = new VertexSet;
+    m_components.insert(myCC);
+    for(const VID vid : *otherCC) {
+      myCC->insert(vid);
+      m_vidToCC.emplace(vid, myCC);
+    }
+  }
+
+  return *this;
 }
 
 
@@ -248,11 +317,14 @@ CCTracker<RoadmapType>&
 CCTracker<RoadmapType>::
 operator=(CCTracker&& _other) {
   m_roadmap    = _other.m_roadmap;
-  m_nextID     = _other.m_nextID;
-  m_ccs        = std::move(_other.m_ccs);
+  m_components = std::move(_other.m_components);
+  // Clear _other's components to ensure they aren't deleted with it.
+  _other.m_components.clear();
   m_vidToCC    = std::move(_other.m_vidToCC);
   m_clockStart = std::move(_other.m_clockStart);
   m_clockStop  = std::move(_other.m_clockStop);
+
+  return *this;
 }
 
 /*--------------------------------- Queries ----------------------------------*/
@@ -310,7 +382,7 @@ inline
 size_t
 CCTracker<RoadmapType>::
 GetNumCCs() const noexcept {
-  return m_ccs.size();
+  return m_components.size();
 }
 
 
@@ -328,10 +400,8 @@ typename CCTracker<RoadmapType>::VertexSet
 CCTracker<RoadmapType>::
 GetRepresentatives() const noexcept {
   VertexSet representatives;
-  for(const auto& cc : m_ccs) {
-    const VertexSet& vids = *cc.second.get();
-    representatives.insert(*vids.begin());
-  }
+  for(const VertexSet* const cc : m_components)
+    representatives.insert(*cc->begin());
   return representatives;
 }
 
@@ -348,19 +418,64 @@ InSameCC(const VID _vid1, const VID _vid2) const noexcept {
 
 template <typename RoadmapType>
 inline
-typename CCTracker<RoadmapType>::CCMap::const_iterator
+typename CCTracker<RoadmapType>::ComponentSet::const_iterator
 CCTracker<RoadmapType>::
 begin() const noexcept {
-  return m_ccs.begin();
+  return m_components.begin();
 }
 
 
 template <typename RoadmapType>
 inline
-typename CCTracker<RoadmapType>::CCMap::const_iterator
+typename CCTracker<RoadmapType>::ComponentSet::const_iterator
 CCTracker<RoadmapType>::
 end() const noexcept {
-  return m_ccs.end();
+  return m_components.end();
+}
+
+/*-------------------------------- Event Hooks -------------------------------*/
+
+template <template <typename...> class MapType, typename ValueType,
+          typename... Rest>
+void
+MapUniqueInsert(MapType<std::string, ValueType, Rest...>& _map,
+    const std::string& _label, const ValueType& _value) noexcept {
+  if(_map.count(_label))
+    throw RunTimeException(WHERE) << "Map already has an element labeled '"
+                                  << _label << "'.";
+  _map.emplace(_label, _value);
+}
+
+
+template <typename RoadmapType>
+void
+CCTracker<RoadmapType>::
+InstallCreatedHook(const std::string& _label, const CreatedHook& _h) {
+  MapUniqueInsert(m_createdHooks, _label, _h);
+}
+
+
+template <typename RoadmapType>
+void
+CCTracker<RoadmapType>::
+InstallDeletedHook(const std::string& _label, const DeletedHook& _h) {
+  MapUniqueInsert(m_deletedHooks, _label, _h);
+}
+
+
+template <typename RoadmapType>
+void
+CCTracker<RoadmapType>::
+InstallBrokenHook(const std::string& _label, const BrokenHook& _h) {
+  MapUniqueInsert(m_brokenHooks, _label, _h);
+}
+
+
+template <typename RoadmapType>
+void
+CCTracker<RoadmapType>::
+InstallMergedHook(const std::string& _label, const MergedHook& _h) {
+  MapUniqueInsert(m_mergedHooks, _label, _h);
 }
 
 /*----------------------------------- Debug ----------------------------------*/
@@ -370,12 +485,8 @@ void
 CCTracker<RoadmapType>::
 Print(std::ostream& _os, const std::string& _indent) const {
   _os << _indent << "There are " << GetNumCCs() << " CCs." << std::endl;
-  for(const auto& idCC : *this) {
-    const size_t id = idCC.first;
-    const auto& cc  = *idCC.second.get();
-
-    _os << _indent << "  CC " << id << ": " << cc << std::endl;
-  }
+  for(const VertexSet* const cc : m_components)
+    _os << _indent << "  CC " << cc << ": " << *cc << std::endl;
 }
 
 /*--------------------------------- Updates ----------------------------------*/
@@ -393,16 +504,17 @@ AddVertex(const vertex_iterator _vi) noexcept {
     throw RunTimeException(WHERE) << "Vertex " << vid << " is already in a CC.";
 
   // Create a new CC for this vertex.
-  m_ccs.emplace(m_nextID, std::shared_ptr<VertexSet>(new VertexSet{vid}));
-  m_vidToCC.emplace(vid, m_nextID);
+  VertexSet* const cc = new VertexSet{vid};
+  m_components.emplace(cc);
+  m_vidToCC.emplace(vid, cc);
 
   if(s_debug)
-    std::cout << "Added vertex " << vid << " to new CC " << m_nextID << ". "
+    std::cout << "Added vertex " << vid << " to new CC " << cc << ". "
               << "There are now " << GetNumCCs() << " CCs."
               << std::endl;
 
-  // Advance the next id.
-  ++m_nextID;
+  for(const auto& hook : m_createdHooks)
+    hook.second(this, cc);
 }
 
 
@@ -434,13 +546,16 @@ DeleteVertex(const vertex_iterator _vi) noexcept {
                                   << " is missing the query VID. Contents: "
                                   << *cc;
 
+  for(const auto& hook : m_deletedHooks)
+    hook.second(this, cc);
+
   // Remove the CC.
-  const size_t ccID = m_vidToCC[vid];
-  m_ccs.erase(ccID);
+  m_components.erase(cc);
+  delete cc;
   m_vidToCC.erase(vid);
 
   if(s_debug) {
-    std::cout << "Deleted vertex " << vid << " and CC " << ccID << "."
+    std::cout << "Deleted vertex " << vid << " and CC " << cc << "."
               << std::endl;
     Print(std::cout, "  ");
   }
@@ -459,8 +574,6 @@ AddEdge(const edge_iterator _ei) noexcept {
   nonstd::call_on_destruct stopper(m_clockStop, "CCTracker::AddEdge");
 
   // Adding an edge should always merge two CCs, which may already be the same.
-  // If either is dirty, we will clean it before merging to avoid making a
-  // bigger clean-up problem later.
   const VID sourceVID = (*_ei).source(),
             targetVID = (*_ei).target();
   VertexSet* const sourceCC = FindCC(sourceVID),
@@ -480,33 +593,33 @@ AddEdge(const edge_iterator _ei) noexcept {
 
   // Otherwise determine which CC is larger (by number of vertices).
   VertexSet* smallCC, * largeCC;
-  size_t smallID, largeID;
   if(sourceCC->size() < targetCC->size()) {
     smallCC = sourceCC;
-    smallID = m_vidToCC[sourceVID];
     largeCC = targetCC;
-    largeID = m_vidToCC[targetVID];
   }
   else {
     smallCC = targetCC;
-    smallID = m_vidToCC[targetVID];
     largeCC = sourceCC;
-    largeID = m_vidToCC[sourceVID];
   }
+
+  // Call hooks before merging.
+  for(const auto& hook : m_mergedHooks)
+    hook.second(this, largeCC, smallCC);
 
   // Merge the smaller CC into the larger one.
   std::copy(smallCC->begin(), smallCC->end(),
       std::inserter(*largeCC, largeCC->begin()));
 
-  // Update the CC IDs for the vertices which used to be in the small set.
+  // Update the CCs for the vertices which used to be in the small set.
   for(const VID vid : *smallCC)
-    m_vidToCC[vid] = largeID;
+    m_vidToCC[vid] = largeCC;
 
   // Remove the small CC.
-  m_ccs.erase(smallID);
+  m_components.erase(smallCC);
+  delete smallCC;
 
   if(s_debug) {
-    std::cout << "  Merged CC " << smallID << " into " << largeID << "."
+    std::cout << "  Merged CC " << smallCC << " into " << largeCC << "."
               << std::endl;
     Print(std::cout, "  ");
   }
@@ -566,39 +679,25 @@ DeleteEdge(const edge_iterator _ei) noexcept {
     return;
   }
 
-  // Otherwise, the discovered vertices are now in their own CC. Create a new CC
-  // rooted at the target.
-  sourceCC->erase(target);
-  m_vidToCC.erase(target);
-  vertex_iterator ti = m_roadmap->find_vertex(target);
-  if(ti == m_roadmap->end())
-    throw RunTimeException(WHERE) << "Target vertex is not in the roadmap.";
-  AddVertex(ti);
-
-  const size_t newID = m_vidToCC.at(target);
-  VertexSet* const newCC = FindCC(target);
-  const bool oops = sourceCC == newCC;
-  if(oops)
-    throw RunTimeException(WHERE) << "CC connecting "
-                                  << source << ", " << target
-                                  << " failed to break."
-                                  << std::endl;
-
-  // Move the remaining discovered nodes to the new CC.
-  discovered.erase(target);
+  // Otherwise they are now disconnected. Move the discovered vertices into
+  // their own new CC.
+  VertexSet* const newCC = new VertexSet;
+  m_components.insert(newCC);
   for(const VID vid : discovered) {
-    // Remove from old CC.
-    m_vidToCC[vid] = newID;
     sourceCC->erase(vid);
     newCC->insert(vid);
+    m_vidToCC[vid] = newCC;
   }
 
   if(s_debug) {
-    std::cout << "  Split off new CC " << newID << " from "
+    std::cout << "  Split off new CC " << newCC << " from "
               << m_vidToCC.at(source) << "."
               << std::endl;
     Print(std::cout, "  ");
   }
+
+  for(const auto& hook : m_brokenHooks)
+    hook.second(this, sourceCC, newCC);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -610,15 +709,14 @@ FindCC(const VID _vid) const noexcept {
   // Assert that we have the CC id for this vertex.
   auto iter = m_vidToCC.find(_vid);
   if(iter == m_vidToCC.end())
-    throw RunTimeException(WHERE) << "No CC ID found for vertex " << _vid << ".";
+    throw RunTimeException(WHERE) << "No CC found for vertex " << _vid << ".";
 
-  // Use the discovered id to find the CC structure.
-  const size_t ccID = iter->second;
-  auto ccIter = m_ccs.find(ccID);
-  if(ccIter == m_ccs.end())
-    throw RunTimeException(WHERE) << "No CC with ID " << ccID
-                                  << " found for vertex " << _vid << ".";
-  return ccIter->second.get();
+  // Assert that the component is present in the component set.
+  VertexSet* const cc = iter->second;
+  if(!m_components.count(cc))
+    throw RunTimeException(WHERE) << "No CC " << cc << " found for vertex "
+                                  << _vid << ".";
+  return cc;
 }
 
 
@@ -642,13 +740,11 @@ RecomputeCCs() noexcept {
   /// @warning This function assumes that VIDs grow in order of construction to
   ///          handle directed graphs.
   /// @TODO Remove the assumption. We will need to use predecessor information
-  ///       to do that, and the current function in RoadmapGraph is a
-  ///       linear-time lookup. We need to fix that before we can fix this.
+  ///       to do that.
 
   // Clear any previous CC info.
-  m_ccs.clear();
+  m_components.clear();
   m_vidToCC.clear();
-  m_nextID = 0;
 
   // Build a list of all vertices.
   std::set<VID> unmappedDescriptors;
@@ -659,17 +755,14 @@ RecomputeCCs() noexcept {
   while(!unmappedDescriptors.empty()) {
     // Get the next descriptor and compute its CC.
     const VID current = *unmappedDescriptors.begin();
-    auto ccIter = m_ccs.emplace(m_nextID,
-        std::shared_ptr<VertexSet>(new VertexSet(BFS(current))));
+    VertexSet* const cc = new VertexSet(BFS(current));
+    m_components.insert(cc);
 
     // Remove the discovered CC from the unmapped vertex set.
-    const VertexSet& cc = *ccIter.first->second.get(); // Wow!
-    for(const VID vid : cc) {
+    for(const VID vid : *cc) {
       unmappedDescriptors.erase(vid);
-      m_vidToCC[vid] = m_nextID;
+      m_vidToCC.emplace(vid, cc);
     }
-
-    ++m_nextID;
   }
 }
 
