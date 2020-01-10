@@ -205,7 +205,7 @@
 
       <DisassemblyRRTStrategy label="BasicDisassemblyRRT" debug="false"
         nfLabel="Nearest" vcLabel="pqp"
-        gtype="UNDIRECTED_TREE" samplerLabel="MaskedProximitySampler"
+        samplerLabel="MaskedProximitySampler"
         extenderLabel="BERO"
         successfulCheckME="MinClearanceEval">
 <!--  NOTE: the vc from the non-TimeEval of the two evaluators should match up

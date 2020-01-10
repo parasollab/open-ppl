@@ -19,6 +19,7 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename RoadmapType::VID           VID;
+    typedef typename RoadmapType::VertexSet     VertexSet;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
 
@@ -46,18 +47,28 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name NeighborhoodFinderMethod Interface
+    ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
-    template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
 
-    template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
+
+    ///@}
+
+  protected:
+
+    ///@name Helpers
+    ///@{
+
+    /// Templated implementation for both individual and group versions.
+    template <typename AbstractRoadmapType>
+    void FindNeighborsImpl(AbstractRoadmapType* const _r,
+        const typename AbstractRoadmapType::CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out);
 
     ///@}
 
@@ -77,18 +88,16 @@ class RadiusNF: public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 RadiusNF<MPTraits>::
-RadiusNF() : NeighborhoodFinderMethod<MPTraits>() {
+RadiusNF() : NeighborhoodFinderMethod<MPTraits>(Type::RADIUS) {
   this->SetName("RadiusNF");
-  this->m_nfType = Type::RADIUS;
 }
 
 
 template <typename MPTraits>
 RadiusNF<MPTraits>::
-RadiusNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
+RadiusNF(XMLNode& _node) :
+    NeighborhoodFinderMethod<MPTraits>(_node, Type::RADIUS) {
   this->SetName("RadiusNF");
-  this->m_nfType = Type::RADIUS;
-  this->m_radius = _node.Read("radius", true, 0.5, 0.0, MAX_DBL, "Radius");
 
   m_useFallback = _node.Read("useFallback", false, m_useFallback,
       "Use nearest node if none are found within the radius.");
@@ -106,15 +115,34 @@ Print(std::ostream& _os) const {
       << std::endl;
 }
 
-/*------------------- NeighborhoodFinderMethod Functions ---------------------*/
+/*-------------------- NeighborhoodFinderMethod Overrides --------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 RadiusNF<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+
+template <typename MPTraits>
+void
+RadiusNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+/*---------------------------------- Helpers ---------------------------------*/
+
+template <typename MPTraits>
+template <typename AbstractRoadmapType>
+void
+RadiusNF<MPTraits>::
+FindNeighborsImpl(AbstractRoadmapType* const _r,
+    const typename AbstractRoadmapType::CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   // The neighbor to use as a fallback if m_useFallback is set.
@@ -123,14 +151,13 @@ FindNeighbors(RoadmapType* _r,
   // Find all nodes within radius
   std::multiset<Neighbor> inRadius;
 
-  for(InputIterator it = _first; it != _last; it++) {
+  for(const VID vid : _candidates) {
     // Check for connectedness.
-    const VID vid = _r->GetVID(it);
-    if(this->DirectEdge(_r, _cfg, vid))
+    if(this->m_unconnected and this->DirectEdge(_r, _cfg, vid))
       continue;
 
     // Check for connection to self.
-    const CfgType& node = _r->GetVertex(it);
+    const auto& node = _r->GetVertex(vid);
     if(node == _cfg)
       continue;
 
@@ -153,17 +180,6 @@ FindNeighbors(RoadmapType* _r,
     inRadius.insert(fallback);
 
   std::copy(inRadius.begin(), inRadius.end(), _out);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-RadiusNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
 }
 
 /*----------------------------------------------------------------------------*/

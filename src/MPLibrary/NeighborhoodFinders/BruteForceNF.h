@@ -25,6 +25,7 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -39,12 +40,11 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    BruteForceNF(std::string _dmLabel = "", bool _unconnected = false,
-        size_t _k = 5);
+    BruteForceNF();
 
     BruteForceNF(XMLNode& _node);
 
-    virtual ~BruteForceNF();
+    virtual ~BruteForceNF() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -53,18 +53,28 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name NeighborhoodFinderMethod Interface
+    ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
-    template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
 
-    template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
+
+    ///@}
+
+  protected:
+
+    ///@name Helpers
+    ///@{
+
+    /// Templated implementation for both individual and group versions.
+    template <typename AbstractRoadmapType>
+    void FindNeighborsImpl(AbstractRoadmapType* const _r,
+        const typename AbstractRoadmapType::CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out);
 
     ///@}
 
@@ -74,26 +84,17 @@ class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 BruteForceNF<MPTraits>::
-BruteForceNF(std::string _dmLabel, bool _unconnected, size_t _k) :
-    NeighborhoodFinderMethod<MPTraits>(_dmLabel, _unconnected) {
+BruteForceNF() : NeighborhoodFinderMethod<MPTraits>(Type::K) {
   this->SetName("BruteForceNF");
-  this->m_nfType = Type::K;
-  this->m_k = _k;
 }
 
 
 template <typename MPTraits>
 BruteForceNF<MPTraits>::
-BruteForceNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
+BruteForceNF(XMLNode& _node) :
+    NeighborhoodFinderMethod<MPTraits>(_node, Type::K) {
   this->SetName("BruteForceNF");
-  this->m_nfType = Type::K;
-  this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 }
-
-
-template <typename MPTraits>
-BruteForceNF<MPTraits>::
-~BruteForceNF() = default;
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
@@ -106,35 +107,59 @@ Print(std::ostream& _os) const {
       << std::endl;
 }
 
-/*-------------------- NeighborhoodFinderMethod Interface --------------------*/
+/*-------------------- NeighborhoodFinderMethod Overrides --------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 BruteForceNF<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+
+template <typename MPTraits>
+void
+BruteForceNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+template <typename MPTraits>
+template <typename AbstractRoadmapType>
+void
+BruteForceNF<MPTraits>::
+FindNeighborsImpl(AbstractRoadmapType* const _r,
+    const typename AbstractRoadmapType::CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(this->m_debug)
     std::cout << "Checking for nearest " << this->m_k
               << " neighbors with dm '" << this->m_dmLabel << "'."
+              << "\n\tQuery cfg: " << _cfg.PrettyPrint()
               << std::endl;
 
-  // Keep sorted list of k best so far
-  /// @todo See if we can do this more efficiently with a std::set (also avoids
-  ///       the extra copy at the end).
+  // Keep a max pq of the k best so far (so that we can quickly test and remove
+  // the farthest).
   std::priority_queue<Neighbor> pq;
 
-  for(InputIterator it = _first; it != _last; it++) {
-    // Get the candidate VID and check for connectedness.
-    const VID vid = _r->GetVID(it);
-    if(this->DirectEdge(_r, _cfg, vid))
+  for(const VID vid : _candidates) {
+    // Check for prior connection.
+    if(this->m_unconnected and this->DirectEdge(_r, _cfg, vid))
       continue;
 
     // Get the candidate Cfg and check against connection to self.
-    const CfgType& node = _r->GetVertex(it);
+    const auto& node = _r->GetVertex(vid);
     if(node == _cfg)
       continue;
 
@@ -164,66 +189,7 @@ FindNeighbors(RoadmapType* _r,
     pq.pop();
   }
 
-  // Reverse order
-  std::copy(closest.rbegin(), closest.rend(), _out);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-BruteForceNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
-
-  if(this->m_debug)
-    std::cout << "Checking for nearest " << this->m_k
-              << " neighbors with dm '" << this->m_dmLabel << "'."
-              << std::endl;
-
-  // Keep sorted list of k best so far
-  std::priority_queue<Neighbor> pq;
-
-  for(InputIterator it = _first; it != _last; it++) {
-    // Check for connectedness.
-    const VID vid = _r->GetVID(it);
-    if(this->DirectEdge(_r, _cfg, vid))
-      continue;
-
-    // Get the configuration and check for connection to self.
-    const GroupCfgType& node = _r->GetVertex(it);
-    if(node == _cfg)
-      continue;
-
-    // Check distance. If it is infinite, these are not connectable.
-    const double distance = dm->Distance(node, _cfg);
-    if(std::isinf(distance))
-      continue;
-
-    // Track the closest m_k neighbors.
-    if(pq.size() < this->m_k) {
-      pq.emplace(vid, distance);
-    }
-    else if(distance < pq.top().distance) {
-      pq.pop();
-      pq.emplace(vid, distance);
-    }
-  }
-
-  if(this->m_debug)
-    std::cout << "\tFound " << pq.size() << " neighbors." << std::endl;
-
-  // Transfer k closest to vector, sorted greatest to least distance
-  std::vector<Neighbor> closest;
-  closest.reserve(pq.size());
-  while(!pq.empty()) {
-    closest.push_back(pq.top());
-    pq.pop();
-  }
-
-  // Reverse order
+  // Write to output iterator in reverse order.
   std::copy(closest.rbegin(), closest.rend(), _out);
 }
 

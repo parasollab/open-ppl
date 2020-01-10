@@ -9,8 +9,9 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Runs two other NeighborhoodFinders in order. The results from the first will
-/// be passed as candidates to the second.
+/// A meta-method which runs multiple NeighborhoodFinders in order. The results
+/// from each method are passed as candidates to the next.
+///
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -24,6 +25,7 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -42,7 +44,7 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
 
     HierarchicalNF(XMLNode& _node);
 
-    virtual ~HierarchicalNF();
+    virtual ~HierarchicalNF() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -51,28 +53,37 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name NeighborhoodFinder Interface
+    ///@name NeighborhoodFinder Overrides
     ///@{
 
-    template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
 
-    template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    /// @overload This version is for group roadmaps.
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
 
     ///@}
 
   private:
 
+    ///@name Helpers
+    ///@{
+
+    /// Templated implementation for both individual and group versions.
+    template <typename AbstractRoadmapType>
+    void FindNeighborsImpl(AbstractRoadmapType* const _r,
+        const typename AbstractRoadmapType::CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out);
+
+    ///@}
     ///@name Internal State
     ///@{
 
-    std::string m_nfLabel;  ///< The first NF to use.
-    std::string m_nfLabel2; ///< The second NF.
+    std::vector<std::string> m_nfLabels;  ///< The NF labels to use, in order.
+    std::vector<Neighbor> m_neighborBuffer; ///< Buffer between method calls.
+    VertexSet m_candidateBuffer;            ///< Buffer between method calls.
 
     ///@}
 
@@ -82,26 +93,22 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 HierarchicalNF<MPTraits>::
-HierarchicalNF() : NeighborhoodFinderMethod<MPTraits>() {
+HierarchicalNF() : NeighborhoodFinderMethod<MPTraits>(Type::OTHER) {
   this->SetName("HierarchicalNF");
-  this->m_nfType = Type::OTHER;
 }
 
 
 template <typename MPTraits>
 HierarchicalNF<MPTraits>::
-HierarchicalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, false) {
+HierarchicalNF(XMLNode& _node) :
+    NeighborhoodFinderMethod<MPTraits>(_node, Type::OTHER, false) {
   this->SetName("HierarchicalNF");
-  this->m_nfType = Type::OTHER;
 
-  m_nfLabel = _node.Read("nfLabel", true, "", "Neighbor Finder Method1");
-  m_nfLabel2 = _node.Read("nfLabel2", true, "", "Neighbor Finder Method2");
+  for(auto& child : _node)
+    if(child.Name() == "NeighborhoodFinder")
+      m_nfLabels.push_back(child.Read("label", true, "",
+          "NeighborhoodFinder Method"));
 }
-
-
-template <typename MPTraits>
-HierarchicalNF<MPTraits>::
-~HierarchicalNF() = default;
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
@@ -110,45 +117,66 @@ void
 HierarchicalNF<MPTraits>::
 Print(std::ostream& _os) const {
   NeighborhoodFinderMethod<MPTraits>::Print(_os);
-  _os << "\tnfLabel: " << m_nfLabel
-      << "\n\tnfLabel2: " << m_nfLabel2
-      << std::endl;
+  for(const std::string& label : m_nfLabels)
+    _os << "\tLabel: " << label << std::endl;
 }
 
-/*----------------------- NeighborhoodFinder Interface -----------------------*/
+/*-------------------- NeighborhoodFinderMethod Overrides --------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 HierarchicalNF<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
-  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  auto nf2 = this->GetNeighborhoodFinder(m_nfLabel2);
-
-  std::vector<Neighbor> closest;
-  nf->FindNeighbors(_r, _first, _last, _fromFullRoadmap, _cfg,
-      std::back_inserter(closest));
-
-  std::vector<VID> closestVID;
-  closestVID.reserve(closest.size());
-  for(const auto& p : closest)
-    closestVID.push_back(p.target);
-
-  nf2->FindNeighbors(_r, closestVID.begin(), closestVID.end(), false,
-      _cfg, _out);
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 HierarchicalNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+
+template <typename MPTraits>
+template <typename AbstractRoadmapType>
+void
+HierarchicalNF<MPTraits>::
+FindNeighborsImpl(AbstractRoadmapType* const _r,
+    const typename AbstractRoadmapType::CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
+  // Run each method in succession.
+  m_candidateBuffer = _candidates;
+  for(auto iter = m_nfLabels.begin(); ; ) {
+    // Find neighbors with the current method and candidate set.
+    m_neighborBuffer.clear();
+    this->GetNeighborhoodFinder(*iter)->FindNeighbors(_r, _cfg,
+        m_candidateBuffer, std::back_inserter(m_neighborBuffer));
+
+    // Check if this was the last method.
+    ++iter;
+    const bool lastMethod = iter == m_nfLabels.end();
+    if(lastMethod)
+      break;
+
+    // This isn't the last method, the discovered neighbors become the
+    // candidates.
+    m_candidateBuffer.clear();
+    for(const auto& neighbor : m_neighborBuffer)
+      m_candidateBuffer.insert(neighbor.target);
+  }
+
+  // Copy the final result set to the output iterator.
+  for(const auto& neighbor : m_neighborBuffer)
+    _out = neighbor;
 }
 
 /*----------------------------------------------------------------------------*/

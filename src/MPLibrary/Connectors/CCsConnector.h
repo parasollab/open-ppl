@@ -146,7 +146,7 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
     // Determine nearest neighbors in the representative's CC.
     m_neighborBuffer.clear();
     if(_targetSet)
-      nf->FindNeighbors(_r, cfg, IntersectVertexSets(cc, *_targetSet),
+      nf->FindNeighbors(_r, cfg, VertexSetIntersection(cc, *_targetSet),
           std::back_inserter(m_neighborBuffer));
     else
       nf->FindNeighbors(_r, cfg, cc, std::back_inserter(m_neighborBuffer));

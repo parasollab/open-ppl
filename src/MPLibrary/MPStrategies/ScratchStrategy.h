@@ -20,6 +20,7 @@ class ScratchStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::VertexSet VertexSet;
 
     ///@}
     ///@name Construction

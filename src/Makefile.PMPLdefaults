@@ -151,15 +151,18 @@ $(MODELLOADER_LIBFILE): $(CGAL_LIBFILE)
 ################################################################################
 ## MPNN
 ################################################################################
-MPNN_DIR  := $(UTILS_DIR)/nearest_neighbors/MPNN
-MPNN_SRC  := $(MPNN_DIR)/src
-MPNN_LIB  := -L$(MPNN_SRC) -lMPNN
-MPNN_INCL := -I$(MPNN_DIR)/include
-
-MPNN_LIBFILE := $(MPNN_SRC)/libMPNN.a
-$(MPNN_LIBFILE):
-	@echo Building MPNN library...
-	@cd $(MPNN_SRC) && $(MAKE) platform=$(platform) debug=$(debug)
+# This lib is disabled, probably forever. We'll likely need to re-implement it
+# entirely if we ever need it (see comments in
+# deadcode/NeighborhoodFinders/MPNNNF.h).
+#MPNN_DIR  := $(UTILS_DIR)/nearest_neighbors/MPNN
+#MPNN_SRC  := $(MPNN_DIR)/src
+#MPNN_LIB  := -L$(MPNN_SRC) -lMPNN
+#MPNN_INCL := -I$(MPNN_DIR)/include
+#
+#MPNN_LIBFILE := $(MPNN_SRC)/libMPNN.a
+#$(MPNN_LIBFILE):
+#	@echo Building MPNN library...
+#	@cd $(MPNN_SRC) && $(MAKE) platform=$(platform) debug=$(debug)
 
 ################################################################################
 ## KMeans
@@ -285,7 +288,7 @@ SANDBOX_DIR := $(GLVIS_DIR)/sandbox
 GLVIS_INCL  := -I$(GLVIS_DIR)/nonstd -I$(GLVIS_DIR)/glutils -I$(GLVIS_DIR)
 GLVIS_LIBS  := -L$(GLVIS_DIR)/nonstd -L$(GLVIS_DIR)/glutils -L$(SANDBOX_DIR) \
                -lglsandbox -lglutils -lnonstd
- 
+
 GLVIS_LIBFILE := $(SANDBOX_DIR)/libglsandbox.a
 $(GLVIS_LIBFILE):
 	@echo Building gl_visualizer library...

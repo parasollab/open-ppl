@@ -53,6 +53,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
     typedef typename RoadmapType::VI                  VI;
+    typedef typename RoadmapType::VertexSet           VertexSet;
     typedef WorkspaceDecomposition::vertex_descriptor VD;
     typedef WorkspaceDecomposition::adj_edge_iterator EI;
 
@@ -68,6 +69,9 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// A pair of regions, which act as a hash key when caching the inter-region
     /// distances.
     typedef std::pair<const WorkspaceRegion*, const WorkspaceRegion*> RegionPair;
+
+    /// A map of the VIDs occupying a given region.
+    typedef std::map<const WorkspaceRegion*, VertexSet> OccupancyMap;
 
     ///@}
     ///@name Construction
@@ -93,14 +97,14 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _region The region of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    std::vector<VID> GetMappedVIDs(const WorkspaceRegion* const _region,
+    VertexSet GetMappedVIDs(const WorkspaceRegion* const _region,
         const size_t _bodyIndex = 0) const;
 
     /// Get the set of VIDs that are bucketed within a set of regions.
     /// @param _regions The regions of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    std::vector<VID> GetMappedVIDs(
+    VertexSet GetMappedVIDs(
         const std::vector<const WorkspaceRegion*>& _regions,
         const size_t _bodyIndex = 0) const;
 
@@ -109,7 +113,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _end An end iterator to the region descriptors of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    std::vector<VID> GetMappedVIDs(
+    VertexSet GetMappedVIDs(
         std::vector<VD>::const_iterator _begin,
         std::vector<VD>::const_iterator _end,
         const size_t _bodyIndex = 0) const;
@@ -217,7 +221,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// a designated cell.
     /// @param _region The starting region.
     /// @param _bodyIndex The body to use.
-    /// @param _earlyStopDistance Stop after the last cell added is this far
+    /// @param _backtrackDistance Stop after the last cell added is this far
     ///                           from the first populated cell. Use -1 to
     ///                           disable.
     /// @param _adjacency An optional adjacency map to use instead of the
@@ -227,7 +231,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     SSSPData
     ComputeFrontier(const WorkspaceRegion* const _region,
         const size_t _bodyIndex = 0,
-        const double _earlyStopDistance = -1,
+        const double _backtrackDistance = -1,
         const AdjacencyMap& _adjacency = {});
 
     /// The AO-compatible verison.
@@ -288,8 +292,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// Get the forward map from region -> VIDs for a given body.
     /// @param _bodyIndex The body index.
     /// @return The map for this body.
-    const std::map<const WorkspaceRegion*, std::vector<VID>>& GetForwardMap(
-        const size_t _bodyIndex) const;
+    const OccupancyMap& GetForwardMap(const size_t _bodyIndex) const;
 
     /// Get the inverse map from VID -> regions for each body.
     /// @param _vid The VID to unmap.
@@ -326,8 +329,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     GridOverlay::DecompositionMap m_cellToRegions;
 
     /// A mapping from workspace regions to contained VIDs.
-    std::vector<std::map<const WorkspaceRegion*, std::vector<VID>>>
-        m_regionToVIDs;
+    std::vector<OccupancyMap> m_regionToVIDs;
 
     /// An inverse mapping from VID to the containing neighborhood.
     std::unordered_map<VID, NeighborhoodKey> m_vidToNeighborhood;
@@ -504,7 +506,7 @@ Initialize() {
 /*---------------------------------- Queries ---------------------------------*/
 
 template <typename MPTraits>
-std::vector<typename TopologicalMap<MPTraits>::VID>
+typename MPTraits::RoadmapType::VertexSet
 TopologicalMap<MPTraits>::
 GetMappedVIDs(const WorkspaceRegion* const _region, const size_t _bodyIndex)
     const {
@@ -518,12 +520,12 @@ GetMappedVIDs(const WorkspaceRegion* const _region, const size_t _bodyIndex)
   const auto& forwardMap = GetForwardMap(_bodyIndex);
 
   auto iter = forwardMap.find(_region);
-  return iter == forwardMap.end() ? std::vector<VID>() : iter->second;
+  return iter == forwardMap.end() ? VertexSet() : iter->second;
 }
 
 
 template <typename MPTraits>
-std::vector<typename TopologicalMap<MPTraits>::VID>
+typename MPTraits::RoadmapType::VertexSet
 TopologicalMap<MPTraits>::
 GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
     const size_t _bodyIndex) const {
@@ -535,7 +537,7 @@ GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
   // Find all VIDs that live within the region set.
   /// @todo Profile effect of changing all to a std::set and removing the later
   ///       sort/unique calls.
-  std::vector<VID> all;
+  VertexSet all;
   for(const auto region : _regions) {
     // Skip empty regions.
     auto iter = forwardMap.find(region);
@@ -544,24 +546,15 @@ GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
 
     // Copy these VIDs.
     const auto& vids = iter->second;
-    std::copy(vids.begin(), vids.end(), std::back_inserter(all));
+    VertexSetUnionInPlace(all, vids);
   }
-
-  // Sort and make sure list is unique.
-  std::sort(all.begin(), all.end());
-  auto newEnd = std::unique(all.begin(), all.end());
-
-  // Check that we didn't double-add any vertices.
-  if(all.end() != newEnd)
-    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex "
-                                  << "should be mapped to only one region.";
 
   return all;
 }
 
 
 template <typename MPTraits>
-std::vector<typename TopologicalMap<MPTraits>::VID>
+typename MPTraits::RoadmapType::VertexSet
 TopologicalMap<MPTraits>::
 GetMappedVIDs(
     std::vector<VD>::const_iterator _begin,
@@ -578,33 +571,19 @@ GetMappedVIDs(
   auto decomposition = this->GetDecomposition();
 
   // Find all VIDs that live within the region set.
-  /// @todo Profile effect of changing all to a std::set and removing the later
-  ///       sort/unique calls.
-  std::vector<VID> all;
-  for(auto vidIter = _begin; vidIter != _end; ++vidIter) {
-    const WorkspaceRegion& region = decomposition->GetRegion(*vidIter);
+  VertexSet all;
+  for(auto wdIter = _begin; wdIter != _end; ++wdIter) {
+    const WorkspaceRegion& region = decomposition->GetRegion(*wdIter);
 
     // Skip empty regions.
     auto iter = forwardMap.find(&region);
     if(iter == forwardMap.end())
       continue;
 
-    // Copy these VIDs into all.
+    // Copy these VIDs.
     const auto& vids = iter->second;
-    const size_t size = all.size();
-    std::copy(vids.begin(), vids.end(), std::back_inserter(all));
-
-    // In-place merge the all VIDs list.
-    auto mid = all.begin();
-    std::advance(mid, size);
-    std::inplace_merge(all.begin(), mid, all.end());
+    VertexSetUnionInPlace(all, vids);
   }
-
-  // Check that we didn't double-add any vertices.
-  auto newEnd = std::unique(all.begin(), all.end());
-  if(all.end() != newEnd)
-    throw RunTimeException(WHERE) << "Unique removed vertices. Each vertex "
-                                  << "should be mapped to only one region.";
 
   return all;
 }
@@ -831,7 +810,7 @@ MapCfg(const VI _vertex) {
   // Forward-map the regions to the VID.
   for(size_t i = 0; i < neighborhood.size(); ++i) {
     auto region = neighborhood[i];
-    m_regionToVIDs[i][region].push_back(vid);
+    m_regionToVIDs[i][region].insert(vid);
   }
 
   // Inverse-map the VID to the regions.
@@ -865,7 +844,8 @@ UnmapCfg(const VI _vertex) {
 
     if(vidIter == regionMap.end())
       throw RunTimeException(WHERE) << "Tried to unmap vertex " << vid
-                                    << ", but it was missing from it's region map.";
+                                    << ", but it was missing from it's region "
+                                    << "map.";
 
     // Remove this vertex from the map.
     regionMap.erase(vidIter);
@@ -886,8 +866,7 @@ ClearCfgMaps() {
 
 template <typename MPTraits>
 inline
-const std::map<const WorkspaceRegion*,
-               std::vector<typename MPTraits::RoadmapType::VID>>&
+const typename TopologicalMap<MPTraits>::OccupancyMap&
 TopologicalMap<MPTraits>::
 GetForwardMap(const size_t _bodyIndex) const {
   try {
@@ -931,69 +910,67 @@ template <typename MPTraits>
 typename TopologicalMap<MPTraits>::SSSPData
 TopologicalMap<MPTraits>::
 ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
-    const double _earlyStopDistance, const AdjacencyMap& _adjacency) {
+    const double _backtrackDistance, const AdjacencyMap& _adjacency) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeFrontier");
   stats->IncStat(this->GetNameAndLabel() + "::ComputeFrontier");
 
+  // Get the descriptor of the root node.
   // Const cast is required because STAPL has an API error preventing useful
   // iteration over const graphs.
   auto wd = const_cast<WorkspaceDecomposition*>(this->GetDecomposition());
+  const VD root = wd->GetDescriptor(*_region);
 
   if(this->m_debug)
     std::cout << "TopologicalMap::ComputeFrontier"
-              << "\n\tSearching from region " << wd->GetDescriptor(*_region)
+              << "\n\tSearching from region " << root
               << "\n\tBody index: " << _bodyIndex
+              << "\n\tBacktrack distance: " << _backtrackDistance
               << std::endl;
 
-  // Create an early stop criterion if required.
-  SSSPTerminationCriterion<WorkspaceDecomposition> stop;
+  // If we aren't using an early stop, run Dijkstra's with no special stopping
+  // criterion.
+  const bool earlyStop = _backtrackDistance != -1;
+  if(!earlyStop)
+    return DijkstraSSSP(wd, {root}, _adjacency);
 
-  // Create storage for the maximum distance and whether we have found a
-  // populated region.
+  // Create an early stop criterion. Make storage for the maximum distance and
+  // whether we have found a populated region.
   double maxDistance = std::numeric_limits<double>::max();
   bool foundFirstPopulated = false;
+  SSSPTerminationCriterion<WorkspaceDecomposition> stop =
+      [this, wd, _bodyIndex, _backtrackDistance, &maxDistance,
+          &foundFirstPopulated](
+          typename WorkspaceDecomposition::vertex_iterator& _vi,
+          const SSSPOutput<WorkspaceDecomposition>& _sssp)
+      {
+        const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
+        const double distance = _sssp.distance.at(vd);
 
-  const bool earlyStop = _earlyStopDistance != -1;
-  if(earlyStop)
-    stop = [this, wd, _bodyIndex, _earlyStopDistance, &maxDistance,
-            &foundFirstPopulated](
-        typename WorkspaceDecomposition::vertex_iterator& _vi,
-        const SSSPOutput<WorkspaceDecomposition>& _sssp) {
-      const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
-      const double distance = _sssp.distance.at(vd);
-
-      // If we haven't found the first populated region yet, check for it now.
-      if(!foundFirstPopulated) {
-        auto& region = wd->GetRegion(vd);
-        if(this->IsPopulated(&region, _bodyIndex)) {
+        // If we haven't found the first populated region yet, check for it now.
+        if(!foundFirstPopulated
+            and this->IsPopulated(&wd->GetRegion(vd), _bodyIndex)) {
           foundFirstPopulated = true;
-          maxDistance = distance + _earlyStopDistance;
+          maxDistance = distance + _backtrackDistance;
 
           if(this->m_debug)
             std::cout << "\t\tFirst populated node found, max distance is "
                       << std::setprecision(4) << maxDistance << "."
                       << std::endl;
         }
-      }
 
-      // Check for exceeding the max distance (not an else-condition incase the
-      // max distance is 0).
-      if(foundFirstPopulated and distance >= maxDistance) {
-        if(this->m_debug)
-          std::cout << "\t\tLast populated node found at distance "
-                    << std::setprecision(4) << distance
-                    << std::endl;
-        return SSSPTermination::EndSearch;
-      }
+        // Check for exceeding the max distance (not an else-condition in case
+        // the max distance is 0).
+        if(foundFirstPopulated and distance >= maxDistance) {
+          if(this->m_debug)
+            std::cout << "\t\tLast populated node found at distance "
+                      << std::setprecision(4) << distance
+                      << std::endl;
+          return SSSPTermination::EndSearch;
+        }
 
-      return SSSPTermination::Continue;
-    };
-  else
-    stop = SSSPDefaultTermination<WorkspaceDecomposition>();
-
-  // Get the descriptor of the root node.
-  const VD root = wd->GetDescriptor(*_region);
+        return SSSPTermination::Continue;
+      };
 
   return DijkstraSSSP(wd, {root}, stop, _adjacency);
 }
@@ -1071,11 +1048,6 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::ApproximateMinimumInnerDistance");
 
-  /// @todo Refactor this and SSSP code to unify implementations. I think it
-  ///       should be feasible to make an adaptor class to give our grid (which
-  ///       represents an implicit graph) an API that is compatible with the
-  ///       STAPL (explicit) graph.
-
   // First check for the trivial case.
   if(_source == _target)
     return 0;
@@ -1096,6 +1068,11 @@ void
 TopologicalMap<MPTraits>::
 ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
     const double _radius) {
+  /// @todo Refactor this and SSSP code to unify implementations. I think it
+  ///       should be feasible to make an adaptor class to give our grid (which
+  ///       represents an implicit graph) an API that is compatible with the
+  ///       STAPL (explicit) graph.
+
   // Check if we've already computed for this source.
   {
     const RegionPair key = MakeKey(_source, nullptr);

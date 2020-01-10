@@ -81,26 +81,15 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name NeighborhoodFinder Functions
+    ///@name NeighborhoodFinder Overrides
     ///@{
 
-    /// An efficient implementation of this NF requires the ability to check
-    /// whether a vertex is in the candidate set in constant time.
-    virtual void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
         const VertexSet& _candidates, OutputIterator _out) override;
 
-    /// Filter the candidate range. Pass only the topologically relevant
-    /// candidates to the underlying NF.
-    template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
-
-    /// Not implemented.
-    template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
 
     ///@}
 
@@ -124,7 +113,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     /// @param _inputCandidates The set of allowed candidates, or the roadmap if
     ///                         empty.
     /// @return The set of VIDs that are good topological candidates for _query.
-    std::vector<VID> FindCandidates(const CfgType& _cfg,
+    VertexSet FindCandidates(const CfgType& _cfg,
         const VertexSet& _inputCandidates = {});
 
     ///@}
@@ -173,7 +162,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 TopologicalFilter<MPTraits>::
-TopologicalFilter() : NeighborhoodFinderMethod<MPTraits>() {
+TopologicalFilter() : NeighborhoodFinderMethod<MPTraits>(Type::OTHER) {
   this->SetName("TopologicalFilter");
 }
 
@@ -181,10 +170,8 @@ TopologicalFilter() : NeighborhoodFinderMethod<MPTraits>() {
 template <typename MPTraits>
 TopologicalFilter<MPTraits>::
 TopologicalFilter(XMLNode& _node)
-    : NeighborhoodFinderMethod<MPTraits>(_node, false) {
+    : NeighborhoodFinderMethod<MPTraits>(_node, Type::OTHER, false) {
   this->SetName("TopologicalFilter");
-
-  this->m_nfType = Type::OTHER;
 
   m_nfLabel = _node.Read("nfLabel", true, "", "Label for the underlying NF.");
 
@@ -231,12 +218,12 @@ Print(std::ostream& _os) const {
       << std::endl;
 }
 
-/*----------------------- NeighborhoodFinder Functions -----------------------*/
+/*----------------------- NeighborhoodFinder Overrides -----------------------*/
 
 template <typename MPTraits>
 void
 TopologicalFilter<MPTraits>::
-FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
@@ -256,7 +243,7 @@ FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
 
   // Find the topological candidate vertices.
-  std::vector<VID> topologicalCandidates = FindCandidates(_cfg, _candidates);
+  VertexSet topologicalCandidates = FindCandidates(_cfg, _candidates);
   stats->GetAverage(id + "::TopologicalCandidates") +=
       topologicalCandidates.size();
 
@@ -289,42 +276,17 @@ FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
               << std::endl;
 
   // Call the underlying NF on the reduced candidate set.
-  nf->FindNeighbors(_r,
-      topologicalCandidates.begin(), topologicalCandidates.end(),
-      topologicalCandidates.size() == this->GetRoadmap()->Size(),
-      _cfg, _out);
+  nf->FindNeighbors(_r, _cfg, topologicalCandidates, _out);
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 TopologicalFilter<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
-  // In the end we'll end up spending more effort finding extra candidates and
-  // intersecting them with the viable set, so we mitigate this by copying the
-  // input descriptors to an unordered set up front. This also ensures that we
-  // won't identify the first populated cell using an inviable candidate, which
-  // screws up the subsequent frontier computation.
-  const size_t size = std::distance(_first, _last);
-  std::unordered_set<size_t> candidates;
-  candidates.reserve(size);
-  for(auto iter = _first; iter != _last; ++iter)
-    candidates.insert(_r->GetVID(iter));
-
-  this->FindNeighbors(_r, _cfg, candidates, _out);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-TopologicalFilter<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  /// @todo This should be feasible for groups in a similar fashion to
+  ///       multibodies.
   throw NotImplementedException(WHERE);
 }
 
@@ -380,42 +342,47 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
   // Find the first marker by scanning the distance map for the closest occupied
   // cell.
   PopulationMarkers markers{ordering.begin(), ordering.end()};
-  // If we have no input candidates, then we only care about finding the first
-  // populated cell for this body.
-  if(_inputCandidates.empty()) {
-    for(; markers.first != ordering.end(); ++markers.first) {
-      // Get the next cell.
-      auto& region = decomposition->GetRegion(*markers.first);
-      // If it is populated, markers.first is in the right spot.
-      if(tm->IsPopulated(&region, _bodyIndex))
-        break;
-    }
-  }
-  // Otherwise, we need to find the first populated cell with a valid
-  // candidate.
-  else {
-    bool found = false;
-    for(; markers.first != ordering.end(); ++markers.first) {
-      // Get the VIDs in the next cell.
-      auto& region = decomposition->GetRegion(*markers.first);
-      const std::vector<VID> cellVIDs = tm->GetMappedVIDs(&region, _bodyIndex);
+  for(; markers.first != ordering.end(); ++markers.first) {
+    // Get the next cell.
+    auto& region = decomposition->GetRegion(*markers.first);
 
-      // Check whether any of the cell VIDs are
-      for(const auto vid : cellVIDs) {
-        found |= _inputCandidates.count(vid);
-        if(found)
-          break;
-      }
-      if(found)
-        break;
+    // If it isn't populated, keep going.
+    if(!tm->IsPopulated(&region, _bodyIndex))
+      continue;
+
+    // If there are any points in common between this region's VIDs and
+    // our input candidate set, we've found the first marker.
+    const VertexSet& cellVIDs = tm->GetMappedVIDs(&region, _bodyIndex);
+    const VertexSet* small, * large;
+    if(cellVIDs.size() < _inputCandidates.size()) {
+      small = &cellVIDs;
+      large = &_inputCandidates;
     }
+    else {
+      small = &_inputCandidates;
+      large = &cellVIDs;
+    }
+    const bool sharedElement = std::any_of(small->begin(), small->end(),
+        [&large](const VID _v){return large->count(_v);});
+    if(sharedElement)
+      break;
   }
 
   // Check for no markers. We may find none if the underlying NF is a radius
   // type, or if the query occurs in a region of workspace that is disconnected
   // from the rest of the roadmap.
-  if(markers.first == markers.second)
+  if(markers.first == markers.second) {
+    if(this->m_debug)
+      std::cout << "\t\t\tNo populated cells." << std::endl;
     return markers;
+  }
+
+  if(this->m_debug)
+    std::cout << "\t\t\tFirst populated cell " << *markers.first
+              << " in order " << std::distance(ordering.begin(), markers.first)
+              << " has distance "
+              << std::setprecision(4) << distance.at(*markers.first) << "."
+              << std::endl;
 
   // If the underlying NF is radius, we currently need the whole set (might
   // change if we adjust the SSSP computation).
@@ -428,11 +395,7 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
                            + m_backtrackDistance;
 
   if(this->m_debug)
-    std::cout << "\t\t\tFirst populated cell " << *markers.first
-              << " in order " << std::distance(ordering.begin(), markers.first)
-              << " has distance "
-              << std::setprecision(4) << distance.at(*markers.first) << "."
-              << "\n\t\t\tSearching for new last cell with max distance "
+    std::cout << "\t\t\tSearching for new last cell with max distance "
               << std::setprecision(4) << maxDistance << "."
               << std::endl;
 
@@ -490,7 +453,7 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
 
 
 template <typename MPTraits>
-std::vector<typename MPTraits::RoadmapType::VID>
+typename MPTraits::RoadmapType::VertexSet
 TopologicalFilter<MPTraits>::
 FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
   MethodTimer mt(this->GetStatClass(),
@@ -499,7 +462,7 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto mb = this->GetTask()->GetRobot()->GetMultiBody();
 
-  std::vector<VID> candidates;
+  VertexSet candidates;
 
   // For n bodies, make n vertex sets to track the descriptors which have been
   // seen n + 1 times.
@@ -568,49 +531,37 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
     }
   }
 
-  // Define a function for joining the descriptors in a count set with the
-  // output candidates.
-  candidates.clear();
-  auto join = [&candidates](const VertexSet& _countSet) {
-    // Reserve space for the incoming descriptors.
-    candidates.reserve(candidates.size() + _countSet.size());
-
-    // Copy the count set to the end of the new candidates.
-    auto oldEnd = candidates.end();
-    candidates.insert(oldEnd, _countSet.begin(), _countSet.end());
-    auto newEnd = candidates.end();
-
-    /// @todo Do we need to sort the returned descriptors?
-    // Sort the newly copied candidates.
-    std::sort(oldEnd, newEnd);
-    // Merge the two sorted lists.
-    std::inplace_merge(candidates.begin(), oldEnd, newEnd);
-  };
-
   // We have counted all of the descriptors in each body's frontier. Determine
   // the best set to return for the underlying NF.
-  // For k-nearest, add candidates from the best to worst count set until we
-  // have at least k.
-  // For radius, include the two best count sets?
+  candidates.clear();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   switch(nf->GetType()) {
+    // For k-nearest, add candidates from the best to worst count set until we
+    // have at least k.
     case NeighborhoodFinderMethod<MPTraits>::Type::K:
       {
         const size_t desiredVertices = nf->GetK();
         for(auto iter = countSets.rbegin();
             iter != countSets.rend() and candidates.size() < desiredVertices;
             ++iter)
-          join(*iter);
+          VertexSetUnionInPlace(candidates, *iter);
       }
       break;
+    // For radius, include the two best non-empty count sets?
+    /// @todo Wtf is this. Justify this heuristic or come up with one we can
+    ///       justify.
     case NeighborhoodFinderMethod<MPTraits>::Type::RADIUS:
       {
         size_t count = 0;
         const size_t maxCount = 2;
         for(auto iter = countSets.rbegin();
             iter != countSets.rend() and count < maxCount;
-            ++iter, ++count)
-          join(*iter);
+            ++iter) {
+          if(iter->empty())
+            continue;
+          VertexSetUnionInPlace(candidates, *iter);
+          ++count;
+        }
       }
       break;
     default:
@@ -758,6 +709,11 @@ GetSSSPData(const WorkspaceRegion* _region) {
 
   // Do the entire search for now. We will worry about pruning it later.
   // With no early-stop condition, the body index doesn't matter.
+  /// @todo This fails to leverage a major advantage of the filter in large
+  ///       workspaces, which is that we should only need to search until
+  ///       discovering the frontier plust backtrack distance. If the frontier
+  ///       is close and the decomposition is large, this wastes a lot of
+  ///       effort.
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
 
   auto& ssspCache = m_ssspCache[_region];

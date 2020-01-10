@@ -314,6 +314,23 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   if(_goals.count(_start))
     return {_start};
 
+  // Check for impossibility with CC information (if available).
+  auto ccTracker = m_roadmap->GetCCTracker();
+  if(ccTracker) {
+    const bool impossible = std::none_of(_goals.begin(), _goals.end(),
+        [ccTracker, _start](const VID _vid) {
+          return ccTracker->InSameCC(_start, _vid);
+        }
+    );
+
+    if(impossible) {
+      if(this->m_debug)
+        std::cout << "\tStart and goal in different CCs, no path exists"
+                  << std::endl;
+      return {};
+    }
+  }
+
   stats->IncStat("Graph Search");
 
   // Set up the termination criterion to quit early if we find a goal node.

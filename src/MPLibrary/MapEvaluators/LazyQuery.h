@@ -174,7 +174,7 @@ class LazyQuery : public QueryMethod<MPTraits> {
     bool m_deleteInvalid{true};   ///< Remove invalid vertices from the roadmap?
 
     std::vector<int> m_resolutions{1}; ///< List of resolution multiples to check.
-    int m_numEnhance{0};          ///< Number of enhancement nodes to generate.
+    size_t m_numEnhance{0};       ///< Number of enhancement nodes to generate.
     double m_d{0};                ///< Gaussian distance for enhancement sampling.
 
     /// Candidate edges for enhancement sampling.
@@ -209,9 +209,11 @@ LazyQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
   m_deleteInvalid = _node.Read("deleteInvalid", false, m_deleteInvalid,
       "Remove invalid vertices from the roadmap?");
 
-  m_numEnhance = _node.Read("numEnhance", false, m_numEnhance, 0, MAX_INT,
+  m_numEnhance = _node.Read("numEnhance", false, m_numEnhance,
+      size_t(0), std::numeric_limits<size_t>::max(),
       "Number of nodes to generate in node enhancement");
-  m_d = _node.Read("d", false, m_d, 0., MAX_DBL,
+  m_d = _node.Read("d", false, m_d,
+      0., std::numeric_limits<double>::max(),
       "Gaussian d value for node enhancement");
   m_enhanceDmLabel = _node.Read("enhanceDmLabel", m_numEnhance, "",
       "Distance metric method for generating enhancement nodes.");
@@ -495,7 +497,7 @@ NodeEnhance() {
   auto dm = this->GetDistanceMetric(m_enhanceDmLabel);
   auto roadmap = this->GetRoadmap();
 
-  for(int i = 0; i < m_numEnhance and !m_edges.empty(); ++i) {
+  for(size_t i = 0; i < m_numEnhance and !m_edges.empty(); ++i) {
     // Pick a random edge from m_edges.
     const size_t index = LRand() % m_edges.size();
 

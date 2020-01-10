@@ -33,6 +33,7 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::VertexSet           VertexSet;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
@@ -63,18 +64,15 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     virtual void Initialize() override;
 
     ///@}
-    ///@name NeighborhoodFinderMethod Interface
+    ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
-    template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
 
-    template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
 
     ///@}
 
@@ -104,7 +102,7 @@ OptimalNF() : NeighborhoodFinderMethod<MPTraits>() {
 
 template <typename MPTraits>
 OptimalNF<MPTraits>::
-OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
+OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("OptimalNF");
 
   // We must not have the 'unconnected' option set for this to work.
@@ -227,25 +225,21 @@ Initialize() {
 /*-------------------- NeighborhoodFinderMethod Interface --------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 OptimalNF<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   // Update parameters and compute neighbors.
   m_setParameters(_r);
-  m_nf->FindNeighbors(_r, _first, _last, _fromFullRoadmap, _cfg, _out);
+  m_nf->FindNeighbors(_r, _cfg, _candidates, _out);
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator>
 void
 OptimalNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   throw NotImplementedException(WHERE);
 }
 

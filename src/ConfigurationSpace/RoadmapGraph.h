@@ -94,6 +94,9 @@ class RoadmapGraph : public
     // Property types.
     typedef typename STAPLGraph::vertex_property          VP;
     typedef typename STAPLGraph::edge_property            EP;
+    // Useful names for the property types.
+    typedef Vertex                                        CfgType;
+    typedef Edge                                          EdgeType;
 
     typedef stapl::sequential::vector_property_map<STAPLGraph, size_t> ColorMap;
 
@@ -219,6 +222,9 @@ class RoadmapGraph : public
 
     /// Each time the roadmap is modified, we update the timestamp.
     size_t GetTimestamp() const noexcept;
+
+    /// Get the set of all VIDs in the roadmap.
+    const VertexSet& GetAllVIDs() const noexcept;
 
     ///@}
     ///@name Accessors
@@ -415,6 +421,10 @@ class RoadmapGraph : public
     /// it should be, so switching causes ridiculous compiler errors.
     std::unordered_map<VID, VertexSet> m_predecessors;
 
+    /// A set of all VIDs in the roadmap. We track this to make nearest-neighbor
+    /// queries more efficient.
+    VertexSet m_allVIDs;
+
     ///@}
 
 };
@@ -458,7 +468,7 @@ operator=(const RoadmapGraph& _r) {
   if(_r.m_ccTracker) {
     m_ccTracker.reset(new CCTrackerType(*_r.m_ccTracker));
     m_ccTracker->SetRoadmap(this);
-    m_ccTracker->InstallHooks();
+    //m_ccTracker->InstallHooks();
   }
 
   return *this;
@@ -482,7 +492,7 @@ operator=(RoadmapGraph&& _r) {
   if(_r.m_ccTracker) {
     m_ccTracker = std::move(_r.m_ccTracker);
     m_ccTracker->SetRoadmap(this);
-    m_ccTracker->InstallHooks();
+    //m_ccTracker->InstallHooks();
   }
 
   // Clear any hooks on the other to prevent cross-talk with the CCTracker.
@@ -509,6 +519,7 @@ AddVertex(const Vertex& _v) noexcept {
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(_v);
   m_predecessors[vid];
+  m_allVIDs.insert(vid);
   ++m_timestamp;
 
   // Execute post-add hooks and update vizmo debug.
@@ -548,6 +559,7 @@ DeleteVertex(const VID _v) noexcept {
   // Delete the vertex.
   this->delete_vertex(vi->descriptor());
   m_predecessors.erase(predIter);
+  m_allVIDs.erase(_v);
   ++m_timestamp;
 }
 
@@ -785,6 +797,15 @@ size_t
 RoadmapGraph<Vertex, Edge>::
 GetTimestamp() const noexcept {
   return m_timestamp;
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+const typename RoadmapGraph<Vertex, Edge>::VertexSet&
+RoadmapGraph<Vertex, Edge>::
+GetAllVIDs() const noexcept {
+  return m_allVIDs;
 }
 
 /*------------------------------- Accessors ----------------------------------*/
@@ -1072,8 +1093,8 @@ ClearHooks() noexcept {
   m_deleteEdgeHooks.clear();
 
   // We always want the CC tracker's hooks, re-install them if needed.
-  if(m_ccTracker)
-    m_ccTracker->InstallHooks();
+  //if(m_ccTracker)
+  //  m_ccTracker->InstallHooks();
 }
 
 /*----------------------------------- I/O ------------------------------------*/
@@ -1211,6 +1232,9 @@ ExecuteAddVertexHooks(const VI _iterator) noexcept {
   if(!m_enableHooks)
     return;
 
+  if(m_ccTracker)
+    m_ccTracker->AddVertex(_iterator);
+
   for(auto& hook : m_addVertexHooks)
     hook.second(_iterator);
 }
@@ -1221,9 +1245,14 @@ inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteDeleteVertexHooks(const VI _iterator) noexcept {
-  if(m_enableHooks)
-    for(auto& hook : m_deleteVertexHooks)
-      hook.second(_iterator);
+  if(!m_enableHooks)
+    return;
+
+  for(auto& hook : m_deleteVertexHooks)
+    hook.second(_iterator);
+
+  if(m_ccTracker)
+    m_ccTracker->DeleteVertex(_iterator);
 }
 
 
@@ -1232,9 +1261,14 @@ inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteAddEdgeHooks(const EI _iterator) noexcept {
-  if(m_enableHooks)
-    for(auto& hook : m_addEdgeHooks)
-      hook.second(_iterator);
+  if(!m_enableHooks)
+    return;
+
+  if(m_ccTracker)
+    m_ccTracker->AddEdge(_iterator);
+
+  for(auto& hook : m_addEdgeHooks)
+    hook.second(_iterator);
 }
 
 
@@ -1243,9 +1277,14 @@ inline
 void
 RoadmapGraph<Vertex, Edge>::
 ExecuteDeleteEdgeHooks(const EI _iterator) noexcept {
-  if(m_enableHooks)
-    for(auto& hook : m_deleteEdgeHooks)
-      hook.second(_iterator);
+  if(!m_enableHooks)
+    return;
+
+  for(auto& hook : m_deleteEdgeHooks)
+    hook.second(_iterator);
+
+  if(m_ccTracker)
+    m_ccTracker->DeleteEdge(_iterator);
 }
 
 
@@ -1275,8 +1314,8 @@ ToString(const HookType& _t) const noexcept {
 /// @return The intersection of _a and _b.
 inline
 std::unordered_set<size_t>
-IntersectVertexSets(const std::unordered_set<size_t>& _a,
-                    const std::unordered_set<size_t>& _b) {
+VertexSetIntersection(const std::unordered_set<size_t>& _a,
+    const std::unordered_set<size_t>& _b) {
   using VertexSet = std::unordered_set<size_t>;
 
   // Find the smaller of the two sets.
@@ -1297,6 +1336,23 @@ IntersectVertexSets(const std::unordered_set<size_t>& _a,
                std::inserter(intersection, intersection.end()),
                [larger](const size_t _vid) {return larger->count(_vid);});
   return intersection;
+}
+
+
+/// Merge one vertex set into another.
+/// @param _receiver The vertex set receiving new VIDs.
+/// @param _source   The source of the new VIDs.
+/// @return A reference to _receiver.
+inline
+std::unordered_set<size_t>&
+VertexSetUnionInPlace(std::unordered_set<size_t>& _receiver,
+    const std::unordered_set<size_t>& _source) {
+  // Reserve sufficient space for the worst case. This wastes a bit of space
+  // (which is inevitable anyway) but avoids more than one rehash.
+  _receiver.reserve(_receiver.size() + _source.size());
+  for(const size_t vid : _source)
+    _receiver.insert(vid);
+  return _receiver;
 }
 
 
@@ -1326,13 +1382,16 @@ RandomElement(const std::unordered_set<T, Rest...>& _set) noexcept {
   while(bucketSize == 0);
 
   const size_t elementIndex = DRand() * bucketSize;
+#if 0
   std::cout << "\nset size = " << _set.size()
             << "\ntries = " << tries
             << "\nbucketIndex = "  << bucketIndex
             << "\nbucketSize  = "  << bucketSize
             << "\nelementIndex = " << elementIndex
-            << "\nelement = " << *std::next(_set.begin(bucketIndex), elementIndex)
+            << "\nelement = "
+            << *std::next(_set.begin(bucketIndex), elementIndex)
             << std::endl;
+#endif
   return *std::next(_set.begin(bucketIndex), elementIndex);
 #else
   // This is the fully linear solution, which works better for very small sets.

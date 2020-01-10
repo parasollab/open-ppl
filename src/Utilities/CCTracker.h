@@ -176,9 +176,6 @@ class CCTracker final {
     void Print(std::ostream& _os, const std::string& _indent = {}) const;
 
     ///@}
-
-  private:
-
     ///@name Roadmap Callback Functions
     ///@{
     /// These functions accept graph updates and adjust the internal CCs
@@ -201,6 +198,9 @@ class CCTracker final {
     void DeleteEdge(const edge_iterator _ei) noexcept;
 
     ///@}
+
+  private:
+
     ///@name Helpers
     ///@{
 
@@ -255,7 +255,7 @@ CCTracker(RoadmapType* const _r) : m_roadmap(_r) {
   RecomputeCCs();
 
   // Install roadmap hooks.
-  InstallHooks();
+  //InstallHooks();
 
   // Initialize the clock start/stoppers.
   SetStatClass(nullptr);
@@ -646,8 +646,8 @@ DeleteEdge(const edge_iterator _ei) noexcept {
            * const targetCC = FindCC(target);
   if(sourceCC != targetCC) {
     const VertexSet discovered = BFS(0);
-    std::cout << "~~~Roadmap has " << m_roadmap->Size() << " vertices.\n"
-              << "~~~CC from root has " << discovered.size() << " vertices:\n"
+    std::cout << "  Roadmap has " << m_roadmap->Size() << " vertices.\n"
+              << "  CC from root has " << discovered.size() << " vertices:\n"
               << "\t" << discovered
               << std::endl;
     throw RunTimeException(WHERE) << "Edge vertices are not in the same CC.";

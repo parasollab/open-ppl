@@ -9,85 +9,22 @@
 #include "ConfigurationSpace/RoadmapGraph.h"
 
 
-namespace pmpl_detail {
-
-  //////////////////////////////////////////////////////////////////////////////
-  /// Dynamic dispatch for template member functions of neighborhood finders.
-  /// @tparam NF NeighborhoodFinderMethod type
-  /// @tparam RDMP Roadmap type
-  /// @tparam I Input iterator type
-  /// @tparam CFG Configuration type
-  /// @tparam O Output iterator type
-  //////////////////////////////////////////////////////////////////////////////
-  template<typename NF, typename RDMP, typename I, typename CFG, typename O>
-  struct VirtualFindNeighbors {
-
-    public:
-
-      ///@name Construction
-      ///@{
-
-      VirtualFindNeighbors(NF* _v, RDMP* _r, I _f, I _l, bool _b,
-          const CFG& _c, O _o) :
-          m_methodPointer(_v), m_rdmp(_r), m_first(_f), m_last(_l),
-          m_fromFullRoadmap(_b), m_cfg(_c), m_output(_o) { }
-
-      ///@}
-      ///@name Interface
-      ///@{
-
-      template <typename T>
-      void operator()(T& _t) {
-        T* tptr = dynamic_cast<T*>(m_methodPointer);
-        if(tptr != nullptr)
-          tptr->FindNeighbors(m_rdmp, m_first, m_last, m_fromFullRoadmap,
-                              m_cfg, m_output);
-      }
-
-      ///@}
-
-    private:
-
-      ///@name Internal State
-      ///@{
-
-      NF* m_methodPointer;
-      RDMP* m_rdmp;
-      I m_first, m_last;
-      bool m_fromFullRoadmap;
-      const CFG& m_cfg;
-      O m_output;
-
-      ///@}
-
-  };
-
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Base algorithm abstraction for \ref NeighborhoodFinders.
+/// Base algorithm abstraction for NeighborhoodFinders, which are methods that
+/// solve nearest-neighbor queries against configurations in a roadmap.
 ///
-/// @c FindNeighbors takes an input configuration and a set of candidate
-/// neighbors and returns the computed set of "nearest" neighbors.
+/// The primary function 'FindNeighbors' takes an input configuration and
+/// optionally a set of candidate neighbors. It returns the computed set of
+/// "nearest" neighbors and their distances (through the 'Neighbor' structure).
 /// @usage
 /// @code
 /// NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
-/// CfgType c;
-/// vector<VID> nodes;
-/// bool b;
-/// vector<pair<VID, double> > neighbors;
-/// nf->FindNeighbors(this->GetRoadmap(),
-///                   nodes.begin(), nodes.end(), b, c,
-///                   back_inserter(neighbors));
+/// CfgType queryCfg;
+/// VertexSet candidates;
+/// std::vector<Neighbor> neighbors;
+/// nf->FindNeighbors(this->GetRoadmap(), queryCfg, candidates,
+///                   std::back_inserter(neighbors));
 /// @endcode
-///
-/// @todo I believe we can do away with the virtual find neighbors thing by
-///       creating a non-template iterator wrapper which accepts a
-///       std::forward_iterator and roadmap as input. Dereference should call
-///       GetVID appropriately. Another alternative is to write a helper for
-///       the roadmap graph iters and accept only std::forward_iterator for the
-///       primary virtual function.
 ///
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,10 +63,10 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     ///@name Construction
     ///@{
 
-    NeighborhoodFinderMethod(std::string _dmLabel = "",
-        bool _unconnected = false);
+    NeighborhoodFinderMethod(const Type _type = Type::OTHER);
 
-    NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM = true);
+    NeighborhoodFinderMethod(XMLNode& _node, const Type _type = Type::OTHER,
+        const bool _requireDM = true);
 
     virtual ~NeighborhoodFinderMethod() = default;
 
@@ -161,7 +98,7 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     const std::string& GetDMLabel() const noexcept;
 
     ///@}
-    ///@name NeighborhoodFinder Interface
+    ///@name Nearest-Neighbor Queries
     ///@{
 
     /// Some methods can be implemented more efficiently if the candidates are
@@ -171,49 +108,18 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _cfg The query configuration.
     /// @param _candidates The set of candidate VIDs.
     /// @param _out Output iterator.
-    virtual void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
-        const VertexSet& _candidates, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) = 0;
 
-    /// @overload This version is for group roadmaps
-    virtual void FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
-        const VertexSet& _candidates, OutputIterator _out);
+    /// @overload This version is for group roadmaps.
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) = 0;
 
-    /// Finds all vertices in the graph as neighbors.
-    /// @param _r The roadmap.
-    /// @param _cfg The query configuration.
-    /// @param _out Output iterator to the neighbor set.
-    void FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
-        OutputIterator _out);
-
-    /// Finds all vertices in the graph as neighbors.
-    /// @param _r The group roadmap.
-    /// @param _cfg The query group configuration.
-    /// @param _out Output iterator to the neighbor set.
-    void FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
-        OutputIterator _out);
-
-    /// Finds "closest" neighbors in a set of nodes to an input configuration.
-    /// @param _r The roadmap when input nodes are found
-    /// @param _first Begin iterator of the set of VIDs
-    /// @param _last End iterator of the set of VIDs
-    /// @param _fromFullRoadmap If true, saved internal NF model will be used
-    ///                         instead of computing a temporary one. Only
-    ///                         applies to advanced NFMethods.
-    /// @param _cfg The query configuration to find neighbors of
-    /// @param _out Output iterator for neighbor set. Underlying data structure
-    ///        is of pair<VID, double> representing the neighbor and distance to
-    ///        _cfg
-    /// @return The final output iterator _out
-    template <typename InputIterator>
-    void FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
-
-    /// Group overload
-    template <typename InputIterator>
-    void FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    /// @overload This verion uses the full roadmap as the candidate set.
+    template <typename AbstractRoadmapType>
+    void FindNeighbors(AbstractRoadmapType* const _r,
+        const typename AbstractRoadmapType::CfgType& _cfg, OutputIterator _out);
 
     ///@}
 
@@ -226,11 +132,12 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _g The roadmap graph we are searching.
     /// @param _c The query configuration.
     /// @param _v A potential neighbor for _c.
-    /// @return True if m_unconnected and there is already a direct edge from _c
-    ///         to _v. Always returns false if m_unconnected is false.
-    template <typename AbstractRoadmapType, typename AbstractCfgType>
-    bool DirectEdge(const AbstractRoadmapType* _g, const AbstractCfgType& _c,
-        const typename AbstractRoadmapType::VID _v) const;
+    /// @return True if there is already a direct edge from _c to _v.
+    /// @note Takes linear time in |g|.
+    template <typename AbstractRoadmapType>
+    bool DirectEdge(const AbstractRoadmapType* _g,
+        const typename AbstractRoadmapType::CfgType& _c,
+        const typename AbstractRoadmapType::VID _v) const noexcept;
 
     ///@}
     ///@name Internal State
@@ -254,18 +161,40 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
 
 template <typename MPTraits>
 NeighborhoodFinderMethod<MPTraits>::
-NeighborhoodFinderMethod(std::string _dmLabel, bool _unconnected) :
-    MPBaseObject<MPTraits>(), m_dmLabel(_dmLabel), m_unconnected(_unconnected) { }
+NeighborhoodFinderMethod(const Type _type) : MPBaseObject<MPTraits>(),
+    m_nfType(_type) {
+}
 
 
 template <typename MPTraits>
 NeighborhoodFinderMethod<MPTraits>::
-NeighborhoodFinderMethod(XMLNode& _node, bool _requireDM) :
-    MPBaseObject<MPTraits>(_node) {
-  m_dmLabel = _node.Read("dmLabel", _requireDM, "", "Distance Metric Method");
+NeighborhoodFinderMethod(XMLNode& _node, const Type _type,
+    const bool _requireDM) : MPBaseObject<MPTraits>(_node) {
+  if(_requireDM)
+    m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric Method");
 
   m_unconnected = _node.Read("unconnected", false, m_unconnected,
       "Require neighbors to be non-adjacent to the query configuration");
+
+  m_nfType = _type;
+  switch(_type) {
+    case Type::K:
+    {
+      m_k = _node.Read("k", true,
+          m_k, size_t(0), std::numeric_limits<size_t>::max(),
+          "The number of neighbors to find.");
+      break;
+    }
+    case Type::RADIUS:
+    {
+      m_radius = _node.Read("radius", true,
+          m_radius, 0., std::numeric_limits<double>::max(),
+          "Include all neighbors within this metric radius.");
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -326,98 +255,28 @@ GetDMLabel() const noexcept {
   return m_dmLabel;
 }
 
-/*----------------------- NeighborhoodFinder Interface -----------------------*/
+/*------------------------ Nearest-Neighbor Queries --------------------------*/
 
 template <typename MPTraits>
+template <typename AbstractRoadmapType>
 void
 NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(RoadmapType* _r, const CfgType& _cfg,
-    const VertexSet& _candidates, OutputIterator _out) {
-  // Default impl should do the same as regular FindNeighbors.
-  FindNeighbors(_r, _candidates.begin(), _candidates.end(),
-      _candidates.size() == _r->Size(), _cfg, _out);
-}
-
-
-template <typename MPTraits>
-void
-NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
-    const VertexSet& _candidates, OutputIterator _out) {
-  // Default impl should do the same as regular FindNeighbors.
-  FindNeighbors(_r, _candidates.begin(), _candidates.end(),
-      _candidates.size() == _r->Size(), _cfg, _out);
-}
-
-
-template <typename MPTraits>
-void
-NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(RoadmapType* _r, const CfgType& _cfg, OutputIterator _out) {
-  FindNeighbors(_r, _r->begin(), _r->end(), true, _cfg, _out);
-}
-
-
-template <typename MPTraits>
-void
-NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r, const GroupCfgType& _cfg,
+FindNeighbors(AbstractRoadmapType* const _r,
+    const typename AbstractRoadmapType::CfgType& _cfg,
     OutputIterator _out) {
-  FindNeighbors(_r, _r->begin(), _r->end(), true, _cfg, _out);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::FindNeighbors");
-  stats->IncStat(this->GetNameAndLabel() + "::NumQueries");
-
-  typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
-
-  boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
-      NeighborhoodFinderMethod, RoadmapType,
-      InputIterator, CfgType, OutputIterator>(
-        this, _r, _first, _last, _fromFullRoadmap, _cfg, _out));
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator>
-void
-NeighborhoodFinderMethod<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::FindNeighbors");
-  stats->IncStat(this->GetNameAndLabel() + "::NumQueries");
-
-  typedef typename MPTraits::NeighborhoodFinderMethodList MethodList;
-
-  boost::mpl::for_each<MethodList>(pmpl_detail::VirtualFindNeighbors<
-      NeighborhoodFinderMethod, GroupRoadmapType,
-      InputIterator, GroupCfgType, OutputIterator>(
-        this, _r, _first, _last, _fromFullRoadmap, _cfg, _out));
+  this->FindNeighbors(_r, _cfg, _r->GetAllVIDs(), _out);
 }
 
 /*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
-template <typename AbstractRoadmapType, typename AbstractCfgType>
+template <typename AbstractRoadmapType>
+inline
 bool
 NeighborhoodFinderMethod<MPTraits>::
-DirectEdge(const AbstractRoadmapType* _g, const AbstractCfgType& _c,
-    const typename AbstractRoadmapType::VID _v) const {
-  // Consider all nodes to be non-neighbors if we aren't using this check.
-  if(!this->m_unconnected)
-    return false;
-
+DirectEdge(const AbstractRoadmapType* _g,
+    const typename AbstractRoadmapType::CfgType& _c,
+    const typename AbstractRoadmapType::VID _v) const noexcept {
   // The nodes are neighbors if _c is in the graph and the edge (_c, _v) exists.
   const typename AbstractRoadmapType::VID vid = _g->GetVID(_c);
   return vid != INVALID_VID and _g->IsEdge(vid, _v);
