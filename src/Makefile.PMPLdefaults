@@ -154,8 +154,8 @@ $(MODELLOADER_LIBFILE): $(CGAL_LIBFILE)
 # This lib is disabled, probably forever. We'll likely need to re-implement it
 # entirely if we ever need it (see comments in
 # deadcode/NeighborhoodFinders/MPNNNF.h).
-#MPNN_DIR  := $(UTILS_DIR)/nearest_neighbors/MPNN
-#MPNN_SRC  := $(MPNN_DIR)/src
+MPNN_DIR  := $(UTILS_DIR)/nearest_neighbors/MPNN
+MPNN_SRC  := $(MPNN_DIR)/src
 #MPNN_LIB  := -L$(MPNN_SRC) -lMPNN
 #MPNN_INCL := -I$(MPNN_DIR)/include
 #
