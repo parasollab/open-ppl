@@ -103,13 +103,35 @@
         strategyLabel="IndividualPRM">
         <Evaluator label="CBSQuery"/>
       </GroupDecoupledStrategy>
+
+      <ValidationStrategy label="Test" target="CBSPRM" debug="true">
+        <GoldStandard robot="boxy-0" type="roadmap"
+          filename="../Outputs/CBS.0.groupQuery.boxy-0.map"/>
+        <GoldStandard robot="boxy-0" type="cfgpath"
+          filename="../Outputs/CBS.0.groupQuery.boxy-0.rdmp.path"/>
+
+        <GoldStandard robot="boxy-1" type="roadmap"
+          filename="../Outputs/CBS.0.groupQuery.boxy-1.map"/>
+        <GoldStandard robot="boxy-1" type="cfgpath"
+          filename="../Outputs/CBS.0.groupQuery.boxy-1.rdmp.path"/>
+
+        <GoldStandard robot="boxy-2" type="roadmap"
+          filename="../Outputs/CBS.0.groupQuery.boxy-2.map"/>
+        <GoldStandard robot="boxy-2" type="cfgpath"
+          filename="../Outputs/CBS.0.groupQuery.boxy-2.rdmp.path"/>
+
+        <GoldStandard robot="boxy-3" type="roadmap"
+          filename="../Outputs/CBS.0.groupQuery.boxy-3.map"/>
+        <GoldStandard robot="boxy-3" type="cfgpath"
+          filename="../Outputs/CBS.0.groupQuery.boxy-3.rdmp.path"/>
+      </ValidationStrategy>
     </MPStrategies>
 
     <MPTools>
       <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
     </MPTools>
 
-    <Solver mpStrategyLabel="CBSPRM" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
       baseFilename="../Scratch/CBS"/>
 
   </Library>

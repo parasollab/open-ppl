@@ -1,21 +1,23 @@
 #ifndef WEIGHT_H_
 #define WEIGHT_H_
 
-#include <iostream>
-#include <numeric>
-#include <string>
-#include <vector>
-
-#ifdef _PARALLEL
-#include "views/proxy.h"
-#endif
-
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Control.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Range.h"
 #include "Utilities/MPUtils.h"
+
+#ifdef _PARALLEL
+#include "views/proxy.h"
+#endif
+
+#include "nonstd/numerics.h"
+
+#include <iostream>
+#include <numeric>
+#include <string>
+#include <vector>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +191,11 @@ template <typename CfgType>
 bool
 DefaultWeight<CfgType>::
 operator==(const DefaultWeight& _w) const noexcept {
-  return m_lpLabel == _w.GetLPLabel() && m_weight == _w.GetWeight();
+  static constexpr double tolerance = 100
+                                    * std::numeric_limits<double>::epsilon();
+
+  return nonstd::approx(m_weight, _w.GetWeight(), tolerance)
+     and m_intermediates == _w.GetIntermediates();
 }
 
 
@@ -389,8 +395,9 @@ void
 DefaultWeight<CfgType>::
 Read(std::istream& _is) {
   if(!inputRobot)
-    throw RunTimeException(WHERE, "Need to tell the weight class what robot "
-        "we are reading for. Use inputRobot member to specify.");
+    throw RunTimeException(WHERE) << "Need to tell the weight class what robot "
+                                  << "we are reading for. Use inputRobot "
+                                  << "member to specify.";
 
   Clear(); //Necessary, as stapl seems to use the same temp weight object
 
@@ -466,7 +473,7 @@ Write(std::ostream& _os) const {
   _os << m_intermediates.size() << " ";
   for(auto&  cfg : m_intermediates)
     _os << cfg;
-  _os << m_weight;
+  _os << std::scientific << std::setprecision(16) << m_weight;
 
   #ifndef VIZMO_MAP
     //If nonholonomic, print extra data needed (holonomic will have no controls)
@@ -491,6 +498,9 @@ Write(std::ostream& _os) const {
       }
     }
   #endif
+
+  // Clear scientific/precision options.
+  _os.unsetf(std::ios_base::floatfield);
 }
 
 
