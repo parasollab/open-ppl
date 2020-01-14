@@ -49,9 +49,14 @@
         <Evaluator label="NodesEval"/>
       </BasicPRM>
 
+      <ValidationStrategy label="Test" target="BasicPRM" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/BasicPRM.0.map"/>
+      </ValidationStrategy>
+
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BasicPRM" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
       baseFilename="../Scratch/BasicPRM"/>
 
   </Library>

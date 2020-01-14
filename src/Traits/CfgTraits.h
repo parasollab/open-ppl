@@ -150,6 +150,7 @@
 //#include "MPLibrary/MPStrategies/UnitTest/DMTestStrategy.h"
 //#include "MPLibrary/MPStrategies/UnitTest/SVMTest.h"
 #include "MPLibrary/MPStrategies/UtilityGuidedGenerator.h"
+#include "MPLibrary/MPStrategies/ValidationStrategy.h"
 #include "MPLibrary/MPStrategies/VisibilityBasedPRM.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,6 +341,7 @@ struct MPTraits {
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
     VisibilityBasedPRM<MPTraits>,
+    ValidationStrategy<MPTraits>,
 
     //BoundaryTest<MPTraits>,
     //DMTestStrategy<MPTraits>,

@@ -320,7 +320,8 @@ operator==(const Cfg& _cfg) const {
   if(m_robot != _cfg.m_robot)
     return false;
 
-  static constexpr double tolerance = 100 * std::numeric_limits<double>::epsilon();
+  static constexpr double tolerance = 100
+                                    * std::numeric_limits<double>::epsilon();
 
   // Check the velocities.
   for(size_t i = 0; i < m_vel.size(); ++i)
@@ -1217,7 +1218,7 @@ Write(ostream& _os) const {
   #endif
 #endif
   // Write DOFs.
-  _os << scientific << setprecision(17);
+  _os << scientific << setprecision(16);
   for(auto i : m_dofs)
     _os << setw(25) << i << ' ';
 #ifndef VIZMO_MAP

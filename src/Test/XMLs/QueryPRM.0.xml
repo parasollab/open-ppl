@@ -42,23 +42,25 @@
     </Connectors>
 
     <MapEvaluators>
-      <QueryMethod label="Query" debug="false"
-        safeIntervalToolLabel="SI"/>
+      <QueryMethod label="Query" debug="false"/>
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicPRM label="QueryPRM">
+      <BasicPRM label="QueryPRM" debug="true">
         <Sampler label="UniformRandomFree" number="1" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="Query"/>
       </BasicPRM>
+
+      <ValidationStrategy label="Test" target="QueryPRM" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/QueryPRM.0.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/QueryPRM.0.query.rdmp.path"/>
+      </ValidationStrategy>
     </MPStrategies>
 
-    <MPTools>
-      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
-    </MPTools>
-
-    <Solver mpStrategyLabel="QueryPRM" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
       baseFilename="../Scratch/QueryPRM"/>
 
   </Library>

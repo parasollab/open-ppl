@@ -51,4 +51,4 @@ To build the simulator, go to `src` and run `make sim`.
 
 ## Tests
 
-To run the tests, go to `src/Test` and run `tests.sh`.
+To run the tests, go to `src/Test` and run `tests.py`.

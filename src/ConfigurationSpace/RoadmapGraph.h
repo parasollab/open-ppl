@@ -126,6 +126,13 @@ class RoadmapGraph : public
     RoadmapGraph& operator=(RoadmapGraph&& _r);
 
     ///@}
+    ///@name Equality
+    ///@{
+
+    bool operator==(const RoadmapGraph& _r) const noexcept;
+    bool operator!=(const RoadmapGraph& _r) const noexcept;
+
+    ///@}
     ///@name Modifiers
     ///@{
 
@@ -499,6 +506,48 @@ operator=(RoadmapGraph&& _r) {
   _r.ClearHooks();
 
   return *this;
+}
+
+/*------------------------------- Equality -----------------------------------*/
+
+template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+operator==(const RoadmapGraph& _r) const noexcept {
+  // First do fast checks on addess and sizes.
+  if(this == &_r)
+    return true;
+  if(this->Size() != _r.Size() or this->get_num_edges() != _r.get_num_edges())
+    return false;
+
+  // Check vertices and edges.
+  for(auto va = this->begin(); va != this->end(); ++va) {
+    // Find the matching descriptor in _r.
+    auto vb = _r.find_vertex(va->descriptor());
+
+    // Check that the property and number of edges are the same.
+    if(va->property() != vb->property() or va->size() != vb->size())
+      return false;
+
+    // Check that the edges are the same. Do not assume the edge ordering is
+    // the same, only worry about source/target correspondance.
+    for(auto ea = va->begin(); ea != va->end(); ++ea) {
+      CEI eb;
+      if(!_r.GetEdge(ea->source(), ea->target(), eb)
+          or ea->property() != eb->property())
+        return false;
+    }
+  }
+
+  return  true;
+}
+
+
+template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+operator!=(const RoadmapGraph& _r) const noexcept {
+  return !(*this == _r);
 }
 
 /*------------------------------- Modifiers ----------------------------------*/

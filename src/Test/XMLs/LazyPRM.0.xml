@@ -62,9 +62,16 @@
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
+
+      <ValidationStrategy label="Test" target="LazyPRM" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/LazyPRM.0.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/LazyPRM.0.query.rdmp.path"/>
+      </ValidationStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="LazyPRM" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
       baseFilename="../Scratch/LazyPRM"/>
 
   </Library>
