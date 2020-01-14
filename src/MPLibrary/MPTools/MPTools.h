@@ -7,6 +7,7 @@
 #include "Utilities/XMLNode.h"
 
 #include "MedialAxisUtilities.h"
+#include "MeanCurvatureSkeleton3D.h"
 #include "ReebGraphConstruction.h"
 #include "SafeIntervalTool.h"
 #include "SkeletonClearanceUtility.h"
@@ -286,7 +287,8 @@ ParseXML(XMLNode& _node) {
   // For the tools that use the XML to set defaults, keep track of whether we've
   // seen them before.
   bool parsedReebGraph = false,
-       parsedSVMModel  = false;
+       parsedSVMModel  = false,
+       parsedMCS       = false;
 
   // MPTools shouldn't have any data of its own, only child nodes.
   for(auto& child : _node) {
@@ -387,6 +389,15 @@ ParseXML(XMLNode& _node) {
       parsedReebGraph = true;
 
       ReebGraphConstruction::SetDefaultParameters(child);
+    }
+    else if(child.Name() == "MeanCurvatureSkeleton3D") {
+      if(parsedMCS)
+        throw ParseException(child.Where(),
+            "Second meanCurvatureSkeleton3D node detected. This node sets "
+            "default parameters - only one is allowed.");
+      parsedMCS = true;
+
+      MeanCurvatureSkeleton3D::SetDefaultParameters(child);
     }
     else if(child.Name() == "SVMModel") {
       if(parsedSVMModel)

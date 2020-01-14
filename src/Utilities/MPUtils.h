@@ -17,7 +17,7 @@ using namespace mathtool;
 
 #include "IOUtils.h"
 
-class Environment;
+//class Environment;
 class Cfg;
 class Robot;
 

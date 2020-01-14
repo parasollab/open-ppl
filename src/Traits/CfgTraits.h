@@ -140,6 +140,7 @@
 #include "MPLibrary/MPStrategies/DisassemblyRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
@@ -340,6 +341,7 @@ struct MPTraits {
     DisassemblyRRTStrategy<MPTraits>,
     DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
+    DynamicRegionsPRM<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,

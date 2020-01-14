@@ -285,7 +285,7 @@ SANDBOX_DIR := $(GLVIS_DIR)/sandbox
 GLVIS_INCL  := -I$(GLVIS_DIR)/nonstd -I$(GLVIS_DIR)/glutils -I$(GLVIS_DIR)
 GLVIS_LIBS  := -L$(GLVIS_DIR)/nonstd -L$(GLVIS_DIR)/glutils -L$(SANDBOX_DIR) \
                -lglsandbox -lglutils -lnonstd
- 
+
 GLVIS_LIBFILE := $(SANDBOX_DIR)/libglsandbox.a
 $(GLVIS_LIBFILE):
 	@echo Building gl_visualizer library...
@@ -518,6 +518,7 @@ PMPL_SRCS := \
   Geometry/Shapes/NSphericalShell.cpp \
   MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
   MPLibrary/LearningModels/RadialKernelGradient.cpp \
+  MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
@@ -547,7 +548,6 @@ PMPL_SRCS := \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \
-  Utilities/MeanCurvatureSkeleton3D.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \
