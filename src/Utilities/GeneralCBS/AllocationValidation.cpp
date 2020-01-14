@@ -188,7 +188,7 @@ CanReach(Assignment& _a1, Assignment& _a2, GeneralCBSNode& _node) {
 	endCfg.SetRobot(_a1.m_agent->GetRobot());
 
 	auto plan = tmp->MotionPlan(startCfg,endCfg,
-															_a1.m_execEndTime,_a2.m_execStartTime,_a2.m_task->GetParent().get());
+															_a1.m_execEndTime,_a2.m_execStartTime,_a2.m_task->GetParent());
 
 	tmp->m_motionConstraintMap.clear();
 
@@ -242,7 +242,7 @@ PatchPaths(GeneralCBSNode& _node) {
 						endCfg.SetRobot(agent->GetRobot());
 
 						auto plan = tmp->MotionPlan(startCfg,endCfg,
-										0,a.m_execStartTime,a.m_task->GetParent().get());
+										0,a.m_execStartTime,a.m_task->GetParent());
 
 						if(plan.first > a.m_execStartTime)
 							throw RunTimeException(WHERE, "James you broke something again.");
@@ -255,3 +255,33 @@ PatchPaths(GeneralCBSNode& _node) {
 	}
 }
 
+size_t 
+AllocationValidation::
+CountConflicts(GeneralCBSNode& _node) {
+
+	size_t conflictCount = 0;
+
+	auto& solution = _node.GetSolutionRef();
+	//step through all agent assignments and see if any overlap, 
+	//if so, look at the assignment's task's parent to get conflicting task
+	//TODO::find a more clever way to do this that simultaneosuly iteratively looks at agent plans
+	for(auto& agentAssigns : solution.m_agentAssignments) {
+		auto& assignments = agentAssigns.second;
+
+		if(assignments.size() == 0)
+			continue;
+
+		for(size_t i = 0; i < assignments.size()-1; i++) {
+			auto& a1 = assignments[i];
+			auto& a2 = assignments[i+1];
+
+			if(a1.m_execStartTime == a2.m_execStartTime or
+					a1.m_execEndTime > a2.m_execStartTime or 
+					!CanReach(a1,a2,_node)) {
+				conflictCount++;
+			}
+		}
+	}
+	
+	return conflictCount;
+}

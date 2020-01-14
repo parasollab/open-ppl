@@ -13,6 +13,8 @@
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
+#include "TaskHierarchy/SubtaskFlow.h"
+
 using namespace std;
 
 
@@ -445,7 +447,16 @@ ParseChild(XMLNode& _node) {
                                            new InteractionInformation(this, _node)));
   }
 	else if(_node.Name() == "Decomposition") {
-		m_taskDecomposition = std::unique_ptr<Decomposition>(new Decomposition(_node));
+		auto decomp = std::unique_ptr<Decomposition>(new Decomposition(_node,this));
+		if(m_taskDecompositions[decomp->GetLabel()])
+			throw RunTimeException(WHERE,"Decomposition labels must be unique.");
+
+		auto top = decomp->GetMainTask();
+
+		m_taskDecompositions[decomp->GetLabel()] = std::move(decomp);
+
+		SubtaskFlow flow(top);
+		flow.Print();
 	}
 }
 

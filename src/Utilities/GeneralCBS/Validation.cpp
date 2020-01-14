@@ -37,8 +37,8 @@ CreatePostAssignment() {
 
 	for(auto agent : team) {
 		auto mp = problem->GetTasks(agent->GetRobot())[0];
-		auto task = std::shared_ptr<SemanticTask>(new SemanticTask());
-		auto child = std::shared_ptr<SemanticTask>(new SemanticTask(task,mp,false));
+		auto task = new SemanticTask();
+		auto child = new SemanticTask(task,mp,false);
 
 		task->AddSubtask(child);
 

@@ -123,17 +123,18 @@ CreateDecomposition(std::vector<WholeTask*> _wholeTasks) {
 	Decomposition* decomp = new Decomposition(top);
 
 	for(auto wholeTask : _wholeTasks) {
-		auto semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(top,wholeTask->m_task));
-		top->AddSubtask(semanticTask);
+		auto semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(top.get(),wholeTask->m_task));
+		top->AddSubtask(semanticTask.get());
+		decomp->AddTask(semanticTask);
 		this->GetTaskPlan()->SetSemanticWholeTask(semanticTask.get(),wholeTask);
 
 		std::shared_ptr<SemanticTask> previous = nullptr;
 		for(auto subtask : wholeTask->m_subtasks) {
-			auto sub = std::shared_ptr<SemanticTask>(new SemanticTask(semanticTask,subtask));
-			decomp->AddSimpleTask(semanticTask);
-			semanticTask->AddSubtask(sub);
+			auto sub = std::shared_ptr<SemanticTask>(new SemanticTask(semanticTask.get(),subtask));
+			decomp->AddSimpleTask(semanticTask.get());
+			semanticTask->AddSubtask(sub.get());
 			if(previous) {
-				sub->AddDependency(previous,SemanticTask::DependencyType::Initiation);
+				sub->AddDependency(previous.get(),SemanticTask::DependencyType::Initiation);
 			}
 			previous = sub;
 		}

@@ -27,13 +27,22 @@ GeneralCBSNode(const GeneralCBSNode& _parent) {
 bool 
 GeneralCBSNode::
 operator>(const GeneralCBSNode& _other) const noexcept {
-	return m_cost > _other.m_cost;
+
+	if(GetUtility() == _other.GetUtility()){
+		return GetCost() > _other.GetCost();
+	}
+		
+	return GetUtility() < _other.GetUtility();
 }
 
 bool 
 GeneralCBSNode::
 operator<(const GeneralCBSNode& _other) const noexcept {
-	return m_cost < _other.m_cost;
+
+	if(GetUtility() == _other.GetUtility())
+		return GetCost() < _other.GetCost();
+
+	return GetUtility() > _other.GetUtility();
 }
 
 CBSSolution 
@@ -46,6 +55,12 @@ CBSSolution&
 GeneralCBSNode::
 GetSolutionRef() {
 	return m_solution;
+}
+	
+void 
+GeneralCBSNode::
+SetSolution(const CBSSolution& _solution) {
+	m_solution = _solution;
 }
 
 CBSSolution&
@@ -62,7 +77,7 @@ AddMotionConstraint(MotionConstraint& _c, Agent* _agent) {
 
 const std::vector<MotionConstraint>&
 GeneralCBSNode::
-GetMotionConstraints(std::shared_ptr<SemanticTask> _task, Agent* _agent) {
+GetMotionConstraints(SemanticTask* _task, Agent* _agent) {
 	return m_motionConstraints[_task][_agent];
 }
 
@@ -74,13 +89,13 @@ AddAllocationConstraint(AllocationConstraint& _c, Agent* _agent) {
 
 const std::vector<AllocationConstraint>&
 GeneralCBSNode::
-GetAllocationConstraints(std::shared_ptr<SemanticTask> _task, Agent* _agent) {
+GetAllocationConstraints(SemanticTask* _task, Agent* _agent) {
 	return m_allocationConstraints[_task][_agent];
 }
 
 void 
 GeneralCBSNode::
-UpdateTaskPlan(std::shared_ptr<SemanticTask> _task, std::vector<Assignment> _assignments) {
+UpdateTaskPlan(SemanticTask* _task, std::vector<Assignment> _assignments) {
 	//TODO::update solution from this input assignment
 	
 	m_solution.m_taskPlans[_task] = _assignments;
@@ -172,8 +187,52 @@ SetCost(double _cost) {
 
 double
 GeneralCBSNode::
-GetCost() {
-	return m_cost;
+GetCost() const {
+	//return m_cost;
+	//TODO::right now, rest of code default computes the sum-of-cost - needs to be paramaterized
+	//temp makespan override:
+	double makespan = 0;
+	for(auto& tp : m_solution.m_taskPlans) {
+		if(tp.second.back().m_execEndTime > makespan)
+			makespan = tp.second.back().m_execEndTime;
+	}
+	return makespan;
+}
+	
+void 
+GeneralCBSNode::
+SetUtility(double _utility) {
+	m_utility = _utility;
+}
+
+double 
+GeneralCBSNode::
+GetUtility() const {
+	return m_utility;
+}
+
+size_t 
+GeneralCBSNode::
+GetAllocationConflictCount() {
+	return m_allocationConflictCount; 
+}
+	
+size_t 
+GeneralCBSNode::
+GetMotionConflictCount() {
+	return m_motionConflictCount;
+}
+
+void 
+GeneralCBSNode::
+SetAllocationConflictCount(size_t _c) {
+	m_allocationConflictCount = _c;
+}
+	
+void
+GeneralCBSNode::
+SetMotionConflictCount(size_t _c) {
+	m_motionConflictCount = _c;
 }
 
 /*-------------------------- Conflict Based Search -------------------------*/
@@ -201,10 +260,8 @@ ConflictBasedSearch(Decomposition* _decomposition, InitialPlanFunction _initial,
 		if(_debug) {
 			current.Debug();
 			std::cout << "Total Nodes Explored: " << counter << std::endl;
+			std::cout << "Current Tree Size: " << tree.size() << std::endl;
 		}
-
-		if(counter == 2753)
-			std::cout << "Debug" << std::endl;
 
 		if(!_validation(current, tree))
 			continue;

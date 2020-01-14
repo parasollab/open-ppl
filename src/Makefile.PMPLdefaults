@@ -552,6 +552,7 @@ PMPL_SRCS := \
   MPProblem/RobotGroup/RobotGroup.cpp \
   MPProblem/TaskHierarchy/Decomposition.cpp \
   MPProblem/TaskHierarchy/SemanticTask.cpp \
+  MPProblem/TaskHierarchy/SubtaskFlow.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
@@ -559,6 +560,7 @@ PMPL_SRCS := \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
 	Utilities/GeneralCBS/AllocationValidation.cpp \
+	Utilities/GeneralCBS/BypassValidation.cpp \
 	Utilities/GeneralCBS/ComposeValidation.cpp \
 	Utilities/GeneralCBS/GeneralCBS.cpp \
 	Utilities/GeneralCBS/LowLevelSearch.cpp \

@@ -210,7 +210,7 @@ class MPProblem final
     std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>>
         m_groupTaskMap;
 
-		std::unique_ptr<Decomposition> m_taskDecomposition;
+		std::unordered_map<std::string,std::unique_ptr<Decomposition>> m_taskDecompositions;
 
     ///@}
     ///@name Files

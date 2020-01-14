@@ -3,6 +3,8 @@
 
 #include "SemanticTask.h"
 
+class MPProblem;
+
 class Decomposition {
 
 	public:
@@ -12,7 +14,7 @@ class Decomposition {
 
 		Decomposition(std::shared_ptr<SemanticTask> _mainTask);
 	
-		Decomposition(XMLNode& _node);
+		Decomposition(XMLNode& _node, MPProblem* _problem);
 
 		~Decomposition();
 
@@ -20,24 +22,37 @@ class Decomposition {
 		///@name Accessors
 		///@{
 		
-		std::shared_ptr<SemanticTask> GetMainTask();
+		const std::string GetLabel() const;
+	
+		SemanticTask* GetMainTask();
 
-		std::vector<std::shared_ptr<SemanticTask>>& GetSimpleTasks();
+		std::vector<SemanticTask*>& GetSimpleTasks();
 
-		void AddSimpleTask(std::shared_ptr<SemanticTask> _task);
+		void AddTask(std::shared_ptr<SemanticTask> _task);
+
+		SemanticTask* GetTask(std::string _label);
+
+		void AddSimpleTask(SemanticTask* _task);
 
 		///@}
 		
 	private:
+		///@name Helper Functions
+		///@{
 
+		void ParseTask(XMLNode& _node, MPProblem* _problem);
+
+		///@}
 		///@name Internal State
 		///@{
 
+		std::unordered_map<std::string,std::shared_ptr<SemanticTask>> m_taskMap;
+
 		///< Keeps track of smallest unit of decomposition
-		std::vector<std::shared_ptr<SemanticTask>> m_simpleTasks;
+		std::vector<SemanticTask*> m_simpleTasks;
 
 		///< highest task in the decomposition
-		std::shared_ptr<SemanticTask>		  m_mainTask;
+		SemanticTask*	m_mainTask;
 
 		std::string m_label;
 

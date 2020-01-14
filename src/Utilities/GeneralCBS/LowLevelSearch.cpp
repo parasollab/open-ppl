@@ -49,7 +49,7 @@ LowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLab
 }
 bool
 LowLevelSearch::
-UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
+UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 	return true;
 }
 

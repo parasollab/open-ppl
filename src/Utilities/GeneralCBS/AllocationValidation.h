@@ -36,6 +36,8 @@ class AllocationValidation : public Validation {
 	///@input _tree the CBS tree to which any child nodes will be added
 	///@output bool indicates if the node's solution is valid
 	virtual bool ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) override;
+
+	size_t CountConflicts(GeneralCBSNode& _node);
 	
 	///@}
 

@@ -9,7 +9,7 @@ MPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcL
 
 bool
 MPLowLevelSearch::
-UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
+UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 
 	if(m_debug) {
 		std::cout << "Pre-Clearing task plan" << std::endl;
@@ -182,14 +182,14 @@ PlanAssignments(GeneralCBSNode& _node) {
 
 				//Check if all allocated subtasks have been planned for.
 				if(!assign.m_agent) {
-					resolved.insert(kv.first.get());
+					resolved.insert(kv.first);
 					break;
 				}
 
 				//Check if this subtask has been planned already.
 				if(!assign.m_execPath.empty()) {
 					if(i == kv.second.size()-1)
-						resolved.insert(kv.first.get());
+						resolved.insert(kv.first);
 					continue;
 				}
 
@@ -249,7 +249,7 @@ PlanAssignments(GeneralCBSNode& _node) {
 				}
 
 				if(i == kv.second.size()-1)
-					resolved.insert(kv.first.get());
+					resolved.insert(kv.first);
 			}
 		}
 		if(m_debug) {
@@ -326,7 +326,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	}
 
 	auto query = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
-									_assign.m_task->GetParent().get())->m_subtaskStartEndCfgs[_assign.m_task->GetMotionTask()];
+									_assign.m_task->GetParent())->m_subtaskStartEndCfgs[_assign.m_task->GetMotionTask()];
 
 	//Agent is does not have a configuration at task start.
 	if(!query.first.GetRobot())
@@ -343,7 +343,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	query.first.SetRobot(agent->GetRobot());
 	query.second.SetRobot(agent->GetRobot());
 
-	auto setup = this->MotionPlan(setupCfg,query.first,setupStart,_startTime,_assign.m_task->GetParent().get());
+	auto setup = this->MotionPlan(setupCfg,query.first,setupStart,_startTime,_assign.m_task->GetParent());
 
 	if(setup.second.first.empty())
 		return false;
@@ -354,7 +354,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 			and !PatchPaths(_node,_assign,setup.first))
 		return false;
 
-	auto exec = this->MotionPlan(query.first,query.second,setup.first,0,_assign.m_task->GetParent().get());
+	auto exec = this->MotionPlan(query.first,query.second,setup.first,0,_assign.m_task->GetParent());
 
 	if(exec.second.first.empty())
 		return false;
@@ -403,7 +403,7 @@ PatchPaths(GeneralCBSNode& _node, Assignment& _assign, double _endTime) {
 	}
 
 	auto plan = this->MotionPlan(startCfg, endCfg, previous->m_execStartTime, 
-																_endTime,_assign.m_task->GetParent().get());
+																_endTime,_assign.m_task->GetParent());
 
 	if(plan.first > _endTime)
 		return false;

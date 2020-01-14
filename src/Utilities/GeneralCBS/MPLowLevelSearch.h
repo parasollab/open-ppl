@@ -20,7 +20,7 @@ class MPLowLevelSearch : public LowLevelSearch {
 		///@input _node contains the solution we are trying to update
 		///@input _task is the task which has a new constraint and needs updating
 		///@output bool indicating if there is a valid plan for the task being updated
-		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
+		virtual bool UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) override;
 	
 		//@}
 

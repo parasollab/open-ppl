@@ -5,6 +5,9 @@
 
 #include <unordered_map>
 
+class Decomposition;
+class MPProblem;
+
 class SemanticTask {
 
 	public:
@@ -25,7 +28,7 @@ class SemanticTask {
 			None
 		};
 
-		typedef std::unordered_map<DependencyType, std::vector<std::shared_ptr<SemanticTask>>, 
+		typedef std::unordered_map<DependencyType, std::vector<SemanticTask*>, 
 															 std::hash<int>> DependencyMap;
 
 		///@}
@@ -34,9 +37,9 @@ class SemanticTask {
 
 		SemanticTask();
 
-		SemanticTask(XMLNode& _node);
+		SemanticTask(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp);
 
-		SemanticTask(std::shared_ptr<SemanticTask> _parent, std::shared_ptr<MPTask> _simpleTask, 
+		SemanticTask(SemanticTask* _parent, std::shared_ptr<MPTask> _simpleTask, 
 								 bool _decomposable = true);
 
 		~SemanticTask();
@@ -48,31 +51,44 @@ class SemanticTask {
 		std::string GetLabel() const;
 
 		///< Sets the dependencies of all the semantic tasks below this in the hierarchy
-		std::vector<std::shared_ptr<SemanticTask>> SetDependencies();
+		std::vector<SemanticTask*> SetDependencies();
 
 		///< Indicates if this is a simple task or not
 		bool IsDecomposable();
 
+		void SetMotionTask(std::shared_ptr<MPTask> _motion);
+
 		std::shared_ptr<MPTask> GetMotionTask();
 
-		std::shared_ptr<SemanticTask> GetParent();
+		SemanticTask* GetParent();
 
-		void SetParent(std::shared_ptr<SemanticTask> _parent);
+		void SetParent(SemanticTask* _parent);
 
-		void AddDependency(std::shared_ptr<SemanticTask> _task, DependencyType _type);
+		void AddDependency(SemanticTask* _task, DependencyType _type);
 
 		DependencyMap& GetDependencies();
 
 		bool IsFixedAssignment();
 
-		void AddSubtask(std::shared_ptr<SemanticTask> _task);
+		void AddSubtask(SemanticTask* _task);
 
-		std::vector<std::shared_ptr<SemanticTask>> GetSubtasks();
+		std::vector<SemanticTask*> GetSubtasks();
+
+		SubtaskRelation GetSubtaskRelation();
+
+		//void SetCompletionFunction(TBDFunction _func);
+
+		//TBDFunction GetCompletionFunction();
 
 		///@}
 
 	private:
+		///@name Helper Functions
+		///@{
 
+		void ParseDependency(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp);
+
+		///@}
 		///@name Internal State
 		///@{
 
@@ -80,10 +96,10 @@ class SemanticTask {
 		std::string m_label;
 
 		///< Parent SemanticTask that includes this task in its decomposition
-		std::shared_ptr<SemanticTask> m_parent{nullptr};
+		SemanticTask* m_parent{nullptr};
 
 		///< Set of subtasks that make up this task's decomposition
-		std::vector<std::shared_ptr<SemanticTask>> m_subtasks;
+		std::vector<SemanticTask*> m_subtasks;
 
 		///< Relationship between the subtasks indicating if they're alternatives or all required
 		SubtaskRelation m_subtasksRelation;
@@ -97,8 +113,10 @@ class SemanticTask {
 		///< Indicates if the assignment of the simple task is fixed
 		bool m_fixedAssignment{false};
 
-		//< Indicates if the task can be decomposed into subtasks
+		///< Indicates if the task can be decomposed into subtasks
 		bool m_decomposable{true};
+
+		//TBDFunction m_completionFunction;
 
 		///@}
 };

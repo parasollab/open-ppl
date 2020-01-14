@@ -13,10 +13,10 @@ TMPLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vc
 /*----------------------------------- Interface -----------------------------------*/
 bool
 TMPLowLevelSearch::
-UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
+UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
-	auto query = sg->AddTaskToGraph(m_tmpLibrary->GetTaskPlan()->GetWholeTask(_task.get()));
+	auto query = sg->AddTaskToGraph(m_tmpLibrary->GetTaskPlan()->GetWholeTask(_task));
 
 	if(m_debug) {
 		std::cout << "Updating Plan for: " << _task << std::endl;
@@ -64,9 +64,9 @@ UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) {
 
 void
 TMPLowLevelSearch::
-Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
+Initialize(GeneralCBSNode& _node, SemanticTask* _task, std::pair<size_t,size_t> _query) {
 
-	m_currentTask = _task.get();
+	m_currentTask = _task;
 
 	auto team = m_tmpLibrary->GetTaskPlan()->GetTeam();
 
@@ -75,14 +75,30 @@ Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair
 
 	for(auto vit = sg->GetGraph()->begin(); vit != sg->GetGraph()->end(); vit++) {
 
-		if(vit->descriptor() > sg->NonTaskNodes() and 
+		if(vit->descriptor() >= sg->NonTaskNodes() and 
 						(vit->descriptor() < _query.first or vit->descriptor() > _query.second+2))
 			continue;
 
 		auto& cfg = vit->property();
 		size_t vid = vit->descriptor();
 		if(cfg.GetRobot() == m_tmpLibrary->GetTaskPlan()->GetCoordinator()->GetRobot()) {
-			m_intervalMap[vid][cfg.GetRobot()->GetAgent()] = {std::make_pair(0,MAX_DBL)};
+			if(vid == _query.first) {
+				auto release = _task->GetMotionTask()->GetReleaseWindow();
+				m_intervalMap[vid][cfg.GetRobot()->GetAgent()] = {release};
+			}
+		
+			else if(vid == _query.second) {
+				auto deadline = _task->GetMotionTask()->GetDeadlineWindow();
+				m_intervalMap[vid][cfg.GetRobot()->GetAgent()] = {deadline};
+			}
+
+			else {
+				std::cout << "Nontask node cutoff: " << sg->NonTaskNodes()-1 << std::endl;
+				std::cout << "Query: " << _query << std::endl;
+				std::cout << "VID: " << vid << std::endl;
+				throw RunTimeException(WHERE, "Checking a coordinator vid that should be ignored at this point.");
+			}
+
 			continue;
 		}
 		for(auto agent : team) {
@@ -102,7 +118,7 @@ Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair
 
 std::vector<std::pair<double,double>>
 TMPLowLevelSearch::
-ComputeIntervals(GeneralCBSNode& _node, size_t _vid, std::shared_ptr<SemanticTask> _task, Agent* _agent) {
+ComputeIntervals(GeneralCBSNode& _node, size_t _vid, SemanticTask* _task, Agent* _agent) {
 	//need to map interval to departure time/location pairing while finding avail intervals
 	
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
@@ -267,7 +283,7 @@ Uninitialize() {
 
 std::vector<Assignment>
 TMPLowLevelSearch::
-Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
+Search(SemanticTask* _task, std::pair<size_t,size_t> _query) {
 
 	m_usedAgents.clear();
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
@@ -284,7 +300,9 @@ Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query) {
 		for(auto avail : agentAvailInts.second) {
 			AvailElem elem(start, agentAvailInts.first, avail);
 			//m_usedAgents[elem].insert(agentAvailInts.first);
-			pq.push(std::make_pair(0,elem));
+			auto coordinator = static_cast<Agent*>(m_tmpLibrary->GetTaskPlan()->GetCoordinator());
+			auto release = m_intervalMap[start][coordinator][0].first;
+			pq.push(std::make_pair(release,elem));
 		}
 	}
 
@@ -365,7 +383,16 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 			if(agent->GetRobot() == m_tmpLibrary->GetTaskPlan()->GetCoordinator()->GetRobot()) {
 				//if(!CheckDeliveringAgentFutureConstraints(transition.first,_elem))  
 				//	continue;
-				transition.first = arrivalTime;
+				transition.first = std::max(arrivalTime,avail.first);
+				bool valid = true;
+				if(transition.first > arrivalTime ) {
+					valid = CheckExec(_elem,transition.first,target);
+				}
+				if(!valid or
+						transition.first > _elem.m_availInt.second or // delivering agent has to leave
+						transition.first > avail.second or // deadline has expired
+						!CheckDeliveringAgentFutureConstraints(transition.first,_elem))  
+					continue;
 			}
 			// interaction edge
 			else if(agent->GetRobot()->GetCapability() != _elem.m_agent->GetRobot()->GetCapability()) { 
@@ -528,14 +555,14 @@ ComputeExec(AvailElem _elem, size_t _endVID, double _startTime) {
 
 std::vector<Assignment> 
 TMPLowLevelSearch::
-PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task) {
+PlanDetails(std::vector<AvailElem> _plan, SemanticTask* _task) {
 
 	std::vector<Assignment> planDetails;
 
 	Agent* agent = nullptr;
 	AvailElem start;
 
-	for(size_t i = 1; i < _plan.size()-1; i++) {
+	for(size_t i = 1; i < _plan.size(); i++) {
 		AvailElem elem = _plan[i];
 
 		if(elem.m_agent != agent) {
@@ -555,7 +582,7 @@ PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task) {
 		}
 
 		double endTime = m_distance[elem];
-		if(i < _plan.size() - 2) {
+		if(i < _plan.size() - 1) {
 			endTime = m_distance[_plan[i+1]];
 		}
 
@@ -569,7 +596,7 @@ PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task) {
 
 Assignment 
 TMPLowLevelSearch::
-CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask> _parentTask, double _endTime) {
+CreateAssignment(AvailElem _start, AvailElem _end, SemanticTask* _parentTask, double _endTime) {
 	if(_start.m_agent != _end.m_agent)
 		throw RunTimeException(WHERE, "Attempting to create assignment with mismatching agent avail-task nodes.");
 
@@ -598,7 +625,7 @@ CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask>
 	motionTask->SetStartConstraint(std::move(startConstraint));
 	motionTask->AddGoalConstraint(std::move(goalConstraint));
 
-	std::shared_ptr<SemanticTask> semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(_parentTask,motionTask));
+	SemanticTask* semanticTask = new SemanticTask(_parentTask,motionTask);
 
 	auto setup = m_setupPathMap[_start];
 	auto exec = m_execPathMap[_end];

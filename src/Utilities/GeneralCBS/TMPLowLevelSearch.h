@@ -78,7 +78,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		///@input _node contains the solution we are trying to update
 		///@input _task is the task which has a new constraint and needs updating
 		///@output bool indicating if there is a valid plan for the task being updated
-		virtual bool UpdateSolution(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task) override;
+		virtual bool UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) override;
 	
 		virtual std::pair<double,std::pair<std::vector<size_t>,size_t>> MotionPlan(Cfg _start, Cfg _goal,
 						double _startTime = 0, double _minEndTime = 0, SemanticTask* _currentTask = nullptr) override;
@@ -91,14 +91,14 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		///@name Helper Functions
 		///@{
 	
-		void Initialize(GeneralCBSNode& _node, std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query);
+		void Initialize(GeneralCBSNode& _node, SemanticTask* _task, std::pair<size_t,size_t> _query);
 
 		std::vector<AvailInterval> ComputeIntervals(GeneralCBSNode& _node, size_t vid, 
-														std::shared_ptr<SemanticTask> _task, Agent* _agent); 
+														SemanticTask* _task, Agent* _agent); 
 
 		void Uninitialize();
 
-		std::vector<Assignment> Search(std::shared_ptr<SemanticTask> _task, std::pair<size_t,size_t> _query);
+		std::vector<Assignment> Search(SemanticTask* _task, std::pair<size_t,size_t> _query);
 
 		std::vector<std::pair<double,AvailElem>> ValidNeighbors(const AvailElem& _elem, 
 															size_t _vid, double _currentCost, double _edgeCost);
@@ -109,9 +109,9 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		std::pair<double,std::pair<std::vector<size_t>,size_t>>
 		ComputeExec(AvailElem _elem, size_t _endVID, double _startTime);
 
-		std::vector<Assignment> PlanDetails(std::vector<AvailElem> _plan, std::shared_ptr<SemanticTask> _task);
+		std::vector<Assignment> PlanDetails(std::vector<AvailElem> _plan, SemanticTask* _task);
 
-		Assignment CreateAssignment(AvailElem _start, AvailElem _end, std::shared_ptr<SemanticTask> _parentTask, double _endTime);
+		Assignment CreateAssignment(AvailElem _start, AvailElem _end, SemanticTask* _parentTask, double _endTime);
 
 		bool CheckExec(AvailElem _elem, double _endTime, AvailElem _post);
 		///@}

@@ -107,7 +107,7 @@ FindMotionConflict(GeneralCBSNode& _node) {
 	std::unordered_map<Agent*,std::vector<Cfg>> agentPaths;
 
 	std::unordered_map<Agent*,std::vector<std::pair<
-					std::pair<size_t,size_t>,std::shared_ptr<SemanticTask>>>> m_pathTaskMap;
+					std::pair<size_t,size_t>,SemanticTask*>>> pathTaskMap;
 
 	auto sg = static_cast<CombinedRoadmap*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 
@@ -215,15 +215,18 @@ FindMotionConflict(GeneralCBSNode& _node) {
 
 			previousTimeStep = end;
 
-			if(end != a.m_execEndTime)
+			if(end != a.m_execEndTime) {
+				std::cout << "End: " << end << " execEndTime: " << a.m_execEndTime << std::endl;
+
 				throw RunTimeException(WHERE, "Path lengths do not match up in Motion Validation for ." +
 																			agent->GetRobot()->GetLabel());
+			}
 			
 			agentPaths[agent].insert(agentPaths[agent].end(),interim.begin(),interim.end());
 			agentPaths[agent].insert(agentPaths[agent].end(),cfgs.begin(),cfgs.end());
 			agentPaths[agent].insert(agentPaths[agent].end(),execCfgs.begin(),execCfgs.end());
 
-			m_pathTaskMap[agent].push_back(std::make_pair(std::make_pair(start,end-1),a.m_task->GetParent()));
+			pathTaskMap[agent].push_back(std::make_pair(std::make_pair(start,end-1),a.m_task->GetParent()));
 		}
 		
 	}
@@ -296,28 +299,32 @@ FindMotionConflict(GeneralCBSNode& _node) {
 				one.m_agent = robot1->GetAgent();
 				one.m_conflictCfg = cfg2;
 				one.m_timestep = t;
-				for(auto task : m_pathTaskMap[one.m_agent]) {
-					if(t >= task.first.first and t <= task.first.second) {
-						one.m_task = task.second;
+				if(!path1.empty()) {
+					for(auto task : pathTaskMap[one.m_agent]) {
+						if(t >= task.first.first and t <= task.first.second) {
+							one.m_task = task.second;
+						}
 					}
-				}
 
-				if(t >= path2.size()-1) {
-					one.m_duration = std::numeric_limits<size_t>::infinity();
+					if(t >= path2.size()-1 or path2.empty()) {
+						one.m_duration = std::numeric_limits<size_t>::infinity();
+					}
+
 				}
 
 				two.m_agent = robot2->GetAgent();
 				two.m_conflictCfg = cfg1;
 				two.m_timestep = t;
-				for(auto task : m_pathTaskMap[two.m_agent]) {
-					if(t >= task.first.first and t <= task.first.second) {
-						two.m_task = task.second;
+				if(!path2.empty()) {
+					for(auto task : pathTaskMap[two.m_agent]) {
+						if(t >= task.first.first and t <= task.first.second) {
+							two.m_task = task.second;
+						}
+					}
+					if(t >= path1.size()-1 or path1.empty()) {
+						two.m_duration = std::numeric_limits<size_t>::infinity();
 					}
 				}
-				if(t >= path1.size()-1) {
-					two.m_duration = std::numeric_limits<size_t>::infinity();
-				}
-
 				return std::make_pair(one,two);
 			}
 		}
@@ -340,7 +347,7 @@ void
 MotionValidation::
 AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraintPair _constraints) {
 		
-	if(_constraints.first.m_task.get()) {
+	if(_constraints.first.m_task) {
 		GeneralCBSNode one(_node);
 		one.AddMotionConstraint(_constraints.first,_constraints.first.m_agent);
 
@@ -374,7 +381,7 @@ AddMotionChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, MotionConstraint
 
  	}
 
-	if(_constraints.second.m_task.get()) {
+	if(_constraints.second.m_task) {
 		GeneralCBSNode two(_node);
 		two.AddMotionConstraint(_constraints.second,_constraints.second.m_agent);
 
@@ -449,7 +456,7 @@ AvoidancePaths(GeneralCBSNode& _node) {
 		lastCfg.SetRobot(agent->GetRobot());
 
 		auto plan = m_lowLevel->LowLevelSearch::MotionPlan(lastCfg, lastCfg, start, maxTime, 
-																			assign.m_task->GetParent().get());
+																			assign.m_task->GetParent());
 
 		m_lowLevel->m_motionConstraintMap.clear();	
 
@@ -464,5 +471,202 @@ AvoidancePaths(GeneralCBSNode& _node) {
 		assign.m_execPath = plan.second.first;
 		assign.m_finalWaitTimeSteps = plan.second.second;
 	}	
+}
+
+size_t 
+MotionValidation::
+CountConflicts(GeneralCBSNode& _node) {
+
+	size_t conflictCount = 0;
+
+	const auto& agentAssignments = _node.GetSolution().m_agentAssignments;
+
+	//TODO::Need this to get the agent roadmap - later replace by accessing the MPSolution 
+	//Currently don't store anything in the MPLibrary's solution object
+	std::unordered_map<Agent*,std::vector<Cfg>> agentPaths;
+
+	std::unordered_map<Agent*,std::vector<std::pair<
+					std::pair<size_t,size_t>,SemanticTask*>>> pathTaskMap;
+
+	auto sg = static_cast<CombinedRoadmap*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+
+	for(auto kv : agentAssignments) {
+		auto agent = kv.first;
+		agentPaths[agent] = {};
+
+		auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(agent));
+
+		auto assigns = kv.second;
+		auto postAssignment = _node.GetPostAssignmentRef().m_agentAssignments[agent][0];
+		assigns.push_back(postAssignment);
+	
+		Cfg previousCfg = agent->GetRobot()->GetSimulationModel()->GetState();
+		size_t previousTimeStep = 0;
+	
+		for(size_t i = 0; i < assigns.size(); i++) {
+			auto a = assigns[i];
+
+			std::vector<Cfg> interim;
+
+
+			PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> setupPath(roadmap.get());
+			//remove last element of setup as it is the same as the exec path
+			auto setup = a.m_setupPath;
+			//setup.pop_back();
+			setupPath += setup;
+			setupPath.SetFinalWaitTimeSteps(a.m_setupWaitTimeSteps);
+			//path += a.m_execPath;
+			std::vector<Cfg> cfgs;
+			if(!sg->m_discrete) 
+				cfgs = setupPath.FullCfgs(m_library);
+			else { 
+				auto verts = setupPath.Cfgs();
+
+				if(!verts.empty())
+					cfgs.push_back(verts[0]);
+				for(size_t j = 1; j < verts.size(); j++) {
+					Cfg middle = verts[j];
+					middle.SetData({(verts[j-1][0]+verts[j][0])/2, (verts[j-1][1]+verts[j][1])/2, 
+													(verts[j-1][2]+verts[j][2])/2});
+					cfgs.push_back(middle);
+					cfgs.push_back(verts[j]);
+				}
+				for(size_t j = 0; j < a.m_setupWaitTimeSteps; j++) {
+					cfgs.push_back(cfgs.back());
+				}
+			}
+
+			size_t interimSteps = 0;
+			if(a.m_execStartTime != a.m_setupStartTime)
+				interimSteps = a.m_execStartTime - (cfgs.size()+previousTimeStep);
+			if(!cfgs.empty() and interimSteps > 0)
+				interimSteps++;
+
+			if(m_debug) 
+				std::cout << "Interim Steps: " << interimSteps << std::endl;
+
+			//for(size_t j = 0; j < a.m_execStartTime - (cfgs.size()-1+previousTimeStep); j++) {
+			for(size_t j = 0; j < interimSteps; j++) {
+				interim.push_back(previousCfg);
+			}
+
+			if(!cfgs.empty())
+				cfgs.pop_back();
+
+			PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> execPath(roadmap.get());
+			//if(a.m_execStartTime != a.m_execEndTime and a.m_finalWaitTimeSteps > 0) {
+			execPath += a.m_execPath;
+			execPath.SetFinalWaitTimeSteps(a.m_finalWaitTimeSteps);
+			//}
+
+			std::vector<Cfg> execCfgs;
+			if(!sg->m_discrete)
+				execCfgs = execPath.FullCfgs(m_library);
+			else {
+				auto verts = execPath.Cfgs();
+
+				if(!verts.empty())
+					execCfgs.push_back(verts[0]);
+				for(size_t j = 1; j < verts.size(); j++) {
+					Cfg middle = verts[j];
+					middle.SetData({(verts[j-1][0]+verts[j][0])/2, (verts[j-1][1]+verts[j][1])/2, 
+													(verts[j-1][2]+verts[j][2])/2});
+					execCfgs.push_back(middle);
+					execCfgs.push_back(verts[j]);
+				}
+				for(size_t j = 0; j < a.m_finalWaitTimeSteps; j++) {
+					execCfgs.push_back(execCfgs.back());
+				}
+			}
+
+			previousCfg = execCfgs.back();
+
+			//if(i < assigns.size()-1) {
+				execCfgs.pop_back();
+				//previousTimeStep = 1;
+			//}	
+
+			size_t start = agentPaths[agent].size();
+			size_t end = start+interim.size()+cfgs.size()+execCfgs.size();
+
+			if(i == assigns.size()-1 and a.m_execStartTime != a.m_execEndTime)
+				end = end-1;
+
+			previousTimeStep = end;
+
+			if(end != a.m_execEndTime) {
+				std::cout << "End: " << end << " execEndTime: " << a.m_execEndTime << std::endl;
+
+				throw RunTimeException(WHERE, "Path lengths do not match up in Motion Validation for ." +
+																			agent->GetRobot()->GetLabel());
+			}
+			
+			agentPaths[agent].insert(agentPaths[agent].end(),interim.begin(),interim.end());
+			agentPaths[agent].insert(agentPaths[agent].end(),cfgs.begin(),cfgs.end());
+			agentPaths[agent].insert(agentPaths[agent].end(),execCfgs.begin(),execCfgs.end());
+
+			pathTaskMap[agent].push_back(std::make_pair(std::make_pair(start,end-1),a.m_task->GetParent()));
+		}
+		
+	}
+
+	//Find the last timestep a robot is moving.
+	size_t lastTimestep = 0;
+	for(auto& kv : agentPaths) {
+		lastTimestep = std::max(lastTimestep,kv.second.size());
+	}
+
+	auto vc = static_cast<CollisionDetectionValidity<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
+			m_library->GetValidityChecker(m_vcLabel).get());
+
+	for(size_t t = 0; t < lastTimestep; ++t) {
+		// Collision check each robot against all other at this timestep.
+		for(auto iter1 = agentPaths.begin(); iter1 != agentPaths.end();) {
+			// Configure the first robot at the appropriate configuration.
+			auto robot1 				= iter1->first->GetRobot();
+			const auto& path1 	= iter1->second;
+			const size_t step1 	= std::min(t, path1.size() - 1);
+			// If the agent has no assignments, check against its initial location
+			auto cfg1 					= (!path1.empty()) ? path1[step1] : 
+															robot1->GetSimulationModel()->GetState();
+			//auto cfg1 = path1[step1];
+			cfg1.SetRobot(robot1);
+			auto multibody1 		= robot1->GetMultiBody();
+			multibody1->Configure(cfg1);
+
+			// Compare to all remaining robots.
+			for(auto iter2 = ++iter1; iter2 != agentPaths.end(); ++iter2) {
+				//Configure the second rbot at the appropriate configuration.
+				auto robot2 				= iter2->first->GetRobot();
+				const auto& path2		= iter2->second;
+				const size_t step2 	= std::min(t, path2.size() - 1);
+				// If the agent has no assignments, check against its initial location
+				auto cfg2						= (!path2.empty()) ? path2[step2] :
+																robot2->GetSimulationModel()->GetState();
+				//auto cfg2 = path2[step2];
+				cfg2.SetRobot(robot2);
+				auto multibody2 		= robot2->GetMultiBody();
+				multibody2->Configure(cfg2);
+
+				// Check for collitision. If none, move on.
+				if(!sg->m_discrete) {
+					CDInfo cdInfo;
+					const bool collision = vc->IsMultiBodyCollision(cdInfo,
+						multibody1, multibody2, "MotionValidation");
+					if(collision)
+						conflictCount++;
+				}
+				else {
+					const bool collision = (cfg1[0] == cfg2[0]
+											and cfg1[1] == cfg2[1]
+											and cfg1[2] == cfg2[2]);
+					if(collision)
+						conflictCount++;
+				}
+			}
+		}
+	}
+
+	return conflictCount;
 }
 

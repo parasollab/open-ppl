@@ -444,7 +444,11 @@ ConstructGraph(){
   CombinedRoadmap::ConstructGraph();
   CreateHighLevelGraph();
 
+	//TODO::I think only used in one place and just use a >= check to capture the desired value
+	//without extra checks needed for task graphs with no nontask vertices.
 	m_nonTaskNodes = m_highLevelGraph->Size();
+	//if(m_nonTaskNodes > 0)
+	//	m_nonTaskNodes--;
 
   //CreateAvailableIntervalGraph();
   if(m_debug){
