@@ -34,6 +34,14 @@ if not os.path.isfile(test_file):
   print('Error: cannot find test file ' + test_file + '.')
   sys.exit(1)
 
+# Delete any leftover files from the previous run.
+for root, dirs, files in os.walk(output_dir):
+  for f in files:
+    # Skip hidden files.
+    if f[0] == '.':
+      continue;
+    os.remove(os.path.join(root, f))
+
 # Read the test file into an array of lines.
 lines = [line.strip() for line in open(test_file, 'r')]
 
