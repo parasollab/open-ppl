@@ -22,6 +22,9 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 	CBSSolution solution;
 	solution.m_decomposition = _decomposition;
 
+	auto flow = new SubtaskFlow(_decomposition->GetMainTask());
+	solution.m_subtaskFlow = flow;
+
 	CBSSolution postAssignment = this->CreatePostAssignment();
 
 	GeneralCBSNode node(solution,postAssignment);
@@ -40,16 +43,21 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 
 		AllocationConstraint constraint(nullptr,location,location,0,0,nullptr);
 
-		for(auto& semanticTask : _decomposition->GetSimpleTasks()) {
+		for(auto& semanticTask : _decomposition->GetMotionTasks()) {
 			constraint.m_task = semanticTask;
 			node.AddAllocationConstraint(constraint, agent);
 		}
 	}
 
-	for(auto& semanticTask : _decomposition->GetSimpleTasks()) {
+	/*for(auto& semanticTask : _decomposition->GetSimpleTasks()) {
 		if(!m_lowLevel->UpdateSolution(node, semanticTask))
 			return false;	
-	}
+	}*/
+
+
+	auto root = flow->GetRootIter();
+	if(!m_lowLevel->UpdateSolution(node,root->property().m_task))
+		return false;
 
 	_tree.push(node);
 	return true;

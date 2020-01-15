@@ -6,11 +6,14 @@ SubtaskFlow::
 SubtaskFlow(SemanticTask* _task) {
 	FlowNode node;
 	node.m_task = _task;
-	auto vid = this->add_vertex(node);
+	m_root = this->add_vertex(node);
 	TBDFunction blank;
-	std::vector<size_t> vids = {vid};
+	std::vector<size_t> vids = {m_root};
 	ParentInfo parent = std::make_pair(vids,blank);
-	EvalNode(_task, parent);
+	auto children = EvalNode(_task, parent);
+	for(auto vid : children.first) {
+		this->add_edge(m_root,vid,SemanticTask::DependencyType::None);
+	}
 }
 
 SubtaskFlow::
@@ -57,7 +60,48 @@ Print() {
 		}
 	}
 }
-/*--------------------------------------- Helper Function------------------------------------*/
+/*------------------------------------------- Accessors ---------------------------------------*/
+	
+size_t
+SubtaskFlow::
+Size() {
+	return this->get_num_vertices();
+}
+	
+SubtaskFlow::VI 
+SubtaskFlow::
+GetFlowNodeIter(SemanticTask* _task) {
+	for(auto vit = this->begin(); vit != this->end(); vit++) {
+		if(vit->property().m_task == _task)
+			return vit;
+	}
+	return this->end();
+}
+
+SubtaskFlow::VI
+SubtaskFlow::
+GetFlowNodeIter(size_t _vid) {
+	VI iter = this->find_vertex(_vid);
+	if(iter == this->end())
+		throw RunTimeException(WHERE) << "VID is not in SubtaskFlow: " << _vid << std::endl;
+	return iter;
+}
+
+FlowNode
+SubtaskFlow::
+GetFlowNode(size_t _vid) {
+	VI iter = this->find_vertex(_vid);
+	if(iter == this->end())
+		throw RunTimeException(WHERE) << "VID is not in SubtaskFlow: " << _vid << std::endl;
+	return iter->property();
+}
+		
+SubtaskFlow::VI 
+SubtaskFlow::
+GetRootIter() {
+	return this->GetFlowNodeIter(m_root);
+}
+/*--------------------------------------- Helper Functions ------------------------------------*/
 
 std::pair<std::vector<size_t>,TBDFunction>
 SubtaskFlow::
@@ -91,6 +135,7 @@ EvalNode(SemanticTask* _task, ParentInfo _parentInfo) {
 
 	// Check if first subtask is dependent on second.
 	ParentInfo children;
+		FlowNode GetFlowNode(SemanticTask* _task);
 	for(auto subtask : subtasks) {
 		children = HandleDependencies(subtask, _parentInfo);
 		if(!children.first.empty() 

@@ -566,6 +566,7 @@ PMPL_SRCS := \
 	Utilities/GeneralCBS/LowLevelSearch.cpp \
 	Utilities/GeneralCBS/MotionValidation.cpp \
 	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/PrecedenceLowLevelSearch.cpp \
 	Utilities/GeneralCBS/TCBSValidation.cpp \
 	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/Validation.cpp \

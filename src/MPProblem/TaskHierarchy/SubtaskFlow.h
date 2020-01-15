@@ -36,6 +36,8 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 #endif
     ;
 
+		typedef typename STAPLGraph::vertex_iterator VI;
+
 		///@}
 		///@name Construction
 		///@{
@@ -50,6 +52,18 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 
 		void Print();
 
+		///@}
+		///@name Accessors
+		///@{
+
+		size_t Size();
+
+		VI GetFlowNodeIter(SemanticTask* _task);
+		VI GetFlowNodeIter(size_t _vid);
+
+		FlowNode GetFlowNode(size_t _vid);
+
+		VI GetRootIter();
 		///@}
 
 	private:
@@ -76,6 +90,8 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 		///@{
 
 		std::unordered_map<SemanticTask*,size_t> m_taskNodeMap;
+
+		size_t m_root;
 
 		///@}
 

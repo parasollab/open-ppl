@@ -20,6 +20,11 @@ Decomposition(XMLNode& _node, MPProblem* _problem) {
 	m_label = _node.Read("label", true, "", 
 							"Unique label for the decomposition");
 
+	std::string coordinator = _node.Read("coordinator", true, "",
+							"Indicates whcih robot is responsible for coordinating this decompostion.");
+
+	m_coordinator = _problem->GetRobot(coordinator);
+
 	// create all the semantic tasks
 	for(auto& child : _node) {
 		if(child.Name() == "SemanticTask") {
@@ -47,6 +52,13 @@ Decomposition::
 GetLabel() const {
 	return m_label;
 }
+
+Robot*
+Decomposition::
+GetCoordinator() const {
+	return m_coordinator;
+}
+
 SemanticTask*
 Decomposition::
 GetMainTask() {
@@ -74,10 +86,22 @@ GetSimpleTasks() {
 	return m_simpleTasks;
 }
 
+std::vector<SemanticTask*>& 
+Decomposition::
+GetMotionTasks() {
+	return m_motionTasks;
+}
+
 void 
 Decomposition::
 AddSimpleTask(SemanticTask* _task) {
 	m_simpleTasks.push_back(_task);
+}
+
+void 
+Decomposition::
+AddMotionTask(SemanticTask* _task) {
+	m_motionTasks.push_back(_task);
 }
 
 /*--------------------------------- Helper Functions ------------------*/

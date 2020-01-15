@@ -285,6 +285,24 @@ CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks){
 
 void
 TaskPlan::
+CreateWholeTasks(Decomposition* _decomp){
+  for(auto task : _decomp->GetMotionTasks()){
+    WholeTask* wholeTask = new WholeTask();
+    wholeTask->m_task = task->GetMotionTask();
+		this->SetSemanticWholeTask(task,wholeTask);
+		
+    for(auto const& elem : m_dummyMap){
+      wholeTask->m_startPoints[elem.first] = {};
+      wholeTask->m_goalPoints[elem.first] = {};
+      wholeTask->m_startVIDs[elem.first] = {};
+      wholeTask->m_goalVIDs[elem.first] = {};
+    }
+    m_wholeTasks.push_back(wholeTask);
+  }
+}
+
+void
+TaskPlan::
 SetWholeTaskOwner(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask){
   m_subtaskMap[_subtask] = _wholeTask;
 }

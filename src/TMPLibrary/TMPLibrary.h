@@ -23,6 +23,7 @@
 //TMPLibrary TODOs::
 //Save the ITs in a single location so they only need to be constructed once
 
+class Decomposition;
 class PoIPlacementMethod;
 class StateGraph;
 class TaskAllocatorMethod;
@@ -187,6 +188,9 @@ class TMPLibrary {
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks,
 							 std::shared_ptr<TaskPlan> _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
+
+		void Solve(MPProblem* _problem, Decomposition* _decomp, std::shared_ptr<TaskPlan> _taskPlan,
+								Coordinator* _coordinator, std::vector<HandoffAgent*> _team); 
 		
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
 	  					 std::shared_ptr<TaskPlan> _taskPlan);

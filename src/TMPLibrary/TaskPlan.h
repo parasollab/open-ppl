@@ -4,6 +4,7 @@
 #include <list>
 #include <unordered_map>
 #include "MPProblem/MPTask.h"
+#include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 
 #include "Utilities/CBS/DiscreteAgentAllocation.h"
@@ -112,6 +113,9 @@ class TaskPlan {
 
     /// Generates the whole task object for each input task
     void CreateWholeTasks(std::vector<std::shared_ptr<MPTask>> _tasks);
+
+		/// Generates the whole task object for each motion task in the decomposition.
+    void CreateWholeTasks(Decomposition* _decomp);
 
     /// Sets the wholeTask owner of the subtask in the subtask map
     void SetWholeTaskOwner(std::shared_ptr<MPTask> _subtask, WholeTask* _wholeTask);

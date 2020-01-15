@@ -13,6 +13,7 @@
 #include "Utilities/GeneralCBS/ComposeValidation.h"
 #include "Utilities/GeneralCBS/GeneralCBS.h"
 #include "Utilities/GeneralCBS/MotionValidation.h"
+#include "Utilities/GeneralCBS/PrecedenceLowLevelSearch.h"
 #include "Utilities/GeneralCBS/TMPLowLevelSearch.h"
 #include "Utilities/SSSP.h"
 
@@ -54,31 +55,33 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	sg->PrintGraph();
 
 	//TODO::Create decomposition out of task plan
-	auto decomp = CreateDecomposition(_wholeTasks);
+	//auto decomp = CreateDecomposition(_wholeTasks);
 	//auto decomp = new Decomposition(std::shared_ptr<SemanticTask>(new SemanticTask()));
+	auto decomp = this->GetMPLibrary()->GetMPProblem()->GetDecompositions(this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get();
 	
-	TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_debug);
+	//TMPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_debug);
+	PrecedenceLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_debug);
 
 	auto alloc = new AllocationValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary());
 	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
-	//auto compose = new ComposeValidation({alloc, motion});
+
+	auto compose = new ComposeValidation({alloc, motion});
 
 												
-	ValidationFunction allocValid = [this,alloc](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
-		return alloc->ValidatePlan(_node, _tree);
-	};
+	//ValidationFunction allocValid = [this,alloc](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+	//	return alloc->ValidatePlan(_node, _tree);
+	//};
 
-	ConflictCountFunction allocCount = [this,alloc](GeneralCBSNode& _node) {
-		size_t conflicts = alloc->CountConflicts(_node);
-		_node.SetAllocationConflictCount(conflicts);
-	};
+	//ConflictCountFunction allocCount = [this,alloc](GeneralCBSNode& _node) {
+	//	size_t conflicts = alloc->CountConflicts(_node);
+	//	_node.SetAllocationConflictCount(conflicts);
+	//};
 
-	auto allocBypass = new BypassValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),
-																				allocValid,allocCount,MAX_INT);
+	//auto allocBypass = new BypassValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),
+	//																			allocValid,allocCount,MAX_INT);
 
-	auto compose = new ComposeValidation({allocBypass, motion});
+	//auto compose = new ComposeValidation({allocValid, motion});
 	
-	//auto compose = new ComposeValidation({alloc, motion});
 
 	InitialPlanFunction init = [this,alloc](Decomposition* _decomp,GeneralCBSTree& _tree) {
 		return alloc->InitialPlan(_decomp,_tree);
@@ -99,7 +102,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		for(auto plan : solution.m_taskPlans) {
 			auto task = plan.first;
 			auto assignments = plan.second;
-			std::cout << std::endl << std::endl << "Task: " << task << std::endl;
+			std::cout << std::endl << std::endl << "Task: " << task->GetLabel() << std::endl;
 			for(auto a : assignments) {
 				auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(a.m_agent)).get();
 				std::cout << "\tAgent: " << a.m_agent->GetRobot()->GetLabel() << std::endl;
@@ -1889,7 +1892,7 @@ CreateDecomposition(std::vector<WholeTask*> _wholeTasks) {
 		auto semanticTask = std::shared_ptr<SemanticTask>(new SemanticTask(top.get(),wholeTask->m_task));
 		decomp->AddTask(semanticTask);
 		top->AddSubtask(semanticTask.get());
-		decomp->AddSimpleTask(semanticTask.get());
+		decomp->AddMotionTask(semanticTask.get());
 		this->GetTaskPlan()->SetSemanticWholeTask(semanticTask.get(),wholeTask);
 	}
 

@@ -5,7 +5,9 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
+#include "MPProblem/TaskHierarchy/SubtaskFlow.h"
 
+#include <unordered_set>
 
 struct Assignment {
 	Agent* 													m_agent{nullptr};
@@ -59,9 +61,17 @@ struct Assignment {
 struct CBSSolution {
 
 	Decomposition* 																							m_decomposition;
+	SubtaskFlow*																								m_subtaskFlow;
 	std::unordered_map<SemanticTask*,Agent*>										m_allocationMap;
+
+	///< Sequence of assignments given to an agent.
 	std::unordered_map<Agent*,std::vector<Assignment>>					m_agentAssignments;
+
+	///< Individual agent assignments that complete the semantic task.
 	std::unordered_map<SemanticTask*,std::vector<Assignment>> 	m_taskPlans;
+
+	///< Indicates which task plans are chosen for multiply decomposable problems.
+	std::unordered_set<SemanticTask*>														m_solutionTasks;
 
 };
 

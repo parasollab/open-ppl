@@ -42,6 +42,7 @@ SemanticTask(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 	for(auto& child : _node) {
 		if(child.Name() == "Task") {
 			m_simpleTask = std::shared_ptr<MPTask>(new MPTask(_problem,child));
+			_decomp->AddMotionTask(this);
 		}
 		else if(child.Name() == "Dependency") {
 			ParseDependency(_problem, _node, _decomp);

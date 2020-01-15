@@ -132,6 +132,8 @@ UpdateTaskPlan(SemanticTask* _task, std::vector<Assignment> _assignments) {
 	//Just computing SOC for now
 	double cost = 0;
 	for(auto plan : m_solution.m_taskPlans) {
+		if(plan.second.empty())
+			continue;
 		auto a = plan.second.back();
 		cost += a.m_execEndTime;
 	}
@@ -193,6 +195,8 @@ GetCost() const {
 	//temp makespan override:
 	double makespan = 0;
 	for(auto& tp : m_solution.m_taskPlans) {
+		if(tp.second.empty())
+			continue;
 		if(tp.second.back().m_execEndTime > makespan)
 			makespan = tp.second.back().m_execEndTime;
 	}

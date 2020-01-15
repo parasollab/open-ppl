@@ -131,7 +131,7 @@ CreateDecomposition(std::vector<WholeTask*> _wholeTasks) {
 		std::shared_ptr<SemanticTask> previous = nullptr;
 		for(auto subtask : wholeTask->m_subtasks) {
 			auto sub = std::shared_ptr<SemanticTask>(new SemanticTask(semanticTask.get(),subtask));
-			decomp->AddSimpleTask(semanticTask.get());
+			decomp->AddMotionTask(semanticTask.get());
 			semanticTask->AddSubtask(sub.get());
 			if(previous) {
 				sub->AddDependency(previous.get(),SemanticTask::DependencyType::Initiation);

@@ -129,6 +129,8 @@ class MPProblem final
     /// @param _newOwner The new robot assigned to _task.
     void ReassignTask(MPTask* const _task, Robot* const _newOwner);
 
+		const std::vector<std::unique_ptr<Decomposition>>& GetDecompositions(Robot* _coordinator);
+
     ///@}
     ///@name Dynamic Obstacle Accessors
     ///@{
@@ -210,7 +212,7 @@ class MPProblem final
     std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>>
         m_groupTaskMap;
 
-		std::unordered_map<std::string,std::unique_ptr<Decomposition>> m_taskDecompositions;
+		std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>> m_taskDecompositions;
 
     ///@}
     ///@name Files

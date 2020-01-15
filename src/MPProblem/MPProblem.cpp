@@ -201,6 +201,12 @@ ReassignTask(MPTask* const _task, Robot* const _newOwner) {
   newTasks.emplace_back(std::move(*iter));
   oldTasks.erase(iter);
 }
+		
+const std::vector<std::unique_ptr<Decomposition>>& 
+MPProblem::
+GetDecompositions(Robot* _coordinator) {
+	return m_taskDecompositions[_coordinator];
+}
 
 /*----------------------------- Environment Accessors ------------------------*/
 
@@ -448,12 +454,10 @@ ParseChild(XMLNode& _node) {
   }
 	else if(_node.Name() == "Decomposition") {
 		auto decomp = std::unique_ptr<Decomposition>(new Decomposition(_node,this));
-		if(m_taskDecompositions[decomp->GetLabel()])
-			throw RunTimeException(WHERE,"Decomposition labels must be unique.");
 
 		auto top = decomp->GetMainTask();
 
-		m_taskDecompositions[decomp->GetLabel()] = std::move(decomp);
+		m_taskDecompositions[decomp->GetCoordinator()].push_back(std::move(decomp));
 
 		SubtaskFlow flow(top);
 		flow.Print();

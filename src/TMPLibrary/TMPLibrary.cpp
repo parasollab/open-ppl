@@ -350,7 +350,6 @@ SetBaseFilename(const std::string& _s) noexcept {
 /*---------------------------- Solution Accessors ----------------------------*/
 
 /*--------------------------- Execution Interface ----------------------------*/
-
 void
 TMPLibrary::
 Solve(MPProblem* _problem, 
@@ -365,6 +364,26 @@ Solve(MPProblem* _problem,
 				m_taskPlan->SetCoordinator(_coordinator);
 				m_taskPlan->LoadTeam(_team);
 				m_taskPlan->CreateWholeTasks(_tasks);
+
+				for(auto& solver : m_solvers)
+								RunSolver(solver);
+}
+
+void
+TMPLibrary::
+Solve(MPProblem* _problem, 
+								Decomposition* _decomp, 
+								std::shared_ptr<TaskPlan> _taskPlan,
+								Coordinator* _coordinator,
+								std::vector<HandoffAgent*> _team) {
+
+				m_problem = _problem;
+				m_taskPlan = _taskPlan;
+				m_taskPlan->SetCoordinator(_coordinator);
+				m_taskPlan->LoadTeam(_team);
+				m_taskPlan->CreateWholeTasks(_decomp);
+				for(auto task : _decomp->GetMotionTasks())
+					m_tasks.push_back(task->GetMotionTask());
 
 				for(auto& solver : m_solvers)
 								RunSolver(solver);

@@ -174,7 +174,7 @@ Initialize() {
 
   //USE TMPLIBRARY TO GET TASK ASSIGNMENTS
   m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
-  m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), m_taskPlan, this, m_memberAgents);
+  m_tmpLibrary->Solve(problem, problem->GetDecompositions(m_robot)[0].get(), m_taskPlan, this, m_memberAgents);
 
   if(!m_runSimulator) {
 		Simulation::Get()->PrintStatFile();
