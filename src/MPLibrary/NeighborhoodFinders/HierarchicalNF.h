@@ -128,6 +128,9 @@ void
 HierarchicalNF<MPTraits>::
 FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
 }
 
@@ -137,6 +140,9 @@ void
 HierarchicalNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
 }
 
@@ -150,9 +156,6 @@ HierarchicalNF<MPTraits>::
 FindNeighborsImpl(AbstractRoadmapType* const _r,
     const typename AbstractRoadmapType::CfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
-  MethodTimer mt(this->GetStatClass(),
-      this->GetNameAndLabel() + "::FindNeighbors");
-
   // Run each method in succession.
   m_candidateBuffer = _candidates;
   for(auto iter = m_nfLabels.begin(); ; ) {

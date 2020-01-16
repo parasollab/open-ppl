@@ -229,6 +229,9 @@ void
 OptimalNF<MPTraits>::
 FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   // Update parameters and compute neighbors.
   m_setParameters(_r);
   m_nf->FindNeighbors(_r, _cfg, _candidates, _out);

@@ -122,6 +122,9 @@ void
 RadiusNF<MPTraits>::
 FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
 }
 
@@ -131,6 +134,9 @@ void
 RadiusNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
 }
 
