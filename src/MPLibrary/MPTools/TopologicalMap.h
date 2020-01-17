@@ -97,14 +97,15 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _region The region of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    VertexSet GetMappedVIDs(const WorkspaceRegion* const _region,
+    VertexSet GetMappedVIDs(RoadmapType* const _r,
+        const WorkspaceRegion* const _region,
         const size_t _bodyIndex = 0) const;
 
     /// Get the set of VIDs that are bucketed within a set of regions.
     /// @param _regions The regions of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    VertexSet GetMappedVIDs(
+    VertexSet GetMappedVIDs(RoadmapType* const _r,
         const std::vector<const WorkspaceRegion*>& _regions,
         const size_t _bodyIndex = 0) const;
 
@@ -113,7 +114,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _end An end iterator to the region descriptors of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    VertexSet GetMappedVIDs(
+    VertexSet GetMappedVIDs(RoadmapType* const _r,
         std::vector<VD>::const_iterator _begin,
         std::vector<VD>::const_iterator _end,
         const size_t _bodyIndex = 0) const;
@@ -123,14 +124,14 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _bodyIndex The body to use.
     /// @return The workspace region in which body _bodyIndex resides when
     ///         configured at _vid.
-    const WorkspaceRegion* GetMappedRegion(const VID _vid,
+    const WorkspaceRegion* GetMappedRegion(RoadmapType* const _r, const VID _vid,
         const size_t _bodyIndex = 0) const;
 
     /// Check if a region is populated.
     /// @param _region The region to check.
     /// @param _bodyIndex The body to use.
     /// @return True if the region contains any configurations of _bodyIndex.
-    bool IsPopulated(const WorkspaceRegion* const _region,
+    bool IsPopulated(RoadmapType* const _r, const WorkspaceRegion* const _region,
         const size_t _bodyIndex = 0) const;
 
     ///@}
@@ -146,7 +147,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _bodyIndex The body to use.
     /// @return The region containing _bodyIndex at _vid, or null if in obstacle
     ///         space.
-    const WorkspaceRegion* LocateRegion(const VID _vid,
+    const WorkspaceRegion* LocateRegion(RoadmapType* const _r, const VID _vid,
         const size_t _bodyIndex = 0) const;
 
     /// Find the workspace region that contains the reference point for a given
@@ -180,7 +181,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _bodyIndex The body to use.
     /// @return The index of the grid cell which contains _bodyIndex when
     ///         configured at _v.
-    size_t LocateCell(const VID _v, const size_t _bodyIndex = 0) const;
+    size_t LocateCell(RoadmapType* const _r, const VID _v,
+        const size_t _bodyIndex = 0) const;
 
     /// Find the grid cell index that holds a given configuration.
     /// @param _c The configuration.
@@ -203,7 +205,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     /// Locate the neighborhood that is occupied by a robot in a particular
     /// configuration.
-    NeighborhoodKey LocateNeighborhood(const VID _v) const;
+    NeighborhoodKey LocateNeighborhood(RoadmapType* const _r, const VID _v) const;
     NeighborhoodKey LocateNeighborhood(const CfgType& _c) const; ///< @overload
 
     ///@}
@@ -220,6 +222,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// Compute the frontier of occupied cells for a given body, starting from
     /// a designated cell.
     /// @param _region The starting region.
+    /// @param _roadmap The roadmap to check population.
     /// @param _bodyIndex The body to use.
     /// @param _backtrackDistance Stop after the last cell added is this far
     ///                           from the first populated cell. Use -1 to
@@ -230,6 +233,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///         (including populated and unpopulated cells).
     SSSPData
     ComputeFrontier(const WorkspaceRegion* const _region,
+        RoadmapType* const _r = nullptr,
         const size_t _bodyIndex = 0,
         const double _backtrackDistance = -1,
         const AdjacencyMap& _adjacency = {});
@@ -277,14 +281,17 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///@name Cfg Mapping
     ///@{
 
+    /// Create a new mapping for a robot.
+    void EnsureMap(RoadmapType* const _r);
+
     /// Map a new configuration to the appropriate decomposition region and vis
     /// versa.
     /// @param _vertex A roadmap graph iterator to the newly added vertex.
-    void MapCfg(const VI _vertex);
+    void MapCfg(RoadmapType* const _r, const VI _vertex);
 
     /// Unmap a to-be-deleted configuration.
     /// @param _vertex A roadmap graph iterator to the to-be-deleted vertex.
-    void UnmapCfg(const VI _vertex);
+    void UnmapCfg(RoadmapType* const _r, const VI _vertex);
 
     /// Clear the cfg maps.
     void ClearCfgMaps();
@@ -292,12 +299,14 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// Get the forward map from region -> VIDs for a given body.
     /// @param _bodyIndex The body index.
     /// @return The map for this body.
-    const OccupancyMap& GetForwardMap(const size_t _bodyIndex) const;
+    const OccupancyMap& GetForwardMap(RoadmapType* const _r,
+        const size_t _bodyIndex) const;
 
     /// Get the inverse map from VID -> regions for each body.
     /// @param _vid The VID to unmap.
     /// @return The neighborhood key for this configuration.
-    const NeighborhoodKey& GetInverseMap(const VID _vid) const;
+    const NeighborhoodKey& GetInverseMap(RoadmapType* const _r, const VID _vid)
+        const;
 
     ///@}
     ///@name Distance Caching
@@ -329,10 +338,11 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     GridOverlay::DecompositionMap m_cellToRegions;
 
     /// A mapping from workspace regions to contained VIDs.
-    std::vector<OccupancyMap> m_regionToVIDs;
+    std::unordered_map<RoadmapType*, std::vector<OccupancyMap>> m_regionToVIDs;
 
     /// An inverse mapping from VID to the containing neighborhood.
-    std::unordered_map<VID, NeighborhoodKey> m_vidToNeighborhood;
+    std::unordered_map<RoadmapType*, std::unordered_map<VID, NeighborhoodKey>>
+        m_vidToNeighborhood;
 
     /// A set of grid cells which lie on the boundary of obstacle space.
     std::unordered_set<size_t> m_boundaryCells;
@@ -486,21 +496,6 @@ Initialize() {
     }
   }
 #endif
-
-  // Set the size of the mapping.
-  auto mb = this->GetTask()->GetRobot()->GetMultiBody();
-  m_regionToVIDs.resize(mb->GetNumBodies());
-
-  // Install roadmap hooks.
-  auto g = this->GetRoadmap();
-  g->InstallHook(RoadmapType::HookType::AddVertex, this->GetNameAndLabel(),
-      [this](const VI _vi){this->MapCfg(_vi);});
-  g->InstallHook(RoadmapType::HookType::DeleteVertex, this->GetNameAndLabel(),
-      [this](const VI _vi){this->UnmapCfg(_vi);});
-
-  // If the graph has existing vertices, map them now.
-  for(auto iter = g->begin(); iter != g->end(); ++iter)
-    MapCfg(iter);
 }
 
 /*---------------------------------- Queries ---------------------------------*/
@@ -508,16 +503,12 @@ Initialize() {
 template <typename MPTraits>
 typename MPTraits::RoadmapType::VertexSet
 TopologicalMap<MPTraits>::
-GetMappedVIDs(const WorkspaceRegion* const _region, const size_t _bodyIndex)
-    const {
-  /// @bug This version only returns a sorted output because the graph uses
-  ///      ascending VIDs. Things will get confused if we add VIDs out of order.
-  ///      Ideally we need to check for this in MapCfg, and maybe also make a
-  ///      loaded roadmap compress its VIDs if there are any missing.
+GetMappedVIDs(RoadmapType* const _r, const WorkspaceRegion* const _region,
+    const size_t _bodyIndex) const {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::GetMappedVIDs");
 
-  const auto& forwardMap = GetForwardMap(_bodyIndex);
+  const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
 
   auto iter = forwardMap.find(_region);
   return iter == forwardMap.end() ? VertexSet() : iter->second;
@@ -527,16 +518,15 @@ GetMappedVIDs(const WorkspaceRegion* const _region, const size_t _bodyIndex)
 template <typename MPTraits>
 typename MPTraits::RoadmapType::VertexSet
 TopologicalMap<MPTraits>::
-GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
+GetMappedVIDs(RoadmapType* const _r,
+    const std::vector<const WorkspaceRegion*>& _regions,
     const size_t _bodyIndex) const {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::GetMappedVIDs");
 
-  const auto& forwardMap = GetForwardMap(_bodyIndex);
+  const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
 
   // Find all VIDs that live within the region set.
-  /// @todo Profile effect of changing all to a std::set and removing the later
-  ///       sort/unique calls.
   VertexSet all;
   for(const auto region : _regions) {
     // Skip empty regions.
@@ -556,7 +546,7 @@ GetMappedVIDs(const std::vector<const WorkspaceRegion*>& _regions,
 template <typename MPTraits>
 typename MPTraits::RoadmapType::VertexSet
 TopologicalMap<MPTraits>::
-GetMappedVIDs(
+GetMappedVIDs(RoadmapType* const _r,
     std::vector<VD>::const_iterator _begin,
     std::vector<VD>::const_iterator _end,
     const size_t _bodyIndex) const {
@@ -567,7 +557,7 @@ GetMappedVIDs(
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::GetMappedVIDs");
 
-  const auto& forwardMap = GetForwardMap(_bodyIndex);
+  const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
   auto decomposition = this->GetDecomposition();
 
   // Find all VIDs that live within the region set.
@@ -592,15 +582,16 @@ GetMappedVIDs(
 template <typename MPTraits>
 const WorkspaceRegion*
 TopologicalMap<MPTraits>::
-GetMappedRegion(const VID _vid, const size_t _bodyIndex) const {
-  const auto& inverseMap = GetInverseMap(_vid);
+GetMappedRegion(RoadmapType* const _r, const VID _vid, const size_t _bodyIndex)
+    const {
+  const auto& inverseMap = GetInverseMap(_r, _vid);
   try {
     return inverseMap.at(_bodyIndex);
   }
   catch(const std::runtime_error& _e) {
     throw RunTimeException(WHERE) << "Inverse map for VID " << _vid
-                                  << " has no entry for body index " << _bodyIndex
-                                  << ".";
+                                  << " has no entry for body index "
+                                  << _bodyIndex << ".";
   }
 }
 
@@ -608,8 +599,9 @@ GetMappedRegion(const VID _vid, const size_t _bodyIndex) const {
 template <typename MPTraits>
 bool
 TopologicalMap<MPTraits>::
-IsPopulated(const WorkspaceRegion* const _region, const size_t _bodyIndex) const {
-  const auto& forwardMap = GetForwardMap(_bodyIndex);
+IsPopulated(RoadmapType* const _r, const WorkspaceRegion* const _region,
+    const size_t _bodyIndex) const {
+  const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
   auto iter = forwardMap.find(_region);
   return iter != forwardMap.end() and !iter->second.empty();
 }
@@ -630,8 +622,9 @@ GetRandomRegion() const {
 template <typename MPTraits>
 const WorkspaceRegion*
 TopologicalMap<MPTraits>::
-LocateRegion(const VID _vid, const size_t _bodyIndex) const {
-  return LocateRegion(this->GetRoadmap()->GetVertex(_vid), _bodyIndex);
+LocateRegion(RoadmapType* const _r, const VID _vid, const size_t _bodyIndex)
+    const {
+  return LocateRegion(_r->GetVertex(_vid), _bodyIndex);
 }
 
 
@@ -731,8 +724,8 @@ LocateNearestRegion(const Point3d& _p) const {
 template <typename MPTraits>
 size_t
 TopologicalMap<MPTraits>::
-LocateCell(const VID _v, const size_t _bodyIndex) const {
-  return LocateCell(this->GetRoadmap()->GetVertex(_v), _bodyIndex);
+LocateCell(RoadmapType* const _r, const VID _v, const size_t _bodyIndex) const {
+  return LocateCell(_r->GetVertex(_v), _bodyIndex);
 }
 
 
@@ -759,8 +752,8 @@ LocateCell(const Point3d& _p) const {
 template <typename MPTraits>
 typename TopologicalMap<MPTraits>::NeighborhoodKey
 TopologicalMap<MPTraits>::
-LocateNeighborhood(const VID _v) const {
-  return LocateNeighborhood(this->GetRoadmap()->GetVertex(_v));
+LocateNeighborhood(RoadmapType* const _r, const VID _v) const {
+  return LocateNeighborhood(_r->GetVertex(_v));
 }
 
 
@@ -799,47 +792,73 @@ GetDecomposition() const {
 template <typename MPTraits>
 void
 TopologicalMap<MPTraits>::
-MapCfg(const VI _vertex) {
+EnsureMap(RoadmapType* const _r) {
+  // Create forward and inverse maps.
+  auto& forward = m_regionToVIDs[_r];
+  auto& inverse = m_vidToNeighborhood[_r];
+
+  // Set the size of the mappings.
+  auto mb = _r->GetRobot()->GetMultiBody();
+  forward.resize(mb->GetNumBodies());
+  inverse.reserve(_r->Size());
+
+  // Install roadmap hooks.
+  _r->InstallHook(RoadmapType::HookType::AddVertex, this->GetNameAndLabel(),
+      [this, _r](const VI _vi){this->MapCfg(_r, _vi);});
+  _r->InstallHook(RoadmapType::HookType::DeleteVertex, this->GetNameAndLabel(),
+      [this, _r](const VI _vi){this->UnmapCfg(_r, _vi);});
+
+  // If the graph has existing vertices, map them now.
+  for(auto iter = _r->begin(); iter != _r->end(); ++iter)
+    MapCfg(_r, iter);
+}
+
+
+template <typename MPTraits>
+void
+TopologicalMap<MPTraits>::
+MapCfg(RoadmapType* const _r, const VI _vertex) {
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::MapCfg");
 
   const auto& cfg = _vertex->property();
   const VID vid = _vertex->descriptor();
 
+  // Inverse-map the VID to the regions.
   const auto neighborhood = LocateNeighborhood(cfg);
+  m_vidToNeighborhood[_r][vid] = neighborhood;
 
   // Forward-map the regions to the VID.
+  auto& forward = m_regionToVIDs[_r];
   for(size_t i = 0; i < neighborhood.size(); ++i) {
     auto region = neighborhood[i];
-    m_regionToVIDs[i][region].insert(vid);
+    forward[i][region].insert(vid);
   }
-
-  // Inverse-map the VID to the regions.
-  m_vidToNeighborhood[vid] = neighborhood;
 }
 
 
 template<typename MPTraits>
 void
 TopologicalMap<MPTraits>::
-UnmapCfg(const VI _vertex) {
+UnmapCfg(RoadmapType* const _r, const VI _vertex) {
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::UnmapCfg");
 
   const VID vid = _vertex->descriptor();
 
   // Assert that this vertex was mapped to a neighborhood.
-  auto neighborhoodIter = m_vidToNeighborhood.find(vid);
-
-  if(neighborhoodIter == m_vidToNeighborhood.end())
+  auto& inverse = m_vidToNeighborhood[_r];
+  auto neighborhoodIter = inverse.find(vid);
+  if(neighborhoodIter == inverse.end())
     throw RunTimeException(WHERE) << "Tried to unmap vertex " << vid
                                   << ", but didn't find a neighborhood for it.";
 
   // Remove the mapping from each neighborhood region to this VID.
   const auto& neighborhood = neighborhoodIter->second;
+  auto& forward = m_regionToVIDs[_r];
   for(size_t i = 0; i < neighborhood.size(); ++i) {
     const auto region = neighborhood[i];
 
     // Assert that the region was mapped to the vertex.
-    auto& regionMap = m_regionToVIDs[i][region];
+    auto& regionMap = forward[i][region];
     auto vidIter = std::find(regionMap.begin(), regionMap.end(), vid);
 
     if(vidIter == regionMap.end())
@@ -851,7 +870,7 @@ UnmapCfg(const VI _vertex) {
     regionMap.erase(vidIter);
   }
 
-  m_vidToNeighborhood.erase(neighborhoodIter);
+  inverse.erase(neighborhoodIter);
 }
 
 
@@ -868,13 +887,15 @@ template <typename MPTraits>
 inline
 const typename TopologicalMap<MPTraits>::OccupancyMap&
 TopologicalMap<MPTraits>::
-GetForwardMap(const size_t _bodyIndex) const {
+GetForwardMap(RoadmapType* const _r, const size_t _bodyIndex) const {
+  const_cast<TopologicalMap*>(this)->EnsureMap(_r);
   try {
-    return m_regionToVIDs.at(_bodyIndex);
+    return m_regionToVIDs.at(_r).at(_bodyIndex);
   }
   catch(const std::runtime_error& _e) {
-    throw RunTimeException(WHERE) << "No forward map for body index "
-                                  << _bodyIndex << ".";
+    throw RunTimeException(WHERE) << "No forward map for "
+                                  << "roadmap " << _r << ", "
+                                  << "body index " << _bodyIndex << ".";
   }
 }
 
@@ -883,12 +904,15 @@ template <typename MPTraits>
 inline
 const typename TopologicalMap<MPTraits>::NeighborhoodKey&
 TopologicalMap<MPTraits>::
-GetInverseMap(const VID _vid) const {
+GetInverseMap(RoadmapType* const _r, const VID _vid) const {
+  const_cast<TopologicalMap*>(this)->EnsureMap(_r);
   try {
-    return m_vidToNeighborhood.at(_vid);
+    return m_vidToNeighborhood.at(_r).at(_vid);
   }
   catch(const std::runtime_error& _e) {
-    throw RunTimeException(WHERE) << "No inverse map for VID " << _vid << ".";
+    throw RunTimeException(WHERE) << "No inverse map for "
+                                  << "roadmap " << _r << ", "
+                                  << "VID " << _vid << ".";
   }
 }
 
@@ -909,7 +933,8 @@ MakeKey(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2)
 template <typename MPTraits>
 typename TopologicalMap<MPTraits>::SSSPData
 TopologicalMap<MPTraits>::
-ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
+ComputeFrontier(const WorkspaceRegion* const _region, RoadmapType* const _r,
+    const size_t _bodyIndex,
     const double _backtrackDistance, const AdjacencyMap& _adjacency) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeFrontier");
@@ -939,7 +964,7 @@ ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
   double maxDistance = std::numeric_limits<double>::max();
   bool foundFirstPopulated = false;
   SSSPTerminationCriterion<WorkspaceDecomposition> stop =
-      [this, wd, _bodyIndex, _backtrackDistance, &maxDistance,
+      [this, wd, _r, _bodyIndex, _backtrackDistance, &maxDistance,
           &foundFirstPopulated](
           typename WorkspaceDecomposition::vertex_iterator& _vi,
           const SSSPOutput<WorkspaceDecomposition>& _sssp)
@@ -949,7 +974,7 @@ ComputeFrontier(const WorkspaceRegion* const _region, const size_t _bodyIndex,
 
         // If we haven't found the first populated region yet, check for it now.
         if(!foundFirstPopulated
-            and this->IsPopulated(&wd->GetRegion(vd), _bodyIndex)) {
+            and this->IsPopulated(_r, &wd->GetRegion(vd), _bodyIndex)) {
           foundFirstPopulated = true;
           maxDistance = distance + _backtrackDistance;
 

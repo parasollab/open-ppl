@@ -105,15 +105,16 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     ///                         empty.
     /// @return The set of regions that hold candidate neighbors for _bodyIndex
     ///         at _cfg.
-    PopulationMarkers FindCandidateRegions(const CfgType& _cfg,
-        const size_t _bodyIndex, const VertexSet& _inputCandidates);
+    PopulationMarkers FindCandidateRegions(RoadmapType* const _r,
+        const CfgType& _cfg, const size_t _bodyIndex,
+        const VertexSet& _inputCandidates);
 
     /// Find the topological candidate vertices for a given configuration.
     /// @param _query The configuration we wish to connect to.
     /// @param _inputCandidates The set of allowed candidates, or the roadmap if
     ///                         empty.
     /// @return The set of VIDs that are good topological candidates for _query.
-    VertexSet FindCandidates(const CfgType& _cfg,
+    VertexSet FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
         const VertexSet& _inputCandidates = {});
 
     ///@}
@@ -243,7 +244,9 @@ FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
 
   // Find the topological candidate vertices.
-  VertexSet topologicalCandidates = FindCandidates(_cfg, _candidates);
+  const bool fullRoadmap = _candidates.size() == _r->Size();
+  VertexSet topologicalCandidates = FindCandidates(_r, _cfg,
+      fullRoadmap ? VertexSet() : _candidates);
   stats->GetAverage(id + "::TopologicalCandidates") +=
       topologicalCandidates.size();
 
@@ -295,8 +298,8 @@ FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
 template <typename MPTraits>
 typename TopologicalFilter<MPTraits>::PopulationMarkers
 TopologicalFilter<MPTraits>::
-FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
-    const VertexSet& _inputCandidates) {
+FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
+    const size_t _bodyIndex, const VertexSet& _inputCandidates) {
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
   MethodTimer mt(stats, id + "::FindCandidateRegions");
@@ -347,12 +350,17 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
     auto& region = decomposition->GetRegion(*markers.first);
 
     // If it isn't populated, keep going.
-    if(!tm->IsPopulated(&region, _bodyIndex))
+    if(!tm->IsPopulated(_r, &region, _bodyIndex))
       continue;
+
+    // If the input candidate set is empty, we're looking over the whole
+    // roadmap and this is the first marker.
+    if(_inputCandidates.empty())
+      break;
 
     // If there are any points in common between this region's VIDs and
     // our input candidate set, we've found the first marker.
-    const VertexSet& cellVIDs = tm->GetMappedVIDs(&region, _bodyIndex);
+    const VertexSet& cellVIDs = tm->GetMappedVIDs(_r, &region, _bodyIndex);
     const VertexSet* small, * large;
     if(cellVIDs.size() < _inputCandidates.size()) {
       small = &cellVIDs;
@@ -455,7 +463,8 @@ FindCandidateRegions(const CfgType& _cfg, const size_t _bodyIndex,
 template <typename MPTraits>
 typename MPTraits::RoadmapType::VertexSet
 TopologicalFilter<MPTraits>::
-FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
+FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _inputCandidates) {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::FindCandidates");
 
@@ -479,12 +488,16 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
   // appear.
   for(size_t i = 0; i < bodyCount; ++i) {
     // Find the candidate regions for this body.
-    const PopulationMarkers regions = FindCandidateRegions(_cfg, i,
+    const PopulationMarkers regions = FindCandidateRegions(_r, _cfg, i,
         _inputCandidates);
 
     // Get the sorted candidates for this region.
-    candidates.clear();
-    candidates = tm->GetMappedVIDs(regions.first, regions.second, i);
+    {
+      MethodTimer mt(this->GetStatClass(),
+          this->GetNameAndLabel() + "::FindCandidates::Get");
+      candidates.clear();
+      candidates = tm->GetMappedVIDs(_r, regions.first, regions.second, i);
+    }
 
     if(this->m_debug)
       std::cout << "\t" << candidates.size()
@@ -494,6 +507,8 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
     // If we are selecting only from a set of input candidates, discard any new
     // candidates that aren't in the input set.
     if(_inputCandidates.size()) {
+      MethodTimer mt(this->GetStatClass(),
+          this->GetNameAndLabel() + "::FindCandidates::Filter");
       for(auto iter = candidates.begin(); iter != candidates.end(); ) {
         // If this vertex is allowed, move on.
         if(_inputCandidates.count(*iter))
@@ -509,6 +524,8 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
     }
 
     // Count the new candidates.
+    MethodTimer mt(this->GetStatClass(),
+        this->GetNameAndLabel() + "::FindCandidates::Count");
     for(const auto vid : candidates) {
       // Check if this vertex has already been seen.
       auto iter = descriptorCounts.find(vid);
@@ -533,6 +550,8 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
 
   // We have counted all of the descriptors in each body's frontier. Determine
   // the best set to return for the underlying NF.
+  MethodTimer jt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindCandidates::Join");
   candidates.clear();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   switch(nf->GetType()) {
@@ -673,13 +692,13 @@ BuildQueryMap() {
               << "\n\tDescriptor:  "
               << decomposition->GetDescriptor(*goalRegion)
               << "\n\tMapped VIDs for base:";
-    for(const auto vid : tm->GetMappedVIDs(goalRegion))
+    for(const auto vid : tm->GetMappedVIDs(g, goalRegion))
       std::cout << "  " << vid;
     auto startRegion = tm->LocateRegion(start);
     std::cout << "\n\tStart region: " << startRegion
               << "\n\tDescriptor:  " << decomposition->GetDescriptor(*startRegion)
               << "\n\tMapped VIDs for base:";
-    for(const auto vid : tm->GetMappedVIDs(startRegion))
+    for(const auto vid : tm->GetMappedVIDs(g, startRegion))
       std::cout << "  " << vid;
 
     std::cout << std::endl;
@@ -719,7 +738,7 @@ GetSSSPData(const WorkspaceRegion* _region) {
   auto& ssspCache = m_ssspCache[_region];
   ssspCache = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS
             ? tm->ComputeFrontierNew(_region, nf->GetRadius(), m_queryMap)
-            : tm->ComputeFrontier(_region, 0, -1, m_queryMap);
+            : tm->ComputeFrontier(_region, nullptr, 0, -1, m_queryMap);
 
   // Remove the data we will not use.
   ssspCache.parent.clear();

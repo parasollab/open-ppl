@@ -217,13 +217,9 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
     return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, &m_active);
 
   // Otherwise we need to select only nodes that are both active and in the
-  // candidate set. Find the intersection of the active set with the candidates.
-  VertexSet activeCandidates;
-  activeCandidates.reserve(std::min(_candidates->size(), m_active.size()));
-  std::copy_if(m_active.begin(), m_active.end(),
-      std::inserter(activeCandidates, activeCandidates.end()),
-      [_candidates](const VID _vid){return _candidates->count(_vid);}
-  );
+  // candidate set.
+  const VertexSet activeCandidates = VertexSetIntersection(m_active,
+      *_candidates);
 
   // Ensure we found some active candidates.
   if(activeCandidates.empty())
@@ -244,10 +240,6 @@ SelectNeighbor(const CfgType& _cfg, const std::vector<Neighbor>& _neighbors) {
   Neighbor best = _neighbors[0];
   double bestCost = g->GetVertex(best.target).GetStat("cost");
   for(const auto& n : _neighbors) {
-    // Check for invalid neighbors.
-    if(n.target == INVALID_VID)
-      throw RunTimeException(WHERE) << "NF should not return bogus nodes.";
-
     // Skip if this neighbor isn't better than the best.
     const double pathCost = g->GetVertex(n.target).GetStat("cost");
     if(pathCost >= bestCost)

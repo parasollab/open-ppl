@@ -385,7 +385,7 @@ Initialize() {
 
   const VID start = *startVIDs.begin();
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto startRegion = tm->LocateRegion(start);
+  auto startRegion = tm->LocateRegion(this->GetRoadmap(), start);
   m_regionData[startRegion].vertices.insert(start);
 }
 
@@ -414,8 +414,9 @@ Syclop<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _qRand, LPOutput<MPTraits>& _lp,
     const bool _requireNew) {
   // Log this extension attempt.
+  auto r = this->GetRoadmap();
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  const WorkspaceRegion* r1 = tm->LocateRegion(_nearVID);
+  const WorkspaceRegion* r1 = tm->LocateRegion(r, _nearVID);
   const WorkspaceRegion* r2 = tm->LocateRegion(_qRand);
   ++(m_regionPairData[std::make_pair(r1, r2)].numAttempts);
 
@@ -432,8 +433,9 @@ AddNode(const CfgType& _newCfg) {
   // If node is new and not invalid, update region data.
   if(added.second) {
     // Find the region and coverage cell for this node.
+    auto g = this->GetRoadmap();
     auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-    const WorkspaceRegion* r = tm->LocateRegion(added.first);
+    const WorkspaceRegion* r = tm->LocateRegion(g, added.first);
     const size_t cellIndex = tm->LocateCell(_newCfg.GetPoint());
     auto& data = m_regionData[r];
 
@@ -467,10 +469,11 @@ AddEdge(const VID _source, const VID _target, const LPOutput<MPTraits>& _lpOutpu
 
   // Update the list of cells in the target region that were reached by
   // extending from the source region.
+  auto r = this->GetRoadmap();
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  const WorkspaceRegion* const r1 = tm->LocateRegion(_source);
-  const WorkspaceRegion* const r2 = tm->LocateRegion(_target);
-  const size_t cellIndex = tm->LocateCell(_target);
+  const WorkspaceRegion* const r1 = tm->LocateRegion(r, _source);
+  const WorkspaceRegion* const r2 = tm->LocateRegion(r, _target);
+  const size_t cellIndex = tm->LocateCell(r, _target);
 
   m_regionPairData[std::make_pair(r1, r2)].AddCell(cellIndex);
 }
@@ -495,13 +498,14 @@ DiscreteLead() {
   const auto& startVIDs = goalTracker->GetStartVIDs();
   const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
   Point3d goalPoint;
+  auto r = this->GetRoadmap();
 
   if(startVIDs.size() != 1)
     throw RunTimeException(WHERE) << "Exactly one start VID is required, but "
                                   << startVIDs.size() << " were found.";
   if(goalVIDs.size() == 1) {
     const VID goalVID = *goalVIDs.begin();
-    goalPoint = this->GetRoadmap()->GetVertex(goalVID).GetPoint();
+    goalPoint = r->GetVertex(goalVID).GetPoint();
   }
   else {
     // Check for a goal boundary. We already checked that there is one goal
@@ -533,7 +537,7 @@ DiscreteLead() {
 
   // Find the start and goal regions.
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto startRegion = tm->LocateRegion(*startVIDs.begin());
+  auto startRegion = tm->LocateRegion(r, *startVIDs.begin());
   auto goalRegion  = tm->LocateRegion(goalPoint);
 
   // Find the start and goal in the graph

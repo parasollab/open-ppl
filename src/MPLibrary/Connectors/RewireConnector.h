@@ -252,10 +252,19 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
   else
     nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
 
+  // If we have a CC tracker, disable it during rewire since we won't change the
+  // CCs by the end.
+  auto ccTracker = _r->GetCCTracker();
+  if(ccTracker)
+    ccTracker->Disable();
+
   // Attempt to rewire this vertex with a better parent.
   RewireVertex(_r, _source, m_neighborBuffer, _collision);
   // Attempt to rewire the neighbors through _source.
   RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
+
+  if(ccTracker)
+    ccTracker->Enable();
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
