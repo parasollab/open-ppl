@@ -27,6 +27,16 @@ UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 	Initialize(_node, _task, query);
 
 	if(m_debug) {
+		std::cout << "Elems with constraints" << std::endl;
+		for(auto kv : m_availSourceMap) {
+			std::cout << kv.first.m_vid 
+								<< ", "
+								<< kv.first.m_agent->GetRobot()->GetLabel()
+								<< ", "
+								<< kv.first.m_availInt
+								<< std::endl;
+		}
+
 		for(auto inter : m_intervalMap) {
 			auto vid = inter.first;
 			auto cfg = sg->GetGraph()->GetVertex(vid);
@@ -236,9 +246,11 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, SemanticTask* _task, Agent*
 			else if(iter->second > departTime and iter->first < departTime) { //overlap is at the back of interval
 				iter->second = departTime;
 
+				auto oldConstraint = m_availSourceMap[elem];
+
 				//update which constraint is the source which interval
 				elem.m_availInt = *iter;
-				//m_availSourceMap[elem] = constraint;	
+				m_availSourceMap[elem] = oldConstraint;	
 				m_availEndMap[elem] = constraint;
 				iter++;
 				continue;
