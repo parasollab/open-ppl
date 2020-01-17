@@ -23,7 +23,9 @@
 #include <string>
 #include <vector>
 
-using ED = WorkspaceSkeleton::ED;
+using VD = WorkspaceSkeleton::VD;
+using EIT = WorkspaceSkeleton::adj_edge_iterator;
+using VIT = WorkspaceSkeleton::vertex_iterator;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dynamic Regions PRM algorithm.
@@ -33,18 +35,19 @@ using ED = WorkspaceSkeleton::ED;
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 
-struct ExpansionRegion {
-  ED edgeDescriptor;
-  size_t componentID{0};
+class Region {
+  public:
+  EIT edgeIterator;
   size_t edgeIndex{0};
-  size_t successes{0};   ///< Number of valid samples in this region.
-  size_t attempts{1};    ///< Number of sampling attempts in this region.
+  mutable size_t successes{0};   ///< Number of valid samples in this region.
+  mutable size_t attempts{1};    ///< Number of sampling attempts in this region.
   mutable double weight{0};      ///< Ratio of successful samples to total samples.
   Vector3d center{Vector3d(0.0,0.0,0.0)};
   double size{0.0};
 
-  //place holders for now
-  Vector3d GetCenter() {
+  Region(const EIT& _eit = EIT()) : edgeIterator(_eit) {}
+
+  Vector3d GetCenter() const {
     return center;
   }
 
@@ -52,7 +55,7 @@ struct ExpansionRegion {
     center =_c;
   }
 
-  double GetSize() {
+  double GetSize() const {
     return size;
   }
 
@@ -62,30 +65,57 @@ struct ExpansionRegion {
   }
 
   void UpdateSuccessRate(const size_t _success, const size_t _attempts) {
-    if(_attempts == 0)
-      throw RunTimeException(WHERE) << "No attempt made to sample in this region.";
+    successes = _success;
+    attempts = _attempts;
 
-    weight = 1.0 * _success / _attempts;
+    weight = 1.0 * successes / attempts;
   }
 
-  ExpansionRegion(const ED& _ed = ED()) : edgeDescriptor(_ed) {}
+  virtual bool operator==(const Region& _key) const {return 0;}
 
-  bool operator==(const ExpansionRegion& _key) const {
+  const Vector3d* GetNextSkeletonEdgePoint() {
+    const std::vector<Point3d>& path = edgeIterator->property();
+    auto currentIt = find(path.begin(), path.end(), center);
+    if(currentIt >= path.end()-1)
+      return nullptr;
+    advance(currentIt,1);
+
+    return &(*currentIt);
+  }
+};
+
+class ExpansionRegion : public Region {
+  public:
+  size_t componentID{0};
+  virtual bool operator==(const ExpansionRegion& _key) const {
     return componentID == _key.componentID;
   }
+  ExpansionRegion(const EIT& _eit = EIT()) : Region(_eit) {}
+};
+
+class ConnectionRegion : public Region {
+  public:
+  pair<size_t, size_t> componentIDs{make_pair(0,0)};
+
+  virtual bool operator==(const ConnectionRegion& _key) const {
+    return componentIDs == _key.componentIDs;
+  }
+  ConnectionRegion(const EIT& _eit = EIT()) : Region(_eit) {}
 };
 
 namespace std {
   template <>
-    struct hash<ExpansionRegion> {
+    class hash<ExpansionRegion> {
 
-      typedef ExpansionRegion RegionType;
+      public:
+      typedef ExpansionRegion ExpansionRegionType;
 
-      size_t operator()(const RegionType& _key) const {
-        return _key.componentID;
+      size_t operator()(const ExpansionRegionType& _key) const {
+        return _key.edgeIndex;
       }
     };
 }
+
 
 template <typename MPTraits>
 class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
@@ -98,8 +128,6 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-    typedef typename WorkspaceSkeleton::VD     VD;
-    typedef typename WorkspaceSkeleton::ED     ED;
     typedef typename RoadmapType::VertexSet VertexSet;
 
 
@@ -138,7 +166,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     ///@{
 
     virtual void Initialize() override;
-    virtual void Run() override;
+    virtual void Iterate() override;
 
     ///@}
     ///@name Helpers
@@ -150,15 +178,13 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     double GetRegionRadius(Vector3d _v);
 
-    Boundary* MakeBoundary(vector<double> _v, double _r);
+    Boundary* MakeBoundary(Vector3d _v, double _r);
 
-    bool IsCovered(WorkspaceSkeleton::adj_edge_iterator _eit, size_t _componentID);
+    bool IsCovered(Vector3d _point, size_t _componentID);
 
     /// Initialize the object just in time by building a workspace skeleton and
     /// region kit.
     void LazyInitialize();
-
-    void InitializeExpansionRegions(size_t _componentID, const WorkspaceSkeleton::vertex_iterator _vit);
 
     /// Sample and add configurations to the roadmap.
     /// @return The generated VIDs for the successful samples.
@@ -168,9 +194,15 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// @param _vids A set of node VIDs to connect to the rest of the roadmap.
     void Connect(const std::vector<VID>& _vids);
 
-    /// Select a region. For now will return a random region
+    /// Select a region based weighted success probabilities
     /// @return expansion region to be expanded
-    ExpansionRegion* SelectRegion();
+    ExpansionRegion* SelectExpansionRegion();
+
+    void CreateConnectionRegion(const EIT& _eit, Vector3d _p, size_t _ccA, size_t ccB);
+    void CreateExpansionRegion(size_t _cc, VIT _vit);
+    /// Select a connection region between two connected components
+    /// @return expansion region to be expanded
+    ExpansionRegion* SelectConnectionRegion(size_t _ccA, size_t _ccB);
 
     /// ComputeProbabilities
     /// @return probabiliities based on expansion success
@@ -183,6 +215,11 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     vector<CfgType> ExpandComponent(ExpansionRegion* _r);
 
+    bool AdvanceRegion(ExpansionRegion* _r);
+
+    bool AreSamplesCovered(const ExpansionRegion* _region, const vector<CfgType> _samples);
+
+    void ConnectComponent(size_t _componentID);
     ///@}
     ///@name Internal State
     ///@{
@@ -204,7 +241,6 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// An optional sampling boundary for fixing the base.
     std::unique_ptr<Boundary> m_samplingBoundary;
 
-    WorkspaceSkeleton m_skeleton;     ///< The workspace skeleton.
     RegionKit m_regionKit;            ///< Manages regions following the skeleton.
     std::string m_decompositionLabel; ///< The workspace decomposition label.
     std::string m_scuLabel;           ///< The skeleton clearance utility label.
@@ -219,7 +255,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     std::string m_skeletonType{"reeb"};
 
-    typedef std::unordered_set<VD> CoveredMap;
+    typedef std::unordered_set<mathtool::Vector3d> CoveredMap;
     typedef std::unordered_set<ExpansionRegion> ExpansionRegionMap;
 
     std::unordered_map<size_t, CoveredMap> m_skeletonCoverageMap;
@@ -229,12 +265,17 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     vector<ExpansionRegion> m_expansionRegions;
 
+    vector<ConnectionRegion> m_connectionRegions;
+
     /// Weight of explore vs. exploit in region selection probabilities.
     /// Exploring is a uniform chance to select each region, while exploit
     /// favors successful regions.
     double m_explore{.5};
     ///@}
     std::string m_nfLabel;       ///< The neighborhood finder label.
+    std::string m_lpLabel;       ///< The neighborhood finder label.
+    WorkspaceSkeleton m_skeleton;     ///< The workspace skeleton.
+
 
 };
 
@@ -256,6 +297,8 @@ DynamicRegionsPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
       "filename of roadmap to start from");
 
   m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder");
+
+  m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
 
   for(auto& child : _node) {
     if(child.Name() == "Sampler") {
@@ -322,12 +365,23 @@ Initialize() {
 template <typename MPTraits>
 void
 DynamicRegionsPRM<MPTraits>::
-Run() {
+Iterate() {
   if(!m_initialized)
     LazyInitialize();
 
-  auto region = SelectRegion();
-  this->ExpandComponent(region);
+  auto region = SelectExpansionRegion();
+  auto samples = this->ExpandComponent(region);
+  if(region != nullptr) {
+    if(!samples.empty()) {
+      while (AdvanceRegion(region) && AreSamplesCovered(region, samples))
+        continue;
+      //ConnectComponent(region.ComponentID);
+    }
+    else {
+      //get random component
+      //connectcomponent(random component region)
+    }
+  }
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -374,23 +428,108 @@ template <typename MPTraits>
 bool
 DynamicRegionsPRM<MPTraits>::
 AttemptConnection(CfgType _c1, CfgType _c2) {
+  auto lp = this->GetLocalPlanner(m_lpLabel);
+  Environment* env = this->GetEnvironment();
+  LPOutput<MPTraits> lpOutput;
+  if(lp->IsConnected(_c1, _c2, &lpOutput,
+    env->GetPositionRes(), env->GetOrientationRes(), true, false))
+    return true;
+
   return false;
 }
+
+
+template <typename MPTraits>
+bool
+DynamicRegionsPRM<MPTraits>::
+AreSamplesCovered(const ExpansionRegion* _region, const vector<CfgType> _samples) {
+  auto boundary = MakeBoundary(_region->GetCenter(), _region->GetSize());
+  for(auto s: _samples) {
+    if(s.InBounds(boundary))
+      return true;
+  }
+  return false;
+}
+
+
+template <typename MPTraits>
+bool
+DynamicRegionsPRM<MPTraits>::
+AdvanceRegion(ExpansionRegion* _r) {
+  if(this->m_debug)
+    cout << this->GetNameAndLabel() << "::AdvanceRegion()" << endl;
+
+  if(_r == nullptr) {
+    cout << "Cannot advance whole environment. Why is this being called?" << endl;
+    return false;
+  }
+  // mark current position as covered and spawn connection regions
+  auto ccID = _r->componentID;
+  auto position = _r->GetCenter();
+  m_skeletonCoverageMap[ccID].insert(position);
+  auto g = this->GetRoadmap();
+  auto ccTracker = g->GetCCTracker();
+  auto representatives = ccTracker->GetRepresentatives();
+  for(auto & rep : representatives) {
+    if(ccTracker->InSameCC(ccID, rep))
+      continue;
+    if(!IsCovered(position, rep))
+      continue;
+
+    CreateConnectionRegion(_r->edgeIterator, position, ccID, rep);
+  }
+
+  //check for end of edge
+  auto nextEdgePoint = _r->GetNextSkeletonEdgePoint();
+  if(nextEdgePoint == nullptr) {
+    //remove region from list of regions
+    m_expansionRegions.erase(remove(m_expansionRegions.begin(), m_expansionRegions.end(), *_r), m_expansionRegions.end());
+
+    VIT vit = m_skeleton.find_vertex(_r->edgeIterator->target());
+    CreateExpansionRegion(ccID, vit);
+  if(this->m_debug)
+    cout << "region reached end of edge. New region created at vertex "
+         << vit->descriptor() << endl;
+    return false;
+  }
+  //check for usable clearance
+  double clearance = GetRegionRadius(*nextEdgePoint);
+  if(clearance < 0) {
+    m_expansionRegions.erase(remove(m_expansionRegions.begin(), m_expansionRegions.end(), *_r), m_expansionRegions.end());
+    return false;
+  }
+  //move to the next position
+  _r->SetCenter(*nextEdgePoint);
+  _r->SetSize(clearance);
+  if(this->m_debug)
+    cout << "region advanced to edge point " << *nextEdgePoint
+         << " with size " << clearance << endl;
+  return true;
+}
+
 
 template <typename MPTraits>
 vector<typename DynamicRegionsPRM<MPTraits>::CfgType>
 DynamicRegionsPRM<MPTraits>::
 ExpandComponent(ExpansionRegion* _r) {
-  auto center = _r->GetCenter();
-  vector<double> position {center[0], center[1],center[2]};
-  auto boundary = MakeBoundary(position, _r->GetSize());
+  if(this->m_debug)
+    cout << this->GetNameAndLabel() << "::ExpandComponent()" << endl;
+
+  auto boundary = _r == nullptr ? this->GetEnvironment()->GetBoundary() : MakeBoundary(_r->GetCenter(), _r->GetSize());
   size_t attempts = 0;
   auto samples = Sample(boundary, attempts);
   auto g = this->GetRoadmap();
-  auto component = g->GetCCTracker()->GetCC(_r->componentID);
+  auto ccTracker = g->GetCCTracker();
+  VertexSet nodes;
+  if(_r == nullptr)
+    for(auto vi = g->begin(); vi != g->end(); ++vi)
+      nodes.insert(VID(vi->descriptor()));
+  else
+    nodes = ccTracker->GetCC(_r->componentID);
+
   for(auto s : samples) {
     //attempt connection between s and nearest neighbors in CC
-    auto knn = FindNearestNeighbors(s, &(component));
+    auto knn = FindNearestNeighbors(s, &(nodes));
     bool isConnected = false;
     VID vid1;
     for(auto n : knn) {
@@ -402,15 +541,36 @@ ExpandComponent(ExpansionRegion* _r) {
     }
     if(!isConnected) {
       samples.erase(remove(samples.begin(), samples.end(),s), samples.end());
+      if(this->m_debug)
+        cout << "sample could not connect. Remaining to test: " << samples.size() << endl;
       continue;
     }
     auto vid2 = g->AddVertex(s);
     LPOutput<MPTraits> lp;
     g->AddEdge(vid1, vid2, lp.m_edge);
+    if(this->m_debug)
+      cout << "sample " << vid1 << " and " << vid2
+           << " connected successfully. Remaining to test: " << samples.size() << endl;
   }
-  _r->UpdateSuccessRate(samples.size(), attempts);
+  if(_r != nullptr)
+    _r->UpdateSuccessRate(samples.size(), attempts);
 
   return samples;
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionsPRM<MPTraits>::
+ConnectComponent(size_t _componentID) {
+  auto g = this->GetRoadmap();
+  auto ccTracker = g->GetCCTracker();
+  auto representatives = ccTracker->GetRepresentatives();
+  for(auto & rep : representatives) {
+    if(ccTracker->InSameCC(_componentID, rep))
+      continue;
+
+  }
 }
 
 
@@ -476,8 +636,9 @@ Connect(const std::vector<VID>& _vids) {
 template<typename MPTraits>
 Boundary*
 DynamicRegionsPRM<MPTraits>::
-MakeBoundary(vector<double> _v, double _r) {
-  return new CSpaceBoundingSphere(_v, _r);
+MakeBoundary(Vector3d _v, double _r) {
+  vector<double> v{_v[0], _v[1], _v[2]};
+  return new CSpaceBoundingSphere(v, _r);
 }
 
 
@@ -487,7 +648,8 @@ DynamicRegionsPRM<MPTraits>::
 GetRegionRadius(Vector3d _v) {
   auto clearance = this->GetClearance(_v);
   double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->GetBoundingSphereRadius();
-  return min((robotRadius * 3), (clearance - robotRadius));
+  //return min((robotRadius * 3), (clearance - robotRadius));
+  return (clearance - robotRadius);
 }
 
 
@@ -504,6 +666,44 @@ GetClearance(Vector3d _v) {
   CDInfo cd(true);
   vc->IsValid(cfg, cd, callee);
   return cd.m_minDist;
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionsPRM<MPTraits>::
+CreateExpansionRegion(size_t _cc, const VIT _vit) {
+  for(auto eit = _vit->begin(); eit != _vit->end(); ++eit) {
+    const std::vector<Point3d>& path = eit->property();
+    if(IsCovered(path[0], _cc))
+      continue;
+
+    double regionSize = GetRegionRadius(path[0]);
+    ExpansionRegion er(eit);
+    er.componentID = _cc;
+    er.SetCenter(path[0]);
+    er.SetSize(regionSize);
+    m_ccRegionMapp[_cc].insert(er);
+    m_expansionRegions.push_back(er);
+  }
+  m_skeletonCoverageMap[_cc].insert(_vit->property());
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionsPRM<MPTraits>::
+CreateConnectionRegion(const EIT& _eit, Vector3d _p, size_t _ccA, size_t _ccB) {
+  ConnectionRegion cr (_eit);
+  cr.componentIDs = make_pair(_ccA, _ccB);
+  cr.SetCenter(_p);
+  m_connectionRegions.push_back(cr);
+
+  if(this->m_debug) {
+    std::cout << "New connection region added between CC " << _ccA
+              << " and " << _ccB <<". Total number of connection regions: "
+              << m_connectionRegions.size() << endl;
+  }
 }
 
 
@@ -534,8 +734,7 @@ LazyInitialize() {
 
     //generate a valid configuration in the boundary centered at the skeleton
     //vertex with size regionSize
-    vector<double> position {iter->property()[0], iter->property()[1],iter->property()[2]};
-    auto boundary = MakeBoundary(position, regionSize);
+    auto boundary = MakeBoundary(iter->property(), regionSize);
     size_t attempts = 0;
     vector<CfgType> samples = this->Sample(boundary, attempts);
     if(samples.empty()) {
@@ -547,17 +746,18 @@ LazyInitialize() {
     auto s = samples[0];
     auto ccID = g->AddVertex(s);
     for(auto eit = iter->begin(); eit != iter ->end(); ++eit) {
-      if(IsCovered(eit, ccID))
+      const std::vector<Point3d>& path = eit->property();
+      if(IsCovered(path[0], ccID))
         continue;
-      ExpansionRegion er(eit->descriptor());
+      ExpansionRegion er(eit);
       er.componentID = ccID;
-      er.SetCenter(iter->property());
+      er.SetCenter(path[0]);
       er.SetSize(regionSize);
+      er.UpdateSuccessRate(1, attempts);
       m_ccRegionMapp[ccID].insert(er);
       m_expansionRegions.push_back(er);
-      er.UpdateSuccessRate(1, attempts);
     }
-    m_skeletonCoverageMap[ccID].insert(iter->descriptor());
+    m_skeletonCoverageMap[ccID].insert(iter->property());
 
   }
   if(this->m_debug)
@@ -622,31 +822,19 @@ BuildSkeleton() {
 
 
 template<typename MPTraits>
-void
-DynamicRegionsPRM <MPTraits>::
-InitializeExpansionRegions(size_t _componentID, const WorkspaceSkeleton::vertex_iterator _vit) {
-  for(auto eit = _vit->begin(); eit != _vit->end(); ++eit) {
-    if(IsCovered(eit, _componentID))
-      continue;
-    ExpansionRegion er(eit->descriptor());
-    er.componentID = _componentID;
-    m_ccRegionMapp[_componentID].insert(er);
-    m_expansionRegions.push_back(er);
-  }
-  m_skeletonCoverageMap[_componentID].insert(_vit->descriptor());
-}
-
-
-template<typename MPTraits>
 bool
 DynamicRegionsPRM <MPTraits>::
-IsCovered(WorkspaceSkeleton::adj_edge_iterator _eit, size_t _componentID) {
-  //if the component covers the edge, there is an entry of this mapping
-  auto regions = m_ccRegionMapp[_componentID];
+IsCovered(Vector3d _point, size_t _componentID) {
+  //if the component covers the point, there is/was a region centered at the
+  //point recordered in the coverage map of the CC
+
+  auto regions = m_skeletonCoverageMap[_componentID];
+
   if(regions.empty())
     return false;
+
   for(auto& r : regions) {
-    if(m_skeleton.FindEdge(r.edgeDescriptor)->descriptor() == _eit->descriptor())
+    if(r == _point)
       return true;
   }
   return false;
@@ -656,7 +844,7 @@ IsCovered(WorkspaceSkeleton::adj_edge_iterator _eit, size_t _componentID) {
 template<typename MPTraits>
 ExpansionRegion*
 DynamicRegionsPRM <MPTraits>::
-SelectRegion() {
+SelectExpansionRegion() {
   // Update all region probabilities.
   std::vector<double> probabilities = ComputeProbabilities();
 
@@ -750,9 +938,6 @@ DynamicRegionsPRM <MPTraits>::
 IncrementSuccessFailure(const ExpansionRegion _region, const size_t _success, const size_t _failure) {
   // Ensure that this region exists.
   auto iter = std::find(m_expansionRegions.begin(), m_expansionRegions.end(), _region);
-  if(iter == m_expansionRegions.end())
-    throw RunTimeException(WHERE) << "Cannot increment attempts for "
-                                  << "non-existing region '" << _region.componentID << "'";
 
   iter->successes += _success;
   iter->attempts  += (_success + _failure);
