@@ -65,22 +65,22 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	auto alloc = new AllocationValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary());
 	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
 
-	auto compose = new ComposeValidation({alloc, motion});
+	//auto compose = new ComposeValidation({alloc, motion});
 
 												
-	//ValidationFunction allocValid = [this,alloc](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
-	//	return alloc->ValidatePlan(_node, _tree);
-	//};
+	ValidationFunction allocValid = [this,alloc](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+		return alloc->ValidatePlan(_node, _tree);
+	};
 
-	//ConflictCountFunction allocCount = [this,alloc](GeneralCBSNode& _node) {
-	//	size_t conflicts = alloc->CountConflicts(_node);
-	//	_node.SetAllocationConflictCount(conflicts);
-	//};
+	ConflictCountFunction allocCount = [this,alloc](GeneralCBSNode& _node) {
+		size_t conflicts = alloc->CountConflicts(_node);
+		_node.SetAllocationConflictCount(conflicts);
+	};
 
-	//auto allocBypass = new BypassValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),
-	//																			allocValid,allocCount,MAX_INT);
+	auto allocBypass = new BypassValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),
+																				allocValid,allocCount,MAX_INT);
 
-	//auto compose = new ComposeValidation({allocValid, motion});
+	auto compose = new ComposeValidation({allocBypass, motion});
 	
 
 	InitialPlanFunction init = [this,alloc](Decomposition* _decomp,GeneralCBSTree& _tree) {

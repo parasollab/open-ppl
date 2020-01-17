@@ -58,6 +58,16 @@ Print() {
 								<< depType 
 								<< std::endl;
 		}
+		for(auto vid : vit->property().m_subNodes) {
+			auto child = this->find_vertex(vid);
+			if(child == this->end())
+				throw RunTimeException(WHERE, "Child node is not in the Flow");
+			std::cout << "\t\tChild: " 
+								<< child->property().m_task->GetLabel() 
+								<< " DepType: " 
+								<< "SubNode" 
+								<< std::endl;
+		}
 	}
 }
 /*------------------------------------------- Accessors ---------------------------------------*/
@@ -101,6 +111,12 @@ SubtaskFlow::
 GetRootIter() {
 	return this->GetFlowNodeIter(m_root);
 }
+
+size_t
+SubtaskFlow::
+GetSuperNode(size_t _vid) {
+	return m_superNodeMap[_vid];
+}
 /*--------------------------------------- Helper Functions ------------------------------------*/
 
 std::pair<std::vector<size_t>,TBDFunction>
@@ -122,6 +138,7 @@ EvalNode(SemanticTask* _task, ParentInfo _parentInfo) {
 		TBDFunction simple;
 		simple.m_elems.push_back(vid);
 		std::vector<size_t> vids = {vid};
+		m_superNodeMap[vid] = vid;
 		return std::make_pair(vids,simple);
 	}
 
@@ -185,7 +202,7 @@ HandleDependencies(SemanticTask* _task, ParentInfo _parentInfo) {
 			if(dep.second.size() > 1) {
 				throw RunTimeException(WHERE, "Decomp tree is not binary.");
 			}
-			auto depTask = dep.second[0];
+			auto depTask = *(dep.second.begin());
 			switch(dep.first) {
 				case SemanticTask::Completion :
 						throw RunTimeException(WHERE, "Dependency type not handled."); 
@@ -236,8 +253,10 @@ MergeNodes(SemanticTask* _one, SemanticTask* _two, ParentInfo _parentInfo) {
 	TBDFunction func;
 	func.m_operator = TBDFunction::MAX;
 	func.m_subFunctions = {left.second,right.second};
+	
+	merge.m_task = _one->GetParent();
 
-	merge.m_initiationFunction = func;
+	merge.m_initiationFunction = _parentInfo.second;
 
 	auto vid = this->add_vertex(merge);
 
@@ -249,6 +268,20 @@ MergeNodes(SemanticTask* _one, SemanticTask* _two, ParentInfo _parentInfo) {
 			this->add_edge(vid,eit->target(),SemanticTask::DependencyType::None);
 		}
 	}
+
+	for(auto l : left.first) {
+		for(auto r : right.first) {
+			this->add_edge(l,r,SemanticTask::DependencyType::Synchronous);
+			this->add_edge(r,l,SemanticTask::DependencyType::Synchronous);
+		}
+	}
+	for(auto l : left.first) {
+		m_superNodeMap[l] = vid;
+	}
+	for(auto r : right.first) {
+		m_superNodeMap[r] = vid;
+	}
+	m_superNodeMap[vid] = vid;
 
 	TBDFunction retFunc;
 	retFunc.m_elems = {vid};

@@ -146,7 +146,7 @@ GeneralCBSNode::
 Debug() {
 	std::cout << "Allocation Constraints" << std::endl;
 	for(auto tACs : m_allocationConstraints) {
-		std::cout << "Task: " << tACs.first << std::endl;
+		std::cout << "Task: " << tACs.first->GetLabel() << std::endl;
 		for(auto aCs : tACs.second) {				std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
 			std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
 			for(auto c : aCs.second) {
@@ -159,7 +159,7 @@ Debug() {
 	}
 	std::cout << "Motion Constraints" << std::endl;
 	for(auto tACs : m_motionConstraints) {
-		std::cout << "Task: " << tACs.first << std::endl;
+		std::cout << "Task: " << tACs.first->GetLabel() << std::endl;
 		for(auto aCs : tACs.second) {
 			std::cout << aCs.first->GetRobot()->GetLabel() << std::endl;
 			for(auto c : aCs.second) {
@@ -170,7 +170,7 @@ Debug() {
 	}
 	std::cout << "Task Plans" << std::endl;
 	for(auto tp : m_solution.m_taskPlans) {
-		std::cout << std::endl << "\tTask: " << tp.first << std::endl;
+		std::cout << std::endl << "\tTask: " << tp.first->GetLabel() << std::endl;
 		for(auto a : tp.second) {
 			if(!a.m_agent)
 				continue;

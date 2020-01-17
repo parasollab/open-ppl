@@ -4,6 +4,7 @@
 #include "MPProblem/MPTask.h"
 
 #include <unordered_map>
+#include <unordered_set>
 
 class Decomposition;
 class MPProblem;
@@ -28,7 +29,7 @@ class SemanticTask {
 			None
 		};
 
-		typedef std::unordered_map<DependencyType, std::vector<SemanticTask*>, 
+		typedef std::unordered_map<DependencyType, std::unordered_set<SemanticTask*>, 
 															 std::hash<int>> DependencyMap;
 
 		///@}
@@ -64,7 +65,7 @@ class SemanticTask {
 
 		void SetParent(SemanticTask* _parent);
 
-		void AddDependency(SemanticTask* _task, DependencyType _type);
+		std::unordered_set<SemanticTask*> AddDependency(SemanticTask* _task, DependencyType _type);
 
 		DependencyMap& GetDependencies();
 

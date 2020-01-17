@@ -12,6 +12,9 @@ PrecedenceLowLevelSearch::
 UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 	auto iter = _node.GetSolutionRef().m_subtaskFlow->GetFlowNodeIter(_task);
 	auto vid = iter->descriptor();
+
+	auto flow = _node.GetSolutionRef().m_subtaskFlow;
+	vid = flow->GetSuperNode(vid);
 	
 	ClearFlowSubtree(_node,vid);
 
@@ -31,10 +34,16 @@ ClearFlowSubtree(GeneralCBSNode& _node, size_t _vid) {
 	auto iter = flow->GetFlowNodeIter(_vid);
 	auto& task = iter->property().m_task;
 
+	if(_node.GetSolutionRef().m_taskPlans[task].empty() and iter->property().m_subNodes.empty())
+		return;	
+
 	_node.GetSolutionRef().m_taskPlans[task] = {};
 
 	for(auto eit = iter->begin(); eit != iter->end(); eit++) {
 		ClearFlowSubtree(_node, eit->target());
+	}
+	for(auto s : iter->property().m_subNodes) {
+		ClearFlowSubtree(_node, s);
 	}
 }
 
@@ -45,15 +54,23 @@ UpdateCompletionTimes(GeneralCBSNode& _node) {
 	auto flow = _node.GetSolutionRef().m_subtaskFlow;
 
 	for(auto vit = flow->begin(); vit != flow->end(); vit++) {
-		if(!vit->property().m_task->GetMotionTask())
+		if(!vit->property().m_task->GetMotionTask()) {
+			m_taskCompletionTimes[vit->descriptor()] = 0;
 			continue;
-		
+		}
+			
 		auto& tp = taskPlans[vit->property().m_task];
 		if(tp.empty())
 			m_taskCompletionTimes[vit->descriptor()] = MAX_DBL;
 		else
 			m_taskCompletionTimes[vit->descriptor()] = tp.back().m_execEndTime;
 	}	
+	for(auto vit = flow->begin(); vit != flow->end(); vit++) {
+		auto super = flow->GetSuperNode(vit->descriptor());
+		if(super == vit->descriptor())
+			continue;
+		m_taskCompletionTimes[super] = std::max(m_taskCompletionTimes[super],m_taskCompletionTimes[vit->descriptor()]);
+	}
 }
 
 bool 
@@ -89,8 +106,14 @@ PlanSubtree(GeneralCBSNode& _node, size_t _start) {
 
 		seen.insert(current.second);
 
+		// Check if it is a super node (holding synchronous tasks).
+		if(!iter->property().m_subNodes.empty()) {
+			if(!UpdateTaskGroup(_node, iter->property().m_subNodes, iter->descriptor(), current.first, seen, pq))
+				continue;
+		}
+
 		// Update the task plan and check that it completeable.
-		if(!UpdateIndividualTask(_node,iter->property().m_task,iter->descriptor(),current.first))
+		else if(!UpdateIndividualTask(_node,iter->property().m_task,iter->descriptor(),current.first))
 			continue;
 
 		for(auto eit = iter->begin(); eit != iter->end(); eit++) {
@@ -147,6 +170,98 @@ EvaluateFunction(TBDFunction _func) {
 	return value;
 }
 
+bool
+PrecedenceLowLevelSearch::
+UpdateTaskGroup(GeneralCBSNode& _node, std::vector<size_t> _taskGroup, size_t _parentVID, double _precedence, 
+									std::unordered_set<size_t>& _seen, std::priority_queue<std::pair<double,size_t>>& _pq) {
+
+	auto& flow = _node.GetSolutionRef().m_subtaskFlow;
+
+	//TODO::seperate into synchronization groups
+	//call function on individual sync groups
+	
+	std::unordered_set<size_t> success;
+
+	double release = _precedence;
+	for(auto vid : _taskGroup) {
+		auto iter = flow->GetFlowNodeIter(vid);
+		release = std::max(release,iter->property().m_task->GetMotionTask()->GetReleaseWindow().first);
+	}
+
+	for(auto vid : _taskGroup) {
+		auto iter = flow->GetFlowNodeIter(vid);
+		if(iter->property().m_subNodes.empty() and
+				UpdateIndividualTask(_node,iter->property().m_task,iter->descriptor(),release))//_precedence))
+			success.insert(iter->descriptor());
+		else 
+			throw RunTimeException(WHERE) << "Recursive super nodes are not yet handled."
+																		<< std::endl;
+	}
+
+	//Not all tasks within the synchronized group can be completed, therefore none can.
+	if(success.size() < _taskGroup.size()){
+		for(auto vid : success) {
+			auto iter = flow->GetFlowNodeIter(vid);
+			_node.GetSolutionRef().m_taskPlans[iter->property().m_task] = {};
+		}
+		return false;
+	}
+
+	// TODO::Assume synchronization means start at same time. Can also be start X timesteps later.
+	bool sync = CheckSynchronization(_node,success);
+
+	auto& taskPlans = _node.GetSolutionRef().m_taskPlans;
+
+	if(sync) {
+		double completion = 0;
+		double initiation = MAX_DBL;
+		for(auto vid : success) {
+			auto iter = flow->GetFlowNodeIter(vid);
+			completion = std::max(completion,taskPlans[iter->property().m_task].back().m_execEndTime);
+
+			double& init = taskPlans[iter->property().m_task].front().m_execStartTime;
+			if(initiation != MAX_DBL and initiation != init)
+				throw RunTimeException(WHERE) << "Synchronization constraint violation was not caught." 
+																			<< std::endl;
+			initiation = std::min(initiation,init);
+		}
+		m_taskCompletionTimes[_parentVID] = completion;
+		m_taskInitiationTimes[_parentVID] = initiation;
+
+		for(auto vid : success) {
+			_seen.insert(vid);
+
+			auto iter = flow->GetFlowNodeIter(vid);
+
+			for(auto eit = iter->begin(); eit != iter->end(); eit++) {
+				
+				// Check that the task does not already have a better start time.
+				if(_seen.count(eit->target()) or success.count(eit->target()))
+					continue;
+
+				// Compute the available start time of the subsequent task.
+				// Verify that all required preceeding tasks have been completed.
+				double startTime = ComputeStartTime(_node, eit->target());
+				if(startTime == MAX_DBL)
+					continue;
+
+				_pq.push(std::make_pair(startTime, eit->target()));
+			}
+		}
+		return true;
+	}
+
+	//Recursively call function with updated start time
+	//precedence = max of all task start times
+	for(auto vid : _taskGroup) {
+		auto iter = flow->GetFlowNodeIter(vid);
+		_precedence = std::max(_precedence,taskPlans[iter->property().m_task].front().m_execStartTime);
+		taskPlans[iter->property().m_task] = {};
+	}
+
+	return UpdateTaskGroup(_node,_taskGroup, _parentVID, _precedence, _seen, _pq);
+}
+	
 bool 
 PrecedenceLowLevelSearch::
 UpdateIndividualTask(GeneralCBSNode& _node, SemanticTask* _task, size_t _vid, double _precedence) {
@@ -177,8 +292,10 @@ UpdateIndividualTask(GeneralCBSNode& _node, SemanticTask* _task, size_t _vid, do
 	bool success = TMPLowLevelSearch::UpdateSolution(_node,_task);
 
 	// Update local tracking of task completion time.
-	if(success)
+	if(success) {
 		m_taskCompletionTimes[_vid] = _node.GetSolutionRef().m_taskPlans[_task].back().m_execEndTime;
+		m_taskInitiationTimes[_vid] = _node.GetSolutionRef().m_taskPlans[_task].front().m_execStartTime;
+	}
 	
 	// Restore the original time window.
 	motion->SetReleaseWindow(oldWindow);
@@ -186,4 +303,22 @@ UpdateIndividualTask(GeneralCBSNode& _node, SemanticTask* _task, size_t _vid, do
 	return success;
 }
 
+bool 
+PrecedenceLowLevelSearch::
+CheckSynchronization(GeneralCBSNode& _node, std::unordered_set<size_t> _tasks) {
+	auto& taskPlans = _node.GetSolutionRef().m_taskPlans;
+	auto flow = _node.GetSolutionRef().m_subtaskFlow;
+
+	double initiation = MAX_DBL;
+	for(auto vid : _tasks) {
+		auto iter = flow->GetFlowNodeIter(vid);
+
+		double& init = taskPlans[iter->property().m_task].front().m_execStartTime;
+		if(initiation != MAX_DBL and initiation != init)
+			return false;
+		initiation = init;
+	}
+	
+	return true;
+}
 /*----------------------------------------------------------------------------*/

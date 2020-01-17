@@ -84,11 +84,20 @@ ParseDependency(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 				type = SemanticTask::DependencyType::Completion;
 			else if(dependencyType == "asynchronous")
 				type = SemanticTask::DependencyType::Asynchronous;
-			else if(dependencyType == "synchronous")
+			else if(dependencyType == "synchronous") {
 				type = SemanticTask::DependencyType::Synchronous;
+				depTask->AddDependency(this,type);
+			}
 			else 
 				throw RunTimeException(WHERE, "Unknown dependency type: " + dependencyType);
+			//auto& chain = 
 			this->AddDependency(depTask,type);
+
+			//if(type == DependencyType::Synchronous) {
+			//	for(auto& task : chain) {
+					
+			//	}
+			//}
 		}
 		//else if(child.Name() == "Task") {
 		//	std::shared_ptr<MPTask> simpleTask = std::shared_ptr<MPTask>(new MPTask(_problem,grandchild));
@@ -182,13 +191,16 @@ SetParent(SemanticTask* _parent) {
 	m_parent = _parent;
 }
 
-void 
+std::unordered_set<SemanticTask*> 
 SemanticTask::
 AddDependency(SemanticTask* _task, DependencyType _type) {
-	m_dependencyMap[_type].push_back(_task);
+	m_dependencyMap[_type].insert(_task);
+
+	// Return dependencies in case the caller needs to build dependency chains.
+	return m_dependencyMap[_type];
 }
 
-std::unordered_map<SemanticTask::DependencyType,std::vector<SemanticTask*>,std::hash<int>>&
+std::unordered_map<SemanticTask::DependencyType,std::unordered_set<SemanticTask*>,std::hash<int>>&
 SemanticTask::
 GetDependencies() {
 	return m_dependencyMap;

@@ -64,6 +64,8 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 		FlowNode GetFlowNode(size_t _vid);
 
 		VI GetRootIter();
+
+		size_t GetSuperNode(size_t _vid);
 		///@}
 
 	private:
@@ -92,6 +94,8 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 		std::unordered_map<SemanticTask*,size_t> m_taskNodeMap;
 
 		size_t m_root;
+
+		std::unordered_map<size_t,size_t> m_superNodeMap;
 
 		///@}
 

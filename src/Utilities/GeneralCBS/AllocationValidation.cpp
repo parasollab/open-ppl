@@ -156,6 +156,10 @@ void
 AllocationValidation::
 AddAllocationChildren(GeneralCBSNode& _node, GeneralCBSTree& _tree, AllocationConstraintPair _constraints) {
 
+	if(!_constraints.first.m_task or !_constraints.second.m_task) {
+		throw RunTimeException(WHERE, "Houston we have a problem.");
+	}
+
 	GeneralCBSNode one(_node);
 	one.AddAllocationConstraint(_constraints.first,_constraints.first.m_agent);
 	if(m_lowLevel->UpdateSolution(one, _constraints.first.m_task))

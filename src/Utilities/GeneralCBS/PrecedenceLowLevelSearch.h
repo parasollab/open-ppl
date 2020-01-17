@@ -46,11 +46,18 @@ class PrecedenceLowLevelSearch : public TMPLowLevelSearch {
 
 		double EvaluateFunction(TBDFunction _func);
 
+		bool UpdateTaskGroup(GeneralCBSNode& _node, std::vector<size_t> _taskGroup, size_t _parentVID,
+						double _precedence, std::unordered_set<size_t>& _seen, 
+						std::priority_queue<std::pair<double,size_t>>& _pq);
+
 		bool UpdateIndividualTask(GeneralCBSNode& _node, SemanticTask* _task, size_t _vid, double _precedence);
+
+		bool CheckSynchronization(GeneralCBSNode& _node, std::unordered_set<size_t> _tasks);
 		///@}
 		///@name Internal State
 		///@{
 
+		std::unordered_map<size_t,double> m_taskInitiationTimes;
 		std::unordered_map<size_t,double> m_taskCompletionTimes;
 
 		///@}
