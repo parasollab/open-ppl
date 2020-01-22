@@ -793,6 +793,10 @@ template <typename MPTraits>
 void
 TopologicalMap<MPTraits>::
 EnsureMap(RoadmapType* const _r) {
+  // If we already have maps for _r, do nothing.
+  if(m_regionToVIDs.count(_r))
+    return;
+
   // Create forward and inverse maps.
   auto& forward = m_regionToVIDs[_r];
   auto& inverse = m_vidToNeighborhood[_r];
