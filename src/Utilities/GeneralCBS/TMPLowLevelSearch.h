@@ -39,6 +39,10 @@ class TMPLowLevelSearch : public LowLevelSearch {
 				return m_availInt.first < _elem.m_availInt.first;
 			}
 
+			bool operator!=(const AvailElem& _elem) const {
+				return !(*this == _elem);
+			}
+
 		};
 		struct AvailElemCompare  {
 			bool operator()(const AvailElem& _one, const AvailElem& _two) const {
@@ -86,7 +90,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		bool CheckDeliveringAgentFutureConstraints(double _interactionTime, AvailElem _elem);
 		//@}
 
-  private:
+  protected:
 
 		///@name Helper Functions
 		///@{
@@ -101,7 +105,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 		std::vector<Assignment> Search(SemanticTask* _task, std::pair<size_t,size_t> _query);
 
 		std::vector<std::pair<double,AvailElem>> ValidNeighbors(const AvailElem& _elem, 
-															size_t _vid, double _currentCost, double _edgeCost);
+															size_t _vid, double _currentCost, double _edgeCost,bool _getAll=false);
 
 		std::pair<double,std::pair<std::vector<size_t>,size_t>>
 	 	ComputeSetup(AvailElem _elem, double _minTime, AvailElem _parent);
@@ -156,7 +160,7 @@ class TMPLowLevelSearch : public LowLevelSearch {
 
 		std::map<AvailElem,double,AvailElemCompare> m_setupStartTimes;
 
-		std::map<AvailElem,std::unordered_set<Agent*>,AvailElemCompare> m_usedAgents;
+		std::map<AvailElem,std::unordered_map<Agent*,std::pair<double,Cfg>>,AvailElemCompare> m_usedAgents;
 
 		std::map<AvailElem,std::map<AvailElem,std::pair<std::vector<size_t>,size_t>>,AvailElemCompare> m_reExecPathMap;
 		///@}

@@ -1,9 +1,9 @@
 #ifndef PRECEDENCE_LOW_LEVEL_SEARCH_H_
 #define PRECEDENCE_LOW_LEVEL_SEARCH_H_
 
-#include "Utilities/GeneralCBS/TMPLowLevelSearch.h"
+#include "Utilities/GeneralCBS/MetaTMPLowLevelSearch.h"
 
-class PrecedenceLowLevelSearch : public TMPLowLevelSearch {
+class PrecedenceLowLevelSearch : public MetaTMPLowLevelSearch {
   public:
 
 		///@name Local Types
@@ -53,6 +53,9 @@ class PrecedenceLowLevelSearch : public TMPLowLevelSearch {
 		bool UpdateIndividualTask(GeneralCBSNode& _node, SemanticTask* _task, size_t _vid, double _precedence);
 
 		bool CheckSynchronization(GeneralCBSNode& _node, std::unordered_set<size_t> _tasks);
+
+		std::pair<double,std::unordered_set<SemanticTask*>> 
+										ExtractSubtreePlan(GeneralCBSNode& _node, SemanticTask* _task);
 		///@}
 		///@name Internal State
 		///@{

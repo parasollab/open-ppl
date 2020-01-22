@@ -126,6 +126,10 @@ FindMotionConflict(GeneralCBSNode& _node) {
 	
 		for(size_t i = 0; i < assigns.size(); i++) {
 			auto a = assigns[i];
+			if(i != assigns.size()-1
+							and !_node.GetSolutionRef().m_solutionTasks.count(a.m_task->GetParent())
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
 
 			std::vector<Cfg> interim;
 
@@ -431,8 +435,15 @@ AvoidancePaths(GeneralCBSNode& _node) {
 		auto& assign = postAA[agent][0];
 
 		size_t start = 0;
-		if(!aa.second.empty())
-			start = aa.second.back().m_execEndTime;
+		if(!aa.second.empty()) {
+			//start = aa.second.back().m_execEndTime;
+			for(int i = aa.second.size()-1; i >= 0; i--) {
+				auto& lastAssign = aa.second[i];
+				if(_node.GetSolutionRef().m_solutionTasks.empty() 
+						or _node.GetSolutionRef().m_solutionTasks.count(lastAssign.m_task->GetParent()))
+					start = lastAssign.m_execEndTime;
+			}
+		}
 
 		auto g = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(agent));
 
@@ -505,6 +516,10 @@ CountConflicts(GeneralCBSNode& _node) {
 	
 		for(size_t i = 0; i < assigns.size(); i++) {
 			auto a = assigns[i];
+			if(i != assigns.size()-1
+							and !_node.GetSolutionRef().m_solutionTasks.count(a.m_task->GetParent())
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
 
 			std::vector<Cfg> interim;
 

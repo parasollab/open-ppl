@@ -89,6 +89,9 @@ Initialize(GeneralCBSNode& _node, SemanticTask* _task, std::pair<size_t,size_t> 
 						(vit->descriptor() < _query.first or vit->descriptor() > _query.second+2))
 			continue;
 
+		if(!m_intervalMap[vit->descriptor()].empty())
+			continue;
+
 		auto& cfg = vit->property();
 		size_t vid = vit->descriptor();
 		if(cfg.GetRobot() == m_tmpLibrary->GetTaskPlan()->GetCoordinator()->GetRobot()) {
@@ -341,7 +344,10 @@ Search(SemanticTask* _task, std::pair<size_t,size_t> _query) {
 			for(auto elem : elems) {
 				pq.push(elem);
 				m_usedAgents[elem.second] = m_usedAgents[current.second];
-				m_usedAgents[elem.second].insert(elem.second.m_agent);
+				auto cfg = sg->GetGraph()->GetVertex(elem.second.m_vid);
+				cfg.SetRobot(elem.second.m_agent->GetRobot());
+				auto lastUse = std::make_pair(elem.first,cfg);
+				m_usedAgents[elem.second][elem.second.m_agent] = lastUse;
 				debug.insert(elem.second.m_vid);
 			} 
 		}
@@ -370,7 +376,7 @@ Search(SemanticTask* _task, std::pair<size_t,size_t> _query) {
 	
 std::vector<std::pair<double,TMPLowLevelSearch::AvailElem>> 
 TMPLowLevelSearch::
-ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double _edgeCost) {
+ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double _edgeCost,bool _getAll) {
 
 	std::vector<std::pair<double,AvailElem>> validNeighbors;
 
@@ -378,8 +384,8 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 
 	for(auto kv : m_intervalMap[_vid]) {
 		auto agent = kv.first;
-		if(m_usedAgents[_elem].count(agent) and agent != _elem.m_agent)
-			continue;
+		//if(m_usedAgents[_elem].count(agent) and agent != _elem.m_agent)
+		//	continue;
 		for(auto avail : kv.second) {
 
 			if(arrivalTime > avail.second)// or // too late
@@ -438,7 +444,7 @@ ValidNeighbors(const AvailElem& _elem, size_t _vid, double _currentCost, double 
 			//TODO::Add custom ordering
 
 			//if(iter == m_seen.end() or m_distance[target] > transition.first) {
-			if(!m_seen.count(target) or m_distance[target] > transition.first) {
+			if(_getAll or !m_seen.count(target) or m_distance[target] > transition.first) {
 			//if(!m_distance[target] == 0 or m_distance[target] > transition.first) {
 				validNeighbors.push_back(std::make_pair(transition.first,target));
 				m_seen.insert(target);
@@ -464,6 +470,13 @@ ComputeSetup(AvailElem _elem, double _minTime, AvailElem _parent) {
 	auto constraint = m_availSourceMap[_elem];
 	auto startCfg = constraint.m_endLocation;
 	auto startTime = constraint.m_endTime;
+
+	auto lastUse = m_usedAgents[_parent][_elem.m_agent];
+	if(lastUse.first > startTime) {
+		startTime = lastUse.first;
+		startCfg = lastUse.second;
+	}
+
 	
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 	auto g = sg->GetGraph();

@@ -59,6 +59,14 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 	if(!m_lowLevel->UpdateSolution(node,root->property().m_task))
 		return false;
 
+	/*SemanticTask* meta = new SemanticTask();
+	for(auto tp : node.GetSolutionRef().m_taskPlans) {
+		if(tp.second.empty())
+			continue;
+		meta->AddSubtask(tp.first);
+		node.GetSolutionRef().m_metaTaskMap[tp.first] = meta;
+	}*/
+
 	_tree.push(node);
 	return true;
 }
@@ -98,8 +106,16 @@ FindAllocationConflict(GeneralCBSNode& _node) {
 			continue;
 
 		for(size_t i = 0; i < assignments.size()-1; i++) {
+
 			auto& a1 = assignments[i];
 			auto& a2 = assignments[i+1];
+
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a1.m_task->GetParent()) 
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a2.m_task->GetParent())
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
 
 			if(a1.m_execStartTime == a2.m_execStartTime or
 					a1.m_execEndTime > a2.m_execStartTime or 
@@ -240,6 +256,12 @@ PatchPaths(GeneralCBSNode& _node) {
 		auto agent = kv.first;
 		for(size_t i = 0; i < kv.second.size(); i++) {
 			auto& a = kv.second[i];
+
+
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a.m_task->GetParent())
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
+
 			if(i == 0) {
 				if(a.m_setupStartTime > 0) {
 					auto g = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(a.m_agent));
@@ -286,6 +308,12 @@ CountConflicts(GeneralCBSNode& _node) {
 		for(size_t i = 0; i < assignments.size()-1; i++) {
 			auto& a1 = assignments[i];
 			auto& a2 = assignments[i+1];
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a1.m_task->GetParent()) 
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a2.m_task->GetParent())
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
 
 			if(a1.m_execStartTime == a2.m_execStartTime or
 					a1.m_execEndTime > a2.m_execStartTime or 
@@ -296,4 +324,48 @@ CountConflicts(GeneralCBSNode& _node) {
 	}
 	
 	return conflictCount;
+}
+
+void
+AllocationValidation::
+FindAllConflicts(GeneralCBSNode& _node) {
+
+	OrderedConflicts conflicts;
+
+	auto& solution = _node.GetSolutionRef();
+	//step through all agent assignments and see if any overlap, 
+	//if so, look at the assignment's task's parent to get conflicting task
+	//TODO::find a more clever way to do this that simultaneosuly iteratively looks at agent plans
+	for(auto& agentAssigns : solution.m_agentAssignments) {
+		auto& assignments = agentAssigns.second;
+
+		if(assignments.size() == 0)
+			continue;
+
+		for(size_t i = 0; i < assignments.size()-1; i++) {
+			auto& a1 = assignments[i];
+			auto& a2 = assignments[i+1];
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a1.m_task->GetParent()) 
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
+			if(!_node.GetSolutionRef().m_solutionTasks.count(a2.m_task->GetParent())
+							and !_node.GetSolutionRef().m_solutionTasks.empty())
+				continue;
+
+			if(a1.m_execStartTime == a2.m_execStartTime or
+					a1.m_execEndTime > a2.m_execStartTime or 
+					!CanReach(a1,a2,_node)) {
+				conflicts.push(std::make_pair(a1,a2));
+			}
+		}
+	}
+	
+	auto& orderedConflicts = _node.GetAllocationConflicts();
+	orderedConflicts = {};
+
+	while(!conflicts.empty()) {
+		auto c = conflicts.top();
+		conflicts.pop();
+		orderedConflicts.push_back(c);
+	}
 }

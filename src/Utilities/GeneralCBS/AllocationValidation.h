@@ -13,6 +13,18 @@ class AllocationValidation : public Validation {
 
 	typedef std::pair<AllocationConstraint,AllocationConstraint> AllocationConstraintPair;
 
+	struct ConflictCompare {
+		bool operator()(const std::pair<Assignment,Assignment>& _one, 
+										const std::pair<Assignment,Assignment>& _two) const {
+			return std::min(_one.first.m_execStartTime,_one.second.m_execStartTime) < 
+						std::min(_two.first.m_execStartTime, _two.second.m_execStartTime);
+		}
+	};
+
+	typedef std::priority_queue<std::pair<Assignment,Assignment>,
+															std::vector<std::pair<Assignment,Assignment>>,
+															ConflictCompare> OrderedConflicts;
+
 	///@}
 	///@name Construction
 	///@{
@@ -38,6 +50,8 @@ class AllocationValidation : public Validation {
 	virtual bool ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) override;
 
 	size_t CountConflicts(GeneralCBSNode& _node);
+
+	void FindAllConflicts(GeneralCBSNode& _node);
 	
 	///@}
 

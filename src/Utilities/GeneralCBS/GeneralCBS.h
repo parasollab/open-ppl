@@ -73,6 +73,8 @@ struct CBSSolution {
 	///< Indicates which task plans are chosen for multiply decomposable problems.
 	std::unordered_set<SemanticTask*>														m_solutionTasks;
 
+	std::unordered_map<SemanticTask*,SemanticTask*>							m_metaTaskMap;
+
 };
 
 
@@ -185,6 +187,9 @@ class GeneralCBSNode {
 
 	void SetAllocationConflictCount(size_t _c);
 	void SetMotionConflictCount(size_t _c);
+
+	std::vector<std::pair<Assignment,Assignment>>& GetAllocationConflicts();
+
 	///@}
 
   private:
@@ -203,6 +208,8 @@ class GeneralCBSNode {
 
 	double m_utility{0};
 
+	std::vector<std::pair<Assignment,Assignment>> m_allocationConflicts;
+
 	///@}
 
 };
@@ -214,6 +221,8 @@ using InitialPlanFunction = std::function<bool(Decomposition* _decomposition, Ge
 using ValidationFunction = std::function<bool(GeneralCBSNode& _node, GeneralCBSTree& _tree)>;
 
 using ConflictCountFunction = std::function<void(GeneralCBSNode& _node)>;
+
+using FindAllConflictsFunction = std::function<void(GeneralCBSNode& _node)>;
 
 //using LowLevelSearch = std::function<void(GeneralCBSNode& _node)>;
 

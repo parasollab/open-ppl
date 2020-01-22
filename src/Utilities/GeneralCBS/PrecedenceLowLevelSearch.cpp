@@ -3,7 +3,7 @@
 /*--------------------------------------- Construction -------------------------------------*/
 PrecedenceLowLevelSearch::
 PrecedenceLowLevelSearch(TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel, bool _debug) : 
-								TMPLowLevelSearch(_tmpLibrary,_sgLabel,_vcLabel,_debug) { }
+								MetaTMPLowLevelSearch(_tmpLibrary,_sgLabel,_vcLabel,_debug) { }
 
 /*---------------------------------------- Interface ---------------------------------------*/
 
@@ -137,7 +137,50 @@ PlanSubtree(GeneralCBSNode& _node, size_t _start) {
 bool 
 PrecedenceLowLevelSearch::
 ExtractPlan(GeneralCBSNode& _node) {
+
+	auto top = _node.GetSolutionRef().m_decomposition->GetMainTask();
+
+	auto tasks = ExtractSubtreePlan(_node,top);
+	
+	_node.GetSolutionRef().m_solutionTasks = tasks.second;
+
 	return true;
+}
+
+std::pair<double,std::unordered_set<SemanticTask*>>
+PrecedenceLowLevelSearch::
+ExtractSubtreePlan(GeneralCBSNode& _node, SemanticTask* _task) {
+	if(_task->GetMotionTask()) {
+		std::unordered_set<SemanticTask*> tasks;
+		tasks.insert(_task);
+		return std::make_pair(_node.GetSolutionRef().m_taskPlans[_task].back().m_execEndTime,tasks);
+	}
+
+	std::vector<std::pair<double,std::unordered_set<SemanticTask*>>> subtrees;
+	double max = 0;
+	double min = MAX_INT;
+	size_t minIndex = MAX_INT;
+	for(auto subtask : _task->GetSubtasks()) {
+		auto subtree = ExtractSubtreePlan(_node,subtask);
+		subtrees.push_back(subtree);
+		max = std::max(max,subtree.first);
+		if(min > subtree.first) {
+			min = subtree.first;
+			minIndex = subtrees.size()-1;
+		}
+	}
+	
+	if(_task->GetSubtaskRelation() == SemanticTask::AND) {
+		std::unordered_set<SemanticTask*> tasks;
+		for(auto subtree : subtrees) {
+			for(auto task : subtree.second) {
+				tasks.insert(task);
+			}
+		}
+		return std::make_pair(max,tasks);
+	}
+
+	return subtrees[minIndex];
 }
 
 double
@@ -289,7 +332,7 @@ UpdateIndividualTask(GeneralCBSNode& _node, SemanticTask* _task, size_t _vid, do
 	motion->SetReleaseWindow(releaseWindow);
 
 	// Update the task solution.
-	bool success = TMPLowLevelSearch::UpdateSolution(_node,_task);
+	bool success = MetaTMPLowLevelSearch::UpdateSolution(_node,_task);
 
 	// Update local tracking of task completion time.
 	if(success) {

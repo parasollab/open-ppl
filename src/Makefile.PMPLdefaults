@@ -564,9 +564,11 @@ PMPL_SRCS := \
 	Utilities/GeneralCBS/ComposeValidation.cpp \
 	Utilities/GeneralCBS/GeneralCBS.cpp \
 	Utilities/GeneralCBS/LowLevelSearch.cpp \
+	Utilities/GeneralCBS/MetaTMPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/MotionValidation.cpp \
 	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/PrecedenceLowLevelSearch.cpp \
+	Utilities/GeneralCBS/PrioritizedConflictValidation.cpp \
 	Utilities/GeneralCBS/TCBSValidation.cpp \
 	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/Validation.cpp \

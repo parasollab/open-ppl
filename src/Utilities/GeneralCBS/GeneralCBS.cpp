@@ -178,6 +178,10 @@ Debug() {
 			std::cout << "\t\t\t" << a.m_setupStartTime << "-------->" 
 								<< a.m_execStartTime << "---->" << a.m_execEndTime << std::endl;
 		}
+	}
+	std::cout << "Tasks in Chosen Decomposition: " << std::endl;
+	for(auto t : m_solution.m_solutionTasks) {
+		std::cout << t->GetLabel() << std::endl;
 	}	
 }
 
@@ -194,13 +198,18 @@ GetCost() const {
 	//TODO::right now, rest of code default computes the sum-of-cost - needs to be paramaterized
 	//temp makespan override:
 	double makespan = 0;
+	double soc = 0;
 	for(auto& tp : m_solution.m_taskPlans) {
 		if(tp.second.empty())
 			continue;
+		if(!m_solution.m_solutionTasks.empty() and !m_solution.m_solutionTasks.count(tp.first))
+			continue;
 		if(tp.second.back().m_execEndTime > makespan)
 			makespan = tp.second.back().m_execEndTime;
+		soc += tp.second.back().m_execEndTime;
 	}
-	return makespan;
+	//return makespan;
+	return soc;
 }
 	
 void 
@@ -237,6 +246,12 @@ void
 GeneralCBSNode::
 SetMotionConflictCount(size_t _c) {
 	m_motionConflictCount = _c;
+}
+	
+std::vector<std::pair<Assignment,Assignment>>& 
+GeneralCBSNode::
+GetAllocationConflicts() {
+	return m_allocationConflicts;
 }
 
 /*-------------------------- Conflict Based Search -------------------------*/

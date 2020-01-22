@@ -14,7 +14,11 @@
 #include "Utilities/GeneralCBS/GeneralCBS.h"
 #include "Utilities/GeneralCBS/MotionValidation.h"
 #include "Utilities/GeneralCBS/PrecedenceLowLevelSearch.h"
+#include "Utilities/GeneralCBS/PrioritizedConflictValidation.h"
 #include "Utilities/GeneralCBS/TMPLowLevelSearch.h"
+
+#include "Utilities/GeneralCBS/MetaTMPLowLevelSearch.h"
+
 #include "Utilities/SSSP.h"
 
 TMPCBS::
@@ -77,8 +81,23 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 		_node.SetAllocationConflictCount(conflicts);
 	};
 
+	//FindAllConflictsFunction findAllAlloc = [this,alloc](GeneralCBSNode& _node) {
+	//	alloc->FindAllConflicts(_node);
+	//};
+
+
+	//auto allocPC = new PrioritizedConflictValidation(this->GetMPLibrary(), &lowLevel, 
+	//									this->GetTMPLibrary(), findAllAlloc);
+
+	//ValidationFunction allocPCValid = [this,allocPC](GeneralCBSNode& _node,GeneralCBSTree& _tree) {
+	//	return allocPC->ValidatePlan(_node, _tree);
+	//};
+
 	auto allocBypass = new BypassValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),
 																				allocValid,allocCount,MAX_INT);
+
+	//auto allocBypass = new BypassValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),
+	//																			allocPCValid,allocCount,MAX_INT);
 
 	auto compose = new ComposeValidation({allocBypass, motion});
 	
@@ -101,6 +120,8 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	if(true) {
 		for(auto plan : solution.m_taskPlans) {
 			auto task = plan.first;
+			if(!solution.m_solutionTasks.empty() and !solution.m_solutionTasks.count(task))
+				continue;
 			auto assignments = plan.second;
 			std::cout << std::endl << std::endl << "Task: " << task->GetLabel() << std::endl;
 			for(auto a : assignments) {
