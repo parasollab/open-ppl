@@ -56,10 +56,13 @@ class HierarchicalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinder Overrides
     ///@{
 
+    virtual void SetDMLabel(const std::string& _label) noexcept override;
+
+    virtual const std::string& GetDMLabel() const noexcept override;
+
     virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
         const VertexSet& _candidates, OutputIterator _out) override;
 
-    /// @overload This version is for group roadmaps.
     virtual void FindNeighbors(GroupRoadmapType* const _r,
         const GroupCfgType& _cfg, const VertexSet& _candidates,
         OutputIterator _out) override;
@@ -122,6 +125,24 @@ Print(std::ostream& _os) const {
 }
 
 /*-------------------- NeighborhoodFinderMethod Overrides --------------------*/
+
+template <typename MPTraits>
+inline
+void
+HierarchicalNF<MPTraits>::
+SetDMLabel(const std::string& _label) noexcept {
+  this->GetNeighborhoodFinder(m_nfLabels.back())->SetDMLabel(_label);
+}
+
+
+template <typename MPTraits>
+inline
+const std::string&
+HierarchicalNF<MPTraits>::
+GetDMLabel() const noexcept {
+  return this->GetNeighborhoodFinder(m_nfLabels.back())->GetDMLabel();
+}
+
 
 template <typename MPTraits>
 void

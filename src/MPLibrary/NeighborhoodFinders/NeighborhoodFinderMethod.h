@@ -91,11 +91,11 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
 
     /// Set the distance metric label.
     /// @param _label The new DM label to use.
-    void SetDMLabel(const std::string& _label) noexcept;
+    virtual void SetDMLabel(const std::string& _label) noexcept;
 
     /// Get the distance metric label.
     /// @return The label for the current DM.
-    const std::string& GetDMLabel() const noexcept;
+    virtual const std::string& GetDMLabel() const noexcept;
 
     ///@}
     ///@name Nearest-Neighbor Queries

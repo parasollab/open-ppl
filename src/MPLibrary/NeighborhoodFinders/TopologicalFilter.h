@@ -84,6 +84,10 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinder Overrides
     ///@{
 
+    virtual void SetDMLabel(const std::string& _label) noexcept override;
+
+    virtual const std::string& GetDMLabel() const noexcept override;
+
     virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
         const VertexSet& _candidates, OutputIterator _out) override;
 
@@ -220,6 +224,24 @@ Print(std::ostream& _os) const {
 }
 
 /*----------------------- NeighborhoodFinder Overrides -----------------------*/
+
+template <typename MPTraits>
+inline
+void
+TopologicalFilter<MPTraits>::
+SetDMLabel(const std::string& _label) noexcept {
+  this->GetNeighborhoodFinder(m_nfLabel)->SetDMLabel(_label);
+}
+
+
+template <typename MPTraits>
+inline
+const std::string&
+TopologicalFilter<MPTraits>::
+GetDMLabel() const noexcept {
+  return this->GetNeighborhoodFinder(m_nfLabel)->GetDMLabel();
+}
+
 
 template <typename MPTraits>
 void
