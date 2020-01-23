@@ -63,7 +63,7 @@
       <QueryMethod label="Query" debug="true"/>
 
       <!-- Sample more nodes than we need to test path refinement. -->
-      <ComposeEvaluator label="QueryMinSize" operator="and">
+      <ComposeEvaluator label="QueryMinSize" operator="and" debug="true">
         <Evaluator label="Query"/>
         <Evaluator label="NodeLimit"/>
       </ComposeEvaluator>
