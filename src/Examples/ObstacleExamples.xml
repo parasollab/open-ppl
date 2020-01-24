@@ -5,10 +5,12 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="example">
 
-    <Environment filename="Obstacle/obstacle.env"
+    <!--Environment filename="Obstacle/obstacle.env"-->
+    <Environment filename="MazeTunnel/mazetunnel.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="Obstacle/robot.robot">
+    <!--Robot label="boxy" filename="Obstacle/robot.robot"-->
+    <Robot label="boxy" filename="MazeTunnel/robot.robot">
       <!--
       <Agent type="planning"/>
       -->
@@ -19,12 +21,14 @@
     <Task label="query" robot="boxy">
       <StartConstraints>
 
-        <CSpaceConstraint point="-36 -18 0 0 0 0" />
+        <!--CSpaceConstraint point="-36 -18 0 0 0 0" /-->
+        <CSpaceConstraint point="8 17 0 0 0 0" />
       </StartConstraints>
 
       <GoalConstraints>
 
-        <CSpaceConstraint point="-8 14 0 0 0 0" />
+        <!--CSpaceConstraint point="-8 14 0 0 0 0" /-->
+        <CSpaceConstraint point="10 -10 0 0 0 0" />
       </GoalConstraints>
     </Task>
 
@@ -71,7 +75,7 @@
     <NeighborhoodFinders>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-        k="1"/>
+        k="10"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
       <HierarchicalNF label="HierarchicalNF" nfLabel="BFNF" nfLabel2="RandomNF"
         dmLabel=""/>
@@ -179,7 +183,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="4." minDist=".01"/>
+        vcLabel="pqp_solid" maxDist="1." minDist=".01"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
@@ -529,8 +533,8 @@
 
       <ScratchStrategy label="scratch"/>
 
-      <DynamicRegionsPRM label="DRPRM" decompositionLabel="fine" skeletonType="mcs" debug="true"
-        nfLabel="Nearest"lpLabel="sl">
+      <DynamicRegionsPRM label="DRPRM" decompositionLabel="fine" skeletonType="mcs" debug="false"
+        nfLabel="Nearest"lpLabel="sl" extenderLabel="BERO">
         <Sampler label="UniformRandomFree" number="1" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="BoundedQuery"/>
@@ -540,9 +544,9 @@
 
     <MPTools>
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
-        io="read" baseFilename="3D/coarse"/>
+        io="write" baseFilename="MazeTunnel/coarse"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
-        io="read" baseFilename="3D/quality"/>
+        io="write" baseFilename="MazeTunnel/quality"/>
 
       <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
         gridSize="1"/>
