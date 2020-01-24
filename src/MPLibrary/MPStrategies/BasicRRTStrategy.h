@@ -423,7 +423,8 @@ template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectTarget() {
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::SelectTarget");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::SelectTarget");
 
   CfgType target(this->GetTask()->GetRobot());
 
@@ -479,7 +480,8 @@ template <typename MPTraits>
 typename MPTraits::CfgType
 BasicRRTStrategy<MPTraits>::
 SelectDispersedTarget(const VID _v) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::SelectDispersedTarget");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::SelectDispersedTarget");
 
   // Get original cfg with vid _v and its neighbors
   auto g = this->GetRoadmap();
@@ -537,7 +539,7 @@ typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, "BasicRRTStrategy::FindNearestNeighbor");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::FindNearestNeighbor");
 
   if(this->m_debug)
     std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
@@ -570,7 +572,7 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
   // high numbers for this, you likely have problems with parameter or algorithm
   // selection.
   if(neighbors.empty()) {
-    stats->IncStat("BasicRRTStrategy::FailedNF");
+    stats->IncStat(this->GetNameAndLabel() + "::FailedNF");
     if(this->m_debug)
       std::cout << "\tFailed to find a nearest neighbor."
                 << std::endl;
@@ -610,8 +612,10 @@ typename BasicRRTStrategy<MPTraits>::VID
 BasicRRTStrategy<MPTraits>::
 Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp,
     const bool _requireNew) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::Extend");
-  this->GetStatClass()->IncStat("BasicRRTStrategy::Extend");
+  auto stats = this->GetStatClass();
+  const std::string id = this->GetNameAndLabel() + "::Extend";
+  MethodTimer mt(stats, id);
+  stats->IncStat(id);
 
   auto e = this->GetExtender(m_exLabel);
   const CfgType& qNear = this->GetRoadmap()->GetVertex(_nearVID);
@@ -671,7 +675,7 @@ template <typename MPTraits>
 std::pair<typename BasicRRTStrategy<MPTraits>::VID, bool>
 BasicRRTStrategy<MPTraits>::
 AddNode(const CfgType& _newCfg) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::AddNode");
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::AddNode");
 
   auto g = this->GetRoadmap();
 
@@ -694,7 +698,7 @@ void
 BasicRRTStrategy<MPTraits>::
 AddEdge(const VID _source, const VID _target,
     const LPOutput<MPTraits>& _lpOutput) {
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::AddEdge");
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::AddEdge");
 
   if(this->m_debug)
     std::cout << "\tAdding Edge (" << _source << ", " << _target << ")."
@@ -727,7 +731,8 @@ ConnectNeighbors(const VID _newVID) {
   if(_newVID == INVALID_VID or m_ncLabel.empty())
     return;
 
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::ConnectNeighbors");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ConnectNeighbors");
 
   // Try to connect _newVID to its neighbors using the connector.
   this->GetConnector(m_ncLabel)->Connect(this->GetRoadmap(), _newVID);
@@ -747,16 +752,13 @@ TryGoalExtension(const VID _newVID) {
   if(goalConstraints.empty())
     return;
 
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::TryGoalExtension");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::TryGoalExtension");
 
-  if(this->m_debug) {
-    auto g = this->GetRoadmap();
-    const CfgType& cfg = g->GetVertex(_newVID);
-
+  if(this->m_debug)
     std::cout << "Checking goal extension for new node " << _newVID << " at "
-              << cfg.PrettyPrint() << "."
+              << this->GetRoadmap()->GetVertex(_newVID).PrettyPrint()
               << std::endl;
-  }
 
   for(const auto& constraint : goalConstraints)
     TryGoalExtension(_newVID, constraint->GetBoundary());
@@ -859,7 +861,7 @@ ExpandTree(const VID _nearestVID, const CfgType& _target) {
   if(this->m_debug)
     std::cout << "Trying expansion from node " << _nearestVID << " "
          << this->GetRoadmap()->GetVertex(_nearestVID).PrettyPrint()
-         << "..." << std::endl;
+         << std::endl;
 
   // Try to extend from the _nearestVID to _target
   const VID newVID = this->Extend(_nearestVID, _target);
@@ -902,7 +904,8 @@ ConnectTrees(const VID _recentlyGrown) {
   if(!m_growGoals or _recentlyGrown == INVALID_VID or ccCount == 1)
     return;
 
-  MethodTimer mt(this->GetStatClass(), "BasicRRTStrategy::ConnectTrees");
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ConnectTrees");
 
   // Get the configuration by value in case the graph's vertex vector gets
   // re-allocated.

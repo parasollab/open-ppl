@@ -36,6 +36,7 @@
 #include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -209,7 +210,8 @@ struct MPTraits {
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
     ObstacleClearanceValidity<MPTraits>,
-    TerrainValidityChecker<MPTraits>
+    TerrainValidityChecker<MPTraits>,
+    TopologicalMapValidity<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
