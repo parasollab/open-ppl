@@ -32,7 +32,7 @@ class TopologicalMapValidity : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
-        const std::string& _callName) override;
+        const std::string& _caller) override;
 
     ///@}
 
@@ -69,8 +69,13 @@ TopologicalMapValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) 
 template <typename MPTraits>
 bool
 TopologicalMapValidity<MPTraits>::
-IsValidImpl(CfgType& _cfg, CDInfo&, const std::string&) {
+IsValidImpl(CfgType& _cfg, CDInfo&, const std::string& _caller) {
+  this->GetStatClass()->IncCfgIsColl(_caller);
+
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+
+  // Position the robots within the environment.
+  _cfg.ConfigureRobot();
 
   using NeighborhoodKey = typename TopologicalMap<MPTraits>::NeighborhoodKey;
 
