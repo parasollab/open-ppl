@@ -66,6 +66,8 @@ class StatClass final {
     // Histories
     std::vector<double>& GetHistory(const std::string& _s);
     void AddToHistory(const std::string& _s, double _v);
+    void WriteHistory(const std::string& _s);
+
     void SetAuxDest(const std::string& _s);
 
     void PrintAllStats(std::ostream& _os);

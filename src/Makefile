@@ -102,7 +102,7 @@ endif
 # Dependency Tracking ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 DEPS_OUT = $(OBJ_DIR)/$*.d
-DEPS     = -MMD -MF $(DEPS_OUT)
+DEPS     = -MMD -MT $(OBJ_DIR)/$*.o -MF $(DEPS_OUT)
 
 DEPENDENCY_FILE := $(OBJ_DIR)/Dependencies
 -include $(DEPENDENCY_FILE)
