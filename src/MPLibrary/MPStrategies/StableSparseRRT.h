@@ -111,6 +111,9 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     /// Recursively prune the set of inactive leaves until none remain.
     void PruneInactiveLeaves();
 
+    /// Find the best-cost VID for each goal so far.
+    VertexSet GetBestGoalVIDs();
+
     ///@}
     ///@name Internal State
     ///@{
@@ -334,14 +337,16 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
 
   // If the new node isn't better, it's an inactive leaf.
   const bool betterCost = cost < representativeCost;
-  if(!betterCost) {
-    if(this->m_debug)
-      std::cout << "\tNew node " << _newVID << " with cost "
-                << cost << " >= " << representativeCost
-                << " not better than previous representative " << representative
-                << "." << std::endl;
+
+  if(this->m_debug)
+    std::cout << "\tNew node " << _newVID << " with cost "
+              << cost << (betterCost ? " < " : " >= " ) << representativeCost
+              << (betterCost ? "" : " not")
+              << " better than previous representative " << representative
+              << "." << std::endl;
+
+  if(!betterCost)
     m_inactiveLeaves.insert(_newVID);
-  }
   else
     UpdateRepresentative(witness, _newVID);
 
@@ -458,6 +463,13 @@ PruneInactiveLeaves() {
               << " inactive leaves."
               << std::endl;
 
+  // We need to make sure we don't prune the best goal nodes. These could be
+  // inactive leaves if there is a lower-cost node in their witness region, but
+  // we obviously want to keep them so that we still have a valid solution to
+  // our problem.
+  const VertexSet goals = GetBestGoalVIDs();
+  VertexSet leafGoals;
+
   // Prune the inactive leaves until there are none.
   size_t count = 0;
   while(!m_inactiveLeaves.empty()) {
@@ -467,6 +479,16 @@ PruneInactiveLeaves() {
     auto leaf = m_inactiveLeaves.begin();
     const VID leafVID = *leaf;
     m_inactiveLeaves.erase(leaf);
+
+    // If this leaf is a best goal, don't prune it.
+    if(goals.count(leafVID)) {
+      leafGoals.insert(leafVID);
+      if(this->m_debug)
+        std::cout << "\tNot pruning inactive leaf " << leafVID
+                  << " which is a best goal node."
+                  << std::endl;
+      continue;
+    }
 
     // Find parent.
     const VertexSet& predecessors = g->GetPredecessors(leafVID);
@@ -484,6 +506,8 @@ PruneInactiveLeaves() {
 
     // Remove leaf.
     g->DeleteVertex(leafVID);
+    if(this->m_debug)
+      std::cout << "\tPruned inactive leaf " << leafVID << "." << std::endl;
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.
     if(g->get_out_degree(parent) == 0) {
@@ -491,17 +515,62 @@ PruneInactiveLeaves() {
       if(!active)
         m_inactiveLeaves.insert(parent);
       if(this->m_debug)
-        std::cout << "\tParent node '" << parent << "' is a leaf and "
+        std::cout << "\t  Parent node '" << parent << "' is a leaf and "
                   << (active ? "" : "in") << "active."
                   << std::endl;
     }
     else if(this->m_debug)
-      std::cout << "\tParent node '" << parent << "' has other children."
+      std::cout << "\t  Parent node '" << parent << "' has other children."
                 << std::endl;
   }
 
+  // If we skipped pruning any leaf goals, add those back to the inactive leaves
+  // now.
+  m_inactiveLeaves.insert(leafGoals.begin(), leafGoals.end());
+
   if(this->m_debug)
     std::cout << "Pruned " << count << " vertices." << std::endl;
+}
+
+
+template <typename MPTraits>
+typename MPTraits::RoadmapType::VertexSet
+StableSparseRRT<MPTraits>::
+GetBestGoalVIDs() {
+  auto goalTracker = this->GetGoalTracker();
+  const size_t numGoals = this->GetTask()->GetNumGoals();
+  auto r = this->GetRoadmap();
+
+  VertexSet bestGoalVIDs;
+
+  // Check each goal.
+  for(size_t i = 0; i < numGoals; ++i) {
+    // Get the VIDs that satisfy this goal. If there aren't any, move on.
+    const VertexSet& goals = goalTracker->GetGoalVIDs(i);
+    if(goals.empty())
+      continue;
+
+    // Find the best-cost VID.
+    VID bestVID = INVALID_VID;
+    double bestCost = std::numeric_limits<double>::infinity();
+    for(const VID vid : goals) {
+      // Get cost.
+      const double cost = r->GetVertex(vid).GetStat("cost");;
+
+      // Skip if not better.
+      if(cost >= bestCost)
+        continue;
+
+      // This cost is better.
+      bestCost = cost;
+      bestVID = vid;
+    }
+
+    // Add the best VID to the output set.
+    bestGoalVIDs.insert(bestVID);
+  }
+
+  return bestGoalVIDs;
 }
 
 /*----------------------------------------------------------------------------*/
