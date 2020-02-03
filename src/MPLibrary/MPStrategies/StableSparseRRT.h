@@ -26,6 +26,25 @@
 /// @note This method currently measures cost with distance in holonomic
 ///       problems and time steps in nonholonomic problems.
 ///
+/// @note If we re-create an existing node, the original algorithm would keep
+///       both copies and mark the more expensive one as inactive. This would
+///       also cause the subtree rooted at the more expensive node to be
+///       sub-optimal w.r.t. the best known cost to this state. Our roadmap
+///       graph however does not permit duplicate states, so in our case the
+///       new path will be discarded. It would be nice to save it if cheaper and
+///       rewire its parent, but that wouldn't be exactly SST, and would also
+///       require propogating cost changes to the children (which could also
+///       require updates to the representatives for their witnesses). However
+///       it is very rare to recreate the same exact state via a different local
+///       plan, so the main way this matters in our usage is for the goal
+///       states: if the goal is a single point in state space, our goal-biasing
+///       heuristics will frequently recreate it from other parents, sometimes
+///       with a cheaper plan. If we don't do something to take the cheaper
+///       plan, we'll never see the cost decrease when running past the first
+///       feasible solution. The easy way to avoid the problem is to use
+///       non-point goals for this method so that the generated goal states are
+///       slightly different (i.e. use a small sphere instead of a point).
+///
 /// Reference:
 ///   Yanbo Li, Zakary Littlefield, and Kostas Bekris. "Sparse Methods for
 ///   Efficient Asymptotically Optimal Kinodynamic Planning". Algorithmic
