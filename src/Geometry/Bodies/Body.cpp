@@ -688,7 +688,7 @@ ReadGeometryFile(GMSPolyhedron::COMAdjust _comAdjust) {
   ComputeMomentOfInertia();
   ComputeBoundingBox();
   MarkDirty();
-  Validate();
+  //Validate();
 }
 
 

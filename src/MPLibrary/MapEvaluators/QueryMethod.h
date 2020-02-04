@@ -44,6 +44,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::CfgType              CfgType;
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
+    typedef typename RoadmapType::VertexSet         VertexSet;
     typedef typename MPTraits::GoalTracker          GoalTracker;
     typedef typename GoalTracker::VIDSet            VIDSet;
 
@@ -225,9 +226,9 @@ operator()() {
   const size_t numGoals = task->GetNumGoals();
 
   // Record the path length history when this function exits.
-  nonstd::call_on_destruct trackHistory([this](){
-      this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
-  });
+  //nonstd::call_on_destruct trackHistory([this](){
+  //    this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
+  //});
 
   if(goalTracker->GetStartVIDs().empty())
     return false;
@@ -328,6 +329,34 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
         std::cout << "\tStart and goal in different CCs, no path exists"
                   << std::endl;
       return {};
+    }
+  }
+
+  // Try to use predecessor following to generate a path quickly.
+  if(_goals.size() == 1) {
+    VID current = *_goals.begin();
+    std::vector<VID> path;
+    while(true) {
+      path.push_back(current);
+
+      // If this is the start node, we're done.
+      if(current == _start)
+        break;
+
+      // Make sure we have at most one parent.
+      const VertexSet& parents = m_roadmap->GetPredecessors(current);
+      if(parents.size() != 1)
+        break;
+
+      // Set current to the parent and continue.
+      current = *parents.begin();
+    }
+
+    // The path succeeded if _start is the last element.
+    const bool success = path.back() == _start;
+    if(success) {
+      std::reverse(path.begin(), path.end());
+      return path;
     }
   }
 
