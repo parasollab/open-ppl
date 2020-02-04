@@ -2,6 +2,8 @@
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
@@ -211,10 +213,11 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   if(_debug)
     cout << "Adding holes..." << endl;
 
-  // Initialize the boundary as inward-facing.
-  auto cp = _env->GetBoundary()->CGAL();
-  NefPolyhedron boundary(cp);
-  boundary = boundary.complement();
+  // Set up to check for obstacle/boundary collisions.
+  static PQPSolid pqpSolid;
+  CDInfo cdInfo;
+  mathtool::Transformation identity;
+  const GMSPolyhedron boundaryPoly = _env->GetBoundary()->MakePolyhedron();
 
   vector<Vector3d> holes;
   for(size_t i = _env->UsingBoundaryObstacle(); i < _env->NumObstacles(); ++i) {
@@ -230,9 +233,22 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
     // Create each hole with a point just beneath one of the model's facets.
     for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
-      // Get the body's first facet.
+      // If this body intersects with the environment boundary, do NOT add a
+      // hole! There is already a connection to the outside of the boundary,
+      // adding a hole will cause tetgen to misbehave.
       const Body* const body = obst->GetBody(j);
-      const auto& facet = body->GetWorldPolyhedron().GetPolygonList()[0];
+      const GMSPolyhedron& poly = body->GetWorldPolyhedron();
+      const bool touching = pqpSolid.IsInCollision(poly, identity,
+                                                   boundaryPoly, identity, cdInfo);
+      if(touching) {
+        if(_debug)
+          std::cout << "\t\tSkipping body " << j << " which touches boundary."
+                    << std::endl;
+        //continue;
+      }
+
+      // Get the body's first facet.
+      const auto& facet = poly.GetPolygonList()[0];
 
       // Pick a point just beneath this facet's center as the hole.
       holes.emplace_back(facet.FindCenter() - .0001 * facet.GetNormal());
@@ -506,6 +522,7 @@ MakeFreeModel(const Environment* _env) {
         if(m_debug)
           std::cout << "\t\tbody " << j
                     << " is " << (ocp.is_closed() ? "" : "not ") << "closed"
+                    << "\t\t  and " << (ocp.is_valid() ? "" : "not ") << "valid"
                     << std::endl;
 
         // Subtract it from the freespace.
