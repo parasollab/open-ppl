@@ -535,7 +535,6 @@ double
 ITConnector::
 SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const {
   auto intermediates = _ei->property();
-  auto dm = m_library->GetDistanceMetric("euclidean");
   double distance = 0.0;
   for(size_t i = 1; i < intermediates.size(); i++){
     double step = (intermediates[i-1]-intermediates[i]).norm();
