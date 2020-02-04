@@ -3,6 +3,7 @@
 
 #include "NeighborhoodFinderMethod.h"
 
+#include "Geometry/Bodies/Connection.h"
 #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
 
 #include <string>
@@ -160,6 +161,9 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     /// Try to find the nearest neighborhood for queries in obstacle space?
     bool m_recoverObstSamples{false};
 
+    std::vector<size_t> m_bodyMask; ///< Bodies to use with filtering.
+    std::vector<double> m_maxJointTranslation; ///< The maximum translation for each body (relative to the base) due to joint motions.
+
     ///@}
 };
 
@@ -198,6 +202,16 @@ TopologicalFilter(XMLNode& _node)
 
   m_recoverObstSamples = _node.Read("recoverObst", false, m_recoverObstSamples,
       "Try to find the nearest neighborhood for queries in obstacle space?");
+
+  std::string bodyMask = _node.Read("bodyMask", false, "",
+      "List of body indexes that we will use. If not specified, use all.");
+  if(!bodyMask.empty()) {
+    std::istringstream is(bodyMask);
+    size_t buffer;
+    while(is >> buffer)
+      m_bodyMask.push_back(buffer);
+    std::cout << "Body mask: " << m_bodyMask << std::endl;
+  }
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -491,14 +505,13 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
       this->GetNameAndLabel() + "::FindCandidates");
 
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  auto mb = this->GetTask()->GetRobot()->GetMultiBody();
+  //auto mb = this->GetTask()->GetRobot()->GetMultiBody();
 
   VertexSet candidates;
 
   // For n bodies, make n vertex sets to track the descriptors which have been
   // seen n + 1 times.
-  const size_t bodyCount = mb->GetNumBodies();
-  std::vector<VertexSet> countSets(bodyCount);
+  std::vector<VertexSet> countSets(m_bodyMask.size());
 
   // Make a map from descriptor to count. Elements not present have zero count.
   std::unordered_map<VID, size_t> descriptorCounts;
@@ -508,7 +521,7 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
 
   // Find the candidates for each body and count the number of times they
   // appear.
-  for(size_t i = 0; i < bodyCount; ++i) {
+  for(const size_t i : m_bodyMask) {
     // Find the candidate regions for this body.
     const PopulationMarkers regions = FindCandidateRegions(_r, _cfg, i,
         _inputCandidates);
@@ -630,6 +643,46 @@ LazyInitialize() {
   m_queryMap.clear();
   if(m_useQueryMap)
     BuildQueryMap();
+
+  auto robot = this->GetTask()->GetRobot();
+  auto mb = robot->GetMultiBody();
+  if(m_bodyMask.empty()) {
+    for(size_t i = 0; i != mb->GetNumBodies(); ++i)
+      m_bodyMask.push_back(i);
+    std::cout << "Body mask: " << m_bodyMask << std::endl;
+  }
+
+  // Crudely estimate the max joint translations based on DH params.
+  m_maxJointTranslation.resize(mb->GetNumBodies());
+  m_maxJointTranslation[0] = 0;
+  for(size_t index = 1; index < mb->GetNumBodies(); ++index) {
+    // Get the next body and backward connection to the parent.
+    const Body* const b = mb->GetBody(index);
+    const Connection& c = b->GetBackwardConnection(0);
+    const size_t parentIndex = index - 1;
+
+    /// @todo This assumes a linear structure. Upgrade later, enforce for now.
+    const bool oneBackwardConnection = b->BackwardConnectionCount() == 1,
+               previousIsParent      = c.GetPreviousBodyIndex() == parentIndex;
+    if(!oneBackwardConnection or !previousIsParent)
+      throw NotImplementedException(WHERE) << "Only chain-topology robots are "
+                                           << "supported at this time.";
+
+    // Compute the sum of the dh param translations to upper-bound the maximum
+    // translation of this body's center relative to its parent.
+    /// @todo Do something a bit more elegant here to account for joint limits
+    ///       and otherwise usable range of motion.
+    const double parentToJointDistance = c.GetTransformationToDHFrame().translation().norm(),
+                 jointToThisDistance   = c.GetTransformationToBody2().translation().norm(),
+                 sum                   = parentToJointDistance + jointToThisDistance;
+
+    // Set the maximum translation to the parent's plus this.
+    m_maxJointTranslation[index] = m_maxJointTranslation[parentIndex] + sum;
+
+    std::cout << "Max joint translation for body " << index << ": "
+              << m_maxJointTranslation[index]
+              << std::endl;
+  }
 }
 
 
