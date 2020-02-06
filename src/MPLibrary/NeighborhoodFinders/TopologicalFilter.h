@@ -163,6 +163,7 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
 
     std::vector<size_t> m_bodyMask; ///< Bodies to use with filtering.
     std::vector<double> m_maxJointTranslation; ///< The maximum translation for each body (relative to the base) due to joint motions.
+    double m_factor{1}; ///< Ratio of max workspace translation / cspace distance.
 
     ///@}
 };
@@ -683,6 +684,10 @@ LazyInitialize() {
               << m_maxJointTranslation[index]
               << std::endl;
   }
+
+  /// @todo This assumes a chain robot and maximal joint range.
+  if(mb->GetBaseType() == Body::Type::Fixed)
+    m_factor = m_maxJointTranslation.back() / (2. * std::sqrt(mb->DOF()));
 }
 
 
@@ -812,7 +817,7 @@ GetSSSPData(const WorkspaceRegion* _region) {
 
   auto& ssspCache = m_ssspCache[_region];
   ssspCache = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS
-            ? tm->ComputeFrontierNew(_region, nf->GetRadius(), m_queryMap)
+            ? tm->ComputeFrontierNew(_region, m_factor * nf->GetRadius(), m_queryMap)
             : tm->ComputeFrontier(_region, nullptr, 0, -1, m_queryMap);
 
   // Remove the data we will not use.

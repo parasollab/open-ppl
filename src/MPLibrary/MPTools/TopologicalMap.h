@@ -669,6 +669,9 @@ LocateRegion(const Point3d& _point) const {
     std::cout << "TopologicalMap::LocateRegion"
               << "\n\tPoint " << _point << "is " << (inObstacle ? "" : "not ")
               << "inside an obstacle."
+              << "\n\tCell: " << cell
+              << " with center " << m_grid->CellCenter(cell)
+              << ", width " << m_grid->CellLength()
               << "\n\tCandidate regions: " << candidateRegions.size()
               << "\n\tContaining region: " << r
               << std::endl;

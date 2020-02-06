@@ -7,6 +7,7 @@
 #include "Utilities/MPUtils.h"
 #include "Workspace/WorkspaceDecomposition.h"
 
+#include "nonstd/io.h"
 #include "nonstd/timer.h"
 
 #include <cmath>
@@ -311,7 +312,7 @@ Cell(const Point3d& _p) const noexcept {
 
   for(size_t i = 0; i < 3; ++i) {
     const auto range = m_boundary->GetRange(i);
-    cell[i] = m_num[i] * (_p[i] - range.min) / range.Length();
+    cell[i] = (_p[i] - range.min) / m_length;
     // Catch edge-case for cells on the maximal boundary.
     cell[i] = std::min(cell[i], m_num[i] - 1);
   }
@@ -387,7 +388,13 @@ Test(const size_t _trials) const {
             << "\n\tNum X:     " << m_num[0]
             << "\n\tNum Y:     " << m_num[1]
             << "\n\tNum Z:     " << m_num[2]
+            << "\nBoundary Information: " << *m_boundary
             << std::endl;
+
+  for(size_t i = 0; i < 3; ++i)
+    std::cout << "\tlength " << i << ": " << m_boundary->GetRange(i).Length()
+              << std::endl;
+
 
   // Compute a value that is just slightly smaller than the half-length of the
   // cell.
@@ -433,17 +440,33 @@ Test(const size_t _trials) const {
 
     if(!indexTranslationOK or !centerOK or !addOK or !subOK) {
       std::cout << "GridOverlay: test failed on trial " << i << ":"
-                << "\n\tcell: " << cell
-                << "\n\tx:    " << x
-                << "\n\ty:    " << y
-                << "\n\tz:    " << z
-                << "\n\ttestIndex: " << testIndex
-                << "\n\tcenter:      " << center
-                << "\n\tcenterIndex: " << centerIndex
-                << "\n\tadd:         " << center + testDisplacement
-                << "\n\taddIndex:    " << addIndex
-                << "\n\tsub:         " << center - testDisplacement
-                << "\n\tsubIndex:    " << subIndex
+                << "\n\tcell:         " << cell
+                << " (" << x
+                << "," << y
+                << "," << z
+                << ")"
+                << "\n\ttestIndex:    " << testIndex
+                << "\n\tcenter:       " << center
+                << "\n\tCell(center): " << Cell(center)
+                << "\n\tcenterIndex:  " << centerIndex
+                << " (" << XIndex(centerIndex)
+                << "," << YIndex(centerIndex)
+                << "," << ZIndex(centerIndex)
+                << ")"
+                << "\n\tadd:          " << center + testDisplacement
+                << "\n\tCell(add):    " << Cell(center + testDisplacement)
+                << "\n\taddIndex:     " << addIndex
+                << " (" << XIndex(addIndex)
+                << "," << YIndex(addIndex)
+                << "," << ZIndex(addIndex)
+                << ")"
+                << "\n\tsub:          " << center - testDisplacement
+                << "\n\tCell(sub):    " << Cell(center - testDisplacement)
+                << "\n\tsubIndex:     " << subIndex
+                << " (" << XIndex(subIndex)
+                << "," << YIndex(subIndex)
+                << "," << ZIndex(subIndex)
+                << ")"
                 << std::endl;
       if(!indexTranslationOK)
         std::cout << "Index translation failed." << std::endl;
