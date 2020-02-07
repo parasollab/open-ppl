@@ -425,6 +425,12 @@ Initialize() {
         env->GetBoundary(), m_gridSize));
     this->GetStatClass()->SetStat(gridLabel + "::Size", m_grid->Size());
 
+    // If we're debugging, run the grid test to make sure it's working right.
+    if(this->m_debug) {
+      std::cout << "Testing grid (debug mode)..." << std::endl;
+      m_grid->Test();
+    }
+
     // Compute the mapping from grid cell to region.
     if(this->m_debug)
       std::cout << "Computing grid to region map." << std::endl;
@@ -703,6 +709,12 @@ LocateRegion(const Point3d& _point) const {
         for(const Point3d& p : region->GetPoints())
           maxRadius = std::max(maxRadius, (p-c).norm());
       }
+
+      // Add the cell.
+      auto c = glutils::triangulated_model::make_box(m_grid->CellLength(),
+          m_grid->CellLength(), m_grid->CellLength());
+      c.translate(ToGLUtils(m_grid->CellCenter(cell)));
+      t.add_model(c);
 
       // Add the point as a small sphere of 1/20 the radius.
       auto p = glutils::triangulated_model::make_sphere(maxRadius / 20., 4);
