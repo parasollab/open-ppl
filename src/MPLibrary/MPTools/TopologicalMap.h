@@ -2,11 +2,15 @@
 #define PMPL_TOPOLOGICAL_MAP_H_
 
 #include "MPLibrary/MPBaseObject.h"
+#include "Simulator/Conversions.h"
 #include "Utilities/Hash.h"
 #include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/GridOverlay.h"
 #include "Workspace/WorkspaceDecomposition.h"
+
+#include "glutils/obj_file.h"
+#include "glutils/triangulated_model.h"
 
 #include <algorithm>
 #include <map>
@@ -676,9 +680,44 @@ LocateRegion(const Point3d& _point) const {
               << "\n\tContaining region: " << r
               << std::endl;
 
-    if(!inObstacle and !r)
+    if(!inObstacle and !r) {
+      // This really can't happen with a well-formed decomposition, yet somehow
+      // I see it on the lab machines. Build an obj mesh of the candidate
+      // regions, and a small box for the point. Merge these into a single obj
+      // and print to file for inspection.
+      glutils::triangulated_model t;
+
+      // Add the candidate regions, and find their max bounding sphere size.
+      double maxRadius = 0.;
+      for(const WorkspaceRegion* region : candidateRegions) {
+        // Add the facets.
+        for(const WorkspaceRegion::Facet facet : region->GetFacets()) {
+          t.add_facet(t.add_point(ToGLUtils(facet.GetPoint(0))),
+                      t.add_point(ToGLUtils(facet.GetPoint(1))),
+                      t.add_point(ToGLUtils(facet.GetPoint(2))));
+        }
+
+        // Find the center.
+        const Point3d c = region->FindCenter();
+        // Find max distance from center.
+        for(const Point3d& p : region->GetPoints())
+          maxRadius = std::max(maxRadius, (p-c).norm());
+      }
+
+      // Add the point as a small sphere of 1/20 the radius.
+      auto p = glutils::triangulated_model::make_sphere(maxRadius / 20., 4);
+      p.translate(ToGLUtils(_point));
+      t.add_model(p);
+
+      // Output the model to an obj file.
+      {
+        glutils::obj_file file("tm-error.obj");
+        file << t;
+      }
+
       throw RunTimeException(WHERE) << "Freespace point " << _point
                                     << " is not in any region.";
+    }
   }
 
   return r;
