@@ -103,7 +103,7 @@ BuildSkeleton(const WorkspaceDecomposition* _tetrahedralization, bool _curve) {
 
   Skeletonization mcs(inputMesh);
   mcs.set_quality_speed_tradeoff(m_params.m_wH);//10
-  //mcs.set_min_edge_length(1);
+  mcs.set_min_edge_length(1);
   mcs.set_medially_centered_speed_tradeoff(m_params.m_wM);//100
   mcs.set_max_iterations(m_params.m_iterations);
 
@@ -580,10 +580,10 @@ Read(string _filename) {
   if(m_debug)
     cout << "MeanCurvatureSkeleton3D::Read()" << endl;
 
-  m_skeleton.Read("skeleton_" + _filename);
+  m_skeleton.Read(_filename + "_skeleton");
 
   m_annotation = AnnotationType(&m_skeleton);
-  m_annotation.Read("annotation_" + _filename);
+  m_annotation.Read(_filename + "_annotation");
 }
 
 void
@@ -592,8 +592,8 @@ Write(string _filename) {
   if(m_debug)
     cout << "MeanCurvatureSkeleton3D::Write()" << endl;
 
-  m_skeleton.Write("skeleton_" + _filename);
-  m_annotation.Write("annotation_" + _filename);
+  m_skeleton.Write(_filename + "_skeleton");
+  m_annotation.Write(_filename + "_annotation");
 }
 
 
