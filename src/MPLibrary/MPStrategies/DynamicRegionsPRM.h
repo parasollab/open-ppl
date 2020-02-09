@@ -849,6 +849,14 @@ ExpandComponent(ExpansionRegion* const _r) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::ExpandComponent");
 
+  if(this->m_debug)
+    std::cout << "Attempting to expand component "
+              << _r->GetLocalComponentDescriptor()
+              << " at index " << _r->edgeIndex
+              << " with center at (" << _r->GetCenter()
+              << ")."
+              << std::endl;
+
   // Ensure we got a valid expansion region.
   if(!_r)
     throw RunTimeException(WHERE) << "Non-null region expected.";
@@ -857,8 +865,10 @@ ExpandComponent(ExpansionRegion* const _r) {
   const auto boundary = MakeBoundary(_r->GetCenter());
   const std::vector<CfgType> samples = Sample(&boundary);
 
-  // Try to connect each sample to the component.
   auto r = this->GetRoadmap();
+  const size_t initialEdgeCount = r->get_num_edges();
+
+  // Try to connect each sample to the component.
   const LocalComponentDescriptor d = _r->GetLocalComponentDescriptor();
   VertexSet newVIDs;
   for(const CfgType& cfg : samples) {
@@ -881,7 +891,10 @@ ExpandComponent(ExpansionRegion* const _r) {
   _r->TrackSuccess(newVIDs.size(), samples.size());
 
   if(this->m_debug)
-    std::cout << "Generated " << newVIDs.size() << " new vertices."
+    std::cout << "\tGenerated " << newVIDs.size() << " new vertices "
+              << newVIDs << "."
+              << "\tGenerated " << r->get_num_edges() - initialEdgeCount
+              << " edges."
               << std::endl;
 
   return newVIDs;
@@ -896,20 +909,43 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
       this->GetNameAndLabel() + "::ConnectEdgeSegment");
   auto r = this->GetRoadmap();
 
-  if(this->m_debug)
+  if(this->m_debug) {
     std::cout << "Trying to connect components in edge (" << _ed.id() << "|"
-              << _ed.source() << "," << _ed.target() << ")"
-              << std::endl;
+              << _ed.source() << "," << _ed.target() << ").";
+
+    std::cout << "\n\tLeft components:";
+    const auto& left = m_localComponents[_ed];
+    for(const auto& repAndVIDs : left)
+      std::cout << " " << LocalComponentDescriptor{_ed, repAndVIDs.first, false};
+
+    std::cout << "\n\tRight components:";
+    const SkeletonEdgeDescriptor rd = reverse(_ed);
+    const auto& right = m_localComponents[rd];
+    for(const auto& repAndVIDs : right)
+      std::cout << " " << LocalComponentDescriptor{rd, repAndVIDs.first, false};
+
+    std::cout << "\n\tBridge components:";
+    const auto& bridge = m_bridges[_ed.id()];
+    for(const auto& repAndVIDs : bridge)
+      std::cout << " " << LocalComponentDescriptor{_ed, repAndVIDs.first, true};
+
+    std::cout << std::endl;
+  }
 
   using CCMap   = std::map<VID, VertexSet>;
   using EdgeMap = std::unordered_map<VID, std::vector<EdgeOutput>>;
   EdgeMap leftEdges, rightEdges, bridgeEdges;
 
   // Define a function for building connections to local components in a CCMap.
-  auto connector = [this, _ed](const CfgType& _cfg, const CCMap& _ccMap,
+  auto connector = [this](const CfgType& _cfg,
+      const SkeletonEdgeDescriptor& _ed,
       EdgeMap& _edgeMap, const bool _bridges) {
+    // Find the cc map.
+    const auto& ccMap = _bridges ? m_bridges.at(_ed.id())
+                                 : m_localComponents.at(_ed);
+
     // Try to make connection from _cfg to each component in the map.
-    for(const auto& repAndVIDs : _ccMap) {
+    for(const auto& repAndVIDs : ccMap) {
       const VID representative = repAndVIDs.first;
       const LocalComponentDescriptor d{_ed, representative, _bridges};
 
@@ -956,28 +992,30 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
   // Try to connect each sample to the local components in this edge.
   for(const CfgType& cfg : samples) {
     const SkeletonEdgeDescriptor rightEd = reverse(_ed);
-    const auto& leftCCs   = m_localComponents[_ed],
-              & rightCCs  = m_localComponents[rightEd],
-              & bridgeCCs = m_bridges[_ed.id()];
-
-
-    // Each set of CCs is a map from representative vid -> all vids
-    leftEdges.clear();
-    connector(cfg, leftCCs, leftEdges, false);
-    rightEdges.clear();
-    connector(cfg, rightCCs, rightEdges, false);
-    bridgeEdges.clear();
-    connector(cfg, bridgeCCs, bridgeEdges, true);
-
+    // Try to connect to each set of components.
     if(this->m_debug)
       std::cout << "\tCfg: " << cfg.PrettyPrint()
-                << "\n\tConnected to:"
-                << "\n\t\t" << leftEdges.size() << "/" << leftCCs.size()
-                << " left components"
-                << "\n\t\t" << rightEdges.size() << "/" << rightCCs.size()
-                << " right components"
-                << "\n\t\t" << bridgeEdges.size() << "/" << bridgeCCs.size()
-                << " bridges"
+                << "\n\tTrying to connect left components."
+                << std::endl;
+    leftEdges.clear();
+    connector(cfg, _ed, leftEdges, false);
+    if(this->m_debug)
+      std::cout << "\tTrying to connect right components." << std::endl;
+    rightEdges.clear();
+    connector(cfg, rightEd, rightEdges, false);
+    if(this->m_debug)
+      std::cout << "\tTrying to connect bridges." << std::endl;
+    bridgeEdges.clear();
+    connector(cfg, _ed, bridgeEdges, true);
+
+    if(this->m_debug)
+      std::cout << "\tConnected to:"
+                << "\n\t\t" << leftEdges.size() << "/"
+                << m_localComponents[_ed].size() << " left components"
+                << "\n\t\t" << rightEdges.size() << "/"
+                << m_localComponents[rightEd].size() << " right components"
+                << "\n\t\t" << bridgeEdges.size() << "/"
+                << m_bridges[_ed.id()].size() << " bridges"
                 << std::endl;
 
     // Determine what kind of connection(s) we built to decide whether to keep
@@ -1328,12 +1366,6 @@ SelectExpansionRegion() {
     std::cout << "\n\tSelected index " << index
               << (r ? "." : " (whole env).")
               << std::endl;
-
-    if(r)
-      std::cout << "\tRegion is on edge " << r->GetLocalComponentDescriptor()
-                << " at index " << r->edgeIndex
-                << " with center at " << r->GetCenter()
-                << "." << std::endl;
   }
 
   return regions[index];
@@ -1515,11 +1547,18 @@ AreSamplesCovered(const ExpansionRegion* const _region,
   auto r = this->GetRoadmap();
 
   // The samples are considered covered if any of them is inside the boundary.
-  return std::any_of(_samples.begin(), _samples.end(),
+  const bool covered = std::any_of(_samples.begin(), _samples.end(),
       [&boundary,r](const VID _vid) {
         return boundary.InBoundary(r->GetVertex(_vid));
       }
   );
+
+  if(this->m_debug)
+    std::cout << "\t" << (covered ? "At least one sample is" : "No samples are")
+              << " covered at the region's new position."
+              << std::endl;
+
+  return covered;
 }
 
 /*----------------------------- General Planning -----------------------------*/
@@ -1612,6 +1651,10 @@ ConnectToComponent(const CfgType& _cfg,
   const std::string clock = this->GetNameAndLabel() + "::ConnectToComponent";
   MethodTimer mt(stats, clock);
 
+  if(this->m_debug)
+    std::cout << "\tTrying to connect to component " << _d << "."
+              << std::endl;
+
   // Find neighbors for _cfg in the component _d.
   const VertexSet& cc = _d.bridge ? GetBridge(_d) : GetLocalComponent(_d);
   const std::vector<Neighbor> neighbors = FindNearestNeighbors(_cfg, &cc);
@@ -1627,7 +1670,7 @@ ConnectToComponent(const CfgType& _cfg,
 
     if(this->m_debug)
       std::cout << "\t\t" << (success ? "Connected" : "Failed to connect")
-                << " component " << _d << " through VID " << vid << "."
+                << " through VID " << vid << "."
                 << std::endl;
 
     // Skip failures.
