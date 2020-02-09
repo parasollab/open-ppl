@@ -603,7 +603,9 @@ Initialize() {
         }
       }
 
-      std::cout << "Components: " << components << std::endl;
+      if(this->m_debug)
+        std::cout << "\tComponents: " << components
+                  << std::endl;
 
       // Each non-empty component will now be a local component rooted at this
       // skeleton vertex.
@@ -1821,6 +1823,26 @@ BuildSkeleton() {
       throw ParseException(WHERE) << "Unrecognized skeleton type '"
                                   << m_skeletonType << "', options for 2d "
                                   << "problems are {ma}.";
+  }
+
+
+  if(this->m_debug) {
+    auto& g = m_skeleton.GetGraph();
+    std::cout << "The skeleton has " << g.get_num_vertices() << " vertices and "
+              << g.get_num_edges() << " edges."
+              << std::endl;
+
+    // Print the whole thing for inspection.
+    for(auto vit = g.begin(); vit != g.end(); ++vit) {
+      std::cout << "Vertex " << vit->descriptor() << " has " << vit->size()
+                << " edges.\n\t";
+      for(auto eit = vit->begin(); eit != vit->end(); ++eit)
+        std::cout << " (" << eit->descriptor().id()
+                  << "|" << eit->descriptor().source()
+                  << "," << eit->descriptor().target()
+                  << ")";
+      std::cout << std::endl;
+    }
   }
 }
 
