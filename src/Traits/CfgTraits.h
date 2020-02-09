@@ -149,6 +149,7 @@
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
+#include "MPLibrary/MPStrategies/StrategySequence.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 //#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
@@ -348,6 +349,7 @@ struct MPTraits {
     MultiStrategy<MPTraits>,
     ScratchStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
+    StrategySequence<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,
