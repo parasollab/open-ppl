@@ -119,7 +119,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
       /// Compute the weight for this region (i.e. success rate).
       double GetWeight() const noexcept {
-        return successes / attempts;
+        return double(successes) / attempts;
       }
 
       /// Get the center of this region.
@@ -386,6 +386,10 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// favors successful regions.
     double m_explore{.5};
 
+    /// Optional hard radius for regions. 0 indicates the use of clearance-based
+    /// size.
+    double m_regionRadius{0.};
+
     ///@}
     ///@name Hacked Shared State
     ///@{
@@ -485,6 +489,10 @@ DynamicRegionsPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_explore = _node.Read("exploreBias", false, m_explore, 0., 1.,
       "Preference for exploring vs. exploiting successful regions. "
       "1 indicates pure explore, 0 indicates pure exploit.");
+
+  m_regionRadius = _node.Read("regionRadius", false, m_regionRadius,
+      0., std::numeric_limits<double>::max(), "Optional hard radius for "
+      "regions. If 0 or not specified, clearance-based sizing will be used.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -794,6 +802,9 @@ GrowRRT(const VID _q) {
     while(samples.empty())
       samples = Sample();
 
+    if(this->m_debug)
+      std::cout << "\tPopping next sample." << std::endl;
+
     // Pop the next sample.
     CfgType qRand = samples.back();
     samples.pop_back();
@@ -809,6 +820,10 @@ GrowRRT(const VID _q) {
     if(newVID == INVALID_VID)
       continue;
 
+    if(this->m_debug)
+      std::cout << "\tAttempting to connect " << newVID << " to pre-RRT roadmap."
+                << std::endl;
+
     // Try to connect newVID to the pre-RRT roadmap.
     const std::vector<Neighbor> mapNeighbors = FindNearestNeighbors(
         r->GetVertex(newVID), &roadmapVIDs);
@@ -820,6 +835,12 @@ GrowRRT(const VID _q) {
       // Skip failures.
       if(!success)
         continue;
+
+      connected = true;
+      if(this->m_debug)
+        std::cout << "\tConnected to " << n.target << "."
+                  << std::endl;
+
       // Add edge.
       r->AddEdge(newVID, n.target, lp.m_edge);
     }
@@ -827,14 +848,22 @@ GrowRRT(const VID _q) {
     // If we connected, we're good to go.
     /// @todo Figure out what local component we connected to and add this tree
     ///       to it.
-    if(connected)
+    if(connected) {
+      if(this->m_debug)
+        std::cout << "\tEnding RRT because we connected to the roadmap."
+                  << std::endl;
       return;
+    }
 
     // Check if we reached skeleton node. If so, make this a new local component
     // for all of its outgoing edges.
     const bool inRegion = CheckReachedRegion(newVID, *ccTracker->GetCC(newVID));
-    if(inRegion)
+    if(inRegion) {
+      if(this->m_debug)
+        std::cout << "\tEnding RRT because we reached a skeleton vertex region."
+                  << std::endl;
       return;
+    }
   }
 
   throw RunTimeException(WHERE) << "Unreachable state.";
@@ -855,6 +884,7 @@ ExpandComponent(ExpansionRegion* const _r) {
               << " at index " << _r->edgeIndex
               << " with center at (" << _r->GetCenter()
               << ")."
+              << "\n\tRegion success rate is " << _r->GetWeight() << "."
               << std::endl;
 
   // Ensure we got a valid expansion region.
@@ -893,8 +923,9 @@ ExpandComponent(ExpansionRegion* const _r) {
   if(this->m_debug)
     std::cout << "\tGenerated " << newVIDs.size() << " new vertices "
               << newVIDs << "."
-              << "\tGenerated " << r->get_num_edges() - initialEdgeCount
+              << "\n\tGenerated " << (r->get_num_edges() - initialEdgeCount) / 2.
               << " edges."
+              << "\n\tRegion success rate is now " << _r->GetWeight() << "."
               << std::endl;
 
   return newVIDs;
@@ -916,18 +947,24 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
     std::cout << "\n\tLeft components:";
     const auto& left = m_localComponents[_ed];
     for(const auto& repAndVIDs : left)
-      std::cout << " " << LocalComponentDescriptor{_ed, repAndVIDs.first, false};
+      std::cout << "\n\t\t"
+                << LocalComponentDescriptor{_ed, repAndVIDs.first, false}
+                << " " << repAndVIDs.second;
 
     std::cout << "\n\tRight components:";
     const SkeletonEdgeDescriptor rd = reverse(_ed);
     const auto& right = m_localComponents[rd];
     for(const auto& repAndVIDs : right)
-      std::cout << " " << LocalComponentDescriptor{rd, repAndVIDs.first, false};
+      std::cout << "\n\t\t"
+                << LocalComponentDescriptor{rd, repAndVIDs.first, false}
+                << " " << repAndVIDs.second;
 
     std::cout << "\n\tBridge components:";
     const auto& bridge = m_bridges[_ed.id()];
     for(const auto& repAndVIDs : bridge)
-      std::cout << " " << LocalComponentDescriptor{_ed, repAndVIDs.first, true};
+      std::cout << "\n\t\t"
+                << LocalComponentDescriptor{_ed, repAndVIDs.first, true}
+                << " " << repAndVIDs.second;
 
     std::cout << std::endl;
   }
@@ -1061,6 +1098,7 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
                 << (newBridge ? "new bridge," : "")
                 << (leftMerge ? "left merge," : "")
                 << (rightMerge ? "right merge," : "")
+                << ")."
                 << std::endl;
 
     // Merge each of the descriptors together. MergeLocalComponents will handle
@@ -1597,7 +1635,7 @@ FindNearestNeighbors(const CfgType& _cfg, const VertexSet* const _candidates) {
   MethodTimer mt(stats, this->GetNameAndLabel() + "::FindNearestNeighbors");
 
   if(this->m_debug)
-    std::cout << "\tSearching for nearest neighbors to " << _cfg.PrettyPrint()
+    std::cout << "\tSearching for nearest neighbors to cfg" //<< _cfg.PrettyPrint()
               << " with '" << m_nfLabel << "' from "
               << (_candidates
                   ? "a set of size " + std::to_string(_candidates->size())
@@ -1719,9 +1757,8 @@ Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp) {
   _lp.Clear();
   const bool success = e->Extend(qNear, _target, qNew, _lp);
   if(this->m_debug)
-    std::cout << "Extending from VID " << _nearVID
-              << "\n\tqNear: " << qNear.PrettyPrint()
-              << "\n\tExtended "
+    std::cout << "\tExtending from VID " << _nearVID
+              << "\n\t\tExtended "
               << std::setprecision(4) << _lp.m_edge.first.GetWeight()
               << " units."
               << std::endl;
@@ -1736,6 +1773,11 @@ Extend(const VID _nearVID, const CfgType& _target, LPOutput<MPTraits>& _lp) {
   // The extension succeeded. Add the node and edges.
   const auto newVID = r->AddVertex(qNew);
   r->AddEdge(_nearVID, newVID, _lp.m_edge);
+
+  if(this->m_debug)
+    std::cout << "\tGenerated new vertex " << newVID << " and edge "
+              << "(" << _nearVID << "," << newVID << ")."
+              << std::endl;
 
   return newVID;
 }
@@ -1764,6 +1806,9 @@ DynamicRegionsPRM<MPTraits>::
 GetRegionRadius(const Vector3d& _v) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::GetRegionRadius");
+
+  if(m_regionRadius != 0.)
+    return m_regionRadius;
 
   const double clearance = GetClearance(_v),
                robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
