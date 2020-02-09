@@ -192,6 +192,9 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// Map for low clearance.
     typedef std::set<size_t> LowClearanceMap;
 
+    /// Map for regions with unconnected local components.
+    typedef std::set<SkeletonEdgeDescriptor, EdgeCompare> UnconnectedEdgeMap;
+
     ///@}
     ///@name Construction
     ///@{
@@ -283,6 +286,9 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     LocalComponentDescriptor MergeLocalComponents(
         const LocalComponentDescriptor& _d1,
         const LocalComponentDescriptor& _d2);
+
+    /// Update the local connectivity for an edge.
+    void UpdateEdgeConnectivity(const SkeletonEdgeDescriptor& _ed);
 
     ///@}
     ///@name Region Functions
@@ -402,7 +408,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     static LowClearanceMap m_lowClearanceMap; ///< Track low-clearance edges.
 
-    static std::vector<ExpansionRegion> m_expansionRegions;
+    static UnconnectedEdgeMap m_unconnectedEdges; ///< Track unconnected edges.
 
     ///@}
 
@@ -435,8 +441,8 @@ typename DynamicRegionsPRM<MPTraits>::LowClearanceMap
 DynamicRegionsPRM<MPTraits>::m_lowClearanceMap;
 
 template <typename MPTraits>
-std::vector<typename DynamicRegionsPRM<MPTraits>::ExpansionRegion>
-DynamicRegionsPRM<MPTraits>::m_expansionRegions;
+typename DynamicRegionsPRM<MPTraits>::UnconnectedEdgeMap
+DynamicRegionsPRM<MPTraits>::m_unconnectedEdges;
 
 
 template <typename MPTraits>
@@ -578,9 +584,13 @@ Initialize() {
           // Add the edges to the roadmap.
           r->AddEdge(v1, v2, lpOutput.m_edge);
 
-          // Merge v2's component into v1's.
+          // If the vertices are already in the same component, we're done.
           const size_t index1 = componentIndex[v1],
                        index2 = componentIndex[v2];
+          if(index1 == index2)
+            continue;
+
+          // Merge v2's component into v1's.
           VertexSetUnionInPlace(components[index1], components[index2]);
 
           // Retarget all vertices in the index2 component on index1.
@@ -593,6 +603,8 @@ Initialize() {
         }
       }
 
+      std::cout << "Components: " << components << std::endl;
+
       // Each non-empty component will now be a local component rooted at this
       // skeleton vertex.
       size_t newComponents = 0;
@@ -602,7 +614,7 @@ Initialize() {
           continue;
         ++newComponents;
 
-        for(auto eit = iter->begin(); eit != iter->end(); ++iter) {
+        for(auto eit = iter->begin(); eit != iter->end(); ++eit) {
           const VID representative = *component.begin();
           LocalComponentDescriptor d{eit->descriptor(), representative, false};
           MakeLocalComponent(d, component);
@@ -612,7 +624,7 @@ Initialize() {
       componentCount += newComponents;
       regionCount += newComponents * iter->size();
       if(this->m_debug)
-        std::cout << "Initialized " << newComponents << " new components "
+        std::cout << "\t\tInitialized " << newComponents << " new components "
                   << "and " << newComponents * iter->size() << " regions "
                   << "at skeleton vertex " << iter->descriptor() << "."
                   << std::endl;
@@ -643,26 +655,12 @@ Iterate() {
   // different.
   const bool wholeEnvironment = region == nullptr;
   if(wholeEnvironment) {
-#if 1
-    // Skip since we don't know what to do.
+    // Select a random unconnected edge and attempt to connect it.
+    const size_t index = LRand() % m_unconnectedEdges.size();
+    auto iter = m_unconnectedEdges.begin();
+    std::advance(iter, index);
+    ConnectEdgeSegment(*iter);
     return;
-#else // We can't do this - any connections need to update the local connectivity.
-    // Get random component and try to connect it to the others.
-    // TODO Add a mechanism for sampling here and options for how to use the
-    //      samples.
-    //      Option 1: Only keep the sample if it connects to at least one other
-    //                component.
-    //      Option 2: Try to connect first. If that fails, save the sample as a
-    //                new CC. Locate the nearest skeleton vertex (with inner
-    //                distance) and try to grow an RRT to there.
-    const VertexSet ccs = this->GetRoadmap()->GetCCTracker()->
-        GetRepresentatives();
-    auto iter = ccs.begin();
-    const size_t randomIndex = LRand() % ccs.size();
-    std::advance(iter, randomIndex);
-    ConnectComponent(*iter);
-    return;
-#endif
   }
 
   // Try to expand the component associated with this region. If we succeed,
@@ -771,6 +769,11 @@ DynamicRegionsPRM<MPTraits>::
 GrowRRT(const VID _q) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::GrowRRT");
+
+  if(this->m_debug)
+    std::cout << "Growing RRT from node " << _q << " until connection or "
+              << "locating a skeleton vertex."
+              << std::endl;
 
   auto r = this->GetRoadmap();
   auto ccTracker = r->GetCCTracker();
@@ -892,8 +895,8 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
   auto r = this->GetRoadmap();
 
   if(this->m_debug)
-    std::cout << "Trying to connect components in edge ("
-              << _ed.source() << "," << _ed.target() << "|" << _ed.id() << ")"
+    std::cout << "Trying to connect components in edge (" << _ed.id() << "|"
+              << _ed.source() << "," << _ed.target() << ")"
               << std::endl;
 
   using CCMap   = std::map<VID, VertexSet>;
@@ -941,7 +944,7 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
 
   // Pick a random point along the edge.
   const std::vector<Point3d>& path = m_skeleton.FindEdge(_ed)->property();
-  const size_t index = path.size() % LRand();
+  const size_t index = LRand() % path.size();
   const Point3d& point = path[index];
 
   // Make a sampling region at the point and draw samples.
@@ -1026,6 +1029,8 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
     for(size_t i = 1; i < descriptors.size(); ++i)
       d = MergeLocalComponents(d, descriptors[i]);
   }
+
+  UpdateEdgeConnectivity(_ed);
 }
 
 /*------------------------ Local Connected Components ------------------------*/
@@ -1034,6 +1039,11 @@ template <typename MPTraits>
 void
 DynamicRegionsPRM<MPTraits>::
 MakeLocalComponent(const LocalComponentDescriptor& _d, const VertexSet& _vids) {
+  if(this->m_debug)
+    std::cout << "\t\tInitializing new component with descriptor " << _d << "."
+              << "\n\t\t\tVIDs: " << _vids
+              << std::endl;
+
   // Make sure this component isn't already a bridge.
   const bool isBridge = m_bridges[_d.edgeDescriptor.id()].count(
       _d.representative);
@@ -1068,8 +1078,8 @@ MakeLocalComponent(const LocalComponentDescriptor& _d, const VertexSet& _vids) {
                                     << " already exists.";
   }
 
-  if(this->m_debug)
-    std::cout << "Created new local component " << _d << std::endl;
+  // Update this edge's connectivity.
+  UpdateEdgeConnectivity(_d.edgeDescriptor);
 }
 
 
@@ -1250,6 +1260,38 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
   }
 }
 
+
+template <typename MPTraits>
+void
+DynamicRegionsPRM<MPTraits>::
+UpdateEdgeConnectivity(const SkeletonEdgeDescriptor& _ed) {
+  // Get the component information.
+  const SkeletonEdgeDescriptor right = reverse(_ed);
+  const auto& leftCCs   = m_localComponents[_ed],
+            & rightCCs  = m_localComponents[right],
+            & bridgeCCs = m_bridges[_ed.id()];
+
+  bool connected;
+
+  // If the edge is marked as low clearnce, it is connected if there is at most
+  // one left and one right component.
+  const bool lowClearance = m_lowClearanceMap.count(_ed.id());
+  if(lowClearance)
+     connected = leftCCs.size() < 2 and rightCCs.size() < 2;
+  // Otherwise, it is connected if there are no left/right CCs and only one
+  // bridge.
+  else
+    connected = leftCCs.empty() and rightCCs.empty() and bridgeCCs.size() == 1;
+
+  const SkeletonEdgeDescriptor& canonical = _ed.source() < _ed.target()
+                                          ? _ed
+                                          : right;
+  if(connected)
+    m_unconnectedEdges.erase(canonical);
+  else
+    m_unconnectedEdges.insert(canonical);
+}
+
 /*----------------------------- Region Functions -----------------------------*/
 
 template<typename MPTraits>
@@ -1304,8 +1346,6 @@ ComputeProbabilities() {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeProbabilities");
 
-    //typedef std::map<SkeletonEdgeDescriptor, std::map<VID, ExpansionRegion>, EdgeCompare>
-    //    RegionMap;
   // Sum all weights of all current regions and collect them into a vector.
   double totalWeight = 0.;
   std::vector<ExpansionRegion*> regions;
@@ -1326,8 +1366,9 @@ ComputeProbabilities() {
 
   // Compute the total probability (exploit + explore).
   for(const ExpansionRegion* const region : regions) {
-    const auto& weight = region->GetWeight();
-    const double exploit = (1 - m_explore) * weight / totalWeight;
+    const double exploit = totalWeight > 100 * std::numeric_limits<double>::epsilon()
+                         ? (1 - m_explore) * region->GetWeight() / totalWeight
+                         : 0;
 
     probabilities.emplace_back(exploit + explore);
   }
@@ -1454,6 +1495,7 @@ AdvanceRegion(ExpansionRegion* const _r, const VertexSet& _newVIDs) {
 
   // Promote component to bridge (also removes the region).
   PromoteLocalComponent(d);
+  UpdateEdgeConnectivity(d.edgeDescriptor);
 
   return false;
 }
@@ -1514,7 +1556,7 @@ FindNearestNeighbors(const CfgType& _cfg, const VertexSet* const _candidates) {
   MethodTimer mt(stats, this->GetNameAndLabel() + "::FindNearestNeighbors");
 
   if(this->m_debug)
-    std::cout << "Searching for nearest neighbors to " << _cfg.PrettyPrint()
+    std::cout << "\tSearching for nearest neighbors to " << _cfg.PrettyPrint()
               << " with '" << m_nfLabel << "' from "
               << (_candidates
                   ? "a set of size " + std::to_string(_candidates->size())
@@ -1533,10 +1575,10 @@ FindNearestNeighbors(const CfgType& _cfg, const VertexSet* const _candidates) {
   if(neighbors.empty()) {
     stats->IncStat(this->GetNameAndLabel() + "::FailedNF");
     if(this->m_debug)
-      std::cout << "\tFailed to find a nearest neighbor." << std::endl;
+      std::cout << "\t\tFailed to find a nearest neighbor." << std::endl;
   }
   else if(this->m_debug)
-    std::cout << "\tFound " << neighbors.size() << " nearest neighbors."
+    std::cout << "\t\tFound " << neighbors.size() << " nearest neighbors."
               << std::endl;
 
   return neighbors;
