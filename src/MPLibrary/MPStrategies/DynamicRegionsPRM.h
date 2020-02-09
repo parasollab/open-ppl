@@ -1780,6 +1780,7 @@ BuildSkeleton() {
       // Create the workspace skeleton.
       auto sk = mcs.GetSkeleton();
       m_skeleton = sk.first;
+      m_skeleton.DoubleEdges();
     }
     else if(m_skeletonType == "reeb") {
       // Create a workspace skeleton using a reeb graph.
@@ -1792,6 +1793,7 @@ BuildSkeleton() {
 
       // Create the workspace skeleton.
       m_skeleton = reeb.GetSkeleton();
+      m_skeleton.DoubleEdges();
     }
     else
       throw ParseException(WHERE) << "Unrecognized skeleton type '"
@@ -1812,6 +1814,8 @@ BuildSkeleton() {
       MedialAxis2D ma(polyhedra, env->GetBoundary());
       ma.BuildMedialAxis();
       m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+      //m_skeleton.DoubleEdges(); // TODO Figure out how the 2d medial axis
+      //looks to see if we need this.
     }
     else
       throw ParseException(WHERE) << "Unrecognized skeleton type '"

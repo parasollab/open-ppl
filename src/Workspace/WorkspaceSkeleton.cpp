@@ -284,6 +284,23 @@ RefineEdges(double _maxLength){
   }
 }
 
+
+void
+WorkspaceSkeleton::
+DoubleEdges() {
+  for(auto vi = m_graph.begin(); vi != m_graph.end(); ++vi) {
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
+      // Get the path and make a reversed copy.
+      auto path = ei->property();
+      std::reverse(path.begin(), path.end());
+
+      // Add an edge in reverse orientation with the same edge ID.
+      add_internal_edge(m_graph, reverse(ei->descriptor()), path);
+    }
+  }
+}
+
+
 /*--------------------------- Setters & Getters ------------------------------*/
 
 void

@@ -533,10 +533,10 @@
 
       <ScratchStrategy label="scratch"/>
 
-      <DynamicRegionsPRM label="DRPRM" decompositionLabel="fine" skeletonType="mcs" debug="false"
-        nfLabel="Nearest"lpLabel="sl" extenderLabel="BERO">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
-        <Connector label="Closest"/>
+      <DynamicRegionsPRM label="DRPRM" debug="true"
+        nfLabel="Nearest" lpLabel="sl" extenderLabel="BERO"
+        skeletonType="mcs">
+        <Sampler label="UniformRandomFree" number="5" attempts="20"/>
         <Evaluator label="BoundedQuery"/>
       </DynamicRegionsPRM>
 
@@ -566,7 +566,7 @@
       <SVMModel kernel="radial" c="10" epsilon=".001" gamma="1"/>
 
       <MeanCurvatureSkeleton3D space="1" iteration="100" quality=".001" medial=".1"
-        io="write" useConvex="false" filebase="MCS_BBx.12345678.map"/>
+        io="read" useConvex="false" filebase="MCS_BBx.12345678.map"/>
 
     </MPTools>
 
