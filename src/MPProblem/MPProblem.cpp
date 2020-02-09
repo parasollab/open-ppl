@@ -302,6 +302,12 @@ GetRobotGroups() const noexcept {
 
 /*----------------------------- Task Accessors -------------------------------*/
 
+MPTask*
+MPProblem::
+GetTask(std::string _label) {
+	return m_taskLabelMap[_label];
+}
+
 std::vector<std::shared_ptr<MPTask>>
 MPProblem::
 GetTasks(Robot* const _robot) const noexcept {
@@ -432,7 +438,10 @@ ParseChild(XMLNode& _node) {
     const std::string label = _node.Read("robot", true, "",
         "Label for the robot assigned to this task.");
     auto robot = this->GetRobot(label);
-    m_taskMap[robot].emplace_back(new MPTask(this, _node));
+		auto task = std::shared_ptr<MPTask>(new MPTask(this, _node));
+    m_taskMap[robot].push_back(task);
+		//TODO::Add check that tasks have unique labels
+		m_taskLabelMap[task->GetLabel()] = task.get();
   }
   else if(_node.Name() == "GroupTask") {
     auto task = GroupTask::Factory(this, _node);
