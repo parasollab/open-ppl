@@ -1348,6 +1348,23 @@ IntersectVertexSets(const std::unordered_set<size_t>& _a,
   return intersection;
 }
 
+
+/// Merge one vertex set into another.
+/// @param _receiver The vertex set receiving new VIDs.
+/// @param _source   The source of the new VIDs.
+/// @return A reference to _receiver.
+inline
+std::unordered_set<size_t>&
+VertexSetUnionInPlace(std::unordered_set<size_t>& _receiver,
+    const std::unordered_set<size_t>& _source) {
+  // Reserve sufficient space for the worst case. This wastes a bit of space
+  // (which is inevitable anyway) but avoids more than one rehash.
+  _receiver.reserve(_receiver.size() + _source.size());
+  for(const size_t vid : _source)
+    _receiver.insert(vid);
+  return _receiver;
+}
+
 /*----------------------------------------------------------------------------*/
 
 #endif

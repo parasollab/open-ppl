@@ -137,19 +137,19 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
     }
 
     // Get the representative's CC.
-    const VertexSet& cc = ccTracker->GetCC(rep);
+    const VertexSet* cc = ccTracker->GetCC(rep);
     if(this->m_debug)
       std::cout << "\t\tAttempting connection to CC with node " << rep
-                << " of size " << cc.size() << "."
+                << " of size " << cc->size() << "."
                 << std::endl;
 
     // Determine nearest neighbors in the representative's CC.
     m_neighborBuffer.clear();
     if(_targetSet)
-      nf->FindNeighbors(_r, cfg, IntersectVertexSets(cc, *_targetSet),
+      nf->FindNeighbors(_r, cfg, IntersectVertexSets(*cc, *_targetSet),
           m_neighborBuffer);
     else
-      nf->FindNeighbors(_r, cfg, cc, m_neighborBuffer);
+      nf->FindNeighbors(_r, cfg, *cc, m_neighborBuffer);
 
     // Attempt connections.
     this->ConnectNeighbors(_r, _source, m_neighborBuffer, _collision,

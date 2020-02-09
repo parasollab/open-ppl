@@ -134,7 +134,7 @@ class CCTracker final {
     /// Get the CC which contains a representative node.
     /// @param _vid The representative's descriptor.
     /// @return The CC which contains _vid.
-    const VertexSet& GetCC(const VID _vid) const noexcept;
+    const VertexSet* GetCC(const VID _vid) const noexcept;
 
     /// Get a set of representative VIDs for each CC.
     /// @return The descriptor for one vertex from each CC.
@@ -387,10 +387,10 @@ GetNumCCs() const noexcept {
 
 
 template <typename RoadmapType>
-const typename CCTracker<RoadmapType>::VertexSet&
+const typename CCTracker<RoadmapType>::VertexSet*
 CCTracker<RoadmapType>::
 GetCC(const VID _vid) const noexcept {
-  return *FindCC(_vid);
+  return FindCC(_vid);
 }
 
 
