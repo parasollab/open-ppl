@@ -1903,7 +1903,7 @@ GetRegionRadius(const Vector3d& _v) {
     return m_regionRadius;
 
   const double clearance = GetClearance(_v),
-               robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
+               robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->GetBody(0)->
                              GetBoundingSphereRadius();
   return 1.2 * (clearance - robotRadius);
 }
