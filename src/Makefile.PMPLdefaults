@@ -89,7 +89,7 @@ CD_LIBFILE := $(PQP_LIBFILE) $(RAPID_LIBFILE)
 ifeq ($(platform), MACOS_gcc)
   EIGEN_INCL := -I/usr/local/include/eigen3
 else
-  EIGEN_INCL := -I/usr/include/eigen3
+  EIGEN_INCL := -I/software/eigen-3.3.7/include/eigen3 -I/usr/include/eigen3
 endif
 
 ################################################################################
