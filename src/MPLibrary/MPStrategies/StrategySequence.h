@@ -151,6 +151,7 @@ Run() {
 			stats->SetStat(id+"::PathCost",
 										this->GetMPSolution()->GetPath()->Length());
 		}
+		task->GetStatus().complete();
 	}
 }
 
