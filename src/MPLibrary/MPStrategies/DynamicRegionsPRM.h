@@ -695,6 +695,12 @@ template<typename MPTraits>
 void
 DynamicRegionsPRM<MPTraits>::
 AddQuery() {
+  // Do nothing if we have no query.
+  auto goalTracker = this->GetGoalTracker();
+  const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
+  if(goalTracker->GetStartVIDs().empty())
+    return;
+
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::AddQuery");
 
