@@ -342,10 +342,6 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     std::vector<EdgeOutput> ConnectToComponent(const CfgType& _cfg,
         const LocalComponentDescriptor& _d);
 
-    /// @overload
-    std::vector<EdgeOutput> ConnectToComponent(const VertexSet& _vids,
-        const LocalComponentDescriptor& _d);
-
     /// Extend a tree node towards a direction
     VID Extend(const VID _nearVID, const CfgType& _target,
         LPOutput<MPTraits>& _lp);
@@ -926,6 +922,7 @@ ExpandComponent(ExpansionRegion* const _r) {
               << "\n\tGenerated " << (r->get_num_edges() - initialEdgeCount) / 2.
               << " edges."
               << "\n\tRegion success rate is now " << _r->GetWeight() << "."
+              << "\n\tComponent VIDs: " << GetLocalComponent(d)
               << std::endl;
 
   return newVIDs;
@@ -1499,15 +1496,18 @@ AdvanceRegion(ExpansionRegion* const _r, const VertexSet& _newVIDs) {
 
   if(this->m_debug)
     std::cout << "\tRegion reached the end of its edge."
-              << "\n\tTrying to connect to outbound local components."
+              << "\n\tTrying to connect new VIDs to outbound local components."
+              << "\n\t\tVIDs: " << _newVIDs
               << std::endl;
 
   // Define a function for trying to connect this region's local component to
   // those rooted at the edge target.
-  auto connector = [this, &_newVIDs](const SkeletonEdgeDescriptor _ed,
-      const std::map<VID, VertexSet>& _ccs, const bool _bridges) {
+  VertexSet connectedVIDs;
+  auto connector = [this, &_newVIDs, &connectedVIDs](
+      const SkeletonEdgeDescriptor _ed, const std::map<VID, VertexSet>& _ccs,
+      const bool _bridges) {
     if(this->m_debug)
-      std::cout << "\t\tTrying " << _ccs.size()
+      std::cout << "\tTrying " << _ccs.size()
                 << (_bridges ? " bridges " : " components ")
                 << "on edge (" << _ed.id() << "|" << _ed.source() << ","
                 << _ed.target() << ")..."
@@ -1520,21 +1520,43 @@ AdvanceRegion(ExpansionRegion* const _r, const VertexSet& _newVIDs) {
     for(const auto& cc : _ccs) {
       const VID representative = cc.first;
       const LocalComponentDescriptor d{_ed, representative, _bridges};
+      const VertexSet& vids = cc.second;
 
-      // Try to make edges to this CC.
-      const std::vector<EdgeOutput> edges = ConnectToComponent(_newVIDs, d);
-      connected |= edges.size();
+      // If we've already connected to any vertex in this CC, we don't need to
+      // make more.
+      if(HaveCommonVertex(connectedVIDs, vids)) {
+        if(this->m_debug)
+          std::cout << "\t\tSkipping component " << d << ", already connected."
+                    << std::endl;
+        connected = true;
+        continue;
+      }
 
-      // Add the connections to the roadmap.
-      for(const auto& edge : edges)
-        r->AddEdge(edge.source, edge.target, edge.weights);
+      // Check each of our new vids.
+      for(const VID vid : _newVIDs) {
+        // Make edges to the target component.
+        const std::vector<EdgeOutput> edges = ConnectToComponent(
+            r->GetVertex(vid), d);
 
-      if(this->m_debug)
-        std::cout << "\t\t\t"
-                  << (edges.size() ? "Formed connections on"
-                                   : "Failed to connect to")
-                  << " component " << d << "."
-                  << std::endl;
+        // If we made no edges, move on to the next VID.
+        if(edges.empty())
+          continue;
+
+        // Add the connections to the roadmap and move on to the next CC.
+        connected = true;
+        for(const auto& edge : edges) {
+          r->AddEdge(vid, edge.target, edge.weights);
+          connectedVIDs.insert(edge.target);
+        }
+
+        if(this->m_debug)
+          std::cout << "\t\t"
+                    << (edges.size() ? "Formed connections on"
+                                     : "Failed to connect to")
+                    << " component " << d << "."
+                    << std::endl;
+        break;
+      }
     }
 
     return connected;
@@ -1689,12 +1711,14 @@ ConnectToComponent(const CfgType& _cfg,
   const std::string clock = this->GetNameAndLabel() + "::ConnectToComponent";
   MethodTimer mt(stats, clock);
 
+  const VertexSet& cc = _d.bridge ? GetBridge(_d) : GetLocalComponent(_d);
+
   if(this->m_debug)
     std::cout << "\tTrying to connect to component " << _d << "."
+              << "\n\t\tVIDs: " << cc
               << std::endl;
 
   // Find neighbors for _cfg in the component _d.
-  const VertexSet& cc = _d.bridge ? GetBridge(_d) : GetLocalComponent(_d);
   const std::vector<Neighbor> neighbors = FindNearestNeighbors(_cfg, &cc);
 
   // Try to connect _cfg to each neighbor.
@@ -1719,25 +1743,6 @@ ConnectToComponent(const CfgType& _cfg,
     output.emplace_back(EdgeOutput{INVALID_VID, vid, lp.m_edge});
   }
 
-  return output;
-}
-
-
-template <typename MPTraits>
-std::vector<typename DynamicRegionsPRM<MPTraits>::EdgeOutput>
-DynamicRegionsPRM<MPTraits>::
-ConnectToComponent(const VertexSet& _vids,
-    const LocalComponentDescriptor& _d) {
-  std::vector<EdgeOutput> output, buffer;
-  auto r = this->GetRoadmap();
-  for(const VID vid : _vids) {
-    buffer = ConnectToComponent(r->GetVertex(vid), _d);
-    output.reserve(output.size() + buffer.size());
-    for(const auto& edge : buffer) {
-      output.push_back(edge);
-      output.back().source = vid;
-    }
-  }
   return output;
 }
 

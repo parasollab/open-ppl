@@ -1348,6 +1348,33 @@ IntersectVertexSets(const std::unordered_set<size_t>& _a,
   return intersection;
 }
 
+/// Check if two vertex sets have any members in common.
+/// @param _a The first set.
+/// @param _b The second set.
+/// @return True if there are any vertices in both _a and _b.
+inline
+bool
+HaveCommonVertex(const std::unordered_set<size_t>& _a,
+                 const std::unordered_set<size_t>& _b) {
+  using VertexSet = std::unordered_set<size_t>;
+
+  // Find the smaller of the two sets.
+  const VertexSet* smaller,
+                 * larger;
+  if(_a.size() < _b.size()) {
+    smaller = &_a;
+    larger  = &_b;
+  }
+  else {
+    smaller = &_b;
+    larger  = &_a;
+  }
+
+  // Test each element in the smaller set for membership in the larger one.
+  return std::any_of(smaller->begin(), smaller->end(),
+                     [larger](const size_t _vid) {return larger->count(_vid);});
+}
+
 
 /// Merge one vertex set into another.
 /// @param _receiver The vertex set receiving new VIDs.
