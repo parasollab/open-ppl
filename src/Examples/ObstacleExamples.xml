@@ -75,7 +75,7 @@
     <NeighborhoodFinders>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-        k="10"/>
+        k="8"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
       <HierarchicalNF label="HierarchicalNF" nfLabel="BFNF" nfLabel2="RandomNF"
         dmLabel=""/>
@@ -302,8 +302,9 @@
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
         value="50" operator="%"/>
       <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
-      <ComposeEvaluator label="BoundedQuery" operator="or">
-        <Evaluator label="NodesEval"/>
+      <IterationCountEvaluator label="Iterations" minCount="1000"/>
+      <ComposeEvaluator label="BoundedQuery" operator="or" debug="true">
+        <Evaluator label="Iterations"/>
         <Evaluator label="Query"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
@@ -351,7 +352,7 @@
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
-        <Connector label="Closest"/>
+        <Connector label="ConnectCCs"/>
         <!--Connector label="KdTree"/-->
         <Evaluator label="Query"/>
       </BasicPRM>
@@ -535,8 +536,8 @@
 
       <DynamicRegionsPRM label="DRPRM" debug="true"
         nfLabel="Nearest" lpLabel="sl" extenderLabel="BERO"
-        skeletonType="mcs">
-        <Sampler label="UniformRandomFree" number="5" attempts="20"/>
+        skeletonType="mcs" regionRadius="0">
+        <Sampler label="UniformRandomFree" number="4" attempts="20"/>
         <Evaluator label="BoundedQuery"/>
       </DynamicRegionsPRM>
 
@@ -544,9 +545,9 @@
 
     <MPTools>
       <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
-        io="write" baseFilename="MazeTunnel/coarse"/>
+        io="read" baseFilename="MazeTunnel/coarse"/>
       <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
-        io="write" baseFilename="MazeTunnel/quality"/>
+        io="read" baseFilename="MazeTunnel/quality"/>
 
       <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
         gridSize="1"/>

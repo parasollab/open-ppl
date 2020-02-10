@@ -103,8 +103,8 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
       const SkeletonEdgeIterator edgeIterator; ///< Iterator to region's edge.
       VID representative{INVALID_VID};       ///< Representative roadmap vertex.
       size_t edgeIndex{0};   ///< Which edge point are we at?
-      size_t attempts{1};    ///< Number of attempts to extend into this region.
-      size_t successes{0};   ///< Number of successful attempts.
+      double attempts{1};    ///< Number of attempts to extend into this region.
+      double successes{0};   ///< Number of successful attempts.
 
       ///@}
 
@@ -113,13 +113,15 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
       /// Track the success rate of extending into this region.
       void TrackSuccess(const size_t _success, const size_t _attempts) {
+        successes *= .9;
+        attempts  *= .9;
         successes += _success;
         attempts  += _attempts;
       }
 
       /// Compute the weight for this region (i.e. success rate).
       double GetWeight() const noexcept {
-        return double(successes) / attempts;
+        return successes / attempts;
       }
 
       /// Get the center of this region.
@@ -151,7 +153,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     struct EdgeCompare {
       bool
       operator()(const SkeletonEdgeDescriptor& _d1,
-          const SkeletonEdgeDescriptor& _d2) noexcept {
+          const SkeletonEdgeDescriptor& _d2) const noexcept {
         // Test ID first since we should only ever have two edges on the same ID (one
         // for each direction). If ID are equal, sort by source, then target.
       //  if(_d1.id() < _d2.id())
@@ -274,7 +276,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     /// Promote a local connected component to a bridge.
     /// @param _d The descriptor for the local component.
-    void PromoteLocalComponent(const LocalComponentDescriptor& _d);
+    LocalComponentDescriptor PromoteLocalComponent(LocalComponentDescriptor _d);
 
     /// Merge two local connected components. If they are both incomplete and
     /// from the same side of the edge, the one whos region is further ahead
@@ -289,6 +291,9 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
 
     /// Update the local connectivity for an edge.
     void UpdateEdgeConnectivity(const SkeletonEdgeDescriptor& _ed);
+
+    /// Check if an edge is considered locally connected.
+    bool IsEdgeConnected(const SkeletonEdgeDescriptor& _ed);
 
     ///@}
     ///@name Region Functions
@@ -661,6 +666,8 @@ Iterate() {
   // different.
   const bool wholeEnvironment = region == nullptr;
   if(wholeEnvironment) {
+    if(m_unconnectedEdges.empty())
+      return;
     // Select a random unconnected edge and attempt to connect it.
     const size_t index = LRand() % m_unconnectedEdges.size();
     auto iter = m_unconnectedEdges.begin();
@@ -677,8 +684,9 @@ Iterate() {
     while(AdvanceRegion(region, samples) and AreSamplesCovered(region, samples))
       continue;
 
-  // Try to connect the selected component to the others.
-  ConnectEdgeSegment(ed);
+  // Try to connect the selected component to the others if needed.
+  if(!IsEdgeConnected(ed))
+    ConnectEdgeSegment(ed);
 }
 
 /*-------------------- Roadmap builders -------------------------------------*/
@@ -916,6 +924,10 @@ ExpandComponent(ExpansionRegion* const _r) {
   // Update the success rate for this region.
   _r->TrackSuccess(newVIDs.size(), samples.size());
 
+  // Add the new vertices to their local component.
+  VertexSet& cc = GetLocalComponent(d);
+  cc.insert(newVIDs.begin(), newVIDs.end());
+
   if(this->m_debug)
     std::cout << "\tGenerated " << newVIDs.size() << " new vertices "
               << newVIDs << "."
@@ -925,6 +937,62 @@ ExpandComponent(ExpansionRegion* const _r) {
               << "\n\tComponent VIDs: " << GetLocalComponent(d)
               << std::endl;
 
+  // Aggressive bridging.
+#if 1
+  // If there are any local components going the other way, try to connect.
+  bool bridged = false;
+  const SkeletonEdgeDescriptor reverseEd = reverse((*_r->edgeIterator).descriptor());
+  const auto& reverseComponents = m_localComponents[reverseEd];
+  if(reverseComponents.size()) {
+    if(this->m_debug)
+      std::cout << "\tChecking for connection to " << reverseComponents.size()
+                << " components from the other side of this edge."
+                << std::endl;
+
+    // Copy the descriptors because any merges will invalidate iteration over
+    // reverseComponents.
+    std::vector<LocalComponentDescriptor> reverseDescriptors;
+    for(const auto& repAndVIDs : reverseComponents)
+      reverseDescriptors.emplace_back(LocalComponentDescriptor{reverseEd, repAndVIDs.first, false});
+
+    LocalComponentDescriptor myComponent = d;
+    for(const auto& rd : reverseDescriptors) {
+      if(this->m_debug)
+        std::cout << "\tChecking connection to " << rd << "."
+                  << std::endl;
+
+      for(const VID newVID : newVIDs) {
+        if(this->m_debug)
+          std::cout << "\tChecking connection from VID " << newVID << "."
+                    << std::endl;
+
+        // Make edges.
+        const std::vector<EdgeOutput> edges = this->ConnectToComponent(
+            r->GetVertex(newVID), rd);
+        if(!edges.size())
+          continue;
+
+        // We made a bridge.
+        bridged = true;
+        for(auto& edge : edges)
+          r->AddEdge(newVID, edge.target, std::move(edge.weights));
+
+        myComponent = MergeLocalComponents(myComponent, rd);
+
+        if(this->m_debug)
+          std::cout << "\t\tMerged with component " << rd << " to form a bridge."
+                    << "\n\t\tNew component descriptor is " << myComponent << "."
+                    << std::endl;
+
+        // Once we've connected, we don't need to keep trying the other vids.
+        break;
+      }
+    }
+  }
+
+  if(bridged)
+    newVIDs.clear();
+#endif
   return newVIDs;
 }
 
@@ -1200,11 +1268,11 @@ GetBridge(const LocalComponentDescriptor& _d) noexcept {
 
 
 template <typename MPTraits>
-void
+typename DynamicRegionsPRM<MPTraits>::LocalComponentDescriptor
 DynamicRegionsPRM<MPTraits>::
-PromoteLocalComponent(const LocalComponentDescriptor& _d) {
+PromoteLocalComponent(LocalComponentDescriptor _d) {
   if(this->m_debug)
-    std::cout << "Promoted local component " << _d << " to bridge."
+    std::cout << "\t\tPromoted local component " << _d << " to bridge."
               << std::endl;
 
   // Get the vids, which also ensures the component exists.
@@ -1215,6 +1283,7 @@ PromoteLocalComponent(const LocalComponentDescriptor& _d) {
       std::piecewise_construct,
       std::forward_as_tuple(_d.representative),
       std::forward_as_tuple(std::move(vids)));
+  _d.bridge = true;
 
   // Make sure we created a new element.
   const bool isNew = iterBool.second;
@@ -1224,6 +1293,8 @@ PromoteLocalComponent(const LocalComponentDescriptor& _d) {
   // Erase from the local component and region maps.
   m_localComponents[_d.edgeDescriptor].erase(_d.representative);
   m_regions[_d.edgeDescriptor].erase(_d.representative);
+
+  return _d;
 }
 
 
@@ -1286,7 +1357,7 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
     case 2:
     {
       if(this->m_debug)
-        std::cout << "Merging bridges " << _d1 << " and " << _d2 << "."
+        std::cout << "\t\tMerging bridges " << _d1 << " and " << _d2 << "."
                   << std::endl;
       return mergeBridges(_d1, _d2);
     }
@@ -1294,11 +1365,11 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
     case 1:
     {
       if(this->m_debug)
-        std::cout << "Merging bridge " << (_d1.bridge ? _d1 : _d2)
+        std::cout << "\t\tMerging bridge " << (_d1.bridge ? _d1 : _d2)
                   << " and component " << (_d1.bridge ? _d2 : _d1) << "."
                   << std::endl;
-      PromoteLocalComponent(_d1.bridge ? _d2 : _d1);
-      return mergeBridges(_d1, _d2);
+      return _d1.bridge ? mergeBridges(_d1, PromoteLocalComponent(_d2))
+                        : mergeBridges(_d2, PromoteLocalComponent(_d1));
     }
     // Handle merging two non-bridges.
     case 0:
@@ -1308,16 +1379,15 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
       const bool sameSide = _d1.edgeDescriptor == _d2.edgeDescriptor;
       if(!sameSide) {
         if(this->m_debug)
-          std::cout << "Merging components " << _d1 << " and " << _d2
+          std::cout << "\t\tMerging components " << _d1 << " and " << _d2
                     << " into a new bridge."
                     << std::endl;
-        PromoteLocalComponent(_d1);
-        PromoteLocalComponent(_d2);
-        return mergeBridges(_d1, _d2);
+        return mergeBridges(PromoteLocalComponent(_d1),
+                            PromoteLocalComponent(_d2));
       }
 
       if(this->m_debug)
-        std::cout << "Merging components " << _d1 << " and " << _d2
+        std::cout << "\t\tMerging components " << _d1 << " and " << _d2
                   << " on the same side."
                   << std::endl;
 
@@ -1353,10 +1423,9 @@ UpdateEdgeConnectivity(const SkeletonEdgeDescriptor& _ed) {
   const bool lowClearance = m_lowClearanceMap.count(_ed.id());
   if(lowClearance)
      connected = leftCCs.size() < 2 and rightCCs.size() < 2;
-  // Otherwise, it is connected if there are no left/right CCs and only one
-  // bridge.
+  // Otherwise, it is connected if there is only one component.
   else
-    connected = leftCCs.empty() and rightCCs.empty() and bridgeCCs.size() == 1;
+    connected = (leftCCs.size() + rightCCs.size() + bridgeCCs.size()) < 2;
 
   const SkeletonEdgeDescriptor& canonical = _ed.source() < _ed.target()
                                           ? _ed
@@ -1365,6 +1434,18 @@ UpdateEdgeConnectivity(const SkeletonEdgeDescriptor& _ed) {
     m_unconnectedEdges.erase(canonical);
   else
     m_unconnectedEdges.insert(canonical);
+}
+
+
+template <typename MPTraits>
+bool
+DynamicRegionsPRM<MPTraits>::
+IsEdgeConnected(const SkeletonEdgeDescriptor& _ed) {
+  const SkeletonEdgeDescriptor right = reverse(_ed);
+  const SkeletonEdgeDescriptor& canonical = _ed.source() < _ed.target()
+                                          ? _ed
+                                          : right;
+  return !m_unconnectedEdges.count(canonical);
 }
 
 /*----------------------------- Region Functions -----------------------------*/
@@ -1818,7 +1899,7 @@ GetRegionRadius(const Vector3d& _v) {
   const double clearance = GetClearance(_v),
                robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
                              GetBoundingSphereRadius();
-  return (clearance - robotRadius);
+  return 1.2 * (clearance - robotRadius);
 }
 
 
