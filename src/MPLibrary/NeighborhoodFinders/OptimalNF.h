@@ -81,7 +81,8 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    NeighborhoodFinderPointer m_nf; ///< The internal neighborhood finder.
+    /// The internal neighborhood finder.
+    std::unique_ptr<NeighborhoodFinderMethod<MPTraits>> m_nf;
 
     /// This function adjusts the NF parameters based on the current roadmap
     /// size before each run.
@@ -128,7 +129,7 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
     this->m_nfType = Type::RADIUS;
 
     // Create a radius NF.
-    m_nf = NeighborhoodFinderPointer(new RadiusNF<MPTraits>());
+    m_nf.reset(new RadiusNF<MPTraits>());
 
     // Define the parameter function to set K based on the roadmap size and
     // dimension.
@@ -183,7 +184,7 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
 
     // Create a k-nearest NF (currently we use brute force but can probably
     // switch this to kd-tree).
-    m_nf = NeighborhoodFinderPointer(new BruteForceNF<MPTraits>());
+    m_nf.reset(new BruteForceNF<MPTraits>());
 
     // Define the parameter function to set K based on the roadmap size and
     // dimension.

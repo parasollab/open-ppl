@@ -65,9 +65,6 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef SSSPAdjacencyMap<WorkspaceDecomposition> AdjacencyMap;
-    typedef SSSPOutput<WorkspaceDecomposition>       SSSPData;
-
     typedef std::vector<const WorkspaceRegion*>      NeighborhoodKey;
 
     /// A pair of regions, which act as a hash key when caching the inter-region
@@ -101,26 +98,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// @param _region The region of interest.
     /// @param _bodyIndex The body to use.
     /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    VertexSet GetMappedVIDs(RoadmapType* const _r,
+    const VertexSet* GetMappedVIDs(RoadmapType* const _r,
         const WorkspaceRegion* const _region,
-        const size_t _bodyIndex = 0) const;
-
-    /// Get the set of VIDs that are bucketed within a set of regions.
-    /// @param _regions The regions of interest.
-    /// @param _bodyIndex The body to use.
-    /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    VertexSet GetMappedVIDs(RoadmapType* const _r,
-        const std::vector<const WorkspaceRegion*>& _regions,
-        const size_t _bodyIndex = 0) const;
-
-    /// Get the set of VIDs that are bucketed within a set of regions.
-    /// @param _begin A begin iterator to the region descriptors of interest.
-    /// @param _end An end iterator to the region descriptors of interest.
-    /// @param _bodyIndex The body to use.
-    /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    VertexSet GetMappedVIDs(RoadmapType* const _r,
-        std::vector<VD>::const_iterator _begin,
-        std::vector<VD>::const_iterator _end,
         const size_t _bodyIndex = 0) const;
 
     /// Get the workspace region to which a given VID is mapped.
@@ -218,42 +197,6 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     /// Get the decomposition used by this map.
     const WorkspaceDecomposition* GetDecomposition() const;
-
-    ///@}
-    ///@name Frontier
-    ///@{
-
-    /// Compute the frontier of occupied cells for a given body, starting from
-    /// a designated cell.
-    /// @param _region The starting region.
-    /// @param _roadmap The roadmap to check population.
-    /// @param _bodyIndex The body to use.
-    /// @param _backtrackDistance Stop after the last cell added is this far
-    ///                           from the first populated cell. Use -1 to
-    ///                           disable.
-    /// @param _adjacency An optional adjacency map to use instead of the
-    ///                   decomposition's.
-    /// @return The SSSP results that describe the discovered frontier
-    ///         (including populated and unpopulated cells).
-    SSSPData
-    ComputeFrontier(const WorkspaceRegion* const _region,
-        RoadmapType* const _r = nullptr,
-        const size_t _bodyIndex = 0,
-        const double _backtrackDistance = -1,
-        const AdjacencyMap& _adjacency = {});
-
-    /// The AO-compatible verison.
-    /// @param _region    The starting region.
-    /// @param _radius    The desired frontier radius, measured by
-    ///                   inner-distance in workspace. The actual frontier will
-    ///                   be larger due to approximations.
-    /// @param _adjacency An optional adjacency map to use instead of the
-    ///                   decomposition's.
-    /// @return The SSSP results that describe the discovered frontier
-    ///         (including populated and unpopulated cells).
-    SSSPData
-    ComputeFrontierNew(const WorkspaceRegion* const _region,
-        const double _radius, const AdjacencyMap& _adjacency = {});
 
     ///@}
     ///@name Inter-Region Distance
@@ -511,7 +454,7 @@ Initialize() {
 /*---------------------------------- Queries ---------------------------------*/
 
 template <typename MPTraits>
-typename MPTraits::RoadmapType::VertexSet
+const typename MPTraits::RoadmapType::VertexSet*
 TopologicalMap<MPTraits>::
 GetMappedVIDs(RoadmapType* const _r, const WorkspaceRegion* const _region,
     const size_t _bodyIndex) const {
@@ -521,71 +464,7 @@ GetMappedVIDs(RoadmapType* const _r, const WorkspaceRegion* const _region,
   const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
 
   auto iter = forwardMap.find(_region);
-  return iter == forwardMap.end() ? VertexSet() : iter->second;
-}
-
-
-template <typename MPTraits>
-typename MPTraits::RoadmapType::VertexSet
-TopologicalMap<MPTraits>::
-GetMappedVIDs(RoadmapType* const _r,
-    const std::vector<const WorkspaceRegion*>& _regions,
-    const size_t _bodyIndex) const {
-  MethodTimer mt(this->GetStatClass(),
-      this->GetNameAndLabel() + "::GetMappedVIDs");
-
-  const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
-
-  // Find all VIDs that live within the region set.
-  VertexSet all;
-  for(const auto region : _regions) {
-    // Skip empty regions.
-    auto iter = forwardMap.find(region);
-    if(iter == forwardMap.end())
-      continue;
-
-    // Copy these VIDs.
-    const auto& vids = iter->second;
-    VertexSetUnionInPlace(all, vids);
-  }
-
-  return all;
-}
-
-
-template <typename MPTraits>
-typename MPTraits::RoadmapType::VertexSet
-TopologicalMap<MPTraits>::
-GetMappedVIDs(RoadmapType* const _r,
-    std::vector<VD>::const_iterator _begin,
-    std::vector<VD>::const_iterator _end,
-    const size_t _bodyIndex) const {
-  // Do nothing on an empty range.
-  if(_begin == _end)
-    return {};
-
-  MethodTimer mt(this->GetStatClass(),
-      this->GetNameAndLabel() + "::GetMappedVIDs");
-
-  const auto& forwardMap = GetForwardMap(_r, _bodyIndex);
-  auto decomposition = this->GetDecomposition();
-
-  // Find all VIDs that live within the region set.
-  VertexSet all;
-  for(auto wdIter = _begin; wdIter != _end; ++wdIter) {
-    const WorkspaceRegion& region = decomposition->GetRegion(*wdIter);
-
-    // Skip empty regions.
-    auto iter = forwardMap.find(&region);
-    if(iter == forwardMap.end())
-      continue;
-
-    // Copy these VIDs.
-    const auto& vids = iter->second;
-    VertexSetUnionInPlace(all, vids);
-  }
-
-  return all;
+  return iter == forwardMap.end() ? nullptr : &iter->second;
 }
 
 
@@ -984,141 +863,6 @@ MakeKey(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2)
     const noexcept {
   return {std::min(_r1, _r2),
           std::max(_r1, _r2)};
-}
-
-/*-------------------------------- Frontiers ---------------------------------*/
-
-template <typename MPTraits>
-typename TopologicalMap<MPTraits>::SSSPData
-TopologicalMap<MPTraits>::
-ComputeFrontier(const WorkspaceRegion* const _region, RoadmapType* const _r,
-    const size_t _bodyIndex,
-    const double _backtrackDistance, const AdjacencyMap& _adjacency) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeFrontier");
-  stats->IncStat(this->GetNameAndLabel() + "::ComputeFrontier");
-
-  // Get the descriptor of the root node.
-  // Const cast is required because STAPL has an API error preventing useful
-  // iteration over const graphs.
-  auto wd = const_cast<WorkspaceDecomposition*>(this->GetDecomposition());
-  const VD root = wd->GetDescriptor(*_region);
-
-  if(this->m_debug)
-    std::cout << "TopologicalMap::ComputeFrontier"
-              << "\n\tSearching from region " << root
-              << "\n\tBody index: " << _bodyIndex
-              << "\n\tBacktrack distance: " << _backtrackDistance
-              << std::endl;
-
-  // If we aren't using an early stop, run Dijkstra's with no special stopping
-  // criterion.
-  const bool earlyStop = _backtrackDistance != -1;
-  if(!earlyStop)
-    return DijkstraSSSP(wd, {root}, _adjacency);
-
-  // Create an early stop criterion. Make storage for the maximum distance and
-  // whether we have found a populated region.
-  double maxDistance = std::numeric_limits<double>::max();
-  bool foundFirstPopulated = false;
-  SSSPTerminationCriterion<WorkspaceDecomposition> stop =
-      [this, wd, _r, _bodyIndex, _backtrackDistance, &maxDistance,
-          &foundFirstPopulated](
-          typename WorkspaceDecomposition::vertex_iterator& _vi,
-          const SSSPOutput<WorkspaceDecomposition>& _sssp)
-      {
-        const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
-        const double distance = _sssp.distance.at(vd);
-
-        // If we haven't found the first populated region yet, check for it now.
-        if(!foundFirstPopulated
-            and this->IsPopulated(_r, &wd->GetRegion(vd), _bodyIndex)) {
-          foundFirstPopulated = true;
-          maxDistance = distance + _backtrackDistance;
-
-          if(this->m_debug)
-            std::cout << "\t\tFirst populated node found, max distance is "
-                      << std::setprecision(4) << maxDistance << "."
-                      << std::endl;
-        }
-
-        // Check for exceeding the max distance (not an else-condition in case
-        // the max distance is 0).
-        if(foundFirstPopulated and distance >= maxDistance) {
-          if(this->m_debug)
-            std::cout << "\t\tLast populated node found at distance "
-                      << std::setprecision(4) << distance
-                      << std::endl;
-          return SSSPTermination::EndSearch;
-        }
-
-        return SSSPTermination::Continue;
-      };
-
-  return DijkstraSSSP(wd, {root}, stop, _adjacency);
-}
-
-
-template <typename MPTraits>
-typename TopologicalMap<MPTraits>::SSSPData
-TopologicalMap<MPTraits>::
-ComputeFrontierNew(const WorkspaceRegion* const _region,
-    const double _radius, const AdjacencyMap& _adjacency) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeFrontierNew");
-  stats->IncStat(this->GetNameAndLabel() + "::ComputeFrontierNew");
-
-  // Const cast is required because STAPL has an API error preventing useful
-  // iteration over const graphs.
-  auto wd = const_cast<WorkspaceDecomposition*>(this->GetDecomposition());
-
-  // We will use the approximate inner distance which is based on a manhattan
-  // search through our grid. The 3-ball using manhattan distance is an
-  // octahedron, so we must increase radius by a factor of sqrt(3) to account
-  // for this (ensures we get all cells within _radius, at the expense of
-  // including some extras).
-  const double radius = std::sqrt(3) * _radius;
-
-  if(this->m_debug)
-    std::cout << "TopologicalMap::ComputeFrontierNew"
-              << "\n\tSearching from region " << wd->GetDescriptor(*_region)
-              << "\n\tManhattan Radius: " << radius
-              << std::endl;
-
-  // Get the descriptor of the root node.
-  const VD root = wd->GetDescriptor(*_region);
-
-  // Compute the approximate inner distances to each region within the radius.
-  ComputeApproximateMinimumInnerDistances(_region, radius);
-
-  // Create a weight function which uses the approx min inner distance, measured
-  // from the root region (not the source region - that would be zero in all
-  // cases since the source and target are adjacent).
-  SSSPPathWeightFunction<WorkspaceDecomposition> weight = [wd, _region, this](
-      typename WorkspaceDecomposition::adj_edge_iterator& _ei,
-      const double _sourceDistance,
-      const double _targetDistance)
-  {
-    const WorkspaceRegion* const target = &wd->GetRegion(_ei->target());
-
-    return this->ApproximateMinimumInnerDistance(_region, target);
-  };
-
-  // Create an early stop criterion to terminate the search after we exceed the
-  // radius.
-  SSSPTerminationCriterion<WorkspaceDecomposition> stop = [radius](
-      typename WorkspaceDecomposition::vertex_iterator& _vi,
-      const SSSPOutput<WorkspaceDecomposition>& _sssp)
-  {
-    const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
-    const double distance = _sssp.distance.at(vd);
-
-    return distance > radius
-         ? SSSPTermination::EndSearch
-         : SSSPTermination::Continue;
-  };
-
-  return DijkstraSSSP(wd, {root}, weight, stop, _adjacency);
 }
 
 /*--------------------------- Inter-Region Distance --------------------------*/
