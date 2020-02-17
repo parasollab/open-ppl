@@ -28,12 +28,14 @@
 #endif
 
 #include "MPLibrary/MPBaseObject.h"
+#include "Utilities/CCTracker.h"
 
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class Robot;
@@ -81,6 +83,7 @@ class RoadmapGraph : public
     typedef typename STAPLGraph::vertex_descriptor        VID;
     typedef typename STAPLGraph::edge_descriptor          EID;
     typedef typename EID::edge_id_type                    EdgeID;
+    typedef typename std::unordered_set<VID>              VertexSet;
 
     // Iterator types.
     typedef typename STAPLGraph::vertex_iterator          VI;
@@ -99,11 +102,32 @@ class RoadmapGraph : public
     typedef std::function<void(EI)> EdgeHook;
     enum class HookType {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
 
+    // CC Tracker.
+    typedef CCTracker<RoadmapGraph<Vertex, Edge>> CCTrackerType;
+
     ///@}
     ///@name Construction
     ///@{
 
     RoadmapGraph(Robot* const _r);
+
+    ///@}
+    ///@name Move and Copy
+    ///@{
+    /// Move and copy operations do not copy hook functions.
+
+    RoadmapGraph(const RoadmapGraph& _r);
+    RoadmapGraph(RoadmapGraph&& _r);
+
+    RoadmapGraph& operator=(const RoadmapGraph& _r);
+    RoadmapGraph& operator=(RoadmapGraph&& _r);
+
+    ///@}
+    ///@name Equality
+    ///@{
+
+    bool operator==(const RoadmapGraph& _r) const noexcept;
+    bool operator!=(const RoadmapGraph& _r) const noexcept;
 
     ///@}
     ///@name Modifiers
@@ -121,7 +145,7 @@ class RoadmapGraph : public
     /// @param _vid The desired descriptor.
     /// @param _v The vertex property.
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
-    virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
+    //virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
 
     /// Add a vertex to the graph without checking for uniqueness.
     /// @param _v The vertex to add.
@@ -163,6 +187,10 @@ class RoadmapGraph : public
     /// @param _r The roadmap to copy from.
     void AppendRoadmap(const RoadmapGraph& _r);
 
+    /// Set the CC tracker.
+    /// @param _stats Optional stat class for performance profiling.
+    void SetCCTracker(StatClass* const _stats = nullptr);
+
     ///@}
     ///@name Queries
     ///@{
@@ -201,14 +229,13 @@ class RoadmapGraph : public
     VID GetVID(const VI& _t) const noexcept;
     VID GetVID(const Vertex& _t) const noexcept;
 
+    /// Get the set of predecessors for a given vertex.
+    /// @param _vid The vertex descriptor.
+    /// @return The set of VIDs which have _vid as a child node.
+    const VertexSet& GetPredecessors(const VID _vid) const noexcept;
+
     /// Get the descriptor of the last vertex added to the graph.
     VID GetLastVID() const noexcept;
-
-#ifndef _PARALLEL
-    /// Get the number of CCs in the graph.
-    /// @return The CC count.
-    size_t GetNumCCs() noexcept;
-#endif
 
     /// Each time the roadmap is modified, we update the timestamp.
     size_t GetTimestamp() const noexcept;
@@ -219,6 +246,9 @@ class RoadmapGraph : public
 
     /// Get the robot represented by this roadmap.
     Robot* GetRobot() const noexcept;
+
+    /// Get the connected component tracker.
+    CCTrackerType* GetCCTracker() const noexcept;
 
     /// Retrieve a reference to a vertex property by descriptor or iterator.
     template <typename T>
@@ -395,6 +425,16 @@ class RoadmapGraph : public
     /// Hook functions to call when deleting an edge.
     std::unordered_map<std::string, EdgeHook> m_deleteEdgeHooks;
 
+    /// Tracks weak CCs within the roadmap.
+    std::unique_ptr<CCTrackerType> m_ccTracker;
+
+    /// Tracks predecessor information. We use this instead of switching to a
+    /// STAPL directed_preds graph because (a) directed_preds uses a vector for
+    /// storage of VIDs, making all changes linear-time operations in the
+    /// in-degree of each vertex, and (b) the STAPL API is not interchangable as
+    /// it should be, so switching causes ridiculous compiler errors.
+    std::unordered_map<VID, VertexSet> m_predecessors;
+
     ///@}
 
 };
@@ -404,6 +444,114 @@ class RoadmapGraph : public
 template <typename Vertex, typename Edge>
 RoadmapGraph<Vertex, Edge>::
 RoadmapGraph(Robot* const _r) : m_robot(_r) { }
+
+/*------------------------------ Move and Copy -------------------------------*/
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>::
+RoadmapGraph(const RoadmapGraph& _r) : RoadmapGraph(_r.m_robot) {
+  *this = _r;
+}
+
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>::
+RoadmapGraph(RoadmapGraph&& _r) : RoadmapGraph(_r.m_robot) {
+  *this = std::move(_r);
+}
+
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>&
+RoadmapGraph<Vertex, Edge>::
+operator=(const RoadmapGraph& _r) {
+  // Clear any hooks installed on this map.
+  ClearHooks();
+
+  // Copy the stapl graph and our add-ons.
+  STAPLGraph::operator=(_r);
+  m_robot        = _r.m_robot;
+  m_timestamp    = _r.m_timestamp;
+  m_predecessors = _r.m_predecessors;
+
+  // If the other graph had a CC tracker, copy it and point at this roadmap.
+  if(_r.m_ccTracker) {
+    m_ccTracker.reset(new CCTrackerType(*_r.m_ccTracker));
+    m_ccTracker->SetRoadmap(this);
+    m_ccTracker->InstallHooks();
+  }
+
+  return *this;
+}
+
+
+template <typename Vertex, typename Edge>
+RoadmapGraph<Vertex, Edge>&
+RoadmapGraph<Vertex, Edge>::
+operator=(RoadmapGraph&& _r) {
+  // Clear any hooks installed on this map.
+  ClearHooks();
+
+  // Move the stapl graph and our add-ons.
+  STAPLGraph::operator=(std::move(_r));
+  m_robot        = _r.m_robot;
+  m_timestamp    = _r.m_timestamp;
+  m_predecessors = std::move(_r.m_predecessors);
+
+  // If the other graph had a CC tracker, move it and point at this roadmap.
+  if(_r.m_ccTracker) {
+    m_ccTracker = std::move(_r.m_ccTracker);
+    m_ccTracker->SetRoadmap(this);
+    m_ccTracker->InstallHooks();
+  }
+
+  // Clear any hooks on the other to prevent cross-talk with the CCTracker.
+  _r.ClearHooks();
+
+  return *this;
+}
+
+/*------------------------------- Equality -----------------------------------*/
+
+template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+operator==(const RoadmapGraph& _r) const noexcept {
+  // First do fast checks on addess and sizes.
+  if(this == &_r)
+    return true;
+  if(this->Size() != _r.Size() or this->get_num_edges() != _r.get_num_edges())
+    return false;
+
+  // Check vertices and edges.
+  for(auto va = this->begin(); va != this->end(); ++va) {
+    // Find the matching descriptor in _r.
+    auto vb = _r.find_vertex(va->descriptor());
+
+    // Check that the property and number of edges are the same.
+    if(va->property() != vb->property() or va->size() != vb->size())
+      return false;
+
+    // Check that the edges are the same. Do not assume the edge ordering is
+    // the same, only worry about source/target correspondance.
+    for(auto ea = va->begin(); ea != va->end(); ++ea) {
+      CEI eb;
+      if(!_r.GetEdge(ea->source(), ea->target(), eb)
+          or ea->property() != eb->property())
+        return false;
+    }
+  }
+
+  return  true;
+}
+
+
+template <typename Vertex, typename Edge>
+bool
+RoadmapGraph<Vertex, Edge>::
+operator!=(const RoadmapGraph& _r) const noexcept {
+  return !(*this == _r);
+}
 
 /*------------------------------- Modifiers ----------------------------------*/
 
@@ -422,35 +570,11 @@ AddVertex(const Vertex& _v) noexcept {
 
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(_v);
+  m_predecessors[vid];
   ++m_timestamp;
 
   // Execute post-add hooks and update vizmo debug.
   ExecuteAddVertexHooks(this->find_vertex(vid));
-  VDAddNode(_v);
-
-  return vid;
-}
-
-
-template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
-AddVertex(const VID _vid, const Vertex& _v) noexcept {
-  // Find the vertex and ensure it does not already exist.
-  auto iter = this->find_vertex(_vid);
-  const bool exists = iter != this->end();
-  if(exists or IsVertex(_v)) {
-    std::cerr << "\nRoadmapGraph::AddVertex: already in graph" << std::endl;
-    return iter->descriptor();
-  }
-
-  // The vertex does not exist. Add it now.
-  const VID vid = this->add_vertex(_vid, _v);
-  ++m_timestamp;
-
-  // Execute post-add hooks and update vizmo debug.
-  ExecuteAddVertexHooks(this->find_vertex(vid));
-  VDAddNode(_v);
 
   return vid;
 }
@@ -487,30 +611,19 @@ DeleteVertex(const VID _v) noexcept {
     DeleteEdge(edge);
 
   // Delete the inbound edges.
-  /// @TODO This could be done faster with a directed preds graph, but I want to
-  ///       profile it both ways to be sure of the costs before doing that. We
-  ///       rarely delete vertices, so right now this is an edge case. If we
-  ///       start working with methods that delete a lot of vertices, we will
-  ///       likely need to switch to the directed preds graph.
-  for(VI vertex = this->begin(); vertex != this->end(); ++vertex) {
-    while(true) {
-      // Jump to the next edge that targets this vertex.
-      EI edge = stapl::graph_find(vertex->begin(), vertex->end(),
-          stapl::eq_target<VID>(_v));
-      if(edge == vertex->end())
-        break;
-
-      // If we found one, delete it.
-      DeleteEdge(edge);
-    }
+  auto predIter = m_predecessors.find(_v);
+  VertexSet& preds = predIter->second;
+  while(!preds.empty()) {
+    const VID predecessor = *preds.begin();
+    DeleteEdge(predecessor, _v);
   }
 
-  // Execute pre-delete hooks and update vizmo debug.
+  // Execute pre-delete hooks.
   ExecuteDeleteVertexHooks(vi);
-  VDRemoveNode(vi->property());
 
   // Delete the vertex.
   this->delete_vertex(vi->descriptor());
+  m_predecessors.erase(predIter);
   ++m_timestamp;
 }
 
@@ -528,19 +641,18 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
     std::cerr << "\nRoadmapGraph::AddEdge: edge (" << _source << ", "
               << _target << ") already exists, not adding."
               << std::endl;
+    return;
   }
-  else {
-    // Find the edge iterator.
-    VI vi;
-    EI ei;
-    this->find_edge(edgeDescriptor, vi, ei);
 
-    // Execute post-add hooks and update vizmo debug.
-    ExecuteAddEdgeHooks(ei);
-    VDAddEdge(vi->property(), GetVertex(_target));
+  // Add the source as a predecessor of target.
+  m_predecessors[_target].insert(_source);
+  ++m_timestamp;
 
-    ++m_timestamp;
-  }
+  // Execute post-add hooks.
+  VI vi;
+  EI ei;
+  this->find_edge(edgeDescriptor, vi, ei);
+  ExecuteAddEdgeHooks(ei);
 }
 
 
@@ -565,8 +677,8 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
 
   const bool found = this->find_edge(edgeDescriptor, dummy, edgeIterator);
   if(!found)
-    throw RunTimeException(WHERE, "Edge (" + std::to_string(_source) + ", " +
-        std::to_string(_target) + ") does not exist.");
+    throw RunTimeException(WHERE) << "Edge (" << _source << ", " << _target
+                                  << ") does not exist.";
 
   DeleteEdge(edgeIterator);
 }
@@ -576,12 +688,14 @@ template <class Vertex, class Edge>
 void
 RoadmapGraph<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
-  // Execute pre-delete hooks and update vizmo debug.
+  // Execute pre-delete hooks.
+  const VID source = _iterator->source(),
+            target = _iterator->target();
   ExecuteDeleteEdgeHooks(_iterator);
-  VDRemoveEdge(GetVertex(_iterator->source()), GetVertex(_iterator->target()));
 
   // Delete the edge.
   this->delete_edge(_iterator->descriptor());
+  m_predecessors[target].erase(source);
   ++m_timestamp;
 }
 
@@ -617,6 +731,17 @@ AppendRoadmap(const RoadmapGraph& _r) {
         AddEdge(source, target, eit->property());
     }
   }
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+void
+RoadmapGraph<Vertex, Edge>::
+SetCCTracker(StatClass* const _stats) {
+  m_ccTracker.reset(new CCTrackerType(this));
+  if(_stats)
+    m_ccTracker->SetStatClass(_stats);
 }
 
 /*-------------------------------- Queries -----------------------------------*/
@@ -711,6 +836,15 @@ GetVID(const Vertex& _t) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
+const typename RoadmapGraph<Vertex, Edge>::VertexSet&
+RoadmapGraph<Vertex, Edge>::
+GetPredecessors(const VID _vid) const noexcept {
+  return m_predecessors.at(_vid);
+}
+
+
+template <typename Vertex, typename Edge>
+inline
 typename RoadmapGraph<Vertex, Edge>::VID
 RoadmapGraph<Vertex, Edge>::
 GetLastVID() const noexcept {
@@ -719,18 +853,6 @@ GetLastVID() const noexcept {
 
   return (--this->end())->descriptor();
 }
-
-
-#ifndef _PARALLEL
-template <typename Vertex, typename Edge>
-inline
-size_t
-RoadmapGraph<Vertex, Edge>::
-GetNumCCs() noexcept {
-  ColorMap c;
-  return get_cc_count(*this, c);
-}
-#endif
 
 
 template <typename Vertex, typename Edge>
@@ -749,6 +871,15 @@ Robot*
 RoadmapGraph<Vertex, Edge>::
 GetRobot() const noexcept {
   return m_robot;
+}
+
+
+template <typename Vertex, typename Edge>
+inline
+typename RoadmapGraph<Vertex, Edge>::CCTrackerType*
+RoadmapGraph<Vertex, Edge>::
+GetCCTracker() const noexcept {
+  return m_ccTracker.get();
 }
 
 
@@ -1015,6 +1146,10 @@ ClearHooks() noexcept {
   m_deleteVertexHooks.clear();
   m_addEdgeHooks.clear();
   m_deleteEdgeHooks.clear();
+
+  // We always want the CC tracker's hooks, re-install them if needed.
+  if(m_ccTracker)
+    m_ccTracker->InstallHooks();
 }
 
 /*----------------------------------- I/O ------------------------------------*/
@@ -1208,6 +1343,37 @@ ToString(const HookType& _t) const noexcept {
   }
 }
 
+/*----------------------------------------------------------------------------*/
+
+/// Find the intersection of two vertex sets.
+/// @param _a The first set.
+/// @param _b The second set.
+/// @return The intersection of _a and _b.
+inline
+std::unordered_set<size_t>
+IntersectVertexSets(const std::unordered_set<size_t>& _a,
+                    const std::unordered_set<size_t>& _b) {
+  using VertexSet = std::unordered_set<size_t>;
+
+  // Find the smaller of the two sets.
+  const VertexSet* smaller,
+                 * larger;
+  if(_a.size() < _b.size()) {
+    smaller = &_a;
+    larger  = &_b;
+  }
+  else {
+    smaller = &_b;
+    larger  = &_a;
+  }
+
+  // Test each element in the smaller set for membership in the larger one.
+  VertexSet intersection;
+  std::copy_if(smaller->begin(), smaller->end(),
+               std::inserter(intersection, intersection.end()),
+               [larger](const size_t _vid) {return larger->count(_vid);});
+  return intersection;
+}
 
 /*----------------------------------------------------------------------------*/
 

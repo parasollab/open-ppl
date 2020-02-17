@@ -61,9 +61,16 @@
         growGoals="true">
         <Evaluator label="BoundedQuery"/>
       </BasicRRTStrategy>
+
+      <ValidationStrategy label="Test" target="BasicRRT" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/BasicRRT.0.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/BasicRRT.0.query.rdmp.path"/>
+      </ValidationStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="BasicRRT" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
         baseFilename="../Scratch/BasicRRT"/>
 
   </Library>

@@ -1,5 +1,5 @@
-#ifndef IO_UTILS_H_
-#define IO_UTILS_H_
+#ifndef PMPL_IO_UTILS_H_
+#define PMPL_IO_UTILS_H_
 
 #include <string>
 #include <iostream>
@@ -10,6 +10,7 @@
 #include "PMPLExceptions.h"
 
 class GroupCfg;
+class Robot;
 
 
 /*------------------------------- Vizmo Debug --------------------------------*/
@@ -140,30 +141,47 @@ void
 VDAddTempEdge<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
 
 
-/// @TODO
-template <typename CfgType>
+/// Add hook functions to track roadmap changes in the vizmo debug file.
+/// @param _r The roadmap to track.
+template <typename AbstractRoadmapType>
 void
-VDQuery(const CfgType& _cfg1, const CfgType& _cfg2) {
-  if(vdo)
-    (*vdo) << "Query " << _cfg1 << " " << _cfg2 << std::endl;
+VDTrackRoadmap(AbstractRoadmapType* const _r) {
+  if(!vdo)
+    return;
+
+  const std::string label = "VizmoDebug";
+  _r->InstallHook(AbstractRoadmapType::HookType::AddVertex, label,
+      [_r](const typename AbstractRoadmapType::vertex_iterator _vi){
+        VDAddNode(_vi->property());
+      });
+  _r->InstallHook(AbstractRoadmapType::HookType::DeleteVertex, label,
+      [_r](const typename AbstractRoadmapType::vertex_iterator _vi) {
+        VDRemoveNode(_vi->property());
+      });
+  _r->InstallHook(AbstractRoadmapType::HookType::AddEdge, label,
+      [_r](const typename AbstractRoadmapType::adj_edge_iterator _ei) {
+        const auto source = (*_ei).source(),
+                   target = (*_ei).target();
+        VDAddEdge(_r->GetVertex(source), _r->GetVertex(target));
+      });
+  _r->InstallHook(AbstractRoadmapType::HookType::DeleteEdge, label,
+      [_r](const typename AbstractRoadmapType::adj_edge_iterator _ei) {
+        const auto source = (*_ei).source(),
+                   target = (*_ei).target();
+        VDRemoveEdge(_r->GetVertex(source), _r->GetVertex(target));
+      });
 }
 
-template <>
-inline
-void
-VDQuery<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
 
 /*----------------------------- Other IO Utils -------------------------------*/
 
-/// Write a list of Cfgs in a give path to file with given filename. Note if
-/// file couldn't be opened, error message will be post and process will be
-/// terminated.
+/// Write a list of Cfgs from a path to file.
 template <typename CfgType>
 void
-WritePath(const std::string& _outputFile, const std::vector<CfgType>& _path) {
-  std::ofstream ofs(_outputFile);
+WritePath(const std::string& _filename, const std::vector<CfgType>& _path) {
+  std::ofstream ofs(_filename);
   if(!ofs)
-    throw RunTimeException(WHERE, "Cannot open file \"" + _outputFile + "\"");
+    throw RunTimeException(WHERE) << "Cannot open file '" << _filename << "'";
 
   // Print header.
   ofs << "VIZMO_PATH_FILE   Path Version 2012" << std::endl
@@ -173,6 +191,43 @@ WritePath(const std::string& _outputFile, const std::vector<CfgType>& _path) {
   // Print path.
   for(auto cit = _path.begin(); cit != _path.end(); ++cit)
     ofs << *cit << std::endl;
+}
+
+
+/// Read a list of Cfgs from a file to path.
+template <typename CfgType>
+std::vector<CfgType>
+ReadPath(const std::string& _filename, Robot* const _robot) {
+  std::ifstream ifs(_filename);
+  if(!ifs)
+    throw RunTimeException(WHERE) << "Cannot open file '" << _filename << "'";
+
+  // Eat header.
+  std::string line1, line2;
+  std::getline(ifs, line1);
+  std::getline(ifs, line2);
+  size_t pathSize = 0;
+  ifs >> pathSize;
+
+  if(line1 != std::string("VIZMO_PATH_FILE   Path Version 2012")
+      or line2 != std::string("1")
+      or pathSize == 0)
+    throw ParseException(WHERE) << "Path file '" << _filename
+                                << "' has ill-formed header.";
+
+  // Make path.
+  std::vector<CfgType> path(pathSize, CfgType(_robot));
+  for(size_t i = 0; i < pathSize; ++i)
+    ifs >> path[i];
+
+  // Make sure we reached the end of the path.
+  ifs >> std::ws;
+  const bool end = ifs.peek() == EOF;
+  if(!end)
+    throw ParseException(WHERE) << "Path file has content after " << pathSize
+                                << " expected cfgs.";
+
+  return path;
 }
 
 
@@ -240,14 +295,6 @@ ReadField(std::istream& _is, CountingStreamBuffer& _cbs,
 /// @return Data string
 std::string ReadFieldString(std::istream& _is, CountingStreamBuffer& _cbs,
     const std::string& _desc, const bool _toUpper = true);
-
-
-/*
-/// Read color from a comment line
-/// @param _is Stream
-/// @return Color
-Color4 GetColorFromComment(std::istream& _is);
-*/
 
 
 /// Split string based on delimiter.

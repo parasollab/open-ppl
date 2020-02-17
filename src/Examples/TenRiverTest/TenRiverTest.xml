@@ -181,7 +181,7 @@
         <Member label="member18"/>
         <Member label="member19"/>
         <Member label="member20"/>
-        <Member label="member21"/>        
+        <Member label="member21"/>
         <HandoffEnvironment filename="../handoff.env" positionRes=".01"/>
         <PlacementMethod type="disjointworkspaces" label="djw" precision="2"/>
         <!--PlacementMethod type="owdensity" label="ow" proximity="2" density="75" dmLabel="euclidean"
@@ -196,109 +196,109 @@
          goal configuration. -->
 
 
-    <Task label="query" robot="member1">    
-      <StartConstraints>        
-        <CSpaceConstraint point="5 3 0"/>    
+    <Task label="query" robot="member1">
+      <StartConstraints>
+        <CSpaceConstraint point="5 3 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member2">    
-      <StartConstraints>        
-        <CSpaceConstraint point="11 15 0"/>  
+    <Task label="query" robot="member2">
+      <StartConstraints>
+        <CSpaceConstraint point="11 15 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member3">    
-      <StartConstraints>        
-        <CSpaceConstraint point="17 41 0"/>  
+    <Task label="query" robot="member3">
+      <StartConstraints>
+        <CSpaceConstraint point="17 41 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member4">    
-      <StartConstraints>        
-        <CSpaceConstraint point="23 36 0"/>  
+    <Task label="query" robot="member4">
+      <StartConstraints>
+        <CSpaceConstraint point="23 36 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member5">    
-      <StartConstraints>        
-        <CSpaceConstraint point="29 19 0"/>  
+    <Task label="query" robot="member5">
+      <StartConstraints>
+        <CSpaceConstraint point="29 19 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member6">    
-      <StartConstraints>        
-        <CSpaceConstraint point="35 46 0"/>  
+    <Task label="query" robot="member6">
+      <StartConstraints>
+        <CSpaceConstraint point="35 46 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member7">    
-      <StartConstraints>        
-        <CSpaceConstraint point="41 16 0"/>  
+    <Task label="query" robot="member7">
+      <StartConstraints>
+        <CSpaceConstraint point="41 16 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member8">    
-      <StartConstraints>        
-        <CSpaceConstraint point="47 12 0"/>  
+    <Task label="query" robot="member8">
+      <StartConstraints>
+        <CSpaceConstraint point="47 12 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member9">    
-      <StartConstraints>        
-        <CSpaceConstraint point="53 31 0"/>  
+    <Task label="query" robot="member9">
+      <StartConstraints>
+        <CSpaceConstraint point="53 31 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member10">    
-      <StartConstraints>        
-        <CSpaceConstraint point="59 30 0"/>  
+    <Task label="query" robot="member10">
+      <StartConstraints>
+        <CSpaceConstraint point="59 30 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member11">    
-      <StartConstraints>        
-        <CSpaceConstraint point="65 50 0"/>  
+    <Task label="query" robot="member11">
+      <StartConstraints>
+        <CSpaceConstraint point="65 50 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member12">    
-      <StartConstraints>        
-        <CSpaceConstraint point="71 47 0"/>  
+    <Task label="query" robot="member12">
+      <StartConstraints>
+        <CSpaceConstraint point="71 47 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member13">    
-      <StartConstraints>        
-        <CSpaceConstraint point="77 13 0"/>  
+    <Task label="query" robot="member13">
+      <StartConstraints>
+        <CSpaceConstraint point="77 13 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member14">    
-      <StartConstraints>        
-        <CSpaceConstraint point="83 59 0"/>  
+    <Task label="query" robot="member14">
+      <StartConstraints>
+        <CSpaceConstraint point="83 59 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member15">    
-      <StartConstraints>        
-        <CSpaceConstraint point="89 10 0"/>  
+    <Task label="query" robot="member15">
+      <StartConstraints>
+        <CSpaceConstraint point="89 10 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member16">    
-      <StartConstraints>        
-        <CSpaceConstraint point="95 17 0"/>  
+    <Task label="query" robot="member16">
+      <StartConstraints>
+        <CSpaceConstraint point="95 17 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member17">    
-      <StartConstraints>        
-        <CSpaceConstraint point="101 4 0"/>  
+    <Task label="query" robot="member17">
+      <StartConstraints>
+        <CSpaceConstraint point="101 4 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member18">    
-      <StartConstraints>        
-        <CSpaceConstraint point="107 38 0"/> 
+    <Task label="query" robot="member18">
+      <StartConstraints>
+        <CSpaceConstraint point="107 38 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member19">    
-      <StartConstraints>        
-        <CSpaceConstraint point="113 42 0"/> 
+    <Task label="query" robot="member19">
+      <StartConstraints>
+        <CSpaceConstraint point="113 42 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member20">    
-      <StartConstraints>        
-        <CSpaceConstraint point="119 23 0"/> 
+    <Task label="query" robot="member20">
+      <StartConstraints>
+        <CSpaceConstraint point="119 23 0"/>
       </StartConstraints>
     </Task>
-    <Task label="query" robot="member21">    
-      <StartConstraints>        
-        <CSpaceConstraint point="125 18 0"/> 
+    <Task label="query" robot="member21">
+      <StartConstraints>
+        <CSpaceConstraint point="125 18 0"/>
       </StartConstraints>
     </Task>
 
@@ -578,7 +578,7 @@
     </PathModifiers>
 
     <Connectors>
-      <AdaptiveConnector label="AdaptiveCS" nfLabel="" lpLabel="sl"
+      <AdaptiveConnector label="AdaptiveCS" lpLabel="sl"
         percentRandom="0.5" checkIfSameCC="false" debug="false"
         uniformProbability="false" fixedCost="false" fixedReward="false">
         <NeighborFinder Method="BFNF"/>
@@ -586,7 +586,7 @@
         <NeighborFinder Method="RandomNF"/>
         <NeighborFinder Method="BFNFAll"/>
       </AdaptiveConnector>
-      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5"/>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl"/>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
       <NeighborhoodConnector label="ClosestRobot" nfLabel="BFNF" lpLabel="slRobot"
@@ -721,7 +721,6 @@
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
-        <!--<ComponentConnector method="ConnectCCs"/>-->
         <Evaluator label="PRMQuery"/>
       </BasicPRM>
 
@@ -737,7 +736,6 @@
         inputMap="input.map" startAt="connecting">
         <Sampler method="UniformRandomFree" number="10" attempts="10"/>
         <Connector method="Closest"/>
-        <ComponentConnector method="ConnectCCs"/>
         <Evaluator method="NodesEval"/>
       </BasicPRM>
 

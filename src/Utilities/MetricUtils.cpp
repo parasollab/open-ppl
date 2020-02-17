@@ -201,6 +201,15 @@ AddToHistory(const std::string& _s, double _v) {
 
 void
 StatClass::
+WriteHistory(const std::string& _s) {
+  std::ofstream ofs(m_auxFileDest + "." + _s + ".hist");
+  for(const auto& item : m_histories[_s])
+    ofs << std::scientific << std::setprecision(16) << item << std::endl;
+}
+
+
+void
+StatClass::
 SetAuxDest(const std::string& _s) {
   m_auxFileDest = _s;
 }
@@ -313,11 +322,8 @@ PrintAllStats(std::ostream& _os) {
         << std::endl;
 
   // Write out history files.
-  for(const auto& hist : m_histories) {
-    std::ofstream ofs(m_auxFileDest + "." + hist.first + ".hist");
-    for(const auto& item : hist.second)
-      ofs << item << std::endl;
-  }
+  for(const auto& hist : m_histories)
+    WriteHistory(hist.first);
 }
 
 /*------------------------------- MethodTimer --------------------------------*/

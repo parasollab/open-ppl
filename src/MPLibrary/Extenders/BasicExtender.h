@@ -278,6 +278,12 @@ Expand(const CfgType& _start, const CfgType& _end, CfgType& _newCfg,
     // Full expansion. We have to adjust _newCfg to be equal to _end because
     // of accumulated floating-point error from the division in FindIncrement and
     // adding incr to tick.
+    /// @todo No, we don't *have* to set _newCfg to _end, and it would be better
+    ///       if we didn't use this assumption. We are doing this so that we
+    ///       can use extenders as local planners in multi-tree RRT methods. To
+    ///       fix and remove the assumption, we need to homogenize our extenders
+    ///       and local planners into a single class with methods for both uses
+    ///       (i.e. 'Extend' and 'LocalPlan').
     // We do not specifically collision check _end because previous is within a
     // resolution of _end (they are very, very close) and it was already checked.
     _newCfg = _end;
@@ -440,20 +446,18 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   if(ticker == nTicks + 1) {
     if(this->m_debug) {
       const GroupCfgType finalDiff = _end - tick;
-      std::cout << std::endl << "Successful expansion, setting _newCfg = _end."
-                << std::endl << "Final difference (_end - tick) = "
-                << finalDiff.PrettyPrint(4) << std::endl
-                << "Checking error between _end and tick..." << std::endl;
+      std::cout << "Successful expansion, setting _newCfg = _end."
+                << "\nFinal difference (_end - tick) = "
+                << finalDiff.PrettyPrint(4)
+                << std::endl;
 
       // Confirm tick is within resolution of _end:
-      if(!tick.WithinResolution(_end, _posRes, _oriRes)) {
-        const string output = "Error: debug test caught that the final cfg"
-            " of a full extension was more than a resolution off (greater than "
-            + std::to_string(_posRes) + " or " + std::to_string(_oriRes) +
-            ") from the desired end cfg. Check preceeding output for values.";
-        throw RunTimeException(WHERE, output);
-        std::cout << output << std::endl << std::endl;
-      }
+      if(!tick.WithinResolution(_end, _posRes, _oriRes))
+        throw RunTimeException(WHERE) << "The final cfg of a full extension "
+                                      << "was more than a resolution off "
+                                      << "(greater than "
+                                      << _posRes << " or " << _oriRes
+                                      << ") from the desired end cfg.";
     }
 
     // adjust _newCfg to be equal to _end because of minor float error that is

@@ -622,17 +622,19 @@ ITConnector::
 DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
 											std::vector<Cfg*> _cfgs) {
 	std::vector<size_t> vids;
+	std::unordered_set<size_t> vidSet;
 
 	for(auto cfg : _cfgs) {
 		if(cfg->GetRobot()->GetCapability() == _capability) {
 			auto vid = _graph->GetVID(*cfg);
-			if(vid != MAX_INT)
+			if(vid != MAX_INT) {
 				vids.push_back(vid);
+				vidSet.insert(vid);
+			}
 		}
 	}
 
 	auto cm = m_library->GetConnector("Closest");
 	cm->Connect(_graph, vids.begin(), vids.end(),
-										 vids.begin(), vids.end(),
-										false); 
+										 &vidSet); 
 }

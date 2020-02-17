@@ -1,7 +1,8 @@
-#ifndef METRIC_METHOD_H_
-#define METRIC_METHOD_H_
+#ifndef PMPL_METRIC_METHOD_H_
+#define PMPL_METRIC_METHOD_H_
 
 #include "Utilities/MPUtils.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref Metrics.

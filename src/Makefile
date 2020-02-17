@@ -102,7 +102,7 @@ endif
 # Dependency Tracking ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 DEPS_OUT = $(OBJ_DIR)/$*.d
-DEPS     = -MMD -MF $(DEPS_OUT)
+DEPS     = -MMD -MT $(OBJ_DIR)/$*.o -MF $(DEPS_OUT)
 
 DEPENDENCY_FILE := $(OBJ_DIR)/Dependencies
 -include $(DEPENDENCY_FILE)
@@ -133,10 +133,9 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # This recipe runs headers with Q_OBJECT through the qt MOC.
+#@mkdir -p $(MOC_DIR)/moc_$(shell dirname $<) #needed for MACOS support
 $(MOC_DIR)/moc_%.cpp: %.h | $(MOC_DIR)
 	@echo Moc\'ing $(shell echo $< | sed 's|.*/||' )...
-	#@mkdir -p $(MOC_DIR)/moc_$(shell dirname $<) #needed for MACOS support
-	@echo $(QT_MOC) $< -o $@
 	@$(QT_MOC) $< -o $@
 
 # This recipe is for MOC sources.
