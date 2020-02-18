@@ -1000,8 +1000,8 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
       if(m_boundaryCells.count(neighbor))
         continue;
 
-      updateInnerDistance(neighbor, 0);
-      visited.insert(neighbor);
+      //updateInnerDistance(neighbor, 0);
+      //visited.insert(neighbor);
       distance[neighbor] = 0;
       parent[neighbor]   = neighbor;
       pq.emplace(neighbor, 0);

@@ -67,12 +67,29 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
+    virtual size_t& GetK() noexcept override;
+
+    virtual double& GetRadius() noexcept override;
+
+    virtual void SetDMLabel(const std::string& _label) noexcept override;
+
+    virtual const std::string& GetDMLabel() const noexcept override;
+
     virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
         const VertexSet& _candidates, OutputIterator _out) override;
 
     virtual void FindNeighbors(GroupRoadmapType* const _r,
         const GroupCfgType& _cfg, const VertexSet& _candidates,
         OutputIterator _out) override;
+
+    ///@}
+    ///@name Parameter Interface
+    ///@{
+
+    /// Update the parameters based on the current roadmap state. This is
+    /// required when we need to check the parameter values prior to calling the
+    /// method, as in the TopologicalFilter.
+    void UpdateParameters(RoadmapType* const _r);
 
     ///@}
 
@@ -160,10 +177,16 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
       // can't compute the measure of cfree).
       const double volumeRatio = cfreeHyperVolume / unitBallHyperVolume;
 
+      // The optimal radius will depend on (lg x / x) where x is the size of the
+      // roadmap. This reaches its maximum at x = e, so we'll lower-bound the
+      // effective size at e to avoid numerical problems and sillyness with an
+      // expanding radius.
+      const double size = std::max<double>(std::exp(1), _r->Size());
+
       // Find the optimal radius.
       const double gamma = 2. * std::pow(1. + rd, rd) * std::pow(volumeRatio, rd);
       const double optimalR = gamma
-                            * std::pow(std::log(_r->Size()) / _r->Size(), rd);
+                            * std::pow(std::log(size) / size, rd);
       if(exLabel.empty())
         this->m_nf->GetRadius() = optimalR;
       else {
@@ -194,7 +217,8 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
       const size_t dimension = robot->GetCSpace()->GetDimension()
                              + (vspace ? vspace->GetDimension() : 0);
       const double k = e * (1. + 1. / dimension);
-      const size_t optimalK = std::ceil(k * std::log(_r->Size()));
+      // Force the size to be at least two to get a positive k-value.
+      const size_t optimalK = std::ceil(k * std::log(std::max<size_t>(_r->Size(), 2)));
       this->m_nf->GetK() = optimalK;
       if(this->m_debug)
         std::cout << "Finding closest neighbors with k = " << this->m_nf->GetK()
@@ -205,7 +229,7 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   else
     throw ParseException(_node.Where()) << "Unrecognized nfType. " << choices;
 
-  m_nf->SetDMLabel(this->GetDMLabel());
+  m_nf->SetDMLabel(this->m_dmLabel);
 }
 
 
@@ -224,6 +248,42 @@ Initialize() {
 }
 
 /*-------------------- NeighborhoodFinderMethod Interface --------------------*/
+
+template <typename MPTraits>
+inline
+size_t&
+OptimalNF<MPTraits>::
+GetK() noexcept {
+  return m_nf->GetK();
+}
+
+
+template <typename MPTraits>
+inline
+double&
+OptimalNF<MPTraits>::
+GetRadius() noexcept {
+  return m_nf->GetRadius();
+}
+
+
+template <typename MPTraits>
+inline
+void
+OptimalNF<MPTraits>::
+SetDMLabel(const std::string& _label) noexcept {
+  m_nf->SetDMLabel(_label);
+}
+
+
+template <typename MPTraits>
+inline
+const std::string&
+OptimalNF<MPTraits>::
+GetDMLabel() const noexcept {
+  return m_nf->GetDMLabel();
+}
+
 
 template <typename MPTraits>
 void
@@ -245,6 +305,15 @@ OptimalNF<MPTraits>::
 FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
   throw NotImplementedException(WHERE);
+}
+
+/*--------------------------- Parameter Interface ----------------------------*/
+
+template <typename MPTraits>
+void
+OptimalNF<MPTraits>::
+UpdateParameters(RoadmapType* const _r) {
+  m_setParameters(_r);
 }
 
 /*----------------------------------------------------------------------------*/

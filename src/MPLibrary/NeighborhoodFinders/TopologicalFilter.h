@@ -144,9 +144,12 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
 
     /// Get the SSSP data for a region, computing it if necessary.
     /// @param _region The region.
+    /// @param _r The roadmap (needed to set parameters for optimal NF).
     /// @return The SSSP data for _region.
+    /// @todo Figure out how to avoid needing _r to set optimal NF
+    ///       parameters here.
     SSSPOutput<WorkspaceDecomposition>& GetSSSPData(
-        const WorkspaceRegion* _region);
+        const WorkspaceRegion* _region, RoadmapType* const _r);
 
     /// Compute the frontier of occupied cells for a given body, starting from
     /// a designated cell.
@@ -412,7 +415,7 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
   }
 
   // Get the SSSP data for this cell.
-  const auto& ssspCache = GetSSSPData(rootRegion);
+  const auto& ssspCache = GetSSSPData(rootRegion, _r);
   const auto& ordering = ssspCache.ordering;
   const auto& distance = ssspCache.distance;
 
@@ -818,32 +821,45 @@ BuildQueryMap() {
 template <typename MPTraits>
 SSSPOutput<WorkspaceDecomposition>&
 TopologicalFilter<MPTraits>::
-GetSSSPData(const WorkspaceRegion* _region) {
+GetSSSPData(const WorkspaceRegion* _region, RoadmapType* const _r) {
+  // Check if we have the data cached.
   auto iter = m_ssspCache.find(_region);
   const bool cacheHit = iter != m_ssspCache.end();
+  if(this->m_debug) {
+    auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+    std::cout << "\t\tSSSP cache for region "
+              << tm->GetDecomposition()->GetDescriptor(*_region) << " is "
+              << (cacheHit ? "hot" : "cold") << "."
+              << std::endl;
+  }
 
   this->GetStatClass()->GetAverage(this->GetNameAndLabel() + "::CacheHitRate")
       += cacheHit;
 
+  // Return prior computation if cached.
   if(cacheHit)
     return iter->second;
 
-  // Compute the distance map for this region if it is not cached.
-  auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-  if(this->m_debug)
-    std::cout << "\t\tSSSP cache for region "
-              << tm->GetDecomposition()->GetDescriptor(*_region) << " is cold."
-              << std::endl;
+  // Ensure the parameters are set correctly for OptimalNF since we will grab
+  // the radius in a moment.
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto optimalNF = dynamic_cast<OptimalNF<MPTraits>*>(nf);
+  if(optimalNF) {
+    optimalNF->UpdateParameters(_r);
+    if(this->m_debug)
+      std::cout << "Radius: " << nf->GetRadius()
+                << "\nfactor: " << m_factor
+                << std::endl;
+  }
 
-  // Do the entire search for now. We will worry about pruning it later.
-  // With no early-stop condition, the body index doesn't matter.
+  // Compute the distance map for this region. Do the entire search for now. We
+  // will worry about pruning it later. With no early-stop condition, the body
+  // index doesn't matter.
   /// @todo This fails to leverage a major advantage of the filter in large
   ///       workspaces, which is that we should only need to search until
   ///       discovering the frontier plust backtrack distance. If the frontier
   ///       is close and the decomposition is large, this wastes a lot of
   ///       effort.
-  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-
   auto& ssspCache = m_ssspCache[_region];
   if(m_approximateFrontier)
     ssspCache = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS

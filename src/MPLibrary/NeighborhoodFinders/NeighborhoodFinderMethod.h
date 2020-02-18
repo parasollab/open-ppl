@@ -84,10 +84,10 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     Type GetType() const noexcept;
 
     /// @return Number of closest neighbors to find
-    size_t& GetK() noexcept;
+    virtual size_t& GetK() noexcept;
 
     /// @return Distance of farthest potential neighbor
-    double& GetRadius() noexcept;
+    virtual double& GetRadius() noexcept;
 
     /// Set the distance metric label.
     /// @param _label The new DM label to use.
