@@ -638,7 +638,7 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
     case NeighborhoodFinderMethod<MPTraits>::Type::RADIUS:
     {
       size_t count = 0;
-      const size_t maxCount = 2;
+      const size_t maxCount = 1;
       for(auto iter = countSets.rbegin();
           iter != countSets.rend() and count < maxCount;
           ++iter) {
