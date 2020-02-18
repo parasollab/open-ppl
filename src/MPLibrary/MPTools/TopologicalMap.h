@@ -58,8 +58,6 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     typedef typename RoadmapType::VID                 VID;
     typedef typename RoadmapType::VI                  VI;
     typedef typename RoadmapType::VertexSet           VertexSet;
-    typedef WorkspaceDecomposition::vertex_descriptor VD;
-    typedef WorkspaceDecomposition::adj_edge_iterator EI;
 
     ///@}
     ///@name Local Types
@@ -67,9 +65,8 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
 
     typedef std::vector<const WorkspaceRegion*>      NeighborhoodKey;
 
-    /// A pair of regions, which act as a hash key when caching the inter-region
-    /// distances.
-    typedef std::pair<const WorkspaceRegion*, const WorkspaceRegion*> RegionPair;
+    /// A map describing the distance to a region from some starting point.
+    typedef std::unordered_map<const WorkspaceRegion*, double> DistanceMap;
 
     /// A map of the VIDs occupying a given region.
     typedef std::map<const WorkspaceRegion*, VertexSet> OccupancyMap;
@@ -218,7 +215,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     /// out to a given radius.
     /// @param _source The source cell.
     /// @param _radius Compute inner distances for cells within this radius.
-    void ComputeApproximateMinimumInnerDistances(
+    const DistanceMap& ComputeApproximateMinimumInnerDistances(
         const WorkspaceRegion* const _source, const double _radius);
 
     ///@}
@@ -256,19 +253,6 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
         const;
 
     ///@}
-    ///@name Distance Caching
-    ///@{
-
-    /// Make a map key from two region pointers. The lower-address region will
-    /// always go first to compress the key space.
-    /// @param _r1 The first region.
-    /// @param _r2 The second region.
-    /// @return A key pair for {_r1,  _r2} which is identical to the key pair
-    ///         for {_r2, _r1}.
-    RegionPair MakeKey(const WorkspaceRegion* const _r1,
-        const WorkspaceRegion* const _r2) const noexcept;
-
-    ///@}
     ///@name Internal State
     ///@{
 
@@ -295,7 +279,7 @@ class TopologicalMap final : public MPBaseObject<MPTraits> {
     std::unordered_set<size_t> m_boundaryCells;
 
     /// A cache for approximate inner-distance between regions.
-    std::unordered_map<RegionPair, double> m_innerDistanceMap;
+    std::unordered_map<const WorkspaceRegion*, DistanceMap> m_innerDistanceMap;
 
     ///@}
 
@@ -853,18 +837,6 @@ GetInverseMap(RoadmapType* const _r, const VID _vid) const {
   }
 }
 
-/*----------------------------- Distance Caching -----------------------------*/
-
-template <typename MPTraits>
-inline
-typename TopologicalMap<MPTraits>::RegionPair
-TopologicalMap<MPTraits>::
-MakeKey(const WorkspaceRegion* const _r1, const WorkspaceRegion* const _r2)
-    const noexcept {
-  return {std::min(_r1, _r2),
-          std::max(_r1, _r2)};
-}
-
 /*--------------------------- Inter-Region Distance --------------------------*/
 
 template <typename MPTraits>
@@ -879,19 +851,24 @@ ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
   if(_source == _target)
     return 0;
 
-  // Next check if we've alreay cached this inner distance.
-  const RegionPair key = MakeKey(_source, _target);
-  auto iter = m_innerDistanceMap.find(key);
-  const bool cached = iter != m_innerDistanceMap.end();
+  // Next check if we've alreay cached inner distances from this source.
+  auto sourceIter = m_innerDistanceMap.find(_source);
+  const bool sourceCached = sourceIter != m_innerDistanceMap.end();
+  if(!sourceCached)
+    return std::numeric_limits<double>::infinity();
 
-  return cached
-       ? iter->second
+  // Next look for the target entry in the source map.
+  const auto& sourceMap = sourceIter->second;
+  auto targetIter = sourceMap.find(_target);
+  const bool targetCached = targetIter != sourceMap.end();
+  return targetCached
+       ? targetIter->second
        : std::numeric_limits<double>::infinity();
 }
 
 
 template <typename MPTraits>
-void
+const typename TopologicalMap<MPTraits>::DistanceMap&
 TopologicalMap<MPTraits>::
 ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
     const double _radius) {
@@ -900,37 +877,41 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
   ///       represents an implicit graph) an API that is compatible with the
   ///       STAPL (explicit) graph.
 
+  DistanceMap* distanceMap{nullptr};
+
   // Check if we've already computed for this source.
   {
-    const RegionPair key = MakeKey(_source, nullptr);
-    auto iter = m_innerDistanceMap.find(key);
+    auto iter = m_innerDistanceMap.find(_source);
     const bool alreadyComputed = iter != m_innerDistanceMap.end();
 
     // If we already computed this cell, don't do it again unless the radius is
     // bigger.
     if(alreadyComputed) {
-      const double lastRadius = iter->second;
+      distanceMap = &iter->second;
+      const double lastRadius = distanceMap->at(nullptr);
       if(lastRadius > _radius)
-        return;
+        return *distanceMap;
     }
 
-    // Set the computed radius.
-    m_innerDistanceMap[key] = _radius;
+    // We haven't computed this distance map to the necessary radius. (Re)compute
+    // with this radius.
+    distanceMap = &m_innerDistanceMap[_source];
+    (*distanceMap)[nullptr] = _radius;
   }
 
   // Define a function for updating the minimum inner distance to the regions
   // touching a given cell.
-  auto updateInnerDistance = [_source, this](const size_t _cell,
-                                             const double _distance) {
+  auto updateInnerDistance = [_source, this, distanceMap](const size_t _cell,
+                                                          const double _distance)
+  {
     // Find all regions touching the cell.
     const auto& regions = this->m_cellToRegions[_cell];
 
     // Set the distance if it isn't already set.
     for(const WorkspaceRegion* const region : regions) {
-      const RegionPair key = MakeKey(_source, region);
-      if(this->m_innerDistanceMap.count(key))
+      if(distanceMap->count(region))
         continue;
-      this->m_innerDistanceMap[key] = _distance;
+      distanceMap->emplace(region, _distance);
     }
   };
 
@@ -1046,12 +1027,9 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
       continue;
     visited.insert(current.cell);
 
-    // Update the inner distance map for all regions touched by this cell.
-    updateInnerDistance(current.cell, current.distance);
-
     // Check for early termination.
     const bool stop = current.distance > _radius;
-#if 1
+#if 0
     // This part is for debugging the search over the grid.
     std::cout << "\tVertex: " << current.cell
               << ", parent: " << parent[current.cell]
@@ -1061,6 +1039,9 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
 #endif
     if(stop)
       break;
+
+    // Update the inner distance map for all regions touched by this cell.
+    updateInnerDistance(current.cell, current.distance);
 
     // Relax each outgoing edge.
     const std::unordered_set<size_t> neighbors = m_grid->LocateFacetNeighbors(
@@ -1127,6 +1108,7 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
   }
 #endif
 #endif
+  return *distanceMap;
 }
 
 /*----------------------------------------------------------------------------*/

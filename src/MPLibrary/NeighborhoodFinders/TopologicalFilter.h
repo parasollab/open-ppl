@@ -6,6 +6,7 @@
 #include "Geometry/Bodies/Connection.h"
 #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
 
+#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -475,15 +476,13 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
               << std::setprecision(4) << distance.at(*markers.first) << "."
               << std::endl;
 
-  // If the underlying NF is radius, we currently need the whole set (might
-  // change if we adjust the SSSP computation).
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  if(nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS)
-    return markers;
+  const bool radiusNF = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS;
 
   // Compute the max distance between the first and second marker.
-  const double maxDistance = distance.at(*markers.first)
-                           + m_backtrackDistance;
+  const double maxDistance = radiusNF
+                           ? nf->GetRadius() * std::sqrt(3)
+                           : distance.at(*markers.first) + m_backtrackDistance;
 
   if(this->m_debug)
     std::cout << "\t\t\tSearching for new last cell with max distance "
@@ -584,7 +583,7 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
       for(const VID vid : *vids) {
         // If there are input candidates and this VID isn't in there, don't
         // count this candidate.
-        if(_inputCandidates.count(vid))
+        if(!_inputCandidates.empty() and !_inputCandidates.count(vid))
           continue;
         ++candidateCount;
 
@@ -873,6 +872,23 @@ GetSSSPData(const WorkspaceRegion* _region, RoadmapType* const _r) {
   ssspCache.parent.clear();
   ssspCache.successors.clear();
 
+  // Check that the output is correct.
+  if(this->m_debug) {
+    std::cout << "Verifying ordering:" << std::endl;
+    for(size_t i = 1; i < ssspCache.ordering.size(); ++i) {
+      const VID previous = ssspCache.ordering[i - 1],
+                current  = ssspCache.ordering[i];
+      if(ssspCache.distance[previous] > ssspCache.distance[current]) {
+        RunTimeException e(WHERE);
+        e << "Ordering isn't correct." << std::endl;
+        for(const VID vid : ssspCache.ordering)
+          e << "\t" << vid << "\t" << ssspCache.distance[vid] << std::endl;
+        throw e;
+      }
+    }
+    std::cout << "\tOK" << std::endl;
+  }
+
   return ssspCache;
 }
 
@@ -905,40 +921,39 @@ ComputeFrontierRadius(const WorkspaceRegion* const _region,
               << "\n\tManhattan Radius: " << radius
               << std::endl;
 
-  // Get the descriptor of the root node.
-  const VD root = wd->GetDescriptor(*_region);
-
   // Compute the approximate inner distances to each region within the radius.
-  tm->ComputeApproximateMinimumInnerDistances(_region, radius);
+  const auto& distances = tm->ComputeApproximateMinimumInnerDistances(_region, radius);
 
-  // Create a weight function which uses the approx min inner distance, measured
-  // from the root region (not the source region - that would be zero in all
-  // cases since the source and target are adjacent).
-  SSSPPathWeightFunction<WorkspaceDecomposition> weight = [wd, _region, tm](
-      typename WorkspaceDecomposition::adj_edge_iterator& _ei,
-      const double _sourceDistance,
-      const double _targetDistance)
-  {
-    const WorkspaceRegion* const target = &wd->GetRegion(_ei->target());
+  // Make an SSSP data out of the distance map. Do this by iterating over the WD
+  // to avoid an n^2 algorithm.
+  SSSPData data;
+  for(auto iter = wd->begin(); iter != wd->end(); ++iter) {
+    const WorkspaceRegion* r = &iter->property();
 
-    return tm->ApproximateMinimumInnerDistance(_region, target);
-  };
+    // Skip regions which aren't in the returned distance map.
+    if(!distances.count(r))
+      continue;
 
-  // Create an early stop criterion to terminate the search after we exceed the
-  // radius.
-  SSSPTerminationCriterion<WorkspaceDecomposition> stop = [radius](
-      typename WorkspaceDecomposition::vertex_iterator& _vi,
-      const SSSPOutput<WorkspaceDecomposition>& _sssp)
-  {
-    const WorkspaceDecomposition::vertex_descriptor vd = _vi->descriptor();
-    const double distance = _sssp.distance.at(vd);
+    const VD d = iter->descriptor();
+    data.ordering.push_back(d);
+    data.distance.emplace(d, distances.at(r));
+  }
 
-    return distance > radius
-         ? SSSPTermination::EndSearch
-         : SSSPTermination::Continue;
-  };
+  // Assert the map is the right size. Add one for the null region which
+  // describes the radius.
+  if(data.ordering.size() + 1 != distances.size())
+    throw RunTimeException(WHERE) << "Distance map is the wrong size ("
+                                  << data.ordering.size() << " vs. expected "
+                                  << distances.size() << ").";
 
-  return DijkstraSSSP(wd, {root}, weight, stop, m_queryMap);
+  // Sort the ordering based on distance.
+  std::sort(data.ordering.begin(), data.ordering.end(),
+      [&data](const VD _a, const VD _b) {
+        return data.distance.at(_a) < data.distance.at(_b);
+      }
+  );
+
+  return data;
 }
 
 
