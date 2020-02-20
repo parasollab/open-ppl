@@ -136,6 +136,10 @@ UniformMedialAxisSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
 
+  if(!m_clearanceUtility.IsInitialized()) {
+    m_clearanceUtility.SetMPLibrary(this->GetMPLibrary());
+    m_clearanceUtility.Initialize();
+  }
   Environment* env = this->GetEnvironment();
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
@@ -522,8 +526,15 @@ BinarySearch(const Boundary* const _boundary,
       env->GetPositionRes(), env->GetOrientationRes());
 
   while(nTicks > 1) {
+
     //compute midpoint
     CfgType mid = (left + right) / 2;
+    Vector3d leftPosition = Vector3d(left.GetPosition()[0], left.GetPosition()[1], left.GetPosition()[2]);
+    Vector3d rightPosition = Vector3d(right.GetPosition()[0], right.GetPosition()[1], right.GetPosition()[2]);
+
+    if((rightPosition - leftPosition).norm() < 0.000001) {
+      break;
+    }
 
     //grab witness id
     CfgType tmp(robot);
@@ -588,6 +599,7 @@ BinarySearch(const Boundary* const _boundary,
   }
 
   //keep witness with higher clearance
+
   if(left.m_clearanceInfo.m_minDist > 0 || right.m_clearanceInfo.m_minDist > 0) {
     CfgType& higher = left.m_clearanceInfo.m_minDist >
       right.m_clearanceInfo.m_minDist ? left : right;
