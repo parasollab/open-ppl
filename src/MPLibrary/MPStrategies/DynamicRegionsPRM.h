@@ -698,8 +698,8 @@ AddQuery() {
   // Do nothing if we have no query.
   auto goalTracker = this->GetGoalTracker();
   const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
-  if(goalTracker->GetStartVIDs().empty())
-    return;
+  //if(goalTracker->GetStartVIDs().empty())
+    //return;
 
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::AddQuery");
@@ -1904,7 +1904,7 @@ GetRegionRadius(const Vector3d& _v) {
 
   const double clearance = GetClearance(_v),
                robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->GetBody(0)->
-                             GetBoundingSphereRadius();
+                             GetInsideSphereRadius() / 2;
   return 1.2 * (clearance - robotRadius);
 }
 
