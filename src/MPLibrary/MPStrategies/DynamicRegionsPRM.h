@@ -266,7 +266,7 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// Get the expansion region for a local component.
     /// @param _d The descriptor for the local component.
     /// @return The expansion region for this component.
-    ExpansionRegion& GetExpansionRegion(const LocalComponentDescriptor& _d)
+    ExpansionRegion* GetExpansionRegion(const LocalComponentDescriptor& _d)
         noexcept;
 
     /// Get a bridge's vertex set.
@@ -1247,11 +1247,17 @@ GetLocalComponent(const LocalComponentDescriptor& _d) noexcept {
 
 
 template <typename MPTraits>
-typename DynamicRegionsPRM<MPTraits>::ExpansionRegion&
+typename DynamicRegionsPRM<MPTraits>::ExpansionRegion*
 DynamicRegionsPRM<MPTraits>::
 GetExpansionRegion(const LocalComponentDescriptor& _d) noexcept {
+  // If this edge has low clearance, we may not have a region for this
+  // component.
+  const bool lowClearance = m_lowClearanceMap.count(_d.edgeDescriptor.id());
+  if(lowClearance and !m_regions.at(_d.edgeDescriptor).count(_d.representative))
+    return nullptr;
+
   try {
-    return m_regions.at(_d.edgeDescriptor).at(_d.representative);
+    return &m_regions.at(_d.edgeDescriptor).at(_d.representative);
   }
   catch(const std::out_of_range&) {
     throw RunTimeException(WHERE) << "Expansion region for component " << _d
@@ -1399,9 +1405,13 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
 
       // The components are from the same side. Find which component's region is
       // further along and keep that one.
-      const ExpansionRegion& r1 = GetExpansionRegion(_d1),
-                           & r2 = GetExpansionRegion(_d2);
-      const bool saveR1 = r1.edgeIndex > r2.edgeIndex;
+      const ExpansionRegion* r1 = GetExpansionRegion(_d1),
+                           * r2 = GetExpansionRegion(_d2);
+      // We may get null regions if the component is on a low-clearance edge. In
+      // that case, we'll save the component with no region because the other
+      // one will eventually hit the low-clearance point.
+      const bool saveR1 = (r1 and r2 and r1->edgeIndex > r2->edgeIndex)
+                       or (!r1 and r2);
       return saveR1 ? sameSideMerge(_d1, _d2)
                     : sameSideMerge(_d2, _d1);
     }
