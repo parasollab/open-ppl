@@ -387,9 +387,9 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// favors successful regions.
     double m_explore{.5};
 
-    /// Optional hard radius for regions. 0 indicates the use of clearance-based
-    /// size.
-    double m_regionRadius{0.};
+    /// Optional minimum radius for regions. -1 indicates no limit, allowing
+    /// low-clearance regions to be pruned.
+    double m_minRegionRadius{-1};
 
     ///@}
     ///@name Hacked Shared State
@@ -491,9 +491,11 @@ DynamicRegionsPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
       "Preference for exploring vs. exploiting successful regions. "
       "1 indicates pure explore, 0 indicates pure exploit.");
 
-  m_regionRadius = _node.Read("regionRadius", false, m_regionRadius,
-      0., std::numeric_limits<double>::max(), "Optional hard radius for "
-      "regions. If 0 or not specified, clearance-based sizing will be used.");
+  m_minRegionRadius = _node.Read("minRegionRadius", false, m_minRegionRadius,
+      0., std::numeric_limits<double>::max(), "Optional minimum radius for "
+      "regions. Leaving it unset indicates no limit, allowing low-clearance "
+      "regions to be pruned. This likely will not work well without either "
+      "a high-clearance environment or a medial axis skeleton.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -1909,13 +1911,10 @@ GetRegionRadius(const Vector3d& _v) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::GetRegionRadius");
 
-  if(m_regionRadius != 0.)
-    return m_regionRadius;
-
   const double clearance = GetClearance(_v),
                robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->GetBody(0)->
                              GetInsideSphereRadius() / 2;
-  return 1.2 * (clearance - robotRadius);
+  return std::max(1.2 * (clearance - robotRadius), m_minRegionRadius);
 }
 
 
