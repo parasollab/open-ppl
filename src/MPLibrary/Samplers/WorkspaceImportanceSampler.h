@@ -6,10 +6,10 @@
 #include "MPLibrary/MPTools/TetGenDecomposition.h"
 #include "Workspace/WorkspaceDecomposition.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief Workspace Importance Sampling uses a tetrahedralization to bias
-///        sampling towards narrow passages of the workspace.
+/// Workspace Importance Sampling uses a tetrahedralization to bias sampling
+/// towards narrow passages of the workspace.
 ///
 /// Workspace Importance Sampling defines an importance value over each
 /// tetrahedron of a tetrahedralization. From the importance value, a number of
@@ -18,9 +18,11 @@
 /// to yield a successful configuration in the configuration space.
 ///
 /// From:
-/// Hanna Kurniawati and David Hsu, "Workspace Importance Sampling for
-/// Probabilistic Roadmap Planners," In Proc. of the Int. Conf. on Intelligent
-/// Robots and Systems (IROS), Sendai, Japan, pp. 1618-1623, Sept 2004.
+///   Hanna Kurniawati and David Hsu, "Workspace Importance Sampling for
+///   Probabilistic Roadmap Planners," In Proc. of the Int. Conf. on Intelligent
+///   Robots and Systems (IROS), Sendai, Japan, pp. 1618-1623, Sept 2004.
+///
+/// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
 class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
@@ -56,7 +58,8 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     ///@{
 
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) override;
+        std::vector<CfgType>& _result, std::vector<CfgType>& _collision)
+        override;
 
     ///@}
 
@@ -76,24 +79,14 @@ class WorkspaceImportanceSampler : public SamplerMethod<MPTraits> {
     /// Compute the importance of a given tetrahedron.
     double ComputeTetrahedronImportance(const size_t _i) const;
 
-    /// Get a random point within the tetrahedron defined by four points.
-    /// @param _base The base of the tetrahedron in absolute coordinates.
-    /// @param _p1   Another point, relative to _base.
-    /// @param _p2   Another point, relative to _base.
-    /// @param _p3   Another point, relative to _base.
-    /// @return A point inside the tetrahedron defined by {_base, _base + _p1,
-    ///         _base + _p2, _base + _p3}.
-    const Point3d RandomPointInTetrahedron(const Point3d& _base,
-        const Point3d& _p1, const Point3d& _p2, const Point3d& _p3) const;
-
     ///@}
     ///@name Internal State
     ///@{
 
-    std::string m_vcLabel{"pqp_solid"}; ///< Validity checker label.
+    std::string m_vcLabel;              ///< Validity checker label.
     std::string m_decompositionLabel;   ///< The workspace decomposition label.
 
-    vector<size_t> m_numAttempts;  ///< Number of attempts per tetrahedron
+    std::vector<size_t> m_numAttempts;  ///< Number of attempts per tetrahedron
 
     /// The "eagerness in obtaining one milestone for each tetrahedron".
     double m_alpha{.2};
@@ -118,7 +111,7 @@ WorkspaceImportanceSampler(XMLNode& _node) :
     SamplerMethod<MPTraits>(_node) {
   this->SetName("WorkspaceImportanceSampler");
 
-  m_vcLabel = _node.Read("vcLabel", false, m_vcLabel, "Validity Test Method");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
 
   m_decompositionLabel = _node.Read("decompositionLabel", true, "",
       "The workspace decomposition to use.");
@@ -152,44 +145,36 @@ template <typename MPTraits>
 bool
 WorkspaceImportanceSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
+    std::vector<CfgType>& _result, std::vector<CfgType>& _collision) {
   if(!m_initialized)
     InitDecomposition();
 
-  string callee(this->GetNameAndLabel() + "::SampleImpl()");
-  Environment* env = this->GetEnvironment();
-  auto tetrahedralization = this->GetMPTools()->
-      GetDecomposition(m_decompositionLabel);
+  const std::string callee(this->GetNameAndLabel() + "::SampleImpl()");
+  Environment* const env = this->GetEnvironment();
+  auto wd = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
   auto vc = this->GetValidityChecker(m_vcLabel);
 
   // Pick a tetrahedron with uniform random probability.
-  size_t t = LRand() % tetrahedralization->GetNumRegions();
-  const auto& tetra = tetrahedralization->GetRegion(t);
+  size_t t = LRand() % wd->GetNumRegions();
+  const Boundary* const tetra = wd->GetRegion(t).GetBoundary();
 
-  // Get relative coordinates.
-  const Vector3d& o = tetra.GetPoint(0);
-  const Vector3d a = tetra.GetPoint(1) - o;
-  const Vector3d b = tetra.GetPoint(2) - o;
-  const Vector3d c = tetra.GetPoint(3) - o;
-
-  // Try to generate a sample inside the tetrahedron.
   for(size_t i = 0; i < m_numAttempts[t]; ++i) {
+    // Generate a sample inside the tetrahedron.
     CfgType cfg(this->GetTask()->GetRobot());
-    cfg.GetRandomCfg(this->GetEnvironment());
+    cfg.GetRandomCfg(env);
 
-    const Point3d p = RandomPointInTetrahedron(o, a, b, c);
-    for(size_t j = 0; j < cfg.PosDOF(); ++j)
-      cfg[j] = p[j];
+    // Set the positional DOFs to a random point in the tetra.
+    const std::vector<double> p = tetra->GetRandomPoint();
+    for(size_t i = 0; i < cfg.PosDOF() and i < p.size(); ++i)
+      cfg[i] = p[i];
 
     // Check if the new configuration is valid.
-    if(cfg.InBounds(env)) {
-      if(vc->IsValid(cfg, callee)) {
-        _result.push_back(cfg);
-        return true;
-      }
-      else
-        _collision.push_back(cfg);
+    if(cfg.InBounds(env) and vc->IsValid(cfg, callee)) {
+      _result.push_back(cfg);
+      return true;
     }
+    else
+      _collision.push_back(cfg);
   }
   return false;
 }
@@ -201,13 +186,12 @@ void
 WorkspaceImportanceSampler<MPTraits>::
 InitDecomposition() {
   // Get the tetrahedralization.
-  auto tetrahedralization = this->GetMPTools()->
-      GetDecomposition(m_decompositionLabel);
+  auto wd = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
 
   // Compute tetrahedron importance values.
-  const size_t numTetras = tetrahedralization->GetNumRegions();
+  const size_t numTetras = wd->GetNumRegions();
   double totalImportance = 0;
-  vector<double> importances(numTetras);
+  std::vector<double> importances(numTetras);
   for(size_t i = 0; i < numTetras; ++i)
     totalImportance += importances[i] = ComputeTetrahedronImportance(i);
 
@@ -234,8 +218,7 @@ ComputeTetrahedronHeight(const WorkspaceRegion& _tetra,
 
     // Look for this point in the facet.
     bool pointOnFacet = false;
-    size_t index = 0;
-    for(; index < 3; ++index) {
+    for(size_t index = 0; index < 3; ++index) {
       if(p == _f.GetPoint(index)) {
         pointOnFacet = true;
         break;
@@ -244,15 +227,15 @@ ComputeTetrahedronHeight(const WorkspaceRegion& _tetra,
 
     // If we didn't find p on this facet, then use p to find the height.
     if(!pointOnFacet) {
-      height = (_f.GetPoint(index) - p) * _f.GetNormal();
+      height = (_f.GetPoint(0) - p) * _f.GetNormal();
       break;
     }
   }
 
   // Ensure this height makes sense.
   if(height <= 0)
-    throw PMPLException("Tetrahedralization error", WHERE, "Can't have a "
-        "tetrahedron with non-positive height " + to_string(height) + ".");
+    throw RunTimeException(WHERE) << "Can't have a tetrahedron with "
+                                  << "non-positive height " << height << ".";
 
   return height;
 }
@@ -271,17 +254,16 @@ ComputeTetrahedronImportance(const size_t _i) const {
   // using that facet as the base.
 
   // Find number of neighbors.
-  auto tetrahedralization = this->GetMPTools()->
-      GetDecomposition(m_decompositionLabel);
-  auto iter = tetrahedralization->find_vertex(_i);
+  auto wd = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
+  auto iter = wd->find_vertex(_i);
   size_t numNeighbors = iter->size();
   if(numNeighbors > 4)
-    throw PMPLException("Tetrahedralization error", WHERE, "Can't have more than"
-        " four neighbors in a tetrahedral region graph.");
+    throw RunTimeException(WHERE) << "Can't have more than four neighbors in a "
+                                  << "tetrahedral decomposition graph.";
 
   // Initialize all facets as relevant to the importance calculation.
   const auto& tetra = iter->property();
-  vector<const WorkspaceRegion::Facet*> importanceFacets;
+  std::vector<const WorkspaceRegion::Facet*> importanceFacets;
   for(const auto& f : tetra.GetFacets())
     importanceFacets.push_back(&f);
 
@@ -295,10 +277,11 @@ ComputeTetrahedronImportance(const size_t _i) const {
 
       // Ensure we only have one facet in this portal as expected.
       if(portalFacets.size() != 1)
-        throw PMPLException("Tetrahedralization error", WHERE, "Each portal "
-            "must have exactly one shared facet, but detected " +
-            to_string(portalFacets.size()) + " shared facets between adjacent "
-            "regions.");
+        throw RunTimeException(WHERE) << "Each portal must have exactly one "
+                                      << "shared facet, but detected "
+                                      << portalFacets.size()
+                                      << " shared facets between adjacent "
+                                      << "regions.";
 
       // Find the shared facet in the boundary facet list.
       auto fIter = find(importanceFacets.begin(), importanceFacets.end(),
@@ -306,8 +289,9 @@ ComputeTetrahedronImportance(const size_t _i) const {
 
       // Ensure we found a real facet.
       if(fIter == importanceFacets.end())
-        throw PMPLException("Tetrahedralization error", WHERE, "The neighboring "
-            "facets of a tetrahedron must be present in its facet list.");
+        throw RunTimeException(WHERE) << "The neighboring facets of a "
+                                      << "tetrahedron must be present in its "
+                                      << "facet list.";
 
       // Remove this facet from the set of boundary facets.
       importanceFacets.erase(fIter);
@@ -319,47 +303,6 @@ ComputeTetrahedronImportance(const size_t _i) const {
   for(const auto& f : importanceFacets)
     importance += ComputeTetrahedronHeight(tetra, *f);
   return importance /= numNeighbors;
-}
-
-
-template <typename MPTraits>
-const Point3d
-WorkspaceImportanceSampler<MPTraits>::
-RandomPointInTetrahedron(const Point3d& _base, const Point3d& _p1,
-    const Point3d& _p2, const Point3d& _p3) const {
-  // From:
-  //   C. Rocchini and P. Cignoni, "Generating Random Points in a Tetrahedron,"
-  //       Journal of Graphics Tools, 2001.
-
-  // Pick a point in unit cube.
-  double s = DRand();
-  double t = DRand();
-  double u = DRand();
-
-  // Cut cube in half with plane s + t = 1.
-  if(s + t > 1) {
-    s = 1 - s;
-    t = 1 - t;
-  }
-
-  // Cut cube with planes t + u = 1 and s + t + u = 1.
-  if(s + t + u > 1) {
-    if(t + u > 1) {
-      double ttmp = 1 - u;
-      double utmp = 1 - s - t;
-      swap(t, ttmp);
-      swap(u, utmp);
-    }
-    else {
-      double stmp = 1 - t - u;
-      double utmp = s + t + u - 1;
-      swap(s, stmp);
-      swap(u, utmp);
-    }
-  }
-
-  // Determine random point in tetrahedron.
-  return _base + _p1 * s + _p2 * t + _p3 * u;
 }
 
 /*----------------------------------------------------------------------------*/
