@@ -179,13 +179,24 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
       }
     };
 
+    /// Ordering operator for stapl edge descriptors for bridges. Only cares
+    /// about the edge ID.
+    struct EdgeIDCompare {
+      bool
+      operator()(const SkeletonEdgeDescriptor& _d1,
+          const SkeletonEdgeDescriptor& _d2) const noexcept {
+        return _d1.id() < _d2.id();
+      }
+    };
+
     /// Map for local connected components. Maps skeleton edge to representative
     /// to vids.
     typedef std::map<SkeletonEdgeDescriptor, std::map<VID, VertexSet>, EdgeCompare>
         LocalConnectivityMap;
 
     /// Bridges are non-directional and tied to edge IDs.
-    typedef std::map<size_t, std::map<VID, VertexSet>> BridgeMap;
+    typedef std::map<SkeletonEdgeDescriptor, std::map<VID, VertexSet>, EdgeIDCompare>
+        BridgeMap;
 
     /// Map for regions.
     typedef std::map<SkeletonEdgeDescriptor, std::map<VID, ExpansionRegion>, EdgeCompare>
@@ -273,6 +284,10 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// @param _d The descriptor for the bridge.
     /// @return The set of VIDs in this bridge.
     VertexSet& GetBridge(const LocalComponentDescriptor& _d) noexcept;
+
+    /// Get the local component descriptor for a vertex.
+    /// @warning This is a linear scan over all local CCs, use very sparingly.
+    LocalComponentDescriptor FindLocalComponent(const VID _vid) const noexcept;
 
     /// Promote a local connected component to a bridge.
     /// @param _d The descriptor for the local component.
@@ -730,13 +745,19 @@ AddQuery() {
       if(!success)
         continue;
       connected = true;
+      if(this->m_debug)
+        std::cout << "\tConnected to " << n.target << "."
+                  << std::endl;
 
       // Add the edges to the roadmap.
       r->AddEdge(vid, n.target, lp.m_edge);
 
-      /// @todo Find n.target's local component and add vid to it. I'm skipping
-      ///       this for now because I have no obvious efficient way to do it
-      ///       and it will hardly affect planning at all.
+      // Find n.target's local component and add vid to it.
+      const LocalComponentDescriptor d = FindLocalComponent(n.target);
+      VertexSet& vids = d.bridge
+                      ? GetBridge(d)
+                      : GetLocalComponent(d);
+      vids.insert(vid);
     }
 
     // If we connected, all is well. Move on to the next one.
@@ -838,7 +859,7 @@ GrowRRT(const VID _q) {
     // Try to connect newVID to the pre-RRT roadmap.
     const std::vector<Neighbor> mapNeighbors = FindNearestNeighbors(
         r->GetVertex(newVID), &roadmapVIDs);
-    bool connected = false;
+    VID connectedTo = INVALID_VID;
     for(const Neighbor& n : mapNeighbors) {
       // Try connection.
       const bool success = AttemptConnection(r->GetVertex(newVID),
@@ -847,21 +868,36 @@ GrowRRT(const VID _q) {
       if(!success)
         continue;
 
-      connected = true;
+      connectedTo = n.target;
       if(this->m_debug)
         std::cout << "\tConnected to " << n.target << "."
                   << std::endl;
+      /// @todo We may connect multiple times, but we're only adding the tree to
+      ///       one local component...
 
       // Add edge.
       r->AddEdge(newVID, n.target, lp.m_edge);
     }
 
     // If we connected, we're good to go.
-    /// @todo Figure out what local component we connected to and add this tree
-    ///       to it.
+    const bool connected = connectedTo != INVALID_VID;
     if(connected) {
       if(this->m_debug)
-        std::cout << "\tEnding RRT because we connected to the roadmap."
+        std::cout << "\tEnding RRT because we connected to the roadmap at "
+                  << connectedTo << "."
+                  << std::endl;
+
+      // Figure out what local component we connected to and add this tree
+      // to it.
+      const LocalComponentDescriptor d = FindLocalComponent(connectedTo);
+      const VertexSet* treeCC = ccTracker->GetCC(newVID);
+      VertexSet& vids = d.bridge
+                      ? GetBridge(d)
+                      : GetLocalComponent(d);
+      vids.insert(treeCC->begin(), treeCC->end());
+
+      if(this->m_debug)
+        std::cout << "\t\tMerged with local component " << d << "."
                   << std::endl;
       return;
     }
@@ -1032,7 +1068,7 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
                 << " " << repAndVIDs.second;
 
     std::cout << "\n\tBridge components:";
-    const auto& bridge = m_bridges[_ed.id()];
+    const auto& bridge = m_bridges[_ed];
     for(const auto& repAndVIDs : bridge)
       std::cout << "\n\t\t"
                 << LocalComponentDescriptor{_ed, repAndVIDs.first, true}
@@ -1050,7 +1086,7 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
       const SkeletonEdgeDescriptor& _ed,
       EdgeMap& _edgeMap, const bool _bridges) {
     // Find the cc map.
-    const auto& ccMap = _bridges ? m_bridges.at(_ed.id())
+    const auto& ccMap = _bridges ? m_bridges.at(_ed)
                                  : m_localComponents.at(_ed);
 
     // Try to make connection from _cfg to each component in the map.
@@ -1129,7 +1165,7 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
                 << "\n\t\t" << rightEdges.size() << "/"
                 << m_localComponents[rightEd].size() << " right components"
                 << "\n\t\t" << bridgeEdges.size() << "/"
-                << m_bridges[_ed.id()].size() << " bridges"
+                << m_bridges[_ed].size() << " bridges"
                 << std::endl;
 
     // Determine what kind of connection(s) we built to decide whether to keep
@@ -1183,6 +1219,10 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
     LocalComponentDescriptor d = descriptors[0];
     for(size_t i = 1; i < descriptors.size(); ++i)
       d = MergeLocalComponents(d, descriptors[i]);
+
+    // Add the new VID to the surviving local component.
+    VertexSet& vids = d.bridge ? GetBridge(d) : GetLocalComponent(d);
+    vids.insert(newVID);
   }
 
   UpdateEdgeConnectivity(_ed);
@@ -1200,7 +1240,7 @@ MakeLocalComponent(const LocalComponentDescriptor& _d, const VertexSet& _vids) {
               << std::endl;
 
   // Make sure this component isn't already a bridge.
-  const bool isBridge = m_bridges[_d.edgeDescriptor.id()].count(
+  const bool isBridge = m_bridges[_d.edgeDescriptor].count(
       _d.representative);
   if(isBridge)
     throw RunTimeException(WHERE) << "Local component " << _d
@@ -1277,11 +1317,46 @@ typename MPTraits::RoadmapType::VertexSet&
 DynamicRegionsPRM<MPTraits>::
 GetBridge(const LocalComponentDescriptor& _d) noexcept {
   try {
-    return m_bridges.at(_d.edgeDescriptor.id()).at(_d.representative);
+    return m_bridges.at(_d.edgeDescriptor).at(_d.representative);
   }
   catch(const std::out_of_range&) {
     throw RunTimeException(WHERE) << "Bridge " << _d << " does not exist.";
   }
+}
+
+
+template <typename MPTraits>
+typename DynamicRegionsPRM<MPTraits>::LocalComponentDescriptor
+DynamicRegionsPRM<MPTraits>::
+FindLocalComponent(const VID _vid) const noexcept {
+  // Search the local components.
+  for(const auto& edAndMap : m_localComponents) {
+    for(const auto& vidAndVIDs : edAndMap.second) {
+      // Check for the vid in this set.
+      const VertexSet& vids = vidAndVIDs.second;
+      if(!vids.count(_vid))
+        continue;
+
+      // This is the component we joined.
+      return LocalComponentDescriptor{edAndMap.first, vidAndVIDs.first, false};
+    }
+  }
+
+  // Search the bridges.
+  for(const auto& edAndMap : m_bridges) {
+    for(const auto& vidAndVIDs : edAndMap.second) {
+      // Check for the vid in this set.
+      const VertexSet& vids = vidAndVIDs.second;
+      if(!vids.count(_vid))
+        continue;
+
+      // This is the component we joined.
+      return LocalComponentDescriptor{edAndMap.first, vidAndVIDs.first, true};
+    }
+  }
+
+  throw RunTimeException(WHERE) << "VID " << _vid
+                                << " is not in any local component or bridge.";
 }
 
 
@@ -1297,7 +1372,7 @@ PromoteLocalComponent(LocalComponentDescriptor _d) {
   VertexSet& vids = GetLocalComponent(_d);
 
   // Try to construct a new bridge.
-  auto iterBool = m_bridges[_d.edgeDescriptor.id()].emplace(
+  auto iterBool = m_bridges[_d.edgeDescriptor].emplace(
       std::piecewise_construct,
       std::forward_as_tuple(_d.representative),
       std::forward_as_tuple(std::move(vids)));
@@ -1338,12 +1413,12 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
     // Merge the smaller bridge into the larger one.
     if(v1.size() > v2.size()) {
       VertexSetUnionInPlace(v1, v2);
-      this->m_bridges[_d2.edgeDescriptor.id()].erase(_d2.representative);
+      this->m_bridges[_d2.edgeDescriptor].erase(_d2.representative);
       return _d1;
     }
     else {
       VertexSetUnionInPlace(v2, v1);
-      this->m_bridges[_d1.edgeDescriptor.id()].erase(_d1.representative);
+      this->m_bridges[_d1.edgeDescriptor].erase(_d1.representative);
       return _d2;
     }
   };
@@ -1436,7 +1511,7 @@ UpdateEdgeConnectivity(const SkeletonEdgeDescriptor& _ed) {
   const SkeletonEdgeDescriptor right = reverse(_ed);
   const auto& leftCCs   = m_localComponents[_ed],
             & rightCCs  = m_localComponents[right],
-            & bridgeCCs = m_bridges[_ed.id()];
+            & bridgeCCs = m_bridges[_ed];
 
   bool connected;
 
@@ -1672,7 +1747,7 @@ AdvanceRegion(ExpansionRegion* const _r, const VertexSet& _newVIDs) {
   for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
     const SkeletonEdgeDescriptor ed = eit->descriptor();
     const auto& components = m_localComponents[ed];
-    const auto& bridges = m_bridges[ed.id()];
+    const auto& bridges = m_bridges[ed];
 
     connected |= connector(ed, components, false);
     connected |= connector(ed, bridges, true);
