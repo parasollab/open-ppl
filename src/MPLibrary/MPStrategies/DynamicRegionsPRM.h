@@ -1904,7 +1904,12 @@ MakeBoundary(const Vector3d& _v) {
   // it below at zero just in case.
   const double radius = std::max(0., GetRegionRadius(_v));
 
-  return CSpaceBoundingSphere(v, radius);
+  const bool threeD = this->GetTask()->GetRobot()->GetMultiBody()->GetBaseType()
+                   == Body::Type::Volumetric;
+  if(threeD)
+    return CSpaceBoundingSphere(v, radius);
+  else
+    return CSpaceBoundingSphere({_v[0], _v[1]}, radius);
 }
 
 
