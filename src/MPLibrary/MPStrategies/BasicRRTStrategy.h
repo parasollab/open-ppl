@@ -310,6 +310,12 @@ template <typename MPTraits>
 void
 BasicRRTStrategy<MPTraits>::
 Initialize() {
+  //////////////////////////////////////////////////////////////////////////////
+  // This is just for the dynamic region PRM paper, to be removed after.
+  // Reset the roadmap so that we try the next query without the previous map.
+  this->GetRoadmap()->clear();
+  //////////////////////////////////////////////////////////////////////////////
+
   // Sanity checks on grow goals option.
   if(m_growGoals) {
     // Assert that we are not using a nonholonomic robot.

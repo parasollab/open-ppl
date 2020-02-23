@@ -33,7 +33,7 @@ main(int _argc, char** _argv) {
   Robot* const robot = problem->GetRobots().front().get();
   const auto robotTasks = problem->GetTasks(robot);
     for(auto task : robotTasks)
-			if(!task->GetStatus().is_complete())
+      if(!task->GetStatus().is_complete())
       	pmpl->Solve(problem, task.get());
 
   // Also solve the group task(s).

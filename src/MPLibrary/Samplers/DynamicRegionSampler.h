@@ -99,7 +99,8 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    WorkspaceSkeleton m_skeleton;     ///< The workspace skeleton.
+    WorkspaceSkeleton m_originalSkeleton; ///< The original workspace skeleton.
+    WorkspaceSkeleton m_skeleton;         ///< The directed/pruned workspace skeleton.
     RegionKit m_regionKit;            ///< Manages regions following the skeleton.
 
     std::string m_skeletonType{"reeb"}; ///< Type of skeleton to build.
@@ -112,7 +113,8 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
 
     bool m_initialized{false};    ///< Have auxiliary structures been initialized?
 
-    pair <Point3d, Point3d> m_queryPair;
+    /// Last pair of points we used to direct the skeleton.
+    std::pair<Point3d, Point3d> m_queryPair;
 
     ///@}
 
@@ -295,8 +297,8 @@ LazyInitialize() {
 
       // Create the workspace skeleton.
       auto sk = mcs.GetSkeleton();
-      m_skeleton = sk.first;
-      m_skeleton.DoubleEdges();
+      m_originalSkeleton = sk.first;
+      m_originalSkeleton.DoubleEdges();
     }
     else if(m_skeletonType == "reeb") {
       // Create a workspace skeleton using a reeb graph.
@@ -308,8 +310,8 @@ LazyInitialize() {
       reeb.Construct(decomposition);
 
       // Create the workspace skeleton.
-      m_skeleton = reeb.GetSkeleton();
-      m_skeleton.DoubleEdges();
+      m_originalSkeleton = reeb.GetSkeleton();
+      m_originalSkeleton.DoubleEdges();
     }
     else
       throw ParseException(WHERE) << "Unrecognized skeleton type '"
@@ -328,7 +330,7 @@ LazyInitialize() {
     // Build a skeleton from a 2D medial axis.
     MedialAxis2D ma(polyhedra, env->GetBoundary());
     ma.BuildMedialAxis();
-    m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+    m_originalSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
   }
 
   this->DirectSkeleton();
@@ -402,6 +404,7 @@ DirectSkeleton() {
     return;
 
   // Direct the workspace skeleton outward from the starting point.
+  m_skeleton = m_originalSkeleton;
   m_skeleton = m_skeleton.Direct(start);
 
   // Prune the workspace skeleton relative to the goal.
