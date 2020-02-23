@@ -37,10 +37,13 @@ FindVertex(const VD _vertexDescriptor) {
 
 WorkspaceSkeleton::adj_edge_iterator
 WorkspaceSkeleton::
-FindEdge(const ED& _edgeDescriptor) {
+FindEdge(const ED& _ed) {
   vertex_iterator vit;
   adj_edge_iterator eit;
-  m_graph.find_edge(_edgeDescriptor, vit, eit);
+  if(!m_graph.find_edge(_ed, vit, eit))
+    throw RunTimeException(WHERE) << "Requested non-existing edge ("
+                                  << _ed.id() << "|" << _ed.source()
+                                  << "," << _ed.target() << ")";
   return eit;
 }
 

@@ -699,9 +699,8 @@ DynamicRegionsPRM<MPTraits>::
 AddQuery() {
   // Do nothing if we have no query.
   auto goalTracker = this->GetGoalTracker();
-  const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
-  //if(goalTracker->GetStartVIDs().empty())
-    //return;
+  if(!goalTracker->UnreachedGoalCount())
+    return;
 
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::AddQuery");
@@ -1092,6 +1091,11 @@ ConnectEdgeSegment(const SkeletonEdgeDescriptor _ed) {
 
   // Pick a random point along the edge.
   const std::vector<Point3d>& path = m_skeleton.FindEdge(_ed)->property();
+  if(path.empty())
+    throw RunTimeException(WHERE) << "Ill-formed skeleton. Edge descriptor ("
+                                  << _ed.id() << "|" << _ed.source() << ","
+                                  << _ed.target() << ") has empty path.";
+
   const size_t index = LRand() % path.size();
   const Point3d& point = path[index];
 
