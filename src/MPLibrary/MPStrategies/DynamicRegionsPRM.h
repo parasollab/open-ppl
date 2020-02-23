@@ -406,6 +406,10 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     /// low-clearance regions to be pruned.
     double m_minRegionRadius{-1};
 
+    /// After extending a local component, aggressively try to bridge across to
+    /// the other side from the newly added configurations.
+    bool m_aggressiveBridging{true};
+
     ///@}
     ///@name Hacked Shared State
     ///@{
@@ -511,6 +515,11 @@ DynamicRegionsPRM(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
       "regions. Leaving it unset indicates no limit, allowing low-clearance "
       "regions to be pruned. This likely will not work well without either "
       "a high-clearance environment or a medial axis skeleton.");
+
+  m_aggressiveBridging = _node.Read("aggressiveBridging", false,
+      m_aggressiveBridging, "After extending a local component, aggressively "
+      "try to bridge across to the other side from the newly added "
+      "configurations.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -758,6 +767,11 @@ AddQuery() {
                       ? GetBridge(d)
                       : GetLocalComponent(d);
       vids.insert(vid);
+
+      if(this->m_debug)
+        std::cout << "\t\tMerged with local component " << d << "."
+                  << std::endl;
+      break;
     }
 
     // If we connected, all is well. Move on to the next one.
@@ -859,7 +873,6 @@ GrowRRT(const VID _q) {
     // Try to connect newVID to the pre-RRT roadmap.
     const std::vector<Neighbor> mapNeighbors = FindNearestNeighbors(
         r->GetVertex(newVID), &roadmapVIDs);
-    VID connectedTo = INVALID_VID;
     for(const Neighbor& n : mapNeighbors) {
       // Try connection.
       const bool success = AttemptConnection(r->GetVertex(newVID),
@@ -868,28 +881,12 @@ GrowRRT(const VID _q) {
       if(!success)
         continue;
 
-      connectedTo = n.target;
-      if(this->m_debug)
-        std::cout << "\tConnected to " << n.target << "."
-                  << std::endl;
-      /// @todo We may connect multiple times, but we're only adding the tree to
-      ///       one local component...
-
       // Add edge.
       r->AddEdge(newVID, n.target, lp.m_edge);
-    }
-
-    // If we connected, we're good to go.
-    const bool connected = connectedTo != INVALID_VID;
-    if(connected) {
-      if(this->m_debug)
-        std::cout << "\tEnding RRT because we connected to the roadmap at "
-                  << connectedTo << "."
-                  << std::endl;
 
       // Figure out what local component we connected to and add this tree
       // to it.
-      const LocalComponentDescriptor d = FindLocalComponent(connectedTo);
+      const LocalComponentDescriptor d = FindLocalComponent(n.target);
       const VertexSet* treeCC = ccTracker->GetCC(newVID);
       VertexSet& vids = d.bridge
                       ? GetBridge(d)
@@ -897,8 +894,12 @@ GrowRRT(const VID _q) {
       vids.insert(treeCC->begin(), treeCC->end());
 
       if(this->m_debug)
-        std::cout << "\t\tMerged with local component " << d << "."
+        std::cout << "\tEnding RRT because we connected to the roadmap at "
+                  << n.target << "."
+                  << "\n\tMerged with local component " << d << "."
                   << std::endl;
+
+      // We're done with the RRT now.
       return;
     }
 
@@ -981,61 +982,61 @@ ExpandComponent(ExpansionRegion* const _r) {
               << std::endl;
 
   // Aggressive bridging.
-#if 1
-  // If there are any local components going the other way, try to connect.
-  bool bridged = false;
-  const SkeletonEdgeDescriptor reverseEd = reverse((*_r->edgeIterator).descriptor());
-  const auto& reverseComponents = m_localComponents[reverseEd];
-  if(reverseComponents.size()) {
-    if(this->m_debug)
-      std::cout << "\tChecking for connection to " << reverseComponents.size()
-                << " components from the other side of this edge."
-                << std::endl;
-
-    // Copy the descriptors because any merges will invalidate iteration over
-    // reverseComponents.
-    std::vector<LocalComponentDescriptor> reverseDescriptors;
-    for(const auto& repAndVIDs : reverseComponents)
-      reverseDescriptors.emplace_back(LocalComponentDescriptor{reverseEd, repAndVIDs.first, false});
-
-    LocalComponentDescriptor myComponent = d;
-    for(const auto& rd : reverseDescriptors) {
+  if(m_aggressiveBridging) {
+    // If there are any local components going the other way, try to connect.
+    bool bridged = false;
+    const SkeletonEdgeDescriptor reverseEd = reverse((*_r->edgeIterator).descriptor());
+    const auto& reverseComponents = m_localComponents[reverseEd];
+    if(reverseComponents.size()) {
       if(this->m_debug)
-        std::cout << "\tChecking connection to " << rd << "."
+        std::cout << "\tChecking for connection to " << reverseComponents.size()
+                  << " components from the other side of this edge."
                   << std::endl;
 
-      for(const VID newVID : newVIDs) {
+      // Copy the descriptors because any merges will invalidate iteration over
+      // reverseComponents.
+      std::vector<LocalComponentDescriptor> reverseDescriptors;
+      for(const auto& repAndVIDs : reverseComponents)
+        reverseDescriptors.emplace_back(LocalComponentDescriptor{reverseEd, repAndVIDs.first, false});
+
+      LocalComponentDescriptor myComponent = d;
+      for(const auto& rd : reverseDescriptors) {
         if(this->m_debug)
-          std::cout << "\tChecking connection from VID " << newVID << "."
+          std::cout << "\tChecking connection to " << rd << "."
                     << std::endl;
 
-        // Make edges.
-        const std::vector<EdgeOutput> edges = this->ConnectToComponent(
-            r->GetVertex(newVID), rd);
-        if(!edges.size())
-          continue;
+        for(const VID newVID : newVIDs) {
+          if(this->m_debug)
+            std::cout << "\tChecking connection from VID " << newVID << "."
+                      << std::endl;
 
-        // We made a bridge.
-        bridged = true;
-        for(auto& edge : edges)
-          r->AddEdge(newVID, edge.target, std::move(edge.weights));
+          // Make edges.
+          const std::vector<EdgeOutput> edges = this->ConnectToComponent(
+              r->GetVertex(newVID), rd);
+          if(!edges.size())
+            continue;
 
-        myComponent = MergeLocalComponents(myComponent, rd);
+          // We made a bridge.
+          bridged = true;
+          for(auto& edge : edges)
+            r->AddEdge(newVID, edge.target, std::move(edge.weights));
 
-        if(this->m_debug)
-          std::cout << "\t\tMerged with component " << rd << " to form a bridge."
-                    << "\n\t\tNew component descriptor is " << myComponent << "."
-                    << std::endl;
+          myComponent = MergeLocalComponents(myComponent, rd);
 
-        // Once we've connected, we don't need to keep trying the other vids.
-        break;
+          if(this->m_debug)
+            std::cout << "\t\tMerged with component " << rd << " to form a bridge."
+                      << "\n\t\tNew component descriptor is " << myComponent << "."
+                      << std::endl;
+
+          // Once we've connected, we don't need to keep trying the other vids.
+          break;
+        }
       }
     }
-  }
 
-  if(bridged)
-    newVIDs.clear();
-#endif
+    if(bridged)
+      newVIDs.clear();
+  }
   return newVIDs;
 }
 
