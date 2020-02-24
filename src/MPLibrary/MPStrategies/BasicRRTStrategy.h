@@ -314,6 +314,10 @@ Initialize() {
   // This is just for the dynamic region PRM paper, to be removed after.
   // Reset the roadmap so that we try the next query without the previous map.
   this->GetRoadmap()->clear();
+
+  // reset CCTracker to avoid remembering old map's VIDs
+  this->GetRoadmap()->GetCCTracker()->RemoveHooks();
+  this->GetRoadmap()->SetCCTracker();
   //////////////////////////////////////////////////////////////////////////////
 
   // Sanity checks on grow goals option.

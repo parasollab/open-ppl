@@ -123,6 +123,9 @@ class CCTracker final {
     /// Install hooks in the roadmap.
     void InstallHooks() noexcept;
 
+    /// Install hooks in the roadmap.
+    void RemoveHooks() noexcept;
+
     ///@}
     ///@name Query Functions
     ///@{
@@ -373,6 +376,19 @@ InstallHooks() noexcept {
       [this](const edge_iterator _i){this->AddEdge(_i);});
   m_roadmap->InstallHook(RoadmapType::HookType::DeleteEdge, label,
       [this](const edge_iterator _i){this->DeleteEdge(_i);});
+}
+
+
+template <typename RoadmapType>
+inline
+void
+CCTracker<RoadmapType>::
+RemoveHooks() noexcept {
+  const std::string label = "CCTracker";
+  m_roadmap->RemoveHook(RoadmapType::HookType::AddVertex, label);
+  m_roadmap->RemoveHook(RoadmapType::HookType::DeleteVertex, label);
+  m_roadmap->RemoveHook(RoadmapType::HookType::AddEdge, label);
+  m_roadmap->RemoveHook(RoadmapType::HookType::DeleteEdge, label);
 }
 
 /*--------------------------------- Queries ----------------------------------*/

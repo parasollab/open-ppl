@@ -328,11 +328,15 @@ LazyInitialize() {
     }
 
     // Build a skeleton from a 2D medial axis.
+    if(this->m_debug)
+    cout << "Build a skeleton from a 2D medial axis." << endl;
     MedialAxis2D ma(polyhedra, env->GetBoundary());
     ma.BuildMedialAxis();
     m_originalSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
   }
 
+  if(this->m_debug)
+    cout << "Direct skeleton" << endl;
   this->DirectSkeleton();
 }
 
@@ -358,6 +362,12 @@ DirectSkeleton() {
   if(startVIDs.size() == 1) {
     const VID startVID = *startVIDs.begin();
     start = g->GetVertex(startVID).GetPoint();
+  }
+  // Maybe this is a multi-query set up where GoalTracker was reset
+  // TODO find a cleaner way of handling this. This is only true if the start is
+  // the first vertex added to the roadmap (RRT basically).
+  else if(this->GetRoadmap()->get_num_vertices() >= 1) {
+    start = g->GetVertex(0).GetPoint();
   }
   else {
     // Probably we can just take the center of the start constraint boundary if
