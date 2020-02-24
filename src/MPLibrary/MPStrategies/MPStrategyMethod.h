@@ -345,8 +345,9 @@ GenerateStart(const std::string& _samplerLabel) {
   if(!this->GetTask()->EvaluateStartConstraints(g->GetVertex(vid)))
     throw RunTimeException(WHERE) << "Sampled configuration from a start "
                                   << "boundary, but task claims it doesn't satisfy:"
+                                  << "\n\tBoundary: " << *startBoundary
                                   << "\n\tCfg:      " << start.PrettyPrint()
-                                  << "\n\tBoundary: " << *startBoundary;
+                                  << "\n\tFull cfg: " << start;
   // Do not accept any bullcrap about the goal tracker not recognizing this
   // configuration.
   if(!this->GetGoalTracker()->GetStartVIDs().count(vid))
@@ -422,8 +423,9 @@ GenerateGoals(const std::string& _samplerLabel) {
       throw RunTimeException(WHERE) << "Sampled configuration from goal " << i
                                     << " boundary, but task claims it doesn't "
                                     << "satisfy:"
+                                    << "\n\tBoundary: " << *goalBoundary
                                     << "\n\tCfg:      " << goal.PrettyPrint()
-                                    << "\n\tBoundary: " << *goalBoundary;
+                                    << "\n\tFull cfg: " << goal;
     // Do not accept any bullcrap about the goal tracker not recognizing this
     // configuration.
     if(!this->GetGoalTracker()->GetGoalVIDs(i).count(vid))
