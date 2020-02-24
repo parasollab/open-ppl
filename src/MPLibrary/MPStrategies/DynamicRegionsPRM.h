@@ -2050,7 +2050,9 @@ BuildSkeleton() {
       if(this->m_debug)
         std::cout << "Building a Mean Curvature skeleton." << std::endl;
       MeanCurvatureSkeleton3D mcs;
-      mcs.SetEnvironment(this->GetEnvironment());
+      // This does a lot of extra processing that skews the dynamic region PRM
+      // times. We will assume the skeleton will be read from a file.
+      //mcs.SetEnvironment(this->GetEnvironment());
       mcs.BuildSkeleton();
 
       // Create the workspace skeleton.

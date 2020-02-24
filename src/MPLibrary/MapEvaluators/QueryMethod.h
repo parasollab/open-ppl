@@ -226,9 +226,13 @@ operator()() {
   auto task = this->GetTask();
   const size_t numGoals = task->GetNumGoals();
 
-  if(goalTracker->GetStartVIDs().empty()){
+  if(goalTracker->GetStartVIDs().empty()) {
+    if(this->m_debug)
+      std::cout << "No start VIDs, query cannot succeed."
+                << std::endl;
     return false;
   }
+
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.

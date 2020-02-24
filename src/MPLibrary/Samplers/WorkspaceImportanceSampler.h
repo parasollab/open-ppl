@@ -155,8 +155,15 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   auto vc = this->GetValidityChecker(m_vcLabel);
 
   // Pick a tetrahedron with uniform random probability.
-  size_t t = LRand() % wd->GetNumRegions();
+  const size_t t = LRand() % wd->GetNumRegions();
   const Boundary* const tetra = wd->GetRegion(t).GetBoundary();
+
+  if(this->m_debug)
+    std::cout << "Selected tetra " << t
+              << "\n\tBoundary: " << *tetra
+              << "\n\tVolume:   " << tetra->GetVolume()
+              << "\n\tAttempts: " << m_numAttempts[t]
+              << std::endl;
 
   for(size_t i = 0; i < m_numAttempts[t]; ++i) {
     // Generate a sample inside the tetrahedron.
@@ -185,6 +192,11 @@ template <typename MPTraits>
 void
 WorkspaceImportanceSampler<MPTraits>::
 InitDecomposition() {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::InitDecomposition");
+
+  m_initialized = true;
+
   // Get the tetrahedralization.
   auto wd = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
 
@@ -199,9 +211,24 @@ InitDecomposition() {
   m_numAttempts.clear();
   m_numAttempts.reserve(numTetras);
   for(size_t i = 0; i < numTetras; ++i) {
-    size_t nt = log(1 - m_alpha) / log(1 - importances[i] / totalImportance);
-    m_numAttempts.push_back(nt);
+    const size_t nt = log(1 - m_alpha) / log(1 - importances[i] / totalImportance);
+    m_numAttempts.push_back(std::max<size_t>(nt, 1));
   }
+
+  if(this->m_debug)
+    std::cout << this->GetName() << "::InitDecomposition"
+              << "\n\tNumber of tetrahedra: " << numTetras
+              << "\n\tTotal importance:     " << totalImportance
+              << "\n\tMax importance:       "
+              << *std::max_element(importances.begin(), importances.end())
+              << "\n\tMin importance:       "
+              << *std::min_element(importances.begin(), importances.end())
+              << "\n\tMax attempts:         "
+              << *std::max_element(m_numAttempts.begin(), m_numAttempts.end())
+              << "\n\tMin attempts:         "
+              << *std::min_element(m_numAttempts.begin(), m_numAttempts.end())
+              << std::endl;
+  std::cin.ignore();
 }
 
 
@@ -302,7 +329,7 @@ ComputeTetrahedronImportance(const size_t _i) const {
   double importance = 0;
   for(const auto& f : importanceFacets)
     importance += ComputeTetrahedronHeight(tetra, *f);
-  return importance /= numNeighbors;
+  return importance /= importanceFacets.size();
 }
 
 /*----------------------------------------------------------------------------*/
