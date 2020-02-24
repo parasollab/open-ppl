@@ -292,7 +292,7 @@ LazyInitialize() {
       if(this->m_debug)
         std::cout << "Building a Mean Curvature skeleton." << std::endl;
       MeanCurvatureSkeleton3D mcs;
-      mcs.SetEnvironment(this->GetEnvironment());
+      //mcs.SetEnvironment(this->GetEnvironment());
       mcs.BuildSkeleton();
 
       // Create the workspace skeleton.
@@ -315,8 +315,8 @@ LazyInitialize() {
     }
     else
       throw ParseException(WHERE) << "Unrecognized skeleton type '"
-        << m_skeletonType << "', options for 3d "
-        << "problems are {mcs, reeb}.";
+                                  << m_skeletonType << "', options for 3d "
+                                  << "problems are {mcs, reeb}.";
   }
   else {
     // Collect the obstacles we want to consider (all in this case).
@@ -329,14 +329,14 @@ LazyInitialize() {
 
     // Build a skeleton from a 2D medial axis.
     if(this->m_debug)
-    cout << "Build a skeleton from a 2D medial axis." << endl;
+      std::cout << "Build a skeleton from a 2D medial axis." << endl;
     MedialAxis2D ma(polyhedra, env->GetBoundary());
     ma.BuildMedialAxis();
     m_originalSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
   }
 
   if(this->m_debug)
-    cout << "Direct skeleton" << endl;
+    std::cout << "Direct skeleton" << endl;
   this->DirectSkeleton();
 }
 
@@ -362,12 +362,6 @@ DirectSkeleton() {
   if(startVIDs.size() == 1) {
     const VID startVID = *startVIDs.begin();
     start = g->GetVertex(startVID).GetPoint();
-  }
-  // Maybe this is a multi-query set up where GoalTracker was reset
-  // TODO find a cleaner way of handling this. This is only true if the start is
-  // the first vertex added to the roadmap (RRT basically).
-  else if(this->GetRoadmap()->get_num_vertices() >= 1) {
-    start = g->GetVertex(0).GetPoint();
   }
   else {
     // Probably we can just take the center of the start constraint boundary if
@@ -407,9 +401,8 @@ DirectSkeleton() {
     goal = samples.front().GetPoint();
   }
 
-  //if there is a new start and goal pair, redirect the skeleton
-  pair<Point3d, Point3d> currentQuery = make_pair(start, goal);
-
+  // If there is a new start and goal pair, redirect the skeleton
+  std::pair<Point3d, Point3d> currentQuery{start, goal};
   if(currentQuery == m_queryPair)
     return;
 
@@ -443,7 +436,7 @@ DirectSkeleton() {
   m_regionKit.Initialize(&m_skeleton, start, robotRadius, this->GetNameAndLabel(),
       this->GetRoadmap());
 
-  m_queryPair = make_pair(start, goal);
+  m_queryPair = std::make_pair(start, goal);
 }
 
 /*----------------------------------------------------------------------------*/

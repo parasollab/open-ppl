@@ -722,8 +722,7 @@ void
 DynamicRegionsPRM<MPTraits>::
 AddQuery() {
   // Do nothing if we have no query.
-  auto goalTracker = this->GetGoalTracker();
-  if(!goalTracker->UnreachedGoalCount())
+  if(this->GetTask()->Empty())
     return;
 
   auto stats = this->GetStatClass();

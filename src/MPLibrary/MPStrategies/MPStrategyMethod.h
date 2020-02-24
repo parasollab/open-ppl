@@ -340,6 +340,19 @@ GenerateStart(const std::string& _samplerLabel) {
     std::cout << "\tVID " << vid << " at " << start.PrettyPrint()
               << std::endl;
 
+  // Do not accept any bullcrap about the configuration not satisfying the
+  // boundary we just used to sample it.
+  if(!this->GetTask()->EvaluateStartConstraints(g->GetVertex(vid)))
+    throw RunTimeException(WHERE) << "Sampled configuration from a start "
+                                  << "boundary, but task claims it doesn't satisfy:"
+                                  << "\n\tCfg:      " << start.PrettyPrint()
+                                  << "\n\tBoundary: " << *startBoundary;
+  // Do not accept any bullcrap about the goal tracker not recognizing this
+  // configuration.
+  if(!this->GetGoalTracker()->GetStartVIDs().count(vid))
+    throw RunTimeException(WHERE) << "Added VID " << vid << " as a start "
+                                  << "node, but GoalTracker didn't log it.";
+
   return vid;
 }
 
@@ -402,6 +415,20 @@ GenerateGoals(const std::string& _samplerLabel) {
     if(this->m_debug)
       std::cout << "\tVID " << vid << " at " << goal.PrettyPrint()
                 << std::endl;
+
+    // Do not accept any bullcrap about the configuration not satisfying the
+    // boundary we just used to sample it.
+    if(!this->GetTask()->EvaluateGoalConstraints(g->GetVertex(vid), i))
+      throw RunTimeException(WHERE) << "Sampled configuration from goal " << i
+                                    << " boundary, but task claims it doesn't "
+                                    << "satisfy:"
+                                    << "\n\tCfg:      " << goal.PrettyPrint()
+                                    << "\n\tBoundary: " << *goalBoundary;
+    // Do not accept any bullcrap about the goal tracker not recognizing this
+    // configuration.
+    if(!this->GetGoalTracker()->GetGoalVIDs(i).count(vid))
+      throw RunTimeException(WHERE) << "Added VID " << vid << " as a goal "
+                                    << "node, but GoalTracker didn't log it.";
   }
 
   return vids;

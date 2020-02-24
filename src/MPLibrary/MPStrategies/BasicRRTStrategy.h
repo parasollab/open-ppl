@@ -317,7 +317,7 @@ Initialize() {
 
   // reset CCTracker to avoid remembering old map's VIDs
   this->GetRoadmap()->GetCCTracker()->RemoveHooks();
-  this->GetRoadmap()->SetCCTracker();
+  this->GetRoadmap()->SetCCTracker(this->GetStatClass());
   //////////////////////////////////////////////////////////////////////////////
 
   // Sanity checks on grow goals option.
