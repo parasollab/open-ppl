@@ -126,6 +126,7 @@ Run() {
     if(roadmap and !this->GetGoalTracker()->IsMap(roadmap,task)) {
       this->GetGoalTracker()->AddMap(roadmap,task);
     }
+    this->GetPath()->Clear();
 
     auto sm = this->GetMPStrategy(method.label);
     MethodTimer* mt = new MethodTimer(stats, id + "::InitAndRun");
