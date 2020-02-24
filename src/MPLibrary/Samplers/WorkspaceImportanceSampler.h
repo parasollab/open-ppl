@@ -228,7 +228,8 @@ InitDecomposition() {
               << "\n\tMin attempts:         "
               << *std::min_element(m_numAttempts.begin(), m_numAttempts.end())
               << std::endl;
-  std::cin.ignore();
+  // This is handy for figuring out how to set alpha.
+  //std::cin.ignore();
 }
 
 
