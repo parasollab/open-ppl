@@ -148,6 +148,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     RoadmapType* m_roadmap{nullptr};   ///< Last roadmap queried.
+    MPTask* m_task{nullptr};           ///< Last task we looked at.
 
     size_t m_goalIndex{0};             ///< Index of next unreached goal.
 
@@ -237,7 +238,7 @@ operator()() {
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.
   auto r = this->GetRoadmap();
-  if(unreachedGoals.empty() or r != m_roadmap)
+  if(unreachedGoals.empty() or r != m_roadmap or task != m_task)
     Reset(r);
 
   if(this->m_debug)
@@ -407,6 +408,7 @@ QueryMethod<MPTraits>::
 Reset(RoadmapType* const _r) {
   // Set the roadmap.
   m_roadmap = _r;
+  m_task = this->GetTask();
 
   // Reset the goal index.
   m_goalIndex = 0;
