@@ -49,17 +49,34 @@ class TimeEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     ///@}
 
+    static void Reset();
+
   private:
 
     ///@name Internal State
     ///@{
 
-    bool       m_started{false}; ///< Has timing started?
+    static bool m_started; ///< Has timing started?
     double     m_timeout;        ///< Timeout after this long.
-    ClockClass m_clock;          ///< Internal timer.
+    static ClockClass m_clock;          ///< Internal timer.
 
     ///@}
 };
+
+template <typename MPTraits>
+bool TimeEvaluator<MPTraits>::m_started = false;
+
+template <typename MPTraits>
+ClockClass TimeEvaluator<MPTraits>::m_clock;
+
+template <typename MPTraits>
+void
+TimeEvaluator<MPTraits>::
+Reset() {
+  m_started = false;
+  m_clock.ClearClock();
+}
+
 
 /*------------------------------ Construction --------------------------------*/
 

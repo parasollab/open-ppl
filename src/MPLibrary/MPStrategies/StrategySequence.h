@@ -121,6 +121,7 @@ Run() {
     auto task = this->GetMPProblem()->GetTask(method.task);
     this->GetMPLibrary()->SetTask(task);
 
+    TimeEvaluator<MPTraits>::Reset();
     auto roadmap = this->GetRoadmap(task->GetRobot());
 
     if(roadmap and !this->GetGoalTracker()->IsMap(roadmap,task)) {
