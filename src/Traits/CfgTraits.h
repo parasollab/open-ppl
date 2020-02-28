@@ -142,6 +142,7 @@
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
+#include "MPLibrary/MPStrategies/NNCompare.h"
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
@@ -337,6 +338,7 @@ struct MPTraits {
     GroupPRM<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
+    NNCompare<MPTraits>,
     ScratchStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
     Syclop<MPTraits>,

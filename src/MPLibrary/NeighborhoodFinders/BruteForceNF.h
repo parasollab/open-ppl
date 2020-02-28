@@ -103,7 +103,7 @@ void
 BruteForceNF<MPTraits>::
 Print(std::ostream& _os) const {
   NeighborhoodFinderMethod<MPTraits>::Print(_os);
-  _os << "\tk: " << this->m_k
+  _os << "\tk: " << (this->m_k ? std::to_string(this->m_k) : "all")
       << std::endl;
 }
 
@@ -144,7 +144,8 @@ FindNeighborsImpl(AbstractRoadmapType* const _r,
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
   if(this->m_debug)
-    std::cout << "Checking for nearest " << this->m_k
+    std::cout << "Checking for nearest "
+              << (this->m_k ? std::to_string(this->m_k) : "all")
               << " neighbors with dm '" << this->m_dmLabel << "'."
               << "\n\tQuery cfg: " << _cfg.PrettyPrint()
               << std::endl;
@@ -170,7 +171,7 @@ FindNeighborsImpl(AbstractRoadmapType* const _r,
       continue;
 
     // Track the closest m_k neighbors.
-    if(pq.size() < this->m_k)
+    if(!this->m_k or pq.size() < this->m_k)
       pq.emplace(vid, distance);
     else if(distance < pq.top().distance) {
       pq.pop();

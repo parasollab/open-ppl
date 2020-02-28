@@ -203,11 +203,11 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   }
   else if(nfType == "k") {
     this->m_nfType = Type::K;
-    this->GetK() = 1;
 
     // Create a k-nearest NF (currently we use brute force but can probably
     // switch this to kd-tree).
     m_nf.reset(new BruteForceNF<MPTraits>());
+    this->GetK() = 1;
 
     // Define the parameter function to set K based on the roadmap size and
     // dimension.

@@ -182,7 +182,7 @@ NeighborhoodFinderMethod(XMLNode& _node, const Type _type,
     {
       m_k = _node.Read("k", true,
           m_k, size_t(0), std::numeric_limits<size_t>::max(),
-          "The number of neighbors to find.");
+          "The number of neighbors to find. Zero for all.");
       break;
     }
     case Type::RADIUS:

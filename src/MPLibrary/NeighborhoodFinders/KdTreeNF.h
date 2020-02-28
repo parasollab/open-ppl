@@ -264,49 +264,51 @@ SetupModels(RoadmapType* const _r) {
 
   // Create a kd tree for each of its connected components.
   auto* ccTracker = _r->GetCCTracker();
-  for(const VertexSet* cc : *ccTracker)
-    m_trees[ModelKey{_r, cc}];
+  if(ccTracker) {
+    for(const VertexSet* cc : *ccTracker)
+      m_trees[ModelKey{_r, cc}];
 
-  // Create a hook to add new CC tracker models.
-  ccTracker->InstallCreatedHook(this->GetNameAndLabel(),
-      [this, _r](const CCTrackerType* const, const VertexSet* const _cc) {
-        this->m_trees[ModelKey{_r, _cc}];
-      }
-  );
-  // Create a hook to remove CC tracker models.
-  ccTracker->InstallDeletedHook(this->GetNameAndLabel(),
-      [this, _r](const CCTrackerType* const, const VertexSet* const _cc) {
-        this->m_trees.erase(ModelKey{_r, _cc});
-      }
-  );
-  // Create a hook to merge CC tracker models.
-  ccTracker->InstallMergedHook(this->GetNameAndLabel(),
-      [this, _r](const CCTrackerType* const, const VertexSet* const _target,
-          const VertexSet* const _source) {
-        // Add all points in _source to the tree for _target.
-        auto* targetTree = &this->m_trees.at(ModelKey{_r, _target});
-        for(const VID vid : *_source)
-          targetTree->insert(PointD(vid, _r->GetVertex(vid)));
-
-        // Remove the tree for _source.
-        this->m_trees.erase(ModelKey{_r, _source});
-      }
-  );
-  // Create a hook to split CC tracker models.
-  ccTracker->InstallBrokenHook(this->GetNameAndLabel(),
-      [this, _r](const CCTrackerType* const, const VertexSet* const _source,
-          const VertexSet* const _target) {
-        // Create a new tree for the _target CC and move its points from the
-        // _source tree to their new tree.
-        auto* targetTree = &this->m_trees[ModelKey{_r, _target}],
-            * sourceTree = &this->m_trees.at(ModelKey{_r, _source});
-        for(const VID vid : *_target) {
-          PointD p(vid, _r->GetVertex(vid));
-          targetTree->insert(p);
-          sourceTree->remove(p);
+    // Create a hook to add new CC tracker models.
+    ccTracker->InstallCreatedHook(this->GetNameAndLabel(),
+        [this, _r](const CCTrackerType* const, const VertexSet* const _cc) {
+          this->m_trees[ModelKey{_r, _cc}];
         }
-      }
-  );
+    );
+    // Create a hook to remove CC tracker models.
+    ccTracker->InstallDeletedHook(this->GetNameAndLabel(),
+        [this, _r](const CCTrackerType* const, const VertexSet* const _cc) {
+          this->m_trees.erase(ModelKey{_r, _cc});
+        }
+    );
+    // Create a hook to merge CC tracker models.
+    ccTracker->InstallMergedHook(this->GetNameAndLabel(),
+        [this, _r](const CCTrackerType* const, const VertexSet* const _target,
+            const VertexSet* const _source) {
+          // Add all points in _source to the tree for _target.
+          auto* targetTree = &this->m_trees.at(ModelKey{_r, _target});
+          for(const VID vid : *_source)
+            targetTree->insert(PointD(vid, _r->GetVertex(vid)));
+
+          // Remove the tree for _source.
+          this->m_trees.erase(ModelKey{_r, _source});
+        }
+    );
+    // Create a hook to split CC tracker models.
+    ccTracker->InstallBrokenHook(this->GetNameAndLabel(),
+        [this, _r](const CCTrackerType* const, const VertexSet* const _source,
+            const VertexSet* const _target) {
+          // Create a new tree for the _target CC and move its points from the
+          // _source tree to their new tree.
+          auto* targetTree = &this->m_trees[ModelKey{_r, _target}],
+              * sourceTree = &this->m_trees.at(ModelKey{_r, _source});
+          for(const VID vid : *_target) {
+            PointD p(vid, _r->GetVertex(vid));
+            targetTree->insert(p);
+            sourceTree->remove(p);
+          }
+        }
+    );
+  }
 
   // Create a function factory for adding vertices to the kd tree.
   typename RoadmapType::VertexHook adder = [tree, _r, this](const VI _vi) {
@@ -319,9 +321,11 @@ SetupModels(RoadmapType* const _r) {
 
         // Add vertex to its CC tree.
         auto* ccTracker = _r->GetCCTracker();
-        auto* cc        = &ccTracker->GetCC(vid);
-        auto* ccTree    = &this->m_trees.at(ModelKey{_r, cc});
-        ccTree->insert(p);
+        if(ccTracker) {
+          auto* cc        = &ccTracker->GetCC(vid);
+          auto* ccTree    = &this->m_trees.at(ModelKey{_r, cc});
+          ccTree->insert(p);
+        }
       };
   // Create a function factory for deleting vertices from the kd tree.
   typename RoadmapType::VertexHook deleter = [tree, _r, this](const VI _vi) {
@@ -334,9 +338,11 @@ SetupModels(RoadmapType* const _r) {
 
         // Remove vertex from its CC tree.
         auto* ccTracker = _r->GetCCTracker();
-        auto* cc        = &ccTracker->GetCC(vid);
-        auto* ccTree    = &this->m_trees.at(ModelKey{_r, cc});
-        ccTree->remove(p);
+        if(ccTracker) {
+          auto* cc        = &ccTracker->GetCC(vid);
+          auto* ccTree    = &this->m_trees.at(ModelKey{_r, cc});
+          ccTree->remove(p);
+        }
       };
 
   // Add each existing vertex to the set.
