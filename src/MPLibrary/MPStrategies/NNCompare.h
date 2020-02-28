@@ -15,13 +15,22 @@
 ///
 /// This is a strategy for evaluating a NN/DM combination for a particular local
 /// planner rather than building a roadmap. The constructed roadmap will contain
-/// only the test vertices and no edges.
+/// only the test vertices and no edges. An 'oracle' nearest-neighbor process
+/// will determine all connectable nearest neighbors for this LP within the
+/// designated k or radius value. The test NN methods will be compared to this
+/// to determine how close to ideal their behavior is.
 ///
-/// Measures both time/input size and percentage of the 'oracle' neighbors,
-/// which are the nearest connectable neighbors in the input set. Samples will
-/// be generated in a set number of phases with fixed total roadmap size. Each
-/// set will be added to the roadmap and re-used on subsequent phases, in
-/// addition to any new samples drawn to complete the needed number.
+/// Measures time/input size and metrics on the rate of selecting and filtering
+/// the oracle percentage of the oracle neighbors:
+/// - Selection is the percentage of the oracle neighbors discovered. High
+///   values indicate that the method is effective at finding the ideal
+///   neighbors.
+/// - Rejection is the fraction of returned neighbors which are connectable.
+///   High rejection indicates the method is effective at excluding
+///   unconnectable configurations.
+/// Samples will be generated in a set number of phases with fixed total roadmap
+/// size. Each set will be added to the roadmap and re-used on subsequent
+/// phases, in addition to any new samples drawn to complete the needed number.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NNCompare : public MPStrategyMethod<MPTraits> {
@@ -215,7 +224,8 @@ Initialize() {
   // {
   //   "2": {
   //     "nf1": {
-  //       "rates": [.3, .2, .9, ...],
+  //       "select": [.3, .2, .9, ...],
+  //       "reject": [.21, .1, .8, ...],
   //       "time": 12.3
   //     },
   //     "nf2": {
@@ -235,7 +245,11 @@ Initialize() {
 
     // For each NN method, add flat arrays for success rate and time.
     for(const std::string& nfLabel : m_nfLabels)
-      m_output[key][nfLabel] = {{"rates", nlohmann::json::array()}, {"time", 0}};
+      m_output[key][nfLabel] = {
+          {"select", nlohmann::json::array()},
+          {"reject", nlohmann::json::array()},
+          {"time", 0}
+      };
   }
 }
 
@@ -275,7 +289,8 @@ Run() {
     for(const std::string& nfLabel : m_nfLabels) {
       auto nf = this->GetNeighborhoodFinder(nfLabel);
       const std::string clockName = nf->GetNameAndLabel() + "::FindNeighbors";
-      m_output[std::to_string(count)][nfLabel]["time"] = stats->GetSeconds(clockName);
+      m_output[std::to_string(count)][nfLabel]["time"] =
+          stats->GetSeconds(clockName) / r->Size();
     }
   }
 }
@@ -333,7 +348,8 @@ FindOracleNeighbors(const VID _source, VertexSet& _oracles) {
       this->GetNameAndLabel() + "::FindOracleNeighbors");
 
   // If the oracle NF is k-nearest, we'll need to temporarily swap its K value.
-  // This works for radius NF too because its k-value is already zero.
+  // This works for radius NF too because its k-value is already zero, and the
+  // radius will remain as-is.
   const size_t k = m_oracleNf->GetK();
   m_oracleNf->GetK() = 0;
 
@@ -383,14 +399,25 @@ Test(const VID _source, const VertexSet& _oracles) {
     //  throw RunTimeException(WHERE) << "NF method '" << nfLabel
     //                                << "' returned fewer than the oracle.";
 
-    // Check how many were oracles.
+    // Check how many were oracles and how many were connectable.
     size_t oracleCount = 0;
-    for(const Neighbor& n : m_neighborBuffer)
+    size_t connectable = 0;
+    bool foundSource = false;
+    for(const Neighbor& n : m_neighborBuffer) {
       oracleCount += _oracles.count(n.target);
+      if(n.target == _source) {
+        foundSource = true;
+        continue;
+      }
+      connectable += Connectable(_source, n.target);
+    }
 
     // Compute success rate and add to the output structure.
-    const double rate = double(oracleCount) / _oracles.size();
-    m_output[std::to_string(count)][nfLabel]["rates"].push_back(rate);
+    const double select = double(oracleCount) / _oracles.size(),
+                 reject = double(connectable)
+                          / (m_neighborBuffer.size() - foundSource);
+    m_output[std::to_string(count)][nfLabel]["select"].push_back(select);
+    m_output[std::to_string(count)][nfLabel]["reject"].push_back(reject);
   }
 }
 
