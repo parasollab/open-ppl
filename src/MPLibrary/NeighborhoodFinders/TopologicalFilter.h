@@ -625,7 +625,9 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
     // have at least k.
     case NeighborhoodFinderMethod<MPTraits>::Type::K:
     {
-      const size_t desiredVertices = nf->GetK();
+      const size_t desiredVertices = nf->GetK()
+                                   ? nf->GetK()
+                                   : std::numeric_limits<size_t>::max();
       for(auto iter = countSets.rbegin();
           iter != countSets.rend() and candidates.size() < desiredVertices;
           ++iter)
