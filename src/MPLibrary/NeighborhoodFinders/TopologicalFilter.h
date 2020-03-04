@@ -954,7 +954,7 @@ ComputeFrontierRadius(const WorkspaceRegion* const _region,
   // octahedron, so we must increase radius by a factor of sqrt(3) to account
   // for this (ensures we get all cells within _radius, at the expense of
   // including some extras).
-  const double radius = 2 * _radius; //std::sqrt(3) * _radius;
+  const double radius = std::sqrt(3) * _radius;//2 * _radius;
 
   if(this->m_debug)
     std::cout << "ComputeFrontierRadius"
