@@ -392,7 +392,8 @@ Initialize() {
       const MultiBody* const obst = env->GetObstacle(i);
       for(const Body& b : obst->GetBodies()) {
         const auto& poly = b.GetWorldPolyhedron();
-        const std::unordered_set<size_t> cells = m_grid->LocateCells(poly);
+        const std::unordered_set<size_t> cells = m_grid->LocateCells(poly, {},
+            GridOverlay::CellSet::Interior);
 
         if(this->m_debug)
           std::cout << "\tFound " << cells.size() << " cells for obstacle "
@@ -534,14 +535,20 @@ LocateRegion(const Point3d& _point) const {
   }
 
   if(this->m_debug) {
-    // If we are debugging, use pqp to check if _point lies within an obstacle.
+    // Use pqp to check if _point lies within an obstacle.
     using CDType = CollisionDetectionValidity<MPTraits>;
     auto vc = static_cast<CDType*>(this->GetValidityChecker(m_pqpLabel));
     const bool inObstacle = vc->IsInsideObstacle(_point);
 
+    // Check for boundary containment.
+    auto env = this->GetEnvironment()->GetBoundary();
+    const bool inBoundary = env->InBoundary(_point);
+
     std::cout << "TopologicalMap::LocateRegion"
               << "\n\tPoint " << _point << "is " << (inObstacle ? "" : "not ")
               << "inside an obstacle."
+              << "\n\tPoint " << _point << "is " << (inBoundary ? "" : "not ")
+              << "inside the env boundary."
               << "\n\tCell: " << cell
               << " with center " << m_grid->CellCenter(cell)
               << ", width " << m_grid->CellLength()
@@ -549,12 +556,22 @@ LocateRegion(const Point3d& _point) const {
               << "\n\tContaining region: " << r
               << std::endl;
 
+    // If the point isn't in an obstacle and we have no region, then something
+    // went wrong with the cell to region map.
+    // Build an obj mesh of the candidate regions, and a small box for the
+    // point. Merge these into a single obj and print to file for inspection.
     if(!inObstacle and !r) {
-      // This really can't happen with a well-formed decomposition, yet somehow
-      // I see it on the lab machines. Build an obj mesh of the candidate
-      // regions, and a small box for the point. Merge these into a single obj
-      // and print to file for inspection.
       glutils::triangulated_model t;
+
+      // Add the env boundary so that we know roughly where in the environment
+      // the problem occured.
+      auto b = glutils::triangulated_model::make_box(env->GetRange(0).Length(),
+          env->GetRange(1).Length(), env->GetRange(2).Length());
+      {
+        const std::vector<double>& center = env->GetCenter();
+        b.translate(ToGLUtils(Point3d(center[0], center[1], center[2])));
+        t.add_model(b);
+      }
 
       // Add the candidate regions, and find their max bounding sphere size.
       double maxRadius = 0.;
@@ -686,6 +703,7 @@ LocateNeighborhood(const CfgType& _c) const {
   NeighborhoodKey key(mb->GetNumBodies(), nullptr);
 
   // Locate the region occupied by each body's centroid.
+  _c.ConfigureRobot();
   for(size_t i = 0; i < key.size(); ++i) {
     auto body = mb->GetBody(i);
     key[i] = LocateRegion(body->GetWorldTransformation().translation());
@@ -941,7 +959,7 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
   // Find the source and target cells.
   const Boundary* const sourceBoundary = _source->GetBoundary();
   const std::unordered_set<size_t> sourceCells = m_grid->LocateCells(
-      sourceBoundary);
+      sourceBoundary, GridOverlay::CellSet::Closure);
 
   // Initialize visited and distance maps.
   {

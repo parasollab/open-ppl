@@ -117,6 +117,8 @@ class NNCompare : public MPStrategyMethod<MPTraits> {
     /// Buffer to avoid constantly re-allocating huge vectors.
     std::vector<Neighbor> m_neighborBuffer;
 
+    bool m_prettyPrint{false}; ///< Readable output (true) or compact (false).
+
     ///@}
 
 };
@@ -147,6 +149,8 @@ NNCompare(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
       "attempt to connect selected neighbors.");
   m_dmLabel = _node.Read("dmLabel", true, "", "The distance metric for ordering "
       "oracle neighbors.");
+  m_prettyPrint = _node.Read("prettyPrint", false, m_prettyPrint,
+      "True for human-readable output, false for compact.");
 
   // Set up the oracle NF.
   {
@@ -226,6 +230,7 @@ Initialize() {
   //     "nf1": {
   //       "select": [.3, .2, .9, ...],
   //       "reject": [.21, .1, .8, ...],
+  //       "count": [1, 2, 0, ...],
   //       "time": 12.3
   //     },
   //     "nf2": {
@@ -248,6 +253,7 @@ Initialize() {
       m_output[key][nfLabel] = {
           {"select", nlohmann::json::array()},
           {"reject", nlohmann::json::array()},
+          {"count", nlohmann::json::array()},
           {"time", 0}
       };
   }
@@ -281,6 +287,13 @@ Run() {
       oracles.clear();
       FindOracleNeighbors(source, oracles);
 
+      // If the oracles are empty, there are no connectable neighbors. No NN
+      // method can succeed and we won't get any signal from testing them.
+      if(oracles.empty()) {
+        stats->IncStat(this->GetNameAndLabel() + "::NoOracles");
+        continue;
+      }
+
       // Test each NF against the oracles.
       Test(source, oracles);
     }
@@ -306,10 +319,18 @@ Finalize() {
               << this->GetNameAndLabel() << "' since it has no other purpose."
               << std::endl;
 
+  const std::string base = this->GetBaseFilename();
+
   // Print the output object to file.
-  const std::string filename = this->GetBaseFilename() + ".nn-compare.json";
-  std::ofstream outfile(filename);
-  outfile << m_output;
+  std::ofstream outfile(base + ".nn-compare.json");
+  if(m_prettyPrint)
+    outfile << m_output.dump(1);
+  else
+    outfile << m_output;
+
+  // Output stats for timing information.
+  std::ofstream osStat(base + ".stat");
+  this->GetStatClass()->PrintAllStats(osStat, this->GetRoadmap());
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -382,6 +403,8 @@ Test(const VID _source, const VertexSet& _oracles) {
 
   auto r = this->GetRoadmap();
   const size_t count = r->Size();
+  const std::string key = std::to_string(count);
+  VertexSet foundOracles;
 
   // For each NN method
   //   Look for neighbors of size
@@ -394,17 +417,16 @@ Test(const VID _source, const VertexSet& _oracles) {
     nf->FindNeighbors(r, r->GetVertex(_source),
         std::back_inserter(m_neighborBuffer));
 
-    // Make sure the method has a chance to find all oracles.
-    //if(m_neighborBuffer.size() < _oracles.size())
-    //  throw RunTimeException(WHERE) << "NF method '" << nfLabel
-    //                                << "' returned fewer than the oracle.";
-
     // Check how many were oracles and how many were connectable.
     size_t oracleCount = 0;
     size_t connectable = 0;
     bool foundSource = false;
+    foundOracles.clear();
     for(const Neighbor& n : m_neighborBuffer) {
-      oracleCount += _oracles.count(n.target);
+      if(_oracles.count(n.target)) {
+        ++oracleCount;
+        foundOracles.insert(n.target);
+      }
       if(n.target == _source) {
         foundSource = true;
         continue;
@@ -412,12 +434,94 @@ Test(const VID _source, const VertexSet& _oracles) {
       connectable += Connectable(_source, n.target);
     }
 
-    // Compute success rate and add to the output structure.
-    const double select = double(oracleCount) / _oracles.size(),
-                 reject = double(connectable)
-                          / (m_neighborBuffer.size() - foundSource);
-    m_output[std::to_string(count)][nfLabel]["select"].push_back(select);
-    m_output[std::to_string(count)][nfLabel]["reject"].push_back(reject);
+    // Track number of returned vertices.
+    const size_t numNeighbors = m_neighborBuffer.size() - foundSource;
+    m_output[key][nfLabel]["count"].push_back(numNeighbors);
+
+    // Compute selection rate.
+    const double select = double(oracleCount) / _oracles.size();
+    m_output[key][nfLabel]["select"].push_back(select);
+
+    // If the NF missed oracles, WTF.
+    if(oracleCount != _oracles.size()) {
+      VertexSet missedOracles;
+      std::copy_if(_oracles.begin(), _oracles.end(),
+          std::inserter(missedOracles, missedOracles.end()),
+          [&foundOracles](const VID _vid) {
+            return !foundOracles.count(_vid);
+          }
+      );
+
+      auto r = this->GetRoadmap();
+      auto tm = this->GetMPTools()->GetTopologicalMap("tm-coarse");
+      auto wd = tm->GetDecomposition();
+      auto dm = this->GetDistanceMetric("euclidean");
+      const WorkspaceRegion* rs = tm->LocateRegion(r, _source);
+
+      std::cout << "NF '" << nfLabel << "' missed "
+                << missedOracles.size() << "/" << _oracles.size()
+                << " oracles."
+                << "\n\tOracles: " << _oracles
+                << "\n\tFound:  "  << foundOracles
+                << "\n\tMissed: "  << missedOracles
+                << "\n\tAll neighbors (" << m_neighborBuffer.size() << "): ";
+
+      std::for_each(m_neighborBuffer.begin(), m_neighborBuffer.end(),
+          [](const Neighbor& _n) {
+            std::cout << _n.target << "(" << _n.distance << "), ";
+          }
+      );
+      std::cout << "\n\tSource region: " << wd->GetDescriptor(*rs) << " (" << rs << ")"
+                << std::endl;
+
+      // For each missed oracle, figure out what went wrong.
+      for(const VID vid : missedOracles) {
+        // Find its region in the topological map.
+        const WorkspaceRegion* rv = tm->LocateRegion(r, vid);
+
+        // Find the approx inner distance from rs to rv.
+        const double distance = tm->ApproximateMinimumInnerDistance(rs, rv);
+
+        // Report.
+        std::cout << "\t\tVID " << vid << ": region " << wd->GetDescriptor(*rv)
+                  << "(" << rv << ") @ id = " << distance
+                  << ", d = " << dm->Distance(r->GetVertex(_source), r->GetVertex(vid))
+                  << std::endl;
+
+        if(rs == rv)
+          std::cout << "\t\tWe missed oracles in the source region?!";
+          //throw RunTimeException(WHERE) << "We missed oracles in the source region?!";
+      }
+
+      // report the approximate inner distance between r and the source region.
+
+
+      // Assert that we counted correctly.
+      if(_oracles.size() - oracleCount != missedOracles.size())
+        throw RunTimeException(WHERE) << "We counted wrong, |missedOracles| = "
+                                      << missedOracles.size() << ", but "
+                                      << "|oracles| - oracleCount = "
+                                      << _oracles.size() - oracleCount;
+      if(foundOracles.size() + missedOracles.size() != _oracles.size())
+        throw RunTimeException(WHERE) << "We counted wrong, |oracles| ("
+                                      << _oracles.size() << ") != |foundOracles|"
+                                      << " (" << foundOracles.size() << ") + |"
+                                      << "missedOracles| (" << missedOracles.size()
+                                      << ") = "
+                                      << foundOracles.size() + missedOracles.size();
+      // Assert that we computed a valid partition.
+      if(!VertexSetIntersection(foundOracles, missedOracles).empty())
+        throw RunTimeException(WHERE) << "Invalid partition, foundOracles and "
+                                      << "missedOracles share elements.";
+    }
+
+    // If we found no neighbors, do not compute a rejection rate.
+    if(m_neighborBuffer.empty())
+      continue;
+    // Else compute the rejection rate as the percentage of returned neighors
+    // which are connectable.
+    const double reject = double(connectable) / numNeighbors;
+    m_output[key][nfLabel]["reject"].push_back(reject);
   }
 }
 

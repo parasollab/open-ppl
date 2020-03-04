@@ -187,6 +187,10 @@ class GMSPolyhedron final {
     /// exist.
     PQP_Model* GetPQPModel() const noexcept;
 
+    /// Get a point just 'beneath' one of the facets to for is-inside-obstacle
+    /// checks. This is to catch degenerate cases where the zero point.
+    const Vector3d& GetInsidePoint() const noexcept;
+
     ///@}
     ///@name Build Common Shapes
     ///@{
@@ -228,6 +232,9 @@ class GMSPolyhedron final {
     /// @WARNING The computed values are relative to the model's local frame.
     void ComputeRadii();
 
+    /// Compute the inside point.
+    void ComputeInsidePoint();
+
     ///@}
     ///@name Internal State
     ///@{
@@ -248,6 +255,8 @@ class GMSPolyhedron final {
     ///          way to copy these objects without later triggering a double-free.
     mutable std::unique_ptr<RAPID_model> m_rapidModel;  ///< RAPID model
     mutable std::unique_ptr<PQP_Model> m_pqpModel;      ///< PQP model
+
+    Vector3d m_insidePoint; ///< Rrrrarg degeneracy rarg.
 
     ///@}
 

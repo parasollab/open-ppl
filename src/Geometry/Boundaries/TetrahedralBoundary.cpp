@@ -99,6 +99,7 @@ GetRange(const size_t _i) const {
 const std::vector<double>&
 TetrahedralBoundary::
 GetCenter() const noexcept {
+  throw RunTimeException(WHERE) << "Impl is wrong, need to compute the barycenter.";
   return m_bbx.GetCenter();
 }
 

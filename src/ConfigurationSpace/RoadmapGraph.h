@@ -1368,8 +1368,8 @@ VertexSetIntersection(const std::unordered_set<size_t>& _a,
   using VertexSet = std::unordered_set<size_t>;
 
   // Find the smaller of the two sets.
-  const VertexSet* smaller,
-                 * larger;
+  const VertexSet* smaller{nullptr},
+                 * larger{nullptr};
   if(_a.size() < _b.size()) {
     smaller = &_a;
     larger  = &_b;
@@ -1402,6 +1402,29 @@ VertexSetUnionInPlace(std::unordered_set<size_t>& _receiver,
   for(const size_t vid : _source)
     _receiver.insert(vid);
   return _receiver;
+}
+
+
+/// Check for a shared element within two vertex sets.
+inline
+bool
+VertexSetSharedElement(const std::unordered_set<size_t>& _a,
+    const std::unordered_set<size_t>& _b) {
+  using VertexSet = std::unordered_set<size_t>;
+
+  const VertexSet* small{nullptr},
+                 * large{nullptr};
+  if(_a.size() < _b.size()) {
+    small = &_a;
+    large = &_b;
+  }
+  else {
+    small = &_b;
+    large = &_a;
+  }
+  return std::any_of(small->begin(), small->end(),
+      [large](const size_t _v){return large->count(_v);}
+  );
 }
 
 

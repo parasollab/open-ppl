@@ -136,8 +136,8 @@ IsInCollision(
       _polyhedron2, _transformation2, _cdInfo);
   if(!collision)
   {
-    const auto point1 = _transformation1 * _polyhedron1.GetVertexList()[0];
-    const auto point2 = _transformation2 * _polyhedron2.GetVertexList()[0];
+    const auto point1 = _transformation1 * _polyhedron1.GetInsidePoint();
+    const auto point2 = _transformation2 * _polyhedron2.GetInsidePoint();
 
     collision = IsInsideObstacle(point1, _polyhedron2, _transformation2)
              or IsInsideObstacle(point2, _polyhedron1, _transformation1);
@@ -208,6 +208,12 @@ IsInsideObstacle(const Vector3d& _point, const GMSPolyhedron& _polyhedron,
 
   // Check the ordered collisions to see what happened. Skip over any points
   // where we enter and exit at the same point.
+  /// @todo This can still fail. I.e., what if we collide with two entering and
+  ///       one leaving triangle, as if we shot straight past the tip of a
+  ///       tetrahedron with the seem exactly aligned with the starting point?
+  ///       We need to check *all* colocated points, not just a pair. On
+  ///       detection of a scrape (colocated and different type) we need to
+  ///       erase all of the colocated collisions.
   while(!collisions.empty()) {
     if(collisions.size() == 1)
       return collisions.begin()->second;

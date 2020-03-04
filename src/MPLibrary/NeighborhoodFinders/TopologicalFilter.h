@@ -207,6 +207,8 @@ class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
     std::vector<double> m_maxJointTranslation; ///< The maximum translation for each body (relative to the base) due to joint motions.
     double m_factor{1}; ///< Ratio of max workspace translation / cspace distance.
 
+    bool m_bypass{false}; ///< Bypass the underlying NF, for isolated evaluation of the filter only.
+
     ///@}
 };
 
@@ -259,6 +261,9 @@ TopologicalFilter(XMLNode& _node)
       m_bodyMask.push_back(buffer);
     std::cout << "Body mask: " << m_bodyMask << std::endl;
   }
+
+  m_bypass = _node.Read("bypass", false, m_bypass,
+      "Bypass the underlying NF for isolated evaluation of the filter.");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -362,7 +367,31 @@ FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
               << std::endl;
 
   // Call the underlying NF on the reduced candidate set.
-  nf->FindNeighbors(_r, _cfg, topologicalCandidates, _out);
+  if(!m_bypass) {
+    nf->FindNeighbors(_r, _cfg, topologicalCandidates, _out);
+    return;
+  }
+
+  // We bypassed. Get the nf's DM and sort all candidates by distance.
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
+  std::multiset<Neighbor> neighbors;
+  for(const VID vid : topologicalCandidates) {
+    // Skip self.
+    const CfgType& cfg = _r->GetVertex(vid);
+    if(cfg == _cfg)
+      continue;
+
+    // Get distance, skip unconnectable.
+    const double distance = dm->Distance(_cfg, cfg);
+    if(std::isinf(distance))
+      continue;
+
+    // Add to neighbors.
+    neighbors.emplace(vid, distance);
+  }
+
+  // Write neighbors to output.
+  std::copy(neighbors.begin(), neighbors.end(), _out);
 }
 
 
@@ -420,6 +449,13 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
   const auto& ordering = ssspCache.ordering;
   const auto& distance = ssspCache.distance;
 
+  // If we're looking for a radius frontier, return the whole ordering.
+  PopulationMarkers markers{ordering.begin(), ordering.end()};
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  const bool radiusNF = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS;
+  if(radiusNF)
+    return markers;
+
   if(this->m_debug)
     std::cout << "\t\tFinding populated cells for body " << _bodyIndex
               << " from region " << *ordering.begin()
@@ -427,7 +463,6 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
 
   // Find the first marker by scanning the distance map for the closest occupied
   // cell.
-  PopulationMarkers markers{ordering.begin(), ordering.end()};
   for(; markers.first != ordering.end(); ++markers.first) {
     // Get the next cell.
     auto& region = decomposition->GetRegion(*markers.first);
@@ -444,19 +479,7 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
     // If there are any points in common between this region's VIDs and
     // our input candidate set, we've found the first marker.
     const VertexSet* const cellVIDs = tm->GetMappedVIDs(_r, &region, _bodyIndex);
-    const VertexSet* small{nullptr},
-                   * large{nullptr};
-    if(cellVIDs->size() < _inputCandidates.size()) {
-      small = cellVIDs;
-      large = &_inputCandidates;
-    }
-    else {
-      small = &_inputCandidates;
-      large = cellVIDs;
-    }
-    const bool sharedElement = std::any_of(small->begin(), small->end(),
-        [&large](const VID _v){return large->count(_v);});
-    if(sharedElement)
+    if(VertexSetSharedElement(*cellVIDs, _inputCandidates))
       break;
   }
 
@@ -476,13 +499,8 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
               << std::setprecision(4) << distance.at(*markers.first) << "."
               << std::endl;
 
-  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  const bool radiusNF = nf->GetType() == NeighborhoodFinderMethod<MPTraits>::Type::RADIUS;
-
   // Compute the max distance between the first and second marker.
-  const double maxDistance = radiusNF
-                           ? nf->GetRadius() * std::sqrt(3)
-                           : distance.at(*markers.first) + m_backtrackDistance;
+  const double maxDistance = distance.at(*markers.first) + m_backtrackDistance;
 
   if(this->m_debug)
     std::cout << "\t\t\tSearching for new last cell with max distance "
@@ -576,6 +594,13 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
     for(auto rIter = regions.first; rIter != regions.second; ++rIter) {
       const WorkspaceRegion& region = decomposition->GetRegion(*rIter);
       const VertexSet* const vids = tm->GetMappedVIDs(_r, &region, i);
+
+      if(this->m_debug)
+        std::cout << "\tChecking cell " << *rIter << " (" << &region << "): "
+                  << (vids ? std::to_string(vids->size()) : "No" )
+                  << " mapped VIDs."
+                  << std::endl;
+
       // The vids set may not exist if we have no configurations in this region.
       if(!vids)
         continue;
@@ -876,7 +901,9 @@ GetSSSPData(const WorkspaceRegion* _region, RoadmapType* const _r) {
 
   // Check that the output is correct.
   if(this->m_debug) {
-    std::cout << "Verifying ordering:" << std::endl;
+    std::cout << "\tOrdering: " << ssspCache.ordering
+              << std::endl
+              << "\t\tVerifying...";
     for(size_t i = 1; i < ssspCache.ordering.size(); ++i) {
       const VID previous = ssspCache.ordering[i - 1],
                 current  = ssspCache.ordering[i];
@@ -888,7 +915,19 @@ GetSSSPData(const WorkspaceRegion* _region, RoadmapType* const _r) {
         throw e;
       }
     }
-    std::cout << "\tOK" << std::endl;
+    std::cout << "OK" << std::endl;
+
+    // Make sure the ordering contains the root region.
+    const VD rootDescriptor = this->GetMPTools()->GetTopologicalMap(m_tmLabel)->
+        GetDecomposition()->GetDescriptor(*_region);
+    auto iter = std::find(ssspCache.ordering.begin(), ssspCache.ordering.end(),
+        rootDescriptor);
+    if(iter == ssspCache.ordering.end())
+      throw RunTimeException(WHERE) << "Ordering does not contain the root "
+                                    << "region."
+                                    << "\n\troot: " << rootDescriptor
+                                    << " (" << _region << ")"
+                                    << "\n\tordering: " << ssspCache.ordering;
   }
 
   return ssspCache;
@@ -915,7 +954,7 @@ ComputeFrontierRadius(const WorkspaceRegion* const _region,
   // octahedron, so we must increase radius by a factor of sqrt(3) to account
   // for this (ensures we get all cells within _radius, at the expense of
   // including some extras).
-  const double radius = std::sqrt(3) * _radius;
+  const double radius = 2 * _radius; //std::sqrt(3) * _radius;
 
   if(this->m_debug)
     std::cout << "ComputeFrontierRadius"
@@ -925,6 +964,10 @@ ComputeFrontierRadius(const WorkspaceRegion* const _region,
 
   // Compute the approximate inner distances to each region within the radius.
   const auto& distances = tm->ComputeApproximateMinimumInnerDistances(_region, radius);
+  if(!distances.count(_region))
+    throw RunTimeException(WHERE) << "Distance map must contain the source cell.";
+  if(distances.at(_region) != 0.)
+    throw RunTimeException(WHERE) << "Source cell has non-zero distance.";
 
   // Make an SSSP data out of the distance map. Do this by iterating over the WD
   // to avoid an n^2 algorithm.

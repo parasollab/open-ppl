@@ -42,6 +42,9 @@ class GridOverlay {
     /// A set of X, Y, Z indexes for a grid cell.
     typedef std::array<size_t, 3> IndexSet;
 
+    /// The types of cell sets for use with LocateCells.
+    enum class CellSet : unsigned char {Boundary = 1, Interior = 2, Closure = 3};
+
     ///@}
     ///@name Construction
     ///@{
@@ -77,23 +80,20 @@ class GridOverlay {
 
     /// Find the cells that touch a given boundary.
     /// @param _b The boundary of interest.
-    /// @param _interior Include cells which lie in the interior? If false, only
-    ///                  cells touching the boundary will be returned.
-    /// @return A set of cell indexes that touch _b (either the boundary or
-    ///         closure).
+    /// @param _type The type of cell set to include.
+    /// @return A set of cell indexes that touch _b as described by _type.
     std::unordered_set<size_t> LocateCells(const Boundary* const _b,
-        const bool _interior = true) const;
+        const CellSet _type = CellSet::Closure) const;
 
     /// Find the cells that touch a given polyhedron.
     /// @param _polyhedron The polyhedron of interest.
     /// @param _transformation The transformation for _polyhedron.
-    /// @param _interior Include cells which lie in the interior? If false, only
-    ///                  cells touching the boundary will be returned.
-    /// @return A set of cell indexes that touch _polyhedron (either the
-    ///         boundary or closure).
+    /// @param _type The type of cell set to include.
+    /// @return A set of cell indexes that touch _polyhedron as described by
+    ///         _type.
     std::unordered_set<size_t> LocateCells(const GMSPolyhedron& _polyhedron,
         const mathtool::Transformation& _transformation = {},
-        const bool _interior = true) const;
+        const CellSet _type = CellSet::Closure) const;
 
     /// Find the cells that contain a given boundary's bounding box.
     /// @param _b The boundary of interest.

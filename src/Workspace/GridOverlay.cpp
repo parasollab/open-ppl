@@ -72,17 +72,17 @@ LocateCell(const Point3d& _p) const {
 
 std::unordered_set<size_t>
 GridOverlay::
-LocateCells(const Boundary* const _b, const bool _interior) const {
+LocateCells(const Boundary* const _b, const CellSet _type) const {
   GMSPolyhedron polyhedron = _b->MakePolyhedron();
   polyhedron.Invert();
-  return this->LocateCells(polyhedron, mathtool::Transformation(), _interior);
+  return this->LocateCells(polyhedron, mathtool::Transformation(), _type);
 }
 
 
 std::unordered_set<size_t>
 GridOverlay::
 LocateCells(const GMSPolyhedron& _polyhedron, const mathtool::Transformation& _t,
-    const bool _interior) const {
+    const CellSet _type) const {
   /// @todo Can make the !_interior version more efficient by computing bbx
   ///       cells for each facet.
   /// @todo Can make both versions more efficient by avoiding re-building the
@@ -102,11 +102,22 @@ LocateCells(const GMSPolyhedron& _polyhedron, const mathtool::Transformation& _t
   for(const size_t cell : bbxCells) {
     Point3d center = CellCenter(cell);
     mathtool::Transformation t(center);
-    const bool touching = _interior
-                        ? pqpSolid.IsInCollision(*m_polyhedron, t,
-                                                 _polyhedron, _t, cdInfo)
-                        :      pqp.IsInCollision(*m_polyhedron, t,
-                                                 _polyhedron, _t, cdInfo);
+    bool touching;
+    switch(_type) {
+      case CellSet::Boundary:
+        touching = pqp.IsInCollision(*m_polyhedron, t,
+                                     _polyhedron, _t, cdInfo);
+        break;
+      case CellSet::Interior:
+        touching = pqpSolid.IsInsideObstacle(center, _polyhedron, _t);
+        break;
+      case CellSet::Closure:
+        touching = pqpSolid.IsInCollision(*m_polyhedron, t,
+                                          _polyhedron, _t, cdInfo);
+        break;
+      default:
+        throw RunTimeException(WHERE) << "Unrecognized cell set type.";
+    }
 
     if(touching)
       cells.insert(cell);
@@ -139,9 +150,10 @@ LocateBBXCells(const Point3d& _min, const Point3d& _max) const {
 
   // Create space for the appropriate number of cells.
   std::unordered_set<size_t> output;
-  output.reserve((max[0] - min[0] + 1) *
-                 (max[1] - min[1] + 1) *
-                 (max[2] - min[2] + 1));
+  const size_t expectedSize = (max[0] - min[0] + 1) *
+                              (max[1] - min[1] + 1) *
+                              (max[2] - min[2] + 1);
+  output.reserve(expectedSize);
 
   // Populate the cell list.
   for(size_t z = min[2]; z <= max[2]; ++z) {
@@ -152,6 +164,18 @@ LocateBBXCells(const Point3d& _min, const Point3d& _max) const {
         output.insert(i);
     }
   }
+
+#if 1
+  // Assert that the maxes are >= the mins.
+  if(max[0] < min[0] or max[1] < min[1] or max[2] < min[2])
+    throw RunTimeException(WHERE) << "Maxes " << max << " less than mins "
+                                  << min;
+  // Assert that we got the right number of cells.
+  if(output.size() != expectedSize)
+    throw RunTimeException(WHERE) << "Wrong number of BBX cells. Expected "
+                                  << expectedSize << ", got "
+                                  << output.size() << ".";
+#endif
 
   return output;
 }
@@ -293,7 +317,7 @@ ComputeDecompositionMap(const WorkspaceDecomposition* const _decomposition,
   {
     auto region   = &iter->property();
     auto boundary = region->GetBoundary();
-    auto cells    = _useCollisionDetection ? LocateCells(boundary, true)
+    auto cells    = _useCollisionDetection ? LocateCells(boundary, CellSet::Closure)
                                            : LocateBBXCells(boundary);
 
     for(auto index : cells)

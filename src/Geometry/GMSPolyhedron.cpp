@@ -36,7 +36,8 @@ GMSPolyhedron(const GMSPolyhedron& _p) :
     m_cgalPoints(_p.m_cgalPoints),
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
-    m_minRadius(_p.m_minRadius)
+    m_minRadius(_p.m_minRadius),
+    m_insidePoint(_p.m_insidePoint)
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -54,7 +55,8 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
     m_rapidModel(std::move(_p.m_rapidModel)),
-    m_pqpModel(std::move(_p.m_pqpModel))
+    m_pqpModel(std::move(_p.m_pqpModel)),
+    m_insidePoint(std::move(_p.m_insidePoint))
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -83,6 +85,7 @@ GMSPolyhedron(glutils::triangulated_model&& _t) {
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
+  ComputeInsidePoint();
 }
 
 
@@ -104,6 +107,7 @@ operator=(const GMSPolyhedron& _p) {
   m_minRadius = _p.m_minRadius;
   m_centroid = _p.m_centroid;
   m_centroidCached = _p.m_centroidCached;
+  m_insidePoint = _p.m_insidePoint;
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -131,6 +135,7 @@ operator=(GMSPolyhedron&& _p) {
   m_centroidCached = _p.m_centroidCached;
   m_rapidModel = std::move(_p.m_rapidModel);
   m_pqpModel = std::move(_p.m_pqpModel);
+  m_insidePoint = std::move(_p.m_insidePoint);
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -150,6 +155,7 @@ operator*=(const Transformation& _t) {
   // Update the vertices.
   for(auto& point : m_vertexList)
     point = _t * point;
+  m_insidePoint = _t * m_insidePoint;
 
   // Update the face normals.
   for(auto& facet : m_polygonList)
@@ -187,6 +193,7 @@ Invert() {
   // Trigger rebuild of CD models to get the normals facing the right way.
   m_rapidModel.release();
   m_pqpModel.release();
+  ComputeInsidePoint();
 }
 
 
@@ -329,6 +336,7 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
+  ComputeInsidePoint();
 
   return com;
 }
@@ -497,6 +505,15 @@ ComputeRadii() {
 }
 
 
+void
+GMSPolyhedron::
+ComputeInsidePoint() {
+  // Compute a point just beneath the first facet.
+  const auto& facet = GetPolygonList()[0];
+  m_insidePoint = facet.FindCenter() - 1e-6 * facet.GetNormal();
+}
+
+
 std::unique_ptr<WorkspaceBoundingBox>
 GMSPolyhedron::
 ComputeBoundingBox() const {
@@ -518,6 +535,14 @@ ComputeBoundingBox() const {
   bbx->SetRange(0, x);
   bbx->SetRange(1, y);
   bbx->SetRange(2, z);
+
+#if 1
+  // Assert that all poly points are inside.
+  for(const auto& v : m_vertexList)
+    if(!bbx->InBoundary(v))
+      throw RunTimeException(WHERE) << "Computed bbx " << *bbx << " does not "
+                                    << "contain polyhedron point " << v << ".";
+#endif
 
   return bbx;
 }
@@ -609,6 +634,7 @@ ComputeConvexHull() const {
   convexHull.OrderFacets();
   convexHull.ComputeSurfaceArea();
   convexHull.ComputeRadii();
+  convexHull.ComputeInsidePoint();
 
   return convexHull;
 }
@@ -669,6 +695,13 @@ GetPQPModel() const noexcept {
   return m_pqpModel.get();
 }
 
+
+const Vector3d&
+GMSPolyhedron::
+GetInsidePoint() const noexcept {
+  return m_insidePoint;
+}
+
 /*------------------------------- Common Shapes ------------------------------*/
 
 GMSPolyhedron
@@ -709,6 +742,7 @@ MakeBox(const Range<double>& _x, const Range<double>& _y,
   bbx.OrderFacets();
   bbx.ComputeSurfaceArea();
   bbx.ComputeRadii();
+  bbx.ComputeInsidePoint();
 
   return bbx;
 }
