@@ -973,21 +973,8 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
     // Find all neighbors of the source cells.
     std::unordered_set<size_t> allNeighbors;
     for(const size_t cell : sourceCells) {
-      for(size_t i = 0; i < 3; ++i) {
-        std::unordered_set<size_t> neighbors;
-        switch(i) {
-          case 0:
-            neighbors = m_grid->LocateFacetNeighbors(cell);
-            break;
-          case 1:
-            neighbors = m_grid->LocateEdgeNeighbors(cell);
-            break;
-          case 2:
-            neighbors = m_grid->LocateVertexNeighbors(cell);
-            break;
-        }
-        allNeighbors.insert(neighbors.begin(), neighbors.end());
-      }
+      std::unordered_set<size_t> neighbors = m_grid->LocateAllNeighbors(cell);
+      allNeighbors.insert(neighbors.begin(), neighbors.end());
     }
 
     // Put the neighbors in the queue as visited @ distance 0.
@@ -1062,10 +1049,11 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
     updateInnerDistance(current.cell, current.distance);
 
     // Relax each outgoing edge.
-    const std::unordered_set<size_t> neighbors = m_grid->LocateFacetNeighbors(
+    const std::unordered_set<size_t> neighbors = m_grid->LocateAllNeighbors(
         current.cell);
     for(const size_t n : neighbors)
-      relax(current.cell, n);
+      if(!visited.count(n))
+        relax(current.cell, n);
   }
 
 #if 0

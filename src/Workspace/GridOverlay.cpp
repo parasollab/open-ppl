@@ -272,6 +272,29 @@ LocateVertexNeighbors(const size_t _index) const {
   return output;
 }
 
+
+std::unordered_set<size_t>
+GridOverlay::
+LocateAllNeighbors(const size_t _index) const {
+  std::unordered_set<size_t> allNeighbors;
+  allNeighbors.reserve(26);
+
+  {
+    const auto neighbors = LocateFacetNeighbors(_index);
+    allNeighbors.insert(neighbors.begin(), neighbors.end());
+  }
+  {
+    const auto neighbors = LocateEdgeNeighbors(_index);
+    allNeighbors.insert(neighbors.begin(), neighbors.end());
+  }
+  {
+    const auto neighbors = LocateVertexNeighbors(_index);
+    allNeighbors.insert(neighbors.begin(), neighbors.end());
+  }
+
+  return allNeighbors;
+}
+
 /*------------------------------- Cell Finders -------------------------------*/
 
 double

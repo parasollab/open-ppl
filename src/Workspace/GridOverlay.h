@@ -124,6 +124,11 @@ class GridOverlay {
     /// @return The neighbor cell indexes.
     std::unordered_set<size_t> LocateVertexNeighbors(const size_t _index) const;
 
+    /// Locate all neighbors of a cell.
+    /// @param _index The cell index.
+    /// @return The neighbor cell indexes.
+    std::unordered_set<size_t> LocateAllNeighbors(const size_t _index) const;
+
     ///@}
     ///@name Cell Properties
     ///@{

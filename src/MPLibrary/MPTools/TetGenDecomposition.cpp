@@ -233,28 +233,33 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
     // Create each hole with a point just beneath one of the model's facets.
     for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
-      // If this body intersects with the environment boundary, do NOT add a
-      // hole! There is already a connection to the outside of the boundary,
-      // adding a hole will cause tetgen to misbehave.
       const Body* const body = obst->GetBody(j);
       const GMSPolyhedron& poly = body->GetWorldPolyhedron();
-      const bool touching = pqpSolid.IsInCollision(poly, identity,
-                                                   boundaryPoly, identity, cdInfo);
-      if(touching) {
-        if(_debug)
-          std::cout << "\t\tSkipping body " << j << " which touches boundary."
-                    << std::endl;
-        //continue;
-      }
+      holes.emplace_back(poly.GetInsidePoint());
 
-      // Get the body's first facet.
-      const auto& facet = poly.GetPolygonList()[0];
-
-      // Pick a point just beneath this facet's center as the hole.
-      holes.emplace_back(facet.FindCenter() - .0001 * facet.GetNormal());
-
-      if(_debug)
+      if(_debug) {
         std::cout << "\t\tAdded hole at " << holes.back() << "." << std::endl;
+
+        // Check that the hole point is inside the poly.
+        const bool goodHole = pqpSolid.IsInsideObstacle(holes.back(), poly, identity);
+        std::cout << "\t\tComputed hole is " << (goodHole ? "" : "not " )
+                  << "in the obstacle!"
+                  << std::endl;
+
+        /// @todo There seems to be an intermittent problem with adding holes for
+        ///       obstacles that touch the environment boundary. Sometimes it
+        ///       causes bad decompositions where the free space gets eaten away,
+        ///       and sometimes not. Not adding the hole sometimes causes tetgen
+        ///       to not remove the tetras within the obstacle. We need to
+        ///       characterize the cases where it fails and where it works.
+        const bool touching = pqpSolid.IsInCollision(poly, identity,
+                                                     boundaryPoly, identity,
+                                                     cdInfo);
+        if(touching)
+          std::cout << "\t\tBody " << j << " touches boundary, might cause "
+                    << "problems!"
+                    << std::endl;
+      }
     }
   }
 
@@ -385,7 +390,7 @@ operator()(const Environment* _env) {
 
   if(writeFile and m_debug) {
     ostringstream os;
-    decomposition->WriteObj("decomposition.map");
+    decomposition->WriteObj("decomposition.obj");
   }
 
   // Release tetgen structures.

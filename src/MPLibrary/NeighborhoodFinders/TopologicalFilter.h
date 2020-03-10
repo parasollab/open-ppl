@@ -949,21 +949,15 @@ ComputeFrontierRadius(const WorkspaceRegion* const _region,
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
   auto wd = const_cast<WorkspaceDecomposition*>(tm->GetDecomposition());
 
-  // We will use the approximate inner distance which is based on a manhattan
-  // search through our grid. The 3-ball using manhattan distance is an
-  // octahedron, so we must increase radius by a factor of sqrt(3) to account
-  // for this (ensures we get all cells within _radius, at the expense of
-  // including some extras).
-  const double radius = std::sqrt(3) * _radius;//2 * _radius;
-
   if(this->m_debug)
     std::cout << "ComputeFrontierRadius"
               << "\n\tSearching from region " << wd->GetDescriptor(*_region)
-              << "\n\tManhattan Radius: " << radius
+              << "\n\tManhattan Radius: " << _radius
               << std::endl;
 
   // Compute the approximate inner distances to each region within the radius.
-  const auto& distances = tm->ComputeApproximateMinimumInnerDistances(_region, radius);
+  const auto& distances = tm->ComputeApproximateMinimumInnerDistances(_region,
+      _radius);
   if(!distances.count(_region))
     throw RunTimeException(WHERE) << "Distance map must contain the source cell.";
   if(distances.at(_region) != 0.)
