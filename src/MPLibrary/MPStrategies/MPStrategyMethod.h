@@ -88,6 +88,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.
 
+    virtual void ClearRoadmap();   ///< Pre-clear the roadmap(s) if requested.
+
     ///@}
     ///@name Start/Goal Generation
     ///@{
@@ -116,6 +118,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     std::vector<std::string> m_meLabels; ///< The list of map evaluators to use.
     size_t m_iterations{0};              ///< The number of executed iterations.
     bool m_writeOutput{true};            ///< Write output at the end?
+    bool m_clearMap{false};              ///< Clear the roadmap(s) before run?
 
     ///@}
 };
@@ -129,6 +132,8 @@ MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 
   m_writeOutput = _node.Read("writeOutput", false, m_writeOutput,
       "Enable writing of output files (roadmap, path, stats)?");
+  m_clearMap = _node.Read("clearMap", false, m_clearMap,
+      "Clear the roadmap(s) prior to executing the strategy?");
 
   // Parse evaluator child nodes.
   for(auto& child : _node)
@@ -164,6 +169,9 @@ operator()() {
 
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
+
+  if(m_clearMap)
+    ClearRoadmap();
 
   MethodTimer* mt = new MethodTimer(stats, id + "::InitAndRun");
   {
@@ -287,6 +295,26 @@ Finalize() {
   // Output stats.
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
+}
+
+
+template <typename MPTraits>
+void
+MPStrategyMethod<MPTraits>::
+ClearRoadmap() {
+  /// @todo This uses the STAPL graph 'clear' function, which doesn't activate
+  ///       any roadmap hooks. Methods which use hooks may have stale data after
+  ///       clearing the map. To fix we'll need to replace with our own function
+  ///       in RoadmapGraph.
+
+  // If we have a CC tracker, remove its hooks.
+  auto roadmap = this->GetRoadmap();
+  auto ccTracker = roadmap->GetCCTracker();
+  if(ccTracker)
+    ccTracker->RemoveHooks();
+
+  roadmap->clear();
+  roadmap->SetCCTracker(this->GetStatClass());
 }
 
 /*--------------------------- Start/Goal Generation --------------------------*/

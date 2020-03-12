@@ -10,11 +10,6 @@
 /// provided to include the cost of generated paths in the stats and to clear
 /// the roadmap between executions.
 ///
-/// @todo This uses the STAPL graph 'clear' function, which doesn't activate any
-///       roadmap hooks. Methods which use hooks may have stale data after
-///       clearing the map. To fix we'll need to replace with our own function
-///       in RoadmapGraph.
-///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -38,7 +33,6 @@ class StrategySequence : public MPStrategyMethod<MPTraits> {
       std::string strategyLabel;  ///< The strategy to use.
       std::string taskLabel;      ///< The task to solve.
       bool makePath;              ///< Should we produce a path at the end?
-      bool clearMap;              ///< Should we clear the roadmap first?
     };
 
     ///@}
@@ -65,16 +59,6 @@ class StrategySequence : public MPStrategyMethod<MPTraits> {
     ///@{
 
     virtual void Run() override;
-
-    ///@}
-    ///@name Helpers
-    ///@{
-
-    /// Reset the solution for the next task by clearing the path and possibly
-    /// the roadmap also.
-    /// @param _task The next task.
-    /// @param _clear Clear the roadmap?
-    void ResetSolution(MPTask* const _task, const bool _clearMap = false);
 
     ///@}
     ///@name Internal State
@@ -109,8 +93,6 @@ StrategySequence(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
           "Label of the task for this method to solve.");
       method.makePath = child.Read("path", true, true,
           "Indicates if this method is expected to generate a path.");
-      method.clearMap = child.Read("clearMap", false, false,
-          "Should we clear the roadmap before running this strategy?");
       m_strategyMethods.push_back(method);
     }
   }
@@ -148,7 +130,12 @@ Run() {
     this->GetMPLibrary()->SetTask(task);
 
     this->GetMPLibrary()->ResetTimeEvaluators();
-    ResetSolution(task, method.clearMap);
+    this->GetPath()->Clear();
+
+    // Ensure the goal tracker has a goal map for this roadmap, task pair.
+    auto roadmap = this->GetRoadmap(task->GetRobot());
+    if(roadmap and !this->GetGoalTracker()->IsMap(roadmap, task))
+      this->GetGoalTracker()->AddMap(roadmap, task);
 
     // Run the strategy without producing any output.
     const std::string id = method.taskLabel + "::" + method.strategyLabel;
@@ -167,32 +154,6 @@ Run() {
     // Mark the task as complete.
     task->GetStatus().complete();
   }
-}
-
-/*-------------------------------- Helpers -----------------------------------*/
-
-template <typename MPTraits>
-void
-StrategySequence<MPTraits>::
-ResetSolution(MPTask* const _task, const bool _clearMap) {
-  // Clear the path.
-  this->GetPath()->Clear();
-
-  // Clear the roadmap if needed.
-  auto roadmap = this->GetRoadmap(_task->GetRobot());
-  if(_clearMap) {
-    // If we have a CC tracker, remove its hooks.
-    auto ccTracker = roadmap->GetCCTracker();
-    if(ccTracker)
-      ccTracker->RemoveHooks();
-
-    roadmap->clear();
-    roadmap->SetCCTracker(this->GetStatClass());
-  }
-
-  // Ensure the goal tracker has a goal map for this roadmap, task pair.
-  if(roadmap and !this->GetGoalTracker()->IsMap(roadmap, _task))
-    this->GetGoalTracker()->AddMap(roadmap, _task);
 }
 
 /*----------------------------------------------------------------------------*/
