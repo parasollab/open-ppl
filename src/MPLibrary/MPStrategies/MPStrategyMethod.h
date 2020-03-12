@@ -70,7 +70,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
     /// Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
-    virtual void Run();            ///< Call Iterate until EvaluateMap is true.
 
     /// Set output file writing to on or off (on by default). This is used to
     /// suppress generation of roadmap, path, and stat files.
@@ -84,6 +83,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///@name Helpers
     ///@{
 
+    virtual void Run();            ///< Call Iterate until EvaluateMap is true.
     virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.

@@ -108,7 +108,7 @@ class MPProblem final
     ///@name Task Accessors
     ///@{
 
-		MPTask* GetTask(std::string _label);
+    MPTask* GetTask(std::string _label);
 
     /// Get the unfinished tasks currently assigned to a given robot.
     /// @param _robot The robot to retrieve tasks for.
@@ -211,7 +211,8 @@ class MPProblem final
     std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>>
         m_groupTaskMap;
 
-		std::unordered_map<std::string,MPTask*> m_taskLabelMap;
+    // Maps task labels to tasks.
+    std::unordered_map<std::string, MPTask*> m_taskLabelMap;
 
     ///@}
     ///@name Files

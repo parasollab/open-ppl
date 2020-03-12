@@ -22,6 +22,18 @@
 ///
 /// A PRM guided by a workspace skeleton.
 ///
+/// Reference:
+///   Read Sandstrom. "Approximating Configuration Space Topology with Workspace
+///   Models". PhD Thesis, Spring 2020.
+///   -and-
+///   Read Sandstrom, Diane Uwacu, Jory Denny, and Nancy M. Amato.
+///   "Topology-Guided Roadmap Construction with Dynamic Region Sampling".
+///   Under review for RA-L @ IROS 20.
+///
+/// @todo Add a function to initialize from an existing roadmap, which means
+///       detecting the bridges and local components along each edge and
+///       initializing expansion regions appropriately.
+///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -156,18 +168,6 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
           const SkeletonEdgeDescriptor& _d2) const noexcept {
         // Test ID first since we should only ever have two edges on the same ID (one
         // for each direction). If ID are equal, sort by source, then target.
-      //  if(_d1.id() < _d2.id())
-      //    return true;
-      //  else if(_d1.id() > _d2.id())
-      //    return false;
-      //  else if(_d1.source() < _d2.source())
-      //    return true;
-      //  else if(_d1.source() > _d2.source())
-      //    return false;
-      //  else if(_d1.target() < _d2.target())
-      //    return true;
-      //  return false;
-
         return _d1.id() < _d2.id()
             or (!(_d1.id() > _d2.id())
                 and (_d1.source() < _d2.source()
@@ -413,13 +413,14 @@ class DynamicRegionsPRM : public MPStrategyMethod<MPTraits> {
     ///@}
     ///@name Hacked Shared State
     ///@{
-    /// For WAFR20, we need all instances of this method to share state so that
+    /// For IROS20, we need all instances of this method to share state so that
     /// we can handle initial construction and subsequent query solves in an
     /// easy way. This is to be fixed later so that each instance maintains its
-    /// own state. We will likely also want a way to initialize a state properly
-    /// from an existing roadmap, which means detecting the bridges and local
-    /// components along each edge and initializing expansion regions
-    /// appropriately.
+    /// own state.
+    /// @todo I'm not actually sure that we want to 'fix' this - if we do, then
+    ///       we'd have to re-detect local components for multiple instances of
+    ///       the same strategy working on the same roadmap. More likely we want
+    ///       to keep a single shared state for each roadmap.
 
     static bool m_initialized; ///< Is the shared state initialized?
 
