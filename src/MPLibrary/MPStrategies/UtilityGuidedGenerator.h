@@ -1,5 +1,5 @@
-#ifndef UTILITY_GUIDED_GENERATOR_H_
-#define UTILITY_GUIDED_GENERATOR_H_
+#ifndef PMPL_UTILITY_GUIDED_GENERATOR_H_
+#define PMPL_UTILITY_GUIDED_GENERATOR_H_
 
 #include "MPStrategyMethod.h"
 
@@ -7,355 +7,481 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @TODO
+/// An approximate model of c-space used by the utility guided sampling
+/// strategy.
+///
+/// @todo This implementation is very bad. It takes O(n lg n) time for the
+///       nearest-neighbor problem on each iteration. If we wish to use this as
+///       a comparison method, we should first improve this implementation to a
+///       more reasonable performance.
 /// @ingroup MotionPlanningStrategyUtils
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
-struct ApproximateCSpaceModel {
+template <typename MPTraits>
+class ApproximateCSpaceModel {
 
-  typedef typename MPTraits::CfgType CfgType;
-  typedef typename MPTraits::MPLibrary MPLibrary;
-  typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
+  public:
 
-  typedef typename std::pair<CfgType, double> ModelPair;
+    ///@name Motion Planning Types
+    ///@{
 
-  std::vector<ModelPair> m_modelNodes;
-  DistanceMetricPointer m_dm;
+    typedef typename MPTraits::CfgType                CfgType;
+    typedef typename MPTraits::MPLibrary              MPLibrary;
+    typedef typename MPLibrary::DistanceMetricPointer DistanceMetricPointer;
 
-  ApproximateCSpaceModel(DistanceMetricPointer _dm) : m_dm(_dm) {}
-  ~ApproximateCSpaceModel() {}
+    ///@}
+    ///@name Local Types
+    ///@{
 
-  void AddSample(const CfgType& _c, double _coll) {
-    m_modelNodes.emplace_back(_c, _coll);
-  }
+    typedef typename std::pair<CfgType, double> ModelPair;
 
-  double FreeProbability(const CfgType& _c, int _k) {
-    // Make a comparator to sort the model nodes.
-    auto comparator = [&_c, this](const ModelPair& _p1, const ModelPair& _p2)
-    {
-      return this->m_dm->Distance(_c, _p1.first)
-           < this->m_dm->Distance(_c, _p2.first);
-    };
+    ///@}
+    ///@name Construction
+    ///@{
 
-    std::sort(m_modelNodes.begin(), m_modelNodes.end(), comparator);
+    ApproximateCSpaceModel(DistanceMetricPointer _dm = nullptr);
 
-    int size = min<int>(_k, m_modelNodes.size());
-    if(size == 0)
-      return 0.0;
-    else
-    {
-      auto adder = [](const double _sum, const ModelPair& _p)
-      {
-        return std::plus<double>()(_sum, _p.second);
-      };
-      return std::accumulate(m_modelNodes.begin(), m_modelNodes.begin() + size,
-          0., adder) / size;
-    }
-  }
+    ///@}
+    ///@name Model Interface
+    ///@{
+
+    /// Add a sample to the model.
+    /// @param _c The sample to add.
+    /// @param _valid The sample's validity.
+    void AddSample(const CfgType& _c, const bool _valid);
+
+    /// Estimate the probability that a sample is free based on the k-nearest
+    /// neighbors according to the distance metric.
+    /// @param _c The query sample.
+    /// @param _k The k to use.
+    /// @return Estimated probability that the sample is free, equal to the
+    ///         average validity of the k-nearest samples.
+    double FreeProbability(const CfgType& _c, const size_t _k);
+
+    ///@}
+
+  private:
+
+    ///@name Internal State
+    ///@{
+
+    std::vector<ModelPair> m_modelNodes;   ///< The nodes in the model.
+    DistanceMetricPointer m_dm;            ///< The distance metric.
+
+    ///@}
 
 };
 
+/*------------------------------- Construction -------------------------------*/
+
+template <typename MPTraits>
+ApproximateCSpaceModel<MPTraits>::
+ApproximateCSpaceModel(DistanceMetricPointer _dm) : m_dm(_dm) {}
+
+/*----------------------------------------------------------------------------*/
+
+template <typename MPTraits>
+void
+ApproximateCSpaceModel<MPTraits>::
+AddSample(const CfgType& _c, const bool _valid) {
+  m_modelNodes.emplace_back(_c, _valid);
+}
+
+
+template <typename MPTraits>
+double
+ApproximateCSpaceModel<MPTraits>::
+FreeProbability(const CfgType& _c, const size_t _k) {
+  // Determine how many nodes will be used to estimate the probability that _c
+  // is free.
+  const size_t size = std::min(_k, m_modelNodes.size());
+  if(size == 0)
+    return 0.;
+
+  // Sort the model nodes on distance to _c.
+  /// @todo This should be replaced with something better, at minimum a linear
+  ///       scan and priority-queue for the (size) best nodes for O(n lg size)
+  ///       time.
+  auto comparator = [&_c, this](const ModelPair& _p1, const ModelPair& _p2)
+  {
+    return this->m_dm->Distance(_c, _p1.first)
+         < this->m_dm->Distance(_c, _p2.first);
+  };
+  std::sort(m_modelNodes.begin(), m_modelNodes.end(), comparator);
+
+  // Return the average validity of the first (size) nodes.
+  auto adder = [](const double _sum, const ModelPair& _p)
+  {
+    return _sum + _p.second;
+  };
+  return std::accumulate(m_modelNodes.begin(), m_modelNodes.begin() + size,
+      0., adder) / size;
+}
+
+/*----------------------------------------------------------------------------*/
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~ UtilitiyGuidedGenerator ~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO
-/// @todo Configure for pausible execution.
+/// Attempts to generate configurations based on a midpoint rule and an
+/// approximate model of c-space based on k-nearest neighbors.
+///
+/// Reference:
+///   Brendan Burns and Oliver Brock. "Toward Optimal Configuration Space
+///   Sampling". RSS 2005.
+///
+/// @note The paper seems to assume there will always be several connected
+///       components and provides no contingency for when this isn't the case.
+///       We use a uniform random sample from the environment bounary in this
+///       case.
+///
+/// @todo This is really a strategy for sampling and needs to be moved to a
+///       SamplerMethod class.
+///
+/// @warning This sampler really sucks when the roadmap is small. Tau needs to
+///          be set VERY high to avoid problems where the midpoint between start
+///          and goal cfgs/clusters is deep in obstacle space, which mitigates
+///          the proposed benefits.
+///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
+template <typename MPTraits>
 class UtilityGuidedGenerator : public MPStrategyMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::VertexSet VertexSet;
 
-    UtilityGuidedGenerator(std::string _vcLabel = "", std::string _nfLabel = "",
-        std::string _connector = "", std::vector<std::string> _evaluators = std::vector<std::string>(),
-        double _componentDist = 0.5, double _tao = 0.01,
-        int _kNeighbors = 10, int _kSamples = 5);
+    ///@}
+    ///@name Construction
+    ///@{
+
+    UtilityGuidedGenerator();
     UtilityGuidedGenerator(XMLNode& _node);
-    virtual ~UtilityGuidedGenerator();
+    virtual ~UtilityGuidedGenerator() = default;
 
-    virtual void ParseXML(XMLNode& _node);
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
     virtual void Print(std::ostream& _os) const;
 
-    virtual void Initialize() {}
-    virtual void Run();
-    virtual void Finalize();
+    ///@}
+    ///@name MPStrategyMethod Overrides
+    ///@{
+
+    virtual void Initialize() override;
+    virtual void Iterate() override;
+
+    ///@}
 
   protected:
 
-    CfgType GenerateEntropyGuidedSample();
+    ///@name Helpers
+    ///@{
 
-    //data
-    std::string m_vcLabel, m_nfLabel, m_connectorLabel;
-    double m_componentDist, m_tao;
-    int m_kNeighbors, m_kSamples;
+    CfgType GenerateSample();
+    CfgType UniformRandomSample();
+    CfgType EntropyGuidedSample();
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::string m_vcLabel;
+    std::string m_nfLabel;
+    std::string m_connectorLabel;
+
+    double m_componentDist{10};
+    double m_tau{5};
+    size_t m_kNeighbors{10};
+    size_t m_kSamples{5};
+
+    ApproximateCSpaceModel<MPTraits> m_model;
+
+    ///@}
+
 };
 
+/*------------------------------- Construction -------------------------------*/
 
-template <class MPTraits>
+template <typename MPTraits>
 UtilityGuidedGenerator<MPTraits>::
-UtilityGuidedGenerator(std::string _vcLabel, std::string _nfLabel, std::string _connector,
-    std::vector<std::string> _evaluators, double _componentDist, double _tao,
-    int _kNeighbors, int _kSamples) :
-    m_vcLabel(_vcLabel), m_nfLabel(_nfLabel), m_connectorLabel(_connector),
-    m_componentDist(_componentDist), m_tao(_tao),
-    m_kNeighbors(_kNeighbors), m_kSamples(_kSamples) {
-  this->m_meLabels = _evaluators;
+UtilityGuidedGenerator() {
   this->SetName("UtilityGuidedGenerator");
 }
 
-template <class MPTraits>
-UtilityGuidedGenerator<MPTraits>::UtilityGuidedGenerator(XMLNode& _node) :
-        MPStrategyMethod<MPTraits>(_node) {
+
+template <typename MPTraits>
+UtilityGuidedGenerator<MPTraits>::
+UtilityGuidedGenerator(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("UtilityGuidedGenerator");
-  ParseXML(_node);
+
+  m_vcLabel = _node.Read("vcLabel", true, "",
+      "Validity Checker for sampling.");
+  m_nfLabel = _node.Read("nfLabel", true, "",
+      "Neighborhood Finder used in approximate c-space model.");
+  m_connectorLabel = _node.Read("connectorLabel", true, "",
+      "Connector for local planning.");
+
+  m_componentDist = _node.Read("componentDist", false,
+      m_componentDist, 0., std::numeric_limits<double>::max(),
+      "Distance threshold between ccs");
+
+  m_tau = _node.Read("tau", false,
+      m_tau, 0., std::numeric_limits<double>::max(),
+      "perturb amount");
+
+  m_kNeighbors = _node.Read("kneighbors", false,
+      m_kNeighbors, size_t(0), std::numeric_limits<size_t>::max(),
+      "number of neighbors to look at when determining the probability a "
+      "sample is free");
+
+  m_kSamples = _node.Read("ksamples", false,
+      m_kSamples, size_t(0), std::numeric_limits<size_t>::max(),
+      "number of samples to select from during each round");
 }
 
-template <class MPTraits>
-UtilityGuidedGenerator<MPTraits>::~UtilityGuidedGenerator(){}
+/*----------------------------------------------------------------------------*/
 
 template <typename MPTraits>
 void
-UtilityGuidedGenerator<MPTraits>::ParseXML(XMLNode& _node) {
-  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Checker to verify validity of nodes.");
-  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder used in approximate c-space model.");
-  m_connectorLabel = _node.Read("connectorLabel", true, "", "Node Connector used for connecting nodes. ");
-
-  m_componentDist = _node.Read("componentDist", false, 0.5, 0.0, MAX_DBL, "distance threshold between ccs");
-  m_tao = _node.Read("tao", false, 0.01, 0.0, MAX_DBL, "perturb amount");
-  m_kNeighbors = _node.Read("kneighbors", false, 10, 0, MAX_INT, "number of neighbors to look at when determining the probability a sample is free");
-  m_kSamples = _node.Read("ksamples", false, 5, 0, MAX_INT, "number of samples to select from during each round");
-
-  for(auto& child : _node)
-    if(child.Name() == "Evaluator")
-      this->m_meLabels.push_back(
-          child.Read("label", true, "", "Evaluation Method"));
-}
-
-template <class MPTraits>
-void
-UtilityGuidedGenerator<MPTraits>::Print(std::ostream& _os) const {
+UtilityGuidedGenerator<MPTraits>::
+Print(std::ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
-  _os << "\tValidity Checker: " << m_vcLabel << std::endl;
-  _os << "\tNeighborhood Finder: " << m_nfLabel << std::endl;
-  _os << "\tComponent Distance: " << m_componentDist << std::endl;
-  _os << "\tTao: " << m_tao << std::endl;
-  _os << "\tKNeighbors: " << m_kNeighbors << std::endl;
-  _os << "\tKSamples: " << m_kSamples << std::endl;
-  _os << "\tNode Connector: " << m_connectorLabel << std::endl;
-  _os << "\tEvaluators\n";
-  for(auto& l : this->m_meLabels)
-    _os << "\t" << l;
-  _os << std::endl;
+  _os << "\tValidity Checker: " << m_vcLabel
+      << "\n\tNeighborhood Finder: " << m_nfLabel
+      << "\n\tComponent Distance: " << m_componentDist
+      << "\n\tTao: " << m_tau
+      << "\n\tKNeighbors: " << m_kNeighbors
+      << "\n\tKSamples: " << m_kSamples
+      << "\n\tNode Connector: " << m_connectorLabel
+      << std::endl;
 }
 
+/*----------------------------------------------------------------------------*/
 
-template <class MPTraits>
+template <typename MPTraits>
 void
-UtilityGuidedGenerator<MPTraits>::Run() {
-  if(this->m_debug) std::cout << "\nRunning UtilityGuidedGenerator::" << std::endl;
-
-  //setup variables
-  StatClass* stats = this->GetStatClass();
-  RoadmapType* rmap = this->GetRoadmap();
-  Environment* env = this->GetEnvironment();
-  auto bb = env->GetBoundary();
-
+UtilityGuidedGenerator<MPTraits>::
+Initialize() {
+  // Initialize the approximate model.
   auto dm = this->GetDistanceMetric(this->GetNeighborhoodFinder(m_nfLabel)->
       GetDMLabel());
-  ApproximateCSpaceModel<MPTraits> model(dm);
+  m_model = ApproximateCSpaceModel<MPTraits>(dm);
 
-  auto vcm = this->GetValidityChecker(m_vcLabel);
-  std::string callee(this->GetNameAndLabel() + "::Run()");
+  // Generate start and goal nodes if possible.
+  this->GenerateStart();
+  this->GenerateGoals();
 
-  auto connector = this->GetConnector(m_connectorLabel);
+  // Ensure the roadmap has at least one free sample.
+  auto r = this->GetRoadmap();
+  if(r->Size() >= 1)
+    return;
 
+  // Try up to 100 times to generate a valid sample.
+  for(size_t i = 0; i < 100; ++i) {
+    // Generate a sample.
+    CfgType q = GenerateSample();
 
-  stats->StartClock("Map Generation");
+    // Add the sample to the model.
+    const bool valid = q.GetLabel("VALID");
+    m_model.AddSample(q, valid);
 
-  bool mapPassedEvaluation = false;
-  while(!mapPassedEvaluation) {
-
-    CfgType q(this->GetTask()->GetRobot());
-
-    //if roadmap empty, simply add a free random sample
-    if(rmap->get_num_vertices() < 1) {
-      stats->StartClock("Total Sampling Time");
-      bool inBBX = false, isValid = false;
-      while(!inBBX && !isValid) {
-        stats->IncNodesAttempted(this->GetNameAndLabel());
-        q.GetRandomCfg(bb);
-        inBBX = q.InBounds(bb);
-        if(inBBX) {
-          isValid = vcm->IsValid(q, callee);
-          if(isValid)
-            stats->IncNodesGenerated(this->GetNameAndLabel());
-        }
-      }
-      if(this->m_debug) std::cout << "roadmap empty, adding free random sample\n";
-      model.AddSample(q, 1);
-      rmap->AddVertex(q);
-      stats->StopClock("Total Sampling Time");
-
+    if(valid) {
+      r->AddVertex(q);
+      return;
     }
-    else {
-      stats->StartClock("Total Sampling Time");
-      //generate a entropy guided sample
-      q = GenerateEntropyGuidedSample();
-      double qProbFree = model.FreeProbability(q, m_kNeighbors);
-      if(this->m_debug) std::cout << "q (" << qProbFree << ") = " << q << std::endl;
-
-      for(int j=1; j<m_kSamples; ++j) {
-        CfgType qNew = GenerateEntropyGuidedSample();
-        double qNewProbFree = model.FreeProbability(qNew, m_kNeighbors);
-        if(this->m_debug) std::cout << "\tq_" << j << " (" << qNewProbFree << ") = " << qNew << std::endl;
-
-        if(qNewProbFree > qProbFree) {
-          if(this->m_debug) std::cout << "\tprobability greater, swapping to q_" << j << std::endl;
-          q = qNew;
-          qProbFree = qNewProbFree;
-        }
-        else
-          if(this->m_debug) std::cout << "\tprobablity not greater, keeping q\n";
-      }
-      if(this->m_debug) std::cout << "q (" << qProbFree << ") = " << q << std::endl;
-
-      //add the sample to the model and roadmap (if free)
-      stats->IncNodesAttempted(this->GetNameAndLabel());
-      stats->StopClock("Total Sampling Time");
-      bool isColl = !q.InBounds(bb) || !vcm->IsValid(q, callee);
-      if(!isColl) {
-        if(this->m_debug) std::cout << "valid, adding to roadmap and model\n";
-        stats->IncNodesGenerated(this->GetNameAndLabel());
-
-        model.AddSample(q, 1);
-        VID qvid = rmap->AddVertex(q);
-
-        //connect sample
-        stats->StartClock("Total Connection Time");
-        connector->Connect(rmap, qvid);
-        stats->StopClock("Total Connection Time");
-        if(this->m_debug) std::cout << "connecting sample, roadmap now has " << rmap->get_num_vertices() << " nodes and " << rmap->get_num_edges() << " edges\n";
-
-      }
-      else {
-        if(this->m_debug) std::cout << "invalid, adding to model only\n";
-        model.AddSample(q, 0);
-      }
-      if(this->m_debug) std::cout << std::endl;
-    }
-
-    mapPassedEvaluation = this->EvaluateMap();
   }
 
-  stats->StopClock("Map Generation");
-  if(this->m_debug) stats->PrintClock("Map Generation", std::cout);
-
-  if(this->m_debug) std::cout << "\nEnd Running UtilityGuidedGenerator::" << std::endl;
+  throw RunTimeException(WHERE) << "Could not generate initial sample.";
 }
 
-template <class MPTraits>
+
+template <typename MPTraits>
 void
-UtilityGuidedGenerator<MPTraits>::Finalize() {
-  if(this->m_debug) std::cout<<"\nFinalizing UtilityGuidedGenerator::"<<std::endl;
+UtilityGuidedGenerator<MPTraits>::
+Iterate() {
+  CfgType q = GenerateSample();
 
-  //output final map
-  this->GetRoadmap()->Write(this->GetBaseFilename() + ".map", this->GetEnvironment());
+  // Add the sample to the model.
+  const bool valid = q.GetLabel("VALID");
+  m_model.AddSample(q, valid);
 
-  //output stats
-  std::string str = this->GetBaseFilename() + ".stat";
-  std::ofstream  osStat(str.c_str());
-  osStat << "NodeGen+Connection Stats" << std::endl;
-  StatClass* stats = this->GetStatClass();
-  stats->PrintAllStats(osStat, this->GetRoadmap());
-  stats->PrintClock("Map Generation", osStat);
-  osStat.close();
+  // If the sample wasn't free, quit.
+  if(!valid)
+    return;
 
-  if(this->m_debug) std::cout << "\nEnd Finalizing UtilityGuidedGenerator" << std::endl;
+  // Add q the roadmap and attempt connection.
+  auto r = this->GetRoadmap();
+  const VID vid = r->AddVertex(q);
+  this->GetConnector(m_connectorLabel)->Connect(r, vid);
 }
 
-template <class MPTraits>
+/*--------------------------------- Helpers ----------------------------------*/
+
+template <typename MPTraits>
 typename MPTraits::CfgType
 UtilityGuidedGenerator<MPTraits>::
-GenerateEntropyGuidedSample() {
-  RoadmapType* rmap = this->GetRoadmap();
-  Environment* env = this->GetEnvironment();
-  auto bb = env->GetBoundary();
-  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
-  auto robot = this->GetTask()->GetRobot();
+GenerateSample() {
+  // If there are multiple CCs, use entropy-guided. Else use uniform.
+  auto ccTracker = this->GetRoadmap()->GetCCTracker();
+  const bool multipleCCs = ccTracker->GetNumCCs() > 1;
+  CfgType (UtilityGuidedGenerator<MPTraits>::*makeSample)(void);
+  makeSample = multipleCCs
+             ? &UtilityGuidedGenerator<MPTraits>::EntropyGuidedSample
+             : &UtilityGuidedGenerator<MPTraits>::UniformRandomSample;
 
-  CfgType q1(robot), q2(robot);
-
-  stapl::sequential::vector_property_map<RoadmapType, size_t > cmap;
-  std::vector<std::pair<size_t, VID> > ccs;
-  if(get_cc_stats(*rmap, cmap, ccs) == 1) {
-    int index = (int)floor((double)DRand()*(double)rmap->get_num_vertices());
-    q1 = (rmap->begin() + index)->property();
-    q2.GetRandomCfg(bb);
+  // Generate m_kSamples samples and keep the one with the highest estimated
+  // probability of lying in free space.
+  CfgType best;
+  double bestProbability = -1;
+  for(size_t i = 0; i < m_kSamples; ++i) {
+    const CfgType q = (*this.*makeSample)();
+    double probability = m_model.FreeProbability(q, m_kNeighbors);
     if(this->m_debug)
-      std::cout << "\t\tIn GenerateEntropyGuidedSample: only 1 cc, randomly selected vertex " << (rmap->begin() + index)->descriptor() << " and a random sample\n";
-  }
-  else {
-    //randomly select 2 ccs that are within a threshold m_componentDist of each other
-    if(this->m_debug)
-      std::cout << "\t\tIn GenerateEntropyGuidedSample: there are " << ccs.size() << " ccs, looking for a pair less than " << m_componentDist << " apart\n";
-    VID cc1Vid, cc2Vid, minCC1Vid = -1, minCC2Vid = -1;
-    std::vector<VID> cc1, cc2;
-    double dist = 0, minDist = 0;
-    int possibleCombos = 1;
-    for(size_t i=ccs.size(); i>2; --i)
-      possibleCombos *= i;
-    do {
-      cc1Vid = ccs[(int)floor((double)DRand()*(double)ccs.size())].second;
-      do {
-	cc2Vid = ccs[(int)floor((double)DRand()*(double)ccs.size())].second;
-      }
-      while (cc1Vid == cc2Vid);
+      std::cout << "\tq_" << i << " (" << probability << ") = "
+                << q.PrettyPrint()
+                << std::endl;
 
-      cmap.reset();
-      get_cc(*rmap, cmap, cc1Vid, cc1);
-      cmap.reset();
-      get_cc(*rmap, cmap, cc2Vid, cc2);
-
-      std::vector<Neighbor> kp;
-      nf->FindNeighborPairs(rmap, cc1.begin(), cc1.end(), cc2.begin(),
-          cc2.end(), std::back_inserter(kp));
-      dist = kp[0].distance;
-
+    if(probability > bestProbability) {
       if(this->m_debug)
-        std::cout << "\t\t\tdist between cc " << cc1Vid << " and " << cc2Vid << " is " << dist << std::endl;
-      if(dist < minDist) {
-        minCC1Vid = cc1Vid;
-        minCC2Vid = cc2Vid;
-      }
+        std::cout << "\t\tprobability greater, swapping to q_" << i
+                  << std::endl;
+      best = q;
+      bestProbability = probability;
     }
-    while (dist > m_componentDist && possibleCombos-- > 0);
-    if(dist <= m_componentDist) {
-      cc1Vid = minCC1Vid;
-      cc2Vid = minCC2Vid;
-
-      cmap.reset();
-      get_cc(*rmap, cmap, cc1Vid, cc1);
-      cmap.reset();
-      get_cc(*rmap, cmap, cc2Vid, cc2);
-    }
-    if(this->m_debug)
-      std::cout << "\t\t\tselected cc pair " << cc1Vid << " and " << cc2Vid << std::endl;
-
-    //randomly select a node in each cc
-    q1 = rmap->GetVertex(cc1[(int)floor(DRand()*cc1.size())]);
-    q2 = rmap->GetVertex(cc2[(int)floor(DRand()*cc2.size())]);
   }
 
-  //return perturbation of the midpoint between the two nodes
+  // Validity check the sample.
+  const std::string caller = this->GetNameAndLabel() + "::Iterate";
+  const bool valid = this->GetValidityChecker(m_vcLabel)->IsValid(best, caller);
+  if(this->m_debug)
+    std::cout << "\tGenerated " << (valid ? "" : "in") << "valid sample "
+              << best.PrettyPrint()
+              << std::endl;
+
+  return best;
+}
+
+
+template <typename MPTraits>
+typename MPTraits::CfgType
+UtilityGuidedGenerator<MPTraits>::
+UniformRandomSample() {
+  CfgType q(this->GetTask()->GetRobot());
+  q.GetRandomCfg(this->GetEnvironment()->GetBoundary());
+
+  if(this->m_debug)
+    std::cout << "\t\tonly 1 cc, sampled new cfg"
+              << std::endl;
+
+  return q;
+}
+
+
+template <typename MPTraits>
+typename MPTraits::CfgType
+UtilityGuidedGenerator<MPTraits>::
+EntropyGuidedSample() {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::EntropyGuidedSample");
+
+  auto r = this->GetRoadmap();
+  auto ccTracker = r->GetCCTracker();
+
+  // Randomly select 2 ccs that are within a threshold m_componentDist of each
+  // other. We will return a perturbation of their midpoint.
+  if(this->m_debug)
+    std::cout << "\t\tThere are " << ccTracker->GetNumCCs()
+              << " ccs, looking for a pair less than " << m_componentDist
+              << " apart"
+              << std::endl;
+
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  std::vector<Neighbor> neighbors;
+
+  // Get a representative from each CC.
+  VertexSet firstRepresentatives = ccTracker->GetRepresentatives(),
+            allSecondRepresentatives = firstRepresentatives;
+
+  // Try to find a pair of CCs where the closest nodes are within a threshold
+  // m_componentDist of each other.
+  std::pair<VID, VID> ccVIDs{INVALID_VID, INVALID_VID};
+  double ccDistance = std::numeric_limits<double>::infinity();
+  while(firstRepresentatives.size() and ccDistance > m_componentDist) {
+    // Select a random first VID and remove it from the set of first reps.
+    const VID firstVID = RandomElement(firstRepresentatives);
+    firstRepresentatives.erase(firstVID);
+
+    // Get the related CC.
+    const VertexSet& firstCC = *ccTracker->GetCC(firstVID);
+
+    // Get the representatives from all other CCs.
+    allSecondRepresentatives.erase(firstVID);
+    VertexSet secondRepresentatives = allSecondRepresentatives;
+
+    // Try all of these.
+    while(secondRepresentatives.size() and ccDistance > m_componentDist) {
+      // Select a random second VID and remove it from the set of first reps.
+      const VID secondVID = RandomElement(secondRepresentatives);
+      secondRepresentatives.erase(secondVID);
+
+      // Get the related CC.
+      const VertexSet& secondCC = *ccTracker->GetCC(secondVID);
+
+      // Search for the smallest distance between these.
+      for(const VID vid : firstCC) {
+        // Find neighbors to this vid.
+        neighbors.clear();
+        nf->FindNeighbors(r, r->GetVertex(vid), secondCC, neighbors);
+
+        if(neighbors.empty())
+          continue;
+
+        const double distance = neighbors[0].distance;
+        if(distance < ccDistance) {
+          ccDistance = distance;
+          ccVIDs = {vid, neighbors[0].target};
+
+          // Quit if we're close enough.
+          if(ccDistance <= m_componentDist)
+            break;
+        }
+      }
+    }
+  }
+
+  // Make sure we got valid VIDs.
+  if(ccVIDs.first == INVALID_VID or ccVIDs.second == INVALID_VID)
+    throw RunTimeException(WHERE) << "Could not find a valid pair of VIDs.";
+
+  // Get the CC's for the selected VIDs.
+  const VertexSet& cc1 = *ccTracker->GetCC(ccVIDs.first),
+                 & cc2 = *ccTracker->GetCC(ccVIDs.second);
+
+  if(this->m_debug)
+    std::cout << "\t\t\tselected ccs " << &cc1 << ", " << &cc2
+              << " with closest nodes "
+              << ccVIDs.first << ", " << ccVIDs.second
+              << " at distance " << ccDistance
+              << std::endl;
+
+  const CfgType& q1 = r->GetVertex(RandomElement(cc1));
+  const CfgType& q2 = r->GetVertex(RandomElement(cc2));
+
+  // Return perturbation of the midpoint between the two nodes.
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
   CfgType qn = (q1 + q2)/2;
   CfgType ray = qn;
-  ray.GetRandomRay(DRand()*m_tao, dm);
+  ray.GetRandomRay(DRand() * m_tau, dm);
   return qn + ray;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

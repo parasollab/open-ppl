@@ -1143,6 +1143,7 @@ RunSolver(const Solver& _solver) {
   if(_solver.vizmoDebug)
     VDClose();
 
+  this->GetStatClass()->PrintClock("MPLibrary::Initialize", std::cout);
   Uninitialize();
   m_problem->SetBaseFilename(originalBaseFilename);
 }

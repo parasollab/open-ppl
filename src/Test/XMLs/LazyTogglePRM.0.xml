@@ -60,7 +60,8 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <TogglePRMStrategy label="LazyTogglePRM" priority="true">
+      <TogglePRMStrategy label="LazyTogglePRM" priority="true"
+        vcLabel="pqp_solid">
         <Sampler label="UniformRandom" number="10" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <ColConnector label="ToggleConnect"/>

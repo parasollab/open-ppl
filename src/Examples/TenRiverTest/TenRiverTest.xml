@@ -429,16 +429,6 @@
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
            use_scaling="0"/-->
-      <BandsNF label="RbandNF_2bands_4k" debug="false" dmLabel="euclidean">
-        <RBand label="first" max = '8' k='8' policy='closest'
-          dmLabel="euclidean"/>
-        <RBand label="second" min = '8' max = '64' k='8' policy='random'
-          dmLabel="euclidean"/>
-      </BandsNF>
-      <BandsNF label="DbandNF" debug="false" dmLabel="euclidean">
-        <DBand label="first" min='.1' max='.3' k='16' policy='closest'
-          dmLabel="euclidean"/>
-      </BandsNF>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -482,34 +472,8 @@
         saveIntermediates="false"/>
       <TransformAtS label="tas" binaryEvaluation="true" vcLabel="rapid" s="0.5"
         saveIntermediates="false"/>
-      <AStarDistance label="asd" vcLabel="rapid" dmLabel="euclidean"
-        maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
-      <AStarClearance label="asc" vcLabel="pqp_solid" maxTries="6" numNeighbors="3"
-        histLength="10" dmLabel="euclidean" clearanceType="exact"
-        penetrationType="exact" useBBX="true" positional="true" debug="false"/>
-      <!--MedialAxisLP label="malpr" controller="recursive"
-        macEpsilon="0.1" maxIter="10"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"
-        debug="true" saveIntermediates="true"/>
-      <MedialAxisLP label="malpi" controller="iterative"
-        resFactor="20" maxIter="100"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"
-        debug="true" saveIntermediates="true" maxFailures="100"/>
-      <MedialAxisLP label="malpb" controller="binary"
-        resFactor="20" maxIter="100"
-        vcLabel="pqp_solid" dmLabel="euclidean"
-        clearanceType="exact" penetrationType="exact" useBBX="true"
-        positional="true"
-        debug="true" saveIntermediates="true"/-->
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
-      <ApproxSpheres label="apsph" vcLabel="pqp_solid" dmLabel="euclidean"
-        saveIntermediates="false" clearanceType="exact"
-        penetrationType="exact"/>
       <HierarchicalLP label="hlp">
         <LocalPlanner method="sl"/>
         <LocalPlanner method="ras"/>

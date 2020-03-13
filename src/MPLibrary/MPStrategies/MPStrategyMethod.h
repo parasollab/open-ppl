@@ -96,19 +96,22 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
     /// Generate a 'start' node for the task and add it to the roadmap.
     /// @param _samplerLabel The label for the sampler to use if no query
-    ///                      sampler was provided.
+    ///                      sampler was provided, or empty to require a query
+    ///                      sampler.
     /// @return The VID of the generated configuration.
     /// @note This returns size_t so that it will work for both individual and
     ///       group strategies (all VID types are typedefs for size_t).
-    virtual size_t GenerateStart(const std::string& _samplerLabel);
+    virtual size_t GenerateStart(const std::string& _samplerLabel = "");
 
     /// Generate 'goal' node(s) for the task and add it(them) to the roadmap.
     /// @param _samplerLabel The label for the sampler to use if no query
-    ///                      sampler was provided.
+    ///                      sampler was provided, or empty to require a query
+    ///                      sampler.
     /// @return The VIDs of the generated configurations.
     /// @note This returns size_t so that it will work for both individual and
     ///       group strategies (all VID types are typedefs for size_t).
-    virtual std::vector<size_t> GenerateGoals(const std::string& _samplerLabel);
+    virtual std::vector<size_t> GenerateGoals(
+        const std::string& _samplerLabel = "");
 
     ///@}
     ///@name Internal State

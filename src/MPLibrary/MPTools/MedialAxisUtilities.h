@@ -706,7 +706,6 @@ FindApproximateWitness(const std::size_t& _numRays,
             const bool& _useOppValidityWitness) {
   if(this->m_debug)
     cout << "FindApproximateWitness: numRays = " << _numRays << endl;
-  auto dm  = this->GetDistanceMetric(m_dmLabel);
   auto vcm = this->GetValidityChecker(m_vcLabel);
 
   string callee = this->GetNameAndLabel() + "::FindApproximateWitness()";

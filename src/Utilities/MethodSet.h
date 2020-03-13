@@ -1,5 +1,5 @@
-#ifndef METHOD_SET_H_
-#define METHOD_SET_H_
+#ifndef PMPL_METHOD_SET_H_
+#define PMPL_METHOD_SET_H_
 
 #include <functional>
 #include <iostream>
@@ -15,7 +15,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Creates new method instances from an XML node.
+/// Creates new method instances from an XML node.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename Method>
 struct MethodFactory final {
@@ -23,14 +23,14 @@ struct MethodFactory final {
   ///@name Local Types
   ///@{
 
-  typedef std::shared_ptr<Method> MethodPointer;
+  typedef std::shared_ptr<Method> OwningPointer;
 
   ///@}
   ///@name Operator
   ///@{
 
-  MethodPointer operator()(XMLNode& _node) const {
-    return MethodPointer(new Method(_node));
+  OwningPointer operator()(XMLNode& _node) const {
+    return OwningPointer(new Method(_node));
   }
 
   ///@}
@@ -52,7 +52,7 @@ struct MethodFactory final {
 /// its universe of method types. Then, specific instantiations of those types
 /// can be added to its map of available methods by calling 'AddMethod'.
 ////////////////////////////////////////////////////////////////////////////////
-template<typename MPTraits, typename Method>
+template <typename MPTraits, typename Method>
 class MethodSet final {
 
   public:
@@ -62,10 +62,11 @@ class MethodSet final {
 
     typedef typename MPTraits::MPLibrary                  MPLibrary;
 
-    typedef std::shared_ptr<Method>                       MethodPointer;
-    typedef typename std::map<std::string, MethodPointer> MethodMap;
+    typedef Method*                                       MethodPointer;
+    typedef std::shared_ptr<Method>                       OwningPointer;
+    typedef typename std::map<std::string, OwningPointer> MethodMap;
 
-    typedef std::function<MethodPointer(XMLNode&)>        FactoryType;
+    typedef std::function<OwningPointer(XMLNode&)>        FactoryType;
     typedef typename std::map<std::string, FactoryType>   FactoryMap;
 
     typedef typename MethodMap::iterator                  iterator;
@@ -93,15 +94,12 @@ class MethodSet final {
 
     void AddMethod(MethodPointer _e, const std::string& _label);
 
+    void AddMethod(OwningPointer _e, const std::string& _label);
+
     /// Get a method by label.
     /// @param _label The method label.
     /// @return The corresponding method pointer.
     MethodPointer GetMethod(const std::string& _label);
-
-    /// Find a method iterator.
-    /// @param _label The method label.
-    /// @return The iterator to that method, or nullptr if it is not found.
-    iterator FindMethod(std::string _label);
 
     /// Prepare all methods in this set for execution on the owning MPLibrary's
     /// current MPProblem.
@@ -144,7 +142,6 @@ class MethodSet final {
     MPLibrary* const m_library; ///< The owning planning library.
 
     std::string m_name;     ///< The name of this set of methods.
-    std::string m_default;  ///< The name of the default method in this set.
 
     FactoryMap m_universe;  ///< The set of allowed methods.
     MethodMap m_elements;   ///< The set of instantiated methods.
@@ -184,7 +181,7 @@ AddMethod(XMLNode& _node) {
   if(iter == m_universe.end())
     return;
 
-  MethodPointer e = iter->second(_node);
+  OwningPointer e = iter->second(_node);
   AddMethod(e, e->m_label);
 }
 
@@ -193,22 +190,31 @@ template <typename MPTraits, typename Method>
 void
 MethodSet<MPTraits, Method>::
 AddMethod(MethodPointer _e, const std::string& _label) {
+  AddMethod(OwningPointer(_e), _label);
+}
+
+
+template <typename MPTraits, typename Method>
+void
+MethodSet<MPTraits, Method>::
+AddMethod(OwningPointer _e, const std::string& _label) {
   auto iter = m_universe.find(_e->m_name);
 
   // Throw exception if method isn't in universe.
   if(iter == m_universe.end())
-    throw ParseException(WHERE, "Method '" + _e->m_name +
-        "' is not contained within the motion planning universe.");
+    throw ParseException(WHERE) << "Method set '" << m_name << "' has no "
+                                << "method type '" << _e->m_name << "'.";
+  // Also throw if the label already exists.
+  if(m_elements.count(_label))
+    throw ParseException(WHERE) << "Method set '" << m_name << "' already has "
+                                << "label '" << _label << "'.";
+  // And also for empty labels.
+  if(_label.empty())
+    throw ParseException(WHERE) << "Method label cannot be empty.";
 
   _e->SetMPLibrary(m_library);
   _e->SetLabel(_label);
-  if(m_elements.empty())
-    m_default = _label;
-  if(m_elements.find(_label) == m_elements.end())
-    m_elements[_label] = _e;
-  else
-    cerr << "\nWarning, method list already has a pointer associated with "
-         << "\"" << _label << "\", not added\n";
+  m_elements[_label] = _e;
 }
 
 
@@ -216,28 +222,18 @@ template <typename MPTraits, typename Method>
 typename MethodSet<MPTraits, Method>::MethodPointer
 MethodSet<MPTraits, Method>::
 GetMethod(const std::string& _label) {
-  MethodPointer element = (_label == "") ? m_elements[m_default] :
-                                           m_elements[_label];
-  if(element.get() == nullptr) {
-    std::string err = "Element '" + _label + "' does not exist in " + m_name +
-        ". Choices are: ";
-    for(auto& elem : m_elements)
-      if(elem.second.get())
-        err += " '" + elem.first + "',";
-    err.pop_back();
-    throw RunTimeException(WHERE, err);
+  // Find the method and ensure it exists.
+  auto iter = m_elements.find(_label);
+
+  if(iter == m_elements.end()) {
+    std::ostringstream choices;
+    Print(choices);
+    throw RunTimeException(WHERE) << "Method '" << _label << "' does not exist "
+                                  << "in set " << m_name << "."
+                                  << choices.str();
   }
-  return element;
-}
 
-
-template <typename MPTraits, typename Method>
-typename MethodSet<MPTraits, Method>::iterator
-MethodSet<MPTraits, Method>::
-FindMethod(std::string _label) {
-  if(_label == "")
-    _label = m_default;
-  return m_elements.find(_label);
+  return iter->second.get();
 }
 
 
@@ -253,17 +249,13 @@ Initialize() {
 template <typename MPTraits, typename Method>
 void
 MethodSet<MPTraits, Method>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   size_t count = 0;
 
-  _os << "\n" << m_name << " has these methods available::\n\n";
-
-  for(auto& elem : m_elements) {
-    _os << ++count << ") \"" << elem.first << "\" (" << elem.second->m_name
-        << ")\n";
-    elem.second->Print(_os);
-    _os << std::endl;
-  }
+  _os << "\n" << m_name << " has these methods available:";
+  for(const auto& elem : m_elements)
+    _os << "\n\t"
+        << ++count << ") '" << elem.first << "' (" << elem.second->m_name << ")";
   _os << std::endl;
 }
 

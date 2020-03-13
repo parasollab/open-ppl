@@ -141,7 +141,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     m_clearanceUtility.Initialize();
   }
   Environment* env = this->GetEnvironment();
-  auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto robot = this->GetTask()->GetRobot();
   auto multiBody = _cfg.GetMultiBody();
