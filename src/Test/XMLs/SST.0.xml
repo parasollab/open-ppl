@@ -53,9 +53,16 @@
         witnessNfLabel="Nearest" witnessRadius=".5" prune="true">
         <Evaluator label="Query"/>
       </StableSparseRRT>
+
+      <ValidationStrategy label="Test" target="SST" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/SST.0.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/SST.0.query.rdmp.path"/>
+      </ValidationStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="SST" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
         baseFilename="../Scratch/SST"/>
 
   </Library>

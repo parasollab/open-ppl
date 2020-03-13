@@ -75,9 +75,18 @@
         growGoals="false" m="1" growthFocus="0.01">
         <Evaluator label="QueryMinSize"/>
       </BasicRRTStrategy>
+
+      <ValidationStrategy label="Test" target="RRT*" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/RRTStar.0.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/RRTStar.0.query.rdmp.path"/>
+        <GoldStandard label="pathlength" type="history"
+          filename="../Outputs/RRTStar.0.query.pathlength.hist"/>
+      </ValidationStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="RRT*" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
         baseFilename="../Scratch/RRTStar"/>
 
   </Library>
