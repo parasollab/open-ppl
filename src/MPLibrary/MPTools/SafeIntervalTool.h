@@ -215,7 +215,7 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   /// @TODO Figure out how to avoid needing this downcast so that we can
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
-  auto basevc = this->GetValidityChecker(m_vcLabel).get();
+  auto basevc = this->GetValidityChecker(m_vcLabel);
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
 
   // Compute the step number associated with _timestep.

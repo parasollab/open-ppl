@@ -330,8 +330,8 @@ Initialize() {
     me->Initialize();
   }
   if(!m_stateMELabel.empty()) {
-    auto stateME = dynamic_pointer_cast<StrategyStateEvaluator<MPTraits> > (
-                   this->GetMapEvaluator(m_stateMELabel));
+    auto stateME = dynamic_cast<StrategyStateEvaluator<MPTraits>*>(
+        this->GetMapEvaluator(m_stateMELabel));
     if(this->m_debug)
       std::cout << "Setting " << m_stateMELabel << "'s label to "
                 << this->GetLabel() << std::endl;
@@ -568,9 +568,8 @@ template <typename MPTraits>
 std::pair<typename DisassemblyRRTStrategy<MPTraits>::GroupCfgType, std::size_t>
 DisassemblyRRTStrategy<MPTraits>::
 SelectTarget() {
-  std::shared_ptr<MaskedSamplerMethodGroup<MPTraits> > const sampler =
-                      dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits> >(
-                      this->GetSampler(this->m_samplerLabel));
+  auto sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+      this->GetSampler(this->m_samplerLabel));
   auto const graph = this->GetGroupRoadmap();
   const size_t numVerts = graph->get_num_vertices();
   const VID randomVID = LRand() % numVerts;
@@ -837,8 +836,8 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
   auto const graph = this->GetGroupRoadmap();
   const GroupCfgType& qNear = graph->GetVertex(_qNear);
 
-  auto const sampler = dynamic_pointer_cast<MaskedSamplerMethodGroup<MPTraits>>(
-                                        this->GetSampler(this->m_samplerLabel));
+  auto const sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+      this->GetSampler(this->m_samplerLabel));
 
   //Save the active bodies from the VC so it can be replaced at the end.
   const Formation prevActiveBodies = sampler->GetActiveRobots();

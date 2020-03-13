@@ -65,12 +65,12 @@ operator()() {
         "this ME! Make sure the xml label stateMELabel is set for this "
         "strategy");
 
-  auto method = dynamic_pointer_cast<DisassemblyMethod<MPTraits>> (
+  auto method = dynamic_cast<DisassemblyMethod<MPTraits>*>(
       this->GetMPStrategy(m_strategyLabel));
   if(method)
     return method->IsSuccessful();
 
-  auto rrt = dynamic_pointer_cast<DisassemblyRRTStrategy<MPTraits>> (
+  auto rrt = dynamic_cast<DisassemblyRRTStrategy<MPTraits>*>(
       this->GetMPStrategy(m_strategyLabel));
   if(rrt)
     return method->IsSuccessful();

@@ -1,76 +1,123 @@
-#ifndef NODE_CLEARANCE_VALIDITY_H
-#define NODE_CLEARANCE_VALIDITY_H
+#ifndef PMPL_NODE_CLEARANCE_VALIDITY_H
+#define PMPL_NODE_CLEARANCE_VALIDITY_H
 
 #include "ValidityCheckerMethod.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Considers a configuration as valid if it lies outside a threshold distance
+/// from all other nodes in the roadmap.
+///
+/// @warning This won't work correctly with batch sampling because it only
+///          checks clearance against the other nodes in the roadmap. For
+///          consistency it must check only one configuration at a time.
+///
 /// @ingroup ValidityCheckers
-/// @brief TODO
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class NodeClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType     CfgType;
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 
-    NodeClearanceValidity(double _delta = 1.0, std::string _nfLabel = "");
+    ///@}
+    ///@name Construction
+    ///@{
+
+    NodeClearanceValidity();
+
     NodeClearanceValidity(XMLNode& _node);
-    virtual ~NodeClearanceValidity();
 
-    virtual void Print(std::ostream& _os) const;
+    virtual ~NodeClearanceValidity() = default;
 
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName);
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name ValidityCheckerMethod Overrides
+    ///@{
+
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const std::string& _callName) override;
+
+    ///@}
 
   private:
-    double m_delta;
-    std::string m_nfLabel;
+
+    ///@name Internal State
+    ///@{
+
+    double m_minClearance;  ///< Minimum required clearance from other nodes.
+    std::string m_nfLabel;  ///< NF to find nearest nodes and distance.
+
+    ///@}
+
 };
 
-template <class MPTraits>
-NodeClearanceValidity<MPTraits>::NodeClearanceValidity(double _delta, std::string _nfLabel) :
-  ValidityCheckerMethod<MPTraits>(), m_delta(_delta), m_nfLabel(_nfLabel) {
-    this->SetName("NodeClearanceValidity");
-  }
+/*------------------------------- Construction -------------------------------*/
 
-template <class MPTraits>
-NodeClearanceValidity<MPTraits>::NodeClearanceValidity(XMLNode& _node):
-  ValidityCheckerMethod<MPTraits>(_node) {
-    this->SetName("NodeClearanceValidity");
-    m_delta = _node.Read("delta", true, 1.0, 0.0, MAX_DBL, "Clearance from every other node");
-    m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder to be used");
-  }
+template <typename MPTraits>
+NodeClearanceValidity<MPTraits>::
+NodeClearanceValidity() : ValidityCheckerMethod<MPTraits>() {
+  this->SetName("NodeClearanceValidity");
+}
 
-template <class MPTraits>
-NodeClearanceValidity<MPTraits>::~NodeClearanceValidity() {}
 
-template <class MPTraits>
+template <typename MPTraits>
+NodeClearanceValidity<MPTraits>::
+NodeClearanceValidity(XMLNode& _node): ValidityCheckerMethod<MPTraits>(_node) {
+  this->SetName("NodeClearanceValidity");
+
+  m_minClearance = _node.Read("delta", true, 1., 0.,
+      std::numeric_limits<double>::max(),
+      "Minimum clearance from every other node in the roadmap.");
+
+  m_nfLabel = _node.Read("nfLabel", true, "", "Neighborhood Finder to find "
+      "nearest nodes and their distance.");
+}
+
+/*-------------------------- MPBaseObject Overrides --------------------------*/
+
+template <typename MPTraits>
 void
-NodeClearanceValidity<MPTraits>::Print(std::ostream& _os) const {
+NodeClearanceValidity<MPTraits>::
+Print(std::ostream& _os) const {
   ValidityCheckerMethod<MPTraits>::Print(_os);
-  _os << "\tdelta::" << m_delta
-    << "\tnfLabel::" << m_nfLabel << std::endl;
+  _os << "\tminClearance: " << m_minClearance
+      << "\n\tnfLabel: " << m_nfLabel
+      << std::endl;
 }
 
-template <class MPTraits>
+/*-------------------- ValidityCheckerMethod Overrides -----------------------*/
+
+template <typename MPTraits>
 bool
-NodeClearanceValidity<MPTraits>::IsValidImpl(CfgType& _cfg,
-    CDInfo& _cdInfo, const std::string& _callName) {
-  std::vector<Neighbor> kClosest;
-  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(
-      this->GetRoadmap(), static_cast<CfgType>(_cfg), std::back_inserter(kClosest) );
+NodeClearanceValidity<MPTraits>::
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
+  // Find the nearest neighbors using the NF.
+  auto r = this->GetRoadmap(_cfg.GetRobot());
+  std::vector<Neighbor> neighbors;
+  this->GetNeighborhoodFinder(m_nfLabel)->FindNeighbors(r, _cfg,
+      std::back_inserter(neighbors));
 
-  if(kClosest.empty()) {
-    _cfg.SetLabel("VALID", true);
-    return true;
-  }
+  // The cfg is valid if we found no neighbors or if the nearest is outside the
+  // clearance zone.
+  const bool valid = neighbors.empty()
+                  or neighbors[0].distance > m_minClearance;
 
-  bool result = m_delta < kClosest[0].distance;
-
-  _cfg.SetLabel("VALID", result);
-  return result;
+  _cfg.SetLabel("VALID", valid);
+  return valid;
 }
+
+/*----------------------------------------------------------------------------*/
 
 #endif

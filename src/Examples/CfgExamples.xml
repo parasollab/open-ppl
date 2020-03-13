@@ -82,16 +82,6 @@
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
       <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
            use_scaling="0"/-->
-      <BandsNF label="RbandNF_2bands_4k" debug="false" dmLabel="euclidean">
-        <RBand label="first" max = '8' k='8' policy='closest'
-          dmLabel="euclidean"/>
-        <RBand label="second" min = '8' max = '64' k='8' policy='random'
-          dmLabel="euclidean"/>
-      </BandsNF>
-      <BandsNF label="DbandNF" debug="false" dmLabel="euclidean">
-        <DBand label="first" min='.1' max='.3' k='16' policy='closest'
-          dmLabel="euclidean"/>
-      </BandsNF>
       <TopologicalFilter label="TopologicalNF" nfLabel="BFNF" tmLabel="tm-coarse"
         backtrackDistance="6" debug="false"/>
       <LSHNF label="LSHNF"
@@ -142,11 +132,6 @@
         saveIntermediates="false"/>
       <TransformAtS label="tas" binaryEvaluation="true" vcLabel="rapid" s="0.5"
         saveIntermediates="false"/>
-      <AStarDistance label="asd" vcLabel="rapid" dmLabel="euclidean"
-        maxTries="6" numNeighbors="10" histLength="10" debug="true"/>
-      <AStarClearance label="asc" vcLabel="pqp_solid" maxTries="6" numNeighbors="3"
-        histLength="10" dmLabel="euclidean" clearanceType="exact"
-        penetrationType="exact" useBBX="true" positional="true" debug="false"/>
       <MedialAxisLP label="malpr" controller="recursive"
         macEpsilon="0.1" maxIter="10"
         vcLabel="pqp_solid" dmLabel="euclidean"
@@ -168,9 +153,6 @@
         debug="true" saveIntermediates="true"/>
       <ToggleLP label="togglelp" vcLabel="rapid" dmLabel="euclidean"
         lpLabel="sl" maxIter="5"/>
-      <ApproxSpheres label="apsph" vcLabel="pqp_solid" dmLabel="euclidean"
-        saveIntermediates="false" clearanceType="exact"
-        penetrationType="exact"/>
       <HierarchicalLP label="hlp">
         <LocalPlanner method="sl"/>
         <LocalPlanner method="ras"/>
@@ -292,7 +274,7 @@
       </LazyToggleQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="5000" operator=">="/>
+        value="1000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -446,7 +428,7 @@
       </BasicRRTStrategy>
 
       <!-- Toggle PRM -->
-      <TogglePRMStrategy label="TogglePRM" priority="true">
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <ColConnector label="ToggleConnect"/>
@@ -468,7 +450,8 @@
         <Evaluator label="NodesEval"/>
       </EvaluateMapStrategy>
 
-      <UtilityGuidedGenerator label="UtilityGuided" vcLabel="rapid" nfLabel="BFNF"
+      <UtilityGuidedGenerator label="UtilityGuided" debug="true"
+        querySampler="UniformRandomFree" vcLabel="pqp_solid" nfLabel="BFNF"
         connectorLabel="Closest">
         <Evaluator label="NodesEval"/>
       </UtilityGuidedGenerator>
