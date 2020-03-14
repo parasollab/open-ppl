@@ -536,7 +536,7 @@ ComputeBoundingBox() const {
   bbx->SetRange(1, y);
   bbx->SetRange(2, z);
 
-#if 1
+#if 0
   // Assert that all poly points are inside.
   for(const auto& v : m_vertexList)
     if(!bbx->InBoundary(v))

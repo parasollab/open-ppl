@@ -39,6 +39,12 @@
 ///   Read Sandstrom, Andrew Bregger, Ben Smith, Shawna Thomas, and Nancy M.
 ///   Amato. "Topological Nearest-Neighbor Filtering for Sampling-based
 ///   Planners". ICRA 2018.
+///   - and -
+///   Read Sandstrom, Jory Denny, and Nancy M. Amato. "Asymptotically-Optimal
+//    Topological Nearest-Neighbor Filtering". Under review for RA-L @ IROS 20.
+//    - and -
+//    Read Sandstrom. "Approximating Configuration Space Topology with Workspace
+//    Models". PhD Thesis, May 2020.
 ///
 /// @WARNING The current implementation assumes that the workspace decomposition
 ///          will not change once created. If this occurs, the maps must be
@@ -907,7 +913,7 @@ ComputeApproximateMinimumInnerDistances(const WorkspaceRegion* const _source,
     if(alreadyComputed) {
       distanceMap = &iter->second;
       const double lastRadius = distanceMap->at(nullptr);
-      if(lastRadius > _radius)
+      if(lastRadius >= _radius)
         return *distanceMap;
     }
 

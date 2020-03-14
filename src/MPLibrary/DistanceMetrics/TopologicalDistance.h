@@ -125,6 +125,13 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   for(size_t i = 0; i < neighborhood1.size(); ++i) {
     const WorkspaceRegion* const cell1 = neighborhood1[i],
                          * const cell2 = neighborhood2[i];
+
+    // Ensure that the map has computed a inner-distances to the maximum extent
+    // possible (this is a no-op if we've already computed it).
+    tm->ComputeApproximateMinimumInnerDistances(cell1,
+        std::numeric_limits<double>::infinity());
+
+    // Get the inner distance according to the map.
     const double distance = tm->ApproximateMinimumInnerDistance(cell1, cell2);
 
     // If it is infinite, these regions aren't connectable.

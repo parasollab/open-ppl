@@ -88,6 +88,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.
 
+    template <typename> friend class AOAnalyzer; ///< Needs access to Iterate for other methods.
+
     ///@}
     ///@name Start/Goal Generation
     ///@{
@@ -120,8 +122,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     size_t m_iterations{0};              ///< The number of executed iterations.
     bool m_writeOutput{true};            ///< Write output at the end?
 
-    std::vector<std::string> m_nfClockLabels; ///< Include times for these NFs in the NN time history
-
     ///@}
 };
 
@@ -136,12 +136,9 @@ MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
       "Enable writing of output files (roadmap, path, stats)?");
 
   // Parse evaluator child nodes.
-  for(auto& child : _node) {
+  for(auto& child : _node)
     if(child.Name() == "Evaluator")
       m_meLabels.push_back(child.Read("label", true, "", "Evaluation Method"));
-    else if(child.Name() == "NNClock")
-      m_nfClockLabels.push_back(child.Read("label", true, "", ""));
-  }
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -204,33 +201,11 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
-  const std::string clockName = this->GetNameAndLabel() + "::Run";
   auto stats = this->GetStatClass();
+  const std::string clockName = this->GetNameAndLabel() + "::Run";
+  MethodTimer mt(stats, clockName);
 
   do {
-    // Add history for:
-    // - run time
-    // - roadmap size
-    // - nearest neighbor time (need NN clock name)
-    // - path cost
-    {
-      auto path = this->GetPath();
-      stats->AddToHistory("pathlength", path->Empty() ? 0 : path->Length());
-
-      stats->AddToHistory("mapsize", this->GetRoadmap()->Size());
-
-      stats->AddToHistory("runtime", stats->GetSeconds(clockName));
-
-      double totalNNTime = 0;
-      for(const auto& label : m_nfClockLabels)
-      {
-        auto nf = this->GetNeighborhoodFinder(label);
-        const std::string clockName = nf->GetNameAndLabel() + "::FindNeighbors";
-        totalNNTime += stats->GetSeconds(clockName);
-      }
-      stats->AddToHistory("nntime", totalNNTime);
-    }
-
     ++m_iterations;
     if(this->m_debug) {
       const size_t vertices = this->GetGroupTask()
@@ -246,7 +221,6 @@ Run() {
                 << std::endl;
     }
 
-    MethodTimer mt(stats, clockName);
     Iterate();
   } while(!EvaluateMap() and this->IsRunning());
 }

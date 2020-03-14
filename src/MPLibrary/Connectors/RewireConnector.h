@@ -472,7 +472,10 @@ RewireTest(RoadmapType* const _r, const VID _vid,
   // Ensure that the computed LP cost is approximately equal to the distance
   // metric cost (or none of this works because we didn't test the right set of
   // neighbors in the first place).
-#if 0
+  /// @note You can disable this if your DM doesn't exactly agree with the LP,
+  ///       but you will get near-AO instead of AO rewiring since the new parent
+  ///       may not be the absolute best one.
+#if 1
   const double computedDistance = EdgeWeight(lpo.m_edge.first, robot),
                tolerance        = distance * .001;
   const bool lpDmDisagreement = !nonstd::approx(computedDistance, distance,

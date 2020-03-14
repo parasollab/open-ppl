@@ -127,6 +127,7 @@
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
+#include "MPLibrary/MPStrategies/AOAnalyzer.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
@@ -324,6 +325,7 @@ struct MPTraits {
 #if 0
     AdaptiveRRT<MPTraits>, Fix after ICRA 18
 #endif
+    AOAnalyzer<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DisassemblyExhaustiveGraph<MPTraits>,

@@ -475,7 +475,6 @@ operator=(const RoadmapGraph& _r) {
   if(_r.m_ccTracker) {
     m_ccTracker.reset(new CCTrackerType(*_r.m_ccTracker));
     m_ccTracker->SetRoadmap(this);
-    //m_ccTracker->InstallHooks();
   }
 
   return *this;
@@ -499,7 +498,6 @@ operator=(RoadmapGraph&& _r) {
   if(_r.m_ccTracker) {
     m_ccTracker = std::move(_r.m_ccTracker);
     m_ccTracker->SetRoadmap(this);
-    //m_ccTracker->InstallHooks();
   }
 
   // Clear any hooks on the other to prevent cross-talk with the CCTracker.
@@ -1140,10 +1138,6 @@ ClearHooks() noexcept {
   m_deleteVertexHooks.clear();
   m_addEdgeHooks.clear();
   m_deleteEdgeHooks.clear();
-
-  // We always want the CC tracker's hooks, re-install them if needed.
-  //if(m_ccTracker)
-  //  m_ccTracker->InstallHooks();
 }
 
 /*----------------------------------- I/O ------------------------------------*/
@@ -1385,23 +1379,6 @@ VertexSetIntersection(const std::unordered_set<size_t>& _a,
                std::inserter(intersection, intersection.end()),
                [larger](const size_t _vid) {return larger->count(_vid);});
   return intersection;
-}
-
-
-/// Merge one vertex set into another.
-/// @param _receiver The vertex set receiving new VIDs.
-/// @param _source   The source of the new VIDs.
-/// @return A reference to _receiver.
-inline
-std::unordered_set<size_t>&
-VertexSetUnionInPlace(std::unordered_set<size_t>& _receiver,
-    const std::unordered_set<size_t>& _source) {
-  // Reserve sufficient space for the worst case. This wastes a bit of space
-  // (which is inevitable anyway) but avoids more than one rehash.
-  _receiver.reserve(_receiver.size() + _source.size());
-  for(const size_t vid : _source)
-    _receiver.insert(vid);
-  return _receiver;
 }
 
 

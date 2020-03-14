@@ -309,7 +309,7 @@ operator()(const typename MPTraits::CfgType& _query) const noexcept {
     const VertexSet& mapped = map.at(key);
 
     // Add the mapped configurations to the candidate set.
-    VertexSetUnionInPlace(candidates, mapped);
+    candidates.insert(mapped.begin(), mapped.end());
 
     if(m_candidateLimit and candidates.size() > m_candidateLimit)
       break;

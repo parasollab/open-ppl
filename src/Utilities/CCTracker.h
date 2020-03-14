@@ -120,9 +120,6 @@ class CCTracker final {
     /// Set the stat class pointer if we wish to do performance profiling.
     void SetStatClass(StatClass* const _stats) const noexcept;
 
-    /// Install hooks in the roadmap.
-    void InstallHooks() noexcept;
-
     ///@}
     ///@name Query Functions
     ///@{
@@ -263,9 +260,6 @@ CCTracker<RoadmapType>::
 CCTracker(RoadmapType* const _r) : m_roadmap(_r) {
   RecomputeCCs();
 
-  // Install roadmap hooks.
-  //InstallHooks();
-
   // Initialize the clock start/stoppers.
   SetStatClass(nullptr);
 }
@@ -365,23 +359,6 @@ SetStatClass(StatClass* const _stats) const noexcept {
   m_clockStop = [_stats](const std::string& _label) {
     _stats->StopClock(_label);
   };
-}
-
-
-template <typename RoadmapType>
-inline
-void
-CCTracker<RoadmapType>::
-InstallHooks() noexcept {
-  const std::string label = "CCTracker";
-  m_roadmap->InstallHook(RoadmapType::HookType::AddVertex, label,
-      [this](const vertex_iterator _i){this->AddVertex(_i);});
-  m_roadmap->InstallHook(RoadmapType::HookType::DeleteVertex, label,
-      [this](const vertex_iterator _i){this->DeleteVertex(_i);});
-  m_roadmap->InstallHook(RoadmapType::HookType::AddEdge, label,
-      [this](const edge_iterator _i){this->AddEdge(_i);});
-  m_roadmap->InstallHook(RoadmapType::HookType::DeleteEdge, label,
-      [this](const edge_iterator _i){this->DeleteEdge(_i);});
 }
 
 /*--------------------------------- Queries ----------------------------------*/

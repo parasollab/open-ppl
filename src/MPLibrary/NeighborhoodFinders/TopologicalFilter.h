@@ -21,6 +21,12 @@
 ///   Read Sandstrom, Andrew Bregger, Ben Smith, Shawna Thomas, and Nancy M.
 ///   Amato. "Topological Nearest-Neighbor Filtering for Sampling-based
 ///   Planners". ICRA 2018.
+///   - and -
+///   Read Sandstrom, Jory Denny, and Nancy M. Amato. "Asymptotically-Optimal
+//    Topological Nearest-Neighbor Filtering". Under review for RA-L @ IROS 20.
+//    - and -
+//    Read Sandstrom. "Approximating Configuration Space Topology with Workspace
+//    Models". PhD Thesis, May 2020.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TopologicalFilter : public NeighborhoodFinderMethod<MPTraits> {
