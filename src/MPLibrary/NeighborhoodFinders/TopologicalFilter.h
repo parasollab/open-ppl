@@ -485,7 +485,7 @@ FindCandidateRegions(RoadmapType* const _r, const CfgType& _cfg,
     // If there are any points in common between this region's VIDs and
     // our input candidate set, we've found the first marker.
     const VertexSet* const cellVIDs = tm->GetMappedVIDs(_r, &region, _bodyIndex);
-    if(VertexSetSharedElement(*cellVIDs, _inputCandidates))
+    if(HaveCommonVertex(*cellVIDs, _inputCandidates))
       break;
   }
 

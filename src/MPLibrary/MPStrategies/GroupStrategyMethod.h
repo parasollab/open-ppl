@@ -61,6 +61,8 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
 
     virtual void Finalize() override;
 
+    virtual void ClearRoadmap() override;
+
     virtual size_t GenerateStart(const std::string& _samplerLabel) override;
 
     virtual std::vector<size_t> GenerateGoals(const std::string& _samplerLabel)
@@ -165,6 +167,14 @@ Finalize() {
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat);
 #endif
+}
+
+
+template <typename MPTraits>
+void
+GroupStrategyMethod<MPTraits>::
+ClearRoadmap() {
+  throw NotImplementedException(WHERE);
 }
 
 

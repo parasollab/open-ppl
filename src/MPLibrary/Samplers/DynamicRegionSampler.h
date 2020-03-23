@@ -92,13 +92,18 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     /// region kit.
     void LazyInitialize();
 
+
+    void DirectSkeleton();
+
     ///@}
     ///@name Internal State
     ///@{
 
-    WorkspaceSkeleton m_skeleton;     ///< The workspace skeleton.
+    WorkspaceSkeleton m_originalSkeleton; ///< The original workspace skeleton.
+    WorkspaceSkeleton m_skeleton;         ///< The directed/pruned workspace skeleton.
     RegionKit m_regionKit;            ///< Manages regions following the skeleton.
 
+    std::string m_skeletonType{"reeb"}; ///< Type of skeleton to build.
     std::string m_samplerLabel;       ///< The sampler label.
     std::string m_decompositionLabel; ///< The workspace decomposition label.
     std::string m_scuLabel;           ///< The skeleton clearance utility label.
@@ -107,6 +112,9 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     double m_velocityAlignment{.1};   ///< Strength of velocity biasing.
 
     bool m_initialized{false};    ///< Have auxiliary structures been initialized?
+
+    /// Last pair of points we used to direct the skeleton.
+    std::pair<Point3d, Point3d> m_queryPair;
 
     ///@}
 
@@ -131,7 +139,13 @@ DynamicRegionSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
   m_samplerLabel = _node.Read("samplerLabel", true, "", "The sampler to use "
       "within regions.");
 
-  m_decompositionLabel = _node.Read("decompositionLabel", true, "",
+  m_skeletonType = _node.Read("skeletonType", true, "",
+      "the type of skeleton to use, Available options are reeb and mcs "
+      "for 3d, ma for 2d");
+
+  // If using a reeb skeleton, we need a decomposition to build it.
+  m_decompositionLabel = _node.Read("decompositionLabel",
+      m_skeletonType == "reeb", "",
       "The workspace decomposition to use.");
 
   m_scuLabel = _node.Read("scuLabel", false, "", "The skeleton clearance utility "
@@ -258,8 +272,11 @@ template <typename MPTraits>
 void
 DynamicRegionSampler<MPTraits>::
 LazyInitialize() {
-  if(m_initialized)
+  if(m_initialized) {
+    this->DirectSkeleton();
     return;
+  }
+
   m_initialized = true;
 
   MethodTimer mt(this->GetStatClass(), "DynamicRegionSampler::BuildSkeleton");
@@ -271,13 +288,35 @@ LazyInitialize() {
       Body::Type::Volumetric;
 
   if(threeD) {
-    // Create a workspace skeleton using a reeb graph.
-    auto decomposition = this->GetMPTools()->GetDecomposition(m_decompositionLabel);
-    ReebGraphConstruction reeb;
-    reeb.Construct(decomposition);
+    if(m_skeletonType == "mcs") {
+      if(this->m_debug)
+        std::cout << "Building a Mean Curvature skeleton." << std::endl;
+      MeanCurvatureSkeleton3D mcs;
+      mcs.SetEnvironment(this->GetEnvironment());
+      mcs.BuildSkeleton();
 
-    // Create the workspace skeleton.
-    m_skeleton = reeb.GetSkeleton();
+      // Create the workspace skeleton.
+      auto sk = mcs.GetSkeleton();
+      m_originalSkeleton = sk.first;
+      m_originalSkeleton.DoubleEdges();
+    }
+    else if(m_skeletonType == "reeb") {
+      // Create a workspace skeleton using a reeb graph.
+      if(this->m_debug)
+        std::cout << "Building a Reeb Graph skeleton." << std::endl;
+      auto decomposition = this->GetMPTools()->GetDecomposition(
+          m_decompositionLabel);
+      ReebGraphConstruction reeb;
+      reeb.Construct(decomposition);
+
+      // Create the workspace skeleton.
+      m_originalSkeleton = reeb.GetSkeleton();
+      m_originalSkeleton.DoubleEdges();
+    }
+    else
+      throw ParseException(WHERE) << "Unrecognized skeleton type '"
+                                  << m_skeletonType << "', options for 3d "
+                                  << "problems are {mcs, reeb}.";
   }
   else {
     // Collect the obstacles we want to consider (all in this case).
@@ -289,11 +328,23 @@ LazyInitialize() {
     }
 
     // Build a skeleton from a 2D medial axis.
+    if(this->m_debug)
+      std::cout << "Build a skeleton from a 2D medial axis." << endl;
     MedialAxis2D ma(polyhedra, env->GetBoundary());
     ma.BuildMedialAxis();
-    m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+    m_originalSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
   }
 
+  if(this->m_debug)
+    std::cout << "Direct skeleton" << endl;
+  this->DirectSkeleton();
+}
+
+
+template <typename MPTraits>
+void
+DynamicRegionSampler<MPTraits>::
+DirectSkeleton() {
   // Only support single-goal tasks; this is inherent to the method. The problem
   // is solvable but hasn't been solved yet.
   const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
@@ -350,7 +401,13 @@ LazyInitialize() {
     goal = samples.front().GetPoint();
   }
 
+  // If there is a new start and goal pair, redirect the skeleton
+  std::pair<Point3d, Point3d> currentQuery{start, goal};
+  if(currentQuery == m_queryPair)
+    return;
+
   // Direct the workspace skeleton outward from the starting point.
+  m_skeleton = m_originalSkeleton;
   m_skeleton = m_skeleton.Direct(start);
 
   // Prune the workspace skeleton relative to the goal.
@@ -375,8 +432,11 @@ LazyInitialize() {
   const double robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->
       GetBoundingSphereRadius();
 
+  m_regionKit.Clear();
   m_regionKit.Initialize(&m_skeleton, start, robotRadius, this->GetNameAndLabel(),
       this->GetRoadmap());
+
+  m_queryPair = std::make_pair(start, goal);
 }
 
 /*----------------------------------------------------------------------------*/

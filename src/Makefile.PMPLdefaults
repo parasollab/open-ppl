@@ -533,6 +533,7 @@ PMPL_SRCS := \
   Geometry/Shapes/NSphericalShell.cpp \
   MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
   MPLibrary/LearningModels/RadialKernelGradient.cpp \
+  MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
@@ -562,7 +563,6 @@ PMPL_SRCS := \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \
-  Utilities/MeanCurvatureSkeleton3D.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \

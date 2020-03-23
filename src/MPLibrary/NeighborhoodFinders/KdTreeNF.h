@@ -322,8 +322,8 @@ SetupModels(RoadmapType* const _r) {
         // Add vertex to its CC tree.
         auto* ccTracker = _r->GetCCTracker();
         if(ccTracker) {
-          auto* cc        = &ccTracker->GetCC(vid);
-          auto* ccTree    = &this->m_trees.at(ModelKey{_r, cc});
+          auto* cc     = ccTracker->GetCC(vid);
+          auto* ccTree = &this->m_trees.at(ModelKey{_r, cc});
           ccTree->insert(p);
         }
       };
@@ -339,8 +339,8 @@ SetupModels(RoadmapType* const _r) {
         // Remove vertex from its CC tree.
         auto* ccTracker = _r->GetCCTracker();
         if(ccTracker) {
-          auto* cc        = &ccTracker->GetCC(vid);
-          auto* ccTree    = &this->m_trees.at(ModelKey{_r, cc});
+          auto* cc     = ccTracker->GetCC(vid);
+          auto* ccTree = &this->m_trees.at(ModelKey{_r, cc});
           ccTree->remove(p);
         }
       };

@@ -52,12 +52,12 @@ struct Range final {
 
   /// Test if a value is inside this range.
   /// @param _val The value to test.
-  /// @param _tolerance Tolerance to accomodate floating-point error.
+  /// @param _tolerance Tolerance to accommodate floating-point error, as a
+  ///                   fraction of the min/max.
   /// @return True if the test value lies inside the range (or on the boundary
   ///         for inclusive test).
   template <typename U>
-  bool Contains(const U& _val,
-      const double _tolerance = std::numeric_limits<double>::epsilon() * 10.)
+  bool Contains(const U& _val, const double _tolerance = 1e-8)
       const noexcept;
 
   /// Test the clearance of a value. Clearance is defined as the minimum
@@ -150,7 +150,8 @@ inline
 bool
 Range<T>::
 Contains(const U& _val, const double _tolerance) const noexcept {
-  return (min - _tolerance) <= _val && _val <= (max + _tolerance);
+  return (min - std::abs(min) * _tolerance) <= _val
+     and _val <= (max + std::abs(max) * _tolerance);
 }
 
 

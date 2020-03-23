@@ -419,7 +419,7 @@ EntropyGuidedSample() {
     firstRepresentatives.erase(firstVID);
 
     // Get the related CC.
-    const VertexSet& firstCC = ccTracker->GetCC(firstVID);
+    const VertexSet& firstCC = *ccTracker->GetCC(firstVID);
 
     // Get the representatives from all other CCs.
     allSecondRepresentatives.erase(firstVID);
@@ -432,7 +432,7 @@ EntropyGuidedSample() {
       secondRepresentatives.erase(secondVID);
 
       // Get the related CC.
-      const VertexSet& secondCC = ccTracker->GetCC(secondVID);
+      const VertexSet& secondCC = *ccTracker->GetCC(secondVID);
 
       // Search for the smallest distance between these.
       for(const VID vid : firstCC) {
@@ -462,8 +462,8 @@ EntropyGuidedSample() {
     throw RunTimeException(WHERE) << "Could not find a valid pair of VIDs.";
 
   // Get the CC's for the selected VIDs.
-  const VertexSet& cc1 = ccTracker->GetCC(ccVIDs.first),
-                 & cc2 = ccTracker->GetCC(ccVIDs.second);
+  const VertexSet& cc1 = *ccTracker->GetCC(ccVIDs.first),
+                 & cc2 = *ccTracker->GetCC(ccVIDs.second);
 
   if(this->m_debug)
     std::cout << "\t\t\tselected ccs " << &cc1 << ", " << &cc2

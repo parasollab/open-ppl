@@ -137,6 +137,7 @@
 #include "MPLibrary/MPStrategies/DisassemblyRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
@@ -147,6 +148,7 @@
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
+#include "MPLibrary/MPStrategies/StrategySequence.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 //#include "MPLibrary/MPStrategies/UnitTest/BoundaryTest.h"
@@ -335,6 +337,7 @@ struct MPTraits {
     DisassemblyRRTStrategy<MPTraits>,
     DisassemblyIMLRRT<MPTraits>,
     DynamicDomainRRT<MPTraits>,
+    DynamicRegionsPRM<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
@@ -343,6 +346,7 @@ struct MPTraits {
     NNCompare<MPTraits>,
     ScratchStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
+    StrategySequence<MPTraits>,
     Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     UtilityGuidedGenerator<MPTraits>,

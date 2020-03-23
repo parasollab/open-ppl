@@ -1382,26 +1382,31 @@ VertexSetIntersection(const std::unordered_set<size_t>& _a,
 }
 
 
-/// Check for a shared element within two vertex sets.
+/// Check if two vertex sets have any members in common.
+/// @param _a The first set.
+/// @param _b The second set.
+/// @return True if there are any vertices in both _a and _b.
 inline
 bool
-VertexSetSharedElement(const std::unordered_set<size_t>& _a,
-    const std::unordered_set<size_t>& _b) {
+HaveCommonVertex(const std::unordered_set<size_t>& _a,
+                 const std::unordered_set<size_t>& _b) {
   using VertexSet = std::unordered_set<size_t>;
 
-  const VertexSet* small{nullptr},
-                 * large{nullptr};
+  // Find the smaller of the two sets.
+  const VertexSet* smaller,
+                 * larger;
   if(_a.size() < _b.size()) {
-    small = &_a;
-    large = &_b;
+    smaller = &_a;
+    larger  = &_b;
   }
   else {
-    small = &_b;
-    large = &_a;
+    smaller = &_b;
+    larger  = &_a;
   }
-  return std::any_of(small->begin(), small->end(),
-      [large](const size_t _v){return large->count(_v);}
-  );
+
+  // Test each element in the smaller set for membership in the larger one.
+  return std::any_of(smaller->begin(), smaller->end(),
+                     [larger](const size_t _vid) {return larger->count(_vid);});
 }
 
 
@@ -1448,7 +1453,6 @@ RandomElement(const std::unordered_set<T, Rest...>& _set) noexcept {
   return *std::next(_set.begin(), DRand() * _set.size());
 #endif
 }
-
 
 /*----------------------------------------------------------------------------*/
 

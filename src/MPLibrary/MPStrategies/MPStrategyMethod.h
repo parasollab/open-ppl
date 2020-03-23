@@ -88,7 +88,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     virtual void Iterate() {}      ///< Execute one iteration of the strategy.
     virtual void Finalize();       ///< Clean-up and output results.
 
-    template <typename> friend class AOAnalyzer; ///< Needs access to Iterate for other methods.
+    virtual void ClearRoadmap();   ///< Pre-clear the roadmap(s) if requested.
 
     ///@}
     ///@name Start/Goal Generation
@@ -121,8 +121,13 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     std::vector<std::string> m_meLabels; ///< The list of map evaluators to use.
     size_t m_iterations{0};              ///< The number of executed iterations.
     bool m_writeOutput{true};            ///< Write output at the end?
+    bool m_clearMap{false};              ///< Clear the roadmap(s) before run?
 
     ///@}
+
+    /// Needs access to Iterate for other methods.
+    template <typename> friend class AOAnalyzer;
+
 };
 
 /*----------------------------- Construction ---------------------------------*/
@@ -134,6 +139,8 @@ MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 
   m_writeOutput = _node.Read("writeOutput", false, m_writeOutput,
       "Enable writing of output files (roadmap, path, stats)?");
+  m_clearMap = _node.Read("clearMap", false, m_clearMap,
+      "Clear the roadmap(s) prior to executing the strategy?");
 
   // Parse evaluator child nodes.
   for(auto& child : _node)
@@ -171,6 +178,11 @@ operator()() {
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
 
+  if(m_clearMap)
+    ClearRoadmap();
+
+  MethodTimer* mt = new MethodTimer(stats, id + "::InitAndRun");
+
   // Initialize.
   {
     MethodTimer mt(stats, id + "::Initialize");
@@ -181,6 +193,8 @@ operator()() {
   // Run.
   Run();
   stats->PrintClock(id + "::Run", std::cout);
+
+  delete mt;
 
   // Don't count finalize in the time because file io isn't relevant to
   // algorithmic performance.
@@ -297,6 +311,22 @@ Finalize() {
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
 }
 
+
+template <typename MPTraits>
+void
+MPStrategyMethod<MPTraits>::
+ClearRoadmap() {
+  /// @todo This uses the STAPL graph 'clear' function, which doesn't activate
+  ///       any roadmap hooks. Methods which use hooks may have stale data after
+  ///       clearing the map. To fix we'll need to replace with our own function
+  ///       in RoadmapGraph.
+  auto roadmap = this->GetRoadmap();
+  roadmap->clear();
+
+  // Make a new CC tracker to clear the old stale data.
+  roadmap->SetCCTracker(this->GetStatClass());
+}
+
 /*--------------------------- Start/Goal Generation --------------------------*/
 
 template <typename MPTraits>
@@ -347,6 +377,18 @@ GenerateStart(const std::string& _samplerLabel) {
   if(this->m_debug)
     std::cout << "\tVID " << vid << " at " << start.PrettyPrint()
               << std::endl;
+
+  // Ensure the configuration satisfies the boundary we just used to sample it.
+  if(!this->GetTask()->EvaluateStartConstraints(g->GetVertex(vid)))
+    throw RunTimeException(WHERE) << "Sampled configuration from a start "
+                                  << "boundary, but task claims it doesn't satisfy:"
+                                  << "\n\tBoundary: " << *startBoundary
+                                  << "\n\tCfg:      " << start.PrettyPrint()
+                                  << "\n\tFull cfg: " << start;
+  // Ensure the goal tracker recognized this configuration.
+  if(!this->GetGoalTracker()->GetStartVIDs().count(vid))
+    throw RunTimeException(WHERE) << "Added VID " << vid << " as a start "
+                                  << "node, but GoalTracker didn't log it.";
 
   return vid;
 }
@@ -410,6 +452,21 @@ GenerateGoals(const std::string& _samplerLabel) {
     if(this->m_debug)
       std::cout << "\tVID " << vid << " at " << goal.PrettyPrint()
                 << std::endl;
+
+    // Do not accept any bullcrap about the configuration not satisfying the
+    // boundary we just used to sample it.
+    if(!this->GetTask()->EvaluateGoalConstraints(g->GetVertex(vid), i))
+      throw RunTimeException(WHERE) << "Sampled configuration from goal " << i
+                                    << " boundary, but task claims it doesn't "
+                                    << "satisfy:"
+                                    << "\n\tBoundary: " << *goalBoundary
+                                    << "\n\tCfg:      " << goal.PrettyPrint()
+                                    << "\n\tFull cfg: " << goal;
+    // Do not accept any bullcrap about the goal tracker not recognizing this
+    // configuration.
+    if(!this->GetGoalTracker()->GetGoalVIDs(i).count(vid))
+      throw RunTimeException(WHERE) << "Added VID " << vid << " as a goal "
+                                    << "node, but GoalTracker didn't log it.";
   }
 
   return vids;

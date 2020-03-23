@@ -35,6 +35,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupPathType     GroupPathType;
     typedef typename GroupRoadmapType::VID       VID;
+    typedef typename GroupRoadmapType::VertexSet VertexSet;
     typedef typename GroupCfgType::Formation     Formation;
 
     ///@}
@@ -555,12 +556,12 @@ FindNearestNeighbor(const GroupCfgType& _cfg) {
 
   // Find the CC we are expanding.
   auto ccTracker = roadmap->GetCCTracker();
-  const auto& cc = ccTracker->GetCC(m_startGroupCfgVID);
+  const VertexSet* const cc = ccTracker->GetCC(m_startGroupCfgVID);
 
   // Find neighbors in the roadmap.
   std::vector<Neighbor> neighbors;
   auto const nf = this->GetNeighborhoodFinder(m_nfLabel);
-  nf->FindNeighbors(roadmap, _cfg, cc, std::back_inserter(neighbors));
+  nf->FindNeighbors(roadmap, _cfg, *cc, std::back_inserter(neighbors));
 
   // Return the nearest VID.
   const VID nearestVID = neighbors[0].target;

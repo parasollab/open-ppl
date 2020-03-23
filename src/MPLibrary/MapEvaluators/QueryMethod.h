@@ -149,6 +149,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     RoadmapType* m_roadmap{nullptr};   ///< Last roadmap queried.
+    MPTask* m_task{nullptr};           ///< Last task we looked at.
 
     size_t m_goalIndex{0};             ///< Index of next unreached goal.
 
@@ -230,14 +231,18 @@ operator()() {
       this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
   });
 
-  if(goalTracker->GetStartVIDs().empty())
+  if(goalTracker->GetStartVIDs().empty()) {
+    if(this->m_debug)
+      std::cout << "No start VIDs, query cannot succeed."
+                << std::endl;
     return false;
+  }
 
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.
   auto r = this->GetRoadmap();
-  if(unreachedGoals.empty() or r != m_roadmap)
+  if(unreachedGoals.empty() or r != m_roadmap or task != m_task)
     Reset(r);
 
   if(this->m_debug)
@@ -420,6 +425,7 @@ QueryMethod<MPTraits>::
 Reset(RoadmapType* const _r) {
   // Set the roadmap.
   m_roadmap = _r;
+  m_task = this->GetTask();
 
   // Reset the goal index.
   m_goalIndex = 0;
