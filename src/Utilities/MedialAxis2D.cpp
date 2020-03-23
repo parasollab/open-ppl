@@ -356,7 +356,8 @@ GetSkeleton(size_t _t) {
     edgeMap.insert(make_pair(ed,AnnotateSegment(eit->property())));
     // Add the bidirectional edge for the opposite direction
     std::reverse(edge.begin(), edge.end());
-    ed = g.add_edge(eit->target(),eit->source(),edge);
+    // Need to add it this way so that the edge ID matches.
+    add_internal_edge(g, reverse(ed), edge);
     //TODO:: figure out if this needs to be added to the edge map or not.
   }
 

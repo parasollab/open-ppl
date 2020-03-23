@@ -914,10 +914,10 @@ ConnectTrees(const VID _recentlyGrown) {
       continue;
 
     // Get the CC associated with this representative.
-    const VertexSet& cc = ccTracker->GetCC(representative);
+    const VertexSet* cc = ccTracker->GetCC(representative);
 
     // Find nearest neighbor to qNew in the other tree.
-    const VID nearestVID = FindNearestNeighbor(qNew, &cc);
+    const VID nearestVID = FindNearestNeighbor(qNew, cc);
     if(nearestVID == INVALID_VID)
       continue;
 

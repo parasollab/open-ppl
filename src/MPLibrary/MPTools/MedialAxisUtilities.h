@@ -420,6 +420,7 @@ Initialize() {
       else
         std::cout << "Using approximate penetration" << std::endl;
   }
+  m_initialized = true;
 }
 
 
@@ -458,7 +459,6 @@ ExactCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
     VDClearAll();
     VDAddTempCfg(_cfg, false);
   }
-
 
   const bool initValidity = GetNearestVertexWitness(_cfg, _cdInfo, _b);
 
@@ -539,6 +539,7 @@ GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
       }
     }
   }
+
   return initValidity;
 }
 

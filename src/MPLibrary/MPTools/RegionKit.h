@@ -203,6 +203,8 @@ void
 RegionKit::
 Initialize(WorkspaceSkeleton* const _skeleton, const Point3d& _point,
     const double _robotRadius, const std::string& _label, RoadmapGraph* _graph) {
+  if(_graph->IsHook(RoadmapGraph::HookType::AddVertex, _label))
+    _graph->RemoveHook(RoadmapGraph::HookType::AddVertex, _label);
   // Set the skeleton pointer and initialize the regions/auxiliary data.
   m_skeleton = _skeleton;
   m_regionRadius = m_regionFactor * _robotRadius;

@@ -1349,6 +1349,51 @@ IntersectVertexSets(const std::unordered_set<size_t>& _a,
 }
 
 
+/// Check if two vertex sets have any members in common.
+/// @param _a The first set.
+/// @param _b The second set.
+/// @return True if there are any vertices in both _a and _b.
+inline
+bool
+HaveCommonVertex(const std::unordered_set<size_t>& _a,
+                 const std::unordered_set<size_t>& _b) {
+  using VertexSet = std::unordered_set<size_t>;
+
+  // Find the smaller of the two sets.
+  const VertexSet* smaller,
+                 * larger;
+  if(_a.size() < _b.size()) {
+    smaller = &_a;
+    larger  = &_b;
+  }
+  else {
+    smaller = &_b;
+    larger  = &_a;
+  }
+
+  // Test each element in the smaller set for membership in the larger one.
+  return std::any_of(smaller->begin(), smaller->end(),
+                     [larger](const size_t _vid) {return larger->count(_vid);});
+}
+
+
+/// Merge one vertex set into another.
+/// @param _receiver The vertex set receiving new VIDs.
+/// @param _source   The source of the new VIDs.
+/// @return A reference to _receiver.
+inline
+std::unordered_set<size_t>&
+VertexSetUnionInPlace(std::unordered_set<size_t>& _receiver,
+    const std::unordered_set<size_t>& _source) {
+  // Reserve sufficient space for the worst case. This wastes a bit of space
+  // (which is inevitable anyway) but avoids more than one rehash.
+  _receiver.reserve(_receiver.size() + _source.size());
+  for(const size_t vid : _source)
+    _receiver.insert(vid);
+  return _receiver;
+}
+
+
 /// Select a random element from a vertex set (or other unordered set).
 /// @param _set The set.
 /// @return A random element from within.
@@ -1389,7 +1434,6 @@ RandomElement(const std::unordered_set<T, Rest...>& _set) noexcept {
   return *std::next(_set.begin(), DRand() * _set.size());
 #endif
 }
-
 
 /*----------------------------------------------------------------------------*/
 

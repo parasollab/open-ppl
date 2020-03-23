@@ -83,6 +83,14 @@ class WorkspaceSkeleton {
     /// Divide existing edges into sizes of at most _maxLength.
     void RefineEdges(double _maxLength);
 
+    /// Double up the edges so that each one has a duplicate facing the opposite
+    /// direction with reversed path and same edge ID. This does not make sense
+    /// with Direct or Prune. If you want to use with RefineEdges you should
+    /// call that first to ensure the edge counterparts match exactly.
+    /// @note This function assumes that all edges currently in the skeleton
+    ///       are unique and not reverse duplicates.
+    void DoubleEdges();
+
     ///@}
     ///@name Accessors
     ///@{
@@ -126,7 +134,5 @@ class WorkspaceSkeleton {
 
     ///@}
 };
-
-
 
 #endif
