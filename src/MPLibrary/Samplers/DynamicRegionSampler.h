@@ -292,7 +292,7 @@ LazyInitialize() {
       if(this->m_debug)
         std::cout << "Building a Mean Curvature skeleton." << std::endl;
       MeanCurvatureSkeleton3D mcs;
-      //mcs.SetEnvironment(this->GetEnvironment());
+      mcs.SetEnvironment(this->GetEnvironment());
       mcs.BuildSkeleton();
 
       // Create the workspace skeleton.

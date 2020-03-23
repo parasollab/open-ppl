@@ -57,6 +57,10 @@ Point3d ToPMPLPoint3d(const CGAL::Simple_cartesian<double>::Point_3& _p) {
 void
 MeanCurvatureSkeleton3D::
 SetEnvironment(const Environment* _env) {
+  // Do nothing if we're reading in from a file.
+  if(m_params.ioType == "read")
+    return;
+
   if(this->m_debug)
     cout << "MeanCurvatureSkeleton3D::Construct()" << endl;
 
@@ -70,13 +74,13 @@ SetEnvironment(const Environment* _env) {
 void
 MeanCurvatureSkeleton3D::
 BuildSkeleton(const WorkspaceDecomposition* _tetrahedralization, bool _curve) {
-  if(m_debug)
-    cout << "MeanCurvatureSkeleton3D::BuildSkeleton()" << endl;
-
   if(m_params.ioType == "read") {
     Read(m_params.filebase);
     return;
   }
+
+  if(m_debug)
+    cout << "MeanCurvatureSkeleton3D::BuildSkeleton()" << endl;
 
   SurfaceMesh inputMesh;
   // Copy vertices.
