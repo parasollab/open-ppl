@@ -75,7 +75,7 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(vizmo_map) $(group_map)
+DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(SERVER_DEF) $(vizmo_map) $(group_map)
 INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
 LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 
@@ -84,12 +84,16 @@ LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 # Pre-pend the build directory to the object file names.
 PMPL_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
 SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
+SERVER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SERVER_SRCS))
+CLIENT_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(CLIENT_SRCS))
 HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
 
 # Make the object files depend on updated utility libraries so the libs are
 # built first.
 $(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(SERVER_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(CLIENT_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 # Set which object defines the main function.
@@ -130,6 +134,15 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	  $(LIBS) -o $@
 
+# Build the server.
+server: $(SERVER_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SERVER_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+
+client: $(CLIENT_OBJS)  $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # This recipe runs headers with Q_OBJECT through the qt MOC.
@@ -158,7 +171,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 .PHONY: clean
 clean:
 	@echo Cleaning pmpl library and executables...
-	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim server
 
 .PHONY: reallyclean
 reallyclean: clean
