@@ -124,7 +124,9 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     /// @param _representative The new representative's VID in the roadmap.
     void UpdateRepresentative(const VID _witness, const VID _representative);
 
-    // Find nearest witness to a vertex.
+    /// Find nearest witness to a configuration.
+    /// @param _newCfg The query configuration.
+    /// @return The nearest witness node to _newCfg.
     Neighbor FindNearestWitness(const CfgType& _newCfg);
 
     /// Recursively prune the set of inactive leaves until none remain.
