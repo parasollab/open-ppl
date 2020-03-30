@@ -124,6 +124,10 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     bool m_clearMap{false};              ///< Clear the roadmap(s) before run?
 
     ///@}
+
+    /// Needs access to Iterate for other methods.
+    template <typename> friend class AOAnalyzer;
+
 };
 
 /*----------------------------- Construction ---------------------------------*/
@@ -168,6 +172,7 @@ MPStrategyMethod<MPTraits>::
 operator()() {
   m_iterations = 0;
 
+  // Print settings.
   Print(std::cout);
 
   auto stats = this->GetStatClass();
@@ -177,18 +182,19 @@ operator()() {
     ClearRoadmap();
 
   MethodTimer* mt = new MethodTimer(stats, id + "::InitAndRun");
+
+  // Initialize.
   {
     MethodTimer mt(stats, id + "::Initialize");
     Initialize();
   }
   stats->PrintClock(id + "::Initialize", std::cout);
-  {
-    MethodTimer mt(stats, id + "::Run");
-    Run();
-  }
+
+  // Run.
+  Run();
   stats->PrintClock(id + "::Run", std::cout);
+
   delete mt;
-  stats->PrintClock(id + "::InitAndRun", std::cout);
 
   // Don't count finalize in the time because file io isn't relevant to
   // algorithmic performance.
@@ -209,6 +215,10 @@ template <typename MPTraits>
 void
 MPStrategyMethod<MPTraits>::
 Run() {
+  auto stats = this->GetStatClass();
+  const std::string clockName = this->GetNameAndLabel() + "::Run";
+  MethodTimer mt(stats, clockName);
+
   do {
     ++m_iterations;
     if(this->m_debug) {
@@ -218,6 +228,7 @@ Run() {
       const std::string roadmap = this->GetGroupTask()
                                 ? "Group Roadmap"
                                 : "Roadmap";
+      stats->PrintClock(clockName, std::cout);
       std::cout << "\n*** Starting iteration " << m_iterations
                 << " ***************************************************"
                 << "\n" << roadmap << " has " << vertices << " vertices."
@@ -309,14 +320,10 @@ ClearRoadmap() {
   ///       any roadmap hooks. Methods which use hooks may have stale data after
   ///       clearing the map. To fix we'll need to replace with our own function
   ///       in RoadmapGraph.
-
-  // If we have a CC tracker, remove its hooks.
   auto roadmap = this->GetRoadmap();
-  auto ccTracker = roadmap->GetCCTracker();
-  if(ccTracker)
-    ccTracker->RemoveHooks();
-
   roadmap->clear();
+
+  // Make a new CC tracker to clear the old stale data.
   roadmap->SetCCTracker(this->GetStatClass());
 }
 
@@ -371,16 +378,14 @@ GenerateStart(const std::string& _samplerLabel) {
     std::cout << "\tVID " << vid << " at " << start.PrettyPrint()
               << std::endl;
 
-  // Do not accept any bullcrap about the configuration not satisfying the
-  // boundary we just used to sample it.
+  // Ensure the configuration satisfies the boundary we just used to sample it.
   if(!this->GetTask()->EvaluateStartConstraints(g->GetVertex(vid)))
     throw RunTimeException(WHERE) << "Sampled configuration from a start "
                                   << "boundary, but task claims it doesn't satisfy:"
                                   << "\n\tBoundary: " << *startBoundary
                                   << "\n\tCfg:      " << start.PrettyPrint()
                                   << "\n\tFull cfg: " << start;
-  // Do not accept any bullcrap about the goal tracker not recognizing this
-  // configuration.
+  // Ensure the goal tracker recognized this configuration.
   if(!this->GetGoalTracker()->GetStartVIDs().count(vid))
     throw RunTimeException(WHERE) << "Added VID " << vid << " as a start "
                                   << "node, but GoalTracker didn't log it.";

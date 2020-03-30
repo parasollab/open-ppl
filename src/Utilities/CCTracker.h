@@ -120,12 +120,6 @@ class CCTracker final {
     /// Set the stat class pointer if we wish to do performance profiling.
     void SetStatClass(StatClass* const _stats) const noexcept;
 
-    /// Install hooks in the roadmap.
-    void InstallHooks() noexcept;
-
-    /// Install hooks in the roadmap.
-    void RemoveHooks() noexcept;
-
     ///@}
     ///@name Query Functions
     ///@{
@@ -170,6 +164,15 @@ class CCTracker final {
     void InstallMergedHook(const std::string& _label, const MergedHook& _h);
 
     ///@}
+    ///@name Optimization
+    ///@{
+    /// Updates can be disabled to optimize rewiring operations (where we change
+    /// the graph without changing connectivity).
+
+    void Disable();
+    void Enable();
+
+    ///@}
     ///@name Debug
     ///@{
 
@@ -179,9 +182,6 @@ class CCTracker final {
     void Print(std::ostream& _os, const std::string& _indent = {}) const;
 
     ///@}
-
-  private:
-
     ///@name Roadmap Callback Functions
     ///@{
     /// These functions accept graph updates and adjust the internal CCs
@@ -204,6 +204,9 @@ class CCTracker final {
     void DeleteEdge(const edge_iterator _ei) noexcept;
 
     ///@}
+
+  private:
+
     ///@name Helpers
     ///@{
 
@@ -244,6 +247,7 @@ class CCTracker final {
     std::unordered_map<std::string, DeletedHook> m_deletedHooks;
     std::unordered_map<std::string, BrokenHook>  m_brokenHooks;
     std::unordered_map<std::string, MergedHook>  m_mergedHooks;
+    bool m_enable{true};
 
     static constexpr const bool s_debug = false;  ///< Enable debug messages.
 
@@ -256,9 +260,6 @@ template <typename RoadmapType>
 CCTracker<RoadmapType>::
 CCTracker(RoadmapType* const _r) : m_roadmap(_r) {
   RecomputeCCs();
-
-  // Install roadmap hooks.
-  InstallHooks();
 
   // Initialize the clock start/stoppers.
   SetStatClass(nullptr);
@@ -359,36 +360,6 @@ SetStatClass(StatClass* const _stats) const noexcept {
   m_clockStop = [_stats](const std::string& _label) {
     _stats->StopClock(_label);
   };
-}
-
-
-template <typename RoadmapType>
-inline
-void
-CCTracker<RoadmapType>::
-InstallHooks() noexcept {
-  const std::string label = "CCTracker";
-  m_roadmap->InstallHook(RoadmapType::HookType::AddVertex, label,
-      [this](const vertex_iterator _i){this->AddVertex(_i);});
-  m_roadmap->InstallHook(RoadmapType::HookType::DeleteVertex, label,
-      [this](const vertex_iterator _i){this->DeleteVertex(_i);});
-  m_roadmap->InstallHook(RoadmapType::HookType::AddEdge, label,
-      [this](const edge_iterator _i){this->AddEdge(_i);});
-  m_roadmap->InstallHook(RoadmapType::HookType::DeleteEdge, label,
-      [this](const edge_iterator _i){this->DeleteEdge(_i);});
-}
-
-
-template <typename RoadmapType>
-inline
-void
-CCTracker<RoadmapType>::
-RemoveHooks() noexcept {
-  const std::string label = "CCTracker";
-  m_roadmap->RemoveHook(RoadmapType::HookType::AddVertex, label);
-  m_roadmap->RemoveHook(RoadmapType::HookType::DeleteVertex, label);
-  m_roadmap->RemoveHook(RoadmapType::HookType::AddEdge, label);
-  m_roadmap->RemoveHook(RoadmapType::HookType::DeleteEdge, label);
 }
 
 /*--------------------------------- Queries ----------------------------------*/
@@ -494,6 +465,22 @@ InstallMergedHook(const std::string& _label, const MergedHook& _h) {
   MapUniqueInsert(m_mergedHooks, _label, _h);
 }
 
+
+template <typename RoadmapType>
+void
+CCTracker<RoadmapType>::
+Disable() {
+  m_enable = false;
+}
+
+
+template <typename RoadmapType>
+void
+CCTracker<RoadmapType>::
+Enable() {
+  m_enable = true;
+}
+
 /*----------------------------------- Debug ----------------------------------*/
 
 template <typename RoadmapType>
@@ -511,6 +498,9 @@ template <typename RoadmapType>
 void
 CCTracker<RoadmapType>::
 AddVertex(const vertex_iterator _vi) noexcept {
+  if(!m_enable)
+    return;
+
   m_clockStart("CCTracker::AddVertex");
   nonstd::call_on_destruct stopper(m_clockStop, "CCTracker::AddVertex");
 
@@ -538,6 +528,9 @@ template <typename RoadmapType>
 void
 CCTracker<RoadmapType>::
 DeleteVertex(const vertex_iterator _vi) noexcept {
+  if(!m_enable)
+    return;
+
   m_clockStart("CCTracker::DeleteVertex");
   nonstd::call_on_destruct stopper(m_clockStop, "CCTracker::DeleteVertex");
 
@@ -584,6 +577,9 @@ template <typename RoadmapType>
 void
 CCTracker<RoadmapType>::
 AddEdge(const edge_iterator _ei) noexcept {
+  if(!m_enable)
+    return;
+
   /// @note This is linear in the size of the smaller CC if a merge occurs, or
   ///       constant amortized otherwise.
   m_clockStart("CCTracker::AddEdge");
@@ -646,6 +642,9 @@ template <typename RoadmapType>
 void
 CCTracker<RoadmapType>::
 DeleteEdge(const edge_iterator _ei) noexcept {
+  if(!m_enable)
+    return;
+
   m_clockStart("CCTracker::DeleteEdge");
   nonstd::call_on_destruct stopper(m_clockStop, "CCTracker::DeleteEdge");
 
@@ -662,8 +661,8 @@ DeleteEdge(const edge_iterator _ei) noexcept {
            * const targetCC = FindCC(target);
   if(sourceCC != targetCC) {
     const VertexSet discovered = BFS(0);
-    std::cout << "~~~Roadmap has " << m_roadmap->Size() << " vertices.\n"
-              << "~~~CC from root has " << discovered.size() << " vertices:\n"
+    std::cout << "  Roadmap has " << m_roadmap->Size() << " vertices.\n"
+              << "  CC from root has " << discovered.size() << " vertices:\n"
               << "\t" << discovered
               << std::endl;
     throw RunTimeException(WHERE) << "Edge vertices are not in the same CC.";

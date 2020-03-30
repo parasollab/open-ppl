@@ -85,35 +85,33 @@ void
 DrawableRoadmap::
 AddVertex(VI _vi) {
   // Gets Vertex data.
-  auto cfg = _vi->property();
+  const VID vid  = _vi->descriptor();
+  const Cfg& cfg = _vi->property();
   std::lock_guard<std::mutex> lock(m_lock);
-  m_bufferCfgs.push_back(cfg.GetData());
+  m_bufferAddCfgs.emplace(vid, DrawableCfg(cfg.GetData(), m_dmb.get()));
 }
 
 
 void
 DrawableRoadmap::
 AddEdge(EI _ei) {
-  // Gets Edge data.
-  auto edge = _ei->property();
-  const auto& intermediates = edge.GetIntermediates();
-
   // vids of the source and target vids
-  auto startVid = _ei->source();
-  auto endVid = _ei->target();
-
-  std::vector<glutils::vector3f> edgeList;
+  const VID startVID = _ei->source(),
+            endVID   = _ei->target();
+  const EdgeID eid(startVID, endVID);
 
   // get the cfgs from the graph
-  const Cfg& startCfg = m_graph->GetVertex(startVid);
-  const Cfg& endCfg   = m_graph->GetVertex(endVid);
+  const Cfg& startCfg = m_graph->GetVertex(startVID);
+  const Cfg& endCfg   = m_graph->GetVertex(endVID);
 
+  std::vector<glutils::vector3f> edgeList;
   edgeList.push_back(ToGLUtils(startCfg.GetPoint()));
 
   // for each intermiate add it to the last edge, the edge
   // just created.
-  for(const auto& inter : intermediates) {
-    auto p = inter.GetPoint();
+  const auto& intermediates = _ei->property().GetIntermediates();
+  for(const auto& intermediate : intermediates) {
+    const auto& p = intermediate.GetPoint();
     edgeList.push_back(ToGLUtils(p));
   }
 
@@ -121,21 +119,29 @@ AddEdge(EI _ei) {
 
   // add the target cfg to the edge points
   std::lock_guard<std::mutex> lock(m_lock);
-  m_bufferEdges.emplace_back(std::move(edgeList));
+  m_bufferAddEdges.emplace(eid, std::move(edgeList));
 }
 
 
 void
 DrawableRoadmap::
 DeleteVertex(VI _vi) {
-  throw NotImplementedException(WHERE);
+  const VID vid = _vi->descriptor();
+
+  std::lock_guard<std::mutex> lock(m_lock);
+  m_bufferAddCfgs.erase(vid);
+  m_bufferDeleteCfgs.insert(vid);
 }
 
 
 void
 DrawableRoadmap::
 DeleteEdge(EI _ei) {
-  throw NotImplementedException(WHERE);
+  const EdgeID eid(_ei->source(), _ei->target());
+
+  std::lock_guard<std::mutex> lock(m_lock);
+  m_bufferAddEdges.erase(eid);
+  m_bufferDeleteEdges.insert(eid);
 }
 
 
@@ -162,21 +168,34 @@ draw() {
   {
     std::lock_guard<std::mutex> lock(m_lock);
 
-    for(const auto& cfg : m_bufferCfgs) {
-      m_cfgs.emplace_back(cfg, m_dmb.get());
-      m_cfgs.back().initialize();
-    }
-    m_bufferCfgs.clear();
+    // Handle vertex deletion.
+    for(const VID vid : m_bufferDeleteCfgs)
+      m_cfgs.erase(vid);
+    m_bufferDeleteCfgs.clear();
 
-    copy(m_bufferEdges.begin(), m_bufferEdges.end(), std::back_inserter(m_edges));
-    m_bufferEdges.clear();
+    // Handle vertex addition.
+    for(const auto& pair : m_bufferAddCfgs) {
+      auto iterBool = m_cfgs.emplace(pair);
+      iterBool.first->second.initialize();
+    }
+    m_bufferAddCfgs.clear();
+
+    // Handle edge deletion.
+    for(const EdgeID& eid : m_bufferDeleteEdges)
+      m_edges.erase(eid);
+    m_bufferDeleteEdges.clear();
+
+    // Handle edge addition.
+    copy(m_bufferAddEdges.begin(), m_bufferAddEdges.end(),
+        std::inserter(m_edges, m_edges.end()));
+    m_bufferAddEdges.clear();
   }
 
   // if draw robot then draw a rendering of the robot at the cfg,
   // otherwise, draw the cfg as a point.
   if(m_drawRobot)
-    for(auto& cfg : m_cfgs)
-      cfg.render();
+    for(auto& pair : m_cfgs)
+      pair.second.render();
   else {
     glPointSize(3);
     glDisable(GL_LIGHTING);
@@ -184,8 +203,8 @@ draw() {
 
     // says to draw a point primative
     glBegin(GL_POINTS);
-    for(auto& v : m_cfgs)
-      glVertex3fv(v.GetPoint().begin());
+    for(auto& pair : m_cfgs)
+      glVertex3fv(pair.second.GetPoint().begin());
     glEnd();
     glEnable(GL_LIGHTING);
   }
@@ -194,14 +213,15 @@ draw() {
 
   // sets the width of the line
   glLineWidth(1.0);
-  for(const auto& edge : m_edges) {
+  for(const auto& pair : m_edges) {
     // after the first vertex, for each new vertice
     // added a new line will be drawn.
     // Lets say n vertices were drawn, n-1 vertices will
     // rendered. Start from 0 to 1, 1 to 2, 2 to 3 and so on.
     glBegin(GL_LINE_STRIP);
-    for(const auto& inter : edge)
-      glVertex3fv(inter.begin());
+    const PointPath& edge = pair.second;
+    for(const auto& intermediates : edge)
+      glVertex3fv(intermediates.begin());
     glEnd();
   }
   glEnable(GL_LIGHTING);

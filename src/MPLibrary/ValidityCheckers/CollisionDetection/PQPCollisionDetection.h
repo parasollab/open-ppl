@@ -1,8 +1,9 @@
-#ifndef PQP_COLLISION_DETECTION_H_
-#define PQP_COLLISION_DETECTION_H_
+#ifndef PMPL_PQP_COLLISION_DETECTION_H_
+#define PMPL_PQP_COLLISION_DETECTION_H_
 
 #include "CollisionDetectionMethod.h"
 
+class GMSPolyhedron;
 class PQP_Model;
 
 
@@ -31,13 +32,22 @@ class PQP : public CollisionDetectionMethod {
     virtual ~PQP();
 
     ///@}
+    ///@name Model Construction
+    ///@{
+
+    /// Build a PQP model for a GMSPolyhedron.
+    /// @param _polyhedron The polyhedron to model.
+    /// @return A PQP model of _model.
+    static PQP_Model* Build(const GMSPolyhedron& _polyhedron);
+
+    ///@}
     ///@name CollisionDetectionMethod Overrides
     ///@{
 
-    static void Build(Body* const _body);
-
-    virtual bool IsInCollision(const Body* const _body1,
-        const Body* const _body2, CDInfo& _cdInfo) override;
+    virtual bool IsInCollision(
+        const GMSPolyhedron& _polyhedron1, const mathtool::Transformation& _t1,
+        const GMSPolyhedron& _polyhedron2, const mathtool::Transformation& _t2,
+        CDInfo& _cdInfo) override;
 
     ///@}
 
@@ -65,16 +75,19 @@ class PQPSolid : public PQP {
     ///@name CollisionDetectorMethod Overrides
     ///@{
 
-    virtual bool IsInCollision(const Body* const _body1,
-        const Body* const _body2, CDInfo& _cdInfo) override;
+    virtual bool IsInCollision(
+        const GMSPolyhedron& _polyhedron1, const mathtool::Transformation& _t1,
+        const GMSPolyhedron& _polyhedron2, const mathtool::Transformation& _t2,
+        CDInfo& _cdInfo) override;
 
     /// Shoot a pseudo-ray outward from a reference point to determine if it
     /// lies within a given body.
     /// @param _pt The reference point of interest.
     /// @param _body The body to check against.
     /// @return True if _pt is inside _body.
-    virtual bool IsInsideObstacle(const mathtool::Vector3d& _pt,
-        const Body* const _body) override;
+    virtual bool IsInsideObstacle(const mathtool::Vector3d& _point,
+        const GMSPolyhedron& _polyhedron,
+        const mathtool::Transformation& _transformation) override;
 
     ///@}
 

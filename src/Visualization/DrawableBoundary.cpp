@@ -43,6 +43,22 @@ build() {
 
   DrawablePolyhedron::build();
 
+  // Build normals
+#if 0
+  if(!this->m_wire) {
+    glColor4fv(glutils::color::red);
+    glLineWidth(4);
+    glBegin(GL_LINES);
+    for(const auto& polygon : m_polyhedron.GetPolygonList()) {
+      const auto center = polygon.FindCenter(),
+                 normal = polygon.GetNormal();
+      glVertex3dv(static_cast<const GLdouble*>(center));
+      glVertex3dv(static_cast<const GLdouble*>(center + normal));
+    }
+    glEnd();
+  }
+#endif
+
   if(!this->m_wire)
     glEnable(GL_CULL_FACE);
   if(transparent) {

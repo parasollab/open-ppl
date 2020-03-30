@@ -528,11 +528,11 @@ GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
     // from obstacles
     for(size_t m = 0; m < multiBody->GetNumBodies(); ++m) {
       const GMSPolyhedron& poly = multiBody->GetBody(m)->GetWorldPolyhedron();
-      for(size_t j = 0; j < poly.m_vertexList.size(); ++j) {
-        const double clr = _b->GetClearance(poly.m_vertexList[j]);
+      for(size_t j = 0; j < poly.GetVertexList().size(); ++j) {
+        const double clr = _b->GetClearance(poly.GetVertexList()[j]);
         if(clr < _cdInfo.m_minDist) {
-          _cdInfo.m_robotPoint = poly.m_vertexList[j];
-          _cdInfo.m_objectPoint = _b->GetClearancePoint(poly.m_vertexList[j]);
+          _cdInfo.m_robotPoint = poly.GetVertexList()[j];
+          _cdInfo.m_objectPoint = _b->GetClearancePoint(poly.GetVertexList()[j]);
           _cdInfo.m_minDist = clr;
           _cdInfo.m_nearestObstIndex = -1;
         }
@@ -877,7 +877,7 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
 
   //For 2d:
   //initial ray starts at rand angle, then all others are uniformly distributed:
-  double angleRad = 2.*PI*rand()/(double)RAND_MAX;//Note 2d case only currently
+  double angleRad = 2.*PI*DRand();//Note 2d case only currently
 
   for(size_t i = 0; i < _numRays; ++i) {
     CfgType tmpDirection(this->GetTask()->GetRobot());

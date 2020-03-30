@@ -1,5 +1,5 @@
-#ifndef ITERATION_COUNT_EVALUATOR_H_
-#define ITERATION_COUNT_EVALUATOR_H_
+#ifndef PMPL_ITERATION_COUNT_EVALUATOR_H_
+#define PMPL_ITERATION_COUNT_EVALUATOR_H_
 
 #include "MapEvaluatorMethod.h"
 
@@ -9,18 +9,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true once a minimum number of iterations has been achieved.
 ///
+/// @warning This counts every time you call operator()() and won't work
+///          properly with multiple sub-problems.
+///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class IterationCountEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   public:
+
     ///@name Construction
     ///@{
 
-    IterationCountEvaluator(const double _minCount = 5);
+    IterationCountEvaluator();
 
-  IterationCountEvaluator(XMLNode& _node);
+    IterationCountEvaluator(XMLNode& _node);
 
     virtual ~IterationCountEvaluator() = default;
 
@@ -39,12 +43,12 @@ class IterationCountEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@}
 
   private:
+
     ///@name Internal State
     ///@{
 
-    unsigned int m_minCount{0};
-    unsigned int m_currentCount{0};
-    bool m_minAchieved{false};
+    unsigned int m_minCount{0};      ///< Minimum iterations to return true.
+    unsigned int m_currentCount{0};  ///< Current iteration count.
 
     ///@}
 };
@@ -53,8 +57,7 @@ class IterationCountEvaluator : public MapEvaluatorMethod<MPTraits> {
 
 template <typename MPTraits>
 IterationCountEvaluator<MPTraits>::
-IterationCountEvaluator(const double _minCount) :
-    MapEvaluatorMethod<MPTraits>(), m_minCount(_minCount) {
+IterationCountEvaluator() : MapEvaluatorMethod<MPTraits>() {
   this->SetName("IterationCountEvaluator");
 }
 
@@ -75,7 +78,6 @@ void
 IterationCountEvaluator<MPTraits>::
 Initialize() {
   m_currentCount = 0;
-  m_minAchieved = false;
 }
 
 /*---------------------- MapEvaluatorMethod Interface ------------------------*/
@@ -84,10 +86,7 @@ template <typename MPTraits>
 bool
 IterationCountEvaluator<MPTraits>::
 operator()() {
-  if(!m_minAchieved)
-    m_minAchieved = (++m_currentCount >= m_minCount);
-
-  return m_minAchieved;
+  return ++m_currentCount >= m_minCount;
 }
 
 

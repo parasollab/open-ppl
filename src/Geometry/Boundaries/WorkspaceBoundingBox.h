@@ -1,5 +1,5 @@
-#ifndef WORKSPACE_BOUNDING_BOX_H_
-#define WORKSPACE_BOUNDING_BOX_H_
+#ifndef PMPL_WORKSPACE_BOUNDING_BOX_H_
+#define PMPL_WORKSPACE_BOUNDING_BOX_H_
 
 #include "AbstractBoundingBox.h"
 

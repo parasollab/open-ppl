@@ -1,11 +1,17 @@
 #include "GMSPolyhedron.h"
 
+#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
+#include "Utilities/IOUtils.h"
+#include "Utilities/MPUtils.h"
+
+#include "PQP.h"
+#include "RAPID.H"
+
 #include "MovieBYULoader.h"
 #include "ModelFactory.h"
 #include "ObjLoader.h"
-
-#include "Utilities/IOUtils.h"
-#include "Utilities/MPUtils.h"
 
 #include "glutils/triangulated_model.h"
 
@@ -14,12 +20,15 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
-#include <set>
 
 using namespace std;
 
 
 /*------------------------------ Construction --------------------------------*/
+
+GMSPolyhedron::
+GMSPolyhedron() = default;
+
 
 GMSPolyhedron::
 GMSPolyhedron(const GMSPolyhedron& _p) :
@@ -28,9 +37,7 @@ GMSPolyhedron(const GMSPolyhedron& _p) :
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
-    m_boundaryLines(_p.m_boundaryLines),
-    m_boundaryCached(_p.m_boundaryCached),
-    m_force2DBoundary(_p.m_force2DBoundary)
+    m_insidePoint(_p.m_insidePoint)
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -42,14 +49,14 @@ GMSPolyhedron(const GMSPolyhedron& _p) :
 
 GMSPolyhedron::
 GMSPolyhedron(GMSPolyhedron&& _p) :
-    m_vertexList(move(_p.m_vertexList)),
-    m_cgalPoints(move(_p.m_cgalPoints)),
+    m_vertexList(std::move(_p.m_vertexList)),
+    m_cgalPoints(std::move(_p.m_cgalPoints)),
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
-    m_boundaryLines(move(_p.m_boundaryLines)),
-    m_boundaryCached(_p.m_boundaryCached),
-    m_force2DBoundary(_p.m_force2DBoundary)
+    m_rapidModel(std::move(_p.m_rapidModel)),
+    m_pqpModel(std::move(_p.m_pqpModel)),
+    m_insidePoint(std::move(_p.m_insidePoint))
 {
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -61,40 +68,46 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
 
 GMSPolyhedron::
 GMSPolyhedron(glutils::triangulated_model&& _t) {
-  m_vertexList.reserve(_t.num_points());
-  m_polygonList.reserve(_t.num_facets());
-
   // Copy vertices.
+  m_vertexList.reserve(_t.num_points());
   for(auto iter = _t.points_begin(); iter != _t.points_end(); ++iter) {
     const glutils::vector3f& v = *iter;
     m_vertexList.emplace_back(v[0], v[1], v[2]);
   }
 
   // Copy facets.
+  m_polygonList.reserve(_t.num_facets());
   for(auto iter = _t.facets_begin(); iter != _t.facets_end(); ++iter) {
     const glutils::triangle_facet& f = *iter;
     m_polygonList.emplace_back(f[0], f[1], f[2], m_vertexList);
   }
 
-  MarkDirty();
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
+  ComputeInsidePoint();
 }
+
+
+GMSPolyhedron::
+~GMSPolyhedron() = default;
 
 /*------------------------------- Assignment ---------------------------------*/
 
 GMSPolyhedron&
 GMSPolyhedron::
 operator=(const GMSPolyhedron& _p) {
+  if(this == &_p)
+    return *this;
+
   m_vertexList = _p.m_vertexList;
   m_cgalPoints = _p.m_cgalPoints;
   m_area = _p.m_area;
   m_maxRadius = _p.m_maxRadius;
   m_minRadius = _p.m_minRadius;
-  m_boundaryLines = _p.m_boundaryLines;
-  m_boundaryCached = _p.m_boundaryCached;
-  m_force2DBoundary = _p.m_force2DBoundary;
+  m_centroid = _p.m_centroid;
+  m_centroidCached = _p.m_centroidCached;
+  m_insidePoint = _p.m_insidePoint;
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -110,14 +123,19 @@ operator=(const GMSPolyhedron& _p) {
 GMSPolyhedron&
 GMSPolyhedron::
 operator=(GMSPolyhedron&& _p) {
-  m_vertexList = move(_p.m_vertexList);
-  m_cgalPoints = move(_p.m_cgalPoints);
+  if(this == &_p)
+    return *this;
+
+  m_vertexList = std::move(_p.m_vertexList);
+  m_cgalPoints = std::move(_p.m_cgalPoints);
   m_area = _p.m_area;
   m_maxRadius = _p.m_maxRadius;
   m_minRadius = _p.m_minRadius;
-  m_boundaryLines = move(_p.m_boundaryLines);
-  m_boundaryCached = _p.m_boundaryCached;
-  m_force2DBoundary = _p.m_force2DBoundary;
+  m_centroid = std::move(_p.m_centroid);
+  m_centroidCached = _p.m_centroidCached;
+  m_rapidModel = std::move(_p.m_rapidModel);
+  m_pqpModel = std::move(_p.m_pqpModel);
+  m_insidePoint = std::move(_p.m_insidePoint);
 
   // Need to manually copy the polygons so that they refer to this polyhedron's
   // point list and not _p's.
@@ -137,6 +155,7 @@ operator*=(const Transformation& _t) {
   // Update the vertices.
   for(auto& point : m_vertexList)
     point = _t * point;
+  m_insidePoint = _t * m_insidePoint;
 
   // Update the face normals.
   for(auto& facet : m_polygonList)
@@ -156,6 +175,11 @@ operator*=(const Transformation& _t) {
       point = cgalTransform(point);
   }
 
+  // Trigger rebuild of CD models.
+  m_rapidModel.release();
+  m_pqpModel.release();
+  m_centroidCached = false;
+
   return *this;
 }
 
@@ -165,6 +189,49 @@ GMSPolyhedron::
 Invert() {
   for(auto& facet : m_polygonList)
     facet.Reverse();
+
+  // Trigger rebuild of CD models to get the normals facing the right way.
+  m_rapidModel.release();
+  m_pqpModel.release();
+  ComputeInsidePoint();
+}
+
+
+void
+GMSPolyhedron::
+Scale(double _scalingFactor) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_scalingFactor, 0.0 , 0.0},
+    {0.0, _scalingFactor, 0.0},
+    {0.0, 0.0, _scalingFactor}};
+
+  Vector3d toCenter = -(GetCentroid());
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  const Transformation center(toCenter, Orientation(unitM)),
+                       scale(Vector3d(0,0,0), Orientation(scaleM)),
+                       recenter(-toCenter, Orientation(unitM)),
+                       t = center * scale * recenter;
+
+  *(this) *= t;
+}
+
+
+GMSPolyhedron
+operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
+  GMSPolyhedron poly = _poly;
+  return poly *= _t;
 }
 
 /*-------------------------------- Equality ----------------------------------*/
@@ -269,6 +336,7 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
   OrderFacets();
   ComputeSurfaceArea();
   ComputeRadii();
+  ComputeInsidePoint();
 
   return com;
 }
@@ -294,20 +362,19 @@ GMSPolyhedron::
 WriteObj(ostream& _os) const {
  _os << "#Number of vertices: " << m_vertexList.size() << endl;
  _os << "#Number of triangles: " << m_polygonList.size() << endl;
- for(auto v : m_vertexList) {
-   _os << "v " << v << endl;
- }
- for(auto p: m_polygonList) {
-   p.ComputeNormal();
-   _os << "vn " << p.GetNormal() << endl;
- }
+ for(const auto& v : m_vertexList)
+   _os << "v " << v << std::endl;
+ for(const auto& p: m_polygonList)
+   _os << "vn " << p.GetNormal() << std::endl;
 
- for(auto p: m_polygonList) {
-   _os << "f ";
-   for(auto i = p.begin(); i != p.end(); i++) {
-     _os << *i + 1 << "//" << *i + 1 << " ";
-   }
-   _os << endl;
+ size_t count = 1;
+ for(const auto& p: m_polygonList) {
+   _os << "f";
+   for(const auto index : p)
+     _os << " " << index + 1 << "//" << count;
+   _os << std::endl;
+
+   ++count;
  }
 }
 
@@ -341,11 +408,33 @@ GetPolygonList() const noexcept {
 }
 
 
-vector<pair<int,int>>&
+const Vector3d&
 GMSPolyhedron::
-GetBoundaryLines() {
-   BuildBoundary();
-   return m_boundaryLines;
+GetCentroid() const {
+  if(!m_centroidCached)
+    ComputeCentroid();
+  return m_centroid;
+}
+
+
+double
+GMSPolyhedron::
+GetSurfaceArea() const noexcept {
+  return m_area;
+}
+
+
+double
+GMSPolyhedron::
+GetMaxRadius() const noexcept {
+  return m_maxRadius;
+}
+
+
+double
+GMSPolyhedron::
+GetMinRadius() const noexcept {
+  return m_minRadius;
 }
 
 /*--------------------------- Geometry Functions -----------------------------*/
@@ -393,149 +482,6 @@ GetRandPtOnSurface() const {
 }
 
 
-bool
-GMSPolyhedron::
-IsOnSurface(const Point2d& _p) const {
-  for(const auto& poly : m_polygonList) {
-    if(!poly.IsTriangle())
-      continue;
-    const Vector3d& v0 = poly.GetPoint(0);
-    const Vector3d& v1 = poly.GetPoint(1);
-    const Vector3d& v2 = poly.GetPoint(2);
-    const Point2d p0(v0[0], v0[2]);
-    const Point2d p1(v1[0], v1[2]);
-    const Point2d p2(v2[0], v2[2]);
-    if(PtInTriangle(p0, p1, p2, _p))
-      return true;
-  }
-  return false;
-}
-
-
-double
-GMSPolyhedron::
-HeightAtPt(const Point2d& _p, bool& _valid) const {
-  for(const auto& poly : m_polygonList) {
-    if(!poly.IsTriangle())
-      continue;
-    const Vector3d& v0 = poly.GetPoint(0);
-    const Vector3d& v1 = poly.GetPoint(1);
-    const Vector3d& v2 = poly.GetPoint(2);
-    Point2d p0(v0[0], v0[2]);
-    Point2d p1(v1[0], v1[2]);
-    Point2d p2(v2[0], v2[2]);
-    double u, v;
-    if(PtInTriangle(p0, p1, p2, _p, u, v)) {
-      _valid = true;
-      Point3d pt3d = GetPtFromBarycentricCoords(v0, v1, v2, u, v);
-      return pt3d[1];
-    }
-  }
-  // After checking all triangles, inconsistency found in iscollision check
-  _valid = false;
-  return -19999.0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Given a reference point and a line segment, find the point on the
-///        segment nearest to the reference and return the squared distance
-///        between them.
-/// \param[in] _p The reference point.
-/// \param[in] _s The start of the line segment.
-/// \param[in] _e The end of the line segment.
-/// \param[in/out] _closest The point on the segment that is closest to _p.
-/// \return The squared distance between _p and _closest.
-inline double
-distanceSqrFromSegment(const Point3d& _p, const Point3d& _s, const Point3d& _e,
-    Point3d& _closest) {
-  const Vector3d n = _e - _s;
-  const Vector3d q = _p - _s;
-  double len = q.comp(n);
-  if(len <= 0)
-    _closest = _s;
-  else if(len >= n.norm())
-    _closest = _e;
-  else
-    _closest = q.proj(n);
-  return (_closest - _p).normsqr();
-}
-
-
-double
-GMSPolyhedron::
-GetClearance(const Point3d& _p, Point3d& _closest) {
-  double closestDist = 1e10;
-
-  // Go through all boundary edges and find the closest point on any edge to _p.
-  for(const auto& bl : GetBoundaryLines()) {
-    const Vector3d& v1 =  m_vertexList[bl.first];
-    const Vector3d& v2 =  m_vertexList[bl.second];
-
-    // Find the point on this boundary line closest to p.
-    Point3d c;
-    double dist = distanceSqrFromSegment(_p, v1, v2, c);
-    if(dist < closestDist) {
-      closestDist = dist;
-      _closest = c;
-    }
-  }
-
-  return sqrt(closestDist);
-}
-
-
-double
-GMSPolyhedron::
-PushToMedialAxis(Point3d& _p) {
-  Point3d orig = _p;
-
-  // Compute clearance and closest point.
-  Point3d closest;
-  double clearance = GetClearance(_p, closest);
-
-  // Compute the direction in the xz plane from closest to _p.
-  Vector3d dir = (_p - closest).normalize();
-  dir[1] = 0;
-  dir = dir.normalize() * .5;
-
-  Point3d newClosest = closest;
-  size_t iteration = 0;
-  do {
-    // Push point along dir.
-    _p += dir;
-
-    // Project pushed point to xz plane.
-    Point2d proj(_p[0], _p[2]);
-
-    // Find height (y-coordinate) of polyhedron at this xz point.
-    bool valid = true;
-    double newH = HeightAtPt(proj, valid);
-
-    // If polyhedron doesn't extend to this xz point, return original point.
-    if(!valid) {
-      _p = orig;
-      break;
-    }
-
-    // Otherwise, set pushed point's y-coordinate to the polyhedron height.
-    _p[1] = newH;
-    clearance = GetClearance(_p, newClosest);
-  } while((newClosest - closest).normsqr() < 0.1 && iteration < 1000000);
-
-  return clearance;
-}
-
-
-const Vector3d&
-GMSPolyhedron::
-GetCentroid() const {
-  if(!m_centroidCached)
-    ComputeCentroid();
-  return m_centroid;
-}
-
-
 void
 GMSPolyhedron::
 ComputeSurfaceArea() {
@@ -561,64 +507,42 @@ ComputeRadii() {
 
 void
 GMSPolyhedron::
-MarkDirty() const {
-  m_centroidCached = false;
-  m_boundaryCached = false;
+ComputeInsidePoint() {
+  // Compute a point just beneath the first facet.
+  const auto& facet = GetPolygonList()[0];
+  m_insidePoint = facet.FindCenter() - 1e-6 * facet.GetNormal();
 }
 
 
-GMSPolyhedron
+std::unique_ptr<WorkspaceBoundingBox>
 GMSPolyhedron::
-ComputeBoundingPolyhedron() const {
-  // Find Extreme values.
-  double minX, minY, minZ, maxX, maxY, maxZ;
-  minX = maxX = m_vertexList[0][0];
-  minY = maxY = m_vertexList[0][1];
-  minZ = maxZ = m_vertexList[0][2];
+ComputeBoundingBox() const {
+  // Initialize point-ranges in each dimension on the first vertex.
+  const auto& vo = m_vertexList[0];
+  Range<double> x(vo[0], vo[0]),
+                y(vo[1], vo[1]),
+                z(vo[2], vo[2]);
 
+  // Find Extreme values.
   for(const auto& v : m_vertexList) {
-    minX = min(minX, v[0]);
-    maxX = max(maxX, v[0]);
-    minY = min(minY, v[1]);
-    maxY = max(maxY, v[1]);
-    minZ = min(minZ, v[2]);
-    maxZ = max(maxZ, v[2]);
+    x.ExpandToInclude(v[0]);
+    y.ExpandToInclude(v[1]);
+    z.ExpandToInclude(v[2]);
   }
 
-  // Make output polyhedron.
-  GMSPolyhedron bbx;
-  auto& verts = bbx.m_vertexList;
-  auto& polys = bbx.m_polygonList;
+  // Make workspace bounding box.
+  std::unique_ptr<WorkspaceBoundingBox> bbx(new WorkspaceBoundingBox(3));
+  bbx->SetRange(0, x);
+  bbx->SetRange(1, y);
+  bbx->SetRange(2, z);
 
-  // Add vertices.
-  verts.reserve(8);
-  verts.emplace_back(minX, minY, minZ);
-  verts.emplace_back(minX, minY, maxZ);
-  verts.emplace_back(minX, maxY, minZ);
-  verts.emplace_back(minX, maxY, maxZ);
-  verts.emplace_back(maxX, minY, minZ);
-  verts.emplace_back(maxX, minY, maxZ);
-  verts.emplace_back(maxX, maxY, minZ);
-  verts.emplace_back(maxX, maxY, maxZ);
-
-  // Add polygons.
-  polys.reserve(12);
-  polys.emplace_back(0, 1, 3, verts);
-  polys.emplace_back(0, 3, 2, verts);
-  polys.emplace_back(4, 0, 2, verts);
-  polys.emplace_back(4, 2, 6, verts);
-  polys.emplace_back(5, 4, 6, verts);
-  polys.emplace_back(5, 6, 7, verts);
-  polys.emplace_back(1, 5, 7, verts);
-  polys.emplace_back(1, 7, 3, verts);
-  polys.emplace_back(3, 7, 6, verts);
-  polys.emplace_back(3, 6, 2, verts);
-  polys.emplace_back(0, 4, 1, verts);
-  polys.emplace_back(0, 1, 5, verts);
-
-  bbx.OrderFacets();
-  bbx.ComputeSurfaceArea();
-  bbx.ComputeRadii();
+#if 0
+  // Assert that all poly points are inside.
+  for(const auto& v : m_vertexList)
+    if(!bbx->InBoundary(v))
+      throw RunTimeException(WHERE) << "Computed bbx " << *bbx << " does not "
+                                    << "contain polyhedron point " << v << ".";
+#endif
 
   return bbx;
 }
@@ -665,8 +589,7 @@ CGAL() const {
   builder b(*this);
   cp.delegate(b);
   if(!cp.is_valid())
-    throw RunTimeException(WHERE, "GMSPolyhedron:: Invalid CGAL polyhedron "
-        "created!");
+    throw RunTimeException(WHERE) << "Invalid CGAL polyhedron created!";
   return cp;
 }
 
@@ -692,7 +615,7 @@ ComputeConvexHull() const {
       fit != poly.facets_end(); ++fit) {
     // Each facet is described by a set of half-edges. Get the vertex/point
     // indexes in each facet.
-    HalfedgeFacetCirculator he = fit->facet_begin();
+    CGALPolyhedron::Halfedge_around_facet_circulator he = fit->facet_begin();
     vector<int> indexes;
     do {
       indexes.push_back(std::distance(poly.vertices_begin(), he->vertex()));
@@ -711,69 +634,12 @@ ComputeConvexHull() const {
   convexHull.OrderFacets();
   convexHull.ComputeSurfaceArea();
   convexHull.ComputeRadii();
+  convexHull.ComputeInsidePoint();
 
   return convexHull;
 }
 
 /*-------------------------- Initialization Helpers --------------------------*/
-
-void
-GMSPolyhedron::
-BuildBoundary2D() {
-  m_boundaryLines.clear();
-  m_boundaryCached = false;
-  m_force2DBoundary = true;
-  BuildBoundary();
-}
-
-
-void
-GMSPolyhedron::
-BuildBoundary() {
-  // If the boundary is already cached, we do not need to compute it again.
-  if(m_boundaryCached)
-    return;
-  m_boundaryCached = true;
-
-  // Create function for determining if a polygon is near the XZ surface plane.
-  auto NearXZPlane = [&](const GMSPolygon& _p) -> bool {
-    const double tolerance = 0.3; // Tolerance for considering points near-plane.
-    return fabs(_p.GetPoint(0)[1]) <= tolerance
-        && fabs(_p.GetPoint(1)[1]) <= tolerance
-        && fabs(_p.GetPoint(2)[1]) <= tolerance;
-  };
-
-  // Get all of the edges from every triangle.
-  multiset<pair<int, int>> lines;
-  for(const auto& tri : m_polygonList) {
-    if(m_force2DBoundary && !NearXZPlane(tri))
-      continue;
-    for(unsigned short i = 0; i < 3; ++i) {
-      // Always put the lower vertex index first to make finding duplicates
-      // easier.
-      const int& a = tri[i];
-      const int& b = tri[(i + 1) % 3];
-      lines.emplace(min(a, b), max(a, b));
-    }
-  }
-
-  // Store the edges that occurred exactly once as the boundary lines.
-  for(auto iter = lines.begin(), next = ++lines.begin();
-      iter != lines.end() && next != lines.end(); ++iter, ++next) {
-    if(*iter != *next)
-      continue;
-    do {
-      ++next;
-    } while(next != lines.end() && *iter == *next);
-    iter = lines.erase(iter, next);
-    --iter;
-  }
-
-  m_boundaryLines.clear();
-  m_boundaryLines.reserve(lines.size());
-  std::copy(lines.begin(), lines.end(), back_inserter(m_boundaryLines));
-}
-
 
 void
 GMSPolyhedron::
@@ -790,7 +656,8 @@ ComputeCentroid() const {
 void
 GMSPolyhedron::
 OrderFacets() {
-  std::sort(m_polygonList.begin(), m_polygonList.end(), std::greater<GMSPolygon>());
+  std::sort(m_polygonList.begin(), m_polygonList.end(),
+      std::greater<GMSPolygon>());
 }
 
 
@@ -809,45 +676,75 @@ UpdateCGALPoints() {
     m_cgalPoints.emplace_back(v[0], v[1], v[2]);
 }
 
-/*----------------------------- Transformation -------------------------------*/
+/*------------------------ Collision Detection Helpers -----------------------*/
+
+RAPID_model*
+GMSPolyhedron::
+GetRapidModel() const noexcept {
+  if(!m_rapidModel)
+    m_rapidModel.reset(Rapid::Build(*this));
+  return m_rapidModel.get();
+}
+
+
+PQP_Model*
+GMSPolyhedron::
+GetPQPModel() const noexcept {
+  if(!m_pqpModel)
+    m_pqpModel.reset(PQP::Build(*this));
+  return m_pqpModel.get();
+}
+
+
+const Vector3d&
+GMSPolyhedron::
+GetInsidePoint() const noexcept {
+  return m_insidePoint;
+}
+
+/*------------------------------- Common Shapes ------------------------------*/
 
 GMSPolyhedron
-operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
-  GMSPolyhedron poly = _poly;
-  return poly *= _t;
-}
-
-
-void
 GMSPolyhedron::
-Scale(double _scalingFactor) {
-  //to make sure that the centroid is not moved, center the model before scaling
-  //and bring it back to its center afterwards
+MakeBox(const Range<double>& _x, const Range<double>& _y,
+    const Range<double>& _z) {
+  // Make output polyhedron.
+  GMSPolyhedron bbx;
+  auto& verts = bbx.m_vertexList;
+  auto& polys = bbx.m_polygonList;
 
-  double scaleVec[3][3] = {
-    {_scalingFactor, 0.0 , 0.0},
-    {0.0, _scalingFactor, 0.0},
-    {0.0, 0.0, _scalingFactor}};
+  // Add vertices.
+  verts.reserve(8);
+  verts.emplace_back(_x.min, _y.min, _z.min);
+  verts.emplace_back(_x.min, _y.min, _z.max);
+  verts.emplace_back(_x.min, _y.max, _z.min);
+  verts.emplace_back(_x.min, _y.max, _z.max);
+  verts.emplace_back(_x.max, _y.min, _z.min);
+  verts.emplace_back(_x.max, _y.min, _z.max);
+  verts.emplace_back(_x.max, _y.max, _z.min);
+  verts.emplace_back(_x.max, _y.max, _z.max);
 
-  Vector3d toCenter = -(GetCentroid());
+  // Add polygons.
+  polys.reserve(12);
+  polys.emplace_back(0, 1, 3, verts);
+  polys.emplace_back(0, 3, 2, verts);
+  polys.emplace_back(4, 0, 2, verts);
+  polys.emplace_back(4, 2, 6, verts);
+  polys.emplace_back(5, 4, 6, verts);
+  polys.emplace_back(5, 6, 7, verts);
+  polys.emplace_back(1, 5, 7, verts);
+  polys.emplace_back(1, 7, 3, verts);
+  polys.emplace_back(3, 7, 6, verts);
+  polys.emplace_back(3, 6, 2, verts);
+  polys.emplace_back(0, 4, 5, verts);
+  polys.emplace_back(0, 5, 1, verts);
 
-  Matrix3x3 scaleM(scaleVec);
+  bbx.OrderFacets();
+  bbx.ComputeSurfaceArea();
+  bbx.ComputeRadii();
+  bbx.ComputeInsidePoint();
 
-  double unitOrientation[3][3] = {
-    {1, 0, 0},
-    {0, 1, 0},
-    {0, 0, 1}};
-
-  Matrix3x3 unitM(unitOrientation);
-
-  Transformation center(toCenter, Orientation(unitM));
-
-  Transformation scale(Vector3d(0,0,0), Orientation(scaleM));
-
-  Transformation recenter(-toCenter, Orientation(unitM));
-
-  Transformation t = center * scale * recenter;
-
-  *(this) *= t;
+  return bbx;
 }
+
 /*----------------------------------------------------------------------------*/

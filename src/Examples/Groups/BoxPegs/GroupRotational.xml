@@ -173,7 +173,7 @@
 
        <DisassemblyRRTStrategy label="BasicRRTIMLRRT"
         nfLabel="Nearest" vcLabel="pqp"
-        gtype="UNDIRECTED_TREE" debug="false"
+        debug="false"
         samplerLabel="MaskedProximitySamplerIMLRRT"
         extenderLabel="BERO" manhattanLike="true"
         successfulCheckME="MinClearanceEval">
@@ -183,7 +183,7 @@
 
       <DisassemblyRRTStrategy label="BasicRRT" debug="false"
         nfLabel="Nearest" vcLabel="pqp"
-        gtype="UNDIRECTED_TREE"  samplerLabel="MaskedProximitySampler"
+        samplerLabel="MaskedProximitySampler"
         extenderLabel="BERO"
         successfulCheckME="MinClearanceEval">
 <!--  NOTE: the vc from the non-TimeEval of the two evaluators should match up

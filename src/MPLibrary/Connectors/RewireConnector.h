@@ -166,6 +166,9 @@ class RewireConnector : public ConnectorMethod<MPTraits> {
     /// is a better cost than the first.
     std::function<double(const double&, const double&)> m_objective;
 
+    /// Buffer for nf-reported distances.
+    std::unordered_map<VID, double> m_distanceBuffer;
+
     ///@}
 
 };
@@ -248,14 +251,37 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   m_neighborBuffer.clear();
   if(_targetSet)
-    nf->FindNeighbors(_r, cfg, *_targetSet, m_neighborBuffer);
+    nf->FindNeighbors(_r, cfg, *_targetSet, std::back_inserter(m_neighborBuffer));
   else
     nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
+
+  // Set neighbors' distance to the cost from the tree root, then re-sort
+  // according to that cost plus the distance to _source.
+  m_distanceBuffer.clear();
+  for(auto& neighbor : m_neighborBuffer) {
+    m_distanceBuffer[neighbor.target] = neighbor.distance;
+    neighbor.distance = ShortestPathWeight(_r, neighbor.target);
+  }
+  std::sort(m_neighborBuffer.begin(), m_neighborBuffer.end(),
+      [this](const Neighbor& _n1, const Neighbor& _n2) {
+        return _n1.distance + this->m_distanceBuffer[_n1.target]
+             < _n2.distance + this->m_distanceBuffer[_n2.target];
+      }
+  );
+
+  // If we have a CC tracker, disable it during rewire since we won't change the
+  // CCs by the end.
+  auto ccTracker = _r->GetCCTracker();
+  if(ccTracker)
+    ccTracker->Disable();
 
   // Attempt to rewire this vertex with a better parent.
   RewireVertex(_r, _source, m_neighborBuffer, _collision);
   // Attempt to rewire the neighbors through _source.
   RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
+
+  if(ccTracker)
+    ccTracker->Enable();
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -267,14 +293,12 @@ RewireVertex(RoadmapType* const _r, const VID _vid,
     const std::vector<Neighbor>& _neighbors,
     OutputIterator<RoadmapType>* const _collision) {
   // Check the current best path cost from the root to _vid.
-  double    bestCost      = ShortestPathWeight(_r, _vid);
+  const double oldCost    = ShortestPathWeight(_r, _vid);
   const VID oldParentVID  = *_r->GetPredecessors(_vid).begin();
-  VID       bestParentVID = oldParentVID;
-  LPOutput<MPTraits> bestLP;
 
   if(this->m_debug)
     std::cout << "\tAttempting to rewire node " << _vid
-              << " with cost " << bestCost << " through neighbors"
+              << " with cost " << oldCost << " through neighbors"
               << " for " << m_objectiveLabel << " cost."
               << "\n\t\tCurrent parent is " << oldParentVID << "."
               << std::endl;
@@ -292,28 +316,19 @@ RewireVertex(RoadmapType* const _r, const VID _vid,
     }
 
     // Test if this neighbor is a better parent for _vid than the current best.
-    const double neighborCost = ShortestPathWeight(_r, neighborVID);
-    const RewireTestOutput test = RewireTest(_r, _vid, bestParentVID, bestCost,
+    const double neighborCost = neighbor.distance;
+    const RewireTestOutput test = RewireTest(_r, _vid, oldParentVID, oldCost,
         neighborVID, neighborCost, _collision);
 
     // Move on if the test failed.
     if(!test.passed)
       continue;
 
-    // This is possibly the new best.
-    bestParentVID = neighborVID;
-    bestCost      = test.cost;
-    bestLP        = test.lpo;
+    // This is the new best.
+    ChangeParent(_r, _vid, oldParentVID, neighborVID, test.lpo.m_edge.first,
+        test.cost);
+    break;
   }
-
-
-  // If the best parent hasn't changed, do nothing.
-  if(bestParentVID == oldParentVID)
-    return;
-
-  // The best parent has changed. Update the roadmap.
-  ChangeParent(_r, _vid, oldParentVID, bestParentVID, bestLP.m_edge.first,
-      bestCost);
 }
 
 
@@ -358,7 +373,7 @@ RewireNeighbors(RoadmapType* const _r, const VID _vid,
 
     // Test to see if this node should be rewired through _vid.
     const VID neighborCurrentParent = *predecessors.begin();
-    const double currentCost = ShortestPathWeight(_r, neighborVID);
+    const double currentCost = neighbor.distance;
     const RewireTestOutput test = RewireTest(_r, neighborVID,
         neighborCurrentParent, currentCost, _vid, vidCost, _collision);
 
@@ -381,21 +396,11 @@ RewireTest(RoadmapType* const _r, const VID _vid,
     const VID _potentialParent, const double _potentialParentCost,
     OutputIterator<RoadmapType>* const _collision) noexcept {
   // Skip rewiring through the same parent.
-  if(_potentialParent == _currentParent) {
+  const bool sameParent = _potentialParent == _currentParent;
+  if(sameParent) {
     if(this->m_debug)
       std::cout << "\t\tNot rewiring node " << _vid
                 << " which is already a child of " << _potentialParent << "."
-                << std::endl;
-    return RewireTestOutput();
-  }
-
-  // Skip rewiring if the current path to _vid is better than the path to
-  // _potential parent.
-  if(m_objective(_potentialParentCost, _currentCost)) {
-    if(this->m_debug)
-      std::cout << "\t\tNot rewiring node " << _vid << " because current cost "
-                << _currentCost << " is better than cost to " << _potentialParent
-                << " of " << _potentialParentCost << "."
                 << std::endl;
     return RewireTestOutput();
   }
@@ -411,6 +416,35 @@ RewireTest(RoadmapType* const _r, const VID _vid,
     return RewireTestOutput();
   }
 
+  // Skip rewiring if the current path to _vid is better than the path to
+  // _potential parent.
+  const bool notBetterTo = m_objective(_potentialParentCost, _currentCost);
+  if(notBetterTo) {
+    if(this->m_debug)
+      std::cout << "\t\tNot rewiring node " << _vid << " because current cost "
+                << _currentCost << " is better than cost to " << _potentialParent
+                << " of " << _potentialParentCost << "."
+                << std::endl;
+    return RewireTestOutput();
+  }
+
+  // If the total cost isn't better, do not rewire.
+  auto nf = this->GetNeighborhoodFinder(m_nfLabel);
+  auto dm = this->GetDistanceMetric(nf->GetDMLabel());
+  const CfgType& potentialParentCfg = _r->GetVertex(_potentialParent),
+               & cfg                = _r->GetVertex(_vid);
+  const double distance      = dm->Distance(potentialParentCfg, cfg),
+               potentialCost = _potentialParentCost + distance;
+  const bool notBetterThrough = m_objective(potentialCost, _currentCost);
+  if(notBetterThrough) {
+    if(this->m_debug)
+      std::cout << "\t\tNot rewiring node " << _vid << " because current cost "
+                << _currentCost << " is better than cost through "
+                << _potentialParent << " of " << potentialCost << "."
+                << std::endl;
+    return RewireTestOutput();
+  }
+
   // Create a local plan. If we fail, do not rewire.
   auto lp    = this->GetLocalPlanner(this->m_lpLabel);
   auto env   = this->GetEnvironment();
@@ -418,9 +452,8 @@ RewireTest(RoadmapType* const _r, const VID _vid,
   CfgType collision(robot);
   LPOutput<MPTraits> lpo;
 
-  const bool success = lp->IsConnected(_r->GetVertex(_potentialParent),
-      _r->GetVertex(_vid), collision, &lpo, env->GetPositionRes(),
-      env->GetOrientationRes());
+  const bool success = lp->IsConnected(potentialParentCfg, cfg, collision, &lpo,
+      env->GetPositionRes(), env->GetOrientationRes());
 
   if(!success) {
     if(_collision)
@@ -436,17 +469,23 @@ RewireTest(RoadmapType* const _r, const VID _vid,
     return RewireTestOutput();
   }
 
-  // If the total cost isn't better, do not rewire.
-  const double potentialCost = _potentialParentCost
-                             + EdgeWeight(lpo.m_edge.first, robot);
-  if(m_objective(potentialCost, _currentCost)) {
-    if(this->m_debug)
-      std::cout << "\t\tNot rewiring node " << _vid << " because current cost "
-                << _currentCost << " is better than cost through "
-                << _potentialParent << " of " << potentialCost << "."
-                << std::endl;
-    return RewireTestOutput();
-  }
+  // Ensure that the computed LP cost is approximately equal to the distance
+  // metric cost (or none of this works because we didn't test the right set of
+  // neighbors in the first place).
+  /// @note You can disable this if your DM doesn't exactly agree with the LP,
+  ///       but you will get near-AO instead of AO rewiring since the new parent
+  ///       may not be the absolute best one.
+#if 1
+  const double computedDistance = EdgeWeight(lpo.m_edge.first, robot),
+               tolerance        = distance * .001;
+  const bool lpDmDisagreement = !nonstd::approx(computedDistance, distance,
+      tolerance);
+  if(lpDmDisagreement)
+    throw RunTimeException(WHERE) << "LP computed distance " << computedDistance
+                                  << " differs from DM value " << distance
+                                  << ". These must agree for RewireConnector "
+                                  << "to function properly.";
+#endif
 
   // The cost through the potential parent is better.
   if(this->m_debug)
@@ -524,6 +563,10 @@ template <typename MPTraits>
 double
 RewireConnector<MPTraits>::
 EdgeWeight(const WeightType& _w, const Robot* const _robot) const noexcept {
+  /// @note This will always be the GetWeight version unless we develop a
+  ///       steering function and local planner that can use it for a
+  ///       nonholonomic robot. I've left it in to remind us that nonholonomic
+  ///       robots use time steps for their default cost function.
   return _robot->IsNonholonomic() ? _w.GetTimeSteps()
                                   : _w.GetWeight();
 }

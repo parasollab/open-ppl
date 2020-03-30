@@ -467,12 +467,18 @@ MakePointRobot() {
   body.SetBodyType(is2d ? Body::Type::Planar : Body::Type::Volumetric);
   body.SetMovementType(Body::MovementType::Translational);
 
-  // Create body geometry. Use a single, open triangle.
+  // Create body geometry. Use a single, open triangle. Make sure it isn't
+  // co-planar with any axis-pair-plane to get a non-degenerate bounding box.
   GMSPolyhedron poly;
-  poly.GetVertexList() = vector<Vector3d>{{1e-8, 0, 0},
-      {0, 0, 1e-8}, {-1e-8, 0, 0}};
+  poly.GetVertexList() = std::vector<Vector3d>{{1e-8,    0,    0},
+                                               {   0, 1e-8,    0},
+                                               {   0,    0, 1e-8}};
   poly.GetPolygonList() = vector<GMSPolygon>{GMSPolygon(0, 1, 2,
       poly.GetVertexList())};
+  // Translate the triangle so that its center is on the origin.
+  const Vector3d center = poly.GetPolygonList()[0].FindCenter();
+  for(auto& vertex : poly.GetVertexList())
+    vertex -= center;
   body.SetPolyhedron(std::move(poly));
 
   // Add body geometry to multibody.

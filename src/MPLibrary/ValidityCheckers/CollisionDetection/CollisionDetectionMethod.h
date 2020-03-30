@@ -1,24 +1,18 @@
 #ifndef PMPL_COLLISION_DETECTION_METHOD_H_
 #define PMPL_COLLISION_DETECTION_METHOD_H_
 
+#include "Transformation.h"
 #include "Vector.h"
 
 #include <iostream>
 #include <string>
 
-class Body;
 class CDInfo;
+class GMSPolyhedron;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base abstraction for \ref CollisionDetection.
-///
-/// CollisionDetectionMethod is a base class for geometric collision detection
-/// methods. Mostly these serve as middleware to interface with external
-/// libraries. @cd methods are not directly accessed but have two core
-/// functions, @c IsInCollision and @c IsInsideObstacle. @c IsInCollision takes
-/// as input two @c Body and determine if they collide. @c IsInsideObstacle
-/// takes a point and a @c Body to determine if the point is inside of the body.
+/// Base abstraction for geometric collision detection methods.
 ///
 /// @ingroup CollisionDetection
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,20 +43,30 @@ class CollisionDetectionMethod {
     ///@name CD Interface
     ///@{
 
-    /// Check if two bodies are in collision.
-    /// @param _body1  The first Body.
-    /// @param _body2  The second Body.
-    /// @param _cdInfo Output information from the collision computation.
-    /// @return Do the bodies touch?
-    virtual bool IsInCollision(const Body* const _body1,
-        const Body* const _body2, CDInfo& _cdInfo) = 0;
+    /// Check if two polyhedrons are in collision.
+    /// @param _polyhedron1     The first polyhedron.
+    /// @param _transformation1 Transformation for the first polyhedron.
+    /// @param _polyhedron2     The second polyhedron.
+    /// @param _transformation2 Transformation for the second polyhedron.
+    /// @param _cdInfo      Output information from the collision computation.
+    /// @return True if the polyhedrons are considered to be in collision. Some
+    ///         method check only intersection (i.e. Rapid, PQP) while others
+    ///         also check if one polyhedron is inside the other (i.e. PQPSolid).
+    virtual bool IsInCollision(
+        const GMSPolyhedron& _polyhedron1,
+        const mathtool::Transformation& _transformation1,
+        const GMSPolyhedron& _polyhedron2,
+        const mathtool::Transformation& _transformation2,
+        CDInfo& _cdInfo) = 0;
 
-    /// Check if a point is inside of a body.
-    /// @param _pt   The point to check.
-    /// @param _body The body to check against.
-    /// @return Is the point inside the body?
-    virtual bool IsInsideObstacle(const mathtool::Vector3d& _pt,
-        const Body* const _body);
+    /// Check if a point is inside of a polyhedron.
+    /// @param _point          The point to check.
+    /// @param _polyhedron     The polyhedron to check against.
+    /// @param _transformation Transformation for the polyhedron.
+    /// @return Is the point inside _polyhedron?
+    virtual bool IsInsideObstacle(const mathtool::Vector3d& _point,
+        const GMSPolyhedron& _polyhedron,
+        const mathtool::Transformation& _transformation);
 
     ///@}
 

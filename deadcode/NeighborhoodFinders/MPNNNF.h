@@ -16,6 +16,16 @@
 /// underlying k-d tree will not be updated until a query is requested (the
 /// changes are buffered until then).
 ///
+/// @todo This object has too many problems and is currently disabled:
+///       1. It assumes a single roadmap; we require a different k-d tree for
+///          each roadmap to get correct results.
+///       2. It ignores the candidate set. To function properly we'll need to
+///          build a separate k-d tree for each component (and roadmap).
+///       3. The library leaks memory and allocates from the heap like someone
+///          buying google stock at $2 a share. Likely we'll need to entirely
+///          re-implement the code to get a reasonable implementation with
+///          acceptable memory locality.
+///
 /// Reference:
 ///   Anna Yershova and Steven M. LaValle. "Improving Motion Planning
 ///   Algorithms by Efficient Nearest-Neighbor Searching." TRO 2007.
@@ -34,6 +44,7 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VI             VI;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -42,6 +53,7 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     ///@}
     ///@name Construction
@@ -51,7 +63,7 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
 
     MPNNNF(XMLNode& _node);
 
-    virtual ~MPNNNF();
+    virtual ~MPNNNF() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -62,30 +74,15 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name NeighborhoodFinder Interface
+    ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
-
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
-
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
 
     ///@}
 
@@ -129,24 +126,16 @@ class MPNNNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <typename MPTraits>
 MPNNNF<MPTraits>::
-MPNNNF() : NeighborhoodFinderMethod<MPTraits>() {
+MPNNNF() : NeighborhoodFinderMethod<MPTraits>(Type::K) {
   this->SetName("MPNNNF");
-  this->m_nfType = Type::K;
 }
 
 
 template <typename MPTraits>
 MPNNNF<MPTraits>::
-MPNNNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
+MPNNNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, Type::K) {
   this->SetName("MPNNNF");
-  this->m_nfType = Type::K;
-  this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 }
-
-
-template <typename MPTraits>
-MPNNNF<MPTraits>::
-~MPNNNF() = default;
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
@@ -176,6 +165,7 @@ Initialize() {
       [this](const VI _vi){this->m_deleted.push_back(_vi->descriptor());});
 }
 
+
 template <typename MPTraits>
 void
 MPNNNF<MPTraits>::
@@ -187,11 +177,13 @@ Print(std::ostream& _os) const {
 /*----------------------- NeighborhoodFinder Interface -----------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+void
 MPNNNF<MPTraits>::
-FindNeighbors(RoadmapType* _r, InputIterator _first, InputIterator _last,
-    bool _fromFullRoadmap, const CfgType& _cfg, OutputIterator _out) {
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   // First check for and make any updates to the internal kd tree.
   this->UpdateKdTree();
 
@@ -219,42 +211,14 @@ FindNeighbors(RoadmapType* _r, InputIterator _first, InputIterator _last,
       ++_out;
     }
   }
-
-  return _out;
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+void
 MPNNNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-MPNNNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-MPNNNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   throw NotImplementedException(WHERE);
 }
 

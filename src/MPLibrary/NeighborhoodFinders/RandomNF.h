@@ -3,12 +3,16 @@
 
 #include "NeighborhoodFinderMethod.h"
 
+#include <set>
 #include <string>
-#include <unordered_set>
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Selects a set of random neighbors from the roadmap.
+///
+/// @note This assumes a fairly small k value compared to the candidate set
+///       size, and will perform poorly otherwise.
+///
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -22,6 +26,7 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::RoadmapType       RoadmapType;
     typedef typename RoadmapType::VID            VID;
+    typedef typename RoadmapType::VertexSet      VertexSet;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
 
@@ -30,6 +35,7 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     ///@}
     ///@name Construction
@@ -39,7 +45,7 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
 
     RandomNF(XMLNode& _node);
 
-    virtual ~RandomNF();
+    virtual ~RandomNF() = default;
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -48,30 +54,28 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name NeighborhoodFinder Interface
+    ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    ///@}
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
+  protected:
+
+    ///@name Helpers
+    ///@{
+
+    /// Templated implementation for both individual and group versions.
+    template <typename AbstractRoadmapType>
+    void FindNeighborsImpl(AbstractRoadmapType* const _r,
+        const typename AbstractRoadmapType::CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out);
 
     ///@}
 
@@ -81,25 +85,17 @@ class RandomNF : public NeighborhoodFinderMethod<MPTraits> {
 
 template <class MPTraits>
 RandomNF<MPTraits>::
-RandomNF() : NeighborhoodFinderMethod<MPTraits>() {
+RandomNF() : NeighborhoodFinderMethod<MPTraits>(Type::K) {
   this->SetName("RandomNF");
-  this->m_nfType = Type::K;
 }
 
 
 template <class MPTraits>
 RandomNF<MPTraits>::
 RandomNF(XMLNode& _node):
-NeighborhoodFinderMethod<MPTraits>(_node) {
+NeighborhoodFinderMethod<MPTraits>(_node, Type::K) {
   this->SetName("RandomNF");
-  this->m_nfType = Type::K;
-  this->m_k = _node.Read("k", true, 5, 0, MAX_INT, "Number of neighbors to find");
 }
-
-
-template <class MPTraits>
-RandomNF<MPTraits>::
-~RandomNF() = default;
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
 
@@ -114,121 +110,72 @@ Print(std::ostream& _os) const {
 
 /*----------------------- NeighborhoodFinder Interface -----------------------*/
 
-template <class MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+template <typename MPTraits>
+void
 RandomNF<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
-  auto g = _r;
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+
+template <typename MPTraits>
+void
+RandomNF<MPTraits>::
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
+  this->FindNeighborsImpl(_r, _cfg, _candidates, _out);
+}
+
+/*--------------------------------- Helpers ----------------------------------*/
+
+template <typename MPTraits>
+template <typename AbstractRoadmapType>
+void
+RandomNF<MPTraits>::
+FindNeighborsImpl(AbstractRoadmapType* const _r,
+    const typename AbstractRoadmapType::CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
 
-  std::unordered_set<VID> foundVIDs;
-  const VID queryVID = g->GetVID(_cfg);
+  VertexSet foundVIDs;
+  std::set<Neighbor> closest;
 
-  const size_t inputSize = std::distance(_first, _last);
+  // Look for up to m_k random neighbors. Try until we find enough or run out of
+  // choices.
+  while(foundVIDs.size() < _candidates.size() and closest.size() < this->m_k) {
+    // Pick a random candidate. Try again if we already found it.
+    const VID vid = RandomElement(_candidates);
+    if(foundVIDs.count(vid))
+      continue;
+    foundVIDs.insert(vid);
 
-  // Look for up to m_k random neighbors.
-  for(size_t i = 0; i < this->m_k && i < inputSize; ++i) {
-    // Try until we find a valid neighbor or run out of choices.
-    while(foundVIDs.size() < inputSize) {
-      auto iter = _first;
-      std::advance(iter, LRand() % inputSize);
-      const VID vid = g->GetVID(iter);
+    // Check for prior connection.
+    if(this->m_unconnected and this->DirectEdge(_r, _cfg, vid))
+      continue;
 
-      // Check for invalid conditions.
-      const bool alreadyFound = foundVIDs.count(vid),
-                 isQuery = queryVID == vid,
-                 isConnected = this->DirectEdge(g, _cfg, vid);
+    // Check against connection to self.
+    const auto& node = _r->GetVertex(vid);
+    if(node == _cfg)
+      continue;
 
-      // Track this VID.
-      foundVIDs.insert(vid);
+    // Get the distance from the query cfg to the candidate. If it is infinite,
+    // these configurations are not connectable.
+    const double distance = dm->Distance(node, _cfg);
+    if(std::isinf(distance))
+      continue;
 
-      if(alreadyFound or isQuery or isConnected)
-        continue;
-
-      // Check distance.
-      const double distance = dm->Distance(_cfg, g->GetVertex(vid));
-      if(std::isinf(distance))
-        continue;
-
-      *_out++ = Neighbor(vid, distance);
-      break;
-    }
+    closest.emplace(vid, distance);
   }
 
-  return _out;
-}
-
-
-template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-RandomNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  auto g = _r;
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
-
-  std::set<std::pair<VID, VID>> foundPairs;
-
-  const size_t inputSize1 = std::distance(_first1, _last1),
-               inputSize2 = std::distance(_first2, _last2);
-
-  for(size_t i = 0; i < this->m_k and i < inputSize1 and i < inputSize2; ++i) {
-    // Try until we find a valid neighbor or run out of choices.
-    while(foundPairs.size() < inputSize1 * inputSize2) {
-      const VID vid1 = g->GetVID(_first1 + LRand() % inputSize1),
-                vid2 = g->GetVID(_first2 + LRand() % inputSize2);
-      const CfgType& cfg1 = g->GetVertex(vid1);
-
-      // Check for invalid conditions.
-      const bool alreadyFound = foundPairs.count({vid1, vid2}),
-                 alreadyConnected = this->DirectEdge(g, cfg1, vid2);
-
-      if(alreadyFound or alreadyConnected)
-        continue;
-
-      // Track this pair.
-      foundPairs.emplace(vid1, vid2);
-
-      // Check distance.
-      const double distance = dm->Distance(cfg1, g->GetVertex(vid2));
-      if(std::isinf(distance))
-        continue;
-
-      *_out++ = Neighbor(vid1, vid2, distance);
-      break;
-    }
-  }
-
-  return _out;
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-RandomNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-RandomNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  throw NotImplementedException(WHERE);
+  for(const auto& neighbor : closest)
+    _out = neighbor;
 }
 
 /*----------------------------------------------------------------------------*/

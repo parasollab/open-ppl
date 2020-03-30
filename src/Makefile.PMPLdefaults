@@ -19,7 +19,7 @@ UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
 	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL) $(CGAL_INC) \
-	     $(EIGEN_INCL)
+	     $(EIGEN_INCL) $(JSON_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB) $(BULLET_LIB) \
 	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS) $(MATLAB_LIBS)
@@ -27,7 +27,7 @@ UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) \
 		$(CGAL_LIBFILE) $(MODELLOADER_LIBFILE) \
 		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE) \
 		$(BULLET_LIBFILE) $(GLVIS_LIBFILE) $(PHYSICAL_ROBOTS_LIBFILE) \
-		$(LKH_LIBFILE)
+		$(LKH_LIBFILE) $(JSON_LIBFILE)
 
 ifeq ($(parallel), 1)
   BOOST_INCL = -I$(BOOST_ROOT)/include
@@ -151,15 +151,18 @@ $(MODELLOADER_LIBFILE): $(CGAL_LIBFILE)
 ################################################################################
 ## MPNN
 ################################################################################
+# This lib is disabled, probably forever. We'll likely need to re-implement it
+# entirely if we ever need it (see comments in
+# deadcode/NeighborhoodFinders/MPNNNF.h).
 MPNN_DIR  := $(UTILS_DIR)/nearest_neighbors/MPNN
 MPNN_SRC  := $(MPNN_DIR)/src
-MPNN_LIB  := -L$(MPNN_SRC) -lMPNN
-MPNN_INCL := -I$(MPNN_DIR)/include
-
-MPNN_LIBFILE := $(MPNN_SRC)/libMPNN.a
-$(MPNN_LIBFILE):
-	@echo Building MPNN library...
-	@cd $(MPNN_SRC) && $(MAKE) platform=$(platform) debug=$(debug)
+#MPNN_LIB  := -L$(MPNN_SRC) -lMPNN
+#MPNN_INCL := -I$(MPNN_DIR)/include
+#
+#MPNN_LIBFILE := $(MPNN_SRC)/libMPNN.a
+#$(MPNN_LIBFILE):
+#	@echo Building MPNN library...
+#	@cd $(MPNN_SRC) && $(MAKE) platform=$(platform) debug=$(debug)
 
 ################################################################################
 ## KMeans
@@ -381,6 +384,18 @@ ifneq ($(matlab), 0)
     Simulator/MatlabMicroSimulator.cpp
 
 endif
+
+################################################################################
+# nlohmann/json
+################################################################################
+
+JSON_DIR  := $(UTILS_DIR)/nlohmann-json
+JSON_INCL := -I$(JSON_DIR)/install
+
+JSON_LIBFILE := $(JSON_DIR)/install
+$(JSON_LIBFILE):
+	@echo Building nlohmann-json library...
+	@cd $(JSON_DIR) && $(MAKE) platform=$(platform)
 
 ################################################################################
 # Simulator

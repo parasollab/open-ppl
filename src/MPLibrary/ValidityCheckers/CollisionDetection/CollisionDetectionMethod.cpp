@@ -30,8 +30,9 @@ Print(std::ostream& _os) const {
 
 bool
 CollisionDetectionMethod::
-IsInsideObstacle(const mathtool::Vector3d& _pt, const Body* const _body) {
-  throw RunTimeException(WHERE, "Not implemented.");
+IsInsideObstacle(const mathtool::Vector3d& _pt, const GMSPolyhedron&,
+    const mathtool::Transformation&) {
+  throw NotImplementedException(WHERE);
 }
 
 /*----------------------------------------------------------------------------*/

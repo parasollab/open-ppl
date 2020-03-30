@@ -185,7 +185,7 @@ ClearancePoint(std::vector<double> _p) const noexcept {
 
   // If _p is inside the box, push it to the nearest wall.
   if(!isOutside and index != size_t(-1))
-    _p[index] = m_range[index].ClearancePoint(_p[index]);
+    _p[index] = minClearance;
 
   return _p;
 }

@@ -627,7 +627,8 @@ Initialize() {
             continue;
 
           // Merge v2's component into v1's.
-          VertexSetUnionInPlace(components[index1], components[index2]);
+          components[index1].insert(components[index2].begin(),
+              components[index2].end());
 
           // Retarget all vertices in the index2 component on index1.
           for(const VID vid : components[index2])
@@ -887,7 +888,7 @@ GrowRRT(const VID _q) {
       // Figure out what local component we connected to and add this tree
       // to it.
       const LocalComponentDescriptor d = FindLocalComponent(n.target);
-      const VertexSet* treeCC = ccTracker->GetCC(newVID);
+      const VertexSet* const treeCC = ccTracker->GetCC(newVID);
       VertexSet& vids = d.bridge
                       ? GetBridge(d)
                       : GetLocalComponent(d);
@@ -1413,12 +1414,12 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
 
     // Merge the smaller bridge into the larger one.
     if(v1.size() > v2.size()) {
-      VertexSetUnionInPlace(v1, v2);
+      v1.insert(v2.begin(), v2.end());
       this->m_bridges[_d2.edgeDescriptor].erase(_d2.representative);
       return _d1;
     }
     else {
-      VertexSetUnionInPlace(v2, v1);
+      v2.insert(v1.begin(), v1.end());
       this->m_bridges[_d1.edgeDescriptor].erase(_d1.representative);
       return _d2;
     }
@@ -1433,9 +1434,9 @@ MergeLocalComponents(const LocalComponentDescriptor& _d1,
 
     // Merge the smaller set into the larger, move result to save if necessary.
     if(save.size() >= merge.size())
-      VertexSetUnionInPlace(save, merge);
+      save.insert(merge.begin(), merge.end());
     else {
-      VertexSetUnionInPlace(merge, save);
+      merge.insert(save.begin(), save.end());
       save = std::move(merge);
     }
 
@@ -1848,7 +1849,7 @@ FindNearestNeighbors(const CfgType& _cfg, const VertexSet* const _candidates) {
   auto r = this->GetRoadmap();
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   if(_candidates)
-    nf->FindNeighbors(r, _cfg, *_candidates, neighbors);
+    nf->FindNeighbors(r, _cfg, *_candidates, std::back_inserter(neighbors));
   else
     nf->FindNeighbors(r, _cfg, std::back_inserter(neighbors));
 
@@ -1998,7 +1999,7 @@ GetRegionRadius(const Vector3d& _v) {
 
   const double clearance = GetClearance(_v),
                robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->GetBody(0)->
-                             GetInsideSphereRadius() / 2;
+                             GetPolyhedron().GetMinRadius() / 2;
   return std::max(1.2 * (clearance - robotRadius), m_minRegionRadius);
 }
 
