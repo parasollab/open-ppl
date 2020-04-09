@@ -14,7 +14,9 @@
 #include "Utilities/GeneralCBS/GeneralCBS.h"
 #include "Utilities/GeneralCBS/MotionValidation.h"
 #include "Utilities/GeneralCBS/PrecedenceLowLevelSearch.h"
+
 #include "Utilities/GeneralCBS/PrioritizedConflictValidation.h"
+
 #include "Utilities/GeneralCBS/TMPLowLevelSearch.h"
 
 #include "Utilities/GeneralCBS/MetaTMPLowLevelSearch.h"
