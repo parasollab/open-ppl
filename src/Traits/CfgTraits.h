@@ -41,7 +41,7 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #include "MPLibrary/NeighborhoodFinders/DPESNF.h"
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
-#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
+//#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
 #include "MPLibrary/NeighborhoodFinders/LSHNF.h"
 #include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
@@ -109,6 +109,7 @@
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GridCBSQuery.h"
 #include "MPLibrary/MapEvaluators/GroupCBSQuery.h"
 #include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
@@ -216,7 +217,7 @@ struct MPTraits {
     BruteForceNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
-    KdTreeNF<MPTraits>,
+    //KdTreeNF<MPTraits>,
     LSHNF<MPTraits>,
     OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,
@@ -298,6 +299,7 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
+    GridCBSQuery<MPTraits>,
     GroupCBSQuery<MPTraits>,
     GroupDecoupledQuery<MPTraits>,
     GroupQuery<MPTraits>,
