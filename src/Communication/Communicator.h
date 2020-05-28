@@ -12,7 +12,7 @@ class Communicator {
 	///@name Construction 
 	///@{
 	
-	Communicator(int _port = 8888);
+	Communicator(int _masterPort = 0, int _port = 8888);
 
 	~Communicator() = default;
 
@@ -20,6 +20,8 @@ class Communicator {
 	///@name Connection
 	///@{
 	
+	void RegisterWithMaster(int _port, std::string _hostname);
+
 	bool CreatePublisher(std::string _label);
 
 	bool CreateSubscriber(std::string _label);
@@ -38,6 +40,8 @@ class Communicator {
 
 	///@name Helper Functions
 	///@{
+
+	void SetSocket(int& _socket);
 	
 	void ProcessMessage(std::string _msg);
 
@@ -46,7 +50,9 @@ class Communicator {
 	///@{
 	
 	int m_masterSocket;
+	int m_subscribeSocket;
 
+	int m_masterPort;
 	int m_port;
 
 	std::unordered_map<std::string,Publisher>  m_publishers;

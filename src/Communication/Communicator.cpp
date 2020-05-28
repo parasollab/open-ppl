@@ -22,8 +22,10 @@
 /*------------------------- Construction ------------------------*/
 
 Communicator::
-Communicator(int _port) : m_port(_port) {
+Communicator(int _masterPort, int _port) : m_masterPort(_masterPort), m_port(_port) {
 	std::cout << "Constructing Communicator" << std::endl;
+
+	//SetSocket(m_masterSocket);
 
 	// Creating publisher for master node
 	// m_publishers.emplace("master",Publisher(_masterSocket));
@@ -35,10 +37,35 @@ Communicator(int _port) : m_port(_port) {
 
 /*-------------------------- Connection -------------------------*/
 
+void
+Communicator::
+RegisterWithMaster(int _port, std::string _hostname) {
+
+	struct sockaddr_in master_addr;
+	struct hostent *master;
+
+	m_masterSocket = socket(AF_INET, SOCK_STREAM,0);
+	if(m_masterSocket < 0)
+		throw RunTimeException(WHERE) << "Failed to set master socket." << std::endl;
+
+	master = gethostbyname(_hostname.c_str());
+	if(master == NULL)
+		throw RunTimeException(WHERE) << "No host found with name: " << _hostname << std::endl;
+	bzero((char *) &master_addr, sizeof(master_addr));
+	master_addr.sin_family = AF_INET;
+	bcopy((char *)master->h_addr,
+				(char *)&master_addr.sin_addr.s_addr,
+				master->h_length);
+	master_addr.sin_port = htons(_port);
+	if(connect(m_masterSocket, (struct sockaddr *) &master_addr, sizeof(master_addr)) < 0)
+		throw RunTimeException(WHERE) << "Failed to connect to master node." << std::endl;
+	
+}
+
 bool 
 Communicator::
 CreatePublisher(std::string _label) {
-
+	
 	return true;
 }
 
@@ -52,15 +79,8 @@ CreateSubscriber(std::string _label) {
 void
 Communicator::
 Listen() {
-	// Establish master socket for this node
-	m_masterSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if(m_masterSocket == 0) 
-		throw RunTimeException(WHERE) << "Failed to establish master socket." << std::endl;
 
-	// Set master socket to allow multiple connections
-	int opt = 1;
-	if(setsockopt(m_masterSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&(opt), sizeof(opt)) < 0)
-		throw RunTimeException(WHERE) << "Failed to allow multiple connections." << std::endl;
+	SetSocket(m_subscribeSocket);
 
 	// type of socket created
 	struct sockaddr_in address;
@@ -69,13 +89,13 @@ Listen() {
 	address.sin_port = htons(m_port);
 
 	// bind master socket to address
-	if(bind(m_masterSocket, (struct sockaddr *)&address, sizeof(address)) < 0)
+	if(bind(m_subscribeSocket, (struct sockaddr *)&address, sizeof(address)) < 0)
 		throw RunTimeException(WHERE) << "Failed to bind master socket to port." << std::endl;
 
 	std::cout << "Listener on port " << m_port << std::endl;
 
 	// specify maximum of four connections on master port
-	if(listen(m_masterSocket, 4) < 0)
+	if(listen(m_subscribeSocket, 4) < 0)
 		throw RunTimeException(WHERE) << "Listen Failure." << std::endl;
 
 	//int addrlen = sizeof(address);
@@ -94,8 +114,8 @@ Listen() {
 		FD_ZERO(&readfds);
 
 		// Add master socket to set
-		FD_SET(m_masterSocket, &readfds);
-		maxSd = m_masterSocket;
+		FD_SET(m_subscribeSocket, &readfds);
+		maxSd = m_subscribeSocket;
 
 		// Add child sockets to set
 		for(int i = 0; i < maxClients; i++) {
@@ -120,9 +140,9 @@ Listen() {
 			throw RunTimeException(WHERE) << "Select Error" << std::endl;
 
 		// Check master socket for an incoming connection
-		if(FD_ISSET(m_masterSocket, &readfds)) {
+		if(FD_ISSET(m_subscribeSocket, &readfds)) {
 			socklen_t addrlen = sizeof(address);
-			newSocket = accept(m_masterSocket, (struct sockaddr *)&address, &addrlen);//(socklen_t *)&addrlen);
+			newSocket = accept(m_subscribeSocket, (struct sockaddr *)&address, &addrlen);//(socklen_t *)&addrlen);
 			if(newSocket<0)
 				throw RunTimeException(WHERE) << "Accept Failure" << std::endl;
 
@@ -214,6 +234,20 @@ IsMaster() {
 }
 
 /*---------------------------- Helper Functions ------------------------------*/
+
+void 
+Communicator::
+SetSocket(int& _socket) {
+	// Establish master socket for this node
+	_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if(_socket == 0) 
+		throw RunTimeException(WHERE) << "Failed to establish master socket." << std::endl;
+
+	// Set master socket to allow multiple connections
+	int opt = 1;
+	if(setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&(opt), sizeof(opt)) < 0)
+		throw RunTimeException(WHERE) << "Failed to allow multiple connections." << std::endl;
+}
 
 void
 Communicator::

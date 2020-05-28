@@ -216,8 +216,9 @@ main(int _argc, char** _argv) {
   // Parse the Library node into an MPLibrary object.
   MPLibrary* pmpl = new MPLibrary(xmlFile);
 
-	Communicator comm(8888);
+	Communicator comm(8888,8889);
 
+	comm.RegisterWithMaster(8888,"localhost");
 
 	comm.CreatePublisher("test");
 	comm.Listen();
