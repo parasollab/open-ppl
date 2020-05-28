@@ -2,7 +2,7 @@
 
 # Set platform, debug mode, and address sanitizer if not already set.
 platform ?= LINUX_gcc
-debug    ?= 0
+debug    ?= 1
 asan     ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
@@ -84,6 +84,7 @@ LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 # Pre-pend the build directory to the object file names.
 PMPL_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
 SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
+COMM_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(COMM_SRCS))
 SERVER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SERVER_SRCS))
 CLIENT_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(CLIENT_SRCS))
 HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
@@ -92,8 +93,9 @@ HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
 # built first.
 $(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
-$(SERVER_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
-$(CLIENT_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(COMM_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(SERVER_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(CLIENT_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 # Set which object defines the main function.
@@ -135,13 +137,13 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	  $(LIBS) -o $@
 
 # Build the server.
-server: $(SERVER_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+server: $(SERVER_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SERVER_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SERVER_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
 
-client: $(CLIENT_OBJS)  $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+client: $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

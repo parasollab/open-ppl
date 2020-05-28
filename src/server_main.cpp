@@ -13,6 +13,8 @@
 #include "MPProblem/GroupTask.h"
 #include "Utilities/PMPLExceptions.h"
 
+#include "Communication/Communicator.h"
+
 void error(char* msg) {
 	perror(msg);
 	exit(1);
@@ -213,6 +215,20 @@ main(int _argc, char** _argv) {
 
   // Parse the Library node into an MPLibrary object.
   MPLibrary* pmpl = new MPLibrary(xmlFile);
+
+	Communicator comm(8888);
+
+
+	comm.CreatePublisher("test");
+	comm.Listen();
+
+
+
+
+
+
+
+
 
 
 	// Connect to client
