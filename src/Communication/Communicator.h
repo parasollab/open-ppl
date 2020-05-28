@@ -27,6 +27,13 @@ class Communicator {
 	void Listen();
 	
 	///@}
+	///@name Accessors
+	///@{
+	
+	void SetMaster(bool _master);
+	bool IsMaster();
+
+	///@}
 	private:
 
 	///@name Helper Functions
@@ -47,6 +54,8 @@ class Communicator {
 	std::unordered_map<std::string,Subscriber> m_subscribers;
 
 	bool m_listening{true};
+
+	bool m_isMaster{false};
 	///@}
 };
 

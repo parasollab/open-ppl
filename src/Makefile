@@ -87,6 +87,7 @@ SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
 COMM_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(COMM_SRCS))
 SERVER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SERVER_SRCS))
 CLIENT_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(CLIENT_SRCS))
+MASTER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(MASTER_SRCS))
 HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
 
 # Make the object files depend on updated utility libraries so the libs are
@@ -144,6 +145,11 @@ server: $(SERVER_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 client: $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+
+master: $(MASTER_OBJS) $(COMM_OBJS) $(PMPL_LIBFILE)
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(MASTER_OBJS) $(COMM_OBJS) $(LIBS) -o $@
+
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

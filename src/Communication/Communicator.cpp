@@ -199,6 +199,20 @@ Listen() {
 	}
 }
 
+/*-------------------------------- Accessors ---------------------------------*/
+
+void 
+Communicator::
+SetMaster(bool _master) {
+	m_isMaster = _master;
+}
+	
+bool 
+Communicator::
+IsMaster() {
+	return m_isMaster;
+}
+
 /*---------------------------- Helper Functions ------------------------------*/
 
 void
