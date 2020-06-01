@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -59,13 +60,17 @@ RegisterWithMaster(int _port, std::string _hostname) {
 	master_addr.sin_port = htons(_port);
 	if(connect(m_masterSocket, (struct sockaddr *) &master_addr, sizeof(master_addr)) < 0)
 		throw RunTimeException(WHERE) << "Failed to connect to master node." << std::endl;
+
+	WaitForRecept("", m_masterSocket);
 	
 }
 
 bool 
 Communicator::
 CreatePublisher(std::string _label) {
-	
+
+	std::string msg = "add_pub/" + _label;
+	SendMessage(msg,m_masterSocket);
 	return true;
 }
 
@@ -101,9 +106,8 @@ Listen() {
 	//int addrlen = sizeof(address);
 	std::cout << "Waiting for connections..." << std::endl;
 
-	int newSocket, clientSockets[30], activity, valread, sd, maxSd;
-	int maxClients = 30;
-	for(int i = 0; i < maxClients; i++) {
+	int clientSockets[m_maxClients];
+	for(int i = 0; i < m_maxClients; i++) {
 		clientSockets[i] = 0;
 	}
 	// set of socket descriptors
@@ -113,14 +117,14 @@ Listen() {
 		// Clear socket set
 		FD_ZERO(&readfds);
 
-		// Add master socket to set
+		// Add subscribe socket to set
 		FD_SET(m_subscribeSocket, &readfds);
-		maxSd = m_subscribeSocket;
+		int maxSd = m_subscribeSocket;
 
 		// Add child sockets to set
-		for(int i = 0; i < maxClients; i++) {
+		for(int i = 0; i < m_maxClients; i++) {
 			// Socket descriptor
-			sd = clientSockets[i];
+			int sd = clientSockets[i];
 			
 			// If valid socket descriptor then add to read list
 			if(sd > 0)
@@ -134,7 +138,7 @@ Listen() {
 		// Wait for an activity on one of the sockets, timeout is NULL,
 		// so wait indefinitely
 		// TODO::may want to change later
-		activity = select(maxSd+1, &readfds, NULL, NULL, NULL);
+		int activity = select(maxSd+1, &readfds, NULL, NULL, NULL);
 
 		if((activity < 0) && (errno!=EINTR)) 
 			throw RunTimeException(WHERE) << "Select Error" << std::endl;
@@ -142,7 +146,7 @@ Listen() {
 		// Check master socket for an incoming connection
 		if(FD_ISSET(m_subscribeSocket, &readfds)) {
 			socklen_t addrlen = sizeof(address);
-			newSocket = accept(m_subscribeSocket, (struct sockaddr *)&address, &addrlen);//(socklen_t *)&addrlen);
+			int newSocket = accept(m_subscribeSocket, (struct sockaddr *)&address, &addrlen);//(socklen_t *)&addrlen);
 			if(newSocket<0)
 				throw RunTimeException(WHERE) << "Accept Failure" << std::endl;
 
@@ -161,13 +165,14 @@ Listen() {
 			//std::string welcomeMsg = "Welcome to the team.";
 			
 
-			if(send(newSocket, "WELCOME", 7, 0) != 7)//welcomeMsg.size())
-				throw RunTimeException(WHERE) << "Send" << std::endl;
+			//if(send(newSocket, "WELCOME", 7, 0) != 7)//welcomeMsg.size())
+			//	throw RunTimeException(WHERE) << "Send" << std::endl;
+			SendMessage("WELCOME",newSocket);
 
 			std::cout << "Welcome message successfully sent." << std::endl;
 			
 			// Add new socket to array of sockets
-			for(int i = 0; i < maxClients; i++) {
+			for(int i = 0; i < m_maxClients; i++) {
 				// if position is empty
 				if(clientSockets[i] == 0) {
 					clientSockets[i] = newSocket;
@@ -177,15 +182,16 @@ Listen() {
 			}
 
 			// Else its some other IO operation on some other socket
-			for(int i = 0; i < maxClients; i++) {
-				sd = clientSockets[i];
+			for(int i = 0; i < m_maxClients; i++) {
+				int sd = clientSockets[i];
 
 				if(FD_ISSET(sd, &readfds)) {
 					char buffer[1024];
   				bzero(buffer,1024);
 
 					//Check if it was for closing, also read the incoming message
-					if((valread = read(sd, buffer, 1024)) == 0) {
+					int valread = read(sd, buffer, 1024);
+					if(valread == 0) {
 						// Somebody disconnected, get details and print
 						getpeername(sd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
 						std::cout << "Node disconnected, ip "
@@ -197,6 +203,8 @@ Listen() {
 						// Close the socket and mark as 0 in list for reuse
 						close(sd);
 						clientSockets[i] = 0;
+						// Remove stored publisher info from this client
+						// TODO::^^
 					}
 					// Echo back message that came in
 					else {
@@ -251,4 +259,44 @@ SetSocket(int& _socket) {
 
 void
 Communicator::
-ProcessMessage(std::string _msg) {}	
+ProcessMessage(std::string _msg) {
+	//std::vector<string> info;
+	std::stringstream ss(_msg);
+	std::string type;
+	getline(ss,type,'/');
+	std::cout << "Type" << type << std::endl;
+}
+
+void
+Communicator::
+SendMessage(std::string _msg, int _sockfd) {
+	// Convert to char buffer
+	char msg[_msg.size()+1];
+	strcpy(msg,_msg.c_str());
+
+	// Send message through socket
+	if(write(_sockfd,msg,_msg.size()) < 0)
+		throw RunTimeException(WHERE) << "ERROR writing to socket " << _sockfd << std::endl;
+
+	WaitForRecept(_msg, _sockfd);
+}
+
+void
+Communicator::
+WaitForRecept(std::string _msg, int _sockfd) {
+	// Wait for reciept acknowledgement
+	char buffer[_msg.size()+1];
+	bzero(buffer,_msg.size());
+	if(read(_sockfd,buffer,_msg.size()) < 0)
+		throw RunTimeException(WHERE) << "ERROR reading from socket " << _sockfd << std::endl;
+	if(_msg.size() > 0 and strlen(buffer) != _msg.size()+1) {
+		std::string message;
+		for(auto c : buffer) {
+			if(c == '\0')
+				break;
+			message += c;
+		}
+		std::cout << "Message Received: " << message << std::endl;
+		throw RunTimeException(WHERE) << "ERROR reading from socket " << _sockfd << std::endl;
+	}
+}	

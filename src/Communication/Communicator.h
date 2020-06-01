@@ -45,12 +45,17 @@ class Communicator {
 	
 	void ProcessMessage(std::string _msg);
 
+	void SendMessage(std::string _msg, int _sockfd);
+	void WaitForRecept(std::string _msg, int _sockfd);
+
 	///@}
 	///@name Internal State 
 	///@{
 	
 	int m_masterSocket;
 	int m_subscribeSocket;
+
+	int m_maxClients{30};
 
 	int m_masterPort;
 	int m_port;
