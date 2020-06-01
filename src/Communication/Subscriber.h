@@ -14,6 +14,14 @@ class Subscriber {
 		~Subscriber() = default;
 
 		///@}
+		///@name Accessors
+		///@{
+
+		std::string GetChannel();
+
+		int GetSocket();
+
+		///@}
 	private:
 
 		///@name Helper Functions

@@ -170,17 +170,19 @@ main(int _argc, char** _argv) {
 
 	comm.RegisterWithMaster(8888,"localhost");
 
-	comm.CreateSubscriber("test");
+	comm.CreateSubscriber("pmpl");
 	//comm.Listen();
 
+	std::string query = "send me a motion plan";
+
+	comm.Query("pmpl",query);
 
 
 
 
 
 
-
-  if(_argc != 5 || std::string(_argv[1]) != "-f")
+  if(_argc != 3 || std::string(_argv[1]) != "-f")
     throw ParseException(WHERE) << "Incorrect usage. Usage: -f options.xml";
 
 	std::string xmlFile = _argv[2];

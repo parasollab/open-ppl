@@ -75,7 +75,9 @@ RegisterWithServer(int _port, std::string _hostname, int& _socket) {
 
 bool 
 Communicator::
-CreatePublisher(std::string _label) {
+CreatePublisher(std::string _label, QueryHandler _queryHandler) {
+
+	std::cout << _queryHandler("test") << std::endl;
 
 	char hostname[128];
 	gethostname(hostname,123);
@@ -87,8 +89,13 @@ CreatePublisher(std::string _label) {
 										+ std::to_string(m_port);
 
 	SendMessage(msg,m_masterSocket);
-	
-	m_publishers.emplace(_label,Publisher(_label));
+
+	Publisher pub(_label,_queryHandler);
+	m_publishers[_label] = pub;
+
+	std::cout << pub.HandleQuery("test") << std::endl;
+
+	m_publishers[_label].SetQueryHandler(_queryHandler);
 
 	return true;
 }
@@ -263,6 +270,21 @@ Listen() {
 	}
 }
 
+/*-------------------------------- Interface ---------------------------------*/
+
+void 
+Communicator::
+Query(std::string _channel, std::string _msg) {
+	auto& sub = m_subscribers[_channel];
+	std::string query = "query/"
+										+ _channel + "/"
+										+ _msg;
+	SendMessage(query,sub.GetSocket());
+	std::string response = ReceiveMessage(sub.GetSocket());
+
+	std::cout << response << std::endl;
+}
+
 /*-------------------------------- Accessors ---------------------------------*/
 
 void 
@@ -328,6 +350,13 @@ ProcessMessage(std::string _msg, int _client) {
 		// register subscriber with publisher
 		RegisterSubscriberWithPublisher(host);
 	}
+	else if(type == "new_sub") {
+		AddSubscriberToPublisher(_msg,_client);
+		SendMessage(_msg,_client,false);
+	}
+	else if(type == "query") {
+		HandleQuery(_msg,_client);
+	}
 }
 
 void
@@ -390,6 +419,32 @@ RegisterSubscriberWithPublisher(HostInfo _host) {
 										+ _host.channelName + '/';
 
 		SendMessage(msg,socket);
+}
+		
+void
+Communicator::
+AddSubscriberToPublisher(std::string _msg,int _client) {
+	std::stringstream ss(_msg);
+	std::string channel;
+	getline(ss, channel, '/');
+
+	Publisher& pub = m_publishers[channel];
+	pub.AddSubscriber(_client);
+}
+
+void
+Communicator::
+HandleQuery(std::string _msg, int _client) {
+	std::stringstream ss(_msg);
+	std::string channel;
+
+	// perform an extra getline to remove the query message type label
+	getline(ss,channel,'/');
+	getline(ss,channel,'/');
+	Publisher& pub = m_publishers[channel];
+	std::string response = pub.HandleQuery(_msg);
+
+	SendMessage(response,_client,false);
 }
 
 /*-------------------------------- Master Specific Functions ----------------------------*/

@@ -23,7 +23,7 @@ Publisher::
 Publisher() {}
 
 Publisher::
-Publisher(std::string _channelName) : m_channelName(_channelName) {}
+Publisher(std::string _channelName, QueryHandler _queryHandler) : m_channelName(_channelName), m_queryHandler(_queryHandler) {}
 
 /*------------------------- Communication -----------------------------*/
 
@@ -37,11 +37,28 @@ Write(std::string _msg) {
 	}*/
 	return true;
 }
-		
+	
+std::string
+Publisher::
+HandleQuery(std::string _msg) {
+	return m_queryHandler(_msg);
+}	
 /*------------------------- Accessors -----------------------------*/
 
 std::string 
 Publisher::
 GetChannelName() {
 	return m_channelName;
+}
+
+void
+Publisher::
+AddSubscriber(int _socket) {
+	m_subscriberSocketFDs.push_back(_socket);
+}
+
+void
+Publisher::
+SetQueryHandler(QueryHandler _queryHandler) {
+	m_queryHandler = _queryHandler;
 }

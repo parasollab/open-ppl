@@ -16,6 +16,10 @@
 
 #include "Communication/Communicator.h"
 
+std::string MotionPlan(std::string _msg, MPLibrary* _pmpl) {
+	return "A motion plan";
+} 
+
 void error(char* msg) {
 	perror(msg);
 	exit(1);
@@ -221,7 +225,14 @@ main(int _argc, char** _argv) {
 
 	comm.RegisterWithMaster(8888,"localhost");
 
-	comm.CreatePublisher("test");
+	std::function<std::string(std::string _msg)> queryHandler = [pmpl](std::string _msg) {
+		return MotionPlan(_msg, pmpl);
+	};
+
+	std::cout << queryHandler("test") << std::endl;
+
+
+	comm.CreatePublisher("pmpl",queryHandler);
 	comm.Listen();
 
 
