@@ -9,6 +9,16 @@
 
 class Communicator {
 	public:
+	///@name LocalTypes
+	///@{
+	
+	struct HostInfo {
+		std::string channelName;
+		std::string hostName;
+		std::string portNumber;
+	};
+
+	///@}
 	///@name Construction 
 	///@{
 	
@@ -21,6 +31,7 @@ class Communicator {
 	///@{
 	
 	void RegisterWithMaster(int _port, std::string _hostname);
+	void RegisterWithServer(int _port, std::string _hostname, int& _socket);
 
 	bool CreatePublisher(std::string _label);
 
@@ -43,10 +54,18 @@ class Communicator {
 
 	void SetSocket(int& _socket);
 	
-	void ProcessMessage(std::string _msg);
+	void ProcessMessage(std::string _msg, int _client);
 
-	void SendMessage(std::string _msg, int _sockfd);
-	void WaitForRecept(std::string _msg, int _sockfd);
+	void SendMessage(std::string _msg, int _sockfd, bool receipt=true);
+	std::string ReceiveMessage(int _sockfd, int _size);
+	bool GetReceipt(std::string _msg, int _sockfd);
+
+	void RegisterSubscriberWithPublisher(HostInfo _host);
+	///@}
+	///@name Master Specific Functions
+	///@{
+	
+	void ConnectSubscribers();
 
 	///@}
 	///@name Internal State 
@@ -55,7 +74,7 @@ class Communicator {
 	int m_masterSocket;
 	int m_subscribeSocket;
 
-	int m_maxClients{30};
+	int m_maxClients{2};
 
 	int m_masterPort;
 	int m_port;
@@ -67,6 +86,18 @@ class Communicator {
 	bool m_listening{true};
 
 	bool m_isMaster{false};
+
+	bool m_debug{true};
+	///@}
+	///@name Master Specific State
+	///@{
+	
+	std::unordered_map<std::string, HostInfo> m_channelHosts;
+
+	std::vector<std::pair<bool,std::pair<std::string,int>>> m_channelSubscribers;
+
+	std::unordered_map<int,std::vector<std::string>> m_clientChannelMap;
+
 	///@}
 };
 

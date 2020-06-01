@@ -17,11 +17,15 @@
 
 #include "Utilities/PMPLExceptions.h"
 
+/*------------------------- Construction -----------------------------*/
+
 Publisher::
 Publisher() {}
 
 Publisher::
 Publisher(std::string _channelName) : m_channelName(_channelName) {}
+
+/*------------------------- Communication -----------------------------*/
 
 bool
 Publisher::
@@ -32,4 +36,12 @@ Write(std::string _msg) {
 			throw RunTimeException(WHERE) << "Error sending message over channel: " << m_channelName << std::endl;
 	}*/
 	return true;
+}
+		
+/*------------------------- Accessors -----------------------------*/
+
+std::string 
+Publisher::
+GetChannelName() {
+	return m_channelName;
 }

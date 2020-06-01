@@ -33,6 +33,7 @@ Communicator(int _masterPort, int _port) : m_masterPort(_masterPort), m_port(_po
 	
 	// Creating subscriber for master node
 	// m_subscribers.emplace("master",Subscriber(_masterSocket));
+	SetSocket(m_subscribeSocket);
 
 }
 
@@ -41,12 +42,18 @@ Communicator(int _masterPort, int _port) : m_masterPort(_masterPort), m_port(_po
 void
 Communicator::
 RegisterWithMaster(int _port, std::string _hostname) {
+	RegisterWithServer(_port, _hostname, m_masterSocket);
+}
+
+void
+Communicator::
+RegisterWithServer(int _port, std::string _hostname, int& _socket) {
 
 	struct sockaddr_in master_addr;
 	struct hostent *master;
 
-	m_masterSocket = socket(AF_INET, SOCK_STREAM,0);
-	if(m_masterSocket < 0)
+	_socket = socket(AF_INET, SOCK_STREAM,0);
+	if(_socket < 0)
 		throw RunTimeException(WHERE) << "Failed to set master socket." << std::endl;
 
 	master = gethostbyname(_hostname.c_str());
@@ -58,10 +65,11 @@ RegisterWithMaster(int _port, std::string _hostname) {
 				(char *)&master_addr.sin_addr.s_addr,
 				master->h_length);
 	master_addr.sin_port = htons(_port);
-	if(connect(m_masterSocket, (struct sockaddr *) &master_addr, sizeof(master_addr)) < 0)
+	if(connect(_socket, (struct sockaddr *) &master_addr, sizeof(master_addr)) < 0)
 		throw RunTimeException(WHERE) << "Failed to connect to master node." << std::endl;
 
-	WaitForRecept("", m_masterSocket);
+	//while(!GetReceipt("", m_masterSocket)){}
+	GetReceipt("WELCOME", _socket);
 	
 }
 
@@ -69,14 +77,35 @@ bool
 Communicator::
 CreatePublisher(std::string _label) {
 
-	std::string msg = "add_pub/" + _label;
+	char hostname[128];
+	gethostname(hostname,123);
+	std::string host(hostname);
+
+	std::string msg = "add_pub/" 
+										+ _label + "/" 
+										+ host + '/' 
+										+ std::to_string(m_port);
+
 	SendMessage(msg,m_masterSocket);
+	
+	m_publishers.emplace(_label,Publisher(_label));
+
 	return true;
 }
 
 bool 
 Communicator::
 CreateSubscriber(std::string _label) {
+
+	// request host info from master node
+	std::string msg = "add_sub/" + _label + "/";
+	SendMessage(msg,m_masterSocket,false);
+	std::string response = ReceiveMessage(m_masterSocket,256);
+
+	if(m_debug)	
+		std::cout << response << std::endl;
+
+	ProcessMessage(response,0);
 	
 	return true;
 }
@@ -85,7 +114,7 @@ void
 Communicator::
 Listen() {
 
-	SetSocket(m_subscribeSocket);
+	//SetSocket(m_subscribeSocket);
 
 	// type of socket created
 	struct sockaddr_in address;
@@ -143,9 +172,9 @@ Listen() {
 		if((activity < 0) && (errno!=EINTR)) 
 			throw RunTimeException(WHERE) << "Select Error" << std::endl;
 
+		socklen_t addrlen = sizeof(address);
 		// Check master socket for an incoming connection
 		if(FD_ISSET(m_subscribeSocket, &readfds)) {
-			socklen_t addrlen = sizeof(address);
 			int newSocket = accept(m_subscribeSocket, (struct sockaddr *)&address, &addrlen);//(socklen_t *)&addrlen);
 			if(newSocket<0)
 				throw RunTimeException(WHERE) << "Accept Failure" << std::endl;
@@ -167,9 +196,9 @@ Listen() {
 
 			//if(send(newSocket, "WELCOME", 7, 0) != 7)//welcomeMsg.size())
 			//	throw RunTimeException(WHERE) << "Send" << std::endl;
-			SendMessage("WELCOME",newSocket);
+			SendMessage("WELCOME",newSocket,false);
 
-			std::cout << "Welcome message successfully sent." << std::endl;
+			//std::cout << "Welcome message successfully sent." << std::endl;
 			
 			// Add new socket to array of sockets
 			for(int i = 0; i < m_maxClients; i++) {
@@ -180,7 +209,8 @@ Listen() {
 					break;
 				}
 			}
-
+		}
+		else {
 			// Else its some other IO operation on some other socket
 			for(int i = 0; i < m_maxClients; i++) {
 				int sd = clientSockets[i];
@@ -204,13 +234,16 @@ Listen() {
 						close(sd);
 						clientSockets[i] = 0;
 						// Remove stored publisher info from this client
-						// TODO::^^
+						for(auto channel : m_clientChannelMap[i]) {
+							m_channelHosts.erase(channel);	
+						}
+
 					}
 					// Echo back message that came in
 					else {
 						// Set the string terminating NULL byteon the end of the data read
 						buffer[valread] = '\0';
-						send(sd, buffer, strlen(buffer), 0);
+						//send(sd, buffer, strlen(buffer), 0);
 
 						std::string message;
 						for(auto c : buffer) {
@@ -219,11 +252,14 @@ Listen() {
 							message += c;
 						}
 						std::cout << "Message Received: " << message << std::endl;
-						ProcessMessage(message);
+						ProcessMessage(message,clientSockets[i]);
 					}
 				}
 			}
 		}
+		// try to connect all unconnected subscribers
+		if(m_isMaster)
+			ConnectSubscribers();
 	}
 }
 
@@ -259,44 +295,125 @@ SetSocket(int& _socket) {
 
 void
 Communicator::
-ProcessMessage(std::string _msg) {
+ProcessMessage(std::string _msg, int _client) {
 	//std::vector<string> info;
 	std::stringstream ss(_msg);
 	std::string type;
 	getline(ss,type,'/');
-	std::cout << "Type" << type << std::endl;
+	std::cout << "Type " << type << std::endl;
+	if(type == "add_pub") {
+		HostInfo host;
+
+		getline(ss,host.channelName,'/');
+		getline(ss,host.hostName,'/');
+		getline(ss,host.portNumber,'/');
+
+		m_clientChannelMap[_client].push_back(host.channelName);
+
+		m_channelHosts[host.channelName] = host;
+		SendMessage(_msg,_client,false);
+	}
+	else if(type == "add_sub"){
+		std::string channel;
+		getline(ss,channel,'/');
+		m_channelSubscribers.emplace_back(std::make_pair(false,std::make_pair(channel,_client)));
+	}
+	else if(type == "pub_info") {
+		HostInfo host;
+
+		getline(ss,host.channelName,'/');
+		getline(ss,host.hostName,'/');
+		getline(ss,host.portNumber,'/');
+
+		// register subscriber with publisher
+		RegisterSubscriberWithPublisher(host);
+	}
 }
 
 void
 Communicator::
-SendMessage(std::string _msg, int _sockfd) {
+SendMessage(std::string _msg, int _sockfd, bool _receipt) {
 	// Convert to char buffer
 	char msg[_msg.size()+1];
 	strcpy(msg,_msg.c_str());
 
 	// Send message through socket
-	if(write(_sockfd,msg,_msg.size()) < 0)
-		throw RunTimeException(WHERE) << "ERROR writing to socket " << _sockfd << std::endl;
+	if(send(_sockfd,msg,_msg.size(),0) < 0)
+		throw RunTimeException(WHERE) << "ERROR writing to socket " << _sockfd << " " << _msg << std::endl;
 
-	WaitForRecept(_msg, _sockfd);
+	// Keep trying until receive receipt
+	//while(_receipt and !GetReceipt(_msg,_sockfd))
+		//if(send(_sockfd,msg,_msg.size(),0) < 0)
+			//throw RunTimeException(WHERE) << "ERROR writing to socket " << _sockfd << std::endl;
+	if(_receipt)
+		GetReceipt(_msg,_sockfd);
+}
+
+std::string
+Communicator::
+ReceiveMessage(int _sockfd, int _size) {
+
+	char buffer[_size];
+	bzero(buffer,_size-1);
+	if(read(_sockfd,buffer,_size) < 0)
+	//if(recv(_sockfd,buffer,_msg.size(),0) < 0)
+		throw RunTimeException(WHERE) << "ERROR reading from socket " << _sockfd << std::endl;
+	std::string message(buffer);
+	if(m_debug) {
+		std::cout << "Message Received: " << message << ". <end of message>" << std::endl;
+	}
+	return message;
+}
+
+
+bool
+Communicator::
+GetReceipt(std::string _msg, int _sockfd) {
+	// Wait for reciept acknowledgement
+	std::string message = ReceiveMessage(_sockfd,_msg.size()+1);
+	if(_msg.size() > 0 and message.size() != _msg.size()+1) {
+		return false;
+	}
+	//else if(_msg.size() == 0 and strlen(buffer) != 7)
+	//	return false;
+	return true;
 }
 
 void
 Communicator::
-WaitForRecept(std::string _msg, int _sockfd) {
-	// Wait for reciept acknowledgement
-	char buffer[_msg.size()+1];
-	bzero(buffer,_msg.size());
-	if(read(_sockfd,buffer,_msg.size()) < 0)
-		throw RunTimeException(WHERE) << "ERROR reading from socket " << _sockfd << std::endl;
-	if(_msg.size() > 0 and strlen(buffer) != _msg.size()+1) {
-		std::string message;
-		for(auto c : buffer) {
-			if(c == '\0')
-				break;
-			message += c;
-		}
-		std::cout << "Message Received: " << message << std::endl;
-		throw RunTimeException(WHERE) << "ERROR reading from socket " << _sockfd << std::endl;
+RegisterSubscriberWithPublisher(HostInfo _host) {
+		int socket;
+		RegisterWithServer(std::stoi(_host.portNumber), _host.hostName, socket);
+		m_subscribers.emplace(_host.channelName,Subscriber(_host.channelName,socket));
+		
+		std::string msg = "new_sub/"
+										+ _host.channelName + '/';
+
+		SendMessage(msg,socket);
+}
+
+/*-------------------------------- Master Specific Functions ----------------------------*/
+
+void
+Communicator::
+ConnectSubscribers() {
+	for(auto sub : m_channelSubscribers) {
+		if(sub.first)
+			continue;
+		std::string channel = sub.second.first;
+
+		// check if channel has been registered with master
+		auto iter = m_channelHosts.find(channel);
+		if(iter == m_channelHosts.end())
+			continue;
+		
+		HostInfo host = iter->second;
+		
+		int subscriber = sub.second.second;
+		std::string msg = "pub_info/" 
+										+ host.channelName + "/" 
+										+ host.hostName + '/' 
+										+ host.portNumber + '/';
+		SendMessage(msg,subscriber,false);
 	}
 }	

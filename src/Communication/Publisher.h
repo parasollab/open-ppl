@@ -22,6 +22,12 @@ class Publisher {
 		bool Write(std::string _msg);
 
 		///@}
+		///@name Accessors
+		///@{
+
+		std::string GetChannelName();
+
+		///@}
 		
 	private:
 		///@name Helper Functions

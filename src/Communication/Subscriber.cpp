@@ -9,4 +9,5 @@ Subscriber::
 Subscriber() {}
 
 Subscriber::
-Subscriber(int _socket) {}
+Subscriber(std::string _channelName, int _socket) 
+		: m_channelName(_channelName), m_socket(_socket) {}

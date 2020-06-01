@@ -13,6 +13,8 @@
 #include "MPProblem/GroupTask.h"
 #include "Utilities/PMPLExceptions.h"
 
+#include "Communication/Communicator.h"
+
 void error(const char *msg)
 {
     perror(msg);
@@ -163,6 +165,20 @@ main(int _argc, char** _argv) {
     throw RunTimeException(WHERE) << "This platform does not support infinity "
                                   << "for double-types, which is required for "
                                   << "pmpl to work properly.";
+
+	Communicator comm(8888,8890);
+
+	comm.RegisterWithMaster(8888,"localhost");
+
+	comm.CreateSubscriber("test");
+	//comm.Listen();
+
+
+
+
+
+
+
 
   if(_argc != 5 || std::string(_argv[1]) != "-f")
     throw ParseException(WHERE) << "Incorrect usage. Usage: -f options.xml";

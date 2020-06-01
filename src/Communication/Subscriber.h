@@ -1,13 +1,15 @@
 #ifndef _PMPL_SUBSCRIBER_H_
 #define _PMPL_SUBSCRIBER_H_
 
+#include <string>
+
 class Subscriber {
 	public: 
 		///@name Construction
 		///@{
 
 		Subscriber();
-		Subscriber(int _socket);
+		Subscriber(std::string _channelName, int _socket);
 
 		~Subscriber() = default;
 
@@ -19,6 +21,8 @@ class Subscriber {
 		///@}
 		///@name Internal State
 		///@{
+
+		std::string m_channelName;
 
 		int m_socket;
 
