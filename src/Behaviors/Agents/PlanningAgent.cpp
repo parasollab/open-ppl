@@ -24,7 +24,7 @@ PlanningAgent(Robot* const _r, const PlanningAgent& _a) : Agent(_r, _a)
 
 
 PlanningAgent::
-PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
+PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
   // Currently there are no parameters. Parse XML options here.
 
 }

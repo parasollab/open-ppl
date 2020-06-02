@@ -1,4 +1,7 @@
-#include "MPLibrary/PMPL.h"
+//#include "MPLibrary/PMPL.h"
+#include "MPProblem/Constraints/Constraint.h"
+#include "MPProblem/GroupTask.h"
+#include "MPProblem/MPTask.h"
 #include "Simulator/Simulation.h"
 #include "Visualization/Gui/Setup.h"
 

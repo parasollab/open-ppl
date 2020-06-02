@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include "Communication/Communicator.h"
 #include "MPProblem/Robot/Control.h"
 
 class Cfg;
@@ -36,10 +37,12 @@ class Agent {
     ControlSet m_currentControls;      ///< The current control set.
     size_t m_stepsRemaining{0};        ///< Steps remaining on current controls.
 
-    bool m_debug{true};               ///< Toggle debug messages.
+    bool m_debug{true};                ///< Toggle debug messages.
 
     /// Specifiies the type of agent for heterogenous multiagent teams
     std::string m_capability;
+
+		Communicator m_communicator;       ///< Control communication with outside processes
 
     ///@}
 
@@ -52,6 +55,11 @@ class Agent {
     /// Create an agent for a robot.
     /// @param _r The robot which this agent will reason for.
     Agent(Robot* const _r);
+
+    /// Create an agent for a robot.
+    /// @param _r The robot which this agent will reason for.
+    /// @param _node The XML node to parse.
+    Agent(Robot* const _r, XMLNode& _node);
 
     /// Copy an agent for another robot.
     /// @param _r The destination robot.

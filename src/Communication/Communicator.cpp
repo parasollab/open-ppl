@@ -24,7 +24,7 @@
 
 Communicator::
 Communicator(int _masterPort, int _port) : m_masterPort(_masterPort), m_port(_port) {
-	std::cout << "Constructing Communicator" << std::endl;
+	//std::cout << "Constructing Communicator" << std::endl;
 
 	//SetSocket(m_masterSocket);
 

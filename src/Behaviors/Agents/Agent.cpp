@@ -23,6 +23,17 @@
 Agent::
 Agent(Robot* const _r) : m_robot(_r) { }
 
+Agent::
+Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) { 
+	for(auto child : _node){
+		if(child.Name() == "Communicator") {
+			int port = child.Read("masterPort", true, 0, 0, 9999, "Port number of the master node.");
+			std::string hostname = child.Read("hostname", true, "", "Host name of the master node.");
+			m_communicator = Communicator();
+			m_communicator.RegisterWithMaster(port,hostname);
+		}
+	}
+}
 
 Agent::
 Agent(Robot* const _r, const Agent& _a)

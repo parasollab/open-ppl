@@ -75,7 +75,7 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(SERVER_DEF) $(vizmo_map) $(group_map)
+DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(PLANNER_DEF) $(TASK_DEF) $(vizmo_map) $(group_map)
 INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
 LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 
@@ -85,7 +85,8 @@ LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 PMPL_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
 SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
 COMM_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(COMM_SRCS))
-SERVER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SERVER_SRCS))
+PLANNER_OBJS  := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PLANNER_SRCS))
+TASK_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(TASK_SRCS))
 CLIENT_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(CLIENT_SRCS))
 MASTER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(MASTER_SRCS))
 HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
@@ -93,9 +94,10 @@ HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
 # Make the object files depend on updated utility libraries so the libs are
 # built first.
 $(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(TASK_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(COMM_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
-$(SERVER_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(PLANNER_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(CLIENT_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
@@ -131,16 +133,16 @@ pmpl: $(MAIN) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(HARDWARE_OBJS) $(LIBS) -o $@
 
 # Build the simulator.
-sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
+sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
      | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	  $(LIBS) -o $@
 
 # Build the server.
-server: $(SERVER_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+planner: $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SERVER_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
 
 client: $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
@@ -179,7 +181,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 .PHONY: clean
 clean:
 	@echo Cleaning pmpl library and executables...
-	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim server
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim planner
 
 .PHONY: reallyclean
 reallyclean: clean

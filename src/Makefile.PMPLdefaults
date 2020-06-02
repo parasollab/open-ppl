@@ -391,8 +391,19 @@ SIM_INCL := $(QT_INCL)
 SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_SRCS := \
+  $(PMPL_DIR)/sim_main.cpp \
+
+
+
+################################################################################
+# Task Planning Sources
+################################################################################
+PLANNER_DEF  :=
+planner: PLANNER_DEF += -DPMPL_USE_SIMULATOR
+PLANNER_INCL := $(QT_INCL)
+PLANNER_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
+TASK_SRCS := \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
-  Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableBoundary.cpp \
   Visualization/DrawableCfg.cpp \
@@ -409,7 +420,7 @@ SIM_SRCS := \
   Visualization/Gui/Setup.cpp \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp \
-  $(PMPL_DIR)/sim_main.cpp \
+  Simulator/Simulation.cpp \
   TMPLibrary/Actions/Action.cpp \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
@@ -433,6 +444,7 @@ SIM_SRCS := \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
+  TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
   TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
@@ -463,10 +475,11 @@ COMM_SRCS := \
   Communication/Subscriber.cpp \
 
 ################################################################################
-# Server
+# Planning Server
 ################################################################################
-SERVER_SRCS := \
-  $(PMPL_DIR)/server_main.cpp \
+PLANNER_SRCS := \
+  $(PMPL_DIR)/planner_main.cpp \
+	Utilities/PlanningServer.cpp \
 
 ################################################################################
 # Server

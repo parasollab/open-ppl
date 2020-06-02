@@ -5,6 +5,7 @@
 
 // TMPStrategyMethods to include
 
+#include "TMPLibrary/TMPStrategies/DummyStrategyMethod.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
 #include "TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.h"
 
@@ -44,6 +45,7 @@ struct TMPTraits {
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
     ITMethod,
+		DummyStrategyMethod,
 		MultiAgentMultiTaskPlanner
       > TMPStrategyMethodList;
 
