@@ -40,7 +40,7 @@ Coordinator(Robot* const _r) : Agent(_r) {
 
 
 Coordinator::
-Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
+Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
 
   // Parse the labels of the group members.
   for(auto& child : _node) {
@@ -55,11 +55,12 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r) {
       AddPlacementMethod(PlacementMethod::Factory(m_robot->GetMPProblem(), child));
     }*/
     //else {
+    if(child.Name() == "Member") {
       // Parse the robot label.
       const std::string memberLabel = child.Read("label", true, "",
           "The label of the member robot.");
       m_memberLabels.push_back(memberLabel);
-    //}
+    }
   }
 
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
@@ -156,10 +157,17 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
-	//USE TMPLIBRARY TO GET TASK ASSIGNMENTS
-	TaskPlan* taskPlan = new TaskPlan();
-	m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), taskPlan, this, m_memberAgents);
-  DistributeTaskPlan(taskPlan);
+	// if networked, request plan from server
+	if(m_communicator.IsConnectedToMaster()) {
+		std::string query  ="send me a task plan";
+		std::cout << m_communicator.Query("ppl",query) << std::endl;
+	}
+	//else use tmplibrary to get task assignments
+	else {
+		TaskPlan* taskPlan = new TaskPlan();
+		m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), taskPlan, this, m_memberAgents);
+  	DistributeTaskPlan(taskPlan);
+	}
 
   if(m_debug){
     std::cout << "OTUPUTTING AGENT TASK ASSIGNMENTS" << std::endl;

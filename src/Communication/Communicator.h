@@ -44,7 +44,7 @@ class Communicator {
 		///@name Interface
 		///@{
 	
-		void Query(std::string _channel, std::string _msg);
+		std::string Query(std::string _channel, std::string _msg);
 
 		///@}
 		///@name Accessors
@@ -53,6 +53,7 @@ class Communicator {
 		void SetMaster(bool _master);
 		bool IsMaster();
 
+		bool IsConnectedToMaster();
 		///@}
 	private:
 
@@ -85,7 +86,7 @@ class Communicator {
 		///@name Internal State 
 		///@{
 	
-		int m_masterSocket;
+		int m_masterSocket{0};
 		int m_subscribeSocket;
 
 		int m_maxClients{2};

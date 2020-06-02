@@ -272,7 +272,7 @@ Listen() {
 
 /*-------------------------------- Interface ---------------------------------*/
 
-void 
+std::string 
 Communicator::
 Query(std::string _channel, std::string _msg) {
 	auto& sub = m_subscribers[_channel];
@@ -283,6 +283,7 @@ Query(std::string _channel, std::string _msg) {
 	std::string response = ReceiveMessage(sub.GetSocket());
 
 	std::cout << response << std::endl;
+	return response;
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
@@ -297,6 +298,12 @@ bool
 Communicator::
 IsMaster() {
 	return m_isMaster;
+}
+		
+bool 
+Communicator::
+IsConnectedToMaster() {
+	return m_masterSocket != 0;
 }
 
 /*---------------------------- Helper Functions ------------------------------*/

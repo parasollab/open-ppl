@@ -26,7 +26,7 @@ main(int _argc, char** _argv) {
   std::string xmlFile = _argv[2];
 
   // Parse the Problem node into an MPProblem object.
-  MPProblem* problem = new MPProblem(xmlFile);
+  //MPProblem* problem = new MPProblem(xmlFile);
 
   // Parse the Library node into an MPLibrary object.
   TMPLibrary* ppl = new TMPLibrary(xmlFile);
@@ -40,7 +40,7 @@ main(int _argc, char** _argv) {
 		return server.Solve(_msg);
 	};
 
-	comm.CreatePublisher("pmpl",queryHandler);
+	comm.CreatePublisher("ppl",queryHandler);
 	comm.Listen();
 
 	/*
@@ -64,7 +64,7 @@ main(int _argc, char** _argv) {
 	*/
 
   // Release resources.
-  delete problem;
+  //delete problem;
   delete ppl;
 
   return 0;

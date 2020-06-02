@@ -25,12 +25,23 @@ Agent(Robot* const _r) : m_robot(_r) { }
 
 Agent::
 Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) { 
-	for(auto child : _node){
+	for(auto& child : _node) {
 		if(child.Name() == "Communicator") {
 			int port = child.Read("masterPort", true, 0, 0, 9999, "Port number of the master node.");
 			std::string hostname = child.Read("hostname", true, "", "Host name of the master node.");
 			m_communicator = Communicator();
 			m_communicator.RegisterWithMaster(port,hostname);
+			for(auto& grandchild : child) {
+				if(grandchild.Name() == "Subscriber") {
+					std::string channel = grandchild.Read("channel",true,"","Name of subscription channel.");
+					m_communicator.CreateSubscriber(channel);
+				}
+				else if(grandchild.Name() == "Publisher") {
+					throw RunTimeException(WHERE) << "Agent publisher not yet handled." << std::endl;
+					//std::string channel = grandchild.Read("channel",true,"","Name of subscription channel.");
+					//m_communicator.CreatePublisher(channel,*QUERYFUNCTION*);
+				}
+			}
 		}
 	}
 }
