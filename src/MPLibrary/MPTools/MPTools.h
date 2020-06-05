@@ -6,6 +6,7 @@
 
 #include "Utilities/XMLNode.h"
 
+#include "GridIntervalMap.h"
 #include "MedialAxisUtilities.h"
 #include "ReebGraphConstruction.h"
 #include "SafeIntervalTool.h"
@@ -60,6 +61,7 @@ class MPToolsType final {
   MPLibrary* const m_library; ///< The owning library.
 
   LabelMap<ClearanceUtility>         m_clearanceUtils;
+  LabelMap<GridIntervalMap>          m_gridIntervalMaps;
   LabelMap<MedialAxisUtility>        m_medialAxisUtils;
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
   LabelMap<TopologicalMap>           m_topologicalMaps;
@@ -111,6 +113,23 @@ class MPToolsType final {
     /// @param _utility The ClearanceUtility to use.
     void SetClearanceUtility(const std::string& _label,
         ClearanceUtility<MPTraits>* const _utility);
+
+    ///@}
+    ///@name Grid Interval Map
+    ///@{
+
+    /// Get a TopologicalMap by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    GridIntervalMap<MPTraits>* GetGridIntervalMap(const std::string& _label) const;
+
+    /// Set a TopologicalMap. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The GridIntervalMap to use.
+    void SetGridIntervalMap(const std::string& _label,
+        GridIntervalMap<MPTraits>* const _utility);
 
     ///@}
     ///@name Medial Axis Utility
@@ -300,6 +319,17 @@ ParseXML(XMLNode& _node) {
 
       SetClearanceUtility(utility->GetLabel(), utility);
     }
+    else if(child.Name() == "GridIntervalMap") {
+      auto utility = new GridIntervalMap<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_gridIntervalMaps.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second GridIntervalMap "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
+      SetGridIntervalMap(utility->GetLabel(), utility);
+    }
     else if(child.Name() == "MedialAxisUtility") {
       auto utility = new MedialAxisUtility<MPTraits>(child);
 
@@ -411,6 +441,8 @@ Initialize() {
   //Uninitialize();
   for(auto& pair : m_clearanceUtils)
     pair.second->Initialize();
+  for(auto& pair : m_gridIntervalMaps)
+    pair.second->Initialize();
   for(auto& pair : m_medialAxisUtils)
     pair.second->Initialize();
   for(auto& pair : m_skeletonUtils)
@@ -480,6 +512,23 @@ SetClearanceUtility(const std::string& _label,
 }
 
 
+/*------------------------------ Grid Interval Map -----------------------------*/
+
+template <typename MPTraits>
+GridIntervalMap<MPTraits>*
+MPToolsType<MPTraits>::
+GetGridIntervalMap(const std::string& _label) const {
+  return GetUtility(_label, m_gridIntervalMaps);
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetGridIntervalMap(const std::string& _label,
+    GridIntervalMap<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_gridIntervalMaps);
+}
 /*-------------------------- Medial Axis Utility -----------------------------*/
 
 template <typename MPTraits>

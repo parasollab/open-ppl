@@ -214,6 +214,8 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// A map from robot to task.
     std::unordered_map<Robot*, MPTask*> m_taskMap;
 
+    std::string m_gridIntervalMapLabel; ///< The grid interval map tool label/
+
     ///@}
 
 };
@@ -242,6 +244,10 @@ GridCBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
 
   m_vcLabel = _node.Read("vcLabel", true, "",
       "The validity checker for conflict detection. Must be a CD type.");
+    // Parse the other options.
+  m_gridIntervalMapLabel = _node.Read("gridIntervalMapLabel", false, "",
+      "Label of the GridIntervalMap");
+
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -550,14 +556,16 @@ template <typename MPTraits>
 typename GridCBSQuery<MPTraits>::Conflict
 GridCBSQuery<MPTraits>::
 FindConflict(const Solution& _solution) {
+  auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
   // Recreate each path at resolution level.
   std::map<Robot*, std::vector<CfgType>> cfgPaths;
   for(const auto& pair : _solution) {
     Robot* const robot = pair.first;
     const auto& path   = pair.second;
     cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
+    giMap->UpdateReservationTable(path.get());
   }
-
+  
   // Find the latest timestep in which a robot is still moving.
   size_t lastTimestep = 0;
   for(auto& path : cfgPaths)
