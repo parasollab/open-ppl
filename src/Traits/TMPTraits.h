@@ -12,11 +12,16 @@
 // PoIPlacementMethods to include
 
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.h"
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.h"
 
 // TaskEvaluators to include
 
 #include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
+#include "TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.h"
+#include "TMPLibrary/TaskEvaluators/TaskCBSPlanner.h"
+#include "TMPLibrary/TaskEvaluators/TCBS.h"
+#include "TMPLibrary/TaskEvaluators/TMPCBS.h"
 
 // TaskDecomposers to include
 
@@ -25,10 +30,12 @@
 // TaskAllocators to include 
 
 #include "TMPLibrary/TaskAllocators/AuctionMethod.h"
+#include "TMPLibrary/TaskAllocators/TCBSAllocator.h"
 
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/DiscreteIntervalGraph.h"
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,11 +59,16 @@ struct TMPTraits {
   //types of points of interest placement methods available in our world
   typedef boost::mpl::list<
     DisjointWorkspaces,
-    WorkspaceGuidance
+    WorkspaceGuidance,
+		OverlappingWorkspacesDensity
       > PoIPlacementMethodList;
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
+		OrderedMultiTaskEvaluator,
+		TaskCBSPlanner,
+		TCBS,
+		TMPCBS,
     EnforcedHillClimbing
       > TaskEvaluatorMethodList;
 
@@ -67,11 +79,13 @@ struct TMPTraits {
 
   //types of task allocators available in our world
   typedef boost::mpl::list<
-    AuctionMethod
+    AuctionMethod,
+		TCBSAllocator
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
 		CombinedRoadmap,
+		DiscreteIntervalGraph,
 		MultiTaskGraph
 			> StateGraphList;
 };

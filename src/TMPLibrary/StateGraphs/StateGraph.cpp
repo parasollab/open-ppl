@@ -1,7 +1,7 @@
 #include "StateGraph.h"
 
 #include "Behaviors/Agents/Coordinator.h"
-
+#include "Simulator/Simulation.h"
 #include "TMPLibrary/TaskPlan.h"
 
 /*------------------------------ Construction --------------------------------*/

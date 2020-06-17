@@ -45,39 +45,19 @@ CSpaceConstraint(Robot* const _r, XMLNode& _node)
   const std::string pointString = _node.Read("point", false, "", "The Cfg point"),
                     bbxString = _node.Read("bbx", false, "", "The Cfg box");
 
-  // Assert that we got exactly one of these.
   if(pointString.empty() == bbxString.empty())
     throw ParseException(_node.Where()) << "A CSpaceConstraint should specify a "
                                         << "single configuration (point) or "
                                         << "bounding box (bbx), but not both.";
 
-  // Initialize the boundary.
-  std::unique_ptr<CSpaceBoundingBox> bbx(new CSpaceBoundingBox(
-      m_robot->GetMultiBody()->DOF() * (m_robot->IsNonholonomic() ? 2 : 1))
-  );
+	ParseBoundaryString(_r,pointString,bbxString);
 
-  // Parse the boundary data.
-  if(!bbxString.empty()) {
-    // This is a bounding box constraint.
-    std::istringstream bbxStream(bbxString);
-    bbxStream >> *bbx;
-  }
-  else {
-    // This is a point constraint.
-    Cfg point(_r);
-#ifdef VIZMO_MAP
-    std::istringstream pointStream("0 " + pointString);
-#else
-    std::istringstream pointStream(pointString);
-#endif
-    point.Read(pointStream);
-
-    bbx->ShrinkToPoint(point);
-  }
-
-  m_boundary = std::move(bbx);
 }
 
+CSpaceConstraint::
+CSpaceConstraint(Robot* const _r, std::string _pointString, std::string _bbxString) : BoundaryConstraint(_r,nullptr) {
+	ParseBoundaryString(_r,_pointString,_bbxString);
+}
 
 CSpaceConstraint::
 ~CSpaceConstraint() = default;
@@ -89,4 +69,36 @@ Clone() const {
   return std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(*this));
 }
 
+/*------------------------------ Helper Functions --------------------------------*/
+
+void 
+CSpaceConstraint::
+ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxString) {
+  // Assert that we got exactly one of these.
+  // Initialize the boundary.
+  std::unique_ptr<CSpaceBoundingBox> bbx(new CSpaceBoundingBox(
+      m_robot->GetMultiBody()->DOF() * (m_robot->IsNonholonomic() ? 2 : 1))
+  );
+
+  // Parse the boundary data.
+  if(!_bbxString.empty()) {
+    // This is a bounding box constraint.
+    std::istringstream bbxStream(_bbxString);
+    bbxStream >> *bbx;
+  }
+  else {
+    // This is a point constraint.
+    Cfg point(_r);
+#ifdef VIZMO_MAP
+    std::istringstream pointStream("0 " + _pointString);
+#else
+    std::istringstream pointStream(_pointString);
+#endif
+    point.Read(pointStream);
+
+    bbx->ShrinkToPoint(point);
+  }
+
+  m_boundary = std::move(bbx);
+}
 /*----------------------------------------------------------------------------*/

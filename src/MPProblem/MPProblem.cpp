@@ -1,16 +1,20 @@
 #include "MPProblem.h"
 
+#include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/GroupTask.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/DynamicObstacle.h"
 #include "MPProblem/InteractionInformation.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
+
+#include "TaskHierarchy/SubtaskFlow.h"
 
 using namespace std;
 
@@ -199,6 +203,18 @@ ReassignTask(MPTask* const _task, Robot* const _newOwner) {
   oldTasks.erase(iter);
 }
 
+void
+MPProblem::
+AddDecomposition(Robot* _coordinator, std::unique_ptr<Decomposition>&& _decomp) {
+	m_taskDecompositions[_coordinator].push_back(std::move(_decomp));
+}
+		
+const std::vector<std::unique_ptr<Decomposition>>& 
+MPProblem::
+GetDecompositions(Robot* _coordinator) {
+	return m_taskDecompositions[_coordinator];
+}
+
 /*----------------------------- Environment Accessors ------------------------*/
 
 Environment*
@@ -298,6 +314,20 @@ const std::vector<std::unique_ptr<RobotGroup>>&
 MPProblem::
 GetRobotGroups() const noexcept {
   return m_robotGroups;
+}
+
+Cfg 
+MPProblem::
+GetInitialCfg(Robot* _r) {
+	return m_initialCfgs[_r];
+}
+		
+void 
+MPProblem::
+SetInitialCfg(Robot* _r, Cfg _cfg) {
+	if(_r != _cfg.GetRobot())
+		throw RunTimeException(WHERE) << "Initial Cfg robot does not match." << std::endl;
+	m_initialCfgs[_r] = _cfg;
 }
 
 /*----------------------------- Task Accessors -------------------------------*/
@@ -452,6 +482,16 @@ ParseChild(XMLNode& _node) {
     m_interactionInformations.emplace_back(std::unique_ptr<InteractionInformation>(
                                            new InteractionInformation(this, _node)));
   }
+	else if(_node.Name() == "Decomposition") {
+		auto decomp = std::unique_ptr<Decomposition>(new Decomposition(_node,this));
+
+		auto top = decomp->GetMainTask();
+
+		m_taskDecompositions[decomp->GetCoordinator()].push_back(std::move(decomp));
+
+		SubtaskFlow flow(top);
+		flow.Print();
+	}
 }
 
 

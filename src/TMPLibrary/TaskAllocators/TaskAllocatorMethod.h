@@ -18,6 +18,12 @@ class TaskAllocatorMethod : public TMPBaseObject {
 		virtual ~TaskAllocatorMethod() = default;  	
 
     ///@}
+    ///@name Call Method
+    ///@{
+
+		virtual void AllocateTasks();
+
+		///@}
 };
 
 /*----------------------------------------------------------------------------*/

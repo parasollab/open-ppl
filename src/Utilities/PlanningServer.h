@@ -8,6 +8,16 @@
 
 class PlanningServer {
 	public:
+		///@name LocalTypes
+		///@{
+
+		struct PlanningProblem {
+			Coordinator* 				 coordinator;
+			std::vector<Robot*>  team;
+			Decomposition*       decomposition;
+		};
+
+		///@}
 		///@name Construction
 		///@{
 
@@ -27,7 +37,7 @@ class PlanningServer {
 		///@name Helper Functions
 		///@{
 
-		
+		PlanningProblem ParseMessage(std::string _msg) const;
 
 		///@}
 		///@name Internal State

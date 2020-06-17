@@ -9,6 +9,7 @@
 #include "TMPLibrary/TaskPlan.h"
 
 #include "Simulator/Simulation.h"
+#include "Utilities/MetricUtils.h"
 
 
 /*****************************************Constructor*****************************************************/
@@ -41,11 +42,13 @@ Initialize(){
 void
 TMPStrategyMethod::
 operator()(){
+	this->GetTaskPlan()->GetStatClass()->StartClock("TotalTMPStrategyTime");
 	Initialize();	
 	PlanTasks();
 	this->GetStateGraph(m_sgLabel)->LoadStateGraph();
 	DecomposeTasks();
 	AssignTasks();
+	this->GetTaskPlan()->GetStatClass()->StopClock("TotalTMPStrategyTime");
 }
 
 /*****************************************Accessors******************************************************/

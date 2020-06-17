@@ -98,6 +98,11 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param The path weight function object to use.
     virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f);
 
+		void SetLastConstraintTime(double _last);
+		void SetLastGoalConstraintTime(double _time);
+		void SetStartTime(double _start);
+		void SetEndTime(double _end);
+
     ///@}
 
   protected:
@@ -143,6 +148,9 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
         typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
+    std::vector<typename QueryMethod<MPTraits>::VID>
+        TwoVariableQuery(const VID _start, const VIDSet& _goals);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -156,9 +164,15 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
     std::string m_dmLabel;           ///< The DistanceMetric label.
+		bool m_twoVariable{false};       ///< Temporary flag to use two varibale state search.
 
     /// The function for computing total path weight.
     SSSPPathWeightFunction<RoadmapType> m_weightFunction;
+
+		double m_lastConstraint{0};
+		double m_lastGoalConstraint{0};
+		double m_startTime{0};
+		double m_endTime{0};
 
     ///@}
 
@@ -188,6 +202,8 @@ QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "Label of the SafeIntervalTool");
   m_dmLabel = _node.Read("dmLabel", false, "",
       "Alternate distance metric to replace edge weight during search.");
+	m_twoVariable = _node.Read("twoVariableSS",false,m_twoVariable,
+									"Flag to use two variable state search.");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -317,10 +333,13 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
               << std::endl;
 
   // Check for trivial path.
-  if(_goals.count(_start))
+  if(_goals.count(_start) and m_startTime >= m_endTime)
     return {_start};
 
   stats->IncStat("Graph Search");
+
+  if(m_twoVariable)
+    return TwoVariableQuery(_start,_goals);
 
   // Set up the termination criterion to quit early if we find a goal node.
   SSSPTerminationCriterion<RoadmapType> termination(
@@ -524,7 +543,132 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // If we're still here, the edge is OK.
   return newDistance;
 }
+template <typename MPTraits>
+std::vector<typename QueryMethod<MPTraits>::VID>
+QueryMethod<MPTraits>::
+TwoVariableQuery(const VID _start, const VIDSet& _goals) {
+/*
+	double minEnd = m_endTime;
 
+  SSSPTerminationCriterion<RoadmapType> termination(
+      [minEnd,_goals](typename RoadmapType::vertex_iterator& _vi,
+             const SSSPOutput<RoadmapType>& _sssp) {
+        return (_goals.count(_vi->descriptor()) or _sssp.distance.at(_vi->descriptor()) > minEnd)
+																							? SSSPTermination::EndSearch
+                                              : SSSPTermination::Continue;
+      }
+  );
+*/
+  SSSPPathWeightFunction<RoadmapType> weight;
+  if(m_weightFunction) {
+    weight = m_weightFunction;
+  }
+  else if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+  else {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->StaticPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+
+
+  auto g = this->GetRoadmap();
+/*
+  // Run dijkstra's algorithm to find the path, if it exists.
+  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(g, {_start}, weight,
+      termination);
+
+  // Find the last discovered node, which should be a goal if there is a valid
+  // path.
+  const VID last = sssp.ordering.back();
+  if(_goals.count(last)) {
+  	// Extract the path.
+  	std::vector<VID> path;
+  	path.push_back(last);
+
+  	VID current = last;
+  	do {
+    	current = sssp.parent.at(current);
+    	path.push_back(current);
+  	} 	while(current != _start);
+  	std::reverse(path.begin(), path.end());
+
+  	if(this->m_debug)
+    	std::cout << "\tSuccess: reached goal node " << last << " with path cost "
+      	        << sssp.distance.at(last) << "."
+      	        << std::endl;
+
+  	return path;
+  }
+*/
+	//If there is not a valid path satisfying both the end time and the goal vid use two variable search
+
+	/*double lastConflict = 0;
+	for(auto conflict : g->GetAllConflictsCfgAt()) {
+		if(conflict.second > lastConflict) {
+			lastConflict = conflict.second;
+		}
+	}*/
+
+	//double minStep = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  //double minStep = g->GetEdge(*(_goals.begin()), *(_goals.begin())).GetTimeSteps();
+
+  auto node = TwoVariableDijkstraSSSP(g, {_start}, _goals, m_startTime,
+      m_endTime, m_lastConstraint, m_lastGoalConstraint, weight);
+
+  if(!node)
+    return {};
+
+  this->GetPath()->SetFinalWaitTimeSteps(node->m_waitTimeSteps);
+
+  std::vector<typename QueryMethod<MPTraits>::VID> path;
+  while(node->m_parent) {
+    path.push_back(node->m_vid);
+    node = node->m_parent;
+    if(!node)
+      return {};
+  }
+
+  path.push_back(node->m_vid);
+  std::reverse(path.begin(),path.end());
+
+  return path;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetLastConstraintTime(double _last) {
+	m_lastConstraint = _last;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetLastGoalConstraintTime(double _time) {
+	m_lastGoalConstraint = _time;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetStartTime(double _start) {
+	m_startTime = _start;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetEndTime(double _end) {
+	m_endTime = _end;
+}
 /*----------------------------------------------------------------------------*/
 
 #endif

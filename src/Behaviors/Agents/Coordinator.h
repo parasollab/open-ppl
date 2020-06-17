@@ -13,6 +13,7 @@
 
 //TODO remove dependency on these
 #include "TMPLibrary/Actions/Action.h"
+#include "TMPLibrary/TaskPlan.h"
 
 class HandoffAgent;
 class InteractionTemplate;
@@ -72,6 +73,8 @@ class Coordinator : public Agent {
 
     /// Call PMPL to create a path for the agent to follow.
     virtual void Initialize() override;
+
+		void InitializePlanningComponents();
 
     /// Follow the roadmap.
     virtual void Step(const double _dt) override;
@@ -173,7 +176,9 @@ class Coordinator : public Agent {
     //robots
     void TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan);
 
-	void DistributeTaskPlan(TaskPlan* _taskPlan);
+		void DistributeTaskPlan(std::shared_ptr<TaskPlan> _taskPlan);
+    
+		void GenerateRandomTasks();
 
     ///@}
 
@@ -250,6 +255,14 @@ class Coordinator : public Agent {
 
 	//TODO:: make this more formal and not specifically ITMethod
     std::string m_tmpStrategyLabel;
+
+		std::shared_ptr<TaskPlan> m_taskPlan{nullptr};
+
+    size_t m_numRandTasks;
+
+		bool m_runSimulator{true};
+
+		bool m_runDummies;
 
     ///@}
 

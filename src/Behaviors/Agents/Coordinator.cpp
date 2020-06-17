@@ -7,8 +7,11 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
+//#include "Behaviors/Agents/DummyAgent.h"
 #include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
+
+#include "Communication/Messages/Message.h"
 
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
@@ -26,7 +29,6 @@
 #include "Traits/CfgTraits.h"
 
 #include "TMPLibrary/Actions/Action.h"
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
@@ -66,6 +68,11 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "
       "nearest agents and charging locations.");
 
+  m_numRandTasks = _node.Read("numRandTasks", false, 0, 0, MAX_INT, "number of "
+      "random tasks to generate");
+
+	m_runSimulator = _node.Read("runSim", false, m_runSimulator, "Flag to execute the plan or not.");
+	m_runDummies = _node.Read("runDummies", false, false, "Flag to use dummy agents that only follow input paths.");
   //m_tmp = _node.Read("tmp", false, false, "Does the coordinator use a tmp method?");
 
   //m_it = _node.Read("it", false, true, "Generate the Capability and Combined Roadmaps.");
@@ -102,17 +109,10 @@ Initialize() {
     return;
   m_initialized = true;
 
-  // Get problem info.
-  auto problem = m_robot->GetMPProblem();
-  const std::string& xmlFile = problem->GetXMLFilename();
-
-  // Initialize the agent's planning library.
-  m_tmpLibrary = new TMPLibrary(xmlFile);
-  m_library = m_tmpLibrary->GetMPLibrary();
-	m_solution = new MPSolution(m_robot);
-  //m_library->SetMPSolution(m_solution);
+	InitializePlanningComponents();
 
   // Set up the group members.
+  auto problem = m_robot->GetMPProblem();
   int priority = 1;
   for(const auto& memberLabel : m_memberLabels) {
     Robot* member = problem->GetRobot(memberLabel);
@@ -157,20 +157,38 @@ Initialize() {
     std::cout << "Done Initializing Agents" << std::endl;
   }
 
+  if(m_numRandTasks > 0){
+    if(problem->GetTasks(m_robot).size() == 1)
+      problem->ReassignTask(problem->GetTasks(m_robot)[0].get(),m_memberAgents[0]->GetRobot());
+    GenerateRandomTasks();
+  }
+
 	// if networked, request plan from server
 	if(m_communicator.IsConnectedToMaster()) {
-		std::string query  ="send me a task plan";
+		
+		std::vector<Robot*> team;
+		for(auto agent : m_memberAgents) {
+			team.push_back(agent->GetRobot());
+		}
+
+		std::string query = RobotTeamToMessage(team,this->GetRobot()) 
+											+ DecompositionToMessage(problem->GetDecompositions(m_robot)[0].get());
 		std::cout << m_communicator.Query("ppl",query) << std::endl;
 	}
 	//else use tmplibrary to get task assignments
 	else {
-		TaskPlan* taskPlan = new TaskPlan();
-		m_tmpLibrary->Solve(problem, problem->GetTasks(m_robot), taskPlan, this, m_memberAgents);
-  	DistributeTaskPlan(taskPlan);
+		m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
+  	m_tmpLibrary->Solve(problem, problem->GetDecompositions(m_robot)[0].get(), m_taskPlan, this, m_memberAgents);
+	}
+  if(!m_runSimulator) {
+		Simulation::Get()->PrintStatFile();
+  	exit(0);
 	}
 
+  DistributeTaskPlan(m_taskPlan);
+
   if(m_debug){
-    std::cout << "OTUPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
+    std::cout << "OUTPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
     for(auto agent : m_memberAgents){
       std::cout << agent->GetRobot()->GetLabel() << std::endl;
       auto list = agent->GetQueuedSubtasks();
@@ -201,6 +219,24 @@ Initialize() {
 
 void
 Coordinator::
+InitializePlanningComponents() {
+  // Get problem info.
+  auto problem = m_robot->GetMPProblem();
+  const std::string& xmlFile = problem->GetXMLFilename();
+
+  // Initialize the agent's planning library.
+  m_tmpLibrary = new TMPLibrary(xmlFile);
+  m_library = m_tmpLibrary->GetMPLibrary();
+	m_solution = new MPSolution(m_robot);
+  m_library->SetMPSolution(m_solution);
+  m_library->SetMPProblem(problem);
+
+  MPTask* task = new MPTask(m_robot);
+  m_library->SetTask(task);
+}
+
+void
+Coordinator::
 Step(const double _dt) {
   Initialize();
 
@@ -208,7 +244,7 @@ Step(const double _dt) {
     std::cout << "___________________________________________________________"
               << std::endl;
   for(auto agent : m_memberAgents)  {
-    if(this->m_debug)
+    if(this->m_debug and !m_runDummies)
       std::cout << agent->GetRobot()->GetLabel()
                 << " has plan: "
                 << agent->HasPlan()
@@ -218,11 +254,17 @@ Step(const double _dt) {
                 << std::endl;
   }
 
-  if(!m_robot->IsManipulator())
-    ArbitrateCollision();
+  //if(!m_robot->IsManipulator())
+    //ArbitrateCollision();
 
   for(auto agent : m_memberAgents){
-    agent->Step(_dt);
+		if(m_runDummies) {
+			auto dummy = static_cast<HandoffAgent*>(agent);
+			dummy->HandoffAgent::Step(_dt);
+		}
+		else {
+    	agent->Step(_dt);
+		}
   }
 
   CheckFinished();
@@ -240,7 +282,7 @@ Uninitialize() {
 
   delete m_solution;
   delete m_library;
-	delete m_tmpLibrary;  
+	delete m_tmpLibrary;
 //delete m_megaRoadmap;
 
   m_solution = nullptr;
@@ -308,7 +350,7 @@ CheckFinished() {
   for(auto agent : m_memberAgents){
     if(!agent->GetQueuedSubtasks().empty())
       return;
-		if(agent->GetTask())
+		if(agent->GetSubtask())
 			return;
   }
   for(auto agent : m_memberAgents){
@@ -459,8 +501,11 @@ IsClearToMoveOn(HandoffAgent* _agent){
       std::cout << "Partner: " << partner->GetRobot()->GetLabel() << std::endl;
       std::cout << "Partner task: " << partner->GetTask() << std::endl;
     }
+		// Checks that partner is not performing a different subtask
+		if(m_taskPlan->GetWholeTask(partner->GetSubtask()) != wholeTask)
+			return false;
     // Checks if the other agent is there to hand the task off to
-    if(!partner->GetTask() or partner->ReachedHandoff()){
+    if((!partner->GetTask() or partner->ReachedHandoff()) and !partner->IsPlanning()){
       partner->SetPerformingSubtask(true);
       partner->SetClearToMove(true);
       // Allows the first agent to move on from the IT
@@ -543,7 +588,7 @@ ConvertActionsToTasks(std::vector<std::shared_ptr<Action>> _actionPlan){
         boundingBox->SetRange(2,-1,1);
         auto startConstraint = std::unique_ptr<BoundaryConstraint>
           (new BoundaryConstraint(robots[0], std::move(boundingBox)));
-        
+
 				std::unique_ptr<CSpaceBoundingBox> boundingBox2(
             new CSpaceBoundingBox({goal->GetRange(0).Center(),goal->GetRange(1).Center(),0}));
         boundingBox2->SetRange(0,(goal->GetRange(0).Center()-radius/2),
@@ -619,12 +664,12 @@ TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan){
 
 void
 Coordinator::
-DistributeTaskPlan(TaskPlan* _taskPlan){
+DistributeTaskPlan(std::shared_ptr<TaskPlan> _taskPlan){
 	for(auto agent : m_memberAgents){
 		for(auto& task : _taskPlan->GetAgentTasks(agent)){
 			agent->AddSubtask(task);
 		}
-	}		
+	}
 }
 
 //TMPStrategyMethod*
@@ -644,4 +689,75 @@ void
 Coordinator::
 SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
   *m_solution->GetRoadmap(m_robot) = *_graph;
+}
+
+void
+Coordinator::
+GenerateRandomTasks(){
+  auto problem = m_robot->GetMPProblem();
+  auto env = problem->GetEnvironment();
+
+	m_library->SetSeed();
+
+  auto sampler = m_library->GetSampler("UniformRandomFree");
+  auto numAttempts = 1000000;
+
+  auto numNodes = 2;
+
+  size_t numTasks = 0;
+
+	std::set<Cfg> samples;
+
+  while(numTasks < m_numRandTasks) {
+    std::vector<Cfg> samplePoints;
+
+    // sample random start and goal
+    sampler->Sample(numNodes, numAttempts, env->GetBoundary(),
+        std::back_inserter(samplePoints));
+
+    if(samplePoints.size() < 2)
+      continue;
+
+
+		//Temporary for icra discrete stuff
+		auto startCfg = samplePoints[0];
+		int x = int(startCfg[0]+.5);
+		int y = int(startCfg[1]+.5);
+		startCfg.SetData({double(x),double(y),0});
+		auto goalCfg = samplePoints[1];
+		x = int(goalCfg[0]+.5);
+		y = int(goalCfg[1]+.5);
+		goalCfg.SetData({double(x),double(y),0});
+
+		if(startCfg == goalCfg)
+			continue;
+
+		if(samples.count(startCfg) or samples.count(goalCfg))
+			continue;
+
+		if(!env->GetBoundary()->InBoundary(startCfg) 
+		or !env->GetBoundary()->InBoundary(goalCfg))
+			continue;
+    std::cout << "Sampled task" << std::endl
+              << "Start: " << startCfg.PrettyPrint() << std::endl
+              << "Goal: " << goalCfg.PrettyPrint() << std::endl;
+
+    // create tasks from sample start and goal
+    std::unique_ptr<CSpaceConstraint> start =
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, startCfg));
+    std::unique_ptr<CSpaceConstraint> goal =
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, goalCfg));
+
+    std::unique_ptr<MPTask> task =
+      std::unique_ptr<MPTask>(new MPTask(m_robot));
+
+    task->SetStartConstraint(std::move(start));
+    task->AddGoalConstraint(std::move(goal));
+
+    problem->AddTask(std::move(task));
+
+    numTasks++;
+		samples.insert(startCfg);
+		samples.insert(goalCfg);
+  }
 }

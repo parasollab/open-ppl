@@ -2,6 +2,7 @@
 
 #include "Traits/TMPTraits.h"
 
+#include "Simulator/Simulation.h"
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
@@ -27,12 +28,14 @@ TMPLibrary(){
 												typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
 				m_stateGraphs = new StateGraphSet(this,
 												typename TMPTraits::StateGraphList(), "StateGraphs");
+				m_tmpTools = new TMPTools(this);
 }
 
 
 TMPLibrary::
 TMPLibrary(const std::string& _filename) : TMPLibrary() {
 				m_library = new MPLibrary(_filename);
+				m_library->SetSeed();
 				ReadXMLFile(_filename);
 }
 
@@ -56,7 +59,9 @@ Initialize(){
 	m_taskEvaluators->Initialize();
 	m_taskDecomposers->Initialize();
 	m_taskAllocators->Initialize();
+	this->GetTaskPlan()->GetStatClass()->StartClock("StateGraphConstruction");
 	m_stateGraphs->Initialize();
+	this->GetTaskPlan()->GetStatClass()->StopClock("StateGraphConstruction");
 }
 
 void
@@ -109,28 +114,32 @@ bool
 TMPLibrary::
 ParseChild(XMLNode& _node) {
 				if(_node.Name() == "TMPStrategies") {
-								m_tmpStrategies->ParseXML(_node);
-								return true;
+					m_tmpStrategies->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "PoIPlacementMethods") {
-								m_poiPlacementMethods->ParseXML(_node);
-								return true;
+					m_poiPlacementMethods->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "TaskEvaluators") {
-								m_taskEvaluators->ParseXML(_node);
-								return true;
+					m_taskEvaluators->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "TaskDecomposers") {
-								m_taskDecomposers->ParseXML(_node);
-								return true;
+					m_taskDecomposers->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "TaskAllocators") {
-								m_taskAllocators->ParseXML(_node);
-								return true;
+					m_taskAllocators->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "StateGraphs") {
-								m_stateGraphs->ParseXML(_node);
-								return true;
+					m_stateGraphs->ParseXML(_node);
+					return true;
+				}
+				else if(_node.Name() == "TMPTools") {
+					m_tmpTools->ParseXML(_node);
+					return true;
 				}
 				else if(_node.Name() == "Solver") {
 								const std::string label = _node.Read("tmpStrategyLabel", true, "",
@@ -213,7 +222,7 @@ AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
 
 /*---------------------------- Solution Accessors -----------------------------------*/
 
-TaskPlan*  
+std::shared_ptr<TaskPlan>
 TMPLibrary::
 GetTaskPlan(){
 				return m_taskPlan;
@@ -221,7 +230,7 @@ GetTaskPlan(){
 
 void
 TMPLibrary::
-SetTaskPlan(TaskPlan* _taskPlan){
+SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan){
 	m_taskPlan = _taskPlan;
 }
 
@@ -341,12 +350,11 @@ SetBaseFilename(const std::string& _s) noexcept {
 /*---------------------------- Solution Accessors ----------------------------*/
 
 /*--------------------------- Execution Interface ----------------------------*/
-
 void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								TaskPlan* _taskPlan,
+								std::shared_ptr<TaskPlan> _taskPlan,
 								Coordinator* _coordinator,
 								std::vector<HandoffAgent*> _team) {
 
@@ -364,8 +372,54 @@ Solve(MPProblem* _problem,
 void
 TMPLibrary::
 Solve(MPProblem* _problem, 
+								Decomposition* _decomp, 
+								std::shared_ptr<TaskPlan> _taskPlan,
+								Coordinator* _coordinator,
+								std::vector<HandoffAgent*> _team) {
+
+				m_problem = _problem;
+				m_taskPlan = _taskPlan;
+				m_taskPlan->SetCoordinator(_coordinator);
+				m_taskPlan->LoadTeam(_team);
+				m_taskPlan->CreateWholeTasks(_decomp);
+				for(auto task : _decomp->GetMotionTasks())
+					m_tasks.push_back(task->GetMotionTask());
+
+				for(auto& solver : m_solvers)
+								RunSolver(solver);
+}
+
+void
+TMPLibrary::
+Solve(MPProblem* _problem, 
+								Decomposition* _decomp, 
+								std::shared_ptr<TaskPlan> _taskPlan,
+								Coordinator* _coordinator,
+								std::vector<Robot*> _team) {
+
+				m_problem = _problem;
+				m_taskPlan = _taskPlan;
+				m_taskPlan->SetProblem(_problem);
+				m_taskPlan->SetCoordinator(_coordinator);
+				m_taskPlan->LoadTeam(_team);
+				m_taskPlan->CreateWholeTasks(_decomp);
+				
+				
+				auto solution = new MPSolution(_coordinator->GetRobot());
+ 	 			m_library->SetMPSolution(solution);
+
+				for(auto task : _decomp->GetMotionTasks())
+					m_tasks.push_back(task->GetMotionTask());
+
+				for(auto& solver : m_solvers)
+								RunSolver(solver);
+}
+
+void
+TMPLibrary::
+Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								TaskPlan* _taskPlan) {
+								std::shared_ptr<TaskPlan> _taskPlan) {
 
 				m_problem = _problem;
 				m_tasks = _tasks;
@@ -383,11 +437,9 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks) {
 
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
-								m_taskPlan = new TaskPlan();
+								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
 
 								RunSolver(solver);
-
-								delete m_taskPlan;
 				}
 
 				m_taskPlan = nullptr;
@@ -401,11 +453,9 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
 
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
-								m_taskPlan = new TaskPlan();
+								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
 
 								RunSolver(solver);
-
-								delete m_taskPlan;
 				}
 
 				m_taskPlan = nullptr;
@@ -415,7 +465,7 @@ void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								TaskPlan* _taskPlan,
+								std::shared_ptr<TaskPlan> _taskPlan,
 								const std::string& _label, const long _seed,
 								const std::string& _baseFilename) {
 

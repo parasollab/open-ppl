@@ -40,8 +40,11 @@ class CombinedRoadmap : public StateGraph {
 		/// robot-type roadmaps into robots of the respective type.
 		virtual void LoadStateGraph() override;
 
+		std::shared_ptr<GraphType> GetCapabilityRoadmap(HandoffAgent* _agent);
+
     ///@}
 
+		bool m_discrete{false}; ///< Flag for operating in a discrete gride world
   protected:
 
 		///@name Helpers
@@ -56,8 +59,10 @@ class CombinedRoadmap : public StateGraph {
 		///@{
 
 		virtual void ConstructGraph() override;
+		void ConstructDiscreteRoadmap();
 
 		void GenerateITs();
+		void GenerateDiscreteITs();
 
 		void FindITLocations(InteractionTemplate* _it);
 
@@ -88,6 +93,7 @@ class CombinedRoadmap : public StateGraph {
     std::unique_ptr<Environment> m_interactionEnvironment;    ///< The handoff template environment.
 
 		std::unique_ptr<MPSolution> m_solution;
+
 		///@}
 
 };

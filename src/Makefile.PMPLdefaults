@@ -425,6 +425,7 @@ TASK_SRCS := \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
   TMPLibrary/Actions/StartTask.cpp \
+  TMPLibrary/OccupiedInterval.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
@@ -432,23 +433,32 @@ TASK_SRCS := \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/DiscreteIntervalGraph.cpp \
   TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
   TMPLibrary/TaskAllocators/AuctionMethod.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
+  TMPLibrary/TaskAllocators/TCBSAllocator.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
+  TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/TaskCBSPlanner.cpp \
+  TMPLibrary/TaskEvaluators/TCBS.cpp \
+  TMPLibrary/TaskEvaluators/TMPCBS.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
-  TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
+	TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
+  TMPLibrary/TMPTools/DiscreteMAD.cpp \
+  TMPLibrary/TMPTools/MultiAgentDijkstra.cpp \
+  TMPLibrary/TMPTools/TMPTools.cpp \
   TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
@@ -458,6 +468,7 @@ TASK_SRCS := \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
 
 ################################################################################
@@ -580,12 +591,28 @@ PMPL_SRCS := \
   MPProblem/Robot/Robot.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp \
   MPProblem/RobotGroup/RobotGroup.cpp \
+  MPProblem/TaskHierarchy/Decomposition.cpp \
+  MPProblem/TaskHierarchy/SemanticTask.cpp \
+  MPProblem/TaskHierarchy/SubtaskFlow.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
+	Utilities/GeneralCBS/AllocationValidation.cpp \
+	Utilities/GeneralCBS/BypassValidation.cpp \
+	Utilities/GeneralCBS/ComposeValidation.cpp \
+	Utilities/GeneralCBS/GeneralCBS.cpp \
+	Utilities/GeneralCBS/LowLevelSearch.cpp \
+	Utilities/GeneralCBS/MetaTMPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/MotionValidation.cpp \
+	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/PrecedenceLowLevelSearch.cpp \
+	Utilities/GeneralCBS/PrioritizedConflictValidation.cpp \
+	Utilities/GeneralCBS/TCBSValidation.cpp \
+	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/Validation.cpp \
   Utilities/IOUtils.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \

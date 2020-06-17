@@ -26,10 +26,11 @@ main(int _argc, char** _argv) {
   std::string xmlFile = _argv[2];
 
   // Parse the Problem node into an MPProblem object.
-  //MPProblem* problem = new MPProblem(xmlFile);
+  MPProblem* problem = new MPProblem(xmlFile);
 
   // Parse the Library node into an MPLibrary object.
   TMPLibrary* ppl = new TMPLibrary(xmlFile);
+	ppl->SetMPProblem(problem);
 	
 	PlanningServer server(ppl);
 

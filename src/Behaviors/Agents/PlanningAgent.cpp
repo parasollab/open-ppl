@@ -61,7 +61,10 @@ Initialize() {
   // Initialize a clock to track this agent's total planning time. This is done
   // to ensure that the stat's clock map isn't adding elements across threads.
   const std::string clockName = "Planning::" + m_robot->GetLabel();
-  Simulation::GetStatClass()->ClearClock(clockName);
+
+	if(Simulation::Get())
+  	Simulation::GetStatClass()->ClearClock(clockName);
+	//TODO::Put other stat class accessors here or better yet - create a different stat holder
 }
 
 

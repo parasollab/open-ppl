@@ -78,6 +78,9 @@ class ITConnector {
     /// Checks the capability skeleton of the corresponding type to see if the
     /// two cfgs are in connected free space.
     bool InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2);
+
+		void DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
+											std::vector<Cfg*> _cfgs);
     ///@}
     ///@name Member Variables
     ///@{

@@ -5,13 +5,14 @@
 #include <iostream>
 #include <vector>
 
+#include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 
 #include "Transformation.h"
 #include "Vector.h"
 
-class Cfg;
+//class Cfg;
 class Robot;
 class RobotGroup;
 

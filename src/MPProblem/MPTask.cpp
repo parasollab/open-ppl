@@ -33,6 +33,16 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
   std::transform(m_capability.begin(), m_capability.end(), m_capability.begin(),
       ::tolower);
 
+	m_releaseWindow.first = _node.Read("releaseStart",false,0.0,0.0,MAX_DBL,
+			"Indicates the time the task is released and can be initiated.");
+	m_releaseWindow.second = _node.Read("releaseEnd",false,MAX_DBL,0.0,MAX_DBL,
+			"Indicates the final time the task can be initiated.");
+
+	m_deadlineWindow.first = _node.Read("deadlineStart",false,0.0,0.0,MAX_DBL,
+			"Indicates the maximum time the task can be completed.");
+	m_deadlineWindow.second = _node.Read("deadlineEnd",false,MAX_DBL,0.0,MAX_DBL,
+			"Indicates the maximum time the task can be completed.");
+
   // Parse constraints.
   for(auto& child : _node) {
     if(child.Name() == "StartConstraints") {
@@ -249,6 +259,29 @@ double
 MPTask::
 GetEstimatedStartTime() const noexcept {
   return m_startTime;
+}
+
+void 
+MPTask::
+SetReleaseWindow(const std::pair<double,double> _release) noexcept {
+	m_releaseWindow = _release;
+}
+		
+void
+MPTask::SetDeadlineWindow(const std::pair<double,double> _deadline) noexcept {
+	m_deadlineWindow = _deadline;
+}
+		
+std::pair<double,double>
+MPTask::
+GetReleaseWindow() const noexcept {
+	return m_releaseWindow;
+}
+		
+std::pair<double,double>
+MPTask::
+GetDeadlineWindow() const noexcept {
+	return m_deadlineWindow;
 }
 
 /*---------------------------- Constraint Evaluation -------------------------*/

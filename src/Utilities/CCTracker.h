@@ -126,6 +126,10 @@ class CCTracker final {
     /// Install hooks in the roadmap.
     void RemoveHooks() noexcept;
 
+    /// Recompute all CCs from scratch. Complexity is linear in the size of the
+    /// roadmap (O(V + E)).
+    void RecomputeCCs() noexcept;
+
     ///@}
     ///@name Query Functions
     ///@{
@@ -214,10 +218,6 @@ class CCTracker final {
 
     /// @overload
     VertexSet* FindCC(const VID _vid) noexcept;
-
-    /// Recompute all CCs from scratch. Complexity is linear in the size of the
-    /// roadmap (O(V + E)).
-    void RecomputeCCs() noexcept;
 
     /// Run a breadth-first search on the roadmap from a particular start node.
     /// @param _start The start node.

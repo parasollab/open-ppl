@@ -8,6 +8,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ConfigurationSpace/Cfg.h"
+//class Cfg;
+class Decomposition;
 class DynamicObstacle;
 class InteractionInformation;
 class Environment;
@@ -104,6 +107,10 @@ class MPProblem final
     /// Get all robot groups in this problem.
     const std::vector<std::unique_ptr<RobotGroup>>& GetRobotGroups() const noexcept;
 
+		Cfg GetInitialCfg(Robot* _r);
+
+		void SetInitialCfg(Robot* _r, Cfg _cfg);
+
     ///@}
     ///@name Task Accessors
     ///@{
@@ -129,6 +136,10 @@ class MPProblem final
     /// @param _task The task to reassign.
     /// @param _newOwner The new robot assigned to _task.
     void ReassignTask(MPTask* const _task, Robot* const _newOwner);
+
+		void AddDecomposition(Robot* _coordinator, std::unique_ptr<Decomposition>&& _decomp);
+
+		const std::vector<std::unique_ptr<Decomposition>>& GetDecompositions(Robot* _coordinator);
 
     ///@}
     ///@name Dynamic Obstacle Accessors
@@ -200,6 +211,8 @@ class MPProblem final
     std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot groups.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
 
+		std::unordered_map<Robot*,Cfg> m_initialCfgs;  ///< Map of robot initial locations.
+
     /// The dynamic obstacles in our problem.
     std::vector<DynamicObstacle> m_dynamicObstacles;
 
@@ -213,6 +226,8 @@ class MPProblem final
 
     // Maps task labels to tasks.
     std::unordered_map<std::string, MPTask*> m_taskLabelMap;
+
+		std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>> m_taskDecompositions;
 
     ///@}
     ///@name Files

@@ -16,21 +16,14 @@
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
-/*
-#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
-#include "TMPLibrary/StateGraphs/StateGraph.h"
-#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
-#include "TMPLibrary/TaskPlan.h"
-#include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
-#include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
-#include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
-#include "TMPLibrary/TMPTools/TMPTools.h"
-*/
 #include <algorithm>
 #include <atomic>
 #include <unordered_map>
 
+//TMPLibrary TODOs::
+//Save the ITs in a single location so they only need to be constructed once
 
+class Decomposition;
 class PoIPlacementMethod;
 class StateGraph;
 class TaskAllocatorMethod;
@@ -181,9 +174,9 @@ class TMPLibrary {
     ///@name Solution Accessors
     ///@{
 
-    TaskPlan* GetTaskPlan();
+    std::shared_ptr<TaskPlan> GetTaskPlan();
 
-		void SetTaskPlan(TaskPlan* _taskPlan);
+		void SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan);
 
     StateGraphPointer GetStateGraph(const std::string& _l);
 
@@ -194,17 +187,23 @@ class TMPLibrary {
 		///@{
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks,
-							 TaskPlan* _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
+							 std::shared_ptr<TaskPlan> _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
+
+		void Solve(MPProblem* _problem, Decomposition* _decomp, std::shared_ptr<TaskPlan> _taskPlan,
+								Coordinator* _coordinator, std::vector<HandoffAgent*> _team); 
+
+		void Solve(MPProblem* _problem, Decomposition* _decomp, std::shared_ptr<TaskPlan> _taskPlan,
+								Coordinator* _coordinator, std::vector<Robot*> _team); 
 		
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
-	  					 TaskPlan* _taskPlan);
+	  					 std::shared_ptr<TaskPlan> _taskPlan);
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks);
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks);
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
-							 TaskPlan* _taskPlan, const std::string& _label, const long _seed,
+							 std::shared_ptr<TaskPlan> _taskPlan, const std::string& _label, const long _seed,
     					 const std::string& _baseFilename);
 
 		void InitializeMPProblem(MPProblem* _problem);
@@ -267,7 +266,7 @@ class TMPLibrary {
   	///@name Solution
   	///@{
 
-  	TaskPlan* m_taskPlan;   ///< Current task plan
+  	std::shared_ptr<TaskPlan> m_taskPlan;   ///< Current task plan
 
   	///@}
 };

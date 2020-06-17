@@ -58,17 +58,8 @@ GetTranslatedPositions(){
   }
   for(auto center : m_information->GetTemplateLocations()){
     for(auto cfg : m_handoffCfgs){
-      double x = cfg[0];
-      double y = cfg[1];
-      double theta = center[2]*PI;
-
-      double newX = x*cos(theta) - y*sin(theta);
-      double newY = y*sin(theta) + y*cos(theta);
-      double oldTheta = cfg[2];
-
       Cfg newCfg = cfg;
-      newCfg.SetLinearPosition({newX, newY, oldTheta});
-      newCfg += center;
+      newCfg.TransformCfg(center.GetBaseTransformation());
       m_translatedInteractionPositions.push_back(newCfg);
     }
   }
@@ -85,17 +76,8 @@ GetTransformedPositionPairs(){
   for(auto center : m_information->GetTemplateLocations()){
     std::vector<Cfg> positions;
     for(auto cfg : m_handoffCfgs){
-      double x = cfg[0];
-      double y = cfg[1];
-      double theta = center[2];
-
-      double newX = x*cos(theta) - y*sin(theta);
-      double newY = y*sin(theta) + y*cos(theta);
-      double oldTheta = cfg[2];
-
       Cfg newCfg = cfg;
-      newCfg.SetLinearPosition({newX, newY, oldTheta});
-      newCfg += center;
+      newCfg.TransformCfg(center.GetBaseTransformation());
       positions.push_back(newCfg);
     }
     m_transformedInteractionPositionPairs.push_back(std::pair<Cfg,Cfg>(positions[0],positions[1]));
@@ -114,17 +96,8 @@ GetTranslatedPaths(){
     for(auto& path : m_interactionPaths){
       std::vector<Cfg> translatedPath;
       for(auto cfg : path){
-        double x = cfg[0];
-        double y = cfg[1];
-        double theta = center[2]*PI;
-
-        double newX = x*cos(theta) - y*sin(theta);
-        double newY = y*sin(theta) + y*cos(theta);
-        double oldTheta = cfg[2];
-
         Cfg newCfg = cfg;
-        newCfg.SetLinearPosition({newX, newY, oldTheta});
-        newCfg += center;
+        newCfg.TransformCfg(center.GetBaseTransformation());
         translatedPath.push_back(newCfg);
       }
       m_translatedInteractionPaths.push_back(translatedPath);
@@ -249,7 +222,8 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
         }
         weight.SetWeight(cost);
       }*/
-      weight.SetWeight(m_information->GetInteractionWeight());
+			double interactionWeight = m_information->GetInteractionWeight();
+      weight.SetWeight(interactionWeight);
       m_connectedRoadmap->AddEdge(startVID, endVID, weight);
       m_connectingEdge = std::pair<size_t,size_t>(startVID, endVID);
     }

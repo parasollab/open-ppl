@@ -139,6 +139,19 @@ class RoadmapGraph : public
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept;
 
+    /// Add a new unique vertex to the graph with a designated descriptor. If it
+    /// already exists or the descriptor is already in use, a warning will be
+    /// printed to cerr.
+    /// @param _vid The desired descriptor.
+    /// @param _v The vertex property.
+    /// @return A new VID of the added vertex, or the VID of the existing vertex.
+    //virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
+
+    /// Add a vertex to the graph without checking for uniqueness.
+    /// @param _v The vertex to add.
+    /// @return A new VID of the added vertex, or the VID of the existing vertex.
+    virtual VID AddDuplicateVertex(const Vertex& _v) noexcept;
+
     /// Remove a vertex (and attached edges) from the graph if it exists.
     /// @param _v The vertex descriptor.
     virtual void DeleteVertex(const VID _v) noexcept;
@@ -465,8 +478,15 @@ operator=(const RoadmapGraph& _r) {
   if(_r.m_ccTracker) {
     m_ccTracker.reset(new CCTrackerType(*_r.m_ccTracker));
     m_ccTracker->SetRoadmap(this);
-    m_ccTracker->InstallHooks();
+		// Old CC tracker hooks are reinstalled in first call.
+		// These need to be cleared and the new CC tracker hooks installed.
+		ClearHooks();
+    //m_ccTracker->InstallHooks();
   }
+	// Old ccTracker hooks are not executed on copied vertices and edges.
+	else if(m_ccTracker) {
+		m_ccTracker->RecomputeCCs();
+	}
 
   return *this;
 }
@@ -566,6 +586,20 @@ AddVertex(const Vertex& _v) noexcept {
   return vid;
 }
 
+template <typename Vertex, typename Edge>
+typename RoadmapGraph<Vertex, Edge>::VID
+RoadmapGraph<Vertex, Edge>::
+AddDuplicateVertex(const Vertex& _v) noexcept {
+  
+	const VID vid = this->add_vertex(_v);
+  ++m_timestamp;
+
+  // Execute post-add hooks and update vizmo debug.
+  ExecuteAddVertexHooks(this->find_vertex(vid));
+  VDAddNode(_v);
+
+  return vid;
+}
 
 template <typename Vertex, typename Edge>
 void

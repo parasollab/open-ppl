@@ -77,8 +77,6 @@ bool
 Communicator::
 CreatePublisher(std::string _label, QueryHandler _queryHandler) {
 
-	std::cout << _queryHandler("test") << std::endl;
-
 	char hostname[128];
 	gethostname(hostname,123);
 	std::string host(hostname);
@@ -92,8 +90,6 @@ CreatePublisher(std::string _label, QueryHandler _queryHandler) {
 
 	Publisher pub(_label,_queryHandler);
 	m_publishers[_label] = pub;
-
-	std::cout << pub.HandleQuery("test") << std::endl;
 
 	m_publishers[_label].SetQueryHandler(_queryHandler);
 
@@ -223,11 +219,11 @@ Listen() {
 				int sd = clientSockets[i];
 
 				if(FD_ISSET(sd, &readfds)) {
-					char buffer[1024];
-  				bzero(buffer,1024);
+					char buffer[4096];
+  				bzero(buffer,4096);
 
 					//Check if it was for closing, also read the incoming message
-					int valread = read(sd, buffer, 1024);
+					int valread = read(sd, buffer, 4096);
 					if(valread == 0) {
 						// Somebody disconnected, get details and print
 						getpeername(sd, (struct sockaddr*)&address, (socklen_t*)&addrlen);

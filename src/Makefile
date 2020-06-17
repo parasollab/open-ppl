@@ -16,7 +16,7 @@ asan     ?= 0
 
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
-vizmo_map := #-DVIZMO_MAP
+vizmo_map := -DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
 group_map := #-DGROUP_MAP
@@ -140,7 +140,9 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWAR
 	  $(LIBS) -o $@
 
 # Build the server.
-planner: $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+planner: $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
+     | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
+
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
 

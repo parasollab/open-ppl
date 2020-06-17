@@ -3,6 +3,8 @@
 
 #include "nonstd/status.h"
 
+#include "Utilities/MPUtils.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -138,6 +140,12 @@ class MPTask final {
     double GetEstimatedStartTime() const noexcept;
     double GetEstimatedCompletionTime() const noexcept;
 
+		void SetReleaseWindow(const std::pair<double,double> _release) noexcept;
+		void SetDeadlineWindow(const std::pair<double,double> _deadline) noexcept;
+
+		std::pair<double,double> GetReleaseWindow() const noexcept;
+		std::pair<double,double> GetDeadlineWindow() const noexcept;
+
     ///@}
     ///@name Constraint Evaluation
     ///@{
@@ -188,6 +196,11 @@ class MPTask final {
     double m_startTime{0};   ///< Estimated start time of task
     double m_finishTime{0};  ///< Estimated time of arrival at goal
 
+		///< Indicates time the task can be started.
+		std::pair<double,double> m_releaseWindow;
+
+		///< Indicates the time the task must be completed by.
+		std::pair<double,double> m_deadlineWindow;
     ///@}
 
 };

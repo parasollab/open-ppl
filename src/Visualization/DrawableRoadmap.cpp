@@ -59,7 +59,8 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
       }
   };
 
-  main_window::get()->add_key_mapping(m_name, std::move(fn));
+  if(main_window::get())
+  	main_window::get()->add_key_mapping(m_name, std::move(fn));
 }
 
 
@@ -128,14 +129,14 @@ AddEdge(EI _ei) {
 void
 DrawableRoadmap::
 DeleteVertex(VI _vi) {
-  throw NotImplementedException(WHERE);
+  //throw NotImplementedException(WHERE);
 }
 
 
 void
 DrawableRoadmap::
 DeleteEdge(EI _ei) {
-  throw NotImplementedException(WHERE);
+  //throw NotImplementedException(WHERE);
 }
 
 

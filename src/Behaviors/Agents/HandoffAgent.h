@@ -2,7 +2,7 @@
 #define HANDOFF_AGENT_H_
 
 #include "PathFollowingAgent.h"
-
+//#include "DummyAgent.h"
 
 class Coordinator;
 class TMPLibrary;
@@ -54,6 +54,8 @@ class HandoffAgent : public PathFollowingAgent {
     /// m_cost
     double GetPotentialCost() const;
 
+		void SavePotentialPath();
+
     /// Returns the projected time of completion of current path
     double GetTaskTime() const;
 
@@ -87,6 +89,8 @@ class HandoffAgent : public PathFollowingAgent {
     /// True means continue performing currrent task.
     virtual bool EvaluateTask() override;
 
+    virtual void Step(const double _dt) override;
+
     /// Returns agent collision priority
     size_t GetPriority();
 
@@ -99,6 +103,10 @@ class HandoffAgent : public PathFollowingAgent {
     void SetClearToMove(bool _clear);
 
     void CheckInteractionPath();
+
+		/// Returns the current subtask the agent is performing or 
+		/// setting up to perform.
+		std::shared_ptr<MPTask> GetSubtask();
     ///@}
   protected:
 
@@ -121,6 +129,9 @@ class HandoffAgent : public PathFollowingAgent {
 
     virtual void ExecuteControls(const ControlSet& _c, const size_t _steps)
         override;
+
+		/// Sends the robot back to it's starting location
+		void GoHome();
 
     ///@}
     ///@name Internal State
@@ -154,6 +165,9 @@ class HandoffAgent : public PathFollowingAgent {
     std::vector<size_t> m_simulatorGraphIDs;
 
     bool m_generatingCost{false}; ///< Flag so work function knows which query method to use.
+
+		bool m_returningHome{false}; ///< Flag that indicates if the robot is returning/returned 
+																 ///< it's initial location to get out of the way.
     ///@}
 
 };
