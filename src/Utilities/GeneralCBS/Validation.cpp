@@ -38,7 +38,7 @@ CreatePostAssignment() {
 	for(auto agent : team) {
 		auto mp = problem->GetTasks(agent->GetRobot())[0];
 		auto task = new SemanticTask();
-		auto child = new SemanticTask(task,mp,false);
+		auto child = new SemanticTask(task,nullptr,mp,false);
 
 		task->AddSubtask(child);
 

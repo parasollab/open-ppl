@@ -66,7 +66,7 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 	if(m_parent) {
 		m_parent->AddSubtask(this);
 	}
-	if(_decomp) {
+	if(_decomp and _simpleTask.get()) {
 		_decomp->AddMotionTask(this);
 	}
 }

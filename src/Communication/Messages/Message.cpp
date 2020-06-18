@@ -248,6 +248,8 @@ std::string
 SemanticTaskToMessage(SemanticTask* _task) {
 	std::string msg = "label="
 									+ _task->GetLabel()
+									+ ",parent="
+									+ (_task->GetParent() ? _task->GetParent()->GetLabel() : "")
 									+ ",subtask_relation=";
 	switch(_task->GetSubtaskRelation()) {
 		case SemanticTask::SubtaskRelation::AND: msg += "AND,";

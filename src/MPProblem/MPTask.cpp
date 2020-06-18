@@ -14,6 +14,8 @@
 
 MPTask::
 MPTask(Robot* const _robot) : m_robot(_robot) {
+	m_releaseWindow = std::make_pair(0,MAX_DBL);
+	m_deadlineWindow = std::make_pair(0,MAX_DBL);
 }
 
 

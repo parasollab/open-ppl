@@ -15,6 +15,17 @@ bool
 TMPLowLevelSearch::
 UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 
+	//I think this code has become antiquated with hiearchcial decomposition
+	//This bit is just to make stuff work for simple example durin gmessage system implementation.
+	if(!_task->GetMotionTask()) {
+		bool success = true;
+		for(auto sub : _task->GetSubtasks()) {
+			if(!UpdateSolution(_node,sub))
+				success = false;
+		}
+		return success;
+	}
+
 	auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 	auto query = sg->AddTaskToGraph(m_tmpLibrary->GetTaskPlan()->GetWholeTask(_task));
 
