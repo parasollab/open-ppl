@@ -122,6 +122,12 @@ GetTaskPlan() const noexcept {
   return m_tmpLibrary->GetTaskPlan();
 }
 
+Plan*
+TMPBaseObject::
+GetPlan() const noexcept {
+	return m_tmpLibrary->GetPlan();
+}
+
 TMPBaseObject::StateGraphPointer
 TMPBaseObject::
 GetStateGraph(const std::string& _label) const noexcept {

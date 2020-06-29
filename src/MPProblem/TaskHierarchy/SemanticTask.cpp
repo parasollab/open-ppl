@@ -76,6 +76,20 @@ SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTa
 						 bool _decomposable) : m_parent(_parent), m_simpleTask(_simpleTask), m_decomposable(_decomposable) {
 	if(m_parent) {
 		m_parent->AddSubtask(this);
+		m_label = _parent->GetLabel() + "_" + std::to_string(_parent->GetSubtasks().size());
+	}
+	if(_decomp) {
+		_decomp->AddMotionTask(this);
+	}
+}
+
+SemanticTask::
+SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTask> _simpleTask,
+						 bool _decomposable) : m_label(_label), m_parent(_parent), m_simpleTask(_simpleTask), m_decomposable(_decomposable) {
+	if(m_parent) {
+		m_parent->AddSubtask(this);
+		if(_label == "")
+			m_label = _parent->GetLabel() + "_" + std::to_string(_parent->GetSubtasks().size());
 	}
 	if(_decomp) {
 		_decomp->AddMotionTask(this);

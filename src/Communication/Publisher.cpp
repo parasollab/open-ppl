@@ -38,7 +38,7 @@ Write(std::string _msg) {
 	return true;
 }
 	
-std::string
+std::vector<std::string>
 Publisher::
 HandleQuery(std::string _msg) {
 	return m_queryHandler(_msg);

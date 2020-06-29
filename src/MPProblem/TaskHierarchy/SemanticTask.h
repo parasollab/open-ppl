@@ -47,6 +47,9 @@ class SemanticTask {
 		SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTask> _simpleTask,
 								 bool _decomposable=true);
 
+		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
+								 std::shared_ptr<MPTask> _simpleTask, bool _decomposable=true);
+
 		~SemanticTask();
 
 		///@}

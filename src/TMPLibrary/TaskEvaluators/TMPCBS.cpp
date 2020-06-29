@@ -147,6 +147,8 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 			}
 		}
 	}
+
+	ConvertCBSSolutionToTaskPlan(solution);
 	
 	
 	//this->GetTaskPlan()->GetStatClass()->SetStat("TotalNodes", total);
@@ -1928,4 +1930,54 @@ CreateDecomposition(std::vector<WholeTask*> _wholeTasks) {
 	}
 
 	return decomp;
+}
+
+void
+TMPCBS::
+ConvertCBSSolutionToTaskPlan(const CBSSolution& _solution) {
+	auto plan = this->GetPlan();
+
+	/*for(auto assignments : _solution.m_agentAssignments) {
+		for(auto assign : assignments.second) {
+			plan->AddAllocation(assignments.first->GetRobot(),assign.m_task);
+			plan->SetTaskSolution(assign.m_task,ConvertAssignmentToTaskSolution(assign));
+		}
+	}*/
+	for(auto tp : _solution.m_taskPlans) {
+		if(!_solution.m_solutionTasks.count(tp.first))
+			continue;
+		for(auto assign : tp.second) {
+			plan->AddAllocation(assign.m_agent->GetRobot(),assign.m_task);
+			plan->SetTaskSolution(assign.m_task,ConvertAssignmentToTaskSolution(assign));
+		}
+	}
+}
+
+std::shared_ptr<TaskSolution>
+TMPCBS::
+ConvertAssignmentToTaskSolution(Assignment& _assign) {
+	auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(_assign.m_task));
+
+	sol->SetRobot(_assign.m_agent->GetRobot());
+
+	//TODO::Configure MPSolution
+	MPSolution* mp = new MPSolution(_assign.m_agent->GetRobot());
+	auto sg = static_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+	auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(_assign.m_agent));
+	mp->SetRoadmap(_assign.m_agent->GetRobot(),roadmap.get());
+
+	auto vids = _assign.m_setupPath;
+	for(auto& vid : _assign.m_execPath) {
+		vids.push_back(vid);
+	}
+
+	auto path = new PathType<MPTraits<Cfg>>(roadmap.get());
+	(*path) += vids;
+	mp->SetPath(_assign.m_agent->GetRobot(),path);
+
+	sol->SetMotionSolution(mp);
+
+	sol->SetStartTime(_assign.m_setupStartTime);
+
+	return sol;
 }

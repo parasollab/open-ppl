@@ -24,6 +24,7 @@
 //Save the ITs in a single location so they only need to be constructed once
 
 class Decomposition;
+class Plan;
 class PoIPlacementMethod;
 class StateGraph;
 class TaskAllocatorMethod;
@@ -178,6 +179,10 @@ class TMPLibrary {
 
 		void SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan);
 
+		Plan* GetPlan();
+
+		void SetPlan(Plan* _plan);
+
     StateGraphPointer GetStateGraph(const std::string& _l);
 
     void AddStateGraph(StateGraphPointer _sg, const std::string& _l);
@@ -193,7 +198,7 @@ class TMPLibrary {
 								Coordinator* _coordinator, std::vector<HandoffAgent*> _team); 
 
 		void Solve(MPProblem* _problem, Decomposition* _decomp, std::shared_ptr<TaskPlan> _taskPlan,
-								Coordinator* _coordinator, std::vector<Robot*> _team); 
+								Plan* _plan, Coordinator* _coordinator, std::vector<Robot*> _team); 
 		
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks, 
 	  					 std::shared_ptr<TaskPlan> _taskPlan);
@@ -267,6 +272,8 @@ class TMPLibrary {
   	///@{
 
   	std::shared_ptr<TaskPlan> m_taskPlan;   ///< Current task plan
+
+		Plan* m_plan;
 
   	///@}
 };

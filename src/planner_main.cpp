@@ -37,7 +37,7 @@ main(int _argc, char** _argv) {
 	Communicator comm(8888,8889);
 	comm.RegisterWithMaster(8888,"localhost");
 
-	std::function<std::string(std::string _msg)> queryHandler = [server](std::string _msg) {
+	std::function<std::vector<std::string>(std::string _msg)> queryHandler = [server](std::string _msg) {
 		return server.Solve(_msg);
 	};
 

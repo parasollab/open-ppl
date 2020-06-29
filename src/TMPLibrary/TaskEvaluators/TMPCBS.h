@@ -3,10 +3,15 @@
 
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
+#include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/Solution/TaskSolution.h"
+
 #include "Utilities/CBS/DiscreteAgentAllocation.h"
 #include "Utilities/CBS/DiscreteMotionConflict.h"
 #include "Utilities/CBS/NewCBSTree.h"
 #include "Utilities/CBS/TMPCBSNode.h"
+
+#include "Utilities/GeneralCBS/GeneralCBS.h"
 
 /************************************************************************************/
 //
@@ -80,6 +85,10 @@ class TMPCBS : public TaskEvaluatorMethod {
 		void PatchSetupPaths(Node* _node);
 
 		Decomposition* CreateDecomposition(std::vector<WholeTask*> _wholeTasks);
+
+		void ConvertCBSSolutionToTaskPlan(const CBSSolution& _solution);
+
+		std::shared_ptr<TaskSolution> ConvertAssignmentToTaskSolution(Assignment& _assign);
 
 		///@}
 		///@name Internal State

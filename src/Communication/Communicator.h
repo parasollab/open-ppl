@@ -12,7 +12,7 @@ class Communicator {
 		///@name LocalTypes
 		///@{
 
-		typedef std::function<std::string(std::string _msg)> QueryHandler;
+		typedef std::function<std::vector<std::string>(std::string _msg)> QueryHandler;
 		struct HostInfo {
 			std::string channelName;
 			std::string hostName;

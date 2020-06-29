@@ -431,6 +431,8 @@ TASK_SRCS := \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
+	TMPLibrary/Solution/Plan.cpp \
+	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
   TMPLibrary/StateGraphs/DiscreteIntervalGraph.cpp \

@@ -11,7 +11,7 @@ class Publisher {
 		///@name Local Types
 		///@{
 
-		typedef std::function<std::string(std::string _msg)> QueryHandler;
+		typedef std::function<std::vector<std::string>(std::string _msg)> QueryHandler;
 
 		///@}
 		///@name Construction
@@ -28,7 +28,7 @@ class Publisher {
 
 		bool Write(std::string _msg);
 
-		std::string HandleQuery(std::string _msg);
+		std::vector<std::string> HandleQuery(std::string _msg);
 
 		///@}
 		///@name Accessors

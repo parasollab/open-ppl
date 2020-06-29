@@ -275,8 +275,15 @@ Query(std::string _channel, std::string _msg) {
 	std::string query = "query/"
 										+ _channel + "/"
 										+ _msg;
-	SendMessage(query,sub.GetSocket());
-	std::string response = ReceiveMessage(sub.GetSocket());
+	SendMessage(query,sub.GetSocket(),false);
+	std::string response;
+	while(true) {
+		std::string msg = ReceiveMessage(sub.GetSocket());
+		if(msg == "DONE")
+			break;
+		response += msg;
+		SendMessage(msg,sub.GetSocket(),false);
+	}
 
 	std::cout << response << std::endl;
 	return response;
@@ -445,9 +452,12 @@ HandleQuery(std::string _msg, int _client) {
 	getline(ss,channel,'/');
 	getline(ss,channel,'/');
 	Publisher& pub = m_publishers[channel];
-	std::string response = pub.HandleQuery(_msg);
+	std::vector<std::string> response = pub.HandleQuery(_msg);
 
-	SendMessage(response,_client,false);
+	for(auto r : response) {
+		SendMessage(r,_client,true);
+	}
+	SendMessage("DONE",_client,false);
 }
 
 /*-------------------------------- Master Specific Functions ----------------------------*/

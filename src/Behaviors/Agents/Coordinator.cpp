@@ -173,19 +173,22 @@ Initialize() {
 
 		std::string query = RobotTeamToMessage(team,this->GetRobot()) 
 											+ DecompositionToMessage(problem->GetDecompositions(m_robot)[0].get());
-		std::cout << m_communicator.Query("ppl",query) << std::endl;
+		auto response = m_communicator.Query("ppl",query);
+		std::cout << response << std::endl;
+		m_plan = std::shared_ptr<Plan>(MessageToPlan(response,problem->GetDecompositions(m_robot)[0].get(),problem));
+		DistributePlan(m_plan.get());
 	}
 	//else use tmplibrary to get task assignments
 	else {
 		m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
   	m_tmpLibrary->Solve(problem, problem->GetDecompositions(m_robot)[0].get(), m_taskPlan, this, m_memberAgents);
+  	DistributeTaskPlan(m_taskPlan);
 	}
   if(!m_runSimulator) {
 		Simulation::Get()->PrintStatFile();
   	exit(0);
 	}
 
-  DistributeTaskPlan(m_taskPlan);
 
   if(m_debug){
     std::cout << "OUTPUTTING AGENT TASK ASSIGNMENTS" << std::endl;
@@ -196,16 +199,17 @@ Initialize() {
         std::cout << task << std::endl;
       }
     }
-
-    std::cout << "Looking at whole tasks now" << std::endl;
-    for(auto& wholeTask : m_tmpLibrary->GetTaskPlan()->GetWholeTasks()){
-      if(m_debug){
-        std::cout << "New whole task" << std::endl;
-      }
-      for(auto task : wholeTask->m_subtasks){
-        std::cout << task << std::endl;
-      }
-    }
+		if(m_tmpLibrary->GetTaskPlan()) {
+    	std::cout << "Looking at whole tasks now" << std::endl;
+    	for(auto& wholeTask : m_tmpLibrary->GetTaskPlan()->GetWholeTasks()){
+      	if(m_debug){
+        	std::cout << "New whole task" << std::endl;
+      	}
+      	for(auto task : wholeTask->m_subtasks){
+        	std::cout << task << std::endl;
+      	}
+    	}
+		}
   }
 
   for(auto agent : m_memberAgents){
@@ -266,8 +270,8 @@ Step(const double _dt) {
     	agent->Step(_dt);
 		}
   }
-
-  CheckFinished();
+	//TODO::Undo this comment
+  //CheckFinished();
 
   m_currentTime += m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 }
@@ -760,4 +764,32 @@ GenerateRandomTasks(){
 		samples.insert(startCfg);
 		samples.insert(goalCfg);
   }
+}
+
+void
+Coordinator::
+DistributePlan(Plan* _plan) {
+	for(auto agent : m_memberAgents) {
+		auto allocs = _plan->GetAllocations(agent->GetRobot());
+		std::vector<TaskSolution*> solutions;
+
+		//Temporary dummy task 
+		std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(agent->GetRobot()));
+		agent->SetTask(temp);	
+
+		for(auto iter = allocs.begin(); iter != allocs.end(); iter++) {
+			auto sol = _plan->GetTaskSolution(*iter);
+			solutions.push_back(sol);
+			auto mpSol = sol->GetMotionSolution();
+
+			if(iter == allocs.begin()) {
+				agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap());
+				agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(agent->GetRobot()));
+			}
+			else {
+				*(agent->GetMPSolution()->GetPath(agent->GetRobot())) += *(mpSol->GetPath());
+			}
+		}	
+		agent->SetPlan(agent->GetMPSolution()->GetPath()->Cfgs());	
+	}
 }

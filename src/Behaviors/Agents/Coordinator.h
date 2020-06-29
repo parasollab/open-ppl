@@ -177,6 +177,8 @@ class Coordinator : public Agent {
     void TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan);
 
 		void DistributeTaskPlan(std::shared_ptr<TaskPlan> _taskPlan);
+
+		void DistributePlan(Plan* _plan);
     
 		void GenerateRandomTasks();
 
@@ -257,6 +259,8 @@ class Coordinator : public Agent {
     std::string m_tmpStrategyLabel;
 
 		std::shared_ptr<TaskPlan> m_taskPlan{nullptr};
+
+		std::shared_ptr<Plan> m_plan{nullptr};
 
     size_t m_numRandTasks;
 

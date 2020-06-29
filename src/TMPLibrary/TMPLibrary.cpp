@@ -4,6 +4,7 @@
 
 #include "Simulator/Simulation.h"
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
 #include "TMPLibrary/TaskPlan.h"
@@ -233,6 +234,18 @@ TMPLibrary::
 SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan){
 	m_taskPlan = _taskPlan;
 }
+		
+Plan* 
+TMPLibrary::
+GetPlan() {
+	return m_plan;
+}
+
+void 
+TMPLibrary::
+SetPlan(Plan* _plan) {
+	m_plan = _plan;
+}
 
 TMPLibrary::StateGraphPointer  
 TMPLibrary::
@@ -394,6 +407,7 @@ TMPLibrary::
 Solve(MPProblem* _problem, 
 								Decomposition* _decomp, 
 								std::shared_ptr<TaskPlan> _taskPlan,
+								Plan* _plan,
 								Coordinator* _coordinator,
 								std::vector<Robot*> _team) {
 
@@ -403,8 +417,13 @@ Solve(MPProblem* _problem,
 				m_taskPlan->SetCoordinator(_coordinator);
 				m_taskPlan->LoadTeam(_team);
 				m_taskPlan->CreateWholeTasks(_decomp);
+				m_plan = _plan;
 				
-				
+				for(auto task : _decomp->GetTaskMap()) {
+					auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(task.second.get()));
+					m_plan->SetTaskSolution(task.second.get(),sol);
+				}
+
 				auto solution = new MPSolution(_coordinator->GetRobot());
  	 			m_library->SetMPSolution(solution);
 

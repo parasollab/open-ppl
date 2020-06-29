@@ -94,10 +94,12 @@ Decomposition::
 GetTask(std::string _label) {
 	auto iter = m_taskMap.find(_label);
 		if(iter == m_taskMap.end())
-			throw RunTimeException(WHERE) << "Tried to access non-existent semantic task ("
+			return nullptr;
+			/*throw RunTimeException(WHERE) << "Tried to access non-existent semantic task ("
 																		<< _label
 																		<< ") in decomposition." 
 																		<< std::endl;
+			*/
 	return m_taskMap[_label].get();
 }
 

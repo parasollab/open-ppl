@@ -639,7 +639,15 @@ EvaluateTask(){
 void
 HandoffAgent::
 Step(const double _dt) {
-	PlanningAgent::Step(_dt);
+  if(m_debug and m_graphVisualID == (size_t(-1))){
+    m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap(),
+      glutils::color(0., 1., 0., 0.2));
+  }
+  if(m_debug and m_pathVisualID == (size_t(-1)) and !m_path.empty()) {
+		m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
+	}
+	//TODO::Undo this comment
+	//PlanningAgent::Step(_dt);
 }
 
 bool

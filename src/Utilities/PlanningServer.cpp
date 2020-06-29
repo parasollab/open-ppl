@@ -4,6 +4,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Communication/Messages/Message.h"
 #include "Simulator/Simulation.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "Utilities/PMPLExceptions.h"
 
 /*--------------------------- Construction ---------------------------*/
@@ -13,10 +14,15 @@ PlanningServer(TMPLibrary* _library) : m_library(_library) {}
 
 /*--------------------------- Interface ------------------------------*/
 
-std::string
+std::vector<std::string>
 PlanningServer::
 Solve(std::string _msg) const {
 	PlanningProblem problem = ParseMessage(_msg);
+
+	Plan* plan = new Plan();
+	plan->SetCoordinator(problem.coordinator);
+	plan->SetTeam(problem.team);
+	plan->SetDecomposition(problem.decomposition);
 
 	auto taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
 	
@@ -32,10 +38,54 @@ Solve(std::string _msg) const {
   m_library->Solve(m_library->GetMPProblem(), 
 									 problem.decomposition, 
 									 taskPlan,
+									 plan,
 									 problem.coordinator, 
 									 problem.team);
 
-	return "A motion plan";
+	std::vector<std::string> messages;
+	auto planMessage = PlanToMessage(plan);
+	messages.push_back(planMessage);
+
+	auto& ref1 = messages.back();
+	ref1 += "<<roadmaps=";
+
+	for(auto robot : problem.team) {
+		auto allocs = plan->GetAllocations(robot);
+		if(allocs.empty())
+			continue;
+		auto sol = plan->GetTaskSolution(*(allocs.begin()));
+		auto roadmap = sol->GetMotionSolution()->GetRoadmap(robot);
+		std::vector<std::string> rm = RoadmapToMessage(roadmap,robot);
+		for(auto r : rm) {
+			messages.push_back(r);
+		}
+	}
+
+	auto& ref2 = messages.back();
+	ref2 += ">><<motion_plans=";
+
+	
+	for(const auto& kv : plan->GetTaskSolutions()) {
+		if(!kv.second)
+			continue;
+		if(!kv.second->GetMotionSolution())
+			continue;
+		std::string label = kv.first->GetLabel();
+		std::vector<std::string> motionPlan = MotionSolutionToMessage(kv.second->GetMotionSolution(),label);
+		for(const auto& mp : motionPlan) {
+			messages.push_back(mp);
+		}
+	}
+
+	auto& ref3 = messages.back();
+	ref3 += ">>";
+
+	auto& first = messages.front();
+	first = "<" + first;
+	auto& last = messages.back();
+	last += ">";	
+
+	return messages;
 }
 		
 /*-------------------------- Helper Functions -----------------------*/

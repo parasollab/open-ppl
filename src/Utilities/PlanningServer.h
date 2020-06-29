@@ -29,7 +29,7 @@ class PlanningServer {
 		///@name Interface
 		///@{
 
-		std::string Solve(std::string _msg) const;
+		std::vector<std::string> Solve(std::string _msg) const;
 
 		///@}
 

@@ -351,6 +351,9 @@ class RoadmapGraph : public
     template <typename RG>
     friend void Read(RG* _g, const std::string& _filename);
 
+		template <typename RG>
+		friend void ReadMessage(RG* _g, const std::string& _msg); 
+		//void ReadMessage(RoadmapGraph* _g, const std::string& _msg); 
     /// Write the current roadmap out to a roadmap (.map) file.
     /// @param _filename The name of the map file to write to.
     /// @param _env The environment for which this map was constructed.
@@ -1264,6 +1267,61 @@ Read(const std::string& _filename) {
 }
 #endif
 
+/// Read in a message.
+/// @param _g The graph to populate from the message.
+/// @param _msg The message containing the graph.
+/// @note This is a non-member to avoid problems with explicit instantiation of
+///       this function for robot groups. It should be returned to a member
+///       function when we have an elegant means for implementing group roadmap
+///       input.
+template <typename RoadmapGraph>
+void
+ReadMessage(RoadmapGraph* _g, const std::string& _msg) {
+  std::stringstream ss(_msg);
+
+  std::string tag;
+  bool headerParsed = false;
+  int graphStart = 0;
+  // Read the file until we find the GRAPHSTART tag.
+  while(!headerParsed) {
+    // Mark our position and read the next line.
+    graphStart = ss.tellg();
+    if(!(ss >> tag))
+      throw ParseException(WHERE) << "Error reading msg '" << _msg
+                                  << "' - GRAPHSTART tag is missing.";
+
+    // If we find the GRAPHSTART tag, we are done.
+    if(tag.find("GRAPHSTART") != std::string::npos)
+      headerParsed = true;
+  }
+
+  if(!_g->GetRobot())
+    RunTimeException(WHERE) << "Must specify robot when reading in roadmaps.";
+
+  typedef typename RoadmapGraph::STAPLGraph STAPLGraph;
+  typedef typename RoadmapGraph::vertex_property Vertex;
+  typedef typename RoadmapGraph::edge_property Edge;
+
+  // Set the input robot for our edge class.
+  /// @TODO this is a bad way to handle the fact that it's necessary to know
+  /// the robot type (non/holonomic) when reading and writing.
+  Edge::inputRobot = _g->GetRobot();
+  Vertex::inputRobot = _g->GetRobot();
+
+  // Set ss back to the line with the GRAPHSTART tag and read in the graph.
+  ss.seekg(graphStart, ss.beg);
+  stapl::sequential::read_graph<STAPLGraph>(*_g, ss);
+
+  // Unset the input robot for our edge class.
+  Edge::inputRobot = nullptr;
+  Vertex::inputRobot = nullptr;
+
+  for(auto vi = _g->begin(); vi != _g->end(); ++vi)
+    _g->ExecuteAddVertexHooks(vi);
+  for(auto vi = _g->begin(); vi != _g->end(); ++vi)
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei)
+      _g->ExecuteAddEdgeHooks(ei);
+}
 
 template <typename Vertex, typename Edge>
 void
