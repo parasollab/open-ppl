@@ -121,13 +121,18 @@ Initialize() {
     // Throw an exception if not.
     Agent* memberAgent = member->GetAgent();
 
-    HandoffAgent* a = dynamic_cast<HandoffAgent*>(
-        memberAgent);
-    if(!a)
-      throw RunTimeException(WHERE, "Incompatible agent type specified for "
-          "group member '" + memberLabel + "'.");
-    m_memberAgents.push_back(a);
-
+		ChildAgent* c = dynamic_cast<ChildAgent*>(memberAgent);
+		if(c) {
+			m_childAgents.push_back(c);
+		}
+		else {
+    	HandoffAgent* a = dynamic_cast<HandoffAgent*>(
+      	  memberAgent);
+    	if(!a)
+      	throw RunTimeException(WHERE, "Incompatible agent type specified for "
+        	  "group member '" + memberLabel + "'.");
+    	m_memberAgents.push_back(a);
+		}
     // Set the initial priority.
     SetPriority(memberAgent, priority++);
   }
@@ -148,6 +153,9 @@ Initialize() {
   }
 
 
+  for(auto agent : m_childAgents){
+    std::cout << agent->GetRobot()->GetLabel() << std::endl;
+  }
   for(auto agent : m_memberAgents){
     std::cout << agent->GetRobot()->GetLabel() << std::endl;
   }
@@ -167,7 +175,8 @@ Initialize() {
 	if(m_communicator.IsConnectedToMaster()) {
 		
 		std::vector<Robot*> team;
-		for(auto agent : m_memberAgents) {
+		//for(auto agent : m_memberAgents) {
+		for(auto agent : m_childAgents) {
 			team.push_back(agent->GetRobot());
 		}
 
@@ -212,6 +221,9 @@ Initialize() {
 		}
   }
 
+  for(auto agent : m_childAgents){
+    agent->GetRobot()->SetVirtual(false);
+  }
   for(auto agent : m_memberAgents){
     agent->GetRobot()->SetVirtual(false);
   }
@@ -265,6 +277,17 @@ Step(const double _dt) {
 		if(m_runDummies) {
 			auto dummy = static_cast<HandoffAgent*>(agent);
 			dummy->HandoffAgent::Step(_dt);
+		}
+		else {
+    	agent->Step(_dt);
+		}
+  }
+  for(auto agent : m_childAgents){
+		if(m_runDummies) {
+			//auto dummy = static_cast<HandoffAgent*>(agent);
+			//dummy->HandoffAgent::Step(_dt);
+			auto dummy = static_cast<ChildAgent*>(agent);
+			dummy->ChildAgent::Step(_dt);
 		}
 		else {
     	agent->Step(_dt);
@@ -546,6 +569,10 @@ InitializeAgents(){
     agent->Initialize();
     agent->SetParentAgent(this);
   }
+  for(auto agent : m_childAgents){
+    agent->Initialize();
+    agent->SetCoordinator(this);
+  }
 }
 
 /*--------------------------- Helpers ------------------------------*/
@@ -769,7 +796,8 @@ GenerateRandomTasks(){
 void
 Coordinator::
 DistributePlan(Plan* _plan) {
-	for(auto agent : m_memberAgents) {
+	//for(auto agent : m_memberAgents) {
+	for(auto agent : m_childAgents) {
 		auto allocs = _plan->GetAllocations(agent->GetRobot());
 		std::vector<TaskSolution*> solutions;
 
@@ -789,7 +817,14 @@ DistributePlan(Plan* _plan) {
 			else {
 				*(agent->GetMPSolution()->GetPath(agent->GetRobot())) += *(mpSol->GetPath());
 			}
-		}	
-		agent->SetPlan(agent->GetMPSolution()->GetPath()->Cfgs());	
+		}
+		auto& cfgs = agent->GetMPSolution()->GetPath()->Cfgs();	
+		agent->SetPlan(cfgs);
+		if(cfgs.empty())
+			continue;
+		auto goalCfg = cfgs.back();
+    std::unique_ptr<CSpaceConstraint> goal =
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(agent->GetRobot(), goalCfg));
+    temp->AddGoalConstraint(std::move(goal));
 	}
 }

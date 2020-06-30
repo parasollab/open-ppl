@@ -145,7 +145,7 @@ EvaluateTask() {
 
   // Check if the agent has completed its task. If so, clear out any remaining
   // plan data and mark the task complete.
-  if(GetTask()->EvaluateGoalConstraints(current)) {
+  if(GetTask()->EvaluateGoalConstraints(current) and !GetTask()->GetGoalConstraints().empty()) {
     if(m_debug)
       std::cout << "Reached the end of the path." << std::endl;
 

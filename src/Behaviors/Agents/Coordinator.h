@@ -2,6 +2,7 @@
 #define COORDINATOR_H_
 
 #include "Agent.h"
+#include "ChildAgent.h"
 #include "PlanningAgent.h"
 #include "HandoffAgent.h"
 
@@ -213,7 +214,9 @@ class Coordinator : public Agent {
     //RoadmapType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
 
     std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
+
     std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
+    std::vector<ChildAgent*> m_childAgents;       ///< All robots in the group.
 
     /// The relative priorities for member robots.
     std::unordered_map<Agent*, size_t> m_memberPriorities;
