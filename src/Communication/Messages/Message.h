@@ -4,11 +4,13 @@
 #include <string>
 #include <vector>
 
+
 #include "MPLibrary/MPSolution.h"
 
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
+#include "MPProblem/Robot/Control.h"
 #include "MPProblem/Robot/Robot.h"
 
 #include "TMPLibrary/Solution/Plan.h"
@@ -82,5 +84,12 @@ MessageToMotionSolution(std::string _msg);
 std::vector<std::string> RoadmapToMessage(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _roadmap, Robot* _robot);
 
 RoadmapGraph<Cfg,DefaultWeight<Cfg>>* MessageToRoadmap(std::string _msg, Robot* _robot);
+
+/*------------------------------- Control Info  -------------------------------------*/
+
+//Control 
+std::string ControlSetToMessage(ControlSet& _c, size_t _steps);
+
+std::pair<size_t,ControlSet> MessageToControlSet(std::string _msg, MPProblem* _problem);
 
 #endif

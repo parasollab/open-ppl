@@ -2,6 +2,11 @@
 
 #include "Coordinator.h"
 
+#include "Communication/Messages/Message.h"
+#include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
+#include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
+#include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
+
 #include "Simulator/Simulation.h"
 /*---------------------------------- Construction ----------------------------------*/
 
@@ -12,12 +17,22 @@ ChildAgent(Robot* const _r) : PathFollowingAgent(_r) {
 
 ChildAgent::
 ChildAgent(Robot* const _r, XMLNode& _node) : PathFollowingAgent(_r,_node) {
-
+	m_controlChannel = _node.Read("controlChannel",false,"","Channel to publish controls to."); 
 }
+
+ChildAgent::
+ChildAgent(Robot* const _r, const ChildAgent& _a) : PathFollowingAgent(_r,_a) 
+{ }
 
  ChildAgent::
 ~ChildAgent() {
   Uninitialize();
+}
+
+std::unique_ptr<Agent>
+ChildAgent::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<ChildAgent>(new ChildAgent(_r, *this));
 }
 
 /*----------------------------- Simulation Interface -------------------------------*/
@@ -25,21 +40,53 @@ ChildAgent(Robot* const _r, XMLNode& _node) : PathFollowingAgent(_r,_node) {
 void 
 ChildAgent::
 Initialize() {
+	// Set up control publishing
+	if(m_controlChannel.size() > 0) {
+  	if(!m_communicator->GetPublisher(m_controlChannel))
+			throw RunTimeException(WHERE) << m_robot->GetLabel() 
+																		<< " control channel not connected." 
+																		<< std::endl;
+		
+		//m_running = true;
+		//auto publish = [this](){this->PublishControls();};
+		//m_thread = std::thread(publish);
+	}
+
   PathFollowingAgent::Initialize();
+
+}
+
+void
+ChildAgent::
+Uninitialize() {
+	/*if(m_controlChannel.size() > 0)
+		std::lock_gaurd<std::mutex> guard(m_lock);
+
+		m_running = false;
+		if(m_thread.joinable())
+			m_thread.join();
+	}*/
+	PathFollowingAgent::Uninitialize();
 }
 
 void 
 ChildAgent::
 Step(const double _dt) {
-  if(m_debug and m_graphVisualID == (size_t(-1)) and m_solution.get()){
+  if(m_debug and m_graphVisualID == (size_t(-1)) and m_solution.get() and Simulation::Get()){
     m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap(),
       glutils::color(0., 1., 0., 0.2));
   }
-  if(m_debug and m_pathVisualID == (size_t(-1)) and !m_path.empty()) {
+  if(m_debug and m_pathVisualID == (size_t(-1)) and !m_path.empty() and Simulation::Get()) {
 		m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
-	}
+	}	
 
 	PathFollowingAgent::Step(_dt);
+	if(!HasPlan()) {
+  	const Cfg current = m_robot->GetSimulationModel()->GetState();
+  	auto control = m_robot->GetController()->operator()(current,
+      current, 1);
+		ExecuteControls({control},1);
+	}
 }
 
 /*------------------------------- Child Interface ---------------------------------*/
@@ -88,6 +135,12 @@ void
 ChildAgent::
 GeneratePlan() {}
 
+void
+ChildAgent::
+ClearPlan() {
+	//m_lastCfg = m_path.back();
+	PathFollowingAgent::ClearPlan();
+}
 /*------------------------------- Controller Helpers ---------------------------------*/
 
 void 
@@ -99,3 +152,45 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
         "We are assuming that only one control will be passed in at a time.");
 }
 
+void
+ChildAgent::
+ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
+	//if(!m_communicator.get())
+		Agent::ExecuteControlsSimulation(_c,_steps);
+
+	if(!m_communicator.get())
+		return;
+
+	m_queuedControlSet = _c;
+	m_queuedSteps = _steps;
+
+	m_locked = false;
+	while(!m_locked) {}
+	
+	//SendControlMessage(_c,_steps);
+}
+
+
+void
+ChildAgent::
+ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
+	//if(!m_communicator.get())
+		Agent::ExecuteControlsHardware(_c,_steps);
+
+	//throw RunTimeException(WHERE) << "Support for standard message passing system does not include hardware yet." << std::endl;
+}
+
+/*----------------------------- Communication Helpers -------------------------------*/
+
+std::vector<std::string>
+ChildAgent::
+PublishFunction(std::string _msg) {
+	while(m_locked) {}
+	std::string response = ControlSetToMessage(m_queuedControlSet,m_queuedSteps);
+
+	m_locked = true;
+
+	return {response};
+}
+
+/*-----------------------------------------------------------------------------------*/

@@ -13,8 +13,8 @@ int
 main(int _argc, char** _argv) {
   try {
     const std::string flag = std::string(_argv[1]);
-    if(_argc < 3 || (flag != "-f" and flag != "-e" and flag != "-h"))
-      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e|-h} options.xml");
+    if(_argc < 3 || (flag != "-f" and flag != "-e" and flag != "-h" and flag != "-c"))
+      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e|-h|-c} options.xml");
 
     // Make problem object.
     std::shared_ptr<MPProblem> problem(new MPProblem(_argv[2]));

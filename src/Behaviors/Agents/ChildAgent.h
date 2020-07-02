@@ -3,6 +3,13 @@
 
 #include "PathFollowingAgent.h"
 
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <queue>
+#include <vector>
+
 class Coordinator;
 
 class ChildAgent : public PathFollowingAgent {
@@ -14,7 +21,11 @@ class ChildAgent : public PathFollowingAgent {
 
     ChildAgent(Robot* const _r, XMLNode& _node);
 
+    ChildAgent(Robot* const _r, const ChildAgent& _a);
+
     virtual ~ChildAgent();
+
+		std::unique_ptr<Agent> Clone(Robot* const _r) const override;
 
     ///@}
     ///@name Simulation Interface
@@ -23,6 +34,8 @@ class ChildAgent : public PathFollowingAgent {
     virtual void Initialize() override;
 
     virtual void Step(const double _dt) override;
+
+    virtual void Uninitialize() override;
 
     ///@}
     ///@name Child Interface
@@ -56,6 +69,8 @@ class ChildAgent : public PathFollowingAgent {
     virtual void ExecuteTask(const double _dt) override;
 		
 		virtual void GeneratePlan() override;
+
+		virtual void ClearPlan() override;
 		///@}
 	private:
 
@@ -64,13 +79,38 @@ class ChildAgent : public PathFollowingAgent {
 
     virtual void ExecuteControls(const ControlSet& _c, const size_t _steps) override;
 
+    virtual void ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) override;
+
+    virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) override;
+
 		///@}
+    ///@name Communication Helpers
+    ///@{
+		
+    virtual std::vector<std::string> PublishFunction(std::string _msg) override;
+
+    ///@}
     ///@name Internal State
     ///@{
 
 		/// The parent group to which this agent belongs.
     Coordinator* m_coordinator{nullptr};
 	
+		/*std::queue<std::pair<size_t,ControlSet>> m_controlQueue;
+
+		mutable std::atomic<bool> m_running;
+
+		std::thread m_thread;
+
+    mutable std::mutex m_lock;   */
+
+		std::string m_controlChannel;
+
+		ControlSet m_queuedControlSet;
+		size_t m_queuedSteps;
+		bool m_locked{true};
+
+		Cfg m_lastCfg;
 		///@}
 
 };

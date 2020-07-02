@@ -121,6 +121,9 @@ Initialize() {
     // Throw an exception if not.
     Agent* memberAgent = member->GetAgent();
 
+		if(m_communicator.get() and !memberAgent->GetCommunicator().get())
+			memberAgent->SetCommunicator(m_communicator);
+
 		ChildAgent* c = dynamic_cast<ChildAgent*>(memberAgent);
 		if(c) {
 			m_childAgents.push_back(c);
@@ -172,7 +175,7 @@ Initialize() {
   }
 
 	// if networked, request plan from server
-	if(m_communicator.IsConnectedToMaster()) {
+	if(m_communicator->IsConnectedToMaster()) {
 		
 		std::vector<Robot*> team;
 		//for(auto agent : m_memberAgents) {
@@ -182,7 +185,7 @@ Initialize() {
 
 		std::string query = RobotTeamToMessage(team,this->GetRobot()) 
 											+ DecompositionToMessage(problem->GetDecompositions(m_robot)[0].get());
-		auto response = m_communicator.Query("ppl",query);
+		auto response = m_communicator->Query("ppl",query);
 		std::cout << response << std::endl;
 		m_plan = std::shared_ptr<Plan>(MessageToPlan(response,problem->GetDecompositions(m_robot)[0].get(),problem));
 		DistributePlan(m_plan.get());

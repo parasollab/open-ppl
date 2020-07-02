@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "Communication/Communicator.h"
@@ -42,7 +43,10 @@ class Agent {
     /// Specifiies the type of agent for heterogenous multiagent teams
     std::string m_capability;
 
-		Communicator m_communicator;       ///< Control communication with outside processes
+		///< Control communication with outside processes
+		std::shared_ptr<Communicator> m_communicator;      
+
+		std::thread m_communicationThread; 
 
     ///@}
 
@@ -149,9 +153,18 @@ class Agent {
     /// @param _steps The number of steps we wish to stop for.
     void PauseAgent(const size_t _steps);
 
+    ///@}
+    ///@name Accessors
+    ///@{
+    
     /// Get the type of agent
     const std::string& GetCapability() const noexcept;
 
+		std::shared_ptr<Communicator> GetCommunicator();
+
+		void SetCommunicator(std::shared_ptr<Communicator> _communicator);
+
+		///@}
   protected:
 
     /// Instruct the agent to enqueue a command for gathering sensor readings.
@@ -174,18 +187,24 @@ class Agent {
     /// @param _steps The number of time steps to execute the control.
     virtual void ExecuteControls(const ControlSet& _c, const size_t _steps);
 
-  private:
-
     /// Execute a set of controls on the simulated robot.
     /// @param _c The controls to execute.
-    void ExecuteControlsSimulation(const ControlSet& _c);
+    virtual void ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps);
 
     /// Execute a set of controls on the hardware if present.
     /// @param _c The controls to execute.
     /// @param _steps The number of time steps to execute the control.
-    void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps);
+    virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps);
 
-    ///@}
+		///@}
+  private:
+
+		///@name Communication Helpers
+		///@{
+		
+    virtual std::vector<std::string> PublishFunction(std::string _msg);
+
+		///@}
     ///@name Disabled Functions
     ///@{
     /// Regular copy/move is disabled because each agent must be created for a

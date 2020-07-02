@@ -878,3 +878,94 @@ MessageToRoadmap(std::string _msg, Robot* _robot) {
 	ReadMessage(roadmap,_msg);
 	return roadmap;
 }
+
+/*------------------------------- Control Info  -------------------------------------*/
+
+//Control 
+std::string
+ControlSetToMessage(ControlSet& _c, size_t _steps) {
+	std::string msg = "control_set/<steps="
+									+ std::to_string(_steps);
+
+	for(auto control : _c) {
+		auto actuator = control.actuator;
+		auto robot = actuator->GetRobot();
+		
+		msg += ("<robot=" 
+						+ robot->GetLabel()
+						+ ",actuator="
+						+ actuator->GetLabel()
+						+ ",signal="
+					 );
+
+		for(auto d : control.signal) {
+			msg += (std::to_string(d) + " ");
+		}
+
+		msg += ">";
+	}
+
+	msg += ">";	
+
+	return msg;
+}
+
+std::pair<size_t,ControlSet>
+MessageToControlSet(std::string _msg, MPProblem* _problem) {
+	ControlSet c;
+
+	std::stringstream ss(_msg);
+	std::string label;
+	getline(ss,label,'/');
+	if(label != "control_set")
+		throw RunTimeException(WHERE) << "Expected a control set title." << std::endl;
+
+	getline(ss,label);
+	auto submessages = ParseSubMessage(label);
+
+	std::stringstream stepsSS(submessages[0]);
+	getline(stepsSS,label,'=');
+	if(label != "steps")
+		throw RunTimeException(WHERE) << "Expected number of steps for controls." << std::endl;
+
+	size_t steps;
+	stepsSS >> steps;
+
+	for(size_t i = 1; i < submessages.size(); i++) {
+		std::stringstream controlSS(submessages[i]);
+		std::string robotLabel;
+		getline(controlSS,robotLabel,',');
+		std::stringstream rlSS(robotLabel);
+		getline(rlSS,robotLabel,'=');
+		if(robotLabel != "robot")
+			throw RunTimeException(WHERE) << "Expected a robot label." << std::endl;
+		getline(rlSS,robotLabel);
+		auto robot = _problem->GetRobot(robotLabel);
+
+		std::string actuatorLabel;
+		getline(controlSS,actuatorLabel,',');
+		std::stringstream alSS(actuatorLabel);
+		getline(alSS,actuatorLabel,'=');
+		if(actuatorLabel != "actuator")
+			throw RunTimeException(WHERE) << "Expected an acutator label." << std::endl;
+		getline(alSS,actuatorLabel);
+		auto actuator = robot->GetActuator(actuatorLabel);
+	
+		std::string signalLabel;
+		getline(controlSS,signalLabel,'=');
+		if(signalLabel != "signal")
+			throw RunTimeException(WHERE) << "Expected a control signal." << std::endl;
+
+		std::vector<double> signal;
+		while(controlSS) {
+			double d;
+			controlSS >> d;
+			signal.push_back(d);
+		}
+
+		Control control(actuator,signal);
+		c.push_back(control);
+	}
+
+	return std::make_pair(steps,c);
+}

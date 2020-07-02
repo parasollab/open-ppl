@@ -54,6 +54,11 @@ class Communicator {
 		bool IsMaster();
 
 		bool IsConnectedToMaster();
+
+		Publisher* GetPublisher(std::string _label);
+
+		Subscriber* GetSubscriber(std::string _label);
+
 		///@}
 	private:
 
@@ -89,7 +94,7 @@ class Communicator {
 		int m_masterSocket{0};
 		int m_subscribeSocket;
 
-		int m_maxClients{2};
+		int m_maxClients{30};
 
 		int m_masterPort;
 		int m_port;

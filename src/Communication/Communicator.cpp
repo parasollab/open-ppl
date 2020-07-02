@@ -309,6 +309,23 @@ IsConnectedToMaster() {
 	return m_masterSocket != 0;
 }
 
+Publisher* 
+Communicator::
+GetPublisher(std::string _label) {
+	auto iter = m_publishers.find(_label);
+	if(iter == m_publishers.end())
+		return nullptr;	
+	return &m_publishers[_label];
+}
+
+Subscriber* 
+Communicator::
+GetSubscriber(std::string _label) {
+	auto iter = m_subscribers.find(_label);
+	if(iter == m_subscribers.end())
+		return nullptr;	
+	return &m_subscribers[_label];
+}
 /*---------------------------- Helper Functions ------------------------------*/
 
 void 
@@ -375,6 +392,8 @@ SendMessage(std::string _msg, int _sockfd, bool _receipt) {
 	// Convert to char buffer
 	char msg[_msg.size()+1];
 	strcpy(msg,_msg.c_str());
+
+	std::cout << "Sending Message: " << _msg << std::endl;
 
 	// Send message through socket
 	if(send(_sockfd,msg,_msg.size(),0) < 0)
@@ -465,7 +484,7 @@ HandleQuery(std::string _msg, int _client) {
 void
 Communicator::
 ConnectSubscribers() {
-	for(auto sub : m_channelSubscribers) {
+	for(auto& sub : m_channelSubscribers) {
 		if(sub.first)
 			continue;
 		std::string channel = sub.second.first;
@@ -474,6 +493,7 @@ ConnectSubscribers() {
 		auto iter = m_channelHosts.find(channel);
 		if(iter == m_channelHosts.end())
 			continue;
+		sub.first = true;
 		
 		HostInfo host = iter->second;
 		
