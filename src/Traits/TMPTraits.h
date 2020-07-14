@@ -8,6 +8,7 @@
 #include "TMPLibrary/TMPStrategies/DummyStrategyMethod.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
 #include "TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.h"
+#include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
 
 // PoIPlacementMethods to include
 
@@ -19,6 +20,7 @@
 
 #include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
 #include "TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.h"
+#include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/TaskCBSPlanner.h"
 #include "TMPLibrary/TaskEvaluators/TCBS.h"
 #include "TMPLibrary/TaskEvaluators/TMPCBS.h"
@@ -53,7 +55,8 @@ struct TMPTraits {
   typedef boost::mpl::list<
     ITMethod,
 		DummyStrategyMethod,
-		MultiAgentMultiTaskPlanner
+		MultiAgentMultiTaskPlanner,
+		SimpleMotionMethod
       > TMPStrategyMethodList;
 
   //types of points of interest placement methods available in our world
@@ -66,6 +69,7 @@ struct TMPTraits {
   //types of task evaluators available in our world
   typedef boost::mpl::list<
 		OrderedMultiTaskEvaluator,
+		SimpleMotionEvaluator,
 		TaskCBSPlanner,
 		TCBS,
 		TMPCBS,

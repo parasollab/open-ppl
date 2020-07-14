@@ -78,11 +78,11 @@ class Plan {
 		///@name Internal State
 		///@{
 
-		Coordinator* m_coordinator;
+		Coordinator* m_coordinator{nullptr};
 
 		std::vector<Robot*> m_team;
 
-		Decomposition* m_decomposition;
+		Decomposition* m_decomposition{nullptr};
 
 		std::unordered_map<Robot*,std::list<SemanticTask*>> m_allocations;
 
@@ -90,7 +90,7 @@ class Plan {
 
 		std::unique_ptr<StatClass> m_statClass;
 
-		MPProblem* m_problem;
+		MPProblem* m_problem{nullptr};
 
 		///@}
 

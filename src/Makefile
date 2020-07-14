@@ -83,6 +83,7 @@ LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
 
 # Pre-pend the build directory to the object file names.
 PMPL_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
+PPL_OBJS  		:= $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PPL_SRCS))
 SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
 COMM_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(COMM_SRCS))
 PLANNER_OBJS  := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PLANNER_SRCS))
@@ -131,6 +132,12 @@ $(PMPL_LIBFILE): $(PMPL_OBJS)
 pmpl: $(MAIN) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(HARDWARE_OBJS) $(LIBS) -o $@
+
+# Build the tmp executable.
+ppl: $(PPL_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
+     | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(PPL_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
 
 # Build the simulator.
 sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
@@ -183,7 +190,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 .PHONY: clean
 clean:
 	@echo Cleaning pmpl library and executables...
-	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim planner
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim planner ppl master
 
 .PHONY: reallyclean
 reallyclean: clean

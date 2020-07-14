@@ -45,7 +45,7 @@ operator()(){
 	this->GetTaskPlan()->GetStatClass()->StartClock("TotalTMPStrategyTime");
 	Initialize();	
 	PlanTasks();
-	this->GetStateGraph(m_sgLabel)->LoadStateGraph();
+	//this->GetStateGraph(m_sgLabel)->LoadStateGraph();
 	DecomposeTasks();
 	AssignTasks();
 	this->GetTaskPlan()->GetStatClass()->StopClock("TotalTMPStrategyTime");

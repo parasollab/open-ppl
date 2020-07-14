@@ -58,7 +58,7 @@ void
 TaskPlan::
 Initialize(){
 	m_statClass = std::unique_ptr<StatClass>(new StatClass());
-  if(!m_coordinator){
+  /*if(!m_coordinator){
     throw RunTimeException(WHERE, "TaskPlan has no coordinator.");
   }
   else if(m_memberAgents.empty()){
@@ -66,7 +66,7 @@ Initialize(){
   }
   else if(m_wholeTasks.empty()){
     throw RunTimeException(WHERE, "TaskPlan has no tasks to plan for.");
-  }
+  }*/
   InitializeCostMap();
   InitializeRAT();
 	InitializePositiveConstraints();

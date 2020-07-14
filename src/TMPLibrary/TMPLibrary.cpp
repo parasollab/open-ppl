@@ -457,6 +457,7 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks) {
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
 								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
+								m_plan = new Plan();
 
 								RunSolver(solver);
 				}
@@ -473,6 +474,7 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
 								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
+								m_plan = new Plan();
 
 								RunSolver(solver);
 				}
@@ -524,7 +526,12 @@ RunSolver(const Solver& _solver) {
 				}
 
 				SetBaseFilename(GetMPProblem()->GetPath(baseFilename));
-				m_library->GetStatClass()->SetAuxDest(GetBaseFilename());
+				//m_library->GetStatClass()->SetAuxDest(GetBaseFilename());
+				//If you are getting a seg fault here, it is bc you are still using a TaskPlan
+				//based tmpLibrary approach. This is slowly being phased out and this is where
+				//you get caught using the old way. Look at the options above and pick one that
+				//initializes a Plan object (m_plan) or fix the one you're currently using.
+				m_plan->GetStatClass()->SetAuxDest(GetBaseFilename());
 
 				// Initialize vizmo debug if there is a valid filename
 				//if(_solver.vizmoDebug)

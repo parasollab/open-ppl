@@ -448,6 +448,7 @@ TASK_SRCS := \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskCBSPlanner.cpp \
   TMPLibrary/TaskEvaluators/TCBS.cpp \
   TMPLibrary/TaskEvaluators/TMPCBS.cpp \
@@ -456,6 +457,7 @@ TASK_SRCS := \
   TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
+	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
   TMPLibrary/TMPTools/DiscreteMAD.cpp \
@@ -474,6 +476,11 @@ TASK_SRCS := \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
+################################################################################
+# TMP Main
+################################################################################
+PPL_SRCS := \
+  $(PMPL_DIR)/tmp_main.cpp \
 
 ################################################################################
 # Master Node
