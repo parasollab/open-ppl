@@ -44,7 +44,11 @@ class Decomposition {
 
 		std::vector<SemanticTask*>& GetMotionTasks();
 
+		std::vector<SemanticTask*>& GetGroupMotionTasks();
+
 		void AddMotionTask(SemanticTask* _task);
+
+		void AddGroupMotionTask(SemanticTask* _task);
 
 		const std::unordered_map<std::string,std::shared_ptr<SemanticTask>>& GetTaskMap() const;
 
@@ -68,6 +72,8 @@ class Decomposition {
 		//TODO: Rectify with above
 		///< Keeps track of the tasks with motion tasks.
 		std::vector<SemanticTask*> m_motionTasks;
+
+		std::vector<SemanticTask*> m_groupMotionTasks;
 
 		///< highest task in the decomposition
 		SemanticTask*	m_mainTask;

@@ -1,6 +1,15 @@
 #ifndef TCBS_ALLOCATOR_H_
 #define TCBS_ALLOCATOR_H_
 
+///////////////////////////////////////////////////////////////////////////////
+///
+/// This is an implementation of the TCBS combined task allocation and path 
+/// finding method presented in 'An Optimal Algorithm to Solve the Combined 
+/// Task Allocation and Path Finding Problem.'
+///
+///////////////////////////////////////////////////////////////////////////////
+
+
 #include "TaskAllocatorMethod.h"
 
 #include "MPProblem/TaskHierarchy/Decomposition.h"

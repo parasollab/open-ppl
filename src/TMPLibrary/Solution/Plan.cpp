@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
+#include "MPProblem/RobotGroup/RobotGroup.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "TaskSolution.h"
@@ -67,14 +68,32 @@ ClearAllocations(Robot* _robot) {
 
 void 
 Plan::
+ClearAllocations(RobotGroup* _group) {
+	m_groupAllocations[_group].clear();
+}
+
+void 
+Plan::
 AddAllocation(Robot* _robot, SemanticTask* _task) {
 	m_allocations[_robot].push_back(_task);
+}
+
+void 
+Plan::
+AddAllocation(RobotGroup* _group, SemanticTask* _task) {
+	m_groupAllocations[_group].push_back(_task);
 }
 
 std::list<SemanticTask*> 
 Plan::
 GetAllocations(Robot* _robot) {
 	return m_allocations[_robot];
+}
+
+std::list<SemanticTask*> 
+Plan::
+GetAllocations(RobotGroup* _group) {
+	return m_groupAllocations[_group];
 }
 
 /// Task Plans

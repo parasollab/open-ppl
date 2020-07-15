@@ -761,7 +761,7 @@ MessageToTaskSolution(std::string _msg, Plan* _plan) {
 
 	auto task = decomp->GetTask(label);
 	if(!task)
-		task = new SemanticTask(label,parent,decomp,nullptr);
+		task = new SemanticTask(label,parent,decomp);
 	
 	TaskSolution* solution = new TaskSolution(task);
 

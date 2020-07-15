@@ -10,6 +10,7 @@ class Coordinator;
 class Decomposition;
 class MPProblem;
 class Robot;
+class RobotGroup;
 class SemanticTask;
 class StatClass;
 class TaskSolution;
@@ -45,9 +46,15 @@ class Plan {
 		/// Task Allocations
 		void ClearAllocations(Robot* _robot);
 
+		void ClearAllocations(RobotGroup* _group);
+
 		void AddAllocation(Robot* _robot, SemanticTask* _task);
 
+		void AddAllocation(RobotGroup* _group, SemanticTask* _task);
+
 		std::list<SemanticTask*> GetAllocations(Robot* _robot);
+
+		std::list<SemanticTask*> GetAllocations(RobotGroup* _group);
 
 		const std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>>& GetTaskSolutions();
 
@@ -85,6 +92,8 @@ class Plan {
 		Decomposition* m_decomposition{nullptr};
 
 		std::unordered_map<Robot*,std::list<SemanticTask*>> m_allocations;
+
+		std::unordered_map<RobotGroup*,std::list<SemanticTask*>> m_groupAllocations;
 
 		std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>> m_taskSolutions;
 

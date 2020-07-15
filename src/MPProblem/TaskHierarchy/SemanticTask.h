@@ -1,6 +1,7 @@
 #ifndef SEMANTIC_TASK_H_
 #define SEMANTIC_TASK_H_
 
+#include "MPProblem/GroupTask.h"
 #include "MPProblem/MPTask.h"
 
 #include <unordered_map>
@@ -42,13 +43,23 @@ class SemanticTask {
 
 		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 								 SubtaskRelation _relation, bool _decomposable, bool _fixed, 
-								 std::shared_ptr<MPTask> _simpleTask = nullptr);
+								 std::shared_ptr<MPTask> _motionTask = nullptr);
 
-		SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTask> _simpleTask,
+		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
+								 SubtaskRelation _relation, bool _decomposable, bool _fixed, 
+								 std::shared_ptr<GroupTask> _groupMotionTask);
+
+		SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTask> _motionTask,
+								 bool _decomposable=true);
+
+		SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<GroupTask> _groupMotionTask,
 								 bool _decomposable=true);
 
 		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
-								 std::shared_ptr<MPTask> _simpleTask, bool _decomposable=true);
+								 std::shared_ptr<MPTask> _motionTask = nullptr, bool _decomposable=true);
+
+		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
+								 std::shared_ptr<GroupTask> _groupMotionTask, bool _decomposable=true);
 
 		~SemanticTask();
 
@@ -58,15 +69,19 @@ class SemanticTask {
 
 		std::string GetLabel() const;
 
-		///< Sets the dependencies of all the semantic tasks below this in the hierarchy
+		/// Sets the dependencies of all the semantic tasks below this in the hierarchy,
 		std::vector<SemanticTask*> SetDependencies();
 
-		///< Indicates if this is a simple task or not
+		/// Indicates if this task can be decomposed.
 		bool IsDecomposable();
 
 		void SetMotionTask(std::shared_ptr<MPTask> _motion);
 
 		std::shared_ptr<MPTask> GetMotionTask();
+
+		void SetGroupMotionTask(std::shared_ptr<GroupTask> _motion);
+
+		std::shared_ptr<GroupTask> GetGroupMotionTask();
 
 		SemanticTask* GetParent();
 
@@ -83,10 +98,6 @@ class SemanticTask {
 		std::vector<SemanticTask*> GetSubtasks();
 
 		SubtaskRelation GetSubtaskRelation();
-
-		//void SetCompletionFunction(TBDFunction _func);
-
-		//TBDFunction GetCompletionFunction();
 
 		///@}
 
@@ -107,7 +118,10 @@ class SemanticTask {
 		SemanticTask* m_parent{nullptr};
 
 		///< If this SemanticTask is a simple task, this holds the corresponding motion task
-		std::shared_ptr<MPTask>	m_simpleTask;
+		std::shared_ptr<MPTask>	m_motionTask;
+
+		///< If this SemanticTask is a simple task, this holds the corresponding motion task
+		std::shared_ptr<GroupTask>	m_groupMotionTask;
 
 		///< Indicates if the assignment of the simple task is fixed
 		bool m_fixedAssignment{false};
@@ -124,9 +138,6 @@ class SemanticTask {
 		///< Keeps track of all the semantic tasks for each dependency type
 		DependencyMap	m_dependencyMap;
 		
-
-		//TBDFunction m_completionFunction;
-
 		///@}
 };
 

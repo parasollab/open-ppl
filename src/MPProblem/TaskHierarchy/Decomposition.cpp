@@ -87,6 +87,8 @@ AddTask(std::shared_ptr<SemanticTask> _task) {
 	m_taskMap[_task->GetLabel()] = _task;
 	if(_task->GetMotionTask())
 		m_motionTasks.push_back(_task.get());
+	if(_task->GetGroupMotionTask())
+		m_groupMotionTasks.push_back(_task.get());
 }
 
 SemanticTask* 
@@ -117,6 +119,12 @@ GetMotionTasks() {
 	return m_motionTasks;
 }
 
+std::vector<SemanticTask*>& 
+Decomposition::
+GetGroupMotionTasks() {
+	return m_groupMotionTasks;
+}
+
 void 
 Decomposition::
 AddSimpleTask(SemanticTask* _task) {
@@ -127,6 +135,12 @@ void
 Decomposition::
 AddMotionTask(SemanticTask* _task) {
 	m_motionTasks.push_back(_task);
+}
+
+void 
+Decomposition::
+AddGroupMotionTask(SemanticTask* _task) {
+	m_groupMotionTasks.push_back(_task);
 }
 		
 const std::unordered_map<std::string,std::shared_ptr<SemanticTask>>& 
