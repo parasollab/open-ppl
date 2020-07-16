@@ -112,6 +112,8 @@ class Coordinator : public Agent {
 
 		void SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph);
 
+		std::vector<std::string> GetMemberLabels();
+
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
     ///@}

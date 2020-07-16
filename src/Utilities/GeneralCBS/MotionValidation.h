@@ -18,7 +18,7 @@ class MotionValidation : public Validation {
 
 	MotionValidation();
 
-	MotionValidation(MPLibrary* _library,LowLevelSearch* _lowLevel, 
+	MotionValidation(MPLibrary* _library,LowLevelSearch* _lowLevel, bool _avoidancePaths, 
 									 TMPLibrary* _tmpLibrary, std::string _vcLabel, std::string _sgLabel);
 
 	~MotionValidation();
@@ -62,6 +62,9 @@ class MotionValidation : public Validation {
 	///@}
 	///@name Internal State
 	///@{
+
+	///< Flag to plan path after completing task for each robot to get out of the way
+	bool m_avoidancePaths{true};
 
 	///< State Graph Label
 	std::string m_sgLabel;

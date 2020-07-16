@@ -831,3 +831,9 @@ DistributePlan(Plan* _plan) {
     temp->AddGoalConstraint(std::move(goal));
 	}
 }
+		
+std::vector<std::string> 
+Coordinator::
+GetMemberLabels() {
+	return m_memberLabels;
+}

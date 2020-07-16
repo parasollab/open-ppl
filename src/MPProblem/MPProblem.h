@@ -141,6 +141,9 @@ class MPProblem final
 
 		const std::vector<std::unique_ptr<Decomposition>>& GetDecompositions(Robot* _coordinator);
 
+		const std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>>& 
+														GetDecompositions();
+
     ///@}
     ///@name Dynamic Obstacle Accessors
     ///@{

@@ -70,7 +70,7 @@ Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
 	PrecedenceLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_debug);
 
 	auto alloc = new AllocationValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary());
-	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
+	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,true,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
 
 	//auto compose = new ComposeValidation({alloc, motion});
 

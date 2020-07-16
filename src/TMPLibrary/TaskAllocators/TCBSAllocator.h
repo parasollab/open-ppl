@@ -5,7 +5,10 @@
 ///
 /// This is an implementation of the TCBS combined task allocation and path 
 /// finding method presented in 'An Optimal Algorithm to Solve the Combined 
-/// Task Allocation and Path Finding Problem.'
+/// Task Allocation and Path Finding Problem.' It is extended in our code base
+/// to be able to handle continuous space motion planning problems with the 
+/// motion planning extension of CBS replacing the underlying discrete CBS 
+/// algorithm in the paper.
 ///
 ///////////////////////////////////////////////////////////////////////////////
 

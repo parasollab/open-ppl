@@ -18,6 +18,7 @@
 
 // TaskEvaluators to include
 
+#include "TMPLibrary/TaskEvaluators/CBSEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
 #include "TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
@@ -68,6 +69,7 @@ struct TMPTraits {
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
+		CBSEvaluator,
 		OrderedMultiTaskEvaluator,
 		SimpleMotionEvaluator,
 		TaskCBSPlanner,

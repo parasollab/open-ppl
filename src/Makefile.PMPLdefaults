@@ -445,6 +445,7 @@ TASK_SRCS := \
   TMPLibrary/TaskAllocators/TCBSAllocator.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
+  TMPLibrary/TaskEvaluators/CBSEvaluator.cpp \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
@@ -619,6 +620,7 @@ PMPL_SRCS := \
 	Utilities/GeneralCBS/MetaTMPLowLevelSearch.cpp \
 	Utilities/GeneralCBS/MotionValidation.cpp \
 	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/ParallelCBS.cpp \
 	Utilities/GeneralCBS/PrecedenceLowLevelSearch.cpp \
 	Utilities/GeneralCBS/PrioritizedConflictValidation.cpp \
 	Utilities/GeneralCBS/TCBSValidation.cpp \

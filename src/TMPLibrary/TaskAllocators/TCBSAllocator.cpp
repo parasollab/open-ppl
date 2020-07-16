@@ -41,7 +41,7 @@ AllocateTasks() {
 	MPLowLevelSearch lowLevel(this->GetTMPLibrary(), m_sgLabel, m_vcLabel,m_lowLevelDebug);
 
 	auto tcbs = new TCBSValidation(this->GetMPLibrary(),&lowLevel, this->GetTMPLibrary());
-	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
+	auto motion = new MotionValidation(this->GetMPLibrary(),&lowLevel,true,this->GetTMPLibrary(),m_sgLabel,m_vcLabel);
 	auto compose = new ComposeValidation({motion,tcbs});
 
 	InitialPlanFunction init = [this,tcbs](Decomposition* _decomp,GeneralCBSTree& _tree) {
@@ -55,6 +55,7 @@ AllocateTasks() {
 			return compose->ValidatePlan(_node, _tree);
 		};
 
+		// Compute the allocation and paths together 
 		solution = ConflictBasedSearch(decomp, init, composeValid,this->GetTaskPlan()->GetStatClass(),MAX_INT,m_debug);	
 	}
 	else {
@@ -69,6 +70,7 @@ AllocateTasks() {
 			return motion->ValidatePlan(_node, _tree);
 		};
 
+		// First compute an optimal allocation without considering motion conflicts
 		solution = ConflictBasedSearch(decomp, init, tcbsValid,this->GetTaskPlan()->GetStatClass(),MAX_INT,m_debug);
 		
 		auto top = decomp->GetMainTask();
@@ -89,6 +91,7 @@ AllocateTasks() {
 			}
 		}
 
+		// Compute the optimal paths for the given allocation
 		solution = ConflictBasedSearch(decomp,motionInit,motionValid,this->GetTaskPlan()->GetStatClass(),MAX_INT,m_debug);
 
 	}

@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/StateGraphs/Helpers/ITConnector.h"
 #include "TMPLibrary/StateGraphs/Helpers/ITConstructor.h"
 #include "TMPLibrary/TaskPlan.h"
@@ -43,8 +44,9 @@ Initialize(){
 
 	ResetRobotTypeRoadmaps();
 
-  m_solution = std::unique_ptr<MPSolution>(new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot()));
-	m_solution->SetRoadmap(this->GetTaskPlan()->GetCoordinator()->GetRobot(),m_graph);
+  //m_solution = std::unique_ptr<MPSolution>(new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot()));
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(this->GetPlan()->GetCoordinator()->GetRobot()));
+	m_solution->SetRoadmap(this->GetPlan()->GetCoordinator()->GetRobot(),m_graph);
 
 	//TODO Move these to helper classes
 	if(m_discrete)
@@ -138,14 +140,14 @@ ConstructDiscreteRoadmap() {
 		x = int(goalCfg[0] + .5);
 		y = int(goalCfg[1] + .5);
 		goalCfg.SetData({double(x),double(y),0});
-    wholeTask->m_startPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startCfg};
-    wholeTask->m_goalPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalCfg};
+    wholeTask->m_startPoints[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startCfg};
+    wholeTask->m_goalPoints[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalCfg};
 
 		auto startVID = m_graph->AddVertex(startCfg);
 		auto goalVID = m_graph->AddVertex(goalCfg);
 	
-		wholeTask->m_startVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startVID};
-		wholeTask->m_goalVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalVID};
+		wholeTask->m_startVIDs[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startVID};
+		wholeTask->m_goalVIDs[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalVID};
 	
     auto dummyMap = this->GetTaskPlan()->GetDummyMap();
     for(auto const& elem : dummyMap) {
@@ -174,7 +176,7 @@ ConstructDiscreteRoadmap() {
 
 	}
 	//Construct Robot-type roadmaps
-	auto envBoundary = this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetMPProblem()->GetEnvironment()->GetBoundary();
+	auto envBoundary = this->GetPlan()->GetCoordinator()->GetRobot()->GetMPProblem()->GetEnvironment()->GetBoundary();
 	auto xRange = envBoundary->GetRange(0);
 	auto yRange = envBoundary->GetRange(1);
 
@@ -437,7 +439,7 @@ GenerateDiscreteITs() {
 		currentTemplate->AddHandoffCfg(delivering, originalProblem);
 
 
-    currentTemplate->ConnectRoadmaps(this->GetTaskPlan()->GetCoordinator()->GetRobot(), originalProblem);
+    currentTemplate->ConnectRoadmaps(this->GetPlan()->GetCoordinator()->GetRobot(), originalProblem);
 	}
 
 	
@@ -489,7 +491,7 @@ GenerateITs(){
               GetBoundary();
           std::vector<Cfg> goalPoints;
 
-          MPSolution* sol = new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+          MPSolution* sol = new MPSolution(this->GetPlan()->GetCoordinator()->GetRobot());
           this->GetMPLibrary()->SetMPSolution(sol);
           this->GetMPLibrary()->SetTask(task.get());
           auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
@@ -535,7 +537,7 @@ GenerateITs(){
       // Solve for manipulator robot teams
       else {
         std::vector<Cfg> startPoints;
-        MPSolution* sol = new MPSolution(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+        MPSolution* sol = new MPSolution(this->GetPlan()->GetCoordinator()->GetRobot());
         this->GetMPLibrary()->SetMPSolution(sol);
         auto sampler = this->GetMPLibrary()->GetSampler("UniformRandomFree");
         size_t numNodes = 1, numAttempts = 100;
@@ -589,7 +591,7 @@ GenerateITs(){
     }
 
 
-    currentTemplate->ConnectRoadmaps(this->GetTaskPlan()->GetCoordinator()->GetRobot(), originalProblem);
+    currentTemplate->ConnectRoadmaps(this->GetPlan()->GetCoordinator()->GetRobot(), originalProblem);
 
     this->GetTaskPlan()->GetStatClass()->StopClock("Construct InteractionTemplate "
                 + currentTemplate->GetInformation()->GetLabel());
@@ -623,7 +625,7 @@ GenerateITs(){
 
   this->GetMPLibrary()->SetMPProblem(originalProblem);
   this->GetMPLibrary()->SetMPSolution(m_solution.get());
-  this->GetMPLibrary()->SetTask(originalProblem->GetTasks(this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
+  this->GetMPLibrary()->SetTask(originalProblem->GetTasks(this->GetPlan()->GetCoordinator()->GetRobot())[0].get());
 }
 
 void
@@ -784,8 +786,8 @@ SetupWholeTasks(){
     if(goalPoints.empty())
       throw RunTimeException(WHERE, "No valid goal position for the robot.");
 
-    wholeTask->m_startPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startPoints[0]};
-    wholeTask->m_goalPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalPoints[0]};
+    wholeTask->m_startPoints[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {startPoints[0]};
+    wholeTask->m_goalPoints[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {goalPoints[0]};
 
     // Loop through each type of capability then push start/goal constraints
     // into vectors in WholeTask
@@ -815,26 +817,26 @@ SetupWholeTasks(){
 
     }
 
-    task->SetRobot(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+    task->SetRobot(this->GetPlan()->GetCoordinator()->GetRobot());
     this->GetMPLibrary()->SetTask(task.get());
 
     // Create 0 weight edges between each capability and the coordinator
     // configuration.
     auto coordinatorStartVID = m_graph->AddVertex(
-                    wholeTask->m_startPoints[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
+                    wholeTask->m_startPoints[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
 
-    wholeTask->m_startVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorStartVID};
+    wholeTask->m_startVIDs[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorStartVID};
 
     auto coordinatorGoalVID = m_graph->AddVertex(wholeTask->m_goalPoints[
-															this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
+															this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()][0]);
 
-    wholeTask->m_goalVIDs[this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorGoalVID};
+    wholeTask->m_goalVIDs[this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel()] = {coordinatorGoalVID};
 
     const DefaultWeight<Cfg> weight;
 
     this->GetTaskPlan()->GetStatClass()->StartClock("Construction MegaRoadmap");
     for(auto const& elem : wholeTask->m_startPoints){
-      if(elem.first == this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel())
+      if(elem.first == this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel())
         continue;
 
       for(auto start : elem.second) {
@@ -851,7 +853,7 @@ SetupWholeTasks(){
     }
 
     for(auto const& elem : wholeTask->m_goalPoints){
-      if(elem.first == this->GetTaskPlan()->GetCoordinator()->GetRobot()->GetLabel())
+      if(elem.first == this->GetPlan()->GetCoordinator()->GetRobot()->GetLabel())
         continue;
 
       for(auto goal : elem.second) {
@@ -869,7 +871,7 @@ SetupWholeTasks(){
     this->GetTaskPlan()->GetStatClass()->StopClock("Construction MegaRoadmap");
   }
   this->GetMPLibrary()->SetTask(this->GetMPProblem()->GetTasks(
-												this->GetTaskPlan()->GetCoordinator()->GetRobot())[0].get());
+												this->GetPlan()->GetCoordinator()->GetRobot())[0].get());
 }
 
 

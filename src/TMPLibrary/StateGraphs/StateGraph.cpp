@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Simulator/Simulation.h"
 #include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 /*------------------------------ Construction --------------------------------*/
 
@@ -23,7 +24,7 @@ Initialize() {
 	if(m_graph){
 		delete m_graph;
 	}
-	m_graph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+	m_graph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
 
 	ConstructGraph();
 }

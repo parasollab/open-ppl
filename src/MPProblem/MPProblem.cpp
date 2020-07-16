@@ -215,6 +215,11 @@ GetDecompositions(Robot* _coordinator) {
 	return m_taskDecompositions[_coordinator];
 }
 
+const std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>>& 
+MPProblem::
+GetDecompositions() {
+	return m_taskDecompositions;
+}
 /*----------------------------- Environment Accessors ------------------------*/
 
 Environment*

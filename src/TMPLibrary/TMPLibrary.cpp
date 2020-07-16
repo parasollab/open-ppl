@@ -456,8 +456,17 @@ Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks) {
 
 				for(auto& solver : m_solvers) {
 								// Create storage for the solution.
+								//TODO::Remove all reliance on TaskPlan
 								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
+
 								m_plan = new Plan();
+								for(auto& r : _problem->GetRobots()) {
+									auto c = dynamic_cast<Coordinator*>(r->GetAgent());
+									if(c) {
+										m_plan->SetCoordinator(c);
+										break;
+									}
+								}
 
 								RunSolver(solver);
 				}

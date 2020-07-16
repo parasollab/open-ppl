@@ -14,7 +14,7 @@ UpdateSolution(GeneralCBSNode& _node, SemanticTask* _task) {
 	if(m_debug) {
 		std::cout << "Pre-Clearing task plan" << std::endl;
 		auto solution = _node.GetSolution();
-		auto sg = static_cast<MultiTaskGraph*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
+		auto sg = static_cast<CombinedRoadmap*>(m_tmpLibrary->GetStateGraph(m_sgLabel).get());
 		for(auto plan : solution.m_taskPlans) {
 			auto task = plan.first;
 			auto assignments = plan.second;
@@ -316,7 +316,7 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 	Cfg setupCfg;
 	double setupStart;
 	if(!_previous.m_agent) {
-		setupCfg = m_library->GetMPProblem()->GetInitialCfg(agent->GetRobot());
+		setupCfg = m_tmpLibrary->GetMPProblem()->GetInitialCfg(agent->GetRobot());
 		//setupCfg = agent->GetRobot()->GetSimulationModel()->GetState();
 		setupStart = 0;
 	}
@@ -326,8 +326,12 @@ PlanAssignment(GeneralCBSNode& _node, Assignment& _assign, Assignment& _previous
 		setupStart = _previous.m_execEndTime;
 	}
 
-	auto query = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
-									_assign.m_task->GetParent())->m_subtaskStartEndCfgs[_assign.m_task->GetMotionTask()];
+	//auto query = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
+	//								_assign.m_task->GetParent())->m_subtaskStartEndCfgs[_assign.m_task->GetMotionTask()];
+	auto queryVIDs = sg->AddTaskToGraph(m_tmpLibrary->GetTaskPlan()->GetWholeTask(_assign.m_task->GetParent()));
+	Cfg startCfg = sg->GetGraph()->GetVertex(queryVIDs.first);
+	Cfg endCfg = sg->GetGraph()->GetVertex(queryVIDs.second);
+	auto query = std::make_pair(startCfg, endCfg);
 
 	//Agent is does not have a configuration at task start.
 	if(!query.first.GetRobot())

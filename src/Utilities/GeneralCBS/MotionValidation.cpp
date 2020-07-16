@@ -11,10 +11,10 @@ MotionValidation::
 MotionValidation() {}	
 
 MotionValidation::
-MotionValidation(MPLibrary* _library, LowLevelSearch* _lowLevel, TMPLibrary* _tmpLibrary, 
-								std::string _sgLabel, std::string _vcLabel) :
+MotionValidation(MPLibrary* _library, LowLevelSearch* _lowLevel, bool _avoidancePaths,
+								TMPLibrary* _tmpLibrary, std::string _sgLabel, std::string _vcLabel) :
 								Validation(_library,_lowLevel, _tmpLibrary), 
-								m_sgLabel(_sgLabel), m_vcLabel(_vcLabel) {}	
+								m_avoidancePaths(_avoidancePaths), m_sgLabel(_sgLabel), m_vcLabel(_vcLabel) {}	
 
 MotionValidation::
 ~MotionValidation() {}
@@ -30,6 +30,7 @@ InitialPlan(Decomposition* _decomposition, GeneralCBSTree& _tree) {
 
 	auto top = _decomposition->GetMainTask();
 	for(auto task : top->GetSubtasks()) {
+		solution.m_solutionTasks.insert(task);
 		for(auto subtask : task->GetSubtasks()) {
 			Assignment a;
 			a.m_task = subtask;
@@ -82,7 +83,8 @@ bool
 MotionValidation::
 ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 
-	AvoidancePaths(_node);
+	if(m_avoidancePaths)
+		AvoidancePaths(_node);
 
 	auto constraints = FindMotionConflict(_node);
 	
@@ -118,8 +120,10 @@ FindMotionConflict(GeneralCBSNode& _node) {
 		auto roadmap = sg->GetCapabilityRoadmap(static_cast<HandoffAgent*>(agent));
 
 		auto assigns = kv.second;
-		auto postAssignment = _node.GetPostAssignmentRef().m_agentAssignments[agent][0];
-		assigns.push_back(postAssignment);
+		if(m_avoidancePaths) {
+			auto postAssignment = _node.GetPostAssignmentRef().m_agentAssignments[agent][0];
+			assigns.push_back(postAssignment);
+		}
 	
 		//Cfg previousCfg = agent->GetRobot()->GetSimulationModel()->GetState();
 		Cfg previousCfg = m_library->GetMPProblem()->GetInitialCfg(agent->GetRobot());
@@ -215,7 +219,7 @@ FindMotionConflict(GeneralCBSNode& _node) {
 			size_t start = agentPaths[agent].size();
 			size_t end = start+interim.size()+cfgs.size()+execCfgs.size();
 
-			if(i == assigns.size()-1 and a.m_execStartTime != a.m_execEndTime)
+			if(i > 0 and i == assigns.size()-1 and a.m_execStartTime != a.m_execEndTime)
 				end = end-1;
 
 			previousTimeStep = end;
