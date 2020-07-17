@@ -87,6 +87,12 @@ GetBackwardConnection(size_t _index) {
         "Cannot access backward connection '" + ::to_string(_index) + "'.");
 }
 
+void
+FreeBody::
+SetClosureIndices(pair<size_t, size_t> _connection) {
+  m_closureIndices.push_back(_connection);
+}
+
 bool
 FreeBody::
 IsAdjacent(shared_ptr<FreeBody> _otherBody) const {
@@ -96,6 +102,56 @@ IsAdjacent(shared_ptr<FreeBody> _otherBody) const {
   for(const auto& c : m_backwardConnections)
     if(c->GetPreviousBody() == _otherBody)
       return true;
+  //Addition 1: for branched structures: check if there is a shared parent
+  for(const auto& c1: m_backwardConnections) {
+    Connection c2 = _otherBody->GetBackwardConnection(0);
+    if(c1->GetPreviousBody() == c2.GetPreviousBody())
+      return true;
+  }
+  //Addition 2: for closed chains, check if the pair is closing a loop
+  //pair<size_t, size_t> thisPair = make_pair(m_index, _otherBody->m_index);
+  for(auto eachPair: m_closureIndices) {
+    if(m_index == eachPair.first && _otherBody->m_index == eachPair.second)
+      return true;
+    if(_otherBody->m_index == eachPair.first && m_index == eachPair.second)
+      return true;
+  }
+  //Addition 3: check branching on the closure connection
+  for(auto eachPair: m_closureIndices) {
+    if(m_backwardConnections.size() > 0) {
+      if(m_index == eachPair.first) {
+        if(_otherBody->GetBackwardConnection(0).GetPreviousBody()->m_index == eachPair.second)
+          return true;
+
+      }
+      if(m_index == eachPair.second) {
+        if(_otherBody->GetBackwardConnection(0).GetPreviousBody()->m_index == eachPair.first)
+          return true;
+      }
+      if(_otherBody->m_index == eachPair.first) {
+        auto c = m_backwardConnections[0];
+        if(c->GetPreviousBody()->m_index == eachPair.second)
+          return true;
+      }
+      if(_otherBody->m_index == eachPair.second) {
+        auto c = m_backwardConnections[0];
+        if(c->GetPreviousBody()->m_index == eachPair.first)
+          return true;
+      }
+    }
+  }
+
+  //4. Addition 4: branched closures
+  for(auto eachPair1 : m_closureIndices) {
+    if(m_index == eachPair1.first || m_index == eachPair1.second) {
+      for(auto eachPair2 : m_closureIndices) {
+        if(_otherBody->m_index == eachPair2.first || _otherBody->m_index == eachPair2.second) {
+          if(eachPair1.first == eachPair2.first)
+            return true;
+        }
+      }
+    }
+  }
   return this == _otherBody.get();
 }
 

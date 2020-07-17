@@ -534,6 +534,19 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   //get connection info
   string connectionTag = ReadFieldString(_is, _cbs,
       "Failed reading connections tag.");
+    if(connectionTag == "ADJACENCIES") {
+      size_t closuresCount = ReadField<size_t>(_is, _cbs,
+          "Failed reading number of closing loop connections.");
+      for(size_t m = 0; m < closuresCount && _is; ++m) {
+        //read body indices
+        int firstI = ReadField<int>(_is, _cbs, "Failed reading first closing loop index");
+        int secondI = ReadField<int>(_is, _cbs, "Failed reading second closing loop index");
+        for(auto& Body: m_freeBody) {
+          Body->SetClosureIndices(make_pair(firstI, secondI));
+        }
+      }
+      connectionTag = ReadFieldString(_is, _cbs, "Failed reading connections tag.");
+    }
   if(connectionTag != "CONNECTIONS")
     throw ParseException(_cbs.Where(),
         "Unknwon connections tag '" + connectionTag + "'."

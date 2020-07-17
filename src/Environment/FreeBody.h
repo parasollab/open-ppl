@@ -160,6 +160,10 @@ class FreeBody : public Body {
     /// @param _transformation Transformation
     void ConfigureRender(Transformation& _transformation);
 
+    /////////////////////////////////////////////////////////////////////////////
+    /// @bried define the necessary connection(s) to close a loop
+    void SetClosureIndices(pair<size_t, size_t> _connection);
+
     ///@}
     ///@name I/O
     ///@{
@@ -219,6 +223,7 @@ class FreeBody : public Body {
     vector<Connection*> m_backwardConnections; ///< Backward Connections
 
     Transformation m_renderTransformation;     ///< Rendering Transform
+    vector<pair<size_t, size_t> > m_closureIndices;
 };
 
 #endif
