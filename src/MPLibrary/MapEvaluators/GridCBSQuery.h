@@ -32,11 +32,12 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::RoadmapType   RoadmapType;
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::Path          Path;
-    typedef typename RoadmapType::VID        VID;
-    typedef typename RoadmapType::EdgeID     EdgeID;
+    typedef typename MPTraits::RoadmapType          RoadmapType;
+    typedef typename MPTraits::CfgType              CfgType;
+    typedef typename MPTraits::Path                 Path;
+    typedef typename RoadmapType::VID               VID;
+    typedef typename RoadmapType::EdgeID            EdgeID;
+    typedef typename GridIntervalMap<MPTraits>::CellConflict  CellConflict;
 
     ///@}
 
@@ -52,19 +53,24 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
       CfgType cfg2;     ///< The second robot's configuration.
       size_t  timestep; ///< The timestep when the collision occurred.
 
+      std::vector<Robot*> robots;     ///< The conflicting robots
+      size_t cellIndex;     ///< The index cell.
+
+
       /// @todo This is to support old gcc v4.x, replace with
       ///       default-constructed class members after we upgrade.
-      Conflict(const CfgType& _cfg1 = CfgType(nullptr),
-          const CfgType& _cfg2 = CfgType(nullptr),
-          const size_t _timestep = 0) :
-          cfg1(_cfg1),
-          cfg2(_cfg2),
-          timestep(_timestep)
+      Conflict(const size_t _timestep = 0,
+          const std::vector<Robot*> _robots = std::vector<Robot*>(),
+          const size_t _cellIndex = 0 )
+           :
+          timestep(_timestep),
+          robots(_robots),
+          cellIndex(_cellIndex)
       {}
 
       /// @return True if this is an empty conflict.
       bool Empty() const noexcept {
-        return !cfg1.GetRobot();
+        return robots.size() <= 1;
       }
     };
 
@@ -73,6 +79,12 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     /// A mapping from robot to conflict set.
     typedef std::map<Robot*, ConflictSet> ConflictMap;
+
+    /// A set of conflicts for a single robot, keyed on timestep.
+    typedef std::multimap<size_t, size_t> CellConflictSet;
+
+    /// A mapping from robot to conflict set.
+    typedef std::map<Robot*, CellConflictSet> CellConflictMap;
 
     /// A solution to the query is a path for each robot. These are implemented
     /// with shared_ptr because we may have many copies of a particular path at
@@ -84,7 +96,8 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     struct CBSNode {
 
       double      cost{0};     ///< The total cost of the team's path.
-      ConflictMap conflicts;   ///< The conflicts in this node.
+      //ConflictMap conflicts;   ///< The conflicts in this node.
+      CellConflictMap cellConflicts; 
       Solution    solution;    ///< The constructed solution.
 
       /// Order by cost.
@@ -150,7 +163,7 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @param _timestep The timestep when _cfg must be avoided.
     /// @param _parent   The parent CBS node (its conflicts will be copied).
     /// @param _tree     The CBS tree to add new nodes.
-    void CreateChildNode(Robot* const _robot, CfgType&& _cfg,
+    void CreateChildNode(Robot* const _robot, Robot* const _robot2, const size_t _cellIndex,
         const size_t _timestep, const CBSNode& _parent, CBSTree& _tree);
 
     /// Compute the total cost of the paths in a solution.
@@ -161,8 +174,7 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @param _robot     The individual robot.
     /// @param _conflicts The conflicts to avoid.
     /// @return A path if found, or empty pointer if not.
-    std::shared_ptr<Path> SolveIndividualTask(Robot* const _robot,
-        const ConflictMap& _conflicts = {});
+    std::shared_ptr<Path> SolveIndividualTask(Robot* const _robot, const CellConflictMap& _cellConflicts = {});
 
     /// Store a valid solution in the MPLibrary's solution object.
     /// @param _solution The solution paths to store.
@@ -173,6 +185,8 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @return A discovered conflict, or an empty one if none was found.
     Conflict FindConflict(const Solution& _solution);
 
+    Conflict FindConflict2(const Solution& _solution);
+
     /// Define a function for computing path weights w.r.t. multi-robot
     /// problems. Here the metric is the number of timesteps, and we return
     /// infinity if taking an edge would result in a inter-robot collision.
@@ -182,16 +196,29 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @return The time to the target node via this edge, or infinity if taking
     ///         this edge would result in a collision with dynamic obstacles.
     double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-        const double _sourceTimestep, const double _bestTimestep) const;
+        const double _sourceTimestep, const double _bestTimestep);
 
-    /// Check if an edge is collision-free with respect to another robot's cfg.
-    /// @param _source The cfg source of the edge.
-    /// @param _target The cfg target of the edge.
-    /// @param _conflictCfg The other robot's cfg to check.
-    /// @return True if there is no collision between this robot traveling the
-    ///         edge from _source to _target and the other robot at _conflictCfg.
-    bool IsEdgeSafe(const VID _source, const VID _target,
-        const CfgType& _conflictCfg) const;
+    // Check if an edge is collision-free with respect to a given workspace grid-cell
+    bool IsEdgeSafe(const VID _source, const VID _target, const size_t _conflictCell);
+
+    // Maps edges and vertices are to workspace grid cells, it uses the below functions
+    void RoadmapsCellMapping();
+
+    // Maps edges to workspace cells, an edge is represented as a vector of set of cells 
+    // for storing accurately the sets of cells that are swept during each intermediate 
+    // cfg of the edge. 
+    void EdgeCellMapping(Robot* _robot, size_t _source, size_t _target);
+
+    // Maps vertices to a set of cells.
+    void VertexCellMapping(Robot* _robot, size_t _vid);
+
+    // Updates the Reservation Table (whis is stored in the Grid Interval Map tool).
+    // When a path is given, it is updated into the reservation table by updating vertices
+    // and edges by retrieving their corresponding sets of cells that they swept from the
+    // cellsEdge and cellsVertex caches. 
+    void UpdatePathReservationTable(Path* _path, size_t _lastTimestep);
+
+    //void VertexCellMapping(Robot* _robot, size_t _vid);
 
     ///@}
     ///@name Internal State
@@ -206,15 +233,31 @@ class GridCBSQuery : public MapEvaluatorMethod<MPTraits> {
     size_t m_nodeLimit{std::numeric_limits<size_t>::max()};
 
     /// The current set of conflicts to avoid.
-    const ConflictSet* m_currentConflicts{nullptr};
+    //const ConflictSet* m_currentConflicts{nullptr};
 
     /// The set of conflicts we've already tried to resolve.
-    std::set<ConflictMap> m_conflictCache;
+    //std::set<ConflictMap> m_conflictCache;
 
     /// A map from robot to task.
     std::unordered_map<Robot*, MPTask*> m_taskMap;
 
     std::string m_gridIntervalMapLabel; ///< The grid interval map tool label/
+
+
+    const CellConflictSet* m_currentCellConflicts{nullptr}; // The current set of cellconflicts
+
+    std::set<CellConflictMap> m_cellConflictCache; 
+
+    bool m_alternativeFindConflict{false}; // A flag for utilizing a alternative FindConflict function
+
+    std::unordered_map<Robot*,
+      std::unordered_map<size_t,
+        std::unordered_map<size_t, 
+          std::vector<std::unordered_set<size_t>>>>> m_cellsEdgeCache; // The sets of cells that the existing edges swept.
+
+    std::unordered_map<Robot*,
+        std::unordered_map<size_t, 
+          std::unordered_set<size_t>>> m_cellsVertexCache; // The sets of cells that the exisiting vertices swept.
 
     ///@}
 
@@ -247,6 +290,9 @@ GridCBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
     // Parse the other options.
   m_gridIntervalMapLabel = _node.Read("gridIntervalMapLabel", false, "",
       "Label of the GridIntervalMap");
+
+  m_alternativeFindConflict = _node.Read("alternativeFindConflict", false, m_alternativeFindConflict,
+      "Boolean flag to choose alternative FindConflict function");
 
 }
 
@@ -305,6 +351,12 @@ operator()() {
   // Clear the group task for creating the individual plans.
   this->GetMPLibrary()->SetGroupTask(nullptr);
 
+  {
+  MethodTimer mt(this->GetStatClass(),
+    this->GetNameAndLabel() + "::PreProccesing::RoadmapsCellMapping"); 
+  RoadmapsCellMapping();
+  }
+
   // Intialize the CBS tree.
   CBSTree tree;
   ConstructInitialSolution(tree);
@@ -317,6 +369,7 @@ operator()() {
   while(!tree.empty() and m_nodeLimit > counter) {
     // Increment iteration count.
     ++counter;
+    this->GetStatClass()->IncStat("CBSNodes");
     if(this->m_debug)
       std::cout << "\tStarting iteration " << counter << "."
                 << std::endl;
@@ -326,7 +379,13 @@ operator()() {
     tree.pop();
 
     // Check the solution for conflicts.
-    Conflict conflict = FindConflict(currentCBSNode.solution);
+
+    Conflict conflict;
+
+    if(!m_alternativeFindConflict) 
+      conflict = FindConflict(currentCBSNode.solution);
+    else 
+      conflict = FindConflict2(currentCBSNode.solution);
 
     // If we detected a conflict, this solution isn't valid. Add new child nodes
     // to the tree and move on to the next node.
@@ -357,7 +416,7 @@ operator()() {
   this->GetMPLibrary()->SetGroupTask(m_groupTask);
 
   // Clear the conflict cache.
-  m_conflictCache.clear();
+  m_cellConflictCache.clear();
 
   return success;
 }
@@ -405,13 +464,14 @@ void
 GridCBSQuery<MPTraits>::
 CreateChildNodes(Conflict&& _conflict, const CBSNode& _parent, CBSTree& _tree) {
   // Find the two robots involved in the conflict.
-  auto robot1 = _conflict.cfg1.GetRobot(),
-       robot2 = _conflict.cfg2.GetRobot();
+
+  auto robot1 = _conflict.robots[0],
+        robot2 = _conflict.robots[1];
 
   // Assign the conflict to each robot.
-  CreateChildNode(robot1, std::move(_conflict.cfg2), _conflict.timestep,
+  CreateChildNode(robot1, robot2, _conflict.cellIndex, _conflict.timestep,
       _parent, _tree);
-  CreateChildNode(robot2, std::move(_conflict.cfg1), _conflict.timestep,
+  CreateChildNode(robot2, robot1, _conflict.cellIndex, _conflict.timestep,
       _parent, _tree);
 }
 
@@ -419,23 +479,25 @@ CreateChildNodes(Conflict&& _conflict, const CBSNode& _parent, CBSTree& _tree) {
 template <typename MPTraits>
 void
 GridCBSQuery<MPTraits>::
-CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
-    const CBSNode& _parent, CBSTree& _tree) {
+CreateChildNode(Robot* const _robot, Robot* const _robot2, const size_t _cellIndex, 
+  const size_t _timestep, const CBSNode& _parent, CBSTree& _tree) {
+  auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
+  
   if(this->m_debug)
     std::cout << "\t\tAttempting to create CBS node with conflict on robot "
               << _robot->GetLabel() << " at timestep "
-              << _timestep << " colliding against robot "
-              << _cfg.GetRobot()->GetLabel()
-              << std::endl;
+              << _timestep << ", at cell " << _cellIndex << " with center at " 
+              << giMap->CellCenter(_cellIndex) << " colliding against robot "
+              << _robot2->GetLabel() << std::endl;
 
   // Initialize the child node by copying the parent.
   CBSNode child = _parent;
 
   // Assert that we aren't adding a duplicate conflict, which should be
   // impossible with a correct implementation.
-  auto bounds = child.conflicts[_robot].equal_range(_timestep);
-  for(auto iter = bounds.first; iter != bounds.second; ++iter)
-    if(iter->second == _cfg) {
+  auto cellBounds = child.cellConflicts[_robot].equal_range(_timestep);
+  for(auto iter = cellBounds.first; iter != cellBounds.second; ++iter)
+    if(iter->second == _cellIndex) {
       if(this->m_debug)
         std::cout << "\t\t\tConflict double-assigned to robot "
                   << _robot->GetLabel() << ", skipping."
@@ -443,7 +505,8 @@ CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
       return;
     }
 
-  child.conflicts[_robot].emplace(_timestep, std::move(_cfg));
+
+  child.cellConflicts[_robot].emplace(_timestep, _cellIndex);
 
 #if 0
   for(auto conflictSet : child.conflicts) {
@@ -457,16 +520,19 @@ CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
 #endif
 
   // If we've already seen this set of conflicts, don't check them again.
-  if(m_conflictCache.count(child.conflicts)) {
+  if(m_cellConflictCache.count(child.cellConflicts)) {
     if(this->m_debug)
       std::cout << "\t\t\tThis conflict set was already attempted, skipping."
                 << std::endl;
     return;
   }
-  m_conflictCache.insert(child.conflicts);
+
+  m_cellConflictCache.insert(child.cellConflicts);
+
+
 
   // Find a path for this robot. If it fails, discard the new node.
-  auto path = SolveIndividualTask(_robot, child.conflicts);
+  auto path = SolveIndividualTask(_robot,  child.cellConflicts);
   if(!path)
     return;
 
@@ -493,21 +559,21 @@ ComputeCost(const Solution& _solution) {
 template <typename MPTraits>
 std::shared_ptr<typename MPTraits::Path>
 GridCBSQuery<MPTraits>::
-SolveIndividualTask(Robot* const _robot, const ConflictMap& _conflicts) {
+SolveIndividualTask(Robot* const _robot, const CellConflictMap& _cellConflicts) {
   MethodTimer mt(this->GetStatClass(),
-      this->GetNameAndLabel() + "SolveIndividualTask");
+      this->GetNameAndLabel() + "::ConflictResolution");
 
   MPTask* const task = m_taskMap.at(_robot);
   if(this->m_debug)
-    std::cout << (_conflicts.empty() ? "\t" : "\t\t\t")
+    std::cout << (_cellConflicts.empty() ? "\t" : "\t\t\t")
               << "Solving task '" << task->GetLabel() << "' (" << task
               << ") for robot '" << _robot->GetLabel() << "' (" << _robot
               << ")."
               << std::endl;
 
   // Set the conflicts to avoid.
-  if(!_conflicts.empty())
-    m_currentConflicts = &_conflicts.at(_robot);
+  if(!_cellConflicts.empty())
+    m_currentCellConflicts = &_cellConflicts.at(_robot);
 
   // Generate a path for this robot individually while avoiding the conflicts.
   this->GetMPLibrary()->SetTask(task);
@@ -515,11 +581,12 @@ SolveIndividualTask(Robot* const _robot, const ConflictMap& _conflicts) {
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
 
-  // Clear the conflicts.
-  m_currentConflicts = nullptr;
+
+    // Clear the conflicts.
+  m_currentCellConflicts = nullptr;
 
   if(this->m_debug)
-    std::cout << (_conflicts.empty() ? "\t\t" : "\t\t\t\t")
+    std::cout << (_cellConflicts.empty() ? "\t\t" : "\t\t\t\t")
               << "Path for robot " << _robot->GetLabel() << " was "
               << (success ? "" : "not ") << "found."
               << std::endl;
@@ -552,10 +619,13 @@ SetSolution(Solution&& _solution) {
 }
 
 
+// This is the FindConflict() original function.
 template <typename MPTraits>
 typename GridCBSQuery<MPTraits>::Conflict
 GridCBSQuery<MPTraits>::
 FindConflict(const Solution& _solution) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ConflictDetection");
   auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
   // Recreate each path at resolution level.
   std::map<Robot*, std::vector<CfgType>> cfgPaths;
@@ -563,17 +633,77 @@ FindConflict(const Solution& _solution) {
     Robot* const robot = pair.first;
     const auto& path   = pair.second;
     cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
-    giMap->UpdateReservationTable(path.get());
   }
-  
+
   // Find the latest timestep in which a robot is still moving.
   size_t lastTimestep = 0;
   for(auto& path : cfgPaths)
     lastTimestep = std::max(lastTimestep, path.second.size());
 
-  auto vc = static_cast<CollisionDetectionValidity<MPTraits>*>(
-      this->GetValidityChecker(m_vcLabel)
-  );
+  // Since resrvation table stores safe intervals, we need to know the
+  // last timestep of all paths. Then we need to go through all edges
+  // of all paths and then updating the resetvation table passing just 
+  // the set of cells and the time interval.  
+
+  // Updating reservation tables of each cell
+  std::vector<Path*> paths;
+  for(const auto& pair : _solution) {
+    const auto& path   = pair.second;
+    paths.push_back(path.get());
+    UpdatePathReservationTable(path.get(), lastTimestep);
+  }
+  auto cellConflict = giMap->FindEarliestConflict();
+  giMap->ClearConflicts();
+
+  if(!cellConflict.Empty()) {
+
+    auto robot1 = cellConflict.robots[0];
+    auto robot2 = cellConflict.robots[1];
+
+    if(this->m_debug)
+            std::cout << "\t\tConflict detected at timestemp " << cellConflict.timestep
+                      << " (time " << this->GetEnvironment()->GetTimeRes() * cellConflict.timestep
+                      << ", cell " << cellConflict.cellIndex << ".)"
+                      << "\n\t\t\tRobot " << robot1->GetLabel() << " and  "
+                      << "\n\t\t\tRobot " << robot2->GetLabel() << ". "
+                      << std::endl;
+
+        Conflict newConflict{cellConflict.timestep, cellConflict.robots, cellConflict.cellIndex};
+
+        return newConflict;
+  }
+
+  if(this->m_debug)
+    std::cout << "\t\tNo conflict detected." << std::endl;
+
+  // We didn't find a conflict, return an empty one.
+  return {};
+}
+
+
+// This is the FindConflict() second function.
+template <typename MPTraits>
+typename GridCBSQuery<MPTraits>::Conflict
+GridCBSQuery<MPTraits>::
+FindConflict2(const Solution& _solution) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ConflictDetection");
+  auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
+  // Recreate each path at resolution level.
+  std::map<Robot*, std::vector<CfgType>> cfgPaths;
+  for(const auto& pair : _solution) {
+    Robot* const robot = pair.first;
+    const auto& path   = pair.second;
+    cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
+  }
+
+  // Find the latest timestep in which a robot is still moving.
+  size_t lastTimestep = 0;
+  for(auto& path : cfgPaths)
+    lastTimestep = std::max(lastTimestep, path.second.size());
+
+  double cellsPerCfg = 0;
+  double counter = 0;
 
   // Step through each timestep.
   for(size_t t = 0; t < lastTimestep; ++t) {
@@ -584,8 +714,10 @@ FindConflict(const Solution& _solution) {
       const auto& path1  = iter1->second;
       const size_t step1 = std::min(t, path1.size() - 1);
       const auto& cfg1   = path1[step1];
-      auto multibody1    = robot1->GetMultiBody();
-      multibody1->Configure(cfg1);
+      auto cells1 = giMap->LocateCells(cfg1);
+
+      cellsPerCfg += cells1.size();
+      ++counter;
 
       // Compare to all remaining robots.
       for(auto iter2 = ++iter1; iter2 != cfgPaths.end(); ++iter2) {
@@ -594,33 +726,43 @@ FindConflict(const Solution& _solution) {
         const auto& path2  = iter2->second;
         const size_t step2 = std::min(t, path2.size() - 1);
         const auto& cfg2   = path2[step2];
-        auto multibody2    = robot2->GetMultiBody();
-        multibody2->Configure(cfg2);
+        auto cells2 = giMap->LocateCells(cfg2);
 
-        // Check for collision. If none, move on.
-        CDInfo cdInfo;
-        const bool collision = vc->IsMultiBodyCollision(cdInfo,
-            multibody1, multibody2, this->GetNameAndLabel());
+        bool collision = false;
+        size_t cellIndex = 0;
+
+        for(auto cell : cells1) {
+          if(cells2.count(cell)) {
+            collision = true;
+            cellIndex = cell;
+            break;
+          }
+        }
+
         if(!collision)
           continue;
 
-        if(this->m_debug)
-          std::cout << "\t\tConflict detected at timestemp " << t
-                    << " (time " << this->GetEnvironment()->GetTimeRes() * t
-                    << ")."
-                    << "\n\t\t\tRobot " << robot1->GetLabel() << ": "
-                    << cfg1.PrettyPrint()
-                    << "\n\t\t\tRobot " << robot2->GetLabel() << ": "
-                    << cfg2.PrettyPrint()
-                    << std::endl;
+        this->GetStatClass()->SetStat("CellsPerCfg", cellsPerCfg/counter);
 
-        Conflict newConflict{cfg1, cfg2, t};
+        std::vector<Robot*> robots{robot1,robot2};
+        
+        if(this->m_debug)
+            std::cout << "\t\tConflict detected at timestemp " << t
+                      << " (time " << this->GetEnvironment()->GetTimeRes() * t
+                      << ", cell " << cellIndex << ".)"
+                      << "\n\t\t\tRobot " << robot1->GetLabel() << " and  "
+                      << "\n\t\t\tRobot " << robot2->GetLabel() << ". "
+                      << std::endl;
+
+        Conflict newConflict{t, robots, cellIndex};
 
         return newConflict;
       }
     }
   }
 
+  this->GetStatClass()->SetStat("CellsPerCfg", cellsPerCfg/counter);
+ 
   if(this->m_debug)
     std::cout << "\t\tNo conflict detected." << std::endl;
 
@@ -633,7 +775,7 @@ template <typename MPTraits>
 double
 GridCBSQuery<MPTraits>::
 MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-    const double _startTime, const double _bestEndTime) const {
+    const double _startTime, const double _bestEndTime) {
   // Compute the time when we will end this edge.
   const size_t startTime = static_cast<size_t>(std::llround(_startTime)),
                endTime   = startTime + _ei->property().GetTimeSteps();
@@ -644,21 +786,21 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     return endTime;
 
   // If there are no current conflicts, there is nothing to check.
-  if(!m_currentConflicts)
+  if(!m_currentCellConflicts)
     return endTime;
 
   // There is at least one conflict. Find the set which occurs between this
   // edge's start and end time.
-  auto lower = m_currentConflicts->lower_bound(startTime),
-       upper = m_currentConflicts->upper_bound(endTime);
+  auto lower = m_currentCellConflicts->lower_bound(startTime),
+       upper = m_currentCellConflicts->upper_bound(endTime);
 
   // If all of the conflicts happen before or after now, there is nothing to
   // check.
-  const bool beforeNow = lower == m_currentConflicts->end();
+  const bool beforeNow = lower == m_currentCellConflicts->end();
   if(beforeNow)
     return endTime;
 
-  const bool afterNow = upper == m_currentConflicts->begin();
+  const bool afterNow = upper == m_currentCellConflicts->begin();
   if(afterNow)
     return endTime;
 
@@ -666,7 +808,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   for(auto iter = lower; iter != upper; ++iter) {
     // Unpack the conflict data.
     const size_t timestep = iter->first;
-    const CfgType& cfg    = iter->second;
+    const size_t cell    = iter->second;
 
     // Assert that the conflict occurs during this edge transition (remove this
     // later once we're sure it works right).
@@ -676,15 +818,16 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
                                     << "conflicts that occur during this range.";
 
     // Check if the conflict cfg hits this edge.
-    const bool hitsEdge = !IsEdgeSafe(_ei->source(), _ei->target(), cfg);
-    if(!hitsEdge)
+    const bool hitsEdge = !IsEdgeSafe(_ei->source(), _ei->target(), cell);
+    if(!hitsEdge) 
       continue;
+
+    auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
 
     if(this->m_debug)
       std::cout << "\t\t\t\t\tEdge (" << _ei->source() << ","
-                << _ei->target() << ") collides against robot "
-                << cfg.GetRobot()->GetLabel()
-                << " at " << cfg.PrettyPrint()
+                << _ei->target() << ") collides against cell "
+                << cell << " at " << giMap->CellCenter(cell)
                 << std::endl;
 
     // The conflict blocks this edge.
@@ -696,48 +839,141 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 }
 
 
-template <typename MPTraits>
+template<typename MPTraits>
 bool
 GridCBSQuery<MPTraits>::
-IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
-    const {
+IsEdgeSafe(const VID _source, const VID _target, const size_t _conflictCell) {
+
   auto robot = this->GetTask()->GetRobot();
-  auto roadmap = this->GetRoadmap(robot);
+  {
+  MethodTimer mt(this->GetStatClass(),
+    this->GetNameAndLabel() + "::IsEdgeSafe::AccessingCache"); 
+  auto it = m_cellsEdgeCache.find(robot);
+  if(it != m_cellsEdgeCache.end()) {
+    // std::cout << "Robot exists" << std::endl;
+    auto it2 = it->second.find(_source);
+    if(it2 != it->second.end()) {
+      // std::cout << "vid source exists" << std::endl;
+      auto it3 = it2->second.find(_target);
+      if(it3 != it2->second.end()) {
+        // std::cout << "vid target exists" << std::endl;
+        this->GetStatClass()->IncStat("ACCounter");
+        auto cellsEdge = it3->second;
+        for(size_t i = 0 ; i < cellsEdge.size() ; ++i)
+          if(cellsEdge[i].count(_conflictCell)) {
+            // std::cout << "Invalidating edge since conflictCell is contained in the edge" << std::endl;
+            return false;
+          }
+      }
+    }
+  }
+  return true;
+  }  
+}
+
+
+template<typename MPTraits>
+void
+GridCBSQuery<MPTraits>::
+RoadmapsCellMapping() {
+
+  for(Robot* const robot : *m_groupTask->GetRobotGroup()) {
+    auto roadmap = this->GetRoadmap(robot);
+    auto numVertices = roadmap->get_num_vertices();
+    for(size_t i = 0 ; i < numVertices; ++i) {
+      VertexCellMapping(robot,i);
+      for(size_t j = 0 ; j < numVertices; ++j ) {
+        if(roadmap->IsEdge(i,j)) 
+          EdgeCellMapping(robot,i,j);
+      }  
+    }
+  }
+}
+
+
+template<typename MPTraits>
+void
+GridCBSQuery<MPTraits>::
+EdgeCellMapping(Robot* _robot, size_t _source, size_t _target) {
+
+  auto roadmap = this->GetRoadmap(_robot);
 
   // Reconstruct the edge path at resolution-level.
   std::vector<CfgType> path;
-  path.push_back(roadmap->GetVertex(_source));
   std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(
       roadmap, _source, _target);
   path.insert(path.end(), edge.begin(), edge.end());
-  path.push_back(roadmap->GetVertex(_target));
-
-  // Get the valididty checker and make sure it has type
-  // CollisionDetectionValidity.
-  /// @TODO Figure out how to avoid needing this downcast so that we can
-  ///       leverage more efficient compose checks (like checking the bounding
-  ///       spheres first).
-  auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
-
-  // Configure the other robot at _conflictCfg.
-  auto otherMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
-  otherMultiBody->Configure(_conflictCfg);
-
-  // Check each configuration in the resolution-level path for collision with
-  // _conflictCfg.
-  CDInfo cdInfo;
-  auto thisMultiBody = robot->GetMultiBody();
+  auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
+  std::vector<std::unordered_set<size_t>> cellsEdge;
   for(const CfgType& cfg : path) {
-    thisMultiBody->Configure(cfg);
-    if(vc->IsMultiBodyCollision(cdInfo, thisMultiBody, otherMultiBody,
-        this->GetNameAndLabel()))
-      return false;
+    auto cells = giMap->LocateCells(cfg);
+
+    cellsEdge.push_back(cells);
   }
 
-  // If we haven't detected a collision, the edge is safe.
-  return true;
+  m_cellsEdgeCache[_robot][_source][_target] = cellsEdge;
+
 }
+
+
+template<typename MPTraits>
+void
+GridCBSQuery<MPTraits>::
+VertexCellMapping(Robot* _robot, size_t _vid) {
+
+  auto roadmap = this->GetRoadmap(_robot);
+  auto cfg = roadmap->GetVertex(_vid);
+  auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
+  auto cellsVertex = giMap->LocateCells(cfg);
+  m_cellsVertexCache[_robot][_vid] = cellsVertex;
+}  
+
+
+template<typename MPTraits>
+void
+GridCBSQuery<MPTraits>::
+UpdatePathReservationTable(Path* _path, size_t _lastTimestep) {
+
+  auto robot = _path->GetRobot();
+  auto vidPath = _path->VIDs();
+  size_t  minTime = 0, maxTime = 0;
+
+  auto roadmap = this->GetRoadmap(robot);
+  auto giMap = this->GetMPTools()->GetGridIntervalMap(m_gridIntervalMapLabel);
+
+  // Retrieving the set of cells form the first vertex from cellVertex cache
+  auto cellsVertex =  m_cellsVertexCache[robot][vidPath[0]];
+  cellsVertex.clear();
+  giMap->UpdateReservationTable(robot, cellsVertex, minTime, minTime);
+
+
+  for(size_t i = 0 ; i < vidPath.size()-1 ; ++i) {
+    // Retrieving the vector's of set of cells for each edge from the cellEdge cache
+    auto edgeProperty = roadmap->GetEdge(vidPath[i],vidPath[i+1]);
+    auto cellsEdge = m_cellsEdgeCache[robot][vidPath[i]][vidPath[i+1]];
+    for(size_t j = 0 ; j < cellsEdge.size() ; ++j) {
+      giMap->UpdateReservationTable(robot, cellsEdge[j], minTime + j, minTime + j);
+      ++maxTime;
+    }
+
+    auto cellsVertex =  m_cellsVertexCache[robot][vidPath[0]];
+    giMap->UpdateReservationTable(robot, cellsVertex, maxTime, maxTime);
+    
+    minTime = maxTime;
+
+    cellsEdge.clear();
+    cellsVertex.clear();
+  }
+
+  // Once we finish traversing the path, if there ais at least one robot that is still moving 
+  // we add those timestep to the reservation table for not making the robot "disappear" once it gets
+  // to the goal. 
+  if(_lastTimestep > maxTime) {
+    cellsVertex =  m_cellsVertexCache[robot][vidPath[vidPath.size()-1]];
+    giMap->UpdateReservationTable(robot, cellsVertex, maxTime, _lastTimestep);
+  }
+}
+ 
 
 /*----------------------------------------------------------------------------*/
 

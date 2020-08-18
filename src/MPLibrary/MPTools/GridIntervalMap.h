@@ -68,9 +68,10 @@ class GridIntervalMap final : public MPBaseObject<MPTraits> {
 
       /// @todo This is to support old gcc v4.x, replace with
       ///       default-constructed class members after we upgrade.
-      CellConflict(const std::vector<Robot*> _robots,
+      CellConflict(
           const size_t _cellIndex = 0,
-          const size_t _timestep = 0) :
+          const size_t _timestep = 0,
+          const std::vector<Robot*> _robots = std::vector<Robot*>() ) :
           robots(_robots),
           cellIndex(_cellIndex),
           timestep(_timestep)
@@ -91,10 +92,7 @@ class GridIntervalMap final : public MPBaseObject<MPTraits> {
 
     typedef std::map<size_t,RobotIntervals> CellsIntervals; // Mapping a cell to robot intervals
 
-
-
-    
-
+    typedef std::map<size_t,CellConflict> ConflictMap; // A map of all the detected conflicts
 
 
     ///@}
@@ -147,13 +145,28 @@ class GridIntervalMap final : public MPBaseObject<MPTraits> {
     ///         boundary or closure).
     std::unordered_set<size_t> LocateCells(const CfgType& _c);
 
-    void UpdateReservationTable(const Path* _p);
+    // Updates the reservation table, 
+    void UpdateReservationTable(Robot* _robot, std::unordered_set<size_t> _cells , size_t _minTime,
+      size_t _maxTime);
 
+    // Adds a timestep to a set of intervals.
     void AddTimestep(Intervals& _intervals, size_t _t);
 
+    // Checks whether a timestep is contained on a given set fo intervals.
     bool ContainsTimestep(Intervals& _intervals, size_t _t);
 
+    // Check if two or more robots have been at the same cell and at the same timestep.  
     CellConflict FindConflict(size_t _cellIndex, RobotIntervals _robotIntervals, size_t _timestep);
+
+    // After checking all the paths and discovering all the conflicts, this function returns the 
+    // earliest one.
+    CellConflict FindEarliestConflict();
+
+    // Clears all conflicts and all intervals.
+    void ClearConflicts();
+
+    // Returns the geometric center of a cell.
+    Point3d CellCenter(const size_t _index) const noexcept;
 
     ///@} 
 
@@ -171,7 +184,7 @@ class GridIntervalMap final : public MPBaseObject<MPTraits> {
 
     CellsIntervals m_cellsIntervals;
 
-
+    ConflictMap m_conflictMap;
 
     ///@}
 
@@ -250,20 +263,16 @@ Initialize() {
                                     << "robot radius. Uncomment this exception "
                                     << "at your own peril!";
 
-
-  // // Install roadmap hooks.
-  // auto g = this->GetRoadmap();
-  // g->InstallHook(RoadmapType::HookType::AddVertex, this->GetNameAndLabel(),
-  //     [this](const VI _vi){this->MapCfg(_vi);});
-  // g->InstallHook(RoadmapType::HookType::DeleteVertex, this->GetNameAndLabel(),
-  //     [this](const VI _vi){this->UnmapCfg(_vi);});
-
-  // // If the graph has existing vertices, map them now.
-  // for(auto iter = g->begin(); iter != g->end(); ++iter)
-  //   MapCfg(iter);
 }
 
 /*---------------------------------- Queries ---------------------------------*/
+
+template <typename MPTraits>
+Point3d
+GridIntervalMap<MPTraits>::
+CellCenter(const size_t _index) const noexcept {
+  return m_grid->CellCenter(_index);
+}
 
 
 template <typename MPTraits>
@@ -297,6 +306,8 @@ template<typename MPTraits>
 std::unordered_set<size_t> 
 GridIntervalMap<MPTraits>::
 LocateCells(const CfgType& _c) {
+    MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::LocateCells");
 
   // Configure _c's robot at _c.
   auto robotMultiBody = _c.GetRobot()->GetMultiBody();
@@ -324,49 +335,43 @@ LocateCells(const CfgType& _c) {
 template<typename MPTraits>
 void
 GridIntervalMap<MPTraits>::
-UpdateReservationTable(const Path* _p) {
+UpdateReservationTable(Robot* _robot, std::unordered_set<size_t> _cells , size_t _minTime,
+  size_t _maxTime) {
 
-  auto cfgs = _p->FullCfgs(this->GetMPLibrary());
-  auto robot = cfgs[0].GetRobot();
-  for(size_t i = 0; i < cfgs.size() ; ++i) {
-    auto cells = LocateCells(cfgs[i]);
-    for(auto& cell : cells ) {
-      if(m_cellsIntervals.count(cell)) {
-        //inside this we need to verify is two or more robots are 
-        //ocuppying the same cell a the same timestep
-
-        auto it = m_cellsIntervals.find(cell);
-
-        //auto robotIntervals = m_cellsIntervals[cell];
-
-        if(it->second.count(robot)) {
-          //cell has been occupied before, current robot has been there before
-          //auto intervals = robotIntervals[robot];
-          auto it2 = it->second.find(robot);
+  for(auto& cell : _cells ) {
+    if(m_cellsIntervals.count(cell)) {
+      // Inside this we need to verify if two or more robots are ocuppying the same cell a the same timestep
+      auto it = m_cellsIntervals.find(cell);
+      if(it->second.count(_robot)) {
+        // Case 1: cell has been occupied before, current robot has been there before
+        auto it2 = it->second.find(_robot);
+        for(size_t i = _minTime ; i <= _maxTime ; ++i )
           AddTimestep(it2->second, i);
-        } else {
-          //cell has been occupied before, but current robot has not been there before
-          it->second[robot][i] = i;
-          //it->second.insert(std::make_pair(robot, std::make_pair(i,i)));
-        }
-        // once we added the timestep we can check it for conflicts
-
+      } else {
+        // Case 2: cell has been occupied before, but current robot has not been there before
+        it->second[_robot][_minTime] = _maxTime;
+      }
+      // Once we added the timesteps during the robot swepts the cells, we can check it 
+      // other robot has been there at the sime time (conflict detection)
+      for(size_t i = _minTime ; i <= _maxTime ; ++i ) {
         auto cellConflict =  FindConflict(cell, it->second, i );
-        if(cellConflict.Empty()) {
-          //std::cout << "No conflicts found becuase robots size is " << cellConflict.robots.size() << std::endl;
-        }
-        else {
-          std::cout << "CONFLICT found at timestep " << cellConflict.timestep << " ,at cell " 
-            << cellConflict.cellIndex << " involving robots " << std::endl;
+        // If we identify a cell conflict, we stop there, since we need the earliset confloct time.
+        if(!cellConflict.Empty()) {
+          m_conflictMap[cellConflict.timestep] = cellConflict;
+          if(this->m_debug) {  
+            std::cout << "CONFLICT found at timestep " << cellConflict.timestep << " ,at cell " 
+              << cellConflict.cellIndex << " involving robots " << std::endl;
             for(auto& robot : cellConflict.robots)
               std::cout << robot->GetLabel() << "\t";
             std::cout << std::endl; 
+          }
+          break;
         }
-
-      } else {
-        // this cell has not been occupied yet, there is no need for checking it for conclicts
-        m_cellsIntervals[cell][robot][i] = i;
-      }
+      } 
+      
+    } else {
+      // Case 3: This cell has not been occupied yet, there is no need for checking it for conclicts
+      m_cellsIntervals[cell][_robot][_minTime] = _maxTime;
     }
   }
 }
@@ -401,6 +406,7 @@ AddTimestep(Intervals& _intervals, size_t _t) {
       break;
     } else {}
   }
+  // _t is not added, the we have to add it.
   if(!timestepAdded)
     _intervals[_t] = _t;
 
@@ -428,8 +434,42 @@ FindConflict(size_t _cellIndex, RobotIntervals _robotIntervals, size_t _timestep
     if(ContainsTimestep(intervals.second, _timestep))
       robots.push_back(intervals.first);
   }
-  return CellConflict(robots, _cellIndex, _timestep);
-} 
+  return CellConflict(_cellIndex, _timestep, robots);
+}
+
+
+template<typename MPTraits>
+typename GridIntervalMap<MPTraits>::CellConflict
+GridIntervalMap<MPTraits>::
+FindEarliestConflict(){
+
+  typename GridIntervalMap<MPTraits>::CellConflict cellConflict;
+  if(!m_conflictMap.empty()) {
+    cellConflict = m_conflictMap.begin()->second;
+ 
+    std::cout << "CONFLICT found at timestep " << cellConflict.timestep << " ,at cell " 
+      << cellConflict.cellIndex << " involving robots " << std::endl;
+    for(auto& robot : cellConflict.robots)
+      std::cout << robot->GetLabel() << "\t";
+    std::cout << std::endl; 
+          
+  } else {
+    std::cout << "NO CONFLICTS FOUND" << std::endl;
+  }
+  return cellConflict;
+
+}
+
+
+template<typename MPTraits>
+void
+GridIntervalMap<MPTraits>::
+ClearConflicts(){
+  m_conflictMap.clear();
+  m_cellsIntervals.clear();
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #endif
