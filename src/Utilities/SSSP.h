@@ -143,9 +143,9 @@ SSSPDefaultHeuristic() {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 using SSSPNeighborsFunction =
-      std::function<typename GraphType::vertex_iterator(
+      std::function<void(
                 const GraphType* g,
-                typename GraphType::vertex_descriptor current)>;
+                typename GraphType::vertex_iterator vi)>;
 
 /// Create a standard SSSP neighbors function.
 /// @return
@@ -153,10 +153,7 @@ template <typename GraphType>
 SSSPNeighborsFunction<GraphType>
 SSSPDefaultNeighbors() {
   return [](const GraphType* _g,
-            typename GraphType::vertex_descriptor _current)
-  {
-    return _g->find_vertex(_current);
-  };
+            typename GraphType::vertex_iterator _vi){};
 }
 
 
@@ -263,9 +260,8 @@ AStarSSSP(
     output.parent[current.vd] = current.parent;
 
     // Get vertex iterator for current vertex
-    auto vi = _neighbors(_g, current.vd);
-    // auto vi = _g->find_vertex(current.vd);
-
+    auto vi = _g->find_vertex(current.vd);
+    _neighbors(_g, vi);
     // Check for early termination
     auto stop = _earlyStop(vi, output);
 
@@ -402,7 +398,9 @@ AStarSSSP(
 
     // Get vertex iterator for current vertex
     // auto vi = _neighbors(_g, current.vd);
-    typename GraphType::vertex_iterator vi = _g->find_vertex(current.vd);
+    auto vi = _g->find_vertex(current.vd);
+
+    auto dynamic_vi = _neighbors(_g, vi);
 
     // Check for early termination
     auto stop = _earlyStop(vi, output);
@@ -457,11 +455,11 @@ AStarSSSP(
     std::vector<typename GraphType::vertex_descriptor>& _goals,
     SSSPPathWeightFunction<GraphType>& _weight,
     SSSPTerminationCriterion<GraphType>& _earlyStop) {
-  //auto _neighbors = SSSPDefaultNeighbors<GraphType>();
+  auto _neighbors = SSSPDefaultNeighbors<GraphType>();
   auto _heuristic = SSSPDefaultHeuristic<GraphType>();
-  //return AStarSSSP(_g, _starts, _goals, _weight, _heuristic, _neighbors, _earlyStop);
+  return AStarSSSP(_g, _starts, _goals, _weight, _heuristic, _neighbors, _earlyStop);
 
-  return AStarSSSP(_g, _starts, _goals, _weight, _heuristic, _earlyStop);
+  //return AStarSSSP(_g, _starts, _goals, _weight, _heuristic, _earlyStop);
 }
 
 
