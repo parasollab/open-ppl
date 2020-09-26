@@ -88,7 +88,7 @@ ValidatePlan(GeneralCBSNode& _node, GeneralCBSTree& _tree) {
 
 	auto constraints = FindMotionConflict(_node);
 	
-	if(constraints.first.m_timestep != MAX_INT){
+	if(constraints.first.m_timestep != std::numeric_limits<size_t>::max()){
 		AddMotionChildren(_node, _tree, constraints);
 		return false;
 	}

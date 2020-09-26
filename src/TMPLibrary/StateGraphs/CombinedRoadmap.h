@@ -3,7 +3,7 @@
 
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include "MPLibrary/MPSolution.h"
 
@@ -12,7 +12,7 @@
 class CombinedRoadmap : public StateGraph {
   public:
 
-    typedef RoadmapGraph<CfgType, WeightType>         GraphType;
+    typedef GenericStateGraph<CfgType, WeightType>         GraphType;
     typedef typename GraphType::vertex_descriptor     VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 

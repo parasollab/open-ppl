@@ -1,6 +1,6 @@
 #include "MPLibrary/MPBaseObject.h"
 #include "MPTools/SafeIntervalTool.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 
 template <typename MPTraits>

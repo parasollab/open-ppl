@@ -28,13 +28,13 @@ Initialize(){
 
 /*************************************** Accessors ***************************************/
 
-RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
 MultiTaskGraph::
 GetGraph(){
   return m_highLevelGraph.get();
 }
 
-std::shared_ptr<RoadmapGraph<Cfg,DefaultWeight<Cfg>>>
+std::shared_ptr<GenericStateGraph<Cfg,DefaultWeight<Cfg>>>
 MultiTaskGraph::
 GetAvailableIntervalGraph() {
   return m_availableIntervalGraph;

@@ -33,7 +33,7 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     ///@{
 
 
-    typedef std::unordered_map<std::string,RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
+    typedef std::unordered_map<std::string,GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
 
 
     ///@name Construction

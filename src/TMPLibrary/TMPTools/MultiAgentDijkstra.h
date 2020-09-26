@@ -11,8 +11,8 @@
 class MultiAgentDijkstra : public TMPBaseObject {
   public:
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> AvailableIntervalGraph;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> AvailableIntervalGraph;
 
     ///@name Constructor
     ///@{

@@ -12,7 +12,7 @@
 
 MoveRobot::
 MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _hasObject,
-          RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator) {
+          GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator) {
   m_robot = _robot;
   m_start = _start;
   m_goal = _goal;
@@ -22,7 +22,7 @@ MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _ha
     m_providedRoadmap = true;
   }
   else{
-    m_roadmapGraph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
+    m_roadmapGraph = new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
     m_providedRoadmap = false;
   }
   m_library = _library;
@@ -136,7 +136,7 @@ CheckPreConditions(const FactLayer* _factLayer){
   m_library->SetTask(task);
 
   HandoffAgent* agent = static_cast<HandoffAgent*>(m_robot->GetAgent());
-  agent->SetRoadmapGraph(m_roadmapGraph);
+  agent->SetGenericStateGraph(m_roadmapGraph);
   auto solution = agent->GetMPSolution();
   try{
     m_roadmapGraph->SetRobot(m_robot);

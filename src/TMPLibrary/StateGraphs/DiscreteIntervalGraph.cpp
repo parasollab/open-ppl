@@ -28,13 +28,13 @@ Initialize(){
 
 /*************************************** Accessors ***************************************/
 
-RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
 DiscreteIntervalGraph::
 GetGraph(){
   return m_highLevelGraph.get();
 }
 
-std::shared_ptr<RoadmapGraph<Cfg,DefaultWeight<Cfg>>>
+std::shared_ptr<GenericStateGraph<Cfg,DefaultWeight<Cfg>>>
 DiscreteIntervalGraph::
 GetAvailableIntervalGraph() {
   return m_availableIntervalGraph;
@@ -429,7 +429,7 @@ LowLevelGraphPath(HandoffAgent* _agent, size_t _start, size_t _goal, ConstraintM
 
 	std::unordered_map<size_t, std::set<std::pair<size_t,size_t>>> pathConstraints;
 	for(auto timeConstraint : _constraints[_agent]) {
-		if(timeConstraint.second.second == MAX_INT) {
+		if(timeConstraint.second.second == std::numeric_limits<size_t>::max()) {
 			pathConstraints[timeConstraint.first-1].insert(timeConstraint.second);
 		}
 		else {

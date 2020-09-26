@@ -23,6 +23,8 @@
  based on the one suggested by Guido van Rossum where hash table is used to associate each vertex in a graph with an array of
  adjacent vertices. There is no explicit representation of edges as objects..
  */
+#include "FibonocciHeap.h"
+
 #include <iostream>
 #include <map>
 #include <list>
@@ -36,8 +38,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <vector>
-
-using namespace std;
 
 //vector<int> *shortest_order;
 //int *distance_to_dest;
@@ -86,7 +86,7 @@ int get_min_distant_unmarked_node(graph* graph_obj, int *distance_to_dest,
 /** This function inserts a new node into the fibonacci heap. Depending on the key mentioned,
     heap min pointer is changed appropriately and degree incremented by one.
 */
-void 
+void
 FibonacciHeap::
 fib_heap_insert(FibonacciNode *new_node, double key) {
 
@@ -118,7 +118,7 @@ fib_heap_insert(FibonacciNode *new_node, double key) {
 
 /** This function deals with adding truncated nodes to the root list.
     mark value of the node is set to FALSE as it is equivalent to the node being insert first time. */
-void 
+void
 FibonacciHeap::
 fib_heap_existing_to_root(FibonacciNode *new_node) {
 
@@ -182,7 +182,7 @@ fib_heap_existing_to_root(FibonacciNode *new_node) {
 
 /** This function adds the new_child_node to the parent_node child list. Degree of the parent in incremented
     by one as well to reflect to the node*/
-void 
+void
 FibonacciHeap::
 fib_heap_add_child(FibonacciNode *parent_node,
 		FibonacciNode *new_child_node) {
@@ -205,7 +205,7 @@ fib_heap_add_child(FibonacciNode *parent_node,
 }
 
 /** This function is used to truncate a child node from a sibling list. It could be a root list as well. */
-void 
+void
 FibonacciHeap::
 fib_heap_remove_node_from_root(FibonacciNode *node) {
 
@@ -234,7 +234,7 @@ fib_heap_remove_node_from_root(FibonacciNode *node) {
     First the larger node is sliced from its sibling list and is then
     added as a child to the smaller node
     */
-void 
+void
 FibonacciHeap::
 fib_heap_link(FibonacciNode *high_node, FibonacciNode *low_node) {
 
@@ -252,7 +252,7 @@ fib_heap_link(FibonacciNode *high_node, FibonacciNode *low_node) {
     same degree into a single tree. We do this with the help of a auxillary table to see if
     there is a tree with degree already existing in our heap.
 */
-void 
+void
 FibonacciHeap::
 fib_heap_consolidate(/*fibonacci_heap *heap_inst*/) {
 
@@ -261,9 +261,9 @@ fib_heap_consolidate(/*fibonacci_heap *heap_inst*/) {
 
 	if (m_numNodes > 1) { //When the number of nodes is less then 1, consolidate makes no sense.
 		int degree_table_size = m_numNodes;
-		vector<FibonacciNode*> degree_table; //This is the table via which the degrees are compared for consolidation.
+                std::vector<FibonacciNode*> degree_table; //This is the table via which the degrees are compared for consolidation.
 		FibonacciNode *current_node = m_minNode, *start_node = m_minNode;
-		
+
 		FibonacciNode *existing_node_degree_array, *current_consolidating_node;
 
 		FibonacciNode *temp_node = m_minNode, *iterating_node = m_minNode;
@@ -369,7 +369,7 @@ fib_heap_extract_min(/*fibonacci_heap *heap_inst*/) {
 }
 
 /** This method removes the child node from its parent in the heap.*/
-void 
+void
 FibonacciHeap::
 fib_heap_cut(/*fibonacci_heap *heap_inst, */FibonacciNode *node,
 		FibonacciNode *node_parent) {
@@ -383,7 +383,7 @@ fib_heap_cut(/*fibonacci_heap *heap_inst, */FibonacciNode *node,
     values are true. It goes from child to parent until it sees a parent
     whose child mark value is false. It sets the child mark of last parent
     as true since it just lost a child.*/
-void 
+void
 FibonacciHeap::
 fib_heap_cascading_cut(/*fibonacci_heap *heap_inst, */FibonacciNode *node) {
 
@@ -404,7 +404,7 @@ fib_heap_cascading_cut(/*fibonacci_heap *heap_inst, */FibonacciNode *node) {
 /** This method sets the key field of node to amount specified as argument.
     Based on the new value it may be removed from the parent and called for
     cut and cascade methods.*/
-void 
+void
 FibonacciHeap::
 fib_heap_decrease_key(/*fibonacci_heap *heap_inst, */FibonacciNode *node_inst,
 		double new_key) {
@@ -438,7 +438,7 @@ fib_heap_decrease_key(/*fibonacci_heap *heap_inst, */FibonacciNode *node_inst,
     in the data type being used. This function is not in use for our current
     implementation.
     */
-void 
+void
 FibonacciHeap::
 fib_heap_delete(/*fibonacci_heap *heap_inst, */FibonacciNode *node) {
 	fib_heap_decrease_key(/*heap_inst, */node, INT_MIN);
@@ -497,14 +497,14 @@ void dijkstra_normal(graph* graph_instance, int src) {
 */
 
 /** This function calculates the minimum distant node using the fibonacci heap.*/
-/*int 
+/*int
 FibonacciHeap::
 get_min_distant_unmarked_node_fib_heap(graph* graph_obj,
 		fibonacci_heap *heap, FibonacciNode **node_array, bool *marked);*/
 
 /** This function implements the Dijkstra algorithm using the fibonacci heap. Source vertex
     is specified by the user as input.*/
-void 
+void
 FibonacciHeap::
 dijkstra_fibanocci(/*graph* graph_instance, */int src) {
 //TODO NEED TO MODIFY FOR MAMTP METHOD AND REMOVE UNNECESSARY STUFF
@@ -552,7 +552,7 @@ dijkstra_fibanocci(/*graph* graph_instance, */int src) {
 
 /** This function calculates the min distant unmarked node using the normal array implementation.
     This uses the Greedy approach.*/
-int 
+int
 FibonacciHeap::
 get_min_distant_unmarked_node(/*graph* graph_obj, */int *distance_to_dest,
 		std::unordered_map<size_t,bool>& marked) {
@@ -625,10 +625,10 @@ get_min_distant_unmarked_node(/*graph* graph_obj, */int *distance_to_dest,
 }
 
 /** This function calculates the minimum distant node using the fibonacci heap.*/
-int 
+int
 FibonacciHeap::
 get_min_distant_unmarked_node_fib_heap(/*graph* graph_obj,
-		fibonacci_heap *heap, */std::unordered_map<size_t,FibonacciNode*>& node_array, 
+		fibonacci_heap *heap, */std::unordered_map<size_t,FibonacciNode*>& node_array,
 		std::unordered_map<size_t,bool>& marked) {
 
 	int min_distance = INT_MAX;
@@ -641,7 +641,7 @@ get_min_distant_unmarked_node_fib_heap(/*graph* graph_obj,
 		min_node_index = min_node->m_VID;
 		//Marking that the node has reached its min distance.
 		marked[min_node_index] = true;
-		
+
 
 		//TODO NEEDS to be changed to new format
 		//Updating the distances for the adjacent vertices of min distant unmarked node.
@@ -681,7 +681,7 @@ get_min_distant_unmarked_node_fib_heap(/*graph* graph_obj,
 }
 
 /** This function runs the Depth-First-Search to find if the graph is completely connected.*/
-/*void 
+/*void
 FibonacciHeap::
 run_DFS(int node_index, std::unordered_map<size_t,bool>& discovered) {
 
@@ -701,10 +701,10 @@ run_DFS(int node_index, std::unordered_map<size_t,bool>& discovered) {
 }
 */
 /** This function check if the graph is connected by running Depth-Frist-Search on the graph.*/
-bool 
+bool
 FibonacciHeap::
 check_connected(/*graph *my_graph*/) {
-	//TODO NEED to update all of this and may be able to use RoadmapGraph's base functions
+	//TODO NEED to update all of this and may be able to use GenericStateGraph's base functions
     //Array showing if a node is connected the graoh.
 	bool *discovered = new bool[my_graph->num_vertices];
 	for (int i = 0; i < my_graph->num_vertices; i++) {

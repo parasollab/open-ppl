@@ -681,7 +681,7 @@ GetMPSolution(){
 
 void
 HandoffAgent::
-SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph){
   *m_solution->GetRoadmap(m_robot) = *_graph;
 }
 

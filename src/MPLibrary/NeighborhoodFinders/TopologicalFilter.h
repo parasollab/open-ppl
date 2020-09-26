@@ -899,7 +899,7 @@ ComputeIntersection(InputIterator _first, InputIterator _last,
 
   auto g = this->GetRoadmap();
 
-  // The input range could be VIDs or vertex iterators. Ask the RoadmapGraph for
+  // The input range could be VIDs or vertex iterators. Ask the GenericStateGraph for
   // VIDs.
   std::vector<VID> inputRange;
   inputRange.reserve(std::distance(_first, _last));

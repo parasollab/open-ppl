@@ -2,7 +2,7 @@
 #define NEW_CONFLICT_H_
 
 #include "MPLibrary/MPBaseObject.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "TMPLibrary/TaskPlan.h"
 #include "Behaviors/Agents/Agent.h"
 

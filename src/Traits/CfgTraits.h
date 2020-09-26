@@ -12,8 +12,10 @@
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+//#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/GeneralRoadmapGraph.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
@@ -175,7 +177,9 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef RoadmapGraph<C, W>              RoadmapType;
+//  typedef GenericStateGraph<C, W>              RoadmapType;
+
+  typedef GenericStateGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;

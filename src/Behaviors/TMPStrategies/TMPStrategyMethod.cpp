@@ -77,7 +77,7 @@ Initialize(Robot* _robot){
   if(m_combinedRoadmap){
 		delete m_combinedRoadmap;
   }
-	m_combinedRoadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(m_robot);
+	m_combinedRoadmap = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(m_robot);
 
   m_library = nullptr;
 
@@ -447,7 +447,7 @@ TransformITs(){
       Simulation::GetStatClass()->StartClock("Placement InteractionTemplate "
                 + currentTemplate->GetInformation()->GetLabel());
 
-      RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = currentTemplate->GetConnectedRoadmap();
+      GenericStateGraph<Cfg, DefaultWeight<Cfg>>* graph = currentTemplate->GetConnectedRoadmap();
 
       // Copy vertices and map the change in VIDs.
       std::unordered_map<VID, VID> oldToNew;

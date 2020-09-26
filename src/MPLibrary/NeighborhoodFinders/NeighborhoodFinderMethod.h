@@ -6,7 +6,7 @@
 
 #include "Neighbors.h"
 #include "Utilities/MPUtils.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 
 namespace pmpl_detail {
@@ -323,9 +323,9 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _v A potential neighbor for _c.
     /// @return True if m_unconnected and there is already a direct edge from _c
     ///         to _v. Always returns false if m_unconnected is false.
-    template <typename RoadmapGraph, typename Cfg>
-    bool DirectEdge(const RoadmapGraph* _g, const Cfg& _c,
-        const typename RoadmapGraph::VID _v) const;
+    template <typename GenericStateGraph, typename Cfg>
+    bool DirectEdge(const GenericStateGraph* _g, const Cfg& _c,
+        const typename GenericStateGraph::VID _v) const;
 
     ///@}
     ///@name Internal State
@@ -664,17 +664,17 @@ FindAllNeighborPairs(GraphType* _g,
 /*-------------------------------- Helpers -----------------------------------*/
 
 template <typename MPTraits>
-template <typename RoadmapGraph, typename Cfg>
+template <typename GenericStateGraph, typename Cfg>
 bool
 NeighborhoodFinderMethod<MPTraits>::
-DirectEdge(const RoadmapGraph* _g, const Cfg& _c,
-    typename RoadmapGraph::VID _v) const {
+DirectEdge(const GenericStateGraph* _g, const Cfg& _c,
+    typename GenericStateGraph::VID _v) const {
   // Consider all nodes to be non-neighbors if we aren't using this check.
   if(!this->m_unconnected)
     return false;
 
   // The nodes are neighbors if _c is in the graph and the edge (_c, _v) exists.
-  const typename RoadmapGraph::VID vid = _g->GetVID(_c);
+  const typename GenericStateGraph::VID vid = _g->GetVID(_c);
   return vid != INVALID_VID and _g->IsEdge(vid, _v);
 }
 

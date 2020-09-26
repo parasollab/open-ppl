@@ -3,7 +3,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include "TMPLibrary/TaskPlan.h"
 
@@ -128,7 +128,7 @@ TaskCBSNode(TaskCBSNode<WholeTask, OccupiedInterval>* _parentNode,
 
   m_validVIDs = _parentNode->m_validVIDs;
 
-  //m_graph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(m_plan->GetCoordinator()->GetRobot());
+  //m_graph = new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(m_plan->GetCoordinator()->GetRobot());
   //*m_graph = *(_parentNode->m_graph);
 
   for(auto& kv : _parentNode->GetTaskPlan()->GetSubtaskMap()){

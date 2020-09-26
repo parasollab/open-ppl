@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
 #include "MPLibrary/PMPL.h"
@@ -50,7 +50,7 @@ class RelaxedGraphPlan {
 
   public:
 
-    typedef std::unordered_map<std::string,RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
+    typedef std::unordered_map<std::string,GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
 
     ///@name Construction
     ///@{

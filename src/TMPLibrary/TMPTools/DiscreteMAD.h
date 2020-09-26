@@ -13,8 +13,8 @@
 class DiscreteMAD : public TMPBaseObject {
   public:
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> AvailableIntervalGraph;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> AvailableIntervalGraph;
 		typedef std::unordered_map<HandoffAgent*, std::list<DiscreteAgentAllocation>> AgentAllocationMap;
 
 		typedef std::unordered_map<HandoffAgent*, std::vector<std::pair<size_t,std::pair<size_t,size_t>>>> 

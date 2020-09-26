@@ -3,7 +3,7 @@
 
 #include "MPStrategyMethod.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/MPTask.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"

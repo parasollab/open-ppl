@@ -8,13 +8,13 @@ InteractionTemplate(InteractionInformation* _info) {
 
 /*------------------------------ Accessors --------------------------------*/
 
-std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*>
+std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*>
 InteractionTemplate::
 GetRoadmaps() const {
   return m_roadmaps;
 }
 
-std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*>
+std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*>
 InteractionTemplate::
 GetRoadmaps() {
   return m_roadmaps;
@@ -26,7 +26,7 @@ GetInformation() {
   return m_information;
 }
 
-RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
 InteractionTemplate::
 GetConnectedRoadmap() const {
   return m_connectedRoadmap;
@@ -110,11 +110,11 @@ GetTranslatedPaths(){
 
 void
 InteractionTemplate::
-AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
+AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
   //auto robot = _roadmap->begin()->property().GetRobot();
-  //RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(*_roadmap);
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* roadmap =
-    new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(_roadmap->GetRobot());
+  //GenericStateGraph<Cfg, DefaultWeight<Cfg>>* roadmap = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(*_roadmap);
+  GenericStateGraph<Cfg, DefaultWeight<Cfg>>* roadmap =
+    new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(_roadmap->GetRobot());
   *roadmap = *_roadmap;
   m_roadmaps.push_back(roadmap);
   /*for(auto vit = _roadmap->begin(); vit != _roadmap->end(); vit++){
@@ -146,7 +146,7 @@ AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem){
   std::vector<double> pathVIDs;
   pathVIDs.push_back(roadmap->GetVID(_path[0]));
 
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
+  GenericStateGraph<Cfg, DefaultWeight<Cfg>>* g = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(robot);
   *g = *roadmap;
   for(size_t i = 1; i < _path.size(); i++){
     auto cfg = _path[i];
@@ -156,7 +156,7 @@ AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem){
   }
   m_pathlessRoadmaps.push_back(g);
 
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* pg = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(robot);
+  GenericStateGraph<Cfg, DefaultWeight<Cfg>>* pg = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(robot);
   std::unordered_map<double, double> oldToNew;
   for(size_t i = 0; i < _path.size(); i++){
     auto newVID = pg->AddVertex(_path[i]);
@@ -181,7 +181,7 @@ void
 InteractionTemplate::
 ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
   //Combine roadmaps into one graph
-  m_connectedRoadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(_robot);
+  m_connectedRoadmap = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(_robot);
   for(auto roadmap : m_roadmaps){
     vector<size_t> currentRoadmap;
     // Copy vertices and map the change in VIDs.

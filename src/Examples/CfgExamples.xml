@@ -249,7 +249,7 @@
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
-        graphSearchAlg="dijkstras"/>
+        graphSearchAlg="astar"/>
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">

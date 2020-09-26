@@ -87,10 +87,10 @@ CopyRobotTypeRoadmaps(){
   for(auto agent : this->GetTaskPlan()->GetTeam()){
     //Copy corresponding capability roadmap into agent
     auto graph = m_capabilityRoadmaps[agent->GetCapability()];
-    auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
+    auto g = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
     *g = *graph;
     g->SetRobot(agent->GetRobot());
-    agent->SetRoadmapGraph(g);
+    agent->SetGenericStateGraph(g);
 
     // Write the capability map.
     graph->Write(agent->GetRobot()->GetLabel() + ".map",
@@ -196,7 +196,7 @@ ConstructDiscreteRoadmap() {
 			vidMatrix.push_back({});
 		}
 		
-		auto roadmap = std::shared_ptr<RoadmapGraph<Cfg,DefaultWeight<Cfg>>>(new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(robot));
+		auto roadmap = std::shared_ptr<GenericStateGraph<Cfg,DefaultWeight<Cfg>>>(new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(robot));
 
 		while(x < xRange.max) {
 			int y = std::ceil(yRange.min);
@@ -244,9 +244,9 @@ ConstructDiscreteRoadmap() {
 		weight.SetTimeSteps(2);
 		for(size_t i = 0 ; i < vidMatrix.size(); i++) {
 			for(size_t j = 0 ; j < vidMatrix[i].size(); j++) {
-				if(vidMatrix[i][j] == MAX_INT)
+				if(vidMatrix[i][j] == std::numeric_limits<size_t>::max())
 					continue;
-				if(j < vidMatrix[i].size()-1 and vidMatrix[i][j+1] != MAX_INT) {//connect up
+				if(j < vidMatrix[i].size()-1 and vidMatrix[i][j+1] != std::numeric_limits<size_t>::max()) {//connect up
 
 					Cfg source = roadmap->GetVertex(vidMatrix[i][j]);
 					Cfg target = roadmap->GetVertex(vidMatrix[i][j+1]);
@@ -268,7 +268,7 @@ ConstructDiscreteRoadmap() {
 					continue;
 
 				//Connect left
-				if(vidMatrix[i-1][j] != MAX_INT) {
+				if(vidMatrix[i-1][j] != std::numeric_limits<size_t>::max()) {
 
 					Cfg source = roadmap->GetVertex(vidMatrix[i][j]);
 					Cfg target = roadmap->GetVertex(vidMatrix[i-1][j]);
@@ -421,7 +421,7 @@ GenerateDiscreteITs() {
 		//Assumes just a receiving and delivering robot 
   	auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
 		Cfg receiving(dummyMap[handoffTasks[0]->GetCapability()]->GetRobot());
-		auto receivingRoadmap = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(handoffTasks[0]->GetRobot());
+		auto receivingRoadmap = new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(handoffTasks[0]->GetRobot());
 		receivingRoadmap->AddVertex(receiving);
 
     currentTemplate->AddRoadmap(receivingRoadmap);
@@ -431,7 +431,7 @@ GenerateDiscreteITs() {
 
 		Cfg delivering(dummyMap[handoffTasks[1]->GetCapability()]->GetRobot());
 		delivering.SetData({1,0,0});
-		auto deliveringRoadmap = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(handoffTasks[1]->GetRobot());
+		auto deliveringRoadmap = new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(handoffTasks[1]->GetRobot());
 		deliveringRoadmap->AddVertex(delivering);
 
     currentTemplate->AddRoadmap(deliveringRoadmap);
@@ -674,7 +674,7 @@ TransformITs(){
       this->GetTaskPlan()->GetStatClass()->StartClock("Placement InteractionTemplate "
                 + currentTemplate->GetInformation()->GetLabel());
 
-      RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = currentTemplate->GetConnectedRoadmap();
+      GenericStateGraph<Cfg, DefaultWeight<Cfg>>* graph = currentTemplate->GetConnectedRoadmap();
 
 			std::unordered_set<size_t> invalids;
 
@@ -875,7 +875,7 @@ SetupWholeTasks(){
 }
 
 
-std::shared_ptr<RoadmapGraph<Cfg,DefaultWeight<Cfg>>> 
+std::shared_ptr<GenericStateGraph<Cfg,DefaultWeight<Cfg>>> 
 CombinedRoadmap::
 GetCapabilityRoadmap(HandoffAgent* _agent) {
 	return m_capabilityRoadmaps[_agent->GetCapability()];

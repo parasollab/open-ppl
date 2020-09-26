@@ -341,7 +341,7 @@ DiscreteSearch(Node* _node, size_t _start, size_t _goal, size_t _startTime, size
 	auto conflicts = _node->GetConflicts();
 	for(auto constraint : (*conflicts)[agent]) {
 		auto timeConstraint = constraint->GetConstraint();	
-		if(timeConstraint.second.second == MAX_INT) {
+		if(timeConstraint.second.second == std::numeric_limits<size_t>::max()) {
 			pathConstraints[timeConstraint.first-1].insert(timeConstraint.second);
 		}
 		else {

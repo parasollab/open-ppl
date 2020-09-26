@@ -11,7 +11,6 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/SSSP.h"
-
 #include "nonstd/io.h"
 
 
@@ -97,6 +96,8 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// Set an alternate path weight function to use when searching the roadmap.
     /// @param The path weight function object to use.
     virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f);
+    virtual void SetHeuristicFunction(SSSPHeuristicFunction<RoadmapType> _h);
+    virtual void SetNeighborsFunction(SSSPNeighborsFunction<RoadmapType> _n);
 
 		void SetLastConstraintTime(double _last);
 		void SetLastGoalConstraintTime(double _time);
@@ -161,13 +162,18 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     size_t m_goalIndex{0};             ///< Index of next unreached goal.
 
     GraphSearchAlg m_searchAlg{DIJKSTRAS};  ///< The sssp algorithm to use.
-
+    //GraphSearchAlg m_searchAlg{ASTAR};
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
     std::string m_dmLabel;           ///< The DistanceMetric label.
 		bool m_twoVariable{false};       ///< Temporary flag to use two varibale state search.
 
     /// The function for computing total path weight.
     SSSPPathWeightFunction<RoadmapType> m_weightFunction;
+
+    /// The function for computing the heuristic at a node.
+    SSSPHeuristicFunction<RoadmapType> m_heuristicFunction;
+
+    SSSPNeighborsFunction<RoadmapType> m_neighborsFunction;
 
 		double m_lastConstraint{0};
 		double m_lastGoalConstraint{0};
@@ -371,10 +377,28 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
     };
   }
 
-  // Run dijkstra's algorithm to find the path, if it exists.
-  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(m_roadmap, {_start}, weight,
-      termination);
+//  SSSPHeuristicFunction<RoadmapType> heuristic;
+//  if(m_heuristicFunction)
+//    heuristic = m_heuristicFunction;
+//  else {
+//    heuristic = SSSPDefaultHeuristic<RoadmapType>();
+//  }
+//  SSSPNeighborsFunction<RoadmapType> neighbors;
+//  if(m_neighborsFunction)
+//    neighbors = m_neighborsFunction;
+//  else {
+//    neighbors = SSSPDefaultNeighbors<RoadmapType>();
+//  }
 
+  // Run dijkstra's algorithm to find the path, if it exists.
+  SSSPOutput<RoadmapType> sssp;
+
+  if(m_searchAlg == DIJKSTRAS)
+    sssp = DijkstraSSSP(m_roadmap, {_start}, weight, termination);
+  else if(m_searchAlg == ASTAR) {
+    std::vector<VID> goals(_goals.begin(), _goals.end());
+    sssp = AStarSSSP(m_roadmap, {_start}, goals, weight, termination);
+  }
   // Find the last discovered node, which should be a goal if there is a valid
   // path.
   const VID last = sssp.ordering.back();
@@ -419,6 +443,20 @@ SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f) {
   m_weightFunction = _f;
 }
 
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetHeuristicFunction(SSSPHeuristicFunction<RoadmapType> _h) {
+  m_heuristicFunction = _h;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetNeighborsFunction(SSSPNeighborsFunction<RoadmapType> _n) {
+  m_neighborsFunction = _n;
+}
+
 /*------------------------------- Helpers ------------------------------------*/
 
 template <typename MPTraits>
@@ -448,11 +486,11 @@ SetSearchAlgViaString(std::string _alg, const std::string& _where) {
     m_searchAlg = DIJKSTRAS;
   else if(_alg == "astar")
   {
-    throw NotImplementedException(_where) << "We do not actually have A* "
-                                          << "implemented since the STAPL "
-                                          << "version does not use the "
-                                          << "heuristic, and the new impl only "
-                                          << "supports dijkstras right now.";
+//    throw NotImplementedException(_where) << "We do not actually have A* "
+//                                          << "implemented since the STAPL "
+//                                          << "version does not use the "
+//                                          << "heuristic, and the new impl only "
+//                                          << "supports dijkstras right now.";
     m_searchAlg = ASTAR;
   }
   else

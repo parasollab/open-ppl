@@ -79,7 +79,7 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
 
     /// Extract path VIDs in roadmap from path
     /// @param _path Path to extract VIDs from
-    /// @param _graph RoadmapGraph containing path nodes
+    /// @param _graph GenericStateGraph containing path nodes
     /// @return Path VIDs
     vector<VID> GetPathVIDs(vector<CfgType>& _path, RoadmapType* _graph);
 

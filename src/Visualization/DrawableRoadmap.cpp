@@ -16,7 +16,7 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
   : m_color(_color),
     m_multiBody(*_graph->GetRobot()->GetMultiBody()),
     m_graph(_graph) {
-  // counter for the number of instances of DrawableRoadmapGraph
+  // counter for the number of instances of DrawableGenericStateGraph
   static size_t roadmapGraphCounter = 0;
 
   // if a name is given the use that name, otherwise generate one

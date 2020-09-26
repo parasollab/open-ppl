@@ -10,7 +10,7 @@ class LowLevelSearch {
 		///@name Local Types
 		///@{
 
-		typedef RoadmapGraph<Cfg,DefaultWeight<Cfg>> Roadmap;
+		typedef GenericStateGraph<Cfg,DefaultWeight<Cfg>> Roadmap;
 
     /// A set of conflicts for a single robot, keyed on timestep.
     typedef std::multimap<size_t, std::pair<Cfg,double>> MotionConstraintSet;

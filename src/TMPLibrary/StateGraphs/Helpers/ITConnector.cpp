@@ -25,14 +25,14 @@ ITConnector(XMLNode& _node) {
 }
 
 
-RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
 ITConnector::
 ConnectInteractionTemplates(std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                             const std::string& _capability,
                             std::vector<Cfg>& _startAndGoal,
-                            RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap){
+                            GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap){
 
-  RoadmapGraph<Cfg, DefaultWeight<Cfg>>* graph = new RoadmapGraph<
+  GenericStateGraph<Cfg, DefaultWeight<Cfg>>* graph = new GenericStateGraph<
                                       Cfg,DefaultWeight<Cfg>>(_megaRoadmap->GetRobot());
 
   auto cfgs = CalculateBaseDistances(_ITs,_capability, _startAndGoal);
@@ -275,7 +275,7 @@ UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs){
 
 void
 ITConnector::
-CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
+CopyInTemplates(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _graph,
                 std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                 const std::string& _capability,
                 std::vector<Cfg>& _startAndGoal){
@@ -321,7 +321,7 @@ CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
 
 void
 ITConnector::
-ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
+ConnectTemplates(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _graph){
   auto robot = _graph->GetRobot();
   auto solution = new MPSolution(robot);
   auto env = robot->GetMPProblem()->GetEnvironment();
@@ -372,7 +372,7 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
 
     m_library->SetTask(task);
 
-    typedef RoadmapGraph<Cfg,DefaultWeight<Cfg>> RoadmapType;
+    typedef GenericStateGraph<Cfg,DefaultWeight<Cfg>> RoadmapType;
     _graph->InstallHook(RoadmapType::HookType::AddEdge, "debug",
         [](RoadmapType::EI _ei) {
         if(_ei->property().GetWeight()==0){
@@ -619,7 +619,7 @@ SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const {
 	
 void
 ITConnector::
-DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
+DirectionConnections(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
 											std::vector<Cfg*> _cfgs) {
 	std::vector<size_t> vids;
 	std::unordered_set<size_t> vidSet;
@@ -627,7 +627,7 @@ DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _
 	for(auto cfg : _cfgs) {
 		if(cfg->GetRobot()->GetCapability() == _capability) {
 			auto vid = _graph->GetVID(*cfg);
-			if(vid != MAX_INT) {
+			if(vid != std::numeric_limits<size_t>::max()) {
 				vids.push_back(vid);
 				vidSet.insert(vid);
 			}

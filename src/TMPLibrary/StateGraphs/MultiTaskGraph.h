@@ -3,7 +3,7 @@
 
 #include "Behaviors/Agents/HandoffAgent.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include "MPLibrary/MPSolution.h"
 
@@ -34,8 +34,8 @@ class MultiTaskGraph : public CombinedRoadmap {
       }
     };
 
-    typedef RoadmapGraph<CfgType, WeightType> TaskGraph;
-    typedef RoadmapGraph<CfgType, WeightType> AvailableIntervalGraph;
+    typedef GenericStateGraph<CfgType, WeightType> TaskGraph;
+    typedef GenericStateGraph<CfgType, WeightType> AvailableIntervalGraph;
 
     ///@}
 

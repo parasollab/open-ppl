@@ -173,11 +173,11 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, SemanticTask* _task, Agent*
 		auto targetVID = g->GetVID(startCfg);
 		if(targetVID != INVALID_VID) {
 
-			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EI eit;
-			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::VI vit;
+			GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EI eit;
+			GenericStateGraph<Cfg,DefaultWeight<Cfg>>::VI vit;
 
-			if(!g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(_vid,targetVID),vit,eit))
-				g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(targetVID,_vid),vit,eit);
+			if(!g->find_edge(GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EID(_vid,targetVID),vit,eit))
+				g->find_edge(GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EID(targetVID,_vid),vit,eit);
 
 			departTime = startTime - eit->property().GetWeight();
 		}*/
@@ -195,13 +195,13 @@ ComputeIntervals(GeneralCBSNode& _node, size_t _vid, SemanticTask* _task, Agent*
 
 		auto sourceVID = g->GetVID(endCfg);
 		if(sourceVID != INVALID_VID) {
-			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EI eit;
-			RoadmapGraph<Cfg,DefaultWeight<Cfg>>::VI vit;
+			GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EI eit;
+			GenericStateGraph<Cfg,DefaultWeight<Cfg>>::VI vit;
 
-			if(!g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(sourceVID,_vid),vit,eit))
-				g->find_edge(RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EID(_vid,sourceVID),vit,eit);
+			if(!g->find_edge(GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EID(sourceVID,_vid),vit,eit))
+				g->find_edge(GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EID(_vid,sourceVID),vit,eit);
 			
-			//RoadmapGraph<Cfg,DefaultWeight<Cfg>>::EP& edge = g->GetEdge(sourceVID,_vid);
+			//GenericStateGraph<Cfg,DefaultWeight<Cfg>>::EP& edge = g->GetEdge(sourceVID,_vid);
 			returnTime = endTime + eit->property().GetWeight();
 		}
 		else {*/

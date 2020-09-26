@@ -305,7 +305,7 @@ DiscreteMAD::
 CreateSubtaskPlan(HandoffAgent* _agent, size_t _start, size_t _end, size_t _startTime, size_t _endTime,
 									ConstraintMap _constraints) {
 
-	if(_endTime == MAX_INT or _startTime == MAX_INT)
+	if(_endTime == std::numeric_limits<size_t>::max() or _startTime == std::numeric_limits<size_t>::max())
 		throw RunTimeException(WHERE,"Invalid Plan.");
 
 	SubtaskPlan plan;

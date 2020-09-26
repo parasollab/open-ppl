@@ -3,7 +3,7 @@
 
 #include "LowLevelSearch.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include <unordered_set>
 

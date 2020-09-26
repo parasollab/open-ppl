@@ -3,7 +3,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include "TMPLibrary/TaskPlan.h"
 

@@ -241,12 +241,12 @@ endif
 ################################################################################
 # Qt4
 ################################################################################
-QT_BASE := /usr/include
+QT_BASE := /usr/include/qt4
 ifeq ($(platform), MACOS_gcc)
   QT_BASE := /usr/local/opt/qt/include
 endif
 
-QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
+QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
            -I$(QT_BASE)/QtOpenGL
 QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
 ifeq ($(platform), MACOS_gcc)
@@ -256,7 +256,7 @@ ifeq ($(platform), MACOS_gcc)
 endif
 
 # Moc setup
-QT_MOC_BASE = /usr/lib64/qt4/bin
+QT_MOC_BASE = /usr/share/qt4/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
 endif
