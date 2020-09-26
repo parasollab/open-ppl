@@ -143,7 +143,7 @@ SSSPDefaultHeuristic() {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 using SSSPNeighborsFunction =
-      std::function<const typename GraphType::vertex_iterator(
+      std::function<typename GraphType::vertex_iterator(
                 const GraphType* g,
                 typename GraphType::vertex_descriptor current)>;
 
@@ -402,7 +402,7 @@ AStarSSSP(
 
     // Get vertex iterator for current vertex
     // auto vi = _neighbors(_g, current.vd);
-    auto vi = _g->find_vertex(current.vd);
+    typename GraphType::vertex_iterator vi = _g->find_vertex(current.vd);
 
     // Check for early termination
     auto stop = _earlyStop(vi, output);
