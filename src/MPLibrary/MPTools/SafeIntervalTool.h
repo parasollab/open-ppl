@@ -258,13 +258,23 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
   // If there are no dynamic obstacles, the safe interval is infinite.
   const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   if(obstacles.empty())
-    return Intervals{Range<double>(0, std::numeric_limits<double>::max())};
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
+  std::unordered_map<CfgType, size_t> finalResting;
 
   // Find the latest timestep in which a dynamic obstacle is still moving.
   size_t timeFinal = 0;
-  for(auto& obstacle : obstacles)
-    if(obstacle.GetPath().size() > timeFinal)
-      timeFinal = obstacle.GetPath().size();
+  for(auto& obstacle : obstacles) {
+    auto path = obstacle.GetPath();
+
+    
+
+    // if(obstacle.GetPath().size() > timeFinal) {
+    //   timeFinal = obstacle.GetPath().size();
+    // }
+  }
+  
+  std::cout << "Obstacle Path Length: " << timeFinal << std::endl;
 
   // Determine all of the intervals for which it is safe to start following this
   // set of configurations.
@@ -277,6 +287,7 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
   // moving.
   for(size_t tstep = 0; tstep < timeFinal; ++tstep) {
     const double startTime = tstep * timeRes;
+
 
     // Check if it is safe to start the sequence at startTime.
     bool safe = true;
@@ -309,6 +320,9 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
   // time.
   if(currentInterval)
     currentInterval->max = std::numeric_limits<double>::max();
+  else {
+    safeIntervals.emplace_back(timeFinal + timeRes, std::numeric_limits<double>::max());
+  }
 
   return safeIntervals;
 }

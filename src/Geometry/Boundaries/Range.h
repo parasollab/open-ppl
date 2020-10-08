@@ -77,6 +77,10 @@ struct Range final {
   /// Sample the range for a random contained value with uniform probability.
   T Sample() const noexcept;
 
+  bool operator==(const Range<T>& _other) const {
+    return min == _other.min && max == _other.max;
+  }
+
   ///@}
   ///@name Modifiers
   ///@{
@@ -246,6 +250,7 @@ operator>>(std::istream& _is, Range<T>& _r) {
   char delim;
   return _is >> _r.min >> std::skipws >> delim >> _r.max;
 }
+
 
 /*----------------------------------------------------------------------------*/
 

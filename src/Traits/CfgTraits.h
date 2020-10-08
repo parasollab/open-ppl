@@ -123,6 +123,7 @@
 #include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/MapEvaluators/TrueEvaluation.h"
@@ -319,6 +320,7 @@ struct MPTraits {
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     StrategyStateEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>

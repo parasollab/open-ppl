@@ -57,7 +57,7 @@ class PathType final {
     const std::vector<VID>& VIDs() const noexcept;
 
 		/// Get the VIDs and timesteps waiting in the path.
-		const std::pair<std::vector<VID>,std::vector<size_t>> VIDsWaiting() const noexcept;		
+		const std::pair<std::vector<VID>,std::vector<size_t>> VIDsWaiting() const noexcept;
 
     /// Get a copy of the Cfgs in the path.
     /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
@@ -73,7 +73,16 @@ class PathType final {
     template <typename MPLibrary>
     const std::vector<CfgType> FullCfgs(MPLibrary* const _lib) const;
 
-		size_t TimeSteps() const;
+    /// Get the current full Cfg path with wait times. Steps are spaced one
+    /// environment resolution apart. This is not cached due to its size and
+    /// infrequent usage.
+    /// @param _lib The planning library to use.
+    /// @return The full path of configurations, including local-plan
+    ///         intermediates between the roadmap nodes and waiting.
+    template <typename MPLibrary>
+    const std::vector<CfgType> FullCfgsWithWait(MPLibrary* const _lib) const;
+
+    size_t TimeSteps() const;
 
     /// Append another path to the end of this one.
     /// @param _p The path to append.
@@ -104,6 +113,10 @@ class PathType final {
 
 		const size_t GetFinalWaitTimeSteps() const;
 
+    /// Set the wait times at each vertex in path
+    /// Used in Safe Interval Path Planning
+    void SetWaitTimes(std::vector<size_t> _waitTimes);
+
     ///@}
 
   private:
@@ -119,7 +132,7 @@ class PathType final {
 
     RoadmapType* const m_roadmap;        ///< The roadmap.
     std::vector<VID> m_vids;             ///< The VIDs in the path.
-		std::vector<size_t> m_waitingTimesteps; ///< The number of timesteps to wait at each vid.
+    std::vector<size_t> m_waitingTimesteps; ///< The number of timesteps to wait at each vid.
 
     mutable std::vector<CfgType> m_cfgs; ///< The path configurations.
     mutable bool m_cfgsCached{false};    ///< Are the current cfgs correct?
@@ -206,11 +219,11 @@ VIDs() const noexcept {
 }
 
 template <typename MPTraits>
-const std::pair<std::vector<typename PathType<MPTraits>::VID>,std::vector<size_t>> 
+const std::pair<std::vector<typename PathType<MPTraits>::VID>,std::vector<size_t>>
 PathType<MPTraits>::
 VIDsWaiting() const noexcept {
 	return std::make_pair(m_vids,m_waitingTimesteps);
-}	
+}
 
 template <typename MPTraits>
 const std::vector<typename MPTraits::CfgType>&
@@ -253,6 +266,49 @@ FullCfgs(MPLibrary* const _lib) const {
 	for(size_t i = 0; i < m_finalWaitTimeSteps; i++) {
 		out.push_back(last);
 	}
+  return out;
+}
+
+template <typename MPTraits>
+template <typename MPLibrary>
+const std::vector<typename MPTraits::CfgType>
+PathType<MPTraits>::
+FullCfgsWithWait(MPLibrary* const _lib) const {
+  if(m_vids.empty())
+    return std::vector<CfgType>();
+
+  // Insert the first vertex.
+  size_t vid = m_vids.front();
+  CfgType vertex = m_roadmap->GetVertex(vid);
+  std::vector<CfgType> out = {vertex};
+
+  // Insert first vertex however many timesteps it waits
+  for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
+    out.push_back(vertex);
+  }
+
+  auto cnt = 1;
+  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
+    // Insert intermediates between vertices.
+
+    std::vector<CfgType> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    out.insert(out.end(), edge.begin(), edge.end());
+
+    // Insert the next vertex.
+    vid = *(it+1);
+    vertex = m_roadmap->GetVertex(vid);
+    out.push_back(vertex);
+    for(size_t i = 0; i < m_waitingTimesteps[cnt]; ++i) {
+      out.push_back(vertex);
+    }
+
+    cnt++;
+  }
+
+  auto last = out.back();
+  for(size_t i = 0; i < m_finalWaitTimeSteps; i++) {
+    out.push_back(last);
+  }
   return out;
 }
 
@@ -341,6 +397,7 @@ PathType<MPTraits>::
 Clear() {
   FlushCache();
   m_vids.clear();
+  m_waitingTimesteps.clear();
 }
 
 
@@ -354,17 +411,30 @@ FlushCache() {
 }
 
 template <typename MPTraits>
-void 
+void
 PathType<MPTraits>::
 SetFinalWaitTimeSteps(const size_t& _timeSteps) {
 	m_finalWaitTimeSteps = _timeSteps;
 }
 
 template <typename MPTraits>
-const size_t 
+const size_t
 PathType<MPTraits>::
 GetFinalWaitTimeSteps() const {
 	return m_finalWaitTimeSteps;
+}
+
+template <typename MPTraits>
+void
+PathType<MPTraits>::
+SetWaitTimes(std::vector<size_t> _waitTimes) {
+  m_waitingTimesteps = _waitTimes;
+
+  // Check to make sure that size matches path length
+  if(m_waitingTimesteps.size() != m_vids.size()) {
+    throw RunTimeException(WHERE) << "Size of timestep vector does not "
+                                  << "match path length";
+  }
 }
 /*--------------------------------- Helpers ----------------------------------*/
 
