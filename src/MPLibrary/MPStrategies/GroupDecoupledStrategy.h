@@ -137,6 +137,7 @@ Finalize() {
     return;
 
   double totalCost = 0;
+  double avgVertices = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
   auto groupRoadmap = this->GetGroupRoadmap();
@@ -162,6 +163,7 @@ Finalize() {
         << ": " << path->VIDs() << std::endl;
 
     auto roadmap = path->GetRoadmap();
+    avgVertices += roadmap->get_num_vertices();
     const std::string base = this->GetBaseFilename();
     roadmap->Write(base +"."+ robot->GetLabel() + ".map",
       this->GetEnvironment());
@@ -173,8 +175,11 @@ Finalize() {
     ++i;
   }
 
+  avgVertices /= i;
+
   StatClass* stats = this->GetStatClass();
   stats->SetStat("GroupDecoupledQuery::TotalCost", totalCost);
+  stats->SetStat("GroupDecoupledQuery::AvgVertices", avgVertices);
 
   // Add each path configuration to the group roadmap.
   const size_t numRobots = groupTask->Size();
