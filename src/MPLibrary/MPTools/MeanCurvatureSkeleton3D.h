@@ -16,37 +16,47 @@
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/extract_mean_curvature_flow_skeleton.h>
 #include <containers/sequential/graph/graph.h>
 #include <containers/sequential/graph/algorithms/graph_algo_util.h>
 #include <boost/functional/hash.hpp>
-
-using namespace std;
-
-#include "Vector.h"
-using namespace mathtool;
-#include "IOUtils.h"
+#include "Utilities/IOUtils.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Workspace/WorkspaceSkeleton.h"
+#include "Workspace/WorkspaceDecomposition.h"
 #include "Workspace/PropertyMap.h"
+#include "Vector.h"
+
+using namespace std;
+using namespace mathtool;
 
 class Environment;
+class XMLNode;
+class WorkspaceDecomposition;
 
-struct MeanCurvatureParams{
-  double m_wM{0.2};
-  double m_wH{0.1};
-  double m_refine{1};
-  size_t m_iterations{1000};
-  std::string ioType;
-  std::string filename;
-};
 
 /////////////////////////////////////////////////////////////////////////////
 /// 3D Mean Curvature Skeleton implementation from CGAL
 /////////////////////////////////////////////////////////////////////////////
-class MeanCurvature3D {
+class MeanCurvatureSkeleton3D {
 
   public:
+
+    struct Parameters {
+      double m_wM{0.2};
+      double m_wH{0.1};
+      double m_refine{1};
+      size_t m_iterations{1000};
+      std::string ioType;
+      std::string filebase;
+      bool useConvex{false};
+      double scaleConvex{1.2};
+      size_t space;
+    };
+
+    static Parameters m_defaultParams; ///< Parameters
+
     ///@name Local types
     ///{
     /// Note: Please do not change the kernel to exact computation that will
@@ -67,16 +77,22 @@ class MeanCurvature3D {
     ///@name Construction
     ///@{
 
-    MeanCurvature3D() {}
+    MeanCurvatureSkeleton3D();
+
+    /// Construct a Mean Curvature Skeleton from an XML node.
+    /// @param _node The XML node to parse.
+    static void SetDefaultParameters(XMLNode& _node);
+
     // Initializes the input mesh as the obstacle space of a given environment
-    MeanCurvature3D(const Environment* _env, size_t _space = 1, bool _d = false);
+    void SetEnvironment(const Environment* _env);
+
     // Initialize the input mesh from the input exact polyhedron
     template<typename PolyhedronType>
-      MeanCurvature3D(PolyhedronType& _poly, bool _d = false) : m_debug(_d) {
+      MeanCurvatureSkeleton3D(PolyhedronType& _poly, bool _d = false) : m_debug(_d) {
         AddPolyhedron(_poly);
       }
     // Destructor
-    ~MeanCurvature3D();
+    ~MeanCurvatureSkeleton3D();
 
     ///@}
     ///@name IO functions
@@ -94,6 +110,9 @@ class MeanCurvature3D {
     /// Construct the mean curvature skeleton
     void BuildSkeleton(bool _curve = true);
 
+    /// Construct the mean curvature skeleton from a decomposition
+    void BuildSkeleton(const WorkspaceDecomposition* _decomposition, bool _curve = true);
+
     ///@}
     ///@name Accessors
     ///@{
@@ -106,7 +125,7 @@ class MeanCurvature3D {
     /// points as annotations of the skeleton
     pair<WorkspaceSkeleton, AnnotationType> GetMesoSkeleton();
 
-    void SetParameters(MeanCurvatureParams& _p) { m_params = _p; }
+    void SetParameters(Parameters& _p) { m_params = _p; }
 
     ///@}
 
@@ -153,18 +172,18 @@ class MeanCurvature3D {
     WorkspaceSkeleton m_skeleton; ///< skeleton compatible with MPLibrary classes
     AnnotationType m_annotation;  ///< annotation graph for the skeleton
     bool m_debug{false};   ///< Toggle debug messages.
-    MeanCurvatureParams m_params; ///< Parameters
+    Parameters m_params; ///< Parameters
     ///@}
 };
 
 /*------------------------Templated Modifiers---------------------------------*/
 template<typename PolyhedronType>
 void
-MeanCurvature3D::
+MeanCurvatureSkeleton3D::
 AddPolyhedron(PolyhedronType& _poly, double _refine) {
   stringstream ss;
-  ss<<_poly;
-  ss>>m_input;
+  ss << _poly;
+  ss >> m_input;
   Refine(m_input, _refine); //1.32
 }
 

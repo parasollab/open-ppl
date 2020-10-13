@@ -16,6 +16,7 @@
 #include "MPLibrary/Extenders/ExtenderMethod.h"
 #include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
 #include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h"
+#include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/Metrics/MetricMethod.h"
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
 #include "MPLibrary/MPTools/MPTools.h"
@@ -237,6 +238,15 @@ class MPLibraryType final
     }
     void AddMapEvaluator(MapEvaluatorPointer _me, const std::string& _l) {
       m_mapEvaluators->AddMethod(_me, _l);
+    }
+
+    /// For cases where we need to reset all instances of TimeEvaluator.
+    void ResetTimeEvaluators() {
+      for(auto& labelPtr : *m_mapEvaluators) {
+        auto t = dynamic_cast<TimeEvaluator<MPTraits>*>(labelPtr.second.get());
+        if(t)
+          t->Initialize();
+      }
     }
 
     ///@}

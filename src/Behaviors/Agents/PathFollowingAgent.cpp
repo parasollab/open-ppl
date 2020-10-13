@@ -124,6 +124,10 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 PathFollowingAgent::
 EvaluateTask() {
+  //hack for the moment to handle multi-task edge case where delivering robot checks receiving 
+  //robot's task at the moment the receiving robot is delivering a different task.
+	if(m_path.empty())
+		return true;
   // Get the current configuration.
   const Cfg current = m_robot->GetSimulationModel()->GetState();
 
@@ -141,7 +145,7 @@ EvaluateTask() {
 
   // Check if the agent has completed its task. If so, clear out any remaining
   // plan data and mark the task complete.
-  if(GetTask()->EvaluateGoalConstraints(current)) {
+  if(GetTask()->EvaluateGoalConstraints(current) and !GetTask()->GetGoalConstraints().empty()) {
     if(m_debug)
       std::cout << "Reached the end of the path." << std::endl;
 
@@ -155,7 +159,7 @@ EvaluateTask() {
 
   // Advance our subgoal while we are within the distance threshold of the next
   // one.
-  while(distance < m_waypointThreshold) {
+  while(distance < m_waypointThreshold and !m_path.empty()) {
     if(m_debug)
       std::cout << "\tReached waypoint " << m_pathIndex << " at "
                 << distance << "/" << m_waypointThreshold

@@ -4,7 +4,7 @@
 
 #include "Action.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/Weight.h"
 
@@ -25,7 +25,7 @@ class MoveRobot : public Action {
   public:
 
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
 
     ///@name Construction
     ///@{
@@ -39,7 +39,7 @@ class MoveRobot : public Action {
     /// @param _manipulator Indicates type of robot team used
     //
     MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _hasObject,
-                RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator);
+                GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator);
 
     virtual ~MoveRobot();
 
@@ -57,7 +57,7 @@ class MoveRobot : public Action {
   private:
 
     /// Roadmap graph preloaded and used to check feasibility of move action
-    RoadmapGraph<Cfg, DefaultWeight<Cfg>>* m_roadmapGraph{nullptr};
+    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* m_roadmapGraph{nullptr};
 
     Robot* m_robot{nullptr}; ///< Robot being moved
 

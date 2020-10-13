@@ -106,7 +106,7 @@ GetCenter() const noexcept {
 double
 TetrahedralBoundary::
 GetVolume() const noexcept {
-  throw NotImplementedException(WHERE);
+  return m_volume;
 }
 
 /*--------------------------------- Sampling ---------------------------------*/

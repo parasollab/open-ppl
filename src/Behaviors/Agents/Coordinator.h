@@ -2,6 +2,7 @@
 #define COORDINATOR_H_
 
 #include "Agent.h"
+#include "ChildAgent.h"
 #include "PlanningAgent.h"
 #include "HandoffAgent.h"
 
@@ -13,6 +14,7 @@
 
 //TODO remove dependency on these
 #include "TMPLibrary/Actions/Action.h"
+#include "TMPLibrary/TaskPlan.h"
 
 class HandoffAgent;
 class InteractionTemplate;
@@ -49,7 +51,7 @@ class Coordinator : public Agent {
     ///@name Motion Planning Types
     ///@{
 
-    typedef RoadmapGraph<CfgType, WeightType>         RoadmapType;
+    typedef GenericStateGraph<CfgType, WeightType>         RoadmapType;
     typedef typename RoadmapType::vertex_descriptor   VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 
@@ -72,6 +74,8 @@ class Coordinator : public Agent {
 
     /// Call PMPL to create a path for the agent to follow.
     virtual void Initialize() override;
+
+		void InitializePlanningComponents();
 
     /// Follow the roadmap.
     virtual void Step(const double _dt) override;
@@ -106,7 +110,9 @@ class Coordinator : public Agent {
 
 		TMPLibrary* GetTMPLibrary();
 
-		void SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+		void SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+
+		std::vector<std::string> GetMemberLabels();
 
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
@@ -173,7 +179,11 @@ class Coordinator : public Agent {
     //robots
     void TMPAssignTasks(std::vector<std::shared_ptr<MPTask>> _taskPlan);
 
-	void DistributeTaskPlan(TaskPlan* _taskPlan);
+		void DistributeTaskPlan(std::shared_ptr<TaskPlan> _taskPlan);
+
+		void DistributePlan(Plan* _plan);
+    
+		void GenerateRandomTasks();
 
     ///@}
 
@@ -206,7 +216,9 @@ class Coordinator : public Agent {
     //RoadmapType* m_megaRoadmap{nullptr}; ///< The combined roadmap of all heterogenous robots and handoffs.
 
     std::vector<std::string> m_memberLabels;  ///< Labels for the group members.
+
     std::vector<HandoffAgent*> m_memberAgents;       ///< All robots in the group.
+    std::vector<ChildAgent*> m_childAgents;       ///< All robots in the group.
 
     /// The relative priorities for member robots.
     std::unordered_map<Agent*, size_t> m_memberPriorities;
@@ -250,6 +262,16 @@ class Coordinator : public Agent {
 
 	//TODO:: make this more formal and not specifically ITMethod
     std::string m_tmpStrategyLabel;
+
+		std::shared_ptr<TaskPlan> m_taskPlan{nullptr};
+
+		std::shared_ptr<Plan> m_plan{nullptr};
+
+    size_t m_numRandTasks;
+
+		bool m_runSimulator{true};
+
+		bool m_runDummies;
 
     ///@}
 

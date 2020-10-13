@@ -7,96 +7,98 @@
 
     <Environment filename="3d.xml"/>
 
-	<Robot  label="boxy-0" filename="iCreate.xml">
+	<Robot  label="boxy-0" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-1" filename="iCreate.xml">
+	<Robot  label="boxy-1" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-2" filename="iCreate.xml">
+	<Robot  label="boxy-2" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-3" filename="iCreate.xml">
+	<Robot  label="boxy-3" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-4" filename="iCreate.xml">
+	<Robot  label="boxy-4" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-5" filename="iCreate.xml">
+	<Robot  label="boxy-5" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-6" filename="iCreate.xml">
+	<Robot  label="boxy-6" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-7" filename="iCreate.xml">
+	<Robot  label="boxy-7" filename="boxy.robot">
 		<Agent type="planning"/>
 	</Robot>
 	<RobotGroup label="robotGroup" robotLabels="
 		boxy-0 boxy-1 boxy-2 boxy-3 boxy-4
 	boxy-5 boxy-6 boxy-7 "/>
+	<RobotGroup label="templateGroup" robotLabels="
+		boxy-0 boxy-1"/>
 	<GroupTask label="groupQuery" group="robotGroup">
 	<Task label="query-0" robot="boxy-0">
 		<StartConstraints>
- 			<CSpaceConstraint point="-4.170000 2.503333 0.000000"/>
+ 			<CSpaceConstraint point="-4.170000 2.503333 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="4.170000 2.503333 0.000000"/>
+			 <CSpaceConstraint point="4.170000 2.503333 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-1" robot="boxy-1">
 		<StartConstraints>
- 			<CSpaceConstraint point="-4.170000 0.836667 0.000000"/>
+ 			<CSpaceConstraint point="-4.170000 0.836667 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="4.170000 0.836667 0.000000"/>
+			 <CSpaceConstraint point="4.170000 0.836667 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-2" robot="boxy-2">
 		<StartConstraints>
- 			<CSpaceConstraint point="-4.170000 -0.830000 0.000000"/>
+ 			<CSpaceConstraint point="-4.170000 -0.830000 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="4.170000 -0.830000 0.000000"/>
+			 <CSpaceConstraint point="4.170000 -0.830000 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-3" robot="boxy-3">
 		<StartConstraints>
- 			<CSpaceConstraint point="-4.170000 -2.496667 0.000000"/>
+ 			<CSpaceConstraint point="-4.170000 -2.496667 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="4.170000 -2.496667 0.000000"/>
+			 <CSpaceConstraint point="4.170000 -2.496667 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-4" robot="boxy-4">
 		<StartConstraints>
- 			<CSpaceConstraint point="-2.503333 -4.170000 0.000000"/>
+ 			<CSpaceConstraint point="-2.503333 -4.170000 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="-2.503333 4.170000 0.000000"/>
+			 <CSpaceConstraint point="-2.503333 4.170000 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-5" robot="boxy-5">
 		<StartConstraints>
- 			<CSpaceConstraint point="-0.836667 -4.170000 0.000000"/>
+ 			<CSpaceConstraint point="-0.836667 -4.170000 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="-0.836667 4.170000 0.000000"/>
+			 <CSpaceConstraint point="-0.836667 4.170000 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-6" robot="boxy-6">
 		<StartConstraints>
- 			<CSpaceConstraint point="0.830000 -4.170000 0.000000"/>
+ 			<CSpaceConstraint point="0.830000 -4.170000 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="0.830000 4.170000 0.000000"/>
+			 <CSpaceConstraint point="0.830000 4.170000 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	<Task label="query-7" robot="boxy-7">
 		<StartConstraints>
- 			<CSpaceConstraint point="2.496667 -4.170000 0.000000"/>
+ 			<CSpaceConstraint point="2.496667 -4.170000 0 0 0 0"/>
 	        </StartConstraints>
  		<GoalConstraints>
-			 <CSpaceConstraint point="2.496667 4.170000 0.000000"/>
+			 <CSpaceConstraint point="2.496667 4.170000 0 0 0 0"/>
  		 </GoalConstraints>
  	</Task>
  	</GroupTask>
@@ -156,6 +158,8 @@
     </Metrics>
 
     <MapEvaluators>
+      <SIPPMethod label="SIPP" safeIntervalToolLabel="SI"/>
+
       <TimeEvaluator label="TimeEval" timeout="1000"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="1000" operator=">="/>
@@ -167,10 +171,12 @@
       <GroupQuery label="CompositeQuery"/>
       <!--GroupDecoupledQueryRRT label="DecoupledQueryRRT" queryLabel="IndividualQuery"
         debug="false"/-->
-      <GroupDecoupledQuery label="DecoupledQuery" queryLabel="IndividualQuery"
+      <GroupDecoupledQuery label="DecoupledQuery" queryLabel="SIPP"
         debug="false"/>
-      <GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery"
-        debug="false" numIter="64" firstSol="false"/>
+      <!--GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery" vcLabel="pqp_solid"
+        debug="false"/-->
+      <GroupCBSQuery label="CBSQuery" queryLabel="SIPP" vcLabel="pqp_solid"
+        debug="true"/>
 
       <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
         <Evaluator label="TimeEval"/>
@@ -245,9 +251,9 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="DecoupledPRM" seed="372025"
+    <Solver mpStrategyLabel="CBSPRM" seed="372025"
       baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="214445"
+    <!--Solver mpStrategyLabel="DecoupledPRM" seed="214445"
       baseFilename="decoupled" vizmoDebug="true"/>
     <Solver mpStrategyLabel="DecoupledPRM" seed="416589"
       baseFilename="decoupled" vizmoDebug="true"/>
@@ -268,7 +274,7 @@
     <Solver mpStrategyLabel="DecoupledPRM" seed="600342"
       baseFilename="decoupled" vizmoDebug="true"/>
     <Solver mpStrategyLabel="DecoupledPRM" seed="392241"
-      baseFilename="decoupled" vizmoDebug="true"/>
+      baseFilename="decoupled" vizmoDebug="true"/-->
 
   </Library>
 

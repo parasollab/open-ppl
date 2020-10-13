@@ -23,6 +23,35 @@
 Agent::
 Agent(Robot* const _r) : m_robot(_r) { }
 
+Agent::
+Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) { 
+	for(auto& child : _node) {
+		if(child.Name() == "Communicator") {
+			int masterPort = child.Read("masterPort", true, 0, 0, 9999, "Port number of the master node.");
+			std::string hostname = child.Read("hostname", true, "", "Host name of the master node.");
+			int port = child.Read("port", true, 0, 0, 9999, "Port number for this communicator.");
+			m_communicator = std::shared_ptr<Communicator>(new Communicator(masterPort,port));
+			m_communicator->RegisterWithMaster(masterPort,hostname);
+			for(auto& grandchild : child) {
+				if(grandchild.Name() == "Subscriber") {
+					std::string channel = grandchild.Read("channel",true,"","Name of subscription channel.");
+					m_communicator->CreateSubscriber(channel);
+				}
+				else if(grandchild.Name() == "Publisher") {
+					std::string channel = grandchild.Read("channel",true,"","Name of subscription channel.");
+	
+					std::function<std::vector<std::string>(std::string _msg)> publishFunction = [this](std::string _msg) {
+						return this->PublishFunction(_msg);
+					};
+					m_communicator->CreatePublisher(channel,publishFunction);
+				}
+			}
+			
+			auto listen = [this](){this->GetCommunicator()->Listen();};
+			m_communicationThread = std::thread(listen);
+		}
+	}
+}
 
 Agent::
 Agent(Robot* const _r, const Agent& _a)
@@ -33,7 +62,10 @@ Agent(Robot* const _r, const Agent& _a)
 
 
 Agent::
-~Agent() = default;
+~Agent() {
+	if(m_communicationThread.joinable())
+		m_communicationThread.join();
+}
 
 /*----------------------------- Accessors ------------------------------------*/
 
@@ -76,6 +108,17 @@ GetCapability() const noexcept {
   return m_robot->GetCapability();
 }
 
+std::shared_ptr<Communicator>
+Agent::
+GetCommunicator() {
+	return m_communicator;
+}
+
+void
+Agent::
+SetCommunicator(std::shared_ptr<Communicator> _communicator) {
+	m_communicator = _communicator;
+}
 /*------------------------------ Internal State ------------------------------*/
 
 bool
@@ -237,7 +280,7 @@ ContinueLastControls() {
               << std::endl;
 
   --m_stepsRemaining;
-  ExecuteControlsSimulation(m_currentControls);
+  ExecuteControlsSimulation(m_currentControls,1);
 
   return true;
 }
@@ -258,14 +301,14 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
     std::cout << std::endl;
   }
 
-  ExecuteControlsSimulation(_c);
+  ExecuteControlsSimulation(_c, _steps);
   ExecuteControlsHardware(_c, _steps);
 }
 
 
 void
 Agent::
-ExecuteControlsSimulation(const ControlSet& _c) {
+ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
   // Execute the controls on the simulated robot.
   if(m_debug) {
     for(size_t i = 0; i < _c.size(); ++i) {
@@ -298,4 +341,11 @@ ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
   hardware->EnqueueCommand(MotionCommand(_c, _steps * timeRes));
 }
 
+/*---------------------------- Communication Helpers -----------------------------*/
+
+std::vector<std::string> 
+Agent::
+PublishFunction(std::string _msg) {
+	return {};
+}
 /*----------------------------------------------------------------------------*/

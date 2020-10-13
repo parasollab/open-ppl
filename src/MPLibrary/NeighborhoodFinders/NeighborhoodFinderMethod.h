@@ -6,7 +6,8 @@
 
 #include "Neighbors.h"
 #include "Utilities/MPUtils.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+//#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,18 +85,18 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     Type GetType() const noexcept;
 
     /// @return Number of closest neighbors to find
-    size_t& GetK() noexcept;
+    virtual size_t& GetK() noexcept;
 
     /// @return Distance of farthest potential neighbor
-    double& GetRadius() noexcept;
+    virtual double& GetRadius() noexcept;
 
     /// Set the distance metric label.
     /// @param _label The new DM label to use.
-    void SetDMLabel(const std::string& _label) noexcept;
+    virtual void SetDMLabel(const std::string& _label) noexcept;
 
     /// Get the distance metric label.
     /// @return The label for the current DM.
-    const std::string& GetDMLabel() const noexcept;
+    virtual const std::string& GetDMLabel() const noexcept;
 
     ///@}
     ///@name Nearest-Neighbor Queries
@@ -182,7 +183,7 @@ NeighborhoodFinderMethod(XMLNode& _node, const Type _type,
     {
       m_k = _node.Read("k", true,
           m_k, size_t(0), std::numeric_limits<size_t>::max(),
-          "The number of neighbors to find.");
+          "The number of neighbors to find. Zero for all.");
       break;
     }
     case Type::RADIUS:

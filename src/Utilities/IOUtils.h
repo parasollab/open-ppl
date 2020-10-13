@@ -10,6 +10,7 @@
 #include "PMPLExceptions.h"
 
 class GroupCfg;
+class Robot;
 
 
 /*------------------------------- Vizmo Debug --------------------------------*/
@@ -174,15 +175,13 @@ VDTrackRoadmap(AbstractRoadmapType* const _r) {
 
 /*----------------------------- Other IO Utils -------------------------------*/
 
-/// Write a list of Cfgs in a give path to file with given filename. Note if
-/// file couldn't be opened, error message will be post and process will be
-/// terminated.
+/// Write a list of Cfgs from a path to file.
 template <typename CfgType>
 void
-WritePath(const std::string& _outputFile, const std::vector<CfgType>& _path) {
-  std::ofstream ofs(_outputFile);
+WritePath(const std::string& _filename, const std::vector<CfgType>& _path) {
+  std::ofstream ofs(_filename);
   if(!ofs)
-    throw RunTimeException(WHERE, "Cannot open file \"" + _outputFile + "\"");
+    throw RunTimeException(WHERE) << "Cannot open file '" << _filename << "'";
 
   // Print header.
   ofs << "VIZMO_PATH_FILE   Path Version 2012" << std::endl
@@ -192,6 +191,43 @@ WritePath(const std::string& _outputFile, const std::vector<CfgType>& _path) {
   // Print path.
   for(auto cit = _path.begin(); cit != _path.end(); ++cit)
     ofs << *cit << std::endl;
+}
+
+
+/// Read a list of Cfgs from a file to path.
+template <typename CfgType>
+std::vector<CfgType>
+ReadPath(const std::string& _filename, Robot* const _robot) {
+  std::ifstream ifs(_filename);
+  if(!ifs)
+    throw RunTimeException(WHERE) << "Cannot open file '" << _filename << "'";
+
+  // Eat header.
+  std::string line1, line2;
+  std::getline(ifs, line1);
+  std::getline(ifs, line2);
+  size_t pathSize = 0;
+  ifs >> pathSize;
+
+  if(line1 != std::string("VIZMO_PATH_FILE   Path Version 2012")
+      or line2 != std::string("1")
+      or pathSize == 0)
+    throw ParseException(WHERE) << "Path file '" << _filename
+                                << "' has ill-formed header.";
+
+  // Make path.
+  std::vector<CfgType> path(pathSize, CfgType(_robot));
+  for(size_t i = 0; i < pathSize; ++i)
+    ifs >> path[i];
+
+  // Make sure we reached the end of the path.
+  ifs >> std::ws;
+  const bool end = ifs.peek() == EOF;
+  if(!end)
+    throw ParseException(WHERE) << "Path file has content after " << pathSize
+                                << " expected cfgs.";
+
+  return path;
 }
 
 

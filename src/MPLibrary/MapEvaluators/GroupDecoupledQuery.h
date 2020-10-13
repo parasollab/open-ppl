@@ -100,12 +100,17 @@ operator()() {
     success &= (*query)();
     if(!success)
       break;
+    std::cout << "Path: " << this->GetPath(robot) << std::endl;
 
     // Success: add this robot/path as a dynamic obstacle for the remaining
     // robots.
 
+    // this->GetMPProblem()->AddDynamicObstacle(
+    //     DynamicObstacle(robot, this->GetPath(robot)->FullCfgs(this->GetMPLibrary()))
+    //       );
+    // FullCfgsWithWait: Used for Safe Interval Path planning
     this->GetMPProblem()->AddDynamicObstacle(
-        DynamicObstacle(robot, this->GetPath(robot)->FullCfgs(this->GetMPLibrary()))
+        DynamicObstacle(robot, this->GetPath(robot)->FullCfgsWithWait(this->GetMPLibrary()))
           );
 
   }

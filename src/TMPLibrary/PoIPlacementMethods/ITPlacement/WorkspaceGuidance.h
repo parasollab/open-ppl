@@ -12,8 +12,8 @@ class WorkspaceGuidance : public ITPlacementMethod {
     ///@name Motion Planning Types
     ///@{
 
-    //typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraph;
-    //typedef typename RoadmapGraph::VID                     VID;
+    //typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> GenericStateGraph;
+    //typedef typename GenericStateGraph::VID                     VID;
 
     ///@}
     ///@name Construction

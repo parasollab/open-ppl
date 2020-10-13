@@ -1,17 +1,20 @@
 #include "ITConstructor.h"
 
-#include "Simulator/Simulation.h"
 #include "MPProblem/Environment/Environment.h"
+#include "Simulator/Simulation.h"
+#include "Utilities/MetricUtils.h"
 
 ITConstructor::
 ITConstructor(MPLibrary* _library,
               std::vector<HandoffAgent*> _memberAgents,
-              Robot* _superRobot){
+              Robot* _superRobot,
+							TaskPlan* _taskPlan){
   m_library = _library;
   m_problem = _library->GetMPProblem();
   m_superRobot = _superRobot;
   m_memberAgents = _memberAgents;
   m_problemCopy = std::shared_ptr<MPProblem>(m_problem);
+	m_taskPlan = _taskPlan;
 }
 
 
@@ -147,7 +150,7 @@ ConstructIT(InteractionTemplate* _it){
 
   _it->ConnectRoadmaps(m_superRobot, m_problem);
 
-  Simulation::GetStatClass()->StopClock("Construct InteractionTemplate "
+  m_taskPlan->GetStatClass()->StopClock("Construct InteractionTemplate "
       + _it->GetInformation()->GetLabel());
 
   std::cout << "Trying to write handoffTemplate Map" << std::endl;

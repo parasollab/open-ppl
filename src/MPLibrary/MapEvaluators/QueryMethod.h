@@ -11,7 +11,6 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/SSSP.h"
-
 #include "nonstd/io.h"
 
 
@@ -97,6 +96,13 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     /// Set an alternate path weight function to use when searching the roadmap.
     /// @param The path weight function object to use.
     virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f);
+    virtual void SetHeuristicFunction(SSSPHeuristicFunction<RoadmapType> _h);
+    virtual void SetNeighborsFunction(SSSPNeighborsFunction<RoadmapType> _n);
+
+		void SetLastConstraintTime(double _last);
+		void SetLastGoalConstraintTime(double _time);
+		void SetStartTime(double _start);
+		void SetEndTime(double _end);
 
     ///@}
 
@@ -143,21 +149,36 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
         typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
+    std::vector<typename QueryMethod<MPTraits>::VID>
+        TwoVariableQuery(const VID _start, const VIDSet& _goals);
+
     ///@}
     ///@name Internal State
     ///@{
 
     RoadmapType* m_roadmap{nullptr};   ///< Last roadmap queried.
+    MPTask* m_task{nullptr};           ///< Last task we looked at.
 
     size_t m_goalIndex{0};             ///< Index of next unreached goal.
 
     GraphSearchAlg m_searchAlg{DIJKSTRAS};  ///< The sssp algorithm to use.
-
+    //GraphSearchAlg m_searchAlg{ASTAR};
     std::string m_safeIntervalLabel; ///< The SafeIntervalTool label.
     std::string m_dmLabel;           ///< The DistanceMetric label.
+		bool m_twoVariable{false};       ///< Temporary flag to use two varibale state search.
 
     /// The function for computing total path weight.
     SSSPPathWeightFunction<RoadmapType> m_weightFunction;
+
+    /// The function for computing the heuristic at a node.
+    SSSPHeuristicFunction<RoadmapType> m_heuristicFunction;
+
+    SSSPNeighborsFunction<RoadmapType> m_neighborsFunction;
+
+		double m_lastConstraint{0};
+		double m_lastGoalConstraint{0};
+		double m_startTime{0};
+		double m_endTime{0};
 
     ///@}
 
@@ -187,6 +208,8 @@ QueryMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "Label of the SafeIntervalTool");
   m_dmLabel = _node.Read("dmLabel", false, "",
       "Alternate distance metric to replace edge weight during search.");
+	m_twoVariable = _node.Read("twoVariableSS",false,m_twoVariable,
+									"Flag to use two variable state search.");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -224,19 +247,28 @@ operator()() {
   auto task = this->GetTask();
   const size_t numGoals = task->GetNumGoals();
 
+//<<<<<<< HEAD
   // Record the path length history when this function exits.
   nonstd::call_on_destruct trackHistory([this](){
       this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
   });
 
-  if(goalTracker->GetStartVIDs().empty())
+//  if(goalTracker->GetStartVIDs().empty())
+//    return false;
+//=======
+  if(goalTracker->GetStartVIDs().empty()) {
+    if(this->m_debug)
+      std::cout << "No start VIDs, query cannot succeed."
+                << std::endl;
     return false;
+  }
+//>>>>>>> f6ce1e7018f26298c319349ddfb7481a9dbbfdda
 
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
   // rebuild the whole path.
   auto r = this->GetRoadmap();
-  if(unreachedGoals.empty() or r != m_roadmap)
+  if(unreachedGoals.empty() or r != m_roadmap or task != m_task)
     Reset(r);
 
   if(this->m_debug)
@@ -311,7 +343,7 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
               << std::endl;
 
   // Check for trivial path.
-  if(_goals.count(_start))
+  if(_goals.count(_start) and m_startTime >= m_endTime)
     return {_start};
 
   // Check for impossibility with CC information (if available).
@@ -332,6 +364,9 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   }
 
   stats->IncStat("Graph Search");
+
+  if(m_twoVariable)
+    return TwoVariableQuery(_start,_goals);
 
   // Set up the termination criterion to quit early if we find a goal node.
   SSSPTerminationCriterion<RoadmapType> termination(
@@ -363,10 +398,28 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
     };
   }
 
-  // Run dijkstra's algorithm to find the path, if it exists.
-  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(m_roadmap, {_start}, weight,
-      termination);
+//  SSSPHeuristicFunction<RoadmapType> heuristic;
+//  if(m_heuristicFunction)
+//    heuristic = m_heuristicFunction;
+//  else {
+//    heuristic = SSSPDefaultHeuristic<RoadmapType>();
+//  }
+//  SSSPNeighborsFunction<RoadmapType> neighbors;
+//  if(m_neighborsFunction)
+//    neighbors = m_neighborsFunction;
+//  else {
+//    neighbors = SSSPDefaultNeighbors<RoadmapType>();
+//  }
 
+  // Run dijkstra's algorithm to find the path, if it exists.
+  SSSPOutput<RoadmapType> sssp;
+
+  if(m_searchAlg == DIJKSTRAS)
+    sssp = DijkstraSSSP(m_roadmap, {_start}, weight, termination);
+  else if(m_searchAlg == ASTAR) {
+    std::vector<VID> goals(_goals.begin(), _goals.end());
+    sssp = AStarSSSP(m_roadmap, {_start}, goals, weight, termination);
+  }
   // Find the last discovered node, which should be a goal if there is a valid
   // path.
   const VID last = sssp.ordering.back();
@@ -411,6 +464,20 @@ SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f) {
   m_weightFunction = _f;
 }
 
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetHeuristicFunction(SSSPHeuristicFunction<RoadmapType> _h) {
+  m_heuristicFunction = _h;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetNeighborsFunction(SSSPNeighborsFunction<RoadmapType> _n) {
+  m_neighborsFunction = _n;
+}
+
 /*------------------------------- Helpers ------------------------------------*/
 
 template <typename MPTraits>
@@ -419,6 +486,7 @@ QueryMethod<MPTraits>::
 Reset(RoadmapType* const _r) {
   // Set the roadmap.
   m_roadmap = _r;
+  m_task = this->GetTask();
 
   // Reset the goal index.
   m_goalIndex = 0;
@@ -439,11 +507,11 @@ SetSearchAlgViaString(std::string _alg, const std::string& _where) {
     m_searchAlg = DIJKSTRAS;
   else if(_alg == "astar")
   {
-    throw NotImplementedException(_where) << "We do not actually have A* "
-                                          << "implemented since the STAPL "
-                                          << "version does not use the "
-                                          << "heuristic, and the new impl only "
-                                          << "supports dijkstras right now.";
+//    throw NotImplementedException(_where) << "We do not actually have A* "
+//                                          << "implemented since the STAPL "
+//                                          << "version does not use the "
+//                                          << "heuristic, and the new impl only "
+//                                          << "supports dijkstras right now.";
     m_searchAlg = ASTAR;
   }
   else
@@ -534,7 +602,132 @@ DynamicPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   // If we're still here, the edge is OK.
   return newDistance;
 }
+template <typename MPTraits>
+std::vector<typename QueryMethod<MPTraits>::VID>
+QueryMethod<MPTraits>::
+TwoVariableQuery(const VID _start, const VIDSet& _goals) {
+/*
+	double minEnd = m_endTime;
 
+  SSSPTerminationCriterion<RoadmapType> termination(
+      [minEnd,_goals](typename RoadmapType::vertex_iterator& _vi,
+             const SSSPOutput<RoadmapType>& _sssp) {
+        return (_goals.count(_vi->descriptor()) or _sssp.distance.at(_vi->descriptor()) > minEnd)
+																							? SSSPTermination::EndSearch
+                                              : SSSPTermination::Continue;
+      }
+  );
+*/
+  SSSPPathWeightFunction<RoadmapType> weight;
+  if(m_weightFunction) {
+    weight = m_weightFunction;
+  }
+  else if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->DynamicPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+  else {
+    weight = [this](typename RoadmapType::adj_edge_iterator& _ei,
+                    const double _sourceDistance,
+                    const double _targetDistance) {
+      return this->StaticPathWeight(_ei, _sourceDistance, _targetDistance);
+    };
+  }
+
+
+  auto g = this->GetRoadmap();
+/*
+  // Run dijkstra's algorithm to find the path, if it exists.
+  const SSSPOutput<RoadmapType> sssp = DijkstraSSSP(g, {_start}, weight,
+      termination);
+
+  // Find the last discovered node, which should be a goal if there is a valid
+  // path.
+  const VID last = sssp.ordering.back();
+  if(_goals.count(last)) {
+  	// Extract the path.
+  	std::vector<VID> path;
+  	path.push_back(last);
+
+  	VID current = last;
+  	do {
+    	current = sssp.parent.at(current);
+    	path.push_back(current);
+  	} 	while(current != _start);
+  	std::reverse(path.begin(), path.end());
+
+  	if(this->m_debug)
+    	std::cout << "\tSuccess: reached goal node " << last << " with path cost "
+      	        << sssp.distance.at(last) << "."
+      	        << std::endl;
+
+  	return path;
+  }
+*/
+	//If there is not a valid path satisfying both the end time and the goal vid use two variable search
+
+	/*double lastConflict = 0;
+	for(auto conflict : g->GetAllConflictsCfgAt()) {
+		if(conflict.second > lastConflict) {
+			lastConflict = conflict.second;
+		}
+	}*/
+
+	//double minStep = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  //double minStep = g->GetEdge(*(_goals.begin()), *(_goals.begin())).GetTimeSteps();
+
+  auto node = TwoVariableDijkstraSSSP(g, {_start}, _goals, m_startTime,
+      m_endTime, m_lastConstraint, m_lastGoalConstraint, weight);
+
+  if(!node)
+    return {};
+
+  this->GetPath()->SetFinalWaitTimeSteps(node->m_waitTimeSteps);
+
+  std::vector<typename QueryMethod<MPTraits>::VID> path;
+  while(node->m_parent) {
+    path.push_back(node->m_vid);
+    node = node->m_parent;
+    if(!node)
+      return {};
+  }
+
+  path.push_back(node->m_vid);
+  std::reverse(path.begin(),path.end());
+
+  return path;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetLastConstraintTime(double _last) {
+	m_lastConstraint = _last;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetLastGoalConstraintTime(double _time) {
+	m_lastGoalConstraint = _time;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetStartTime(double _start) {
+	m_startTime = _start;
+}
+
+template <typename MPTraits>
+void
+QueryMethod<MPTraits>::
+SetEndTime(double _end) {
+	m_endTime = _end;
+}
 /*----------------------------------------------------------------------------*/
 
 #endif

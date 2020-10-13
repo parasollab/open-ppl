@@ -31,7 +31,7 @@ static std::unique_ptr<Simulation> s_singleton;
 
 
 Simulation::
-Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit)
+Simulation(MPProblem* _problem, const bool _edit)
   : m_problem(_problem), m_editMode(_edit), m_stats(new StatClass()) {
   // If we are in edit mode, then the backlog is annoying rather than helpful.
   // Disable it in that case.
@@ -42,7 +42,7 @@ Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit)
 
 void
 Simulation::
-Create(std::shared_ptr<MPProblem> _problem, const bool _edit) {
+Create(MPProblem* _problem, const bool _edit) {
   if(s_singleton.get())
     throw RunTimeException(WHERE, "THERE CAN ONLY BE ONE!");
   s_singleton.reset(new Simulation(_problem, _edit));
@@ -103,15 +103,15 @@ Initialize() {
     return;
 
   // Require a non-null problem to initialize.
-  if(!m_problem.get())
+  if(!m_problem)
     throw RunTimeException(WHERE) << "Cannot initialize with a null problem!";
 
   // Require a non-null main window to initialize.
-  if(!main_window::get())
-    throw RunTimeException(WHERE) << "Cannot initialize without a main window!";
+  //if(!main_window::get())
+  //  throw RunTimeException(WHERE) << "Cannot initialize without a main window!";
 
   // Create a bullet engine.
-  m_engine = new BulletEngine(m_problem.get());
+  m_engine = new BulletEngine(m_problem);
 
   // Add the problem objects to the simulation.
   AddBBX();
@@ -125,7 +125,8 @@ Initialize() {
                           at  = ToGLUtils(t * Vector3d(0, 0, -1)),
                           up  = ToGLUtils(t.rotation() * Vector3d(0, 1, 0));
 
-  main_window::get()->gl()->camera()->position(pos, at, up);
+  if(main_window::get())
+		main_window::get()->gl()->camera()->position(pos, at, up);
 }
 
 
@@ -342,7 +343,7 @@ RemovePath(const size_t _id) {
 
 size_t
 Simulation::
-AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
     const glutils::color& _color) {
   std::lock_guard<std::mutex> lock(m_guard);
 
@@ -541,7 +542,10 @@ AddTerrain() {
   auto env = m_problem->GetEnvironment();
   for(const auto& elem : env->GetTerrains()) {
     for(const auto& terrain : elem.second) {
-      AddBoundary(terrain.GetBoundary(), terrain.Color(), terrain.IsWired());
+      //AddBoundary(terrain.GetBoundary(), terrain.Color(), terrain.IsWired());
+      for(auto& boundary : terrain.GetBoundaries()){
+      	AddBoundary(boundary.get(), terrain.Color(), terrain.IsWired());
+			}
     }
   }
 }

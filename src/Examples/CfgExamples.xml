@@ -119,10 +119,6 @@
         penetrationType="exact" debug="false" positional="true"/>
       <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
         decompositionLabel="fine"/>
-      <DynamicRegionSampler label="DynamicRegionSampler"
-        samplerLabel="UniformRandom"
-        explore=".2" regionFactor="2.5" penetration="1"
-        velocityBiasing="false" velocityAlignment=".4" decompositionLabel="fine"/>
     </Samplers>
 
     <LocalPlanners>
@@ -254,7 +250,7 @@
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
-        graphSearchAlg="dijkstras"/>
+        graphSearchAlg="astar"/>
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">

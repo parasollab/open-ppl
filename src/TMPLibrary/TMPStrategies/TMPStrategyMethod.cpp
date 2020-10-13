@@ -9,12 +9,13 @@
 #include "TMPLibrary/TaskPlan.h"
 
 #include "Simulator/Simulation.h"
+#include "Utilities/MetricUtils.h"
 
 
 /*****************************************Constructor*****************************************************/
 TMPStrategyMethod::
 TMPStrategyMethod(XMLNode& _node) : TMPBaseObject(_node){
-  m_sgLabel = _node.Read("sgLabel", true, "",
+  m_sgLabel = _node.Read("sgLabel", false, "",
 												 "Label for the state graph used by the TMPStrategy");
   m_teLabel = _node.Read("teLabel", false, "",
 												 "Label for the task evaluator used by the TMPStrategy");
@@ -41,11 +42,13 @@ Initialize(){
 void
 TMPStrategyMethod::
 operator()(){
+	this->GetTaskPlan()->GetStatClass()->StartClock("TotalTMPStrategyTime");
 	Initialize();	
 	PlanTasks();
-	this->GetStateGraph(m_sgLabel)->LoadStateGraph();
+	//this->GetStateGraph(m_sgLabel)->LoadStateGraph();
 	DecomposeTasks();
 	AssignTasks();
+	this->GetTaskPlan()->GetStatClass()->StopClock("TotalTMPStrategyTime");
 }
 
 /*****************************************Accessors******************************************************/

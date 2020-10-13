@@ -2,7 +2,9 @@
 #define PMPL_DRAWABLE_ROADMAP_H_
 
 #include "DrawableCfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+//#include "ConfigurationSpace/GenericStateGraph.h"
+
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
 #include "Utilities/Hash.h"
 
@@ -30,9 +32,9 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@name Local Types
     ///@{
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>>   RoadmapType;
-    typedef typename RoadmapType::VI                VI;
-    typedef typename RoadmapType::EI                EI;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef typename RoadmapType::VI VI;
+    typedef typename RoadmapType::EI EI;
     typedef typename RoadmapType::VID               VID;
     typedef typename std::pair<VID, VID>            EdgeID;
 
@@ -125,7 +127,7 @@ class DrawableRoadmap : public glutils::drawable  {
     std::unique_ptr<DrawableMultiBody> m_dmb; ///< The drawable multibody.
     std::atomic<bool> m_drawRobot{false};     ///< Draw the robots or a point?
     mutable std::mutex m_lock;                ///< Lock for updating the rendering.
-    RoadmapType* m_graph;                     ///< Pointer to the RoadmapGraph.
+    RoadmapType* m_graph;                     ///< Pointer to the GenericStateGraph.
 
     std::string m_name;                       ///< A name for this rendering.
 

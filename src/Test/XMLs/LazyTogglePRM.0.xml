@@ -67,9 +67,18 @@
         <ColConnector label="ToggleConnect"/>
         <Evaluator label="LazyToggleQuery"/>
       </TogglePRMStrategy>
+
+      <ValidationStrategy label="Test" target="LazyTogglePRM" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/LazyTogglePRM.0.query.map"/>
+        <GoldStandard robot="boxy" type="blockroadmap"
+          filename="../Outputs/LazyTogglePRM.0.query.block.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/LazyTogglePRM.0.query.rdmp.path"/>
+      </ValidationStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="LazyTogglePRM" seed="0"
+    <Solver mpStrategyLabel="Test" seed="0"
       baseFilename="../Scratch/LazyTogglePRM"/>
 
   </Library>

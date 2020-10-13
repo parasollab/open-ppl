@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -17,7 +18,6 @@ using namespace mathtool;
 
 #include "IOUtils.h"
 
-class Environment;
 class Cfg;
 class Robot;
 
@@ -26,8 +26,8 @@ class Robot;
 
 /*-------------------------------- Constants ---------------------------------*/
 
-#define MAX_INT  numeric_limits<int>::max()
-#define MAX_DBL  numeric_limits<double>::max()
+#define MAX_INT  std::numeric_limits<int>::max()
+#define MAX_DBL  std::numeric_limits<double>::max()
 
 /// Variable resolution epsilon for doubles and float. This number is based upon
 /// the resolution of the lower magnitude value between _t1 and _t2.

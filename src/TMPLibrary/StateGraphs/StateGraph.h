@@ -3,7 +3,7 @@
 
 #include "TMPLibrary/TMPBaseObject.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include <iostream>
 
@@ -29,7 +29,7 @@ class StateGraph : public TMPBaseObject {
     ///@name Accessors
     ///@{
 
-		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
+		virtual GenericStateGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
 
 		/// Copies the state graph into the coordinator solution object.
 		virtual void LoadStateGraph();
@@ -47,9 +47,9 @@ class StateGraph : public TMPBaseObject {
 		///@name member variables
 		///@{
 
-		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
+		GenericStateGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
 
-		std::string m_pmLabel;
+		std::string m_pmLabel{""};
 
 		
 		///@}

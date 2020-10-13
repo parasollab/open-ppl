@@ -33,7 +33,7 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     ///@{
 
 
-    typedef std::unordered_map<std::string,RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
+    typedef std::unordered_map<std::string,GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
 
 
     ///@name Construction
@@ -60,14 +60,14 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     ///Returns a sequence of actions to solve the problem
     std::vector<std::shared_ptr<Action>> Solve();
 
-		virtual bool operator()() override;
-
     ///@}
 
   protected:
 
     ///@name Helper Functions
     ///@{
+		
+		virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan= nullptr) override;
 
     /// Converts a cfg to a bundary that can be used as a location for the TP
     /// logic

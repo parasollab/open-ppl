@@ -1,16 +1,20 @@
 #include "MPProblem.h"
 
+#include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/GroupTask.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/DynamicObstacle.h"
 #include "MPProblem/InteractionInformation.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
+
+#include "TaskHierarchy/SubtaskFlow.h"
 
 using namespace std;
 
@@ -199,6 +203,23 @@ ReassignTask(MPTask* const _task, Robot* const _newOwner) {
   oldTasks.erase(iter);
 }
 
+void
+MPProblem::
+AddDecomposition(Robot* _coordinator, std::unique_ptr<Decomposition>&& _decomp) {
+	m_taskDecompositions[_coordinator].push_back(std::move(_decomp));
+}
+		
+const std::vector<std::unique_ptr<Decomposition>>& 
+MPProblem::
+GetDecompositions(Robot* _coordinator) {
+	return m_taskDecompositions[_coordinator];
+}
+
+const std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>>& 
+MPProblem::
+GetDecompositions() {
+	return m_taskDecompositions;
+}
 /*----------------------------- Environment Accessors ------------------------*/
 
 Environment*
@@ -300,7 +321,27 @@ GetRobotGroups() const noexcept {
   return m_robotGroups;
 }
 
+Cfg 
+MPProblem::
+GetInitialCfg(Robot* _r) {
+	return m_initialCfgs[_r];
+}
+		
+void 
+MPProblem::
+SetInitialCfg(Robot* _r, Cfg _cfg) {
+	if(_r != _cfg.GetRobot())
+		throw RunTimeException(WHERE) << "Initial Cfg robot does not match." << std::endl;
+	m_initialCfgs[_r] = _cfg;
+}
+
 /*----------------------------- Task Accessors -------------------------------*/
+
+MPTask*
+MPProblem::
+GetTask(std::string _label) {
+  return m_taskLabelMap[_label];
+}
 
 std::vector<std::shared_ptr<MPTask>>
 MPProblem::
@@ -432,7 +473,10 @@ ParseChild(XMLNode& _node) {
     const std::string label = _node.Read("robot", true, "",
         "Label for the robot assigned to this task.");
     auto robot = this->GetRobot(label);
-    m_taskMap[robot].emplace_back(new MPTask(this, _node));
+    auto task = std::shared_ptr<MPTask>(new MPTask(this, _node));
+    m_taskMap[robot].push_back(task);
+    /// @todo Add check that tasks have unique labels
+    m_taskLabelMap[task->GetLabel()] = task.get();
   }
   else if(_node.Name() == "GroupTask") {
     auto task = GroupTask::Factory(this, _node);
@@ -443,6 +487,16 @@ ParseChild(XMLNode& _node) {
     m_interactionInformations.emplace_back(std::unique_ptr<InteractionInformation>(
                                            new InteractionInformation(this, _node)));
   }
+	else if(_node.Name() == "Decomposition") {
+		auto decomp = std::unique_ptr<Decomposition>(new Decomposition(_node,this));
+
+		auto top = decomp->GetMainTask();
+
+		m_taskDecompositions[decomp->GetCoordinator()].push_back(std::move(decomp));
+
+		SubtaskFlow flow(top);
+		flow.Print();
+	}
 }
 
 

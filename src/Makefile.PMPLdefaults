@@ -89,7 +89,7 @@ CD_LIBFILE := $(PQP_LIBFILE) $(RAPID_LIBFILE)
 ifeq ($(platform), MACOS_gcc)
   EIGEN_INCL := -I/usr/local/include/eigen3
 else
-  EIGEN_INCL := -I/usr/include/eigen3
+  EIGEN_INCL := -I/software/eigen-3.3.7/include/eigen3 -I/usr/include/eigen3
 endif
 
 ################################################################################
@@ -249,7 +249,15 @@ ifeq ($(platform), MACOS_gcc)
   QT_BASE := /usr/local/opt/qt/include
 endif
 
-QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
+ifeq ($(shell lsb_release -si), Ubuntu)
+  QT_BASE := /usr/include/qt4
+endif
+
+ifeq ($(shell lsb_release -si), Pop)
+  QT_BASE := /usr/include/qt4
+endif
+
+QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
            -I$(QT_BASE)/QtOpenGL
 QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
 ifeq ($(platform), MACOS_gcc)
@@ -263,6 +271,15 @@ QT_MOC_BASE = /usr/lib64/qt4/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
 endif
+
+ifeq ($(shell lsb_release -si), Ubuntu)
+  QT_MOC_BASE := /usr/share/qt4/bin
+endif
+
+ifeq ($(shell lsb_release -si), Pop)
+  QT_MOC_BASE := /usr/share/qt4/bin
+endif
+
 QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
 ifndef QT_MOC
   $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
@@ -394,8 +411,19 @@ SIM_INCL := $(QT_INCL)
 SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_SRCS := \
+  $(PMPL_DIR)/sim_main.cpp \
+
+
+
+################################################################################
+# Task Planning Sources
+################################################################################
+PLANNER_DEF  :=
+planner: PLANNER_DEF += -DPMPL_USE_SIMULATOR
+PLANNER_INCL := $(QT_INCL)
+PLANNER_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
+TASK_SRCS := \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
-  Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableBoundary.cpp \
   Visualization/DrawableCfg.cpp \
@@ -412,44 +440,95 @@ SIM_SRCS := \
   Visualization/Gui/Setup.cpp \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp \
-  $(PMPL_DIR)/sim_main.cpp \
+  Simulator/Simulation.cpp \
   TMPLibrary/Actions/Action.cpp \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
   TMPLibrary/Actions/StartTask.cpp \
+  TMPLibrary/OccupiedInterval.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
+	TMPLibrary/Solution/Plan.cpp \
+	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/DiscreteIntervalGraph.cpp \
   TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
   TMPLibrary/TaskAllocators/AuctionMethod.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
+  TMPLibrary/TaskAllocators/TCBSAllocator.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
+  TMPLibrary/TaskEvaluators/CBSEvaluator.cpp \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
+  TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/TaskCBSPlanner.cpp \
+  TMPLibrary/TaskEvaluators/TCBS.cpp \
+  TMPLibrary/TaskEvaluators/TMPCBS.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
+  TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
-  TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
+	TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
+	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
   TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
+  TMPLibrary/TMPTools/DiscreteMAD.cpp \
+  TMPLibrary/TMPTools/MultiAgentDijkstra.cpp \
+  TMPLibrary/TMPTools/TMPTools.cpp \
   TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/ChildAgent.cpp \
+  Behaviors/Agents/ClientAgent.cpp \
   Behaviors/Agents/Coordinator.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
+################################################################################
+# TMP Main
+################################################################################
+PPL_SRCS := \
+  $(PMPL_DIR)/tmp_main.cpp \
+
+################################################################################
+# Master Node
+################################################################################
+MASTER_SRCS := \
+  master_node_main.cpp \
+
+################################################################################
+# Communication
+################################################################################
+COMM_SRCS := \
+  Communication/Communicator.cpp \
+  Communication/Publisher.cpp \
+  Communication/Subscriber.cpp \
+
+################################################################################
+# Planning Server
+################################################################################
+PLANNER_SRCS := \
+  $(PMPL_DIR)/planner_main.cpp \
+	Utilities/PlanningServer.cpp \
+
+################################################################################
+# Server
+################################################################################
+CLIENT_SRCS := \
+  $(PMPL_DIR)/client.cpp \
 
 ################################################################################
 # Hardware
@@ -519,8 +598,10 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
+  MPLibrary/MapEvaluators/SIPPMethod.h \
   MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
   MPLibrary/LearningModels/RadialKernelGradient.cpp \
+  MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
@@ -543,14 +624,30 @@ PMPL_SRCS := \
   MPProblem/Robot/Robot.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp \
   MPProblem/RobotGroup/RobotGroup.cpp \
+  MPProblem/TaskHierarchy/Decomposition.cpp \
+  MPProblem/TaskHierarchy/SemanticTask.cpp \
+  MPProblem/TaskHierarchy/SubtaskFlow.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
+	Utilities/GeneralCBS/AllocationValidation.cpp \
+	Utilities/GeneralCBS/BypassValidation.cpp \
+	Utilities/GeneralCBS/ComposeValidation.cpp \
+	Utilities/GeneralCBS/GeneralCBS.cpp \
+	Utilities/GeneralCBS/LowLevelSearch.cpp \
+	Utilities/GeneralCBS/MetaTMPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/MotionValidation.cpp \
+	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/ParallelCBS.cpp \
+	Utilities/GeneralCBS/PrecedenceLowLevelSearch.cpp \
+	Utilities/GeneralCBS/PrioritizedConflictValidation.cpp \
+	Utilities/GeneralCBS/TCBSValidation.cpp \
+	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
+	Utilities/GeneralCBS/Validation.cpp \
   Utilities/IOUtils.cpp \
-  Utilities/MeanCurvatureSkeleton3D.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \
   Utilities/MPUtils.cpp \

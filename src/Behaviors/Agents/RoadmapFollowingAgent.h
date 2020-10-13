@@ -17,7 +17,7 @@ class RoadmapFollowingAgent : public PlanningAgent {
     ///@name Motion Planning Types
     ///@{
 
-    typedef RoadmapGraph<CfgType, WeightType>         RoadmapType;
+    typedef GenericStateGraph<CfgType, WeightType>         RoadmapType;
     typedef typename RoadmapType::vertex_descriptor   VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 

@@ -1,5 +1,5 @@
-#ifndef TIME_EVALUATOR_H_
-#define TIME_EVALUATOR_H_
+#ifndef PMPL_TIME_EVALUATOR_H_
+#define PMPL_TIME_EVALUATOR_H_
 
 #include "MapEvaluatorMethod.h"
 
@@ -11,13 +11,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// A stop-watch like evaluator that returns false after a set amount of time.
 ///
-/// @TODO This should be removed, as it's redundant with just using the more
-///       flexibile ConditionalEvaluator with the TimeMetric.
-///
-/// @WARNING This evaluator uses an rusage-based clock just like our StatClass.
-///          The two probably aren't safe to access concurrently. We can adjust
-///          this by switching to a C++11 chrono-based clock when the need
-///          arises.
+/// This class maintains a separate clock for each instance. For a global clock
+/// use ConditionalEvaluator with the TimeMetric.
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,9 +49,9 @@ class TimeEvaluator : public MapEvaluatorMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    bool       m_started{false}; ///< Has timing started?
-    double     m_timeout;        ///< Timeout after this long.
-    ClockClass m_clock;          ///< Internal timer.
+    bool m_started{false}; ///< Has timing started?
+    double     m_timeout;  ///< Timeout after this long.
+    ClockClass m_clock;    ///< Internal timer.
 
     ///@}
 };

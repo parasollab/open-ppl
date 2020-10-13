@@ -1,28 +1,77 @@
 #ifndef PMPL_TMP_TOOLS_H_
 #define PMPL_TMP_TOOLS_H_
 
-#include "TMPLibrary/TMPBaseObject.h"
+#include "TMPLibrary/TMPTools/DiscreteMAD.h"
+#include "TMPLibrary/TMPTools/MultiAgentDijkstra.h"
 
 #include <iostream>
 
-class TMPTools : public TMPBaseObject {
+class TMPTools {
   public:
 
-  	///@name Construction
+		///@name Local Types
+		///@{
+
+		template <typename Utility>
+		using LabelMap = std::unordered_map<std::string, Utility*>;
+
+  	///@}
+		///@name Construction
     ///@{
 
   	TMPTools() = default;
 
-		TMPTools(XMLNode& _node);
+		TMPTools(TMPLibrary* _tmpLibrary);
 
-		virtual ~TMPTools() = default;  	
+		virtual ~TMPTools() = default;  
+
+		void ParseXML(XMLNode& _node);	
 
     ///@}
-};
+    ///@name Interaction Templates
+    ///@{
 
+		///@}
+		///@name MultiAgentDijkstra
+		///@{
+		
+		MultiAgentDijkstra* GetMultiAgentDijkstra(const std::string& _label);
+
+		void SetMultiAgentDijkstra(const std::string& _label,
+							MultiAgentDijkstra* _utility);
+
+		DiscreteMAD* GetDiscreteMAD(const std::string& _label);
+
+		void SetDiscreteMAD(const std::string& _label,
+							DiscreteMAD* _utility);
+		///@}
+    
+	private:
+	
+		///@name Helpers
+		///@{
+
+		template <typename Utility>
+		Utility* GetUtility(const std::string& _label,
+				const LabelMap<Utility>& _map);
+
+		template <typename Utility>
+		void SetUtility(const std::string& _label, Utility* _utility,
+				LabelMap<Utility>& _map);
+
+		///@}
+		///@name Internal State
+		///@{
+
+		TMPLibrary* const m_tmpLibrary; ///< The owning library.
+
+		LabelMap<MultiAgentDijkstra> 		m_multiAgentDijkstras;
+		LabelMap<DiscreteMAD> 					m_discreteMADs;
+		LabelMap<InteractionTemplate>   m_interactionTemplates;
+
+		///@}
+};
 /*----------------------------------------------------------------------------*/
 
 #endif
 
-TMPTools::
-TMPTools(XMLNode& _node) : TMPBaseObject(_node) {}

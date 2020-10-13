@@ -16,7 +16,7 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
   : m_color(_color),
     m_multiBody(*_graph->GetRobot()->GetMultiBody()),
     m_graph(_graph) {
-  // counter for the number of instances of DrawableRoadmapGraph
+  // counter for the number of instances of DrawableGenericStateGraph
   static size_t roadmapGraphCounter = 0;
 
   // if a name is given the use that name, otherwise generate one
@@ -59,7 +59,8 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
       }
   };
 
-  main_window::get()->add_key_mapping(m_name, std::move(fn));
+  if(main_window::get())
+  	main_window::get()->add_key_mapping(m_name, std::move(fn));
 }
 
 
@@ -131,6 +132,7 @@ DeleteVertex(VI _vi) {
   std::lock_guard<std::mutex> lock(m_lock);
   m_bufferAddCfgs.erase(vid);
   m_bufferDeleteCfgs.insert(vid);
+  //throw NotImplementedException(WHERE);
 }
 
 
@@ -142,6 +144,7 @@ DeleteEdge(EI _ei) {
   std::lock_guard<std::mutex> lock(m_lock);
   m_bufferAddEdges.erase(eid);
   m_bufferDeleteEdges.insert(eid);
+  //throw NotImplementedException(WHERE);
 }
 
 

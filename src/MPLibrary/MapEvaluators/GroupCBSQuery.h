@@ -267,19 +267,21 @@ Initialize() {
   auto query = dynamic_cast<QueryMethod<MPTraits>*>(
       this->GetMapEvaluator(m_queryLabel)
   );
-  if(!query)
-    throw RunTimeException(WHERE) << "Query method " << m_queryLabel
+  if(query) {
+  //if(!query) {
+    /*throw RunTimeException(WHERE) << "Query method " << m_queryLabel
                                   << " is not of type QueryMethod."
-                                  << std::endl;
+                                  << std::endl;*/
 
-  // Set the query method's path weight function.
-  query->SetPathWeightFunction(
-      [this](typename RoadmapType::adj_edge_iterator& _ei,
-             const double _sourceDistance,
-             const double _targetDistance) {
-        return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
-      }
-  );
+   // Set the query method's path weight function.
+   query->SetPathWeightFunction(
+       [this](typename RoadmapType::adj_edge_iterator& _ei,
+               const double _sourceDistance,
+               const double _targetDistance) {
+          return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
+        }
+    );
+  }
 }
 
 /*-------------------------- MapEvaluator Overrides --------------------------*/
@@ -330,6 +332,8 @@ operator()() {
     const bool conflictDetected = !conflict.Empty();
     if(conflictDetected) {
       CreateChildNodes(std::move(conflict), currentCBSNode, tree);
+      if(tree.empty())
+        std::cout << "Empty tree" << std::endl;
       continue;
     }
 
@@ -442,7 +446,7 @@ CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
 
   child.conflicts[_robot].emplace(_timestep, std::move(_cfg));
 
-#if 0
+/*
   for(auto conflictSet : child.conflicts) {
     for(auto conflict : conflictSet.second) {
       std::cout << "\t\t\t\t\tConflict on robot " << conflictSet.first->GetLabel()
@@ -451,7 +455,7 @@ CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
         << conflict.second.PrettyPrint() << std::endl;
     }
   }
-#endif
+*/
 
   // If we've already seen this set of conflicts, don't check them again.
   if(m_conflictCache.count(child.conflicts)) {
@@ -506,6 +510,18 @@ SolveIndividualTask(Robot* const _robot, const ConflictMap& _conflicts) {
   if(!_conflicts.empty())
     m_currentConflicts = &_conflicts.at(_robot);
 
+  this->GetMPProblem()->ClearDynamicObstacles();
+
+  if(m_currentConflicts) {
+    for(auto c : *m_currentConflicts) {
+      std::vector<CfgType> path = {c.second};
+      Robot* constraintRobot = c.second.GetRobot();
+      DynamicObstacle dyOb(constraintRobot, path);
+      dyOb.SetStartTime(c.first);
+      this->GetMPProblem()->AddDynamicObstacle(std::move(dyOb));
+    }
+  }
+
   // Generate a path for this robot individually while avoiding the conflicts.
   this->GetMPLibrary()->SetTask(task);
   auto query = this->GetMapEvaluator(m_queryLabel);
@@ -514,6 +530,7 @@ SolveIndividualTask(Robot* const _robot, const ConflictMap& _conflicts) {
 
   // Clear the conflicts.
   m_currentConflicts = nullptr;
+  this->GetMPProblem()->ClearDynamicObstacles();
 
   if(this->m_debug)
     std::cout << (_conflicts.empty() ? "\t\t" : "\t\t\t\t")
@@ -609,7 +626,14 @@ FindConflict(const Solution& _solution) {
                     << cfg2.PrettyPrint()
                     << std::endl;
 
-        Conflict newConflict{cfg1, cfg2, t};
+				//Old block pre-merge with master, remove if compiles
+				//TODO::Was getting some weird complication bug about explicit construction
+        Conflict newConflict(cfg1,cfg2,t);
+        //newConflict.cfg1     = cfg1;
+        //newConflict.cfg2     = cfg2;
+        //newConflict.timestep = t;
+        
+        //Conflict newConflict{cfg1, cfg2, t};
 
         return newConflict;
       }
@@ -620,7 +644,9 @@ FindConflict(const Solution& _solution) {
     std::cout << "\t\tNo conflict detected." << std::endl;
 
   // We didn't find a conflict, return an empty one.
-  return {};
+  // Again weird compilation - I'll figure these out later
+  Conflict c;
+  return c;
 }
 
 

@@ -7,7 +7,7 @@
 #include "Behaviors/Agents/Agent.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
@@ -17,7 +17,7 @@ class ITMethod : public TMPStrategyMethod {
 
   public:
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> TaskGraph;
 
     ///@name Construction
     ///@{
@@ -28,7 +28,7 @@ class ITMethod : public TMPStrategyMethod {
 		//ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
 		//							Environment* _interactionEnvironment);
 
-		~ITMethod() = default;
+		virtual ~ITMethod() = default;
 
     ///@}
   

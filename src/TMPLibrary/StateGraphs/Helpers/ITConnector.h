@@ -2,7 +2,7 @@
 #define IT_CONNECTOR_H_
 
 #include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
 #include "Traits/CfgTraits.h"
@@ -41,11 +41,11 @@ class ITConnector {
     ///@{
 
     /// Assumes that all ITs provided contain the given capability.
-    RoadmapGraph<Cfg, DefaultWeight<Cfg>>* ConnectInteractionTemplates(
+    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* ConnectInteractionTemplates(
                  std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                  const std::string& _capability,
                  std::vector<Cfg>& _startAndGoal,
-                 RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap);
+                 GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _megaRoadmap);
 
     ///@}
 
@@ -61,14 +61,14 @@ class ITConnector {
 
     void UpdateAdjustedDistances(Cfg* _cfg1, Cfg* _cfg2, std::vector<Cfg*> _cfgs);
 
-    void CopyInTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph,
+    void CopyInTemplates(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _graph,
                          std::vector<std::shared_ptr<InteractionTemplate>>& _ITs,
                          const std::string& _capability,
                          std::vector<Cfg>& _startAndGoal);
 
     void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 
-    void ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph);
+    void ConnectTemplates(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _graph);
 
     void BuildSkeletons();
 
@@ -78,6 +78,9 @@ class ITConnector {
     /// Checks the capability skeleton of the corresponding type to see if the
     /// two cfgs are in connected free space.
     bool InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2);
+
+		void DirectionConnections(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
+											std::vector<Cfg*> _cfgs);
     ///@}
     ///@name Member Variables
     ///@{

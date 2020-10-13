@@ -123,6 +123,13 @@ class CCTracker final {
     /// Install hooks in the roadmap.
     void InstallHooks() noexcept;
 
+    /// Install hooks in the roadmap.
+    void RemoveHooks() noexcept;
+
+    /// Recompute all CCs from scratch. Complexity is linear in the size of the
+    /// roadmap (O(V + E)).
+    void RecomputeCCs() noexcept;
+
     ///@}
     ///@name Query Functions
     ///@{
@@ -134,7 +141,7 @@ class CCTracker final {
     /// Get the CC which contains a representative node.
     /// @param _vid The representative's descriptor.
     /// @return The CC which contains _vid.
-    const VertexSet& GetCC(const VID _vid) const noexcept;
+    const VertexSet* GetCC(const VID _vid) const noexcept;
 
     /// Get a set of representative VIDs for each CC.
     /// @return The descriptor for one vertex from each CC.
@@ -211,10 +218,6 @@ class CCTracker final {
 
     /// @overload
     VertexSet* FindCC(const VID _vid) noexcept;
-
-    /// Recompute all CCs from scratch. Complexity is linear in the size of the
-    /// roadmap (O(V + E)).
-    void RecomputeCCs() noexcept;
 
     /// Run a breadth-first search on the roadmap from a particular start node.
     /// @param _start The start node.
@@ -375,6 +378,19 @@ InstallHooks() noexcept {
       [this](const edge_iterator _i){this->DeleteEdge(_i);});
 }
 
+
+template <typename RoadmapType>
+inline
+void
+CCTracker<RoadmapType>::
+RemoveHooks() noexcept {
+  const std::string label = "CCTracker";
+  m_roadmap->RemoveHook(RoadmapType::HookType::AddVertex, label);
+  m_roadmap->RemoveHook(RoadmapType::HookType::DeleteVertex, label);
+  m_roadmap->RemoveHook(RoadmapType::HookType::AddEdge, label);
+  m_roadmap->RemoveHook(RoadmapType::HookType::DeleteEdge, label);
+}
+
 /*--------------------------------- Queries ----------------------------------*/
 
 template <typename RoadmapType>
@@ -387,10 +403,10 @@ GetNumCCs() const noexcept {
 
 
 template <typename RoadmapType>
-const typename CCTracker<RoadmapType>::VertexSet&
+const typename CCTracker<RoadmapType>::VertexSet*
 CCTracker<RoadmapType>::
 GetCC(const VID _vid) const noexcept {
-  return *FindCC(_vid);
+  return FindCC(_vid);
 }
 
 

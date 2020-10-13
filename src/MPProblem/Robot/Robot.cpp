@@ -630,6 +630,7 @@ Robot::
 IsFixed() const noexcept {
   return m_fixed;
 }
+		
 /*---------------------------------- Debug -----------------------------------*/
 
 std::ostream&

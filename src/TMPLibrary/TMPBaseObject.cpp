@@ -116,10 +116,16 @@ GetMPProblem() const noexcept {
 
 /*--------------------------- Solution Accessors -----------------------------*/
 
-TaskPlan*
+std::shared_ptr<TaskPlan>
 TMPBaseObject::
 GetTaskPlan() const noexcept {
   return m_tmpLibrary->GetTaskPlan();
+}
+
+Plan*
+TMPBaseObject::
+GetPlan() const noexcept {
+	return m_tmpLibrary->GetPlan();
 }
 
 TMPBaseObject::StateGraphPointer

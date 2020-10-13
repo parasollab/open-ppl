@@ -10,53 +10,6 @@
 #include "Utilities/MPUtils.h"
 
 
-/*------------------------- Range-checking Functions -------------------------*/
-
-/// Check a value for containment within a given range.
-/// @param _val The value to test.
-/// @param _min The lower bound of the range.
-/// @param _max The upper bound of the range.
-/// @param _inclusive Count values on the boundary as inside?
-/// @return True if the test value lies inside the range (or on the boundary
-///         for inclusive test).
-template <typename T, typename U>
-inline
-bool
-InRange(const U& _val, const T& _min, const T& _max, const bool _inclusive = true)
-    noexcept {
-  return _inclusive ? _min <= _val && _val <= _max :
-                      _min <  _val && _val <  _max ;
-}
-
-
-/// Check a value for containment within a given range.
-/// @param _val The value to test.
-/// @param _bounds A pair describing the lower, upper bounds.
-/// @param _inclusive Count values on the boundary as inside?
-/// @return True if the test value lies inside the range (or on the boundary
-///         for inclusive test).
-template <typename T, typename U>
-inline
-bool
-InRange(const U& _val, const std::pair<T, T>& _bounds,
-    const bool _inclusive = true) noexcept {
-  return InRange(_val, _bounds.first, _bounds.second, _inclusive);
-}
-
-
-/// Sample a range for an enclosed value with uniform probability.
-/// @param _min The lower bound.
-/// @param _max The upper bound.
-/// @return A random value within [_min, _max] sampled with uniform probability.
-template <typename T>
-inline
-T
-SampleRange(const T& _min, const T& _max) noexcept {
-  return _min + (_max - _min) * DRand();
-}
-
-/*-------------------------------- Range Type --------------------------------*/
-
 ////////////////////////////////////////////////////////////////////////////////
 /// A range of numeric values.
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,11 +52,13 @@ struct Range final {
 
   /// Test if a value is inside this range.
   /// @param _val The value to test.
-  /// @param _inclusive Count values on the boundary as inside?
+  /// @param _tolerance Tolerance to accommodate floating-point error, as a
+  ///                   fraction of the min/max.
   /// @return True if the test value lies inside the range (or on the boundary
   ///         for inclusive test).
   template <typename U>
-  bool Contains(const U& _val, const bool _inclusive = true) const noexcept;
+  bool Contains(const U& _val, const double _tolerance = 1e-8)
+      const noexcept;
 
   /// Test the clearance of a value. Clearance is defined as the minimum
   /// distance to a boundary value, and will be negative if the test value falls
@@ -121,6 +76,10 @@ struct Range final {
 
   /// Sample the range for a random contained value with uniform probability.
   T Sample() const noexcept;
+
+  bool operator==(const Range<T>& _other) const {
+    return min == _other.min && max == _other.max;
+  }
 
   ///@}
   ///@name Modifiers
@@ -194,8 +153,9 @@ template <typename U>
 inline
 bool
 Range<T>::
-Contains(const U& _val, const bool _inclusive) const noexcept {
-  return InRange(_val, min, max, _inclusive);
+Contains(const U& _val, const double _tolerance) const noexcept {
+  return (min - std::abs(min) * _tolerance) <= _val
+     and _val <= (max + std::abs(max) * _tolerance);
 }
 
 
@@ -232,7 +192,7 @@ inline
 T
 Range<T>::
 Sample() const noexcept {
-  return SampleRange(min, max);
+  return min + (max - min) * DRand();
 }
 
 /*-------------------------------- Modifiers ---------------------------------*/
@@ -290,6 +250,7 @@ operator>>(std::istream& _is, Range<T>& _r) {
   char delim;
   return _is >> _r.min >> std::skipws >> delim >> _r.max;
 }
+
 
 /*----------------------------------------------------------------------------*/
 

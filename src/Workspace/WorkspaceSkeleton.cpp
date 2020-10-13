@@ -37,10 +37,13 @@ FindVertex(const VD _vertexDescriptor) {
 
 WorkspaceSkeleton::adj_edge_iterator
 WorkspaceSkeleton::
-FindEdge(const ED& _edgeDescriptor) {
+FindEdge(const ED& _ed) {
   vertex_iterator vit;
   adj_edge_iterator eit;
-  m_graph.find_edge(_edgeDescriptor, vit, eit);
+  if(!m_graph.find_edge(_ed, vit, eit))
+    throw RunTimeException(WHERE) << "Requested non-existing edge ("
+                                  << _ed.id() << "|" << _ed.source()
+                                  << "," << _ed.target() << ")";
   return eit;
 }
 
@@ -283,6 +286,34 @@ RefineEdges(double _maxLength){
     m_graph.delete_edge(firstVID,lastVID);
   }
 }
+
+
+void
+WorkspaceSkeleton::
+DoubleEdges() {
+  for(auto vi = m_graph.begin(); vi != m_graph.end(); ++vi) {
+    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
+      // Make a reverse descriptor.
+      ED reverseEd = reverse(ei->descriptor());
+
+      // If it already exists in the graph, then this edge was added here by
+      // reversing an original edge. Skip.
+      vertex_iterator vit;
+      adj_edge_iterator eit;
+      const bool exists = m_graph.find_edge(reverseEd, vit, eit);
+      if(exists)
+        continue;
+
+      // Get the path and make a reversed copy.
+      auto path = ei->property();
+      std::reverse(path.begin(), path.end());
+
+      // Add an edge in reverse orientation with the same edge ID.
+      add_internal_edge(m_graph, reverseEd, path);
+    }
+  }
+}
+
 
 /*--------------------------- Setters & Getters ------------------------------*/
 

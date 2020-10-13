@@ -46,7 +46,7 @@ BreakupTask(WholeTask* _wholeTask){
                 << cfg.GetRobot() << std::endl;
     }
   }
-  Simulation::GetStatClass()->StartClock("IT Task Decomposition");
+  //Simulation::GetStatClass()->StartClock("IT Task Decomposition");
 
   Robot* currentRobot = nullptr;
   Cfg start;
@@ -65,6 +65,7 @@ BreakupTask(WholeTask* _wholeTask){
     else if(currentRobot != cfg.GetRobot() and goal.GetRobot()){
       auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
       _wholeTask->m_subtasks.push_back(subtask);
+			_wholeTask->m_subtaskStartEndCfgs[subtask] = std::make_pair(start,goal);
       if(currentRobot->GetAgent()->GetCapability() != cfg.GetRobot()->GetAgent()->GetCapability()){
         currentRobot = cfg.GetRobot();
       }
@@ -75,8 +76,9 @@ BreakupTask(WholeTask* _wholeTask){
   if(virtualRobot and start.GetRobot() and goal.GetRobot()){
     auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
     _wholeTask->m_subtasks.push_back(subtask);
+		_wholeTask->m_subtaskStartEndCfgs[subtask] = std::make_pair(start,goal);
   }
-  Simulation::GetStatClass()->StopClock("IT Task Decomposition");
+  //Simulation::GetStatClass()->StopClock("IT Task Decomposition");
 }
 
 std::shared_ptr<MPTask>

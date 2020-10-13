@@ -78,6 +78,8 @@ Connection(MultiBody* const _owner, XMLNode& _node)
           "Range of the joint.");
       std::istringstream buffer(rangeString);
       buffer >> m_jointRange[0];
+      if(!buffer)
+        throw ParseException(_node.Where()) << "range is ill-formed.";
     }
 
     // Spherical joints have two joint ranges, read the second now.
@@ -86,6 +88,8 @@ Connection(MultiBody* const _owner, XMLNode& _node)
           "Range of the joint about the second axis.");
       std::istringstream buffer(rangeString2);
       buffer >> m_jointRange[1];
+      if(!buffer)
+        throw ParseException(_node.Where()) << "range2 is ill-formed.";
     }
   }
 
@@ -96,8 +100,10 @@ Connection(MultiBody* const _owner, XMLNode& _node)
     const std::string parentToDHString = _node.Read("transformParentToDH", true,
         "", "Transformation parameters of parent to DH frame.");
     std::istringstream buffer(parentToDHString);
-    while(buffer)
-      buffer >> m_transformationToDHFrame;
+    buffer >> m_transformationToDHFrame;
+    if(!buffer)
+      throw ParseException(_node.Where()) << "transformParentToDH is "
+                                          << "ill-formed.";
   }
 
   // DH params.
@@ -105,8 +111,9 @@ Connection(MultiBody* const _owner, XMLNode& _node)
     const std::string dhParamsString = _node.Read("initialDHParams", true, "",
         "DH parameters.");
     std::istringstream buffer(dhParamsString);
-    while(buffer)
-      buffer >> m_dhParameters;
+    buffer >> m_dhParameters;
+    if(!buffer)
+      throw ParseException(_node.Where()) << "initialDHParams is ill-formed.";
   }
 
   // Transform from DH to com.
@@ -114,8 +121,10 @@ Connection(MultiBody* const _owner, XMLNode& _node)
     const std::string dhToChildString = _node.Read("transformDHToChild", true,
         "", "Transformation paremeters of DH to com.");
     std::istringstream buffer(dhToChildString);
-    while(buffer)
-      buffer >> m_transformationToBody2;
+    buffer >> m_transformationToBody2;
+    if(!buffer)
+      throw ParseException(_node.Where()) << "transformDHToChild is "
+                                          << "ill-formed.";
   }
 }
 

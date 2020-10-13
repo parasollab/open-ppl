@@ -3,10 +3,12 @@
 #include "Behaviors/Agents/Coordinator.h"
 
 #include "TMPLibrary/StateGraphs/StateGraph.h"
+#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
 #include "TMPLibrary/TaskDecomposers/ITTaskBreakup.h"
 #include "TMPLibrary/TaskPlan.h"
 
 #include "Simulator/Simulation.h"
+#include "Utilities/MetricUtils.h"
 /**********************************Construction********************************/
 
 ITMethod::
@@ -52,13 +54,13 @@ QueryCombinedRoadmap(){
 
   //m_solution->SetRoadmap(m_robot, m_combinedRoadmap);
 
-  if(m_debug){
+  if(m_debug and Simulation::Get()){
     Simulation::Get()->AddRoadmap(this->GetStateGraph(m_sgLabel)->GetGraph(),
       glutils::color(1., 0., 1., 0.2));
   }
   //Find path for each whole task in megaRoadmap
   for(auto& wholeTask: this->GetTaskPlan()->GetWholeTasks()){
-    Simulation::GetStatClass()->StartClock("IT MegaRoadmap Query");
+    this->GetTaskPlan()->GetStatClass()->StartClock("IT MegaRoadmap Query");
     wholeTask->m_task->SetRobot(robot);
     this->GetMPLibrary()->SetTask(wholeTask->m_task.get());
     auto& c = wholeTask->m_task->GetGoalConstraints()[0];
@@ -67,9 +69,9 @@ QueryCombinedRoadmap(){
       LRand(), "PlanWholeTask");
     //Save cfg path in the handoff class
     wholeTask->m_wholePath = solution->GetPath()->Cfgs();
-    Simulation::GetStatClass()->StopClock("IT MegaRoadmap Query");
+    this->GetTaskPlan()->GetStatClass()->StopClock("IT MegaRoadmap Query");
     //TODO:: Need to update for multiple tasks
-    Simulation::GetStatClass()->SetStat("WholePathLength", solution->GetPath()->Length());
+    this->GetTaskPlan()->GetStatClass()->SetStat("WholePathLength", solution->GetPath()->Length());
   }
 }
 
@@ -78,10 +80,12 @@ QueryCombinedRoadmap(){
 void
 ITMethod:: 
 AssignTasks(){
+  this->GetTaskAllocator(m_taLabel)->AllocateTasks();
+  /*
 	TaskPlan* taskPlan = this->GetTaskPlan();
 	//TODO::Abstract this and AuctionTask Function to an auction class that this calls in stead
   // Load m_unassignedTasks with the initial subtasks for all tasks.
-  Simulation::GetStatClass()->StartClock("IT Task Assignment");
+  this->GetTaskPlan()->GetStatClass()->StartClock("IT Task Assignment");
   for(auto& wholeTask : taskPlan->GetWholeTasks()){
     auto subtask = taskPlan->GetNextSubtask(wholeTask);
     if(subtask){
@@ -108,8 +112,8 @@ AssignTasks(){
   for(auto agent : taskPlan->GetTeam()){
     agent->GetRobot()->SetVirtual(false);
   }
-  Simulation::GetStatClass()->StopClock("IT Task Assignment");
-	
+  this->GetTaskPlan()->GetStatClass()->StopClock("IT Task Assignment");
+	*/
 }
 
 void
@@ -117,11 +121,11 @@ ITMethod::
 DecomposeTasks(){
 	auto td = this->GetTaskDecomposer(m_tdLabel);
 
-	Simulation::GetStatClass()->StartClock("IT Task Decomposition");
   for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
+		this->GetTaskPlan()->GetStatClass()->StartClock("IT Task Decomposition");
     td->BreakupTask(wholeTask);
-    Simulation::GetStatClass()->StopClock("IT Task Decomposition");
-    Simulation::GetStatClass()->SetStat("Subtasks", wholeTask->m_subtasks.size());
+    this->GetTaskPlan()->GetStatClass()->StopClock("IT Task Decomposition");
+    this->GetTaskPlan()->GetStatClass()->SetStat("Subtasks", wholeTask->m_subtasks.size());
   }
 }
 

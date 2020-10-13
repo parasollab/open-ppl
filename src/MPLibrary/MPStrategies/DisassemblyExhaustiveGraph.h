@@ -492,7 +492,7 @@ template <typename MPTraits>
 std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
 UnWeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
-  if(this->m_debug)
+  /*if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
          << std::endl;
 
@@ -587,7 +587,7 @@ UnWeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
         HandleNewNode(newNode);
     }
   }
-
+*/
   return std::make_pair(true, VIDPath());
 }
 

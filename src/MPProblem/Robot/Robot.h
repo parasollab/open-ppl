@@ -15,6 +15,7 @@ class Battery;
 class Body;
 class Boundary;
 class BulletModel;
+class Cfg;
 class ControllerMethod;
 class CSpaceBoundingBox;
 class MatlabMicroSimulator;
@@ -322,6 +323,9 @@ class Robot final {
 
     /// Check if the robot has a fixed base
     bool IsFixed() const noexcept;
+
+		Cfg GetInitialCfg();
+		void SetInitialCfg(Cfg _cfg);
     ///@}
 
 

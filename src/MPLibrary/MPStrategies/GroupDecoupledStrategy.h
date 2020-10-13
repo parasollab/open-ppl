@@ -169,8 +169,9 @@ Finalize() {
       this->GetEnvironment());
     if(path and path->Size()) {
       ::WritePath(base +"."+ robot->GetLabel() + ".rdmp.path", path->Cfgs());
+      // FullCfgsWithWait: Used for Safe Interval Path Planning
       ::WritePath(base +"."+ robot->GetLabel()  + ".path",
-        path->FullCfgs(this->GetMPLibrary()));
+        path->FullCfgsWithWait(this->GetMPLibrary()));
     }
     ++i;
   }

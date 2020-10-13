@@ -573,9 +573,50 @@ FindCandidates(const CfgType& _cfg, const VertexSet& _inputCandidates) {
     std::cout << "\tReturning " << candidates.size()
               << " candidates."
               << std::endl;
+//<<<<<<< HEAD
   return candidates;
+//=======
+//  return candidateIntersection;
 }
 
+/*
+template <typename MPTraits>
+template <typename InputIterator>
+std::vector<typename TopologicalFilter<MPTraits>::VID>
+TopologicalFilter<MPTraits>::
+ComputeIntersection(InputIterator _first, InputIterator _last,
+    const std::vector<VID>& _candidates) const {
+  if(_candidates.empty())
+    return {};
+
+  MethodTimer mt(this->GetStatClass(), "TopologicalFilter::ComputeIntersection");
+
+  auto g = this->GetRoadmap();
+
+  // The input range could be VIDs or vertex iterators. Ask the GenericStateGraph for
+  // VIDs.
+  std::vector<VID> inputRange;
+  inputRange.reserve(std::distance(_first, _last));
+  for(auto iter = _first; iter != _last; ++iter)
+    inputRange.push_back(g->GetVID(iter));
+
+  // Sort and uniqueify the input set.
+  std::sort(inputRange.begin(), inputRange.end());
+  auto iter = std::unique(inputRange.begin(), inputRange.end());
+  inputRange.erase(iter, inputRange.end());
+
+  // Compute the intersection with the candidate set.
+  std::vector<VID> intersection;
+  intersection.reserve(std::max(inputRange.size(), _candidates.size()));
+
+  std::set_intersection(inputRange.begin(), inputRange.end(),
+                        _candidates.begin(), _candidates.end(),
+                        std::back_inserter(intersection));
+
+  return intersection;
+//>>>>>>> f6ce1e7018f26298c319349ddfb7481a9dbbfdda
+}
+*/
 /*---------------------------------- Helpers ---------------------------------*/
 
 template <typename MPTraits>
