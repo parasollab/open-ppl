@@ -259,13 +259,14 @@ ifeq ($(platform), MACOS_gcc)
 endif
 
 # Moc setup
-QT_MOC_BASE = /usr/lib64/qt4/bin
+#QT_MOC_BASE = /usr/lib64/qt4/bin
+QT_MOC_BASE = /usr/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
 endif
-QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
+QT_MOC  := $(shell find $(QT_MOC_BASE)/moc-qt4 2> /dev/null)
 ifndef QT_MOC
-  $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
+  $(error Qt moc not found at $(QT_MOC_BASE)/moc-qt4.)
 endif
 
 # Find the header files with Q_OBJECT.
