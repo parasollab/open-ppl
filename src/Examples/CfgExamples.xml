@@ -120,7 +120,7 @@
       <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
         decompositionLabel="fine"/>
       <DynamicRegionSampler label="DynamicRegionSampler"
-        samplerLabel="UniformRandom"
+        samplerLabel="UniformRandom" skeletonType="mcs"
         explore=".2" regionFactor="2.5" penetration="1"
         velocityBiasing="false" velocityAlignment=".4" decompositionLabel="fine"/>
     </Samplers>
@@ -254,7 +254,7 @@
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
-        graphSearchAlg="dijkstras"/>
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
@@ -329,11 +329,11 @@
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="true">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
+        <!--Sampler label="UniformRandomFree" number="1" attempts="1"/-->
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
-        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+        <Sampler label="MAPRM" number="10" attempts="10"/>
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
         <Evaluator label="Query"/>
@@ -544,6 +544,8 @@
         useBBX="true" positional="true"/>
 
       <SVMModel kernel="radial" c="10" epsilon=".001" gamma="1"/>
+
+      <SafeIntervalTool label="SI" vcLabel="rapid"/>
 
     </MPTools>
 
