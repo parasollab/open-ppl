@@ -324,6 +324,27 @@ operator()() {
     CBSNode currentCBSNode = tree.top();
     tree.pop();
 
+    if(this->m_debug) {
+
+      for(auto kv : currentCBSNode.solution) {
+        std::cout << "Path for robot: " << kv.first->GetLabel() << std::endl;
+        std::cout << "Timesteps: " << kv.second->TimeSteps() << ", FullCfgs: " << kv.second->FullCfgsWithWait(this->GetMPLibrary()).size() << std::endl;
+        auto vids = kv.second->VIDs();
+        auto wait = kv.second->GetWaitTimes();
+
+        std::cout << "Path: ";
+        for(auto v : vids) {
+          std::cout << v << ", ";
+       }
+       std::cout << std::endl << "Wait: ";
+
+        for(auto w : wait) {
+          std::cout << w << ", ";
+       }
+       std::cout << std::endl << std::endl;
+      }    
+    }
+
     // Check the solution for conflicts.
     Conflict conflict = FindConflict(currentCBSNode.solution);
 
@@ -422,12 +443,16 @@ void
 GroupCBSQuery<MPTraits>::
 CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
     const CBSNode& _parent, CBSTree& _tree) {
-  if(this->m_debug)
+  if(this->m_debug) {
     std::cout << "\t\tAttempting to create CBS node with conflict on robot "
               << _robot->GetLabel() << " at timestep "
               << _timestep << " colliding against robot "
               << _cfg.GetRobot()->GetLabel()
-              << std::endl;
+              << std::endl
+              << "Current cost: " 
+              << _parent.cost
+              << std::endl; 
+  }
 
   // Initialize the child node by copying the parent.
   CBSNode child = _parent;
@@ -476,7 +501,7 @@ CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
   _tree.push(child);
 
   if(this->m_debug)
-    std::cout << "\t\t\tChild node created." << std::endl;
+    std::cout << "\t\t\tChild node created." << std::endl << "Cost: " << child.cost << std::endl;
 }
 
 
@@ -484,9 +509,11 @@ template <typename MPTraits>
 double
 GroupCBSQuery<MPTraits>::
 ComputeCost(const Solution& _solution) {
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
   double cost = 0;
   for(const auto& pair : _solution)
-    cost += pair.second->Length();
+    //cost += pair.second->Length();
+    cost += pair.second->TimeSteps() * timeRes;
   return cost;
 }
 
@@ -514,10 +541,10 @@ SolveIndividualTask(Robot* const _robot, const ConflictMap& _conflicts) {
 
   if(m_currentConflicts) {
     for(auto c : *m_currentConflicts) {
-      std::vector<CfgType> path = {c.second};
+      std::vector<CfgType> path = {c.second,c.second,c.second};
       Robot* constraintRobot = c.second.GetRobot();
       DynamicObstacle dyOb(constraintRobot, path);
-      dyOb.SetStartTime(c.first);
+      dyOb.SetStartTime(c.first-1);
       this->GetMPProblem()->AddDynamicObstacle(std::move(dyOb));
     }
   }
@@ -530,7 +557,7 @@ SolveIndividualTask(Robot* const _robot, const ConflictMap& _conflicts) {
 
   // Clear the conflicts.
   m_currentConflicts = nullptr;
-  this->GetMPProblem()->ClearDynamicObstacles();
+  //this->GetMPProblem()->ClearDynamicObstacles();
 
   if(this->m_debug)
     std::cout << (_conflicts.empty() ? "\t\t" : "\t\t\t\t")
@@ -575,7 +602,8 @@ FindConflict(const Solution& _solution) {
   for(const auto& pair : _solution) {
     Robot* const robot = pair.first;
     const auto& path   = pair.second;
-    cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
+    //cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
+    cfgPaths[robot] = path->FullCfgsWithWait(this->GetMPLibrary());
   }
 
   // Find the latest timestep in which a robot is still moving.

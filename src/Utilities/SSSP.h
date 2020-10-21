@@ -179,9 +179,9 @@ AStarSSSP(
     SSSPTerminationCriterion<GraphType>& _earlyStop,
     const double _startDistance = 0)
 {
-  static constexpr bool debug = true;
-  if(debug)
-    std::cout << "AStarSSSP" << std::endl;
+  //static constexpr bool debug = true;
+  //if(debug)
+  //  std::cout << "AStarSSSP" << std::endl;
 
   using VD = typename GraphType::vertex_descriptor;
   using EI = typename GraphType::adj_edge_iterator;
@@ -338,8 +338,8 @@ DijkstraSSSP(
 {
   static constexpr bool debug = true;
   const bool customAdjacency = !_adjacencyMap.empty();
-  if(debug)
-    std::cout << "DijkstraSSSP" << std::endl;
+  //if(debug)
+  //  std::cout << "DijkstraSSSP" << std::endl;
 
   using VD = typename GraphType::vertex_descriptor;
   using EI = typename GraphType::adj_edge_iterator;

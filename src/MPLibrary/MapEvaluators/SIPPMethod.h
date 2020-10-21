@@ -358,7 +358,7 @@ operator()() {
     State state;
     state.vd = start;
     state.cfg = m_roadmap->GetVertex(start);
-    state.intervals = m_roadmap_intervals[start];
+    state.intervals = {m_roadmap_intervals[start][0]};
     //auto siTool = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
     //state.intervals = siTool->ComputeIntervals(startCfg);
 
@@ -378,8 +378,10 @@ operator()() {
 
 
   // We generated a path successfully: track the path length history.
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
   this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
   std::cout << this->GetPath()->Length() << std::endl;
+  std::cout << this->GetPath()->TimeSteps() * timeRes << std::endl;
   this->GetStatClass()->SetStat(
       "QueryMethod::" + this->GetLabel() + "::FoundPath", 1);
 
@@ -457,11 +459,14 @@ GeneratePath(const size_t _start, const size_t _goal) {
   State prev = state;
   std::vector<size_t> path;
   path.push_back(state.vd);
+  auto previous = current;
+
   while(current != _start) {
+    previous = current;
     current = output.parent[current];
     state = m_sippGraph->GetVertex(current);
-    m_wait_timesteps.push_back(ceil(m_transitionWait[state.vd][prev.vd]));
-    prev = state;
+    m_wait_timesteps.push_back(ceil(m_transitionWait[current][previous]));
+    //prev = state;
     path.push_back(state.vd);
   }
 
@@ -470,8 +475,8 @@ GeneratePath(const size_t _start, const size_t _goal) {
 
   cleanup();
 
-  std::cout << "Path : " << path << std::endl;
-  std::cout << "Wait: " << m_wait_timesteps << std::endl;
+  //std::cout << "Path : " << path << std::endl;
+  //std::cout << "Wait: " << m_wait_timesteps << std::endl;
 
   return path;
 }
@@ -554,8 +559,9 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   auto t = _ei->target();
   State targetState = m_sippGraph->GetVertex(t);
   const auto& target = m_roadmap->GetVertex(targetState.vd);
-  auto vertexIntervals = siTool->ComputeIntervals(target);
-  if(!(siTool->ContainsTimestep(vertexIntervals, newDistance*timeRes))) {
+  //auto vertexIntervals = siTool->ComputeIntervals(target);
+  auto vertexInterval = targetState.intervals[0];
+  if(!(siTool->ContainsTimestep({vertexInterval}, newDistance*timeRes))) {
     // TODO Check if its possible to wait
     // If not return inf
     // else add waiting time to new distance
@@ -575,7 +581,7 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
       workingInterval.Translate(edgeWeight);
 
       // Check if working interval overlaps targets intervals
-      Range<double> overlap = IntervalOverlaps(vertexIntervals, workingInterval);
+      Range<double> overlap = IntervalOverlaps({vertexInterval}, workingInterval);
 
       if(overlap.max - overlap.min >= 0) {
         waitTime = (overlap.min - edgeWeight) - sourceDistance;
@@ -606,14 +612,15 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   if(edgeIntervals.empty()) 
     throw RunTimeException(WHERE) << "Should always be at least one edge interval." << std::endl;
 
-  if(edgeIntervals.size() > 1)
-    std::cout << "Edge Intervals size: " << edgeIntervals.size() << std::endl;
+  //if(edgeIntervals.size() > 1)
+  //  std::cout << "Edge Intervals size: " << edgeIntervals.size() << std::endl;
   // Look at edge intervals and get overlap with source interval
-  const auto srcCfg = m_roadmap->GetVertex(src.vd);
-  auto sourceIntervals = siTool->ComputeIntervals(srcCfg);
+  //const auto srcCfg = m_roadmap->GetVertex(src.vd);
+  //auto sourceIntervals = siTool->ComputeIntervals(srcCfg);
+  auto sourceInterval = src.intervals[0];
   
   // iterate through in order
-  std::vector<Range<double>> overlappingIntervals = OverlappingIntervals(sourceIntervals, edgeIntervals);
+  std::vector<Range<double>> overlappingIntervals = OverlappingIntervals({sourceInterval}, edgeIntervals);
   //std::cout << "Overlapping Intervals size: " << overlappingIntervals.size() << std::endl;
 
   for(auto interval : overlappingIntervals) {
@@ -631,14 +638,15 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     }
 
     // ow subtract edge from beginning of target and see if that lays in edge interval (if it does you are done and wait time is that time)
-    for(auto& r : vertexIntervals) {
+    //for(auto& r : vertexIntervals) {
+    auto& r = vertexInterval;
       if(startTime <= r.min-edgeWeight && interval.max >= r.min-edgeWeight) {
       //if(interval.min <= r.min-edgeWeight && interval.max >= r.min-edgeWeight) {
         waitTime = r.min - edgeWeight - sourceDistance;
         isSafe = true;
         break;
       }
-    }
+    //}
     if(isSafe) {
       break;
     }
@@ -656,9 +664,13 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   //}
   //m_roadmap_intervals.emplace(st.vd, vertexIntervals);
   // Edge is okay
-  m_transitionWait[src.vd][targetState.vd] = waitTime;
+  //m_transitionWait[src.vd][targetState.vd] = waitTime;
+  m_transitionWait[_ei->source()][_ei->target()] = waitTime;
  // std::cout << "Wait: " << m_transitionWait[src.vd][targetState.vd] << std::endl;
   //std::cout << "end dynamicpathweight 6" << std::endl;
+
+  if(waitTime < 0)
+    throw RunTimeException(WHERE) << "VERY BAD. SHOULD NEVER HAPPEN." << std::endl;
 
   return newDistance + waitTime;
 }
@@ -696,6 +708,7 @@ void
 SIPPMethod<MPTraits>::
 SIPPNeighbors(SIPPGraph* _g, 
     typename SIPPGraph::vertex_descriptor _vd) {
+  auto siTool = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
   //std::cout << "start sippneighbors" << std::endl;
   auto vi = _g->find_vertex(_vd);
   //std::cout << _vd << std::endl;
@@ -708,7 +721,10 @@ SIPPNeighbors(SIPPGraph* _g,
   //std::cout << "sipp start: " << _vd << std::endl;
   //std::cout << "roadmap start: " << state.vd << "\n" << std::endl;
 
-  auto safe_intervals = m_roadmap_intervals[state.vd];
+  //auto safe_intervals = m_roadmap_intervals[state.vd];
+  //auto cfg = m_roadmap->GetVertex(state.vd);
+  //auto safe_intervals = siTool->ComputeIntervals(cfg);;
+  auto safeInterval = state.intervals[0];
 
   // Iterate thorugh neighbors of current state
   for(auto ei = rit->begin(); ei != rit->end(); ++ei) {
@@ -716,30 +732,34 @@ SIPPNeighbors(SIPPGraph* _g,
     auto target = ei->target();
     //std::cout << "roadmap target: " << target << std::endl;
     // compute SI  here
-    if(!m_changed[target]) {
+    //if(!m_changed[target]) {
       // Iterate through Intervals
-      auto t_intervals = m_roadmap_intervals[target];
+      //auto t_intervals = m_roadmap_intervals[target];
+      auto tcfg = m_roadmap->GetVertex(target);
+      auto t_intervals = siTool->ComputeIntervals(tcfg);
 
       // Check if overlapping, if so
       // Create new state for neighbor with that
       // interval in SIPP Graph
       for(auto interval : t_intervals) {
-        auto intvl = IntervalOverlaps(safe_intervals, interval);
+        auto intvl = IntervalOverlaps({safeInterval}, interval);
 
         if(intvl.max > intvl.min) {
           // Calculate earliest arrival time
           //auto edgeCost = ei->property().GetWeight();
           State new_state;
           new_state.vd = target;
-          new_state.cfg = m_roadmap->GetVertex(target);
-          new_state.intervals = m_roadmap_intervals[target];
+          //new_state.cfg = m_roadmap->GetVertex(target);
+          //new_state.intervals = m_roadmap_intervals[target];
+          new_state.cfg = tcfg;
+          new_state.intervals = {interval};
           auto sipp_target = _g->AddVertex(new_state);
           _g->AddEdge(_vd, sipp_target, ei->property());
           //std::cout << "_g size: " << _g->Size() << std::endl;
           
         }
       }
-    }
+    //}
   }
  // std::cout << "end sippneighbors" << std::endl;
 }
@@ -789,8 +809,8 @@ computeIntervals() {
     m_roadmap_intervals[vid] = vertexIntervals;
     for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
 
-      if(ei->source() == 602 and ei->target() == 534)
-        std::cout << "HERE" << std::endl;
+      //if(ei->source() == 602 and ei->target() == 534)
+      //  std::cout << "HERE" << std::endl;
 
       auto edgeIntervals = si->ComputeIntervals(ei->property(), ei->source(),
           ei->target(), m_roadmap);

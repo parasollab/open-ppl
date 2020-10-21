@@ -117,6 +117,7 @@ class PathType final {
     /// Used in Safe Interval Path Planning
     void SetWaitTimes(std::vector<size_t> _waitTimes);
 
+    std::vector<size_t> GetWaitTimes();
     ///@}
 
   private:
@@ -286,6 +287,7 @@ FullCfgsWithWait(MPLibrary* const _lib) const {
   std::vector<CfgType> out = {vertex};
 
   // Insert first vertex however many timesteps it waits
+  //for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
   for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
     out.push_back(vertex);
   }
@@ -333,7 +335,13 @@ TimeSteps() const {
 		timesteps += edge.GetTimeSteps();
   }
 	timesteps += m_finalWaitTimeSteps;
+
+  for(auto w : m_waitingTimesteps) {
+    timesteps += w;
+  }
+
   return timesteps;
+  
 }
 
 
@@ -438,6 +446,13 @@ SetWaitTimes(std::vector<size_t> _waitTimes) {
     throw RunTimeException(WHERE) << "Size of timestep vector does not "
                                   << "match path length";
   }
+}
+
+template <typename MPTraits>
+std::vector<size_t>
+PathType<MPTraits>::
+GetWaitTimes() {
+  return m_waitingTimesteps;
 }
 /*--------------------------------- Helpers ----------------------------------*/
 
