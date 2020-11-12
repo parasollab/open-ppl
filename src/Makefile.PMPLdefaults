@@ -263,6 +263,9 @@ QT_MOC_BASE = /usr/lib64/qt4/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
 endif
+ifeq ($(platform), Ubuntu)
+  QT_MOC_BASE = /usr/share/qt4/bin
+endif
 QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
 ifndef QT_MOC
   $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
