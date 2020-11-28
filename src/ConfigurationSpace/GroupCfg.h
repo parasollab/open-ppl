@@ -12,7 +12,6 @@
 #include "Transformation.h"
 #include "Vector.h"
 
-//class Cfg;
 class Robot;
 class RobotGroup;
 

@@ -138,7 +138,6 @@ GeneratePlan() {}
 void
 ChildAgent::
 ClearPlan() {
-	//m_lastCfg = m_path.back();
 	PathFollowingAgent::ClearPlan();
 }
 /*------------------------------- Controller Helpers ---------------------------------*/
@@ -155,8 +154,7 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
 void
 ChildAgent::
 ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
-	//if(!m_communicator.get())
-		Agent::ExecuteControlsSimulation(_c,_steps);
+	Agent::ExecuteControlsSimulation(_c,_steps);
 
 	if(!m_communicator.get())
 		return;
@@ -166,8 +164,6 @@ ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
 
 	m_locked = false;
 	while(!m_locked) {}
-	
-	//SendControlMessage(_c,_steps);
 }
 
 

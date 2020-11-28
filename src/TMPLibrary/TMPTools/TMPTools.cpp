@@ -7,51 +7,9 @@ void
 TMPTools::
 ParseXML(XMLNode& _node) {
 	for(auto& child : _node){
-		if(child.Name() == "MultiAgentDijkstra") {
-			auto utility = new MultiAgentDijkstra(child);
-			if(m_multiAgentDijkstras.count(utility->GetLabel()))
-				throw ParseException(child.Where(), "Second MultiAgentDijkstra node with the"
-					"label '" + utility->GetLabel() + "'. Labels must be unique.");
-		
-			SetMultiAgentDijkstra(utility->GetLabel(), utility);
-		}
-		if(child.Name() == "DiscreteMAD") {
-			auto utility = new DiscreteMAD(child);
-			if(m_discreteMADs.count(utility->GetLabel()))
-				throw ParseException(child.Where(), "Second DiscreteMAD node with the"
-					"label '" + utility->GetLabel() + "'. Labels must be unique.");
-		
-			SetDiscreteMAD(utility->GetLabel(), utility);
-		}
 	}
 }
 		
-void 
-TMPTools::
-SetMultiAgentDijkstra(const std::string& _label, 
-											MultiAgentDijkstra* _utility) {
-	SetUtility(_label, _utility, m_multiAgentDijkstras);
-}
-
-MultiAgentDijkstra*
-TMPTools::
-GetMultiAgentDijkstra(const std::string& _label) {
-	return GetUtility(_label, m_multiAgentDijkstras);
-}
-
-void 
-TMPTools::
-SetDiscreteMAD(const std::string& _label, 
-											DiscreteMAD* _utility) {
-	SetUtility(_label, _utility, m_discreteMADs);
-}
-
-DiscreteMAD*
-TMPTools::
-GetDiscreteMAD(const std::string& _label) {
-	return GetUtility(_label, m_discreteMADs);
-}
-
 template <typename Utility>
 void
 TMPTools::

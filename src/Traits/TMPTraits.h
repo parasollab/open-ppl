@@ -7,7 +7,6 @@
 
 #include "TMPLibrary/TMPStrategies/DummyStrategyMethod.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
-#include "TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.h"
 #include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
 
 // PoIPlacementMethods to include
@@ -18,13 +17,8 @@
 
 // TaskEvaluators to include
 
-#include "TMPLibrary/TaskEvaluators/CBSEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
-#include "TMPLibrary/TaskEvaluators/OrderedMultiTaskEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
-#include "TMPLibrary/TaskEvaluators/TaskCBSPlanner.h"
-#include "TMPLibrary/TaskEvaluators/TCBS.h"
-#include "TMPLibrary/TaskEvaluators/TMPCBS.h"
 
 // TaskDecomposers to include
 
@@ -38,7 +32,6 @@
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
-#include "TMPLibrary/StateGraphs/DiscreteIntervalGraph.h"
 #include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +49,6 @@ struct TMPTraits {
   typedef boost::mpl::list<
     ITMethod,
 		DummyStrategyMethod,
-		MultiAgentMultiTaskPlanner,
 		SimpleMotionMethod
       > TMPStrategyMethodList;
 
@@ -69,12 +61,7 @@ struct TMPTraits {
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
-		CBSEvaluator,
-		OrderedMultiTaskEvaluator,
 		SimpleMotionEvaluator,
-		TaskCBSPlanner,
-		TCBS,
-		TMPCBS,
     EnforcedHillClimbing
       > TaskEvaluatorMethodList;
 
@@ -86,12 +73,10 @@ struct TMPTraits {
   //types of task allocators available in our world
   typedef boost::mpl::list<
     AuctionMethod,
-		TCBSAllocator
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
 		CombinedRoadmap,
-		DiscreteIntervalGraph,
 		MultiTaskGraph
 			> StateGraphList;
 };

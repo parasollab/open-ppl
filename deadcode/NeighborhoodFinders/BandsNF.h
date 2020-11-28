@@ -679,6 +679,8 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
+
     BandsNF() : NeighborhoodFinderMethod<MPTraits>() {
       this->SetName("BandsNF");
     }
@@ -699,26 +701,26 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
       NeighborhoodFinderMethod<MPTraits>::Print(_os);
     }
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _r,
+    template<typename InputIterator>
+    void FindNeighbors(RoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const CfgType& _cfg, OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _r,
+    template<typename InputIterator>
+    void FindNeighborPairs(RoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out);
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _r,
+    template<typename InputIterator>
+    void FindNeighbors(GroupRoadmapType* _r,
         InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
         const GroupCfgType& _cfg, OutputIterator _out) {
       throw NotImplementedException(WHERE);
     }
 
-    template<typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
+    template<typename InputIterator>
+    void FindNeighborPairs(GroupRoadmapType* _r,
         InputIterator _first1, InputIterator _last1,
         InputIterator _first2, InputIterator _last2,
         OutputIterator _out) {
@@ -731,10 +733,10 @@ class BandsNF: public NeighborhoodFinderMethod<MPTraits> {
 
 // Returns all nodes within radius from _cfg
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
+template<typename InputIterator>
+void
 BandsNF<MPTraits>::
-FindNeighbors(RoadmapType* _roadmap,
+FindNeighbors(RoadmapType* _r,
     InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
     const CfgType& _cfg, OutputIterator _out) {
   std::vector<Neighbor> neighbors;
@@ -746,10 +748,10 @@ FindNeighbors(RoadmapType* _roadmap,
     std::vector<Neighbor> bandNeighbors;
 
     if((*bandIT)->GetName() == "DBand"){
-      bandNeighbors = ((DBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_roadmap, _first, _last, _cfg);
+      bandNeighbors = ((DBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_r, _first, _last, _cfg);
     }
     else if((*bandIT)->GetName() == "RBand"){
-      bandNeighbors = ((RBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_roadmap, _first, _last, _cfg);
+      bandNeighbors = ((RBand<MPTraits>*)(*bandIT).get())->GetNeighbors(_r, _first, _last, _cfg);
     }
 
     for (typename std::vector<Neighbor>::iterator itr = bandNeighbors.begin(); itr != bandNeighbors.end(); ++itr) {
@@ -774,15 +776,13 @@ FindNeighbors(RoadmapType* _roadmap,
       ++_out;
     }
   }
-
-  return _out;
 }
 
 
 template <typename MPTraits>
-template<typename InputIterator, typename OutputIterator>
-OutputIterator
-BandsNF<MPTraits>::FindNeighborPairs(RoadmapType* _roadmap,
+template<typename InputIterator>
+void
+BandsNF<MPTraits>::FindNeighborPairs(RoadmapType* _r,
     InputIterator _first1, InputIterator _last1,
     InputIterator _first2, InputIterator _last2,
     OutputIterator _out) {
