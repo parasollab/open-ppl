@@ -18,6 +18,7 @@
 #include "Simulator/MatlabMicroSimulator.h"
 #include "Simulator/MicroSimulator.h"
 #include "Utilities/XMLNode.h"
+#include "Utilities/URDFParser.h"
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"

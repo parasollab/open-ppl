@@ -408,7 +408,7 @@ URDF_LIBS :=
 URDF_SRCS :=
 
 ifeq ($(platform), Ubuntu)
-  URDF_INCL := -I/opt/ros/melodic/include/urdf
+  URDF_INCL := -I/opt/ros/melodic/include
   URDF_LIBS := /opt/ros/melodic/lib/liburdf.so
   URDF_SRCS := \
     Utilities/URDFParser.cpp
