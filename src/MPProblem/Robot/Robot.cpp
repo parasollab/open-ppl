@@ -338,14 +338,11 @@ void
 Robot::
 ReadURDF(const std::string& _filename) {
   urdf::Model model = ParseURDF(_filename);
-  TranslateURDFToPMPL(model);
+
+  
+
 }
 
-void
-Robot::
-TranslateURDFToPMPL(urdf::Model& _model) {
-  
-}
 /*--------------------------- Planning Interface -----------------------------*/
 
 void

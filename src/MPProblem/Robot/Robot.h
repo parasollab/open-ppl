@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <urdf/model.h>
 
 class Actuator;
 class Agent;
@@ -178,9 +177,9 @@ class Robot final {
     /// @param _filename The file name.
     void ReadURDF(const std::string& _filename);
 
-    /// Convert the urdf robot model to classes native to pmpl.
+/*    /// Convert the urdf robot model to classes native to pmpl.
     /// @param _model The parsed urdf model.
-    void TranslateURDFToPMPL(urdf::Model& _model);
+    void TranslateURDFToPMPL(urdf::Model& _model);*/
     ///@}
 
   public:
