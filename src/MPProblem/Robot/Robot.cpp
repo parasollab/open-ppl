@@ -75,6 +75,10 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     // If we got an XML file, use that parsing mechanism.
     ReadXMLFile(filename);
   }
+  else if(filename.find(".urdf") != std::string::npos) {
+    // If we got a URDF file, use that parsing mechanism.
+    ReadURDF(filename);
+  }
   else {
     // Otherwise we got a multibody file, which cannot specify dynamics options
     // like actuators and controls. Assume some defaults for these.
@@ -330,6 +334,18 @@ ReadMultibodyFile(const std::string& _filename) {
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
+void
+Robot::
+ReadURDF(const std::string& _filename) {
+  urdf::Model model = ParseURDF(_filename);
+  TranslateURDFToPMPL(model);
+}
+
+void
+Robot::
+TranslateURDFToPMPL(urdf::Model& _model) {
+  
+}
 /*--------------------------- Planning Interface -----------------------------*/
 
 void

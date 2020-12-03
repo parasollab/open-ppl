@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <urdf/model.h>
 
 class Actuator;
 class Agent;
@@ -173,6 +174,13 @@ class Robot final {
     /// @param _filename The file name.
     void ReadMultibodyFile(const std::string& _filename);
 
+    /// Parse a universal robot descriptor file for this robot.
+    /// @param _filename The file name.
+    void ReadURDF(const std::string& _filename);
+
+    /// Convert the urdf robot model to classes native to pmpl.
+    /// @param _model The parsed urdf model.
+    void TranslateURDFToPMPL(urdf::Model& _model);
     ///@}
 
   public:
