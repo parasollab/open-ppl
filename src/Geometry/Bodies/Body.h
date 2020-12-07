@@ -3,6 +3,7 @@
 
 #include "Geometry/GMSPolyhedron.h"
 #include "Utilities/MPUtils.h"
+#include "Utilities/XMLNode.h"
 
 #include "Transformation.h"
 
@@ -12,14 +13,13 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <urdf/model.h>
 
 using namespace mathtool;
 
 class CollisionDetectionMethod;
 class Connection;
 class MultiBody;
-class XMLNode;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A single polyhedral body in workspace. One or more of these are composed to
@@ -270,6 +270,8 @@ class Body {
     ///       update the old files to the new XML format. Do not waste time
     ///       working on this function.
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
+
+    void TranslateURDFLink(const std::shared_ptr<urdf::Link>& _link);
 
     ///@}
     ///@name Visualization

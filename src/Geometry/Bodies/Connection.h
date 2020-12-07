@@ -1,21 +1,23 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <array>
-#include <memory>
-#include <string>
-#include <utility>
+#include "DHParameters.h"
+#include "Geometry/Boundaries/Range.h"
+#include "Utilities/IOUtils.h"
+#include "Utilities/XMLNode.h"
 
 #include "Transformation.h"
 using namespace mathtool;
 
-#include "DHParameters.h"
-#include "Utilities/IOUtils.h"
-#include "Geometry/Boundaries/Range.h"
+#include <array>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <urdf/model.h>
 
 class Body;
 class MultiBody;
-class XMLNode;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +81,9 @@ class Connection final {
     /// @param _is The input stream to read.
     /// @param _cbs The input counting stream buffer.
     void Read(istream& _is, CountingStreamBuffer& _cbs);
+
+    void TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
+                            const std::unordered_map<std::string,size_t>& _linkMap);
 
     /// Set the free bodies which are joined by this connection and call their
     /// link functions.

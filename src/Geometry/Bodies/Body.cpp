@@ -4,7 +4,6 @@
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/Color.h"
-#include "Utilities/XMLNode.h"
 
 #include <CGAL/Quotient.h>
 #include <CGAL/MP_Float.h>
@@ -821,7 +820,43 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   // Read the mesh file.
   ReadGeometryFile(m_comAdjust);
 }
+    
+void 
+Body::
+TranslateURDFLink(const std::shared_ptr<urdf::Link>& _link) {
 
+  // Translate geometric elements.
+  const auto geometry = _link->collision->geometry.get();
+  if(geometry->type != urdf::Geometry::MESH)
+    throw RunTimeException(WHERE) << "Only support mesh geometries at the moment."
+                                  << std::endl;
+  const auto mesh = dynamic_cast<urdf::Mesh*>(geometry);
+  m_filename = mesh->filename;
+  //TODO::use scale info as well
+  //auto scale = mesh->scale;
+
+  // Translate visual elements.
+  const auto material = _link->visual->material;
+  const auto color = material->color;
+  m_color = glutils::color(color.a, color.b, color.g, color.r);
+  m_textureFile = material->texture_filename;
+
+ 
+  // Determine if base link.
+  const auto parent = _link->getParent();
+  if(parent.get()) {
+    SetMovementType(MovementType::Joint);
+  }
+  else {
+    // TODO::Currently assume volumetric rotational. 
+    //       Need way to determine from urdf.
+    SetBodyType(Type::Volumetric);
+    SetMovementType(MovementType::Rotational);
+  }
+
+  // Read the mesh file.
+  ReadGeometryFile(m_comAdjust);
+}
 /*----------------------------- Computation Helpers --------------------------*/
 
 void

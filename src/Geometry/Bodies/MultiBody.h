@@ -253,6 +253,8 @@ class MultiBody {
     /// @param _os The output stream to write to.
     void Write(std::ostream& _os) const;
 
+    void TranslateURDF(std::string _urdf);
+
     ///@}
 
   private:

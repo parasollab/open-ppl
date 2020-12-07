@@ -4,6 +4,7 @@
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Utilities/XMLNode.h"
+#include "Utilities/URDFParser.h"
 
 #include <algorithm>
 #include <numeric>
@@ -723,6 +724,41 @@ Write(std::ostream& _os) const {
   for(const auto& body : m_bodies)
     for(size_t j = 0; j < body.ForwardConnectionCount(); ++j)
       _os << body.GetForwardConnection(j);
+}
+
+void
+MultiBody::
+TranslateURDF(std::string _filename) {
+  // Parse the urdf.
+  urdf::Model model = ParseURDF(_filename);
+
+  // Extract bodies
+  std::vector<std::shared_ptr<urdf::Link>> links;
+  model.getLinks(links);
+
+  std::unordered_map<std::string,size_t> linkMap;
+
+  for(size_t i = 0; i < links.size(); i++) {
+    const size_t index = AddBody(Body(this, i));
+    auto free = GetBody(index);
+    free->TranslateURDFLink(links[i]);
+
+    linkMap[links[i]->name] = i;
+
+    if(free->IsBase() && m_baseIndex == size_t(-1))
+      m_baseIndex = index;
+  }
+
+  // Extract joints
+  const auto& joints = model.joints_;
+
+  for(const auto& joint : joints) {
+    // add connection info to multibody connection map
+    m_joints.emplace_back(new Connection(this));
+    m_joints.back()->TranslateURDFJoint(joint.second,linkMap);
+    m_joints.back()->SetBodies();
+  }
+  
 }
 
 /*---------------------------------- Helpers ---------------------------------*/

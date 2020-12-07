@@ -215,7 +215,64 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_transformationToBody2 = ReadField<Transformation>(_is, _cbs,
       "Failed reading transformation to next body.");
 }
+    
+void 
+Connection::
+TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
+                   const std::unordered_map<std::string,size_t>& _linkMap) {
+  //body indices
+  m_bodyIndices.first = _linkMap.at(_joint->parent_link_name);
+  m_bodyIndices.second = _linkMap.at(_joint->child_link_name);
 
+  //grab the joint type
+  switch(_joint->type) {
+    case urdf::Joint::REVOLUTE :
+      m_jointType = Connection::JointType::Revolute;
+      break;
+    case urdf::Joint::FIXED :
+      m_jointType = Connection::JointType::NonActuated;
+    default :
+      throw RunTimeException(WHERE) << "Unsupported joint type." 
+                                    << std::endl;
+  }
+
+  //grab the joint limits for revolute and spherical joints
+  if(IsRevolute() || IsSpherical()) {
+    m_jointRange[0].min = m_jointRange[1].min = -1;
+    m_jointRange[0].max = m_jointRange[1].max = 1;
+    size_t numRange = IsRevolute() ? 1 : 2;
+
+    auto limits = _joint->limits;
+
+    for(size_t i = 0; i < numRange; ++i) {
+      m_jointRange[i].min = limits->lower/PI;
+      m_jointRange[i].max = limits->upper/PI;
+    }
+  }
+
+  auto& transform = _joint->parent_to_joint_origin_transform;
+  Vector3d position = {transform.position.x, 
+                       transform.position.y, 
+                       transform.position.z};
+
+  Quaternion quaternion(transform.rotation.w,
+                        {transform.rotation.x,
+                        transform.rotation.y,
+                        transform.rotation.z});
+
+  MatrixOrientation orientation(quaternion);
+
+  //transformation to DHFrame 
+  m_transformationToDHFrame = Transformation();
+
+  //DH parameters
+  m_dhParameters = DHParameters();
+
+  //transformation to next body
+
+  m_transformationToBody2 = Transformation(position,
+                                           orientation);
+}
 
 void
 Connection::

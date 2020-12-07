@@ -18,7 +18,6 @@
 #include "Simulator/MatlabMicroSimulator.h"
 #include "Simulator/MicroSimulator.h"
 #include "Utilities/XMLNode.h"
-#include "Utilities/URDFParser.h"
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"
@@ -337,10 +336,13 @@ ReadMultibodyFile(const std::string& _filename) {
 void
 Robot::
 ReadURDF(const std::string& _filename) {
-  urdf::Model model = ParseURDF(_filename);
+  // Convert the urdf model to multibody representation.
+  m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
+  m_multibody->TranslateURDF(_filename);
 
-  
-
+  // Initialize the DOF limits and set the robot to a zero starting configuration.
+  InitializePlanningSpaces();
+  m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
 /*--------------------------- Planning Interface -----------------------------*/
