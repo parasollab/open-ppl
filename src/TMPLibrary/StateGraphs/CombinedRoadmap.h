@@ -40,7 +40,7 @@ class CombinedRoadmap : public StateGraph {
 		/// robot-type roadmaps into robots of the respective type.
 		virtual void LoadStateGraph() override;
 
-		std::shared_ptr<GraphType> GetCapabilityRoadmap(HandoffAgent* _agent);
+		std::shared_ptr<GraphType> GetCapabilityRoadmap(Agent* _agent);
 
     ///@}
 

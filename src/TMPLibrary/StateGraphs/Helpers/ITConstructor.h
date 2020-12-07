@@ -2,7 +2,7 @@
 #define IT_CONSTRUCTOR_H_
 
 
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 
 #include "MPLibrary/MPLibrary.h"
 
@@ -18,7 +18,7 @@ class ITConstructor{
     ///@{
 
     ITConstructor(MPLibrary* _library,
-                  std::vector<HandoffAgent*> _memberAgents,
+                  std::vector<Agent*> _memberAgents,
                   Robot* _superRobot,
 									TaskPlan* _taskPlan);
 
@@ -36,7 +36,7 @@ class ITConstructor{
     MPLibrary* m_library;
     MPProblem* m_problem;
     std::shared_ptr<MPProblem> m_problemCopy;
-    std::vector<HandoffAgent*> m_memberAgents;
+    std::vector<Agent*> m_memberAgents;
     Robot* m_superRobot;
 		TaskPlan* m_taskPlan;
     bool m_debug;

@@ -6,7 +6,7 @@
 
 ITConstructor::
 ITConstructor(MPLibrary* _library,
-              std::vector<HandoffAgent*> _memberAgents,
+              std::vector<Agent*> _memberAgents,
               Robot* _superRobot,
 							TaskPlan* _taskPlan){
   m_library = _library;
@@ -27,10 +27,10 @@ ConstructIT(InteractionTemplate* _it){
                                 _it->GetInformation()->GetInteractionEnvironment());
   m_problemCopy->SetEnvironment(std::move(interactionEnvironment));
 
-  std::list<HandoffAgent*> unusedAgents;
+  std::list<Agent*> unusedAgents;
   std::copy(m_memberAgents.begin(), m_memberAgents.end(), std::back_inserter(unusedAgents));
   auto handoffTasks = _it->GetInformation()->GetInteractionTasks();
-  std::unordered_map<std::shared_ptr<MPTask>, HandoffAgent*> agentTasks;
+  std::unordered_map<std::shared_ptr<MPTask>, Agent*> agentTasks;
   // Loop through all tasks and assign a robot of matching capability to the
   // task, then configuring the robot at the goal constraint.
   for(auto task : handoffTasks){

@@ -587,7 +587,7 @@ SelectTask(){
 bool
 HandoffAgent::
 EvaluateTask(){
-  if(m_CUSTOM_PATH){
+  /*if(m_CUSTOM_PATH){
     //Check if custom path is finished
     //m_clearToMove = true;
     if(!this->PathFollowingAgent::EvaluateTask()){
@@ -597,8 +597,11 @@ EvaluateTask(){
       return false;
     }
     return true;
-  }
-	else if(m_returningHome){
+  }*/
+	//else if
+
+
+/*  if(m_returningHome){
 		if(!this->PathFollowingAgent::EvaluateTask()){
 			SetTask(nullptr);
 			m_path.clear();
@@ -631,7 +634,7 @@ EvaluateTask(){
       }
       m_path.push_back(m_robot->GetSimulationModel()->GetState());
     }
-  }
+  }*/
   return true;
 
 }
@@ -774,7 +777,7 @@ CheckInteractionPath(){
     for(auto& cfg : m_path){
       cfg.SetRobot(m_robot);
     }
-    m_CUSTOM_PATH = true;
+    //m_CUSTOM_PATH = true;
     auto customTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
 
     auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());

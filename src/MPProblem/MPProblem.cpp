@@ -14,8 +14,6 @@
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
-#include "TaskHierarchy/SubtaskFlow.h"
-
 using namespace std;
 
 
@@ -489,13 +487,7 @@ ParseChild(XMLNode& _node) {
   }
 	else if(_node.Name() == "Decomposition") {
 		auto decomp = std::unique_ptr<Decomposition>(new Decomposition(_node,this));
-
-		auto top = decomp->GetMainTask();
-
 		m_taskDecompositions[decomp->GetCoordinator()].push_back(std::move(decomp));
-
-		SubtaskFlow flow(top);
-		flow.Print();
 	}
 }
 

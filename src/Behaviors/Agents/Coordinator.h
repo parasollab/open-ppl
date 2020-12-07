@@ -114,6 +114,9 @@ class Coordinator : public Agent {
 
 		std::vector<std::string> GetMemberLabels();
 
+		std::vector<HandoffAgent*> GetMemberAgents();
+		std::vector<ChildAgent*> GetChildAgents();
+
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
     ///@}

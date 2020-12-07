@@ -8,7 +8,6 @@
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 
-#include "Utilities/CBS/DiscreteAgentAllocation.h"
 #include "Utilities/MetricUtils.h"
 
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
@@ -17,7 +16,7 @@
 #include "ConfigurationSpace/Cfg.h"
 
 class Coordinator;
-class HandoffAgent;
+class Agent;
 
 class TaskPlan {
 
@@ -29,7 +28,7 @@ class TaskPlan {
 
 
 		//Discrete Stuff
-		typedef std::unordered_map<HandoffAgent*,std::vector<DiscreteAgentAllocation>> AgentAllocationMap;
+		//typedef std::unordered_map<HandoffAgent*,std::vector<DiscreteAgentAllocation>> AgentAllocationMap;
     ///@name Construction
     ///@{
 
@@ -57,9 +56,9 @@ class TaskPlan {
     /// completed.
     std::list<std::shared_ptr<MPTask>> GetTaskDependencies(std::shared_ptr<MPTask> _task);
 
-    void AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task);
+    void AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task);
 
-    void AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask);
+    void AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask);
 
     /// first must occur before second
     void AddDependency(std::shared_ptr<MPTask> _first, std::shared_ptr<MPTask> _second);
@@ -94,9 +93,9 @@ class TaskPlan {
 
 		std::list<OccupiedInterval> GetRobotAvailability(Agent* _agent);
 
-    void UpdateRAT(HandoffAgent* _agent, OccupiedInterval _interval);
+    void UpdateRAT(Agent* _agent, OccupiedInterval _interval);
 
-    void ClearRobotAvailability(HandoffAgent* _agent);
+    void ClearRobotAvailability(Agent* _agent);
 
     ///@}
     ///@name TIM Functions
@@ -143,7 +142,7 @@ class TaskPlan {
     /// @param _wholeTask The WholeTask object containing the subtasks in
     /// question
     /// @return The HandoffAgent assigned to the preceeding subtask
-    HandoffAgent* GetLastAgent(WholeTask* _wholeTask);
+    Agent* GetLastAgent(WholeTask* _wholeTask);
 
 		void SetSemanticWholeTask(SemanticTask* _s, WholeTask* _w);
 
@@ -157,18 +156,18 @@ class TaskPlan {
 
     Coordinator* GetCoordinator();
 
-    void LoadTeam(std::vector<HandoffAgent*> _team);
+    void LoadTeam(std::vector<Agent*> _team);
     void LoadTeam(std::vector<Robot*> _team);
 
     /// Returns the set of all the agents available for the task
-    std::vector<HandoffAgent*>& GetTeam();
+    std::vector<Agent*>& GetTeam();
 
     /// Generates the dummy agents of each capabiltiy used for planning
     void GenerateDummyAgents();
 
-    HandoffAgent* GetCapabilityAgent(std::string _robotType);
+    Agent* GetCapabilityAgent(std::string _robotType);
 
-    std::unordered_map<std::string,HandoffAgent*>& GetDummyMap();
+    std::unordered_map<std::string,Agent*>& GetDummyMap();
 
     ///@}
     ///@name Interaction Templates
@@ -195,23 +194,23 @@ class TaskPlan {
 
 		std::unordered_map<WholeTask*,std::list<OccupiedInterval>>& GetPositiveConstraints();
 
-		void AddPositiveInstantConstraint(WholeTask* _task, HandoffAgent* _agent, double _instant);
+		void AddPositiveInstantConstraint(WholeTask* _task, Agent* _agent, double _instant);
 
-		std::list<std::pair<HandoffAgent*,double>>& GetPositiveInstantTaskConstraints(WholeTask* _task);
+		std::list<std::pair<Agent*,double>>& GetPositiveInstantTaskConstraints(WholeTask* _task);
 
-		std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>>& GetPositiveInstantConstraints();
+		std::unordered_map<WholeTask*,std::list<std::pair<Agent*,double>>>& GetPositiveInstantConstraints();
 
     ///@}
     ///@name Discrete Stuff
     ///@{
 
-		void AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation);
+/*		void AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation);
 
 		AgentAllocationMap& GetAllAgentAllocations();
 
 		std::vector<DiscreteAgentAllocation> GetAgentAllocations(HandoffAgent* _agent);
 
-		void SetAgentAllocations(AgentAllocationMap _allocs);
+		void SetAgentAllocations(AgentAllocationMap _allocs);*/
     ///@}
 
 		void PrintStatFile(const std::string& _basename = "");
@@ -251,10 +250,10 @@ class TaskPlan {
     TaskDependencyMap m_taskDependencyMap;
 
     /// Maps agent capabilities to a dummy agent used for planning.
-    std::unordered_map<std::string, HandoffAgent*> m_dummyMap;
+    std::unordered_map<std::string, Agent*> m_dummyMap;
 
     /// All robots available for the task..
-    std::vector<HandoffAgent*> m_memberAgents;
+    std::vector<Agent*> m_memberAgents;
 
     /// The set of Interaction Templates
     std::vector<std::shared_ptr<InteractionTemplate>> m_interactionTemplates;
@@ -263,10 +262,10 @@ class TaskPlan {
     std::unordered_map<WholeTask*,std::pair<double,double>> m_taskCostMap;
 
 		std::unordered_map<WholeTask*,std::list<OccupiedInterval>> m_positiveConstraints;
-		std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>> m_posInstantConstraints;
+		std::unordered_map<WholeTask*,std::list<std::pair<Agent*,double>>> m_posInstantConstraints;
 
 		//Discrete Stuff 
-		AgentAllocationMap m_agentAllocationMap;
+		//AgentAllocationMap m_agentAllocationMap;
 
 		//temp for RA-L
 		std::unordered_map<SemanticTask*,WholeTask*> m_semanticWholeMap;

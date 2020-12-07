@@ -242,13 +242,17 @@ endif
 # Qt4
 ################################################################################
 QT_BASE := /usr/include
+
 ifeq ($(platform), MACOS_gcc)
   QT_BASE := /usr/local/opt/qt/include
 endif
+ifeq ($(platform), Ubuntu)
+  QT_BASE := /usr/include/qt4
+endif
 
-QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
-           -I$(QT_BASE)/QtOpenGL
-QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
+QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
+           -I$(QT_BASE)/QtOpenGL -I$(BASE)/QtWidgets -I$(BASE)QtApplication
+QT_LIBS := -lQtGui -lQtOpenGL -lQtCore
 ifeq ($(platform), MACOS_gcc)
   QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
              -I$(QT_BASE)/QtOpenGL -I$(QT_BASE)/QtWidgets
@@ -259,6 +263,9 @@ endif
 QT_MOC_BASE = /usr/lib64/qt4/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
+endif
+ifeq ($(platform), Ubuntu) 
+  QT_MOC_BASE = /usr/share/qt4/bin
 endif
 QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
 ifndef QT_MOC
@@ -451,6 +458,7 @@ TASK_SRCS := \
   TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
+	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
   TMPLibrary/TaskPlan.cpp \
@@ -464,6 +472,9 @@ TASK_SRCS := \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
+  Behaviors/Agents/StepFunctions/StepFunction.cpp \
+  Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
   Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
 ################################################################################
@@ -601,20 +612,6 @@ PMPL_SRCS := \
   Simulator/MicroSimulator.cpp \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
-	Utilities/GeneralCBS/AllocationValidation.cpp \
-	Utilities/GeneralCBS/BypassValidation.cpp \
-	Utilities/GeneralCBS/ComposeValidation.cpp \
-	Utilities/GeneralCBS/GeneralCBS.cpp \
-	Utilities/GeneralCBS/LowLevelSearch.cpp \
-	Utilities/GeneralCBS/MetaTMPLowLevelSearch.cpp \
-	Utilities/GeneralCBS/MotionValidation.cpp \
-	Utilities/GeneralCBS/MPLowLevelSearch.cpp \
-	Utilities/GeneralCBS/ParallelCBS.cpp \
-	Utilities/GeneralCBS/PrecedenceLowLevelSearch.cpp \
-	Utilities/GeneralCBS/PrioritizedConflictValidation.cpp \
-	Utilities/GeneralCBS/TCBSValidation.cpp \
-	Utilities/GeneralCBS/TMPLowLevelSearch.cpp \
-	Utilities/GeneralCBS/Validation.cpp \
   Utilities/IOUtils.cpp \
   Utilities/MedialAxis2D.cpp \
   Utilities/MetricUtils.cpp \

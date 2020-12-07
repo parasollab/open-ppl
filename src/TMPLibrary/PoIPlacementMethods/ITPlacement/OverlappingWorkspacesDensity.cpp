@@ -1,7 +1,7 @@
 #include "OverlappingWorkspacesDensity.h"
 
 #include "Behaviors/Agents/Coordinator.h"
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 
 #include "TMPLibrary/TaskPlan.h"
 
@@ -25,6 +25,11 @@ OverlappingWorkspacesDensity::
 PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   //_solution->AddInteractionTemplate(_it);
 
+  throw RunTimeException(WHERE) << "OverlappingWorkspaces IT Placement implementation"
+          "needs updating." << std::endl;
+
+/*
+
   auto tasks = _it->GetInformation()->GetInteractionTasks();
 
   //auto coordinator = static_cast<Coordinator*>(tasks[0]->GetRobot()->GetAgent());
@@ -32,7 +37,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   // Assuming two robots for now
   // Get the capability to determine the workspaces
 
-  std::vector<HandoffAgent*> capabilityAgents;
+  std::vector<Agent*> capabilityAgents;
   for(auto& task : tasks){
     auto agent = this->GetTaskPlan()->GetCapabilityAgent(task->GetCapability());
     capabilityAgents.push_back(agent);
@@ -124,4 +129,5 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
     std::cout << cfg.PrettyPrint() << std::endl;
     _it->GetInformation()->AddTemplateLocation(cfg);
   }
+  */
 }

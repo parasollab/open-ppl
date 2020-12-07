@@ -170,10 +170,7 @@ ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
 void
 ChildAgent::
 ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
-	//if(!m_communicator.get())
-		Agent::ExecuteControlsHardware(_c,_steps);
-
-	//throw RunTimeException(WHERE) << "Support for standard message passing system does not include hardware yet." << std::endl;
+	Agent::ExecuteControlsHardware(_c,_steps);
 }
 
 /*----------------------------- Communication Helpers -------------------------------*/

@@ -1,6 +1,7 @@
 #include "CombinedRoadmap.h"
 
 #include "Behaviors/Agents/Coordinator.h"
+#include "Behaviors/Agents/PlanningAgent.h"
 
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
@@ -84,18 +85,19 @@ ResetRobotTypeRoadmaps(){
 void
 CombinedRoadmap::
 CopyRobotTypeRoadmaps(){
-  for(auto agent : this->GetTaskPlan()->GetTeam()){
+/*  for(auto agent : this->GetTaskPlan()->GetTeam()){
     //Copy corresponding capability roadmap into agent
     auto graph = m_capabilityRoadmaps[agent->GetCapability()];
     auto g = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(agent->GetRobot());
     *g = *graph;
     g->SetRobot(agent->GetRobot());
-    agent->SetRoadmapGraph(g);
+    auto a = static_cast<PlanningAgent*>(agent);
+    a->SetRoadmapGraph(g);
 
     // Write the capability map.
     graph->Write(agent->GetRobot()->GetLabel() + ".map",
         this->GetMPProblem()->GetEnvironment());
-  }
+  }*/
 }
 
 /*------------------------------ Construction Helpers --------------------------------*/
@@ -462,7 +464,7 @@ GenerateITs(){
   problemCopy->SetEnvironment(std::move(m_interactionEnvironment));
   this->GetMPLibrary()->SetMPProblem(problemCopy.get());
   // Set robots to virtual so that planning handoffs does not cause collisions
-  std::list<HandoffAgent*> unusedAgents;
+  std::list<Agent*> unusedAgents;
 
 
   for(auto& currentTemplate : this->GetTaskPlan()->GetInteractionTemplates()){
@@ -473,7 +475,7 @@ GenerateITs(){
     std::copy(this->GetTaskPlan()->GetTeam().begin(), this->GetTaskPlan()->GetTeam().end(), 	
 							std::back_inserter(unusedAgents));
     auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
-    std::unordered_map<std::shared_ptr<MPTask>, HandoffAgent*> agentTasks;
+    std::unordered_map<std::shared_ptr<MPTask>, Agent*> agentTasks;
     // Loop through all tasks and assign a robot of matching capability to the
     // task, then configuring the robot at the goal constraint.
     for(auto task : handoffTasks){
@@ -877,7 +879,7 @@ SetupWholeTasks(){
 
 std::shared_ptr<RoadmapGraph<Cfg,DefaultWeight<Cfg>>> 
 CombinedRoadmap::
-GetCapabilityRoadmap(HandoffAgent* _agent) {
+GetCapabilityRoadmap(Agent* _agent) {
 	return m_capabilityRoadmaps[_agent->GetCapability()];
 }
 

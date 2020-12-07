@@ -137,9 +137,6 @@ EvalNode(SemanticTask* _task, ParentInfo _parentInfo) {
 
 		m_taskNodeMap[_task] = vid;
 
-		//for(auto p : _parentInfo.first) {
-		//	this->add_edge(p,vid,);
-		//}
 		TBDFunction simple;
 		simple.m_elems.push_back(vid);
 		std::vector<size_t> vids = {vid};

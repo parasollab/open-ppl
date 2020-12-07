@@ -45,6 +45,8 @@ AllocateTasks(){
 void 
 AuctionMethod::
 AuctionSubtasks(WholeTask* _wholeTask){
+
+  /*
 	m_unassignedTasks.clear();
 	auto subtask = this->GetTaskPlan()->GetNextSubtask(_wholeTask);
 	if(!subtask)
@@ -60,15 +62,15 @@ AuctionSubtasks(WholeTask* _wholeTask){
     if(newSubtask){
       AddSubtask(newSubtask);
     }
-	}
+	}*/
 }
 
 std::shared_ptr<MPTask> 
 AuctionMethod::
 AuctionTask(std::shared_ptr<MPTask> _nextTask){
 
-
-  HandoffAgent* minAgent = nullptr;
+/*
+  Agent* minAgent = nullptr;
   double minCost = std::numeric_limits<double>::max();
 
   // Generate the cost of a task for each agent
@@ -87,14 +89,7 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
     agent->GetRobot()->SetVirtual(false);
     agent->GenerateCost(_nextTask);
     agent->GetRobot()->SetVirtual(true);
-    /*auto tempThread = std::thread([agent, _nextTask](){
-      agent->GenerateCost(_nextTask);
-    });
-    costThreads.push_back(std::move(tempThread));*/
   }
-  /*for(auto& thread : costThreads){
-    thread.join();
-  }*/
 
   // Assign the task to the agent with the lowest cost.
   for(auto agent : this->GetTaskPlan()->GetTeam()){
@@ -158,12 +153,16 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
 		this->GetTaskPlan()->AddDependency(_nextTask,newSubtask);
   }
   return newSubtask;
+*/
+  return nullptr;
 }
 
 
 void 
 AuctionMethod::
-AddSubtask(std::shared_ptr<MPTask> _subtask){
+AddSubtask(std::shared_ptr<MPTask> _subtask) {
+
+  /*
 	if(m_unassignedTasks.empty()){
 		m_unassignedTasks.push_back(_subtask);
 		return;
@@ -175,4 +174,5 @@ AddSubtask(std::shared_ptr<MPTask> _subtask){
 		}
 	}
 	m_unassignedTasks.push_back(_subtask);
+  */
 }

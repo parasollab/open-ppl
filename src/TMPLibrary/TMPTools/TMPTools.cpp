@@ -6,8 +6,8 @@ TMPTools(TMPLibrary* const _tmpLibrary) : m_tmpLibrary(_tmpLibrary) {}
 void
 TMPTools::
 ParseXML(XMLNode& _node) {
-	for(auto& child : _node){
-	}
+	/*for(auto& child : _node){
+	}*/
 }
 		
 template <typename Utility>

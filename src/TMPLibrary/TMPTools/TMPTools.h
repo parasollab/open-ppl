@@ -1,7 +1,12 @@
-#ifndef PMPL_TMP_TOOLS_H_
-#define PMPL_TMP_TOOLS_H_
+#ifndef _PPL_TMP_TOOLS_H_
+#define _PPL_TMP_TOOLS_H_
 
 #include <iostream>
+#include <unordered_map>
+
+#include "TMPLibrary/TMPLibrary.h"
+#include "Utilities/PMPLExceptions.h"
+#include "Utilities/XMLNode.h"
 
 class TMPTools {
   public:

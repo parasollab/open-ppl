@@ -29,9 +29,9 @@ class DisjointWorkspaces : public ITPlacementMethod {
     void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 
     bool CheckLocation(Cfg _cfg, InteractionTemplate* _it);//,
-                       //std::unordered_map<std::string, HandoffAgent*> _capabilityAgents);
+                       //std::unordered_map<std::string, Agent*> _capabilityAgents);
 
-		void SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, HandoffAgent* _agent);
+		void SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, Agent* _agent);
 
     ///@}
 

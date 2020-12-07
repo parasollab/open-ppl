@@ -183,7 +183,7 @@ DecompositionToMessage(Decomposition* _decomp) {
 
 	auto taskMap = _decomp->GetTaskMap();
 
-	for(auto task : _decomp->GetSimpleTasks()) {
+	for(auto task : _decomp->GetMotionTasks()) {
 		queue.push_back(task);
 	}
 

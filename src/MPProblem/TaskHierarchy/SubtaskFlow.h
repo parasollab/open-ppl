@@ -30,9 +30,11 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 
     using STAPLGraph =
 #ifdef _PARALLEL
-    stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES, FlowNode, SemanticTask::DependencyType>
+    stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES, 
+                         FlowNode, SemanticTask::DependencyType>
 #else
-    stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES, FlowNode, SemanticTask::DependencyType>
+    stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES, 
+                             FlowNode, SemanticTask::DependencyType>
 #endif
     ;
 

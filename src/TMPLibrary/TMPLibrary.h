@@ -34,7 +34,7 @@ class TaskPlan;
 class TMPStrategyMethod;
 class TMPTools;
 class Coordinator;
-class HandoffAgent;
+class Agent;
 //template<typename TMPMethod>TMPMethodSet;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,10 +192,10 @@ class TMPLibrary {
 		///@{
 
 		void Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks,
-							 std::shared_ptr<TaskPlan> _taskPlan, Coordinator*, std::vector<HandoffAgent*> _team);
+							 std::shared_ptr<TaskPlan> _taskPlan, Coordinator*, std::vector<Agent*> _team);
 
 		void Solve(MPProblem* _problem, Decomposition* _decomp, std::shared_ptr<TaskPlan> _taskPlan,
-								Coordinator* _coordinator, std::vector<HandoffAgent*> _team); 
+								Coordinator* _coordinator, std::vector<Agent*> _team); 
 
 		void Solve(MPProblem* _problem, Decomposition* _decomp, std::shared_ptr<TaskPlan> _taskPlan,
 								Plan* _plan, Coordinator* _coordinator, std::vector<Robot*> _team); 

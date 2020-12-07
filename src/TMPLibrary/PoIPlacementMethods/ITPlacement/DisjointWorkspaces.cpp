@@ -1,7 +1,7 @@
 #include "DisjointWorkspaces.h"
 
 #include "Behaviors/Agents/Coordinator.h"
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 
 #include "TMPLibrary/TaskPlan.h"
 
@@ -40,7 +40,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   // Assuming two robots for now
   // Get the capability to determine the workspaces
 
-  std::vector<HandoffAgent*> capabilityAgents;
+  std::vector<Agent*> capabilityAgents;
   for(auto& task : tasks){
     auto agent = this->GetTaskPlan()->GetCapabilityAgent(task->GetCapability());
     capabilityAgents.push_back(agent);
@@ -187,7 +187,7 @@ GetRandomDouble(double _min, double _max){
 
 void
 DisjointWorkspaces::
-SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, HandoffAgent* _agent){
+SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, Agent* _agent){
 
       std::vector<Cfg> samplePoints;
 			for(auto& boundary : _terrain.GetBoundaries()){

@@ -1,7 +1,7 @@
 #ifndef PMPL_MULTI_TASK_GRAPH_H_
 #define PMPL_MULTI_TASK_GRAPH_H_
 
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 
 #include "ConfigurationSpace/RoadmapGraph.h"
 
@@ -85,7 +85,7 @@ class MultiTaskGraph : public CombinedRoadmap {
     /// @return Returns the time the new robot is ready to start the next subtask
     double RobotSelection(size_t _source, size_t _target, Agent** _minAgent,
         std::unordered_map<Agent*,std::list<OccupiedInterval>>& _RATCache,
-        size_t parent, double _previousEdge, std::set<HandoffAgent*> _usedAgents);
+        size_t parent, double _previousEdge, std::set<Agent*> _usedAgents);
 
     /// @param _wholeTask is the task being appended to the high level graph in order
     //				 to be planned next.

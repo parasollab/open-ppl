@@ -1,7 +1,7 @@
 #include "TaskPlan.h"
 
 #include "Behaviors/Agents/Coordinator.h"
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 
 /**************************************Task Plan****************************/
 TaskPlan::
@@ -394,7 +394,7 @@ GetCoordinator(){
 
 void
 TaskPlan::
-LoadTeam(std::vector<HandoffAgent*> _team){
+LoadTeam(std::vector<Agent*> _team){
   m_memberAgents = _team;
 }
 
@@ -403,12 +403,12 @@ TaskPlan::
 LoadTeam(std::vector<Robot*> _team){
   m_memberAgents = {};
 	for(auto robot : _team) {
-		auto agent = dynamic_cast<HandoffAgent*>(robot->GetAgent());
+		auto agent = robot->GetAgent();
 		m_memberAgents.push_back(agent);
 	}
 }
 
-std::vector<HandoffAgent*>&
+std::vector<Agent*>&
 TaskPlan::
 GetTeam(){
   return m_memberAgents;
@@ -427,13 +427,13 @@ GenerateDummyAgents(){
   }
 }
 
-HandoffAgent*
+Agent*
 TaskPlan::
 GetCapabilityAgent(std::string _robotType){
   return m_dummyMap[_robotType];
 }
 
-std::unordered_map<std::string,HandoffAgent*>&
+std::unordered_map<std::string,Agent*>&
 TaskPlan::
 GetDummyMap(){
   return m_dummyMap;
@@ -508,7 +508,7 @@ GetPositiveConstraints() {
 
 void 
 TaskPlan::
-AddPositiveInstantConstraint(WholeTask* _task, HandoffAgent* _agent, double _instant) {
+AddPositiveInstantConstraint(WholeTask* _task, Agent* _agent, double _instant) {
 	auto pair = std::make_pair(_agent,_instant);
 	auto& instants = m_posInstantConstraints[_task];
   if(instants.empty()){
@@ -527,33 +527,21 @@ AddPositiveInstantConstraint(WholeTask* _task, HandoffAgent* _agent, double _ins
   }
 }
 
-std::list<std::pair<HandoffAgent*,double>>&
+std::list<std::pair<Agent*,double>>&
 TaskPlan::
 GetPositiveInstantTaskConstraints(WholeTask* _task) {
 	return m_posInstantConstraints[_task];
 }
 
-std::unordered_map<WholeTask*,std::list<std::pair<HandoffAgent*,double>>>&
+std::unordered_map<WholeTask*,std::list<std::pair<Agent*,double>>>&
 TaskPlan::
 GetPositiveInstantConstraints() {
 	return m_posInstantConstraints;
 }
 /**************************************Discrete Stuff****************************/
-void 
+/*void 
 TaskPlan::
 AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation) {
-/*	auto& allocations = m_agentAllocationMap[_agent];
-	if(allocations.empty() or allocations.back().m_startTime < _allocation.m_startTime) {
-		allocations.push_back(_allocation);
-		return;
-	}
-
-	for(auto iter = allocations.begin(); iter != allocations.end(); iter++) {
-		if(iter->m_startTime > _allocation.m_startTime) {
-			allocations.insert(iter,_allocation);
-			return;
-		}
-	}*/
 	m_agentAllocationMap[_agent].push_back(_allocation);
 }
 
@@ -573,7 +561,7 @@ void
 TaskPlan::
 SetAgentAllocations(AgentAllocationMap _allocs) {
 	m_agentAllocationMap = _allocs;
-}
+}*/
 
 void
 TaskPlan::

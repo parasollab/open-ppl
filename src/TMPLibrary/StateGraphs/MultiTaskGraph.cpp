@@ -115,7 +115,7 @@ double
 MultiTaskGraph::
 RobotSelection(size_t _source, size_t _target, Agent** _minAgent,
     std::unordered_map<Agent*,std::list<OccupiedInterval>>& _RATCache,
-    size_t _parent, double _previousEdge, std::set<HandoffAgent*> _usedAgents){
+    size_t _parent, double _previousEdge, std::set<Agent*> _usedAgents){
   //Agent* minAgent = nullptr;
   double minTime = MAX_DBL;
   /*
@@ -596,7 +596,7 @@ GetAgentAvailableIntervals(size_t _source, size_t _target) {//,
       }
       else {
         Cfg temp(agentRAT.first->GetRobot());
-        OccupiedInterval oi(static_cast<HandoffAgent*>(agentRAT.first),
+        OccupiedInterval oi(static_cast<Agent*>(agentRAT.first),
             temp, temp, MAX_DBL, MAX_DBL);
         auto safe = std::make_pair(arrivalTime,oi);
         m_agentSafeIntervalMap[_source][agentRAT.first].push_back(safe);

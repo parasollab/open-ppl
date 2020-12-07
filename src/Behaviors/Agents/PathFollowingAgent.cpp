@@ -151,9 +151,9 @@ EvaluateTask() {
 
     GetTask()->GetStatus().complete();
     SetTask(nullptr);
-    if(m_CUSTOM_PATH){
-      this->PauseAgent(300);
-    }
+    //if(m_CUSTOM_PATH){
+    //  this->PauseAgent(300);
+    //}
     return false;
   }
 

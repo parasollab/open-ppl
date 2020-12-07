@@ -73,13 +73,6 @@ PlanningAgent::
 Step(const double _dt) {
   Initialize();
 
-  /*if(HasPlan() and m_CUSTOM_PATH){
-    ExecuteTask(_dt);
-    return;
-  }
-  else{
-    m_CUSTOM_PATH = false;
-  }*/
   // If the agent is planning or localizing, skip this step.
   if(IsPlanning() or IsLocalizing())
     return;

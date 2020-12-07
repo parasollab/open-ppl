@@ -53,9 +53,6 @@ SemanticTask(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 		}	
 	}
 
-	//m_subtasks
-	//m_dependencyMap
-
 }
 		
 SemanticTask::
@@ -167,7 +164,8 @@ ParseDependency(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 
 			std::string dependencyType = child.Read("type", true, "",
 													"Type of dependency");
-			std::transform(dependencyType.begin(), dependencyType.end(), dependencyType.begin(), ::tolower);
+			std::transform(dependencyType.begin(), dependencyType.end(), 
+                     dependencyType.begin(), ::tolower);
 
 			SemanticTask::DependencyType type = SemanticTask::DependencyType::None;
 
@@ -183,22 +181,12 @@ ParseDependency(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 			}
 			else 
 				throw RunTimeException(WHERE, "Unknown dependency type: " + dependencyType);
-			//auto& chain = 
 			this->AddDependency(depTask,type);
 
-			//if(type == DependencyType::Synchronous) {
-			//	for(auto& task : chain) {
-					
-			//	}
-			//}
 		}
-		//else if(child.Name() == "Task") {
-		//	std::shared_ptr<MPTask> simpleTask = std::shared_ptr<MPTask>(new MPTask(_problem,grandchild));
-		//	task->SetMotionTask(simpleTask);
-		//	AddSimpleTask(task.get());
-		//}
 	}
 }
+
 /*---------------------------- Accessors -----------------------*/
 	
 std::string 
@@ -206,6 +194,7 @@ SemanticTask::
 GetLabel() const {
 	return m_label;
 }
+
 std::vector<SemanticTask*> 
 SemanticTask::
 SetDependencies() {
@@ -215,7 +204,8 @@ SetDependencies() {
 
 	std::vector<SemanticTask*> simpleTasks;
 
-	// Check if this is a simple task and if so add it to the set of simple tasks for itself
+	// Check if this is a motion task and, if so, add it to the set 
+  // of motion tasks for itself
 	if(m_motionTask or m_groupMotionTask) {
 		return {this};
 	}

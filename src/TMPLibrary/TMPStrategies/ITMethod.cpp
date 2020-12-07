@@ -134,7 +134,7 @@ ITMethod::
 AuctionTask(std::shared_ptr<MPTask> _nextTask){
 
 
-  HandoffAgent* minAgent = nullptr;
+  Agent* minAgent = nullptr;
   double minCost = std::numeric_limits<double>::max();
 
   // Generate the cost of a task for each agent

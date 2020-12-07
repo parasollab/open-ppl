@@ -16,23 +16,15 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Task label="query" robot="boxy">
+    <Task label="startLocation" robot="boxy">
       <StartConstraints>
-        <!-- WARNING Support for multiple constraints is not yet implemented! -->
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
-		      <GoalConstraints>
-    		    <!-- Here multiple constraints indicates a compound goal. Each constraint
-        		     represents a single intermediate goal. -->
-		        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
-    		  </GoalConstraints>
     </Task>
 
-		<!--Decomposition label="main" taskLabel="top" coordinator="boxy">
-			<SemanticTask label="top" subtaskRelation="AND"/>
-	
-			<SemanticTask label="first" parent="top">
-    		<Task label="query" robot="boxy">
+		<Decomposition label="main" taskLabel="first" coordinator="boxy">
+			<SemanticTask label="first">
+    		<Task label="query1" robot="boxy">
       		<StartConstraints>
         		<CSpaceConstraint point="0 0 0 0 0 0"/>
       		</StartConstraints>
@@ -42,20 +34,7 @@
     		  </GoalConstraints>
 		    </Task>
 			</SemanticTask>
-
-			<SemanticTask label="second" parent="top">
-				<Dependency type="initiation" task="first"/>
-    		<Task label="query" robot="boxy">
-      		<StartConstraints>
-		        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
-      		</StartConstraints>
-
-		      <GoalConstraints>
-        		<CSpaceConstraint point="20 20 20 0 0 0"/>
-    		  </GoalConstraints>
-		    </Task>
-			</SemanticTask>
-		</Decomposition-->
+		</Decomposition>
 
   </Problem>
 

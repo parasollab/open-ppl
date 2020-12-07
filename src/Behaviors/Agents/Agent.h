@@ -12,6 +12,7 @@
 class Cfg;
 class MPTask;
 class Robot;
+class StepFunction;
 class XMLNode;
 
 
@@ -40,19 +41,22 @@ class Agent {
 
     bool m_debug{true};                ///< Toggle debug messages.
 
-    /// Specifiies the type of agent for heterogenous multiagent teams
+    /// Specifiies the type of agent for heterogenous multiagent teams.
     std::string m_capability;
 
-		///< Control communication with outside processes
+		///< Control communication with outside processes.
 		std::shared_ptr<Communicator> m_communicator;      
 
+    ///< Thread to continuously monitor for communication.
 		std::thread m_communicationThread; 
+
+    ///< Step function to define agent behaviors.
+    std::unique_ptr<StepFunction> m_stepFunction;
 
     ///@}
 
   public:
 
-    bool m_CUSTOM_PATH{false}; //TODO FIX THIS HACK
     ///@name Construction
     ///@{
 
@@ -201,7 +205,12 @@ class Agent {
 
 		///@name Communication Helpers
 		///@{
-		
+
+    /// Parse the communicator XMLNode and launch the communicator thread.
+    /// @param _node The input XMLNode containing the communicator information.
+    void ParseCommunicatorXMLNode(XMLNode& _node);
+
+    /// TODO::Remember what the intended purpose of this function is.	
     virtual std::vector<std::string> PublishFunction(std::string _msg);
 
 		///@}

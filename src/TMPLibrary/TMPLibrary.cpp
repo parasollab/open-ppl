@@ -1,10 +1,13 @@
 #include "TMPLibrary.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "Traits/TMPTraits.h"
 
 #include "Simulator/Simulation.h"
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/Solution/TaskSolution.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
 #include "TMPLibrary/TaskPlan.h"
@@ -369,7 +372,7 @@ Solve(MPProblem* _problem,
 								std::vector<std::shared_ptr<MPTask>> _tasks, 
 								std::shared_ptr<TaskPlan> _taskPlan,
 								Coordinator* _coordinator,
-								std::vector<HandoffAgent*> _team) {
+								std::vector<Agent*> _team) {
 
 				m_problem = _problem;
 				m_tasks = _tasks;
@@ -388,7 +391,7 @@ Solve(MPProblem* _problem,
 								Decomposition* _decomp, 
 								std::shared_ptr<TaskPlan> _taskPlan,
 								Coordinator* _coordinator,
-								std::vector<HandoffAgent*> _team) {
+								std::vector<Agent*> _team) {
 
 				m_problem = _problem;
 				m_taskPlan = _taskPlan;

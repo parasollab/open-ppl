@@ -1,5 +1,5 @@
-#ifndef _PMPL_CLIENT_AGENT_
-#define _PMPL_CLIENT_AGENT_
+#ifndef _PPL_CLIENT_AGENT_
+#define _PPL_CLIENT_AGENT_
 
 /*--------------------------------------------------------------------*/
 /// Simple wrapper around the base agent that receives commands from 

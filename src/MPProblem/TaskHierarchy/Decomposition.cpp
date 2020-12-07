@@ -9,8 +9,7 @@ Decomposition() {}
 
 Decomposition::
 Decomposition(std::shared_ptr<SemanticTask> _mainTask) {
-	m_mainTask = _mainTask.get();
-	//m_simpleTasks = m_mainTask->SetDependencies();
+	m_rootTask = _mainTask.get();
 }
 	
 Decomposition::
@@ -35,15 +34,15 @@ Decomposition(XMLNode& _node, MPProblem* _problem) {
 				throw RunTimeException(WHERE, "SemanticTask labels must be unique within a decomposition.");
 			m_taskMap[task->GetLabel()] = task;
 			if(task->GetMotionTask())
-				m_simpleTasks.push_back(task.get());
+				m_motionTasks.push_back(task.get());
 		}
 	}
 
 	// set the highest level task
-	m_mainTask = m_taskMap[mainTask].get();
+	m_rootTask = m_taskMap[mainTask].get();
 
-	// set the dependencies between the simple tasks
-	//m_simpleTasks = m_mainTask->SetDependencies();
+  // Compute subtask flow
+  m_subtaskFlow = std::unique_ptr<SubtaskFlow>(new SubtaskFlow(m_rootTask));
 }
 
 Decomposition::
@@ -71,14 +70,14 @@ SetCoordinator(Robot* _robot) {
 
 SemanticTask*
 Decomposition::
-GetMainTask() {
-	return m_mainTask;
+GetRootTask() {
+	return m_rootTask;
 }
 
 void
 Decomposition::
-SetMainTask(SemanticTask* _task) {
-	m_mainTask = _task;
+SetRootTask(SemanticTask* _task) {
+	m_rootTask = _task;
 }
 
 void 
@@ -105,14 +104,6 @@ GetTask(std::string _label) {
 	return m_taskMap[_label].get();
 }
 
-
-
-std::vector<SemanticTask*>& 
-Decomposition::
-GetSimpleTasks() {
-	return m_simpleTasks;
-}
-
 std::vector<SemanticTask*>& 
 Decomposition::
 GetMotionTasks() {
@@ -123,12 +114,6 @@ std::vector<SemanticTask*>&
 Decomposition::
 GetGroupMotionTasks() {
 	return m_groupMotionTasks;
-}
-
-void 
-Decomposition::
-AddSimpleTask(SemanticTask* _task) {
-	m_simpleTasks.push_back(_task);
 }
 
 void 
@@ -194,4 +179,16 @@ ParseTask(XMLNode& _node, MPProblem* _problem) {
 		//	AddSimpleTask(task.get());
 		//}
 	}
+}
+    
+void 
+Decomposition::
+SetComplete(bool _complete) {
+  m_complete = _complete;
+}
+    
+bool 
+Decomposition::
+IsComplete() {
+  return m_complete;
 }

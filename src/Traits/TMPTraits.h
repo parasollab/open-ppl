@@ -27,7 +27,6 @@
 // TaskAllocators to include 
 
 #include "TMPLibrary/TaskAllocators/AuctionMethod.h"
-#include "TMPLibrary/TaskAllocators/TCBSAllocator.h"
 
 // StateGraphs to include
 
@@ -72,7 +71,7 @@ struct TMPTraits {
 
   //types of task allocators available in our world
   typedef boost::mpl::list<
-    AuctionMethod,
+    AuctionMethod
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
