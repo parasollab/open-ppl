@@ -83,7 +83,9 @@ class Connection final {
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
     void TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
-                            const std::unordered_map<std::string,size_t>& _linkMap);
+                            const std::pair<size_t,size_t> _bodyIndices,
+                            const Vector3d _bodyPosition,
+                            const MatrixOrientation _bodyOrientation);
 
     /// Set the free bodies which are joined by this connection and call their
     /// link functions.

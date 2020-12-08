@@ -219,12 +219,14 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
 void 
 Connection::
 TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
-                   const std::unordered_map<std::string,size_t>& _linkMap) {
-  //body indices
-  m_bodyIndices.first = _linkMap.at(_joint->parent_link_name);
-  m_bodyIndices.second = _linkMap.at(_joint->child_link_name);
+                   const std::pair<size_t,size_t> _bodyIndices,
+                   const Vector3d _bodyPosition,
+                   const MatrixOrientation _bodyOrientation) {
 
-  //grab the joint type
+  // body indices
+  m_bodyIndices = _bodyIndices;
+
+  // grab the joint type
   switch(_joint->type) {
     case urdf::Joint::REVOLUTE :
       m_jointType = Connection::JointType::Revolute;
@@ -236,7 +238,7 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
                                     << std::endl;
   }
 
-  //grab the joint limits for revolute and spherical joints
+  // grab the joint limits for revolute and spherical joints
   if(IsRevolute() || IsSpherical()) {
     m_jointRange[0].min = m_jointRange[1].min = -1;
     m_jointRange[0].max = m_jointRange[1].max = 1;
@@ -263,7 +265,8 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
   MatrixOrientation orientation(quaternion);
 
   //transformation to DHFrame 
-  m_transformationToDHFrame = Transformation();
+  m_transformationToDHFrame = Transformation(_bodyPosition,
+                                             _bodyOrientation);
 
   //DH parameters
   m_dhParameters = DHParameters();

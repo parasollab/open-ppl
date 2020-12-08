@@ -755,7 +755,28 @@ TranslateURDF(std::string _filename) {
   for(const auto& joint : joints) {
     // add connection info to multibody connection map
     m_joints.emplace_back(new Connection(this));
-    m_joints.back()->TranslateURDFJoint(joint.second,linkMap);
+
+    //body indices
+    auto bodyIndices = std::make_pair(
+                          linkMap.at(joint.second->parent_link_name),
+                          linkMap.at(joint.second->child_link_name));
+
+    auto bodyTransform = model.getLink(
+                    joint.second->child_link_name)->collision->origin;
+
+    Vector3d position = {bodyTransform.position.x, 
+                         bodyTransform.position.y, 
+                         bodyTransform.position.z};
+
+    Quaternion quaternion(bodyTransform.rotation.w,
+                          {bodyTransform.rotation.x,
+                          bodyTransform.rotation.y,
+                          bodyTransform.rotation.z});
+
+    MatrixOrientation orientation(quaternion);
+
+    m_joints.back()->TranslateURDFJoint(joint.second,bodyIndices,
+                                        position,orientation);
     m_joints.back()->SetBodies();
   }
   
