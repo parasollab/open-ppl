@@ -99,14 +99,14 @@ GetTaskDependencies(std::shared_ptr<MPTask> _task){
 
 void
 TaskPlan::
-AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task){
+AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task){
   auto& tasks = m_agentTaskMap[_agent];
   tasks.push_back(_task);
 }
 
 void
 TaskPlan::
-AddSubtask(HandoffAgent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask){
+AddSubtask(Agent* _agent, std::shared_ptr<MPTask> _task, WholeTask* _wholeTask){
   auto& tasks = m_agentTaskMap[_agent];
   tasks.push_back(_task);
 	Cfg temp1;
@@ -218,7 +218,7 @@ GetRobotAvailability(Agent* _agent){
 
 void
 TaskPlan::
-UpdateRAT(HandoffAgent* _agent, OccupiedInterval _interval){
+UpdateRAT(Agent* _agent, OccupiedInterval _interval){
   auto& avail = m_RAT[_agent];
   for(auto it = avail.begin(); it != avail.end(); it++){
     if(_interval < *it){
@@ -231,7 +231,7 @@ UpdateRAT(HandoffAgent* _agent, OccupiedInterval _interval){
 
 void
 TaskPlan::
-ClearRobotAvailability(HandoffAgent* _agent){
+ClearRobotAvailability(Agent* _agent){
   m_RAT[_agent].clear();
 }
 /*****************************************TIM Functions****************************************************/
@@ -350,13 +350,13 @@ GetNextSubtask(WholeTask* _wholeTask){
   return _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator++];
 }
 
-HandoffAgent*
+Agent*
 TaskPlan::
 GetLastAgent(WholeTask* _wholeTask){
   if(_wholeTask->m_subtaskIterator == 0)
     return nullptr;
   auto lastSubtask = _wholeTask->m_subtasks[_wholeTask->m_subtaskIterator - 1];
-  return static_cast<HandoffAgent*>(lastSubtask->GetRobot()->GetAgent());
+  return static_cast<Agent*>(lastSubtask->GetRobot()->GetAgent());
 }
 
 void
@@ -541,11 +541,11 @@ GetPositiveInstantConstraints() {
 /**************************************Discrete Stuff****************************/
 /*void 
 TaskPlan::
-AddAgentAllocation(HandoffAgent* _agent, DiscreteAgentAllocation _allocation) {
+AddAgentAllocation(Agent* _agent, DiscreteAgentAllocation _allocation) {
 	m_agentAllocationMap[_agent].push_back(_allocation);
 }
 
-std::unordered_map<HandoffAgent*,std::vector<DiscreteAgentAllocation>>&
+std::unordered_map<Agent*,std::vector<DiscreteAgentAllocation>>&
 TaskPlan::
 GetAllAgentAllocations() {
 	return m_agentAllocationMap;
@@ -553,7 +553,7 @@ GetAllAgentAllocations() {
 
 std::vector<DiscreteAgentAllocation>
 TaskPlan::
-GetAgentAllocations(HandoffAgent* _agent) {
+GetAgentAllocations(Agent* _agent) {
 	return m_agentAllocationMap[_agent];
 }
 

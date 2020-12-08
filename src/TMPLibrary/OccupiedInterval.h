@@ -2,7 +2,7 @@
 #define OCCUPIED_INTERVAL_H__
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 #include "MPProblem/MPTask.h"
 
 #include <list>
@@ -15,7 +15,7 @@ class OccupiedInterval{
 
     OccupiedInterval();
 
-    OccupiedInterval(HandoffAgent* _r, Cfg _sL, Cfg _eL, double _sT, double _eT);
+    OccupiedInterval(Agent* _r, Cfg _sL, Cfg _eL, double _sT, double _eT);
 
     OccupiedInterval(const OccupiedInterval& _other);
 
@@ -28,7 +28,7 @@ class OccupiedInterval{
     ///@name Accessors
     ///@{
 
-    HandoffAgent* GetAgent();
+    Agent* GetAgent();
 
     Cfg GetStartLocation();
 
@@ -85,7 +85,7 @@ class OccupiedInterval{
     ///@name Internal State
     ///@{
 
-    HandoffAgent* m_agent{nullptr}; ///< HandoffAgent that is occupied for the interval.
+    Agent* m_agent{nullptr}; ///< Agent that is occupied for the interval.
 
     Cfg m_startLocation; ///< Physical start of the interval.
 

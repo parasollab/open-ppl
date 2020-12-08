@@ -5,6 +5,7 @@
 #include "Behaviors/Agents/Agent.h"
 
 #include "MPLibrary/MPLibrary.h"
+#include "MPLibrary/PMPL.h"
 
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
@@ -14,6 +15,12 @@
 
 class ITConstructor{
   public:
+    ///@name Local Types
+    ///@{
+
+    
+
+    ///@}
     ///@name Construction
     ///@{
 

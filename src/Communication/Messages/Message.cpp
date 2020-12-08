@@ -170,7 +170,7 @@ MessageToRobotTeam(std::string _msg, MPProblem* _problem) {
 std::string
 DecompositionToMessage(Decomposition* _decomp) {
 	std::string info = "<task=" 
-									 + _decomp->GetMainTask()->GetLabel()
+									 + _decomp->GetRootTask()->GetLabel()
 									 + ",coordinator="
 									 + _decomp->GetCoordinator()->GetLabel()
 									 + ">";
@@ -232,7 +232,7 @@ MessageToDecomposition(std::string _msg, MPProblem* _problem) {
 		
 		if(param == "task") {
 			getline(keyvalue,param,'=');
-			decomp->SetMainTask(decomp->GetTask(param));
+			decomp->SetRootTask(decomp->GetTask(param));
 		}
 		else if(param == "coordinator") {
 			getline(keyvalue,param,'=');
@@ -557,7 +557,7 @@ std::string
 PlanToMessage(Plan* _plan) {
 	std::string msg = "plan/<";
 	
-	auto top = _plan->GetDecomposition()->GetMainTask();
+	auto top = _plan->GetDecomposition()->GetRootTask();
 
 	std::vector<SemanticTask*> pq;
 	pq.push_back(top);

@@ -1,10 +1,12 @@
 #include "TMPLibrary/OccupiedInterval.h"
 
+#include "MPProblem/Robot/Robot.h"
+
 OccupiedInterval::
 OccupiedInterval(){}
 
 OccupiedInterval::
-OccupiedInterval(HandoffAgent* _r, Cfg _sL, Cfg _eL, double _sT, double _eT) :
+OccupiedInterval(Agent* _r, Cfg _sL, Cfg _eL, double _sT, double _eT) :
   m_agent(_r), m_startLocation(_sL), m_endLocation(_eL), m_startTime(_sT),
   m_endTime(_eT){
   }
@@ -33,7 +35,7 @@ operator=(const OccupiedInterval& _other){
   m_task = _other.m_task;
   return *this;
 }
-HandoffAgent*
+Agent*
 OccupiedInterval::
 GetAgent(){
   return m_agent;

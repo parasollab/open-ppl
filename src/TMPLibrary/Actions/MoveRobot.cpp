@@ -1,6 +1,6 @@
 #include "MoveRobot.h"
 
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/PathFollowingAgent.h"
 
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
@@ -135,9 +135,9 @@ CheckPreConditions(const FactLayer* _factLayer){
 
   m_library->SetTask(task);
 
-  HandoffAgent* agent = static_cast<HandoffAgent*>(m_robot->GetAgent());
-  agent->SetRoadmapGraph(m_roadmapGraph);
+  PathFollowingAgent* agent = static_cast<PathFollowingAgent*>(m_robot->GetAgent());
   auto solution = agent->GetMPSolution();
+  solution->SetRoadmap(agent->GetRobot(),m_roadmapGraph);
   try{
     m_roadmapGraph->SetRobot(m_robot);
 

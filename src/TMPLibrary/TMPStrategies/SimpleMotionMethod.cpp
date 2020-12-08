@@ -33,7 +33,7 @@ Initialize(){
 	Decomposition* decomp = new Decomposition();
 	SemanticTask* top = new SemanticTask("top", nullptr, decomp, 
 													SemanticTask::SubtaskRelation::AND, false, true);
-	decomp->SetMainTask(top);
+	decomp->SetRootTask(top);
 
 	std::unordered_set<Robot*> robots;
 	for(auto mt : this->GetTMPLibrary()->GetTasks()) {

@@ -49,8 +49,6 @@ class ITMethod : public TMPStrategyMethod {
 		
 		void QueryCombinedRoadmap();
 
-		std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask);
-
 		void CopyRobotTypeRoadmaps();
 
     /// Inserts the subtask into the unassignedTasks list at the appropriate point
