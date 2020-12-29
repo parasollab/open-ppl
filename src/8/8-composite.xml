@@ -13,7 +13,7 @@
 	<Robot  label="boxy-1" filename="iCreate.xml">
 		<Agent type="planning"/>
 	</Robot>
-	<Robot  label="boxy-2" filename="iCreate.xml">
+	<!--Robot  label="boxy-2" filename="iCreate.xml">
 		<Agent type="planning"/>
 	</Robot>
 	<Robot  label="boxy-3" filename="iCreate.xml">
@@ -30,10 +30,12 @@
 	</Robot>
 	<Robot  label="boxy-7" filename="iCreate.xml">
 		<Agent type="planning"/>
-	</Robot>
+	</Robot-->
 	<RobotGroup label="robotGroup" robotLabels="
-		boxy-0 boxy-1 boxy-2 boxy-3 boxy-4
-	boxy-5 boxy-6 boxy-7 "/>
+          boxy-0 boxy-1"/>
+
+        <!-- boxy-2 boxy-3 boxy-4
+	boxy-5 boxy-6 boxy-7 "/-->
 	<GroupTask label="groupQuery" group="robotGroup">
 	<Task label="query-0" robot="boxy-0">
 		<StartConstraints>
@@ -51,7 +53,7 @@
 			 <CSpaceConstraint point="4.170000 0.836667 0.000000"/>
  		 </GoalConstraints>
  	</Task>
- 	<Task label="query-2" robot="boxy-2">
+ 	<!--Task label="query-2" robot="boxy-2">
 		<StartConstraints>
  			<CSpaceConstraint point="-4.170000 -0.830000 0.000000"/>
 	        </StartConstraints>
@@ -98,7 +100,7 @@
  		<GoalConstraints>
 			 <CSpaceConstraint point="2.496667 4.170000 0.000000"/>
  		 </GoalConstraints>
- 	</Task>
+ 	</Task-->
  	</GroupTask>
  </Problem>
 
@@ -169,8 +171,8 @@
         debug="false"/-->
       <GroupDecoupledQuery label="DecoupledQuery" queryLabel="IndividualQuery"
         debug="true"/>
-      <GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery"
-        debug="true" numIter="64" firstSol="false"/>
+      <!--GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery"
+        debug="true" safeIntervalLabel="SI" vcLabel="pqp_solid"/-->
 
       <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
         <Evaluator label="TimeEval"/>
@@ -192,10 +194,10 @@
         <Evaluator label="DecoupledQueryRRT"/>
       </ComposeEvaluator-->
 
-      <ComposeEvaluator label="BoundedCBSQuery" operator="or">
+      <!--ComposeEvaluator label="BoundedCBSQuery" operator="or">
         <Evaluator label="TimeEval"/>
         <Evaluator label="CBSQuery"/>
-      </ComposeEvaluator>
+      </ComposeEvaluator-->
     </MapEvaluators>
 
 
@@ -226,13 +228,13 @@
       <!--GroupDecoupledStrategyRRT label="DecoupledRRT" strategyLabel="IndividualRRT">
         <Evaluator label="BoundedDecoupledQueryRRT"/>
       </GroupDecoupledStrategyRRT-->
-      <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM">
+      <!--GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM">
         <Evaluator label="CBSQuery"/>
-      </GroupDecoupledStrategy>
+      </GroupDecoupledStrategy-->
     </MPStrategies>
 
     <MPTools>
-      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="true"/>
+      <!--SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="true"/-->
 
       <!-- We won't need these until the topological tools are updated to
            support robot groups.

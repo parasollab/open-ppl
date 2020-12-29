@@ -35,6 +35,10 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::GoalTracker GoalTracker;
     typedef typename GoalTracker::VIDSet VIDSet;
 
+    typedef std::unordered_map<size_t,
+                std::unordered_map<size_t,
+                    std::vector<Range<double>>>> EdgeIntervals;
+
     ///@}
     ///@name Classes and Structures
     ///@{
@@ -98,13 +102,19 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     void SetStartTime(double _start);
     void SetEndTime(double _end);
 
+    virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) override;
+
+    virtual void SetMinEndtime(double _minEndtime) override;
+
+    bool SatisfyConstraints();
+
     ///@}
 
   protected:
 
     ///@name Helpers
     ///@{
-    
+
     /// Reset the path and list of undiscovered goals.
     /// Also resets wait times and cached safe intervals.
     virtual void Reset(RoadmapGraph* const _r);
@@ -121,7 +131,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
 
     /// Define a function for computing path weights w.r.t. dynamic obstacles.
     /// Here the metric is the number of time steps, and we return the distance
-    /// with a wait time if taking an edge would result in a collision 
+    /// with a wait time if taking an edge would result in a collision
     /// with a dynamic obstacle. If waiting cannot fix, return infinity.
     /// @param _ei An iterator to the edge we are checking.
     /// @param _sourceDistance The shortest time to the source node.
@@ -133,18 +143,18 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
         const double _sourceDistance, const double _targetDistance);
 
     /// Heuristic function for Safe interval path planning.
-    /// Calls Dijkstra's from goal node to find shortest path to all 
+    /// Calls Dijkstra's from goal node to find shortest path to all
     /// nodes in roadmap.
     /// @param _g
     /// @param _source
     /// @param _target
-    /// @return 
+    /// @return
     double SIPPHeuristic(const SIPPGraph* _g,
                          typename SIPPGraph::vertex_descriptor _source,
                          typename SIPPGraph::vertex_descriptor _target);
 
     /// Neighbors function for Safe interval path planning.
-    /// 
+    ///
     void SIPPNeighbors(SIPPGraph* _g,
                        typename SIPPGraph::vertex_descriptor _vd);
 
@@ -158,7 +168,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     ///
     Range<double> IntervalContains(std::vector<Range<double>> _intervals,
                                    double timestep);
-    
+
     ///
     std::vector<Range<double>> OverlappingIntervals(std::vector<Range<double>> _intervalsA, std::vector<Range<double>> _intervalsB);
 
@@ -185,7 +195,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
 
     std::unordered_map<size_t,
                    unordered_map<size_t,
-                   std::vector<Range<double>>>> m_edge_intervals;
+                   std::vector<Range<double>>>> m_edgeIntervals;
 
     std::vector<size_t> m_wait_timesteps;
     std::unordered_map<size_t,
@@ -194,10 +204,14 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     size_t m_goalIndex{0};
     double m_startTime{0};
     double m_endTime{0};
+    double m_minEndtime{0};
+    double m_pathCost{0};
+    size_t m_currentGoalVID{0};
 
     bool m_initialized{false};
     bool m_invervalsSet{false};
     bool m_sippSet{false};
+
     ///@}
 };
 
@@ -307,7 +321,7 @@ operator()() {
   auto r = this->GetRoadmap();
   if(unreachedGoals.empty() or r != m_roadmap or task != m_task)
     Reset(r);
-  
+
   /*std::cout << "Querying roadmap for a path satisfying task '"
               << task->GetLabel()
               << "', " << unreachedGoals.size() << " / " << numGoals
@@ -374,6 +388,7 @@ operator()() {
     const bool success = PerformSubQuery(newStart, g[0]);
     if(!success)
       return false;
+
   }
 
 
@@ -402,13 +417,15 @@ GeneratePath(const size_t _start, const size_t _goal) {
   //   return {_start};
 
   stats->IncStat("Graph Search");
-
+  m_currentGoalVID = _goal;
   // Set up termination criterion to exit early if we find goal node.
   SSSPTerminationCriterion<SIPPGraph> termination(
-      [_goal](typename SIPPGraph::vertex_iterator& _vi,
+      [_goal,this](typename SIPPGraph::vertex_iterator& _vi,
         const SSSPOutput<SIPPGraph>& _sssp) {
         auto sipp_state = _vi->property();
-        return _goal == sipp_state.vd ? SSSPTermination::EndSearch
+       if(_goal == sipp_state.vd && this->SatisfyConstraints())
+        std::cout << "pathCost: " << this->m_pathCost << ", minEndtime: " <<  m_minEndtime << std::endl;
+        return  (_goal == sipp_state.vd && this->SatisfyConstraints()) ? SSSPTermination::EndSearch
                                           : SSSPTermination::Continue;
       }
   );
@@ -537,7 +554,7 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   if(sourceDistance > 0) {
     sourceDistance = sourceDistance - m_costToGoMap[sourceState.vd];
   }
-  
+
   // Compute new distance which is the number of timesteps at which
   // the robot would reach the target node.
   const double edgeWeight  = _ei->property().GetTimeSteps(),
@@ -602,14 +619,100 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   auto u = _ei->source();
   State src = m_sippGraph->GetVertex(u);
 
+  /////------------------------------------------------------------
+  ///// In this part we will tray a hack (the same as
+  ////  GrouCBSQuery::MultiRobotPathWeight) for lazily check edgeIntervals when
+  ////  no conflicts occur during traversing this edge.
+
+  //bool conflictFreeEdge = false;
+  //std::vector<Range<double>> defaultEdgeIntervals = {Range<double>(0, std::numeric_limits<double>::max())};
+
+  //// If there are no current conflicts, there is nothing to check.
+  //if(!m_currentConflicts)
+  //  conflictFreeEdge = true;
+  //else {
+  //  // Compute the time when we will end this edge.
+  //  const size_t startTime = static_cast<size_t>(std::llround(_sourceDistance)),
+  //              endTime   = startTime + _ei->property().GetTimeSteps();
+
+  //  // There is at least one conflict. Find the set which occurs between this
+  //  // edge's start and end time.
+  //  auto lower = m_currentConflicts->lower_bound(startTime),
+  //       upper = m_currentConflicts->upper_bound(endTime);
+
+  //  // If all of the conflicts happen before or after now, there is nothing to
+  //  // check.
+  //  const bool beforeNow = lower == m_currentConflicts->end();
+  //  if(beforeNow)
+  //    conflictFreeEdge = true;
+
+  //  const bool afterNow = upper == m_currentConflicts->begin();
+  //  if(afterNow)
+  //    conflictFreeEdge = true;
+  //}
+  ///////---------------------------------------------------------------
+
+  //if(m_usingConflictSet)
+  //  conflictFreeEdge = false;
 
   // source dist + waiting time
   bool isSafe = false;
   // compute valid edge intervals for when you can leave
-  std::vector<Range<double>> edgeIntervals = siTool->ComputeIntervals(_ei->property(),
-    src.vd, targetState.vd, m_roadmap);
+
+  //std::cout << "Trying to acces to edge (" << _ei->source() << "," << _ei->target() << ")." << std::endl;
+  //auto edgeIntervals = m_edge_intervals[_ei->source()][_ei->target()];
+  //std::vector<Range<double>> edgeIntervals = siTool->ComputeIntervals(_ei->property(),
+  //  src.vd, targetState.vd, m_roadmap);
+
   //std::cout << "Edge weight: " << edgeWeight << std::endl;
-  if(edgeIntervals.empty()) 
+  /// NOTE: The next function is only a hack since for some reason there are
+  //  certain edges which their edgeIntervals are not computed in the NN
+  //  function.
+  //if(conflictFreeEdge) {
+  //  edgeIntervals = defaultEdgeIntervals;
+  //} else
+
+  std::vector<Range<double>> edgeIntervals;
+ // std::vector<Range<double>> cachedEdgeIntervals;
+  {
+    MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::RetrieveIntervals");
+    //cachedEdgeIntervals = m_edgeIntervals[src.vd][targetState.vd];
+    edgeIntervals = m_edgeIntervals[src.vd][targetState.vd];
+    //std::cout << "edge(" << src.vd << "," << targetState.vd << ")[cached]: " << cachedEdgeIntervals << std::endl;
+  }
+  if(edgeIntervals.empty()) {
+    MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ComputeIntervals");
+    edgeIntervals = siTool->ComputeIntervals(_ei->property(), src.vd, targetState.vd, m_roadmap);
+    //std::cout << "EdgeInterval were not cached for this edge. " << std::endl;
+  }
+
+ // if(cachedEdgeIntervals.size() != edgeIntervals.size()) {
+ //   std::cout << "\tATENTION!" << std::endl;
+ //   std::cout << "edge(" << src.vd << "," << targetState.vd << ")[cached]: " << cachedEdgeIntervals << std::endl;
+ //   std::cout << "edge(" << src.vd << "," << targetState.vd << ")[computed]: " << edgeIntervals << std::endl;
+ // } else{
+ //   for(size_t i=0 ; i < edgeIntervals.size() ; ++i) {
+ //     if(edgeIntervals[i].min != cachedEdgeIntervals[i].min) {
+ //       std::cout << "\tATENTION!" << std::endl;
+ //       std::cout << "edge(" << src.vd << "," << targetState.vd << ")[cached]: " << cachedEdgeIntervals << std::endl;
+ //       std::cout << "edge(" << src.vd << "," << targetState.vd << ")[computed]: " << edgeIntervals << std::endl;
+ //       break;
+ //     }
+ //     if(edgeIntervals[i].max != cachedEdgeIntervals[i].max) {
+ //       std::cout << "\tATENTION!" << std::endl;
+ //       std::cout << "edge(" << src.vd << "," << targetState.vd << ")[cached]: " << cachedEdgeIntervals << std::endl;
+ //       std::cout << "edge(" << src.vd << "," << targetState.vd << ")[computed]: " << edgeIntervals << std::endl;
+ //       break;
+ //     }
+ //   }
+ // }
+
+  //auto computedEdgeIntervals = siTool->ComputeIntervals(_ei->property(), src.vd, targetState.vd, m_roadmap);
+  //std::cout << "edge(" << src.vd << "," << targetState.vd << ")[computed]: " << computedEdgeIntervals << std::endl;
+
+  if(edgeIntervals.empty())
     throw RunTimeException(WHERE) << "Should always be at least one edge interval." << std::endl;
 
   //if(edgeIntervals.size() > 1)
@@ -618,7 +721,7 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   //const auto srcCfg = m_roadmap->GetVertex(src.vd);
   //auto sourceIntervals = siTool->ComputeIntervals(srcCfg);
   auto sourceInterval = src.intervals[0];
-  
+
   // iterate through in order
   std::vector<Range<double>> overlappingIntervals = OverlappingIntervals({sourceInterval}, edgeIntervals);
   //std::cout << "Overlapping Intervals size: " << overlappingIntervals.size() << std::endl;
@@ -652,7 +755,7 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     }
     // set to true if ^
   }
-  
+
   if(!isSafe) {
       //std::cout << "end dynamicpathweight 5" << std::endl;
 
@@ -671,7 +774,8 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
 
   if(waitTime < 0)
     throw RunTimeException(WHERE) << "VERY BAD. SHOULD NEVER HAPPEN." << std::endl;
-
+  if(targetState.vd == m_currentGoalVID)
+    m_pathCost = newDistance + waitTime;
   return newDistance + waitTime;
 }
 
@@ -706,7 +810,7 @@ SIPPHeuristic(const  SIPPGraph* _g,
 template <typename MPTraits>
 void
 SIPPMethod<MPTraits>::
-SIPPNeighbors(SIPPGraph* _g, 
+SIPPNeighbors(SIPPGraph* _g,
     typename SIPPGraph::vertex_descriptor _vd) {
   auto siTool = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
   //std::cout << "start sippneighbors" << std::endl;
@@ -738,6 +842,14 @@ SIPPNeighbors(SIPPGraph* _g,
       auto tcfg = m_roadmap->GetVertex(target);
       auto t_intervals = siTool->ComputeIntervals(tcfg);
 
+      /// We will try to compute and store edgeIntervals here instead of doing
+      /// it in DynamicPathWeight.
+      //{
+     // MethodTimer mt(this->GetStatClass(),
+      //  this->GetNameAndLabel() + "::ComputeIntervals-NN");
+      //auto edgeIntervals = siTool->ComputeIntervals(ei->property(), ei->source(), ei->target(), m_roadmap);
+      //m_edge_intervals[ei->source()][ei->target()] = edgeIntervals;
+      //}
       // Check if overlapping, if so
       // Create new state for neighbor with that
       // interval in SIPP Graph
@@ -756,7 +868,7 @@ SIPPNeighbors(SIPPGraph* _g,
           auto sipp_target = _g->AddVertex(new_state);
           _g->AddEdge(_vd, sipp_target, ei->property());
           //std::cout << "_g size: " << _g->Size() << std::endl;
-          
+
         }
       }
     //}
@@ -807,15 +919,16 @@ computeIntervals() {
     auto cfg = m_roadmap->GetVertex(vi);
     auto vertexIntervals = si->ComputeIntervals(cfg);
     m_roadmap_intervals[vid] = vertexIntervals;
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
+    //for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
 
-      //if(ei->source() == 602 and ei->target() == 534)
-      //  std::cout << "HERE" << std::endl;
-
-      auto edgeIntervals = si->ComputeIntervals(ei->property(), ei->source(),
-          ei->target(), m_roadmap);
-      m_edge_intervals[ei->source()][ei->target()] = edgeIntervals;
-    }
+    //  //if(ei->source() == 602 and ei->target() == 534)
+    //  //  std::cout << "HERE" << std::endl;
+    //  MethodTimer mt(this->GetStatClass(),
+    //    this->GetNameAndLabel() + "::EdgeIntervals2");
+    //  auto edgeIntervals = si->ComputeIntervals(ei->property(), ei->source(),
+    //      ei->target(), m_roadmap);
+    //  m_edge_intervals[ei->source()][ei->target()] = edgeIntervals;
+    //}
   }
   m_invervalsSet = true;
 }
@@ -831,12 +944,12 @@ IntervalOverlaps(std::vector<Range<double>> _intervals,
       min = _interval.min;
     else
       min = r.min;
-    
+
     if(_interval.max < r.max)
       max = _interval.max;
     else
       max = r.max;
-    
+
     if(r.max < _interval.min || r.min > _interval.max ||
      _interval.max < r.min || _interval.min > r.max) {
        continue;
@@ -865,4 +978,32 @@ SIPPMethod<MPTraits>::
 cleanup() {
 
 }
+
+
+template <typename MPTraits>
+void
+SIPPMethod<MPTraits>::
+SetEdgeIntervals(typename SIPPMethod<MPTraits>::EdgeIntervals _edgeIntervals){
+
+  m_edgeIntervals = _edgeIntervals;
+}
+
+
+template <typename MPTraits>
+void
+SIPPMethod<MPTraits>::
+SetMinEndtime(double _minEndtime){
+
+  m_minEndtime = _minEndtime;
+}
+
+
+template <typename MPTraits>
+bool
+SIPPMethod<MPTraits>::
+SatisfyConstraints(){
+
+  return m_pathCost > m_minEndtime;
+}
+
 #endif

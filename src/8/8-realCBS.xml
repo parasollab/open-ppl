@@ -156,9 +156,9 @@
     </Metrics>
 
     <MapEvaluators>
-      <SIPPMethod label="SIPP" safeIntervalToolLabel="SI"/>
+      <SIPPMethod label="SIPP" safeIntervalToolLabel="SI" />
 
-      <TimeEvaluator label="TimeEval" timeout="1000"/>
+      <TimeEvaluator label="TimeEval" timeout="50"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="1000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
@@ -174,7 +174,7 @@
       <!--GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery" vcLabel="pqp_solid"
         debug="false"/-->
       <GroupCBSQuery label="CBSQuery" queryLabel="SIPP" vcLabel="pqp_solid"
-        debug="false"/>
+        debug="true" safeIntervalLabel="SI"  />
 
       <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
         <Evaluator label="TimeEval"/>
@@ -230,7 +230,7 @@
       <!--GroupDecoupledStrategyRRT label="DecoupledRRT" strategyLabel="IndividualRRT">
         <Evaluator label="BoundedDecoupledQueryRRT"/>
       </GroupDecoupledStrategyRRT-->
-      <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM">
+      <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM" debug="true">
         <Evaluator label="CBSQuery"/>
       </GroupDecoupledStrategy>
     </MPStrategies>
@@ -249,30 +249,36 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
+    <Solver mpStrategyLabel="CBSPRM" seed="564564"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <!--Solver mpStrategyLabel="CBSPRM" seed="398017"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/-->
+    <!--Solver mpStrategyLabel="CBSPRM" seed="214445"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="293462"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="951855"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="416589"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
     <Solver mpStrategyLabel="CBSPRM" seed="372025"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <!--Solver mpStrategyLabel="DecoupledPRM" seed="214445"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="416589"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="838249"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="120848"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="911747"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="353346"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="825145"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="157744"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="619543"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="600342"
-      baseFilename="decoupled" vizmoDebug="true"/>
-    <Solver mpStrategyLabel="DecoupledPRM" seed="392241"
-      baseFilename="decoupled" vizmoDebug="true"/-->
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="120848"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="739201"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="353346"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="154590"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="301294"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="900342"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="292241"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="123456"
+      baseFilename="notCached/cbs+sipp" vizmoDebug="true"/-->
 
   </Library>
 

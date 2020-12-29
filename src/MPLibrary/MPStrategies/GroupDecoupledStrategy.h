@@ -141,6 +141,7 @@ Finalize() {
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
   auto groupRoadmap = this->GetGroupRoadmap();
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
 
   // Collect the full cfg paths for each robot.
   size_t longestPath = 0;
@@ -154,7 +155,8 @@ Finalize() {
     // If the path is empty, we didn't solve the problem.
     if(path->Empty())
       return;
-    totalCost += path->Length();
+    totalCost += path->TimeSteps() * timeRes;
+    std::cout << path->GetRobot()->GetLabel() << "'s path cost: " << path->TimeSteps() * timeRes << std::endl;
     // Collect the path.
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
