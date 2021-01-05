@@ -36,6 +36,7 @@ class SimpleMotionMethod : public TMPStrategyMethod {
 
 		///@name Internal State
 		///@{
+
 		///@}
 };
 

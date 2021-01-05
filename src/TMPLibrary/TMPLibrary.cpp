@@ -2,6 +2,8 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
+#include "MPProblem/TaskHierarchy/Decomposition.h"
+
 #include "Traits/TMPTraits.h"
 
 #include "Simulator/Simulation.h"
@@ -10,7 +12,6 @@
 #include "TMPLibrary/Solution/TaskSolution.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
@@ -57,15 +58,14 @@ TMPLibrary::
 void
 TMPLibrary::
 Initialize(){
-	m_taskPlan->Initialize();
 	m_tmpStrategies->Initialize();
 	m_poiPlacementMethods->Initialize();
 	m_taskEvaluators->Initialize();
 	m_taskDecomposers->Initialize();
 	m_taskAllocators->Initialize();
-	this->GetTaskPlan()->GetStatClass()->StartClock("StateGraphConstruction");
+	this->GetPlan()->GetStatClass()->StartClock("StateGraphConstruction");
 	m_stateGraphs->Initialize();
-	this->GetTaskPlan()->GetStatClass()->StopClock("StateGraphConstruction");
+	this->GetPlan()->GetStatClass()->StopClock("StateGraphConstruction");
 }
 
 void
@@ -225,18 +225,6 @@ AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
 }
 
 /*---------------------------- Solution Accessors -----------------------------------*/
-
-std::shared_ptr<TaskPlan>
-TMPLibrary::
-GetTaskPlan(){
-				return m_taskPlan;
-}
-
-void
-TMPLibrary::
-SetTaskPlan(std::shared_ptr<TaskPlan> _taskPlan){
-	m_taskPlan = _taskPlan;
-}
 		
 Plan* 
 TMPLibrary::
@@ -363,64 +351,22 @@ SetBaseFilename(const std::string& _s) noexcept {
 				m_problem->SetBaseFilename(_s);
 }
 
-/*---------------------------- Solution Accessors ----------------------------*/
-
 /*--------------------------- Execution Interface ----------------------------*/
-void
-TMPLibrary::
-Solve(MPProblem* _problem, 
-								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								std::shared_ptr<TaskPlan> _taskPlan,
-								Coordinator* _coordinator,
-								std::vector<Agent*> _team) {
-
-				m_problem = _problem;
-				m_tasks = _tasks;
-				m_taskPlan = _taskPlan;
-				m_taskPlan->SetCoordinator(_coordinator);
-				m_taskPlan->LoadTeam(_team);
-				m_taskPlan->CreateWholeTasks(_tasks);
-
-				for(auto& solver : m_solvers)
-								RunSolver(solver);
-}
 
 void
 TMPLibrary::
 Solve(MPProblem* _problem, 
 								Decomposition* _decomp, 
-								std::shared_ptr<TaskPlan> _taskPlan,
-								Coordinator* _coordinator,
-								std::vector<Agent*> _team) {
-
-				m_problem = _problem;
-				m_taskPlan = _taskPlan;
-				m_taskPlan->SetCoordinator(_coordinator);
-				m_taskPlan->LoadTeam(_team);
-				m_taskPlan->CreateWholeTasks(_decomp);
-				for(auto task : _decomp->GetMotionTasks())
-					m_tasks.push_back(task->GetMotionTask());
-
-				for(auto& solver : m_solvers)
-								RunSolver(solver);
-}
-
-void
-TMPLibrary::
-Solve(MPProblem* _problem, 
-								Decomposition* _decomp, 
-								std::shared_ptr<TaskPlan> _taskPlan,
 								Plan* _plan,
 								Coordinator* _coordinator,
 								std::vector<Robot*> _team) {
 
 				m_problem = _problem;
-				m_taskPlan = _taskPlan;
-				m_taskPlan->SetProblem(_problem);
-				m_taskPlan->SetCoordinator(_coordinator);
-				m_taskPlan->LoadTeam(_team);
-				m_taskPlan->CreateWholeTasks(_decomp);
 				m_plan = _plan;
+				m_plan->SetMPProblem(_problem);
+				m_plan->SetCoordinator(_coordinator);
+				m_plan->SetTeam(_team);
+				//m_taskPlan->CreateWholeTasks(_decomp);
 				
 				for(auto task : _decomp->GetTaskMap()) {
 					auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(task.second.get()));
@@ -439,84 +385,10 @@ Solve(MPProblem* _problem,
 
 void
 TMPLibrary::
-Solve(MPProblem* _problem, 
-								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								std::shared_ptr<TaskPlan> _taskPlan) {
-
-				m_problem = _problem;
-				m_tasks = _tasks;
-				m_taskPlan = _taskPlan;
-
-				for(auto& solver : m_solvers)
-								RunSolver(solver);
-}
-
-void
-TMPLibrary::
-Solve(MPProblem* _problem, std::vector<std::shared_ptr<MPTask>> _tasks) {
-				m_problem = _problem;
-				m_tasks = _tasks;
-
-				for(auto& solver : m_solvers) {
-								// Create storage for the solution.
-								//TODO::Remove all reliance on TaskPlan
-								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
-
-								m_plan = new Plan();
-								for(auto& r : _problem->GetRobots()) {
-									auto c = dynamic_cast<Coordinator*>(r->GetAgent());
-									if(c) {
-										m_plan->SetCoordinator(c);
-										break;
-									}
-								}
-
-								RunSolver(solver);
-				}
-
-				m_taskPlan = nullptr;
-}
-
-void
-TMPLibrary::
-Solve(MPProblem* _problem, std::vector<std::shared_ptr<GroupTask>> _tasks) {
-				m_problem = _problem;
-				m_groupTasks = _tasks;
-
-				for(auto& solver : m_solvers) {
-								// Create storage for the solution.
-								m_taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
-								m_plan = new Plan();
-
-								RunSolver(solver);
-				}
-
-				m_taskPlan = nullptr;
-}
-
-void
-TMPLibrary::
-Solve(MPProblem* _problem, 
-								std::vector<std::shared_ptr<MPTask>> _tasks, 
-								std::shared_ptr<TaskPlan> _taskPlan,
-								const std::string& _label, const long _seed,
-								const std::string& _baseFilename) {
-
-				m_problem = _problem;
-				m_tasks = _tasks;
-				m_taskPlan = _taskPlan;
-
-				Solver s{_label, _baseFilename, false};
-				RunSolver(s);
-}
-
-void
-TMPLibrary::
 InitializeMPProblem(MPProblem* _problem){
 				SetMPProblem(_problem);
 				Initialize();
 }
-
 
 void
 TMPLibrary::

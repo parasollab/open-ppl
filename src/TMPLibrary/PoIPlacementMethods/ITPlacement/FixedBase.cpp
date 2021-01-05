@@ -3,7 +3,7 @@
 
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 FixedBase::
 FixedBase(MPProblem* _problem) : ITPlacementMethod(_problem) {}

@@ -58,8 +58,11 @@ operator=(const MPProblem& _other) {
 
   // Copy robots.
   m_robots.clear();
-  for(const auto& robot : _other.m_robots)
+  for(const auto& robot : _other.m_robots) {
     m_robots.emplace_back(new Robot(this, *robot));
+    m_robotCapabilityMap[m_robots.back()->
+           GetCapability()].push_back(m_robots.back().get());
+  }
 
   // Copy tasks.
   m_taskMap.clear();
@@ -282,6 +285,11 @@ GetRobots() const noexcept {
   return m_robots;
 }
 
+const std::vector<Robot*> 
+MPProblem::
+GetRobotsOfType(std::string _type) const noexcept {
+  return m_robotCapabilityMap.at(_type);
+}
 
 size_t
 MPProblem::
@@ -460,6 +468,8 @@ ParseChild(XMLNode& _node) {
   }
   else if(_node.Name() == "Robot") {
     m_robots.emplace_back(new Robot(this, _node));
+    m_robotCapabilityMap[m_robots.back()->
+           GetCapability()].push_back(m_robots.back().get());
   }
   else if(_node.Name() == "RobotGroup") {
     m_robotGroups.emplace_back(new RobotGroup(this, _node));

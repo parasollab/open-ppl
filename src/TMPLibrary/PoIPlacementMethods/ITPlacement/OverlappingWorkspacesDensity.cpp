@@ -3,7 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/Agent.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 OverlappingWorkspacesDensity::
 OverlappingWorkspacesDensity(){

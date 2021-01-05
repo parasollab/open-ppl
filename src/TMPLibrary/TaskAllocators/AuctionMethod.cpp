@@ -1,6 +1,6 @@
 #include "AuctionMethod.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
@@ -19,7 +19,7 @@ AuctionMethod(XMLNode& _node) : TaskAllocatorMethod(_node){
 void
 AuctionMethod::
 AllocateTasks(){
-	this->GetMPLibrary()->GetStatClass()->StartClock("Auction Method");
+	this->GetPlan()->GetStatClass()->StartClock("Auction Method");
 	/*for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
     auto subtask = this->GetTaskPlan()->GetNextSubtask(wholeTask);
 		if(subtask){
@@ -28,15 +28,16 @@ AllocateTasks(){
 		}
 	}*/
 
-	for(auto agent : this->GetTaskPlan()->GetTeam()){
+  /*
+	for(auto agent : this->GetPlan()->GetTeam()){
     agent->GetRobot()->SetVirtual(true);
   }
 	for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
 		AuctionSubtasks(wholeTask);
-	}
+	}*/
 
 
-	this->GetTaskPlan()->GetStatClass()->StopClock("Auction Method");
+	this->GetPlan()->GetStatClass()->StopClock("Auction Method");
 }
 
 

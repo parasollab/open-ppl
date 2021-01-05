@@ -43,9 +43,11 @@ class TMPStrategyMethod : public TMPBaseObject {
 		/// values for these.
 		virtual void PlanTasks();
 
-		virtual void AssignTasks();
-
+    /// Split existing tasks into subtasks.
 		virtual void DecomposeTasks();
+
+    /// Assign subtasks to agents.
+		virtual void AssignTasks();
 
     ///@}
     ///@name Member Variables

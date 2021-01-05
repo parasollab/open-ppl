@@ -432,7 +432,6 @@ TASK_SRCS := \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
   TMPLibrary/Actions/StartTask.cpp \
-  TMPLibrary/OccupiedInterval.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
@@ -442,7 +441,6 @@ TASK_SRCS := \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
-  TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
@@ -461,7 +459,6 @@ TASK_SRCS := \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
-  TMPLibrary/TaskPlan.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/ChildAgent.cpp \

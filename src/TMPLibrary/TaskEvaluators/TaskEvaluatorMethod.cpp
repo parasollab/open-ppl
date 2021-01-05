@@ -1,6 +1,6 @@
 #include "TaskEvaluatorMethod.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
 /*------------------------------ Construction --------------------------------*/
@@ -19,15 +19,15 @@ TaskEvaluatorMethod::
 
 bool 
 TaskEvaluatorMethod::
-operator()(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
-	this->GetTaskPlan()->GetStatClass()->StartClock("TaskEvaluationTime");
-	auto ret = Run( _wholeTasks, _plan);
-	this->GetTaskPlan()->GetStatClass()->StopClock("TaskEvaluationTime");
+operator()(Plan* _plan){
+	this->GetPlan()->GetStatClass()->StartClock("TaskEvaluationTime");
+	auto ret = Run(_plan);
+	this->GetPlan()->GetStatClass()->StopClock("TaskEvaluationTime");
 	return ret;
 }
 
 bool
 TaskEvaluatorMethod::
-Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
+Run(Plan* _plan){
 	return false;
 }

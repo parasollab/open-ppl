@@ -116,12 +116,6 @@ GetMPProblem() const noexcept {
 
 /*--------------------------- Solution Accessors -----------------------------*/
 
-std::shared_ptr<TaskPlan>
-TMPBaseObject::
-GetTaskPlan() const noexcept {
-  return m_tmpLibrary->GetTaskPlan();
-}
-
 Plan*
 TMPBaseObject::
 GetPlan() const noexcept {

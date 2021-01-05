@@ -5,7 +5,6 @@
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Agents/Coordinator.h"
 #include "TMPLibrary/TMPLibrary.h"
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
@@ -119,12 +118,11 @@ main(int _argc, char** _argv) {
 		}
 
 		for(const auto& decomp : decomps.second) {
-			auto taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
 			Plan* plan = new Plan();
 			plan->SetCoordinator(c);
 			plan->SetTeam(team);
 			plan->SetDecomposition(decomp.get());
-			ppl->Solve(problem, decomp.get(), taskPlan, plan, c, team);
+			ppl->Solve(problem, decomp.get(), plan, c, team);
 		}
 	}
   // Release resources.

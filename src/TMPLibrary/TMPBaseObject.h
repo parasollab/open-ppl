@@ -161,9 +161,6 @@ class TMPBaseObject {
     ///@name Solution Accessors
     ///@{
 
-    /// Get the current TaskPlan
-    std::shared_ptr<TaskPlan> GetTaskPlan() const noexcept;
-
 		/// Get the current Plan
 		Plan* GetPlan() const noexcept;
 

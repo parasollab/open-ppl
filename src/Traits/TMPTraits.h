@@ -31,7 +31,6 @@
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
-#include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup TaskAndMotionPlanningUniverse
@@ -75,8 +74,7 @@ struct TMPTraits {
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
-		CombinedRoadmap,
-		MultiTaskGraph
+		CombinedRoadmap
 			> StateGraphList;
 };
 

@@ -5,11 +5,11 @@
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
 #include "TMPLibrary/TaskDecomposers/ITTaskBreakup.h"
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
-/**********************************Construction********************************/
+/*---------------------------------- Construction ----------------------------*/
 
 ITMethod::
 ITMethod(){
@@ -21,12 +21,7 @@ ITMethod(XMLNode& _node) : TMPStrategyMethod(_node) {
 	this->SetName("ITMethod");
 }
 
-/*ITMethod::
-ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
-									Environment* _interactionEnvironment) :
-									TMPStrategyMethod(_useITs, _debug, _dmLabel, _connectionThreshold, _interactionEnvironment){}
-*/
-/***********************************Call Method********************************/
+/*------------------------------------ Overrides ----------------------------*/
 
 void
 ITMethod::
@@ -34,15 +29,37 @@ PlanTasks(){
 	QueryCombinedRoadmap();
 }
 
-/***********************************Configure**********************************/
-      
+void
+ITMethod:: 
+AssignTasks(){
+  this->GetTaskAllocator(m_taLabel)->AllocateTasks();
+}
 
-/********************************Combined Roadmap******************************/
+void
+ITMethod::
+DecomposeTasks(){
+	auto td = this->GetTaskDecomposer(m_tdLabel);
+
+  //TODO::Convert this to use semantic task representation
+  /*
+  for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
+		this->GetTaskPlan()->GetStatClass()->StartClock(
+                                    "IT Task Decomposition");
+    td->BreakupTask(wholeTask);
+    this->GetTaskPlan()->GetStatClass()->StopClock(
+                                    "IT Task Decomposition");
+    this->GetTaskPlan()->GetStatClass()->SetStat("Subtasks", 
+                                     wholeTask->m_subtasks.size());
+  }
+  */
+}
+
+/*------------------------------ Helper Functions ------------------------------*/
 
 void 
 ITMethod::
 QueryCombinedRoadmap(){
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+  auto robot = this->GetPlan()->GetCoordinator()->GetRobot();
 	auto solution = new MPSolution(robot);
 	solution->SetRoadmap(robot,this->GetStateGraph(m_sgLabel)->GetGraph());
 
@@ -58,6 +75,9 @@ QueryCombinedRoadmap(){
     Simulation::Get()->AddRoadmap(this->GetStateGraph(m_sgLabel)->GetGraph(),
       glutils::color(1., 0., 1., 0.2));
   }
+
+  //TODO::Convert this to use semantic task representation
+  /*
   //Find path for each whole task in megaRoadmap
   for(auto& wholeTask: this->GetTaskPlan()->GetWholeTasks()){
     this->GetTaskPlan()->GetStatClass()->StartClock("IT MegaRoadmap Query");
@@ -65,52 +85,13 @@ QueryCombinedRoadmap(){
     this->GetMPLibrary()->SetTask(wholeTask->m_task.get());
     auto& c = wholeTask->m_task->GetGoalConstraints()[0];
     c->Clone();
-    this->GetMPLibrary()->Solve(this->GetMPProblem(), wholeTask->m_task.get(), solution, "EvaluateMapStrategy",
-      LRand(), "PlanWholeTask");
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), wholeTask->m_task.get(), 
+                                solution, "EvaluateMapStrategy",
+                                LRand(), "PlanWholeTask");
     //Save cfg path in the handoff class
     wholeTask->m_wholePath = solution->GetPath()->Cfgs();
     this->GetTaskPlan()->GetStatClass()->StopClock("IT MegaRoadmap Query");
     //TODO:: Need to update for multiple tasks
     this->GetTaskPlan()->GetStatClass()->SetStat("WholePathLength", solution->GetPath()->Length());
-  }
-}
-
-/*********************************Task Assignment******************************/
- 
-void
-ITMethod:: 
-AssignTasks(){
-  this->GetTaskAllocator(m_taLabel)->AllocateTasks();
-}
-
-void
-ITMethod::
-DecomposeTasks(){
-	auto td = this->GetTaskDecomposer(m_tdLabel);
-
-  for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
-		this->GetTaskPlan()->GetStatClass()->StartClock("IT Task Decomposition");
-    td->BreakupTask(wholeTask);
-    this->GetTaskPlan()->GetStatClass()->StopClock("IT Task Decomposition");
-    this->GetTaskPlan()->GetStatClass()->SetStat("Subtasks", wholeTask->m_subtasks.size());
-  }
-}
-
-
-/*********************************Helper Functions******************************/
-
-void 
-ITMethod::
-AddSubtask(std::shared_ptr<MPTask> _subtask){
-	if(m_unassignedTasks.empty()){
-		m_unassignedTasks.push_back(_subtask);
-		return;
-	}
-	for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
-		if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
-			m_unassignedTasks.insert(it, _subtask);
-			return;
-		}
-	}
-	m_unassignedTasks.push_back(_subtask);
+  }*/
 }

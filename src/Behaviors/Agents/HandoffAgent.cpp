@@ -15,7 +15,6 @@
 #include "Simulator/MicroSimulator.h"
 #include "Simulator/Simulation.h"
 
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPLibrary.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
@@ -691,7 +690,7 @@ SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
 void
 HandoffAgent::
 AddSubtask(std::shared_ptr<MPTask> _task){
-  auto deliveringPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
+  /*auto deliveringPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
 																		_task)->m_interactionPathsDelivering[_task];
   auto receivingPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
 																		_task)->m_interactionPathsReceiving[_task];
@@ -717,7 +716,7 @@ AddSubtask(std::shared_ptr<MPTask> _task){
     _task->AddGoalConstraint(std::move(goalConstraint));
   }
 
-  m_queuedSubtasks.push_back(_task);
+  m_queuedSubtasks.push_back(_task);*/
 }
 
 
@@ -760,6 +759,7 @@ SetClearToMove(bool _clear){
 void
 HandoffAgent::
 CheckInteractionPath(){
+  /*
   std::shared_ptr<MPTask> subtask;
   subtask = GetTask();
   auto wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTask(subtask);
@@ -802,7 +802,7 @@ CheckInteractionPath(){
   }
   else {
     SetTask(nullptr);
-  }
+  }*/
 }
 
 void

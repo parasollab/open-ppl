@@ -78,7 +78,7 @@ EnforcedHillClimbing::
 
 bool 
 EnforcedHillClimbing::
-Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan){
+Run(Plan* _plan){
 	//TODO::put the actual solve stuff here
 	throw RunTimeException(WHERE, "Enforced Hill Climbing has not been integrated with the TMPLibrary yet.");
 	return false;

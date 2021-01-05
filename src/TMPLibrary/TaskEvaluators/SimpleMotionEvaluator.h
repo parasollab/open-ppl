@@ -24,7 +24,7 @@ class SimpleMotionEvaluator : public TaskEvaluatorMethod {
     ///@}
   private:
 
-    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr) override;
+    virtual bool Run(Plan* _plan = nullptr) override;
 
 };
 

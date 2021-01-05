@@ -10,7 +10,6 @@
 #include "MPProblem/MPTask.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
-#include "TMPLibrary/TaskPlan.h"
  
 /*----------------------------- Construction -------------------------*/
 
@@ -122,13 +121,11 @@ GetPlan() {
     m_plan->SetTeam(team);
     m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
 
-    auto taskPlan = std::shared_ptr<TaskPlan>(new TaskPlan());
-
     if(!m_tmpLibrary)
       m_tmpLibrary = m_coordinator->GetTMPLibrary();
 
     m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(), 
-                          taskPlan, m_plan.get(), m_coordinator, team);
+                        m_plan.get(), m_coordinator, team);
 	}
 
   if(m_debug and m_plan){

@@ -87,6 +87,7 @@ class CombinedRoadmap : public StateGraph {
 		/// The VIDs of the start and end points of the whole tasks in the
 		/// megaRoadmap
 		std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
+		std::vector<std::vector<size_t>> m_startEndPoints;
 
 		double m_connectionThreshold{1.5};
 		std::string m_dmLabel;

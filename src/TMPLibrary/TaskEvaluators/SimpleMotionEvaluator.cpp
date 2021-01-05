@@ -20,9 +20,15 @@ SimpleMotionEvaluator::
 
 bool 
 SimpleMotionEvaluator::
-Run(std::vector<WholeTask*> _wholeTasks, std::shared_ptr<TaskPlan> _plan) {
+Run(Plan* _plan) {
 
-	auto plan = this->GetPlan();	
+  Plan* plan;
+
+  if(_plan)
+    plan = _plan;
+  else
+    plan = this->GetPlan();
+
 	auto decomp = plan->GetDecomposition();
 	auto tasks = decomp->GetMotionTasks();
 	auto groupTasks = decomp->GetGroupMotionTasks();

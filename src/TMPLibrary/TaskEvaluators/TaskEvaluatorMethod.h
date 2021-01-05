@@ -25,12 +25,12 @@ class TaskEvaluatorMethod : public TMPBaseObject {
 
     /// Evaluate a stateGraph.
     /// @return True if this stateGraph meets the evaluation criteria.
-    bool operator()(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr);
+    bool operator()(Plan* _plan = nullptr);
 
     ///@}
   protected:
 
-    virtual bool Run(std::vector<WholeTask*> _wholeTasks = {}, std::shared_ptr<TaskPlan> _plan = nullptr);
+    virtual bool Run(Plan* _plan = nullptr);
 
     std::string m_sgLabel; ///< StateGraph Label
 

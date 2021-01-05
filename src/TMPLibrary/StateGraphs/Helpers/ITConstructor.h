@@ -10,7 +10,6 @@
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
 
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 class ITConstructor{
@@ -26,8 +25,7 @@ class ITConstructor{
 
     ITConstructor(MPLibrary* _library,
                   std::vector<Agent*> _memberAgents,
-                  Robot* _superRobot,
-									TaskPlan* _taskPlan);
+                  Robot* _superRobot);
 
     ~ITConstructor() = default;
 
@@ -45,7 +43,6 @@ class ITConstructor{
     std::shared_ptr<MPProblem> m_problemCopy;
     std::vector<Agent*> m_memberAgents;
     Robot* m_superRobot;
-		TaskPlan* m_taskPlan;
     bool m_debug;
 
 

@@ -7,14 +7,12 @@
 ITConstructor::
 ITConstructor(MPLibrary* _library,
               std::vector<Agent*> _memberAgents,
-              Robot* _superRobot,
-							TaskPlan* _taskPlan){
+              Robot* _superRobot){
   m_library = _library;
   m_problem = _library->GetMPProblem();
   m_superRobot = _superRobot;
   m_memberAgents = _memberAgents;
   m_problemCopy = std::shared_ptr<MPProblem>(m_problem);
-	m_taskPlan = _taskPlan;
 }
 
 
@@ -149,9 +147,6 @@ ConstructIT(InteractionTemplate* _it){
 
 
   _it->ConnectRoadmaps(m_superRobot, m_problem);
-
-  m_taskPlan->GetStatClass()->StopClock("Construct InteractionTemplate "
-      + _it->GetInformation()->GetLabel());
 
   std::cout << "Trying to write handoffTemplate Map" << std::endl;
   _it->GetConnectedRoadmap()->Write("handoffTemplate.map", m_problemCopy->GetEnvironment());

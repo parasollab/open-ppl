@@ -288,12 +288,6 @@ InitializeAgents(){
 /*--------------------------- Helpers ------------------------------*/
 
 
-std::string
-Coordinator::
-GetCurrentStrategy(){
-	return m_tmpStrategyLabel;
-}
-
 TMPLibrary*
 Coordinator::
 GetTMPLibrary(){

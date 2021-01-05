@@ -2,7 +2,7 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 #include "Utilities/SSSP.h"

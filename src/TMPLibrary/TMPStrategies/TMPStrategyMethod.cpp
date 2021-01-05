@@ -6,13 +6,13 @@
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/StateGraphs/Helpers/ITConnector.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
 
 
-/*****************************************Constructor*****************************************************/
+/*-------------------------------- Constructor --------------------------------*/
 TMPStrategyMethod::
 TMPStrategyMethod(XMLNode& _node) : TMPBaseObject(_node){
   m_sgLabel = _node.Read("sgLabel", false, "",
@@ -29,31 +29,28 @@ TMPStrategyMethod::
 ~TMPStrategyMethod(){
 }
 
-/******************************************Configure*****************************************************/
+/*---------------------------------- Configure ---------------------------------*/
 
 void
 TMPStrategyMethod::
 Initialize(){
-	//this->GetTaskPlan()->Initialize();
-	//this->GetStateGraph(m_sgLabel)->Initialize();
 }
 
-/****************************************Call Method*****************************************************/
+/*--------------------------------- Call Method ---------------------------------*/
 void
 TMPStrategyMethod::
 operator()(){
-	this->GetTaskPlan()->GetStatClass()->StartClock("TotalTMPStrategyTime");
+	this->GetPlan()->GetStatClass()->StartClock("TotalTMPStrategyTime");
 	Initialize();	
 	PlanTasks();
-	//this->GetStateGraph(m_sgLabel)->LoadStateGraph();
 	DecomposeTasks();
 	AssignTasks();
-	this->GetTaskPlan()->GetStatClass()->StopClock("TotalTMPStrategyTime");
+	this->GetPlan()->GetStatClass()->StopClock("TotalTMPStrategyTime");
 }
 
-/*****************************************Accessors******************************************************/
+/*---------------------------------- Accessors ----------------------------------*/
 
-/**************************************Combined Roadmap**************************************************/
+/*----------------------------- Combined Roadmap --------------------------------*/
 
 void
 TMPStrategyMethod::

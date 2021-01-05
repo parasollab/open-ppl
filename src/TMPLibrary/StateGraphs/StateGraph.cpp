@@ -2,7 +2,6 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 #include "Simulator/Simulation.h"
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/Solution/Plan.h"
 
 /*------------------------------ Construction --------------------------------*/
@@ -40,7 +39,7 @@ GetGraph(){
 void
 StateGraph::
 LoadStateGraph(){
-	this->GetTaskPlan()->GetCoordinator()->SetRoadmapGraph(m_graph);
+	this->GetPlan()->GetCoordinator()->SetRoadmapGraph(m_graph);
 }
 
 /*------------------------------ Helpers --------------------------------*/

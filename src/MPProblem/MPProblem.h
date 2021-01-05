@@ -94,6 +94,9 @@ class MPProblem final
     /// Get all robots in this problem.
     const std::vector<std::unique_ptr<Robot>>& GetRobots() const noexcept;
 
+    /// Get all robots of a specified type.
+    const std::vector<Robot*> GetRobotsOfType(std::string _type) const noexcept;
+
     /// Group versions:
     /// Get the number of robot groups in our problem.
     size_t NumRobotGroups() const noexcept;
@@ -213,6 +216,9 @@ class MPProblem final
     std::vector<std::unique_ptr<Robot>> m_robots;  ///< The robots in our problem.
     std::vector<std::unique_ptr<RobotGroup>> m_robotGroups; ///< Robot groups.
     std::unique_ptr<Robot> m_pointRobot;           ///< A pseudo point-robot.
+  
+    /// Map of robot type to set of robots.
+    std::unordered_map<std::string,std::vector<Robot*>> m_robotCapabilityMap;
 
 		std::unordered_map<Robot*,Cfg> m_initialCfgs;  ///< Map of robot initial locations.
 

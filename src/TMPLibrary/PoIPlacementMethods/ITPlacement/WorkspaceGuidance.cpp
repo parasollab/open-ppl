@@ -2,7 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 WorkspaceGuidance::
 WorkspaceGuidance(){
@@ -30,7 +30,7 @@ WorkspaceGuidance::
 PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   BuildSkeleton();
 
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+  auto robot = this->GetPlan()->GetCoordinator()->GetRobot();
   auto g = m_skeleton.GetGraph();
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
@@ -64,7 +64,7 @@ BuildSkeleton(){
 
   // Determine if we need a 2d or 3d skeleton.
   auto env = this->GetMPProblem()->GetEnvironment();
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+  auto robot = this->GetPlan()->GetCoordinator()->GetRobot();
   //const bool threeD = robot->GetMultiBody()->GetBaseType() ==
   //    Body::Type::Volumetric;
 

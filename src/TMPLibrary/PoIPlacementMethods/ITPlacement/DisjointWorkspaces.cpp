@@ -3,7 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Behaviors/Agents/Agent.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 #include "Utilities/MPUtils.h"
 
@@ -42,7 +42,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
 
   std::vector<Agent*> capabilityAgents;
   for(auto& task : tasks){
-    auto agent = this->GetTaskPlan()->GetCapabilityAgent(task->GetCapability());
+    auto agent = this->GetTMPLibrary()->GetMPProblem()->GetRobotsOfType(task->GetCapability())[0]->GetAgent();
     capabilityAgents.push_back(agent);
   }
 
@@ -53,7 +53,7 @@ PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
   }
   else {
 		//TODO::Kind of a hack and need to evaluate
-    auto task = new MPTask(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+    auto task = new MPTask(this->GetPlan()->GetCoordinator()->GetRobot());
     this->GetMPLibrary()->SetTask(task);
   }
 

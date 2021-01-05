@@ -8,7 +8,7 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
@@ -34,7 +34,7 @@ BreakupTask(WholeTask* _wholeTask){
   // Break the wholeTasks into subtasks based on when the robot pointer changes
   // in the wholeTask path. This change indicates that the robot capability
   // changed along the path in the megaRoadmap
-  Robot* virtualRobot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+  Robot* virtualRobot = this->GetPlan()->GetCoordinator()->GetRobot();
   if(m_debug){
     std::cout << "Splitting up next whole task: " << _wholeTask << std::endl;
     std::cout << "Printing out path of whole task" << std::endl;
