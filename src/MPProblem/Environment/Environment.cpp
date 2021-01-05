@@ -308,7 +308,6 @@ operator=(const Environment& _other) {
   m_filename            = _other.m_filename;
   m_modelDataDir        = _other.m_modelDataDir;
   m_positionRes         = _other.m_positionRes;
-  m_positionResFactor   = _other.m_positionResFactor;
   m_orientationRes      = _other.m_orientationRes;
   m_timeRes             = _other.m_timeRes;
   m_frictionCoefficient = _other.m_frictionCoefficient;
@@ -461,9 +460,6 @@ Read(std::string _filename) {
     if(resolution == "POSITIONRES")
       m_positionRes = ReadField<double>(ifs, cbs, "Failed reading Position "
           "resolution\n");
-    else if(resolution == "POSITIONRESFACTOR")
-      m_positionResFactor = ReadField<double>(ifs, cbs, "Failed reading Position "
-          "factor resolution\n");
     else if(resolution == "ORIENTATION")
       m_orientationRes = ReadField<double>(ifs, cbs, "Failed reading "
           "Orientation resolution\n");
@@ -532,24 +528,59 @@ Write(std::ostream & _os) {
 void
 Environment::
 ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots) {
-  if(m_positionRes >= 0.)
+  if(m_positionRes > 0.)
     return; // Do not compute it.
 
-  double bodiesMinSpan = std::numeric_limits<double>::max();
-  for(auto& robot : _robots)
-    bodiesMinSpan = std::min(bodiesMinSpan,
-                             robot->GetMultiBody()->GetMaxAxisRange());
+  // The resolution needs to ensure that any motion of resolution length can't
+  // completely skip a collision. I.e. if we have two thin objects moving past
+  // each other, they must not be able to get all the way through each other by
+  // taking steps of resolution length.
+  //
+  // There is no guaranteed way to compute this without considering all
+  // possibile ways that two objects can collide. We will use a heuristic
+  // resolution of 1% of the smallest bounding-box length (excluding dimensions
+  // which aren't relevant in this environment).
 
-  for(auto& body : m_obstacles)
-    bodiesMinSpan = std::min(bodiesMinSpan, body->GetMaxAxisRange());
+  // We only need to care about dimensions that are relevant to the environment
+  // boundary.
+  const size_t dimensions = m_boundary->GetDimension();
 
-  // Set to XML input resolution if specified, else compute resolution factor
-  m_positionRes = bodiesMinSpan * m_positionResFactor;
+  // Determine the minimum bbx span (i.e. the smallest bbx length for any object
+  // in the environemnt).
+  double minimumSpan = std::numeric_limits<double>::max();
+
+  // Find the minimum span amongst the robots.
+  for(const auto& robot : _robots) {
+    const auto multibody = robot->GetMultiBody();
+    for(const auto& body : multibody->GetBodies()) {
+      const auto b = body.GetPolyhedron().ComputeBoundingBox();
+
+      for(size_t i = 0; i < dimensions; ++i)
+        minimumSpan = std::min(minimumSpan, b->GetRange(i).Length());
+    }
+  }
+
+  // Find the minimum span amongst the obstacles.
+  for(const auto& multibody : m_obstacles) {
+    for(const auto& body : multibody->GetBodies()) {
+      const auto b = body.GetPolyhedron().ComputeBoundingBox();
+
+      for(size_t i = 0; i < dimensions; ++i)
+        minimumSpan = std::min(minimumSpan, b->GetRange(i).Length());
+    }
+  }
+
+  // Estimate a good resolution as 1% of the minimum bbx span.
+  m_positionRes = minimumSpan * .01;
 
   /// @TODO Add an automatic computation of the orientation resolution here.
   ///       This should be done so that rotating the robot base by one orientation
   ///       resolution makes a point on the bounding sphere move by one position
-  ///       resolution.
+  ///       resolution. If possible we should also separate the resolutions for
+  ///       joint angles and base orientations since this gets really, really
+  ///       small with manipulators having several links (probably we'll need to
+  ///       manage this in the local planner to make maximum use of the
+  ///       available resolution).
 
   // This is a very important parameter - always report a notice when we compute
   // it automatically.
@@ -605,59 +636,6 @@ void
 Environment::
 SetBoundary(std::unique_ptr<Boundary>&& _b) noexcept {
   m_boundary = std::move(_b);
-}
-
-
-void
-Environment::
-ResetBoundary(double _d, const MultiBody* const _multibody) {
-  double minx, miny, minz, maxx, maxy, maxz;
-  minx = miny = minz = std::numeric_limits<double>::max();
-  maxx = maxy = maxz = std::numeric_limits<double>::lowest();
-
-  double robotRadius = _multibody->GetBoundingSphereRadius();
-  _d += robotRadius;
-
-  for(auto& body : m_obstacles) {
-    const double* tmp = body->GetBoundingBox();
-    minx = std::min(minx, tmp[0]);
-    maxx = std::max(maxx, tmp[1]);
-    miny = std::min(miny, tmp[2]);
-    maxy = std::max(maxy, tmp[3]);
-    minz = std::min(minz, tmp[4]);
-    maxz = std::max(maxz, tmp[5]);
-  }
-
-  std::vector<std::pair<double, double> > obstBBX(3);
-  obstBBX[0] = std::make_pair(minx, maxx);
-  obstBBX[1] = std::make_pair(miny, maxy);
-  obstBBX[2] = std::make_pair(minz, maxz);
-
-  m_boundary->ResetBoundary(obstBBX, _d);
-}
-
-
-void
-Environment::
-ResetBoundary(const std::vector<std::pair<double, double>>& _bbx,
-    const double _margin) {
-  m_boundary->ResetBoundary(_bbx, _margin);
-}
-
-
-void
-Environment::
-ExpandBoundary(double _d, const MultiBody* const _multibody) {
-  double robotRadius = _multibody->GetBoundingSphereRadius();
-  _d += robotRadius;
-
-  std::vector<std::pair<double, double>> originBBX(3);
-  for(size_t i = 0; i < 3; ++i) {
-    const auto& r = GetBoundary()->GetRange(i);
-    originBBX[i] = std::make_pair(r.min, r.max);
-  }
-
-  m_boundary->ResetBoundary(originBBX, _d);
 }
 
 /*---------------------------- Obstacle Functions ----------------------------*/
@@ -830,7 +808,8 @@ CreateBoundaryObstacle() {
   // Make the boundary body.
   Body body(mb.get());
   body.SetBodyType(Body::Type::Fixed);
-  body.SetPolyhedron(m_boundary->MakePolyhedron());
+  GMSPolyhedron poly = m_boundary->MakePolyhedron();
+  body.SetPolyhedron(std::move(poly));
 
   // Add the body to the multibody and finish initialization.
   const size_t index = mb->AddBody(std::move(body));

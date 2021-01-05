@@ -340,7 +340,6 @@ ConstructGraph(){
   SetupWholeTasks();
 
   ITConnector connector(m_connectionThreshold,this->GetMPLibrary());
-  //auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
   if(true){//Adds robot starting locations to combined roadmap
     for(auto agent : this->GetTaskPlan()->GetTeam()){
@@ -476,7 +475,7 @@ GenerateITs(){
               + currentTemplate->GetInformation()->GetLabel());
 
     unusedAgents.clear();
-    std::copy(this->GetTaskPlan()->GetTeam().begin(), this->GetTaskPlan()->GetTeam().end(), 	
+    std::copy(this->GetTaskPlan()->GetTeam().begin(), this->GetTaskPlan()->GetTeam().end(),
 							std::back_inserter(unusedAgents));
     auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
     std::unordered_map<std::shared_ptr<MPTask>, Agent*> agentTasks;
@@ -760,7 +759,7 @@ TransformITs(){
               + currentTemplate->GetInformation()->GetLabel());
     }
   }
- 
+
 	for(auto vid : invalidVIDs){
 		m_graph->DeleteVertex(vid);
 	} 

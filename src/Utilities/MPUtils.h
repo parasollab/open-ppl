@@ -105,6 +105,38 @@ Point3d GetPtFromBarycentricCoords(const Point3d& _a, const Point3d& _b,
 /// @return Normalized representation of _theta in the range -PI to PI.
 double NormalizeTheta(double _theta);
 
+/*---------------------------- Comparators -----------------------------------*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compare the second of a pair.
+/// @tparam T Type 1 of pair
+/// @tparam U Type 2 of pair
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, typename U>
+struct CompareSecond {
+
+  const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
+      const noexcept {
+    return _a.second < _b.second;
+  }
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compare the second of a pair reversed.
+/// @tparam T Type 1 of pair
+/// @tparam U Type 2 of pair
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, typename U>
+struct CompareSecondReverse {
+
+  const bool operator()(const std::pair<T, U>& _a, const std::pair<T, U>& _b)
+      const noexcept {
+    return _a.second > _b.second;
+  }
+
+};
+
 /*------------------------------ Cfg Utilities -------------------------------*/
 
 /// Determine whether two configurations are within a resolution unit of each

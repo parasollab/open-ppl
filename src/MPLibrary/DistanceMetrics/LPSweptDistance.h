@@ -182,8 +182,8 @@ SweptDistance(const vector<GMSPolyhedron>& _poly1,
   size_t count = 0;
 
   for(size_t b=0; b<_poly1.size(); ++b)
-    for(size_t i=0; i<_poly1[b].m_vertexList.size(); ++i, ++count)
-      sum += (_poly1[b].m_vertexList[i] - _poly2[b].m_vertexList[i]).norm();
+    for(size_t i=0; i<_poly1[b].GetVertexList().size(); ++i, ++count)
+      sum += (_poly1[b].GetVertexList()[i] - _poly2[b].GetVertexList()[i]).norm();
 
   return count ? sum / count : 0;
 }

@@ -78,9 +78,9 @@ Agent::
 ResetStartConstraint() {
   if(!GetTask())
     return;
-  
+
   auto pos = m_robot->GetSimulationModel()->GetState();
-  std::unique_ptr<CSpaceConstraint> start = 
+  std::unique_ptr<CSpaceConstraint> start =
     std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(m_robot, pos));
 
   GetTask()->SetStartConstraint(std::move(start));
@@ -205,6 +205,9 @@ Localize() {
   auto sensor = hardware->GetSensor();
   if(!sensor)
     return;
+
+  if(m_debug)
+    std::cout << "Enqueueing localize command." << std::endl;
 
   // Pause the agent to make sure the hardware actuator doesn't continue
   // executing a previous motion command while localizing.

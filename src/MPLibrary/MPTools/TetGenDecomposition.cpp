@@ -2,6 +2,8 @@
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/MPProblem.h"
 #include "Workspace/WorkspaceDecomposition.h"
@@ -211,10 +213,11 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
   if(_debug)
     cout << "Adding holes..." << endl;
 
-  // Initialize the boundary as inward-facing.
-  auto cp = _env->GetBoundary()->CGAL();
-  NefPolyhedron boundary(cp);
-  boundary = boundary.complement();
+  // Set up to check for obstacle/boundary collisions.
+  static PQPSolid pqpSolid;
+  CDInfo cdInfo;
+  mathtool::Transformation identity;
+  const GMSPolyhedron boundaryPoly = _env->GetBoundary()->MakePolyhedron();
 
   vector<Vector3d> holes;
   for(size_t i = _env->UsingBoundaryObstacle(); i < _env->NumObstacles(); ++i) {
@@ -230,15 +233,33 @@ AddHoles(tetgenio* const _freeModel, const NefPolyhedron& _freespace,
 
     // Create each hole with a point just beneath one of the model's facets.
     for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
-      // Get the body's first facet.
       const Body* const body = obst->GetBody(j);
-      const auto& facet = body->GetWorldPolyhedron().GetPolygonList()[0];
+      const GMSPolyhedron& poly = body->GetWorldPolyhedron();
+      holes.emplace_back(poly.GetInsidePoint());
 
-      // Pick a point just beneath this facet's center as the hole.
-      holes.emplace_back(facet.FindCenter() - .0001 * facet.GetNormal());
-
-      if(_debug)
+      if(_debug) {
         std::cout << "\t\tAdded hole at " << holes.back() << "." << std::endl;
+
+        // Check that the hole point is inside the poly.
+        const bool goodHole = pqpSolid.IsInsideObstacle(holes.back(), poly, identity);
+        std::cout << "\t\tComputed hole is " << (goodHole ? "" : "not " )
+                  << "in the obstacle!"
+                  << std::endl;
+
+        /// @todo There seems to be an intermittent problem with adding holes for
+        ///       obstacles that touch the environment boundary. Sometimes it
+        ///       causes bad decompositions where the free space gets eaten away,
+        ///       and sometimes not. Not adding the hole sometimes causes tetgen
+        ///       to not remove the tetras within the obstacle. We need to
+        ///       characterize the cases where it fails and where it works.
+        const bool touching = pqpSolid.IsInCollision(poly, identity,
+                                                     boundaryPoly, identity,
+                                                     cdInfo);
+        if(touching)
+          std::cout << "\t\tBody " << j << " touches boundary, might cause "
+                    << "problems!"
+                    << std::endl;
+      }
     }
   }
 
@@ -369,7 +390,7 @@ operator()(const Environment* _env) {
 
   if(writeFile and m_debug) {
     ostringstream os;
-    decomposition->WriteObj("decomposition.map");
+    decomposition->WriteObj("decomposition.obj");
   }
 
   // Release tetgen structures.
@@ -445,7 +466,7 @@ MakeInternalVoidModel(const Environment* _env) {
 
   // Subtract each obstacle from the convex hull.
   MultiBody* obst = _env->GetObstacle(0);
-  auto poly = obst->GetBody(0)->GetWorldConvexHull();
+  auto poly = obst->GetBody(0)->GetWorldPolyhedron().ComputeConvexHull();
 
   //scale the convex hull to avoid degenerate triangles.
   poly.Scale(m_convexHullScaleFactor);
@@ -506,6 +527,7 @@ MakeFreeModel(const Environment* _env) {
         if(m_debug)
           std::cout << "\t\tbody " << j
                     << " is " << (ocp.is_closed() ? "" : "not ") << "closed"
+                    << "\t\t  and " << (ocp.is_valid() ? "" : "not ") << "valid"
                     << std::endl;
 
         // Subtract it from the freespace.

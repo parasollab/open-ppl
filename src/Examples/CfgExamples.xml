@@ -39,7 +39,6 @@
       <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
       <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
         velWeight="0" avlWeight="0"/>
-      <CenterOfMass label="com"/>
       <KnotTheory label="knot"/>
       <Manhattan label="manhattan"/>
       <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
@@ -50,6 +49,7 @@
         lpLabel="sl"/>
       <TopologicalDistance label="connectedFreeSpace" operator="sum"
         tmLabel="tm-coarse"/>
+      <WorkspaceTranslation label="workspace"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -74,22 +74,23 @@
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
-      <HierarchicalNF label="HierarchicalNF" nfLabel="BFNF" nfLabel2="RandomNF"
-        dmLabel=""/>
+      <HierarchicalNF label="HierarchicalNF">
+        <NeighborhoodFinder label="BFNF"/>
+        <NeighborhoodFinder label="RandomNF"/>
+      </HierarchicalNF>
       <OptimalNF label="OptimalK" nfType="k" dmLabel="euclidean"/>
       <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="10"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
-      <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
-      <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
-           use_scaling="0"/-->
+      <DPESNF label="DPESNF"
+        dmLabel="euclidean" k="5"
+        samplerLabel="UniformRandomFree" pivotCount="12"/>
       <TopologicalFilter label="TopologicalNF" nfLabel="BFNF" tmLabel="tm-coarse"
         backtrackDistance="6" debug="false"/>
-      <LSHNF label="LSHNF"
-        k="8" hashDimension="3" hashFamilies="8" hashRadius="9"
-        dmLabel="euclidean"/>
+      <LSHNF label="LSHNF" debug="false"
+        k="8" dmLabel="euclidean"
+        hashDimension="3" hashFamilies="8" hashRadius="4"/>
       <KdTreeNF label="KdTreeNF"
-        k="5" epsilon=".01" useScaling="true"
-        dmLabel="euclidean"/>
+        k="10" dmLabel="euclidean" epsilon="0"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -118,6 +119,10 @@
         penetrationType="exact" debug="false" positional="true"/>
       <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
         decompositionLabel="fine"/>
+      <DynamicRegionSampler label="DynamicRegionSampler"
+        samplerLabel="UniformRandom" skeletonType="mcs"
+        explore=".2" regionFactor="2.5" penetration="1"
+        velocityBiasing="false" velocityAlignment=".4" decompositionLabel="fine"/>
     </Samplers>
 
     <LocalPlanners>
@@ -249,7 +254,7 @@
     <MapEvaluators>
       <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
-        graphSearchAlg="dijkstras"/>
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
@@ -279,6 +284,10 @@
       <ComposeEvaluator label="BoundedQuery" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="Query"/>
+      </ComposeEvaluator>
+      <ComposeEvaluator label="MinimumLazyQuery" operator="and">
+        <Evaluator label="LazyQuery"/>
+        <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
     </MapEvaluators>
@@ -320,13 +329,13 @@
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="true">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
+        <!--Sampler label="UniformRandomFree" number="1" attempts="1"/-->
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
-        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+        <Sampler label="MAPRM" number="10" attempts="10"/>
         <Connector label="Closest"/>
-        <!--Connector label="KdTree"/-->
+        <!--Connector label="ConnectCCs"/-->
         <Evaluator label="Query"/>
       </BasicPRM>
 
@@ -345,12 +354,20 @@
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
 
-      <!-- BasicRRT -->
+      <!-- Basic RRT -->
       <BasicRRTStrategy label="RRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
         goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
+      <!-- Bi-directional RRT -->
+      <BasicRRTStrategy label="BiRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="KdTreeNF" extenderLabel="BERO"
+        growGoals="true">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
@@ -461,33 +478,6 @@
         <MPStrategy label="AdaptiveRRT"/>
       </MultiStrategy>
 
-      <!-- Spark PRM Examples -->
-      <!--
-      <SparkTogglePRMStrategy label="SparkToggle" maxNPCCSize="2"
-        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
-        minDist="0.1" vcLabel="rapid" nfLabel="BFNF" nfVertexLabel="Nearest"
-        trimDepth="2" dmLabel="euclidean" cLabel="SparkPRMConnector"
-        eLabel="BERO" priority="false" growthFocus="0.25" checkEdgeCases="true"
-        checkImportant="true" trimAll="true" biasConnect="true"
-        rrtDebug="false">
-        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
-        <Connector label="ToggleConnect"/>
-        <ColConnector label="ToggleConnect"/>
-        <Evaluator label="Query"/>
-      </SparkTogglePRMStrategy>
-
-      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
-        maxRRTSize="100" attemptRatio="10" delta="5" minDist="0.1" vcLabel="rapid"
-        nfLabel="BFNF" nfVertexLabel="Nearest" trimDepth="2" dmLabel="euclidean"
-        cLabel="SparkPRMConnector" eLabel="BERO" growthFocus="0.25"
-        checkEdgeCases="true" checkImportant="true" trimAll="true"
-        biasConnect="true" rrtDebug="false">
-        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
-        <Connector label="Closest"/>
-        <Evaluator label="Query"/>
-      </SparkBasicPRM>
-      -->
-
       <!-- Syclop -->
       <Syclop label="Syclop" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
@@ -554,6 +544,8 @@
         useBBX="true" positional="true"/>
 
       <SVMModel kernel="radial" c="10" epsilon=".001" gamma="1"/>
+
+      <SafeIntervalTool label="SI" vcLabel="rapid"/>
 
     </MPTools>
 

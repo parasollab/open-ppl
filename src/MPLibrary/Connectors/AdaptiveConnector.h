@@ -230,7 +230,8 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
   m_neighborBuffer.clear();
   auto nfptr = this->GetNeighborhoodFinder(this->m_lastUse);
   if(_targetSet)
-    nfptr->FindNeighbors(_r, vCfg, *_targetSet, m_neighborBuffer);
+    nfptr->FindNeighbors(_r, vCfg, *_targetSet,
+        std::back_inserter(m_neighborBuffer));
   else
     nfptr->FindNeighbors(_r, vCfg, std::back_inserter(m_neighborBuffer));
 

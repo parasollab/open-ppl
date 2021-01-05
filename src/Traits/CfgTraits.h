@@ -17,7 +17,6 @@
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
-#include "MPLibrary/DistanceMetrics/CenterOfMassDistance.h"
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/KnotTheoryDistance.h"
 #include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
@@ -26,6 +25,7 @@
 #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
@@ -36,6 +36,7 @@
 #include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -43,7 +44,6 @@
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
 #include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
 #include "MPLibrary/NeighborhoodFinders/LSHNF.h"
-#include "MPLibrary/NeighborhoodFinders/MPNNNF.h"
 #include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 #include "MPLibrary/NeighborhoodFinders/RandomNF.h"
@@ -127,6 +127,7 @@
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
+#include "MPLibrary/MPStrategies/AOAnalyzer.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyExhaustiveGraph.h"
@@ -143,6 +144,7 @@
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/MultiStrategy.h"
+//#include "MPLibrary/MPStrategies/NNCompare.h"
 #include "MPLibrary/MPStrategies/PushCfgToMATest.h"
 #include "MPLibrary/MPStrategies/ScratchStrategy.h"
 #include "MPLibrary/MPStrategies/StableSparseRRT.h"
@@ -191,7 +193,6 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     BinaryLPSweptDistance<MPTraits>,
-    CenterOfMassDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
     KnotTheoryDistance<MPTraits>,
     LPSweptDistance<MPTraits>,
@@ -200,7 +201,8 @@ struct MPTraits {
     RMSDDistance<MPTraits>,
     ScaledEuclideanDistance<MPTraits>,
     TopologicalDistance<MPTraits>,
-    WeightedEuclideanDistance<MPTraits>
+    WeightedEuclideanDistance<MPTraits>,
+    WorkspaceTranslationDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -212,7 +214,8 @@ struct MPTraits {
     NegateValidity<MPTraits>,
     NodeClearanceValidity<MPTraits>,
     ObstacleClearanceValidity<MPTraits>,
-    TerrainValidityChecker<MPTraits>
+    TerrainValidityChecker<MPTraits>,
+    TopologicalMapValidity<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -222,7 +225,6 @@ struct MPTraits {
     HierarchicalNF<MPTraits>,
     KdTreeNF<MPTraits>,
     LSHNF<MPTraits>,
-    MPNNNF<MPTraits>,
     OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,
     RandomNF<MPTraits>,
@@ -325,6 +327,7 @@ struct MPTraits {
 #if 0
     AdaptiveRRT<MPTraits>, Fix after ICRA 18
 #endif
+    AOAnalyzer<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DisassemblyExhaustiveGraph<MPTraits>,
@@ -340,6 +343,7 @@ struct MPTraits {
     GroupPRM<MPTraits>,
     ModifyPath<MPTraits>,
     MultiStrategy<MPTraits>,
+    //NNCompare<MPTraits>,
     ScratchStrategy<MPTraits>,
     StableSparseRRT<MPTraits>,
     StrategySequence<MPTraits>,

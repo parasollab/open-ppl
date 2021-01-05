@@ -44,6 +44,7 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::CfgType              CfgType;
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
+    typedef typename RoadmapType::VertexSet         VertexSet;
     typedef typename MPTraits::GoalTracker          GoalTracker;
     typedef typename GoalTracker::VIDSet            VIDSet;
 
@@ -225,11 +226,9 @@ void
 QueryMethod<MPTraits>::
 Initialize() {
   // Clear previous state.
-  m_dmLabel.clear();
   Reset(nullptr);
 
-  this->GetStatClass()->SetStat(
-      "QueryMethod::" + this->GetLabel() + "::FoundPath", 0);
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 0);
 }
 
 /*-------------------------- MapEvaluator Interface --------------------------*/
@@ -242,6 +241,11 @@ operator()() {
   const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
   auto task = this->GetTask();
   const size_t numGoals = task->GetNumGoals();
+
+  // Record the path length history when this function exits.
+  nonstd::call_on_destruct trackHistory([this](){
+      this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
+  });
 
   if(goalTracker->GetStartVIDs().empty()) {
     if(this->m_debug)
@@ -307,11 +311,7 @@ operator()() {
       return false;
   }
 
-  // We generated a path successfully: track the path length history.
-  this->GetStatClass()->AddToHistory("pathlength", this->GetPath()->Length());
-
-  this->GetStatClass()->SetStat(
-      "QueryMethod::" + this->GetLabel() + "::FoundPath", 1);
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 1);
 
   if(this->m_debug)
     std::cout << "\tConnected all goals!" << std::endl;
@@ -335,6 +335,23 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   // Check for trivial path.
   if(_goals.count(_start) and m_startTime >= m_endTime)
     return {_start};
+
+  // Check for impossibility with CC information (if available).
+  auto ccTracker = m_roadmap->GetCCTracker();
+  if(ccTracker) {
+    const bool impossible = std::none_of(_goals.begin(), _goals.end(),
+        [ccTracker, _start](const VID _vid) {
+          return ccTracker->InSameCC(_start, _vid);
+        }
+    );
+
+    if(impossible) {
+      if(this->m_debug)
+        std::cout << "\tStart and goal in different CCs, no path exists"
+                  << std::endl;
+      return {};
+    }
+  }
 
   stats->IncStat("Graph Search");
 

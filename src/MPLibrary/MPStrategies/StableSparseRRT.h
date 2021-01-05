@@ -13,14 +13,37 @@
 /// StableSparseRRT is an RRT variant which aims to maintain a sparse 'active
 /// set' of vertices.
 ///
-/// The active set is used for neighborhood finding instead of the entire
-/// roadmap. The density of the active set is controlled by the 'witness
-/// configurations', which enforce that there will be at most one active vertex
-/// within the 'witness radius' (these are different from the witness
-/// configurations used elsewhere in PMPL). The active vertex within a witness's
-/// ball region is always the one with the best total cost from the start
-/// configuration. This is distance in holonomic problems and time steps in
-/// nonholonomic problems.
+/// A set of 'witness' configurations creates the sparseness criteria. Each
+/// witness defines a ball region in state space, and the tree should grow
+/// from only the lowest-cost vertex in each witness region. These vertices
+/// form the 'active set', while the other vertices are 'inactive'. The latter
+/// aren't used in neighborhood finding or extension, and should be pruned
+/// away.
+///
+/// @note The 'witnesss configurations' here are are different from the witness
+///       configurations used elsewhere in PMPL.
+///
+/// @note This method currently measures cost with distance in holonomic
+///       problems and time steps in nonholonomic problems.
+///
+/// @note If we re-create an existing node, the original algorithm would keep
+///       both copies and mark the more expensive one as inactive. This would
+///       also cause the subtree rooted at the more expensive node to be
+///       sub-optimal w.r.t. the best known cost to this state. Our roadmap
+///       graph however does not permit duplicate states, so in our case the
+///       new path will be discarded. It would be nice to save it if cheaper and
+///       rewire its parent, but that wouldn't be exactly SST, and would also
+///       require propogating cost changes to the children (which could also
+///       require updates to the representatives for their witnesses). However
+///       it is very rare to recreate the same exact state via a different local
+///       plan, so the main way this matters in our usage is for the goal
+///       states: if the goal is a single point in state space, our goal-biasing
+///       heuristics will frequently recreate it from other parents, sometimes
+///       with a cheaper plan. If we don't do something to take the cheaper
+///       plan, we'll never see the cost decrease when running past the first
+///       feasible solution. The easy way to avoid the problem is to use
+///       non-point goals for this method so that the generated goal states are
+///       slightly different (i.e. use a small sphere instead of a point).
 ///
 /// Reference:
 ///   Yanbo Li, Zakary Littlefield, and Kostas Bekris. "Sparse Methods for
@@ -39,8 +62,7 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
-
-    using typename BasicRRTStrategy<MPTraits>::VertexSet;
+    typedef typename RoadmapType::VertexSet VertexSet;
 
     ///@}
     ///@name Construction
@@ -89,14 +111,29 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     /// @param _nearestVID The starting VID for the extension.
     /// @param _newVID The new VID created by the extension.
     /// @param _lp The local plan info.
-    void UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
+    /// @return True if the new node is active.
+    bool UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
         const LPOutput<MPTraits>& _lp);
 
-    // Find nearest witness to a vertex.
+    /// Add a new witness node and track its representative.
+    /// @param _roadmapVID The node's VID in the roadmap.
+    void AddNewWitness(const VID _roadmapVID);
+
+    /// Update the representative for a witness.
+    /// @param _witness The witness's VID in the witness map.
+    /// @param _representative The new representative's VID in the roadmap.
+    void UpdateRepresentative(const VID _witness, const VID _representative);
+
+    /// Find nearest witness to a configuration.
+    /// @param _newCfg The query configuration.
+    /// @return The nearest witness node to _newCfg.
     Neighbor FindNearestWitness(const CfgType& _newCfg);
 
     /// Recursively prune the set of inactive leaves until none remain.
     void PruneInactiveLeaves();
+
+    /// Find the best-cost VID for each goal so far.
+    VertexSet GetBestGoalVIDs();
 
     ///@}
     ///@name Internal State
@@ -112,6 +149,10 @@ class StableSparseRRT : public BasicRRTStrategy<MPTraits> {
     std::unordered_map<VID, VID> m_representatives;
 
     std::string m_witnessNfLabel; ///< NF to use for finding witness nodes.
+
+    /// Storage for witnessess. They must be stored separately from the main
+    /// roadmap because they may be pruned from the tree.
+    std::map<RoadmapType*, RoadmapType> m_witnessMaps;
 
     double m_witnessRadius{.5}; ///< Distance between witness nodes.
     bool m_prune{false};
@@ -154,6 +195,7 @@ Initialize() {
   m_witnesses.clear();
   m_inactiveLeaves.clear();
   m_representatives.clear();
+  m_witnessMaps.clear();
 
   if(this->m_debug)
     std::cout << "Initializing StableSparseRRT" << std::endl;
@@ -182,9 +224,7 @@ Initialize() {
                                   << std::endl;
 
   // Add the start node to the SST structures.
-  m_active.insert(start);
-  m_witnesses.insert(start);
-  m_representatives.emplace(start, start);
+  AddNewWitness(start);
 }
 
 /*----------------------- BasicRRTStrategy Overrides -------------------------*/
@@ -201,13 +241,9 @@ FindNearestNeighbor(const CfgType& _cfg, const VertexSet* const _candidates) {
     return BasicRRTStrategy<MPTraits>::FindNearestNeighbor(_cfg, &m_active);
 
   // Otherwise we need to select only nodes that are both active and in the
-  // candidate set. Find the intersection of the active set with the candidates.
-  VertexSet activeCandidates;
-  activeCandidates.reserve(std::min(_candidates->size(), m_active.size()));
-  std::copy_if(m_active.begin(), m_active.end(),
-      std::inserter(activeCandidates, activeCandidates.end()),
-      [_candidates](const VID _vid){return _candidates->count(_vid);}
-  );
+  // candidate set.
+  const VertexSet activeCandidates = VertexSetIntersection(m_active,
+      *_candidates);
 
   // Ensure we found some active candidates.
   if(activeCandidates.empty())
@@ -225,16 +261,16 @@ SelectNeighbor(const CfgType& _cfg, const std::vector<Neighbor>& _neighbors) {
   auto g = this->GetRoadmap();
 
   // Select the node with the best path cost.
-  Neighbor best;
+  Neighbor best = _neighbors[0];
+  double bestCost = g->GetVertex(best.target).GetStat("cost");
   for(const auto& n : _neighbors) {
-    // Check for invalid neighbors.
-    if(n.target == INVALID_VID)
-      throw RunTimeException(WHERE) << "NF should not return bogus nodes.";
-
-    // Check if this neighbor has the best cost so far.
+    // Skip if this neighbor isn't better than the best.
     const double pathCost = g->GetVertex(n.target).GetStat("cost");
-    if(pathCost < best.distance)
-      best = n;
+    if(pathCost >= bestCost)
+      continue;
+
+    best = n;
+    bestCost = pathCost;
   }
 
   return best;
@@ -262,8 +298,14 @@ Extend(const VID _nearest, const CfgType& _target, LPOutput<MPTraits>& _lp,
 
   // If we succeeded, update the SST structures before we return.
   const bool success = newVID != INVALID_VID;
-  if(success)
-    UpdateSSTStructures(_nearest, newVID, _lp);
+  if(success) {
+    // If the node isn't active, then we will have deleted it if pruning is
+    // used. Do not return a valid VID all cases to keep behavior the same
+    // regardless of pruning setting.
+    const bool active = UpdateSSTStructures(_nearest, newVID, _lp);
+    if(!active)
+      return INVALID_VID;
+  }
 
   return newVID;
 }
@@ -271,7 +313,7 @@ Extend(const VID _nearest, const CfgType& _target, LPOutput<MPTraits>& _lp,
 /*----------------------------- SST Functions --------------------------------*/
 
 template <typename MPTraits>
-void
+bool
 StableSparseRRT<MPTraits>::
 UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
     const LPOutput<MPTraits>& _lp) {
@@ -288,6 +330,8 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
 
   // Cost of new node is the cost from root to parent plus cost from parent to
   // new node.
+  /// @todo Change this to only edge weights, nonholonomic extenders/local
+  ///       planners should set the weight using desired cost (such as time).
   double cost = nearest.GetStat("cost");
   if(this->GetTask()->GetRobot()->IsNonholonomic())
     cost += _lp.m_edge.first.GetTimeSteps();
@@ -296,56 +340,106 @@ UpdateSSTStructures(const VID _nearestVID, const VID _newVID,
   newNode.SetStat("cost", cost);
 
   // Find the nearest witness to newNode and the separation distance.
-  const auto witnessPair = FindNearestWitness(newNode);
-
-  const VID witness = witnessPair.target;
-  const double distance = witnessPair.distance;
+  const auto   witnessPair = FindNearestWitness(newNode);
+  const VID    witness     = witnessPair.target;
+  const double distance    = witnessPair.distance;
 
   // If nearest witness is invalid or more than m_witnessRadius away from
   // newNode, then newNode is a new witness and its own representative.
   if(witness == INVALID_VID or distance > m_witnessRadius) {
-    m_witnesses.insert(_newVID);
-    m_active.insert(_newVID);
-    m_representatives[_newVID] = _newVID;
-
-    if(this->m_debug)
-      std::cout << "\tAdding new witness node " << _newVID
-                << " with cost " << cost << "."
-                << std::endl;
-    return;
+    AddNewWitness(_newVID);
+    return true;
   }
 
   // Otherwise we need to see if this node is a better representative for the
   // nearby witness.
-  const VID representative = m_representatives[witness];
+  const VID    representative     = m_representatives[witness];
   const double representativeCost = g->GetVertex(representative).GetStat("cost");
 
   // If the new node isn't better, it's an inactive leaf.
-  if(cost >= representativeCost) {
-    if(this->m_debug)
-      std::cout << "\tNew node " << _newVID << " with cost "
-                << cost << " >= " << representativeCost
-                << " not better than previous representative " << representative
-                << "." << std::endl;
+  const bool betterCost = cost < representativeCost;
+
+  if(this->m_debug)
+    std::cout << "\tNew node " << _newVID << " with cost "
+              << cost << (betterCost ? " < " : " >= " ) << representativeCost
+              << (betterCost ? "" : " not")
+              << " better than previous representative " << representative
+              << "." << std::endl;
+
+  if(!betterCost)
     m_inactiveLeaves.insert(_newVID);
-    return;
-  }
-
-  // The new node is a better representative.
-  auto cit = m_active.find(representative);
-  if(cit == m_active.end())
-    throw RunTimeException(WHERE) << "Could not find representative '"
-                                  << representative << "' in the active set.";
-
-  m_active.erase(cit);
-  m_active.insert(_newVID);
-  m_representatives[witness] = _newVID;
+  else
+    UpdateRepresentative(witness, _newVID);
 
   // Prune leaf nodes that are inactive.
   if(m_prune)
     PruneInactiveLeaves();
+
+  return betterCost;
 }
 
+
+template <typename MPTraits>
+void
+StableSparseRRT<MPTraits>::
+AddNewWitness(const VID _roadmapVID) {
+  // Find the witness map for the current roadmap.
+  auto r = this->GetRoadmap();
+  auto iter = m_witnessMaps.find(r);
+  if(iter == m_witnessMaps.end()) {
+    auto pair = m_witnessMaps.emplace(r, RoadmapType(r->GetRobot()));
+    iter = pair.first;
+  }
+  RoadmapType& witnessMap = iter->second;
+
+  // Add the witness configuration to the witness map.
+  const CfgType& cfg = r->GetVertex(_roadmapVID);
+  const VID witnessMapVID = witnessMap.AddVertex(cfg);
+  m_witnesses.insert(witnessMapVID);
+
+  if(this->m_debug)
+    std::cout << "\tAdding new witness node " << witnessMapVID
+              << std::endl;
+
+  // Update the representative.
+  UpdateRepresentative(witnessMapVID, _roadmapVID);
+}
+
+
+template <typename MPTraits>
+void
+StableSparseRRT<MPTraits>::
+UpdateRepresentative(const VID _witness, const VID _representative) {
+  if(this->m_debug)
+    std::cout << "\tSetting representative for witness node " << _witness
+              << " to " << _representative
+              << " with cost "
+              << this->GetRoadmap()->GetVertex(_representative).GetStat("cost")
+              << std::endl;
+
+  // Add the new representative to the active set.
+  m_active.insert(_representative);
+
+  // If there isn't a representative for this witness yet, create a new entry.
+  auto iter = m_representatives.find(_witness);
+  const bool exists = iter != m_representatives.end();
+  if(!exists) {
+    m_representatives[_witness] = _representative;
+    return;
+  }
+
+  // There is already a representative for this witness: we must erase it
+  // from the active set.
+  const VID oldRepresentative = iter->second;
+  m_active.erase(iter->second);
+  iter->second = _representative;
+
+  // If the old representative has no children, it is now an inactive leaf.
+  auto vi = this->GetRoadmap()->find_vertex(oldRepresentative);
+  const bool noChildren = vi->begin() == vi->end();
+  if(noChildren)
+    m_inactiveLeaves.insert(oldRepresentative);
+}
 
 
 template <typename MPTraits>
@@ -358,8 +452,9 @@ FindNearestWitness(const CfgType& _cfg) {
 
   // Search with the witness NF.
   const auto nf = this->GetNeighborhoodFinder(this->m_witnessNfLabel);
-  nf->FindNeighbors(this->GetRoadmap(), _cfg, m_witnesses,
-      witnessNeighbors);
+  RoadmapType& witnessMap = m_witnessMaps.at(this->GetRoadmap());
+  nf->FindNeighbors(&witnessMap, _cfg, m_witnesses,
+      std::back_inserter(witnessNeighbors));
 
   // If that failed, return a null result.
   if(witnessNeighbors.empty())
@@ -384,11 +479,37 @@ PruneInactiveLeaves() {
   MethodTimer mt(this->GetStatClass(), "SST::PruneInactiveLeaves");
   auto g = this->GetRoadmap();
 
+  if(this->m_debug)
+    std::cout << "Pruning tree, " << m_inactiveLeaves.size()
+              << " inactive leaves."
+              << std::endl;
+
+  // We need to make sure we don't prune the best goal nodes. These could be
+  // inactive leaves if there is a lower-cost node in their witness region, but
+  // we obviously want to keep them so that we still have a valid solution to
+  // our problem.
+  const VertexSet goals = GetBestGoalVIDs();
+  VertexSet leafGoals;
+
   // Prune the inactive leaves until there are none.
+  size_t count = 0;
   while(!m_inactiveLeaves.empty()) {
+    ++count;
+
     // Get the next leaf.
     auto leaf = m_inactiveLeaves.begin();
     const VID leafVID = *leaf;
+    m_inactiveLeaves.erase(leaf);
+
+    // If this leaf is a best goal, don't prune it.
+    if(goals.count(leafVID)) {
+      leafGoals.insert(leafVID);
+      if(this->m_debug)
+        std::cout << "\tNot pruning inactive leaf " << leafVID
+                  << " which is a best goal node."
+                  << std::endl;
+      continue;
+    }
 
     // Find parent.
     const VertexSet& predecessors = g->GetPredecessors(leafVID);
@@ -406,15 +527,71 @@ PruneInactiveLeaves() {
 
     // Remove leaf.
     g->DeleteVertex(leafVID);
-    m_inactiveLeaves.erase(leaf);
+    if(this->m_debug)
+      std::cout << "\tPruned inactive leaf " << leafVID << "." << std::endl;
 
     // If parent is now an inactive leaf, add it to m_inactiveLeaves.
     if(g->get_out_degree(parent) == 0) {
       const bool active = m_active.count(parent);
       if(!active)
         m_inactiveLeaves.insert(parent);
+      if(this->m_debug)
+        std::cout << "\t  Parent node '" << parent << "' is a leaf and "
+                  << (active ? "" : "in") << "active."
+                  << std::endl;
     }
+    else if(this->m_debug)
+      std::cout << "\t  Parent node '" << parent << "' has other children."
+                << std::endl;
   }
+
+  // If we skipped pruning any leaf goals, add those back to the inactive leaves
+  // now.
+  m_inactiveLeaves.insert(leafGoals.begin(), leafGoals.end());
+
+  if(this->m_debug)
+    std::cout << "Pruned " << count << " vertices." << std::endl;
+}
+
+
+template <typename MPTraits>
+typename MPTraits::RoadmapType::VertexSet
+StableSparseRRT<MPTraits>::
+GetBestGoalVIDs() {
+  auto goalTracker = this->GetGoalTracker();
+  const size_t numGoals = this->GetTask()->GetNumGoals();
+  auto r = this->GetRoadmap();
+
+  VertexSet bestGoalVIDs;
+
+  // Check each goal.
+  for(size_t i = 0; i < numGoals; ++i) {
+    // Get the VIDs that satisfy this goal. If there aren't any, move on.
+    const VertexSet& goals = goalTracker->GetGoalVIDs(i);
+    if(goals.empty())
+      continue;
+
+    // Find the best-cost VID.
+    VID bestVID = INVALID_VID;
+    double bestCost = std::numeric_limits<double>::infinity();
+    for(const VID vid : goals) {
+      // Get cost.
+      const double cost = r->GetVertex(vid).GetStat("cost");;
+
+      // Skip if not better.
+      if(cost >= bestCost)
+        continue;
+
+      // This cost is better.
+      bestCost = cost;
+      bestVID = vid;
+    }
+
+    // Add the best VID to the output set.
+    bestGoalVIDs.insert(bestVID);
+  }
+
+  return bestGoalVIDs;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -33,6 +33,7 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     typedef typename MPTraits::CfgType                CfgType;
     typedef typename MPTraits::RoadmapType            RoadmapType;
     typedef typename RoadmapType::VID                 VID;
+    typedef typename RoadmapType::VertexSet           VertexSet;
     typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType           GroupCfgType;
 
@@ -44,6 +45,7 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@{
 
     using typename NeighborhoodFinderMethod<MPTraits>::Type;
+    using typename NeighborhoodFinderMethod<MPTraits>::OutputIterator;
 
     ///@}
     ///@name Construction
@@ -62,30 +64,32 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     virtual void Initialize() override;
 
     ///@}
-    ///@name NeighborhoodFinderMethod Interface
+    ///@name NeighborhoodFinderMethod Overrides
     ///@{
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(RoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const CfgType& _cfg, OutputIterator _out);
+    virtual size_t& GetK() noexcept override;
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(RoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
+    virtual double& GetRadius() noexcept override;
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighbors(GroupRoadmapType* _r,
-        InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-        const GroupCfgType& _cfg, OutputIterator _out);
+    virtual void SetDMLabel(const std::string& _label) noexcept override;
 
-    template <typename InputIterator, typename OutputIterator>
-    OutputIterator FindNeighborPairs(GroupRoadmapType* _r,
-        InputIterator _first1, InputIterator _last1,
-        InputIterator _first2, InputIterator _last2,
-        OutputIterator _out);
+    virtual const std::string& GetDMLabel() const noexcept override;
+
+    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+        const VertexSet& _candidates, OutputIterator _out) override;
+
+    virtual void FindNeighbors(GroupRoadmapType* const _r,
+        const GroupCfgType& _cfg, const VertexSet& _candidates,
+        OutputIterator _out) override;
+
+    ///@}
+    ///@name Parameter Interface
+    ///@{
+
+    /// Update the parameters based on the current roadmap state. This is
+    /// required when we need to check the parameter values prior to calling the
+    /// method, as in the TopologicalFilter.
+    void UpdateParameters(RoadmapType* const _r);
 
     ///@}
 
@@ -94,7 +98,8 @@ class OptimalNF : public NeighborhoodFinderMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    NeighborhoodFinderPointer m_nf; ///< The internal neighborhood finder.
+    /// The internal neighborhood finder.
+    std::unique_ptr<NeighborhoodFinderMethod<MPTraits>> m_nf;
 
     /// This function adjusts the NF parameters based on the current roadmap
     /// size before each run.
@@ -115,13 +120,17 @@ OptimalNF() : NeighborhoodFinderMethod<MPTraits>() {
 
 template <typename MPTraits>
 OptimalNF<MPTraits>::
-OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
+OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
   this->SetName("OptimalNF");
 
   // We must not have the 'unconnected' option set for this to work.
   if(this->m_unconnected)
     throw ParseException(_node.Where()) << "OptimalNF requires unconnected = "
                                         << "false.";
+
+  std::string exLabel = _node.Read("exLabel", false, "",
+      "The RRT extender label if used with an RRT method. If supplied, the "
+      "optimal radius will not exceed the extender's max distance.");
 
   // Parse the type (radius or k).
   const std::string choices = "Choices are 'radius' or 'k'.";
@@ -137,11 +146,11 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
     this->m_nfType = Type::RADIUS;
 
     // Create a radius NF.
-    m_nf = NeighborhoodFinderPointer(new RadiusNF<MPTraits>());
+    m_nf.reset(new RadiusNF<MPTraits>());
 
     // Define the parameter function to set K based on the roadmap size and
     // dimension.
-    m_setParameters = [this, e](const RoadmapType* const _r) {
+    m_setParameters = [this, e, exLabel](const RoadmapType* const _r) {
       auto robot  = _r->GetRobot();
       auto cspace = robot->GetCSpace();
       auto vspace = robot->GetVSpace();
@@ -168,24 +177,37 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
       // can't compute the measure of cfree).
       const double volumeRatio = cfreeHyperVolume / unitBallHyperVolume;
 
+      // The optimal radius will depend on (lg x / x) where x is the size of the
+      // roadmap. This reaches its maximum at x = e, so we'll lower-bound the
+      // effective size at e to avoid numerical problems and sillyness with an
+      // expanding radius.
+      const double size = std::max<double>(std::exp(1), _r->Size());
+
       // Find the optimal radius.
       const double gamma = 2. * std::pow(1. + rd, rd) * std::pow(volumeRatio, rd);
       const double optimalR = gamma
-                            * std::pow(std::log(_r->Size()) / _r->Size(), rd);
-      this->m_nf->GetRadius() = optimalR;
+                            * std::pow(std::log(size) / size, rd);
+      if(exLabel.empty())
+        this->m_nf->GetRadius() = optimalR;
+      else {
+        auto ex = this->GetExtender(exLabel);
+        this->m_nf->GetRadius() = std::min(optimalR, ex->GetMaxDistance());
+      }
+
       if(this->m_debug)
         std::cout << "Finding closest neighbors with radius = "
-                  << this->m_nf->GetRadius() << "."
+                  << this->m_nf->GetRadius() << " (extender: "
+                  << (exLabel.empty() ? "none" : exLabel) << ")."
                   << std::endl;
     };
   }
   else if(nfType == "k") {
     this->m_nfType = Type::K;
-    this->GetK() = 1;
 
     // Create a k-nearest NF (currently we use brute force but can probably
     // switch this to kd-tree).
-    m_nf = NeighborhoodFinderPointer(new BruteForceNF<MPTraits>());
+    m_nf.reset(new BruteForceNF<MPTraits>());
+    this->GetK() = 1;
 
     // Define the parameter function to set K based on the roadmap size and
     // dimension.
@@ -195,7 +217,8 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
       const size_t dimension = robot->GetCSpace()->GetDimension()
                              + (vspace ? vspace->GetDimension() : 0);
       const double k = e * (1. + 1. / dimension);
-      const size_t optimalK = std::ceil(k * std::log(_r->Size()));
+      // Force the size to be at least two to get a positive k-value.
+      const size_t optimalK = std::ceil(k * std::log(std::max<size_t>(_r->Size(), 2)));
       this->m_nf->GetK() = optimalK;
       if(this->m_debug)
         std::cout << "Finding closest neighbors with k = " << this->m_nf->GetK()
@@ -206,7 +229,7 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node, true) {
   else
     throw ParseException(_node.Where()) << "Unrecognized nfType. " << choices;
 
-  m_nf->SetDMLabel(this->GetDMLabel());
+  m_nf->SetDMLabel(this->m_dmLabel);
 }
 
 
@@ -227,52 +250,70 @@ Initialize() {
 /*-------------------- NeighborhoodFinderMethod Interface --------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+inline
+size_t&
 OptimalNF<MPTraits>::
-FindNeighbors(RoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const CfgType& _cfg, OutputIterator _out) {
+GetK() noexcept {
+  return m_nf->GetK();
+}
+
+
+template <typename MPTraits>
+inline
+double&
+OptimalNF<MPTraits>::
+GetRadius() noexcept {
+  return m_nf->GetRadius();
+}
+
+
+template <typename MPTraits>
+inline
+void
+OptimalNF<MPTraits>::
+SetDMLabel(const std::string& _label) noexcept {
+  m_nf->SetDMLabel(_label);
+}
+
+
+template <typename MPTraits>
+inline
+const std::string&
+OptimalNF<MPTraits>::
+GetDMLabel() const noexcept {
+  return m_nf->GetDMLabel();
+}
+
+
+template <typename MPTraits>
+void
+OptimalNF<MPTraits>::
+FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNeighbors");
+
   // Update parameters and compute neighbors.
   m_setParameters(_r);
-  m_nf->FindNeighbors(_r, _first, _last, _fromFullRoadmap, _cfg, _out);
-
-  return _out;
+  m_nf->FindNeighbors(_r, _cfg, _candidates, _out);
 }
 
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+void
 OptimalNF<MPTraits>::
-FindNeighborPairs(RoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
+FindNeighbors(GroupRoadmapType* const _r, const GroupCfgType& _cfg,
+    const VertexSet& _candidates, OutputIterator _out) {
   throw NotImplementedException(WHERE);
 }
 
+/*--------------------------- Parameter Interface ----------------------------*/
 
 template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
+void
 OptimalNF<MPTraits>::
-FindNeighbors(GroupRoadmapType* _r,
-    InputIterator _first, InputIterator _last, bool _fromFullRoadmap,
-    const GroupCfgType& _cfg, OutputIterator _out) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-template <typename InputIterator, typename OutputIterator>
-OutputIterator
-OptimalNF<MPTraits>::
-FindNeighborPairs(GroupRoadmapType* _r,
-    InputIterator _first1, InputIterator _last1,
-    InputIterator _first2, InputIterator _last2,
-    OutputIterator _out) {
-  throw NotImplementedException(WHERE);
+UpdateParameters(RoadmapType* const _r) {
+  m_setParameters(_r);
 }
 
 /*----------------------------------------------------------------------------*/

@@ -131,7 +131,7 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
                       "robot's multibody! For now this is not supported here!");
       const size_t body = 0; /// TODO add loop here to support multiple bodies.
       const std::vector<GMSPolygon>& polygons =
-                        multiBody->GetBody(body)->GetPolyhedron().m_polygonList;
+                        multiBody->GetBody(body)->GetPolyhedron().GetPolygonList();
       for(const GMSPolygon& polygon : polygons) {
         Vector3d normal = polygon.GetNormal();
         if(posDofsPerBody == 2)

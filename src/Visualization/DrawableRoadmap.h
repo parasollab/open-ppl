@@ -4,12 +4,16 @@
 #include "DrawableCfg.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
+#include "Utilities/Hash.h"
 
 #include "glutils/drawable.h"
 
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 class DrawableMultiBody;
@@ -26,9 +30,14 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@name Local Types
     ///@{
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
-    typedef typename RoadmapType::VI VI;
-    typedef typename RoadmapType::EI EI;
+    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>>   RoadmapType;
+    typedef typename RoadmapType::VI                VI;
+    typedef typename RoadmapType::EI                EI;
+    typedef typename RoadmapType::VID               VID;
+    typedef typename std::pair<VID, VID>            EdgeID;
+
+    typedef typename std::vector<double>            CfgData;
+    typedef typename std::vector<glutils::vector3f> PointPath;
 
     ///@}
     ///@name Constructor
@@ -100,13 +109,16 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@name Internal State
     ///@{
 
-    std::vector<DrawableCfg> m_cfgs;                     ///< Cfg renderings.
-    std::vector<std::vector<glutils::vector3f>> m_edges; ///< Edge renderings.
+    std::unordered_map<VID, DrawableCfg> m_cfgs;    ///< Cfg renderings.
+    std::unordered_map<EdgeID, PointPath> m_edges;  ///< Edge renderings.
 
-    /// Buffer for added configurations.
-    std::vector<std::vector<double>> m_bufferCfgs;
-    /// Buffer for added edges.
-    std::vector<std::vector<glutils::vector3f>> m_bufferEdges;
+    /// Buffer for configurations.
+    std::unordered_map<VID, DrawableCfg> m_bufferAddCfgs;
+    std::unordered_set<VID> m_bufferDeleteCfgs;
+
+    /// Buffer for edges.
+    std::unordered_map<EdgeID, PointPath> m_bufferAddEdges;
+    std::unordered_set<EdgeID> m_bufferDeleteEdges;
 
     glutils::color m_color;                   ///< The rendering color.
     MultiBody m_multiBody;                    ///< Local copy of the multibody.

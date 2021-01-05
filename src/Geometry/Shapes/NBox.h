@@ -1,5 +1,5 @@
-#ifndef N_BOX_H_
-#define N_BOX_H_
+#ifndef PMPL_N_BOX_H_
+#define PMPL_N_BOX_H_
 
 #include <cstddef>
 #include <iostream>

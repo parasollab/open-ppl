@@ -158,7 +158,8 @@ ConnectImplImpl(AbstractRoadmapType* const _r, const VID _source,
   // Determine nearest neighbors.
   m_neighborBuffer.clear();
   if(_targetSet)
-    nf->FindNeighbors(_r, cfg, *_targetSet, m_neighborBuffer);
+    nf->FindNeighbors(_r, cfg, *_targetSet,
+        std::back_inserter(m_neighborBuffer));
   else
     nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
 

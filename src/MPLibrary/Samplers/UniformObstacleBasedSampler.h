@@ -113,17 +113,9 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   bool generated = false;
   int attempts = 0;
   bool cfg1Free;
-  double margin = m_margin;
-  if(margin == 0)
-    margin = _cfg.GetMultiBody()->GetMaxAxisRange();
-
-  vector<pair<double, double> > origBoundary;
-  for(size_t i = 0; i < 3; i++) {
-    const auto& r = _boundary->GetRange(i);
-    origBoundary.emplace_back(r.min, r.max);
-  }
-
-  env->ResetBoundary(margin, _cfg.GetMultiBody());
+  double margin = m_margin != 0.
+                ? m_margin
+                : _cfg.GetMultiBody()->GetBase()->GetPolyhedron().GetMaxRadius();
 
   attempts++;
   //Generate first cfg
@@ -159,7 +151,6 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   CfgType temp = cfg1;
 
   inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
-  env->ResetBoundary(origBoundary, 0);
   for(int i = 1; i < nTicks; i++) {
     tick += inter;
     tickFree = vc->IsValid(tick, callee);

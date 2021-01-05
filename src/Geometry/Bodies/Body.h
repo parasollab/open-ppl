@@ -1,23 +1,23 @@
-#ifndef BODY_H_
-#define BODY_H_
+#ifndef PMPL_BODY_H_
+#define PMPL_BODY_H_
+
+#include "Geometry/GMSPolyhedron.h"
+#include "Utilities/MPUtils.h"
+
+#include "Transformation.h"
+
+#include "glutils/color.h"
 
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "glutils/color.h"
-#include "Geometry/GMSPolyhedron.h"
-#include "Utilities/MPUtils.h"
-
-#include "Transformation.h"
 using namespace mathtool;
 
 class CollisionDetectionMethod;
 class Connection;
 class MultiBody;
-class PQP_Model;
-class RAPID_model;
 class XMLNode;
 
 
@@ -153,12 +153,6 @@ class Body {
     ///@name Geometric Properties
     ///@{
 
-    /// Get the maximal bounding radius as measured from the body's center point.
-    double GetBoundingSphereRadius() const;
-
-    /// Get the minimum radius as measured from the body's center point.
-    double GetInsideSphereRadius() const;
-
     /// Set the polyhedron model for this body.
     void SetPolyhedron(GMSPolyhedron&& _poly);
 
@@ -174,18 +168,12 @@ class Body {
     /// Compute the bounding box in world coordinates.
     GMSPolyhedron GetWorldBoundingBox() const;
 
-    /// Test if a point is a convex hull vertex of this body's polyhedron in
-    /// model coordinates.
-    /// @param _v A vertex in model coordinates.
-    /// @return True if \p _v is a convex hull vertex of body.
-    bool IsConvexHullVertex(const Vector3d& _v) const;
-
     ///@}
     ///@name Transform Functions
     ///@{
 
     /// Mark all cached objects as requiring an update.
-    void MarkDirty() const;
+    void MarkDirty();
 
     /// Set the transformation from model to world coordinates.
     /// @param _transformation The new transformation for this body.
@@ -194,19 +182,6 @@ class Body {
     /// Get the transformation from model to world coordinates.
     /// @return The current transformation.
     const Transformation& GetWorldTransformation() const;
-
-    ///@}
-    ///@name Collision Detection Models
-    ///@{
-
-    /// Build rapid and PQP models of this body.
-    void BuildCDModels();
-
-    RAPID_model* GetRapidBody() const noexcept;
-    void SetRapidBody(std::unique_ptr<RAPID_model>&& _r);
-
-    PQP_Model* GetPQPBody() const noexcept;
-    void SetPQPBody(std::unique_ptr<PQP_Model>&& _p);
 
     ///@}
     ///@name Connection Information
@@ -272,9 +247,6 @@ class Body {
 
     static std::string m_modelDataDir; ///< Directory of geometry files
 
-    /// Get the center-of-mass adjustment option.
-    GMSPolyhedron::COMAdjust GetCOMAdjust() const;
-
     /// Get the file name from which this body was constructed.
     const std::string& GetFileName() const;
 
@@ -287,7 +259,8 @@ class Body {
 
     /// Read geometry information from file.
     /// @param _comAdjust Center of mass adjustment method
-    void ReadGeometryFile(GMSPolyhedron::COMAdjust _comAdjust = GMSPolyhedron::COMAdjust::None);
+    void ReadGeometryFile(
+        GMSPolyhedron::COMAdjust _comAdjust = GMSPolyhedron::COMAdjust::None);
 
     /// Parse a body from an old .env or .robot file.
     /// @param _is An open input stream for the geometry file.
@@ -297,12 +270,6 @@ class Body {
     ///       update the old files to the new XML format. Do not waste time
     ///       working on this function.
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
-
-    /// @return the convex hull in model coordinates
-    GMSPolyhedron& GetConvexHull();
-
-    /// @return a convex hull in world coordinates
-    const GMSPolyhedron& GetWorldConvexHull();
 
     ///@}
     ///@name Visualization
@@ -337,9 +304,6 @@ class Body {
     /// Compute the axis-aligned bounding box in model coordinates.
     void ComputeBoundingBox() const;
 
-    /// Compute the convex hull in model coordinates.
-    void ComputeConvexHull() const;
-
     const Transformation& FetchBaseTransform() const noexcept;
 
     const Transformation& FetchLinkTransform() const noexcept;
@@ -350,12 +314,6 @@ class Body {
     /// @return The transformation from model to world coordinates.
     const Transformation& ComputeWorldTransformation(std::set<size_t>& _visited)
         const;
-
-    /// Compute the world-coordinate polyhedron by applying the world transform
-    /// to the model-coordinate version.
-    /// @param _polyhedron is the polyhedron to operate on
-    /// @param _worldPolyhedron stores the world-coordinate result
-    void ComputeWorldPolyhedron(const GMSPolyhedron& _polyhedron, const GMSPolyhedron& _worldPolyhedron) const;
 
     ///@}
     ///@name Internal State
@@ -372,24 +330,15 @@ class Body {
     GMSPolyhedron m_polyhedron;              ///< Model in model coordinates.
     GMSPolyhedron m_boundingBox;             ///< AABB in model coordinates.
 
-    GMSPolyhedron m_convexHull;              ///< Convex hull in model frame.
-    mutable bool m_convexHullCached{false};  ///< Is convex hull cached?
-
     Transformation m_transform;         ///< Transform from model to world frame.
     mutable bool m_transformCached{false};    ///< Is the transform cached?
 
-    GMSPolyhedron m_worldPolyhedron;         ///< Model in world coordinates.
+    mutable GMSPolyhedron m_worldPolyhedron;     ///< Model in world coordinates.
     mutable bool m_worldPolyhedronCached{false}; ///< Is world polyhedron cached?
-
-    GMSPolyhedron m_worldConvexHull;         ///< Convex model in world coordinates.
-    mutable bool m_worldConvexHullCached{false};  ///< Is world convex hull cached?
 
     double m_mass{1};                        ///< Mass of Body
     Matrix3x3 m_moment;                      ///< Moment of Inertia
     GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
-
-    std::unique_ptr<RAPID_model> m_rapidBody;  ///< RAPID model
-    std::unique_ptr<PQP_Model> m_pqpBody;      ///< PQP model
 
     std::vector<Connection*> m_forwardConnections;  ///< Forward Connections
     std::vector<Connection*> m_backwardConnections; ///< Backward Connections

@@ -43,6 +43,12 @@ class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
     virtual ~GroupQuery() = default;
 
     ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
+
+    virtual void Initialize() override;
+
+    ///@}
     ///@name MapEvaluator Overrides
     ///@{
 
@@ -98,6 +104,18 @@ GroupQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("GroupQuery");
 }
 
+/*------------------------- MPBaseObject Overrides ---------------------------*/
+
+template <typename MPTraits>
+void
+GroupQuery<MPTraits>::
+Initialize() {
+  // Clear previous state.
+  Reset(nullptr);
+
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 0);
+}
+
 /*-------------------------- MapEvaluator Overrides --------------------------*/
 
 template <typename MPTraits>
@@ -108,6 +126,12 @@ operator()() {
   const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
   auto task = this->GetGroupTask();
   const size_t numGoals = task->GetNumGoals();
+
+  // Record the path length history when this function exits.
+  nonstd::call_on_destruct trackHistory([this](){
+      this->GetStatClass()->AddToHistory("pathlength",
+          this->GetGroupPath()->Length());
+  });
 
   // If no goals remain, then this must be a refinement step (as in optimal
   // planning). In this case or the roadmap has changed, reinitialize and
@@ -166,8 +190,7 @@ operator()() {
       return false;
   }
 
-  // We generated a path successfully: track the path length history.
-  this->GetStatClass()->AddToHistory("pathlength", path->Length());
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 1);
 
   if(this->m_debug)
     std::cout << "\tConnected all goals!" << std::endl;

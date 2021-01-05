@@ -234,7 +234,6 @@ InitRegions(const Point3d& _start) {
 #ifdef PMPL_USE_SIMULATOR
   Simulation::Get()->AddWorkspaceSkeleton(m_skeleton, glutils::color::orange);
   usleep(sleepTime);
-  m_skeleton->Write("skeleton");
 #endif
 }
 

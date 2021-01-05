@@ -1,5 +1,5 @@
-#ifndef ABSTRACT_BOUNDING_BOX_H_
-#define ABSTRACT_BOUNDING_BOX_H_
+#ifndef PMPL_ABSTRACT_BOUNDING_BOX_H_
+#define PMPL_ABSTRACT_BOUNDING_BOX_H_
 
 #include "Boundary.h"
 #include "Geometry/Shapes/NBox.h"

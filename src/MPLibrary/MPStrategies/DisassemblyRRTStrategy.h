@@ -13,11 +13,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// This is sub-method for disassembly methods. Sub-method because it is
 /// not designed to be used on its own, but rather to be called from a
-/// disassembly method in order to try an RRT removal.
+/// disassembly method in order to try an RRT removal. It will only extend the
+/// CC which contains the starting position for removal.
 ///
-/// @todo This needs to be removed and replaced with an appropriate substrategy
-///       call (i.e. create an appropriate task, switch to it, and call standard
-///       RRT).
+/// @todo This should probably inherit from and build off regular RRT. It has
+///       sufficiently distinct functionality to be its own class though, either
+///       as a base class or its own thing.
 ///
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,16 +35,8 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupPathType     GroupPathType;
     typedef typename GroupRoadmapType::VID       VID;
+    typedef typename GroupRoadmapType::VertexSet VertexSet;
     typedef typename GroupCfgType::Formation     Formation;
-    typedef typename MPBaseObject<MPTraits>::MapEvaluatorPointer MapEvaluatorPointer;
-
-    typedef typename MPTraits::MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
-
-    ///@}
-    ///@name Local Types
-    ///@{
-
-    typedef std::vector<VID> TreeType;
 
     ///@}
     ///@name Construction
@@ -64,7 +57,6 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@}
 
     /// We need the start Cfg just for initializing the tree for disassembly
-//    const CfgType* m_startCfg{nullptr};
     const GroupCfgType* m_startGroupCfg{nullptr};
     //In relation to the Manhattan-Like RRT (for the Thanh Le implementation)
     // this is q_init in that paper.
@@ -100,16 +92,9 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Neighbor Helpers
     ///@{
 
-    /// Get the configurations that are adjacent to _v in the map.
-    std::vector<GroupCfgType> SelectNeighbors(VID _v);
-
-    /// Find the nearest configuration to the target _cfg within _tree.
-    virtual VID FindNearestNeighbor(const GroupCfgType& _cfg, const TreeType& _tree);
-
-    /// If the graph type is GRAPH, try to connect a configuration to its
-    /// neighbors. No-op for TREE type graph.
-    /// @param _newVID The VID of the configuration to connect.
-//    void ConnectNeighbors(VID _newVID);
+    /// Find the nearest configuration to the target _cfg within a set of
+    /// _candidates.
+    virtual VID FindNearestNeighbor(const GroupCfgType& _cfg);
 
     ///@}
     ///@name Growth Helpers
@@ -134,18 +119,12 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _source   The source node.
     /// @param _target   The target node.
     /// @param _lpOutput The extender output.
-    void AddEdge(VID _source, VID _target, const GroupLPOutput<MPTraits>& _lpOutput);
+    void AddEdge(const VID _source, const VID _target,
+        const GroupLPOutput<MPTraits>& _lpOutput);
 
     ///@}
     ///@name Tree Helpers
     ///@{
-
-    /// Attempt to expand the map by growing towards a target
-    ///        configuration from the nearest existing node in the current tree.
-    /// @param _target The target configuration.
-    /// @return            The VID of a newly created Cfg if successful,
-    ///                    INVALID_VID otherwise.
-    virtual VID ExpandTree(GroupCfgType& _target);
 
     /// Attempt to expand the map by growing towards a target
     ///        configuration from an arbitrary node.
@@ -155,7 +134,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///                        INVALID_VID otherwise.
     virtual VID ExpandTree(const VID _nearestVID, const GroupCfgType& _target);
 
-    ///< Only for Manhattan-Like RRT.
+    /// Only for Manhattan-Like RRT.
     void PerterbCollidingParts(VID& _qNear, bool& _expanded);
 
     ///@}
@@ -165,13 +144,10 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     std::string m_nfLabel;       ///< The neighborhood finder label.
     std::string m_vcLabel;       ///< The validity checker label.
     std::string m_exLabel;       ///< The extender label.
-    std::string m_gt;            ///< The graph type.
 
-    std::string m_samplerLabel; ///< Sampler label.
-    //No number or attempts is recorded because we need single
-    // disassembly samples.
+    std::string m_samplerLabel;  ///< Sampler label.
 
-    std::string m_stateMELabel; ///< The ME label for the StrategyStateEvaluator used
+    std::string m_stateMELabel;  ///< The ME label for the StrategyStateEvaluator used
 
     /// The ME label that determines the successful flag of this strategy
     /// (should be minimum clearance of the part being removed).
@@ -183,9 +159,8 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     VID m_startGroupCfgVID{0};
     Formation m_activeRobots; //For the extender and neighborhood finder
-//    size_t m_lastSamplesLeaderBody; // a default makes no sense here.
 
-    ///< Provides path to node with highest clearance if it fails:
+    /// Provides path to node with highest clearance if it fails:
     bool m_returnBestPathOnFailure{true};
     bool m_preserveMinClearance{false};
 
@@ -206,12 +181,6 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     bool m_successful{false};
 
     ///@}
-    ///@name Tree Data
-    ///@{
-
-    TreeType m_tree;                ///< The tree of VIDs of the roadmap.
-
-    ///@}
     ///@name Extension Success Tracking
     ///@{
 
@@ -219,6 +188,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     size_t m_trials{0};     ///< The count of attempted extensions.
 
     ///@}
+
 };
 
 /*----------------------------- Construction ---------------------------------*/
@@ -234,9 +204,6 @@ template <typename MPTraits>
 DisassemblyRRTStrategy<MPTraits>::
 DisassemblyRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   this->SetName("DisassemblyRRTStrategy");
-
-  // Parse RRT parameters
-  m_gt = _node.Read("gtype", true, "", "Graph type dir/undirected tree/graph");
 
   // Parse MP object labels
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
@@ -280,21 +247,11 @@ template <typename MPTraits>
 void
 DisassemblyRRTStrategy<MPTraits>::
 Print(std::ostream& _os) const {
-  if(this->m_debug) {
-  _os << "DisassemblyRRTStrategy::Print (debug is true)" << std::endl
-      << "  MP objects:" << std::endl
-//      << "\tDistance Metric: " << m_dmLabel << std::endl
-      << "\tNeighborhood Finder: " << m_nfLabel << std::endl
-      << "\tValidity Checker: " << m_vcLabel << std::endl
-//      << "\tConnection Method: " << m_ncLabel << std::endl
-      << "\tExtender: " << m_exLabel << std::endl
-      << "\tEvaluators: " << std::endl;
-  for(auto& s : this->m_meLabels)
-    _os << "\t\t" << s << std::endl;
-
-  _os << "  RRT properties:" << std::endl
-      << "\tGraph Type: " << m_gt << std::endl;
-  }
+  MPStrategyMethod<MPTraits>::Print(_os);
+  _os << "\tNeighborhood Finder: " << m_nfLabel
+      << "\n\tValidity Checker: " << m_vcLabel
+      << "\n\tExtender: " << m_exLabel
+      << std::endl;
 }
 
 /*-------------------------- MPStrategy overrides ----------------------------*/
@@ -338,17 +295,16 @@ Initialize() {
     stateME->m_strategyLabel = this->GetLabel();
   }
 
-  MapEvaluatorPointer me = this->GetMapEvaluator(m_successfulCheckME);
+  auto me = this->GetMapEvaluator(m_successfulCheckME);
   me->SetActiveRobots(m_activeRobots);
 
   if(!m_samplerLabel.empty() && m_startGroupCfg && m_startGroupCfg->DOF() != 0) {
     // the startCfg will be the root in this roadmap, and we only use one tree.
     m_startGroupCfgVID = g->AddVertex(*m_startGroupCfg);
-    m_tree = TreeType(1, m_startGroupCfgVID);
   }
   else // If no sampler and start cfg, throw an exception
-    throw RunTimeException(WHERE, "RRT strategy for disassembly not "
-                                  "initialized correctly!");
+    throw RunTimeException(WHERE) << "RRT strategy for disassembly not "
+                                  << "initialized correctly!";
 
   /// @todo This shouldn't be needed, everything is initialized at the top of
   ///       the library's solve call. It is also done above.
@@ -364,41 +320,36 @@ DisassemblyRRTStrategy<MPTraits>::
 Iterate() {
   GroupRoadmapType* const graph = this->GetGroupRoadmap();
   auto const stats = this->GetStatClass();
+  const std::string id = this->GetNameAndLabel();
   ++m_trials;
-//  if(this->m_debug)
-//    std::cout << "*** Starting iteration " << m_trials << " "
-//         << "***************************************************" << std::endl
-//         << "Graph state: " << std::endl << graph->PrettyPrint() << std::endl;
 
-  stats->StartClock("SelectDirectionClock");
+  // Generate a growth direction.
+  std::pair<GroupCfgType, VID> target;
+  {
+    MethodTimer mt(stats, id + "::SelectDirectionClock");
 
-  // Find random growth direction.
-  std::pair<GroupCfgType, VID> target = this->SelectTarget();
+    // Find random growth direction.
+    target = this->SelectTarget();
 
-  // Check the sample was actually successful:
-  if(target.first == *m_startGroupCfg) {
+    // Check the sample was actually successful:
+    if(target.first == *m_startGroupCfg) {
+      if(this->m_debug)
+        std::cout << std::endl << std::endl << std::endl
+                  << "Sample failed! Re-attempting, but counting this iteration."
+                  << std::endl;
+      return;
+    }
+
+    // Sample succeeded.
+    ++m_numCfgsGenerated;
     if(this->m_debug)
-      std::cout << std::endl << std::endl << std::endl
-                << "Sample failed! Re-attempting, but counting this iteration."
+      std::cout << "Random direction selected: " << target.first.PrettyPrint()
                 << std::endl;
-    stats->StopClock("SelectDirectionClock");
-    return;
   }
 
-  ++m_numCfgsGenerated;
-
-  if(this->m_debug)
-    std::cout << "Random direction selected: " << target.first.PrettyPrint()
-              << std::endl;
-
-  stats->StopClock("SelectDireDisassemblyRRTctionClock");
-  stats->StartClock("FindNearestNeighborClock");
 
   // Find the nearest configuration to target within the current tree
-  const VID nearestVID = FindNearestNeighbor(target.first, m_tree);
-
-  stats->StopClock("FindNearestNeighborClock");
-  stats->StartClock("ExpandTreeClock");
+  const VID nearestVID = FindNearestNeighbor(target.first);
 
   // Expand current tree
   const VID newVID = this->ExpandTree(nearestVID, target.first);
@@ -410,7 +361,6 @@ Iterate() {
                 tempCfg << std::endl;
     }
   }
-  stats->StopClock("ExpandTreeClock");
 }
 
 
@@ -422,7 +372,7 @@ Finalize() {
   const std::string baseFilename = this->GetBaseFilename();
   const size_t mapVerts = map->get_num_vertices();
   GroupPathType* const path = this->GetGroupPath();
-  ValidityCheckerPointer vc = this->GetValidityChecker(this->m_vcLabel);
+  auto vc = this->GetValidityChecker(this->m_vcLabel);
 
 //  if(this->m_debug) {
     std::cout << "DisassemblyRRTStrategy::Finalize()" << std::endl
@@ -450,7 +400,7 @@ Finalize() {
   }
 
   // Active robots is set in Initialize() for this:
-  MapEvaluatorPointer me = this->GetMapEvaluator(m_successfulCheckME);
+  auto me = this->GetMapEvaluator(m_successfulCheckME);
   m_successful = me->operator()();
   if(m_successful) {
     //Create a temp query to make the path through the group's c-space.
@@ -570,12 +520,11 @@ DisassemblyRRTStrategy<MPTraits>::
 SelectTarget() {
   auto sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
       this->GetSampler(this->m_samplerLabel));
-  auto const graph = this->GetGroupRoadmap();
-  const size_t numVerts = graph->get_num_vertices();
-  const VID randomVID = LRand() % numVerts;
+  auto const g = this->GetGroupRoadmap();
+  const VID randomVID = LRand() % g->Size();
 
   // Set the sampler to mask relative to a random cfg in the tree.
-  sampler->SetStartCfg(graph->GetVertex(randomVID));
+  sampler->SetStartCfg(g->GetVertex(randomVID));
 
   // NOTE: that active bodies will already be correctly set (outside RRT method)
 
@@ -597,30 +546,25 @@ SelectTarget() {
 /*---------------------------- Neighbor Helpers ------------------------------*/
 
 template <typename MPTraits>
-std::vector<typename DisassemblyRRTStrategy<MPTraits>::GroupCfgType>
-DisassemblyRRTStrategy<MPTraits>::
-SelectNeighbors(VID _v) {
-  GroupRoadmapType* g = this->GetGroupRoadmap();
-  typename GroupRoadmapType::vertex_iterator vi = g->find_vertex(_v);
-  std::vector<GroupCfgType> vec;
-  for(const auto& e : *vi)
-    vec.push_back(g->GetVertex(e.target()));
-  return vec;
-}
-
-
-template <typename MPTraits>
 typename DisassemblyRRTStrategy<MPTraits>::VID
 DisassemblyRRTStrategy<MPTraits>::
-FindNearestNeighbor(const GroupCfgType& _cfg, const TreeType& _tree) {
+FindNearestNeighbor(const GroupCfgType& _cfg) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::FindNearestNeighbor");
+
   auto roadmap = this->GetGroupRoadmap();
+
+  // Find the CC we are expanding.
+  auto ccTracker = roadmap->GetCCTracker();
+  const VertexSet* const cc = ccTracker->GetCC(m_startGroupCfgVID);
+
+  // Find neighbors in the roadmap.
   std::vector<Neighbor> neighbors;
   auto const nf = this->GetNeighborhoodFinder(m_nfLabel);
-  nf->FindNeighbors(roadmap, _tree.begin(), _tree.end(),
-                    _tree.size() == roadmap->get_num_vertices(),
-                    _cfg, std::back_inserter(neighbors));
-  const VID nearestVID = neighbors[0].target;
+  nf->FindNeighbors(roadmap, _cfg, *cc, std::back_inserter(neighbors));
 
+  // Return the nearest VID.
+  const VID nearestVID = neighbors[0].target;
   return nearestVID;
 }
 
@@ -726,9 +670,6 @@ Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
     AddEdge(_nearVID, newVID, lpOutput);
   }
 
-//  if(nodeIsNew && !_lp)
-//    ConnectNeighbors(newVID);
-
   if(m_timeEverything)
     this->GetStatClass()->StopClock("Extend(internal)::AfterExtendClock");
 
@@ -746,38 +687,29 @@ AddNode(const GroupCfgType& _newCfg) {
   GroupRoadmapType* const g = this->GetGroupRoadmap();
   const VID newVID = g->AddVertex(_newCfg);
   const bool nodeIsNew = (newVID == (g->get_num_vertices() - 1));
-  if(nodeIsNew) {
-    if(this->m_debug)
-      std::cout << "m_tree.size() = " << m_tree.size()
-                << " | m_tree.capacity() = " << m_tree.capacity()
+  if(this->m_debug) {
+    if(nodeIsNew)
+      std::cout << "\tAdding VID " << newVID << " to tree."
                 << std::endl;
-    m_tree.push_back(newVID);
-    if(this->m_debug)
-      std::cout << "\tAdding VID " << newVID << " to tree." << std::endl;
+    else
+      std::cout << "\tVID " << newVID << " already exists, not adding."
+                << std::endl;
   }
-  else if(this->m_debug)
-    std::cout << "\tVID " << newVID << " already exists, not adding." << std::endl;
 
-  if(this->m_debug)
-    std::cout << "RRT: roadmap state after adding vertex:" << std::endl
-              << g->PrettyPrint();
-
-  return std::make_pair(newVID, nodeIsNew);
+  return {newVID, nodeIsNew};
 }
 
 
 template <typename MPTraits>
 void
 DisassemblyRRTStrategy<MPTraits>::
-AddEdge(VID _source, VID _target, const GroupLPOutput<MPTraits>& _lpOutput) {
-  GroupRoadmapType* g = this->GetGroupRoadmap();
-  if(m_gt.find("UNDIRECTED") != std::string::npos)
-    g->AddEdge(_source, _target, _lpOutput.m_edge);
-  else
-    g->AddEdge(_source, _target, _lpOutput.m_edge.first);
+AddEdge(const VID _source, const VID _target,
+    const GroupLPOutput<MPTraits>& _lpOutput) {
+  this->GetGroupRoadmap()->AddEdge(_source, _target, _lpOutput.m_edge);
 
   if(this->m_debug)
-    std::cout << "\tAdding Edge (" << _source << ", " << _target << ")." << std::endl;
+    std::cout << "\tAdding Edge (" << _source << ", " << _target << ")."
+              << std::endl;
 }
 
 /*------------------------------ Tree Helpers --------------------------------*/
@@ -785,44 +717,28 @@ AddEdge(VID _source, VID _target, const GroupLPOutput<MPTraits>& _lpOutput) {
 template <typename MPTraits>
 typename DisassemblyRRTStrategy<MPTraits>::VID
 DisassemblyRRTStrategy<MPTraits>::
-ExpandTree(GroupCfgType& _target) {
-  VID nearestVID = FindNearestNeighbor(_target, m_tree);
-  return this->ExpandTree(nearestVID, _target);
-}
-
-
-template <typename MPTraits>
-typename DisassemblyRRTStrategy<MPTraits>::VID
-DisassemblyRRTStrategy<MPTraits>::
 ExpandTree(const VID _nearestVID, const GroupCfgType& _target) {
-  if(m_timeEverything)
-    this->GetStatClass()->StartClock("ExpandTree::ExtendClock");
+  auto stats = this->GetStatClass();
+  const std::string id = this->GetNameAndLabel();
+  MethodTimer mt(stats, id + "::ExpandTree");
 
   // Try to extend from the _nearestVID to _target
-  const VID newVID = this->Extend(_nearestVID, _target);
-
-  if(m_timeEverything) {
-    this->GetStatClass()->StopClock("ExpandTree::ExtendClock");
-    this->GetStatClass()->StartClock("ExpandTree::PerturbCollidingPartsClock");
+  VID newVID;
+  {
+    MethodTimer mt(stats, id + "::RegularExtend");
+    newVID = this->Extend(_nearestVID, _target);
   }
 
   bool expanded = (newVID != INVALID_VID);
-  VID qNear;//For manhattan-like algorithm
-  if(expanded)
-    qNear = newVID;
-  else
-    qNear = _nearestVID;
+
+  /// @todo Should we really do the perterb part if we already expanded?
+  VID nearVID = expanded ? newVID : _nearestVID;
   if(m_doManhattanLike && !m_collidingParts.empty())
-    PerterbCollidingParts(qNear, expanded);
+    PerterbCollidingParts(nearVID, expanded);
 
-  if(m_timeEverything) {
-    this->GetStatClass()->StopClock("ExpandTree::PerturbCollidingPartsClock");
-  }
-
-  if(!expanded)
-    return INVALID_VID;
-
-  return newVID;
+  /// @todo This should probably return nearVID or we'll never use the work done
+  ///       in the perterb function?
+  return expanded ? newVID : INVALID_VID;
 }
 
 
@@ -830,6 +746,9 @@ template <typename MPTraits>
 void
 DisassemblyRRTStrategy<MPTraits>::
 PerterbCollidingParts(VID& _qNear, bool& _expanded) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::PerterbCollidingParts");
+
   if(this->m_debug)
     std::cout << "PerterbCollidingParts (Manhattan Like). _qNear = " << _qNear
               << " | _expanded = " << _expanded << std::endl;
@@ -877,16 +796,6 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
     sampler->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
                     std::back_inserter(successfulSamples));
 
-    //TODO: I'm removing this as the way samples are generated shouldn't matter,
-    //      LPs/extenders should choose which leader to use.
-//    m_lastSamplesLeaderBody = sampler->GetLastSamplesLeaderBody();
-//    if(this->m_debug) {
-//      std::cout << "After perturb sampling, last leader body = "
-//                << m_lastSamplesLeaderBody << std::endl;
-//      if(m_lastSamplesLeaderBody != partToAdjust[0])
-//        throw RunTimeException(WHERE, "The part to adjust wasn't sampled for!");
-//    }
-
     if(successfulSamples.empty())
       continue; // Call it a failed iteration if a perturbation wasn't possible.
 
@@ -898,15 +807,9 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
     //Save previous parts, since Extend() will clobber the data in the member.
     const std::vector<size_t> prevCollidingParts = m_collidingParts;
 
-    if(m_timeEverything)
-      this->GetStatClass()->StartClock("PerturbCollidingParts::ExtendClock");
-
     //Extend towards perterbCfg and add to the tree if not too similar.
     //NOTE will clear and replace all elements in m_collidingParts!
     const VID newVID = this->Extend(_qNear, perterbCfg);
-
-    if(m_timeEverything)
-      this->GetStatClass()->StopClock("PerturbCollidingParts::ExtendClock");
 
     if(newVID != INVALID_VID) {
       _expanded = true;//It should be correct to keep updating this.

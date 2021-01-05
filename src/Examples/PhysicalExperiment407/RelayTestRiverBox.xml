@@ -183,8 +183,6 @@
       <RadiusNF label="RadiusNF" dmLabel="euclidean" radius="1.5"/>
       <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
       <DPESNF label="DPESNF" dmLabel="euclidean" k="5" m="3"/>
-      <!--MPNNNF label="BFNF" dmLabel="euclidean" use_rotational="0"
-           use_scaling="0"/-->
     </NeighborhoodFinders>
 
     <Samplers>
