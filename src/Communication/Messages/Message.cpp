@@ -130,7 +130,7 @@ MessageToRobotTeam(std::string _msg, MPProblem* _problem) {
 			//getline(keyvalue,param);
 			//auto submessages = ParseSubMessage(param);
 			//std::stringstream robotinfo(submessages[0]);
-			Robot* robot;
+			Robot* robot = nullptr;
 			while(robotinfo) {
 				getline(robotinfo,param,',');
 
@@ -316,9 +316,9 @@ MessageToSemanticTask(std::string _msg, Decomposition* _decomp, MPProblem* _prob
 
 	std::string label;
 	SemanticTask* parent = nullptr;
-	SemanticTask::SubtaskRelation relation;
-	bool decomposable;
-	bool fixed;
+	SemanticTask::SubtaskRelation relation = SemanticTask::SubtaskRelation::AND;
+	bool decomposable = true;
+	bool fixed = true;
 	std::shared_ptr<MPTask> motionTask;
 	
 

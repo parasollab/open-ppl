@@ -16,6 +16,9 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
   : m_color(_color),
     m_multiBody(*_graph->GetRobot()->GetMultiBody()),
     m_graph(_graph) {
+
+  m_dmb = std::unique_ptr<DrawableMultiBody>(new DrawableMultiBody(&m_multiBody));
+
   // counter for the number of instances of DrawableRoadmapGraph
   static size_t roadmapGraphCounter = 0;
 
@@ -42,6 +45,7 @@ DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
       [this](EI _ei) {
         this->DeleteEdge(_ei);
       });
+
 
   // Adding the current content of the graph to the DRM.
   for(auto iter = m_graph->begin(); iter != m_graph->end(); ++iter)
@@ -149,12 +153,17 @@ DeleteEdge(EI _ei) {
 void
 DrawableRoadmap::
 initialize() {
+
+  if(m_initialized)
+    return;
+
+  m_initialized = true;
+
   glutils::drawable::initialize();
 
   for(size_t i = 0; i < m_multiBody.GetNumBodies(); ++i)
     m_multiBody.GetBody(i)->SetColor(m_color);
 
-  m_dmb = std::unique_ptr<DrawableMultiBody>(new DrawableMultiBody(&m_multiBody));
   m_dmb->initialize();
 }
 
