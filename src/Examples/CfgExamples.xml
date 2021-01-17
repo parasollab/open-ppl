@@ -336,7 +336,7 @@
         <!--Sampler label="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
-        <Evaluator label="Query"/>
+        <Evaluator label="NodesEval"/>
       </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
