@@ -12,6 +12,8 @@
 #include "Simulator/Simulation.h"
 #include "Utilities/MetricUtils.h"
 
+#include "Utilities/Hypergraph.h"
+
 /*------------------------------ Construction --------------------------------*/
 CombinedRoadmap::
 CombinedRoadmap(){
