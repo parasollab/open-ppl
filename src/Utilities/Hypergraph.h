@@ -45,6 +45,8 @@ class Hypergraph {
 
     size_t GetVID(VertexType _vertex) const;
 
+    const std::unordered_map<size_t,Vertex>& GetVertexMap() const;
+
     ///@}
     ///@name Hyperarc Accessor Functions
     ///@{
@@ -57,6 +59,8 @@ class Hypergraph {
     const std::set<size_t>& GetIncomingHyperarcs(size_t _vid) const;
 
     const std::set<size_t>& GetOutgoingHyperarcs(size_t _vid) const;
+
+    const std::unordered_map<size_t,Hyperarc>& GetHyperarcMap() const;
 
     ///@}
 
@@ -139,6 +143,15 @@ GetVID(VertexType _vertex) const {
 
   return MAX_INT;
 }
+    
+template <typename VertexType, typename HyperarcType>
+const std::unordered_map<size_t,
+      typename Hypergraph<VertexType,HyperarcType>::Vertex>& 
+Hypergraph<VertexType,HyperarcType>::
+GetVertexMap() const {
+  return m_vertexMap;
+}
+
 /*------------------------- Hyperarc Accessors ----------------------*/
 
 template <typename VertexType, typename HyperarcType>
@@ -211,4 +224,11 @@ GetOutgoingHyperarcs(size_t _vid) const {
   return m_outgoingHyperarcs.at(_vid);
 }
 
+template <typename VertexType, typename HyperarcType>
+const std::unordered_map<size_t,
+    typename Hypergraph<VertexType,HyperarcType>::Hyperarc>& 
+Hypergraph<VertexType,HyperarcType>::
+GetHyperarcMap() const {
+  return m_hyperarcMap;
+}
 #endif
