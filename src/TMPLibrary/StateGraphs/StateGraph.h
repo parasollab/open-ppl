@@ -29,7 +29,7 @@ class StateGraph : public TMPBaseObject {
     ///@name Accessors
     ///@{
 
-		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
+		virtual RoadmapGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
 
 		/// Copies the state graph into the coordinator solution object.
 		virtual void LoadStateGraph();
@@ -49,7 +49,7 @@ class StateGraph : public TMPBaseObject {
 
 		RoadmapGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
 
-		std::string m_pmLabel;
+		std::string m_pmLabel{""};
 
 		
 		///@}

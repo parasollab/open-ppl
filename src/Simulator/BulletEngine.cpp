@@ -92,6 +92,10 @@ BulletEngine::
 void
 BulletEngine::
 Step(const btScalar _timestep) {
+
+  //temporary to check urdf stuff.
+  return;
+
   std::lock_guard<std::mutex> lock(m_lock);
 
   // Rebuild any objects which need it.

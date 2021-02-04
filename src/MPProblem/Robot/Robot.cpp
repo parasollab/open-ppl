@@ -18,6 +18,7 @@
 #include "Simulator/MatlabMicroSimulator.h"
 #include "Simulator/MicroSimulator.h"
 #include "Utilities/XMLNode.h"
+#include "Utilities/URDFParser.h"
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"
@@ -52,6 +53,8 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // MPStrategies in group decoupled planners. 
   m_defaultStrategyLabel = _node.Read("defaultStrategyLabel", false, "", "The robot individual strategy");
 
+  std::string worldLink = _node.Read("worldLink", false, "", "The link name for the world link in a URDF.");
+
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
   std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
@@ -74,9 +77,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     // If we got an XML file, use that parsing mechanism.
     ReadXMLFile(filename);
   }
-  else if(filename.find(".urdf") != std::string::npos) {
+  else if(filename.find(".urdf") != std::string::npos or filename.find(".xacro") != std::string::npos) {
     // If we got a URDF file, use that parsing mechanism.
-    ReadURDF(filename);
+    ReadURDF(filename,worldLink);
   }
   else {
     // Otherwise we got a multibody file, which cannot specify dynamics options
@@ -335,10 +338,10 @@ ReadMultibodyFile(const std::string& _filename) {
 
 void
 Robot::
-ReadURDF(const std::string& _filename) {
+ReadURDF(const std::string& _filename, std::string _worldLink) {
   // Convert the urdf model to multibody representation.
   m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
-  m_multibody->TranslateURDF(_filename);
+  m_multibody->TranslateURDF(_filename, _worldLink);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   InitializePlanningSpaces();
@@ -646,6 +649,7 @@ Robot::
 IsFixed() const noexcept {
   return m_fixed;
 }
+		
 /*---------------------------------- Debug -----------------------------------*/
 
 std::ostream&

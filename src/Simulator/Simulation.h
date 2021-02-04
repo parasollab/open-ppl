@@ -43,14 +43,14 @@ class Simulation : public base_visualization {
     /// Create a simulation of an MPProblem.
     /// @param _problem The MPProblem to simulate.
     /// @param _edit Start in edit mode instead of the physical simulator?
-    Simulation(std::shared_ptr<MPProblem> _problem, const bool _edit);
+    Simulation(MPProblem* _problem, const bool _edit);
 
   public:
 
     /// Create the singleton.
     /// @param _problem The MPProblem to simulate.
     /// @param _edit Start in edit mode instead of the physical simulator?
-    static void Create(std::shared_ptr<MPProblem> _problem,
+    static void Create(MPProblem* _problem,
         const bool _edit = false);
 
     virtual ~Simulation();
@@ -194,8 +194,8 @@ class Simulation : public base_visualization {
     ///@name Internal State
     ///@{
 
-    const std::shared_ptr<MPProblem> m_problem;  ///< The simulated MPProblem.
-    BulletEngine* m_engine{nullptr};             ///< The physics engine.
+    MPProblem* m_problem; 			 					 ///< The simulated MPProblem.
+    BulletEngine* m_engine{nullptr};       ///< The physics engine.
 
     mutable std::mutex m_guard;            ///< Lock for updating transforms.
     std::thread m_worker;                  ///< Thread for stepping simulation.

@@ -2,14 +2,14 @@
 #define WHOLE_TASK_H_
 
 #include <vector>
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/Agent.h"
 #include "MPProblem/MPTask.h"
 
 struct WholeTask{
 
   std::shared_ptr<MPTask> m_task; ///< The original task to be split up
   std::vector<std::shared_ptr<MPTask>> m_subtasks; ///< split up tasks
-  std::vector<HandoffAgent*> m_agentAssignment; ///< corresponding agents assigned to each subtask
+  std::vector<Agent*> m_agentAssignment; ///< corresponding agents assigned to each subtask
   /// Maps of capabilities to cfgs/vids of start and end points for corresponding
   /// capability
   /// vectors of these so that they can be treated the same as stored roadmaps 
@@ -18,6 +18,8 @@ struct WholeTask{
   std::unordered_map<std::string, std::vector<size_t>> m_startVIDs;
   std::unordered_map<std::string, std::vector<Cfg>> m_goalPoints;
   std::unordered_map<std::string, std::vector<size_t>> m_goalVIDs;
+
+	std::unordered_map<std::shared_ptr<MPTask>,std::pair<Cfg,Cfg>> m_subtaskStartEndCfgs;
 
   std::unordered_map<Cfg*,std::vector<Cfg>*> m_interactionPoints;
 

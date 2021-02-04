@@ -129,6 +129,8 @@ class DrawableRoadmap : public glutils::drawable  {
 
     std::string m_name;                       ///< A name for this rendering.
 
+    bool m_initialized{false};                ///<Flag indiciating if the initialization function has been called.
+
     ///@}
 
 };

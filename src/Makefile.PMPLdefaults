@@ -245,13 +245,17 @@ endif
 # Qt4
 ################################################################################
 QT_BASE := /usr/include
+
 ifeq ($(platform), MACOS_gcc)
   QT_BASE := /usr/local/opt/qt/include
 endif
+ifeq ($(platform), Ubuntu)
+  QT_BASE := /usr/include/qt4
+endif
 
-QT_INCL := -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
-           -I$(QT_BASE)/QtOpenGL
-QT_LIBS := -lQtCore -lQtGui -lQtOpenGL
+QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
+           -I$(QT_BASE)/QtOpenGL -I$(BASE)/QtWidgets -I$(BASE)QtApplication
+QT_LIBS := -lQtGui -lQtOpenGL -lQtCore
 ifeq ($(platform), MACOS_gcc)
   QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
              -I$(QT_BASE)/QtOpenGL -I$(QT_BASE)/QtWidgets
@@ -259,16 +263,24 @@ ifeq ($(platform), MACOS_gcc)
 endif
 
 # Moc setup
-QT_MOC_BASE = /usr/lib64/qt4/bin
+#QT_MOC_BASE = /usr/lib64/qt4/bin
+QT_MOC_BASE = /usr/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
 endif
-ifeq ($(platform), Ubuntu)
+
+QT_MOC  := $(shell find $(QT_MOC_BASE)/moc-qt4 2> /dev/null)
+
+ifeq ($(platform), Ubuntu) 
   QT_MOC_BASE = /usr/share/qt4/bin
+  QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
+  ifndef QT_MOC
+    $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
+  endif
 endif
-QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
+
 ifndef QT_MOC
-  $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
+  $(error Qt moc not found at $(QT_MOC_BASE)/moc-qt4.)
 endif
 
 # Find the header files with Q_OBJECT.
@@ -424,8 +436,19 @@ SIM_INCL := $(QT_INCL)
 SIM_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
 
 SIM_SRCS := \
+  $(PMPL_DIR)/sim_main.cpp \
+
+
+
+################################################################################
+# Task Planning Sources
+################################################################################
+PLANNER_DEF  :=
+planner: PLANNER_DEF += -DPMPL_USE_SIMULATOR
+PLANNER_INCL := $(QT_INCL)
+PLANNER_LIBS := $(QT_LIBS) $(GL_LIBS) -lpthread
+TASK_SRCS := \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp \
-  Simulator/Simulation.cpp \
   Visualization/DrawableBody.cpp \
   Visualization/DrawableBoundary.cpp \
   Visualization/DrawableCfg.cpp \
@@ -442,7 +465,7 @@ SIM_SRCS := \
   Visualization/Gui/Setup.cpp \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp \
-  $(PMPL_DIR)/sim_main.cpp \
+  Simulator/Simulation.cpp \
   TMPLibrary/Actions/Action.cpp \
   TMPLibrary/Actions/HandoffTask.cpp \
   TMPLibrary/Actions/MoveRobot.cpp \
@@ -452,9 +475,10 @@ SIM_SRCS := \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
+	TMPLibrary/Solution/Plan.cpp \
+	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/State.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
-  TMPLibrary/StateGraphs/MultiTaskGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
@@ -464,22 +488,62 @@ SIM_SRCS := \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
   TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
+  TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
+  TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
-  TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.cpp \
-  TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
+	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
+	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/InteractionTemplate.cpp \
-  TMPLibrary/TaskPlan.cpp \
+  TMPLibrary/TMPTools/TMPTools.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/BatteryConstrainedGroup.cpp \
+  Behaviors/Agents/ChildAgent.cpp \
+  Behaviors/Agents/ClientAgent.cpp \
   Behaviors/Agents/Coordinator.cpp \
   Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
   Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
+  Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
+  Behaviors/Agents/StepFunctions/StepFunction.cpp \
+  Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
+  Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
+################################################################################
+# TMP Main
+################################################################################
+PPL_SRCS := \
+  $(PMPL_DIR)/tmp_main.cpp \
+
+################################################################################
+# Master Node
+################################################################################
+MASTER_SRCS := \
+  master_node_main.cpp \
+
+################################################################################
+# Communication
+################################################################################
+COMM_SRCS := \
+  Communication/Communicator.cpp \
+  Communication/Publisher.cpp \
+  Communication/Subscriber.cpp \
+
+################################################################################
+# Planning Server
+################################################################################
+PLANNER_SRCS := \
+  $(PMPL_DIR)/planner_main.cpp \
+	Utilities/PlanningServer.cpp \
+
+################################################################################
+# Server
+################################################################################
+CLIENT_SRCS := \
+  $(PMPL_DIR)/client.cpp \
 
 ################################################################################
 # Hardware
@@ -511,12 +575,21 @@ endif
 # PMPL
 ################################################################################
 PMPL_DEF  := -D$(ROBOT_DEF)
-PMPL_INCL := -I$(PMPL_DIR) $(URDF_INCL)
+PMPL_INCL := -I$(PMPL_DIR) $(URDF_INCL) 
 PMPL_LIB  := -L$(PMPL_DIR) $(URDF_LIBS) -lobprm
 
 PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_SRCS := \
+  Utilities/ClockClass.cpp \
+  Utilities/CountingStreamBuffer.cpp \
+  Utilities/IOUtils.cpp \
+  Utilities/MedialAxis2D.cpp \
+  Utilities/MetricUtils.cpp \
+  Utilities/MPUtils.cpp \
+  Utilities/SSSP.cpp \
+  Utilities/XMLNode.cpp \
+  $(URDF_SRCS) \
   Behaviors/Agents/Agent.cpp \
   Behaviors/Agents/AgentFactory_pmpl.cpp \
   Behaviors/Agents/BatteryBreak.cpp \
@@ -574,19 +647,13 @@ PMPL_SRCS := \
   MPProblem/Robot/Robot.cpp \
   MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp \
   MPProblem/RobotGroup/RobotGroup.cpp \
+  MPProblem/TaskHierarchy/Decomposition.cpp \
+  MPProblem/TaskHierarchy/SemanticTask.cpp \
+  MPProblem/TaskHierarchy/SubtaskFlow.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
-  Utilities/ClockClass.cpp \
-  Utilities/CountingStreamBuffer.cpp \
-  Utilities/IOUtils.cpp \
-  Utilities/MedialAxis2D.cpp \
-  Utilities/MetricUtils.cpp \
-  Utilities/MPUtils.cpp \
-  Utilities/SSSP.cpp \
-  $(URDF_SRCS) \
-  Utilities/XMLNode.cpp \
   Workspace/GridOverlay.cpp \
   Workspace/WorkspaceDecomposition.cpp \
   Workspace/WorkspacePortal.cpp \

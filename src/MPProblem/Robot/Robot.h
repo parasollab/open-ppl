@@ -15,6 +15,7 @@ class Battery;
 class Body;
 class Boundary;
 class BulletModel;
+class Cfg;
 class ControllerMethod;
 class CSpaceBoundingBox;
 class MatlabMicroSimulator;
@@ -175,7 +176,7 @@ class Robot final {
 
     /// Parse a universal robot descriptor file for this robot.
     /// @param _filename The file name.
-    void ReadURDF(const std::string& _filename);
+    void ReadURDF(const std::string& _filename, std::string _worldLink);
 
 /*    /// Convert the urdf robot model to classes native to pmpl.
     /// @param _model The parsed urdf model.
@@ -329,6 +330,9 @@ class Robot final {
 
     /// Check if the robot has a fixed base
     bool IsFixed() const noexcept;
+
+		Cfg GetInitialCfg();
+		void SetInitialCfg(Cfg _cfg);
     ///@}
 
 

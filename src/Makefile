@@ -16,7 +16,7 @@ asan     ?= 0
 
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
-vizmo_map := #-DVIZMO_MAP
+vizmo_map := -DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
 group_map := #-DGROUP_MAP
@@ -75,7 +75,7 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(vizmo_map) $(group_map)
+DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(PLANNER_DEF) $(TASK_DEF) $(vizmo_map) $(group_map)
 INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL) $(URDF_INCL)
 LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS) $(URDF_LIBS)
 
@@ -83,13 +83,23 @@ LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS) $(URDF_LIB
 
 # Pre-pend the build directory to the object file names.
 PMPL_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PMPL_SRCS))
+PPL_OBJS  		:= $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PPL_SRCS))
 SIM_OBJS      := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(SIM_SRCS))
+COMM_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(COMM_SRCS))
+PLANNER_OBJS  := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(PLANNER_SRCS))
+TASK_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(TASK_SRCS))
+CLIENT_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(CLIENT_SRCS))
+MASTER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(MASTER_SRCS))
 HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
 
 # Make the object files depend on updated utility libraries so the libs are
 # built first.
 $(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(TASK_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(COMM_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(PLANNER_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(CLIENT_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 # Set which object defines the main function.
@@ -123,12 +133,34 @@ pmpl: $(MAIN) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
 	@echo Linking $@...
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(MAIN) $(HARDWARE_OBJS) $(LIBS) -o $@
 
-# Build the simulator.
-sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
+# Build the tmp executable.
+ppl: $(PPL_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
      | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(PPL_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+
+# Build the simulator.
+sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
+     | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	  $(LIBS) -o $@
+
+# Build the server.
+planner: $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
+     | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
+
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+
+client: $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
+
+master: $(MASTER_OBJS) $(COMM_OBJS) $(PMPL_LIBFILE)
+	@echo Linking $@...
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(MASTER_OBJS) $(COMM_OBJS) $(LIBS) -o $@
+
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -158,7 +190,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 .PHONY: clean
 clean:
 	@echo Cleaning pmpl library and executables...
-	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim planner ppl master
 
 .PHONY: reallyclean
 reallyclean: clean

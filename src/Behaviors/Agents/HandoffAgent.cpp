@@ -15,7 +15,6 @@
 #include "Simulator/MicroSimulator.h"
 #include "Simulator/Simulation.h"
 
-#include "TMPLibrary/TaskPlan.h"
 #include "TMPLibrary/TMPLibrary.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
@@ -103,7 +102,8 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   auto goalCenter = _task->GetGoalConstraints()[0]->GetBoundary()->GetCenter();
   Cfg goalCfg({goalCenter[0],goalCenter[1],0}, m_robot);
   env->SaveBoundary();
-  if(!env->IsolateTerrain(currentPos,goalCfg) and m_robot->GetCapability() != ""){
+  //if(!env->IsolateTerrain(currentPos,goalCfg) and m_robot->GetCapability() != ""){
+  if(!env->SameTerrain(currentPos,goalCfg)) {
     m_potentialCost = std::numeric_limits<size_t>::max();
     return;
   }
@@ -153,7 +153,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
     if(!startConstraint->Satisfied(position)){
       m_potentialCost = std::numeric_limits<size_t>::max();
       currentPos.ConfigureRobot();
-      env->RestoreBoundary();
+      //env->RestoreBoundary();
       return;
     }
     setupTask->SetStartConstraint(std::move(startConstraint));
@@ -245,7 +245,7 @@ GenerateCost(std::shared_ptr<MPTask> const _task) {
   currentPos.ConfigureRobot();
   std::cout << "Finishing generate cost function" << std::endl;
   m_generatingCost = false;
-  env->RestoreBoundary();
+  //env->RestoreBoundary();
 }
 
 double
@@ -254,6 +254,11 @@ GetPotentialCost() const {
   return m_potentialCost;
 }
 
+void
+HandoffAgent::
+SavePotentialPath(){
+	m_path = m_potentialPath;
+}
 
 double
 HandoffAgent::
@@ -449,7 +454,11 @@ SelectTask(){
     return true;
   if(m_queuedSubtasks.size() == 0){
     m_priority = 0;
-    return false;
+		if(m_returningHome)
+    	return false;
+		m_returningHome = true;
+		GoHome();
+		return GetTask().get();
   }
 
   auto subtask = m_queuedSubtasks.front();
@@ -494,8 +503,23 @@ SelectTask(){
       std::cout << "Not satisfied" << std::endl;
       std::cout << "Generating Setup task for: " << m_robot->GetLabel() << std::endl;
     }
+		if(m_robot->IsManipulator()){
+			for(size_t i = 0; i < 3; i++){
+				auto range = ranges[i];
+				auto center = range.Center();
+				box->SetRange(i, center-.05, center+.05);
+			}
+		}
+		else{
+			for(size_t i = 0; i < 2; i++){
+				auto range = ranges[i];
+				auto center = range.Center();
+				box->SetRange(i, center-.005, center+.005);
+			}
+			box->SetRange(2, -1, 1);
+		}
 
-    std::shared_ptr<MPTask> setupTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
+		std::shared_ptr<MPTask> setupTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
     std::unique_ptr<CSpaceConstraint> start = std::unique_ptr<CSpaceConstraint>(
                                               new CSpaceConstraint(m_robot, pos));
 
@@ -562,7 +586,7 @@ SelectTask(){
 bool
 HandoffAgent::
 EvaluateTask(){
-  if(m_CUSTOM_PATH){
+  /*if(m_CUSTOM_PATH){
     //Check if custom path is finished
     //m_clearToMove = true;
     if(!this->PathFollowingAgent::EvaluateTask()){
@@ -572,7 +596,18 @@ EvaluateTask(){
       return false;
     }
     return true;
-  }
+  }*/
+	//else if
+
+
+/*  if(m_returningHome){
+		if(!this->PathFollowingAgent::EvaluateTask()){
+			SetTask(nullptr);
+			m_path.clear();
+			return false;
+		}
+		return true;
+	}
   auto task = GetTask();
   if(!this->PathFollowingAgent::EvaluateTask()){
     if(m_debug){
@@ -598,9 +633,23 @@ EvaluateTask(){
       }
       m_path.push_back(m_robot->GetSimulationModel()->GetState());
     }
-  }
+  }*/
   return true;
 
+}
+
+void
+HandoffAgent::
+Step(const double _dt) {
+  if(m_debug and m_graphVisualID == (size_t(-1))){
+    m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap(),
+      glutils::color(0., 1., 0., 0.2));
+  }
+  if(m_debug and m_pathVisualID == (size_t(-1)) and !m_path.empty()) {
+		m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
+	}
+
+	PlanningAgent::Step(_dt);
 }
 
 bool
@@ -641,7 +690,7 @@ SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
 void
 HandoffAgent::
 AddSubtask(std::shared_ptr<MPTask> _task){
-  auto deliveringPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
+  /*auto deliveringPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
 																		_task)->m_interactionPathsDelivering[_task];
   auto receivingPath = m_tmpLibrary->GetTaskPlan()->GetWholeTask(
 																		_task)->m_interactionPathsReceiving[_task];
@@ -667,7 +716,7 @@ AddSubtask(std::shared_ptr<MPTask> _task){
     _task->AddGoalConstraint(std::move(goalConstraint));
   }
 
-  m_queuedSubtasks.push_back(_task);
+  m_queuedSubtasks.push_back(_task);*/
 }
 
 
@@ -710,6 +759,7 @@ SetClearToMove(bool _clear){
 void
 HandoffAgent::
 CheckInteractionPath(){
+  /*
   std::shared_ptr<MPTask> subtask;
   subtask = GetTask();
   auto wholeTask = m_tmpLibrary->GetTaskPlan()->GetWholeTask(subtask);
@@ -727,7 +777,7 @@ CheckInteractionPath(){
     for(auto& cfg : m_path){
       cfg.SetRobot(m_robot);
     }
-    m_CUSTOM_PATH = true;
+    //m_CUSTOM_PATH = true;
     auto customTask = std::shared_ptr<MPTask>(new MPTask(m_robot));
 
     auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
@@ -752,5 +802,24 @@ CheckInteractionPath(){
   }
   else {
     SetTask(nullptr);
-  }
+  }*/
 }
+
+void
+HandoffAgent::
+GoHome(){
+	m_performingSubtask = false;
+	auto tasks = m_robot->GetMPProblem()->GetTasks(m_robot);
+	if(tasks.size() > 0)
+		SetTask(tasks[0]);
+}
+
+std::shared_ptr<MPTask> 
+HandoffAgent::
+GetSubtask(){
+	if(m_performingSubtask)
+		return GetTask();
+	if(m_queuedSubtasks.empty())
+		return nullptr;
+	return m_queuedSubtasks.front();
+}	

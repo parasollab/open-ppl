@@ -161,8 +161,8 @@ class TMPBaseObject {
     ///@name Solution Accessors
     ///@{
 
-    /// Get the current TaskPlan
-    TaskPlan* GetTaskPlan() const noexcept;
+		/// Get the current Plan
+		Plan* GetPlan() const noexcept;
 
     /// Get the underlying StateGraph
     StateGraphPointer GetStateGraph(const std::string&) const noexcept;

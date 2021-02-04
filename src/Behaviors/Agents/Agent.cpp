@@ -1,6 +1,7 @@
 #include "Agent.h"
 
 #include "Behaviors/Controllers/ControllerMethod.h"
+#include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/Constraints/CSpaceConstraint.h"
@@ -23,6 +24,18 @@
 Agent::
 Agent(Robot* const _r) : m_robot(_r) { }
 
+Agent::
+Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) { 
+
+	for(auto& child : _node) {
+		if(child.Name() == "Communicator") {
+      ParseCommunicatorXMLNode(child);
+		}
+    else if(child.Name() == "StepFunction") {
+      m_stepFunction = StepFunction::Factory(this,child);
+    }
+	}
+}
 
 Agent::
 Agent(Robot* const _r, const Agent& _a)
@@ -33,7 +46,10 @@ Agent(Robot* const _r, const Agent& _a)
 
 
 Agent::
-~Agent() = default;
+~Agent() {
+	if(m_communicationThread.joinable())
+		m_communicationThread.join();
+}
 
 /*----------------------------- Accessors ------------------------------------*/
 
@@ -76,6 +92,17 @@ GetCapability() const noexcept {
   return m_robot->GetCapability();
 }
 
+std::shared_ptr<Communicator>
+Agent::
+GetCommunicator() {
+	return m_communicator;
+}
+
+void
+Agent::
+SetCommunicator(std::shared_ptr<Communicator> _communicator) {
+	m_communicator = _communicator;
+}
 /*------------------------------ Internal State ------------------------------*/
 
 bool
@@ -237,7 +264,7 @@ ContinueLastControls() {
               << std::endl;
 
   --m_stepsRemaining;
-  ExecuteControlsSimulation(m_currentControls);
+  ExecuteControlsSimulation(m_currentControls,1);
 
   return true;
 }
@@ -258,14 +285,14 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
     std::cout << std::endl;
   }
 
-  ExecuteControlsSimulation(_c);
+  ExecuteControlsSimulation(_c, _steps);
   ExecuteControlsHardware(_c, _steps);
 }
 
 
 void
 Agent::
-ExecuteControlsSimulation(const ControlSet& _c) {
+ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
   // Execute the controls on the simulated robot.
   if(m_debug) {
     for(size_t i = 0; i < _c.size(); ++i) {
@@ -298,4 +325,57 @@ ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
   hardware->EnqueueCommand(MotionCommand(_c, _steps * timeRes));
 }
 
+/*---------------------------- Communication Helpers -----------------------------*/
+
+void
+Agent::
+ParseCommunicatorXMLNode(XMLNode& _node) {
+
+  /// Read communicator info from XML node.
+  int masterPort = _node.Read("masterPort", true, 0, 0, 9999, 
+                              "Port number of the master node.");
+
+  std::string hostname = _node.Read("hostname", true, "", 
+                                    "Host name of the master node.");
+
+  int port = _node.Read("port", true, 0, 0, 9999, 
+                        "Port number for this communicator.");
+
+  /// Initialize communicator object and register 
+  /// this agent with the master node.
+  m_communicator = std::shared_ptr<Communicator>(new Communicator(masterPort,port));
+  m_communicator->RegisterWithMaster(masterPort,hostname);
+
+  for(auto& child : _node) {
+    /// Check for any channels for this agent to subscribe to.
+    if(child.Name() == "Subscriber") {
+      std::string channel = child.Read("channel",true,"",
+                                            "Name of subscription channel.");
+      m_communicator->CreateSubscriber(channel);
+    }
+
+    /// Check for any channels for this agent to publish to.
+    else if(child.Name() == "Publisher") {
+      std::string channel = child.Read("channel",true,"",
+                                            "Name of subscription channel.");
+      std::function<std::vector<std::string>(std::string _msg)> publishFunction = 
+        [this](std::string _msg) {
+          return this->PublishFunction(_msg);
+      };
+
+      m_communicator->CreatePublisher(channel,publishFunction);
+    }
+  }
+
+  /// Launch communicator thread to listen for 
+  /// any communication with this agent.
+  auto listen = [this](){this->GetCommunicator()->Listen();};
+  m_communicationThread = std::thread(listen);
+}
+
+std::vector<std::string> 
+Agent::
+PublishFunction(std::string _msg) {
+	return {};
+}
 /*----------------------------------------------------------------------------*/

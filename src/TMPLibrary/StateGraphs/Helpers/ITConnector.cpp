@@ -2,7 +2,7 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TMPTools/InteractionTemplate.h"
 
 #include "Utilities/SSSP.h"
@@ -15,13 +15,13 @@
 ITConnector::
 ITConnector(double _threshold, MPLibrary* _library) : m_threshold(_threshold){
   m_library = _library;
-  BuildSkeletons();
+  //BuildSkeletons();
 }
 
 ITConnector::
 ITConnector(XMLNode& _node) {
 	//TODO::ParseXML
-	BuildSkeletons();
+	//BuildSkeletons();
 }
 
 
@@ -37,10 +37,30 @@ ConnectInteractionTemplates(std::vector<std::shared_ptr<InteractionTemplate>>& _
 
   auto cfgs = CalculateBaseDistances(_ITs,_capability, _startAndGoal);
 
+	auto robot = cfgs[0]->GetRobot();
+
+	if(robot->GetCapability() != _capability)
+		throw RunTimeException(WHERE,"Mismatched robot types.");
+
+  //graph->SetRobot(cfgs[0]->GetRobot());
+  graph->SetRobot(robot);
+
+  auto vcm = m_library->GetValidityChecker("terrain_solid");
+	std::vector<size_t> invalids;
+	for(auto vit = graph->begin(); vit != graph->end(); vit++) {
+		Cfg cfg = vit->property();
+		cfg.SetRobot(robot);
+		bool isValid = vcm->IsValid(cfg, "ValidateITCfg");
+		if(!isValid) {
+			invalids.push_back(vit->descriptor());
+		}
+	}
+	for(auto vid : invalids) {
+		graph->DeleteVertex(vid);
+	}
+
   if(cfgs.empty())
     return graph;
-
-  graph->SetRobot(cfgs[0]->GetRobot());
 
   for(auto cfg1 : cfgs){
     for(auto cfg2 : cfgs){
@@ -73,6 +93,9 @@ ConnectInteractionTemplates(std::vector<std::shared_ptr<InteractionTemplate>>& _
   CopyInTemplates(graph, _ITs, _capability, _startAndGoal);
   if(!cfgs[0]->GetRobot()->IsManipulator())
     ConnectTemplates(graph);
+
+	DirectionConnections(graph, _capability, cfgs);
+
   m_connections = {};
   m_baseDistances = {};
   m_adjDist = {};
@@ -330,7 +353,9 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
     }
     */
 
-    env->IsolateTerrain(start,goal);
+    //env->IsolateTerrain(start,goal);
+		if(!env->SameTerrain(start,goal))	
+			continue;
 
     start.SetRobot(robot);
     goal.SetRobot(robot);
@@ -355,8 +380,6 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
         }
         });
 
-
-
     if(robot->IsManipulator()){
       m_library->Solve(m_library->GetMPProblem(), task, solution, "EvaluateMapStrategy",
                        LRand(), "ConnectingDistinctRoadmaps");
@@ -378,7 +401,7 @@ ConnectTemplates(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph){
     }
 
   }
-  env->RestoreBoundary();
+  //env->RestoreBoundary();
   *_graph = *solution->GetRoadmap(robot);
   _graph->Write("ConnectedTemplates-"+robot->GetCapability()+".map",
                 robot->GetMPProblem()->GetEnvironment());
@@ -405,6 +428,9 @@ BuildSkeletons(){
       }
       auto terrains = otherTerrainType.second;
       for(auto terrain : terrains){
+				if(terrain.IsVirtual()){
+					continue;
+				}
         auto boundary = terrain.GetBoundary();
         auto polyhedron = boundary->MakePolyhedron();
         polyhedron.Invert();
@@ -477,6 +503,13 @@ BuildSkeletons(){
 bool
 ITConnector::
 InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
+
+	auto e = m_library->GetMPProblem()->GetEnvironment();
+	if(e->SameTerrain(_cfg1,_cfg2))
+		return true;
+	else
+		return false;
+
   if(_cfg1.GetRobot()->GetCapability() !=
       _cfg2.GetRobot()->GetCapability()){
     return false;
@@ -484,6 +517,17 @@ InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2){
   else if(_cfg1.GetRobot()->IsManipulator()){
     return true;
   }
+
+	auto envTemp = m_library->GetMPProblem()->GetEnvironment();
+	for(auto& terrain : envTemp->GetTerrains()){
+		if(terrain.first != _cfg1.GetRobot()->GetCapability())
+			continue;
+		for(auto& t : terrain.second)
+			if(t.InTerrain(_cfg1) and t.InTerrain(_cfg2))
+				return true;	
+	}
+	return false;
+
   auto& g = m_capabilitySkeletons[_cfg1.GetRobot()->GetCapability()];
 
   if(!g) //indicates that no terrains are present to constrict the agent type
@@ -541,4 +585,26 @@ SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const {
     distance += step;
   }
   return distance;
+}
+	
+void
+ITConnector::
+DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
+											std::vector<Cfg*> _cfgs) {
+	std::vector<size_t> vids;
+	std::unordered_set<size_t> vidSet;
+
+	for(auto cfg : _cfgs) {
+		if(cfg->GetRobot()->GetCapability() == _capability) {
+			auto vid = _graph->GetVID(*cfg);
+			if(vid != MAX_INT) {
+				vids.push_back(vid);
+				vidSet.insert(vid);
+			}
+		}
+	}
+
+	auto cm = m_library->GetConnector("Closest");
+	cm->Connect(_graph, vids.begin(), vids.end(),
+										 &vidSet); 
 }

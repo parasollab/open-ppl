@@ -1,6 +1,8 @@
 #ifndef PMPL_CONNECTION_METHOD_H_
 #define PMPL_CONNECTION_METHOD_H_
 
+#include "ConfigurationSpace/Weight.h"
+
 #include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
 #include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "MPLibrary/MPBaseObject.h"
@@ -212,6 +214,8 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
     bool m_oneWay{false};       ///< Create one-way edges or two-way?
     bool m_rewiring{false};     ///< Does this connector delete edges?
 
+		bool m_selfEdges{false}; 		///< Indicates if roadmap vertices should have self-edges.
+
     /// This is a performance optimization which makes a big impact. The
     /// neighbor set can be as large as the roadmap, so it is important to avoid
     /// re-allocating it on every call to ConnectImpl.
@@ -240,6 +244,9 @@ ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   m_maxFailures = _node.Read("maxFailures", false, m_maxFailures,
       size_t(0), std::numeric_limits<size_t>::max(),
       "Terminate Connect operations after this many failures (0 to disable).");
+	
+	m_selfEdges = _node.Read("selfEdges", false, m_selfEdges,
+			"Indicates if the connector should allow self edges.");
 
   m_oneWay = _node.Read("unidirectional", false, m_oneWay,
       "Create unidirectional edges.");
@@ -390,6 +397,11 @@ ConnectNeighbors(AbstractRoadmapType* const _r, const VID _source,
     if(_earlyQuit && connected)
       return;
   }
+
+	//Connect vertices to themselves
+	//if(m_selfEdges) {
+		//this->ConnectNodes(_r, _source, _source, _collision);
+	//}
 }
 
 
@@ -474,7 +486,7 @@ DoNotCheck(AbstractRoadmapType* const _r, const VID _source, const VID _target)
   }
 
   // Check for self-connection.
-  if(_source == _target) {
+  if(_source == _target and !m_selfEdges) {
     if(this->m_debug)
       std::cout << "\t\t\tSkipping self-connection "
                 << "(" << _source << ", " << _target << ")."

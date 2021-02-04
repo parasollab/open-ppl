@@ -183,6 +183,9 @@ class Body {
     /// @return The current transformation.
     const Transformation& GetWorldTransformation() const;
 
+    /// Get the transformation from the model to the URDF reference frame;
+    const Transformation GetTransformationToURDFReferenceFrame() const;
+
     ///@}
     ///@name Connection Information
     ///@{
@@ -271,7 +274,7 @@ class Body {
     ///       working on this function.
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
 
-    void TranslateURDFLink(const std::shared_ptr<urdf::Link>& _link);
+    void TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, const bool _base);
 
     ///@}
     ///@name Visualization

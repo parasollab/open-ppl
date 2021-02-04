@@ -32,11 +32,25 @@ class CSpaceConstraint : public BoundaryConstraint {
     /// @param _node The node to parse.
     explicit CSpaceConstraint(Robot* const _r, XMLNode& _node);
 
+    /// Construct a constraint from message strings.
+    /// @param _r The robot to constrain.
+    /// @param _pointString The string containing point constraint info.
+    /// @param _bbxString The string containing bounding box constraint info.
+    explicit CSpaceConstraint(Robot* const _r, std::string _pointString, std::string _bbxString);
+
     virtual ~CSpaceConstraint();
 
     virtual std::unique_ptr<Constraint> Clone() const override;
 
     ///@}
+
+	private:
+		///@name Helper Functions
+		///@{
+
+		void ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxString);
+
+		///@}
 
 };
 

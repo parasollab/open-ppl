@@ -2,7 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 ITPlacementMethod::
 ITPlacementMethod(XMLNode& _node) : PoIPlacementMethod(_node) {}

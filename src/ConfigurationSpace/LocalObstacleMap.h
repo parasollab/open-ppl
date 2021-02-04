@@ -1,7 +1,16 @@
 #ifndef LOCAL_OBSTACLE_MAP_H_
 #define LOCAL_OBSTACLE_MAP_H_
 
+#ifndef INVALID_VID
+#define INVALID_VID (std::numeric_limits<size_t>::max())
+#endif
+
+#ifndef INVALID_EID
+#define INVALID_EID (std::numeric_limits<size_t>::max())
+#endif
+
 #include "Utilities/MetricUtils.h"
+#include "Utilities/PMPLExceptions.h"
 
 #include <unordered_map>
 #include <unordered_set>

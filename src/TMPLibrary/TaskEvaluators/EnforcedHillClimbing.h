@@ -60,14 +60,14 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     ///Returns a sequence of actions to solve the problem
     std::vector<std::shared_ptr<Action>> Solve();
 
-		virtual bool operator()() override;
-
     ///@}
 
   protected:
 
     ///@name Helper Functions
     ///@{
+		
+		virtual bool Run(Plan* _plan= nullptr) override;
 
     /// Converts a cfg to a bundary that can be used as a location for the TP
     /// logic

@@ -78,8 +78,9 @@ EnforcedHillClimbing::
 
 bool 
 EnforcedHillClimbing::
-operator()(){
+Run(Plan* _plan){
 	//TODO::put the actual solve stuff here
+	throw RunTimeException(WHERE, "Enforced Hill Climbing has not been integrated with the TMPLibrary yet.");
 	return false;
 }
 

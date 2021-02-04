@@ -468,6 +468,19 @@ Body::
 GetWorldTransformation() const {
   return (this->*m_transformFetcher)();
 }
+    
+const Transformation
+Body::
+GetTransformationToURDFReferenceFrame() const {
+
+  if(IsBase())
+    return Transformation();
+
+  const Connection& back = *m_backwardConnections[0];
+  const Transformation& forward = back.GetTransformationToBody2();
+  const Transformation reverse = -forward;
+  return reverse;
+}
 
 /*--------------------------- Connection Properties --------------------------*/
 
@@ -823,15 +836,31 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
     
 void 
 Body::
-TranslateURDFLink(const std::shared_ptr<urdf::Link>& _link) {
+TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, const bool _base) {
 
   // Translate geometric elements.
   const auto geometry = _link->collision->geometry.get();
   if(geometry->type != urdf::Geometry::MESH)
     throw RunTimeException(WHERE) << "Only support mesh geometries at the moment."
                                   << std::endl;
+
   const auto mesh = dynamic_cast<urdf::Mesh*>(geometry);
-  m_filename = mesh->filename;
+
+  auto fullROSPath = mesh->filename;
+
+  if(fullROSPath.empty())
+    throw RunTimeException(WHERE) << "ROS geometry filename is empty." << std::endl;
+  else if(fullROSPath[0] == '/') 
+    m_filename = fullROSPath;
+  else {
+
+    size_t sl = fullROSPath.find("//");
+    auto packagePath = fullROSPath.substr(sl+2,fullROSPath.size()-1);
+
+    sl = packagePath.find("/");
+    m_filename = packagePath.substr(sl+1,packagePath.size()-1);
+  }
+
   //TODO::use scale info as well
   //auto scale = mesh->scale;
 
@@ -844,8 +873,9 @@ TranslateURDFLink(const std::shared_ptr<urdf::Link>& _link) {
  
   // Determine if base link.
   const auto parent = _link->getParent();
-  if(parent.get()) {
+  if(!_base) {
     SetMovementType(MovementType::Joint);
+    SetBodyType(Type::Joint);
   }
   else {
     // TODO::Currently assume volumetric rotational. 
@@ -933,9 +963,10 @@ ComputeWorldTransformation(std::set<size_t>& _visited) const {
   auto& transform = const_cast<Transformation&>(m_transform);
   transform =
       back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
-      back.GetTransformationToDHFrame() *
-      back.GetDHParameters().GetTransformation() *
-      back.GetTransformationToBody2();
+//      back.GetTransformationToDHFrame() *
+//      back.GetDHParameters().GetTransformation() *
+//      back.GetTransformationToBody2();
+      back.GetTransformationFromJoint();
 
   return m_transform;
 }

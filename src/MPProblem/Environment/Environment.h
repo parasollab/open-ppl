@@ -1,6 +1,7 @@
 #ifndef PMPL_ENVIRONMENT_H_
 #define PMPL_ENVIRONMENT_H_
 
+#include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Utilities/MPUtils.h"
 
@@ -29,6 +30,13 @@ class Terrain {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
+    enum Axis {X, Y, Z};
+
+		///@}
+
     ///@name Construction
     ///@{
 
@@ -38,6 +46,9 @@ class Terrain {
 
     Terrain(const Terrain& _terrain);
 
+    bool IsNeighbor(const Terrain& _terrain);
+
+    double GetPerimeter();
     ///@}
     ///@name Accessors
     ///@{
@@ -46,24 +57,43 @@ class Terrain {
 
     const Boundary* GetBoundary() const noexcept;
 
+		const std::vector<std::unique_ptr<Boundary>>& GetBoundaries() const noexcept;
+
+		bool InTerrain(const Point3d _p) const noexcept;
+
+		bool InTerrain(const Cfg _cfg) const noexcept;
+
+		bool IsVirtual() const noexcept;
+
     bool IsWired() const noexcept;
 
     ///@}
 
   private:
+		///@name Helpers
+		///@{
 
-    ///@name Internal State
-    ///@{
+    bool IsTouching(Boundary* _bound1, Boundary* _bound2, Axis& _type);
+
+    double Overlap(Boundary* _b1, Boundary* _b2);
+
+		///@}
+		///@name Internal State
+		///@{
 
     glutils::color m_color{glutils::color::green}; ///< Color for visualization.
     std::unique_ptr<Boundary> m_boundary;          ///< The enclosing boundary.
+
+		std::vector<std::unique_ptr<Boundary>> m_boundaries; ///< represent the space occupied by the terrain
+
+		bool m_virtual{false}; ///< indicates a boundary limit for robots of the same capability
+													 ///< but does not invalidate robots of other capabiilties inside it.
 
     /// A rendering property, if true then the boundary is
     /// rendered as a solid mesh; otherwise, it is rendered in wire frame.
     bool m_wire{true};
 
-    ///@}
-
+		///@}
 };
 
 
@@ -217,6 +247,8 @@ class Environment {
     ///IROS Hacks
 
     bool IsolateTerrain(Cfg start, Cfg goal);
+
+		bool SameTerrain(Cfg _start, Cfg _goal);
 
     void RestoreBoundary();
 

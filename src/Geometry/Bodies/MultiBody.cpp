@@ -3,8 +3,6 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "Utilities/XMLNode.h"
-#include "Utilities/URDFParser.h"
 
 #include <algorithm>
 #include <numeric>
@@ -167,6 +165,9 @@ InitializeDOFs(const Boundary* const _b) {
                                DofType::Joint, joint->GetJointRange(0));
         m_dofInfo.emplace_back("Spherical Joint " + label + " Angle 1",
                                DofType::Joint, joint->GetJointRange(1));
+        break;
+      case Connection::JointType::Prismatic:
+        throw RunTimeException(WHERE) << "Prismatic joints not yet suported.";
         break;
       case Connection::JointType::NonActuated:
         break;
@@ -356,13 +357,19 @@ GetCurrentCfg() noexcept {
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
 
-    // Get the connection object's DHParameters.
+    const auto jointValues = joint->GetJointValues();
+/*    // Get the connection object's DHParameters.
     const DHParameters& dh = joint->GetDHParameters();
 
     // Set the joint DOF values from the DH params.
     *jnt++ = dh.m_theta / PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       *jnt++ = dh.m_alpha / PI;
+*/
+    // Set the joint DOF values from the connection
+    *jnt++ = jointValues[0];
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      *jnt++ = jointValues[1];
   }
 
   // If jnt is not at the end now, we did something wrong.
@@ -440,7 +447,8 @@ AddBody(Body&& _body) {
 Body*
 MultiBody::
 GetBase() noexcept {
-  return m_baseBody;
+  return &m_bodies[m_baseIndex];
+  //return m_baseBody;
 }
 
 
@@ -546,6 +554,9 @@ UpdateJointLimits() noexcept {
         m_dofInfo[i].range   = joint->get()->GetJointRange(0);
         m_dofInfo[++i].range = (++joint)->get()->GetJointRange(1);
         break;
+      case Connection::JointType::Prismatic:
+        throw RunTimeException(WHERE) << "Prismatic joints not yet suported.";
+        break;
       case Connection::JointType::NonActuated:
         break;
     }
@@ -587,10 +598,17 @@ Configure(const vector<double>& _v) {
       continue;
 
     // Adjust the joint to reflect new configuration.
-    auto& dh = joint->GetDHParameters();
+/*    auto& dh = joint->GetDHParameters();
     dh.m_theta = _v[index++] * PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       dh.m_alpha = _v[index++] * PI;
+*/
+    std::vector<double> values;
+    values.push_back(_v[index++] * PI);
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      values.push_back(_v[index++] * PI);
+
+    joint->SetJointValues(values);
   }
 
   // The base transform has been updated, now update the links.
@@ -728,31 +746,58 @@ Write(std::ostream& _os) const {
 
 void
 MultiBody::
-TranslateURDF(std::string _filename) {
+TranslateURDF(std::string _filename,std::string _worldLink) {
   // Parse the urdf.
   urdf::Model model = ParseURDF(_filename);
 
-  // Extract bodies
+  // Set the model direcotry for body geometries
+  size_t sl = _filename.rfind("urdf/");
+  auto modelDir = _filename.substr(0,sl);
+  Body::m_modelDataDir = modelDir;
+
+
+  // Collect topological ordering of links because the
+  // urdf model has them in a different order than pmpl
   std::vector<std::shared_ptr<urdf::Link>> links;
   model.getLinks(links);
-
-  std::unordered_map<std::string,size_t> linkMap;
-
-  for(size_t i = 0; i < links.size(); i++) {
-    const size_t index = AddBody(Body(this, i));
-    auto free = GetBody(index);
-    free->TranslateURDFLink(links[i]);
-
-    linkMap[links[i]->name] = i;
-
-    if(free->IsBase() && m_baseIndex == size_t(-1))
-      m_baseIndex = index;
-  }
-
-  // Extract joints
   const auto& joints = model.joints_;
 
+  std::unordered_map<std::string, std::vector<std::string>> childMap;
+  std::unordered_map<std::string, std::string> parentMap;
+
+  for(size_t i = 0; i < links.size(); i++) {
+    parentMap[links[i]->name] = "";
+  }
+
+  for(auto j : joints) {
+    childMap[j.second->parent_link_name].push_back(j.second->child_link_name);
+    parentMap[j.second->child_link_name] = j.second->parent_link_name;
+  }
+
+  // Identify base link/body
+  std::string baseName;
+  for(auto kv : parentMap) {
+    if(kv.second != "" and kv.second != _worldLink) 
+      continue;
+    if(kv.first == _worldLink)
+      continue;
+    baseName = kv.first;
+  }
+
+
+  // Extract bodies
+  std::unordered_map<std::string,size_t> linkMap;
+
+  size_t count = 0;
+
+  AddURDFLink(baseName, count, model, linkMap, childMap, true);
+
+  // Extract joints
+
   for(const auto& joint : joints) {
+    if(joint.second->parent_link_name == _worldLink)
+      continue;
+
     // add connection info to multibody connection map
     m_joints.emplace_back(new Connection(this));
 
@@ -780,6 +825,33 @@ TranslateURDF(std::string _filename) {
     m_joints.back()->SetBodies();
   }
   
+}
+
+void
+MultiBody::
+AddURDFLink(std::string _name, size_t& _count,
+            urdf::Model& _model, 
+            std::unordered_map<std::string,size_t>& _linkMap,
+            std::unordered_map<std::string,std::vector<std::string>>& _childMap,
+            bool _base) {
+
+  const size_t index = AddBody(Body(this, _count));
+  auto free = GetBody(index);
+
+  auto link = _model.getLink(_name);
+
+  free->TranslateURDFLink(link,_base);
+
+  _linkMap[link->name] = index;
+
+  if(_base && free->IsBase()) {
+    m_baseIndex = index;
+    SetBaseBody(m_baseIndex);
+  }
+
+  for(auto child : _childMap[_name]) {
+    AddURDFLink(child, ++_count, _model, _linkMap, _childMap);
+  }
 }
 
 /*---------------------------------- Helpers ---------------------------------*/
