@@ -569,7 +569,8 @@ GetURDFTransformation() const noexcept {
 
   return GetPreviousBody()->GetTransformationToURDFReferenceFrame() *
          GetTransformationToChildFrame() *
-         ApplyURDFJointValues();
+         ApplyURDFJointValues() *
+         GetTransformationToBody2();
 }
 
 const Transformation
@@ -590,31 +591,28 @@ ApplyURDFJointValues() const noexcept {
   S = sin(m_jointValues[0]);
   t = 1 - C;
   
-  Matrix<3,3> translation;
+  Matrix<3,3> rotation;
   //first row
-  translation[0][0] = t*(ux*ux) + C;
-  translation[0][1] = t*ux*uy - S*uz;
-  translation[0][2] = t*ux*uz + S*uy;
+  rotation[0][0] = t*(ux*ux) + C;
+  rotation[0][1] = t*ux*uy - S*uz;
+  rotation[0][2] = t*ux*uz + S*uy;
   
   //second row
-  translation[1][0] = t*ux*uy + S*uz;
-  translation[1][1] = t*(uy*uy) + C;
-  translation[1][2] = t*uy*uz - S*ux;
+  rotation[1][0] = t*ux*uy + S*uz;
+  rotation[1][1] = t*(uy*uy) + C;
+  rotation[1][2] = t*uy*uz - S*ux;
 
   //third row
-  translation[2][0] = t*ux*uz - S*uy;
-  translation[2][1] = t*uy*uz + S*ux;
-  translation[2][2] = t*(uz*uz) + C;
+  rotation[2][0] = t*ux*uz - S*uy;
+  rotation[2][1] = t*uy*uz + S*ux;
+  rotation[2][2] = t*(uz*uz) + C;
 
   
-  Transformation rotAboutAxis(Vector3d(),translation);
+  Transformation rotAboutAxis(Vector3d(),rotation);
 
-
-  const auto& t2b2 = GetTransformationToBody2();
-
-//  return Transformation(t2b2.translation(),translation);
-  return rotAboutAxis * t2b2;
+  return rotAboutAxis;
 }
+
 /*---------------------------------- Debug -----------------------------------*/
 
 std::ostream&
