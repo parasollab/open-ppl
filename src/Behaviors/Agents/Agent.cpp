@@ -379,3 +379,13 @@ PublishFunction(std::string _msg) {
 	return {};
 }
 /*----------------------------------------------------------------------------*/
+
+//Step Function Interface
+//TODO:: Make this a lot cleaner
+void
+Agent::
+Step(const double _dt) {
+  if(!m_stepFunction.get())
+    return;
+  m_stepFunction->StepAgent(_dt);
+}

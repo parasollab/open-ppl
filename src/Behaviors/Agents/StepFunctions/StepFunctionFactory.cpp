@@ -1,5 +1,6 @@
 #include "StepFunction.h"
 #include "DefaultCoordinatorStepFunction.h"
+#include "ROSStepFunction.h"
 
 #include <algorithm>
 #include <string>
@@ -20,6 +21,11 @@ Factory(Agent* _agent, XMLNode& _node) {
           new DefaultCoordinatorStepFunction(c, _node)
       );
     }   
+  }
+  else if(type == "ros") {
+    output = std::unique_ptr<StepFunction>(
+        new ROSStepFunction(_agent, _node)
+    );
   }
   else {
     throw ParseException(_node.Where(), "Unknown step function type '" + type + "'.");

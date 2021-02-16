@@ -123,7 +123,7 @@ class Agent {
     /// Decide what to do on each time step in the simulation. The agent should
     /// implement its decision by sending commands to the robot's controller.
     /// @param _dt The timestep length.
-    virtual void Step(const double _dt) = 0;
+    virtual void Step(const double _dt);
 
     /// Tear down the agent. Release any resources and reset the object to it's
     /// pre-initialize state.

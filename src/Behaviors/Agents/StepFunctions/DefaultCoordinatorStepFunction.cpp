@@ -36,7 +36,10 @@ StepAgent(double _dt) {
   else if(HasProblem() and GetPlan()) {
     DistributePlan();
   }
-
+  
+  for(auto child : m_coordinator->GetChildAgents()) {
+    child->Agent::Step(_dt);
+  }
 }
 
 /*---------------------------- Helper Functions  ----------------------*/

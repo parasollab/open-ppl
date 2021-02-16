@@ -419,11 +419,15 @@ URDF_INCL :=
 URDF_LIBS :=
 URDF_SRCS :=
 
+ROS_DIR :=
+
 ifeq ($(platform), Ubuntu)
-  URDF_INCL := -I/opt/ros/melodic/include
-  URDF_LIBS := /opt/ros/melodic/lib/liburdf.so
+  ROS_DIR := /opt/ros/melodic
+  URDF_INCL := -I$(ROS_DIR)/include
+  URDF_LIBS := $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so
   URDF_SRCS := \
-    Utilities/URDFParser.cpp
+    Utilities/URDFParser.cpp \
+    Behaviors/Agents/StepFunctions/ROSStepFunction.cpp
 endif
 
 

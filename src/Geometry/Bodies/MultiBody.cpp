@@ -781,6 +781,8 @@ TranslateURDF(std::string _filename,std::string _worldLink) {
       continue;
     if(kv.first == _worldLink)
       continue;
+    if(!model.getLink(kv.first)->collision.get())
+      continue;
     baseName = kv.first;
   }
 
@@ -796,6 +798,11 @@ TranslateURDF(std::string _filename,std::string _worldLink) {
 
   for(const auto& joint : joints) {
     if(joint.second->parent_link_name == _worldLink)
+      continue;
+
+    // Check if links in joint have physical geometries or are virtual
+    if(!model.getLink(joint.second->parent_link_name)->collision.get()
+       or !model.getLink(joint.second->child_link_name)->collision.get())
       continue;
 
     // add connection info to multibody connection map
@@ -835,10 +842,16 @@ AddURDFLink(std::string _name, size_t& _count,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
             bool _base) {
 
+  auto link = _model.getLink(_name);
+    
+  // Check if the link has a physical geometry or is virtual
+  if(!link->collision.get()) {
+    return;
+  }
+
   const size_t index = AddBody(Body(this, _count));
   auto free = GetBody(index);
 
-  auto link = _model.getLink(_name);
 
   free->TranslateURDFLink(link,_base);
 
