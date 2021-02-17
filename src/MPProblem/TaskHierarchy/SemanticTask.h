@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_TASK_H_
-#define SEMANTIC_TASK_H_
+#ifndef PPL_SEMANTIC_TASK_H_
+#define PPL_SEMANTIC_TASK_H_
 
 #include "MPProblem/GroupTask.h"
 #include "MPProblem/MPTask.h"
@@ -30,7 +30,7 @@ class SemanticTask {
 			None
 		};
 
-		typedef std::unordered_map<DependencyType, std::unordered_set<SemanticTask*>, 
+		typedef std::unordered_map<DependencyType, std::unordered_set<SemanticTask*>,
 															 std::hash<int>> DependencyMap;
 
 		///@}
@@ -61,10 +61,10 @@ class SemanticTask {
     /// @param _relation Relationship between subtasks.
     /// @param _decomposable Flag indicating if this task can be further decomposed.
     /// @param _fixedAssign Flag indicating if this task has a fixed assignment.
-    /// @param _groupMotionTask Corresponding group motion task for completing this 
+    /// @param _groupMotionTask Corresponding group motion task for completing this
     ///                         task.
 		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
-								 SubtaskRelation _relation, bool _decomposable, bool _fixedAssign, 
+								 SubtaskRelation _relation, bool _decomposable, bool _fixedAssign,
 								 std::shared_ptr<GroupTask> _groupMotionTask);
 
     /// @param _parent Parent task in decomposition tree.
@@ -76,10 +76,10 @@ class SemanticTask {
 
     /// @param _parent Parent task in decomposition tree.
     /// @param _decomp Owning decomposition.
-    /// @param _groupMotionTask Corresponding group motion task for completing this 
+    /// @param _groupMotionTask Corresponding group motion task for completing this
     ///                         task.
     /// @param _decomposable Flag indicating if this task can be further decomposed.
-		SemanticTask(SemanticTask* _parent, Decomposition* _decomp, 
+		SemanticTask(SemanticTask* _parent, Decomposition* _decomp,
                  std::shared_ptr<GroupTask> _groupMotionTask, bool _decomposable=true);
 
     /// @param _label Label for referencing task.
@@ -87,16 +87,16 @@ class SemanticTask {
     /// @param _decomp Owning decomposition.
     /// @param _motionTask Corresponding motion task for completing this task.
     /// @param _decomposable Flag indicating if this task can be further decomposed.
-		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
+		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 								 std::shared_ptr<MPTask> _motionTask = nullptr, bool _decomposable=true);
 
     /// @param _label Label for referencing task.
     /// @param _parent Parent task in decomposition tree.
     /// @param _decomp Owning decomposition.
-    /// @param _groupMotionTask Corresponding group motion task for completing this 
+    /// @param _groupMotionTask Corresponding group motion task for completing this
     ///                         task.
     /// @param _decomposable Flag indicating if this task can be further decomposed.
-		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
+		SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 								 std::shared_ptr<GroupTask> _groupMotionTask, bool _decomposable=true);
 
 		~SemanticTask();
