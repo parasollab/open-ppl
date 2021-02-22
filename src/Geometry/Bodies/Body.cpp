@@ -836,7 +836,8 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
     
 void 
 Body::
-TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, const bool _base) {
+TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, 
+                  const bool _base, const bool _fixed) {
 
   // Translate geometric elements.
   const auto geometry = _link->collision->geometry.get();
@@ -880,8 +881,14 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, const bool _ba
   else {
     // TODO::Currently assume volumetric rotational. 
     //       Need way to determine from urdf.
-    SetBodyType(Type::Volumetric);
-    SetMovementType(MovementType::Rotational);
+    if(_fixed) {
+      SetBodyType(Type::Fixed);
+      SetMovementType(MovementType::Fixed);
+    }
+    else {
+      SetBodyType(Type::Volumetric);
+      SetMovementType(MovementType::Rotational);
+    }
   }
 
   // Read the mesh file.

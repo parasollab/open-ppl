@@ -424,7 +424,7 @@ ROS_DIR :=
 ifeq ($(platform), Ubuntu)
   ROS_DIR := /opt/ros/melodic
   URDF_INCL := -I$(ROS_DIR)/include
-  URDF_LIBS := $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so
+  URDF_LIBS := $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so
   URDF_SRCS := \
     Utilities/URDFParser.cpp \
     Behaviors/Agents/StepFunctions/ROSStepFunction.cpp

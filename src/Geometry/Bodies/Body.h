@@ -274,7 +274,8 @@ class Body {
     ///       working on this function.
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
 
-    void TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, const bool _base);
+    void TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, 
+                           const bool _base, const bool _fixed);
 
     ///@}
     ///@name Visualization

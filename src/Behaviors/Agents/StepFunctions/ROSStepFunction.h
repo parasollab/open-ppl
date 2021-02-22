@@ -24,10 +24,14 @@ class ROSStepFunction : public StepFunction {
     ///@}
 
   protected:
+
+    //Temp function::Needs to be moved to controller class.
+    void MoveArm(std::vector<double> _goal);
+
     ///@name Internal State
     ///@{
 
-
+    ros::Publisher m_armPub;
 
     ///@}
 };

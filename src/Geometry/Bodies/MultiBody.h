@@ -257,13 +257,14 @@ class MultiBody {
     /// @param _os The output stream to write to.
     void Write(std::ostream& _os) const;
 
-    void TranslateURDF(std::string _urdf, std::string _worldLink);
+    void TranslateURDF(std::string _urdf, std::string _worldLink, bool _fixed);
 
     void AddURDFLink(std::string _name, size_t& _count,
             urdf::Model& _model, 
             std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
-            bool _base = false);
+            bool _base = false,
+            bool _fixed = false);
     ///@}
 
   private:

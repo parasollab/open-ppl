@@ -746,7 +746,7 @@ Write(std::ostream& _os) const {
 
 void
 MultiBody::
-TranslateURDF(std::string _filename,std::string _worldLink) {
+TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
   // Parse the urdf.
   urdf::Model model = ParseURDF(_filename);
 
@@ -792,7 +792,7 @@ TranslateURDF(std::string _filename,std::string _worldLink) {
 
   size_t count = 0;
 
-  AddURDFLink(baseName, count, model, linkMap, childMap, true);
+  AddURDFLink(baseName, count, model, linkMap, childMap, true, _fixed);
 
   // Extract joints
 
@@ -840,7 +840,8 @@ AddURDFLink(std::string _name, size_t& _count,
             urdf::Model& _model, 
             std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
-            bool _base) {
+            bool _base,
+            bool _fixed) {
 
   auto link = _model.getLink(_name);
     
@@ -853,7 +854,7 @@ AddURDFLink(std::string _name, size_t& _count,
   auto free = GetBody(index);
 
 
-  free->TranslateURDFLink(link,_base);
+  free->TranslateURDFLink(link,_base,_fixed);
 
   _linkMap[link->name] = index;
 

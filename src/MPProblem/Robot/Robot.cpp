@@ -55,6 +55,9 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   std::string worldLink = _node.Read("worldLink", false, "", "The link name for the world link in a URDF.");
 
+  m_fixed = _node.Read("fixed", false, m_fixed, 
+                       "Flag indicating if robot has a fixed base.");
+
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
   std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
@@ -341,7 +344,7 @@ Robot::
 ReadURDF(const std::string& _filename, std::string _worldLink) {
   // Convert the urdf model to multibody representation.
   m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
-  m_multibody->TranslateURDF(_filename, _worldLink);
+  m_multibody->TranslateURDF(_filename, _worldLink, m_fixed);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   InitializePlanningSpaces();
