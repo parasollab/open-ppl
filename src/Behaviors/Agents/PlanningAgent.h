@@ -83,6 +83,9 @@ class PlanningAgent : public Agent {
     /// @return The MPSolution pointer.
     MPSolution* GetMPSolution();
 
+    /// Get the pointer to this agents library object.
+    /// @return The MPLibrary pointer.
+    MPLibrary* GetMPLibrary();
     ///@}
 
   protected:

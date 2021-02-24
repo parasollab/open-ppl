@@ -46,15 +46,31 @@ ROSStepFunction::
 ReachedWaypoint(const Cfg& _waypoint) {
   ros::spinOnce();
 
+  // Grab joint angles
   auto js = s_jointStates;
+
+  // Check to make sure they have been set
+  if(js.size() == 0)
+    return false;
+
+  // Convert joint angles to pmpl representation
   std::vector<double> jointStates;
   for(auto d : js) {
     jointStates.push_back(d/PI);
   }
   
   //TODO::Check if m_jointState has reached the current waypoint
+  auto r = m_agent->GetRobot();
+  Cfg state(r);
+  state.SetData(jointStates);
+  
+  auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
+  auto lib = p->GetMPLibrary();
+  auto dm = lib->GetDistanceMetric(m_waypointDm);
 
-  return true;
+  double distance = dm->Distance(state, _waypoint);
+
+  return distance < m_waypointThreshold;
 }
 
 void 

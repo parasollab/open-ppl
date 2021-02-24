@@ -193,6 +193,12 @@ PlanningAgent::
 GetMPSolution() {
   return m_solution.get();
 }
+    
+MPLibrary* 
+PlanningAgent::
+GetMPLibrary() {
+  return m_library.get();
+}
 
 /*---------------------------- Planning Helpers ------------------------------*/
 
