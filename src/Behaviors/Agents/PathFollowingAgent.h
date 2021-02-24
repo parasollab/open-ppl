@@ -43,7 +43,13 @@ class PathFollowingAgent : public PlanningAgent {
 
     virtual void ClearPlan() override;
 
+    ///@}
+    ///@{
+
+    const std::vector<Cfg>& GetPath() const;
+
     void SetPlan(std::vector<Cfg> _path);
+
     ///@}
 
   protected:

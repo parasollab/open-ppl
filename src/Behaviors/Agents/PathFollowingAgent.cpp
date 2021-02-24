@@ -76,6 +76,11 @@ HasPlan() const {
   return !m_path.empty();
 }
 
+const std::vector<Cfg>&
+PathFollowingAgent::
+GetPath() const {
+  return m_path;
+}
 
 void
 PathFollowingAgent::

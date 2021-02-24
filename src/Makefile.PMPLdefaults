@@ -512,6 +512,7 @@ TASK_SRCS := \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
+  Behaviors/Agents/StepFunctions/FollowPath.cpp \
   Behaviors/Agents/StepFunctions/StepFunction.cpp \
   Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
   Communication/Messages/Message.cpp \

@@ -6,10 +6,12 @@
 
 #include <trajectory_msgs/JointTrajectory.h>
 
-/*----------------------- Construction --------------------*/
+std::vector<double> ROSStepFunction::s_jointStates = {};
+
+/*-------------------------- Construction -----------------------*/
 ROSStepFunction::
 ROSStepFunction(Agent* _agent, XMLNode& _node) 
-              : StepFunction(_agent,_node) {
+              : FollowPath(_agent,_node) {
 
   int argc = 0;
   char* argv[255];
@@ -24,59 +26,41 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
   m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
                            "simplemanip1/arm_controller/command",
                             10);
-  /*
-  ros::spin();
 
-  ros::shutdown();
-  */
+  /*JointStateCallback callback = [this](const sensor_msgs::JointState _msg) {
+    this->Callback(_msg);
+  };*/
+
+  m_stateSub = nh.subscribe("simplemanip1/joint_states",1000,Callback);
 }
 
 ROSStepFunction::
 ~ROSStepFunction() { }
 
-/*------------------------- Interface -----------------------*/
+/*---------------------------- Interface ---------------------------*/
+
+/*------------------------- Helper Functions -----------------------*/
+
+bool 
+ROSStepFunction::
+ReachedWaypoint(const Cfg& _waypoint) {
+  ros::spinOnce();
+
+  auto js = s_jointStates;
+  std::vector<double> jointStates;
+  for(auto d : js) {
+    jointStates.push_back(d/PI);
+  }
+  
+  //TODO::Check if m_jointState has reached the current waypoint
+
+  return true;
+}
 
 void 
 ROSStepFunction::
-StepAgent(double _dt) {
-  std::cout << "Calling step function." << std::endl;
-
-
-  auto p = dynamic_cast<PathFollowingAgent*>(this->m_agent);
-  if(!p)
-    return;
-
-  //TODO::Roughly follow path following code that moves from waypoint to waypoint
-
-
-  //TODO::Create ROS Controller that can be called here
-
-/*
-  std::vector<double> point = {0,0,0};
-  MoveArm(arm_pub,point);
-
-  point = {.785,.785,.785};
-  MoveArm(arm_pub,point);
-
-  point = {1.57,1.57,1.57};
-  MoveArm(arm_pub,point);
-
-  point = {.785,.785,.785};
-  MoveArm(arm_pub,point);
-
-  point = {0,0,0};
-  MoveArm(arm_pub,point);
-
-  point = {-.785,-.785,-.785};
-  MoveArm(arm_pub,point);
-
-  point = {-1.57,-1.57,-1.57};
-  MoveArm(arm_pub,point);
-
-  ros::spinOnce();
-
-  ros::Duration(3).sleep();
-*/
+MoveToWaypoint(const Cfg& _waypoint) {
+  MoveArm(_waypoint.GetData());
 }
     
 void 
@@ -95,7 +79,10 @@ MoveArm(std::vector<double> _goal) {
 
     msg.points.resize(1);
 
-    msg.points[0].positions = _goal;
+    //msg.points[0].positions = _goal;
+    for(auto d : _goal) {
+      msg.points[0].positions.push_back(d*PI);
+    }
 
     msg.points[0].time_from_start = ros::Duration(3.0);
 
@@ -107,4 +94,11 @@ MoveArm(std::vector<double> _goal) {
     m_armPub.publish(msg);
     rate.sleep();
   }
+}
+   
+void 
+ROSStepFunction::
+Callback(const sensor_msgs::JointState _msg) {
+  ROS_INFO_STREAM("Received: " << _msg.position);
+  s_jointStates = _msg.position;
 }

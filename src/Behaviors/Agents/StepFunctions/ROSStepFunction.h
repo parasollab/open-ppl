@@ -1,13 +1,20 @@
 #ifndef _PPL_ROS_STEP_FUNCTION_H_
 #define _PPL_ROS_STEP_FUNCTION_H_
 
-#include "StepFunction.h"
+#include "FollowPath.h"
 
 #include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 
-class ROSStepFunction : public StepFunction {
+class ROSStepFunction : public FollowPath {
 
   public:
+    ///@name Static variables
+    ///@{
+
+    static std::vector<double> s_jointStates;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -19,8 +26,6 @@ class ROSStepFunction : public StepFunction {
     ///@name Interface
     ///@{
 
-    virtual void StepAgent(double _dt) override;
-
     ///@}
 
   protected:
@@ -28,12 +33,28 @@ class ROSStepFunction : public StepFunction {
     //Temp function::Needs to be moved to controller class.
     void MoveArm(std::vector<double> _goal);
 
+    ///@name Helper Functions
+    ///@{
+
+    virtual bool ReachedWaypoint(const Cfg& _waypoint) override;
+
+    virtual void MoveToWaypoint(const Cfg& _waypoint) override;
+
+    static void Callback(const sensor_msgs::JointState _msg);
+
+    ///@}
     ///@name Internal State
     ///@{
 
     ros::Publisher m_armPub;
 
+    ros::Subscriber m_stateSub;
+
+
     ///@}
 };
+
+
+using JointStateCallback = std::function<void(const sensor_msgs::JointState _msg)>;
 
 #endif
