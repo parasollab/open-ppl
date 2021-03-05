@@ -847,6 +847,7 @@ AddURDFLink(std::string _name, size_t& _count,
     
   // Check if the link has a physical geometry or is virtual
   if(!link->collision.get()) {
+    _count--;
     return;
   }
 

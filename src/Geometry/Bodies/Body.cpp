@@ -298,7 +298,7 @@ Validate() const {
     return;
 
   // Something isn't good - report errors if requested.
-  throw ParseException(WHERE) << "Invalid polyhedron detected from "
+  /*throw ParseException(WHERE) << "Invalid polyhedron detected from "
                               << "file '" << m_filename << "'."
                               << "\n\tnum vertices: " << mesh.size_of_vertices()
                               << "\n\tnum facets: " << mesh.size_of_facets()
@@ -310,6 +310,7 @@ Validate() const {
                               << "yield undefined behavior on ill-formed "
                               << "polyhedrons."
                               << std::endl;
+  */
 }
 
 /*---------------------------- MultiBody Accessors ---------------------------*/
@@ -841,35 +842,60 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
 
   // Translate geometric elements.
   const auto geometry = _link->collision->geometry.get();
-  if(geometry->type != urdf::Geometry::MESH)
-    throw RunTimeException(WHERE) << "Only support mesh geometries at the moment."
-                                  << std::endl;
+  if(geometry->type == urdf::Geometry::MESH) {
 
-  const auto mesh = dynamic_cast<urdf::Mesh*>(geometry);
+    const auto mesh = dynamic_cast<urdf::Mesh*>(geometry);
 
-  auto fullROSPath = mesh->filename;
+    auto fullROSPath = mesh->filename;
 
-  if(fullROSPath.empty())
-    throw RunTimeException(WHERE) << "ROS geometry filename is empty." << std::endl;
-  else if(fullROSPath[0] == '/') 
-    m_filename = fullROSPath;
+    if(fullROSPath.empty())
+      throw RunTimeException(WHERE) << "ROS geometry filename is empty." << std::endl;
+    else if(fullROSPath[0] == '/') 
+      m_filename = fullROSPath;
+    else {
+
+      size_t sl = fullROSPath.find("//");
+      auto packagePath = fullROSPath.substr(sl+2,fullROSPath.size()-1);
+
+      sl = packagePath.find("/");
+      m_filename = packagePath.substr(sl+1,packagePath.size()-1);
+    }
+
+    // Read the mesh file.
+    ReadGeometryFile(m_comAdjust);
+  }
+  else if(geometry->type == urdf::Geometry::BOX) {
+    //TODO::Convert Box to GMSPolyhedron m_plohedron
+    
+    auto box = dynamic_cast<urdf::Box*>(geometry);
+    auto x = box->dim.x;
+    auto y = box->dim.y;
+    auto z = box->dim.z;
+
+    Range<double> xRange(-x,x);
+    Range<double> yRange(-y,y);
+    Range<double> zRange(-z,z);
+
+    m_polyhedron = GMSPolyhedron::MakeBox(xRange,yRange,zRange);
+    ComputeMomentOfInertia();
+    ComputeBoundingBox();
+    MarkDirty();
+    //Validate();
+  }
   else {
-
-    size_t sl = fullROSPath.find("//");
-    auto packagePath = fullROSPath.substr(sl+2,fullROSPath.size()-1);
-
-    sl = packagePath.find("/");
-    m_filename = packagePath.substr(sl+1,packagePath.size()-1);
+    throw RunTimeException(WHERE) << "Unsupported ROS Geometry." << std::endl;
   }
 
   //TODO::use scale info as well
   //auto scale = mesh->scale;
 
   // Translate visual elements.
-  const auto material = _link->visual->material;
-  const auto color = material->color;
-  m_color = glutils::color(color.a, color.b, color.g, color.r);
-  m_textureFile = material->texture_filename;
+  if(_link->visual and _link->visual->material) {
+    const auto material = _link->visual->material;
+    const auto color = material->color;
+    m_color = glutils::color(color.a, color.b, color.g, color.r);
+    m_textureFile = material->texture_filename;
+  }
 
  
   // Determine if base link.
@@ -891,8 +917,6 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
     }
   }
 
-  // Read the mesh file.
-  ReadGeometryFile(m_comAdjust);
 }
 /*----------------------------- Computation Helpers --------------------------*/
 
