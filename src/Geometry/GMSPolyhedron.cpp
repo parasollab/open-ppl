@@ -747,4 +747,56 @@ MakeBox(const Range<double>& _x, const Range<double>& _y,
   return bbx;
 }
 
+
+GMSPolyhedron
+GMSPolyhedron::MakeCylinder(const Range<double>& _height,
+    const double _radius, const uint32_t _fidelity) {
+  // Make output polyhedron.
+  GMSPolyhedron bbx;
+  auto& verts = bbx.m_vertexList;
+  auto& polys = bbx.m_polygonList;
+
+  // @TODO: Do we need to include any checking for reasonable arguments?
+  //  e.g. fidelity must be at least 3.
+
+  double angle_size = (2.0 * M_PI) / _fidelity;
+
+  // Add vertices.
+  verts.reserve(2*_fidelity + 2);
+  for (uint32_t i = 0; i < _fidelity; i++) {
+    double angle = i*angle_size;
+    verts.emplace_back(_radius * std::cos(angle), _radius * std::sin(angle),
+                       _height.min);
+    verts.emplace_back(_radius * std::cos(angle), _radius * std::sin(angle),
+                       _height.max);
+  }
+
+  // Need to add vert to center of top and bottom surfaces.
+  verts.emplace_back(0.0, 0.0, _height.min);
+  verts.emplace_back(0.0, 0.0, _height.max);
+
+  // Add polygons.
+  polys.reserve(_fidelity * 4);
+
+  for (uint32_t i = 0; i < _fidelity; i++) {
+    // Bottom polys
+    polys.emplace_back(2*i, (2*i+2) % (2*_fidelity), 2*_fidelity, verts);
+
+    // Top polys
+    polys.emplace_back(2*i+1, (2*i+3) % (2*_fidelity), 2*_fidelity + 1, verts);
+
+    // Side polys
+    polys.emplace_back(2*i, 2*i+1, (2*i+2) % (2*_fidelity), verts);
+    polys.emplace_back((2*i+2) % (2*_fidelity), 2*i+1,
+                       (2*i+3) % (2*_fidelity), verts);
+  }
+
+  bbx.OrderFacets();
+  bbx.ComputeSurfaceArea();
+  bbx.ComputeRadii();
+  bbx.ComputeInsidePoint();
+
+  return bbx;
+}
+
 /*----------------------------------------------------------------------------*/
