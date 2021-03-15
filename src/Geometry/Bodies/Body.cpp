@@ -187,9 +187,31 @@ Body(MultiBody* const _owner, XMLNode& _node)
   }
 
   // Read geometry file.
-  m_filename = _node.Read("filename", true, "", "File containing the geometry"
+  m_filename = _node.Read("filename", false, "", "File containing the geometry"
       " information for this body.");
-  ReadGeometryFile(m_comAdjust);
+  if(m_filename != "")
+    ReadGeometryFile(m_comAdjust);
+  
+  bool shape = false;
+  for(auto child : _node) {
+    //Make sure there is only one shape specified
+    if(child.Name() == "Cylinder" || child.Name() == "Box") {
+      if(shape == true)
+        throw RunTimeException(WHERE) << "Can only specify one shape for a body.";
+      shape = true;
+    }
+    if(child.Name() == "Cylinder") {
+      Range<double> height;
+      height.min = child.Read("minHeight", true, 0., 0., 1000., "Minimum y coordinator of cylinder.");
+      height.max = child.Read("maxHeight", true, 0., 0., 1000., "Maximum y coordinator of cylinder."); 
+
+      double radius = child.Read("radius", true, 0., 0., 1000., "Radius of cylinder.");
+
+      size_t fidelity = child.Read("fidelity", true, 0, 0, 1000, "Number of points in approximate circle of cylinder.");
+
+      m_polyhedron = GMSPolyhedron::MakeCylinder(height,radius,fidelity);
+    }
+  }
 }
 
 
@@ -872,9 +894,9 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
     auto y = box->dim.y;
     auto z = box->dim.z;
 
-    Range<double> xRange(-x,x);
-    Range<double> yRange(-y,y);
-    Range<double> zRange(-z,z);
+    Range<double> xRange(-x/2,x/2);
+    Range<double> yRange(-y/2,y/2);
+    Range<double> zRange(-z/2,z/2);
 
     m_polyhedron = GMSPolyhedron::MakeBox(xRange,yRange,zRange);
     ComputeMomentOfInertia();

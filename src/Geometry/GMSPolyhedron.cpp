@@ -780,15 +780,15 @@ GMSPolyhedron::MakeCylinder(const Range<double>& _height,
 
   for (uint32_t i = 0; i < _fidelity; i++) {
     // Bottom polys
-    polys.emplace_back(2*i, (2*i+2) % (2*_fidelity), 2*_fidelity, verts);
+    polys.emplace_back(2*i, 2*_fidelity, (2*i+2) % (2*_fidelity), verts);
 
     // Top polys
     polys.emplace_back(2*i+1, (2*i+3) % (2*_fidelity), 2*_fidelity + 1, verts);
 
     // Side polys
-    polys.emplace_back(2*i, 2*i+1, (2*i+2) % (2*_fidelity), verts);
-    polys.emplace_back((2*i+2) % (2*_fidelity), 2*i+1,
-                       (2*i+3) % (2*_fidelity), verts);
+    polys.emplace_back(2*i, (2*i+2) % (2*_fidelity), 2*i+1, verts);
+    polys.emplace_back((2*i+2) % (2*_fidelity), (2*i+3) % (2*_fidelity), 
+                       2*i+1, verts);
   }
 
   bbx.OrderFacets();
