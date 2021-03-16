@@ -904,6 +904,19 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
     MarkDirty();
     //Validate();
   }
+  else if(geometry->type == urdf::Geometry::CYLINDER) {
+    auto cyl = dynamic_cast<urdf::Cylinder*>(geometry);
+
+    Range<double> height;
+    height.min = -cyl->length/2;
+    height.max = cyl->length/2;
+
+    double radius = cyl->radius;
+
+    size_t fidelity = 33;
+
+    m_polyhedron = GMSPolyhedron::MakeCylinder(height, radius, fidelity);
+  }
   else {
     throw RunTimeException(WHERE) << "Unsupported ROS Geometry." << std::endl;
   }
