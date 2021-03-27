@@ -16,7 +16,7 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
   int argc = 0;
   char* argv[255];
 
-  ros::init(argc,argv,this->m_agent->GetRobot()->GetLabel());
+  ros::init(argc,argv,"pmpl_" + this->m_agent->GetRobot()->GetLabel());
 
   ros::start();
   
@@ -24,14 +24,15 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   ros::NodeHandle nh;
   m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                           "simplemanip1/arm_controller/command",
-                            10);
+                m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
+                10);
 
   /*JointStateCallback callback = [this](const sensor_msgs::JointState _msg) {
     this->Callback(_msg);
   };*/
 
-  m_stateSub = nh.subscribe("simplemanip1/joint_states",1000,Callback);
+  m_stateSub = nh.subscribe(m_agent->GetRobot()->GetLabel()+"/joint_states",
+                            1000,Callback);
 }
 
 ROSStepFunction::
@@ -75,13 +76,13 @@ ReachedWaypoint(const Cfg& _waypoint) {
 
 void 
 ROSStepFunction::
-MoveToWaypoint(const Cfg& _waypoint) {
-  MoveArm(_waypoint.GetData());
+MoveToWaypoint(const Cfg& _waypoint, double _dt) {
+  MoveArm(_waypoint.GetData(), _dt);
 }
     
 void 
 ROSStepFunction::
-MoveArm(std::vector<double> _goal) {
+MoveArm(std::vector<double> _goal, double _dt) {
   if(ros::ok()) {
 
     ros::Rate rate(3);
@@ -89,9 +90,17 @@ MoveArm(std::vector<double> _goal) {
     trajectory_msgs::JointTrajectory msg;
 
     msg.joint_names.clear();
-    msg.joint_names.push_back("sphere_0_to_link_1");
+    /*msg.joint_names.push_back("sphere_0_to_link_1");
     msg.joint_names.push_back("sphere_1_to_link_2");
     msg.joint_names.push_back("sphere_2_to_link_3");
+    */
+
+    msg.joint_names.push_back("shoulder_pan_joint");
+    msg.joint_names.push_back("shoulder_lift_joint");
+    msg.joint_names.push_back("elbow_joint");
+    msg.joint_names.push_back("wrist_1_joint");
+    msg.joint_names.push_back("wrist_2_joint");
+    msg.joint_names.push_back("wrist_3_joint");
 
     msg.points.resize(1);
 

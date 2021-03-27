@@ -802,8 +802,14 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
 
     // Check if links in joint have physical geometries or are virtual
     if(!model.getLink(joint.second->parent_link_name)->collision.get()
-       or !model.getLink(joint.second->child_link_name)->collision.get())
+       or !model.getLink(joint.second->child_link_name)->collision.get()) {
+     
+      std::cout << joint.second->name << std::endl; 
+      std::cout << joint.second->parent_link_name << " " << model.getLink(joint.second->parent_link_name)->collision.get() << std::endl;
+      std::cout << joint.second->child_link_name << " " << model.getLink(joint.second->child_link_name)->collision.get() << std::endl;
+
       continue;
+    }
 
     // add connection info to multibody connection map
     m_joints.emplace_back(new Connection(this));
@@ -832,6 +838,8 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
     m_joints.back()->SetBodies();
   }
   
+  
+  std::cout << "temp" << std::endl;
 }
 
 void

@@ -884,7 +884,19 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
     }
 
     // Read the mesh file.
-    ReadGeometryFile(m_comAdjust);
+    //ReadGeometryFile(m_comAdjust);
+    ReadGeometryFile(GMSPolyhedron::COMAdjust::None);
+
+    // Apply mesh scaling
+    auto scale = mesh->scale;
+  
+    auto newCenter = m_polyhedron.GetCentroid();
+    newCenter[0] = newCenter[0]*scale.x;
+    newCenter[1] = newCenter[1]*scale.y;
+    newCenter[2] = newCenter[2]*scale.z;
+
+    m_polyhedron.Scale(scale.x,scale.y,scale.z,newCenter);
+
   }
   else if(geometry->type == urdf::Geometry::BOX) {
     //TODO::Convert Box to GMSPolyhedron m_plohedron
@@ -920,9 +932,6 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
   else {
     throw RunTimeException(WHERE) << "Unsupported ROS Geometry." << std::endl;
   }
-
-  //TODO::use scale info as well
-  //auto scale = mesh->scale;
 
   // Translate visual elements.
   if(_link->visual and _link->visual->material) {

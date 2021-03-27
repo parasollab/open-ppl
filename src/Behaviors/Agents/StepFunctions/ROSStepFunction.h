@@ -31,14 +31,14 @@ class ROSStepFunction : public FollowPath {
   protected:
 
     //Temp function::Needs to be moved to controller class.
-    void MoveArm(std::vector<double> _goal);
+    void MoveArm(std::vector<double> _goal, double _dt);
 
     ///@name Helper Functions
     ///@{
 
     virtual bool ReachedWaypoint(const Cfg& _waypoint) override;
 
-    virtual void MoveToWaypoint(const Cfg& _waypoint) override;
+    virtual void MoveToWaypoint(const Cfg& _waypoint, double _dt) override;
 
     static void Callback(const sensor_msgs::JointState _msg);
 

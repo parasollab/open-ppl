@@ -227,6 +227,70 @@ Scale(double _scalingFactor) {
   *(this) *= t;
 }
 
+void
+GMSPolyhedron::
+Scale(double _x, double _y, double _z) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_x, 0.0 , 0.0},
+    {0.0, _y, 0.0},
+    {0.0, 0.0, _z}};
+
+  Vector3d toCenter = -(GetCentroid());
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  const Transformation center(toCenter, Orientation(unitM)),
+                       scale(Vector3d(0,0,0), Orientation(scaleM)),
+                       recenter(-toCenter, Orientation(unitM)),
+                       t = center * scale * recenter;
+
+  *(this) *= t;
+}
+
+void
+GMSPolyhedron::
+Scale(double _x, double _y, double _z, Vector3d _newCenter) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_x, 0.0 , 0.0},
+    {0.0, _y, 0.0},
+    {0.0, 0.0, _z}};
+
+  //Vector3d toCenter = -(GetCentroid());
+
+  //Vector3d toNewCenter = GetCentroid() - _newCenter;
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  const Transformation //center(toCenter, Orientation(unitM)),
+                       scale(Vector3d(0,0,0), Orientation(scaleM)),
+                       //recenter(toNewCenter, Orientation(unitM)),
+                       //t = center * scale * recenter;
+                       t = scale;
+
+  m_centroidCached = false;
+
+  *(this) *= t;
+}
 
 GMSPolyhedron
 operator*(const Transformation& _t, const GMSPolyhedron& _poly) {

@@ -26,14 +26,14 @@ FollowPath::
 StepAgent(double _dt) {
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
   if(p and p->HasPlan())
-    ExecutePath();
+    ExecutePath(_dt);
 }
 
 /*----------------------------- Helper Functions ----------------------------*/
 
 void
 FollowPath::
-ExecutePath() {
+ExecutePath(double _dt) {
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
   auto path = p->GetPath();
 
@@ -42,7 +42,7 @@ ExecutePath() {
   
   // Check if the robot has reached the current waypoint
   if(!ReachedWaypoint(current)) {
-    MoveToWaypoint(current);
+    MoveToWaypoint(current, _dt);
     return;
   }
 
@@ -59,17 +59,47 @@ ExecutePath() {
 
   // Move to the next waypoint
   auto next = path[m_pathIndex];
-  MoveToWaypoint(next);
+  MoveToWaypoint(next, _dt);
 }
     
 bool 
 FollowPath::
 ReachedWaypoint(const Cfg& _waypoint) {
-  return true;
+  auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
+  auto lib = p->GetMPLibrary();
+  auto dm = lib->GetDistanceMetric(m_waypointDm);
+
+  Cfg state = p->GetRobot()->GetSimulationModel()->GetState();
+
+  double distance = dm->Distance(state, _waypoint);
+
+  return distance < m_waypointThreshold;
 }
 
 void
 FollowPath::
-MoveToWaypoint(const Cfg& _cfg) {
+MoveToWaypoint(const Cfg& _waypoint, double _dt) {
 
+  const size_t steps = Simulation::NearestNumSteps(_dt);;
+  auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
+  auto robot = p->GetRobot();
+  const double timeRes = robot->GetMPProblem()->GetEnvironment()->GetTimeRes(),
+               time = timeRes * steps;
+
+  // Ask the controller for the best action to get from the current position to
+  // the next waypoint.
+  const Cfg current = robot->GetSimulationModel()->GetState();
+  auto bestControl = robot->GetController()->operator()(current, _waypoint, time);
+
+
+  if(m_debug){
+    std::cout << "Printing m_path in agent step function" << std::endl;
+    auto path = p->GetPath();
+    for(auto cfg : path){
+      std::cout << cfg.PrettyPrint() << std::endl;
+    }
+  }
+
+  //TODO::Add hardware version
+  robot->GetSimulationModel()->Execute(bestControl);
 }

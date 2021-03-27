@@ -28,11 +28,11 @@ class FollowPath : public StepFunction {
     ///@name Helper Functions
     ///@{
 
-    void ExecutePath();
+    void ExecutePath(double _dt);
 
     virtual bool ReachedWaypoint(const Cfg& _waypoint);
 
-    virtual void MoveToWaypoint(const Cfg& _waypoint);
+    virtual void MoveToWaypoint(const Cfg& _waypoint, double _dt);
 
     ///@}
     ///@name Internal State

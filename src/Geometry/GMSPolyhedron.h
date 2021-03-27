@@ -99,6 +99,8 @@ class GMSPolyhedron final {
     /// centroid.
     /// @param _scalingFactor The scaling factor
     void Scale(double _scalingFactor);
+    void Scale(double _x, double _y, double _z);
+    void Scale(double _x, double _y, double _z, Vector3d _newCenter);
 
     ///@}
     ///@name Equality
