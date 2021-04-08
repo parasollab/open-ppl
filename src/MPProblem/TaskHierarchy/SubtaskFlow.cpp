@@ -21,7 +21,7 @@ SubtaskFlow(SemanticTask* _task) {
 }
 
 SubtaskFlow::
-~SubtaskFlow() { }
+~SubtaskFlow() {}
 
 /*-------------------------------------------- Debug ----------------------------------------*/
 		
@@ -209,8 +209,7 @@ HandleDependencies(SemanticTask* _task, ParentInfo _parentInfo) {
 				case SemanticTask::Completion :
 						throw RunTimeException(WHERE, "Dependency type not handled.");
 						break;
-				case SemanticTask::Initiation : // Standard sequential dependency
-					{
+				case SemanticTask::Initiation : { // Standard sequential dependency
 						children = EvalNode(depTask, _parentInfo);
 						ParentInfo grandChildren = EvalNode(_task, children);
 						for(auto source : children.first) {
