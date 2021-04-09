@@ -22,7 +22,7 @@ Decomposition(XMLNode& _node, MPProblem* _problem) {
 							"Unique label for the decomposition");
 
 	std::string coordinator = _node.Read("coordinator", true, "",
-							"Indicates whcih robot is responsible for coordinating this decompostion.");
+							"Indicates which robot is responsible for coordinating this decompostion.");
 
 	m_coordinator = _problem->GetRobot(coordinator);
 

@@ -98,7 +98,7 @@ SubtaskFlow::
 GetFlowNodeIter(size_t _vid) {
 	VI iter = this->find_vertex(_vid);
 	if(iter == this->end())
-		throw RunTimeException(WHERE) << "VID is not in SubtaskFlow: " << _vid << std::endl;
+		throw RunTimeException(WHERE, "VID is not in SubtaskFlow: " + _vid);
 	return iter;
 }
 
@@ -107,7 +107,7 @@ SubtaskFlow::
 GetFlowNode(size_t _vid) {
 	VI iter = this->find_vertex(_vid);
 	if(iter == this->end())
-		throw RunTimeException(WHERE) << "VID is not in SubtaskFlow: " << _vid << std::endl;
+		throw RunTimeException(WHERE, "VID is not in SubtaskFlow: " + _vid);
 	return iter->property();
 }
 		
@@ -148,7 +148,7 @@ EvalNode(SemanticTask* _task, ParentInfo _parentInfo) {
 	if(subtasks.size() != 2) {
 		std::cout << "Number of subtasks: " << subtasks.size() << std::endl;
 		throw RunTimeException(WHERE, 
-				"SubtaskFlow is operating under the assumption that the decomp tree is binary.");
+				"SubtaskFlow is operating under the assumption that the decomp tree is binary." );
 	}
 
 
