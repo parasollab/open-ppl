@@ -951,14 +951,14 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
   else {
     // TODO::Currently assume volumetric rotational. 
     //       Need way to determine from urdf.
-    if(_fixed) {
-      SetBodyType(Type::Fixed);
-      SetMovementType(MovementType::Fixed);
-    }
-    else {
+    //if(_fixed) {
+    //  SetBodyType(Type::Fixed);
+    //  SetMovementType(MovementType::Fixed);
+    //}
+    //else {
       SetBodyType(Type::Volumetric);
       SetMovementType(MovementType::Rotational);
-    }
+    //}
   }
 
 }

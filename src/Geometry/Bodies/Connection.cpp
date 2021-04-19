@@ -246,16 +246,19 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
     case urdf::Joint::FIXED :
       m_jointType = Connection::JointType::NonActuated;
       break;
+    case urdf::Joint::PRISMATIC : 
+      m_jointType = Connection::JointType::Prismatic;
+      break;
     default :
       throw RunTimeException(WHERE) << "Unsupported joint type." 
                                     << std::endl;
   }
 
   // grab the joint limits for revolute and spherical joints
-  if(IsRevolute() || IsSpherical()) {
+  if(IsRevolute() || IsSpherical() || IsPrismatic()) {
     m_jointRange[0].min = m_jointRange[1].min = -1;
     m_jointRange[0].max = m_jointRange[1].max = 1;
-    size_t numRange = IsRevolute() ? 1 : 2;
+    size_t numRange = IsSpherical() ? 2 : 1;
 
     auto limits = _joint->limits;
 
@@ -361,6 +364,11 @@ IsSpherical() const noexcept {
   return m_jointType == JointType::Spherical;
 }
 
+bool
+Connection::
+IsPrismatic() const noexcept {
+  return m_jointType == JointType::Prismatic;
+}
 
 bool
 Connection::
@@ -578,39 +586,52 @@ Connection::
 ApplyURDFJointValues() const noexcept {
 
 
-  if(GetConnectionType() != Connection::JointType::Revolute)
-    throw RunTimeException(WHERE) << "Non revolute joints not yet supported for URDF modeling.";
+  if(GetConnectionType() == Connection::JointType::Revolute) {
 
-  // define reused functions
-  double ux,uy,uz,C,S,t;
-  ux = m_jointAxis[0];
-  uy = m_jointAxis[1];
-  uz = m_jointAxis[2];
+    // define reused functions
+    double ux,uy,uz,C,S,t;
+    ux = m_jointAxis[0];
+    uy = m_jointAxis[1];
+    uz = m_jointAxis[2];
 
-  C = cos(m_jointValues[0]);
-  S = sin(m_jointValues[0]);
-  t = 1 - C;
-  
-  Matrix<3,3> rotation;
-  //first row
-  rotation[0][0] = t*(ux*ux) + C;
-  rotation[0][1] = t*ux*uy - S*uz;
-  rotation[0][2] = t*ux*uz + S*uy;
-  
-  //second row
-  rotation[1][0] = t*ux*uy + S*uz;
-  rotation[1][1] = t*(uy*uy) + C;
-  rotation[1][2] = t*uy*uz - S*ux;
+    C = cos(m_jointValues[0]);
+    S = sin(m_jointValues[0]);
+    t = 1 - C;
 
-  //third row
-  rotation[2][0] = t*ux*uz - S*uy;
-  rotation[2][1] = t*uy*uz + S*ux;
-  rotation[2][2] = t*(uz*uz) + C;
+    Matrix<3,3> rotation;
+    //first row
+    rotation[0][0] = t*(ux*ux) + C;
+    rotation[0][1] = t*ux*uy - S*uz;
+    rotation[0][2] = t*ux*uz + S*uy;
 
-  
-  Transformation rotAboutAxis(Vector3d(),rotation);
+    //second row
+    rotation[1][0] = t*ux*uy + S*uz;
+    rotation[1][1] = t*(uy*uy) + C;
+    rotation[1][2] = t*uy*uz - S*ux;
 
-  return rotAboutAxis;
+    //third row
+    rotation[2][0] = t*ux*uz - S*uy;
+    rotation[2][1] = t*uy*uz + S*ux;
+    rotation[2][2] = t*(uz*uz) + C;
+
+
+    Transformation rotAboutAxis(Vector3d(),rotation);
+
+    return rotAboutAxis;
+  }
+  else if(GetConnectionType() == Connection::JointType::Revolute) {
+    Vector3d translation;
+    translation[0] = m_jointAxis[0] * m_jointValues[0];
+    translation[1] = m_jointAxis[1] * m_jointValues[0];
+    translation[2] = m_jointAxis[2] * m_jointValues[0];
+
+    mathtool::Matrix3x3 identity;
+    mathtool::identity(identity);
+
+    return Transformation(translation,identity);
+  }
+
+  return Transformation();
 }
 
 /*---------------------------------- Debug -----------------------------------*/

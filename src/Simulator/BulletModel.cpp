@@ -637,6 +637,18 @@ Build() {
                     << std::endl;
         break;
       }
+      case Connection::JointType::Prismatic: 
+      {
+        auto axis = joints[i]->GetJointAxis();
+        btVector3 jointAxis(axis[0],axis[1],axis[2]);
+        m_bulletModel->setupPrismatic(linkIndex, linkMass, linkInertia, parentIndex,
+          parentToLinkRotationInParentFrame,
+          jointAxis,
+          parentToActuationTranslationInParentFrame,
+          actuationToLinkTranslationInLinkFrame,
+          s_disableParentCollision);
+        break;
+      }
       default:
         throw RunTimeException(WHERE) << "Unsupported joint type.";
     }

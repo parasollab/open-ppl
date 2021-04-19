@@ -132,6 +132,9 @@ class Connection final {
     /// Check if this is a spherical joint.
     bool IsSpherical() const noexcept;
 
+    /// Check if this is a prismatic joint.
+    bool IsPrismatic() const noexcept;
+
     /// Check if this is a non-actuated joint.
     bool IsNonActuated() const noexcept;
 

@@ -167,7 +167,8 @@ InitializeDOFs(const Boundary* const _b) {
                                DofType::Joint, joint->GetJointRange(1));
         break;
       case Connection::JointType::Prismatic:
-        throw RunTimeException(WHERE) << "Prismatic joints not yet suported.";
+        m_dofInfo.emplace_back("Prismatic Joint " + label + " Angle 0",
+                               DofType::Joint, joint->GetJointRange(0));
         break;
       case Connection::JointType::NonActuated:
         break;
@@ -587,7 +588,7 @@ Configure(const vector<double>& _v) {
 
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
-    m_baseBody->Configure(GenerateBaseTransformation(_v));
+    GetBase()->Configure(GenerateBaseTransformation(_v));
     index = PosDOF() + OrientationDOF();
   }
 
