@@ -256,6 +256,7 @@ endif
 QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
            -I$(QT_BASE)/QtOpenGL -I$(BASE)/QtWidgets -I$(BASE)QtApplication
 QT_LIBS := -lQtGui -lQtOpenGL -lQtCore
+
 ifeq ($(platform), MACOS_gcc)
   QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
              -I$(QT_BASE)/QtOpenGL -I$(QT_BASE)/QtWidgets
@@ -627,6 +628,7 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
+  MPLibrary/MapEvaluators/SIPPMethod.h \
   MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
   MPLibrary/LearningModels/RadialKernelGradient.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \

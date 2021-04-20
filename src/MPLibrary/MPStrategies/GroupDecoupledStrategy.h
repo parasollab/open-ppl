@@ -137,9 +137,11 @@ Finalize() {
     return;
 
   double totalCost = 0;
+  double avgVertices = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
   auto groupRoadmap = this->GetGroupRoadmap();
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
 
   // Collect the full cfg paths for each robot.
   size_t longestPath = 0;
@@ -153,7 +155,8 @@ Finalize() {
     // If the path is empty, we didn't solve the problem.
     if(path->Empty())
       return;
-    totalCost += path->Length();
+    totalCost += path->TimeSteps() * timeRes;
+    std::cout << path->GetRobot()->GetLabel() << "'s path cost: " << path->TimeSteps() * timeRes << std::endl;
     // Collect the path.
     paths.push_back(path->VIDs());
     longestPath = std::max(longestPath, paths.back().size());
@@ -162,19 +165,24 @@ Finalize() {
         << ": " << path->VIDs() << std::endl;
 
     auto roadmap = path->GetRoadmap();
+    avgVertices += roadmap->get_num_vertices();
     const std::string base = this->GetBaseFilename();
     roadmap->Write(base +"."+ robot->GetLabel() + ".map",
       this->GetEnvironment());
     if(path and path->Size()) {
       ::WritePath(base +"."+ robot->GetLabel() + ".rdmp.path", path->Cfgs());
+      // FullCfgsWithWait: Used for Safe Interval Path Planning
       ::WritePath(base +"."+ robot->GetLabel()  + ".path",
-        path->FullCfgs(this->GetMPLibrary()));
+        path->FullCfgsWithWait(this->GetMPLibrary()));
     }
     ++i;
   }
 
+  avgVertices /= i;
+
   StatClass* stats = this->GetStatClass();
   stats->SetStat("GroupDecoupledQuery::TotalCost", totalCost);
+  stats->SetStat("GroupDecoupledQuery::AvgVertices", avgVertices);
 
   // Add each path configuration to the group roadmap.
   const size_t numRobots = groupTask->Size();

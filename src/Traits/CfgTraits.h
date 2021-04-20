@@ -12,8 +12,10 @@
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+//#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/GeneralRoadmapGraph.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
@@ -42,7 +44,7 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #include "MPLibrary/NeighborhoodFinders/DPESNF.h"
 #include "MPLibrary/NeighborhoodFinders/HierarchicalNF.h"
-#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
+//#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
 #include "MPLibrary/NeighborhoodFinders/LSHNF.h"
 #include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
@@ -51,7 +53,7 @@
 
 //sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
-#include "MPLibrary/Samplers/DynamicRegionSampler.h"
+//#include "MPLibrary/Samplers/DynamicRegionSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 #include "MPLibrary/Samplers/GridSampler.h"
 #include "MPLibrary/Samplers/MaskedProximitySamplerGroup.h"
@@ -110,6 +112,7 @@
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GridCBSQuery.h"
 #include "MPLibrary/MapEvaluators/GroupCBSQuery.h"
 #include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
@@ -121,6 +124,7 @@
 #include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/StrategyStateEvaluator.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/MapEvaluators/TrueEvaluation.h"
@@ -136,8 +140,8 @@
 #include "MPLibrary/MPStrategies/DisassemblyPreemptiveDFSManipulator.h"
 #include "MPLibrary/MPStrategies/DisassemblyRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DisassemblyIMLRRT.h"
-#include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
-#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
+//#include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
+//#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
@@ -177,7 +181,9 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef RoadmapGraph<C, W>              RoadmapType;
+//  typedef GenericStateGraph<C, W>              RoadmapType;
+
+  typedef GenericStateGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
@@ -223,7 +229,7 @@ struct MPTraits {
     BruteForceNF<MPTraits>,
     DPESNF<MPTraits>,
     HierarchicalNF<MPTraits>,
-    KdTreeNF<MPTraits>,
+    //KdTreeNF<MPTraits>,
     LSHNF<MPTraits>,
     OptimalNF<MPTraits>,
     RadiusNF<MPTraits>,
@@ -234,7 +240,6 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
-    DynamicRegionSampler<MPTraits>,
     GaussianSampler<MPTraits>,
     GridSampler<MPTraits>,
     MaskedProximitySamplerGroup<MPTraits>,
@@ -248,6 +253,7 @@ struct MPTraits {
     UniformRandomSampler<MPTraits>,
     WorkspaceImportanceSampler<MPTraits>
       > SamplerMethodList;
+    //DynamicRegionSampler<MPTraits>,
 
   //types of local planners available in our world
   typedef boost::mpl::list<
@@ -305,6 +311,7 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     ComposeEvaluator<MPTraits>,
+    GridCBSQuery<MPTraits>,
     GroupCBSQuery<MPTraits>,
     GroupDecoupledQuery<MPTraits>,
     GroupQuery<MPTraits>,
@@ -317,6 +324,7 @@ struct MPTraits {
     NegateEvaluator<MPTraits>,
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     StrategyStateEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
     TrueEvaluation<MPTraits>
@@ -336,8 +344,6 @@ struct MPTraits {
     DisassemblyPreemptiveDFSManipulator<MPTraits>,
     DisassemblyRRTStrategy<MPTraits>,
     DisassemblyIMLRRT<MPTraits>,
-    DynamicDomainRRT<MPTraits>,
-    DynamicRegionsPRM<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
@@ -358,6 +364,8 @@ struct MPTraits {
     PushCfgToMATest<MPTraits>
     //SVMTest<MPTraits>
       > MPStrategyMethodList;
+    //DynamicDomainRRT<MPTraits>,
+    //DynamicRegionsPRM<MPTraits>,
 };
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef PMPL_MP_STRATEGY_METHOD_H_
 #define PMPL_MP_STRATEGY_METHOD_H_
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/MPTask.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
@@ -320,6 +320,7 @@ ClearRoadmap() {
   ///       any roadmap hooks. Methods which use hooks may have stale data after
   ///       clearing the map. To fix we'll need to replace with our own function
   ///       in RoadmapGraph.
+
   auto roadmap = this->GetRoadmap();
   roadmap->clear();
 

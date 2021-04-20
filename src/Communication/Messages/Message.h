@@ -81,9 +81,9 @@ MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>>*
 MessageToMotionSolution(std::string _msg);
 
 //Roadmap
-std::vector<std::string> RoadmapToMessage(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _roadmap, Robot* _robot);
+std::vector<std::string> RoadmapToMessage(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _roadmap, Robot* _robot);
 
-RoadmapGraph<Cfg,DefaultWeight<Cfg>>* MessageToRoadmap(std::string _msg, Robot* _robot);
+GenericStateGraph<Cfg,DefaultWeight<Cfg>>* MessageToRoadmap(std::string _msg, Robot* _robot);
 
 /*------------------------------- Control Info  -------------------------------------*/
 

@@ -64,7 +64,7 @@ class HandoffAgent : public PathFollowingAgent {
 
     /// Sets the roadmap graph in the m_solution
     /// @param _graph roadmap graph to set in the m_solution
-    void SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+    void SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph);
 
     /// Appends a subtask onto this agents task queue
     /// @param _task new subtask to add to the queue

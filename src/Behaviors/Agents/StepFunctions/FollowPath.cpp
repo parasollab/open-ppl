@@ -2,6 +2,7 @@
 
 #include "Behaviors/Agents/PathFollowingAgent.h"
 #include "ConfigurationSpace/Cfg.h"
+#include "Simulator/Simulation.h"
 #include "Utilities/XMLNode.h"
 
 /*------------------------------ Construction ------------------------------*/

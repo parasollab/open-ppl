@@ -57,6 +57,14 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   m_fixed = _node.Read("fixed", false, m_fixed, 
                        "Flag indicating if robot has a fixed base.");
+  std::string basePositionString = _node.Read("basePosition", false, "", 
+                       "String indiciating the xyz and rpy of the robot base if fixed.");
+  std::istringstream basePositionStream(basePositionString);
+  m_basePosition = std::vector<double>(6);
+  for(size_t i = 0; i < 6; i++) {
+    basePositionStream >> m_basePosition[i];
+  }
+  
 
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
@@ -349,6 +357,9 @@ ReadURDF(const std::string& _filename, std::string _worldLink) {
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   InitializePlanningSpaces();
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
+  if(m_fixed) {
+    m_multibody->GetBase()->Configure(m_multibody->GenerateBaseTransformation(m_basePosition));
+  }
 }
 
 /*--------------------------- Planning Interface -----------------------------*/

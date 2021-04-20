@@ -7,7 +7,7 @@
 
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/Weight.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "MPProblem/InteractionInformation.h"
 #include "MPProblem/MPTask.h"
@@ -38,13 +38,13 @@ class InteractionTemplate {
     ///@name Accessors
     ///@{
 
-    std::vector<RoadmapGraph<Cfg,DefaultWeight<Cfg>>*> GetRoadmaps() const;
+    std::vector<GenericStateGraph<Cfg,DefaultWeight<Cfg>>*> GetRoadmaps() const;
 
-    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> GetRoadmaps();
+    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> GetRoadmaps();
 
     InteractionInformation* GetInformation();
 
-    RoadmapGraph<Cfg, DefaultWeight<Cfg>>* GetConnectedRoadmap() const;
+    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* GetConnectedRoadmap() const;
 
     std::vector<std::vector<size_t>>& GetDistinctRoadmaps();
 
@@ -68,7 +68,7 @@ class InteractionTemplate {
     ///@name Member Management
     ///@{
 
-    void AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
+    void AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
 
     void AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem);
 
@@ -93,10 +93,10 @@ class InteractionTemplate {
     std::vector<std::vector<Cfg>> m_interactionPaths;
 
     ///The set of paths created from solving each task.
-    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> m_roadmaps;
+    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_roadmaps;
 
     ///The combination of all roadmaps in m_roadmaps.
-    RoadmapGraph<Cfg, DefaultWeight<Cfg>>* m_connectedRoadmap{nullptr};
+    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* m_connectedRoadmap{nullptr};
 
     ///The set of VIDs from each distinct roadmap in the connected roadmap.
     std::vector<std::vector<size_t>> m_distinctRoadmaps;
@@ -105,9 +105,9 @@ class InteractionTemplate {
     std::vector<double> m_distinctPathCosts;
 
     ///The set of roadmaps without the corresponding paths
-    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> m_pathlessRoadmaps;
+    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_pathlessRoadmaps;
 
-    std::vector<RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> m_pathOnlyRoadmaps;
+    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_pathOnlyRoadmaps;
 
     bool m_debug{false};
 

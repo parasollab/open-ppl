@@ -1,6 +1,6 @@
 #include "MoveRobot.h"
 
-#include "Behaviors/Agents/PathFollowingAgent.h"
+#include "Behaviors/Agents/HandoffAgent.h"
 
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
@@ -12,7 +12,7 @@
 
 MoveRobot::
 MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _hasObject,
-          RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator) {
+          GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap, MPLibrary* _library, bool _manipulator) {
   m_robot = _robot;
   m_start = _start;
   m_goal = _goal;
@@ -22,7 +22,7 @@ MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _ha
     m_providedRoadmap = true;
   }
   else{
-    m_roadmapGraph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
+    m_roadmapGraph = new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
     m_providedRoadmap = false;
   }
   m_library = _library;
@@ -135,9 +135,12 @@ CheckPreConditions(const FactLayer* _factLayer){
 
   m_library->SetTask(task);
 
-  PathFollowingAgent* agent = static_cast<PathFollowingAgent*>(m_robot->GetAgent());
+  HandoffAgent* agent = static_cast<HandoffAgent*>(m_robot->GetAgent());
+  agent->SetGenericStateGraph(m_roadmapGraph);
+
   auto solution = agent->GetMPSolution();
   solution->SetRoadmap(agent->GetRobot(),m_roadmapGraph);
+
   try{
     m_roadmapGraph->SetRobot(m_robot);
 

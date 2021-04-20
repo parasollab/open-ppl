@@ -549,7 +549,7 @@ template <typename MPTraits>
 typename DisassemblyRRTStrategy<MPTraits>::VID
 DisassemblyRRTStrategy<MPTraits>::
 FindNearestNeighbor(const GroupCfgType& _cfg) {
-  MethodTimer mt(this->GetStatClass(),
+  /*MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::FindNearestNeighbor");
 
   auto roadmap = this->GetGroupRoadmap();
@@ -566,6 +566,9 @@ FindNearestNeighbor(const GroupCfgType& _cfg) {
   // Return the nearest VID.
   const VID nearestVID = neighbors[0].target;
   return nearestVID;
+*/
+
+  return 0;
 }
 
 /*----------------------------- Growth Helpers -------------------------------*/

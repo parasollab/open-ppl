@@ -1997,10 +1997,11 @@ GetRegionRadius(const Vector3d& _v) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::GetRegionRadius");
 
-  const double clearance = GetClearance(_v),
+  /*const double clearance = GetClearance(_v),
                robotRadius = this->GetTask()->GetRobot()->GetMultiBody()->GetBody(0)->
                              GetPolyhedron().GetMinRadius() / 2;
-  return std::max(1.2 * (clearance - robotRadius), m_minRegionRadius);
+  return std::max(1.2 * (clearance - robotRadius), m_minRegionRadius);*/
+  return 0;
 }
 
 

@@ -623,7 +623,7 @@ MessageToPlan(std::string _msg, Decomposition* _decomp, MPProblem* _problem) {
 	if(roadmaps[0] != "roadmaps=")
 		throw RunTimeException(WHERE) << "Expected robot roadmaps." << std::endl;
 
-	std::unordered_map<Robot*,RoadmapGraph<Cfg,DefaultWeight<Cfg>>*> roadmapMap;
+	std::unordered_map<Robot*,GenericStateGraph<Cfg,DefaultWeight<Cfg>>*> roadmapMap;
 
 	std::cout << "Roadmaps"  << std::endl << std::endl;
 	for(size_t i = 1; i < roadmaps.size(); i++) {
@@ -845,7 +845,7 @@ MessageToMotionSolution(std::string _msg, Robot* _robot, RobotGroup* _group) {
 
 //Roadmap
 std::vector<std::string>
-RoadmapToMessage(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _roadmap, Robot* _robot) {
+RoadmapToMessage(GenericStateGraph<Cfg,DefaultWeight<Cfg>>* _roadmap, Robot* _robot) {
 
 	std::ostringstream oss;
 	stapl::sequential::write_graph(*_roadmap,oss);
@@ -872,9 +872,9 @@ RoadmapToMessage(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _roadmap, Robot* _robot) 
 	return messages;
 }
 
-RoadmapGraph<Cfg,DefaultWeight<Cfg>>*
+GenericStateGraph<Cfg,DefaultWeight<Cfg>>*
 MessageToRoadmap(std::string _msg, Robot* _robot) {
-	auto roadmap = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(_robot);
+	auto roadmap = new GenericStateGraph<Cfg,DefaultWeight<Cfg>>(_robot);
 	ReadMessage(roadmap,_msg);
 	return roadmap;
 }

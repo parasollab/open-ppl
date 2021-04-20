@@ -27,6 +27,10 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
 
     virtual ~MapEvaluatorMethod() = default;
 
+    typedef std::unordered_map<size_t,
+                std::unordered_map<size_t,
+                    std::vector<Range<double>>>> EdgeIntervals;
+
     ///@}
     ///@name MapEvaluator Interface
     ///@{
@@ -34,6 +38,10 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     /// Evaluate a roadmap.
     /// @return True if this roadmap meets the evaluation criteria.
     virtual bool operator()() = 0;
+
+    virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) {};
+
+    virtual void SetMinEndtime(double _minEndtime) {};
 
     ///@}
     ///@name Active Robots

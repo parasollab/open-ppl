@@ -1042,6 +1042,7 @@ void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, GroupTask* _task) {
   m_problem = _problem;
+  m_task = nullptr;
   m_groupTask = _task;
 
   for(auto& solver : m_solvers) {
@@ -1062,6 +1063,7 @@ void
 MPLibraryType<MPTraits>::
 Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution) {
   m_problem = _problem;
+  m_task = nullptr;
   m_groupTask = _task;
   m_solution = _solution;
 

@@ -91,9 +91,12 @@ BuildSkeleton(){
     }
 
     // Build a skeleton from a 2D medial axis.
-    MedialAxis2D ma(polyhedra, env->GetBoundary());
+    throw RunTimeException(WHERE) << "Broken implementation commented out." << std::endl;
+    // THis might just be a missing include
+    /*MedialAxis2D ma(polyhedra, env->GetBoundary());
     ma.BuildMedialAxis();
     m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+    */
   }
 
 

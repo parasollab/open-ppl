@@ -362,7 +362,7 @@ GetMesoSkeleton() {
 void
 MeanCurvatureSkeleton3D::
 InitializeFreeSpace(const Environment* _env){
-  if(m_debug)
+ /* if(m_debug)
     cout << "MeanCurvatureSkeleton3D::InitializeFreeSpace()" << endl;
 
   // Initialize the freespace model as an outward-facing boundary.
@@ -422,7 +422,7 @@ InitializeFreeSpace(const Environment* _env){
 
   // Change the surface mesh to the surface with simple cartesian point kernel
   // otherwise skeletonization does not work with exact kernel
-  AddPolyhedron(smesh,0.01*len);
+  AddPolyhedron(smesh,0.01*len);*/
 }
 
 void

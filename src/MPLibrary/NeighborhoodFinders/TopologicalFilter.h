@@ -690,7 +690,6 @@ FindCandidates(RoadmapType* const _r, const CfgType& _cfg,
     std::cout << "\tReturning " << candidates.size()
               << " candidates."
               << std::endl;
-
   return candidates;
 }
 

@@ -10,7 +10,7 @@
 ///
 /// Stores all information available from local plan computations, including
 /// intermediates along edges (not straight line), the path
-/// generated, and the edge weights to be added to the RoadmapGraph.
+/// generated, and the edge weights to be added to the GenericStateGraph.
 ///
 /// @todo Destroy this object and have LPs/Extenders work directly with a
 ///       LocalPlan object, which should replace the DefaultWeight class as our

@@ -82,6 +82,7 @@ class Robot final {
   double m_maxAngularVelocity{1};  ///< Max angular velocity.
   std::string m_capability;        ///< The terrain label that the robot can use.
   bool m_fixed{false};
+  std::vector<double> m_basePosition;
   bool m_manipulator{false};       ///< Is the robot a manipulator?
   std::string m_defaultStrategyLabel; ///< The robot's default MP Strategy.
 
