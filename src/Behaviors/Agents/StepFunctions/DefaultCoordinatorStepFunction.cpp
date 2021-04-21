@@ -154,11 +154,12 @@ DistributePlan() {
   //auto memberAgents = m_coordinator->GetMemberAgents();
   
   for(auto agent : childAgents) {
-		auto allocs = m_plan->GetAllocations(agent->GetRobot());
+    auto robot = agent->GetRobot();
+		auto allocs = m_plan->GetAllocations(robot);
 		std::vector<TaskSolution*> solutions;
 
 		//Temporary dummy task 
-		std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(agent->GetRobot()));
+		std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(robot));
 		agent->SetTask(temp);	
 
 		for(auto iter = allocs.begin(); iter != allocs.end(); iter++) {
@@ -167,20 +168,20 @@ DistributePlan() {
 			auto mpSol = sol->GetMotionSolution();
 
 			if(iter == allocs.begin()) {
-				agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap());
-				agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(agent->GetRobot()));
+				agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap(robot));
+				agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(robot));
 			}
 			else {
-				*(agent->GetMPSolution()->GetPath(agent->GetRobot())) += *(mpSol->GetPath());
+				*(agent->GetMPSolution()->GetPath(robot)) += *(mpSol->GetPath(robot));
 			}
 		}
-		auto& cfgs = agent->GetMPSolution()->GetPath()->Cfgs();	
+		auto& cfgs = agent->GetMPSolution()->GetPath(robot)->Cfgs();	
 		agent->SetPlan(cfgs);
 		if(cfgs.empty())
 			continue;
 		auto goalCfg = cfgs.back();
     std::unique_ptr<CSpaceConstraint> goal =
-      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(agent->GetRobot(), goalCfg));
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot, goalCfg));
     temp->AddGoalConstraint(std::move(goal));
 	}
 }

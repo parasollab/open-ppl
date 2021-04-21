@@ -82,6 +82,10 @@ void
 Plan::
 AddAllocation(RobotGroup* _group, SemanticTask* _task) {
 	m_groupAllocations[_group].push_back(_task);
+  //TODO:: Quick idea - need to think through how to represent group better
+  for(auto r : _group->GetRobots()) {
+    this->AddAllocation(r,_task);
+  }
 }
 
 std::list<SemanticTask*> 

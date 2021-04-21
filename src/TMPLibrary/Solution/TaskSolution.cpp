@@ -91,7 +91,30 @@ Print() {
 		}
 	}
 	else if(m_robotGroup) {
-		std::cout << "Robot Group Path Unsupported.";
+    std::cout << "Composite path" << std::endl;
+    std::unordered_map<std::string,std::vector<Cfg>> individualPaths;
+		for(auto r : m_robotGroup->GetRobots()) {
+      std::vector<Cfg> path;
+      individualPaths[r->GetLabel()] = path;
+    }
+    for(auto g : m_motionSolution->GetGroupPath(m_robotGroup)->Cfgs()) {
+      for(auto r : m_robotGroup->GetRobots()) {
+        individualPaths[r->GetLabel()].push_back(g.GetRobotCfg(r));
+      }
+    }
+    for(auto kv : individualPaths) {
+      std::cout << std::endl << kv.first << std::endl;
+      for(auto c : kv.second) {
+        std::cout << "[" << c.PrettyPrint() << "],    ";
+      }
+    }
+    std::cout << "Decoupled path" << std::endl;
+    for(auto r : m_robotGroup->GetRobots()) {
+      std::cout << std::endl << r->GetLabel() << std::endl;
+      for(auto vid : m_motionSolution->GetPath(r)->VIDs()) {
+        std::cout << vid << ", ";
+      }
+    }
 	}
 	std::cout << std::endl << std::endl;	
 }
