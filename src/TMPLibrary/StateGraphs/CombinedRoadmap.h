@@ -1,22 +1,47 @@
 #ifndef PMPL_COMBINED_ROADMAP_H_
 #define PMPL_COMBINED_ROADMAP_H_
 
-#include "TMPLibrary/StateGraphs/StateGraph.h"
-
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/GroupCfg.h"
+#include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
 
 #include "MPLibrary/MPSolution.h"
-
+#include "MPProblem/MPProblem.h"
+#include "TMPLibrary/StateGraphs/StateGraph.h"
+#include "Traits/CfgTraits.h"
+#include "Utilities/Hypergraph.h"
 #include <iostream>
+
+class InteractionTemplate;
 
 class CombinedRoadmap : public StateGraph {
   public:
 
-    typedef RoadmapGraph<CfgType, WeightType>         GraphType;
-    typedef typename GraphType::vertex_descriptor     VID;
-    typedef typename std::vector<VID>::const_iterator VIDIterator;
+    ///@name Local Types
+    ///@{
 
+    struct ActionUpdate {
 
+    };
+
+    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
+    typedef std::pair<GroupRoadmapType*,ActionUpdate> SemanticRoadmap;
+    typedef std::set<SemanticRoadmap*>                CompositeSemanticRoadmap;
+
+    struct TMPVertex {
+      size_t rvid; ///< Roadmap vid
+      SemanticRoadmap* sr;
+    };
+
+    struct TMPHyperarc {
+      GroupLocalPlanType glp;
+    };
+
+    typedef Hypergraph<TMPVertex,TMPHyperarc> TMPHypergraph;
+
+    ///@}
   	///@name Construction
     ///@{
 
@@ -36,64 +61,44 @@ class CombinedRoadmap : public StateGraph {
     ///@name Accessors
     ///@{
 
-		/// Copies the state graph into the coordinator solution, and copies the individual
-		/// robot-type roadmaps into robots of the respective type.
-		virtual void LoadStateGraph() override;
+    ///@param _sr  The semantic roadmap to add the configuration too.
+    ///@param _cfg The GroupCfg that is being added to the underlying 
+    ///            Cspace roadmap.
+    ///@return     The hypergraph vid of the added configuration.
+    size_t AddConfiguration(SemanticRoadmap* _sr, GroupCfg _cfg);
 
-		std::shared_ptr<GraphType> GetCapabilityRoadmap(Agent* _agent);
+    ///@param _csr The composite semantic roadmap that is being
+    ///            connected with the interaction/
+    ///@param _it  The interaction being added to the hypergraph.
+    ///@return     The hypergraph vid of the new vertex for each
+    ///            spawned semantic roadmap.
+    std::set<size_t> AddInteraction(CompositeSemanticRoadmap _csr, 
+                                    InteractionTemplate* _it);
 
+    const TMPHypergraph* GetHypergraph() const;
+
+    const std::set<SemanticRoadmap>& GetSemanticRoadmaps() const;
+
+    const MPSolution* GetMPSolution() const;
     ///@}
 
-		bool m_discrete{false}; ///< Flag for operating in a discrete gride world
   protected:
 
-		///@name Helpers
+		///@name Helpers Functions
 		///@{
-
-		void ResetRobotTypeRoadmaps();
-
-		void CopyRobotTypeRoadmaps();
 
 		///@}
-		///@name Construction Helpers
+		///@name Internal State
 		///@{
 
-		virtual void ConstructGraph() override;
-		void ConstructDiscreteRoadmap();
+    /// Hypergraph representation of the combined roadmap
+    std::unique_ptr<TMPHypergraph> m_hypergraph;
 
-		void GenerateITs();
-		void GenerateDiscreteITs();
+    /// Set of all semantic roadmaps contained in the hypergraph
+    std::set<SemanticRoadmap> m_semanticRoadmaps;
 
-		void FindITLocations(InteractionTemplate* _it);
-
-		/// Transforms the ITs into the disovered locations
-		void TransformITs();
-
-		/// Initiallizes configurations for each capability at the start and end
-		/// constriants of each whole task and adds them to the megaRoadmap
-		void SetupWholeTasks();
-
-		///@}
-		///@name member variables
-		///@{
-
-		/// Map from each capability to the roadmap for that capability.
-		std::unordered_map<std::string, std::shared_ptr<GraphType>> m_capabilityRoadmaps;
-    
-		/// The VIDs of all individual agent roadmaps in each transformed handoff template.
-    std::vector<std::vector<size_t>> m_transformedRoadmaps;
-
-
-		/// The VIDs of the start and end points of the whole tasks in the
-		/// megaRoadmap
-		std::vector<std::vector<size_t>> m_wholeTaskStartEndPoints;
-		std::vector<std::vector<size_t>> m_startEndPoints;
-
-		double m_connectionThreshold{1.5};
-		std::string m_dmLabel;
-    std::unique_ptr<Environment> m_interactionEnvironment;    ///< The handoff template environment.
-
-		std::unique_ptr<MPSolution> m_solution;
+    /// MPSolution containing all roadmaps used in the combined roadmap
+		std::unique_ptr<MPSolution> m_mpSolution;
 
 		///@}
 
