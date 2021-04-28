@@ -175,8 +175,16 @@ DistributePlan() {
 				*(agent->GetMPSolution()->GetPath(robot)) += *(mpSol->GetPath(robot));
 			}
 		}
-		auto& cfgs = agent->GetMPSolution()->GetPath(robot)->Cfgs();	
+		auto& cfgs = agent->GetMPSolution()->GetPath(robot)->FullCfgs(m_tmpLibrary->GetMPLibrary());	
+		//auto& cfgs = agent->GetMPSolution()->GetPath(robot)->Cfgs();	
 		agent->SetPlan(cfgs);
+
+    std::cout << "Plan for " << robot->GetLabel() << ": " << std::endl;
+    for(auto cfg : cfgs) {
+      std::cout << cfg.PrettyPrint() << std::endl;
+    }
+    std::cout << std::endl;
+
 		if(cfgs.empty())
 			continue;
 		auto goalCfg = cfgs.back();

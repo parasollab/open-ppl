@@ -114,6 +114,10 @@ Print() {
       for(auto vid : m_motionSolution->GetPath(r)->VIDs()) {
         std::cout << vid << ", ";
       }
+      std::cout << std::endl;
+      for(auto cfg : m_motionSolution->GetPath(r)->Cfgs()) {
+        std::cout << cfg.PrettyPrint() << std::endl;
+      }
     }
 	}
 	std::cout << std::endl << std::endl;	

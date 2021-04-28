@@ -50,6 +50,7 @@ class ROSStepFunction : public FollowPath {
 
     ros::Subscriber m_stateSub;
 
+    double m_time{1};
 
     ///@}
 };
