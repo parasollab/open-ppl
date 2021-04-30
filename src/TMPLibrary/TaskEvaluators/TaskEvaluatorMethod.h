@@ -5,8 +5,6 @@
 
 #include <iostream>
 
-class WholeTask;
-
 class TaskEvaluatorMethod : public TMPBaseObject {
   public:
 

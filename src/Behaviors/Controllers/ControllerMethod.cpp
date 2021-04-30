@@ -1,19 +1,12 @@
 #include "ControllerMethod.h"
 
-#include "Behaviors/Controllers/CarlikeNeedleController.h"
 #include "Behaviors/Controllers/ControlSetGenerators.h"
-#include "Behaviors/Controllers/ICreateController.h"
-//#include "Behaviors/Controllers/PIDFeedback.h"
 #include "Behaviors/Controllers/SimpleController.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Robot.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
-
-#ifdef PMPL_USE_MATLAB
-#include "Behaviors/Controllers/MatlabNeedleController.h"
-#endif
 
 #include "nonstd/container_ops.h"
 
@@ -77,18 +70,6 @@ Factory(Robot* const _r, XMLNode& _node) {
   // Setup the appropriate controller type.
   if(controllerType == "simple")
     output = std::unique_ptr<SimpleController>(new SimpleController(_r, _node));
-  //else if(controllerType == "pid")
-  //  output = std::unique_ptr<PIDFeedback>(new PIDFeedback(_r, _node));
-  else if(controllerType == "icreatecontroller")
-    output = std::unique_ptr<ICreateController>(new ICreateController(_r, _node));
-  else if(controllerType == "carlikeneedle")
-    output = std::unique_ptr<CarlikeNeedleController>(new
-        CarlikeNeedleController(_r, _node));
-#ifdef PMPL_USE_MATLAB
-  else if(controllerType == "matlabneedle")
-    output = std::unique_ptr<MatlabNeedleController>(new
-        MatlabNeedleController(_r, _node));
-#endif
   else
     throw ParseException(_node.Where(), "Unknown controller label '" +
         controllerType + "'. Currently only 'simple' is supported.");

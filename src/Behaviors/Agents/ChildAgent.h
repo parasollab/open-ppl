@@ -84,12 +84,6 @@ class ChildAgent : public PathFollowingAgent {
     virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) override;
 
 		///@}
-    ///@name Communication Helpers
-    ///@{
-		
-    virtual std::vector<std::string> PublishFunction(std::string _msg) override;
-
-    ///@}
     ///@name Internal State
     ///@{
 

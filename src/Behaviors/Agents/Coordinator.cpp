@@ -11,14 +11,17 @@
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
-#include "Communication/Messages/Message.h"
-
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
 
 #include "Traits/CfgTraits.h"
+
+#include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/Solution/TaskSolution.h"
 
 #include "sandbox/gui/main_window.h"
 
@@ -88,9 +91,6 @@ Initialize() {
     // We are assuming that all member robots have a compatible agent type.
     // Throw an exception if not.
     Agent* memberAgent = member->GetAgent();
-
-		if(m_communicator.get() and !memberAgent->GetCommunicator().get())
-			memberAgent->SetCommunicator(m_communicator);
 
 		ChildAgent* c = static_cast<ChildAgent*>(memberAgent);
 		if(c) {
@@ -274,10 +274,6 @@ Coordinator::
 InitializeAgents(){
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
-  }
-  for(auto agent : m_memberAgents){
-    agent->Initialize();
-    agent->SetParentAgent(this);
   }
   for(auto agent : m_childAgents){
     agent->Initialize();

@@ -2,13 +2,13 @@
 
 #include "Coordinator.h"
 
-#include "Communication/Messages/Message.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
 #include "MPProblem/Robot/HardwareInterfaces/SensorInterface.h"
 
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 
+#include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 /*---------------------------------- Construction ----------------------------------*/
 
@@ -42,20 +42,7 @@ Clone(Robot* const _r) const {
 void 
 ChildAgent::
 Initialize() {
-	// Set up control publishing
-	if(m_controlChannel.size() > 0) {
-  	if(!m_communicator->GetPublisher(m_controlChannel))
-			throw RunTimeException(WHERE) << m_robot->GetLabel() 
-																		<< " control channel not connected." 
-																		<< std::endl;
-		
-		//m_running = true;
-		//auto publish = [this](){this->PublishControls();};
-		//m_thread = std::thread(publish);
-	}
-
   PathFollowingAgent::Initialize();
-
 }
 
 void
@@ -162,15 +149,7 @@ void
 ChildAgent::
 ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
 	Agent::ExecuteControlsSimulation(_c,_steps);
-
-	if(!m_communicator.get())
-		return;
-
-	m_queuedControlSet = _c;
-	m_queuedSteps = _steps;
-
-	m_locked = false;
-	while(!m_locked) {}
+	return;
 }
 
 
@@ -178,19 +157,6 @@ void
 ChildAgent::
 ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
 	Agent::ExecuteControlsHardware(_c,_steps);
-}
-
-/*----------------------------- Communication Helpers -------------------------------*/
-
-std::vector<std::string>
-ChildAgent::
-PublishFunction(std::string _msg) {
-	while(m_locked) {}
-	std::string response = ControlSetToMessage(m_queuedControlSet,m_queuedSteps);
-
-	m_locked = true;
-
-	return {response};
 }
 
 /*-----------------------------------------------------------------------------------*/

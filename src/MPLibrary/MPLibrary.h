@@ -13,7 +13,6 @@
 
 #include "MPLibrary/Connectors/ConnectorMethod.h"
 #include "MPLibrary/DistanceMetrics/DistanceMetricMethod.h"
-#include "MPLibrary/Extenders/ExtenderMethod.h"
 #include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
 #include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
@@ -21,7 +20,6 @@
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
 #include "MPLibrary/MPTools/MPTools.h"
 #include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
-#include "MPLibrary/PathModifiers/PathModifierMethod.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
@@ -83,8 +81,6 @@ class MPLibraryType final
                                                             NeighborhoodFinderSet;
     typedef MethodSet<MPTraits, SamplerMethod<MPTraits>>        SamplerSet;
     typedef MethodSet<MPTraits, LocalPlannerMethod<MPTraits>>   LocalPlannerSet;
-    typedef MethodSet<MPTraits, ExtenderMethod<MPTraits>>       ExtenderSet;
-    typedef MethodSet<MPTraits, PathModifierMethod<MPTraits>>   PathModifierSet;
     typedef MethodSet<MPTraits, ConnectorMethod<MPTraits>>      ConnectorSet;
     typedef MethodSet<MPTraits, MetricMethod<MPTraits>>         MetricSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethod<MPTraits>>   MapEvaluatorSet;
@@ -100,8 +96,6 @@ class MPLibraryType final
                                                        NeighborhoodFinderPointer;
     typedef typename SamplerSet::MethodPointer         SamplerPointer;
     typedef typename LocalPlannerSet::MethodPointer    LocalPlannerPointer;
-    typedef typename ExtenderSet::MethodPointer        ExtenderPointer;
-    typedef typename PathModifierSet::MethodPointer    PathModifierPointer;
     typedef typename ConnectorSet::MethodPointer       ConnectorPointer;
     typedef typename MetricSet::MethodPointer          MetricPointer;
     typedef typename MapEvaluatorSet::MethodPointer    MapEvaluatorPointer;
@@ -185,28 +179,6 @@ class MPLibraryType final
     }
     void AddLocalPlanner(LocalPlannerPointer _lp, const std::string& _l) {
       m_localPlanners->AddMethod(_lp, _l);
-    }
-
-    ///@}
-    ///@name Extender Accessors
-    ///@{
-
-    ExtenderPointer GetExtender(const std::string& _l) {
-      return m_extenders->GetMethod(_l);
-    }
-    void AddExtender(ExtenderPointer _mps, const std::string& _l) {
-      m_extenders->AddMethod(_mps, _l);
-    }
-
-    ///@}
-    ///@name Path Modifier Accessors
-    ///@{
-
-    PathModifierPointer GetPathModifier(const std::string& _l) {
-      return m_pathModifiers->GetMethod(_l);
-    }
-    void AddPathModifier(PathModifierPointer _ps, const std::string& _l) {
-      m_pathModifiers->AddMethod(_ps, _l);
     }
 
     ///@}
@@ -449,8 +421,6 @@ class MPLibraryType final
     NeighborhoodFinderSet* m_neighborhoodFinders{nullptr};
     SamplerSet*            m_samplers{nullptr};
     LocalPlannerSet*       m_localPlanners{nullptr};
-    ExtenderSet*           m_extenders{nullptr};
-    PathModifierSet*       m_pathModifiers{nullptr};
     ConnectorSet*          m_connectors{nullptr};
     MetricSet*             m_metrics{nullptr};
     MapEvaluatorSet*       m_mapEvaluators{nullptr};
@@ -490,10 +460,6 @@ MPLibraryType() {
       typename MPTraits::SamplerMethodList(), "Samplers");
   m_localPlanners = new LocalPlannerSet(this,
       typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
-  m_extenders = new ExtenderSet(this,
-      typename MPTraits::ExtenderMethodList(), "Extenders");
-  m_pathModifiers = new PathModifierSet(this,
-      typename MPTraits::PathModifierMethodList(), "PathModifiers");
   m_connectors = new ConnectorSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metrics = new MetricSet(this,
@@ -522,8 +488,6 @@ MPLibraryType<MPTraits>::
   delete m_neighborhoodFinders;
   delete m_samplers;
   delete m_localPlanners;
-  delete m_extenders;
-  delete m_pathModifiers;
   delete m_connectors;
   delete m_metrics;
   delete m_mapEvaluators;
@@ -552,8 +516,6 @@ Initialize() {
   m_neighborhoodFinders->Initialize();
   m_samplers->Initialize();
   m_localPlanners->Initialize();
-  m_extenders->Initialize();
-  m_pathModifiers->Initialize();
   m_connectors->Initialize();
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
@@ -648,14 +610,6 @@ ParseChild(XMLNode& _node) {
     m_localPlanners->ParseXML(_node);
     return true;
   }
-  else if(_node.Name() == "Extenders") {
-    m_extenders->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "PathModifiers") {
-    m_pathModifiers->ParseXML(_node);
-    return true;
-  }
   else if(_node.Name() == "Connectors") {
     m_connectors->ParseXML(_node);
     return true;
@@ -709,8 +663,6 @@ Print(ostream& _os) const {
   m_neighborhoodFinders->Print(_os);
   m_samplers->Print(_os);
   m_localPlanners->Print(_os);
-  m_extenders->Print(_os);
-  m_pathModifiers->Print(_os);
   m_connectors->Print(_os);
   m_metrics->Print(_os);
   m_mapEvaluators->Print(_os);

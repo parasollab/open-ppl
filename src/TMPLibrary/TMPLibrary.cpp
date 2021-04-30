@@ -7,15 +7,10 @@
 #include "Traits/TMPTraits.h"
 
 #include "Simulator/Simulation.h"
-#include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/Solution/TaskSolution.h"
-#include "TMPLibrary/StateGraphs/StateGraph.h"
-#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
-#include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
-#include "TMPLibrary/TMPTools/TMPTools.h"
 
 /*---------------------------- Construction ----------------------------------*/
 
@@ -23,17 +18,8 @@ TMPLibrary::
 TMPLibrary(){
 				m_tmpStrategies = new TMPStrategyMethodSet(this,
 												typename TMPTraits::TMPStrategyMethodList(), "TMPStrategies");
-				m_poiPlacementMethods = new PoIPlacementMethodSet(this,
-												typename TMPTraits::PoIPlacementMethodList(), "PoIPlacementMethods");
-				m_taskAllocators = new TaskAllocatorMethodSet(this,
-												typename TMPTraits::TaskAllocatorMethodList(), "TaskAllocators");
-				m_taskDecomposers = new TaskDecomposerMethodSet(this,
-												typename TMPTraits::TaskDecomposerMethodList(), "TaskDecomposers");
 				m_taskEvaluators = new TaskEvaluatorMethodSet(this,
 												typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
-				m_stateGraphs = new StateGraphSet(this,
-												typename TMPTraits::StateGraphList(), "StateGraphs");
-				m_tmpTools = new TMPTools(this);
 }
 
 
@@ -48,24 +34,14 @@ TMPLibrary(const std::string& _filename) : TMPLibrary() {
 TMPLibrary::
 ~TMPLibrary() {
 				delete m_tmpStrategies;
-				delete m_poiPlacementMethods;
 				delete m_taskEvaluators;
-				delete m_taskDecomposers;
-				delete m_taskAllocators;
-				delete m_stateGraphs;
 }
 
 void
 TMPLibrary::
 Initialize(){
 	m_tmpStrategies->Initialize();
-	m_poiPlacementMethods->Initialize();
 	m_taskEvaluators->Initialize();
-	m_taskDecomposers->Initialize();
-	m_taskAllocators->Initialize();
-	this->GetPlan()->GetStatClass()->StartClock("StateGraphConstruction");
-	m_stateGraphs->Initialize();
-	this->GetPlan()->GetStatClass()->StopClock("StateGraphConstruction");
 }
 
 void
@@ -121,28 +97,8 @@ ParseChild(XMLNode& _node) {
 					m_tmpStrategies->ParseXML(_node);
 					return true;
 				}
-				else if(_node.Name() == "PoIPlacementMethods") {
-					m_poiPlacementMethods->ParseXML(_node);
-					return true;
-				}
 				else if(_node.Name() == "TaskEvaluators") {
 					m_taskEvaluators->ParseXML(_node);
-					return true;
-				}
-				else if(_node.Name() == "TaskDecomposers") {
-					m_taskDecomposers->ParseXML(_node);
-					return true;
-				}
-				else if(_node.Name() == "TaskAllocators") {
-					m_taskAllocators->ParseXML(_node);
-					return true;
-				}
-				else if(_node.Name() == "StateGraphs") {
-					m_stateGraphs->ParseXML(_node);
-					return true;
-				}
-				else if(_node.Name() == "TMPTools") {
-					m_tmpTools->ParseXML(_node);
 					return true;
 				}
 				else if(_node.Name() == "Solver") {
@@ -176,18 +132,6 @@ AddTMPStrategy(TMPStrategyMethodPointer _sm, const std::string& _l) {
 				m_tmpStrategies->AddMethod(_sm,_l);
 }
 
-TMPLibrary::PoIPlacementMethodPointer 
-TMPLibrary::
-GetPoIPlacementMethod(const std::string& _l){
-				return m_poiPlacementMethods->GetMethod(_l);
-}
-
-void  
-TMPLibrary::
-TMPLibrary::AddPoIPlacementMethod(PoIPlacementMethodPointer _pm, const std::string& _l) {
-				m_poiPlacementMethods->AddMethod(_pm,_l);
-}
-
 TMPLibrary::TaskEvaluatorMethodPointer  
 TMPLibrary::
 GetTaskEvaluator(const std::string& _l){
@@ -198,30 +142,6 @@ void
 TMPLibrary::
 AddTaskEvaluator(TaskEvaluatorMethodPointer _te, const std::string& _l) {
 				m_taskEvaluators->AddMethod(_te,_l);
-}
-
-TMPLibrary::TaskDecomposerMethodPointer  
-TMPLibrary::
-GetTaskDecomposer(const std::string& _l){
-				return m_taskDecomposers->GetMethod(_l);
-}
-
-void  
-TMPLibrary::
-AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l) {
-				m_taskDecomposers->AddMethod(_td,_l);
-}
-
-TMPLibrary::TaskAllocatorMethodPointer  
-TMPLibrary::
-GetTaskAllocator(const std::string& _l){
-				return m_taskAllocators->GetMethod(_l);
-}
-
-void  
-TMPLibrary::
-AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
-				m_taskAllocators->AddMethod(_ta,_l);
 }
 
 /*---------------------------- Solution Accessors -----------------------------------*/
@@ -238,18 +158,6 @@ SetPlan(Plan* _plan) {
 	m_plan = _plan;
 }
 
-TMPLibrary::StateGraphPointer  
-TMPLibrary::
-GetStateGraph(const std::string& _l){
-				return m_stateGraphs->GetMethod(_l);
-}
-
-void  
-TMPLibrary::
-AddStateGraph(StateGraphPointer _sg, const std::string& _l){
-				m_stateGraphs->AddMethod(_sg,_l);
-}
-
 /*-------------------------------- Debugging ---------------------------------*/
 
 void
@@ -257,11 +165,7 @@ TMPLibrary::
 Print(ostream& _os) const {
 				_os << "TMPLibrary" << std::endl;
 				m_tmpStrategies->Print(_os);
-				m_poiPlacementMethods->Print(_os);
 				m_taskEvaluators->Print(_os);
-				m_taskDecomposers->Print(_os);
-				m_taskAllocators->Print(_os);
-				m_stateGraphs->Print(_os);
 }
 
 /*----------------------------- Input Accessors ------------------------------*/
