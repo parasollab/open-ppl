@@ -40,6 +40,14 @@ StepAgent(double _dt) {
   for(auto child : m_coordinator->GetChildAgents()) {
     child->Agent::Step(_dt);
   }
+  for(auto child : m_coordinator->GetChildAgents()) {
+    auto p = dynamic_cast<PathFollowingAgent*>(child);
+    auto path = p->GetPath();
+    if(path.size() > 0)
+      return;
+  }
+  std::cout << "All agents completed paths. Exiting program." << std::endl;
+  exit(0);
 }
 
 /*---------------------------- Helper Functions  ----------------------*/
