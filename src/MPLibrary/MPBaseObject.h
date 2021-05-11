@@ -52,8 +52,6 @@ class MPBaseObject {
 
     typedef typename MPLibrary::SamplerPointer         SamplerPointer;
     typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
-    typedef typename MPLibrary::ExtenderPointer        ExtenderPointer;
-    typedef typename MPLibrary::PathModifierPointer    PathModifierPointer;
     typedef typename MPLibrary::ConnectorPointer       ConnectorPointer;
     typedef typename MPLibrary::MetricPointer          MetricPointer;
     typedef typename MPLibrary::MapEvaluatorPointer    MapEvaluatorPointer;
@@ -147,12 +145,6 @@ class MPBaseObject {
 
     /// Get a local planner by label from the owning MPLibrary.
     LocalPlannerPointer GetLocalPlanner(const std::string&) const noexcept;
-
-    /// Get an extender by label from the owning MPLibrary.
-    ExtenderPointer GetExtender(const std::string&) const noexcept;
-
-    /// Get a path modifier by label from the owning MPLibrary.
-    PathModifierPointer GetPathModifier(const std::string&) const noexcept;
 
     /// Get a connector by label from the owning MPLibrary.
     ConnectorPointer GetConnector(const std::string&) const noexcept;
@@ -371,24 +363,6 @@ typename MPBaseObject<MPTraits>::LocalPlannerPointer
 MPBaseObject<MPTraits>::
 GetLocalPlanner(const std::string& _label) const noexcept {
   return m_library->GetLocalPlanner(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::ExtenderPointer
-MPBaseObject<MPTraits>::
-GetExtender(const std::string& _label) const noexcept {
-  return m_library->GetExtender(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::PathModifierPointer
-MPBaseObject<MPTraits>::
-GetPathModifier(const std::string& _label) const noexcept {
-  return m_library->GetPathModifier(_label);
 }
 
 

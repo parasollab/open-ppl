@@ -70,34 +70,10 @@ GetTMPStrategy(const std::string& _label) const noexcept {
 	return m_tmpLibrary->GetTMPStrategy(_label);
 }
 
-TMPBaseObject::PoIPlacementMethodPointer 
-TMPBaseObject::
-GetPoIPlacementMethod(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetPoIPlacementMethod(_label);
-}
-
 TMPBaseObject::TaskEvaluatorMethodPointer 
 TMPBaseObject::
 GetTaskEvaluator(const std::string& _label) const noexcept {
 	return m_tmpLibrary->GetTaskEvaluator(_label);
-}
-
-TMPBaseObject::TaskDecomposerMethodPointer 
-TMPBaseObject::
-GetTaskDecomposer(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetTaskDecomposer(_label);
-}
-
-TMPBaseObject::TaskAllocatorMethodPointer 
-TMPBaseObject::
-GetTaskAllocator(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetTaskAllocator(_label);
-}
-
-TMPTools* 
-TMPBaseObject::
-GetTMPTools() const noexcept {
-	return m_tmpLibrary->GetTMPTools();
 }
 
 /*------------------------------ Problem Accessors ---------------------------*/
@@ -122,8 +98,3 @@ GetPlan() const noexcept {
 	return m_tmpLibrary->GetPlan();
 }
 
-TMPBaseObject::StateGraphPointer
-TMPBaseObject::
-GetStateGraph(const std::string& _label) const noexcept {
-  return m_tmpLibrary->GetStateGraph(_label);
-}

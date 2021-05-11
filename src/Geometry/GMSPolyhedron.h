@@ -20,7 +20,6 @@
 
 class IModel;
 class PQP_Model;
-class RAPID_model;
 class WorkspaceBoundingBox;
 
 using namespace mathtool;
@@ -128,7 +127,7 @@ class GMSPolyhedron final {
 
     /// Output the model to a BYU-format file.
     /// @param _os The output stream to use.
-    void WriteBYU(std::ostream& _os) const;
+    //void WriteBYU(std::ostream& _os) const;
 
     /// Output the model to a Obj-format file.
     /// @param _os The output stream to use.
@@ -180,10 +179,6 @@ class GMSPolyhedron final {
     ///@}
     ///@name Collision Detection Models
     ///@{
-
-    /// Get the rapid CD model. It will be constructed if it doesn't already
-    /// exist.
-    RAPID_model* GetRapidModel() const noexcept;
 
     /// Get the pqp CD model. It will be constructed if it doesn't already
     /// exist.
@@ -271,9 +266,8 @@ class GMSPolyhedron final {
     mutable bool m_centroidCached{false}; ///< Is the centroid cached?
 
 
-    /// @warning PQP and RAPID do not properly implement copying, so there is no
+    /// @warning PQP does not properly implement copying, so there is no
     ///          way to copy these objects without later triggering a double-free.
-    mutable std::unique_ptr<RAPID_model> m_rapidModel;  ///< RAPID model
     mutable std::unique_ptr<PQP_Model> m_pqpModel;      ///< PQP model
 
     Vector3d m_insidePoint; ///< Rrrrarg degeneracy rarg.

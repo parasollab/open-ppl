@@ -11,8 +11,6 @@
 
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
 
 #include "nonstd/io.h"
 
@@ -215,13 +213,7 @@ CollisionDetectionValidity(XMLNode& _node)
 
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
-  if(cdLabel == "BoundingSpheres")
-    m_cdMethod.reset(new BoundingSpheres());
-  else if(cdLabel == "InsideSpheres")
-    m_cdMethod.reset(new InsideSpheres());
-  else if(cdLabel == "RAPID")
-    m_cdMethod.reset(new Rapid());
-  else if(cdLabel == "PQP")
+  if(cdLabel == "PQP")
     m_cdMethod.reset(new PQP());
   else if(cdLabel == "PQP_SOLID")
     m_cdMethod.reset(new PQPSolid());

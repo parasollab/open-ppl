@@ -371,12 +371,11 @@ InitializeFreeSpace(const Environment* _env){
   CGAL::Polyhedron_3<CGAL::Exact_predicates_exact_constructions_kernel> cp;
   if(m_params.useConvex) {
     std::cout << "building a convex hull boundary" << endl;
-    auto convex = _env->GetObstacle(0)->GetBody(0)->GetWorldPolyhedron().
-        ComputeConvexHull();
+    auto convex = _env->GetObstacle(0)->GetBody(0)->GetWorldConvexHull();
     convex.Scale(1.2);
     cp = convex.CGAL();
   }
-  else
+ else
     cp = _env->GetBoundary()->CGAL();
 
   double len = 0, minr = numeric_limits<double>::max();

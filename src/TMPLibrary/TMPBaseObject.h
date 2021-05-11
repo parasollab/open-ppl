@@ -8,16 +8,6 @@
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
-/*
-class TMPStrategyMethod;
-class PoIPlacementMethod;
-class TaskEvaluatorMethod;
-class TaskDecomposerMethod;
-class TaskAllocatorMethod;
-class StateGraph;
-template<typename TMPMethod> class TMPMethodSet;
-class TMPTools;
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for all TMP algorithm abstractions in PMPL.
@@ -44,37 +34,14 @@ class TMPBaseObject {
 		///@}
     ///@name Method Set Types
     ///@{
-  /*	
-		typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
-  	typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
-  	typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
-  	typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
-  	typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
-  	typedef TMPMethodSet<StateGraph>			   			 StateGraphSet;
-
-    ///@}
-    ///@name Method Pointer Types
-    ///@{
-    
-		typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
-  	typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
-  	typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
-  	typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
-  	typedef typename TaskAllocatorMethodSet::TMPMethodPointer 	TaskAllocatorMethodPointer;
-  	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
-   */
-		 ///@name Method Pointer Types
+		///@name Method Pointer Types
     ///@{
     
 		typedef typename TMPLibrary::TMPStrategyMethodPointer      TMPStrategyMethodPointer;
-  	typedef typename TMPLibrary::PoIPlacementMethodPointer     PoIPlacementMethodPointer;
   	typedef typename TMPLibrary::TaskEvaluatorMethodPointer    TaskEvaluatorMethodPointer;
-  	typedef typename TMPLibrary::TaskDecomposerMethodPointer   TaskDecomposerMethodPointer;
-  	typedef typename TMPLibrary::TaskAllocatorMethodPointer    TaskAllocatorMethodPointer;
-  	typedef typename TMPLibrary::StateGraphPointer             StateGraphPointer;
 		
 		///@}
-	///@name Construction
+	  ///@name Construction
     ///@{
 
     /// Default constructor explicitly gives name, label, and debug.
@@ -133,19 +100,7 @@ class TMPBaseObject {
     /// Get a TMPStrategyMethod method from the owning TMPLibrary
     TMPStrategyMethodPointer GetTMPStrategy(const std::string&) const noexcept;
 
-    /// Get a Point-of-Interest placement method from the owning TMPLibrary
-    PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string&) const noexcept;
-
     TaskEvaluatorMethodPointer GetTaskEvaluator(const std::string&) const noexcept;
-
-    /// Get a TaskDecomposition from the owning TMPLibrary
-    TaskDecomposerMethodPointer GetTaskDecomposer(const std::string&) const noexcept;
-
-    /// Get a TaskAllocator from the owning TMPLibrary
-    TaskAllocatorMethodPointer GetTaskAllocator(const std::string&) const noexcept;
-
-    /// Get the TMP tool container from the TMPLibrary
-    TMPTools* GetTMPTools() const noexcept;
 
     ///@}
     ///@name Problem Accessors
@@ -163,9 +118,6 @@ class TMPBaseObject {
 
 		/// Get the current Plan
 		Plan* GetPlan() const noexcept;
-
-    /// Get the underlying StateGraph
-    StateGraphPointer GetStateGraph(const std::string&) const noexcept;
 
     ///@}
   protected:

@@ -12,7 +12,6 @@
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-//#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GeneralRoadmapGraph.h"
@@ -84,7 +83,7 @@ struct MPTraits {
   typedef W                               WeightType;
 //  typedef GenericStateGraph<C, W>              RoadmapType;
 
-  typedef GenericStateGraph<C, W>              RoadmapType;
+  typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;

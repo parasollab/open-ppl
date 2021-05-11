@@ -40,9 +40,6 @@ Decomposition(XMLNode& _node, MPProblem* _problem) {
 
 	// set the highest level task
 	m_rootTask = m_taskMap[mainTask].get();
-
-  // Compute subtask flow
-  m_subtaskFlow = std::unique_ptr<SubtaskFlow>(new SubtaskFlow(m_rootTask));
 }
 
 Decomposition::

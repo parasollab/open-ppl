@@ -149,12 +149,7 @@ void
 ChildAgent::
 ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
 	Agent::ExecuteControlsSimulation(_c,_steps);
-
-	m_queuedControlSet = _c;
-	m_queuedSteps = _steps;
-
-	m_locked = false;
-	while(!m_locked) {}
+	return;
 }
 
 

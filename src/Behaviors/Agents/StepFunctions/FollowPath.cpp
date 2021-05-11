@@ -3,6 +3,8 @@
 #include "Behaviors/Agents/PathFollowingAgent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/XMLNode.h"

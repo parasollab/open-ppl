@@ -1,7 +1,6 @@
 #include "DefaultCoordinatorStepFunction.h"
 
 #include "ConfigurationSpace/Cfg.h"
-  
 #include "MPLibrary/MPSolution.h"
 
 #include "MPProblem/Constraints/BoundaryConstraint.h"
@@ -91,24 +90,22 @@ GetPlan() {
   auto problem = robot->GetMPProblem();
 
 	/// Use tmplibrary to get task assignments
-	{
-    m_plan = std::shared_ptr<Plan>(new Plan());
-    m_plan->SetCoordinator(m_coordinator);
+  m_plan = std::shared_ptr<Plan>(new Plan());
+  m_plan->SetCoordinator(m_coordinator);
 
-    std::vector<Robot*> team;
-    for(auto agent : m_coordinator->GetChildAgents()) {
-      team.push_back(agent->GetRobot());
-    }
-  
-    m_plan->SetTeam(team);
-    m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
+  std::vector<Robot*> team;
+  for(auto agent : m_coordinator->GetChildAgents()) {
+    team.push_back(agent->GetRobot());
+  }
 
-    if(!m_tmpLibrary)
-      m_tmpLibrary = m_coordinator->GetTMPLibrary();
+  m_plan->SetTeam(team);
+  m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
 
-    m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(), 
-                        m_plan.get(), m_coordinator, team);
-	}
+  if(!m_tmpLibrary)
+    m_tmpLibrary = m_coordinator->GetTMPLibrary();
+
+  m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(), 
+      m_plan.get(), m_coordinator, team);
 
   if(m_debug and m_plan){
     std::cout << "SOLUTION PLAN" << std::endl;

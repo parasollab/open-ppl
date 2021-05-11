@@ -21,6 +21,9 @@
 
 #include "Traits/CfgTraits.h"
 
+#include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/Solution/TaskSolution.h"
+
 #include "sandbox/gui/main_window.h"
 
 /*------------------------------ Construction --------------------------------*/
@@ -272,10 +275,6 @@ InitializeAgents(){
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
   }
-  //for(auto agent : m_memberAgents){
-  //  agent->Initialize();
-  //  agent->SetParentAgent(this);
-  //}
   for(auto agent : m_childAgents){
     agent->Initialize();
     agent->SetCoordinator(this);

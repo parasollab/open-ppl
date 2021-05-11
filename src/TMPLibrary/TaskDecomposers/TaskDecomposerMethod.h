@@ -2,7 +2,6 @@
 #define PMPL_TASK_DECOMPOSER_METHOD_H_
 
 #include "TMPLibrary/TMPBaseObject.h"
-#include "TMPLibrary/WholeTask.h"
 
 #include <iostream>
 
@@ -22,7 +21,7 @@ class TaskDecomposerMethod : public TMPBaseObject {
     ///@name Interface
     ///@{
 
-		virtual void BreakupTask(WholeTask* _wholeTask);
+		//virtual void BreakupTask(WholeTask* _wholeTask);
 
     ///@}
 };
