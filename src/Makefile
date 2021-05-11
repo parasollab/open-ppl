@@ -1,7 +1,7 @@
 # Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Set platform, debug mode, and address sanitizer if not already set.
-platform ?= LINUX_gcc
+platform ?= Ubuntu
 debug    ?= 0
 asan     ?= 0
 
@@ -146,20 +146,6 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWAR
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	  $(LIBS) -o $@
 
-# Build the server.
-planner: $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
-     | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
-
-	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
-
-client: $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
-	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
-
-master: $(MASTER_OBJS) $(COMM_OBJS) $(PMPL_LIBFILE)
-	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(MASTER_OBJS) $(COMM_OBJS) $(LIBS) -o $@
 
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

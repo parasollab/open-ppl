@@ -1,15 +1,16 @@
 #include "DefaultCoordinatorStepFunction.h"
 
-#include "Communication/Messages/Message.h"
- 
 #include "ConfigurationSpace/Cfg.h"
   
 #include "MPLibrary/MPSolution.h"
 
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
+#include "TMPLibrary/Solution/TaskSolution.h"
  
 /*----------------------------- Construction -------------------------*/
 
@@ -89,38 +90,8 @@ GetPlan() {
   auto robot = m_coordinator->GetRobot();
   auto problem = robot->GetMPProblem();
 
-	// if networked, request plan from server
-  auto communicator = m_coordinator->GetCommunicator();
-	if(communicator.get() and communicator->IsConnectedToMaster()) {
-		
-		std::vector<Robot*> team;
-		for(auto agent : m_coordinator->GetChildAgents()) {
-			team.push_back(agent->GetRobot());
-		}
-
-    /// Convert robot team and problem decomposition tree to a message
-		std::string query = RobotTeamToMessage(team,robot) 
-											+ DecompositionToMessage(
-                          problem->GetDecompositions(robot)[0].get());
-
-    /// Send query message to server and wait for response
-		auto response = communicator->Query("ppl",query);
-    if(m_debug) {
-  		std::cout << "QUERY MESSAGE::"
-                << query 
-                << "\n\n"
-                << "RESPONSE MESSAGE::"
-                << response
-                << std::endl;
-    }
-
-    /// Convert response message to a Plan object
-		m_plan = std::shared_ptr<Plan>(MessageToPlan(
-              response,problem->GetDecompositions(robot)[0].get(),problem));
-
-	}
-	/// Otherwise use tmplibrary to get task assignments
-	else {
+	/// Use tmplibrary to get task assignments
+	{
     m_plan = std::shared_ptr<Plan>(new Plan());
     m_plan->SetCoordinator(m_coordinator);
 

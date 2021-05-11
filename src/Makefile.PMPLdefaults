@@ -471,85 +471,33 @@ TASK_SRCS := \
   Visualization/Gui/SliderTextWidget.cpp \
   Visualization/Gui/TestWidget.cpp \
   Simulator/Simulation.cpp \
-  TMPLibrary/Actions/Action.cpp \
-  TMPLibrary/Actions/HandoffTask.cpp \
-  TMPLibrary/Actions/MoveRobot.cpp \
-  TMPLibrary/Actions/StartTask.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
 	TMPLibrary/Solution/Plan.cpp \
 	TMPLibrary/Solution/TaskSolution.cpp \
-  TMPLibrary/State.cpp \
-  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
-  TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
-  TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
-  TMPLibrary/TaskAllocators/AuctionMethod.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
-  TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
-  TMPLibrary/TaskEvaluators/EnforcedHillClimbing.cpp \
-  TMPLibrary/TaskEvaluators/Heuristics/RelaxedGraphPlan.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
-  TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
-  TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
-  TMPLibrary/TMPTools/InteractionTemplate.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
-  Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/ChildAgent.cpp \
-  Behaviors/Agents/ClientAgent.cpp \
   Behaviors/Agents/Coordinator.cpp \
-  Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
-  Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
   Behaviors/Agents/StepFunctions/FollowPath.cpp \
   Behaviors/Agents/StepFunctions/StepFunction.cpp \
   Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
-  Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
 ################################################################################
 # TMP Main
 ################################################################################
 PPL_SRCS := \
   $(PMPL_DIR)/tmp_main.cpp \
-
-################################################################################
-# Master Node
-################################################################################
-MASTER_SRCS := \
-  master_node_main.cpp \
-
-################################################################################
-# Communication
-################################################################################
-COMM_SRCS := \
-  Communication/Communicator.cpp \
-  Communication/Publisher.cpp \
-  Communication/Subscriber.cpp \
-
-################################################################################
-# Planning Server
-################################################################################
-PLANNER_SRCS := \
-  $(PMPL_DIR)/planner_main.cpp \
-	Utilities/PlanningServer.cpp \
-
-################################################################################
-# Server
-################################################################################
-CLIENT_SRCS := \
-  $(PMPL_DIR)/client.cpp \
 
 ################################################################################
 # Hardware
@@ -598,7 +546,6 @@ PMPL_SRCS := \
   $(URDF_SRCS) \
   Behaviors/Agents/Agent.cpp \
   Behaviors/Agents/AgentFactory_pmpl.cpp \
-  Behaviors/Agents/BatteryBreak.cpp \
   Behaviors/Controllers/CarlikeNeedleController.cpp \
   Behaviors/Controllers/ControllerMethod.cpp \
   Behaviors/Controllers/ControlSetGenerators.cpp \
@@ -628,13 +575,12 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
-  MPLibrary/MapEvaluators/SIPPMethod.h \
-  MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
-  MPLibrary/LearningModels/RadialKernelGradient.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
+  MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
+  MPLibrary/LearningModels/RadialKernelGradient.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \

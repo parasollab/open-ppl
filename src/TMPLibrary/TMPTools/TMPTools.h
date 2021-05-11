@@ -30,10 +30,6 @@ class TMPTools {
 		void ParseXML(XMLNode& _node);	
 
     ///@}
-    ///@name Interaction Templates
-    ///@{
-
-		///@}
     
 	private:
 	
@@ -53,8 +49,6 @@ class TMPTools {
 		///@{
 
 		TMPLibrary* const m_tmpLibrary; ///< The owning library.
-
-		LabelMap<InteractionTemplate>   m_interactionTemplates;
 
 		///@}
 };

@@ -4,7 +4,6 @@
 #include "Behaviors/Agents/Coordinator.h"
 
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
-#include "TMPLibrary/StateGraphs/Helpers/ITConnector.h"
 #include "TMPLibrary/StateGraphs/StateGraph.h"
 #include "TMPLibrary/Solution/Plan.h"
 

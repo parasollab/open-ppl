@@ -1,14 +1,9 @@
 #include "Agent.h"
 
-#include "BatteryConstrainedGroup.h"
 #include "Coordinator.h"
 #include "ChildAgent.h"
-#include "ClientAgent.h"
-#include "HandoffAgent.h"
-#include "PathFollowingChildAgent.h"
 #include "PathFollowingAgent.h"
 #include "PlanningAgent.h"
-#include "RoadmapFollowingAgent.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
@@ -33,30 +28,10 @@ Factory(Robot* const _r, XMLNode& _node) {
     output = std::unique_ptr<PlanningAgent>(
         new PlanningAgent(_r, _node)
     );
-  else if(type == "pathfollowingchild")
-    output = std::unique_ptr<PathFollowingChildAgent>(
-        new PathFollowingChildAgent(_r, _node)
-    );
-  else if(type == "roadmapfollowing")
-    output = std::unique_ptr<RoadmapFollowingAgent>(
-        new RoadmapFollowingAgent(_r, _node)
-    );
-  else if(type == "batteryconstrainedgroup")
-    output = std::unique_ptr<BatteryConstrainedGroup>(
-        new BatteryConstrainedGroup(_r, _node)
-    );
-  else if(type == "handoff")
-    output = std::unique_ptr<HandoffAgent>(
-        new HandoffAgent(_r, _node)
-    );
   else if(type == "coordinator")
     output = std::unique_ptr<Coordinator>(
         new Coordinator(_r, _node)
     );
-	else if(type == "client")
-		output = std::unique_ptr<ClientAgent>(
-				new ClientAgent(_r, _node)
-		);
 	else if(type == "child")
 		output = std::unique_ptr<ChildAgent>(
 				new ChildAgent(_r, _node)

@@ -6,7 +6,6 @@
 #include <thread>
 #include <vector>
 
-#include "Communication/Communicator.h"
 #include "MPProblem/Robot/Control.h"
 
 class Cfg;
@@ -43,12 +42,6 @@ class Agent {
 
     /// Specifiies the type of agent for heterogenous multiagent teams.
     std::string m_capability;
-
-		///< Control communication with outside processes.
-		std::shared_ptr<Communicator> m_communicator;      
-
-    ///< Thread to continuously monitor for communication.
-		std::thread m_communicationThread; 
 
     ///< Step function to define agent behaviors.
     std::unique_ptr<StepFunction> m_stepFunction;
@@ -164,10 +157,6 @@ class Agent {
     /// Get the type of agent
     const std::string& GetCapability() const noexcept;
 
-		std::shared_ptr<Communicator> GetCommunicator();
-
-		void SetCommunicator(std::shared_ptr<Communicator> _communicator);
-
 		///@}
   protected:
 
@@ -203,17 +192,6 @@ class Agent {
 		///@}
   private:
 
-		///@name Communication Helpers
-		///@{
-
-    /// Parse the communicator XMLNode and launch the communicator thread.
-    /// @param _node The input XMLNode containing the communicator information.
-    void ParseCommunicatorXMLNode(XMLNode& _node);
-
-    /// TODO::Remember what the intended purpose of this function is.	
-    virtual std::vector<std::string> PublishFunction(std::string _msg);
-
-		///@}
     ///@name Disabled Functions
     ///@{
     /// Regular copy/move is disabled because each agent must be created for a

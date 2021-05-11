@@ -7,16 +7,17 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
-#include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
-#include "Communication/Messages/Message.h"
-
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
+
+#include "TMPLibrary/Solution/TaskSolution.h"
 
 #include "Traits/CfgTraits.h"
 
@@ -47,7 +48,6 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
 
   m_numRandTasks = _node.Read("numRandTasks", false, 0, 0, MAX_INT, "number of "
       "random tasks to generate");
-  
 
   // This is a coordinator agent, which does not make sense without some group
   // members to coordinate. Throw an exception if it has no members.
@@ -89,14 +89,11 @@ Initialize() {
     // Throw an exception if not.
     Agent* memberAgent = member->GetAgent();
 
-		if(m_communicator.get() and !memberAgent->GetCommunicator().get())
-			memberAgent->SetCommunicator(m_communicator);
-
 		ChildAgent* c = static_cast<ChildAgent*>(memberAgent);
 		if(c) {
 			m_childAgents.push_back(c);
 		}
-		else {
+		/*else {
     	HandoffAgent* a = static_cast<HandoffAgent*>(
       	  memberAgent);
     	if(!a) {
@@ -104,7 +101,7 @@ Initialize() {
         	  "group member '" << memberLabel << "'." << std::endl;
       }
     	m_memberAgents.push_back(a);
-		}
+		}*/
   }
 
   if(m_debug) {
@@ -112,29 +109,29 @@ Initialize() {
     for(auto agent : m_childAgents){
       std::cout << "\t" << agent->GetRobot()->GetLabel() << std::endl;
     }
-    std::cout << "Member Agents" << std::endl;
+    /*std::cout << "Member Agents" << std::endl;
     for(auto agent : m_memberAgents){
       std::cout << "\t" << agent->GetRobot()->GetLabel() << std::endl;
-    }
+    }*/
   }
 
   InitializeAgents();
 
   // Generate random tasks if requested
-  if(m_numRandTasks > 0){
+  /*if(m_numRandTasks > 0){
     if(problem->GetTasks(m_robot).size() == 1)
       problem->ReassignTask(problem->GetTasks(m_robot)[0].get(),
                             m_memberAgents[0]->GetRobot());
     GenerateRandomTasks();
-  }
+  }*/
 
 
   for(auto agent : m_childAgents){
     agent->GetRobot()->SetVirtual(false);
   }
-  for(auto agent : m_memberAgents){
-    agent->GetRobot()->SetVirtual(false);
-  }
+  //for(auto agent : m_memberAgents){
+  //  agent->GetRobot()->SetVirtual(false);
+  //}
 
   Simulation::Get()->PrintStatFile();
   m_clock.start();
@@ -275,10 +272,10 @@ InitializeAgents(){
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
   }
-  for(auto agent : m_memberAgents){
-    agent->Initialize();
-    agent->SetParentAgent(this);
-  }
+  //for(auto agent : m_memberAgents){
+  //  agent->Initialize();
+  //  agent->SetParentAgent(this);
+  //}
   for(auto agent : m_childAgents){
     agent->Initialize();
     agent->SetCoordinator(this);
@@ -413,11 +410,11 @@ GetMemberLabels() {
 	return m_memberLabels;
 }
 
-std::vector<HandoffAgent*> 
+/*std::vector<HandoffAgent*> 
 Coordinator::
 GetMemberAgents() {
 	return m_memberAgents;
-}
+}*/
 
 std::vector<ChildAgent*> 
 Coordinator::
