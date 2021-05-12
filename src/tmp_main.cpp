@@ -123,6 +123,12 @@ main(int _argc, char** _argv) {
 			plan->SetTeam(team);
 			plan->SetDecomposition(decomp.get());
 			ppl->Solve(problem, decomp.get(), plan, c, team);
+      const std::string basename = problem->GetBaseFilename(),
+                        fullname = problem->GetPath(basename + "-ppl.stat");
+
+      // Print the stats to file.
+      std::ofstream osStat(fullname);
+      plan->GetStatClass()->PrintAllStats(osStat);
 		}
 	}
   // Release resources.

@@ -153,8 +153,10 @@ Finalize() {
     auto path = this->GetPath(robot);
 
     // If the path is empty, we didn't solve the problem.
-    if(path->Empty())
+    if(path->Empty()) {
+      GroupStrategyMethod<MPTraits>::Finalize();
       return;
+    }
     totalCost += path->TimeSteps() * timeRes;
     std::cout << path->GetRobot()->GetLabel() << "'s path cost: " << path->TimeSteps() * timeRes << std::endl;
     // Collect the path.
