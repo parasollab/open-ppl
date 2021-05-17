@@ -26,7 +26,7 @@ class TaskSolution {
 		///@}
 		///@name Accessors
 		///@{
-		
+
 		SemanticTask* GetTask();
 
 		void SetRobot(Robot* _robot);
@@ -44,7 +44,7 @@ class TaskSolution {
 		void SetStartTime(double _startTime);
 
 		double GetStartTime();
-		
+
 		///@}
 		///@name Print
 		///@{
@@ -52,7 +52,7 @@ class TaskSolution {
 		void Print();
 
 		///@}
-	
+
 	private:
 		///@name Internal State
 		///@{

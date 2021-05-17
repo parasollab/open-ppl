@@ -7,11 +7,11 @@
 
 TaskSolution::
 TaskSolution(SemanticTask* _task) : m_task(_task) {}
-		
+
 TaskSolution::
 ~TaskSolution() {}
 
-SemanticTask* 
+SemanticTask*
 TaskSolution::
 GetTask() {
 	return m_task;
@@ -19,25 +19,25 @@ GetTask() {
 
 /*------------------------------------ Accessors ------------------------------*/
 
-void 
+void
 TaskSolution::
 SetRobot(Robot* _robot) {
 	m_robot = _robot;
 }
 
-Robot* 
+Robot*
 TaskSolution::
 GetRobot() {
 	return m_robot;
 }
 
-void 
+void
 TaskSolution::
 SetRobotGroup(RobotGroup* _group) {
 	m_robotGroup = _group;
 }
 
-RobotGroup* 
+RobotGroup*
 TaskSolution::
 GetRobotGroup() {
 	return m_robotGroup;
@@ -49,26 +49,26 @@ SetMotionSolution(MPSolution* _solution) {
 	m_motionSolution = _solution;
 }
 
-TaskSolution::MPSolution* 
+TaskSolution::MPSolution*
 TaskSolution::
 GetMotionSolution() {
 	return m_motionSolution;
 }
-		
-void 
+
+void
 TaskSolution::
 SetStartTime(double _startTime) {
 	m_startTime = _startTime;
 }
 
-double 
+double
 TaskSolution::
 GetStartTime() {
 	return m_startTime;
 }
-	
+
 /*--------------------------------------- Print ----------------------------*/	
-void 
+void
 TaskSolution::
 Print() {
 	std::cout << "Solution for " << m_task->GetLabel() << std::endl;
@@ -93,5 +93,5 @@ Print() {
 	else if(m_robotGroup) {
 		std::cout << "Robot Group Path Unsupported.";
 	}
-	std::cout << std::endl << std::endl;	
+	std::cout << std::endl << std::endl;
 }
