@@ -7,6 +7,10 @@
 #include "Traits/TMPTraits.h"
 
 #include "Simulator/Simulation.h"
+#include "TMPLibrary/ActionSpace/Action.h"
+#include "TMPLibrary/ActionSpace/Condition.h"
+#include "TMPLibrary/ActionSpace/Interaction.h"
+#include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 #include "TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/Solution/TaskSolution.h"
@@ -34,6 +38,8 @@ TMPLibrary(){
 				m_stateGraphs = new StateGraphSet(this,
 												typename TMPTraits::StateGraphList(), "StateGraphs");
 				m_tmpTools = new TMPTools(this);
+        m_interactionStrategies = new InteractionStrategyMethodSet(this,
+                        typename TMPTraits::InteractionStrategyMethodList(), "InteractionStrategies");
 }
 
 
@@ -117,7 +123,10 @@ ReadXMLFile(const std::string& _filename) {
 bool
 TMPLibrary::
 ParseChild(XMLNode& _node) {
-				if(_node.Name() == "TMPStrategies") {
+				if(_node.Name() == "ActionSpace") {
+          return ParseActionSpace(_node);
+        }
+				else if(_node.Name() == "TMPStrategies") {
 					m_tmpStrategies->ParseXML(_node);
 					return true;
 				}
@@ -145,6 +154,10 @@ ParseChild(XMLNode& _node) {
 					m_tmpTools->ParseXML(_node);
 					return true;
 				}
+				else if(_node.Name() == "InteractionStrategies") {
+					m_interactionStrategies->ParseXML(_node);
+					return true;
+				}
 				else if(_node.Name() == "Solver") {
 								const std::string label = _node.Read("tmpStrategyLabel", true, "",
 																"The strategy to use.");
@@ -158,8 +171,26 @@ ParseChild(XMLNode& _node) {
 								m_solvers.emplace_back(Solver{label, baseFilename});
 								return true;
 				}
-				else
-								return false;
+				return false;
+}
+
+bool
+TMPLibrary::
+ParseActionSpace(XMLNode& _node) {
+  for(auto& child : _node) {
+    if(child.Name() == "Action") {
+      auto action = std::unique_ptr<Action>(new Action(child));
+      AddAction(std::move(action));
+    }
+    else if(child.Name() == "Interaction") {
+      auto interaction = std::unique_ptr<Interaction>(new Interaction(child));
+      AddInteraction(std::move(interaction));
+    }
+    else {
+      return false;
+    }
+  }
+  return true;
 }
 
 /*---------------------------- TMPStrategy Accessors -----------------------------------*/
@@ -224,7 +255,46 @@ AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
 				m_taskAllocators->AddMethod(_ta,_l);
 }
 
-/*---------------------------- Solution Accessors -----------------------------------*/
+TMPLibrary::InteractionStrategyMethodPointer  
+TMPLibrary::
+GetInteractionStrategy(const std::string& _l){
+				return m_interactionStrategies->GetMethod(_l);
+}
+
+void  
+TMPLibrary::
+AddInteractionStrategy(InteractionStrategyMethodPointer _is, const std::string& _l) {
+				m_interactionStrategies->AddMethod(_is,_l);
+}
+/*---------------------------- Action Space Accessors ------------------------------*/
+Action*
+TMPLibrary::
+GetAction(const std::string& _label) const {
+  return m_actions.at(_label).get();
+}
+
+    
+void
+TMPLibrary::
+AddAction(std::unique_ptr<Action>&& _action) {
+  m_actions[_action->GetLabel()] = std::move(_action);
+}
+
+    
+Interaction*
+TMPLibrary::
+GetInteraction(const std::string& _label) const {
+  return m_interactions.at(_label).get();
+}
+
+    
+void 
+TMPLibrary::
+AddInteraction(std::unique_ptr<Interaction>&& _interaction) {
+  m_interactions[_interaction->GetLabel()] = std::move(_interaction);
+}
+
+/*---------------------i-------- Solution Accessors ---------------------------------*/
 		
 Plan* 
 TMPLibrary::
@@ -262,6 +332,7 @@ Print(ostream& _os) const {
 				m_taskDecomposers->Print(_os);
 				m_taskAllocators->Print(_os);
 				m_stateGraphs->Print(_os);
+				m_interactionStrategies->Print(_os);
 }
 
 /*----------------------------- Input Accessors ------------------------------*/

@@ -50,6 +50,9 @@ class Constraint {
     /// @param _r The new robot to constrain, or null to represent any robot.
     virtual void SetRobot(Robot* const _r);
 
+    /// Get the current subject of this constraint.
+    Robot* GetRobot() const;
+
     /// Get a sampling boundary that describes the subset of CSpace allowed by
     /// this constraint.
     /// @note Many constraints can be described in terms of boundaries, but some

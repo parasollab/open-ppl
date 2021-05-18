@@ -41,4 +41,10 @@ SetRobot(Robot* const _r) {
   m_robot = _r;
 }
 
+Robot*
+Constraint::
+GetRobot() const {
+  return m_robot;
+}
+
 /*----------------------------------------------------------------------------*/

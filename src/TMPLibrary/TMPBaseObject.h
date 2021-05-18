@@ -1,6 +1,11 @@
 #ifndef PMPL_TMP_BASE_OBJECT_H_
 #define PMPL_TMP_BASE_OBJECT_H_
 
+#include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/GroupCfg.h"
+#include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+
 #include "MPLibrary/PMPL.h"
 #include "MPProblem/MPProblem.h"
 #include "TMPLibrary/TMPLibrary.h"
@@ -40,6 +45,8 @@ class TMPBaseObject {
 		///@name LocalTypes
 		///@{
 
+    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
 
 		///@}
     ///@name Method Set Types
@@ -66,12 +73,13 @@ class TMPBaseObject {
 		 ///@name Method Pointer Types
     ///@{
     
-		typedef typename TMPLibrary::TMPStrategyMethodPointer      TMPStrategyMethodPointer;
-  	typedef typename TMPLibrary::PoIPlacementMethodPointer     PoIPlacementMethodPointer;
-  	typedef typename TMPLibrary::TaskEvaluatorMethodPointer    TaskEvaluatorMethodPointer;
-  	typedef typename TMPLibrary::TaskDecomposerMethodPointer   TaskDecomposerMethodPointer;
-  	typedef typename TMPLibrary::TaskAllocatorMethodPointer    TaskAllocatorMethodPointer;
-  	typedef typename TMPLibrary::StateGraphPointer             StateGraphPointer;
+		typedef typename TMPLibrary::TMPStrategyMethodPointer         TMPStrategyMethodPointer;
+  	typedef typename TMPLibrary::PoIPlacementMethodPointer        PoIPlacementMethodPointer;
+  	typedef typename TMPLibrary::TaskEvaluatorMethodPointer       TaskEvaluatorMethodPointer;
+  	typedef typename TMPLibrary::TaskDecomposerMethodPointer      TaskDecomposerMethodPointer;
+  	typedef typename TMPLibrary::TaskAllocatorMethodPointer       TaskAllocatorMethodPointer;
+  	typedef typename TMPLibrary::StateGraphPointer                StateGraphPointer;
+  	typedef typename TMPLibrary::InteractionStrategyMethodPointer InteractionStrategyMethodPointer;
 		
 		///@}
 	///@name Construction
@@ -146,6 +154,10 @@ class TMPBaseObject {
 
     /// Get the TMP tool container from the TMPLibrary
     TMPTools* GetTMPTools() const noexcept;
+
+    /// Get the TMP tool container from the TMPLibrary
+    InteractionStrategyMethodPointer GetInteractionStrategyMethod(
+                                      const std::string& _label) const noexcept;
 
     ///@}
     ///@name Problem Accessors

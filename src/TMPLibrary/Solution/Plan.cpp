@@ -140,7 +140,7 @@ Plan::
 GetTaskSolutions() {
 	return m_taskSolutions;
 }
-	
+
 /// MPProblem
 void 
 Plan::

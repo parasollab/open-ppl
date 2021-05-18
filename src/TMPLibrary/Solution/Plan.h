@@ -64,7 +64,7 @@ class Plan {
 		TaskSolution* GetTaskSolution(SemanticTask* _task);
 
 		std::vector<TaskSolution*> GetRobotTaskSolutions(Robot* _robot);
-	
+
 		/// MPProblem
 		void SetMPProblem(MPProblem* _problem);
 

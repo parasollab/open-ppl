@@ -23,7 +23,13 @@
 //TMPLibrary TODOs::
 //Save the ITs in a single location so they only need to be constructed once
 
+class Agent;
+class Action;
+class Condition;
+class Coordinator;
 class Decomposition;
+class Interaction;
+class InteractionStrategyMethod;
 class Plan;
 class PoIPlacementMethod;
 class StateGraph;
@@ -32,8 +38,6 @@ class TaskDecomposerMethod;
 class TaskEvaluatorMethod;
 class TMPStrategyMethod;
 class TMPTools;
-class Coordinator;
-class Agent;
 //template<typename TMPMethod>TMPMethodSet;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,12 +63,13 @@ class TMPLibrary {
     ///@name Method Set Types
     ///@{
   	
-		typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
-  	typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
-  	typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
-  	typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
-  	typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
-  	typedef TMPMethodSet<StateGraph>			   			 StateGraphSet;
+		typedef TMPMethodSet<TMPStrategyMethod>          TMPStrategyMethodSet;
+  	typedef TMPMethodSet<PoIPlacementMethod>         PoIPlacementMethodSet;
+  	typedef TMPMethodSet<TaskEvaluatorMethod>        TaskEvaluatorMethodSet;
+  	typedef TMPMethodSet<TaskDecomposerMethod>       TaskDecomposerMethodSet;
+  	typedef TMPMethodSet<TaskAllocatorMethod>        TaskAllocatorMethodSet;
+  	typedef TMPMethodSet<StateGraph>			   			   StateGraphSet;
+		typedef TMPMethodSet<InteractionStrategyMethod>  InteractionStrategyMethodSet;
 
     ///@}
     ///@name Method Pointer Types
@@ -76,6 +81,8 @@ class TMPLibrary {
   	typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
   	typedef typename TaskAllocatorMethodSet::TMPMethodPointer 	TaskAllocatorMethodPointer;
   	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
+		typedef typename InteractionStrategyMethodSet::TMPMethodPointer     
+                                                                InteractionStrategyMethodPointer;
 		
 		///@}
     ///@name Construction
@@ -131,7 +138,7 @@ class TMPLibrary {
     void AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l);
 
     ///@}
-    ///@name Task ALlocator Accessors
+    ///@name Task Allocator Accessors
     ///@{
 
     /// Get a TaskAllocator 
@@ -147,6 +154,27 @@ class TMPLibrary {
     TMPTools* GetTMPTools() {
     	return m_tmpTools;
     }
+
+    ///@}
+    ///@name Interaction Strategy Accessors
+    ///@{
+
+    /// Get a TaskAllocator 
+    InteractionStrategyMethodPointer GetInteractionStrategy(const std::string& _l);
+
+    void AddInteractionStrategy(InteractionStrategyMethodPointer _is, const std::string& _l);
+
+    ///@}
+    ///@name Action Space Accessors 
+    ///@{
+
+    Action* GetAction(const std::string& _label) const;
+
+    void AddAction(std::unique_ptr<Action>&& _action);
+
+    Interaction* GetInteraction(const std::string& _label) const;
+
+    void AddInteraction(std::unique_ptr<Interaction>&& _interaction);
 
     ///@}
     ///@name Input Accessors
@@ -221,6 +249,9 @@ class TMPLibrary {
     /// @param _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
 
+    /// Helper for parsing actions and interactions.
+    /// @param _node The child node to be parsed.
+    bool ParseActionSpace(XMLNode& _node);
     ///@}
 
   	///@name Inputs
@@ -238,14 +269,25 @@ class TMPLibrary {
     ///@{
     /// Method sets hold and offer access to the tmp planning objects of the
     /// corresponding type.
-  	TMPStrategyMethodSet*     m_tmpStrategies;
-  	PoIPlacementMethodSet*    m_poiPlacementMethods;
-  	TaskEvaluatorMethodSet*   m_taskEvaluators;
-  	TaskDecomposerMethodSet*  m_taskDecomposers;
-  	TaskAllocatorMethodSet*   m_taskAllocators;
-  	StateGraphSet*  		  		m_stateGraphs;
+  	TMPStrategyMethodSet*             m_tmpStrategies;
+  	PoIPlacementMethodSet*            m_poiPlacementMethods;
+  	TaskEvaluatorMethodSet*           m_taskEvaluators;
+  	TaskDecomposerMethodSet*          m_taskDecomposers;
+  	TaskAllocatorMethodSet*           m_taskAllocators;
+  	StateGraphSet*  		  		        m_stateGraphs;
+  	InteractionStrategyMethodSet*     m_interactionStrategies;
 
   	///@}
+    ///@name Action Space
+    ///@{
+
+    /// The set of actions available to plan with.
+    std::unordered_map<std::string,std::unique_ptr<Action>> m_actions;
+
+    /// The set of interactions available to plan with.
+    std::unordered_map<std::string,std::unique_ptr<Interaction>> m_interactions;
+
+    ///@}
   	///@name Solution
   	///@{
 

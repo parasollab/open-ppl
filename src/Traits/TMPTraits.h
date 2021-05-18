@@ -17,7 +17,6 @@
 
 // TaskEvaluators to include
 
-#include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 
 // TaskDecomposers to include
@@ -31,6 +30,10 @@
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+
+// InteractionStrategyMethods to include
+
+#include "TMPLibrary/InteractionStrategies/IndependentPaths.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup TaskAndMotionPlanningUniverse
@@ -59,8 +62,7 @@ struct TMPTraits {
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
-		SimpleMotionEvaluator,
-    EnforcedHillClimbing
+		SimpleMotionEvaluator
       > TaskEvaluatorMethodList;
 
   //types of task decomposers available in our world
@@ -76,6 +78,10 @@ struct TMPTraits {
 	typedef boost::mpl::list<
 		CombinedRoadmap
 			> StateGraphList;
+
+	typedef boost::mpl::list<
+		IndependentPaths
+			> InteractionStrategyMethodList;
 };
 
 #endif

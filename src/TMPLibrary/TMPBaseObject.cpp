@@ -99,6 +99,12 @@ TMPBaseObject::
 GetTMPTools() const noexcept {
 	return m_tmpLibrary->GetTMPTools();
 }
+    
+TMPBaseObject::InteractionStrategyMethodPointer
+TMPBaseObject::
+GetInteractionStrategyMethod(const std::string& _label) const noexcept {
+  return m_tmpLibrary->GetInteractionStrategy(_label);
+}
 
 /*------------------------------ Problem Accessors ---------------------------*/
 
