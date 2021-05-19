@@ -3,7 +3,8 @@
 
 #include "Condition.h"
 
-class GroupRobot;
+class RobotGroup;
+class TMPLibrary;
 
 class CompositeCondition : public Condition {
   public:
@@ -18,7 +19,7 @@ class CompositeCondition : public Condition {
 
     CompositeCondition();
 
-    CompositeCondition(XMLNode& _node);
+    CompositeCondition(XMLNode& _node, TMPLibrary* _tmpLibrary);
 
     ~CompositeCondition();
 
@@ -26,7 +27,7 @@ class CompositeCondition : public Condition {
     ///@name Interface
     ///@{
 
-    GroupRobot* Satisfied(const State& _state);
+    RobotGroup* Satisfied(const State& _state);
 
     ///@}
     ///@name Accessors

@@ -4,6 +4,7 @@
 #include "Condition.h"
 
 class RobotGroup;
+class TMPLibrary;
 
 class FormationCondition : public Condition {
   public:
@@ -18,7 +19,7 @@ class FormationCondition : public Condition {
 
     FormationCondition();
 
-    FormationCondition(XMLNode& _node);
+    FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary);
 
     ~FormationCondition();
 

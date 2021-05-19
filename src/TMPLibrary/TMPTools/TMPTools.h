@@ -37,7 +37,7 @@ class TMPTools {
     
 	private:
 	
-		///@name Helpers
+		///@name Helper Functions
 		///@{
 
 		template <typename Utility>

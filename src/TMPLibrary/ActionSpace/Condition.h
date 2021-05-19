@@ -9,6 +9,7 @@
 #include "TMPLibrary/TMPBaseObject.h"
 
 class RobotGroup;
+class TMPLibrary;
 
 class Condition : public TMPBaseObject {
 
@@ -28,11 +29,11 @@ class Condition : public TMPBaseObject {
 
     Condition();
 
-    Condition(XMLNode& _node);
+    Condition(XMLNode& _node, TMPLibrary* _tmpLibrary);
 
     ~Condition();
 
-    static std::unique_ptr<Condition> Factory(XMLNode& _node);
+    static Condition* Factory(XMLNode& _node, TMPLibrary* _tmpLibrary);
 
     ///@}
     ///@name Interface

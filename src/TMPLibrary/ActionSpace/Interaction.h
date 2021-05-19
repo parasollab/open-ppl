@@ -35,8 +35,7 @@ class Interaction : public Action {
     ///@name Accessors
     ///@{
 
-    const std::vector<std::unique_ptr<Condition>>& 
-                      GetInterimConditions() const;
+    const std::vector<std::string>& GetInterimConditions() const;
 
     MPSolution* GetMPSolution() const;
     ///@}
@@ -59,7 +58,7 @@ class Interaction : public Action {
 
     /// The set of conditions representing the intermediate stage
     /// of the interaction needed by the interaction strategy.
-    std::vector<std::unique_ptr<Condition>> m_interimConditions;
+    std::vector<std::string> m_interimConditions;
     ///@}
 };
 

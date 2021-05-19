@@ -4,34 +4,37 @@
 #include "MotionCondition.h"
 
 #include "MPProblem/RobotGroup/RobotGroup.h"
+
+#include "TMPLibrary/TMPLibrary.h"
+
 /*----------------------- Construction -----------------------*/
 
 Condition::
 Condition() {}
 
 Condition::
-Condition(XMLNode& _node) : TMPBaseObject(_node) {}
+Condition(XMLNode& _node, TMPLibrary* _tmpLibrary) : TMPBaseObject(_node) {
+  this->SetTMPLibrary(_tmpLibrary);
+}
 
 Condition::
 ~Condition() {}
 
-std::unique_ptr<Condition>
+Condition*
 Condition::
-Factory(XMLNode& _node) {
+Factory(XMLNode& _node, TMPLibrary* _tmpLibrary) {
 
   
   std::string type = _node.Read("type", true, "", "The Condition class name.");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
-  std::unique_ptr<Condition> output;
+  Condition* output;
 
   if(type == "formation") {
-    output = std::unique_ptr<FormationCondition>(
-                new FormationCondition(_node));
+    output = new FormationCondition(_node,_tmpLibrary);
   }
   else if(type == "motion") {
-    output = std::unique_ptr<MotionCondition>(
-                new MotionCondition(_node));
+    output = new MotionCondition(_node,_tmpLibrary);
   }
 
   return output;

@@ -23,12 +23,10 @@
 //TMPLibrary TODOs::
 //Save the ITs in a single location so they only need to be constructed once
 
+class ActionSpace;
 class Agent;
-class Action;
-class Condition;
 class Coordinator;
 class Decomposition;
-class Interaction;
 class InteractionStrategyMethod;
 class Plan;
 class PoIPlacementMethod;
@@ -168,13 +166,9 @@ class TMPLibrary {
     ///@name Action Space Accessors 
     ///@{
 
-    Action* GetAction(const std::string& _label) const;
-
-    void AddAction(std::unique_ptr<Action>&& _action);
-
-    Interaction* GetInteraction(const std::string& _label) const;
-
-    void AddInteraction(std::unique_ptr<Interaction>&& _interaction);
+    ActionSpace* GetActionSpace() {
+      return m_actionSpace;
+    }
 
     ///@}
     ///@name Input Accessors
@@ -249,20 +243,18 @@ class TMPLibrary {
     /// @param _node The child node to be parsed.
     bool ParseChild(XMLNode& _node);
 
-    /// Helper for parsing actions and interactions.
-    /// @param _node The child node to be parsed.
-    bool ParseActionSpace(XMLNode& _node);
     ///@}
 
   	///@name Inputs
     ///@{
 
-    MPLibrary* 															m_library;	  ///< The underlying MPLibrary
-  	MPProblem* 															m_problem;	  ///< The current MPProblem
-  	std::vector<std::shared_ptr<MPTask>> 		m_tasks; 	  	///< Current set of tasks
-  	std::vector<std::shared_ptr<GroupTask>> m_groupTasks; ///< Current set of group tasks
-  	std::vector<Solver> 										m_solvers;    ///< Set of inputs to execute
-		TMPTools*															  m_tmpTools;   ///< TMPTools container
+    MPLibrary* 															m_library;	   ///< The underlying MPLibrary
+  	MPProblem* 															m_problem;	   ///< The current MPProblem
+  	std::vector<std::shared_ptr<MPTask>> 		m_tasks; 	  	 ///< Current set of tasks
+  	std::vector<std::shared_ptr<GroupTask>> m_groupTasks;  ///< Current set of group tasks
+  	std::vector<Solver> 										m_solvers;     ///< Set of inputs to execute
+		TMPTools*															  m_tmpTools;    ///< TMPTools container
+		ActionSpace*													  m_actionSpace; ///< ActionSpace container
 
   	///@}
   	///@name TMPMethod Sets
@@ -276,16 +268,6 @@ class TMPLibrary {
   	TaskAllocatorMethodSet*           m_taskAllocators;
   	StateGraphSet*  		  		        m_stateGraphs;
   	InteractionStrategyMethodSet*     m_interactionStrategies;
-
-  	///@}
-    ///@name Action Space
-    ///@{
-
-    /// The set of actions available to plan with.
-    std::unordered_map<std::string,std::unique_ptr<Action>> m_actions;
-
-    /// The set of interactions available to plan with.
-    std::unordered_map<std::string,std::unique_ptr<Interaction>> m_interactions;
 
     ///@}
   	///@name Solution

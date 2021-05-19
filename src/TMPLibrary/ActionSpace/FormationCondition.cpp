@@ -3,6 +3,8 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
+#include "TMPLibrary/TMPLibrary.h"
+
 /*----------------------- Construction -----------------------*/
 
 FormationCondition::
@@ -11,7 +13,7 @@ FormationCondition() {
 }
 
 FormationCondition::
-FormationCondition(XMLNode& _node) : Condition(_node) {
+FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpLibrary) {
   this->SetName("FormationCondition");
 
   for(auto& child : _node) {

@@ -39,7 +39,7 @@ Valid(const State& _state) {
 
 /*------------------------ Accessors -------------------------*/
 
-const std::vector<std::unique_ptr<Condition>>&
+const std::vector<std::string>&
 Interaction::
 GetInterimConditions() const {
   return m_interimConditions;
@@ -68,9 +68,10 @@ ParseXMLNode(XMLNode& _node) {
                          "Interaction Strategy Label");
 
   for(auto& child : _node) {
-    if(_node.Name() == "InterimConditions") {
+    if(child.Name() == "InterimConditions") {
       for(auto& grandchild : child) {
-        auto condition = Condition::Factory(grandchild);
+        auto condition = grandchild.Read("label",true,"",
+                         "Label of condition to include.");
         m_interimConditions.push_back(std::move(condition));
       }
     }

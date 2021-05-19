@@ -1,5 +1,7 @@
 #include "Action.h"
 
+#include "ActionSpace.h"
+
 /*----------------------- Construction -----------------------*/
 
 Action::
@@ -21,7 +23,8 @@ Action::
 Valid(const State& _state) {
 
   // Check if each of the pre-conditions are satisfied.
-  for(const auto& pre : m_preConditions) {
+  for(const auto& label : m_preConditions) {
+    auto pre = this->GetTMPLibrary()->GetActionSpace()->GetCondition(label);
     if(!pre->Satisfied(_state))
     return false;
   }
@@ -30,13 +33,13 @@ Valid(const State& _state) {
 
 /*------------------------ Accessors -------------------------*/
 
-const std::vector<std::unique_ptr<Condition>>&
+const std::vector<std::string>&
 Action::
 GetPreConditions() const {
   return m_preConditions;
 }
 
-const std::vector<std::unique_ptr<Condition>>&
+const std::vector<std::string>&
 Action::
 GetPostConditions() const {
   return m_postConditions;
@@ -54,15 +57,17 @@ void
 Action::
 ParseXMLNode(XMLNode& _node) {
   for(auto& child : _node) {
-    if(_node.Name() == "PreConditions") {
+    if(child.Name() == "PreConditions") {
       for(auto& grandchild : child) {
-        auto condition = Condition::Factory(grandchild);
+        auto condition = grandchild.Read("label",true,"",
+                         "Label of condition to include.");
         m_preConditions.push_back(std::move(condition));
       }
     }
-    else if(_node.Name() == "PostConditions") {
+    else if(child.Name() == "PostConditions") {
       for(auto& grandchild : child) {
-        auto condition = Condition::Factory(grandchild);
+        auto condition = grandchild.Read("label",true,"",
+                         "Label of condition to include.");
         m_preConditions.push_back(std::move(condition));
       }
     }

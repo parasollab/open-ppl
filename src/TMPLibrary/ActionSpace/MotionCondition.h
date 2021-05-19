@@ -5,6 +5,7 @@
 
 class Constraint;
 class RobotGroup;
+class TMPLibrary;
 
 class MotionCondition : public Condition {
 
@@ -20,7 +21,7 @@ class MotionCondition : public Condition {
 
     MotionCondition();
 
-    MotionCondition(XMLNode& _node);
+    MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary);
 
     ~MotionCondition();
 

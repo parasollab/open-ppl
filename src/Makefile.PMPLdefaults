@@ -449,6 +449,7 @@ TASK_SRCS := \
   Visualization/Gui/TestWidget.cpp \
   Simulator/Simulation.cpp \
   TMPLibrary/ActionSpace/Action.cpp \
+  TMPLibrary/ActionSpace/ActionSpace.cpp \
   TMPLibrary/ActionSpace/Interaction.cpp \
   TMPLibrary/ActionSpace/Condition.cpp \
   TMPLibrary/ActionSpace/CompositeCondition.cpp \

@@ -7,6 +7,8 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
+#include "TMPLibrary/TMPLibrary.h"
+
 /*----------------------- Construction -----------------------*/
 
 MotionCondition::
@@ -15,18 +17,15 @@ MotionCondition() {
 }
 
 MotionCondition::
-MotionCondition(XMLNode& _node) : Condition(_node) {
+MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpLibrary) {
   this->SetName("MotionCondition");
 
-  std::string robotGroupLabel = _node.Read("robotGroup", true, "", 
-                                      "Robot to assign constrant.");
-
-  auto robotGroup = this->GetMPProblem()->GetRobotGroup(robotGroupLabel);
-
   for(auto& child : _node) {
-    if(child.Name() == "Constraint") {
+    auto found = child.Name().find("Constraint");
+    if(found != std::string::npos) {
       auto robotLabel = child.Read("robot", false, "", "Robot to assign constraint.");
-      auto robot = (robotLabel != "") ? robotGroup->GetRobot(robotLabel)
+
+      auto robot = (robotLabel != "") ? this->GetMPProblem()->GetRobot(robotLabel)
                                       : nullptr;
       auto constraint = Constraint::Factory(robot, child);
       m_constraints.push_back(std::move(constraint));

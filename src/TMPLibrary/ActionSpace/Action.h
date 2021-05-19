@@ -32,11 +32,9 @@ class Action : public TMPBaseObject {
     ///@name Accessors
     ///@{
 
-    const std::vector<std::unique_ptr<Condition>>& 
-                      GetPreConditions() const;
+    const std::vector<std::string>& GetPreConditions() const;
 
-    const std::vector<std::unique_ptr<Condition>>& 
-                      GetPostConditions() const;
+    const std::vector<std::string>& GetPostConditions() const;
 
     ///@}
 
@@ -52,8 +50,8 @@ class Action : public TMPBaseObject {
     ///@name Internal State
     ///@{
 
-    std::vector<std::unique_ptr<Condition>> m_preConditions;
-    std::vector<std::unique_ptr<Condition>> m_postConditions;
+    std::vector<std::string> m_preConditions;
+    std::vector<std::string> m_postConditions;
 
     ///@}
 };
