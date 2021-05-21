@@ -16,13 +16,20 @@
         waypointThreshold=".05"/>
     </Robot>
 
+    <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
+        <Member label="boxy"/>
+        <StepFunction type="defaultcoordinator" debug="true"/>
+      </Agent>
+    </Robot>
+
     <Task label="startLocation" robot="boxy">
       <StartConstraints>
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
     </Task>
 
-		<Decomposition label="main" taskLabel="first" coordinator="boxy">
+		<Decomposition label="main" taskLabel="first" coordinator="coordinator">
 			<SemanticTask label="first">
     		<Task label="query1" robot="boxy">
       		<StartConstraints>
@@ -178,7 +185,7 @@
       </Condition>
 
       <Condition label="MotionExample" type="motion">
-        <!--CSpaceConstraint point="0 0 0 0 0 0" robot="boxy"/-->
+        <CSpaceConstraint point="0 0 0 0 0 0" dof="6"/>
       </Condition>
 
       <!-- Actions -->

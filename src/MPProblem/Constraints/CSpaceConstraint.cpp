@@ -50,13 +50,16 @@ CSpaceConstraint(Robot* const _r, XMLNode& _node)
                                         << "single configuration (point) or "
                                         << "bounding box (bbx), but not both.";
 
-	ParseBoundaryString(_r,pointString,bbxString);
+  const size_t dof = _node.Read("dof", false, 0, 0, 100, 
+        "The number of dof to initialize the constraint if there is not a specified robot.");
+
+	ParseBoundaryString(_r,pointString,bbxString,dof);
 
 }
 
 CSpaceConstraint::
-CSpaceConstraint(Robot* const _r, std::string _pointString, std::string _bbxString) : BoundaryConstraint(_r,nullptr) {
-	ParseBoundaryString(_r,_pointString,_bbxString);
+CSpaceConstraint(Robot* const _r, std::string _pointString, std::string _bbxString, size_t _dof) : BoundaryConstraint(_r,nullptr) {
+	ParseBoundaryString(_r,_pointString,_bbxString, _dof);
 }
 
 CSpaceConstraint::
@@ -73,11 +76,12 @@ Clone() const {
 
 void 
 CSpaceConstraint::
-ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxString) {
+ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxString, size_t _dof) {
   // Assert that we got exactly one of these.
   // Initialize the boundary.
   std::unique_ptr<CSpaceBoundingBox> bbx(new CSpaceBoundingBox(
-      m_robot->GetMultiBody()->DOF() * (m_robot->IsNonholonomic() ? 2 : 1))
+      m_robot ? m_robot->GetMultiBody()->DOF() * (m_robot->IsNonholonomic() ? 2 : 1)
+              : _dof)
   );
 
   // Parse the boundary data.
@@ -86,8 +90,8 @@ ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxS
     std::istringstream bbxStream(_bbxString);
     bbxStream >> *bbx;
   }
-  else {
-    // This is a point constraint.
+  // This is a point constraint.
+  else if(m_robot) {
     Cfg point(_r);
 #ifdef VIZMO_MAP
     std::istringstream pointStream("0 " + _pointString);
@@ -97,6 +101,18 @@ ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxS
     point.Read(pointStream);
 
     bbx->ShrinkToPoint(point);
+  }
+  else {
+    std::vector<std::pair<double,double>> boundary;
+    std::istringstream pointStream(_pointString);
+    
+    for(size_t i = 0; i < _dof; i++) {
+      double d;
+      pointStream >> d;
+      boundary.push_back(std::make_pair(d,d));
+    }
+    
+    bbx->ResetBoundary(boundary,0);
   }
 
   m_boundary = std::move(bbx);

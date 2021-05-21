@@ -23,11 +23,7 @@ MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpL
   for(auto& child : _node) {
     auto found = child.Name().find("Constraint");
     if(found != std::string::npos) {
-      auto robotLabel = child.Read("robot", false, "", "Robot to assign constraint.");
-
-      auto robot = (robotLabel != "") ? this->GetMPProblem()->GetRobot(robotLabel)
-                                      : nullptr;
-      auto constraint = Constraint::Factory(robot, child);
+      auto constraint = Constraint::Factory(nullptr, child);
       m_constraints.push_back(std::move(constraint));
     }
   }

@@ -36,7 +36,8 @@ class CSpaceConstraint : public BoundaryConstraint {
     /// @param _r The robot to constrain.
     /// @param _pointString The string containing point constraint info.
     /// @param _bbxString The string containing bounding box constraint info.
-    explicit CSpaceConstraint(Robot* const _r, std::string _pointString, std::string _bbxString);
+    explicit CSpaceConstraint(Robot* const _r, std::string _pointString, 
+                              std::string _bbxString, size_t _dof=0);
 
     virtual ~CSpaceConstraint();
 
@@ -48,7 +49,8 @@ class CSpaceConstraint : public BoundaryConstraint {
 		///@name Helper Functions
 		///@{
 
-		void ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxString);
+		void ParseBoundaryString(Robot* const _r, std::string _pointString, 
+                             std::string _bbxString, size_t _dof);
 
 		///@}
 
