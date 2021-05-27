@@ -320,6 +320,40 @@ GetRobotGroup(const std::string& _label) const noexcept {
                                 << "'.";
 }
 
+RobotGroup*
+MPProblem::
+AddRobotGroup(const std::vector<Robot*> _robots, const std::string _label) {
+
+  // Check that group does not already exist
+  for(auto& group : m_robotGroups) {
+    if(_robots.size() != group->GetRobots().size())
+      continue;
+
+    bool match = false;
+    for(auto r : group->GetRobots()) {
+      match = false;
+      for(auto n : _robots) {
+        if(r != n) 
+          continue;
+
+        match = true;
+        break;
+      }
+      if(!match)
+        break;
+    }
+
+    if(match) {
+      std::cout << "Robot group already exists: "
+                << group->GetLabel()
+                << std::endl;
+      return group.get();
+    }
+  }
+
+  m_robotGroups.emplace_back(new RobotGroup(this,_label,_robots));
+  return m_robotGroups.back().get();
+}
 
 const std::vector<std::unique_ptr<RobotGroup>>&
 MPProblem::

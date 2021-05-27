@@ -32,6 +32,12 @@ class ActionSpace {
     void ParseXML(XMLNode& _node);
 
     ///@}
+    ///@name Interface
+    ///@{
+
+    void Initialize();
+
+    ///@}
     ///@name Conditions
     ///@{
 
@@ -42,6 +48,8 @@ class ActionSpace {
     ///@}
     ///@name Actions
     ///@{
+
+    const LabelMap<Action>& GetActions();
 
     Action* GetAction(const std::string& _label);
 

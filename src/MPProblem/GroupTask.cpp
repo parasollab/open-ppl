@@ -20,7 +20,6 @@ GroupTask(RobotGroup* const _robot)
   : m_group(_robot)
 { }
 
-
 GroupTask::
 GroupTask(MPProblem* const _problem, XMLNode& _node) {
   // Parse task and robot labels.

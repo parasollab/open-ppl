@@ -1,12 +1,12 @@
-#ifndef PPL_FORMATION_H_
-#define PPL_FORMATION_H_
+#ifndef PPL_PROXIMITY_CONDITION_H_
+#define PPL_PROXIMITY_CONDITION_H_
 
 #include "Condition.h"
 
 class RobotGroup;
 class TMPLibrary;
 
-class FormationCondition : public Condition {
+class ProximityCondition : public Condition {
   public:
     ///@name Local Types
     ///@{
@@ -17,11 +17,11 @@ class FormationCondition : public Condition {
     ///@name Construction
     ///@{
 
-    FormationCondition();
+    ProximityCondition();
 
-    FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary);
+    ProximityCondition(XMLNode& _node, TMPLibrary* _library);
 
-    ~FormationCondition();
+    ~ProximityCondition();
 
     ///@}
     ///@name Interface
@@ -29,25 +29,22 @@ class FormationCondition : public Condition {
 
     virtual RobotGroup* Satisfied(const State& _state) const override;
 
-    const std::vector<std::string> GetRoles() const;
-  
     ///@}
 
   private:
     ///@name Helper Functions
     ///@{
 
-    bool CheckRequirements(RobotGroup* _group) const;
+    void ParseXML(XMLNode& _node);
 
     ///@}
     ///@name Internal State
     ///@{
 
-    std::vector<std::string> m_requiredTypes;
-
-    std::vector<std::string> m_roles;
+    std::unique_ptr<Boundary> m_boundary;
 
     ///@}
+
 };
 
 #endif

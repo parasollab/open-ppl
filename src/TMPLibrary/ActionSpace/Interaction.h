@@ -29,6 +29,8 @@ class Interaction : public Action {
     ///@name Interface
     ///@{
 
+    virtual void Initialize() override;
+
     virtual bool Valid(const State& _state) override;
 
     ///@}
@@ -37,7 +39,12 @@ class Interaction : public Action {
 
     const std::vector<std::string>& GetInterimConditions() const;
 
-    MPSolution* GetMPSolution() const;
+    MPSolution* GetToInterimSolution() const;
+
+    MPSolution* GetToPostSolution() const;
+
+    const std::string GetInteractionStrategyLabel() const;
+
     ///@}
 
   protected:
@@ -54,7 +61,9 @@ class Interaction : public Action {
 
     std::string m_isLabel; ///< Interaction Strategy Label
 
-    std::unique_ptr<MPSolution> m_mpSolution;
+    std::unique_ptr<MPSolution> m_toInterimSolution;
+
+    std::unique_ptr<MPSolution> m_toPostSolution;
 
     /// The set of conditions representing the intermediate stage
     /// of the interaction needed by the interaction strategy.

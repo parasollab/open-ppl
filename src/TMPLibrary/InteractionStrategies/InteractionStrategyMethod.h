@@ -32,10 +32,12 @@ class InteractionStrategyMethod : public TMPBaseObject {
 
     ///@}
 
-  private:
+  protected:
 
     ///@name Internal State
     ///@{
+
+    std::string m_sgLabel;
 
     ///@}
 

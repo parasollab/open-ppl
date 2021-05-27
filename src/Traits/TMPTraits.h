@@ -5,6 +5,7 @@
 
 // TMPStrategyMethods to include
 
+#include "TMPLibrary/TMPStrategies/BasicHCR.h"
 #include "TMPLibrary/TMPStrategies/DummyStrategyMethod.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
 #include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
@@ -17,6 +18,7 @@
 
 // TaskEvaluators to include
 
+#include "TMPLibrary/TaskEvaluators/HCRQuery.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 
 // TaskDecomposers to include
@@ -34,6 +36,7 @@
 // InteractionStrategyMethods to include
 
 #include "TMPLibrary/InteractionStrategies/IndependentPaths.h"
+#include "TMPLibrary/InteractionStrategies/InteractionStrategyExample.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup TaskAndMotionPlanningUniverse
@@ -48,6 +51,7 @@ struct TMPTraits {
 
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
+    BasicHCR,
     ITMethod,
 		DummyStrategyMethod,
 		SimpleMotionMethod
@@ -62,6 +66,7 @@ struct TMPTraits {
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
+    HCRQuery,
 		SimpleMotionEvaluator
       > TaskEvaluatorMethodList;
 
@@ -80,7 +85,8 @@ struct TMPTraits {
 			> StateGraphList;
 
 	typedef boost::mpl::list<
-		IndependentPaths
+		IndependentPaths,
+    InteractionStrategyExample
 			> InteractionStrategyMethodList;
 };
 

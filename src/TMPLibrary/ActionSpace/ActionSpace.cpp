@@ -22,6 +22,15 @@ ActionSpace::
     delete pair.second;
 }
 
+/*------------------------- Interface ------------------------*/
+
+void
+ActionSpace::
+Initialize() {
+  for(auto action : m_actions) {
+    action.second->Initialize();
+  }
+}
 /*------------------------ Conditions ------------------------*/
 
 Condition*
@@ -37,6 +46,12 @@ SetCondition(const std::string& _label, Condition* _utility) {
 }
 
 /*-------------------------- Actions -------------------------*/
+
+const ActionSpace::LabelMap<Action>&
+ActionSpace::
+GetActions() {
+  return m_actions;
+}
 
 Action*
 ActionSpace::

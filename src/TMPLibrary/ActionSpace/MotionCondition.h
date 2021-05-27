@@ -32,13 +32,25 @@ class MotionCondition : public Condition {
     virtual RobotGroup* Satisfied(const State& _state) const override;
 
     ///@}
+    ///@name Accessors
+    ///@{
+
+    const std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&
+                    GetConstraints();
+
+    std::vector<Constraint*> GetConstraints(std::string _type);
+
+    std::string GetRole(Constraint* _constraint);
+
+    ///@}
   private:
     ///@name Internal State
     ///@{
 
-    /// Set of CSpace and Workspace constraints
-    std::vector<std::unique_ptr<Constraint>> m_constraints;
+    /// Set of pairs of robot type and CSpace/Workspace constraints
+    std::vector<std::pair<std::string,std::unique_ptr<Constraint>>> m_constraints;
 
+    std::unordered_map<Constraint*,std::string> m_roles;
     ///@}
 
 };

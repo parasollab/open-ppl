@@ -68,7 +68,7 @@ ParseXMLNode(XMLNode& _node) {
       for(auto& grandchild : child) {
         auto condition = grandchild.Read("label",true,"",
                          "Label of condition to include.");
-        m_preConditions.push_back(std::move(condition));
+        m_postConditions.push_back(std::move(condition));
       }
     }
   }

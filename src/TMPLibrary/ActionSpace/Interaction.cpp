@@ -1,6 +1,9 @@
 #include "Interaction.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 /*----------------------- Construction -----------------------*/
 
@@ -11,7 +14,6 @@ Interaction() {
 
 Interaction::
 Interaction(XMLNode& _node) : Action(_node) {
-  this->SetName("Interaction");
   ParseXMLNode(_node);
 }
 
@@ -19,6 +21,14 @@ Interaction::
 ~Interaction() {}
 
 /*------------------------ Interface -------------------------*/
+
+void
+Interaction::
+Initialize() {
+  auto c = this->GetPlan()->GetCoordinator();
+  m_toInterimSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
+  m_toPostSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
+}
 
 bool
 Interaction::
@@ -47,10 +57,21 @@ GetInterimConditions() const {
 
 Interaction::MPSolution*
 Interaction::
-GetMPSolution() const {
-  return m_mpSolution.get();
+GetToInterimSolution() const {
+  return m_toInterimSolution.get();
 }
-
+    
+Interaction::MPSolution*
+Interaction::
+GetToPostSolution() const {
+  return m_toPostSolution.get();
+}
+    
+const std::string 
+Interaction::
+GetInteractionStrategyLabel() const {
+  return m_isLabel;
+}
 /*--------------------- Helper Functions ---------------------*/
 
 void
@@ -62,7 +83,7 @@ SetClassName() {
 void
 Interaction::
 ParseXMLNode(XMLNode& _node) {
-  Action::ParseXMLNode(_node);
+  //Action::ParseXMLNode(_node);
 
   m_isLabel = _node.Read("isLabel", true, "", 
                          "Interaction Strategy Label");

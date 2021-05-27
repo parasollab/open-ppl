@@ -13,7 +13,7 @@
 #include "Utilities/Hypergraph.h"
 #include <iostream>
 
-class InteractionTemplate;
+class Interaction;
 
 class CombinedRoadmap : public StateGraph {
   public:
@@ -33,9 +33,13 @@ class CombinedRoadmap : public StateGraph {
     struct TMPVertex {
       size_t rvid; ///< Roadmap vid
       SemanticRoadmap* sr;
+ 
+      TMPVertex() {} 
+      TMPVertex(size_t _rvid, SemanticRoadmap* _sr) : rvid(_rvid), sr(_sr) {}
     };
 
     struct TMPHyperarc {
+      bool semantic{false};
       GroupLocalPlanType glp;
     };
 
@@ -49,7 +53,7 @@ class CombinedRoadmap : public StateGraph {
 
 		CombinedRoadmap(XMLNode& _node);
 
-		virtual ~CombinedRoadmap() = default;  	
+		virtual ~CombinedRoadmap();  	
 
     ///@}
     ///@name Initialization
@@ -73,13 +77,16 @@ class CombinedRoadmap : public StateGraph {
     ///@return     The hypergraph vid of the new vertex for each
     ///            spawned semantic roadmap.
     std::set<size_t> AddInteraction(CompositeSemanticRoadmap _csr, 
-                                    InteractionTemplate* _it);
+                                    Interaction* _it);
 
     const TMPHypergraph* GetHypergraph() const;
 
-    const std::set<SemanticRoadmap>& GetSemanticRoadmaps() const;
+    const std::set<SemanticRoadmap*>& GetSemanticRoadmaps() const;
 
-    const MPSolution* GetMPSolution() const;
+    MPSolution* GetMPSolution() const;
+
+    void AddRobotGroup(RobotGroup* _group);
+
     ///@}
 
   protected:
@@ -95,7 +102,7 @@ class CombinedRoadmap : public StateGraph {
     std::unique_ptr<TMPHypergraph> m_hypergraph;
 
     /// Set of all semantic roadmaps contained in the hypergraph
-    std::set<SemanticRoadmap> m_semanticRoadmaps;
+    std::set<SemanticRoadmap*> m_semanticRoadmaps;
 
     /// MPSolution containing all roadmaps used in the combined roadmap
 		std::unique_ptr<MPSolution> m_mpSolution;

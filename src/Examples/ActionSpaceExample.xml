@@ -8,7 +8,7 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot">
+    <Robot label="boxy" filename="3D/boxy.robot" capability="boxy">
       <!--
       <Agent type="planning"/>
       -->
@@ -23,11 +23,15 @@
       </Agent>
     </Robot>
 
-    <Task label="startLocation" robot="boxy">
-      <StartConstraints>
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
-      </StartConstraints>
-    </Task>
+    <RobotGroup label="robotGroup" robotLabels="boxy"/>
+
+    <GroupTask label="groupQuery" group="robotGroup">
+      <Task label="startLocation" robot="boxy">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
 
 		<Decomposition label="main" taskLabel="first" coordinator="coordinator">
 			<SemanticTask label="first">
@@ -75,7 +79,7 @@
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
     </LocalPlanners>
 
     <Extenders>
@@ -109,7 +113,7 @@
       </LazyQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="1000" operator=">="/>
+        value="100" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -120,14 +124,21 @@
         <Evaluator label="Query"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
+      <GroupQuery label="CompositeQuery" debug="true"/>
     </MapEvaluators>
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="BasicPRM1" debug="true">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="Query"/>
+      </BasicPRM>
+
+      <BasicPRM label="NodePRM" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
       </BasicPRM>
 
       <!-- LazyPRM -->
@@ -141,6 +152,26 @@
       <EvaluateMapStrategy label="EvaluateMapStrategy">
         <Evaluator label="NodesEval"/>
       </EvaluateMapStrategy>
+
+      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="BasicPRM1">
+        <Evaluator label="TrueEvaluator"/>
+      </GroupDecoupledStrategy>
+
+      <GroupDecoupledStrategy label="DecoupledNodes" strategyLabel="NodePRM">
+        <Evaluator label="TrueEvaluator"/>
+      </GroupDecoupledStrategy>
+
+      <GroupPRM label="CompositePRM" debug="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="CompositeQuery"/>
+      </GroupPRM>
+
+      <GroupPRM label="CompositeNodes" debug="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
+      </GroupPRM>
     </MPStrategies>
 
     <MPTools>
@@ -156,6 +187,8 @@
 	<TMPLibrary>
 		<TMPStrategies>
 			<SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
+      <BasicHCR label="BasicHCR" teLabel="HCRQuery" mpStrat="CompositeNodes" 
+                sgLabel="HCR" expansionProb=".2" debug="true"/>
 		</TMPStrategies>
 
 		<PoIPlacementMethods>
@@ -163,6 +196,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
+      <HCRQuery label="HCRQuery"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -171,7 +205,13 @@
 		<TaskAllocators>
 		</TaskAllocators>
 
+    <InteractionStrategies>
+      <InteractionStrategyExample label="InteractionStrategyExample" 
+                                  mpStrategy="CompositePRM" debug="true"/>
+    </InteractionStrategies>
+
 		<StateGraphs>
+      <CombinedRoadmap label="HCR"/>
 		</StateGraphs>
 
 		<TMPTools>
@@ -181,15 +221,36 @@
 
       <!-- Conditions -->
       <Condition label="FormationExample" type="formation">
-        <Member type="boxy"/>
+        <Member type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="Solo" type="formation">
+        <Member type="boxy" role="R1"/>
       </Condition>
 
       <Condition label="MotionExample" type="motion">
-        <CSpaceConstraint point="0 0 0 0 0 0" dof="6"/>
+        <CSpaceConstraint point="0 0 0 0 0 0" dof="6" 
+                          type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="StartLocation" type="motion">
+        <CSpaceConstraint point="0 0 0 0 0 0" dof="6" 
+                          type="boxy" role="R1"/>
+      </Condition>
+
+      
+      <Condition label="GoalBox" type="motion">
+        <CSpaceConstraint bbx="[15:25 ; 0:10 ; 5:15 ; -1:1 ; -1:1 ; -1:1]"  
+                          dof="6" type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="FinalLocation" type="motion">
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"
+                          dof="6" type="boxy" role="R1"/>
       </Condition>
 
       <!-- Actions -->
-      <Action label="ActionExample">
+      <!--Action label="ActionExample">
         <PreConditions>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
@@ -199,9 +260,39 @@
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
         </PostConditions>
-      </Action>
+      </Action-->
 
-      <Interaction label="InteractionExample" isLabel="InteractionStrategyExample">
+      <Interaction label="Begin" isLabel="InteractionStrategyExample">
+        <PreConditions>
+          <Condition label="Solo"/>
+          <Condition label="StartLocation"/>
+        </PreConditions>
+        <InterimConditions>
+          <Condition label="Solo"/>
+          <Condition label="StartLocation"/>
+        </InterimConditions>
+        <PostConditions>
+          <Condition label="Solo"/>
+          <Condition label="StartLocation"/>
+        </PostConditions>
+      </Interaction>
+
+      <Interaction label="Arrive" isLabel="InteractionStrategyExample">
+        <PreConditions>
+          <Condition label="Solo"/>
+          <Condition label="GoalBox"/>
+        </PreConditions>
+        <InterimConditions>
+          <Condition label="Solo"/>
+          <Condition label="FinalLocation"/>
+        </InterimConditions>
+        <PostConditions>
+          <Condition label="Solo"/>
+          <Condition label="FinalLocation"/>
+        </PostConditions>
+      </Interaction>
+
+      <!--Interaction label="InteractionExample" isLabel="InteractionStrategyExample">
         <PreConditions>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
@@ -216,10 +307,10 @@
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
         </PostConditions>
-      </Interaction>
+      </Interaction-->
     </ActionSpace>
 	
-		<Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
+		<Solver tmpStrategyLabel="BasicHCR" baseFilename="action_space_example"/>
 	</TMPLibrary>
 
 </MotionPlanning>

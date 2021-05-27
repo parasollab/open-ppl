@@ -1,7 +1,9 @@
 #include "Condition.h"
 
+#include "CompositeCondition.h"
 #include "FormationCondition.h"
 #include "MotionCondition.h"
+#include "ProximityCondition.h"
 
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
@@ -30,15 +32,22 @@ Factory(XMLNode& _node, TMPLibrary* _tmpLibrary) {
 
   Condition* output;
 
-  if(type == "formation") {
+  if(type == "composite") {
+    output = new CompositeCondition(_node,_tmpLibrary);
+  }
+  else if(type == "formation") {
     output = new FormationCondition(_node,_tmpLibrary);
   }
   else if(type == "motion") {
     output = new MotionCondition(_node,_tmpLibrary);
   }
+  else if(type == "proximity") {
+    output = new ProximityCondition(_node,_tmpLibrary);
+  }
 
   return output;
 }
+
 /*------------------------ Interface -------------------------*/
 
 RobotGroup*

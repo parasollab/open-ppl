@@ -4,7 +4,7 @@
 
 InteractionStrategyMethod::
 InteractionStrategyMethod(XMLNode& _node) : TMPBaseObject(_node) {
-
+  m_sgLabel = _node.Read("sgLabel", false, "", "StateGraph to use within strategy.");
 }
 
 InteractionStrategyMethod::

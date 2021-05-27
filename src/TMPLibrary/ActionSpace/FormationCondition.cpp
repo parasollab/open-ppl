@@ -20,7 +20,11 @@ FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_t
     if(child.Name() == "Member") {
       auto type = child.Read("type", true, "", 
                         "Type of robot required in formation.");
+      auto role = child.Read("role", true, "", 
+                        "Type of robot required in formation.");
+
       m_requiredTypes.push_back(type);
+      m_roles.push_back(role);
     }
   }
 
@@ -42,6 +46,14 @@ Satisfied(const State& _state) const {
   }
 
   return nullptr;
+}
+
+/*------------------------ Accessors -------------------------*/
+    
+const std::vector<std::string> 
+FormationCondition::
+GetRoles() const {
+  return m_roles;
 }
 
 /*--------------------- Helper Functions ---------------------*/

@@ -83,8 +83,8 @@
     </PathModifiers>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
-        checkIfSameCC="true" debug="false"/>
+      <NeighborhoodConnector label="Closest" nfLabel="Nearest" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
     </Connectors>
 
     <Metrics>
@@ -154,8 +154,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="DecoupledPRM" seed="12345678"
-      baseFilename="decoupled" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CompositePRM" seed="12345678"
+      baseFilename="composite" vizmoDebug="true"/>
 
   </Library>
 

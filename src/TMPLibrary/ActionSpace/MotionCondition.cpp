@@ -23,8 +23,17 @@ MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpL
   for(auto& child : _node) {
     auto found = child.Name().find("Constraint");
     if(found != std::string::npos) {
-      auto constraint = Constraint::Factory(nullptr, child);
+
+      // Generate constraint with specified type
+      std::string type = child.Read("type", false, "ANY", 
+                                    "Type of robot to apply the constraint to.");
+      auto constraint = std::make_pair(type,Constraint::Factory(nullptr, child));
       m_constraints.push_back(std::move(constraint));
+
+      // Set role for constraint
+      std::string role = child.Read("role", true, "", 
+                                    "Used to identify robot tole across conditions.");
+      m_roles[m_constraints.back().second.get()] = role;
     }
   }
 }
@@ -69,16 +78,15 @@ Satisfied(const State& _state) const {
           continue;
 
         // Make sure the robot is of the right type
-        if(constraint->GetRobot() and 
-           constraint->GetRobot()->GetCapability() != robot->GetCapability())
+        if(constraint.first != robot->GetCapability())
           continue;
 
         // Check if robot cfg satisfies constraint
         auto cfg = groupCfg.GetRobotCfg(robot);
-        if(!constraint->Satisfied(cfg))
+        if(!constraint.second->Satisfied(cfg))
           continue;
 
-        constraint->SetRobot(robot);
+        constraint.second->SetRobot(robot);
         matched.insert(robot);
         foundMatch = true;
       }
@@ -97,4 +105,31 @@ Satisfied(const State& _state) const {
   return nullptr;
 }
 
+/*------------------------- Accessors ------------------------*/
+
+const std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&
+MotionCondition::
+GetConstraints() {
+  return m_constraints;
+}
+
+std::vector<Constraint*>
+MotionCondition::
+GetConstraints(std::string _type) {
+  std::vector<Constraint*> constraints;
+
+  for(const auto& c : m_constraints) {
+    if(_type == c.first) {
+      constraints.push_back(c.second.get());
+    }
+  }
+
+  return constraints;
+}
+    
+std::string
+MotionCondition::
+GetRole(Constraint* _constraint) {
+  return m_roles[_constraint];
+}
 /*------------------------------------------------------------*/

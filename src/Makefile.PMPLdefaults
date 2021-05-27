@@ -455,7 +455,9 @@ TASK_SRCS := \
   TMPLibrary/ActionSpace/CompositeCondition.cpp \
   TMPLibrary/ActionSpace/FormationCondition.cpp \
   TMPLibrary/ActionSpace/MotionCondition.cpp \
+  TMPLibrary/ActionSpace/ProximityCondition.cpp \
   TMPLibrary/InteractionStrategies/IndependentPaths.cpp \
+  TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
@@ -472,9 +474,11 @@ TASK_SRCS := \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
+  TMPLibrary/TaskEvaluators/HCRQuery.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
+  TMPLibrary/TMPStrategies/BasicHCR.cpp \
   TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \

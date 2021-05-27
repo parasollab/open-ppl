@@ -397,6 +397,11 @@ class MPLibraryType final
         const std::string& _label, const long _seed,
         const std::string& _baseFilename);
 
+    /// Group overload:
+    void Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution,
+        const std::string& _label, const long _seed,
+        const std::string& _baseFilename);
+
     ///@}
     ///@name Debugging
     ///@{
@@ -576,7 +581,7 @@ Uninitialize() {
     groupMap->ClearHooks();
 
   // Also clear hooks for the individual robot if it exists:
-  if(m_solution->GetRobot())
+  if(m_solution->GetRobot() and this->GetRoadmap())
     this->GetRoadmap()->ClearHooks();
 }
 
@@ -1086,6 +1091,19 @@ Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
   RunSolver(s);
 }
 
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution,
+    const std::string& _label, const long _seed,
+    const std::string& _baseFilename) {
+  m_problem = _problem;
+  m_groupTask = _task;
+  m_solution = _solution;
+
+  Solver s{_label, _seed, _baseFilename, false};
+  RunSolver(s);
+}
 
 template <typename MPTraits>
 void

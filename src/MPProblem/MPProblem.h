@@ -110,6 +110,9 @@ class MPProblem final
     /// Get all robot groups in this problem.
     const std::vector<std::unique_ptr<RobotGroup>>& GetRobotGroups() const noexcept;
 
+    /// Add a new robot group
+    RobotGroup* AddRobotGroup(const std::vector<Robot*> _robots, const std::string _label);
+
 		Cfg GetInitialCfg(Robot* _r);
 
 		void SetInitialCfg(Robot* _r, Cfg _cfg);

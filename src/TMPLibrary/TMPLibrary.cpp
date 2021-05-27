@@ -73,6 +73,7 @@ Initialize(){
 	this->GetPlan()->GetStatClass()->StartClock("StateGraphConstruction");
 	m_stateGraphs->Initialize();
 	this->GetPlan()->GetStatClass()->StopClock("StateGraphConstruction");
+  m_actionSpace->Initialize();
 }
 
 void
