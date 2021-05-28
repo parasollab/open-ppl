@@ -38,12 +38,14 @@ Valid(const State& _state) {
   if(!Action::Valid(_state))
     return false;
 
+  // TODO:: This is being done elsewhere - re-evaluate the decision.
   // Check if there is a valid motion from pre-conditions
   // to post-conditions.
+  /*State s = _state;
   auto is = this->GetInteractionStrategyMethod(m_isLabel);
-  if(!is->operator()(this,_state))
+  if(!is->operator()(this,s))
     return false;
-
+  */
   return true;
 }
 
@@ -72,6 +74,31 @@ Interaction::
 GetInteractionStrategyLabel() const {
   return m_isLabel;
 }
+    
+void 
+Interaction::
+SetToInterimPath(GroupPathType* _path) {
+  m_toInterimPath = _path;
+}
+
+Interaction::GroupPathType*
+Interaction::
+GetToInterimPath() {
+  return m_toInterimPath;
+}
+
+void
+Interaction::
+SetToPostPath(GroupPathType* _path) {
+  m_toPostPath = _path;
+}
+
+Interaction::GroupPathType*
+Interaction::
+GetToPostPath() {
+  return m_toPostPath;
+}
+
 /*--------------------- Helper Functions ---------------------*/
 
 void

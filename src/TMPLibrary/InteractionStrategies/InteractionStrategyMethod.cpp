@@ -14,7 +14,7 @@ InteractionStrategyMethod::
 
 bool 
 InteractionStrategyMethod::
-operator()(Interaction* _interaction, const State& _start) {
+operator()(Interaction* _interaction, State& _start) {
   return false;
 }
 

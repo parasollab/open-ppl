@@ -1,5 +1,7 @@
 #include "InteractionStrategyExample.h"
 
+#include "ConfigurationSpace/GroupCfg.h"
+
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/ActionSpace/Interaction.h"
@@ -21,6 +23,12 @@ InteractionStrategyExample(XMLNode& _node)
 
   m_mpStrategyLabel = _node.Read("mpStrategy", true, "",
                  "MPStrategy to use to plan interactions.");
+ 
+ m_dmLabel = _node.Read("dmLabel", true, "",
+                 "Distance Metric to use when reconstructing path weights.");
+
+ m_lpLabel = _node.Read("lpLabel", true, "",
+                 "Local Planner to use when reconstructing path weights.");
 }
 
 InteractionStrategyExample::
@@ -30,7 +38,7 @@ InteractionStrategyExample::
 
 bool 
 InteractionStrategyExample::
-operator()(Interaction* _interaction, const State& _state) {
+operator()(Interaction* _interaction, State& _state) {
 
   // Assign interaction roles.
   auto& preconditions = _interaction->GetPreConditions();
@@ -49,9 +57,13 @@ operator()(Interaction* _interaction, const State& _state) {
                                  interimConstraintMap);
 
   // Compute motions from pre to interim conditions.
-  if(!PlanMotions(toInterim,_interaction->GetToInterimSolution(),
-                  "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim"))
+  auto toInterimPath = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
+                  "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
+
+  if(!toInterimPath)
     return false;
+
+  _interaction->SetToInterimPath(toInterimPath);
 
   // Extract last cfg from path and use to start post task.
   // Currently, the state is both computed and added in this function.
@@ -67,8 +79,17 @@ operator()(Interaction* _interaction, const State& _state) {
                               goalConstraintMap);
 
   // Compute motions from interim to post conditions.
-  return PlanMotions(toPost,_interaction->GetToPostSolution(),
+  auto toPostPath = PlanMotions(toPost,_interaction->GetToPostSolution(),
                      "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
+
+  _interaction->SetToPostPath(toPostPath);
+
+  if(!toPostPath)
+    return false;
+
+  _state = m_finalState;
+
+  return true;
 }
 
 /*--------------------- Helper Functions ---------------------*/
@@ -271,7 +292,7 @@ GenerateTasks(std::vector<std::string> _conditions,
   return groupTasks;
 }
 
-bool
+InteractionStrategyExample::GroupPathType*
 InteractionStrategyExample::
 PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label) {
 
@@ -293,6 +314,7 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
     // Check for solution
     // Check composite path
+    auto grm = _solution->GetGroupRoadmap(group);
     auto groupPath = _solution->GetGroupPath(group);
     if(groupPath and !groupPath->Empty()) {
       if(m_debug) {
@@ -302,34 +324,156 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
         }
       }
 
-      // Save individual robot cfgs at the end of the path.
+      // Save group cfg at the end of the path.
       auto lastVID = groupPath->VIDs().back();
-      auto rm = _solution->GetGroupRoadmap(group);
-      auto last = rm->GetVertex(lastVID);
+      auto last = grm->GetVertex(lastVID);
 
+      m_finalState[group] = std::make_pair(grm,lastVID);
+
+      // Save individual robot cfgs at the end of the path.
       for(auto robot : group->GetRobots()) {
         auto cfg = last.GetRobotCfg(robot);
         m_interimCfgMap[robot] = cfg;
+
+      }
+
+      // Collect individial robot paths
+      for(auto gcfg : groupPath->FullCfgs(lib)) {
+        for(auto robot : group->GetRobots()) {
+          auto cfg = gcfg.GetRobotCfg(robot);
+          m_individualPaths[robot].push_back(cfg);
+        }
       }
 
       continue;
     }
 
     // Check decoupled paths.
+    GroupCfg gcfg(grm);
+
     for(auto robot : group->GetRobots()) {
       auto path = _solution->GetPath(robot);
       if(path->Empty())
-        return false;
+        return nullptr;
 
       // Save last cfg in path.
       auto lastVID = path->VIDs().back();
       auto rm = _solution->GetRoadmap(robot);
       auto cfg = rm->GetVertex(lastVID);
       m_interimCfgMap[robot] = cfg;
+
+      gcfg.SetRobotCfg(robot,lastVID);
+
+      // Collect individial robot paths.
+      auto individualPath = _solution->GetPath(robot);
+      m_individualPaths[robot] = individualPath->FullCfgs(lib);
+    }
+
+    // Save group cfg at the end of the path.
+    auto groupVID = grm->AddVertex(gcfg);
+    m_finalState[group] = std::make_pair(grm,groupVID);
+  }
+
+  return ConstructCompositePath(_solution);
+}
+
+InteractionStrategyExample::GroupPathType*
+InteractionStrategyExample::
+ConstructCompositePath(MPSolution* _solution) {
+
+  GroupPathType* path = nullptr;
+  auto prob = this->GetMPProblem();
+
+  // Merge paths into single group path.
+
+  // Initialized combined group.
+  std::vector<Robot*> allRobots; 
+  std::string groupLabel = "";
+
+  for(auto kv : m_individualPaths) {
+    auto robot = kv.first;
+    allRobots.push_back(robot);
+    _solution->AddRobot(robot);
+    groupLabel += (robot->GetLabel() + "--");
+  }
+
+  auto group = prob->AddRobotGroup(allRobots,groupLabel);
+  _solution->AddRobotGroup(group);
+  auto grm = _solution->GetGroupRoadmap(group);
+
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
+
+  // Add full cfg paths to individual roadmaps.
+  size_t maxLength = 0;
+  std::unordered_map<Robot*,std::vector<size_t>> individualVIDs;
+
+  for(auto kv : m_individualPaths) {
+    auto robot = kv.first;
+    auto cfgs = kv.second;
+
+    // Grab max length of individual path.
+    maxLength = std::max(maxLength,cfgs.size());
+
+    // Iterate over cfgs and connect them in the roadmap
+    auto rm = _solution->GetRoadmap(robot);
+    size_t previous = rm->AddVertex(cfgs[0]);
+
+    for(size_t i = 1; i < cfgs.size(); i++) {
+      auto cfg = kv.second[i];
+      auto vid = rm->AddVertex(cfg);
+
+      auto distance = dm->Distance(cfgs[i-1],cfg);
+      DefaultWeight<Cfg> weight;
+      weight.SetWeight(distance);
+
+      rm->AddEdge(previous,vid,weight);
+      previous = vid;
     }
   }
 
-  return true;
+  // Merge individual cfgs into group cfgs.
+  size_t previousVID;
+  GroupCfg previousCfg;
+  for(size_t i = 0; i < maxLength; i++) {
+    GroupCfg gcfg(grm);
+
+    for(auto kv : individualVIDs) {
+      auto robot = kv.first;
+      size_t vid;
+      // Grab the current vid is still moving.
+      if(i < kv.second.size()) {
+        vid = kv.second[i];
+      }
+      // Grab the last vid if finished moving.
+      else {
+        vid = kv.second.back();
+      }
+
+      gcfg.SetRobotCfg(robot,vid);
+    }
+
+    // Add group cfg to roadmap
+    auto gvid = grm->AddVertex(gcfg);
+
+    if(i == 0) {
+      previousVID = gvid;
+      previousCfg = gcfg;
+      continue;
+    }
+
+    // Connect gcfg to previous
+    auto distance = dm->Distance(previousCfg,gcfg);
+    GroupWeightType weight(grm,m_lpLabel,distance,{previousCfg,gcfg});
+
+    grm->AddEdge(previousVID,gvid,weight);
+    
+    previousVID = gvid;
+    previousCfg = gcfg;
+  }
+
+  m_individualPaths.clear();
+
+  return path;
 }
 
 InteractionStrategyExample::State

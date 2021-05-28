@@ -3,14 +3,17 @@
 
 #include "InteractionStrategyMethod.h"
 
+#include "ConfigurationSpace/GroupPath.h"
+
 class InteractionStrategyExample : public InteractionStrategyMethod {
   public:
     ///@name Local Types
     ///@{
 
     typedef InteractionStrategyMethod::State State;
-		typedef MPSolutionType<MPTraits<Cfg,
-            DefaultWeight<Cfg>>> MPSolution;
+		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupPathType;
+    typedef GroupLocalPlan<Cfg> GroupWeightType;
 
     ///@}
     ///@name Construction
@@ -26,7 +29,7 @@ class InteractionStrategyExample : public InteractionStrategyMethod {
     ///@name Interface
     ///@{
 
-    virtual bool operator()(Interaction* _interaction, const State& _state) override;
+    virtual bool operator()(Interaction* _interaction, State& _state) override;
 
     ///@}
 
@@ -42,18 +45,30 @@ class InteractionStrategyExample : public InteractionStrategyMethod {
                             std::unordered_map<Robot*,Constraint*> _startConstraints,
                             std::unordered_map<Robot*,Constraint*> _goalConstraints);
 
-    bool PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
+    GroupPathType* PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
+
+    GroupPathType* ConstructCompositePath(MPSolution* _solution);
 
     State InterimState(Interaction* _interaction);
+
     ///@}
     ///@name Internal State
     ///@{
 
     std::string m_mpStrategyLabel;
 
+    std::string m_dmLabel;
+
+    std::string m_lpLabel;
+
     std::unordered_map<std::string,Robot*> m_roleMap;
 
     std::unordered_map<Robot*,Cfg> m_interimCfgMap;
+
+    std::unordered_map<Robot*,std::vector<Cfg>> m_individualPaths;
+ 
+    State m_finalState;
+
     ///@}
 };
 

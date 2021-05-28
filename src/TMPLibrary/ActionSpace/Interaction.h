@@ -3,6 +3,8 @@
 
 #include "Action.h"
 
+#include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
 #include "MPLibrary/MPSolution.h"
 #include "Traits/CfgTraits.h"
 
@@ -12,8 +14,9 @@ class Interaction : public Action {
     ///@{
 
     typedef Condition::State State;
-		typedef MPSolutionType<MPTraits<Cfg,
-            DefaultWeight<Cfg>>> MPSolution;
+		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupPathType;
+
 
     ///@}
     ///@name Construction
@@ -39,11 +42,19 @@ class Interaction : public Action {
 
     const std::vector<std::string>& GetInterimConditions() const;
 
+    const std::string GetInteractionStrategyLabel() const;
+
     MPSolution* GetToInterimSolution() const;
 
     MPSolution* GetToPostSolution() const;
 
-    const std::string GetInteractionStrategyLabel() const;
+    void SetToInterimPath(GroupPathType* _path);
+
+    GroupPathType* GetToInterimPath();
+
+    void SetToPostPath(GroupPathType* _path);
+
+    GroupPathType* GetToPostPath();
 
     ///@}
 
@@ -61,13 +72,18 @@ class Interaction : public Action {
 
     std::string m_isLabel; ///< Interaction Strategy Label
 
+    /// The set of conditions representing the intermediate stage
+    /// of the interaction needed by the interaction strategy.
+    std::vector<std::string> m_interimConditions;
+
     std::unique_ptr<MPSolution> m_toInterimSolution;
 
     std::unique_ptr<MPSolution> m_toPostSolution;
 
-    /// The set of conditions representing the intermediate stage
-    /// of the interaction needed by the interaction strategy.
-    std::vector<std::string> m_interimConditions;
+    GroupPathType* m_toInterimPath;
+
+    GroupPathType* m_toPostPath;
+
     ///@}
 };
 

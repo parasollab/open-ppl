@@ -28,7 +28,11 @@ class InteractionStrategyMethod : public TMPBaseObject {
     ///@name Interface
     ///@{
 
-    virtual bool operator()(Interaction* _interaction, const State& _start);
+    ///@param _interaction The interaction to plan.
+    ///@param _start Input as the start state. Modified to reflect the
+    ///              output state.
+    ///@return bool representing if successful or not.
+    virtual bool operator()(Interaction* _interaction, State& _start);
 
     ///@}
 
