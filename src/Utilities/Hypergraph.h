@@ -41,7 +41,7 @@ class Hypergraph {
 
     size_t AddVertex(VertexType _vertex);
 
-    const Vertex& GetVertex(size_t _vid) const;
+    VertexType& GetVertex(size_t _vid);
 
     size_t GetVID(VertexType _vertex) const;
 
@@ -54,7 +54,7 @@ class Hypergraph {
     size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
                        HyperarcType _hyperarc);
 
-    const Hyperarc& GetHyperarc(size_t _hid) const;
+    HyperarcType& GetHyperarc(size_t _hid);
 
     const std::set<size_t>& GetIncomingHyperarcs(size_t _vid) const;
 
@@ -63,6 +63,8 @@ class Hypergraph {
     const std::unordered_map<size_t,Hyperarc>& GetHyperarcMap() const;
 
     ///@}
+
+    void Print() const;
 
   private: 
 
@@ -96,7 +98,12 @@ Hypergraph() { }
 
 template <typename VertexType, typename HyperarcType>
 Hypergraph<VertexType,HyperarcType>::
-~Hypergraph() { }
+~Hypergraph() { 
+  std::cout << "DESTRUCTING HYERPGRAPH\n"
+            << "Num Vertices: " << m_vertexCounter
+            << "Num Hyperarcs: " << m_hyperarcCounter
+            << std::endl;
+}
 
 /*------------------------- Vertex Accessors ------------------------*/
 
@@ -117,9 +124,9 @@ AddVertex(VertexType _vertex) {
 }
 
 template <typename VertexType, typename HyperarcType>
-const typename Hypergraph<VertexType,HyperarcType>::Vertex& 
+VertexType& 
 Hypergraph<VertexType,HyperarcType>::
-GetVertex(size_t _vid) const {
+GetVertex(size_t _vid) {
 
   auto iter = m_vertexMap.find(_vid);
   if(iter == m_vertexMap.end())
@@ -128,7 +135,7 @@ GetVertex(size_t _vid) const {
                                   << " that does not exist."
                                   << std::endl;
 
-  return iter->second;
+  return iter->second.property;
 }
 
 template <typename VertexType, typename HyperarcType>
@@ -180,9 +187,9 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
 }
 
 template <typename VertexType, typename HyperarcType>
-const typename Hypergraph<VertexType,HyperarcType>::Hyperarc& 
+HyperarcType& 
 Hypergraph<VertexType,HyperarcType>::
-GetHyperarc(size_t _hid) const {
+GetHyperarc(size_t _hid) {
 
   auto iter = m_hyperarcMap.find(_hid);
   if(iter == m_hyperarcMap.end()) 
@@ -231,4 +238,48 @@ Hypergraph<VertexType,HyperarcType>::
 GetHyperarcMap() const {
   return m_hyperarcMap;
 }
+
+/*-------------------------------------------------------------------*/
+
+template <typename VertexType, typename HyperarcType>
+void
+Hypergraph<VertexType,HyperarcType>::
+Print() const {
+
+  std::cout << "PRINTING HYPERGRAPH" << std::endl;
+
+  std::cout << "Hyperarcs" << std::endl;
+  for(auto kv : m_hyperarcMap) {
+    auto hid = kv.first;
+    auto arc = kv.second;
+
+    std::cout << hid << " : {Tail:[";
+
+    for(auto iter = arc.tail.begin(); iter != arc.tail.end(); iter++) {
+      std::cout << *iter;
+      auto next = iter;
+      next++;
+      if(next != arc.tail.end()) {
+        std::cout << ",";
+      }
+    }
+
+    std::cout << "], Head:[";
+
+    for(auto iter = arc.head.begin(); iter != arc.head.end(); iter++) {
+      std::cout << *iter;
+      auto next = iter;
+      next++;
+      if(next != arc.head.end()) {
+        std::cout << ",";
+      }
+    }
+    std::cout << "]}" << std::endl;
+  }
+
+  std::cout << "END OF HYPERGRAPH" << std::endl;
+}
+
+/*-------------------------------------------------------------------*/
+
 #endif

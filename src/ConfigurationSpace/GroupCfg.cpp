@@ -198,6 +198,12 @@ GetVID(const size_t _index) const noexcept {
   return m_vids[_index];
 }
 
+GroupCfg::VID
+GroupCfg::
+GetVID(Robot* const _robot) const {
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  return GetVID(index);
+}
 /*------------------------ Individual Configurations -------------------------*/
 
 void

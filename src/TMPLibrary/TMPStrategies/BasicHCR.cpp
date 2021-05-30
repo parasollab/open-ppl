@@ -165,17 +165,20 @@ SampleInteraction(SemanticRoadmap* _sr) {
     throw RunTimeException(WHERE) << "Interaction not sampled from distribution.";
 
   auto start = FindStartState(inter,_sr);
-  
+
   if(start.first.empty())
     return false;
 
+  // Make copy to get modified to output state by interaction strategy
+  auto startCopy = start.second;
+  
   auto is = this->GetInteractionStrategyMethod(inter->GetInteractionStrategyLabel());
-  if(!is->operator()(inter,start.second))
+  if(!is->operator()(inter,startCopy))
     return false;
 
   auto hcr = dynamic_cast<CombinedRoadmap*>(
               this->GetStateGraph(m_sgLabel).get());
-  hcr->AddInteraction(start.first,inter);
+  hcr->AddInteraction(start.first,start.second,startCopy,inter);
 
   return true;
 }

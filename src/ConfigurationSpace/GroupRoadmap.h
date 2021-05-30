@@ -48,6 +48,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     using typename BaseType::VID;
     using typename BaseType::STAPLGraph;
 
+    using typename BaseType::VertexHook;
+    using typename BaseType::EdgeHook;
+    using typename BaseType::HookType;
     ///@}
     ///@name Construction
     ///@{
@@ -393,9 +396,9 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(this->IsVertex(cfg, vi)) {
-    std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
-              << " already in graph"
-              << std::endl;
+    //std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
+    //          << " already in graph"
+    //          << std::endl;
     return vi->descriptor();
   }
 

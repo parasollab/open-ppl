@@ -128,6 +128,8 @@ class GroupCfg final {
     ///         if it is a local configuration.
     VID GetVID(const size_t _index) const noexcept;
 
+    VID GetVID(Robot* const _robot) const;
+
     ///@}
     ///@name Individual Configurations
     ///@{

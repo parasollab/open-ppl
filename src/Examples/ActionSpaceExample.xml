@@ -5,7 +5,7 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="tmp_examples">
 
-    <Environment filename="3D/3d.env"
+    <Environment filename="3D/3d-empty.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot" capability="boxy">
@@ -34,17 +34,21 @@
     </GroupTask>
 
 		<Decomposition label="main" taskLabel="first" coordinator="coordinator">
-			<SemanticTask label="first">
-    		<Task label="query1" robot="boxy">
-      		<StartConstraints>
-        		<CSpaceConstraint point="0 0 0 0 0 0"/>
-      		</StartConstraints>
 
-		      <GoalConstraints>
-		        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
-    		  </GoalConstraints>
-		    </Task>
+			<SemanticTask label="first" fixedAllocation="true">
+
+        <GroupTask label="groupQuery" group="robotGroup">
+
+      		<Task label="query1" robot="boxy">
+		        <GoalConstraints>
+		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      		  </GoalConstraints>
+  		    </Task>
+
+        </GroupTask>
+
 			</SemanticTask>
+
 		</Decomposition>
 
   </Problem>
@@ -89,7 +93,7 @@
     </PathModifiers>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" debug="true"
+      <NeighborhoodConnector label="Closest" debug="false"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
     </Connectors>
 
@@ -103,7 +107,7 @@
       <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
-      <LazyQuery label="LazyQuery" debug="true"
+      <LazyQuery label="LazyQuery" debug="false"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
@@ -113,7 +117,7 @@
       </LazyQuery>
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="3" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -124,13 +128,13 @@
         <Evaluator label="Query"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
-      <GroupQuery label="CompositeQuery" debug="true"/>
+      <GroupQuery label="CompositeQuery" debug="false"/>
     </MapEvaluators>
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="true">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+      <BasicPRM label="BasicPRM1" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="Query"/>
       </BasicPRM>
@@ -142,7 +146,7 @@
       </BasicPRM>
 
       <!-- LazyPRM -->
-      <BasicPRM label="LazyPRM" debug="true">
+      <BasicPRM label="LazyPRM" debug="false">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
@@ -161,14 +165,14 @@
         <Evaluator label="TrueEvaluator"/>
       </GroupDecoupledStrategy>
 
-      <GroupPRM label="CompositePRM" debug="true">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+      <GroupPRM label="CompositePRM" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="CompositeQuery"/>
       </GroupPRM>
 
-      <GroupPRM label="CompositeNodes" debug="true">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+      <GroupPRM label="CompositeNodes" debug="false">
+        <Sampler label="UniformRandomFree" number="50" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
       </GroupPRM>
@@ -188,7 +192,7 @@
 		<TMPStrategies>
 			<SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
       <BasicHCR label="BasicHCR" teLabel="HCRQuery" mpStrat="CompositeNodes" 
-                sgLabel="HCR" expansionProb=".2" debug="true"/>
+                sgLabel="HCR" expansionProb=".3" debug="true"/>
 		</TMPStrategies>
 
 		<PoIPlacementMethods>
@@ -196,7 +200,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -207,11 +211,12 @@
 
     <InteractionStrategies>
       <InteractionStrategyExample label="InteractionStrategyExample" 
-                                  mpStrategy="CompositePRM" debug="true"/>
+                                  mpStrategy="CompositePRM" dmLabel="euclidean"
+                                  lpLabel="sl" debug="true"/>
     </InteractionStrategies>
 
 		<StateGraphs>
-      <CombinedRoadmap label="HCR"/>
+      <CombinedRoadmap label="HCR" debug="true"/>
 		</StateGraphs>
 
 		<TMPTools>

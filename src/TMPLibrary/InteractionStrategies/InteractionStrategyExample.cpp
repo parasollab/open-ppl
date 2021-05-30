@@ -40,6 +40,12 @@ bool
 InteractionStrategyExample::
 operator()(Interaction* _interaction, State& _state) {
 
+  if(m_debug) {
+    std::cout << "Planning interaction: " 
+              << _interaction->GetLabel() 
+              << std::endl;
+  }
+
   // Assign interaction roles.
   auto& preconditions = _interaction->GetPreConditions();
   AssignRoles(_state,preconditions);
@@ -381,7 +387,6 @@ InteractionStrategyExample::GroupPathType*
 InteractionStrategyExample::
 ConstructCompositePath(MPSolution* _solution) {
 
-  GroupPathType* path = nullptr;
   auto prob = this->GetMPProblem();
 
   // Merge paths into single group path.
@@ -417,10 +422,12 @@ ConstructCompositePath(MPSolution* _solution) {
     // Iterate over cfgs and connect them in the roadmap
     auto rm = _solution->GetRoadmap(robot);
     size_t previous = rm->AddVertex(cfgs[0]);
+    individualVIDs[robot].push_back(previous);
 
     for(size_t i = 1; i < cfgs.size(); i++) {
       auto cfg = kv.second[i];
       auto vid = rm->AddVertex(cfg);
+      individualVIDs[robot].push_back(vid);
 
       auto distance = dm->Distance(cfgs[i-1],cfg);
       DefaultWeight<Cfg> weight;
@@ -434,6 +441,7 @@ ConstructCompositePath(MPSolution* _solution) {
   // Merge individual cfgs into group cfgs.
   size_t previousVID;
   GroupCfg previousCfg;
+  std::vector<size_t> compositePath;
   for(size_t i = 0; i < maxLength; i++) {
     GroupCfg gcfg(grm);
 
@@ -454,6 +462,7 @@ ConstructCompositePath(MPSolution* _solution) {
 
     // Add group cfg to roadmap
     auto gvid = grm->AddVertex(gcfg);
+    compositePath.push_back(gvid);
 
     if(i == 0) {
       previousVID = gvid;
@@ -470,6 +479,10 @@ ConstructCompositePath(MPSolution* _solution) {
     previousVID = gvid;
     previousCfg = gcfg;
   }
+
+  GroupPathType* path = _solution->GetGroupPath(group);
+  path->Clear();
+  (*path) += compositePath;
 
   m_individualPaths.clear();
 

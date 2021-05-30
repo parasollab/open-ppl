@@ -196,8 +196,8 @@ GroupLocalPlan(GroupRoadmapType* const _g, const std::string& _lpLabel,
       m_intermediates(_intermediates)  {
   if(m_groupMap)
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
-  else
-    std::cout << "Warning: no group map provided in group LP!" << std::endl;
+  //else
+    //std::cout << "Warning: no group map provided in group LP!" << std::endl;
 }
 
 /*--------------------------- Ordering and Equality --------------------------*/

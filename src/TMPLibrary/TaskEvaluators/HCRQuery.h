@@ -36,6 +36,9 @@ class HCRQuery : public TaskEvaluatorMethod {
     ///@}
     ///@name Internal State
     ///@{
+
+    std::string m_sgLabel;
+
     ///@}
 
 };
