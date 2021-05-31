@@ -35,13 +35,13 @@ class HCRQuery : public TaskEvaluatorMethod {
 
     virtual bool Run(Plan* _plan = nullptr) override;
 
-    size_t temp{0};
-
     ///@}
 
   private:
     ///@name Helper Functions
     ///@{
+
+    void ExtractPlan(std::vector<HPElem>& _path);
 
     std::vector<HPElem> PerformHyperpathQuery();
 

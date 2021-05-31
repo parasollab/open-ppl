@@ -36,15 +36,27 @@ Run(Plan* _plan) {
   }
 
   auto path = PerformHyperpathQuery();
+  
+  if(path.empty())
+    return false;
 
-  return !path.empty();
-  temp++;
-  return temp >= 10;
+  ExtractPlan(path);
 
-  return false;
+  return true;
 }
 
 /*--------------------- Helper Functions ---------------------*/
+
+void
+HCRQuery::
+ExtractPlan(std::vector<HPElem>& _path) {
+  auto plan = this->GetPlan();
+
+  //TODO:: Convert hyperpath into solution representation.
+
+  if(m_debug)
+    plan->Print();
+}
 
 std::vector<HCRQuery::HPElem>
 HCRQuery::
