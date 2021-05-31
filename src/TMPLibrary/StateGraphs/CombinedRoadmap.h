@@ -83,7 +83,7 @@ class CombinedRoadmap : public StateGraph {
     void AddInteraction(CompositeSemanticRoadmap _csr, State _input, 
                         State _output, Interaction* _it);
 
-    const TMPHypergraph* GetHypergraph() const;
+    TMPHypergraph* GetHypergraph();
 
     const std::set<SemanticRoadmap*>& GetSemanticRoadmaps() const;
 
@@ -101,7 +101,7 @@ class CombinedRoadmap : public StateGraph {
     void AddSemanticRoadmap(SemanticRoadmap* _sr);
     void AddInteractionRoadmap(SemanticRoadmap* _sr);
 
-    void CheckForGoalState(std::set<size_t> _hids);
+    void CheckForGoalState(std::set<size_t> _hvids);
 
     ///@description Recursive build composite semantic roadmaps that cover all
     ///             robots in the problem with the robots in each semantic roadmap

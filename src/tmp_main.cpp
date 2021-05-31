@@ -14,6 +14,8 @@
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "Utilities/PMPLExceptions.h"
 
+#include "Utilities/Hypergraph.h"
+#include "Utilities/SSSHP.h"
 
 int
 main(int _argc, char** _argv) {

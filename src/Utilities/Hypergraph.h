@@ -41,7 +41,9 @@ class Hypergraph {
 
     size_t AddVertex(VertexType _vertex);
 
-    VertexType& GetVertex(size_t _vid);
+    Vertex& GetVertex(size_t _vid);
+
+    VertexType& GetVertexType(size_t _vid);
 
     size_t GetVID(VertexType _vertex) const;
 
@@ -54,7 +56,9 @@ class Hypergraph {
     size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
                        HyperarcType _hyperarc);
 
-    HyperarcType& GetHyperarc(size_t _hid);
+    Hyperarc& GetHyperarc(size_t _hid);
+
+    HyperarcType& GetHyperarcType(size_t _hid);
 
     const std::set<size_t>& GetIncomingHyperarcs(size_t _vid) const;
 
@@ -124,9 +128,24 @@ AddVertex(VertexType _vertex) {
 }
 
 template <typename VertexType, typename HyperarcType>
-VertexType& 
+typename Hypergraph<VertexType,HyperarcType>::Vertex& 
 Hypergraph<VertexType,HyperarcType>::
 GetVertex(size_t _vid) {
+
+  auto iter = m_vertexMap.find(_vid);
+  if(iter == m_vertexMap.end())
+    throw RunTimeException(WHERE) << "Requested vertex "
+                                  << _vid
+                                  << " that does not exist."
+                                  << std::endl;
+
+  return iter->second;
+}
+
+template <typename VertexType, typename HyperarcType>
+VertexType& 
+Hypergraph<VertexType,HyperarcType>::
+GetVertexType(size_t _vid) {
 
   auto iter = m_vertexMap.find(_vid);
   if(iter == m_vertexMap.end())
@@ -187,7 +206,7 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
 }
 
 template <typename VertexType, typename HyperarcType>
-HyperarcType& 
+typename Hypergraph<VertexType,HyperarcType>::Hyperarc&
 Hypergraph<VertexType,HyperarcType>::
 GetHyperarc(size_t _hid) {
 
@@ -199,6 +218,21 @@ GetHyperarc(size_t _hid) {
                                   << std::endl;
 
   return iter->second;
+}
+
+template <typename VertexType, typename HyperarcType>
+HyperarcType&
+Hypergraph<VertexType,HyperarcType>::
+GetHyperarcType(size_t _hid) {
+
+  auto iter = m_hyperarcMap.find(_hid);
+  if(iter == m_hyperarcMap.end()) 
+    throw RunTimeException(WHERE) << "The requested hyperarc "
+                                  << _hid
+                                  << " does not exists."
+                                  << std::endl;
+
+  return iter->second.property;
 }
 
 template <typename VertexType, typename HyperarcType>

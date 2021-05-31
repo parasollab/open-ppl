@@ -200,7 +200,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="true"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>

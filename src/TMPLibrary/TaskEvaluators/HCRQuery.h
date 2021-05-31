@@ -3,11 +3,20 @@
 
 #include "TaskEvaluatorMethod.h"
 
+#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+
+#include "Utilities/SSSHP.h"
+
 class HCRQuery : public TaskEvaluatorMethod {
 
   public:
     ///@name Local Types
     ///@{
+
+    typedef std::pair<bool,size_t> HPElem;
+    typedef CombinedRoadmap::TMPVertex TMPVertex;
+    typedef CombinedRoadmap::TMPHyperarc TMPHyperarc;
+
     ///@}
     ///@name Construction
     ///@{
@@ -33,6 +42,18 @@ class HCRQuery : public TaskEvaluatorMethod {
   private:
     ///@name Helper Functions
     ///@{
+
+    std::vector<HPElem> PerformHyperpathQuery();
+
+    std::vector<HPElem> ConstructPath(size_t _sink, 
+                std::set<HPElem>& _parents, MBTOutput& _mbt);
+
+    std::vector<HPElem> AddBranches(std::vector<HPElem> _path, 
+                std::set<HPElem>& _parents, MBTOutput& _mbt);
+
+    std::vector<HPElem> AddDanglingNodes(std::vector<HPElem> _path,
+                std::set<HPElem>& _parents);
+
     ///@}
     ///@name Internal State
     ///@{

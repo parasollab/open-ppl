@@ -139,6 +139,8 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
     previousVID = vid;
   }
 
+  auto interimPathEndVID = m_vertexMap[sr][previousVID];
+
   // Copy post path over
   auto postVIDs = _inter->GetToPostPath()->VIDs();
   auto postRm = _inter->GetToPostSolution()->GetGroupRoadmap(group);
@@ -146,6 +148,8 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   // Add first cfg to path.
   cfg = postRm->GetVertex(postVIDs[0]);
   previousVID = MoveGroupCfg(cfg,grm);
+
+  auto postPathStartVID = m_vertexMap[sr][previousVID];
 
   // Iterate through path and add vertices and edges.
   for(size_t i = 1; i < postVIDs.size(); i++) {
@@ -161,6 +165,11 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
 
   auto postPathEndVID = m_vertexMap[sr][previousVID];
 
+  // Connect interim to post path
+  TMPHyperarc arc;
+  arc.semantic = true;
+  m_hypergraph->AddHyperarc({postPathStartVID},{interimPathEndVID},arc);
+
   // Connect interaction path to existing semantic roadmaps
   std::set<size_t> tail;
   for(auto tailSr : _csr) {
@@ -174,9 +183,6 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   }
 
   std::set<size_t> head = {interimPathStartVID};
-
-  TMPHyperarc arc;
-  arc.semantic = true;
 
   m_hypergraph->AddHyperarc(head,tail,arc);
 
@@ -204,9 +210,9 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
 }
 
     
-const Hypergraph<CombinedRoadmap::TMPVertex,CombinedRoadmap::TMPHyperarc>* 
+Hypergraph<CombinedRoadmap::TMPVertex,CombinedRoadmap::TMPHyperarc>* 
 CombinedRoadmap::
-GetHypergraph() const {
+GetHypergraph() {
   return m_hypergraph.get();
 }
 
@@ -326,16 +332,16 @@ AddInteractionRoadmap(SemanticRoadmap* _sr) {
 
 void
 CombinedRoadmap::
-CheckForGoalState(std::set<size_t> _hids) {
+CheckForGoalState(std::set<size_t> _hvids) {
   
   // Check if any hypergraph vertex induces a satisfying state.
 
   // Collect composite roadmaps with disjoint coverage of all robots.
   std::vector<CompositeSemanticRoadmap> csrs;
-  for(auto hid : _hids) {
+  for(auto hvid : _hvids) {
 
     // Initialize composite semantic roadmap from output sr.
-    TMPVertex vertex = m_hypergraph->GetVertex(hid);
+    TMPVertex vertex = m_hypergraph->GetVertexType(hvid);
     auto sr = vertex.sr;
     CompositeSemanticRoadmap csr = {sr};
 
@@ -592,6 +598,9 @@ AddHypergraphVertex(SemanticRoadmap* _sr, VI _vi) {
 
   m_vertexMap[_sr][rvid] = hvid;
 
+  if(hvid == 878)
+    std::cout << "HERE" << std::endl;
+
   return hvid;
 }
     
@@ -618,6 +627,9 @@ AddHypergraphArc(SemanticRoadmap* _sr, EI _ei) {
   TMPHyperarc arc;
   arc.semantic = false;
   arc.glp = _ei->property();
+
+  if(hTarget == 878)
+    std::cout << "HERE" << std::endl;
 
   auto hid = m_hypergraph->AddHyperarc({hTarget},{hSource},arc);
   return hid;

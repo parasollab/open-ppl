@@ -54,11 +54,7 @@ using SSSHPTerminationCriterion =
 /// Create a standard SSSHP stop criterion.
 /// @return A termination criterion which never stops early.
 SSSHPTerminationCriterion
-SSSHPDefaultTermination() {
-  return [](size_t&, const MBTOutput&) {
-    return SSSHPTermination::Continue;
-  };
-}
+SSSHPDefaultTermination();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define a weight function for the hyperarcs. This takes in a hyperarc and
@@ -73,8 +69,8 @@ using SSSHPPathWeightFunction =
 
 /// Create a standard SSSHP weight function. This implements the distance 
 /// function described in the paper. 
-/// @return A path weight function whcih adds the hyperarc propwerty weight
-///         to the heighest weighted tail vertex of the hyperarc.
+/// @return A path weight function which adds the hyperarc property weight
+///         to the highest weighted tail vertex of the hyperarc.
 template <typename VertexType, typename HyperarcType>
 SSSHPPathWeightFunction<VertexType,HyperarcType>
 DefaultSSSHPPathWeightFunction() {
@@ -83,11 +79,11 @@ DefaultSSSHPPathWeightFunction() {
        const std::unordered_map<size_t,double> _weightMap,
        const size_t _target) 
          {
-            const double hyperarcWeight = _hyperarc.property.GetWeight(),
-                         tailWeight = 0;
+            const double hyperarcWeight = _hyperarc.property.GetWeight();
+            double tailWeight = 0;
             
             for(auto vid : _hyperarc.tail) {
-              tailWeight = std::max(tailWeight,_weightMap[vid]);
+              tailWeight = std::max(tailWeight,_weightMap.at(vid));
             }
 
             return hyperarcWeight + tailWeight;
@@ -111,13 +107,13 @@ SBTDijkstra(
 
   // Initialize tail node counts.
   std::unordered_map<size_t,size_t> tailNodeCounter; //k_j in paper
-  for(const auto& h : _h->GetHyperarcMap()) {
-    tailNodeCouner(h.hid) = 0;
+  for(const auto& kv : _h->GetHyperarcMap()) {
+    tailNodeCounter[kv.first] = 0;
   }
  
   // Initialize vertex weights.
-  for(const auto& v : _h->GetVertexMap()) {
-    mbt.weightMap[v.vid] = MAX_INT;
+  for(const auto& kv : _h->GetVertexMap()) {
+    mbt.weightMap[kv.first] = MAX_INT;
   }
 
   mbt.weightMap[_source] = _sourceWeight;
@@ -154,11 +150,11 @@ SBTDijkstra(
                       std::greater<element>> pq;
 
   // Initialize visited set
-  std::unordered_set<size_t> visited;
+  std::set<size_t> visited;
 
   // Define a relax function.
   auto relax = [&mbt, &pq, &_weight](size_t _target,
-          typename Hypergraph<VertexType,HyperarcType>::Hyperarc& _hyperarc) {
+          const typename Hypergraph<VertexType,HyperarcType>::Hyperarc& _hyperarc) {
 
     const double newWeight = _weight(_hyperarc,mbt.weightMap,_target);
 
@@ -172,13 +168,16 @@ SBTDijkstra(
   };
 
   // Intialize starting node in queue.
-  pq.emplace(_source,_source,_sourceWeight);
+  pq.emplace(MAX_INT,_source,_sourceWeight);
 
   // SBT-Dijkstras
   while(!pq.empty()) {
     // Get the next element.
-    element current = pq.top;
+    element current = pq.top();
     pq.pop();
+
+    if(current.vid == 878)
+      std::cout << "HERE" << std::endl;
 
     // If this node has already been visited, the element is stale. Discard.
     if(visited.count(current.vid))
@@ -187,9 +186,10 @@ SBTDijkstra(
 
     // Save the vertex's parent hyperarc.
     mbt.vertexParentMap[current.vid] = current.parent;
+    mbt.ordering.push_back(current.vid);
 
     // Check for early termination
-    auto stop = _earlyStop(current.vid,mbt);
+    auto stop = _termination(current.vid,mbt);
 
     if(stop == SSSHPTermination::Continue)
       // Continue as usual.
@@ -202,7 +202,7 @@ SBTDijkstra(
       break;
 
     // Iterate through the forward start of the current vertex.
-    for(auto hid : _h->GetOutgoingEdges(current.vid)) {
+    for(auto hid : _h->GetOutgoingHyperarcs(current.vid)) {
 
       // Fetch the hyperarc from the hypergraph.
       const auto& hyperarc = _h->GetHyperarc(hid);
