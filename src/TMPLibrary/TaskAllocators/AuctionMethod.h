@@ -7,40 +7,40 @@
 class AuctionMethod : public TaskAllocatorMethod {
   public:
 
-  	///@name Construction
+    ///@name Construction
     ///@{
 
-  	AuctionMethod();
+    AuctionMethod();
 
-	AuctionMethod(XMLNode& _node);
+  AuctionMethod(XMLNode& _node);
 
-	virtual ~AuctionMethod() = default;  	
+  virtual ~AuctionMethod() = default;
 
     ///@}
     ///@name Call Method
     ///@{
 
-	virtual void AllocateTasks() override;
+  virtual void AllocateTasks() override;
 
-	///@}
+  ///@}
   private:
-  	///@name Helpers
-  	///@{
+    ///@name Helpers
+    ///@{
 
-  	void AuctionSubtasks(WholeTask* _wholeTask);
+    void AuctionSubtasks(WholeTask* _wholeTask);
 
-		std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask);
+    std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask);
 
     /// Inserts the subtask into the unassignedTasks list at the appropriate point
-	 	void AddSubtask(std::shared_ptr<MPTask> _subtask);	
+     void AddSubtask(std::shared_ptr<MPTask> _subtask);
 
-  	///@}
-  	///@name Internal State
-  	///@{
+    ///@}
+    ///@name Internal State
+    ///@{
 
-  	std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
+    std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
 
-  	///@}
+    ///@}
 };
 
 /*----------------------------------------------------------------------------*/

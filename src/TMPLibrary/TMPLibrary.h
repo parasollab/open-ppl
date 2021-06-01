@@ -43,11 +43,11 @@ class Agent;
 
 class TMPLibrary {
   public:
-  	///@name Local Types
+    ///@name Local Types
     ///@{
 
     ///@}
-		/// Solver represents an input set to MPLibraryType. It includes an
+    /// Solver represents an input set to MPLibraryType. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
     struct Solver {
       std::string label;         ///< The XML label for the strategy to use.
@@ -58,26 +58,26 @@ class TMPLibrary {
     ///@}
     ///@name Method Set Types
     ///@{
-  	
-		typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
-  	typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
-  	typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
-  	typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
-  	typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
-  	typedef TMPMethodSet<StateGraph>			   			 StateGraphSet;
+
+    typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
+    typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
+    typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
+    typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
+    typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
+    typedef TMPMethodSet<StateGraph>               StateGraphSet;
 
     ///@}
     ///@name Method Pointer Types
     ///@{
-    
-		typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
-  	typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
-  	typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
-  	typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
-  	typedef typename TaskAllocatorMethodSet::TMPMethodPointer 	TaskAllocatorMethodPointer;
-  	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
-		
-		///@}
+
+    typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
+    typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
+    typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
+    typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
+    typedef typename TaskAllocatorMethodSet::TMPMethodPointer   TaskAllocatorMethodPointer;
+    typedef typename StateGraphSet::TMPMethodPointer            StateGraphPointer;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -99,7 +99,7 @@ class TMPLibrary {
     ///@name TMPStrategyMethod Accessors
     ///@{
 
-    /// Get a TMPStrategyMethod method 
+    /// Get a TMPStrategyMethod method
     TMPStrategyMethodPointer GetTMPStrategy(const std::string& _l);
 
     void AddTMPStrategy(TMPStrategyMethodPointer _sm, const std::string& _l);
@@ -108,12 +108,12 @@ class TMPLibrary {
     ///@name PoIPlacementMethod Accessors
     ///@{
 
-    /// Get a Point-of-Interest placement method 
+    /// Get a Point-of-Interest placement method
     PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string& _l);
 
     void AddPoIPlacementMethod(PoIPlacementMethodPointer _pm, const std::string& _l);
 
-	///@}
+    ///@}
     ///@name TaskEvaluator Accessors
     ///@{
 
@@ -125,7 +125,7 @@ class TMPLibrary {
     ///@name Task Decomposition Accessors
     ///@{
 
-    /// Get a TaskDecomposition 
+    /// Get a TaskDecomposition
     TaskDecomposerMethodPointer GetTaskDecomposer(const std::string& _l);
 
     void AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l);
@@ -134,7 +134,7 @@ class TMPLibrary {
     ///@name Task ALlocator Accessors
     ///@{
 
-    /// Get a TaskAllocator 
+    /// Get a TaskAllocator
     TaskAllocatorMethodPointer GetTaskAllocator(const std::string& _l);
 
     void AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l);
@@ -143,17 +143,17 @@ class TMPLibrary {
     ///@name TMPTool Accessors
     ///@{
 
-    /// Get the TMP tool container 
+    /// Get the TMP tool container
     TMPTools* GetTMPTools() {
-    	return m_tmpTools;
+      return m_tmpTools;
     }
 
     ///@}
     ///@name Input Accessors
     ///@{
 
-		MPLibrary* GetMPLibrary() const noexcept;
-		void SetMPLibrary(MPLibrary* _l) noexcept;
+    MPLibrary* GetMPLibrary() const noexcept;
+    void SetMPLibrary(MPLibrary* _l) noexcept;
     MPProblem* GetMPProblem() const noexcept;
     void SetMPProblem(MPProblem* const _problem) noexcept;
 
@@ -174,33 +174,33 @@ class TMPLibrary {
     ///@name Solution Accessors
     ///@{
 
-		Plan* GetPlan();
+    Plan* GetPlan();
 
-		void SetPlan(Plan* _plan);
+    void SetPlan(Plan* _plan);
 
     StateGraphPointer GetStateGraph(const std::string& _l);
 
     void AddStateGraph(StateGraphPointer _sg, const std::string& _l);
 
-		///@}
-		///@name Execution
-		///@{
+    ///@}
+    ///@name Execution
+    ///@{
 
-		void Solve(MPProblem* _problem, Decomposition* _decomp, Plan* _plan,
-								Coordinator* _coordinator, std::vector<Robot*> _team); 
-		
-		void InitializeMPProblem(MPProblem* _problem);
+    void Solve(MPProblem* _problem, Decomposition* _decomp, Plan* _plan,
+                Coordinator* _coordinator, std::vector<Robot*> _team);
 
-		///@
-		///@name Debug
-		///@{
+    void InitializeMPProblem(MPProblem* _problem);
 
-		void Print(std::ostream&) const;
+    ///@
+    ///@name Debug
+    ///@{
 
-		///@}
+    void Print(std::ostream&) const;
+
+    ///@}
 
   private:
-  	///@name Execution Helpers
+    ///@name Execution Helpers
     ///@{
 
     /// Execute a solver with the current problem, task, and solution.
@@ -222,38 +222,36 @@ class TMPLibrary {
     bool ParseChild(XMLNode& _node);
 
     ///@}
-
-  	///@name Inputs
+    ///@name Inputs
     ///@{
 
-    MPLibrary* 															m_library;	  ///< The underlying MPLibrary
-  	MPProblem* 															m_problem;	  ///< The current MPProblem
-  	std::vector<std::shared_ptr<MPTask>> 		m_tasks; 	  	///< Current set of tasks
-  	std::vector<std::shared_ptr<GroupTask>> m_groupTasks; ///< Current set of group tasks
-  	std::vector<Solver> 										m_solvers;    ///< Set of inputs to execute
-		TMPTools*															  m_tmpTools;   ///< TMPTools container
+    MPLibrary*                              m_library;    ///< The underlying MPLibrary
+    MPProblem*                              m_problem;    ///< The current MPProblem
+    std::vector<std::shared_ptr<MPTask>>    m_tasks;      ///< Current set of tasks
+    std::vector<std::shared_ptr<GroupTask>> m_groupTasks; ///< Current set of group tasks
+    std::vector<Solver>                     m_solvers;    ///< Set of inputs to execute
+    TMPTools*                               m_tmpTools;   ///< TMPTools container
 
-  	///@}
-  	///@name TMPMethod Sets
+    ///@}
+    ///@name TMPMethod Sets
     ///@{
     /// Method sets hold and offer access to the tmp planning objects of the
     /// corresponding type.
-  	TMPStrategyMethodSet*     m_tmpStrategies;
-  	PoIPlacementMethodSet*    m_poiPlacementMethods;
-  	TaskEvaluatorMethodSet*   m_taskEvaluators;
-  	TaskDecomposerMethodSet*  m_taskDecomposers;
-  	TaskAllocatorMethodSet*   m_taskAllocators;
-  	StateGraphSet*  		  		m_stateGraphs;
+    TMPStrategyMethodSet*     m_tmpStrategies;
+    PoIPlacementMethodSet*    m_poiPlacementMethods;
+    TaskEvaluatorMethodSet*   m_taskEvaluators;
+    TaskDecomposerMethodSet*  m_taskDecomposers;
+    TaskAllocatorMethodSet*   m_taskAllocators;
+    StateGraphSet*            m_stateGraphs;
 
-  	///@}
-  	///@name Solution
-  	///@{
+    ///@}
+    ///@name Solution
+    ///@{
 
-		Plan* m_plan;
+    Plan* m_plan;
 
-  	///@}
+    ///@}
 };
-
 
 /*----------------------------------------------------------------------------*/
 

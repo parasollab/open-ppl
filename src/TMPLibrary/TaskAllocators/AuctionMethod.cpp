@@ -8,67 +8,66 @@
 
 AuctionMethod::
 AuctionMethod() {
-	this->SetName("AuctionMethod");
+  this->SetName("AuctionMethod");
 }
 
 AuctionMethod::
-AuctionMethod(XMLNode& _node) : TaskAllocatorMethod(_node){
-	this->SetName("AuctionMethod");
+AuctionMethod(XMLNode& _node) : TaskAllocatorMethod(_node) {
+  this->SetName("AuctionMethod");
 }
 
 void
 AuctionMethod::
-AllocateTasks(){
-	this->GetPlan()->GetStatClass()->StartClock("Auction Method");
-	/*for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
+AllocateTasks() {
+  this->GetPlan()->GetStatClass()->StartClock("Auction Method");
+  /*for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
     auto subtask = this->GetTaskPlan()->GetNextSubtask(wholeTask);
-		if(subtask){
-			m_unassignedTasks.push_back(subtask);
-			this->GetTaskPlan()->SetWholeTaskOwner(subtask, wholeTask);
-		}
-	}*/
+    if(subtask){
+      m_unassignedTasks.push_back(subtask);
+      this->GetTaskPlan()->SetWholeTaskOwner(subtask, wholeTask);
+    }
+  }*/
 
   /*
-	for(auto agent : this->GetPlan()->GetTeam()){
+  for(auto agent : this->GetPlan()->GetTeam()){
     agent->GetRobot()->SetVirtual(true);
   }
-	for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
-		AuctionSubtasks(wholeTask);
-	}*/
+  for(auto& wholeTask : this->GetTaskPlan()->GetWholeTasks()){
+    AuctionSubtasks(wholeTask);
+  }*/
 
-
-	this->GetPlan()->GetStatClass()->StopClock("Auction Method");
+  this->GetPlan()->GetStatClass()->StopClock("Auction Method");
 }
 
 
 
 /***********************************Helpers**********************************/
-void 
+void
 AuctionMethod::
-AuctionSubtasks(WholeTask* _wholeTask){
+AuctionSubtasks(WholeTask* _wholeTask) {
 
   /*
-	m_unassignedTasks.clear();
-	auto subtask = this->GetTaskPlan()->GetNextSubtask(_wholeTask);
-	if(!subtask)
-		return;
-	m_unassignedTasks.push_back(subtask);
-	this->GetTaskPlan()->SetWholeTaskOwner(subtask,_wholeTask);
+  m_unassignedTasks.clear();
+  auto subtask = this->GetTaskPlan()->GetNextSubtask(_wholeTask);
+  if(!subtask)
+    return;
+  m_unassignedTasks.push_back(subtask);
+  this->GetTaskPlan()->SetWholeTaskOwner(subtask,_wholeTask);
 
-	while(!m_unassignedTasks.empty()){
+  while(!m_unassignedTasks.empty()){
     std::shared_ptr<MPTask> nextTask = m_unassignedTasks.front();
     auto newSubtask = AuctionTask(nextTask);
-    
-		m_unassignedTasks.pop_front();
+
+    m_unassignedTasks.pop_front();
     if(newSubtask){
       AddSubtask(newSubtask);
     }
-	}*/
+  }*/
 }
 
-std::shared_ptr<MPTask> 
+std::shared_ptr<MPTask>
 AuctionMethod::
-AuctionTask(std::shared_ptr<MPTask> _nextTask){
+AuctionTask(std::shared_ptr<MPTask> _nextTask) {
 
 /*
   Agent* minAgent = nullptr;
@@ -116,7 +115,7 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
   }
   // Assign subtask to min agent
   _nextTask->SetRobot(minAgent->GetRobot());
-	auto wholeTask = this->GetTaskPlan()->GetWholeTask(_nextTask);
+  auto wholeTask = this->GetTaskPlan()->GetWholeTask(_nextTask);
   if(!this->GetTaskPlan()->GetWholeTask(_nextTask)->m_agentAssignment.empty()){
     auto previousAgent = wholeTask->m_agentAssignment.back();
     //check if prior subtask was assigned to the same robot and merge them if so
@@ -129,18 +128,18 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
       }
       wholeTask->m_subtasks.erase(wholeTask->m_subtasks.begin()
                                         + wholeTask->m_subtaskIterator);
-			this->GetTaskPlan()->RemoveLastDependency(_nextTask);
+      this->GetTaskPlan()->RemoveLastDependency(_nextTask);
     }
     else{
       wholeTask->m_agentAssignment.push_back(minAgent);
-			this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
-			minAgent->SavePotentialPath();
+      this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
+      minAgent->SavePotentialPath();
     }
   }
   else{
     wholeTask->m_agentAssignment.push_back(minAgent);
-		this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
-		minAgent->SavePotentialPath();
+    this->GetTaskPlan()->AddSubtask(minAgent,_nextTask);
+    minAgent->SavePotentialPath();
   }
   // See how long this agent will take to complete the subtask and if it
   // ends in a handoff add the next subtask to the queue
@@ -150,8 +149,8 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
   if(newSubtask){
     this->GetTaskPlan()->SetWholeTaskOwner(newSubtask,wholeTask);
     newSubtask->SetEstimatedStartTime(endTime);
-		//NEW
-		this->GetTaskPlan()->AddDependency(_nextTask,newSubtask);
+    //NEW
+    this->GetTaskPlan()->AddDependency(_nextTask,newSubtask);
   }
   return newSubtask;
 */
@@ -159,21 +158,21 @@ AuctionTask(std::shared_ptr<MPTask> _nextTask){
 }
 
 
-void 
+void
 AuctionMethod::
 AddSubtask(std::shared_ptr<MPTask> _subtask) {
 
   /*
-	if(m_unassignedTasks.empty()){
-		m_unassignedTasks.push_back(_subtask);
-		return;
-	}
-	for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
-		if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
-			m_unassignedTasks.insert(it, _subtask);
-			return;
-		}
-	}
-	m_unassignedTasks.push_back(_subtask);
+  if(m_unassignedTasks.empty()){
+    m_unassignedTasks.push_back(_subtask);
+    return;
+  }
+  for(auto it = m_unassignedTasks.begin(); it != m_unassignedTasks.end(); it++){
+    if(_subtask->GetEstimatedStartTime() < it->get()->GetEstimatedStartTime()){
+      m_unassignedTasks.insert(it, _subtask);
+      return;
+    }
+  }
+  m_unassignedTasks.push_back(_subtask);
   */
 }

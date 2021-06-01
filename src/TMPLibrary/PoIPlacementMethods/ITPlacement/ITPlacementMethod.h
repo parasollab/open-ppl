@@ -16,13 +16,13 @@ class ITPlacementMethod : public PoIPlacementMethod {
     ///@name Construction
     ///@{
 
-		ITPlacementMethod(XMLNode& _node);
-	
-		ITPlacementMethod() = default;
+    ITPlacementMethod(XMLNode& _node);
+
+    ITPlacementMethod() = default;
 
     ~ITPlacementMethod() = default;
-		
-	virtual std::unique_ptr<ITPlacementMethod> Clone();
+
+    virtual std::unique_ptr<ITPlacementMethod> Clone();
 
     /// Create a dynamically-allocated placement method from an XML node.
     /// @param _p The problem which this method will be applied to.

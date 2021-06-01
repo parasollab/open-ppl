@@ -4,26 +4,27 @@
 #include "TMPStrategyMethod.h"
 
 class DummyStrategyMethod : public TMPStrategyMethod {
-	public: 
-		///@name Construction
-		///@{
+  public:
+    ///@name Construction
+    ///@{
 
-		DummyStrategyMethod();
+    DummyStrategyMethod();
 
-		DummyStrategyMethod(XMLNode& _node);
+    DummyStrategyMethod(XMLNode& _node);
 
-		~DummyStrategyMethod() = default;
+    ~DummyStrategyMethod() = default;
 
-		///@}
-		///@name Overrides
-		///@{
-	
-  	/*virtual void PlanTasks() override;       
+    ///@}
+    ///@name Overrides
+    ///@{
 
-		virtual void AssignTasks() override;
+    /*virtual void PlanTasks() override;
 
-		virtual void DecomposeTasks() override;*/
+    virtual void AssignTasks() override;
 
-	///@}
+    virtual void DecomposeTasks() override;*/
+
+  ///@}
 };
+
 #endif

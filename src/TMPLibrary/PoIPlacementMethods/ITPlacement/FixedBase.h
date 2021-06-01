@@ -26,9 +26,7 @@ class FixedBase : public ITPlacementMethod {
 
     ///@}
 
-
   private:
-
 
 };
 

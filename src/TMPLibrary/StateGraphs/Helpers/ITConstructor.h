@@ -1,7 +1,6 @@
 #ifndef IT_CONSTRUCTOR_H_
 #define IT_CONSTRUCTOR_H_
 
-
 #include "Behaviors/Agents/Agent.h"
 
 #include "MPLibrary/MPLibrary.h"
@@ -16,8 +15,6 @@ class ITConstructor{
   public:
     ///@name Local Types
     ///@{
-
-    
 
     ///@}
     ///@name Construction
@@ -44,7 +41,6 @@ class ITConstructor{
     std::vector<Agent*> m_memberAgents;
     Robot* m_superRobot;
     bool m_debug;
-
 
 };
 #endif

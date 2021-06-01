@@ -7,7 +7,6 @@
 
 #include "Traits/CfgTraits.h"
 
-
 class InteractionTemplate;
 class WorkspaceSkeleton;
 
@@ -23,7 +22,7 @@ class ITConnector {
     ///@name Construction
     ///@{
 
-    struct AdjustedInfo{
+    struct AdjustedInfo {
       Cfg*   m_connection;
       double m_summedDistance;
       bool   m_directConnection;
@@ -32,7 +31,7 @@ class ITConnector {
 
     ITConnector(double _threshold, MPLibrary* _library);
 
-		ITConnector(XMLNode& _node);
+    ITConnector(XMLNode& _node);
 
     ~ITConnector() = default;
 
@@ -72,15 +71,14 @@ class ITConnector {
 
     void BuildSkeletons();
 
-
     double SkeletonPathWeight(typename WorkspaceSkeleton::adj_edge_iterator& _ei) const;
 
     /// Checks the capability skeleton of the corresponding type to see if the
     /// two cfgs are in connected free space.
     bool InConnectedWorkspace(Cfg _cfg1, Cfg _cfg2);
 
-		void DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability, 
-											std::vector<Cfg*> _cfgs);
+    void DirectionConnections(RoadmapGraph<Cfg,DefaultWeight<Cfg>>* _graph, std::string _capability,
+                      std::vector<Cfg*> _cfgs);
     ///@}
     ///@name Member Variables
     ///@{
@@ -98,7 +96,6 @@ class ITConnector {
     bool m_debug{false};
 
     std::unordered_map<std::string,std::shared_ptr<WorkspaceSkeleton>> m_capabilitySkeletons;
-
 
     ///@}
 };

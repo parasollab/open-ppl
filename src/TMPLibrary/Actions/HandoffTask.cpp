@@ -2,14 +2,14 @@
 
 HandoffTask::
 HandoffTask(Robot* _passer, Robot* _receiver,
-    const Boundary* _passingLocation,
-    const Boundary* _receivingLocation,
-    MPLibrary* _library){
+            const Boundary* _passingLocation,
+            const Boundary* _receivingLocation,
+            MPLibrary* _library) {
 
   m_passer            = _passer;
   m_receiver          = _receiver;
   m_passingLocation   = _passingLocation;
-  m_receivingLocation =  _receivingLocation;
+  m_receivingLocation = _receivingLocation;
   m_library = _library;
 
   m_startState.m_taskOwners.push_back(_passer);
@@ -28,7 +28,7 @@ HandoffTask::
 
 bool
 HandoffTask::
-CheckPreConditions(const FactLayer* _factLayer){
+CheckPreConditions(const FactLayer* _factLayer) {
 
   std::cout << "CHECKING PRE CONDITIONS FOR HANDOFF TASK FOR " << m_passer->GetLabel() << " to " << m_receiver->GetLabel() << std::endl;
 
@@ -57,7 +57,6 @@ CheckPreConditions(const FactLayer* _factLayer){
   if(it == possibleLocations.end())
     return false;
 
-
   // Check if the object/task can be at the IT location
   auto objectLocations = _factLayer->m_possibleObjectLocations;
   auto obIt = std::find(objectLocations.begin(), objectLocations.end(), m_passingLocation);
@@ -82,23 +81,23 @@ CheckPreConditions(const FactLayer* _factLayer){
 
 std::vector<Robot*>
 HandoffTask::
-GetRobots(){
+GetRobots() {
   return {m_passer, m_receiver};
 }
 
 
 std::string
 HandoffTask::
-PrintAction(){
+PrintAction() {
   std::string ret = "HANDOFF TASK " + m_passer->GetLabel() + " at ";
-  for(auto d : m_passingLocation->GetCenter()){
+  for(auto d : m_passingLocation->GetCenter()) {
     ret += std::to_string(d) + " : ";
   }
 
   ret += " to " + m_receiver->GetLabel();
 
   ret += " at ";
-  for(auto d : m_receivingLocation->GetCenter()){
+  for(auto d : m_receivingLocation->GetCenter()) {
     ret += std::to_string(d) + " : ";
   }
   return ret;

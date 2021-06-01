@@ -4,25 +4,25 @@
 
 DummyStrategyMethod::
 DummyStrategyMethod() {
-	this->SetName("DummyStrategyMethod");
+  this->SetName("DummyStrategyMethod");
 }
 
 DummyStrategyMethod::
-DummyStrategyMethod(XMLNode& _node) : TMPStrategyMethod(_node){
-	this->SetName("DummyStrategyMethod");
+DummyStrategyMethod(XMLNode& _node) : TMPStrategyMethod(_node) {
+  this->SetName("DummyStrategyMethod");
 }
 
 /*--------------------------- Overrides -------------------------*/
-/*	
-void 
+/*
+void
 DummyStrategyMethod::
 PlanTasks() {}
 
-void 
+void
 DummyStrategyMethod::
 AssignTasks() {}
 
-void 
+void
 DummyStrategyMethod::
 DecomposeTasks() {}
 */

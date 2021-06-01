@@ -9,64 +9,65 @@ class RobotGroup;
 class SemanticTask;
 
 class TaskSolution {
-	public:
-		///@name Local Types
-		///@{
+  public:
+    ///@name Local Types
+    ///@{
 
-		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
 
-		///@}
-		///@name Construction
-		///@{
+    ///@}
+    ///@name Construction
+    ///@{
 
-		TaskSolution(SemanticTask* _task);
+    TaskSolution(SemanticTask* _task);
 
-		~TaskSolution();
+    ~TaskSolution();
 
-		///@}
-		///@name Accessors
-		///@{
+    ///@}
+    ///@name Accessors
+    ///@{
 
-		SemanticTask* GetTask();
+    SemanticTask* GetTask();
 
-		void SetRobot(Robot* _robot);
+    void SetRobot(Robot* _robot);
 
-		Robot* GetRobot();
+    Robot* GetRobot();
 
-		void SetRobotGroup(RobotGroup* _group);
+    void SetRobotGroup(RobotGroup* _group);
 
-		RobotGroup* GetRobotGroup();
+    RobotGroup* GetRobotGroup();
 
-		void SetMotionSolution(MPSolution* _solution);
+    void SetMotionSolution(MPSolution* _solution);
 
-		MPSolution* GetMotionSolution();
-	
-		void SetStartTime(double _startTime);
+    MPSolution* GetMotionSolution();
 
-		double GetStartTime();
+    void SetStartTime(double _startTime);
 
-		///@}
-		///@name Print
-		///@{
+    double GetStartTime();
 
-		void Print();
+    ///@}
+    ///@name Print
+    ///@{
 
-		///@}
+    void Print();
 
-	private:
-		///@name Internal State
-		///@{
+    ///@}
 
-		SemanticTask* m_task;
+  private:
+    ///@name Internal State
+    ///@{
 
-		Robot* m_robot{nullptr};
+    SemanticTask* m_task;
 
-		RobotGroup* m_robotGroup{nullptr};
+    Robot* m_robot{nullptr};
 
-		MPSolution* m_motionSolution{nullptr};
+    RobotGroup* m_robotGroup{nullptr};
 
-		double m_startTime{0};
+    MPSolution* m_motionSolution{nullptr};
 
-		///@}
+    double m_startTime{0};
+
+    ///@}
 };
+
 #endif

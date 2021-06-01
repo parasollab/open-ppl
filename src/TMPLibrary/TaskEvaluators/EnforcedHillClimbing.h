@@ -1,7 +1,6 @@
 #ifndef ENFORCED_HILL_CLIMBING_H_
 #define ENFORCED_HILL_CLIMBING_H_
 
-
 //#include "MPProblem/Robot/Robot.h"
 
 #include "TMPLibrary/Actions/Action.h"
@@ -13,17 +12,12 @@
 #include "Vector.h"
 #include <containers/sequential/graph/graph.h>
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of the Relaxed GRAPHPLAN as described in the
 /// paper: The FF Planning System: Fast Plan Generation Through
 /// Heuristic Search
 ///
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 class EnforcedHillClimbing : public TaskEvaluatorMethod {
 
@@ -32,15 +26,13 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     ///@name Local Types
     ///@{
 
-
     typedef std::unordered_map<std::string,RoadmapGraph<Cfg, DefaultWeight<Cfg>>*> CapabilityMap;
-
 
     ///@name Construction
     ///@{
 
-		EnforcedHillClimbing();
-		EnforcedHillClimbing(XMLNode& _node);
+    EnforcedHillClimbing();
+    EnforcedHillClimbing(XMLNode& _node);
 
     /// @param _capabilityMap Set of roadmaps for each cabaility to be used in
     /// @param _robots Set of robots available to solve task
@@ -66,8 +58,8 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
 
     ///@name Helper Functions
     ///@{
-		
-		virtual bool Run(Plan* _plan= nullptr) override;
+
+    virtual bool Run(Plan* _plan= nullptr) override;
 
     /// Converts a cfg to a bundary that can be used as a location for the TP
     /// logic
@@ -80,7 +72,6 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
     bool DuplicateState(State _state);
 
     ///@}
-
     ///@name Internal State
     ///@{
 
@@ -107,6 +98,5 @@ class EnforcedHillClimbing : public TaskEvaluatorMethod {
 
     bool m_manipulator; ///< Indicates robot team available
 };
-
 
 #endif

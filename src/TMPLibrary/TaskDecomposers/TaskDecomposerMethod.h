@@ -9,20 +9,20 @@
 class TaskDecomposerMethod : public TMPBaseObject {
   public:
 
-  	///@name Construction
+    ///@name Construction
     ///@{
 
-  	TaskDecomposerMethod() = default;
+    TaskDecomposerMethod() = default;
 
-		TaskDecomposerMethod(XMLNode& _node);
+    TaskDecomposerMethod(XMLNode& _node);
 
-		virtual ~TaskDecomposerMethod() = default;  	
+    virtual ~TaskDecomposerMethod() = default;
 
     ///@}
     ///@name Interface
     ///@{
 
-		virtual void BreakupTask(WholeTask* _wholeTask);
+    virtual void BreakupTask(WholeTask* _wholeTask);
 
     ///@}
 };

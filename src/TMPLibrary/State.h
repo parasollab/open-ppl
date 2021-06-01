@@ -30,27 +30,25 @@ struct State {
     bool operator==(const State& _state) const;
 
     bool operator!=(const State& _state) const;
-    
+
     ///@}
-  
+
     State ApplyAction(std::shared_ptr<Action> _action);
-  
+
   //private:
 
     ///@name Internal State
     ///@{
 
     bool m_debug{true};               ///< Toggle debug messages.
-    
+
     ///@}
 
-    std::unordered_map<Robot*, const Boundary*>  m_robotLocations;
+    std::unordered_map<Robot*, const Boundary*> m_robotLocations;
 
-    std::vector<const Boundary*>  m_objectLocations;
+    std::vector<const Boundary*> m_objectLocations;
 
-    std::vector<Robot*>     m_taskOwners;
-
-
+    std::vector<Robot*> m_taskOwners;
 
 };
 

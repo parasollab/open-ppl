@@ -16,13 +16,13 @@
 #include "Traits/CfgTraits.h"
 
 ITTaskBreakup::
-ITTaskBreakup(){
-	this->SetName("ITTaskBreakup");
+ITTaskBreakup() {
+  this->SetName("ITTaskBreakup");
 }
 
 ITTaskBreakup::
-ITTaskBreakup(XMLNode& _node) : TaskDecomposerMethod(_node){
-	this->SetName("ITTaskBreakup");
+ITTaskBreakup(XMLNode& _node) : TaskDecomposerMethod(_node) {
+  this->SetName("ITTaskBreakup");
 }
 
 ITTaskBreakup::
@@ -30,15 +30,15 @@ ITTaskBreakup::
 
 void
 ITTaskBreakup::
-BreakupTask(WholeTask* _wholeTask){
+BreakupTask(WholeTask* _wholeTask) {
   // Break the wholeTasks into subtasks based on when the robot pointer changes
   // in the wholeTask path. This change indicates that the robot capability
   // changed along the path in the megaRoadmap
   Robot* virtualRobot = this->GetPlan()->GetCoordinator()->GetRobot();
-  if(m_debug){
+  if(m_debug) {
     std::cout << "Splitting up next whole task: " << _wholeTask << std::endl;
     std::cout << "Printing out path of whole task" << std::endl;
-    for(auto cfg : _wholeTask->m_wholePath){
+    for(auto cfg : _wholeTask->m_wholePath) {
       std::cout << cfg.PrettyPrint()
                 << " : : "
                 << cfg.GetRobot()->GetCapability()
@@ -51,48 +51,48 @@ BreakupTask(WholeTask* _wholeTask){
   Robot* currentRobot = nullptr;
   Cfg start;
   Cfg goal;
-  for(auto cfg : _wholeTask->m_wholePath){
-    if(cfg.GetRobot() == virtualRobot){
+  for(auto cfg : _wholeTask->m_wholePath) {
+    if(cfg.GetRobot() == virtualRobot) {
       continue;
     }
-    else if(!currentRobot){
+    else if(!currentRobot) {
       start = cfg;
       currentRobot = cfg.GetRobot();
     }
-    else if(currentRobot == cfg.GetRobot()){
+    else if(currentRobot == cfg.GetRobot()) {
       goal = cfg;
     }
-    else if(currentRobot != cfg.GetRobot() and goal.GetRobot()){
+    else if(currentRobot != cfg.GetRobot() and goal.GetRobot()) {
       auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
       _wholeTask->m_subtasks.push_back(subtask);
-			_wholeTask->m_subtaskStartEndCfgs[subtask] = std::make_pair(start,goal);
-      if(currentRobot->GetAgent()->GetCapability() != cfg.GetRobot()->GetAgent()->GetCapability()){
+      _wholeTask->m_subtaskStartEndCfgs[subtask] = std::make_pair(start,goal);
+      if(currentRobot->GetAgent()->GetCapability() != cfg.GetRobot()->GetAgent()->GetCapability()) {
         currentRobot = cfg.GetRobot();
       }
       start = cfg;
     }
   }
   Cfg blank;
-  if(virtualRobot and start.GetRobot() and goal.GetRobot()){
+  if(virtualRobot and start.GetRobot() and goal.GetRobot()) {
     auto subtask = MakeSubtask(currentRobot,start,goal,_wholeTask);
     _wholeTask->m_subtasks.push_back(subtask);
-		_wholeTask->m_subtaskStartEndCfgs[subtask] = std::make_pair(start,goal);
+    _wholeTask->m_subtaskStartEndCfgs[subtask] = std::make_pair(start,goal);
   }
   //Simulation::GetStatClass()->StopClock("IT Task Decomposition");
 }
 
 std::shared_ptr<MPTask>
 ITTaskBreakup::
-MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask){
+MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask) {
 
   auto& map = _wholeTask->m_interactionPoints;
   std::vector<Cfg> startPath = {};
   std::vector<Cfg> goalPath = {};
-  for(auto& interactionPoint : map){
-    if(*interactionPoint.first == _start){
+  for(auto& interactionPoint : map) {
+    if(*interactionPoint.first == _start) {
       startPath = *interactionPoint.second;
     }
-    else if(*interactionPoint.first == _goal){
+    else if(*interactionPoint.first == _goal) {
       goalPath = *interactionPoint.second;
     }
   }
@@ -100,12 +100,12 @@ MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask){
   std::shared_ptr<MPTask> subtask = std::shared_ptr<MPTask>(new MPTask(_robot));
   // Make start and goal constrants from start and end cfgs
 
-  if(m_debug and _start == _goal){
+  if(m_debug and _start == _goal) {
     std::cout << "start and end are same" << std::endl;
   }
 
   // Create new subtask for a non-manipulator robot
-  if(!_goal.GetRobot()->IsManipulator()){
+  if(!_goal.GetRobot()->IsManipulator()) {
     auto radius = (_robot->GetMultiBody()->GetBoundingSphereRadius());
 /*
     std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
@@ -159,22 +159,20 @@ MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask){
     subtask->ClearGoalConstraints();
     subtask->AddGoalConstraint(std::move(goalConstraint));
 
-
-
   }
   // Create new subtask for a manipulator robot
   else {
     auto startBox = unique_ptr<CSpaceBoundingBox>(new CSpaceBoundingBox(8));
     startBox->ShrinkToPoint(_start);
     auto ranges = startBox->GetRanges();
-    for(size_t i = 3; i < ranges.size(); i++){
+    for(size_t i = 3; i < ranges.size(); i++) {
       auto range = ranges[i];
       auto center = range.Center();
       startBox->SetRange(i, center-.05, center+.05);
     }
 
     std::cout << "Ranges for start constraint" << std::endl;
-    for(auto r : startBox->GetRanges()){
+    for(auto r : startBox->GetRanges()) {
       std::cout << r << std::endl;
     }
 
@@ -185,14 +183,14 @@ MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask){
     auto goalBox = unique_ptr<CSpaceBoundingBox>(new CSpaceBoundingBox(8));
     goalBox->ShrinkToPoint(_goal);
     ranges = goalBox->GetRanges();
-    for(size_t i = 3; i < ranges.size(); i++){
+    for(size_t i = 3; i < ranges.size(); i++) {
       auto range = ranges[i];
       auto center = range.Center();
       goalBox->SetRange(i, center-.05, center+.05);
 
     }
     std::cout << "Ranges for goal constraint" << std::endl;
-    for(auto r : goalBox->GetRanges()){
+    for(auto r : goalBox->GetRanges()) {
       std::cout << r << std::endl;
     }
 
@@ -206,7 +204,7 @@ MakeSubtask(Robot* _robot, Cfg _start, Cfg _goal, WholeTask* _wholeTask){
 
   subtask->SetCapability(_robot->GetAgent()->GetCapability());
 
-  if(m_debug){
+  if(m_debug) {
     std::cout << "Start of subtask: " << _start.PrettyPrint() << std::endl;
     std::cout << "End of subtask: " << _goal.PrettyPrint() << std::endl;
   }

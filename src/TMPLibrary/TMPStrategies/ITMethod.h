@@ -11,8 +11,6 @@
 
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
-
-
 class ITMethod : public TMPStrategyMethod {
 
   public:
@@ -25,37 +23,37 @@ class ITMethod : public TMPStrategyMethod {
 
     ITMethod(XMLNode& _node);
 
-		virtual ~ITMethod() = default;
+    virtual ~ITMethod() = default;
 
     ///@}
-  
-	protected:
-	
-		///@name Overrides
-    ///@{
-    
-    virtual void PlanTasks() override;
-       
-		virtual void AssignTasks() override;
 
-		virtual void DecomposeTasks() override;
-		
+  protected:
+
+    ///@name Overrides
+    ///@{
+
+    virtual void PlanTasks() override;
+
+    virtual void AssignTasks() override;
+
+    virtual void DecomposeTasks() override;
+
     ///@}
     ///@name Helper Functions
     ///@{
 
-    /// Extract a motion path for the task from the 
+    /// Extract a motion path for the task from the
     /// combined roadmap.
-		void QueryCombinedRoadmap();
+    void QueryCombinedRoadmap();
 
     ///@}
     //@name Member Variables
     ///@{
 
-		// TODO::This needs to be changed to a priority queue to 
+    // TODO::This needs to be changed to a priority queue to
     // allow for multiple tasks
-		std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
-    
+    std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
+
     ///@}
 
 };

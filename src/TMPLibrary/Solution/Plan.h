@@ -16,92 +16,93 @@ class StatClass;
 class TaskSolution;
 
 class Plan {
-	public:
-		///@name Construction
-		///@{
+  public:
+    ///@name Construction
+    ///@{
 
-		Plan();
+    Plan();
 
-		~Plan();
+    ~Plan();
 
-		///@}
-		///@name Accessors
-		///@{
+    ///@}
+    ///@name Accessors
+    ///@{
 
-		/// Coordinator
-		void SetCoordinator(Coordinator* _coordinator);
+    /// Coordinator
+    void SetCoordinator(Coordinator* _coordinator);
 
-		Coordinator* GetCoordinator() const;
+    Coordinator* GetCoordinator() const;
 
-		/// Robot Team
-		void SetTeam(std::vector<Robot*> _team);
+    /// Robot Team
+    void SetTeam(std::vector<Robot*> _team);
 
-		const std::vector<Robot*>& GetTeam() const;
+    const std::vector<Robot*>& GetTeam() const;
 
-		/// Decomposition
-		void SetDecomposition(Decomposition* _decomp);
+    /// Decomposition
+    void SetDecomposition(Decomposition* _decomp);
 
-		Decomposition* GetDecomposition() const;
+    Decomposition* GetDecomposition() const;
 
-		/// Task Allocations
-		void ClearAllocations(Robot* _robot);
+    /// Task Allocations
+    void ClearAllocations(Robot* _robot);
 
-		void ClearAllocations(RobotGroup* _group);
+    void ClearAllocations(RobotGroup* _group);
 
-		void AddAllocation(Robot* _robot, SemanticTask* _task);
+    void AddAllocation(Robot* _robot, SemanticTask* _task);
 
-		void AddAllocation(RobotGroup* _group, SemanticTask* _task);
+    void AddAllocation(RobotGroup* _group, SemanticTask* _task);
 
-		std::list<SemanticTask*> GetAllocations(Robot* _robot);
+    std::list<SemanticTask*> GetAllocations(Robot* _robot);
 
-		std::list<SemanticTask*> GetAllocations(RobotGroup* _group);
+    std::list<SemanticTask*> GetAllocations(RobotGroup* _group);
 
-		const std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>>& GetTaskSolutions();
+    const std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>>& GetTaskSolutions();
 
-		/// Task Plans
-		void SetTaskSolution(SemanticTask* _task, std::shared_ptr<TaskSolution> _solution);
+    /// Task Plans
+    void SetTaskSolution(SemanticTask* _task, std::shared_ptr<TaskSolution> _solution);
 
-		TaskSolution* GetTaskSolution(SemanticTask* _task);
+    TaskSolution* GetTaskSolution(SemanticTask* _task);
 
-		std::vector<TaskSolution*> GetRobotTaskSolutions(Robot* _robot);
+    std::vector<TaskSolution*> GetRobotTaskSolutions(Robot* _robot);
 
-		/// MPProblem
-		void SetMPProblem(MPProblem* _problem);
+    /// MPProblem
+    void SetMPProblem(MPProblem* _problem);
 
-		MPProblem* GetMPProblem();
+    MPProblem* GetMPProblem();
 
-		/// StatClass
-		StatClass* GetStatClass();
+    /// StatClass
+    StatClass* GetStatClass();
 
-		///@}
-		///@name Print
-		///@{
+    ///@}
+    ///@name Print
+    ///@{
 
-		void Print();
+    void Print();
 
-		///@}
+    ///@}
 
-	private:
-		///@name Internal State
-		///@{
+  private:
+    ///@name Internal State
+    ///@{
 
-		Coordinator* m_coordinator{nullptr};
+    Coordinator* m_coordinator{nullptr};
 
-		std::vector<Robot*> m_team;
+    std::vector<Robot*> m_team;
 
-		Decomposition* m_decomposition{nullptr};
+    Decomposition* m_decomposition{nullptr};
 
-		std::unordered_map<Robot*,std::list<SemanticTask*>> m_allocations;
+    std::unordered_map<Robot*,std::list<SemanticTask*>> m_allocations;
 
-		std::unordered_map<RobotGroup*,std::list<SemanticTask*>> m_groupAllocations;
+    std::unordered_map<RobotGroup*,std::list<SemanticTask*>> m_groupAllocations;
 
-		std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>> m_taskSolutions;
+    std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>> m_taskSolutions;
 
-		std::unique_ptr<StatClass> m_statClass;
+    std::unique_ptr<StatClass> m_statClass;
 
-		MPProblem* m_problem{nullptr};
+    MPProblem* m_problem{nullptr};
 
-		///@}
+    ///@}
 
 };
+
 #endif

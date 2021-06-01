@@ -9,13 +9,13 @@
 #include "Simulator/BulletModel.h"
 
 EnforcedHillClimbing::
-EnforcedHillClimbing(){
-	this->SetName("EnforcedHillClimbing");
+EnforcedHillClimbing() {
+  this->SetName("EnforcedHillClimbing");
 }
 
 EnforcedHillClimbing::
-EnforcedHillClimbing(XMLNode& _node) : TaskEvaluatorMethod(_node){
-	this->SetName("EnforcedHillClimbing");
+EnforcedHillClimbing(XMLNode& _node) : TaskEvaluatorMethod(_node) {
+  this->SetName("EnforcedHillClimbing");
 }
 
 EnforcedHillClimbing::
@@ -25,7 +25,7 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
                      std::vector<std::unique_ptr<InteractionTemplate>>& _handoffs,
                      MPLibrary* _library,
                      bool _manipulator)
-                     : m_capabilityMap(_capabilityMap){
+                     : m_capabilityMap(_capabilityMap) {
   m_robots = _robots;
   m_library = _library;
   m_manipulator = _manipulator;
@@ -47,9 +47,9 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
     std::pair<const Boundary*, const Boundary*> p(first,second);
     m_handoffLocations.insert(p);
   }*/
-  for(auto& temp : _handoffs){
+  for(auto& temp : _handoffs) {
     auto& transPos = temp->GetTranslatedPositions();
-    for(size_t i = 0; i < temp->GetTranslatedPositions().size(); i+=2){
+    for(size_t i = 0; i < temp->GetTranslatedPositions().size(); i+=2) {
       auto first = CfgToBoundary(transPos[i]);
       auto second = CfgToBoundary(transPos[i+1]);
 
@@ -58,55 +58,53 @@ EnforcedHillClimbing(const CapabilityMap& _capabilityMap,
     }
   }
 
-
   m_start.m_objectLocations.push_back(m_initialLocation);
-  for(auto robot : m_robots){
+  for(auto robot : m_robots) {
     m_start.m_robotLocations[robot] = CfgToBoundary(robot->GetSimulationModel()->GetState());
   }
 
   m_goal.m_objectLocations.push_back(m_goalLocation);
-
 }
 
 EnforcedHillClimbing::
-~EnforcedHillClimbing(){
-  for(auto& boundary : m_handoffLocations){
+~EnforcedHillClimbing() {
+  for(auto& boundary : m_handoffLocations) {
     delete boundary.first;
     delete boundary.second;
   }
 }
 
-bool 
+bool
 EnforcedHillClimbing::
-Run(Plan* _plan){
-	//TODO::put the actual solve stuff here
-	throw RunTimeException(WHERE, "Enforced Hill Climbing has not been integrated with the TMPLibrary yet.");
-	return false;
+Run(Plan* _plan) {
+  //TODO::put the actual solve stuff here
+  throw RunTimeException(WHERE, "Enforced Hill Climbing has not been integrated with the TMPLibrary yet.");
+  return false;
 }
 
 Boundary*
 EnforcedHillClimbing::
-CfgToBoundary(Cfg _cfg){
+CfgToBoundary(Cfg _cfg) {
   //Provides error range for the manipulator to reach
-  if(m_manipulator){
+  if(m_manipulator) {
     auto boundary = new CSpaceBoundingBox(8);
     boundary->ShrinkToPoint(_cfg);
     auto ranges = boundary->GetRanges();
-    for(size_t i = 3; i < ranges.size(); i++){
+    for(size_t i = 3; i < ranges.size(); i++) {
       auto range = ranges[i];
       auto center = range.Center();
       boundary->SetRange(i, center-.05, center+.05);
     }
 
     std::cout << "Ranges for boundary" << std::endl;
-    for(auto r : boundary->GetRanges()){
+    for(auto r : boundary->GetRanges()) {
       std::cout << r << std::endl;
     }
 
     return boundary;
   }
   //Provides error range to the non-manipulator to reach
-  else{
+  else {
     CSpaceBoundingSphere* boundary = new CSpaceBoundingSphere(_cfg.GetPosition(),
         1.2*_cfg.GetRobot()->GetMultiBody()->GetBoundingSphereRadius());
     return boundary;
@@ -115,7 +113,7 @@ CfgToBoundary(Cfg _cfg){
 
 std::vector<std::shared_ptr<Action>>
 EnforcedHillClimbing::
-Solve(){
+Solve() {
   State current = m_start;
 
   // Find intial possible actions and heuristic score
@@ -124,8 +122,8 @@ Solve(){
                         m_goalLocation, m_capabilityMap, m_library, m_manipulator);
   auto actions = rgp0.Heuristic();
   auto options = rgp0.RecommendedActions();
-  if(m_debug){
-    for(auto& action : actions){
+  if(m_debug) {
+    for(auto& action : actions) {
       std::cout << action->PrintAction() << std::endl;
     }
   }
@@ -133,14 +131,14 @@ Solve(){
   // Score is representative of cost of moves not just one
   // "point" per action
   double score = 0;
-  for(auto& action : actions){
+  for(auto& action : actions) {
     std::cout << "COST OF: " << action->PrintAction() << " ==== " << action->GetCost() << std::endl;
     score += action->GetCost();
   }
 
   // Add reachable states/performable actions to queue
   std::queue<std::pair<State,std::vector<std::shared_ptr<Action>>>> queue;
-  for(auto action : options){
+  for(auto action : options) {
     State resultState = current.ApplyAction(action);
     std::pair<State,std::vector<std::shared_ptr<Action>>> newEntry(resultState,{action});
     queue.push(newEntry);
@@ -148,8 +146,8 @@ Solve(){
 
   std::list<std::shared_ptr<Action>> possibleActions;
   size_t count = 0;
-  while(queue.size() > 0){
-    if(m_debug){
+  while(queue.size() > 0) {
+    if(m_debug) {
       std::cout << "Inside EHC While loop " << count << std::endl;
     }
     count++;
@@ -158,9 +156,9 @@ Solve(){
     std::vector<std::shared_ptr<Action>> acts = entry.second;
     State check = entry.first;
 
-    if(m_debug){
+    if(m_debug) {
       std::cout << "Applied Actions: " << std::endl;
-      for(auto& a : acts){
+      for(auto& a : acts) {
         std::cout << a->PrintAction() << std::endl;
       }
     }
@@ -170,9 +168,9 @@ Solve(){
                          m_goalLocation, m_capabilityMap, m_library, m_manipulator);
     possibleActions = rgp.Heuristic();
 
-    if(m_debug){
+    if(m_debug) {
       std::cout << std::endl << std::endl << "POSSIBLE ACTIONS FROM RGP" << std::endl;
-      for(auto& action : possibleActions){
+      for(auto& action : possibleActions) {
         std::cout << action->PrintAction() << std::endl;
       }
       std::cout << std::endl;
@@ -180,19 +178,19 @@ Solve(){
 
     //Temporary fix for duplicate actions::
     std::unordered_set<std::shared_ptr<Action>> uniquePossibleActions;
-    for(auto& action : possibleActions){
+    for(auto& action : possibleActions) {
       uniquePossibleActions.insert(action);
     }
     //Check if action produces better state
     double newScore = 0;
     //TODO:: Figure out what the issue is here
-    for(auto& action : uniquePossibleActions){
+    for(auto& action : uniquePossibleActions) {
       newScore += action->GetCost();
     }
     // Update to new state
-    if(newScore < score){
-      for(auto act : acts){
-        if(m_debug){
+    if(newScore < score) {
+      for(auto act : acts) {
+        if(m_debug) {
           std::cout << "ADDING : " << std::endl << act->PrintAction() << std::endl;
         }
         plan.push_back(act);
@@ -201,7 +199,7 @@ Solve(){
       score = newScore;
       queue = std::queue<std::pair<State,std::vector<std::shared_ptr<Action>>>>();
       auto options = rgp.RecommendedActions();
-      for(auto action : options){
+      for(auto action : options) {
         State resultState = current.ApplyAction(action);
         std::pair<State,std::vector<std::shared_ptr<Action>>> newEntry(resultState,{action});
         queue.push(newEntry);
@@ -211,11 +209,11 @@ Solve(){
     // Add child states of action to the queue
     else {
       auto options = rgp.RecommendedActions();
-      for(auto action : options){
+      for(auto action : options) {
         State newState = check;
         std::vector<std::shared_ptr<Action>> newActs;
         newState.ApplyAction(action);
-        if(!DuplicateState(newState)){
+        if(!DuplicateState(newState)) {
           newActs.push_back(action);
           std::pair<State, std::vector<std::shared_ptr<Action>>> newEntry(newState,newActs);
           queue.push(newEntry);
@@ -223,22 +221,22 @@ Solve(){
       }
     }
     // Reached the goal state
-    if(score == 0){
-      if(m_debug){
+    if(score == 0) {
+      if(m_debug) {
         std::cout << "SCORE AT 0" << std::endl;
       }
-      if(plan.back()->GetResultState().m_taskOwners.size() < 1){
+      if(plan.back()->GetResultState().m_taskOwners.size() < 1) {
         for(auto& a : possibleActions)
           plan.push_back(a);
       }
       return plan;
     }
   }
-  if(m_debug){
+  if(m_debug) {
     std::cout << "RAN OUT OF OPTIONS" << std::endl;
   }
   //TODO::HACK - Find actual bug and handle this case - think this is solved
-  if(plan.back()->GetResultState().m_taskOwners.size() < 1){
+  if(plan.back()->GetResultState().m_taskOwners.size() < 1) {
     for(auto& a : possibleActions)
       plan.push_back(a);
   }
@@ -247,21 +245,21 @@ Solve(){
 
 bool
 EnforcedHillClimbing::
-DuplicateState(State _state){
-  for(auto exist : m_visitedStates){
-    for(auto robot : m_robots){
-      if(_state.m_robotLocations[robot] != exist.m_robotLocations[robot]){
+DuplicateState(State _state) {
+  for(auto exist : m_visitedStates) {
+    for(auto robot : m_robots) {
+      if(_state.m_robotLocations[robot] != exist.m_robotLocations[robot]) {
         return false;
       }
     }
     //Should only run once for now, bc there's only one object/task right now
-    for(size_t i = 0; i < exist.m_objectLocations.size(); i++){
-      if(_state.m_objectLocations[i] != exist.m_objectLocations[i]){
+    for(size_t i = 0; i < exist.m_objectLocations.size(); i++) {
+      if(_state.m_objectLocations[i] != exist.m_objectLocations[i]) {
         return false;
       }
     }
-    for(size_t i = 0; i < exist.m_taskOwners.size(); i++){
-      if(_state.m_taskOwners[i] != exist.m_taskOwners[i]){
+    for(size_t i = 0; i < exist.m_taskOwners.size(); i++) {
+      if(_state.m_taskOwners[i] != exist.m_taskOwners[i]) {
         return false;
       }
     }
