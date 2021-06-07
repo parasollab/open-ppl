@@ -5,7 +5,6 @@
 
 #include "MPLibrary/PMPL.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent calls pmpl once and then follows the resulting path.
 /// @ingroup Agents

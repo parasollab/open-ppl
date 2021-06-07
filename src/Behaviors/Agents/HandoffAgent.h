@@ -9,7 +9,6 @@ class TMPLibrary;
 
 class NetbookInterface;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent follows a set of tasks and executes the helper worker behavior.
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +53,7 @@ class HandoffAgent : public PathFollowingAgent {
     /// m_cost
     double GetPotentialCost() const;
 
-		void SavePotentialPath();
+    void SavePotentialPath();
 
     /// Returns the projected time of completion of current path
     double GetTaskTime() const;
@@ -104,9 +103,9 @@ class HandoffAgent : public PathFollowingAgent {
 
     void CheckInteractionPath();
 
-		/// Returns the current subtask the agent is performing or 
-		/// setting up to perform.
-		std::shared_ptr<MPTask> GetSubtask();
+    /// Returns the current subtask the agent is performing or
+    /// setting up to perform.
+    std::shared_ptr<MPTask> GetSubtask();
     ///@}
   protected:
 
@@ -130,16 +129,16 @@ class HandoffAgent : public PathFollowingAgent {
     virtual void ExecuteControls(const ControlSet& _c, const size_t _steps)
         override;
 
-		/// Sends the robot back to it's starting location
-		void GoHome();
+    /// Sends the robot back to it's starting location
+    void GoHome();
 
     ///@}
     ///@name Internal State
     ///@{
 
-		TMPLibrary* m_tmpLibrary;
-    
-		/// The parent group to which this agent belongs.
+    TMPLibrary* m_tmpLibrary;
+
+    /// The parent group to which this agent belongs.
     Coordinator* m_parentAgent{nullptr};
 
     double m_distance{0.0}; ///< The distance traveled since localizing.
@@ -166,8 +165,8 @@ class HandoffAgent : public PathFollowingAgent {
 
     bool m_generatingCost{false}; ///< Flag so work function knows which query method to use.
 
-		bool m_returningHome{false}; ///< Flag that indicates if the robot is returning/returned 
-																 ///< it's initial location to get out of the way.
+    bool m_returningHome{false}; ///< Flag that indicates if the robot is returning/returned
+                                 ///< it's initial location to get out of the way.
     ///@}
 
 };

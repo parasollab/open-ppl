@@ -7,7 +7,6 @@
 
 #include <memory>
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Base class for agents which will plan paths using PMPL. This agent only
 /// plans; it does not attempt to execute the plan in the simulation.

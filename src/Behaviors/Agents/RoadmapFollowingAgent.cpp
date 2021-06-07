@@ -7,23 +7,19 @@
 #include "MPProblem/Robot/Robot.h"
 #include "Simulator/BulletModel.h"
 
-
 /*------------------------------ Construction --------------------------------*/
 
 RoadmapFollowingAgent::
 RoadmapFollowingAgent(Robot* const _r) : PlanningAgent(_r) { }
 
-
 RoadmapFollowingAgent::
 RoadmapFollowingAgent(Robot* const _r, const RoadmapFollowingAgent& _a)
   : PlanningAgent(_r, _a) { }
-
 
 RoadmapFollowingAgent::
 RoadmapFollowingAgent(Robot* const _r, XMLNode& _node) : PlanningAgent(_r) {
   // Currently there are no parameters. Parse XML options here.
 }
-
 
 std::unique_ptr<Agent>
 RoadmapFollowingAgent::
@@ -31,7 +27,6 @@ Clone(Robot* const _r) const {
   return std::unique_ptr<RoadmapFollowingAgent>(
       new RoadmapFollowingAgent(_r, *this));
 }
-
 
 RoadmapFollowingAgent::
 ~RoadmapFollowingAgent() {
@@ -45,7 +40,6 @@ RoadmapFollowingAgent::
 HasPlan() const {
   return m_solution->GetPath()->Size() != 0;
 }
-
 
 void
 RoadmapFollowingAgent::
@@ -91,7 +85,6 @@ EvaluateTask() {
 
   return !complete;
 }
-
 
 void
 RoadmapFollowingAgent::

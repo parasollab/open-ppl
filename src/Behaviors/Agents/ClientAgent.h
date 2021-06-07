@@ -2,7 +2,7 @@
 #define _PPL_CLIENT_AGENT_
 
 /*--------------------------------------------------------------------*/
-/// Simple wrapper around the base agent that receives commands from 
+/// Simple wrapper around the base agent that receives commands from
 /// an agent publisher and executes them in the simulator.
 /*--------------------------------------------------------------------*/
 
@@ -16,9 +16,9 @@
 #include "Agent.h"
 
 class ClientAgent : public Agent {
-	public:
-		///@name Construction
-		///@{
+  public:
+    ///@name Construction
+    ///@{
 
     /// Create an agent for a robot.
     /// @param _r The robot which this agent will reason for.
@@ -31,13 +31,13 @@ class ClientAgent : public Agent {
 
     ClientAgent(Robot* const _r, const ClientAgent& _a);
 
-		~ClientAgent();
+    ~ClientAgent();
 
-		std::unique_ptr<Agent> Clone(Robot* const _r) const override;
+    std::unique_ptr<Agent> Clone(Robot* const _r) const override;
 
-		///@}
-		///@name Simulator Interface
-		///@{
+    ///@}
+    ///@name Simulator Interface
+    ///@{
 
     /// Set up the agent before running. Anything that needs to be done only once
     /// on first starting should go here.
@@ -52,31 +52,30 @@ class ClientAgent : public Agent {
     /// pre-initialize state.
     virtual void Uninitialize() override;
 
-		///@}
+    ///@}
 
-	private:
+  private:
 
-		///@name Communication Interface
-		///@{
+    ///@name Communication Interface
+    ///@{
 
-		std::pair<size_t,ControlSet> ListenForControls();
+    std::pair<size_t,ControlSet> ListenForControls();
 
-		///@}
-		///@name Internal State
-		///@{
+    ///@}
+    ///@name Internal State
+    ///@{
 
-		std::queue<std::pair<size_t,ControlSet>> m_controlQueue;
+    std::queue<std::pair<size_t,ControlSet>> m_controlQueue;
 
-		mutable std::atomic<bool> m_running;
+    mutable std::atomic<bool> m_running;
 
-		std::thread m_thread;
+    std::thread m_thread;
 
-    mutable std::mutex m_lock;   
+    mutable std::mutex m_lock;
 
-		std::string m_controlChannel;
-		///@}
-		
+    std::string m_controlChannel;
+    ///@}
+
 };
 
 #endif
-

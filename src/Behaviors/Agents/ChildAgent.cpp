@@ -17,14 +17,14 @@ ChildAgent(Robot* const _r) : PathFollowingAgent(_r) {
 
 ChildAgent::
 ChildAgent(Robot* const _r, XMLNode& _node) : PathFollowingAgent(_r,_node) {
-	m_controlChannel = _node.Read("controlChannel",false,"","Channel to publish controls to."); 
+  m_controlChannel = _node.Read("controlChannel",false,"","Channel to publish controls to.");
 }
 
 ChildAgent::
-ChildAgent(Robot* const _r, const ChildAgent& _a) : PathFollowingAgent(_r,_a) 
+ChildAgent(Robot* const _r, const ChildAgent& _a) : PathFollowingAgent(_r,_a)
 { }
 
- ChildAgent::
+ChildAgent::
 ~ChildAgent() {
   Uninitialize();
 }
@@ -37,112 +37,112 @@ Clone(Robot* const _r) const {
 
 /*----------------------------- Simulation Interface -------------------------------*/
 
-void 
+void
 ChildAgent::
 Initialize() {
-	// Set up control publishing
-	if(m_controlChannel.size() > 0) {
-  	if(!m_communicator->GetPublisher(m_controlChannel))
-			throw RunTimeException(WHERE) << m_robot->GetLabel() 
-																		<< " control channel not connected." 
-																		<< std::endl;
-		
-		//m_running = true;
-		//auto publish = [this](){this->PublishControls();};
-		//m_thread = std::thread(publish);
-	}
+  // Set up control publishing
+  if(m_controlChannel.size() > 0) {
+    if(!m_communicator->GetPublisher(m_controlChannel))
+      throw RunTimeException(WHERE) << m_robot->GetLabel()
+                                    << " control channel not connected."
+                                    << std::endl;
+
+    //m_running = true;
+    //auto publish = [this](){this->PublishControls();};
+    //m_thread = std::thread(publish);
+  }
 
   PathFollowingAgent::Initialize();
-
 }
 
 void
 ChildAgent::
 Uninitialize() {
-	/*if(m_controlChannel.size() > 0)
-		std::lock_gaurd<std::mutex> guard(m_lock);
+  /*if(m_controlChannel.size() > 0)
+    std::lock_gaurd<std::mutex> guard(m_lock);
 
-		m_running = false;
-		if(m_thread.joinable())
-			m_thread.join();
-	}*/
-	PathFollowingAgent::Uninitialize();
+    m_running = false;
+    if(m_thread.joinable())
+      m_thread.join();
+  }*/
+  PathFollowingAgent::Uninitialize();
 }
 
-void 
+void
 ChildAgent::
 Step(const double _dt) {
-  if(m_debug and m_graphVisualID == (size_t(-1)) and m_solution.get() and Simulation::Get()){
+  if(m_debug and m_graphVisualID == (size_t(-1)) and m_solution.get() and Simulation::Get()) {
     m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap(),
       glutils::color(0., 1., 0., 0.2));
   }
   if(m_debug and m_pathVisualID == (size_t(-1)) and !m_path.empty() and Simulation::Get()) {
-		m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
-	}	
+    m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
+  }
 
-	PathFollowingAgent::Step(_dt);
-	if(!HasPlan()) {
-  	const Cfg current = m_robot->GetSimulationModel()->GetState();
-  	auto control = m_robot->GetController()->operator()(current,
+  PathFollowingAgent::Step(_dt);
+  if(!HasPlan()) {
+    const Cfg current = m_robot->GetSimulationModel()->GetState();
+    auto control = m_robot->GetController()->operator()(current,
       current, 1);
-		ExecuteControls({control},1);
-	}
+    ExecuteControls({control},1);
+  }
 }
 
 /*------------------------------- Child Interface ---------------------------------*/
 
-Coordinator* 
+Coordinator*
 ChildAgent::
 GetCoordinator() {
-	return m_coordinator;
+  return m_coordinator;
 }
 
-void 
+void
 ChildAgent::
 SetCoordinator(Coordinator* const _coordinator) {
-	m_coordinator = _coordinator;
+  m_coordinator = _coordinator;
 }
 
 /*---------------------------------- Accessors ------------------------------------*/
-    
-MPSolution* 
+
+MPSolution*
 ChildAgent::
 GetMPSolution() {
-	return m_solution.get();
+  return m_solution.get();
 }
 
 /*-------------------------------- Task Helpers -----------------------------------*/
 
-bool 
+bool
 ChildAgent::
 SelectTask() {
-	return true;
+  return true;
 }
 
-bool 
+bool
 ChildAgent::
 EvaluateTask() {
-	return PathFollowingAgent::EvaluateTask();
+  return PathFollowingAgent::EvaluateTask();
 }
 
-void 
+void
 ChildAgent::
 ExecuteTask(const double _dt) {
-	PathFollowingAgent::ExecuteTask(_dt);
+  PathFollowingAgent::ExecuteTask(_dt);
 }
-		
-void 
+
+void
 ChildAgent::
 GeneratePlan() {}
 
 void
 ChildAgent::
 ClearPlan() {
-	PathFollowingAgent::ClearPlan();
+  PathFollowingAgent::ClearPlan();
 }
+
 /*------------------------------- Controller Helpers ---------------------------------*/
 
-void 
+void
 ChildAgent::
 ExecuteControls(const ControlSet& _c, const size_t _steps) {
   this->Agent::ExecuteControls(_c, _steps);
@@ -154,23 +154,22 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
 void
 ChildAgent::
 ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
-	Agent::ExecuteControlsSimulation(_c,_steps);
+  Agent::ExecuteControlsSimulation(_c,_steps);
 
-	if(!m_communicator.get())
-		return;
+  if(!m_communicator.get())
+    return;
 
-	m_queuedControlSet = _c;
-	m_queuedSteps = _steps;
+  m_queuedControlSet = _c;
+  m_queuedSteps = _steps;
 
-	m_locked = false;
-	while(!m_locked) {}
+  m_locked = false;
+  while(!m_locked) {}
 }
-
 
 void
 ChildAgent::
 ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
-	Agent::ExecuteControlsHardware(_c,_steps);
+  Agent::ExecuteControlsHardware(_c,_steps);
 }
 
 /*----------------------------- Communication Helpers -------------------------------*/
@@ -178,12 +177,12 @@ ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
 std::vector<std::string>
 ChildAgent::
 PublishFunction(std::string _msg) {
-	while(m_locked) {}
-	std::string response = ControlSetToMessage(m_queuedControlSet,m_queuedSteps);
+  while(m_locked) {}
+  std::string response = ControlSetToMessage(m_queuedControlSet,m_queuedSteps);
 
-	m_locked = true;
+  m_locked = true;
 
-	return {response};
+  return {response};
 }
 
 /*-----------------------------------------------------------------------------------*/

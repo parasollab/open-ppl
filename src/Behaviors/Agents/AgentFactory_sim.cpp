@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <string>
 
-
 std::unique_ptr<Agent>
 Agent::
 Factory(Robot* const _r, XMLNode& _node) {
@@ -53,14 +52,14 @@ Factory(Robot* const _r, XMLNode& _node) {
     output = std::unique_ptr<Coordinator>(
         new Coordinator(_r, _node)
     );
-	else if(type == "client")
-		output = std::unique_ptr<ClientAgent>(
-				new ClientAgent(_r, _node)
-		);
-	else if(type == "child")
-		output = std::unique_ptr<ChildAgent>(
-				new ChildAgent(_r, _node)
-		);
+  else if(type == "client")
+    output = std::unique_ptr<ClientAgent>(
+        new ClientAgent(_r, _node)
+    );
+  else if(type == "child")
+    output = std::unique_ptr<ChildAgent>(
+        new ChildAgent(_r, _node)
+    );
   else
     throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
 

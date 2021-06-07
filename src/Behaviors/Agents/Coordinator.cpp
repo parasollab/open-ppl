@@ -28,7 +28,6 @@ Coordinator::
 Coordinator(Robot* const _r) : Agent(_r) {
 }
 
-
 Coordinator::
 Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
 
@@ -47,7 +46,6 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
 
   m_numRandTasks = _node.Read("numRandTasks", false, 0, 0, MAX_INT, "number of "
       "random tasks to generate");
-  
 
   // This is a coordinator agent, which does not make sense without some group
   // members to coordinate. Throw an exception if it has no members.
@@ -56,12 +54,10 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
         "least one member robot.");
 }
 
-
 Coordinator::
 ~Coordinator() {
   Uninitialize();
 }
-
 
 std::unique_ptr<Agent>
 Coordinator::
@@ -69,6 +65,7 @@ Clone(Robot* const _r) const {
   throw RunTimeException(WHERE, "Not yet implemented.");
   return {nullptr};
 }
+
 /*------------------------------ Agent Interface -----------------------------*/
 
 void
@@ -78,7 +75,7 @@ Initialize() {
     return;
   m_initialized = true;
 
-	InitializePlanningComponents();
+  InitializePlanningComponents();
 
   // Set up the group members.
   auto problem = m_robot->GetMPProblem();
@@ -89,31 +86,31 @@ Initialize() {
     // Throw an exception if not.
     Agent* memberAgent = member->GetAgent();
 
-		if(m_communicator.get() and !memberAgent->GetCommunicator().get())
-			memberAgent->SetCommunicator(m_communicator);
+    if(m_communicator.get() and !memberAgent->GetCommunicator().get())
+      memberAgent->SetCommunicator(m_communicator);
 
-		ChildAgent* c = static_cast<ChildAgent*>(memberAgent);
-		if(c) {
-			m_childAgents.push_back(c);
-		}
-		else {
-    	HandoffAgent* a = static_cast<HandoffAgent*>(
-      	  memberAgent);
-    	if(!a) {
-      	throw RunTimeException(WHERE) << "Incompatible agent type specified for "
-        	  "group member '" << memberLabel << "'." << std::endl;
+    ChildAgent* c = static_cast<ChildAgent*>(memberAgent);
+    if(c) {
+      m_childAgents.push_back(c);
+    }
+    else {
+      HandoffAgent* a = static_cast<HandoffAgent*>(
+          memberAgent);
+      if(!a) {
+        throw RunTimeException(WHERE) << "Incompatible agent type specified for "
+            "group member '" << memberLabel << "'." << std::endl;
       }
-    	m_memberAgents.push_back(a);
-		}
+      m_memberAgents.push_back(a);
+    }
   }
 
   if(m_debug) {
     std::cout << "Child Agents" << std::endl;
-    for(auto agent : m_childAgents){
+    for(auto agent : m_childAgents) {
       std::cout << "\t" << agent->GetRobot()->GetLabel() << std::endl;
     }
     std::cout << "Member Agents" << std::endl;
-    for(auto agent : m_memberAgents){
+    for(auto agent : m_memberAgents) {
       std::cout << "\t" << agent->GetRobot()->GetLabel() << std::endl;
     }
   }
@@ -121,25 +118,23 @@ Initialize() {
   InitializeAgents();
 
   // Generate random tasks if requested
-  if(m_numRandTasks > 0){
+  if(m_numRandTasks > 0) {
     if(problem->GetTasks(m_robot).size() == 1)
       problem->ReassignTask(problem->GetTasks(m_robot)[0].get(),
                             m_memberAgents[0]->GetRobot());
     GenerateRandomTasks();
   }
 
-
-  for(auto agent : m_childAgents){
+  for(auto agent : m_childAgents) {
     agent->GetRobot()->SetVirtual(false);
   }
-  for(auto agent : m_memberAgents){
+  for(auto agent : m_memberAgents) {
     agent->GetRobot()->SetVirtual(false);
   }
 
   Simulation::Get()->PrintStatFile();
   m_clock.start();
 }
-
 
 void
 Coordinator::
@@ -151,7 +146,7 @@ InitializePlanningComponents() {
   // Initialize the agent's planning library.
   m_tmpLibrary = new TMPLibrary(xmlFile);
   m_library = m_tmpLibrary->GetMPLibrary();
-	m_solution = new MPSolution(m_robot);
+  m_solution = new MPSolution(m_robot);
   m_library->SetMPSolution(m_solution);
   m_library->SetMPProblem(problem);
 
@@ -163,7 +158,6 @@ void
 Coordinator::
 Step(const double _dt) {
   Initialize();
-
 
 /*
   if(this->m_debug)
@@ -182,27 +176,27 @@ Step(const double _dt) {
 */
 /*
   for(auto agent : m_memberAgents){
-		if(m_runDummies) {
-			auto dummy = static_cast<HandoffAgent*>(agent);
-			dummy->HandoffAgent::Step(_dt);
-		}
-		else {
-    	agent->Step(_dt);
-		}
+    if(m_runDummies) {
+      auto dummy = static_cast<HandoffAgent*>(agent);
+      dummy->HandoffAgent::Step(_dt);
+    }
+    else {
+      agent->Step(_dt);
+    }
   }
   for(auto agent : m_childAgents){
-		if(m_runDummies) {
-			//auto dummy = static_cast<HandoffAgent*>(agent);
-			//dummy->HandoffAgent::Step(_dt);
-			auto dummy = static_cast<ChildAgent*>(agent);
-			dummy->ChildAgent::Step(_dt);
-		}
-		//else {
-    	agent->Step(_dt);
-		//}
+    if(m_runDummies) {
+      //auto dummy = static_cast<HandoffAgent*>(agent);
+      //dummy->HandoffAgent::Step(_dt);
+      auto dummy = static_cast<ChildAgent*>(agent);
+      dummy->ChildAgent::Step(_dt);
+    }
+    //else {
+      agent->Step(_dt);
+    //}
   }
 */
-	//TODO::Undo this comment
+  //TODO::Undo this comment
   //CheckFinished();
 
   if(this->m_stepFunction.get())
@@ -210,7 +204,6 @@ Step(const double _dt) {
 
   m_currentTime += m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 }
-
 
 void
 Coordinator::
@@ -221,12 +214,12 @@ Uninitialize() {
 
   delete m_solution;
   delete m_library;
-	delete m_tmpLibrary;
+  delete m_tmpLibrary;
 
   m_solution = nullptr;
   m_library  = nullptr;
 
-  for(auto id : m_simulatorGraphIDs){
+  for(auto id : m_simulatorGraphIDs) {
     Simulation::Get()->RemoveRoadmap(id);
   }
 }
@@ -235,7 +228,6 @@ Uninitialize() {
 
 
 /*--------------------------- Member Management ------------------------------*/
-
 
 void
 Coordinator::
@@ -246,7 +238,6 @@ DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
   std::unique_ptr<BoundaryConstraint> destination(
       new BoundaryConstraint(m_robot, std::move(_where))
   );
-
 
   task->AddGoalConstraint(std::move(destination));
   if(this->m_debug) {
@@ -263,7 +254,7 @@ DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
 
 double
 Coordinator::
-GetCurrentTime(){
+GetCurrentTime() {
   return m_currentTime;
 }
 
@@ -271,15 +262,15 @@ GetCurrentTime(){
 
 void
 Coordinator::
-InitializeAgents(){
+InitializeAgents() {
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
   }
-  for(auto agent : m_memberAgents){
+  for(auto agent : m_memberAgents) {
     agent->Initialize();
     agent->SetParentAgent(this);
   }
-  for(auto agent : m_childAgents){
+  for(auto agent : m_childAgents) {
     agent->Initialize();
     agent->SetCoordinator(this);
   }
@@ -287,26 +278,25 @@ InitializeAgents(){
 
 /*--------------------------- Helpers ------------------------------*/
 
-
 TMPLibrary*
 Coordinator::
-GetTMPLibrary(){
-	return m_tmpLibrary;
+GetTMPLibrary() {
+  return m_tmpLibrary;
 }
 
 void
 Coordinator::
-SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+SetRoadmapGraph(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph) {
   *m_solution->GetRoadmap(m_robot) = *_graph;
 }
 
 void
 Coordinator::
-GenerateRandomTasks(){
+GenerateRandomTasks() {
   auto problem = m_robot->GetMPProblem();
   auto env = problem->GetEnvironment();
 
-	m_library->SetSeed();
+  m_library->SetSeed();
 
   auto sampler = m_library->GetSampler("UniformRandomFree");
   auto numAttempts = 1000000;
@@ -315,7 +305,7 @@ GenerateRandomTasks(){
 
   size_t numTasks = 0;
 
-	std::set<Cfg> samples;
+  std::set<Cfg> samples;
 
   while(numTasks < m_numRandTasks) {
     std::vector<Cfg> samplePoints;
@@ -327,26 +317,25 @@ GenerateRandomTasks(){
     if(samplePoints.size() < 2)
       continue;
 
+    //Temporary for icra discrete stuff
+    auto startCfg = samplePoints[0];
+    int x = int(startCfg[0]+.5);
+    int y = int(startCfg[1]+.5);
+    startCfg.SetData({double(x),double(y),0});
+    auto goalCfg = samplePoints[1];
+    x = int(goalCfg[0]+.5);
+    y = int(goalCfg[1]+.5);
+    goalCfg.SetData({double(x),double(y),0});
 
-		//Temporary for icra discrete stuff
-		auto startCfg = samplePoints[0];
-		int x = int(startCfg[0]+.5);
-		int y = int(startCfg[1]+.5);
-		startCfg.SetData({double(x),double(y),0});
-		auto goalCfg = samplePoints[1];
-		x = int(goalCfg[0]+.5);
-		y = int(goalCfg[1]+.5);
-		goalCfg.SetData({double(x),double(y),0});
+    if(startCfg == goalCfg)
+      continue;
 
-		if(startCfg == goalCfg)
-			continue;
+    if(samples.count(startCfg) or samples.count(goalCfg))
+      continue;
 
-		if(samples.count(startCfg) or samples.count(goalCfg))
-			continue;
-
-		if(!env->GetBoundary()->InBoundary(startCfg) 
-		or !env->GetBoundary()->InBoundary(goalCfg))
-			continue;
+    if(!env->GetBoundary()->InBoundary(startCfg)
+    or !env->GetBoundary()->InBoundary(goalCfg))
+      continue;
     std::cout << "Sampled task" << std::endl
               << "Start: " << startCfg.PrettyPrint() << std::endl
               << "Goal: " << goalCfg.PrettyPrint() << std::endl;
@@ -366,61 +355,61 @@ GenerateRandomTasks(){
     problem->AddTask(std::move(task));
 
     numTasks++;
-		samples.insert(startCfg);
-		samples.insert(goalCfg);
+    samples.insert(startCfg);
+    samples.insert(goalCfg);
   }
 }
 
 void
 Coordinator::
 DistributePlan(Plan* _plan) {
-	//for(auto agent : m_memberAgents) {
-	for(auto agent : m_childAgents) {
-		auto allocs = _plan->GetAllocations(agent->GetRobot());
-		std::vector<TaskSolution*> solutions;
+  //for(auto agent : m_memberAgents) {
+  for(auto agent : m_childAgents) {
+    auto allocs = _plan->GetAllocations(agent->GetRobot());
+    std::vector<TaskSolution*> solutions;
 
-		//Temporary dummy task 
-		std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(agent->GetRobot()));
-		agent->SetTask(temp);	
+    //Temporary dummy task
+    std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(agent->GetRobot()));
+    agent->SetTask(temp);
 
-		for(auto iter = allocs.begin(); iter != allocs.end(); iter++) {
-			auto sol = _plan->GetTaskSolution(*iter);
-			solutions.push_back(sol);
-			auto mpSol = sol->GetMotionSolution();
+    for(auto iter = allocs.begin(); iter != allocs.end(); iter++) {
+      auto sol = _plan->GetTaskSolution(*iter);
+      solutions.push_back(sol);
+      auto mpSol = sol->GetMotionSolution();
 
-			if(iter == allocs.begin()) {
-				agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap());
-				agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(agent->GetRobot()));
-			}
-			else {
-				*(agent->GetMPSolution()->GetPath(agent->GetRobot())) += *(mpSol->GetPath());
-			}
-		}
-		auto& cfgs = agent->GetMPSolution()->GetPath()->Cfgs();	
-		agent->SetPlan(cfgs);
-		if(cfgs.empty())
-			continue;
-		auto goalCfg = cfgs.back();
+      if(iter == allocs.begin()) {
+        agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap());
+        agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(agent->GetRobot()));
+      }
+      else {
+        *(agent->GetMPSolution()->GetPath(agent->GetRobot())) += *(mpSol->GetPath());
+      }
+    }
+    auto& cfgs = agent->GetMPSolution()->GetPath()->Cfgs();
+    agent->SetPlan(cfgs);
+    if(cfgs.empty())
+      continue;
+    auto goalCfg = cfgs.back();
     std::unique_ptr<CSpaceConstraint> goal =
       std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(agent->GetRobot(), goalCfg));
     temp->AddGoalConstraint(std::move(goal));
-	}
+  }
 }
-		
-std::vector<std::string> 
+
+std::vector<std::string>
 Coordinator::
 GetMemberLabels() {
-	return m_memberLabels;
+  return m_memberLabels;
 }
 
-std::vector<HandoffAgent*> 
+std::vector<HandoffAgent*>
 Coordinator::
 GetMemberAgents() {
-	return m_memberAgents;
+  return m_memberAgents;
 }
 
-std::vector<ChildAgent*> 
+std::vector<ChildAgent*>
 Coordinator::
 GetChildAgents() {
-	return m_childAgents;
+  return m_childAgents;
 }
