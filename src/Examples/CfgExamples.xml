@@ -330,13 +330,13 @@
 
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-        <!--Sampler label="UniformRandomFree" number="1" attempts="1"/-->
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
-        <Sampler label="MAPRM" number="10" attempts="10"/>
+        <!--Sampler label="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
-        <Evaluator label="Query"/>
+        <Evaluator label="NodesEval"/>
       </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
