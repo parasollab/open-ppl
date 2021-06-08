@@ -24,7 +24,6 @@ BatteryConstrainedGroup::
 BatteryConstrainedGroup(Robot* const _r) : Agent(_r) {
 }
 
-
 BatteryConstrainedGroup::
 BatteryConstrainedGroup(Robot* const _r, XMLNode& _node) : Agent(_r) {
 
@@ -74,12 +73,10 @@ BatteryConstrainedGroup(Robot* const _r, XMLNode& _node) : Agent(_r) {
         "least one member robot.");
 }
 
-
 BatteryConstrainedGroup::
 ~BatteryConstrainedGroup() {
   Uninitialize();
 }
-
 
 std::unique_ptr<Agent>
 BatteryConstrainedGroup::
@@ -87,6 +84,7 @@ Clone(Robot* const _r) const {
   throw RunTimeException(WHERE, "Not yet implemented.");
   return {nullptr};
 }
+
 /*------------------------------ Agent Interface -----------------------------*/
 
 void
@@ -127,10 +125,10 @@ Initialize() {
 
   // Initialize the version map.
   /// @TODO Generalize code so that this is not necessary.
-  for(Agent* agent : m_memberAgents){
+  for(Agent* agent : m_memberAgents) {
     std::unordered_map<PlanningAgent*, size_t> otherMap;
-    for(Agent* otherAgent : m_memberAgents){
-      if(agent != otherAgent){
+    for(Agent* otherAgent : m_memberAgents) {
+      if(agent != otherAgent) {
         PlanningAgent* planningAgent = dynamic_cast<PlanningAgent*>(otherAgent);
         if(!planningAgent)
           throw RunTimeException(WHERE, "Incompatible agent type specified for "
@@ -191,7 +189,7 @@ Step(const double _dt) {
   if(this->m_debug)
     std::cout << "___________________________________________________________"
               << std::endl;
-  for(auto agent : m_memberAgents)  {
+  for(auto agent : m_memberAgents) {
     PathFollowingChildAgent* childAgent = static_cast<PathFollowingChildAgent*>(agent);
     if(this->m_debug)
       std::cout << agent->GetRobot()->GetLabel()
@@ -215,9 +213,6 @@ Step(const double _dt) {
   //std::cout << "Arbitrate Collision for bcg." << std::endl;
   ArbitrateCollision();
 
-
-
-
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
   auto hardware = m_robot->GetHardwareQueue();
   //const double depletionRate = hardware ? .36 : .04;
@@ -230,12 +225,12 @@ Step(const double _dt) {
     //std::cout << "Stepping the agent" << std::endl;
     agent->Step(_dt);
     //Checks if GoToHelp agent has left charging location
-    if(/*GetRole(agent) == Helper or */GetRole(agent) == GoingToHelp){
-      for(auto& chargingLocation : m_chargingLocations){
+    if(/*GetRole(agent) == Helper or */GetRole(agent) == GoingToHelp) {
+      for(auto& chargingLocation : m_chargingLocations) {
         if(chargingLocation.second != agent)
           continue;
         if(!chargingLocation.first->InBoundary(agent->GetRobot()->
-              GetSimulationModel()->GetState())){
+              GetSimulationModel()->GetState())) {
           ClearChargingLocation(agent);
         }
         break;
@@ -247,31 +242,25 @@ Step(const double _dt) {
       agent->GetRobot()->GetBattery()->UpdateValue(timeRes * depletionRate);
   }
   //charges all agents currently at charging locations.
-  for(auto& chargingLocation : m_chargingLocations){
-    if(chargingLocation.second){
+  for(auto& chargingLocation : m_chargingLocations) {
+    if(chargingLocation.second) {
       chargingLocation.second->GetRobot()->GetBattery()->Charge(m_chargingRate + timeRes*depletionRate);
     }
   }
   m_currentTime += m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 }
 
-
 void
 BatteryConstrainedGroup::
-SetBatteryBreak(BatteryBreak _break, Agent* _member){
-  //TODO: Need to account for battery breing drained during planning.
+SetBatteryBreak(BatteryBreak _break, Agent* _member) {
+  //TODO: Need to account for battery being drained during planning.
   // Pretty sure that is taken care of by checking battery break after planning
   if(GetRole(_member) != Worker or !m_proactive)
     return;
   /*if(m_proactive){
-
-
-
   }*/
-  m_batteryBreaks[_member] =  _break;
+  m_batteryBreaks[_member] = _break;
 }
-
-
 
 void
 BatteryConstrainedGroup::
@@ -296,7 +285,7 @@ AssignTask(Agent* const _member) {
   PathFollowingChildAgent* childAgent = static_cast<PathFollowingChildAgent*>(_member);
   // Assign a task based on the state of the member.
   //std::cout << _member->GetRobot()->GetLabel() << ": " << GetRole(_member) << std::endl;
-  switch(GetRole(_member)){
+  switch(GetRole(_member)) {
     case Worker:
       AssignTaskWorker(_member);
       break;
@@ -311,13 +300,13 @@ AssignTask(Agent* const _member) {
         std::cout << "Calling assign task for ReturningToCharge: "
                   << _member->GetRobot()->GetLabel()
                   << std::endl;
-      if(IsAtChargingLocation(_member)){
+      if(IsAtChargingLocation(_member)) {
         // TODO: Set task to nullptr
         SetRole(_member, Charging);
         SetPriority(_member, GetPriority(_member) - 500);
         m_helperMap.erase(m_helperMap.find(_member));
       }
-      else{
+      else {
         GoToCharge(_member);
       }
       break;
@@ -345,7 +334,7 @@ ArbitrateCollision() {
     const double distanceThreshold = 4. *
       childAgent->GetRobot()->GetMultiBody()->GetBoundingSphereRadius();
     auto group = childAgent->ProximityCheck(distanceThreshold);
-    if(!group.empty() and !ValidateVersionMap(childAgent, group)){
+    if(!group.empty() and !ValidateVersionMap(childAgent, group)) {
       //std::cout << "Collision detected." << std::endl;
        needReplan.push_back(std::make_pair(childAgent, group));
        // Helper reached point of collision but is within handoff proximity and
@@ -362,19 +351,19 @@ ArbitrateCollision() {
        // said charging location.
     }
   }
-  for(auto pair : needReplan){
+  for(auto pair : needReplan) {
     PathFollowingChildAgent* groupAgent = static_cast<PathFollowingChildAgent*>(pair.first);
     //std::cout << groupAgent->GetRobot()->GetLabel() << std::endl;
     vector<Agent*> group = pair.second;
-    if(IsHighestPriority(groupAgent, group)){
+    if(IsHighestPriority(groupAgent, group)) {
       if(this->m_debug)
         std::cout << "Updating Version Map" << std::endl;
       UpdateVersionMap(groupAgent, group);
-      if(GetRole(groupAgent) == GoingToHelp){
+      if(GetRole(groupAgent) == GoingToHelp) {
         CheckReachedWorker(groupAgent);
       }
     }
-    else{
+    else {
       groupAgent->PauseAgent(5);
       //groupAgent->SetTask(nullptr);
     }
@@ -392,7 +381,6 @@ SetPriority(Agent* const _a, const size_t _priority) {
   m_memberPriorities[_a] = _priority;
 }
 
-
 size_t
 BatteryConstrainedGroup::
 GetPriority(Agent* const _a) {
@@ -401,11 +389,11 @@ GetPriority(Agent* const _a) {
 
 bool
 BatteryConstrainedGroup::
-IsHighestPriority(Agent* const _a, const vector<Agent*>& _group){
+IsHighestPriority(Agent* const _a, const vector<Agent*>& _group) {
   //std::cout << "Checking for highest priority" << std:: endl;
   //std::cout << "Size of group: " << _group.size() << std::endl;
   size_t maxPriority = 0;
-  for(auto agent : _group){
+  for(auto agent : _group) {
     size_t currentPriority = GetPriority(agent);
     //std::cout << "Current Priority for" << agent->GetRobot()->GetLabel()
     //          << ": " << currentPriority << std::endl;
@@ -415,7 +403,6 @@ IsHighestPriority(Agent* const _a, const vector<Agent*>& _group){
   return GetPriority(_a) > maxPriority;
 }
 
-
 void
 BatteryConstrainedGroup::
 SetRole(Agent* const _a, const Role _r) {
@@ -423,29 +410,28 @@ SetRole(Agent* const _a, const Role _r) {
   const auto& label = _a->GetRobot()->GetLabel();
 
   switch(_r) {
-    case Worker :
+    case Worker:
       stats->StartClock("Productive Time for " + label);
       stats->StopClock("Going to Help Time for " + label);
       break;
-    case WaitingForHelp :
+    case WaitingForHelp:
       stats->StopClock("Productive Time for " + label);
       break;
-    case ReturningToCharge :
+    case ReturningToCharge:
       stats->StartClock("Returning to Charger Time for " + label);
       break;
-    case Charging :
+    case Charging:
       stats->StopClock("Returning to Charger Time for " + label);
       break;
-    case GoingToHelp :
+    case GoingToHelp:
       stats->StartClock("Going to Help Time for " + label);
       break;
-    case Helper :
+    case Helper:
       break;
   }
 
   m_roleMap[_a] = _r;
 }
-
 
 BatteryConstrainedGroup::Role
 BatteryConstrainedGroup::
@@ -453,13 +439,11 @@ GetRole(Agent* const _a) const {
   return m_roleMap.at(_a);
 }
 
-
 bool
 BatteryConstrainedGroup::
 IsWorker(Agent* const _a) const {
   return GetRole(_a) == Worker;
 }
-
 
 std::vector<Agent*>
 BatteryConstrainedGroup::
@@ -473,7 +457,6 @@ GetWorkers() {
   return output;
 }
 
-
 std::vector<Agent*>
 BatteryConstrainedGroup::
 GetHelpers() {
@@ -485,7 +468,6 @@ GetHelpers() {
 
   return output;
 }
-
 
 Agent*
 BatteryConstrainedGroup::
@@ -513,7 +495,6 @@ GetNearestHelper(Agent* const _member) {
   return nearestHelper;
 }
 
-
 void
 BatteryConstrainedGroup::
 DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
@@ -523,7 +504,6 @@ DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
   std::unique_ptr<BoundaryConstraint> destination(
       new BoundaryConstraint(m_robot, std::move(_where))
   );
-
 
   task->AddGoalConstraint(std::move(destination));
   if(this->m_debug) {
@@ -540,7 +520,6 @@ DispatchTo(Agent* const _member, std::unique_ptr<Boundary>&& _where) {
   // Add the task to the MPProblem.
   //m_robot->GetMPProblem()->AddTask(std::move(task));
 }
-
 
 bool
 BatteryConstrainedGroup::
@@ -563,11 +542,10 @@ InHandoffProximity(Agent* const _member1, Agent* const _member2) {
   return distance < m_handoffThreshold;
 }
 
-
 void
 BatteryConstrainedGroup::
 UpdateVersionMap(Agent* const _member, std::vector<Agent*> _agents) {
-  for(Agent* agent : _agents){
+  for(Agent* agent : _agents) {
     PlanningAgent* planningAgent = static_cast<PlanningAgent*>(agent);
     // Update each proximity agent's knowledge about this member's plan version.
     m_versionMap[_member][planningAgent] = planningAgent->GetPlanVersion();
@@ -577,7 +555,7 @@ UpdateVersionMap(Agent* const _member, std::vector<Agent*> _agents) {
 bool
 BatteryConstrainedGroup::
 ValidateVersionMap(Agent* const _member, std::vector<Agent*> _agents) {
-  for(Agent* agent : _agents){
+  for(Agent* agent : _agents) {
     if(agent == _member)
       continue;
     PlanningAgent* planningAgent = static_cast<PlanningAgent*>(agent);
@@ -595,10 +573,9 @@ ValidateVersionMap(Agent* const _member, std::vector<Agent*> _agents) {
   return true;
 }
 
-
 void
 BatteryConstrainedGroup::
-CheckReachedWorker(Agent* const _member){
+CheckReachedWorker(Agent* const _member) {
   if(this->m_debug) {
     for(auto agent : m_memberAgents)
       std::cout << agent->GetRobot()->GetLabel() << " is a " << GetRole(agent)
@@ -608,7 +585,7 @@ CheckReachedWorker(Agent* const _member){
               << std::endl;
   }
 
-  for(auto agentPair : m_helperMap){
+  for(auto agentPair : m_helperMap) {
     //find the worker the helper is assigned to
     if(this->m_debug)
       std::cout << "Worker: "
@@ -633,11 +610,11 @@ CheckReachedWorker(Agent* const _member){
     if(GetRole(agentPair.first) == Worker)
       break;
     //if(InHandoffProximity(agentPair.first, _member)){
-    if(GetRole(agentPair.first) == ReturningToCharge){
+    if(GetRole(agentPair.first) == ReturningToCharge) {
       PerformHelperSwap(_member, agentPair.first);
     }
     else {
-      if(GetRole(agentPair.first) == WaitingForHelp){
+      if(GetRole(agentPair.first) == WaitingForHelp) {
         if(this->m_debug)
           std::cout << "Need to revert to reactive behavior" << std::endl;
 
@@ -673,11 +650,10 @@ CheckReachedWorker(Agent* const _member){
       }
     }
   }
-  if(m_helperMap.empty() && !m_proactive){
+  if(m_helperMap.empty() && !m_proactive) {
     PerformHelperSwap(_member, nullptr);
   }
 }
-
 
 /*---------------------------- Charging Locations ----------------------------*/
 
@@ -704,7 +680,6 @@ InitializeChargingLocations() {
       std::cout << position << std::endl;
   }
 }
-
 
 std::pair<Boundary*, double>
 BatteryConstrainedGroup::
@@ -742,10 +717,10 @@ FindNearestChargingLocation(Agent* const _a) {
     //std::cout << "Best Distance: " << bestDistance << std::endl;
   }
   if(this->m_debug and bestChargingLocation->
-      InBoundary(m_helperMap[_a]->GetRobot()->GetSimulationModel()->GetState())){
+      InBoundary(m_helperMap[_a]->GetRobot()->GetSimulationModel()->GetState())) {
     std::cout << "My helper is on the charging location." << std::endl;
-
   }
+
   //If there is no empty charging location return an empty pointer
   if(!goalLocation or bestChargingLocation->
       InBoundary(m_helperMap[_a]->GetRobot()->GetSimulationModel()->GetState()))
@@ -769,8 +744,6 @@ IsAtChargingLocation(Agent* const _member) {
   if(!location)
     return false;
 
-
-
   // Define a distance threshold. We say a member is 'at' a charging location if
   // it is within this ammount.
   static constexpr double threshold = .15;
@@ -782,11 +755,11 @@ IsAtChargingLocation(Agent* const _member) {
               << threshold
               << std::endl;
 
-  for(auto& charger : m_chargingLocations){
-    if(charger.first.get() == location){
+  for(auto& charger : m_chargingLocations) {
+    if(charger.first.get() == location) {
       // If an agent is at the charging location, assign it to the charging
       // location.
-      if(location->InBoundary(_member->GetRobot()->GetSimulationModel()->GetState())){
+      if(location->InBoundary(_member->GetRobot()->GetSimulationModel()->GetState())) {
         charger.second = _member;
         return true;
       }
@@ -828,7 +801,7 @@ GoToCharge(Agent* const _member) {
   auto nearest = FindNearestChargingLocation(_member);
 
   // If no charging location is available, we cannot send this agent anywhere.
-  if(!nearest.first){
+  if(!nearest.first) {
     if(this->m_debug)
       std::cout << "Didn't find a charging location." << std::endl;
     return;
@@ -839,9 +812,9 @@ GoToCharge(Agent* const _member) {
 
 bool
 BatteryConstrainedGroup::
-ClearToPlan(Agent* const _member){
+ClearToPlan(Agent* const _member) {
   auto task = _member->GetTask();
-  for(auto agentPair : m_helperMap){
+  for(auto agentPair : m_helperMap) {
     if(agentPair.second != _member)
       continue;
     return !task->EvaluateGoalConstraints(agentPair.first->GetRobot()->
@@ -859,16 +832,16 @@ AssignTaskWorker(Agent* const _member) {
   if(this->m_debug)
     std::cout << "Assign task to worker at time: " << GetCurrentTime()
               << std::endl;
-  if(!_member->GetTask()){
+  if(!_member->GetTask()) {
     auto tasks = m_robot->GetMPProblem()->GetTasks(m_robot);
-    for(auto& task : tasks){
+    for(auto& task : tasks) {
        if(task->GetStatus().is_started())
          continue;
        _member->SetTask(task);
        task->GetStatus().start();
        break;
     }
-    if(tasks.size() < 1){
+    if(tasks.size() < 1) {
       if(this->m_debug)
         std::cout << "No Tasks left in the problem" << std::endl;
 
@@ -886,8 +859,8 @@ void
 BatteryConstrainedGroup::
 AssignTaskHelper(Agent* const _member) {
   // If there are no paused tasks, we have nothing to assign to this helper.
-  if(m_pausedTasks.empty()){
-    if(m_proactive){
+  if(m_pausedTasks.empty()) {
+    if(m_proactive) {
       AssignProactiveHelperTask(_member);
     }
     return;
@@ -944,10 +917,9 @@ AssignTaskHelper(Agent* const _member) {
   ClearChargingLocation(_member);
 }
 
-
 void
 BatteryConstrainedGroup::
-AssignProactiveHelperTask(Agent* const _member){
+AssignProactiveHelperTask(Agent* const _member) {
   //std::cout << "Number of battery breaks stored: " << m_batteryBreaks.size() << std::endl;
   if(m_batteryBreaks.empty())
     return;
@@ -987,15 +959,7 @@ AssignProactiveHelperTask(Agent* const _member){
 
   task->AddGoalConstraint(std::move(goal));
 
-
-
-
 /*
-
-
-
-
-
   std::shared_ptr<MPProblem> problemCopy(new MPProblem(*m_robot->GetMPProblem()));
 
   auto currentRobot = problemCopy->GetRobot(_member->GetRobot()->GetLabel());
@@ -1023,13 +987,6 @@ AssignProactiveHelperTask(Agent* const _member){
   m_library->Solve(problemCopy.get(), task.get(), m_solution, "LazyPRM",
       LRand(), "LazyCollisionAvoidance");
 
-
-
-
-
-
-
-
   auto memberRobot = _member->GetRobot();
 
   // Reset the modified states.
@@ -1038,9 +995,6 @@ AssignProactiveHelperTask(Agent* const _member){
   m_library->SetMPProblem(m_robot->GetMPProblem());
 
   Cfg pos = memberRobot->GetSimulationModel()->GetState();
-
-
-
 
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 
@@ -1089,9 +1043,6 @@ AssignProactiveHelperTask(Agent* const _member){
 
   */
 
-
-
-
   SetRole(_member, GoingToHelp);
   SetPriority(_member, GetPriority(_member) + 1000);
   _member->SetTask(task);
@@ -1106,7 +1057,7 @@ AssignProactiveHelperTask(Agent* const _member){
 
 void
 BatteryConstrainedGroup::
-AssignTaskWaiting(Agent* const _member){
+AssignTaskWaiting(Agent* const _member) {
   auto iter = m_helperMap.find(_member);
   // If the helper has arrived, send the waiting agent back to charge.
   if(iter != m_helperMap.end()) {
@@ -1129,16 +1080,14 @@ AssignTaskWaiting(Agent* const _member){
   }
 }
 
-
-
 void
 BatteryConstrainedGroup::
-PerformHelperSwap(Agent* const _helper, Agent* _worker){
+PerformHelperSwap(Agent* const _helper, Agent* _worker) {
   PathFollowingChildAgent* childAgent = static_cast<PathFollowingChildAgent*>(_helper);
   if(this->m_debug)
     std::cout << "Perform Helper Swap" << std::endl;
-  if(m_proactive){
-    for(auto it = m_pausedTasks.begin(); it != m_pausedTasks.end(); it++){
+  if(m_proactive) {
+    for(auto it = m_pausedTasks.begin(); it != m_pausedTasks.end(); it++) {
       PausedTask pausedTask = *it;
       if(pausedTask.m_previousOwner != _worker)
         continue;
@@ -1172,7 +1121,7 @@ PerformHelperSwap(Agent* const _helper, Agent* _worker){
       std::cout << "Stored Task: " << childAgent->GetPausedTask() << std::endl;;
     SetRole(_helper, Worker);
     //SetRole(_helper, Charging);
-    if(childAgent->GetPausedTask()){
+    if(childAgent->GetPausedTask()) {
       _helper->SetTask(childAgent->GetPausedTask());
     }
     else {
@@ -1182,13 +1131,12 @@ PerformHelperSwap(Agent* const _helper, Agent* _worker){
   SetPriority(_helper, GetPriority(_helper) + 500);
 }
 
-
 void
 BatteryConstrainedGroup::
-BatteryCheck(Agent* const _member){
-  if(GetRole(_member) == Worker){
+BatteryCheck(Agent* const _member) {
+  if(GetRole(_member) == Worker) {
     PathFollowingChildAgent* childAgent = static_cast<PathFollowingChildAgent*>(_member);
-    if(childAgent->IsBatteryLow()){
+    if(childAgent->IsBatteryLow()) {
       Simulation::GetStatClass()->StartClock("DownTime for" + _member->GetRobot()->GetLabel());
       //Simulation::GetStatClass()->StartClock("DownTime for" + _member->GetRobot()->
       //        GetLabel() + " " + std::to_string(childAgent->GetPlanVersion()));
@@ -1200,7 +1148,7 @@ BatteryCheck(Agent* const _member){
       task.m_task = _member->GetTask();
 
       if(task.m_task->EvaluateGoalConstraints(_member->GetRobot()->
-          GetSimulationModel()->GetState())){
+          GetSimulationModel()->GetState())) {
         task.m_task->GetStatus().complete();
         task.m_task = nullptr;
       }
@@ -1213,7 +1161,7 @@ BatteryCheck(Agent* const _member){
       task.m_priority = GetPriority(_member);
       m_pausedTasks.push_back(task);
       // If we need to wait for a helper handoff, wait here.
-      if(m_handoff){
+      if(m_handoff) {
         if(this->m_debug)
           std::cout << _member->GetRobot()->GetLabel() << " WAITING FOR HELP"
                     << std::endl;
@@ -1222,7 +1170,7 @@ BatteryCheck(Agent* const _member){
         SetPriority(_member, GetPriority(_member) - 1500);
       }
       // If we can stop the task without waiting, go charge.
-      else{
+      else {
         SetRole(_member, ReturningToCharge);
         SetPriority(_member, GetPriority(_member) + 500);
         //GoToCharge(_member);
@@ -1232,16 +1180,14 @@ BatteryCheck(Agent* const _member){
   }
 }
 
-
 double
 BatteryConstrainedGroup::
-GetCurrentTime(){
+GetCurrentTime() {
   return m_currentTime;
 }
 
 bool
 BatteryConstrainedGroup::
-IsProactive(){
+IsProactive() {
   return m_proactive;
 }
-

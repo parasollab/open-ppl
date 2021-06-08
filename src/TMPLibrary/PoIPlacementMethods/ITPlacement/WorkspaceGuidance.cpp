@@ -2,16 +2,16 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "TMPLibrary/TaskPlan.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 WorkspaceGuidance::
-WorkspaceGuidance(){
-	this->SetName("WorkspaceGuidance");
+WorkspaceGuidance() {
+  this->SetName("WorkspaceGuidance");
 }
 
 WorkspaceGuidance::
 WorkspaceGuidance(XMLNode& _node) : ITPlacementMethod(_node) {
-	this->SetName("WorkspaceGuidance");
+  this->SetName("WorkspaceGuidance");
   m_dmLabel = _node.Read("dmLabel", false, "positionEuclidean",
                          "distance metric to track distance between interaction templates");
   m_distanceThreshold = _node.Read("distanceThreshold", true, nan(""), 0., 1000.,
@@ -21,40 +21,39 @@ WorkspaceGuidance(XMLNode& _node) : ITPlacementMethod(_node) {
 
 std::unique_ptr<ITPlacementMethod>
 WorkspaceGuidance::
-Clone(){
-	return std::unique_ptr<WorkspaceGuidance>(new WorkspaceGuidance(*this));	
+Clone() {
+  return std::unique_ptr<WorkspaceGuidance>(new WorkspaceGuidance(*this));
 }
 
 void
 WorkspaceGuidance::
-PlaceIT(InteractionTemplate* _it, MPSolution* _solution){
+PlaceIT(InteractionTemplate* _it, MPSolution* _solution) {
   BuildSkeleton();
 
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+  auto robot = this->GetPlan()->GetCoordinator()->GetRobot();
   auto g = m_skeleton.GetGraph();
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
-  for(auto vi = g.begin(); vi != g.end(); vi++){
+  for(auto vi = g.begin(); vi != g.end(); vi++) {
     std::cout << vi->property() << std::endl;
     Cfg location(vi->property(), robot);
     bool check = true; //distance check
-    for(auto cfg : _it->GetInformation()->GetTemplateLocations()){
-      if(dm->Distance(location, cfg) < m_distanceThreshold){
+    for(auto cfg : _it->GetInformation()->GetTemplateLocations()) {
+      if(dm->Distance(location, cfg) < m_distanceThreshold) {
         check = false;
         break;
       }
     }
-    if(check){
+    if(check) {
       _it->GetInformation()->AddTemplateLocation(location);
       std::cout << location.PrettyPrint() << std::endl;
     }
   }
-
 }
 
 void
 WorkspaceGuidance::
-BuildSkeleton(){
+BuildSkeleton() {
 
   if(m_initialized)
     return;
@@ -64,13 +63,13 @@ BuildSkeleton(){
 
   // Determine if we need a 2d or 3d skeleton.
   auto env = this->GetMPProblem()->GetEnvironment();
-  auto robot = this->GetTaskPlan()->GetCoordinator()->GetRobot();
+  auto robot = this->GetPlan()->GetCoordinator()->GetRobot();
   //const bool threeD = robot->GetMultiBody()->GetBaseType() ==
   //    Body::Type::Volumetric;
 
   //Only considering 2D right now with the icreates
   //if(threeD) {
-  if(false){
+  if(false) {
     // Create a workspace skeleton using a reeb graph.
 
     /*auto decomposition = this->GetMPLibrary()->GetMPTools()->GetDecomposition(m_decompositionLabel);
@@ -96,7 +95,6 @@ BuildSkeleton(){
     m_skeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
   }
 
-
   const auto& startConstraint = this->GetMPProblem()->GetTasks(robot)[0]->GetStartConstraint();
   auto startCenter = startConstraint->GetBoundary()->GetCenter();
   Point3d start(startCenter[0], startCenter[1], 0);
@@ -110,7 +108,6 @@ BuildSkeleton(){
                                   << "for each sub-component.";
   auto goalCenter = goalConstraints[0]->GetBoundary()->GetCenter();
   Point3d goal(goalCenter[0], goalCenter[1], 0);
-
 
   // Get the start and goal point from the goal tracker.
   // Try to prevent non-point tasks by requiring single VIDs for the start and
@@ -139,5 +136,4 @@ BuildSkeleton(){
 
   // Prune the workspace skeleton relative to the goal.
   m_skeleton.Prune(goal);
-
 }

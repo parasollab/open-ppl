@@ -8,14 +8,20 @@
 class TaskAllocatorMethod : public TMPBaseObject {
   public:
 
-  	///@name Construction
+    ///@name Construction
     ///@{
 
-  	TaskAllocatorMethod() = default;
+    TaskAllocatorMethod() = default;
 
-		TaskAllocatorMethod(XMLNode& _node);
+    TaskAllocatorMethod(XMLNode& _node);
 
-		virtual ~TaskAllocatorMethod() = default;  	
+    virtual ~TaskAllocatorMethod() = default;
+
+    ///@}
+    ///@name Call Method
+    ///@{
+
+    virtual void AllocateTasks();
 
     ///@}
 };

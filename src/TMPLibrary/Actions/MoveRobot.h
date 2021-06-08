@@ -1,7 +1,6 @@
 #ifndef MOVE_ROBOT_H_
 #define MOVE_ROBOT_H_
 
-
 #include "Action.h"
 
 #include "ConfigurationSpace/RoadmapGraph.h"
@@ -23,7 +22,6 @@
 class MoveRobot : public Action {
 
   public:
-
 
     typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
 

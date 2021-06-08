@@ -10,7 +10,7 @@ class OverlappingWorkspacesDensity : public ITPlacementMethod {
     ///@name Construction
     ///@{
 
-		OverlappingWorkspacesDensity();
+    OverlappingWorkspacesDensity();
 
     OverlappingWorkspacesDensity(XMLNode& _node);
 
@@ -24,15 +24,12 @@ class OverlappingWorkspacesDensity : public ITPlacementMethod {
 
     ///@}
 
-
   private:
     std::string m_dmLabel;
     double m_density{5};
     double m_proximity{1};
     double m_numNodes{100};
 
-
 };
 
 #endif
-

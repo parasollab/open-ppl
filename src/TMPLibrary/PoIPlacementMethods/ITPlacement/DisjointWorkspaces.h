@@ -11,14 +11,14 @@ class DisjointWorkspaces : public ITPlacementMethod {
 
     ///@name Construction
     ///@{
-    
-		DisjointWorkspaces();
+
+    DisjointWorkspaces();
 
     DisjointWorkspaces(XMLNode& _node);
 
     ~DisjointWorkspaces() = default;
 
-		std::unique_ptr<ITPlacementMethod> Clone() override;
+    std::unique_ptr<ITPlacementMethod> Clone() override;
 
     ///@}
     ///@name Interface
@@ -29,15 +29,18 @@ class DisjointWorkspaces : public ITPlacementMethod {
     void TranslateCfg(const Cfg& _centerCfg, Cfg& _relativeCfg);
 
     bool CheckLocation(Cfg _cfg, InteractionTemplate* _it);//,
-                       //std::unordered_map<std::string, HandoffAgent*> _capabilityAgents);
+                       //std::unordered_map<std::string, Agent*> _capabilityAgents);
+
+    void SampleBorder(Terrain& _terrain, bool _receiving, InteractionTemplate* _it, Agent* _agent);
 
     ///@}
-
 
   private:
     double m_precision;
     double GetRandomDouble(double _min, double _max);
-    int m_maxAttempts;
+    size_t m_maxAttempts;
+
+    std::unordered_map<Boundary*,bool> m_sampled;
 
 };
 

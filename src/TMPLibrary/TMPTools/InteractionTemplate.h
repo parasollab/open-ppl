@@ -14,7 +14,6 @@
 #include "MPProblem/MPProblem.h"
 #include "Utilities/XMLNode.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This represents an Interaction Template, which stores the roadmaps for the
 /// robots to perform an interaction (handoff).
@@ -57,7 +56,7 @@ class InteractionTemplate {
     /// Positions of Robots for Handoff Locations at each handoff location
     std::vector<Cfg>& GetTranslatedPositions();
 
-    /// Gets the transformed position of robot pairs at each of the IT locations. 
+    /// Gets the transformed position of robot pairs at each of the IT locations.
     /// First is the robot handing off. Second is robot receving.
     std::vector<std::pair<Cfg,Cfg>> GetTransformedPositionPairs();
 
@@ -80,7 +79,6 @@ class InteractionTemplate {
 
     std::pair<size_t,size_t> GetConnectingEdge();
     ///@}
-
 
   protected:
 

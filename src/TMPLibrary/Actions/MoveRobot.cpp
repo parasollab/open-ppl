@@ -1,6 +1,6 @@
 #include "MoveRobot.h"
 
-#include "Behaviors/Agents/HandoffAgent.h"
+#include "Behaviors/Agents/PathFollowingAgent.h"
 
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
@@ -17,11 +17,11 @@ MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _ha
   m_start = _start;
   m_goal = _goal;
   m_hasObject = _hasObject;
-  if(_roadmap){
+  if(_roadmap) {
     m_roadmapGraph = _roadmap;
     m_providedRoadmap = true;
   }
-  else{
+  else {
     m_roadmapGraph = new RoadmapGraph<Cfg,DefaultWeight<Cfg>>(m_robot);
     m_providedRoadmap = false;
   }
@@ -31,7 +31,7 @@ MoveRobot(Robot* _robot, const Boundary* _start, const Boundary* _goal, bool _ha
   m_startState.m_robotLocations[_robot] = _start;
   m_resultState.m_robotLocations[_robot] = _goal;
 
-  if(_hasObject){
+  if(_hasObject) {
     m_startState.m_taskOwners.push_back(_robot);
     m_startState.m_objectLocations.push_back(_start);
 
@@ -45,15 +45,15 @@ MoveRobot::
 
 bool
 MoveRobot::
-CheckPreConditions(const FactLayer* _factLayer){
+CheckPreConditions(const FactLayer* _factLayer) {
   //Check that robot is in the start location
   //MoveRobot::countChecked++;
   auto possibleLocationsIter = _factLayer->m_possibleRobotLocations.find(m_robot);
   auto possibleLocations = possibleLocationsIter->second;
   //auto it = std::find(possibleLocations.begin(), possibleLocations.end(), m_start);
   bool match = false;
-  for(auto location : possibleLocations){
-    if(location->GetCenter() == m_start->GetCenter()){
+  for(auto location : possibleLocations) {
+    if(location->GetCenter() == m_start->GetCenter()) {
       match = true;
     }
   }
@@ -66,29 +66,27 @@ CheckPreConditions(const FactLayer* _factLayer){
   MPTask* task = new MPTask(m_robot);
 
   //Checks if the robot has the object/task to start the move
-  if(m_hasObject){
+  if(m_hasObject) {
     auto objectLocations = _factLayer->m_possibleObjectLocations;
     auto obIt = std::find(objectLocations.begin(), objectLocations.end(), m_start);
-    if(obIt == objectLocations.end()){
+    if(obIt == objectLocations.end()) {
       //std::cout << "Does not have the object " << m_robot->GetLabel() << std::endl;
       return false;
     }
     auto objectOwners = _factLayer->m_possibleRobotPayloads;
     auto owIt = std::find(objectOwners.begin(), objectOwners.end(), m_robot);
-    if(owIt == objectOwners.end()){
+    if(owIt == objectOwners.end()) {
       //std::cout << "Does not have the object " << m_robot->GetLabel() << std::endl;
       return false;
     }
   }
 
-
-  if(m_manipulator){
+  if(m_manipulator) {
     auto startBox = m_start->Clone();
     std::cout << "Start Type: " << startBox->Name() << std::endl;
 
     auto startConstraint = std::unique_ptr<BoundaryConstraint>
       (new BoundaryConstraint(m_robot, std::move(startBox)));
-
 
     auto goalBox = m_goal->Clone();
     std::cout << "Goal Type: " << goalBox->Name() << std::endl;
@@ -96,19 +94,16 @@ CheckPreConditions(const FactLayer* _factLayer){
     auto goalConstraint = std::unique_ptr<BoundaryConstraint>
       (new BoundaryConstraint(m_robot, std::move(goalBox)));
 
-
     task->SetStartConstraint(std::move(startConstraint));
     task->AddGoalConstraint(std::move(goalConstraint));
-
   }
-  else{
+  else {
     auto radius = 1.2 * (m_robot->GetMultiBody()->GetBoundingSphereRadius());
 
     std::unique_ptr<CSpaceBoundingSphere> boundingSphere(
         new CSpaceBoundingSphere(m_start->GetCenter(), radius));
     auto startConstraint = std::unique_ptr<BoundaryConstraint>
       (new BoundaryConstraint(m_robot, std::move(boundingSphere)));
-
 
     std::unique_ptr<CSpaceBoundingSphere> boundingSphere2(
         new CSpaceBoundingSphere(m_goal->GetCenter(), radius));
@@ -118,27 +113,26 @@ CheckPreConditions(const FactLayer* _factLayer){
     auto goalConstraint = std::unique_ptr<BoundaryConstraint>
       (new BoundaryConstraint(m_robot, std::move(boundingSphere2)));
 
-
     task->SetStartConstraint(std::move(startConstraint));
     task->AddGoalConstraint(std::move(goalConstraint));
   }
 
-  if(m_debug){
+  if(m_debug) {
     std::cout << "Checking Preconditions for : " << this->PrintAction() << std::endl;
   }
   //if(!CanBeInLocation(m_robot, goalBoundary.get()))
   //  return false;
 
-  if(m_debug){
+  if(m_debug) {
     std::cout << "Planning in MOVEROBOT for " << m_robot->GetLabel() <<  std::endl;
   }
 
   m_library->SetTask(task);
 
-  HandoffAgent* agent = static_cast<HandoffAgent*>(m_robot->GetAgent());
-  agent->SetRoadmapGraph(m_roadmapGraph);
+  PathFollowingAgent* agent = static_cast<PathFollowingAgent*>(m_robot->GetAgent());
   auto solution = agent->GetMPSolution();
-  try{
+  solution->SetRoadmap(agent->GetRobot(),m_roadmapGraph);
+  try {
     m_roadmapGraph->SetRobot(m_robot);
 
     //for(auto vit = m_roadmapGraph->begin(); vit != m_roadmapGraph->end(); vit++){
@@ -147,7 +141,7 @@ CheckPreConditions(const FactLayer* _factLayer){
     //  std::cout << "Satisfied: " << start->Satisfied(vit->property()) << std::endl;
     //}
 
-    if(m_providedRoadmap){
+    if(m_providedRoadmap) {
       m_library->Solve(m_robot->GetMPProblem(), task, solution, "EvaluateMapStrategy",
           LRand(), "CheckPreCondition-Provided");
     }
@@ -155,18 +149,18 @@ CheckPreConditions(const FactLayer* _factLayer){
       m_library->Solve(m_robot->GetMPProblem(), task, solution, "LazyQuery",
           LRand(), "CheckPreCondition-Generating");
     }
-    if(solution->GetPath()->Cfgs().empty()){
+    if(solution->GetPath()->Cfgs().empty()) {
       //if(m_manipulator and !m_hasObject)
         m_used = true;
       return false;
     }
-    if(m_manipulator){
+    if(m_manipulator) {
       auto goalCfg = solution->GetPath()->Cfgs()[solution->GetPath()->Cfgs().size() -1];
       auto currentCfg = m_robot->GetSimulationModel()->GetState();
       const size_t numDof = m_robot->GetMultiBody()->PosDOF() +
                             m_robot->GetMultiBody()->OrientationDOF();
-      for(size_t i = 0; i < numDof; i++){
-        if(currentCfg[i] != goalCfg[i]){
+      for(size_t i = 0; i < numDof; i++) {
+        if(currentCfg[i] != goalCfg[i]) {
           std::cout << "Move requires mobile base" << std::endl;
           m_used = true;
           return false;
@@ -179,8 +173,8 @@ CheckPreConditions(const FactLayer* _factLayer){
   }
   // Usually indicates that the precheck for the goal constraint didn't work
   // as a result of some bug likely in terrain validity checker
-  catch(...){
-    if(m_debug){
+  catch(...) {
+    if(m_debug) {
       std::cout << "Caught error in MOVEROBOT for " << m_robot->GetLabel() << std::endl;
     }
     m_used = true;
@@ -189,15 +183,15 @@ CheckPreConditions(const FactLayer* _factLayer){
     return false;
   }
   //Return true if path exists and false if not
-  if(m_debug){
+  if(m_debug) {
     std::cout << "Adding MOVEROBOT for "
               << m_robot->GetLabel()
               << "from ";
-    for(auto d : m_start->GetCenter()){
+    for(auto d : m_start->GetCenter()) {
       std::cout << d << " : ";
     }
     std::cout << " to ";
-    for(auto d : m_goal->GetCenter()){
+    for(auto d : m_goal->GetCenter()) {
       std::cout << d << " : ";
     }
     std::cout << std::endl
@@ -211,25 +205,24 @@ CheckPreConditions(const FactLayer* _factLayer){
   return true;
 }
 
-
 std::vector<Robot*>
 MoveRobot::
-GetRobots(){
+GetRobots() {
   return {m_robot};
 }
 
 std::string
 MoveRobot::
-PrintAction(){
+PrintAction() {
   std::string ret = "MOVEROBOT " + m_robot->GetLabel() + " from ";
-  for(auto d : m_start->GetCenter()){
+  for(auto d : m_start->GetCenter()) {
     ret += std::to_string(d) + " : ";
   }
   ret += " to ";
-  for(auto d : m_goal->GetCenter()){
+  for(auto d : m_goal->GetCenter()) {
     ret += std::to_string(d) + " : ";
   }
-  if(m_hasObject){
+  if(m_hasObject) {
     ret += "WITH object/task";
   }
   else {

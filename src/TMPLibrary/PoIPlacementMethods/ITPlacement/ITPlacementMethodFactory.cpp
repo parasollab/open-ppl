@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <string>
 
-
 std::unique_ptr<ITPlacementMethod>
 ITPlacementMethod::
 Factory(XMLNode& _node) {

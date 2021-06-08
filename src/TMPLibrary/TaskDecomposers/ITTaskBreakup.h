@@ -1,9 +1,7 @@
-
 #ifndef TASK_BREAKUP_H_
 #define TASK_BREAKUP_H_
 
 #include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
-
 
 class Robot;
 
@@ -11,10 +9,10 @@ class ITTaskBreakup : public TaskDecomposerMethod {
   public:
     ///@name Construction
     ///@{
-		
-		ITTaskBreakup();
 
-		ITTaskBreakup(XMLNode& _node);
+    ITTaskBreakup();
+
+    ITTaskBreakup(XMLNode& _node);
 
     ~ITTaskBreakup();
 

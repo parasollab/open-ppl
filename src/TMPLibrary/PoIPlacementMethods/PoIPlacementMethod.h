@@ -12,18 +12,18 @@
 class PoIPlacementMethod : public TMPBaseObject {
   public:
 
-  	///@name Construction
+    ///@name Construction
     ///@{
 
-  	PoIPlacementMethod() = default;
+    PoIPlacementMethod() = default;
 
-		PoIPlacementMethod(XMLNode& _node);
+    PoIPlacementMethod(XMLNode& _node);
 
-		virtual ~PoIPlacementMethod() = default;  	
+    virtual ~PoIPlacementMethod() = default;  	
 
     ///@}
     //TODO::convert to generic "Place" function
-		void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution);
+    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution);
 };
 
 /*----------------------------------------------------------------------------*/

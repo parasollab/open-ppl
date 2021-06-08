@@ -8,7 +8,6 @@
 #include "MPLibrary/PMPL.h"
 #include "BatteryBreak.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent represents the task hand-off behavior presented in
 /// the thesis Titled:
@@ -113,7 +112,6 @@ class BatteryConstrainedGroup : public Agent {
     double GetCurrentTime();
 
     ///@}
-
 
   private:
 
@@ -242,7 +240,6 @@ class BatteryConstrainedGroup : public Agent {
     /// @param _member The worker member which is requesting a new task.
     void AssignTaskWaiting(Agent* const _member);
 
-
     void PerformHelperSwap(Agent* const _member, Agent* _worker);
 
     /// Checks the battery level of a worker and assigns its task to the
@@ -251,7 +248,6 @@ class BatteryConstrainedGroup : public Agent {
     void BatteryCheck(Agent* const _member);
 
     bool IsProactive();
-
 
     ///@}
 

@@ -5,10 +5,9 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Stores the furthest time and place that an agent can reach on its path
-/// before being required to turn bakc and go to a charger.
+/// before being required to turn back and go to a charger.
 ////////////////////////////////////////////////////////////////////////////////
 class BatteryBreak {
 

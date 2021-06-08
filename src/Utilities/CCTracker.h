@@ -215,12 +215,12 @@ class CCTracker final {
     /// @return A CC which holds _vid.
     const VertexSet* FindCC(const VID _vid) const noexcept;
 
+    /// Recompute all CCs from scrathc. Complexity is linear in the size of the
+    /// roadmap (O(V+E)).
+    void RecomputeCCs() noexcept;
+
     /// @overload
     VertexSet* FindCC(const VID _vid) noexcept;
-
-    /// Recompute all CCs from scratch. Complexity is linear in the size of the
-    /// roadmap (O(V + E)).
-    void RecomputeCCs() noexcept;
 
     /// Run a breadth-first search on the roadmap from a particular start node.
     /// @param _start The start node.

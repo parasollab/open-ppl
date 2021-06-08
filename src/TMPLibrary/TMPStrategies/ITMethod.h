@@ -11,8 +11,6 @@
 
 #include "TMPLibrary/TMPStrategies/TMPStrategyMethod.h"
 
-
-
 class ITMethod : public TMPStrategyMethod {
 
   public:
@@ -25,47 +23,37 @@ class ITMethod : public TMPStrategyMethod {
 
     ITMethod(XMLNode& _node);
 
-		//ITMethod(bool _useITs, bool _debug, std::string _dmLabel, double _connectionThreshold,
-		//							Environment* _interactionEnvironment);
-
-		~ITMethod() = default;
+    virtual ~ITMethod() = default;
 
     ///@}
-  
-	protected:
-	
-		///@name Helper Functions
+
+  protected:
+
+    ///@name Overrides
     ///@{
-    
-		/// Get plan for the input agents to perform the input tasks.
-    /// _library needs to have the solution and problem set to the coordinator's
-    /// values for these.
+
     virtual void PlanTasks() override;
-       
 
-		virtual void AssignTasks() override;
+    virtual void AssignTasks() override;
 
-		virtual void DecomposeTasks() override;
-		
-		void QueryCombinedRoadmap();
+    virtual void DecomposeTasks() override;
 
-		std::shared_ptr<MPTask> AuctionTask(std::shared_ptr<MPTask> _nextTask);
+    ///@}
+    ///@name Helper Functions
+    ///@{
 
-		void CopyRobotTypeRoadmaps();
-
-    /// Inserts the subtask into the unassignedTasks list at the appropriate point
-		void AddSubtask(std::shared_ptr<MPTask> _subtask);
+    /// Extract a motion path for the task from the
+    /// combined roadmap.
+    void QueryCombinedRoadmap();
 
     ///@}
     //@name Member Variables
     ///@{
 
-		//TODO add task assignment as its own class (e.g. auction method)
-		//TODO maybe put a base function in TMPStrategyMethod that can use it if desired
+    // TODO::This needs to be changed to a priority queue to
+    // allow for multiple tasks
+    std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
 
-		//TODO this needs to be changed to a priority queue to allow for multiple tasks
-		std::list<std::shared_ptr<MPTask>> m_unassignedTasks;
-    
     ///@}
 
 };

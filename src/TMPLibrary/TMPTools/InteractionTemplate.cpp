@@ -40,62 +40,43 @@ GetDistinctRoadmaps() {
 
 std::vector<Cfg>
 InteractionTemplate::
-GetPositions(){
+GetPositions() {
   return m_handoffCfgs;
 }
 
 std::vector<std::vector<Cfg>>
 InteractionTemplate::
-GetPaths(){
+GetPaths() {
   return m_interactionPaths;
 }
 
 std::vector<Cfg>&
 InteractionTemplate::
-GetTranslatedPositions(){
-  if(!m_translatedInteractionPositions.empty()){
+GetTranslatedPositions() {
+  if(!m_translatedInteractionPositions.empty()) {
     return m_translatedInteractionPositions;
   }
-  for(auto center : m_information->GetTemplateLocations()){
-    for(auto cfg : m_handoffCfgs){
-      double x = cfg[0];
-      double y = cfg[1];
-      double theta = center[2]*PI;
-
-      double newX = x*cos(theta) - y*sin(theta);
-      double newY = y*sin(theta) + y*cos(theta);
-      double oldTheta = cfg[2];
-
+  for(auto center : m_information->GetTemplateLocations()) {
+    for(auto cfg : m_handoffCfgs) {
       Cfg newCfg = cfg;
-      newCfg.SetLinearPosition({newX, newY, oldTheta});
-      newCfg += center;
+      newCfg.TransformCfg(center.GetBaseTransformation());
       m_translatedInteractionPositions.push_back(newCfg);
     }
   }
   return m_translatedInteractionPositions;
 }
 
-
-std::vector<std::pair<Cfg,Cfg>> 
+std::vector<std::pair<Cfg,Cfg>>
 InteractionTemplate::
-GetTransformedPositionPairs(){
-  if(!m_transformedInteractionPositionPairs.empty()){
+GetTransformedPositionPairs() {
+  if(!m_transformedInteractionPositionPairs.empty()) {
     return m_transformedInteractionPositionPairs;
   }
-  for(auto center : m_information->GetTemplateLocations()){
+  for(auto center : m_information->GetTemplateLocations()) {
     std::vector<Cfg> positions;
-    for(auto cfg : m_handoffCfgs){
-      double x = cfg[0];
-      double y = cfg[1];
-      double theta = center[2];
-
-      double newX = x*cos(theta) - y*sin(theta);
-      double newY = y*sin(theta) + y*cos(theta);
-      double oldTheta = cfg[2];
-
+    for(auto cfg : m_handoffCfgs) {
       Cfg newCfg = cfg;
-      newCfg.SetLinearPosition({newX, newY, oldTheta});
-      newCfg += center;
+      newCfg.TransformCfg(center.GetBaseTransformation());
       positions.push_back(newCfg);
     }
     m_transformedInteractionPositionPairs.push_back(std::pair<Cfg,Cfg>(positions[0],positions[1]));
@@ -103,28 +84,18 @@ GetTransformedPositionPairs(){
   return m_transformedInteractionPositionPairs;
 }
 
-
 std::vector<std::vector<Cfg>>&
 InteractionTemplate::
-GetTranslatedPaths(){
-  if(!m_translatedInteractionPaths.empty()){
+GetTranslatedPaths() {
+  if(!m_translatedInteractionPaths.empty()) {
     return m_translatedInteractionPaths;
   }
-  for(auto center : m_information->GetTemplateLocations()){
-    for(auto& path : m_interactionPaths){
+  for(auto center : m_information->GetTemplateLocations()) {
+    for(auto& path : m_interactionPaths) {
       std::vector<Cfg> translatedPath;
-      for(auto cfg : path){
-        double x = cfg[0];
-        double y = cfg[1];
-        double theta = center[2]*PI;
-
-        double newX = x*cos(theta) - y*sin(theta);
-        double newY = y*sin(theta) + y*cos(theta);
-        double oldTheta = cfg[2];
-
+      for(auto cfg : path) {
         Cfg newCfg = cfg;
-        newCfg.SetLinearPosition({newX, newY, oldTheta});
-        newCfg += center;
+        newCfg.TransformCfg(center.GetBaseTransformation());
         translatedPath.push_back(newCfg);
       }
       m_translatedInteractionPaths.push_back(translatedPath);
@@ -152,19 +123,19 @@ AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _roadmap) {
 
 void
 InteractionTemplate::
-AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem){
-  for(auto& cfg : _path){
+AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem) {
+  for(auto& cfg : _path) {
     cfg.SetRobot(_problem->GetRobot(cfg.GetRobot()->GetLabel()));
   }
-  if(_path.size() == 1){
-    for(size_t i = 0; i < 200; i ++){
+  if(_path.size() == 1) {
+    for(size_t i = 0; i < 200; i ++) {
       _path.push_back(_path[0]);
     }
   }
-  if(m_information->SavedPaths()){
+  if(m_information->SavedPaths()) {
     m_interactionPaths.push_back(_path);
   }
-  else{
+  else {
     m_interactionPaths.push_back({_path[_path.size()-1]});
   }
   /*auto roadmap = m_roadmaps[m_roadmaps.size()-1];
@@ -196,7 +167,6 @@ AddPath(std::vector<Cfg> _path/*, double _cost*/, MPProblem* _problem){
   m_distinctPathCosts.push_back(_cost);*/
 }
 
-
 void
 InteractionTemplate::
 AddHandoffCfg(Cfg _cfg, MPProblem* _problem) {
@@ -209,7 +179,7 @@ InteractionTemplate::
 ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
   //Combine roadmaps into one graph
   m_connectedRoadmap = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(_robot);
-  for(auto roadmap : m_roadmaps){
+  for(auto roadmap : m_roadmaps) {
     vector<size_t> currentRoadmap;
     // Copy vertices and map the change in VIDs.
     std::unordered_map<size_t, size_t> oldToNew;
@@ -227,7 +197,7 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
       for(auto eit = vit->begin(); eit != vit->end(); ++eit) {
         auto source = oldToNew[eit->source()];
         auto target = oldToNew[eit->target()];
-        if(!m_connectedRoadmap->IsEdge(source, target)){
+        if(!m_connectedRoadmap->IsEdge(source, target)) {
           m_connectedRoadmap->AddEdge(source, target, eit->property());
         }
       }
@@ -235,8 +205,8 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
     m_distinctRoadmaps.push_back(currentRoadmap);
   }
   //Connect the end configuration and add the edge to the roadmap
-  for(auto start : m_handoffCfgs){
-    for(auto end : m_handoffCfgs){
+  for(auto start : m_handoffCfgs) {
+    for(auto end : m_handoffCfgs) {
       if(start == end)
         continue;
       auto startVID = m_connectedRoadmap->GetVID(start);
@@ -249,7 +219,8 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
         }
         weight.SetWeight(cost);
       }*/
-      weight.SetWeight(m_information->GetInteractionWeight());
+      double interactionWeight = m_information->GetInteractionWeight();
+      weight.SetWeight(interactionWeight);
       m_connectedRoadmap->AddEdge(startVID, endVID, weight);
       m_connectingEdge = std::pair<size_t,size_t>(startVID, endVID);
     }
@@ -258,6 +229,6 @@ ConnectRoadmaps(Robot* _robot, MPProblem* _problem) {
 
 std::pair<size_t,size_t>
 InteractionTemplate::
-GetConnectingEdge(){
+GetConnectingEdge() {
   return m_connectingEdge;
 }

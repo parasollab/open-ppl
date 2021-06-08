@@ -1,18 +1,18 @@
 #include "StateGraph.h"
 
 #include "Behaviors/Agents/Coordinator.h"
-
-#include "TMPLibrary/TaskPlan.h"
+#include "Simulator/Simulation.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 /*------------------------------ Construction --------------------------------*/
 
 StateGraph::
-StateGraph(){}
+StateGraph() {}
 
 StateGraph::
 StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
-	m_pmLabel = _node.Read("pmLabel",false,"",
-								"The placement method used for points of interests (i.e. ITs)");
+  m_pmLabel = _node.Read("pmLabel",false,"",
+                "The placement method used for points of interests (i.e. ITs)");
 }
 
 /*------------------------------ Construction --------------------------------*/
@@ -20,32 +20,31 @@ StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
 void
 StateGraph::
 Initialize() {
-	if(m_graph){
-		delete m_graph;
-	}
-	m_graph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(this->GetTaskPlan()->GetCoordinator()->GetRobot());
+  if(m_graph) {
+    delete m_graph;
+  }
+  m_graph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
 
-	ConstructGraph();
+  ConstructGraph();
 }
 
 /*------------------------------ Accessors --------------------------------*/
 
 RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
 StateGraph::
-GetGraph(){
-	return m_graph;
+GetGraph() {
+  return m_graph;
 }
 
 void
 StateGraph::
-LoadStateGraph(){
-	this->GetTaskPlan()->GetCoordinator()->SetRoadmapGraph(m_graph);
+LoadStateGraph() {
+  this->GetPlan()->GetCoordinator()->SetRoadmapGraph(m_graph);
 }
 
 /*------------------------------ Helpers --------------------------------*/
 
 void
 StateGraph::
-ConstructGraph(){
-
+ConstructGraph() {
 }

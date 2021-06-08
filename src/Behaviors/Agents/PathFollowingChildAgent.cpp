@@ -22,20 +22,17 @@
 
 #include "Simulator/Simulation.h"
 
-
 /*------------------------------ Construction --------------------------------*/
 
 PathFollowingChildAgent::
 PathFollowingChildAgent(Robot* const _r) : PathFollowingAgent(_r) {
 }
 
-
 PathFollowingChildAgent::
 PathFollowingChildAgent(Robot* const _r, XMLNode& _node)
   : PathFollowingAgent(_r, _node) {
   // Parse XML parameters.
 }
-
 
 PathFollowingChildAgent::
 ~PathFollowingChildAgent() {
@@ -77,7 +74,6 @@ IsBatteryLow() {
   return battery->GetCurLevel() < threshold;
 }
 
-
 bool
 PathFollowingChildAgent::
 IsBatteryHigh() {
@@ -93,7 +89,6 @@ PathFollowingChildAgent::
 SetParentAgent(BatteryConstrainedGroup* const _parent) {
   m_parentAgent = _parent;
 }
-
 
 bool
 PathFollowingChildAgent::
@@ -168,14 +163,12 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
   m_planning = false;
 }
 
-
 bool
 PathFollowingChildAgent::
-SelectTask(){
+SelectTask() {
   m_parentAgent->AssignTask(this);
   return GetTask().get();
 }
-
 
 void
 PathFollowingChildAgent::
@@ -261,10 +254,10 @@ SetBatteryBreak() {
 
   double departureTime = GetTask()->GetEstimatedCompletionTime() - numSteps*timeRes;
   double currentTime =m_parentAgent->GetCurrentTime();
-  if(departureTime > currentTime){
+  if(departureTime > currentTime) {
     m_stepsRemaining = std::ceil((departureTime - currentTime)/timeRes);
   }
-  if(batteryLevel - batteryThreshold < 1.5){
+  if(batteryLevel - batteryThreshold < 1.5) {
     BatteryBreak batteryBreak(path.back(), m_parentAgent->GetCurrentTime() + numSteps * timeRes);
 
     std::cout << "Battery Break at: " << batteryBreak.GetPlace()
@@ -283,17 +276,15 @@ SetBatteryBreak() {
   //m_parentAgent->SetBatteryBreak(batteryBreak, this);
 }
 
-
 void
 PathFollowingChildAgent::
-SetPausedTask(std::shared_ptr<MPTask> _pausedTask){
+SetPausedTask(std::shared_ptr<MPTask> _pausedTask) {
   m_pausedTask = _pausedTask;
 }
 
-
 std::shared_ptr<MPTask>
 PathFollowingChildAgent::
-GetPausedTask(){
+GetPausedTask() {
   return m_pausedTask;
 }
 

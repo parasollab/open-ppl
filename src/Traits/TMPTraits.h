@@ -5,17 +5,20 @@
 
 // TMPStrategyMethods to include
 
+#include "TMPLibrary/TMPStrategies/DummyStrategyMethod.h"
 #include "TMPLibrary/TMPStrategies/ITMethod.h"
-#include "TMPLibrary/TMPStrategies/MultiAgentMultiTaskPlanner.h"
+#include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
 
 // PoIPlacementMethods to include
 
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.h"
+#include "TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.h"
 #include "TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.h"
 
 // TaskEvaluators to include
 
 #include "TMPLibrary/TaskEvaluators/EnforcedHillClimbing.h"
+#include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 
 // TaskDecomposers to include
 
@@ -28,7 +31,6 @@
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
-#include "TMPLibrary/StateGraphs/MultiTaskGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup TaskAndMotionPlanningUniverse
@@ -44,17 +46,20 @@ struct TMPTraits {
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
     ITMethod,
-		MultiAgentMultiTaskPlanner
+		DummyStrategyMethod,
+		SimpleMotionMethod
       > TMPStrategyMethodList;
 
   //types of points of interest placement methods available in our world
   typedef boost::mpl::list<
     DisjointWorkspaces,
-    WorkspaceGuidance
+    WorkspaceGuidance,
+		OverlappingWorkspacesDensity
       > PoIPlacementMethodList;
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
+		SimpleMotionEvaluator,
     EnforcedHillClimbing
       > TaskEvaluatorMethodList;
 
@@ -69,8 +74,7 @@ struct TMPTraits {
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
-		CombinedRoadmap,
-		MultiTaskGraph
+		CombinedRoadmap
 			> StateGraphList;
 };
 

@@ -1,7 +1,7 @@
 #include "StartTask.h"
 
 StartTask::
-StartTask(Robot* _robot, const Boundary* _location){
+StartTask(Robot* _robot, const Boundary* _location) {
   m_robot = _robot;
   m_location = _location;
 
@@ -18,7 +18,7 @@ StartTask::
 
 bool
 StartTask::
-CheckPreConditions(const FactLayer* _factLayer){
+CheckPreConditions(const FactLayer* _factLayer) {
   std::cout << "CHECKING PRE CONDITIONS FOR START TASK FOR " << m_robot->GetLabel() << std::endl;
   //Checks that the location is the starting point of the task
   auto initialLocation = *(_factLayer->m_possibleObjectLocations.begin());
@@ -47,15 +47,15 @@ CheckPreConditions(const FactLayer* _factLayer){
 
 std::vector<Robot*>
 StartTask::
-GetRobots(){
+GetRobots() {
   return {m_robot};
 }
 
 std::string
 StartTask::
-PrintAction(){
+PrintAction() {
   std::string ret = "STARTTASK " + m_robot->GetLabel() + " at ";
-  for(auto d : m_location->GetCenter()){
+  for(auto d : m_location->GetCenter()) {
     ret += std::to_string(d) + " : ";
   }
   return ret;

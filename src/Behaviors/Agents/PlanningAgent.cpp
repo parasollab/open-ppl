@@ -11,31 +11,25 @@
 
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 
-
 /*------------------------------ Construction --------------------------------*/
 
 PlanningAgent::
 PlanningAgent(Robot* const _r) : Agent(_r) { }
 
-
 PlanningAgent::
 PlanningAgent(Robot* const _r, const PlanningAgent& _a) : Agent(_r, _a)
 { }
 
-
 PlanningAgent::
-PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r) {
+PlanningAgent(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
   // Currently there are no parameters. Parse XML options here.
-
 }
-
 
 std::unique_ptr<Agent>
 PlanningAgent::
 Clone(Robot* const _r) const {
   return std::unique_ptr<PlanningAgent>(new PlanningAgent(_r, *this));
 }
-
 
 PlanningAgent::
 ~PlanningAgent() = default;
@@ -61,7 +55,10 @@ Initialize() {
   // Initialize a clock to track this agent's total planning time. This is done
   // to ensure that the stat's clock map isn't adding elements across threads.
   const std::string clockName = "Planning::" + m_robot->GetLabel();
-  Simulation::GetStatClass()->ClearClock(clockName);
+
+  if(Simulation::Get())
+    Simulation::GetStatClass()->ClearClock(clockName);
+  //TODO::Put other stat class accessors here or better yet - create a different stat holder
 }
 
 
@@ -113,7 +110,6 @@ Step(const double _dt) {
     PauseAgent(1);
 }
 
-
 void
 PlanningAgent::
 Uninitialize() {
@@ -136,7 +132,6 @@ Uninitialize() {
   }
 }
 
-
 void
 PlanningAgent::
 SetTask(std::shared_ptr<MPTask> const _task) {
@@ -152,7 +147,6 @@ HasPlan() const {
   // We have a plan if the solution has cfgs.
   return m_solution->GetPath()->Size();
 }
-
 
 void
 PlanningAgent::
@@ -171,13 +165,11 @@ ClearPlan() {
     m_solution->GetPath()->Clear();
 }
 
-
 bool
 PlanningAgent::
 IsPlanning() const {
   return m_planning;
 }
-
 
 size_t
 PlanningAgent::
@@ -228,7 +220,6 @@ GeneratePlan() {
   m_thread.detach();
 }
 
-
 void
 PlanningAgent::
 WorkFunction(std::shared_ptr<MPProblem> _problem) {
@@ -257,7 +248,6 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
     m_pathVisualID = Simulation::Get()->AddPath(path, glutils::color::red);
 }
 
-
 void
 PlanningAgent::
 StopPlanning() {
@@ -283,14 +273,12 @@ SelectTask() {
   return true;
 }
 
-
 bool
 PlanningAgent::
 EvaluateTask() {
   // This agent only plans and cannot complete tasks.
   return false;
 }
-
 
 void
 PlanningAgent::

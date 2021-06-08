@@ -609,7 +609,14 @@ FindConflict(const Solution& _solution) {
                     << cfg2.PrettyPrint()
                     << std::endl;
 
-        Conflict newConflict{cfg1, cfg2, t};
+				//Old block pre-merge with master, remove if compiles
+				//TODO::Was getting some weird complication bug about explicit construction
+        Conflict newConflict(cfg1,cfg2,t);
+        //newConflict.cfg1     = cfg1;
+        //newConflict.cfg2     = cfg2;
+        //newConflict.timestep = t;
+        
+        //Conflict newConflict{cfg1, cfg2, t};
 
         return newConflict;
       }
@@ -620,7 +627,9 @@ FindConflict(const Solution& _solution) {
     std::cout << "\t\tNo conflict detected." << std::endl;
 
   // We didn't find a conflict, return an empty one.
-  return {};
+  // Again weird compilation - I'll figure these out later
+  Conflict c;
+  return c;
 }
 
 

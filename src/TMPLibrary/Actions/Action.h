@@ -31,7 +31,7 @@ class Action {
     ///@}
     ///@name Interface Functions
     ///@{
-    //
+
     /// Checks if the preconditions for this action are met in the given fact
     /// layer
     /// @param _factLayer The possible state that is the action could be
@@ -107,6 +107,7 @@ class Action {
     /// Base cost of 100 for actions such as starting and handing off task to be
     /// considered in the other plan cost
     double m_cost{100}; ///< Cost of performing this action
+
     ///@}
 };
 

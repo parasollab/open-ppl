@@ -44,6 +44,8 @@ class InteractionInformation {
 
     std::vector<std::shared_ptr<MPTask>>& GetInteractionTasks();
 
+		std::vector<std::shared_ptr<MPTask>>& GetTypeTasks(const std::string& _s);
+
     double GetInteractionWeight() const;
 
     /// Adds an addition location to place an IT
@@ -82,6 +84,8 @@ class InteractionInformation {
     ///The set of tasks that must be performed to handoff.
     std::vector<std::shared_ptr<MPTask>> m_tasks;
 
+		std::unordered_map<std::string,std::vector<std::shared_ptr<MPTask>>> m_taskType;
+
     ///The handoff label
     std::string m_label;
 
@@ -89,7 +93,7 @@ class InteractionInformation {
     size_t m_maxAttempts;
 
     ///The weight of the edge between interaction cfgs
-    size_t m_interactionWeight{0};
+    double m_interactionWeight{0};
 
     ///The locations for manually placed handoffs
     std::vector<Cfg> m_handoffLocations;

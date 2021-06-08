@@ -19,13 +19,13 @@ class WorkspaceGuidance : public ITPlacementMethod {
     ///@name Construction
     ///@{
 
-		WorkspaceGuidance();
+    WorkspaceGuidance();
 
     WorkspaceGuidance(XMLNode& _node);
 
     ~WorkspaceGuidance() = default;
 
-		std::unique_ptr<ITPlacementMethod> Clone() override;
+    std::unique_ptr<ITPlacementMethod> Clone() override;
 
     ///@}
     ///@name Interface
@@ -35,17 +35,14 @@ class WorkspaceGuidance : public ITPlacementMethod {
 
     ///@}
 
-
   private:
 
     void BuildSkeleton();
-
 
     std::string m_dmLabel;
     double m_distanceThreshold;
     WorkspaceSkeleton m_skeleton;
     bool m_initialized{false};
-
 };
 
 #endif

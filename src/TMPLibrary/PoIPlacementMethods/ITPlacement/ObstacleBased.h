@@ -24,7 +24,6 @@ class ObstacleBased : public ITPlacementMethod {
 
     ///@}
 
-
   protected:
 
     void Fill();
@@ -36,7 +35,7 @@ class ObstacleBased : public ITPlacementMethod {
 
   private:
 
-    double m_ballRadius, m_ballDiameter, m_precision, m_startCornerAngle, 
+    double m_ballRadius, m_ballDiameter, m_precision, m_startCornerAngle,
         m_endCornerAngle, m_stepCornerAngle, m_checksPerSide, m_refineMethod;
     Environment* m_environment;
     const Boundary* m_boundary;
@@ -44,7 +43,6 @@ class ObstacleBased : public ITPlacementMethod {
     int m_dimensions;
     std::map<size_t, vector<Vector3d>> m_obstacles;
     vector<vector<vector<double>>> m_obstaclesBounds;
-
 
 };
 

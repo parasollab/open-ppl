@@ -1,7 +1,7 @@
 #include "Action.h"
 
 Action::
-Action(){
+Action() {
 }
 
 Action::
@@ -9,61 +9,61 @@ Action::
 
 bool
 Action::
-CheckPreConditions(const FactLayer* _factLayer){
+CheckPreConditions(const FactLayer* _factLayer) {
   return true;
 }
 
 void
 Action::
-SetLayerMembership(size_t _layerMembership){
+SetLayerMembership(size_t _layerMembership) {
   m_layerMembership = _layerMembership;
 }
 
 size_t
 Action::
-GetLayerMembership(){
+GetLayerMembership() {
   return m_layerMembership;
 }
 
 bool
 Action::
-Used(){
+Used() {
   return m_used;
 }
 
 void
 Action::
-SetUsed(bool _used){
+SetUsed(bool _used) {
   m_used = _used;
 }
 
 State&
 Action::
-GetStartState(){
+GetStartState() {
   return m_startState;
 }
 
 State&
 Action::
-GetResultState(){
+GetResultState() {
   return m_resultState;
 }
 
 std::vector<Robot*>
 Action::
-GetRobots(){
+GetRobots() {
   return {};
 }
 
 std::string
 Action::
-PrintAction(){
+PrintAction() {
   return "Base Action";
 }
 
 double
 Action::
-GetCost(){
+GetCost() {
   return m_cost;
 }
 
@@ -84,12 +84,11 @@ operator!=(const Action& _action) const {
   return !(*this == _action);
 }
 
-
 /*----------------------Helpers---------------------------*/
 
 bool
 Action::
-CanBeInLocation(Robot* _robot, const Boundary* _location){
+CanBeInLocation(Robot* _robot, const Boundary* _location) {
 
   std::vector<Cfg> goalPoints;
 

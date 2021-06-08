@@ -17,7 +17,6 @@
 //#include "TMPLibrary/Actions/Action.h"
 #include "TMPLibrary/State.h"
 
-
 class Cfg;
 class MPTask;
 class Robot;
@@ -30,7 +29,6 @@ class Action;
 /// Heuristic Search
 ///
 ////////////////////////////////////////////////////////////////////////////////
-
 
 struct FactLayer {
   std::unordered_map<Robot*, std::set<const Boundary*>> m_possibleRobotLocations;
@@ -143,10 +141,10 @@ class RelaxedGraphPlan {
     std::vector<std::pair<FactLayer*, ActionLayer*>> m_layerGraph;
 
     /// Keeps track of when goal facts can be achieved
-    std::vector<FactLayer*>                         m_goalLayers;
+    std::vector<FactLayer*>                          m_goalLayers;
 
     /// Recommended set of next actions to take to achieve goal state
-    std::vector<std::shared_ptr<Action>>            m_helpfulActions;
+    std::vector<std::shared_ptr<Action>>             m_helpfulActions;
 
     State m_start; ///< Starting state of the problem
     State m_goal; ///< Goal state of the problem
