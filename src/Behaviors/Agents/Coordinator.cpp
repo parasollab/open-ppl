@@ -7,11 +7,8 @@
 #include "nonstd/timer.h"
 #include "nonstd/io.h"
 
-#include "Behaviors/Agents/HandoffAgent.h"
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
-
-#include "Communication/Messages/Message.h"
 
 #include "MPProblem/Robot/Robot.h"
 
@@ -19,6 +16,8 @@
 #include "Simulator/BulletModel.h"
 
 #include "Traits/CfgTraits.h"
+
+#include "TMPLibrary/Solution/TaskSolution.h"
 
 #include "sandbox/gui/main_window.h"
 
@@ -86,31 +85,19 @@ Initialize() {
     // Throw an exception if not.
     Agent* memberAgent = member->GetAgent();
 
-    if(m_communicator.get() and !memberAgent->GetCommunicator().get())
-      memberAgent->SetCommunicator(m_communicator);
-
     ChildAgent* c = static_cast<ChildAgent*>(memberAgent);
     if(c) {
       m_childAgents.push_back(c);
     }
     else {
-      HandoffAgent* a = static_cast<HandoffAgent*>(
-          memberAgent);
-      if(!a) {
-        throw RunTimeException(WHERE) << "Incompatible agent type specified for "
-            "group member '" << memberLabel << "'." << std::endl;
-      }
-      m_memberAgents.push_back(a);
+      throw RunTimeException(WHERE) << "Incompatible agent type specified for "
+                   "group member '" << memberLabel << "'." << std::endl;
     }
   }
 
   if(m_debug) {
     std::cout << "Child Agents" << std::endl;
     for(auto agent : m_childAgents) {
-      std::cout << "\t" << agent->GetRobot()->GetLabel() << std::endl;
-    }
-    std::cout << "Member Agents" << std::endl;
-    for(auto agent : m_memberAgents) {
       std::cout << "\t" << agent->GetRobot()->GetLabel() << std::endl;
     }
   }
@@ -121,19 +108,15 @@ Initialize() {
   if(m_numRandTasks > 0) {
     if(problem->GetTasks(m_robot).size() == 1)
       problem->ReassignTask(problem->GetTasks(m_robot)[0].get(),
-                            m_memberAgents[0]->GetRobot());
+                            m_childAgents[0]->GetRobot());
     GenerateRandomTasks();
   }
 
   for(auto agent : m_childAgents) {
     agent->GetRobot()->SetVirtual(false);
   }
-  for(auto agent : m_memberAgents) {
-    agent->GetRobot()->SetVirtual(false);
-  }
 
   Simulation::Get()->PrintStatFile();
-  m_clock.start();
 }
 
 void
@@ -266,10 +249,6 @@ InitializeAgents() {
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
   }
-  for(auto agent : m_memberAgents) {
-    agent->Initialize();
-    agent->SetParentAgent(this);
-  }
   for(auto agent : m_childAgents) {
     agent->Initialize();
     agent->SetCoordinator(this);
@@ -400,12 +379,6 @@ std::vector<std::string>
 Coordinator::
 GetMemberLabels() {
   return m_memberLabels;
-}
-
-std::vector<HandoffAgent*>
-Coordinator::
-GetMemberAgents() {
-  return m_memberAgents;
 }
 
 std::vector<ChildAgent*>

@@ -1,7 +1,5 @@
 #include "DefaultCoordinatorStepFunction.h"
 
-#include "Communication/Messages/Message.h"
-
 #include "ConfigurationSpace/Cfg.h"
 
 #include "MPLibrary/MPSolution.h"
@@ -9,6 +7,8 @@
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
+
+#include "TMPLibrary/Solution/TaskSolution.h"
 
 /*----------------------------- Construction -------------------------*/
 
@@ -75,55 +75,23 @@ GetPlan() {
   auto robot = m_coordinator->GetRobot();
   auto problem = robot->GetMPProblem();
 
-  // if networked, request plan from server
-  auto communicator = m_coordinator->GetCommunicator();
-  if(communicator.get() and communicator->IsConnectedToMaster()) {
+  // Use tmplibrary to get task assignments
+  m_plan = std::shared_ptr<Plan>(new Plan());
+  m_plan->SetCoordinator(m_coordinator);
 
-    std::vector<Robot*> team;
-    for(auto agent : m_coordinator->GetChildAgents()) {
-      team.push_back(agent->GetRobot());
-    }
-
-    /// Convert robot team and problem decomposition tree to a message
-    std::string query = RobotTeamToMessage(team,robot)
-                      + DecompositionToMessage(
-                          problem->GetDecompositions(robot)[0].get());
-
-    /// Send query message to server and wait for response
-    auto response = communicator->Query("ppl",query);
-    if(m_debug) {
-      std::cout << "QUERY MESSAGE::"
-                << query
-                << "\n\n"
-                << "RESPONSE MESSAGE::"
-                << response
-                << std::endl;
-    }
-
-    /// Convert response message to a Plan object
-    m_plan = std::shared_ptr<Plan>(MessageToPlan(
-              response, problem->GetDecompositions(robot)[0].get(),problem));
-
+  std::vector<Robot*> team;
+  for(auto agent : m_coordinator->GetChildAgents()) {
+    team.push_back(agent->GetRobot());
   }
-  /// Otherwise use tmplibrary to get task assignments
-  else {
-    m_plan = std::shared_ptr<Plan>(new Plan());
-    m_plan->SetCoordinator(m_coordinator);
 
-    std::vector<Robot*> team;
-    for(auto agent : m_coordinator->GetChildAgents()) {
-      team.push_back(agent->GetRobot());
-    }
+  m_plan->SetTeam(team);
+  m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
 
-    m_plan->SetTeam(team);
-    m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
+  if(!m_tmpLibrary)
+    m_tmpLibrary = m_coordinator->GetTMPLibrary();
 
-    if(!m_tmpLibrary)
-      m_tmpLibrary = m_coordinator->GetTMPLibrary();
-
-    m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(),
-                        m_plan.get(), m_coordinator, team);
-  }
+  m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(),
+                      m_plan.get(), m_coordinator, team);
 
   if(m_debug and m_plan) {
     std::cout << "SOLUTION PLAN" << std::endl;

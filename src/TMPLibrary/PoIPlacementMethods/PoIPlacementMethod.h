@@ -2,7 +2,6 @@
 #define PMPL_POI_PLACEMENT_METHOD_H_
 
 #include "TMPLibrary/TMPBaseObject.h"
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"//Move to ITPlacementMethod when available
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
@@ -23,7 +22,7 @@ class PoIPlacementMethod : public TMPBaseObject {
 
     ///@}
     //TODO::convert to generic "Place" function
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution);
+    //void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution);
 };
 
 /*----------------------------------------------------------------------------*/

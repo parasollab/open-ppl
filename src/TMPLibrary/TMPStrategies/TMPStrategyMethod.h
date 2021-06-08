@@ -1,7 +1,5 @@
-#ifndef TMP_STRATEGY_METHOD_H
-#define TMP_STRATEGY_METHOD_H
-
-#include "Behaviors/Agents/HandoffAgent.h"
+#ifndef PPL_TMP_STRATEGY_METHOD_H
+#define PPL_TMP_STRATEGY_METHOD_H
 
 #include "MPProblem/MPTask.h"
 

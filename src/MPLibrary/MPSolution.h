@@ -4,7 +4,6 @@
 #include "ConfigurationSpace/LocalObstacleMap.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "Utilities/MetricUtils.h"
 
 #include <map>
