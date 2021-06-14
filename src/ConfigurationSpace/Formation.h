@@ -27,7 +27,7 @@ class Formation {
     ///@{
 
     Formation(std::vector<Robot*> _robots, Robot* _leader, 
-              std::unordered_map<Robot*,FormationConstraint> _constraintMap);
+              std::unordered_map<MultiBody*,FormationConstraint> _constraintMap);
 
     ~Formation();
 
@@ -58,7 +58,7 @@ class Formation {
 
     void AddBody(Body* _body, bool _base = false);
 
-    void AddConnection(Body* _first, Body* _second, Connection* _connection);
+    void AddConnection(Body* _first, Body* _second, Connection& _connection);
 
     /// Construct the formation cspace boundary from multibody.
     void InitializePlanningSpace();
@@ -92,12 +92,13 @@ class Formation {
     std::unique_ptr<CSpaceBoundingBox> m_cspace;
 
     /// The map of constraints defining the formation
-    std::unordered_map<Robot*,FormationConstraint> m_constraintMap;
+    std::unordered_map<MultiBody*,FormationConstraint> m_constraintMap;
 
     /// The map of individual robot connections to formation connnections.
     /// The boolean value represents if the direction is the same or if it
     /// has been inverted (same = true, inverted = false);
-    std::unordered_map<Connection*,std::pair<bool,size_t> m_jointMap;
+    std::unordered_map<Connection*,std::pair<bool,size_t>> m_jointMap;
+    std::unordered_map<size_t,Connection*> m_reverseJointMap;
 
     /// Map of individual robot bodies to formation bodies.
     std::unordered_map<Body*,size_t> m_bodyMap;

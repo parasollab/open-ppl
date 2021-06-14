@@ -4,7 +4,7 @@
 
 Formation::
 Formation(std::vector<Robot*> _robots, Robot* _leader, 
-    std::unordered_map<Robot*,FormationConstraint> _constraintMap) 
+    std::unordered_map<MultiBody*,FormationConstraint> _constraintMap) 
     : m_robots(_robots), m_leader(_leader), m_constraintMap(_constraintMap) {
 
   BuildMultiBody(); 
@@ -92,14 +92,16 @@ Formation::
 BuildMultiBody() {
 
   // Build multibody tree  
-  std::unordered_map<Body*,std::vector<std::pair<Connection*,Body*>> tree;
+  std::unordered_map<Body*,std::vector<std::pair<Connection,Body*>>> tree;
 
   // Add leader to the tree.
   auto mb = m_leader->GetMultiBody();
-  for(auto body : mb->GetBodies()) {
+  for(size_t j = 0; j < mb->GetNumBodies(); j++) {
+    auto body = mb->GetBody(j);
+
     for(size_t i = 0; i < body->ForwardConnectionCount(); i++) {
       auto connection = body->GetForwardConnection(i);
-      tree[body].push_back(std::make_pair(connection,connection->GetNextBody()));
+      tree[body].push_back(std::make_pair(connection,connection.GetNextBody()));
     }
   }
 
@@ -110,25 +112,27 @@ BuildMultiBody() {
     mb = robot->GetMultiBody();
 
     // Find new robot base
-    auto constraint = m_constraintMap[robot];
+    auto constraint = m_constraintMap[robot->GetMultiBody()];
     auto base = constraint.dependentBody;
 
-    // Add base to tree. Nullptr indicates it comes from constraint.
-    tree[constraint.referenceBody] = std::make_pair(nullptr,base);
+    // Add base to tree. Empty connection with nullptr mb indicates 
+    // it comes from constraint.
+    Connection empty(nullptr);
+    tree[constraint.referenceBody].push_back(std::make_pair(empty,base));
 
     // Trace new base back to original
     auto body = base;
-    std::set<Connection*> addedConnections;
+    std::set<std::pair<Body*,Body*>> addedConnections;
     while(body != mb->GetBase()) {
       auto oldBody = body;
       // Assuming only one backward connection.
       auto connection = body->GetBackwardConnection(0);
-      body = connection->GetPreviousBody();
+      body = connection.GetPreviousBody();
 
       // Add connection to tree. Will identify inverted connection later.
       tree[oldBody].push_back(std::make_pair(connection,body));
 
-      addedConnections.insert(connection);
+      addedConnections.insert(std::make_pair(body,oldBody));
     }
 
     // Fill in rest of bodies and connections
@@ -138,10 +142,13 @@ BuildMultiBody() {
         auto connection = body->GetForwardConnection(i);
         
         // Check that this was not added on the backtrace.
-        if(addedConnections.count(connection))
+        auto added = std::make_pair(body,connection.GetNextBody());
+        if(addedConnections.count(added))
           continue;
 
-        tree[body] = std::make_pair(connection,connection->GetNextBody());
+        addedConnections.insert(added);
+
+        tree[body].push_back(std::make_pair(connection,connection.GetNextBody()));
       }
     }
   }
@@ -152,14 +159,14 @@ BuildMultiBody() {
   AddBody(body,true); 
 
   std::set<Body*> addedBodies;
-  addedBodies.insert(base);
+  addedBodies.insert(body);
 
   // Add all bodies
   for(auto kv : tree) {
     auto source = kv.first;
 
     if(!addedBodies.count(source)) {
-      AddBody(source)
+      AddBody(source);
     }
 
     for(auto p : kv.second) { 
@@ -203,33 +210,44 @@ AddBody(Body* _body, bool _base) {
 }
 
 void
-Formation
-AddConnection(Body* _first, Body* _second, Connection* _connection) {
-  // Check if connection is to be copied or generated from constraint
-  if(!_connection) {
-    // Create connection from constraint
-    return;
-  }
+Formation::
+AddConnection(Body* _first, Body* _second, Connection& _connection) {
 
-  // Copy connection
-  Connection connection = *_connection;
- 
+  Connection connection(m_multibody.get());
   bool sameDirection = true;
- 
-  // Check if connection is in the proper order;
-  if(_connection.GetPreviousBody() != _first) {
-    _connection.InvertConnection();
-    sameDirection = false;
+
+  // Check if connection is to be copied or generated from constraint
+  if(!connection.GetMultiBody()) {
+    // Create connection from constraint
+    auto constraint = m_constraintMap[_first->GetMultiBody()];
+    Transformation toDHFrame = constraint.transformation;
+    DHParameters dh;
+    Transformation identity;
+    Connection connection(m_multibody.get(),identity,toDHFrame,
+                          dh,Connection::JointType::NonActuated);
+  }
+  else {
+    // Copy connection
+    Connection connection = _connection;
+
+    // Check if connection is in the proper order;
+    if(connection.GetPreviousBody() != _first) {
+      connection.InvertConnection();
+      sameDirection = false;
+    }
   }
 
   // Update body pointers
   auto first = m_bodyMap[_first];
   auto second = m_bodyMap[_second];
 
-  connection.SetBodies(m_multibody,first,second);
+  connection.SetBodies(m_multibody.get(),first,second);
 
-  m_linkMap = std::make_pair(sameDirection,
-            m_multibody->AddConnection(std::move(connection)));
+  auto c = _first->GetConnectionTo(_second);
+
+  auto index = m_multibody->AddJoint(std::move(connection));
+  m_jointMap[c] = std::make_pair(sameDirection,index);
+  m_reverseJointMap[index] = c;
 }
 
 void
@@ -249,13 +267,96 @@ InitializePlanningSpace() {
 std::vector<double>
 Formation::
 ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
-  return {};
+  std::vector<double> dofs(m_multibody->DOF());
+
+  std::unordered_map<size_t,double> indexedValues;
+
+  for(auto cfg : _cfgs) {
+    auto mb = cfg.GetRobot()->GetMultiBody();
+
+    if(cfg.GetRobot() == m_leader) {
+      // Extract base values
+    }
+
+    size_t counter = 0;
+    for(const auto& joint : mb->GetJoints()) {
+      auto j = joint.get();
+
+      if(j->GetConnectionType() == Connection::JointType::NonActuated) 
+        continue;
+      
+      auto index = m_jointMap[j].second;
+      indexedValues[index] = cfg[counter];
+
+      counter++;
+    }
+  }
+
+  size_t counter = 0;
+  
+  for(size_t i = 0; i < m_multibody->GetJoints().size(); i++) {
+
+    auto joint = m_multibody->GetJoint(i);
+
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+      continue;
+
+    auto value = indexedValues[i];
+
+    dofs[counter] = value;
+    counter++;
+  }
+
+  return dofs;
 }
     
 std::vector<Cfg>
 Formation::
 ConvertToIndividualCfgs(std::vector<double> _dofs) {
-  return {};
+
+  std::vector<Cfg> cfgs;
+
+  std::unordered_map<Connection*,double> valueMap;
+
+  size_t counter = 0;
+
+  for(size_t i = 0; i < m_multibody->GetJoints().size(); i++) {
+    auto joint = m_multibody->GetJoint(i);
+
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+      continue;
+
+    auto connection = m_reverseJointMap[i];
+
+    //TODO::Modify value if inverted.
+    auto value = _dofs[counter];
+    valueMap[connection] = value;
+
+    counter++;
+  }
+
+  for(auto robot : m_robots) {
+    auto mb = robot->GetMultiBody();
+    std::vector<double> dofs(mb->DOF());
+
+    counter = 0;
+    for(const auto& joint : mb->GetJoints()) {
+      if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+        continue;
+
+      auto value = valueMap[joint.get()];
+      dofs[counter] = value;
+
+      counter++;
+    }
+
+    Cfg cfg(robot);
+    cfg.SetData(dofs);
+
+    cfgs.push_back(cfg);
+  }
+
+  return cfgs;
 }
 
 /*----------------------------------------------------------------------------*/

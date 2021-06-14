@@ -58,6 +58,11 @@ class Connection final {
     /// @param _node The input XML node to read.
     Connection(MultiBody* const _owner, XMLNode& _node);
 
+    /// Build a connection from scratch. Joint limits set with SetJointLimits function.
+    /// Bodies set with SetBodies function.
+    Connection(MultiBody* _owner, Transformation _toBody2, Transformation _toDHFrame,
+               DHParameters _dhParams, JointType _type);
+ 
     /// Copying a connection does not copy the multibody and body pointers, as
     /// this would not be a usable object. Call SetBodies to attach a newly
     /// copied connection to another multibody.
@@ -130,6 +135,9 @@ class Connection final {
     ///@}
     ///@name Body information
     ///@{
+
+    /// Get the owning multibody.
+    const MultiBody* GetMultiBody() const noexcept;
 
     /// Get a pointer to the child Body.
     const Body* GetPreviousBody() const noexcept;

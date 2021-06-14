@@ -128,6 +128,12 @@ Connection(MultiBody* const _owner, XMLNode& _node)
   }
 }
 
+Connection::
+Connection(MultiBody* _owner, Transformation _toBody2, Transformation _toDHFrame, 
+           DHParameters _dhParams, JointType _type) : 
+           m_multibody(_owner), m_transformationToBody2(_toBody2), 
+           m_transformationToDHFrame(_toDHFrame), m_dhParameters(_dhParams),
+           m_jointType(_type) {}
 
 Connection::
 Connection(const Connection& _other) {
@@ -303,6 +309,12 @@ SetJointRange(const size_t _i, const Range<double>& _r) noexcept {
 }
 
 /*----------------------------- Body Information -----------------------------*/
+    
+const MultiBody*
+Connection::
+GetMultiBody() const noexcept {
+  return m_multibody;
+}
 
 const Body*
 Connection::
