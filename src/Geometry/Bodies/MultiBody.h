@@ -211,6 +211,11 @@ class MultiBody {
     /// @param _i The connection index.
     Connection* GetJoint(const size_t _i) noexcept;
 
+    /// Add a joint.
+    /// @param _joint The joint to add.
+    /// @return The index of the joint.
+    size_t AddJoint(Connection&& _joint);
+
     /// Get the DOF type for a specific degree of freedom.
     const DofType& GetDOFType(const size_t _i) const noexcept;
 

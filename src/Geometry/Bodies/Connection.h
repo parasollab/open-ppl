@@ -162,6 +162,13 @@ class Connection final {
     const Transformation& GetTransformationToDHFrame() const noexcept;
 
     ///@}
+    ///@name Modifiers
+    ///@{
+
+    // Switches the order of the bodies and inverts the transformation.
+    void InvertConnection();
+
+    ///@}
 
   private:
 

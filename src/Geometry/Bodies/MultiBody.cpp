@@ -513,7 +513,13 @@ MultiBody::
 GetJoint(const size_t _i) noexcept {
   return m_joints[_i].get();
 }
-
+    
+size_t
+MultiBody::
+AddJoint(Connection&& _joint) {
+  m_joints.emplace_back(new Connection(_joint));
+  return m_joints.size() - 1;
+}
 
 const DofType&
 MultiBody::

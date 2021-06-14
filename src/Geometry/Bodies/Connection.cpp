@@ -387,6 +387,18 @@ Connection::
 GetTransformationToDHFrame() const noexcept {
   return m_transformationToDHFrame;
 }
+/*-------------------------------- Modifiers ----------------------------------*/
+
+void
+Connection::
+InvertConnection() {
+  auto first = m_bodyIndices.first;
+  m_bodyIndices.first = m_bodyIndices.second;
+  m_bodyIndices.second = first;
+
+  m_transformationToDHFrame = -m_transformationToDHFrame;
+  m_transformationToBody2 = -m_transformationToBody2;
+}
 
 /*---------------------------------- Debug -----------------------------------*/
 
