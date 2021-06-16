@@ -36,9 +36,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 #ifdef _PARALLEL
-class MPLibraryType final : public stapl::p_object
+class MPLibraryType : public stapl::p_object
 #else
-class MPLibraryType final
+class MPLibraryType 
 #endif
 {
 

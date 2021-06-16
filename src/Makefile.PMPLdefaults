@@ -521,6 +521,19 @@ ifneq ($(icreate), 0)
   HARDWARE_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
 endif
 
+################################################################################
+# Testing Sources
+################################################################################
+#TEST_DEF  :=
+#tests: TEST_DEF
+TEST_INCL := 
+TEST_LIBS := 
+TEST_SRCS := \
+  tests_main.cpp \
+  Testing/MPProblem/MPProblemTests.cpp \
+  Testing/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.cpp \
+  Testing/TMPLibrary/TMPLibraryTests.cpp \
+  Testing/TestBaseObject.cpp
 
 ################################################################################
 # PMPL
