@@ -58,7 +58,6 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::GroupCfgType GroupCfg;
-    typedef typename GroupCfg::Formation    Formation;
 
     ///@}
     ///@name Construction

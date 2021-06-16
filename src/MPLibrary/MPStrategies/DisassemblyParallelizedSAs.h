@@ -23,7 +23,7 @@ template <typename MPTraits>
 class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
   public:
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                  RobotFormation;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename GroupRoadmapType::VID       VID;
     typedef std::vector<VID>                     VIDPath;
@@ -39,9 +39,9 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual RobotFormation SelectSubassembly(DisassemblyNode* _q) override;
     virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
-                                   const Formation& _subassembly) override;
+                                   const RobotFormation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
                     const std::vector<size_t>& _removedParts,
@@ -55,10 +55,10 @@ class DisassemblyParallelizedSAs : public DisassemblyMethod<MPTraits> {
 
     bool m_initialMatingRemoval{true};//A flag to keep track of Iterate state
 
-    double m_maxFormationTime = 0;
+    double m_maxRobotFormationTime = 0;
 
     // subassembly candidates
-    std::vector<Formation> m_subassemblies;
+    std::vector<RobotFormation> m_subassemblies;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
@@ -93,7 +93,7 @@ Iterate() {
     this->m_successful = true;
     const double initialTime = stats->GetSeconds(initialRemovalClockName);
     stats->SetStat("Total time for in-parallel removal",
-                   initialTime + m_maxFormationTime);
+                   initialTime + m_maxRobotFormationTime);
     return;
   }
 
@@ -110,7 +110,7 @@ Iterate() {
     m_initialMatingRemoval = false;//Only attempt once.
     //Pass the node (will be the root) and its initial parts as the subassembly
     // so that all parts are attempted.
-    for(Formation& sub : this->m_predefinedSubassemblies) {
+    for(RobotFormation& sub : this->m_predefinedSubassemblies) {
       if(this->m_debug)
         std::cout << "Attempting initial sub = " << sub << std::endl;
       std::pair<bool, VIDPath> result = Expand(node, sub);
@@ -133,7 +133,7 @@ Iterate() {
     //Not on the initial SA removal step, so attempt each subassembly
     // and time how long it takes for each one, recording the max time.
     for(size_t i = 0; i < this->m_predefinedSubassemblies.size(); i++) {
-      Formation sub = this->m_predefinedSubassemblies.at(i);
+      RobotFormation sub = this->m_predefinedSubassemblies.at(i);
       //Create new clock so we don't accumulate each time:
       const std::string thisClockName = tempClockName + std::to_string(i);
       if(this->m_debug)
@@ -144,7 +144,7 @@ Iterate() {
         std::vector<VIDPath> removalPaths;
         for(size_t j = 0; j < sub.size(); ++j) {
           const size_t part = sub.at(j);
-          const Formation partSub({part});
+          const RobotFormation partSub({part});
           std::pair<bool, VIDPath> result = Expand(node, partSub);
           if (result.first) {
             sub.erase(remove(sub.begin(), sub.end(), part), sub.end());
@@ -166,8 +166,8 @@ Iterate() {
       }
       stats->StopClock(thisClockName);
       const double timeTaken = stats->GetSeconds(thisClockName);
-      if(timeTaken > m_maxFormationTime)
-        m_maxFormationTime = timeTaken;
+      if(timeTaken > m_maxRobotFormationTime)
+        m_maxRobotFormationTime = timeTaken;
     }
   }
 }
@@ -222,23 +222,23 @@ SelectExpansionNode() {
 }
 
 template <typename MPTraits>
-typename DisassemblyParallelizedSAs<MPTraits>::Formation
+typename DisassemblyParallelizedSAs<MPTraits>::RobotFormation
 DisassemblyParallelizedSAs<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
-  return Formation();
+  return RobotFormation();
 }
 
 template <typename MPTraits>
 std::pair<bool, typename DisassemblyParallelizedSAs<MPTraits>::VIDPath>
 DisassemblyParallelizedSAs<MPTraits>::
-Expand(DisassemblyNode* _q, const Formation& _subassembly) {
+Expand(DisassemblyNode* _q, const RobotFormation& _subassembly) {
   if (_subassembly.empty())
     return std::make_pair(false, VIDPath());
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
+    std::cout << this->GetNameAndLabel() << "::Expand with RobotFormation: "
          << _subassembly << std::endl;
 
   VID newVID;

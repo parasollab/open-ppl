@@ -43,7 +43,7 @@ class MaskedSamplerMethodGroup : public SamplerMethod<MPTraits> {
 
     using typename SamplerMethod<MPTraits>::GroupOutputIterator;
 
-    typedef std::vector<size_t> Formation;
+    typedef std::vector<size_t> RobotFormation;
 
     ///@}
     ///@name Construction
@@ -65,9 +65,9 @@ class MaskedSamplerMethodGroup : public SamplerMethod<MPTraits> {
     const GroupCfgType& GetStartCfg();
 
 
-    void SetActiveRobots(const Formation& _robots);
+    void SetActiveRobots(const RobotFormation& _robots);
 
-    Formation GetActiveRobots();
+    RobotFormation GetActiveRobots();
 
     ///@}
 
@@ -77,7 +77,7 @@ class MaskedSamplerMethodGroup : public SamplerMethod<MPTraits> {
     ///@{
 
     /// Body numbers of the masking. Only updated in SetMaskByBodyList().
-    Formation m_activeRobots;
+    RobotFormation m_activeRobots;
 
     /// This is the cfg that has all the default values for dofs that
     /// are to be masked.
@@ -120,13 +120,13 @@ GetStartCfg() {
 template <typename MPTraits>
 void
 MaskedSamplerMethodGroup<MPTraits>::
-SetActiveRobots(const Formation& _robots) {
+SetActiveRobots(const RobotFormation& _robots) {
   m_activeRobots = _robots;
 }
 
 
 template <typename MPTraits>
-typename MaskedSamplerMethodGroup<MPTraits>::Formation
+typename MaskedSamplerMethodGroup<MPTraits>::RobotFormation
 MaskedSamplerMethodGroup<MPTraits>::
 GetActiveRobots() {
   return m_activeRobots;

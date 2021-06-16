@@ -30,7 +30,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
   public:
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename MPTraits::MPSolution        MPSolution;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                       RobotFormation;
     typedef typename MPTraits::GroupPathType     GroupPath;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename GroupRoadmapType::VID       VID;
@@ -59,10 +59,10 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
       double bestCumulativeWeight = 0;
 
       // List of removed, but not yet disassembled, subassemblies.
-      std::vector<Formation> usedSubassemblies;
+      std::vector<RobotFormation> usedSubassemblies;
 
       //The remaining parts of the assembly at initial position for this state.
-      Formation initialParts;
+      RobotFormation initialParts;
 
       // removedParts is the vector of parts that were removed to get TO this
       // node from a parent. The root's will be empty.
@@ -88,29 +88,29 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
       // can use this information later on.
       struct MotionInformation {
           MotionInformation(const std::vector<VID>& _vids,
-                            const Formation& _moved) :
-                            motionVIDs(_vids), movedFormation(_moved) {}
+                            const RobotFormation& _moved) :
+                            motionVIDs(_vids), movedRobotFormation(_moved) {}
           std::string PrettyPrint() const {
             std::ostringstream out;
             out << "Motion Info { vids = " << motionVIDs << ", formation = "
-                << movedFormation << "}";
+                << movedRobotFormation << "}";
             return out.str();
           }
 
 
           std::vector<VID> motionVIDs;
-          Formation movedFormation;
+          RobotFormation movedRobotFormation;
       };
       // It is assumed that the last member of this will be the "set aside"
       // motion for the removal.
       // Note this is not designed to work with graph methods yet.
       std::vector<MotionInformation> formationMotions;
 
-      void AddFormationMotion(const std::vector<VID>& _vids,
-                              const Formation& _formation) {
+      void AddRobotFormationMotion(const std::vector<VID>& _vids,
+                              const RobotFormation& _formation) {
         MotionInformation& lastInfo = formationMotions.back();
         if(!formationMotions.empty() and
-            lastInfo.movedFormation == _formation and
+            lastInfo.movedRobotFormation == _formation and
             lastInfo.motionVIDs.back() == _vids.front()) {
           // We can compactly add these motion vids to the last motion.
           // Skip the first vid since it's the same, as just checked.
@@ -202,9 +202,9 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     ///@name virtual disassembly methods
     ///@{
     virtual DisassemblyNode* SelectExpansionNode() = 0;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) = 0;
+    virtual RobotFormation SelectSubassembly(DisassemblyNode* _q) = 0;
     virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
-                                           const Formation& _subassembly) = 0;
+                                           const RobotFormation& _subassembly) = 0;
 
     ///@}
     ///@name Expanding methods
@@ -215,20 +215,20 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     // This is also to check that if parts are embedded in an assembly, as a full
     // mating extension might complete, but not actually remove the part.
     bool EnsureMinimumClearance(GroupCfgType& _cfg,
-                                const Formation& _formation = Formation());
+                                const RobotFormation& _formation = RobotFormation());
 
     // Create samples for the mating approach and return them as vector of cfgs
-    std::vector<GroupCfgType> GetMatingSamples(const Formation& _subassembly);
-    VIDPath ExpandMatingApproach(const VID _q, const Formation& _formation,
+    std::vector<GroupCfgType> GetMatingSamples(const RobotFormation& _subassembly);
+    VIDPath ExpandMatingApproach(const VID _q, const RobotFormation& _formation,
                                  VID& _newVid,
                                  DisassemblyNode* const _node = nullptr);
     GroupCfgType FindClosestRemovalCfg(const GroupCfgType& _startCfg,
         const GroupCfgType& _endCfg, GroupLPOutput<MPTraits>& _lpOutput,
-        const Formation& _formation);
+        const RobotFormation& _formation);
 
     //Creates a new MPSolution and invokes the RRT strategy on a single piece of
     // the assembly. Then adds the path (if successful) to the roadmap.
-    VIDPath ExpandRRTApproach(const VID _q, const Formation& _formation,
+    VIDPath ExpandRRTApproach(const VID _q, const RobotFormation& _formation,
                               VID& _newVid,
                               DisassemblyNode* const _node = nullptr);
 
@@ -261,14 +261,14 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     ///@}
     ///@name Subassembly Identification
     ///@{
-    void AnalysePartContacts(const VID _q, const Formation& _partIndices);
+    void AnalysePartContacts(const VID _q, const RobotFormation& _partIndices);
     void AnalysePartContacts(const VID _q, const size_t _partIndex);
 
     /// @warning This function does not obey _parts for the generation of the
     /// subassembly candidates if the flag m_generateSubassembliesOnce is true.
     /// In some cases this is slower.
-    std::vector<Formation> GenerateSubassemblies(const VID _currentVid,
-                                                 const Formation& _parts);
+    std::vector<RobotFormation> GenerateSubassemblies(const VID _currentVid,
+                                                 const RobotFormation& _parts);
 
 
     //The point of this helper function is to be given all of the valid/pruned
@@ -277,12 +277,12 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     // a collision with which other body (the last index). This means we can do:
     // m_bodyContacts[whichBody][whichDirection] to get all of the colliding Parts
     // for the piece at index whichBody and direction.
-    std::vector<Formation> GenerateDirectionalCollisionSubassemblies(
-                                const VID _currentVid, const Formation& _parts);
-    std::vector<Formation> GeneratePredefinedSubassemblies(
-                                                       const Formation& _parts);
+    std::vector<RobotFormation> GenerateDirectionalCollisionSubassemblies(
+                                const VID _currentVid, const RobotFormation& _parts);
+    std::vector<RobotFormation> GeneratePredefinedSubassemblies(
+                                                       const RobotFormation& _parts);
 
-    void PrintDirectionalCollisionInfo(const Formation& _parts);
+    void PrintDirectionalCollisionInfo(const RobotFormation& _parts);
 
 
     //This helper function will recursively check for parts that co-collide given
@@ -291,14 +291,14 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
     // valid and also checked.
     void GetCollidingPartsRecursive(const size_t _partInd,
                                     const size_t _dirInd,
-                                    Formation& _currentSubassembly);
+                                    RobotFormation& _currentSubassembly);
 
     //Check if _subassemblies already has _subassembly as a member.
-    bool IsDuplicateSubassembly(const Formation& _subassembly,
-                                const std::vector<Formation>& _subassemblies);
+    bool IsDuplicateSubassembly(const RobotFormation& _subassembly,
+                                const std::vector<RobotFormation>& _subassemblies);
 
     //Check if subassembly _a is identical to subassembly _b.
-    bool SameSubassembly(const Formation& _a, const Formation& _b) const;
+    bool SameSubassembly(const RobotFormation& _a, const RobotFormation& _b) const;
 
     ///@}
     ///@name adjacency identification
@@ -393,7 +393,7 @@ class DisassemblyMethod : public MPStrategyMethod<MPTraits> {
 
     ///< A std::vector of predefined subassemblies. Using these as the candidates
     ///< will override the generation using directional collisions.
-    std::vector<Formation> m_predefinedSubassemblies;
+    std::vector<RobotFormation> m_predefinedSubassemblies;
 
     /// list of path stats, each pair corresponds to a path, the first is the
     /// number of nodes in the path, the second is the path's distance.
@@ -526,7 +526,7 @@ DisassemblyMethod(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   //Parse out each subassembly found from nodes:
   for(const std::string& saStr : subassemblyStrings) {
     std::stringstream ss(saStr);
-    Formation sub;
+    RobotFormation sub;
     size_t part;
     //Parse the subassembly std::string:
     while(ss >> part)
@@ -619,7 +619,7 @@ Initialize() {
     std::cout << label << std::endl;
     if(!m_predefinedSubassemblies.empty()) {
       std::cout << "Predefined subassemblies to use: " << std::endl;
-      for(const Formation& sub : m_predefinedSubassemblies)
+      for(const RobotFormation& sub : m_predefinedSubassemblies)
         std::cout << sub << std::endl;
     }
     else
@@ -827,7 +827,7 @@ GenerateFullDisassemblyPath(const VIDPath& _path) {
 template <typename MPTraits>
 std::vector<typename DisassemblyMethod<MPTraits>::GroupCfgType>
 DisassemblyMethod<MPTraits>::
-GetMatingSamples(const Formation& _subassembly) {
+GetMatingSamples(const RobotFormation& _subassembly) {
   std::vector<GroupCfgType> samples;
 
   auto const sampler = m_matingSamplerLabels.begin();
@@ -848,7 +848,7 @@ DisassemblyMethod<MPTraits>::
 FindClosestRemovalCfg(const GroupCfgType& _startCfg,
                       const GroupCfgType& _endCfg,
                       GroupLPOutput<MPTraits>& _lpOutput,
-                      const Formation& _formation) {
+                      const RobotFormation& _formation) {
   std::cout << "Warning: FindClosestRemovalCfg is inefficient and should only "
             << "be used if it's actually needed." << std::endl << std::endl;
 
@@ -916,7 +916,7 @@ PrintDisassemblyTree() {
 template <typename MPTraits>
 bool
 DisassemblyMethod<MPTraits>::
-EnsureMinimumClearance(GroupCfgType& _cfg, const Formation& _formation) {
+EnsureMinimumClearance(GroupCfgType& _cfg, const RobotFormation& _formation) {
   /// TODO Remove hardcoding of this.
   auto const minDistME = dynamic_cast<MinimumClearanceEvaluator<MPTraits>*>(
       this->GetMapEvaluator("MinClearanceEval"));
@@ -938,7 +938,7 @@ EnsureMinimumClearance(GroupCfgType& _cfg, const Formation& _formation) {
 template <typename MPTraits>
 typename DisassemblyMethod<MPTraits>::VIDPath
 DisassemblyMethod<MPTraits>::
-ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid,
+ExpandMatingApproach(const VID _q, const RobotFormation& _formation, VID& _newVid,
                      DisassemblyNode* const _node) {
   this->GetStatClass()->StartClock("ExpandMatingApproachClock");
   auto const graph = this->GetGroupRoadmap();
@@ -1013,7 +1013,7 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid,
   VIDPath path = {_q, _newVid};
   if(_node && !m_graphMethod) {
     const std::vector<VID> vids({_q, _newVid});
-    _node->AddFormationMotion(vids, _formation);
+    _node->AddRobotFormationMotion(vids, _formation);
   }
 
   if(this->m_debug) {
@@ -1037,7 +1037,7 @@ ExpandMatingApproach(const VID _q, const Formation& _formation, VID& _newVid,
 template <typename MPTraits>
 typename DisassemblyMethod<MPTraits>::VIDPath
 DisassemblyMethod<MPTraits>::
-ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID,
+ExpandRRTApproach(const VID _q, const RobotFormation& _formation, VID& _newVID,
                   DisassemblyNode* const _node) {
   this->GetStatClass()->StartClock("ExpandRRTApproachClock");
   auto const graph = this->GetGroupRoadmap();
@@ -1137,7 +1137,7 @@ ExpandRRTApproach(const VID _q, const Formation& _formation, VID& _newVID,
   delete tempSolution;
 
   if(_node and pathFound and !m_graphMethod)
-    _node->AddFormationMotion(disassemblyRoadmapPath, _formation);
+    _node->AddRobotFormationMotion(disassemblyRoadmapPath, _formation);
 
   m_lastAddedVID = _newVID;
 
@@ -1288,14 +1288,14 @@ GenerateNode(DisassemblyNode* const _parent,
 
   // Copy then remove the part(s) from any subassembly they were in for _parent:
   node.usedSubassemblies = _parent->usedSubassemblies;
-  for (Formation& sub : node.usedSubassemblies)
+  for (RobotFormation& sub : node.usedSubassemblies)
     for (const size_t part : _removedParts)
       sub.erase(remove(sub.begin(), sub.end(), part), sub.end());
 
   // Remove any empty entries in usedSubassemblies.
   node.usedSubassemblies.erase(
     remove_if(node.usedSubassemblies.begin(), node.usedSubassemblies.end(),
-        [](Formation const& s) { return s.empty(); }),
+        [](RobotFormation const& s) { return s.empty(); }),
         node.usedSubassemblies.end());
 
   // Start with parent cfg to keep formation (removed part dofs get overwritten)
@@ -1342,7 +1342,7 @@ GenerateNode(DisassemblyNode* const _parent,
   if(!m_graphMethod) {
     const std::vector<VID> vids(
         {_parent->formationMotions.back().motionVIDs.back(), node.vid});
-    _parent->AddFormationMotion(vids, _removedParts);
+    _parent->AddRobotFormationMotion(vids, _removedParts);
   }
 
   if(m_printFullPath) {
@@ -1379,7 +1379,7 @@ GenerateNode(DisassemblyNode* const _parent,
         const std::vector<GroupCfgType> fakePath({initialCfg, removedCfg});
 
         GroupLPOutput<MPTraits> tempLPOutput(graph, fakePath);
-        const Formation singlePart{_removedParts[i]};
+        const RobotFormation singlePart{_removedParts[i]};
         tempLPOutput.SetActiveRobots(singlePart);// Set the active body for LP.
         tempLPOutput.SetIndividualEdges(singlePart); // Create individual edges.
         tempLPOutput.SetEdgeWeights(1); // Give a nonzero weight.
@@ -1435,7 +1435,7 @@ GenerateNode(DisassemblyNode* const _parent,
 template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
-AnalysePartContacts(const VID _q, const Formation& _partIndices) {
+AnalysePartContacts(const VID _q, const RobotFormation& _partIndices) {
   std::vector<size_t> fullIndexList;
   auto dirs = GetMatingSamples(_partIndices);
   for (size_t i = 0; i < dirs.size(); ++i)
@@ -1467,7 +1467,7 @@ AnalysePartContacts(const VID _q, const size_t _partIndex) {
 
   GroupCfgType newCfg, col, startCfg = graph->GetVertex(_q);
   // loop through the remaining parts
-  Formation activeRobots = {_partIndex};
+  RobotFormation activeRobots = {_partIndex};
   auto samples = GetMatingSamples(activeRobots);
 
   // loop through all direction of the mating approach
@@ -1502,9 +1502,9 @@ AnalysePartContacts(const VID _q, const size_t _partIndex) {
 
 
 template <typename MPTraits>
-std::vector<typename DisassemblyMethod<MPTraits>::Formation>
+std::vector<typename DisassemblyMethod<MPTraits>::RobotFormation>
 DisassemblyMethod<MPTraits>::
-GenerateSubassemblies(const VID _currentVid, const Formation& _parts) {
+GenerateSubassemblies(const VID _currentVid, const RobotFormation& _parts) {
   if(this->m_debug)
       std::cout << this->GetNameAndLabel() << "::GenerateSubassemblies()"
                 << std::endl;
@@ -1530,7 +1530,7 @@ GenerateSubassemblies(const VID _currentVid, const Formation& _parts) {
 template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
-PrintDirectionalCollisionInfo(const Formation& _parts) {
+PrintDirectionalCollisionInfo(const RobotFormation& _parts) {
   for (auto &partInd : _parts) {
     std::cout << " Body " << partInd << " : ";
     for (auto &dir : m_nonObstacleDirs[partInd]) {
@@ -1546,11 +1546,11 @@ PrintDirectionalCollisionInfo(const Formation& _parts) {
 
 
 template <typename MPTraits>
-std::vector<typename DisassemblyMethod<MPTraits>::Formation>
+std::vector<typename DisassemblyMethod<MPTraits>::RobotFormation>
 DisassemblyMethod<MPTraits>::
 GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
-                                          const Formation& _parts) {
-  std::vector<Formation> subassemblies;
+                                          const RobotFormation& _parts) {
+  std::vector<RobotFormation> subassemblies;
   if(_parts.size() < 2)
     return subassemblies;
 
@@ -1571,7 +1571,7 @@ GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
   for(size_t partInd : _parts) {
     // For each non-obstacle direction in the body:
     for(size_t dirInd : m_nonObstacleDirs[partInd]) {
-      Formation subassembly; // Initially empty std::vector for recursion.
+      RobotFormation subassembly; // Initially empty std::vector for recursion.
       GetCollidingPartsRecursive(partInd, dirInd, subassembly);
 
       sort(subassembly.begin(), subassembly.end()); // Sort for comparisons
@@ -1585,7 +1585,7 @@ GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
   } // End for all Parts in the entire remaining assembly
 
   // Post-processing: remove bodies that have already been disassembled.
-  for (Formation& subassembly : subassemblies) {
+  for (RobotFormation& subassembly : subassemblies) {
     auto subBody = begin(subassembly);
     while (subBody != end(subassembly)) {
       bool contained = false;
@@ -1603,12 +1603,12 @@ GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
   }
   // second test for subassembly size, because of the removing of bodies
   subassemblies.erase(remove_if(subassemblies.begin(), subassemblies.end(),
-                      [](Formation const& s) { return s.size() < 2; }),
+                      [](RobotFormation const& s) { return s.size() < 2; }),
                       subassemblies.end());
 
   // Sort subassemblies by size
   struct SortSize {
-    bool operator() (const Formation& i, const Formation& j)
+    bool operator() (const RobotFormation& i, const RobotFormation& j)
                       { return (i.size() < j.size());}
   } sortSize;
   sort(subassemblies.begin(), subassemblies.end(), sortSize);
@@ -1626,15 +1626,15 @@ GenerateDirectionalCollisionSubassemblies(const VID _currentVid,
 }
 
 template <typename MPTraits>
-std::vector<typename DisassemblyMethod<MPTraits>::Formation>
+std::vector<typename DisassemblyMethod<MPTraits>::RobotFormation>
 DisassemblyMethod<MPTraits>::
-GeneratePredefinedSubassemblies(const Formation& _parts) {
+GeneratePredefinedSubassemblies(const RobotFormation& _parts) {
   //Given a list _parts, find the subassemblies in m_predefinedSubassemblies
   // that are valid candidates to attempt (all of the parts in a valid
   // subassembly will be inside _parts).
-  std::vector<Formation> subs;
+  std::vector<RobotFormation> subs;
 
-  for(Formation& cand : m_predefinedSubassemblies) {
+  for(RobotFormation& cand : m_predefinedSubassemblies) {
     bool invalid = false;
     for(size_t part : cand)
       if(std::find(_parts.begin(), _parts.end(), part) == _parts.end())
@@ -1653,7 +1653,7 @@ template <typename MPTraits>
 void
 DisassemblyMethod<MPTraits>::
 GetCollidingPartsRecursive(const size_t _partInd, const size_t _dirInd,
-                           Formation& _currentSubassembly) {
+                           RobotFormation& _currentSubassembly) {
   // If a body is in _currentSubassembly, it implies it has already been
   // recursively checked.
   //Check that the indices are good:
@@ -1696,8 +1696,8 @@ GetCollidingPartsRecursive(const size_t _partInd, const size_t _dirInd,
 template <typename MPTraits>
 bool
 DisassemblyMethod<MPTraits>::
-IsDuplicateSubassembly(const Formation& _subassembly,
-                       const std::vector<Formation>& _subassemblies) {
+IsDuplicateSubassembly(const RobotFormation& _subassembly,
+                       const std::vector<RobotFormation>& _subassemblies) {
   // check if subassembly is a duplicate against all current subassemblies.
   bool duplicate = false;
   for (auto &sub : _subassemblies) {
@@ -1720,7 +1720,7 @@ IsDuplicateSubassembly(const Formation& _subassembly,
 template <typename MPTraits>
 bool
 DisassemblyMethod<MPTraits>::
-SameSubassembly(const Formation& _a, const Formation& _b) const {
+SameSubassembly(const RobotFormation& _a, const RobotFormation& _b) const {
   if(_a.size() != _b.size())
     return false;
 

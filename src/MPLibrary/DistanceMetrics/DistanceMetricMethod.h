@@ -42,7 +42,6 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::RoadmapType   RoadmapType;
     typedef typename RoadmapType::VID        VID;
     typedef typename MPTraits::GroupCfgType  GroupCfgType;
-    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction

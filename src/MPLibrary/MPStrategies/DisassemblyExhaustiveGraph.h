@@ -26,7 +26,7 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
   public:
 
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                  RobotFormation;
     typedef typename MPTraits::GroupPathType     GroupPath;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupWeightType   GroupWeightType;
@@ -36,7 +36,7 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
     typedef typename DisassemblyMethod<MPTraits>::DisassemblyNode  DisassemblyNode;
     typedef typename DisassemblyMethod<MPTraits>::Approach         Approach;
     typedef typename DisassemblyMethod<MPTraits>::State            State;
-    typedef std::pair<Formation, std::map<Approach, bool> >                  AttemptEntry;
+    typedef std::pair<RobotFormation, std::map<Approach, bool> >                  AttemptEntry;
 
     DisassemblyExhaustiveGraph();
     DisassemblyExhaustiveGraph(XMLNode& _node);
@@ -46,14 +46,14 @@ class DisassemblyExhaustiveGraph : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual RobotFormation SelectSubassembly(DisassemblyNode* _q) override;
     virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
-                                      const Formation& _subassembly) override;
+                                      const RobotFormation& _subassembly) override;
 
     std::pair<bool, VIDPath> UnWeightedExpand(DisassemblyNode* _q,
-                                              const Formation& _subassembly);
+                                              const RobotFormation& _subassembly);
     std::pair<bool, VIDPath> WeightedExpand(DisassemblyNode* _q,
-                                          const Formation& _subassembly);
+                                          const RobotFormation& _subassembly);
 
     void RunUnitTests();
     void RunAStarTests();
@@ -200,13 +200,13 @@ RunUnitTests() {
   sortMe.usedSubassemblies = {{7,8},{12,11,9,10},{2},{21},{20,19,0,18,17}};
   EnforcePartSorting(&sortMe);
 
-  if(sortMe.initialParts != Formation({1,3,4,5,6}))
+  if(sortMe.initialParts != RobotFormation({1,3,4,5,6}))
     throw RunTimeException(WHERE, "Initial Parts sorting test failed!!!");
 
-  std::vector<Formation> sortedSubs =
+  std::vector<RobotFormation> sortedSubs =
                                   {{0,17,18,19,20},{2},{7,8},{9,10,11,12},{21}};
   if(sortMe.usedSubassemblies != sortedSubs)
-    throw RunTimeException(WHERE, "Formation sorting test failed!!!");
+    throw RunTimeException(WHERE, "RobotFormation sorting test failed!!!");
 
   m_nodeBuckets.clear();//Clean up
   this->m_disNodes.clear();
@@ -295,28 +295,28 @@ RunAStarTests() {
 //  v8.push_back({cfg8, cfg1});
 //
 //  //4//- Generate the three
-//  DisassemblyNode* l1 = this->GenerateNode(l0, Formation({4}), v1, true, 3);
+//  DisassemblyNode* l1 = this->GenerateNode(l0, RobotFormation({4}), v1, true, 3);
 //  HandleNewNode(l1);
 //
-//  DisassemblyNode* l2 = this->GenerateNode(l0, Formation({3, 4}), v2, true, 4);
+//  DisassemblyNode* l2 = this->GenerateNode(l0, RobotFormation({3, 4}), v2, true, 4);
 //  HandleNewNode(l2);
 //
-//  DisassemblyNode* l3 = this->GenerateNode(l1, Formation({3}), v3, true, 4);
+//  DisassemblyNode* l3 = this->GenerateNode(l1, RobotFormation({3}), v3, true, 4);
 //  HandleNewNode(l3);
 //
-//  DisassemblyNode* l4 = this->GenerateNode(l1, Formation({2, 3}), v4, true, 1);
+//  DisassemblyNode* l4 = this->GenerateNode(l1, RobotFormation({2, 3}), v4, true, 1);
 //  HandleNewNode(l4);
 //
-//  DisassemblyNode* l5 = this->GenerateNode(l2, Formation({2}), v5, true, 4);
+//  DisassemblyNode* l5 = this->GenerateNode(l2, RobotFormation({2}), v5, true, 4);
 //  HandleNewNode(l5);
 //
-//  DisassemblyNode* l6 = this->GenerateNode(l4, Formation({2}), v6, true, 1);
+//  DisassemblyNode* l6 = this->GenerateNode(l4, RobotFormation({2}), v6, true, 1);
 //  HandleNewNode(l6);
 //
-//  DisassemblyNode* l7 = this->GenerateNode(l4, Formation({5}), v7, true, 2);
+//  DisassemblyNode* l7 = this->GenerateNode(l4, RobotFormation({5}), v7, true, 2);
 //  HandleNewNode(l7);
 //
-//  DisassemblyNode* l8 = this->GenerateNode(l0, Formation({4}), v8, true, 2);
+//  DisassemblyNode* l8 = this->GenerateNode(l0, RobotFormation({4}), v8, true, 2);
 //  HandleNewNode(l8);
 //
 //  //5//- Verify the data
@@ -352,7 +352,7 @@ EnforcePartSorting(DisassemblyNode* const _node) {
 
   //Sort subassemblies by increasing number of first part:
   struct SortByFirstPart {
-    bool operator() (const Formation& i, const Formation& j) {
+    bool operator() (const RobotFormation& i, const RobotFormation& j) {
       return (i.at(0) < j.at(0));
     }
   } sortFirstPart;
@@ -414,7 +414,7 @@ Iterate() {
     return;
   }
 
-  Expand(node, Formation());
+  Expand(node, RobotFormation());
 }
 
 template <typename MPTraits>
@@ -469,19 +469,19 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-typename DisassemblyExhaustiveGraph<MPTraits>::Formation
+typename DisassemblyExhaustiveGraph<MPTraits>::RobotFormation
 DisassemblyExhaustiveGraph<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
   throw RunTimeException(WHERE, "Not used by this method");
-  return Formation();
+  return RobotFormation();
 }
 
 template <typename MPTraits>
 std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
-Expand(DisassemblyNode* _node, const Formation& _subassembly) {
+Expand(DisassemblyNode* _node, const RobotFormation& _subassembly) {
   if(this->m_aStarSearch)
     return WeightedExpand(_node, _subassembly);
   else
@@ -491,14 +491,14 @@ Expand(DisassemblyNode* _node, const Formation& _subassembly) {
 template <typename MPTraits>
 std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
-UnWeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
+UnWeightedExpand(DisassemblyNode* _node, const RobotFormation& _subassembly) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
          << std::endl;
 
   VID newVID;
   std::vector<VIDPath> removingPaths;
-  Formation singleSub;
+  RobotFormation singleSub;
   DisassemblyNode* newNode = nullptr;
 
   // first test all single bodies for expansion with mating and rrt approach
@@ -510,7 +510,7 @@ UnWeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
 
   //1. Attempt all single parts: mating, then RRT if mating fails.
   for (auto &part : parts) {
-    Formation sub = {part};
+    RobotFormation sub = {part};
     singleSub = sub;
     newNode = nullptr;
     // expand
@@ -595,7 +595,7 @@ UnWeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
 template <typename MPTraits>
 std::pair<bool, typename DisassemblyExhaustiveGraph<MPTraits>::VIDPath>
 DisassemblyExhaustiveGraph<MPTraits>::
-WeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
+WeightedExpand(DisassemblyNode* _node, const RobotFormation& _subassembly) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::Expand with single-part subassemblies"
               << std::endl;
@@ -608,7 +608,7 @@ WeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
 
   VID newVID;
   std::vector<VIDPath> removingPaths;
-  Formation singleSub;
+  RobotFormation singleSub;
   DisassemblyNode* newNode = nullptr;
 
   // first test all single bodies for expansion with mating and rrt approach
@@ -620,7 +620,7 @@ WeightedExpand(DisassemblyNode* _node, const Formation& _subassembly) {
 
   //1. Attempt all single parts: mating, then RRT if mating fails.
   for (auto &part : parts) {
-    Formation sub = {part};
+    RobotFormation sub = {part};
     singleSub = sub;
     newNode = nullptr;
     // expand

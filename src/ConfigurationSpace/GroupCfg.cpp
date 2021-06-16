@@ -1,8 +1,10 @@
 #include "GroupCfg.h"
 
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
+#include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 #include "nonstd.h"
 
@@ -10,8 +12,8 @@
 /*------------------------------- Construction -------------------------------*/
 
 GroupCfg::
-GroupCfg(GroupRoadmapType* const _groupMap, const bool _init)
-    : m_groupMap(_groupMap) {
+GroupCfg(GroupRoadmapType* const _groupMap, const bool _init) 
+     : m_groupMap(_groupMap) {
 
   // If no group map was given, this is a placeholder object. We can't do
   // anything with it since every meaningful operation requires a group map.
@@ -204,6 +206,12 @@ GetVID(Robot* const _robot) const {
   const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   return GetVID(index);
 }
+    
+void
+GroupCfg::
+AddFormation(Formation* _formation) {
+  m_formations.push_back(_formation);
+}
 /*------------------------ Individual Configurations -------------------------*/
 
 void
@@ -221,6 +229,8 @@ SetRobotCfg(const size_t _index, IndividualCfg&& _cfg) {
 
   // Allocate space for local cfgs if not already done.
   InitializeLocalCfgs();
+
+  //TODO::Make sure this obeys formations constraints.
 
   m_localCfgs[_index] = std::move(_cfg);
   m_vids[_index] = INVALID_VID;
@@ -404,7 +414,7 @@ WithinResolution(const GroupCfg& _cfg, const double _posRes,
 
 /*------------------------------DOF Modifiers---------------------------------*/
 
-void
+/*void
 GroupCfg::
 RotateFormationAboutLeader(const Formation& _robotList,
     const mathtool::Orientation& _rotation, const bool _debug) {
@@ -439,9 +449,9 @@ RotateFormationAboutLeader(const Formation& _robotList,
   const mathtool::Transformation transform = initialLeaderTransform * rotation;
 
   ApplyTransformationForRobots(_robotList, transform, initialLeaderTransform);
-}
+}*/
 
-
+/*
 void
 GroupCfg::
 ApplyTransformationForRobots(const Formation& _robotList,
@@ -472,12 +482,12 @@ ApplyTransformationForRobots(const Formation& _robotList,
 //    OverwriteDofsForRobots(transformed, _robotList);
     OverwriteDofsForRobots(transformed, {robotIndex});
   }
-}
+}*/
 
 
 void
 GroupCfg::
-AddDofsForRobots(const std::vector<double>& _dofs, const Formation& _robots) {
+AddDofsForRobots(const std::vector<double>& _dofs, const std::vector<size_t>& _robots) {
   for(const size_t robotIndex : _robots) {
     if(IsLocalCfg(robotIndex)) {
       // We can simply modify the local values, since it's not a roadmap cfg yet
@@ -514,7 +524,7 @@ AddDofsForRobots(const std::vector<double>& _dofs, const Formation& _robots) {
 
 void
 GroupCfg::
-AddDofsForRobots(const mathtool::Vector3d& _dofs, const Formation& _robots) {
+AddDofsForRobots(const mathtool::Vector3d& _dofs, const std::vector<size_t>& _robots) {
   for(const size_t robotIndex : _robots) {
     IndividualCfg robotCfg = GetRobotCfg(robotIndex);
     for(size_t i = 0; i < robotCfg.PosDOF(); ++i)
@@ -527,7 +537,7 @@ AddDofsForRobots(const mathtool::Vector3d& _dofs, const Formation& _robots) {
 void
 GroupCfg::
 OverwriteDofsForRobots(const std::vector<double>& _dofs,
-    const Formation& _robots) {
+    const std::vector<size_t>& _robots) {
   for(const size_t robotIndex : _robots) {
     IndividualCfg newIndividualCfg(GetRobot(robotIndex));
     newIndividualCfg.SetData(_dofs);
@@ -539,7 +549,7 @@ OverwriteDofsForRobots(const std::vector<double>& _dofs,
 void
 GroupCfg::
 OverwriteDofsForRobots(const mathtool::Vector3d& _dofs,
-    const Formation& _robots) {
+    const std::vector<size_t>& _robots) {
   for(const size_t robotIndex : _robots) {
     IndividualCfg newIndividualCfg(GetRobot(robotIndex));
     newIndividualCfg.SetLinearPosition(_dofs);
@@ -550,7 +560,7 @@ OverwriteDofsForRobots(const mathtool::Vector3d& _dofs,
 
 void
 GroupCfg::
-OverwriteDofsForRobots(const GroupCfg& _fromCfg, const Formation& _robots) {
+OverwriteDofsForRobots(const GroupCfg& _fromCfg, const std::vector<size_t>& _robots) {
   for(const size_t robotIndex : _robots) {
     IndividualCfg robotCfg = _fromCfg.GetRobotCfg(robotIndex);
     SetRobotCfg(robotIndex, std::move(robotCfg));
@@ -644,10 +654,54 @@ InBounds(const Environment* const _env) const noexcept {
   return InBounds(_env->GetBoundary());
 }
 
+void
+GroupCfg::
+GetRandomGroupCfg(const Boundary* const _b) {
+  std::set<Robot*> found;
+  auto group = m_groupMap->GetGroup();
+
+  for(auto formation : m_formations) {
+    auto cfgs = formation->GetRandomFormationCfg(_b);
+    for(auto cfg : cfgs) {
+
+      // Grab robot from cfg.
+      auto robot = cfg.GetRobot();
+
+      // Save cfg to local cfgs.
+      auto index = group->GetGroupIndex(robot);
+      m_localCfgs[index] = cfg;
+
+      // Mark this robot as complete.
+      found.insert(robot);
+    }
+  }
+
+  auto robots = group->GetRobots();
+  for(size_t i = 0; i < robots.size(); i++) {
+    auto robot = robots[i];
+
+    // Check if robot cfg was set by formation sampling.
+    if(found.count(robot))
+      continue;
+
+    // If not, get a random configuration for it.
+    Cfg cfg(robot);
+    cfg.GetRandomCfg(_b);
+
+    // Save cfg to local cfgs.
+    m_localCfgs[i] = cfg;
+  }
+}
 
 void
 GroupCfg::
-NormalizeOrientation(const Formation& _robots) noexcept {
+GetRandomGroupCfg(Environment* _env) {
+  GetRandomGroupCfg(_env->GetBoundary());
+}
+
+void
+GroupCfg::
+NormalizeOrientation(const std::vector<size_t>& _robots) noexcept {
   if(_robots.empty()) // Do all robots in this case.
     for(size_t i = 0; i < GetNumRobots(); ++i)
       GetRobotCfg(i).NormalizeOrientation();

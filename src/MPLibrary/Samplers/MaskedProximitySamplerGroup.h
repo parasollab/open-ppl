@@ -37,7 +37,7 @@ class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
 
     using typename SamplerMethod<MPTraits>::GroupOutputIterator;
 
-    typedef typename std::vector<size_t> Formation;
+    typedef typename std::vector<size_t> RobotFormation;
 
     ///@}
     ///@name Construction
@@ -111,7 +111,7 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   // from _cfg and return (extendedCfg - roadmap[0]).
   auto vc = this->GetValidityChecker(m_vcLabel);
 
-  Formation robotList = this->m_activeRobots;  // Copy for potential reordering.
+  RobotFormation robotList = this->m_activeRobots;  // Copy for potential reordering.
 
   ///@TODO: For now I'm assuming that the bodies all have the same dofsPerBody,
   ///       this should be updated to be arbitrary in the future.
@@ -175,7 +175,9 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
 
     //Preserves any existing translations, as it will undo, rotate, and redo
     // any translation (and additional components due to not rotating about itself)
-    extendedCfg.RotateFormationAboutLeader(robotList, rotMat, this->m_debug);
+    //TODO::Update this to new Formation representation.
+    throw RunTimeException(WHERE) << "Not currently supported.";
+    //extendedCfg.RotateRobotFormationAboutLeader(robotList, rotMat, this->m_debug);
 
     if(this->m_debug)
       std::cout << "Cfg after rotation: " << extendedCfg.PrettyPrint()

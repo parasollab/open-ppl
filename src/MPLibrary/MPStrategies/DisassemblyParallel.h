@@ -20,7 +20,7 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 
   public:
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                  RobotFormation;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename GroupRoadmapType::VID       VID;
     typedef std::vector<VID>                     VIDPath;
@@ -36,9 +36,9 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual RobotFormation SelectSubassembly(DisassemblyNode* _q) override;
     virtual std::pair<bool, VIDPath> Expand(DisassemblyNode* _q,
-                                   const Formation& _subassembly) override;
+                                   const RobotFormation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
                     const std::vector<size_t>& _removedParts,
@@ -51,8 +51,8 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
     // 1. The subassembly itself as its own node, so it gets fully disassembled.
     // 2. The current assembly without the subassembly, to return to after
     //      finishing with the subassembly.
-    void GenerateFormationNodes(DisassemblyNode* _parent,
-                                  const Formation& _subassembly);
+    void GenerateRobotFormationNodes(DisassemblyNode* _parent,
+                                  const RobotFormation& _subassembly);
 
     Approach m_approach = Approach::mating;
     State m_state = State::singlePart;
@@ -63,7 +63,7 @@ class DisassemblyParallel : public DisassemblyMethod<MPTraits> {
     bool m_noSubassemblies{false};
 
     // subassembly candidates
-    std::vector<Formation> m_subassemblies;
+    std::vector<RobotFormation> m_subassemblies;
 
     // Determine whether to do (pseudo) in-parallel removals or not:
     // setting default to false as this is not yet supported for groups
@@ -111,7 +111,7 @@ Iterate() {
 
   std::vector<size_t> removedParts;
   std::vector<VIDPath > removingPaths;
-  Formation subassembly;
+  RobotFormation subassembly;
 
   DisassemblyNode* node = SelectExpansionNode();
 
@@ -121,7 +121,7 @@ Iterate() {
   else
     m_approach = Approach::rrt;
 
-  Formation completePartList = node->GetCompletePartList();
+  RobotFormation completePartList = node->GetCompletePartList();
 
 
 
@@ -170,7 +170,7 @@ Iterate() {
   else { // Determinism exhausted, attempt RRT until timeout or state change.
     // RRT single part:
     for (const size_t id : completePartList) {
-      subassembly = Formation({id});
+      subassembly = RobotFormation({id});
       std::pair<bool, VIDPath > result = Expand(node, subassembly);
       if (result.first) {
         removedParts.push_back(id);
@@ -183,7 +183,7 @@ Iterate() {
     if (removedParts.empty()) {
       m_state = State::multiPart;
       ComputeSubassemblies(node);
-      for (const Formation& sub : m_subassemblies) {
+      for (const RobotFormation& sub : m_subassemblies) {
         std::pair<bool, VIDPath > result = Expand(node, sub);
         if (result.first) {
           removedParts = sub;
@@ -233,23 +233,23 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-typename DisassemblyParallel<MPTraits>::Formation
+typename DisassemblyParallel<MPTraits>::RobotFormation
 DisassemblyParallel<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   throw RunTimeException(WHERE, "Unused by this strategy");
-  return Formation();
+  return RobotFormation();
 }
 
 
 template <typename MPTraits>
 std::pair<bool, typename DisassemblyParallel<MPTraits>::VIDPath >
 DisassemblyParallel<MPTraits>::
-Expand(DisassemblyNode* _q, const Formation& _subassembly) {
+Expand(DisassemblyNode* _q, const RobotFormation& _subassembly) {
   if(_subassembly.empty())
     return std::make_pair(false, VIDPath());
 
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
+    std::cout << this->GetNameAndLabel() << "::Expand with RobotFormation: "
               << _subassembly << std::endl << "And remaining parts: "
               << _q->GetCompletePartList() << std::endl;
 
@@ -307,7 +307,7 @@ ComputeSubassemblies(DisassemblyNode* _node) {
                   this->GenerateSubassemblies(_node->vid, _node->initialParts);
     //Get all sub-subassemblies that could be used from usedSubassemblies:
     for (const auto &usedSub : _node->usedSubassemblies) {
-      std::vector<Formation> subs =
+      std::vector<RobotFormation> subs =
                               this->GenerateSubassemblies(_node->vid, usedSub);
       if (!subs.empty()) {
         //Don't reuse any complete subassemblies already in usedSubassemblies:

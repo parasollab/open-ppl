@@ -25,7 +25,6 @@ class GroupPath final {
     typedef typename MPTraits::GroupCfgType       GroupCfg;
     typedef typename MPTraits::GroupRoadmapType   GroupRoadmapType;
     typedef typename GroupRoadmapType::VID        VID;
-    typedef typename GroupCfg::Formation          Formation;
 
     ///@}
     ///@name Construction

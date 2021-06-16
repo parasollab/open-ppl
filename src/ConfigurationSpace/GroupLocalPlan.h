@@ -39,7 +39,6 @@ class GroupLocalPlan final {
     typedef DefaultWeight<CfgType>                  IndividualEdge;
     typedef GroupRoadmap<GroupCfg, GroupLocalPlan>  GroupRoadmapType;
     typedef std::vector<GroupCfg>                   GroupCfgPath;
-    typedef std::vector<size_t>                     Formation;
     typedef size_t                                  GroupVID;
 
     typedef stapl::edge_descriptor_impl<size_t>     ED;

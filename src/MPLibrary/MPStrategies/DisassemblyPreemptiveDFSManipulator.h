@@ -22,7 +22,7 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
     typedef typename MPTraits::MPSolution        MPSolution;
     typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef vector<size_t>                       RobotFormation;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename GroupRoadmapType::VID       VID;
     typedef std::vector<VID>                     VIDPath;
@@ -51,9 +51,9 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual RobotFormation SelectSubassembly(DisassemblyNode* _q) override;
     virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
-                                   const Formation& _subassembly) override;
+                                   const RobotFormation& _subassembly) override;
 
     void AppendNode(DisassemblyNode* _parent,
                     const vector<size_t>& _removedParts,
@@ -73,7 +73,7 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
 
     // Places the effector along a vector of cfgs to match.
     VIDPath PlaceEffectorAlongRemoval(
-               const Formation& _removedFormation,
+               const RobotFormation& _removedRobotFormation,
                const std::vector<GroupCfgType>& _removalCfgs,
                GroupRoadmapType* const _effectorMap,
                EffectorPlacementInfo& _placementInfo = EffectorPlacementInfo());
@@ -93,7 +93,7 @@ class DisassemblyPreemptiveDFSManipulator : public DisassemblyMethod<MPTraits> {
     bool m_noSubassemblies{false};
 
     // subassembly candidates
-    std::vector<Formation> m_subassemblies;
+    std::vector<RobotFormation> m_subassemblies;
 
     // Determine whether to do (pseudo) in-parallel removals or not:
     // setting default to false as this is not yet supported for groups
@@ -186,7 +186,7 @@ Iterate() {
 
   std::vector<size_t> removedParts;
   std::vector<VIDPath > removingPaths;
-  Formation subassembly;
+  RobotFormation subassembly;
 
   DisassemblyNode* node = SelectExpansionNode();
 
@@ -196,7 +196,7 @@ Iterate() {
   else
     m_approach = Approach::rrt;
 
-  Formation completePartList = node->GetCompletePartList();
+  RobotFormation completePartList = node->GetCompletePartList();
 
 
 
@@ -245,7 +245,7 @@ Iterate() {
   else { // Determinism exhausted, attempt RRT until timeout or state change.
     // RRT single part:
     for(const size_t id : completePartList) {
-      subassembly = Formation({id});
+      subassembly = RobotFormation({id});
       std::pair<bool, VIDPath > result = Expand(node, subassembly);
       if(result.first) {
         removedParts.push_back(id);
@@ -258,7 +258,7 @@ Iterate() {
     if(removedParts.empty()) {
       m_state = State::multiPart;
       ComputeSubassemblies(node);
-      for(const Formation& sub : m_subassemblies) {
+      for(const RobotFormation& sub : m_subassemblies) {
         std::pair<bool, VIDPath > result = Expand(node, sub);
         if(result.first) {
           removedParts = sub;
@@ -308,23 +308,23 @@ SelectExpansionNode() {
 
 
 template <typename MPTraits>
-typename DisassemblyPreemptiveDFSManipulator<MPTraits>::Formation
+typename DisassemblyPreemptiveDFSManipulator<MPTraits>::RobotFormation
 DisassemblyPreemptiveDFSManipulator<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   throw RunTimeException(WHERE, "Unused by this strategy");
-  return Formation();
+  return RobotFormation();
 }
 
 
 template <typename MPTraits>
 std::pair<bool, typename DisassemblyPreemptiveDFSManipulator<MPTraits>::VIDPath >
 DisassemblyPreemptiveDFSManipulator<MPTraits>::
-Expand(DisassemblyNode* _q, const Formation& _subassembly) {
+Expand(DisassemblyNode* _q, const RobotFormation& _subassembly) {
   if(_subassembly.empty())
     return std::make_pair(false, VIDPath());
 
   if(this->m_debug)
-    std::cout << this->GetNameAndLabel() << "::Expand with Formation: "
+    std::cout << this->GetNameAndLabel() << "::Expand with RobotFormation: "
               << _subassembly << std::endl << "And remaining parts: "
               << _q->GetCompletePartList() << std::endl;
 
@@ -382,7 +382,7 @@ ComputeSubassemblies(DisassemblyNode* _node) {
                   this->GenerateSubassemblies(_node->vid, _node->initialParts);
     //Get all sub-subassemblies that could be used from usedSubassemblies:
     for(const auto &usedSub : _node->usedSubassemblies) {
-      vector<Formation> subs =
+      vector<RobotFormation> subs =
                               this->GenerateSubassemblies(_node->vid, usedSub);
       if(!subs.empty()) {
         //Don't reuse any complete subassemblies already in usedSubassemblies:
@@ -458,7 +458,7 @@ PlaceEndEffector() {
               motionIndex < currNode->formationMotions.size(); ++motionIndex) {
 
           const MotionInformation& motionInfo = currNode->formationMotions[motionIndex];
-          const Formation& movedParts = motionInfo.movedFormation;
+          const RobotFormation& movedParts = motionInfo.movedRobotFormation;
           VIDPath motionVIDs = motionInfo.motionVIDs;
 
           // Remove the last vid from the last motion, since it will be the "set
@@ -515,7 +515,7 @@ PlaceEndEffector() {
             else {
               // Perform local planning to place the end effector.
               auto effectorLP = this->GetLocalPlanner(m_effectorPlacementLP);
-              const Formation effector({effectorRobotIndex});
+              const RobotFormation effector({effectorRobotIndex});
 
               // Note: I'm copying this because for some reason the reference to
               // the cfg was having its group roadmap changed at some point, and
@@ -636,7 +636,7 @@ PlaceEndEffector() {
 
           // Set aside the part just removed, if the removal is now completed:
           if(motionSuccess and lastMotion) {
-            Formation activeRobots = movedParts;
+            RobotFormation activeRobots = movedParts;
             activeRobots.push_back(effectorRobotIndex);
             // We need to create an edge so that the part "teleports" after removal.
             GroupLPOutput<MPTraits> lpOutput(m_effectorRoadmap);
@@ -657,7 +657,7 @@ PlaceEndEffector() {
             const GroupCfgType& lastEffectorPosition =
                                m_effectorRoadmap->GetVertex(removalPath.back());
             setAsideWithEffector.OverwriteDofsForRobots(lastEffectorPosition,
-                                               Formation({effectorRobotIndex}));
+                                               RobotFormation({effectorRobotIndex}));
 
             const VID setAsideNewVID =
                              m_effectorRoadmap->AddVertex(setAsideWithEffector);
@@ -705,7 +705,7 @@ PlaceEndEffector() {
         this->Finalize(); // Output all disassembly info.
         throw RunTimeException(WHERE) << "No valid effector placement could be "
             << "found for removing formation "
-            << currNode->formationMotions.back().movedFormation
+            << currNode->formationMotions.back().movedRobotFormation
             << std::endl << "This case is not yet properly handled, as some"
             " amount of replanning is necessary. Wrote all outputs.";
       }
@@ -743,7 +743,7 @@ WriteAllOutputs(const GroupPath<MPTraits>& _path, const size_t _pathIndex) {
 template <typename MPTraits>
 typename DisassemblyPreemptiveDFSManipulator<MPTraits>::VIDPath
 DisassemblyPreemptiveDFSManipulator<MPTraits>::
-PlaceEffectorAlongRemoval(const Formation& _removedFormation,
+PlaceEffectorAlongRemoval(const RobotFormation& _removedRobotFormation,
                           const std::vector<GroupCfgType>& _removalCfgs,
                           GroupRoadmapType* const _effectorMap,
                           EffectorPlacementInfo& _placementInfo) {
@@ -771,9 +771,9 @@ PlaceEffectorAlongRemoval(const Formation& _removedFormation,
   // valid contact point.
   // Note that if we increment the partIndex, we reset the bodyIndex and polygonIndex.
   for(size_t& partIndex = _placementInfo.partIndex;
-          partIndex < _removedFormation.size(); ++partIndex,
+          partIndex < _removedRobotFormation.size(); ++partIndex,
           _placementInfo.bodyIndex = 0, _placementInfo.polygonIndex = 0) {
-    const size_t part = _removedFormation[partIndex];
+    const size_t part = _removedRobotFormation[partIndex];
     MultiBody* const mb = _effectorMap->GetGroup()->GetRobot(part)->GetMultiBody();
 
     // Note that if we increment the bodyNum, we reset the polygonIndex
@@ -815,7 +815,7 @@ PlaceEffectorAlongRemoval(const Formation& _removedFormation,
             if(this->m_debug)
               std::cout << "Placed the effector successfully for body "
                         << bodyNum << " for removed part " << part
-                        << " of removed formation " << _removedFormation
+                        << " of removed formation " << _removedRobotFormation
                         << " of the removal path." << std::endl
                         << "Effector group cfg = "
                         << effectorGroupCfg.PrettyPrint(4) << std::endl;
@@ -846,7 +846,7 @@ PlaceEffectorAlongRemoval(const Formation& _removedFormation,
           if(!isFirst) { // If the first, there's only one cfg so far.
             // Create the active robot formation which includes the end effector (assumed
             // to be the last robot in the effector group).
-            Formation activeRobots = _removedFormation;
+            RobotFormation activeRobots = _removedRobotFormation;
             activeRobots.push_back(_effectorMap->GetNumRobots() - 1);
             GroupLPOutput<MPTraits> lpOutput(m_effectorRoadmap);
             GroupCfgType col;
@@ -1042,7 +1042,7 @@ AttemptEffectorPlacement(Body* const _body, GroupCfgType& _manipulatorGroupCfg,
     // Make the formation list be just the effector body, since we can assume
     // all other bodies have been co-validated for this cfg, if debug then just
     // do a fully exhaustive validity check (by providing empty formation list).
-    Formation effectorGroup;
+    RobotFormation effectorGroup;
     if(!this->m_debug)
       effectorGroup = {_manipulatorGroupCfg.GetNumRobots() - 1};
     //const bool isValid = vc->IsValid(_manipulatorGroupCfg, cdInfo, label,

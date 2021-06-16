@@ -422,9 +422,8 @@ Sample(size_t _numNodes, size_t _maxAttempts,
   // sample.
   for(size_t i = 0; i < _numNodes; ++i) {
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      // Generate a random configuration for each robot.
-      for(size_t i = 0; i < cfg.GetNumRobots(); ++i)
-        cfg.GetRobotCfg(i).GetRandomCfg(_boundary);
+      // Generate a random configuration for group cfg.
+      cfg.GetRandomGroupCfg(_boundary);
 
       if(this->Sampler(cfg, _boundary, valid, invalid))
         break;

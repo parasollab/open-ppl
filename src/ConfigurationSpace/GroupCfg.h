@@ -12,8 +12,10 @@
 #include "Transformation.h"
 #include "Vector.h"
 
+class Environment;
 class Robot;
 class RobotGroup;
+class Formation;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,12 +51,12 @@ class GroupCfg final {
     typedef Cfg              IndividualCfg;
     typedef GroupRoadmap<GroupCfg, GroupLocalPlan<IndividualCfg>> GroupRoadmapType;
 
+    //TODO::Purge this everywhere and update to new formation class
     /// A formation represents a group of robots which are maintaining their
     /// configurations relative to a leader, such as maintaining a square or
     /// V-shape while moving. The values are robot indexes (within the group,
     /// not problem) with the first index denoting the leader robot. These are
     /// not stored in configurations but may be required for edges.
-    typedef std::vector<size_t> Formation;
 
     ///@}
     ///@name Construction
@@ -67,7 +69,7 @@ class GroupCfg final {
     /// @todo This object does not work at all without a group map. We should
     ///       throw relevant exceptions if needed.
     explicit GroupCfg(GroupRoadmapType* const _groupMap = nullptr,
-        const bool _init = false);
+         const bool _init = false);
 
     ///@}
     ///@name Equality
@@ -129,6 +131,9 @@ class GroupCfg final {
     VID GetVID(const size_t _index) const noexcept;
 
     VID GetVID(Robot* const _robot) const;
+
+    /// Add a formation specifying the constraints on a subgroup of robots.
+    void AddFormation(Formation* _formation);
 
     ///@}
     ///@name Individual Configurations
@@ -242,9 +247,9 @@ class GroupCfg final {
     /// @param _robotList This list of bodies to rotate. First one is leader body.
     /// @param _rotation The change in orientation that should be applied to _cfg.
     /// @param _debug A flag to print to cout (no access to an m_debug flag here).
-    void RotateFormationAboutLeader(const Formation& _robotList,
-                                    const mathtool::Orientation& _rotation,
-                                    const bool _debug = false);
+    //void RotateFormationAboutLeader(const Formation& _robotList,
+    //                                const mathtool::Orientation& _rotation,
+    //                                const bool _debug = false);
 
     /// Given this GroupCfg as the starting configuration, this function applies
     /// a transformation uniformly over all robots listed.
@@ -257,10 +262,10 @@ class GroupCfg final {
     /// @param _relativeTransform (Optional) The transformation to "undo" before
     ///        applying _transform. If default, it will be a simple transform
     ///        application. See RotateFormationAboutLeader for usage example.
-    void ApplyTransformationForRobots(const Formation& _robotList,
-                             const mathtool::Transformation& _transform,
-                             const mathtool::Transformation& _relativeTransform
-                                                  = mathtool::Transformation());
+    //void ApplyTransformationForRobots(const Formation& _robotList,
+    //                         const mathtool::Transformation& _transform,
+    //                         const mathtool::Transformation& _relativeTransform
+    //                                              = mathtool::Transformation());
 
 
     /// Given this configuration, add in the same DOF values to each body given.
@@ -270,7 +275,7 @@ class GroupCfg final {
     ///              body has #dofs = _dofs.size().
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void AddDofsForRobots(const std::vector<double>& _dofs,
-                          const Formation& _robots);
+                          const std::vector<size_t>& _robots);
 
 
     /// This function adds all positional dofs in _dofs. It will handle 1-3 dofs
@@ -280,7 +285,7 @@ class GroupCfg final {
     /// @param _dofs The positional values to add in to each body.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void AddDofsForRobots(const mathtool::Vector3d& _dofs,
-                          const Formation& _robots);
+                          const std::vector<size_t>& _robots);
 
     /// Given new DOF values, overwrite the existing values for each individual
     /// cfg in this group cfg that is listed in _robots. Note that _dofs needs
@@ -288,7 +293,7 @@ class GroupCfg final {
     /// @param _fromCfg The configuration to take values from.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void OverwriteDofsForRobots(const std::vector<double>& _dofs,
-                                const Formation& _robots);
+                                const std::vector<size_t>& _robots);
 
 
     /// Given new DOF values, overwrite the existing values for each individual
@@ -297,7 +302,7 @@ class GroupCfg final {
     /// @param _fromCfg The configuration to take values from.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void OverwriteDofsForRobots(const mathtool::Vector3d& _dofs,
-                                const Formation& _robots);
+                                const std::vector<size_t>& _robots);
 
 
     /// Given this and another configuration, copy the DOF values from the other
@@ -305,7 +310,7 @@ class GroupCfg final {
     /// @param _fromCfg The configuration to take values from.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void OverwriteDofsForRobots(const GroupCfg& _fromCfg,
-                                const Formation& _robots);
+                                const std::vector<size_t>& _robots);
 
     /// @overload to handle robot pointers.
     void OverwriteDofsForRobots(const GroupCfg& _fromCfg,
@@ -345,8 +350,15 @@ class GroupCfg final {
     /// @overload
     bool InBounds(const Environment* const _env) const noexcept;
 
+    /// Create a group configuration where every vertex of every robots
+    /// is guaranteed to lie within the specified boundary. If a group cfg
+    /// cannot be found, the program will abort. The function will try a
+    /// predefined number of times.
+    void GetRandomGroupCfg(const Boundary* const _b);
+    void GetRandomGroupCfg(Environment* _env);
+
     /// Normalize Orientation DOFs for a Group Cfg
-    virtual void NormalizeOrientation(const Formation& _robots = Formation())
+    virtual void NormalizeOrientation(const std::vector<size_t>& _robots = {})
         noexcept;
 
     ///@}
@@ -382,6 +394,7 @@ class GroupCfg final {
     VIDSet m_vids;   ///< The individual VIDs in this aggregate configuration.
     std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
 
+    std::vector<Formation*> m_formations; ///<Formations contained in the group Cfg.
     ///@}
 
 };

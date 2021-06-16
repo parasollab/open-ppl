@@ -36,7 +36,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     typedef typename MPTraits::GroupPathType     GroupPathType;
     typedef typename GroupRoadmapType::VID       VID;
     typedef typename GroupRoadmapType::VertexSet VertexSet;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                  RobotFormation;
 
     ///@}
     ///@name Construction
@@ -158,7 +158,7 @@ class DisassemblyRRTStrategy : public MPStrategyMethod<MPTraits> {
     ///@{
 
     VID m_startGroupCfgVID{0};
-    Formation m_activeRobots; //For the extender and neighborhood finder
+    RobotFormation m_activeRobots; //For the extender and neighborhood finder
 
     /// Provides path to node with highest clearance if it fails:
     bool m_returnBestPathOnFailure{true};
@@ -591,7 +591,7 @@ Extend(const VID _nearVID, const GroupCfgType& _qRand, const bool _lp) {
     this->GetStatClass()->StartClock("Extend(internal)::ExtendClock");
 
   // Create shuffled version of the active robot list and extend with that.
-  Formation orderedActiveRobots = m_activeRobots;
+  RobotFormation orderedActiveRobots = m_activeRobots;
   if(orderedActiveRobots.size() > 1) {
     // Since only leader (first entry) matters, just swap a random position:
     const size_t ind = LRand() % orderedActiveRobots.size();
@@ -759,7 +759,7 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
       this->GetSampler(this->m_samplerLabel));
 
   //Save the active bodies from the VC so it can be replaced at the end.
-  const Formation prevActiveBodies = sampler->GetActiveRobots();
+  const RobotFormation prevActiveBodies = sampler->GetActiveRobots();
 
   if(prevActiveBodies != m_activeRobots)
     throw RunTimeException(WHERE, "Sampler's and VC's active bodies don't match!");
@@ -783,7 +783,7 @@ PerterbCollidingParts(VID& _qNear, bool& _expanded) {
 
     //Replace mask on sampler with the parts in m_collidingParts
     //We just use a random strategy for which part to perturb
-    const Formation partToAdjust =
+    const RobotFormation partToAdjust =
                           {m_collidingParts[LRand() % m_collidingParts.size()]};
     sampler->SetActiveRobots(partToAdjust);
     m_activeRobots = partToAdjust;

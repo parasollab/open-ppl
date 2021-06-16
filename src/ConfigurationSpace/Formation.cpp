@@ -1,11 +1,13 @@
 #include "Formation.h"
 
+
 /*-------------------------------- Construction ------------------------------*/
 
 Formation::
 Formation(std::vector<Robot*> _robots, Robot* _leader, 
     std::unordered_map<MultiBody*,FormationConstraint> _constraintMap) 
-    : m_robots(_robots), m_leader(_leader), m_constraintMap(_constraintMap) {
+    : m_robots(_robots), m_leader(_leader), m_constraintMap(_constraintMap), 
+      m_multibody(MultiBody::Type::Active), m_cspace(0) {
 
   BuildMultiBody(); 
   InitializePlanningSpace();
@@ -13,15 +15,100 @@ Formation(std::vector<Robot*> _robots, Robot* _leader,
 }
 
 Formation::
-~Formation() { }
+Formation(const Formation& _formation) :
+  m_robots(_formation.m_robots),
+  m_leader(_formation.m_leader),
+  m_constraintMap(_formation.m_constraintMap),
+  m_multibody(_formation.m_multibody),
+  m_cspace(_formation.m_cspace),
+  m_jointMap(_formation.m_jointMap),
+  m_reverseJointMap(_formation.m_reverseJointMap),
+  m_bodyMap(_formation.m_bodyMap) 
+{ 
+  //BuildMultiBody(); 
+  //InitializePlanningSpace();
+}
+
+Formation::
+Formation(Formation&& _formation) :
+  m_robots(std::move(_formation.m_robots)),
+  m_leader(std::move(_formation.m_leader)),
+  m_constraintMap(std::move(_formation.m_constraintMap)),
+  m_multibody(std::move(_formation.m_multibody)),
+  m_cspace(std::move(_formation.m_cspace)),
+  m_jointMap(std::move(_formation.m_jointMap)),
+  m_reverseJointMap(std::move(_formation.m_reverseJointMap)),
+  m_bodyMap(std::move(_formation.m_bodyMap)) 
+{
+  //BuildMultiBody(); 
+  //InitializePlanningSpace();
+}
+
+Formation::
+~Formation() {};
+/*--------------------------------- Assignment -------------------------------*/
+
+Formation&
+Formation::
+operator=(const Formation& _formation) {
+  m_robots.clear();
+  m_robots = _formation.m_robots;
+
+  m_leader = _formation.m_leader;
+
+  m_multibody = _formation.m_multibody;
+
+  m_cspace = _formation.m_cspace;
+
+  m_constraintMap.clear();
+  m_constraintMap = _formation.m_constraintMap;
+
+  m_jointMap.clear();
+  m_jointMap = _formation.m_jointMap;
+
+  m_reverseJointMap.clear();
+  m_reverseJointMap = _formation.m_reverseJointMap;
+
+  m_bodyMap.clear();
+  m_bodyMap = _formation.m_bodyMap;
+
+  return *this;
+}
+
+Formation&
+Formation::
+operator=(Formation&& _formation) {
+  m_robots.clear();
+  m_robots = std::move(_formation.m_robots);
+
+  m_leader = std::move(_formation.m_leader);
+
+  m_multibody = std::move(_formation.m_multibody);
+
+  m_cspace = std::move(_formation.m_cspace);
+
+  m_constraintMap.clear();
+  m_constraintMap = std::move(_formation.m_constraintMap);
+
+  m_jointMap.clear();
+  m_jointMap = std::move(_formation.m_jointMap);
+
+  m_reverseJointMap.clear();
+  m_reverseJointMap = std::move(_formation.m_reverseJointMap);
+
+  m_bodyMap.clear();
+  m_bodyMap = std::move(_formation.m_bodyMap);
+
+  return *this;
+}
 
 /*---------------------------------- Interface -------------------------------*/
 
 std::vector<Cfg>
 Formation::
-RandomFormationCfg(const Boundary* const _b) {
+GetRandomFormationCfg(const Boundary* const _b) {
 
-  std::vector<double> dofs(m_multibody->DOF());
+  std::vector<double> dofs(m_multibody.DOF());
 
   /// Currently only support workspace boundaries
   if(_b->Type() != Boundary::Space::Workspace) 
@@ -33,7 +120,7 @@ RandomFormationCfg(const Boundary* const _b) {
 
   // If _b is a workspace boundary, use no more values than boundary size.
   if(_b->Type() == Boundary::Space::Workspace) {
-    numDof = std::min(numDof, m_multibody->PosDOF());
+    numDof = std::min(numDof, m_multibody.PosDOF());
   }
 
   for(size_t tries = 1000; tries > 0; tries--) {
@@ -48,11 +135,11 @@ RandomFormationCfg(const Boundary* const _b) {
     // For each DOF that was not generated from sampling the boundary,
     // generate a value from the formation CSpace.
     for(size_t i = numDof; i < dofs.size(); i++) {
-      dofs[i] = m_cspace->GetRange(i).Sample();
+      dofs[i] = m_cspace.GetRange(i).Sample();
     }
 
     // The result is valid if it satisfies all the boundaries.
-    if(!m_cspace->InBoundary(dofs))
+    if(!m_cspace.InBoundary(dofs))
       continue;
 
     auto cfgs = ConvertToIndividualCfgs(dofs);
@@ -70,10 +157,10 @@ RandomFormationCfg(const Boundary* const _b) {
   }
   
   throw RunTimeException(WHERE) << "Could not generate a random formation."
-                                << "\nFormation Cspace: " << *(m_cspace.get())
+                                << "\nFormation Cspace: " << m_cspace
                                 << "\nSampling Boundary: " << *_b
                                 << "\nFormationRadius: " 
-                                << m_multibody->GetBoundingSphereRadius();
+                                << m_multibody.GetBoundingSphereRadius();
 
   return {};
 }
@@ -154,7 +241,7 @@ BuildMultiBody() {
   }
 
   // Convert tree into multibody
-  m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
+  m_multibody = MultiBody(MultiBody::Type::Active);
   auto body = m_leader->GetMultiBody()->GetBase();
   AddBody(body,true); 
 
@@ -206,14 +293,14 @@ AddBody(Body* _body, bool _base) {
     }
   }
 
-  m_bodyMap[_body] = m_multibody->AddBody(std::move(body));
+  m_bodyMap[_body] = m_multibody.AddBody(std::move(body));
 }
 
 void
 Formation::
 AddConnection(Body* _first, Body* _second, Connection& _connection) {
 
-  Connection connection(m_multibody.get());
+  Connection connection(&m_multibody);
   bool sameDirection = true;
 
   // Check if connection is to be copied or generated from constraint
@@ -223,7 +310,7 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
     Transformation toDHFrame = constraint.transformation;
     DHParameters dh;
     Transformation identity;
-    Connection connection(m_multibody.get(),identity,toDHFrame,
+    Connection connection(&m_multibody,identity,toDHFrame,
                           dh,Connection::JointType::NonActuated);
   }
   else {
@@ -241,11 +328,11 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
   auto first = m_bodyMap[_first];
   auto second = m_bodyMap[_second];
 
-  connection.SetBodies(m_multibody.get(),first,second);
+  connection.SetBodies(&m_multibody,first,second);
 
   auto c = _first->GetConnectionTo(_second);
 
-  auto index = m_multibody->AddJoint(std::move(connection));
+  auto index = m_multibody.AddJoint(std::move(connection));
   m_jointMap[c] = std::make_pair(sameDirection,index);
   m_reverseJointMap[index] = c;
 }
@@ -255,19 +342,19 @@ Formation::
 InitializePlanningSpace() {
 
   // Intialize the configuration space of the formation
-  m_cspace = std::unique_ptr<CSpaceBoundingBox>(new CSpaceBoundingBox(m_multibody->DOF()));
+  m_cspace = CSpaceBoundingBox(m_multibody.DOF());
   
-  const auto& dofInfo = m_multibody->GetDofInfo();
+  const auto& dofInfo = m_multibody.GetDofInfo();
 
-  for(size_t i = 0; i < m_multibody->DOF(); i++) {
-    m_cspace->SetRange(i, dofInfo[i].range);
+  for(size_t i = 0; i < m_multibody.DOF(); i++) {
+    m_cspace.SetRange(i, dofInfo[i].range);
   }
 }
     
 std::vector<double>
 Formation::
 ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
-  std::vector<double> dofs(m_multibody->DOF());
+  std::vector<double> dofs(m_multibody.DOF());
 
   std::unordered_map<size_t,double> indexedValues;
 
@@ -294,9 +381,9 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
 
   size_t counter = 0;
   
-  for(size_t i = 0; i < m_multibody->GetJoints().size(); i++) {
+  for(size_t i = 0; i < m_multibody.GetJoints().size(); i++) {
 
-    auto joint = m_multibody->GetJoint(i);
+    auto joint = m_multibody.GetJoint(i);
 
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
@@ -320,8 +407,8 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
 
   size_t counter = 0;
 
-  for(size_t i = 0; i < m_multibody->GetJoints().size(); i++) {
-    auto joint = m_multibody->GetJoint(i);
+  for(size_t i = 0; i < m_multibody.GetJoints().size(); i++) {
+    auto joint = m_multibody.GetJoint(i);
 
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;

@@ -31,7 +31,7 @@ class MinimumClearanceEvaluator : public MapEvaluatorMethod<MPTraits> {
     typedef typename RoadmapType::VID            VID;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                  RobotFormation;
 
 
     ///@name Construction
@@ -64,7 +64,7 @@ class MinimumClearanceEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     // TODO: These can probably be simplified into a templated function
     bool TestCfg(CfgType& _cfg);
-    bool TestCfg(GroupCfgType& _cfg, const Formation& _activeRobots = Formation());
+    bool TestCfg(GroupCfgType& _cfg, const RobotFormation& _activeRobots = RobotFormation());
 
     ///@name Internal State
     ///@{
@@ -172,7 +172,7 @@ TestCfg(CfgType& _cfg) {
 template <typename MPTraits>
 bool
 MinimumClearanceEvaluator<MPTraits>::
-TestCfg(GroupCfgType& _cfg, const Formation& _activeRobots) {
+TestCfg(GroupCfgType& _cfg, const RobotFormation& _activeRobots) {
   if(_activeRobots.empty())
     throw RunTimeException(WHERE, "Must provide active robots for groups!");
 

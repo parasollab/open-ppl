@@ -17,7 +17,7 @@ template <typename MPTraits>
 class DisassemblyIMLRRT : public DisassemblyMethod<MPTraits> {
   public:
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename GroupCfgType::Formation     Formation;
+    typedef std::vector<size_t>                  RobotFormation;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
     typedef typename GroupRoadmapType::VID       VID;
     typedef std::vector<VID>                     VIDPath;
@@ -33,14 +33,14 @@ class DisassemblyIMLRRT : public DisassemblyMethod<MPTraits> {
 
   protected:
     virtual DisassemblyNode* SelectExpansionNode() override;
-    virtual Formation SelectSubassembly(DisassemblyNode* _q) override;
+    virtual RobotFormation SelectSubassembly(DisassemblyNode* _q) override;
     virtual pair<bool, VIDPath> Expand(DisassemblyNode* _q,
-                                   const Formation& _subassembly) override;
+                                   const RobotFormation& _subassembly) override;
 
     DisassemblyNode* m_lastNode{nullptr};
     VID m_qInitVid{0};
 
-    Formation m_sub;
+    RobotFormation m_sub;
 
     using DisassemblyMethod<MPTraits>::m_disNodes;
     using DisassemblyMethod<MPTraits>::m_numParts;
@@ -137,36 +137,36 @@ SelectExpansionNode() {
 template <typename MPTraits>
 pair<bool, typename DisassemblyIMLRRT<MPTraits>::VIDPath>
 DisassemblyIMLRRT<MPTraits>::
-Expand(DisassemblyNode* _q, const Formation& _subassembly) {
+Expand(DisassemblyNode* _q, const RobotFormation& _subassembly) {
   throw RunTimeException(WHERE,"Not implemented");
   return make_pair(false, VIDPath());
 }
 
 
 template <typename MPTraits>
-typename DisassemblyIMLRRT<MPTraits>::Formation
+typename DisassemblyIMLRRT<MPTraits>::RobotFormation
 DisassemblyIMLRRT<MPTraits>::
 SelectSubassembly(DisassemblyNode* _q) {
   if(this->m_debug)
     std::cout << this->GetNameAndLabel() << "::SelectSubassembly()" << std::endl;
 
-  // check count of initialParts and return empty Formation if empty
+  // check count of initialParts and return empty RobotFormation if empty
   if(_q->initialParts.empty()) {
     std::cout << "initialParts are empty!" << std::endl;
-    return Formation();
+    return RobotFormation();
   }
 
   /// Return parts sequentially.
   static size_t lastIndexTried = _q->initialParts.size();
   if(lastIndexTried > 1 && lastIndexTried <= _q->initialParts.size())
-    return Formation({_q->initialParts[--lastIndexTried]});
+    return RobotFormation({_q->initialParts[--lastIndexTried]});
   else {
     lastIndexTried = _q->initialParts.size();
-    return Formation({_q->initialParts[0]});
+    return RobotFormation({_q->initialParts[0]});
   }
 
   //Always return just a random single part from the remaining parts.
-  return Formation({_q->initialParts[(LRand() % _q->initialParts.size())]});
+  return RobotFormation({_q->initialParts[(LRand() % _q->initialParts.size())]});
 }
 
 #endif

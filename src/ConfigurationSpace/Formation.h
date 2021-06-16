@@ -8,6 +8,7 @@
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/Robot/Robot.h"
 
+
 class Formation {
   public:
 
@@ -31,12 +32,22 @@ class Formation {
 
     ~Formation();
 
+    Formation(const Formation& _formation);
+    Formation(Formation&& _formation);
+
+    ///@}
+    ///@name Assignment
+    ///@{
+
+    Formation& operator=(const Formation& _formation);
+    Formation& operator=(Formation&& _formation);
+
     ///@}
     ///@name Interface 
     ///@{
 
     /// Get a random configuration of the formation.
-    std::vector<Cfg> RandomFormationCfg(const Boundary* _b);
+    std::vector<Cfg> GetRandomFormationCfg(const Boundary* _b);
 
     /// Find the c-space increment that moves from a start to a goal in a fixed
     /// number of steps.
@@ -82,17 +93,14 @@ class Formation {
     /// The lead robot in the formation - used to construct multibody.
     Robot* m_leader;
 
-    /// The multibody representing the formation.
-    std::unique_ptr<MultiBody> m_multibody;
-
-    /// The degrees of freedom of the formation.
-    std::vector<double> m_dofs;
-
-    // The configuration space of the formation.
-    std::unique_ptr<CSpaceBoundingBox> m_cspace;
-
     /// The map of constraints defining the formation
     std::unordered_map<MultiBody*,FormationConstraint> m_constraintMap;
+
+    /// The multibody representing the formation.
+    MultiBody m_multibody;
+
+    // The configuration space of the formation.
+    CSpaceBoundingBox m_cspace;
 
     /// The map of individual robot connections to formation connnections.
     /// The boolean value represents if the direction is the same or if it
