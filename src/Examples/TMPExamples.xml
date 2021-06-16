@@ -17,7 +17,7 @@
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
-      <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
+      <Agent type="coordinator" dmLabel="euclidean" debug="true">
         <Member label="boxy"/>
         <StepFunction type="defaultcoordinator" debug="true"/>
       </Agent>
@@ -35,19 +35,19 @@
       </StartConstraints>
     </Task>
 
-		<Decomposition label="main" taskLabel="first" coordinator="coordinator">
-			<SemanticTask label="first">
-    		<Task label="query1" robot="boxy">
-      		<StartConstraints>
-        		<CSpaceConstraint point="0 0 0 0 0 0"/>
-      		</StartConstraints>
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first">
+        <Task label="query1" robot="boxy">
+          <StartConstraints>
+            <CSpaceConstraint point="0 0 0 0 0 0"/>
+          </StartConstraints>
 
-		      <GoalConstraints>
-		        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
-    		  </GoalConstraints>
-		    </Task>
-			</SemanticTask>
-		</Decomposition>
+          <GoalConstraints>
+            <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
 
   </Problem>
 
@@ -86,6 +86,14 @@
     </MapEvaluators>
 
     <MPStrategies>
+      <!-- Basic RRT -->
+      <BasicRRTStrategy label="RRT" debug="false"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
 
     </MPStrategies>
 
@@ -94,36 +102,36 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
 
-	<TMPLibrary>
-		<TMPStrategies>
-			<SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
-		</TMPStrategies>
+  <TMPLibrary>
+    <TMPStrategies>
+      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
+    </TMPStrategies>
 
-		<PoIPlacementMethods>
-		</PoIPlacementMethods>
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
 
-		<TaskEvaluators>
-			<SimpleMotionEvaluator label="motionEval"/>
-		</TaskEvaluators>
+    <TaskEvaluators>
+      <SimpleMotionEvaluator label="motionEval"/>
+    </TaskEvaluators>
 
-		<TaskDecomposers>
-		</TaskDecomposers>
+    <TaskDecomposers>
+    </TaskDecomposers>
 
-		<TaskAllocators>
-		</TaskAllocators>
+    <TaskAllocators>
+    </TaskAllocators>
 
-		<StateGraphs>
-		</StateGraphs>
+    <StateGraphs>
+    </StateGraphs>
 
-		<TMPTools>
-		</TMPTools>
-	
-		<Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
-	</TMPLibrary>
+    <TMPTools>
+    </TMPTools>
+
+    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
+  </TMPLibrary>
 
 </MotionPlanning>

@@ -19,10 +19,12 @@
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 
 //neighborhood finder includes
 
 //sampler includes
+#include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
 
@@ -37,6 +39,7 @@
 //map evaluator includes
 
 //mp strategies includes
+#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -76,7 +79,8 @@ struct MPTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<MPTraits>
+    CollisionDetectionValidity<MPTraits>,
+    AlwaysTrueValidity<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -85,6 +89,7 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
+    UniformRandomSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
@@ -115,6 +120,7 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    BasicRRTStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 
