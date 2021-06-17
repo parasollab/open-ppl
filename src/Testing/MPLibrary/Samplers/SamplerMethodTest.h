@@ -130,6 +130,7 @@ IndividualCfgSample(Boundary* _boundary, std::vector<Cfg>& _valids,
   auto robot = this->GetMPProblem()->GetRobots()[0];
   auto task = this->GetMPProblem()->GetTask(robot);
   this->GetMPLibrary()->SetTask(task);
+  this->GetMPLibrary()->SetGroupTask(nullptr);
 
   size_t numNodes = 10;
   size_t maxAttempts = 100;
@@ -150,6 +151,7 @@ IndividualCfgSampleWithEEConstraint() {
   auto robot = this->GetMPProblem()->GetRobots()[0];
   auto task = this->GetMPProblem()->GetTask(robot);
   this->GetMPLibrary()->SetTask(task);
+  this->GetMPLibrary()->SetGroupTask(nullptr);
 
   //TODO::Finish test and decide function outputs. 
 }
@@ -163,6 +165,7 @@ IndividualFilter() {
   auto robot = this->GetMPProblem()->GetRobots()[0];
   auto task = this->GetMPProblem()->GetTasks(robot)[0];
   this->GetMPLibrary()->SetTask(task);
+  this->GetMPLibrary()->SetGroupTask(nullptr);
 
   //TODO::Finish test and decide function outputs. 
 }
@@ -176,6 +179,7 @@ GroupCfgSampleSingleBoundary() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0];
   auto task = this->GetMPProblem()->GetTasks(group)[0];
   this->GetMPLibrary()->SetGroupTask(task);
+  this->GetMPLibrary()->SetTask(nullptr);
 
   //TODO::Finish test and decide function outputs. 
 }
@@ -189,6 +193,7 @@ GroupCfgSampleIndividualBoundaries() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0];
   auto task = this->GetMPProblem()->GetTasks(group)[0];
   this->GetMPLibrary()->SetGroupTask(task);
+  this->GetMPLibrary()->SetTask(nullptr);
 
   //TODO::Finish test and decide function outputs. 
 }
@@ -202,6 +207,7 @@ GroupFilter() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0];
   auto task = this->GetMPProblem()->GetTasks(group)[0];
   this->GetMPLibrary()->SetGroupTask(task);
+  this->GetMPLibrary()->SetTask(nullptr);
 
   //TODO::Finish test and decide function outputs. 
 }

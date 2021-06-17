@@ -20,6 +20,7 @@
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
 
 //neighborhood finder includes
 
@@ -83,7 +84,8 @@ struct MPTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<MPTraits>
+    CollisionDetectionValidity<MPTraits>,
+      AlwaysTrueValidityTest<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
