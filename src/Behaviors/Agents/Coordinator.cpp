@@ -15,7 +15,11 @@
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
 
-#include "Traits/CfgTraits.h"
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else 
+  #include "Traits/TestTraits.h"
+#endif
 
 #include "TMPLibrary/Solution/TaskSolution.h"
 

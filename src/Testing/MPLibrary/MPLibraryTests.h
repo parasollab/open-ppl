@@ -4,13 +4,13 @@
 #include "MPLibrary/MPLibrary.h"
 #include "Testing/TestBaseObject.h"
 
-template <typename TestTraits>
-class MPLibraryTests : public MPLibraryType<TestTraits>, public TestBaseObject {
+template <typename MPTraits>
+class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
   public:
     ///@LocalTypes
     ///@{
 
-    typedef MPLibraryType<TestTraits>    MPLibrary;
+    typedef MPLibraryType<MPTraits>    MPLibrary;
     typedef TestBaseObject::TestResult TestResult;
 
     ///@}
@@ -39,23 +39,23 @@ class MPLibraryTests : public MPLibraryType<TestTraits>, public TestBaseObject {
 
 /*--------------------------- Construction ---------------------------*/
 
-template <typename TestTraits>
-MPLibraryTests<TestTraits>::
+template <typename MPTraits>
+MPLibraryTests<MPTraits>::
 MPLibraryTests() {}
 
-template <typename TestTraits>
-MPLibraryTests<TestTraits>::
-MPLibraryTests(const std::string& _xmlFile) : MPLibraryType<TestTraits>(_xmlFile) {}
+template <typename MPTraits>
+MPLibraryTests<MPTraits>::
+MPLibraryTests(const std::string& _xmlFile) : MPLibraryType<MPTraits>(_xmlFile) {}
 
-template <typename TestTraits>
-MPLibraryTests<TestTraits>::
+template <typename MPTraits>
+MPLibraryTests<MPTraits>::
 ~MPLibraryTests() {}
 
 /*----------------------------- Interface ----------------------------*/
 
-template <typename TestTraits>
-typename MPLibraryTests<TestTraits>::TestResult
-MPLibraryTests<TestTraits>::
+template <typename MPTraits>
+typename MPLibraryTests<MPTraits>::TestResult
+MPLibraryTests<MPTraits>::
 RunTest() {
   return TestResult();
 }

@@ -6,6 +6,7 @@
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/XMLNode.h"
 #include "MPProblem/DynamicObstacle.h"
+#include "MPProblem/Robot/Robot.h"
 #include "MPLibrary/Conflict.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 

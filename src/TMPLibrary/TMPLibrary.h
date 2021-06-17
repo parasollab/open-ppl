@@ -9,7 +9,11 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
-#include "Traits/CfgTraits.h"
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else 
+  #include "Traits/TestTraits.h"
+#endif
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"

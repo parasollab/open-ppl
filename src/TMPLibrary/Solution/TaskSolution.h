@@ -2,7 +2,12 @@
 #define _PMPL_TASK_SOLUTION_H_
 
 #include "MPLibrary/MPSolution.h"
-#include "Traits/CfgTraits.h"
+
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else 
+  #include "Traits/TestTraits.h"
+#endif
 
 class Robot;
 class RobotGroup;

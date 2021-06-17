@@ -1,5 +1,5 @@
-#ifndef PMPL_CFG_TRAITS_H_
-#define PMPL_CFG_TRAITS_H_
+#ifndef PPL_TEST_TRAITS_H_
+#define PPL_TEST_TRAITS_H_
 
 #include "MPLibrary/GoalTracker.h"
 #include "MPLibrary/MPSolution.h"
@@ -24,6 +24,7 @@
 //neighborhood finder includes
 
 //sampler includes
+#include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
 
@@ -46,7 +47,7 @@
 /// @tparam W Weight type
 ///
 ///TODO::Update this description
-/// TestTraits is a type class which defines the motion planning universe. We
+/// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
 /// Essentially the important types are, the CfgType or the @cspace abstraction
@@ -59,21 +60,21 @@
 /// top of this file.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename C, typename W = DefaultWeight<C>>
-struct TestTraits {
+struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
   typedef RoadmapGraph<C, W>              RoadmapType;
-  typedef PathType<TestTraits>              Path;
-  typedef MPLibraryTests<TestTraits>         MPLibrary;
-  typedef MPSolutionType<TestTraits>        MPSolution;
-  typedef MPToolsType<TestTraits>           MPTools;
-  typedef LocalObstacleMapType<TestTraits>  LocalObstacleMap;
-  typedef GoalTrackerType<TestTraits>       GoalTracker;
+  typedef PathType<MPTraits>              Path;
+  typedef MPLibraryTests<MPTraits>         MPLibrary;
+  typedef MPSolutionType<MPTraits>        MPSolution;
+  typedef MPToolsType<MPTraits>           MPTools;
+  typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
+  typedef GoalTrackerType<MPTraits>       GoalTracker;
 
   typedef GroupLocalPlan<CfgType>                    GroupWeightType;
   typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
-  typedef GroupPath<TestTraits>                        GroupPathType;
+  typedef GroupPath<MPTraits>                        GroupPathType;
   typedef GroupCfg                                   GroupCfgType;
 
   //types of distance metrics available in our world
@@ -82,7 +83,7 @@ struct TestTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<TestTraits>
+    CollisionDetectionValidity<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -91,6 +92,7 @@ struct TestTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
+      UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world

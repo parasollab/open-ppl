@@ -1,3 +1,6 @@
+// Have to include this first for now.
+#include "Traits/TestTraits.h"
+
 #include <exception>
 #include <limits>
 #include <string>
@@ -7,7 +10,6 @@
 #include "Testing/MPLibrary/MPLibraryTests.h"
 #include "Testing/TMPLibrary/TMPLibraryTests.h"
 #include "TMPLibrary/Solution/Plan.h"
-#include "Traits/CfgTraits.h"
 #include "Testing/MPProblem/MPProblemTests.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/GroupTask.h"
