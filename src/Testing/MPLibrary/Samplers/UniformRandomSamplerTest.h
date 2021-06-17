@@ -67,9 +67,45 @@ typename UniformRandomSamplerTest<MPTraits>::TestResult
 UniformRandomSamplerTest<MPTraits>::
 TestIndividualCfgSample() {
 
-  this->IndividualCfgSample();
+  bool passed = true;
+  std::string message = "";
 
-  return TestResult();
+  Boundary* boundary = nullptr;
+  std::vector<Cfg> valids;
+  std::vector<Cfg> invalids;
+
+  this->IndividualCfgSample(boundary, valids, invalids);
+
+  // Make sure that all valids are inside the boundary 
+  // and all invalids are outside the boundary.
+
+  for(auto cfg : valids) {
+    if(boundary->InBoundary(cfg))   
+      continue;
+
+    passed = false;
+    message = message + "\n\tA configuration was incorrectly labeled "
+              "valid for the given boundary.\n";
+    break;
+  }
+
+  for(auto cfg : valids) {
+    if(!boundary->InBoundary(cfg))   
+      continue;
+
+    passed = false;
+    message = message + "\n\tA configuration was incorrectly labeled "
+              "invalid for the given boundary.\n";
+    break;
+  }
+
+  if(passed) {
+    message = "IndividualCfgSample::PASSED!\n";
+  }
+  else {
+    message = "IndividualCfgSample::FAILED :(\n" + message;
+  }
+  return std::make_pair(passed,message);
 }
 
 template <typename MPTraits>
@@ -77,9 +113,18 @@ typename UniformRandomSamplerTest<MPTraits>::TestResult
 UniformRandomSamplerTest<MPTraits>::
 TestIndividualCfgSampleWithEEConstraint() {
 
+  bool passed = true;
+  std::string message = "";
+
   this->IndividualCfgSampleWithEEConstraint();
 
-  return TestResult();
+  if(passed) {
+    message = "IndividualCfgSampleWithEEConstraint::PASSED!\n";
+  }
+  else {
+    message = "IndividualCfgSampleWithEEConstraint::FAILED :(\n" + message;
+  }
+  return std::make_pair(passed,message);
 }
 
 template <typename MPTraits>
@@ -87,29 +132,56 @@ typename UniformRandomSamplerTest<MPTraits>::TestResult
 UniformRandomSamplerTest<MPTraits>::
 TestIndividualFilter() {
 
+  bool passed = true;
+  std::string message = "";
+
   this->IndividualFilter();
 
-  return TestResult();
+  if(passed) {
+    message = "IndividualFilter::PASSED!\n";
+  }
+  else {
+    message = "IndividualFilter::FAILED :(\n" + message;
+  }
+  return std::make_pair(passed,message);
 }
 
 template <typename MPTraits>
 typename UniformRandomSamplerTest<MPTraits>::TestResult
 UniformRandomSamplerTest<MPTraits>::
 TestGroupCfgSampleSingleBoundary() {
+
+  bool passed = true;
+  std::string message = "";
   
   this->GroupCfgSampleSingleBoundary();
 
-  return TestResult();
+  if(passed) {
+    message = "GroupCfgSampleSingleBoundary::PASSED!\n";
+  }
+  else {
+    message = "GroupCfgSampleSingleBoundary::FAILED :(\n" + message;
+  }
+  return std::make_pair(passed,message);
 }
 
 template <typename MPTraits>
 typename UniformRandomSamplerTest<MPTraits>::TestResult
 UniformRandomSamplerTest<MPTraits>::
 TestGroupCfgSampleIndividualBoundaries() {
+
+  bool passed = true;
+  std::string message = "";
   
   this->GroupCfgSampleIndividualBoundaries();
 
-  return TestResult();
+  if(passed) {
+    message = "GroupCfgSampleIndividualBoundaries::PASSED!\n";
+  }
+  else {
+    message = "GroupCfgSampleIndividualBoundaries::FAILED :(\n" + message;
+  }
+  return std::make_pair(passed,message);
 }
 
 template <typename MPTraits>
@@ -117,9 +189,18 @@ typename UniformRandomSamplerTest<MPTraits>::TestResult
 UniformRandomSamplerTest<MPTraits>::
 TestGroupFilter() {
 
+  bool passed = true;
+  std::string message = "";
+
   this->GroupFilter();
 
-  return TestResult();
+  if(passed) {
+    message = "GroupFilter::PASSED!\n";
+  }
+  else {
+    message = "GroupFilter::FAILED :(\n" + message;
+  }
+  return std::make_pair(passed,message);
 }
 
 #endif

@@ -55,7 +55,8 @@ class SamplerMethodTest : public SamplerMethod<MPTraits>,
     //      The function should instantiate whatever input variables are 
     //      needed to test the underlying SamplerMethod function.
 
-    virtual void IndividualCfgSample();
+    virtual void IndividualCfgSample(Boundary* _boundary, 
+                    std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids);
 
     virtual void IndividualCfgSampleWithEEConstraint();
 
@@ -122,14 +123,22 @@ RunTest() {
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-IndividualCfgSample() {
+IndividualCfgSample(Boundary* _boundary, std::vector<Cfg>& _valids,
+                    std::vector<Cfg>& _invalids) {
 
   // Set MPLibrary to sample for single robot
   auto robot = this->GetMPProblem()->GetRobots()[0];
   auto task = this->GetMPProblem()->GetTask(robot);
   this->GetMPLibrary()->SetTask(task);
 
-  //TODO::Finish test and decide function outputs. 
+  size_t numNodes = 10;
+  size_t maxAttempts = 100;
+
+  if(!_boundary)
+    _boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+
+  this->Sample(numNodes,maxAttempts,_boundary,std::back_inserter(_valids),
+               std::back_inserter(_invalids));
 }
 
 template <typename MPTraits>
