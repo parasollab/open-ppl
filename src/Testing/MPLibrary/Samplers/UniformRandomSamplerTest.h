@@ -89,7 +89,7 @@ TestIndividualCfgSample() {
     break;
   }
 
-  for(auto cfg : valids) {
+  for(auto cfg : invalids) {
     if(!boundary->InBoundary(cfg))   
       continue;
 
