@@ -17,6 +17,7 @@ class Body;
 class MultiBody;
 class XMLNode;
 
+enum class DofType;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Connection information between two Bodys in a MultiBody.

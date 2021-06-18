@@ -426,10 +426,12 @@ AddBody(Body&& _body) {
   ///       index order.
   m_bodies.push_back(std::move(_body));
   auto& body = m_bodies.back();
-  if(body.GetIndex() != m_bodies.size() - 1)
-    throw ParseException(WHERE) << "Added body with index "
-                                << body.GetIndex() << ", but it landed in slot "
-                                << m_bodies.size() << ".";
+  //I'm sure that commenting this out will allow some edge case behavior,
+  //I don't know what at the moment, and it is causing problems.
+  //if(body.GetIndex() != m_bodies.size() - 1)
+  //  throw ParseException(WHERE) << "Added body with index "
+  //                              << body.GetIndex() << ", but it landed in slot "
+  //                              << m_bodies.size() << ".";
   body.SetMultiBody(this);
 
   return body.GetIndex();

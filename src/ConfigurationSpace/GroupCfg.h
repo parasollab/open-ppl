@@ -395,6 +395,10 @@ class GroupCfg final {
     std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
 
     std::vector<Formation*> m_formations; ///<Formations contained in the group Cfg.
+
+    /// The function to use for normalizing orientation DOFs.
+    mutable double (*m_normalizer)(const double&){Normalize};
+
     ///@}
 
 };

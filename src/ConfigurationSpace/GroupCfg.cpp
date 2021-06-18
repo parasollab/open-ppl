@@ -613,10 +613,46 @@ FindIncrement(const GroupCfg& _start, const GroupCfg& _goal, const int _nTicks) 
     throw RunTimeException(WHERE) << "Cannot use two different groups (or group "
                                   << "roadmaps) with this operation currently!";
 
+  // Find increment for all robots in formations.
+  std::set<Robot*> found;
+  auto group = m_groupMap->GetGroup();
+
+  for(auto formation : m_formations) {
+
+    std::vector<Cfg> start;
+    std::vector<Cfg> goal;
+
+    for(auto robot : formation->GetRobots()) {
+      start.push_back(_start.GetRobotCfg(robot));
+      goal.push_back(_goal.GetRobotCfg(robot));
+    }
+
+    auto cfgs = formation->FindIncrement(start,goal,_nTicks);
+    for(auto cfg : cfgs) {
+      
+      // Grab robot from cfg.
+      auto robot = cfg.GetRobot();
+
+      // Save cfg to local cfgs.
+      auto index = group->GetGroupIndex(robot);
+      SetRobotCfg(index,std::move(cfg));
+
+      // Mark this robot as complete.
+      found.insert(robot);
+    }
+  }
+
+
   // For each robot in the group, find the increment for the individual cfg
   // given the number of ticks found.
   for(size_t i = 0; i < GetNumRobots(); ++i) {
-    IndividualCfg incr(GetRobot(i));
+
+    // Check that robots have not already been incremented by formation increments.
+    auto robot = GetRobot(i);
+    if(found.count(robot))
+      continue;
+
+    IndividualCfg incr(robot);
     incr.FindIncrement(_start.GetRobotCfg(i), _goal.GetRobotCfg(i), _nTicks);
     SetRobotCfg(i, std::move(incr));
   }
@@ -659,6 +695,11 @@ GroupCfg::
 GetRandomGroupCfg(const Boundary* const _b) {
   std::set<Robot*> found;
   auto group = m_groupMap->GetGroup();
+
+  for(size_t i = 0; i < GetNumRobots(); i++) {
+    m_vids[i] = INVALID_VID;
+  }
+  InitializeLocalCfgs();
 
   for(auto formation : m_formations) {
     auto cfgs = formation->GetRandomFormationCfg(_b);

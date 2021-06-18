@@ -342,17 +342,18 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   GroupCfgType previous = _start;
 
 
-
+  //TODO::Make sure this is no longer needed with new formation implementation
   /// Set these to true to have single parts treated (less efficiently) as
   /// multiple parts, which should now be identical.
-  const bool multipleParts = _robotIndexes.size() > 1;
-  const bool isRotational = _start.OriDOF() > 0;
-  const bool subassemblyRotation = multipleParts && isRotational;
+  //const bool multipleParts = _robotIndexes.size() > 1;
+  //const bool isRotational = _start.OriDOF() > 0;
+  //const bool subassemblyRotation = multipleParts && isRotational;
 
   GroupCfgType oneStep = _start; // The placeholder for computing steps of angles.
 
   int nTicks;
-  const unsigned int leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
+  //TODO::Make sure this is no longer needed with new formation implementation
+  //const unsigned int leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
 
   GroupCfgType incr(_start.GetGroupRoadmap());
 
@@ -361,6 +362,8 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   incr.FindIncrement(_start, _end, &nTicks, _posRes, _oriRes);
   const GroupCfgType incrUntouched = incr;
 
+  //TODO::Make sure this is no longer needed with new formation implementation
+  /*
   if(subassemblyRotation) {
     // Remove the rotational bits, as incr should only do the translation
     // and then RotateRobotFormationAboutLeader() will handle all rotations.
@@ -369,6 +372,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
             incrUntouched.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
             _robotIndexes);
   }
+  */
 
   // Move out from start towards dir, bounded by number of ticks allowed at a
   // given resolution and the distance _delta: the maximum distance to grow
@@ -383,7 +387,8 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     if(this->m_debug)
       std::cout << "Extending group on tick " << ticker << std::endl;
 
-    if(subassemblyRotation) {
+    //TODO::Make sure this is no longer needed with new formation implementation
+    /*if(subassemblyRotation) {
       // Handle subassembly rotation. We must update the delta transformation
       // due to Euler Angles not conforming to linear angle changes between cfgs
 
@@ -418,7 +423,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
       if(this->m_debug)
         std::cout << "tick after rotation = " << tick.PrettyPrint()
                   << std::endl << std::endl;
-    }
+    }*/
 
     if(tick.InBounds(env->GetBoundary())) {
       //if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand", _robotIndexes)) {

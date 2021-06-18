@@ -8,6 +8,7 @@
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
 #include "MPProblem/Robot/Robot.h"
 
+enum class DofType;
 
 class Formation {
   public:
@@ -57,6 +58,12 @@ class Formation {
     std::vector<Cfg> FindIncrement(std::vector<Cfg> _start, std::vector<Cfg> _goal, 
                                    const size_t _nTicks);
 
+    ///@}
+    ///@name Accessors
+    ///@{
+
+    std::vector<Robot*> GetRobots();
+  
     ///@}
 
   private:

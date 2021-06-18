@@ -1,5 +1,10 @@
 #include "Formation.h"
 
+#include "MPProblem/Environment/Environment.h"
+#include "MPProblem/MPProblem.h"
+
+#include "Transformation.h"
+#include "EulerAngle.h"
 
 /*-------------------------------- Construction ------------------------------*/
 
@@ -169,7 +174,38 @@ std::vector<Cfg>
 Formation::
 FindIncrement(std::vector<Cfg> _start, std::vector<Cfg> _goal, 
     const size_t _nTicks) {
-  return {};
+  // Need positive number of ticks.
+  if(_nTicks <= 0)
+    throw RunTimeException(WHERE) << "Divide by 0";
+
+  std::vector<double> dofs(m_multibody.DOF());
+
+  std::vector<double> start = ConvertToFormationDOF(_start);
+  std::vector<double> goal = ConvertToFormationDOF(_goal);
+
+  // Compute the increment value for each DOF needed to go from _start to _goal
+  // in _nTicks steps.
+  for(size_t i = 0; i < m_multibody.DOF(); ++i) {
+    switch(m_multibody.GetDOFType(i)) {
+      case DofType::Positional:
+      case DofType::Joint:
+        dofs[i] = (goal[i] - start[i]) / _nTicks;
+        break;
+      case DofType::Rotational:
+        dofs[i] = Normalize(goal[i] - start[i]) / _nTicks;
+        break;
+    }
+  }
+
+  return ConvertToIndividualCfgs(dofs);
+}
+
+/*---------------------------------- Accessors -------------------------------*/
+
+std::vector<Robot*>
+Formation::
+GetRobots() {
+  return m_robots;
 }
 
 /*------------------------------- Helper Functions ---------------------------*/
@@ -214,6 +250,7 @@ BuildMultiBody() {
       auto oldBody = body;
       // Assuming only one backward connection.
       auto connection = body->GetBackwardConnection(0);
+
       body = connection.GetPreviousBody();
 
       // Add connection to tree. Will identify inverted connection later.
@@ -227,7 +264,10 @@ BuildMultiBody() {
       for(size_t i = 0; i < body->ForwardConnectionCount(); i++) {
 
         auto connection = body->GetForwardConnection(i);
-        
+
+        if(!connection.GetMultiBody())
+          continue;       
+ 
         // Check that this was not added on the backtrace.
         auto added = std::make_pair(body,connection.GetNextBody());
         if(addedConnections.count(added))
@@ -241,7 +281,7 @@ BuildMultiBody() {
   }
 
   // Convert tree into multibody
-  m_multibody = MultiBody(MultiBody::Type::Active);
+  //m_multibody = MultiBody(MultiBody::Type::Active);
   auto body = m_leader->GetMultiBody()->GetBase();
   AddBody(body,true); 
 
@@ -275,6 +315,9 @@ BuildMultiBody() {
       AddConnection(source, target, connection);
     }
   }
+
+  auto env = m_robots[0]->GetMPProblem()->GetEnvironment()->GetBoundary();
+  m_multibody.InitializeDOFs(env);
 }
 
 void
@@ -293,7 +336,12 @@ AddBody(Body* _body, bool _base) {
     }
   }
 
-  m_bodyMap[_body] = m_multibody.AddBody(std::move(body));
+  auto index = m_multibody.AddBody(std::move(body));
+  m_bodyMap[_body] = index; 
+
+  if(_base) {
+    m_multibody.SetBaseBody(index);
+  }
 }
 
 void
@@ -304,7 +352,7 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
   bool sameDirection = true;
 
   // Check if connection is to be copied or generated from constraint
-  if(!connection.GetMultiBody()) {
+  if(!_connection.GetMultiBody()) {
     // Create connection from constraint
     auto constraint = m_constraintMap[_first->GetMultiBody()];
     Transformation toDHFrame = constraint.transformation;
@@ -328,11 +376,13 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
   auto first = m_bodyMap[_first];
   auto second = m_bodyMap[_second];
 
-  connection.SetBodies(&m_multibody,first,second);
 
   auto c = _first->GetConnectionTo(_second);
 
   auto index = m_multibody.AddJoint(std::move(connection));
+  
+  m_multibody.GetJoint(index)->SetBodies(&m_multibody,first,second);
+
   m_jointMap[c] = std::make_pair(sameDirection,index);
   m_reverseJointMap[index] = c;
 }
@@ -401,8 +451,67 @@ std::vector<Cfg>
 Formation::
 ConvertToIndividualCfgs(std::vector<double> _dofs) {
 
+  m_multibody.Configure(_dofs);
+
   std::vector<Cfg> cfgs;
 
+  for(auto robot : m_robots) {
+
+    auto mb = robot->GetMultiBody();
+
+    std::vector<double> dofs(mb->DOF());
+
+    // Use base transformation to compute pos and orientation dofs
+    auto robotBase = mb->GetBase();
+
+    auto index = m_bodyMap[robotBase];
+
+    auto transform = m_multibody.GetBody(index)->GetWorldTransformation();
+    auto translation = transform.translation();
+    auto orientation = transform.rotation();
+
+    for(size_t i = 0; i < mb->PosDOF(); i++) {
+      dofs[i] = translation[i];
+    }
+
+    for(size_t i = 0; i < mb->OrientationDOF(); i++) {
+      EulerAngle e;
+      convertFromMatrix(e,orientation.matrix());
+      double value;
+      switch(i) {
+        case 0: value = e.alpha();
+                break;
+        case 1: value = e.beta();
+                break;
+        case 2: value = e.gamma();
+                break;
+        default: throw RunTimeException(WHERE) << "INVALID number of "
+                "orientation dofs.";
+    
+      }
+      dofs[i + mb->PosDOF()] = value;
+    }
+
+    // Convert joint angles
+    const auto& joints = mb->GetJoints();
+    for(size_t i = 0; i < joints.size(); i++) {
+
+      auto robotJoint = mb->GetJoint(i);
+      auto index = m_jointMap[robotJoint].second;
+
+      auto value = dofs[index + m_multibody.PosDOF() 
+                        + m_multibody.OrientationDOF()];
+
+      dofs[i + mb->PosDOF() + mb->OrientationDOF()] = value;
+    }
+   
+    Cfg cfg(robot);
+    cfg.SetData(dofs);
+
+    cfgs.push_back(cfg);
+  }
+
+/*
   std::unordered_map<Connection*,double> valueMap;
 
   size_t counter = 0;
@@ -442,6 +551,7 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
 
     cfgs.push_back(cfg);
   }
+*/
 
   return cfgs;
 }

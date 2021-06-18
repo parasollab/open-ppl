@@ -1,6 +1,7 @@
 #include "Body.h"
 
 #include "Connection.h"
+#include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/Color.h"
@@ -326,6 +327,7 @@ void
 Body::
 SetMultiBody(MultiBody* const _owner) noexcept {
   m_multibody = _owner;
+  m_index = m_multibody->GetNumBodies()-1;
 }
 
 
