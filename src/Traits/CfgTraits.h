@@ -16,12 +16,14 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+#include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 
 //neighborhood finder includes
+#include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
@@ -75,6 +77,7 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -85,6 +88,7 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
+    BruteForceNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
