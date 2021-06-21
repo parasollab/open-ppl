@@ -29,6 +29,23 @@ class CombinedRoadmap : public StateGraph {
     struct ActionUpdate {
       /// Pairs of before and after changes.
       std::vector<std::pair<State,State>> updates;
+
+      bool operator==(const ActionUpdate& _other) {
+
+        if(updates.size() != _other.updates.size())
+          return false;
+
+        for(size_t i = 0; i < updates.size(); i++) {
+          if(updates[i] != _other.updates[i])
+            return false;
+        }
+
+        return true;
+      }
+
+      bool operator!=(const ActionUpdate& _other) {
+        return !(*this == _other);
+      }
     };
 
     typedef std::pair<GroupRoadmapType*,ActionUpdate> SemanticRoadmap;
@@ -98,7 +115,9 @@ class CombinedRoadmap : public StateGraph {
 		///@name Helpers Functions
 		///@{
 
-    void AddSemanticRoadmap(SemanticRoadmap* _sr);
+    SemanticRoadmap* AddSemanticRoadmap(GroupRoadmapType* _grm, 
+                                        const ActionUpdate& _update);
+
     void AddInteractionRoadmap(SemanticRoadmap* _sr);
 
     void CheckForGoalState(std::set<size_t> _hvids);

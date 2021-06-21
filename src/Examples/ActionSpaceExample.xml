@@ -200,7 +200,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="true"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -216,7 +216,7 @@
     </InteractionStrategies>
 
 		<StateGraphs>
-      <CombinedRoadmap label="HCR" debug="true"/>
+      <CombinedRoadmap label="HCR" debug="false"/>
 		</StateGraphs>
 
 		<TMPTools>

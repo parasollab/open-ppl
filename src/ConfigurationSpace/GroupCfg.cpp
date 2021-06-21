@@ -96,10 +96,46 @@ operator+=(const GroupCfg& _other) {
     throw RunTimeException(WHERE, "Cannot add GroupCfgs with different group "
                                   "roadmaps!");
 
+  // Also ensure that the same formations exists.
+  if(m_formations != _other.m_formations)
+    throw RunTimeException(WHERE) << "Cannot add GroupCfgs with different formations.";
+
+  // First add the formation dofs.
+  std::set<size_t> checked;
+
+  for(auto formation : m_formations) {
+    std::vector<Cfg> cfgs;
+    std::vector<Cfg> otherCfgs;
+
+    for(auto robot : formation->GetRobots()) {
+      cfgs.push_back(GetRobotCfg(robot));
+      otherCfgs.push_back(_other.GetRobotCfg(robot));
+    }
+
+    auto dofs = formation->ConvertToFormationDOF(cfgs);
+    auto otherDofs = formation->ConvertToFormationDOF(otherCfgs);
+
+
+    for(size_t i = 0; i < dofs.size(); i++) {
+      dofs[i] = dofs[i] + otherDofs[i];
+    }
+
+    cfgs = formation->ConvertToIndividualCfgs(dofs);
+
+    for(auto cfg : cfgs) {
+      const size_t index = m_groupMap->GetGroup()->GetGroupIndex(cfg.GetRobot());
+      m_localCfgs[index] = cfg;
+      checked.insert(index);
+    }
+  }
+
   // We will be using the local cfgs, as we don't want to require any cfgs that
   // use this operator to have to add cfgs to roadmaps.
-  for(size_t i = 0; i < GetNumRobots(); ++i)
+  for(size_t i = 0; i < GetNumRobots(); ++i) {
+    if(checked.count(i))
+      continue;
     SetRobotCfg(i, GetRobotCfg(i) + _other.GetRobotCfg(i));
+  }
 
   return *this;
 }

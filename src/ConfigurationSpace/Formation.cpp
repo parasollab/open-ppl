@@ -316,6 +316,9 @@ BuildMultiBody() {
     }
   }
 
+  auto baseIndex = m_bodyMap[m_leader->GetMultiBody()->GetBase()];
+  m_multibody.SetBaseBody(baseIndex);
+
   auto env = m_robots[0]->GetMPProblem()->GetEnvironment()->GetBoundary();
   m_multibody.InitializeDOFs(env);
 }
@@ -339,9 +342,10 @@ AddBody(Body* _body, bool _base) {
   auto index = m_multibody.AddBody(std::move(body));
   m_bodyMap[_body] = index; 
 
-  if(_base) {
-    m_multibody.SetBaseBody(index);
-  }
+  // Moved bc the m_bodies vector is resized, changing the address of the base body.
+  //if(_base) {
+  //  m_multibody.SetBaseBody(index);
+  //}
 }
 
 void
@@ -479,11 +483,11 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
       convertFromMatrix(e,orientation.matrix());
       double value;
       switch(i) {
-        case 0: value = e.alpha();
+        case 0: value = e.alpha()/PI;
                 break;
-        case 1: value = e.beta();
+        case 1: value = e.beta()/PI;
                 break;
-        case 2: value = e.gamma();
+        case 2: value = e.gamma()/PI;
                 break;
         default: throw RunTimeException(WHERE) << "INVALID number of "
                 "orientation dofs.";

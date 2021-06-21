@@ -118,6 +118,8 @@ SampleSemanticRoadmap() {
 
   for(auto sr : dist) {
     if(d <= sr.second) {
+      //Temp simple update:If successful, reduce probaility of sampling again
+      m_srUtilityScore[sr.first] = m_srUtilityScore[sr.first] * 0.5;
       return sr.first;
     }
   }
@@ -176,6 +178,9 @@ SampleInteraction(SemanticRoadmap* _sr) {
   if(!is->operator()(inter,startCopy))
     return false;
 
+  //Temp simple update:If successful, reduce probaility of sampling again
+  m_interactionUtilityScore[inter] = m_interactionUtilityScore[inter] * 0.5;
+
   auto hcr = dynamic_cast<CombinedRoadmap*>(
               this->GetStateGraph(m_sgLabel).get());
   hcr->AddInteraction(start.first,start.second,startCopy,inter);
@@ -213,6 +218,15 @@ ExpandRoadmap(SemanticRoadmap* _sr) {
 std::pair<BasicHCR::CompositeSemanticRoadmap,BasicHCR::State>
 BasicHCR::
 FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
+
+  if(m_debug) {
+    std::cout << "Sampling interaction " 
+              << _interaction->GetLabel()
+              << " for "
+              << _sr->first->GetGroup()->GetLabel()
+              << "."
+              << std::endl;
+  }
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
 

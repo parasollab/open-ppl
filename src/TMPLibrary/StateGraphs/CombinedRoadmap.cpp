@@ -64,8 +64,7 @@ Initialize(){
     auto grm = m_mpSolution->GetGroupRoadmap(group.get());
 
     // Create new semantic roadmap from group roadmap
-    auto sm = new SemanticRoadmap(std::make_pair(grm,ActionUpdate()));
-    AddSemanticRoadmap(sm);
+    auto sr = AddSemanticRoadmap(grm,ActionUpdate());
 
     // Create initial group vertex
     auto gcfg = GroupCfg(grm);
@@ -83,7 +82,7 @@ Initialize(){
     // Add intial group vertex and connect to virtual source
     auto rvid = grm->AddVertex(gcfg);
 
-    auto hvid = m_vertexMap[sm][rvid];
+    auto hvid = m_vertexMap[sr][rvid];
     if(m_debug) {
       std::cout << "Hypergraph vid: " << hvid << std::endl;
     }
@@ -192,9 +191,8 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
     auto outputGroup = kv.second.first->GetGroup();
     m_mpSolution->AddRobotGroup(outputGroup);
     auto outputRm = m_mpSolution->GetGroupRoadmap(outputGroup);
-    auto newSr = new SemanticRoadmap(outputRm,update);
 
-    AddSemanticRoadmap(newSr);
+    auto newSr = AddSemanticRoadmap(outputRm, update);
 
     auto subVID = kv.second.second;
     auto hvid = m_vertexMap[newSr][subVID];
@@ -238,50 +236,65 @@ AddRobotGroup(RobotGroup* _group) {
 
 /*------------------------------ Helper Functions ----------------------------*/
 
-void
+CombinedRoadmap::SemanticRoadmap*
 CombinedRoadmap::
-AddSemanticRoadmap(SemanticRoadmap* _sr) {
+AddSemanticRoadmap(GroupRoadmapType* _grm, const ActionUpdate& _update) {
   // Check if semantic roadmap already exists
-  if(m_semanticRoadmaps.count(_sr))
-    return;
+  for(auto sr : m_semanticRoadmaps) {
+    if(sr->first != _grm)
+      continue;
 
-  if(!m_cspaceRoadmaps.count(_sr->first)) {
+    if(sr->second == _update)
+      return sr;
+ 
+    // Check for equivalent action updates
+    auto state1 = ApplyActionUpdate(m_initialState,sr->second);
+    auto state2 = ApplyActionUpdate(m_initialState,_update);
+
+    if(state1 == state2)
+      return sr;
+  }
+
+  auto sr = new SemanticRoadmap(std::make_pair(_grm,_update));
+  m_semanticRoadmaps.insert(sr);
+
+  if(!m_cspaceRoadmaps.count(sr->first)) {
     std::cout << "New cspace roadmap" << std::endl;
   }
-  m_cspaceRoadmaps.insert(_sr->first);
+  m_cspaceRoadmaps.insert(sr->first);
 
-  _sr->first->InstallHook(GroupRoadmapType::HookType::AddVertex, 
+  sr->first->InstallHook(GroupRoadmapType::HookType::AddVertex, 
       "CombinedRoadmap::AddVertex"+std::to_string(m_hookCounter),
-      [this, _sr](VI _vi) {
-        this->AddHypergraphVertex(_sr,_vi);
+      [this, sr](VI _vi) {
+        this->AddHypergraphVertex(sr,_vi);
   });
-  _sr->first->InstallHook(GroupRoadmapType::HookType::AddEdge, 
+  sr->first->InstallHook(GroupRoadmapType::HookType::AddEdge, 
       "CombinedRoadmap::AddEdge"+std::to_string(m_hookCounter),
-      [this, _sr](EI _ei) {
-        this->AddHypergraphArc(_sr,_ei);
+      [this, sr](EI _ei) {
+        this->AddHypergraphArc(sr,_ei);
   });
-  _sr->first->InstallHook(GroupRoadmapType::HookType::DeleteVertex, 
+  sr->first->InstallHook(GroupRoadmapType::HookType::DeleteVertex, 
       "CombinedRoadmap::DeleteVertex"+std::to_string(m_hookCounter),
-      [this, _sr](VI _vi) {
+      [this, sr](VI _vi) {
 
   });
-  _sr->first->InstallHook(GroupRoadmapType::HookType::DeleteEdge, 
+  sr->first->InstallHook(GroupRoadmapType::HookType::DeleteEdge, 
       "CombinedRoadmap::DeleteEdge"+std::to_string(m_hookCounter),
-      [this, _sr](EI _ei) {
+      [this, sr](EI _ei) {
 
   });
 
   m_hookCounter++;
 
-  m_semanticRoadmaps.insert(_sr);
-
   // Adding the current content of the semantic roadmap to the Hypergraph.
-  for(auto iter = _sr->first->begin(); iter != _sr->first->end(); ++iter)
-    AddHypergraphVertex(_sr,iter);
+  for(auto iter = sr->first->begin(); iter != sr->first->end(); ++iter)
+    AddHypergraphVertex(sr,iter);
 
-  for(auto iter = _sr->first->begin(); iter != _sr->first->end(); ++iter)
+  for(auto iter = sr->first->begin(); iter != sr->first->end(); ++iter)
     for(auto edges = iter->begin(); edges != iter->end(); ++edges)
-        AddHypergraphArc(_sr,edges);
+        AddHypergraphArc(sr,edges);
+
+  return sr;
 }
 
 void
@@ -424,19 +437,22 @@ BuildRobotGroups(CompositeSemanticRoadmap _csr, std::set<Robot*> _robots, size_t
     auto sr = *iter;
     offset++;
 
+    auto robots = _robots;
+    auto csr = _csr;
+
     // Make sure the semantic roadmap is not already included.
-    if(_csr.count(sr)) {
+    if(csr.count(sr)) {
       continue;
     }
 
     // Check if robots are disjoint from composite semantic roadmap.
     bool disjoint = true;
     for(auto robot : sr->first->GetGroup()->GetRobots()) {
-      if(_robots.count(robot)) {
+      if(robots.count(robot)) {
         disjoint = false;
         break;
       }
-      _robots.insert(robot);
+      robots.insert(robot);
     }
 
     if(!disjoint) {
@@ -444,10 +460,10 @@ BuildRobotGroups(CompositeSemanticRoadmap _csr, std::set<Robot*> _robots, size_t
     }
 
     // Add the semantic roadmap to the composite one.
-    _csr.insert(sr);
+    csr.insert(sr);
 
     // Recursively build csr by robot groups
-    auto recursive = BuildRobotGroups(_csr,_robots,offset);
+    auto recursive = BuildRobotGroups(csr,robots,offset);
 
     for(auto newCsr : recursive) {
       output.push_back(newCsr);

@@ -41,6 +41,8 @@ class InteractionStrategyExample : public InteractionStrategyMethod {
 
     std::unordered_map<Robot*,Constraint*> GenerateConstraints(std::vector<std::string> _conditions);
 
+    std::unordered_map<Robot*,Constraint*>GenerateConstraints(State& _state); 
+
     std::vector<GroupTask*> GenerateTasks(std::vector<std::string> _conditions, 
                             std::unordered_map<Robot*,Constraint*> _startConstraints,
                             std::unordered_map<Robot*,Constraint*> _goalConstraints);

@@ -83,10 +83,11 @@ Satisfied(const State& _state) const {
 
         // Check if robot cfg satisfies constraint
         auto cfg = groupCfg.GetRobotCfg(robot);
+        constraint.second->SetRobot(robot);
+
         if(!constraint.second->Satisfied(cfg))
           continue;
 
-        constraint.second->SetRobot(robot);
         matched.insert(robot);
         foundMatch = true;
       }

@@ -2,6 +2,8 @@
 
 #include "ConfigurationSpace/Formation.h"
 
+#include "Traits/CfgTraits.h"
+
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "TMPLibrary/Solution/Plan.h"
@@ -111,6 +113,22 @@ Run(Plan* _plan) {
   
   groupCfg.GetRandomGroupCfg(env);
   std::cout << groupCfg << std::endl;
+
+  auto groupCfg2 = tempSol->GetGroupRoadmap()->GetVertex(0);
+  groupCfg2.AddFormation(&formation);
+  groupCfg2.GetRandomGroupCfg(env);
+  std::cout << groupCfg2 << std::endl;
+
+  auto collisionCfg = groupCfg;
+
+  auto lpOutput = new GroupLPOutput<MPTraits<Cfg>>(tempSol->GetGroupRoadmap());
+
+  auto lp = this->GetMPLibrary()->GetLocalPlanner("sl");
+
+  auto posRes = env->GetPositionRes();
+  auto oriRes = env->GetOrientationRes();
+
+  lp->IsConnected(groupCfg,groupCfg2,collisionCfg,lpOutput, posRes, oriRes);
 
 	return true;	
 }

@@ -66,6 +66,11 @@ PerformHyperpathQuery() {
               this->GetStateGraph(m_sgLabel).get());
   auto hypergraph = hcr->GetHypergraph();
 
+  // Perform quick sanity check that the goal has been connected
+  // to anything else in the graph.
+  if(hypergraph->GetIncomingHyperarcs(1).size() == 0)
+    return {};
+
   SSSHPTerminationCriterion termination(
     [](size_t& _vid, const MBTOutput& _mbt) {
       if(_vid == 1)

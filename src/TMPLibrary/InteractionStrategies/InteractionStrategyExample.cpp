@@ -51,7 +51,10 @@ operator()(Interaction* _interaction, State& _state) {
   AssignRoles(_state,preconditions);
 
   // Construct start constraints.
-  auto startConstraintMap = GenerateConstraints(preconditions);
+  //auto startConstraintMap = GenerateConstraints(preconditions);
+
+  // Construct start constraints from initial state.
+  auto startConstraintMap = GenerateConstraints(_state);
 
   // Construct interim constraints.
   auto& interimConditions = _interaction->GetInterimConditions();
@@ -94,6 +97,11 @@ operator()(Interaction* _interaction, State& _state) {
     return false;
 
   _state = m_finalState;
+
+  m_roleMap.clear();
+  m_interimCfgMap.clear();
+  m_individualPaths.clear();
+  m_finalState.clear();
 
   return true;
 }
@@ -159,6 +167,27 @@ AssignRoles(const State& _state, std::vector<std::string> _conditions) {
       }
     }
   }
+}
+
+std::unordered_map<Robot*,Constraint*>
+InteractionStrategyExample::
+GenerateConstraints(State& _state) { 
+  std::unordered_map<Robot*,Constraint*> constraintMap;
+
+  for(auto kv : _state) {
+    auto group = kv.first;
+    auto grm = kv.second.first;
+    auto vid = kv.second.second;
+    auto gcfg = grm->GetVertex(vid);
+
+    for(auto robot : group->GetRobots()) {
+      auto cfg = gcfg.GetRobotCfg(robot);
+      auto constraint = new CSpaceConstraint(robot,cfg);
+      constraintMap[robot] = constraint;
+    }
+  }
+
+  return constraintMap;
 }
 
 std::unordered_map<Robot*,Constraint*>
@@ -344,9 +373,16 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
       }
 
       // Collect individial robot paths
-      for(auto gcfg : groupPath->FullCfgs(lib)) {
+      //for(auto gcfg : groupPath->FullCfgs(lib)) {
+      auto& fullCfgs = groupPath->FullCfgs(lib);
+      for(size_t i = 0; i < fullCfgs.size(); i++) {
+        auto gcfg = fullCfgs[i];
         for(auto robot : group->GetRobots()) {
           auto cfg = gcfg.GetRobotCfg(robot);
+
+          if(!m_individualPaths[robot].empty() and cfg == m_individualPaths[robot].back())
+            std::cout << "Debug here" << std::endl;
+
           m_individualPaths[robot].push_back(cfg);
         }
       }

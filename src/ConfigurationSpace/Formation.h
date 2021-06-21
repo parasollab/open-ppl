@@ -58,6 +58,15 @@ class Formation {
     std::vector<Cfg> FindIncrement(std::vector<Cfg> _start, std::vector<Cfg> _goal, 
                                    const size_t _nTicks);
 
+    /// Convert a set of robot cfgs into the formation degrees-of-freedom.
+    ///@param _cfgs The configurations of the robots in the formation.
+    std::vector<double> ConvertToFormationDOF(std::vector<Cfg> _cfgs);
+
+    /// Convert formation degrees-of-freedom into a set of individual robot
+    /// cfgs.
+    ///@param _dofs The formation dofs to convert.
+    std::vector<Cfg> ConvertToIndividualCfgs(std::vector<double> _dofs);
+
     ///@}
     ///@name Accessors
     ///@{
@@ -80,15 +89,6 @@ class Formation {
 
     /// Construct the formation cspace boundary from multibody.
     void InitializePlanningSpace();
-
-    /// Convert a set of robot cfgs into the formation degrees-of-freedom.
-    ///@param _cfgs The configurations of the robots in the formation.
-    std::vector<double> ConvertToFormationDOF(std::vector<Cfg> _cfgs);
-
-    /// Convert formation degrees-of-freedom into a set of individual robot
-    /// cfgs.
-    ///@param _dofs The formation dofs to convert.
-    std::vector<Cfg> ConvertToIndividualCfgs(std::vector<double> _dofs);
 
     ///@}
     ///@name Internal State
