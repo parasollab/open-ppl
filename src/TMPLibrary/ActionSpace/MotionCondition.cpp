@@ -133,4 +133,16 @@ MotionCondition::
 GetRole(Constraint* _constraint) {
   return m_roles[_constraint];
 }
+
+std::set<std::string>
+MotionCondition::
+GetRoles() {
+  std::set<std::string> roles;
+
+  for(auto kv : m_roles) {
+    roles.insert(kv.second);
+  }
+
+  return roles;
+}
 /*------------------------------------------------------------*/

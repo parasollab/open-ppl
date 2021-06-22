@@ -18,6 +18,7 @@ class BasicHCR : public TMPStrategyMethod {
     typedef CombinedRoadmap::SemanticRoadmap SemanticRoadmap;
     typedef CombinedRoadmap::CompositeSemanticRoadmap 
             CompositeSemanticRoadmap;
+    typedef std::set<std::string>            RoleSet;
 
     ///@} 
 		///@name Construction
@@ -72,6 +73,10 @@ class BasicHCR : public TMPStrategyMethod {
     ///        state that satisfies the interaction preconditions.
     std::pair<CompositeSemanticRoadmap,State> FindStartState(
         Interaction* _interaction, SemanticRoadmap* _sr);
+
+    std::vector<std::unordered_map<SemanticRoadmap*,size_t>> BuildCompositeSemanticRoadmaps(
+      const std::unordered_map<SemanticRoadmap*,std::vector<RoleSet>>& _possibleRoles,
+      RoleSet _totalRoles, RoleSet _satisfiedRoles, std::unordered_map<SemanticRoadmap*,size_t> _csr);
 
     ///@}
     ///@name Internal State

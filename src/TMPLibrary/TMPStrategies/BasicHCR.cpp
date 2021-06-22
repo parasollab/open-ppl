@@ -178,6 +178,14 @@ SampleInteraction(SemanticRoadmap* _sr) {
   if(!is->operator()(inter,startCopy))
     return false;
 
+  if(m_debug) {
+    std::cout << "Successful interaction plan for "
+              << inter->GetLabel()
+              << "and "
+              << _sr->first->GetGroup()->GetLabel()
+              << ".";
+  }
+
   //Temp simple update:If successful, reduce probaility of sampling again
   m_interactionUtilityScore[inter] = m_interactionUtilityScore[inter] * 0.5;
 
@@ -229,48 +237,202 @@ FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
   }
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
+  auto hcr = dynamic_cast<CombinedRoadmap*>(
+              this->GetStateGraph(m_sgLabel).get());
 
   // Check for valid composite sr
 
-  // Temp for implementing sampling
-  CompositeSemanticRoadmap csm = {_sr};
+  //TODO::Move all of this into hook functions and caching
+  // Collect possible role assignments
+  // Map of a semantic roadmap to each set of roles that it satisfies and the vids it satisfies them with
+  std::unordered_map<SemanticRoadmap*,std::vector<RoleSet>> roleMap;
+  std::unordered_map<SemanticRoadmap*,std::vector<std::vector<size_t>>> vidMap;
 
-  auto rm = _sr->first;
-  State state;
+  RoleSet totalRoles;
 
-  for(auto vit = rm->begin(); vit != rm->end(); vit++) {
+  for(auto label : _interaction->GetPreConditions()) {
 
-    auto vid = vit->descriptor();
+    auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
 
-    if(m_debug) {
-      auto cfg = vit->property();
-      std::cout << "Evaluating VID: "
-                << vid
-                << ", representing"
-                << cfg.PrettyPrint()
-                <<std::endl;
+    if(!m) continue; // Check that it is a motion condition
+
+    auto roles = m->GetRoles();
+    for(auto role : roles) {
+      totalRoles.insert(role);
     }
-  
-    state[rm->GetGroup()] = std::make_pair(rm,vid);
 
-    for(auto label : _interaction->GetPreConditions()) {
+    // Find groupCfgs that satisfy the motion condition
+    for(auto sr : hcr->GetSemanticRoadmaps()) {
 
-      auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
+      // Check that the number of robots in the sr matches the motion condition
+      if(sr->first->GetGroup()->Size() != roles.size())
+        continue;
 
-      if(!m) continue; // Check that it is a motion condition
+      std::vector<size_t> satisfyingVIDs;
 
-      if(!m->Satisfied(state)) {
+      auto rm = sr->first;
+      State state;
+      for(auto vit = rm->begin(); vit != rm->end(); vit++) {
         state.clear();
-        break;
+
+        auto vid = vit->descriptor();
+        state[rm->GetGroup()] = std::make_pair(rm,vid);
+
+        if(!m->Satisfied(state)) {
+          satisfyingVIDs.push_back(vid);
+        }
+      }
+
+      roleMap[sr].push_back(roles);
+      vidMap[sr].push_back(satisfyingVIDs);
+    }
+  }
+
+  // Check that the input semantic roadmap is fully utilized
+  if(roleMap[_sr].empty())
+    return std::make_pair(CompositeSemanticRoadmap(), State());
+
+  // Build Composite Semantic Roadmaps
+  // Extract just the role labels
+  /*std::unordered_map<SemanticRoadmap*,std::vector<RoleSet>> possibleRoles;
+  for(const auto& kv : roleMap) {
+    for(const auto& roles : kv.second) {
+      possibleRoles[kv.first].push_back(roles.first);
+    }
+  }*/
+
+  // Check composite semantic roadmaps with the input semantic roadmap in initial set of satisfied roles
+  std::vector<std::unordered_map<SemanticRoadmap*,size_t>> csrs;
+  //for(auto init : possibleRoles[_sr]) {
+  for(size_t i = 0; i < roleMap[_sr].size(); i++) {
+    auto init = roleMap[_sr][i];
+
+    std::set<std::string> satisfiedRoles;
+    for(auto role : init) {
+      satisfiedRoles.insert(role);
+    }
+
+    std::unordered_map<SemanticRoadmap*,size_t> csr;
+    csr[_sr] = i;
+
+    //auto moreCsrs = BuildCompositeSemanticRoadmaps(possibleRoles,totalRoles,satisfiedRoles,csr);
+    auto moreCsrs = BuildCompositeSemanticRoadmaps(roleMap,totalRoles,satisfiedRoles,csr);
+    for(auto csr : moreCsrs) {
+      csrs.push_back(csr);
+    }
+  }
+
+  //Todo::Sample a state from there
+  if(csrs.empty());
+    return std::make_pair(CompositeSemanticRoadmap(), State());
+
+  for(auto csrInfo : csrs) {
+    CompositeSemanticRoadmap csr;
+    State state;
+
+    for(auto kv : csrInfo) {
+      auto sr = kv.first;
+      auto vidSet = vidMap[sr][kv.second];
+      //TODO::Sample vid from set or check all combos
+      auto vid = vidSet[0];
+
+      csr.insert(sr);
+      state[sr->first->GetGroup()] = std::make_pair(sr->first,vid);
+    }
+
+    //TODO::Validate that composite state works
+    return std::make_pair(csr,state);
+  }
+
+  /*for(auto csm : csms) {
+    auto rm = _sr->first;
+    State state;
+
+    for(auto vit = rm->begin(); vit != rm->end(); vit++) {
+
+      auto vid = vit->descriptor();
+
+      state[rm->GetGroup()] = std::make_pair(rm,vid);
+
+      for(auto label : _interaction->GetPreConditions()) {
+
+        auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
+
+        if(!m) continue; // Check that it is a motion condition
+
+        if(!m->Satisfied(state)) {
+          state.clear();
+          break;
+        }
+      }
+
+      // Check if state met all conditions
+      if(!state.empty()) {
+        if(m_debug) {
+          auto cfg = vit->property();
+          std::cout << "Valid State at VID: "
+                   << vid
+                   << ", representing"
+                   << cfg.PrettyPrint()
+                    <<std::endl;
+        }
+  
+        return std::make_pair(csm,state);
       }
     }
-
-    // Check if state met all conditions
-    if(!state.empty())
-      return std::make_pair(csm,state);
-  }
+  }*/
 
   return std::make_pair(CompositeSemanticRoadmap(), State());
 }
 
+std::vector<std::unordered_map<BasicHCR::SemanticRoadmap*,size_t>>
+BasicHCR::
+BuildCompositeSemanticRoadmaps(
+    const std::unordered_map<SemanticRoadmap*,std::vector<std::set<std::string>>>& _possibleRoles,
+    RoleSet _totalRoles, RoleSet _satisfiedRoles, std::unordered_map<SemanticRoadmap*,size_t> _csr) {
+
+  // Check if _totalRoles matches _satisfiedRoles
+  if(_totalRoles == _satisfiedRoles) 
+    return {_csr};
+
+  std::vector<std::unordered_map<SemanticRoadmap*,size_t>> csrs;
+
+  for(auto kv : _possibleRoles) {
+    auto sr = kv.first;
+
+    // Check if semantic roadmap is already in composite semantic roadmap
+    auto iter = _csr.find(sr);
+    if(iter != _csr.end())
+      continue;
+
+    // Try to add each possible role assignment for semantic roadmap
+    const auto& roleSets = kv.second; 
+    for(size_t i = 0; i < roleSets.size(); i++) {
+      auto roleSet = roleSets[i];
+
+      auto satisfied = _satisfiedRoles;
+
+      for(auto role : roleSet) {
+        satisfied.insert(role);
+      }
+
+      // Check that the satisfied set increased by the proper size. 
+      // Otherwise, some roles are already claimed, and we move on to the next role set.
+      if(satisfied.size() != roleSet.size() + _satisfiedRoles.size())
+        continue;
+ 
+      auto csr = _csr;
+      csr[sr] = i;
+
+      auto newCsrs = BuildCompositeSemanticRoadmaps(_possibleRoles,_totalRoles,
+                                                    satisfied,csr);
+
+      for(auto c : newCsrs) {
+        csrs.push_back(c);
+      }
+    }
+  } 
+
+  return csrs;
+}
 /*------------------------------------------------------------*/

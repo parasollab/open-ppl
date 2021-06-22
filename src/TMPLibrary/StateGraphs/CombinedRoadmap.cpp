@@ -221,7 +221,6 @@ GetSemanticRoadmaps() const {
   return m_semanticRoadmaps;
 }
 
-    
 MPSolution* 
 CombinedRoadmap::
 GetMPSolution() const {

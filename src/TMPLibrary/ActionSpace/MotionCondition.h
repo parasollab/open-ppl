@@ -42,6 +42,8 @@ class MotionCondition : public Condition {
 
     std::string GetRole(Constraint* _constraint);
 
+    std::set<std::string> GetRoles();
+
     ///@}
   private:
     ///@name Internal State

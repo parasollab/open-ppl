@@ -1,0 +1,359 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="tmp_examples">
+
+    <Environment filename="3D/3d-empty.env"
+      frictionCoefficient="0" gravity="0 0 0"/>
+
+    <Robot label="boxy1" filename="3D/boxy.robot" capability="boxy">
+      <!--
+      <Agent type="planning"/>
+      -->
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <Robot label="boxy2" filename="3D/boxy.robot" capability="boxy">
+      <!--
+      <Agent type="planning"/>
+      -->
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
+        <Member label="boxy1"/>
+        <Member label="boxy2"/>
+        <StepFunction type="defaultcoordinator" debug="true"/>
+      </Agent>
+    </Robot>
+
+    <RobotGroup label="robotGroup1" robotLabels="boxy1"/>
+    <RobotGroup label="robotGroup2" robotLabels="boxy2"/>
+
+    <GroupTask label="groupQuery" group="robotGroup1">
+      <Task label="startLocation1" robot="boxy1">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
+
+    <GroupTask label="groupQuery" group="robotGroup2">
+      <Task label="startLocation2" robot="boxy2">
+        <StartConstraints>
+          <CSpaceConstraint point="10 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
+
+		<Decomposition label="main" taskLabel="top" coordinator="coordinator">
+
+      <SemanticTask label="top" decomposable="true" subtaskRelation="AND"/>
+
+			<SemanticTask label="first" fixedAllocation="true" parent="top">
+        <GroupTask label="groupQuery" group="robotGroup1">
+      		<Task label="query1" robot="boxy1">
+		        <GoalConstraints>
+		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      		  </GoalConstraints>
+  		    </Task>
+
+        </GroupTask>
+			</SemanticTask>
+
+			<SemanticTask label="second" fixedAllocation="true" parent="top">
+        <GroupTask label="groupQuery" group="robotGroup2">
+          <Task label="query2" robot="boxy2">
+            <GoalConstraints>
+              <CSpaceConstraint point="20 0 0 0 0 0"/>
+            </GoalConstraints>
+          </Task>
+        </GroupTask>
+			</SemanticTask>
+
+		</Decomposition>
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
+      <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
+        velWeight="0" avlWeight="0"/>
+      <Manhattan label="manhattan"/>
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
+        normalize="false"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
+    </LocalPlanners>
+
+    <Extenders>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" debug="false"
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <TrueEvaluation label="TrueEvaluator" />
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras"/>
+      <LazyQuery label="LazyQuery" debug="false"
+        vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
+        numEnhance="10" d="0.5" deleteInvalid="true">
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="10" operator=">="/>
+      <ComposeEvaluator label="BoundedQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+      <TimeEvaluator label="TimeEval" timeout="10"/>
+      <GroupQuery label="CompositeQuery" debug="false"/>
+    </MapEvaluators>
+    <MPStrategies>
+
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="BasicPRM1" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="Query"/>
+      </BasicPRM>
+
+      <BasicPRM label="NodePRM" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
+
+      <!-- LazyPRM -->
+      <BasicPRM label="LazyPRM" debug="false">
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <Evaluator label="LazyQuery"/>
+      </BasicPRM>
+
+      <!-- EvaluateMapStrategy -->
+      <EvaluateMapStrategy label="EvaluateMapStrategy">
+        <Evaluator label="NodesEval"/>
+      </EvaluateMapStrategy>
+
+      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="BasicPRM1">
+        <Evaluator label="TrueEvaluator"/>
+      </GroupDecoupledStrategy>
+
+      <GroupDecoupledStrategy label="DecoupledNodes" strategyLabel="NodePRM">
+        <Evaluator label="TrueEvaluator"/>
+      </GroupDecoupledStrategy>
+
+      <GroupPRM label="CompositePRM" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="CompositeQuery"/>
+      </GroupPRM>
+
+      <GroupPRM label="CompositeNodes" debug="false">
+        <Sampler label="UniformRandomFree" number="5" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
+      </GroupPRM>
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
+
+  </Library>
+
+	<TMPLibrary>
+		<TMPStrategies>
+			<SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
+      <BasicHCR label="BasicHCR" teLabel="HCRQuery" mpStrat="CompositeNodes" 
+                sgLabel="HCR" expansionProb="0.7" debug="true"/>
+		</TMPStrategies>
+
+		<PoIPlacementMethods>
+		</PoIPlacementMethods>
+
+		<TaskEvaluators>
+			<SimpleMotionEvaluator label="motionEval"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false"/>
+		</TaskEvaluators>
+
+		<TaskDecomposers>
+		</TaskDecomposers>
+
+		<TaskAllocators>
+		</TaskAllocators>
+
+    <InteractionStrategies>
+      <InteractionStrategyExample label="InteractionStrategyExample" 
+                                  mpStrategy="CompositePRM" dmLabel="euclidean"
+                                  lpLabel="sl" debug="true"/>
+    </InteractionStrategies>
+
+		<StateGraphs>
+      <CombinedRoadmap label="HCR" debug="true"/>
+		</StateGraphs>
+
+		<TMPTools>
+		</TMPTools>
+
+    <ActionSpace>
+
+      <!-- Conditions -->
+      <Condition label="Solo" type="formation">
+        <Member type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="Solo2" type="formation">
+        <Member type="boxy" role="R2"/>
+      </Condition>
+
+      <Condition label="Formation" type="formation">
+        <Member type="boxy" role="R1"/>
+        <Member type="boxy" role="R2"/>
+      </Condition>
+
+      
+      <!--Condition label="GoalBox1" type="motion">
+        <CSpaceConstraint bbx="[15:25 ; 0:10 ; 5:15 ; -1:1 ; -1:1 ; -1:1]"  
+                          dof="6" type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="FinalLocation1" type="motion">
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"
+                          dof="6" type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="StartLocation2" type="motion">
+        <CSpaceConstraint point="10 0 0 0 0 0" dof="6" 
+                          type="boxy" role="R1"/>
+      </Condition>
+
+      
+      <Condition label="GoalBox2" type="motion">
+        <CSpaceConstraint bbx="[15:25 ; -5:5 ; -5:5 ; -1:1 ; -1:1 ; -1:1]"  
+                          dof="6" type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="FinalLocation2" type="motion">
+        <CSpaceConstraint point="20 0 0 0 0 0"
+                          dof="6" type="boxy" role="R1"/>
+      </Condition-->
+
+      <Condition label="FormationBox1" type="motion">
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
+                          dof="6" type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="FormationBox2" type="motion">
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
+                          dof="6" type="boxy" role="R2"/>
+      </Condition>
+
+      <Condition label="FormationBox" type="motion">
+        <BoundaryConstraint bbx="[-25:25 ; -15:15 ; -25:25]"  
+                          dof="6" type="boxy" role="Formation"/>
+      </Condition>
+      <!-- Actions -->
+
+      <!--Interaction label="Arrive1" isLabel="InteractionStrategyExample">
+        <PreConditions>
+          <Condition label="Solo"/>
+          <Condition label="GoalBox1"/>
+        </PreConditions>
+        <InterimConditions>
+          <Condition label="Solo"/>
+          <Condition label="FinalLocation1"/>
+        </InterimConditions>
+        <PostConditions>
+          <Condition label="Solo"/>
+          <Condition label="FinalLocation1"/>
+        </PostConditions>
+      </Interaction>
+
+      <Interaction label="Arrive2" isLabel="InteractionStrategyExample">
+        <PreConditions>
+          <Condition label="Solo"/>
+          <Condition label="GoalBox2"/>
+        </PreConditions>
+        <InterimConditions>
+          <Condition label="Solo"/>
+          <Condition label="FinalLocation2"/>
+        </InterimConditions>
+        <PostConditions>
+          <Condition label="Solo"/>
+          <Condition label="FinalLocation2"/>
+        </PostConditions>
+      </Interaction-->
+
+      <Interaction label="CreateFormation" isLabel="InteractionStrategyExample">
+        <PreConditions>
+          <Condition label="Solo"/>
+          <Condition label="Solo2"/>
+          <Condition label="FormationBox1"/>
+          <Condition label="FormationBox2"/>
+        </PreConditions>
+
+        <InterimConditions>
+          <Condition label="Formation"/>
+          <Condition label="FormationBox"/>
+        </InterimConditions>
+
+        <PostConditions>
+          <Condition label="Formation"/>
+          <Condition label="FormationBox"/>
+        </PostConditions>
+      </Interaction>
+    </ActionSpace>
+	
+		<Solver tmpStrategyLabel="BasicHCR" baseFilename="action_space_example"/>
+	</TMPLibrary>
+
+</MotionPlanning>
