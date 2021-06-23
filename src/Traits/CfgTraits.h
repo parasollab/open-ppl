@@ -42,7 +42,7 @@
 //map evaluator includes
 
 //mp strategies includes
-//#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -126,7 +126,7 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-//    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 
