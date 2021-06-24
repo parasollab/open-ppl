@@ -159,6 +159,10 @@ class CombinedRoadmap : public StateGraph {
               size_t _newSource, size_t _newTarget, 
               GroupRoadmapType* _originalRoadmap, GroupRoadmapType* _newRoadmap);
 
+    /// Ensure that the input state is using the local mpSolution roadmaps.
+    ///@param _state The state to syncronize with internal representation.
+    void RemapState(State& _state);
+
 		///@}
 		///@name Internal State
 		///@{

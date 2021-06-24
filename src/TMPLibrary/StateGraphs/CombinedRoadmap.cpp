@@ -105,13 +105,24 @@ void
 CombinedRoadmap::
 AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Interaction* _inter) {
 
+  // Make sure input and output states reflect proper roadmap
+  RemapState(_input);
+  RemapState(_output);
+
   // Create semantic roadmap for interaction.
 
+  // Grab group roadmap.
   auto group = _inter->GetToInterimPath()->GetRoadmap()->GetGroup();
   m_mpSolution->AddRobotGroup(group);
   auto grm = m_mpSolution->GetGroupRoadmap(group);
 
-  ActionUpdate update; //= MergeActionUpdates(_csr);
+  // Collect updates from accross semantic roadmaps
+  ActionUpdate update; 
+  for(auto sr : _csr) {
+    update = MergeActionUpdates(update, sr->second);
+  }
+
+  // Add new change to action update
   update.updates.push_back(std::make_pair(_input,_output));
 
   SemanticRoadmap* sr = new SemanticRoadmap(std::make_pair(grm,update));
@@ -689,6 +700,26 @@ MoveGroupEdge(size_t _originalSource, size_t _originalTarget,
   _newRoadmap->AddEdge(_newSource,_newTarget,newEdge);
 }
 
+void
+CombinedRoadmap::
+RemapState(State& _state) {
+
+  for(auto& kv : _state) {
+    // Extract the state info for the group.
+    auto group = kv.first;
+    auto grm = kv.second.first;
+    auto vid = kv.second.second;
+    auto gcfg = grm->GetVertex(vid);
+
+    // Make sure the state info for the group is in the local mpSolution.
+    m_mpSolution->AddRobotGroup(group);
+    auto newGrm = m_mpSolution->GetGroupRoadmap(group);
+    auto newVid = MoveGroupCfg(gcfg,newGrm);
+    
+    // Update the state to match the local representation.
+    kv.second = std::make_pair(newGrm,newVid);
+  }
+}
 /*----------------------------------------------------------------------------*/
 
 /*istream&

@@ -223,9 +223,6 @@ FullCfgs(MPLibrary* const _lib) const {
     if(!edge.SkipEdge()) {
       std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, source, target);
 
-      if(edge.front() == out.back())
-        std::cout << "Debug here" << std::endl;
-
       // Only grab the intermediate cfgs.
       auto startIter = edge.begin();
       startIter++;
@@ -235,9 +232,6 @@ FullCfgs(MPLibrary* const _lib) const {
 
       out.insert(out.end(), startIter, endIter--);
     }
-
-    if(m_roadmap->GetVertex(target) == out.back())
-      std::cout << "Debug here" << std::endl;
   
     // Insert the next vertex.
     out.push_back(m_roadmap->GetVertex(target));

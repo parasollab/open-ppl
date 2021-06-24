@@ -120,6 +120,10 @@ AssignRoles(const State& _state, std::vector<std::string> _conditions) {
   for(auto label : _conditions) {
     auto condition = as->GetCondition(label);
 
+    auto m = dynamic_cast<MotionCondition*>(condition);
+    if(!m)
+      continue;
+
     auto group = condition->Satisfied(_state);
     if(!group)
       throw RunTimeException(WHERE) << "Interaction conditions "
@@ -129,6 +133,8 @@ AssignRoles(const State& _state, std::vector<std::string> _conditions) {
   }
 
   // Identify roles
+  std::set<Robot*> usedRobots;
+
   for(auto kv : conditionMap) {
     auto group = kv.first;
     auto robots = group->GetRobots();
@@ -157,12 +163,17 @@ AssignRoles(const State& _state, std::vector<std::string> _conditions) {
           if(robot->GetCapability() != type) 
             continue;
 
+          // Check if robot has been used already
+          if(usedRobots.count(robot))
+            continue;
+
           // Check that robot cfg matches the constraint
           auto cfg = groupCfg.GetRobotCfg(robot);
           if(!c.second->Satisfied(cfg)) 
             continue;
 
           m_roleMap[role] = robot;
+          usedRobots.insert(robot);
         }
       }
     }
@@ -331,9 +342,12 @@ InteractionStrategyExample::GroupPathType*
 InteractionStrategyExample::
 PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label) {
 
-  // Grab MPSolution, MPLibrary, and MPProblem
+  // Grab MPSolution, MPLibrary, and MPProblem.
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
+
+  // Clear previous final state.
+  m_finalState.clear();
 
   for(auto task : _tasks) {
 
@@ -380,8 +394,8 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
         for(auto robot : group->GetRobots()) {
           auto cfg = gcfg.GetRobotCfg(robot);
 
-          if(!m_individualPaths[robot].empty() and cfg == m_individualPaths[robot].back())
-            std::cout << "Debug here" << std::endl;
+          //if(!m_individualPaths[robot].empty() and cfg == m_individualPaths[robot].back())
+          //  std::cout << "Debug here" << std::endl;
 
           m_individualPaths[robot].push_back(cfg);
         }

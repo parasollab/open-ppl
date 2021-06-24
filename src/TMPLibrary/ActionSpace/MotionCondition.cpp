@@ -90,6 +90,7 @@ Satisfied(const State& _state) const {
 
         matched.insert(robot);
         foundMatch = true;
+        break;
       }
 
       if(!foundMatch) {

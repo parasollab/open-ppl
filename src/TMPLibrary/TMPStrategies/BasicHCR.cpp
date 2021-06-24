@@ -278,10 +278,13 @@ FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
         auto vid = vit->descriptor();
         state[rm->GetGroup()] = std::make_pair(rm,vid);
 
-        if(!m->Satisfied(state)) {
+        if(m->Satisfied(state)) {
           satisfyingVIDs.push_back(vid);
         }
       }
+
+      if(satisfyingVIDs.size() == 0)
+        continue;
 
       roleMap[sr].push_back(roles);
       vidMap[sr].push_back(satisfyingVIDs);
@@ -322,9 +325,11 @@ FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
     }
   }
 
-  //Todo::Sample a state from there
-  if(csrs.empty());
+  // Make sure at least one valid state was found.
+  if(csrs.size() == 0)
     return std::make_pair(CompositeSemanticRoadmap(), State());
+
+  //Todo::Sample a state from there
 
   for(auto csrInfo : csrs) {
     CompositeSemanticRoadmap csr;
