@@ -8,6 +8,7 @@ template <typename MPTraits>
 class SamplerMethodTest : public SamplerMethod<MPTraits>, 
                           public TestBaseObject {
   public:
+
     ///@name Local Types
     ///@{
 
@@ -29,7 +30,8 @@ class SamplerMethodTest : public SamplerMethod<MPTraits>,
 
     ///@}
 
-  private:
+  protected:
+
     ///@name Interface Test Functions
     ///@{
 
@@ -58,15 +60,29 @@ class SamplerMethodTest : public SamplerMethod<MPTraits>,
     virtual void IndividualCfgSample(Boundary* _boundary, 
                     std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids);
 
-    virtual void IndividualCfgSampleWithEEConstraint();
+    virtual void IndividualCfgSampleWithEEConstraint(Boundary* _boundary, 
+                    Boundary* _eeBoundary, std::vector<Cfg>& _valids, 
+                    std::vector<Cfg>& _invalids);
 
-    virtual void IndividualFilter();
+    virtual void IndividualFilter(std::vector<Cfg> _input, Boundary* _boundary,
+                    std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids);
 
-    virtual void GroupCfgSampleSingleBoundary();
+    virtual void GroupCfgSampleSingleBoundary(Boundary* _boundary, 
+                    std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids);
 
-    virtual void GroupCfgSampleIndividualBoundaries();
+    virtual void GroupCfgSampleIndividualBoundaries(std::map<Robot*,Boundary*> _boundaryMap, 
+                    std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids);
 
-    virtual void GroupFilter();
+    virtual void GroupFilter(std::vector<GroupCfg> _input, Boundary* _boundary,
+      std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids);
+
+    ///@}
+    ///@name Helper Functions
+    ///@{
+
+    void SetLibraryRobot();
+
+    void SetLibraryGroup();
 
     ///@}
 };
@@ -126,11 +142,7 @@ SamplerMethodTest<MPTraits>::
 IndividualCfgSample(Boundary* _boundary, std::vector<Cfg>& _valids,
                     std::vector<Cfg>& _invalids) {
 
-  // Set MPLibrary to sample for single robot
-  auto robot = this->GetMPProblem()->GetRobots()[0];
-  auto task = this->GetMPProblem()->GetTask(robot);
-  this->GetMPLibrary()->SetTask(task);
-  this->GetMPLibrary()->SetGroupTask(nullptr);
+  SetLibraryRobot();
 
   size_t numNodes = 10;
   size_t maxAttempts = 100;
@@ -145,71 +157,113 @@ IndividualCfgSample(Boundary* _boundary, std::vector<Cfg>& _valids,
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-IndividualCfgSampleWithEEConstraint() {
+IndividualCfgSampleWithEEConstraint(Boundary* _boundary, 
+            Boundary* _eeBoundary, std::vector<Cfg>& _valids, 
+            std::vector<Cfg>& _invalids) {
 
-  // Set MPLibrary to sample for single robot
+  SetLibraryRobot();
+
+  // Check if robot has end effector
   auto robot = this->GetMPProblem()->GetRobots()[0];
-  auto task = this->GetMPProblem()->GetTask(robot);
-  this->GetMPLibrary()->SetTask(task);
-  this->GetMPLibrary()->SetGroupTask(nullptr);
+  if(!robot->GetEndEffector().m_effectorBody)
+    return;
 
-  //TODO::Finish test and decide function outputs. 
+  size_t numNodes = 10;
+  size_t maxAttempts = 100;
+
+  if(!_boundary)
+    _boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+
+  this->Sample(numNodes,maxAttempts,_boundary,_eeBoundary,
+               std::back_inserter(_valids), std::back_inserter(_invalids));
 }
 
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-IndividualFilter() {
+IndividualFilter(std::vector<Cfg> _input, Boundary* _boundary, 
+                 std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids) {
 
+  SetLibraryRobot();
+
+  size_t maxAttempts = 100;
+
+  if(!_boundary)
+    _boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+
+  this->Filter(_input.begin(), _input.end(), maxAttempts, _boundary,
+               std::back_inserter(_valids), std::back_inserter(_invalids));
+}
+
+template <typename MPTraits>
+void
+SamplerMethodTest<MPTraits>::
+GroupCfgSampleSingleBoundary(Boundary* _boundary, std::vector<GroupCfg>& _valids,
+      std::vector<GroupCfg>& _invalids) {
+
+  SetLibraryGroup();
+
+  size_t numNodes = 10;
+  size_t maxAttempts = 100;
+
+  if(!_boundary)
+    _boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+
+  this->Sample(numNodes,maxAttempts,_boundary,std::back_inserter(_valids), 
+               std::back_inserter(_invalids));
+}
+
+template <typename MPTraits>
+void
+SamplerMethodTest<MPTraits>::
+GroupCfgSampleIndividualBoundaries(std::map<Robot*,Boundary*> _boundaryMap, 
+      std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids) {
+
+  SetLibraryGroup();
+
+  size_t numNodes = 10;
+  size_t maxAttempts = 100;
+
+  this->Sample(numNodes,maxAttempts,_boundaryMap,std::back_inserter(_valids), 
+               std::back_inserter(_invalids));
+}
+
+template <typename MPTraits>
+void
+SamplerMethodTest<MPTraits>::
+GroupFilter(std::vector<GroupCfg> _input, Boundary* _boundary,
+      std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids) {
+
+  SetLibraryGroup();
+
+  size_t maxAttempts = 100;
+  
+  this->Filter(_input.begin(), _input.end(), maxAttempts, _boundary, 
+               std::back_inserter(_valids), std::back_inserter(_invalids));
+}
+
+/*-------------------------- Helper Functions ------------------------*/
+
+template <typename MPTraits>
+void
+SamplerMethodTest<MPTraits>::
+SetLibraryRobot() {
   // Set MPLibrary to sample for single robot
   auto robot = this->GetMPProblem()->GetRobots()[0];
   auto task = this->GetMPProblem()->GetTasks(robot)[0];
   this->GetMPLibrary()->SetTask(task);
   this->GetMPLibrary()->SetGroupTask(nullptr);
-
-  //TODO::Finish test and decide function outputs. 
 }
 
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-GroupCfgSampleSingleBoundary() {
-
+SetLibraryGroup() {
   // Set MPLibrary to sample for robot group
   auto group = this->GetMPProblem()->GetRobotGroups()[0];
   auto task = this->GetMPProblem()->GetTasks(group)[0];
   this->GetMPLibrary()->SetGroupTask(task);
   this->GetMPLibrary()->SetTask(nullptr);
-
-  //TODO::Finish test and decide function outputs. 
-}
-
-template <typename MPTraits>
-void
-SamplerMethodTest<MPTraits>::
-GroupCfgSampleIndividualBoundaries() {
-
-  // Set MPLibrary to sample for robot group
-  auto group = this->GetMPProblem()->GetRobotGroups()[0];
-  auto task = this->GetMPProblem()->GetTasks(group)[0];
-  this->GetMPLibrary()->SetGroupTask(task);
-  this->GetMPLibrary()->SetTask(nullptr);
-
-  //TODO::Finish test and decide function outputs. 
-}
-
-template <typename MPTraits>
-void
-SamplerMethodTest<MPTraits>::
-GroupFilter() {
-
-  // Set MPLibrary to sample for robot group
-  auto group = this->GetMPProblem()->GetRobotGroups()[0];
-  auto task = this->GetMPProblem()->GetTasks(group)[0];
-  this->GetMPLibrary()->SetGroupTask(task);
-  this->GetMPLibrary()->SetTask(nullptr);
-
-  //TODO::Finish test and decide function outputs. 
 }
 
 /*--------------------------------------------------------------------*/
