@@ -15,6 +15,7 @@ class DistanceMetricMethodTest : public DistanceMetricMethod<MPTraits>,
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::GroupCfgType GroupCfgType;
+    typedef typename MPTraits::RoadmapType  RoadmapType;
 
     typedef TestBaseObject::TestResult TestResult;
 
@@ -150,31 +151,88 @@ template <typename MPTraits>
 double
 DistanceMetricMethodTest<MPTraits>::
 IndividualEdgeWeight() {
-  //TODO::Implement this default function.
-  return 0;
+
+  // Initialize roadmap for test
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  RoadmapType roadmap(robot);
+
+  // Get cfgs for edge
+  auto cfg1 = GetIndividualCfg();
+  auto cfg2 = GetIndividualCfg();
+  
+  for(size_t i = 0; i < cfg2.PosDOF(); i++) {
+    cfg2[i] = 5;
+  }
+
+  for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
+    cfg2[i+cfg2.PosDOF()] = .5;
+  }
+
+  // Add cfgs to roadmap
+  auto first = roadmap.AddVertex(cfg1);
+  auto second = roadmap.AddVertex(cfg2);
+
+  // Add edge
+  DefaultWeight<CfgType> weight;
+  roadmap.AddEdge(first,second,weight);
+
+  // Call distance metric method
+  return this->EdgeWeight(&roadmap,first,second);
 }
 
 template <typename MPTraits>
 typename MPTraits::CfgType
 DistanceMetricMethodTest<MPTraits>::
 IndividualScaleCfg() {
-  //TODO::Implement this default function.
-  return GetIndividualCfg();
+
+  // Grab initial variables
+  double length = 10;
+  auto cfg = GetIndividualCfg();
+
+  // Increase each dof from 0, so that scaling has an effect
+  for(size_t i = 0; i < cfg.DOF(); i++) {
+    cfg[i] = 0.01;
+  }
+
+  // Call distance metric method
+  this->Scale(length,cfg);
+
+  return cfg; 
 }
 
 template <typename MPTraits>
 double
 DistanceMetricMethodTest<MPTraits>::
 GroupCfgDistance() {
-  //TODO::Implement this default function.
-  return 0;
+  auto gcfg1 = GetGroupCfg();
+  auto gcfg2 = GetGroupCfg();
+  
+  for(size_t i = 0; i < gcfg2.GetNumRobots(); i++) {
+
+    // Grab individual cfg
+    auto& cfg = gcfg2.GetRobotCfg(i);
+
+    // Adjust individual cfg
+    for(size_t j = 0; j < cfg.PosDOF(); j++) {
+      cfg[j] = 5;
+    }
+    
+    for(size_t j = cfg.PosDOF(); j < cfg.DOF(); j++) {
+      cfg[j+cfg.PosDOF()] = .5;
+    }
+  }
+
+  // Call distance metric method
+  return this->Distance(gcfg1,gcfg2);
 }
 
 template <typename MPTraits>
 double
 DistanceMetricMethodTest<MPTraits>::
 GroupEdgeWeight() {
-  //TODO::Implement this default function.
+  // TODO::Implement this default function.
+  // This function does not currently exists in the 
+  // distance metric method.
   return 0;
 }
 
@@ -182,8 +240,25 @@ template <typename MPTraits>
 typename MPTraits::GroupCfgType
 DistanceMetricMethodTest<MPTraits>::
 GroupScaleCfg() {
-  //TODO::Implement this default function.
-  return GetGroupCfg();
+
+  double length = 10;
+  auto gcfg = GetGroupCfg();
+
+  // Increase each dof from 0, so that scaling has an effect
+  for(size_t i = 0; i < gcfg.GetNumRobots(); i++) {
+
+    // Grab individual robot cfg
+    auto& cfg = gcfg.GetRobotCfg(i);
+
+    // Update dofs
+    for(size_t j = 0; j < cfg.DOF(); j++) {
+      cfg[j] = 0.01;
+    }
+  }
+
+  this->Scale(length,gcfg);
+
+  return gcfg; 
 }
 
 /*-------------------------- Helper Functions ------------------------*/

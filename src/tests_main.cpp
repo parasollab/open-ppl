@@ -18,6 +18,8 @@
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "Utilities/PMPLExceptions.h"
 
+#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
+#include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
 
 int
 main(int _argc, char** _argv) {
