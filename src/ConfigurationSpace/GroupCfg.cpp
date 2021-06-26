@@ -20,6 +20,8 @@ GroupCfg(GroupRoadmapType* const _groupMap, const bool _init)
   if(!m_groupMap)
     return;
 
+  InitializeFormations();
+
   // Set the VID list to all invalid.
   m_vids.resize(GetNumRobots(), INVALID_VID);
 
@@ -248,6 +250,7 @@ GroupCfg::
 AddFormation(Formation* _formation) {
   m_formations.push_back(_formation);
 }
+
 /*------------------------ Individual Configurations -------------------------*/
 
 void
@@ -815,6 +818,11 @@ IsLocalCfg(const size_t _robotIndex) const noexcept {
   return m_vids[_robotIndex] == INVALID_VID;
 }
 
+void
+GroupCfg::
+InitializeFormations() noexcept {
+  m_formations = m_groupMap->GetActiveFormations();
+}
 
 void
 GroupCfg::

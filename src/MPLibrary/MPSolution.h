@@ -314,6 +314,7 @@ SetGroupPath(RobotGroup* const _g, GroupPathType* _path) noexcept {
   groupSolution->path.release();
   groupSolution->path.reset(_path);
 }
+
 /*---------------------------- Roadmap Accessors -----------------------------*/
 
 template <typename MPTraits>

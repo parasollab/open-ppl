@@ -1,5 +1,5 @@
-#ifndef PPL_FORMATION_H_
-#define PPL_FORMATION_H_
+#ifndef PPL_FORMATION_CONDITION_H_
+#define PPL_FORMATION_CONDITION_H_
 
 #include "Condition.h"
 

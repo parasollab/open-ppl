@@ -1,6 +1,7 @@
 #ifndef PMPL_GROUP_ROADMAP_H_
 #define PMPL_GROUP_ROADMAP_H_
 
+#include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
@@ -86,6 +87,12 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// Get the number of robots for the group this roadmap is for.
     size_t GetNumRobots() const noexcept;
 
+    /// Get the set of formations available in this roadmap.
+    const std::unordered_map<Formation*,bool>& GetFormations();
+
+    /// Get the set of currently active formations.
+    std::vector<Formation*> GetActiveFormations();
+
     ///@}
     ///@name Input/Output
     ///@{
@@ -135,6 +142,19 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// @param _iterator An iterator to the edge.
     virtual void DeleteEdge(EI _iterator) noexcept override;
 
+    /// Add a formation to this group roadmap.
+    /// @param _formation The formation to add.
+    /// @param _active The initial active/inactive status.
+    void AddFormation(Formation* _formation, bool _active = true); 
+
+    /// Set the active value of the formation to true.
+    /// @param The formation to set as active.
+    void SetFormationActive(Formation* _formation);
+
+    /// Set the active value of the formation to false.
+    /// @param The formation to set as inactive.
+    void SetFormationInactive(Formation* _formation);
+
     ///@}
     ///@name Hooks
     ///@{
@@ -153,6 +173,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     RobotGroup* const m_group; ///< The robot group.
 
     std::vector<IndividualRoadmap*> m_roadmaps; ///< The individual roadmaps.
+
+    /// The set of available formations and their active=1/inactive=0 status.
+    std::unordered_map<Formation*,bool> m_formations; 
 
     using BaseType::m_timestamp;
 
@@ -208,6 +231,26 @@ GetNumRobots() const noexcept {
   return m_group->Size();
 }
 
+template <typename Vertex, typename Edge>
+const std::unordered_map<Formation*,bool>&
+GroupRoadmap<Vertex, Edge>::
+GetFormations() {
+  return m_formations;
+}
+
+template <typename Vertex, typename Edge>
+std::vector<Formation*>
+GroupRoadmap<Vertex, Edge>::
+GetActiveFormations() {
+  std::vector<Formation*> active;
+
+  for(const auto& formation : m_formations) {
+    if(formation.second) 
+      active.push_back(formation.first);
+  }
+
+  return active;
+}
 
 /*-------------------------------Input/Output---------------------------------*/
 
@@ -490,6 +533,27 @@ DeleteEdge(EI _iterator) noexcept {
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());
   ++m_timestamp;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+AddFormation(Formation* _formation, bool _active) {
+  m_formations[_formation] = _active;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+SetFormationActive(Formation* _formation) {
+  m_formations[_formation] = true;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+SetFormationInactive(Formation* _formation) {
+  m_formations[_formation] = false;
 }
 
 /*----------------------------------- Hooks ----------------------------------*/

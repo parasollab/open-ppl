@@ -381,6 +381,9 @@ class GroupCfg final {
     /// Initialize the set of local configurations if not already done.
     void InitializeLocalCfgs() noexcept;
 
+    /// Initialize the set of formations this cfg is subject to.
+    void InitializeFormations() noexcept;
+
     /// Verify that an index is valid. Throw an exception if not.
     /// @param _robotIndex The (group) index to verify.
     void VerifyIndex(const size_t _robotIndex) const noexcept;
