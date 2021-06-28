@@ -249,5 +249,6 @@ GetGroupCfg() {
   GroupCfgType gcfg(group);
   return gcfg;
 }
+
 /*--------------------------------------------------------------------*/
 #endif

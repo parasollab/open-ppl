@@ -21,6 +21,7 @@
 #include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
 #include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
+#include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
 
 int
 main(int _argc, char** _argv) {
