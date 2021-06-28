@@ -66,6 +66,7 @@ operator()(Interaction* _interaction, State& _state) {
                                  interimConstraintMap);
 
   // Compute motions from pre to interim conditions.
+  SetActiveFormations(preconditions,_interaction->GetToInterimSolution());
   auto toInterimPath = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
                   "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
 
@@ -88,6 +89,7 @@ operator()(Interaction* _interaction, State& _state) {
                               goalConstraintMap);
 
   // Compute motions from interim to post conditions.
+  SetActiveFormations(postconditions,_interaction->GetToPostSolution());
   auto toPostPath = PlanMotions(toPost,_interaction->GetToPostSolution(),
                      "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
 
@@ -599,4 +601,44 @@ InterimState(Interaction* _interaction) {
  
   return interimState; 
 }
+
+void
+InteractionStrategyExample::
+SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution) {
+  
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+  auto prob = this->GetMPProblem();
+  
+  for(auto label : _conditions) {
+    // Make sure it's a formation condition.
+    auto condition = as->GetCondition(label);
+    auto f = dynamic_cast<FormationCondition*>(condition);
+    if(!f)
+      continue;
+
+    auto formation = f->GenerateFormation(m_roleMap);
+
+    // Collect robots from assigned roles
+    std::vector<Robot*> robots = formation->GetRobots();
+    std::string groupLabel = "";
+
+    for(auto role : f->GetRoles()) {
+      auto robot = m_roleMap[role];
+      //robots.push_back(robot);
+      groupLabel += (role + ":" + robot->GetLabel() + "--");
+    }
+
+    // Intialize group
+    RobotGroup* group = prob->AddRobotGroup(robots,groupLabel);
+    for(auto robot : group->GetRobots()) {
+      _solution->AddRobot(robot);
+    }
+    _solution->AddRobotGroup(group);
+    auto grm = _solution->GetGroupRoadmap(group);
+
+    grm->AddFormation(formation);
+    grm->SetFormationActive(formation);
+  }
+}
+
 /*------------------------------------------------------------*/

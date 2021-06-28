@@ -2,7 +2,9 @@
 #define PPL_FORMATION_CONDITION_H_
 
 #include "Condition.h"
+#include "Transformation.h"
 
+class Formation;
 class RobotGroup;
 class TMPLibrary;
 
@@ -12,6 +14,16 @@ class FormationCondition : public Condition {
     ///@{
 
     typedef Condition::State State;
+
+    struct Role {
+      bool leader = true;
+      std::string name;
+      std::string type;
+      std::string referenceRole;
+      size_t referenceBody;
+      size_t dependentBody;
+      Transformation transformation;
+    };
 
     ///@}
     ///@name Construction
@@ -31,6 +43,8 @@ class FormationCondition : public Condition {
 
     const std::vector<std::string> GetRoles() const;
   
+    Formation* GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap);
+
     ///@}
 
   private:
@@ -39,13 +53,15 @@ class FormationCondition : public Condition {
 
     bool CheckRequirements(RobotGroup* _group) const;
 
+    std::vector<double> ParseVectorString(std::string _s);
+
     ///@}
     ///@name Internal State
     ///@{
 
     std::vector<std::string> m_requiredTypes;
 
-    std::vector<std::string> m_roles;
+    std::unordered_map<std::string,Role> m_roles;
 
     ///@}
 };

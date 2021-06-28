@@ -53,6 +53,8 @@ class InteractionStrategyExample : public InteractionStrategyMethod {
 
     State InterimState(Interaction* _interaction);
 
+    void SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution);
+
     ///@}
     ///@name Internal State
     ///@{
