@@ -438,6 +438,24 @@ class MPLibraryType
     std::vector<Solver> m_solvers;           ///< The set of inputs to execute.
 
     ///@}
+    ///@name Other Library Objects
+    ///@{
+    /// These do not use method sets because the sub-objects are not expected to
+    /// share a common interface.
+
+    std::unique_ptr<GoalTracker> m_goalTracker;
+    MPTools* m_mpTools{nullptr};
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::atomic<bool> m_running{true};  ///< Keep running the strategy?
+
+    ///@}
+
+  protected: 
+
     ///@name Method Sets
     ///@{
     /// Method sets hold and offer access to the motion planning objects of the
@@ -456,22 +474,6 @@ class MPLibraryType
     MPStrategySet*         m_mpStrategies{nullptr};
 
     ///@}
-    ///@name Other Library Objects
-    ///@{
-    /// These do not use method sets because the sub-objects are not expected to
-    /// share a common interface.
-
-    std::unique_ptr<GoalTracker> m_goalTracker;
-    MPTools* m_mpTools{nullptr};
-
-    ///@}
-    ///@name Internal State
-    ///@{
-
-    std::atomic<bool> m_running{true};  ///< Keep running the strategy?
-
-    ///@}
-
 };
 
 /*---------------------------- Construction ----------------------------------*/

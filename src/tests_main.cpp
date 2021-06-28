@@ -18,11 +18,6 @@
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "Utilities/PMPLExceptions.h"
 
-#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
-#include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
-#include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
-#include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
-
 int
 main(int _argc, char** _argv) {
   // Assert that this platform supports an infinity for doubles.
@@ -138,7 +133,8 @@ main(int _argc, char** _argv) {
 
 
   
- 
+  auto mpResults = mpl->RunTest();
+  std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
   
  
   // Release resources.
