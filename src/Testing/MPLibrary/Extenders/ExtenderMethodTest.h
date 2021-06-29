@@ -7,7 +7,7 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class ExtenderMethodTest : public ExtenderMethod<MPTraits>,
+class ExtenderMethodTest : virtual public ExtenderMethod<MPTraits>,
                            public TestBaseObject {
 
   public:

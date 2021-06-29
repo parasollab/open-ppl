@@ -8,7 +8,7 @@
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
 template <typename MPTraits>
-class MapEvaluatorMethodTest : public MapEvaluatorMethod<MPTraits>,
+class MapEvaluatorMethodTest : virtual public MapEvaluatorMethod<MPTraits>,
                                public TestBaseObject {
 
   public: 

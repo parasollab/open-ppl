@@ -5,8 +5,8 @@
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 
 template <typename MPTraits>
-class AlwaysTrueValidityTest : public ValidityCheckerMethodTest<MPTraits>,
-                               public AlwaysTrueValidity<MPTraits> {
+class AlwaysTrueValidityTest : virtual public AlwaysTrueValidity<MPTraits>,
+                               public ValidityCheckerMethodTest<MPTraits> {
 
   public: 
   
@@ -60,7 +60,9 @@ AlwaysTrueValidityTest() : AlwaysTrueValidity<MPTraits>() {}
 
 template<typename MPTraits>
 AlwaysTrueValidityTest<MPTraits>:: 
-AlwaysTrueValidityTest(XMLNode& _node) : AlwaysTrueValidity<MPTraits>(_node) {}
+AlwaysTrueValidityTest(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node),
+                                         AlwaysTrueValidity<MPTraits>(_node) {
+}
 
 template<typename MPTraits>
 AlwaysTrueValidityTest<MPTraits>::

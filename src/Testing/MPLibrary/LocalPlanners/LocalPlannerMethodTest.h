@@ -5,7 +5,7 @@
 #include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
 
 template <typename MPTraits>
-class LocalPlannerMethodTest : public LocalPlannerMethod<MPTraits>,
+class LocalPlannerMethodTest : virtual public LocalPlannerMethod<MPTraits>,
                                public TestBaseObject {
 
   public:

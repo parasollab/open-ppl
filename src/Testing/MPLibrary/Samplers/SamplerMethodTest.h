@@ -5,7 +5,7 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class SamplerMethodTest : public SamplerMethod<MPTraits>, 
+class SamplerMethodTest : virtual public SamplerMethod<MPTraits>, 
                           public TestBaseObject {
   public:
 

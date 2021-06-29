@@ -5,8 +5,8 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class ConnectorMethodTest : public ConnectorMethod<MPTraits>,
-                        public TestBaseObject {
+class ConnectorMethodTest : virtual public ConnectorMethod<MPTraits>,
+                            public TestBaseObject {
   public: 
     
     ///@name Local Types

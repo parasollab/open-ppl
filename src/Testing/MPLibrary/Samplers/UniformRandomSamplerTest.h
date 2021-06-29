@@ -5,7 +5,7 @@
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 
 template <class MPTraits>
-class UniformRandomSamplerTest : public UniformRandomSampler<MPTraits>, 
+class UniformRandomSamplerTest : virtual public UniformRandomSampler<MPTraits>, 
                                  public SamplerMethodTest<MPTraits> {
   public:
 
@@ -54,7 +54,8 @@ UniformRandomSamplerTest() : UniformRandomSampler<MPTraits>() {}
 
 template <typename MPTraits>
 UniformRandomSamplerTest<MPTraits>::
-UniformRandomSamplerTest(XMLNode& _node) : UniformRandomSampler<MPTraits>(_node) {}
+UniformRandomSamplerTest(XMLNode& _node) : SamplerMethod<MPTraits>(_node);
+                                           UniformRandomSampler<MPTraits>(_node) {}
 
 template <typename MPTraits>
 UniformRandomSamplerTest<MPTraits>::
