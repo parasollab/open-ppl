@@ -608,12 +608,20 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
   
   auto as = this->GetTMPLibrary()->GetActionSpace();
   auto prob = this->GetMPProblem();
-  
+ 
+  // Map of group roadmaps to active formations
+  std::unordered_map<GroupRoadmap<GroupCfg,GroupLocalPlan<Cfg>>*,
+                     std::vector<Formation*>> roadmapFormations;
+
   for(auto label : _conditions) {
     // Make sure it's a formation condition.
     auto condition = as->GetCondition(label);
     auto f = dynamic_cast<FormationCondition*>(condition);
     if(!f)
+      continue;
+
+    // Make sure there are robots to actually make a formation with.
+    if(f->GetRoles().size() < 2)
       continue;
 
     auto formation = f->GenerateFormation(m_roleMap);
@@ -630,14 +638,25 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
 
     // Intialize group
     RobotGroup* group = prob->AddRobotGroup(robots,groupLabel);
+
     for(auto robot : group->GetRobots()) {
       _solution->AddRobot(robot);
     }
+
     _solution->AddRobotGroup(group);
     auto grm = _solution->GetGroupRoadmap(group);
+    grm->SetAllFormationsInactive();
 
     grm->AddFormation(formation);
-    grm->SetFormationActive(formation);
+    roadmapFormations[grm].push_back(formation);
+  }
+  
+  for(auto& kv : roadmapFormations) {
+    auto grm = kv.first;
+    auto formations = kv.second;
+    for(auto& formation : formations) {
+      grm->SetFormationActive(formation);
+    }
   }
 }
 

@@ -262,16 +262,18 @@
 
       <!-- Conditions -->
       <Condition label="Solo" type="formation">
-        <Member type="boxy" role="R1"/>
+        <Role name="R1" type="boxy"/>
       </Condition>
 
       <Condition label="Solo2" type="formation">
-        <Member type="boxy" role="R2"/>
+        <Role name="R2" type="boxy"/>
       </Condition>
 
       <Condition label="Formation" type="formation">
-        <Member type="boxy" role="R1"/>
-        <Member type="boxy" role="R2"/>
+        <Role name="R1" type="boxy"/>
+        <Role name="R2" type="boxy">
+          <FormationConstraint refRole="R1" translation="0 0 0" orientation="0 0 0"/>
+        </Role>
       </Condition>
 
       

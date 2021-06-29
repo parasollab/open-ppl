@@ -41,11 +41,11 @@ FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_t
           role.referenceRole = grandchild.Read("refRole", true, "", 
                     "The role in the formation that this constraint is dependent on.");
 
-          role.referenceBody = grandchild.Read("refBody", true, 0,0,100,
+          role.referenceBody = grandchild.Read("refBody", false, 0,0,100,
                     "The body index in the reference role robot that this constraint is "
                     "dependent on.");
 
-          role.dependentBody = grandchild.Read("depBody", true, 0,0,100,
+          role.dependentBody = grandchild.Read("depBody", false, 0,0,100,
                     "The body index in this role robot that this is subject to this "
                     "constraint.");
 
@@ -54,8 +54,8 @@ FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_t
 
           auto translation = ParseVectorString(translationString);
 
-          std::string orientationString = grandchild.Read("translation", true, "",
-                    "The translation portion of the formation constraint.");
+          std::string orientationString = grandchild.Read("orientation", true, "",
+                    "The orientation portion of the formation constraint.");
 
           auto eulerVec = ParseVectorString(orientationString);
           

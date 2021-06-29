@@ -358,7 +358,7 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
   // Check if connection is to be copied or generated from constraint
   if(!_connection.GetMultiBody()) {
     // Create connection from constraint
-    auto constraint = m_constraintMap[_first->GetMultiBody()];
+    auto constraint = m_constraintMap[_second->GetMultiBody()];
     Transformation toDHFrame = constraint.transformation;
     DHParameters dh;
     Transformation identity;

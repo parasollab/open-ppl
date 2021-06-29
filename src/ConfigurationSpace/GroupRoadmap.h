@@ -155,6 +155,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     /// @param The formation to set as inactive.
     void SetFormationInactive(Formation* _formation);
 
+    /// Set the active value of all formations to false;
+    void SetAllFormationsInactive();
+
     ///@}
     ///@name Hooks
     ///@{
@@ -554,6 +557,15 @@ void
 GroupRoadmap<Vertex, Edge>::
 SetFormationInactive(Formation* _formation) {
   m_formations[_formation] = false;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+SetAllFormationsInactive() {
+  for(auto& kv : m_formations) {
+    kv.second = false;
+  }
 }
 
 /*----------------------------------- Hooks ----------------------------------*/
