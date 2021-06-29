@@ -132,7 +132,7 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <!--UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/-->
     </Samplers>
 
     <LocalPlanners>

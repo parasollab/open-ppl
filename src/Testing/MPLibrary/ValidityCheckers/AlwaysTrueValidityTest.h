@@ -15,6 +15,8 @@ class AlwaysTrueValidityTest : public ValidityCheckerMethodTest<MPTraits>,
 
     typedef TestBaseObject::TestResult TestResult;
 
+    typedef typename MPTraits::CfgType CfgType;
+
     ///@}
     ///@name Construction
     ///@{
@@ -24,6 +26,13 @@ class AlwaysTrueValidityTest : public ValidityCheckerMethodTest<MPTraits>,
     AlwaysTrueValidityTest(XMLNode& _node);
 
     ~AlwaysTrueValidityTest();
+
+    ///@}
+    ///@name Interface 
+    ///@{
+
+    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+        const std::string& _callName) override;
 
     ///@}
 
@@ -37,6 +46,10 @@ class AlwaysTrueValidityTest : public ValidityCheckerMethodTest<MPTraits>,
     virtual TestResult GroupCfgValidityTest() override;
 
     ///@}
+
+    //using AlwaysTrueValidity<MPTraits>::m_name;
+    template<typename T, typename U> friend class MethodSet;
+
 };
 
 /*--------------------------- Construction ---------------------------*/
@@ -52,6 +65,15 @@ AlwaysTrueValidityTest(XMLNode& _node) : AlwaysTrueValidity<MPTraits>(_node) {}
 template<typename MPTraits>
 AlwaysTrueValidityTest<MPTraits>::
 ~AlwaysTrueValidityTest() {}
+
+/*---------------------------- Interface -----------------------------*/
+
+template <typename MPTraits>
+bool
+AlwaysTrueValidityTest<MPTraits>::
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
+  return AlwaysTrueValidity<MPTraits>::IsValidImpl(_cfg,_cdInfo,_callName);
+}
 
 /*--------------------- Test Interface Functions ---------------------*/
 

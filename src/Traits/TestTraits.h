@@ -84,7 +84,6 @@ struct MPTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<MPTraits>,
       AlwaysTrueValidityTest<MPTraits>
       > ValidityCheckerMethodList;
 
@@ -94,7 +93,7 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      UniformRandomSamplerTest<MPTraits>
+      //UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world

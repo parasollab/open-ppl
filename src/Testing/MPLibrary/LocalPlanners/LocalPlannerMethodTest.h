@@ -215,7 +215,7 @@ void
 LocalPlannerMethodTest<MPTraits>::
 SetLibraryRobot() {
   // Set MPLibrary to sample for single robot
-  auto robot = this->GetMPProblem()->GetRobots()[0];
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
   auto task = this->GetMPProblem()->GetTasks(robot)[0];
   this->GetMPLibrary()->SetTask(task);
   this->GetMPLibrary()->SetGroupTask(nullptr);
@@ -226,7 +226,7 @@ void
 LocalPlannerMethodTest<MPTraits>::
 SetLibraryGroup() {
   // Set MPLibrary to sample for robot group
-  auto group = this->GetMPProblem()->GetRobotGroups()[0];
+  auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
   auto task = this->GetMPProblem()->GetTasks(group)[0];
   this->GetMPLibrary()->SetGroupTask(task);
   this->GetMPLibrary()->SetTask(nullptr);
