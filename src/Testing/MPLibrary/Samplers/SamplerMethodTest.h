@@ -57,23 +57,23 @@ class SamplerMethodTest : virtual public SamplerMethod<MPTraits>,
     //      The function should instantiate whatever input variables are 
     //      needed to test the underlying SamplerMethod function.
 
-    virtual void IndividualCfgSample(Boundary* _boundary, 
+    virtual void IndividualCfgSample(Boundary*& _boundary, 
                     std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids);
 
-    virtual void IndividualCfgSampleWithEEConstraint(Boundary* _boundary, 
+    virtual void IndividualCfgSampleWithEEConstraint(Boundary*& _boundary, 
                     Boundary* _eeBoundary, std::vector<Cfg>& _valids, 
                     std::vector<Cfg>& _invalids);
 
-    virtual void IndividualFilter(std::vector<Cfg> _input, Boundary* _boundary,
+    virtual void IndividualFilter(std::vector<Cfg> _input, Boundary*& _boundary,
                     std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids);
 
-    virtual void GroupCfgSampleSingleBoundary(Boundary* _boundary, 
+    virtual void GroupCfgSampleSingleBoundary(Boundary*& _boundary, 
                     std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids);
 
-    virtual void GroupCfgSampleIndividualBoundaries(std::map<Robot*,Boundary*> _boundaryMap, 
+    virtual void GroupCfgSampleIndividualBoundaries(std::map<Robot*,const Boundary*>& _boundaryMap, 
                     std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids);
 
-    virtual void GroupFilter(std::vector<GroupCfg> _input, Boundary* _boundary,
+    virtual void GroupFilter(std::vector<GroupCfg> _input, Boundary*& _boundary,
       std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids);
 
     ///@}
@@ -139,7 +139,7 @@ RunTest() {
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-IndividualCfgSample(Boundary* _boundary, std::vector<Cfg>& _valids,
+IndividualCfgSample(Boundary*& _boundary, std::vector<Cfg>& _valids,
                     std::vector<Cfg>& _invalids) {
 
   SetLibraryRobot();
@@ -157,15 +157,15 @@ IndividualCfgSample(Boundary* _boundary, std::vector<Cfg>& _valids,
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-IndividualCfgSampleWithEEConstraint(Boundary* _boundary, 
+IndividualCfgSampleWithEEConstraint(Boundary*& _boundary, 
             Boundary* _eeBoundary, std::vector<Cfg>& _valids, 
             std::vector<Cfg>& _invalids) {
 
   SetLibraryRobot();
 
   // Check if robot has end effector
-  auto robot = this->GetMPProblem()->GetRobots()[0];
-  if(!robot->GetEndEffector().m_effectorBody)
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  if(!robot->GetEndEffector().effectorBody)
     return;
 
   size_t numNodes = 10;
@@ -181,7 +181,7 @@ IndividualCfgSampleWithEEConstraint(Boundary* _boundary,
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-IndividualFilter(std::vector<Cfg> _input, Boundary* _boundary, 
+IndividualFilter(std::vector<Cfg> _input, Boundary*& _boundary, 
                  std::vector<Cfg>& _valids, std::vector<Cfg>& _invalids) {
 
   SetLibraryRobot();
@@ -198,7 +198,7 @@ IndividualFilter(std::vector<Cfg> _input, Boundary* _boundary,
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-GroupCfgSampleSingleBoundary(Boundary* _boundary, std::vector<GroupCfg>& _valids,
+GroupCfgSampleSingleBoundary(Boundary*& _boundary, std::vector<GroupCfg>& _valids,
       std::vector<GroupCfg>& _invalids) {
 
   SetLibraryGroup();
@@ -216,7 +216,7 @@ GroupCfgSampleSingleBoundary(Boundary* _boundary, std::vector<GroupCfg>& _valids
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-GroupCfgSampleIndividualBoundaries(std::map<Robot*,Boundary*> _boundaryMap, 
+GroupCfgSampleIndividualBoundaries(std::map<Robot*,const Boundary*>& _boundaryMap, 
       std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids) {
 
   SetLibraryGroup();
@@ -231,7 +231,7 @@ GroupCfgSampleIndividualBoundaries(std::map<Robot*,Boundary*> _boundaryMap,
 template <typename MPTraits>
 void
 SamplerMethodTest<MPTraits>::
-GroupFilter(std::vector<GroupCfg> _input, Boundary* _boundary,
+GroupFilter(std::vector<GroupCfg> _input, Boundary*& _boundary,
       std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids) {
 
   SetLibraryGroup();
@@ -249,8 +249,8 @@ void
 SamplerMethodTest<MPTraits>::
 SetLibraryRobot() {
   // Set MPLibrary to sample for single robot
-  auto robot = this->GetMPProblem()->GetRobots()[0];
-  auto task = this->GetMPProblem()->GetTasks(robot)[0];
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  auto task = this->GetMPProblem()->GetTasks(robot)[0].get();
   this->GetMPLibrary()->SetTask(task);
   this->GetMPLibrary()->SetGroupTask(nullptr);
 }
@@ -260,8 +260,8 @@ void
 SamplerMethodTest<MPTraits>::
 SetLibraryGroup() {
   // Set MPLibrary to sample for robot group
-  auto group = this->GetMPProblem()->GetRobotGroups()[0];
-  auto task = this->GetMPProblem()->GetTasks(group)[0];
+  auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
+  auto task = this->GetMPProblem()->GetTasks(group)[0].get();
   this->GetMPLibrary()->SetGroupTask(task);
   this->GetMPLibrary()->SetTask(nullptr);
 }

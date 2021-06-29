@@ -55,7 +55,7 @@ class Terrain {
 
     const glutils::color& Color() const noexcept;
 
-    const Boundary* GetBoundary() const noexcept;
+    Boundary* GetBoundary() const noexcept;
 
 		const std::vector<std::unique_ptr<Boundary>>& GetBoundaries() const noexcept;
 
@@ -178,7 +178,7 @@ class Environment {
     ///@name Boundary Functions
     ///@{
 
-    const Boundary* GetBoundary() const noexcept;
+    Boundary* GetBoundary() const noexcept;
 
     void SetBoundary(std::unique_ptr<Boundary>&& _b) noexcept;
 

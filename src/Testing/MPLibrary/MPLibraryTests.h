@@ -129,6 +129,9 @@ typename MPLibraryTests<MPTraits>::TestResult
 MPLibraryTests<MPTraits>::
 RunTest() {
 
+  // Init mpsolution for stat purposes (and avoiding seg faults)
+  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobots()[0].get())); 
+
   size_t passed = 0;
   size_t failed = 0;
   size_t total = 0;
@@ -169,6 +172,7 @@ RunTest() {
                         "\nPassed: " + std::to_string(passed) +
                         "\nFailed: " + std::to_string(failed) +
                         "\n\n\n";
+
 
   return std::make_pair(success,message);
 }
