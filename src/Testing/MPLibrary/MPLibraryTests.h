@@ -11,7 +11,7 @@
 #include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
 #include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
 //#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
-//#include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
+#include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
 //#include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
 
