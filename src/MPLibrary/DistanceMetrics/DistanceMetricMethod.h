@@ -114,6 +114,18 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 
     ///@}
 
+  private:
+
+    ///@name Internal State
+    ///@{
+
+    /// TODO::Determine where the best home for this is.
+    /// Indicate if there is a noninfinite distance between group cfgs 
+    /// of different formations.
+    bool m_strictFormations{false}; 
+
+    ///@}
+
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -121,6 +133,11 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
 template <typename MPTraits>
 DistanceMetricMethod<MPTraits>::
 DistanceMetricMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+
+  m_strictFormations = _node.Read("strictFormations", false, m_strictFormations,
+                                   "Flag indicating if group cfgs must have the "
+                                   "same formation to have a finite distance.");
+
 }
 
 /*----------------------------- Distance Interface ---------------------------*/
@@ -129,6 +146,11 @@ template <typename MPTraits>
 double
 DistanceMetricMethod<MPTraits>::
 Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
+
+  // If strict formations are required, check that the two cfgs match.
+  if(m_strictFormations and _c1.GetFormations() != _c2.GetFormations())
+    return std::numeric_limits<double>::infinity();
+
   double sum = 0;
   for(size_t i = 0; i < _c1.GetNumRobots(); ++i)
     sum += Distance(_c1.GetRobotCfg(i), _c2.GetRobotCfg(i));

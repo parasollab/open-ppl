@@ -135,6 +135,8 @@ class GroupCfg final {
     /// Add a formation specifying the constraints on a subgroup of robots.
     void AddFormation(Formation* _formation);
 
+    const std::unordered_set<Formation*>& GetFormations() const;
+ 
     ///@}
     ///@name Individual Configurations
     ///@{
@@ -397,7 +399,7 @@ class GroupCfg final {
     VIDSet m_vids;   ///< The individual VIDs in this aggregate configuration.
     std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
 
-    std::vector<Formation*> m_formations; ///<Formations contained in the group Cfg.
+    std::unordered_set<Formation*> m_formations; ///<Formations contained in the group Cfg.
 
     /// The function to use for normalizing orientation DOFs.
     mutable double (*m_normalizer)(const double&){Normalize};

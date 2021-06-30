@@ -417,6 +417,9 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
 
     if(cfg.GetRobot() == m_leader) {
       // Extract base values
+      for(size_t i = 0; i < cfg.PosDOF() + cfg.OriDOF(); i++) {
+        dofs[i] = cfg[i];
+      }
     }
 
     size_t counter = 0;

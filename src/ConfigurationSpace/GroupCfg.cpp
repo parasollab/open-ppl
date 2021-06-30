@@ -126,7 +126,8 @@ operator+=(const GroupCfg& _other) {
 
     for(auto cfg : cfgs) {
       const size_t index = m_groupMap->GetGroup()->GetGroupIndex(cfg.GetRobot());
-      m_localCfgs[index] = cfg;
+      auto copy = cfg;
+      SetRobotCfg(index,std::move(copy));
       checked.insert(index);
     }
   }
@@ -248,7 +249,13 @@ GetVID(Robot* const _robot) const {
 void
 GroupCfg::
 AddFormation(Formation* _formation) {
-  m_formations.push_back(_formation);
+  m_formations.insert(_formation);
+}
+    
+const std::unordered_set<Formation*>&
+GroupCfg::
+GetFormations() const {
+  return m_formations;
 }
 
 /*------------------------ Individual Configurations -------------------------*/

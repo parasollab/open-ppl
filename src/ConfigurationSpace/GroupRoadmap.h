@@ -91,7 +91,7 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     const std::unordered_map<Formation*,bool>& GetFormations();
 
     /// Get the set of currently active formations.
-    std::vector<Formation*> GetActiveFormations();
+    std::unordered_set<Formation*> GetActiveFormations();
 
     ///@}
     ///@name Input/Output
@@ -242,14 +242,14 @@ GetFormations() {
 }
 
 template <typename Vertex, typename Edge>
-std::vector<Formation*>
+std::unordered_set<Formation*>
 GroupRoadmap<Vertex, Edge>::
 GetActiveFormations() {
-  std::vector<Formation*> active;
+  std::unordered_set<Formation*> active;
 
   for(const auto& formation : m_formations) {
     if(formation.second) 
-      active.push_back(formation.first);
+      active.insert(formation.first);
   }
 
   return active;

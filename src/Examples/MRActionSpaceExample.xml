@@ -79,7 +79,7 @@
 
           <Task label="query2" robot="boxy2">
             <GoalConstraints>
-              <CSpaceConstraint point="20 0 0 0 0 0"/>
+		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
             </GoalConstraints>
           </Task>
         </GroupTask>
@@ -98,7 +98,7 @@
   <Library>
 
     <DistanceMetrics>
-      <Euclidean label="euclidean"/>
+      <Euclidean label="euclidean" strictFormations="true"/>
       <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
       <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
         velWeight="0" avlWeight="0"/>
@@ -110,7 +110,7 @@
     <ValidityCheckers>
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
-      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" ignoreSelfCollision="true"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -313,6 +313,16 @@
                           dof="6" type="boxy" role="R2"/>
       </Condition>
 
+      <Condition label="TightFormationBox1" type="motion">
+        <CSpaceConstraint bbx="[5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+                          dof="6" type="boxy" role="R1"/>
+      </Condition>
+
+      <Condition label="TightFormationBox2" type="motion">
+        <CSpaceConstraint bbx="[5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+                          dof="6" type="boxy" role="R2"/>
+      </Condition>
+
       <Condition label="FormationBox" type="motion">
         <BoundaryConstraint limits="[-25:25 ; -15:15 ; -25:25]"  
                           shape="box" type="boxy" role="Formation"/>
@@ -328,7 +338,7 @@
       <Condition label="GroupFinalLocation" type="motion">
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"
                           dof="6" type="boxy" role="R1"/>
-        <CSpaceConstraint point="20 0 0 0 0 0"
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"
                           dof="6" type="boxy" role="R2"/>
       </Condition>
       <!-- Actions -->
@@ -388,14 +398,14 @@
 
         <InterimConditions>
           <Condition label="Formation"/>
-          <Condition label="FormationBox1"/>
-          <Condition label="FormationBox2"/>
+          <Condition label="TightFormationBox1"/>
+          <Condition label="TightFormationBox2"/>
         </InterimConditions>
 
         <PostConditions>
           <Condition label="Formation"/>
-          <Condition label="FormationBox1"/>
-          <Condition label="FormationBox2"/>
+          <Condition label="TightFormationBox1"/>
+          <Condition label="TightFormationBox2"/>
         </PostConditions>
       </Interaction>
     </ActionSpace>

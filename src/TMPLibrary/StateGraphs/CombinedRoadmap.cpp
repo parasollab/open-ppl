@@ -52,7 +52,12 @@ Initialize(){
   auto c = this->GetPlan()->GetCoordinator();
   m_mpSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
 
-  for(auto& group : prob->GetRobotGroups()) { 
+  for(auto& group : prob->GetRobotGroups()) {
+
+    //TODO::TEMP TO TEST FORMATION PLANNING
+    if(group->Size() > 1)
+      continue;
+ 
     // Add individial robots to mp solution
     for(auto& r : group->GetRobots()) {
       m_mpSolution->AddRobot(r);
