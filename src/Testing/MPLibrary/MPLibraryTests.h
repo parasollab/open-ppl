@@ -6,13 +6,13 @@
 
 #include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/ValidityCheckerMethodTest.h"
-//#include "Testing/MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethodTest.h"
+#include "Testing/MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethodTest.h"
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 #include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
 #include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
 //#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
 #include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
-//#include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
+#include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
 
 template <typename MPTraits>
@@ -31,14 +31,14 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     typedef MethodSet<MPTraits, DistanceMetricMethodTest<MPTraits>> DistanceMetricTestSet;
     typedef MethodSet<MPTraits, ValidityCheckerMethodTest<MPTraits>>
                                                                     ValidityCheckerTestSet;
-    //typedef MethodSet<MPTraits, NeighborhoodFinderMethodTest<MPTraits>>
-    //                                                                NeighborhoodFinderTestSet;
+    typedef MethodSet<MPTraits, NeighborhoodFinderMethodTest<MPTraits>>
+                                                                    NeighborhoodFinderTestSet;
     typedef MethodSet<MPTraits, SamplerMethodTest<MPTraits>>        SamplerTestSet;
     typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
     typedef MethodSet<MPTraits, ExtenderMethodTest<MPTraits>>       ExtenderTestSet;
     //typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
-    //typedef MethodSet<MPTraits, ConnectorMethodTests<MPTraits>>     ConnectorTestSet;
-    //typedef MethodSet<MPTraits, MetricMethodTests<MPTraits>>        MetricTestSet;
+    typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>     ConnectorTestSet;
+    typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>        MetricTestSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethodTest<MPTraits>>   MapEvaluatorTestSet;
 
     ///@}
@@ -91,13 +91,13 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
 
     DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
     ValidityCheckerTestSet*    m_validityCheckerTests{nullptr};
-    //NeighborhoodFinderTestSet* m_neighborhoodFinderTests{nullptr};
+    NeighborhoodFinderTestSet* m_neighborhoodFinderTests{nullptr};
     SamplerTestSet*            m_samplerTests{nullptr};
     LocalPlannerTestSet*       m_localPlannerTests{nullptr};
     ExtenderTestSet*           m_extenderTests{nullptr};
     //PathModifierTestSet*       m_pathModifierTests{nullptr};
-    //ConnectorTestSet*          m_connectorTests{nullptr};
-    //MetricTestSet*             m_metricTests{nullptr};
+    ConnectorTestSet*          m_connectorTests{nullptr};
+    MetricTestSet*             m_metricTests{nullptr};
     MapEvaluatorTestSet*       m_mapEvaluatorTests{nullptr};
 
     ///@}
@@ -143,7 +143,7 @@ RunTest() {
   RunMethodSetTests(*this->m_validityCheckerTests,passed,failed,total);
 
   // Neighborhood finder tests
-  //RunMethodSetTests(*this->m_neighborhoodFinderTests,passed,failed,total);
+  RunMethodSetTests(*this->m_neighborhoodFinderTests,passed,failed,total);
 
   // Sampler tests
   RunMethodSetTests(*this->m_samplerTests,passed,failed,total);
@@ -158,10 +158,10 @@ RunTest() {
   //RunMethodSetTests(*this->m_pathModifierTests,passed,failed,total);
 
   // Connector tests
-  //RunMethodSetTests(*this->m_connectorTests,passed,failed,total);
+  RunMethodSetTests(*this->m_connectorTests,passed,failed,total);
 
   // Metric tests
-  //RunMethodSetTests(*this->m_metricTests,passed,failed,total);
+  RunMethodSetTests(*this->m_metricTests,passed,failed,total);
 
   // Map evaluator tests
   RunMethodSetTests(*this->m_mapEvaluatorTests,passed,failed,total);
@@ -187,8 +187,8 @@ InitializeMethodSets() {
       typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
   m_validityCheckerTests = new ValidityCheckerTestSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
-  //m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
-  //    typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
+  m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
+      typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
   m_samplerTests = new SamplerTestSet(this,
       typename MPTraits::SamplerMethodList(), "Samplers");
   m_localPlannerTests = new LocalPlannerTestSet(this,
@@ -197,10 +197,10 @@ InitializeMethodSets() {
       typename MPTraits::ExtenderMethodList(), "Extenders");
   //m_pathModifierTests = new PathModifierTestSet(this,
   //    typename MPTraits::PathModifierMethodList(), "PathModifiers");
-  //m_connectorTests = new ConnectorTestSet(this,
-  //    typename MPTraits::ConnectorMethodList(), "Connectors");
-  //m_metricTests = new MetricTestSet(this,
-  //    typename MPTraits::MetricMethodList(), "Metrics");
+  m_connectorTests = new ConnectorTestSet(this,
+      typename MPTraits::ConnectorMethodList(), "Connectors");
+  m_metricTests = new MetricTestSet(this,
+      typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluatorTests = new MapEvaluatorTestSet(this,
       typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
 }
@@ -275,10 +275,10 @@ ParseChild(XMLNode& _node) {
     m_validityCheckerTests->ParseXML(_node);
     return true;
   }
-  //else if(_node.Name() == "NeighborhoodFinders") {
-  //  m_neighborhoodFinderTests->ParseXML(_node);
-  //  return true;
-  //}
+  else if(_node.Name() == "NeighborhoodFinders") {
+    m_neighborhoodFinderTests->ParseXML(_node);
+    return true;
+  }
   else if(_node.Name() == "Samplers") {
     m_samplerTests->ParseXML(_node);
     return true;
@@ -295,14 +295,14 @@ ParseChild(XMLNode& _node) {
   //  m_pathModifierTests->ParseXML(_node);
   //  return true;
   //}
-  //else if(_node.Name() == "Connectors") {
-  //  m_connectorTests->ParseXML(_node);
-  //  return true;
-  //}
-  //else if(_node.Name() == "Metrics") {
-  //  m_metricTests->ParseXML(_node);
-  //  return true;
-  //}
+  else if(_node.Name() == "Connectors") {
+    m_connectorTests->ParseXML(_node);
+    return true;
+  }
+  else if(_node.Name() == "Metrics") {
+    m_metricTests->ParseXML(_node);
+    return true;
+  }
   else if(_node.Name() == "MapEvaluators") {
     m_mapEvaluatorTests->ParseXML(_node);
     return true;
