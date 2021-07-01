@@ -13,10 +13,4 @@ SimpleMotionEvaluatorTest::
 
 /*----------------------------- Interface ----------------------------*/
 
-typename SimpleMotionEvaluatorTest::TestResult
-SimpleMotionEvaluatorTest::
-RunTest() {
-  return TestResult();
-}
-
 /*--------------------------------------------------------------------*/

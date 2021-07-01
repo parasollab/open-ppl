@@ -1,10 +1,11 @@
 #ifndef PPL_SIMPLE_MOTION_EVALUATOR_TEST_H_
 #define PPL_SIMPLE_MOTION_EVALUATOR_TEST_H_
 
-#include "Testing/TestBaseObject.h"
+#include "Testing/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 
-class SimpleMotionEvaluatorTest : public SimpleMotionEvaluator, public TestBaseObject {
+class SimpleMotionEvaluatorTest : virtual public SimpleMotionEvaluator, 
+                                  public TaskEvaluatorMethodTest {
   public: 
     ///@name LocalTypes
     ///@{
@@ -20,12 +21,6 @@ class SimpleMotionEvaluatorTest : public SimpleMotionEvaluator, public TestBaseO
     SimpleMotionEvaluatorTest(XMLNode& _node);
 
     virtual ~SimpleMotionEvaluatorTest();
-
-    ///@}
-    ///@name Interface
-    ///@{
-
-    virtual TestResult RunTest() override;
 
     ///@}
 };
