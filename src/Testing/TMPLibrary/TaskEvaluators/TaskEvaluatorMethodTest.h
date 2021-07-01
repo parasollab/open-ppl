@@ -28,6 +28,11 @@ class TaskEvaluatorMethodTest : virtual public TaskEvaluatorMethod,
 
     virtual TestResult RunTest() override;
 
+    ///@} Test Interface Functions
+    ///@{
+
+    virtual TestResult TaskEvaluatorTest() = 0;
+
     ///@}
 
 };

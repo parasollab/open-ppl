@@ -13,10 +13,15 @@ TaskEvaluatorMethodTest::
 TaskEvaluatorMethodTest::TestResult
 TaskEvaluatorMethodTest::
 RunTest() { 
-  return TestResult();
+
+  bool passed = true;
+  std::string message = "";
+
+  auto result = TaskEvaluatorTest();
+  passed = passed and result.first;
+  message = message + result.second;
+
+  return std::make_pair(passed,message);
 }
-
-/*--------------------- Test Interface Functions ---------------------*/
-
 
 /*--------------------------------------------------------------------*/
