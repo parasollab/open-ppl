@@ -19,7 +19,7 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
   int argc = 0;
   char* argv[255];
 
-  ros::init(argc,argv,"pmpl_" + this->m_agent->GetRobot()->GetLabel());
+  ros::init(argc,argv,"ppl_" + this->m_agent->GetRobot()->GetLabel());
 
   ros::start();
   
@@ -27,7 +27,8 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   ros::NodeHandle nh;
   m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                "/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
+                "/pos_joint_traj_controller/command",
+                //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                 10);
 
   /*JointStateCallback callback = [this](const sensor_msgs::JointState _msg) {
