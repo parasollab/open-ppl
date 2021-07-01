@@ -52,12 +52,11 @@ Initialize(){
   auto c = this->GetPlan()->GetCoordinator();
   m_mpSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
 
-  for(auto& group : prob->GetRobotGroups()) {
+  for(auto& kv : c->GetInitialRobotGroups()) {
 
-    //TODO::TEMP TO TEST FORMATION PLANNING
-    if(group->Size() > 1)
-      continue;
- 
+    auto group = kv.first;
+    auto formation = kv.second;
+
     // Add individial robots to mp solution
     for(auto& r : group->GetRobots()) {
       m_mpSolution->AddRobot(r);
@@ -65,8 +64,14 @@ Initialize(){
 
     // Create new group roadmaps in mp solution
     //auto grm = new GroupRoadmapType(group.get(), m_mpSolution.get());
-    m_mpSolution->AddRobotGroup(group.get());
-    auto grm = m_mpSolution->GetGroupRoadmap(group.get());
+    m_mpSolution->AddRobotGroup(group);
+    auto grm = m_mpSolution->GetGroupRoadmap(group);
+
+    // Add the initial formation to the roadmap and set it active.
+    if(formation) {
+      grm->AddFormation(formation);
+      grm->SetFormationActive(formation);
+    }
 
     // Create new semantic roadmap from group roadmap
     auto sr = AddSemanticRoadmap(grm,ActionUpdate());
@@ -95,7 +100,7 @@ Initialize(){
     sourceHeadSet.insert(hvid);
 
     // Add group and position to initial state
-    m_initialState[group.get()] = std::make_pair(grm,rvid);
+    m_initialState[group] = std::make_pair(grm,rvid);
   }
 
   TMPHyperarc arc;

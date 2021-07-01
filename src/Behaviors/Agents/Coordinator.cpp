@@ -11,9 +11,12 @@
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
+#include "ConfigurationSpace/Formation.h"
+
 #include "Communication/Messages/Message.h"
 
 #include "MPProblem/Robot/Robot.h"
+#include "MPProblem/RobotGroup/RobotGroup.h"
 
 #include "Simulator/Simulation.h"
 #include "Simulator/BulletModel.h"
@@ -39,6 +42,9 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
       const std::string memberLabel = child.Read("label", true, "",
           "The label of the member robot.");
       m_memberLabels.push_back(memberLabel);
+    }
+    else if(child.Name() == "InitialGroup") {
+      ParseInitialGroup(child);
     }
   }
 
@@ -424,3 +430,94 @@ Coordinator::
 GetChildAgents() {
 	return m_childAgents;
 }
+
+std::unordered_map<RobotGroup*,Formation*>
+Coordinator::
+GetInitialRobotGroups() {
+  return m_initialGroups;
+}
+
+void
+Coordinator::
+ParseInitialGroup(XMLNode& _node) {
+  
+  std::string label = _node.Read("label",true,"","Group label to "
+                                 "include in the intial set.");
+  auto problem = m_robot->GetMPProblem();
+  auto group = problem->GetRobotGroup(label);
+ 
+  std::unordered_map<MultiBody*,Formation::FormationConstraint> constraintMap;
+
+  for(auto& child : _node) {
+    if(child.Name() == "FormationConstraint") {
+      Formation::FormationConstraint constraint;
+
+      std::string robotLabel = child.Read("depRobot",true,"","The robot in the "
+                       "the formation that is subject to this constraint.");
+      constraint.dependentRobot = problem->GetRobot(robotLabel);
+
+      size_t bodyIndex = child.Read("depBody",false,0,0,100,"The body "
+                       "index in the ref robot that is subject to this constraint.");
+      constraint.dependentBody = constraint.dependentRobot->GetMultiBody()->GetBody(bodyIndex);
+
+      robotLabel = child.Read("refRobot",true,"","The robot in the "
+                       "the formation that this is constraint is dependent on.");
+      constraint.referenceRobot = problem->GetRobot(robotLabel);
+
+      bodyIndex = child.Read("refBody",false,0,0,100,"The body "
+                        "index in the ref robot that this constraint is dependent on.");
+      constraint.referenceBody = constraint.referenceRobot->GetMultiBody()->GetBody(bodyIndex);
+
+      std::string translationString = child.Read("translation", true, "", "The "
+                       "translation portion of the formation constraint.");
+
+      auto translation = ParseVectorString(translationString);
+
+      std::string orientationString = child.Read("orientation", true, "", "The "
+                       "orientation portion of the formation constraint.");
+
+      auto eulerVec = ParseVectorString(orientationString);
+
+      constraint.transformation = Transformation(Vector3d(translation[0],
+                                                    translation[1],
+                                                    translation[2]),
+                                           EulerAngle(eulerVec[0],
+                                                      eulerVec[1],
+                                                      eulerVec[2]));
+
+      constraintMap[constraint.dependentRobot->GetMultiBody()] = constraint;
+    }
+    else {
+      throw ParseException(WHERE) << "Unsupported XML Name.";
+    }
+  }
+
+
+  Formation* formation = nullptr;
+
+  if(!constraintMap.empty()) {
+    std::string leaderLabel = _node.Read("leader",true,"",
+                 "The leader of the formation (if there is a formation).");
+    auto leader = problem->GetRobot(leaderLabel);
+    formation = new Formation(group->GetRobots(),leader,constraintMap);
+  }
+
+  m_initialGroups[group] = formation; 
+}
+
+std::vector<double>
+Coordinator::
+ParseVectorString(std::string _s) {
+
+  std::vector<double> vec;
+  std::istringstream stream(_s);
+
+  for(size_t i = 0; i < 3; i++) {
+    double d;
+    stream >> d;
+    vec.push_back(d);
+  }
+
+  return vec;
+}
+

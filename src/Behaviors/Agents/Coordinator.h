@@ -12,10 +12,12 @@
 #include "MPLibrary/PMPL.h"
 
 class HandoffAgent;
+class Formation;
 class InteractionTemplate;
 class TMPStrategyMethod;
 class ITMethod;
 class Plan;
+class RobotGroup;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent represents the task hand-off behavior presented in
@@ -110,8 +112,11 @@ class Coordinator : public Agent {
 		std::vector<HandoffAgent*> GetMemberAgents();
 		std::vector<ChildAgent*> GetChildAgents();
 
+    std::unordered_map<RobotGroup*,Formation*> GetInitialRobotGroups();
+
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
+
     ///@}
   private:
 
@@ -141,6 +146,10 @@ class Coordinator : public Agent {
 		void DistributePlan(Plan* _plan);
     
 		void GenerateRandomTasks();
+
+    void ParseInitialGroup(XMLNode& _node);
+
+    std::vector<double> ParseVectorString(std::string _s);
 
     ///@}
 
@@ -178,6 +187,8 @@ class Coordinator : public Agent {
 		bool m_runSimulator{true};
 
 		bool m_runDummies;
+
+    std::unordered_map<RobotGroup*,Formation*> m_initialGroups;
 
     ///@}
 
