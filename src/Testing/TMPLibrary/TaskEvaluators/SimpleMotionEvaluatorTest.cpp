@@ -11,6 +11,12 @@ SimpleMotionEvaluatorTest(XMLNode& _node) : SimpleMotionEvaluator(_node) {}
 SimpleMotionEvaluatorTest::
 ~SimpleMotionEvaluatorTest() {}
 
-/*----------------------------- Interface ----------------------------*/
+/*---------------------- Test Interface Functions --------------------*/
+
+SimpleMotionEvaluatorTest::TestResult
+SimpleMotionEvaluatorTest::
+TaskEvaluatorTest() {
+  return TestResult();
+}
 
 /*--------------------------------------------------------------------*/
