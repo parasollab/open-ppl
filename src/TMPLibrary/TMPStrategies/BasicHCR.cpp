@@ -90,6 +90,19 @@ SampleSemanticRoadmap() {
 
     double util = 1;
 
+    // Check if roadmap has an active robot.
+    bool active = false;
+    auto group = sr->first->GetGroup();
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsActive()) {
+        active = true;
+        break;
+      }
+    }
+
+    if(!active)
+      continue;
+
     // Get utility score for existing sr
     auto iter = m_srUtilityScore.find(sr);
     if(iter != m_srUtilityScore.end()) {
