@@ -464,11 +464,11 @@
           <Condition label="GraspGoalBox"/>
         </PreConditions>
         <InterimConditions>
-          <Condition label="Formation"/>
+          <Condition label="Grasp"/>
           <Condition label="GraspFinalLocation"/>
         </InterimConditions>
         <PostConditions>
-          <Condition label="Formation"/>
+          <Condition label="Grasp"/>
           <Condition label="GraspFinalLocation"/>
         </PostConditions>
       </Interaction>

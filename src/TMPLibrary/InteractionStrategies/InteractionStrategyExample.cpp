@@ -526,6 +526,18 @@ ConstructCompositePath(MPSolution* _solution) {
     auto distance = dm->Distance(previousCfg,gcfg);
     GroupWeightType weight(grm,m_lpLabel,distance,{previousCfg,gcfg});
 
+    // Set local edges for inactive robots
+    for(auto robot : group->GetRobots()) {
+      if(!robot->GetMultiBody()->IsActive())
+        continue;
+
+      std::vector<Cfg> intermediates = {previousCfg.GetRobotCfg(robot),
+                                       gcfg.GetRobotCfg(robot)};
+
+      DefaultWeight<Cfg> individualEdge("",distance,intermediates);
+      weight.SetEdge(robot,std::move(individualEdge));
+    }
+
     grm->AddEdge(previousVID,gvid,weight);
     
     previousVID = gvid;

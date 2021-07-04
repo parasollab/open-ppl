@@ -347,7 +347,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // number of these that occur so that we can ensure SOME robot(s) moved.
     if(individualSourceVID == individualTargetVID) {
       ++numInactiveRobots;
-      continue;
+    //  continue;
     }
 
     // Assert that the individual vertices exist.
