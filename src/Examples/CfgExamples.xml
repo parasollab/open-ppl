@@ -363,6 +363,16 @@
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
+      <!-- Adaptive RRT -->
+      <BasicRRTStrategy label="AdaptiveRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 costMethod="reward">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
       <!-- Bi-directional RRT -->
       <BasicRRTStrategy label="BiRRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
