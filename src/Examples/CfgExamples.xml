@@ -370,6 +370,11 @@
         growGoals="false" growthFocus="0.01" m="1"
         goalDmLabel="euclidean" goalThreshold="5"
         wallPenalty=0.5 gamma=0.5 costMethod="reward">
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+          <Extender label="BESO"/>
+          <Extender label="ROVRO"/>
+        </GrowthSet>
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
@@ -415,22 +420,6 @@
         growGoals="true">
         <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
-
-      <!-- Adaptive RRT -->
-      <!-- Broken, disabled.
-      <AdaptiveRRT label="AdaptiveRRT"
-        growthFocus="0.01"
-        nfLabel="BFNF" vcLabel="rapid" extenderLabel="BERO"
-        gamma="0.1" cost="reward" debug="true"
-        samplerLabel="UniformRandom">
-        <Evaluator label="NodesEval"/>
-        <GrowthSet threshold="0.0">
-          <Extender label="BERO"/>
-          <Extender label="BESO"/>
-          <Extender label="ROVRO"/>
-        </GrowthSet>
-      </AdaptiveRRT>
-      -->
 
       <!-- DynamicDomainRRT -->
       <!--
