@@ -105,14 +105,14 @@
       <!--SemanticTask label="top" decomposable="true" subtaskRelation="AND"/-->
 
 			<SemanticTask label="first" fixedAllocation="true" parent="top">
-        <GroupTask label="groupQuery" group="formation">
+        <GroupTask label="groupQuery" group="grasp">
       		<Task label="query1" robot="boxy1">
 		        <GoalConstraints>
 		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       		  </GoalConstraints>
   		    </Task>
 
-          <Task label="query2" robot="boxy2">
+          <Task label="query2" robot="passive">
             <GoalConstraints>
 		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
             </GoalConstraints>

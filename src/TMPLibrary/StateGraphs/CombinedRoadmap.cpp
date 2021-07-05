@@ -675,16 +675,16 @@ size_t
 CombinedRoadmap::
 MoveGroupCfg(GroupCfg& _original, GroupRoadmapType* _newRoadmap) {
 
-  auto group = _newRoadmap->GetGroup();
+  //auto group = _newRoadmap->GetGroup();
 
-  GroupCfg gcfg(_newRoadmap);
+  GroupCfg gcfg = _original.SetGroupRoadmap(_newRoadmap);
   
-  for(auto robot : group->GetRobots()) {
-    auto rm = m_mpSolution->GetRoadmap(robot);
-    auto cfg = _original.GetRobotCfg(robot);
-    auto vid = rm->AddVertex(cfg);
-    gcfg.SetRobotCfg(robot,vid);
-  }
+  //for(auto robot : group->GetRobots()) {
+  //  auto rm = m_mpSolution->GetRoadmap(robot);
+  //  auto cfg = _original.GetRobotCfg(robot);
+  //  auto vid = rm->AddVertex(cfg);
+  //  gcfg.SetRobotCfg(robot,vid);
+  //}
 
   return _newRoadmap->AddVertex(gcfg);
 }
