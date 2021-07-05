@@ -364,6 +364,7 @@
       </BasicRRTStrategy>
 
       <!-- Adaptive RRT -->
+      <!--
       <BasicRRTStrategy label="AdaptiveRRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
@@ -377,6 +378,7 @@
         </GrowthSet>
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
+      -->
 
       <!-- Bi-directional RRT -->
       <BasicRRTStrategy label="BiRRT" debug="true"

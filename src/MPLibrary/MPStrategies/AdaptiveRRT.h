@@ -75,7 +75,7 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
     ///@name MPStrategy Overrides
     ///@{
 
-    virtual void Initialize();
+    virtual void Initialize() override;
 
     ///@}
     ///@name Tree Helpers
