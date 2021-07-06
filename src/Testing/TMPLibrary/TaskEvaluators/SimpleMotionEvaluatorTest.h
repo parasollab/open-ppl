@@ -6,7 +6,8 @@
 
 class SimpleMotionEvaluatorTest : virtual public SimpleMotionEvaluator, 
                                   public TaskEvaluatorMethodTest {
-  public: 
+  public:
+ 
     ///@name LocalTypes
     ///@{
 
@@ -21,6 +22,15 @@ class SimpleMotionEvaluatorTest : virtual public SimpleMotionEvaluator,
     SimpleMotionEvaluatorTest(XMLNode& _node);
 
     virtual ~SimpleMotionEvaluatorTest();
+
+    ///@}
+    
+  private: 
+    
+    ///@} Test Interface Functions
+    ///@{
+
+    virtual TestResult TaskEvaluatorTest();
 
     ///@}
 };
