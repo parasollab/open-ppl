@@ -60,6 +60,8 @@ class AdaptiveRRT : public BasicRRTStrategy<MPTraits> {
 
     AdaptiveRRT(XMLNode& _node);
 
+    //AdaptiveRRT();
+
     virtual ~AdaptiveRRT() = default;
 
     ///@}
@@ -221,6 +223,13 @@ AdaptiveRRT(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node){
     throw ParseException(_node.Where(), "Unknown cost method '" + costMethod +
         "'. Choices are 'fixed', 'reward', or 'cycles'.");
 }
+/*
+template <typename MPTraits>
+AdaptiveRRT<MPTraits>::
+AdaptiveRRT() {
+  this->SetName("AdaptiveRRT");
+}
+*/
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
 
@@ -268,18 +277,25 @@ template <typename MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
   // Setup MP Variables
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  //TODO: auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  auto dm = this->GetDistanceMetric(this->m_goalDmLabel);
   VID recentVID = INVALID_VID;
 
   // get the nearest expand node from the roadmap
   auto nf = this->GetNeighborhoodFinder(this->m_nfLabel);
-  std::vector<std::pair<VID, double> > kClosest;
+  //TODO: std::vector<std::pair<VID, double> > kClosest;
+
+  std::vector<Neighbor> kClosest;
+  nf->FindNeighbors(this->GetRoadmap(), _dir, std::back_inserter(kClosest));
+  /*
+  TODO:
   nf->FindNeighbors(this->GetRoadmap(),
-      this->m_currentTree->begin(), this->m_currentTree->end(),
-      this->m_currentTree->size() ==
+      this->m_trees.begin(), this->m_trees.end(),
+      this->m_trees.size() ==
       this->GetRoadmap()->get_num_vertices(),
       _dir, std::back_inserter(kClosest));
-  CfgType& nearest = this->GetRoadmap()->GetVertex(kClosest[0].first);
+  */
+  CfgType& nearest = this->GetRoadmap()->GetVertex(kClosest[0].source);
 
   // get visiblity of nearest node to decide growth method
   double visibility = GetVisibility(nearest);
@@ -353,10 +369,11 @@ AdaptiveRRT<MPTraits>::ExpandTree(CfgType& _dir){
     // Tree expansion was successful
     nearest.IncrementStat("Success");
     // update the tree with the new configuration
-    recentVID = UpdateTree(kClosest[0].first, newCfg, _dir, delta);
-    if(recentVID > this->m_currentTree->back()) {
+    recentVID = UpdateTree(kClosest[0].source, newCfg, _dir, delta);
+    //TODO:: if(recentVID > this->m_trees.back()) {
+    if(recentVID > this->GetRoadmap()->GetLastVID()) {
       // if node does not exist in roadmap, add to tree.
-      this->m_currentTree->push_back(recentVID);
+      this->m_trees[0].insert(recentVID);
       // reward growth method based on expanded distance in proportion to delta_q
       RewardGrowthMethod(dist/delta, gm, rgsit->second);
     }
@@ -459,7 +476,7 @@ template <typename MPTraits>
 typename AdaptiveRRT<MPTraits>::VID
 AdaptiveRRT<MPTraits>::UpdateTree(VID _expandNode, CfgType& _newCfg,
     CfgType& _dir, double _delta){
-  auto dm = this->GetDistanceMetric(this->m_dmLabel);
+  auto dm = this->GetDistanceMetric(this->m_goalDmLabel);
 
   CfgType& nearest = this->GetRoadmap()->GetVertex(_expandNode);
 
