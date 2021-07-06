@@ -357,7 +357,7 @@ GetNormalizedData(const shared_ptr<const Boundary> _b) const {
     double center = range.first[i] + radius;
     normed.push_back((m_v[i] - center) / radius);
   }
-  return move(normed);
+  return normed;
 }
 
 
