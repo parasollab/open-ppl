@@ -48,6 +48,10 @@ class Interaction : public Action {
 
     MPSolution* GetToPostSolution() const;
 
+    std::unique_ptr<MPSolution>&& ExtractToInterimSolution();
+
+    std::unique_ptr<MPSolution>&& ExtractToPostSolution();
+
     void SetToInterimPath(GroupPathType* _path);
 
     GroupPathType* GetToInterimPath();

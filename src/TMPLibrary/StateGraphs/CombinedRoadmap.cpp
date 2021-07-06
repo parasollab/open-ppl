@@ -253,6 +253,18 @@ CombinedRoadmap::
 AddRobotGroup(RobotGroup* _group) {
   m_mpSolution->AddRobotGroup(_group);
 }
+    
+void
+CombinedRoadmap::
+SetExpansionStatus(bool _status) {
+  m_expansionStatus = _status;
+}
+    
+bool
+CombinedRoadmap::
+GetExpansionStatus() {
+  return m_expansionStatus;
+}
 
 /*------------------------------ Helper Functions ----------------------------*/
 
@@ -286,12 +298,16 @@ AddSemanticRoadmap(GroupRoadmapType* _grm, const ActionUpdate& _update) {
   sr->first->InstallHook(GroupRoadmapType::HookType::AddVertex, 
       "CombinedRoadmap::AddVertex"+std::to_string(m_hookCounter),
       [this, sr](VI _vi) {
-        this->AddHypergraphVertex(sr,_vi);
+        if(this->GetExpansionStatus()) {
+          this->AddHypergraphVertex(sr,_vi);
+        }
   });
   sr->first->InstallHook(GroupRoadmapType::HookType::AddEdge, 
       "CombinedRoadmap::AddEdge"+std::to_string(m_hookCounter),
       [this, sr](EI _ei) {
-        this->AddHypergraphArc(sr,_ei);
+        if(this->GetExpansionStatus()) {
+          this->AddHypergraphArc(sr,_ei);
+        }
   });
   sr->first->InstallHook(GroupRoadmapType::HookType::DeleteVertex, 
       "CombinedRoadmap::DeleteVertex"+std::to_string(m_hookCounter),
@@ -664,9 +680,6 @@ AddHypergraphArc(SemanticRoadmap* _sr, EI _ei) {
   arc.semantic = false;
   arc.glp = _ei->property();
 
-  if(hTarget == 878)
-    std::cout << "HERE" << std::endl;
-
   auto hid = m_hypergraph->AddHyperarc({hTarget},{hSource},arc);
   return hid;
 }
@@ -675,17 +688,7 @@ size_t
 CombinedRoadmap::
 MoveGroupCfg(GroupCfg& _original, GroupRoadmapType* _newRoadmap) {
 
-  //auto group = _newRoadmap->GetGroup();
-
   GroupCfg gcfg = _original.SetGroupRoadmap(_newRoadmap);
-  
-  //for(auto robot : group->GetRobots()) {
-  //  auto rm = m_mpSolution->GetRoadmap(robot);
-  //  auto cfg = _original.GetRobotCfg(robot);
-  //  auto vid = rm->AddVertex(cfg);
-  //  gcfg.SetRobotCfg(robot,vid);
-  //}
-
   return _newRoadmap->AddVertex(gcfg);
 }
 

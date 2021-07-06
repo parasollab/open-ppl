@@ -146,6 +146,11 @@ bool
 BasicHCR::
 SampleInteraction(SemanticRoadmap* _sr) {
 
+  // Set hcr to interaction expansion
+  auto hcr = dynamic_cast<CombinedRoadmap*>(
+              this->GetStateGraph(m_sgLabel).get());
+  hcr->SetExpansionStatus(false);
+
   // Normalize Interaction Probabilities
 
   double totalUtil = 0;
@@ -202,8 +207,6 @@ SampleInteraction(SemanticRoadmap* _sr) {
   //Temp simple update:If successful, reduce probaility of sampling again
   m_interactionUtilityScore[inter] = m_interactionUtilityScore[inter] * 0.5;
 
-  auto hcr = dynamic_cast<CombinedRoadmap*>(
-              this->GetStateGraph(m_sgLabel).get());
   hcr->AddInteraction(start.first,start.second,startCopy,inter);
 
   return true;
@@ -218,6 +221,9 @@ ExpandRoadmap(SemanticRoadmap* _sr) {
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
  
+  // Set hcr to roadmap expansion
+  hcr->SetExpansionStatus(true);
+
   // Initialize dummy task
   auto task = new GroupTask(_sr->first->GetGroup());
 

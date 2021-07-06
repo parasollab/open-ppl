@@ -69,6 +69,18 @@ GetToPostSolution() const {
   return m_toPostSolution.get();
 }
     
+std::unique_ptr<Interaction::MPSolution>&& 
+Interaction::
+ExtractToInterimSolution() {
+  return std::move(m_toInterimSolution);
+}
+
+std::unique_ptr<Interaction::MPSolution>&& 
+Interaction::
+ExtractToPostSolution() {
+  return std::move(m_toPostSolution);
+}
+
 const std::string 
 Interaction::
 GetInteractionStrategyLabel() const {

@@ -22,9 +22,11 @@ class CombinedRoadmap : public StateGraph {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
-    typedef Condition::State                          State;
+    typedef GroupLocalPlan<Cfg>                         GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>   GroupRoadmapType;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupPathType;
+		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef Condition::State                            State;
 
     struct ActionUpdate {
       /// Pairs of before and after changes.
@@ -62,6 +64,7 @@ class CombinedRoadmap : public StateGraph {
     struct TMPHyperarc {
       bool semantic{false};
       GroupLocalPlanType glp;
+      std::vector<GroupPathType> paths;
     };
 
     typedef Hypergraph<TMPVertex,TMPHyperarc> TMPHypergraph;
@@ -107,6 +110,10 @@ class CombinedRoadmap : public StateGraph {
     MPSolution* GetMPSolution() const;
 
     void AddRobotGroup(RobotGroup* _group);
+
+    void SetExpansionStatus(bool _status);
+
+    bool GetExpansionStatus();
 
     ///@}
 
@@ -187,6 +194,12 @@ class CombinedRoadmap : public StateGraph {
     State m_initialState;
 
     size_t m_hookCounter{0};
+
+    /// Flag indiciating if the cspace roadmaps are being expanded or if the 
+    /// system is planning for an interaction.
+    /// True = expansion
+    /// False = interaction
+    bool m_expansionStatus{true};
 		///@}
 
 };
