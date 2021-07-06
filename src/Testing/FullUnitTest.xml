@@ -129,6 +129,8 @@
       <!-- Test not yet added -->
       <!--BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"
         k="1"/-->
+      <BruteForceNF label="Nearest10" dmLabel="minkowski" unconnected="false"
+        k="10"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -148,6 +150,7 @@
     </PathModifiers>
 
     <Connectors>
+      <RewireConnector label="Rewire" nfLabel="Nearest10" lpLabel="sl"/>
     </Connectors>
 
     <Metrics>

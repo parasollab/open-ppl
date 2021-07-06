@@ -38,7 +38,10 @@ class ConnectorMethodTest : virtual public ConnectorMethod<MPTraits>,
     ///@name Interface Test Functions
     ///@{
     
+    /// @TODO: Should the name be TestIndividualRobotConnect to be consistent with UniformSampler example?
     virtual TestResult IndividualRobotConnectTest() = 0;
+  
+    /// @TODO: Should the name be TestRobotGroupConnect to be consistent with UniformSampler example?
 
     virtual TestResult RobotGroupConnectTest() = 0;
  
@@ -80,6 +83,7 @@ RunTest() {
   bool passed = true;
   std::string message = "";
 
+  /// @TODO: Should the name be TestIndividualRobotConnect to be consistent with UniformSampler example?
   auto result = IndividualRobotConnectTest();
   passed = passed and result.first;
   message = message + result.second;
