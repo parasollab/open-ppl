@@ -22,11 +22,12 @@ class CombinedRoadmap : public StateGraph {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                         GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>   GroupRoadmapType;
-    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupPathType;
+    typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>        GroupRoadmapType;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
 		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
-    typedef Condition::State                            State;
+    typedef Condition::State                                 State;
 
     struct ActionUpdate {
       /// Pairs of before and after changes.
@@ -64,7 +65,7 @@ class CombinedRoadmap : public StateGraph {
     struct TMPHyperarc {
       bool semantic{false};
       GroupLocalPlanType glp;
-      std::vector<GroupPathType> paths;
+      std::vector<Path*> paths;
     };
 
     typedef Hypergraph<TMPVertex,TMPHyperarc> TMPHypergraph;
@@ -182,6 +183,7 @@ class CombinedRoadmap : public StateGraph {
 
     /// Set of all interaction roadmaps contained in the hypergraph.
     std::set<SemanticRoadmap*> m_interactionRoadmaps;
+    std::vector<std::unique_ptr<MPSolution>> m_interactionSolutions;
 
     std::set<GroupRoadmapType*> m_cspaceRoadmaps;
 
@@ -200,6 +202,7 @@ class CombinedRoadmap : public StateGraph {
     /// True = expansion
     /// False = interaction
     bool m_expansionStatus{true};
+
 		///@}
 
 };

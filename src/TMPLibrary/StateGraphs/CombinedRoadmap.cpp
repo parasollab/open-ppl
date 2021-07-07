@@ -121,10 +121,12 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
 
   // Create semantic roadmap for interaction.
 
+  /*
   // Grab group roadmap.
   auto group = _inter->GetToInterimPath()->GetRoadmap()->GetGroup();
   m_mpSolution->AddRobotGroup(group);
   auto grm = m_mpSolution->GetGroupRoadmap(group);
+  */
 
   // Collect updates from accross semantic roadmaps
   ActionUpdate update; 
@@ -135,6 +137,77 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   // Add new change to action update
   update.updates.push_back(std::make_pair(_input,_output));
 
+  // Get hvids from start state
+  std::set<size_t> startHVids;
+  for(auto sr : _csr) {
+    auto group = sr->first->GetGroup();
+    auto vid = _input[group].second;
+    
+    auto hvid = m_vertexMap[sr][vid];
+    startHVids.insert(hvid);
+  }
+
+  // Initialize incoming interaction hyperarc
+  TMPHyperarc incoming;
+  incoming.semantic = true; 
+
+  // Extract to Interim solution from interaction.
+  m_interactionSolutions.push_back(_inter->ExtractToInterimSolution());
+
+  // Pull individual robot paths from solution and add them to the hyperarc.
+  for(auto& kv : _input) {
+    auto group = kv.first;
+    auto robots = group->GetRobots();
+    for(auto robot : robots) {
+      auto path = m_interactionSolutions.back()->GetPath(robot);
+      incoming.paths.push_back(path);
+    }
+  }
+ 
+  // Create virtual interaction node
+  TMPVertex interactionVertex(MAX_INT,nullptr);
+  size_t interactionHVid = m_hypergraph->AddVertex(interactionVertex); 
+
+  // Connect start vertices and interaction vertex
+  m_hypergraph->AddHyperarc({interactionHVid},startHVids,incoming);
+
+  // Initialize outgoing interaction hyperarc
+  TMPHyperarc outgoing;
+  outgoing.semantic = true; 
+
+  // Extract to Post solution form interaction.
+  m_interactionSolutions.push_back(_inter->ExtractToPostSolution());
+
+  // Pull individual robot paths from solution and add them to the hyperarc.
+  for(auto& kv : _output) {
+    auto group = kv.first;
+    auto robots = group->GetRobots();
+    for(auto robot : robots) {
+      auto path = m_interactionSolutions.back()->GetPath(robot);
+      outgoing.paths.push_back(path);
+    }
+  }
+
+  // Create semantic roadmaps for output
+  std::set<size_t> postHVids;
+  for(auto kv : _output) {
+    auto outputGroup = kv.second.first->GetGroup();
+    m_mpSolution->AddRobotGroup(outputGroup);
+    auto outputRm = m_mpSolution->GetGroupRoadmap(outputGroup);
+
+    auto newSr = AddSemanticRoadmap(outputRm, update);
+
+    auto subVID = kv.second.second;
+    auto hvid = m_vertexMap[newSr][subVID];
+
+    postHVids.insert(hvid);
+  }
+
+  // Connect interaction vertex and end vertices
+  m_hypergraph->AddHyperarc(postHVids,{interactionHVid},outgoing);
+  CheckForGoalState(postHVids);
+
+  /*
   SemanticRoadmap* sr = new SemanticRoadmap(std::make_pair(grm,update));
   AddInteractionRoadmap(sr);
 
@@ -224,8 +297,8 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   tail = {postPathEndVID};
 
   m_hypergraph->AddHyperarc(head,tail,arc);
-
   CheckForGoalState(tail);
+  */
 }
 
     
@@ -673,12 +746,30 @@ AddHypergraphArc(SemanticRoadmap* _sr, EI _ei) {
   if(iter == vertices.end())
     throw RunTimeException(WHERE) << "Target not included in semantic roadmap.";
 
+  // Initialize hyperarc
+  TMPHyperarc arc;
+  arc.semantic = false;
+  //arc.glp = _ei->property();
+
+  // Construct hyperarc internal paths
+  const auto& edgeDescriptors = _ei->property().GetEdgeDescriptors();
+  auto grm = _sr->first;
+  auto group = grm->GetGroup();
+  auto& robots = group->GetRobots();
+  for(size_t i = 0; i < robots.size(); i++) {
+    auto eid = edgeDescriptors[i];
+    auto roadmap = grm->GetRoadmap(i);
+    Path* path = new Path(roadmap);
+    std::vector<size_t> vids = {eid.source(),eid.target()};
+    *path += vids;
+    
+    // Add path to hyperarc
+    arc.paths.push_back(path);
+  }
+
   auto hSource = vertices[source];
   auto hTarget = vertices[target];
 
-  TMPHyperarc arc;
-  arc.semantic = false;
-  arc.glp = _ei->property();
 
   auto hid = m_hypergraph->AddHyperarc({hTarget},{hSource},arc);
   return hid;

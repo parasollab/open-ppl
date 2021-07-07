@@ -88,7 +88,10 @@ PerformHyperpathQuery() {
         hyperarcWeight = 0;
       }
       else {
-        hyperarcWeight = _hyperarc.property.glp.GetWeight();
+        hyperarcWeight = 0;
+        for(auto& path : _hyperarc.property.paths) {
+          hyperarcWeight = std::max(hyperarcWeight,path->Length());
+        }
       }
 
       double tailWeight = 0;
