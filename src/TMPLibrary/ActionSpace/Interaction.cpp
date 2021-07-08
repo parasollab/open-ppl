@@ -111,6 +111,29 @@ GetToPostPath() {
   return m_toPostPath;
 }
 
+void 
+Interaction::
+SetToInterimPaths(std::vector<Path*> _paths) {
+  m_toInterimPaths = _paths;
+}
+    
+std::vector<Path*> 
+Interaction::
+GetToInterimPaths() {
+  return m_toInterimPaths;
+}
+    
+void 
+Interaction::
+SetToPostPaths(std::vector<Path*> _paths) {
+  m_toPostPaths = _paths;
+}
+    
+std::vector<Path*> 
+Interaction::
+GetToPostPaths() {
+  return m_toPostPaths;
+}
 /*--------------------- Helper Functions ---------------------*/
 
 void

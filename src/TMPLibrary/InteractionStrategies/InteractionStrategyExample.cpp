@@ -67,13 +67,16 @@ operator()(Interaction* _interaction, State& _state) {
 
   // Compute motions from pre to interim conditions.
   SetActiveFormations(preconditions,_interaction->GetToInterimSolution());
-  auto toInterimPath = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
+  //auto toInterimPath = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
+  //                "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
+  auto toInterimPaths = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
                   "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
 
-  if(!toInterimPath)
+  //if(!toInterimPath)
+  if(!toInterimPaths.empty())
     return false;
 
-  _interaction->SetToInterimPath(toInterimPath);
+  _interaction->SetToInterimPaths(toInterimPaths);
 
   // Extract last cfg from path and use to start post task.
   // Currently, the state is both computed and added in this function.
@@ -90,13 +93,16 @@ operator()(Interaction* _interaction, State& _state) {
 
   // Compute motions from interim to post conditions.
   SetActiveFormations(postconditions,_interaction->GetToPostSolution());
-  auto toPostPath = PlanMotions(toPost,_interaction->GetToPostSolution(),
+  //auto toPostPath = PlanMotions(toPost,_interaction->GetToPostSolution(),
+  //                   "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
+  auto toPostPaths = PlanMotions(toPost,_interaction->GetToPostSolution(),
                      "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
 
-  _interaction->SetToPostPath(toPostPath);
-
-  if(!toPostPath)
+  //if(!toPostPath)
+  if(!toPostPaths.empty())
     return false;
+
+  _interaction->SetToPostPaths(toPostPaths);
 
   _state = m_finalState;
 
@@ -340,7 +346,7 @@ GenerateTasks(std::vector<std::string> _conditions,
   return groupTasks;
 }
 
-InteractionStrategyExample::GroupPathType*
+std::vector<InteractionStrategyExample::Path*>
 InteractionStrategyExample::
 PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label) {
 
@@ -350,6 +356,8 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
   // Clear previous final state.
   m_finalState.clear();
+
+  std::vector<Path*> paths;
 
   for(auto task : _tasks) {
 
@@ -388,6 +396,7 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
       }
 
+      /*
       // Collect individial robot paths
       //for(auto gcfg : groupPath->FullCfgs(lib)) {
       auto& fullCfgs = groupPath->FullCfgs(lib);
@@ -402,7 +411,12 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
           m_individualPaths[robot].push_back(cfg);
         }
       }
-
+      */
+      // Extract into individual robot paths
+      auto decoupledPaths = DecouplePath(_solution,groupPath);
+      for(auto p : decoupledPaths) {
+        paths.push_back(p);
+      }
       continue;
     }
 
@@ -411,8 +425,10 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
     for(auto robot : group->GetRobots()) {
       auto path = _solution->GetPath(robot);
-      if(path->Empty())
-        return nullptr;
+      if(path->Empty()) {
+        //return nullptr;
+        return {};
+      }
 
       // Save last cfg in path.
       auto lastVID = path->VIDs().back();
@@ -422,9 +438,13 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
       gcfg.SetRobotCfg(robot,lastVID);
 
+      /*
       // Collect individial robot paths.
       auto individualPath = _solution->GetPath(robot);
       m_individualPaths[robot] = individualPath->FullCfgs(lib);
+      */
+
+      paths.push_back(path);
     }
 
     // Save group cfg at the end of the path.
@@ -432,7 +452,8 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
     m_finalState[group] = std::make_pair(grm,groupVID);
   }
 
-  return ConstructCompositePath(_solution);
+  return paths;
+  //return ConstructCompositePath(_solution);
 }
 
 InteractionStrategyExample::GroupPathType*
@@ -673,3 +694,32 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
 }
 
 /*------------------------------------------------------------*/
+    
+std::vector<InteractionStrategyExample::Path*> 
+InteractionStrategyExample::
+DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
+  auto grm = _groupPath->GetRoadmap();
+  auto group = grm->GetGroup();
+  auto robots = group->GetRobots();
+ 
+  std::unordered_map<Robot*,std::vector<size_t>> individualVIDs;
+ 
+  auto& gcfgs = _groupPath->Cfgs();
+  for(auto& gcfg : gcfgs) {
+    for(auto robot : robots) {
+      auto vid = gcfg.GetVID(robot);
+      individualVIDs[robot].push_back(vid);
+    }  
+  }
+
+  std::vector<Path*> paths;
+
+  for(auto robot : robots) {
+    auto path = _solution->GetPath(robot);
+    path->Clear();
+    *path += individualVIDs[robot];
+    paths.push_back(path);
+  }
+
+  return paths;
+}

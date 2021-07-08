@@ -15,6 +15,7 @@ class Interaction : public Action {
 
     typedef Condition::State State;
 		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupPathType;
 
 
@@ -54,11 +55,19 @@ class Interaction : public Action {
 
     void SetToInterimPath(GroupPathType* _path);
 
+    void SetToInterimPaths(std::vector<Path*> _paths);
+
     GroupPathType* GetToInterimPath();
+
+    std::vector<Path*> GetToInterimPaths();
 
     void SetToPostPath(GroupPathType* _path);
 
+    void SetToPostPaths(std::vector<Path*> _paths);
+
     GroupPathType* GetToPostPath();
+
+    std::vector<Path*> GetToPostPaths();
 
     ///@}
 
@@ -87,6 +96,10 @@ class Interaction : public Action {
     GroupPathType* m_toInterimPath;
 
     GroupPathType* m_toPostPath;
+
+    std::vector<Path*> m_toInterimPaths;
+
+    std::vector<Path*> m_toPostPaths;
 
     ///@}
 };

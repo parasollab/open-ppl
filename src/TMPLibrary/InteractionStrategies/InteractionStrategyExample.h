@@ -10,10 +10,11 @@ class InteractionStrategyExample : public InteractionStrategyMethod {
     ///@name Local Types
     ///@{
 
-    typedef InteractionStrategyMethod::State State;
+    typedef InteractionStrategyMethod::State                 State;
 		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
-    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupPathType;
-    typedef GroupLocalPlan<Cfg> GroupWeightType;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
+    typedef GroupLocalPlan<Cfg>                              GroupWeightType;
 
     ///@}
     ///@name Construction
@@ -47,13 +48,18 @@ class InteractionStrategyExample : public InteractionStrategyMethod {
                             std::unordered_map<Robot*,Constraint*> _startConstraints,
                             std::unordered_map<Robot*,Constraint*> _goalConstraints);
 
-    GroupPathType* PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
+    //GroupPathType* PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
+    std::vector<Path*> PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
 
     GroupPathType* ConstructCompositePath(MPSolution* _solution);
 
     State InterimState(Interaction* _interaction);
 
     void SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution);
+
+
+    // Temp - delete after Irving gets official and proper version in
+    std::vector<Path*> DecouplePath(MPSolution* _solution, GroupPathType* _groupPath);
 
     ///@}
     ///@name Internal State
