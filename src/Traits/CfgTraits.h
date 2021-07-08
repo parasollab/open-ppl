@@ -43,6 +43,7 @@
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -126,8 +127,11 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>,
+    TogglePRMStrategy<MPTraits>
       > MPStrategyMethodList;
+
+
 };
 
 #endif
