@@ -90,7 +90,8 @@ PerformHyperpathQuery() {
       //else {
         hyperarcWeight = 0;
         for(auto& path : _hyperarc.property.paths) {
-          hyperarcWeight = std::max(hyperarcWeight,path->Length());
+          //hyperarcWeight = std::max(hyperarcWeight,path->Length());
+          hyperarcWeight = std::max(hyperarcWeight,double(path->TimeSteps()));
         }
       //}
 

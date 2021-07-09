@@ -331,6 +331,8 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   // Set data in the LPOutput object.
   _lpOutput->m_edge.first.SetWeight(numSteps);
   _lpOutput->m_edge.second.SetWeight(numSteps);
+  _lpOutput->m_edge.first.SetTimeSteps(numSteps);
+  _lpOutput->m_edge.second.SetTimeSteps(numSteps);
   _lpOutput->SetIndividualEdges(_robotIndexes);
   _lpOutput->SetActiveRobots(_robotIndexes);
 

@@ -762,7 +762,8 @@ AddHypergraphArc(SemanticRoadmap* _sr, EI _ei) {
     Path* path = new Path(roadmap);
     std::vector<size_t> vids = {eid.source(),eid.target()};
     *path += vids;
-    
+    path->SetTimeSteps(_ei->property().GetTimeSteps());   
+ 
     // Add path to hyperarc
     arc.paths.push_back(path);
   }

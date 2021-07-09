@@ -75,6 +75,10 @@ class PathType final {
 
 		size_t TimeSteps() const;
 
+    void SetTimeSteps(size_t _timesteps);
+
+    void ResetTimeSteps();
+
     /// Append another path to the end of this one.
     /// @param _p The path to append.
     PathType& operator+=(const PathType& _p);
@@ -128,6 +132,9 @@ class PathType final {
     mutable bool m_lengthCached{false};  ///< Is the current length correct?
 
 		size_t m_finalWaitTimeSteps{0}; ///< Temp - need to move this logic into the waiting timesteps.
+
+    mutable size_t m_timesteps{0};
+    mutable bool m_timestepsCached{false};
 
     ///@}
 };
@@ -260,23 +267,44 @@ template <typename MPTraits>
 size_t
 PathType<MPTraits>::
 TimeSteps() const {
+
+  if(m_timestepsCached)
+    return m_timesteps;
+
+  m_timestepsCached = true;
+
   if(m_vids.empty())
     return 0;
 
-	size_t timesteps = 0;
+	m_timesteps = 0;
 
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
 		if(*it == *(it+1)) {
-			timesteps++;
+			m_timesteps++;
 			continue;
 		}
 		auto edge = m_roadmap->GetEdge(*it, *(it+1));
-		timesteps += edge.GetTimeSteps();
+		m_timesteps += edge.GetTimeSteps();
   }
-	timesteps += m_finalWaitTimeSteps;
-  return timesteps;
+	m_timesteps += m_finalWaitTimeSteps;
+  return m_timesteps;
 }
 
+template <typename MPTraits>
+void
+PathType<MPTraits>::
+SetTimeSteps(size_t _timesteps) {
+  m_timestepsCached = true;
+  m_timesteps = _timesteps;
+}
+
+
+template <typename MPTraits>
+void
+PathType<MPTraits>::
+ResetTimeSteps() {
+  m_timestepsCached = false;
+}
 
 template <typename MPTraits>
 PathType<MPTraits>&

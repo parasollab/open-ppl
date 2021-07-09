@@ -50,6 +50,8 @@ class GroupPath final {
     /// Get the total edge weight.
     double Length() const;
 
+    size_t TimeSteps() const;
+
     /// Get the VIDs in the path.
     const std::vector<VID>& VIDs() const noexcept;
 
@@ -114,6 +116,8 @@ class GroupPath final {
     mutable double m_length{0};            ///< The path length.
     mutable bool m_lengthCached{false};    ///< Is the current path length correct?
 
+    mutable double m_timesteps{0};            ///< The number of timesteps.
+    mutable bool m_timestepsCached{false};    ///< Is the current path number of timesteps correct?
     ///@}
 };
 
@@ -174,6 +178,30 @@ Length() const {
   return m_length;
 }
 
+template <typename MPTraits>
+size_t
+GroupPath<MPTraits>::
+TimeSteps() const {
+  // If the length is cached, we don't need to recompute.
+  if(m_timestepsCached)
+    return m_timesteps;
+  m_timestepsCached = true;
+
+  // Recompute the length by summing the edge weights.
+  m_timesteps = 0;
+  for(auto start = m_vids.begin(); start + 1 < m_vids.end(); ++start) {
+    // Skip repeated vertices.
+    /// @todo This will be an error if we allow self-edges.
+    if(*start == *(start + 1))
+      continue;
+
+    // Add this edge's weight to the sum.
+    const auto& edge = m_roadmap->GetEdge(*start, *(start + 1));
+    m_timesteps += edge.GetTimeSteps();
+  }
+
+  return m_timesteps;
+}
 
 template <typename MPTraits>
 const std::vector<typename GroupPath<MPTraits>::VID>&
@@ -292,6 +320,7 @@ operator=(const GroupPath& _p) {
   m_cfgsCached   = _p.m_cfgsCached;
   m_length       = _p.m_length;
   m_lengthCached = _p.m_lengthCached;
+  m_timestepsCached = _p.m_timestepsCached;
 
   return *this;
 }
@@ -311,6 +340,7 @@ void
 GroupPath<MPTraits>::
 FlushCache() {
   m_lengthCached = false;
+  m_timestepsCached = false;
   m_cfgsCached = false;
   m_cfgs.clear();
 }

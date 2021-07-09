@@ -718,6 +718,7 @@ DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
     auto path = _solution->GetPath(robot);
     path->Clear();
     *path += individualVIDs[robot];
+    path->SetTimeSteps(_groupPath->TimeSteps());
     paths.push_back(path);
   }
 

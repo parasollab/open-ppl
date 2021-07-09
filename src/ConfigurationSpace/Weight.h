@@ -320,6 +320,8 @@ template <typename CfgType>
 std::size_t
 DefaultWeight<CfgType>::
 GetTimeSteps() const noexcept {
+  if(m_timeSteps == 0)
+    return m_intermediates.size();
   return m_timeSteps;
 }
 

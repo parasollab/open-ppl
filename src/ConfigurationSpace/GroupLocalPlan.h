@@ -132,6 +132,10 @@ class GroupLocalPlan final {
 
     size_t GetNumRobots() const noexcept;
 
+    void SetTimeSteps(size_t _timesteps);
+
+    size_t GetTimeSteps() const;
+
     ///@}
     ///@name Stuff for stapl graph interface
     ///@{
@@ -180,6 +184,8 @@ class GroupLocalPlan final {
     std::vector<ED> m_edges;           ///< Descriptors of the individual edges.
 
     bool m_skipEdge{false}; ///< Flag to skip full recreation in GroupPath::FullCfgs.
+
+    size_t m_timesteps;
 
     ///@}
 
@@ -458,7 +464,21 @@ GroupLocalPlan<CfgType>::
 GetNumRobots() const noexcept {
   return m_groupMap->GetGroup()->Size();
 }
+    
+template <typename CfgType>
+void 
+GroupLocalPlan<CfgType>::
+SetTimeSteps(size_t _timesteps) {
+  m_timesteps = _timesteps;
+}
 
+template <typename CfgType>
+size_t 
+GroupLocalPlan<CfgType>::
+GetTimeSteps() const {
+  return m_timesteps;
+}
+ 
 /*---------------------- stapl graph interface helpers -----------------------*/
 
 template <typename CfgType>
