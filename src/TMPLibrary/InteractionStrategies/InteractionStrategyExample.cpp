@@ -73,7 +73,7 @@ operator()(Interaction* _interaction, State& _state) {
                   "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
 
   //if(!toInterimPath)
-  if(!toInterimPaths.empty())
+  if(toInterimPaths.empty())
     return false;
 
   _interaction->SetToInterimPaths(toInterimPaths);
@@ -99,7 +99,7 @@ operator()(Interaction* _interaction, State& _state) {
                      "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
 
   //if(!toPostPath)
-  if(!toPostPaths.empty())
+  if(toPostPaths.empty())
     return false;
 
   _interaction->SetToPostPaths(toPostPaths);
