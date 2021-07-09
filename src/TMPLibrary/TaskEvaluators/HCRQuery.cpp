@@ -84,15 +84,15 @@ PerformHyperpathQuery() {
        const size_t _target) {
 
       double hyperarcWeight; 
-      if(_hyperarc.property.semantic) {
-        hyperarcWeight = 0;
-      }
-      else {
+      //if(_hyperarc.property.semantic) {
+      //  hyperarcWeight = 0;
+      //}
+      //else {
         hyperarcWeight = 0;
         for(auto& path : _hyperarc.property.paths) {
           hyperarcWeight = std::max(hyperarcWeight,path->Length());
         }
-      }
+      //}
 
       double tailWeight = 0;
 
