@@ -61,6 +61,9 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -70,6 +73,8 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
@@ -102,8 +107,8 @@
         <!--Evaluator label="Query"/-->
       </BasicRRTStrategy>
       <!-- Toggle PRM-->
-      <TogglePRMStrategy label="TogglePRM" vcLabel="alwaysTrue" priority="true">
-        <Sampler label="UniformRandom" number="10" attempts="1"/>
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <ColConnector label="ToggleConnect"/>
         <!-- <Evaluator label="Query"/> -->
