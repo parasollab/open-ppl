@@ -23,6 +23,7 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -61,6 +62,9 @@ class MedialAxisClearanceValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _callName) override;
+
+    virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
+        const std::string& _caller) override;
 
     ///@}
 
@@ -148,6 +152,13 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
   return result;
 }
 
+
+template <typename MPTraits>
+bool
+MedialAxisClearanceValidity<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+  throw NotImplementedException(WHERE) << "This functions has not been implemented.";
+}
 /*----------------------------------------------------------------------------*/
 
 template <typename MPTraits>

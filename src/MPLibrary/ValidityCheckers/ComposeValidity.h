@@ -20,6 +20,7 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Local Types
@@ -46,6 +47,9 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _callName) override;
+
+    virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
+        const std::string& _caller) override;
 
     ///@}
     ///@name Internal State
@@ -138,6 +142,19 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
   return false;
 }
 
+
+template <typename MPTraits>
+bool
+ComposeValidity<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+  for(size_t i = 0; i < _cfg.GetNumRobots(); i++) {
+    auto& cfg = _cfg.GetRobotCfg(i);
+    if(!this->IsValidImpl(cfg,_cdInfo,_caller))
+      return false;
+  } 
+
+  return true;
+}
 /*----------------------------------------------------------------------------*/
 
 #endif

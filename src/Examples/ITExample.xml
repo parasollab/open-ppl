@@ -64,7 +64,7 @@
       </Agent>
     </Robot>
 
-    <GroupTask label="graspStart" group="grasp2">
+    <GroupTask label="graspStart" group="grasp1">
       <Task label="startLocation1" robot="boxy1">
         <StartConstraints>
           <CSpaceConstraint point="-15 0 0 0 0 0"/>
@@ -158,7 +158,7 @@
     <ValidityCheckers>
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
-      <CollisionDetection label="pqp_solid" method="PQP_SOLID" ignoreSelfCollision="true"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" ignoreSelfCollision="true" interRobotCollision="false"/>
       <TerrainValidity label="terrain" debug="false"/>
       <ComposeValidity label="terrain_robot" operator="AND">
         <ValidityChecker label="pqp_solid"/>
@@ -179,7 +179,7 @@
 
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
-      <StraightLine label="sl_terain" binaryEvaluation="true" vcLabel="terrain_robot"/>
+      <StraightLine label="sl_terrain" binaryEvaluation="true" vcLabel="terrain_robot"/>
     </LocalPlanners>
 
     <Extenders>
@@ -285,7 +285,7 @@
 		<TMPStrategies>
 			<SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
       <BasicHCR label="BasicHCR" teLabel="HCRQuery" mpStrat="CompositeNodes" 
-                sgLabel="HCR" expansionProb="0.7" debug="true"/>
+                sgLabel="HCR" expansionProb="0.1" debug="true"/>
 		</TMPStrategies>
 
 		<PoIPlacementMethods>
@@ -355,7 +355,7 @@
       </Condition>
 
       <Condition label="FormationBox1" type="motion">
-        <CSpaceConstraint bbx="[-13:-17 ; -2:2 ; -2:2 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-17:-13 ; -2:2 ; -2:2 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="land" role="R1"/>
       </Condition>
 
@@ -382,6 +382,12 @@
                           dof="6" type="passive" role="P1"/>
       </Condition>
 
+      <Condition label="ExchangeBox1" type="motion">
+        <CSpaceConstraint bbx="[-15:-15 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+                          dof="6" type="land" role="R1"/>
+        <CSpaceConstraint bbx="[-15:-15 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+                          dof="6" type="passive" role="P1"/>
+      </Condition>
 
 
       <Condition label="TightFormationBox2" type="motion">
@@ -394,11 +400,17 @@
                           dof="6" type="passive" role="P1"/>
       </Condition>
 
+      <Condition label="ExchangeBox2" type="motion">
+        <CSpaceConstraint bbx="[-2:-2 ; 0:0 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+                          dof="6" type="water" role="R2"/>
+        <CSpaceConstraint bbx="[-2:-2 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+                          dof="6" type="passive" role="P1"/>
+      </Condition>
 
 
       <Condition label="Grasp2GoalBox" type="motion">
         <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
-                          dof="6" type="land" role="R1"/>
+                          dof="6" type="water" role="R2"/>
         <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="passive" role="P1"/>
       </Condition>
@@ -421,12 +433,12 @@
 
 
       <Condition label="Anywhere1" type="motion">
-        <CSpaceConstraint bbx="[-25:-5 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="land" role="R1"/>
       </Condition>
 
       <Condition label="Anywhere2" type="motion">
-        <CSpaceConstraint bbx="[-25:-5 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="water" role="R2"/>
       </Condition>
 
@@ -435,7 +447,7 @@
       <Interaction label="Grasp2Arrive" isLabel="InteractionStrategyExample">
         <PreConditions>
           <Condition label="Grasp2"/>
-          <Condition label="GraspGoalBox"/>
+          <Condition label="Grasp2GoalBox"/>
         </PreConditions>
         <InterimConditions>
           <Condition label="Grasp2"/>
@@ -473,8 +485,7 @@
       <Interaction label="GraspExchange" isLabel="InteractionStrategyExample">
         <PreConditions>
           <Condition label="Grasp"/>
-          <Condition label="TightFormationBox1"/>
-          <Condition label="TightGraspBox"/>
+          <Condition label="ExchangeBox1"/>
           <Condition label="Solo2"/>
           <Condition label="Anywhere2"/>
         </PreConditions>
@@ -486,8 +497,7 @@
 
         <PostConditions>
           <Condition label="Grasp2"/>
-          <Condition label="TightFormationBox2"/>
-          <Condition label="TightGraspBox2"/>
+          <Condition label="ExchangeBox2"/>
           <Condition label="Solo"/>
           <Condition label="Anywhere1"/>
         </PostConditions>

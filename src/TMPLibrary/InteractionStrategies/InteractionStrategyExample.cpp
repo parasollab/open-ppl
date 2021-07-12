@@ -46,6 +46,8 @@ operator()(Interaction* _interaction, State& _state) {
               << std::endl;
   }
 
+  _interaction->Initialize();
+
   // Assign interaction roles.
   auto& preconditions = _interaction->GetPreConditions();
   AssignRoles(_state,preconditions);

@@ -132,7 +132,7 @@ SampleSemanticRoadmap() {
   for(auto sr : dist) {
     if(d <= sr.second) {
       //Temp simple update:If successful, reduce probaility of sampling again
-      m_srUtilityScore[sr.first] = m_srUtilityScore[sr.first] * 0.5;
+      //m_srUtilityScore[sr.first] = m_srUtilityScore[sr.first] * 0.5;
       return sr.first;
     }
   }
@@ -266,6 +266,8 @@ FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
   // Map of a semantic roadmap to each set of roles that it satisfies and the vids it satisfies them with
   std::unordered_map<SemanticRoadmap*,std::vector<RoleSet>> roleMap;
   std::unordered_map<SemanticRoadmap*,std::vector<std::vector<size_t>>> vidMap;
+
+  roleMap[_sr] = {};
 
   RoleSet totalRoles;
 
