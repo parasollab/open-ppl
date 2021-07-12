@@ -6,7 +6,7 @@
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
-#include "MPLibrary/LocalPlanners/StraightLine.h"
+//#include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"

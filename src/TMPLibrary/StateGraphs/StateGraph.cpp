@@ -7,12 +7,12 @@
 /*------------------------------ Construction --------------------------------*/
 
 StateGraph::
-StateGraph(){}
+StateGraph() {}
 
 StateGraph::
 StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
-	m_pmLabel = _node.Read("pmLabel",false,"",
-								"The placement method used for points of interests (i.e. ITs)");
+  m_pmLabel = _node.Read("pmLabel",false,"",
+                "The placement method used for points of interests (i.e. ITs)");
 }
 
 /*------------------------------ Construction --------------------------------*/
@@ -25,15 +25,15 @@ Initialize() {
 	}
 	m_graph = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
 
-	ConstructGraph();
+  ConstructGraph();
 }
 
 /*------------------------------ Accessors --------------------------------*/
 
 GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
 StateGraph::
-GetGraph(){
-	return m_graph;
+GetGraph() {
+  return m_graph;
 }
 
 void
@@ -46,6 +46,5 @@ LoadStateGraph(){
 
 void
 StateGraph::
-ConstructGraph(){
-
+ConstructGraph() {
 }

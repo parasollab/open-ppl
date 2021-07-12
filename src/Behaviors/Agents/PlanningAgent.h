@@ -6,7 +6,7 @@
 #include "MPLibrary/PMPL.h"
 
 #include <memory>
-
+#include <thread>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base class for agents which will plan paths using PMPL. This agent only

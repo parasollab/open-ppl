@@ -13,7 +13,7 @@
 class Coordinator;
 
 class ChildAgent : public PathFollowingAgent {
-	public :
+  public :
     ///@name Construction
     ///@{
 
@@ -25,7 +25,7 @@ class ChildAgent : public PathFollowingAgent {
 
     virtual ~ChildAgent();
 
-		std::unique_ptr<Agent> Clone(Robot* const _r) const override;
+    std::unique_ptr<Agent> Clone(Robot* const _r) const override;
 
     ///@}
     ///@name Simulation Interface
@@ -47,18 +47,18 @@ class ChildAgent : public PathFollowingAgent {
     ///@param _parent The parent agent.
     void SetCoordinator(Coordinator* const _parent);
 
-		///@}
-		///@name Accessors
-		///@{
+    ///@}
+    ///@name Accessors
+    ///@{
 
     /// Returns this agents m_solution pointer
     MPSolution* GetMPSolution();
 
-		///@}
+    ///@}
     ///@name Task Helpers
     ///@{
 
-		virtual bool SelectTask() override;
+    virtual bool SelectTask() override;
 
     /// Evaluate the agent's progress on its current task.
     /// @return True if we should continue the current task, false otherwise.
@@ -67,12 +67,12 @@ class ChildAgent : public PathFollowingAgent {
     /// Continue executing the agent's current task.
     /// @param _dt The step length.
     virtual void ExecuteTask(const double _dt) override;
-		
-		virtual void GeneratePlan() override;
 
-		virtual void ClearPlan() override;
-		///@}
-	private:
+    virtual void GeneratePlan() override;
+
+    virtual void ClearPlan() override;
+    ///@}
+  private:
 
     ///@name Controller Helpers
     ///@{
@@ -83,35 +83,29 @@ class ChildAgent : public PathFollowingAgent {
 
     virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) override;
 
-		///@}
-    ///@name Communication Helpers
-    ///@{
-		
-    virtual std::vector<std::string> PublishFunction(std::string _msg) override;
-
     ///@}
     ///@name Internal State
     ///@{
 
-		/// The parent group to which this agent belongs.
+    /// The parent group to which this agent belongs.
     Coordinator* m_coordinator{nullptr};
-	
-		/*std::queue<std::pair<size_t,ControlSet>> m_controlQueue;
 
-		mutable std::atomic<bool> m_running;
+    /*std::queue<std::pair<size_t,ControlSet>> m_controlQueue;
 
-		std::thread m_thread;
+    mutable std::atomic<bool> m_running;
+
+    std::thread m_thread;
 
     mutable std::mutex m_lock;   */
 
-		std::string m_controlChannel;
+    std::string m_controlChannel;
 
-		ControlSet m_queuedControlSet;
-		size_t m_queuedSteps;
-		bool m_locked{true};
+    ControlSet m_queuedControlSet;
+    size_t m_queuedSteps;
+    bool m_locked{true};
 
-		Cfg m_lastCfg;
-		///@}
+    Cfg m_lastCfg;
+    ///@}
 
 };
 

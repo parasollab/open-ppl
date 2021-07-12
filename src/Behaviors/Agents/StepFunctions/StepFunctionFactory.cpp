@@ -21,7 +21,7 @@ Factory(Agent* _agent, XMLNode& _node) {
       output = std::unique_ptr<StepFunction>(
           new DefaultCoordinatorStepFunction(c, _node)
       );
-    }   
+    }
   }
   else if(type == "followpath") {
     output = std::unique_ptr<StepFunction>(

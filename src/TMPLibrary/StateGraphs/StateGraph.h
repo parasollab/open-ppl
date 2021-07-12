@@ -10,20 +10,20 @@
 class StateGraph : public TMPBaseObject {
   public:
 
-  	///@name Construction
+    ///@name Construction
     ///@{
 
-  	StateGraph();
+    StateGraph();
 
-		StateGraph(XMLNode& _node);
+    StateGraph(XMLNode& _node);
 
-		virtual ~StateGraph() = default;  	
+    virtual ~StateGraph() = default;
 
     ///@}
     ///@name Initialization
     ///@{
 
-		virtual void Initialize() override;
+    virtual void Initialize() override;
 
     ///@}
     ///@name Accessors
@@ -31,28 +31,27 @@ class StateGraph : public TMPBaseObject {
 
 		virtual GenericStateGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
 
-		/// Copies the state graph into the coordinator solution object.
-		virtual void LoadStateGraph();
+    /// Copies the state graph into the coordinator solution object.
+    virtual void LoadStateGraph();
 
     ///@}
 
   protected:
 
-		///@name Helpers
-		///@{
-		
-		virtual void ConstructGraph();
+    ///@name Helpers
+    ///@{
 
-		///@}
-		///@name member variables
-		///@{
+    virtual void ConstructGraph();
+
+    ///@}
+    ///@name member variables
+    ///@{
 
 		GenericStateGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
 
-		std::string m_pmLabel{""};
+    std::string m_pmLabel{""};
 
-		
-		///@}
+    ///@}
 
 };
 

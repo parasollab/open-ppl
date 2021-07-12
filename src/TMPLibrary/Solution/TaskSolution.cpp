@@ -7,68 +7,68 @@
 
 TaskSolution::
 TaskSolution(SemanticTask* _task) : m_task(_task) {}
-		
+
 TaskSolution::
 ~TaskSolution() {}
 
-SemanticTask* 
+SemanticTask*
 TaskSolution::
 GetTask() {
-	return m_task;
+  return m_task;
 }
 
 /*------------------------------------ Accessors ------------------------------*/
 
-void 
+void
 TaskSolution::
 SetRobot(Robot* _robot) {
-	m_robot = _robot;
+  m_robot = _robot;
 }
 
-Robot* 
+Robot*
 TaskSolution::
 GetRobot() {
-	return m_robot;
+  return m_robot;
 }
 
-void 
+void
 TaskSolution::
 SetRobotGroup(RobotGroup* _group) {
-	m_robotGroup = _group;
+  m_robotGroup = _group;
 }
 
-RobotGroup* 
+RobotGroup*
 TaskSolution::
 GetRobotGroup() {
-	return m_robotGroup;
+  return m_robotGroup;
 }
 
-void 
+void
 TaskSolution::
 SetMotionSolution(MPSolution* _solution) {
-	m_motionSolution = _solution;
+  m_motionSolution = _solution;
 }
 
-TaskSolution::MPSolution* 
+TaskSolution::MPSolution*
 TaskSolution::
 GetMotionSolution() {
-	return m_motionSolution;
-}
-		
-void 
-TaskSolution::
-SetStartTime(double _startTime) {
-	m_startTime = _startTime;
+  return m_motionSolution;
 }
 
-double 
+void
+TaskSolution::
+SetStartTime(double _startTime) {
+  m_startTime = _startTime;
+}
+
+double
 TaskSolution::
 GetStartTime() {
-	return m_startTime;
+  return m_startTime;
 }
-	
-/*--------------------------------------- Print ----------------------------*/	
-void 
+
+/*--------------------------------------- Print ----------------------------*/
+void
 TaskSolution::
 Print() {
 	std::cout << "Solution for " << m_task->GetLabel() << std::endl;

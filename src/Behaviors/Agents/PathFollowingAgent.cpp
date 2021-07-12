@@ -7,7 +7,6 @@
 #include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 
-
 /*------------------------------ Construction --------------------------------*/
 
 PathFollowingAgent::
@@ -19,7 +18,6 @@ PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a)
   : PlanningAgent(_r, _a)
 { }
 
-
 PathFollowingAgent::
 PathFollowingAgent(Robot* const _r, XMLNode& _node) : PlanningAgent(_r, _node) {
   m_waypointDm = _node.Read("waypointDm", true, "",
@@ -30,13 +28,11 @@ PathFollowingAgent(Robot* const _r, XMLNode& _node) : PlanningAgent(_r, _node) {
       "The robot is considered to have reached waypoints within this threshold.");
 }
 
-
 std::unique_ptr<Agent>
 PathFollowingAgent::
 Clone(Robot* const _r) const {
   return std::unique_ptr<PathFollowingAgent>(new PathFollowingAgent(_r, *this));
 }
-
 
 PathFollowingAgent::
 ~PathFollowingAgent() {
@@ -60,7 +56,7 @@ Uninitialize() {
 
 void
 PathFollowingAgent::
-ClearVisualGraph(){
+ClearVisualGraph() {
   if(Simulation::Get() and m_graphVisualID != size_t(-1))
   {
     Simulation::Get()->RemoveRoadmap(m_graphVisualID);
@@ -86,8 +82,7 @@ void
 PathFollowingAgent::
 ClearPlan() {
   // Remove the path visual if needed.
-  if(HasPlan() and Simulation::Get() and m_pathVisualID != size_t(-1))
-  {
+  if(HasPlan() and Simulation::Get() and m_pathVisualID != size_t(-1)) {
     Simulation::Get()->RemovePath(m_pathVisualID);
     m_pathVisualID = size_t(-1);
   }
@@ -99,7 +94,7 @@ ClearPlan() {
 
 void
 PathFollowingAgent::
-SetPlan(std::vector<Cfg> _path){
+SetPlan(std::vector<Cfg> _path) {
   m_path = _path;
 }
 
@@ -175,8 +170,7 @@ EvaluateTask() {
     ++m_pathIndex;
 
     // Check if we have completed the path. If so, this task is complete.
-    if(m_pathIndex == m_path.size())
-    {
+    if(m_pathIndex == m_path.size()) {
       if(m_debug)
         std::cout << "Reached the end of the path." << std::endl;
       GetTask()->GetStatus().complete();
@@ -189,7 +183,6 @@ EvaluateTask() {
 
   return true;
 }
-
 
 void
 PathFollowingAgent::
@@ -209,7 +202,6 @@ ExecuteTask(const double _dt) {
   const Cfg current = m_robot->GetSimulationModel()->GetState();
   auto bestControl = m_robot->GetController()->operator()(current,
       m_path[m_pathIndex], time);
-
 
   if(m_debug){
     std::cout << "Printing m_path in agent step function" << std::endl;

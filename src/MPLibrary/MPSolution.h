@@ -3,8 +3,8 @@
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
+#include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
-#include "TMPLibrary/TMPTools/InteractionTemplate.h"
 #include "Utilities/MetricUtils.h"
 
 #include <map>
@@ -80,11 +80,19 @@ class MPSolutionType final {
     ///@name Modifiers
     ///@{
 
+    void AddRobot(Robot* const _r) noexcept;
+
     void SetRobot(Robot* const _r) noexcept;
 
     void SetRoadmap(Robot* const _r, RoadmapType* _roadmap) noexcept;
 
     void SetPath(Robot* const _r, Path* _path) noexcept;
+
+    void AddRobotGroup(RobotGroup* const _g) noexcept;
+
+    void SetGroupRoadmap(RobotGroup* const _g, GroupRoadmapType* _roadmap) noexcept;
+
+    void SetGroupPath(RobotGroup* const _r, GroupPathType* _path) noexcept;
 
     ///@}
     ///@name Accessors
@@ -132,6 +140,10 @@ class MPSolutionType final {
     /// @return The solution object for _g.
     const GroupSolution* GetGroupSolution(RobotGroup* _g) const noexcept;
 
+    /// Get the solution for a robot group.
+    /// @param _g The robot group.
+    /// @return The solution object for _g.
+    GroupSolution* GetGroupSolution(RobotGroup* _g) noexcept;
     ///@}
     ///@name Internal State
     ///@{
@@ -199,6 +211,24 @@ MPSolutionType(RobotGroup* const _g)
 template <typename MPTraits>
 void
 MPSolutionType<MPTraits>::
+AddRobot(Robot* const _r) noexcept {
+  m_robot = _r;
+
+  auto iter = m_individualSolutions.find(_r);
+  if(iter != m_individualSolutions.end()) {
+    std::cout << "Robot "
+              << _r->GetLabel()
+              << " is already in solution."
+              << std::endl;
+    return;
+  }
+    
+  m_individualSolutions[_r] = RobotSolution(_r,m_stats.get());
+}
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
 SetRobot(Robot* const _r) noexcept {
   if(m_robot == _r)
     return;
@@ -239,6 +269,50 @@ SetPath(Robot* const _r, Path* _path) noexcept {
 
   robotSolution->path.release();
   robotSolution->path.reset(_path);
+}
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+AddRobotGroup(RobotGroup* const _g) noexcept {
+  m_group = _g;
+
+  auto iter = m_groupSolutions.find(_g);
+  if(iter != m_groupSolutions.end()) {
+    std::cout << "Group :"
+              << _g->GetLabel()
+              << " already in solution." 
+              << std::endl;
+    return;
+  }
+
+  m_groupSolutions[_g] = GroupSolution(_g,this);
+}
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+SetGroupRoadmap(RobotGroup* const _g, GroupRoadmapType* _roadmap) noexcept {
+  auto groupSolution = GetGroupSolution(_g);
+  if(!groupSolution)
+    throw RunTimeException(WHERE) << "Cannot set roadmap for group that does not "
+                                  << "have a solution.";
+
+  groupSolution->freeMap.reset(_roadmap);
+  groupSolution->path.reset(new GroupPathType(_roadmap));
+}
+
+template <typename MPTraits>
+void
+MPSolutionType<MPTraits>::
+SetGroupPath(RobotGroup* const _g, GroupPathType* _path) noexcept {
+  auto groupSolution = GetGroupSolution(_g);
+  if(!groupSolution)
+    throw RunTimeException(WHERE) << "Cannot set path for group that does not "
+                                  << "have a solution.";
+
+  groupSolution->path.release();
+  groupSolution->path.reset(_path);
 }
 
 /*---------------------------- Roadmap Accessors -----------------------------*/
@@ -369,6 +443,18 @@ GetGroupSolution(RobotGroup* _g) const noexcept {
   return found ? &iter->second : nullptr;
 }
 
+template <typename MPTraits>
+inline
+typename MPSolutionType<MPTraits>::GroupSolution*
+MPSolutionType<MPTraits>::
+GetGroupSolution(RobotGroup* _g) noexcept {
+  if(!_g)
+    _g = m_group;
+
+  auto iter = m_groupSolutions.find(_g);
+  const bool found = iter != m_groupSolutions.end();
+  return found ? &iter->second : nullptr;
+}
 /*----------------------------------------------------------------------------*/
 
 #endif

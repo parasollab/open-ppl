@@ -37,44 +37,44 @@ class TMPTools;
 ////////////////////////////////////////////////////////////////////////////////
 class TMPBaseObject {
   public:
-		///@name LocalTypes
-		///@{
+    ///@name LocalTypes
+    ///@{
 
 
-		///@}
+    ///@}
     ///@name Method Set Types
     ///@{
-  /*	
-		typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
-  	typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
-  	typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
-  	typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
-  	typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
-  	typedef TMPMethodSet<StateGraph>			   			 StateGraphSet;
+  /*
+    typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
+    typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
+    typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
+    typedef TMPMethodSet<TaskDecomposerMethod>     TaskDecomposerMethodSet;
+    typedef TMPMethodSet<TaskAllocatorMethod>      TaskAllocatorMethodSet;
+    typedef TMPMethodSet<StateGraph>               StateGraphSet;
 
     ///@}
     ///@name Method Pointer Types
     ///@{
-    
-		typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
-  	typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
-  	typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
-  	typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
-  	typedef typename TaskAllocatorMethodSet::TMPMethodPointer 	TaskAllocatorMethodPointer;
-  	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
+
+    typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
+    typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
+    typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
+    typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
+    typedef typename TaskAllocatorMethodSet::TMPMethodPointer   TaskAllocatorMethodPointer;
+    typedef typename StateGraphSet::TMPMethodPointer            StateGraphPointer;
    */
-		 ///@name Method Pointer Types
+    ///@name Method Pointer Types
     ///@{
-    
-		typedef typename TMPLibrary::TMPStrategyMethodPointer      TMPStrategyMethodPointer;
-  	typedef typename TMPLibrary::PoIPlacementMethodPointer     PoIPlacementMethodPointer;
-  	typedef typename TMPLibrary::TaskEvaluatorMethodPointer    TaskEvaluatorMethodPointer;
-  	typedef typename TMPLibrary::TaskDecomposerMethodPointer   TaskDecomposerMethodPointer;
-  	typedef typename TMPLibrary::TaskAllocatorMethodPointer    TaskAllocatorMethodPointer;
-  	typedef typename TMPLibrary::StateGraphPointer             StateGraphPointer;
-		
-		///@}
-	///@name Construction
+
+    typedef typename TMPLibrary::TMPStrategyMethodPointer      TMPStrategyMethodPointer;
+    typedef typename TMPLibrary::PoIPlacementMethodPointer     PoIPlacementMethodPointer;
+    typedef typename TMPLibrary::TaskEvaluatorMethodPointer    TaskEvaluatorMethodPointer;
+    typedef typename TMPLibrary::TaskDecomposerMethodPointer   TaskDecomposerMethodPointer;
+    typedef typename TMPLibrary::TaskAllocatorMethodPointer    TaskAllocatorMethodPointer;
+    typedef typename TMPLibrary::StateGraphPointer             StateGraphPointer;
+
+    ///@}
+    ///@name Construction
     ///@{
 
     /// Default constructor explicitly gives name, label, and debug.
@@ -123,7 +123,7 @@ class TMPBaseObject {
     ///@}
     ///@name TMPLibrary Accessors
     ///@{
-    
+
     /// Set the owning TMPLibrary.
     void SetTMPLibrary(TMPLibrary*) noexcept;
 
@@ -151,8 +151,8 @@ class TMPBaseObject {
     ///@name Problem Accessors
     ///@{
 
-		/// Get the underlying MPLibrary
-		MPLibrary* GetMPLibrary() const noexcept;
+    /// Get the underlying MPLibrary
+    MPLibrary* GetMPLibrary() const noexcept;
 
     /// Get the library's current TMPProblem
     MPProblem* GetMPProblem() const noexcept;
@@ -161,8 +161,8 @@ class TMPBaseObject {
     ///@name Solution Accessors
     ///@{
 
-		/// Get the current Plan
-		Plan* GetPlan() const noexcept;
+    /// Get the current Plan
+    Plan* GetPlan() const noexcept;
 
     /// Get the underlying StateGraph
     StateGraphPointer GetStateGraph(const std::string&) const noexcept;
@@ -182,7 +182,7 @@ class TMPBaseObject {
 
   private:
 
-  	std::string m_name;                ///< Class name
+    std::string m_name;                ///< Class name
     std::string m_label;               ///< Unique identifier.
     TMPLibrary* m_tmpLibrary{nullptr}; ///< The owning MPLibrary.
 

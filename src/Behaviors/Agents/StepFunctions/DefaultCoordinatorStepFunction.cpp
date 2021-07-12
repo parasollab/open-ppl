@@ -1,28 +1,26 @@
 #include "DefaultCoordinatorStepFunction.h"
 
-#include "Communication/Messages/Message.h"
- 
 #include "ConfigurationSpace/Cfg.h"
-  
+
 #include "MPLibrary/MPSolution.h"
 
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
- 
+#include "TMPLibrary/Solution/TaskSolution.h"
+
 /*----------------------------- Construction -------------------------*/
 
 DefaultCoordinatorStepFunction::
 DefaultCoordinatorStepFunction(Coordinator* _coordinator, XMLNode& _node) :
-             StepFunction(_coordinator, _node) { 
+             StepFunction(_coordinator, _node) {
 
   m_coordinator = static_cast<Coordinator*>(m_agent);
 }
 
 DefaultCoordinatorStepFunction::
 ~DefaultCoordinatorStepFunction() { }
-
 
 /*------------------------------- Interface --------------------------*/
 
@@ -44,7 +42,7 @@ StepAgent(double _dt) {
 
 /*---------------------------- Helper Functions  ----------------------*/
 
-bool 
+bool
 DefaultCoordinatorStepFunction::
 HasProblem() {
 
@@ -68,70 +66,38 @@ HasProblem() {
   return false;
 }
 
-bool 
+bool
 DefaultCoordinatorStepFunction::
 HasPlan() {
   return m_plan.get();
 }
 
-bool 
+bool
 DefaultCoordinatorStepFunction::
 GetPlan() {
 
   auto robot = m_coordinator->GetRobot();
   auto problem = robot->GetMPProblem();
 
-	// if networked, request plan from server
-  auto communicator = m_coordinator->GetCommunicator();
-	if(communicator.get() and communicator->IsConnectedToMaster()) {
-		
-		std::vector<Robot*> team;
-		for(auto agent : m_coordinator->GetChildAgents()) {
-			team.push_back(agent->GetRobot());
-		}
+  // Use tmplibrary to get task assignments
+  m_plan = std::shared_ptr<Plan>(new Plan());
+  m_plan->SetCoordinator(m_coordinator);
 
-    /// Convert robot team and problem decomposition tree to a message
-		std::string query = RobotTeamToMessage(team,robot) 
-											+ DecompositionToMessage(
-                          problem->GetDecompositions(robot)[0].get());
+  std::vector<Robot*> team;
+  for(auto agent : m_coordinator->GetChildAgents()) {
+    team.push_back(agent->GetRobot());
+  }
 
-    /// Send query message to server and wait for response
-		auto response = communicator->Query("ppl",query);
-    if(m_debug) {
-  		std::cout << "QUERY MESSAGE::"
-                << query 
-                << "\n\n"
-                << "RESPONSE MESSAGE::"
-                << response
-                << std::endl;
-    }
+  m_plan->SetTeam(team);
+  m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
 
-    /// Convert response message to a Plan object
-		m_plan = std::shared_ptr<Plan>(MessageToPlan(
-              response,problem->GetDecompositions(robot)[0].get(),problem));
+  if(!m_tmpLibrary)
+    m_tmpLibrary = m_coordinator->GetTMPLibrary();
 
-	}
-	/// Otherwise use tmplibrary to get task assignments
-	else {
-    m_plan = std::shared_ptr<Plan>(new Plan());
-    m_plan->SetCoordinator(m_coordinator);
+  m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(),
+                      m_plan.get(), m_coordinator, team);
 
-    std::vector<Robot*> team;
-    for(auto agent : m_coordinator->GetChildAgents()) {
-      team.push_back(agent->GetRobot());
-    }
-  
-    m_plan->SetTeam(team);
-    m_plan->SetDecomposition(problem->GetDecompositions(robot)[0].get());
-
-    if(!m_tmpLibrary)
-      m_tmpLibrary = m_coordinator->GetTMPLibrary();
-
-    m_tmpLibrary->Solve(problem, problem->GetDecompositions(robot)[0].get(), 
-                        m_plan.get(), m_coordinator, team);
-	}
-
-  if(m_debug and m_plan){
+  if(m_debug and m_plan) {
     std::cout << "SOLUTION PLAN" << std::endl;
     m_plan->Print();
   }
@@ -139,12 +105,9 @@ GetPlan() {
   return m_plan.get();
 }
 
-    
-void 
+void
 DefaultCoordinatorStepFunction::
-StepMemberAgents(double _dt) {
-
-}
+StepMemberAgents(double _dt) { }
 
 void
 DefaultCoordinatorStepFunction::
@@ -152,7 +115,7 @@ DistributePlan() {
 
   auto childAgents = m_coordinator->GetChildAgents();
   //auto memberAgents = m_coordinator->GetMemberAgents();
-  
+
   for(auto agent : childAgents) {
     auto robot = agent->GetRobot();
 		auto allocs = m_plan->GetAllocations(robot);
@@ -188,8 +151,9 @@ DistributePlan() {
 		if(cfgs.empty())
 			continue;
 		auto goalCfg = cfgs.back();
+
     std::unique_ptr<CSpaceConstraint> goal =
       std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot, goalCfg));
     temp->AddGoalConstraint(std::move(goal));
-	}
+  }
 }
