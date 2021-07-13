@@ -41,7 +41,7 @@ class ProximityCondition : public Condition {
     ///@name Internal State
     ///@{
 
-    std::unique_ptr<Boundary> m_boundary;
+    double m_threshold;
 
     ///@}
 

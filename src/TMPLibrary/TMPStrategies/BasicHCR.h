@@ -78,6 +78,20 @@ class BasicHCR : public TMPStrategyMethod {
       const std::unordered_map<SemanticRoadmap*,std::vector<RoleSet>>& _possibleRoles,
       RoleSet _totalRoles, RoleSet _satisfiedRoles, std::unordered_map<SemanticRoadmap*,size_t> _csr);
 
+
+    // Stuff for proximity
+    std::pair<CompositeSemanticRoadmap,State> FindStartState2(
+        Interaction* _interaction, SemanticRoadmap* _sr);
+   
+    // Check if the previous function already dos this 
+    std::vector<BasicHCR::CompositeSemanticRoadmap>
+    BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr, 
+                  std::vector<std::vector<std::string>>& _roles, size_t _offset);
+
+    std::pair<CompositeSemanticRoadmap,State>
+    CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr, 
+                                 std::vector<size_t>& _indices,size_t _csrIndex,
+                                 Interaction* _interaction);
     ///@}
     ///@name Internal State
     ///@{

@@ -7,7 +7,9 @@
 #include "TMPLibrary/ActionSpace/Action.h"
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/Interaction.h"
+#include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
+#include "TMPLibrary/ActionSpace/ProximityCondition.h"
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
@@ -240,6 +242,182 @@ ExpandRoadmap(SemanticRoadmap* _sr) {
              "ExpandSemanticRoadmap");
 
   delete task;
+}
+
+std::pair<BasicHCR::CompositeSemanticRoadmap,BasicHCR::State>
+BasicHCR::
+FindStartState2(Interaction* _interaction, SemanticRoadmap* _sr) {
+
+  if(m_debug) {
+    std::cout << "Sampling interaction " 
+              << _interaction->GetLabel()
+              << " for "
+              << _sr->first->GetGroup()->GetLabel()
+              << "."
+              << std::endl;
+  }
+
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+
+  auto group = _sr->first->GetGroup();
+  bool matchedInputGroup = false;
+
+  // Collect all role combinations
+  std::vector<std::vector<std::string>> totalRoles;
+  for(auto label : _interaction->GetPreConditions()) {
+
+    auto f = dynamic_cast<FormationCondition*>(as->GetCondition(label));
+
+    if(!f) continue; // Check that it is a formation condition
+
+    auto roles = f->GetRoles();
+
+    std::set<Robot*> used;
+  
+    for(auto role : roles) {
+      for(auto robot : group->GetRobots()) {
+        if(used.count(robot))
+          continue;
+
+        if(role == robot->GetCapability()) {
+          used.insert(robot);
+          break;
+        }
+      }
+    }
+
+    if(roles.size() == used.size()) {
+      matchedInputGroup = true;
+    }
+    else {
+      totalRoles.push_back(roles);
+    }
+  }
+
+  // If semantic roadmap does not match any formation conditions, quit
+  if(!matchedInputGroup)
+    return std::make_pair(CompositeSemanticRoadmap(),State());
+   
+  auto csrs = BuildCompositeSemanticRoadmaps({_sr},totalRoles,0);
+
+
+  // Naive, check all state combinations
+  for(auto csr : csrs) {
+
+    std::vector<SemanticRoadmap*> vCsr;
+    for(auto sr : csr) {
+      vCsr.push_back(sr);
+    }
+
+    std::vector<size_t> indices(csr.size(),0);
+
+    auto value = CheckCompositeStatesForProximity(vCsr,indices,0,_interaction);
+
+    if(!value.second.empty())
+      return value;
+  }
+    
+  return std::make_pair(CompositeSemanticRoadmap(),State());
+}
+
+//Add recusrive function to find composite semantic roadmaps
+
+std::vector<BasicHCR::CompositeSemanticRoadmap>
+BasicHCR::
+BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr, 
+      std::vector<std::vector<std::string>>& _roles, size_t _offset) {
+
+  
+  std::vector<CompositeSemanticRoadmap> csrs;
+
+  auto hcr = dynamic_cast<CombinedRoadmap*>(
+              this->GetStateGraph(m_sgLabel).get());
+
+  auto roles = _roles[_offset];
+  for(auto sr : hcr->GetSemanticRoadmaps()) {
+    if(_csr.count(sr))
+      continue;
+
+    auto group = sr->first->GetGroup();
+    std::set<Robot*> used;
+  
+    for(auto role : roles) {
+      for(auto robot : group->GetRobots()) {
+        if(used.count(robot))
+          continue;
+
+        if(role == robot->GetCapability()) {
+          used.insert(robot);
+          break;
+        }
+      }
+    }
+    
+    if(roles.size() == used.size()) {
+      CompositeSemanticRoadmap newCsr = _csr;
+      newCsr.insert(sr);
+      auto newCsrs = BuildCompositeSemanticRoadmaps(newCsr,_roles,_offset+1);
+
+      for(auto c : newCsrs) {
+        csrs.push_back(c);
+      }
+    }
+  }
+
+  return csrs;
+}
+
+std::pair<BasicHCR::CompositeSemanticRoadmap,BasicHCR::State>
+BasicHCR::
+CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr, 
+                                 std::vector<size_t>& _indices,size_t _csrIndex,
+                                 Interaction* _interaction) {
+
+  if(_csrIndex == _csr.size()) {
+    // Construct state
+    State state;
+    for(size_t i = 0; i < _csr.size(); i++) {
+      auto sr = _csr[i];
+      auto grm = sr->first;
+      state[grm->GetGroup()] = std::make_pair(grm,_indices[i]);
+    }
+
+    CompositeSemanticRoadmap csr;
+    for(auto sr : _csr) {
+      csr.insert(sr);
+    }
+
+    // Check proximity
+    auto as = this->GetTMPLibrary()->GetActionSpace();
+
+    for(auto label : _interaction->GetPreConditions()) {
+
+      auto p = dynamic_cast<ProximityCondition*>(as->GetCondition(label));
+
+      if(!p) continue; // Check that it is a motion condition
+
+      if(!p->Satisfied(state))
+        return std::make_pair(csr,State());
+    } 
+
+    // Return value if true
+    return std::make_pair(csr,state);
+  }
+    
+  auto sr = _csr[_csrIndex];
+  auto grm = sr->first;
+
+  for(auto iter = grm->begin(); iter != grm->end(); iter++) {
+    auto vid = iter->descriptor();
+    _indices[_csrIndex] = vid;
+
+    auto value = CheckCompositeStatesForProximity(_csr,_indices,_csrIndex+1,_interaction);
+
+    if(!value.second.empty())
+      return value;
+  }
+
+  return std::make_pair(CompositeSemanticRoadmap(),State());
 }
 
 std::pair<BasicHCR::CompositeSemanticRoadmap,BasicHCR::State>
