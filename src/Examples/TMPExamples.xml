@@ -90,9 +90,6 @@
     </Metrics>
 
     <MapEvaluators>
-      <TrueEvaluation label="TrueEvaluator" />
-      <QueryMethod label="Query" debug="false"
-        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -106,7 +103,6 @@
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>
         </GrowthSet>
-        <Evaluator label="Query"/>
       </AdaptiveRRT>
 
     </MPStrategies>
