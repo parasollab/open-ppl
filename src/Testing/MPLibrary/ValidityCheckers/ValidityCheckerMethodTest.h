@@ -5,7 +5,7 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class ValidityCheckerMethodTest : public ValidityCheckerMethod<MPTraits>, 
+class ValidityCheckerMethodTest : virtual public ValidityCheckerMethod<MPTraits>, 
                                   public TestBaseObject {
   public:
   
@@ -76,7 +76,7 @@ RunTest() {
   passed = passed and result.first;
   message = message += result.second;
 
-  result = GroupCfgValidity();
+  result = GroupCfgValidityTest();
   passed = passed and result.first;
   message = message += result.second;
 
@@ -91,25 +91,25 @@ ValidityCheckerMethodTest<MPTraits>::
 IndividualCfgValidity() {
 
   // Set the library for a single robot.
-  auto robot = this->GetMPProblem()->GetRobots()[0];
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
   auto task = this->GetMPProblem()->GetTasks(robot)[0];
-  this->GetMPLibrary()->SetTask(task);
+  this->GetMPLibrary()->SetTask(task.get());
   this->GetMPLibrary()->SetGroupTask(nullptr); 
 
   std::vector<std::pair<bool,CfgType>> output;
   
   // Place a robot in the center of the envionment (assume it's open).
   CfgType cfg(robot);
-  bool valid = IsValid(cfg,"Test");
-  output.push_back(valid,cfg);
+  bool valid = this->IsValid(cfg,"Test");
+  output.push_back(std::make_pair(valid,cfg));
   
   // If the robot has positional DOF, place it outside the environment 
   // boundary.
   if(robot->GetMultiBody()->PosDOF() > 0) {
     auto x = this->GetEnvironment()->GetBoundary()->GetRange(0).min;
     cfg[0] = x - 1;
-    valid = IsValid(cfg,"Test");
-    output.push_back(valid,cfg);
+    valid = this->IsValid(cfg,"Test");
+    output.push_back(std::make_pair(valid,cfg));
   }
   
   return output;
@@ -121,15 +121,17 @@ ValidityCheckerMethodTest<MPTraits>::
 GroupCfgValidity() {
 
   // Set the library for a robot group.
-  auto robot = this->GetMPProblem()->GetRobots()[0];
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
   auto task = this->GetMPProblem()->GetTasks(robot)[0];
-  this->GetMPLibrary()->SetTask(task);
+  this->GetMPLibrary()->SetTask(task.get());
   this->GetMPLibrary()->SetGroupTask(nullptr); 
  
   // TODO::Implement this test. Make sure the negative example has two 
   // robots colliding with each other and the positive has no inter-
   // robot collision.
+  return {};
 }
+
 /*--------------------------------------------------------------------*/
 
 #endif

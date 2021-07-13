@@ -5,7 +5,7 @@
 
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
-class SimpleMotionEvaluator : public TaskEvaluatorMethod {
+class SimpleMotionEvaluator : virtual public TaskEvaluatorMethod {
   public:
 
     ///@name Constructor

@@ -38,6 +38,7 @@ main(int _argc, char** _argv) {
   // Parse the Library node into an TMPLibrary object.
   TMPLibraryTests* ppl = new TMPLibraryTests(xmlFile);
   MPLibraryTests<MPTraits<Cfg>>* mpl = new MPLibraryTests<MPTraits<Cfg>>(xmlFile);
+  mpl->SetMPProblem(problem);
 
     // Position the robot by sampling from the first task and set colors.
     /// @TODO Decide on a way to declare the starting configuration either

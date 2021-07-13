@@ -5,8 +5,8 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class PathModifierMethodTest : public PathModifierMethod<MPTraits>,
-                           public TestBaseObject {
+class PathModifierMethodTest : virtual public PathModifierMethod<MPTraits>,
+                               public TestBaseObject {
 
   public:
 
