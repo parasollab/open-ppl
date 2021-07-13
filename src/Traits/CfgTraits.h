@@ -135,13 +135,9 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-<<<<<<< HEAD
+    BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>
-=======
-    BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>
->>>>>>> a88c0fa2
       > MPStrategyMethodList;
 
 
