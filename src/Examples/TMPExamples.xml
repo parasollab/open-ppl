@@ -90,19 +90,21 @@
     </Metrics>
 
     <MapEvaluators>
+      <TrueEvaluation label="TrueEvaluator" />
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
       <AdaptiveRRT label="AdaptiveRRT" debug="true"
-        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
-        goalDmLabel="euclidean" goalThreshold="5"
-        wallPenalty=0.5 gamma=0.5 costMethod="reward">
+        goalDmLabel="minkowski" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 cost="reward">
+
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>
-          <Extender label="BESO"/>
-          <Extender label="ROVRO"/>
         </GrowthSet>
         <Evaluator label="Query"/>
       </AdaptiveRRT>
