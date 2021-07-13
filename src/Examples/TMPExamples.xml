@@ -93,14 +93,19 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <!-- Basic RRT-->
-      <BasicRRTStrategy label="RRT" debug="false"
-        querySampler="UniformRandom" samplerLabel="UniformRandom"
+      <AdaptiveRRT label="AdaptiveRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
-        goalDmLabel="minkowski" goalThreshold="5">
-        <!--Evaluator label="Query"/-->
-      </BasicRRTStrategy>
+        goalDmLabel="euclidean" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 costMethod="reward">
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+          <Extender label="BESO"/>
+          <Extender label="ROVRO"/>
+        </GrowthSet>
+        <Evaluator label="Query"/>
+      </AdaptiveRRT>
 
     </MPStrategies>
 
@@ -109,7 +114,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="RRT" seed="12345678"
+    <Solver mpStrategyLabel="AdaptiveRRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
