@@ -43,7 +43,7 @@
 //metric includes
 
 //map evaluator includes
-
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
@@ -131,6 +131,7 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    QueryMethod<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world

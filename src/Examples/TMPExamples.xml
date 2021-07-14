@@ -99,6 +99,8 @@
     </Metrics>
 
     <MapEvaluators>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -112,10 +114,10 @@
       </BasicRRTStrategy>
       <!-- Toggle PRM-->
       <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
-        <Sampler label="UniformRandomFree" number="1000" attempts="10"/>
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <ColConnector label="Closest"/>
-        <!-- <Evaluator label="Query"/> -->
+        <Evaluator label="Query"/>
       </TogglePRMStrategy>
     </MPStrategies>
 
@@ -124,7 +126,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="TogglePRM" seed="12345878"
+    <Solver mpStrategyLabel="TogglePRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> 
 
   </Library>
