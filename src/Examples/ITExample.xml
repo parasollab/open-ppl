@@ -67,7 +67,7 @@
     <GroupTask label="graspStart" group="grasp1">
       <Task label="startLocation1" robot="boxy1">
         <StartConstraints>
-          <CSpaceConstraint point="-15 0 0 0 0 0"/>
+          <CSpaceConstraint point="-20 0 0 0 0 0"/>
         </StartConstraints>
       </Task>
       <Task label="startLocation2" robot="passive">
@@ -93,7 +93,7 @@
     <GroupTask label="a" group="robotGroup1">
       <Task label="startLocation1" robot="boxy1">
         <StartConstraints>
-          <CSpaceConstraint point="-15 0 0 0 0 0"/>
+          <CSpaceConstraint point="-20 0 0 0 0 0"/>
         </StartConstraints>
       </Task>
     </GroupTask>
@@ -121,13 +121,13 @@
         <GroupTask label="groupQuery" group="grasp2">
       		<Task label="query1" robot="boxy2">
 		        <GoalConstraints>
-		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+		          <CSpaceConstraint point="0 3 10 0 0 0"/>
       		  </GoalConstraints>
   		    </Task>
 
           <Task label="query2" robot="passive">
             <GoalConstraints>
-		          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+		          <CSpaceConstraint point="0 -2 10 0 0 0"/>
             </GoalConstraints>
           </Task>
         </GroupTask>
@@ -333,14 +333,14 @@
       <Condition label="Grasp" type="formation">
         <Role name="R1" type="land"/>
         <Role name="P1" type="passive">
-          <FormationConstraint refRole="R1" translation="0 0 0" orientation="0 0 0"/>
+          <FormationConstraint refRole="R1" translation="5 0 0" orientation="0 0 0"/>
         </Role>
       </Condition>
 
       <Condition label="Grasp2" type="formation">
         <Role name="R2" type="water"/>
         <Role name="P1" type="passive">
-          <FormationConstraint refRole="R2" translation="0 0 0" orientation="0 0 0"/>
+          <FormationConstraint refRole="R2" translation="-5 0 0" orientation="0 0 0"/>
         </Role>
       </Condition>
 
@@ -355,7 +355,7 @@
       </Condition>
 
       <Condition label="FormationBox1" type="motion">
-        <CSpaceConstraint bbx="[-17:-13 ; -2:2 ; -2:2 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-22:-18 ; -2:2 ; -2:2 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="land" role="R1"/>
       </Condition>
 
@@ -373,7 +373,7 @@
 
 
       <Condition label="TightFormationBox1" type="motion">
-        <CSpaceConstraint bbx="[-15:-15 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+        <CSpaceConstraint bbx="[-20:-20 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
                           dof="6" type="land" role="R1"/>
       </Condition>
 
@@ -383,7 +383,7 @@
       </Condition>
 
       <Condition label="ExchangeBox1" type="motion">
-        <CSpaceConstraint bbx="[-15:-15 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+        <CSpaceConstraint bbx="[-20:-20 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
                           dof="6" type="land" role="R1"/>
         <CSpaceConstraint bbx="[-15:-15 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
                           dof="6" type="passive" role="P1"/>
@@ -401,9 +401,9 @@
       </Condition>
 
       <Condition label="ExchangeBox2" type="motion">
-        <CSpaceConstraint bbx="[-2:-2 ; 0:0 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+        <CSpaceConstraint bbx="[2:2 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
                           dof="6" type="water" role="R2"/>
-        <CSpaceConstraint bbx="[-2:-2 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
+        <CSpaceConstraint bbx="[-3:-3 ; 5:5 ; 0:0 ; 0:0 ; 0:0 ; 0:0]"  
                           dof="6" type="passive" role="P1"/>
       </Condition>
 
@@ -416,18 +416,18 @@
       </Condition>
 
       <Condition label="Grasp2FinalLocation" type="motion">
-        <CSpaceConstraint point="0 5 10 0.2 0.8 0.5"
+        <CSpaceConstraint point="0 3 10 0 0 0"
                           dof="6" type="water" role="R2"/>
-        <CSpaceConstraint point="0 5 10 0.2 0.8 0.5"
+        <CSpaceConstraint point="0 -2 10 0 0 0"
                           dof="6" type="passive" role="P1"/>
       </Condition>
 
       <Condition label="ExchangeBox" type="motion">
-        <CSpaceConstraint point="-5 0 0 0 0 0"
+        <CSpaceConstraint point="-10 5 0 0 0 0"
                           dof="6" type="land" role="R1"/>
-        <CSpaceConstraint point="-5 0 0 0 0 0"
+        <CSpaceConstraint point="0 5 0 0 0 0"
                           dof="6" type="water" role="R2"/>
-        <CSpaceConstraint point="-5 0 0 0 0 0"
+        <CSpaceConstraint point="-5 5 0 0 0 0"
                           dof="6" type="passive" role="P1"/>
       </Condition>
 

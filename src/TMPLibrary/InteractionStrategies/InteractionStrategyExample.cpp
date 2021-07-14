@@ -78,6 +78,9 @@ operator()(Interaction* _interaction, State& _state) {
   if(toInterimPaths.empty())
     return false;
 
+  auto& postconditions = _interaction->GetPostConditions();
+  SetActiveFormations(postconditions,_interaction->GetToPostSolution());
+
   _interaction->SetToInterimPaths(toInterimPaths);
 
   // Extract last cfg from path and use to start post task.
@@ -85,7 +88,6 @@ operator()(Interaction* _interaction, State& _state) {
   auto state = InterimState(_interaction);
 
   // Construct goal constraints.
-  auto& postconditions = _interaction->GetPostConditions();
   auto goalConstraintMap = GenerateConstraints(postconditions);
 
   // Construct toPost tasks with postcondition robot groups.
@@ -94,7 +96,6 @@ operator()(Interaction* _interaction, State& _state) {
                               goalConstraintMap);
 
   // Compute motions from interim to post conditions.
-  SetActiveFormations(postconditions,_interaction->GetToPostSolution());
   //auto toPostPath = PlanMotions(toPost,_interaction->GetToPostSolution(),
   //                   "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
   auto toPostPaths = PlanMotions(toPost,_interaction->GetToPostSolution(),
