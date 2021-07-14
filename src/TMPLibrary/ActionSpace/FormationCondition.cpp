@@ -158,6 +158,17 @@ GetRoles() const {
   return roles;
 }
 
+const std::vector<std::string> 
+FormationCondition::
+GetTypes() const {
+  std::vector<std::string> types;
+  for(auto role : m_roles) {
+    types.push_back(role.second.type);
+  }
+
+  return types;
+}
+
 /*--------------------- Helper Functions ---------------------*/
 
 bool

@@ -263,34 +263,34 @@ FindStartState2(Interaction* _interaction, SemanticRoadmap* _sr) {
   bool matchedInputGroup = false;
 
   // Collect all role combinations
-  std::vector<std::vector<std::string>> totalRoles;
+  std::vector<std::vector<std::string>> totalTypes;
   for(auto label : _interaction->GetPreConditions()) {
 
     auto f = dynamic_cast<FormationCondition*>(as->GetCondition(label));
 
     if(!f) continue; // Check that it is a formation condition
 
-    auto roles = f->GetRoles();
+    auto types = f->GetTypes();
 
     std::set<Robot*> used;
   
-    for(auto role : roles) {
+    for(auto type : types) {
       for(auto robot : group->GetRobots()) {
         if(used.count(robot))
           continue;
 
-        if(role == robot->GetCapability()) {
+        if(type == robot->GetCapability()) {
           used.insert(robot);
           break;
         }
       }
     }
 
-    if(roles.size() == used.size()) {
+    if(types.size() == used.size()) {
       matchedInputGroup = true;
     }
     else {
-      totalRoles.push_back(roles);
+      totalTypes.push_back(types);
     }
   }
 
@@ -298,7 +298,7 @@ FindStartState2(Interaction* _interaction, SemanticRoadmap* _sr) {
   if(!matchedInputGroup)
     return std::make_pair(CompositeSemanticRoadmap(),State());
    
-  auto csrs = BuildCompositeSemanticRoadmaps({_sr},totalRoles,0);
+  auto csrs = BuildCompositeSemanticRoadmaps({_sr},totalTypes,0);
 
 
   // Naive, check all state combinations
@@ -325,15 +325,17 @@ FindStartState2(Interaction* _interaction, SemanticRoadmap* _sr) {
 std::vector<BasicHCR::CompositeSemanticRoadmap>
 BasicHCR::
 BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr, 
-      std::vector<std::vector<std::string>>& _roles, size_t _offset) {
+      std::vector<std::vector<std::string>>& _types, size_t _offset) {
 
-  
+  if(_offset >= _types.size())
+    return {_csr}; 
+ 
   std::vector<CompositeSemanticRoadmap> csrs;
 
   auto hcr = dynamic_cast<CombinedRoadmap*>(
               this->GetStateGraph(m_sgLabel).get());
 
-  auto roles = _roles[_offset];
+  auto types = _types[_offset];
   for(auto sr : hcr->GetSemanticRoadmaps()) {
     if(_csr.count(sr))
       continue;
@@ -341,22 +343,22 @@ BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr,
     auto group = sr->first->GetGroup();
     std::set<Robot*> used;
   
-    for(auto role : roles) {
+    for(auto type : types) {
       for(auto robot : group->GetRobots()) {
         if(used.count(robot))
           continue;
 
-        if(role == robot->GetCapability()) {
+        if(type == robot->GetCapability()) {
           used.insert(robot);
           break;
         }
       }
     }
     
-    if(roles.size() == used.size()) {
+    if(types.size() == used.size()) {
       CompositeSemanticRoadmap newCsr = _csr;
       newCsr.insert(sr);
-      auto newCsrs = BuildCompositeSemanticRoadmaps(newCsr,_roles,_offset+1);
+      auto newCsrs = BuildCompositeSemanticRoadmaps(newCsr,_types,_offset+1);
 
       for(auto c : newCsrs) {
         csrs.push_back(c);
@@ -397,7 +399,7 @@ CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr,
       if(!p) continue; // Check that it is a motion condition
 
       if(!p->Satisfied(state))
-        return std::make_pair(csr,State());
+        return std::make_pair(CompositeSemanticRoadmap(),State());
     } 
 
     // Return value if true

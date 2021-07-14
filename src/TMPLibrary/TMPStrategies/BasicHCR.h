@@ -86,7 +86,7 @@ class BasicHCR : public TMPStrategyMethod {
     // Check if the previous function already dos this 
     std::vector<BasicHCR::CompositeSemanticRoadmap>
     BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr, 
-                  std::vector<std::vector<std::string>>& _roles, size_t _offset);
+                  std::vector<std::vector<std::string>>& _types, size_t _offset);
 
     std::pair<CompositeSemanticRoadmap,State>
     CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr, 

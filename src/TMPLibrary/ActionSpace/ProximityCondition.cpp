@@ -53,8 +53,8 @@ Satisfied(const State& _state) const {
       auto& center2 = centerPoints[j].second;
 
       auto x = center1[0] - center2[0];
-      auto y = center1[0] - center2[0];
-      auto z = center1[0] - center2[0];
+      auto y = center1[1] - center2[1];
+      auto z = center1[2] - center2[2];
 
       x = x*x;
       y = y*y;
@@ -77,7 +77,7 @@ ProximityCondition::
 ParseXML(XMLNode& _node) {
   this->SetName("ProximityCondition");
 
-  m_threshold = _node.Read("radius", true, 0.0, 0.0, MAX_DBL,
+  m_threshold = _node.Read("threshold", true, 0.0, 0.0, MAX_DBL,
                         "Proximity radius for condition.");
 }
 
