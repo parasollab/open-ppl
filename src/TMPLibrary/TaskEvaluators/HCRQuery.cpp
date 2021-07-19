@@ -1,5 +1,7 @@
 #include "HCRQuery.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 #include "TMPLibrary/Solution/Plan.h"
 
@@ -35,21 +37,113 @@ Run(Plan* _plan) {
     hcr->GetHypergraph()->Print();
   }
 
-  auto path = PerformHyperpathQuery();
+  //auto path = PerformHyperpathQuery();
+  auto node = PerformCBSQuery();
   
-  if(path.empty())
+  if(node.solutionMap.empty())
     return false;
 
-  ExtractPlan(path);
+  ExtractPlan(node);
 
   return true;
 }
 
 /*--------------------- Helper Functions ---------------------*/
+    
+HCRQuery::Node 
+HCRQuery::
+PerformCBSQuery() {
+  
+  CBSLowLevelPlanner<Robot,CT,Path> lowlevel(
+    [this](Node _node, Robot* _robot) {
+      auto hyperpath = this->PerformHyperpathQuery();
+      if(hyperpath.empty())
+        return false;
+
+      auto individualPaths = this->ExtractPaths(hyperpath);
+    
+      for(auto path : individualPaths) {
+        _node.solutionMap[path->GetRobot()] = path;
+      }
+
+      return true;
+    }
+  );
+
+  CBSValidationFunction<Robot,CT,Path> validate(
+    [this](Node _node) {
+      return this->Validate(_node);
+    }
+  );
+
+  CBSSplitNodeFunction<Robot,CT,Path> split(
+    [this](Node _node, std::vector<std::pair<Robot*,CT>> _constraints,
+           CBSLowLevelPlanner<Robot,CT,Path> _lowlevel) {
+      return this->SplitNode(_node,_constraints,_lowlevel);
+    }
+  );
+
+  CBSCostFunction<Robot,CT,Path> cost(
+    [this](Node _node) {
+      double cost = 0;
+      for(auto path : _node.solutionMap) {
+        if(!path.second)
+          continue;
+
+        double length = path.second->Length();
+
+        if(this->m_soc) 
+          cost += length;
+        else 
+          cost = std::max(cost,length);
+      }
+      return cost;
+    }
+  );
+
+  CBSInitialFunction<Robot,CT,Path> initial(
+    [lowlevel](Node _node) {
+      return lowlevel(_node,nullptr);
+    }
+  );
+
+  std::vector<Robot*> robots; 
+  auto c = this->GetPlan()->GetCoordinator();
+  for(auto group : c->GetInitialRobotGroups()) {
+    for(auto robot : group.first->GetRobots())
+      robots.push_back(robot);
+  }
+
+  auto node = CBS(robots,validate,split,lowlevel,cost,initial);
+
+  return node;
+}
+
+std::vector<std::pair<Robot*,HCRQuery::CT>> 
+HCRQuery::
+Validate(Node _node) {
+  return {};
+}
+
+std::vector<HCRQuery::Node> 
+HCRQuery::
+SplitNode(Node _node, 
+          std::vector<std::pair<Robot*,CT>> _constraints,
+          CBSLowLevelPlanner<Robot,CT,Path> _lowlevel) {
+
+  return {};
+}
+
+std::vector<HCRQuery::Path*>
+HCRQuery::
+ExtractPaths(const std::vector<HPElem>& _hyperpath) {
+  return {};
+}
+
 
 void
 HCRQuery::
-ExtractPlan(std::vector<HPElem>& _path) {
+ExtractPlan(Node _node) {
   auto plan = this->GetPlan();
 
   //TODO:: Convert hyperpath into solution representation.
@@ -252,4 +346,9 @@ AddDanglingNodes(std::vector<HPElem> _path, std::set<HPElem>& _parents) {
   return finalPath; 
 }
 
+bool
+HCRQuery::
+Soc() {
+  return m_soc;
+}
 /*------------------------------------------------------------*/
