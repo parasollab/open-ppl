@@ -18,7 +18,7 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    
+
     <RobotGroup label="robotGroup" robotLabels="boxy1 boxy2"/>
 
     <GroupTask label="groupQuery" group="robotGroup">
@@ -70,9 +70,9 @@
     </Task>
 
     <Decomposition label="main" taskLabel="first" coordinator="coordinator">
-    
+
       <SemanticTask label="top" subtaskRelation="AND"/>
-  
+
       <SemanticTask label="first" parent="top">
         <Task label="query1" robot="boxy1">
           <StartConstraints>
@@ -101,7 +101,7 @@
             <StartConstraints>
               <CSpaceConstraint point="5 0 0 0 0 0"/>
             </StartConstraints>
-    
+
             <GoalConstraints>
               <CSpaceConstraint point="20 -5 10 0.2 0.8 0.5"/>
             </GoalConstraints>
@@ -154,6 +154,14 @@
     </Metrics>
 
     <MapEvaluators>
+      <!-- <LazyQuery label="LazyQuery" debug="true"
+        vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
+        numEnhance="10" d="0.5" deleteInvalid="true">
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery> -->
     </MapEvaluators>
 
     <MPStrategies>
@@ -166,7 +174,12 @@
         goalDmLabel="minkowski" goalThreshold="5"-->
         <!--Evaluator label="Query"/-->
       <!--/BasicRRTStrategy-->
-
+      <!-- LazyPRM-->
+      <!-- <BasicPRM label="LazyPRM" debug="true">
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue" />
+        <Evaluator label="LazyQuery"/>
+      </BasicPRM> -->
     </MPStrategies>
 
     <MPTools>

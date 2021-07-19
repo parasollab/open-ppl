@@ -43,6 +43,7 @@
 //metric includes
 
 //map evaluator includes
+#include "MPLibrary/MapEvaluators/LazyQuery.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
@@ -129,6 +130,7 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    LazyQuery<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
