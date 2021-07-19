@@ -21,6 +21,10 @@ struct CBSNode {
   double cost;
 
 
+  CBSNode() {
+    cost = 0;
+  }
+
   CBSNode(std::vector<IndividualTask*> _tasks) {
     for(auto& task : _tasks) {
       constraintMap[task] = {};
@@ -29,8 +33,8 @@ struct CBSNode {
   }
 
   CBSNode(const CBSNode& _node) {
-    constraintMap(_node.constraintMap);
-    solutionMap(_node.solutionMap);
+    constraintMap = _node.constraintMap;
+    solutionMap = _node.solutionMap;
     cost = _node.cost;
   }
 
@@ -119,13 +123,18 @@ using CBSCostFunction =
   std::function<double(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+using CBSInitialFunction = 
+  std::function<void(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
   std::vector<IndividualTask*> _tasks,
   CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
   CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
   CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
-  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost)
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial = nullptr)
 {
 
   using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
@@ -136,13 +145,20 @@ CBS(
                       std::greater<CBSNodeType>> ct;
 
   // Create root node with initial plans
-  CBSNodeType root;
-  for(auto task : _tasks) {
-    auto sol = _lowlevel(root, task);
-    root.solutionMap[task] = sol;
+  CBSNodeType root(_tasks);
+
+  if(_initial) {
+    _initial(root);
+  }
+  else { 
+    for(auto task : _tasks) {
+      auto valid = _lowlevel(root, task);
+      if(!valid)
+        return CBSNodeType();
+    }
   }
 
-  ct.insert(root);
+  ct.push(root);
 
   // Search conflict tree
   while(!ct.empty()) {
@@ -163,7 +179,7 @@ CBS(
 
     // Add child nodes to the tree
     for(const auto& child : children) {
-      ct.insert(child);
+      ct.push(child);
     }
   }
 
