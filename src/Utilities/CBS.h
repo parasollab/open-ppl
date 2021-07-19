@@ -7,12 +7,12 @@
 #include <unordered_map>
 #include <vector>
 
-template <typename IndividualTask, typename Constraint, typename IndividualSolution>
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 struct CBSNode {
 
   /// Map of task to its constraints
-  //std::unordered_map<IndividualTask*,std::unordered_set<Constraint>> constraintMap;
-  std::unordered_map<IndividualTask*,std::set<Constraint>> constraintMap;
+  //std::unordered_map<IndividualTask*,std::unordered_set<ConstraintType>> constraintMap;
+  std::unordered_map<IndividualTask*,std::set<ConstraintType>> constraintMap;
 
   /// Map of task to its solution
   std::unordered_map<IndividualTask*,IndividualSolution*> solutionMap;
@@ -97,38 +97,38 @@ struct CBSNode {
 };
 
 
-template <typename IndividualTask, typename Constraint, typename IndividualSolution>
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSLowLevelPlanner =
-  std::function<bool>(CBSNode<IndividualTask, Constraint, IndividualSolution> _node,
+  std::function<bool(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node,
     IndividualTask* _task)>;
 
-template <typename IndividualTask, typename Constraint, typename IndividualSolution>
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSValidationFunction =
-  std::function<std::vector<std::pair<IndividualTask*,Constraint>>(
-    CBSNode<IndividualTask, Constraint, IndividualSolution> _node)>;
+  std::function<std::vector<std::pair<IndividualTask*,ConstraintType>>(
+    CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
-template <typename IndividualTask, typename Constraint, typename IndividualSolution>
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSSplitNodeFunction =
-  std::function<std::vector<CBSNode>(
-    CBSNode<IndividualTask, Constraint, IndividualSolution> _node,
-    std::vector<std::pair<IndividualTask*, Constraint>> _constraints,
-    CBSLowLevelPlanner<IndividualTask, Constraint, IndividualSolution>& _lowlevel)>;
+  std::function<std::vector<CBSNode<IndividualTask,ConstraintType,IndividualSolution>>(
+    CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node,
+    std::vector<std::pair<IndividualTask*, ConstraintType>> _constraints,
+    CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel)>;
 
-template <typename IndividualTask, typename Constraint, typename IndividualSolution>
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSCostFunction =
-  double(CBSNode<IndividualTask, Constraint, IndividualSolution> _node)>;
+  std::function<double(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
-template <typename IndividualTask, typename Constraint, typename IndividualSolution>
-CBSNode<IndividualTask, Constraint, IndividualSolution>
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
   std::vector<IndividualTask*> _tasks,
-  CBSValidationFunction<IndividualTask,Constraint,IndividualSolution>& _validate,
-  CBSSplitNodeFunction<IndividualTask,Constraint,IndividualSolution>& _split,
-  CBSLowLevelPlanner<IndividualTask,Constraint,IndividualSolution>& _lowlevel,
-  CBSCostFunction<IndividualTask,Constraint,IndividualSolution>& _cost)
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost)
 {
 
-  using CBSNodeType = CBSNode<IndividualTask,Constraint,IndividualSolution>;
+  using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
 
   // Create the conflict tree
   std::priority_queue<CBSNodeType,
