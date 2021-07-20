@@ -185,7 +185,16 @@ template <typename MPTraits>
 bool
 CBSQuery<MPTraits>::
 operator()() {
-  CBSLowLevelPlanner<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
+
+  m_groupTask = this->GetGroupTask();
+
+  std::vector<MPTask*> tasks;
+  for (auto i = m_groupTask.begin(), i != m_groupTask.end(); i++) {
+    tasks.push_back(*i);
+  }
+
+  //CBSLowLevelPlanner<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
+  CBSLowLevelPlanner<MPTask, Constraint, typename MPTraits::Path>(
       [this](CBSNodeType& _node, MPTask* _task) {
         auto path = this->SolveIndividualTask(_task,_node.constraintMap);
         if(!path)
@@ -193,7 +202,7 @@ operator()() {
         _node.solutionMap[_task] = path;
         return true;
       });
-  CBSValidationFunction<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
+  CBSValidationFunction<MPTask, Constraint, typename MPTraits::Path>(
       [this](CBSNodeType& _node) {
         auto taskConflict = this->FindConflict(_node.solutionMap);
         std::vector<std::pair<MPTask*, Constraint>> constraints;
@@ -203,10 +212,10 @@ operator()() {
         return constraints;
       });
 
-  CBSSplitNodeFunction<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
+  CBSSplitNodeFunction<MPTask, Constraint, typename MPTraits::Path>(
         [this](CBSNodeType& _node, std::vector<std::pair<MPTask*, Constraint>> _constraints,
-          CBSLowLevelPlanner<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>_lowlevel,
-          CBSCostFunction<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>> _cost) {
+          CBSLowLevelPlanner<MPTask, Constraint, typename MPTraits::Path>& _lowlevel,
+          CBSCostFunction<MPTask, Constraint, typename MPTraits::Path>& _cost) {
 
             std::vector<CBSNodeType> children;
             for (auto constraintPair : _constraints) {
@@ -231,7 +240,7 @@ operator()() {
               if (!_lowlevel(child, task))
                 continue;
 
-              child.cost = _cost(child, this->m_costLabel);
+              child.cost = _cost(child);
               children.push_back(child);
 
               if(this->m_debug)
@@ -241,10 +250,10 @@ operator()() {
             return children;
 
       });
-  CBSCostFunction<MPTask, Constraint, std::sharedptr<typename MPTraits::Path>>(
-      [](CBSNodeType& _node, std::string _costLabel) {
+  CBSCostFunction<MPTask, Constraint, typename MPTraits::Path>(
+      [this](CBSNodeType& _node) {
         double cost = 0;
-        if (_costLabel == "SOC") {
+        if (this->m_costLabel == "SOC") {
           for (const auto& ts : solutionMap) {
             cost += ts.second->length()
           }
@@ -256,6 +265,9 @@ operator()() {
         }
         return cost;
       });
+
+  CBS(tasks, CBSValidationFunction, CBSSplitNodeFunction, CBSLowLevelPlanner,
+      CBSCostFunction);
 }
 
 template <typename MPTraits>

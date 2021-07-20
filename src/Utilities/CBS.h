@@ -30,6 +30,7 @@ struct CBSNode {
       constraintMap[task] = {};
       solutionMap[task] = nullptr;
     }
+    cost = 0;
   }
 
   CBSNode(const CBSNode& _node) {
@@ -108,7 +109,7 @@ using CBSLowLevelPlanner =
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSValidationFunction =
-  std::function<std::vector<std::pair<IndividualTask*,ConstraintType>>(
+  std::function<std::vector<std::pair<IndividualTask*, ConstraintType>>(
     CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
@@ -116,15 +117,16 @@ using CBSSplitNodeFunction =
   std::function<std::vector<CBSNode<IndividualTask,ConstraintType,IndividualSolution>>(
     CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node,
     std::vector<std::pair<IndividualTask*, ConstraintType>> _constraints,
-    CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel)>;
+    CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel,
+    CBSCostFunction<IndividualTask, ConstraintType, IndividualSolution>& _cost)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSCostFunction =
   std::function<double(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
-using CBSInitialFunction = 
-  std::function<void(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
+using CBSInitialFunction =
+  std::function<void(std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>& _node, std::vector<IndividualTask*> _tasks, CBSCostFunction<IndividualTask, ConstraintType, IndividualSolution>& _cost)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
@@ -145,20 +147,27 @@ CBS(
                       std::greater<CBSNodeType>> ct;
 
   // Create root node with initial plans
-  CBSNodeType root(_tasks);
+  std::vector<CBSNodeType> root;
 
   if(_initial) {
-    _initial(root);
+    _initial(root, _tasks, CBSCostFunction);
   }
-  else { 
+  else {
+    //TODO: this doesn't make sense. if an initial function is not provided, we
+    //should assume that we have root nodes passed in or at least check that
+    //root nodes have been passed in.
+    CBSNodeType single(_tasks);
     for(auto task : _tasks) {
-      auto valid = _lowlevel(root, task);
+      auto valid = _lowlevel(single, task);
       if(!valid)
         return CBSNodeType();
     }
+    single.cost = _cost(single);
+    root.push_back(single);
   }
 
-  ct.push(root);
+  for (auto node : root)
+    ct.push(root);
 
   // Search conflict tree
   while(!ct.empty()) {

@@ -1,0 +1,281 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="example">
+
+    <Environment filename="3d.xml"/>
+
+	<Robot  label="boxy-0" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-1" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-2" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-3" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-4" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-5" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-6" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<Robot  label="boxy-7" filename="boxy.robot">
+		<Agent type="planning"/>
+	</Robot>
+	<RobotGroup label="robotGroup" robotLabels="
+		boxy-0 boxy-1 boxy-2 boxy-3 boxy-4
+	boxy-5 boxy-6 boxy-7 "/>
+	<GroupTask label="groupQuery" group="robotGroup">
+	<Task label="query-0" robot="boxy-0">
+		<StartConstraints>
+ 			<CSpaceConstraint point="-4.170000 2.503333 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="4.170000 2.503333 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-1" robot="boxy-1">
+		<StartConstraints>
+ 			<CSpaceConstraint point="-4.170000 0.836667 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="4.170000 0.836667 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-2" robot="boxy-2">
+		<StartConstraints>
+ 			<CSpaceConstraint point="-4.170000 -0.830000 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="4.170000 -0.830000 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-3" robot="boxy-3">
+		<StartConstraints>
+ 			<CSpaceConstraint point="-4.170000 -2.496667 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="4.170000 -2.496667 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-4" robot="boxy-4">
+		<StartConstraints>
+ 			<CSpaceConstraint point="-2.503333 -4.170000 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="-2.503333 4.170000 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-5" robot="boxy-5">
+		<StartConstraints>
+ 			<CSpaceConstraint point="-0.836667 -4.170000 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="-0.836667 4.170000 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-6" robot="boxy-6">
+		<StartConstraints>
+ 			<CSpaceConstraint point="0.830000 -4.170000 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="0.830000 4.170000 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	<Task label="query-7" robot="boxy-7">
+		<StartConstraints>
+ 			<CSpaceConstraint point="2.496667 -4.170000 0 0 0 0"/>
+	        </StartConstraints>
+ 		<GoalConstraints>
+			 <CSpaceConstraint point="2.496667 4.170000 0 0 0 0"/>
+ 		 </GoalConstraints>
+ 	</Task>
+ 	</GroupTask>
+ </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <WeightedEuclidean label="positionEuclidean" posWeight=1 rotWeight=0 velWeight=0 avlWeight=0/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="6"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+      <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="false" vcLabel="pqp_solid"
+        saveIntermediates="true"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+        vcLabel="alwaysTrue"/>
+     <MedialAxisLP label="malpi" controller="iterative"
+       resFactor="20" maxIter="100"
+       vcLabel="pqp_solid" dmLabel="euclidean"
+       clearanceType="exact" penetrationType="exact" useBBX="true"
+       positional="true"
+       debug="false" saveIntermediates="true" maxFailures="100" noProgress="1"
+       pathModifier="ShortcuttingPathModifier"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="pqp_solid" maxDist="1." minDist=".001"/>
+    </Extenders>
+
+    <PathModifiers>
+      <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
+        debug="false"/>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <TimeEvaluator label="TimeEval" timeout="200"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="1000" operator=">="/>
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
+        value="1000" operator=">"/>
+
+      <QueryMethod label="IndividualQuery" debug="false"
+        safeIntervalToolLabel="SI" vcLabel="pqp_solid" />
+      <GroupQuery label="CompositeQuery"/>
+      <!--GroupDecoupledQueryRRT label="DecoupledQueryRRT" queryLabel="IndividualQuery"
+        debug="false"/-->
+      <GroupDecoupledQuery label="DecoupledQuery" queryLabel="IndividualQuery"
+        debug="false"/>
+      <GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery"
+        debug="true" numIter="64" firstSol="false"/>
+        <!--samplingOnConflicts="true" newSamples="10" attempts="5"
+        radius="10"/-->
+
+      <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
+        <Evaluator label="TimeEval"/>
+        <Evaluator label="IndividualQuery"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="BoundedCompositeQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="CompositeQuery"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="BoundedDecoupledQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="DecoupledQuery"/>
+      </ComposeEvaluator>
+
+      <!--ComposeEvaluator label="BoundedDecoupledQueryRRT" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="DecoupledQueryRRT"/>
+      </ComposeEvaluator-->
+
+      <ComposeEvaluator label="BoundedCBSQuery" operator="or">
+        <Evaluator label="TimeEval"/>
+        <Evaluator label="CBSQuery"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+
+    <MPStrategies>
+      <BasicPRM label="IndividualPRM">
+        <Sampler label="UniformRandomFree" number="20" attempts="5"/>
+        <Connector label="Closest"/>
+        <Evaluator label="BoundedIndividualQuery"/>
+      </BasicPRM>
+      <!-- BasicRRT -->
+      <BasicRRTStrategy label="IndividualRRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.00001" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="IndividualQuery"/>
+      </BasicRRTStrategy>
+
+      <GroupPRM label="CompositePRM" debug="false">
+        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+        <Connector label="Closest"/>
+        <Evaluator label="CompositeQuery"/>
+      </GroupPRM>
+
+      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="IndividualPRM">
+        <Evaluator label="DecoupledQuery"/>
+      </GroupDecoupledStrategy>
+      <!--GroupDecoupledStrategyRRT label="DecoupledRRT" strategyLabel="IndividualRRT">
+        <Evaluator label="BoundedDecoupledQueryRRT"/>
+      </GroupDecoupledStrategyRRT-->
+      <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM"
+        writeOutput="true" >
+        <Evaluator label="BoundedCBSQuery"/>
+      </GroupDecoupledStrategy>
+    </MPStrategies>
+
+    <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="false"/>
+
+      <!-- We won't need these until the topological tools are updated to
+           support robot groups.
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
+        io="read" baseFilename="3D/coarse"/>
+      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
+        io="read" baseFilename="3D/quality"/>
+      -->
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="CBSPRM" seed="9112025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="7222025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="5332025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="3442025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="1552025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="8662025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="6772025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="4882025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="2992025"
+      baseFilename="cbs" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CBSPRM" seed="9002025"
+      baseFilename="cbs" vizmoDebug="true"/>
+
+  </Library>
+
+</MotionPlanning>
