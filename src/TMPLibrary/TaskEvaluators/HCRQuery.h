@@ -82,6 +82,8 @@ class HCRQuery : public TaskEvaluatorMethod {
 
     std::string m_sgLabel;
 
+    std::string m_vcLabel;
+
     bool m_soc{false}; ///< Flag indiciating sum-of-cost or makespan
     ///@}
 

@@ -19,6 +19,9 @@ HCRQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("HCRQuery");
   m_sgLabel = _node.Read("sgLabel", true, "", 
            "Temp till stategraph is embedded in plan.");
+
+  m_vcLabel = _node.Read("vcLabel", true, "", 
+           "Validity checker to use in validating paths.");
 }
 
 HCRQuery::
@@ -122,6 +125,80 @@ PerformCBSQuery() {
 std::vector<std::pair<Robot*,HCRQuery::CT>> 
 HCRQuery::
 Validate(Node _node) {
+
+  // Recreate each path at resolution level.
+  std::unordered_map<Robot*,vector<Cfg>> cfgPaths;
+  for(auto sol : _node.solutionMap) {
+    auto robot = sol.first;
+    auto path = sol.second;
+    cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
+  }
+
+  // Find the latest timestep in which each robot is still moving.
+  size_t lastTimestep = 0;
+  for(auto& path : cfgPaths) {
+    lastTimestep = std::max(lastTimestep,path.second.size());
+  }
+
+  auto vc = static_cast<CollisionDetectionValidity<MPTraits<Cfg,DefaultWeight<Cfg>>>*>(
+    this->GetMPLibrary()->GetValidityChecker(m_vcLabel));
+
+  // Step through each timestep
+  for(size_t t = 0; t < lastTimestep; t++) {
+    // Collision check each robot path against all others at this timestep.
+    for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end();) {
+      // Configur the first robot at the appropriate configuration.
+      auto robot1        = iter1->first;
+      const auto& path1  = iter1->second;
+      const size_t step1 = std::min(t,path1.size() - 1);
+      const auto& cfg1   = path1[step1];
+      auto multibody1    = robot1->GetMultiBody();
+      multibody1->Configure(cfg1);
+
+      // Compare to all remaining robots.
+      for(auto iter2 = ++iter1; iter2 != cfgPaths.end(); ++iter2) {
+        // Configure the second robot at the appropriate configuration.
+        auto robot2        = iter2->first;
+        const auto& path2  = iter2->second;
+        const size_t step2 = std::min(t,path2.size() - 1);
+        const auto& cfg2   = path2[step2];
+        auto multibody2    = robot2->GetMultiBody();
+        multibody2->Configure(cfg2);
+
+        // Check for collision. If none, move on.
+        CDInfo cdInfo;
+        const bool collision = vc->IsMultiBodyCollision(cdInfo,
+          multibody1,multibody2, this->GetNameAndLabel());
+        if(!collision)
+          continue;
+
+        if(this->m_debug) {
+          std::cout << "\t\tConflict detected at timestep " << t
+                    << " (time " << this->GetMPProblem()->GetEnvironment()->GetTimeRes() * t
+                    << ")."
+                    << "\n\t\t\tRobot " << robot1->GetLabel() << ": "
+                    << cfg1.PrettyPrint()
+                    << "\n\t\t\tRobot " << robot2->GetLabel() << ": "
+                    << cfg2.PrettyPrint()
+                    << std::endl;
+        }
+        
+        // Make cbs constraints.
+        CT constraint1 = std::make_pair(t,cfg2);
+        CT constraint2 = std::make_pair(t,cfg1);
+    
+        std::vector<std::pair<Robot*,CT>> constraintSet;
+        constraintSet.push_back(std::make_pair(robot1,constraint1));
+        constraintSet.push_back(std::make_pair(robot2,constraint2));
+  
+        return constraintSet;
+      }
+    }
+  }
+
+  if(this->m_debug)
+    std::cout << "No conflict detected." << std::endl;
+
   return {};
 }
 
@@ -131,7 +208,29 @@ SplitNode(Node _node,
           std::vector<std::pair<Robot*,CT>> _constraints,
           CBSLowLevelPlanner<Robot,CT,Path> _lowlevel) {
 
-  return {};
+  std::vector<Node> children;
+
+  for(const auto& constraint : _constraints) {
+    Robot* robot =  constraint.first;
+    auto c = constraint.second;
+
+    // Verify that this is not a duplicate constraint.
+    if(_node.constraintMap.at(robot).count(c))
+      throw RunTimeException(WHERE) << "Duplicaiting cbs constraint in HCRQuery."
+                                    << "\nRobot: " << robot->GetLabel()
+                                    << "\nConstraint: {Robot: " 
+                                    << c.second.GetRobot()->GetLabel()
+                                    << ", Cfg: " 
+                                    << c.second.PrettyPrint()
+                                    << ", Timestep: " << c.first 
+                                    << "}" << std::endl;
+
+    Node child = _node;
+    child.constraintMap[robot].insert(c);
+    children.push_back(std::move(child));
+  }
+
+  return children;
 }
 
 std::vector<HCRQuery::Path*>

@@ -178,7 +178,8 @@ CBS(
     auto children = _split(node, constraints, _lowlevel);
 
     // Add child nodes to the tree
-    for(const auto& child : children) {
+    for(auto& child : children) {
+      child.cost = _cost(child);
       ct.push(child);
     }
   }
