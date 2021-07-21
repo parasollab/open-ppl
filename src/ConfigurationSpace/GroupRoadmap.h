@@ -468,6 +468,10 @@ AddVertex(const Vertex& _v) noexcept {
   this->m_allVIDs.insert(vid);
   ++m_timestamp;
 
+  //debug
+  if(vid == 102)
+    std::cout << "HERE" << std::endl;
+
   // Execute post-add hooks.
   this->ExecuteAddVertexHooks(this->find_vertex(vid));
 

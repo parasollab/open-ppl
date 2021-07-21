@@ -300,6 +300,7 @@ class MPLibraryType final
     GoalTracker*      GetGoalTracker() const noexcept;
     StatClass*        GetStatClass() const noexcept;
 
+    void              SetPreserveHooks(bool _preserveHooks);
     ///@}
     ///@name Edge Reconstruction
     ///@{
@@ -476,6 +477,8 @@ class MPLibraryType final
 
     std::atomic<bool> m_running{true};  ///< Keep running the strategy?
 
+    bool m_preserveHooks{false};
+
     ///@}
 
 };
@@ -574,6 +577,9 @@ MPLibraryType<MPTraits>::
 Uninitialize() {
   // Clear goal tracker.
   m_goalTracker->Clear();
+
+  if(m_preserveHooks)
+    return;
 
   // Clear group hooks.
   GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
@@ -896,6 +902,12 @@ GetStatClass() const noexcept {
   return m_solution->GetStatClass();
 }
 
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+SetPreserveHooks(bool _preserveHooks) {
+  m_preserveHooks = _preserveHooks;
+}
 /*--------------------------- Edge Reconstruction ----------------------------*/
 
 template <typename MPTraits>

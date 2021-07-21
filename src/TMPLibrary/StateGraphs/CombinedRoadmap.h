@@ -55,8 +55,8 @@ class CombinedRoadmap : public StateGraph {
     typedef std::set<SemanticRoadmap*>                CompositeSemanticRoadmap;
 
     struct TMPVertex {
-      size_t rvid; ///< Roadmap vid
-      SemanticRoadmap* sr;
+      size_t rvid{MAX_INT}; ///< Roadmap vid
+      SemanticRoadmap* sr{nullptr};
  
       TMPVertex() {} 
       TMPVertex(size_t _rvid, SemanticRoadmap* _sr) : rvid(_rvid), sr(_sr) {}
@@ -171,6 +171,10 @@ class CombinedRoadmap : public StateGraph {
     ///@param _state The state to syncronize with internal representation.
     void RemapState(State& _state);
 
+    /// Copy a path into the local mpsolution object.
+    /// @param _path The path to copy over.
+    /// @return The pointer to the new path with local mpsolution vids.
+    Path* MovePathToMPSolution(Path* _path);
 		///@}
 		///@name Internal State
 		///@{

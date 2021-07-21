@@ -103,7 +103,7 @@ struct CBSNode {
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSLowLevelPlanner =
-  std::function<bool(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node,
+  std::function<bool(CBSNode<IndividualTask, ConstraintType, IndividualSolution>& _node,
     IndividualTask* _task)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
@@ -124,7 +124,7 @@ using CBSCostFunction =
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSInitialFunction = 
-  std::function<void(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
+  std::function<bool(CBSNode<IndividualTask, ConstraintType, IndividualSolution>& _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
@@ -139,17 +139,21 @@ CBS(
 
   using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
 
-  // Create the conflict tree
+  // Create the conflict tree.
   std::priority_queue<CBSNodeType,
                       std::vector<CBSNodeType>,
                       std::greater<CBSNodeType>> ct;
 
-  // Create root node with initial plans
+  // Create root node with initial plans.
   CBSNodeType root(_tasks);
 
+  // If there is an initial solutino function, use it.
   if(_initial) {
-    _initial(root);
+    // Verify that there is in an initial solution.
+    if(!_initial(root))
+      return CBSNodeType();
   }
+  // Otherwise, call the low level planner on each task.
   else { 
     for(auto task : _tasks) {
       auto valid = _lowlevel(root, task);
@@ -160,24 +164,24 @@ CBS(
 
   ct.push(root);
 
-  // Search conflict tree
+  // Search conflict tree.
   while(!ct.empty()) {
 
-    // Grab minimum cost node
+    // Grab minimum cost node.
     auto node = ct.top();
     ct.pop();
 
-    // Validate solution in node
+    // Validate solution in node.
     auto constraints = _validate(node);
 
-    // If there are no conflicts, return the valid solution
+    // If there are no conflicts, return the valid solution.
     if(constraints.empty())
       return node;
 
-    // Create child nodes
+    // Create child nodes.
     auto children = _split(node, constraints, _lowlevel);
 
-    // Add child nodes to the tree
+    // Add child nodes to the tree.
     for(auto& child : children) {
       child.cost = _cost(child);
       ct.push(child);

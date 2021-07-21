@@ -459,6 +459,7 @@ TASK_SRCS := \
   TMPLibrary/InteractionStrategies/IndependentPaths.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp \
+  TMPLibrary/InteractionStrategies/TemplateInteractions.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \

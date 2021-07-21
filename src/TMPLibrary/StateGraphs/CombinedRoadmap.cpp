@@ -52,6 +52,8 @@ Initialize(){
   auto c = this->GetPlan()->GetCoordinator();
   m_mpSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
 
+  std::unordered_map<Robot*,size_t> robotStartVIDMap;
+
   for(auto& kv : c->GetInitialRobotGroups()) {
 
     auto group = kv.first;
@@ -84,6 +86,7 @@ Initialize(){
       auto rm = m_mpSolution->GetRoadmap(r);
       auto cfg = prob->GetInitialCfg(r);
       auto vid = rm->AddVertex(cfg);
+      robotStartVIDMap[r] = vid;
      
       // Update group vertex 
       gcfg.SetRobotCfg(r,vid);
@@ -105,6 +108,15 @@ Initialize(){
 
   TMPHyperarc arc;
   arc.semantic = true;
+  
+  // Setup 'paths' for initial cfgs
+  for(auto kv : robotStartVIDMap) {
+    auto robot = kv.first;
+    auto rm = m_mpSolution->GetRoadmap(robot);
+    auto path = new Path(rm);
+    *path += {kv.second};
+    arc.paths.push_back(path);
+  }
 
   m_hypergraph->AddHyperarc(sourceHeadSet,{sourceVID},arc);
 }
@@ -160,6 +172,7 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
     auto robots = group->GetRobots();
     for(auto robot : robots) {
       auto path = m_interactionSolutions.back()->GetPath(robot);
+      path = MovePathToMPSolution(path);
       incoming.paths.push_back(path);
     }
   }
@@ -184,6 +197,7 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
     auto robots = group->GetRobots();
     for(auto robot : robots) {
       auto path = m_interactionSolutions.back()->GetPath(robot);
+      path = MovePathToMPSolution(path);
       outgoing.paths.push_back(path);
     }
   }
@@ -825,6 +839,41 @@ RemapState(State& _state) {
     kv.second = std::make_pair(newGrm,newVid);
   }
 }
+
+CombinedRoadmap::Path*
+CombinedRoadmap::
+MovePathToMPSolution(Path* _path) {
+
+  auto robot = _path->GetRobot();
+  auto pathRoadmap = _path->GetRoadmap();
+  auto solutionRoadmap = m_mpSolution->GetRoadmap(robot);
+
+  // Check that the path is not already of the local mp solution.
+  if(pathRoadmap == solutionRoadmap)
+    return _path;
+
+  const auto pathVIDs = _path->VIDs();
+  std::vector<size_t> solutionVIDs(pathVIDs.size());
+
+  // Add vertices
+  for(size_t i = 0; i < pathVIDs.size(); i++) {
+    //TODO::Update with irving's new path representation
+    const auto& cfg = pathRoadmap->GetVertex(pathVIDs[i]);
+    auto solutionVID = solutionRoadmap->AddVertex(cfg);
+    solutionVIDs[i] = solutionVID;
+  }
+
+  // Add edges
+  for(size_t i = 1; i < pathVIDs.size(); i++) {
+    auto edge = pathRoadmap->GetEdge(pathVIDs[i-1],pathVIDs[i]);
+    solutionRoadmap->AddEdge(solutionVIDs[i-1],solutionVIDs[i],edge);
+  }
+
+  auto path = new Path(solutionRoadmap);
+  *path += solutionVIDs;
+  return path;
+}
+
 /*----------------------------------------------------------------------------*/
 
 /*istream&

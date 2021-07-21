@@ -58,16 +58,14 @@ HCRQuery::
 PerformCBSQuery() {
   
   CBSLowLevelPlanner<Robot,CT,Path> lowlevel(
-    [this](Node _node, Robot* _robot) {
+    [this](Node& _node, Robot* _robot) {
       auto hyperpath = this->PerformHyperpathQuery();
       if(hyperpath.empty())
         return false;
 
       auto individualPaths = this->ExtractPaths(hyperpath);
-    
-      for(auto path : individualPaths) {
-        _node.solutionMap[path->GetRobot()] = path;
-      }
+
+      _node.solutionMap = individualPaths;    
 
       return true;
     }
@@ -105,7 +103,7 @@ PerformCBSQuery() {
   );
 
   CBSInitialFunction<Robot,CT,Path> initial(
-    [lowlevel](Node _node) {
+    [lowlevel](Node& _node) {
       return lowlevel(_node,nullptr);
     }
   );
@@ -233,10 +231,40 @@ SplitNode(Node _node,
   return children;
 }
 
-std::vector<HCRQuery::Path*>
+std::unordered_map<Robot*,HCRQuery::Path*>
 HCRQuery::
 ExtractPaths(const std::vector<HPElem>& _hyperpath) {
-  return {};
+
+  auto hcr = dynamic_cast<CombinedRoadmap*>(
+              this->GetStateGraph(m_sgLabel).get());
+  auto hypergraph = hcr->GetHypergraph();
+  auto mpsolution = hcr->GetMPSolution();
+
+  // Initialize path for each robot.
+  std::unordered_map<Robot*,Path*> robotPaths;
+  auto c = this->GetPlan()->GetCoordinator();
+  for(auto group : c->GetInitialRobotGroups()) {
+    for(auto robot : group.first->GetRobots()) {
+      auto roadmap = mpsolution->GetRoadmap(robot);
+      auto path = new Path(roadmap);
+      robotPaths[robot] = path;
+    }
+  }
+
+  // Add up the paths that comprise the hyperarcs in the hyperpath.
+  for(auto elem : _hyperpath) {
+    // If elem is a vertex, skip
+    if(elem.first)
+      continue;
+
+    auto hyperarc = hypergraph->GetHyperarcType(elem.second);
+    for(auto path : hyperarc.paths) {
+      auto robot = path->GetRobot();
+      *robotPaths[robot] += *path;
+    }
+  }
+  
+  return robotPaths;
 }
 
 

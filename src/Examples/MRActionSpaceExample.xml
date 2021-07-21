@@ -270,7 +270,7 @@
 
       <Condition label="StartLocation2" type="motion">
         <CSpaceConstraint point="10 0 0 0 0 0" dof="6" 
-                          type="boxy" role="R1"/>
+                          type="boxy" role="R2"/>
       </Condition>
 
       
@@ -304,15 +304,15 @@
 
       <Interaction label="Arrive2" isLabel="InteractionStrategyExample">
         <PreConditions>
-          <Condition label="Solo"/>
+          <Condition label="Solo2"/>
           <Condition label="GoalBox2"/>
         </PreConditions>
         <InterimConditions>
-          <Condition label="Solo"/>
+          <Condition label="Solo2"/>
           <Condition label="FinalLocation2"/>
         </InterimConditions>
         <PostConditions>
-          <Condition label="Solo"/>
+          <Condition label="Solo2"/>
           <Condition label="FinalLocation2"/>
         </PostConditions>
       </Interaction>

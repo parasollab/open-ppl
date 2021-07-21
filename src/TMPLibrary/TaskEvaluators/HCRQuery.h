@@ -61,7 +61,7 @@ class HCRQuery : public TaskEvaluatorMethod {
                         std::vector<std::pair<Robot*,CT>> _constraints,
                         CBSLowLevelPlanner<Robot,CT,Path> _lowlevel);
 
-    std::vector<Path*> ExtractPaths(const std::vector<HPElem>& _hyperpath);
+    std::unordered_map<Robot*,Path*> ExtractPaths(const std::vector<HPElem>& _hyperpath);
 
     void ExtractPlan(Node _node);
 

@@ -238,8 +238,10 @@ ExpandRoadmap(SemanticRoadmap* _sr) {
   auto solution = hcr->GetMPSolution();
 
   // Call the MPLibrary solve function to expand the roadmap
+  lib->SetPreserveHooks(true);
   lib->Solve(prob,task,solution,m_mpStrategy, LRand(), 
              "ExpandSemanticRoadmap");
+  lib->SetPreserveHooks(false);
 
   delete task;
 }

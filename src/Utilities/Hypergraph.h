@@ -186,6 +186,10 @@ Hypergraph<VertexType,HyperarcType>::
 AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
             HyperarcType _hyperarc) {
 
+  //debug
+  if(_head.count(0) or _tail.count(0))
+    std::cout << "HERE";
+
   Hyperarc h;
   h.property = _hyperarc;
   h.head = _head;
