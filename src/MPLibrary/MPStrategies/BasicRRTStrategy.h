@@ -805,6 +805,7 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
               << std::endl;
 
   // If we are out of range, do not attempt to extend.
+  std::cout << "Distance: " << distance << ", Range: " << range << std::endl;
   if(distance > range) {
     if(this->m_debug)
       std::cout << "\tNot attempting goal extension." << std::endl;

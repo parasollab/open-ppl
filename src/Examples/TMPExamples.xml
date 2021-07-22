@@ -90,6 +90,8 @@
     </Metrics>
 
     <MapEvaluators>
+      <QueryMethod label="QueryMethod" debug="false"
+        graphSearchAlg="dijkstras" />
     </MapEvaluators>
 
     <MPStrategies>
@@ -103,6 +105,7 @@
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>
         </GrowthSet>
+        <Evaluator label="QueryMethod"/>
       </AdaptiveRRT>
 
     </MPStrategies>
