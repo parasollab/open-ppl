@@ -295,7 +295,7 @@ Validate() const {
 
   // The polyhedron is good if it is valid, triangular, closed, and
   // outward-facing.
-  if(valid and triangular and closed and outward)
+  if(valid and triangular and closed) // and outward)
     return;
 
   // Something isn't good - report errors if requested.

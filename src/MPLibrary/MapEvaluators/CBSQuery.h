@@ -53,11 +53,11 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     typedef std::set<Constraint> ConstraintSet;
 
-    typedef std::unordered_map<MPTask*, ConstraintSet> ConstraintMap;
+    typedef std::unordered_map<Robot*, ConstraintSet> ConstraintMap;
 
-    typedef std::unordered_map<MPTask*, std::shared_ptr<Path>> SolutionMap;
+    typedef std::unordered_map<Robot*, std::shared_ptr<Path>> SolutionMap;
 
-    typedef CBSNode<MPTask*, Constraint, std::shared_ptr<Path>> CBSNodeType;
+    typedef CBSNode<Robot*, Constraint, std::shared_ptr<Path>> CBSNodeType;
 
 
   public:
@@ -90,19 +90,10 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
-    void ConstructInitialSolution(CBSTree& _tree);
-
-    void CreateChildNode(Robot* const _robot, CfgType&& _cfg,
-        const size_t _timestep, const CBSNodeType& _parent, CBSTree& _tree);
-
-    double ComputeCost(const Solution& _solution);
-
-    std::shared_ptr<Path> SolveIndividualTask(MPTask* const _task,
+    std::shared_ptr<Path> SolveIndividualTask(Robot* const _robot,
         const ConstraintMap& _constraintMap = {});
 
-    void SetSolution(Solution&& _solution);
-
-    std::pair<std::pair<MPTask*, MPTask*>, Conflict> FindConflict(const SolutionMap& _solution);
+    std::pair<std::pair<Robot*, Robot*>, Conflict> FindConflict(const SolutionMap& _solution);
 
     double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceTimestep, const double _bestTimestep) const;
@@ -110,14 +101,16 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     bool IsEdgeSafe(const VID _source, const VID _target,
         const CfgType& _conflictCfg) const;
 
-    GroupTask* m_groupTask;    ///< The group task we're working on.
+    std::vector<Robot*> m_robots;
 
     std::string m_queryLabel;  ///< Query method for making individual plans.
     std::string m_vcLabel;     ///< Validity checker for conflict detection.
     std::string m_costLabel = "SOC";
+    size_t m_nodeLimit{std::numeric_limits<size_t>::max()};
 
     const ConstraintSet* m_currentConstraints{nullptr};
     std::set<ConstraintMap> m_conflictCache;
+    std::unordered_map<Robot*, MPTask*> m_taskMap;
 
 
 };
@@ -155,7 +148,7 @@ Initialize() {
   // Assert that the validity checker is an instance of collision detection
   // validity.
   auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(
-      this->GetValidityChecker(m_vcLabel).get()
+      this->GetValidityChecker(m_vcLabel)
   );
   if(!vc)
     throw RunTimeException(WHERE) << "Validity checker " << m_vcLabel
@@ -164,7 +157,7 @@ Initialize() {
 
   // Assert that the query evaluator is an instance of query method.
   auto query = dynamic_cast<QueryMethod<MPTraits>*>(
-      this->GetMapEvaluator(m_queryLabel).get()
+      this->GetMapEvaluator(m_queryLabel)
   );
   if(!query)
     throw RunTimeException(WHERE) << "Query method " << m_queryLabel
@@ -186,50 +179,58 @@ bool
 CBSQuery<MPTraits>::
 operator()() {
 
-  m_groupTask = this->GetGroupTask();
+  m_robots = this->GetGroupTask()->GetRobotGroup()->GetRobots();
+  for (auto& task : *(this->GetGroupTask())){
+    auto robot = task.GetRobot();
+    if (m_taskMap.count(robot))
+      throw RunTimeException(WHERE) << "This class can't handle group tasks "
+                                    << "with more than one individual task "
+                                    << "for a given robot (robot "
+                                    << robot->GetLabel() << " has multiple "
+                                    << "tasks)." << std::endl;
 
-  std::vector<MPTask*> tasks;
-  for (auto i = m_groupTask.begin(), i != m_groupTask.end(); i++) {
-    tasks.push_back(*i);
+    m_taskMap[robot]=&task;
   }
 
+
   //CBSLowLevelPlanner<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
-  CBSLowLevelPlanner<MPTask, Constraint, typename MPTraits::Path>(
-      [this](CBSNodeType& _node, MPTask* _task) {
-        auto path = this->SolveIndividualTask(_task,_node.constraintMap);
+  CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path> lowlevel(
+      [this](CBSNodeType& _node, Robot* _robot) {
+        auto path = this->SolveIndividualTask(_robot, _node.constraintMap);
         if(!path)
           return false;
-        _node.solutionMap[_task] = path;
+        _node.solutionMap[_robot] = path;
         return true;
       });
-  CBSValidationFunction<MPTask, Constraint, typename MPTraits::Path>(
+  CBSValidationFunction<Robot, Constraint, typename MPTraits::Path> validation(
       [this](CBSNodeType& _node) {
-        auto taskConflict = this->FindConflict(_node.solutionMap);
-        std::vector<std::pair<MPTask*, Constraint>> constraints;
-        if (taskConflict.first.first != nullptr) {
-          constraints = {std::make_pair(taskConflict.first.first, std::make_pair(c.timestep, c.cfg2)), std::make_pair(taskConflict.first.second, std::make_pair(c.timestep, c.cfg1))};
+        auto robotConflict = this->FindConflict(_node.solutionMap);
+        std::vector<std::pair<Robot*, Constraint>> constraints;
+        if (robotConflict.first.first != nullptr) {
+          auto c = robotConflict.second;
+          constraints = {std::make_pair(robotConflict.first.first, std::make_pair(c.timestep, c.cfg2)), std::make_pair(robotConflict.first.second, std::make_pair(c.timestep, c.cfg1))};
         }
         return constraints;
       });
 
-  CBSSplitNodeFunction<MPTask, Constraint, typename MPTraits::Path>(
-        [this](CBSNodeType& _node, std::vector<std::pair<MPTask*, Constraint>> _constraints,
-          CBSLowLevelPlanner<MPTask, Constraint, typename MPTraits::Path>& _lowlevel,
-          CBSCostFunction<MPTask, Constraint, typename MPTraits::Path>& _cost) {
+  CBSSplitNodeFunction<Robot, Constraint, typename MPTraits::Path> split(
+        [this](CBSNodeType& _node, std::vector<std::pair<Robot*, Constraint>> _constraints,
+          CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
+          CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost) {
 
             std::vector<CBSNodeType> children;
             for (auto constraintPair : _constraints) {
-              auto task = constraintPair.first;
+              auto robot = constraintPair.first;
               auto constraint = constraintPair.second;
-              CBSNodeType child = _parent;
-              if(child.constraintMap[task].find(constraint) == child.constraintMap[task].end()){
+              CBSNodeType child = _node;
+              if(child.constraintMap[robot].find(constraint) == child.constraintMap[robot].end()){
                 if(this->m_debug)
                   std::cout << "\t\t\tConflict double-assigned to robot "
-                            << _robot->GetLabel() << ", skipping."
+                            << robot->GetLabel() << ", skipping."
                             << std::endl;
                 continue;
               }
-              child.constraintMap[task].insert(constraint);
+              child.constraintMap[robot].insert(constraint);
               if(m_conflictCache.count(child.constraintMap)) {
                 if (this->m_debug)
                   std::cout << "\t\t\tThis conflict set was already attempted, skipping."
@@ -237,7 +238,7 @@ operator()() {
                 continue;
               }
               m_conflictCache.insert(child.constraintMap);
-              if (!_lowlevel(child, task))
+              if (!_lowlevel(child, robot))
                 continue;
 
               child.cost = _cost(child);
@@ -250,15 +251,15 @@ operator()() {
             return children;
 
       });
-  CBSCostFunction<MPTask, Constraint, typename MPTraits::Path>(
+  CBSCostFunction<Robot, Constraint, typename MPTraits::Path> cost(
       [this](CBSNodeType& _node) {
         double cost = 0;
         if (this->m_costLabel == "SOC") {
-          for (const auto& ts : solutionMap) {
-            cost += ts.second->length()
+          for (const auto& ts : _node.solutionMap) {
+            cost += ts.second->length();
           }
         } else {
-          for (const auto& ts : solutionMap) {
+          for (const auto& ts : _node.solutionMap) {
             if (ts.second->length() > cost)
               cost = ts.second->length();
           }
@@ -266,32 +267,31 @@ operator()() {
         return cost;
       });
 
-  CBS(tasks, CBSValidationFunction, CBSSplitNodeFunction, CBSLowLevelPlanner,
-      CBSCostFunction);
+  CBS(m_robots, validation, split, lowlevel, cost);
 }
 
 template <typename MPTraits>
 std::shared_ptr<typename MPTraits::Path>
-GroupCBSQuery<MPTraits>::
-SolveIndividualTask(MPTask* const _task, const ConstraintMap& _constraintMap) {
+CBSQuery<MPTraits>::
+SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "SolveIndividualTask");
-  Robot* robot = _task->GetRobot();
 
+  MPTask* const task = m_taskMap.at(_robot);
 
   if(this->m_debug)
     std::cout << (_constraintMap.empty() ? "\t" : "\t\t\t")
-              << "Solving task '" << _task->GetLabel() << "' (" << _task
-              << ") for robot '" << robot->GetLabel() << "' (" << robot
+              << "Solving task '" << task->GetLabel() << "' (" << task
+              << ") for robot '" << _robot->GetLabel() << "' (" << _robot
               << ")."
               << std::endl;
 
   // Set the conflicts to avoid.
   if (!_constraintMap.empty())
-    m_currentConstraints = &_constraintMap.at(robot);
+    m_currentConstraints = &_constraintMap.at(_robot);
 
   // Generate a path for this robot individually while avoiding the conflicts.
-  this->GetMPLibrary()->SetTask(_task);
+  this->GetMPLibrary()->SetTask(task);
   auto query = this->GetMapEvaluator(m_queryLabel);
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
@@ -301,7 +301,7 @@ SolveIndividualTask(MPTask* const _task, const ConstraintMap& _constraintMap) {
 
   if(this->m_debug)
     std::cout << (_constraintMap.empty() ? "\t\t" : "\t\t\t\t")
-              << "Path for robot " << robot->GetLabel() << " was "
+              << "Path for robot " << _robot->GetLabel() << " was "
               << (success ? "" : "not ") << "found."
               << std::endl;
 
@@ -310,7 +310,7 @@ SolveIndividualTask(MPTask* const _task, const ConstraintMap& _constraintMap) {
     return {};
 
   // Otherwise, return a copy of the robot's path from the solution object.
-  Path* path = this->GetPath(robot);
+  Path* path = this->GetPath(_robot);
   auto out = std::shared_ptr<Path>(new Path(std::move(*path)));
   path->Clear();
 
@@ -318,13 +318,13 @@ SolveIndividualTask(MPTask* const _task, const ConstraintMap& _constraintMap) {
 }
 
 template <typename MPTraits>
-std::pair<std::pair<MPTask*, MPTask*>, typename CBSQuery<MPTraits>::Conflict>
-GroupCBSQuery<MPTraits>::
+std::pair<std::pair<Robot*, Robot*>, typename CBSQuery<MPTraits>::Conflict>
+CBSQuery<MPTraits>::
 FindConflict(const SolutionMap& _solution) {
   // Recreate each path at resolution level.
-  std::map<MPTask*, std::vector<CfgType>> cfgPaths;
+  std::map<Robot*, std::vector<CfgType>> cfgPaths;
   for(const auto& pair : _solution) {
-    MPTask* const task = pair.first;
+    Robot* const robot = pair.first;
     const auto& path   = pair.second;
     cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
   }
@@ -343,7 +343,7 @@ FindConflict(const SolutionMap& _solution) {
     // Collision check each robot path against all others at this timestep.
     for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end();) {
       // Configure the first robot at the approriate configuration.
-      auto task1         = iter1->first;
+      auto robot1         = iter1->first;
       const auto& path1  = iter1->second;
       const size_t step1 = std::min(t, path1.size() - 1);
       const auto& cfg1   = path1[step1];
@@ -353,7 +353,7 @@ FindConflict(const SolutionMap& _solution) {
       // Compare to all remaining robots.
       for(auto iter2 = ++iter1; iter2 != cfgPaths.end(); ++iter2) {
         // Configure the second robot at the appropriate configuration.
-        auto task2         = iter2->first;
+        auto robot2         = iter2->first;
         const auto& path2  = iter2->second;
         const size_t step2 = std::min(t, path2.size() - 1);
         const auto& cfg2   = path2[step2];
@@ -371,23 +371,23 @@ FindConflict(const SolutionMap& _solution) {
           std::cout << "\t\tConflict detected at timestemp " << t
                     << " (time " << this->GetEnvironment()->GetTimeRes() * t
                     << ")."
-                    << "\n\t\t\tRobot " << task1->GetRobot()->GetLabel() << ": "
+                    << "\n\t\t\tRobot " << robot1->GetLabel() << ": "
                     << cfg1.PrettyPrint()
-                    << "\n\t\t\tRobot " << task2->GetRobot()->GetLabel() << ": "
+                    << "\n\t\t\tRobot " << robot2->GetLabel() << ": "
                     << cfg2.PrettyPrint()
                     << std::endl;
 
 				//Old block pre-merge with master, remove if compiles
 				//TODO::Was getting some weird complication bug about explicit construction
         Conflict newConflict(cfg1,cfg2,t);
-        std::pair<MPTask*, MPTask*> taskPair = std::make_pair(task1, task2);
+        std::pair<Robot*, Robot*> robotPair = std::make_pair(robot1, robot2);
         //newConflict.cfg1     = cfg1;
         //newConflict.cfg2     = cfg2;
         //newConflict.timestep = t;
 
         //Conflict newConflict{cfg1, cfg2, t};
 
-        return std::make_pair(taskPair, newConflict);
+        return std::make_pair(robotPair, newConflict);
       }
     }
   }
@@ -403,72 +403,8 @@ FindConflict(const SolutionMap& _solution) {
 
 
 template <typename MPTraits>
-CBSNodeType
-GroupCBSQuery<MPTraits>::
-CreateChildNode(Robot* const _robot, CfgType&& _cfg, const size_t _timestep,
-    const CBSNodeType& _parent) {
-  if(this->m_debug)
-    std::cout << "\t\tAttempting to create CBS node with conflict on robot "
-              << _robot->GetLabel() << " at timestep "
-              << _timestep << " colliding against robot "
-              << _cfg.GetRobot()->GetLabel()
-              << std::endl;
-
-  // Initialize the child node by copying the parent.
-  CBSNodeType child = _parent;
-
-  // Assert that we aren't adding a duplicate conflict, which should be
-  // impossible with a correct implementation.
-
-  auto bounds = child.conflicts[_robot].equal_range(_timestep);
-  for(auto iter = bounds.first; iter != bounds.second; ++iter)
-    if(iter->second == _cfg) {
-      if(this->m_debug)
-        std::cout << "\t\t\tConflict double-assigned to robot "
-                  << _robot->GetLabel() << ", skipping."
-                  << std::endl;
-      return;
-    }
-
-  child.conflicts[_robot].emplace(_timestep, std::move(_cfg));
-
-#if 0
-  for(auto conflictSet : child.conflicts) {
-    for(auto conflict : conflictSet.second) {
-      std::cout << "\t\t\t\t\tConflict on robot " << conflictSet.first->GetLabel()
-        << " at time " << conflict.first << " against robot "
-        << conflict.second.GetRobot()->GetLabel() << " at cfg "
-        << conflict.second.PrettyPrint() << std::endl;
-    }
-  }
-#endif
-
-  // If we've already seen this set of conflicts, don't check them again.
-  if(m_conflictCache.count(child.conflicts)) {
-    if(this->m_debug)
-      std::cout << "\t\t\tThis conflict set was already attempted, skipping."
-                << std::endl;
-    return;
-  }
-  m_conflictCache.insert(child.conflicts);
-
-  // Find a path for this robot. If it fails, discard the new node.
-  auto path = SolveIndividualTask(_robot, child.conflicts);
-  if(!path)
-    return;
-
-  child.solution[_robot] = path;
-  child.cost = ComputeCost(child.solution);
-
-  if(this->m_debug)
-    std::cout << "\t\t\tChild node created." << std::endl;
-
-  return child;
-}
-
-template <typename MPTraits>
 double
-GroupCBSQuery<MPTraits>::
+CBSQuery<MPTraits>::
 MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
     const double _startTime, const double _bestEndTime) const {
   // Compute the time when we will end this edge.
@@ -535,7 +471,7 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
 template <typename MPTraits>
 bool
-GroupCBSQuery<MPTraits>::
+CBSQuery<MPTraits>::
 IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
     const {
   auto robot = this->GetTask()->GetRobot();
@@ -576,3 +512,4 @@ IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
   return true;
 }
 
+#endif

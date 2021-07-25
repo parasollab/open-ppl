@@ -113,16 +113,16 @@ using CBSValidationFunction =
     CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+using CBSCostFunction =
+  std::function<double(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSSplitNodeFunction =
   std::function<std::vector<CBSNode<IndividualTask,ConstraintType,IndividualSolution>>(
     CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node,
     std::vector<std::pair<IndividualTask*, ConstraintType>> _constraints,
     CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel,
     CBSCostFunction<IndividualTask, ConstraintType, IndividualSolution>& _cost)>;
-
-template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
-using CBSCostFunction =
-  std::function<double(CBSNode<IndividualTask, ConstraintType, IndividualSolution> _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSInitialFunction =
@@ -150,7 +150,7 @@ CBS(
   std::vector<CBSNodeType> root;
 
   if(_initial) {
-    _initial(root, _tasks, CBSCostFunction);
+    _initial(root, _tasks, _cost);
   }
   else {
     //TODO: this doesn't make sense. if an initial function is not provided, we
