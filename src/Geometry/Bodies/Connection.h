@@ -91,6 +91,11 @@ class Connection final {
     /// @param _cbs The input counting stream buffer.
     void Read(istream& _is, CountingStreamBuffer& _cbs);
 
+    /// Tanslate the URDF joint specificiation to this Connection representation.
+    /// @param _joint The joint in the URDF model to translate.
+    /// @param _bodyIndices The bodies connected by this joint.
+    /// @param _bodyPosition The Body position relative the joint.
+    /// @param _bodyOrientation The body orientation relative the joint.
     void TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
                             const std::pair<size_t,size_t> _bodyIndices,
                             const Vector3d _bodyPosition,
@@ -234,7 +239,6 @@ class Connection final {
     std::pair<size_t, size_t> m_bodyIndices;   ///< (previous body, next body)
     std::array<Range<double>, 2> m_jointRange; ///< The valid joint ranges.
 
-    ;
     ///@}
 
 };

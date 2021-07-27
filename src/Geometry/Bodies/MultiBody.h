@@ -257,17 +257,29 @@ class MultiBody {
     /// @param _os The output stream to write to.
     void Write(std::ostream& _os) const;
 
+    /// Translate a URDF model of the robot into a MultiBody representation.
+    /// @param _urdf The URDF filename to load.
+    /// @param _worldLink The virtual link connecting the URDF model to the world frame.
+    /// @param _fixed A flag indicating if the robot model has a fixed base.
     void TranslateURDF(std::string _urdf, std::string _worldLink, bool _fixed);
 
+    /// Add a link to this multibody that is specified in the URDF model.
+    /// @param _name Name of the link to add.
+    /// @param _model The URDF model to extract the link info from.
+    /// @param _linkMap The map of link names to body indices
+    /// @param _childMap Map of link parentage.
+    /// @param _base flag indiciating if the link to be added is the base.
+    /// @param _fixed Flag indiciating if the link is fixed.
     void AddURDFLink(std::string _name, size_t& _count,
             urdf::Model& _model, 
             std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
             bool _base = false,
             bool _fixed = false);
+
     ///@}
 
-    ///TODO::Temporary move to public until base position can be pulled from gazebo
+    /// TODO::Temporary move to public until base position can be pulled from gazebo
     /// Generate the transformation for the base body at some set of DOF values.
     /// @param _v The DOF values.
     /// @return The base body transformation at _v.

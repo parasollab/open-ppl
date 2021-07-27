@@ -40,17 +40,18 @@ class ROSStepFunction : public FollowPath {
 
     virtual void MoveToWaypoint(const Cfg& _waypoint, double _dt) override;
 
+    /// Call back function to pass into ros behaviors.
     static void Callback(const sensor_msgs::JointState _msg);
 
     ///@}
     ///@name Internal State
     ///@{
 
-    ros::Publisher m_armPub;
+    ros::Publisher m_armPub; ///< Publisher for arm controls.
 
-    ros::Subscriber m_stateSub;
+    ros::Subscriber m_stateSub; ///< Subscriber for robot state.
 
-    double m_time{1};
+    double m_time{1}; ///< Time duration to execute controls.
 
     ///@}
 };

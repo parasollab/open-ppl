@@ -27,7 +27,7 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   ros::NodeHandle nh;
   m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                "/pos_joint_traj_controller/command",
+                "/scaled_pos_joint_traj_controller/command",
                 //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                 10);
 
@@ -55,7 +55,8 @@ ReachedWaypoint(const Cfg& _waypoint) {
   //auto js = s_jointStates;
 
   sensor_msgs::JointState msg;
-  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/joint_states");
+  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/joint_states");
+  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 
   if(sharedMsg!=NULL)
     msg = *sharedMsg;
@@ -70,7 +71,7 @@ ReachedWaypoint(const Cfg& _waypoint) {
   // Convert joint angles to pmpl representation
   std::vector<double> jointStates;
   for(auto d : js) {
-    auto jv = d/PI;
+    auto jv = d/(2*PI);
     //Hack to deal with nonsense ros joint status values that forget about joint limits
     if(jv > 1)
       jv = -2 + jv;
@@ -133,7 +134,7 @@ MoveArm(std::vector<double> _goal, double _dt) {
 
     //msg.points[0].positions = _goal;
     for(auto d : _goal) {
-      msg.points[0].positions.push_back(d*PI);
+      msg.points[0].positions.push_back(d*2*PI);
     }
 
     msg.points[0].time_from_start = ros::Duration(m_time);

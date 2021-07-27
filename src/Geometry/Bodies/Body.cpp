@@ -899,7 +899,7 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
 
   }
   else if(geometry->type == urdf::Geometry::BOX) {
-    //TODO::Convert Box to GMSPolyhedron m_plohedron
+    // Convert Box to GMSPolyhedron m_plohedron
     
     auto box = dynamic_cast<urdf::Box*>(geometry);
     auto x = box->dim.x;
@@ -949,13 +949,13 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
     SetBodyType(Type::Joint);
   }
   else {
-    // TODO::Currently assume volumetric rotational. 
-    //       Need way to determine from urdf.
     if(_fixed) {
       SetBodyType(Type::Fixed);
       SetMovementType(MovementType::Fixed);
     }
     else {
+      // TODO::Currently assume volumetric rotational. 
+      //       Need way to determine from urdf.
       SetBodyType(Type::Volumetric);
       SetMovementType(MovementType::Rotational);
     }
