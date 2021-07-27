@@ -5,7 +5,12 @@
 #ifdef PMPCfg
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Traits/CfgTraits.h"
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else
+  #include "Traits/TestTraits.h"
+#endif
+
 typedef MPTraits<Cfg> PMPLTraits;
 
 #else

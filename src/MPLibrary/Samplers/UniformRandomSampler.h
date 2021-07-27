@@ -12,7 +12,7 @@
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
-class UniformRandomSampler : public SamplerMethod<MPTraits> {
+class UniformRandomSampler : virtual public SamplerMethod<MPTraits> {
 
   public:
 

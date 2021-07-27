@@ -3,8 +3,8 @@
 
 //////////////////////////////////////////////////////////////////
 ///
-/// This is a virtual base class for agent functions. 
-/// Agent behavior will be customizeable by the step 
+/// This is a virtual base class for agent functions.
+/// Agent behavior will be customizeable by the step
 /// function behavior.
 ///
 ///////////////////////////////////////////////////////////////////
@@ -14,11 +14,11 @@
 #include <memory>
 
 class StepFunction {
-  
+
   public :
     ///@name Construction
-    ///@{ 
-    
+    ///@{
+
     StepFunction(Agent* _agent, XMLNode& _node);
 
     ~StepFunction();
@@ -37,7 +37,7 @@ class StepFunction {
     virtual void StepAgent(double _dt) = 0;
 
     ///@}
-    
+
   protected:
     ///@name Internal State
     ///@{

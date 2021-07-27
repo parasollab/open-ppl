@@ -11,54 +11,47 @@
 class TMPTools {
   public:
 
-		///@name Local Types
-		///@{
-
-		template <typename Utility>
-		using LabelMap = std::unordered_map<std::string, Utility*>;
-
-  	///@}
-		///@name Construction
+    ///@name Local Types
     ///@{
 
-  	TMPTools() = default;
-
-		TMPTools(TMPLibrary* _tmpLibrary);
-
-		virtual ~TMPTools() = default;  
-
-		void ParseXML(XMLNode& _node);	
+    template <typename Utility>
+    using LabelMap = std::unordered_map<std::string, Utility*>;
 
     ///@}
-    ///@name Interaction Templates
+    ///@name Construction
     ///@{
 
-		///@}
-    
-	private:
-	
-		///@name Helpers
-		///@{
+    TMPTools() = default;
 
-		template <typename Utility>
-		Utility* GetUtility(const std::string& _label,
-				const LabelMap<Utility>& _map);
+    TMPTools(TMPLibrary* _tmpLibrary);
 
-		template <typename Utility>
-		void SetUtility(const std::string& _label, Utility* _utility,
-				LabelMap<Utility>& _map);
+    virtual ~TMPTools() = default;
 
-		///@}
-		///@name Internal State
-		///@{
+    void ParseXML(XMLNode& _node);
 
-		TMPLibrary* const m_tmpLibrary; ///< The owning library.
+    ///@}
 
-		LabelMap<InteractionTemplate>   m_interactionTemplates;
+  private:
 
-		///@}
+    ///@name Helpers
+    ///@{
+
+    template <typename Utility>
+    Utility* GetUtility(const std::string& _label,
+        const LabelMap<Utility>& _map);
+
+    template <typename Utility>
+    void SetUtility(const std::string& _label, Utility* _utility,
+        LabelMap<Utility>& _map);
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    TMPLibrary* const m_tmpLibrary; ///< The owning library.
+
+    ///@}
 };
 /*----------------------------------------------------------------------------*/
 
 #endif
-

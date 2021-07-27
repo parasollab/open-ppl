@@ -1,13 +1,13 @@
-#ifndef SUBTASK_FLOW_H_
-#define SUBTASK_FLOW_H_
+#ifndef PPL_SUBTASK_FLOW_H_
+#define PPL_SUBTASK_FLOW_H_
 
 #include "SemanticTask.h"
 
 #include <containers/sequential/graph/graph.h>
 
 struct TBDFunction {
-	enum Operator {MAX,MIN};
-	Operator m_operator{MAX};
+	enum Operator {Max,Min};
+	Operator m_operator{Max};
 	std::vector<TBDFunction> m_subFunctions;
 	std::vector<size_t> m_elems;
 };
@@ -30,10 +30,10 @@ class SubtaskFlow : public stapl::sequential::graph<stapl::DIRECTED,
 
     using STAPLGraph =
 #ifdef _PARALLEL
-    stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES, 
+    stapl::dynamic_graph<stapl::DIRECTED,stapl::NONMULTIEDGES,
                          FlowNode, SemanticTask::DependencyType>
 #else
-    stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES, 
+    stapl::sequential::graph<stapl::DIRECTED,stapl::NONMULTIEDGES,
                              FlowNode, SemanticTask::DependencyType>
 #endif
     ;

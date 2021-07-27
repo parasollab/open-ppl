@@ -29,7 +29,7 @@ SemanticTask(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 	m_decomposable = _node.Read("decomposable", false, true, 
 				"Indicates if a task is decomposable into subtasks.");
 
-	m_fixedAssignment = _node.Read("fixedAllocation", false, false, 
+	m_fixedAssignment = _node.Read("fixedAllocation", false, false,
 				"Indicates if the simple tasks within this have fixed allocations.");
 
 	std::string parentLabel = _node.Read("parent", false, "", "Label for task's parent.");
@@ -48,18 +48,19 @@ SemanticTask(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 			m_groupMotionTask = std::shared_ptr<GroupTask>(new GroupTask(_problem,child));;
 			_decomp->AddGroupMotionTask(this);
 		}
-		else if(child.Name() == "Dependency") {
+		else if(child.Name() == "Dependency")
 			ParseDependency(_problem, _node, _decomp);
-		}	
 	}
 
 }
 		
 SemanticTask::
-SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
-								 SubtaskRelation _relation, bool _decomposable, bool _fixed,
-									std::shared_ptr<MPTask> _motionTask) : m_label(_label), m_parent(_parent), 
-									m_subtasksRelation(_relation) {
+SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
+								SubtaskRelation _relation, bool _decomposable, bool _fixed,
+								std::shared_ptr<MPTask> _motionTask) :
+								m_label(_label),
+								m_parent(_parent),
+								m_subtasksRelation(_relation) {
 
 	m_decomposable = _decomposable;
 	m_fixedAssignment = _fixed;
@@ -74,10 +75,12 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 }
 
 SemanticTask::
-SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
-								 SubtaskRelation _relation, bool _decomposable, bool _fixed,
-									std::shared_ptr<GroupTask> _groupMotionTask) : m_label(_label), m_parent(_parent), 
-									m_subtasksRelation(_relation) {
+SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
+								SubtaskRelation _relation, bool _decomposable, bool _fixed,
+								std::shared_ptr<GroupTask> _groupMotionTask) :
+								m_label(_label),
+								m_parent(_parent),
+								m_subtasksRelation(_relation) {
 
 	m_decomposable = _decomposable;
 	m_fixedAssignment = _fixed;
@@ -92,8 +95,11 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 }
 
 SemanticTask::
-SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTask> _motionTask,
-						 bool _decomposable) : m_parent(_parent), m_motionTask(_motionTask), m_decomposable(_decomposable) {
+SemanticTask(SemanticTask* _parent, Decomposition* _decomp,
+							std::shared_ptr<MPTask> _motionTask, bool _decomposable) :
+							m_parent(_parent),
+							m_motionTask(_motionTask),
+							m_decomposable(_decomposable) {
 
 	if(m_parent) {
 		m_parent->AddSubtask(this);
@@ -105,9 +111,11 @@ SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTa
 }
 
 SemanticTask::
-SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<GroupTask> _groupMotionTask,
-						 bool _decomposable) : m_parent(_parent), m_groupMotionTask(_groupMotionTask), 
-						 m_decomposable(_decomposable) {
+SemanticTask(SemanticTask* _parent, Decomposition* _decomp,
+							std::shared_ptr<GroupTask> _groupMotionTask, bool _decomposable) :
+							m_parent(_parent),
+							m_groupMotionTask(_groupMotionTask), 
+						 	m_decomposable(_decomposable) {
 
 	if(m_parent) {
 		m_parent->AddSubtask(this);
@@ -119,9 +127,12 @@ SemanticTask(SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<Grou
 }
 
 SemanticTask::
-SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, std::shared_ptr<MPTask> _motionTask,
-						 bool _decomposable) : m_label(_label), m_parent(_parent), m_motionTask(_motionTask), 
-						 m_decomposable(_decomposable) {
+SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
+							std::shared_ptr<MPTask> _motionTask, bool _decomposable) :
+							m_label(_label),
+							m_parent(_parent),
+							m_motionTask(_motionTask),
+						 	m_decomposable(_decomposable) {
 
 	if(m_parent) {
 		m_parent->AddSubtask(this);
@@ -134,9 +145,9 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
 }
 
 SemanticTask::
-SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp, 
-						 std::shared_ptr<GroupTask> _groupMotionTask, bool _decomposable) : 
-						 m_label(_label), m_parent(_parent), m_groupMotionTask(_groupMotionTask), 
+SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
+						 std::shared_ptr<GroupTask> _groupMotionTask, bool _decomposable) :
+						 m_label(_label), m_parent(_parent), m_groupMotionTask(_groupMotionTask),
 						 m_decomposable(_decomposable) {
 
 	if(m_parent) {
@@ -195,7 +206,7 @@ GetLabel() const {
 	return m_label;
 }
 
-std::vector<SemanticTask*> 
+std::vector<SemanticTask*>
 SemanticTask::
 SetDependencies() {
 
@@ -204,7 +215,7 @@ SetDependencies() {
 
 	std::vector<SemanticTask*> simpleTasks;
 
-	// Check if this is a motion task and, if so, add it to the set 
+	// Check if this is a motion task and, if so, add it to the set
   // of motion tasks for itself
 	if(m_motionTask or m_groupMotionTask) {
 		return {this};
@@ -219,7 +230,7 @@ SetDependencies() {
 	}
 
 	for(auto taskDecomp : simpleTaskDecompositions) {
-		auto task = taskDecomp.first; 
+		auto task = taskDecomp.first;
 		for(auto dependencyTasks : task->GetDependencies()) {
 
 			// iterate through dependent semantic tasks
@@ -268,7 +279,7 @@ SetGroupMotionTask(std::shared_ptr<GroupTask> _groupMotion) {
 	m_groupMotionTask = _groupMotion;
 }
 
-std::shared_ptr<GroupTask> 
+std::shared_ptr<GroupTask>
 SemanticTask::
 GetGroupMotionTask() {
 	return m_groupMotionTask;
@@ -286,7 +297,7 @@ SetParent(SemanticTask* _parent) {
 	m_parent = _parent;
 }
 
-std::unordered_set<SemanticTask*> 
+std::unordered_set<SemanticTask*>
 SemanticTask::
 AddDependency(SemanticTask* _task, DependencyType _type) {
 	m_dependencyMap[_type].insert(_task);
@@ -313,13 +324,13 @@ AddSubtask(SemanticTask* _task) {
 	m_subtasks.push_back(_task);
 }
 
-std::vector<SemanticTask*> 
+std::vector<SemanticTask*>
 SemanticTask::
 GetSubtasks() {
 	return m_subtasks;
 }
 		
-SemanticTask::SubtaskRelation 
+SemanticTask::SubtaskRelation
 SemanticTask::
 GetSubtaskRelation() {
 	return m_subtasksRelation;

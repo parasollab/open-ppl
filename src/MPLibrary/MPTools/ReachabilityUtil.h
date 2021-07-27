@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "MPLibrary/MPBaseObject.h"
-#include "MPLibrary/Extenders/KinodynamicExtender.h"
+//#include "MPLibrary/Extenders/KinodynamicExtender.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ void
 ReachabilityUtil<MPTraits>::
 Initialize() {
   // Ensure we got a valid extender.
-  auto extender = dynamic_cast<KinodynamicExtender<MPTraits>*>(
+  /*auto extender = dynamic_cast<KinodynamicExtender<MPTraits>*>(
       this->GetExtender(m_extenderLabel));
   if(!extender)
     throw RunTimeException(WHERE) << "Extender for ReachabilityUtil must be a "
@@ -113,6 +113,7 @@ Initialize() {
   if(controls->empty())
     throw RunTimeException(WHERE) << "Only descrete controls are supported by "
                                   << "ReachabilityUtil for now.";
+  */
 }
 
 /*----------------------------- Utility Operator ----------------------------*/
@@ -122,7 +123,7 @@ typename ReachabilityUtil<MPTraits>::ReachableSet
 ReachabilityUtil<MPTraits>::
 operator() (const CfgType& _cfg) {
   MethodTimer mt(this->GetStatClass(), "ReachabilityUtil");
-
+/*
   // test if the cfg is already in the cache
   // if true, then return the set; otherwise compute reachable set with the
   // given extender
@@ -135,8 +136,9 @@ operator() (const CfgType& _cfg) {
       this->GetExtender(m_extenderLabel));
   auto robot = _cfg.GetRobot();
   const auto& controls = robot->GetController()->GetControlSet();
-
+*/
   ReachableSet set;
+/*
   CfgType cfg;
 
   // Apply each control, if the result is not in collision add it to the
@@ -157,6 +159,7 @@ operator() (const CfgType& _cfg) {
     set.push_back(cfg);
   }
   m_reachableSets.insert(make_pair(_cfg, set));
+*/  
   return set;
 }
 

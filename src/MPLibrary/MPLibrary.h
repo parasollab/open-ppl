@@ -16,7 +16,6 @@
 #include "MPLibrary/Extenders/ExtenderMethod.h"
 #include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
 #include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h"
-#include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/Metrics/MetricMethod.h"
 #include "MPLibrary/MPStrategies/MPStrategyMethod.h"
 #include "MPLibrary/MPTools/MPTools.h"
@@ -37,9 +36,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 #ifdef _PARALLEL
-class MPLibraryType final : public stapl::p_object
+class MPLibraryType : public stapl::p_object
 #else
-class MPLibraryType final
+class MPLibraryType 
 #endif
 {
 
@@ -241,14 +240,14 @@ class MPLibraryType final
     }
 
     /// For cases where we need to reset all instances of TimeEvaluator.
-    void ResetTimeEvaluators() {
+/*    void ResetTimeEvaluators() {
       for(auto& labelPtr : *m_mapEvaluators) {
         auto t = dynamic_cast<TimeEvaluator<MPTraits>*>(labelPtr.second.get());
         if(t)
           t->Initialize();
       }
     }
-
+*/
     ///@}
     ///@name MPStrategy Accessors
     ///@{
@@ -439,6 +438,24 @@ class MPLibraryType final
     std::vector<Solver> m_solvers;           ///< The set of inputs to execute.
 
     ///@}
+    ///@name Other Library Objects
+    ///@{
+    /// These do not use method sets because the sub-objects are not expected to
+    /// share a common interface.
+
+    std::unique_ptr<GoalTracker> m_goalTracker;
+    MPTools* m_mpTools{nullptr};
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    std::atomic<bool> m_running{true};  ///< Keep running the strategy?
+
+    ///@}
+
+  protected: 
+
     ///@name Method Sets
     ///@{
     /// Method sets hold and offer access to the motion planning objects of the
@@ -457,22 +474,6 @@ class MPLibraryType final
     MPStrategySet*         m_mpStrategies{nullptr};
 
     ///@}
-    ///@name Other Library Objects
-    ///@{
-    /// These do not use method sets because the sub-objects are not expected to
-    /// share a common interface.
-
-    std::unique_ptr<GoalTracker> m_goalTracker;
-    MPTools* m_mpTools{nullptr};
-
-    ///@}
-    ///@name Internal State
-    ///@{
-
-    std::atomic<bool> m_running{true};  ///< Keep running the strategy?
-
-    ///@}
-
 };
 
 /*---------------------------- Construction ----------------------------------*/

@@ -1,5 +1,5 @@
-#ifndef DECOMPOSITION_H_
-#define DECOMPOSITION_H_
+#ifndef PPL_DECOMPOSITION_H_
+#define PPL_DECOMPOSITION_H_
 
 #include "SemanticTask.h"
 #include "SubtaskFlow.h"

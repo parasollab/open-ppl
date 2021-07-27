@@ -2,71 +2,77 @@
 #define _PMPL_TASK_SOLUTION_H_
 
 #include "MPLibrary/MPSolution.h"
-#include "Traits/CfgTraits.h"
+
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else 
+  #include "Traits/TestTraits.h"
+#endif
 
 class Robot;
 class RobotGroup;
 class SemanticTask;
 
 class TaskSolution {
-	public:
-		///@name Local Types
-		///@{
+  public:
+    ///@name Local Types
+    ///@{
 
-		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
 
-		///@}
-		///@name Construction
-		///@{
+    ///@}
+    ///@name Construction
+    ///@{
 
-		TaskSolution(SemanticTask* _task);
+    TaskSolution(SemanticTask* _task);
 
-		~TaskSolution();
+    ~TaskSolution();
 
-		///@}
-		///@name Accessors
-		///@{
-		
-		SemanticTask* GetTask();
+    ///@}
+    ///@name Accessors
+    ///@{
 
-		void SetRobot(Robot* _robot);
+    SemanticTask* GetTask();
 
-		Robot* GetRobot();
+    void SetRobot(Robot* _robot);
 
-		void SetRobotGroup(RobotGroup* _group);
+    Robot* GetRobot();
 
-		RobotGroup* GetRobotGroup();
+    void SetRobotGroup(RobotGroup* _group);
 
-		void SetMotionSolution(MPSolution* _solution);
+    RobotGroup* GetRobotGroup();
 
-		MPSolution* GetMotionSolution();
-	
-		void SetStartTime(double _startTime);
+    void SetMotionSolution(MPSolution* _solution);
 
-		double GetStartTime();
-		
-		///@}
-		///@name Print
-		///@{
+    MPSolution* GetMotionSolution();
 
-		void Print();
+    void SetStartTime(double _startTime);
 
-		///@}
-	
-	private:
-		///@name Internal State
-		///@{
+    double GetStartTime();
 
-		SemanticTask* m_task;
+    ///@}
+    ///@name Print
+    ///@{
 
-		Robot* m_robot{nullptr};
+    void Print();
 
-		RobotGroup* m_robotGroup{nullptr};
+    ///@}
 
-		MPSolution* m_motionSolution{nullptr};
+  private:
+    ///@name Internal State
+    ///@{
 
-		double m_startTime{0};
+    SemanticTask* m_task;
 
-		///@}
+    Robot* m_robot{nullptr};
+
+    RobotGroup* m_robotGroup{nullptr};
+
+    MPSolution* m_motionSolution{nullptr};
+
+    double m_startTime{0};
+
+    ///@}
 };
+
 #endif

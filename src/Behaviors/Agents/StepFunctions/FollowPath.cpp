@@ -1,6 +1,7 @@
 #include "FollowPath.h"
 
 #include "Behaviors/Agents/PathFollowingAgent.h"
+#include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "Simulator/Simulation.h"
 #include "Utilities/XMLNode.h"

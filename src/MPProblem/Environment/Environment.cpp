@@ -207,7 +207,7 @@ Color() const noexcept {
 }
 
 
-const Boundary*
+Boundary*
 Terrain::
 GetBoundary() const noexcept {
   return m_boundary.get();
@@ -625,7 +625,7 @@ GetTimeRes() const noexcept {
 
 /*----------------------------- Boundary Functions ---------------------------*/
 
-const Boundary*
+Boundary*
 Environment::
 GetBoundary() const noexcept {
   return m_boundary.get();

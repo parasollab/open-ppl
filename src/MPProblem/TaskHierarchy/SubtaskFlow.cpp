@@ -21,7 +21,7 @@ SubtaskFlow(SemanticTask* _task) {
 }
 
 SubtaskFlow::
-~SubtaskFlow() { }
+~SubtaskFlow() {}
 
 /*-------------------------------------------- Debug ----------------------------------------*/
 		
@@ -98,7 +98,7 @@ SubtaskFlow::
 GetFlowNodeIter(size_t _vid) {
 	VI iter = this->find_vertex(_vid);
 	if(iter == this->end())
-		throw RunTimeException(WHERE) << "VID is not in SubtaskFlow: " << _vid << std::endl;
+		throw RunTimeException(WHERE, "VID is not in SubtaskFlow: " + _vid);
 	return iter;
 }
 
@@ -107,7 +107,7 @@ SubtaskFlow::
 GetFlowNode(size_t _vid) {
 	VI iter = this->find_vertex(_vid);
 	if(iter == this->end())
-		throw RunTimeException(WHERE) << "VID is not in SubtaskFlow: " << _vid << std::endl;
+		throw RunTimeException(WHERE, "VID is not in SubtaskFlow: " + _vid);
 	return iter->property();
 }
 		
@@ -148,7 +148,7 @@ EvalNode(SemanticTask* _task, ParentInfo _parentInfo) {
 	if(subtasks.size() != 2) {
 		std::cout << "Number of subtasks: " << subtasks.size() << std::endl;
 		throw RunTimeException(WHERE, 
-				"SubtaskFlow is operating under the assumption that the decomp tree is binary.");
+				"SubtaskFlow is operating under the assumption that the decomp tree is binary." );
 	}
 
 
@@ -184,11 +184,11 @@ EvalNode(SemanticTask* _task, ParentInfo _parentInfo) {
 
 	if(_task->GetSubtaskRelation() == SemanticTask::SubtaskRelation::XOR) {
 
-		func.m_operator = TBDFunction::MIN;
+		func.m_operator = TBDFunction::Min;
 		return std::make_pair(childVIDs,func);
 	}
 	// Last remaining scenario is two required independent subtasks
-	func.m_operator = TBDFunction::MAX;
+	func.m_operator = TBDFunction::Max;
 	return std::make_pair(childVIDs,func);	
 }
 
@@ -207,10 +207,9 @@ HandleDependencies(SemanticTask* _task, ParentInfo _parentInfo) {
 			auto depTask = *(dep.second.begin());
 			switch(dep.first) {
 				case SemanticTask::Completion :
-						throw RunTimeException(WHERE, "Dependency type not handled."); 
+						throw RunTimeException(WHERE, "Dependency type not handled.");
 						break;
-				case SemanticTask::Initiation : // Standard sequential dependency 
-					{
+				case SemanticTask::Initiation : { // Standard sequential dependency
 						children = EvalNode(depTask, _parentInfo);
 						ParentInfo grandChildren = EvalNode(_task, children);
 						for(auto source : children.first) {
@@ -224,13 +223,13 @@ HandleDependencies(SemanticTask* _task, ParentInfo _parentInfo) {
 					children = MergeNodes(_task,depTask, _parentInfo);
 					break;
 				case SemanticTask::Asynchronous :
-					throw RunTimeException(WHERE, "Dependency type not handled."); 
+					throw RunTimeException(WHERE, "Dependency type not handled.");
 					break;
 				case SemanticTask::None :
-					throw RunTimeException(WHERE, "Dependency type not handled."); 
+					throw RunTimeException(WHERE, "Dependency type not handled.");
 					break;
 				default:
-					throw RunTimeException(WHERE, "Dependency type not handled."); 
+					throw RunTimeException(WHERE, "Dependency type not handled.");
 					break;
 			}
 		}		
@@ -253,7 +252,7 @@ MergeNodes(SemanticTask* _one, SemanticTask* _two, ParentInfo _parentInfo) {
 	}
 
 	TBDFunction func;
-	func.m_operator = TBDFunction::MAX;
+	func.m_operator = TBDFunction::Max;
 	func.m_subFunctions = {left.second,right.second};
 	
 	merge.m_task = _one->GetParent();

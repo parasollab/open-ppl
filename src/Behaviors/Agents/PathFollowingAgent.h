@@ -5,7 +5,6 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent calls pmpl to generate a path, then attempts to follow the path
 /// waypoints as closely as possible by relying on the robot's controller.

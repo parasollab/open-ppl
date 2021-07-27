@@ -27,9 +27,9 @@ class XMLNode;
 /// tasks, and robots.
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef _PARALLEL
-class MPProblem final : public stapl::p_object
+class MPProblem : public stapl::p_object
 #else
-class MPProblem final
+class MPProblem 
 #endif
 {
 
@@ -48,7 +48,7 @@ class MPProblem final
     MPProblem(const MPProblem& _other); ///< Copy.
     MPProblem(MPProblem&& _other) = delete;
 
-    ~MPProblem();
+    virtual ~MPProblem();
 
     ///@}
     ///@name Assignment

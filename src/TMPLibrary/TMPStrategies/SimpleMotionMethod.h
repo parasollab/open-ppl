@@ -4,18 +4,18 @@
 #include "TMPStrategyMethod.h"
 
 class SimpleMotionMethod : public TMPStrategyMethod {
-	public:
-	
+  public:
+
     ///@name Construction
     ///@{
 
-		SimpleMotionMethod();
+    SimpleMotionMethod();
 
     SimpleMotionMethod(XMLNode& _node);
 
     ~SimpleMotionMethod();
 
-		virtual void Initialize() override;
+    virtual void Initialize() override;
 
     ///@}
     ///@name Accessors
@@ -29,15 +29,15 @@ class SimpleMotionMethod : public TMPStrategyMethod {
     /// _library needs to have the solution and problem set to the coordinator's
     /// values for these.
     virtual void PlanTasks() override;
-       
+
     ///@}
 
-	private:
+  private:
 
-		///@name Internal State
-		///@{
+    ///@name Internal State
+    ///@{
 
-		///@}
+    ///@}
 };
 
 #endif
