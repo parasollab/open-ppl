@@ -26,29 +26,23 @@
 /// @ingroup MotionPlanningStrategies
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
+class TogglePRMStrategy : public BasicPRM<MPTraits> {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType     CfgType;
-    typedef typename MPTraits::RoadmapType RoadmapType;
-    typedef typename RoadmapType::VID      VID;
+    typedef typename MPTraits::CfgType                  CfgType;
+    typedef typename MPTraits::RoadmapType              RoadmapType;
+    typedef typename RoadmapType::VID                   VID;
+    typedef typename BasicPRM<MPTraits>::SamplerSetting SamplerSetting;
 
     ///@}
     ///@name Local Types
     ///@{
 
     typedef std::deque<std::pair<bool, CfgType>> ToggleQueue;
-
-    /// Settings for a specific sampler.
-    struct SamplerSetting {
-      std::string label;
-      size_t count;
-      size_t attempts;
-    };
 
     ///@}
     ///@name Construction
@@ -98,11 +92,7 @@ class TogglePRMStrategy : public MPStrategyMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    /// Sampler labels with number and attempts of sampler.
-    std::vector<SamplerSetting> m_samplers;
-    /// Connector labels for node-to-node.
-    std::vector<std::string> m_connectorLabels;
-    /// Connectors for obstacle roadmap.
+
     std::vector<std::string> m_colConnectorLabels;
     std::string m_vcLabel;     ///< Validity checker for lazy samplers.
 
@@ -125,7 +115,7 @@ TogglePRMStrategy() {
 
 template <typename MPTraits>
 TogglePRMStrategy<MPTraits>::
-TogglePRMStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
+TogglePRMStrategy(XMLNode& _node) : BasicPRM<MPTraits>(_node) {
   this->SetName("TogglePRMStrategy");
 
   m_vcLabel = _node.Read("vcLabel", true, "",
@@ -141,13 +131,13 @@ TogglePRMStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
           1, 0, MAX_INT, "Number of samples");
       s.attempts = child.Read("attempts", false,
           1, 0, MAX_INT, "Number of attempts per sample");
-      m_samplers.push_back(s);
+      this->m_samplers.push_back(s);
     }
     else if(child.Name() == "Connector")
-      m_connectorLabels.push_back(
+      this->m_connectorLabels.push_back(
           child.Read("label", true, "", "Connector Label"));
     else if(child.Name() == "ColConnector")
-      m_colConnectorLabels.push_back(
+        m_colConnectorLabels.push_back(
           child.Read("label", true, "", "Node connection method"));
   }
 }
@@ -161,13 +151,13 @@ Print(std::ostream& _os) const {
   MPStrategyMethod<MPTraits>::Print(_os);
 
   _os << "\tSamplers";
-  for(const auto& sampler : m_samplers)
+  for(const auto& sampler : this->m_samplers)
     _os << "\n\t\t" << sampler.label
         << "\tNumber:"   << sampler.count
         << "\tAttempts:" << sampler.attempts;
 
   _os << "\n\tConnectors";
-  for(const auto& label : m_connectorLabels)
+  for(const auto& label : this->m_connectorLabels)
     _os << "\n\t\t" << label;
 
   _os << "\n\tCollision Connectors";
@@ -185,9 +175,7 @@ template <typename MPTraits>
 void
 TogglePRMStrategy<MPTraits>::
 Initialize() {
-  // Generate start and goal nodes if possible.
-  this->GenerateStart(m_samplers.front().label);
-  this->GenerateGoals(m_samplers.front().label);
+  BasicPRM<MPTraits>::Initialize();
 
   m_queue.clear();
 }
