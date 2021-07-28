@@ -1,7 +1,7 @@
 # Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Set platform, debug mode, and address sanitizer if not already set.
-platform ?= Ubuntu
+platform ?= LINUX_gcc
 debug    ?= 1
 asan     ?= 0
 

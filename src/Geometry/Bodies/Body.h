@@ -13,13 +13,15 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <urdf/model.h>
 
 using namespace mathtool;
 
 class CollisionDetectionMethod;
 class Connection;
 class MultiBody;
+namespace urdf {
+  class Link;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A single polyhedral body in workspace. One or more of these are composed to

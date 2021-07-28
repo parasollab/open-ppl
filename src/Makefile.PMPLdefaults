@@ -428,7 +428,14 @@ ifeq ($(platform), Ubuntu)
   URDF_LIBS := $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so
   URDF_SRCS := \
     Utilities/URDFParser.cpp \
-    Behaviors/Agents/StepFunctions/ROSStepFunction.cpp
+    Behaviors/Agents/StepFunctions/ROSStepFunction.cpp \
+		Behaviors/Agents/StepFunctions/ROSStepFunctionFactory.cpp \
+		Geometry/Bodies/URDFSupport.cpp \
+		MPProblem/Robot/RobotURDFSupport.cpp
+else
+  URDF_SRCS := \
+  	Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
+		MPProblem/Robot/RobotEmptyFunctions.cpp
 endif
 
 
@@ -491,7 +498,6 @@ TASK_SRCS := \
   Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
   Behaviors/Agents/StepFunctions/FollowPath.cpp \
   Behaviors/Agents/StepFunctions/StepFunction.cpp \
-  Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
   TMPLibrary/TMPLibrary.cpp
 ################################################################################
 # TMP Main

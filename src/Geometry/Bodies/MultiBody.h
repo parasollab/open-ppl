@@ -7,7 +7,6 @@
 #include <unordered_map>
     
 #include "Utilities/XMLNode.h"
-#include "Utilities/URDFParser.h"
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Boundaries/Range.h"
@@ -15,6 +14,10 @@
 class Boundary;
 class Cfg;
 class Connection;
+
+namespace urdf {
+  class Model;
+}
 //class XMLNode;
 
 #ifdef DEBUG_BULLET_PROBLEMS

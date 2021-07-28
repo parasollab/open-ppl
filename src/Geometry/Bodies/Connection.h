@@ -15,11 +15,13 @@ using namespace mathtool;
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <urdf/model.h>
+//#include <urdf/model.h>
 
 class Body;
 class MultiBody;
-
+namespace urdf {
+  class Joint;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Connection information between two Bodys in a MultiBody.

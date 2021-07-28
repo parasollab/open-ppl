@@ -1,6 +1,7 @@
 #include "StepFunction.h"
 #include "DefaultCoordinatorStepFunction.h"
 #include "FollowPath.h"
+#include "ROSStepFunction.h"
 
 #include <algorithm>
 #include <string>
@@ -25,6 +26,11 @@ Factory(Agent* _agent, XMLNode& _node) {
   else if(type == "followpath") {
     output = std::unique_ptr<StepFunction>(
       new FollowPath(_agent, _node)
+    );
+  }
+  else if(type == "ros") {
+    output = std::unique_ptr<StepFunction>(
+      new ROSStepFunction(_agent, _node)
     );
   }
   else {
