@@ -149,8 +149,18 @@ GetRoles() {
 
 std::vector<std::unique_ptr<Constraint>>&&
 MotionCondition::
-GetTransformedConstraints(Transformation& _transform) {
+GetTranslatedConstraints(const std::vector<double>& _t) const {
   std::vector<std::unique_ptr<Constraint>> constraints;
+
+  for(const auto& constraint : m_constraints) {
+    auto boundary = constraint.second->GetBoundary()->Clone();
+    boundary->Translate(_t);
+
+    auto c = std::unique_ptr<Constraint>(new BoundaryConstraint(
+             constraint.second->GetRobot(),std::move(boundary)));
+    constraints.push_back(std::move(c));
+  }
+
   return std::move(constraints);
 }
 /*------------------------------------------------------------*/

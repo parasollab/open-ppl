@@ -45,7 +45,9 @@ class MotionCondition : public Condition {
 
     std::set<std::string> GetRoles();
 
-    std::vector<std::unique_ptr<Constraint>>&& GetTransformedConstraints(Transformation& _transform);
+    std::vector<std::unique_ptr<Constraint>>&& 
+                    GetTranslatedConstraints(const std::vector<double>& _t) const;
+
     ///@}
   private:
     ///@name Internal State
