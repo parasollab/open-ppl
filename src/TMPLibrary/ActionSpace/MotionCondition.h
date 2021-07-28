@@ -2,6 +2,7 @@
 #define PPL_MOTION_CONDITION_H_
 
 #include "Condition.h"
+#include "Transformation.h"
 
 class Constraint;
 class RobotGroup;
@@ -44,6 +45,7 @@ class MotionCondition : public Condition {
 
     std::set<std::string> GetRoles();
 
+    std::vector<std::unique_ptr<Constraint>>&& GetTransformedConstraints(Transformation& _transform);
     ///@}
   private:
     ///@name Internal State

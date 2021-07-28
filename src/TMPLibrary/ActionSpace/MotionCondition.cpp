@@ -146,4 +146,11 @@ GetRoles() {
 
   return roles;
 }
+
+std::vector<std::unique_ptr<Constraint>>&&
+MotionCondition::
+GetTransformedConstraints(Transformation& _transform) {
+  std::vector<std::unique_ptr<Constraint>> constraints;
+  return std::move(constraints);
+}
 /*------------------------------------------------------------*/
