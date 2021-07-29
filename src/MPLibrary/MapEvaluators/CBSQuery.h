@@ -55,9 +55,9 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     typedef std::unordered_map<Robot*, ConstraintSet> ConstraintMap;
 
-    typedef std::unordered_map<Robot*, std::shared_ptr<Path>> SolutionMap;
+    typedef std::unordered_map<Robot*, Path*> SolutionMap;
 
-    typedef CBSNode<Robot*, Constraint, std::shared_ptr<Path>> CBSNodeType;
+    typedef CBSNode<Robot, Constraint, Path> CBSNodeType;
 
 
   public:
@@ -90,7 +90,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
-    std::shared_ptr<Path> SolveIndividualTask(Robot* const _robot,
+    Path* SolveIndividualTask(Robot* const _robot,
         const ConstraintMap& _constraintMap = {});
 
     std::pair<std::pair<Robot*, Robot*>, Conflict> FindConflict(const SolutionMap& _solution);
@@ -100,6 +100,9 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     bool IsEdgeSafe(const VID _source, const VID _target,
         const CfgType& _conflictCfg) const;
+
+    std::set<std::pair<size_t, Cfg>>::iterator LowerBound(size_t bound) const;
+    std::set<std::pair<size_t, Cfg>>::iterator UpperBound(size_t bound) const;
 
     std::vector<Robot*> m_robots;
 
@@ -256,12 +259,12 @@ operator()() {
         double cost = 0;
         if (this->m_costLabel == "SOC") {
           for (const auto& ts : _node.solutionMap) {
-            cost += ts.second->length();
+            cost += ts.second->Length();
           }
         } else {
           for (const auto& ts : _node.solutionMap) {
-            if (ts.second->length() > cost)
-              cost = ts.second->length();
+            if (ts.second->Length() > cost)
+              cost = ts.second->Length();
           }
         }
         return cost;
@@ -271,7 +274,7 @@ operator()() {
 }
 
 template <typename MPTraits>
-std::shared_ptr<typename MPTraits::Path>
+typename MPTraits::Path*
 CBSQuery<MPTraits>::
 SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   MethodTimer mt(this->GetStatClass(),
@@ -311,10 +314,10 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
 
   // Otherwise, return a copy of the robot's path from the solution object.
   Path* path = this->GetPath(_robot);
-  auto out = std::shared_ptr<Path>(new Path(std::move(*path)));
-  path->Clear();
+  //auto out = new Path(std::move(*path));
+  //path->Clear();
 
-  return out;
+  return path;
 }
 
 template <typename MPTraits>
@@ -335,7 +338,7 @@ FindConflict(const SolutionMap& _solution) {
     lastTimestep = std::max(lastTimestep, path.second.size());
 
   auto vc = static_cast<CollisionDetectionValidity<MPTraits>*>(
-      this->GetValidityChecker(m_vcLabel).get()
+      this->GetValidityChecker(m_vcLabel)
   );
 
   // Step through each timestep.
@@ -422,8 +425,8 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
 
   // There is at least one conflict. Find the set which occurs between this
   // edge's start and end time.
-  auto lower = m_currentConstraints->lower_bound(startTime),
-       upper = m_currentConstraints->upper_bound(endTime);
+  auto lower = LowerBound(startTime);
+  auto upper = UpperBound(endTime);
 
   // If all of the conflicts happen before or after now, there is nothing to
   // check.
@@ -468,6 +471,38 @@ MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
   return endTime;
 }
 
+template<typename MPTraits>
+std::set<std::pair<size_t, Cfg>>::iterator
+CBSQuery<MPTraits>::
+LowerBound(size_t bound) const {
+    //const ConstraintSet* m_currentConstraints{nullptr};
+    //typedef std::pair<size_t, CfgType> Constraint;
+  auto bound_it = m_currentConstraints->end();
+  for (auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
+    if (it->first <= bound)
+      bound_it = it;
+    else
+      break;
+  }
+  return bound_it;
+}
+
+template<typename MPTraits>
+std::set<std::pair<size_t, Cfg>>::iterator
+CBSQuery<MPTraits>::
+UpperBound(size_t bound) const {
+    //const ConstraintSet* m_currentConstraints{nullptr};
+    //typedef std::pair<size_t, CfgType> Constraint;
+  auto bound_it = m_currentConstraints->end();
+  for (auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
+    if (it->first > bound){
+      bound_it = it;
+      break;
+    }
+  }
+  return bound_it;
+}
+
 
 template <typename MPTraits>
 bool
@@ -491,7 +526,7 @@ IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc.get());
+  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
 
   // Configure the other robot at _conflictCfg.
   auto otherMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
@@ -511,5 +546,7 @@ IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
   // If we haven't detected a collision, the edge is safe.
   return true;
 }
+
+
 
 #endif
