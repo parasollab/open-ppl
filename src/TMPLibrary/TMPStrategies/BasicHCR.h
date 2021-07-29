@@ -83,6 +83,8 @@ class BasicHCR : public TMPStrategyMethod {
     std::pair<CompositeSemanticRoadmap,State> FindStartState2(
         Interaction* _interaction, SemanticRoadmap* _sr);
    
+    bool CheckCompositeStatesForMotionConstraints(Interaction* _interaction, State& _state);
+
     // Check if the previous function already dos this 
     std::vector<BasicHCR::CompositeSemanticRoadmap>
     BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr, 

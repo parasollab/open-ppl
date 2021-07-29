@@ -186,7 +186,7 @@ SampleInteraction(SemanticRoadmap* _sr) {
   if(!inter) 
     throw RunTimeException(WHERE) << "Interaction not sampled from distribution.";
 
-  auto start = FindStartState(inter,_sr);
+  auto start = FindStartState2(inter,_sr);
 
   if(start.first.empty())
     return false;
@@ -404,8 +404,11 @@ CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr,
         return std::make_pair(CompositeSemanticRoadmap(),State());
     } 
 
-    // Return value if true
-    return std::make_pair(csr,state);
+    // Return value if it satisfies the Motion Constraints
+    if(CheckCompositeStatesForMotionConstraints(_interaction,state))
+      return std::make_pair(csr,state);
+
+    return std::make_pair(CompositeSemanticRoadmap(),State());
   }
     
   auto sr = _csr[_csrIndex];
@@ -422,6 +425,46 @@ CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr,
   }
 
   return std::make_pair(CompositeSemanticRoadmap(),State());
+}
+
+bool 
+BasicHCR::
+CheckCompositeStatesForMotionConstraints(Interaction* _interaction, State& _state) {
+  
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+
+  ProximityCondition* p;
+
+  // Find the proximity condition - assume only one
+  for(auto label : _interaction->GetPreConditions()) {
+    p = dynamic_cast<ProximityCondition*>(as->GetCondition(label));
+ 
+    // Check that it is a proximty condition 
+    if(p)
+      break;
+  }
+
+  // Check Motion Constraints
+  for(auto label : _interaction->GetPreConditions()) {
+
+    auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
+
+    // Check that it is a motion condition
+    if(!m) 
+      continue; 
+
+    // ReCenter m on p
+    m->ReCenter(p->GetBoundary()->GetCenter());
+
+    bool sat = m->Satisfied(_state);
+
+    m->ReCenter({0,0,0});
+
+    if(!sat)
+      return false;
+  } 
+
+  return true;
 }
 
 std::pair<BasicHCR::CompositeSemanticRoadmap,BasicHCR::State>

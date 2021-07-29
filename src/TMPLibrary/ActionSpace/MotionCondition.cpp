@@ -67,7 +67,7 @@ Satisfied(const State& _state) const {
     auto groupCfg = roadmap->GetVertex(vid);
 
     bool foundMatch = true;
-    for(auto& constraint : m_constraints) {
+    for(auto& constraint : m_translatedConstraints) {
 
       foundMatch = false;
 
@@ -147,10 +147,18 @@ GetRoles() {
   return roles;
 }
 
-std::vector<std::unique_ptr<Constraint>>&&
+void    
 MotionCondition::
-GetTranslatedConstraints(const std::vector<double>& _t) const {
-  std::vector<std::unique_ptr<Constraint>> constraints;
+ReCenter(const std::vector<double>& _t) {
+  m_translatedConstraints = ComputeTranslatedConstraints(_t);
+}
+
+/*--------------------- Helper Functions ---------------------*/
+
+std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&&
+MotionCondition::
+ComputeTranslatedConstraints(const std::vector<double>& _t) const {
+  std::vector<std::pair<std::string, std::unique_ptr<Constraint>>> constraints;
 
   for(const auto& constraint : m_constraints) {
     auto boundary = constraint.second->GetBoundary()->Clone();
@@ -158,7 +166,7 @@ GetTranslatedConstraints(const std::vector<double>& _t) const {
 
     auto c = std::unique_ptr<Constraint>(new BoundaryConstraint(
              constraint.second->GetRobot(),std::move(boundary)));
-    constraints.push_back(std::move(c));
+    constraints.push_back(std::make_pair(constraint.first,std::move(c)));
   }
 
   return std::move(constraints);
