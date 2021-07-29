@@ -24,6 +24,8 @@ class LazyQueryTest : virtual public LazyQuery<MPTraits>,
     typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::WeightType       WeightType;
+
 
     typedef TestBaseObject::TestResult TestResult;
 
@@ -78,11 +80,13 @@ class LazyQueryTest : virtual public LazyQuery<MPTraits>,
 /*--------------------------- Construction ---------------------------*/
 template <typename MPTraits>
 LazyQueryTest<MPTraits>::
-LazyQueryTest() : QueryMethod<MPTraits>(), LazyQuery<MPTraits>() {}
+LazyQueryTest() : QueryMethod<MPTraits>(), LazyQuery<MPTraits>() {
+}
 
 template <typename MPTraits>
 LazyQueryTest<MPTraits>::
-LazyQueryTest(XMLNode& _node) : QueryMethod<MPTraits>(), LazyQuery<MPTraits>(_node) {}
+LazyQueryTest(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPTraits>(_node), LazyQuery<MPTraits>(_node) {
+}
 
 template <typename MPTraits>
 LazyQueryTest<MPTraits>::
@@ -97,12 +101,18 @@ MainFunctionTest() {
 
   bool passed = true;
   std::string message = "";
+  std::cout << "Before Single Setup" << std::endl;
 
   // Test Individual Robot Functionality
   SingleSetup();
 
+  std::cout << "After Single Setup" << std::endl;
+
+
   auto singleResult = this->IndividualRobotMainFunction(m_singleRoadmap,
                                                         m_singleTask);
+  
+  std::cout << "After Single Result" << std::endl;
 
   if(!singleResult) {
     passed = false;
@@ -142,47 +152,50 @@ void
 LazyQueryTest<MPTraits>::
 SingleSetup() {
   // Get Robot
-  auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  auto robot = MapEvaluatorMethodTest<MPTraits>::GetMPProblem()->GetRobots()[0].get();
+  // auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  std::cout << "In Single Setup" << std::endl;
 
   /// Roadmap Construction
-  auto roadmap = RoadmapType(robot);
+  // auto roadmap = RoadmapType(robot);
+  RoadmapType* roadmap = new RoadmapType(robot);
 
   // Construct vertices and add to roadmap
 
   // Start & Goal: Valid robot configurations.
-  vector<double> startP { 24.0, -24.0, 0 };
+  mathtool::Vector3d startP { 24.0, -24.0, 0 };
   auto start = roadmap->AddVertex(CfgType(startP, robot));
 
-  vector<double> goalP { 24.0, 24.0, 0 };
+  mathtool::Vector3d goalP { 24.0, 24.0, 0 };
   auto goal = roadmap->AddVertex(CfgType(goalP, robot));
 
   // Vertex 1: Out of boundary vertex.
-  vector<double> v1P { 30, 0, 0 };
+  mathtool::Vector3d v1P { 30, 0, 0 };
   auto v1 = roadmap->AddVertex(CfgType(v1P, robot));
 
   // Vertex 2: In boundary vertex.
-  vector<double> v2P { 20, 0, 0 };
+  mathtool::Vector3d v2P { 20, 0, 0 };
   auto v2 = roadmap->AddVertex(CfgType(v2P, robot));
 
   // Add edges to roadmap with respective weights
 
   // Edge 1: Passes through object in enviornment
   // Tests to ensure edges are invalidated properly
-  roadmap->AddEdge(start, goal, 3.0);
+  roadmap->AddEdge(start, goal, WeightType("a",3.0));
 
   // Edge 2 & 3: Passes through vertex out of environment
   // boundary. Tests to ensure vertices are invalidated
   // properly.
-  roadmap->AddEdge(start, v1, 1.0);
-  roadmap->AddEdge(v1, goal, 1.0);
+  roadmap->AddEdge(start, v1, WeightType("b",1.0));
+  roadmap->AddEdge(v1, goal, WeightType("c",1.0));
 
   // Edge 4 & 5: Valid path to goal. Tests to ensure query
   // method can find path after failing first to searches.
-  roadmap->AddEdge(start, v2, 4.0);
-  roadmap->AddEdge(v2, goal, 4.0);
+  roadmap->AddEdge(start, v2, WeightType("d",4.0));
+  roadmap->AddEdge(v2, goal, WeightType("e",4.0));
 
   /// Task Construction
-  MPTask* task(robot);
+  MPTask* task = new MPTask(robot);
   // Set robot start and goal constraints
   auto startConstraint = std::unique_ptr<CSpaceConstraint>(
     new CSpaceConstraint(robot, CfgType(startP, robot)));

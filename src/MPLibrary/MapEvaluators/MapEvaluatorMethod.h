@@ -23,7 +23,8 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
 
     MapEvaluatorMethod() = default;
 
-    MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+    // MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+    MapEvaluatorMethod(XMLNode& _node);
 
     virtual ~MapEvaluatorMethod() = default;
 
@@ -67,6 +68,12 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     ///@}
 
 };
+
+template<typename MPTraits>
+MapEvaluatorMethod<MPTraits>::
+MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) { 
+  std::cout << "HERE IN MAPEVAL" << std::endl;
+}
 
 /*----------------------------- Active Robots --------------------------------*/
 

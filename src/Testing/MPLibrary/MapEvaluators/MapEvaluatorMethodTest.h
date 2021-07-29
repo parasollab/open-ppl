@@ -36,7 +36,7 @@ class MapEvaluatorMethodTest : virtual public MapEvaluatorMethod<MPTraits>,
 
     ///@}
 
-  private:
+  protected:
     ///@name Interface Test Function
     ///@{
 
@@ -59,7 +59,7 @@ class MapEvaluatorMethodTest : virtual public MapEvaluatorMethod<MPTraits>,
 
 template <typename MPTraits>
 MapEvaluatorMethodTest<MPTraits>::
-MapEvaluatorMethodTest() { }
+MapEvaluatorMethodTest() : MapEvaluatorMethod<MPTraits>() { }
 
 template <typename MPTraits>
 MapEvaluatorMethodTest<MPTraits>::
