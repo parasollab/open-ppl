@@ -18,7 +18,7 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    
+
     <RobotGroup label="robotGroup" robotLabels="boxy1 boxy2"/>
 
     <GroupTask label="groupQuery" group="robotGroup">
@@ -70,9 +70,9 @@
     </Task>
 
     <Decomposition label="main" taskLabel="first" coordinator="coordinator">
-    
+
       <SemanticTask label="top" subtaskRelation="AND"/>
-  
+
       <SemanticTask label="first" parent="top">
         <Task label="query1" robot="boxy1">
           <StartConstraints>
@@ -101,7 +101,7 @@
             <StartConstraints>
               <CSpaceConstraint point="5 0 0 0 0 0"/>
             </StartConstraints>
-    
+
             <GoalConstraints>
               <CSpaceConstraint point="20 -5 10 0.2 0.8 0.5"/>
             </GoalConstraints>
@@ -123,6 +123,10 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <ValidityCheckers>
+      <BoundingSpheres  label="BoundingSperes"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>

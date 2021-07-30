@@ -21,6 +21,7 @@
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 
 //neighborhood finder includes
 
@@ -56,8 +57,8 @@
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
 ///
-/// All methods should have "Test" at the end to specify that they are using the 
-/// test version, and the test version header file should be included at the 
+/// All methods should have "Test" at the end to specify that they are using the
+/// test version, and the test version header file should be included at the
 /// top of this file.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename C, typename W = DefaultWeight<C>>
@@ -84,7 +85,8 @@ struct MPTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-      AlwaysTrueValidityTest<MPTraits>
+      AlwaysTrueValidityTest<MPTraits>,
+      BoundingSpheresCollisionDetectionTest<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world

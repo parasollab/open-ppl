@@ -60,6 +60,7 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
+      <CollisionDetection label="bounding" method="BoundingSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
@@ -69,7 +70,7 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="bounding"/>
     </Samplers>
 
     <LocalPlanners>
@@ -77,7 +78,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
+        vcLabel="bounding" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
