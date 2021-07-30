@@ -151,7 +151,6 @@ CBSDefaultInitialFunction() {
   };
 }
 
-
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
@@ -186,10 +185,10 @@ CBS(
   // Create root node with initial plans
   std::vector<CBSNodeType> root;
 
-  _initial(root, _tasks, _cost);
+  _initial(root, _tasks, _lowlevel, _cost);
 
   for (auto node : root)
-    ct.push(root);
+    ct.push(node);
 
   // Search conflict tree
   while(!ct.empty()) {
@@ -203,10 +202,10 @@ CBS(
 
     // If there are no conflicts, return the valid solution
     if(constraints.empty())
-      return node;
+     return node;
 
     // Create child nodes
-    auto children = _split(node, constraints, _lowlevel);
+    auto children = _split(node, constraints, _lowlevel, _cost);
 
     // Add child nodes to the tree
     for(const auto& child : children) {
@@ -216,5 +215,6 @@ CBS(
 
   return CBSNodeType();
 }
+
 
 #endif

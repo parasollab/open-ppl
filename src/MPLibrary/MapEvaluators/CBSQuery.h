@@ -234,13 +234,15 @@ operator()() {
                 continue;
               }
               child.constraintMap[robot].insert(constraint);
-              if(m_conflictCache.count(child.constraintMap)) {
-                if (this->m_debug)
-                  std::cout << "\t\t\tThis conflict set was already attempted, skipping."
-                            << std::endl;
-                continue;
-              }
-              m_conflictCache.insert(child.constraintMap);
+
+              //TODO: Conflict Caching will need to be reimplemented
+              //if(m_conflictCache.count(child.constraintMap)) {
+              //  if (this->m_debug)
+              //    std::cout << "\t\t\tThis conflict set was already attempted, skipping."
+              //              << std::endl;
+              //  continue;
+              //}
+              //m_conflictCache.insert(child.constraintMap);
               if (!_lowlevel(child, robot))
                 continue;
 
@@ -270,7 +272,15 @@ operator()() {
         return cost;
       });
 
-  CBS(m_robots, validation, split, lowlevel, cost);
+  auto solution_node =  CBS(m_robots, validation, split, lowlevel, cost);
+  auto solution = this->GetMPSolution();
+  if (solution_node.solutionMap.size() > 0) {
+    for(auto rp : solution_node.solutionMap) {
+      solution->SetPath(rp.first, rp.second);
+    }
+    return true;
+  }
+  return false;
 }
 
 template <typename MPTraits>
