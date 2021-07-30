@@ -454,11 +454,13 @@ CheckCompositeStatesForMotionConstraints(Interaction* _interaction, State& _stat
       continue; 
 
     // ReCenter m on p
-    m->ReCenter(p->GetBoundary()->GetCenter());
+    if(p)
+      m->ReCenter(p->GetBoundary()->GetCenter());
 
     bool sat = m->Satisfied(_state);
 
-    m->ReCenter({0,0,0});
+    std::vector<double> origin = {0,0,0};
+    m->ReCenter(origin);
 
     if(!sat)
       return false;

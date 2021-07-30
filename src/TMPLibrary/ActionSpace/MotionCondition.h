@@ -53,8 +53,6 @@ class MotionCondition : public Condition {
 
     ///@name Helper Functions
     ///@{
-    std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&& 
-                ComputeTranslatedConstraints(const std::vector<double>& _t) const;
 
     ///@}
     ///@name Internal State
@@ -66,6 +64,8 @@ class MotionCondition : public Condition {
     std::vector<std::pair<std::string,std::unique_ptr<Constraint>>> m_translatedConstraints;
 
     std::unordered_map<Constraint*,std::string> m_roles;
+
+    bool m_explicit{false}; ///< Flag indicating that constraints cannot be shifted.
 
     ///@}
 

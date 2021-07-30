@@ -81,7 +81,8 @@ ProximityCondition::
 ComputeCompositeCenter(const State& _state) const {
 
   // Collect the center points of all the robots in the input state.
-  std::vector<std::pair<Robot*,std::vector<double>>> centerPoints;
+  std::vector<double> center(3,0);
+  double numRobots = 0;
 
   for(auto kv : _state) {
     auto group = kv.first;
@@ -89,28 +90,17 @@ ComputeCompositeCenter(const State& _state) const {
 
     for(auto robot : group->GetRobots()) {
       auto cfg = gcfg.GetRobotCfg(robot);
-      std::vector<double> center(3,0.0);
+      numRobots += 1;
 
       for(size_t i = 0; i < cfg.PosDOF(); i++) {
-        center[i] = cfg[i];
+        center[i] += cfg[i];
       }
-
-      centerPoints.push_back(std::make_pair(robot,center));
-    }
-  }
-
-  // Check if all center-to-center distances satisfy the threshold
-  // and collect the composite center.
-  std::vector<double> center(3,0);
-  for(size_t i = 0; i < centerPoints.size(); i++) {
-    for(size_t i = 0; i < center.size(); i++) {
-      center[i] = center[i]/centerPoints.size();
     }
   }
 
   // Average the center values to get the composite center.
   for(size_t i = 0; i < center.size(); i++) {
-    center[i] = center[i]/centerPoints.size();
+    center[i] = center[i]/numRobots;
   }
 
   return center;

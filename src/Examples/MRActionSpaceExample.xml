@@ -259,7 +259,7 @@
 
       
       <Condition label="GoalBox1" type="motion">
-        <CSpaceConstraint bbx="[15:25 ; 0:10 ; 5:15 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="boxy" role="R1"/>
       </Condition>
 
@@ -272,10 +272,9 @@
         <CSpaceConstraint point="10 0 0 0 0 0" dof="6" 
                           type="boxy" role="R2"/>
       </Condition>
-
       
       <Condition label="GoalBox2" type="motion">
-        <CSpaceConstraint bbx="[15:25 ; -5:5 ; -5:5 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="boxy" role="R2"/>
       </Condition>
 

@@ -20,6 +20,9 @@ MotionCondition::
 MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpLibrary) {
   this->SetName("MotionCondition");
 
+  m_explicit = _node.Read("explicit",false,m_explicit,
+                          "Flag indicating if constraints can be shifted.");
+
   for(auto& child : _node) {
     auto found = child.Name().find("Constraint");
     if(found != std::string::npos) {
@@ -36,6 +39,8 @@ MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpL
       m_roles[m_constraints.back().second.get()] = role;
     }
   }
+
+  ReCenter({0,0,0});
 }
 
 MotionCondition::
@@ -67,7 +72,14 @@ Satisfied(const State& _state) const {
     auto groupCfg = roadmap->GetVertex(vid);
 
     bool foundMatch = true;
-    for(auto& constraint : m_translatedConstraints) {
+
+    const std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>* constraints;
+    if(m_explicit)
+      constraints = &m_constraints;
+    else
+      constraints = &m_translatedConstraints;
+
+    for(auto& constraint : *constraints) {
 
       foundMatch = false;
 
@@ -150,15 +162,7 @@ GetRoles() {
 void    
 MotionCondition::
 ReCenter(const std::vector<double>& _t) {
-  m_translatedConstraints = ComputeTranslatedConstraints(_t);
-}
-
-/*--------------------- Helper Functions ---------------------*/
-
-std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&&
-MotionCondition::
-ComputeTranslatedConstraints(const std::vector<double>& _t) const {
-  std::vector<std::pair<std::string, std::unique_ptr<Constraint>>> constraints;
+  m_translatedConstraints.clear();
 
   for(const auto& constraint : m_constraints) {
     auto boundary = constraint.second->GetBoundary()->Clone();
@@ -166,9 +170,10 @@ ComputeTranslatedConstraints(const std::vector<double>& _t) const {
 
     auto c = std::unique_ptr<Constraint>(new BoundaryConstraint(
              constraint.second->GetRobot(),std::move(boundary)));
-    constraints.push_back(std::make_pair(constraint.first,std::move(c)));
+    m_translatedConstraints.push_back(std::make_pair(constraint.first,std::move(c)));
   }
-
-  return std::move(constraints);
 }
+
+/*--------------------- Helper Functions ---------------------*/
+
 /*------------------------------------------------------------*/

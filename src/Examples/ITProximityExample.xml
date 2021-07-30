@@ -293,7 +293,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false" vcLabel="pqp_solid"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -443,8 +443,8 @@
       </Condition>
 
 
-      <Condition label="ExchangeProximity" type="proximity" threshold="12"/>
-      <Condition label="GraspProximity" type="proximity" threshold="8"/>
+      <Condition label="ExchangeProximity" type="proximity" shape="sphere" limits="[0 0 0 ; 12]"/>
+      <Condition label="GraspProximity" type="proximity" shape="sphere" limits="[0 0 0 ; 8]"/>
 
 
       <!-- Actions -->
