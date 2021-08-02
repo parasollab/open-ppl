@@ -121,10 +121,26 @@ Satisfied(const State& _state) const {
 
 /*------------------------- Accessors ------------------------*/
 
-const std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&
+const std::vector<std::pair<std::string,Constraint*>>
 MotionCondition::
 GetConstraints() {
-  return m_constraints;
+
+  std::vector<std::pair<std::string,Constraint*>> constraints;
+
+  if(m_explicit) {
+    for(const auto& constraint : m_constraints) {
+      auto p = std::make_pair(constraint.first,constraint.second.get());
+      constraints.push_back(p);
+    }
+  }
+  else {
+    for(const auto& constraint : m_translatedConstraints) {
+      auto p = std::make_pair(constraint.first,constraint.second.get());
+      constraints.push_back(p);
+    }
+  }
+
+  return constraints;
 }
 
 std::vector<Constraint*>
@@ -162,6 +178,10 @@ GetRoles() {
 void    
 MotionCondition::
 ReCenter(const std::vector<double>& _t) {
+
+  if(m_explicit)
+    return;
+
   m_translatedConstraints.clear();
 
   for(const auto& constraint : m_constraints) {

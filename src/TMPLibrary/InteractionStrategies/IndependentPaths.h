@@ -7,6 +7,16 @@ class IndependentPaths : public InteractionStrategyMethod {
 
   public:
 
+    ///@name Local Types
+    ///@{
+
+    typedef InteractionStrategyMethod::State                 State;
+		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
+    typedef GroupLocalPlan<Cfg>                              GroupWeightType;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -20,10 +30,33 @@ class IndependentPaths : public InteractionStrategyMethod {
     ///@name Interface
     ///@{
 
+    virtual bool operator()(Interaction* _interaction, State& _state) override;
+
     ///@}
 
   private:
-    string m_samplerLabel;
+    ///@name Helper Functions
+    ///@{
 
+    std::vector<GroupTask*> GenerateTasks(std::vector<std::string> _conditions, 
+                            std::unordered_map<Robot*,Constraint*> _startConstraints,
+                            std::unordered_map<Robot*,Constraint*> _goalConstraints);
+
+    std::vector<Path*> PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
+
+    State InterimState(Interaction* _interaction);
+
+    ///@}
+    ///@name Internal State
+
+    std::string m_mpStrategyLabel;
+
+    std::unordered_map<Robot*,Cfg> m_interimCfgMap;
+
+    std::unordered_map<Robot*,std::vector<Cfg>> m_individualPaths;
+ 
+    State m_finalState;
+
+    ///@}
 };
 #endif

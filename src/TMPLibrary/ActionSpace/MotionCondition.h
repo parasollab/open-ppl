@@ -36,8 +36,7 @@ class MotionCondition : public Condition {
     ///@name Accessors
     ///@{
 
-    const std::vector<std::pair<std::string,std::unique_ptr<Constraint>>>&
-                    GetConstraints();
+    const std::vector<std::pair<std::string,Constraint*>> GetConstraints();
 
     std::vector<Constraint*> GetConstraints(std::string _type);
 

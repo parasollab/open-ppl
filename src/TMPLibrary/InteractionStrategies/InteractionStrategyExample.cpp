@@ -166,7 +166,7 @@ AssignRoles(const State& _state, std::vector<std::string> _conditions) {
       const auto& constraints = m->GetConstraints();
       for(const auto& c : constraints) {
 
-        auto role = m->GetRole(c.second.get());
+        auto role = m->GetRole(c.second);
         // Find the right robot for the role
         auto type = c.first;
         for(auto robot : robots) {
@@ -257,11 +257,11 @@ GenerateConstraints(std::vector<std::string> _conditions) {
       for(const auto& c : constraints) {
 
         // Check if condition role has been assigned
-        auto role = m->GetRole(c.second.get());
+        auto role = m->GetRole(c.second);
         auto iter = m_roleMap.find(role);
         if(iter != m_roleMap.end()) {
           auto robot = m_roleMap[role];
-          constraintMap[robot] = c.second.get();
+          constraintMap[robot] = c.second;
           continue;
         }
         throw RunTimeException(WHERE) << "Role "

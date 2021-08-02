@@ -9,11 +9,9 @@
       frictionCoefficient="0" gravity="0 0 0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot" capability="boxy">
-      <!--
-      <Agent type="planning"/>
-      -->
-      <Agent type="pathfollowing" waypointDm="euclideanPosition"
-        waypointThreshold=".05"/>
+      <Agent type="child" waypointDm="euclidean" waypointThreshold=".05">
+        <StepFunction type="followpath" waypointDm="euclidean" time="1"/>
+      </Agent>
     </Robot>
 
     <Robot label="boxy2" filename="3D/boxy.robot" capability="boxy">

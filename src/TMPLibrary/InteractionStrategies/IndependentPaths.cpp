@@ -1,5 +1,10 @@
 #include "IndependentPaths.h"
 
+#include "TMPLibrary/ActionSpace/ActionSpace.h"
+#include "TMPLibrary/ActionSpace/FormationCondition.h"
+#include "TMPLibrary/ActionSpace/Interaction.h"
+#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+
 /*---------------------------- Construction --------------------------*/
 
 IndependentPaths::
@@ -10,7 +15,8 @@ IndependentPaths() {
 IndependentPaths::
 IndependentPaths(XMLNode& _node) : InteractionStrategyMethod(_node) {
   this->SetName("IndependentPaths");
-  m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler for all Robots");
+  m_mpStrategyLabel = _node.Read("mpStrategy", true, "",
+                 "MPStrategy to use to plan interactions.");
 }
 
 IndependentPaths::
@@ -18,188 +24,296 @@ IndependentPaths::
 
 /*------------------------------ Interface ----------------------------*/
 
-  /*
-void
+bool
 IndependentPaths::
-PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy) {
+operator()(Interaction* _interaction, State& _state) {
 
-  cout << m_samplerLabel << endl;
-
-  auto testSampler = sg->GetMPLibrary()->GetSampler(m_samplerLabel);
-  testSampler->Print(std::cout);
-
-  cout << "Done" << endl;
-
-  auto originalProblem = this->GetMPProblem();
-
-  for(auto& info : originalProblem->GetInteractionInformations()){
-    //auto it = new InteractionTemplate(info.get());
-    //this->GetPlan()->AddInteractionTemplate(it);
-    //FindITLocations(it);
-    auto inter = new Interaction(info.get());
-    this->GetPlan()->AddInteraction(inter);
+  if(m_debug) {
+    std::cout << "Planning interaction: " 
+              << _interaction->GetLabel() 
+              << std::endl;
   }
 
-  sg->GetMPLibrary()->SetMPProblem(problemCopy.get());
-  // Set robots to virtual so that planning handoffs does not cause collisions
-  std::list<HandoffAgent*> unusedAgents;
+  _interaction->Initialize();
 
-  for(auto& currentTemplate : this->GetPlan()->GetInteractions()){
-    this->GetPlan()->GetStatClass()->StartClock("Construct InteractionTemplate "
-        + currentTemplate->GetInformation()->GetLabel());
+  // Collect robot groups
+  std::vector<RobotGroup*> groups;
+  for(auto kv : _state) {
+    groups.push_back(kv.first);
+  }
 
-    unusedAgents.clear();
-    std::copy(this->GetPlan()->GetTeam().begin(), this->GetPlan()->GetTeam().end(),
-        std::back_inserter(unusedAgents));
+  // Assign interaction roles.
+  auto& preconditions = _interaction->GetPreConditions();
+  AssignRoles(_state,preconditions);
 
-    auto handoffTasks = currentTemplate->GetInformation()->GetInteractionTasks();
-    std::unordered_map<std::shared_ptr<MPTask>, HandoffAgent*> agentTasks;
-    // Loop through all tasks and assign a robot of matching capability to the
-    // task, then configuring the robot at the goal constraint.
+  // Construct start constraints.
+  //auto startConstraintMap = GenerateConstraints(preconditions);
 
-    for(auto task : handoffTasks){
-      sg->GetMPLibrary()->SetTask(task.get());
-      for(auto agent : unusedAgents){
-        if(agent->GetCapability() == task->GetCapability()){
-          agentTasks[task] = agent;
-          Robot* tempRobot = problemCopy->GetRobot(agent->GetRobot()->GetLabel());
-          task->SetRobot(tempRobot);
-          unusedAgents.remove(agent);
-          // Confiure tempRobot at the goal constraint for the task
-          // - Sample at the point of the goal constraint
-          // - Get CFG from sample and place tempRobot there
-          auto boundingBox = task->GetGoalConstraints().front()->
-            GetBoundary();
-          std::vector<Cfg> goalPoints;
+  // Construct start constraints from initial state.
+  auto startConstraintMap = GenerateConstraints(_state);
 
-          MPSolution* sol = new MPSolution(this->GetPlan()->GetCoordinator()->GetRobot());
-          sg->GetMPLibrary()->SetMPSolution(sol);
-          sg->GetMPLibrary()->SetTask(task.get());
-          auto sampler = sg->GetMPLibrary()->GetSampler(m_samplerLabel);
-          size_t numNodes = 1, numAttempts = 100;
-          tempRobot->SetVirtual(true);
-          sampler->Sample(numNodes, numAttempts, boundingBox,
-              std::back_inserter(goalPoints));
+  // Construct interim constraints.
+  auto& interimConditions = _interaction->GetInterimConditions();
+  auto interimConstraintMap = GenerateConstraints(interimConditions,groups);
 
-          tempRobot->SetVirtual(false);
-          if(goalPoints.empty())
-            throw RunTimeException(WHERE, "No valid final handoff position for the robot.");
+  // Construct toInterim tasks with precondition robot groups.
+  auto toInterim = GenerateTasks(preconditions,
+                                 startConstraintMap,
+                                 interimConstraintMap);
 
-          goalPoints[0].ConfigureRobot();
-          break;
-        }
-      }
+  // Compute motions from pre to interim conditions.
+  SetActiveFormations(preconditions,_interaction->GetToInterimSolution());
+  //auto toInterimPath = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
+  //                "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
+  auto toInterimPaths = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
+                  "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
+
+  //if(!toInterimPath)
+  if(toInterimPaths.empty())
+    return false;
+
+  auto& postconditions = _interaction->GetPostConditions();
+  SetActiveFormations(postconditions,_interaction->GetToPostSolution());
+
+  _interaction->SetToInterimPaths(toInterimPaths);
+
+  // Extract last cfg from path and use to start post task.
+  // Currently, the state is both computed and added in this function.
+  auto state = InterimState(_interaction);
+
+  // Construct goal constraints.
+  auto goalConstraintMap = GenerateConstraints(postconditions,groups);
+
+  // Construct toPost tasks with postcondition robot groups.
+  auto toPost = GenerateTasks(postconditions,
+                              interimConstraintMap,
+                              goalConstraintMap);
+
+  // Compute motions from interim to post conditions.
+  //auto toPostPath = PlanMotions(toPost,_interaction->GetToPostSolution(),
+  //                   "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
+  auto toPostPaths = PlanMotions(toPost,_interaction->GetToPostSolution(),
+                     "PlanInteraction::"+_interaction->GetLabel()+"::ToPost"); 
+
+  //if(!toPostPath)
+  if(toPostPaths.empty())
+    return false;
+
+  _interaction->SetToPostPaths(toPostPaths);
+
+  _state = m_finalState;
+
+  m_roleMap.clear();
+  m_interimCfgMap.clear();
+  m_individualPaths.clear();
+  m_finalState.clear();
+
+  return true;
+}
+
+/*--------------------------- Helper Functions ------------------------*/
+
+std::vector<GroupTask*>
+IndependentPaths::
+GenerateTasks(std::vector<std::string> _conditions, 
+              std::unordered_map<Robot*,Constraint*> _startConstraints,
+              std::unordered_map<Robot*,Constraint*> _goalConstraints) {
+
+  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+  std::vector<GroupTask*> groupTasks;
+
+  // Create a task for each required robot group
+  for(auto label : _conditions) {
+    auto condition = as->GetCondition(label);
+
+    // Check that condition is a formation condition
+    auto f = dynamic_cast<FormationCondition*>(condition);
+    if(!f)
+      continue;
+
+    auto roles = f->GetRoles();
+    std::vector<Robot*> robots;
+    std::string groupLabel = "";
+    for(auto role : roles) {
+      auto robot = m_roleMap[role];
+      robots.push_back(robot);
+      groupLabel += (role + ":" + robot->GetLabel() + "--");
     }
-    // Set the unused agents to virtual before planning.
-    for(auto agent : unusedAgents){
-      auto robot = problemCopy->GetRobot(agent->GetRobot()->GetLabel());
-      robot->SetVirtual(true);
+
+    RobotGroup* group = this->GetMPProblem()->AddRobotGroup(robots,groupLabel);
+    // Check if group is truly new and update MPSolution
+    if(group->GetLabel() == groupLabel) {
+      hcr->AddRobotGroup(group);
     }
-    int check = 0;
-    for(auto task : handoffTasks){
-      Robot* taskRobot = problemCopy->GetRobot(agentTasks[task]->GetRobot()->GetLabel());
-      std::unique_ptr<MPSolution> handoffSolution(new MPSolution(taskRobot));
-      // Store the current configuration of the robot, since the multibody
-      // will be moved while solving.
-      auto currentConfig = taskRobot->GetMultiBody()->GetCurrentDOFs();
-      if(m_debug){
-        for(auto& robot : problemCopy->GetRobots()){
-          std::cout << robot->GetLabel() << " - " << robot.get()
-            << ": " << robot->GetMultiBody()->GetCurrentDOFs()
-            << " - " << robot->IsVirtual() << std::endl;
-        }
-      }
+   
+    GroupTask* groupTask = new GroupTask(group);
 
-      task->SetRobot(taskRobot);
-      // Solve for non-mainpulator robot teams
-      if(!taskRobot->IsManipulator()){
-        sg->GetMPLibrary()->Solve(problemCopy.get(), task.get(), handoffSolution.get(),
-            currentTemplate->GetInformation()->GetMPStrategy(), LRand(),
-            currentTemplate->GetInformation()->GetMPStrategy());
-      }
-      // Solve for manipulator robot teams
-      else {
-        std::vector<Cfg> startPoints;
-        MPSolution* sol = new MPSolution(this->GetPlan()->GetCoordinator()->GetRobot());
-        sg->GetMPLibrary()->SetMPSolution(sol);
-        auto sampler = sg->GetMPLibrary()->GetSampler(m_samplerLabel);
-        size_t numNodes = 1, numAttempts = 100;
-        auto boundingBox = task->GetStartConstraint()->GetBoundary();
-        sg->GetMPLibrary()->SetTask(task.get());
-        sampler->Sample(numNodes, numAttempts, boundingBox,std::back_inserter(startPoints));
+    // Generate individual robot tasks
+    for(auto robot : robots) {
+      MPTask task(robot);
 
-        if(startPoints.empty())
-          throw RunTimeException(WHERE, "No valid start handoff position for the robot.");
+      auto start = _startConstraints[robot]->Clone();
+      start->SetRobot(robot);
+      task.SetStartConstraint(std::move(start));
 
-        startPoints[0].ConfigureRobot();
-        std::cout << startPoints[0].PrettyPrint() << std::endl;
+      auto goal = _goalConstraints[robot]->Clone();
+      goal->SetRobot(robot);
+      task.AddGoalConstraint(std::move(goal));
 
-        sg->GetMPLibrary()->Solve(problemCopy.get(), task.get(),
-            handoffSolution.get(), currentTemplate->GetInformation()->GetMPStrategy()
-            , LRand(), currentTemplate->GetInformation()->GetMPStrategy());
-      }
+      groupTask->AddTask(task);
+    }
+ 
+    groupTasks.push_back(groupTask);
+  }
 
-      taskRobot->GetMultiBody()->Configure(currentConfig);
+  return groupTasks;
+}
 
-      if(m_debug){
-        std::cout << "Size of path: " << handoffSolution->GetPath()->Cfgs().size() << std::endl;
-        for(auto cfg : handoffSolution->GetPath()->Cfgs()){
+std::vector<IndependentPaths::Path*>
+IndependentPaths::
+PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label) {
+
+  // Grab MPSolution, MPLibrary, and MPProblem.
+  auto lib = this->GetMPLibrary();
+  auto prob = this->GetMPProblem();
+
+  // Clear previous final state.
+  m_finalState.clear();
+
+  std::vector<Path*> paths;
+
+  for(auto task : _tasks) {
+
+    // Add group to MPSolution
+    auto group = task->GetRobotGroup();
+    for(auto robot : group->GetRobots()) {
+      _solution->AddRobot(robot);
+    }
+    _solution->AddRobotGroup(group);
+    
+    // Call the MPLibrary solve function to expand the roadmap
+    lib->Solve(prob,task,_solution,m_mpStrategyLabel, LRand(),_label);
+
+    // Check for solution
+    // Check composite path
+    auto grm = _solution->GetGroupRoadmap(group);
+    auto groupPath = _solution->GetGroupPath(group);
+    if(groupPath and !groupPath->Empty()) {
+      if(m_debug) {
+        std::cout << "Cfg Path for " << _label << std::endl;
+        for(auto cfg : groupPath->Cfgs()) {
           std::cout << cfg.PrettyPrint() << std::endl;
         }
       }
 
-      handoffSolution->GetRoadmap()->Write("indHandoffTemplate" + std::to_string(check) + ".map", problemCopy->GetEnvironment());
-      check++;
+      // Save group cfg at the end of the path.
+      auto lastVID = groupPath->VIDs().back();
+      auto last = grm->GetVertex(lastVID);
 
-      // Store the roadmap for each task in the handoff
-      auto rob = handoffSolution->GetRoadmap()->GetRobot();
-      handoffSolution->GetRoadmap()->SetRobot(originalProblem->GetRobot(rob->GetLabel()));
-      currentTemplate->AddRoadmap(handoffSolution->GetRoadmap());
-      currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs(), originalProblem);
+      m_finalState[group] = std::make_pair(grm,lastVID);
 
-      if(currentTemplate->GetInformation()->SavedPaths()){
-        //currentTemplate->AddPath(handoffSolution->GetPath()->Cfgs()),
-        // handoffSolution->GetPath()->Length());
-        std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
-        currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().back(), originalProblem);
-        std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().back() << std::endl;
-      }else{
-        // Add final configuration of path to template
-        std::cout << "Path: " << handoffSolution->GetPath()->Size() << std::endl;
-        currentTemplate->AddHandoffCfg(handoffSolution->GetPath()->Cfgs().back(), originalProblem);
-        std::cout << "Handoff Cfg: " << handoffSolution->GetPath()->Cfgs().back() << std::endl;
+      // Save individual robot cfgs at the end of the path.
+      for(auto robot : group->GetRobots()) {
+        auto cfg = last.GetRobotCfg(robot);
+        m_interimCfgMap[robot] = cfg;
+
       }
+
+      // Extract into individual robot paths
+      auto decoupledPaths = DecouplePath(_solution,groupPath);
+      for(auto p : decoupledPaths) {
+        paths.push_back(p);
+      }
+      continue;
     }
 
-    currentTemplate->ConnectRoadmaps(this->GetPlan()->GetCoordinator()->GetRobot(), originalProblem);
+    // Check decoupled paths.
+    GroupCfg gcfg(grm);
 
-    this->GetPlan()->GetStatClass()->StopClock("Construct InteractionTemplate "
-        + currentTemplate->GetInformation()->GetLabel());
-    this->GetPlan()->GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
-        +"::Vertices", currentTemplate->GetConnectedRoadmap()->get_num_vertices());
-    this->GetPlan()->GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
-        +"::Edges", currentTemplate->GetConnectedRoadmap()->get_num_vertices());
+    for(auto robot : group->GetRobots()) {
+      auto path = _solution->GetPath(robot);
+      if(path->Empty()) {
+        //return nullptr;
+        return {};
+      }
 
-    size_t count = 0;
-    for(auto rm : currentTemplate->GetRoadmaps()){
-      count++;
-      this->GetPlan()->GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
-          +"::"+std::to_string(count)
-          +"::Vertices", rm->get_num_vertices());
-      this->GetPlan()->GetStatClass()->SetStat(currentTemplate->GetInformation()->GetLabel()
-          +"::"+std::to_string(count)
-          +"::Edges", rm->get_num_vertices());
+      // Save last cfg in path.
+      auto lastVID = path->VIDs().back();
+      auto rm = _solution->GetRoadmap(robot);
+      auto cfg = rm->GetVertex(lastVID);
+      m_interimCfgMap[robot] = cfg;
+
+      gcfg.SetRobotCfg(robot,lastVID);
+
+      paths.push_back(path);
     }
 
-    std::cout << "Trying to write handoffTemplate Map" << std::endl;
-    currentTemplate->GetConnectedRoadmap()->Write("handoffTemplate.map",
-        problemCopy->GetEnvironment());
-
-    // Reset the agents to non-virtual, since they could be used in the next
-    // template.
-    for(auto agent : unusedAgents){
-      problemCopy->GetRobot(agent->GetRobot()->GetLabel())->SetVirtual(false);
-    }
+    // Save group cfg at the end of the path.
+    auto groupVID = grm->AddVertex(gcfg);
+    m_finalState[group] = std::make_pair(grm,groupVID);
   }
+
+  return paths;
 }
-  */
+
+IndependentPaths::State
+IndependentPaths::
+InterimState(Interaction* _interaction) {
+
+  State interimState;
+
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+  auto prob = this->GetMPProblem();
+  auto solution = _interaction->GetToPostSolution();
+
+  // Collect post condition robot groups
+  std::vector<RobotGroup*> postGroups;
+  auto& postConditions = _interaction->GetPostConditions();
+  
+  for(auto conditionLabel : postConditions) {
+    auto condition = as->GetCondition(conditionLabel);
+
+    // Check that this is a formation condition
+    auto f = dynamic_cast<FormationCondition*>(condition);
+    if(!f)
+      continue;
+
+    // Collect robots from assigned roles
+    std::vector<Robot*> robots;
+    std::string groupLabel = "";
+
+    for(auto role : f->GetRoles()) {
+      auto robot = m_roleMap[role];
+      robots.push_back(robot);
+      groupLabel += (role + ":" + robot->GetLabel() + "--");
+    }
+
+    // Intialize group
+    RobotGroup* group = prob->AddRobotGroup(robots,groupLabel);
+    for(auto robot : group->GetRobots()) {
+      solution->AddRobot(robot);
+    }
+    solution->AddRobotGroup(group);
+    
+    // Create initial group vertex
+    auto grm = solution->GetGroupRoadmap(group);
+    auto gcfg = GroupCfg(grm);
+
+    // Add initial cfg to individual roadmaps
+    for(auto& robot : group->GetRobots()) {
+      auto rm = solution->GetRoadmap(robot);
+      auto cfg = m_interimCfgMap[robot];
+      auto vid = rm->AddVertex(cfg);
+     
+      // Update group vertex 
+      gcfg.SetRobotCfg(robot,vid);
+    }
+
+    // Add intial group vertex and add to state
+    auto gvid = grm->AddVertex(gcfg);
+    interimState[group] = std::make_pair(grm,gvid);
+  }
+ 
+  return interimState; 
+}

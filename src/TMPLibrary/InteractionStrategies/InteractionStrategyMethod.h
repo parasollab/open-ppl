@@ -13,6 +13,10 @@ class InteractionStrategyMethod : public TMPBaseObject {
     ///@{
 
     typedef Condition::State State;
+    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
+    typedef GroupLocalPlan<Cfg>                              GroupWeightType;
 
     ///@}
     ///@name Construction
@@ -38,10 +42,58 @@ class InteractionStrategyMethod : public TMPBaseObject {
 
   protected:
 
+    ///@name Helper Functions
+    ///@{
+
+    /// Assign interaction roles to the robots in the input state from the input set 
+    /// of conditions.
+    /// @param _state The state to extract the robots and connect to the conditions.
+    /// @param _conditions The set of conditions to use to assign roles.
+    void AssignRoles(const State& _state, const std::vector<std::string>& _conditions);
+
+    /// Use the pre-conditions in the interaction to set the local 
+    /// boundary for planning the interaction.
+    /// @param _interaction The interaction to extract the boundary for.
+    /// @param _state State to center interaction boundary on.
+    void SetInteractionBoundary(Interaction* _interaction, const State& _state);
+
+    /// Generate a set of CSpace constraints corresponding to the input state.
+    /// @param _state The state to convert into CSpace constraints.
+    std::unordered_map<Robot*,Constraint*> GenerateConstraints(const State& _state);
+
+    /// Generate a set of motion constraints from the listed conditions.
+    /// @param _conditions The conditions to generate the constraints from.
+    /// @param _groups The robot groups the constraints will form.
+    std::unordered_map<Robot*,Constraint*> GenerateConstraints(
+                                           const std::vector<std::string>& _conditions,
+                                           const std::vector<RobotGroup*>& _groups);
+
+    /// Sample a set of motion constraints for each group in the interaction boundary.
+    /// @param _groups The robot groups to find constraints for.
+    std::unordered_map<Robot*,Constraint*> SampleMotionConstraints(
+                                           const std::vector<std::string>& _conditions,
+                                           const std::vector<RobotGroup*> _groups);
+
+    void SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution);
+
+
+    // TODO::Temporary - delete after IRving's implementation is checked in.
+    std::vector<Path*> DecouplePath(MPSolution* _solution, GroupPathType* _groupPath);
+
+    ///@}
     ///@name Internal State
     ///@{
 
-    std::string m_sgLabel;
+    std::unordered_map<std::string,Robot*> m_roleMap;
+
+    std::unique_ptr<Boundary> m_boundary; ///< Boundary to plan interaction within.
+
+    std::string m_sgLabel; ///< State graph label
+
+    std::string m_smLabel; ///< Sampler method label
+
+    size_t m_numNodes; ///< Number of samples for sampling constraint cfgs.
+    size_t m_maxAttempts; ///< Number of attempts for sampling constraint cfgs.
 
     ///@}
 
