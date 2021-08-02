@@ -114,7 +114,7 @@ class MPLibraryType
 
     MPLibraryType(const std::string& _filename);
 
-    ~MPLibraryType();
+    virtual ~MPLibraryType();
 
     ///@}
     ///@name Configuration
