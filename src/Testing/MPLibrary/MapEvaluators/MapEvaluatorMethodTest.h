@@ -93,7 +93,9 @@ IndividualRobotMainFunction(RoadmapType* _roadmap, MPTask* _task) {
   auto lib = this->GetMPLibrary();
   lib->SetTask(_task);
   lib->SetGroupTask(nullptr);
-  
+
+  this->GetMPLibrary()->GetGoalTracker()->AddMap(_roadmap, _task);
+
   auto robot = _task->GetRobot();
   auto solution = lib->GetMPSolution();
   solution->AddRobot(robot);

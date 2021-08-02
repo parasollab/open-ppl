@@ -101,19 +101,13 @@ MainFunctionTest() {
 
   bool passed = true;
   std::string message = "";
-  std::cout << "Before Single Setup" << std::endl;
 
   // Test Individual Robot Functionality
   SingleSetup();
 
-  std::cout << "After Single Setup" << std::endl;
-
-
   auto singleResult = this->IndividualRobotMainFunction(m_singleRoadmap,
                                                         m_singleTask);
   
-  std::cout << "After Single Result" << std::endl;
-
   if(!singleResult) {
     passed = false;
     message = message + "\n\tIndividual robot functionality testing failed "
@@ -154,7 +148,6 @@ SingleSetup() {
   // Get Robot
   auto robot = MapEvaluatorMethodTest<MPTraits>::GetMPProblem()->GetRobots()[0].get();
   // auto robot = this->GetMPProblem()->GetRobots()[0].get();
-  std::cout << "In Single Setup" << std::endl;
 
   /// Roadmap Construction
   // auto roadmap = RoadmapType(robot);
@@ -163,19 +156,35 @@ SingleSetup() {
   // Construct vertices and add to roadmap
 
   // Start & Goal: Valid robot configurations.
-  mathtool::Vector3d startP { 24.0, -24.0, 0 };
-  auto start = roadmap->AddVertex(CfgType(startP, robot));
+  // mathtool::Vector3d startP { 0.0, 0.0, 0.0 };
+  // auto start = roadmap->AddVertex(CfgType(startP, robot));
+  auto p1 = CfgType(robot);
+  std::istringstream p1Stream("0 0 0 0 0 0 0");
+  p1.Read(p1Stream);
+  auto start = roadmap->AddVertex(p1);
 
-  mathtool::Vector3d goalP { 24.0, 24.0, 0 };
-  auto goal = roadmap->AddVertex(CfgType(goalP, robot));
+  // mathtool::Vector3d goalP { 20.0, 5.0, 10.0 };
+  // auto goal = roadmap->AddVertex(CfgType(goalP, robot));
+  auto p2 = CfgType(robot);
+  std::istringstream p2Stream("0 20 -10 0 .3 .7 .8");
+  p2.Read(p2Stream);
+  auto goal = roadmap->AddVertex(p2);
 
   // Vertex 1: Out of boundary vertex.
-  mathtool::Vector3d v1P { 30, 0, 0 };
-  auto v1 = roadmap->AddVertex(CfgType(v1P, robot));
+  // mathtool::Vector3d v1P { 0.0, 50.0, 0.0 };
+  // auto v1 = roadmap->AddVertex(CfgType(v1P, robot));
+  auto v1P = CfgType(robot);
+  std::istringstream v1Stream("0 0 -50 0 0 0 0");
+  v1P.Read(v1Stream);
+  auto v1 = roadmap->AddVertex(v1P);
 
   // Vertex 2: In boundary vertex.
-  mathtool::Vector3d v2P { 20, 0, 0 };
-  auto v2 = roadmap->AddVertex(CfgType(v2P, robot));
+  // mathtool::Vector3d v2P { 20.0, 0.0, 10.0 };
+  // auto v2 = roadmap->AddVertex(CfgType(v2P, robot));
+  auto v2P = CfgType(robot);
+  std::istringstream v2Stream("0 20 0 0 0 0 0");
+  v2P.Read(v2Stream);
+  auto v2 = roadmap->AddVertex(v2P);
 
   // Add edges to roadmap with respective weights
 
@@ -195,13 +204,15 @@ SingleSetup() {
   roadmap->AddEdge(v2, goal, WeightType("e",4.0));
 
   /// Task Construction
-  MPTask* task = new MPTask(robot);
+  // MPTask* task = new MPTask(robot);
+  auto task = this->GetMPLibrary()->GetTask();
+  task->SetRobot(robot);
   // Set robot start and goal constraints
   auto startConstraint = std::unique_ptr<CSpaceConstraint>(
-    new CSpaceConstraint(robot, CfgType(startP, robot)));
+    new CSpaceConstraint(robot, p1));
 
   auto goalConstraint  = std::unique_ptr<CSpaceConstraint>(
-    new CSpaceConstraint(robot, CfgType(goalP, robot)));
+    new CSpaceConstraint(robot, p2)); 
 
   task->SetStartConstraint(std::move(startConstraint));
   task->AddGoalConstraint(std::move(goalConstraint));
