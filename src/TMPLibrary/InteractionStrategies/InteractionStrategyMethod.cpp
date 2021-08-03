@@ -19,9 +19,9 @@
 
 InteractionStrategyMethod::
 InteractionStrategyMethod(XMLNode& _node) : TMPBaseObject(_node) {
-  m_sgLabel     = _node.Read("sgLabel", false, "", 
+  m_sgLabel     = _node.Read("sgLabel", true, "", 
                              "StateGraph to use within strategy.");
-  m_smLabel     = _node.Read("sgLabel", true, "", 
+  m_smLabel     = _node.Read("smLabel", true, "", 
                              "Sampler method to use within strategy.");
   m_numNodes    = _node.Read("numNodes", false, 1, 0, 100, 
                              "Numbner of samples for finding constraints.");

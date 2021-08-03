@@ -35,6 +35,7 @@ operator()(Interaction* _interaction, State& _state) {
   }
 
   _interaction->Initialize();
+  SetInteractionBoundary(_interaction,_state);
 
   // Collect robot groups
   std::vector<RobotGroup*> groups;

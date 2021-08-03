@@ -398,7 +398,7 @@ CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr,
 
       auto p = dynamic_cast<ProximityCondition*>(as->GetCondition(label));
 
-      if(!p) continue; // Check that it is a motion condition
+      if(!p) continue; // Check that it is a proximty condition
 
       if(!p->Satisfied(state))
         return std::make_pair(CompositeSemanticRoadmap(),State());

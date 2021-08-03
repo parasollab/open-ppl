@@ -314,6 +314,7 @@ void
 TMPLibrary::
 SetMPProblem(MPProblem* const _problem) noexcept {
   m_problem = _problem;
+  m_library->SetMPProblem(_problem);
 }
 
 std::vector<std::shared_ptr<MPTask>>& 
@@ -387,7 +388,7 @@ Solve(MPProblem* _problem,
     Coordinator* _coordinator,
     std::vector<Robot*> _team) {
 
-  m_problem = _problem;
+  SetMPProblem(_problem);
   m_plan = _plan;
   m_plan->SetMPProblem(_problem);
   m_plan->SetCoordinator(_coordinator);

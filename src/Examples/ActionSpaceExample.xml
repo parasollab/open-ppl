@@ -16,14 +16,15 @@
         waypointThreshold=".05"/>
     </Robot>
 
+    <RobotGroup label="robotGroup" robotLabels="boxy"/>
+
     <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
       <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
         <Member label="boxy"/>
         <StepFunction type="defaultcoordinator" debug="true"/>
+        <InitialGroup label="robotGroup"/>
       </Agent>
     </Robot>
-
-    <RobotGroup label="robotGroup" robotLabels="boxy"/>
 
     <GroupTask label="groupQuery" group="robotGroup">
       <Task label="startLocation" robot="boxy">
@@ -200,7 +201,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" vcLabel="pqp_solid" debug="true"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -210,13 +211,13 @@
 		</TaskAllocators>
 
     <InteractionStrategies>
-      <InteractionStrategyExample label="InteractionStrategyExample" 
-                                  mpStrategy="CompositePRM" dmLabel="euclidean"
-                                  lpLabel="sl" debug="true"/>
+      <IndependentPaths label="IndPaths" 
+          sgLabel="HCR" smLabel="UniformRandomFree"
+          mpStrategy="CompositePRM" debug="true"/>
     </InteractionStrategies>
 
 		<StateGraphs>
-      <CombinedRoadmap label="HCR" debug="false"/>
+      <CombinedRoadmap label="HCR" debug="true"/>
 		</StateGraphs>
 
 		<TMPTools>
@@ -225,12 +226,9 @@
     <ActionSpace>
 
       <!-- Conditions -->
-      <Condition label="FormationExample" type="formation">
-        <Member type="boxy" role="R1"/>
-      </Condition>
 
       <Condition label="Solo" type="formation">
-        <Member type="boxy" role="R1"/>
+        <Role name="R1" type="boxy"/>
       </Condition>
 
       <Condition label="MotionExample" type="motion">
@@ -245,7 +243,7 @@
 
       
       <Condition label="GoalBox" type="motion">
-        <CSpaceConstraint bbx="[15:25 ; 0:10 ; 5:15 ; -1:1 ; -1:1 ; -1:1]"  
+        <CSpaceConstraint bbx="[-25:25 ; -15:15 ; -25:25 ; -1:1 ; -1:1 ; -1:1]"  
                           dof="6" type="boxy" role="R1"/>
       </Condition>
 
@@ -267,7 +265,7 @@
         </PostConditions>
       </Action-->
 
-      <Interaction label="Begin" isLabel="InteractionStrategyExample">
+      <Interaction label="Begin" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Solo"/>
           <Condition label="StartLocation"/>
@@ -282,7 +280,7 @@
         </PostConditions>
       </Interaction>
 
-      <Interaction label="Arrive" isLabel="InteractionStrategyExample">
+      <Interaction label="Arrive" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Solo"/>
           <Condition label="GoalBox"/>

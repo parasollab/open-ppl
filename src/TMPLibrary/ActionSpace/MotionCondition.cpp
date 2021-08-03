@@ -191,6 +191,7 @@ ReCenter(const std::vector<double>& _t) {
     auto c = std::unique_ptr<Constraint>(new BoundaryConstraint(
              constraint.second->GetRobot(),std::move(boundary)));
     m_translatedConstraints.push_back(std::make_pair(constraint.first,std::move(c)));
+    m_roles[m_translatedConstraints.back().second.get()] = m_roles[constraint.second.get()];
   }
 }
 

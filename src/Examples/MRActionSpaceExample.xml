@@ -234,9 +234,9 @@
 		</TaskAllocators>
 
     <InteractionStrategies>
-      <InteractionStrategyExample label="InteractionStrategyExample" 
-                                  mpStrategy="CompositePRM" dmLabel="euclidean"
-                                  lpLabel="sl" debug="true"/>
+      <IndependentPaths label="IndependentPaths" 
+          sgLabel="HCR" smLabel="UniformRandomFree"
+          mpStrategy="CompositePRM" debug="true"/>
     </InteractionStrategies>
 
 		<StateGraphs>
@@ -286,7 +286,7 @@
 
       <!-- Actions -->
 
-      <Interaction label="Arrive1" isLabel="InteractionStrategyExample">
+      <Interaction label="Arrive1" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Solo"/>
           <Condition label="GoalBox1"/>
@@ -301,7 +301,7 @@
         </PostConditions>
       </Interaction>
 
-      <Interaction label="Arrive2" isLabel="InteractionStrategyExample">
+      <Interaction label="Arrive2" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Solo2"/>
           <Condition label="GoalBox2"/>
