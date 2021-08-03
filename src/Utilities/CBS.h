@@ -12,7 +12,7 @@ struct CBSNode {
 
   /// Map of task to its constraints
   //std::unordered_map<IndividualTask*,std::unordered_set<ConstraintType>> constraintMap;
-  std::unordered_map<IndividualTask*,std::set<ConstraintType>> constraintMap;
+  std::map<IndividualTask*,std::set<ConstraintType>> constraintMap;
 
   /// Map of task to its solution
   std::unordered_map<IndividualTask*,IndividualSolution*> solutionMap;

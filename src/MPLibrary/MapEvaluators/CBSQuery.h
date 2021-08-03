@@ -53,7 +53,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     typedef std::set<Constraint> ConstraintSet;
 
-    typedef std::unordered_map<Robot*, ConstraintSet> ConstraintMap;
+    typedef std::map<Robot*, ConstraintSet> ConstraintMap;
 
     typedef std::unordered_map<Robot*, Path*> SolutionMap;
 
@@ -112,7 +112,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     size_t m_nodeLimit{std::numeric_limits<size_t>::max()};
 
     const ConstraintSet* m_currentConstraints{nullptr};
-    std::set<ConstraintMap> m_conflictCache;
+    std::set<ConstraintMap> m_constraintCache;
     std::unordered_map<Robot*, MPTask*> m_taskMap;
 
 
@@ -185,7 +185,7 @@ operator()() {
   m_robots = this->GetGroupTask()->GetRobotGroup()->GetRobots();
   for (auto& task : *(this->GetGroupTask())){
     auto robot = task.GetRobot();
-    if (m_taskMap.count(robot))
+    if (m_taskMap.count(robot) && m_taskMap[robot] != &task)
       throw RunTimeException(WHERE) << "This class can't handle group tasks "
                                     << "with more than one individual task "
                                     << "for a given robot (robot "
@@ -226,7 +226,7 @@ operator()() {
               auto robot = constraintPair.first;
               auto constraint = constraintPair.second;
               CBSNodeType child = _node;
-              if(child.constraintMap[robot].find(constraint) == child.constraintMap[robot].end()){
+              if(child.constraintMap[robot].find(constraint) != child.constraintMap[robot].end()){
                 if(this->m_debug)
                   std::cout << "\t\t\tConflict double-assigned to robot "
                             << robot->GetLabel() << ", skipping."
@@ -235,14 +235,13 @@ operator()() {
               }
               child.constraintMap[robot].insert(constraint);
 
-              //TODO: Conflict Caching will need to be reimplemented
-              //if(m_conflictCache.count(child.constraintMap)) {
-              //  if (this->m_debug)
-              //    std::cout << "\t\t\tThis conflict set was already attempted, skipping."
-              //              << std::endl;
-              //  continue;
-              //}
-              //m_conflictCache.insert(child.constraintMap);
+              if(m_constraintCache.count(child.constraintMap)) {
+                if (this->m_debug)
+                  std::cout << "\t\t\tThis conflict set was already attempted, skipping."
+                            << std::endl;
+                continue;
+              }
+              m_constraintCache.insert(child.constraintMap);
               if (!_lowlevel(child, robot))
                 continue;
 
@@ -384,7 +383,7 @@ FindConflict(const SolutionMap& _solution) {
           continue;
 
         if(this->m_debug)
-          std::cout << "\t\tConflict detected at timestemp " << t
+          std::cout << "\t\tConflict detected at timestep " << t
                     << " (time " << this->GetEnvironment()->GetTimeRes() * t
                     << ")."
                     << "\n\t\t\tRobot " << robot1->GetLabel() << ": "
@@ -492,10 +491,10 @@ LowerBound(size_t bound) const {
     //typedef std::pair<size_t, CfgType> Constraint;
   auto bound_it = m_currentConstraints->end();
   for (auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if (it->first <= bound)
+    if (it->first >= bound){
       bound_it = it;
-    else
       break;
+    }
   }
   return bound_it;
 }
