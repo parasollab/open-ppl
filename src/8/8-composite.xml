@@ -107,7 +107,6 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-      <WeightedEuclidean label="positionEuclidean" posWeight=1 rotWeight=0 velWeight=0 avlWeight=0/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -120,7 +119,6 @@
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="3"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
-      <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -140,62 +138,22 @@
         vcLabel="pqp_solid" maxDist="1." minDist=".001"/>
     </Extenders>
 
-    <PathModifiers>
-      <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
-        debug="false"/>
-    </PathModifiers>
-
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="false" debug="false"/>
     </Connectors>
 
-    <Metrics>
-      <NumNodesMetric label="NumNodes"/>
-      <NumEdgesMetric label="NumEdges"/>
-    </Metrics>
-
     <MapEvaluators>
-      <TimeEvaluator label="TimeEval" timeout="1000"/>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="1000" operator=">="/>
-      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
-        value="1000" operator=">"/>
-
       <QueryMethod label="IndividualQuery" debug="false"
         safeIntervalToolLabel="SI" twoVariableSS="true"/>
-      <GroupQuery label="CompositeQuery"/>
-      <!--GroupDecoupledQueryRRT label="DecoupledQueryRRT" queryLabel="IndividualQuery"
-        debug="false"/-->
-      <GroupDecoupledQuery label="DecoupledQuery" queryLabel="IndividualQuery"
-        debug="true"/>
-      <GroupCBSQuery label="CBSQuery" queryLabel="IndividualQuery"
-        debug="true" numIter="64" firstSol="false"/>
-
-      <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
-        <Evaluator label="TimeEval"/>
-        <Evaluator label="IndividualQuery"/>
-      </ComposeEvaluator>
-
-      <ComposeEvaluator label="BoundedCompositeQuery" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="CompositeQuery"/>
-      </ComposeEvaluator>
-
-      <ComposeEvaluator label="BoundedDecoupledQuery" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="DecoupledQuery"/>
-      </ComposeEvaluator>
+      <CBSQuery label="CBSQuery" queryLabel="IndividualQuery"
+        debug="true" vcLabel="pqp_solid"/>
 
       <!--ComposeEvaluator label="BoundedDecoupledQueryRRT" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="DecoupledQueryRRT"/>
       </ComposeEvaluator-->
 
-      <ComposeEvaluator label="BoundedCBSQuery" operator="or">
-        <Evaluator label="TimeEval"/>
-        <Evaluator label="CBSQuery"/>
-      </ComposeEvaluator>
     </MapEvaluators>
 
 
@@ -213,16 +171,6 @@
         goalDmLabel="euclidean" goalThreshold="5">
         <Evaluator label="IndividualQuery"/>
       </BasicRRTStrategy>
-
-      <GroupPRM label="CompositePRM" debug="true">
-        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
-        <Connector label="Closest"/>
-        <Evaluator label="CompositeQuery"/>
-      </GroupPRM>
-
-      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="IndividualPRM">
-        <Evaluator label="DecoupledQuery"/>
-      </GroupDecoupledStrategy>
       <!--GroupDecoupledStrategyRRT label="DecoupledRRT" strategyLabel="IndividualRRT">
         <Evaluator label="BoundedDecoupledQueryRRT"/>
       </GroupDecoupledStrategyRRT-->
@@ -245,8 +193,6 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="CompositePRM" seed="98765"
-      baseFilename="composite" vizmoDebug="true"/>
     <Solver mpStrategyLabel="CBSPRM" seed="98765"
       baseFilename="cbs" vizmoDebug="true"/>
 
