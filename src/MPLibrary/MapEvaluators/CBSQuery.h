@@ -304,10 +304,13 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
     m_currentConstraints = &_constraintMap.at(_robot);
 
   // Generate a path for this robot individually while avoiding the conflicts.
+  auto groupTask = this->GetMPLibrary()->GetGroupTask();
+  this->GetMPLibrary()->SetGroupTask(nullptr);
   this->GetMPLibrary()->SetTask(task);
   auto query = this->GetMapEvaluator(m_queryLabel);
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
+  this->GetMPLibrary()->SetGroupTask(groupTask);
 
   // Clear the conflicts.
   m_currentConstraints = nullptr;
