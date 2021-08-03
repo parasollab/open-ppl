@@ -1,9 +1,9 @@
 #ifndef PMPL_TMP_BASE_OBJECT_H_
 #define PMPL_TMP_BASE_OBJECT_H_
 
-#include "MPLibrary/PMPL.h"
-#include "MPProblem/MPProblem.h"
-#include "TMPLibrary/TMPLibrary.h"
+//#include "MPLibrary/PMPL.h"
+//#include "MPProblem/MPProblem.h"
+//#include "TMPLibrary/TMPLibrary.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
@@ -18,6 +18,11 @@ class StateGraph;
 template<typename TMPMethod> class TMPMethodSet;
 class TMPTools;
 */
+
+template <typename C, typename W>
+class MPTraits;
+class MPProblem;
+class TMPLibrary;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for all TMP algorithm abstractions in PMPL.
@@ -40,6 +45,7 @@ class TMPBaseObject {
     ///@name LocalTypes
     ///@{
 
+    typedef typename MPTraits<Cfg>::MPLibrary MPLibrary;
 
     ///@}
     ///@name Method Set Types

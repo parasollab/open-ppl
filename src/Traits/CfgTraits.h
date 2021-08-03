@@ -44,7 +44,9 @@
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
+#include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
@@ -134,7 +136,9 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     CBSQuery<MPTraits>,
-    QueryMethod<MPTraits>
+    ComposeEvaluator<MPTraits>,
+    QueryMethod<MPTraits>,
+    TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world

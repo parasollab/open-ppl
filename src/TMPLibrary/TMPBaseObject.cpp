@@ -1,5 +1,9 @@
 #include "TMPBaseObject.h"
 
+#include "MPProblem/MPProblem.h"
+#include "TMPLibrary/TMPLibrary.h"
+//#include "Traits/CfgTraits.h"
+
 /*-------------------------------- Construction ------------------------------*/
 
 TMPBaseObject::

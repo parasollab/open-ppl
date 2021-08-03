@@ -208,7 +208,7 @@ AddMethod(TMPMethodPointer _e, const std::string& _label) {
   if(m_elements.find(_label) == m_elements.end())
     m_elements[_label] = _e;
   else
-    cerr << "\nWarning, TMPMethod list already has a pointer associated with "
+    std::cerr << "\nWarning, TMPMethod list already has a pointer associated with "
          << "\"" << _label << "\", not added\n";
 }
 
@@ -254,7 +254,7 @@ Initialize() {
 template <typename TMPMethod>
 void
 TMPMethodSet<TMPMethod>::
-Print(ostream& _os) const {
+Print(std::ostream& _os) const {
   size_t count = 0;
 
   _os << "\n" << m_name << " has these TMPMethods available::\n\n";
