@@ -4,7 +4,9 @@
 #include "TMPLibrary/ActionSpace/Condition.h"
 #include "TMPLibrary/TMPBaseObject.h"
 
+class FormationCondition;
 class Interaction;
+class MotionCondition;
 
 class InteractionStrategyMethod : public TMPBaseObject {
 
@@ -80,6 +82,12 @@ class InteractionStrategyMethod : public TMPBaseObject {
     // TODO::Temporary - delete after IRving's implementation is checked in.
     std::vector<Path*> DecouplePath(MPSolution* _solution, GroupPathType* _groupPath);
 
+    /// Compare a formation condition to a motion condition for role equivalence.
+    /// @param _f The formation condition to consider.
+    /// @param _m The motion condition to consider.
+    /// @return If the two are conditioned on the same roles.
+    bool CompareConditionRoleSets(FormationCondition* _f,
+                                  MotionCondition* _m);
     ///@}
     ///@name Internal State
     ///@{

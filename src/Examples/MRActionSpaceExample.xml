@@ -234,7 +234,7 @@
 		</TaskAllocators>
 
     <InteractionStrategies>
-      <IndependentPaths label="IndependentPaths" 
+      <IndependentPaths label="IndPaths" 
           sgLabel="HCR" smLabel="UniformRandomFree"
           mpStrategy="CompositePRM" debug="true"/>
     </InteractionStrategies>

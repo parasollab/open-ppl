@@ -303,9 +303,9 @@
 		</TaskAllocators>
 
     <InteractionStrategies>
-      <InteractionStrategyExample label="InteractionStrategyExample" 
-                                  mpStrategy="CompositePRM" dmLabel="euclidean"
-                                  lpLabel="sl_terrain" debug="true"/>
+      <IndependentPaths label="IndPaths" 
+          sgLabel="HCR" smLabel="UniformRandomFree"
+          mpStrategy="CompositePRM" debug="true"/>
     </InteractionStrategies>
 
 		<StateGraphs>
@@ -346,11 +346,11 @@
 
       <Condition label="Exchange" type="formation">
         <Role name="R1" type="land"/>
-        <Role name="R2" type="water">
-          <FormationConstraint refRole="R1" translation="0 0 0" orientation="0 0 0"/>
-        </Role>
         <Role name="P1" type="passive">
-          <FormationConstraint refRole="R1" translation="0 0 0" orientation="0 0 0"/>
+          <FormationConstraint refRole="R1" translation="5 0 0" orientation="0 0 0"/>
+        </Role>
+        <Role name="R2" type="water">
+          <FormationConstraint refRole="P1" translation="5 0 0" orientation="0 0 0"/>
         </Role>
       </Condition>
 
@@ -449,7 +449,7 @@
 
       <!-- Actions -->
 
-      <Interaction label="Grasp2Arrive" isLabel="InteractionStrategyExample">
+      <Interaction label="Grasp2Arrive" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Grasp2"/>
           <Condition label="Grasp2GoalBox"/>
@@ -465,47 +465,47 @@
       </Interaction>
 
 
-      <Interaction label="CreateGrasp" isLabel="InteractionStrategyExample">
+      <Interaction label="CreateGrasp" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Solo"/>
           <Condition label="Passive"/>
-          <!--Condition label="FormationBox1"/>
-          <Condition label="GraspBox"/-->
           <Condition label="GraspProximity"/>
         </PreConditions>
 
         <InterimConditions>
           <Condition label="Grasp"/>
-          <Condition label="TightFormationBox1"/>
-          <Condition label="TightGraspBox"/>
+          <!--Condition label="TightFormationBox1"/>
+          <Condition label="TightGraspBox"/-->
         </InterimConditions>
 
         <PostConditions>
           <Condition label="Grasp"/>
-          <Condition label="TightFormationBox1"/>
-          <Condition label="TightGraspBox"/>
+          <!--Condition label="TightFormationBox1"/>
+          <Condition label="TightGraspBox"/-->
         </PostConditions>
       </Interaction>
 
 
-      <Interaction label="GraspExchange" isLabel="InteractionStrategyExample">
+      <Interaction label="GraspExchange" isLabel="IndPaths">
         <PreConditions>
           <Condition label="Grasp"/>
-          <Condition label="ExchangeBox1"/>
+          <!--Condition label="ExchangeBox1"/-->
           <Condition label="Solo2"/>
-          <Condition label="Anywhere2"/>
+          <!--Condition label="Anywhere2"/-->
+          <Condition label="ExchangeProximity"/>
         </PreConditions>
 
         <InterimConditions>
           <Condition label="Exchange"/>
-          <Condition label="ExchangeBox"/>
+          <!--Condition label="ExchangeBox"/-->
+          <Condition label="ExchangeProximity"/>
         </InterimConditions>
 
         <PostConditions>
           <Condition label="Grasp2"/>
-          <Condition label="ExchangeBox2"/>
+          <!--Condition label="ExchangeBox2"/-->
           <Condition label="Solo"/>
-          <Condition label="Anywhere1"/>
+          <!--Condition label="Anywhere1"/-->
         </PostConditions>
       </Interaction>
     </ActionSpace>

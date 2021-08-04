@@ -392,3 +392,19 @@ DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
   return paths;
 }
 
+bool
+InteractionStrategyMethod::
+CompareConditionRoleSets(FormationCondition* _f,
+                         MotionCondition* _m) {
+  auto r1 = _f->GetRoles();
+  auto r2 = _m->GetRoles();
+  if(r1.size() != r2.size())
+    return false;
+
+  for(auto role : r1) {
+    if(!r2.count(role))
+      return false;
+  }
+
+  return true;
+}
