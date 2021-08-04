@@ -199,7 +199,7 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
     bool constrained = false;
     for(auto robot : group->GetRobots()) {
       auto iter = constraintMap.find(robot);
-      auto exists = iter == constraintMap.end();
+      auto exists = iter != constraintMap.end();
       if(exists)
         constrained = true;
       if(exists != constrained)
@@ -365,6 +365,30 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
 std::vector<Path*> 
 InteractionStrategyMethod::
 DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
-  return {};
+  auto grm = _groupPath->GetRoadmap();
+  auto group = grm->GetGroup();
+  auto robots = group->GetRobots();
+ 
+  std::unordered_map<Robot*,std::vector<size_t>> individualVIDs;
+ 
+  auto& gcfgs = _groupPath->Cfgs();
+  for(auto& gcfg : gcfgs) {
+    for(auto robot : robots) {
+      auto vid = gcfg.GetVID(robot);
+      individualVIDs[robot].push_back(vid);
+    }  
+  }
+
+  std::vector<Path*> paths;
+
+  for(auto robot : robots) {
+    auto path = _solution->GetPath(robot);
+    path->Clear();
+    *path += individualVIDs[robot];
+    path->SetTimeSteps(_groupPath->TimeSteps());
+    paths.push_back(path);
+  }
+
+  return paths;
 }
 

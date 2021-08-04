@@ -127,9 +127,13 @@ void
 CombinedRoadmap::
 AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Interaction* _inter) {
 
-  // Make sure input and output states reflect proper roadmap
+  // Make sure input and output states reflect proper roadmap.
   RemapState(_input);
+  // Set expansion status to true so that hooks get executed on the output state.
+  m_expansionStatus = true;
   RemapState(_output);
+  // Set expansion status back to false so none of the interaction path info gets added by accident.
+  m_expansionStatus = false;
 
   // Create semantic roadmap for interaction.
 
