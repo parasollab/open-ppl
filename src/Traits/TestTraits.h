@@ -85,8 +85,7 @@ struct MPTraits {
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
-      AlwaysTrueValidityTest<MPTraits>,
-      BoundingSpheresCollisionDetectionTest<MPTraits>
+      AlwaysTrueValidityTest<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world

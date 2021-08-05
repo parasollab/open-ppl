@@ -57,7 +57,10 @@ class CollisionDetectionMethod {
         const mathtool::Transformation& _transformation1,
         const GMSPolyhedron& _polyhedron2,
         const mathtool::Transformation& _transformation2,
-        CDInfo& _cdInfo) = 0;
+        CDInfo& _cdInfo){
+      std::cout << "This should never be called." << std::endl;
+      return true;
+    };
 
     /// Check if a point is inside of a polyhedron.
     /// @param _point          The point to check.

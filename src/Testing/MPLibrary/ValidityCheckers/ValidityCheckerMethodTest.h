@@ -118,7 +118,7 @@ IndividualCfgValidity() {
 }
 
 template <typename MPTraits>
-std::vector<std::pair<bool,typename MPTraits::CfgType>> // TODO: need to update this to groupcfgtype (seebelowline 163) and above in declaration. same for inside test.
+std::vector<std::pair<bool,typename MPTraits::CfgType>>
 ValidityCheckerMethodTest<MPTraits>::
 GroupCfgValidityBounding() {
 
