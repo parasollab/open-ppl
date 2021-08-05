@@ -53,6 +53,14 @@ class InteractionStrategyMethod : public TMPBaseObject {
     /// @param _conditions The set of conditions to use to assign roles.
     void AssignRoles(const State& _state, const std::vector<std::string>& _conditions);
 
+    /// For each input condition, assign a group and individual robots to the roles.
+    /// @param _state The state to use to extract the roles.
+    /// @param _conditions The set of conditions to assign roles from.
+    /// @param _usedGroups The set of robot groups that have already been claimed.
+    void AssignRolesFromConditions(const State& _state,
+                          const std::vector<Condition*>& _conditions,
+                          std::unordered_set<RobotGroup*>& _usedGroups);
+
     /// Use the pre-conditions in the interaction to set the local 
     /// boundary for planning the interaction.
     /// @param _interaction The interaction to extract the boundary for.
@@ -74,7 +82,7 @@ class InteractionStrategyMethod : public TMPBaseObject {
     /// @param _groups The robot groups to find constraints for.
     std::unordered_map<Robot*,Constraint*> SampleMotionConstraints(
                                            const std::vector<std::string>& _conditions,
-                                           const std::vector<RobotGroup*> _groups);
+                                           const std::vector<Robot*> _robots);
 
     void SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution);
 

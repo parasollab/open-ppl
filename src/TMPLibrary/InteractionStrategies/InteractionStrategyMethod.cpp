@@ -48,70 +48,83 @@ AssignRoles(const State& _state, const std::vector<std::string>& _conditions) {
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
-  // Find relevant conditions
-  std::unordered_map<RobotGroup*,std::vector<Condition*>> conditionMap;
- 
-  for(auto label : _conditions) {
-    auto condition = as->GetCondition(label);
+  std::vector<Condition*> formationConditions;
+  std::vector<Condition*> motionConditions;
 
-    auto m = dynamic_cast<MotionCondition*>(condition);
-    if(!m)
+  for(auto label1 : _conditions) {
+
+    // Check that condition is a formation condition.
+    auto c1 = as->GetCondition(label1);
+    auto f = dynamic_cast<FormationCondition*>(c1);
+    if(!f)
       continue;
 
-    auto group = condition->Satisfied(_state);
-    if(!group)
-      throw RunTimeException(WHERE) << "Interaction conditions "
-                                    << "not satisfied by input state.";
+    bool match = false;
 
-    conditionMap[group].push_back(condition);
-  }
+    for(auto label2 : _conditions) {
 
-  // Identify roles
-  std::set<Robot*> usedRobots;
-
-  for(auto kv : conditionMap) {
-    auto group = kv.first;
-    auto robots = group->GetRobots();
-    auto conditions = kv.second;
-
-    auto groupRoadmap = _state.at(group).first;
-    auto groupVID = _state.at(group).second;
-
-    auto groupCfg = groupRoadmap->GetVertex(groupVID);
-
-    for(auto condition : conditions) {
-      // Check if condition is a motion condition
-      auto m = dynamic_cast<MotionCondition*>(condition);
-      if(!m) 
+      // Check if condition is a motion condition.
+      auto c2 = as->GetCondition(label2);
+      auto m = dynamic_cast<MotionCondition*>(c2);
+      if(!m)
         continue;
 
-      // Match constraints to robots
-      const auto& constraints = m->GetConstraints();
-      for(const auto& c : constraints) {
+      // Make sure group is not already assigned to a formation.
+      if(std::count(motionConditions.begin(),motionConditions.end(),m))
+        continue;
 
-        auto role = m->GetRole(c.second);
-        // Find the right robot for the role
-        auto type = c.first;
-        for(auto robot : robots) {
-          // Check that robot is of the right type
-          if(robot->GetCapability() != type) 
-            continue;
-
-          // Check if robot has been used already
-          if(usedRobots.count(robot))
-            continue;
-
-          // Check that robot cfg matches the constraint
-          auto cfg = groupCfg.GetRobotCfg(robot);
-          if(!c.second->Satisfied(cfg)) 
-            continue;
-
-          m_roleMap[role] = robot;
-          usedRobots.insert(robot);
-        }
+      // Check if the motion condition matches the formation condition.
+      if(CompareConditionRoleSets(f,m)) { 
+        // Add it to the motion conditions if it's a match
+        motionConditions.push_back(c2); 
+        match = true;
       }
     }
-  } 
+    
+    // If no motion condition was found, add the formation condition.
+    if(!match)
+      formationConditions.push_back(c1); 
+  }
+
+  std::unordered_set<RobotGroup*> usedGroups;
+  AssignRolesFromConditions(_state,motionConditions,usedGroups);
+  AssignRolesFromConditions(_state,formationConditions,usedGroups);
+}
+
+void
+InteractionStrategyMethod::
+AssignRolesFromConditions(const State& _state,
+                          const std::vector<Condition*>& _conditions,
+                          std::unordered_set<RobotGroup*>& _usedGroups) {
+
+  for(auto condition : _conditions) {
+    bool satisfied = false;
+    for(auto kv : _state) {
+
+      // Check if the group has been used already.
+      auto group = kv.first;
+      if(_usedGroups.count(group))
+        continue;
+      
+      // Create an isolated state for the group.
+      State state;
+      state[kv.first] = kv.second;
+
+      // Check if the group satisfies the condition.
+      if(!condition->Satisfied(state))
+        continue;
+
+      satisfied = true;
+
+      // Claim the group for this condition.
+      _usedGroups.insert(group);
+      condition->AssignRoles(m_roleMap,state);
+    }
+
+    if(!satisfied)
+      throw RunTimeException(WHERE) << "No satisfying group found to assign roles for "
+                                    << condition->GetLabel() << ".";
+  }
 }
 
 void
@@ -194,7 +207,7 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
   }
 
   // Ensure that each group is either entirely defined or undefined.
-  std::vector<RobotGroup*> unconstrainedGroups;
+  std::vector<Robot*> unconstrainedRobots;
   for(const auto group : _groups) {
     bool constrained = false;
     for(auto robot : group->GetRobots()) {
@@ -207,16 +220,19 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
                                       << group->GetLabel()
                                       << " is only partially constrained.";
     }
-    if(!constrained)
-      unconstrainedGroups.push_back(group);
+    if(!constrained) {
+      for(auto robot : group->GetRobots()) {
+        unconstrainedRobots.push_back(robot);
+      }
+    }
   }
 
   // If all groups are constrained, return the constraint map.
-  if(unconstrainedGroups.empty())
+  if(unconstrainedRobots.empty())
     return constraintMap;
 
   // Sample Motion Constraints for unconstrained groups.
-  auto constraints = SampleMotionConstraints(_conditions,unconstrainedGroups);
+  auto constraints = SampleMotionConstraints(_conditions,unconstrainedRobots);
   
   // Make sure that valid constraints were found.
   if(constraints.empty())
@@ -232,7 +248,7 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
 std::unordered_map<Robot*,Constraint*> 
 InteractionStrategyMethod::
 SampleMotionConstraints(const std::vector<std::string>& _conditions,
-                        const std::vector<RobotGroup*> _groups) {
+                        const std::vector<Robot*> _robots) {
 
   std::unordered_map<Robot*,Constraint*> constraintMap;
   auto as = this->GetTMPLibrary()->GetActionSpace();
@@ -259,13 +275,14 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
 
     RobotGroup* group = this->GetMPProblem()->AddRobotGroup(robots,groupLabel);
     
-    // Check if this is one of the input groups.
-    bool match = false;
-    for(const auto& g : _groups) {
-      if(group == g) {
-        match = true;
-        break;
+    // Check if this is consists of input robots
+    bool match = true;
+    for(auto robot : group->GetRobots()) {
+      if(std::count(_robots.begin(),_robots.end(),robot)) {
+        continue;
       }
+      match = false;
+      break;
     }
     if(!match)
       continue;

@@ -41,12 +41,19 @@ class FormationCondition : public Condition {
 
     virtual RobotGroup* Satisfied(const State& _state) const override;
 
+    virtual void AssignRoles(std::unordered_map<std::string,Robot*>& _roleMap,
+                             const State& _state) const override;
+
+    Formation* GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap);
+
+    ///@}
+    ///@name Accessors
+    ///@{
+
     const std::vector<std::string> GetRoles() const;
  
     const std::vector<std::string> GetTypes() const;
  
-    Formation* GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap);
-
     ///@}
 
   private:

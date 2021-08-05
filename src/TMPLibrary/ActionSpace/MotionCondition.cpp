@@ -119,11 +119,50 @@ Satisfied(const State& _state) const {
   return nullptr;
 }
 
+void
+MotionCondition::
+AssignRoles(std::unordered_map<std::string,Robot*>& _roleMap,
+            const State& _state) const {
+  std::unordered_set<Robot*> usedRobots;
+
+  for(const auto kv : _state) {
+    auto group = kv.first;
+    auto robots = group->GetRobots();
+    auto grm = kv.second.first;
+    auto vid = kv.second.second;
+    auto gcfg = grm->GetVertex(vid);
+
+    const auto constraints = GetConstraints();
+    for(const auto& c : constraints) {
+      auto role = GetRole(c.second);
+
+      // Find the right robot for the role.
+      auto type = c.first;
+      for(auto robot : robots) {
+        // Check that the robot is of the right type.
+        if(robot->GetCapability() != type)
+          continue;
+
+        // Check if the robot has been used already.
+        if(usedRobots.count(robot))
+          continue;
+
+        // Check that the robot cfg matches the constraint.
+        auto cfg = gcfg.GetRobotCfg(robot);
+        if(!c.second->Satisfied(cfg))
+          continue;
+
+        _roleMap[role] = robot;
+        usedRobots.insert(robot);
+      }
+    }
+  }
+}
 /*------------------------- Accessors ------------------------*/
 
 const std::vector<std::pair<std::string,Constraint*>>
 MotionCondition::
-GetConstraints() {
+GetConstraints() const {
 
   std::vector<std::pair<std::string,Constraint*>> constraints;
 
@@ -145,7 +184,7 @@ GetConstraints() {
 
 std::vector<Constraint*>
 MotionCondition::
-GetConstraints(std::string _type) {
+GetConstraints(std::string _type) const {
   std::vector<Constraint*> constraints;
 
   for(const auto& c : m_constraints) {
@@ -159,13 +198,13 @@ GetConstraints(std::string _type) {
     
 std::string
 MotionCondition::
-GetRole(Constraint* _constraint) {
-  return m_roles[_constraint];
+GetRole(Constraint* _constraint) const {
+  return m_roles.at(_constraint);
 }
 
 std::set<std::string>
 MotionCondition::
-GetRoles() {
+GetRoles() const {
   std::set<std::string> roles;
 
   for(auto kv : m_roles) {

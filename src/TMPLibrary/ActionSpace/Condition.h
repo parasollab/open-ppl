@@ -41,6 +41,9 @@ class Condition : public TMPBaseObject {
 
     virtual RobotGroup* Satisfied(const State& _state) const;
 
+    virtual void AssignRoles(std::unordered_map<std::string,Robot*>& _roleMap,
+                             const State& _state) const;
+
     ///@}
     ///@name Accessors
     ///@{

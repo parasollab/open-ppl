@@ -127,6 +127,12 @@ void
 CombinedRoadmap::
 AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Interaction* _inter) {
 
+  // Save formation constraints before things get moved
+  std::unordered_map<RobotGroup*,std::unordered_set<Formation*>> outputFormations;
+  for(auto kv : _output) {
+    outputFormations[kv.first] = kv.second.first->GetActiveFormations();
+  }
+
   // Make sure input and output states reflect proper roadmap.
   RemapState(_input);
   // Set expansion status to true so that hooks get executed on the output state.
@@ -212,6 +218,10 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
     auto outputGroup = kv.second.first->GetGroup();
     m_mpSolution->AddRobotGroup(outputGroup);
     auto outputRm = m_mpSolution->GetGroupRoadmap(outputGroup);
+
+    for(auto formation : outputFormations[outputGroup]) {
+      outputRm->AddFormation(formation);
+    }
 
     auto newSr = AddSemanticRoadmap(outputRm, update);
 

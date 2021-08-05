@@ -293,7 +293,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false" vcLabel="pqp_solid"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false" vcLabel="terrain_robot"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -304,7 +304,7 @@
 
     <InteractionStrategies>
       <IndependentPaths label="IndPaths" 
-          sgLabel="HCR" smLabel="UniformRandomFree"
+          sgLabel="HCR" smLabel="UniformRandomFreeTerrain"
           mpStrategy="CompositePRM" debug="true"/>
     </InteractionStrategies>
 

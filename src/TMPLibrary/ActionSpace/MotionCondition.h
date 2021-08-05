@@ -32,17 +32,20 @@ class MotionCondition : public Condition {
 
     virtual RobotGroup* Satisfied(const State& _state) const override;
 
+    virtual void AssignRoles(std::unordered_map<std::string,Robot*>& _roleMap,
+                             const State& _state) const override;
+
     ///@}
     ///@name Accessors
     ///@{
 
-    const std::vector<std::pair<std::string,Constraint*>> GetConstraints();
+    const std::vector<std::pair<std::string,Constraint*>> GetConstraints() const;
 
-    std::vector<Constraint*> GetConstraints(std::string _type);
+    std::vector<Constraint*> GetConstraints(std::string _type) const;
 
-    std::string GetRole(Constraint* _constraint);
+    std::string GetRole(Constraint* _constraint) const;
 
-    std::set<std::string> GetRoles();
+    std::set<std::string> GetRoles() const;
 
     void ReCenter(const std::vector<double>& _t);
 

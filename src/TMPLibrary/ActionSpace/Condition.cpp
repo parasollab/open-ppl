@@ -56,6 +56,11 @@ Satisfied(const State& _state) const {
   return nullptr;
 }
 
+void 
+Condition::
+AssignRoles(std::unordered_map<std::string,Robot*>& _roleMap,
+            const State& _state) const { }
+
 /*------------------------ Accessors -------------------------*/
 
 bool

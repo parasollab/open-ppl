@@ -275,20 +275,24 @@ FindStartState2(Interaction* _interaction, SemanticRoadmap* _sr) {
     auto types = f->GetTypes();
 
     std::set<Robot*> used;
-  
-    for(auto type : types) {
-      for(auto robot : group->GetRobots()) {
-        if(used.count(robot))
-          continue;
 
-        if(type == robot->GetCapability()) {
-          used.insert(robot);
-          break;
+    // If the input group hasn't been matched to a condition, 
+    // check if this is a match.
+    if(!matchedInputGroup) { 
+      for(auto type : types) {
+        for(auto robot : group->GetRobots()) {
+          if(used.count(robot))
+            continue;
+
+          if(type == robot->GetCapability()) {
+            used.insert(robot);
+            break;
+          }
         }
       }
     }
 
-    if(types.size() == used.size()) {
+    if(types.size() == used.size() and used.size() == group->Size()) {
       matchedInputGroup = true;
     }
     else {

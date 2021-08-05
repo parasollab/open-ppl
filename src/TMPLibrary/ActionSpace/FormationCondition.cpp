@@ -97,6 +97,35 @@ Satisfied(const State& _state) const {
   return nullptr;
 }
 
+void
+FormationCondition::
+AssignRoles(std::unordered_map<std::string,Robot*>& _roleMap,
+            const State& _state) const {
+
+  std::unordered_set<Robot*> used;
+
+  for(const auto kv : _state) {
+    auto group = kv.first;
+
+    for(const auto& role : m_roles) {
+      auto type = role.second.type;
+
+      for(auto& robot : group->GetRobots()) {
+        // Check if this robot has been used already.
+        if(used.count(robot)) 
+          continue;
+
+        // Check if the robot is of the right type.
+        if(robot->GetCapability() == type) {
+          used.insert(robot);
+          _roleMap[role.first] = robot;
+          break;
+        }
+      }
+    }
+  }  
+}
+
 Formation*
 FormationCondition::
 GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap) {

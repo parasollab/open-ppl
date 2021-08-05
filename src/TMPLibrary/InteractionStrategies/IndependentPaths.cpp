@@ -55,7 +55,11 @@ operator()(Interaction* _interaction, State& _state) {
 
   // Construct interim constraints.
   auto& interimConditions = _interaction->GetInterimConditions();
+  SetActiveFormations(preconditions,_interaction->GetToInterimSolution());
   auto interimConstraintMap = GenerateConstraints(interimConditions,groups);
+
+  if(interimConstraintMap.empty())
+    return false;
 
   // Construct toInterim tasks with precondition robot groups.
   auto toInterim = GenerateTasks(preconditions,
@@ -63,7 +67,6 @@ operator()(Interaction* _interaction, State& _state) {
                                  interimConstraintMap);
 
   // Compute motions from pre to interim conditions.
-  SetActiveFormations(preconditions,_interaction->GetToInterimSolution());
   //auto toInterimPath = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
   //                "PlanInteraction::"+_interaction->GetLabel()+"::ToInterim");
   auto toInterimPaths = PlanMotions(toInterim,_interaction->GetToInterimSolution(),
@@ -84,6 +87,9 @@ operator()(Interaction* _interaction, State& _state) {
 
   // Construct goal constraints.
   auto goalConstraintMap = GenerateConstraints(postconditions,groups);
+
+  if(goalConstraintMap.empty())
+    return false;
 
   // Construct toPost tasks with postcondition robot groups.
   auto toPost = GenerateTasks(postconditions,

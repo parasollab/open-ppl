@@ -362,12 +362,12 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
     Transformation toDHFrame = constraint.transformation;
     DHParameters dh;
     Transformation identity;
-    Connection connection(&m_multibody,identity,toDHFrame,
+    connection = Connection(&m_multibody,identity,toDHFrame,
                           dh,Connection::JointType::NonActuated);
   }
   else {
     // Copy connection
-    Connection connection = _connection;
+    connection = _connection;
 
     // Check if connection is in the proper order;
     if(connection.GetPreviousBody() != _first) {
