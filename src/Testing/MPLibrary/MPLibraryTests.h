@@ -234,8 +234,8 @@ InitializeCollisionDetectionMethodTests() {
 
   //TODO FOR AZHAR: uncomment the following lines and delete the todo
   /*
-  InsideSpheresCollisionDetectionTest* insideSpheres =
-    new InsideSpheresCollisionDetectionTest();
+  InsideSpheresCollisionDetectionTest* insideSpheres = nullptr;
+  insideSpheres = new InsideSpheresCollisionDetectionTest(this->GetMPProblem());
   m_collisionDetectionTests["Inside Spheres"] = insideSpheres;
   */
 
