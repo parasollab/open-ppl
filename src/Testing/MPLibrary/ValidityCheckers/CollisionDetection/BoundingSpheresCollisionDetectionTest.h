@@ -84,9 +84,7 @@ IndividualCfgValidityTest() {
     message = message + "\n\tA cfg was incorrectly labeled invalid.\n";
   }
 
-  // TODO: place configuration within an obstacle
-
-
+  // TODO:place configuration within an obstacle
 
   return std::make_pair(passed,message);
 }
@@ -103,9 +101,47 @@ MultipleCfgValidityTest() {
   Cfg cfg1(robot1);
   Cfg cfg2(robot2);
 
-  // CheckCollision(cfg1.GetMultiBody(), cfg2.GetMultiBody());
+  // place configurations above each other
+  cfg1[0] = 15;
+  cfg1[1] = -5;
+  cfg1[2] = 0;
+  cfg1[3] = 0;
+  cfg1[4] = 0;
+  cfg1[5] = 0;
 
+  cfg2[0] = 15;
+  cfg2[1] = -5;
+  cfg2[2] = 0;
+  cfg2[3] = 0;
+  cfg2[4] = 0;
+  cfg2[5] = 0;
 
+  bool valid = this->CheckCollision(cfg1.GetMultiBody(), cfg2.GetMultiBody());
+  if (!valid) {
+    passed = false;
+    message = message + "\n\tA cfg was incorrectly labeled invalid.\n";
+  }
+
+  // place one configuration away
+  cfg1[0] = 0;
+  cfg1[1] = -5;
+  cfg1[2] = 0;
+  cfg1[3] = 0;
+  cfg1[4] = 0;
+  cfg1[5] = 0;
+
+  cfg2[0] = 15;
+  cfg2[1] = -5;
+  cfg2[2] = 0;
+  cfg2[3] = 0;
+  cfg2[4] = 0;
+  cfg2[5] = 0;
+
+  valid = this->CheckCollision(cfg1.GetMultiBody(), cfg2.GetMultiBody());
+  if (valid) {
+    passed = false;
+    message = message + "\n\tA cfg was incorrectly labeled invalid.\n";
+  }
 
   return std::make_pair(passed,message);
 }
