@@ -141,9 +141,7 @@ BruteForceNF<MPTraits>::
 FindNeighborsImpl(AbstractRoadmapType* const _r,
     const typename AbstractRoadmapType::CfgType& _cfg,
     const VertexSet& _candidates, OutputIterator _out) {
-  std::cout << "Entered Bruteforce neighbor finder" << std::endl;
   auto dm = this->GetDistanceMetric(this->m_dmLabel);
-  std::cout << "Got Distance Metric" << std::endl;
 
   if(this->m_debug)
     std::cout << "Checking for nearest "

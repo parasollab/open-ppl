@@ -247,22 +247,15 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
     const VertexSet* const _targetSet,
     OutputIterator<RoadmapType>* const _collision) {
   // Determine nearest neighbors.
-  std::cout << "Entering RewireConnector" << std::endl;
   const auto& cfg = _r->GetVertex(_source);
-  std::cout << "Got Vertex" << std::endl;
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
-  std::cout << "Ran NeighborhoodFinder" << std::endl;
   m_neighborBuffer.clear();
-  std::cout << "Cleared Buffer" << std::endl;
   if(_targetSet) {
-    std::cout << "_targetSet was true" << std::endl;
     nf->FindNeighbors(_r, cfg, *_targetSet, std::back_inserter(m_neighborBuffer));
   }
   else {
-    std::cout << "_targetSet was false" << std::endl;
     nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
   }
-  std::cout << "Past _targetSet if statement" << std::endl;
 
   // Set neighbors' distance to the cost from the tree root, then re-sort
   // according to that cost plus the distance to _source.
@@ -277,25 +270,20 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
              < _n2.distance + this->m_distanceBuffer[_n2.target];
       }
   );
-  std::cout << "Sorted neighbors" << std::endl;
 
   // If we have a CC tracker, disable it during rewire since we won't change the
   // CCs by the end.
   auto ccTracker = _r->GetCCTracker();
   if(ccTracker)
     ccTracker->Disable();
-  std::cout << "Disabled ccTracker" << std::endl;
 
   // Attempt to rewire this vertex with a better parent.
   RewireVertex(_r, _source, m_neighborBuffer, _collision);
-  std::cout << "RewireVertex succeed" << std::endl;
   // Attempt to rewire the neighbors through _source.
   RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
-  std::cout << "RewireNeighbors succeed" << std::endl;
 
   if(ccTracker)
     ccTracker->Enable();
-  std::cout << "ccTracker enabled, DONE!" << std::endl;
 }
 
 /*--------------------------------- Helpers ----------------------------------*/

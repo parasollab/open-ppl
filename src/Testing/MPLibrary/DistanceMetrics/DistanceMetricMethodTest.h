@@ -5,7 +5,7 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class DistanceMetricMethodTest : public DistanceMetricMethod<MPTraits>,
+class DistanceMetricMethodTest : virtual public DistanceMetricMethod<MPTraits>,
                                  public TestBaseObject {
 
   public: 
