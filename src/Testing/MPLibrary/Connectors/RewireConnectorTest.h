@@ -150,6 +150,9 @@ IndividualRobotConnectTest() {
   // @TODO: Finish writing individual tests here!
   //  You should make sure that you clear vectors if you reuse the same
   //  data structures before you make the next test.
+  //
+  //  IMPORTANT: If you copy the code above (which I suggest you do), make sure
+  //   you remove the variable declarations.
 
 
   if(passed) {
