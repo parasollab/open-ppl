@@ -242,7 +242,7 @@ IndividualRobotConnectRunTest(
     roadmap.AddEdge(v_ids[it->first], v_ids[it->second], weight);
   }
 
-  // Variable needed to call GetEdge, we don't use it.
+  // Variable needed to call GetEdge, we don't use it otherwise.
   typename RoadmapType::EI edge_itr;
 
   if (debug) {
@@ -264,7 +264,7 @@ IndividualRobotConnectRunTest(
 
   // Check the resulting edges.
 
-  // Create an edge iterator just to call the function, no other purpose.
+  // First, if debug, print resulting edges.
 
   if (debug) {
     std::cout << "\n\t\tPrinting rewired edges:" << std::endl;
@@ -287,6 +287,8 @@ IndividualRobotConnectRunTest(
   for (auto it = end_edges.begin(); it != end_edges.end(); ++it) {
     auto edge_bool =
             roadmap.GetEdge(v_ids[it->first], v_ids[it->second], edge_itr);
+
+    // If debug, print the edge checks as we go through them.
     if (debug) {
       std::cout << "\t\t\tEdge " << it->first << ", " << it->second
                 << " ?   " << (edge_bool == 1 ? "True" : "  False")
