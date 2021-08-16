@@ -304,6 +304,9 @@ PerformHyperpathQuery() {
        const std::unordered_map<size_t,double> _weightMap,
        const size_t _target) {
 
+      if(_target == 1)
+        std::cout << "HERE";
+
       double hyperarcWeight; 
       //if(_hyperarc.property.semantic) {
       //  hyperarcWeight = 0;

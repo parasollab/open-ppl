@@ -222,6 +222,10 @@
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
       <GroupQuery label="CompositeQuery" debug="false"/>
+      <ComposeEvaluator label="TimedCompositeQuery" operator="or">
+        <Evaluator label="TimeEval"/>
+        <Evaluator label="CompositeQuery"/>
+      </ComposeEvaluator>
     </MapEvaluators>
     <MPStrategies>
 
@@ -261,7 +265,7 @@
       <GroupPRM label="CompositePRM" debug="false">
         <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
         <Connector label="ClosestTerrain"/>
-        <Evaluator label="CompositeQuery"/>
+        <Evaluator label="TimedCompositeQuery"/>
       </GroupPRM>
 
       <GroupPRM label="CompositeNodes" debug="false">

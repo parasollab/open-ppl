@@ -92,8 +92,16 @@ ComputeCompositeCenter(const State& _state) const {
       auto cfg = gcfg.GetRobotCfg(robot);
       numRobots += 1;
 
-      for(size_t i = 0; i < cfg.PosDOF(); i++) {
-        center[i] += cfg[i];
+      auto mb = robot->GetMultiBody();
+      mb->Configure(cfg);
+      auto base = mb->GetBase();
+      auto bbx = base->GetBoundingBox();
+      auto transformation = base->GetWorldTransformation();
+      bbx = bbx.operator*=(transformation);
+
+      auto centroid = bbx.GetCentroid();
+      for(size_t i = 0; i < center.size(); i++) {
+        center[i] += centroid[i];
       }
     }
   }
