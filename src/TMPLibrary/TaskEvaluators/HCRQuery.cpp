@@ -260,7 +260,20 @@ ExtractPaths(const std::vector<HPElem>& _hyperpath) {
     auto hyperarc = hypergraph->GetHyperarcType(elem.second);
     for(auto path : hyperarc.paths) {
       auto robot = path->GetRobot();
-      *robotPaths[robot] += *path;
+
+      // Extract the vids (minus the first as it should be the last of the previous
+      // other than the first edge in a robot's path).
+      auto vids = path->VIDs();
+      std::vector<size_t> truncated;
+
+      auto iter = vids.begin();
+      if(!robotPaths[robot]->VIDs().empty())
+        iter++;
+
+      std::copy(iter, vids.end(), std::back_inserter(truncated));
+
+      // Add the vids to the robot's path.
+      *robotPaths[robot] += truncated;
     }
   }
   
