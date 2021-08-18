@@ -41,33 +41,19 @@ class Interaction : public Action {
     ///@name Accessors
     ///@{
 
-    const std::vector<std::string>& GetInterimConditions() const;
-
     const std::string GetInteractionStrategyLabel() const;
 
-    MPSolution* GetToInterimSolution() const;
+    MPSolution* GetToStageSolution(const std::string& _stage) const;
 
-    MPSolution* GetToPostSolution() const;
+    std::unique_ptr<MPSolution>&& ExtractToStageSolution(const std::string& _stage);
 
-    std::unique_ptr<MPSolution>&& ExtractToInterimSolution();
+    GroupPathType* GetToStageGroupPath(const std::string& _stage) const;
 
-    std::unique_ptr<MPSolution>&& ExtractToPostSolution();
+    void SetToStageGroupPath(const std::string& _stage, GroupPathType* _path);
 
-    void SetToInterimPath(GroupPathType* _path);
+    std::vector<Path*> GetToStagePaths(const std::string& _stage) const;
 
-    void SetToInterimPaths(std::vector<Path*> _paths);
-
-    GroupPathType* GetToInterimPath();
-
-    std::vector<Path*> GetToInterimPaths();
-
-    void SetToPostPath(GroupPathType* _path);
-
-    void SetToPostPaths(std::vector<Path*> _paths);
-
-    GroupPathType* GetToPostPath();
-
-    std::vector<Path*> GetToPostPaths();
+    void SetToStagePaths(const std::string& _stage, std::vector<Path*> _paths);
 
     ///@}
 
@@ -85,21 +71,11 @@ class Interaction : public Action {
 
     std::string m_isLabel; ///< Interaction Strategy Label
 
-    /// The set of conditions representing the intermediate stage
-    /// of the interaction needed by the interaction strategy.
-    std::vector<std::string> m_interimConditions;
+    std::unordered_map<std::string,std::unique_ptr<MPSolution>> m_toStageSolutions;
 
-    std::unique_ptr<MPSolution> m_toInterimSolution;
+    std::unordered_map<std::string,GroupPathType*> m_toStageGroupPaths;
 
-    std::unique_ptr<MPSolution> m_toPostSolution;
-
-    GroupPathType* m_toInterimPath;
-
-    GroupPathType* m_toPostPath;
-
-    std::vector<Path*> m_toInterimPaths;
-
-    std::vector<Path*> m_toPostPaths;
+    std::unordered_map<std::string,std::vector<Path*>> m_toStagePaths;
 
     ///@}
 };

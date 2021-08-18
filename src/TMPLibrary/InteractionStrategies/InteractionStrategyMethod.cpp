@@ -134,7 +134,8 @@ SetInteractionBoundary(Interaction* _interaction, const State& _state) {
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
   // Look for the proximity condition and set the interaction boundary.
-  for(const auto label : _interaction->GetPreConditions()) {
+  const auto& initialStage = _interaction->GetStages()[0];
+  for(const auto label : _interaction->GetStageConditions(initialStage)) {
     auto condition = as->GetCondition(label);
     auto p = dynamic_cast<ProximityCondition*>(condition);
     if(!p)

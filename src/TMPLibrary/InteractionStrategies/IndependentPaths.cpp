@@ -44,9 +44,60 @@ operator()(Interaction* _interaction, State& _state) {
   }
 
   // Assign interaction roles.
-  auto& preconditions = _interaction->GetPreConditions();
+  const auto& stages = _interaction->GetStages();
+  auto& preconditions = _interaction->GetStageConditions(stages[0]);
   AssignRoles(_state,preconditions);
 
+  // Iterate through stages and plan motions between them.
+  for(size_t i = 1; i < stages.size(); i++) {
+    const auto& current = stages[i-1];
+    const auto& next = stages[i];
+
+    // Construct start constraint map from current state.
+    auto startConstraintMap = GenerateConstraints(_state);
+
+    // Construct goal constraint map from next state.
+    auto& goalConditions = _interaction->GetStageConditions(next);
+    auto goalConstraintMap = GenerateConstraints(goalConditions,groups);
+
+    // Check that there are was goal constraint created.
+    if(goalConstraintMap.empty())
+      return false;
+
+    // Set the active formations for the planning problem.
+    auto& startConditions = _interaction->GetStageConditions(current);
+    SetActiveFormations(startConditions,_interaction->GetToStageSolution(next));
+
+    // Construct toNextStage tasks with current stage robot groups.
+    auto toNextStageTasks = GenerateTasks(startConditions,
+                                          startConstraintMap,
+                                          goalConstraintMap);
+  
+    // Compute motions from pre to interim conditions.
+    auto toNextStagePaths = PlanMotions(toNextStageTasks,_interaction->GetToStageSolution(next),
+                  "PlanInteraction::"+_interaction->GetLabel()+"::To"+next);
+
+    // Check if a valid solution was found.
+    if(toNextStagePaths.empty())
+      return false;
+
+    // Save plan information.
+    _interaction->SetToStagePaths(next,toNextStagePaths);
+
+    if(i+1 < stages.size())
+      _state = InterimState(_interaction,next,stages[i+1],toNextStagePaths);
+  }
+
+  // Clear information from this planning run.
+  m_roleMap.clear();
+  m_interimCfgMap.clear();
+  m_individualPaths.clear();
+  m_finalState.clear();
+
+  return true;
+
+
+  /*
   // Construct start constraints.
   //auto startConstraintMap = GenerateConstraints(preconditions);
 
@@ -116,6 +167,7 @@ operator()(Interaction* _interaction, State& _state) {
   m_finalState.clear();
 
   return true;
+  */
 }
 
 /*--------------------------- Helper Functions ------------------------*/
@@ -266,19 +318,18 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
 IndependentPaths::State
 IndependentPaths::
-InterimState(Interaction* _interaction) {
+InterimState(Interaction* _interaction, const std::string& _current,
+             const std::string& _next, const std::vector<Path*> _paths) {
 
   State interimState;
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
   auto prob = this->GetMPProblem();
-  auto solution = _interaction->GetToPostSolution();
+  auto solution = _interaction->GetToStageSolution(_next);
 
-  // Collect post condition robot groups
-  std::vector<RobotGroup*> postGroups;
-  auto& postConditions = _interaction->GetPostConditions();
-  
-  for(auto conditionLabel : postConditions) {
+  auto& conditions = _interaction->GetStageConditions(_current);
+
+  for(auto conditionLabel : conditions) {
     auto condition = as->GetCondition(conditionLabel);
 
     // Check that this is a formation condition

@@ -44,7 +44,8 @@ class IndependentPaths : public InteractionStrategyMethod {
 
     std::vector<Path*> PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
 
-    State InterimState(Interaction* _interaction);
+    State InterimState(Interaction* _interaction, const std::string& _current, 
+                       const std::string& _next, const std::vector<Path*> _paths);
 
     ///@}
     ///@name Internal State

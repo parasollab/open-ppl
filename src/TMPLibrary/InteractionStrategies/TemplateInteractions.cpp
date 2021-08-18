@@ -88,8 +88,11 @@ CreateTemplate(Interaction* _interaction) {
 
   // Extract MPSolutions to the template
   InteractionTemplate it;
-  it.toInterimSolution = _interaction->ExtractToInterimSolution();
-  it.toPostSolution = _interaction->ExtractToPostSolution();
+  const auto& stages = _interaction->GetStages();
+  it.stages = stages;
+  for(const auto& stage : stages) {
+    it.toStageSolutions[stage] = _interaction->ExtractToStageSolution(stage);
+  }
   //TODO::Convert start to it.start
 
   m_templateMap[_interaction] = std::move(it);

@@ -266,7 +266,8 @@ FindStartState2(Interaction* _interaction, SemanticRoadmap* _sr) {
 
   // Collect all role combinations
   std::vector<std::vector<std::string>> totalTypes;
-  for(auto label : _interaction->GetPreConditions()) {
+  const auto& initialStage = _interaction->GetStages()[0];
+  for(auto label : _interaction->GetStageConditions(initialStage)) {
 
     auto f = dynamic_cast<FormationCondition*>(as->GetCondition(label));
 
@@ -398,7 +399,8 @@ CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr,
     // Check proximity
     auto as = this->GetTMPLibrary()->GetActionSpace();
 
-    for(auto label : _interaction->GetPreConditions()) {
+    const auto& initialStage = _interaction->GetStages()[0];
+    for(auto label : _interaction->GetStageConditions(initialStage)) {
 
       auto p = dynamic_cast<ProximityCondition*>(as->GetCondition(label));
 
@@ -440,7 +442,8 @@ CheckCompositeStatesForMotionConstraints(Interaction* _interaction, State& _stat
   ProximityCondition* p;
 
   // Find the proximity condition - assume only one
-  for(auto label : _interaction->GetPreConditions()) {
+  const auto& initialStage = _interaction->GetStages()[0];
+  for(auto label : _interaction->GetStageConditions(initialStage)) {
     p = dynamic_cast<ProximityCondition*>(as->GetCondition(label));
  
     // Check that it is a proximty condition 
@@ -449,7 +452,7 @@ CheckCompositeStatesForMotionConstraints(Interaction* _interaction, State& _stat
   }
 
   // Check Motion Constraints
-  for(auto label : _interaction->GetPreConditions()) {
+  for(auto label : _interaction->GetStageConditions(initialStage)) {
 
     auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
 
@@ -502,7 +505,8 @@ FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
 
   RoleSet totalRoles;
 
-  for(auto label : _interaction->GetPreConditions()) {
+  const auto& initialStage = _interaction->GetStages()[0];
+  for(auto label : _interaction->GetStageConditions(initialStage)) {
 
     auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
 
@@ -611,7 +615,8 @@ FindStartState(Interaction* _interaction, SemanticRoadmap* _sr) {
 
       state[rm->GetGroup()] = std::make_pair(rm,vid);
 
-      for(auto label : _interaction->GetPreConditions()) {
+      const auto& initialStage = _interaction->GetStages()[0];
+      for(auto label : _interaction->GetStageConditions(initialStage)) {
 
         auto m = dynamic_cast<MotionCondition*>(as->GetCondition(label));
 

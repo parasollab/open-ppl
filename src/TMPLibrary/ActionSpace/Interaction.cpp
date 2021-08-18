@@ -26,8 +26,9 @@ void
 Interaction::
 Initialize() {
   auto c = this->GetPlan()->GetCoordinator();
-  m_toInterimSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
-  m_toPostSolution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
+  for(auto stage : this->m_stages) {
+    m_toStageSolutions[stage] = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
+  }
 }
 
 bool
@@ -51,34 +52,16 @@ Valid(const State& _state) {
 
 /*------------------------ Accessors -------------------------*/
 
-const std::vector<std::string>&
-Interaction::
-GetInterimConditions() const {
-  return m_interimConditions;
-}
-
 Interaction::MPSolution*
 Interaction::
-GetToInterimSolution() const {
-  return m_toInterimSolution.get();
-}
-    
-Interaction::MPSolution*
-Interaction::
-GetToPostSolution() const {
-  return m_toPostSolution.get();
+GetToStageSolution(const std::string& _stage) const {
+  return m_toStageSolutions.at(_stage).get();
 }
     
 std::unique_ptr<Interaction::MPSolution>&& 
 Interaction::
-ExtractToInterimSolution() {
-  return std::move(m_toInterimSolution);
-}
-
-std::unique_ptr<Interaction::MPSolution>&& 
-Interaction::
-ExtractToPostSolution() {
-  return std::move(m_toPostSolution);
+ExtractToStageSolution(const std::string& _stage) {
+  return std::move(m_toStageSolutions[_stage]);
 }
 
 const std::string 
@@ -87,53 +70,30 @@ GetInteractionStrategyLabel() const {
   return m_isLabel;
 }
     
-void 
-Interaction::
-SetToInterimPath(GroupPathType* _path) {
-  m_toInterimPath = _path;
-}
-
 Interaction::GroupPathType*
 Interaction::
-GetToInterimPath() {
-  return m_toInterimPath;
-}
-
-void
-Interaction::
-SetToPostPath(GroupPathType* _path) {
-  m_toPostPath = _path;
-}
-
-Interaction::GroupPathType*
-Interaction::
-GetToPostPath() {
-  return m_toPostPath;
+GetToStageGroupPath(const std::string& _stage) const {
+  return m_toStageGroupPaths.at(_stage);
 }
 
 void 
 Interaction::
-SetToInterimPaths(std::vector<Path*> _paths) {
-  m_toInterimPaths = _paths;
+SetToStageGroupPath(const std::string& _stage, GroupPathType* _path) {
+  m_toStageGroupPaths[_stage] = _path;
 }
-    
+
 std::vector<Path*> 
 Interaction::
-GetToInterimPaths() {
-  return m_toInterimPaths;
+GetToStagePaths(const std::string& _stage) const {
+  return m_toStagePaths.at(_stage);
 }
     
 void 
 Interaction::
-SetToPostPaths(std::vector<Path*> _paths) {
-  m_toPostPaths = _paths;
+SetToStagePaths(const std::string& _stage, std::vector<Path*> _paths) {
+  m_toStagePaths[_stage] = _paths;
 }
     
-std::vector<Path*> 
-Interaction::
-GetToPostPaths() {
-  return m_toPostPaths;
-}
 /*--------------------- Helper Functions ---------------------*/
 
 void
@@ -150,15 +110,6 @@ ParseXMLNode(XMLNode& _node) {
   m_isLabel = _node.Read("isLabel", true, "", 
                          "Interaction Strategy Label");
 
-  for(auto& child : _node) {
-    if(child.Name() == "InterimConditions") {
-      for(auto& grandchild : child) {
-        auto condition = grandchild.Read("label",true,"",
-                         "Label of condition to include.");
-        m_interimConditions.push_back(std::move(condition));
-      }
-    }
-  }
 }
 
 /*------------------------------------------------------------*/

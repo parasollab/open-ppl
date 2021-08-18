@@ -36,7 +36,6 @@
 // InteractionStrategyMethods to include
 
 #include "TMPLibrary/InteractionStrategies/IndependentPaths.h"
-#include "TMPLibrary/InteractionStrategies/InteractionStrategyExample.h"
 #include "TMPLibrary/InteractionStrategies/TemplateInteractions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +86,6 @@ struct TMPTraits {
 
 	typedef boost::mpl::list<
 		IndependentPaths,
-    InteractionStrategyExample,
     TemplateInteractions
 			> InteractionStrategyMethodList;
 };

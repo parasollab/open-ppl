@@ -16,8 +16,8 @@ class TemplateInteractions : public InteractionStrategyMethod {
 
     struct InteractionTemplate {
       State start;
-      std::unique_ptr<MPSolution> toInterimSolution;
-      std::unique_ptr<MPSolution> toPostSolution;
+      std::vector<std::string> stages;
+      std::unordered_map<std::string,std::unique_ptr<MPSolution>> toStageSolutions;
     };
 
     ///@}

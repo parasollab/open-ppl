@@ -32,9 +32,9 @@ class Action : public TMPBaseObject {
     ///@name Accessors
     ///@{
 
-    const std::vector<std::string>& GetPreConditions() const;
+    const std::vector<std::string>& GetStages() const;
 
-    const std::vector<std::string>& GetPostConditions() const;
+    const std::vector<std::string>& GetStageConditions(const std::string& _stage) const;
 
     ///@}
 
@@ -50,8 +50,8 @@ class Action : public TMPBaseObject {
     ///@name Internal State
     ///@{
 
-    std::vector<std::string> m_preConditions;
-    std::vector<std::string> m_postConditions;
+    std::vector<std::string> m_stages;
+    std::unordered_map<std::string,std::vector<std::string>> m_stageConditions;
 
     ///@}
 };

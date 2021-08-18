@@ -160,15 +160,95 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   update.updates.push_back(std::make_pair(_input,_output));
 
   // Get hvids from start state
-  std::set<size_t> startHVids;
+  std::set<size_t> currentHVids;
   for(auto sr : _csr) {
     auto group = sr->first->GetGroup();
     auto vid = _input[group].second;
     
     auto hvid = m_vertexMap[sr][vid];
-    startHVids.insert(hvid);
+    currentHVids.insert(hvid);
   }
 
+  const auto& stages = _inter->GetStages();
+  auto currentStage = stages[0];
+
+  // Connect all of the intermediate stages
+  for(size_t i = 1; i < stages.size()-1; i++) {
+    TMPHyperarc arc;
+    arc.semantic = true;
+    m_interactionSolutions.push_back(_inter->ExtractToStageSolution(currentStage));
+
+    // Pull individual robot paths from solution and add them to the hyperarc.
+    for(auto& kv : _input) {
+      auto group = kv.first;
+      auto robots = group->GetRobots();
+      for(auto robot : robots) {
+        auto path = m_interactionSolutions.back()->GetPath(robot);
+        path = MovePathToMPSolution(path);
+        arc.paths.push_back(path);
+      }
+    }
+
+    // Create virtual interaction node for next stage
+    TMPVertex interactionVertex(MAX_INT,nullptr);
+    size_t interactionHVid = m_hypergraph->AddVertex(interactionVertex); 
+
+    // Connect current and next stage
+    m_hypergraph->AddHyperarc({interactionHVid},currentHVids,arc);
+
+    // Move current stage values forward
+    currentStage = stages[i];
+    currentHVids = {interactionHVid};
+  }
+
+  // Connect final stage
+  const auto& finalStage = stages.back();
+
+  TMPHyperarc arc;
+  arc.semantic = true; 
+
+  // Extract to Post solution form interaction.
+  m_interactionSolutions.push_back(_inter->ExtractToStageSolution(finalStage));
+
+  // Pull individual robot paths from solution and add them to the hyperarc.
+  for(auto& kv : _output) {
+    auto group = kv.first;
+    auto robots = group->GetRobots();
+    for(auto robot : robots) {
+      auto path = m_interactionSolutions.back()->GetPath(robot);
+      path = MovePathToMPSolution(path);
+      arc.paths.push_back(path);
+    }
+  }
+
+  // Create semantic roadmaps for output
+  std::set<size_t> postHVids;
+  for(auto kv : _output) {
+    auto outputGroup = kv.second.first->GetGroup();
+    m_mpSolution->AddRobotGroup(outputGroup);
+    auto outputRm = m_mpSolution->GetGroupRoadmap(outputGroup);
+
+    for(auto formation : outputFormations[outputGroup]) {
+      outputRm->AddFormation(formation);
+    }
+
+    auto newSr = AddSemanticRoadmap(outputRm, update);
+
+    auto subVID = kv.second.second;
+    auto hvid = m_vertexMap[newSr][subVID];
+
+    postHVids.insert(hvid);
+  }
+
+  // Add the connecting hyperarc.
+  m_hypergraph->AddHyperarc(postHVids,currentHVids,arc);
+
+  // Check if the hypergraph has reached a satisfying state.
+  CheckForGoalState(postHVids);
+
+
+  
+  /*
   // Initialize incoming interaction hyperarc
   TMPHyperarc incoming;
   incoming.semantic = true; 
@@ -234,7 +314,7 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   // Connect interaction vertex and end vertices
   m_hypergraph->AddHyperarc(postHVids,{interactionHVid},outgoing);
   CheckForGoalState(postHVids);
-
+  */
   /*
   SemanticRoadmap* sr = new SemanticRoadmap(std::make_pair(grm,update));
   AddInteractionRoadmap(sr);

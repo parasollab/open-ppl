@@ -457,7 +457,6 @@ TASK_SRCS := \
   TMPLibrary/ActionSpace/MotionCondition.cpp \
   TMPLibrary/ActionSpace/ProximityCondition.cpp \
   TMPLibrary/InteractionStrategies/IndependentPaths.cpp \
-  TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp \
   TMPLibrary/InteractionStrategies/TemplateInteractions.cpp \
   TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
