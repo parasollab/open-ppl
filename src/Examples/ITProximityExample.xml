@@ -427,11 +427,21 @@
       </Condition>
 
       <Condition label="ExchangeBox" type="motion">
-        <CSpaceConstraint point="-10 5 0 0 0 0"
+        <CSpaceConstraint point="-5 0 0 0 0 0"
                           dof="6" type="land" role="R1"/>
-        <CSpaceConstraint point="0 5 0 0 0 0"
+        <CSpaceConstraint point="5 0 0 0 0 0"
                           dof="6" type="water" role="R2"/>
-        <CSpaceConstraint point="-5 5 0 0 0 0"
+        <CSpaceConstraint point="0 0 0 0 0 0"
+                          dof="6" type="passive" role="P1"/>
+      </Condition>
+      <Condition label="ExchangeBoxA" type="motion">
+        <CSpaceConstraint point="-5 0 0 0 0 0"
+                          dof="6" type="land" role="R1"/>
+      </Condition>
+      <Condition label="ExchangeBoxB" type="motion">
+        <CSpaceConstraint point="5 0 0 0 0 0"
+                          dof="6" type="water" role="R2"/>
+        <CSpaceConstraint point="0 0 0 0 0 0"
                           dof="6" type="passive" role="P1"/>
       </Condition>
 
@@ -454,63 +464,49 @@
       <!-- Actions -->
 
       <Interaction label="Grasp2Arrive" isLabel="IndPaths">
-        <PreConditions>
+        <Stage label="Initial">
           <Condition label="Grasp2"/>
           <Condition label="Grasp2GoalBox"/>
-        </PreConditions>
-        <InterimConditions>
+        </Stage>
+        <Stage label="Final">
           <Condition label="Grasp2"/>
           <Condition label="Grasp2FinalLocation"/>
-        </InterimConditions>
-        <PostConditions>
-          <Condition label="Grasp2"/>
-          <Condition label="Grasp2FinalLocation"/>
-        </PostConditions>
+        </Stage>
       </Interaction>
 
 
       <Interaction label="CreateGrasp" isLabel="IndPaths">
-        <PreConditions>
+        <Stage label="Intitial">
           <Condition label="Solo"/>
           <Condition label="Passive"/>
           <Condition label="GraspProximity"/>
-        </PreConditions>
-
-        <InterimConditions>
+        </Stage>
+        <Stage label="Final">
           <Condition label="Grasp"/>
-          <!--Condition label="TightFormationBox1"/>
-          <Condition label="TightGraspBox"/-->
-        </InterimConditions>
-
-        <PostConditions>
-          <Condition label="Grasp"/>
-          <!--Condition label="TightFormationBox1"/>
-          <Condition label="TightGraspBox"/-->
-        </PostConditions>
+        </Stage>
       </Interaction>
 
 
       <Interaction label="GraspExchange" isLabel="IndPaths">
-        <PreConditions>
+        <Stage label="Initial">
           <Condition label="Grasp"/>
-          <!--Condition label="ExchangeBox1"/-->
           <Condition label="Solo2"/>
-          <!--Condition label="Anywhere2"/-->
           <Condition label="ExchangeProximity"/>
-        </PreConditions>
-
-        <InterimConditions>
+        </Stage>
+        <Stage label="ToExchange">
           <Condition label="Exchange"/>
-          <!--Condition label="ExchangeBox"/-->
-          <Condition label="ExchangeProximity"/>
-        </InterimConditions>
-
-        <PostConditions>
+          <Condition label="ExchangeBox"/>
+        </Stage>
+        <Stage label="PostExchange">
           <Condition label="Grasp2"/>
-          <!--Condition label="ExchangeBox2"/-->
           <Condition label="Solo"/>
-          <!--Condition label="Anywhere1"/-->
-        </PostConditions>
+          <Condition label="ExchangeBoxA"/>
+          <Condition label="ExchangeBoxB"/>
+        </Stage>
+        <Stage label="Final">
+          <Condition label="Grasp2"/>
+          <Condition label="Solo"/>
+        </Stage>
       </Interaction>
     </ActionSpace>
 	

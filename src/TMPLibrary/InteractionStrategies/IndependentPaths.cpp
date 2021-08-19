@@ -86,7 +86,10 @@ operator()(Interaction* _interaction, State& _state) {
 
     if(i+1 < stages.size())
       _state = InterimState(_interaction,next,stages[i+1],toNextStagePaths);
+    else 
+      _state = InterimState(_interaction,next,next,toNextStagePaths);
   }
+
 
   // Clear information from this planning run.
   m_roleMap.clear();

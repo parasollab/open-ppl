@@ -195,8 +195,16 @@ SampleInteraction(SemanticRoadmap* _sr) {
   auto startCopy = start.second;
   
   auto is = this->GetInteractionStrategyMethod(inter->GetInteractionStrategyLabel());
-  if(!is->operator()(inter,startCopy))
+  if(!is->operator()(inter,startCopy)) {
+    if(m_debug) {
+      std::cout << "Failed to plan interaction for "
+                << inter->GetLabel()
+                << "and "
+                << _sr->first->GetGroup()->GetLabel()
+                << ".";
+    }
     return false;
+  }
 
   if(m_debug) {
     std::cout << "Successful interaction plan for "
@@ -348,6 +356,27 @@ BuildCompositeSemanticRoadmaps(CompositeSemanticRoadmap _csr,
       continue;
 
     auto group = sr->first->GetGroup();
+
+    // Make sure this group is disjoint from existing sr in the csr
+    bool disjoint = true;
+    for(auto sr2 : _csr) {
+      auto group2 = sr2->first->GetGroup();
+      for(auto robot : group->GetRobots()) {
+        for(auto robot2 : group2->GetRobots()) {
+          if(robot != robot2)
+            continue;
+          disjoint = false;
+          break;
+        }
+        if(disjoint == false)
+          break;
+      }
+      if(disjoint == false)
+        break;
+    }
+    if(disjoint == false)
+      continue;
+
     std::set<Robot*> used;
   
     for(auto type : types) {

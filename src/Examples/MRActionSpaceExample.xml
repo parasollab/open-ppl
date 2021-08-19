@@ -287,33 +287,25 @@
       <!-- Actions -->
 
       <Interaction label="Arrive1" isLabel="IndPaths">
-        <PreConditions>
+        <Stage label="Initial">
           <Condition label="Solo"/>
           <Condition label="GoalBox1"/>
-        </PreConditions>
-        <InterimConditions>
+        </Stage>
+        <Stage label="Final">
           <Condition label="Solo"/>
           <Condition label="FinalLocation1"/>
-        </InterimConditions>
-        <PostConditions>
-          <Condition label="Solo"/>
-          <Condition label="FinalLocation1"/>
-        </PostConditions>
+        </Stage>
       </Interaction>
 
       <Interaction label="Arrive2" isLabel="IndPaths">
-        <PreConditions>
+        <Stage label="Initial">
           <Condition label="Solo2"/>
           <Condition label="GoalBox2"/>
-        </PreConditions>
-        <InterimConditions>
+        </Stage>
+        <Stage label="Final">
           <Condition label="Solo2"/>
           <Condition label="FinalLocation2"/>
-        </InterimConditions>
-        <PostConditions>
-          <Condition label="Solo2"/>
-          <Condition label="FinalLocation2"/>
-        </PostConditions>
+        </Stage>
       </Interaction>
 
     </ActionSpace>

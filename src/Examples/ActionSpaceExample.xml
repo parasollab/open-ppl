@@ -254,62 +254,54 @@
 
       <!-- Actions -->
       <!--Action label="ActionExample">
-        <PreConditions>
+        <Stage>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
-        </PreConditions>
+        </Stage>
 
-        <PostConditions>
+        <Stage>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
-        </PostConditions>
+        </Stage>
       </Action-->
 
-      <Interaction label="Begin" isLabel="IndPaths">
-        <PreConditions>
+      <!--Interaction label="Begin" isLabel="IndPaths">
+        <Stage label="Initial">
           <Condition label="Solo"/>
           <Condition label="StartLocation"/>
-        </PreConditions>
-        <InterimConditions>
+        </Stage>
+        <Stage label="Final">
           <Condition label="Solo"/>
           <Condition label="StartLocation"/>
-        </InterimConditions>
-        <PostConditions>
-          <Condition label="Solo"/>
-          <Condition label="StartLocation"/>
-        </PostConditions>
-      </Interaction>
+        </Stage>
+      </Interaction-->
 
       <Interaction label="Arrive" isLabel="IndPaths">
-        <PreConditions>
+        <Stage label="Initial">
           <Condition label="Solo"/>
           <Condition label="GoalBox"/>
-        </PreConditions>
-        <InterimConditions>
+        </Stage>
+        <Stage label="Final">
           <Condition label="Solo"/>
           <Condition label="FinalLocation"/>
-        </InterimConditions>
-        <PostConditions>
-          <Condition label="Solo"/>
-          <Condition label="FinalLocation"/>
-        </PostConditions>
+        </Stage>
       </Interaction>
 
       <!--Interaction label="InteractionExample" isLabel="InteractionStrategyExample">
-        <PreConditions>
+        <Stage>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
-        </PreConditions>
+        </Stage>
 
-        <InterimConditions>
+        <Stage>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
-        </InterimConditions>
+        </Stage>
 
-        <PostConditions>
+        <Stage>
           <Condition label="FormationExample"/>
           <Condition label="MotionExample"/>
-        </PostConditions>
+        </Stage>
       </Interaction-->
     </ActionSpace>
 	
