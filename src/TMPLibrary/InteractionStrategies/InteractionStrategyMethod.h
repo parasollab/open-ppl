@@ -76,13 +76,17 @@ class InteractionStrategyMethod : public TMPBaseObject {
     /// @param _groups The robot groups the constraints will form.
     std::unordered_map<Robot*,Constraint*> GenerateConstraints(
                                            const std::vector<std::string>& _conditions,
-                                           const std::vector<RobotGroup*>& _groups);
+                                           const std::vector<RobotGroup*>& _groups,
+                                           const State& _state,
+                                           const std::set<Robot*>& _staticRobots);
 
     /// Sample a set of motion constraints for each group in the interaction boundary.
     /// @param _groups The robot groups to find constraints for.
     std::unordered_map<Robot*,Constraint*> SampleMotionConstraints(
                                            const std::vector<std::string>& _conditions,
-                                           const std::vector<Robot*> _robots);
+                                           const std::vector<Robot*> _robots,
+                                           const State& _state,
+                                           const std::set<Robot*>& _staticRobots);
 
     void SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution);
 
@@ -96,6 +100,8 @@ class InteractionStrategyMethod : public TMPBaseObject {
     /// @return If the two are conditioned on the same roles.
     bool CompareConditionRoleSets(FormationCondition* _f,
                                   MotionCondition* _m);
+
+    std::set<Robot*> GetStaticRobots(const std::vector<std::string>& _conditions);
     ///@}
     ///@name Internal State
     ///@{

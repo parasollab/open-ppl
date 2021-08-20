@@ -37,11 +37,6 @@ operator()(Interaction* _interaction, State& _state) {
   _interaction->Initialize();
   SetInteractionBoundary(_interaction,_state);
 
-  // Collect robot groups
-  std::vector<RobotGroup*> groups;
-  for(auto kv : _state) {
-    groups.push_back(kv.first);
-  }
 
   // Assign interaction roles.
   const auto& stages = _interaction->GetStages();
@@ -53,19 +48,27 @@ operator()(Interaction* _interaction, State& _state) {
     const auto& current = stages[i-1];
     const auto& next = stages[i];
 
+    // Collect robot groups
+    std::vector<RobotGroup*> groups;
+    for(auto kv : _state) {
+      groups.push_back(kv.first);
+    }
+
     // Construct start constraint map from current state.
     auto startConstraintMap = GenerateConstraints(_state);
 
     // Construct goal constraint map from next state.
+    auto& startConditions = _interaction->GetStageConditions(current);
+    auto staticRobots = GetStaticRobots(startConditions);
     auto& goalConditions = _interaction->GetStageConditions(next);
-    auto goalConstraintMap = GenerateConstraints(goalConditions,groups);
+    auto goalConstraintMap = GenerateConstraints(goalConditions,groups,
+                                                 _state,staticRobots);
 
     // Check that there are was goal constraint created.
     if(goalConstraintMap.empty())
       return false;
 
     // Set the active formations for the planning problem.
-    auto& startConditions = _interaction->GetStageConditions(current);
     SetActiveFormations(startConditions,_interaction->GetToStageSolution(next));
 
     // Construct toNextStage tasks with current stage robot groups.
@@ -246,6 +249,8 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
   std::vector<Path*> paths;
 
   for(auto task : _tasks) {
+
+    // TODO::Ensure that static groups always have a path length of 1.
 
     // Add group to MPSolution
     auto group = task->GetRobotGroup();

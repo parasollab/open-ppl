@@ -72,7 +72,9 @@ class Formation {
     ///@{
 
     std::vector<Robot*> GetRobots();
-  
+ 
+    Robot* GetLeader() const;
+ 
     ///@}
 
   private:

@@ -2,7 +2,7 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
-#include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
+//#include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
 
 /*----------------------- Construction -----------------------*/

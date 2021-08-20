@@ -173,7 +173,8 @@ GenerateConstraints(const State& _state) {
 std::unordered_map<Robot*,Constraint*> 
 InteractionStrategyMethod::
 GenerateConstraints(const std::vector<std::string>& _conditions, 
-                    const std::vector<RobotGroup*>& _groups) {
+                    const std::vector<RobotGroup*>& _groups,
+                    const State& _state, const std::set<Robot*>& _staticRobots) {
 
   std::unordered_map<Robot*,Constraint*> constraintMap;
   auto as = this->GetTMPLibrary()->GetActionSpace();
@@ -194,7 +195,7 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
     const auto& constraints = m->GetConstraints();
     for(const auto c : constraints) {
 
-      // Check if the costraint role has been assigned.
+      // Check if the constraint role has been assigned.
       auto role = m->GetRole(c.second);
       auto iter = m_roleMap.find(role);
       if(iter == m_roleMap.end())
@@ -203,9 +204,35 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
                                       << " is unassigned.";
       
       auto robot = m_roleMap[role];
+
+      if(_staticRobots.count(robot))
+        throw RunTimeException(WHERE) << "Attempting to give static robot a different constraint.";
+
       constraintMap[robot] = c.second;
     }
   }
+
+  // Generate constraints for static robots at their current state
+  /*State staticState;
+  for(const auto& group : _groups) {
+    // Check that whole group is static or not.
+    const auto& robots = group->GetRobots();
+    bool s = _staticRobots.count(robots[0]);
+    for(size_t i = 1; i < robots.size(); i++) {
+      if(s != _staticRobots.count(robots[i]))
+        throw RunTimeException(WHERE) << "Group has inconsistent static status.";
+    }
+
+    if(s)
+      staticState[group] = _state.at(group);
+  }
+
+  auto staticConstraints = GenerateConstraints(staticState);
+
+  // Copy constraints to main constraint map.
+  for(auto kv : staticConstraints) {
+    constraintMap[kv.first] = kv.second;
+  }*/
 
   // Ensure that each group is either entirely defined or undefined.
   std::vector<Robot*> unconstrainedRobots;
@@ -233,7 +260,8 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
     return constraintMap;
 
   // Sample Motion Constraints for unconstrained groups.
-  auto constraints = SampleMotionConstraints(_conditions,unconstrainedRobots);
+  auto constraints = SampleMotionConstraints(_conditions,unconstrainedRobots,
+                                             _state, _staticRobots);
   
   // Make sure that valid constraints were found.
   if(constraints.empty())
@@ -249,7 +277,9 @@ GenerateConstraints(const std::vector<std::string>& _conditions,
 std::unordered_map<Robot*,Constraint*> 
 InteractionStrategyMethod::
 SampleMotionConstraints(const std::vector<std::string>& _conditions,
-                        const std::vector<Robot*> _robots) {
+                        const std::vector<Robot*> _robots,
+                        const State& _state, 
+                        const std::set<Robot*>& _staticRobots) {
 
   std::unordered_map<Robot*,Constraint*> constraintMap;
   auto as = this->GetTMPLibrary()->GetActionSpace();
@@ -298,18 +328,65 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
     MPSolution sol(group);
     sol.GetGroupRoadmap(group)->AddFormation(formation);
     sol.GetGroupRoadmap(group)->SetFormationActive(formation);
+
     GroupTask task(group);
 
     auto lib = this->GetTMPLibrary()->GetMPLibrary();
     lib->SetMPSolution(&sol);
     lib->SetGroupTask(&task);
 
-    // Sample configurations for the group in the interaction boundary.
+    // TODO::Currently only helpful if the leader is static. Any
+    // child that is static in a formation with an active leader
+    // will not be accounted for. This can be worked around by
+    // creating stages with different formations and thus different
+    // leaders, but this is an inelegant solution and should be fixed.
+
+    // Check if the formation is defined by a static leader.
+    Boundary* boundary;
+    if(_staticRobots.count(formation->GetLeader())) {
+      // Find group in input state with leader
+      bool contains = false;
+      for(auto kv : _state) {
+        auto g = kv.first;
+        for(auto r : g->GetRobots()) {
+          if(r == formation->GetLeader()) {
+            contains = true;
+            break;
+          }
+        }
+
+        // These are not the droids you're looking for.
+        if(!contains)
+          continue;
+
+        auto grm = kv.second.first;
+        auto vid = kv.second.second;
+        auto gcfg = grm->GetVertex(vid);
+        auto cfg = gcfg.GetRobotCfg(formation->GetLeader());
+        auto c = new CSpaceBoundingBox(cfg.DOF());
+        c->ShrinkToPoint(cfg);
+        boundary = c;
+        break;
+      }
+
+      if(!contains)
+        throw RunTimeException(WHERE) << "Failed to find current state of leader.";
+    }
+    else {
+      boundary = m_boundary.get();
+    }
+
+    // Sample configurations for the group in the boundary.
     auto sampler = lib->GetSampler(m_smLabel);
     std::vector<GroupCfg> samples;
-    sampler->Sample(m_numNodes,m_maxAttempts,m_boundary.get(),
+    sampler->Sample(m_numNodes,m_maxAttempts,boundary,
                     std::back_inserter(samples));
-    
+
+    // Delete CSpace boundary if necessary
+    if(_staticRobots.count(formation->GetLeader())) {
+      delete boundary;
+    }
+
     if(samples.empty())
       return {};
 
@@ -425,4 +502,29 @@ CompareConditionRoleSets(FormationCondition* _f,
   }
 
   return true;
+}
+
+std::set<Robot*>
+InteractionStrategyMethod::
+GetStaticRobots(const std::vector<std::string>& _conditions) {
+
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+
+  std::set<Robot*> staticRobots;
+
+  for(const auto& label : _conditions) {
+    auto condition = as->GetCondition(label);
+    auto f = dynamic_cast<FormationCondition*>(condition);
+
+    if(!f or !f->IsStatic())
+      continue;
+
+    const auto& roles = f->GetRoles();
+    for(const auto& role : roles) {
+      auto robot = m_roleMap[role];
+      staticRobots.insert(robot);
+    }        
+  }
+
+  return staticRobots;
 }

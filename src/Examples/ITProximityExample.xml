@@ -326,15 +326,26 @@
         <Role name="R1" type="land"/>
       </Condition>
 
+      <Condition label="SoloStatic" type="formation" static="true">
+        <Role name="R1" type="land"/>
+      </Condition>
+
       <Condition label="Solo2" type="formation">
         <Role name="R2" type="water"/>
       </Condition>
 
-      <Condition label="Passive" type="formation">
+      <Condition label="Passive" type="formation" static="true">
         <Role name="P1" type="passive"/>
       </Condition>
 
-      <Condition label="Grasp" type="formation">
+      <Condition label="CreateGrasp" type="formation" static="true">
+        <Role name="P1" type="passive"/>
+        <Role name="R1" type="land">
+          <FormationConstraint refRole="P1" translation="-5 0 0" orientation="0 0 0"/>
+        </Role>
+      </Condition>
+
+      <Condition label="HoldGrasp" type="formation">
         <Role name="R1" type="land"/>
         <Role name="P1" type="passive">
           <FormationConstraint refRole="R1" translation="5 0 0" orientation="0 0 0"/>
@@ -348,13 +359,20 @@
         </Role>
       </Condition>
 
-      <Condition label="Exchange" type="formation">
-        <Role name="R1" type="land"/>
-        <Role name="P1" type="passive">
-          <FormationConstraint refRole="R1" translation="5 0 0" orientation="0 0 0"/>
-        </Role>
+      <Condition label="Grasp2Static" type="formation" static="true">
+        <Role name="P1" type="passive"/>
         <Role name="R2" type="water">
           <FormationConstraint refRole="P1" translation="5 0 0" orientation="0 0 0"/>
+        </Role>
+      </Condition>
+
+      <Condition label="Exchange" type="formation" static="true">
+        <Role name="P1" type="passive"/>
+        <Role name="R1" type="land">
+          <FormationConstraint refRole="P1" translation="5 0 0" orientation="0 0 0"/>
+        </Role>
+        <Role name="R2" type="water">
+          <FormationConstraint refRole="P1" translation="-5 0 0" orientation="0 0 0"/>
         </Role>
       </Condition>
 
@@ -481,27 +499,27 @@
           <Condition label="Passive"/>
           <Condition label="GraspProximity"/>
         </Stage>
+        <Stage label="CreateGrasp">
+          <Condition label="CreateGrasp"/>
+        </Stage>
         <Stage label="Final">
-          <Condition label="Grasp"/>
+          <Condition label="HoldGrasp"/>
         </Stage>
       </Interaction>
 
 
       <Interaction label="GraspExchange" isLabel="IndPaths">
         <Stage label="Initial">
-          <Condition label="Grasp"/>
+          <Condition label="HoldGrasp"/>
           <Condition label="Solo2"/>
           <Condition label="ExchangeProximity"/>
         </Stage>
         <Stage label="ToExchange">
           <Condition label="Exchange"/>
-          <Condition label="ExchangeBox"/>
         </Stage>
         <Stage label="PostExchange">
-          <Condition label="Grasp2"/>
-          <Condition label="Solo"/>
-          <Condition label="ExchangeBoxA"/>
-          <Condition label="ExchangeBoxB"/>
+          <Condition label="Grasp2Static"/>
+          <Condition label="SoloStatic"/>
         </Stage>
         <Stage label="Final">
           <Condition label="Grasp2"/>

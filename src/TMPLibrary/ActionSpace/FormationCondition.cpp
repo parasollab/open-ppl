@@ -22,6 +22,8 @@ FormationCondition::
 FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpLibrary) {
   this->SetName("FormationCondition");
 
+  m_static = _node.Read("static",false,false,"Flag indicating if this formation is static.");
+
   for(auto& child : _node) {
     if(child.Name() == "Role") {
     
@@ -198,6 +200,11 @@ GetTypes() const {
   return types;
 }
 
+bool 
+FormationCondition::
+IsStatic() const {
+  return m_static;
+}
 /*--------------------- Helper Functions ---------------------*/
 
 bool

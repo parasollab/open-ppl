@@ -53,7 +53,9 @@ class FormationCondition : public Condition {
     const std::vector<std::string> GetRoles() const;
  
     const std::vector<std::string> GetTypes() const;
- 
+
+    bool IsStatic() const;
+
     ///@}
 
   private:
@@ -72,6 +74,7 @@ class FormationCondition : public Condition {
 
     std::unordered_map<std::string,Role> m_roles;
 
+    bool m_static; ///< Flag indiciating if this formation is static interactions.
     ///@}
 };
 

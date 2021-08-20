@@ -176,7 +176,8 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
   for(size_t i = 1; i < stages.size()-1; i++) {
     TMPHyperarc arc;
     arc.semantic = true;
-    m_interactionSolutions.push_back(_inter->ExtractToStageSolution(currentStage));
+    const auto& nextStage = stages[i];
+    m_interactionSolutions.push_back(_inter->ExtractToStageSolution(nextStage));
 
     // Pull individual robot paths from solution and add them to the hyperarc.
     for(auto& kv : _input) {

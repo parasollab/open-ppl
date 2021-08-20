@@ -116,9 +116,9 @@ GetRandomFormationCfg(const Boundary* const _b) {
   std::vector<double> dofs(m_multibody.DOF());
 
   /// Currently only support workspace boundaries
-  if(_b->Type() != Boundary::Space::Workspace) 
-    throw RunTimeException(WHERE) << "Random Formation currently only supports "
-                                     "workspace boundaries.";
+  //if(_b->Type() != Boundary::Space::Workspace) 
+  //  throw RunTimeException(WHERE) << "Random Formation currently only supports "
+  //                                   "workspace boundaries.";
 
   // Determine how many DOF value will be generated from _b.
   size_t numDof = std::min(_b->GetDimension(),dofs.size());
@@ -149,12 +149,15 @@ GetRandomFormationCfg(const Boundary* const _b) {
 
     auto cfgs = ConvertToIndividualCfgs(dofs);
     bool valid = true;
-  
-    for(auto cfg : cfgs) {
-      if(_b->InBoundary(cfg.GetData()))
-        continue;
-      valid = false;
-      break;      
+
+    // TODO::Figure out cspace equivalent?
+    if(_b->Type() == Boundary::Space::Workspace) { 
+      for(auto cfg : cfgs) {
+        if(_b->InBoundary(cfg.GetData()))
+          continue;
+        valid = false;
+        break;      
+      }
     }
 
     if(valid)
@@ -206,6 +209,12 @@ std::vector<Robot*>
 Formation::
 GetRobots() {
   return m_robots;
+}
+
+Robot*
+Formation::
+GetLeader() const {
+  return m_leader;
 }
 
 /*------------------------------- Helper Functions ---------------------------*/
