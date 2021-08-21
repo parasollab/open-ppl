@@ -159,6 +159,7 @@
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID" ignoreSelfCollision="true" interRobotCollision="false"/>
+      <CollisionDetection label="pqp_robot" method="PQP_SOLID" ignoreSelfCollision="true" interRobotCollision="true"/>
       <TerrainValidity label="terrain" debug="false"/>
       <ComposeValidity label="terrain_robot" operator="AND">
         <ValidityChecker label="pqp_solid"/>
@@ -297,7 +298,7 @@
 
 		<TaskEvaluators>
 			<SimpleMotionEvaluator label="motionEval"/>
-      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="false" vcLabel="terrain_robot"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" debug="true" vcLabel="pqp_robot"/>
 		</TaskEvaluators>
 
 		<TaskDecomposers>
@@ -309,7 +310,7 @@
     <InteractionStrategies>
       <IndependentPaths label="IndPaths" 
           sgLabel="HCR" smLabel="UniformRandomFreeTerrain"
-          mpStrategy="CompositePRM" debug="true"/>
+          mpStrategy="CompositePRM" debug="true" numNodes="100" maxAttempts="100"/>
     </InteractionStrategies>
 
 		<StateGraphs>
@@ -369,10 +370,10 @@
       <Condition label="Exchange" type="formation" static="true">
         <Role name="P1" type="passive"/>
         <Role name="R1" type="land">
-          <FormationConstraint refRole="P1" translation="5 0 0" orientation="0 0 0"/>
+          <FormationConstraint refRole="P1" translation="-5 0 0" orientation="0 0 0"/>
         </Role>
         <Role name="R2" type="water">
-          <FormationConstraint refRole="P1" translation="-5 0 0" orientation="0 0 0"/>
+          <FormationConstraint refRole="P1" translation="5 0 0" orientation="0 0 0"/>
         </Role>
       </Condition>
 

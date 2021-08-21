@@ -64,9 +64,9 @@ FormationCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_t
           role.transformation = Transformation(Vector3d(translation[0],
                                                         translation[1],
                                                         translation[2]),
-                                               EulerAngle(eulerVec[0],
-                                                          eulerVec[1],
-                                                          eulerVec[2]));
+                                               EulerAngle(eulerVec[2], // x is gamma
+                                                          eulerVec[1], // y is beta
+                                                          eulerVec[0]));// z is alpha
 
         }
         else {

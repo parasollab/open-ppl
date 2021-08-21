@@ -495,11 +495,11 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
       convertFromMatrix(e,orientation.matrix());
       double value;
       switch(i) {
-        case 0: value = e.alpha()/PI;
+        case 0: value = e.gamma()/PI;
                 break;
         case 1: value = e.beta()/PI;
                 break;
-        case 2: value = e.gamma()/PI;
+        case 2: value = e.alpha()/PI;
                 break;
         default: throw RunTimeException(WHERE) << "INVALID number of "
                 "orientation dofs.";
