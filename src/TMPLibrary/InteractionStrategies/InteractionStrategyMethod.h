@@ -102,6 +102,11 @@ class InteractionStrategyMethod : public TMPBaseObject {
                                   MotionCondition* _m);
 
     std::set<Robot*> GetStaticRobots(const std::vector<std::string>& _conditions);
+
+    void ConfigureStaticRobots(const std::set<Robot*>& _staticRobots, const State& _state); 
+
+    void ResetStaticRobots();
+
     ///@}
     ///@name Internal State
     ///@{

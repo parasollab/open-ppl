@@ -34,6 +34,8 @@ operator()(Interaction* _interaction, State& _state) {
               << std::endl;
   }
 
+  bool foundSolution = false;
+
   _interaction->Initialize();
   SetInteractionBoundary(_interaction,_state);
 
@@ -66,7 +68,7 @@ operator()(Interaction* _interaction, State& _state) {
 
     // Check that there are was goal constraint created.
     if(goalConstraintMap.empty())
-      return false;
+      break;
 
     // Set the active formations for the planning problem.
     SetActiveFormations(startConditions,_interaction->GetToStageSolution(next));
@@ -75,14 +77,19 @@ operator()(Interaction* _interaction, State& _state) {
     auto toNextStageTasks = GenerateTasks(startConditions,
                                           startConstraintMap,
                                           goalConstraintMap);
-  
+
+    // Configure static robots as obstacles
+    ConfigureStaticRobots(staticRobots,_state);
+
     // Compute motions from pre to interim conditions.
     auto toNextStagePaths = PlanMotions(toNextStageTasks,_interaction->GetToStageSolution(next),
-                  "PlanInteraction::"+_interaction->GetLabel()+"::To"+next);
+                  "PlanInteraction::"+_interaction->GetLabel()+"::To"+next,staticRobots);
+
+    ResetStaticRobots();
 
     // Check if a valid solution was found.
     if(toNextStagePaths.empty())
-      return false;
+      break;
 
     // Save plan information.
     _interaction->SetToStagePaths(next,toNextStagePaths);
@@ -91,6 +98,8 @@ operator()(Interaction* _interaction, State& _state) {
       _state = InterimState(_interaction,next,stages[i+1],toNextStagePaths);
     else 
       _state = InterimState(_interaction,next,next,toNextStagePaths);
+
+    foundSolution = true;
   }
 
 
@@ -100,7 +109,7 @@ operator()(Interaction* _interaction, State& _state) {
   m_individualPaths.clear();
   m_finalState.clear();
 
-  return true;
+  return foundSolution;
 
 
   /*
@@ -237,7 +246,8 @@ GenerateTasks(std::vector<std::string> _conditions,
 
 std::vector<IndependentPaths::Path*>
 IndependentPaths::
-PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label) {
+PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label,
+            const std::set<Robot*>& _staticRobots) {
 
   // Grab MPSolution, MPLibrary, and MPProblem.
   auto lib = this->GetMPLibrary();
@@ -256,6 +266,7 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
     auto group = task->GetRobotGroup();
     for(auto robot : group->GetRobots()) {
       _solution->AddRobot(robot);
+      robot->SetVirtual(false);
     }
     _solution->AddRobotGroup(group);
     
@@ -319,6 +330,12 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
     // Save group cfg at the end of the path.
     auto groupVID = grm->AddVertex(gcfg);
     m_finalState[group] = std::make_pair(grm,groupVID);
+
+    // Reset nonstatic robots as virtual
+    for(auto robot : group->GetRobots()) {
+      if(!_staticRobots.count(robot))
+        robot->SetVirtual(true);
+    }
   }
 
   return paths;

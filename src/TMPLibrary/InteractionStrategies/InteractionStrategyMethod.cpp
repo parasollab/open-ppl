@@ -528,3 +528,39 @@ GetStaticRobots(const std::vector<std::string>& _conditions) {
 
   return staticRobots;
 }
+    
+void
+InteractionStrategyMethod::
+ConfigureStaticRobots(const std::set<Robot*>& _staticRobots, const State& _state) {
+  auto prob = this->GetTMPLibrary()->GetMPProblem();
+
+  for(const auto& robot : prob->GetRobots()) {
+    robot->SetVirtual(true);
+  }
+
+  for(const auto& kv : _state) {
+    auto group = kv.first;
+    auto grm = kv.second.first;
+    auto vid = kv.second.second;
+    auto gcfg = grm->GetVertex(vid);
+
+    for(auto robot : group->GetRobots()) {
+      if(!_staticRobots.count(robot))
+        continue;
+
+      robot->SetVirtual(false);
+      auto cfg = gcfg.GetRobotCfg(robot);
+      robot->GetMultiBody()->Configure(cfg);
+    }
+  }
+}
+
+void
+InteractionStrategyMethod::
+ResetStaticRobots() {
+  auto prob = this->GetTMPLibrary()->GetMPProblem();
+
+  for(const auto& robot : prob->GetRobots()) {
+    robot->SetVirtual(false);
+  }
+}

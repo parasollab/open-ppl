@@ -42,7 +42,8 @@ class IndependentPaths : public InteractionStrategyMethod {
                             std::unordered_map<Robot*,Constraint*> _startConstraints,
                             std::unordered_map<Robot*,Constraint*> _goalConstraints);
 
-    std::vector<Path*> PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label);
+    std::vector<Path*> PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, 
+                                   std::string _label, const std::set<Robot*>& _staticRobots);
 
     State InterimState(Interaction* _interaction, const std::string& _current, 
                        const std::string& _next, const std::vector<Path*> _paths);
