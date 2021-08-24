@@ -593,11 +593,35 @@ CheckForGoalState(std::set<size_t> _hvids) {
   // Check composite roadmaps for satisfying state
   for(auto csr : csrs) {
     ActionUpdate compositeUpdate;
+    bool valid = true;
     for(auto sr : csr) {
+      auto size = compositeUpdate.updates.size();
       compositeUpdate = MergeActionUpdates(compositeUpdate,sr->second);
+      if(compositeUpdate.updates.size() < size) {
+        valid = false;
+        break;
+      }
     }
 
+    if(!valid)
+      continue;
+
     auto state = ApplyActionUpdate(m_initialState,compositeUpdate);
+
+    if(m_debug) {
+      std::cout << "Applied Action Update" << std::endl;
+      for(auto kv : state) {
+        auto group = kv.first;
+        auto grm = kv.second.first;
+        auto vid = kv.second.second;
+        auto gcfg = grm->GetVertex(vid);
+
+        std::cout << "Group: " 
+                  << group->GetLabel() 
+                  << " at " << gcfg.PrettyPrint() 
+                  << std::endl;
+      }
+    }
 
     bool satisfying = IsGoalState(state);
 
@@ -710,8 +734,197 @@ MergeActionUpdates(ActionUpdate _one, ActionUpdate _two) {
     }
   }
 
+  auto oneLayers = ConvertActionUpdateToLayers(_one);
+  auto twoLayers = ConvertActionUpdateToLayers(_two); 
+
+  if(m_debug) {
+    std::cout << "Action Update Layers" << std::endl;
+
+    std::cout << "First Update." << std::endl;
+    for(size_t i = 0; i < oneLayers.size(); i++) {
+      auto layer = oneLayers[i];
+      std::cout << "Layer " << i << std::endl;
+      for(auto p : layer) {
+        auto start = p.first;
+        auto end = p.second;
+
+        std::cout << "Start: ";
+        for(auto kv : start) {
+          std::cout << kv.first->GetLabel() << " ";
+        }
+        std::cout << std::endl << "End: ";
+        for(auto kv : end) {
+          std::cout << kv.first->GetLabel() << " ";
+        }
+        std::cout << std::endl;
+      }
+    }
+
+    std::cout << "Second Update." << std::endl;
+    for(size_t i = 0; i < twoLayers.size(); i++) {
+      auto layer = twoLayers[i];
+      std::cout << "Layer " << i<< std::endl;
+      for(auto p : layer) {
+        auto start = p.first;
+        auto end = p.second;
+
+        std::cout << "Start: ";
+        for(auto kv : start) {
+          std::cout << kv.first->GetLabel() << " ";
+        }
+        std::cout << std::endl << "End: ";
+        for(auto kv : end) {
+          std::cout << kv.first->GetLabel() << " ";
+        }
+        std::cout << std::endl;
+      }
+    }
+  }
+
+  // Compare the two layer formats
+  size_t maxLength = std::max(oneLayers.size(),twoLayers.size());
+
+  // Set of robots touched by one side and not the other
+  std::set<Robot*> robotsUsedByOne;
+  std::set<Robot*> robotsUsedByTwo;
+  ActionUpdate combined;
+  for(size_t i = 0; i < minLength; i++) {
+
+    // Track which elements in layer two are matched.
+    std::vector<bool> matches(twoLayers[i].size());
+  
+    // Check if elements in one are also in two
+    for(auto p1 : oneLayers[i]) {
+      auto start1 = p1.first;
+      auto end1 = p1.second;
+
+      combined.updates.push_back(p1);
+
+      // Check if elements in p1 violate the usedRobots in two
+      for(auto kv : start1) {
+        auto g = kv.first;
+        auto r = g->GetRobots();
+        for(auto robot : r) {
+          if(robotsUsedByTwo.count(robot))
+            return ActionUpdate();
+        }
+      }
+
+      bool contains = false;
+      for(size_t j = 0; j < twoLayers[i].size(); j++) {
+        auto p2 = twoLayers[i][j];
+        auto start2 = p2.first;
+        auto end2 = p2.second;
+
+        // Check if elements in two violate the usedRobots in one
+        for(auto kv : start2) {
+          auto g = kv.first;
+          auto r = g->GetRobots();
+          for(auto robot : r) {
+            if(robotsUsedByOne.count(robot))
+              return ActionUpdate();
+          }
+        }
+
+        // Check if state changes are the same
+        if(start1 != start2 or end1 != end2) {
+          matches[j] = false;
+          continue;
+        }
+        contains = true;
+        matches[j] = true;
+        break;
+      }
+
+      if(contains)
+        continue;
+
+      // Make sure anything not contained in two does 
+      // not conflict with later layers in two.
+      for(auto kv : end1) {
+        auto g = kv.first;
+        auto r = g->GetRobots();
+        for(auto robot : r) {
+          robotsUsedByOne.insert(robot);
+        }
+      }
+    }
+    // Collect all robots used by two that are not matched in one
+    for(size_t j = 0; j < matches.size(); j++) {
+      if(matches[j])
+        continue;
+      auto p2 = twoLayers[i][j];
+      combined.updates.push_back(p2);
+      auto end2 = p2.second;
+      for(auto kv : end2) {
+        auto g = kv.first;
+        auto r = g->GetRobots();
+        for(auto robot : r) {
+          robotsUsedByTwo.insert(robot);
+        }
+      }
+    }
+  }
+
+  auto* longerLayers = &oneLayers;
+  auto* usedRobots = &robotsUsedByTwo;
+  if(oneLayers.size() < maxLength) {
+    longerLayers = &twoLayers;
+    usedRobots = &robotsUsedByOne;
+  }
+
+  for(size_t i = minLength; i < maxLength; i++) {
+    auto layer = (*longerLayers)[i];
+    for(auto p : layer) {
+      combined.updates.push_back(p);
+      auto start = p.first;
+      for(auto kv : start) {
+        auto g = kv.first;
+        auto r = g->GetRobots();
+        for(auto robot : r) {
+          if(usedRobots->count(robot))
+            return ActionUpdate();
+        }
+      }
+    }
+  }
+
+  return combined;
+
+  /*
+
   // If no differ, return longer sequence
   if(i == minLength) {
+    if(m_debug) {
+      for(auto transition : _one.updates) {
+        auto start = transition.first;
+        auto end = transition.second;
+
+        std::cout << "Transition\n\tStart:";
+        for(auto kv : start) {
+          auto group = kv.first;
+          auto grm = kv.second.first;
+          auto vid = kv.second.second;
+          auto gcfg = grm->GetVertex(vid);
+          std::cout << "\n\t\t" 
+                    << group->GetLabel() 
+                    << " : " 
+                    << gcfg.PrettyPrint();
+        }
+        std::cout << "\n\tEnd:";
+        for(auto kv : end) {
+          auto group = kv.first;
+          auto grm = kv.second.first;
+          auto vid = kv.second.second;
+          auto gcfg = grm->GetVertex(vid);
+          std::cout << "\n\t\t" 
+                    << group->GetLabel() 
+                    << " : " 
+                    << gcfg.PrettyPrint();
+        }
+        std::cout << std::endl << std::endl;
+      }
+    }
     return _one.updates.size() >= _two.updates.size() ? _one : _two; 
   }
 
@@ -744,7 +957,38 @@ MergeActionUpdates(ActionUpdate _one, ActionUpdate _two) {
     _one.updates.push_back(update);
   }
 
-  return _one;
+  if(m_debug) {
+    for(auto transition : _one.updates) {
+      auto start = transition.first;
+      auto end = transition.second;
+
+      std::cout << "Transition\n\tStart:";
+      for(auto kv : start) {
+        auto group = kv.first;
+        auto grm = kv.second.first;
+        auto vid = kv.second.second;
+        auto gcfg = grm->GetVertex(vid);
+        std::cout << "\n\t\t" 
+                  << group->GetLabel() 
+                  << " : " 
+                  << gcfg.PrettyPrint();
+      }
+      std::cout << "\n\tEnd:";
+      for(auto kv : end) {
+        auto group = kv.first;
+        auto grm = kv.second.first;
+        auto vid = kv.second.second;
+        auto gcfg = grm->GetVertex(vid);
+        std::cout << "\n\t\t" 
+                  << group->GetLabel() 
+                  << " : " 
+                  << gcfg.PrettyPrint();
+      }
+      std::cout << std::endl << std::endl;
+    }
+  }
+
+  return _one;*/
 }
 
 CombinedRoadmap::State
@@ -991,6 +1235,48 @@ operator<<(ostream& _os, const CombinedRoadmap::TMPVertex& _vertex) {
   }
 
   return _os;
+}
+std::vector<std::vector<std::pair<CombinedRoadmap::State,CombinedRoadmap::State>>>
+CombinedRoadmap::
+ConvertActionUpdateToLayers(const ActionUpdate& _update) const {
+  size_t maxLength = _update.updates.size();
+
+  std::unordered_map<RobotGroup*,size_t> lastLayerMap;
+  std::vector<std::vector<std::pair<State,State>>> updateLayers(maxLength);
+
+  for(size_t i = 0; i < _update.updates.size(); i++) {
+    auto update = _update.updates[i];
+    auto start = update.first;
+    auto end = update.second;
+
+    size_t maxIndex = 0;
+    for(auto kv : start) {
+      auto group = kv.first;
+      auto iter = lastLayerMap.find(group);
+
+      // Get layer index of group
+      size_t index = 0;
+      if(iter == lastLayerMap.end())
+        lastLayerMap[group] = index;
+      else
+        index = iter->second;
+
+      // Check if max index is updated
+      maxIndex = std::max(index,maxIndex);
+    }
+
+    // Add update at max index layer
+    auto& layer = updateLayers[maxIndex];
+    layer.push_back(update);
+
+    // Update last index for all groups in end state
+    for(auto kv : end) {
+      auto group = kv.first;
+      lastLayerMap[group] = maxIndex+1;
+    }
+  }
+
+  return updateLayers;
 }
 
 /*----------------------------------------------------------------------------*/

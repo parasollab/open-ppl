@@ -286,6 +286,11 @@ AddRobotGroup(RobotGroup* const _g) noexcept {
     return;
   }
 
+  // Make sure individual robots have solution.
+  for(auto robot : _g->GetRobots()) {
+    this->AddRobot(robot);
+  }
+
   m_groupSolutions[_g] = GroupSolution(_g,this);
 }
 

@@ -175,7 +175,10 @@ class CombinedRoadmap : public StateGraph {
     /// @param _path The path to copy over.
     /// @return The pointer to the new path with local mpsolution vids.
     Path* MovePathToMPSolution(Path* _path);
-		///@}
+		
+    std::vector<std::vector<std::pair<State,State>>> ConvertActionUpdateToLayers(const ActionUpdate& _update) const;
+    
+    ///@}
 		///@name Internal State
 		///@{
 

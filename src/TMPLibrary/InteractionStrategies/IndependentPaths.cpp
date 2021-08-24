@@ -37,6 +37,7 @@ operator()(Interaction* _interaction, State& _state) {
   bool foundSolution = false;
 
   _interaction->Initialize();
+  MoveStateToLocalSolution(_interaction,_state);
   SetInteractionBoundary(_interaction,_state);
 
 
@@ -83,7 +84,7 @@ operator()(Interaction* _interaction, State& _state) {
 
     // Compute motions from pre to interim conditions.
     auto toNextStagePaths = PlanMotions(toNextStageTasks,_interaction->GetToStageSolution(next),
-                  "PlanInteraction::"+_interaction->GetLabel()+"::To"+next,staticRobots);
+                  "PlanInteraction::"+_interaction->GetLabel()+"::To"+next,staticRobots,_state);
 
     ResetStaticRobots();
 
@@ -96,10 +97,10 @@ operator()(Interaction* _interaction, State& _state) {
 
     if(i+1 < stages.size())
       _state = InterimState(_interaction,next,stages[i+1],toNextStagePaths);
-    else 
+    else {
       _state = InterimState(_interaction,next,next,toNextStagePaths);
-
-    foundSolution = true;
+      foundSolution = true;
+    }
   }
 
 
@@ -247,7 +248,7 @@ GenerateTasks(std::vector<std::string> _conditions,
 std::vector<IndependentPaths::Path*>
 IndependentPaths::
 PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label,
-            const std::set<Robot*>& _staticRobots) {
+            const std::set<Robot*>& _staticRobots, const State& _state) {
 
   // Grab MPSolution, MPLibrary, and MPProblem.
   auto lib = this->GetMPLibrary();
@@ -262,16 +263,34 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
 
     // TODO::Ensure that static groups always have a path length of 1.
 
-    // Add group to MPSolution
     auto group = task->GetRobotGroup();
+    bool isStatic = false;
     for(auto robot : group->GetRobots()) {
-      _solution->AddRobot(robot);
-      robot->SetVirtual(false);
+      if(_staticRobots.count(robot)) {
+        isStatic = true;
+        break;
+      }
     }
-    _solution->AddRobotGroup(group);
-    
-    // Call the MPLibrary solve function to expand the roadmap
-    lib->Solve(prob,task,_solution,m_mpStrategyLabel, LRand(),_label);
+
+    if(isStatic) {
+      std::vector<size_t> vids = {_state.at(group).second};
+      auto groupPath = _solution->GetGroupPath(group);
+      groupPath->Clear();
+      *groupPath += vids;
+    }
+    else {
+      // Plan normal path for all other robots
+
+      // Set group non-virtual
+      for(auto robot : group->GetRobots()) {
+        //_solution->AddRobot(robot);
+        robot->SetVirtual(false);
+      }
+      //_solution->AddRobotGroup(group);
+      
+      // Call the MPLibrary solve function to expand the roadmap
+      lib->Solve(prob,task,_solution,m_mpStrategyLabel, LRand(),_label);
+    }
 
     // Check for solution
     // Check composite path
@@ -304,6 +323,9 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
         paths.push_back(p);
       }
       continue;
+    }
+    else if(groupPath and groupPath->Empty()) {
+      return {};
     }
 
     // Check decoupled paths.

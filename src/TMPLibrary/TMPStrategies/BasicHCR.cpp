@@ -36,6 +36,12 @@ BasicHCR(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_sgLabel = _node.Read("sgLabel", true, "", 
            "Temp till stategraph is embedded in plan.");
+
+  m_successUpdate = _node.Read("successUpdate", false, 1.0, 0.0, 10.0,
+            "Factor to multiply utility by in case of success.");
+
+  m_failUpdate = _node.Read("failUpdate", false, 1.0, 0.0, 10.0,
+            "Factor to multiply utility by in case of failure.");
 }
 
 BasicHCR::
@@ -62,13 +68,14 @@ PlanTasks() {
   auto te = this->GetTaskEvaluator(m_teLabel);
 
   do {
-    auto sm = SampleSemanticRoadmap();
+    auto sr = SampleSemanticRoadmap();
 
     if(DRand() <= m_expansionProbability) {
-      ExpandRoadmap(sm);
+      ExpandRoadmap(sr);
     }
     else {
-      SampleInteraction(sm);
+      bool success = SampleInteraction(sr);
+      UpdateSemanticRoadmapUtility(sr,success);
     }
 
   } while(!te->operator()());
@@ -203,6 +210,7 @@ SampleInteraction(SemanticRoadmap* _sr) {
                 << _sr->first->GetGroup()->GetLabel()
                 << ".";
     }
+    m_interactionUtilityScore[inter] = m_interactionUtilityScore[inter] * m_failUpdate;
     return false;
   }
 
@@ -215,7 +223,7 @@ SampleInteraction(SemanticRoadmap* _sr) {
   }
 
   //Temp simple update:If successful, reduce probaility of sampling again
-  m_interactionUtilityScore[inter] = m_interactionUtilityScore[inter] * 0.5;
+  m_interactionUtilityScore[inter] = m_interactionUtilityScore[inter] * m_successUpdate;
 
   hcr->AddInteraction(start.first,start.second,startCopy,inter);
 
@@ -726,4 +734,18 @@ BuildCompositeSemanticRoadmaps(
 
   return csrs;
 }
+
+void
+BasicHCR::
+UpdateSemanticRoadmapUtility(SemanticRoadmap* _sr, bool _success) {
+  double util = m_srUtilityScore.at(_sr);
+
+  if(_success)
+    util = util * m_successUpdate;
+  else 
+    util = util * m_failUpdate;
+
+  m_srUtilityScore[_sr] = util;
+}
+
 /*------------------------------------------------------------*/

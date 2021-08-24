@@ -42,7 +42,7 @@ Decomposition(XMLNode& _node, MPProblem* _problem) {
 	m_rootTask = m_taskMap[mainTask].get();
 
   // Compute subtask flow
-  m_subtaskFlow = std::unique_ptr<SubtaskFlow>(new SubtaskFlow(m_rootTask));
+  //m_subtaskFlow = std::unique_ptr<SubtaskFlow>(new SubtaskFlow(m_rootTask));
 }
 
 Decomposition::

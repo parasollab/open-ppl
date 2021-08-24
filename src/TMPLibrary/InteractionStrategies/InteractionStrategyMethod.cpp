@@ -564,3 +564,27 @@ ResetStaticRobots() {
     robot->SetVirtual(false);
   }
 }
+
+void
+InteractionStrategyMethod::
+MoveStateToLocalSolution(Interaction* _interaction, State& _state) {
+  auto stage = _interaction->GetStages()[1];
+  auto solution = _interaction->GetToStageSolution(stage);
+  
+  for(auto& kv : _state) {
+    // Grab group cfg from original roadmap
+    auto group = kv.first;
+    auto grm = kv.second.first;
+    auto vid = kv.second.second;
+    auto gcfg = grm->GetVertex(vid);
+
+    // Add group cfg to new roadmap
+    solution->AddRobotGroup(group);
+    grm = solution->GetGroupRoadmap(group);
+    gcfg.SetGroupRoadmap(grm);
+    vid = grm->AddVertex(gcfg);
+
+    // Update values in the state
+    kv.second = std::make_pair(grm,vid);
+  }
+}

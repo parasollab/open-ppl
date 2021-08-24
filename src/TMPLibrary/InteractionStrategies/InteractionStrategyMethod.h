@@ -107,6 +107,8 @@ class InteractionStrategyMethod : public TMPBaseObject {
 
     void ResetStaticRobots();
 
+    void MoveStateToLocalSolution(Interaction* _interaction, State& _state);
+
     ///@}
     ///@name Internal State
     ///@{

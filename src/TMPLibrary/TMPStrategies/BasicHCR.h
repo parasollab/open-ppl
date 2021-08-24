@@ -94,6 +94,8 @@ class BasicHCR : public TMPStrategyMethod {
     CheckCompositeStatesForProximity(std::vector<SemanticRoadmap*> _csr, 
                                  std::vector<size_t>& _indices,size_t _csrIndex,
                                  Interaction* _interaction);
+
+    void UpdateSemanticRoadmapUtility(SemanticRoadmap* _sr, bool _success);
     ///@}
     ///@name Internal State
     ///@{
@@ -105,6 +107,10 @@ class BasicHCR : public TMPStrategyMethod {
     double m_expansionProbability;
 
     std::string m_mpStrategy;
+
+    double m_successUpdate;
+
+    double m_failUpdate;
 
     ///@}
 };
