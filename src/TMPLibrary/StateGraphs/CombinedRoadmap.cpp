@@ -1172,6 +1172,11 @@ RemapState(State& _state) {
     // Make sure the state info for the group is in the local mpSolution.
     m_mpSolution->AddRobotGroup(group);
     auto newGrm = m_mpSolution->GetGroupRoadmap(group);
+
+    for(auto form : gcfg.GetFormations()) {
+      newGrm->AddFormation(form,true);
+    }
+
     auto newVid = MoveGroupCfg(gcfg,newGrm);
     
     // Update the state to match the local representation.

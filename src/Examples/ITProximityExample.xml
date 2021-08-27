@@ -8,17 +8,17 @@
     <Environment filename="3D/3d-empty.env"
       frictionCoefficient="0" gravity="0 0 0">
       <Terrain capability="water">
-        <Boundary limits="[-5:5 ; -15:15 ; -25:25]"
+        <Boundary limits="[-5:25 ; -15:15 ; -25:25]"
           space="workspace" shape="box" color="green"/>
       </Terrain>
       <Terrain capability="land">
         <Boundary limits="[-25:-5 ; -15:15 ; -25:25]"
           space="workspace" shape="box" color="blue"/>
       </Terrain>
-      <Terrain capability="land">
+      <!--Terrain capability="land">
         <Boundary limits="[5:25 ; -15:15 ; -25:25]"
           space="workspace" shape="box" color="green"/>
-      </Terrain>
+      </Terrain-->
     </Environment>
 
     <Robot label="boxy1" filename="3D/boxy.robot" capability="land">
@@ -146,7 +146,7 @@
   <Library>
 
     <DistanceMetrics>
-      <Euclidean label="euclidean" strictFormations="true"/>
+      <Euclidean label="euclidean" strictFormations="false"/>
       <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
       <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
         velWeight="0" avlWeight="0"/>
@@ -281,7 +281,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="BasicPRM1" seed="1234567"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
@@ -476,7 +476,7 @@
       </Condition>
 
 
-      <Condition label="ExchangeProximity" type="proximity" shape="sphere" limits="[0 0 0 ; 12]"/>
+      <Condition label="ExchangeProximity" type="proximity" shape="sphere" limits="[0 0 0 ; 15]"/>
       <Condition label="GraspProximity" type="proximity" shape="sphere" limits="[0 0 0 ; 8]"/>
 
 
@@ -519,8 +519,8 @@
           <Condition label="Exchange"/>
         </Stage>
         <Stage label="PostExchange">
-          <Condition label="Grasp2Static"/>
-          <Condition label="SoloStatic"/>
+          <Condition label="Grasp2"/>
+          <Condition label="Solo"/>
         </Stage>
         <Stage label="Final">
           <Condition label="Grasp2"/>

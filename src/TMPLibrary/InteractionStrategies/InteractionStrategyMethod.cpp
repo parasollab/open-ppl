@@ -162,6 +162,12 @@ GenerateConstraints(const State& _state) {
 
     for(auto robot : group->GetRobots()) {
       auto cfg = gcfg.GetRobotCfg(robot);
+
+      if(m_debug) {
+        std::cout << "Generating constraint for " << robot->GetLabel() 
+                  << " at " << cfg.PrettyPrint() << std::endl;
+      }
+
       auto constraint = new CSpaceConstraint(robot,cfg);
       constraintMap[robot] = constraint;
     }
@@ -392,6 +398,12 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
 
     for(auto robot : group->GetRobots()) {
       auto cfg = samples[0].GetRobotCfg(robot);
+
+      if(m_debug) {
+        std::cout << "Generating constraint for " << robot->GetLabel() 
+                  << " at " << cfg.PrettyPrint() << std::endl;
+      }
+
       auto constraint = new CSpaceConstraint(robot,cfg);
       constraintMap[robot] = constraint;
     }
@@ -581,8 +593,13 @@ MoveStateToLocalSolution(Interaction* _interaction, State& _state) {
     // Add group cfg to new roadmap
     solution->AddRobotGroup(group);
     grm = solution->GetGroupRoadmap(group);
-    gcfg.SetGroupRoadmap(grm);
-    vid = grm->AddVertex(gcfg);
+
+    for(auto form : gcfg.GetFormations()) {
+      grm->AddFormation(form,true);
+    }
+
+    auto newGcfg = gcfg.SetGroupRoadmap(grm);
+    vid = grm->AddVertex(newGcfg);
 
     // Update values in the state
     kv.second = std::make_pair(grm,vid);

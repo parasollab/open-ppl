@@ -388,10 +388,12 @@ InterimState(Interaction* _interaction, const std::string& _current,
     std::vector<Robot*> robots;
     std::string groupLabel = "";
 
+    std::unordered_map<std::string,Robot*> roleMap;
     for(auto role : f->GetRoles()) {
       auto robot = m_roleMap[role];
       robots.push_back(robot);
       groupLabel += (role + ":" + robot->GetLabel() + "--");
+      roleMap[role] = robot;
     }
 
     // Intialize group
@@ -400,9 +402,13 @@ InterimState(Interaction* _interaction, const std::string& _current,
       solution->AddRobot(robot);
     }
     solution->AddRobotGroup(group);
-    
-    // Create initial group vertex
+
+    // Set formations
     auto grm = solution->GetGroupRoadmap(group);
+    auto formation = f->GenerateFormation(roleMap);
+    grm->AddFormation(formation,true);
+
+    // Create initial group vertex
     auto gcfg = GroupCfg(grm);
 
     // Add initial cfg to individual roadmaps
