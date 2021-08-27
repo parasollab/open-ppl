@@ -1,9 +1,0 @@
-../aprm -f parking \
-        -cd RAPID \
-	-gNodes CSpaceMAPRM nodes 800 \
-		-calcClear 15 \
-	-bbox [-36,36,-16,16,-100,100] \
-	-bbox_scale 1 \
-	-posres 0.5 \
-	-cNodes closest 12
-

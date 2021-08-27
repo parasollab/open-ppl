@@ -1,0 +1,66 @@
+This directory contains the validation scripts used to test the pmpl code.
+
+- pmpl_nightly_src.pl:
+    Checks out a fresh copy of the code from svn and checks compilation to be free of error.
+    It outputs a log file to <machine_name>:$outputdir
+    It sends a confirmation email to $ADMIN_MAILTO when it completes
+    It should be called via a cron job every night, once for each different configuration tested
+    It assumes that $workdir exists
+
+    options:
+       -c [platform type: e.g., LINUX_gcc]
+       -r [robot type: rigid, surface, reach]
+       -d [debugging option: 0, 1]
+       -p [parallel option: 0, 1]
+       (currently only LINUX_gcc and parallel=0 are supported)
+
+    configurable variables:
+      $outputdir: the location where the log file is output to
+      $ADMIN_MAILTO: the email address of the administrator for the conformation of completeness emails
+      $workdir: the location where the code is checked out to and tested
+
+- pmpl_nightly_src_mail.pl:
+    this checks the log files in $cron_machine:$outputdir and sends a summary email of the results to $MAILTO
+    it should be called via a cron job every night, after all the pmpl_nightly_src.pl calls have completed
+    it looks at the log files from the same date as when it is run
+
+    options:
+       none
+
+    configurable variables:
+       $outputdir = the location where the log files are stored
+       $cron_machine = the machine where $outputdir resides
+       $MAILTO = the email where the summary is sent
+
+    to add a new configuration to search the logs for, add a new call to get_error_code() in the list
+
+- pmpl_nightly_doc.pl:
+    Checks out a fresh copy of the code from svn and checks compilation of documentation to be free of error.
+    It outputs a log file to <machine_name>:$outputdir
+    It sends a confirmation email to $ADMIN_MAILTO when it completes
+    It should be called via a cron job every night, once for each different configuration tested
+    It assumes that $workdir exists
+
+    options:
+       none
+
+    configurable variables:
+      $outputdir: the location where the log file is output to
+      $ADMIN_MAILTO: the email address of the administrator for the conformation of completeness emails
+      $workdir: the location where the code is checked out to and tested
+
+- pmpl_nightly_doc_mail.pl:
+    this checks the log files in $cron_machine:$outputdir and sends a summary email of the results to $MAILTO
+    it should be called via a cron job every night, after all the pmpl_nightly_doc.pl calls have completed
+    it looks at the log files from the same date as when it is run
+
+    options:
+       none
+
+    configurable variables:
+       $outputdir = the location where the log files are stored
+       $cron_machine = the machine where $outputdir resides
+       $MAILTO = the email where the summary is sent
+
+    to add a new configuration to search the logs for, add a new call to get_error_code() in the list
+

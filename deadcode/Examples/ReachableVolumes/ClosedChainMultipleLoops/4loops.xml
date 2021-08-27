@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<motion_planning>
+  <MPProblem>
+    <environment input_env="chain.tree.env">
+      <robot num_joints="18" pos_dof="3" dofs="24">
+        <boundary type="bbox" translational_scale="1">
+          <parameter id="0" Label="x" type="translational" min="-15" max="15" />
+          <parameter id="1" Label="y" type="translational" min="-10" max="10" />
+          <parameter id="2" Label="z" type="translational" min="-15" max="15" />
+        </boundary>
+      </robot>
+    </environment>
+
+    <links_file filename="chain.tree" closed_chain="true"/>
+
+    <distance_metrics>
+      <reachable Label="ReachableDistance"/>
+    </distance_metrics>
+
+    <validity_test>
+      <CollisionDetection Label="cd" method="RAPID" />
+    </validity_test>
+
+    <NeighborhoodFinder>
+      <BFNF Label="BFNF" dm_method="ReachableDistance"/>
+    </NeighborhoodFinder>
+  </MPProblem>
+
+  <MPStrategy iterations=1 gamma=0>
+    <node_generation_methods>
+      <UniformRandomSampler Label="UniformRandomFree" vc_method="cd" />
+    </node_generation_methods>
+
+    <connection_methods>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
+    </connection_methods>
+
+    <lp_methods>
+      <StraightLine Label="sl" length="0" binary_search="0" vc_method="cd"/>
+    </lp_methods>
+
+    <MPStrategyMethod Controller="PRM1">
+      <BasicPRM Label="PRM1" seed="1234567" filename="Basic" iterations="1">
+        <node_generation_method Method="UniformRandomFree" Number="20"/>
+        <node_connection_method Method="Closest"/>
+      </BasicPRM>
+    </MPStrategyMethod>
+
+  </MPStrategy>
+</motion_planning>
+

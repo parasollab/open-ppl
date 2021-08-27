@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<motion_planning>
+  <VizmoDebug filename="Basic"/>
+
+  <MPProblem>
+    <environment input_env="branchs.env">
+      <robot Cfg_name="Cfg_free_tree" num_joints="5" pos_dof="3" dofs="11">
+        <boundary type="bbox" translational_scale="1">
+          <parameter id="0" Label="x" type="translational" min="-30" max="30" />
+          <parameter id="1" Label="y" type="translational" min="-40" max="40" />
+          <parameter id="2" Label="z" type="translational" min="-60" max="60" />
+        </boundary>
+      </robot>
+    </environment>
+
+    <distance_metrics>
+       <euclidean Label="euclidean"/>
+    </distance_metrics>
+
+    <validity_test>
+      <CollisionDetection Label="cd" method="RAPID" />
+    </validity_test>
+
+    <NeighborhoodFinder>
+      <BruteForceNF Label="BFNF" dmMethod="euclidean"/>
+    </NeighborhoodFinder>
+  </MPProblem>
+
+  <MPStrategy>
+    <node_generation_methods>
+      <UniformRandomSampler Label="UniformRandomFree" vcMethod="cd"/>
+    </node_generation_methods>
+
+    <connection_methods>
+      <NeighborhoodConnection Label="Closest" nf="BFNF" k="5" CheckIfSameCC="false" lp_method="sl"/>
+    </connection_methods>
+
+    <lp_methods>
+      <StraightLine Label="sl" binary_search="1" vc_method="cd"/>
+    </lp_methods>
+
+    <MPEvaluator_methods>
+      <ConditionalEvaluation Label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+      <QueryEvaluation Label="Query" filename="branchs.query" dm_method="euclidean" outpath="Basic" lp_method="sl">
+        <node_connection_method Method="Closest"/>
+      </QueryEvaluation>
+      <PrintMapEvaluation Label="PrintMap" base_name="Basic"/>
+    </MPEvaluator_methods>
+
+    <MetricMethods>
+      <NumNodesMetric Label="NumNodes" />
+    </MetricMethods>
+
+    <MPStrategyMethod Controller="BasicPRM">
+      <BasicPRM Label="BasicPRM" seed="1234567" filename="Basic" iterations="1" dm_method="euclidean">
+        <node_generation_method Method="UniformRandomFree" Number="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="NodesEval"/>
+      </BasicPRM>
+    </MPStrategyMethod>
+  </MPStrategy>
+</motion_planning>
+

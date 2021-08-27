@@ -1,0 +1,9 @@
+*.swp
+*.swo
+pmpl
+sim
+build
+libobprm.a
+pmpl_utils
+src/Examples/example*
+src/Testing/StrategyTests/Scratch*

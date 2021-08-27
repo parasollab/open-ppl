@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+    <Environment filename="narrow.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="cd" method="RAPID" />
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" k="5"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler debug="false" label="UniformRandom" vcLabel="cd"/>
+    </Samplers>
+
+    <Connectors>
+      <NeighborhoodConnector debug="false" label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="sl"/>
+    </Connectors>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="cd"/>
+    </LocalPlanners>
+
+    <MapEvaluators>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="5" operator=">=" />
+    </MapEvaluators>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes" />
+    </Metrics>
+
+    <MPStrategies>
+      <BasicPRM label="BasicPRM" debug="false">
+        <Sampler method="UniformRandom" number="10" attempts="10"/>
+        <Connector method="Closest"/>
+        <Evaluator method="NodesEval"/>
+      </BasicPRM>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="BasicPRM" seed="1234567" baseFilename="Basic"/>
+  </MPProblem>
+</MotionPlanning>
+
