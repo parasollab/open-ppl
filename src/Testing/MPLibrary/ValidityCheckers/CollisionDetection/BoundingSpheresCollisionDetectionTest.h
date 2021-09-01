@@ -37,6 +37,13 @@ class BoundingSpheresCollisionDetectionTest :  public BoundingSpheres,
 
     ///@}
 
+    ///@name CollisionDetectionMethod Overrides
+    ///@{
+    virtual bool IsInCollision(
+        const GMSPolyhedron& _polyhedron1, const mathtool::Transformation& _t1,
+        const GMSPolyhedron& _polyhedron2, const mathtool::Transformation& _t2,
+        CDInfo& _cdInfo) override;
+    ///@}
     //using AlwaysTrueValidity<PTraits>::m_name;
 
 };
@@ -44,11 +51,11 @@ class BoundingSpheresCollisionDetectionTest :  public BoundingSpheres,
 /*--------------------------- Construction ---------------------------*/
 
 BoundingSpheresCollisionDetectionTest::
-BoundingSpheresCollisionDetectionTest() : CollisionDetectionMethod(), BoundingSpheres() {}
+BoundingSpheresCollisionDetectionTest() : BoundingSpheres() {}
 
 BoundingSpheresCollisionDetectionTest::
 BoundingSpheresCollisionDetectionTest(MPProblem* _problem) : CollisionDetectionMethod(),
-  BoundingSpheres() {
+                                                             BoundingSpheres(){
   m_MPProblem = _problem;
   }
 
@@ -111,4 +118,14 @@ MultipleCfgValidityTest() {
 }
 
 
+bool
+BoundingSpheresCollisionDetectionTest::
+IsInCollision(
+    const GMSPolyhedron& _polyhedron1, const mathtool::Transformation& _t1,
+    const GMSPolyhedron& _polyhedron2, const mathtool::Transformation& _t2,
+    CDInfo& _cdInfo) {
+  BoundingSpheres bs;
+  return bs.IsInCollision(_polyhedron1, _t1, _polyhedron2, _t2, _cdInfo);
+
+}
 #endif

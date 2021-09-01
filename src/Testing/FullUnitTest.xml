@@ -125,10 +125,6 @@
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
-    <ValidityCheckers>
-      <BoundingSpheres  label="BoundingSperes"/>
-    </ValidityCheckers>
-
     <NeighborhoodFinders>
       <!-- Test not yet added -->
       <!--BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"

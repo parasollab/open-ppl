@@ -180,6 +180,7 @@ RunTest() {
   RunMethodSetTests(*this->m_mapEvaluatorTests,passed,failed,total);
 
   // Collision detection tests
+  InitializeCollisionDetectionMethodTests();
   RunCollisionDetectionMethodTests(passed, failed, total);
 
   bool success = (failed == 0);
@@ -219,7 +220,6 @@ InitializeMethodSets() {
       typename MPTraits::MetricMethodList(), "Metrics");
   m_mapEvaluatorTests = new MapEvaluatorTestSet(this,
       typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
-  InitializeCollisionDetectionMethodTests();
 }
 
 template<typename MPTraits>
