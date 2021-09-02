@@ -250,10 +250,12 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
   const auto& cfg = _r->GetVertex(_source);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   m_neighborBuffer.clear();
-  if(_targetSet)
+  if(_targetSet) {
     nf->FindNeighbors(_r, cfg, *_targetSet, std::back_inserter(m_neighborBuffer));
-  else
+  }
+  else {
     nf->FindNeighbors(_r, cfg, std::back_inserter(m_neighborBuffer));
+  }
 
   // Set neighbors' distance to the cost from the tree root, then re-sort
   // according to that cost plus the distance to _source.

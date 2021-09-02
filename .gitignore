@@ -6,4 +6,4 @@ build
 libobprm.a
 pmpl_utils
 src/Examples/example*
-src/Test/Scratch*
+src/Testing/StrategyTests/Scratch*

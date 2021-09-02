@@ -1,5 +1,5 @@
 #ifndef PPL_TASK_EVALUATOR_METHOD_TEST_H_
-#define PPL_TASK_EVALUATOR_METHOD_TEST_H
+#define PPL_TASK_EVALUATOR_METHOD_TEST_H_
 
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 #include "Testing/TestBaseObject.h"
@@ -27,6 +27,8 @@ class TaskEvaluatorMethodTest : virtual public TaskEvaluatorMethod,
     ///@{
 
     virtual TestResult RunTest() override;
+
+  protected: 
 
     ///@} Test Interface Functions
     ///@{

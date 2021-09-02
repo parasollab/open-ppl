@@ -16,6 +16,7 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+#include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
@@ -29,6 +30,7 @@
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
+#include "MPLibrary/LocalPlanners/StraightLine.h"
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
@@ -36,6 +38,7 @@
 //path smoothing includes
 
 //connector includes
+#include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
@@ -44,6 +47,7 @@
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/BasicPRM.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -79,6 +83,7 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    EuclideanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
@@ -100,6 +105,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+    StraightLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -114,6 +120,7 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+    NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;
 
@@ -128,6 +135,7 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>
       > MPStrategyMethodList;
 };
