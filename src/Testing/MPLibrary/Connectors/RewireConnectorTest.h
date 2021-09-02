@@ -100,7 +100,7 @@ IndividualRobotConnectTest() {
   //   / |           /
   //  R  2          R--2
 
-  // Vertices
+  // Vertices.
   std::vector<double> p_root = {0.0, 0.0};
   std::vector<double> p_1    = {1.0, 1.0};
   std::vector<double> p_2    = {1.0, 0.0};
@@ -125,6 +125,117 @@ IndividualRobotConnectTest() {
     // Test failed!
     passed = false;
     message += "\tFailed Test1: Rewire triangle.\n";
+  }
+  // Test 2: Rewire Large Tree.
+  //
+  // Vertices.
+  p_root = {0.0, 0.0};
+  p_1 = {0.0, 4.0};
+  p_2 = {0.0, 3.0};
+  std::vector<double> p_3 = {3.0, 3.0};
+  std::vector<double> p_4 = {0.0, 2.0};
+  std::vector<double> p_5 = {1.0, 2.0};
+  std::vector<double> p_6 = {4.0, 2.0};
+  std::vector<double> p_7 = {2.0, 1.0};
+  std::vector<double> p_8 = {4.0, 1.0};
+  std::vector<double> p_9 = {2.0, 0.0};
+  std::vector<double> p_10 = {4.0, 0.0};
+  std::vector<double> p_11 = {2.0, 3.0};
+  
+  verts.clear();
+  verts.push_back(p_root);
+  verts.push_back(p_1);
+  verts.push_back(p_2);
+  verts.push_back(p_3);
+  verts.push_back(p_4);
+  verts.push_back(p_5);
+  verts.push_back(p_6);
+  verts.push_back(p_7);
+  verts.push_back(p_8);
+  verts.push_back(p_9);
+  verts.push_back(p_10);
+  verts.push_back(p_11);
+
+  // Start edges.
+  start_edges.clear();
+  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 5));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 7));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 9));
+  start_edges.push_back(std::pair<size_t, size_t>(4, 2));
+  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
+  start_edges.push_back(std::pair<size_t, size_t>(7, 3));
+  start_edges.push_back(std::pair<size_t, size_t>(7, 6));
+  start_edges.push_back(std::pair<size_t, size_t>(7, 8));
+  start_edges.push_back(std::pair<size_t, size_t>(7, 10));
+  start_edges.push_back(std::pair<size_t, size_t>(3, 11));
+
+  // Expected end edges.
+  end_edges.clear();
+  end_edges.push_back(std::pair<size_t, size_t>(0, 4));
+  end_edges.push_back(std::pair<size_t, size_t>(0, 5));
+  end_edges.push_back(std::pair<size_t, size_t>(0, 7));
+  end_edges.push_back(std::pair<size_t, size_t>(0, 9));
+  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
+  end_edges.push_back(std::pair<size_t, size_t>(2, 1));
+  end_edges.push_back(std::pair<size_t, size_t>(7, 3));
+  end_edges.push_back(std::pair<size_t, size_t>(7, 6));
+  end_edges.push_back(std::pair<size_t, size_t>(7, 8));
+  end_edges.push_back(std::pair<size_t, size_t>(7, 10));
+  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
+
+  // Call the helper function.
+  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges)) {
+    // Test failed!
+    passed = false;
+    message += "\tFailed Test2: Rewire large tree.\n";
+  }
+
+  // Test 3: Rewire shortest path.
+  //
+  // Vertices.
+  p_root = {0.0, 0.0};
+  p_1 = {1.0, 2.0};
+  p_2 = {0.0, 1.0};
+  p_3 = {1.0, 1.0};
+  p_4 = {1.0, 0.0};
+  p_5 = {2.0, 0.0};
+  p_6 = {2.0, 1.0};
+
+  verts.clear();
+  verts.push_back(p_root);
+  verts.push_back(p_1);
+  verts.push_back(p_2);
+  verts.push_back(p_3);
+  verts.push_back(p_4);
+  verts.push_back(p_5);
+  verts.push_back(p_6);
+
+  // Start edges.
+  
+  start_edges.clear();
+  start_edges.push_back(std::pair<size_t, size_t>(0, 2));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 3));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
+  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
+  start_edges.push_back(std::pair<size_t, size_t>(4, 5));
+  start_edges.push_back(std::pair<size_t, size_t>(5, 6));
+  
+  // Expected end edges.
+
+  end_edges.clear();
+  start_edges.push_back(std::pair<size_t, size_t>(0, 2));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 3));
+  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
+  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
+  start_edges.push_back(std::pair<size_t, size_t>(4, 5));
+  start_edges.push_back(std::pair<size_t, size_t>(3, 6));
+  
+  // Call the helper function.
+  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges)) {
+    // Test failed!
+    passed = false;
+    message += "\tFailed Test3: Rewire Shortest Path.\n";
   }
 
 
