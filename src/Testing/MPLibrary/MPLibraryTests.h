@@ -1,5 +1,5 @@
-#ifndef PPL_M_P_LIBRARY_TEST_H_
-#define PPL_M_P_LIBRARY_TEST_H_
+#ifndef PPL_BOUNDINGSPHERESCOLLISIONDETECTION_TEST_H_
+#define PPL_BOUNDINGSPHERESCOLLISIONDETECTION_TEST_H_
 
 #include "MPLibrary/MPLibrary.h"
 #include "Testing/TestBaseObject.h"
@@ -17,8 +17,7 @@
 
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethodTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
-//TODO FOR AZHAR: uncomment the following line and delete the todo
-//#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
 
 
 
@@ -149,6 +148,11 @@ RunTest() {
   size_t failed = 0;
   size_t total = 0;
 
+  // Collision detection tests
+  InitializeCollisionDetectionMethodTests();
+  RunCollisionDetectionMethodTests(passed, failed, total);
+
+
   // Distance metric tests
   RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
 
@@ -179,9 +183,6 @@ RunTest() {
   // Map evaluator tests
   RunMethodSetTests(*this->m_mapEvaluatorTests,passed,failed,total);
 
-  // Collision detection tests
-  InitializeCollisionDetectionMethodTests();
-  RunCollisionDetectionMethodTests(passed, failed, total);
 
   bool success = (failed == 0);
   std::string message = "COMPLETED TESTS"
@@ -227,17 +228,13 @@ void
 MPLibraryTests<MPTraits>::
 InitializeCollisionDetectionMethodTests() {
   // TODO: add addition collision detection methods here
-  //CollisionDetectionMethodTest* boundingSpheres = nullptr;
   BoundingSpheresCollisionDetectionTest* boundingSpheres = nullptr;
   boundingSpheres = new BoundingSpheresCollisionDetectionTest(this->GetMPProblem());
   m_collisionDetectionTests["Bounding Spheres"] = boundingSpheres;
 
-  //TODO FOR AZHAR: uncomment the following lines and delete the todo
-  /*
   InsideSpheresCollisionDetectionTest* insideSpheres = nullptr;
   insideSpheres = new InsideSpheresCollisionDetectionTest(this->GetMPProblem());
   m_collisionDetectionTests["Inside Spheres"] = insideSpheres;
-  */
 
 }
 
