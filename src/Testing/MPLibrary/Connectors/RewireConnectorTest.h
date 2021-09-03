@@ -113,7 +113,6 @@ IndividualRobotConnectTest() {
   }
 
   // Vertices
-
   std::vector<double> p_root = {0.0, 0.0};
   std::vector<double> p_1    = {0.0, 1.0};
   std::vector<double> p_2    = {1.0, 0.0};
@@ -139,6 +138,8 @@ IndividualRobotConnectTest() {
     passed = false;
     message += "\tFailed Test1: '" + test_name + "'.\n";
   }
+
+
   // Test 2: Rewire Large Tree.
   //
   // Print the name of the test if debug is request.
@@ -204,7 +205,7 @@ IndividualRobotConnectTest() {
   end_edges.push_back(std::pair<size_t, size_t>(5, 11));
 
   // Call the helper function.
-  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges)) {
+  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges, debug)) {
     // Test failed!
     passed = false;
     message += "\tFailed Test2: Rewire large tree.\n";
@@ -257,7 +258,7 @@ IndividualRobotConnectTest() {
   start_edges.push_back(std::pair<size_t, size_t>(3, 6));
   
   // Call the helper function.
-  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges)) {
+  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges, debug)) {
     // Test failed!
     passed = false;
     message += "\tFailed Test3: Rewire Shortest Path.\n";
