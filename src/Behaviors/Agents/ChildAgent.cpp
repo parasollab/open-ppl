@@ -2,6 +2,8 @@
 
 #include "Coordinator.h"
 
+#include "Behaviors/Agents/StepFunctions/StepFunction.h"
+
 #include "Communication/Messages/Message.h"
 #include "MPProblem/Robot/HardwareInterfaces/HardwareInterface.h"
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
@@ -72,6 +74,12 @@ Uninitialize() {
 void 
 ChildAgent::
 Step(const double _dt) {
+
+  if(m_stepFunction.get()) {
+    this->m_stepFunction->StepAgent(_dt);
+    return;
+  }
+
   if(m_debug and m_graphVisualID == (size_t(-1)) and m_solution.get() and Simulation::Get()){
     m_graphVisualID = Simulation::Get()->AddRoadmap(m_solution->GetRoadmap(),
       glutils::color(0., 1., 0., 0.2));

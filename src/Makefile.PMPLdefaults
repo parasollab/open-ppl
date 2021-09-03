@@ -1,4 +1,4 @@
-# Help ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 
 # Each external library has one or more of the following variables related to
 # compilation:
@@ -496,6 +496,7 @@ TASK_SRCS := \
   Behaviors/Agents/PlanningAgent.cpp \
   Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
+  Behaviors/Agents/StepFunctions/EmptyStepFunction.cpp \
   Behaviors/Agents/StepFunctions/StepFunction.cpp \
   Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
   Communication/Messages/Message.cpp \

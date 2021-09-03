@@ -21,7 +21,7 @@ class StepFunction {
     
     StepFunction(Agent* _agent, XMLNode& _node);
 
-    ~StepFunction();
+    virtual ~StepFunction();
 
     /// Create a dynamically-allocated agent from an XML node.
     /// @param _r The robot which this agent will reason for.

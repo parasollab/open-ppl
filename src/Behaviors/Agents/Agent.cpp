@@ -27,14 +27,20 @@ Agent(Robot* const _r) : m_robot(_r) { }
 Agent::
 Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) { 
 
+  bool setStepFunction = false;
 	for(auto& child : _node) {
 		if(child.Name() == "Communicator") {
       ParseCommunicatorXMLNode(child);
 		}
     else if(child.Name() == "StepFunction") {
       m_stepFunction = StepFunction::Factory(this,child);
+      setStepFunction = true;
     }
 	}
+
+  if(!setStepFunction) {
+    m_stepFunction = nullptr;
+  }
 }
 
 Agent::

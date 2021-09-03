@@ -515,7 +515,7 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
       auto robotJoint = mb->GetJoint(i);
       auto index = m_jointMap[robotJoint].second;
 
-      auto value = dofs[index + m_multibody.PosDOF() 
+      auto value = _dofs[index + m_multibody.PosDOF() 
                         + m_multibody.OrientationDOF()];
 
       dofs[i + mb->PosDOF() + mb->OrientationDOF()] = value;

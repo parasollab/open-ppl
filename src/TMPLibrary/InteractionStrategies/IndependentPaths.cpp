@@ -289,6 +289,7 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
       //_solution->AddRobotGroup(group);
       
       // Call the MPLibrary solve function to expand the roadmap
+      lib->SetTask(nullptr);
       lib->Solve(prob,task,_solution,m_mpStrategyLabel, LRand(),_label);
     }
 
