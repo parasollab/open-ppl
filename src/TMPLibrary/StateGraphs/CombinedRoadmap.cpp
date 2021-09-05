@@ -651,13 +651,21 @@ BuildRobotGroups(CompositeSemanticRoadmap _csr, std::set<Robot*> _robots, size_t
   // Check if covering all robots.
   bool covered = true;
   auto c = this->GetPlan()->GetCoordinator();
-  for(auto& robot : this->GetMPProblem()->GetRobots()) {
+
+  std::vector<Robot*> allRobots;
+  for(auto& kv : c->GetInitialRobotGroups()) {
+    for(auto robot : kv.first->GetRobots()){
+      allRobots.push_back(robot);
+    }
+  }
+
+  for(auto& robot : allRobots) {
 
     // Dont evaluate the coordinator
-    if(robot.get() == c->GetRobot())
+    if(robot == c->GetRobot())
       continue;
 
-    if(!_robots.count(robot.get())) {
+    if(!_robots.count(robot)) {
       covered = false;
       break;
     }

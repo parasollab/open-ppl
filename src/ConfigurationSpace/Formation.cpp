@@ -71,6 +71,9 @@ operator=(const Formation& _formation) {
   m_jointMap.clear();
   m_jointMap = _formation.m_jointMap;
 
+  m_dofMap.clear();
+  m_dofMap = _formation.m_dofMap;
+
   m_reverseJointMap.clear();
   m_reverseJointMap = _formation.m_reverseJointMap;
 
@@ -97,6 +100,9 @@ operator=(Formation&& _formation) {
 
   m_jointMap.clear();
   m_jointMap = std::move(_formation.m_jointMap);
+
+  m_dofMap.clear();
+  m_dofMap = _formation.m_dofMap;
 
   m_reverseJointMap.clear();
   m_reverseJointMap = std::move(_formation.m_reverseJointMap);
@@ -392,11 +398,17 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
 
   auto c = _first->GetConnectionTo(_second);
 
+  size_t oldDOF = m_multibody.DOF();
+
   auto index = m_multibody.AddJoint(std::move(connection));
   
   m_multibody.GetJoint(index)->SetBodies(&m_multibody,first,second);
 
   m_jointMap[c] = std::make_pair(sameDirection,index);
+
+  if(m_multibody.DOF() > oldDOF)
+    m_dofMap[c] = std::make_pair(sameDirection,oldDOF);
+
   m_reverseJointMap[index] = c;
 }
 
@@ -438,7 +450,8 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
       if(j->GetConnectionType() == Connection::JointType::NonActuated) 
         continue;
       
-      auto index = m_jointMap[j].second;
+      //auto index = m_jointMap[j].second;
+      auto index = m_dofMap[j].second;
       indexedValues[index] = cfg[counter];
 
       counter++;
@@ -454,7 +467,7 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
 
-    auto value = indexedValues[i];
+    auto value = indexedValues[counter];
 
     dofs[counter] = value;
     counter++;
@@ -510,15 +523,24 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
 
     // Convert joint angles
     const auto& joints = mb->GetJoints();
+    size_t counter = 0;
     for(size_t i = 0; i < joints.size(); i++) {
 
       auto robotJoint = mb->GetJoint(i);
-      auto index = m_jointMap[robotJoint].second;
+
+      if(robotJoint->GetConnectionType() == Connection::JointType::NonActuated)
+        continue;
+
+      //auto index = m_jointMap[robotJoint].second;
+      auto index = m_dofMap[robotJoint].second;
+
 
       auto value = _dofs[index + m_multibody.PosDOF() 
                         + m_multibody.OrientationDOF()];
 
-      dofs[i + mb->PosDOF() + mb->OrientationDOF()] = value;
+      dofs[counter + mb->PosDOF() + mb->OrientationDOF()] = value;
+
+      counter++;
     }
    
     Cfg cfg(robot);

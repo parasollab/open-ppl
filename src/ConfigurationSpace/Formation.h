@@ -115,6 +115,8 @@ class Formation {
     /// The boolean value represents if the direction is the same or if it
     /// has been inverted (same = true, inverted = false);
     std::unordered_map<Connection*,std::pair<bool,size_t>> m_jointMap;
+    std::unordered_map<Connection*,std::pair<bool,size_t>> m_dofMap;
+    
     std::unordered_map<size_t,Connection*> m_reverseJointMap;
 
     /// Map of individual robot bodies to formation bodies.
