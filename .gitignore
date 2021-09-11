@@ -7,3 +7,4 @@ libobprm.a
 pmpl_utils
 src/Examples/example*
 src/Testing/StrategyTests/Scratch*
+tests
