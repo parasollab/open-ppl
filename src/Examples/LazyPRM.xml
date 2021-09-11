@@ -4,8 +4,10 @@
   <!-- Here we specify input files, such as environment and query. The
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem>
-    <Environment filename="../Envs/3D/3d.env"/>
-    <Robot label="boxy" filename="../Envs/3D/boxy.robot"/>
+    <Environment filename="3D/3d.env"
+      frictionCoefficient="0" gravity="0 0 0"/>
+
+    <Robot label="boxy" filename="3D/boxy.robot">
 
     <Task label="query" robot="boxy">
       <StartConstraints>
@@ -71,26 +73,26 @@
     <MPStrategies>
       <!-- LazyPRM -->
       <BasicPRM label="LazyPRM" debug="true">
-        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Sampler label="UniformRandom" number="10" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
 
-      <ValidationStrategy label="Test" target="LazyPRM" debug="true">
+      <!-- <ValidationStrategy label="Test" target="LazyPRM" debug="true">
         <GoldStandard robot="boxy" type="roadmap"
-          filename="../Outputs/LazyPRM.0.query1.map"/>
+          filename="../Outputs/LazyPRM.0.query.map"/>
         <GoldStandard robot="boxy" type="cfgpath"
-          filename="../Outputs/LazyPRM.0.query1.rdmp.path"/>
-      </ValidationStrategy>
+          filename="../Outputs/LazyPRM.0.query.rdmp.path"/>
+      </ValidationStrategy> -->
     </MPStrategies>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="Test" seed="0"
-      baseFilename="../Scratch/LazyPRM"/>
+    <!-- <Solver mpStrategyLabel="Test" seed="0"
+      baseFilename="../Scratch/LazyPRM"/> -->
 
-    <!-- <Solver mpStrategyLabel="LazyPRM" seed="0"
-      baseFilename="LazyPRM" vizmoDebug="true"/> -->
+    <Solver mpStrategyLabel="LazyPRM" seed="123456789"
+      baseFilename="LazyPRM" vizmoDebug="true"/>
 
   </Library>
 </MotionPlanning>

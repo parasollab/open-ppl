@@ -121,7 +121,7 @@
 
       <!-- LazyPRM -->
       <BasicPRM label="LazyPRM" debug="true">
-        <Sampler label="UniformRandom" number="10" attempts="1"/>
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
@@ -135,8 +135,8 @@
     <!-- <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> -->
 
-    <Solver mpStrategyLabel="LazyPRM" seed="112345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="LazyPRM" seed="0"
+      baseFilename="LazyPRM" vizmoDebug="true"/>
 
   </Library>
 

@@ -94,6 +94,7 @@ IndividualRobotMainFunction(RoadmapType* _roadmap, MPTask* _task) {
   lib->SetTask(_task);
   lib->SetGroupTask(nullptr);
 
+  // Setup goal tracker for test roadmap and task
   this->GetMPLibrary()->GetGoalTracker()->AddMap(_roadmap, _task);
 
   auto robot = _task->GetRobot();

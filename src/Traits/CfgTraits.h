@@ -48,6 +48,7 @@
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -136,7 +137,8 @@ struct MPTraits {
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>,
+    ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 
