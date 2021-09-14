@@ -111,6 +111,7 @@ template <typename MPTraits>
 typename MPTraits::GroupCfgType
 ConnectorMethodTest<MPTraits>::
 GetGroupCfg() {
+  // @TODO: this code is broken.
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
   GroupCfgType gcfg(group);
   return gcfg;

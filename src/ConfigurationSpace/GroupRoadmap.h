@@ -129,6 +129,11 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     using RoadmapGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
+    /// @param _source The source vertex.
+    /// @param _target The target vertex.
+    virtual void DeleteEdge(const VID _source, const VID _target) noexcept override;
+
+    /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
     virtual void DeleteEdge(EI _iterator) noexcept override;
 
@@ -467,6 +472,24 @@ DeleteVertex(const VID _v) noexcept {
   // Delete the group vertex.
   this->delete_vertex(vi->descriptor());
   ++m_timestamp;
+}
+
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+DeleteEdge(const VID _source, const VID _target) noexcept {
+  // Find the edge and crash if it isn't found.
+  const ED edgeDescriptor(_source, _target);
+  VI dummy;
+  EI edgeIterator;
+
+  const bool found = this->find_edge(edgeDescriptor, dummy, edgeIterator);
+  if(!found)
+    throw RunTimeException(WHERE) << "Edge (" << _source << ", " << _target
+                                  << ") does not exist.";
+
+  DeleteEdge(edgeIterator);
 }
 
 

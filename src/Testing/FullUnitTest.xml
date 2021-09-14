@@ -127,7 +127,7 @@
     <NeighborhoodFinders>
       <!-- Test not yet added -->
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
-      <BruteForceNF label="Nearest10" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="Nearest4" dmLabel="euclidean" unconnected="true" k="4"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -149,7 +149,7 @@
     </PathModifiers>
 
     <Connectors>
-      <RewireConnector label="Rewire" nfLabel="Nearest10" lpLabel="slAlwaysTrue"/>
+      <RewireConnector label="Rewire" nfLabel="Nearest4" lpLabel="slAlwaysTrue"/>
     </Connectors>
 
     <Metrics>
