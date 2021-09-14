@@ -5,10 +5,10 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
     <Problem baseFilename="example">
 
-    <Environment filename="../Envs/3D/3d.env"
+    <Environment filename="../Envs/2D/2d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="../Envs/3D/boxy.robot">
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot">
       <!--
       <Agent type="planning"/>
       -->
@@ -18,14 +18,11 @@
 
     <Task label="query" robot="boxy">
       <StartConstraints>
-        <!-- WARNING Support for multiple constraints is not yet implemented! -->
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
+        <CSpaceConstraint point="-10 -10"/>
       </StartConstraints>
 
       <GoalConstraints>
-        <!-- Here multiple constraints indicates a compound goal. Each constraint
-             represents a single intermediate goal. -->
-        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        <CSpaceConstraint point="10 10"/>
       </GoalConstraints>
     </Task>
 

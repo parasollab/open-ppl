@@ -588,7 +588,7 @@ IsConnectedSLBinary(
       
       if (!valid) {
         _col = midCfg;
-        _col.SetLabel("VALID", valid and validity);
+        _col.SetLabel("VALID", !validity);
         return false;
       }
       
