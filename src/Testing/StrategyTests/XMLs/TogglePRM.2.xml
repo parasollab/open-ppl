@@ -92,10 +92,10 @@
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
     <Solver mpStrategyLabel="TogglePRM" seed="12345678"
-      baseFilename="../Outputs/TogglePRM.0" vizmoDebug="true"/>
+      baseFilename="../Outputs/TogglePRM.2" vizmoDebug="true"/>
 
 <!--     <Solver mpStrategyLabel="Test" seed="12345678"
-      baseFilename="../Scratch/TogglePRM.0"/> -->
+      baseFilename="../Scratch/TogglePRM.2"/> -->
 
   </Library>
 
