@@ -78,7 +78,7 @@
     <MPStrategies>
       <!-- Toggle PRM-->
       <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
-          <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+          <Sampler label="UniformRandomFree" number="100" attempts="1"/>
           <Connector label="Closest"/>
           <ColConnector label="Closest"/>
           <Evaluator label="Query"/>
@@ -87,18 +87,18 @@
 
       <ValidationStrategy label="Test" target="TogglePRM" debug="true">
         <GoldStandard robot="boxy" type="roadmap"
-          filename="../Outputs/TogglePRM.0.12345678.map"/>
+          filename="../Outputs/TogglePRM.0.123456.query.map"/>
       </ValidationStrategy>
     </MPStrategies>
 
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="TogglePRM" seed="12345678"
-      baseFilename="../Outputs/TogglePRM.0" vizmoDebug="true"/>
+<!--     <Solver mpStrategyLabel="TogglePRM" seed="123456"
+      baseFilename="../Outputs/TogglePRM.0" vizmoDebug="true"/> -->
 
-<!--     <Solver mpStrategyLabel="Test" seed="12345678"
-      baseFilename="../Scratch/TogglePRM.0"/> -->
+    <Solver mpStrategyLabel="Test" seed="12345678"
+      baseFilename="../Scratch/TogglePRM.0"/> 
 
   </Library>
 

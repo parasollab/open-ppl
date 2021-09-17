@@ -62,11 +62,13 @@
 
     </MPStrategies>
 
-<!--     <Solver mpStrategyLabel="Test" seed="12345678"
-      baseFilename="../Scratch/TogglePRM"/> -->
+ <!--   <Solver mpStrategyLabel="TogglePRM" seed="12345678"
+      baseFilename="../Outputs/TogglePRM.1"/> -->
 
-    <Solver mpStrategyLabel="TogglePRM" seed="12345678"
-      baseFilename="../Outputs/TogglePRM.1"/>
+     <Solver mpStrategyLabel="Test" seed="12345678"
+      baseFilename="../Scratch/TogglePRM.1"/> 
+
+
 
   </Library>
 </MotionPlanning>
