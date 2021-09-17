@@ -699,7 +699,7 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
   auto env   = this->GetEnvironment();
   // @TODO: fix this to properly create group cfg for collision.
   GroupCfgType collision;
-  GroupLPOutput<MPTraits> lpo;
+  GroupLPOutput<MPTraits> lpo(cfg.GetGroupRoadmap());
 
   const bool success = lp->IsConnected(potentialParentCfg, cfg, collision, &lpo,
       env->GetPositionRes(), env->GetOrientationRes());

@@ -85,7 +85,7 @@ RewireConnectorTest<MPTraits>::
 IndividualRobotConnectTest() {
 
   // Indicates if debug information should be printed.
-  bool debug = true;
+  bool debug = false;
 
   bool passed = true;
   std::string message = "";
@@ -280,14 +280,6 @@ IndividualRobotConnectTest() {
   // ///////////////////////////////////////////////////////////////////////////
 
 
-  // @TODO: Finish writing individual tests here!
-  //  You should make sure that you clear vectors if you reuse the same
-  //  data structures before you make the next test.
-  //
-  //  IMPORTANT: If you copy the code above (which I suggest you do), make sure
-  //   you remove the variable declarations.
-
-
   if(passed) {
     message = "IndividualRobotConnectTest::PASSED!\n";
   }
@@ -304,19 +296,10 @@ RewireConnectorTest<MPTraits>::
 RobotGroupConnectTest() {
 
   // Indicates if debug information should be printed.
-  bool debug = true;
+  bool debug = false;
 
   bool passed = true;
   std::string message = "";
-
-  /*
-  // Create a test Configuration and ensure robot has enough DOFs for the test.
-  typename MPTraits::CfgType testCfg = this->GetIndividualCfg();
-  if (testCfg.PosDOF() < 2) {
-    passed = false;
-    message = "\tGiven robot does not have enough PosDOFs to run the test.\n";
-  }
-  */
 
 
   // Begin running Tests.
@@ -428,13 +411,13 @@ RobotGroupConnectTest() {
   end_edges.push_back(std::pair<size_t, size_t>(0, 5));
   end_edges.push_back(std::pair<size_t, size_t>(0, 7));
   end_edges.push_back(std::pair<size_t, size_t>(0, 9));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
   end_edges.push_back(std::pair<size_t, size_t>(2, 1));
+  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
+  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
+  end_edges.push_back(std::pair<size_t, size_t>(7, 3));
   end_edges.push_back(std::pair<size_t, size_t>(7, 6));
   end_edges.push_back(std::pair<size_t, size_t>(7, 8));
   end_edges.push_back(std::pair<size_t, size_t>(7, 10));
-  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
-  end_edges.push_back(std::pair<size_t, size_t>(11, 3));
 
   // Call the helper function.
   if (! RobotGroupConnectRunTest(verts, start_edges, end_edges, debug)) {
@@ -503,14 +486,6 @@ RobotGroupConnectTest() {
   start_edges.clear();
   end_edges.clear();
   // ///////////////////////////////////////////////////////////////////////////
-
-
-  // @TODO: Finish writing individual tests here!
-  //  You should make sure that you clear vectors if you reuse the same
-  //  data structures before you make the next test.
-  //
-  //  IMPORTANT: If you copy the code above (which I suggest you do), make sure
-  //   you remove the variable declarations.
 
 
   if(passed) {
@@ -669,8 +644,6 @@ RobotGroupConnectRunTest(
   mpSolution.AddRobotGroup(group);
   auto roadmap = mpSolution.GetGroupRoadmap(group);
 
-  std::cout << "P1" << std::endl;
-
   // Add Cfgs to roadmap. (Collect Vertex IDs to refer to them later)
 
   // Vector to create cfgs.
@@ -680,28 +653,22 @@ RobotGroupConnectRunTest(
 
 
   for (size_t i = 0; i < vertex_poses.size(); i++) {
-    std::cout << "P2" << std::endl;
     // Create a new group Cfg and ensure that both robot's start config is 0.
     cfgs.push_back(GroupCfg(roadmap));
     for (size_t j = 0; j < cfgs[i].DOF(); j++) {
       (cfgs[i]).GetRobotCfg(size_t(0))[j] = 0.0;
       (cfgs[i]).GetRobotCfg(size_t(1))[j] = 0.0;
-      std::cout << "P3" << std::endl;
     }
 
-    std::cout << "P4" << std::endl;
     // Dump the requested values into the cfg.
     for (size_t j = 0; j < vertex_poses[i].size(); j++) {
       // @TODO: ensure that we don't go past # of DOFs while dumping.
       (cfgs[i]).GetRobotCfg(size_t(0))[j] = (vertex_poses[i])[j] + 1;
       (cfgs[i]).GetRobotCfg(size_t(1))[j] = -((vertex_poses[i])[j] + 1);
-      std::cout << "P5" << std::endl;
     }
 
     // Add the Cfg to the map and capture the Vertex ID. Maintain ordering.
-    std::cout << "P6" << std::endl;
     v_ids.push_back(roadmap->AddVertex(cfgs[i]));
-    std::cout << "P7" << std::endl;
   }
 
 
@@ -711,10 +678,19 @@ RobotGroupConnectRunTest(
   // Use our distance metric to set the weight.
 
   for (auto it = start_edges.begin(); it != start_edges.end(); ++it) {
-    typename MPTraits::GroupWeightType weight;
+    auto dm = this->GetDistanceMetric("euclidean");
+    auto distance = dm->Distance(cfgs[it->first], cfgs[it->second]);
+    auto rmap1 = roadmap->GetRoadmap(0);
+    auto rmap2 = roadmap->GetRoadmap(1);
 
-    weight.SetWeight(2*this->ComputeDist(vertex_poses[it->first],
-                                         vertex_poses[it->second]));
+    DefaultWeight<typename MPTraits::CfgType> w;
+    w.SetWeight(distance);
+    rmap1->AddEdge(v_ids[it->first], v_ids[it->second], w);
+    rmap2->AddEdge(v_ids[it->first], v_ids[it->second], w);
+
+    typename MPTraits::GroupWeightType weight(roadmap);
+
+    weight.SetWeight(2*distance);
 
     roadmap->AddEdge(v_ids[it->first], v_ids[it->second], weight);
   }

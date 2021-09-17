@@ -374,6 +374,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // Execute post-add hooks.
     this->ExecuteAddEdgeHooks(ei);
 
+    this->m_predecessors[_target].insert(_source);
     ++m_timestamp;
   }
 }
@@ -421,6 +422,8 @@ AddVertex(const Vertex& _v) noexcept {
 
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(cfg);
+  this->m_predecessors[vid];
+  this->m_allVIDs.insert(vid);
   ++m_timestamp;
 
   // Execute post-add hooks.

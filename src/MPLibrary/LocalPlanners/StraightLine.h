@@ -318,8 +318,12 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   }
 
   // Set data in the LPOutput object.
-  _lpOutput->m_edge.first.SetWeight(numSteps);
-  _lpOutput->m_edge.second.SetWeight(numSteps);
+  //_lpOutput->m_edge.first.SetWeight(numSteps);
+  //_lpOutput->m_edge.second.SetWeight(numSteps);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto distance = dm->Distance(_c1,_c2);
+  _lpOutput->m_edge.first.SetWeight(distance);
+  _lpOutput->m_edge.second.SetWeight(distance);
   _lpOutput->SetIndividualEdges(_robotIndexes);
   _lpOutput->SetActiveRobots(_robotIndexes);
 
