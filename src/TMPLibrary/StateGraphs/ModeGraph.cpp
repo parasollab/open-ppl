@@ -1,6 +1,7 @@
 #include "ModeGraph.h"
 
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
+#include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 
 #include <set>
 
@@ -102,16 +103,76 @@ SampleTransitions() {
 
     // For each edge in the mode graph, generate n samples
 
-    // Apply interaction strategy to interaction
+    for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
+
+        auto& hyperarc = kv.second;
+        auto interaction = dynamic_cast<Interaction*>(hyperarc.property);
+
+        State modeSet;
+        for(auto vid : hyperarc.tail) {
+            Mode* mode = m_modeHypergraph.GetVertex(vid).property;
+            modeSet[mode] = std::make_pair(nullptr,MAX_INT);
+        }
+
+        auto label = interaction->GetInteractionStrategyLabel();
+        auto is = this->GetInteractionStrategyMethod(label);
+
+        for(size_t i = 0; i < m_numSamples; i++) {
+
+            for(size_t j = 0; j < m_maxAttempts; j++) {
+
+                if(!is->operator()(interaction,modeSet))
+                    continue;
+
+                // TODO::Save interaction paths
+                break;
+            }
+        }
+    }
+
 }
 
 void
 ModeGraph::
 GenerateRoadmaps(const State& _start) {
 
-    // For each mode in the mode hypergraph, run the expansion strategy
 
-    // If mode is initial mode, add starting vertex
+  // If mode is initial mode, add starting vertex
+  for(const auto& kv : _start) {
+      auto mode = kv.first;
+      auto grm = kv.second.first;
+      auto vid = kv.second.second;
+      auto gcfg = grm->GetVertex(vid);
+
+      auto newGrm = m_solution->GetGroupRoadmap(mode);
+      auto newGcfg = gcfg.SetGroupRoadmap(newGrm);
+      newGrm->AddVertex(newGcfg);
+  }
+
+  auto lib = this->GetMPLibrary();
+  auto prob = this->GetMPProblem();
+ 
+  // For each mode in the mode hypergraph, run the expansion strategy
+  for(auto kv : m_modeHypergraph.GetVertexMap()) {
+      auto vertex = kv.second;
+      auto mode = vertex.property;
+
+      // Initialize dummy task
+      auto task = new GroupTask(mode);
+
+      for(auto r : mode->GetRobots()) {
+        auto t = MPTask(r);
+        task->AddTask(t);
+      } 
+ 
+      // Call the MPLibrary solve function to expand the roadmap
+      lib->SetPreserveHooks(true);
+      lib->Solve(prob,task,m_solution.get(),m_expansionStrategy, LRand(), 
+             "ExpandModeRoadmap");
+      lib->SetPreserveHooks(false);
+
+      delete task;
+    }
 }
 
 void
@@ -119,6 +180,30 @@ ModeGraph::
 ConnectTransitions() {
 
     // For each mode in the mode hypergraph, attempt to connect transition samples
+    for(auto kv1 : m_groundedHypergraph.GetVertexMap()) {
+        auto vid1 = kv1.first;
+        auto vertex1 = kv1.second;
+        auto mode = vertex1.property.first;
+
+        // Create start constraint from vertex
+
+        for(auto kv2 : m_groundedHypergraph.GetVertexMap()) {
+            auto vid2 = kv2.first;
+
+            // Make sure vertices are unique
+            if(vid1 == vid2)
+                continue;
+
+            // Make sure vertices of the same mode
+            auto vertex2 = kv2.second;
+            if(mode != vertex2.property.first)
+                continue;
+
+
+            // Create task out of task vertices
+            // GroupTask* task(mode);
+        }
+    }
 }
 
 std::set<ModeGraph::Mode*>

@@ -28,7 +28,7 @@ class ModeGraph : public StateGraph {
     ///@{
 
     typedef RobotGroup                                       Mode;
-    typedef Hypergraph<Mode*,Interaction*>                   ModeHypergraph;
+    typedef Hypergraph<Mode*,Action*>                   ModeHypergraph;
     typedef size_t                                           VID;
     typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
     typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>        GroupRoadmapType;
