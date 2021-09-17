@@ -67,6 +67,7 @@ GetGroupRoadmap(RobotGroup* _group) {
 void
 ModeGraph::
 GenerateModeHypergraph(const State& _start) {
+    auto as = this->GetTMPLibrary()->GetActionSpace();
 
     // Extract initial submodes
     std::set<Mode*> newModes;
@@ -74,8 +75,6 @@ GenerateModeHypergraph(const State& _start) {
         auto mode = kv.first;
         newModes.insert(mode);
     }
-
-    auto as = this->GetTMPLibrary()->GetActionSpace();
 
     // Keep track of already expanded mode/action combinations
     std::unordered_map<Action*,std::set<std::set<VID>>> appliedActions;
@@ -101,9 +100,7 @@ void
 ModeGraph::
 SampleTransitions() {
 
-
     // For each edge in the mode graph, generate n samples
-
     for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
 
         auto& hyperarc = kv.second;
@@ -140,7 +137,6 @@ SampleTransitions() {
 void
 ModeGraph::
 GenerateRoadmaps(const State& _start) {
-
 
   // If mode is initial mode, add starting vertex
   for(const auto& kv : _start) {
@@ -183,6 +179,8 @@ GenerateRoadmaps(const State& _start) {
 void
 ModeGraph::
 ConnectTransitions() {
+    auto lib = this->GetMPLibrary();
+    auto prob = this->GetMPProblem();
 
     // For each mode in the mode hypergraph, attempt to connect transition samples
     for(auto kv1 : m_groundedHypergraph.GetVertexMap()) {
@@ -191,6 +189,16 @@ ConnectTransitions() {
         auto mode = vertex1.property.first;
 
         // Create start constraint from vertex
+        auto startGcfg = vertex1.property.first->GetVertex(vertex1.property.second);
+        std::vector<CSpaceConstraint> startConstraints;
+
+        auto grm = startGcfg.GetGroupRoadmap();
+        auto group = grm->GetGroup();
+
+        for(auto robot : group->GetRobots()) {
+            CSpaceConstraint startConstraint(robot,startGcfg.GetRobotCfg(robot));
+            startConstraints.push_back(startConstraint);
+        }
 
         for(auto kv2 : m_groundedHypergraph.GetVertexMap()) {
             auto vid2 = kv2.first;
@@ -204,9 +212,48 @@ ConnectTransitions() {
             if(mode != vertex2.property.first)
                 continue;
 
+            // Create goal constraint from vertex 2
+            auto goalGcfg = vertex2.property.first->GetVertex(vertex2.property.second);
+            std::vector<CSpaceConstraint> goalConstraints;
 
-            // Create task out of task vertices
-            // GroupTask* task(mode);
+            for(auto robot : group->GetRobots()) {
+                CSpaceConstraint goalConstraint(robot,goalGcfg.GetRobotCfg(robot));
+                goalConstraints.push_back(goalConstraint);
+            }
+
+            // Create group task
+            GroupTask groupTask(group);
+
+            for(size_t i = 0; i < goalConstraints.size(); i++) {
+                // Create individual robot task
+
+                const auto& startConstraint = startConstraints[i];
+                const auto& goalConstraint = goalConstraints[i];
+
+                auto robot = startConstraint.GetRobot();
+                if(robot != goalConstraint.GetRobot())
+                    throw RunTimeException(WHERE) << "Mismatching robots.";
+
+                MPTask task(robot);
+                task.SetStartConstraint(std::move(startConstraint.Clone()));
+                task.AddGoalConstraint(std::move(goalConstraint.Clone()));
+                groupTask.AddTask(task);
+            }
+
+            // Query path for task
+            lib->SetPreserveHooks(true);
+            lib->Solve(prob,&groupTask,m_solution.get(),m_queryStrategy, LRand(), 
+                    "Query transition path");
+            lib->SetPreserveHooks(false);
+
+            // Extract cost of path from solution
+            auto path = m_solution->GetGroupPath(groupTask.GetRobotGroup());
+            Transition transition;
+            //TODO:: Decide if this is necessary 
+            transition.cost = path->Length();
+
+            // Add arc to hypergraph
+            m_groundedHypergraph.AddHyperarc({vid1},{vid2},transition);
         }
     }
 }
