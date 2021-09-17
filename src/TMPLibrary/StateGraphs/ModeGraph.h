@@ -28,7 +28,7 @@ class ModeGraph : public StateGraph {
     ///@{
 
     typedef RobotGroup                                       Mode;
-    typedef Hypergraph<Mode*,Action*>                   ModeHypergraph;
+    typedef Hypergraph<Mode*,Action*>                        ModeHypergraph;
     typedef size_t                                           VID;
     typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
     typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>        GroupRoadmapType;
@@ -89,6 +89,11 @@ class ModeGraph : public StateGraph {
 
     std::set<Mode*> ApplyAction(Action* _action, 
                     std::set<std::set<VID>>& _applied);
+
+    void SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end);
+
+    std::set<VID> AddStateToGroundedHypergraph(const State& _state);
+
     ///@}
     ///@name Internal State
     ///@{

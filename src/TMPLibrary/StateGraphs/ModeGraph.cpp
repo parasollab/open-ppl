@@ -101,6 +101,7 @@ void
 ModeGraph::
 SampleTransitions() {
 
+
     // For each edge in the mode graph, generate n samples
 
     for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
@@ -121,10 +122,14 @@ SampleTransitions() {
 
             for(size_t j = 0; j < m_maxAttempts; j++) {
 
-                if(!is->operator()(interaction,modeSet))
+                // Make state copy to pass by ref and get output state
+                auto goalSet = modeSet;
+
+                if(!is->operator()(interaction,goalSet))
                     continue;
 
-                // TODO::Save interaction paths
+                // Save interaction paths
+                SaveInteractionPaths(interaction,modeSet,goalSet);
                 break;
             }
         }
@@ -223,4 +228,120 @@ ApplyAction(Action* _action, std::set<std::set<VID>>& _applied) {
     return newModes;
 }
 
+void
+ModeGraph::
+SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end) {
+    auto problem = this->GetMPProblem();
+
+    const auto& stages = _interaction->GetStages();
+    State start;
+    State end;
+
+    std::set<VID> tail;
+    Transition transition;
+
+    for(size_t i = 1; i < stages.size(); i++) {
+        auto paths = _interaction->GetToStagePaths(stages[i]);
+
+        if(i == 0) {
+            // Initialize start from original modeSet
+            start = _start;
+        }
+        else {
+            // Collect robots in group
+            std::vector<Robot*> robots;
+            std::string groupLabel = "";
+            for(auto path : paths) {
+                auto robot = path->GetRobot();
+                robots.push_back(robot);
+                groupLabel += (robot->GetLabel() + "--");
+            }
+
+            // Add the group to the problem and solution
+            RobotGroup* group = problem->AddRobotGroup(robots,groupLabel);
+            m_solution->AddRobotGroup(group);
+            start[group] = std::make_pair(nullptr,MAX_INT);
+        }
+
+        // Collect start and goal cfgs
+        std::unordered_map<Robot*,Cfg> startCfgs;
+        for(auto path : paths) {
+            auto robot = path->GetRobot();
+
+            const auto& cfgs = path->Cfgs();
+            
+            if(cfgs.empty())
+                throw RunTimeException(WHERE) << "Expected path for "
+                                                << robot->GetLabel()
+                                                << " in iteraction "
+                                                << _interaction->GetLabel()
+                                                << ", stage:"
+                                                << stages[i];
+
+            // Save the start cfg
+            auto startCfg = cfgs.front();
+            startCfgs[robot] = startCfg;
+        }
+
+        // Update start state to hold discovered vertices
+        for(auto& kv : start) {
+            auto group = kv.first;
+            auto grm = m_solution->GetGroupRoadmap(group);
+            GroupCfg gcfg(grm);
+
+            for(auto robot : group->GetRobots()) {
+                auto cfg = startCfgs[robot];
+                gcfg.SetRobotCfg(robot,std::move(cfg));
+            }
+
+            // Add new group cfg to the group roadmap
+            auto vid = grm->AddVertex(gcfg);
+
+            // Set the state for the group
+            kv.second = std::make_pair(grm,vid);
+        }
+
+        // Add the start state to the grounded vertices graph
+        auto head = AddStateToGroundedHypergraph(start);
+
+        // Check if this is the first stage or not
+        if(!tail.empty()) {
+            // Connect it to the previous stage
+            m_groundedHypergraph.AddHyperarc(head,tail,transition);
+        }
+
+        // Save the transition to the next stage
+        transition = Transition();
+        for(auto path : paths) {
+            transition.explicitPaths[path->GetRobot()] = path;
+            transition.cost = std::max(transition.cost,path->Length());
+        }
+
+        // Set this as the tail for the next stage
+        tail = head;
+    }
+
+    // Add final end state to grounded hypergraph
+    auto head = AddStateToGroundedHypergraph(_end);
+    m_groundedHypergraph.AddHyperarc(head,tail,transition);
+}
+
+std::set<ModeGraph::VID>
+ModeGraph::
+AddStateToGroundedHypergraph(const State& _state) {
+
+    std::set<VID> vids;
+
+    for(const auto& kv : _state) {
+        auto mode = kv.first;
+        auto mvid = m_modeHypergraph.GetVID(mode);
+
+        auto gvid = m_groundedHypergraph.AddVertex(kv.second);
+        m_modeGroundedVertices[mvid].insert(gvid);
+
+        vids.insert(gvid);
+    }
+
+    return vids;
+}
 /*----------------------------------------------------------------------------*/
