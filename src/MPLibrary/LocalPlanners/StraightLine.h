@@ -416,7 +416,31 @@ IsConnectedSLSequential(
     // Add the step distance to the total distance.
     distance += dm->Distance(previousStep, currentStep);
 
-    // Check for collisions.
+    // // Check for collisions.
+    // if(_checkCollision) {
+    //   _cdCounter++;
+    //   if(this->m_debug)
+    //     std::cout << "\n\t\tChecking step " << i << " at "
+    //               << currentStep.PrettyPrint()
+    //               << std::endl;
+
+    //   const bool inBounds = currentStep.InBounds(env);
+    //   if(!inBounds || !vc->IsValid(currentStep, id)) {
+    //     _col = currentStep;
+
+    //     if(this->m_debug)
+    //       std::cout << "\n\t\t\tINVALID" << std::endl;
+    //     return false;
+    //   }
+    //   else if(this->m_debug)
+    //     std::cout << "\n\t\t\tOK" << std::endl;
+    // }
+
+
+    // Check for collisions. 
+    // TODO: out of bounds and obst-space are treated the same.
+    // This might be problematic.
+
     if(_checkCollision) {
       _cdCounter++;
       if(this->m_debug)
@@ -425,16 +449,24 @@ IsConnectedSLSequential(
                   << std::endl;
 
       const bool inBounds = currentStep.InBounds(env);
-      if(!inBounds || !vc->IsValid(currentStep, id)) {
-        _col = currentStep;
+      bool valid = false;
 
-        if(this->m_debug)
-          std::cout << "\n\t\t\tINVALID" << std::endl;
+      //in case the validity is switched for toggle operations.
+      const bool validity = vc->GetValidity();
+      
+      if (inBounds)
+        valid = vc->IsValid(currentStep, id);
+      
+      if (!valid) {
+        _col = currentStep;
+        _col.SetLabel("VALID", valid and validity);
         return false;
       }
-      else if(this->m_debug)
-        std::cout << "\n\t\t\tOK" << std::endl;
+      
+      if(this->m_debug)
+          std::cout << "\n\t\t\t" << (valid ? "VALID" : "INVALID" ) << std::endl;
     }
+
 
     // Save the resolution-level path if requested.
     if(_savePath)
@@ -517,7 +549,30 @@ IsConnectedSLBinary(
     int mid = low + (high - low) / 2;
     CfgType midCfg = increment * mid + _c1;
 
-    // Check collision if requested.
+    // // Check collision if requested.
+    // if(_checkCollision) {
+    //   _cdCounter++;
+    //   if(this->m_debug)
+    //     std::cout << "\n\t\tChecking step " << mid << " at "
+    //               << midCfg.PrettyPrint()
+    //               << std::endl;
+
+    //   const bool inBounds = midCfg.InBounds(env);
+    //   if(!inBounds or !vc->IsValid(midCfg, id)) {
+    //     _col = midCfg;
+    //     if(this->m_debug)
+    //       std::cout << "\n\t\t\tINVALID" << std::endl;
+    //     return false;
+    //   }
+    // }
+    // else if(this->m_debug)
+    //   std::cout << "\n\t\t\tOK" << std::endl;
+
+
+    // Check for collisions.
+    // TODO: out of bounds and obst-space are treated the same. 
+    // This might be problematic.
+
     if(_checkCollision) {
       _cdCounter++;
       if(this->m_debug)
@@ -526,15 +581,24 @@ IsConnectedSLBinary(
                   << std::endl;
 
       const bool inBounds = midCfg.InBounds(env);
-      if(!inBounds or !vc->IsValid(midCfg, id)) {
+      bool valid = false;
+
+      //in case the validity is switched for toggle operations.
+      const bool validity = vc->GetValidity();
+      
+
+      if (inBounds)
+        valid = vc->IsValid(midCfg, id);
+      
+      if (!valid) {
         _col = midCfg;
-        if(this->m_debug)
-          std::cout << "\n\t\t\tINVALID" << std::endl;
+        _col.SetLabel("VALID", !validity);
         return false;
       }
+      
+      if(this->m_debug)
+          std::cout << "\n\t\t\t" << (valid ? "VALID" : "INVALID" ) << std::endl;
     }
-    else if(this->m_debug)
-      std::cout << "\n\t\t\tOK" << std::endl;
 
     // If there is at least one step between low and mid, add the interval from
     // low to mid to the queue.
