@@ -467,6 +467,7 @@ TASK_SRCS := \
 	TMPLibrary/Solution/Plan.cpp \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/ModeGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
   TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \

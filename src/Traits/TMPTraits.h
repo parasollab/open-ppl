@@ -32,6 +32,7 @@
 // StateGraphs to include
 
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/ModeGraph.h"
 
 // InteractionStrategyMethods to include
 
@@ -81,7 +82,8 @@ struct TMPTraits {
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
-		CombinedRoadmap
+		CombinedRoadmap,
+    ModeGraph
 			> StateGraphList;
 
 	typedef boost::mpl::list<
