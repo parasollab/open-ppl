@@ -21,7 +21,7 @@ import sys, os, subprocess
 
 # Configuration
 xml_dir = 'XMLs/'
-output_dir = 'Outputs/'
+output_dir = 'Scratch/'
 
 # Parse arguments
 if len(sys.argv) != 2:
@@ -61,7 +61,7 @@ for line in lines:
   # Execute the XML file.
   xml_path = xml_dir + xml_file
   debug_output = output_dir + os.path.basename(xml_file) + '.pmpl'
-  result = subprocess.run('../../ppl -f ' + xml_path + ' > ' + debug_output, shell=True)
+  result = subprocess.run('../../pmpl -f ' + xml_path + ' > ' + debug_output, shell=True)
 
   # Check for aborted run.
   if result.returncode != 0:

@@ -16,16 +16,6 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Task label="query" robot="boxy">
-      <StartConstraints>
-        <CSpaceConstraint point="-10 -10"/>
-      </StartConstraints>
-
-      <GoalConstraints>
-        <CSpaceConstraint point="10 10"/>
-      </GoalConstraints>
-    </Task>
-
   </Problem>
 
   <!-- Set available algorithms and parameters. -->
@@ -67,8 +57,15 @@
         nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
     </Connectors>
 
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
     <MapEvaluators>
-      <QueryMethod label="Query" debug="true"
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="100" operator=">="/>
+
+      <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
     </MapEvaluators>
 
@@ -78,24 +75,24 @@
           <Sampler label="UniformRandomFree" number="10" attempts="1"/>
           <Connector label="Closest"/>
           <ColConnector label="Closest"/>
-          <Evaluator label="Query"/>
+          <Evaluator label="NodesEval"/>
         </TogglePRMStrategy>
 
 
       <ValidationStrategy label="Test" target="TogglePRM" debug="true">
         <GoldStandard robot="boxy" type="roadmap"
-          filename="../Outputs/TogglePRM.0.12345678.map"/>
+          filename="../Outputs/TogglePRM.2.12345678.map"/>
       </ValidationStrategy>
     </MPStrategies>
 
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="TogglePRM" seed="12345678"
-      baseFilename="../Outputs/TogglePRM.2" vizmoDebug="true"/>
+ <!--   <Solver mpStrategyLabel="TogglePRM" seed="12345678"
+      baseFilename="../Outputs/TogglePRM.2" vizmoDebug="true"/> -->
 
-<!--     <Solver mpStrategyLabel="Test" seed="12345678"
-      baseFilename="../Scratch/TogglePRM.2"/> -->
+     <Solver mpStrategyLabel="Test" seed="12345678"
+      baseFilename="../Scratch/TogglePRM.2"/> 
 
   </Library>
 
