@@ -2,3 +2,4 @@ BasicPRM.0.xml BasicPRM.0.map
 QueryPRM.0.xml QueryPRM.0.query.map QueryPRM.0.query.rdmp.path
 BasicRRT.0.xml BasicRRT.0.query.map BasicRRT.0.query.rdmp.path
 BasicRRT-oneway.0.xml BasicRRT-oneway.0.query.map BasicRRT-oneway.0.query.rdmp.path
+RRTstar.0.xml RRTstar.0.12345.query.map RRTstar.0.query.rdmp.path RRTstar.0.12345.query.pathlength.hist RRTstar.0.12345.query.vd
