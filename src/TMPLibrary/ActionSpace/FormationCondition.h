@@ -9,6 +9,7 @@ class RobotGroup;
 class TMPLibrary;
 
 class FormationCondition : public Condition {
+
   public:
     ///@name Local Types
     ///@{

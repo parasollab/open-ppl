@@ -4,14 +4,11 @@
 #include "StateGraph.h"
 
 #include "ConfigurationSpace/GroupRoadmap.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
 
-#include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
-#include "TMPLibrary/ActionSpace/Condition.h"
-#include "TMPLibrary/ActionSpace/Interaction.h"
+#include "TMPLibrary/ActionSpace/Action.h"
 
 #include "Traits/CfgTraits.h"
 
@@ -19,6 +16,8 @@
 
 #include <unordered_map>
 #include <unordered_set>
+
+class Interaction;
 
 class ModeGraph : public StateGraph {
 
@@ -38,13 +37,13 @@ class ModeGraph : public StateGraph {
     typedef std::pair<GroupRoadmapType*,VID>                 GroundedVertex;
 
     struct Transition {
-        std::unordered_map<Robot*,Path*> explicitPaths;
-        std::unordered_map<Robot*,std::pair<VID,VID>> implicitPaths;
-        double cost;
+      std::unordered_map<Robot*,Path*> explicitPaths;
+      std::unordered_map<Robot*,std::pair<VID,VID>> implicitPaths;
+      double cost;
     };
 
     typedef Hypergraph<GroundedVertex,Transition>           GroundedHypergraph;
-    typedef Condition::State                                State;
+    typedef Action::State                                   State;
 
     ///@}
     ///@name Construction
@@ -87,8 +86,24 @@ class ModeGraph : public StateGraph {
 
     void ConnectTransitions();
 
-    std::set<Mode*> ApplyAction(Action* _action, 
+    std::vector<VID> ApplyAction(Action* _action, 
                     std::set<std::set<VID>>& _applied);
+
+    std::vector<std::set<ModeGraph::VID>> CollectModeSets(
+               const std::vector<std::vector<VID>>& _formationModes, 
+               size_t _index, 
+               const std::set<VID>& _partialSet);
+
+
+    std::vector<std::vector<ModeGraph::Mode*>> CollectModeSetCombinations(
+                        const std::vector<std::vector<std::vector<Robot*>>>& _possibleAssignments,
+                        size_t _index, std::vector<Mode*> _partial, 
+                        const std::set<Robot*>& _used);
+
+
+    std::vector<ModeGraph::Mode*> CollectModeCombinations(const std::vector<std::vector<Robot*>>& _possibleModeAssignments,
+                        size_t _index, const std::vector<Robot*> _partial,
+                        const std::set<Robot*>& _used);
 
     void SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end);
 
