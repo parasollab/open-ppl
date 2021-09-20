@@ -2,7 +2,7 @@
 
 # Set platform, debug mode, and address sanitizer if not already set.
 platform ?= Ubuntu
-debug    ?= 0
+debug    ?= 1
 asan     ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
@@ -76,7 +76,7 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(PLANNER_DEF) $(TASK_DEF) $(vizmo_map) $(group_map) $(URDF_DEFS)
+DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(PLANNER_DEF) $(TASK_DEF) $(vizmo_map) $(group_map) #$(URDF_DEFS)
 INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL) $(URDF_INCL) 
 LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS) $(URDF_LIBS) 
 

@@ -8,8 +8,6 @@
 
 #include "Utilities/XMLNode.h"
 
-#include <kdl/chain.hpp>
-#include <kdl/tree.hpp>
 #include <string>
 
 class Robot;
@@ -20,8 +18,8 @@ class KDLModel {
     ///@name LocalTypes
     ///@{
 
-    typedef KDL::Tree  Tree;
-    typedef KDL::Chain Chain;
+    //typedef KDL::Tree  Tree;
+    //typedef KDL::Chain Chain;
 
     ///@}
     ///@name Construction
@@ -57,13 +55,19 @@ class KDLModel {
 
     Robot* m_robot;
 
+    /*
     Tree m_tree;
 
     Chain m_chain;
+    */
+
+    std::string m_filename;
+
+    std::string m_chainRoot;
+    std::string m_chainTip;
 
     ///@}    
 
 };
 
-#undef PI
 #endif

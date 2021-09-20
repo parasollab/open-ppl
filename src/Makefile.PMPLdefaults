@@ -15,7 +15,7 @@
 # Default system variables
 ################################################################################
 UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
-             $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS) #$(URDF_DEFS)
+             $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS) $(URDF_DEFS)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
 	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL) $(CGAL_INC) \
@@ -438,7 +438,7 @@ ifeq ($(platform), Ubuntu)
   URDF_INCL := -I$(ROS_DIR)/include -I/usr/include/eigen3
   #URDF_LIBS := -L/$(ROS_DIR)/lib -lorocos-kdl -lkdl_parser
   URDF_LIBS := -L/$(ROS_DIR)/lib $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so -lorocos-kdl -lkdl_parser
-  URDF_DEFS := -DPPL_USE_KDL -DURDF
+  URDF_DEFS := -DPPL_USE_KDL -DPPL_USE_URDF
   URDF_SRCS := \
     MPProblem/Robot/KDLModel.cpp \
     Utilities/KDLParser.cpp \
@@ -550,7 +550,6 @@ PMPL_LIB  := -L$(PMPL_DIR) $(URDF_LIBS) $(KDL_LIBS) -lobprm
 PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_SRCS := \
-  $(URDF_SRCS) \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \
@@ -620,6 +619,7 @@ PMPL_SRCS := \
   Workspace/WorkspaceRegion.cpp \
   Workspace/WorkspaceSkeleton.cpp \
   MPLibrary/PMPL.cpp \
+  $(URDF_SRCS) \
   $(MATLAB_SRCS)
   #Behaviors/Controllers/PIDFeedback.cpp \
 

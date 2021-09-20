@@ -35,7 +35,7 @@ main(int _argc, char** _argv) {
 
   // Temp stuff to test IK
   auto kdl = robot->GetKDLModel();
-  std::vector<double> pos = {6,0,14};
+  std::vector<double> pos = {.3,-.3,.5};
   std::vector<std::vector<double>> ori = {{1,0,0},{0,1,0},{0,0,1}};
 
   auto joints = kdl->InverseKinematics(pos,ori);

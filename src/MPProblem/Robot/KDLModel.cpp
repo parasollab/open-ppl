@@ -2,8 +2,10 @@
 
 #include "MPProblem/Robot/Robot.h"
 
-#include "Utilities/KDLParser.h"
 #include "Utilities/PMPLExceptions.h"
+
+#undef PI
+#include "Utilities/KDLParser.h"
 
 #include <kdl/chain.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
@@ -13,7 +15,6 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/tree.hpp>
 
-//#undef PI
 
 //#include "Orientation.h"
 //#include "EulerAngle.h"
@@ -25,27 +26,18 @@ KDLModel::
 KDLModel(Robot* _robot) : m_robot(_robot) {}
 
 KDLModel::
-KDLModel(Robot* _robot, const std::string _filename) : m_robot(_robot) {
-  m_tree = ParseKDLFromFile(_filename);
-}
+KDLModel(Robot* _robot, const std::string _filename) : m_robot(_robot), m_filename(_filename) {}
 
 KDLModel::
 KDLModel(XMLNode& _node, Robot* _robot) : m_robot(_robot) {
   // TODO::Allow explicit specification of kdl chain/tree
-  std::string filename = _node.Read("filename",true,"","URDF file name.");
+  m_filename = _node.Read("filename",true,"","URDF file name.");
 
-  std::string chainRoot = _node.Read("chainRoot",true,"",
+  m_chainRoot = _node.Read("chainRoot",true,"",
                                      "Root of chain to compute FK/IK");
 
-  std::string chainTip = _node.Read("chainTip",true,"",
+  m_chainTip = _node.Read("chainTip",true,"",
                                     "Tip of chain to compute FK/IK");
-
-  m_tree = Tree(ParseKDLFromFile(filename));
-
-  bool ret = m_tree.getChain("chainRoot","chainTip",m_chain);
-
-  if(!ret)
-    throw RunTimeException(WHERE) << "Unable to construct chain from tree.";
 }
 
 KDLModel::
@@ -57,22 +49,31 @@ std::vector<double>
 KDLModel::
 InverseKinematics(std::vector<double> _pos, std::vector<std::vector<double>> _ori) {
 
+  auto tree = ParseKDLFromFile(m_filename);
+
+  KDL::Chain chain;
+
+  bool ret = tree.getChain(m_chainRoot,m_chainTip,chain);
+
+  if(!ret)
+    throw RunTimeException(WHERE) << "Unable to construct chain from tree.";
+
   // forward position solver
-  KDL::ChainFkSolverPos_recursive fksolver1(m_chain);
+  KDL::ChainFkSolverPos_recursive fksolver1(chain);
 
   // inverse velocity solver
-  KDL::ChainIkSolverVel_pinv iksolver1v(m_chain);
+  KDL::ChainIkSolverVel_pinv iksolver1v(chain);
 
   // inverse kinematics solver
-  KDL::ChainIkSolverPos_NR iksolverpos(m_chain,fksolver1,iksolver1v,100,
+  KDL::ChainIkSolverPos_NR iksolverpos(chain,fksolver1,iksolver1v,10000000,
                                     std::numeric_limits<double>::epsilon());
 
   // jntarrays
-  KDL::JntArray q(m_tree.getNrOfJoints());
-  KDL::JntArray qInit(m_tree.getNrOfJoints());
+  KDL::JntArray q(chain.getNrOfJoints());
+  KDL::JntArray qInit(chain.getNrOfJoints());
 
   // destination frame
-  KDL::Vector vector(_pos[0],_pos[2],_pos.size() == 3 ? _pos[2] : 0);
+  KDL::Vector vector(_pos[0],_pos[1],_pos.size() == 3 ? _pos[2] : 0);
 
   // gamma is about the x axis
   //mathtool::EulerAngle euler(_ori[1],_ori[2],_ori[0]);
@@ -93,10 +94,19 @@ InverseKinematics(std::vector<double> _pos, std::vector<std::vector<double>> _or
 
   KDL::Frame fDestination(rotation,vector);
 
-  auto ret = iksolverpos.CartToJnt(qInit,fDestination,q);;
+  auto ret2 = iksolverpos.CartToJnt(qInit,fDestination,q);;
 
-  std::cout << ret << std::endl;
-  
-  return {};
+  auto retString = iksolverpos.strError(ret2);
+
+  std::cout << retString << std::endl;
+ 
+  std::vector<double> dofs;
+  for(size_t i = 0; i < chain.getNrOfJoints(); i++) {
+    dofs.push_back(q(i));
+  }
+
+  // TODO:: Convert to pmpl joint values;
+ 
+  return dofs;
 }
 
