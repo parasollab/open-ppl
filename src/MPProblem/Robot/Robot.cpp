@@ -2,6 +2,10 @@
 
 #include "Actuator.h"
 
+#ifdef PPL_USE_KDL
+  #include "KDLModel.h"
+#endif
+
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -131,6 +135,12 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     else if(child.Name() == "Agent") {
       SetAgent(Agent::Factory(this, child));
     }
+#ifdef PPL_USE_KDL
+    else if(child.Name() == "KDLModel") {
+      m_kdlModel = std::unique_ptr<KDLModel>(
+        new KDLModel(child,this));
+    }
+#endif
   }
 
   // Initialize the emulated battery.
@@ -551,6 +561,19 @@ GetMicroSimulator() noexcept {
 
   return m_simulator.get();
 }
+
+#ifdef PPL_USE_KDL
+
+KDLModel*
+Robot::
+GetKDLModel() noexcept {
+  if(!m_kdlModel)
+    m_kdlModel.reset(new KDLModel(this));
+
+  return m_kdlModel.get();
+}
+
+#endif
 
 /*---------------------------- Hardware Interface ----------------------------*/
 

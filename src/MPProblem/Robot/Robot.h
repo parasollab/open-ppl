@@ -18,6 +18,7 @@ class BulletModel;
 class Cfg;
 class ControllerMethod;
 class CSpaceBoundingBox;
+class KDLModel;
 class MatlabMicroSimulator;
 class MicroSimulator;
 class MPProblem;
@@ -69,6 +70,10 @@ class Robot final {
   std::unique_ptr<MatlabMicroSimulator> m_matlabSimulator; ///< Matlab internal simulator.
 #endif
   BulletModel* m_bulletModel{nullptr};            ///< The bullet simulation model.
+
+#ifdef PPL_USE_KDL
+  std::unique_ptr<KDLModel> m_kdlModel;
+#endif
 
   std::unique_ptr<RobotCommandQueue> m_hardware;    ///< Hardware command queue.
   std::unique_ptr<StateEstimator> m_stateEstimator; ///< The localization object.
@@ -273,6 +278,10 @@ class Robot final {
     /// matlab-based steerable needle. Always returns null when compiled without
     /// matlab support.
     MatlabMicroSimulator* GetMatlabMicroSimulator() noexcept;
+#endif
+
+#ifdef PPL_USE_KDL
+    KDLModel* GetKDLModel() noexcept;
 #endif
 
     ///@}
