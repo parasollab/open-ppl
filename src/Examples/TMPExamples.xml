@@ -95,6 +95,14 @@
     </MapEvaluators>
 
     <MPStrategies>
+      <BasicRRTStrategy label="RRT" debug="false"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5">
+        <!--Evaluator label="Query"/-->
+      </BasicRRTStrategy>
+      
       <AdaptiveRRT label="AdaptiveRRT" debug="true"
         querySampler="UniformRandom" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
