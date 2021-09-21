@@ -57,10 +57,6 @@ class LazyQueryTest : virtual public LazyQuery<MPTraits>,
     /// invalidated properly for a single robot
     void SingleSetup();
 
-    /// Construct a roadmap to test that edges and nodes get
-    /// invalidated properly for a group or robots
-    // void GroupSetup();
-
     ///@}
 
     ///@name Helper Members
