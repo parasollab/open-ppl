@@ -50,6 +50,7 @@
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -140,7 +141,8 @@ struct MPTraits {
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
     AdaptiveRRT<MPTraits>,
-    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>,
+    ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 
