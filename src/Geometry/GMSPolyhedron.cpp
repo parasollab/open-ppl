@@ -1,6 +1,7 @@
 #include "GMSPolyhedron.h"
 
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/MPUtils.h"
@@ -8,7 +9,7 @@
 #include "PQP.h"
 #include "RAPID.H"
 
-//#include "MovieBYULoader.h"
+#include "MovieBYULoader.h"
 #include "ModelFactory.h"
 #include "ObjLoader.h"
 
@@ -53,6 +54,7 @@ GMSPolyhedron(GMSPolyhedron&& _p) :
     m_area(_p.m_area),
     m_maxRadius(_p.m_maxRadius),
     m_minRadius(_p.m_minRadius),
+    m_rapidModel(std::move(_p.m_rapidModel)),
     m_pqpModel(std::move(_p.m_pqpModel)),
     m_insidePoint(std::move(_p.m_insidePoint))
 {
@@ -131,6 +133,7 @@ operator=(GMSPolyhedron&& _p) {
   m_minRadius = _p.m_minRadius;
   m_centroid = std::move(_p.m_centroid);
   m_centroidCached = _p.m_centroidCached;
+  m_rapidModel = std::move(_p.m_rapidModel);
   m_pqpModel = std::move(_p.m_pqpModel);
   m_insidePoint = std::move(_p.m_insidePoint);
 
@@ -173,6 +176,7 @@ operator*=(const Transformation& _t) {
   }
 
   // Trigger rebuild of CD models.
+  m_rapidModel.release();
   m_pqpModel.release();
   m_centroidCached = false;
 
@@ -187,6 +191,7 @@ Invert() {
     facet.Reverse();
 
   // Trigger rebuild of CD models to get the normals facing the right way.
+  m_rapidModel.release();
   m_pqpModel.release();
   ComputeInsidePoint();
 }
@@ -401,7 +406,7 @@ LoadFromIModel(IModel* _imodel, COMAdjust _comAdjust) {
 }
 
 
-/*void
+void
 GMSPolyhedron::
 WriteBYU(ostream& _os) const {
   size_t numTri = m_polygonList.size();
@@ -414,7 +419,7 @@ WriteBYU(ostream& _os) const {
       _os << *i + 1 << " ";
     _os << "-" << (*--p.end()) + 1 << endl;
   }
-}*/
+}
 
 void
 GMSPolyhedron::
@@ -736,6 +741,15 @@ UpdateCGALPoints() {
 }
 
 /*------------------------ Collision Detection Helpers -----------------------*/
+
+RAPID_model*
+GMSPolyhedron::
+GetRapidModel() const noexcept {
+  if(!m_rapidModel)
+    m_rapidModel.reset(Rapid::Build(*this));
+  return m_rapidModel.get();
+}
+
 
 PQP_Model*
 GMSPolyhedron::
