@@ -129,34 +129,6 @@ GroupCfgValidityBounding() {
   this->GetMPLibrary()->SetGroupTask(nullptr);
 
   std::vector<std::pair<bool,CfgType>> output;
-/*
-  // Place first robot at position [15, -5, 0, 0, 0, 0] (assume it's open).
-  CfgType cfg1(robot);
-
-  cfg1[0] = 15;
-  cfg1[1] = -5;
-  cfg1[2] = 0;
-  cfg1[3] = 0;
-  cfg1[4] = 0;
-  cfg1[5] = 0;
-
-  bool valid = this->IsValid(cfg1,"Test"); //should be true
-  output.push_back(std::make_pair(valid,cfg1));
-
-  //Place second robot at position [15, -3,5, 0, 0, 0, 0].
-  CfgType cfg2(robot);
-
-  cfg2[0] = 15;
-  cfg2[1] = -3.5;
-  cfg2[2] = 0;
-  cfg2[3] = 0;
-  cfg2[4] = 0;
-  cfg2[5] = 0;
-
-  bool valid = this->IsValid(cfg2,"Test"); //should be false
-  output.push_back(std::make_pair(valid,cfg2));
-  */
-
   return output;
 }
 

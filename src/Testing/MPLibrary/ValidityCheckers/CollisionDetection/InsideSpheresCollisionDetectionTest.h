@@ -44,7 +44,6 @@ class InsideSpheresCollisionDetectionTest :  public InsideSpheres,
         const GMSPolyhedron& _polyhedron2, const mathtool::Transformation& _t2,
         CDInfo& _cdInfo) override;
     ///@}
-    //using AlwaysTrueValidity<PTraits>::m_name;
 
 };
 
