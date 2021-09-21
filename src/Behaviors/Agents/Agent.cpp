@@ -26,7 +26,7 @@ Agent(Robot* const _r) : m_robot(_r) { }
 Agent::
 Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) {
 
-  for(auto& child : _node) {
+	for(auto& child : _node) {
     if(child.Name() == "StepFunction") {
       m_stepFunction = StepFunction::Factory(this,child);
     }
@@ -41,10 +41,7 @@ Agent(Robot* const _r, const Agent& _a)
 { }
 
 Agent::
-~Agent() {
-  //if(m_communicationThread.joinable())
-  //  m_communicationThread.join();
-}
+~Agent() { }
 
 /*----------------------------- Accessors ------------------------------------*/
 

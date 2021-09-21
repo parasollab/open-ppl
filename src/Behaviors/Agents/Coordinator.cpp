@@ -10,6 +10,8 @@
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 
 #include "Simulator/Simulation.h"
@@ -21,6 +23,9 @@
   #include "Traits/TestTraits.h"
 #endif
 
+#include "TMPLibrary/Solution/TaskSolution.h"
+
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/Solution/TaskSolution.h"
 
 #include "sandbox/gui/main_window.h"
@@ -253,7 +258,7 @@ InitializeAgents() {
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
   }
-  for(auto agent : m_childAgents) {
+  for(auto agent : m_childAgents){
     agent->Initialize();
     agent->SetCoordinator(this);
   }

@@ -155,7 +155,8 @@ class Agent {
     /// Get the type of agent
     const std::string& GetCapability() const noexcept;
 
-    ///@}
+		///@}
+
   protected:
 
     /// Instruct the agent to enqueue a command for gathering sensor readings.

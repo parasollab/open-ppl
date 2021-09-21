@@ -8,6 +8,7 @@
 
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 
+#include "Simulator/BulletModel.h"
 #include "Simulator/Simulation.h"
 /*---------------------------------- Construction ----------------------------------*/
 
@@ -41,18 +42,6 @@ Clone(Robot* const _r) const {
 void
 ChildAgent::
 Initialize() {
-  // Set up control publishing
-  if(m_controlChannel.size() > 0) {
-   /* if(!m_communicator->GetPublisher(m_controlChannel))
-      throw RunTimeException(WHERE) << m_robot->GetLabel()
-                                    << " control channel not connected."
-                                    << std::endl;
-*/
-    //m_running = true;
-    //auto publish = [this](){this->PublishControls();};
-    //m_thread = std::thread(publish);
-  }
-
   PathFollowingAgent::Initialize();
 }
 
@@ -160,7 +149,8 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
 void
 ChildAgent::
 ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
-  Agent::ExecuteControlsSimulation(_c,_steps);
+	Agent::ExecuteControlsSimulation(_c,_steps);
+	return;
 }
 
 void

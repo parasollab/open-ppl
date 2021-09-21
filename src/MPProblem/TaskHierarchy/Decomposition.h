@@ -2,7 +2,6 @@
 #define PPL_DECOMPOSITION_H_
 
 #include "SemanticTask.h"
-#include "SubtaskFlow.h"
 
 class MPProblem;
 
@@ -120,9 +119,6 @@ class Decomposition {
 
     /// Flag indiciating if decomposition has been completed.
     bool m_complete{false};
-
-    /// Subtask flow containing dependency flows in tree.
-    std::unique_ptr<SubtaskFlow> m_subtaskFlow;
 
 		///@}
 };

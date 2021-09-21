@@ -1,8 +1,6 @@
 #include "URDFParser.h"
 #include "PMPLExceptions.h"
 
-#define URDF
-
 urdf::Model
 ParseURDF(const std::string _filename) {
   urdf::Model model;

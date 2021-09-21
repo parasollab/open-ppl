@@ -83,7 +83,6 @@ class ChildAgent : public PathFollowingAgent {
 
     virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) override;
 
-    ///@}
     ///@name Internal State
     ///@{
 

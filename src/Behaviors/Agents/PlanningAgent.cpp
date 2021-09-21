@@ -1,5 +1,7 @@
 #include "PlanningAgent.h"
 
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/HardwareInterfaces/RobotCommandQueue.h"
 #include "MPProblem/Robot/HardwareInterfaces/StateEstimator.h"
 #include "Simulator/BulletModel.h"

@@ -30,8 +30,11 @@ class TMPTools {
     void ParseXML(XMLNode& _node);
 
     ///@}
-
-  private:
+    
+	private:
+	
+		///@name Helpers
+		///@{
 
     ///@name Helpers
     ///@{

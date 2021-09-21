@@ -11,6 +11,10 @@
 
 #include "TMPLibrary/Solution/Plan.h"
 
+#include "MPLibrary/PMPL.h"
+
+#include "TMPLibrary/Solution/Plan.h"
+
 class TMPStrategyMethod;
 
 ////////////////////////////////////////////////////////////////////////////////
