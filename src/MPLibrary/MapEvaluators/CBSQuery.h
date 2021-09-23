@@ -200,7 +200,7 @@ operator()() {
   CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path> lowlevel(
       [this](CBSNodeType& _node, Robot* _robot) {
         auto path = this->SolveIndividualTask(_robot, _node.constraintMap);
-        if(!path)
+        if(!path or path->Cfgs().empty())
           return false;
         _node.solutionMap[_robot] = path;
         return true;
@@ -322,7 +322,7 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
 
   // If we failed to find a path, return an empty pointer.
   if(!success)
-    return {};
+    return nullptr;
 
   // Otherwise, return a copy of the robot's path from the solution object.
   Path* path = this->GetPath(_robot);

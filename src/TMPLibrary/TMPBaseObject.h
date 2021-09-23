@@ -1,14 +1,10 @@
 #ifndef PMPL_TMP_BASE_OBJECT_H_
 #define PMPL_TMP_BASE_OBJECT_H_
 
-//#include "MPLibrary/PMPL.h"
-//#include "MPProblem/MPProblem.h"
-//#include "TMPLibrary/TMPLibrary.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
-/*
 class TMPStrategyMethod;
 class PoIPlacementMethod;
 class TaskEvaluatorMethod;
@@ -17,7 +13,6 @@ class TaskAllocatorMethod;
 class StateGraph;
 template<typename TMPMethod> class TMPMethodSet;
 class TMPTools;
-*/
 
 template <typename C, typename W>
 class MPTraits;
@@ -50,7 +45,7 @@ class TMPBaseObject {
     ///@}
     ///@name Method Set Types
     ///@{
-  /*
+
     typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
     typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
     typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
@@ -68,7 +63,7 @@ class TMPBaseObject {
     typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
     typedef typename TaskAllocatorMethodSet::TMPMethodPointer   TaskAllocatorMethodPointer;
     typedef typename StateGraphSet::TMPMethodPointer            StateGraphPointer;
-   */
+   
     ///@name Method Pointer Types
     ///@{
 

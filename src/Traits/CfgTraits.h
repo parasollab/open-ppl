@@ -137,29 +137,20 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-<<<<<<< HEAD
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     QueryMethod<MPTraits>,
     TimeEvaluator<MPTraits>
-=======
-//    CBSQuery<MPTraits>
-    QueryMethod<MPTraits>
->>>>>>> 9161177adbac9337d3688b4cf3003e6ded2641ec
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
-<<<<<<< HEAD
     BasicRRTStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
-    GroupStrategyMethod<MPTraits>
-=======
-    AdaptiveRRT<MPTraits>,
-    BasicRRTStrategy<MPTraits>,
+    GroupStrategyMethod<MPTraits>,
     ValidationStrategy<MPTraits>
->>>>>>> 9161177adbac9337d3688b4cf3003e6ded2641ec
       > MPStrategyMethodList;
 };
 
