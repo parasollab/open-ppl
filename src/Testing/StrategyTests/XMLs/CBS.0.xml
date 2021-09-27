@@ -228,24 +228,24 @@
 
       <ValidationStrategy label="Test" target="CBSPRM" debug="true">
         <GoldStandard robot="boxy-0" type="roadmap"
-          filename="../Outputs/CBS.0.groupQuery.boxy-0.map"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-0.map"/>
         <GoldStandard robot="boxy-0" type="cfgpath"
-          filename="../Outputs/CBS.0.groupQuery.boxy-0.rdmp.path"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-0.rdmp.path"/>
 
         <GoldStandard robot="boxy-1" type="roadmap"
-          filename="../Outputs/CBS.0.groupQuery.boxy-1.map"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-1.map"/>
         <GoldStandard robot="boxy-1" type="cfgpath"
-          filename="../Outputs/CBS.0.groupQuery.boxy-1.rdmp.path"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-1.rdmp.path"/>
 
         <GoldStandard robot="boxy-2" type="roadmap"
-          filename="../Outputs/CBS.0.groupQuery.boxy-2.map"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-2.map"/>
         <GoldStandard robot="boxy-2" type="cfgpath"
-          filename="../Outputs/CBS.0.groupQuery.boxy-2.rdmp.path"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-2.rdmp.path"/>
 
         <GoldStandard robot="boxy-3" type="roadmap"
-          filename="../Outputs/CBS.0.groupQuery.boxy-3.map"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-3.map"/>
         <GoldStandard robot="boxy-3" type="cfgpath"
-          filename="../Outputs/CBS.0.groupQuery.boxy-3.rdmp.path"/>
+          filename="../Outputs/CBS.0.12345678.groupQuery.boxy-3.rdmp.path"/>
       </ValidationStrategy>
     </MPStrategies>
 
@@ -254,13 +254,11 @@
     </MPTools>
 
     <!-- The seed can be changed to generate different roadmaps and paths -->
-    <Solver mpStrategyLabel="CBSPRM" seed="12345678"
-      baseFilename="../Outputs/CBS.0" vizmoDebug="true"/>
+    <!-- Solver mpStrategyLabel="CBSPRM" seed="12345678"
+      baseFilename="../Outputs/CBS.0" vizmoDebug="true"/-->
 
-    <!-- HANNAH - The solver nodes need to be flipped to run it as a test. -->
-
-    <!--Solver mpStrategyLabel="Test" seed="12345678"
-      baseFilename="../Scratch/CBS.0"/-->
+    <Solver mpStrategyLabel="Test" seed="12345678"
+      baseFilename="../Scratch/CBS.0"/>
 
   </Library>
 </MotionPlanning>
