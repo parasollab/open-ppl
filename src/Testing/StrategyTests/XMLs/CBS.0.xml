@@ -248,7 +248,6 @@
           filename="../Outputs/CBS.0.groupQuery.boxy-3.rdmp.path"/>
       </ValidationStrategy>
     </MPStrategies>
-    </MPStrategies>
 
     <MPTools>
       <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="true"/>

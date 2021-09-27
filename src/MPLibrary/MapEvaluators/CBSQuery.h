@@ -202,9 +202,13 @@ operator()() {
         auto path = this->SolveIndividualTask(_robot, _node.constraintMap);
         if(!path or path->Cfgs().empty())
           return false;
-        _node.solutionMap[_robot] = path;
+
+        Path* pathCopy = new Path(path->GetRoadmap());
+        *pathCopy = *path;
+        _node.solutionMap[_robot] = pathCopy;
         return true;
       });
+
   CBSValidationFunction<Robot, Constraint, typename MPTraits::Path> validation(
       [this](CBSNodeType& _node) {
         auto robotConflict = this->FindConflict(_node.solutionMap);
@@ -253,7 +257,6 @@ operator()() {
             }
 
             return children;
-
       });
   CBSCostFunction<Robot, Constraint, typename MPTraits::Path> cost(
       [this](CBSNodeType& _node) {
