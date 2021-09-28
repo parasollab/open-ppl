@@ -795,9 +795,9 @@ FindMultiBodyInfo() {
 
 Transformation
 MultiBody::
-GenerateBaseTransformation(const std::vector<double>& _v) const {
-  const size_t pos = PosDOF(),
-               ori = OrientationDOF();
+GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri) const {
+  size_t pos = PosDOF();
+  const size_t ori = OrientationDOF();
 
   const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
 
@@ -805,7 +805,11 @@ GenerateBaseTransformation(const std::vector<double>& _v) const {
   if(ori == 1) {
     rotation.alpha() = _v[pos] * PI;     // about Z
   }
-  else if(ori == 3) {
+  else if(ori == 3 or _forceOri) {
+    if(_forceOri and pos == 0) {
+      pos = 3;
+    }
+      
     rotation.gamma() = _v[pos]     * PI; // about X is the third Euler angle
     rotation.beta()  = _v[pos + 1] * PI; // about Y is the second Euler angle
     rotation.alpha() = _v[pos + 2] * PI; // about Z is the first Euler angle

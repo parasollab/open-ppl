@@ -169,6 +169,11 @@ void
 Plan::
 Print() {
   for(auto sol : m_taskSolutions) {
+    if(!sol.first) {
+      std::cout << "Empty task saved in here. Bad. Fix." << std::endl;
+      continue;
+    }
+      
     sol.second->Print();
   }
 }

@@ -285,8 +285,9 @@ class MultiBody {
     /// TODO::Temporary move to public until base position can be pulled from gazebo
     /// Generate the transformation for the base body at some set of DOF values.
     /// @param _v The DOF values.
+    /// @param _forceOri Flag indiciating that the orientation should be set regardless of base type.
     /// @return The base body transformation at _v.
-    Transformation GenerateBaseTransformation(const std::vector<double>& _v)
+    Transformation GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri=false)
         const;
 
   private:

@@ -12,6 +12,6 @@ ReadURDF(const std::string& _filename, std::string _worldLink) {
   InitializePlanningSpaces();
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
   if(m_fixed) {
-    m_multibody->GetBase()->Configure(m_multibody->GenerateBaseTransformation(m_basePosition));
+    m_multibody->GetBase()->Configure(m_multibody->GenerateBaseTransformation(m_basePosition,true));
   }
 }

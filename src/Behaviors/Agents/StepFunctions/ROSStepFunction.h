@@ -53,6 +53,8 @@ class ROSStepFunction : public FollowPath {
 
     double m_time{1}; ///< Time duration to execute controls.
 
+    bool m_sim{true};
+
     ///@}
 };
 
