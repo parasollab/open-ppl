@@ -137,10 +137,6 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-<<<<<<< HEAD
-=======
-//    CBSQuery<MPTraits>
->>>>>>> 9161177adbac9337d3688b4cf3003e6ded2641ec
     QueryMethod<MPTraits>
       > MapEvaluatorMethodList;
 
