@@ -44,11 +44,14 @@
 //metric includes
 
 //map evaluator includes
+//#include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -134,13 +137,19 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+<<<<<<< HEAD
+=======
+//    CBSQuery<MPTraits>
+>>>>>>> 9161177adbac9337d3688b4cf3003e6ded2641ec
     QueryMethod<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>
+    AdaptiveRRT<MPTraits>,
+    BasicRRTStrategy<MPTraits>,
+    ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 

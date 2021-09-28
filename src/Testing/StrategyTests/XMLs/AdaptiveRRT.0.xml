@@ -5,10 +5,10 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="tmp_examples">
 
-    <Environment filename="3D/3d.env"
+    <Environment filename="../Envs/3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot">
+    <Robot label="boxy" filename="../Envs/3D/boxy.robot">
       <!--
       <Agent type="planning"/>
       -->
@@ -16,38 +16,14 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
-      <Agent type="coordinator" dmLabel="minkowski" debug="true">
-        <Member label="boxy"/>
-        <StepFunction type="defaultcoordinator" debug="true"/>
-      </Agent>
-    </Robot>
-
     <Task label="startLocation" robot="boxy">
       <StartConstraints>
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </GoalConstraints>
     </Task>
-
-    <Task label="coordinatorTask" robot="coordinator">
-      <StartConstraints>
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
-      </StartConstraints>
-    </Task>
-
-    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
-      <SemanticTask label="first">
-        <Task label="query1" robot="boxy">
-          <StartConstraints>
-            <CSpaceConstraint point="0 0 0 0 0 0"/>
-          </StartConstraints>
-
-          <GoalConstraints>
-            <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
-          </GoalConstraints>
-        </Task>
-      </SemanticTask>
-    </Decomposition>
 
   </Problem>
 
@@ -60,7 +36,6 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="bounding" method="BoundingSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
@@ -70,7 +45,7 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="bounding"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
     </Samplers>
 
     <LocalPlanners>
@@ -78,7 +53,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="bounding" maxDist="4." minDist=".01"/>
+        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
@@ -96,14 +71,6 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicRRTStrategy label="RRT" debug="false"
-        querySampler="UniformRandom" samplerLabel="UniformRandom"
-        nfLabel="Nearest" extenderLabel="BERO"
-        growGoals="false" growthFocus="0.01" m="1"
-        goalDmLabel="minkowski" goalThreshold="5">
-        <!--Evaluator label="Query"/-->
-      </BasicRRTStrategy>
-      
       <AdaptiveRRT label="AdaptiveRRT" debug="true"
         querySampler="UniformRandom" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
@@ -117,6 +84,11 @@
         <Evaluator label="QueryMethod"/>
       </AdaptiveRRT>
 
+
+      <ValidationStrategy label="Test" target="AdaptiveRRT" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/AdaptiveRRT.0.query1.map"/>
+      </ValidationStrategy>
     </MPStrategies>
 
     <MPTools>
@@ -124,36 +96,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="AdaptiveRRT" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="Test" seed="0"
+      baseFilename="../Scratch/AdaptiveRRT" vizmoDebug="true"/>
 
   </Library>
-
-  <TMPLibrary>
-    <TMPStrategies>
-      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
-    </TMPStrategies>
-
-    <PoIPlacementMethods>
-    </PoIPlacementMethods>
-
-    <TaskEvaluators>
-      <SimpleMotionEvaluator label="motionEval"/>
-    </TaskEvaluators>
-
-    <TaskDecomposers>
-    </TaskDecomposers>
-
-    <TaskAllocators>
-    </TaskAllocators>
-
-    <StateGraphs>
-    </StateGraphs>
-
-    <TMPTools>
-    </TMPTools>
-
-    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
-  </TMPLibrary>
-
 </MotionPlanning>

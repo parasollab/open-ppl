@@ -35,4 +35,15 @@ IsInsideObstacle(const mathtool::Vector3d& _pt, const GMSPolyhedron&,
   throw NotImplementedException(WHERE);
 }
 
+bool
+CollisionDetectionMethod::
+IsInCollision(
+    const GMSPolyhedron& _polyhedron1,
+    const mathtool::Transformation& _transformation1,
+    const GMSPolyhedron& _polyhedron2,
+    const mathtool::Transformation& _transformation2,
+    CDInfo& _cdInfo){
+  throw NotImplementedException(WHERE);
+}
+
 /*----------------------------------------------------------------------------*/
