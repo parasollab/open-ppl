@@ -38,7 +38,9 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
   }
 
   m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                "/pos_joint_traj_controller/command",
+                commandTopic,
+                //"/arm_controller/command",
+                //"/scaled_pos_joint_traj_controller/command",
                 //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                 10);
 
@@ -82,7 +84,8 @@ ReachedWaypoint(const Cfg& _waypoint) {
   // Convert joint angles to pmpl representation
   std::vector<double> jointStates;
   for(auto d : js) {
-    auto jv = d/(2*PI);
+    //auto jv = d/(2*PI);
+    auto jv = d/(PI);
     //Hack to deal with nonsense ros joint status values that forget about joint limits
     if(jv > 1)
       jv = -2 + jv;
@@ -116,6 +119,11 @@ void
 ROSStepFunction::
 MoveToWaypoint(const Cfg& _waypoint, double _dt) {
   std::cout << "Moving to waypoint: " << _waypoint.PrettyPrint() << std::endl;
+
+  //ROS HACK BC WRIST 3 IS NOISY AND DUMB
+  auto hack = _waypoint;
+  hack[5] = 0;
+  
   MoveArm(_waypoint.GetData(), _dt);
 }
     
@@ -145,7 +153,8 @@ MoveArm(std::vector<double> _goal, double _dt) {
 
     //msg.points[0].positions = _goal;
     for(auto d : _goal) {
-      msg.points[0].positions.push_back(d*2*PI);
+      //msg.points[0].positions.push_back(d*2*PI);
+      msg.points[0].positions.push_back(d*PI);
     }
 
     msg.points[0].time_from_start = ros::Duration(m_time);

@@ -152,8 +152,12 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
     auto limits = _joint->limits;
 
     for(size_t i = 0; i < numRange; ++i) {
-      m_jointRange[i].min = limits->lower/PI;
-      m_jointRange[i].max = limits->upper/PI;
+      //m_jointRange[i].min = limits->lower/PI;
+      //m_jointRange[i].max = limits->upper/PI;
+      double lower = limits->lower/PI;
+      double upper = limits->upper/PI;
+      m_jointRange[i].min = std::max(-1.0,lower);
+      m_jointRange[i].max = std::min(1.0,upper);
       m_jointValues.push_back(0);
     }
   }
