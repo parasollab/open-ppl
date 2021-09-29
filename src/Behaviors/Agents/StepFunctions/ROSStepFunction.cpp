@@ -29,20 +29,21 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   ros::NodeHandle nh;
 
-  std::string commandTopic;
   if(m_sim) {
-    std::string commandTopic = "/pos_joint_traj_controller/command"; 
-  }
-  else {
-    std::string commandTopic = "/scaled_pos_joint_traj_controller/command";
-  }
-
-  m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                commandTopic,
+    m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
                 //"/arm_controller/command",
-                //"/scaled_pos_joint_traj_controller/command",
+                "/pos_joint_traj_controller/command",
                 //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                 10);
+  }
+  else {
+    m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
+                //"/arm_controller/command",
+                "/scaled_pos_joint_traj_controller/command",
+                //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
+                10);
+  }
+
 
   JointStateCallback callback = [this](const sensor_msgs::JointState _msg) {
     this->Callback(_msg);
