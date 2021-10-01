@@ -60,7 +60,7 @@ InverseKinematics(std::vector<double> _pos, std::vector<std::vector<double>> _or
   KDL::ChainIkSolverVel_pinv iksolver1v(chain);
 
   // inverse kinematics solver
-  KDL::ChainIkSolverPos_NR iksolverpos(chain,fksolver1,iksolver1v,10000000,
+  KDL::ChainIkSolverPos_NR iksolverpos(chain,fksolver1,iksolver1v,10000,
                                     std::numeric_limits<double>::epsilon());
 
   // jntarrays
@@ -90,13 +90,17 @@ InverseKinematics(std::vector<double> _pos, std::vector<std::vector<double>> _or
   auto retString = iksolverpos.strError(ret2);
 
   std::cout << retString << std::endl;
+
+  for(size_t i = 0; i < 
  
+  // TODO::Sort these alphabetically bc :(
   std::vector<double> dofs;
   for(size_t i = 0; i < chain.getNrOfJoints(); i++) {
+    // Convert to pmpl joint values and add to dof
+    //dofs.push_back(q(i)/KDL::PI);
     dofs.push_back(q(i));
   }
 
-  // TODO:: Convert to pmpl joint values;
  
   return dofs;
 }

@@ -160,6 +160,7 @@ MoveArm(std::vector<double> _goal, double _dt) {
 
     msg.points[0].time_from_start = ros::Duration(m_time);
 
+    /*
     ROS_INFO_STREAM("Sending command:\n" << msg);
     m_armPub.publish(msg);
     rate.sleep();
@@ -167,6 +168,7 @@ MoveArm(std::vector<double> _goal, double _dt) {
     rate.sleep();
     m_armPub.publish(msg);
     rate.sleep();
+    */
   }
 }
    

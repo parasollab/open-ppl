@@ -15,6 +15,8 @@
 #include "Utilities/PMPLExceptions.h"
 
 
+#include "MPProblem/Robot/KDLModel.h"
+
 int
 main(int _argc, char** _argv) {
   // Assert that this platform supports an infinity for doubles.
@@ -31,6 +33,15 @@ main(int _argc, char** _argv) {
 
   // Parse the Problem node into an MPProblem object.
   MPProblem* problem = new MPProblem(xmlFile);
+
+  auto robot = problem->GetRobots()[0].get();
+  std::vector<double> pos = {0.819, 0.23, 0.0787};
+  std::vector<double> ori1 = {1,   0.,   0.};
+  std::vector<double> ori2 = {0.0,  1,   0.};
+  std::vector<double> ori3 = {0.0, 0.0,   1};
+  std::vector<std::vector<double>> ori = {ori1,ori2,ori3};
+
+  auto dof = robot->GetKDLModel()->InverseKinematics(pos,ori);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibrary* ppl = new TMPLibrary(xmlFile);
