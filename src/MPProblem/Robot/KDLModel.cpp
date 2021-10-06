@@ -15,6 +15,8 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/tree.hpp>
 
+#include <trac_ik/trac_ik.hpp>
+
 /*----------------------- Construction -----------------------*/
 
 KDLModel::
@@ -57,51 +59,102 @@ InverseKinematics(std::vector<double> _pos, std::vector<std::vector<double>> _or
   KDL::ChainFkSolverPos_recursive fksolver1(chain);
 
   // inverse velocity solver
-  KDL::ChainIkSolverVel_pinv iksolver1v(chain);
+  KDL::ChainIkSolverVel_pinv iksolver1v(chain, 0.0001, 1000);
 
   // inverse kinematics solver
   KDL::ChainIkSolverPos_NR iksolverpos(chain,fksolver1,iksolver1v,10000,
                                     std::numeric_limits<double>::epsilon());
 
-  // jntarrays
-  KDL::JntArray q(chain.getNrOfJoints());
-  KDL::JntArray qInit(chain.getNrOfJoints());
 
-  // destination frame
-  KDL::Vector vector(_pos[0],_pos[1],_pos.size() == 3 ? _pos[2] : 0);
+  size_t maxAttempts = 10000;
 
-  std::vector<KDL::Vector> rotationValues;
-  for(size_t i = 0; i < 3; i++) {
-    KDL::Vector vec(
-      _ori[i][0],
-      _ori[i][1],
-      _ori[i][2]
-    );
+  for(size_t i = 0; i < maxAttempts; i++) {
+    // jntarrays
+    KDL::JntArray q(chain.getNrOfJoints());
+    KDL::JntArray qInit(chain.getNrOfJoints());
 
-    rotationValues.push_back(vec);
+
+    for(size_t i = 0; i < chain.getNrOfJoints(); i++) {
+      qInit(i) = (DRand() * 360) - 180;
+    }
+  
+
+    // Compute current tcp position
+    KDL::Frame tcp_pos_start;
+    fksolver1.JntToCart(qInit,tcp_pos_start);
+
+
+    // destination frame
+    KDL::Vector vector(_pos[0],_pos[1],_pos.size() == 3 ? _pos[2] : 0);
+
+    std::vector<KDL::Vector> rotationValues;
+    for(size_t i = 0; i < 3; i++) {
+      KDL::Vector vec(
+          _ori[i][0],
+          _ori[i][1],
+          _ori[i][2]
+          );
+
+      rotationValues.push_back(vec);
+    }
+
+    KDL::Rotation rotation(rotationValues[0], rotationValues[1], rotationValues[2]);
+
+    KDL::Frame fDestination(rotation,vector);
+
+    auto ret2 = iksolverpos.CartToJnt(qInit,fDestination,q);;
+
+    auto retString = iksolverpos.strError(ret2);
+
+    std::cout << retString << std::endl;
+
+    if(ret2 < 0)
+      continue;
+
+    // TODO::Sort these alphabetically bc :(
+    std::vector<double> dofs;
+    for(size_t i = 0; i < chain.getNrOfJoints(); i++) {
+      // Convert to pmpl joint values and add to dof
+      //dofs.push_back(q(i)/KDL::PI);
+      dofs.push_back(q(i));
+    }
+
+    KDL::Frame tcp_pos_end;
+    fksolver1.JntToCart(q,tcp_pos_end);
+
+    return dofs;
   }
 
-  KDL::Rotation rotation(rotationValues[0], rotationValues[1], rotationValues[2]);
+  return {};
 
-  KDL::Frame fDestination(rotation,vector);
+/*
+  KDL::JntArray lowerJointLimits(chain.getNrOfJoints());
+  KDL::JntArray upperJointLimits(chain.getNrOfJoints());
 
-  auto ret2 = iksolverpos.CartToJnt(qInit,fDestination,q);;
+  
+  for(size_t i = 0; i < chain.getNrOfJoints(); i++) {
+    lowerJointLimits(i) = -360;
+    upperJointLimits(i) = 360;
+  }
 
-  auto retString = iksolverpos.strError(ret2);
+  double timeout = 5.; // seconds
+  double error = 1e-5;
+  TRAC_IK::SolveType type=TRAC_IK::Speed;
 
-  std::cout << retString << std::endl;
+  TRAC_IK::TRAC_IK ik_solver(chain, lowerJointLimits, upperJointLimits, timeout, error, type);  
 
-  for(size_t i = 0; i < 
- 
-  // TODO::Sort these alphabetically bc :(
-  std::vector<double> dofs;
+  int rc = ik_solver.CartToJnt(qInit, fDestination, q);
+
+  std::cout << rc << std::endl;
+
+  std::vector<double> dofs2;
   for(size_t i = 0; i < chain.getNrOfJoints(); i++) {
     // Convert to pmpl joint values and add to dof
     //dofs.push_back(q(i)/KDL::PI);
-    dofs.push_back(q(i));
+    dofs2.push_back(q(i));
   }
 
- 
-  return dofs;
+  return dofs2;
+  */
 }
 

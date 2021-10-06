@@ -15,7 +15,7 @@
 #include "Utilities/PMPLExceptions.h"
 
 
-#include "MPProblem/Robot/KDLModel.h"
+#include "MPProblem/Robot/Kinematics/ur_kin.h"
 
 int
 main(int _argc, char** _argv) {
@@ -34,14 +34,40 @@ main(int _argc, char** _argv) {
   // Parse the Problem node into an MPProblem object.
   MPProblem* problem = new MPProblem(xmlFile);
 
-  auto robot = problem->GetRobots()[0].get();
-  std::vector<double> pos = {0.819, 0.23, 0.0787};
-  std::vector<double> ori1 = {1,   0.,   0.};
-  std::vector<double> ori2 = {0.0,  1,   0.};
-  std::vector<double> ori3 = {0.0, 0.0,   1};
-  std::vector<std::vector<double>> ori = {ori1,ori2,ori3};
+  double* T = new double[16];
+  double q_sols[8*6];
+  printf("James's test\n");
+  // Point
+  T[3] = .7;
+  T[7] = 0;
+  T[11] = .2;
 
-  auto dof = robot->GetKDLModel()->InverseKinematics(pos,ori);
+  // Orientation matrix
+  T[0] = 0;
+  T[1] = 0;
+  T[2] = 1;
+
+  T[4] = 0;
+  T[5] = 1;
+  T[6] = 0;
+
+  T[8] = -1;
+  T[9] = 0;
+  T[10] = 0;
+
+  T[12] = 0;
+  T[13] = 0;
+  T[14] = 0;
+  T[15] = 1;
+  for(int i=0;i<4;i++) {
+    for(int j=i*4;j<(i+1)*4;j++)
+      printf("%1.3f ", T[j]);
+    printf("\n");
+  }
+  auto num_sols = ur_kinematics::inverse(T, q_sols);
+  for(int i=0;i<num_sols;i++) 
+    printf("%1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n", 
+       q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibrary* ppl = new TMPLibrary(xmlFile);
