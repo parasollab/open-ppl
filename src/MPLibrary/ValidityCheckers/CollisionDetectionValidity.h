@@ -11,6 +11,8 @@
 
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
 
 #include "nonstd/io.h"
 
@@ -217,6 +219,8 @@ CollisionDetectionValidity(XMLNode& _node)
     m_cdMethod.reset(new PQP());
   else if(cdLabel == "PQP_SOLID")
     m_cdMethod.reset(new PQPSolid());
+  else if(cdLabel == "RAPID")
+    m_cdMethod.reset(new Rapid());
   else
     throw ParseException(_node.Where()) << "Unknown collision detection library '"
                                         << cdLabel << "' requested.";

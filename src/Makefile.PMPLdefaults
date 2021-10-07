@@ -273,7 +273,7 @@ endif
 
 QT_MOC  := $(shell find $(QT_MOC_BASE)/moc-qt4 2> /dev/null)
 
-ifeq ($(platform), Ubuntu) 
+ifeq ($(platform), Ubuntu)
   QT_MOC_BASE = /usr/share/qt4/bin
   QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
   ifndef QT_MOC
@@ -438,7 +438,7 @@ ifeq ($(platform), Ubuntu)
   URDF_INCL := -I$(ROS_DIR)/include -I/usr/include/eigen3
   #URDF_LIBS := -L/$(ROS_DIR)/lib -lorocos-kdl -lkdl_parser
   URDF_LIBS := -L/$(ROS_DIR)/lib $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so -lorocos-kdl -lkdl_parser $(ROS_DIR)/lib/libtrac_ik.so
-  URDF_DEFS := -DPPL_USE_KDL -DPPL_USE_URDF -DIKFAST_NO_MAIN 
+  URDF_DEFS := -DPPL_USE_KDL -DPPL_USE_URDF -DIKFAST_NO_MAIN
   URDF_SRCS := \
     MPProblem/Robot/KDLModel.cpp \
     MPProblem/Robot/Kinematics/ur_kin.cpp \
@@ -551,8 +551,8 @@ endif
 ################################################################################
 #TEST_DEF  :=
 #tests: TEST_DEF
-TEST_INCL := 
-TEST_LIBS := 
+TEST_INCL :=
+TEST_LIBS :=
 TEST_SRCS := \
   tests_main.cpp \
   Testing/MPProblem/MPProblemTests.cpp \
@@ -613,6 +613,7 @@ PMPL_SRCS := \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \
@@ -645,4 +646,4 @@ PMPL_SRCS := \
   $(MATLAB_SRCS)
   #Behaviors/Controllers/PIDFeedback.cpp \
 
-  
+

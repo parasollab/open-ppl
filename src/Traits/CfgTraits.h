@@ -14,7 +14,6 @@
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
-#include "ConfigurationSpace/GeneralRoadmapGraph.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
