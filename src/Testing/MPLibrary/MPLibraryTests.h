@@ -1,5 +1,5 @@
-#ifndef PPL_M_P_LIBRARY_TEST_H_
-#define PPL_M_P_LIBRARY_TEST_H_
+#ifndef PPL_BOUNDINGSPHERESCOLLISIONDETECTION_TEST_H_
+#define PPL_BOUNDINGSPHERESCOLLISIONDETECTION_TEST_H_
 
 #include "MPLibrary/MPLibrary.h"
 #include "Testing/TestBaseObject.h"
@@ -14,6 +14,12 @@
 #include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
 #include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
+
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethodTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+
+
 
 template <typename MPTraits>
 class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
@@ -60,15 +66,20 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     ///@}
 
   private:
-   
+
     ///@name Helper Functions
     ///@{
 
     void InitializeMethodSets();
 
+    void InitializeCollisionDetectionMethodTests();
+
     template <typename MethodTypeList>
-    void RunMethodSetTests(const MethodTypeList& _mtl,size_t& _passed, 
+    void RunMethodSetTests(const MethodTypeList& _mtl,size_t& _passed,
                            size_t& failed, size_t& _total);
+
+    void RunCollisionDetectionMethodTests(size_t& _passed, size_t& failed,
+                                          size_t& _total);
 
     ///@name XML Helpers
     ///@{
@@ -77,11 +88,12 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
 
     bool ParseChild(XMLNode& _node);
 
-    ///@} 
+    ///@}
     ///@name Internal State
     ///@{
 
     bool verbose{true};
+    std::map<std::string, CollisionDetectionMethodTest*> m_collisionDetectionTests;
 
     ///@}
     ///@name Method Sets
@@ -130,11 +142,16 @@ MPLibraryTests<MPTraits>::
 RunTest() {
 
   // Init mpsolution for stat purposes (and avoiding seg faults)
-  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobots()[0].get())); 
+  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobots()[0].get()));
 
   size_t passed = 0;
   size_t failed = 0;
   size_t total = 0;
+
+  // Collision detection tests
+  InitializeCollisionDetectionMethodTests();
+  RunCollisionDetectionMethodTests(passed, failed, total);
+
 
   // Distance metric tests
   RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
@@ -166,8 +183,9 @@ RunTest() {
   // Map evaluator tests
   RunMethodSetTests(*this->m_mapEvaluatorTests,passed,failed,total);
 
+
   bool success = (failed == 0);
-  std::string message = "COMPLETED TESTS" 
+  std::string message = "COMPLETED TESTS"
                         "\nTotal: "  + std::to_string(total)  +
                         "\nPassed: " + std::to_string(passed) +
                         "\nFailed: " + std::to_string(failed) +
@@ -205,11 +223,54 @@ InitializeMethodSets() {
       typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
 }
 
+template<typename MPTraits>
+void
+MPLibraryTests<MPTraits>::
+InitializeCollisionDetectionMethodTests() {
+  // TODO: add addition collision detection methods here
+  BoundingSpheresCollisionDetectionTest* boundingSpheres = nullptr;
+  boundingSpheres = new BoundingSpheresCollisionDetectionTest(this->GetMPProblem());
+  m_collisionDetectionTests["Bounding Spheres"] = boundingSpheres;
+
+  InsideSpheresCollisionDetectionTest* insideSpheres = nullptr;
+  insideSpheres = new InsideSpheresCollisionDetectionTest(this->GetMPProblem());
+  m_collisionDetectionTests["Inside Spheres"] = insideSpheres;
+
+}
+
+template <typename MPTraits>
+void
+MPLibraryTests<MPTraits>::
+RunCollisionDetectionMethodTests(size_t& _passed, size_t& _failed, size_t& _total) {
+  for (auto method : m_collisionDetectionTests) {
+    std::cout << "Running test for " << method.first << "..." << std::endl;
+
+    auto test = dynamic_cast<TestBaseObject*>(method.second);
+    auto result = test->RunTest();
+
+    _total++;
+
+    if(result.first) {
+      std::cout << "PASSED!" << std::endl;
+      _passed++;
+    }
+    else {
+      std::cout << "FAILED :(" << std::endl;
+      _failed++;
+    }
+
+    if(verbose) {
+      std::cout << result.second << std::endl;
+    }
+  }
+}
+
+
 template <typename MPTraits>
 template <typename MethodTypeList>
 void
 MPLibraryTests<MPTraits>::
-RunMethodSetTests(const MethodTypeList& _mtl, size_t& _passed, 
+RunMethodSetTests(const MethodTypeList& _mtl, size_t& _passed,
                   size_t& _failed, size_t& _total) {
 
   for(auto iter = _mtl.begin(); iter != _mtl.end(); iter++) {
@@ -232,7 +293,7 @@ RunMethodSetTests(const MethodTypeList& _mtl, size_t& _passed,
 
     if(verbose) {
       std::cout << result.second << std::endl;
-    }    
+    }
   }
 }
 

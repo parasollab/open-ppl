@@ -61,6 +61,7 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
+      <CollisionDetection label="bounding" method="BoundingSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="rapid" method="RAPID"/>
@@ -73,7 +74,7 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="bounding"/>
     </Samplers>
 
     <LocalPlanners>
@@ -84,7 +85,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
+        vcLabel="bounding" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
@@ -99,6 +100,7 @@
     </Metrics>
 
     <MapEvaluators>
+<<<<<<< HEAD
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="false">
@@ -107,10 +109,13 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
+=======
+      <QueryMethod label="QueryMethod" debug="false"
+        graphSearchAlg="dijkstras" />
+>>>>>>> 9161177adbac9337d3688b4cf3003e6ded2641ec
     </MapEvaluators>
 
     <MPStrategies>
-      <!-- Basic RRT-->
       <BasicRRTStrategy label="RRT" debug="false"
         querySampler="UniformRandom" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
@@ -118,6 +123,19 @@
         goalDmLabel="minkowski" goalThreshold="5">
         <!--Evaluator label="Query"/-->
       </BasicRRTStrategy>
+      
+      <AdaptiveRRT label="AdaptiveRRT" debug="true"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 cost="reward">
+
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+        </GrowthSet>
+        <Evaluator label="QueryMethod"/>
+      </AdaptiveRRT>
 
       <!-- LazyPRM -->
       <BasicPRM label="LazyPRM" debug="true">
@@ -132,11 +150,16 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
+<<<<<<< HEAD
     <!-- <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> -->
 
     <Solver mpStrategyLabel="LazyPRM" seed="0"
       baseFilename="LazyPRM" vizmoDebug="true"/>
+=======
+    <Solver mpStrategyLabel="AdaptiveRRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
+>>>>>>> 9161177adbac9337d3688b4cf3003e6ded2641ec
 
   </Library>
 

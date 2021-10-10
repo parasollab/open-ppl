@@ -21,7 +21,8 @@
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
-
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
 //neighborhood finder includes
 
 //sampler includes

@@ -180,7 +180,6 @@ class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
 };
 
 /*----------------------------- Construction ---------------------------------*/
-
 template <typename MPTraits>
 QueryMethod<MPTraits>::
 QueryMethod() : MapEvaluatorMethod<MPTraits>() {
