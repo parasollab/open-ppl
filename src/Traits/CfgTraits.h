@@ -43,7 +43,7 @@
 //metric includes
 
 //map evaluator includes
-//#include "MPLibrary/MapEvaluators/CBSQuery.h"
+#include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 
 //mp strategies includes
@@ -133,7 +133,7 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-//    CBSQuery<MPTraits>
+    LazyQuery<MPTraits>,
     QueryMethod<MPTraits>
       > MapEvaluatorMethodList;
 

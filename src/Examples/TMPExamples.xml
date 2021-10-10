@@ -70,7 +70,7 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="bounding"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
     </Samplers>
 
     <LocalPlanners>
@@ -78,7 +78,7 @@
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="bounding" maxDist="4." minDist=".01"/>
+        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
