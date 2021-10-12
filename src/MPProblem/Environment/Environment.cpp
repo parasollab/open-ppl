@@ -553,6 +553,8 @@ ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots) {
   for(const auto& robot : _robots) {
     const auto multibody = robot->GetMultiBody();
     for(const auto& body : multibody->GetBodies()) {
+      if(body.IsVirtual())
+        continue;
       const auto b = body.GetPolyhedron().ComputeBoundingBox();
 
       for(size_t i = 0; i < dimensions; ++i)

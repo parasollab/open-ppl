@@ -260,6 +260,8 @@ operator=(const Body& _other) {
   m_color         = _other.m_color;
   m_textureFile   = _other.m_textureFile;
 
+  m_virtual = _other.m_virtual;
+
   return *this;
 }
 
@@ -466,6 +468,12 @@ GMSPolyhedron
 Body::
 GetWorldBoundingBox() const {
   return GetWorldTransformation() * m_boundingBox;
+}
+
+bool
+Body::
+IsVirtual() const {
+  return m_virtual;
 }
 
 /*---------------------------- Transform Functions ---------------------------*/

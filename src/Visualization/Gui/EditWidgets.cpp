@@ -154,6 +154,10 @@ EditJointLimitsWidget(QWidget* const _parent, const std::string& _label,
       break;
     case Connection::JointType::Revolute:
       SetValue(_connection.GetJointRange(0));
+      break;
+    case Connection::JointType::Mimic:
+      throw RunTimeException(WHERE, "Cannot edit limits for mimicing joint.");
+      break;
   }
 
   // Create a layout for the slider text widgets.

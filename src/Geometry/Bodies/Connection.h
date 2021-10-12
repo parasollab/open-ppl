@@ -53,10 +53,11 @@ class Connection final {
 
     /// The supported connection types.
     enum class JointType {
-      Revolute,   ///< 1 DOF
-      Spherical,  ///< 2 DOF
-      NonActuated, ///< 0 DOF
-      Prismatic    ///< 1 DOF - Not yet supported
+      Revolute,     ///< 1 DOF
+      Spherical,    ///< 2 DOF
+      NonActuated,  ///< 0 DOF
+      Prismatic,    ///< 1 DOF - Not yet supported
+      Mimic         ///< 1 or 2 DOF
     };
 
     ///@}
@@ -144,6 +145,18 @@ class Connection final {
 
     /// Check if this is a non-actuated joint.
     bool IsNonActuated() const noexcept;
+
+    /// Check if this is a mimic joint.
+    bool IsMimic() const noexcept;
+
+    /// Get the joint that this one is mimicing
+    std::string GetMimicConnectionName() const noexcept;
+
+    /// Set the joint for this one to mimic
+    void SetMimicConnection(Connection* _mimic);
+
+    /// Get the joint that this one is mimicing
+    Connection* GetMimicConnection() const noexcept;
 
     /// Get a joint range.
     /// @param _i The range to get (0 normally, 1 for second spherical range).
@@ -240,6 +253,11 @@ class Connection final {
     JointType m_jointType;                     ///< Type of connection
     std::pair<size_t, size_t> m_bodyIndices;   ///< (previous body, next body)
     std::array<Range<double>, 2> m_jointRange; ///< The valid joint ranges.
+
+    std::string m_mimicConnectionName;
+    Connection* m_mimicConnection{nullptr};
+    double m_mimicMultiplier{1};
+    double m_mimicOffset{0};
 
     ///@}
 

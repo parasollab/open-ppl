@@ -210,8 +210,12 @@ EditStep() {
     for(size_t i = 0; i < this->m_drawables.size(); ++i) {
       auto d  = static_cast<DrawableMultiBody*>(this->m_drawables[i]);
       auto mb = d->GetMultiBody();
-      for(size_t j = 0; j < d->GetNumBodies(); ++j)
-        d->PushTransform(j, ToGLUtils(mb->GetBody(j)->GetWorldTransformation()));
+      for(size_t j = 0; j < d->GetNumBodies(); ++j) {
+        auto body = mb->GetBody(j);
+        if(body->IsVirtual())
+          continue;
+        d->PushTransform(j, ToGLUtils(body->GetWorldTransformation()));
+      }
     }
   }
 }

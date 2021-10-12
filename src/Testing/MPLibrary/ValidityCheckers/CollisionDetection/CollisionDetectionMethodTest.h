@@ -118,16 +118,20 @@ CheckCollision(const MultiBody* const _a, const MultiBody* const _b){
   CDInfo cdInfo;
   for (size_t i = 0; i < _a->GetNumBodies(); i++) {
     const Body* const b1 = _a->GetBody(i);
-      for (size_t j = 0; j < _b->GetNumBodies(); j++) {
-        const Body* const b2 = _b->GetBody(j);
-        auto collision = this->IsInCollision(b1->GetPolyhedron(),
-                                             b1->GetWorldTransformation(),
-                                             b2->GetPolyhedron(),
-                                             b2->GetWorldTransformation(),
-                                             cdInfo);
-        if (collision)
-          return true;
-      }
+    if(b1->IsVirtual())
+      continue;
+    for (size_t j = 0; j < _b->GetNumBodies(); j++) {
+      const Body* const b2 = _b->GetBody(j);
+      if(b2->IsVirtual())
+        continue;
+      auto collision = this->IsInCollision(b1->GetPolyhedron(),
+          b1->GetWorldTransformation(),
+          b2->GetPolyhedron(),
+          b2->GetWorldTransformation(),
+          cdInfo);
+      if (collision)
+        return true;
+    }
   }
   return false;
 }

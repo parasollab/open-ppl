@@ -159,6 +159,10 @@ operator=(const Connection& _other) {
     m_jointParamType             = _other.m_jointParamType;
     m_transformationToChildFrame = _other.m_transformationToChildFrame;
     m_jointAxis                  = _other.m_jointAxis;
+    m_mimicConnectionName        = _other.m_mimicConnectionName;
+    m_mimicConnection            = _other.m_mimicConnection;
+    m_mimicMultiplier            = _other.m_mimicMultiplier;
+    m_mimicOffset                = _other.m_mimicOffset;
   }
 
   return *this;
@@ -309,6 +313,29 @@ IsNonActuated() const noexcept {
   return m_jointType == JointType::NonActuated;
 }
 
+bool
+Connection::
+IsMimic() const noexcept {
+  return m_jointType == JointType::Mimic;
+}
+    
+std::string
+Connection::
+GetMimicConnectionName() const noexcept {
+  return m_mimicConnectionName;
+}
+
+void
+Connection::
+SetMimicConnection(Connection* _mimic) {
+  m_mimicConnection = _mimic;
+}
+
+Connection*
+Connection::
+GetMimicConnection() const noexcept {
+  return m_mimicConnection;
+}
 
 const Range<double>&
 Connection::
@@ -461,6 +488,14 @@ Connection::
 SetJointValues(std::vector<double> _values) {
 
   //TODO::Add check on the number of values
+
+  if(m_jointType == JointType::Mimic) {
+    m_jointValues = m_mimicConnection->GetJointValues();
+    for(size_t i = 0; i < _values.size(); i++) {
+      m_jointValues[i] = _values[i] * m_mimicMultiplier + m_mimicOffset;
+    }
+    return;
+  }
 
   switch(m_jointParamType) {
 

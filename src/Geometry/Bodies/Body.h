@@ -170,6 +170,8 @@ class Body {
     /// Compute the bounding box in world coordinates.
     GMSPolyhedron GetWorldBoundingBox() const;
 
+    bool IsVirtual() const;
+
     ///@}
     ///@name Transform Functions
     ///@{
@@ -357,6 +359,8 @@ class Body {
     std::vector<Connection*> m_adjacencyConnections;///< Adjacency Connections
 
     const Transformation& (Body::*m_transformFetcher)(void) const noexcept = nullptr;
+
+    bool m_virtual{false}; ///< Flag indicating that this body has no physical properties.
 
     ///@}
     ///@name Display Stuff

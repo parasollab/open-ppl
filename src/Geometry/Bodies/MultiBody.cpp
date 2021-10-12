@@ -170,6 +170,9 @@ InitializeDOFs(const Boundary* const _b) {
         m_dofInfo.emplace_back("Prismatic Joint " + label + " Angle 0",
                                DofType::Joint, joint->GetJointRange(0));
         break;
+      case Connection::JointType::Mimic:
+        //m_dofInfo.emplace_back("Mimic Joint " + label,Range<double>());
+        break; 
       case Connection::JointType::NonActuated:
         break;
     }
@@ -355,7 +358,8 @@ GetCurrentCfg() noexcept {
   // For each joint, copy its values.
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
-    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated
+       or joint->GetConnectionType() == Connection::JointType::Mimic)
       continue;
 
     const auto jointValues = joint->GetJointValues();
@@ -558,6 +562,8 @@ UpdateJointLimits() noexcept {
       case Connection::JointType::Prismatic:
         throw RunTimeException(WHERE) << "Prismatic joints not yet suported.";
         break;
+      case Connection::JointType::Mimic:
+        break;
       case Connection::JointType::NonActuated:
         break;
     }
@@ -592,11 +598,19 @@ Configure(const vector<double>& _v) {
     index = PosDOF() + OrientationDOF();
   }
 
+
   // Configure the links.
+  std::vector<Connection*> mimics;
+
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
+    // Skip mimic joint for now
+    else if(joint->GetConnectionType() == Connection::JointType::Mimic) {
+      mimics.push_back(joint.get());
+      continue;
+    }
 
     // Adjust the joint to reflect new configuration.
 /*    auto& dh = joint->GetDHParameters();
@@ -610,6 +624,10 @@ Configure(const vector<double>& _v) {
       values.push_back(_v[index++] * PI);
 
     joint->SetJointValues(values);
+  }
+
+  for(auto mimic : mimics) {
+    mimic->SetJointValues({});
   }
 
   // The base transform has been updated, now update the links.

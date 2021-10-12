@@ -503,7 +503,7 @@ Build() {
     /// @TODO Specify center of mass?
     const btScalar linkMass = joints[i]->GetNextBody()->GetMass();
     btVector3 linkInertia(0, 0, 0);
-    if(isDynamic)
+    if(isDynamic and m_collisionShapes[linkPmplIndex])
       m_collisionShapes[linkPmplIndex]->calculateLocalInertia(linkMass,
                                                               linkInertia);
 
@@ -688,6 +688,10 @@ BuildCollisionShapes(const MultiBody* const _multibody) {
 btCollisionShape*
 BulletModel::
 BuildCollisionShape(const Body* const _body) {
+
+  if(_body->IsVirtual())
+    return nullptr;
+
   // Get the body's polyhedron, vertices, and facets.
   const GMSPolyhedron& poly = _body->GetPolyhedron();
   const auto& vertices = poly.GetVertexList();
