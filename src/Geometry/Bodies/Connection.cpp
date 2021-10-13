@@ -491,8 +491,8 @@ SetJointValues(std::vector<double> _values) {
 
   if(m_jointType == JointType::Mimic) {
     m_jointValues = m_mimicConnection->GetJointValues();
-    for(size_t i = 0; i < _values.size(); i++) {
-      m_jointValues[i] = _values[i] * m_mimicMultiplier + m_mimicOffset;
+    for(size_t i = 0; i < m_jointValues.size(); i++) {
+      m_jointValues[i] = m_jointValues[i] * m_mimicMultiplier + m_mimicOffset;
     }
     return;
   }
@@ -553,7 +553,7 @@ const Transformation
 Connection::
 ApplyURDFJointValues() const noexcept {
 
-  Connection::JointType jointType = GetConnectionType() == ConnectionJointType::Mimic 
+  Connection::JointType jointType = GetConnectionType() == Connection::JointType::Mimic 
                                   ? m_mimicConnection->GetConnectionType()
                                   : GetConnectionType();
 
@@ -591,7 +591,7 @@ ApplyURDFJointValues() const noexcept {
 
     return rotAboutAxis;
   }
-  else if(GetConnectionType() == Connection::JointType::Prismatic) {
+  else if(jointType == Connection::JointType::Prismatic) {
     Vector3d translation;
     translation[0] = m_jointAxis[0] * m_jointValues[0];
     translation[1] = m_jointAxis[1] * m_jointValues[0];
