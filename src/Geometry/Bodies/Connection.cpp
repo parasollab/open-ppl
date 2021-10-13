@@ -553,8 +553,12 @@ const Transformation
 Connection::
 ApplyURDFJointValues() const noexcept {
 
+  Connection::JointType jointType = GetConnectionType() == ConnectionJointType::Mimic 
+                                  ? m_mimicConnection->GetConnectionType()
+                                  : GetConnectionType();
 
-  if(GetConnectionType() == Connection::JointType::Revolute) {
+
+  if(jointType == Connection::JointType::Revolute) {
 
     // define reused functions
     double ux,uy,uz,C,S,t;
