@@ -591,7 +591,7 @@ ApplyURDFJointValues() const noexcept {
 
     return rotAboutAxis;
   }
-  else if(GetConnectionType() == Connection::JointType::Revolute) {
+  else if(GetConnectionType() == Connection::JointType::Prismatic) {
     Vector3d translation;
     translation[0] = m_jointAxis[0] * m_jointValues[0];
     translation[1] = m_jointAxis[1] * m_jointValues[0];
