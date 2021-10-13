@@ -36,7 +36,7 @@ class MapEvaluatorMethodTest : virtual public MapEvaluatorMethod<MPTraits>,
 
     ///@}
 
-  private:
+  protected:
     ///@name Interface Test Function
     ///@{
 
@@ -59,7 +59,7 @@ class MapEvaluatorMethodTest : virtual public MapEvaluatorMethod<MPTraits>,
 
 template <typename MPTraits>
 MapEvaluatorMethodTest<MPTraits>::
-MapEvaluatorMethodTest() { }
+MapEvaluatorMethodTest() : MapEvaluatorMethod<MPTraits>() { }
 
 template <typename MPTraits>
 MapEvaluatorMethodTest<MPTraits>::
@@ -93,7 +93,10 @@ IndividualRobotMainFunction(RoadmapType* _roadmap, MPTask* _task) {
   auto lib = this->GetMPLibrary();
   lib->SetTask(_task);
   lib->SetGroupTask(nullptr);
-  
+
+  // Setup goal tracker for test roadmap and task
+  this->GetMPLibrary()->GetGoalTracker()->AddMap(_roadmap, _task);
+
   auto robot = _task->GetRobot();
   auto solution = lib->GetMPSolution();
   solution->AddRobot(robot);

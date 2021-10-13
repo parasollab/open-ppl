@@ -42,12 +42,19 @@
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 
 //metric includes
+#include "MPLibrary/Metrics/NumNodesMetric.h"
 
 //map evaluator includes
+#include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 
 //mp strategies includes
-#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+#include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -126,18 +133,27 @@ struct MPTraits {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
+    NumNodesMetric<MPTraits>
       > MetricMethodList;
 
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    ConditionalEvaluator<MPTraits>,
+    LazyQuery<MPTraits>,
+    QueryMethod<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>
+    BasicRRTStrategy<MPTraits>,
+    TogglePRMStrategy<MPTraits>,
+    ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
+
+
 };
 
 #endif
