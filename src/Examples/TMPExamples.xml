@@ -55,6 +55,7 @@
   <Library>
 
     <DistanceMetrics>
+      <Euclidean label="euclidean"/>
       <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
         normalize="false"/>
     </DistanceMetrics>
@@ -62,6 +63,9 @@
     <ValidityCheckers>
       <CollisionDetection label="bounding" method="BoundingSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -70,40 +74,37 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="bounding"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
     </LocalPlanners>
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="bounding" maxDist="4." minDist=".01"/>
+        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
     </PathModifiers>
 
     <Connectors>
+      <NeighborhoodConnector label="Closest" debug="true"
+        nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
     </Connectors>
 
     <Metrics>
     </Metrics>
 
     <MapEvaluators>
-      <QueryMethod label="QueryMethod" debug="false"
-        graphSearchAlg="dijkstras" />
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras"/>
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicRRTStrategy label="RRT" debug="false"
-        querySampler="UniformRandom" samplerLabel="UniformRandom"
-        nfLabel="Nearest" extenderLabel="BERO"
-        growGoals="false" growthFocus="0.01" m="1"
-        goalDmLabel="minkowski" goalThreshold="5">
-        <!--Evaluator label="Query"/-->
-      </BasicRRTStrategy>
-      
       <AdaptiveRRT label="AdaptiveRRT" debug="true"
         querySampler="UniformRandom" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
@@ -117,6 +118,22 @@
         <Evaluator label="QueryMethod"/>
       </AdaptiveRRT>
 
+      <BasicRRTStrategy label="RRT" debug="false"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5">
+        <!--Evaluator label="Query"/-->
+      </BasicRRTStrategy>
+
+      <!-- Toggle PRM-->
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <ColConnector label="Closest"/>
+        <Evaluator label="Query"/>
+      </TogglePRMStrategy>
+      
     </MPStrategies>
 
     <MPTools>
@@ -124,8 +141,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="AdaptiveRRT" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/> 
 
   </Library>
 

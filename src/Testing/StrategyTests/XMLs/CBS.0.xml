@@ -254,7 +254,7 @@
     </MPTools>
 
     <!-- The seed can be changed to generate different roadmaps and paths -->
-    <!-- Solver mpStrategyLabel="CBSPRM" seed="12345678"
+    <!--Solver mpStrategyLabel="CBSPRM" seed="12345678"
       baseFilename="../Outputs/CBS.0" vizmoDebug="true"/-->
 
     <Solver mpStrategyLabel="Test" seed="12345678"
