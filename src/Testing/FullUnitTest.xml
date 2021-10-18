@@ -119,16 +119,26 @@
       <!-- Test not yet added -->
       <!--Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
         normalize="false"/-->
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
+        normalize="false"/>
+
+      <!-- Test not yet added -->
+      <Euclidean label="euclidean"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
+
+      <!-- Test not yet added -->
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
       <!-- Test not yet added -->
       <!--BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"
         k="1"/-->
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -136,6 +146,10 @@
     </Samplers>
 
     <LocalPlanners>
+    <!-- Test not yet added -->
+    <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+          vcLabel="alwaysTrue"/>
+    <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
     </LocalPlanners>
 
     <Extenders>
@@ -148,12 +162,22 @@
     </PathModifiers>
 
     <Connectors>
+    <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
+      lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
     </Connectors>
 
     <Metrics>
     </Metrics>
 
     <MapEvaluators>
+      <LazyQuery label="LazyQuery" debug="true"
+        vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
+        numEnhance="10" d="0.5" deleteInvalid="true">
+        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
+        <Resolution mult="27"/>
+        <Resolution mult="16"/>
+        <Resolution mult="1"/>
+      </LazyQuery>
     </MapEvaluators>
 
     <MPStrategies>
@@ -166,7 +190,12 @@
         goalDmLabel="minkowski" goalThreshold="5"-->
         <!--Evaluator label="Query"/-->
       <!--/BasicRRTStrategy-->
-
+      <!-- LazyPRM-->
+      <BasicPRM label="LazyPRM" debug="true">
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue" />
+        <Evaluator label="LazyQuery"/>
+      </BasicPRM>
     </MPStrategies>
 
     <MPTools>
@@ -174,8 +203,12 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="RRT" seed="12345678"
+    <!-- <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/> -->
+
+    <Solver mpStrategyLabel="LazyPRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
+
 
   </Library>
 

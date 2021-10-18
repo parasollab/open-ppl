@@ -4,6 +4,7 @@
 
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Agents/Coordinator.h"
+#include "Traits/CfgTraits.h"
 #include "TMPLibrary/TMPLibrary.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "MPProblem/MPProblem.h"
