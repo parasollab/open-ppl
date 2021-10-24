@@ -5,7 +5,6 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This agent calls pmpl to generate a path, then attempts to follow the path
 /// waypoints as closely as possible by relying on the robot's controller.
@@ -43,7 +42,13 @@ class PathFollowingAgent : public PlanningAgent {
 
     virtual void ClearPlan() override;
 
+    ///@}
+    ///@{
+
+    const std::vector<Cfg>& GetPath() const;
+
     void SetPlan(std::vector<Cfg> _path);
+
     ///@}
 
   protected:

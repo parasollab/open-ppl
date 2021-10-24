@@ -6,28 +6,28 @@
 /*------------------------------ Construction --------------------------------*/
 
 TaskEvaluatorMethod::
-TaskEvaluatorMethod(){}
+TaskEvaluatorMethod() {}
 
 TaskEvaluatorMethod::
 TaskEvaluatorMethod(XMLNode& _node) : TMPBaseObject(_node) {
   m_sgLabel = _node.Read("sgLabel", false, "",
-												 "Label for the state graph used by the TMPStrategy");
+                         "Label for the state graph used by the TMPStrategy");
 }
 
 TaskEvaluatorMethod::
-~TaskEvaluatorMethod(){}
+~TaskEvaluatorMethod() {}
 
-bool 
+bool
 TaskEvaluatorMethod::
-operator()(Plan* _plan){
-	this->GetPlan()->GetStatClass()->StartClock("TaskEvaluationTime");
-	auto ret = Run(_plan);
-	this->GetPlan()->GetStatClass()->StopClock("TaskEvaluationTime");
-	return ret;
+operator()(Plan* _plan) {
+  this->GetPlan()->GetStatClass()->StartClock("TaskEvaluationTime");
+  auto ret = Run(_plan);
+  this->GetPlan()->GetStatClass()->StopClock("TaskEvaluationTime");
+  return ret;
 }
 
 bool
 TaskEvaluatorMethod::
-Run(Plan* _plan){
-	return false;
+Run(Plan* _plan) {
+  return false;
 }

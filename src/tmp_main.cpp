@@ -4,6 +4,7 @@
 
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Agents/Coordinator.h"
+#include "Traits/CfgTraits.h"
 #include "TMPLibrary/TMPLibrary.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "MPProblem/MPProblem.h"
@@ -16,6 +17,8 @@
 
 #include "Utilities/Hypergraph.h"
 #include "Utilities/SSSHP.h"
+
+#include "MPProblem/Robot/Kinematics/ur_kin.h"
 
 int
 main(int _argc, char** _argv) {
@@ -33,6 +36,41 @@ main(int _argc, char** _argv) {
 
   // Parse the Problem node into an MPProblem object.
   MPProblem* problem = new MPProblem(xmlFile);
+
+  double* T = new double[16];
+  double q_sols[8*6];
+  printf("James's test\n");
+  // Point
+  T[3] = .7;
+  T[7] = 0;
+  T[11] = .2;
+
+  // Orientation matrix
+  T[0] = 0;
+  T[1] = 0;
+  T[2] = 1;
+
+  T[4] = 0;
+  T[5] = 1;
+  T[6] = 0;
+
+  T[8] = -1;
+  T[9] = 0;
+  T[10] = 0;
+
+  T[12] = 0;
+  T[13] = 0;
+  T[14] = 0;
+  T[15] = 1;
+  for(int i=0;i<4;i++) {
+    for(int j=i*4;j<(i+1)*4;j++)
+      printf("%1.3f ", T[j]);
+    printf("\n");
+  }
+  auto num_sols = ur_kinematics::inverse(T, q_sols);
+  for(int i=0;i<num_sols;i++) 
+    printf("%1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n", 
+       q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibrary* ppl = new TMPLibrary(xmlFile);
@@ -125,6 +163,12 @@ main(int _argc, char** _argv) {
 			plan->SetTeam(team);
 			plan->SetDecomposition(decomp.get());
 			ppl->Solve(problem, decomp.get(), plan, c, team);
+      const std::string basename = problem->GetBaseFilename(),
+                        fullname = problem->GetPath(basename + "-ppl.stat");
+
+      // Print the stats to file.
+      std::ofstream osStat(fullname);
+      plan->GetStatClass()->PrintAllStats(osStat);
 		}
 	}
   // Release resources.

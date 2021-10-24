@@ -12,7 +12,6 @@
 //class Cfg;
 class Decomposition;
 class DynamicObstacle;
-class InteractionInformation;
 class Environment;
 class MPTask;
 class GroupTask;
@@ -27,9 +26,9 @@ class XMLNode;
 /// tasks, and robots.
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef _PARALLEL
-class MPProblem final : public stapl::p_object
+class MPProblem : public stapl::p_object
 #else
-class MPProblem final
+class MPProblem 
 #endif
 {
 
@@ -48,7 +47,7 @@ class MPProblem final
     MPProblem(const MPProblem& _other); ///< Copy.
     MPProblem(MPProblem&& _other) = delete;
 
-    ~MPProblem();
+    virtual ~MPProblem();
 
     ///@}
     ///@name Assignment
@@ -188,16 +187,6 @@ class MPProblem final
 
     ///@}
 
-    ///@name Handoff Template Accessors
-    ///@{
-
-    /// Return the list of handoff templates defined in the problem
-    /// @return vector of handoff templates
-    std::vector<std::unique_ptr<InteractionInformation>>&
-        GetInteractionInformations();
-
-    ///@}
-
   protected:
 
     ///@name Construction Helpers
@@ -227,9 +216,6 @@ class MPProblem final
 
     /// The dynamic obstacles in our problem.
     std::vector<DynamicObstacle> m_dynamicObstacles;
-
-    /// All handoff templates for a problem.
-    std::vector<std::unique_ptr<InteractionInformation>> m_interactionInformations;
 
     /// Map the tasks assigned to each robot.
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;

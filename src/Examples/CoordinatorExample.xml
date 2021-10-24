@@ -9,12 +9,16 @@
 
     <Robot label="member1" filename="3D/boxy.robot" capability="plain" color="red">
       <Agent type="child" waypointDm="positionEuclidean"
-        waypointThreshold=".05" debug="true"/>
+        waypointThreshold=".05" debug="true">
+        <!--StepFunction type="followpath" waypointDm="euclidean"/-->
+      </Agent>
     </Robot>
 
     <Robot label="member2" filename="3D/boxy.robot" capability="plain" color="green">
       <Agent type="child" waypointDm="positionEuclidean"
-        waypointThreshold=".05" debug="true"/>
+        waypointThreshold=".05" debug="true">
+        <!--StepFunction type="followpath" waypointDm="euclidean"/-->
+      </Agent>
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">

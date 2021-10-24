@@ -2,7 +2,7 @@
 #define PMPL_GROUP_ROADMAP_H_
 
 #include "ConfigurationSpace/Formation.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
@@ -23,20 +23,20 @@
 /// Note that VIDs in this object refer to GROUP configuration VIDs.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename Vertex, typename Edge>
-class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
+class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef RoadmapGraph<Vertex, Edge>     BaseType;
+    typedef GenericStateGraph<Vertex, Edge>     BaseType;
 
     typedef typename BaseType::EID         ED;
     typedef typename Vertex::IndividualCfg IndividualCfg;
     typedef typename Edge::IndividualEdge  IndividualEdge;
     typedef typename Vertex::VIDSet        VIDSet;
-    typedef RoadmapGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
 
     typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
     typedef typename BaseType::edge_descriptor edge_descriptor;
@@ -136,7 +136,7 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// Import the base-class version for this (required because we've
     /// overridden one of the overloads).
-    using RoadmapGraph<Vertex, Edge>::AddEdge;
+    using GenericStateGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
@@ -192,7 +192,7 @@ template <typename Vertex, typename Edge>
 template <typename MPSolution>
 GroupRoadmap<Vertex, Edge>::
 GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
-  RoadmapGraph<Vertex, Edge>(nullptr), m_group(_g) {
+  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
 
   for(Robot* const robot : *m_group)
     m_roadmaps.push_back(_solution->GetRoadmap(robot));
@@ -578,7 +578,7 @@ template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 ClearHooks() noexcept {
-  RoadmapGraph<Vertex, Edge>::ClearHooks();
+  GenericStateGraph<Vertex, Edge>::ClearHooks();
 
   for(IndividualRoadmap* const map : m_roadmaps)
     map->ClearHooks();

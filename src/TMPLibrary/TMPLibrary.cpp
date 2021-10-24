@@ -28,16 +28,17 @@ TMPLibrary(){
   m_poiPlacementMethods = new PoIPlacementMethodSet(this,
       typename TMPTraits::PoIPlacementMethodList(), "PoIPlacementMethods");
   m_tmpStrategies = new TMPStrategyMethodSet(this,
-      typename TMPTraits::TMPStrategyMethodList(), "TMPStrategies");
+                  typename TMPTraits::TMPStrategyMethodList(), "TMPStrategies");
+  m_poiPlacementMethods = new PoIPlacementMethodSet(this,
+                  typename TMPTraits::PoIPlacementMethodList(), "PoIPlacementMethods");
   m_taskAllocators = new TaskAllocatorMethodSet(this,
-      typename TMPTraits::TaskAllocatorMethodList(), "TaskAllocators");
+                  typename TMPTraits::TaskAllocatorMethodList(), "TaskAllocators");
   m_taskDecomposers = new TaskDecomposerMethodSet(this,
-      typename TMPTraits::TaskDecomposerMethodList(), "TaskDecomposers");
+                  typename TMPTraits::TaskDecomposerMethodList(), "TaskDecomposers");
   m_taskEvaluators = new TaskEvaluatorMethodSet(this,
-      typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
+                  typename TMPTraits::TaskEvaluatorMethodList(), "TaskEvaluators");
   m_stateGraphs = new StateGraphSet(this,
-      typename TMPTraits::StateGraphList(), "StateGraphs");
-  m_actionSpace = new ActionSpace(this);
+                  typename TMPTraits::StateGraphList(), "StateGraphs");
   m_tmpTools = new TMPTools(this);
 }
 
@@ -53,6 +54,7 @@ TMPLibrary(const std::string& _filename) : TMPLibrary() {
 TMPLibrary::
 ~TMPLibrary() {
   delete m_tmpStrategies;
+  delete m_interactionStrategies;
   delete m_poiPlacementMethods;
   delete m_taskEvaluators;
   delete m_taskDecomposers;
@@ -78,7 +80,7 @@ Initialize(){
 
 void
 TMPLibrary::
-Uninitialize(){}
+Uninitialize() {}
 
 /*---------------------------- XML Helpers -----------------------------------*/
 
@@ -178,61 +180,61 @@ ParseChild(XMLNode& _node) {
 
 /*---------------------------- TMPStrategy Accessors -----------------------------------*/
 
-TMPLibrary::TMPStrategyMethodPointer 
+TMPLibrary::TMPStrategyMethodPointer
 TMPLibrary::
-GetTMPStrategy(const std::string& _l){
+GetTMPStrategy(const std::string& _l) {
   return m_tmpStrategies->GetMethod(_l);
 }
 
-void 
+void
 TMPLibrary::
 AddTMPStrategy(TMPStrategyMethodPointer _sm, const std::string& _l) {
   m_tmpStrategies->AddMethod(_sm,_l);
 }
 
-TMPLibrary::PoIPlacementMethodPointer 
+TMPLibrary::PoIPlacementMethodPointer
 TMPLibrary::
-GetPoIPlacementMethod(const std::string& _l){
+GetPoIPlacementMethod(const std::string& _l) {
   return m_poiPlacementMethods->GetMethod(_l);
 }
 
-void  
+void
 TMPLibrary::
 TMPLibrary::AddPoIPlacementMethod(PoIPlacementMethodPointer _pm, const std::string& _l) {
   m_poiPlacementMethods->AddMethod(_pm,_l);
 }
 
-TMPLibrary::TaskEvaluatorMethodPointer  
+TMPLibrary::TaskEvaluatorMethodPointer
 TMPLibrary::
-GetTaskEvaluator(const std::string& _l){
+GetTaskEvaluator(const std::string& _l) {
   return m_taskEvaluators->GetMethod(_l);
 }
 
-void  
+void
 TMPLibrary::
 AddTaskEvaluator(TaskEvaluatorMethodPointer _te, const std::string& _l) {
   m_taskEvaluators->AddMethod(_te,_l);
 }
 
-TMPLibrary::TaskDecomposerMethodPointer  
+TMPLibrary::TaskDecomposerMethodPointer
 TMPLibrary::
-GetTaskDecomposer(const std::string& _l){
+GetTaskDecomposer(const std::string& _l) {
   return m_taskDecomposers->GetMethod(_l);
 }
 
-void  
+void
 TMPLibrary::
 AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l) {
   m_taskDecomposers->AddMethod(_td,_l);
 }
 
-TMPLibrary::TaskAllocatorMethodPointer  
+TMPLibrary::TaskAllocatorMethodPointer
 TMPLibrary::
-GetTaskAllocator(const std::string& _l){
+GetTaskAllocator(const std::string& _l) {
   return m_taskAllocators->GetMethod(_l);
 }
 
-void  
+void
 TMPLibrary::
 AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l) {
   m_taskAllocators->AddMethod(_ta,_l);
@@ -257,21 +259,21 @@ GetPlan() {
   return m_plan;
 }
 
-void 
+void
 TMPLibrary::
 SetPlan(Plan* _plan) {
   m_plan = _plan;
 }
 
-TMPLibrary::StateGraphPointer  
+TMPLibrary::StateGraphPointer
 TMPLibrary::
-GetStateGraph(const std::string& _l){
+GetStateGraph(const std::string& _l) {
   return m_stateGraphs->GetMethod(_l);
 }
 
-void  
+void
 TMPLibrary::
-AddStateGraph(StateGraphPointer _sg, const std::string& _l){
+AddStateGraph(StateGraphPointer _sg, const std::string& _l) {
   m_stateGraphs->AddMethod(_sg,_l);
 }
 
@@ -317,62 +319,62 @@ SetMPProblem(MPProblem* const _problem) noexcept {
   m_library->SetMPProblem(_problem);
 }
 
-std::vector<std::shared_ptr<MPTask>>& 
+std::vector<std::shared_ptr<MPTask>>&
 TMPLibrary::
 GetTasks() noexcept {
   return m_tasks;
 }
 
-void 
+void
 TMPLibrary::
 AddTask(MPTask* const _task) noexcept {
   m_tasks.emplace_back(std::shared_ptr<MPTask>(_task));
 }
 
-void 
+void
 TMPLibrary::
-AddTask(std::shared_ptr<MPTask> const _task) noexcept{
+AddTask(std::shared_ptr<MPTask> const _task) noexcept {
   m_tasks.push_back(_task);
 }
 
-void 
+void
 TMPLibrary::
-ClearTasks(){
+ClearTasks() {
   m_tasks.clear();
 }
 
-std::vector<std::shared_ptr<GroupTask>> 
+std::vector<std::shared_ptr<GroupTask>>
 TMPLibrary::
 GetGroupTasks() const noexcept {
   return m_groupTasks;
 }
 
-void 
+void
 TMPLibrary::
 AddGroupTask(GroupTask* const _task) noexcept {
   m_groupTasks.emplace_back(std::shared_ptr<GroupTask>(_task));
 }
 
-void 
+void
 TMPLibrary::
 AddGroupTask(std::shared_ptr<GroupTask> const _task) noexcept {
   m_groupTasks.push_back(_task);
 }
 
-inline 
-void 
+inline
+void
 TMPLibrary::
-ClearGroupTasks(){
+ClearGroupTasks() {
   m_groupTasks.clear();
 }
 
-const std::string& 
+const std::string&
 TMPLibrary::
-GetBaseFilename() const noexcept{
+GetBaseFilename() const noexcept {
   return m_problem->GetBaseFilename();
 }
 
-void 
+void
 TMPLibrary::
 SetBaseFilename(const std::string& _s) noexcept {
   m_problem->SetBaseFilename(_s);
@@ -412,7 +414,7 @@ Solve(MPProblem* _problem,
 
 void
 TMPLibrary::
-InitializeMPProblem(MPProblem* _problem){
+InitializeMPProblem(MPProblem* _problem) {
   SetMPProblem(_problem);
   Initialize();
 }

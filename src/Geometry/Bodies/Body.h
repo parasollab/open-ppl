@@ -3,6 +3,7 @@
 
 #include "Geometry/GMSPolyhedron.h"
 #include "Utilities/MPUtils.h"
+#include "Utilities/XMLNode.h"
 
 #include "Transformation.h"
 
@@ -18,8 +19,9 @@ using namespace mathtool;
 class CollisionDetectionMethod;
 class Connection;
 class MultiBody;
-class XMLNode;
-
+namespace urdf {
+  class Link;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A single polyhedral body in workspace. One or more of these are composed to
@@ -168,6 +170,8 @@ class Body {
     /// Compute the bounding box in world coordinates.
     GMSPolyhedron GetWorldBoundingBox() const;
 
+    bool IsVirtual() const;
+
     ///@}
     ///@name Transform Functions
     ///@{
@@ -182,6 +186,9 @@ class Body {
     /// Get the transformation from model to world coordinates.
     /// @return The current transformation.
     const Transformation& GetWorldTransformation() const;
+
+    /// Get the transformation from the model to the URDF reference frame;
+    const Transformation GetTransformationToURDFReferenceFrame() const;
 
     ///@}
     ///@name Connection Information
@@ -271,6 +278,13 @@ class Body {
     ///       working on this function.
     void Read(std::istream& _is, CountingStreamBuffer& _cbs);
 
+    /// Translate the urdf link representation to a Body representation.
+    /// @param _link The urdf link to translate.
+    /// @param _base Flag indicating if the link is the robot base.
+    /// @param _fixed Flag indiciating if the link is fixed.
+    void TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, 
+                           const bool _base, const bool _fixed);
+
     ///@}
     ///@name Visualization
     ///@{
@@ -345,6 +359,8 @@ class Body {
     std::vector<Connection*> m_adjacencyConnections;///< Adjacency Connections
 
     const Transformation& (Body::*m_transformFetcher)(void) const noexcept = nullptr;
+
+    bool m_virtual{false}; ///< Flag indicating that this body has no physical properties.
 
     ///@}
     ///@name Display Stuff

@@ -5,7 +5,6 @@
 #include "Geometry/Boundaries/WorkspaceBoundingBox.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.h"
 #include "Utilities/Color.h"
-#include "Utilities/XMLNode.h"
 
 #include <CGAL/Quotient.h>
 #include <CGAL/MP_Float.h>
@@ -189,9 +188,31 @@ Body(MultiBody* const _owner, XMLNode& _node)
   }
 
   // Read geometry file.
-  m_filename = _node.Read("filename", true, "", "File containing the geometry"
+  m_filename = _node.Read("filename", false, "", "File containing the geometry"
       " information for this body.");
-  ReadGeometryFile(m_comAdjust);
+  if(m_filename != "")
+    ReadGeometryFile(m_comAdjust);
+  
+  bool shape = false;
+  for(auto child : _node) {
+    //Make sure there is only one shape specified
+    if(child.Name() == "Cylinder" || child.Name() == "Box") {
+      if(shape == true)
+        throw RunTimeException(WHERE) << "Can only specify one shape for a body.";
+      shape = true;
+    }
+    if(child.Name() == "Cylinder") {
+      Range<double> height;
+      height.min = child.Read("minHeight", true, 0., 0., 1000., "Minimum y coordinator of cylinder.");
+      height.max = child.Read("maxHeight", true, 0., 0., 1000., "Maximum y coordinator of cylinder."); 
+
+      double radius = child.Read("radius", true, 0., 0., 1000., "Radius of cylinder.");
+
+      size_t fidelity = child.Read("fidelity", true, 0, 0, 1000, "Number of points in approximate circle of cylinder.");
+
+      m_polyhedron = GMSPolyhedron::MakeCylinder(height,radius,fidelity);
+    }
+  }
 }
 
 
@@ -239,6 +260,8 @@ operator=(const Body& _other) {
 
   m_color         = _other.m_color;
   m_textureFile   = _other.m_textureFile;
+
+  m_virtual = _other.m_virtual;
 
   return *this;
 }
@@ -300,7 +323,7 @@ Validate() const {
     return;
 
   // Something isn't good - report errors if requested.
-  throw ParseException(WHERE) << "Invalid polyhedron detected from "
+  /*throw ParseException(WHERE) << "Invalid polyhedron detected from "
                               << "file '" << m_filename << "'."
                               << "\n\tnum vertices: " << mesh.size_of_vertices()
                               << "\n\tnum facets: " << mesh.size_of_facets()
@@ -312,6 +335,7 @@ Validate() const {
                               << "yield undefined behavior on ill-formed "
                               << "polyhedrons."
                               << std::endl;
+  */
 }
 
 /*---------------------------- MultiBody Accessors ---------------------------*/
@@ -448,6 +472,12 @@ GetWorldBoundingBox() const {
   return GetWorldTransformation() * m_boundingBox;
 }
 
+bool
+Body::
+IsVirtual() const {
+  return m_virtual;
+}
+
 /*---------------------------- Transform Functions ---------------------------*/
 
 void
@@ -470,6 +500,19 @@ const Transformation&
 Body::
 GetWorldTransformation() const {
   return (this->*m_transformFetcher)();
+}
+    
+const Transformation
+Body::
+GetTransformationToURDFReferenceFrame() const {
+
+  if(IsBase())
+    return Transformation();
+
+  const Connection& back = *m_backwardConnections[0];
+  const Transformation& forward = back.GetTransformationToBody2();
+  const Transformation reverse = -forward;
+  return reverse;
 }
 
 /*--------------------------- Connection Properties --------------------------*/
@@ -823,7 +866,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   // Read the mesh file.
   ReadGeometryFile(m_comAdjust);
 }
-
+    
 /*----------------------------- Computation Helpers --------------------------*/
 
 void
@@ -900,9 +943,10 @@ ComputeWorldTransformation(std::set<size_t>& _visited) const {
   auto& transform = const_cast<Transformation&>(m_transform);
   transform =
       back.GetPreviousBody()->ComputeWorldTransformation(_visited) *
-      back.GetTransformationToDHFrame() *
-      back.GetDHParameters().GetTransformation() *
-      back.GetTransformationToBody2();
+//      back.GetTransformationToDHFrame() *
+//      back.GetDHParameters().GetTransformation() *
+//      back.GetTransformationToBody2();
+      back.GetTransformationFromJoint();
 
   return m_transform;
 }

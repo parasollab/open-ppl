@@ -22,7 +22,10 @@
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class LazyQuery : public QueryMethod<MPTraits> {
+class LazyQuery : virtual public QueryMethod<MPTraits> {
+
+
+  // asdf
 
   public:
 
@@ -200,7 +203,7 @@ LazyQuery() : QueryMethod<MPTraits>() {
 
 template <typename MPTraits>
 LazyQuery<MPTraits>::
-LazyQuery(XMLNode& _node) : QueryMethod<MPTraits>(_node) {
+LazyQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPTraits>(_node) {
   this->SetName("LazyQuery");
 
   m_vcLabel = _node.Read("vcLabel", true, "", "Lazy validity checker method.");

@@ -1,7 +1,7 @@
 # Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Set platform, debug mode, and address sanitizer if not already set.
-platform ?= LINUX_gcc
+platform ?= Ubuntu
 debug    ?= 1
 asan     ?= 0
 
@@ -65,6 +65,7 @@ $(MOC_DIR): | $(OBJ_DIR)
 
 # Look for files in the source directories.
 vpath %.h       $(SRC_DIRS)
+vpath %.hpp       $(SRC_DIRS)
 vpath %.cpp     $(SRC_DIRS)
 vpath moc_%.cpp $(MOC_DIR)
 
@@ -75,9 +76,9 @@ include $(PMPL_DIR)/Makefile.PMPLdefaults
 
 # Compiler Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(PLANNER_DEF) $(TASK_DEF) $(vizmo_map) $(group_map)
-INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL)
-LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS)
+DEFS = $(PMPL_DEF) $(UTILS_DEF) $(SIM_DEF) $(PLANNER_DEF) $(TASK_DEF) $(vizmo_map) $(group_map) $(TEST_DEF)
+INCL = $(PMPL_INCL) $(UTILS_INCL) $(STAPL_INCL) $(BOOST_INCL) $(SIM_INCL) $(URDF_INCL) $(TEST_INCL)
+LIBS = $(PMPL_LIB) $(UTILS_LIB) $(STAPL_LIB) $(BOOST_LIB) $(SIM_LIBS) $(URDF_LIBS) $(TEST_LIBS)
 
 # Object File Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -91,6 +92,7 @@ TASK_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(TASK_SRCS))
 CLIENT_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(CLIENT_SRCS))
 MASTER_OBJS   := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(MASTER_SRCS))
 HARDWARE_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(HARDWARE_SRCS))
+TEST_OBJS     := $(patsubst %.cpp,$(OBJ_DIR)/%.o, $(TEST_SRCS))
 
 # Make the object files depend on updated utility libraries so the libs are
 # built first.
@@ -98,9 +100,10 @@ $(PMPL_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(TASK_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(SIM_OBJS):      $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(COMM_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
-$(PLANNER_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(PLANNER_OBJS):  $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(CLIENT_OBJS):   $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 $(HARDWARE_OBJS): $(UTILS_LIBFILE) $(STAPL_LIBFILE)
+$(TEST_OBJS):     $(UTILS_LIBFILE) $(STAPL_LIBFILE)
 
 # Set which object defines the main function.
 ifeq ($(parallel), 1)
@@ -146,20 +149,11 @@ sim: $(PMPL_LIBFILE) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWAR
 	@$(CXX) $(CXXFLAGS) $(OPTS) $(SIM_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) \
 	  $(LIBS) -o $@
 
-# Build the server.
-planner: $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
+
+tests: $(TEST_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE) $(MOC_OBJS) \
      | $(patsubst %,$(MOC_DIR)/%,$(MOC_SRCS))
-
 	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(PLANNER_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
-
-client: $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(PMPL_LIBFILE)
-	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(CLIENT_OBJS) $(COMM_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
-
-master: $(MASTER_OBJS) $(COMM_OBJS) $(PMPL_LIBFILE)
-	@echo Linking $@...
-	@$(CXX) $(CXXFLAGS) $(OPTS) $(MASTER_OBJS) $(COMM_OBJS) $(LIBS) -o $@
+	@$(CXX) $(CXXFLAGS) $(OPTS) $(TEST_OBJS) $(TASK_OBJS) $(COMM_OBJS) $(MOC_OBJS) $(HARDWARE_OBJS) $(LIBS) -o $@
 
 
 # Object File Recipes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -190,7 +184,7 @@ $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 .PHONY: clean
 clean:
 	@echo Cleaning pmpl library and executables...
-	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim planner ppl master
+	@rm -f $(PMPL_LIBFILE) $(MAIN) pmpl sim planner ppl master tests
 
 .PHONY: reallyclean
 reallyclean: clean

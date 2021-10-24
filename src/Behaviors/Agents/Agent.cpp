@@ -18,21 +18,17 @@
 
 #include <iostream>
 
-
 /*------------------------------ Construction --------------------------------*/
 
 Agent::
 Agent(Robot* const _r) : m_robot(_r) { }
 
 Agent::
-Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) { 
+Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) {
 
   bool setStepFunction = false;
 	for(auto& child : _node) {
-		if(child.Name() == "Communicator") {
-      ParseCommunicatorXMLNode(child);
-		}
-    else if(child.Name() == "StepFunction") {
+    if(child.Name() == "StepFunction") {
       m_stepFunction = StepFunction::Factory(this,child);
       setStepFunction = true;
     }
@@ -50,12 +46,8 @@ Agent(Robot* const _r, const Agent& _a)
     m_debug(_a.m_debug)
 { }
 
-
 Agent::
-~Agent() {
-	if(m_communicationThread.joinable())
-		m_communicationThread.join();
-}
+~Agent() { }
 
 /*----------------------------- Accessors ------------------------------------*/
 
@@ -65,13 +57,11 @@ GetRobot() const noexcept {
   return m_robot;
 }
 
-
 void
 Agent::
 SetTask(const std::shared_ptr<MPTask> _task) {
   m_task = _task;
 }
-
 
 std::shared_ptr<MPTask>
 Agent::
@@ -98,17 +88,6 @@ GetCapability() const noexcept {
   return m_robot->GetCapability();
 }
 
-std::shared_ptr<Communicator>
-Agent::
-GetCommunicator() {
-	return m_communicator;
-}
-
-void
-Agent::
-SetCommunicator(std::shared_ptr<Communicator> _communicator) {
-	m_communicator = _communicator;
-}
 /*------------------------------ Internal State ------------------------------*/
 
 bool
@@ -135,7 +114,6 @@ MinimumSteps() const {
   const double hardwareTime = hardware->GetCommunicationTime();
   return Simulation::NearestNumSteps(hardwareTime);
 }
-
 
 std::vector<Agent*>
 Agent::
@@ -177,7 +155,6 @@ Halt() {
               << std::endl;
 }
 
-
 void
 Agent::
 PauseAgent(const size_t _steps) {
@@ -197,7 +174,6 @@ PauseAgent(const size_t _steps) {
 
   ExecuteControls({stopControl}, steps);
 }
-
 
 void
 Agent::
@@ -223,7 +199,6 @@ Localize() {
   hardware->EnqueueCommand(SensorCommand());
 }
 
-
 bool
 Agent::
 IsLocalizing() const noexcept {
@@ -241,7 +216,6 @@ IsLocalizing() const noexcept {
   return hardware->IsLocalizing() or !sensor->IsReady();
 }
 
-
 Cfg
 Agent::
 EstimateState() {
@@ -252,7 +226,6 @@ EstimateState() {
 
   return Cfg();
 }
-
 
 bool
 Agent::
@@ -270,11 +243,10 @@ ContinueLastControls() {
               << std::endl;
 
   --m_stepsRemaining;
-  ExecuteControlsSimulation(m_currentControls,1);
+  ExecuteControlsSimulation(m_currentControls, 1);
 
   return true;
 }
-
 
 void
 Agent::
@@ -295,7 +267,6 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   ExecuteControlsHardware(_c, _steps);
 }
 
-
 void
 Agent::
 ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
@@ -309,7 +280,6 @@ ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
 
   m_robot->GetSimulationModel()->Execute(_c);
 }
-
 
 void
 Agent::
@@ -331,57 +301,14 @@ ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
   hardware->EnqueueCommand(MotionCommand(_c, _steps * timeRes));
 }
 
-/*---------------------------- Communication Helpers -----------------------------*/
+/*----------------------------------------------------------------------------*/
 
+//Step Function Interface
+//TODO:: Make this a lot cleaner
 void
 Agent::
-ParseCommunicatorXMLNode(XMLNode& _node) {
-
-  /// Read communicator info from XML node.
-  int masterPort = _node.Read("masterPort", true, 0, 0, 9999, 
-                              "Port number of the master node.");
-
-  std::string hostname = _node.Read("hostname", true, "", 
-                                    "Host name of the master node.");
-
-  int port = _node.Read("port", true, 0, 0, 9999, 
-                        "Port number for this communicator.");
-
-  /// Initialize communicator object and register 
-  /// this agent with the master node.
-  m_communicator = std::shared_ptr<Communicator>(new Communicator(masterPort,port));
-  m_communicator->RegisterWithMaster(masterPort,hostname);
-
-  for(auto& child : _node) {
-    /// Check for any channels for this agent to subscribe to.
-    if(child.Name() == "Subscriber") {
-      std::string channel = child.Read("channel",true,"",
-                                            "Name of subscription channel.");
-      m_communicator->CreateSubscriber(channel);
-    }
-
-    /// Check for any channels for this agent to publish to.
-    else if(child.Name() == "Publisher") {
-      std::string channel = child.Read("channel",true,"",
-                                            "Name of subscription channel.");
-      std::function<std::vector<std::string>(std::string _msg)> publishFunction = 
-        [this](std::string _msg) {
-          return this->PublishFunction(_msg);
-      };
-
-      m_communicator->CreatePublisher(channel,publishFunction);
-    }
-  }
-
-  /// Launch communicator thread to listen for 
-  /// any communication with this agent.
-  auto listen = [this](){this->GetCommunicator()->Listen();};
-  m_communicationThread = std::thread(listen);
+Step(const double _dt) {
+  if(!m_stepFunction.get())
+    return;
+  m_stepFunction->StepAgent(_dt);
 }
-
-std::vector<std::string> 
-Agent::
-PublishFunction(std::string _msg) {
-	return {};
-}
-/*----------------------------------------------------------------------------*/

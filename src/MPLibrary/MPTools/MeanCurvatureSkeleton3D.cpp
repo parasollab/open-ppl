@@ -362,7 +362,7 @@ GetMesoSkeleton() {
 void
 MeanCurvatureSkeleton3D::
 InitializeFreeSpace(const Environment* _env){
-  if(m_debug)
+ /* if(m_debug)
     cout << "MeanCurvatureSkeleton3D::InitializeFreeSpace()" << endl;
 
   // Initialize the freespace model as an outward-facing boundary.
@@ -371,12 +371,11 @@ InitializeFreeSpace(const Environment* _env){
   CGAL::Polyhedron_3<CGAL::Exact_predicates_exact_constructions_kernel> cp;
   if(m_params.useConvex) {
     std::cout << "building a convex hull boundary" << endl;
-    auto convex = _env->GetObstacle(0)->GetBody(0)->GetWorldPolyhedron().
-        ComputeConvexHull();
+    auto convex = _env->GetObstacle(0)->GetBody(0)->GetWorldConvexHull();
     convex.Scale(1.2);
     cp = convex.CGAL();
   }
-  else
+ else
     cp = _env->GetBoundary()->CGAL();
 
   double len = 0, minr = numeric_limits<double>::max();
@@ -422,7 +421,7 @@ InitializeFreeSpace(const Environment* _env){
 
   // Change the surface mesh to the surface with simple cartesian point kernel
   // otherwise skeletonization does not work with exact kernel
-  AddPolyhedron(smesh,0.01*len);
+  AddPolyhedron(smesh,0.01*len);*/
 }
 
 void

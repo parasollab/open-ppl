@@ -9,7 +9,7 @@
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class AlwaysTrueValidity : public ValidityCheckerMethod<MPTraits> {
+class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
 
   public:
 

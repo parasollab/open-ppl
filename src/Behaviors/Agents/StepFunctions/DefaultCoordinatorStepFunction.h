@@ -5,9 +5,9 @@
 ///
 /// The defines the default behavior for a multi-agent coordinator.
 /// If there is a problem and no plan, the planning library will
-/// be queried. The plan will then be distributed to individual 
-/// agents in the system. 
-/// When there is a plan, the coordinator will step each agent 
+/// be queried. The plan will then be distributed to individual
+/// agents in the system.
+/// When there is a plan, the coordinator will step each agent
 /// along its respective plan to keep everything in sync.
 ///
 ///////////////////////////////////////////////////////////////////
@@ -21,11 +21,11 @@
 #include "TMPLibrary/TMPLibrary.h"
 
 class DefaultCoordinatorStepFunction : public StepFunction {
-  
+
   public :
     ///@name Construction
-    ///@{ 
-    
+    ///@{
+
     DefaultCoordinatorStepFunction(Coordinator* _coordinator, XMLNode& _node);
 
     ~DefaultCoordinatorStepFunction();
@@ -37,7 +37,7 @@ class DefaultCoordinatorStepFunction : public StepFunction {
     virtual void StepAgent(double _dt) override;
 
     ///@}
-    
+
   private:
     ///@name Helper Functions
     ///@name {
@@ -51,7 +51,7 @@ class DefaultCoordinatorStepFunction : public StepFunction {
     void StepMemberAgents(double _dt);
 
     void DistributePlan();
-  
+
     ///@}
     ///@name Internal State
     ///@{

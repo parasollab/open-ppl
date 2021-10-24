@@ -9,7 +9,6 @@
 #include "MPProblem/RobotGroup/RobotGroup.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/DynamicObstacle.h"
-#include "MPProblem/InteractionInformation.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
@@ -481,12 +480,6 @@ SetPath(const string& _filename) {
 }
 
 
-std::vector<std::unique_ptr<InteractionInformation>>&
-MPProblem::
-GetInteractionInformations() {
-  return m_interactionInformations;
-}
-
 /*---------------------------- Construction Helpers --------------------------*/
 
 void
@@ -524,10 +517,6 @@ ParseChild(XMLNode& _node) {
     auto task = GroupTask::Factory(this, _node);
     auto group = this->GetRobotGroup(task->GetRobotGroup()->GetLabel());
     m_groupTaskMap[group].emplace_back(std::move(task));
-  }
-  else if(_node.Name() == "HandoffTemplate") {
-    m_interactionInformations.emplace_back(std::unique_ptr<InteractionInformation>(
-                                           new InteractionInformation(this, _node)));
   }
 	else if(_node.Name() == "Decomposition") {
 		auto decomp = std::unique_ptr<Decomposition>(new Decomposition(_node,this));

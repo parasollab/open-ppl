@@ -108,11 +108,11 @@ class RegionKit final {
     /// @param _robotRadius The robot bounding sphere radius.
     /// @param _label The label to use for the roadmap hook.
     /// @param _graph The roadmap to hook onto.
-    template <typename RoadmapGraph>
+    template <typename GenericStateGraph>
     void
     Initialize(WorkspaceSkeleton* const _skeleton, const Point3d& _point,
         const double _robotRadius, const std::string& _label,
-        RoadmapGraph* _graph);
+        GenericStateGraph* _graph);
 
     /// Release all regions and clear the internal structures.
     void Clear();
@@ -198,13 +198,13 @@ class RegionKit final {
 };
 
 
-template <typename RoadmapGraph>
+template <typename GenericStateGraph>
 void
 RegionKit::
 Initialize(WorkspaceSkeleton* const _skeleton, const Point3d& _point,
-    const double _robotRadius, const std::string& _label, RoadmapGraph* _graph) {
-  if(_graph->IsHook(RoadmapGraph::HookType::AddVertex, _label))
-    _graph->RemoveHook(RoadmapGraph::HookType::AddVertex, _label);
+    const double _robotRadius, const std::string& _label, GenericStateGraph* _graph) {
+  if(_graph->IsHook(GenericStateGraph::HookType::AddVertex, _label))
+    _graph->RemoveHook(GenericStateGraph::HookType::AddVertex, _label);
   // Set the skeleton pointer and initialize the regions/auxiliary data.
   m_skeleton = _skeleton;
   m_regionRadius = m_regionFactor * _robotRadius;
@@ -213,14 +213,14 @@ Initialize(WorkspaceSkeleton* const _skeleton, const Point3d& _point,
 
   // On each new sample, check if we need to advance our regions and generate
   // new ones. Add a roadmap hook to achieve this.
-  auto addVertex = [this](typename RoadmapGraph::VI _vi) {
+  auto addVertex = [this](typename GenericStateGraph::VI _vi) {
     if(this->m_debug)
       std::cout << "RegionKit:: checking region advancement..." << std::endl;
 
     this->CreateRegions(_vi->property().GetPoint());
     this->AdvanceRegions(_vi->property());
   };
-  _graph->InstallHook(RoadmapGraph::HookType::AddVertex, _label, addVertex);
+  _graph->InstallHook(GenericStateGraph::HookType::AddVertex, _label, addVertex);
 }
 
 #endif

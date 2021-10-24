@@ -227,6 +227,70 @@ Scale(double _scalingFactor) {
   *(this) *= t;
 }
 
+void
+GMSPolyhedron::
+Scale(double _x, double _y, double _z) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_x, 0.0 , 0.0},
+    {0.0, _y, 0.0},
+    {0.0, 0.0, _z}};
+
+  Vector3d toCenter = -(GetCentroid());
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  const Transformation center(toCenter, Orientation(unitM)),
+                       scale(Vector3d(0,0,0), Orientation(scaleM)),
+                       recenter(-toCenter, Orientation(unitM)),
+                       t = center * scale * recenter;
+
+  *(this) *= t;
+}
+
+void
+GMSPolyhedron::
+Scale(double _x, double _y, double _z, Vector3d _newCenter) {
+  //to make sure that the centroid is not moved, center the model before scaling
+  //and bring it back to its center afterwards
+
+  double scaleVec[3][3] = {
+    {_x, 0.0 , 0.0},
+    {0.0, _y, 0.0},
+    {0.0, 0.0, _z}};
+
+  //Vector3d toCenter = -(GetCentroid());
+
+  //Vector3d toNewCenter = GetCentroid() - _newCenter;
+
+  Matrix3x3 scaleM(scaleVec);
+
+  double unitOrientation[3][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}};
+
+  Matrix3x3 unitM(unitOrientation);
+
+  const Transformation //center(toCenter, Orientation(unitM)),
+                       scale(Vector3d(0,0,0), Orientation(scaleM)),
+                       //recenter(toNewCenter, Orientation(unitM)),
+                       //t = center * scale * recenter;
+                       t = scale;
+
+  m_centroidCached = false;
+
+  *(this) *= t;
+}
 
 GMSPolyhedron
 operator*(const Transformation& _t, const GMSPolyhedron& _poly) {
@@ -738,6 +802,58 @@ MakeBox(const Range<double>& _x, const Range<double>& _y,
   polys.emplace_back(3, 6, 2, verts);
   polys.emplace_back(0, 4, 5, verts);
   polys.emplace_back(0, 5, 1, verts);
+
+  bbx.OrderFacets();
+  bbx.ComputeSurfaceArea();
+  bbx.ComputeRadii();
+  bbx.ComputeInsidePoint();
+
+  return bbx;
+}
+
+
+GMSPolyhedron
+GMSPolyhedron::MakeCylinder(const Range<double>& _height,
+    const double _radius, const uint32_t _fidelity) {
+  // Make output polyhedron.
+  GMSPolyhedron bbx;
+  auto& verts = bbx.m_vertexList;
+  auto& polys = bbx.m_polygonList;
+
+  // @TODO: Do we need to include any checking for reasonable arguments?
+  //  e.g. fidelity must be at least 3.
+
+  double angle_size = (2.0 * M_PI) / _fidelity;
+
+  // Add vertices.
+  verts.reserve(2*_fidelity + 2);
+  for (uint32_t i = 0; i < _fidelity; i++) {
+    double angle = i*angle_size;
+    verts.emplace_back(_radius * std::cos(angle), _radius * std::sin(angle),
+                       _height.min);
+    verts.emplace_back(_radius * std::cos(angle), _radius * std::sin(angle),
+                       _height.max);
+  }
+
+  // Need to add vert to center of top and bottom surfaces.
+  verts.emplace_back(0.0, 0.0, _height.min);
+  verts.emplace_back(0.0, 0.0, _height.max);
+
+  // Add polygons.
+  polys.reserve(_fidelity * 4);
+
+  for (uint32_t i = 0; i < _fidelity; i++) {
+    // Bottom polys
+    polys.emplace_back(2*i, 2*_fidelity, (2*i+2) % (2*_fidelity), verts);
+
+    // Top polys
+    polys.emplace_back(2*i+1, (2*i+3) % (2*_fidelity), 2*_fidelity + 1, verts);
+
+    // Side polys
+    polys.emplace_back(2*i, (2*i+2) % (2*_fidelity), 2*i+1, verts);
+    polys.emplace_back((2*i+2) % (2*_fidelity), (2*i+3) % (2*_fidelity), 
+                       2*i+1, verts);
+  }
 
   bbx.OrderFacets();
   bbx.ComputeSurfaceArea();

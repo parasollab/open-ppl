@@ -18,18 +18,24 @@
       <!--
       <Agent type="planning"/>
       -->
-      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+      <Agent type="pathfollowing" waypointDm="minkowski"
         waypointThreshold=".05"/>
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
+<<<<<<< HEAD
       <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
         <Member label="boxy"/>
         <Member label="boxy2"/>
+=======
+      <Agent type="coordinator" dmLabel="minkowski" debug="true">
+        <Member label="boxy"/>
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
         <StepFunction type="defaultcoordinator" debug="true"/>
       </Agent>
     </Robot>
 
+<<<<<<< HEAD
 
     <RobotGroup label="robotGroup" robotLabels="boxy boxy2"/>
     <GroupTask label="groupQuery" group="robotGroup">
@@ -68,6 +74,33 @@
         </GroupTask>
 			</SemanticTask>
 		</Decomposition>
+=======
+    <Task label="startLocation" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Task label="coordinatorTask" robot="coordinator">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first">
+        <Task label="query1" robot="boxy">
+          <StartConstraints>
+            <CSpaceConstraint point="0 0 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
 
   </Problem>
 
@@ -76,55 +109,75 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
+<<<<<<< HEAD
       <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
       <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
         velWeight="0" avlWeight="0"/>
       <Manhattan label="manhattan"/>
+=======
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
       <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
         normalize="false"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
+      <CollisionDetection label="bounding" method="BoundingSpheres"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
-      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+      <BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"
         k="1"/>
     </NeighborhoodFinders>
 
     <Samplers>
+<<<<<<< HEAD
+=======
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
+<<<<<<< HEAD
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
     </LocalPlanners>
 
     <Extenders>
+=======
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
+        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
     </Extenders>
 
     <PathModifiers>
     </PathModifiers>
 
     <Connectors>
+<<<<<<< HEAD
       <NeighborhoodConnector label="Closest" debug="false"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+=======
+      <NeighborhoodConnector label="Closest" debug="true"
+        nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
     </Connectors>
 
     <Metrics>
-      <NumNodesMetric label="NumNodes"/>
-      <NumEdgesMetric label="NumEdges"/>
-      <TimeMetric label="TimeInSec"/>
     </Metrics>
 
     <MapEvaluators>
-      <TrueEvaluation label="TrueEvaluator" />
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
+<<<<<<< HEAD
       <LazyQuery label="LazyQuery" debug="false"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
@@ -195,6 +248,40 @@
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
       </GroupPRM>
+=======
+    </MapEvaluators>
+
+    <MPStrategies>
+      <AdaptiveRRT label="AdaptiveRRT" debug="true"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 cost="reward">
+
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+        </GrowthSet>
+        <Evaluator label="QueryMethod"/>
+      </AdaptiveRRT>
+
+      <BasicRRTStrategy label="RRT" debug="false"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5">
+        <!--Evaluator label="Query"/-->
+      </BasicRRTStrategy>
+
+      <!-- Toggle PRM-->
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <ColConnector label="Closest"/>
+        <Evaluator label="Query"/>
+      </TogglePRMStrategy>
+      
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
     </MPStrategies>
 
     <MPTools>
@@ -202,36 +289,41 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
+<<<<<<< HEAD
     <Solver mpStrategyLabel="CompositePRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
+=======
+    <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/> 
+>>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
 
   </Library>
 
-	<TMPLibrary>
-		<TMPStrategies>
-			<SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
-		</TMPStrategies>
+  <TMPLibrary>
+    <TMPStrategies>
+      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
+    </TMPStrategies>
 
-		<PoIPlacementMethods>
-		</PoIPlacementMethods>
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
 
-		<TaskEvaluators>
-			<SimpleMotionEvaluator label="motionEval"/>
-		</TaskEvaluators>
+    <TaskEvaluators>
+      <SimpleMotionEvaluator label="motionEval"/>
+    </TaskEvaluators>
 
-		<TaskDecomposers>
-		</TaskDecomposers>
+    <TaskDecomposers>
+    </TaskDecomposers>
 
-		<TaskAllocators>
-		</TaskAllocators>
+    <TaskAllocators>
+    </TaskAllocators>
 
-		<StateGraphs>
-		</StateGraphs>
+    <StateGraphs>
+    </StateGraphs>
 
-		<TMPTools>
-		</TMPTools>
-	
-		<Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
-	</TMPLibrary>
+    <TMPTools>
+    </TMPTools>
+
+    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
+  </TMPLibrary>
 
 </MotionPlanning>

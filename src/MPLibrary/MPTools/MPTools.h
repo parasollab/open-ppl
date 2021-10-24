@@ -16,7 +16,7 @@
 #include "TRPTool.h"
 #include "ReachabilityUtil.h"
 #include "MPLibrary/MPTools/LKHSearch.h"
-#include "MPLibrary/LearningModels/SVMModel.h"
+//#include "MPLibrary/LearningModels/SVMModel.h"
 
 
 class WorkspaceDecomposition;
@@ -287,7 +287,7 @@ ParseXML(XMLNode& _node) {
   // For the tools that use the XML to set defaults, keep track of whether we've
   // seen them before.
   bool parsedReebGraph = false,
-       parsedSVMModel  = false,
+//       parsedSVMModel  = false,
        parsedMCS       = false;
 
   // MPTools shouldn't have any data of its own, only child nodes.
@@ -399,7 +399,7 @@ ParseXML(XMLNode& _node) {
 
       MeanCurvatureSkeleton3D::SetDefaultParameters(child);
     }
-    else if(child.Name() == "SVMModel") {
+/*    else if(child.Name() == "SVMModel") {
       if(parsedSVMModel)
         throw ParseException(child.Where(), "Second SVMModel node detected. "
             "This node sets default parameters - only one is allowed.");
@@ -407,6 +407,7 @@ ParseXML(XMLNode& _node) {
 
       SVMModel<MPTraits>::SetDefaultParameters(child);
     }
+*/
     else if(child.Name() == "ReachabilityUtil") {
       auto util = new ReachabilityUtil<MPTraits>(child);
       SetReachabilityUtil(util->GetLabel(), util);

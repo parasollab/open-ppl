@@ -18,6 +18,7 @@ class BulletModel;
 class Cfg;
 class ControllerMethod;
 class CSpaceBoundingBox;
+class KDLModel;
 class MatlabMicroSimulator;
 class MicroSimulator;
 class MPProblem;
@@ -70,6 +71,10 @@ class Robot final {
 #endif
   BulletModel* m_bulletModel{nullptr};            ///< The bullet simulation model.
 
+#ifdef PPL_USE_KDL
+  std::unique_ptr<KDLModel> m_kdlModel;
+#endif
+
   std::unique_ptr<RobotCommandQueue> m_hardware;    ///< Hardware command queue.
   std::unique_ptr<StateEstimator> m_stateEstimator; ///< The localization object.
   std::unique_ptr<Battery> m_battery;               ///< An emulated battery.
@@ -82,6 +87,7 @@ class Robot final {
   double m_maxAngularVelocity{1};  ///< Max angular velocity.
   std::string m_capability;        ///< The terrain label that the robot can use.
   bool m_fixed{false};
+  std::vector<double> m_basePosition;
   bool m_manipulator{false};       ///< Is the robot a manipulator?
   std::string m_defaultStrategyLabel; ///< The robot's default MP Strategy.
 
@@ -174,6 +180,13 @@ class Robot final {
     /// @param _filename The file name.
     void ReadMultibodyFile(const std::string& _filename);
 
+    /// Parse a universal robot descriptor file for this robot.
+    /// @param _filename The file name.
+    void ReadURDF(const std::string& _filename, std::string _worldLink);
+
+/*    /// Convert the urdf robot model to classes native to pmpl.
+    /// @param _model The parsed urdf model.
+    void TranslateURDFToPMPL(urdf::Model& _model);*/
     ///@}
 
   public:
@@ -265,6 +278,10 @@ class Robot final {
     /// matlab-based steerable needle. Always returns null when compiled without
     /// matlab support.
     MatlabMicroSimulator* GetMatlabMicroSimulator() noexcept;
+#endif
+
+#ifdef PPL_USE_KDL
+    KDLModel* GetKDLModel() noexcept;
 #endif
 
     ///@}

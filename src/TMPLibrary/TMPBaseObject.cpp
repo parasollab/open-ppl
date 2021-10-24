@@ -1,11 +1,13 @@
 #include "TMPBaseObject.h"
 
+#include "MPProblem/MPProblem.h"
+#include "TMPLibrary/TMPLibrary.h"
+
 /*-------------------------------- Construction ------------------------------*/
 
 TMPBaseObject::
 TMPBaseObject(const std::string& _label, const std::string& _name, bool _debug) :
     m_debug(_debug), m_name(_name), m_label(_label) { }
-
 
 TMPBaseObject::
 TMPBaseObject(XMLNode& _node) {
@@ -29,20 +31,17 @@ GetName() const {
   return m_name;
 }
 
-
 const std::string&
 TMPBaseObject::
 GetLabel() const {
   return m_label;
 }
 
-
 std::string
 TMPBaseObject::
 GetNameAndLabel() const {
   return m_name + "::" + m_label;
 }
-
 
 void
 TMPBaseObject::
@@ -55,49 +54,49 @@ SetLabel(const std::string& _s) {
 void
 TMPBaseObject::
 SetTMPLibrary(TMPLibrary* _l) noexcept {
-	m_tmpLibrary = _l;
+  m_tmpLibrary = _l;
 }
 
 TMPLibrary*
 TMPBaseObject::
 GetTMPLibrary() noexcept {
-	return m_tmpLibrary;
+  return m_tmpLibrary;
 }
 
-TMPBaseObject::TMPStrategyMethodPointer 
+TMPBaseObject::TMPStrategyMethodPointer
 TMPBaseObject::
 GetTMPStrategy(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetTMPStrategy(_label);
+  return m_tmpLibrary->GetTMPStrategy(_label);
 }
 
-TMPBaseObject::PoIPlacementMethodPointer 
+TMPBaseObject::PoIPlacementMethodPointer
 TMPBaseObject::
 GetPoIPlacementMethod(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetPoIPlacementMethod(_label);
+  return m_tmpLibrary->GetPoIPlacementMethod(_label);
 }
 
-TMPBaseObject::TaskEvaluatorMethodPointer 
+TMPBaseObject::TaskEvaluatorMethodPointer
 TMPBaseObject::
 GetTaskEvaluator(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetTaskEvaluator(_label);
+  return m_tmpLibrary->GetTaskEvaluator(_label);
 }
 
-TMPBaseObject::TaskDecomposerMethodPointer 
+TMPBaseObject::TaskDecomposerMethodPointer
 TMPBaseObject::
 GetTaskDecomposer(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetTaskDecomposer(_label);
+  return m_tmpLibrary->GetTaskDecomposer(_label);
 }
 
-TMPBaseObject::TaskAllocatorMethodPointer 
+TMPBaseObject::TaskAllocatorMethodPointer
 TMPBaseObject::
 GetTaskAllocator(const std::string& _label) const noexcept {
-	return m_tmpLibrary->GetTaskAllocator(_label);
+  return m_tmpLibrary->GetTaskAllocator(_label);
 }
 
-TMPTools* 
+TMPTools*
 TMPBaseObject::
 GetTMPTools() const noexcept {
-	return m_tmpLibrary->GetTMPTools();
+  return m_tmpLibrary->GetTMPTools();
 }
     
 TMPBaseObject::InteractionStrategyMethodPointer
@@ -111,7 +110,7 @@ GetInteractionStrategyMethod(const std::string& _label) const noexcept {
 MPLibrary*
 TMPBaseObject::
 GetMPLibrary() const noexcept {
-	return m_tmpLibrary->GetMPLibrary();
+  return m_tmpLibrary->GetMPLibrary();
 }
 
 MPProblem*
@@ -125,7 +124,7 @@ GetMPProblem() const noexcept {
 Plan*
 TMPBaseObject::
 GetPlan() const noexcept {
-	return m_tmpLibrary->GetPlan();
+  return m_tmpLibrary->GetPlan();
 }
 
 TMPBaseObject::StateGraphPointer

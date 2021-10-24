@@ -5,7 +5,12 @@
 #ifdef PMPCfg
 
 #include "ConfigurationSpace/Cfg.h"
-#include "Traits/CfgTraits.h"
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else
+  #include "Traits/TestTraits.h"
+#endif
+
 typedef MPTraits<Cfg> PMPLTraits;
 
 #else
@@ -17,7 +22,7 @@ typedef MPTraits<Cfg> PMPLTraits;
 // constantly.
 extern template class MPLibraryType<PMPLTraits>;
 extern template class MPSolutionType<PMPLTraits>;
-extern template class RoadmapGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
+extern template class GenericStateGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
 extern template class PathType<PMPLTraits>;
 
 

@@ -2,7 +2,6 @@
 
 #include "Utilities/XMLNode.h"
 
-
 std::unique_ptr<Agent>
 Agent::
 Factory(Robot* const _r, XMLNode& _node) {

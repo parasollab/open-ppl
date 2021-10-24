@@ -2,6 +2,10 @@
 
 #include "Actuator.h"
 
+#ifdef PPL_USE_KDL
+  #include "KDLModel.h"
+#endif
+
 #include "Behaviors/Agents/Agent.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -52,6 +56,19 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   // MPStrategies in group decoupled planners. 
   m_defaultStrategyLabel = _node.Read("defaultStrategyLabel", false, "", "The robot individual strategy");
 
+  std::string worldLink = _node.Read("worldLink", false, "", "The link name for the world link in a URDF.");
+
+  m_fixed = _node.Read("fixed", false, m_fixed, 
+                       "Flag indicating if robot has a fixed base.");
+  std::string basePositionString = _node.Read("basePosition", false, "", 
+                       "String indiciating the xyz and rpy of the robot base if fixed.");
+  std::istringstream basePositionStream(basePositionString);
+  m_basePosition = std::vector<double>(6);
+  for(size_t i = 0; i < 6; i++) {
+    basePositionStream >> m_basePosition[i];
+  }
+  
+
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
   std::transform(capability.begin(), capability.end(), capability.begin(), ::tolower);
@@ -73,6 +90,10 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   else if(filename.find(".xml") != std::string::npos) {
     // If we got an XML file, use that parsing mechanism.
     ReadXMLFile(filename);
+  }
+  else if(filename.find(".urdf") != std::string::npos or filename.find(".xacro") != std::string::npos) {
+    // If we got a URDF file, use that parsing mechanism.
+    ReadURDF(filename,worldLink);
   }
   else {
     // Otherwise we got a multibody file, which cannot specify dynamics options
@@ -113,6 +134,12 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     else if(child.Name() == "Agent") {
       SetAgent(Agent::Factory(this, child));
     }
+#ifdef PPL_USE_KDL
+    else if(child.Name() == "KDLModel") {
+      m_kdlModel = std::unique_ptr<KDLModel>(
+        new KDLModel(child,this));
+    }
+#endif
   }
 
   // Initialize the emulated battery.
@@ -329,6 +356,7 @@ ReadMultibodyFile(const std::string& _filename) {
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
 }
 
+
 /*--------------------------- Planning Interface -----------------------------*/
 
 void
@@ -518,6 +546,19 @@ GetMicroSimulator() noexcept {
 
   return m_simulator.get();
 }
+
+#ifdef PPL_USE_KDL
+
+KDLModel*
+Robot::
+GetKDLModel() noexcept {
+  if(!m_kdlModel)
+    m_kdlModel.reset(new KDLModel(this));
+
+  return m_kdlModel.get();
+}
+
+#endif
 
 /*---------------------------- Hardware Interface ----------------------------*/
 

@@ -15,14 +15,14 @@ Decomposition(std::shared_ptr<SemanticTask> _mainTask) {
 Decomposition::
 Decomposition(XMLNode& _node, MPProblem* _problem) {
 	
-	std::string mainTask = _node.Read("taskLabel", true, "", 
+	std::string mainTask = _node.Read("taskLabel", true, "",
 							"Label for the highest level semantic task.");
 
 	m_label = _node.Read("label", true, "", 
 							"Unique label for the decomposition");
 
 	std::string coordinator = _node.Read("coordinator", true, "",
-							"Indicates whcih robot is responsible for coordinating this decompostion.");
+							"Indicates which robot is responsible for coordinating this decompostion.");
 
 	m_coordinator = _problem->GetRobot(coordinator);
 
@@ -104,31 +104,31 @@ GetTask(std::string _label) {
 	return m_taskMap[_label].get();
 }
 
-std::vector<SemanticTask*>& 
+std::vector<SemanticTask*>&
 Decomposition::
 GetMotionTasks() {
 	return m_motionTasks;
 }
 
-std::vector<SemanticTask*>& 
+std::vector<SemanticTask*>&
 Decomposition::
 GetGroupMotionTasks() {
 	return m_groupMotionTasks;
 }
 
-void 
+void
 Decomposition::
 AddMotionTask(SemanticTask* _task) {
 	m_motionTasks.push_back(_task);
 }
 
-void 
+void
 Decomposition::
 AddGroupMotionTask(SemanticTask* _task) {
 	m_groupMotionTasks.push_back(_task);
 }
 		
-const std::unordered_map<std::string,std::shared_ptr<SemanticTask>>& 
+const std::unordered_map<std::string,std::shared_ptr<SemanticTask>>&
 Decomposition::
 GetTaskMap() const {
 	return m_taskMap;
@@ -181,13 +181,13 @@ ParseTask(XMLNode& _node, MPProblem* _problem) {
 	}
 }
     
-void 
+void
 Decomposition::
 SetComplete(bool _complete) {
   m_complete = _complete;
 }
     
-bool 
+bool
 Decomposition::
 IsComplete() {
   return m_complete;

@@ -9,7 +9,11 @@
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
-#include "Traits/CfgTraits.h"
+#ifndef PPL_TEST_TRAITS_H_
+  #include "Traits/CfgTraits.h"
+#else 
+  #include "Traits/TestTraits.h"
+#endif
 
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
@@ -45,11 +49,11 @@ class TMPTools;
 
 class TMPLibrary {
   public:
-  	///@name Local Types
+    ///@name Local Types
     ///@{
 
     ///@}
-		/// Solver represents an input set to MPLibraryType. It includes an
+    /// Solver represents an input set to MPLibraryType. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
     struct Solver {
       std::string label;         ///< The XML label for the strategy to use.
@@ -82,7 +86,7 @@ class TMPLibrary {
 		typedef typename InteractionStrategyMethodSet::TMPMethodPointer     
                                                                 InteractionStrategyMethodPointer;
 		
-		///@}
+    ///@}
     ///@name Construction
     ///@{
 
@@ -104,7 +108,7 @@ class TMPLibrary {
     ///@name TMPStrategyMethod Accessors
     ///@{
 
-    /// Get a TMPStrategyMethod method 
+    /// Get a TMPStrategyMethod method
     TMPStrategyMethodPointer GetTMPStrategy(const std::string& _l);
 
     void AddTMPStrategy(TMPStrategyMethodPointer _sm, const std::string& _l);
@@ -113,12 +117,12 @@ class TMPLibrary {
     ///@name PoIPlacementMethod Accessors
     ///@{
 
-    /// Get a Point-of-Interest placement method 
+    /// Get a Point-of-Interest placement method
     PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string& _l);
 
     void AddPoIPlacementMethod(PoIPlacementMethodPointer _pm, const std::string& _l);
 
-	///@}
+    ///@}
     ///@name TaskEvaluator Accessors
     ///@{
 
@@ -130,7 +134,7 @@ class TMPLibrary {
     ///@name Task Decomposition Accessors
     ///@{
 
-    /// Get a TaskDecomposition 
+    /// Get a TaskDecomposition
     TaskDecomposerMethodPointer GetTaskDecomposer(const std::string& _l);
 
     void AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l);
@@ -139,7 +143,7 @@ class TMPLibrary {
     ///@name Task Allocator Accessors
     ///@{
 
-    /// Get a TaskAllocator 
+    /// Get a TaskAllocator
     TaskAllocatorMethodPointer GetTaskAllocator(const std::string& _l);
 
     void AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l);
@@ -148,9 +152,9 @@ class TMPLibrary {
     ///@name TMPTool Accessors
     ///@{
 
-    /// Get the TMP tool container 
+    /// Get the TMP tool container
     TMPTools* GetTMPTools() {
-    	return m_tmpTools;
+      return m_tmpTools;
     }
 
     ///@}
@@ -174,8 +178,8 @@ class TMPLibrary {
     ///@name Input Accessors
     ///@{
 
-		MPLibrary* GetMPLibrary() const noexcept;
-		void SetMPLibrary(MPLibrary* _l) noexcept;
+    MPLibrary* GetMPLibrary() const noexcept;
+    void SetMPLibrary(MPLibrary* _l) noexcept;
     MPProblem* GetMPProblem() const noexcept;
     void SetMPProblem(MPProblem* const _problem) noexcept;
 
@@ -196,33 +200,33 @@ class TMPLibrary {
     ///@name Solution Accessors
     ///@{
 
-		Plan* GetPlan();
+    Plan* GetPlan();
 
-		void SetPlan(Plan* _plan);
+    void SetPlan(Plan* _plan);
 
     StateGraphPointer GetStateGraph(const std::string& _l);
 
     void AddStateGraph(StateGraphPointer _sg, const std::string& _l);
 
-		///@}
-		///@name Execution
-		///@{
+    ///@}
+    ///@name Execution
+    ///@{
 
-		void Solve(MPProblem* _problem, Decomposition* _decomp, Plan* _plan,
-								Coordinator* _coordinator, std::vector<Robot*> _team); 
-		
-		void InitializeMPProblem(MPProblem* _problem);
+    void Solve(MPProblem* _problem, Decomposition* _decomp, Plan* _plan,
+                Coordinator* _coordinator, std::vector<Robot*> _team);
 
-		///@
-		///@name Debug
-		///@{
+    void InitializeMPProblem(MPProblem* _problem);
 
-		void Print(std::ostream&) const;
+    ///@
+    ///@name Debug
+    ///@{
 
-		///@}
+    void Print(std::ostream&) const;
+
+    ///@}
 
   private:
-  	///@name Execution Helpers
+    ///@name Execution Helpers
     ///@{
 
     /// Execute a solver with the current problem, task, and solution.
@@ -244,8 +248,7 @@ class TMPLibrary {
     bool ParseChild(XMLNode& _node);
 
     ///@}
-
-  	///@name Inputs
+    ///@name Inputs
     ///@{
 
     MPLibrary* 															m_library;	   ///< The underlying MPLibrary
@@ -256,8 +259,8 @@ class TMPLibrary {
 		TMPTools*															  m_tmpTools;    ///< TMPTools container
 		ActionSpace*													  m_actionSpace; ///< ActionSpace container
 
-  	///@}
-  	///@name TMPMethod Sets
+    ///@}
+    ///@name TMPMethod Sets
     ///@{
     /// Method sets hold and offer access to the tmp planning objects of the
     /// corresponding type.
@@ -273,11 +276,10 @@ class TMPLibrary {
   	///@name Solution
   	///@{
 
-		Plan* m_plan;
+    Plan* m_plan;
 
-  	///@}
+    ///@}
 };
-
 
 /*----------------------------------------------------------------------------*/
 

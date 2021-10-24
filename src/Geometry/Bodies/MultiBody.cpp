@@ -3,7 +3,6 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "Utilities/XMLNode.h"
 
 #include <algorithm>
 #include <numeric>
@@ -167,6 +166,13 @@ InitializeDOFs(const Boundary* const _b) {
         m_dofInfo.emplace_back("Spherical Joint " + label + " Angle 1",
                                DofType::Joint, joint->GetJointRange(1));
         break;
+      case Connection::JointType::Prismatic:
+        m_dofInfo.emplace_back("Prismatic Joint " + label + " Angle 0",
+                               DofType::Joint, joint->GetJointRange(0));
+        break;
+      case Connection::JointType::Mimic:
+        //m_dofInfo.emplace_back("Mimic Joint " + label,Range<double>());
+        break; 
       case Connection::JointType::NonActuated:
         break;
     }
@@ -352,16 +358,23 @@ GetCurrentCfg() noexcept {
   // For each joint, copy its values.
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
-    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated
+       or joint->GetConnectionType() == Connection::JointType::Mimic)
       continue;
 
-    // Get the connection object's DHParameters.
+    const auto jointValues = joint->GetJointValues();
+/*    // Get the connection object's DHParameters.
     const DHParameters& dh = joint->GetDHParameters();
 
     // Set the joint DOF values from the DH params.
     *jnt++ = dh.m_theta / PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       *jnt++ = dh.m_alpha / PI;
+*/
+    // Set the joint DOF values from the connection
+    *jnt++ = jointValues[0];
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      *jnt++ = jointValues[1];
   }
 
   // If jnt is not at the end now, we did something wrong.
@@ -441,7 +454,8 @@ AddBody(Body&& _body) {
 Body*
 MultiBody::
 GetBase() noexcept {
-  return m_baseBody;
+  return &m_bodies[m_baseIndex];
+  //return m_baseBody;
 }
 
 
@@ -553,6 +567,11 @@ UpdateJointLimits() noexcept {
         m_dofInfo[i].range   = joint->get()->GetJointRange(0);
         m_dofInfo[++i].range = (++joint)->get()->GetJointRange(1);
         break;
+      case Connection::JointType::Prismatic:
+        throw RunTimeException(WHERE) << "Prismatic joints not yet suported.";
+        break;
+      case Connection::JointType::Mimic:
+        break;
       case Connection::JointType::NonActuated:
         break;
     }
@@ -583,21 +602,40 @@ Configure(const vector<double>& _v) {
 
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
-    m_baseBody->Configure(GenerateBaseTransformation(_v));
+    GetBase()->Configure(GenerateBaseTransformation(_v));
     index = PosDOF() + OrientationDOF();
   }
 
+
   // Configure the links.
+  std::vector<Connection*> mimics;
+
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
+    // Skip mimic joint for now
+    else if(joint->GetConnectionType() == Connection::JointType::Mimic) {
+      mimics.push_back(joint.get());
+      continue;
+    }
 
     // Adjust the joint to reflect new configuration.
-    auto& dh = joint->GetDHParameters();
+/*    auto& dh = joint->GetDHParameters();
     dh.m_theta = _v[index++] * PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       dh.m_alpha = _v[index++] * PI;
+*/
+    std::vector<double> values;
+    values.push_back(_v[index++] * PI);
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      values.push_back(_v[index++] * PI);
+
+    joint->SetJointValues(values);
+  }
+
+  for(auto mimic : mimics) {
+    mimic->SetJointValues({});
   }
 
   // The base transform has been updated, now update the links.
@@ -783,9 +821,9 @@ FindMultiBodyInfo() {
 
 Transformation
 MultiBody::
-GenerateBaseTransformation(const std::vector<double>& _v) const {
-  const size_t pos = PosDOF(),
-               ori = OrientationDOF();
+GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri) const {
+  size_t pos = PosDOF();
+  const size_t ori = OrientationDOF();
 
   const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
 
@@ -793,7 +831,11 @@ GenerateBaseTransformation(const std::vector<double>& _v) const {
   if(ori == 1) {
     rotation.alpha() = _v[pos] * PI;     // about Z
   }
-  else if(ori == 3) {
+  else if(ori == 3 or _forceOri) {
+    if(_forceOri and pos == 0) {
+      pos = 3;
+    }
+      
     rotation.gamma() = _v[pos]     * PI; // about X is the third Euler angle
     rotation.beta()  = _v[pos + 1] * PI; // about Y is the second Euler angle
     rotation.alpha() = _v[pos + 2] * PI; // about Z is the first Euler angle

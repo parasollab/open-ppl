@@ -99,6 +99,8 @@ class GMSPolyhedron final {
     /// centroid.
     /// @param _scalingFactor The scaling factor
     void Scale(double _scalingFactor);
+    void Scale(double _x, double _y, double _z);
+    void Scale(double _x, double _y, double _z, Vector3d _newCenter);
 
     ///@}
     ///@name Equality
@@ -211,6 +213,24 @@ class GMSPolyhedron final {
     ///
     static GMSPolyhedron MakeBox(const Range<double>& _x,
         const Range<double>& _y, const Range<double>& _z);
+
+    /// Build an axis-aligned cylinder.
+    /// @TODO: Fix this comment.
+    /// @param _x The min/max range in the x direction.
+    /// @param _y The min/max range in the y direction.
+    /// @param _z The min/max range in the z direction.
+    /// @return The polyhedron object.
+    /// Vertex diagram:
+    ///
+    ///     2-----6    +Y
+    ///    /|    /|     |
+    ///   3-----7 |     |---+X
+    ///   | 0---|-4    /
+    ///   |/    |/   +Z
+    ///   1-----5
+    ///
+    static GMSPolyhedron MakeCylinder(const Range<double>& _height,
+        const double _radius, const uint32_t _fidelity);
 
     ///@}
 

@@ -3,7 +3,7 @@
 
 #include "MPStrategyMethod.h"
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/MPTask.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
@@ -33,7 +33,7 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
-    typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::CfgType           CfgType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename MPTraits::GroupPathType     GroupPath;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
@@ -60,8 +60,6 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
     ///@{
 
     virtual void Finalize() override;
-
-    virtual void ClearRoadmap() override;
 
     virtual size_t GenerateStart(const std::string& _samplerLabel) override;
 
@@ -167,14 +165,6 @@ Finalize() {
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat);
 #endif
-}
-
-
-template <typename MPTraits>
-void
-GroupStrategyMethod<MPTraits>::
-ClearRoadmap() {
-  throw NotImplementedException(WHERE);
 }
 
 

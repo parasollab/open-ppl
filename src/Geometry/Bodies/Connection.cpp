@@ -1,4 +1,5 @@
 #include "Connection.h"
+#include "EulerAngle.h"
 
 #include "Body.h"
 #include "MultiBody.h"
@@ -15,6 +16,7 @@
 /// @return The joint type represented by _tag.
 Connection::JointType
 GetJointTypeFromTag(std::string _tag, const std::string& _where) {
+
   std::transform(_tag.begin(), _tag.end(), _tag.begin(), ::tolower);
   if(_tag == "revolute")
     return Connection::JointType::Revolute;
@@ -53,7 +55,9 @@ Connection::
 Connection(MultiBody* const _owner)
   : m_multibody(_owner),
     m_jointType(JointType::NonActuated)
-{ }
+{ 
+  m_jointParamType=JointParamType::DH;
+}
 
 
 Connection::
@@ -101,6 +105,7 @@ Connection(MultiBody* const _owner, XMLNode& _node)
         "", "Transformation parameters of parent to DH frame.");
     std::istringstream buffer(parentToDHString);
     buffer >> m_transformationToDHFrame;
+    m_jointParamType=JointParamType::DH;
     if(!buffer)
       throw ParseException(_node.Where()) << "transformParentToDH is "
                                           << "ill-formed.";
@@ -150,14 +155,20 @@ Connection&
 Connection::
 operator=(const Connection& _other) {
   if(this != &_other) {
-    //m_multibody               = nullptr;
-    m_multibody               = _other.m_multibody;
-    m_transformationToBody2   = _other.m_transformationToBody2;
-    m_transformationToDHFrame = _other.m_transformationToDHFrame;
-    m_dhParameters            = _other.m_dhParameters;
-    m_jointType               = _other.m_jointType;
-    m_bodyIndices             = _other.m_bodyIndices;
-    m_jointRange              = _other.m_jointRange;
+    m_multibody                  = nullptr;
+    m_transformationToBody2      = _other.m_transformationToBody2;
+    m_transformationToDHFrame    = _other.m_transformationToDHFrame;
+    m_dhParameters               = _other.m_dhParameters;
+    m_jointType                  = _other.m_jointType;
+    m_bodyIndices                = _other.m_bodyIndices;
+    m_jointRange                 = _other.m_jointRange;
+    m_jointParamType             = _other.m_jointParamType;
+    m_transformationToChildFrame = _other.m_transformationToChildFrame;
+    m_jointAxis                  = _other.m_jointAxis;
+    m_mimicConnectionName        = _other.m_mimicConnectionName;
+    m_mimicConnection            = _other.m_mimicConnection;
+    m_mimicMultiplier            = _other.m_mimicMultiplier;
+    m_mimicOffset                = _other.m_mimicOffset;
   }
 
   return *this;
@@ -210,6 +221,8 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
     }
   }
 
+  m_jointParamType = JointParamType::DH;
+
   //transformation to DHFrame
   m_transformationToDHFrame = ReadField<Transformation>(_is, _cbs,
       "Failed reading transformation to DH frame.");
@@ -222,7 +235,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_transformationToBody2 = ReadField<Transformation>(_is, _cbs,
       "Failed reading transformation to next body.");
 }
-
+    
 
 void
 Connection::
@@ -274,6 +287,12 @@ GetConnectionType() const noexcept {
   return m_jointType;
 }
 
+Connection::JointParamType
+Connection::    
+GetParamType() const noexcept {
+  return m_jointParamType;
+}
+
 
 bool
 Connection::
@@ -288,6 +307,11 @@ IsSpherical() const noexcept {
   return m_jointType == JointType::Spherical;
 }
 
+bool
+Connection::
+IsPrismatic() const noexcept {
+  return m_jointType == JointType::Prismatic;
+}
 
 bool
 Connection::
@@ -295,6 +319,29 @@ IsNonActuated() const noexcept {
   return m_jointType == JointType::NonActuated;
 }
 
+bool
+Connection::
+IsMimic() const noexcept {
+  return m_jointType == JointType::Mimic;
+}
+    
+std::string
+Connection::
+GetMimicConnectionName() const noexcept {
+  return m_mimicConnectionName;
+}
+
+void
+Connection::
+SetMimicConnection(Connection* _mimic) {
+  m_mimicConnection = _mimic;
+}
+
+Connection*
+Connection::
+GetMimicConnection() const noexcept {
+  return m_mimicConnection;
+}
 
 const Range<double>&
 Connection::
@@ -411,6 +458,176 @@ InvertConnection() {
 
   m_transformationToDHFrame = -m_transformationToDHFrame;
   m_transformationToBody2 = -m_transformationToBody2;
+}
+
+Transformation&
+Connection::
+GetTransformationToChildFrame() noexcept {
+  return m_transformationToChildFrame;
+}
+
+const Transformation& 
+Connection::
+GetTransformationToChildFrame() const noexcept {
+  return m_transformationToChildFrame;
+}
+
+Vector3d&
+Connection::
+GetJointAxis() noexcept {
+  return m_jointAxis;
+}
+
+const Vector3d&
+Connection::
+GetJointAxis() const noexcept {
+  return m_jointAxis;
+}
+    
+const std::vector<double> 
+Connection::
+GetJointValues() {
+
+  std::vector<double> values;
+
+  switch(m_jointParamType) {
+    case JointParamType::DH:
+
+      values.push_back(m_dhParameters.m_theta / PI);
+
+      if(GetConnectionType() == Connection::JointType::Spherical) {
+        values.push_back(m_dhParameters.m_alpha / PI);
+      }
+      break;
+
+    case JointParamType::URDF:
+      values = m_jointValues;
+  };
+
+  return values;
+}
+
+void
+Connection::
+SetJointValues(std::vector<double> _values) {
+
+  //TODO::Add check on the number of values
+
+  if(m_jointType == JointType::Mimic) {
+    m_jointValues = m_mimicConnection->GetJointValues();
+    for(size_t i = 0; i < m_jointValues.size(); i++) {
+      m_jointValues[i] = m_jointValues[i] * m_mimicMultiplier + m_mimicOffset;
+    }
+    return;
+  }
+
+  switch(m_jointParamType) {
+
+    case JointParamType::DH:
+
+      m_dhParameters.m_theta = (_values[0]);
+      if(GetConnectionType() == Connection::JointType::Spherical)
+        m_dhParameters.m_alpha = (_values[1]);
+      break;
+
+    case JointParamType::URDF:
+
+      m_jointValues = _values;
+      break;
+  };
+
+}
+
+const Transformation
+Connection::
+GetTransformationFromJoint() const noexcept {
+  
+  switch(m_jointParamType) {
+    case JointParamType::DH:
+      return GetTransformationToDHFrame() *
+             m_dhParameters.GetTransformation() *
+             GetTransformationToBody2();
+      break;
+    case JointParamType::URDF:
+      return GetURDFTransformation();
+      break;
+  };
+
+  return Transformation();
+}
+
+
+const Transformation
+Connection::
+GetURDFTransformation() const noexcept {
+
+  if(GetConnectionType() == Connection::JointType::NonActuated) {
+    return GetPreviousBody()->GetTransformationToURDFReferenceFrame() *
+      GetTransformationToChildFrame() *
+      GetTransformationToBody2();
+  }
+
+  return GetPreviousBody()->GetTransformationToURDFReferenceFrame() *
+         GetTransformationToChildFrame() *
+         ApplyURDFJointValues() *
+         GetTransformationToBody2();
+}
+
+const Transformation
+Connection::
+ApplyURDFJointValues() const noexcept {
+
+  Connection::JointType jointType = GetConnectionType() == Connection::JointType::Mimic 
+                                  ? m_mimicConnection->GetConnectionType()
+                                  : GetConnectionType();
+
+
+  if(jointType == Connection::JointType::Revolute) {
+
+    // define reused functions
+    double ux,uy,uz,C,S,t;
+    ux = m_jointAxis[0];
+    uy = m_jointAxis[1];
+    uz = m_jointAxis[2];
+
+    C = cos(m_jointValues[0]);
+    S = sin(m_jointValues[0]);
+    t = 1 - C;
+
+    Matrix<3,3> rotation;
+    //first row
+    rotation[0][0] = t*(ux*ux) + C;
+    rotation[0][1] = t*ux*uy - S*uz;
+    rotation[0][2] = t*ux*uz + S*uy;
+
+    //second row
+    rotation[1][0] = t*ux*uy + S*uz;
+    rotation[1][1] = t*(uy*uy) + C;
+    rotation[1][2] = t*uy*uz - S*ux;
+
+    //third row
+    rotation[2][0] = t*ux*uz - S*uy;
+    rotation[2][1] = t*uy*uz + S*ux;
+    rotation[2][2] = t*(uz*uz) + C;
+
+
+    Transformation rotAboutAxis(Vector3d(),rotation);
+
+    return rotAboutAxis;
+  }
+  else if(jointType == Connection::JointType::Prismatic) {
+    Vector3d translation;
+    translation[0] = m_jointAxis[0] * m_jointValues[0];
+    translation[1] = m_jointAxis[1] * m_jointValues[0];
+    translation[2] = m_jointAxis[2] * m_jointValues[0];
+
+    mathtool::Matrix3x3 identity;
+    mathtool::identity(identity);
+
+    return Transformation(translation,identity);
+  }
+
+  return Transformation();
 }
 
 /*---------------------------------- Debug -----------------------------------*/

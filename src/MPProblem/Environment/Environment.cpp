@@ -207,7 +207,7 @@ Color() const noexcept {
 }
 
 
-const Boundary*
+Boundary*
 Terrain::
 GetBoundary() const noexcept {
   return m_boundary.get();
@@ -553,6 +553,8 @@ ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots) {
   for(const auto& robot : _robots) {
     const auto multibody = robot->GetMultiBody();
     for(const auto& body : multibody->GetBodies()) {
+      if(body.IsVirtual())
+        continue;
       const auto b = body.GetPolyhedron().ComputeBoundingBox();
 
       for(size_t i = 0; i < dimensions; ++i)
@@ -625,7 +627,7 @@ GetTimeRes() const noexcept {
 
 /*----------------------------- Boundary Functions ---------------------------*/
 
-const Boundary*
+Boundary*
 Environment::
 GetBoundary() const noexcept {
   return m_boundary.get();

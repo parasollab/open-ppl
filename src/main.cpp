@@ -8,6 +8,7 @@
 #include "MPProblem/GroupTask.h"
 #include "Utilities/PMPLExceptions.h"
 
+#include "MPProblem/Robot/KDLModel.h"
 
 int
 main(int _argc, char** _argv) {
@@ -31,6 +32,14 @@ main(int _argc, char** _argv) {
 
   // Create storage for the solution and ask the library to solve our problem.
   Robot* const robot = problem->GetRobots().front().get();
+
+  // Temp stuff to test IK
+  // auto kdl = robot->GetKDLModel();
+  // std::vector<double> pos = {.3,-.3,.5};
+  // std::vector<std::vector<double>> ori = {{1,0,0},{0,1,0},{0,0,1}};
+
+  // auto joints = kdl->InverseKinematics(pos,ori);
+
   const auto robotTasks = problem->GetTasks(robot);
     for(auto task : robotTasks)
       if(!task->GetStatus().is_complete())

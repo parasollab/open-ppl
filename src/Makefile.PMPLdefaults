@@ -15,14 +15,15 @@
 # Default system variables
 ################################################################################
 UTILS_DEF  = $(CD_DEF) $(STAPL_DEF) $(CGAL_DEF) $(BOOST_DEF) $(BULLET_DEF) \
-             $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS)
+             $(PHYSICAL_ROBOTS_DEF) $(LKH_DEF) $(MATLAB_DEFS) $(URDF_DEFS)
 UTILS_INCL = $(CD_INCL) $(TINYXML_INCL) $(MATHTOOL_INCL) $(MODELLOADER_INCL) \
 	     $(MPNN_INCL) $(TETGEN_INCL) $(BULLET_INCL) $(PHYSICAL_ROBOTS_INCL) \
 	     $(GLVIS_INCL) $(LKH_INCL) $(DLIB_INCL) $(MATLAB_INCL) $(CGAL_INC) \
-	     $(EIGEN_INCL) #$(JSON_INCL)
+	     $(EIGEN_INCL) #$(URDF_INCL) #$(JSON_INCL)
 UTILS_LIB  = $(CD_LIB) $(CGAL_LIB) $(TINYXML_LIB) $(MODELLOADER_LIB) \
 	     $(MPNN_LIB) $(KMEANS_LIB) $(TETGEN_LIB) $(BULLET_LIB) \
-	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS) $(MATLAB_LIBS)
+	     $(PHYSICAL_ROBOTS_LIBS) $(GLVIS_LIBS) $(LKH_LIBS) $(MATLAB_LIBS) \
+       #$(URDF_LIBS)
 UTILS_LIBFILE = $(CD_LIBFILE) $(TINYXML_LIBFILE) \
 		$(CGAL_LIBFILE) $(MODELLOADER_LIBFILE) \
 		$(MPNN_LIBFILE) $(KMEANS_LIBFILE) $(TETGEN_LIBFILE) \
@@ -256,6 +257,7 @@ endif
 QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/Qt -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
            -I$(QT_BASE)/QtOpenGL -I$(BASE)/QtWidgets -I$(BASE)QtApplication
 QT_LIBS := -lQtGui -lQtOpenGL -lQtCore
+
 ifeq ($(platform), MACOS_gcc)
   QT_INCL := -I$(QT_BASE) -I$(QT_BASE)/QtCore -I$(QT_BASE)/QtGui \
              -I$(QT_BASE)/QtOpenGL -I$(QT_BASE)/QtWidgets
@@ -263,19 +265,22 @@ ifeq ($(platform), MACOS_gcc)
 endif
 
 # Moc setup
-#QT_MOC_BASE = /usr/lib64/qt4/bin
-QT_MOC_BASE = /usr/bin
+QT_MOC_BASE = /usr/lib64/qt4/bin
+#QT_MOC_BASE = /usr/bin
 ifeq ($(platform), MACOS_gcc)
   QT_MOC_BASE = /usr/local/opt/qt/bin
 endif
+
 QT_MOC  := $(shell find $(QT_MOC_BASE)/moc-qt4 2> /dev/null)
-ifeq ($(platform), Ubuntu) 
+
+ifeq ($(platform), Ubuntu)
   QT_MOC_BASE = /usr/share/qt4/bin
   QT_MOC  := $(shell find $(QT_MOC_BASE)/moc 2> /dev/null)
   ifndef QT_MOC
     $(error Qt moc not found at $(QT_MOC_BASE)/moc.)
   endif
 endif
+
 ifndef QT_MOC
   $(error Qt moc not found at $(QT_MOC_BASE)/moc-qt4.)
 endif
@@ -410,6 +415,47 @@ endif
 #	@cd $(JSON_DIR) && $(MAKE) platform=$(platform)
 
 ################################################################################
+# kdl
+################################################################################
+#KDL_DIR := $(UTILS_DIR)/orocos_kinematics_dynamics/devel_isolated/orocos_kdl
+#KDL_INCL := -I$(KDL_DIR)/include
+#KDL_LIBS := $(KDL_DIR)/lib/liborocos-kdl.so
+#KDL_SRCS := \
+#  Utilities/KDLParser.cpp
+
+################################################################################
+# urdf
+################################################################################
+URDF_INCL :=
+URDF_LIBS :=
+URDF_DEFS :=
+URDF_SRCS :=
+
+ROS_DIR :=
+
+ifeq ($(platform), Ubuntu)
+  ROS_DIR := /opt/ros/melodic
+  URDF_INCL := -I$(ROS_DIR)/include -I/usr/include/eigen3
+  #URDF_LIBS := -L/$(ROS_DIR)/lib -lorocos-kdl -lkdl_parser
+  URDF_LIBS := -L/$(ROS_DIR)/lib $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so -lorocos-kdl -lkdl_parser $(ROS_DIR)/lib/libtrac_ik.so
+  URDF_DEFS := -DPPL_USE_KDL -DPPL_USE_URDF -DIKFAST_NO_MAIN
+  URDF_SRCS := \
+    MPProblem/Robot/KDLModel.cpp \
+    MPProblem/Robot/Kinematics/ur_kin.cpp \
+    Utilities/KDLParser.cpp \
+    Utilities/URDFParser.cpp \
+    Behaviors/Agents/StepFunctions/ROSStepFunction.cpp \
+		Behaviors/Agents/StepFunctions/ROSStepFunctionFactory.cpp \
+		Geometry/Bodies/URDFSupport.cpp \
+		MPProblem/Robot/RobotURDFSupport.cpp
+else
+  URDF_SRCS := \
+  	Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
+		MPProblem/Robot/RobotEmptyFunctions.cpp
+endif
+
+
+################################################################################
 # Simulator
 ################################################################################
 SIM_DEF  :=
@@ -459,81 +505,36 @@ TASK_SRCS := \
   TMPLibrary/InteractionStrategies/IndependentPaths.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp \
   TMPLibrary/InteractionStrategies/TemplateInteractions.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/DisjointWorkspaces.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/OverlappingWorkspacesDensity.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/WorkspaceGuidance.cpp \
-  TMPLibrary/PoIPlacementMethods/ITPlacement/ITPlacementMethod.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \
 	TMPLibrary/Solution/Plan.cpp \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
   TMPLibrary/StateGraphs/ModeGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
-  TMPLibrary/StateGraphs/Helpers/ITConnector.cpp \
-  TMPLibrary/StateGraphs/Helpers/ITConstructor.cpp \
-  TMPLibrary/TaskAllocators/AuctionMethod.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
-  TMPLibrary/TaskDecomposers/ITTaskBreakup.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
-  TMPLibrary/TaskEvaluators/HCRQuery.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/BasicHCR.cpp \
-  TMPLibrary/TMPStrategies/DummyStrategyMethod.cpp \
-  TMPLibrary/TMPStrategies/ITMethod.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
-  TMPLibrary/TMPTools/InteractionTemplate.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \
-  Behaviors/Agents/BatteryConstrainedGroup.cpp \
   Behaviors/Agents/ChildAgent.cpp \
-  Behaviors/Agents/ClientAgent.cpp \
   Behaviors/Agents/Coordinator.cpp \
-  Behaviors/Agents/HandoffAgent.cpp \
   Behaviors/Agents/PathFollowingAgent.cpp \
-  Behaviors/Agents/PathFollowingChildAgent.cpp \
   Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/RoadmapFollowingAgent.cpp \
   Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
   Behaviors/Agents/StepFunctions/EmptyStepFunction.cpp \
+  Behaviors/Agents/StepFunctions/FollowPath.cpp \
   Behaviors/Agents/StepFunctions/StepFunction.cpp \
-  Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
-  Communication/Messages/Message.cpp \
   TMPLibrary/TMPLibrary.cpp
 ################################################################################
 # TMP Main
 ################################################################################
 PPL_SRCS := \
   $(PMPL_DIR)/tmp_main.cpp \
-
-################################################################################
-# Master Node
-################################################################################
-MASTER_SRCS := \
-  master_node_main.cpp \
-
-################################################################################
-# Communication
-################################################################################
-COMM_SRCS := \
-  Communication/Communicator.cpp \
-  Communication/Publisher.cpp \
-  Communication/Subscriber.cpp \
-
-################################################################################
-# Planning Server
-################################################################################
-PLANNER_SRCS := \
-  $(PMPL_DIR)/planner_main.cpp \
-	Utilities/PlanningServer.cpp \
-
-################################################################################
-# Server
-################################################################################
-CLIENT_SRCS := \
-  $(PMPL_DIR)/client.cpp \
 
 ################################################################################
 # Hardware
@@ -560,29 +561,48 @@ ifneq ($(icreate), 0)
   HARDWARE_SRCS += MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp
 endif
 
+################################################################################
+# Testing Sources
+################################################################################
+#TEST_DEF  :=
+#tests: TEST_DEF
+TEST_INCL :=
+TEST_LIBS :=
+TEST_SRCS := \
+  tests_main.cpp \
+  Testing/MPProblem/MPProblemTests.cpp \
+  Testing/TMPLibrary/TaskAllocators/TaskAllocatorMethodTest.cpp \
+  Testing/TMPLibrary/TaskDecomposers/TaskDecomposerMethodTest.cpp \
+  Testing/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.cpp \
+  Testing/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.cpp \
+  Testing/TMPLibrary/TMPLibraryTests.cpp \
+  Testing/TestBaseObject.cpp
 
 ################################################################################
 # PMPL
 ################################################################################
 PMPL_DEF  := -D$(ROBOT_DEF)
-PMPL_INCL := -I$(PMPL_DIR)
-PMPL_LIB  := -L$(PMPL_DIR) -lobprm
+PMPL_INCL := -I$(PMPL_DIR) $(URDF_INCL) $(KDL_INCL)
+PMPL_LIB  := -L$(PMPL_DIR) $(URDF_LIBS) $(KDL_LIBS) -lobprm
 
 PMPL_LIBFILE := $(PMPL_DIR)/libobprm.a
 
 PMPL_SRCS := \
+  Utilities/ClockClass.cpp \
+  Utilities/CountingStreamBuffer.cpp \
+  Utilities/IOUtils.cpp \
+  Utilities/MetricUtils.cpp \
+  Utilities/MPUtils.cpp \
+  Utilities/SSSP.cpp \
+  Utilities/XMLNode.cpp \
   Behaviors/Agents/Agent.cpp \
   Behaviors/Agents/AgentFactory_pmpl.cpp \
-  Behaviors/Agents/BatteryBreak.cpp \
-  Behaviors/Controllers/CarlikeNeedleController.cpp \
   Behaviors/Controllers/ControllerMethod.cpp \
   Behaviors/Controllers/ControlSetGenerators.cpp \
   Behaviors/Controllers/SimpleController.cpp \
-  Behaviors/Controllers/ICreateController.cpp \
   ConfigurationSpace/Cfg.cpp \
   ConfigurationSpace/Formation.cpp \
   ConfigurationSpace/GroupCfg.cpp \
-  ConfigurationSpace/ReachableVolumes.cpp \
   Geometry/GMSPolygon.cpp \
   Geometry/GMSPolyhedron.cpp \
   Geometry/Bodies/Body.cpp \
@@ -604,21 +624,18 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
-  MPLibrary/LearningModels/PolynomialKernelGradient.cpp \
-  MPLibrary/LearningModels/RadialKernelGradient.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
-  MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
-  MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \
-  MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.cpp \
+  MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp \
   MPProblem/MPProblem.cpp \
   MPProblem/MPTask.cpp \
   MPProblem/GroupTask.cpp \
-  MPProblem/InteractionInformation.cpp \
   MPProblem/Constraints/Constraint.cpp \
   MPProblem/Constraints/BoundaryConstraint.cpp \
   MPProblem/Constraints/CSpaceConstraint.cpp \
@@ -631,25 +648,18 @@ PMPL_SRCS := \
   MPProblem/RobotGroup/RobotGroup.cpp \
   MPProblem/TaskHierarchy/Decomposition.cpp \
   MPProblem/TaskHierarchy/SemanticTask.cpp \
-  MPProblem/TaskHierarchy/SubtaskFlow.cpp \
   Simulator/BulletEngine.cpp \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
-  Utilities/ClockClass.cpp \
-  Utilities/CountingStreamBuffer.cpp \
-  Utilities/IOUtils.cpp \
-  Utilities/MedialAxis2D.cpp \
-  Utilities/MetricUtils.cpp \
-  Utilities/MPUtils.cpp \
-  Utilities/SSSHP.cpp \
-  Utilities/SSSP.cpp \
-  Utilities/XMLNode.cpp \
   Workspace/GridOverlay.cpp \
   Workspace/WorkspaceDecomposition.cpp \
   Workspace/WorkspacePortal.cpp \
   Workspace/WorkspaceRegion.cpp \
   Workspace/WorkspaceSkeleton.cpp \
   MPLibrary/PMPL.cpp \
+  $(URDF_SRCS) \
   $(MATLAB_SRCS)
   #Behaviors/Controllers/PIDFeedback.cpp \
+
+

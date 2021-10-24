@@ -26,7 +26,7 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
                       "MPStrategy label to query roadaps.");
   m_numSamples = _node.Read("numSamples",false,1,1,1000,
                       "The number of samples to generate for each transtion.");
-  m_maxAttempts = _node.Read("maxAttemptz",false,1,1,1000,
+  m_maxAttempts = _node.Read("maxAttempts",false,1,1,1000,
                       "The max number of attempts to generate a sample.");
 }
 
