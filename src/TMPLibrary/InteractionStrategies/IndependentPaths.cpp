@@ -78,6 +78,7 @@ operator()(Interaction* _interaction, State& _state) {
     auto toNextStageTasks = GenerateTasks(startConditions,
                                           startConstraintMap,
                                           goalConstraintMap);
+    _interaction->SetToStageTasks(next,toNextStageTasks);
 
     // Configure static robots as obstacles
     ConfigureStaticRobots(staticRobots,_state);

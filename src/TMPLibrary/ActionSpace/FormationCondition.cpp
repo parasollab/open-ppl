@@ -172,6 +172,9 @@ GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap) {
     constraintMap[robot->GetMultiBody()] = constraint;
   }
 
+  if(robots.size() == 1)
+    return nullptr;
+
   auto formation = new Formation(robots,leader,constraintMap);
   return formation;
 }

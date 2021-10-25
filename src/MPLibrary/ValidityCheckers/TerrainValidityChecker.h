@@ -18,7 +18,6 @@ class TerrainValidityChecker : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -34,9 +33,6 @@ class TerrainValidityChecker : public ValidityCheckerMethod<MPTraits> {
 
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const string& _callName) override;
-
-    virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
-        const std::string& _caller) override;
 
     ///@}
 
@@ -65,11 +61,6 @@ TerrainValidityChecker<MPTraits>::
 IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
   if(_cfg.GetRobot()->GetLabel() == "coordinator")
     return true;
-
-  // Assumes passive robots (objects) can be dumped anywhere
-  if(!_cfg.GetRobot()->GetMultiBody()->IsActive())
-    return true;
-
   auto env = this->GetEnvironment();
 
   /// Check whether the cfg is within a terrain boundary. If so,
@@ -107,19 +98,6 @@ IsValidImpl(CfgType& _cfg, CDInfo&, const string&) {
   }
 
   // If the cfg is not in any invalid terrains, return true.
-  return true;
-}
-
-template <typename MPTraits>
-bool
-TerrainValidityChecker<MPTraits>::
-IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  for(size_t i = 0; i < _cfg.GetNumRobots(); i++) {
-    auto& cfg = _cfg.GetRobotCfg(i);
-    if(!this->IsValidImpl(cfg,_cdInfo,_caller))
-      return false;
-  } 
-
   return true;
 }
 

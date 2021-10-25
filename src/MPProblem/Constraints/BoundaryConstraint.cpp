@@ -60,6 +60,36 @@ Satisfied(const Cfg& _c) const {
   return m_boundary->InBoundary(_c);
 }
 
+/*-------------------------------- Operators ---------------------------------*/
+
+bool
+BoundaryConstraint::
+operator==(const BoundaryConstraint& _b) const {
+  if(m_robot != _b.m_robot)
+    return false;
+
+  auto b1 = m_boundary.get();
+  auto b2 = _b.m_boundary.get();
+
+  if(b1->Type() != b2->Type())
+    return false;
+
+  if(b1->Name() != b2->Name())
+    return false;
+
+  if(b1->GetDimension() != b2->GetDimension())
+    return false;
+
+  if(b1->GetCenter() != b2->GetCenter())
+    return false;
+
+  for(size_t i = 0; i < b1->GetDimension(); i++) {
+    if(!(b1->GetRange(i) == b2->GetRange(i)))
+      return false;
+  }
+
+  return true;
+}
 /*-------------------------------- Debugging ---------------------------------*/
 
 std::ostream&

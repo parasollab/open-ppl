@@ -93,7 +93,19 @@ Interaction::
 SetToStagePaths(const std::string& _stage, std::vector<Path*> _paths) {
   m_toStagePaths[_stage] = _paths;
 }
+        
+std::vector<GroupTask*>
+Interaction::
+GetToStageTasks(const std::string& _stage) const {
+  return m_toStageTasks.at(_stage);
+}
     
+void
+Interaction::
+SetToStageTasks(const std::string& _stage, std::vector<GroupTask*> _tasks) {
+  m_toStageTasks[_stage] = _tasks;
+}
+
 /*--------------------- Helper Functions ---------------------*/
 
 void

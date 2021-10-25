@@ -18,10 +18,13 @@
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
-#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -47,6 +50,7 @@
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
@@ -55,7 +59,9 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -97,13 +103,16 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
-    MinkowskiDistance<MPTraits>
+    MinkowskiDistance<MPTraits>,
+    WeightedEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
   typedef boost::mpl::list<
+    AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
-    AlwaysTrueValidity<MPTraits>
+    ComposeValidity<MPTraits>,
+    TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -148,6 +157,7 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    GroupQuery<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
     TimeEvaluator<MPTraits>
@@ -158,7 +168,9 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
+    GroupPRM<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>

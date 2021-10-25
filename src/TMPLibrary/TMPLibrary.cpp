@@ -40,6 +40,8 @@ TMPLibrary(){
   m_stateGraphs = new StateGraphSet(this,
                   typename TMPTraits::StateGraphList(), "StateGraphs");
   m_tmpTools = new TMPTools(this);
+
+  m_actionSpace = new ActionSpace(this);
 }
 
 

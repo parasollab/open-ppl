@@ -3,8 +3,10 @@
 
 #include "StateGraph.h"
 
+#include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
@@ -14,6 +16,7 @@
 
 #include "Utilities/Hypergraph.h"
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -26,7 +29,14 @@ class ModeGraph : public StateGraph {
     ///@name Local Types 
     ///@{
 
-    typedef RobotGroup                                       Mode;
+    struct Mode {
+
+      RobotGroup* robotGroup;
+      std::unordered_set<Formation*> formations;
+      std::vector<std::unique_ptr<Constraint>> constraints;
+
+    };
+
     typedef Hypergraph<Mode*,Action*>                        ModeHypergraph;
     typedef size_t                                           VID;
     typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
@@ -37,9 +47,12 @@ class ModeGraph : public StateGraph {
     typedef std::pair<GroupRoadmapType*,VID>                 GroundedVertex;
 
     struct Transition {
-      std::unordered_map<Robot*,Path*> explicitPaths;
+
+      //std::unordered_map<Robot*,Path*> explicitPaths;
+      std::unordered_map<Robot*,std::vector<Cfg>> explicitPaths;
       std::unordered_map<Robot*,std::pair<VID,VID>> implicitPaths;
       double cost;
+
     };
 
     typedef Hypergraph<GroundedVertex,Transition>           GroundedHypergraph;
@@ -58,6 +71,8 @@ class ModeGraph : public StateGraph {
     ///@}
     ///@name Interface
     ///@{
+
+    void Initialize() override;
 
     void GenerateRepresentation(const State& _start);
 
@@ -86,28 +101,31 @@ class ModeGraph : public StateGraph {
 
     void ConnectTransitions();
 
-    std::vector<VID> ApplyAction(Action* _action, 
-                    std::set<std::set<VID>>& _applied);
+    void ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied,
+                     std::vector<VID>& _newModes);
 
-    std::vector<std::set<ModeGraph::VID>> CollectModeSets(
+    std::vector<std::vector<ModeGraph::VID>> CollectModeSets(
                const std::vector<std::vector<VID>>& _formationModes, 
                size_t _index, 
-               const std::set<VID>& _partialSet);
+               const std::vector<VID>& _partialSet);
 
 
-    std::vector<std::vector<ModeGraph::Mode*>> CollectModeSetCombinations(
+    std::vector<std::vector<Mode*>> CollectModeSetCombinations(
                         const std::vector<std::vector<std::vector<Robot*>>>& _possibleAssignments,
                         size_t _index, std::vector<Mode*> _partial, 
                         const std::set<Robot*>& _used);
 
 
-    std::vector<ModeGraph::Mode*> CollectModeCombinations(const std::vector<std::vector<Robot*>>& _possibleModeAssignments,
+    std::vector<Mode*> CollectModeCombinations(const std::vector<std::vector<Robot*>>& _possibleModeAssignments,
                         size_t _index, const std::vector<Robot*> _partial,
                         const std::set<Robot*>& _used);
 
-    void SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end);
+    void SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
+                                 std::unordered_map<RobotGroup*,Mode*> _startModeMap);
 
-    std::set<VID> AddStateToGroundedHypergraph(const State& _state);
+    VID AddMode(Mode* _mode);
+
+    std::set<VID> AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap);
 
     ///@}
     ///@name Internal State
@@ -122,6 +140,8 @@ class ModeGraph : public StateGraph {
     std::unique_ptr<MPSolution> m_solution;
 
     // Additional info
+
+    std::vector<unique_ptr<Mode>> m_modes;
 
     std::unordered_map<VID,std::unordered_set<VID>> m_modeGroundedVertices;
 

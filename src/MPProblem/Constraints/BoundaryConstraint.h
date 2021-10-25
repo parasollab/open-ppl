@@ -45,6 +45,12 @@ class BoundaryConstraint : public Constraint {
     virtual bool Satisfied(const Cfg& _c) const override;
 
     ///@}
+    ///@name Operators
+    ///@{
+
+    bool operator==(const BoundaryConstraint& _b) const;
+
+    ///@}
 
   protected:
 

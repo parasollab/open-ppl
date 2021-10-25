@@ -113,6 +113,29 @@ operator=(Formation&& _formation) {
   return *this;
 }
 
+/*--------------------------------- Comparison -------------------------------*/
+
+bool
+Formation::
+operator==(const Formation& _formation) {
+  return !(*this != _formation);
+}
+
+bool 
+Formation::
+operator!=(const Formation& _formation) {
+  if(m_robots != _formation.m_robots)
+    return true;
+
+  if(m_leader != _formation.m_leader)
+    return true;
+
+  if(m_constraintMap != _formation.m_constraintMap)
+    return true;
+
+  return false;
+}
+
 /*---------------------------------- Interface -------------------------------*/
 
 std::vector<Cfg>

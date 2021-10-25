@@ -55,6 +55,10 @@ class Interaction : public Action {
 
     void SetToStagePaths(const std::string& _stage, std::vector<Path*> _paths);
 
+    std::vector<GroupTask*> GetToStageTasks(const std::string& _stage) const;
+
+    void SetToStageTasks(const std::string& _stage, std::vector<GroupTask*> _tasks);
+
     ///@}
 
   protected:
@@ -76,6 +80,8 @@ class Interaction : public Action {
     std::unordered_map<std::string,GroupPathType*> m_toStageGroupPaths;
 
     std::unordered_map<std::string,std::vector<Path*>> m_toStagePaths;
+
+    std::unordered_map<std::string,std::vector<GroupTask*>> m_toStageTasks;
 
     ///@}
 };

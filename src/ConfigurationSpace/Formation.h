@@ -22,6 +22,18 @@ class Formation {
       Robot* referenceRobot;
       Body* referenceBody;
       Transformation transformation;
+
+      bool operator==(const FormationConstraint& _other) const {
+        return dependentRobot == _other.dependentRobot
+           and dependentBody  == _other.dependentBody
+           and referenceRobot == _other.referenceRobot
+           and referenceBody  == _other.referenceBody
+           and transformation == _other.transformation;
+      }
+
+      bool operator!=(const FormationConstraint& _other) const {
+        return !(*this == _other);
+      }
     };
 
     ///@}
@@ -42,6 +54,13 @@ class Formation {
 
     Formation& operator=(const Formation& _formation);
     Formation& operator=(Formation&& _formation);
+
+    ///@}
+    ///@name Comparison
+    ///@{
+
+    bool operator==(const Formation& _formation);
+    bool operator!=(const Formation& _formation);
 
     ///@}
     ///@name Interface 
