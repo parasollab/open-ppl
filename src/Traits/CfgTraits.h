@@ -14,6 +14,7 @@
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
@@ -49,6 +50,7 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
@@ -79,6 +81,7 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
+  typedef GenericStateGraph<C, W>         RoadmapType;
   typedef RoadmapGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
@@ -147,6 +150,7 @@ struct MPTraits {
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
