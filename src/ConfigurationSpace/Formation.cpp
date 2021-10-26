@@ -261,7 +261,7 @@ BuildMultiBody() {
     auto body = mb->GetBody(j);
 
     for(size_t i = 0; i < body->ForwardConnectionCount(); i++) {
-      auto connection = body->GetForwardConnection(i);
+      auto& connection = body->GetForwardConnection(i);
       tree[body].push_back(std::make_pair(connection,connection.GetNextBody()));
     }
   }

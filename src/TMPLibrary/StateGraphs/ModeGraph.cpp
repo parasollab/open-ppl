@@ -522,7 +522,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
         _newModes.push_back(vid);
       }
 
-      m_modeHypergraph.AddHyperarc(tail,head,_action);
+      m_modeHypergraph.AddHyperarc(head,tail,_action);
     }
 
     // Mark that this combination has already been tried.

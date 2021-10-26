@@ -51,7 +51,7 @@ class InteractionStrategyMethod : public TMPBaseObject {
     /// of conditions.
     /// @param _state The state to extract the robots and connect to the conditions.
     /// @param _conditions The set of conditions to use to assign roles.
-    void AssignRoles(const State& _state, const std::vector<std::string>& _conditions);
+    virtual void AssignRoles(const State& _state, const std::vector<std::string>& _conditions);
 
     /// For each input condition, assign a group and individual robots to the roles.
     /// @param _state The state to use to extract the roles.
@@ -108,6 +108,8 @@ class InteractionStrategyMethod : public TMPBaseObject {
     void ResetStaticRobots();
 
     void MoveStateToLocalSolution(Interaction* _interaction, State& _state);
+
+    void SampleStartState(Interaction* _interaction, State& _state);
 
     ///@}
     ///@name Internal State

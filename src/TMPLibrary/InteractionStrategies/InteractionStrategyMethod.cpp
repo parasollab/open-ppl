@@ -605,3 +605,10 @@ MoveStateToLocalSolution(Interaction* _interaction, State& _state) {
     kv.second = std::make_pair(grm,vid);
   }
 }
+    
+void
+InteractionStrategyMethod::
+SampleStartState(Interaction* _interaction, State& _state) {
+  throw RunTimeException(WHERE) << "Not yet implemented" << std::endl;
+  //TODO::Sample a start state
+}

@@ -208,6 +208,13 @@ FormationCondition::
 IsStatic() const {
   return m_static;
 }
+
+const FormationCondition::Role&
+FormationCondition::
+GetRoleInfo(std::string _role) const {
+  return m_roles.at(_role);
+}
+
 /*--------------------- Helper Functions ---------------------*/
 
 bool

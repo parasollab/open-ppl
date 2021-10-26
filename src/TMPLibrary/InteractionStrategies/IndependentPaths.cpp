@@ -37,7 +37,22 @@ operator()(Interaction* _interaction, State& _state) {
   bool foundSolution = false;
 
   _interaction->Initialize();
-  MoveStateToLocalSolution(_interaction,_state);
+
+  bool validStart = true;
+  for(auto kv : _state) {
+    if(!kv.second.first or kv.second.second == MAX_INT) {
+      validStart = false;
+      break;
+    }
+  }
+
+  if(validStart) {
+    MoveStateToLocalSolution(_interaction,_state);
+  }
+  else {
+    SampleStartState(_interaction,_state);
+  }
+
   SetInteractionBoundary(_interaction,_state);
 
 

@@ -57,6 +57,8 @@ class FormationCondition : public Condition {
 
     bool IsStatic() const;
 
+    const Role& GetRoleInfo(std::string _role) const;
+
     ///@}
 
   private:
