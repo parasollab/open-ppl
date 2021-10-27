@@ -188,16 +188,6 @@ Initialize() {
     throw RunTimeException(WHERE) << "Query method " << m_queryLabel
                                   << " is not of type QueryMethod."
                                   << std::endl;
-
-  // TODO get rid of this!
-  // Set the query method's path weight function.
-  query->SetPathWeightFunction(
-      [this](typename RoadmapType::adj_edge_iterator& _ei,
-             const double _sourceDistance,
-             const double _targetDistance) {
-        return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
-      }
-  );
 }
 
 template <typename MPTraits>
@@ -400,12 +390,21 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   }
 
   // Generate a path for this robot individually while avoiding the conflicts.
+  // Set the query method's path weight function.
+  query->SetPathWeightFunction(
+      [this](typename RoadmapType::adj_edge_iterator& _ei,
+             const double _sourceDistance,
+             const double _targetDistance) {
+        return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
+      }
+  );
   this->GetMPLibrary()->SetTask(task);
   auto query = this->GetMapEvaluator(m_queryLabel);
   query->SetEdgeIntervals(jointEdgeIntervals);
   query->SetMinEndtime(minEndtime);
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
+  query->ClearPathWeightFunction();
 
 
   // Generate a path for this robot individually while avoiding the conflicts.
