@@ -549,24 +549,24 @@ IsConnectedSLBinary(
     int mid = low + (high - low) / 2;
     CfgType midCfg = increment * mid + _c1;
 
-    // // Check collision if requested.
-    // if(_checkCollision) {
-    //   _cdCounter++;
-    //   if(this->m_debug)
-    //     std::cout << "\n\t\tChecking step " << mid << " at "
-    //               << midCfg.PrettyPrint()
-    //               << std::endl;
+    // Check collision if requested.
+    if(_checkCollision) {
+      _cdCounter++;
+      if(this->m_debug)
+        std::cout << "\n\t\tChecking step " << mid << " at "
+                  << midCfg.PrettyPrint()
+                  << std::endl;
 
-    //   const bool inBounds = midCfg.InBounds(env);
-    //   if(!inBounds or !vc->IsValid(midCfg, id)) {
-    //     _col = midCfg;
-    //     if(this->m_debug)
-    //       std::cout << "\n\t\t\tINVALID" << std::endl;
-    //     return false;
-    //   }
-    // }
-    // else if(this->m_debug)
-    //   std::cout << "\n\t\t\tOK" << std::endl;
+      const bool inBounds = midCfg.InBounds(env);
+      if(!inBounds or !vc->IsValid(midCfg, id)) {
+        _col = midCfg;
+        if(this->m_debug)
+          std::cout << "\n\t\t\tINVALID" << std::endl;
+        return false;
+      }
+    }
+    else if(this->m_debug)
+      std::cout << "\n\t\t\tOK" << std::endl;
 
 
     // Check for collisions.

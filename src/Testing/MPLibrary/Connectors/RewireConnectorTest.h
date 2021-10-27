@@ -10,15 +10,15 @@ class RewireConnectorTest : virtual public RewireConnector<MPTraits>,
                                  public ConnectorMethodTest<MPTraits> {
   public:
 
-    ///@name Local Types
-    ///@{
+    /// @name Local Types
+    /// @{
 
     typedef TestBaseObject::TestResult TestResult;
     typedef typename MPTraits::RoadmapType RoadmapType;
 
-    ///@}
-    ///@name Construction
-    ///@{
+    /// @}
+    /// @name Construction
+    /// @{
 
     RewireConnectorTest();
 
@@ -26,39 +26,52 @@ class RewireConnectorTest : virtual public RewireConnector<MPTraits>,
 
     ~RewireConnectorTest();
 
-    ///@}
+    /// @}
 
   private: 
 
-    ///@name Interface Test Functions
-    ///@{
+    /// @name Interface Test Functions
+    /// @{
 
     virtual TestResult IndividualRobotConnectTest() override;
 
     virtual TestResult RobotGroupConnectTest() override;
 
-    ///@}
+    /// @}
 
 
-    ///@name Test Helper Functions
-    ///@{
-    bool
-    IndividualRobotConnectRunTest(
+    /// @name Test Helper Functions
+    /// @brief These functions automate test running.
+    /// @{
+    /// @param _vertexPoses Vector containing the Cfgs for the tree. Rewire is
+    ///        called on the last vertex in the vector.
+    /// @param _startEdges Vector containing the starting edges for the tree in
+    ///        the form pair <A, B> gives an edge (A -> B).
+    /// @param _endEdges Vector containing the expected edges after the rewire.
+    bool IndividualRobotConnectRunTest(
             std::vector<std::vector<double>> _vertexPoses,
             std::vector<std::pair<size_t, size_t>> _startEdges,
             std::vector<std::pair<size_t, size_t>> _endEdges,
             bool _debug);
 
-    bool
-    RobotGroupConnectRunTest(
+    /// @param _vertexPoses Vector containing the Cfgs for the tree. Rewire is
+    ///        called on the last vertex in the vector.
+    /// @param _startEdges Vector containing the starting edges for the tree in
+    ///        the form pair <A, B> gives an edge (A -> B).
+    /// @param _endEdges Vector containing the expected edges after the rewire.
+    bool RobotGroupConnectRunTest(
             std::vector<std::vector<double>> _vertexPoses,
             std::vector<std::pair<size_t, size_t>> _startEdges,
             std::vector<std::pair<size_t, size_t>> _endEdges,
             bool _debug);
 
+    /// @brief Hacky way to compute Euclidean distance since getting a distance
+    ///        metric here is hard.
+    /// @param _a first configuration as a vector.
+    /// @param _b second configuration as a vector.
     double
     ComputeDist(std::vector<double> _a, std::vector<double> _b);
-    ///@}
+    /// @}
 };
 
 /*--------------------------- Construction ---------------------------*/

@@ -4,13 +4,13 @@
 #include "MPLibrary/MPLibrary.h"
 #include "Testing/TestBaseObject.h"
 
-//#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/ValidityCheckerMethodTest.h"
 #include "Testing/MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethodTest.h"
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
-//#include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
+#include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
 #include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
-//#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
+#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
 #include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
 #include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
@@ -89,13 +89,13 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     /// Method sets hold and offer access to the motion planning objects of the
     /// corresponding type.
 
-    //DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
+    DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
     ValidityCheckerTestSet*    m_validityCheckerTests{nullptr};
     NeighborhoodFinderTestSet* m_neighborhoodFinderTests{nullptr};
     SamplerTestSet*            m_samplerTests{nullptr};
-    //LocalPlannerTestSet*       m_localPlannerTests{nullptr};
+    LocalPlannerTestSet*       m_localPlannerTests{nullptr};
     ExtenderTestSet*           m_extenderTests{nullptr};
-    //PathModifierTestSet*       m_pathModifierTests{nullptr};
+    PathModifierTestSet*       m_pathModifierTests{nullptr};
     ConnectorTestSet*          m_connectorTests{nullptr};
     MetricTestSet*             m_metricTests{nullptr};
     MapEvaluatorTestSet*       m_mapEvaluatorTests{nullptr};
@@ -137,7 +137,7 @@ RunTest() {
   size_t total = 0;
 
   // Distance metric tests
-  //RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
+  RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
 
   // Validity checker tests
   RunMethodSetTests(*this->m_validityCheckerTests,passed,failed,total);
@@ -149,13 +149,13 @@ RunTest() {
   RunMethodSetTests(*this->m_samplerTests,passed,failed,total);
 
   // Local planner tests
-  //RunMethodSetTests(*this->m_localPlannerTests,passed,failed,total);
+  RunMethodSetTests(*this->m_localPlannerTests,passed,failed,total);
 
   // Extender tests
   RunMethodSetTests(*this->m_extenderTests,passed,failed,total);
 
   // Path modifier tests
-  //RunMethodSetTests(*this->m_pathModifierTests,passed,failed,total);
+  RunMethodSetTests(*this->m_pathModifierTests,passed,failed,total);
 
   // Connector tests
   RunMethodSetTests(*this->m_connectorTests,passed,failed,total);
@@ -183,20 +183,20 @@ template <typename MPTraits>
 void
 MPLibraryTests<MPTraits>::
 InitializeMethodSets() {
-  //m_distanceMetricTests = new DistanceMetricTestSet(this,
-  //    typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_distanceMetricTests = new DistanceMetricTestSet(this,
+      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
   m_validityCheckerTests = new ValidityCheckerTestSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
   m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
       typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
   m_samplerTests = new SamplerTestSet(this,
       typename MPTraits::SamplerMethodList(), "Samplers");
-  //m_localPlannerTests = new LocalPlannerTestSet(this,
-  //    typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  m_localPlannerTests = new LocalPlannerTestSet(this,
+      typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
   m_extenderTests = new ExtenderTestSet(this,
       typename MPTraits::ExtenderMethodList(), "Extenders");
-  //m_pathModifierTests = new PathModifierTestSet(this,
-  //    typename MPTraits::PathModifierMethodList(), "PathModifiers");
+  m_pathModifierTests = new PathModifierTestSet(this,
+      typename MPTraits::PathModifierMethodList(), "PathModifiers");
   m_connectorTests = new ConnectorTestSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metricTests = new MetricTestSet(this,
@@ -267,10 +267,10 @@ template <typename MPTraits>
 bool
 MPLibraryTests<MPTraits>::
 ParseChild(XMLNode& _node) {
-  //if(_node.Name() == "DistanceMetrics") {
-  //  m_distanceMetricTests->ParseXML(_node);
-  //  return true;
-  //}
+  if(_node.Name() == "DistanceMetrics") {
+    m_distanceMetricTests->ParseXML(_node);
+    return true;
+  }
   if(_node.Name() == "ValidityCheckers") {
     m_validityCheckerTests->ParseXML(_node);
     return true;
@@ -283,18 +283,18 @@ ParseChild(XMLNode& _node) {
     m_samplerTests->ParseXML(_node);
     return true;
   }
-  //else if(_node.Name() == "LocalPlanners") {
-  //  m_localPlannerTests->ParseXML(_node);
-  //  return true;
-  //}
+  else if(_node.Name() == "LocalPlanners") {
+    m_localPlannerTests->ParseXML(_node);
+    return true;
+  }
   else if(_node.Name() == "Extenders") {
     m_extenderTests->ParseXML(_node);
     return true;
   }
-  //else if(_node.Name() == "PathModifiers") {
-  //  m_pathModifierTests->ParseXML(_node);
-  //  return true;
-  //}
+  else if(_node.Name() == "PathModifiers") {
+    m_pathModifierTests->ParseXML(_node);
+    return true;
+  }
   else if(_node.Name() == "Connectors") {
     m_connectorTests->ParseXML(_node);
     return true;

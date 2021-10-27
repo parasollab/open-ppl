@@ -926,6 +926,28 @@ EdgeWeight(const GroupRoadmapType* const _r, const VID _source, const VID _targe
                                   << _r << "."
                                   << std::endl;
 
+  /*
+  @TODO: the code below was created on a comment from the last review, namely,
+         to match the format of this function with the one below it. However,
+         there's something a bit odd about it. The type of edge->property() is
+         GroupLocalPlan, which only uses a double for edge weight. Therefore,
+         it seems that if the map is setup to use timesteps, this will work
+         properly, likewise for if it is instead setup to use a distance metric.
+         Otherwise, more code is needed there to make something like the below
+         work.
+  // Determine if we should use time steps (for nonholonomic robots) or weights.
+  bool isNonholo = false;
+  // Not ideal, but we need to hack our way in to get the group. We won't
+  //  mutate it though, just read.
+  auto robotGroup = const_cast<GroupRoadmapType*>(_r)->GetGroup();
+
+  for (auto it = robotGroup->begin(); it != robotGroup->end(); ++it) {
+    isNonholo = isNonholo || (*it)->IsNonholonomic();
+  }
+
+  return isNonholo ? edge->property().GetTimeSteps()
+                   : edge->property().GetWeight();
+  */
   return edge->property().GetWeight();
 }
 
