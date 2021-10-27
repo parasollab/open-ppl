@@ -44,20 +44,20 @@ class RewireConnectorTest : virtual public RewireConnector<MPTraits>,
     ///@{
     bool
     IndividualRobotConnectRunTest(
-            std::vector<std::vector<double>> vertex_poses,
-            std::vector<std::pair<size_t, size_t>> start_edges,
-            std::vector<std::pair<size_t, size_t>> end_edges,
-            bool debug);
+            std::vector<std::vector<double>> _vertexPoses,
+            std::vector<std::pair<size_t, size_t>> _startEdges,
+            std::vector<std::pair<size_t, size_t>> _endEdges,
+            bool _debug);
 
     bool
     RobotGroupConnectRunTest(
-            std::vector<std::vector<double>> vertex_poses,
-            std::vector<std::pair<size_t, size_t>> start_edges,
-            std::vector<std::pair<size_t, size_t>> end_edges,
-            bool debug);
+            std::vector<std::vector<double>> _vertexPoses,
+            std::vector<std::pair<size_t, size_t>> _startEdges,
+            std::vector<std::pair<size_t, size_t>> _endEdges,
+            bool _debug);
 
     double
-    ComputeDist(std::vector<double> a, std::vector<double> b);
+    ComputeDist(std::vector<double> _a, std::vector<double> _b);
     ///@}
 };
 
@@ -99,7 +99,7 @@ IndividualRobotConnectTest() {
 
   // Begin running Tests.
   //
-  // IMPORTANT NOTE: The last vertex given in vertex_poses is assumed to be
+  // IMPORTANT NOTE: The last vertex given in _vertexPoses is assumed to be
   //  the vertex which connect is called on! I.e. the most recently added
   //  vertex to the tree.
 
@@ -113,9 +113,9 @@ IndividualRobotConnectTest() {
   //  R  2          R--2
 
   // Print the name of the test if debug is request.
-  std::string test_name = "Rewire triangle";
+  std::string testName = "Rewire triangle";
   if (debug) {
-    std::cout << "\n\tRunning test '" << test_name << "'" << std::endl;
+    std::cout << "\n\tRunning test '" << testName << "'" << std::endl;
   }
 
   // Vertices
@@ -129,29 +129,29 @@ IndividualRobotConnectTest() {
   verts.push_back(p_2);
 
   // Start edges.
-  std::vector<std::pair<size_t, size_t>> start_edges;
-  start_edges.push_back(std::pair<size_t, size_t>(0, 1));
-  start_edges.push_back(std::pair<size_t, size_t>(1, 2));
+  std::vector<std::pair<size_t, size_t>> startEdges;
+  startEdges.push_back(std::pair<size_t, size_t>(0, 1));
+  startEdges.push_back(std::pair<size_t, size_t>(1, 2));
 
   // Expected end edges.
-  std::vector<std::pair<size_t, size_t>> end_edges;
-  end_edges.push_back(std::pair<size_t, size_t>(0, 1));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 2));
+  std::vector<std::pair<size_t, size_t>> endEdges;
+  endEdges.push_back(std::pair<size_t, size_t>(0, 1));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 2));
 
   // Call the helper function, last argument indicates debug messages or not.
-  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges, debug)) {
+  if (! IndividualRobotConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test1: '" + test_name + "'.\n";
+    message += "\tFailed Test1: '" + testName + "'.\n";
   }
 
 
   // Test 2: Rewire Large Tree.
   //
   // Print the name of the test if debug is request.
-  test_name = "Rewire Large Tree";
+  testName = "Rewire Large Tree";
   if (debug) {
-    std::cout << "\n\tRunning test '" << test_name << "'" << std::endl;
+    std::cout << "\n\tRunning test '" << testName << "'" << std::endl;
   }
 
   // Vertices.
@@ -183,35 +183,35 @@ IndividualRobotConnectTest() {
   verts.push_back(p_11);
 
   // Start edges.
-  start_edges.clear();
-  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 5));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 7));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 9));
-  start_edges.push_back(std::pair<size_t, size_t>(4, 2));
-  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 3));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 6));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 8));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 10));
-  start_edges.push_back(std::pair<size_t, size_t>(3, 11));
+  startEdges.clear();
+  startEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 5));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 7));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 9));
+  startEdges.push_back(std::pair<size_t, size_t>(4, 2));
+  startEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 3));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 6));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 8));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 10));
+  startEdges.push_back(std::pair<size_t, size_t>(3, 11));
 
   // Expected end edges.
-  end_edges.clear();
-  end_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 5));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 7));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 9));
-  end_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
-  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 6));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 8));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 10));
-  end_edges.push_back(std::pair<size_t, size_t>(11, 3));
+  endEdges.clear();
+  endEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 5));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 7));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 9));
+  endEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  endEdges.push_back(std::pair<size_t, size_t>(4, 2));
+  endEdges.push_back(std::pair<size_t, size_t>(5, 11));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 6));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 8));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 10));
+  endEdges.push_back(std::pair<size_t, size_t>(11, 3));
 
   // Call the helper function.
-  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges, debug)) {
+  if (! IndividualRobotConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
     message += "\tFailed Test2: Rewire large tree.\n";
@@ -221,9 +221,9 @@ IndividualRobotConnectTest() {
   // Test 3: Rewire shortest path.
   //
   // Print the name of the test if debug is request.
-  test_name = "Rewire shortest path";
+  testName = "Rewire shortest path";
   if (debug) {
-    std::cout << "\n\tRunning test '" << test_name << "'" << std::endl;
+    std::cout << "\n\tRunning test '" << testName << "'" << std::endl;
   }
 
   // Vertices.
@@ -246,36 +246,36 @@ IndividualRobotConnectTest() {
 
   // Start edges.
   
-  start_edges.clear();
-  start_edges.push_back(std::pair<size_t, size_t>(0, 2));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 3));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  start_edges.push_back(std::pair<size_t, size_t>(4, 5));
-  start_edges.push_back(std::pair<size_t, size_t>(5, 6));
+  startEdges.clear();
+  startEdges.push_back(std::pair<size_t, size_t>(0, 2));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 3));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  startEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  startEdges.push_back(std::pair<size_t, size_t>(4, 5));
+  startEdges.push_back(std::pair<size_t, size_t>(5, 6));
   
   // Expected end edges.
 
-  end_edges.clear();
-  end_edges.push_back(std::pair<size_t, size_t>(0, 2));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 3));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  end_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 5));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 6));
+  endEdges.clear();
+  endEdges.push_back(std::pair<size_t, size_t>(0, 2));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 3));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  endEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  endEdges.push_back(std::pair<size_t, size_t>(4, 5));
+  endEdges.push_back(std::pair<size_t, size_t>(4, 6));
 
   // Call the helper function.
-  if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges, debug)) {
+  if (! IndividualRobotConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
     message += "\tFailed Test3: Rewire Shortest Path.\n";
   }
 
   // Clear data structures for the next test.
-  test_name = "TODO: TEST NAME";
+  testName = "TODO: TEST NAME";
   verts.clear();
-  start_edges.clear();
-  end_edges.clear();
+  startEdges.clear();
+  endEdges.clear();
   // ///////////////////////////////////////////////////////////////////////////
 
 
@@ -303,7 +303,7 @@ RobotGroupConnectTest() {
 
   // Begin running Tests.
   //
-  // IMPORTANT NOTE: The last vertex given in vertex_poses is assumed to be
+  // IMPORTANT NOTE: The last vertex given in _vertexPoses is assumed to be
   //  the vertex which connect is called on! I.e. the most recently added
   //  vertex to the tree.
   //
@@ -321,9 +321,9 @@ RobotGroupConnectTest() {
   //  R  2          R--2
 
   // Print the name of the test if debug is request.
-  std::string test_name = "Rewire triangle";
+  std::string testName = "Rewire triangle";
   if (debug) {
-    std::cout << "\n\tRunning test '" << test_name << "'" << std::endl;
+    std::cout << "\n\tRunning test '" << testName << "'" << std::endl;
   }
 
   // Vertices
@@ -337,29 +337,29 @@ RobotGroupConnectTest() {
   verts.push_back(p_2);
 
   // Start edges.
-  std::vector<std::pair<size_t, size_t>> start_edges;
-  start_edges.push_back(std::pair<size_t, size_t>(0, 1));
-  start_edges.push_back(std::pair<size_t, size_t>(1, 2));
+  std::vector<std::pair<size_t, size_t>> startEdges;
+  startEdges.push_back(std::pair<size_t, size_t>(0, 1));
+  startEdges.push_back(std::pair<size_t, size_t>(1, 2));
 
   // Expected end edges.
-  std::vector<std::pair<size_t, size_t>> end_edges;
-  end_edges.push_back(std::pair<size_t, size_t>(0, 1));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 2));
+  std::vector<std::pair<size_t, size_t>> endEdges;
+  endEdges.push_back(std::pair<size_t, size_t>(0, 1));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 2));
 
   // Call the helper function, last argument indicates debug messages or not.
-  if (! RobotGroupConnectRunTest(verts, start_edges, end_edges, debug)) {
+  if (! RobotGroupConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test1: '" + test_name + "'.\n";
+    message += "\tFailed Test1: '" + testName + "'.\n";
   }
 
 
   // Test 2: Rewire Large Tree.
   //
   // Print the name of the test if debug is request.
-  test_name = "Rewire Large Tree";
+  testName = "Rewire Large Tree";
   if (debug) {
-    std::cout << "\n\tRunning test '" << test_name << "'" << std::endl;
+    std::cout << "\n\tRunning test '" << testName << "'" << std::endl;
   }
 
   // Vertices.
@@ -391,35 +391,35 @@ RobotGroupConnectTest() {
   verts.push_back(p_11);
 
   // Start edges.
-  start_edges.clear();
-  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 5));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 7));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 9));
-  start_edges.push_back(std::pair<size_t, size_t>(4, 2));
-  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 3));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 6));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 8));
-  start_edges.push_back(std::pair<size_t, size_t>(7, 10));
-  start_edges.push_back(std::pair<size_t, size_t>(3, 11));
+  startEdges.clear();
+  startEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 5));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 7));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 9));
+  startEdges.push_back(std::pair<size_t, size_t>(4, 2));
+  startEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 3));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 6));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 8));
+  startEdges.push_back(std::pair<size_t, size_t>(7, 10));
+  startEdges.push_back(std::pair<size_t, size_t>(3, 11));
 
   // Expected end edges.
-  end_edges.clear();
-  end_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 5));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 7));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 9));
-  end_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
-  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 3));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 6));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 8));
-  end_edges.push_back(std::pair<size_t, size_t>(7, 10));
+  endEdges.clear();
+  endEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 5));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 7));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 9));
+  endEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  endEdges.push_back(std::pair<size_t, size_t>(4, 2));
+  endEdges.push_back(std::pair<size_t, size_t>(5, 11));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 3));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 6));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 8));
+  endEdges.push_back(std::pair<size_t, size_t>(7, 10));
 
   // Call the helper function.
-  if (! RobotGroupConnectRunTest(verts, start_edges, end_edges, debug)) {
+  if (! RobotGroupConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
     message += "\tFailed Test2: Rewire large tree.\n";
@@ -429,9 +429,9 @@ RobotGroupConnectTest() {
   // Test 3: Rewire shortest path.
   //
   // Print the name of the test if debug is request.
-  test_name = "Rewire shortest path";
+  testName = "Rewire shortest path";
   if (debug) {
-    std::cout << "\n\tRunning test '" << test_name << "'" << std::endl;
+    std::cout << "\n\tRunning test '" << testName << "'" << std::endl;
   }
 
   // Vertices.
@@ -454,36 +454,36 @@ RobotGroupConnectTest() {
 
   // Start edges.
   
-  start_edges.clear();
-  start_edges.push_back(std::pair<size_t, size_t>(0, 2));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 3));
-  start_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  start_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  start_edges.push_back(std::pair<size_t, size_t>(4, 5));
-  start_edges.push_back(std::pair<size_t, size_t>(5, 6));
+  startEdges.clear();
+  startEdges.push_back(std::pair<size_t, size_t>(0, 2));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 3));
+  startEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  startEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  startEdges.push_back(std::pair<size_t, size_t>(4, 5));
+  startEdges.push_back(std::pair<size_t, size_t>(5, 6));
   
   // Expected end edges.
 
-  end_edges.clear();
-  end_edges.push_back(std::pair<size_t, size_t>(0, 2));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 3));
-  end_edges.push_back(std::pair<size_t, size_t>(0, 4));
-  end_edges.push_back(std::pair<size_t, size_t>(2, 1));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 5));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 6));
+  endEdges.clear();
+  endEdges.push_back(std::pair<size_t, size_t>(0, 2));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 3));
+  endEdges.push_back(std::pair<size_t, size_t>(0, 4));
+  endEdges.push_back(std::pair<size_t, size_t>(2, 1));
+  endEdges.push_back(std::pair<size_t, size_t>(4, 5));
+  endEdges.push_back(std::pair<size_t, size_t>(4, 6));
   
   // Call the helper function.
-  if (! RobotGroupConnectRunTest(verts, start_edges, end_edges, debug)) {
+  if (! RobotGroupConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
     message += "\tFailed Test3: Rewire Shortest Path.\n";
   }
 
   // Clear data structures for the next test.
-  test_name = "TODO: TEST NAME";
+  testName = "TODO: TEST NAME";
   verts.clear();
-  start_edges.clear();
-  end_edges.clear();
+  startEdges.clear();
+  endEdges.clear();
   // ///////////////////////////////////////////////////////////////////////////
 
 
@@ -504,10 +504,10 @@ template <typename MPTraits>
 bool
 RewireConnectorTest<MPTraits>::
 IndividualRobotConnectRunTest(
-        std::vector<std::vector<double>> vertex_poses,
-        std::vector<std::pair<size_t, size_t>> start_edges,
-        std::vector<std::pair<size_t, size_t>> end_edges,
-        bool debug) {
+        std::vector<std::vector<double>> _vertexPoses,
+        std::vector<std::pair<size_t, size_t>> _startEdges,
+        std::vector<std::pair<size_t, size_t>> _endEdges,
+        bool _debug) {
 
   // Create the roadmap.
   auto robot = this->GetMPProblem()->GetRobots()[0].get();
@@ -519,10 +519,10 @@ IndividualRobotConnectRunTest(
   // Vector to create cfgs.
   std::vector<typename MPTraits::CfgType> cfgs;
   // Vector to capture Vertex IDs for use later.
-  std::vector<size_t> v_ids;
+  std::vector<size_t> vIds;
 
 
-  for (size_t i = 0; i < vertex_poses.size(); i++) {
+  for (size_t i = 0; i < _vertexPoses.size(); i++) {
     // Create a new Cfg and ensure that it's start configuration is all 0.
     cfgs.push_back(this->GetIndividualCfg());
     for (size_t j = 0; j < cfgs[i].DOF(); j++) {
@@ -530,13 +530,13 @@ IndividualRobotConnectRunTest(
     }
 
     // Dump the requested values into the cfg.
-    for (size_t j = 0; j < vertex_poses[i].size(); j++) {
+    for (size_t j = 0; j < _vertexPoses[i].size(); j++) {
       // @TODO: ensure that we don't go past # of DOFs while dumping.
-      (cfgs[i])[j] = (vertex_poses[i])[j];
+      (cfgs[i])[j] = (_vertexPoses[i])[j];
     }
 
     // Add the Cfg to the map and capture the Vertex ID. Maintain ordering.
-    v_ids.push_back(roadmap.AddVertex(cfgs[i]));
+    vIds.push_back(roadmap.AddVertex(cfgs[i]));
   }
 
 
@@ -545,25 +545,25 @@ IndividualRobotConnectRunTest(
   // Add start edges, don't care in what order we add them.
   // Use our distance metric to set the weight.
 
-  for (auto it = start_edges.begin(); it != start_edges.end(); ++it) {
+  for (auto it = _startEdges.begin(); it != _startEdges.end(); ++it) {
     DefaultWeight<typename MPTraits::CfgType> weight;
 
-    weight.SetWeight(this->ComputeDist(vertex_poses[it->first],
-                                       vertex_poses[it->second]));
+    weight.SetWeight(this->ComputeDist(_vertexPoses[it->first],
+                                       _vertexPoses[it->second]));
 
-    roadmap.AddEdge(v_ids[it->first], v_ids[it->second], weight);
+    roadmap.AddEdge(vIds[it->first], vIds[it->second], weight);
   }
 
   // Variable needed to call GetEdge, we don't use it otherwise.
-  typename RoadmapType::EI edge_itr;
+  typename RoadmapType::EI edgeItr;
 
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tPrinting original edges:" << std::endl;
-    for (size_t i = 0; i < vertex_poses.size(); ++i) {
-      for (size_t j = 0; j < vertex_poses.size(); ++j) {
-        auto edge_bool = roadmap.GetEdge(v_ids[i], v_ids[j], edge_itr);
+    for (size_t i = 0; i < _vertexPoses.size(); ++i) {
+      for (size_t j = 0; j < _vertexPoses.size(); ++j) {
+        auto edgeBool = roadmap.GetEdge(vIds[i], vIds[j], edgeItr);
         std::cout << "\t\t\tEdge " << i << ", " << j
-                  << " ?   " << (edge_bool == 1 ? "True" : "  False")
+                  << " ?   " << (edgeBool == 1 ? "True" : "  False")
                   << std::endl;
       }
     }
@@ -571,49 +571,49 @@ IndividualRobotConnectRunTest(
 
 
   // Run the Rewire Connector.
-  this->Connect(&roadmap, v_ids.back());
+  this->Connect(&roadmap, vIds.back());
 
 
   // Check the resulting edges.
 
-  // First, if debug, print resulting edges.
+  // First, if _debug, print resulting edges.
 
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tPrinting rewired edges:" << std::endl;
-    for (size_t i = 0; i < vertex_poses.size(); ++i) {
-      for (size_t j = 0; j < vertex_poses.size(); ++j) {
-        auto edge_bool = roadmap.GetEdge(v_ids[i], v_ids[j], edge_itr);
+    for (size_t i = 0; i < _vertexPoses.size(); ++i) {
+      for (size_t j = 0; j < _vertexPoses.size(); ++j) {
+        auto edgeBool = roadmap.GetEdge(vIds[i], vIds[j], edgeItr);
         std::cout << "\t\t\tEdge " << i << ", " << j
-                  << " ?   " << (edge_bool == 1 ? "True" : "  False")
+                  << " ?   " << (edgeBool == 1 ? "True" : "  False")
                   << std::endl;
       }
     }
   }
 
   // Loop over the edges that should be in the map and verify if they exist.
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tPrinting test results:" << std::endl;
   }
 
   bool ret = true;
-  for (auto it = end_edges.begin(); it != end_edges.end(); ++it) {
-    auto edge_bool =
-            roadmap.GetEdge(v_ids[it->first], v_ids[it->second], edge_itr);
+  for (auto it = _endEdges.begin(); it != _endEdges.end(); ++it) {
+    auto edgeBool =
+            roadmap.GetEdge(vIds[it->first], vIds[it->second], edgeItr);
 
-    // If debug, print the edge checks as we go through them.
-    if (debug) {
+    // If _debug, print the edge checks as we go through them.
+    if (_debug) {
       std::cout << "\t\t\tEdge " << it->first << ", " << it->second
-                << " ?   " << (edge_bool == 1 ? "True" : "  False")
+                << " ?   " << (edgeBool == 1 ? "True" : "  False")
                 << std::endl;
     }
 
-    if (!edge_bool) {
+    if (!edgeBool) {
       // Did not have expected edge, fail test.
       ret = false;
     }
   }
 
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tTest Pass/Fail ?  " << (ret ? "PASSED" : "FAILED")
               << std::endl;
   }
@@ -626,10 +626,10 @@ template <typename MPTraits>
 bool
 RewireConnectorTest<MPTraits>::
 RobotGroupConnectRunTest(
-        std::vector<std::vector<double>> vertex_poses,
-        std::vector<std::pair<size_t, size_t>> start_edges,
-        std::vector<std::pair<size_t, size_t>> end_edges,
-        bool debug) {
+        std::vector<std::vector<double>> _vertexPoses,
+        std::vector<std::pair<size_t, size_t>> _startEdges,
+        std::vector<std::pair<size_t, size_t>> _endEdges,
+        bool _debug) {
 
   // Create the roadmap.
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
@@ -648,10 +648,10 @@ RobotGroupConnectRunTest(
   // Vector to create cfgs.
   std::vector<typename MPTraits::GroupCfgType> cfgs;
   // Vector to capture Vertex IDs for use later.
-  std::vector<size_t> v_ids;
+  std::vector<size_t> vIds;
 
 
-  for (size_t i = 0; i < vertex_poses.size(); i++) {
+  for (size_t i = 0; i < _vertexPoses.size(); i++) {
     // Create a new group Cfg and ensure that both robot's start config is 0.
     cfgs.push_back(GroupCfg(roadmap));
     for (size_t j = 0; j < cfgs[i].DOF(); j++) {
@@ -660,14 +660,14 @@ RobotGroupConnectRunTest(
     }
 
     // Dump the requested values into the cfg.
-    for (size_t j = 0; j < vertex_poses[i].size(); j++) {
+    for (size_t j = 0; j < _vertexPoses[i].size(); j++) {
       // @TODO: ensure that we don't go past # of DOFs while dumping.
-      (cfgs[i]).GetRobotCfg(size_t(0))[j] = (vertex_poses[i])[j] + 1;
-      (cfgs[i]).GetRobotCfg(size_t(1))[j] = -((vertex_poses[i])[j] + 1);
+      (cfgs[i]).GetRobotCfg(size_t(0))[j] = (_vertexPoses[i])[j] + 1;
+      (cfgs[i]).GetRobotCfg(size_t(1))[j] = -((_vertexPoses[i])[j] + 1);
     }
 
     // Add the Cfg to the map and capture the Vertex ID. Maintain ordering.
-    v_ids.push_back(roadmap->AddVertex(cfgs[i]));
+    vIds.push_back(roadmap->AddVertex(cfgs[i]));
   }
 
 
@@ -676,7 +676,7 @@ RobotGroupConnectRunTest(
   // Add start edges, don't care in what order we add them.
   // Use our distance metric to set the weight.
 
-  for (auto it = start_edges.begin(); it != start_edges.end(); ++it) {
+  for (auto it = _startEdges.begin(); it != _startEdges.end(); ++it) {
     auto dm = this->GetDistanceMetric("euclidean");
     auto distance = dm->Distance(cfgs[it->first], cfgs[it->second]);
     auto rmap1 = roadmap->GetRoadmap(0);
@@ -684,26 +684,26 @@ RobotGroupConnectRunTest(
 
     DefaultWeight<typename MPTraits::CfgType> w;
     w.SetWeight(distance);
-    rmap1->AddEdge(v_ids[it->first], v_ids[it->second], w);
-    rmap2->AddEdge(v_ids[it->first], v_ids[it->second], w);
+    rmap1->AddEdge(vIds[it->first], vIds[it->second], w);
+    rmap2->AddEdge(vIds[it->first], vIds[it->second], w);
 
     typename MPTraits::GroupWeightType weight(roadmap);
 
     weight.SetWeight(distance);
 
-    roadmap->AddEdge(v_ids[it->first], v_ids[it->second], weight);
+    roadmap->AddEdge(vIds[it->first], vIds[it->second], weight);
   }
 
   // Variable needed to call GetEdge, we don't use it otherwise.
-  typename MPTraits::GroupRoadmapType::EI edge_itr;
+  typename MPTraits::GroupRoadmapType::EI edgeItr;
 
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tPrinting original edges:" << std::endl;
-    for (size_t i = 0; i < vertex_poses.size(); ++i) {
-      for (size_t j = 0; j < vertex_poses.size(); ++j) {
-        auto edge_bool = roadmap->GetEdge(v_ids[i], v_ids[j], edge_itr);
+    for (size_t i = 0; i < _vertexPoses.size(); ++i) {
+      for (size_t j = 0; j < _vertexPoses.size(); ++j) {
+        auto edgeBool = roadmap->GetEdge(vIds[i], vIds[j], edgeItr);
         std::cout << "\t\t\tEdge " << i << ", " << j
-                  << " ?   " << (edge_bool == 1 ? "True" : "  False")
+                  << " ?   " << (edgeBool == 1 ? "True" : "  False")
                   << std::endl;
       }
     }
@@ -711,49 +711,49 @@ RobotGroupConnectRunTest(
 
 
   // Run the Rewire Connector.
-  this->Connect(roadmap, v_ids.back());
+  this->Connect(roadmap, vIds.back());
 
 
   // Check the resulting edges.
 
-  // First, if debug, print resulting edges.
+  // First, if _debug, print resulting edges.
 
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tPrinting rewired edges:" << std::endl;
-    for (size_t i = 0; i < vertex_poses.size(); ++i) {
-      for (size_t j = 0; j < vertex_poses.size(); ++j) {
-        auto edge_bool = roadmap->GetEdge(v_ids[i], v_ids[j], edge_itr);
+    for (size_t i = 0; i < _vertexPoses.size(); ++i) {
+      for (size_t j = 0; j < _vertexPoses.size(); ++j) {
+        auto edgeBool = roadmap->GetEdge(vIds[i], vIds[j], edgeItr);
         std::cout << "\t\t\tEdge " << i << ", " << j
-                  << " ?   " << (edge_bool == 1 ? "True" : "  False")
+                  << " ?   " << (edgeBool == 1 ? "True" : "  False")
                   << std::endl;
       }
     }
   }
 
   // Loop over the edges that should be in the map and verify if they exist.
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tPrinting test results:" << std::endl;
   }
 
   bool ret = true;
-  for (auto it = end_edges.begin(); it != end_edges.end(); ++it) {
-    auto edge_bool =
-            roadmap->GetEdge(v_ids[it->first], v_ids[it->second], edge_itr);
+  for (auto it = _endEdges.begin(); it != _endEdges.end(); ++it) {
+    auto edgeBool =
+            roadmap->GetEdge(vIds[it->first], vIds[it->second], edgeItr);
 
-    // If debug, print the edge checks as we go through them.
-    if (debug) {
+    // If _debug, print the edge checks as we go through them.
+    if (_debug) {
       std::cout << "\t\t\tEdge " << it->first << ", " << it->second
-                << " ?   " << (edge_bool == 1 ? "True" : "  False")
+                << " ?   " << (edgeBool == 1 ? "True" : "  False")
                 << std::endl;
     }
 
-    if (!edge_bool) {
+    if (!edgeBool) {
       // Did not have expected edge, fail test.
       ret = false;
     }
   }
 
-  if (debug) {
+  if (_debug) {
     std::cout << "\n\t\tTest Pass/Fail ?  " << (ret ? "PASSED" : "FAILED")
               << std::endl;
   }
@@ -765,10 +765,10 @@ RobotGroupConnectRunTest(
 template <typename MPTraits>
 double
 RewireConnectorTest<MPTraits>::
-ComputeDist(std::vector<double> a, std::vector<double> b) {
+ComputeDist(std::vector<double> _a, std::vector<double> _b) {
   double dist = 0.0;
-  for (size_t i = 0; i < a.size(); ++i) {
-    dist += (a[i] - b[i]) * (a[i] - b[i]);
+  for (size_t i = 0; i < _a.size(); ++i) {
+    dist += (_a[i] - _b[i]) * (_a[i] - _b[i]);
   }
 
   return dist;
