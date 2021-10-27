@@ -34,7 +34,7 @@
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class QueryMethod : public MapEvaluatorMethod<MPTraits> {
+class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
 
   public:
 
@@ -180,7 +180,6 @@ class QueryMethod : public MapEvaluatorMethod<MPTraits> {
 };
 
 /*----------------------------- Construction ---------------------------------*/
-
 template <typename MPTraits>
 QueryMethod<MPTraits>::
 QueryMethod() : MapEvaluatorMethod<MPTraits>() {

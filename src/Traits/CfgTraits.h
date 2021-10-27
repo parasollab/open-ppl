@@ -44,16 +44,22 @@
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
 
-
 //map evaluator includes
-#include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/CBSQuery.h"
+#include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+
 //mp strategies includes
+#include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -138,14 +144,21 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    CBSQuery<MPTraits>,
+    ComposeEvaluator<MPTraits>,
+    ConditionalEvaluator<MPTraits>,
+    LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
-    ConditionalEvaluator<MPTraits>
+    TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    GroupDecoupledStrategy<MPTraits>,
+    GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
       > MPStrategyMethodList;

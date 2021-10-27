@@ -61,6 +61,7 @@
     </DistanceMetrics>
 
     <ValidityCheckers>
+      <CollisionDetection label="bounding" method="BoundingSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
@@ -107,7 +108,19 @@
     </MapEvaluators>
 
     <MPStrategies>
-      <!-- Basic RRT-->
+      <AdaptiveRRT label="AdaptiveRRT" debug="true"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 cost="reward">
+
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+        </GrowthSet>
+        <Evaluator label="QueryMethod"/>
+      </AdaptiveRRT>
+
       <BasicRRTStrategy label="RRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
         nfLabel="Nearest" extenderLabel="BERO"
@@ -123,6 +136,7 @@
         goalDmLabel="euclidean" goalThreshold="5" connectorLabel="Rewire">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
+
       <!-- Toggle PRM-->
       <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
@@ -130,6 +144,7 @@
         <ColConnector label="Closest"/>
         <Evaluator label="Query"/>
       </TogglePRMStrategy>
+      
     </MPStrategies>
 
     <MPTools>
@@ -137,8 +152,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="RRT" seed="12345"
-      baseFilename="RRT" vizmoDebug="true"/> 
+    <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/> 
     <Solver mpStrategyLabel="RRTstar" seed="12345"
       baseFilename="RRTstar" vizmoDebug="true"/> 
 
