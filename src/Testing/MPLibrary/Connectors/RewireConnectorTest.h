@@ -4,7 +4,6 @@
 #include "MPLibrary/Connectors/RewireConnector.h"
 #include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
 
-// @TODO: Default Function Calls? See ConnectorMethodTest.h, line ~45
 
 template <class MPTraits>
 class RewireConnectorTest : virtual public RewireConnector<MPTraits>,
@@ -203,12 +202,12 @@ IndividualRobotConnectTest() {
   end_edges.push_back(std::pair<size_t, size_t>(0, 5));
   end_edges.push_back(std::pair<size_t, size_t>(0, 7));
   end_edges.push_back(std::pair<size_t, size_t>(0, 9));
-  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
   end_edges.push_back(std::pair<size_t, size_t>(2, 1));
+  end_edges.push_back(std::pair<size_t, size_t>(4, 2));
+  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
   end_edges.push_back(std::pair<size_t, size_t>(7, 6));
   end_edges.push_back(std::pair<size_t, size_t>(7, 8));
   end_edges.push_back(std::pair<size_t, size_t>(7, 10));
-  end_edges.push_back(std::pair<size_t, size_t>(5, 11));
   end_edges.push_back(std::pair<size_t, size_t>(11, 3));
 
   // Call the helper function.
@@ -264,7 +263,7 @@ IndividualRobotConnectTest() {
   end_edges.push_back(std::pair<size_t, size_t>(2, 1));
   end_edges.push_back(std::pair<size_t, size_t>(4, 5));
   end_edges.push_back(std::pair<size_t, size_t>(4, 6));
-  
+
   // Call the helper function.
   if (! IndividualRobotConnectRunTest(verts, start_edges, end_edges, debug)) {
     // Test failed!
@@ -690,7 +689,7 @@ RobotGroupConnectRunTest(
 
     typename MPTraits::GroupWeightType weight(roadmap);
 
-    weight.SetWeight(2*distance);
+    weight.SetWeight(distance);
 
     roadmap->AddEdge(v_ids[it->first], v_ids[it->second], weight);
   }

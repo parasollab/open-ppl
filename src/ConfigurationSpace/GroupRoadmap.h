@@ -511,6 +511,12 @@ DeleteEdge(EI _iterator) noexcept {
 
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());
+
+  // Remove predessors as appropriate.
+  const VID source = _iterator->source(),
+            target = _iterator->target();
+
+  this->m_predecessors[target].erase(source);
   ++m_timestamp;
 }
 

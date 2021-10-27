@@ -51,7 +51,7 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
       { }
     };
 
-    /// @TODO Comment rewire grouproadmap helpers correctly.
+    /// An aggregate for returning the results of a group rewiring check.
     struct GroupRewireTestOutput {
       bool               passed{false}; ///< Should we use this rewiring?
       GroupLPOutput<MPTraits> lpo;      ///< The generated local plan.
@@ -114,7 +114,7 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
         const std::vector<Neighbor>& _neighbors,
         OutputIterator<RoadmapType>* const _collision);
 
-    /// @TODO Comment rewire grouproadmap helpers correctly.
+    /// @overload
     void RewireVertex(GroupRoadmapType* const _r, const VID _vid,
         const std::vector<Neighbor>& _neighbors,
         OutputIterator<GroupRoadmapType>* const _collision);
@@ -128,6 +128,11 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
     void RewireNeighbors(RoadmapType* const _r, const VID _vid,
         const std::vector<Neighbor>& _neighbors,
         OutputIterator<RoadmapType>* const _collision);
+
+    /// @overload
+    void RewireNeighbors(GroupRoadmapType* const _r, const VID _vid,
+        const std::vector<Neighbor>& _neighbors,
+        OutputIterator<GroupRoadmapType>* const _collision);
 
     /// Check if a vertex should be rewired through a new parent.
     /// @param _r                   The containing roadmap.
@@ -143,7 +148,7 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
         const VID _potentialParent, const double _potentialParentCost,
         OutputIterator<RoadmapType>* const _collision) noexcept;
 
-    /// @TODO Comment rewire grouproadmap helpers correctly.
+    /// @overload
     GroupRewireTestOutput RewireTest(GroupRoadmapType* const _r, const VID _vid,
         const VID _currentParent, const double _currentCost,
         const VID _potentialParent, const double _potentialParentCost,
@@ -157,7 +162,7 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
     double ShortestPathWeight(const RoadmapType* const _r,
         const VID _vid) const noexcept;
 
-    /// @TODO Comment rewire grouproadmap helpers correctly.
+    /// @overload
     double ShortestPathWeight(const GroupRoadmapType* const _r,
         const VID _vid) const noexcept;
 
@@ -169,7 +174,7 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
     double EdgeWeight(const RoadmapType* const _r, const VID _source,
         const VID _target) const noexcept;
 
-    /// @TODO Comment rewire grouproadmap helpers correctly.
+    /// @overload
     double EdgeWeight(const GroupRoadmapType* const _r, const VID _source,
         const VID _target) const noexcept;
 
@@ -192,7 +197,7 @@ class RewireConnector : virtual public ConnectorMethod<MPTraits> {
         const VID _oldParent, const VID _newParent, const WeightType& _newLp,
         const double _newCost) const noexcept;
 
-    /// @TODO Comment rewire grouproadmap helpers correctly.
+    /// @overload
     void ChangeParent(GroupRoadmapType* const _r, const VID _vid,
         const VID _oldParent, const VID _newParent, const GroupWeightType& _newLp,
         const double _newCost) const noexcept;
@@ -338,6 +343,7 @@ ConnectImpl(GroupRoadmapType* const _r, const VID _source,
     const VertexSet* const _targetSet,
     OutputIterator<GroupRoadmapType>* const _collision) {
   // Determine nearest neighbors.
+
   const auto& gcfg = _r->GetVertex(_source);
   auto nf = this->GetNeighborhoodFinder(m_nfLabel);
   m_neighborBuffer.clear();
@@ -371,7 +377,7 @@ ConnectImpl(GroupRoadmapType* const _r, const VID _source,
   // Attempt to rewire this vertex with a better parent.
   RewireVertex(_r, _source, m_neighborBuffer, _collision);
   // Attempt to rewire the neighbors through _source.
-  //RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
+  RewireNeighbors(_r, _source, m_neighborBuffer, _collision);
 
   if(ccTracker)
     ccTracker->Enable();
@@ -514,6 +520,62 @@ RewireNeighbors(RoadmapType* const _r, const VID _vid,
     const VID neighborCurrentParent = *predecessors.begin();
     const double currentCost = neighbor.distance;
     const RewireTestOutput test = RewireTest(_r, neighborVID,
+        neighborCurrentParent, currentCost, _vid, vidCost, _collision);
+
+    // If the test failed, don't rewire.
+    if(!test.passed)
+      continue;
+
+    // _vid is a better parent for neighborVID. Rewire the tree.
+    ChangeParent(_r, neighborVID, neighborCurrentParent, _vid,
+        test.lpo.m_edge.first, test.cost);
+  }
+}
+
+
+template <typename MPTraits>
+void
+RewireConnector<MPTraits>::
+RewireNeighbors(GroupRoadmapType* const _r, const VID _vid,
+    const std::vector<Neighbor>& _neighbors,
+    OutputIterator<GroupRoadmapType>* const _collision) {
+  const double vidCost = ShortestPathWeight(_r, _vid);
+
+  if(this->m_debug)
+    std::cout << "\tAttempting to rewire nearby nodes through " << _vid
+              << " with cost " << vidCost
+              << " for " << m_objectiveLabel << " cost."
+              << std::endl;
+
+  // Check if any of the neighbors can get better paths through this node.
+  for(const auto& neighbor : _neighbors) {
+    // Check for roots and non-tree graphs.
+    const VID neighborVID = neighbor.target;
+    const auto& predecessors = _r->GetPredecessors(neighborVID);
+
+    switch(predecessors.size()) {
+      case 0:
+        // This is a root.
+        if(this->m_debug)
+          std::cout << "\t\tSkipping node " << neighborVID << " which is a root."
+                    << std::endl;
+        continue;
+      case 1:
+        // There is one parent. Continue processing.
+        break;
+      default:
+        // The graph is not a tree.
+        throw RunTimeException(WHERE) << "Node " << neighborVID << " has "
+                                      << predecessors.size() << " parents and is "
+                                      << "therefore not a tree. RewireConnector "
+                                      << "only works for tree graphs."
+                                      << std::endl;
+    }
+
+    // Test to see if this node should be rewired through _vid.
+    const VID neighborCurrentParent = *predecessors.begin();
+    const double currentCost = neighbor.distance;
+    const GroupRewireTestOutput test = RewireTest(_r, neighborVID,
         neighborCurrentParent, currentCost, _vid, vidCost, _collision);
 
     // If the test failed, don't rewire.
@@ -697,7 +759,6 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
   // Create a local plan. If we fail, do not rewire.
   auto lp    = this->GetLocalPlanner(this->m_lpLabel);
   auto env   = this->GetEnvironment();
-  // @TODO: fix this to properly create group cfg for collision.
   GroupCfgType collision;
   GroupLPOutput<MPTraits> lpo(cfg.GetGroupRoadmap());
 
