@@ -4,7 +4,7 @@
 #include "MapEvaluatorMethod.h"
 
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/RoadmapGraph.h"
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPProblem/MPProblem.h"
@@ -65,8 +65,8 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
       }
 
     };
-    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraph;
-    typedef GenericStateGraph<State, DefaultWeight<Cfg>> SIPPGraph;
+    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraphType;
+    typedef RoadmapGraph<State, DefaultWeight<Cfg>> SIPPGraph;
 
     ///@}
     ///@name Construction
@@ -117,7 +117,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
 
     /// Reset the path and list of undiscovered goals.
     /// Also resets wait times and cached safe intervals.
-    virtual void Reset(RoadmapGraph* const _r);
+    virtual void Reset(RoadmapGraphType* const _r);
 
     /// TODO: Remove this
     void computeIntervals();
@@ -177,7 +177,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    RoadmapGraph* m_roadmap{nullptr};
+    RoadmapGraphType* m_roadmap{nullptr};
     SIPPGraph* m_sippGraph{nullptr};
     MPTask* m_task{nullptr};
 
@@ -191,7 +191,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     std::unordered_map<size_t,std::unordered_set<typename SIPPGraph::
                             vertex_descriptor>> m_sipp_mappings;
 
-    std::unordered_map<typename RoadmapGraph::vertex_descriptor, bool> m_changed;
+    std::unordered_map<typename RoadmapGraphType::vertex_descriptor, bool> m_changed;
 
     std::unordered_map<size_t,
                    unordered_map<size_t,
@@ -510,7 +510,7 @@ SetDMLabel(const std::string& _dmLabel) {
 template <typename MPTraits>
 void
 SIPPMethod<MPTraits>::
-Reset(RoadmapGraph* const _r) {
+Reset(RoadmapGraphType* const _r) {
   m_roadmap = _r;
   m_task = this->GetTask();
   // TODO Do we need this
@@ -888,15 +888,15 @@ InitializeCostToGo(size_t _goal) {
 
   std::vector<size_t> starts = {_goal};
 
-  SSSPTerminationCriterion<RoadmapGraph> termination(
-      [](typename RoadmapGraph::vertex_iterator& _vi,
-        const SSSPOutput<RoadmapGraph>& _sssp) {
+  SSSPTerminationCriterion<RoadmapGraphType> termination(
+      [](typename RoadmapGraphType::vertex_iterator& _vi,
+        const SSSPOutput<RoadmapGraphType>& _sssp) {
         return SSSPTermination::Continue;
       }
   );
 
-  SSSPPathWeightFunction<RoadmapGraph> weight = [this](
-      typename RoadmapGraph::adj_edge_iterator& _ei,
+  SSSPPathWeightFunction<RoadmapGraphType> weight = [this](
+      typename RoadmapGraphType::adj_edge_iterator& _ei,
       const double _sourceDistance,
       const double _targetDistance) {
     return _sourceDistance + _ei->property().GetTimeSteps();

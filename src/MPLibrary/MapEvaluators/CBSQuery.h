@@ -59,9 +59,18 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     typedef CBSNode<Robot, Constraint, Path> CBSNodeType;
 
+    typedef std::unordered_map<size_t,
+                std::unordered_map<size_t,
+                    std::vector<Range<double>>>> EdgeIntervals;
+
     typedef std::unordered_map<Robot*,
                 std::unordered_map<size_t,
                     EdgeIntervals>> EdgeIntervalsMap;
+
+    typedef std::multimap<size_t,
+                std::pair<CfgType,size_t>> SingleConflictsCache;
+
+    typedef std::unordered_map<Robot*,SingleConflictsCache> GroupConflictsCache;
 
   public:
 
@@ -130,6 +139,8 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     const ConstraintSet* m_currentConstraints{nullptr};
     std::set<ConstraintMap> m_constraintCache;
     std::unordered_map<Robot*, MPTask*> m_taskMap;
+
+    GroupConflictsCache m_groupConflictsCache;
 
     EdgeIntervalsMap m_edgeIntervalsMap;
 
@@ -330,12 +341,12 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
     for(auto c : *m_currentConstraints) {
       bool conflictCached = false;
       // First, we check if _robot has a SafeInterval's that have been cached before (at least once).
-      if(m_constraintCache.count(_robot)){
-        auto it = m_constraintCache.find(_robot);
+      if(m_groupConflictsCache.count(_robot)){
+        auto it = m_groupConflictsCache.find(_robot);
         // If so, we check if the current constraint has been cached (we first
         // check the timestep).
         std::cout << "\t\t\tm_currentConstraints[_robot] has size  set has a size of " << m_currentConstraints->size() << std::endl;
-        std::cout << "\t\t\tm_constraintsCache[_robot] has size  set has a size of " << it->second.size() << std::endl;
+        std::cout << "\t\t\tm_groupConflictsCache[_robot] has size  set has a size of " << it->second.size() << std::endl;
         if(it->second.count(c.first)){
           //auto it2 = it->second.find(c.first);
           auto eq = it->second.equal_range(c.first);
@@ -370,7 +381,7 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
         auto newIndex = m_cacheIndex;
         ++m_cacheIndex;
         m_edgeIntervalsMap[_robot][newIndex] = edgeIntervals;
-        m_constraintsCache[_robot].emplace(c.first,std::make_pair(c.second,newIndex));
+        m_groupConflictsCache[_robot].emplace(c.first,std::make_pair(c.second,newIndex));
         std::cout << "\t\t\t\tEMPLACING NEW CONFLICT "
         << "cfg: " << c.second.PrettyPrint() << ", index: " << newIndex << ", timestep: " << c.first << std::endl;
         edgeIntervalsSet.push_back(edgeIntervals);
@@ -390,7 +401,10 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   }
 
   // Generate a path for this robot individually while avoiding the conflicts.
-  // Set the query method's path weight function.
+  this->GetMPLibrary()->SetTask(task);
+  auto query = dynamic_cast<QueryMethod<MPTraits>*>(
+      this->GetMapEvaluator(m_queryLabel)
+  );
   query->SetPathWeightFunction(
       [this](typename RoadmapType::adj_edge_iterator& _ei,
              const double _sourceDistance,
@@ -398,8 +412,6 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
         return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
       }
   );
-  this->GetMPLibrary()->SetTask(task);
-  auto query = this->GetMapEvaluator(m_queryLabel);
   query->SetEdgeIntervals(jointEdgeIntervals);
   query->SetMinEndtime(minEndtime);
   const bool success = (*query)();
