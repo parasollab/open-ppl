@@ -164,7 +164,7 @@ CBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
       "The individual query method. Must be derived from QueryMethod and "
       "should not be used by any other object.");
 
-  m_safeIntervalLabel = _node.Read("safeIntervalLabel", true, "",
+  m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", true, "",
       "The Safe Interval Tool Label");
 
   m_nodeLimit = _node.Read("nodeLimit", false, m_nodeLimit,
