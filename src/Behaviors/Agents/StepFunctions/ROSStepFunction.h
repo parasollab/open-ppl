@@ -5,6 +5,9 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
+
 
 class ROSStepFunction : public FollowPath {
 
@@ -33,10 +36,14 @@ class ROSStepFunction : public FollowPath {
     //Temp function::Needs to be moved to controller class.
     void MoveArm(std::vector<double> _goal, double _dt);
 
+    void MoveBase(std::vector<double> _goal, double _dt);
+
     ///@name Helper Functions
     ///@{
 
     virtual bool ReachedWaypoint(const Cfg& _waypoint) override;
+    virtual bool ReachedWaypointArm(const Cfg& _waypoint);
+    virtual bool ReachedWaypointBase(const Cfg& _waypoint);
 
     virtual void MoveToWaypoint(const Cfg& _waypoint, double _dt) override;
 
@@ -54,6 +61,8 @@ class ROSStepFunction : public FollowPath {
     double m_time{1}; ///< Time duration to execute controls.
 
     bool m_sim{true};
+
+    std::string m_robotLabel;
 
     ///@}
 };

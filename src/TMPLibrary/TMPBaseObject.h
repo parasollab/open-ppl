@@ -57,16 +57,6 @@ class TMPBaseObject {
     ///@name Method Pointer Types
     ///@{
 
-    typedef typename TMPStrategyMethodSet::TMPMethodPointer     TMPStrategyMethodPointer;
-    typedef typename PoIPlacementMethodSet::TMPMethodPointer    PoIPlacementMethodPointer;
-    typedef typename TaskEvaluatorMethodSet::TMPMethodPointer   TaskEvaluatorMethodPointer;
-    typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
-    typedef typename TaskAllocatorMethodSet::TMPMethodPointer   TaskAllocatorMethodPointer;
-    typedef typename StateGraphSet::TMPMethodPointer            StateGraphPointer;
-   
-    ///@name Method Pointer Types
-    ///@{
-
     typedef typename TMPLibrary::TMPStrategyMethodPointer      TMPStrategyMethodPointer;
     typedef typename TMPLibrary::PoIPlacementMethodPointer     PoIPlacementMethodPointer;
     typedef typename TMPLibrary::TaskEvaluatorMethodPointer    TaskEvaluatorMethodPointer;

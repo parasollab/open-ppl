@@ -6,11 +6,15 @@
 
 #include <trajectory_msgs/JointTrajectory.h>
 
+using mathtool::Vector3d;
+using mathtool::Transformation;
+using mathtool::EulerAngle;
+
 std::vector<double> ROSStepFunction::s_jointStates = {};
 
 /*-------------------------- Construction -----------------------*/
 ROSStepFunction::
-ROSStepFunction(Agent* _agent, XMLNode& _node) 
+ROSStepFunction(Agent* _agent, XMLNode& _node)
               : FollowPath(_agent,_node) {
 
   m_time = _node.Read("time",false,m_time,0.,10.,
@@ -18,39 +22,49 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   m_sim = _node.Read("sim",false,m_sim,"Flag indiciating if this is a simulated robot or not.");
 
+  m_robotLabel = _node.Read("robotLabel", true, "", "The robot to be controlled.");
+
   int argc = 0;
   char* argv[255];
 
   ros::init(argc,argv,"ppl_" + this->m_agent->GetRobot()->GetLabel());
 
-  ros::start();
-  
-  ROS_INFO_STREAM("Hello World!");
+  if(m_robotLabel == "ur5") {
 
-  ros::NodeHandle nh;
+    ros::start();
 
-  if(m_sim) {
-    m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                //"/arm_controller/command",
-                "/pos_joint_traj_controller/command",
-                //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
-                10);
+    ROS_INFO_STREAM("Hello Worlid!! --- ur5 Mode");
+
+    ros::NodeHandle nh;
+
+    if(m_sim) {
+      m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
+                  //"/arm_controller/command",
+                  "/pos_joint_traj_controller/command",
+                  //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
+                  10);
+    }
+    else {
+      m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
+                  //"/arm_controller/command",
+                  "/scaled_pos_joint_traj_controller/command",
+                  //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
+                  10);
+    }
+
+    JointStateCallback callback = [this](const sensor_msgs::JointState _msg) {
+      this->Callback(_msg);
+    };
+
+    //m_stateSub = nh.subscribe(m_agent->GetRobot()->GetLabel()+"/joint_states",
+    //                          1000,Callback);
   }
-  else {
-    m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                //"/arm_controller/command",
-                "/scaled_pos_joint_traj_controller/command",
-                //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
-                10);
+
+  if(m_robotLabel == "boxer") {
+
+    ROS_INFO_STREAM("Hello Worlid!! --- Boxer Mode");
+
   }
-
-
-  JointStateCallback callback = [this](const sensor_msgs::JointState _msg) {
-    this->Callback(_msg);
-  };
-
-  //m_stateSub = nh.subscribe(m_agent->GetRobot()->GetLabel()+"/joint_states",
-  //                          1000,Callback);
 }
 
 ROSStepFunction::
@@ -60,9 +74,25 @@ ROSStepFunction::
 
 /*------------------------- Helper Functions -----------------------*/
 
-bool 
+bool
 ROSStepFunction::
 ReachedWaypoint(const Cfg& _waypoint) {
+
+  std::cout << "Checking if waypoint: " << _waypoint.PrettyPrint() <<  "was reached" << std::endl;
+  bool reached = false;
+  if(m_robotLabel == "ur5") {
+    reached = ReachedWaypointArm(_waypoint);
+  }
+
+  if(m_robotLabel == "boxer") {
+    reached = ReachedWaypointBase(_waypoint);
+  }
+  return reached;
+}
+
+bool
+ROSStepFunction::
+ReachedWaypointArm(const Cfg& _waypoint) {
   //ros::spinOnce();
 
   // Grab joint angles
@@ -92,12 +122,12 @@ ReachedWaypoint(const Cfg& _waypoint) {
       jv = -2 + jv;
     jointStates.push_back(jv);
   }
-  
+
   //TODO::Check if m_jointState has reached the current waypoint
   auto r = m_agent->GetRobot();
   Cfg state(r);
   state.SetData(jointStates);
-  
+
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
   auto lib = p->GetMPLibrary();
   auto dm = lib->GetDistanceMetric(m_waypointDm);
@@ -116,19 +146,85 @@ ReachedWaypoint(const Cfg& _waypoint) {
   return distance < m_waypointThreshold;
 }
 
-void 
+
+bool
+ROSStepFunction::
+ReachedWaypointBase(const Cfg& _waypoint) {
+
+  typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+  //tell the action client that we want to spin a thread by default
+  MoveBaseClient ac("move_base", true);
+  bool reached = false;
+  if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    ROS_INFO("Hooray, the base moved 1 meter forward");
+    reached = true;
+  }
+
+  ROS_INFO("The base failed to move forward 1 meter for some reason");
+  return reached;
+}
+
+void
 ROSStepFunction::
 MoveToWaypoint(const Cfg& _waypoint, double _dt) {
   std::cout << "Moving to waypoint: " << _waypoint.PrettyPrint() << std::endl;
 
-  //ROS HACK BC WRIST 3 IS NOISY AND DUMB
-  auto hack = _waypoint;
-  hack[5] = 0;
-  
-  MoveArm(_waypoint.GetData(), _dt);
+  if(m_robotLabel == "ur5") {
+    //ROS HACK BC WRIST 3 IS NOISY AND DUMB
+    auto hack = _waypoint;
+    hack[5] = 0;
+
+    MoveArm(_waypoint.GetData(), _dt);
+  }
+
+  if(m_robotLabel == "boxer") {
+    MoveBase(_waypoint.GetData(), _dt);
+  }
 }
-    
-void 
+
+void
+ROSStepFunction::
+MoveBase(std::vector<double> _goal, double _dt) {
+
+  typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+  //tell the action client that we want to spin a thread by default
+  MoveBaseClient ac("move_base", true);
+
+  //wait for the action server to come up
+  while(!ac.waitForServer(ros::Duration(5.0))){
+    ROS_INFO("Waiting for the move_base action server to come up");
+  }
+
+
+  //Roll pitch and yaw in Radians
+  double roll = _goal[3],
+         pitch = _goal[4],
+         yaw = _goal[5];
+  // Compute the relative rotation from here to there in the local frame.
+  Quaternion q;
+  convertFromEulerVector(q,{roll,pitch,yaw});
+  auto real = q.real();
+  auto vectorImaginary = q.imaginary();
+
+  move_base_msgs::MoveBaseGoal goal;
+
+  //we'll send a goal to the robot to move 1 meter forward
+  goal.target_pose.header.frame_id = "base_link";
+  goal.target_pose.header.stamp = ros::Time::now();
+
+  goal.target_pose.pose.position.x = _goal[0];
+  goal.target_pose.pose.position.y = _goal[1];
+  goal.target_pose.pose.orientation.x = vectorImaginary[0];
+  goal.target_pose.pose.orientation.y = vectorImaginary[1];
+  goal.target_pose.pose.orientation.z = vectorImaginary[2];
+  goal.target_pose.pose.orientation.w = real;
+
+  ROS_INFO_STREAM("Sending goal to boxer");
+  ac.sendGoal(goal);
+  ac.waitForResult();
+
+}
+void
 ROSStepFunction::
 MoveArm(std::vector<double> _goal, double _dt) {
   if(ros::ok()) {
@@ -171,8 +267,8 @@ MoveArm(std::vector<double> _goal, double _dt) {
     */
   }
 }
-   
-void 
+
+void
 ROSStepFunction::
 Callback(const sensor_msgs::JointState _msg) {
   ROS_INFO_STREAM("Received: " << _msg.position);
