@@ -34,7 +34,7 @@ class IndependentPaths : public InteractionStrategyMethod {
 
     ///@}
 
-  private:
+  protected:
     ///@name Helper Functions
     ///@{
 

@@ -679,7 +679,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       const auto& cfgs = path->Cfgs();
       // Skip the first cfgs if this is not the first path
       for(size_t j = (i == 1) ? 0:1; j < cfgs.size(); j++) {
-        transition.explicitPaths[path->GetRobot()].push_back(cfgs[i]);
+        transition.explicitPaths[path->GetRobot()].push_back(cfgs[j]);
       }
 
       // Update max cost at this stage

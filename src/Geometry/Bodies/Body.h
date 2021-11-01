@@ -226,6 +226,9 @@ class Body {
     /// @return True if adjacent
     bool IsAdjacent(const Body* const _otherBody) const;
 
+    bool IsForwardAdjacent(const Body* const _other) const;
+    bool IsBackwardAdjacent(const Body* const _other) const;
+
     /// Determines if two bodies share a parent
     /// @param _otherBody Second body
     /// @return True if sharing a parent

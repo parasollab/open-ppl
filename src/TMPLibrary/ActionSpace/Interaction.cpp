@@ -85,7 +85,9 @@ SetToStageGroupPath(const std::string& _stage, GroupPathType* _path) {
 std::vector<Path*> 
 Interaction::
 GetToStagePaths(const std::string& _stage) const {
-  return m_toStagePaths.at(_stage);
+  if(m_toStagePaths.count(_stage))
+    return m_toStagePaths.at(_stage);
+  return {};
 }
     
 void 

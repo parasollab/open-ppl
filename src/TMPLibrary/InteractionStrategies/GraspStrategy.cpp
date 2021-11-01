@@ -1,9 +1,12 @@
 #include "GraspStrategy.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/Interaction.h"
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 #include "MPProblem/Robot/Kinematics/ur_kin.h"
 
@@ -15,7 +18,7 @@ GraspStrategy() {
 }
 
 GraspStrategy::
-GraspStrategy(XMLNode& _node) : InteractionStrategyMethod(_node) {
+GraspStrategy(XMLNode& _node) : IndependentPaths(_node) {
   this->SetName("GraspStrategy");
 
   m_objectSMLabel = _node.Read("objectSMLabel",true, "",
@@ -35,24 +38,61 @@ bool
 GraspStrategy::
 operator()(Interaction* _interaction, State& _start) {
 
-  auto as = this->GetTMPLibrary()->GetActionSpace();
+  auto problem = this->GetPlan()->GetCoordinator()->GetRobot()->GetMPProblem();
+
+  _interaction->Initialize();
 
   // Get initial conditions
   auto stages = _interaction->GetStages();
+
+  // Check that there are at most 4 stages
+  if(stages.size() > 4)
+    throw RunTimeException(WHERE) << "Grasp sampling assumes at most 4 stages:"
+                                     "\n\t0:Groups"
+                                     "\n\t1:PreGrasp"
+                                     "\n\t2:Grasp"
+                                     "\n\t(Optional)3: PostGrasp"
+                                  << std::endl;
+
   auto initialConditions = _interaction->GetStageConditions(stages[0]);
 
   // Assign roles
   AssignRoles(_start,initialConditions);
 
+  std::string allRobotsLabel;
+  std::vector<Robot*> allRobots;
+
   // Grab object robot models
   std::vector<Robot*> objects;
+  std::string allObjectsLabel;
+
   for(auto kv : _start) {
     auto group = kv.first;
     for(auto r : group->GetRobots()) {
-      if(r->GetMultiBody()->IsPassive())
+
+      // Save object robots
+      if(r->GetMultiBody()->IsPassive()) {
+        // Add obj to set of all objects
         objects.push_back(r);
+        allObjectsLabel += "::"+r->GetLabel();
+      }
+      else  {
+        // Add manip to set of all robots
+        allRobots.push_back(r);
+        allRobotsLabel += "::"+r->GetLabel();
+      }
     }
   }
+
+  // Add composite groups to to grasp solution
+  auto objGroup = problem->AddRobotGroup(objects,allObjectsLabel);
+  auto toGraspSolution = _interaction->GetToStageSolution(stages[1]);
+  toGraspSolution->AddRobotGroup(objGroup);
+  auto objGrm = toGraspSolution->GetGroupRoadmap(objGroup);
+
+  auto group = problem->AddRobotGroup(allRobots,allRobotsLabel);
+  toGraspSolution->AddRobotGroup(group);
+  auto grm = toGraspSolution->GetGroupRoadmap(group);
 
   // Sample object placements
   std::map<Robot*,Cfg> objectPoses;
@@ -61,58 +101,94 @@ operator()(Interaction* _interaction, State& _start) {
     objectPoses[object] = objectPose;
   }
 
-  std::unordered_map<Robot*,Transformation> eeFrames;
-  //temp hardcode to second stage
-  auto pregraspConditions = _interaction->GetStageConditions(stages[1]);
-  for(auto condition : pregraspConditions) {
-    auto f = dynamic_cast<FormationCondition*>(as->GetCondition(condition));
-    if(!f)
-      continue;
+  // Sample pregrasp joint angles
+  auto eeFrames = ComputeEEFrames(_interaction,objectPoses);
 
-    for(auto role : f->GetRoles()) {
-      auto robot = m_roleMap[role];
-      if(!robot->GetMultiBody()->IsPassive())
-        continue;
-
-      const auto& roleInfo = f->GetRoleInfo(role); 
-      Transformation transform = roleInfo.transformation;
-      Cfg cfg = objectPoses[robot];
-
-      auto frame = ComputeEEWorldFrame(cfg, transform);
-      
-      auto refRobot = m_roleMap[roleInfo.referenceRole];
-      auto refBase = refRobot->GetMultiBody()->GetBase();
-      auto refBaseTransformation = refBase->GetWorldTransformation();
-
-      // Current have to rotate base of ur5e bc of weird urdf stuff, but it messes up this calculation
-      if(m_doctorBaseOrientation)
-        refBaseTransformation = Transformation(refBaseTransformation.translation());
-
-      auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
-      auto rotation = (-refBaseTransformation).rotation() * frame.rotation();
-
-      auto eeFrame = Transformation(translation,rotation);
-      eeFrames[refRobot] = eeFrame;
-    }
-  }
-
-  std::unordered_map<Robot*,Cfg> manipCfgs;
+  std::unordered_map<Robot*,Cfg> pregraspCfgs;
   for(auto kv : eeFrames) {
     auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
-    manipCfgs[kv.first] = cfg;
+    SetEEDOF(_interaction,cfg,stages[1]);
+    pregraspCfgs[kv.first] = cfg;
   }
-  
+ 
+  // Sample grasp joint angles
+  std::unordered_map<Robot*,Cfg> graspCfgs;
+  for(auto kv : pregraspCfgs) {
+    auto cfg = kv.second;
+    SetEEDOF(_interaction,cfg,stages[2]);
+    
+    graspCfgs[kv.first] = cfg;
+  }
 
-  // TODO::Iterate through stages
+  // Setup group cfgs
+  GroupCfg objGcfg(objGrm);
+  for(auto kv : objectPoses) {
+    objGcfg.SetRobotCfg(kv.first,std::move(kv.second));
+  }
 
-  // TODO::For each stage
-    //TODO::Set/sample object pose based off of static status
+  GroupCfg pregrasp(grm);
+  for(auto kv : pregraspCfgs) {
+    pregrasp.SetRobotCfg(kv.first,std::move(kv.second));
+  }
 
-    //TODO::Compute EE placement relative object pose
+  GroupCfg grasp(grm);
+  for(auto kv : graspCfgs) {
+    grasp.SetRobotCfg(kv.first,std::move(kv.second));
+  }
 
-    //TODO::Compute joint angles using IK
+  // Get start constraints
+  auto objVID = objGrm->AddVertex(objGcfg);
+  auto preGraspVID = grm->AddVertex(pregrasp);
+  State preGraspState;
+  preGraspState[objGroup] = std::make_pair(objGrm,objVID);
+  preGraspState[group] = std::make_pair(grm,preGraspVID);
+  auto preGraspConstraints = GenerateConstraints(preGraspState);
 
-    //TODO::Compute path from previous stage to next stage
+  // Get goal constraints
+  auto graspVID = grm->AddVertex(grasp);
+  State graspState;
+  graspState[objGroup] = std::make_pair(objGrm,objVID);
+  graspState[group] = std::make_pair(grm,graspVID);
+  auto graspConstraints = GenerateConstraints(graspState);
+ 
+  // Set active formations for grasp planning problem
+  auto startConditions = _interaction->GetStageConditions(stages[0]);
+  SetActiveFormations(startConditions,toGraspSolution);
+
+  // Create grasp planning tasks
+  auto graspTasks = GenerateTasks(startConditions,
+                                  preGraspConstraints,
+                                  graspConstraints);
+
+  _interaction->SetToStageTasks(stages[2],graspTasks);
+
+  // Configure objects as static robots
+  std::set<Robot*> staticRobots;  
+  for(auto obj : objects) {
+    staticRobots.insert(obj);
+  }
+
+  ConfigureStaticRobots(staticRobots,preGraspState);
+
+  auto toGraspPaths = PlanMotions(graspTasks,toGraspSolution,
+                      "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[2],
+                      staticRobots,preGraspState);
+
+  ResetStaticRobots();
+
+  // Check if valid solution was found
+  if(toGraspPaths.empty())
+    return false;
+
+  // Save plan information
+  _interaction->SetToStagePaths(stages[2],toGraspPaths);
+
+  if(stages.size() == 3)
+    _start = InterimState(_interaction,stages[2],stages[2],toGraspPaths);
+  else 
+    _start = InterimState(_interaction,stages[2],stages[3],toGraspPaths);
+
+  //TODO::Compute to post grasp path
 
   return true;
 }
@@ -207,6 +283,51 @@ ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform) {
   return Transformation(translation,rotation);
 }
 
+std::unordered_map<Robot*,Transformation>
+GraspStrategy::
+ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses) {
+
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+  auto stages = _interaction->GetStages();
+
+  std::unordered_map<Robot*,Transformation> eeFrames;
+
+  auto pregraspConditions = _interaction->GetStageConditions(stages[1]);
+  for(auto condition : pregraspConditions) {
+    auto f = dynamic_cast<FormationCondition*>(as->GetCondition(condition));
+    if(!f)
+      continue;
+
+    for(auto role : f->GetRoles()) {
+      auto robot = m_roleMap[role];
+      if(!robot->GetMultiBody()->IsPassive())
+        continue;
+
+      const auto& roleInfo = f->GetRoleInfo(role); 
+      Transformation transform = roleInfo.transformation;
+      Cfg cfg = objectPoses[robot];
+
+      auto frame = ComputeEEWorldFrame(cfg, transform);
+      
+      auto refRobot = m_roleMap[roleInfo.referenceRole];
+      auto refBase = refRobot->GetMultiBody()->GetBase();
+      auto refBaseTransformation = refBase->GetWorldTransformation();
+
+      // Current have to rotate base of ur5e bc of weird urdf stuff, but it messes up this calculation
+      if(m_doctorBaseOrientation)
+        refBaseTransformation = Transformation(refBaseTransformation.translation());
+
+      auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
+      auto rotation = (-refBaseTransformation).rotation() * frame.rotation();
+
+      auto eeFrame = Transformation(translation,rotation);
+      eeFrames[refRobot] = eeFrame;
+    }
+  }
+
+  return eeFrames;
+}
+
 Cfg
 GraspStrategy::
 ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
@@ -244,15 +365,22 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
   T[15] = 1;
 
 
-  for(int i=0;i<4;i++) {
-    for(int j=i*4;j<(i+1)*4;j++)
-      printf("%1.3f ", T[j]);
-    printf("\n");
+  if(m_debug) {
+    for(int i=0;i<4;i++) {
+      for(int j=i*4;j<(i+1)*4;j++)
+        printf("%1.3f ", T[j]);
+      printf("\n");
+    }
   }
+
   auto num_sols = ur_kinematics::inverse(T, q_sols);
-  for(int i=0;i<num_sols;i++) 
-    printf("%1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n", 
-       q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
+
+  if(m_debug) {
+    for(int i=0;i<num_sols;i++) 
+      printf("%1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n", 
+          q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
+  }
+  
   if(num_sols == 0)
     return Cfg(nullptr);
 
@@ -280,4 +408,52 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
   Cfg cfg(_robot);
   cfg.SetData(data);
   return cfg;
+}
+
+void
+GraspStrategy::
+SetEEDOF(Interaction* _interaction, Cfg& _cfg, const std::string& _stage) {
+  
+  Constraint* constraint = nullptr;
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+
+  // Grap role
+  std::string role;
+  for(auto kv : m_roleMap) {
+    if(kv.second == _cfg.GetRobot()) {
+      role = kv.first;
+      break;
+    }
+  }
+
+  for(auto condition : _interaction->GetStageConditions(_stage)) {
+    auto c = as->GetCondition(condition);
+    auto m = dynamic_cast<MotionCondition*>(c);
+    if(!m)
+      continue;
+    constraint = m->GetRoleConstraint(role);
+    if(constraint)
+      break;
+  }
+
+  auto b = dynamic_cast<BoundaryConstraint*>(constraint);
+  auto boundary = b->GetBoundary();
+
+  for(size_t i = 0; i < _cfg.DOF(); i++) {
+    
+    auto range = boundary->GetRange(i);
+
+    // Check if dof is ee 
+    // TODO::temp assume ee dof is 1
+    if(i == 1) {
+      // Sample ee dof within boundary
+      auto ee = range.Sample();
+      _cfg[i] = ee;
+    }
+    else {
+      // Ensure that cfg satisfies boundary
+      if(!range.Contains(_cfg[i]))
+        throw RunTimeException(WHERE) << "Sampled EE position does not satisfy condition constraint.";
+    }
+  }
 }

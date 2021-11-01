@@ -602,12 +602,9 @@ IsAdjacent(const Body* const _other) const {
   if(this == _other)
     return true;
 
-  for(const auto& c : m_forwardConnections)
-    if(c->GetNextBody() == _other)
-      return true;
-  for(const auto& c : m_backwardConnections)
-    if(c->GetPreviousBody() == _other)
-      return true;
+  if(IsForwardAdjacent(_other) or IsBackwardAdjacent(_other))
+    return true;
+
   for(const auto& c : m_adjacencyConnections)
     if(c->GetNextBody() == _other || c->GetPreviousBody() == _other)
       return true;
@@ -615,6 +612,33 @@ IsAdjacent(const Body* const _other) const {
   return false;
 }
 
+bool
+Body::
+IsForwardAdjacent(const Body* const _other) const {
+  for(const auto& c : m_forwardConnections) {
+    auto next = c->GetNextBody();
+    if(next == _other)
+      return true;
+    else if(next->IsVirtual() and next->IsForwardAdjacent(_other))
+      return true;
+  }
+
+  return false;
+}
+
+bool
+Body::
+IsBackwardAdjacent(const Body* const _other) const {
+  for(const auto& c : m_backwardConnections) {
+    auto previous = c->GetPreviousBody();
+    if(previous == _other)
+      return true;
+    else if(previous->IsVirtual() and previous->IsBackwardAdjacent(_other))
+      return true;
+  }
+
+  return false;
+}
 
 bool
 Body::

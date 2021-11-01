@@ -49,6 +49,8 @@ class MotionCondition : public Condition {
 
     void ReCenter(const std::vector<double>& _t);
 
+    Constraint* GetRoleConstraint(const std::string& _role) const;
+
     ///@}
 
   private:
@@ -62,6 +64,8 @@ class MotionCondition : public Condition {
 
     /// Set of pairs of robot type and CSpace/Workspace constraints
     std::vector<std::pair<std::string,std::unique_ptr<Constraint>>> m_constraints;
+
+    std::unordered_map<std::string,Constraint*> m_roleConstraints;
 
     std::vector<std::pair<std::string,std::unique_ptr<Constraint>>> m_translatedConstraints;
 

@@ -37,6 +37,8 @@ MotionCondition(XMLNode& _node, TMPLibrary* _tmpLibrary) : Condition(_node,_tmpL
       std::string role = child.Read("role", true, "", 
                                     "Used to identify robot tole across conditions.");
       m_roles[m_constraints.back().second.get()] = role;
+
+      m_roleConstraints[role] = m_constraints.back().second.get();
     }
   }
 
@@ -232,6 +234,17 @@ ReCenter(const std::vector<double>& _t) {
     m_translatedConstraints.push_back(std::make_pair(constraint.first,std::move(c)));
     m_roles[m_translatedConstraints.back().second.get()] = m_roles[constraint.second.get()];
   }
+}
+
+Constraint*
+MotionCondition::
+GetRoleConstraint(const std::string& _role) const {
+
+  auto iter = m_roleConstraints.find(_role);
+  if(iter == m_roleConstraints.end())
+    return nullptr;
+
+  return iter->second;
 }
 
 /*--------------------- Helper Functions ---------------------*/

@@ -1,11 +1,11 @@
 #ifndef PPL_GRASP_STRATEGY_H_
 #define PPL_GRASP_STRATEGY_H_
 
-#include "InteractionStrategyMethod.h"
+#include "IndependentPaths.h"
 
 #include "MPProblem/MPTask.h"
 
-class GraspStrategy : public InteractionStrategyMethod {
+class GraspStrategy : public IndependentPaths {
 
   public: 
 
@@ -44,7 +44,12 @@ class GraspStrategy : public InteractionStrategyMethod {
     // Compute the EE Frame with respect to the world
     Transformation ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform);
 
+    std::unordered_map<Robot*,Transformation> ComputeEEFrames(Interaction* _interaction, 
+                                                              std::map<Robot*,Cfg>& objectPoses);
+
     Cfg ComputeManipulatorCfg(Robot* _robot, Transformation& _transform);
+
+    void SetEEDOF(Interaction* _interaction, Cfg& _cfg, const std::string& _stage);
 
     ///@}
     ///@name Internal State
