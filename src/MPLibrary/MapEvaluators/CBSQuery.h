@@ -401,6 +401,8 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   }
 
   // Generate a path for this robot individually while avoiding the conflicts.
+  auto groupTask = this->GetGroupTask();
+  this->GetMPLibrary()->SetGroupTask(nullptr);
   this->GetMPLibrary()->SetTask(task);
   auto query = dynamic_cast<QueryMethod<MPTraits>*>(
       this->GetMapEvaluator(m_queryLabel)
@@ -416,6 +418,7 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   query->SetMinEndtime(minEndtime);
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
+  this->GetMPLibrary()->SetGroupTask(groupTask);
   query->ClearPathWeightFunction();
 
 
