@@ -437,7 +437,7 @@ ifeq ($(platform), Ubuntu)
   ROS_DIR := /opt/ros/melodic
   URDF_INCL := -I$(ROS_DIR)/include -I/usr/include/eigen3
   #URDF_LIBS := -L/$(ROS_DIR)/lib -lorocos-kdl -lkdl_parser
-  URDF_LIBS := -L/$(ROS_DIR)/lib $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so -lorocos-kdl -lkdl_parser $(ROS_DIR)/lib/libtrac_ik.so
+  URDF_LIBS := -L/$(ROS_DIR)/lib $(ROS_DIR)/lib/liburdf.so $(ROS_DIR)/lib/libroscpp.so $(ROS_DIR)/lib/librosconsole.so $(ROS_DIR)/lib/libroscpp_serialization.so  $(ROS_DIR)/lib/librostime.so -lorocos-kdl -lkdl_parser $(ROS_DIR)/lib/libtrac_ik.so $(ROS_DIR)/lib/libactionlib.so
   URDF_DEFS := -DPPL_USE_KDL -DPPL_USE_URDF -DIKFAST_NO_MAIN
   URDF_SRCS := \
     MPProblem/Robot/KDLModel.cpp \

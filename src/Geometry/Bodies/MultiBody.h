@@ -266,6 +266,11 @@ class MultiBody {
     /// @param _fixed A flag indicating if the robot model has a fixed base.
     void TranslateURDF(std::string _urdf, std::string _worldLink, bool _fixed);
 
+    /// Read an external file to add a MultiBody.
+    /// @param _filename The filename of the external file.
+    /// @param _node The XML node containing the filename and any extra information.
+    void ReadExternalFile(std::string _filename, XMLNode& _node);
+
     /// Add a link to this multibody that is specified in the URDF model.
     /// @param _name Name of the link to add.
     /// @param _model The URDF model to extract the link info from.

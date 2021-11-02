@@ -66,6 +66,14 @@ MultiBody(XMLNode& _node) {
       "{active, passive, internal}");
   m_multiBodyType = GetMultiBodyTypeFromTag(type, _node.Where());
 
+  const std::string filename = _node.Read("filename", false, "", "External file"
+        " description of multibody.");
+
+  if (filename != "") {
+    ReadExternalFile(filename, _node);
+    return;
+  }
+
   // Read the free bodies in the multibody node. Each body is either the Base
   // (just one) or a link (any number).
   for(auto& child : _node) {
@@ -762,6 +770,29 @@ Write(std::ostream& _os) const {
     for(size_t j = 0; j < body.ForwardConnectionCount(); ++j)
       _os << body.GetForwardConnection(j);
 }
+
+
+void
+MultiBody::
+ReadExternalFile(std::string _filename, XMLNode& _node) {
+  // Get file extension to determine behavior.
+  const std::string ext = _filename.substr(_filename.find_last_of(".") + 1);
+
+  #ifdef PPL_USE_URDF
+  if (ext == "urdf") {
+    // Read the world link.
+    std::string worldLink = _node.Read("worldLink", false, "", "The link name "
+                                       "for the world link in a URDF.");
+    this->TranslateURDF(_node.GetPath() + _filename, worldLink, true);
+    return;
+  }
+  #endif
+
+  // Failed to parse the file, so file type not supported. Throw exception.
+  throw RunTimeException(WHERE) << "Files of type ." << ext
+                                << " are not supported.";
+}
+
 
 /*---------------------------------- Helpers ---------------------------------*/
 
