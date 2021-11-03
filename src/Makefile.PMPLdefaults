@@ -585,6 +585,7 @@ PMPL_SRCS := \
   Behaviors/Controllers/ControllerMethod.cpp \
   Behaviors/Controllers/ControlSetGenerators.cpp \
   Behaviors/Controllers/SimpleController.cpp \
+  Behaviors/Controllers/DiffDriveController.cpp \
   ConfigurationSpace/Cfg.cpp \
   ConfigurationSpace/GroupCfg.cpp \
   Geometry/GMSPolygon.cpp \
