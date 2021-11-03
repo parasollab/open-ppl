@@ -86,6 +86,7 @@ ReachedWaypoint(const Cfg& _waypoint) {
 
   if(m_robotLabel == "boxer") {
     reached = ReachedWaypointBase(_waypoint);
+    std::cout << "reached: " << reached << std::endl;
   }
   return reached;
 }
@@ -158,9 +159,9 @@ ReachedWaypointBase(const Cfg& _waypoint) {
   if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
     ROS_INFO("Hooray, the base moved 1 meter forward");
     reached = true;
+  }else {
+    ROS_INFO("The base failed to move forward 1 meter for some reason");
   }
-
-  ROS_INFO("The base failed to move forward 1 meter for some reason");
   return reached;
 }
 
@@ -209,7 +210,7 @@ MoveBase(std::vector<double> _goal, double _dt) {
   move_base_msgs::MoveBaseGoal goal;
 
   //we'll send a goal to the robot to move 1 meter forward
-  goal.target_pose.header.frame_id = "base_link";
+  goal.target_pose.header.frame_id = "odom";
   goal.target_pose.header.stamp = ros::Time::now();
 
   goal.target_pose.pose.position.x = _goal[0];
@@ -224,6 +225,7 @@ MoveBase(std::vector<double> _goal, double _dt) {
   ac.waitForResult();
 
 }
+
 void
 ROSStepFunction::
 MoveArm(std::vector<double> _goal, double _dt) {

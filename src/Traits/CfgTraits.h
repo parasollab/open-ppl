@@ -18,6 +18,7 @@
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -34,11 +35,14 @@
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/KinodynamicExtender.h"
+#include "MPLibrary/Extenders/MixExtender.h"
 
 //path smoothing includes
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
@@ -97,7 +101,8 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
-    MinkowskiDistance<MPTraits>
+    MinkowskiDistance<MPTraits>,
+    WeightedEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -124,7 +129,9 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>
+    BasicExtender<MPTraits>,
+    KinodynamicExtender<MPTraits>,
+    MixExtender<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
@@ -134,7 +141,8 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    NeighborhoodConnector<MPTraits>
+    NeighborhoodConnector<MPTraits>,
+    RewireConnector<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world

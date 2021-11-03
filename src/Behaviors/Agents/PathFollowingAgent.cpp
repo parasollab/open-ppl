@@ -96,6 +96,8 @@ void
 PathFollowingAgent::
 SetPlan(std::vector<Cfg> _path) {
   m_path = _path;
+
+  m_pathVisualID = Simulation::Get()->AddPath(m_path, glutils::color::red);
 }
 
 /*----------------------------- Planning Helpers -----------------------------*/
@@ -124,7 +126,7 @@ WorkFunction(std::shared_ptr<MPProblem> _problem) {
 bool
 PathFollowingAgent::
 EvaluateTask() {
-  //hack for the moment to handle multi-task edge case where delivering robot checks receiving 
+  //hack for the moment to handle multi-task edge case where delivering robot checks receiving
   //robot's task at the moment the receiving robot is delivering a different task.
 	if(m_path.empty())
 		return true;

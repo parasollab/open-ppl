@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. -->
+  <Problem baseFilename="DiffDriveDemo">
+
+    <Environment filename="boxermaze.env" positionRes=".01"/>
+
+    <Robot label="boxer1" filename="boxer.xml" capability="left" color="red">
+      <Agent type="child" debug="true" waypointDm="positionEuclidean"
+        waypointThreshold="0.01">
+        <!-- <StepFunction type="followpath" debug="true"
+	        waypointDm="positionEuclidean" waypointThreshold="0.1"/> -->
+	      <StepFunction type="ros" robotLabel="boxer"
+          waypointDm="positionEuclidean" time="1" sim="true"
+          waypointThreshold="0.001"/>
+      </Agent>
+    </Robot>
+
+    <Robot label="coordinator" virtual="true" filename="boxer.xml" manipulator="false">
+      <Agent type="coordinator" dmLabel="minkowski" debug="true">
+        <Member label="boxer1"/>
+        <StepFunction type="defaultcoordinator" debug="true"/>
+      </Agent>
+    </Robot>
+
+    <Task label="startLocation" robot="boxer1">
+      <StartConstraints>
+        <CSpaceConstraint point="-1 0.5 0 0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Task label="coordinatorTask" robot="coordinator">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first">
+        <Task label="query1" robot="boxer1">
+          <StartConstraints>
+            <CSpaceConstraint point="-1 0.5 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <!-- <CSpaceConstraint point="1.6252 0.3176 0"/> -->
+            <BoundaryConstraint space="cspace" shape="sphere"
+              limits="[1 -0.5 0 0 0 0; 0.5]"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
+
+
+    <!-- <Task label="query" robot="member1">
+      <StartConstraints>
+        <CSpaceConstraint point="-1.7014 0.4254 0"/>
+      </StartConstraints>
+			<GoalConstraints>
+				<CSpaceConstraint point="1.6252 0.3176 0"/>
+			</GoalConstraints>
+    </Task> -->
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
+        normalize="false"/>
+      <Euclidean label="euclidean"/>
+      <WeightedEuclidean label="positionEuclidean" posWeight="1" rotWeight="0" velWeight="0" avlWeight="0"/>
+      <WeightedEuclidean label="weuclidean" posWeight="0.4" rotWeight="0.4" velWeight="0.1" avlWeight="0.1"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" debug="false"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="NearestPos" dmLabel="weuclidean" unconnected="false" k="3"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="pqp_solid"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" debug="true" dmLabel="weuclidean"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+          vcLabel="alwaysTrue"/>
+      <!-- <ControllerLP label="controller" binaryEvaluation="true" vcLabel="pqp_solid"/> -->
+    </LocalPlanners>
+
+    <Extenders>
+      <KinodynamicExtender label="Best" debug="false"
+        dmLabel="weuclidean" vcLabel="rapid" fixed="false" best="true"
+        numSteps="30" minDist=".05"/>
+      <KinodynamicExtender label="Random" debug="false"
+        dmLabel="weuclidean" vcLabel="rapid" fixed="true" best="false"
+        numSteps="30" minDist=".05"/>
+      <MixExtender label="KinoExtender">
+        <Extender label="Best" probability=".75"/>
+        <Extender label="Random" probability=".25"/>
+      </MixExtender>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="alwaysTrue" maxDist="2." minDist=".001"/>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
+          lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <RewireConnector label="Rewire" nfLabel="NearestPos" lpLabel="sl"/>
+    </Connectors>
+
+    <Metrics>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="true" graphSearchAlg="dijkstras"/>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <!-- Basic PRM-->
+      <BasicPRM label="PRM" debug="true">
+        <Sampler label="UniformRandomFree" number="100" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="Query"/>
+      </BasicPRM>
+
+      <!-- Kinodynamic RRT-->
+      <BasicRRTStrategy label="KinoRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+        goalDmLabel="weuclidean" nfLabel="NearestPos"
+        extenderLabel="Best"
+        growGoals="false" growthFocus="0.05" connectorLabel="Rewire">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="KinoRRT" seed="0"
+      baseFilename="diffdrive" vizmoDebug="true"/>
+
+  </Library>
+
+  <TMPLibrary>
+    <TMPStrategies>
+      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
+    </TMPStrategies>
+
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
+
+    <TaskEvaluators>
+      <SimpleMotionEvaluator label="motionEval"/>
+    </TaskEvaluators>
+
+    <TaskDecomposers>
+    </TaskDecomposers>
+
+    <TaskAllocators>
+    </TaskAllocators>
+
+    <StateGraphs>
+    </StateGraphs>
+
+    <TMPTools>
+    </TMPTools>
+
+    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="DiffDriveDemo"/>
+  </TMPLibrary>
+
+</MotionPlanning>
