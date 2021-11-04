@@ -29,6 +29,9 @@ Factory(Agent* _agent, XMLNode& _node) {
     );
   }
   else if(type == "ros") {
+    int argc = 0;
+    char* argv[255];
+    ros::init(argc,argv,"ppl_" + _agent->GetRobot()->GetLabel());
     output = std::unique_ptr<StepFunction>(
       new ROSStepFunction(_agent, _node)
     );

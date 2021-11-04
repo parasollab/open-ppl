@@ -6,12 +6,17 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <move_base_msgs/MoveBaseResult.h>
 #include <actionlib/client/simple_action_client.h>
-
+#include "actionlib/client/simple_client_goal_state.h"
+#include "actionlib/client/terminal_state.h"
 
 class ROSStepFunction : public FollowPath {
 
   public:
+
+    typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+
     ///@name Static variables
     ///@{
 
@@ -50,6 +55,10 @@ class ROSStepFunction : public FollowPath {
     /// Call back function to pass into ros behaviors.
     static void Callback(const sensor_msgs::JointState _msg);
 
+    void SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_base_msgs::MoveBaseResult::ConstPtr& _result);
+
+    void SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -64,10 +73,15 @@ class ROSStepFunction : public FollowPath {
 
     std::string m_robotLabel;
 
+    bool m_reachedWaypoint{false};
+
+    MoveBaseClient m_ac;
+
     ///@}
 };
 
 
 using JointStateCallback = std::function<void(const sensor_msgs::JointState _msg)>;
+
 
 #endif

@@ -39,14 +39,15 @@ StepAgent(double _dt) {
 void
 FollowPath::
 ExecutePath(double _dt) {
-  std::cout << "Path Index: " << m_pathIndex << std::endl;
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
   auto path = p->GetPath();
+  std::cout << "Current: " << path[m_pathIndex] << std::endl;
 
   // Get the current waypoint
   auto current = path[m_pathIndex];
 
   // Check if the robot has reached the current waypoint
+  std::cout << "Reached: " << ReachedWaypoint(current) << std::endl;
   if(!ReachedWaypoint(current)) {
     MoveToWaypoint(current, _dt);
     return;

@@ -15,7 +15,7 @@ std::vector<double> ROSStepFunction::s_jointStates = {};
 /*-------------------------- Construction -----------------------*/
 ROSStepFunction::
 ROSStepFunction(Agent* _agent, XMLNode& _node)
-              : FollowPath(_agent,_node) {
+              : FollowPath(_agent,_node), m_ac("move_base", true) {
 
   m_time = _node.Read("time",false,m_time,0.,10.,
                       "Time for executing controls.");
@@ -24,10 +24,10 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   m_robotLabel = _node.Read("robotLabel", true, "", "The robot to be controlled.");
 
-  int argc = 0;
-  char* argv[255];
+  // int argc = 0;
+  // char* argv[255];
 
-  ros::init(argc,argv,"ppl_" + this->m_agent->GetRobot()->GetLabel());
+  // ros::init(argc,argv,"ppl_" + this->m_agent->GetRobot()->GetLabel());
 
   if(m_robotLabel == "ur5") {
 
@@ -62,8 +62,15 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   if(m_robotLabel == "boxer") {
 
+    ros::start();
+
     ROS_INFO_STREAM("Hello Worlid!! --- Boxer Mode");
 
+    //wait for the action server to come up
+    while(!m_ac.waitForServer(ros::Duration(5.0))){
+      ROS_INFO("Waiting for the move_base action server to come up");
+    } 
+    
   }
 }
 
@@ -86,7 +93,10 @@ ReachedWaypoint(const Cfg& _waypoint) {
 
   if(m_robotLabel == "boxer") {
     reached = ReachedWaypointBase(_waypoint);
-    std::cout << "reached: " << reached << std::endl;
+    if(reached)
+      ROS_INFO_STREAM("Reached: true");
+    else
+      ROS_INFO_STREAM("Reached: false");
   }
   return reached;
 }
@@ -152,17 +162,16 @@ bool
 ROSStepFunction::
 ReachedWaypointBase(const Cfg& _waypoint) {
 
-  typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+  // typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   //tell the action client that we want to spin a thread by default
-  MoveBaseClient ac("move_base", true);
-  bool reached = false;
-  if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
-    ROS_INFO("Hooray, the base moved 1 meter forward");
-    reached = true;
-  }else {
-    ROS_INFO("The base failed to move forward 1 meter for some reason");
-  }
-  return reached;
+  // MoveBaseClient ac("move_base", true);
+  // if(m_ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
+  //   ROS_INFO("Hooray, the base moved 1 meter forward");
+  //   m_reachedWaypoint = true;
+  // }else {
+  //   ROS_INFO("The base failed to move forward 1 meter for some reason");
+  // }
+  return m_reachedWaypoint;
 }
 
 void
@@ -185,17 +194,13 @@ MoveToWaypoint(const Cfg& _waypoint, double _dt) {
 
 void
 ROSStepFunction::
-MoveBase(std::vector<double> _goal, double _dt) {
+MoveBase(std::vector<double> _goal, double _dt) { 
 
-  typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+  // typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   //tell the action client that we want to spin a thread by default
-  MoveBaseClient ac("move_base", true);
+  // MoveBaseClient ac("move_base", true);
 
-  //wait for the action server to come up
-  while(!ac.waitForServer(ros::Duration(5.0))){
-    ROS_INFO("Waiting for the move_base action server to come up");
-  }
-
+  
 
   //Roll pitch and yaw in Radians
   double roll = _goal[3],
@@ -220,9 +225,17 @@ MoveBase(std::vector<double> _goal, double _dt) {
   goal.target_pose.pose.orientation.z = vectorImaginary[2];
   goal.target_pose.pose.orientation.w = real;
 
-  ROS_INFO_STREAM("Sending goal to boxer");
-  ac.sendGoal(goal);
-  ac.waitForResult();
+  ROS_INFO("Sending goal to boxer");
+  std::cout << _goal << std::endl;
+
+  m_ac.sendGoal(goal,
+                boost::bind(&ROSStepFunction::SimpleDoneCallback, this, _1, _2),
+                MoveBaseClient::SimpleActiveCallback(),
+                boost::bind(&ROSStepFunction::SimpleFeedbackCallback, this, _1));
+  
+  auto res = m_ac.waitForResult(ros::Duration(5.0));
+  std::cout << "Wait Result: " << res << std::endl;
+  // m_ac.cancelGoal();
 
 }
 
@@ -275,4 +288,27 @@ ROSStepFunction::
 Callback(const sensor_msgs::JointState _msg) {
   ROS_INFO_STREAM("Received: " << _msg.position);
   s_jointStates = _msg.position;
+}
+
+void
+ROSStepFunction::
+SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_base_msgs::MoveBaseResult::ConstPtr& _result) {
+  ROS_INFO("Done Callback");
+  // ROS_INFO("Status: %s", _state.getText().c_str());
+  // ROS_INFO("State: %d", _state.state_);
+
+  // // std::cout << "Status: " << _state.getText().c_str() << std::endl;  
+
+  // if(_state.state_ == 6) {
+  //   m_reachedWaypoint = true;
+  // } 
+}
+
+void
+ROSStepFunction::
+SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback) {
+  ROS_INFO("FEEDBACK");
+  // ROS_INFO("Base Position x : %d",  _feedback->base_position.pose.position.x);
+  std::cout << "Base Position x: " << _feedback->base_position.pose.position.x << std::endl;
+  // auto pos = _feedback->base_position;
 }
