@@ -57,7 +57,7 @@ class ROSStepFunction : public FollowPath {
 
     void SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_base_msgs::MoveBaseResult::ConstPtr& _result);
 
-    void SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback);
+    void SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const std::vector<double> _waypoint);
 
     ///@}
     ///@name Internal State

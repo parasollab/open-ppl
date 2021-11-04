@@ -4,18 +4,25 @@
 
 #include "MPProblem/Robot/Robot.h"
 
+#undef PI
+
 #include <trajectory_msgs/JointTrajectory.h>
 
 using mathtool::Vector3d;
 using mathtool::Transformation;
 using mathtool::EulerAngle;
 
+
+#include <tf/tf.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 std::vector<double> ROSStepFunction::s_jointStates = {};
 
 /*-------------------------- Construction -----------------------*/
 ROSStepFunction::
 ROSStepFunction(Agent* _agent, XMLNode& _node)
-              : FollowPath(_agent,_node), m_ac("move_base", true) {
+              : FollowPath(_agent,_node), m_ac("move_base", true){
 
   m_time = _node.Read("time",false,m_time,0.,10.,
                       "Time for executing controls.");
@@ -62,15 +69,16 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   if(m_robotLabel == "boxer") {
 
-    ros::start();
+    // ros::start();
 
     ROS_INFO_STREAM("Hello Worlid!! --- Boxer Mode");
 
     //wait for the action server to come up
     while(!m_ac.waitForServer(ros::Duration(5.0))){
       ROS_INFO("Waiting for the move_base action server to come up");
-    } 
-    
+    }
+
+
   }
 }
 
@@ -93,11 +101,8 @@ ReachedWaypoint(const Cfg& _waypoint) {
 
   if(m_robotLabel == "boxer") {
     reached = ReachedWaypointBase(_waypoint);
-    if(reached)
-      ROS_INFO_STREAM("Reached: true");
-    else
-      ROS_INFO_STREAM("Reached: false");
   }
+
   return reached;
 }
 
@@ -127,7 +132,7 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   std::vector<double> jointStates;
   for(auto d : js) {
     //auto jv = d/(2*PI);
-    auto jv = d/(PI);
+    auto jv = d/(KDL::PI);
     //Hack to deal with nonsense ros joint status values that forget about joint limits
     if(jv > 1)
       jv = -2 + jv;
@@ -165,13 +170,15 @@ ReachedWaypointBase(const Cfg& _waypoint) {
   // typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   //tell the action client that we want to spin a thread by default
   // MoveBaseClient ac("move_base", true);
-  // if(m_ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
-  //   ROS_INFO("Hooray, the base moved 1 meter forward");
-  //   m_reachedWaypoint = true;
-  // }else {
-  //   ROS_INFO("The base failed to move forward 1 meter for some reason");
-  // }
-  return m_reachedWaypoint;
+  bool reached = false;
+  // std::cout << "Current State: " << m_ac.getState().getText() << std::endl;
+  if(m_ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
+    ROS_INFO("Hooray, the base moved 1 meter forward");
+    reached = true;
+  }else {
+    ROS_INFO("The base failed to move forward 1 meter for some reason");
+  }
+  return reached;
 }
 
 void
@@ -194,13 +201,13 @@ MoveToWaypoint(const Cfg& _waypoint, double _dt) {
 
 void
 ROSStepFunction::
-MoveBase(std::vector<double> _goal, double _dt) { 
+MoveBase(std::vector<double> _goal, double _dt) {
 
   // typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   //tell the action client that we want to spin a thread by default
   // MoveBaseClient ac("move_base", true);
 
-  
+
 
   //Roll pitch and yaw in Radians
   double roll = _goal[3],
@@ -208,14 +215,14 @@ MoveBase(std::vector<double> _goal, double _dt) {
          yaw = _goal[5];
   // Compute the relative rotation from here to there in the local frame.
   Quaternion q;
-  convertFromEulerVector(q,{roll,pitch,yaw});
+  convertFromEulerVector(q, {roll,pitch,yaw});
   auto real = q.real();
   auto vectorImaginary = q.imaginary();
 
   move_base_msgs::MoveBaseGoal goal;
 
   //we'll send a goal to the robot to move 1 meter forward
-  goal.target_pose.header.frame_id = "odom";
+  goal.target_pose.header.frame_id = "map";
   goal.target_pose.header.stamp = ros::Time::now();
 
   goal.target_pose.pose.position.x = _goal[0];
@@ -225,16 +232,23 @@ MoveBase(std::vector<double> _goal, double _dt) {
   goal.target_pose.pose.orientation.z = vectorImaginary[2];
   goal.target_pose.pose.orientation.w = real;
 
+  // goal.target_pose.pose.position.x = -1.0;
+  // goal.target_pose.pose.position.y = 0.5;
+  // goal.target_pose.pose.orientation.x = 0;
+  // goal.target_pose.pose.orientation.y = 0;
+  // goal.target_pose.pose.orientation.z = 0;
+  // goal.target_pose.pose.orientation.w = 1;
+
   ROS_INFO("Sending goal to boxer");
-  std::cout << _goal << std::endl;
 
   m_ac.sendGoal(goal,
                 boost::bind(&ROSStepFunction::SimpleDoneCallback, this, _1, _2),
                 MoveBaseClient::SimpleActiveCallback(),
-                boost::bind(&ROSStepFunction::SimpleFeedbackCallback, this, _1));
-  
-  auto res = m_ac.waitForResult(ros::Duration(5.0));
-  std::cout << "Wait Result: " << res << std::endl;
+                boost::bind(&ROSStepFunction::SimpleFeedbackCallback, this, _1, _goal));
+
+  m_ac.waitForResult(ros::Duration(1.0));
+
+  // std::cout << "Wait Result: " << res << std::endl;
   // m_ac.cancelGoal();
 
 }
@@ -266,7 +280,7 @@ MoveArm(std::vector<double> _goal, double _dt) {
     //msg.points[0].positions = _goal;
     for(auto d : _goal) {
       //msg.points[0].positions.push_back(d*2*PI);
-      msg.points[0].positions.push_back(d*PI);
+      msg.points[0].positions.push_back(d*KDL::PI);
     }
 
     msg.points[0].time_from_start = ros::Duration(m_time);
@@ -293,22 +307,52 @@ Callback(const sensor_msgs::JointState _msg) {
 void
 ROSStepFunction::
 SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_base_msgs::MoveBaseResult::ConstPtr& _result) {
-  ROS_INFO("Done Callback");
+  ROS_INFO_STREAM("Done Callback");
   // ROS_INFO("Status: %s", _state.getText().c_str());
   // ROS_INFO("State: %d", _state.state_);
 
-  // // std::cout << "Status: " << _state.getText().c_str() << std::endl;  
+  // // std::cout << "Status: " << _state.getText().c_str() << std::endl;
 
   // if(_state.state_ == 6) {
   //   m_reachedWaypoint = true;
-  // } 
+  // }
 }
 
 void
 ROSStepFunction::
-SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback) {
-  ROS_INFO("FEEDBACK");
+SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const std::vector<double> _waypoint) {
+  // ROS_INFO("FEEDBACK");
+  std::cout << "Waypoint: " << _waypoint << std::endl;
+  auto pose = _feedback->base_position;
+  std::cout << "Pose: " << pose << std::endl;
+
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+
+  // geometry_msgs::TransformStamped poseTrans;
+
+  try {
+    // auto poseTrans = tfBuffer.transform(pose, "map");
+    geometry_msgs::TransformStamped odom_to_map = tfBuffer.lookupTransform("map", "odom", ros::Time(0), ros::Duration(1.0));
+    tf2::doTransform(pose, pose, odom_to_map);
+    std::cout << "Tranformed Pose: " << pose << "\n" << std::endl;
+
+  } catch (tf2::TransformException &ex) {
+    ROS_WARN("%s", ex.what());
+  }
+
+  std::vector<double> poseVec;
+  poseVec.push_back(pose.pose.position.x);
+  poseVec.push_back(pose.pose.position.y);
+  poseVec.push_back(pose.pose.position.z);
+
+  Quaternion q(pose.orientation.w, {pose.orientation.x, pose.orientation.y, pose.orientation.z});
+  EulerAngle e;
+  mathtool::convertFromQuaternion(e, q);
+
+
+
   // ROS_INFO("Base Position x : %d",  _feedback->base_position.pose.position.x);
-  std::cout << "Base Position x: " << _feedback->base_position.pose.position.x << std::endl;
+  // std::cout << "Base Position x: " << _feedback->base_position.pose.position.x << std::endl;
   // auto pos = _feedback->base_position;
 }
