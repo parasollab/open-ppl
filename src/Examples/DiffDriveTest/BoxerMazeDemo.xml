@@ -4,7 +4,7 @@
   <!-- Here we specify input files, such as environment and query. -->
   <Problem baseFilename="DiffDriveDemo">
 
-    <Environment filename="boxermaze.env" positionRes=".01"/>
+    <Environment filename="boxermaze.env" positionRes="1"/>
 
     <Robot label="boxer1" filename="boxer.xml" capability="left" color="red">
       <Agent type="child" debug="false" waypointDm="positionEuclidean"
@@ -13,7 +13,7 @@
 	        waypointDm="positionEuclidean" waypointThreshold="0.1"/> -->
 	      <StepFunction type="ros" robotLabel="boxer"
           waypointDm="positionEuclidean" time="1" sim="true"
-          waypointThreshold="0.001" debug="false"/>
+          waypointThreshold="0.01" debug="false"/>
       </Agent>
     </Robot>
 
@@ -26,7 +26,7 @@
 
     <Task label="startLocation" robot="boxer1">
       <StartConstraints>
-        <CSpaceConstraint point="-1 0.5 0 0 0 0"/>
+        <CSpaceConstraint point="-1.5 1 0 0 0 0"/>
       </StartConstraints>
     </Task>
 
@@ -40,13 +40,13 @@
       <SemanticTask label="first">
         <Task label="query1" robot="boxer1">
           <StartConstraints>
-            <CSpaceConstraint point="-1 0.5 0 0 0 0"/>
+            <CSpaceConstraint point="-1.5 1 0 0 0 0"/>
           </StartConstraints>
 
           <GoalConstraints>
             <!-- <CSpaceConstraint point="1.6252 0.3176 0"/> -->
             <BoundaryConstraint space="cspace" shape="sphere"
-              limits="[1 -0.5 0 0 0 0; 0.5]"/>
+              limits="[1.5 -1 0 0 0 0; 0.5]"/>
           </GoalConstraints>
         </Task>
       </SemanticTask>
@@ -94,7 +94,7 @@
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" debug="false" dmLabel="weuclidean" saveIntermediates="true"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" debug="false" dmLabel="weuclidean" saveIntermediates="false"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
           vcLabel="alwaysTrue"/>
       <!-- <ControllerLP label="controller" binaryEvaluation="true" vcLabel="pqp_solid"/> -->

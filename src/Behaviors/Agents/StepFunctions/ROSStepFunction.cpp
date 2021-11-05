@@ -14,6 +14,7 @@ using mathtool::EulerAngle;
 
 
 #include <tf/tf.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
@@ -215,11 +216,16 @@ MoveBase(const Cfg& _goal, double _dt) {
   // std::cout << "Goal[2]: " << _goal[2] << std::endl;
   // Compute the relative rotation from here to there in the local frame.
   Quaternion q;
-  convertFromEulerVector(q, {_goal[2], 0.0, 0.0});
+  convertFromEulerVector(q, {_goal[2]*KDL::PI, 0.0, 0.0});
   auto real = q.real();
   auto vectorImaginary = q.imaginary();
 
-  std::cout << "Quat: " << vectorImaginary << std::endl;
+  // std::cout << "Quat: " << real << " " << vectorImaginary << std::endl;
+
+  // tf2::Quaternion q2;
+  // q2.setRPY(0, 0, _goal[2]*KDL::PI);
+  // std::cout << "Q2: " << q2.w() << " " << q2.x() << " " << q2.y() << " " << q2.z() << std::endl;
+  
   move_base_msgs::MoveBaseGoal goal;
 
   //we'll send a goal to the robot to move 1 meter forward
@@ -233,6 +239,8 @@ MoveBase(const Cfg& _goal, double _dt) {
   goal.target_pose.pose.orientation.z = vectorImaginary[0];
   goal.target_pose.pose.orientation.w = real;
 
+  std::cout << goal << std::endl;
+
   // goal.target_pose.pose.position.x = -1.0;
   // goal.target_pose.pose.position.y = 0.5;
   // goal.target_pose.pose.orientation.x = 0;
@@ -243,7 +251,7 @@ MoveBase(const Cfg& _goal, double _dt) {
   ROS_INFO("Sending goal to boxer");
 
   m_ac.sendGoal(goal,
-                boost::bind(&ROSStepFunction::SimpleDoneCallback, this, _1, _2),
+                MoveBaseClient::SimpleDoneCallback(),
                 MoveBaseClient::SimpleActiveCallback(),
                 boost::bind(&ROSStepFunction::SimpleFeedbackCallback, this, _1, _goal));
 
@@ -341,9 +349,10 @@ SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedba
   } catch (tf2::TransformException &ex) {
     ROS_WARN("%s", ex.what());
   }
+  std::cout << "Pose: " << pose << std::endl;
 
   Quaternion q(pose.pose.orientation.w, {pose.pose.orientation.z, pose.pose.orientation.y, pose.pose.orientation.x});
-  q.normalize();
+  //q.normalize();
 
   EulerAngle e;
   mathtool::convertFromQuaternion(e, q);
@@ -351,18 +360,18 @@ SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedba
   Cfg cur(this->m_agent->GetRobot());
   cur[0] = pose.pose.position.x;
   cur[1] = pose.pose.position.y;
-  // cur[2] = e.alpha();
+  cur[2] = e.gamma() / KDL::PI;
 
 
-  // std::cout << "Alpha: " << e.alpha() << std::endl;
-  // std::cout << "Beta: " << e.beta() << std::endl;
-  // std::cout << "Gamma: " << e.gamma() << std::endl;
+  // std::cout << "Alpha: " << e.alpha() / KDL::PI << std::endl;
+  // std::cout << "Beta: " << e.beta() / KDL::PI << std::endl;
+  // std::cout << "Gamma: " << e.gamma() / KDL::PI << std::endl;
   // cur[2] = pose.pose.position.z;
   // cur[3] = e.alpha();
   // cur[4] = e.beta();
   // cur[5] = e.gamma();
 
-  std::cout << "Cur: " << cur << std::endl;
-  m_reachedWaypoint = _waypoint.WithinResolution(cur, 0.1, 10.0);
+  // std::cout << "Cur: " << cur << std::endl;
+  m_reachedWaypoint = _waypoint.WithinResolution(cur, 0.05, 1.0);
   // std::cout << "Cur: " << cur << std::endl;
 }
