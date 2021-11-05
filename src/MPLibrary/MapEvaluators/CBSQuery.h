@@ -2,7 +2,7 @@
 #define PMPL_CBS_QUERY_H_
 
 #include "MapEvaluatorMethod.h"
-#include "QueryMethod.h"
+#include "SIPPMethod.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Utilities/CBS.h"
 
@@ -141,9 +141,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     std::unordered_map<Robot*, MPTask*> m_taskMap;
 
     GroupConflictsCache m_groupConflictsCache;
-
     EdgeIntervalsMap m_edgeIntervalsMap;
-
     size_t m_cacheIndex{0};
 
 };
@@ -191,13 +189,13 @@ Initialize() {
                                   << " is not of type "
                                   << "CollisionDetectionValidity.";
 
-  // Assert that the query evaluator is an instance of query method.
-  auto query = dynamic_cast<QueryMethod<MPTraits>*>(
+  // Assert that the query evaluator is an instance of SIPP method.
+  auto query = dynamic_cast<SIPPMethod<MPTraits>*>(
       this->GetMapEvaluator(m_queryLabel)
   );
   if(!query)
     throw RunTimeException(WHERE) << "Query method " << m_queryLabel
-                                  << " is not of type QueryMethod."
+                                  << " is not of type SIPPMethod."
                                   << std::endl;
 }
 
@@ -329,13 +327,10 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   if (!_constraintMap.empty())
     m_currentConstraints = &_constraintMap.at(_robot);
 
-  // New stuff starts here:
+  // Turn conflicts into dynamic obstacles
   this->GetMPProblem()->ClearDynamicObstacles();
-
   std::vector<EdgeIntervals> edgeIntervalsSet;
-
   EdgeIntervals jointEdgeIntervals;
-
 
   if(m_currentConstraints) {
     for(auto c : *m_currentConstraints) {
@@ -345,8 +340,10 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
         auto it = m_groupConflictsCache.find(_robot);
         // If so, we check if the current constraint has been cached (we first
         // check the timestep).
-        std::cout << "\t\t\tm_currentConstraints[_robot] has size  set has a size of " << m_currentConstraints->size() << std::endl;
-        std::cout << "\t\t\tm_groupConflictsCache[_robot] has size  set has a size of " << it->second.size() << std::endl;
+        if (this->m_debug) {
+          std::cout << "\t\t\tm_currentConstraints[_robot] has size  set has a size of " << m_currentConstraints->size() << std::endl;
+          std::cout << "\t\t\tm_groupConflictsCache[_robot] has size  set has a size of " << it->second.size() << std::endl;
+        }
         if(it->second.count(c.first)){
           //auto it2 = it->second.find(c.first);
           auto eq = it->second.equal_range(c.first);
@@ -355,8 +352,9 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
           // safe intervals.
           for(auto it2 = eq.first; it2 != eq.second ; ++it2) {
             if(it2->second.first == c.second){
-              std::cout << "cfg: " << it2->second.first.PrettyPrint() << ", index: " << it2->second.second
-                << ", timestep: " << c.first << std::endl;
+              if (this->m_debug)
+                std::cout << "cfg: " << it2->second.first.PrettyPrint() << ", index: " << it2->second.second
+                          << ", timestep: " << c.first << std::endl;
               auto index = it2->second.second;
               auto edgeIntervals = m_edgeIntervalsMap[_robot][index];
               edgeIntervalsSet.push_back(edgeIntervals);
@@ -370,7 +368,9 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
       // cached, then we have to compute its safe intervals by turning it into a
       // dynamic obstacle.
       if(!conflictCached) {
-        std::cout << "\t\t\tEdgeIntervals has not been cached we have to compute it  manually." << std::endl;
+        if (this->m_debug)
+          std::cout << "\t\t\tEdgeIntervals has not been cached we have to compute it  manually." << std::endl;
+        
         std::vector<CfgType> path = {c.second,c.second,c.second};
         Robot* constraintRobot = c.second.GetRobot();
         DynamicObstacle dyOb(constraintRobot, path);
@@ -382,13 +382,17 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
         ++m_cacheIndex;
         m_edgeIntervalsMap[_robot][newIndex] = edgeIntervals;
         m_groupConflictsCache[_robot].emplace(c.first,std::make_pair(c.second,newIndex));
-        std::cout << "\t\t\t\tEMPLACING NEW CONFLICT "
-        << "cfg: " << c.second.PrettyPrint() << ", index: " << newIndex << ", timestep: " << c.first << std::endl;
+
+        if (this->m_debug)
+          std::cout << "\t\t\t\tEMPLACING NEW CONFLICT "
+                    << "cfg: " << c.second.PrettyPrint() << ", index: " << newIndex << ", timestep: " << c.first << std::endl;
+        
         edgeIntervalsSet.push_back(edgeIntervals);
         this->GetMPProblem()->ClearDynamicObstacles();
       }
     }
-    std::cout << "\t\t\tEdgeIntervals set has a size of " << edgeIntervalsSet.size() << std::endl;
+    if (this->m_debug)
+      std::cout << "\t\t\tEdgeIntervals set has a size of " << edgeIntervalsSet.size() << std::endl;
     jointEdgeIntervals = JoinEdgeIntervals(_robot,edgeIntervalsSet);
   }
   edgeIntervalsSet.clear();
@@ -404,32 +408,12 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
   auto groupTask = this->GetGroupTask();
   this->GetMPLibrary()->SetGroupTask(nullptr);
   this->GetMPLibrary()->SetTask(task);
-  auto query = dynamic_cast<QueryMethod<MPTraits>*>(
-      this->GetMapEvaluator(m_queryLabel)
-  );
-  query->SetPathWeightFunction(
-      [this](typename RoadmapType::adj_edge_iterator& _ei,
-             const double _sourceDistance,
-             const double _targetDistance) {
-        return this->MultiRobotPathWeight(_ei, _sourceDistance, _targetDistance);
-      }
-  );
+  auto query = this->GetMapEvaluator(m_queryLabel);
   query->SetEdgeIntervals(jointEdgeIntervals);
   query->SetMinEndtime(minEndtime);
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
   this->GetMPLibrary()->SetGroupTask(groupTask);
-  query->ClearPathWeightFunction();
-
-
-  // Generate a path for this robot individually while avoiding the conflicts.
-  // auto groupTask = this->GetMPLibrary()->GetGroupTask();
-  // this->GetMPLibrary()->SetGroupTask(nullptr);
-  // this->GetMPLibrary()->SetTask(task);
-  // auto query = this->GetMapEvaluator(m_queryLabel);
-  // const bool success = (*query)();
-  // this->GetMPLibrary()->SetTask(nullptr);
-  // this->GetMPLibrary()->SetGroupTask(groupTask);
 
   // Clear the conflicts.
   m_currentConstraints = nullptr;
@@ -717,7 +701,6 @@ template <typename MPTraits>
 typename CBSQuery<MPTraits>::EdgeIntervals
 CBSQuery<MPTraits>::
 JoinEdgeIntervals(Robot* _robot, std::vector<typename CBSQuery<MPTraits>::EdgeIntervals> _edgeIntervals) {
-
   auto roadmap = this->GetRoadmap(_robot);
   typename CBSQuery<MPTraits>::EdgeIntervals jointEdgeIntervals;
   for(auto vi = roadmap->begin(); vi != roadmap->end(); ++vi) {
@@ -754,7 +737,6 @@ template <typename MPTraits>
 std::vector<Range<double>>
 CBSQuery<MPTraits>::
 InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<double>> _newIntervals) {
-
   std::vector<Range<double>> newJointIntervals;
   if(_newIntervals.empty()) {
     newJointIntervals = _jointIntervals;

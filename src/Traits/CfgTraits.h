@@ -50,6 +50,7 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
@@ -149,6 +150,7 @@ struct MPTraits {
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 

@@ -80,6 +80,7 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
 template<typename MPTraits>
 MapEvaluatorMethod<MPTraits>::
 MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) { 
+  std::cout << "HERE IN MAPEVAL" << std::endl;
 }
 
 /*----------------------------- Active Robots --------------------------------*/
