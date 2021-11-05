@@ -13,7 +13,7 @@
 	        waypointDm="positionEuclidean" waypointThreshold="0.1"/> -->
 	      <StepFunction type="ros" robotLabel="boxer"
           waypointDm="positionEuclidean" time="1" sim="true"
-          waypointThreshold="0.001" debug="true"/>
+          waypointThreshold="0.001" debug="false"/>
       </Agent>
     </Robot>
 

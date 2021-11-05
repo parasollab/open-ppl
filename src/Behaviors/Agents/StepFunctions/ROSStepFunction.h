@@ -41,7 +41,7 @@ class ROSStepFunction : public FollowPath {
     //Temp function::Needs to be moved to controller class.
     void MoveArm(std::vector<double> _goal, double _dt);
 
-    void MoveBase(std::vector<double> _goal, double _dt);
+    void MoveBase(const Cfg& _goal, double _dt);
 
     ///@name Helper Functions
     ///@{
@@ -57,7 +57,7 @@ class ROSStepFunction : public FollowPath {
 
     void SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_base_msgs::MoveBaseResult::ConstPtr& _result);
 
-    void SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const std::vector<double> _waypoint);
+    void SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const Cfg& _waypoint);
 
     ///@}
     ///@name Internal State

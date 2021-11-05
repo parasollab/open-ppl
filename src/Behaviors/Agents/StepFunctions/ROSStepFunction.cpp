@@ -93,14 +93,15 @@ bool
 ROSStepFunction::
 ReachedWaypoint(const Cfg& _waypoint) {
 
-  std::cout << "Checking if waypoint: " << _waypoint.PrettyPrint() <<  "was reached" << std::endl;
+  // std::cout << "Checking if waypoint: " << _waypoint.PrettyPrint() <<  "was reached" << std::endl;
   bool reached = false;
   if(m_robotLabel == "ur5") {
     reached = ReachedWaypointArm(_waypoint);
   }
 
   if(m_robotLabel == "boxer") {
-    reached = ReachedWaypointBase(_waypoint);
+    // reached = ReachedWaypointBase(_waypoint);
+    reached = m_reachedWaypoint;
   }
 
   return reached;
@@ -195,13 +196,13 @@ MoveToWaypoint(const Cfg& _waypoint, double _dt) {
   }
 
   if(m_robotLabel == "boxer") {
-    MoveBase(_waypoint.GetData(), _dt);
+    MoveBase(_waypoint, _dt);
   }
 }
 
 void
 ROSStepFunction::
-MoveBase(std::vector<double> _goal, double _dt) {
+MoveBase(const Cfg& _goal, double _dt) {
 
   // typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
   //tell the action client that we want to spin a thread by default
@@ -210,15 +211,15 @@ MoveBase(std::vector<double> _goal, double _dt) {
 
 
   //Roll pitch and yaw in Radians
-  double roll = _goal[3],
-         pitch = _goal[4],
-         yaw = _goal[5];
+  // std::cout << "Goal: " << _goal << std::endl;
+  // std::cout << "Goal[2]: " << _goal[2] << std::endl;
   // Compute the relative rotation from here to there in the local frame.
   Quaternion q;
-  convertFromEulerVector(q, {roll,pitch,yaw});
+  convertFromEulerVector(q, {_goal[2], 0.0, 0.0});
   auto real = q.real();
   auto vectorImaginary = q.imaginary();
 
+  std::cout << "Quat: " << vectorImaginary << std::endl;
   move_base_msgs::MoveBaseGoal goal;
 
   //we'll send a goal to the robot to move 1 meter forward
@@ -227,9 +228,9 @@ MoveBase(std::vector<double> _goal, double _dt) {
 
   goal.target_pose.pose.position.x = _goal[0];
   goal.target_pose.pose.position.y = _goal[1];
-  goal.target_pose.pose.orientation.x = vectorImaginary[0];
+  goal.target_pose.pose.orientation.x = vectorImaginary[2];
   goal.target_pose.pose.orientation.y = vectorImaginary[1];
-  goal.target_pose.pose.orientation.z = vectorImaginary[2];
+  goal.target_pose.pose.orientation.z = vectorImaginary[0];
   goal.target_pose.pose.orientation.w = real;
 
   // goal.target_pose.pose.position.x = -1.0;
@@ -320,11 +321,11 @@ SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_ba
 
 void
 ROSStepFunction::
-SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const std::vector<double> _waypoint) {
+SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const Cfg& _waypoint) {
   // ROS_INFO("FEEDBACK");
-  std::cout << "Waypoint: " << _waypoint << std::endl;
+  // std::cout << "Waypoint: " << _waypoint << std::endl;
   auto pose = _feedback->base_position;
-  std::cout << "Pose: " << pose << std::endl;
+  // std::cout << "Pose: " << pose << std::endl;
 
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener(tfBuffer);
@@ -333,26 +334,35 @@ SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedba
 
   try {
     // auto poseTrans = tfBuffer.transform(pose, "map");
-    geometry_msgs::TransformStamped odom_to_map = tfBuffer.lookupTransform("map", "odom", ros::Time(0), ros::Duration(1.0));
+    geometry_msgs::TransformStamped odom_to_map = tfBuffer.lookupTransform("map", "odom", ros::Time(0), ros::Duration(0.5));
     tf2::doTransform(pose, pose, odom_to_map);
-    std::cout << "Tranformed Pose: " << pose << "\n" << std::endl;
+    // std::cout << "Tranformed Pose: " << pose << "\n" << std::endl;
 
   } catch (tf2::TransformException &ex) {
     ROS_WARN("%s", ex.what());
   }
 
-  std::vector<double> poseVec;
-  poseVec.push_back(pose.pose.position.x);
-  poseVec.push_back(pose.pose.position.y);
-  poseVec.push_back(pose.pose.position.z);
+  Quaternion q(pose.pose.orientation.w, {pose.pose.orientation.z, pose.pose.orientation.y, pose.pose.orientation.x});
+  q.normalize();
 
-  Quaternion q(pose.orientation.w, {pose.orientation.x, pose.orientation.y, pose.orientation.z});
   EulerAngle e;
   mathtool::convertFromQuaternion(e, q);
 
+  Cfg cur(this->m_agent->GetRobot());
+  cur[0] = pose.pose.position.x;
+  cur[1] = pose.pose.position.y;
+  // cur[2] = e.alpha();
 
 
-  // ROS_INFO("Base Position x : %d",  _feedback->base_position.pose.position.x);
-  // std::cout << "Base Position x: " << _feedback->base_position.pose.position.x << std::endl;
-  // auto pos = _feedback->base_position;
+  // std::cout << "Alpha: " << e.alpha() << std::endl;
+  // std::cout << "Beta: " << e.beta() << std::endl;
+  // std::cout << "Gamma: " << e.gamma() << std::endl;
+  // cur[2] = pose.pose.position.z;
+  // cur[3] = e.alpha();
+  // cur[4] = e.beta();
+  // cur[5] = e.gamma();
+
+  std::cout << "Cur: " << cur << std::endl;
+  m_reachedWaypoint = _waypoint.WithinResolution(cur, 0.1, 10.0);
+  // std::cout << "Cur: " << cur << std::endl;
 }
