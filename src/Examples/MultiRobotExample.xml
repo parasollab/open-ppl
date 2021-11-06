@@ -257,10 +257,10 @@
       <CollisionDetection label="pqp" method="PQP" />
       <CollisionDetection label="pqp_solid" method="PQP_SOLID" />
       <CollisionDetection label="spheres" method="BoundingSpheres" />
-      <ComposeValidity label="spheresOrPQPSolid" operator="or">
-        <ValidityChecker label="spheres" />
-        <ValidityChecker label="pqp_solid" />
-      </ComposeValidity>
+      <ComposeCollision label="spheresAndPQPSolid" operator="and">
+        <CollisionDetector label="spheres"/>
+        <CollisionDetector label="pqp_solid"/>
+      </ComposeCollision>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -312,7 +312,7 @@
     </MPStrategies>
 
     <MPTools>
-      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="true" />
+      <SafeIntervalTool label="SI" vcLabel="spheresAndPQPSolid" debug="true" />
     </MPTools>
 
     <!-- The seed can be changed to generate different roadmaps and paths -->

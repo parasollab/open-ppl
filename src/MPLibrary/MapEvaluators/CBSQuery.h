@@ -181,13 +181,13 @@ CBSQuery<MPTraits>::
 Initialize() {
   // Assert that the validity checker is an instance of collision detection
   // validity.
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(
       this->GetValidityChecker(m_vcLabel)
   );
   if(!vc)
     throw RunTimeException(WHERE) << "Validity checker " << m_vcLabel
                                   << " is not of type "
-                                  << "CollisionDetectionValidity.";
+                                  << "CollisionDetectionValidityMethod.";
 
   // Assert that the query evaluator is an instance of SIPP method.
   auto query = dynamic_cast<SIPPMethod<MPTraits>*>(
@@ -642,7 +642,7 @@ IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(basevc);
 
   // Configure the other robot at _conflictCfg.
   auto otherMultiBody = _conflictCfg.GetRobot()->GetMultiBody();

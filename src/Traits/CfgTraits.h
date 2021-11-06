@@ -23,6 +23,7 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -104,7 +105,8 @@ struct MPTraits {
   typedef boost::mpl::list<
     CollisionDetectionValidity<MPTraits>,
     AlwaysTrueValidity<MPTraits>,
-    ComposeValidity<MPTraits>
+    ComposeValidity<MPTraits>,
+    ComposeCollision<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
