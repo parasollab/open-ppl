@@ -65,11 +65,11 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@name Individual Configuration Validity
     ///@{
 
-    /// Classify a configuration to either @cfree or @cobst.
+    /// Classify a configuration to either cfree or cobst.
     /// @param _cfg The individual configuration.
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
-    /// @return True iff _cfg is in @cfree, false otherwise.
+    /// @return True iff _cfg is in cfree, false otherwise.
     bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller);
 
     /// This version does not return extra information.
@@ -80,11 +80,11 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@name Group Configuration Validity
     ///@{
 
-    /// Classify a gropu configuration to either @cfree or @cobst.
+    /// Classify a gropu configuration to either cfree or cobst.
     /// @param _cfg The group configuration.
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
-    /// @return True iff _cfg is in @cfree, false otherwise.
+    /// @return True iff _cfg is in cfree, false otherwise.
     bool IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller);
 
     /// This version does not return extra information.
@@ -98,12 +98,12 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@name Helpers
     ///@{
 
-    /// Implementation of the classification of a configuration to either @cfree
-    /// or @cobst.
+    /// Implementation of the classification of a configuration to either cfree
+    /// or cobst.
     /// @param _cfg The individual configuration.
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
-    /// @return True if _cfg is in @cfree.
+    /// @return True if _cfg is in cfree.
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) = 0;
 
@@ -111,7 +111,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _cfg The group configuration.
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
-    /// @return True if _cfg is in @cfree.
+    /// @return True if _cfg is in cfree.
     virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _caller);
 

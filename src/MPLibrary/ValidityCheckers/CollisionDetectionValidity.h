@@ -28,7 +28,7 @@
 /// 2. Obstacle collision. The robot's geometry overlaps with some workspace
 ///    obstacle.
 /// 3. Inter-robot collision. The robot's geometry overlaps with some other
-///    robot in its currently configuration.
+///    robot in its current configuration.
 /// For group configurations, collisions between robots within the group are
 /// considered as self-collisions, while collisions with robots not in the group
 /// are classified as inter-robot collisions. This distinction is made because
