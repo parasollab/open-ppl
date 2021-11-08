@@ -39,13 +39,6 @@ class TetGenDecomposition final {
 
     TetGenDecomposition();
 
-    /// Create a TetGen decomposer manually. If a base file name is provided,
-    /// output the decomposed model.
-    /// @param _switches The switches to use.
-    /// @param _baseFilename Base filename for output files.
-    //TetGenDecomposition(const std::string& _switches,
-    //    const std::string& _baseFilename = "");
-
     /// Construct a TetGen decomposer from an XML node.
     /// @param _node The XML node to parse.
     TetGenDecomposition(XMLNode& _node);

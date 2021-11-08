@@ -45,8 +45,10 @@ struct Neighbor final {
   ///@name Equality
   ///@{
 
+  /// Checks equality with another Neighbor
   bool operator==(const Neighbor& _other) const noexcept;
 
+  /// Checks inequality with another Neighbor
   bool operator!=(const Neighbor& _other) const noexcept;
 
   ///@}

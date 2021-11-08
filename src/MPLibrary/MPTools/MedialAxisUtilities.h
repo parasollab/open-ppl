@@ -61,6 +61,18 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ///@name Construction
     ///@{
 
+    /// Construct a ClearanceUtility object
+    /// @param _vcLabel The validity checker to use.
+    /// @param _dmLabel The distance metric to use.
+    /// @param _exactClearance Use exact clearance or not.
+    /// @param _exactPenetration Use exact penetration or not.
+    /// @param _clearanceRays The number of clearance rays to use.
+    /// @param _penetrationRays The number of penetration rays to use.
+    /// @param _approxStepSize The approximate step size to use.
+    /// @param _approxResolution The approximate resolution to use.
+    /// @param _useBBX Use BBX or not.
+    /// @param _positional Use only positional DOFs.
+    /// @param _debug Set to debug mode or not.
     ClearanceUtility(
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
@@ -68,6 +80,8 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
         double _approxStepSize = MAX_DBL, double _approxResolution = MAX_DBL,
         bool _useBBX = true, bool _positional = true, bool _debug = false);
 
+    /// Construct a ClearanceUtility object from an XML node
+    /// @param _node The XML node to use
     ClearanceUtility(XMLNode& _node);
 
     virtual ~ClearanceUtility() = default;
@@ -76,21 +90,36 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
+    /// Print the internal state of this object
+    /// @param _os The std::ostream to print to.
     virtual void Print(ostream& _os) const override;
+
     virtual void Initialize() override;
 
     ///@}
     ///@name Accessors
     ///@{
 
+    /// Get the label of the distance metric
     const string& GetDistanceMetricLabel() const {return m_dmLabel;}
+
+    /// Get the label of the validity checker
     const string& GetValidityCheckerLabel() const {return m_vcLabel;}
+
+    /// Set the label of the validity checker
+    /// @param _s The label of the validity checker to use.
     void SetValidityCheckerLabel(const string& _s) {m_vcLabel = _s;}
+
+    /// Get whether exact clearance is used or not
     bool GetExactClearance() const {return m_exactClearance;}
 
+    /// Get the position resolution
     double GetPositionResolution() const {return m_rayTickResolution;}
+
+    /// Get the orientation resolution
     double GetOrientationResolution() const {return m_orientationResolution;}
 
+    /// Get whether the object is initialized or not
     bool IsInitialized() const {return m_initialized;}
 
     ///@}
@@ -139,9 +168,21 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
     ///        and maxes for clearance across roadmaps, paths, and edges.
     ClearanceStats RoadmapClearance();
 
+    /// Calculate path clearance statistics including averages, mins,
+    ///        and maxes for clearance across the path
+    /// @param _path The path to use.
     ClearanceStats PathClearance(vector<VID>& _path);
+
+    /// Calculate path clearance statistics including averages, mins,
+    ///        and maxes for clearance across the path
+    /// @param _path The path to use.
     ClearanceStats PathClearance(vector<Cfg>& _path);
 
+    /// Calculate path clearance statistics including averages, mins,
+    ///        and maxes for clearance across the edge
+    /// @param _c1 The source vertex.
+    /// @param _c2 The target vertex.
+    /// @param _weight The weight of the edge.
     vector<double> EdgeClearance(const CfgType& _c1, const CfgType& _c2,
         const WeightType& _weight);
 
@@ -167,20 +208,24 @@ class ClearanceUtility : public MPBaseObject<MPTraits> {
 
     // These replaced two similar members from the ClearanceUtility
     // class (m_approxStepSize and m_approxResolution):
+    /// The resolution for rayTicks
     double m_rayTickResolution;//no default values as these are required in node
+    /// The orientation resolution
     double m_orientationResolution;
 
     //These two are linearly related based on the resolution for ray ticking.
     // The max ray magnitude is just how far out a ray will be attempted.
+    /// How far out a ray will be attempted
     double m_maxRayMagnitude;
+    /// The maximum number of ray iterations
     size_t m_maxRayIterations;
 
     //These are just for getting rayTickResolution and orientationResolution.
     // They get multiplied into their respective values from the environment,
     // and should only really be used there. See Initialize() for more info.
-    double m_orientationResFactor{0.};
-    double m_positionalResFactor{0.};
-    double m_maSearchResolutionFactor{1};
+    double m_orientationResFactor{0.}; ///< The orientation resolution factor
+    double m_positionalResFactor{0.}; ///< The position resoluiton factor
+    double m_maSearchResolutionFactor{1}; ///< The search resolution factor
 
     /// A boolean to determine whether initialize has been called on the
     /// utility or not yet. This is important, as there are MPLibrary things
@@ -221,6 +266,18 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     ///@name Construction
     ///@{
 
+    /// Construct a MedialAxisUtility object
+    /// @param _vcLabel The validity checker to use.
+    /// @param _dmLabel The distance metric to use.
+    /// @param _exactClearance Use exact clearance or not.
+    /// @param _exactPenetration Use exact penetration or not.
+    /// @param _clearanceRays The number of clearance rays to use.
+    /// @param _penetrationRays The number of penetration rays to use.
+    /// @param _useBBX Use BBX or not.
+    /// @param _positional Use only positional DOFs.
+    /// @param _debug Set to debug mode or not.
+    /// @param _epsilon The epsilon value to use.
+    /// @param _historyLength The history length to use.
     MedialAxisUtility(
         string _vcLabel = "", string _dmLabel = "",
         bool _exactClearance = false, bool _exactPenetration = false,
@@ -228,6 +285,8 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
         bool _useBBX = true, bool _positional = true, bool _debug = false,
         double _epsilon = 0.1, size_t _historyLength = 5);
 
+    /// Construct a MedialAxisUtility object from an XML node
+    /// @param _node The XML node to use.
     MedialAxisUtility(XMLNode& _node);
 
     virtual ~MedialAxisUtility() = default;
@@ -236,14 +295,19 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     ///@name MPBaseObject Overrides
     ///@{
 
+    /// Print the internal state of this object
+    /// @param _os The std::ostream to print to.
     virtual void Print(ostream& _os) const override;
 
+    /// Set to print debug statements or not
+    /// @param _debug Print debug statements or not.
     void SetDebug(const bool _debug) { this->m_debug = _debug; }
 
     ///@}
     ///@name Property Accessors
     ///@{
 
+    /// Get the value of epsilon
     double GetEpsilon() const {return m_epsilon;}
 
     ///@}
@@ -251,17 +315,23 @@ class MedialAxisUtility : public ClearanceUtility<MPTraits> {
     ///@{
 
     /// Push a configuration to the medial axis.
+    /// @param _cfg The configuration to push.
+    /// @param _b The boundary to use.
     bool PushToMedialAxis(CfgType& _cfg, const Boundary* const _b);
 
     /// Push a configuration that is known to be inside an obstacle
     /// towards the free-space medial axis. It will be pushed until it is
     /// outside the obstacle.
+    /// @param _cfg The configuration to push.
+    /// @param _b The boundary to use.
     bool PushFromInsideObstacle(CfgType& _cfg, const Boundary* const _b);
 
 
     /// Push a configuration to the medial axis by stepping away from the
     /// nearest obstacle at the resolution until a second witness (invalid cfg)
     /// is found and then the midpoint of those two cfgs will be the MA cfg.
+    /// @param _cfg The configuration to push.
+    /// @param _b The boundary to use.
     bool PushCfgToMedialAxisMidpointRule(CfgType& _cfg, const Boundary* const _b);
     ///@}
 
