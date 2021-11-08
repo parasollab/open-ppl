@@ -15,24 +15,13 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Classifies validity based on collisions with other objects in the workspace.
+/// Base algorithm abstraction for Collision Detectors.
 ///
-/// There are three types of collision that can occur:
-/// 1. Self collision. Two or more pieces of the robot's geometry are
-///    overlapping in workspace.
-/// 2. Obstacle collision. The robot's geometry overlaps with some workspace
-///    obstacle.
-/// 3. Inter-robot collision. The robot's geometry overlaps with some other
-///    robot in its currently configuration.
-/// For group configurations, collisions between robots within the group are
-/// considered as self-collisions, while collisions with robots not in the group
-/// are classified as inter-robot collisions. This distinction is made because
-/// considering self-collisions usually means that we want (group)
-/// configurations which are valid without considering the obstacles and other
-/// robots.
+/// Collision detectors check for collisions between obstacles and multibodies.
+/// They evaluate the validity of a configuration in terms of whether it is
+/// in collision with another body.
 ///
-/// Any robot can be omitted from the collision checks by setting it as virtual.
-/// When collision checking a virtual robot, other robots are also ignored.
+/// A CDInfo object may carry additional information about the check.
 ///
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////

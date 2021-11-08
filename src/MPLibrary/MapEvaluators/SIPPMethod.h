@@ -95,17 +95,27 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Query Interface
     ///@{
 
+    /// Generate a path from a start point to a goal point
+    /// @param _start The start coordinate.
+    /// @param _goal The goal coordinate.
     std::vector<size_t> GeneratePath(const size_t _start, const size_t _goal);
 
+    /// Set the distance metric to use
     void SetDMLabel(const std::string& _dmLabel);
 
+    /// Set the start time of the query
     void SetStartTime(double _start);
+
+    /// Set the end time of the query
     void SetEndTime(double _end);
 
+    /// Set the edge intervals to use to generate a path
     virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) override;
 
+    /// Set the minimum end time of a path
     virtual void SetMinEndtime(double _minEndtime) override;
 
+    /// Check if the path satisfies all constraints
     bool SatisfyConstraints();
 
     ///@}
@@ -120,6 +130,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     virtual void Reset(RoadmapGraphType* const _r);
 
     /// TODO: Remove this
+    /// Calculates the safe intervals for each vertex in the roadmap
     void computeIntervals();
 
     /// Check whether a path connecting a start to one of several goals exists
@@ -154,22 +165,22 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
                          typename SIPPGraph::vertex_descriptor _target);
 
     /// Neighbors function for Safe interval path planning.
-    ///
     void SIPPNeighbors(SIPPGraph* _g,
                        typename SIPPGraph::vertex_descriptor _vd);
 
-    ///
+    /// Initialize the cost to go from the start point to the goal
     void InitializeCostToGo(size_t _goal);
 
-    ///
+    /// Calculate the overlap between a safe interval of one configuration
+    /// and the safe intervals of another configuration
     Range<double> IntervalOverlaps(std::vector<Range<double>> _intervals,
                                    Range<double> _interval);
 
-    ///
+    /// Check if any of the safe intervals in _intervals contains timestep
     Range<double> IntervalContains(std::vector<Range<double>> _intervals,
                                    double timestep);
 
-    ///
+    /// Calculates the overlapping safe intervals between _intervalsA and _intervalsB
     std::vector<Range<double>> OverlappingIntervals(std::vector<Range<double>> _intervalsA, std::vector<Range<double>> _intervalsB);
 
     void cleanup();
