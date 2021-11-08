@@ -54,7 +54,7 @@ ComputeDesiredForce(const Cfg& _current, const Cfg& _target, const double _dt) {
   // Ideally, we would like the robot to cover the entire translation or
   // rotation in one step. The computed distances will thus be divided by _dt to
   // give the desired velocity.
-  this->m_debug = true;
+  // this->m_debug = true;
 
   // If we're still here, we are at the target. Line up with the end Cfg.
   if(translation <= threshold)

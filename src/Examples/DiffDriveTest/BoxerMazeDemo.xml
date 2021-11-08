@@ -4,16 +4,16 @@
   <!-- Here we specify input files, such as environment and query. -->
   <Problem baseFilename="DiffDriveDemo">
 
-    <Environment filename="boxermaze.env" positionRes="1"/>
+    <Environment filename="boxermaze.env" positionRes="0.01"/>
 
     <Robot label="boxer1" filename="boxer.xml" capability="left" color="red">
       <Agent type="child" debug="false" waypointDm="positionEuclidean"
-        waypointThreshold="0.01">
-        <!-- <StepFunction type="followpath" debug="true"
-	        waypointDm="positionEuclidean" waypointThreshold="0.1"/> -->
-	      <StepFunction type="ros" robotLabel="boxer"
+        waypointThreshold="0.1">
+        <StepFunction type="followpath" debug="true"
+	        waypointDm="positionEuclidean" waypointThreshold="0.1"/>
+	      <!-- <StepFunction type="ros" robotLabel="boxer"
           waypointDm="positionEuclidean" time="1" sim="true"
-          waypointThreshold="0.01" debug="false"/>
+          waypointThreshold="0.1" debug="false"/> -->
       </Agent>
     </Robot>
 
@@ -26,13 +26,13 @@
 
     <Task label="startLocation" robot="boxer1">
       <StartConstraints>
-        <CSpaceConstraint point="-1.5 1 0 0 0 0"/>
+        <CSpaceConstraint point="-1.5 1.0 -.5"/>
       </StartConstraints>
     </Task>
 
     <Task label="coordinatorTask" robot="coordinator">
       <StartConstraints>
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
+        <CSpaceConstraint point="0 0 0"/>
       </StartConstraints>
     </Task>
 
@@ -40,13 +40,13 @@
       <SemanticTask label="first">
         <Task label="query1" robot="boxer1">
           <StartConstraints>
-            <CSpaceConstraint point="-1.5 1 0 0 0 0"/>
+            <CSpaceConstraint point="-1.5 1.0 -.5"/>
           </StartConstraints>
 
           <GoalConstraints>
             <!-- <CSpaceConstraint point="1.6252 0.3176 0"/> -->
             <BoundaryConstraint space="cspace" shape="sphere"
-              limits="[1.5 -1 0 0 0 0; 0.5]"/>
+              limits="[1.3 0.8 0; 0.5]"/>
           </GoalConstraints>
         </Task>
       </SemanticTask>
@@ -112,7 +112,7 @@
         <Extender label="Random" probability=".25"/>
       </MixExtender>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="alwaysTrue" maxDist="2." minDist=".001"/>
+        vcLabel="alwaysTrue" maxDist="2." minDist=".1"/>
     </Extenders>
 
     <PathModifiers>
@@ -145,7 +145,7 @@
       <BasicRRTStrategy label="KinoRRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
         goalDmLabel="weuclidean" nfLabel="NearestPos"
-        extenderLabel="Best"
+        extenderLabel="KinoExtender"
         growGoals="false" growthFocus="0.05" connectorLabel="Rewire">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
