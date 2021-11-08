@@ -14,10 +14,23 @@
 #include <set>
 #include <vector>
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generates paths for each robot individually and then finds and resolves
+/// conflicts by setting constraints on each robot's path.
+///
+/// Reference:
+///   Guni Sharon, Roni Stern, Ariel Felner, and Nathan Sturtevant. "Conflict-
+///   Based Search For Optimal Multi-Agent Path Finding". AAAI 2012.
+///
+/// @ingroup MapEvaluators
+////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
 class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
   public:
+
+    ///@name Motion Planning Types
+    ///@{
 
     typedef typename MPTraits::RoadmapType   RoadmapType;
     typedef typename MPTraits::CfgType       CfgType;
@@ -25,6 +38,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     typedef typename RoadmapType::VID        VID;
     typedef typename RoadmapType::EdgeID     EdgeID;
 
+    ///}
 
   private:
 
@@ -49,6 +63,9 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
       }
     };
 
+    ///@name Internal Types 
+    ///@{
+
     typedef std::pair<size_t, CfgType> Constraint;
 
     typedef std::set<Constraint> ConstraintSet;
@@ -71,6 +88,8 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
                 std::pair<CfgType,size_t>> SingleConflictsCache;
 
     typedef std::unordered_map<Robot*,SingleConflictsCache> GroupConflictsCache;
+
+    ///@}
 
   public:
 
@@ -102,47 +121,46 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     ///@name Helpers
     ///@{
 
+    /// Generate a path for a robot given a set of constraints
     Path* SolveIndividualTask(Robot* const _robot,
         const ConstraintMap& _constraintMap = {});
 
+    /// Find a conflict between a pair of robots
     std::pair<std::pair<Robot*, Robot*>, Conflict> FindConflict(const SolutionMap& _solution);
 
-    double MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-        const double _sourceTimestep, const double _bestTimestep) const;
-
-    bool IsEdgeSafe(const VID _source, const VID _target,
-        const CfgType& _conflictCfg) const;
-
+    /// Compute the safe intervals for a robot's roadmap
     EdgeIntervals ComputeIntervals(Robot* _robot);
 
+    /// Join the edge intervals for a robot's roadmap
     EdgeIntervals JoinEdgeIntervals(Robot* _robot, std::vector<EdgeIntervals> _edgeIntervals);
 
+    /// Computes joint safe intervals for the intervals in _allIntervals
     std::vector<Range<double>> JoinIntervals(std::vector<std::vector<Range<double>>> _allIntervals);
 
+    /// Inserts _jointIntervals into _newIntervals
     std::vector<Range<double>> InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<double>> _newIntervals);
 
+    /// Checks if there is overlap between two safe intervals
     bool OverlapingIntervals(Range<double> _existingInterval, Range<double> _newInterval);
 
+    /// Merges two safe intervals
     Range<double> MergeIntervals(Range<double> _interval1, Range<double> _interval2);
 
-    std::set<std::pair<size_t, Cfg>>::iterator LowerBound(size_t bound) const;
-    std::set<std::pair<size_t, Cfg>>::iterator UpperBound(size_t bound) const;
-
-    std::vector<Robot*> m_robots;
+    std::vector<Robot*> m_robots; ///< The robots in the group
 
     std::string m_queryLabel;  ///< Query method for making individual plans.
     std::string m_vcLabel;     ///< Validity checker for conflict detection.
-    std::string m_safeIntervalLabel; // The Safe Intarval Tool label
-    std::string m_costLabel = "SOC";
-    size_t m_nodeLimit{std::numeric_limits<size_t>::max()};
+    std::string m_safeIntervalLabel; ///< The Safe Intarval Tool label
+    std::string m_costLabel = "SOC"; ///< The label of the cost function
+    size_t m_nodeLimit{std::numeric_limits<size_t>::max()}; ///< The maximum number of nodes
 
-    const ConstraintSet* m_currentConstraints{nullptr};
-    std::set<ConstraintMap> m_constraintCache;
-    std::unordered_map<Robot*, MPTask*> m_taskMap;
+    const ConstraintSet* m_currentConstraints{nullptr}; ///< The current constraints
+    std::set<ConstraintMap> m_constraintCache; ///< The cached constraints
+    std::unordered_map<Robot*, MPTask*> m_taskMap; ///< The task for each robot
 
-    GroupConflictsCache m_groupConflictsCache;
-    EdgeIntervalsMap m_edgeIntervalsMap;
-    size_t m_cacheIndex{0};
+    GroupConflictsCache m_groupConflictsCache; ///< The cache of contraints with cached safe intervals
+    EdgeIntervalsMap m_edgeIntervalsMap; ///< The cached edge intervals
+    size_t m_cacheIndex{0}; ///< The size of the cache
 
 };
 
@@ -519,150 +537,6 @@ FindConflict(const SolutionMap& _solution) {
   Conflict c;
   return std::make_pair(std::make_pair(nullptr, nullptr), c);
 }
-
-
-template <typename MPTraits>
-double
-CBSQuery<MPTraits>::
-MultiRobotPathWeight(typename RoadmapType::adj_edge_iterator& _ei,
-    const double _startTime, const double _bestEndTime) const {
-  // Compute the time when we will end this edge.
-  const size_t startTime = static_cast<size_t>(std::llround(_startTime)),
-               endTime   = startTime + _ei->property().GetTimeSteps();
-
-  // If this end time isn't better than the current best, we won't use it. Return
-  // without checking conflicts to save computation.
-  if(endTime >= static_cast<size_t>(std::llround(_bestEndTime)))
-    return endTime;
-
-  // If there are no current conflicts, there is nothing to check.
-  if(!m_currentConstraints)
-    return endTime;
-
-  // There is at least one conflict. Find the set which occurs between this
-  // edge's start and end time.
-  auto lower = LowerBound(startTime);
-  auto upper = UpperBound(endTime);
-
-  // If all of the conflicts happen before or after now, there is nothing to
-  // check.
-  const bool beforeNow = lower == m_currentConstraints->end();
-  if(beforeNow)
-    return endTime;
-
-  const bool afterNow = upper == m_currentConstraints->begin();
-  if(afterNow)
-    return endTime;
-
-  // Check the conflict set to see if this edge hits any of them.
-  for(auto iter = lower; iter != upper; ++iter) {
-    // Unpack the conflict data.
-    const size_t timestep = iter->first;
-    const CfgType& cfg    = iter->second;
-
-    // Assert that the conflict occurs during this edge transition (remove this
-    // later once we're sure it works right).
-    const bool rightTime = startTime <= timestep and timestep <= endTime;
-    if(!rightTime)
-      throw RunTimeException(WHERE) << "The conflict set should only include "
-                                    << "conflicts that occur during this range.";
-
-    // Check if the conflict cfg hits this edge.
-    const bool hitsEdge = !IsEdgeSafe(_ei->source(), _ei->target(), cfg);
-    if(!hitsEdge)
-      continue;
-
-    if(this->m_debug)
-      std::cout << "\t\t\t\t\tEdge (" << _ei->source() << ","
-                << _ei->target() << ") collides against robot "
-                << cfg.GetRobot()->GetLabel()
-                << " at " << cfg.PrettyPrint()
-                << std::endl;
-
-    // The conflict blocks this edge.
-    return std::numeric_limits<double>::infinity();
-  }
-
-  // There is no conflict and the end time is better!
-  return endTime;
-}
-
-template<typename MPTraits>
-std::set<std::pair<size_t, Cfg>>::iterator
-CBSQuery<MPTraits>::
-LowerBound(size_t bound) const {
-    //const ConstraintSet* m_currentConstraints{nullptr};
-    //typedef std::pair<size_t, CfgType> Constraint;
-  auto bound_it = m_currentConstraints->end();
-  for (auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if (it->first >= bound){
-      bound_it = it;
-      break;
-    }
-  }
-  return bound_it;
-}
-
-template<typename MPTraits>
-std::set<std::pair<size_t, Cfg>>::iterator
-CBSQuery<MPTraits>::
-UpperBound(size_t bound) const {
-    //const ConstraintSet* m_currentConstraints{nullptr};
-    //typedef std::pair<size_t, CfgType> Constraint;
-  auto bound_it = m_currentConstraints->end();
-  for (auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if (it->first > bound){
-      bound_it = it;
-      break;
-    }
-  }
-  return bound_it;
-}
-
-
-template <typename MPTraits>
-bool
-CBSQuery<MPTraits>::
-IsEdgeSafe(const VID _source, const VID _target, const CfgType& _conflictCfg)
-    const {
-  auto robot = this->GetTask()->GetRobot();
-  auto roadmap = this->GetRoadmap(robot);
-
-  // Reconstruct the edge path at resolution-level.
-  std::vector<CfgType> path;
-  path.push_back(roadmap->GetVertex(_source));
-  std::vector<CfgType> edge = this->GetMPLibrary()->ReconstructEdge(
-      roadmap, _source, _target);
-  path.insert(path.end(), edge.begin(), edge.end());
-  path.push_back(roadmap->GetVertex(_target));
-
-  // Get the valididty checker and make sure it has type
-  // CollisionDetectionValidity.
-  /// @TODO Figure out how to avoid needing this downcast so that we can
-  ///       leverage more efficient compose checks (like checking the bounding
-  ///       spheres first).
-  auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(basevc);
-
-  // Configure the other robot at _conflictCfg.
-  auto otherMultiBody = _conflictCfg.GetRobot()->GetMultiBody();
-  otherMultiBody->Configure(_conflictCfg);
-
-  // Check each configuration in the resolution-level path for collision with
-  // _conflictCfg.
-  CDInfo cdInfo;
-  auto thisMultiBody = robot->GetMultiBody();
-  for(const CfgType& cfg : path) {
-    thisMultiBody->Configure(cfg);
-    if(vc->IsMultiBodyCollision(cdInfo, thisMultiBody, otherMultiBody,
-        this->GetNameAndLabel()))
-      return false;
-  }
-
-  // If we haven't detected a collision, the edge is safe.
-  return true;
-}
-
 
 template <typename MPTraits>
 typename CBSQuery<MPTraits>::EdgeIntervals

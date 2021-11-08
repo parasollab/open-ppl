@@ -40,8 +40,10 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     /// @return True if this roadmap meets the evaluation criteria.
     virtual bool operator()() = 0;
 
+    /// Set the edge intervals of a roadmap
     virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) {};
 
+    /// Set the minimum end time of a path
     virtual void SetMinEndtime(double _minEndtime) {};
 
     ///@}
