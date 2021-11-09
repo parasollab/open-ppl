@@ -6,27 +6,54 @@
 
     <Environment filename="boxermaze.env" positionRes="0.01"/>
 
-    <Robot label="boxer1" filename="boxer.xml" capability="left" color="red">
+    <Robot label="boxer0" filename="boxer.xml" capability="left" color="red">
       <Agent type="child" debug="false" waypointDm="positionEuclidean"
         waypointThreshold="0.1">
-        <StepFunction type="followpath" debug="true"
-	        waypointDm="positionEuclidean" waypointThreshold="0.1"/>
-	      <!-- <StepFunction type="ros" robotLabel="boxer"
+        <!-- <StepFunction type="followpath" debug="false"
+	        waypointDm="positionEuclidean" waypointThreshold="0.1"/> -->
+	      <StepFunction type="ros" robotLabel="boxer"
           waypointDm="positionEuclidean" time="1" sim="true"
-          waypointThreshold="0.1" debug="false"/> -->
+          waypointThreshold="0.1" debug="false"/>
       </Agent>
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="boxer.xml" manipulator="false">
       <Agent type="coordinator" dmLabel="minkowski" debug="false">
-        <Member label="boxer1"/>
+        <Member label="boxer0"/>
         <StepFunction type="defaultcoordinator" debug="false"/>
       </Agent>
     </Robot>
 
-    <Task label="startLocation" robot="boxer1">
+    <Task label="startLocation" robot="boxer0">
       <StartConstraints>
-        <CSpaceConstraint point="-1.5 1.0 -.5"/>
+        <CSpaceConstraint point="1.4 -1.0 0.5"/>
+      </StartConstraints>
+    </Task>
+
+    <Task label="coordinatorTask" robot="coordinator">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first">
+        <Task label="query1" robot="boxer0">
+          <StartConstraints>
+            <CSpaceConstraint point="1.4 -1.0 0.5"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <BoundaryConstraint space="cspace" shape="sphere"
+              limits="[1.4 0.8 0; 0.5]"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
+
+    <!-- <Task label="startLocation" robot="boxer1">
+      <StartConstraints>
+        <CSpaceConstraint point="-1.5 1.0 0.0"/>
       </StartConstraints>
     </Task>
 
@@ -40,27 +67,16 @@
       <SemanticTask label="first">
         <Task label="query1" robot="boxer1">
           <StartConstraints>
-            <CSpaceConstraint point="-1.5 1.0 -.5"/>
+            <CSpaceConstraint point="-1.5 1.0 0.0"/>
           </StartConstraints>
 
           <GoalConstraints>
-            <!-- <CSpaceConstraint point="1.6252 0.3176 0"/> -->
             <BoundaryConstraint space="cspace" shape="sphere"
-              limits="[1.3 0.8 0; 0.5]"/>
+              limits="[1.4 -0.8 0; 0.5]"/>
           </GoalConstraints>
         </Task>
       </SemanticTask>
-    </Decomposition>
-
-
-    <!-- <Task label="query" robot="member1">
-      <StartConstraints>
-        <CSpaceConstraint point="-1.7014 0.4254 0"/>
-      </StartConstraints>
-			<GoalConstraints>
-				<CSpaceConstraint point="1.6252 0.3176 0"/>
-			</GoalConstraints>
-    </Task> -->
+    </Decomposition> -->
 
   </Problem>
 

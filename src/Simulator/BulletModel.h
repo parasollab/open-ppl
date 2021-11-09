@@ -108,7 +108,7 @@ class BulletModel final {
 
     /// Execute a control on the bullet model for the next time step.
     /// @param _c The control to apply.
-    std::vector<double> Execute(const Control& _c) noexcept;
+    void Execute(const Control& _c) noexcept;
 
     /// Execute a set of controls on the bullet model for the next time step.
     /// @param _c The controls to apply.

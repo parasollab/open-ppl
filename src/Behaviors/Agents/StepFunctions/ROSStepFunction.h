@@ -7,12 +7,6 @@
 #include <sensor_msgs/JointState.h>
 #include <nav_msgs/Odometry.h>
 
-// #include <move_base_msgs/MoveBaseAction.h>
-// #include <move_base_msgs/MoveBaseResult.h>
-// #include <actionlib/client/simple_action_client.h>
-// #include "actionlib/client/simple_client_goal_state.h"
-// #include "actionlib/client/terminal_state.h"
-
 class ROSStepFunction : public FollowPath {
 
   public:
@@ -57,13 +51,11 @@ class ROSStepFunction : public FollowPath {
     /// Call back function to pass into ros behaviors.
     static void Callback(const sensor_msgs::JointState _msg);
 
+    /// Callback function to get boxer odometry.
     static void OdomCallback(const nav_msgs::Odometry _msg);
 
+    /// Function to get current state of robot from ROS
     Cfg GetCurrentState();
-
-    // void SimpleDoneCallback(const actionlib::SimpleClientGoalState& _state, const move_base_msgs::MoveBaseResult::ConstPtr& _result);
-
-    // void SimpleFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr& _feedback, const Cfg& _waypoint);
 
     ///@}
     ///@name Internal State
@@ -79,13 +71,9 @@ class ROSStepFunction : public FollowPath {
 
     std::string m_robotLabel;
 
-    bool m_reachedWaypoint{false};
+    ros::Publisher m_boxerPub; ///< Publisher for boxer controls.
 
-    // MoveBaseClient m_ac;
-
-    ros::Publisher m_boxerPub;
-
-    ros::Subscriber m_boxerOdomSub;
+    ros::Subscriber m_boxerOdomSub; ///< Subscriber for boxer odometry.
 
     ///@}
 };

@@ -249,7 +249,7 @@ SetState(const Cfg& _c) noexcept {
 }
 
 
-std::vector<double>
+void
 BulletModel::
 Execute(const Control& _c) noexcept {
   // We should only be executing controls on ROBOT models.
@@ -259,16 +259,13 @@ Execute(const Control& _c) noexcept {
 
   const std::vector<double> output = LocalDirToWorld(_c.GetOutput());
   auto iter = output.begin();
-  std::vector<double> ret;
 
   btVector3 force(0, 0, 0), torque(0, 0, 0);
 
   // Set base force.
   const size_t numPos = m_pmplModel->PosDOF();
-  for(size_t i = 0; i < numPos; ++i, ++iter) {
+  for(size_t i = 0; i < numPos; ++i, ++iter) 
     force[i] = *iter;
-    ret.push_back(force[i]);
-  }
 
   // Set base torque.
   switch(m_pmplModel->OrientationDOF()) {
@@ -276,7 +273,6 @@ Execute(const Control& _c) noexcept {
       // This is a planar rotational robot. We only want a torque in the Z
       // direction.
       torque[2] = *iter++;
-      ret.push_back(torque[2]);
       break;
     case 3:
       // This is a volumetric rotational robot. We need all three torque
@@ -330,7 +326,6 @@ Execute(const Control& _c) noexcept {
       break;
     default:;
   }
-  return ret;
 }
 
 
