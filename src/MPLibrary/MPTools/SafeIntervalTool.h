@@ -326,40 +326,6 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
     }
   }
 
-/*
-  // Alternative approach bc that is insane^^^
-  std::vector<double> invalidStarts;
-  for(size_t i = 0; i < _cfgs.size(); i++) {
-    Cfg cfg1 = _cfgs[i];
-    for(auto obs : obstacles) {
-      const auto& obsPath = obs.GetPath();
-      for(size_t j = 0; j < obsPath.size(); j++) {
-        Cfg cfg2 = obsPath[j];
-
-        auto basevc = this->GetValidityChecker(m_vcLabel);
-        auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
-  
-        // Configure cfg1's robot at cfg1.
-        auto robotMultiBody = cfg1.GetRobot()->GetMultiBody();
-        robotMultiBody->Configure(cfg1);
-
-        auto obstacleMultiBody = obs.GetRobot()->GetMultiBody();
-        obstacleMultiBody->Configure(cfg2);
-
-        // If the obstacle is in collision with _cfg at _timestep, return false
-        CDInfo cdInfo;
-        if(!vc->IsMultiBodyCollision(cdInfo, obstacleMultiBody, robotMultiBody,
-          this->GetNameAndLabel())) {
-          continue;
-        }
-        const double invalidStart = timeRes * (j - i + obs.GetStartTime());
-        invalidStarts.push_back(invalidStart);
-      }
-    }
-  }
-
- */ 
-
   // If we still have a current interval, then the last interval was safe
   // through the end of the dynamic obstacle motions. Extend it to the end of
   // time.
