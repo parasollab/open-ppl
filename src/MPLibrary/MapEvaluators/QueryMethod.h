@@ -99,9 +99,6 @@ class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
     /// @param The path weight function object to use.
     virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f);
 
-    /// Clear the alternate path weight function to use when searching the roadmap.
-    virtual void ClearPathWeightFunction();
-
 		void SetLastConstraintTime(double _last);
 		void SetLastGoalConstraintTime(double _time);
 		void SetStartTime(double _start);
@@ -436,14 +433,6 @@ void
 QueryMethod<MPTraits>::
 SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f) {
   m_weightFunction = _f;
-}
-
-
-template <typename MPTraits>
-void
-QueryMethod<MPTraits>::
-ClearPathWeightFunction() {
-  m_weightFunction = nullptr;
 }
 
 /*------------------------------- Helpers ------------------------------------*/

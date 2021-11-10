@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generates paths for each robot individually and then finds and resolves
-/// conflicts by setting constraints on each robot's path.
+/// conflicts by setting constraints on each robot's path and replanning.
 ///
 /// Reference:
 ///   Guni Sharon, Roni Stern, Ariel Felner, and Nathan Sturtevant. "Conflict-
