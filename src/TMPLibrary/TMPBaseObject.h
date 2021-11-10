@@ -67,7 +67,6 @@ class TMPBaseObject {
     ///@name Method Pointer Types
     ///@{
 
-
     typedef typename TMPLibrary::TMPStrategyMethodPointer      TMPStrategyMethodPointer;
     typedef typename TMPLibrary::PoIPlacementMethodPointer     PoIPlacementMethodPointer;
     typedef typename TMPLibrary::TaskEvaluatorMethodPointer    TaskEvaluatorMethodPointer;
