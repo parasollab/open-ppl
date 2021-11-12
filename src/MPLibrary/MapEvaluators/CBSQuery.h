@@ -141,7 +141,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     std::vector<Range<double>> InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<double>> _newIntervals);
 
     /// Checks if there is overlap between two safe intervals
-    bool OverlapingIntervals(Range<double> _existingInterval, Range<double> _newInterval);
+    bool OverlappingIntervals(Range<double> _existingInterval, Range<double> _newInterval);
 
     /// Merges two safe intervals
     Range<double> MergeIntervals(Range<double> _interval1, Range<double> _interval2);
@@ -621,7 +621,7 @@ InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<do
   } else {
     for(size_t i = 0 ; i < _jointIntervals.size() ; ++i) {
       for(size_t j = 0 ; j < _newIntervals.size() ; ++j) {
-        if(OverlapingIntervals(_jointIntervals[i], _newIntervals[j])) {
+        if(OverlappingIntervals(_jointIntervals[i], _newIntervals[j])) {
           auto newInterval = MergeIntervals(_jointIntervals[i],_newIntervals[j]);
           newJointIntervals.push_back(newInterval);
         }
@@ -639,7 +639,7 @@ InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<do
 template <typename MPTraits>
 bool
 CBSQuery<MPTraits>::
-OverlapingIntervals(Range<double> _existingInterval, Range<double> _newInterval) {
+OverlappingIntervals(Range<double> _existingInterval, Range<double> _newInterval) {
   if(_existingInterval.max <= _newInterval.min)
     return false;
 
