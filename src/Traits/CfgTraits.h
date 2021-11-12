@@ -22,6 +22,8 @@
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -49,6 +51,7 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
@@ -101,7 +104,9 @@ struct MPTraits {
   //types of validity checkers available in our world
   typedef boost::mpl::list<
     CollisionDetectionValidity<MPTraits>,
-    AlwaysTrueValidity<MPTraits>
+    AlwaysTrueValidity<MPTraits>,
+    ComposeValidity<MPTraits>,
+    ComposeCollision<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -147,6 +152,7 @@ struct MPTraits {
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
