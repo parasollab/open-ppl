@@ -24,7 +24,9 @@ class DrawableBody final : public  DrawablePolyhedron {
 
     ///@name Construction
     ///@{
-
+    /// @param _parent the owning Drawable object
+    /// @param _body the body to draw
+    /// @param _wired Draw the boundary in wire frame?
     DrawableBody(DrawableMultiBody* const _parent, Body* const _body, bool _wired = false);
 
     virtual ~DrawableBody() = default;

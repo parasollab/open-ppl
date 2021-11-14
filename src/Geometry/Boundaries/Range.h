@@ -77,6 +77,11 @@ struct Range final {
   /// Sample the range for a random contained value with uniform probability.
   T Sample() const noexcept;
 
+  /// Checks for equality with another Range
+  bool operator==(const Range<T>& _other) const {
+    return min == _other.min && max == _other.max;
+  }
+
   ///@}
   ///@name Modifiers
   ///@{

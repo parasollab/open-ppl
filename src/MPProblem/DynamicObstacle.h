@@ -48,6 +48,12 @@ class DynamicObstacle {
     /// Get the obstacle's path.
     const std::vector<Cfg> GetPath() const noexcept;
 
+    /// Get the obstacle start time.
+    const size_t GetStartTime() const noexcept;
+
+    /// Set the obstacle start time.
+    void SetStartTime(size_t _start);
+
     ///@}
 
   private:
@@ -57,6 +63,7 @@ class DynamicObstacle {
 
     Robot* m_robot{nullptr}; ///< The obstacle robot.
     std::vector<Cfg> m_path; ///< For now, assuming 1 cfg per time resolution.
+    size_t m_startTime{0}; ///< Time that the path starts at.
 
     ///@}
 
