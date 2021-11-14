@@ -15,7 +15,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometric skeleton of the workspace
+/// Geometric skeleton of the workspace.
 ////////////////////////////////////////////////////////////////////////////////
 class WorkspaceSkeleton {
 
@@ -95,8 +95,8 @@ class WorkspaceSkeleton {
     ///@name Accessors
     ///@{
 
-    /// Set the skeleton graph
-    /// @param p_graph the flow graph we want to set for this skeleton
+    /// Set the skeleton graph.
+    /// @param _graph the flow graph we want to set for this skeleton.
     void SetGraph(GraphType& _graph) noexcept;
 
     /// Get the skeleton graph.
@@ -107,18 +107,22 @@ class WorkspaceSkeleton {
     ///@name IO
     ///@{
 
-    /// Writes the graph to a file
-    /// @param _file the output file name
+    /// Writes the graph to a file.
+    /// @param _file the output file name.
 
     void Write(const std::string& _file);
 
-    /// Reads the graph from a file
-    /// @param _file the output file name
+    /// Reads the graph from a file.
+    /// @param _file the output file name.
 
     void Read(const std::string& _file);
 
     ///@}
-	vertex_iterator find_vertex(VD _vd);
+
+    /// Find a vertex iterator in the skeleton by descriptor.
+    /// @param _vd The descriptor of the vertex to search for.
+    /// @return An iterator to the desired vertex.
+	  vertex_iterator find_vertex(VD _vd);
 
   private:
 
