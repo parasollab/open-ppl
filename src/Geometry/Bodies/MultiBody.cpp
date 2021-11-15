@@ -180,7 +180,7 @@ InitializeDOFs(const Boundary* const _b) {
         break;
       case Connection::JointType::Mimic:
         //m_dofInfo.emplace_back("Mimic Joint " + label,Range<double>());
-        break; 
+        break;
       case Connection::JointType::NonActuated:
         break;
     }
@@ -487,10 +487,24 @@ SetBaseBody(const size_t _index) {
 }
 
 
+void
+MultiBody::
+SetBaseType(Body::Type _bodyType) {
+  m_baseType = _bodyType;
+}
+
+
 Body::Type
 MultiBody::
 GetBaseType() const noexcept {
   return m_baseType;
+}
+
+
+void
+MultiBody::
+SetBaseMovementType(Body::MovementType _movementType) {
+  m_baseMovement = _movementType;
 }
 
 
@@ -778,12 +792,41 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
   // Get file extension to determine behavior.
   const std::string ext = _filename.substr(_filename.find_last_of(".") + 1);
 
+  const std::string baseTypeLabel = _node.Read("baseType", false, "", "Body Type");
+  const std::string baseMovementLabel = _node.Read("baseMovement", false, "",
+      "The movement type for the base");
+
+  Body::Type baseType;
+  if(baseTypeLabel == "planar")
+    baseType = Body::Type::Planar;
+  else if (baseTypeLabel == "volumetric")
+    baseType = Body::Type::Volumetric;
+  else if (baseTypeLabel == "fixed")
+    baseType = Body::Type::Fixed;
+  else
+    throw ParseException(_node.Where()) << "Unknown body type (for base) '" << baseTypeLabel
+                                 << "'. " << "Options are: 'planar', 'volumetric', "
+                                 << "'fixed'.";
+
+  Body::MovementType movementType;
+  if(baseMovementLabel == "rotational")
+    movementType = Body::MovementType::Rotational;
+  else if(baseMovementLabel == "translational")
+    movementType = Body::MovementType::Translational;
+  else if(baseMovementLabel == "fixed")
+    movementType = Body::MovementType::Fixed;
+  else
+    throw ParseException(_node.Where()) << "Unknown movement type '" << baseMovementLabel << "'."
+                                 << " Options are: 'rotational', "
+                                 << "'translational', 'fixed'.";
+
   #ifdef PPL_USE_URDF
   if (ext == "urdf") {
     // Read the world link.
     std::string worldLink = _node.Read("worldLink", false, "", "The link name "
                                        "for the world link in a URDF.");
-    this->TranslateURDF(_node.GetPath() + _filename, worldLink, true);
+    this->TranslateURDF(_node.GetPath() + _filename, worldLink,
+        baseType,movementType);
     return;
   }
   #endif
@@ -858,7 +901,7 @@ GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri) const 
     if(_forceOri and pos == 0) {
       pos = 3;
     }
-      
+
     rotation.gamma() = _v[pos]     * PI; // about X is the third Euler angle
     rotation.beta()  = _v[pos + 1] * PI; // about Y is the second Euler angle
     rotation.alpha() = _v[pos + 2] * PI; // about Z is the first Euler angle

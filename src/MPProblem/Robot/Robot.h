@@ -178,7 +178,7 @@ class Robot final {
 
     /// Parse a multibody file describing this robot.
     /// @param _filename The file name.
-    void ReadMultibodyFile(const std::string& _filename);
+    void ReadMultibodyFile(const std::string& _filename, XMLNode& _node);
 
     /// Parse a universal robot descriptor file for this robot.
     /// @param _filename The file name.

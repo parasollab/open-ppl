@@ -10,7 +10,7 @@
 void
 Body::
 TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
-                  const bool _base, const bool _fixed) {
+                  const bool _base) {
 
 
   // Check if body is virtual
@@ -109,16 +109,6 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
   else {
     if(m_virtual)
       throw RunTimeException(WHERE) << "Unsupported behavior with virtual link being base of robot.";
-    if(_fixed) {
-      SetBodyType(Type::Fixed);
-      SetMovementType(MovementType::Fixed);
-    }
-    else {
-      // TODO::Currently assume volumetric rotational.
-      //       Need way to determine from urdf.
-      SetBodyType(Type::Volumetric);
-      SetMovementType(MovementType::Rotational);
-    }
   }
 
 }
@@ -214,7 +204,8 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
 
 void
 MultiBody::
-TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
+TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
+    _baseType, Body::MovementType _baseMovement) {
   // Parse the urdf.
   urdf::Model model = ParseURDF(_filename);
 
@@ -260,7 +251,15 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
 
   size_t count = 0;
 
-  AddURDFLink(baseName, count, model, linkMap, childMap, true, _fixed);
+  AddURDFLink(baseName, count, model, linkMap, childMap, true);
+
+  // AddURDFLinke assigns a "fixed" bodyType value by default, here we override that in
+  // case the base is not fixed
+  auto base = GetBase();
+  base->SetBodyType(_baseType);
+  base->SetMovementType(_baseMovement);
+  SetBaseType(_baseType);
+  SetBaseMovementType(_baseMovement);
 
   // Extract joints
 
@@ -341,8 +340,7 @@ AddURDFLink(std::string _name, size_t& _count,
             urdf::Model& _model,
             std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
-            bool _base,
-            bool _fixed) {
+            bool _base) {
 
   auto link = _model.getLink(_name);
 
@@ -356,7 +354,7 @@ AddURDFLink(std::string _name, size_t& _count,
   auto free = GetBody(index);
 
 
-  free->TranslateURDFLink(link,_base,_fixed);
+  free->TranslateURDFLink(link,_base);
 
   _linkMap[link->name] = index;
 

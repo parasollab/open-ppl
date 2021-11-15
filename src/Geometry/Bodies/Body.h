@@ -282,8 +282,8 @@ class Body {
     /// @param _link The urdf link to translate.
     /// @param _base Flag indicating if the link is the robot base.
     /// @param _fixed Flag indiciating if the link is fixed.
-    void TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, 
-                           const bool _base, const bool _fixed);
+    void TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
+                           const bool _base);
 
     ///@}
     ///@name Visualization
