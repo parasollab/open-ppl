@@ -202,7 +202,7 @@ ReadPath(const std::string& _filename, Robot* const _robot) {
   if(!ifs)
     throw RunTimeException(WHERE) << "Cannot open file '" << _filename << "'";
 
-  // Eat header.
+  // Create header.
   std::string line1, line2;
   std::getline(ifs, line1);
   std::getline(ifs, line2);
@@ -237,7 +237,7 @@ ReadPath(const std::string& _filename, Robot* const _robot) {
 bool FileExists(const std::string& _filename);
 
 
-/// Discard all commented lines util the next uncommented line is found
+/// Discard all commented lines until the next uncommented line is found
 /// @param _is Stream
 void GoToNext(std::istream& _is);
 

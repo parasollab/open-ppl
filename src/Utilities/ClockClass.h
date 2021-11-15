@@ -10,7 +10,7 @@
 /// StopClock calls. This includes both user and system time.
 ///
 /// @note Instances of this class are not thread-safe and should only be used by
-///       a single thread. It is safe to run separate instances in differnet
+///       a single thread. It is safe to run separate instances in different
 ///       threads.
 ///
 /// @ingroup MetricUtils
