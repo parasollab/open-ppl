@@ -67,7 +67,7 @@ class CarlikeNeedleController : public SimpleController {
     ///@name Helpers
     ///@{
 
-    /// Adjust a control to account for the needle-like nature of the controller.
+    /// Adjust a control to account for the needle tip direction.
     /// @param _cfg The current configuration of the controller considered.
     /// @param _c The control to potentially adjust.
     void AdjustControl(const Cfg& _cfg, Control& _c) const noexcept;
