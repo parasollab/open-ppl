@@ -63,7 +63,7 @@ class TMPBaseObject {
     typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
     typedef typename TaskAllocatorMethodSet::TMPMethodPointer   TaskAllocatorMethodPointer;
     typedef typename StateGraphSet::TMPMethodPointer            StateGraphPointer;
-   
+
     ///@name Method Pointer Types
     ///@{
 
@@ -137,6 +137,7 @@ class TMPBaseObject {
     /// Get a Point-of-Interest placement method from the owning TMPLibrary
     PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string&) const noexcept;
 
+    /// Get a TaskEvaluator from the owning TMPLibrary
     TaskEvaluatorMethodPointer GetTaskEvaluator(const std::string&) const noexcept;
 
     /// Get a TaskDecomposition from the owning TMPLibrary

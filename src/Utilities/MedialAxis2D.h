@@ -193,7 +193,7 @@ class MedialAxis2D {
     /// Function to check whether a point is within boundary
     bool IsOutside(const Point2& _p);
 
-    /// Function to check whether a points in edge is within boundary
+    /// Function to check whether a point in edge is within boundary
     void ValidateEdge(MedialEdge& _e);
 
     /// Function to find the circumcenter of a triangle

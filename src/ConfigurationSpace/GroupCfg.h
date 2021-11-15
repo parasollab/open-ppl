@@ -73,20 +73,47 @@ class GroupCfg final {
     ///@name Equality
     ///@{
 
+    /// Check if the current and given group configurations are equal.
+    /// @param _other The given group configuration.
+    /// @return True if equal, false otherwise.
     bool operator==(const GroupCfg& _other) const noexcept;
+    /// Check if the current and given group configurations are unequal.
+    /// @param _other The given group configuration.
+    /// @return True if unequal, false otherwise.
     bool operator!=(const GroupCfg& _other) const noexcept;
 
     ///@}
     ///@name Arithmetic
     ///@{
 
+    /// Find the sum of the current and a given group configuration, 
+    /// by each degree of freedom.
+    /// @param _other The group configuration to be added. 
+    /// @return The sum of the group configurations.
     GroupCfg operator+(const GroupCfg& _other) const;
+
+    /// Find the difference of the current and a 
+    /// given group configuration, by each degree of freedom.
+    /// @param _other The group configuration to be subtracted. 
+    /// @return The difference of the group configurations.
     GroupCfg operator-(const GroupCfg& _other) const;
+
+    /// Find the product of the current and a given group configuration, 
+    /// by each degree of freedom.
+    /// @param _other The group configuration used to multiply the current. 
+    /// @return The product of the group configurations.
     GroupCfg operator*(const double& _other) const;
 
+    /// Add a given group configuration to the current, by each degree of freedom.
+    /// @param _other The group configuration to be added.
     GroupCfg& operator+=(const GroupCfg& _other);
+
+    /// Subtract a given group configuration from the current, by each degree of freedom.
+    /// @param _other The group configuration to be subtracted.
     GroupCfg& operator-=(const GroupCfg& _other);
 
+    /// Multiply the current group configuration by a scalar.
+    /// @param _val The scalar used to multiply the current.
     GroupCfg& operator*=(const double& _val);
 
     ///@}
@@ -101,6 +128,7 @@ class GroupCfg final {
     const std::vector<Robot*>& GetRobots() const noexcept;
 
     /// Get the robot pointer for a group member by index.
+    /// @param _index The desired index.
     Robot* GetRobot(const size_t _index) const;
 
     ///@}
@@ -183,8 +211,8 @@ class GroupCfg final {
     /// @todo These should not return any single-robot values, which can always
     ///       be obtained by accessing the relevant robot.
 
-    /// We assume homogeneous robots right now, so the default argument just
-    /// grabs the values for the first one.
+    /// We assume homogeneous robots right now, so the default argument
+    /// finds the values for the first one.
     size_t PosDOF(const size_t _index = 0) const;
     size_t OriDOF(const size_t _index = 0) const;
     size_t DOF(const size_t _index = 0) const;

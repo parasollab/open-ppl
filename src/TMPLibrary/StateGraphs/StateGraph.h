@@ -28,7 +28,7 @@ class StateGraph : public TMPBaseObject {
     ///@}
     ///@name Accessors
     ///@{
-
+    /// Access RoadmapGraph.
     virtual RoadmapGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
 
     /// Copies the state graph into the coordinator solution object.
@@ -40,7 +40,7 @@ class StateGraph : public TMPBaseObject {
 
     ///@name Helpers
     ///@{
-
+    ///Construct graph
     virtual void ConstructGraph();
 
     ///@}

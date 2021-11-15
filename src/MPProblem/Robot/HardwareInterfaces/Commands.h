@@ -78,6 +78,8 @@ struct MotionCommand : public Command
 
   MotionCommand();
 
+  /// @param _c Set of controls for the motion command
+  /// @param _seconds The control duration
   MotionCommand(const ControlSet& _c, const double _seconds);
 
   virtual std::unique_ptr<Command> Clone() const override;
@@ -114,6 +116,7 @@ struct SensorCommand : public Command {
   ///@name Construction
   ///@{
 
+  /// @param _seconds The command duration
   SensorCommand(const double _seconds = 0);
 
   virtual std::unique_ptr<Command> Clone() const override;

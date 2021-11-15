@@ -29,6 +29,10 @@ class ArucoDetectorInterface : public SensorInterface
     ///@name Construction
     ///@{
 
+    /// Construct hardware interface for aruco detector
+    /// @param _node XMLNode to construct the marker map from
+    /// @param _ip ip address of the netbook running on the aruco detector
+    /// @param _port port to use for the connection
     ArucoDetectorInterface(XMLNode& _node, const std::string& _ip,
         const unsigned short _port = 4002);
 
@@ -40,11 +44,14 @@ class ArucoDetectorInterface : public SensorInterface
 
     virtual SensorType GetType() const noexcept override;
 
+    /// Send command to detector to take measurement, save recieved observations
     virtual void SendCommand(const SensorCommand& _c) override;
 
+    /// Get last detected transformations
     virtual std::vector<mathtool::Transformation> GetLastTransformations()
         override;
 
+    /// Get uncertainty of measurements
     virtual std::vector<double> GetUncertainty() override;
 
     ///@}

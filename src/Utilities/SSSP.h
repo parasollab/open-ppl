@@ -85,7 +85,7 @@ SSSPDefaultTermination() {
 /// best path distances to the source and target nodes found so far. It should
 /// return the new target path distance that would be achieved by using this
 /// edge instead of the previous best. Use infinity to represent an
-/// untraversable edge, or max double to represent a worst-case (but still
+/// untraversable edge or max double to represent a worst-case (but still
 /// traversable) edge.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
@@ -166,7 +166,7 @@ SSSPDefaultNeighbors() {
 /// @param _weight The function for determining total path weight.
 /// @param _heuristic The function for determining heuristic cost.
 /// @param _neighbors The function for getting neighbors of a given node.
-/// @return  An output object which contains discovered information
+/// @return  An output object which contains discovered information.
 template<typename GraphType>
 SSSPOutput<GraphType>
 AStarSSSP(
@@ -304,7 +304,7 @@ AStarSSSP(
 /// @param _weight The function for determining total path weight.
 /// @param _heuristic The function for determining heuristic cost.
 /// @param _neighbors The function for getting neighbors of a given node.
-/// @return  An output object which contains discovered information
+/// @return  An output object which contains discovered information.
 template<typename GraphType>
 SSSPOutput<GraphType>
 AStarSSSP(
@@ -621,14 +621,14 @@ TwoVariableDijkstraSSSP(
       visitedPostConstraints.insert(vid);
     }
 
-    /// @todo If we want to add waiting it should be added as a self edge here
+    /// @todo If we want to add waiting, it should be added as a self edge here
     // Add children of the current node to the queue.
     auto vit = _g->find_vertex(vid);
     for(auto eit = vit->begin(); eit != vit->end(); eit++)
     {
       const size_t target = eit->target();
-      // TODO When we're past the last constraint we might know the best
-      //      distance to this target, which could avoid extraneous conflict
+      // TODO When we're past the last constraint, we might know the best
+      //      distance to this target which could avoid extraneous conflict
       //      checking.
       // Use a dummy infinite distance to force revisiting this node regardless
       // of the prior best path.

@@ -39,6 +39,10 @@ struct Control final {
   ///@{
 
   Control();
+
+  /// Construct control
+  /// @param _actuator The actuator for this control.
+  /// @param _signal The signal for this control.
   Control(Actuator* const _actuator, const Signal& _signal = Signal());
 
   Control(const Control&) = default;
@@ -56,6 +60,7 @@ struct Control final {
   ///@{
 
   /// Ask the actuator to compute the generalized force for this control.
+  /// If not actuator, returns a 0 force vector
   std::vector<double> GetOutput() const;
 
   ///@}
