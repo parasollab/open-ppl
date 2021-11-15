@@ -27,7 +27,9 @@ class TaskEvaluatorMethod : public TMPBaseObject {
 
     ///@}
   protected:
-
+    ///Exectute
+    ///@param _plan pointer
+    ///@return True if exectuion is successful
     virtual bool Run(Plan* _plan = nullptr);
 
     std::string m_sgLabel; ///< StateGraph Label
