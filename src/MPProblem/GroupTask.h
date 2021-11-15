@@ -55,10 +55,11 @@ class GroupTask {
     ///@{
 
     /// Create an empty task for a given robot.
-    /// @param _robot The robot assigned to this task.
+    /// @param _robotGroup The robot group assigned to this task.
     explicit GroupTask(RobotGroup* const _robotGroup);
 
-    /// Parse the set of task constraints described in an XML node.
+    /// Parse the set of task constraints described in an XML node
+    /// and verify that tasks are assigned to robots in group.
     /// @param _problem The MPProblem for this task.
     /// @param _node The XML node to parse.
     explicit GroupTask(MPProblem* const _problem, XMLNode& _node);
@@ -94,6 +95,7 @@ class GroupTask {
     size_t Size() const noexcept;
 
     /// Check if there are no individual tasks.
+    /// @return False if no tasks or all tasks empty
     bool Empty() const noexcept;
 
     /// Get the status object for this task.
@@ -120,7 +122,9 @@ class GroupTask {
     iterator begin() noexcept;
     iterator end() noexcept;
 
+    /// Get iterator to beginning of tasks
     const_iterator begin() const noexcept;
+    /// Get iterator to end of tasks
     const_iterator end() const noexcept;
 
     ///@}
@@ -132,6 +136,7 @@ class GroupTask {
     /// @todo This is a hack that was needed to move the disassembly work
     ///       forward before we had flushed out the tasks/groups. To be removed
     ///       at the earliest opportunity.
+    /// @param _center Robot group to populate from
     void GetStartConstraintCenter(GroupCfg& _center) const noexcept;
 
     ///@}

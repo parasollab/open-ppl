@@ -92,11 +92,20 @@ class MPTask final {
     const std::string& GetLabel() const noexcept;
 
     /// Set the semantic label for this task.
+    /// @param _label Label to set
     void SetLabel(const std::string& _label) noexcept;
 
     /// Get the status object for this task.
     nonstd::status& GetStatus() noexcept;
     const nonstd::status& GetStatus() const noexcept;
+
+    /// A task is considered to be 'empty' if it has neither start nor goal
+    /// constraints.
+    /// @return True if task is 'empty'
+    bool Empty() const noexcept;
+
+    /// Get the number of goals in this task.
+    size_t GetNumGoals() const noexcept;
 
     ///@}
     ///@name Constraint Accessors
@@ -104,22 +113,27 @@ class MPTask final {
     /// The task will take ownership of any added constraints and delete them
     /// when necessary.
 
+    /// Set start constraint for task
+    /// @param _c Constraint to set as start constraint
     void SetStartConstraint(std::unique_ptr<Constraint>&& _c);
+
+    /// Add path constraint to task
+    /// @param _c Path constraint to add to task
     void AddPathConstraint(std::unique_ptr<Constraint>&& _c);
+
+    /// Add goal constraint to task
+    /// @param _c Goal constraint to add to task
     void AddGoalConstraint(std::unique_ptr<Constraint>&& _c);
 
+    /// Get start constraint
     const Constraint* GetStartConstraint() const noexcept;
+    /// Get all path constraints
     const ConstraintSet& GetPathConstraints() const noexcept;
+    /// Get all goal constraints
     const ConstraintSet& GetGoalConstraints() const noexcept;
 
+    /// Remove all goal constraints
     void ClearGoalConstraints();
-
-    /// A task is considered to be 'empty' if it has neither start nor goal
-    /// constraints.
-    bool Empty() const noexcept;
-
-    /// Get the number of goals in this task.
-    size_t GetNumGoals() const noexcept;
 
     /// Sets the capability required for this task.
     /// @param _capability The capability required to complete this task.
@@ -134,16 +148,26 @@ class MPTask final {
     ///@{
     /// Store and fetch estimated times for beginning and completing this task.
 
+    /// Set the estimated start time for the task
+    /// @param _time The estimated start time
     void SetEstimatedStartTime(const double _time) noexcept;
+    /// Set the estimated completion time for the task
+    /// @param _time The estimated completion time
     void SetEstimatedCompletionTime(const double _time) noexcept;
 
+    /// Get the estimated start time for the task
     double GetEstimatedStartTime() const noexcept;
+    /// Get the estimated completion time for the task
     double GetEstimatedCompletionTime() const noexcept;
 
+    /// Set release window
 		void SetReleaseWindow(const std::pair<double,double> _release) noexcept;
+    /// Set deadline window
 		void SetDeadlineWindow(const std::pair<double,double> _deadline) noexcept;
 
+    /// Get the release window
 		std::pair<double,double> GetReleaseWindow() const noexcept;
+    /// Get the deadline window
 		std::pair<double,double> GetDeadlineWindow() const noexcept;
 
     ///@}
