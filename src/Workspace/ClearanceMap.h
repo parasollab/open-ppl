@@ -27,7 +27,11 @@ class Cfg;
 struct Filtration{
   double m_min;   ///< Minimum clearance. 
   Filtration(double _a){m_min = _a;}  ///< Set the minimum clearance to the given clearance value.
-  bool operator()(double _i){ return _i < m_min; } /// < Compare the given clearance value to the minimum clearance.
+
+  /// Compare the given clearance value to the minimum clearance.
+  /// @param _i the clearance to be compared to the minimum clearance.
+  /// @return true if the given clearance is smaller, false otherwise. 
+  bool operator()(double _i){ return _i < m_min; } 
 };
 
 ////////////////////////////////////////////////////////////////////////////////
