@@ -180,7 +180,7 @@ AddTetrahedralRegion(const int _pts[4]) {
   }
 
   // Create a tetrahedral boundary object for the region.
-  /// @TODO The boundary currently double-stores the points. We would like to
+  /// @todo The boundary currently double-stores the points. We would like to
   /// have a non-mutable boundary that holds only references to the points.
   wr.AddBoundary(std::unique_ptr<TetrahedralBoundary>(
       new TetrahedralBoundary(wr.GetPoints())
@@ -217,7 +217,7 @@ Print(std::ostream& _os) const {
       << "\n\tNum edges: " << this->get_num_edges();
 
   for(auto vi = this->begin(); vi != this->end(); ++vi) {
-    _os << "\n\t  Vertex " << vi->descriptor() << " " << &vi->property(); /// @TODO print properties
+    _os << "\n\t  Vertex " << vi->descriptor() << " " << &vi->property();
     for(auto ei = vi->begin(); ei != vi->end(); ++ei)
       _os << "\n\t    Edge to " << ei->target();
   }
@@ -257,7 +257,7 @@ FindPath(const size_t _source, const size_t _target) const {
   if(_source == INVALID_VID or _target == INVALID_VID)
     return {};
 
-  /// @TODO Remove the const-cast after STAPL fixes its API.
+  /// @todo Remove the const-cast after STAPL fixes its API.
   WorkspaceDecomposition* wd = const_cast<WorkspaceDecomposition*>(this);
 
   // Set up an early termination criterion so that we quit early if we find the
@@ -300,9 +300,8 @@ FindPath(const WorkspaceRegion* const _source,
 
 std::vector<size_t>
 WorkspaceDecomposition::
-FindNeighborhood(const std::vector<size_t>& _roots, const double _threshold)
-    const {
-  /// @TODO Remove the const-cast after STAPL fixes its API.
+FindNeighborhood(const std::vector<size_t>& _roots, const double _threshold) const {
+  /// @todo Remove the const-cast after STAPL fixes its API.
   WorkspaceDecomposition* wd = const_cast<WorkspaceDecomposition*>(this);
 
   // Define a path weight function that skips targets if the new distance

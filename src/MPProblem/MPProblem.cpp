@@ -171,56 +171,6 @@ ReadXMLFile(const string& _filename) {
   GetEnvironment()->ComputeResolution(GetRobots());
 }
 
-
-void
-MPProblem::
-AddTask(std::unique_ptr<MPTask>&& _task) {
-  auto robot = _task->GetRobot();
-  m_taskMap[robot].push_back(std::move(_task));
-}
-
-
-void
-MPProblem::
-ReassignTask(MPTask* const _task, Robot* const _newOwner) {
-  // Find an iterator to the existing entry in the task map.
-  auto oldOwner = _task->GetRobot();
-  auto& oldTasks = m_taskMap.at(oldOwner);
-  auto iter = oldTasks.begin();
-  for(; iter != oldTasks.end(); ++iter)
-    if(iter->get() == _task)
-      break;
-
-  // If we hit the end, the task was not found.
-  if(iter == oldTasks.end())
-    throw RunTimeException(WHERE, "Requested task was not found.");
-
-  // Set the task's robot.
-  (*iter)->SetRobot(_newOwner);
-
-  // Move the task to the new owner's map.
-  auto& newTasks = m_taskMap.at(_newOwner);
-  newTasks.emplace_back(std::move(*iter));
-  oldTasks.erase(iter);
-}
-
-void
-MPProblem::
-AddDecomposition(Robot* _coordinator, std::unique_ptr<Decomposition>&& _decomp) {
-	m_taskDecompositions[_coordinator].push_back(std::move(_decomp));
-}
-		
-const std::vector<std::unique_ptr<Decomposition>>& 
-MPProblem::
-GetDecompositions(Robot* _coordinator) {
-	return m_taskDecompositions[_coordinator];
-}
-
-const std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>>& 
-MPProblem::
-GetDecompositions() {
-	return m_taskDecompositions;
-}
 /*----------------------------- Environment Accessors ------------------------*/
 
 Environment*
@@ -381,6 +331,56 @@ GetTasks(RobotGroup* const _group) const noexcept {
   return output;
 }
 
+void
+MPProblem::
+AddTask(std::unique_ptr<MPTask>&& _task) {
+  auto robot = _task->GetRobot();
+  m_taskMap[robot].push_back(std::move(_task));
+}
+
+
+void
+MPProblem::
+ReassignTask(MPTask* const _task, Robot* const _newOwner) {
+  // Find an iterator to the existing entry in the task map.
+  auto oldOwner = _task->GetRobot();
+  auto& oldTasks = m_taskMap.at(oldOwner);
+  auto iter = oldTasks.begin();
+  for(; iter != oldTasks.end(); ++iter)
+    if(iter->get() == _task)
+      break;
+
+  // If we hit the end, the task was not found.
+  if(iter == oldTasks.end())
+    throw RunTimeException(WHERE, "Requested task was not found.");
+
+  // Set the task's robot.
+  (*iter)->SetRobot(_newOwner);
+
+  // Move the task to the new owner's map.
+  auto& newTasks = m_taskMap.at(_newOwner);
+  newTasks.emplace_back(std::move(*iter));
+  oldTasks.erase(iter);
+}
+
+void
+MPProblem::
+AddDecomposition(Robot* _coordinator, std::unique_ptr<Decomposition>&& _decomp) {
+	m_taskDecompositions[_coordinator].push_back(std::move(_decomp));
+}
+		
+const std::vector<std::unique_ptr<Decomposition>>& 
+MPProblem::
+GetDecompositions(Robot* _coordinator) {
+	return m_taskDecompositions[_coordinator];
+}
+
+const std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>>& 
+MPProblem::
+GetDecompositions() {
+	return m_taskDecompositions;
+}
+
 /*---------------------------- Dynamic Obstacles -----------------------------*/
 
 const std::vector<DynamicObstacle>&
@@ -411,7 +411,7 @@ Print(ostream& _os) const {
   _os << "MPProblem"
       << std::endl;
   m_environment->Print(_os);
-  /// @TODO Print robot and task information.
+  /// @todo Print robot and task information.
 }
 
 /*-------------------------- File Path Accessors -----------------------------*/
@@ -446,6 +446,7 @@ SetPath(const string& _filename) {
   m_filePath = _filename;
 }
 
+/*---------------------------- Handoff Template Accessors -------------------*/
 
 std::vector<std::unique_ptr<InteractionInformation>>&
 MPProblem::
@@ -458,7 +459,7 @@ GetInteractionInformations() {
 void
 MPProblem::
 ParseChild(XMLNode& _node) {
-  /// @TODO We currently assume that the environment is parsed first. Need to
+  /// @todo We currently assume that the environment is parsed first. Need to
   ///       make sure this always happens regardless of the XML file ordering.
   if(_node.Name() == "Environment") {
     // Ignore this node if we already have an environment.

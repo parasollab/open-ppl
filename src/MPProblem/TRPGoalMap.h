@@ -56,6 +56,10 @@ class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
 
     TRPGoalMap();
 
+    /// Construct TRPGoalMap
+    /// @param _robot Robot coordinator assigned to all goals
+    /// @param _queryMethod Query method for finding shortest paths
+    /// @param _library Library fir calculating paths
     TRPGoalMap(Robot* _robot, std::string _queryMethod, MPLibrary* _library);
 
     virtual ~TRPGoalMap();
@@ -68,10 +72,6 @@ class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     /// @return Number of vertices.
     const size_t GetNumVertices() const noexcept;
 
-    //const Boundary& GetVertex(const size_t _i) const noexcept;
-
-    //bool IsDepot(const size_t _i);
-
     /// Get the set of descriptors for the goal vertices.
     /// @return Set of descriptors for the goal vertices.
     std::vector<size_t>* GetGoalDescriptors();
@@ -79,9 +79,6 @@ class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     /// Get the set of descriptors for the depot vertices (used in TRP).
     /// @return Set of descriptors for the depot vertices.
     std::vector<size_t>* GetDepotDescriptors();
-
-    //const vertex_descriptor GetDescriptor(const VID _vid) const
-    //    noexcept;
 
     ///@}
     ///@name Path Accessors
@@ -124,31 +121,31 @@ class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
 
     bool m_debug{true};
 
-    std::string m_queryMethodLabel; /// denotes the query method utilized to find
-                                    /// the shortest path between goals
+    std::string m_queryMethodLabel; ///< denotes the query method utilized to find
+                                    ///< the shortest path between goals
 
-    MPLibrary* m_library{nullptr};  /// used to calculate paths between goals
-    Robot* m_robot{nullptr};        /// should be coordinator asigned all the goals
-    //vector<VID> m_goals;            /// stores the goals for the roadmap
-    vector<Path> m_intergoalPaths;  /// stores shortest paths between goals
-    vector<edge_descriptor> m_pathDescriptors;
+    MPLibrary* m_library{nullptr};  ///< used to calculate paths between goals
+    Robot* m_robot{nullptr};        ///< should be coordinator asigned all the goals
+    //vector<VID> m_goals;            ///< stores the goals for the roadmap
+    vector<Path> m_intergoalPaths;  ///< stores shortest paths between goals
+    vector<edge_descriptor> m_pathDescriptors; ///<descruptor for edges on the path
 
-    vector<std::shared_ptr<Constraint>> m_goalConstraints;
-    vector<std::shared_ptr<Constraint>> m_depotConstraints;
+    vector<std::shared_ptr<Constraint>> m_goalConstraints; ///< constraints on the goal
+    vector<std::shared_ptr<Constraint>> m_depotConstraints; ///< depot constraints
 
-    vector<vertex_descriptor> m_goalDescriptors;
-    vector<vertex_descriptor> m_depotDescriptors;
+    vector<vertex_descriptor> m_goalDescriptors; ///< Descriptors for the goals
+    vector<vertex_descriptor> m_depotDescriptors; ///< Descriptors for the depots
 
-    vector<edge_descriptor> m_depotGoalPathDescriptors;
-    vector<Path> m_depotGoalPaths;
+    /// Descriptors from the edges to the goal paths
+    vector<edge_descriptor> m_depotGoalPathDescriptors; 
+    vector<Path> m_depotGoalPaths; ///< Paths from the depots to the goals
 
+    /// Descriptors from the goal paths to the edges
     vector<edge_descriptor> m_goalDepotPathDescriptors;
-    vector<Path> m_goalDepotPaths;
+    vector<Path> m_goalDepotPaths; ///< Paths from the goals to the depots
 
-    vector<edge_descriptor> m_depotPathDescriptors;
-    vector<Path> m_depotPaths;
-    /// starting locations of all the worker robots
-    //std::vector<CSpaceConstraint> m_startingPositions;
+    vector<edge_descriptor> m_depotPathDescriptors; ///< Descriptors from the depots
+    vector<Path> m_depotPaths; ///< Paths for the depots
 
     ///@}
 };

@@ -42,8 +42,8 @@ class DrawableWorkspaceSkeleton : public glutils::drawable_display_list  {
     ///@name Internal State
     ///@{
 
-    WorkspaceSkeleton* const m_skeleton;
-    const glutils::color m_color;
+    WorkspaceSkeleton* const m_skeleton;    /// The workspace skeleton to render.
+    const glutils::color m_color;           /// The color to draw the cfgs and edges.
 
     ///@}
 

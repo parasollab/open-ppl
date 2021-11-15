@@ -4,7 +4,7 @@
 #include "MapEvaluatorMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @TODO
+/// Prints the roadmap to a file
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
@@ -12,9 +12,17 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
 
   public:
 
+    /// Constructs a PrintMapEvaluation object
     PrintMapEvaluation();
+
+    /// Constructs a PrintMapEvaluation object with a base filename
+    /// @param _basename The base name of the output file.
     PrintMapEvaluation(string _baseName);
+
+    /// Constructs a PrintMapEvaluation object from an XML node
+    /// @param _node The XML node to use.
     PrintMapEvaluation(XMLNode& _node);
+
     virtual ~PrintMapEvaluation();
 
     virtual void Print(ostream& _os) const;
@@ -23,7 +31,7 @@ class PrintMapEvaluation : public MapEvaluatorMethod<MPTraits> {
 
   protected:
 
-    string m_baseName;
+    string m_baseName; ///< The basename of the file to write
 };
 
 template <typename MPTraits>
@@ -55,6 +63,7 @@ PrintMapEvaluation<MPTraits>::Print(ostream& _os) const {
   _os << "\tbase filename = " << m_baseName << endl;
 }
 
+/// Write the map to a file
 template <typename MPTraits>
 bool
 PrintMapEvaluation<MPTraits>::operator()() {

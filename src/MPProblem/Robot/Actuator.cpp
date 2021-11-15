@@ -163,7 +163,7 @@ ControlMask() const {
 std::vector<double>
 Actuator::
 ComputeOutput(const Control::Signal& _s) const {
-  /// @TODO Generalize this so that the robot's starting point can be taken into
+  /// @todo Generalize this so that the robot's starting point can be taken into
   ///       account. Currently we assume that the generated force is independent
   ///       of starting state.
   const size_t dof = m_mask.size();

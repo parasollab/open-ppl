@@ -36,6 +36,8 @@ class ICreateInterface : public ActuatorInterface
     ///@name ActuatorInterface overrides
     ///@{
 
+    /// Send command to iCreate
+    /// @param _command Motion command to send
     virtual void SendCommand(const MotionCommand& _command) override;
 
     virtual bool FullStop() override;

@@ -19,8 +19,10 @@ using namespace mathtool;
 using namespace std;
 
 
-// Hash for edge descriptor
+/// Hash for edge descriptor.
 struct edgeHash {
+
+  /// return a hashed value for a given edge descriptor
   size_t operator()(const WorkspaceSkeleton::ED&  _ed) const {
     return hash<typename WorkspaceSkeleton::ED::edge_id_type>()(_ed.id());
   }
@@ -28,8 +30,9 @@ struct edgeHash {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Property map of the workspace skeleton
-/// To use just edge property map, use default vertex property
+/// Property map of the workspace skeleton.
+/// 
+/// To use just edge property map, use default vertex property.
 ////////////////////////////////////////////////////////////////////////////////
 template<typename EdgeProperty, typename VertexProperty=void>
 class PropertyMap {
@@ -46,8 +49,8 @@ class PropertyMap {
     typedef typename GraphType::vertex_iterator        vertex_iterator;
     typedef typename GraphType::adj_edge_iterator      adj_edge_iterator;
 
-    // Filter function types. The filter function removes the properties or
-    // skeleton elemets for which the function returns true
+    /// Filter function types. The filter function removes the properties or
+    /// skeleton elemets for which the function returns true.
     typedef function<bool(EdgeProperty&)>     EdgeFilterFunction;
     typedef function<bool(VertexProperty&)>   VertexFilterFunction;
 
@@ -66,16 +69,15 @@ class PropertyMap {
     ///@{
 
     /// Compute the graph in terms of filter funtion
-    /// then replace the old graph with the annotated one
-    /// @param _f Filter functor: Delete edges for which function returns true
-    /// @return A reference to the annotated workspace skeleton
+    /// then replace the old graph with the annotated one.
+    /// @param _f Filter functor: Delete edges for which function returns true.
+    /// @return A reference to the annotated workspace skeleton.
     WorkspaceSkeleton* GetEdgeFilteredSkeleton(EdgeFilterFunction&& _f);
 
     /// Compute the graph in terms of filter funtion
-    /// then replace the old graph with the annotated one
-    /// @param _f Filter functor: Delete vertices for which function returns
-    ///  true
-    /// @return A reference to the annotated workspace skeleton
+    /// then replace the old graph with the annotated one.
+    /// @param _f Filter functor: Delete vertices for which function returns true.
+    /// @return A reference to the annotated workspace skeleton.
     WorkspaceSkeleton* GetVertexFilteredSkeleton(VertexFilterFunction&& _f);
 
     ///@}
@@ -98,13 +100,13 @@ class PropertyMap {
     ///@name IO
     ///@{
 
-    /// Writes the graph to a file
-    /// @param _file the output file name
+    /// Writes the graph to a file.
+    /// @param _file the output file name.
 
     void Write(const std::string& _file);
 
-    /// Reads the graph from a file
-    /// @param _file the output file name
+    /// Reads the graph from a file.
+    /// @param _file the output file name.
 
     void Read(const std::string& _file);
     ///@}
@@ -115,9 +117,9 @@ class PropertyMap {
 
     ///@name Internal State
     ///@{
-    WorkspaceSkeleton* m_skeleton{nullptr};  ///< Original skeleton
-    EdgeMapType m_edgeMap;  ///< Map for edge property
-    VertexMapType m_vertexMap;  ///< Map for vertex property
+    WorkspaceSkeleton* m_skeleton{nullptr};  ///< Original skeleton.
+    EdgeMapType m_edgeMap;  ///< Map for edge property.
+    VertexMapType m_vertexMap;  ///< Map for vertex property.
     ///@}
 };
 

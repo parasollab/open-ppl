@@ -22,6 +22,8 @@
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -45,14 +47,20 @@
 #include "MPLibrary/Metrics/NumNodesMetric.h"
 
 //map evaluator includes
+#include "MPLibrary/MapEvaluators/CBSQuery.h"
+#include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
+#include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
-#include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
+#include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
@@ -65,7 +73,7 @@
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
-/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// Essentially, the important types are the CfgType or the @cspace abstraction
 /// class, the WeightType or the edge type of the graph, and a type list for
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
@@ -97,7 +105,9 @@ struct MPTraits {
   //types of validity checkers available in our world
   typedef boost::mpl::list<
     CollisionDetectionValidity<MPTraits>,
-    AlwaysTrueValidity<MPTraits>
+    AlwaysTrueValidity<MPTraits>,
+    ComposeValidity<MPTraits>,
+    ComposeCollision<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -139,9 +149,13 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    CBSQuery<MPTraits>,
+    ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
-    QueryMethod<MPTraits>
+    QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
+    TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
@@ -149,6 +163,8 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    GroupDecoupledStrategy<MPTraits>,
+    GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
       > MPStrategyMethodList;

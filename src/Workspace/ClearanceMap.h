@@ -22,18 +22,23 @@ class WorkspaceSkeleton;
 class Cfg;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// filtration function
+/// Filtration function.
 ////////////////////////////////////////////////////////////////////////////////
 struct Filtration{
-  double m_min;   ///< Minimum clearance
-  Filtration(double _a){m_min = _a;}
-  bool operator()(double _i){ return _i < m_min; }
+  double m_min;   ///< Minimum clearance. 
+  Filtration(double _a){m_min = _a;}  ///< Set the minimum clearance to the given clearance value.
+
+  /// Compare the given clearance value to the minimum clearance.
+  /// @param _i the clearance to be compared to the minimum clearance.
+  /// @return true if the given clearance is smaller, false otherwise. 
+  bool operator()(double _i){ return _i < m_min; } 
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clearance map of the workspace skeleton
-/// To use clearance map, put it before workspace skeleton . Direct()
-/// and SetMPlibrary before construct()
+/// Clearance map of the workspace skeleton.
+/// 
+/// To use clearance map, put it before workspace skeleton. Direct()
+/// and SetMPlibrary before construct().
 ////////////////////////////////////////////////////////////////////////////////
 template<class MPTraits>
 class ClearanceMap : public MPBaseObject<MPTraits> {
@@ -53,24 +58,29 @@ class ClearanceMap : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::CfgType                 CfgType;
 
-    typedef function<bool(double)>         FilterFunction;
+    typedef function<bool(double)>                     FilterFunction;
 
     ///@}
 
-    /// Constructor
+  
+    /// @name Construction
+    /// @{
     ClearanceMap() = default;
     void Construct(WorkspaceSkeleton* _s);
-    /// Annotate the clearance map in terms of filter function
-    /// the graph in skeleton won't be touched
-    /// @param _f Filter functor
-    /// @return A reference to the annotated clearance map
+    /// @}
+
+    /// Annotate the clearance map in terms of filter function.
+    /// The graph in skeleton won't be touched.
+    /// @param _f Filter functor.
+    /// @return A reference to the annotated clearance map.
     map<ED, double>& GetAnnotatedClearanceMap(FilterFunction&& _f);
     /// Compute the graph in terms of filter funtion
-    /// then replace the old graph with the annotated one
-    /// @param _f Filter functor
-    /// @return A reference to the annotated workspace skeleton
+    /// then replace the old graph with the annotated one.
+    /// @param _f Filter functor.
+    /// @return A reference to the annotated workspace skeleton.
     WorkspaceSkeleton* GetAnnotatedSkeleton(FilterFunction&& _f);
 
+    /// Get the clerance map
     map<ED, double>& GetClearanceMap(){ return m_clearanceMap; }
 
 
@@ -79,17 +89,17 @@ class ClearanceMap : public MPBaseObject<MPTraits> {
     ///@name Helpers
     ///@{
 
-    /// Compute the minimum clearance along an edge
-    /// @param _ed The edge descriptor of graph
+    /// Compute the minimum clearance along an edge.
+    /// @param _ed The edge descriptor of graph.
     void ComputeMinClearance(const ED& _ed);
 
-    /// Compute the clearance information of a single point
-    /// Check the algorithm in DRRRT
-    /// @param _p single point
+    /// Compute the clearance information of a single point.
+    /// Check the algorithm in DRRRT.
+    /// @param _p single point.
     double GetClearanceInfo(const Point3d& _p);
 
-    ///Remove 2-nodes after deletion of edge
-    /// Check the algorithm in DRRRT
+    /// Remove 2-nodes after deletion of edge.
+    /// Check the algorithm in DRRRT.
     void Remove2Nodes();
     ///@}
     ///@name Internal State
@@ -97,24 +107,28 @@ class ClearanceMap : public MPBaseObject<MPTraits> {
 
     //////////////////////////////////////////////////
     /// We have to define comparator for ED
-    /// since stapl will complain in map.find function
+    /// since stapl will complain in map.find function.
     /////////////////////////////////////////////////
     struct EdgeDescriptorComp{
+
+      /// Comparing two edge descriptors. 
+      /// @param _a the first edge descriptor.
+      /// @param _b the second edge descriptor.
+      /// @return True if the first is larger than or equal to 
+      /// the second. False otherwise.
       bool operator()(const ED& _a, const ED& _b) const{
-        if(_a.source() > _b.source())
-	  return true;
-	else if(_a.source() == _b.source()){
-	  if(_a.target() > _b.target()){
-	   return true;
-	  }
-	}
-	return false;
+        if(_a.source() > _b.source()) return true;
+	      else if(_a.source() == _b.source()){
+	        if(_a.target() > _b.target()){
+	          return true;
+	        }
+	      }
+	      return false;
       }
     };
 
-    map<ED, double, EdgeDescriptorComp> m_clearanceMap;    ///< The map of edges and their
-    			                                   ///< corresponding clearance
-    WorkspaceSkeleton* m_skeleton{nullptr};      ///< Original skeleton
+    map<ED, double, EdgeDescriptorComp> m_clearanceMap;    ///< The map of edges and their corresponding clearance.
+    WorkspaceSkeleton* m_skeleton{nullptr};                ///< Original skeleton.
 
     ///@}
 };

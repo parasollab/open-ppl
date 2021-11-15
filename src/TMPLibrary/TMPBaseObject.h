@@ -1,14 +1,10 @@
 #ifndef PMPL_TMP_BASE_OBJECT_H_
 #define PMPL_TMP_BASE_OBJECT_H_
 
-#include "MPLibrary/PMPL.h"
-#include "MPProblem/MPProblem.h"
-#include "TMPLibrary/TMPLibrary.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/TMPMethodSet.h"
 #include "Utilities/XMLNode.h"
 
-/*
 class TMPStrategyMethod;
 class PoIPlacementMethod;
 class TaskEvaluatorMethod;
@@ -17,7 +13,11 @@ class TaskAllocatorMethod;
 class StateGraph;
 template<typename TMPMethod> class TMPMethodSet;
 class TMPTools;
-*/
+
+template <typename C, typename W>
+class MPTraits;
+class MPProblem;
+class TMPLibrary;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for all TMP algorithm abstractions in PMPL.
@@ -40,11 +40,12 @@ class TMPBaseObject {
     ///@name LocalTypes
     ///@{
 
+    typedef typename MPTraits<Cfg>::MPLibrary MPLibrary;
 
     ///@}
     ///@name Method Set Types
     ///@{
-  /*
+
     typedef TMPMethodSet<TMPStrategyMethod>        TMPStrategyMethodSet;
     typedef TMPMethodSet<PoIPlacementMethod>       PoIPlacementMethodSet;
     typedef TMPMethodSet<TaskEvaluatorMethod>      TaskEvaluatorMethodSet;
@@ -62,7 +63,7 @@ class TMPBaseObject {
     typedef typename TaskDecomposerMethodSet::TMPMethodPointer  TaskDecomposerMethodPointer;
     typedef typename TaskAllocatorMethodSet::TMPMethodPointer   TaskAllocatorMethodPointer;
     typedef typename StateGraphSet::TMPMethodPointer            StateGraphPointer;
-   */
+
     ///@name Method Pointer Types
     ///@{
 
@@ -136,6 +137,7 @@ class TMPBaseObject {
     /// Get a Point-of-Interest placement method from the owning TMPLibrary
     PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string&) const noexcept;
 
+    /// Get a TaskEvaluator from the owning TMPLibrary
     TaskEvaluatorMethodPointer GetTaskEvaluator(const std::string&) const noexcept;
 
     /// Get a TaskDecomposition from the owning TMPLibrary

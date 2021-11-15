@@ -41,7 +41,7 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
 			"Indicates the final time the task can be initiated.");
 
 	m_deadlineWindow.first = _node.Read("deadlineStart",false,0.0,0.0,MAX_DBL,
-			"Indicates the maximum time the task can be completed.");
+			"Indicates the minimum time the task can be completed.");
 	m_deadlineWindow.second = _node.Read("deadlineEnd",false,MAX_DBL,0.0,MAX_DBL,
 			"Indicates the maximum time the task can be completed.");
 

@@ -35,7 +35,7 @@ class XMLNode {
     /// @param _filename XML Filename
     /// @param _desiredNode Desired XML Node to make root of tree
     ///
-    /// Will throw ParseException when \p _desiredNode cannot be found of
+    /// Will throw ParseException when \p _desiredNode cannot be found or
     /// \p _filename is poorly formed input
     XMLNode(const std::string& _filename, const std::string& _desiredNode);
 
@@ -92,8 +92,8 @@ class XMLNode {
     /// @param _name Name of attribute
     /// @param _req Is attribute required
     /// @param _default Default value of attribute
-    /// @param _min Minimum valud of attribute
-    /// @param _max Maximum valud of attribute
+    /// @param _min Minimum value of attribute
+    /// @param _max Maximum value of attribute
     /// @param _desc Description of attribute
     /// @return Value of attribute
     ///
@@ -210,7 +210,7 @@ class XMLNode {
     /// @param _desc Description of attribute
     /// @param _min Minimum value of attribute
     /// @param _max Maximum value of attribute
-    /// @param _val The specified value.
+    /// @param _val The specified value
     /// @return Error report
     template <typename T>
     std::string AttrInvalidBounds(const std::string& _name,

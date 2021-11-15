@@ -77,6 +77,7 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     RobotGroup* GetGroup();
 
     /// Get the individual roadmap for a robot in the group.
+    /// @param _index The index of the desired robot.
     IndividualRoadmap* GetRoadmap(const size_t _index);
     const IndividualRoadmap* GetRoadmap(const size_t _index) const;
 

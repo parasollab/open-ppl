@@ -24,9 +24,6 @@
 template <typename MPTraits>
 class LazyQuery : virtual public QueryMethod<MPTraits> {
 
-
-  // asdf
-
   public:
 
     ///@name Motion Planning Types
@@ -59,6 +56,8 @@ class LazyQuery : virtual public QueryMethod<MPTraits> {
     ///@name QueryMethod Overrides
     ///@{
 
+    /// Set an alternate path weight function to use when searching the roadmap
+    /// @param _f The path weight function to use.
     virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f)
         override;
 
@@ -76,6 +75,8 @@ class LazyQuery : virtual public QueryMethod<MPTraits> {
     ///@name QueryMethod Overrides
     ///@{
 
+    /// Reset the path and list of undiscovered goals
+    /// @param _r The roadmap to use.
     virtual void Reset(RoadmapType* const _r) override;
 
     virtual bool PerformSubQuery(const VID _start, const VIDSet& _goals)
