@@ -29,6 +29,7 @@ class ArucoMarkerMap final {
     ///@{
 
     /// Parse a marker map from an input XML file.
+    /// @param _fileName File name of XML file for marker map
     ArucoMarkerMap(const std::string& _filename);
 
     ///@}

@@ -16,8 +16,8 @@ class Robot;
 ///
 /// The obstacle body and motion properties are modeled as a robot. The
 /// trajectory is interpreted as a sequence of configurations which the obstacle
-/// will assume starting from time 0 and continuing at a rate of one Cfg per time
-/// step.
+/// will assume starting from a specified start time
+/// and continuing at a rate of one Cfg per time step.
 ////////////////////////////////////////////////////////////////////////////////
 class DynamicObstacle {
 
@@ -43,12 +43,15 @@ class DynamicObstacle {
     ///@{
 
     /// Get the obstacle's robot model.
+    /// @return The robot model
     Robot* GetRobot() const noexcept;
 
     /// Get the obstacle's path.
+    /// @return The obstacle's path
     const std::vector<Cfg> GetPath() const noexcept;
 
     /// Get the obstacle start time.
+    /// @return The obstacle's start time
     const size_t GetStartTime() const noexcept;
 
     /// Set the obstacle start time.
@@ -62,7 +65,7 @@ class DynamicObstacle {
     ///@{
 
     Robot* m_robot{nullptr}; ///< The obstacle robot.
-    std::vector<Cfg> m_path; ///< For now, assuming 1 cfg per time resolution.
+    std::vector<Cfg> m_path; ///< Assuming 1 cfg per time resolution.
     size_t m_startTime{0}; ///< Time that the path starts at.
 
     ///@}

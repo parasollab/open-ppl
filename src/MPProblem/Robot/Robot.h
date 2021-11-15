@@ -81,7 +81,7 @@ class Robot final {
   double m_maxLinearVelocity{10};  ///< Max linear velocity.
   double m_maxAngularVelocity{1};  ///< Max angular velocity.
   std::string m_capability;        ///< The terrain label that the robot can use.
-  bool m_fixed{false};
+  bool m_fixed{false};             ///< Does the robot have a fixed base
   bool m_manipulator{false};       ///< Is the robot a manipulator?
   std::string m_defaultStrategyLabel; ///< The robot's default MP Strategy.
 
@@ -249,7 +249,10 @@ class Robot final {
     /// Access the robot's actuators. These are set during input file parsing
     /// and cannot be changed otherwise.
 
+    /// Get actuator using label
+    /// @param _label Label of actuator to retrieve
     Actuator* GetActuator(const std::string& _label) noexcept;
+    /// Get set of all actuators mapped by label
     const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
         GetActuators() const noexcept;
 
@@ -272,12 +275,16 @@ class Robot final {
     ///@{
     /// Access the interface to the hardware robot (if any).
 
+    /// Get hardware command queue
     RobotCommandQueue* GetHardwareQueue() const noexcept;
 
+    /// Get the emualted battery
     Battery* GetBattery() const noexcept;
 
+    /// Get the state estimator
     StateEstimator* GetStateEstimator() const noexcept;
 
+    /// Set the state estimator
     void SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator)
         noexcept;
 
@@ -324,7 +331,9 @@ class Robot final {
     /// Check if the robot has a fixed base
     bool IsFixed() const noexcept;
 
+    /// Get initial configuration for the robot (not implemented)
 		Cfg GetInitialCfg();
+    /// Set initial configuration for the robot (not implemented)
 		void SetInitialCfg(Cfg _cfg);
     ///@}
 

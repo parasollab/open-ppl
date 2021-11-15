@@ -45,9 +45,14 @@ class CSpaceConstraint : public BoundaryConstraint {
     ///@}
 
 	private:
-		///@name Helper Functions
+		///@name Helpers
 		///@{
 
+    /// Construct a constraint from a message string 
+    /// (only one of _pointString or _bbxString can be non-empty).
+    /// @param _r The robot to constrain.
+    /// @param _pointString The string containing point constraint info.
+    /// @param _bbxString The string containing bounding box constraint info.
 		void ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxString);
 
 		///@}

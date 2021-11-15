@@ -113,6 +113,7 @@ class RobotCommandQueue final {
 
     /// Send a command to the robot. Must check for and recognize empty controls
     /// as 'wait' commands.
+    /// @param _command Command to send to robot
     void SendToRobot(const Command& _command);
 
     ///@}

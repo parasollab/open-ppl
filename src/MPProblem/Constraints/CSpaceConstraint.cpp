@@ -37,7 +37,7 @@ CSpaceConstraint::
 CSpaceConstraint(Robot* const _r, XMLNode& _node)
   : BoundaryConstraint(_r, nullptr)
 {
-  /// @TODO Verify that this works with constraints of lower dimension than the
+  /// @todo Verify that this works with constraints of lower dimension than the
   ///       robot's cspace (for partial constraint), or decide that we will not
   ///       support this and throw an error if requested.
 
@@ -69,7 +69,7 @@ Clone() const {
   return std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(*this));
 }
 
-/*------------------------------ Helper Functions --------------------------------*/
+/*------------------------------ Helpers --------------------------------*/
 
 void 
 CSpaceConstraint::
@@ -82,11 +82,14 @@ ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxS
 
   // Parse the boundary data.
   if(!_bbxString.empty()) {
+    if(!_pointString.empty()) {
+      throw RunTimeException(WHERE) << "Cannot parse both _pointString and _bbxString"
+    }
     // This is a bounding box constraint.
     std::istringstream bbxStream(_bbxString);
     bbxStream >> *bbx;
   }
-  else {
+  else if(!_pointString.empty()) {
     // This is a point constraint.
     Cfg point(_r);
 #ifdef VIZMO_MAP
@@ -97,6 +100,9 @@ ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxS
     point.Read(pointStream);
 
     bbx->ShrinkToPoint(point);
+  }
+  else {
+    throw RunTimeException(WHERE) << "Cannot parse boundary string without _pointString or _bbxString"
   }
 
   m_boundary = std::move(bbx);

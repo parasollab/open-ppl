@@ -16,8 +16,8 @@
 
 
 GroupTask::
-GroupTask(RobotGroup* const _robot)
-  : m_group(_robot)
+GroupTask(RobotGroup* const _robotGroup)
+  : m_group(_robotGroup)
 { }
 
 
@@ -92,20 +92,6 @@ RobotGroup*
 GroupTask::
 GetRobotGroup() const noexcept {
   return m_group;
-}
-
-
-RobotGroup*
-GroupTask::
-GetEndEffectorGroup() const noexcept {
-  return m_endEffectorGroup;
-}
-
-
-RobotGroup*
-GroupTask::
-GetManipulatorGroup() const noexcept {
-  return m_manipulatorGroup;
 }
 
 
@@ -226,6 +212,19 @@ end() const noexcept {
 }
 
 /*---------------------------- Disassembly Items -----------------------------*/
+
+RobotGroup*
+GroupTask::
+GetEndEffectorGroup() const noexcept {
+  return m_endEffectorGroup;
+}
+
+
+RobotGroup*
+GroupTask::
+GetManipulatorGroup() const noexcept {
+  return m_manipulatorGroup;
+}
 
 Robot*
 GroupTask::
