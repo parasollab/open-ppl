@@ -27,8 +27,8 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
-#include "MPLibrary/Samplers/UniformRandomSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
+#include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
 #include "MPLibrary/LocalPlanners/StraightLine.h"
@@ -107,8 +107,8 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    UniformRandomSampler<MPTraits>,
-    ObstacleBasedSampler<MPTraits>
+    ObstacleBasedSampler<MPTraits>,
+    UniformRandomSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
