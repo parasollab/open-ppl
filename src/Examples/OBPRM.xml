@@ -1,18 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
 
-  <!-- Here we specify input files, such as environment and query. The
-       'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="example">
 
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
     <Robot label="boxy" filename="3D/boxy.robot">
-      <!--
-      <Agent type="planning"/>
-      -->
-      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+     <Agent type="pathfollowing" waypointDm="euclideanPosition"
         waypointThreshold=".05"/>
     </Robot>
 
@@ -23,15 +18,12 @@
       </StartConstraints>
 
       <GoalConstraints>
-        <!-- Here multiple constraints indicates a compound goal. Each constraint
-             represents a single intermediate goal. -->
-        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+       <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
 
   </Problem>
 
-  <!-- Set available algorithms and parameters. -->
   <Library>
 
     <DistanceMetrics>
@@ -46,9 +38,6 @@
 
     <NeighborhoodFinders>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
-      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-        k="1"/>
-      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -61,13 +50,9 @@
 
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
-      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
-        vcLabel="alwaysTrue"/>
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
@@ -89,14 +74,9 @@
 
     <MPStrategies>
 
-    <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-         <!--Sampler label="UniformRandomFree" number="10" attempts="1"/-->
-         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+      <BasicPRM label="BasicOBPRM" debug="true" querySampler="UniformRandomFree">
          <Sampler label="OBPRM" number="10" attempts="10"/>
-         <!--Sampler label="MAPRM" number="10" attempts="10"/-->
          <Connector label="Closest"/>
-         <!--Connector label="ConnectCCs"/-->
          <Evaluator label="Query"/>
        </BasicPRM>
     </MPStrategies>
@@ -104,10 +84,9 @@
     <MPTools>
     </MPTools>
 
-    <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicOBPRM" seed="0"
+      baseFilename="OBPRM" vizmoDebug="true"/>
 
   </Library>
 
