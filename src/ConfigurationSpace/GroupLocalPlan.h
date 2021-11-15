@@ -48,6 +48,11 @@ class GroupLocalPlan final {
     ///@name Construction
     ///@{
 
+    /// Constructs a GroupLocalPlan.
+    /// @param _g The group of robots to follow this edge. Defaults to nullptr.
+    /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
+    /// @param _w The weight of the plan. Defaults to 0.0.
+    /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
     GroupLocalPlan(GroupRoadmapType* const _g = nullptr,
         const std::string& _lpLabel = "",
         const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
