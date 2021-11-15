@@ -46,11 +46,18 @@ class MatlabNeedleController : public ControllerMethod {
 
     /// This is different from other controllers - it takes a number of steps
     /// instead of a time span.
+    /// @param _current The current configuration.
+    /// @param _target The target configuration.
+    /// @param _steps The number of steps to take.
+    /// @return The computed control.
     virtual Control operator()(const Cfg& _current, const Cfg& _target,
         const double _steps) override;
 
     /// This is different from other controllers - it takes a number of steps
     /// instead of a time span.
+    /// @param _current The current configuration.
+    /// @param _steps The number of steps to take.
+    /// @return The computed control.
     virtual Control GetRandomControl(const Cfg& _current, const double _steps)
         const noexcept override;
 
@@ -61,7 +68,7 @@ class MatlabNeedleController : public ControllerMethod {
     ///@name Control Selection Overrides
     ///@{
 
-    /// Not used here.
+    /// Not used within this class.
     virtual std::vector<double> ComputeDesiredForce(const Cfg& _current,
         const Cfg& _target, const double _steps) override;
 
