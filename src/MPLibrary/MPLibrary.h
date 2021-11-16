@@ -38,7 +38,7 @@ template <typename MPTraits>
 #ifdef _PARALLEL
 class MPLibraryType : public stapl::p_object
 #else
-class MPLibraryType 
+class MPLibraryType
 #endif
 {
 
@@ -370,6 +370,8 @@ class MPLibraryType
     ///                  already be populated. Existing solutions should
     ///                  be extended, not overwritten.
     void Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution);
+    ///@example MPLibrary_UseCase.cpp
+    /// This is an example of how to use the MPLibrary methods.
 
     /// Run each input (solver) in sequence.
     /// @param _problem The problem representation.
@@ -454,7 +456,7 @@ class MPLibraryType
 
     ///@}
 
-  protected: 
+  protected:
 
     ///@name Method Sets
     ///@{

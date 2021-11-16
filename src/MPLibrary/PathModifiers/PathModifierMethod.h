@@ -56,6 +56,8 @@ class PathModifierMethod : public MPBaseObject<MPTraits> {
     /// @endcode
     virtual void Modify(vector<CfgType>& _path,
         vector<CfgType>& _newPath);
+    ///@example PathModifiers_UseCase.cpp
+    /// This is an example of how to use the path modifier methods.
 
     virtual void Modify(RoadmapType* _graph, vector<CfgType>& _path,
                         vector<CfgType>& _newPath);

@@ -110,6 +110,8 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _out Output iterator.
     virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
         const VertexSet& _candidates, OutputIterator _out) = 0;
+    ///@example NeighborhoodFinder_UseCase.cpp
+    /// This is an example of how to use the neighborhood finder methods.
 
     /// @overload This version is for group roadmaps.
     virtual void FindNeighbors(GroupRoadmapType* const _r,

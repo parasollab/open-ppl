@@ -136,6 +136,9 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
         const VertexSet* const _targetSet = nullptr,
         OutputIterator<GroupRoadmapType>* const _collision = nullptr);
 
+    ///@example Connectors_UseCase.cpp
+    /// This is an example of how to use the Connector Methods.
+
     /// Try to connect a given configuration to a set of nearest neighbors.
     /// @param _r The roadmap.
     /// @param _source The configuration.
@@ -244,7 +247,7 @@ ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   m_maxFailures = _node.Read("maxFailures", false, m_maxFailures,
       size_t(0), std::numeric_limits<size_t>::max(),
       "Terminate Connect operations after this many failures (0 to disable).");
-	
+
 	m_selfEdges = _node.Read("selfEdges", false, m_selfEdges,
 			"Indicates if the connector should allow self edges.");
 

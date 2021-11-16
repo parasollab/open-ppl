@@ -71,6 +71,8 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _caller Name of the calling function.
     /// @return True iff _cfg is in cfree, false otherwise.
     bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller);
+    ///@example ValidityCheckers_UseCase.cpp
+    /// This is an example of how to use the validity checker methods.
 
     /// This version does not return extra information.
     /// @overload
