@@ -29,5 +29,5 @@ void CollisionDetectionUseCase() {
 
   // The IsInsideObstacle function will return true if the point is inside of
   // the polyhedron.
- bool isInside = cd->IsInsideObstacle(point, polyhedronA, transformA);
+  bool isInside = cd->IsInsideObstacle(point, polyhedronA, transformA);
 }
