@@ -138,7 +138,10 @@ Connection(MultiBody* _owner, Transformation _toBody2, Transformation _toDHFrame
            DHParameters _dhParams, JointType _type) : 
            m_multibody(_owner), m_transformationToBody2(_toBody2), 
            m_transformationToDHFrame(_toDHFrame), m_dhParameters(_dhParams),
-           m_jointType(_type) {}
+           m_jointType(_type) {
+
+  m_jointParamType = JointParamType::DH;
+}
 
 Connection::
 Connection(const Connection& _other) {

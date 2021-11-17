@@ -79,7 +79,8 @@ PerformCBSQuery() {
 
   CBSSplitNodeFunction<Robot,CT,Path> split(
     [this](Node _node, std::vector<std::pair<Robot*,CT>> _constraints,
-           CBSLowLevelPlanner<Robot,CT,Path> _lowlevel) {
+           CBSLowLevelPlanner<Robot,CT,Path> _lowlevel,
+           CBSCostFunction<Robot,CT,Path> _cost) {
       return this->SplitNode(_node,_constraints,_lowlevel);
     }
   );
@@ -103,8 +104,15 @@ PerformCBSQuery() {
   );
 
   CBSInitialFunction<Robot,CT,Path> initial(
-    [lowlevel](Node& _node) {
-      return lowlevel(_node,nullptr);
+    [lowlevel](
+      std::vector<Node>& _root,
+      std::vector<Robot*> _tasks,
+      CBSLowLevelPlanner<Robot,CT,Path>& _lowlevel,
+      CBSCostFunction<Robot,CT,Path>& _cost) {
+      
+      Node node;
+      lowlevel(node,nullptr);
+      _root.push_back(node);
     }
   );
 
@@ -284,12 +292,25 @@ ExtractPaths(const std::vector<HPElem>& _hyperpath) {
 void
 HCRQuery::
 ExtractPlan(Node _node) {
-  auto plan = this->GetPlan();
 
   //TODO:: Convert hyperpath into solution representation.
+  auto& solutions = _node.solutionMap;
 
-  if(m_debug)
-    plan->Print();
+  for(auto kv : solutions) {
+    auto robot = kv.first;
+    //if(m_debug) {
+      std::cout << "Path for " << robot->GetLabel() << std::endl;
+      for(auto cfg : kv.second->Cfgs()) {
+        std::cout << cfg.PrettyPrint() << std::endl;
+      }
+    //}
+      ::WritePath(this->GetBaseFilename()+"."+robot->GetLabel()+".rdmp.path",
+                kv.second->FullCfgs(this->GetMPLibrary()));
+  }
+
+  //auto plan = this->GetPlan();
+  //if(m_debug)
+  //  plan->Print();
 }
 
 std::vector<HCRQuery::HPElem>

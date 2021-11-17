@@ -3,6 +3,7 @@
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
+#include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/GroupTask.h"
@@ -23,9 +24,11 @@ InteractionStrategyMethod(XMLNode& _node) : TMPBaseObject(_node) {
                              "StateGraph to use within strategy.");
   m_smLabel     = _node.Read("smLabel", true, "", 
                              "Sampler method to use within strategy.");
-  m_numNodes    = _node.Read("numNodes", false, 1, 0, 100, 
+  m_vcLabel     = _node.Read("vcLabel", true, "", 
+                             "Validity checker to use within strategy.");                           
+  m_numNodes    = _node.Read("numNodes", false, 1, 1, MAX_INT, 
                              "Numbner of samples for finding constraints.");
-  m_maxAttempts = _node.Read("maxAttempts", false, 10, 0, 100, 
+  m_maxAttempts = _node.Read("maxAttempts", false, 100, 1, MAX_INT, 
                              "Numbner of sample attempts for finding constraints.");
 }
 
@@ -332,8 +335,11 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
     // Generate a dummy solution and task to utilize the MPLibrary.
     auto formation = f->GenerateFormation(roleMap);
     MPSolution sol(group);
-    sol.GetGroupRoadmap(group)->AddFormation(formation);
-    sol.GetGroupRoadmap(group)->SetFormationActive(formation);
+
+    if(formation) {
+      sol.GetGroupRoadmap(group)->AddFormation(formation);
+      sol.GetGroupRoadmap(group)->SetFormationActive(formation);
+    }
 
     GroupTask task(group);
 
@@ -349,13 +355,15 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
 
     // Check if the formation is defined by a static leader.
     Boundary* boundary;
-    if(_staticRobots.count(formation->GetLeader())) {
+    auto leader = formation ? formation->GetLeader() : group->GetRobots()[0];
+
+    if(_staticRobots.count(leader)) {
       // Find group in input state with leader
       bool contains = false;
       for(auto kv : _state) {
         auto g = kv.first;
         for(auto r : g->GetRobots()) {
-          if(r == formation->GetLeader()) {
+          if(r == leader) {
             contains = true;
             break;
           }
@@ -368,7 +376,7 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
         auto grm = kv.second.first;
         auto vid = kv.second.second;
         auto gcfg = grm->GetVertex(vid);
-        auto cfg = gcfg.GetRobotCfg(formation->GetLeader());
+        auto cfg = gcfg.GetRobotCfg(leader);
         auto c = new CSpaceBoundingBox(cfg.DOF());
         c->ShrinkToPoint(cfg);
         boundary = c;
@@ -389,24 +397,41 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
                     std::back_inserter(samples));
 
     // Delete CSpace boundary if necessary
-    if(_staticRobots.count(formation->GetLeader())) {
+    if(_staticRobots.count(leader)) {
       delete boundary;
     }
 
     if(samples.empty())
       return {};
 
-    for(auto robot : group->GetRobots()) {
-      auto cfg = samples[0].GetRobotCfg(robot);
+    auto vc = this->GetMPLibrary()->GetValidityChecker(m_vcLabel);
 
-      if(m_debug) {
-        std::cout << "Generating constraint for " << robot->GetLabel() 
-                  << " at " << cfg.PrettyPrint() << std::endl;
+    bool foundGoal = false;
+
+    for(auto gcfg : samples) {
+      // Check if group cfg is valid, otherwise look at the next one
+      if(!vc->IsValid(gcfg,this->GetNameAndLabel()))
+        continue;
+      foundGoal = true;
+
+      for(auto robot : group->GetRobots()) {
+
+        auto cfg = gcfg.GetRobotCfg(robot);
+
+        if(m_debug) {
+          std::cout << "Generating constraint for " << robot->GetLabel() 
+                    << " at " << cfg.PrettyPrint() << std::endl;
+        }
+
+        auto constraint = new CSpaceConstraint(robot,cfg);
+        constraintMap[robot] = constraint;
       }
-
-      auto constraint = new CSpaceConstraint(robot,cfg);
-      constraintMap[robot] = constraint;
+      // break because we've already found a valid goal
+      break;
     }
+    // If not goal was found, return an empty map
+    if(!foundGoal)
+      return {};
   }
 
   return constraintMap;

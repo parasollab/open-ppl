@@ -8,8 +8,9 @@
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
 #include "TMPLibrary/Solution/Plan.h"
 
-#include "MPProblem/Robot/Kinematics/ur_kin.h"
-
+#ifdef PPL_USE_URDF
+  #include "MPProblem/Robot/Kinematics/ur_kin.h"
+#endif
 /*----------------------- Construction -----------------------*/
 
 GraspStrategy::
@@ -332,6 +333,8 @@ Cfg
 GraspStrategy::
 ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
+  #ifdef PPL_USE_URDF
+
   std::cout << "Computing IK for a UR5e. Other robots not currently supported." << std::endl;
 
   //TODO::Convert transform to individual ur_kin format
@@ -408,6 +411,14 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
   Cfg cfg(_robot);
   cfg.SetData(data);
   return cfg;
+
+  #else
+
+  throw RunTimeException(WHERE) << "IK not supported without ROS integration.";
+  return Cfg(_robot);
+
+  #endif
+
 }
 
 void

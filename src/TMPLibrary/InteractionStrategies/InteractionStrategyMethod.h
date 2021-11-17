@@ -123,6 +123,8 @@ class InteractionStrategyMethod : public TMPBaseObject {
 
     std::string m_smLabel; ///< Sampler method label
 
+    std::string m_vcLabel; ///< Validity checker label
+
     size_t m_numNodes; ///< Number of samples for sampling constraint cfgs.
     size_t m_maxAttempts; ///< Number of attempts for sampling constraint cfgs.
 

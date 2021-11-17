@@ -19,6 +19,7 @@
 
 // StateGraphs to include
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
+#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 
 // InteractionStrategyMethods to include
 #include "TMPLibrary/InteractionStrategies/IndependentPaths.h"
@@ -48,7 +49,8 @@ struct TMPTraits {
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
-		SimpleMotionEvaluator
+		SimpleMotionEvaluator,
+    HCRQuery
       > TaskEvaluatorMethodList;
 
   //types of task decomposers available in our world
@@ -60,7 +62,8 @@ struct TMPTraits {
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
-    ModeGraph
+    ModeGraph,
+    CombinedRoadmap
 			> StateGraphList;
 
 	typedef boost::mpl::list<
