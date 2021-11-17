@@ -125,25 +125,25 @@
         but here we will just have one task for simplicity -->
     <!-- The task only needs a goal constraint as the start constraint will be generated later 
          from the interaction end point-->
-		<Decomposition label="main" taskLabel="first" coordinator="coordinator">
-			<SemanticTask label="first" fixedAllocation="true">
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first" fixedAllocation="true">
         <!-- The goal constraint is set to be the entire environment, so that it will be complete
              after the exhcange has occured -->
         <GroupTask label="groupQuery" group="grasp2">
-      		<Task label="query1" robot="boxy2">
-		        <GoalConstraints>
-		          <BoundaryConstraint shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
-      		  </GoalConstraints>
-  		    </Task>
+          <Task label="query1" robot="boxy2">
+            <GoalConstraints>
+              <BoundaryConstraint shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
+            </GoalConstraints>
+          </Task>
 
           <Task label="query2" robot="passive">
             <GoalConstraints>
-		          <BoundaryConstraint shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
+              <BoundaryConstraint shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
             </GoalConstraints>
           </Task>
         </GroupTask>
-			</SemanticTask>
-		</Decomposition>
+      </SemanticTask>
+    </Decomposition>
 
   </Problem>
 
@@ -266,29 +266,29 @@
   </Library>
 
   <!-- You should only need to modify the Interaction Strategies portion of the TMPLibrary -->
-	<TMPLibrary>
-		<TMPStrategies>
+  <TMPLibrary>
+    <TMPStrategies>
       <!-- This Basic Hypergraph Combined Roadmap strategy is the one you'll want to use -->
       <!-- It leverages a motion planning strategy to expand underlying roadmaps and also samples interactions 
            to connect them -->
       <!-- The choice of which interaction strategy to use is specified within the interaction node further down in the file -->
       <BasicHCR label="BasicHCR" teLabel="HCRQuery" mpStrat="CompositeNodes" 
                 sgLabel="HCR" expansionProb="0." debug="true"/>
-		</TMPStrategies>
+    </TMPStrategies>
 
-		<PoIPlacementMethods>
-		</PoIPlacementMethods>
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
 
-		<TaskEvaluators>
+    <TaskEvaluators>
       <!-- This query searches over the hypergraph combined roadmap for a TMP solution -->
       <HCRQuery label="HCRQuery" sgLabel="HCR" vcLabel="pqp_solid" debug="false"/>
-		</TaskEvaluators>
+    </TaskEvaluators>
 
-		<TaskDecomposers>
-		</TaskDecomposers>
+    <TaskDecomposers>
+    </TaskDecomposers>
 
-		<TaskAllocators>
-		</TaskAllocators>
+    <TaskAllocators>
+    </TaskAllocators>
 
     <!-- This is where you will want to add new Interaction Strategies -->
     <InteractionStrategies>
@@ -296,12 +296,12 @@
         vcLabel="terrain_robot" mpStrategy="CompositePRM" numNodes="100" debug="true"/>
     </InteractionStrategies>
 
-		<StateGraphs>
+    <StateGraphs>
       <CombinedRoadmap label="HCR" debug="true"/>
-		</StateGraphs>
+    </StateGraphs>
 
-		<TMPTools>
-		</TMPTools>
+    <TMPTools>
+    </TMPTools>
 
     <ActionSpace>
 
@@ -416,8 +416,8 @@
         </Stage>
       </Interaction>
     </ActionSpace>
-	
-		<Solver tmpStrategyLabel="BasicHCR" baseFilename="action_space_example"/>
-	</TMPLibrary>
+  
+    <Solver tmpStrategyLabel="BasicHCR" baseFilename="action_space_example"/>
+  </TMPLibrary>
 
 </MotionPlanning>
