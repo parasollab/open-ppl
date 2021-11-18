@@ -1,6 +1,7 @@
 *.swp
 *.swo
 pmpl
+ppl
 sim
 build
 libobprm.a
