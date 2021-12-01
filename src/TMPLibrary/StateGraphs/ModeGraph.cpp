@@ -314,28 +314,64 @@ SampleTransitions() {
 
     State modeSet;
     std::unordered_map<RobotGroup*,Mode*> tailModeMap;
+    std::set<std::pair<size_t,RobotGroup*>> unactuatedModes;
+
     for(auto vid : hyperarc.tail) {
       auto mode = m_modeHypergraph.GetVertex(vid).property;
       modeSet[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
       tailModeMap[mode->robotGroup] = mode;
+
+      if(m_unactuatedModes.count(vid)) {
+        unactuatedModes.insert(std::make_pair(vid,mode->robotGroup));
+      }
     }
 
     auto label = interaction->GetInteractionStrategyLabel();
     auto is = this->GetInteractionStrategyMethod(label);
 
-    for(size_t i = 0; i < m_numSamples; i++) {
+    // If this hyperarc involves an unactuated mode, use the grounded vertices
+    if(!unactuatedModes.empty()) {
+      if(unactuatedModes.size() > 1)
+        throw RunTimeException(WHERE) << "Multiple unactuated modes in an "
+                      "interactionnot currently supported.";
 
-      for(size_t j = 0; j < m_maxAttempts; j++) {
+      auto unactuatedVID = unactuatedModes.begin()->first;
+      auto unactuatedGroup = unactuatedModes.begin()->second;
+      for(auto gv : m_modeGroundedVertices[unactuatedVID]) {
+        // Get grounded vertex
+        auto groundedVertex = m_groundedHypergraph.GetVertexType(gv);
 
-        // Make state copy to pass by ref and get output state
+        // Make state copy and add grounded vertex to pass to IS.
+        // Will get overwritten as goal state
         auto goalSet = modeSet;
+        goalSet[unactuatedGroup] = groundedVertex;
 
-        if(!is->operator()(interaction,goalSet))
-          continue;
+        for(size_t j = 0; j < m_maxAttempts; j++) {
+          if(!is->operator()(interaction,goalSet))
+            continue;
 
-        // Save interaction paths
-        SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap);
-        break;
+          // Save interaction paths
+          SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap);
+          break;
+        }
+      }
+    }
+    // Otherwise, sample completely new grounded vertices
+    else {
+      for(size_t i = 0; i < m_numSamples; i++) {
+
+        for(size_t j = 0; j < m_maxAttempts; j++) {
+
+          // Make state copy to pass by ref and get output state
+          auto goalSet = modeSet;
+
+          if(!is->operator()(interaction,goalSet))
+            continue;
+
+          // Save interaction paths
+          SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap);
+          break;
+        }
       }
     }
   }
