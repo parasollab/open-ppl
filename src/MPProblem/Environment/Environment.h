@@ -67,6 +67,8 @@ class Terrain {
 
     bool IsWired() const noexcept;
 
+    bool ShouldShow() const noexcept;
+
     ///@}
 
   private:
@@ -92,6 +94,8 @@ class Terrain {
     /// A rendering property, if true then the boundary is
     /// rendered as a solid mesh; otherwise, it is rendered in wire frame.
     bool m_wire{true};
+
+    bool m_show{true};
 
 		///@}
 };

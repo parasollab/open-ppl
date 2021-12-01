@@ -15,6 +15,7 @@
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
 /*----------------------- Construction -----------------------*/
+
 BasicHCR::
 BasicHCR() {
   this->SetName("BasicHCR");

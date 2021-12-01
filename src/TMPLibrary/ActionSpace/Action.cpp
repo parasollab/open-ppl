@@ -47,6 +47,12 @@ GetStageConditions(const std::string& _stage) const {
   return m_stageConditions.at(_stage);
 }
 
+const bool
+Action::
+IsReversible() const {
+  return m_isReversible;
+}
+
 /*--------------------- Helper Functions ---------------------*/
 
 void
@@ -58,6 +64,10 @@ SetClassName() {
 void
 Action::
 ParseXMLNode(XMLNode& _node) {
+
+  m_isReversible = _node.Read("reversible",false,m_isReversible,
+        "Flag indiciating if this action can be resersed or not.");
+
   for(auto& child : _node) {
     if(child.Name() == "Stage") {
       std::string label = child.Read("label",true,"",

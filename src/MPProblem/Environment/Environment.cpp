@@ -39,6 +39,8 @@ Terrain(XMLNode& _node) {
     std::transform(color.begin(), color.end(), color.begin(), ::tolower);
     m_color = StringToColor(color);
   }
+
+  m_show = _node.Read("show",false,m_show,"Flag indicating if the boundary should be drawn.");
 }
 
 
@@ -52,6 +54,7 @@ Terrain(const Terrain& _terrain) {
 	}
 	m_virtual = _terrain.m_virtual;
   m_wire = _terrain.m_wire;
+  m_show = _terrain.m_show;
 }
 
 bool
@@ -251,6 +254,11 @@ IsWired() const noexcept {
   return m_wire;
 }
 
+bool
+Terrain::
+ShouldShow() const noexcept {
+  return m_show;
+}
 
 Environment::
 Environment() = default;

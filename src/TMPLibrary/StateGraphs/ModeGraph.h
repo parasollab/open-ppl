@@ -37,7 +37,8 @@ class ModeGraph : public StateGraph {
 
     };
 
-    typedef Hypergraph<Mode*,Action*>                        ModeHypergraph;
+    typedef std::pair<Action*,bool>                          ReversibleAction;
+    typedef Hypergraph<Mode*,ReversibleAction>               ModeHypergraph;
     typedef size_t                                           VID;
     typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
     typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>        GroupRoadmapType;
@@ -95,6 +96,8 @@ class ModeGraph : public StateGraph {
 
     void GenerateModeHypergraph(const State& _start);
 
+    void SampleNonActuatedCfgs(const State& _start);
+
     void SampleTransitions();
 
     void GenerateRoadmaps(const State& _start);
@@ -145,7 +148,13 @@ class ModeGraph : public StateGraph {
 
     std::unordered_map<VID,std::unordered_set<VID>> m_modeGroundedVertices;
 
+    std::set<size_t> m_unactuatedModes;
+
     // XML Parameters
+
+    std::string m_unactuatedSM;
+
+    std::string m_actuatedSM;
 
     std::string m_expansionStrategy;
 

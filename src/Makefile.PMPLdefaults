@@ -519,6 +519,7 @@ TASK_SRCS := \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/BasicHCR.cpp \
+  TMPLibrary/TMPStrategies/NextBestSearch.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \

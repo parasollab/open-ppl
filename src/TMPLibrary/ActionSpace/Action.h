@@ -36,6 +36,8 @@ class Action : public TMPBaseObject {
 
     const std::vector<std::string>& GetStageConditions(const std::string& _stage) const;
 
+    const bool IsReversible() const;
+
     ///@}
 
   protected:
@@ -53,6 +55,7 @@ class Action : public TMPBaseObject {
     std::vector<std::string> m_stages;
     std::unordered_map<std::string,std::vector<std::string>> m_stageConditions;
 
+    bool m_isReversible{false};
     ///@}
 };
 
