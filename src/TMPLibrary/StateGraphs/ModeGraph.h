@@ -124,7 +124,8 @@ class ModeGraph : public StateGraph {
                         const std::set<Robot*>& _used);
 
     void SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
-                                 std::unordered_map<RobotGroup*,Mode*> _startModeMap);
+                                 std::unordered_map<RobotGroup*,Mode*> _startModeMap,
+                                 std::unordered_map<RobotGroup*,Mode*> _endModeMap);
 
     VID AddMode(Mode* _mode);
 
@@ -154,13 +155,15 @@ class ModeGraph : public StateGraph {
 
     std::string m_unactuatedSM;
 
-    std::string m_actuatedSM;
+    std::string m_querySM;
 
     std::string m_expansionStrategy;
 
     std::string m_queryStrategy;
 
-    size_t m_numSamples;
+    size_t m_numUnactuatedSamples;
+
+    size_t m_numInteractionSamples;
 
     size_t m_maxAttempts;
 

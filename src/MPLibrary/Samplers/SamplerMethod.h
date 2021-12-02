@@ -282,7 +282,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualSample");
 
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid, invalid;
@@ -325,7 +325,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _robotBoundary, const Boundary* const _eeBoundary,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualSample");
 
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid, invalid;
@@ -370,7 +370,7 @@ Filter(InputIterator _first, InputIterator _last,
     size_t _maxAttempts, const Boundary* const _boundary,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Filter");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualFilter");
 
   std::vector<CfgType> valid, invalid;
 
@@ -413,7 +413,7 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _boundary,
     GroupOutputIterator _valid, GroupOutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
 
   GroupCfgType cfg(this->GetGroupRoadmap());
   std::vector<GroupCfgType> valid, invalid;
@@ -456,7 +456,7 @@ SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
     GroupOutputIterator _valid, GroupOutputIterator _invalid) {
   auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
 
   const Boundary* const envBoundary = this->GetEnvironment()->GetBoundary();
 

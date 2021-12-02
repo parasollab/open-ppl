@@ -67,9 +67,13 @@ operator()(Interaction* _interaction, State& _start) {
   std::vector<Robot*> objects;
   std::string allObjectsLabel;
 
+  std::unordered_map<Robot*,RobotGroup*> initialGroups;
+
   for(auto kv : _start) {
     auto group = kv.first;
     for(auto r : group->GetRobots()) {
+
+      initialGroups[r] = group;
 
       // Save object robots
       if(r->GetMultiBody()->IsPassive()) {
@@ -95,10 +99,23 @@ operator()(Interaction* _interaction, State& _start) {
   toGraspSolution->AddRobotGroup(group);
   auto grm = toGraspSolution->GetGroupRoadmap(group);
 
-  // Sample object placements
+  // Get object placements
   std::map<Robot*,Cfg> objectPoses;
-  for(auto object : objects) {
-    auto objectPose = SampleObjectPose(object,_interaction);
+  for(auto object : objects) {  
+    Cfg objectPose(object);
+
+    // Check if object placement is given
+    auto initGroup = initialGroups[object];
+    auto given = _start[initGroup];
+    if(given.first) {
+      auto gcfg = given.first->GetVertex(given.second);
+      objectPose = gcfg.GetRobotCfg(object);
+    }
+    // If not, sample object pose
+    else {
+      objectPose = SampleObjectPose(object,_interaction);
+    }
+
     objectPoses[object] = objectPose;
   }
 
@@ -184,8 +201,10 @@ operator()(Interaction* _interaction, State& _start) {
   // Save plan information
   _interaction->SetToStagePaths(stages[2],toGraspPaths);
 
-  if(stages.size() == 3)
+  if(stages.size() == 3) {
     _start = InterimState(_interaction,stages[2],stages[2],toGraspPaths);
+    return true;
+  }
   else 
     _start = InterimState(_interaction,stages[2],stages[3],toGraspPaths);
 
@@ -272,9 +291,6 @@ GraspStrategy::
 ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform) {
 
   _objectPose.ConfigureRobot();
-  // Temp
-  Cfg cfg(_objectPose.GetRobot());
-  cfg.ConfigureRobot();
 
   auto base = _objectPose.GetRobot()->GetMultiBody()->GetBase();
   auto baseFrame = base->GetWorldTransformation();  

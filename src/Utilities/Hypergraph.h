@@ -116,6 +116,11 @@ size_t
 Hypergraph<VertexType,HyperarcType>::
 AddVertex(VertexType _vertex) {
 
+  // Check if vertex exists already
+  auto vid = GetVID(_vertex);
+  if(vid != MAX_INT)
+    return vid;
+
   Vertex v;
   v.property = _vertex;
   v.vid = m_vertexCounter++;

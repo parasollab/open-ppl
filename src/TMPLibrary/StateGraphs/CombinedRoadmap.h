@@ -60,6 +60,10 @@ class CombinedRoadmap : public StateGraph {
  
       TMPVertex() {} 
       TMPVertex(size_t _rvid, SemanticRoadmap* _sr) : rvid(_rvid), sr(_sr) {}
+
+      bool operator==(const TMPVertex& _other) const {
+        return rvid == _other.rvid and sr == _other.sr;
+      }
     };
 
     struct TMPHyperarc {
