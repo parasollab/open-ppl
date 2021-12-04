@@ -1,0 +1,57 @@
+Roadmap Statistics:
+
+  Number of Nodes: 34
+  Number of Edges: 194
+
+  There are 3 connected components:
+    CC[0]: 22 (vid 0)
+    CC[1]: 11 (vid 1)
+    CC[2]: 1 (vid 6)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandom                               41        34
+  All Samplers                                                      41        34
+  Success Rate: 82.9%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl                                   286          97        8343
+
+
+Collision Detection Calls                                                  Count
+
+  StraightLine::sl::IsConnectedSLBinary                                     8314
+  UniformRandomSampler::UniformRandom::Sampler                                41
+  All Collision Detectors                                                   8355
+
+
+Other Statistics                                                           Value
+
+  QueryMethod::Query::FoundPath                                                1
+
+
+Averages                                                         Value     Count
+
+  NeighborhoodConnector::Closest::CacheHitRatio                      0       330
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicPRM::PRM::Connect                                                     0.5
+  BasicPRM::PRM::EvaluateMap                                                   0
+  BasicPRM::PRM::GenerateStart                                                 0
+  BasicPRM::PRM::InitAndRun                                                0.504
+  BasicPRM::PRM::Initialize                                                    0
+  BasicPRM::PRM::Run                                                       0.504
+  BasicPRM::PRM::Sample                                                  0.00387
+  BruteForceNF::BFNF::FindNeighbors                                            0
+  CCTracker::AddEdge                                                       0.004
+  CCTracker::AddVertex                                                         0
+  MPLibrary::Initialize                                                        0
+  NeighborhoodConnector::Closest::Connect                                    0.5
+  QueryMethod::Query                                                           0
+  StraightLine::sl::IsConnected                                            0.488
+  UniformRandomSampler::UniformRandom::Sample                                  0

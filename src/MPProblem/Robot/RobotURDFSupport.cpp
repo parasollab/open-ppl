@@ -6,7 +6,17 @@ Robot::
 ReadURDF(const std::string& _filename, std::string _worldLink) {
   // Convert the urdf model to multibody representation.
   m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
-  m_multibody->TranslateURDF(_filename, _worldLink, m_fixed);
+
+  Body::Type bodyType;
+  Body::MovementType movementType;
+  if(m_fixed){
+    bodyType = Body::Type::Fixed;
+    movementType = Body::MovementType::Fixed;
+  } else {
+      bodyType = Body::Type::Planar;
+      movementType = Body::MovementType::Rotational;
+  }
+  m_multibody->TranslateURDF(_filename, _worldLink, bodyType, movementType);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   InitializePlanningSpaces();

@@ -7,10 +7,10 @@
 #include <urdf/model.h>
 /*----------------------------------- Body -----------------------------------*/
 
-void 
+void
 Body::
-TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link, 
-                  const bool _base, const bool _fixed) {
+TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
+                  const bool _base) {
 
 
   // Check if body is virtual
@@ -28,7 +28,7 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
 
     if(fullROSPath.empty())
       throw RunTimeException(WHERE) << "ROS geometry filename is empty." << std::endl;
-    else if(fullROSPath[0] == '/') 
+    else if(fullROSPath[0] == '/')
       m_filename = fullROSPath;
     else {
 
@@ -45,7 +45,7 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
 
     // Apply mesh scaling
     auto scale = mesh->scale;
-  
+
     auto newCenter = m_polyhedron.GetCentroid();
     newCenter[0] = newCenter[0]*scale.x;
     newCenter[1] = newCenter[1]*scale.y;
@@ -57,7 +57,7 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
   else if(collision->geometry->type == urdf::Geometry::BOX) {
     // Convert Box to GMSPolyhedron m_plohedron
     const auto geometry = collision->geometry.get();
-    
+
     auto box = dynamic_cast<urdf::Box*>(geometry);
     auto x = box->dim.x;
     auto y = box->dim.y;
@@ -99,7 +99,7 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
     m_textureFile = material->texture_filename;
   }
 
- 
+
   // Determine if base link.
   const auto parent = _link->getParent();
   if(!_base) {
@@ -109,23 +109,13 @@ TranslateURDFLink(const std::shared_ptr<const urdf::Link>& _link,
   else {
     if(m_virtual)
       throw RunTimeException(WHERE) << "Unsupported behavior with virtual link being base of robot.";
-    if(_fixed) {
-      SetBodyType(Type::Fixed);
-      SetMovementType(MovementType::Fixed);
-    }
-    else {
-      // TODO::Currently assume volumetric rotational. 
-      //       Need way to determine from urdf.
-      SetBodyType(Type::Volumetric);
-      SetMovementType(MovementType::Rotational);
-    }
   }
 
 }
 
 /*-------------------------------- Connection --------------------------------*/
 
-void 
+void
 Connection::
 TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
                    const std::pair<size_t,size_t> _bodyIndices,
@@ -145,11 +135,11 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
     case urdf::Joint::FIXED :
       m_jointType = Connection::JointType::NonActuated;
       break;
-    case urdf::Joint::PRISMATIC : 
+    case urdf::Joint::PRISMATIC :
       m_jointType = Connection::JointType::Prismatic;
       break;
     default :
-      throw RunTimeException(WHERE) << "Unsupported joint type." 
+      throw RunTimeException(WHERE) << "Unsupported joint type."
                                     << std::endl;
   }
 
@@ -173,8 +163,8 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
   }
 
   auto& transform = _joint->parent_to_joint_origin_transform;
-  Vector3d position = {transform.position.x, 
-                       transform.position.y, 
+  Vector3d position = {transform.position.x,
+                       transform.position.y,
                        transform.position.z};
 
   Quaternion quaternion(transform.rotation.w,
@@ -184,7 +174,7 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
 
   MatrixOrientation orientation(quaternion);
 
-  //transformation to Child Frame 
+  //transformation to Child Frame
   m_transformationToChildFrame =  Transformation(position,
                                                  orientation);
 
@@ -193,6 +183,9 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
                                           _bodyOrientation);
 
   if(IsRevolute())
+    m_jointAxis = {_joint->axis.x,_joint->axis.y,_joint->axis.z};
+
+  if(IsPrismatic())
     m_jointAxis = {_joint->axis.x,_joint->axis.y,_joint->axis.z};
 
   if(_joint->mimic) {
@@ -211,7 +204,8 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
 
 void
 MultiBody::
-TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
+TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
+    _baseType, Body::MovementType _baseMovement) {
   // Parse the urdf.
   urdf::Model model = ParseURDF(_filename);
 
@@ -242,7 +236,7 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
   // Identify base link/body
   std::string baseName;
   for(auto kv : parentMap) {
-    if(kv.second != "" and kv.second != _worldLink) 
+    if(kv.second != "" and kv.second != _worldLink)
       continue;
     if(kv.first == _worldLink)
       continue;
@@ -257,7 +251,15 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
 
   size_t count = 0;
 
-  AddURDFLink(baseName, count, model, linkMap, childMap, true, _fixed);
+  AddURDFLink(baseName, count, model, linkMap, childMap, true);
+
+  // AddURDFLinke assigns a "fixed" bodyType value by default, here we override that in
+  // case the base is not fixed
+  auto base = GetBase();
+  base->SetBodyType(_baseType);
+  base->SetMovementType(_baseMovement);
+  SetBaseType(_baseType);
+  SetBaseMovementType(_baseMovement);
 
   // Extract joints
 
@@ -277,8 +279,8 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
     // Check if links in joint have physical geometries or are virtual
     /*if(!model.getLink(joint.second->parent_link_name)->collision.get()
        or !model.getLink(joint.second->child_link_name)->collision.get()) {
-     
-      std::cout << joint.second->name << std::endl; 
+
+      std::cout << joint.second->name << std::endl;
       std::cout << joint.second->parent_link_name << " " << model.getLink(joint.second->parent_link_name)->collision.get() << std::endl;
       std::cout << joint.second->child_link_name << " " << model.getLink(joint.second->child_link_name)->collision.get() << std::endl;
 
@@ -301,8 +303,8 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
       auto bodyTransform = model.getLink(
           joint.second->child_link_name)->collision->origin;
 
-      position = Vector3d({bodyTransform.position.x, 
-        bodyTransform.position.y, 
+      position = Vector3d({bodyTransform.position.x,
+        bodyTransform.position.y,
         bodyTransform.position.z});
 
       Quaternion quaternion(bodyTransform.rotation.w,
@@ -312,7 +314,7 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
 
       orientation = MatrixOrientation(quaternion);
 
-    } 
+    }
 
     m_joints.back()->TranslateURDFJoint(joint.second,bodyIndices,
         position,orientation);
@@ -321,7 +323,7 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
 
     jointNameMap[joint.second->name] = m_joints.back().get();
   }
-  
+
   // Connect all the mimic joints
   for(auto& joint : m_joints) {
     if(!joint->IsMimic())
@@ -335,14 +337,13 @@ TranslateURDF(std::string _filename,std::string _worldLink, bool _fixed) {
 void
 MultiBody::
 AddURDFLink(std::string _name, size_t& _count,
-            urdf::Model& _model, 
+            urdf::Model& _model,
             std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
-            bool _base,
-            bool _fixed) {
+            bool _base) {
 
   auto link = _model.getLink(_name);
-    
+
   // Check if the link has a physical geometry or is virtual
   //if(!link->collision.get()) {
   //  _count--;
@@ -353,7 +354,7 @@ AddURDFLink(std::string _name, size_t& _count,
   auto free = GetBody(index);
 
 
-  free->TranslateURDFLink(link,_base,_fixed);
+  free->TranslateURDFLink(link,_base);
 
   _linkMap[link->name] = index;
 

@@ -53,21 +53,21 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_manipulator = _node.Read("manipulator", false, false, "Is the robot a manipulator?");
 
   // Check if the robot uses a default MP Strategy, it is used for setting different
-  // MPStrategies in group decoupled planners. 
+  // MPStrategies in group decoupled planners.
   m_defaultStrategyLabel = _node.Read("defaultStrategyLabel", false, "", "The robot individual strategy");
 
   std::string worldLink = _node.Read("worldLink", false, "", "The link name for the world link in a URDF.");
 
-  m_fixed = _node.Read("fixed", false, m_fixed, 
+  m_fixed = _node.Read("fixed", false, m_fixed,
                        "Flag indicating if robot has a fixed base.");
-  std::string basePositionString = _node.Read("basePosition", false, "", 
+  std::string basePositionString = _node.Read("basePosition", false, "",
                        "String indiciating the xyz and rpy of the robot base if fixed.");
   std::istringstream basePositionStream(basePositionString);
   m_basePosition = std::vector<double>(6);
   for(size_t i = 0; i < 6; i++) {
     basePositionStream >> m_basePosition[i];
   }
-  
+
 
   // Get the (optional) capability type for the robot.
   std::string capability = _node.Read("capability", false, "", "The Robot capability type");
@@ -98,7 +98,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   else {
     // Otherwise we got a multibody file, which cannot specify dynamics options
     // like actuators and controls. Assume some defaults for these.
-    ReadMultibodyFile(filename);
+    ReadMultibodyFile(filename, _node);
     ReadXMLNode(_node);
 
     if(m_actuators.empty()) {
@@ -297,7 +297,7 @@ ReadXMLNode(XMLNode& _node) {
       if(mbFile == "")
         ReadMultiBodyXML(child);
       else
-        ReadMultibodyFile(_node.GetPath() + mbFile);
+        ReadMultibodyFile(_node.GetPath() + mbFile, _node);
     }
     else if(name == "actuator") {
       // We need a multibody to parse the actuators.
@@ -342,15 +342,30 @@ ReadMultiBodyXML(XMLNode& _node) {
 
 void
 Robot::
-ReadMultibodyFile(const std::string& _filename) {
+ReadMultibodyFile(const std::string& _filename, XMLNode& _node) {
+
+  // Get file extension to determine behavior.
+  const std::string ext = _filename.substr(_filename.find_last_of(".") + 1);
+
   // Open the file.
   CountingStreamBuffer cbs(_filename);
   std::istream ifs(&cbs);
 
   // Parse the file to get the robot's geometry.
   m_multibody = std::unique_ptr<MultiBody>(new MultiBody(MultiBody::Type::Active));
-  m_multibody->Read(ifs, cbs);
+  if (ext == "urdf"){
+    // _filename already contains the path file, we need to remove it since in
+    // the next function it will be added again.
+    auto fullPath = _filename;
+    auto path = _node.GetPath();
 
+    std::string::size_type i = fullPath.find(path);
+    if (i != std::string::npos)
+      fullPath.erase(i, path.length());
+    m_multibody->ReadExternalFile(fullPath, _node);
+  } else {
+      m_multibody->Read(ifs, cbs);
+  }
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   InitializePlanningSpaces();
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
@@ -671,7 +686,7 @@ Robot::
 IsFixed() const noexcept {
   return m_fixed;
 }
-		
+
 /*---------------------------------- Debug -----------------------------------*/
 
 std::ostream&

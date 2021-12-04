@@ -55,7 +55,7 @@ Connection::
 Connection(MultiBody* const _owner)
   : m_multibody(_owner),
     m_jointType(JointType::NonActuated)
-{ 
+{
   m_jointParamType=JointParamType::DH;
 }
 
@@ -238,7 +238,7 @@ Read(istream& _is, CountingStreamBuffer& _cbs) {
   m_transformationToBody2 = ReadField<Transformation>(_is, _cbs,
       "Failed reading transformation to next body.");
 }
-    
+
 
 void
 Connection::
@@ -291,7 +291,7 @@ GetConnectionType() const noexcept {
 }
 
 Connection::JointParamType
-Connection::    
+Connection::
 GetParamType() const noexcept {
   return m_jointParamType;
 }
@@ -327,7 +327,7 @@ Connection::
 IsMimic() const noexcept {
   return m_jointType == JointType::Mimic;
 }
-    
+
 std::string
 Connection::
 GetMimicConnectionName() const noexcept {
@@ -469,7 +469,7 @@ GetTransformationToChildFrame() noexcept {
   return m_transformationToChildFrame;
 }
 
-const Transformation& 
+const Transformation&
 Connection::
 GetTransformationToChildFrame() const noexcept {
   return m_transformationToChildFrame;
@@ -486,8 +486,8 @@ Connection::
 GetJointAxis() const noexcept {
   return m_jointAxis;
 }
-    
-const std::vector<double> 
+
+const std::vector<double>
 Connection::
 GetJointValues() {
 
@@ -544,7 +544,7 @@ SetJointValues(std::vector<double> _values) {
 const Transformation
 Connection::
 GetTransformationFromJoint() const noexcept {
-  
+
   switch(m_jointParamType) {
     case JointParamType::DH:
       return GetTransformationToDHFrame() *
@@ -580,7 +580,7 @@ const Transformation
 Connection::
 ApplyURDFJointValues() const noexcept {
 
-  Connection::JointType jointType = GetConnectionType() == Connection::JointType::Mimic 
+  Connection::JointType jointType = GetConnectionType() == Connection::JointType::Mimic
                                   ? m_mimicConnection->GetConnectionType()
                                   : GetConnectionType();
 
@@ -627,7 +627,9 @@ ApplyURDFJointValues() const noexcept {
     mathtool::Matrix3x3 identity;
     mathtool::identity(identity);
 
-    return Transformation(translation,identity);
+    Transformation transAboutAxis(translation,identity);
+
+    return transAboutAxis;
   }
 
   return Transformation();

@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Robot maxLinearVelocity="1.90" maxAngularVelocity="2.0">
+  <!--
+       This robot XML describes physically realistic settings for a Boxer
+       robot. Each direction is modeled as a separate actuator to support
+       continuous controls with a deadzone in the middle.
+  -->
+
+  <MultiBody type="active">
+    <Base filename="objs/boxer.obj" color="0 1 0 1" type="planar"
+      movement="rotational" mass="1"/>
+  </MultiBody>
+
+  <Actuator label="forward" maxMagnitude="1.9"
+    limits="0:0.4 0:0 0:0" type="velocity"/>
+
+  <Actuator label="reverse" maxMagnitude="1.9"
+    limits="-0.4:0 0:0 0:0" type="velocity"/>
+
+  <Actuator label="left" maxMagnitude="2.0"
+    limits="0:0 0:0 0:0.4" type="velocity"/>
+
+  <Actuator label="right" maxMagnitude="2.0"
+    limits="0:0 0:0 -0.4:0" type="velocity"/>
+
+  <Actuator label="null" maxMagnitude="1.9"
+    limits="0:0 0:0 0:0" type="velocity"/>
+
+  <Controller type="diffdrive" debug="false"/>
+
+</Robot>

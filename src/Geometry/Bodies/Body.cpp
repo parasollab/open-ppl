@@ -192,7 +192,7 @@ Body(MultiBody* const _owner, XMLNode& _node)
       " information for this body.");
   if(m_filename != "")
     ReadGeometryFile(m_comAdjust);
-  
+
   bool shape = false;
   for(auto child : _node) {
     //Make sure there is only one shape specified
@@ -204,7 +204,7 @@ Body(MultiBody* const _owner, XMLNode& _node)
     if(child.Name() == "Cylinder") {
       Range<double> height;
       height.min = child.Read("minHeight", true, 0., 0., 1000., "Minimum y coordinator of cylinder.");
-      height.max = child.Read("maxHeight", true, 0., 0., 1000., "Maximum y coordinator of cylinder."); 
+      height.max = child.Read("maxHeight", true, 0., 0., 1000., "Maximum y coordinator of cylinder.");
 
       double radius = child.Read("radius", true, 0., 0., 1000., "Radius of cylinder.");
 
@@ -501,7 +501,7 @@ Body::
 GetWorldTransformation() const {
   return (this->*m_transformFetcher)();
 }
-    
+
 const Transformation
 Body::
 GetTransformationToURDFReferenceFrame() const {
@@ -890,7 +890,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
   // Read the mesh file.
   ReadGeometryFile(m_comAdjust);
 }
-    
+
 /*----------------------------- Computation Helpers --------------------------*/
 
 void

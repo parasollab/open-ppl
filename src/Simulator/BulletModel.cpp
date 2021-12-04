@@ -264,7 +264,7 @@ Execute(const Control& _c) noexcept {
 
   // Set base force.
   const size_t numPos = m_pmplModel->PosDOF();
-  for(size_t i = 0; i < numPos; ++i, ++iter)
+  for(size_t i = 0; i < numPos; ++i, ++iter) 
     force[i] = *iter;
 
   // Set base torque.
@@ -375,20 +375,20 @@ AddToDynamicsWorld(btMultiBodyDynamicsWorld* const _world) {
   // See BulletCollision/BroadphaseCollision/btBroadphaseProxy.h
   // and BulletCollision/CollisionDispatch/btCollisionWorld.h
   // for more info on these.
-  auto group = m_pmplModel->IsActive()
-      ? btBroadphaseProxy::DefaultFilter
-      : btBroadphaseProxy::StaticFilter;
-  auto mask = m_pmplModel->IsActive()
-      ? btBroadphaseProxy::AllFilter
-      : btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+  // auto group = m_pmplModel->IsActive()
+  //     ? btBroadphaseProxy::DefaultFilter
+  //     : btBroadphaseProxy::StaticFilter;
+  // auto mask = m_pmplModel->IsActive()
+  //     ? btBroadphaseProxy::AllFilter
+  //     : btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
         // This is logically equivalent to "All BUT StaticFilter":
 
   // Add the multibody.
   m_world->addMultiBody(m_bulletModel);
 
   // Add the colliders.
-  for(auto* collider : m_colliders)
-    m_world->addCollisionObject(collider, group, mask);
+  //for(auto* collider : m_colliders)
+    //m_world->addCollisionObject(collider, group, mask);
 
   // Add the constraints.
   for(auto* constraint : m_constraints)
@@ -637,7 +637,7 @@ Build() {
                     << std::endl;
         break;
       }
-      case Connection::JointType::Prismatic: 
+      case Connection::JointType::Prismatic:
       {
         auto axis = joints[i]->GetJointAxis();
         btVector3 jointAxis(axis[0],axis[1],axis[2]);

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-    
+
 #include "Utilities/XMLNode.h"
 
 #include "Geometry/Bodies/Body.h"
@@ -191,8 +191,14 @@ class MultiBody {
     /// @param _index The index of the body to use as the base.
     void SetBaseBody(const size_t _index);
 
+    /// Set the body to this _bodyType  .
+    void SetBaseType(Body::Type _bodyType);
+
     /// Get the body type of the base body.
     Body::Type GetBaseType() const noexcept;
+
+    /// Get the movement type of the base body.
+    void SetBaseMovementType(Body::MovementType _movementType);
 
     /// Get the movement type of the base body.
     Body::MovementType GetBaseMovementType() const noexcept;
@@ -269,7 +275,13 @@ class MultiBody {
     /// @param _urdf The URDF filename to load.
     /// @param _worldLink The virtual link connecting the URDF model to the world frame.
     /// @param _fixed A flag indicating if the robot model has a fixed base.
-    void TranslateURDF(std::string _urdf, std::string _worldLink, bool _fixed);
+    void TranslateURDF(std::string _urdf, std::string _worldLink, Body::Type
+        _baseType, Body::MovementType _baseMovement);
+
+    /// Read an external file to add a MultiBody.
+    /// @param _filename The filename of the external file.
+    /// @param _node The XML node containing the filename and any extra information.
+    void ReadExternalFile(std::string _filename, XMLNode& _node);
 
     /// Add a link to this multibody that is specified in the URDF model.
     /// @param _name Name of the link to add.
@@ -279,11 +291,10 @@ class MultiBody {
     /// @param _base flag indiciating if the link to be added is the base.
     /// @param _fixed Flag indiciating if the link is fixed.
     void AddURDFLink(std::string _name, size_t& _count,
-            urdf::Model& _model, 
+            urdf::Model& _model,
             std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
-            bool _base = false,
-            bool _fixed = false);
+            bool _base = false);
 
     ///@}
 

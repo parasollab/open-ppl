@@ -1,0 +1,51 @@
+Roadmap Statistics:
+
+  Number of Nodes: 1241
+  Number of Edges: 1240
+
+  There are 1 connected components:
+    CC[0]: 1241 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandomFree                         7242      7242
+  All Samplers                                                    7242      7242
+  Success Rate: 100%
+
+
+Collision Detection Calls                                                  Count
+
+  KinodynamicExtender                                                     150103
+  UniformRandomSampler::UniformRandomFree::Sampler                          7242
+  All Collision Detectors                                                 157345
+
+
+Other Statistics                                                           Value
+
+  BasicRRTStrategy::KinoRRT::Extend                                     8.16e+03
+  Graph Search                                                                 1
+  QueryMethod::Query::FoundPath                                                1
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicRRTStrategy::KinoRRT::AddEdge                                       0.108
+  BasicRRTStrategy::KinoRRT::AddNode                                       0.368
+  BasicRRTStrategy::KinoRRT::EvaluateMap                                   0.244
+  BasicRRTStrategy::KinoRRT::Extend                                           12
+  BasicRRTStrategy::KinoRRT::FindNearestNeighbor                            17.4
+  BasicRRTStrategy::KinoRRT::GenerateStart                               4.3e-05
+  BasicRRTStrategy::KinoRRT::InitAndRun                                     30.9
+  BasicRRTStrategy::KinoRRT::Initialize                                  4.3e-05
+  BasicRRTStrategy::KinoRRT::Run                                            30.9
+  BasicRRTStrategy::KinoRRT::SelectTarget                                  0.841
+  BasicRRTStrategy::KinoRRT::TryGoalExtension                               1.42
+  BruteForceNF::Nearest::FindNeighbors                                      17.2
+  CCTracker::AddEdge                                                           0
+  CCTracker::AddVertex                                                     0.004
+  KinodynamicExtender::ApplyControl                                         10.8
+  MPLibrary::Initialize                                                        0
+  QueryMethod::GeneratePath                                                0.004
+  QueryMethod::Query                                                       0.136
+  UniformRandomSampler::UniformRandomFree::Sample                          0.633

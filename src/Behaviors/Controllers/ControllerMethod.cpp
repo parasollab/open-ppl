@@ -2,6 +2,7 @@
 
 #include "Behaviors/Controllers/ControlSetGenerators.h"
 #include "Behaviors/Controllers/SimpleController.h"
+#include "Behaviors/Controllers/DiffDriveController.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "MPProblem/Robot/Actuator.h"
 #include "MPProblem/Robot/Robot.h"
@@ -70,6 +71,9 @@ Factory(Robot* const _r, XMLNode& _node) {
   // Setup the appropriate controller type.
   if(controllerType == "simple")
     output = std::unique_ptr<SimpleController>(new SimpleController(_r, _node));
+  if(controllerType == "diffdrive")
+    output = std::unique_ptr<DiffDriveController>(new DiffDriveController(_r,
+          _node));
   else
     throw ParseException(_node.Where(), "Unknown controller label '" +
         controllerType + "'. Currently only 'simple' is supported.");

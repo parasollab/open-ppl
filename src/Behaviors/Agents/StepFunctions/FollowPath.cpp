@@ -41,17 +41,22 @@ FollowPath::
 ExecutePath(double _dt) {
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
   auto path = p->GetPath();
+  // std::cout << "Current: " << path[m_pathIndex] << std::endl;
+
+  std::cout << "Current index: " << m_pathIndex << std::endl;
 
   // Get the current waypoint
   auto current = path[m_pathIndex];
-  
+
   // Check if the robot has reached the current waypoint
+  // std::cout << "Reached: " << ReachedWaypoint(current) << std::endl;
   if(!ReachedWaypoint(current)) {
     MoveToWaypoint(current, _dt);
     return;
   }
 
   // Iterate the index to the next waypoint
+  // std::cout << "Path Index: " << m_pathIndex << std::endl;
   m_pathIndex++;
 
   // Check if the robot has completed the path
@@ -66,8 +71,8 @@ ExecutePath(double _dt) {
   auto next = path[m_pathIndex];
   MoveToWaypoint(next, _dt);
 }
-    
-bool 
+
+bool
 FollowPath::
 ReachedWaypoint(const Cfg& _waypoint) {
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
