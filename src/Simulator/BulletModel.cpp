@@ -649,6 +649,11 @@ Build() {
           s_disableParentCollision);
         break;
       }
+      case Connection::JointType::Mimic:
+      {
+        std::cout << "Mimic joints not properly supported in Bullet yet." << std::endl;
+        break;
+      }
       default:
         throw RunTimeException(WHERE) << "Unsupported joint type.";
     }

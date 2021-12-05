@@ -90,6 +90,27 @@ DefaultSSSHPPathWeightFunction() {
          };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Define a forward star function for vertices. This takes in a vertex and
+/// returns a set of outgoing hyperarcs.
+////////////////////////////////////////////////////////////////////////////////
+template <typename VertexType, typename HyperarcType>
+using SSSHPForwardStar =
+  std::function<std::set<size_t>(
+    const size_t _vid,
+    Hypergraph<VertexType,HyperarcType>* _h)>;
+
+/// Create a standard SSSHP forward star function. This simply asks the
+/// hypergraph for the outgoing hyperarcs.
+/// @return A set of outgoing hyperarcs for the vertex.
+template <typename VertexType, typename HyperarcType>
+SSSHPForwardStar<VertexType,HyperarcType>
+DefaultSSSHPForwardStar() {
+  return [](const size_t& _vid, Hypergraph<VertexType,HyperarcType>* _h) {
+    return _h->GetOutgoingHyperarcs(_vid);
+  };
+}
+
 /// Compute the SSSP through a graph from a start node with Dijkstra's algorithm.
 template <typename VertexType, typename HyperarcType>
 MBTOutput
@@ -98,6 +119,7 @@ SBTDijkstra(
   size_t _source,
   SSSHPPathWeightFunction<VertexType,HyperarcType> _weight,
   SSSHPTerminationCriterion _termination,
+  SSSHPForwardStar<VertexType,HyperarcType> _forwardStar,
   const double _sourceWeight = 0) {
 
   // Set up local variables.
@@ -202,7 +224,7 @@ SBTDijkstra(
       break;
 
     // Iterate through the forward start of the current vertex.
-    for(auto hid : _h->GetOutgoingHyperarcs(current.vid)) {
+    for(auto hid : _forwardStar(current.vid,_h)) {
 
       // Fetch the hyperarc from the hypergraph.
       const auto& hyperarc = _h->GetHyperarc(hid);

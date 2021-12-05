@@ -94,7 +94,7 @@ BulletEngine::
 Step(const btScalar _timestep) {
 
   //temporary to check urdf stuff.
-  //return;
+  return;
 
   std::lock_guard<std::mutex> lock(m_lock);
 

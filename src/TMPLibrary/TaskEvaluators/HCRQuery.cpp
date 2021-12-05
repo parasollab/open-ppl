@@ -362,7 +362,9 @@ PerformHyperpathQuery() {
       return hyperarcWeight + tailWeight;
     }); 
 
-  auto output = SBTDijkstra(hypergraph,0,weight,termination);
+  auto forwardStar = DefaultSSSHPForwardStar<TMPVertex,TMPHyperarc>();
+
+  auto output = SBTDijkstra(hypergraph,0,weight,termination,forwardStar);
 
 
   // Check if query found a path.

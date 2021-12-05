@@ -69,6 +69,8 @@ class ROSStepFunction : public FollowPath {
 
     bool m_sim{true};
 
+    std::vector<std::string> m_jointNames;
+
     std::string m_robotLabel;
 
     ros::Publisher m_boxerPub; ///< Publisher for boxer controls.

@@ -163,8 +163,11 @@ class Connection final {
     /// Set the joint for this one to mimic
     void SetMimicConnection(Connection* _mimic);
 
-    /// Get the joint that this one is mimicing
+    /// Get the joint that this one is mimicking
     Connection* GetMimicConnection() const noexcept;
+
+    /// Get the multiplier and offset of the mimic joint
+    std::pair<double,double> GetMimicRelationship() const noexcept;
 
     /// Get a joint range.
     /// @param _i The range to get (0 normally, 1 for second spherical range).

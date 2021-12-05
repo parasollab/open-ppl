@@ -346,6 +346,12 @@ GetMimicConnection() const noexcept {
   return m_mimicConnection;
 }
 
+std::pair<double,double>
+Connection::
+GetMimicRelationship() const noexcept {
+  return std::make_pair(m_mimicMultiplier,m_mimicOffset);
+}
+
 const Range<double>&
 Connection::
 GetJointRange(const size_t _i) const noexcept {

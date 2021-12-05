@@ -19,6 +19,9 @@ using mathtool::EulerAngle;
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+#include <algorithm>
+#include <sstream>
+
 std::vector<double> ROSStepFunction::s_jointStates = {};
 
 /*-------------------------- Construction -----------------------*/
@@ -32,6 +35,20 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
   m_sim = _node.Read("sim",false,m_sim,"Flag indiciating if this is a simulated robot or not.");
 
   m_robotLabel = _node.Read("robotLabel", true, "", "The robot to be controlled.");
+
+  std::string jointNames = _node.Read("jointNames",true,"","The set of joints to control.");
+
+  // Convert string list to vector of strings
+  std::istringstream ss(jointNames);
+  std::string joint;
+  while(ss >> joint) {
+    m_jointNames.push_back(joint);
+  }
+
+  auto compareFunc = [](std::string _a, std::string _b) {
+    return _a < _b;
+  };
+  std::sort(m_jointNames.begin(),m_jointNames.end(),compareFunc);
 
   ros::start();
 
@@ -128,7 +145,7 @@ ReachedWaypointArm(const Cfg& _waypoint) {
     return false;
 
   // Convert joint angles to pmpl representation
-  std::vector<double> jointStates;
+  /*std::vector<double> jointStates;
   for(auto d : js) {
     //auto jv = d/(2*PI);
     auto jv = d/(KDL::PI);
@@ -136,6 +153,39 @@ ReachedWaypointArm(const Cfg& _waypoint) {
     if(jv > 1)
       jv = -2 + jv;
     jointStates.push_back(jv);
+  }*/
+
+  std::vector<double> jointStates;
+  auto iter = js.begin();
+  for(auto& joint : this->m_agent->GetRobot()->GetMultiBody()->GetJoints()) {
+    switch(joint->GetConnectionType()) {
+      case Connection::JointType::NonActuated:
+      {
+        break;
+      }
+      case Connection::JointType::Mimic:
+      {
+        iter++;
+        break;
+      }
+      case Connection::JointType::Spherical:
+      {
+        throw RunTimeException(WHERE) << "Spherical joints not supported here.";
+      }
+      default: 
+      {
+        auto jv = (*iter)/(KDL::PI);
+        //Hack to deal with nonsense ros joint status values that forget about joint limits
+        if(jv > 1)
+          jv = -2 + jv;
+        else if(jv < -1)
+          jv = 2 + jv;
+        jointStates.push_back(jv);
+        iter++;
+      }
+    }
+    if(iter == js.end())
+      break;
   }
 
   //TODO::Check if m_jointState has reached the current waypoint
@@ -189,8 +239,8 @@ MoveToWaypoint(const Cfg& _waypoint, double _dt) {
 
   if(m_robotLabel == "ur5") {
     //ROS HACK BC WRIST 3 IS NOISY AND DUMB
-    auto hack = _waypoint;
-    hack[5] = 0;
+    //auto hack = _waypoint;
+    //hack[5] = 0;
 
     MoveArm(_waypoint.GetData(), _dt);
   }
@@ -240,24 +290,67 @@ MoveArm(std::vector<double> _goal, double _dt) {
     msg.joint_names.push_back("sphere_2_to_link_3");
     */
 
-    msg.joint_names.push_back("elbow_joint");
+    /*msg.joint_names.push_back("elbow_joint");
     msg.joint_names.push_back("shoulder_lift_joint");
     msg.joint_names.push_back("shoulder_pan_joint");
     msg.joint_names.push_back("wrist_1_joint");
     msg.joint_names.push_back("wrist_2_joint");
-    msg.joint_names.push_back("wrist_3_joint");
+    msg.joint_names.push_back("wrist_3_joint");*/
+
+    for(auto joint : m_jointNames) {
+      msg.joint_names.push_back(joint);
+    }
 
     msg.points.resize(1);
 
     //msg.points[0].positions = _goal;
-    for(auto d : _goal) {
+    /*for(auto d : _goal) {
       //msg.points[0].positions.push_back(d*2*PI);
       msg.points[0].positions.push_back(d*KDL::PI);
+    }*/
+
+    auto iter = _goal.begin();
+    std::unordered_map<Connection*,size_t> mimicJointMap;
+    std::unordered_map<Connection*,double> parentJointValueMap;
+
+    for(auto& joint : this->m_agent->GetRobot()->GetMultiBody()->GetJoints()) {
+      switch(joint->GetConnectionType()) {
+        case Connection::JointType::NonActuated:
+          {
+            break;
+          }
+        case Connection::JointType::Mimic:
+          {
+            // Add placeholder value for mimic joint
+            mimicJointMap[joint.get()] = msg.points[0].positions.size();
+            msg.points[0].positions.push_back(0);
+            break;
+          }
+        case Connection::JointType::Spherical:
+          {
+            throw RunTimeException(WHERE) << "Spherical joints not supported here.";
+          }
+        default: 
+          {
+            double value = (*iter)*KDL::PI;
+            msg.points[0].positions.push_back(value);
+            parentJointValueMap[joint.get()] = value;
+            iter++;
+          }
+      }
+    }
+
+    // Backfill mimic joint values
+    for(auto kv : mimicJointMap) {
+      auto parent = kv.first->GetMimicConnection();
+      auto value = parentJointValueMap[parent];
+      auto relation = kv.first->GetMimicRelationship();
+      value = (value * relation.first) + relation.second;;
+      msg.points[0].positions[kv.second] = value;
     }
 
     msg.points[0].time_from_start = ros::Duration(m_time);
 
-    /*
     ROS_INFO_STREAM("Sending command:\n" << msg);
     m_armPub.publish(msg);
     rate.sleep();
@@ -265,7 +358,6 @@ MoveArm(std::vector<double> _goal, double _dt) {
     rate.sleep();
     m_armPub.publish(msg);
     rate.sleep();
-    */
   }
 }
 
