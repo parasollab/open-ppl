@@ -18,19 +18,30 @@ class TaskEvaluatorMethod : public TMPBaseObject {
     virtual ~TaskEvaluatorMethod();
 
     ///@}
-    ///@name MapEvaluator Interface
+    ///@name Task Evaluator Interface
     ///@{
 
     /// Evaluate a stateGraph.
     /// @return True if this stateGraph meets the evaluation criteria.
     bool operator()(Plan* _plan = nullptr);
 
+    virtual void Initialize();
+
     ///@}
   protected:
 
+    ///@name Helper Functions
+    ///@{
+
     virtual bool Run(Plan* _plan = nullptr);
 
+    ///@}
+    ///@name Internal State
+    ///@{
+
     std::string m_sgLabel; ///< StateGraph Label
+
+    ///@}
 
 };
 

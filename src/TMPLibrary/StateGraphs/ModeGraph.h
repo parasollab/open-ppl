@@ -51,7 +51,7 @@ class ModeGraph : public StateGraph {
 
       //std::unordered_map<Robot*,Path*> explicitPaths;
       std::unordered_map<Robot*,std::vector<Cfg>> explicitPaths;
-      std::unordered_map<Robot*,std::pair<VID,VID>> implicitPaths;
+      std::unordered_map<Robot*,std::pair<double,std::pair<VID,VID>>> implicitPaths;
       double cost;
 
     };
@@ -87,6 +87,8 @@ class ModeGraph : public StateGraph {
 
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
 
+    MPSolution* GetMPSolution();
+  
     ///@}
 
   private:
@@ -94,13 +96,15 @@ class ModeGraph : public StateGraph {
     ///@name Helper Functions
     ///@{
 
-    void GenerateModeHypergraph(const State& _start);
+    std::vector<VID> AddStartState(const State& _start);
 
-    void SampleNonActuatedCfgs(const State& _start);
+    void GenerateModeHypergraph(const std::vector<VID>& _initialModes);
+
+    void SampleNonActuatedCfgs(const State& _start,std::set<VID>& _startVIDs,std::set<VID>& _goalVIDs);
 
     void SampleTransitions();
 
-    void GenerateRoadmaps(const State& _start);
+    void GenerateRoadmaps(const State& _start,std::set<VID>& _startVIDs,std::set<VID>& _goalVIDs);
 
     void ConnectTransitions();
 

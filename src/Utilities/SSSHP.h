@@ -128,10 +128,10 @@ SBTDijkstra(
   MBTOutput mbt;
 
   // Initialize tail node counts.
-  std::unordered_map<size_t,size_t> tailNodeCounter; //k_j in paper
-  for(const auto& kv : _h->GetHyperarcMap()) {
-    tailNodeCounter[kv.first] = 0;
-  }
+  //std::unordered_map<size_t,size_t> tailNodeCounter; //k_j in paper
+  //for(const auto& kv : _h->GetHyperarcMap()) {
+  //  tailNodeCounter[kv.first] = 0;
+  //}
  
   // Initialize vertex weights.
   for(const auto& kv : _h->GetVertexMap()) {
@@ -180,8 +180,9 @@ SBTDijkstra(
 
     const double newWeight = _weight(_hyperarc,mbt.weightMap,_target);
 
-    // If the new distance is not better, quit.
-    if(newWeight >= mbt.weightMap[_target])
+    // If the vertex has been seen before and the new distance is not better, quit.
+    auto iter = mbt.weightMap.find(_target);
+    if(iter != mbt.weightMap.end() and newWeight >= mbt.weightMap[_target])
       return;
 
     // Otherwise, update the target distance and add the target to the queue.
@@ -229,11 +230,15 @@ SBTDijkstra(
       // Fetch the hyperarc from the hypergraph.
       const auto& hyperarc = _h->GetHyperarc(hid);
 
-      // Increment the tail counter of the hyperarc
-      tailNodeCounter[hid]++;
-
       // Check if all the vertices in the tail have been visited.
-      if(tailNodeCounter[hid] < hyperarc.tail.size())
+      bool visitedTail = true;
+      for(auto vid : hyperarc.tail) {
+        if(!visited.count(vid)) {
+          visitedTail = false;
+          break;
+        }
+      }
+      if(!visitedTail)
         continue;
 
       // Set hyperarc parent vertex.

@@ -117,6 +117,7 @@ operator()(Interaction* _interaction, State& _start) {
     }
 
     objectPoses[object] = objectPose;
+    objectPose.ConfigureRobot();
   }
 
   // Sample pregrasp joint angles

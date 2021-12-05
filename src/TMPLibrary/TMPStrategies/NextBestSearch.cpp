@@ -3,6 +3,7 @@
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
 #include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
 /*----------------------- Construction -----------------------*/
 
@@ -29,6 +30,8 @@ PlanTasks() {
 
   auto plan = this->GetPlan();
   auto originalDecomp = plan->GetDecomposition();
+  auto te = this->GetTaskEvaluator(m_teLabel);
+  te->Initialize();
 
   // Initialize bounds
   double bestCost = MAX_DBL;
@@ -53,7 +56,11 @@ PlanTasks() {
 double
 NextBestSearch::
 FindTaskPlan(Decomposition* _decomp) {
-  return 0;
+  auto te = this->GetTaskEvaluator(m_teLabel);
+  if(te->operator()())
+    return 0;
+  else 
+    return MAX_DBL;
 }
 
 double

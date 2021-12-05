@@ -17,6 +17,10 @@ TaskEvaluatorMethod(XMLNode& _node) : TMPBaseObject(_node) {
 TaskEvaluatorMethod::
 ~TaskEvaluatorMethod() {}
 
+void
+TaskEvaluatorMethod::
+Initialize() { }
+
 bool
 TaskEvaluatorMethod::
 operator()(Plan* _plan) {
