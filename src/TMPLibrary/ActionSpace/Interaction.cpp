@@ -96,15 +96,19 @@ SetToStagePaths(const std::string& _stage, std::vector<Path*> _paths) {
   m_toStagePaths[_stage] = _paths;
 }
         
-std::vector<GroupTask*>
+std::vector<std::shared_ptr<GroupTask>>
 Interaction::
 GetToStageTasks(const std::string& _stage) const {
-  return m_toStageTasks.at(_stage);
+  auto iter = m_toStageTasks.find(_stage);
+  if(iter == m_toStageTasks.end())
+    return {};
+
+  return iter->second;
 }
     
 void
 Interaction::
-SetToStageTasks(const std::string& _stage, std::vector<GroupTask*> _tasks) {
+SetToStageTasks(const std::string& _stage, std::vector<std::shared_ptr<GroupTask>> _tasks) {
   m_toStageTasks[_stage] = _tasks;
 }
 

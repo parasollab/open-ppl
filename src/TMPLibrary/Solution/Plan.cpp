@@ -158,6 +158,18 @@ GetMPProblem() {
   return m_problem;
 }
 
+double
+Plan::
+GetCost() const {
+  return m_cost;
+}
+
+void
+Plan::
+SetCost(const double& _cost) {
+  m_cost = _cost;
+}
+
 /// StatClass
 StatClass*
 Plan::

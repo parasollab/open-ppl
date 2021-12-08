@@ -204,7 +204,7 @@ operator()(Interaction* _interaction, State& _state) {
 
 /*--------------------------- Helper Functions ------------------------*/
 
-std::vector<GroupTask*>
+std::vector<std::shared_ptr<GroupTask>>
 IndependentPaths::
 GenerateTasks(std::vector<std::string> _conditions, 
               std::unordered_map<Robot*,Constraint*> _startConstraints,
@@ -212,7 +212,7 @@ GenerateTasks(std::vector<std::string> _conditions,
 
   auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
   auto as = this->GetTMPLibrary()->GetActionSpace();
-  std::vector<GroupTask*> groupTasks;
+  std::vector<std::shared_ptr<GroupTask>> groupTasks;
 
   // Create a task for each required robot group
   for(auto label : _conditions) {
@@ -238,7 +238,7 @@ GenerateTasks(std::vector<std::string> _conditions,
       hcr->AddRobotGroup(group);
     }
    
-    GroupTask* groupTask = new GroupTask(group);
+    auto groupTask = shared_ptr<GroupTask>(new GroupTask(group));
 
     // Generate individual robot tasks
     for(auto robot : robots) {
@@ -263,7 +263,7 @@ GenerateTasks(std::vector<std::string> _conditions,
 
 std::vector<IndependentPaths::Path*>
 IndependentPaths::
-PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _label,
+PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solution, std::string _label,
             const std::set<Robot*>& _staticRobots, const State& _state) {
 
   // Grab MPSolution, MPLibrary, and MPProblem.
@@ -306,7 +306,7 @@ PlanMotions(std::vector<GroupTask*> _tasks, MPSolution* _solution, std::string _
       
       // Call the MPLibrary solve function to expand the roadmap
       lib->SetTask(nullptr);
-      lib->Solve(prob,task,_solution,m_mpStrategyLabel, LRand(),_label);
+      lib->Solve(prob,task.get(),_solution,m_mpStrategyLabel, LRand(),_label);
     }
 
     // Check for solution

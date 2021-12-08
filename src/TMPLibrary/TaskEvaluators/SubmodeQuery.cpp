@@ -1,5 +1,9 @@
 #include "SubmodeQuery.h"
 
+#include "MPProblem/TaskHierarchy/Decomposition.h"
+#include "MPProblem/TaskHierarchy/SemanticTask.h"
+
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 
 /*------------------------------ Construction ------------------------------*/
@@ -111,10 +115,7 @@ CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory&
 void
 SubmodeQuery::
 ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
-  // TODO::All of this
 
-  // Backtrace hyperpath from output
- 
   auto last = m_goalVID;
  
   HPElem source = std::make_pair(true,0);
@@ -136,20 +137,82 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
     std::cout << std::endl;
   }
 
-  // TODO::Initialize a decomposition
+  // Initialize a decomposition
+  auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
+  Decomposition* decomp = new Decomposition(top);
+
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto& gh = mg->GetGroundedHypergraph();
+
+  // Save last set of tasks in each hyperarc
+  std::unordered_map<size_t,std::vector<SemanticTask*>> hyperarcTaskMap;
 
   // Convert each hyperarc into a task
   for(auto elem : path) {
     // Skip the vertices
-    if(e.first)
+    if(elem.first)
       continue;
 
-    // TODO::Grab set of tasks from ModeGraph
+    // Convert hyperarc to semantic tasks
 
-    // TODO::Convert to set of sequentially dependent semantic tasks
+    // Get grounded hypergraph hyperarc
+    auto aeh = m_actionExtendedHypergraph.GetHyperarc(elem.second);
+    auto hyperarc = gh.GetHyperarcType(aeh.property);
 
-    // TODO::Add dependencies from other hyperarcs
+    // Grab tasks of preceeding hyperarcs
+    std::vector<SemanticTask*> previousStage;
+    // Check each of the head vertices incoming hyperarcs 
+    // (should only be one per vertex)
+    for(auto vid : aeh.tail) {
+      auto incoming = m_actionExtendedHypergraph.GetIncomingHyperarcs(vid);
+      if(incoming.empty())
+        continue;
+
+      if(incoming.size() > 1)
+        throw RunTimeException(WHERE) << "should never have more than one incoming hyperarc.";
+
+      // Add tasks from previous hyperarc's final stage to preceeding task set
+      for(auto task : hyperarcTaskMap[*incoming.begin()]) {
+        previousStage.push_back(task);
+      }
+    }
+
+    // Convert to set of sequentially dependent semantic tasks
+    auto& taskSet = hyperarc.taskSet;
+    for(auto stage : taskSet) {
+
+      if(stage.empty())
+        continue;
+  
+      std::vector<SemanticTask*> currentStage;
+      for(auto groupTask : stage) {
+        // Create semantic task
+        const std::string label = std::to_string(aeh.property) + ":" 
+                            + std::to_string(aeh.hid) + ":"
+                            + groupTask->GetRobotGroup()->GetLabel() + ":"
+                            + groupTask->GetLabel();
+        auto task = new SemanticTask(label,top.get(),decomp,
+                 SemanticTask::SubtaskRelation::AND,false,true,groupTask);
+
+        currentStage.push_back(task);
+
+        // Add stage depedencies
+        for(auto previous : previousStage) {
+          task->AddDependency(previous,SemanticTask::DependencyType::Completion);
+        }
+      }
+
+      // Iterate stage forward
+      previousStage = currentStage;
+    }
+
+    // Save last stage in hyperarc task map
+    hyperarcTaskMap[aeh.hid] = previousStage;
   }
+
+  auto plan = this->GetPlan();
+  plan->SetDecomposition(decomp);
+  plan->SetCost(_output.weightMap.at(m_goalVID));
 }
 
 std::vector<SubmodeQuery::HPElem>
@@ -292,6 +355,8 @@ HyperpathQuery() {
   m_goalVID = MAX_INT;
 
   auto output = SBTDijkstra(&m_actionExtendedHypergraph,0,weight,termination,forwardStar);
+
+  m_previousSolutions.insert(m_goalVID);
 
   return output;
 }

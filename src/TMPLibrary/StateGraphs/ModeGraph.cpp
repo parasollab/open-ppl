@@ -2,6 +2,8 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
+#include "ConfigurationSpace/GroupLocalPlan.h"
+
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
@@ -163,6 +165,11 @@ GetGroupRoadmap(RobotGroup* _group) {
   return m_solution->GetGroupRoadmap(_group);
 }
 
+MPSolution* 
+ModeGraph::
+GetMPSolution() {
+  return m_solution.get();
+}
 /*---------------------------- Helper Functions ------------------------------*/
 
 std::vector<ModeGraph::VID>
@@ -575,7 +582,7 @@ ConnectTransitions() {
         }
 
         // Create group task
-        GroupTask groupTask(group);
+        auto groupTask = std::shared_ptr<GroupTask>(new GroupTask(group));
 
         for(size_t i = 0; i < goalConstraints.size(); i++) {
           // Create individual robot task
@@ -590,19 +597,19 @@ ConnectTransitions() {
           MPTask task(robot);
           task.SetStartConstraint(std::move(startConstraint.Clone()));
           task.AddGoalConstraint(std::move(goalConstraint.Clone()));
-          groupTask.AddTask(task);
+          groupTask->AddTask(task);
         }
 
         // Query path for task
         lib->SetPreserveHooks(true);
-        lib->Solve(prob,&groupTask,m_solution.get(),m_queryStrategy, LRand(), 
+        lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
             "Query transition path");
         lib->SetPreserveHooks(false);
 
         // Extract cost of path from solution
-        auto path = m_solution->GetGroupPath(groupTask.GetRobotGroup());
+        auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
         Transition transition;
-        //TODO:: Decide if this is necessary 
+        transition.taskSet.push_back({groupTask});
         transition.cost = path->Length();
 
         // Add arc to hypergraph
@@ -946,13 +953,29 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     double stageCost = 0;
 
     // Collect individual robot paths
+    /*std::unordered_map<Robot*,size_t> startVIDs;
+    std::unordered_map<Robot*,size_t> endVIDs;
+    std::unordered_map<Robot*,double> individualWeights;
+    */
+
     for(auto path : paths) {
       const auto& cfgs = path->Cfgs();
   
+      auto robot = path->GetRobot();
+      /*auto rm = m_solution->GetRoadmap(robot);
+
+      auto startVID = grm->AddVertex(cfgs.front());
+      auto goalVID = grm->AddVertex(cfgs.back());
+
+      startVIDs[robot] = startVID;      
+      endVIDs[robot] = goalVID;
+      individualWeights[robot] = path->Length();
+      */
+
       // Skip the first cfgs if this is not the first path
-      bool isFirst = transition.explicitPaths[path->GetRobot()].size() == 0;
+      bool isFirst = transition.explicitPaths[robot].size() == 0;
       for(size_t j = (isFirst) ? 0:1; j < cfgs.size(); j++) {
-        transition.explicitPaths[path->GetRobot()].push_back(cfgs[j]);
+        transition.explicitPaths[robot].push_back(cfgs[j]);
       }
 
       // Update max cost at this stage
@@ -960,6 +983,132 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     }
 
     transition.cost += stageCost;
+
+    // Collect stage tasks
+    auto tasks = _interaction->GetToStageTasks(stages[i]);
+    transition.taskSet.push_back(tasks);
+    
+    /*// Add an edge in the underlying group roadmaps for these paths
+    for(auto task : tasks) {
+      auto group = task->GetRobotGroup();
+      auto grm = m_solution->GetGroupRoadmap(group);
+      if(!grm) {
+        m_solution->AddRobotGroup(group); 
+        grm = m_solution->GetGroupRoadmap(group);
+      }
+
+      GroupCfg start(grm);
+      GroupCfg end(grm);
+      double weight = 0;
+      for(auto robot : group->GetRobots()) {
+        start.SetRobotCfg(robot,std::move(startCfgs[robot]));
+        end.SetRobotCfg(robot,std::move(endCfgs[robot]));
+        weight = std::max(weight,individualWeights[robot]);
+      }
+
+      auto startVID = grm->AddVertex(start);
+      auto goalVID = grm->AddVertex(end);
+
+      GroupLocalPlan<Cfg> edge(grm);
+      edge.SetWeight(weight);
+      grm->AddEdge(startVID,goalVID,edge);
+    }*/
+
+    // Copy the mp solution info into the local solution
+    auto toStageSolution = _interaction->GetToStageSolution(stages[i]);
+    for(auto task : tasks) {
+      auto group = task->GetRobotGroup();
+
+      std::vector<std::unordered_map<size_t,size_t>> vertexMaps;
+
+      // Copy individual robot roadmaps
+      for(auto robot : group->GetRobots()) {
+        auto localRM = m_solution->GetRoadmap(robot);
+        auto interRM = toStageSolution->GetRoadmap(robot);
+
+        vertexMaps.push_back({});
+        std::unordered_map<size_t,size_t>& vertexMap = vertexMaps.back();
+
+        // Copy vertices
+        for(auto vit = interRM->begin(); vit != interRM->end(); vit++) {
+          auto oldVID = vit->descriptor();
+          auto cfg = vit->property();
+          auto newVID = localRM->AddVertex(cfg);
+          vertexMap[oldVID] = newVID;
+        }
+
+        // Copy edges
+        for(auto vit = interRM->begin(); vit != interRM->end(); vit++) {
+          for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+            auto source = vertexMap[eit->source()];
+            auto target = vertexMap[eit->target()];
+            auto edge = eit->property();
+            localRM->AddEdge(source,target,edge);
+          }
+        }
+      }
+
+      // Copy group roadmaps
+      auto localGrm = m_solution->GetGroupRoadmap(group);
+      auto interGrm = toStageSolution->GetGroupRoadmap(group);
+    
+      std::unordered_map<size_t,size_t> groupVertexMap;
+
+      // Copy vertices
+      for(auto vit = interGrm->begin(); vit != interGrm->end(); vit++) {
+        auto oldVID = vit->descriptor();
+        auto oldGcfg = vit->property();
+
+        // Construct group cfg
+        GroupCfg newGcfg(localGrm);
+        for(size_t i = 0; i < group->GetRobots().size(); i++) {
+          auto oldVID = oldGcfg.GetVID(i);
+
+          if(oldVID != MAX_INT) {
+            newGcfg.SetRobotCfg(i,vertexMaps[i][oldVID]);
+          }
+          else {
+            auto cfg = oldGcfg.GetRobotCfg(i);
+            newGcfg.SetRobotCfg(i,std::move(cfg));
+          }
+        }
+
+        // Copy it over to local group roadmap
+        auto newVID = localGrm->AddVertex(newGcfg);
+        groupVertexMap[oldVID] = newVID;
+      }
+
+      // Copy edges
+      for(auto vit = interGrm->begin(); vit != interGrm->end(); vit++) {
+        for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+          auto source = groupVertexMap[eit->source()];
+          auto target = groupVertexMap[eit->target()];
+          auto oldEdge = eit->property();
+
+          // Reconstruct edge in local group roadmap
+          GroupLocalPlan<Cfg> newEdge(localGrm);
+          auto& edgeDescriptors = oldEdge.GetEdgeDescriptors();
+          for(size_t i = 0; i < group->GetRobots().size(); i++) {
+            auto oldEd = edgeDescriptors[i];
+
+            if(oldEd.source() != MAX_INT and oldEd.target() != MAX_INT) {
+              auto source = vertexMaps[i][oldEd.source()];
+              auto target = vertexMaps[i][oldEd.target()];
+              GroupLocalPlanType::ED ed(source,target);
+              newEdge.SetEdge(group->GetRobots()[i],ed);
+            }
+            else {
+              auto edge = (*oldEdge.GetEdge(i));
+              newEdge.SetEdge(i,std::move(edge));
+            }
+          }
+        
+          newEdge.SetWeight(oldEdge.GetWeight());
+
+          localGrm->AddEdge(source,target,newEdge);
+        }
+      }
+    }
   }
 
   std::unordered_map<Robot*,Cfg> startCfgs;

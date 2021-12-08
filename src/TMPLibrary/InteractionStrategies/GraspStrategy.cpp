@@ -91,7 +91,7 @@ operator()(Interaction* _interaction, State& _start) {
 
   // Add composite groups to to grasp solution
   auto objGroup = problem->AddRobotGroup(objects,allObjectsLabel);
-  auto toGraspSolution = _interaction->GetToStageSolution(stages[1]);
+  auto toGraspSolution = _interaction->GetToStageSolution(stages[2]);
   toGraspSolution->AddRobotGroup(objGroup);
   auto objGrm = toGraspSolution->GetGroupRoadmap(objGroup);
 

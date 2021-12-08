@@ -70,6 +70,10 @@ class Plan {
 
     MPProblem* GetMPProblem();
 
+    double GetCost() const;
+
+    void SetCost(const double& _cost);
+
     /// StatClass
     StatClass* GetStatClass();
 
@@ -100,6 +104,8 @@ class Plan {
     std::unique_ptr<StatClass> m_statClass;
 
     MPProblem* m_problem{nullptr};
+
+    double m_cost;
 
     ///@}
 

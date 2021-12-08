@@ -37,27 +37,30 @@ class ModeGraph : public StateGraph {
 
     };
 
-    typedef std::pair<Action*,bool>                          ReversibleAction;
-    typedef Hypergraph<Mode*,ReversibleAction>               ModeHypergraph;
-    typedef size_t                                           VID;
-    typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>        GroupRoadmapType;
-    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
-    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
-    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
-    typedef std::pair<GroupRoadmapType*,VID>                 GroundedVertex;
+    typedef std::pair<Action*,bool>                              ReversibleAction;
+    typedef Hypergraph<Mode*,ReversibleAction>                   ModeHypergraph;
+    typedef size_t                                               VID;
+    typedef GroupLocalPlan<Cfg>                                  GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>            GroupRoadmapType;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>          GroupPathType;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>           Path;
+    typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>>     MPSolution;
+    typedef std::pair<GroupRoadmapType*,VID>                     GroundedVertex;
+    typedef std::vector<std::vector<std::shared_ptr<GroupTask>>> TransitionTaskSet;
 
     struct Transition {
 
       //std::unordered_map<Robot*,Path*> explicitPaths;
       std::unordered_map<Robot*,std::vector<Cfg>> explicitPaths;
       std::unordered_map<Robot*,std::pair<double,std::pair<VID,VID>>> implicitPaths;
+      TransitionTaskSet taskSet;
       double cost;
 
     };
 
     typedef Hypergraph<GroundedVertex,Transition>           GroundedHypergraph;
     typedef Action::State                                   State;
+
 
     ///@}
     ///@name Construction
@@ -170,6 +173,7 @@ class ModeGraph : public StateGraph {
     size_t m_numInteractionSamples;
 
     size_t m_maxAttempts;
+
 
     ///@}
 
