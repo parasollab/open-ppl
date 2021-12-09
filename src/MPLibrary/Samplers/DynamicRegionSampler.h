@@ -92,7 +92,8 @@ class DynamicRegionSampler : public SamplerMethod<MPTraits> {
     /// region kit.
     void LazyInitialize();
 
-
+    /// Construct a directed and pruned workspace skeleton that will be used
+    /// to guide sampling.
     void DirectSkeleton();
 
     ///@}
