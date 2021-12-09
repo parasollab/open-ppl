@@ -63,7 +63,8 @@ class NextBestSearch : public TMPStrategyMethod {
 
     bool LowLevelPlanner(Node& _node, SemanticTask* _task);
 
-    GroupPathType* QueryPath(SemanticTask* _task, const double& _startTime);
+    GroupPathType* QueryPath(SemanticTask* _task, const double& _startTime,
+                             const Node& _node);
 
     std::vector<std::pair<SemanticTask*,Constraint>> ValidationFunction(Node& _node);
 
@@ -81,10 +82,16 @@ class NextBestSearch : public TMPStrategyMethod {
     double RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
               const double _sourceTimestep, const double _bestTimestep) const;
 
-    bool IsEdgeSafe(const VID _source, const VID _target, const GroupCfg& _conflictCfg) const;
-  
+    bool IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
+                    const size_t _startTime) const;
+ 
+    ConstraintSet::iterator LowerBound(size_t _bound) const;
+    ConstraintSet::iterator UpperBound(size_t _bound) const;
+ 
     ///@name Internal State
     ///@{
+
+    std::string m_queryLabel;
 
     std::string m_queryStrategy;
 

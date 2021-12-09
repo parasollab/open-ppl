@@ -19,6 +19,9 @@ NextBestSearch::
 NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
   this->SetName("NextBestSearch");
 
+  m_queryLabel = _node.Read("queryLabel",true,"",
+        "Map Evaluator to use to query individual solutions.");
+
   m_queryStrategy = _node.Read("queryStrategy",true,"",
         "MPStrategy to use to query individual mode solution.");
 
@@ -210,7 +213,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto startTime = current.first;
 
     // Compute new path
-    auto path = QueryPath(task,startTime);
+    auto path = QueryPath(task,startTime,_node);
 
     // Check if path was found
     if(!path)
@@ -260,7 +263,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
 NextBestSearch::GroupPathType*
 NextBestSearch::
-QueryPath(SemanticTask* _task, const double& _startTime) {
+QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto solution = mg->GetMPSolution();
@@ -268,9 +271,27 @@ QueryPath(SemanticTask* _task, const double& _startTime) {
   auto problem = this->GetMPProblem();
   auto group = _task->GetGroupMotionTask()->GetRobotGroup();
 
+  // Configure GroupQuery
+  auto query = dynamic_cast<GroupQuery<MPTraits<Cfg>>*>(
+    lib->GetMapEvaluator(m_queryLabel)
+  );
+
+  query->SetPathWeightFunction(
+    [this](typename GroupRoadmapType::adj_edge_iterator& _ei, 
+           const double _sourceDistance,
+           const double _targetDistance) {
+      return this->RobotGroupPathWeight(_ei,_sourceDistance,_targetDistance);
+    }
+  );
+
+  // Set current constraint set to this nodes constraint for this task
+  m_currentConstraints = &(_node.constraintMap.at(_task));
+
   // Solve task
   lib->Solve(problem,_task->GetGroupMotionTask().get(),solution,m_queryStrategy,
              LRand(),this->GetNameAndLabel()+"::"+_task->GetLabel());
+
+  query->SetPathWeightFunction(nullptr);
  
   auto path = solution->GetGroupPath(group);
   if(path->Size() == 0)
@@ -330,7 +351,13 @@ ValidationFunction(Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-      cfgPaths[task] = path->FullCfgs(lib);
+      auto start = path->GetRoadmap()->GetVertex(path->VIDs().front());
+
+      cfgPaths[task] = {start};
+      const auto cfgs = path->FullCfgs(lib);
+      for(const auto& cfg : cfgs) {
+        cfgPaths[task].push_back(cfg);
+      }
 
       startTimes[task] = startTime;
       endTimes[task] = startTime + cfgPaths[task].size() - 1;
@@ -358,7 +385,9 @@ ValidationFunction(Node& _node) {
         cfg1.GetRobotCfg(robot).ConfigureRobot();
       }
 
-      for(auto iter2 = ++iter1; iter2 != cfgPaths.end(); iter2++) {
+      auto iter2 = iter1;
+      iter2++;
+      for(; iter2 != cfgPaths.end(); iter2++) {
         auto t2 = iter2->first;
 
         // TODO::Check backfill of time gaps between robots doing anything
@@ -379,14 +408,33 @@ ValidationFunction(Node& _node) {
         bool collision = false;
         for(auto robot1 : group1->GetRobots()) {
           for(auto robot2 : group2->GetRobots()) {
+
+            if(robot1 == robot2)
+              continue;
+
             auto multibody1 = robot1->GetMultiBody();
             auto multibody2 = robot2->GetMultiBody();
             CDInfo cdInfo;
             collision = collision or vc->IsMultiBodyCollision(cdInfo,
                 multibody1,multibody2, this->GetNameAndLabel());
 
-            if(collision)
+            if(collision) {
+              if(m_debug) {
+                std::cout << "Collision found between :" 
+                  << robot1->GetLabel()
+                  << " and "
+                  << robot2->GetLabel()
+                  << ", at timestep: "
+                  << t
+                  << " and positions\n\t1: "
+                  << cfg1.GetRobotCfg(robot1).PrettyPrint()
+                  << "\n\t2: "
+                  << cfg2.GetRobotCfg(robot2).PrettyPrint()
+                  << std::endl;
+              }
+
               break;
+            }
           }
         }
 
@@ -477,7 +525,31 @@ SplitNodeFunction(Node& _node,
                     std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
                     CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
                     CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
-  return {};
+
+  std::vector<Node> newNodes;
+
+  for(auto pair : _constraints) {
+    // Unpack constraint info
+    auto task = pair.first;
+    auto constraint = pair.second;
+
+    // Copy parent node
+    Node child = _node;
+  
+    // Add new constraint
+    child.constraintMap[task].insert(constraint);
+
+    // Replan tasks affected by constraint. Skip if no valid replanned path is found
+    if(!_lowLevel(child,task)) 
+      continue;
+
+    // Update the cost and add to set of new nodes
+    double cost = _cost(child);
+    child.cost = cost;
+    newNodes.push_back(child);
+  }
+
+  return newNodes;
 }
     
 void
@@ -496,6 +568,7 @@ InitialSolutionFunction(std::vector<Node>& _root, std::vector<SemanticTask*> _ta
     }
 
     node.solutionMap[task] = nullptr;
+    node.constraintMap[task] = {};
   }
 
   // Plan tasks
@@ -511,12 +584,130 @@ double
 NextBestSearch::
 RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
               const double _sourceTimestep, const double _bestTimestep) const {
-  return 0;
+
+  // Compute time when we will end this edge.
+  const size_t startTime = static_cast<size_t>(std::llround(_sourceTimestep));
+  const size_t endTime = startTime + _ei->property().GetTimeSteps();
+
+  // If this end time isn't better than current best, we won't use it.
+  // Return without checking conflicts to save computation.
+  if(endTime >= static_cast<size_t>(std::llround(_bestTimestep)))
+    return endTime;
+
+  // If there are no current conflicts, there is nothing to check
+  if(!m_currentConstraints)
+    return endTime;
+
+  // There is at least one conflict. Find the set which occurs between this
+  // edge's start and end time.
+  auto lower = LowerBound(startTime);
+  auto upper = UpperBound(endTime);
+
+  // If all of the conflicts happen before or after now, there is nothing to check.
+  const bool beforeNow = lower == m_currentConstraints->end();
+  if(beforeNow)
+    return endTime;
+
+  const bool afterNow = upper == m_currentConstraints->begin();
+  if(afterNow)
+    return endTime;
+
+  // Check the conflict set to see if this edge hits any of them.
+  for(auto iter = lower; iter != upper; ++iter) {
+    // TODO::ADD BACK IN SIPP BEHAVIORS
+
+    // Check if the conflict gcfg hits this edge
+    const bool hitsEdge = !IsEdgeSafe(_ei->source(), _ei->target(), *iter, startTime);
+    if(!hitsEdge)
+      continue;
+
+    if(this->m_debug) {
+      const GroupCfg& gcfg = iter->second;
+      std::cout << "Edge (" << _ei->source() << ","
+                << _ei->target() << ") collides against group "
+                << gcfg.GetGroupRoadmap()->GetGroup()->GetLabel()
+                << " at " << gcfg.PrettyPrint()
+                << "." << std::endl;
+    }
+
+    // The conflict blocks this edge
+    return std::numeric_limits<double>::infinity();
+  }
+
+  // There is no conflict and the end time is better!
+  return endTime;
 }
 
 bool
 NextBestSearch::
-IsEdgeSafe(const VID _source, const VID _target, const GroupCfg& _conflictCfg) const {
-  return false;
+IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
+           const size_t _startTime) const {
+
+  auto lib = this->GetMPLibrary();
+  auto group = lib->GetGroupTask()->GetRobotGroup();
+  auto grm = lib->GetMPSolution()->GetGroupRoadmap(group);
+
+  // Reconstruct edge path at resolution level
+  std::vector<GroupCfg> path;
+  path.push_back(grm->GetVertex(_source));
+  std::vector<GroupCfg> edge = lib->ReconstructEdge(grm,_source,_target);
+  path.insert(path.end(),edge.begin(),edge.end());
+  path.push_back(grm->GetVertex(_target));
+
+  // Get validity checker and make sure it is a collision detection method
+  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits<Cfg>>*>(
+                    lib->GetValidityChecker(m_vcLabel));
+
+  // Configure the other group at the constraint
+  auto constraintCfg = _constraint.second;
+  constraintCfg.ConfigureRobot();
+  auto constraintGroup = constraintCfg.GetGroupRoadmap()->GetGroup();
+
+  // Check each configuration in the resolution-level path for 
+  // collision with the constraint cfg
+  CDInfo cdInfo;
+  for(const auto& gcfg : path) {
+    gcfg.ConfigureRobot();
+
+    for(auto r1 : group->GetRobots()) {
+      auto mb1 = r1->GetMultiBody();
+      for(auto r2 : constraintGroup->GetRobots()) {
+        auto mb2 = r2->GetMultiBody();
+        if(vc->IsMultiBodyCollision(cdInfo,mb1,mb2,this->GetNameAndLabel())) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+    
+NextBestSearch::ConstraintSet::iterator 
+NextBestSearch::
+LowerBound(size_t _bound) const {
+  auto boundIt = m_currentConstraints->end();
+  for(auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
+    if(it->first >= _bound) {
+      boundIt = it;
+      break;
+    }
+  }
+
+  return boundIt;
+}
+
+NextBestSearch::ConstraintSet::iterator 
+NextBestSearch::
+UpperBound(size_t _bound) const {
+  auto boundIt = m_currentConstraints->end();
+  for(auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
+    if(it->first > _bound) {
+      boundIt = it;
+      break;
+    }
+  }
+
+  return boundIt;
 }
 /*------------------------------------------------------------*/

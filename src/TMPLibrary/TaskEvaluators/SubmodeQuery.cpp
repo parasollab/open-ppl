@@ -69,7 +69,7 @@ CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory&
   auto composite = _history;
   auto newStory = m_actionExtendedHypergraph.GetVertexType(_vid).history;
   auto parentHIDs = m_actionExtendedHypergraph.GetIncomingHyperarcs(_vid);
-  if(parentHIDs.size() > 1)
+  if(parentHIDs.size() > 1 and _vid != 1)
     throw RunTimeException(WHERE) << "Unexpected number of incoming hyperarcs.";
 
   // Combine histories
@@ -126,15 +126,36 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
   if(m_debug) {
     std::cout << "Full Path" << std::endl;
+    std::vector<size_t> vids;
     for(auto e : path) {
-      if(e.first) 
+      if(e.first) {
         std::cout << "v";
-      else
+        vids.push_back(e.second);
+      }
+      else {
         std::cout << "h";
+      }
 
       std::cout << e.second << ", ";
     }
+
     std::cout << std::endl;
+
+    auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+    std::cout << "End points" << std::endl;
+    for(auto vid : vids) {
+      auto v = m_actionExtendedHypergraph.GetVertexType(vid).groundedVID;
+      auto vertex = mg->GetGroundedHypergraph().GetVertexType(v);
+      auto grm = vertex.first;
+      if(!grm)
+        continue;
+      auto gvid = vertex.second;
+      auto gcfg = grm->GetVertex(gvid);
+
+      std::cout << vid << ": " << grm->GetGroup()->GetLabel() 
+                << ": " << gcfg.PrettyPrint() << std::endl;
+    }
+
   }
 
   // Initialize a decomposition

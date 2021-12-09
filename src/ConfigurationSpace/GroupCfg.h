@@ -78,6 +78,8 @@ class GroupCfg final {
     bool operator==(const GroupCfg& _other) const noexcept;
     bool operator!=(const GroupCfg& _other) const noexcept;
 
+    bool operator<(const GroupCfg& _other) const noexcept;
+
     ///@}
     ///@name Arithmetic
     ///@{

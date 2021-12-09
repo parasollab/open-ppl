@@ -251,14 +251,16 @@ FullCfgs(MPLibrary* const _lib) const {
     if(!edge.SkipEdge()) {
       std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, source, target);
 
-      // Only grab the intermediate cfgs.
-      auto startIter = edge.begin();
-      startIter++;
+      if(!edge.empty()) {
+        // Only grab the intermediate cfgs.
+        auto startIter = edge.begin();
+        startIter++;
 
-      auto endIter = edge.end();
-      endIter--;
+        auto endIter = edge.end();
+        endIter--;
 
-      out.insert(out.end(), startIter, endIter--);
+        out.insert(out.end(), startIter, endIter--);
+      }
     }
   
     // Insert the next vertex.

@@ -63,6 +63,23 @@ operator!=(const GroupCfg& _other) const noexcept {
   return !(*this == _other);
 }
 
+bool
+GroupCfg::
+operator<(const GroupCfg& _other) const noexcept {
+
+  const auto& robots = GetRobots();
+
+  for(size_t i = 0; i < robots.size(); i++) {
+    const auto& cfg1 = GetRobotCfg(i);
+    const auto& cfg2 = _other.GetRobotCfg(i);
+    if(cfg1 < cfg2)
+      return true;
+    else if(cfg2 < cfg1)
+      return false;
+  }
+
+  return false;
+}
 /*-------------------------------- Arithmetic --------------------------------*/
 
 GroupCfg

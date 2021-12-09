@@ -60,6 +60,8 @@ class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
 
     std::vector<VID> GeneratePath(const VID _start, const VIDSet& _end);
 
+    virtual void SetPathWeightFunction(SSSPPathWeightFunction<GroupRoadmapType> _f);
+
     ///@}
 
   protected:
@@ -84,6 +86,8 @@ class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
     GroupRoadmapType* m_roadmap{nullptr};
 
     size_t m_goalIndex{0};             ///< Index of next unreached goal.
+
+    SSSPPathWeightFunction<GroupRoadmapType> m_weightFunction;
 
     ///@}
 
@@ -229,7 +233,10 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   // Set up the path weight function depending on whether we have any dynamic
   // obstacles.
   SSSPPathWeightFunction<GroupRoadmapType> weight;
-  if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
+  if(m_weightFunction) {
+    weight = m_weightFunction;
+  }
+  else if(!this->GetMPProblem()->GetDynamicObstacles().empty()) {
     weight = [this](typename GroupRoadmapType::adj_edge_iterator& _ei,
                     const double _sourceDistance,
                     const double _targetDistance) {
@@ -267,6 +274,13 @@ GeneratePath(const VID _start, const VIDSet& _goals) {
   std::reverse(path.begin(), path.end());
 
   return path;
+}
+
+template <typename MPTraits>
+void
+GroupQuery<MPTraits>::
+SetPathWeightFunction(SSSPPathWeightFunction<GroupRoadmapType> _f) {
+  m_weightFunction = _f;
 }
 
 /*--------------------------------- Helpers ----------------------------------*/

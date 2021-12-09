@@ -613,7 +613,7 @@ ConnectTransitions() {
         transition.cost = path->Length();
 
         // Add arc to hypergraph
-        m_groundedHypergraph.AddHyperarc({vid1},{vid2},transition);
+        m_groundedHypergraph.AddHyperarc({vid2},{vid1},transition);
       }
     }
   }
