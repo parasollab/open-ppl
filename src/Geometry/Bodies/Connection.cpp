@@ -158,7 +158,8 @@ Connection&
 Connection::
 operator=(const Connection& _other) {
   if(this != &_other) {
-    m_multibody                  = nullptr;
+    //m_multibody                  = nullptr;
+    m_multibody                  = _other.m_multibody;
     m_transformationToBody2      = _other.m_transformationToBody2;
     m_transformationToDHFrame    = _other.m_transformationToDHFrame;
     m_dhParameters               = _other.m_dhParameters;
@@ -172,6 +173,7 @@ operator=(const Connection& _other) {
     m_mimicConnection            = _other.m_mimicConnection;
     m_mimicMultiplier            = _other.m_mimicMultiplier;
     m_mimicOffset                = _other.m_mimicOffset;
+    m_jointValues.resize(_other.m_jointValues.size());
   }
 
   return *this;

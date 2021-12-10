@@ -54,6 +54,7 @@ class ModeGraph : public StateGraph {
       std::unordered_map<Robot*,std::vector<Cfg>> explicitPaths;
       std::unordered_map<Robot*,std::pair<double,std::pair<VID,VID>>> implicitPaths;
       TransitionTaskSet taskSet;
+      std::unordered_map<GroupTask*,std::unordered_set<Formation*>> taskFormations;
       double cost;
 
     };

@@ -548,6 +548,8 @@ ConnectTransitions() {
     if(m_unactuatedModes.count(kv1.first))
       continue;
 
+    auto mode = m_modeHypergraph.GetVertexType(kv1.first);
+
     for(auto vid1 : m_modeGroundedVertices[kv1.first]) {
 
       auto vertex1 = m_groundedHypergraph.GetVertex(vid1);
@@ -600,17 +602,28 @@ ConnectTransitions() {
           groupTask->AddTask(task);
         }
 
+        // Set active formation constraints
+        auto formations = mode->formations;
+        auto grm = m_solution->GetGroupRoadmap(group);
+        grm->SetAllFormationsInactive();
+        for(auto f : formations) {
+          grm->SetFormationActive(f);
+        }
+
         // Query path for task
         lib->SetPreserveHooks(true);
         lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
             "Query transition path");
         lib->SetPreserveHooks(false);
 
+        grm->SetAllFormationsInactive();
+
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
         Transition transition;
         transition.taskSet.push_back({groupTask});
         transition.cost = path->Length();
+        transition.taskFormations[groupTask.get()] = formations;
 
         // Add arc to hypergraph
         m_groundedHypergraph.AddHyperarc({vid2},{vid1},transition);
@@ -950,6 +963,8 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   for(size_t i = 1; i < stages.size(); i++) {
     auto paths = _interaction->GetToStagePaths(stages[i]);
 
+    auto solution = _interaction->GetToStageSolution(stages[i]);
+
     double stageCost = 0;
 
     // Collect individual robot paths
@@ -987,6 +1002,12 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     // Collect stage tasks
     auto tasks = _interaction->GetToStageTasks(stages[i]);
     transition.taskSet.push_back(tasks);
+    // Grab active formations from interaction solutions
+    for(auto task : tasks) {
+      auto grm = solution->GetGroupRoadmap(task->GetRobotGroup());
+      auto formations = grm->GetActiveFormations();
+      transition.taskFormations[task.get()] = formations;
+    }
     
     /*// Add an edge in the underlying group roadmaps for these paths
     for(auto task : tasks) {
@@ -1127,6 +1148,11 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   for(auto kv : start) {
     auto group = kv.first;
     auto grm = m_solution->GetGroupRoadmap(group);
+    // Set mode formations
+    grm->SetAllFormationsInactive();
+    for(auto f : _startModeMap[group]->formations) {
+      grm->SetFormationActive(f);
+    }
 
     GroupCfg gcfg(grm);
     for(auto robot : group->GetRobots()) {
@@ -1135,12 +1161,19 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
     auto vid = grm->AddVertex(gcfg);
     start[group] = std::make_pair(grm,vid);
+
+    grm->SetAllFormationsInactive();
   }
 
-  // Update end state
+  // Update end state 
   for(auto kv : end) {
     auto group = kv.first;
     auto grm = m_solution->GetGroupRoadmap(group);
+    // Set mode formations
+    grm->SetAllFormationsInactive();
+    for(auto f : _endModeMap[group]->formations) {
+      grm->SetFormationActive(f);
+    }
 
     GroupCfg gcfg(grm);
     for(auto robot : group->GetRobots()) {
@@ -1149,6 +1182,8 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
     auto vid = grm->AddVertex(gcfg);
     end[group] = std::make_pair(grm,vid);
+
+    grm->SetAllFormationsInactive();
   }
 
   // Add the start state to the grounded vertices graph

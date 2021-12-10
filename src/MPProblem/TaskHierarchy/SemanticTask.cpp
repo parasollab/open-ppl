@@ -1,5 +1,6 @@
 #include "SemanticTask.h"
 
+#include "ConfigurationSpace/Formation.h"
 #include "Decomposition.h"
 #include "MPProblem/MPProblem.h"
 #include "Utilities/PMPLExceptions.h"
@@ -349,3 +350,15 @@ GetCompletionFunction() {
 	return m_completionFunction;
 }
 */
+    
+const std::unordered_set<Formation*>&
+SemanticTask::
+GetFormations() const {
+  return m_formations;
+}
+
+void
+SemanticTask::
+AddFormation(Formation* _formation) {
+  m_formations.insert(_formation);
+}

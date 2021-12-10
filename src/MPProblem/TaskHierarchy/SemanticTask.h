@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 class Decomposition;
+class Formation;
 class MPProblem;
 
 class SemanticTask {
@@ -156,6 +157,10 @@ class SemanticTask {
     /// Return the relationship between this task's subtasks.
 		SubtaskRelation GetSubtaskRelation();
 
+    const std::unordered_set<Formation*>& GetFormations() const;
+
+    void AddFormation(Formation* _formation);
+
 		///@}
 
 	private:
@@ -198,7 +203,9 @@ class SemanticTask {
 
 		/// Keeps track of all the semantic tasks for each dependency type
 		DependencyMap	m_dependencyMap;
-		
+	
+    std::unordered_set<Formation*> m_formations;
+	
 		///@}
 };
 

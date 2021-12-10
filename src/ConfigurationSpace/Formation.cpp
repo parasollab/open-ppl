@@ -31,7 +31,7 @@ Formation(const Formation& _formation) :
   m_bodyMap(_formation.m_bodyMap) 
 { 
   //BuildMultiBody(); 
-  //InitializePlanningSpace();
+  InitializePlanningSpace();
 }
 
 Formation::
@@ -46,7 +46,7 @@ Formation(Formation&& _formation) :
   m_bodyMap(std::move(_formation.m_bodyMap)) 
 {
   //BuildMultiBody(); 
-  //InitializePlanningSpace();
+  InitializePlanningSpace();
 }
 
 Formation::
@@ -260,6 +260,8 @@ BuildMultiBody() {
   for(size_t j = 0; j < mb->GetNumBodies(); j++) {
     auto body = mb->GetBody(j);
 
+    tree[body] = {};
+
     for(size_t i = 0; i < body->ForwardConnectionCount(); i++) {
       auto& connection = body->GetForwardConnection(i);
       tree[body].push_back(std::make_pair(connection,connection.GetNextBody()));
@@ -283,6 +285,7 @@ BuildMultiBody() {
 
     // Trace new base back to original
     auto body = base;
+    tree[body] = {};
     std::set<std::pair<Body*,Body*>> addedConnections;
     while(body != mb->GetBase()) {
       auto oldBody = body;
@@ -290,6 +293,7 @@ BuildMultiBody() {
       auto connection = body->GetBackwardConnection(0);
 
       body = connection.GetPreviousBody();
+      tree[body] = {};
 
       // Add connection to tree. Will identify inverted connection later.
       tree[oldBody].push_back(std::make_pair(connection,body));
@@ -332,12 +336,14 @@ BuildMultiBody() {
 
     if(!addedBodies.count(source)) {
       AddBody(source);
+      addedBodies.insert(source);
     }
 
     for(auto p : kv.second) { 
       auto target = p.second;
       if(!addedBodies.count(target)) {
         AddBody(target);
+        addedBodies.insert(target);
       }
     }
   } 
@@ -421,7 +427,9 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
 
   auto c = _first->GetConnectionTo(_second);
 
-  size_t oldDOF = m_multibody.DOF();
+  //size_t oldDOF = m_multibody.DOF();
+
+  auto type = connection.GetConnectionType();
 
   auto index = m_multibody.AddJoint(std::move(connection));
   
@@ -429,15 +437,30 @@ AddConnection(Body* _first, Body* _second, Connection& _connection) {
 
   m_jointMap[c] = std::make_pair(sameDirection,index);
 
-  if(m_multibody.DOF() > oldDOF)
-    m_dofMap[c] = std::make_pair(sameDirection,oldDOF);
-
   m_reverseJointMap[index] = c;
+
+  if(type == Connection::JointType::NonActuated or type == Connection::JointType::Mimic)
+    return;
+
+  // Grab current number of dofs in multibody
+  size_t dofCount = 0;
+  for(auto kv : m_dofMap) {
+    dofCount += kv.second.size();
+  }
+
+  m_dofMap[c].push_back(std::make_pair(sameDirection,dofCount));
+
+  if(c->GetConnectionType() == Connection::JointType::Spherical) {
+    m_dofMap[c].push_back(std::make_pair(sameDirection,dofCount+1));
+  }
 }
 
 void
 Formation::
 InitializePlanningSpace() {
+
+  m_multibody.InitializeDOFs(
+      m_leader->GetMPProblem()->GetEnvironment()->GetBoundary());
 
   // Intialize the configuration space of the formation
   m_cspace = CSpaceBoundingBox(m_multibody.DOF());
@@ -457,6 +480,7 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
   std::unordered_map<size_t,double> indexedValues;
 
   for(auto cfg : _cfgs) {
+    cfg.ConfigureRobot();
     auto mb = cfg.GetRobot()->GetMultiBody();
 
     if(cfg.GetRobot() == m_leader) {
@@ -470,24 +494,30 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
     for(const auto& joint : mb->GetJoints()) {
       auto j = joint.get();
 
-      if(j->GetConnectionType() == Connection::JointType::NonActuated) 
+      auto type = j->GetConnectionType();
+
+      if(type == Connection::JointType::NonActuated or type == Connection::JointType::Mimic)
         continue;
       
       //auto index = m_jointMap[j].second;
-      auto index = m_dofMap[j].second;
-      indexedValues[index] = cfg[counter];
-
-      counter++;
+      auto indices = m_dofMap[j];
+      for(auto pair : indices) {
+        auto index = pair.second;
+        indexedValues[index] = cfg[counter];
+        counter++;
+      }
     }
   }
-
+  
   size_t counter = 0;
   
   for(size_t i = 0; i < m_multibody.GetJoints().size(); i++) {
 
     auto joint = m_multibody.GetJoint(i);
 
-    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+    auto type = joint->GetConnectionType();
+
+    if(type == Connection::JointType::NonActuated or type == Connection::JointType::Mimic)
       continue;
 
     auto value = indexedValues[counter];
@@ -495,7 +525,7 @@ ConvertToFormationDOF(std::vector<Cfg> _cfgs) {
     dofs[counter] = value;
     counter++;
   }
-
+  
   return dofs;
 }
     
@@ -551,19 +581,21 @@ ConvertToIndividualCfgs(std::vector<double> _dofs) {
 
       auto robotJoint = mb->GetJoint(i);
 
-      if(robotJoint->GetConnectionType() == Connection::JointType::NonActuated)
+      if(robotJoint->GetConnectionType() == Connection::JointType::NonActuated
+        or robotJoint->GetConnectionType() == Connection::JointType::Mimic)
         continue;
 
       //auto index = m_jointMap[robotJoint].second;
-      auto index = m_dofMap[robotJoint].second;
+      for(auto pairs : m_dofMap[robotJoint]) {
+        auto index = pairs.second;
 
-
-      auto value = _dofs[index + m_multibody.PosDOF() 
+        auto value = _dofs[index + m_multibody.PosDOF() 
                         + m_multibody.OrientationDOF()];
 
-      dofs[counter + mb->PosDOF() + mb->OrientationDOF()] = value;
+        dofs[counter + mb->PosDOF() + mb->OrientationDOF()] = value;
 
-      counter++;
+        counter++;
+      }
     }
    
     Cfg cfg(robot);

@@ -271,6 +271,13 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
   auto problem = this->GetMPProblem();
   auto group = _task->GetGroupMotionTask()->GetRobotGroup();
 
+  // Set formations
+  auto grm = solution->GetGroupRoadmap(group);
+  grm->SetAllFormationsInactive();
+  for(auto f : _task->GetFormations()) {
+    grm->SetFormationActive(f);
+  }
+
   // Configure GroupQuery
   auto query = dynamic_cast<GroupQuery<MPTraits<Cfg>>*>(
     lib->GetMapEvaluator(m_queryLabel)

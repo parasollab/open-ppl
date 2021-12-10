@@ -215,6 +215,10 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
         auto task = new SemanticTask(label,top.get(),decomp,
                  SemanticTask::SubtaskRelation::AND,false,true,groupTask);
 
+        for(auto f : hyperarc.taskFormations[groupTask.get()]) {
+          task->AddFormation(f);
+        }
+
         currentStage.push_back(task);
 
         // Add stage depedencies
