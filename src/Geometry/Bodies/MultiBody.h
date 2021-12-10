@@ -276,6 +276,9 @@ class MultiBody {
     /// @param _worldLink The virtual link connecting the URDF model to the world frame.
     /// @param _fixed A flag indicating if the robot model has a fixed base.
     void TranslateURDF(std::string _urdf, std::string _worldLink, Body::Type
+        _baseType, Body::MovementType _baseMovement, XMLNode& _node);
+
+    void TranslateURDFFile(std::string _urdf, std::string _worldLink, Body::Type
         _baseType, Body::MovementType _baseMovement);
 
     /// Read an external file to add a MultiBody.
@@ -292,7 +295,6 @@ class MultiBody {
     /// @param _fixed Flag indiciating if the link is fixed.
     void AddURDFLink(std::string _name, size_t& _count,
             urdf::Model& _model,
-            std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
             bool _base = false);
 
@@ -347,6 +349,7 @@ class MultiBody {
     std::vector<DofInfo> m_dofInfo;       ///< DofInfo for each motion
     std::vector<double> m_currentDofs;    ///< The current configuration DOFs
 
+    std::unordered_map<std::string,size_t> m_linkMap;
     ///@}
 };
 

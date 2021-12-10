@@ -205,6 +205,40 @@ TranslateURDFJoint(const std::shared_ptr<urdf::Joint>& _joint,
 void
 MultiBody::
 TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
+    _baseType, Body::MovementType _baseMovement, XMLNode& _node) {
+  this->TranslateURDFFile(_filename,_worldLink,_baseType,_baseMovement);
+
+  // Grab transformation to base
+  std::string basePositionString = _node.Read("basePosition", false, "",
+                       "String indiciating the xyz and rpy of the robot base if fixed.");
+  std::istringstream basePositionStream(basePositionString);
+  auto basePosition = std::vector<double>(6);
+  for(size_t i = 0; i < 6; i++) {
+    basePositionStream >> basePosition[i];
+  }
+
+  if(_baseType == Body::Type::Fixed) {
+    this->GetBase()->Configure(this->GenerateBaseTransformation(basePosition,true));
+  }
+
+  // Add any extra joints
+  for(auto& child : _node) {
+    std::string parentBody = child.Read("parentBody",true,"","Name of the parent body.");
+    std::string childBody = child.Read("childBody",true,"","Name of the child body.");
+
+    auto parentIndex = m_linkMap[parentBody];
+    auto childIndex = m_linkMap[childBody];
+
+    Connection connection(this);
+    this->AddJoint(std::move(connection));
+    auto c = m_joints.back().get();
+    c->SetAdjacentBodies(this,parentIndex,childIndex);
+  }
+}
+
+void
+MultiBody::
+TranslateURDFFile(std::string _filename,std::string _worldLink, Body::Type
     _baseType, Body::MovementType _baseMovement) {
   // Parse the urdf.
   urdf::Model model = ParseURDF(_filename);
@@ -247,11 +281,10 @@ TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
 
 
   // Extract bodies
-  std::unordered_map<std::string,size_t> linkMap;
 
   size_t count = 0;
 
-  AddURDFLink(baseName, count, model, linkMap, childMap, true);
+  AddURDFLink(baseName, count, model, childMap, true);
 
   // AddURDFLinke assigns a "fixed" bodyType value by default, here we override that in
   // case the base is not fixed
@@ -270,11 +303,11 @@ TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
       continue;
 
     // Check that both links are inside the linkMap - sometimes thing specified before the world link
-    auto iter = linkMap.find(joint.second->parent_link_name);
-    if(iter == linkMap.end())
+    auto iter = m_linkMap.find(joint.second->parent_link_name);
+    if(iter == m_linkMap.end())
       continue;
 
-    iter = linkMap.find(joint.second->child_link_name);
+    iter = m_linkMap.find(joint.second->child_link_name);
 
     // Check if links in joint have physical geometries or are virtual
     /*if(!model.getLink(joint.second->parent_link_name)->collision.get()
@@ -292,8 +325,8 @@ TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
 
     //body indices
     auto bodyIndices = std::make_pair(
-                          linkMap.at(joint.second->parent_link_name),
-                          linkMap.at(joint.second->child_link_name));
+                          m_linkMap.at(joint.second->parent_link_name),
+                          m_linkMap.at(joint.second->child_link_name));
 
     Vector3d position = {0,0,0};
     MatrixOrientation orientation;
@@ -332,13 +365,13 @@ TranslateURDF(std::string _filename,std::string _worldLink, Body::Type
     auto name = joint->GetMimicConnectionName();
     joint->SetMimicConnection(jointNameMap[name]);
   }
+
 }
 
 void
 MultiBody::
 AddURDFLink(std::string _name, size_t& _count,
             urdf::Model& _model,
-            std::unordered_map<std::string,size_t>& _linkMap,
             std::unordered_map<std::string,std::vector<std::string>>& _childMap,
             bool _base) {
 
@@ -356,7 +389,7 @@ AddURDFLink(std::string _name, size_t& _count,
 
   free->TranslateURDFLink(link,_base);
 
-  _linkMap[link->name] = index;
+  m_linkMap[link->name] = index;
 
   if(_base && free->IsBase()) {
     m_baseIndex = index;
@@ -364,7 +397,7 @@ AddURDFLink(std::string _name, size_t& _count,
   }
 
   for(auto child : _childMap[_name]) {
-    AddURDFLink(child, ++_count, _model, _linkMap, _childMap);
+    AddURDFLink(child, ++_count, _model, _childMap);
   }
 }
 

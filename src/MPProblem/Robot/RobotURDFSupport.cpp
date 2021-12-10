@@ -16,7 +16,7 @@ ReadURDF(const std::string& _filename, std::string _worldLink) {
       bodyType = Body::Type::Planar;
       movementType = Body::MovementType::Rotational;
   }
-  m_multibody->TranslateURDF(_filename, _worldLink, bodyType, movementType);
+  m_multibody->TranslateURDFFile(_filename, _worldLink, bodyType, movementType);
 
   // Initialize the DOF limits and set the robot to a zero starting configuration.
   InitializePlanningSpaces();

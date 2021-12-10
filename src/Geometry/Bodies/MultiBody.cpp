@@ -800,8 +800,8 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
   // Get file extension to determine behavior.
   const std::string ext = _filename.substr(_filename.find_last_of(".") + 1);
 
-  const std::string baseTypeLabel = _node.Read("baseType", false, "", "Body Type");
-  const std::string baseMovementLabel = _node.Read("baseMovement", false, "",
+  const std::string baseTypeLabel = _node.Read("baseType", true, "", "Body Type");
+  const std::string baseMovementLabel = _node.Read("baseMovement", true, "",
       "The movement type for the base");
 
   Body::Type baseType;
@@ -834,7 +834,8 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
     std::string worldLink = _node.Read("worldLink", false, "", "The link name "
                                        "for the world link in a URDF.");
     this->TranslateURDF(_node.GetPath() + _filename, worldLink,
-        baseType,movementType);
+        baseType,movementType,_node);
+
     return;
   }
   #endif

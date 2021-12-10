@@ -60,6 +60,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
 
   m_fixed = _node.Read("fixed", false, m_fixed,
                        "Flag indicating if robot has a fixed base.");
+
   std::string basePositionString = _node.Read("basePosition", false, "",
                        "String indiciating the xyz and rpy of the robot base if fixed.");
   std::istringstream basePositionStream(basePositionString);
@@ -297,7 +298,7 @@ ReadXMLNode(XMLNode& _node) {
       if(mbFile == "")
         ReadMultiBodyXML(child);
       else
-        ReadMultibodyFile(_node.GetPath() + mbFile, _node);
+        ReadMultibodyFile(_node.GetPath() + mbFile, child);
     }
     else if(name == "actuator") {
       // We need a multibody to parse the actuators.
