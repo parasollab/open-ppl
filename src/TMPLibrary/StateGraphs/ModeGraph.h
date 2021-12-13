@@ -57,6 +57,18 @@ class ModeGraph : public StateGraph {
       std::unordered_map<GroupTask*,std::unordered_set<Formation*>> taskFormations;
       double cost;
 
+      bool operator==(const Transition& _other) const {
+        return explicitPaths  == _other.explicitPaths
+           and implicitPaths  == _other.implicitPaths
+           and taskSet        == _other.taskSet
+           and taskFormations == _other.taskFormations
+           and cost           == _other.cost;
+      }
+
+      bool operator!=(const Transition& _other) const {
+        return !(*this == _other);
+      }
+
     };
 
     typedef Hypergraph<GroundedVertex,Transition>           GroundedHypergraph;

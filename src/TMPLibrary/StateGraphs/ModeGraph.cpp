@@ -542,6 +542,11 @@ ConnectTransitions() {
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
 
+  // Set robots virtual
+  for(const auto& robot : prob->GetRobots()) {
+    robot->SetVirtual(true);
+  }
+
   // For each actuated mode in the mode hypergraph, attempt to connect grounded transition samples
   for(auto kv1 : m_modeHypergraph.GetVertexMap()) {
   
@@ -610,6 +615,11 @@ ConnectTransitions() {
           grm->SetFormationActive(f);
         }
 
+        // Set robots not virtual
+        for(auto robot : grm->GetGroup()->GetRobots()) {
+          robot->SetVirtual(false);
+        }
+
         // Query path for task
         lib->SetPreserveHooks(true);
         lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
@@ -618,17 +628,29 @@ ConnectTransitions() {
 
         grm->SetAllFormationsInactive();
 
+        // Set robots back to virtual
+        for(auto robot : grm->GetGroup()->GetRobots()) {
+          robot->SetVirtual(true);
+        }
+
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
         Transition transition;
         transition.taskSet.push_back({groupTask});
-        transition.cost = path->Length();
+        transition.cost = path->TimeSteps();
         transition.taskFormations[groupTask.get()] = formations;
 
         // Add arc to hypergraph
         m_groundedHypergraph.AddHyperarc({vid2},{vid1},transition);
       }
     }
+  }
+
+  // Set robots virtual
+  for(const auto& robot : prob->GetRobots()) {
+    if(this->GetPlan()->GetCoordinator()->GetRobot() == robot.get())
+      continue;
+    robot->SetVirtual(false);
   }
 }
 
@@ -984,7 +1006,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
       startVIDs[robot] = startVID;      
       endVIDs[robot] = goalVID;
-      individualWeights[robot] = path->Length();
+      individualWeights[robot] = path->TimeSteps();
       */
 
       // Skip the first cfgs if this is not the first path
@@ -994,7 +1016,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       }
 
       // Update max cost at this stage
-      stageCost = std::max(stageCost,path->Length());
+      stageCost = std::max(stageCost,double(path->TimeSteps()));
     }
 
     transition.cost += stageCost;
@@ -1211,6 +1233,26 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       reverse.implicitPaths[kv.first] = std::make_pair(kv.second.first,path);
     }
 
+    // Reverse tasks
+    for(auto stage : transition.taskSet) {
+      std::vector<std::shared_ptr<GroupTask>> newTasks;
+      for(auto task : stage) {
+        auto newTask = std::shared_ptr<GroupTask>(new GroupTask(task->GetRobotGroup()));
+        for(auto iter = task->begin(); iter != task->end(); iter++) {
+          auto start = iter->GetGoalConstraints()[0]->Clone();
+          auto goal  = iter->GetStartConstraint()->Clone();
+          MPTask t(iter->GetRobot());
+          t.SetStartConstraint(std::move(start));
+          t.AddGoalConstraint(std::move(goal));
+          newTask->AddTask(t);
+        }
+        newTasks.push_back(newTask);
+      }
+      reverse.taskSet.push_back(newTasks);
+    }
+    std::reverse(reverse.taskSet.begin(),reverse.taskSet.end());
+    reverse.cost = transition.cost;
+
     // Save reverse transition in hypergraph
     m_groundedHypergraph.AddHyperarc(tail,head,reverse);
   }
@@ -1291,7 +1333,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     transition = Transition();
     for(auto path : paths) {
       transition.explicitPaths[path->GetRobot()] = path;
-      transition.cost = std::max(transition.cost,path->Length());
+      transition.cost = std::max(transition.cost,path->TimeSteps());
     }
 
     // Set this as the tail for the next stage

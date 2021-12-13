@@ -116,6 +116,9 @@ void
 SubmodeQuery::
 ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto& gh = mg->GetGroundedHypergraph();
+
   auto last = m_goalVID;
  
   HPElem source = std::make_pair(true,0);
@@ -127,6 +130,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
   if(m_debug) {
     std::cout << "Full Path" << std::endl;
     std::vector<size_t> vids;
+    std::vector<size_t> hids;
     for(auto e : path) {
       if(e.first) {
         std::cout << "v";
@@ -134,6 +138,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
       }
       else {
         std::cout << "h";
+        hids.push_back(e.second);
       }
 
       std::cout << e.second << ", ";
@@ -141,7 +146,6 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
     std::cout << std::endl;
 
-    auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
     std::cout << "End points" << std::endl;
     for(auto vid : vids) {
       auto v = m_actionExtendedHypergraph.GetVertexType(vid).groundedVID;
@@ -156,14 +160,49 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
                 << ": " << gcfg.PrettyPrint() << std::endl;
     }
 
+    std::cout << "Hyperarc costs" << std::endl;
+    for(auto hid : hids) {
+     
+      auto h = m_actionExtendedHypergraph.GetHyperarcType(hid); 
+      auto groundedHA = gh.GetHyperarcType(h);
+      auto hyperarcWeight = groundedHA.cost;
+
+      std::cout << h << ":" << hyperarcWeight << std::endl;
+    }
   }
 
   // Initialize a decomposition
   auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
   Decomposition* decomp = new Decomposition(top);
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto& gh = mg->GetGroundedHypergraph();
+
+  // Map of initial tasks for each group and a flag indicating if it has 
+  // been used as a precedence constraint for any tasks yet.
+  std::unordered_map<RobotGroup*,std::pair<bool,SemanticTask*>> initialTasks;
+
+  // Create initial tasks for each robot group
+  auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(0);
+  for(auto vid : hyperarc.head) {
+    auto aev = m_actionExtendedHypergraph.GetVertexType(vid);
+    auto vertex = gh.GetVertexType(aev.groundedVID);
+    auto grm = vertex.first;
+    auto group = grm->GetGroup();
+    auto gcfg = grm->GetVertex(vertex.second);
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
+    for(auto robot : group->GetRobots()) {
+      auto cfg = gcfg.GetRobotCfg(robot);
+      auto start = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
+      auto goal = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
+      MPTask t(robot);
+      t.SetStartConstraint(std::move(start));
+      t.AddGoalConstraint(std::move(goal));
+      task->AddTask(t);
+    }
+    const std::string label = group->GetLabel()+ ":InitialPath"; 
+    auto st = new SemanticTask(label,top.get(),decomp,
+        SemanticTask::SubtaskRelation::AND,false,true,task);
+    initialTasks[group] = std::make_pair(false,st);
+  }
 
   // Save last set of tasks in each hyperarc
   std::unordered_map<size_t,std::vector<SemanticTask*>> hyperarcTaskMap;
@@ -225,6 +264,15 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
         for(auto previous : previousStage) {
           task->AddDependency(previous,SemanticTask::DependencyType::Completion);
         }
+
+        // Check if group has been given initial dependency
+        auto& init = initialTasks[groupTask->GetRobotGroup()];
+        if(init.first or !init.second)
+          continue;
+
+        // If not, assign the dependency
+        task->AddDependency(init.second,SemanticTask::DependencyType::Completion);
+        init.first = true;
       }
 
       // Iterate stage forward

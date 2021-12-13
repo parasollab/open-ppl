@@ -1,5 +1,7 @@
 #include "InteractionStrategyMethod.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "MPLibrary/MPLibrary.h"
 #include "MPLibrary/MPSolution.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
@@ -14,6 +16,7 @@
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
 #include "TMPLibrary/ActionSpace/ProximityCondition.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 
 /*--------------------------------------- Construction ---------------------------------*/
@@ -598,6 +601,8 @@ ResetStaticRobots() {
   auto prob = this->GetTMPLibrary()->GetMPProblem();
 
   for(const auto& robot : prob->GetRobots()) {
+    if(this->GetPlan()->GetCoordinator()->GetRobot() == robot.get())
+      continue;
     robot->SetVirtual(false);
   }
 }

@@ -70,6 +70,16 @@ class CombinedRoadmap : public StateGraph {
       bool semantic{false};
       GroupLocalPlanType glp;
       std::vector<Path*> paths;
+
+      bool operator==(const TMPHyperarc& _other) const {
+        return semantic == _other.semantic
+           and glp      == _other.glp
+           and paths    == _other.paths;
+      }
+
+      bool operator!=(const TMPHyperarc& _other) const {
+        return !(*this == _other);
+      }
     };
 
     typedef Hypergraph<TMPVertex,TMPHyperarc> TMPHypergraph;

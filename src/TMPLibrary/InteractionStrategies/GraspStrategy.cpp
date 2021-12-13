@@ -296,9 +296,11 @@ ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform) {
   auto base = _objectPose.GetRobot()->GetMultiBody()->GetBase();
   auto baseFrame = base->GetWorldTransformation();  
 
-  auto translation = (-_transform).rotation() * baseFrame.translation() + _transform.translation();
-  auto rotation = (-_transform).rotation() * baseFrame.rotation();
-  return Transformation(translation,rotation);
+  //auto translation = (-_transform).rotation() * baseFrame.translation() + _transform.translation();
+  //auto rotation = (-_transform).rotation() * baseFrame.rotation();
+  //return Transformation(translation,rotation);
+
+  return baseFrame * _transform;
 }
 
 std::unordered_map<Robot*,Transformation>
@@ -337,6 +339,9 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses) {
 
       auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
       auto rotation = (-refBaseTransformation).rotation() * frame.rotation();
+
+      //auto translation = (-frame).rotation() * refBaseTransformation.translation() + (-frame).translation();
+      //auto rotation = (-frame).rotation() * refBaseTransformation.rotation();
 
       auto eeFrame = Transformation(translation,rotation);
       eeFrames[refRobot] = eeFrame;

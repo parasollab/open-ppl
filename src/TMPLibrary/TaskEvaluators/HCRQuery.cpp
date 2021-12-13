@@ -5,6 +5,8 @@
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 #include "TMPLibrary/Solution/Plan.h"
 
+#include "Traits/CfgTraits.h"
+
 #include "Utilities/Hypergraph.h"
 
 /*----------------------- Construction -----------------------*/
@@ -56,7 +58,11 @@ Run(Plan* _plan) {
 HCRQuery::Node 
 HCRQuery::
 PerformCBSQuery() {
-  
+ 
+  // Initialize MPLibrary because it needs a solution object to keep statistics.
+  MPTraits<Cfg>::MPSolution solution(this->GetPlan()->GetCoordinator()->GetRobot());
+  this->GetMPLibrary()->SetMPSolution(&solution);
+ 
   CBSLowLevelPlanner<Robot,CT,Path> lowlevel(
     [this](Node& _node, Robot* _robot) {
       auto hyperpath = this->PerformHyperpathQuery();
@@ -125,6 +131,9 @@ PerformCBSQuery() {
 
   auto node = CBS(robots,validate,split,lowlevel,cost,initial);
 
+  // Uninitialize MPLibrary so we don't have a garbage mp solution floating around
+  // TODO::Grab the statics if you want or pass in a permant mp solution object
+  this->GetMPLibrary()->SetMPSolution(nullptr);
   return node;
 }
 

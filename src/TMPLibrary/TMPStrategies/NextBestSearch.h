@@ -57,6 +57,8 @@ class NextBestSearch : public TMPStrategyMethod {
 
     void ComputeMotions(Node& _bestNode);
 
+    void SaveSolution(const Node& _node);
+
     ///@}
     ///@name CBS Functors
     ///@{

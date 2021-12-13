@@ -26,6 +26,6 @@
   <Actuator label="null" maxMagnitude="1.04"
     limits="0:0 0:0 0:0" type="velocity"/>
 
-  <Controller type="icreatecontroller" debug="false"/>
+  <!--Controller type="icreatecontroller" debug="false"/-->
 
 </Robot>

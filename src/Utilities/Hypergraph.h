@@ -191,9 +191,23 @@ Hypergraph<VertexType,HyperarcType>::
 AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
             HyperarcType _hyperarc) {
 
-  //debug
-  if(_head.count(0) or _tail.count(0))
-    std::cout << "HERE";
+  // Check if hyperarc already exists
+  if(!_head.empty()) {
+    auto vid = *(_head.begin());
+    auto incomingHIDs = GetIncomingHyperarcs(vid);
+    for(auto hid : incomingHIDs) {
+      auto hyperarc = GetHyperarc(hid);
+      if(hyperarc.head == _head and hyperarc.tail == _tail) {
+        // Hyperarc already exists
+        // Make sure there isn't a new property
+        if(hyperarc.property != _hyperarc) {
+          throw RunTimeException(WHERE) << "Tried to add a different value for the hyperarc: "
+                                        << hyperarc.hid;
+        }
+        return hyperarc.hid;
+      }
+    }
+  }
 
   Hyperarc h;
   h.property = _hyperarc;

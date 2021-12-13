@@ -64,7 +64,8 @@ PlanTasks() {
     // TODO::Store solution in solution set
   }
 
-  // TODO::Save plan in proper format
+  // Save plan in proper format
+  SaveSolution(bestNode);
 }
     
 double
@@ -148,7 +149,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
     if(task->GetDependencies().empty() and task != _task) {
       if(kv.second) {
-        endTimes[task] = kv.second->Length();
+        endTimes[task] = kv.second->TimeSteps();
         solved.insert(task);
       }
     }
@@ -187,7 +188,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
         solved.insert(task);
 
       startTimes[task] = startTime;
-      endTimes[task] = startTime + kv.second->Length();
+      endTimes[task] = startTime + kv.second->TimeSteps();
     }
   } while(solved.size() != size);
  
@@ -222,7 +223,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     // Save path to solution
     _node.solutionMap[task] = path;
     solved.insert(task);
-    endTimes[task] = startTime + path->Length();
+    endTimes[task] = startTime + path->TimeSteps();
 
     // Check if new tasks are available to plan
     std::vector<SemanticTask*> toRemove;
@@ -358,18 +359,43 @@ ValidationFunction(Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-      auto start = path->GetRoadmap()->GetVertex(path->VIDs().front());
+      //auto start = path->GetRoadmap()->GetVertex(path->VIDs().front());
 
-      cfgPaths[task] = {start};
+      //cfgPaths[task] = {start};
       const auto cfgs = path->FullCfgs(lib);
       for(const auto& cfg : cfgs) {
         cfgPaths[task].push_back(cfg);
       }
 
+      auto end = path->GetRoadmap()->GetVertex(path->VIDs().back());
+      cfgPaths[task].push_back(end);
+
       startTimes[task] = startTime;
       endTimes[task] = startTime + cfgPaths[task].size() - 1;
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
+
+      // Update the end times of the preceeding tasks
+      auto group1 = task->GetGroupMotionTask()->GetRobotGroup();
+      for(auto dep : task->GetDependencies()) {
+        for(auto t : dep.second) {
+          // Check if robots overlap
+          bool overlap = false;
+          auto group2 = t->GetGroupMotionTask()->GetRobotGroup();
+          for(auto r1 : group1->GetRobots()) {
+            for(auto r2 : group2->GetRobots()) {
+              if(r1 != r2)
+                continue;
+
+              overlap = true;
+              endTimes[t] = startTime;
+              break;
+            }
+            if(overlap)
+              break;
+          }
+        }
+      }
     }
   }
 
@@ -385,7 +411,7 @@ ValidationFunction(Node& _node) {
 
       // Configure first group at timestep
       const auto& path1  = iter1->second;
-      const size_t step1 = std::min(t,endTimes[t1]) - startTimes[t1];
+      const size_t step1 = std::min(t - startTimes[t1],path1.size()-1);
       const auto& cfg1   = path1[step1];
       const auto group1  = cfg1.GetGroupRoadmap()->GetGroup();
       for(auto robot : group1->GetRobots()) {
@@ -404,7 +430,7 @@ ValidationFunction(Node& _node) {
 
         // Configure second group at timestep
         const auto& path2  = iter2->second;
-        const size_t step2 = std::min(t,endTimes[t2]) - startTimes[t2];
+        const size_t step2 = std::min(t - startTimes[t2], path2.size()-1);
         const auto& cfg2   = path2[step2];
         const auto group2  = cfg2.GetGroupRoadmap()->GetGroup();
         for(auto robot : group2->GetRobots()) {
@@ -440,21 +466,16 @@ ValidationFunction(Node& _node) {
                   << std::endl;
               }
 
-              break;
+              // Create constraints
+              std::vector<std::pair<SemanticTask*,Constraint>> constraints;
+              Constraint constraint1 = std::make_pair(t,cfg2);
+              Constraint constraint2 = std::make_pair(t,cfg1);
+              constraints.emplace_back(t1,constraint1);
+              constraints.emplace_back(t2,constraint2);
+              return constraints;
             }
           }
         }
-
-        if(!collision)
-          continue;
-
-        // Create constraints
-        std::vector<std::pair<SemanticTask*,Constraint>> constraints;
-        Constraint constraint1 = std::make_pair(t,cfg2);
-        Constraint constraint2 = std::make_pair(t,cfg1);
-        constraints.emplace_back(t1,constraint1);
-        constraints.emplace_back(t2,constraint2);
-        return constraints;
       }
     }
   }
@@ -477,7 +498,7 @@ CostFunction(Node& _node) {
     startTimes[task] = 0;
 
     if(task->GetDependencies().empty()) {
-      endTimes[task] = kv.second->Length();
+      endTimes[task] = kv.second->TimeSteps();
       solved.insert(task);
     }
   }
@@ -514,7 +535,7 @@ CostFunction(Node& _node) {
       solved.insert(task);
 
       startTimes[task] = startTime;
-      double endTime = startTime + kv.second->Length();
+      double endTime = startTime + kv.second->TimeSteps();
       endTimes[task] = endTime;
       cost = std::max(endTime,cost);
     }
@@ -716,5 +737,116 @@ UpperBound(size_t _bound) const {
   }
 
   return boundIt;
+}
+
+void
+NextBestSearch::
+SaveSolution(const Node& _node) {
+  // TODO::Decide on final format. For now convert to paths for individual robots
+
+  // Collect all of the robots
+  std::unordered_map<Robot*,std::vector<Cfg>> robotPaths;
+  for(auto kv : _node.solutionMap) {
+    auto group = kv.first->GetGroupMotionTask()->GetRobotGroup();
+    for(auto robot : group->GetRobots()) {
+      robotPaths[robot] = {};
+    }
+  }
+
+  
+  std::vector<SemanticTask*> ordering;
+
+  auto lib = this->GetMPLibrary();
+
+  std::unordered_map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
+
+  std::unordered_map<SemanticTask*,size_t> startTimes;
+  std::unordered_map<SemanticTask*,size_t> endTimes;
+  size_t finalTime = 0;
+
+
+  // Build in order sequence of tasks
+  while(ordering.size() < _node.solutionMap.size()) {
+
+    // Find the set of tasks that are ready to be validated
+    for(auto kv :_node.solutionMap) {
+      auto task = kv.first;
+
+      // Skip if already validated
+      if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
+        continue;
+
+      // Check if dependencies have been validated
+      size_t startTime = 0;
+      bool ready = true;
+      for(auto dep : task->GetDependencies()) {
+        for(auto t : dep.second) {
+          if(std::find(ordering.begin(),ordering.end(),t) == ordering.end()) {
+            ready = false;
+            break;
+          }
+
+          startTime = std::max(endTimes[t],startTime);
+        }
+      }
+
+      if(!ready)
+        continue;
+
+      // Recreate the paths at resolution level
+      const auto& path = kv.second;
+      //auto start = path->GetRoadmap()->GetVertex(path->VIDs().front());
+
+      //cfgPaths[task] = {start};
+      const auto cfgs = path->FullCfgs(lib);
+      for(const auto& cfg : cfgs) {
+        cfgPaths[task].push_back(cfg);
+      }
+
+      auto end = path->GetRoadmap()->GetVertex(path->VIDs().back());
+      cfgPaths[task].push_back(end);
+
+      startTimes[task] = startTime;
+      endTimes[task] = startTime + cfgPaths[task].size() - 1;
+      finalTime = std::max(endTimes[task],finalTime);
+      ordering.push_back(task);
+
+      // Update the end times of the preceeding tasks
+      for(auto dep : task->GetDependencies()) {
+        for(auto t : dep.second) {
+          endTimes[t] = startTime;
+        }
+      }
+    }
+  }
+
+  // Add the cfgs to the paths
+  for(size_t t = 0; t < finalTime; t++) {
+    for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
+      auto t1 = iter1->first;
+
+      // TODO::Check backfill of time gaps between robots doing anything
+      // Check that timesteps lies within task range
+      if(startTimes[t1] > t or endTimes[t1] < t)
+        continue;
+
+      // Configure first group at timestep
+      const auto& path1  = iter1->second;
+      const size_t step1 = std::min(t - startTimes[t1],path1.size()-1);
+      const auto& cfg1   = path1[step1];
+      const auto& group1 = cfg1.GetGroupRoadmap()->GetGroup();
+      for(auto robot : group1->GetRobots()) {
+        robotPaths[robot].push_back(cfg1.GetRobotCfg(robot));
+      }
+    }
+  }
+
+  for(auto kv : robotPaths) {
+    std::cout << "PATH FOR: " << kv.first << std::endl;
+    std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
+    for(auto cfg : kv.second) {
+      std::cout << "\t" << cfg.PrettyPrint() << std::endl;
+    }
+  }
 }
 /*------------------------------------------------------------*/

@@ -55,6 +55,9 @@ class GroupPath final {
     /// Get the VIDs in the path.
     const std::vector<VID>& VIDs() const noexcept;
 
+		/// Get the VIDs and timesteps waiting in the path.
+		const std::pair<std::vector<VID>,std::vector<size_t>> VIDsWaiting() const noexcept;
+
     /// Get a copy of the Cfgs in the path.
     /// @warning If the cfgs in the roadmap are later altered (i.e., if the DOF
     ///          values or labels are edited), this copy will be out-of-date.
@@ -68,6 +71,15 @@ class GroupPath final {
     ///         intermediates between the roadmap nodes.
     template <typename MPLibrary>
     const std::vector<GroupCfg> FullCfgs(MPLibrary* const _lib) const;
+
+    /// Get the current full Cfg path with wait times. Steps are spaced one
+    /// environment resolution apart. This is not cached due to its size and
+    /// infrequent usage.
+    /// @param _lib The planning library to use.
+    /// @return The full path of configurations, including local-plan
+    ///         intermediates between the roadmap nodes and waiting.
+    template <typename MPLibrary>
+    const std::vector<GroupCfg> FullCfgsWithWait(MPLibrary* const _lib) const;
 
     /// Append another path to the end of this one.
     /// @param _p The path to append.
@@ -94,6 +106,11 @@ class GroupPath final {
     /// Clear cached data, but leave the VIDs.
     void FlushCache();
 
+    /// Set the wait times at each vertex in path
+    /// Used in Safe Interval Path Planning
+    void SetWaitTimes(std::vector<size_t> _waitTimes);
+
+    std::vector<size_t> GetWaitTimes();
     ///@}
 
   private:
@@ -109,6 +126,8 @@ class GroupPath final {
 
     GroupRoadmapType* const m_roadmap;     ///< The roadmap.
     std::vector<VID> m_vids;               ///< The vids of the path configurations.
+    std::vector<size_t> m_waitingTimesteps; ///< The number of timesteps to wait at each vid.
+		size_t m_finalWaitTimeSteps{0}; ///< Temp - need to move this logic into the waiting timesteps.
 
     mutable std::vector<GroupCfg> m_cfgs;  ///< The path configurations.
     mutable bool m_cfgsCached{false};      ///< Are the current cfgs correct?
@@ -269,6 +288,52 @@ FullCfgs(MPLibrary* const _lib) const {
   return out;
 }
 
+template <typename MPTraits>
+template <typename MPLibrary>
+const std::vector<typename MPTraits::GroupCfgType>
+GroupPath<MPTraits>::
+FullCfgsWithWait(MPLibrary* const _lib) const {
+  if(m_vids.empty())
+    return std::vector<GroupCfg>();
+
+  if(m_waitingTimesteps.empty())
+    return FullCfgs(_lib);
+
+  // Insert the first vertex.
+  size_t vid = m_vids.front();
+  GroupCfg vertex = m_roadmap->GetVertex(vid);
+  std::vector<GroupCfg> out = {vertex};
+
+  // Insert first vertex however many timesteps it waits
+  //for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
+  for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
+    out.push_back(vertex);
+  }
+
+  auto cnt = 1;
+  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
+    // Insert intermediates between vertices.
+
+    std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    out.insert(out.end(), edge.begin(), edge.end());
+
+    // Insert the next vertex.
+    vid = *(it+1);
+    vertex = m_roadmap->GetVertex(vid);
+    out.push_back(vertex);
+    for(size_t i = 0; i < m_waitingTimesteps[cnt]; ++i) {
+      out.push_back(vertex);
+    }
+
+    cnt++;
+  }
+
+  auto last = out.back();
+  for(size_t i = 0; i < m_finalWaitTimeSteps; i++) {
+    out.push_back(last);
+  }
+  return out;
+}
 
 template <typename MPTraits>
 GroupPath<MPTraits>&
@@ -334,6 +399,7 @@ GroupPath<MPTraits>::
 Clear() {
   FlushCache();
   m_vids.clear();
+  m_waitingTimesteps.clear();
 }
 
 
@@ -345,6 +411,26 @@ FlushCache() {
   m_timestepsCached = false;
   m_cfgsCached = false;
   m_cfgs.clear();
+}
+
+template <typename MPTraits>
+void
+GroupPath<MPTraits>::
+SetWaitTimes(std::vector<size_t> _waitTimes) {
+  m_waitingTimesteps = _waitTimes;
+
+  // Check to make sure that size matches path length
+  if(m_waitingTimesteps.size() != m_vids.size()) {
+    throw RunTimeException(WHERE) << "Size of timestep vector does not "
+                                  << "match path length";
+  }
+}
+
+template <typename MPTraits>
+std::vector<size_t>
+GroupPath<MPTraits>::
+GetWaitTimes() {
+  return m_waitingTimesteps;
 }
 
 /*--------------------------------- Helpers ----------------------------------*/

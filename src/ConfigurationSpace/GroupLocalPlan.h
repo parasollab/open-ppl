@@ -211,6 +211,16 @@ template <typename CfgType>
 bool
 GroupLocalPlan<CfgType>::
 operator==(const GroupLocalPlan& _other) const noexcept {
+   
+  // Check that both edges have a group map
+  // If neither do, return true
+  if(!m_groupMap and !_other.m_groupMap)
+    return true;
+
+  // If only one does, return false
+  if(!m_groupMap or !_other.m_groupMap)
+    return false;
+ 
   // Ensure the edges belong to the same group.
   if(m_groupMap->GetGroup() != _other.m_groupMap->GetGroup())
     return false;
