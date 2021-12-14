@@ -30,6 +30,11 @@ class NextBestSearch : public TMPStrategyMethod {
     typedef std::set<Constraint> ConstraintSet;
     typedef std::map<SemanticTask*,ConstraintSet> ConstraintMap;
 
+    typedef std::unordered_map<size_t,std::vector<Range<double>>> VertexIntervals;
+
+    typedef std::unordered_map<size_t,std::unordered_map<
+                  size_t,std::vector<Range<double>>>> EdgeIntervals;
+
     ///@}
     ///@name Construction
     ///@{
@@ -58,6 +63,8 @@ class NextBestSearch : public TMPStrategyMethod {
     void ComputeMotions(Node& _bestNode);
 
     void SaveSolution(const Node& _node);
+
+    void ComputeIntervals(GroupRoadmapType* _grm);
 
     ///@}
     ///@name CBS Functors
@@ -103,6 +110,11 @@ class NextBestSearch : public TMPStrategyMethod {
 
     const ConstraintSet* m_currentConstraints{nullptr};
     std::set<ConstraintMap> m_constraintCache;
+
+    std::string m_safeIntervalLabel;
+    
+    VertexIntervals m_vertexIntervals;
+    EdgeIntervals m_edgeIntervals;
 
     ///@}
 

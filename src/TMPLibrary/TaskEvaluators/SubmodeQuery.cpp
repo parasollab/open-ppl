@@ -473,6 +473,9 @@ HyperpathPathWeightFunction(
     tailWeight = std::max(tailWeight,cost);
   }
 
+  //double newWeight = (tailWeight == 0) ? hyperarcWeight
+  //                                     : hyperarcWeight + std::max(0.0,tailWeight - 1);
+  //return newWeight;
   return hyperarcWeight + tailWeight;
 }
 

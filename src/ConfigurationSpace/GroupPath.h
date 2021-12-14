@@ -273,12 +273,10 @@ FullCfgs(MPLibrary* const _lib) const {
       if(!edge.empty()) {
         // Only grab the intermediate cfgs.
         auto startIter = edge.begin();
-        startIter++;
 
         auto endIter = edge.end();
-        endIter--;
 
-        out.insert(out.end(), startIter, endIter--);
+        out.insert(out.end(), startIter, endIter);
       }
     }
   

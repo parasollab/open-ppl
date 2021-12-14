@@ -43,6 +43,9 @@ class GroupSIPPMethod : public SIPPMethod<MPTraits> {
                 std::unordered_map<size_t,
                     std::vector<Range<double>>>> EdgeIntervals;
 
+    typedef std::unordered_map<size_t,
+                    std::vector<Range<double>>> VertexIntervals;
+
     ///@}
     ///@name Classes and Structures
     ///@{
@@ -113,8 +116,11 @@ class GroupSIPPMethod : public SIPPMethod<MPTraits> {
     /// Set the end time of the query
     void SetEndTime(double _end);
 
+    /// Set the vertex intervals to use to generate a path
+    void SetVertexIntervals(VertexIntervals _vertexIntervals);
+
     /// Set the edge intervals to use to generate a path
-    virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) override;
+    void SetEdgeIntervals(EdgeIntervals _edgeIntervals);
 
     /// Set the minimum end time of a path
     virtual void SetMinEndtime(double _minEndtime) override;
@@ -202,15 +208,13 @@ class GroupSIPPMethod : public SIPPMethod<MPTraits> {
 
     std::unordered_map<size_t,double> m_costToGoMap;
 
-    std::unordered_map<size_t, std::vector<Range<double>>> m_roadmapIntervals;
+    VertexIntervals m_roadmapIntervals;
 
     std::unordered_map<size_t,std::unordered_set<size_t>> m_sipp_mappings;
 
     std::unordered_map<size_t, bool> m_changed;
 
-    std::unordered_map<size_t,
-                   unordered_map<size_t,
-                   std::vector<Range<double>>>> m_edgeIntervals;
+    EdgeIntervals m_edgeIntervals;
 
     std::vector<size_t> m_waitTimesteps;
     std::unordered_map<size_t,std::unordered_map<size_t, double>> m_transitionWait;
@@ -218,7 +222,7 @@ class GroupSIPPMethod : public SIPPMethod<MPTraits> {
     size_t m_goalIndex{0};
     double m_startTime{0};
     double m_endTime{0};
-    double m_minEndtime{0};
+    double m_minEndTime{0};
     double m_pathCost{0};
     size_t m_currentGoalVID{0};
 
@@ -444,7 +448,7 @@ GeneratePath(const size_t _start, const size_t _goal) {
         const SSSPOutput<SIPPGraph>& _sssp) {
         auto sipp_state = _vi->property();
        if(_goal == sipp_state.vid && this->SatisfyConstraints())
-        std::cout << "pathCost: " << this->m_pathCost << ", minEndtime: " <<  m_minEndtime << std::endl;
+        std::cout << "pathCost: " << this->m_pathCost << ", minEndtime: " <<  m_minEndTime << std::endl;
         return  (_goal == sipp_state.vid && this->SatisfyConstraints()) ? SSSPTermination::EndSearch
                                           : SSSPTermination::Continue;
       }
@@ -481,11 +485,13 @@ GeneratePath(const size_t _start, const size_t _goal) {
                           weight,
                           heuristic,
                           neighbors,
-                          termination);
+                          termination,
+                          m_startTime);
 
   auto current = output.ordering.back();
   auto lastState = m_sippGraph->GetVertex(current);
-  if(_goal != lastState.vid) {
+
+  if(_goal != lastState.vid or !SatisfyConstraints()) {
     std::cout << "Failed to find a path." <<std::endl;
     return std::vector<size_t>();
   }
@@ -539,8 +545,13 @@ Reset() {
   m_transitionWait.clear();
   m_waitTimesteps.clear();
 
-  if(this->GetPath())
+  m_pathCost = 0;
+
+  if(this->GetTask() and this->GetPath())
     this->GetPath()->Clear();
+
+  if(this->GetGroupTask() and this->GetGroupPath())
+    this->GetGroupPath()->Clear();
 }
 
 template <typename MPTraits>
@@ -980,25 +991,34 @@ template <typename MPTraits>
 void
 GroupSIPPMethod<MPTraits>::
 Cleanup() {
-
 }
 
+template <typename MPTraits>
+void
+GroupSIPPMethod<MPTraits>::
+SetVertexIntervals(typename GroupSIPPMethod<MPTraits>::VertexIntervals _vertexIntervals) {
+  m_roadmapIntervals = _vertexIntervals;
+}
 
 template <typename MPTraits>
 void
 GroupSIPPMethod<MPTraits>::
 SetEdgeIntervals(typename GroupSIPPMethod<MPTraits>::EdgeIntervals _edgeIntervals){
-
   m_edgeIntervals = _edgeIntervals;
 }
 
+template <typename MPTraits>
+void
+GroupSIPPMethod<MPTraits>::
+SetStartTime(double _start) {
+  m_startTime = _start;
+}
 
 template <typename MPTraits>
 void
 GroupSIPPMethod<MPTraits>::
 SetMinEndtime(double _minEndtime){
-
-  m_minEndtime = _minEndtime;
+  m_minEndTime = _minEndtime;
 }
 
 
@@ -1006,8 +1026,7 @@ template <typename MPTraits>
 bool
 GroupSIPPMethod<MPTraits>::
 SatisfyConstraints(){
-
-  return m_pathCost > m_minEndtime;
+  return m_pathCost >= m_minEndTime;
 }
 
 #endif

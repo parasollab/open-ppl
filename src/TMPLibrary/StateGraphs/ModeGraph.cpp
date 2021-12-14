@@ -1147,6 +1147,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
           }
         
           newEdge.SetWeight(oldEdge.GetWeight());
+          newEdge.SetTimeSteps(oldEdge.GetTimeSteps());
 
           localGrm->AddEdge(source,target,newEdge);
         }

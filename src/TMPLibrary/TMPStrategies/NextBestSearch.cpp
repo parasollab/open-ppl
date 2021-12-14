@@ -1,5 +1,7 @@
 #include "NextBestSearch.h"
 
+#include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
+
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
 #include "TMPLibrary/Solution/Plan.h"
@@ -27,6 +29,9 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_vcLabel = _node.Read("vcLabel",true,"",
         "Validity checker to use for multirobot collision checking.");
+
+  m_safeIntervalLabel = _node.Read("safeIntervalLabel",true,"",
+        "Safe interval tool to use for compute safe intervals of roadmap.");
 }
 
 NextBestSearch::
@@ -132,6 +137,29 @@ ComputeMotions(Node& _bestNode) {
     _bestNode = solution;
 }
 
+void
+NextBestSearch::
+ComputeIntervals(GroupRoadmapType* _grm) {
+  MethodTimer mt(this->GetPlan()->GetStatClass(),
+    this->GetNameAndLabel()+"::ComputeIntervals");
+
+  m_vertexIntervals.clear();
+  m_edgeIntervals.clear();
+
+  auto si = this->GetMPLibrary()->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
+
+  for(auto vit = _grm->begin(); vit != _grm->end(); vit++) {
+
+    m_vertexIntervals[vit->descriptor()] = si->ComputeIntervals(
+        vit->property());
+
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+      m_edgeIntervals[eit->source()][eit->target()] = si->ComputeIntervals(
+            eit->property(),eit->source(),eit->target(),_grm);
+    }
+  }
+}
+
 /*----------------------- CBS Functors -----------------------*/
 
 bool 
@@ -149,7 +177,11 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
     if(task->GetDependencies().empty() and task != _task) {
       if(kv.second) {
-        endTimes[task] = kv.second->TimeSteps();
+        auto timesteps = kv.second->TimeSteps();
+        if(timesteps > 0)
+          endTimes[task] = timesteps-1;
+        else
+          endTimes[task] = 0;
         solved.insert(task);
       }
     }
@@ -188,7 +220,12 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
         solved.insert(task);
 
       startTimes[task] = startTime;
-      endTimes[task] = startTime + kv.second->TimeSteps();
+      //endTimes[task] = startTime + kv.second->TimeSteps();
+      auto timesteps = kv.second->TimeSteps();
+      if(timesteps > 0)
+        endTimes[task] = startTime + timesteps;// - 1;
+      else 
+        endTimes[task] = startTime;
     }
   } while(solved.size() != size);
  
@@ -223,7 +260,12 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     // Save path to solution
     _node.solutionMap[task] = path;
     solved.insert(task);
-    endTimes[task] = startTime + path->TimeSteps();
+
+    auto timesteps = path->TimeSteps();
+    if(timesteps > 0)
+      endTimes[task] = startTime + timesteps;// - 1;
+    else 
+      endTimes[task] = startTime;
 
     // Check if new tasks are available to plan
     std::vector<SemanticTask*> toRemove;
@@ -280,7 +322,7 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
   }
 
   // Configure GroupQuery
-  auto query = dynamic_cast<GroupQuery<MPTraits<Cfg>>*>(
+  /*auto query = dynamic_cast<GroupQuery<MPTraits<Cfg>>*>(
     lib->GetMapEvaluator(m_queryLabel)
   );
 
@@ -290,16 +332,49 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
            const double _targetDistance) {
       return this->RobotGroupPathWeight(_ei,_sourceDistance,_targetDistance);
     }
-  );
+  );*/
 
   // Set current constraint set to this nodes constraint for this task
   m_currentConstraints = &(_node.constraintMap.at(_task));
+
+  // Turn conflicts into dyanmic obstacles
+  double lastTimestep = 0;
+  for(auto c : *m_currentConstraints) {
+
+    lastTimestep = std::max(double(c.first),lastTimestep);
+
+    if(false) {
+      std::cout << "Check for caching here" << std::endl;
+    }
+    else {
+      RobotGroup* constraintGroup = c.second.GetGroupRoadmap()->GetGroup();
+      for(auto robot : constraintGroup->GetRobots()) {
+        auto cfg = c.second.GetRobotCfg(robot);
+        std::vector<Cfg> path = {cfg,cfg,cfg};
+        DynamicObstacle dob(cfg.GetRobot(),path);
+        dob.SetStartTime(c.first-1);
+        this->GetMPProblem()->AddDynamicObstacle(std::move(dob));
+      } 
+    }
+  }
+
+  ComputeIntervals(grm);
+
+  auto q = dynamic_cast<GroupSIPPMethod<MPTraits<Cfg>>*>(
+    this->GetMPLibrary()->GetMapEvaluator(m_queryLabel)
+  );
+  q->SetMinEndtime(lastTimestep);
+  q->SetStartTime(_startTime);
+
+  q->SetEdgeIntervals(m_edgeIntervals);
+  q->SetVertexIntervals(m_vertexIntervals);
 
   // Solve task
   lib->Solve(problem,_task->GetGroupMotionTask().get(),solution,m_queryStrategy,
              LRand(),this->GetNameAndLabel()+"::"+_task->GetLabel());
 
-  query->SetPathWeightFunction(nullptr);
+  //query->SetPathWeightFunction(nullptr);
+  this->GetMPProblem()->ClearDynamicObstacles();
  
   auto path = solution->GetGroupPath(group);
   if(path->Size() == 0)
@@ -359,19 +434,20 @@ ValidationFunction(Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-      //auto start = path->GetRoadmap()->GetVertex(path->VIDs().front());
-
-      //cfgPaths[task] = {start};
-      const auto cfgs = path->FullCfgs(lib);
-      for(const auto& cfg : cfgs) {
-        cfgPaths[task].push_back(cfg);
+      
+      const auto cfgs = path->FullCfgsWithWait(lib);
+      for(size_t i = 0; i < cfgs.size(); i++) {
+        cfgPaths[task].push_back(cfgs[i]);
       }
 
-      auto end = path->GetRoadmap()->GetVertex(path->VIDs().back());
-      cfgPaths[task].push_back(end);
-
       startTimes[task] = startTime;
-      endTimes[task] = startTime + cfgPaths[task].size() - 1;
+
+      auto timesteps = cfgPaths[task].size();
+      if(timesteps > 0)
+        endTimes[task] = startTime + timesteps - 1;
+      else
+        endTimes[task] = startTime;
+
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
 
@@ -498,7 +574,11 @@ CostFunction(Node& _node) {
     startTimes[task] = 0;
 
     if(task->GetDependencies().empty()) {
-      endTimes[task] = kv.second->TimeSteps();
+      auto timesteps = kv.second->TimeSteps();
+      if(timesteps > 0)
+        endTimes[task] = timesteps;// - 1;
+      else
+        endTimes[task] = 0;
       solved.insert(task);
     }
   }
@@ -535,7 +615,13 @@ CostFunction(Node& _node) {
       solved.insert(task);
 
       startTimes[task] = startTime;
-      double endTime = startTime + kv.second->TimeSteps();
+      //double endTime = startTime + kv.second->TimeSteps();
+      auto timesteps = kv.second->TimeSteps();
+      double endTime;
+      if(timesteps > 0)
+        endTime = startTime + timesteps;// - 1;
+      else 
+        endTime = startTime;
       endTimes[task] = endTime;
       cost = std::max(endTime,cost);
     }
@@ -600,7 +686,8 @@ InitialSolutionFunction(std::vector<Node>& _root, std::vector<SemanticTask*> _ta
   }
 
   // Plan tasks
-  _lowLevel(node,initTask);
+  if(!_lowLevel(node,initTask))
+    throw RunTimeException(WHERE) << "No initial plan.";
 
   // Set node cost
   node.cost = _cost(node);
@@ -764,7 +851,6 @@ SaveSolution(const Node& _node) {
   std::unordered_map<SemanticTask*,size_t> endTimes;
   size_t finalTime = 0;
 
-
   // Build in order sequence of tasks
   while(ordering.size() < _node.solutionMap.size()) {
 
@@ -795,19 +881,19 @@ SaveSolution(const Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-      //auto start = path->GetRoadmap()->GetVertex(path->VIDs().front());
 
-      //cfgPaths[task] = {start};
-      const auto cfgs = path->FullCfgs(lib);
-      for(const auto& cfg : cfgs) {
-        cfgPaths[task].push_back(cfg);
+      const auto cfgs = path->FullCfgsWithWait(lib);
+      for(size_t i = 0; i < cfgs.size(); i++) {
+        cfgPaths[task].push_back(cfgs[i]);
       }
 
-      auto end = path->GetRoadmap()->GetVertex(path->VIDs().back());
-      cfgPaths[task].push_back(end);
-
       startTimes[task] = startTime;
-      endTimes[task] = startTime + cfgPaths[task].size() - 1;
+      auto timesteps = cfgPaths[task].size();
+      if(timesteps > 0)
+        endTimes[task] = startTime + cfgPaths[task].size() - 1;
+      else
+        endTimes[task] = startTime;
+
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
 
@@ -821,7 +907,9 @@ SaveSolution(const Node& _node) {
   }
 
   // Add the cfgs to the paths
-  for(size_t t = 0; t < finalTime; t++) {
+  for(size_t t = 0; t <= finalTime; t++) {
+    std::unordered_set<Robot*> used;
+
     for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
       auto t1 = iter1->first;
 
@@ -834,8 +922,12 @@ SaveSolution(const Node& _node) {
       const auto& path1  = iter1->second;
       const size_t step1 = std::min(t - startTimes[t1],path1.size()-1);
       const auto& cfg1   = path1[step1];
-      const auto& group1 = cfg1.GetGroupRoadmap()->GetGroup();
+      const auto group1  = cfg1.GetGroupRoadmap()->GetGroup();
       for(auto robot : group1->GetRobots()) {
+        // Account for overlap at start/end points in tasks
+        if(used.count(robot))
+          continue;
+        used.insert(robot);
         robotPaths[robot].push_back(cfg1.GetRobotCfg(robot));
       }
     }
@@ -844,8 +936,9 @@ SaveSolution(const Node& _node) {
   for(auto kv : robotPaths) {
     std::cout << "PATH FOR: " << kv.first << std::endl;
     std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
-    for(auto cfg : kv.second) {
-      std::cout << "\t" << cfg.PrettyPrint() << std::endl;
+    for(size_t i = 0; i < kv.second.size(); i++) {
+      auto cfg = kv.second[i];
+      std::cout << "\t" << i << ": " << cfg.PrettyPrint() << std::endl;
     }
   }
 }
