@@ -46,13 +46,13 @@ operator()(Interaction* _interaction, State& _start) {
   // Get initial conditions
   auto stages = _interaction->GetStages();
 
-  // Check that there are at most 4 stages
-  if(stages.size() > 4)
-    throw RunTimeException(WHERE) << "Grasp sampling assumes at most 4 stages:"
+  // Check that there are at least 4 stages
+  if(stages.size() < 3)
+    throw RunTimeException(WHERE) << "Grasp sampling assumes at least 3 stages:"
                                      "\n\t0:Groups"
-                                     "\n\t1:PreGrasp"
+                                     "\n\t1:PreGrasp stages"
                                      "\n\t2:Grasp"
-                                     "\n\t(Optional)3: PostGrasp"
+                                     "\n\t(Optional): PostGrasp stages"
                                   << std::endl;
 
   auto initialConditions = _interaction->GetStageConditions(stages[0]);
@@ -67,7 +67,10 @@ operator()(Interaction* _interaction, State& _start) {
   std::vector<Robot*> objects;
   std::string allObjectsLabel;
 
+  // Construct initial groups
   std::unordered_map<Robot*,RobotGroup*> initialGroups;
+
+  auto originalStart = _start;
 
   for(auto kv : _start) {
     auto group = kv.first;
@@ -89,126 +92,132 @@ operator()(Interaction* _interaction, State& _start) {
     }
   }
 
-  // Add composite groups to to grasp solution
   auto objGroup = problem->AddRobotGroup(objects,allObjectsLabel);
-  auto toGraspSolution = _interaction->GetToStageSolution(stages[2]);
-  toGraspSolution->AddRobotGroup(objGroup);
-  auto objGrm = toGraspSolution->GetGroupRoadmap(objGroup);
-
   auto group = problem->AddRobotGroup(allRobots,allRobotsLabel);
-  toGraspSolution->AddRobotGroup(group);
-  auto grm = toGraspSolution->GetGroupRoadmap(group);
 
-  // Get object placements
-  std::map<Robot*,Cfg> objectPoses;
-  for(auto object : objects) {  
-    Cfg objectPose(object);
+  //TODO::Figure out where grasp stage is
+  size_t graspStage = stages.size() - 1;
+  for(size_t i = 1; i < graspStage; i++) {
 
-    // Check if object placement is given
-    auto initGroup = initialGroups[object];
-    auto given = _start[initGroup];
-    if(given.first) {
-      auto gcfg = given.first->GetVertex(given.second);
-      objectPose = gcfg.GetRobotCfg(object);
+    // Add composite groups to to grasp solution
+    auto toStageSolution = _interaction->GetToStageSolution(stages[i+1]);
+    toStageSolution->AddRobotGroup(objGroup);
+    auto objGrm = toStageSolution->GetGroupRoadmap(objGroup);
+
+    toStageSolution->AddRobotGroup(group);
+    auto grm = toStageSolution->GetGroupRoadmap(group);
+
+    // Get object placements
+    std::map<Robot*,Cfg> objectPoses;
+    for(auto object : objects) {  
+      Cfg objectPose(object);
+
+      // Check if object placement is given
+      auto initGroup = initialGroups[object];
+      auto given = originalStart[initGroup];
+      if(given.first) {
+        auto gcfg = given.first->GetVertex(given.second);
+        objectPose = gcfg.GetRobotCfg(object);
+      }
+      // If not, sample object pose
+      else {
+        objectPose = SampleObjectPose(object,_interaction);
+      }
+
+      objectPoses[object] = objectPose;
+      objectPose.ConfigureRobot();
     }
-    // If not, sample object pose
-    else {
-      objectPose = SampleObjectPose(object,_interaction);
+
+    // Sample pregrasp joint angles
+    auto eeFrames = ComputeEEFrames(_interaction,objectPoses,i);
+
+    std::unordered_map<Robot*,Cfg> pregraspCfgs;
+    for(auto kv : eeFrames) {
+      auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
+      SetEEDOF(_interaction,cfg,stages[i]);
+      pregraspCfgs[kv.first] = cfg;
     }
 
-    objectPoses[object] = objectPose;
-    objectPose.ConfigureRobot();
+    // Sample grasp joint angles
+    auto nextStageEEFrames = ComputeEEFrames(_interaction,objectPoses,i+1);
+    std::unordered_map<Robot*,Cfg> graspCfgs;
+    for(auto kv : nextStageEEFrames) {
+      auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
+      SetEEDOF(_interaction,cfg,stages[i+1]);
+
+      graspCfgs[kv.first] = cfg;
+    }
+
+    // Setup group cfgs
+    GroupCfg objGcfg(objGrm);
+    for(auto kv : objectPoses) {
+      objGcfg.SetRobotCfg(kv.first,std::move(kv.second));
+    }
+
+    GroupCfg pregrasp(grm);
+    for(auto kv : pregraspCfgs) {
+      pregrasp.SetRobotCfg(kv.first,std::move(kv.second));
+    }
+
+    GroupCfg grasp(grm);
+    for(auto kv : graspCfgs) {
+      grasp.SetRobotCfg(kv.first,std::move(kv.second));
+    }
+
+    // Get start constraints
+    auto objVID = objGrm->AddVertex(objGcfg);
+    auto preGraspVID = grm->AddVertex(pregrasp);
+    State preGraspState;
+    preGraspState[objGroup] = std::make_pair(objGrm,objVID);
+    preGraspState[group] = std::make_pair(grm,preGraspVID);
+    auto preGraspConstraints = GenerateConstraints(preGraspState);
+
+    // Get goal constraints
+    auto graspVID = grm->AddVertex(grasp);
+    State graspState;
+    graspState[objGroup] = std::make_pair(objGrm,objVID);
+    graspState[group] = std::make_pair(grm,graspVID);
+    auto graspConstraints = GenerateConstraints(graspState);
+
+    // Set active formations for grasp planning problem
+    auto startConditions = _interaction->GetStageConditions(stages[0]);
+    SetActiveFormations(startConditions,toStageSolution);
+
+    // Create grasp planning tasks
+    auto graspTasks = GenerateTasks(startConditions,
+        preGraspConstraints,
+        graspConstraints);
+
+    _interaction->SetToStageTasks(stages[i+1],graspTasks);
+
+    // Configure objects as static robots
+    std::set<Robot*> staticRobots;  
+    for(auto obj : objects) {
+      staticRobots.insert(obj);
+    }
+
+    ConfigureStaticRobots(staticRobots,preGraspState);
+
+    auto toGraspPaths = PlanMotions(graspTasks,toStageSolution,
+        "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[i+1],
+        staticRobots,preGraspState);
+
+    ResetStaticRobots();
+
+    // Check if valid solution was found
+    if(toGraspPaths.empty())
+      return false;
+
+    // Save plan information
+    _interaction->SetToStagePaths(stages[i+1],toGraspPaths);
+
+    if(i+1 == graspStage) {
+      _start = InterimState(_interaction,stages[i+1],stages[i+1],toGraspPaths);
+      return true;
+    }
+    else 
+      _start = InterimState(_interaction,stages[i+1],stages[i+2],toGraspPaths);
   }
-
-  // Sample pregrasp joint angles
-  auto eeFrames = ComputeEEFrames(_interaction,objectPoses);
-
-  std::unordered_map<Robot*,Cfg> pregraspCfgs;
-  for(auto kv : eeFrames) {
-    auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
-    SetEEDOF(_interaction,cfg,stages[1]);
-    pregraspCfgs[kv.first] = cfg;
-  }
- 
-  // Sample grasp joint angles
-  std::unordered_map<Robot*,Cfg> graspCfgs;
-  for(auto kv : pregraspCfgs) {
-    auto cfg = kv.second;
-    SetEEDOF(_interaction,cfg,stages[2]);
-    
-    graspCfgs[kv.first] = cfg;
-  }
-
-  // Setup group cfgs
-  GroupCfg objGcfg(objGrm);
-  for(auto kv : objectPoses) {
-    objGcfg.SetRobotCfg(kv.first,std::move(kv.second));
-  }
-
-  GroupCfg pregrasp(grm);
-  for(auto kv : pregraspCfgs) {
-    pregrasp.SetRobotCfg(kv.first,std::move(kv.second));
-  }
-
-  GroupCfg grasp(grm);
-  for(auto kv : graspCfgs) {
-    grasp.SetRobotCfg(kv.first,std::move(kv.second));
-  }
-
-  // Get start constraints
-  auto objVID = objGrm->AddVertex(objGcfg);
-  auto preGraspVID = grm->AddVertex(pregrasp);
-  State preGraspState;
-  preGraspState[objGroup] = std::make_pair(objGrm,objVID);
-  preGraspState[group] = std::make_pair(grm,preGraspVID);
-  auto preGraspConstraints = GenerateConstraints(preGraspState);
-
-  // Get goal constraints
-  auto graspVID = grm->AddVertex(grasp);
-  State graspState;
-  graspState[objGroup] = std::make_pair(objGrm,objVID);
-  graspState[group] = std::make_pair(grm,graspVID);
-  auto graspConstraints = GenerateConstraints(graspState);
- 
-  // Set active formations for grasp planning problem
-  auto startConditions = _interaction->GetStageConditions(stages[0]);
-  SetActiveFormations(startConditions,toGraspSolution);
-
-  // Create grasp planning tasks
-  auto graspTasks = GenerateTasks(startConditions,
-                                  preGraspConstraints,
-                                  graspConstraints);
-
-  _interaction->SetToStageTasks(stages[2],graspTasks);
-
-  // Configure objects as static robots
-  std::set<Robot*> staticRobots;  
-  for(auto obj : objects) {
-    staticRobots.insert(obj);
-  }
-
-  ConfigureStaticRobots(staticRobots,preGraspState);
-
-  auto toGraspPaths = PlanMotions(graspTasks,toGraspSolution,
-                      "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[2],
-                      staticRobots,preGraspState);
-
-  ResetStaticRobots();
-
-  // Check if valid solution was found
-  if(toGraspPaths.empty())
-    return false;
-
-  // Save plan information
-  _interaction->SetToStagePaths(stages[2],toGraspPaths);
-
-  if(stages.size() == 3) {
-    _start = InterimState(_interaction,stages[2],stages[2],toGraspPaths);
-    return true;
-  }
-  else 
-    _start = InterimState(_interaction,stages[2],stages[3],toGraspPaths);
-
   //TODO::Compute to post grasp path
 
   return true;
@@ -305,14 +314,14 @@ ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform) {
 
 std::unordered_map<Robot*,Transformation>
 GraspStrategy::
-ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses) {
+ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, size_t _stage) {
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
   auto stages = _interaction->GetStages();
 
   std::unordered_map<Robot*,Transformation> eeFrames;
 
-  auto pregraspConditions = _interaction->GetStageConditions(stages[1]);
+  auto pregraspConditions = _interaction->GetStageConditions(stages[_stage]);
   for(auto condition : pregraspConditions) {
     auto f = dynamic_cast<FormationCondition*>(as->GetCondition(condition));
     if(!f)

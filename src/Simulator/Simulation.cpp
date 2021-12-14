@@ -155,6 +155,15 @@ Uninitialize() {
 void
 Simulation::
 SimulationStep() {
+
+  const double timestep = m_problem->GetEnvironment()->GetTimeRes();
+
+  // Hack for using gazebo when bullet in being a pain
+  for(size_t i = 0; i < m_problem->NumRobots(); ++i)
+    m_problem->GetRobot(i)->Step(timestep);
+  return;
+
+
   // Push the current transforms for all rendering objects.
   {
     std::lock_guard<std::mutex> lock(m_guard);
@@ -175,7 +184,6 @@ SimulationStep() {
     }
   }
 
-  const double timestep = m_problem->GetEnvironment()->GetTimeRes();
 
   // Set each Robot's multibody to its current simulated state.
   for(size_t i = 0; i < m_problem->NumRobots(); ++i)
@@ -529,10 +537,10 @@ AddRobots() {
     if(robot->IsVirtual())
       continue;
 
-    if(!m_editMode) {
-      auto bulletModel = m_engine->AddRobot(robot);
-      robot->SetSimulationModel(bulletModel);
-    }
+    //if(!m_editMode) {
+      //auto bulletModel = m_engine->AddRobot(robot);
+      //robot->SetSimulationModel(bulletModel);
+    //}
 
     auto multiBody = robot->GetMultiBody();
     this->add_drawable(new DrawableMultiBody(multiBody));

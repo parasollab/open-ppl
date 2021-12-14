@@ -5,6 +5,7 @@
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
 #include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/Solution/TaskSolution.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
@@ -940,6 +941,52 @@ SaveSolution(const Node& _node) {
       auto cfg = kv.second[i];
       std::cout << "\t" << i << ": " << cfg.PrettyPrint() << std::endl;
     }
+    //::WritePath("hypergraph-"+kv.first->GetLabel()+".rdmp.path",kv.second);
   }
+
+  // Naive way to create paths - will lose synchronization
+  // Initialize a decomposition
+  auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
+  Decomposition* decomp = new Decomposition(top);
+  auto plan = this->GetPlan();
+  plan->SetDecomposition(decomp);
+  
+  for(auto kv : robotPaths) {
+    auto robot = kv.first;
+    auto cfgs = kv.second;
+
+    // Create a motion task
+    auto mpTask = std::shared_ptr<MPTask>(new MPTask(robot));
+
+    // Create a semantic task
+    const std::string label = robot->GetLabel() + ":PATH";
+    auto task = new SemanticTask(label,top.get(),decomp,
+                 SemanticTask::SubtaskRelation::AND,false,true,mpTask);
+
+    // Create a task solution
+    auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(task));
+    sol->SetRobot(robot);
+
+    // Initialize mp solution and path
+    auto mpsol = new MPSolution(robot);
+    auto rm = mpsol->GetRoadmap(robot);
+
+    std::vector<size_t> vids;
+    for(auto cfg : cfgs) {
+      auto vid = rm->AddVertex(cfg);
+      vids.push_back(vid);
+    }
+    
+    auto path = mpsol->GetPath(robot);
+    *path += vids;
+
+    // Save mp solution in task solution
+    sol->SetMotionSolution(mpsol);
+
+    // Save task solution in plan
+    plan->SetTaskSolution(task,sol);
+    plan->AddAllocation(robot,task);
+  }
+  plan->Print();
 }
 /*------------------------------------------------------------*/

@@ -45,7 +45,8 @@ class GraspStrategy : public IndependentPaths {
     Transformation ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform);
 
     std::unordered_map<Robot*,Transformation> ComputeEEFrames(Interaction* _interaction, 
-                                                              std::map<Robot*,Cfg>& objectPoses);
+                                                              std::map<Robot*,Cfg>& objectPoses,
+                                                              size_t _stage);
 
     Cfg ComputeManipulatorCfg(Robot* _robot, Transformation& _transform);
 
