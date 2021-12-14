@@ -30,7 +30,7 @@ Factory(XMLNode& _node, TMPLibrary* _tmpLibrary) {
   std::string type = _node.Read("type", true, "", "The Condition class name.");
   std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
-  Condition* output;
+  Condition* output = nullptr;
 
   if(type == "composite") {
     output = new CompositeCondition(_node,_tmpLibrary);
