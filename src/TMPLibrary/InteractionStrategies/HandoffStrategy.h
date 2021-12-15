@@ -35,6 +35,8 @@ class HandoffStrategy : public GraspStrategy {
 
     State GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next);
 
+    State GenerateInitialState(Interaction* _interaction, const State& _previous, const size_t _next);
+
     ///@}
     ///@name Internal State
     ///@{

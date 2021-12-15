@@ -577,6 +577,9 @@ ConnectTransitions() {
         if(vid1 == vid2)
           continue;
 
+	std::cout << "Attempting to connect grounded vertices: "
+		  << vid1 << vid2 << std::endl;
+
         auto vertex2 = m_groundedHypergraph.GetVertex(vid2);
 
         // Create goal constraint from vertex 2
@@ -604,6 +607,13 @@ ConnectTransitions() {
           MPTask task(robot);
           task.SetStartConstraint(std::move(startConstraint.Clone()));
           task.AddGoalConstraint(std::move(goalConstraint.Clone()));
+
+          for(const auto& c : mode->constraints) {
+            if(c->GetRobot() != robot)
+              continue;
+            task.AddPathConstraint(std::move(c->Clone()));
+          }
+
           groupTask->AddTask(task);
         }
 
@@ -808,6 +818,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
                 continue;
 
               auto constraint = c->Clone();
+	      constraint->SetRobot(robot);
               mode->constraints.push_back(std::move(constraint));
             }
           }

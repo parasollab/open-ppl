@@ -90,6 +90,8 @@ class GroupPRM : public GroupStrategyMethod<MPTraits> {
     /// Connector labels for node-to-node.
     std::vector<std::string> m_connectorLabels;
 
+    bool m_modeSampling{false};
+
     ///@}
 
 };
@@ -107,6 +109,9 @@ template <typename MPTraits>
 GroupPRM<MPTraits>::
 GroupPRM(XMLNode& _node) : GroupStrategyMethod<MPTraits>(_node) {
   this->SetName("GroupPRM");
+
+  m_modeSampling = _node.Read("modeSampling",false,m_modeSampling,
+		  "Flag indiciating if sampling should use path constraints as modes.");
 
   for(auto& child : _node) {
     if(child.Name() == "Sampler") {
@@ -186,6 +191,20 @@ Sample() {
   auto r = this->GetGroupRoadmap();
   const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
 
+  std::map<Robot*,const Boundary*> pathConstraintMap;
+  if(m_modeSampling) {
+    for(auto iter = this->GetGroupTask()->begin(); iter!=this->GetGroupTask()->end(); iter++) {
+      bool match = false;
+      for(const auto& c : iter->GetPathConstraints()) {
+        pathConstraintMap[c->GetRobot()] = c->GetBoundary();
+	match = true;
+      }
+      if(!match) {
+        pathConstraintMap[iter->GetRobot()] = boundary;
+      }
+    }
+  }
+
   // Generate nodes with each sampler.
   std::vector<VID> out;
   std::vector<GroupCfgType> samples;
@@ -194,8 +213,14 @@ Sample() {
     samples.reserve(sampler.count);
 
     auto s = this->GetSampler(sampler.label);
-    s->Sample(sampler.count, sampler.attempts, boundary,
-        std::back_inserter(samples));
+    if(m_modeSampling) {
+      s->Sample(sampler.count, sampler.attempts, pathConstraintMap,
+          std::back_inserter(samples));
+    }
+    else {
+      s->Sample(sampler.count, sampler.attempts, boundary,
+          std::back_inserter(samples));
+    }
 
     if(this->m_debug)
       std::cout << "\tSampler '" << sampler.label << "' generated "

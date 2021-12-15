@@ -152,14 +152,63 @@ GetRandomFormationCfg(const Boundary* const _b) {
   // Determine how many DOF value will be generated from _b.
   size_t numDof = std::min(_b->GetDimension(),dofs.size());
 
+  const Boundary* b;	
+
   // If _b is a workspace boundary, use no more values than boundary size.
   if(_b->Type() == Boundary::Space::Workspace) {
     numDof = std::min(numDof, m_multibody.PosDOF());
+    b = _b;
+  }
+  else {
+    // Rearrange input boundary of leader's cpsace to match formation order
+    auto mb = m_leader->GetMultiBody();
+    size_t dof = mb->DOF();
+    std::vector<std::pair<double,double>> bbx(dof);
+
+    for(size_t i = 0; i < mb->PosDOF(); i++) {
+      bbx[i] = std::make_pair(_b->GetRange(i).min,_b->GetRange(i).max);
+    }
+
+    for(size_t i = mb->PosDOF(); i < mb->OrientationDOF() + mb->PosDOF(); i++) {
+      bbx[i] = std::make_pair(_b->GetRange(i).min,_b->GetRange(i).max);
+    }
+
+    std::map<size_t,size_t> jointDOFMap;
+    size_t counter = m_multibody.PosDOF() + m_multibody.OrientationDOF();
+    for(size_t i = 0; i < m_multibody.GetJoints().size(); i++) {
+      auto joint = m_multibody.GetJoint(i);
+      if(joint->GetConnectionType() == Connection::JointType::NonActuated or
+         joint->GetConnectionType() == Connection::JointType::Mimic)
+        continue;
+      if(joint->GetConnectionType() == Connection::JointType::Spherical)
+        throw RunTimeException(WHERE) << "PROBLEM PROBLEM PROBLEM - not supported";
+      
+      jointDOFMap[i] = counter;
+      counter++;
+    }
+    
+    size_t dofIndex = mb->PosDOF() + mb->OrientationDOF();
+    for(auto& joint : mb->GetJoints()) {
+      if(joint->GetConnectionType() == Connection::JointType::NonActuated or
+         joint->GetConnectionType() == Connection::JointType::Mimic)
+        continue;
+      if(joint->GetConnectionType() == Connection::JointType::Spherical)
+        throw RunTimeException(WHERE) << "PROBLEM PROBLEM PROBLEM - not supported";
+      // Map joint to cspace index
+      auto pair = m_jointMap[joint.get()];
+      size_t index = jointDOFMap[pair.second];
+      bbx[index] = std::make_pair(_b->GetRange(dofIndex).min,_b->GetRange(dofIndex).max);
+      dofIndex++;
+    }
+
+    auto c = new CSpaceBoundingBox(bbx.size());
+    c->ResetBoundary(bbx,0);
+    b = c;
   }
 
   for(size_t tries = 1000; tries > 0; tries--) {
     // Generate point in the boundary.
-    auto sample = _b->GetRandomPoint();
+    auto sample = b->GetRandomPoint();
 
     // Copy generated DOF values to dofs
     for(size_t i = 0; i < numDof; i++) {
