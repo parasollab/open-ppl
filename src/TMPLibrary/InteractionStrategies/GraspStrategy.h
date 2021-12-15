@@ -32,7 +32,7 @@ class GraspStrategy : public IndependentPaths {
 
     ///@}
 
-  private:
+  protected:
 
     ///@name Helper Functions
     ///@{

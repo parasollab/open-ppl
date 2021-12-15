@@ -853,6 +853,7 @@ CollectModeSets(const std::vector<std::vector<VID>>& _formationModes, size_t _in
   // Intialize the return vector
   std::vector<std::vector<VID>> modeSets;
   
+
   // Add new vids (modes) to the partial set
   auto vids = _formationModes[_index];
   for(auto vid : vids) {
@@ -860,6 +861,28 @@ CollectModeSets(const std::vector<std::vector<VID>>& _formationModes, size_t _in
     // Make sure vid is not already included in the set
     auto iter = std::find(_partialSet.begin(), _partialSet.end(), vid);
     if(iter != _partialSet.end())
+      continue;
+
+    // Make sure this new mode does not intersect with the partial set
+    auto mode = m_modeHypergraph.GetVertexType(vid);
+    const auto& robots = mode->robotGroup->GetRobots();
+    bool intersect = false;
+    for(auto vid2 : _partialSet) {
+      auto mode2 = m_modeHypergraph.GetVertexType(vid2);
+      for(auto r1 : robots) {
+        for(auto r2 : mode2->robotGroup->GetRobots()) {
+          if(r1 == r2) {
+            intersect = true;
+            break;
+          }
+        }
+        if(intersect)
+          break;
+      }
+      if(intersect)
+        break;
+    }
+    if(intersect)
       continue;
 
     // Add vid ot copy of partial set
@@ -1377,7 +1400,13 @@ AddMode(Mode* _mode) {
       bool match = false;
 
       for(auto f2 : formations2) {
-        if(*f1 == *f2) {
+        if(!f1 or !f2) {
+          if(f1 == f2) {
+            match = true;
+            break;
+          }
+        }
+        else if(*f1 == *f2) {
           match = true;
           break;
         }

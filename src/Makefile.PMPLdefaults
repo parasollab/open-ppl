@@ -507,6 +507,7 @@ TASK_SRCS := \
   TMPLibrary/ActionSpace/MotionCondition.cpp \
   TMPLibrary/ActionSpace/ProximityCondition.cpp \
   TMPLibrary/InteractionStrategies/GraspStrategy.cpp \
+  TMPLibrary/InteractionStrategies/HandoffStrategy.cpp \
   TMPLibrary/InteractionStrategies/IndependentPaths.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp \
   TMPLibrary/InteractionStrategies/TemplateInteractions.cpp \
