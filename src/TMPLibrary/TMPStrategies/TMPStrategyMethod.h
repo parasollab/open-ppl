@@ -21,7 +21,7 @@ class TMPStrategyMethod : public TMPBaseObject {
     ///@name Interface
     ///@{
 
-    void operator();
+    void operator()();
 
     ///@}
     ///@name Configure

@@ -22,7 +22,7 @@ class TaskDecomposerMethod : public TMPBaseObject {
     ///@{
 
    //@todo: Convert this to semantic task
-    virtual void BreakupTask(WholeTask* _wholeTask);
+    // virtual void BreakupTask(WholeTask* _wholeTask);
 
     ///@}
 };
