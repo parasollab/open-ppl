@@ -38,7 +38,8 @@ class IndependentPaths : public InteractionStrategyMethod {
     ///@name Helper Functions
     ///@{
 
-    std::vector<std::shared_ptr<GroupTask>> GenerateTasks(std::vector<std::string> _conditions, 
+    virtual std::vector<std::shared_ptr<GroupTask>> GenerateTasks(
+                            std::vector<std::string> _conditions, 
                             std::unordered_map<Robot*,Constraint*> _startConstraints,
                             std::unordered_map<Robot*,Constraint*> _goalConstraints);
 

@@ -95,6 +95,13 @@ AssignRoles(const State& _state, const std::vector<std::string>& _conditions) {
   std::unordered_set<RobotGroup*> usedGroups;
   AssignRolesFromConditions(_state,motionConditions,usedGroups);
   AssignRolesFromConditions(_state,formationConditions,usedGroups);
+
+  if(m_debug) {
+    std::cout << "Assigned roles as follows: " << std::endl;
+    for(auto kv : m_roleMap) {
+      std::cout << kv.first << "->" << kv.second->GetLabel() << std::endl;
+    }
+  }
 }
 
 void

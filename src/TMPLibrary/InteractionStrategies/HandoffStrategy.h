@@ -37,6 +37,11 @@ class HandoffStrategy : public GraspStrategy {
 
     State GenerateInitialState(Interaction* _interaction, const State& _previous, const size_t _next);
 
+    virtual std::vector<std::shared_ptr<GroupTask>> GenerateTasks(
+              std::vector<std::string> _conditions, 
+              std::unordered_map<Robot*,Constraint*> _startConstraints,
+              std::unordered_map<Robot*,Constraint*> _goalConstraints) override;
+
     ///@}
     ///@name Internal State
     ///@{
