@@ -105,6 +105,8 @@ class ModeGraph : public StateGraph {
 
     MPSolution* GetMPSolution();
   
+    VID GetModeOfGroundedVID(const VID& _vid) const;
+
     ///@}
 
   private:

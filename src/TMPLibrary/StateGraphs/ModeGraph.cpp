@@ -170,6 +170,17 @@ ModeGraph::
 GetMPSolution() {
   return m_solution.get();
 }
+    
+ModeGraph::VID 
+ModeGraph::
+GetModeOfGroundedVID(const VID& _vid) const {
+  for(const auto& kv : m_modeGroundedVertices) {
+    if(kv.second.count(_vid))
+      return kv.first;
+  }
+  return MAX_INT;
+}
+
 /*---------------------------- Helper Functions ------------------------------*/
 
 std::vector<ModeGraph::VID>
@@ -818,7 +829,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
                 continue;
 
               auto constraint = c->Clone();
-	      constraint->SetRobot(robot);
+              constraint->SetRobot(robot);
               mode->constraints.push_back(std::move(constraint));
             }
           }

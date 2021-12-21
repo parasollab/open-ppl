@@ -489,11 +489,39 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
   auto aev = _h->GetVertexType(_vid);
   auto groundedVID = aev.groundedVID;
 
+  // Check if vid's parent was in the same mode
+  size_t blockedMode = MAX_INT;
+  auto vertexMode = mg->GetModeOfGroundedVID(groundedVID);
+  auto incoming  = _h->GetIncomingHyperarcs(_vid);
+  if(incoming.size() > 0) {
+    auto hid = *(incoming.begin());
+    auto hyperarc = _h->GetHyperarc(hid);
+    auto tail = hyperarc.tail;
+    if(tail.size() == 1) {
+      auto parent = *(tail.begin());
+      auto parentVertex = _h->GetVertexType(parent);
+      auto parentMode = mg->GetModeOfGroundedVID(parentVertex.groundedVID);
+      if(vertexMode == parentMode)
+        blockedMode = vertexMode;
+    }
+  }
+
   std::set<size_t> fullyGroundedHyperarcs;
 
   // Build partially grounded hyperarcs
   // Grab forward star in grounded hypergraph
   for(auto hid : gh.GetOutgoingHyperarcs(groundedVID)) {
+
+    // If this vertex's parent is in the same submode,
+    // ensure that there is not an additional transition within
+    // that sumode.
+    auto head = gh.GetHyperarc(hid).head;
+    if(head.size() == 1 and blockedMode != MAX_INT) {
+      auto groundedHead = *(head.begin());
+      auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
+      if(headModeVID == blockedMode)
+        continue;
+    }
 
     // Add brand new action extended hyperarc for this vid
     // It will get filled in and check for full grounding in loop
