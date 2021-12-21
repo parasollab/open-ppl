@@ -340,7 +340,7 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       Transformation transform = roleInfo.transformation;
       Cfg cfg = objectPoses[robot];
 
-      auto frame = ComputeEEWorldFrame(cfg, transform);
+      auto frame = ComputeEEWorldFrame(cfg, -transform);
       
       auto refRobot = m_roleMap[roleInfo.referenceRole];
       auto refBase = refRobot->GetMultiBody()->GetBase();
