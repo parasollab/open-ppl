@@ -680,14 +680,29 @@ ModeGraph::
 ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<VID>& _newModes) {
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
-  // Extract the formation constraints
+  // Extract the formation and motion constraints
   std::vector<FormationCondition*> initialFormationConditions;
+  std::vector<MotionCondition*> initialMotionConditions;
   auto initialStage = _action->GetStages()[0];
   for(auto label : _action->GetStageConditions(initialStage)) {
     auto c = as->GetCondition(label);
     auto f = dynamic_cast<FormationCondition*>(c);
-    if(f)
+    if(f) {
       initialFormationConditions.push_back(f);
+      continue;
+    }
+    auto m = dynamic_cast<MotionCondition*>(c);
+    if(m)
+      initialMotionConditions.push_back(m);
+  }
+
+  // Connect motion constraints
+  std::unordered_map<std::string,Constraint*> motionConstraintMap;
+  for(auto m : initialMotionConditions) {
+    for(auto role : m->GetRoles()) {
+      auto constraint = m->GetRoleConstraint(role);
+      motionConstraintMap[role] = constraint;
+    }
   }
 
   // Look at possible combinations of modes in the mode hyerpgraph 
@@ -715,8 +730,65 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       }
 
       // Check if the number of saved robots matches the required number
-      if(f->GetTypes().size() == used.size() and used.size() == mode->robotGroup->Size()) 
+      if(f->GetTypes().size() != used.size() or used.size() != mode->robotGroup->Size()) 
+        continue;
+
+      // Check if mode meets formation requirements
+      // Create state
+      State state;
+      state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+      std::unordered_map<std::string,Robot*> roleMap;
+      f->AssignRoles(roleMap,state);
+      bool satisfied = mode->formations.empty();
+      for(auto formation : mode->formations) {
+        if(f->DoesFormationMatch(roleMap,formation)) {
+          satisfied = true;
+          break;
+        }
+      }
+
+      if(!satisfied)
+        continue;
+
+      // Check if mode meets motion constraints
+      for(auto role : f->GetRoles()) {
+        // Check if role has associated motion constraint
+        auto iter1 = motionConstraintMap.find(role);
+        if(iter1 == motionConstraintMap.end())
+          continue;
+
+        // Check if constraint is in the mode
+        auto constraint = motionConstraintMap[role];
+        auto b1 = constraint->GetBoundary();
+        if(!b1)
+          continue;
+
+        for(const auto& c : mode->constraints) {
+          // Check if boundaries are the same
+          auto b2 = c->GetBoundary();
+          if(b1->Type() == b2->Type()
+            and b1->Name() == b2->Name()
+            and b1->GetDimension() == b2->GetDimension()
+            and b1->GetCenter() == b2->GetCenter()) {
+
+            bool match = true;
+            for(size_t i = 0; i < b1->GetDimension(); i++) {
+              if(!(b1->GetRange(i) == b2->GetRange(i))) {
+                match = false;
+              }
+            }
+            if(match)
+              continue;
+          }
+
+          satisfied = false;
+          break;
+        }
+      }
+
+      if(satisfied) {
         formationModes[i].push_back(vid);
+      }
     }
   }
 
@@ -759,7 +831,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
     }
 
     // Collect robot roles
-    std::unordered_map<std::string,Robot*> roleMap;
+    /*std::unordered_map<std::string,Robot*> roleMap;
     for(size_t i = 0; i < set.size(); i++) {
       auto vid = set[i];
       auto mode = m_modeHypergraph.GetVertexType(vid);
@@ -767,7 +839,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       State state;
       state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
       formationCondition->AssignRoles(roleMap,state);
-    }
+    }*/
 
     // Collect possible assignment of robots into groups
     std::vector<std::vector<std::vector<Robot*>>> possibleAssignments(finalFormationConditions.size());
@@ -802,9 +874,16 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
         auto formationCondition = finalFormationConditions[i];
         auto mode = combo[i];
 
+        // Construct role map for mode set
+        std::unordered_map<std::string,Robot*> roleMap;
+        State state;
+        state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+        formationCondition->AssignRoles(roleMap,state);
+
         // Create formation constraints from roleMap
         auto formation = formationCondition->GenerateFormation(roleMap);
-        mode->formations.insert(formation);
+        if(formation)
+          mode->formations.insert(formation);
 
         // Grab path constraints from final stage
         for(auto motionCondition : finalMotionConditions) {
@@ -844,13 +923,28 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
     }
 
     for(auto modeSet : modeSetCombos) {
+
+      // TODO::Make sure this doesn't happen in the first place
+      // Make sure there is not any overlap in head and tail
+      bool overlap = false;
+
       std::set<VID> head;
       for(auto mode : modeSet) {
         //auto vid = m_modeHypergraph.AddVertex(mode);
+        auto oldSize = m_modeHypergraph.Size();
         auto vid = AddMode(mode);
+
+        if(tail.count(vid)) {
+          overlap = true;
+          break;
+        }
         head.insert(vid);
-        _newModes.push_back(vid);
+        if(oldSize < m_modeHypergraph.Size())
+          _newModes.push_back(vid);
       }
+
+      if(overlap)
+        continue;
 
       m_modeHypergraph.AddHyperarc(head,tail,std::make_pair(_action,false));
       if(_action->IsReversible()) {

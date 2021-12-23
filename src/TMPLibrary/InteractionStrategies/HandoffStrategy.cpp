@@ -168,7 +168,7 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
   std::vector<RobotGroup*> receivers;
   for(auto kv : _previous) {
     auto group = kv.first;
-    bool deliver;
+    bool deliver = false;
     for(auto robot : group->GetRobots()) {
       if(robot->GetMultiBody()->IsPassive()) {
         deliverers.push_back(group);

@@ -215,6 +215,39 @@ GetRoleInfo(std::string _role) const {
   return m_roles.at(_role);
 }
 
+bool
+FormationCondition::
+DoesFormationMatch(std::unordered_map<std::string,Robot*>& _roleMap, Formation* _formation) {
+  for(auto kv : _roleMap) {
+    auto roleLabel = kv.first;
+    auto role = m_roles[roleLabel];
+
+    if(role.leader)
+      continue;
+
+    auto robot = kv.second;
+    auto formationConstraint = _formation->GetFormationConstraint(robot->GetMultiBody());
+
+    // Check transformation
+    if(role.transformation != formationConstraint.transformation)
+      return false;
+    
+    // Check reference robot
+    auto referenceRobot = _roleMap[role.referenceRole];
+    if(referenceRobot != formationConstraint.referenceRobot)
+      return false;
+
+    // Check reference body
+    if(referenceRobot->GetMultiBody()->GetBody(role.referenceBody) != formationConstraint.referenceBody)
+      return false;
+
+    // Check dependent body
+    if(robot->GetMultiBody()->GetBody(role.dependentBody) != formationConstraint.dependentBody)
+      return false;
+  }
+
+  return true;  
+}
 /*--------------------- Helper Functions ---------------------*/
 
 bool

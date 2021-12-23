@@ -136,7 +136,7 @@ operator()(Interaction* _interaction, State& _start) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
       if(!cfg.GetRobot()) {
         std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
-	return false;
+      	return false;
       }
       SetEEDOF(_interaction,cfg,stages[i]);
       pregraspCfgs[kv.first] = cfg;

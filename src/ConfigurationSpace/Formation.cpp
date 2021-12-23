@@ -295,6 +295,11 @@ GetLeader() const {
   return m_leader;
 }
 
+const Formation::FormationConstraint& 
+Formation::
+GetFormationConstraint(MultiBody* _mb) {
+  return m_constraintMap[_mb];
+}
 /*------------------------------- Helper Functions ---------------------------*/
 
 void

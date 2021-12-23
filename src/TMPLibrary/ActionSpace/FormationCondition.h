@@ -59,6 +59,9 @@ class FormationCondition : public Condition {
 
     const Role& GetRoleInfo(std::string _role) const;
 
+    bool DoesFormationMatch(std::unordered_map<std::string,Robot*>& _roleMap,
+                            Formation* _formation);
+
     ///@}
 
   private:

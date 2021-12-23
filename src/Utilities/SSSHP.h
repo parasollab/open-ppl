@@ -199,9 +199,6 @@ SBTDijkstra(
     element current = pq.top();
     pq.pop();
 
-    if(current.vid == 878)
-      std::cout << "HERE" << std::endl;
-
     // If this node has already been visited, the element is stale. Discard.
     if(visited.count(current.vid))
       continue;
