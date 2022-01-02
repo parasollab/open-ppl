@@ -61,14 +61,14 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
     if(m_sim) {
       m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
                   //"/arm_controller/command",
-                  "/pos_joint_traj_controller/command",
+                  "/" + this->m_agent->GetRobot()->GetLabel()+"/pos_joint_traj_controller/command",
                   //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                   10);
     }
     else {
       m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
                   //"/arm_controller/command",
-                  "/scaled_pos_joint_traj_controller/command",
+                  "/" + this->m_agent->GetRobot()->GetLabel()+"/scaled_pos_joint_traj_controller/command",
                   //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                   10);
     }

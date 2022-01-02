@@ -40,6 +40,7 @@ GraspStrategy::
 operator()(Interaction* _interaction, State& _start) {
 
   auto problem = this->GetPlan()->GetCoordinator()->GetRobot()->GetMPProblem();
+  auto lib = this->GetMPLibrary();
 
   _interaction->Initialize();
 
@@ -105,6 +106,7 @@ operator()(Interaction* _interaction, State& _start) {
     auto objGrm = toStageSolution->GetGroupRoadmap(objGroup);
 
     toStageSolution->AddRobotGroup(group);
+    lib->SetMPSolution(toStageSolution);
     auto grm = toStageSolution->GetGroupRoadmap(group);
 
     // Get object placements
@@ -419,33 +421,40 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
           q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
   }
   
-  if(num_sols == 0)
-    return Cfg(nullptr);
-
   //TODO::Validity check cfg and if invalid try the next solution
 
-  std::vector<double> data(_robot->GetMultiBody()->DOF()); //Should be 7
+  auto vc = this->GetMPLibrary()->GetValidityChecker(m_vcLabel);
 
-  data[0] =  q_sols[2]/PI; 
-  data[1] =  0;
-  data[2] =  q_sols[1]/PI;
-  data[3] =  q_sols[0]/PI;
-  data[4] =  q_sols[3]/PI;
-  data[5] =  q_sols[4]/PI;
-  data[6] =  q_sols[5]/PI;
+  for(int i = 0; i < num_sols; i++) {
 
-  for(size_t i = 0; i < data.size(); i++) {
-    if(i == 1)
-      continue;
+    std::vector<double> data(_robot->GetMultiBody()->DOF()); //Should be 7
 
-    if(data[i] > 1) {
-      data[i] = -2 + data[i];
+    data[0] =  q_sols[2]/PI; 
+    data[1] =  0;
+    data[2] =  q_sols[1]/PI;
+    data[3] =  q_sols[0]/PI;
+    data[4] =  q_sols[3]/PI;
+    data[5] =  q_sols[4]/PI;
+    data[6] =  q_sols[5]/PI;
+
+    for(size_t j = 0; j < data.size(); j++) {
+      if(j == 1)
+        continue;
+
+      if(data[j] > 1) {
+        data[j] = -2 + data[j];
+      }
     }
+
+    Cfg cfg(_robot);
+    cfg.SetData(data);
+
+    if(vc->IsValid(cfg,this->GetNameAndLabel()))
+      return cfg;
   }
- 
-  Cfg cfg(_robot);
-  cfg.SetData(data);
-  return cfg;
+
+  //if(num_sols == 0)
+  return Cfg(nullptr);
 
   #else
 
