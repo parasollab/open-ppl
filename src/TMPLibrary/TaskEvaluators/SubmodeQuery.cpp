@@ -6,6 +6,8 @@
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 
+#include "Utilities/SSSP.h"
+
 /*------------------------------ Construction ------------------------------*/
 
 SubmodeQuery::
@@ -398,11 +400,48 @@ AddDanglingNodes(std::vector<HPElem> _path, std::set<HPElem>& _parents) {
 
   return finalPath; 
 }
+
+void
+SubmodeQuery::
+ComputeHeuristicValues() {
+  // Run a dijkstra search backwards through hypergraph as if it was a graph
+
+  // Get graph represnetation grounded hypergraph
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto& gh = mg->GetGroundedHypergraph();
+  auto g = gh.GetReverseGraph();
+
+  // Setup dijkstra functions
+  auto termination = SSSPDefaultTermination<ModeGraph::GroundedHypergraph::GraphType>();
+
+  SSSPPathWeightFunction<ModeGraph::GroundedHypergraph::GraphType> weight(
+    [this](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
+           const double _sourceDistance,
+           const double _targetDistance) {
+    auto groundedHA = _ei->property();
+    double edgeWeight = groundedHA.cost;
+    double newDistance = _sourceDistance + edgeWeight;
+    return newDistance;
+  });
+
+  // Run dijkstra backwards from sink
+  std::vector<size_t> starts = {1};
+  auto output = DijkstraSSSP(g,starts,weight,termination);
+
+  // Save output distances as heuristic values
+  m_heuristicMap = output.distance;
+
+}
+
+
 /*---------------------------- Hyperpath Functions -------------------------*/
 
 MBTOutput
 SubmodeQuery::
 HyperpathQuery() {
+
+  // Compute heuristic values
+  ComputeHeuristicValues();
 
   // Define hyperpath query functors
   SSSHPTerminationCriterion termination(
@@ -425,9 +464,15 @@ HyperpathQuery() {
     }
   );
 
+  SSSHPHeuristic<ActionExtendedVertex,size_t> heuristic(
+    [this](const size_t& _target) {
+      return this->HyperpathHeuristic(_target);
+    }
+  );
+
   m_goalVID = MAX_INT;
 
-  auto output = SBTDijkstra(&m_actionExtendedHypergraph,0,weight,termination,forwardStar);
+  auto output = SBTDijkstra(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
 
   m_previousSolutions.insert(m_goalVID);
 
@@ -593,4 +638,20 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
   return fullyGroundedHyperarcs;
 }
 
+double 
+SubmodeQuery::
+HyperpathHeuristic(const size_t& _target) {
+  auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
+  auto vid = aev.groundedVID;
+  return m_heuristicMap.at(vid);
+}
 /*--------------------------------------------------------------------------*/
+istream&
+operator>>(istream& _is, const SubmodeQuery::ActionExtendedVertex& _vertex) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const SubmodeQuery::ActionExtendedVertex& _vertex) {
+  return _os;
+}

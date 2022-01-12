@@ -112,7 +112,7 @@ class GenericStateGraph: public
     ///@name Construction
     ///@{
 
-    GenericStateGraph(Robot* const _r);
+    GenericStateGraph(Robot* const _r = nullptr);
 
     ///@}
     ///@name Move and Copy

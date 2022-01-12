@@ -75,6 +75,8 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     std::vector<HPElem> AddDanglingNodes(std::vector<HPElem> _path,
                 std::set<HPElem>& _parents);
 
+    void ComputeHeuristicValues();
+
     ///@}
     ///@name Hyperpath Functions
     ///@{
@@ -89,6 +91,8 @@ class SubmodeQuery : public TaskEvaluatorMethod {
           const size_t _target);
 
     std::set<size_t> HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h);
+
+    double HyperpathHeuristic(const size_t& _target);
 
     ///@name Internal State
     ///@{
@@ -106,7 +110,12 @@ class SubmodeQuery : public TaskEvaluatorMethod {
 
     size_t m_goalVID;
 
+    /// Map from grouneded hypergraph vertex to heuristic value
+    std::unordered_map<size_t,double> m_heuristicMap; 
+
     ///@}
 };
 
+std::ostream& operator<<(std::ostream& _os, const SubmodeQuery::ActionExtendedVertex& _vertex);
+std::istream& operator>>(std::istream& _is, const SubmodeQuery::ActionExtendedVertex& _vertex);
 #endif

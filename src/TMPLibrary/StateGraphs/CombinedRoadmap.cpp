@@ -1226,29 +1226,6 @@ MovePathToMPSolution(Path* _path) {
   return path;
 }
 
-/*----------------------------------------------------------------------------*/
-
-/*istream&
-operator>>(istream& _is, TMPVertex& _vertex) {
-  return _is;
-}*/
-
-
-ostream&
-operator<<(ostream& _os, const CombinedRoadmap::TMPVertex& _vertex) {
-  auto rvid = _vertex.rvid;
-  auto grm = _vertex.sr->first;
-  auto group = grm->GetGroup();
-  auto gcfg = grm->GetVertex(rvid);
-
-  _os << "VID: " << rvid << ", RobotGroup: " << group->GetLabel() << std::endl;
-  _os << "\t";
-  for(auto robot : group->GetRobots()) {
-    _os << robot->GetLabel() << " : " << gcfg.GetRobotCfg(robot).PrettyPrint() << std::endl;
-  }
-
-  return _os;
-}
 std::vector<std::vector<std::pair<CombinedRoadmap::State,CombinedRoadmap::State>>>
 CombinedRoadmap::
 ConvertActionUpdateToLayers(const ActionUpdate& _update) const {
@@ -1291,7 +1268,39 @@ ConvertActionUpdateToLayers(const ActionUpdate& _update) const {
 
   return updateLayers;
 }
+/*----------------------------------------------------------------------------*/
 
+istream&
+operator>>(istream& _is, const CombinedRoadmap::TMPVertex& _vertex) {
+  return _is;
+}
+
+
+ostream&
+operator<<(ostream& _os, const CombinedRoadmap::TMPVertex& _vertex) {
+  auto rvid = _vertex.rvid;
+  auto grm = _vertex.sr->first;
+  auto group = grm->GetGroup();
+  auto gcfg = grm->GetVertex(rvid);
+
+  _os << "VID: " << rvid << ", RobotGroup: " << group->GetLabel() << std::endl;
+  _os << "\t";
+  for(auto robot : group->GetRobots()) {
+    _os << robot->GetLabel() << " : " << gcfg.GetRobotCfg(robot).PrettyPrint() << std::endl;
+  }
+
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const CombinedRoadmap::TMPHyperarc& _arc) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const CombinedRoadmap::TMPHyperarc& _arc) {
+  return _os;
+}
 /*----------------------------------------------------------------------------*/
 
 

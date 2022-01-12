@@ -53,6 +53,15 @@ operator==(const GroupCfg& _other) const noexcept {
       return false;
   }
 
+  // Else compare formations
+  if(m_formations.size() != _other.m_formations.size())
+    return false; 
+
+  for(auto formation : _other.m_formations) {
+    if(!m_formations.count(formation))
+      return false;
+  }
+
   return true;
 }
 

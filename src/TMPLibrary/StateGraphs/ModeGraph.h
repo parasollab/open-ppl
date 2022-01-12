@@ -194,4 +194,15 @@ class ModeGraph : public StateGraph {
 
 };
 
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::Mode* _mode);
+std::istream& operator>>(std::istream& _is, const ModeGraph::Mode* _mode);
+
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::ReversibleAction _ra);
+std::istream& operator>>(std::istream& _is, const ModeGraph::ReversibleAction _ra);
+
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::GroundedVertex _vertex);
+std::istream& operator>>(std::istream& _is, const ModeGraph::GroundedVertex _vertex);
+
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::Transition _t);
+std::istream& operator>>(std::istream& _is, const ModeGraph::Transition _t);
 #endif

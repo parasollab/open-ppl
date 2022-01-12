@@ -463,14 +463,15 @@ AddVertex(const Vertex& _v) noexcept {
                                     << " does not exist!";
   }
 
+  // Copy the formation over from the input cfg
+  for(auto formation : _v.GetFormations()) {
+    cfg.AddFormation(formation);
+  }
+
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(cfg);
   this->m_allVIDs.insert(vid);
   ++m_timestamp;
-
-  //debug
-  if(vid == 102)
-    std::cout << "HERE" << std::endl;
 
   // Execute post-add hooks.
   this->ExecuteAddVertexHooks(this->find_vertex(vid));

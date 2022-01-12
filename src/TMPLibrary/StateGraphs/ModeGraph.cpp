@@ -588,8 +588,8 @@ ConnectTransitions() {
         if(vid1 == vid2)
           continue;
 
-	std::cout << "Attempting to connect grounded vertices: "
-		  << vid1 << vid2 << std::endl;
+        std::cout << "Attempting to connect grounded vertices: "
+                  << vid1 << vid2 << std::endl;
 
         auto vertex2 = m_groundedHypergraph.GetVertex(vid2);
 
@@ -1593,3 +1593,42 @@ AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*
 }
 
 /*----------------------------------------------------------------------------*/
+istream&
+operator>>(istream& _is, const ModeGraph::Mode* _mode) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::Mode* _mode) {
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const ModeGraph::ReversibleAction _ra) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::ReversibleAction _ra) {
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const ModeGraph::GroundedVertex _vertex) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::GroundedVertex _vertex) {
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const ModeGraph::Transition _t) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::Transition _t) {
+  return _os;
+}
