@@ -243,7 +243,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   // Will find all the straight-line increments for each robot independently.
   // (Though the numSteps calculation is coupled with all moving robots).
   int numSteps;
-  GroupCfgType increment(groupMap);
+  GroupCfgType increment(_c1);
   increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
 
   const GroupCfgType originalIncrement = increment;

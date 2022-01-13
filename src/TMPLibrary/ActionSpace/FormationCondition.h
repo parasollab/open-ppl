@@ -81,6 +81,8 @@ class FormationCondition : public Condition {
     std::unordered_map<std::string,Role> m_roles;
 
     bool m_static; ///< Flag indiciating if this formation is static interactions.
+
+    std::vector<std::pair<std::unordered_map<std::string,Robot*>,Formation*>> m_cachedFormations;
     ///@}
 };
 

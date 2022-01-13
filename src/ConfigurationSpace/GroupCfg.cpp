@@ -125,8 +125,20 @@ operator+=(const GroupCfg& _other) {
                                   "roadmaps!");
 
   // Also ensure that the same formations exists.
-  if(m_formations != _other.m_formations)
+  if(m_formations.size() != _other.m_formations.size())
     throw RunTimeException(WHERE) << "Cannot add GroupCfgs with different formations.";
+
+  for(auto f1 : m_formations) {
+    bool match = false;
+    for(auto f2 : _other.m_formations) {
+      if(*f1 == *f2) {
+        match = true;
+        break;
+      }
+    }
+    if(!match)
+      throw RunTimeException(WHERE) << "Cannot add GroupCfgs with different formations.";
+  }
 
   // First add the formation dofs.
   std::set<size_t> checked;

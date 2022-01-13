@@ -504,6 +504,7 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
     }
   }
 }
+
 std::vector<Path*> 
 InteractionStrategyMethod::
 DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {

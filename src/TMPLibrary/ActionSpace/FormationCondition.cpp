@@ -132,6 +132,13 @@ Formation*
 FormationCondition::
 GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap) {
 
+  // Check if this role map assignment has been given before
+  for(auto pair : m_cachedFormations) {
+    if(_roleMap == pair.first)
+      return pair.second;
+  }
+
+
   Robot* leader = nullptr;
   std::vector<Robot*> robots;
   std::unordered_map<MultiBody*,Formation::FormationConstraint> constraintMap;
@@ -176,6 +183,9 @@ GenerateFormation(std::unordered_map<std::string,Robot*>& _roleMap) {
     return nullptr;
 
   auto formation = new Formation(robots,leader,constraintMap);
+
+  m_cachedFormations.emplace_back(_roleMap,formation);
+
   return formation;
 }
 
