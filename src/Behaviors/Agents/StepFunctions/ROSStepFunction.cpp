@@ -131,8 +131,8 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   //auto js = s_jointStates;
 
   sensor_msgs::JointState msg;
-  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/joint_states");
-  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
+  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/joint_states");
+  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 
   if(sharedMsg!=NULL)
     msg = *sharedMsg;
