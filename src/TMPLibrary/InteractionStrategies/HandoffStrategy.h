@@ -42,10 +42,13 @@ class HandoffStrategy : public GraspStrategy {
               std::unordered_map<Robot*,Constraint*> _startConstraints,
               std::unordered_map<Robot*,Constraint*> _goalConstraints) override;
 
+    void GeneratePathConstraints(std::vector<std::string> _startConditions, 
+                                 std::vector<std::string> _endConditions);
     ///@}
     ///@name Internal State
     ///@{
 
+    std::unordered_map<Robot*,Constraint*> m_pathConstraintMap;
 
     ///@}
 

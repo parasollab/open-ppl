@@ -315,7 +315,7 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
     auto groupPath = _solution->GetGroupPath(group);
     if(groupPath and !groupPath->Empty()) {
       if(m_debug) {
-        std::cout << "Cfg Path for " << _label << std::endl;
+        std::cout << "Cfg Path for " << _label << ": " << group->GetLabel() << std::endl;
         for(auto cfg : groupPath->Cfgs()) {
           std::cout << cfg.PrettyPrint() << std::endl;
         }

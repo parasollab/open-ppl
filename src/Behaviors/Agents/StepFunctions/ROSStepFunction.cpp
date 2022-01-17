@@ -278,6 +278,12 @@ MoveBase(const Cfg& _goal, double _dt) {
 void
 ROSStepFunction::
 MoveArm(std::vector<double> _goal, double _dt) {
+
+  if(_goal == m_previousGoal)
+    return;
+
+  m_previousGoal = _goal;
+
   if(ros::ok()) {
 
     ros::Rate rate(3);
@@ -354,10 +360,10 @@ MoveArm(std::vector<double> _goal, double _dt) {
     ROS_INFO_STREAM("Sending command:\n" << msg);
     m_armPub.publish(msg);
     rate.sleep();
-    m_armPub.publish(msg);
-    rate.sleep();
-    m_armPub.publish(msg);
-    rate.sleep();
+    //m_armPub.publish(msg);
+    //rate.sleep();
+    //m_armPub.publish(msg);
+    //rate.sleep();
   }
 }
 

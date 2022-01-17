@@ -255,16 +255,20 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
     // Convert to set of sequentially dependent semantic tasks
     auto& taskSet = hyperarc.taskSet;
+    size_t counter = 0;
     for(auto stage : taskSet) {
 
-      if(stage.empty())
+      if(stage.empty()) {
+        counter++;
         continue;
+      }
   
       std::vector<SemanticTask*> currentStage;
       for(auto groupTask : stage) {
         // Create semantic task
         const std::string label = std::to_string(aeh.property) + ":" 
                             + std::to_string(aeh.hid) + ":"
+                            + "stage-" + std::to_string(counter) + ":"
                             + groupTask->GetRobotGroup()->GetLabel() + ":"
                             + groupTask->GetLabel();
         auto task = new SemanticTask(label,top.get(),decomp,
@@ -307,6 +311,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
       // Iterate stage forward
       previousStage = currentStage;
+      counter++;
     }
 
     // Save last stage in hyperarc task map

@@ -54,6 +54,9 @@ operator()(Interaction* _interaction, State& _start) {
     if(startConstraintMap.empty())
       return false;
 
+    // Get path constraints
+    GeneratePathConstraints(startConditions,_interaction->GetStageConditions(next));
+
     // Get goal constraints
     auto nextState = GenerateTransitionState(_interaction,_start,i);
     auto goalConstraintMap = GenerateConstraints(nextState);
@@ -464,6 +467,12 @@ GenerateTasks(std::vector<std::string> _conditions,
     MPTask task(robot);
     task.SetStartConstraint(std::move(_startConstraints[robot]->Clone()));
     task.AddGoalConstraint(std::move(_goalConstraints[robot]->Clone()));
+
+    auto iter = m_pathConstraintMap.find(robot);
+    if(iter != m_pathConstraintMap.end()) {
+      task.AddPathConstraint(std::move(m_pathConstraintMap[robot]->Clone()));
+    }
+
     staticTask->AddTask(task);
   }
 
@@ -473,9 +482,53 @@ GenerateTasks(std::vector<std::string> _conditions,
     MPTask task(robot);
     task.SetStartConstraint(std::move(_startConstraints[robot]->Clone()));
     task.AddGoalConstraint(std::move(_goalConstraints[robot]->Clone()));
+
+    auto iter = m_pathConstraintMap.find(robot);
+    if(iter != m_pathConstraintMap.end()) {
+      task.AddPathConstraint(std::move(m_pathConstraintMap[robot]->Clone()));
+    }
+
     activeTask->AddTask(task);
   }
 
+  m_pathConstraintMap.clear();
+
   return {staticTask,activeTask};
+}
+
+void
+HandoffStrategy::
+GeneratePathConstraints(std::vector<std::string> _startConditions, 
+                        std::vector<std::string> _endConditions) {
+
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+
+  // Check if any motion conditions exist in both condition sets
+  for(auto label1 : _startConditions) {
+    auto c = as->GetCondition(label1);
+    auto m = dynamic_cast<MotionCondition*>(c);
+    if(!m)
+      continue;
+
+    for(auto label2 : _endConditions) {
+      if(label1 != label2)
+        continue;
+
+      auto constraints = m->GetConstraints();
+      for(auto pair : constraints) {
+        auto constraint = pair.second;
+        auto role = m->GetRole(constraint);
+
+        auto robot = m_roleMap[role];
+        if(!robot)
+          throw RunTimeException(WHERE) << "Generating path constraint for role without a robot.";
+
+        m_pathConstraintMap[robot] = constraint;
+        m_pathConstraintMap[robot]->SetRobot(robot);
+      }
+
+      break;
+    }
+  }
 }
 /*------------------------------------------------------------*/
