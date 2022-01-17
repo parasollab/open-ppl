@@ -985,7 +985,6 @@ SaveSolution(const Node& _node) {
 
     // Save task solution in plan
     plan->SetTaskSolution(task,sol);
-    plan->AddAllocation(robot,task);
   }
   plan->Print();
 }

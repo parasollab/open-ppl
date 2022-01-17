@@ -128,6 +128,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
   auto path = ConstructPath(last,parents,_output);
   path = AddDanglingNodes(path,parents);
+  path = OrderPath(path);
 
   if(m_debug) {
     std::cout << "Full Path" << std::endl;
@@ -215,11 +216,16 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
     if(elem.first)
       continue;
 
+    if(m_debug) {
+      std::cout << "Creating semantic tasks for hyperarc: " << elem.second << std::endl;
+    }
+
     // Convert hyperarc to semantic tasks
 
     // Get grounded hypergraph hyperarc
     auto aeh = m_actionExtendedHypergraph.GetHyperarc(elem.second);
     auto hyperarc = gh.GetHyperarcType(aeh.property);
+
 
     // Grab tasks of preceeding hyperarcs
     std::vector<SemanticTask*> previousStage;
@@ -236,6 +242,14 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
       // Add tasks from previous hyperarc's final stage to preceeding task set
       for(auto task : hyperarcTaskMap[*incoming.begin()]) {
         previousStage.push_back(task);
+      }
+    }
+
+ 
+    if(m_debug) {
+      std::cout << "Initial task dependencies" << std::endl;
+      for(auto task : previousStage) {
+        std::cout << "\t" << task->GetLabel() << std::endl;
       }
     }
 
@@ -256,15 +270,26 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
         auto task = new SemanticTask(label,top.get(),decomp,
                  SemanticTask::SubtaskRelation::AND,false,true,groupTask);
 
+        if(m_debug) {
+          std::cout << "Creating task: " << task->GetLabel() << std::endl;
+        }
+
         for(auto f : hyperarc.taskFormations[groupTask.get()]) {
           task->AddFormation(f);
         }
 
         currentStage.push_back(task);
 
+        if(m_debug) {
+          std::cout << "With dependencies:" << std::endl;
+        }
+
         // Add stage depedencies
         for(auto previous : previousStage) {
           task->AddDependency(previous,SemanticTask::DependencyType::Completion);
+          if(m_debug) {
+            std::cout << "\t" << previous->GetLabel() << std::endl;
+          }
         }
 
         // Check if group has been given initial dependency
@@ -275,6 +300,9 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
         // If not, assign the dependency
         task->AddDependency(init.second,SemanticTask::DependencyType::Completion);
         init.first = true;
+        if(m_debug) {
+          std::cout << "Assign initial dependency: " << init.second->GetLabel() << std::endl;
+        }
       }
 
       // Iterate stage forward
@@ -399,6 +427,51 @@ AddDanglingNodes(std::vector<HPElem> _path, std::set<HPElem>& _parents) {
   }
 
   return finalPath; 
+}
+
+std::vector<SubmodeQuery::HPElem>
+SubmodeQuery::
+OrderPath(std::vector<HPElem> _path) {
+  std::set<HPElem> used;
+
+  std::vector<HPElem> ordered = {_path.front()};
+  used.insert(_path.front());
+
+  while(ordered.size() != _path.size()) {
+    for(auto elem : _path) {
+      // Skip vertices
+      if(elem.first)
+        continue;
+
+      if(used.count(elem))
+        continue;
+
+      // Check if entire tail set is in the ordered path
+      auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(elem.second);
+      bool ready = true;
+      for(auto vid : hyperarc.tail) {
+        if(!used.count(std::make_pair(true,vid))) {
+          ready = false;
+          break;
+        }
+      }
+
+      // Skip if the entire tail set is not in the ordered path
+      if(!ready)
+        continue;
+
+      ordered.push_back(elem);
+      used.insert(elem);
+
+      for(auto vid : hyperarc.head) {
+        HPElem ve = std::make_pair(true,vid);
+        ordered.push_back(ve);
+        used.insert(ve);
+      }
+    }
+  }
+
+  return ordered; 
 }
 
 void

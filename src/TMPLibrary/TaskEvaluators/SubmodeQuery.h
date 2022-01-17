@@ -75,6 +75,8 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     std::vector<HPElem> AddDanglingNodes(std::vector<HPElem> _path,
                 std::set<HPElem>& _parents);
 
+    std::vector<HPElem> OrderPath(std::vector<HPElem> _path);
+
     void ComputeHeuristicValues();
 
     ///@}
