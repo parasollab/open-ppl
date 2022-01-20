@@ -638,6 +638,33 @@ InBounds(const Environment* const _env) const noexcept {
   return InBounds(_env->GetBoundary());
 }
 
+void
+GroupCfg::
+GetRandomGroupCfg(const Boundary* const _b) {
+  std::set<Robot*> found;
+  auto group = m_groupMap->GetGroup();
+
+  for(size_t i = 0; i < GetNumRobots(); i++) {
+    m_vids[i] = INVALID_VID;
+  }
+  InitializeLocalCfgs();
+
+  auto robots = group->GetRobots();
+  for(size_t i = 0; i < robots.size(); i++) {
+    auto robot = robots[i];
+
+    // Check if robot cfg was set by formation sampling.
+    if(found.count(robot))
+      continue;
+
+    // If not, get a random configuration for it.
+    Cfg cfg(robot);
+    cfg.GetRandomCfg(_b);
+
+    // Save cfg to local cfgs.
+    m_localCfgs[i] = cfg;
+  }
+}
 
 void
 GroupCfg::
@@ -688,10 +715,11 @@ InitializeLocalCfgs() noexcept {
   if(m_localCfgs.size() == numRobots)
     return;
 
+  m_localCfgs.clear();
   m_localCfgs.resize(numRobots);
 
   for(size_t i = 0; i < numRobots; ++i)
-    SetRobotCfg(i, IndividualCfg(GetRobot(i)));
+    m_localCfgs[i] = IndividualCfg(GetRobot(i));
 }
 
 

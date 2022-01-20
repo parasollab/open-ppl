@@ -371,6 +371,8 @@ class GroupCfg final {
     /// @overload
     bool InBounds(const Environment* const _env) const noexcept;
 
+    void GetRandomGroupCfg(const Boundary* const _b);
+
     /// Normalize Orientation DOFs for a Group Cfg
     virtual void NormalizeOrientation(const Formation& _robots = Formation())
         noexcept;

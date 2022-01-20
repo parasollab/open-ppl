@@ -19,7 +19,7 @@
     <Robot label="boxy-3" filename="3D/iCreate.xml">
       <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
     </Robot>
-    <Robot label="boxy-4" filename="3D/iCreate.xml">
+    <!--Robot label="boxy-4" filename="3D/iCreate.xml">
       <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
     </Robot>
     <Robot label="boxy-5" filename="3D/iCreate.xml">
@@ -30,12 +30,11 @@
     </Robot>
     <Robot label="boxy-7" filename="3D/iCreate.xml">
       <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
-    </Robot>
+    </Robot-->
 
     <!-- The robotLabels parameter lists all of the robots included in this group -->
-    <RobotGroup label="robotGroup" robotLabels="
-		  boxy-0 boxy-1 boxy-2 boxy-3 boxy-4
-	    boxy-5 boxy-6 boxy-7 " />
+    <RobotGroup label="robotGroup" robotLabels="boxy-0 boxy-1 boxy-2 boxy-3"/> 
+      <!-- boxy-4 boxy-5 boxy-6 boxy-7  /-->
 
     <GroupTask label="groupQuery" group="robotGroup">
       <Task label="query-0" robot="boxy-0">
@@ -70,7 +69,7 @@
           <CSpaceConstraint point="4.170000 -2.496667 0.000000" />
         </GoalConstraints>
       </Task>
-      <Task label="query-4" robot="boxy-4">
+      <!--Task label="query-4" robot="boxy-4">
         <StartConstraints>
           <CSpaceConstraint point="-2.503333 -4.170000 0.000000" />
         </StartConstraints>
@@ -101,7 +100,7 @@
         <GoalConstraints>
           <CSpaceConstraint point="2.496667 4.170000 0.000000" />
         </GoalConstraints>
-      </Task>
+      </Task-->
     </GroupTask>
 
   </Problem>
@@ -139,10 +138,12 @@
 
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="false" vcLabel="pqp_solid" saveIntermediates="true" />
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="false" vcLabel="alwaysTrue" saveIntermediates="true" />
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="minkowski" vcLabel="alwaysTrue" maxDist="4." minDist=".01" />
+      <BasicExtender label="BERO" debug="false" dmLabel="minkowski" vcLabel="pqp_solid" maxDist="4." minDist=".01" />
+      <DiscreteExtender label="DiscreteExtender" lp="sl"/>
     </Extenders>
 
     <PathModifiers></PathModifiers>
@@ -161,6 +162,8 @@
       </ComposeEvaluator>
 
       <CBSQuery label="CBSQuery" queryLabel="SIPP" debug="true" vcLabel="pqp_solid" safeIntervalToolLabel="SI" />
+      <DRRT label="DRRTEvaluator" rrt="DiscreteRRT"/>
+      <GroupQuery label="GroupQuery"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -170,8 +173,20 @@
         <Evaluator label="BoundedIndividualQuery" />
       </BasicPRM>
 
+      <GroupRRTStrategy label="DiscreteRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="DiscreteExtender"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="GroupQuery"/>
+      </GroupRRTStrategy>
+
       <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM">
         <Evaluator label="CBSQuery" />
+      </GroupDecoupledStrategy>
+
+      <GroupDecoupledStrategy label="dRRT" strategyLabel="IndividualPRM">
+        <Evaluator label="DRRTEvaluator" />
       </GroupDecoupledStrategy>
     </MPStrategies>
 
@@ -180,7 +195,7 @@
     </MPTools>
 
     <!-- The seed can be changed to generate different roadmaps and paths -->
-    <Solver mpStrategyLabel="CBSPRM" seed="12345678" baseFilename="multi-robot-example" vizmoDebug="true" />
+    <Solver mpStrategyLabel="dRRT" seed="12345678" baseFilename="multi-robot-example" vizmoDebug="true" />
   </Library>
 
   <TMPLibrary>

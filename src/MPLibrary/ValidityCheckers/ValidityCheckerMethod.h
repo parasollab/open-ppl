@@ -190,8 +190,11 @@ template <typename MPTraits>
 bool
 ValidityCheckerMethod<MPTraits>::
 IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  throw NotImplementedException(WHERE) << "No base class implementation is "
-                                       << "provided.";
+  for(auto robot : _cfg.GetRobots()) {
+    if(!IsValidImpl(_cfg.GetRobotCfg(robot),_cdInfo,_caller))
+      return false;
+  }
+  return true;
 }
 
 /*----------------------------------------------------------------------------*/

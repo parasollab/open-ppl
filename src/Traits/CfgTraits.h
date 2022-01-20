@@ -36,6 +36,7 @@
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/DiscreteExtender.h"
 
 //path smoothing includes
 
@@ -49,6 +50,8 @@
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/DRRT.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
@@ -59,6 +62,7 @@
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -126,7 +130,8 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>
+    BasicExtender<MPTraits>,
+    DiscreteExtender<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
@@ -150,6 +155,8 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    DRRT<MPTraits>,
+    GroupQuery<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
@@ -162,6 +169,7 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
+    GroupRRTStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
