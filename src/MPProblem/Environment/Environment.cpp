@@ -22,7 +22,6 @@ Terrain() = default;
 
 Terrain::
 Terrain(XMLNode& _node) {
-  //m_boundary = std::move(Boundary::Factory(_node));
 	std::string color;
   for(auto& child : _node) {
 		m_boundaries.push_back(std::move(Boundary::Factory(child)));
@@ -57,95 +56,31 @@ Terrain(const Terrain& _terrain) {
   m_show = _terrain.m_show;
 }
 
-bool
-Terrain::
-IsNeighbor(const Terrain& _terrain) {
-  Axis type = Z;
-  // iterate through the individual boundaries for both of the terrains
-  for(auto& boundary1: m_boundaries){
-    for(auto& boundary2: _terrain.m_boundaries){
-      // if the boundaries are touching then return true
-      if(IsTouching(boundary1.get(), boundary2.get(), type)){
-          return true;
-      }
-    }
-  }
+/*------------------------------- Accessors -------------------------------*/
 
-  // if the boundaries aren't touching return false
-  return false;
+
+const glutils::color&
+Terrain::
+Color() const noexcept {
+  return m_color;
 }
 
-bool
+
+Boundary*
 Terrain::
-IsTouching(Boundary* _b1, Boundary* _b2, Axis& _type) {
+GetBoundary() const noexcept {
+  return m_boundary.get();
+}
 
-  double b1maxX = _b1->GetRange(0).max;
-  double b1minX = _b1->GetRange(0).min;
-  double b2maxX = _b2->GetRange(0).max;
-  double b2minX = _b2->GetRange(0).min;
-
-  double b1maxY = _b1->GetRange(1).max;
-  double b1minY = _b1->GetRange(1).min;
-  double b2maxY = _b2->GetRange(1).max;
-  double b2minY = _b2->GetRange(1).min;
-
-  if((b1maxX == b2minX || b2maxX == b1minX)) {
-     if(_b1->GetRange(1).Contains(b2maxY) ||
-      			_b1->GetRange(1).Contains(b2minY) ||
-      			_b2->GetRange(1).Contains(b1maxY) ||
-      			_b2->GetRange(1).Contains(b1minY)) {
-      _type = X;
-      return true;
-		}
-  }
-  if(( b1maxY == b2minY || b2maxY == b1minY)) {
-     if(_b1->GetRange(0).Contains(b2maxX) ||
-      			 _b1->GetRange(0).Contains(b2minX) ||
-      		 	 _b2->GetRange(0).Contains(b1maxX) ||
-      			 _b2->GetRange(0).Contains(b1minX)) {
-      _type = Y;
-      return true;
-		}
-  }
-
-  return false;
+const std::vector<std::unique_ptr<Boundary>>&
+Terrain::
+GetBoundaries() const noexcept {
+	return m_boundaries;
 }
 
 double
 Terrain::
 GetPerimeter() {
-  /* 
-  double maxX = 0.0;
-  double minX = 0.0;
-  double maxY = 0.0;
-  double minY = 0.0;
-
-  // goes through all of the boundaries in the terrain and finds the max and
-  // paramaters of the edges
-  for(auto& boundary: _terrain.m_boundaries) {
-    Range<double> xRange = boundary->GetRange(0);
-    Range<double> yRange = boundary->GetRange(1);
-    if(xRange.max > maxX) {
-      maxX = xRange.max;
-    }
-
-    if(yRange.max > maxY) {
-      maxY = yRange.max;
-    }
-
-    if(xRange.min < minX){
-      minX = xRange.min;
-    }
-
-    if(yRange.min < minY){
-      minY = yRange.min;
-    }
-  }
-	*/
-
-  // determines the total perimeter as if the boundaries form one large box
-  //double total = (2 * (maxX - minX)) + (2 * (maxY - minY));
-
 	// Sum the perimeter of the individual boundaries 
   double total = 0;
 	for(auto& boundary : m_boundaries){
@@ -168,9 +103,103 @@ GetPerimeter() {
   return total;
 }
 
+bool
+Terrain::
+InTerrain(const Point3d _p) const noexcept {
+	for(auto& boundary : m_boundaries){
+		if(boundary->InBoundary(_p))
+			return true;
+	}
+	return false;
+}
+
+bool
+Terrain::
+InTerrain(const Cfg _cfg) const noexcept {
+	for(auto& boundary : m_boundaries){
+		if(boundary->InBoundary(_cfg))
+			return true;
+	}
+	return false;
+}
+
+bool
+Terrain::
+IsNeighbor(const Terrain& _terrain) {
+  Axis type = Z;
+  // iterate through the individual boundaries for both of the terrains
+  for(auto& boundary1: m_boundaries){
+    for(auto& boundary2: _terrain.m_boundaries){
+      // if the boundaries are touching then return true
+      if(IsTouching(boundary1.get(), boundary2.get(), type)){
+          return true;
+      }
+    }
+  }
+
+  // if the boundaries aren't touching return false
+  return false;
+}
+
+bool
+Terrain::
+IsVirtual() const noexcept {
+	return m_virtual;
+}
+
+bool
+Terrain::
+IsWired() const noexcept {
+  return m_wire;
+}
+
+/*------------------------------- Helpers -------------------------------*/
+
+bool
+Terrain::
+IsTouching(Boundary* _b1, Boundary* _b2, Axis& _type) {
+  /// @todo Check the implementation of this function
+
+  // Get min/max values of boundaries in x direction
+  double b1maxX = _b1->GetRange(0).max;
+  double b1minX = _b1->GetRange(0).min;
+  double b2maxX = _b2->GetRange(0).max;
+  double b2minX = _b2->GetRange(0).min;
+
+  // Get min/max values of boundaries in y direction
+  double b1maxY = _b1->GetRange(1).max;
+  double b1minY = _b1->GetRange(1).min;
+  double b2maxY = _b2->GetRange(1).max;
+  double b2minY = _b2->GetRange(1).min;
+
+  // Determine if touching in x direction
+  if((b1maxX == b2minX || b2maxX == b1minX)) {
+     if(_b1->GetRange(1).Contains(b2maxY) ||
+      			_b1->GetRange(1).Contains(b2minY) ||
+      			_b2->GetRange(1).Contains(b1maxY) ||
+      			_b2->GetRange(1).Contains(b1minY)) {
+      _type = X;
+      return true;
+		}
+  }
+  // Determine if touching in y direction
+  if(( b1maxY == b2minY || b2maxY == b1minY)) {
+     if(_b1->GetRange(0).Contains(b2maxX) ||
+      			 _b1->GetRange(0).Contains(b2minX) ||
+      		 	 _b2->GetRange(0).Contains(b1maxX) ||
+      			 _b2->GetRange(0).Contains(b1minX)) {
+      _type = Y;
+      return true;
+		}
+  }
+
+  return false;
+}
+
 double
 Terrain::
 Overlap(Boundary* _b1, Boundary* _b2) {
+  // Determine if boundaries touching on X or Y axis
 	Axis type = Z;
   if(!IsTouching(_b1, _b2, type)) {
     std::cout << "ERROR: The two boundaries are not touching." << '\n';
@@ -200,7 +229,6 @@ Overlap(Boundary* _b1, Boundary* _b2) {
   // this will calculate the overlap of the two borders
   return std::min(max1, max2) - std::max(min1, min2);
 }
-
 
 
 const glutils::color&
@@ -259,6 +287,8 @@ Terrain::
 ShouldShow() const noexcept {
   return m_show;
 }
+
+/*------------------------------- Construction -------------------------------*/
 
 Environment::
 Environment() = default;
@@ -425,7 +455,7 @@ ReadXML(XMLNode& _node) {
     else if(child.Name() == "MultiBody") {
       m_obstacles.emplace_back(new MultiBody(child));
 
-      /// @TODO Add support for dynamic obstacles
+      /// @todo Add support for dynamic obstacles
       if(m_obstacles.back()->IsActive())
         throw ParseException(_node.Where(), "Dynamic obstacles are not yet "
             "supported.");
@@ -491,7 +521,7 @@ Read(std::string _filename) {
     m_obstacles.emplace_back(new MultiBody(MultiBody::Type::Passive));
     m_obstacles.back()->Read(ifs, cbs);
 
-    /// @TODO Add support for dynamic obstacles
+    /// @todo Add support for dynamic obstacles
     if(m_obstacles.back()->IsActive())
       throw ParseException(cbs.Where(), "Dynamic obstacles are not yet "
           "supported.");
@@ -583,7 +613,7 @@ ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots) {
   // Estimate a good resolution as 1% of the minimum bbx span.
   m_positionRes = minimumSpan * .01;
 
-  /// @TODO Add an automatic computation of the orientation resolution here.
+  /// @todo Add an automatic computation of the orientation resolution here.
   ///       This should be done so that rotating the robot base by one orientation
   ///       resolution makes a point on the bounding sphere move by one position
   ///       resolution. If possible we should also separate the resolutions for

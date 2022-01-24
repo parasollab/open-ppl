@@ -100,9 +100,20 @@ class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
     virtual void SetHeuristicFunction(SSSPHeuristicFunction<RoadmapType> _h);
     virtual void SetNeighborsFunction(SSSPNeighborsFunction<RoadmapType> _n);
 
+    /// Set the time of the last constraint.
+    /// @param _last The time to use.
 		void SetLastConstraintTime(double _last);
+
+    /// Set the time of the last goal constraint.
+    /// @param _time The time to use.
 		void SetLastGoalConstraintTime(double _time);
+
+    /// Set the start time of the query.
+    /// @param _start The time to use.
 		void SetStartTime(double _start);
+
+    /// Set the end time of the query.
+    /// @param _end The time to use.
 		void SetEndTime(double _end);
 
     ///@}
@@ -113,6 +124,7 @@ class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
     ///@{
 
     /// Reset the path and list of undiscovered goals.
+    /// @param _r The roadmap to use.
     virtual void Reset(RoadmapType* const _r);
 
     /// Set the search algorithm choice from a string.
@@ -150,6 +162,9 @@ class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
         typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
+    /// Perform a query between start and goal vertices in the roadmap
+    /// @param _start The start vertex.
+    /// @param _goal The goal vertex.
     std::vector<typename QueryMethod<MPTraits>::VID>
         TwoVariableQuery(const VID _start, const VIDSet& _goals);
 
@@ -176,10 +191,10 @@ class QueryMethod : virtual public MapEvaluatorMethod<MPTraits> {
 
     SSSPNeighborsFunction<RoadmapType> m_neighborsFunction;
 
-		double m_lastConstraint{0};
-		double m_lastGoalConstraint{0};
-		double m_startTime{0};
-		double m_endTime{0};
+		double m_lastConstraint{0};     ///< The time of the last constraint
+		double m_lastGoalConstraint{0}; ///< The time of the last goal constraint
+		double m_startTime{0};          ///< The start time of the query
+		double m_endTime{0};            ///< The end time of the query
 
     ///@}
 

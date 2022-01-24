@@ -66,6 +66,8 @@ class TRPTool : public MPBaseObject<MPTraits> {
     ///@name Setters
     ///@{
 
+    /// Set the MPLibrary object to use
+    /// @param _library The MPLibrary to use.
     void SetMPLibrary(MPLibrary* _library);
 
     ///@}
@@ -79,7 +81,7 @@ class TRPTool : public MPBaseObject<MPTraits> {
     void AddDepots();
 
     /// Extracts the path set from the output of the LKH library.
-    /// @params _pathVertices The indices of the paths taken by each robot in
+    /// @param _pathVertices The indices of the paths taken by each robot in
     /// the solution.
     PathSets Extract(std::vector<std::vector<size_t>> _pathVertices);
 

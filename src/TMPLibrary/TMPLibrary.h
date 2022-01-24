@@ -11,7 +11,7 @@
 
 #ifndef PPL_TEST_TRAITS_H_
   #include "Traits/CfgTraits.h"
-#else 
+#else
   #include "Traits/TestTraits.h"
 #endif
 
@@ -111,6 +111,8 @@ class TMPLibrary {
     /// Get a TMPStrategyMethod method
     TMPStrategyMethodPointer GetTMPStrategy(const std::string& _l);
 
+    /// Add a TMPStrategyMethod pointer
+    /// @param TMPStrategyMethodPointer
     void AddTMPStrategy(TMPStrategyMethodPointer _sm, const std::string& _l);
 
     ///@}
@@ -120,14 +122,19 @@ class TMPLibrary {
     /// Get a Point-of-Interest placement method
     PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string& _l);
 
+    /// Add a Point-of-Interest placement method pointer
+    /// @param PoIPlacementMethodPointer
     void AddPoIPlacementMethod(PoIPlacementMethodPointer _pm, const std::string& _l);
 
     ///@}
     ///@name TaskEvaluator Accessors
     ///@{
 
+    /// Get a Task Evaluator
     TaskEvaluatorMethodPointer GetTaskEvaluator(const std::string& _l);
 
+    /// Add a TaskEvalutorMethod pointer
+    /// @param TaskEvaluatorMethodPointer
     void AddTaskEvaluator(TaskEvaluatorMethodPointer _te, const std::string& _l);
 
     ///@}
@@ -137,6 +144,8 @@ class TMPLibrary {
     /// Get a TaskDecomposition
     TaskDecomposerMethodPointer GetTaskDecomposer(const std::string& _l);
 
+    /// Add a TaskDecomposition pointer
+    /// @param TaskDecomposerMethodPointer
     void AddTaskDecomposer(TaskDecomposerMethodPointer _td, const std::string& _l);
 
     ///@}
@@ -146,6 +155,8 @@ class TMPLibrary {
     /// Get a TaskAllocator
     TaskAllocatorMethodPointer GetTaskAllocator(const std::string& _l);
 
+    /// Add a TaskAlloctor pointer
+    /// @param TaskAllocatorMethodPointer
     void AddTaskAllocator(TaskAllocatorMethodPointer _ta, const std::string& _l);
 
     ///@}
@@ -217,7 +228,7 @@ class TMPLibrary {
 
     void InitializeMPProblem(MPProblem* _problem);
 
-    ///@
+    ///@}
     ///@name Debug
     ///@{
 

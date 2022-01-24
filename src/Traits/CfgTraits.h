@@ -23,6 +23,7 @@
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
@@ -38,6 +39,7 @@
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/DiscreteExtender.h"
 #include "MPLibrary/Extenders/KinodynamicExtender.h"
 #include "MPLibrary/Extenders/MixExtender.h"
 
@@ -54,11 +56,13 @@
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/DRRT.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
@@ -68,6 +72,7 @@
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -81,7 +86,7 @@
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
-/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// Essentially, the important types are the CfgType or the @cspace abstraction
 /// class, the WeightType or the edge type of the graph, and a type list for
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
@@ -117,6 +122,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
+    ComposeCollision<MPTraits>
     ComposeValidity<MPTraits>,
     TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
@@ -141,6 +147,7 @@ struct MPTraits {
   //types of extenders avaible in our world
   typedef boost::mpl::list<
     BasicExtender<MPTraits>,
+    DiscreteExtender<MPTraits>,
     KinodynamicExtender<MPTraits>,
     MixExtender<MPTraits>
       > ExtenderMethodList;
@@ -167,11 +174,13 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    DRRT<MPTraits>,
     GroupQuery<MPTraits>,
     GroupSIPPMethod<MPTraits>,
     LazyQuery<MPTraits>,
     SIPPMethod<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
@@ -183,6 +192,7 @@ struct MPTraits {
     EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
+    GroupRRTStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>

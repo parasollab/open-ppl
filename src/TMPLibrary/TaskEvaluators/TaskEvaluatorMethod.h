@@ -33,6 +33,9 @@ class TaskEvaluatorMethod : public TMPBaseObject {
     ///@name Helper Functions
     ///@{
 
+    ///Exectute
+    ///@param _plan pointer
+    ///@return True if exectuion is successful
     virtual bool Run(Plan* _plan = nullptr);
 
     ///@}

@@ -9,7 +9,7 @@
 #include <thread>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base class for agents which will plan paths using PMPL. This agent only
+/// Base class for agents which will plan paths using PPL. This agent only
 /// plans; it does not attempt to execute the plan in the simulation.
 ///
 /// The core behavior is:
@@ -36,10 +36,18 @@ class PlanningAgent : public Agent {
     ///@name Construction
     ///@{
 
+    /// Create an agent for a robot.
+    /// @param _r The robot which this agent will reason for.
     PlanningAgent(Robot* const _r);
 
+    /// Copy an agent for another robot.
+    /// @param _r The destination robot.
+    /// @param _a The agent to copy.
     PlanningAgent(Robot* const _r, const PlanningAgent& _a);
 
+    /// Create an agent for a robot.
+    /// @param _r The robot which this agent will reason for.
+    /// @param _node The XML node to parse.
     PlanningAgent(Robot* const _r, XMLNode& _node);
 
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const override;
@@ -62,7 +70,7 @@ class PlanningAgent : public Agent {
     ///@name Planning
     ///@{
 
-    /// Does the agent have a plan for its current task.
+    /// Does the agent have a plan for its current task?
     /// @return True if the agent has a plan.
     virtual bool HasPlan() const;
 
@@ -97,7 +105,7 @@ class PlanningAgent : public Agent {
     /// a separate thread.
     virtual void GeneratePlan();
 
-    /// Function call for PMPL.
+    /// Function call for PPL.
     virtual void WorkFunction(std::shared_ptr<MPProblem> _problem);
 
     /// Stop the current plan (only works for MPStrategies which are implemented
@@ -135,7 +143,7 @@ class PlanningAgent : public Agent {
 
     std::unique_ptr<MPLibrary> m_library;   ///< This agent's planning library.
     std::unique_ptr<MPSolution> m_solution; ///< The current solution.
-    std::thread m_thread;                   ///< Thread for agent to run PMPL.
+    std::thread m_thread;                   ///< Thread for agent to run PPL.
     std::atomic<bool> m_planning{false};    ///< Is the agent currently planning.
     std::atomic<size_t> m_planVersion{1};   ///< The current plan version.
 

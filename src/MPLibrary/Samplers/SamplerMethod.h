@@ -169,6 +169,9 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
         const Boundary* const _boundary, GroupOutputIterator _valid,
         GroupOutputIterator _invalid);
+    ///@example Samplers_UseCase.cpp
+    /// This is an example of how to use the sampler methods.
+
     /// This version does not return invalid samples.
     /// @overload
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,

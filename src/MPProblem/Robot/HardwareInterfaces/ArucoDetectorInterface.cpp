@@ -115,7 +115,7 @@ GetLastTransformations() {
 std::vector<double>
 ArucoDetectorInterface::
 GetUncertainty() {
-  /// @TODO Determine our measurement uncertainty. This should be a vector of
+  /// @todo Determine our measurement uncertainty. This should be a vector of
   ///       three elements which describe the error in {x, y, t}.
   return {};
 }

@@ -1,5 +1,5 @@
-#ifndef PMPL_CBS_QUERY_H_
-#define PMPL_CBS_QUERY_H_
+#ifndef PPL_CBS_QUERY_H_
+#define PPL_CBS_QUERY_H_
 
 #include "MapEvaluatorMethod.h"
 #include "SIPPMethod.h"
@@ -146,6 +146,10 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// Merges two safe intervals
     Range<double> MergeIntervals(Range<double> _interval1, Range<double> _interval2);
 
+    ///@}
+    ///@name Internal State
+    ///@{
+
     std::vector<Robot*> m_robots; ///< The robots in the group
 
     std::string m_queryLabel;  ///< Query method for making individual plans.
@@ -161,6 +165,8 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     GroupConflictsCache m_groupConflictsCache; ///< The cache of contraints with cached safe intervals
     EdgeIntervalsMap m_edgeIntervalsMap; ///< The cached edge intervals
     size_t m_cacheIndex{0}; ///< The size of the cache
+
+    ///@}
 
 };
 
@@ -199,7 +205,7 @@ CBSQuery<MPTraits>::
 Initialize() {
   // Assert that the validity checker is an instance of collision detection
   // validity.
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(
       this->GetValidityChecker(m_vcLabel)
   );
   if(!vc)

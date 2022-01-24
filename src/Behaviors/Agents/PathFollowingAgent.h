@@ -6,7 +6,7 @@
 #include "ConfigurationSpace/Cfg.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This agent calls pmpl to generate a path, then attempts to follow the path
+/// This agent calls PPL to generate a path. It then attempts to follow the path
 /// waypoints as closely as possible by relying on the robot's controller.
 ////////////////////////////////////////////////////////////////////////////////
 class PathFollowingAgent : public PlanningAgent {
@@ -16,10 +16,18 @@ class PathFollowingAgent : public PlanningAgent {
     ///@name Construction
     ///@{
 
+    /// Create an agent for a robot.
+    /// @param _r The robot which this agent will reason for.
     PathFollowingAgent(Robot* const _r);
 
+    /// Copy an agent for another robot.
+    /// @param _r The destination robot.
+    /// @param _a The agent to copy.
     PathFollowingAgent(Robot* const _r, const PathFollowingAgent& _a);
 
+    /// Create an agent for a robot.
+    /// @param _r The robot which this agent will reason for.
+    /// @param _node The XML node to parse.
     PathFollowingAgent(Robot* const _r, XMLNode& _node);
 
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const override;
@@ -32,6 +40,7 @@ class PathFollowingAgent : public PlanningAgent {
 
     virtual void Uninitialize() override;
 
+    /// Visually remove the agent's roadmap representation.
     void ClearVisualGraph();
 
     ///@}
@@ -43,10 +52,13 @@ class PathFollowingAgent : public PlanningAgent {
     virtual void ClearPlan() override;
 
     ///@}
+    ///@ name Accessors
     ///@{
 
     const std::vector<Cfg>& GetPath() const;
 
+    /// Sets the agent's plan.
+    /// @param _path The set of configurations to follow. 
     void SetPlan(std::vector<Cfg> _path);
 
     ///@}

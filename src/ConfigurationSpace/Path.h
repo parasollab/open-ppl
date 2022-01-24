@@ -82,10 +82,14 @@ class PathType final {
     template <typename MPLibrary>
     const std::vector<CfgType> FullCfgsWithWait(MPLibrary* const _lib) const;
 
+    /// Get the number of timesteps calculated to traverse the path,
+    /// including waiting times.
     size_t TimeSteps() const;
 
+    /// Hardcode number of timesteps in the path.
     void SetTimeSteps(size_t _timesteps);
 
+    /// Reset the number of timesteps to 0.
     void ResetTimeSteps();
 
     /// Append another path to the end of this one.
@@ -113,9 +117,18 @@ class PathType final {
     /// Clear cached data, but leave the VIDs.
     void FlushCache();
 
-		void SetFinalWaitTimeSteps(const size_t& _timeSteps);
+    /// Set the number of timesteps to wait after traversal of the path.
+    /// @param _timeSteps The number of desired timesteps.
+    void SetFinalWaitTimeSteps(const size_t& _timeSteps);
 
-		const size_t GetFinalWaitTimeSteps() const;
+    /// Get the number of timesteps to wait after traversal of the path.
+    const size_t GetFinalWaitTimeSteps() const;
+
+    /// Set the wait times at each vertex in path
+    /// Used in Safe Interval Path Planning
+    void SetWaitTimes(std::vector<size_t> _waitTimes);
+
+    std::vector<size_t> GetWaitTimes();
 
     /// Set the wait times at each vertex in path
     /// Used in Safe Interval Path Planning

@@ -40,7 +40,7 @@ class StateGraph : public TMPBaseObject {
 
     ///@name Helpers
     ///@{
-
+    ///Construct graph
     virtual void ConstructGraph();
 
     ///@}

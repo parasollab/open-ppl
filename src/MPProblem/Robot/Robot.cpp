@@ -405,7 +405,7 @@ InitializePlanningSpaces() {
   for(size_t i = pos; i < pos + ori; ++i)
     m_vspace->SetRange(i, -m_maxAngularVelocity, m_maxAngularVelocity);
 
-  /// @TODO Set up a way to specify velocity limits for each joint.
+  /// @todo Set up a way to specify velocity limits for each joint.
   for(size_t i = pos + ori; i < dof; ++i)
     m_vspace->SetRange(i, -1, 1);
 }

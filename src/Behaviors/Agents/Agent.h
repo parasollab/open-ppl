@@ -73,6 +73,8 @@ class Agent {
 
     /// Create a copy of this agent for another robot. This is provided so that
     /// we can copy an agent without knowing its type.
+    /// @param _r The robot which this cloned agent will reason for.
+    /// @return A copy of the agent.
     virtual std::unique_ptr<Agent> Clone(Robot* const _r) const = 0;
 
     virtual ~Agent();
@@ -100,7 +102,7 @@ class Agent {
     std::shared_ptr<MPTask> GetTask() const noexcept;
 
     /// Resets the start constraint of the current task to the robot's current
-    /// position
+    /// position.
     virtual void ResetStartConstraint();
 
     ///@}
@@ -116,7 +118,7 @@ class Agent {
     /// @param _dt The timestep length.
     virtual void Step(const double _dt);
 
-    /// Tear down the agent. Release any resources and reset the object to it's
+    /// Tear down the agent. Release any resources and reset the object to its
     /// pre-initialize state.
     virtual void Uninitialize() = 0;
 
@@ -124,12 +126,12 @@ class Agent {
     /// problem time resolution and larger than the hardware time (if any).
     size_t MinimumSteps() const;
 
-    /// Check for proximity of other robots and return those that lie within
+    /// Check for proximity to other robots and return those that lie within
     /// some threshold.
     /// @WARNING This checks the distance between the robots' reference points;
     ///          it does not indicate the minimum distance between their hulls.
     /// @param _distance The distance threshold.
-    /// @return the vector of Robots within the threshold.
+    /// @return The vector of Robots within the threshold.
     std::vector<Agent*> ProximityCheck(const double _distance) const;
 
     ///@}
@@ -138,14 +140,14 @@ class Agent {
 
     /// Stop the robot in simulation (places 0s in all 6 velocity dofs).
     /// @WARNING Arbitrarily setting the velocity does not respect the robot's
-    ///          dynamics. It is OK for debugging and freezing a scenario upon
+    ///          dynamics. It is suitable for debugging and freezing a scenario upon
     ///          completion, but it is not physically realistic.
     void Halt();
 
     /// Orders the agent to stop itself at its current position. It will ask the
     /// controller to choose actions which stay as close as possible to the
     /// current position.
-    /// @param _steps The number of steps we wish to stop for.
+    /// @param _steps The number of steps to stop for.
     void PauseAgent(const size_t _steps);
 
     ///@}
@@ -169,11 +171,11 @@ class Agent {
     Cfg EstimateState();
 
     /// Continue executing the last controls if time remains.
-    /// @return True if we still have time left on the last controls, false if
-    ///         we are done and need new controls.
+    /// @return True if time is left on the last controls, false if
+    ///         the agent is finished and needs new controls.
     bool ContinueLastControls();
 
-    /// Execute a set of controls on the simulated robot, and on the hardware if
+    /// Execute a set of controls on the simulated robot, and additionally on the hardware if
     /// present.
     /// @param _c The controls to execute.
     /// @param _steps The number of time steps to execute the control.

@@ -16,6 +16,7 @@ class AverageEstimator : public StateEstimator {
     ///@name Construction
     ///@{
 
+    /// @param _robot Robot for the state estimator
     AverageEstimator(Robot* const _robot);
 
     virtual ~AverageEstimator();
@@ -36,6 +37,8 @@ class AverageEstimator : public StateEstimator {
     ///@name Estimation Helpers
     ///@{
 
+    /// Compute the rotation of the robot
+    /// @param _sensor Sensor whose data to use
     double ComputeRotation(SensorInterface* const _sensor);
 
     ///@}

@@ -45,26 +45,46 @@ class Terrain {
     Terrain(XMLNode& _node);
 
     Terrain(const Terrain& _terrain);
-
-    bool IsNeighbor(const Terrain& _terrain);
-
-    double GetPerimeter();
     ///@}
+
+
     ///@name Accessors
     ///@{
 
+    /// Get the color for visualization
     const glutils::color& Color() const noexcept;
 
+    /// Get the single enclosing boundary of the terrain
     Boundary* GetBoundary() const noexcept;
 
+    /// Get the single enclosing boundaries of the terrain
 		const std::vector<std::unique_ptr<Boundary>>& GetBoundaries() const noexcept;
 
+    /// Find the perimeter of all the boundaries
+    double GetPerimeter();
+
+    /// Check if point is in terrain
+    /// @param _p The point to check
+    /// @return True if _p within m_boundaries
 		bool InTerrain(const Point3d _p) const noexcept;
 
+
+    /// Check if configuration is in terrain
+    /// @param _cfg The configuration to check
+    /// @return True if _cfg within m_boundaries
 		bool InTerrain(const Cfg _cfg) const noexcept;
 
+    /// Check if terrain is a neighbor of this terrain
+    /// @param _terrain The terrain to check for neighboring
+    /// @return True if _terrain is touching this terrain
+    bool IsNeighbor(const Terrain& _terrain);
+
+    /// Check if terrain considered virtual
+    /// @return Value of m_virtual
 		bool IsVirtual() const noexcept;
 
+    /// Check if mesh will be wired
+    /// @return Value of m_wire
     bool IsWired() const noexcept;
 
     bool ShouldShow() const noexcept;
@@ -75,8 +95,17 @@ class Terrain {
 		///@name Helpers
 		///@{
 
+    /// Determine if two boundaries are touching
+    /// @param _bound1 First boundary to test
+    /// @param _bound2 Second boundary to test
+    /// @param _type Axis (X or Y) that boundaries determined to be touching on
+    /// @return True if _bound1 and _bound2 touching in X or Y axis
     bool IsTouching(Boundary* _bound1, Boundary* _bound2, Axis& _type);
 
+    /// Determine how much boundaries overlap
+    /// @param _bound1 First boundary to test
+    /// @param _bound2 Second boundary to test
+    /// @return Amount of overlap, 0 if not touching
     double Overlap(Boundary* _b1, Boundary* _b2);
 
 		///@}
@@ -168,35 +197,46 @@ class Environment {
     ///@{
 
     /// Automatically compute position resolution when not specified.
+    /// @param _robots Robots to consider when determining resolution
     void ComputeResolution(const std::vector<std::unique_ptr<Robot>>& _robots);
 
+    /// Get the position resolution
     double GetPositionRes() const noexcept;
+    /// Set the position resolution
     void SetPositionRes(double _res) noexcept;
 
+    /// Get the orientation resolution
     double GetOrientationRes() const noexcept;
+    /// Set the orientation resolution
     void SetOrientationRes(double _res) noexcept;
 
+    /// Get the time resolution
     double GetTimeRes() const noexcept;
 
     ///@}
     ///@name Boundary Functions
     ///@{
 
+    /// Get the single boundary of the environemnt
     Boundary* GetBoundary() const noexcept;
 
+    /// Get the single boundary of the environemnt
+    /// @param _b The new boundary
     void SetBoundary(std::unique_ptr<Boundary>&& _b) noexcept;
 
     ///@}
     ///@name Obstacle Functions
     ///@{
 
-    /// Number of MultiBodies
+    /// Get the number of MultiBodies
     size_t NumObstacles() const noexcept;
 
+    /// Get requested obstacle
     /// @param _index Requested multibody
     /// @return Pointer to static multibody
     MultiBody* GetObstacle(size_t _index) const;
 
+    /// Get random multiboy
     /// @return Pointer to random static multibody
     MultiBody* GetRandomObstacle() const;
 
@@ -238,6 +278,7 @@ class Environment {
     ///@name Terrain Functions
     ///@{
 
+    /// Get environment terrains
     const TerrainMap& GetTerrains() const noexcept;
 
     ///@}
@@ -250,12 +291,23 @@ class Environment {
 
     ///IROS Hacks
 
+    /// Determine if two configurations are in the same boundary of a terrain
+    /// and, if so, sets mutual terrain as new boundary
+    /// @param _start First configuration
+    /// @param _end Second configuration
+    /// @return True if _start and _cfg in same terrain boundary,
     bool IsolateTerrain(Cfg start, Cfg goal);
 
+    /// Determine if two configurations are in the same terrain
+    /// @param _start First configuration
+    /// @param _end Second configuration
+    /// @return True if _start and _cfg in same terrain
 		bool SameTerrain(Cfg _start, Cfg _goal);
 
+    /// Restores original boundary
     void RestoreBoundary();
 
+    /// Saves boundary as original boundary
     void SaveBoundary();
 
     std::unique_ptr<Boundary> m_originalBoundary;
@@ -267,6 +319,8 @@ class Environment {
     ///@{
 
     /// Initialize a boundary object of the appropriate type.
+    /// @param _type Type of boundary object (box, box2d, sphere, or sphere2d)
+    /// @param _where String for parse exception
     void InitializeBoundary(std::string _type, const std::string _where);
 
     /// Create an obstacle for the boundary.

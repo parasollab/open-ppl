@@ -1,7 +1,7 @@
 #ifndef PMPL_COLLISION_DETECTION_VALIDITY_H_
 #define PMPL_COLLISION_DETECTION_VALIDITY_H_
 
-#include "ValidityCheckerMethod.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidityMethod.h"
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Bodies/MultiBody.h"
@@ -28,7 +28,7 @@
 /// 2. Obstacle collision. The robot's geometry overlaps with some workspace
 ///    obstacle.
 /// 3. Inter-robot collision. The robot's geometry overlaps with some other
-///    robot in its currently configuration.
+///    robot in its current configuration.
 /// For group configurations, collisions between robots within the group are
 /// considered as self-collisions, while collisions with robots not in the group
 /// are classified as inter-robot collisions. This distinction is made because
@@ -49,7 +49,8 @@
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
+class CollisionDetectionValidity 
+  : public CollisionDetectionValidityMethod<MPTraits> {
 
   public:
 
@@ -74,18 +75,18 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     /// @return Collision Detection object
-    CollisionDetectionMethod* GetCDMethod() const noexcept;
+    virtual CollisionDetectionMethod* GetCDMethod() const noexcept override;
 
     /// Determine whether a workspace point lies inside of an obstacle.
     /// @param _p The workspace point.
     /// @return True if _p is inside an obstacle.
-    bool IsInsideObstacle(const Point3d& _p);
+    virtual bool IsInsideObstacle(const Point3d& _p) override;
 
     /// Check if two workspace points are mutually visible.
     /// @param _a The first point.
     /// @param _b The second point.
     /// @return True if _a is visible from _b and vice versa.
-    virtual bool WorkspaceVisibility(const Point3d& _a, const Point3d& _b);
+    virtual bool WorkspaceVisibility(const Point3d& _a, const Point3d& _b) override;
 
     /// Check for collision between two multibodies.
     /// @param _cdInfo CDInfo
@@ -93,8 +94,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
     /// @param _b The second multibody.
     /// @param _caller Function calling validity checker.
     /// @return True if _a and _b collide in their present configurations.
-    bool IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
-        const MultiBody* const _b, const std::string& _caller);
+    virtual bool IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
+        const MultiBody* const _b, const std::string& _caller) override;
 
     ///@}
 
@@ -188,7 +189,8 @@ class CollisionDetectionValidity : public ValidityCheckerMethod<MPTraits> {
 
 template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
-CollisionDetectionValidity() : ValidityCheckerMethod<MPTraits>() {
+CollisionDetectionValidity() 
+  : CollisionDetectionValidityMethod<MPTraits>() {
   this->SetName("CollisionDetection");
 }
 
@@ -196,7 +198,7 @@ CollisionDetectionValidity() : ValidityCheckerMethod<MPTraits>() {
 template <typename MPTraits>
 CollisionDetectionValidity<MPTraits>::
 CollisionDetectionValidity(XMLNode& _node)
-    : ValidityCheckerMethod<MPTraits>(_node) {
+    : CollisionDetectionValidityMethod<MPTraits>(_node) {
   this->SetName("CollisionDetection");
 
   m_ignoreSelfCollision = _node.Read("ignoreSelfCollision", false,

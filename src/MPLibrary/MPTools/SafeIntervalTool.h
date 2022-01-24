@@ -266,7 +266,7 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(basevc);
 
   // Compute the step number associated with _timestep.
   const double timeRes = this->GetEnvironment()->GetTimeRes();

@@ -26,7 +26,7 @@
 ///
 /// Weight is the concept for what is stored on the graph edges. Essentially,
 /// edges are defined as polygonal chains I = {q_1, q_2, ..., q_n}
-/// through @cspace. They have two essential properties, a weight value
+/// through @cspace. They have two essential properties: a weight value
 /// representing some idea of distance between the two end points of the edge
 /// and a set of intermediate configurations defining the polygonal chain (not
 /// including the start and goal configurations).
@@ -40,6 +40,10 @@ class DefaultWeight {
     ///@name Construction
     ///@{
 
+    /// Construct a weight.
+    /// @param _label An initial string label for identification.
+    /// @param _w An initial weight value.
+    /// @param _intermediates A vector of intermediate configurations.
     DefaultWeight(const std::string& _label = "", const double _w = 0,
         const std::vector<CfgType>& _intermediates = std::vector<CfgType>());
 
@@ -49,47 +53,84 @@ class DefaultWeight {
     ///@name Assignment
     ///@{
 
+    /// Set the current weight to a copy of a given weight.
+    /// @param _w The given weight.
     virtual const DefaultWeight& operator=(const DefaultWeight& _w);
 
     ///@}
     ///@name Ordering and Equality
     ///@{
 
+    /// Check if the current and given weights are equal.
+    /// @param _w The given weight.
+    /// @return True is equal, false otherwise.
     virtual bool operator==(const DefaultWeight& _w) const noexcept;
+
+    /// Check if the current and given weights are unequal.
+    /// @param _w The given weight.
+    /// @return True is unequal, false otherwise.
     virtual bool operator!=(const DefaultWeight& _w) const noexcept;
 
+    /// Check if the current weight is less than a given weight
+    /// by numerical weight value.
+    /// @param _w The given weight.
+    /// @return True is current weight value is less, false otherwise.
     virtual bool operator<(const DefaultWeight& _other) const noexcept;
 
     ///@}
     ///@name Properties
     ///@{
 
+    /// Get the string label value.
     const std::string& GetLPLabel() const noexcept;
+    /// Set the string label value.
     void SetLPLabel(const std::string& _lpLabel) noexcept;
 
+    /// Get a vector of intermediate configurations corresponding
+    /// to the current weight.
     std::vector<CfgType>& GetIntermediates() noexcept;
+    /// Get a vector of intermediate configurations corresponding
+    /// to the current weight.
     const std::vector<CfgType>& GetIntermediates() const noexcept;
 
+    /// Set the intermediate configurations corresponding to the current weight.
     void SetIntermediates(const std::vector<CfgType>& _intermediates) noexcept;
+    /// Set the intermediate configurations corresponding to the current weight.
     void SetIntermediates(std::vector<CfgType>&& _intermediates) noexcept;
 
+    /// Get the numerical weight value.
     double GetWeight() const noexcept;
+    /// Set the numerical weight value.
     void SetWeight(const double _w) noexcept;
 
+    /// Set a singular control corresponding to the path given by the weight.
     void SetControl(const Control& _c) noexcept;
+    /// Get a vector of controls corresponding to the path given by the weight.
     const ControlSet& GetControlSet() const noexcept;
+    /// Get a vector of controls corresponding to the path given by the weight.
     ControlSet& GetControlSet() noexcept;
+    /// Set a vector of controls corresponding to the path given by the weight.
     void SetControlSet(const ControlSet& _c) noexcept;
 
+    /// Is the checked resolution multiple at most _mult? 
     bool IsChecked(const int _mult) const noexcept;
+    /// Set the checked resolution multiple to a lesser value than current.
+    /// @param _mult The new desired value.
     void SetChecked(const int _mult) noexcept;
 
     bool HasClearance() const noexcept;
+    /// Get the clearance value of the current weight.
     double GetClearance() const noexcept;
+    /// Set the clearance value of the current weight.
+    /// @param The desired new clearance value.
     void SetClearance(const double _c) noexcept;
 
     // The number of timesteps that the local plan on this edge cares about.
+    /// Get the number of timesteps of the local plan corresponding
+    /// to the weight's intermediates' path.
     size_t GetTimeSteps() const noexcept;
+    /// Set the number of timesteps of the local plan corresponding
+    /// to the weight's intermediates' path.
     void SetTimeSteps(std::size_t _steps) noexcept;
 
 
@@ -101,15 +142,15 @@ class DefaultWeight {
     /// @param _is The input stream to read from.
     virtual void Read(std::istream& _is);
 
-    /// Write an edge out to an output stream.
-    /// @param _is The output stream to write to.
+    /// Write an edge to an output stream.
+    /// @param _os The output stream to write to.
     virtual void Write(std::ostream& _os) const;
 
     /// A static pointer to the current robot, which is needed to parse any
     /// intermediate configurations in the edge.
     static Robot* inputRobot;
 
-    /// Clear all of the contents of object to a reinitialized state.
+    /// Clear all of the contents of the object to a reinitialized state.
     void Clear();
 
     ///@}

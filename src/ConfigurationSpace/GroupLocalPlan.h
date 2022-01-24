@@ -47,6 +47,11 @@ class GroupLocalPlan final {
     ///@name Construction
     ///@{
 
+    /// Constructs a GroupLocalPlan.
+    /// @param _g The group of robots to follow this edge. Defaults to nullptr.
+    /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
+    /// @param _w The weight of the plan. Defaults to 0.0.
+    /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
     GroupLocalPlan(GroupRoadmapType* const _g = nullptr,
         const std::string& _lpLabel = "",
         const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
@@ -55,9 +60,16 @@ class GroupLocalPlan final {
     ///@name Ordering and Equality
     ///@{
 
+    /// Check if the given plan is equal to the current.
+    /// @param _w The given plan.
     virtual bool operator==(const GroupLocalPlan& _w) const noexcept;
+
+    /// Check if the given plan is unequal to the current.
+    /// @param _w The given plan.
     virtual bool operator!=(const GroupLocalPlan& _w) const noexcept;
 
+    /// Check if the given plan is less than the current.
+    /// @param _other The given plan.
     virtual bool operator<(const GroupLocalPlan& _other) const noexcept;
 
     ///@}
@@ -74,21 +86,32 @@ class GroupLocalPlan final {
     ///@name Misc. Interface Functions
     ///@{
 
-    // There is no current use case where this should ever get reset to false.
+    // There is no current use case where these should ever get reset to false.
     void SetSkipEdge() noexcept;
     bool SkipEdge() const noexcept;
 
+    /// Set the list of active robots to the vector of robot indices given.
+    /// @param The vector of robo indices given.
     void SetActiveRobots(const std::vector<size_t>& _indices);
+    /// Get the vector of active robots indices.
+    /// @return The vector of active robot indices.
     const std::vector<size_t>& GetActiveRobots() const noexcept;
-
+    
+    /// Reset the states of this object.
     void Clear() noexcept;
 
+    /// Get the group configuration intermediates.
     GroupCfgPath& GetIntermediates() noexcept;
+    /// Get the group configuration intermediates.
     const GroupCfgPath& GetIntermediates() const noexcept;
 
+    /// Set the group configuration intermediates.
     void SetIntermediates(const GroupCfgPath& _cfgs);
 
+    /// Get the string label of this current local plan.
     const std::string& GetLPLabel() const noexcept;
+    /// Set the string label of this current local plan.
+    /// @param The desired string label.
     void SetLPLabel(const std::string _label) noexcept;
 
     ///@}
@@ -120,16 +143,20 @@ class GroupLocalPlan final {
     ///         yet been set.
     const IndividualEdge* GetEdge(Robot* const _robot) const;
 
-    /// Overloads for using index instead of robot pointer.
+    ///Overloads for using index instead of robot pointer.
     IndividualEdge* GetEdge(const size_t _robotIndex);
     const IndividualEdge* GetEdge(const size_t _robotIndex) const;
 
-
+    /// Get a vector of local edges in the plan.
     std::vector<IndividualEdge>& GetLocalEdges() noexcept;
+
+    /// Get a vector of local edges' descriptors.
     std::vector<ED>& GetEdgeDescriptors() noexcept;
 
+    /// Clear all local edges in the plan.
     void ClearLocalEdges() noexcept;
 
+    /// Get the number of robots given in this group local plan.
     size_t GetNumRobots() const noexcept;
 
     void SetTimeSteps(size_t _timesteps);
@@ -137,12 +164,13 @@ class GroupLocalPlan final {
     size_t GetTimeSteps() const;
 
     ///@}
-    ///@name Stuff for stapl graph interface
+    ///@name Stapl graph interface
     ///@{
 
     /// This only adds weights, it doesn't take intermediates into account.
     virtual GroupLocalPlan operator+(const GroupLocalPlan& _other) const ;
 
+    /// Get the weight of the plan.
     double Weight() const noexcept;
 
     ///@}

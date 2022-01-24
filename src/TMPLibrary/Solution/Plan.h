@@ -31,43 +31,69 @@ class Plan {
     /// Coordinator
     void SetCoordinator(Coordinator* _coordinator);
 
+    /// Get Coordinator
     Coordinator* GetCoordinator() const;
 
     /// Robot Team
     void SetTeam(std::vector<Robot*> _team);
 
+    /// Get Robot Team
     const std::vector<Robot*>& GetTeam() const;
 
     /// Decomposition
+    /// @param _decomp Decomposition.
     void SetDecomposition(Decomposition* _decomp);
 
+    /// Get Decomposition
     Decomposition* GetDecomposition() const;
 
     /// Task Allocations
+    /// @param _robot Robot.
     void ClearAllocations(Robot* _robot);
 
+    /// Task Allocations
+    /// @param _group Group.
     void ClearAllocations(RobotGroup* _group);
 
+    /// Add Task Allocations
+    /// @param _robot Robot.
+    /// @param _task Semantic task.
     void AddAllocation(Robot* _robot, SemanticTask* _task);
 
+    /// Add Task Allocations
+    /// @param _robot Robot.
+    /// @param _task Semantic task.
     void AddAllocation(RobotGroup* _group, SemanticTask* _task);
 
+    /// Get Allocations
+    /// @param _robot Robot.
     std::list<SemanticTask*> GetAllocations(Robot* _robot);
 
+    /// Get Allocations
+    /// @param _group Robot group.
     std::list<SemanticTask*> GetAllocations(RobotGroup* _group);
 
+    /// Get Task Solutions
     const std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>>& GetTaskSolutions();
 
     /// Task Plans
+    /// @param _task Task.
+    /// @param _solution Solution.
     void SetTaskSolution(SemanticTask* _task, std::shared_ptr<TaskSolution> _solution);
 
+    /// Get Task Solutions
+    /// @param _task Task.
     TaskSolution* GetTaskSolution(SemanticTask* _task);
 
-		std::vector<TaskSolution*> GetRobotTaskSolutions(Robot* _robot);
+    /// Get Task Solutions of a robot
+    /// @param _robot Robot.
+    std::vector<TaskSolution*> GetRobotTaskSolutions(Robot* _robot);
 
     /// MPProblem
+    /// @param _problem MPProblem.
     void SetMPProblem(MPProblem* _problem);
 
+    /// Get MPProblem
     MPProblem* GetMPProblem();
 
     double GetCost() const;

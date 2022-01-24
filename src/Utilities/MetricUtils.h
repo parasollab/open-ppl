@@ -97,7 +97,7 @@ class StatClass final {
 
     //m_samplerInfo represents sampler nodes attempted and generated
     //  map<string, pair<int, int> > represents a mapping between the sampler name
-    //  and first the # of attempted samples, then the number of generated samples
+    //  and first the number of attempted samples, then the number of generated samples
     //  that is, pair.first = attempts, pair.second = generated (successful attempts)
     std::map<std::string, std::pair<size_t, size_t>> m_samplerInfo;
 

@@ -81,6 +81,7 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
     RobotGroup* GetGroup();
 
     /// Get the individual roadmap for a robot in the group.
+    /// @param _index The index of the desired robot.
     IndividualRoadmap* GetRoadmap(const size_t _index);
     const IndividualRoadmap* GetRoadmap(const size_t _index) const;
 
@@ -521,6 +522,7 @@ DeleteVertex(const VID _v) noexcept {
 
   // Delete the group vertex.
   this->delete_vertex(vi->descriptor());
+  this->m_allVIDs.erase(_v);
   ++m_timestamp;
 }
 

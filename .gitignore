@@ -1,9 +1,11 @@
 *.swp
 *.swo
 pmpl
+ppl
 sim
 build
 libobprm.a
 pmpl_utils
 src/Examples/example*
 src/Testing/StrategyTests/Scratch*
+src/Doxygen/html

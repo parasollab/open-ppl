@@ -201,7 +201,7 @@ FindSharedFacets(const WorkspaceRegion& _wr) const noexcept {
     // Flip facet orientation before comparing as the normals will be reversed.
     for(auto theirFacet : _wr.m_facets) {
       // Use a copy to maintain const-ness.
-      /// @TODO Eliminate this extraneous copy. Perhaps check if = reverse within
+      /// @todo Eliminate this extraneous copy. Perhaps check if = reverse within
       ///       facet class.
       theirFacet.Reverse();
       if(myFacet != theirFacet)

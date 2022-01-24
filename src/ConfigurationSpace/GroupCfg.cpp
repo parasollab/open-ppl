@@ -878,10 +878,11 @@ InitializeLocalCfgs() noexcept {
   if(m_localCfgs.size() == numRobots)
     return;
 
+  m_localCfgs.clear();
   m_localCfgs.resize(numRobots);
 
   for(size_t i = 0; i < numRobots; ++i)
-    SetRobotCfg(i, IndividualCfg(GetRobot(i)));
+    m_localCfgs[i] = IndividualCfg(GetRobot(i));
 }
 
 

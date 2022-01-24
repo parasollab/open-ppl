@@ -259,6 +259,7 @@ class ReebGraphConstruction {
     ///@{
     ///@TODO Fix const-ness of accessors when STAPL fixes sequential graph.
 
+    /// Get the embedding graph
     ReebGraph& GetReebGraph() {return m_reebGraph;}
 
     ///@}

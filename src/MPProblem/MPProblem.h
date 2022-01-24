@@ -75,6 +75,7 @@ class MPProblem
     Environment* GetEnvironment();
 
     /// Set the environment object.
+    /// @param _e Environment to set to
     void SetEnvironment(std::unique_ptr<Environment>&& _e);
 
     ///@}
@@ -85,15 +86,19 @@ class MPProblem
     size_t NumRobots() const noexcept;
 
     /// Get a specific robot by index.
+    /// @param _index Index of robot to get
     Robot* GetRobot(const size_t _index) const noexcept;
 
     /// Get a specific robot by label.
+    /// @param _label Label of robot to get
     Robot* GetRobot(const std::string& _label) const noexcept;
 
     /// Get all robots in this problem.
     const std::vector<std::unique_ptr<Robot>>& GetRobots() const noexcept;
 
     /// Get all robots of a specified type.
+    /// @param _type Type of robots to retrieve
+    /// @return List of robots of type _type
     const std::vector<Robot*> GetRobotsOfType(std::string _type) const noexcept;
 
     /// Group versions:
@@ -101,25 +106,38 @@ class MPProblem
     size_t NumRobotGroups() const noexcept;
 
     /// Get a specific robot group by index.
+    /// @param _index Index of robot group to retrieve
     RobotGroup* GetRobotGroup(const size_t _index) const noexcept;
 
     /// Get a specific robot group by group's label.
+    /// @param _label Label of robot group to retrieve
     RobotGroup* GetRobotGroup(const std::string& _label) const noexcept;
 
     /// Get all robot groups in this problem.
+    /// @return List of robot groups
     const std::vector<std::unique_ptr<RobotGroup>>& GetRobotGroups() const noexcept;
 
     /// Add a new robot group
+    /// @param _robots Robots to make the new group out of.
+    /// @param _label Label to give the new group.
+    /// @return The new RobotGroup created and added to the MPProblem.
     RobotGroup* AddRobotGroup(const std::vector<Robot*> _robots, const std::string _label);
 
+    /// Get initial configuration of a robot
+    /// @param _r Robot whose configuration to retrieve
 		Cfg GetInitialCfg(Robot* _r);
 
+    /// Get initial configuration of a robot
+    /// @param _r Robot whose configuration to retrieve
+    /// @param _cfg Configuration to set for _r
 		void SetInitialCfg(Robot* _r, Cfg _cfg);
 
     ///@}
     ///@name Task Accessors
     ///@{
 
+    /// Get task by label
+    /// @param _label Label of task to retrieve
     MPTask* GetTask(std::string _label);
 
     /// Get the unfinished tasks currently assigned to a given robot.
@@ -129,6 +147,9 @@ class MPProblem
         noexcept;
 
     /// Group overload
+    /// Get the unfinished tasks currently assigned to a group of robots.
+    /// @param _group The robot group to retrieve tasks for.
+    /// @return The set of group tasks currently assigned to _group.
     std::vector<std::shared_ptr<GroupTask>> GetTasks(RobotGroup* const _group)
         const noexcept;
 
@@ -142,10 +163,16 @@ class MPProblem
     /// @param _newOwner The new robot assigned to _task.
     void ReassignTask(MPTask* const _task, Robot* const _newOwner);
 
+    /// Assign task decomposition to a robot
+    /// @param _coordinator Robot to assign task to
+    /// @param _decomp The decomposition task to assign
 		void AddDecomposition(Robot* _coordinator, std::unique_ptr<Decomposition>&& _decomp);
 
+    /// Get set of decomposition tasks for given robot
+    /// @param _coordinator Robot to return task decompositions for
 		const std::vector<std::unique_ptr<Decomposition>>& GetDecompositions(Robot* _coordinator);
 
+    /// Get map of robots to decompositions
 		const std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>>& 
 														GetDecompositions();
 
@@ -156,8 +183,11 @@ class MPProblem
     /// Get all of the dynamic obstacles in this problem.
     const std::vector<DynamicObstacle>& GetDynamicObstacles() const noexcept;
 
+    /// Add dynamic obstacle to this problem
+    /// @param Dynamic obstacle to add
     void AddDynamicObstacle(DynamicObstacle&& _obstacle);
 
+    /// Remove all of the dynamic obstacles in this problem.
     void ClearDynamicObstacles();
 
     ///@}
@@ -165,6 +195,7 @@ class MPProblem
     ///@{
 
     /// Print the environment, robot, and task information.
+    /// @param _os Stream to print to
     virtual void Print(std::ostream& _os) const;
 
     ///@}
@@ -175,14 +206,16 @@ class MPProblem
     const std::string& GetBaseFilename() const;
 
     /// Set the base filename for output files.
+    /// @param _s New base filename
     void SetBaseFilename(const std::string& _s);
 
-    /// Add the base path for input files to a file name.
+    /// Get the base path for input files to a file name.
     /// @param _filename The filename to modify.
     /// @return The base path + filename, or just the path if no name is given.
     std::string GetPath(const std::string& _filename = "");
 
     /// Set the base path for input files.
+    /// @param _fileName File path to set
     void SetPath(const std::string& _filename);
 
     ///@}
@@ -192,7 +225,7 @@ class MPProblem
     ///@name Construction Helpers
     ///@{
 
-    /// Helper for parsing XML nodes.
+    /// Helper for parsing XML nodes of various types.
     /// @param _node The child node to be parsed.
     void ParseChild(XMLNode& _node);
 
@@ -219,12 +252,13 @@ class MPProblem
 
     /// Map the tasks assigned to each robot.
     std::unordered_map<Robot*, std::list<std::shared_ptr<MPTask>>> m_taskMap;
+    /// Map the group tasks assigned to each robot group.
     std::unordered_map<RobotGroup*, std::list<std::shared_ptr<GroupTask>>>
         m_groupTaskMap;
 
-    // Maps task labels to tasks.
+    /// Map task labels to tasks.
     std::unordered_map<std::string, MPTask*> m_taskLabelMap;
-
+    /// Map robots to task decompositions
 		std::unordered_map<Robot*,std::vector<std::unique_ptr<Decomposition>>> m_taskDecompositions;
 
     ///@}
