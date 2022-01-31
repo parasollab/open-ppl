@@ -147,7 +147,6 @@ class GenericStateGraph: public
     /// Check if the current and given roadmaps are unequal.
     /// @param _r The given roadmap.
     /// @return True is unequal, false otherwise.
-    bool operator!=(const RoadmapGraph& _r) const noexcept;
     bool operator!=(const GenericStateGraph& _r) const noexcept;
 
     ///@}

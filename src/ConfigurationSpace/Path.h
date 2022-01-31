@@ -130,11 +130,6 @@ class PathType final {
 
     std::vector<size_t> GetWaitTimes();
 
-    /// Set the wait times at each vertex in path
-    /// Used in Safe Interval Path Planning
-    void SetWaitTimes(std::vector<size_t> _waitTimes);
-
-    std::vector<size_t> GetWaitTimes();
     ///@}
 
   private:

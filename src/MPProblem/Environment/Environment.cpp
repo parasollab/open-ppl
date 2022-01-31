@@ -230,58 +230,6 @@ Overlap(Boundary* _b1, Boundary* _b2) {
   return std::min(max1, max2) - std::max(min1, min2);
 }
 
-
-const glutils::color&
-Terrain::
-Color() const noexcept {
-  return m_color;
-}
-
-
-Boundary*
-Terrain::
-GetBoundary() const noexcept {
-  return m_boundary.get();
-}
-
-const std::vector<std::unique_ptr<Boundary>>&
-Terrain::
-GetBoundaries() const noexcept {
-	return m_boundaries;
-}
-
-bool
-Terrain::
-InTerrain(const Point3d _p) const noexcept {
-	for(auto& boundary : m_boundaries){
-		if(boundary->InBoundary(_p))
-			return true;
-	}
-	return false;
-}
-
-bool
-Terrain::
-InTerrain(const Cfg _cfg) const noexcept {
-	for(auto& boundary : m_boundaries){
-		if(boundary->InBoundary(_cfg))
-			return true;
-	}
-	return false;
-}
-
-bool
-Terrain::
-IsVirtual() const noexcept {
-	return m_virtual;
-}
-
-bool
-Terrain::
-IsWired() const noexcept {
-  return m_wire;
-}
-
 bool
 Terrain::
 ShouldShow() const noexcept {

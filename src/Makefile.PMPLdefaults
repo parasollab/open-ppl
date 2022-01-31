@@ -516,6 +516,7 @@ TASK_SRCS := \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
   TMPLibrary/StateGraphs/ModeGraph.cpp \
+  TMPLibrary/StateGraphs/ObjectCentricModeGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \

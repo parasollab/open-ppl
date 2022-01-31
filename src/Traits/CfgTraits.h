@@ -122,7 +122,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
-    ComposeCollision<MPTraits>
+    ComposeCollision<MPTraits>,
     ComposeValidity<MPTraits>,
     TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;

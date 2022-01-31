@@ -1593,6 +1593,7 @@ AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*
 }
 
 /*----------------------------------------------------------------------------*/
+
 istream&
 operator>>(istream& _is, const ModeGraph::Mode* _mode) {
   return _is;

@@ -47,10 +47,6 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     /// Set the minimum end time of a path
     virtual void SetMinEndtime(double _minEndtime) {};
 
-    virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) {};
-
-    virtual void SetMinEndtime(double _minEndtime) {};
-
     ///@}
     ///@name Active Robots
     ///@{

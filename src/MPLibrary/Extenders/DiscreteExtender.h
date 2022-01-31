@@ -25,7 +25,7 @@ class DiscreteExtender : public ExtenderMethod<MPTraits> {
     typedef typename MPTraits::CfgType         CfgType;
     typedef typename MPTraits::GroupCfgType    GroupCfgType;
     typedef typename MPTraits::GroupWeightType GroupWeightType;
-    typedef typename GroupCfgType::Formation   Formation;
+    typedef std::vector<size_t>                RobotFormation;
 
     ///@}
     ///@name Construction
@@ -50,11 +50,11 @@ class DiscreteExtender : public ExtenderMethod<MPTraits> {
 
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
-        const Formation& _robotIndexes = Formation()) override;
+        const RobotFormation& _robotIndexes = RobotFormation()) override;
 
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-        const Formation& _robotIndexes = Formation()) override;
+        const RobotFormation& _robotIndexes = RobotFormation()) override;
 
     ///@}
 
@@ -112,7 +112,7 @@ bool
 DiscreteExtender<MPTraits>::
 Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
-        const Formation& _robotIndexes) {
+        const RobotFormation& _robotIndexes) {
 
   CDInfo cdInfo;
   return Extend(_start,_end,_new,_lp,cdInfo,_robotIndexes);
@@ -123,7 +123,7 @@ bool
 DiscreteExtender<MPTraits>::
 Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-        const Formation& _robotIndexes) {
+        const RobotFormation& _robotIndexes) {
 
   
   auto computeAngle = [](Cfg& _cfg1, Cfg& _cfg2) {

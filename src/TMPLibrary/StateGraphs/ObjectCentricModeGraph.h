@@ -25,9 +25,9 @@ class ObjectCentricModeGraph : public StateGraph {
     typedef std::map<Robot*,std::pair<Robot*,const Terrain*>> ObjectMode;
 
     /// Key is the robot pointer for the robot or object involved.
-    /// Value is the Interaction the key is involved in and the role (string)
+    /// Value is the Interaction (and reverse statues) the key is involved in and the role (string)
     /// it plays in the interaction.
-    typedef std::map<Robot*,std::pair<Interaction*,std::string>> ObjectModeSwitch;
+    typedef std::map<Robot*,std::pair<std::pair<Interaction*,bool>,std::string>> ObjectModeSwitch;
 
     typedef GenericStateGraph<ObjectMode,ObjectModeSwitch> GraphType;
     typedef GraphType::VID                                 VID;
@@ -56,6 +56,12 @@ class ObjectCentricModeGraph : public StateGraph {
 
     const GraphType* GetGraph() const;
 
+    ///@}
+    ///@name Debug
+    ///@{
+
+    void Print();
+
     ///@{
 
   private:
@@ -65,10 +71,17 @@ class ObjectCentricModeGraph : public StateGraph {
 
     ObjectMode GenerateInitialMode(const State& _start);
 
-    std::vector<std::vector<std::pair<Robot*,std::string>>> GetAllApplications(
-                Interaction* _interaction, VID _source);
+    void BuildModeGraph(ObjectMode& _initialMode);
 
-    void ApplyEdge(ObjectModeSwitch _edge, VID _source);
+    std::vector<std::vector<std::pair<Robot*,std::string>>> GetAllApplications(
+                Interaction* _interaction, VID _source, bool _reverse = false);
+
+    void ExpandApplications(
+                   const std::vector<std::vector<std::pair<Robot*,std::string>>>& _roleCombos, 
+                   std::vector<std::pair<ObjectModeSwitch,std::set<Robot*>>>& _outgoing, 
+                   Interaction* _interaction, bool _reverse = false);
+
+    void ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes);
 
     ///@}
     ///@name Internal State
@@ -76,6 +89,8 @@ class ObjectCentricModeGraph : public StateGraph {
 
     GraphType m_graph;
  
+    std::unique_ptr<MPSolution> m_solution;
+
     std::unordered_map<const Terrain*, size_t> m_capacities;
 
     std::vector<Robot*> m_robots;
