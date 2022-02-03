@@ -68,7 +68,8 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
     else {
       m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
                   //"/arm_controller/command",
-                  "/" + this->m_agent->GetRobot()->GetLabel()+"/scaled_pos_joint_traj_controller/command",
+                  //"/" + this->m_agent->GetRobot()->GetLabel()+"/scaled_pos_joint_traj_controller/command",
+                  "/ppl_joint_traj_controller/command",
                   //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
                   10);
     }
@@ -131,8 +132,8 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   //auto js = s_jointStates;
 
   sensor_msgs::JointState msg;
-  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/joint_states");
-  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
+  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/ppl_joint_states");
+  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/ppl_joint_states");
 
   if(sharedMsg!=NULL)
     msg = *sharedMsg;
@@ -155,6 +156,8 @@ ReachedWaypointArm(const Cfg& _waypoint) {
     jointStates.push_back(jv);
   }*/
 
+  //TODO::Sort alphabetically by corresponding joint names
+
   std::vector<double> jointStates;
   auto iter = js.begin();
   for(auto& joint : this->m_agent->GetRobot()->GetMultiBody()->GetJoints()) {
@@ -165,7 +168,9 @@ ReachedWaypointArm(const Cfg& _waypoint) {
       }
       case Connection::JointType::Mimic:
       {
-        iter++;
+        if(m_sim) {
+          iter++;
+        }
         break;
       }
       case Connection::JointType::Spherical:
