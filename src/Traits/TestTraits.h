@@ -17,6 +17,8 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+// #include "Testing/MPLibrary/DistanceMetrics/ManhattanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -83,6 +85,8 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    //   ManhattanDistanceTest<MPTraits>
+      MinkowskiDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
