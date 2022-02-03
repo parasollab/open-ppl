@@ -1,8 +1,8 @@
 #ifndef PPL_MINKOWSKI_DISTANCE_TEST_H_
 #define PPL_MINKOWSKI_DISTANCE_TEST_H_
 
-#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 
 template <typename MPTraits>
 class MinkowskiDistanceTest : virtual public MinkowskiDistance<MPTraits>,
@@ -22,7 +22,8 @@ class MinkowskiDistanceTest : virtual public MinkowskiDistance<MPTraits>,
     ///@name Construction
     ///@{
 
-    MinkowskiDistanceTest();
+    MinkowskiDistanceTest(double _r1 = 3, double _r2 = 3, double _r3 = 1. / 3,
+        bool _normalize = false);
     MinkowskiDistanceTest(XMLNode& _node);
     ~MinkowskiDistanceTest();
 
@@ -58,7 +59,8 @@ class MinkowskiDistanceTest : virtual public MinkowskiDistance<MPTraits>,
 
 template<typename MPTraits>
 MinkowskiDistanceTest<MPTraits>::
-MinkowskiDistanceTest() : MinkowskiDistance<MPTraits>() {}
+MinkowskiDistanceTest(double _r1, double _r2, double _r3, bool _normalize) :
+    MinkowskiDistance<MPTraits>(_r1, _r2, _r3, _normalize) {}
 
 template<typename MPTraits>
 MinkowskiDistanceTest<MPTraits>:: 
@@ -87,11 +89,14 @@ TestIndividualCfgDistance() {
   bool passed = true;
   std::string message = "";
 
+  // todo test normalized also
+
   auto cfg1 = this->GetIndividualCfg();
   auto cfg2 = this->GetIndividualCfg();
 
   // Minkowski distance should be 5 * PosDOF + 0.5 * OrientationDOF
-  double trueDist = 5 * cfg2.PosDOF() + 0.5 * (cfg2.DOF() - cfg2.PosDOF());
+  double trueDist = std::pow(5, this->m_r1) * cfg2.PosDOF() + std::pow(0.5, this->m_r2) * (cfg2.DOF() - cfg2.PosDOF());
+  trueDist = std::pow(trueDist, this->m_r3);
   auto dist = this->IndividualCfgDistance();
   if (fabs(dist - trueDist) > 1e-7) {
     passed = false;
