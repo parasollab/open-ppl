@@ -35,8 +35,6 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
   m_querySM = _node.Read("querySM",true,"",
                "Sampler Method to use to generate query cfgs.");
 
-  m_expansionStrategy = _node.Read("expansionStrategy",true,"",
-                      "MPStrategy label to build initial roadaps.");
   m_queryStrategy = _node.Read("queryStrategy",true,"",
                       "MPStrategy label to query roadaps.");
   m_numUnactuatedSamples = _node.Read("numUnactuatedSamples",false,0,0,1000,

@@ -252,10 +252,12 @@ AssignRoles(const State& _state, const std::vector<std::string>& _conditions) {
       if(!m) 
         filteredConditions.push_back(condition);
     }
+    // Assign roles from filtered conditions
+    InteractionStrategyMethod::AssignRoles(_state,filteredConditions);
   }
-
-  // Assign roles from filtered conditions
-  InteractionStrategyMethod::AssignRoles(_state,filteredConditions);
+  else {
+    InteractionStrategyMethod::AssignRoles(_state,_conditions);
+  }
 }
 
 Cfg

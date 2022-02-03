@@ -4,7 +4,10 @@
 #include "StateGraph.h"
 
 #include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+
 #include "MPProblem/Environment/Environment.h"
+
 #include "TMPLibrary/ActionSpace/Interaction.h"
 
 #include <map>
@@ -17,7 +20,9 @@ class ObjectCentricModeGraph : public StateGraph {
     ///@name LocalTypes
     ///@{
 
-    typedef Condition::State State;
+    typedef Condition::State                          State;
+    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
 
     /// Key is the robot pointer for the object.
     /// Value is either the robot holding the object or the stable 
@@ -27,7 +32,9 @@ class ObjectCentricModeGraph : public StateGraph {
     /// Key is the robot pointer for the robot or object involved.
     /// Value is the Interaction (and reverse statues) the key is involved in and the role (string)
     /// it plays in the interaction.
-    typedef std::map<Robot*,std::pair<std::pair<Interaction*,bool>,std::string>> ObjectModeSwitch;
+    //typedef std::map<Robot*,std::pair<std::pair<Interaction*,bool>,std::string>> ObjectModeSwitch;
+    typedef std::unordered_map<std::string,Robot*> RoleMap;
+    typedef std::unordered_map<Interaction*,std::vector<std::pair<bool,RoleMap>>> ObjectModeSwitch;
 
     typedef GenericStateGraph<ObjectMode,ObjectModeSwitch> GraphType;
     typedef GraphType::VID                                 VID;
@@ -54,7 +61,11 @@ class ObjectCentricModeGraph : public StateGraph {
     ///@name Accessors
     ///@{
 
-    const GraphType* GetGraph() const;
+    GraphType* GetObjectModeGraph();
+
+    MPSolution* GetMPSolution();
+
+    GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
 
     ///@}
     ///@name Debug
@@ -69,6 +80,8 @@ class ObjectCentricModeGraph : public StateGraph {
     ///@name Helper Functions
     ///@{
 
+    void BuildRoadmaps();
+
     ObjectMode GenerateInitialMode(const State& _start);
 
     void BuildModeGraph(ObjectMode& _initialMode);
@@ -81,7 +94,8 @@ class ObjectCentricModeGraph : public StateGraph {
                    std::vector<std::pair<ObjectModeSwitch,std::set<Robot*>>>& _outgoing, 
                    Interaction* _interaction, bool _reverse = false);
 
-    void ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes);
+    void ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes, 
+                   const std::set<Robot*>& _used);
 
     ///@}
     ///@name Internal State
@@ -94,6 +108,8 @@ class ObjectCentricModeGraph : public StateGraph {
     std::unordered_map<const Terrain*, size_t> m_capacities;
 
     std::vector<Robot*> m_robots;
+
+    std::string m_mpStrategy;
  
     ///@}
 

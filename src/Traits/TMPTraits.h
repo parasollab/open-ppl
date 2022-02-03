@@ -13,6 +13,7 @@
 // TaskEvaluators to include
 #include "TMPLibrary/TaskEvaluators/HCRQuery.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
+#include "TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SubmodeQuery.h"
 
 // TaskDecomposers to include
@@ -56,6 +57,7 @@ struct TMPTraits {
   typedef boost::mpl::list<
     HCRQuery,
 		SimpleMotionEvaluator,
+    SimultaneousMultiArmEvaluator,
     SubmodeQuery
       > TaskEvaluatorMethodList;
 

@@ -2,6 +2,8 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
+#include "MPProblem/Constraints/BoundaryConstraint.h"
+
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/Solution/Plan.h"
@@ -15,6 +17,8 @@ ObjectCentricModeGraph() {
 ObjectCentricModeGraph::
 ObjectCentricModeGraph(XMLNode& _node) : StateGraph(_node) {
   this->SetName("ObjectCentricModeGraph");
+
+  m_mpStrategy = _node.Read("mpStrategy",true,"","MPStrategy to build roadmaps");
 }
 
 ObjectCentricModeGraph::
@@ -75,6 +79,8 @@ Initialize() {
   }
 
   GenerateRepresentation(start);
+
+  BuildRoadmaps();
 }
 
 void
@@ -102,10 +108,22 @@ GenerateRepresentation(const State& _start) {
 
 /*-------------------------------- Accessors ---------------------------------*/
 
-const ObjectCentricModeGraph::GraphType*
+ObjectCentricModeGraph::GraphType*
 ObjectCentricModeGraph::
-GetGraph() const {
+GetObjectModeGraph() {
   return &m_graph;
+}
+    
+MPSolution* 
+ObjectCentricModeGraph::
+GetMPSolution() {
+  return m_solution.get();
+}
+
+ObjectCentricModeGraph::GroupRoadmapType* 
+ObjectCentricModeGraph::
+GetGroupRoadmap(RobotGroup* _group) {
+  return m_solution->GetGroupRoadmap(_group);
 }
 
 /*---------------------------------- Debug  ----------------------------------*/
@@ -156,26 +174,56 @@ Print() {
       auto edge = eit->property();
 
       std::cout << source << " -> " << target << std::endl;
+
       for(auto kv : edge) {
-        auto robot = kv.first;
-        auto action = kv.second;
-        if(action.first.first) {
-          std::cout << "\t"   << robot->GetLabel() 
-                    << " in " << action.first.first->GetLabel() 
-                    << " as " << action.second 
-                    << std::endl;
-        }
-        else {
-          std::cout << "\t" << robot->GetLabel() 
-                    << " does not perform an action" 
-                    << std::endl;
+        auto interaction = kv.first;
+
+        std::cout << "\t" << interaction->GetLabel() << std::endl;
+  
+        for(auto pair : kv.second) {
+          auto reverse = pair.first;
+          auto roleMap = pair.second;
+    
+          std::cout << "\t\tROLE MAP (reversed: " << reverse << ")" << std::endl;
+
+          for(auto kv : roleMap) {
+            std::cout << kv.first << " : " << kv.second->GetLabel() << std::endl;
+          }
         }
       }
+
     }
   }
 }
 
 /*----------------------------- Helper Functions -----------------------------*/
+
+void
+ObjectCentricModeGraph::
+BuildRoadmaps() {
+  
+  auto lib = this->GetMPLibrary();
+  auto prob = this->GetMPProblem();
+  auto b = prob->GetEnvironment()->GetBoundary();
+
+  for(auto robot : m_robots) {
+
+    // Create robot group of one
+    auto group = prob->AddRobotGroup({robot},robot->GetLabel());
+
+    // Configure empty task for group
+    GroupTask gt(group);
+    MPTask mt(robot);
+    auto c = std::unique_ptr<BoundaryConstraint>(
+                new BoundaryConstraint(robot,b->Clone()));
+    mt.SetStartConstraint(std::move(c));
+    gt.AddTask(mt);
+    
+    // Call MPLibrary to build roadmap
+    lib->Solve(prob,&gt,m_solution.get(),m_mpStrategy,LRand(),
+               this->GetNameAndLabel());
+  }
+}
 
 std::vector<std::vector<std::pair<Robot*,std::string>>>
 ObjectCentricModeGraph::
@@ -573,7 +621,8 @@ BuildModeGraph(ObjectMode& _initialMode) {
       // Add each outgoing edge and resulting vertex to graph
       for(auto pair : outgoing) {
         auto edge = pair.first;
-        ApplyEdge(edge,mode,newModes);
+        auto used = pair.second;
+        ApplyEdge(edge,mode,newModes,used);
       }
     }
   }
@@ -585,8 +634,6 @@ ExpandApplications(const std::vector<std::vector<std::pair<Robot*,std::string>>>
                    std::vector<std::pair<ObjectModeSwitch,std::set<Robot*>>>& _outgoing, 
                    Interaction* _interaction, bool _reverse) {
         
-  auto inter = std::make_pair(_interaction,_reverse);
-
   // Add action to all non-conflicting existing edges
   for(auto combo : _roleCombos) {
     for(auto pair : _outgoing) {
@@ -609,10 +656,16 @@ ExpandApplications(const std::vector<std::vector<std::pair<Robot*,std::string>>>
 
       // Copy edge and add new action to it
       auto edge = pair.first;
+      RoleMap roleMap;
+
       for(auto role : combo) {
         auto robot = role.first;
-        edge[robot] = std::make_pair(inter,role.second);
+        auto label = role.second;
+        roleMap[label] = robot;
+        used.insert(robot);
       }
+    
+      edge[_interaction].emplace_back(_reverse,roleMap);
 
       _outgoing.emplace_back(edge,used);
     }
@@ -622,12 +675,16 @@ ExpandApplications(const std::vector<std::vector<std::pair<Robot*,std::string>>>
 
     ObjectModeSwitch edge;
     std::set<Robot*> used;
+    RoleMap roleMap;
 
     for(auto role : combo) {
       auto robot = role.first;
-      edge[robot] = std::make_pair(inter,role.second);
+      auto label = role.second;
+      roleMap[label] = robot;
       used.insert(robot);
     }
+
+    edge[_interaction].emplace_back(_reverse,roleMap);
 
     _outgoing.emplace_back(edge,used);
   }
@@ -635,7 +692,8 @@ ExpandApplications(const std::vector<std::vector<std::pair<Robot*,std::string>>>
 
 void
 ObjectCentricModeGraph::
-ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes) {
+ApplyEdge(ObjectModeSwitch _edge, VID _source, 
+          std::set<VID>& _newModes, const std::set<Robot*>& _used) {
 
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
@@ -645,60 +703,54 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes) {
   ObjectMode newMode;
 
   // Copy over static objects
-  for(auto kv : mode) {
-    auto object = kv.first;
+  for(auto object : m_robots) {
+    if(!object->GetMultiBody()->IsPassive())
+      continue;
     
-    auto iter = _edge.find(object);
-    if(iter == _edge.end()) 
+    if(!_used.count(object)) 
       newMode[object] = mode[object];
-  }
-
-  // Collect remaining robots by their interaction buddies
-  std::unordered_map<Interaction*,std::pair<bool,std::unordered_map<std::string,Robot*>>> interactionGroups;
-  for(auto kv : _edge) {
-    auto robot = kv.first;
-    auto interaction = kv.second.first.first;
-    auto reverse = kv.second.first.second;
-    auto role = kv.second.second;
-    interactionGroups[interaction].first = reverse;
-    interactionGroups[interaction].second[role] = robot;
   }
 
   // Determine object assigmnent coming out of the interaction
   std::set<Robot*> placedObjects;
-  for(auto kv : interactionGroups) {
+  for(auto kv : _edge) {
     auto interaction = kv.first;
-    auto reverse = kv.second.first;
-    auto roleMap = kv.second.second;
 
-    auto stages = interaction->GetStages();
-    auto stage = reverse ? stages.front() : stages.back();
-    auto conditions = interaction->GetStageConditions(stage);
+    for(auto pair : kv.second) {
+      auto reverse = pair.first;
+      auto roleMap = pair.second;
 
-    for(auto c : conditions) {
-      auto f = dynamic_cast<FormationCondition*>(as->GetCondition(c));
-      if(!f)
-        continue;
+      auto stages = interaction->GetStages();
+      auto stage = reverse ? stages.front() : stages.back();
+      auto conditions = interaction->GetStageConditions(stage);
 
-      // Check if condition contains object
-      Robot* object = nullptr;
-      Robot* robot = nullptr;
-      for(auto role : f->GetRoles()) {
-        auto r = roleMap[role];
-        if(r->GetMultiBody()->IsPassive()) {
-          object = r;
+      for(auto c : conditions) {
+        auto f = dynamic_cast<FormationCondition*>(as->GetCondition(c));
+        if(!f)
+          continue;
+
+        // Check if condition contains object
+        Robot* object = nullptr;
+        Robot* robot = nullptr;
+        for(auto role : f->GetRoles()) {
+          auto r = roleMap[role];
+          if(r->GetMultiBody()->IsPassive()) {
+            object = r;
+          }
+          else {
+            robot = r;
+          }
         }
-        robot = r;
-      }
 
-      if(!object)
-        continue;
+        if(!object)
+          continue;
 
-      if(robot) {
-        newMode[object] = std::make_pair(robot,nullptr);
-      }
-      else {
-        placedObjects.insert(object);
+        if(robot) {
+          newMode[object] = std::make_pair(robot,nullptr);
+        }
+        else {
+          placedObjects.insert(object);
+        }
       }
     }
   }

@@ -522,6 +522,7 @@ TASK_SRCS := \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/HCRQuery.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.cpp \
   TMPLibrary/TaskEvaluators/SubmodeQuery.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
