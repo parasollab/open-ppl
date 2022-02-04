@@ -15,7 +15,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class ManhattanDistance : public MinkowskiDistance<MPTraits> {
+class ManhattanDistance : virtual public MinkowskiDistance<MPTraits> {
 
   public:
 

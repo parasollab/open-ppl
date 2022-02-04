@@ -12,7 +12,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class EuclideanDistance : public MinkowskiDistance<MPTraits> {
+class EuclideanDistance : virtual public MinkowskiDistance<MPTraits> {
 
   public:
 
