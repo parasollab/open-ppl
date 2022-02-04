@@ -97,6 +97,7 @@ class ObjectCentricModeGraph : public StateGraph {
     void ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes, 
                    const std::set<Robot*>& _used);
 
+
     ///@}
     ///@name Internal State
     ///@{

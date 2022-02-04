@@ -1,5 +1,9 @@
 #include "SimultaneousMultiArmEvaluator.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
+#include "ConfigurationSpace/Formation.h"
+
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
@@ -16,6 +20,9 @@ SimultaneousMultiArmEvaluator::
 SimultaneousMultiArmEvaluator(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("SimultaneousMultiArmEvaluator");
 
+  m_maxIters = _node.Read("maxIters",false,1000,1,MAX_INT,
+            "Number of iterations to look for a path.");
+
   m_maxAttempts = _node.Read("maxAttempts",false,5,0,MAX_INT,
             "Number of attempts to sample a transition.");
 
@@ -31,20 +38,24 @@ SimultaneousMultiArmEvaluator::
 void
 SimultaneousMultiArmEvaluator::
 Initialize() {
+
   auto sg = static_cast<ObjectCentricModeGraph*>(
       this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
+
+  // TODO::Temporary code to test helper functions
   if(g->Size() == 0)
     return;
 
-  // TODO::Temporary code to test helper functions
   std::cout << "Calling dummy initialize code for testing development." << std::endl;
 
-  auto mode = SelectMode();
-  auto neighbors = GetModeNeighbors(mode);
-  for(auto n : neighbors) {
-    SampleTransition(mode, n);
-  }
+  //auto mode = SelectMode().first;
+  //auto neighbors = GetModeNeighbors(mode);
+  //for(auto n : neighbors) {
+  //  SampleTransition(mode, n);
+  //}
+
+  Run();
 
 }
 
@@ -57,10 +68,112 @@ Run(Plan* _plan) {
   Plan* plan = _plan ? _plan : this->GetPlan();
   plan->Print();
 
+  auto prob = this->GetMPProblem();
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+      this->GetStateGraph(m_sgLabel).get());
+  auto c = this->GetPlan()->GetCoordinator();
+
+  // Create composite group
+  std::vector<Robot*> robots;
+  for(auto pair : c->GetInitialRobotGroups()) {
+    auto group = pair.first;
+    for(auto robot : group->GetRobots()) {
+      robots.push_back(robot);
+    }
+  }
+
+  auto group = prob->AddRobotGroup(robots,"TensorGroup");
+  sg->GetMPSolution()->AddRobotGroup(group);
+
+  m_tensorProductRoadmap = std::unique_ptr<TensorProductRoadmap>(new TensorProductRoadmap(group,sg->GetMPSolution()));
+
+  m_taskGraph = std::unique_ptr<TaskGraph>(new TaskGraph(c->GetRobot()));
+
+  m_actionExtendedGraph = std::unique_ptr<ActionExtendedGraph>(new ActionExtendedGraph(c->GetRobot()));
+
+  auto actionStart = CreateRootNodes();
+  std::cout << actionStart << std::endl;
+
+  for(size_t i = 0; i < m_maxIters; i++) {
+
+    // Select Mode 
+
+    auto pair = SelectMode();
+    auto mode = pair.first;
+    auto history = pair.second;
+  
+    std::cout << mode << " " << history << std::endl;
+
+    // TODO::Compute Heuristic
+
+
+
+    // Sample Transitions
+
+    auto neighbors = GetModeNeighbors(mode);
+    for(auto n : neighbors) {
+      SampleTransition(mode, n);
+    }
+
+    // TODO::RRT Logic
+    // - Qnear = Sample vertex (from heursitic)
+    // - Qnew = Extend(Qnear,hid,heuristic)
+    // - Qbest = rewire(Qmew)
+
+    // TODO::If Qbest to Qnew is valid add it to the graph and connect to stuff
+
+    // TODO::Check if Qnew is in a neighboring mode and create new vertex over there if so
+
+    // TODO::Check if Qnew is a goal configuration and update the path if so
+
+  }
+
   return false;
 }
 
-SimultaneousMultiArmEvaluator::VID
+size_t
+SimultaneousMultiArmEvaluator::
+CreateRootNodes() {
+
+  // Create initial vertex
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+                this->GetStateGraph(m_sgLabel).get());
+ 
+  std::vector<GroupCfg> cfgs;
+
+  // Get initial vertex in TensorProductRoadmap
+  auto c = this->GetPlan()->GetCoordinator();
+  for(auto& kv : c->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    auto rm = sg->GetGroupRoadmap(group);
+    // Note::Assuming first vertex is starting position
+    cfgs.push_back(rm->GetVertex(0));
+  }
+
+  auto tprStart = CreateTensorProductVertex(cfgs);
+
+  // Create initial Task Graph vertex
+  TaskState taskStartState;
+  taskStartState.vid = tprStart;
+  taskStartState.mode = 0;
+
+  auto taskStart = m_taskGraph->AddVertex(taskStartState);
+
+  // Create initial Action Extended Graph vertex
+  ActionExtendedState actionStartState;
+  actionStartState.vid = taskStart;
+
+  m_actionHistories.emplace_back(ActionHistory());
+  actionStartState.ahid = m_actionHistories.size()-1;
+
+  // Create entry for initial mode and history
+  m_modeHistories[0].push_back(0);
+
+  return m_actionExtendedGraph->AddVertex(actionStartState);
+}
+
+
+std::pair<size_t,size_t>
 SimultaneousMultiArmEvaluator::
 SelectMode() {
 
@@ -68,9 +181,29 @@ SelectMode() {
                 this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
 
-  // For now, sample random mode
-  auto vid = LRand() % g->Size();
-  return vid;
+  while(true) {
+    // For now, sample random mode
+    auto mode = LRand() % g->Size();
+    
+    auto histories = m_modeHistories[mode];
+  
+    if(histories.empty())
+      continue;
+
+    auto hid = LRand() % histories.size();
+
+    if(m_debug) {
+      std::cout << "Selected Mode " << mode << " with history [ ";
+      for(auto vid : m_actionHistories[hid]) {
+        std::cout << vid << ", ";
+      }
+      std::cout << "]" << std::endl;
+    }
+
+    return std::make_pair(mode,hid);
+  }
+
+  return std::make_pair(MAX_INT,MAX_INT);
 }
 
 std::set<SimultaneousMultiArmEvaluator::VID>
@@ -146,10 +279,11 @@ SampleTransition(VID _source, VID _target) {
 
       //Plan interaction
       for(size_t i = 0; i < m_maxAttempts; i++) { 
-        bool success = is->operator()(interaction,state);
+        State end = state;
+        bool success = is->operator()(interaction,end);
 
         if(success) {
-          ConnectToExistingRoadmap(interaction,state,reverse);
+          ConnectToExistingRoadmap(interaction,state,end,reverse);
           break;
         }
       }
@@ -161,11 +295,16 @@ SampleTransition(VID _source, VID _target) {
 
 void
 SimultaneousMultiArmEvaluator::
-ConnectToExistingRoadmap(Interaction* _interaction, State& _state, bool _reverse) {
+ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, bool _reverse) {
+
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+                this->GetStateGraph(m_sgLabel).get());
 
   // Initialize set of robot paths
-  std::unordered_map<Robot*,std::vector<Cfg>> robotPaths;
-  for(auto kv : _state) {
+  auto interactionPath = std::unique_ptr<InteractionPath>(new InteractionPath());
+  m_interactionPaths.push_back(std::move(interactionPath));
+  InteractionPath& robotPaths = *(m_interactionPaths.back().get());
+  for(auto kv : _start) {
     auto group = kv.first;
     for(auto robot : group->GetRobots()) {
       robotPaths[robot] = {};
@@ -196,50 +335,67 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _state, bool _reverse
     totalCost += stageCost;
   }
 
-  // TODO::Add start and end robot cfgs to individual roadmaps
+  // Add start and end group cfgs to individual roadmaps
+  TransitionVertex startVertices;
+  TransitionVertex endVertices;
+  for(auto kv : _start) {
+    auto group = kv.first;
+    auto rm = sg->GetGroupRoadmap(group);
+    GroupCfg gcfg(rm);
 
-  for(auto& kv : robotPaths) {
-    if(kv.second.empty())
-      continue;
+    for(auto robot : group->GetRobots()) {
+      const auto& path = robotPaths[robot];
+      auto cfg = path.front();
+      gcfg.SetRobotCfg(robot,std::move(cfg));
+    }
 
-    const auto& start = kv.second.front();
-    const auto& end = kv.second.back();
-
-    AddToRoadmap(start);
-    if(start != end)
-      AddToRoadmap(end);
+    auto vid = AddToRoadmap(gcfg);
+    startVertices.emplace_back(rm,vid);
   }
 
-  // TODO::Save as edge in tensor-product roadmap
+  for(auto kv : _end) {
+    auto group = kv.first;
+    auto rm = sg->GetGroupRoadmap(group);
+    GroupCfg gcfg(rm);
 
+    for(auto robot : group->GetRobots()) {
+      const auto& path = robotPaths[robot];
+      auto cfg = path.back();
+      gcfg.SetRobotCfg(robot,std::move(cfg));
+    }
+
+    auto vid = AddToRoadmap(gcfg);
+    endVertices.emplace_back(rm,vid);
+  }
+
+  // Save key to edge in transition map
+  m_transitionMap[startVertices][endVertices] = m_interactionPaths.back().get();
 }
 
-void
+SimultaneousMultiArmEvaluator::VID
 SimultaneousMultiArmEvaluator::
-AddToRoadmap(Cfg _cfg) {
+AddToRoadmap(GroupCfg _cfg) {
 
   auto lib = this->GetMPLibrary();
-  auto prob = this->GetMPProblem();
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
-  //auto mpSolution = sg->GetMPSolution();
 
   // Get appropriate roadmap
-  auto robot = _cfg.GetRobot();
-  auto group = prob->GetRobotGroup(robot->GetLabel());
+  auto group = _cfg.GetGroupRoadmap()->GetGroup();
   auto rm = sg->GetGroupRoadmap(group);
 
-  // Convert to group cfg
-  GroupCfg gcfg(rm);
-  gcfg.SetRobotCfg(robot,std::move(_cfg));
+  // Move cfg to appropriate roadmap
+  _cfg.SetGroupRoadmap(rm);
 
   // Add vertex to roadmap
-  auto vid = rm->AddVertex(gcfg);
+  auto vid = rm->AddVertex(_cfg);
 
   // Make dummy group task
-  MPTask mt(robot);
   GroupTask gt(group);
-  gt.AddTask(mt);
+  for(auto robot : group->GetRobots()) {
+    MPTask mt(robot);
+    gt.AddTask(mt);
+  }
 
   // Configure library
   lib->SetGroupTask(&gt);
@@ -255,6 +411,88 @@ AddToRoadmap(Cfg _cfg) {
               << ") to " << rm->get_degree(vid)
               << " vertices." << std::endl;
   }
+
+  return vid;
+}
+
+SimultaneousMultiArmEvaluator::VID
+SimultaneousMultiArmEvaluator::
+CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs) {
+  
+  // Collect individual cfgs and active formations
+  std::vector<std::pair<VID,Cfg>> individualCfgs;
+  std::vector<Formation*> formations;
+
+  for(const auto& cfg : _cfgs) {
+    for(auto f : cfg.GetFormations()) {
+      formations.push_back(f);
+    }
+
+    for(size_t i = 0; i < cfg.GetNumRobots(); i++) {
+      auto vid = cfg.GetVID(i);
+      individualCfgs.emplace_back(vid,cfg.GetRobotCfg(i));
+    }
+  }
+
+  auto tpr = m_tensorProductRoadmap.get();
+  tpr->SetAllFormationsInactive();
+  auto group = tpr->GetGroup();
+  
+  for(auto f : formations) {
+    tpr->AddFormation(f,true);
+  }
+
+  GroupCfg tensorCfg(tpr);
+
+  for(auto cfg : individualCfgs) {
+    auto robot = cfg.second.GetRobot();
+    if(cfg.first != MAX_INT)
+      tensorCfg.SetRobotCfg(group->GetGroupIndex(robot),cfg.first);
+    else
+      tensorCfg.SetRobotCfg(robot,std::move(cfg.second));
+  }
+
+  return m_tensorProductRoadmap->AddVertex(tensorCfg);
 }
 
 /*----------------------------------------------------------------------------*/
+
+istream&
+operator>>(std::istream& _is, const SimultaneousMultiArmEvaluator::TaskState) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SimultaneousMultiArmEvaluator::TaskState) {
+  return _os;
+}
+
+istream&
+operator>>(std::istream& _is, const SimultaneousMultiArmEvaluator::TaskEdge) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SimultaneousMultiArmEvaluator::TaskEdge) {
+  return _os;
+}
+
+istream&
+operator>>(std::istream& _is, const SimultaneousMultiArmEvaluator::ActionExtendedState) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SimultaneousMultiArmEvaluator::ActionExtendedState) {
+  return _os;
+}
+
+istream&
+operator>>(std::istream& _is, const SimultaneousMultiArmEvaluator::ActionExtendedEdge) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SimultaneousMultiArmEvaluator::ActionExtendedEdge) {
+  return _os;
+}

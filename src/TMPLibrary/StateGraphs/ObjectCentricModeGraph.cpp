@@ -123,6 +123,11 @@ GetMPSolution() {
 ObjectCentricModeGraph::GroupRoadmapType* 
 ObjectCentricModeGraph::
 GetGroupRoadmap(RobotGroup* _group) {
+  auto rm = m_solution->GetGroupRoadmap(_group);
+  if(rm)
+    return rm;
+
+  m_solution->AddRobotGroup(_group);
   return m_solution->GetGroupRoadmap(_group);
 }
 
