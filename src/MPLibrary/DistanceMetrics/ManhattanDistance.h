@@ -42,7 +42,8 @@ ManhattanDistance(bool _normalize) :
 
 template <typename MPTraits>
 ManhattanDistance<MPTraits>::
-ManhattanDistance(XMLNode& _node) : MinkowskiDistance<MPTraits>(_node) {
+ManhattanDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
+                                    MinkowskiDistance<MPTraits>(_node) {
   this->SetName("Manhattan");
 
   this->m_r1 = 1;
