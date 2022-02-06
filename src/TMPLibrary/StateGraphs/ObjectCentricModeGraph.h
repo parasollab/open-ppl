@@ -3,6 +3,7 @@
 
 #include "StateGraph.h"
 
+#include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 
@@ -24,10 +25,26 @@ class ObjectCentricModeGraph : public StateGraph {
     typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
     typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
 
+    struct ModeInfo {
+      Robot* robot;
+      Formation* formation;
+      const Terrain* terrain;
+
+      ModeInfo(Robot* _robot = nullptr, Formation* _formation = nullptr, 
+                      const Terrain* _terrain = nullptr) :
+        robot(_robot), formation(_formation), terrain(_terrain) {}
+
+      bool operator==(const ModeInfo& _other) const {
+        return robot     == _other.robot 
+           and formation == _other.formation
+           and terrain   == _other.terrain;
+      }
+    };
+
     /// Key is the robot pointer for the object.
     /// Value is either the robot holding the object or the stable 
     /// placement region it is in.
-    typedef std::map<Robot*,std::pair<Robot*,const Terrain*>> ObjectMode;
+    typedef std::map<Robot*,ModeInfo> ObjectMode;
 
     /// Key is the robot pointer for the robot or object involved.
     /// Value is the Interaction (and reverse statues) the key is involved in and the role (string)
@@ -115,5 +132,8 @@ class ObjectCentricModeGraph : public StateGraph {
     ///@}
 
 };
+
+std::ostream& operator<<(std::ostream& _os, const ObjectCentricModeGraph::ObjectMode);
+std::istream& operator>>(std::istream& _is, const ObjectCentricModeGraph::ObjectMode);
 
 #endif

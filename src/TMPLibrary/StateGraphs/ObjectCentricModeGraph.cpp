@@ -149,14 +149,14 @@ Print() {
       auto state = kv.second;
       
       std::cout << "\t" << object->GetLabel();
-      if(state.first) {
-        std::cout << " held by " << state.first->GetLabel() << std::endl;
+      if(state.robot) {
+        std::cout << " held by " << state.robot->GetLabel() << std::endl;
       }
       else {
-        auto boundary = state.second->GetBoundary();
+        auto boundary = state.terrain->GetBoundary();
 
         if(!boundary) {
-          boundary = state.second->GetBoundaries()[0].get();
+          boundary = state.terrain->GetBoundaries()[0].get();
         }
 
         std::cout << " in region [ ";
@@ -253,7 +253,7 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
     groupRobots.push_back(object);
     groupLabel = object->GetLabel();
 
-    auto robot = kv.second.first;
+    auto robot = kv.second.robot;
     if(robot) {
       used.insert(robot);
       groupRobots.push_back(robot);
@@ -533,6 +533,7 @@ GenerateInitialMode(const State& _start) {
 
     // Separate group into objects and robots
     auto group = kv.first;
+    auto grm = kv.second.first;
     std::vector<Robot*> objects;
     std::vector<Robot*> robots;
 
@@ -554,12 +555,16 @@ GenerateInitialMode(const State& _start) {
       // For now, assume (first and only) object is held by one robot
       auto object = objects[0];
       auto robot = robots[0];
-      initialMode[object] = std::make_pair(robot,nullptr);
+      auto formations = grm->GetActiveFormations();
+      if(formations.size() != 1)
+        throw RunTimeException(WHERE) << "Not able to parse initial formation counts other than 1.\n"
+                                      << "Current formation count is " << formations.size();
+      auto formation = formations.begin();
+      initialMode[object] = ModeInfo(robot,*formation,nullptr);
     }
     // Otherwise, collect stable grasp region it lies within
     else {
       auto object = objects[0];
-      auto grm = kv.second.first;
       auto vid = kv.second.second;
       auto gcfg = grm->GetVertex(vid);
       auto cfg = gcfg.GetRobotCfg(object);
@@ -573,9 +578,7 @@ GenerateInitialMode(const State& _start) {
 
         contained = true;
      
-        Robot* empty = nullptr;
- 
-        initialMode[object] = std::make_pair(empty,&terrain);
+        initialMode[object] = ModeInfo(nullptr,nullptr,&terrain);
         break;
       }
       
@@ -737,6 +740,7 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
         // Check if condition contains object
         Robot* object = nullptr;
         Robot* robot = nullptr;
+        RoleMap temp;
         for(auto role : f->GetRoles()) {
           auto r = roleMap[role];
           if(r->GetMultiBody()->IsPassive()) {
@@ -745,13 +749,16 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
           else {
             robot = r;
           }
+            
+          temp[role] = r;
         }
 
         if(!object)
           continue;
 
         if(robot) {
-          newMode[object] = std::make_pair(robot,nullptr);
+          auto formation = f->GenerateFormation(temp);
+          newMode[object] = ModeInfo(robot,formation,nullptr);
         }
         else {
           placedObjects.insert(object);
@@ -772,7 +779,7 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
     for(auto partial : partials) {
       for(const auto& terrain : terrainMap.at(object->GetCapability())) {
         // If reachable and terrain has capacity
-        partial[object] = std::make_pair(nullptr,&terrain);
+        partial[object] = ModeInfo(nullptr,nullptr,&terrain);
         newPartials.push_back(partial);
       }
     }
@@ -790,4 +797,14 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
 
 }
 /*----------------------------------------------------------------------------*/
+
+std::ostream& 
+operator<<(std::ostream& _os, const ObjectCentricModeGraph::ObjectMode) {
+  return _os;
+}
+
+std::istream&
+operator>>(std::istream& _is, const ObjectCentricModeGraph::ObjectMode) {
+  return _is;
+}
 

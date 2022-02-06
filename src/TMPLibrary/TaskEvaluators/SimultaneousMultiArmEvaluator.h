@@ -13,23 +13,25 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     ///@name LocalTypes
     ///@{
 
-    typedef Condition::State                             State;
+    typedef Condition::State                                State;
 
-    typedef ObjectCentricModeGraph::ObjectMode           ObjectMode;
-    typedef ObjectCentricModeGraph::ObjectModeSwitch     ObjectModeSwitch;
-    typedef ObjectCentricModeGraph::GraphType            GraphType;
-    typedef GraphType::VID                               VID;
+    typedef ObjectCentricModeGraph::ModeInfo                ModeInfo;
+    typedef ObjectCentricModeGraph::ObjectMode              ObjectMode;
+    typedef ObjectCentricModeGraph::ObjectModeSwitch        ObjectModeSwitch;
+    typedef ObjectCentricModeGraph::GraphType               GraphType;
+    typedef GraphType::VID                                  VID;
 
-    typedef GroupLocalPlan<Cfg>                          GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>    GroupRoadmapType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>    TensorProductRoadmap;
-    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>  GroupPathType;
+    typedef GroupLocalPlan<Cfg>                             GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>       GroupRoadmapType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>       TensorProductRoadmap;
+    typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>     GroupPathType;
+    typedef GroupLPOutput<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupLPOutputType;
 
-    typedef std::vector<std::pair<GroupRoadmapType*,VID>>           TransitionVertex;
-    typedef std::unordered_map<Robot*,std::vector<Cfg>>  InteractionPath;
+    typedef std::vector<std::pair<GroupRoadmapType*,VID>>   TransitionVertex;
+    typedef std::unordered_map<Robot*,std::vector<Cfg>>     InteractionPath;
     typedef std::map<TransitionVertex,
                  std::map<TransitionVertex,
-                      InteractionPath*>>                 TransitionMap;
+                      InteractionPath*>>                    TransitionMap;
 
     struct TaskState {
       size_t vid; ///< TensorProductRoadmap VID
@@ -115,6 +117,22 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     VID CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs);
 
+    TID Select(size_t _modeID, size_t _history);
+
+    GroupCfg SampleVertex(size_t _modeID);
+
+    TID Extend(TID _qNear, size_t _history);
+
+    TID Rewire(TID _qNew, size_t _history);
+
+    void AddToActionExtendedGraph(TID _qNew, TID _qBest, size_t _history);
+
+    void CheckForModeTransition(TID _qNew);
+
+    void CheckForGoal(TID _qNew);
+
+    std::vector<GroupCfg> SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -125,6 +143,12 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     /// Label for connector method to use in connecting transitions.
     std::string m_connectorLabel; 
+
+    /// Label for compute distance between two group cfgs
+    std::string m_dmLabel;
+
+    /// Label for verifying local plans in TPR
+    std::string m_lpLabel;
 
     /// TensorProductRoadmap for whole system.
     std::unique_ptr<TensorProductRoadmap> m_tensorProductRoadmap; 
@@ -146,6 +170,9 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     /// Map of mode graph vid to all action history indices that reach it.
     std::unordered_map<size_t,std::vector<size_t>> m_modeHistories;
+
+    /// Map of task vertices explored within a particulr history
+    std::unordered_map<size_t,std::set<TID>> m_historyVertices;
 
     ///@}
 };
