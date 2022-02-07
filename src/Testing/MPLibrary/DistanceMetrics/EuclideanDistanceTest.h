@@ -195,6 +195,12 @@ TestGroupEdgeWeight() {
 
   //TODO::This method does not exist in distance metric method yet.
 
+  if (passed) {
+    message = "GroupEdgeWeight::PASSED!\n";
+  } else {
+    message = "GroupEdgeWeight::FAILED :(\n" + message;
+  }
+
   return std::make_pair(passed, message);
 }
 
@@ -207,9 +213,14 @@ TestGroupScaleCfg() {
 
   //TODO::This method does not exist in distance metric method yet.
 
+  if (passed) {
+    message = "GroupScaleCfg::PASSED!\n";
+  } else {
+    message = "GroupScaleCfg::FAILED :(\n" + message;
+  }
+
   return std::make_pair(passed, message);
 }
-
 
 /*--------------------------- Helpers --------------------------------*/
 
@@ -224,13 +235,13 @@ TrueIndividualCfgDistance() {
   double trueDist;
   if (this->m_normalize) {
     const double diagonal = this->GetEnvironment()->GetBoundary()->GetMaxDist(
-        this->m_r1, this->m_r3);
-    trueDist = std::pow(5 / diagonal, this->m_r1) * cfg2.PosDOF();
+        2, 0.5);
+    trueDist = std::pow(5 / diagonal, 2) * cfg2.PosDOF();
   } else {
-    trueDist = std::pow(5, this->m_r1) * cfg2.PosDOF();
+    trueDist = std::pow(5, 2) * cfg2.PosDOF();
   }
-  trueDist += std::pow(0.5, this->m_r2) * (cfg2.DOF() - cfg2.PosDOF());
-  trueDist = std::pow(trueDist, this->m_r3);
+  trueDist += std::pow(0.5, 2) * (cfg2.DOF() - cfg2.PosDOF());
+  trueDist = std::pow(trueDist, 0.5);
 
   return trueDist;
 }
