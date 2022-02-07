@@ -137,11 +137,11 @@ IndividualCfgDistance() {
   auto cfg2 = GetIndividualCfg();
   
   for(size_t i = 0; i < cfg2.PosDOF(); i++) {
-    cfg2[i] = cfg2[i] + 5;
+    cfg2[i] += 5;
   }
 
   for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
-    cfg2[i+cfg2.PosDOF()] = cfg2[i+cfg2.PosDOF()] + .5;
+    cfg2[i] += 0.5;
   }
 
   return this->Distance(cfg1,cfg2);
@@ -161,11 +161,11 @@ IndividualEdgeWeight() {
   auto cfg2 = GetIndividualCfg();
   
   for(size_t i = 0; i < cfg2.PosDOF(); i++) {
-    cfg2[i] = 5;
+    cfg2[i] += 5;
   }
 
   for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
-    cfg2[i+cfg2.PosDOF()] = .5;
+    cfg2[i] += .5;
   }
 
   // Add cfgs to roadmap
@@ -214,11 +214,11 @@ GroupCfgDistance() {
 
     // Adjust individual cfg
     for(size_t j = 0; j < cfg.PosDOF(); j++) {
-      cfg[j] = 5;
+      cfg[j] += 5;
     }
     
     for(size_t j = cfg.PosDOF(); j < cfg.DOF(); j++) {
-      cfg[j+cfg.PosDOF()] = .5;
+      cfg[j] += .5;
     }
   }
 

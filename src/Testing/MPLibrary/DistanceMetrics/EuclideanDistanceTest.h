@@ -52,6 +52,13 @@ class EuclideanDistanceTest : virtual public EuclideanDistance<MPTraits>,
     virtual TestResult TestGroupScaleCfg() override;
 
     ///@}
+    ///@name Helpers
+    ///@{
+
+    double TrueIndividualCfgDistance();
+
+    ///@}
+
 };
 
 /*--------------------------- Construction ---------------------------*/
@@ -87,18 +94,18 @@ TestIndividualCfgDistance() {
   bool passed = true;
   std::string message = "";
 
-  // todo test normalized also
+  double dist = this->IndividualCfgDistance();
+  double trueDist = TrueIndividualCfgDistance();
 
-  auto cfg1 = this->GetIndividualCfg();
-  auto cfg2 = this->GetIndividualCfg();
-
-  // Euclidean distance should be 5 * PosDOF + 0.5 * OrientationDOF
-  double trueDist = std::pow(5, this->m_r1) * cfg2.PosDOF() + std::pow(0.5, this->m_r2) * (cfg2.DOF() - cfg2.PosDOF());
-  trueDist = std::pow(trueDist, this->m_r3);
-  auto dist = this->IndividualCfgDistance();
   if (fabs(dist - trueDist) > 1e-7) {
     passed = false;
-    message = message + "\n\tIncorrect non-zero distance returned between different configurations.\n";
+    message = message + "\n\tIncorrect distance returned between different configurations.\n";
+  }
+
+  if (passed) {
+    message = "IndividualCfgSample::PASSED!\n";
+  } else {
+    message = "IndividualCfgSample::FAILED :(\n" + message;
   }
 
   return std::make_pair(passed, message);
@@ -108,35 +115,124 @@ template<typename MPTraits>
 typename EuclideanDistanceTest<MPTraits>::TestResult
 EuclideanDistanceTest<MPTraits>::
 TestIndividualEdgeWeight() {
-  return std::make_pair(true, "");
+  bool passed = true;
+  std::string message = "";
+
+  double weight = this->IndividualEdgeWeight();
+  double trueWeight = TrueIndividualCfgDistance();
+
+  if (fabs(weight - trueWeight) > 1e-7) {
+    passed = false;
+    message = message + "\n\tIncorrect edge weight/distance between configurations.\n";
+  }
+
+  if (passed) {
+    message = "IndividualEdgeWeight::PASSED!\n";
+  } else {
+    message = "IndividualEdgeWeight::FAILED :(\n" + message;
+  }
+
+  return std::make_pair(passed, message);
 }
 
 template<typename MPTraits>
 typename EuclideanDistanceTest<MPTraits>::TestResult
 EuclideanDistanceTest<MPTraits>::
 TestIndividualScaleCfg() {
-  return std::make_pair(true, "");
+  bool passed = true;
+  std::string message = "";
+
+  CfgType c1 = this->GetIndividualCfg();
+  CfgType c2 = this->IndividualScaleCfg();
+  double newLength = Distance(c1, c2);
+
+  if (fabs(newLength - 10.0) > 1e-7) {
+    passed = false;
+    message = message + "\n\tScaled distance is not the correct magnitude.\n";
+  }
+
+  if (passed) {
+    message = "IndividualScaleCfg::PASSED!\n";
+  } else {
+    message = "IndividualScaleCfg::FAILED :(\n" + message;
+  }
+
+  return std::make_pair(passed, message);
 }
 
 template<typename MPTraits>
 typename EuclideanDistanceTest<MPTraits>::TestResult
 EuclideanDistanceTest<MPTraits>::
 TestGroupCfgDistance() {
-  return std::make_pair(true, "");
+  bool passed = true;
+  std::string message = "";
+
+  GroupCfgType gcfg = this->GetGroupCfg();
+
+  double dist = this->GroupCfgDistance();
+  double trueDist = TrueIndividualCfgDistance() * gcfg.GetNumRobots();
+
+  if (fabs(dist - trueDist) > 1e-7) {
+    passed = false;
+    message = message + "\n\tIncorrect distance returned between different configurations.\n";
+  }
+
+  if (passed) {
+    message = "GroupCfgSample::PASSED!\n";
+  } else {
+    message = "GroupCfgSample::FAILED :(\n" + message;
+  }
+
+  return std::make_pair(passed, message);
 }
 
 template<typename MPTraits>
 typename EuclideanDistanceTest<MPTraits>::TestResult
 EuclideanDistanceTest<MPTraits>::
 TestGroupEdgeWeight() {
-  return std::make_pair(true, "");
+  bool passed = true;
+  std::string message = "";
+
+  //TODO::This method does not exist in distance metric method yet.
+
+  return std::make_pair(passed, message);
 }
 
 template<typename MPTraits>
 typename EuclideanDistanceTest<MPTraits>::TestResult
 EuclideanDistanceTest<MPTraits>::
 TestGroupScaleCfg() {
-  return std::make_pair(true, "");
+  bool passed = true;
+  std::string message = "";
+
+  //TODO::This method does not exist in distance metric method yet.
+
+  return std::make_pair(passed, message);
+}
+
+
+/*--------------------------- Helpers --------------------------------*/
+
+template <typename MPTraits>
+double
+EuclideanDistanceTest<MPTraits>::
+TrueIndividualCfgDistance() {
+  CfgType cfg1 = this->GetIndividualCfg();
+  CfgType cfg2 = this->GetIndividualCfg();
+
+  // Euclidean distance should be sqrt(5^2 * PosDOF + 0.5^2 * OriDOF)
+  double trueDist;
+  if (this->m_normalize) {
+    const double diagonal = this->GetEnvironment()->GetBoundary()->GetMaxDist(
+        this->m_r1, this->m_r3);
+    trueDist = std::pow(5 / diagonal, this->m_r1) * cfg2.PosDOF();
+  } else {
+    trueDist = std::pow(5, this->m_r1) * cfg2.PosDOF();
+  }
+  trueDist += std::pow(0.5, this->m_r2) * (cfg2.DOF() - cfg2.PosDOF());
+  trueDist = std::pow(trueDist, this->m_r3);
+
+  return trueDist;
 }
 
 /*--------------------------------------------------------------------*/
