@@ -54,7 +54,8 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     typedef GenericStateGraph<TaskState,TaskEdge>        TaskGraph;
     typedef TaskGraph::VID                               TID;
 
-    typedef std::vector<TID>                             ActionHistory;
+    // Vector of mode graph vertices
+    typedef std::vector<size_t>                          ActionHistory;
     typedef size_t                                       AHID;
     
     struct ActionExtendedState {
@@ -111,7 +112,8 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     bool SampleTransition(VID _source, VID _target);
 
-    void ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end, bool _reverse);
+    void ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end, 
+                                  bool _reverse, size_t _sourceMode, size_t _targetMode);
     
     VID AddToRoadmap(GroupCfg _cfg);
 
@@ -125,13 +127,15 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     TID Rewire(TID _qNew, size_t _history);
 
-    void AddToActionExtendedGraph(TID _qNew, TID _qBest, size_t _history);
+    void AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history);
 
-    void CheckForModeTransition(TID _qNew);
+    void CheckForModeTransition(TID _qNew, size_t _history);
 
     void CheckForGoal(TID _qNew);
 
     std::vector<GroupCfg> SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID);
+
+    size_t AddHistory(const ActionHistory& _history);
 
     ///@}
     ///@name Internal State

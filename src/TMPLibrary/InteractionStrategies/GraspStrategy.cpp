@@ -226,6 +226,9 @@ operator()(Interaction* _interaction, State& _start) {
   }
   //TODO::Compute to post grasp path
 
+  m_roleMap.clear();
+  m_objectPoseTasks.clear();
+
   return true;
 }
 

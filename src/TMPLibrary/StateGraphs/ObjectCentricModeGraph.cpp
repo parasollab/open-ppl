@@ -58,6 +58,8 @@ Initialize() {
       grm->SetFormationActive(formation);
     }
 
+    m_groups[group].insert(formation);
+
     // Create initial group cfgs
     auto gcfg = GroupCfg(grm);
 
@@ -211,22 +213,40 @@ BuildRoadmaps() {
   auto prob = this->GetMPProblem();
   auto b = prob->GetEnvironment()->GetBoundary();
 
-  for(auto robot : m_robots) {
+  for(auto kv : m_groups) {
+    auto group = kv.first;
+    m_solution->AddRobotGroup(group);
+    auto rm = m_solution->GetGroupRoadmap(group);
 
-    // Create robot group of one
-    auto group = prob->AddRobotGroup({robot},robot->GetLabel());
+    for(auto formation : kv.second) {
 
-    // Configure empty task for group
-    GroupTask gt(group);
-    MPTask mt(robot);
-    auto c = std::unique_ptr<BoundaryConstraint>(
-                new BoundaryConstraint(robot,b->Clone()));
-    mt.SetStartConstraint(std::move(c));
-    gt.AddTask(mt);
-    
-    // Call MPLibrary to build roadmap
-    lib->Solve(prob,&gt,m_solution.get(),m_mpStrategy,LRand(),
-               this->GetNameAndLabel());
+      // Configure roadmap
+      rm->SetAllFormationsInactive();
+      if(formation)
+        rm->AddFormation(formation);
+
+      bool passive = true;
+      for(auto r : group->GetRobots()) {
+        passive = passive and r->GetMultiBody()->IsPassive();
+      }
+
+      if(passive)
+        continue;
+
+      // Configure empty task for group
+      GroupTask gt(group);
+      for(auto robot : group->GetRobots()) {
+        MPTask mt(robot);
+        auto c = std::unique_ptr<BoundaryConstraint>(
+            new BoundaryConstraint(robot,b->Clone()));
+        mt.SetStartConstraint(std::move(c));
+        gt.AddTask(mt);
+      }
+
+      // Call MPLibrary to build roadmap
+      lib->Solve(prob,&gt,m_solution.get(),m_mpStrategy,LRand(),
+          this->GetNameAndLabel());
+    }
   }
 }
 
@@ -383,7 +403,7 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
         }
   
       }
-
+  
       groupPartials = newPartials;
 
     }    
@@ -392,19 +412,20 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
     if(groupPartials.empty())
       return {};
 
+    std::vector<std::vector<std::pair<Robot*,std::string>>> candidatePartials = partials;
     for(auto roleOptions : groupPartials) {
 
       // Try to add group partials to system partials
       std::vector<std::vector<std::pair<Robot*,std::string>>> newPartials;
 
-      for(auto gp : roleOptions) { 
+      for(auto gp : roleOptions) {  
 
-        if(partials.empty()) {
+        if(candidatePartials.empty()) {
           newPartials.push_back({gp});
           continue;
         }
 
-        for(auto partial : partials) {
+        for(auto partial : candidatePartials) {
           // Check for conflcits
           bool conflict = false;
 
@@ -432,9 +453,47 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
 
       if(newPartials.empty())
         return {};
-      partials = newPartials;
+  
+      candidatePartials = newPartials;
     }
+
+    partials.clear();
+
+    // Check if new additions obey formation constraints
+    for(auto partial : candidatePartials) {
+      RoleMap roleMap;
+      size_t start = partial.size() - groupPartials.size();
+      Robot* object;
+      for(size_t i = start; i < partial.size(); i++)  {
+        auto pair = partial[i];
+        auto robot = pair.first;
+        auto role = pair.second;
+        roleMap[role] = robot;
+
+        if(robot->GetMultiBody()->IsPassive())
+          object = robot;
+      }
+
+
+      auto formation = f->GenerateFormation(roleMap);
+      bool okay = formation == mode[object].formation;
+      if(!okay and !formation)
+        continue;
+      okay = okay or (*formation == *(mode[object].formation));
+
+      if(!okay)
+        continue;
+
+      partials.push_back(partial);
+    }
+
   }
+
+  
+  for(auto partial : partials) {
+
+  }
+
  
   return partials; 
 
@@ -704,6 +763,7 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
           std::set<VID>& _newModes, const std::set<Robot*>& _used) {
 
 
+  auto prob = this->GetMPProblem();
   auto as = this->GetTMPLibrary()->GetActionSpace();
   auto mode = m_graph.GetVertex(_source);
   const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
@@ -756,13 +816,27 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
         if(!object)
           continue;
 
+        Formation* formation = nullptr;
+
         if(robot) {
-          auto formation = f->GenerateFormation(temp);
+          formation = f->GenerateFormation(temp);
           newMode[object] = ModeInfo(robot,formation,nullptr);
         }
         else {
           placedObjects.insert(object);
         }
+
+        // Add robot group defining this formation saved set of groups
+        std::vector<Robot*> robots;
+        std::string label = "";
+        for(auto kv : temp) {
+          auto r = kv.second;
+          robots.push_back(r);
+          label += ("::" + r->GetLabel());
+        }
+  
+        auto group = prob->AddRobotGroup(robots,label);
+        m_groups[group].insert(formation);
       }
     }
   }

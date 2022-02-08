@@ -132,12 +132,14 @@ Run(Plan* _plan) {
       continue;
     // - Qbest = rewire(Qnew)
     auto qBest = Rewire(qNew,history);
+    // TODO::Temp while Reqire does nothing
+    qBest = qNear;
 
     // Add Qnew to action extended graph and connect
-    AddToActionExtendedGraph(qNew,qBest,history);
+    AddToActionExtendedGraph(qBest,qNew,history);
 
     // Check if Qnew is in a neighboring mode and create new vertex over there if so
-    CheckForModeTransition(qNew);
+    CheckForModeTransition(qNew,history);
 
     // Check if Qnew is a goal configuration and update the path if so
     CheckForGoal(qNew);
@@ -178,11 +180,10 @@ CreateRootNodes() {
   ActionExtendedState actionStartState;
   actionStartState.vid = taskStart;
 
-  m_actionHistories.emplace_back(ActionHistory());
-  actionStartState.ahid = m_actionHistories.size()-1;
+  ActionHistory initialHistory = {taskStartState.mode};
+  actionStartState.ahid = AddHistory(initialHistory);
 
-  // Create entry for initial mode and history
-  m_modeHistories[0].push_back(0);
+  m_historyVertices[actionStartState.ahid].insert(taskStart);
 
   return m_actionExtendedGraph->AddVertex(actionStartState);
 }
@@ -205,7 +206,8 @@ SelectMode() {
     if(histories.empty())
       continue;
 
-    auto hid = LRand() % histories.size();
+    auto index = LRand() % histories.size();
+    auto hid = histories[index];
 
     if(m_debug) {
       std::cout << "Selected Mode " << mode << " with history [ ";
@@ -266,6 +268,8 @@ SampleTransition(VID _source, VID _target) {
       // Create state
       State state;
 
+      std::vector<RobotGroup*> passives;
+
       auto stage = stages.front();
   
       for(auto condition : interaction->GetStageConditions(stage)) {
@@ -279,26 +283,44 @@ SampleTransition(VID _source, VID _target) {
         // Create appropriate robot group
         std::vector<Robot*> robots;
         std::string label;
+        bool passive = true;
         
         for(auto role : f->GetRoles()) {
           auto robot = roleMap[role];
           robots.push_back(robot);
           label += ("::" + robot->GetLabel());
+          passive = passive and robot->GetMultiBody()->IsPassive();
         }
 
         auto group = prob->AddRobotGroup(robots,label);
+        if(passive)
+          passives.push_back(group);
 
         // Add group to state
         state[group] = std::make_pair(nullptr,MAX_INT);
       }
 
       //Plan interaction
-      for(size_t i = 0; i < m_maxAttempts; i++) { 
+      for(size_t i = 0; i < m_maxAttempts; i++) {
+
+        // Get cfg for each passive group
+        for(auto group : passives) {
+          auto rm = sg->GetGroupRoadmap(group);
+          auto iter = rm->end();
+          size_t vid = MAX_INT;
+          while(iter == rm->end()) {
+            vid = LRand() % rm->Size();
+            iter = rm->find_vertex(vid);
+          }
+
+          state[group] = std::make_pair(rm,vid);
+        }
+ 
         State end = state;
         bool success = is->operator()(interaction,end);
 
         if(success) {
-          ConnectToExistingRoadmap(interaction,state,end,reverse);
+          ConnectToExistingRoadmap(interaction,state,end,reverse,_source,_target);
           break;
         }
       }
@@ -310,10 +332,15 @@ SampleTransition(VID _source, VID _target) {
 
 void
 SimultaneousMultiArmEvaluator::
-ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, bool _reverse) {
+ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, bool _reverse,
+                         size_t _sourceMode, size_t _targetMode) {
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetObjectModeGraph();
+
+  auto startMode = g->GetVertex(_sourceMode);
+  auto endMode = g->GetVertex(_targetMode);
 
   // Initialize set of robot paths
   auto interactionPath = std::unique_ptr<InteractionPath>(new InteractionPath());
@@ -356,6 +383,17 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
   for(auto kv : _start) {
     auto group = kv.first;
     auto rm = sg->GetGroupRoadmap(group);
+
+    rm->SetAllFormationsInactive();
+    for(auto robot : group->GetRobots()) {
+      if(!robot->GetMultiBody()->IsPassive())
+        continue;
+
+      auto formation = startMode[robot].formation;
+      if(formation)
+        rm->AddFormation(formation);
+    }
+
     GroupCfg gcfg(rm);
 
     for(auto robot : group->GetRobots()) {
@@ -370,7 +408,19 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
 
   for(auto kv : _end) {
     auto group = kv.first;
+    auto formations = kv.second.first->GetVertex(kv.second.second).GetFormations();
     auto rm = sg->GetGroupRoadmap(group);
+
+    rm->SetAllFormationsInactive();
+    for(auto robot : group->GetRobots()) {
+      if(!robot->GetMultiBody()->IsPassive())
+        continue;
+
+      auto formation = endMode[robot].formation;
+      if(formation)
+        rm->AddFormation(formation);
+    }
+
     GroupCfg gcfg(rm);
 
     for(auto robot : group->GetRobots()) {
@@ -555,10 +605,12 @@ Extend(TID _qNear, size_t _history) {
   };
 
   // Look at tensor product neighbors of start
+  /*
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
   auto mode = g->GetVertex(taskState.mode);
+
 
   // Collect robot groups
   std::vector<GroupRoadmapType*> roadmaps;
@@ -599,28 +651,35 @@ Extend(TID _qNear, size_t _history) {
     rm->SetAllFormationsInactive();
     roadmaps.push_back(rm);
   }
+  */
+
+  auto nearCfgs = SplitTensorProductVertex(cfg,taskState.mode);
+  auto directionCfgs = SplitTensorProductVertex(direction,taskState.mode);
 
   // Find nearest neighbor to direction for each group roadmap
   std::vector<VID> neighbors;
 
-  for(auto rm : roadmaps) {
+  for(size_t i = 0; i < nearCfgs.size(); i++) {
 
     // Create group cfgs within this roadmap
-    GroupCfg start(rm);
-    GroupCfg d(rm);
-    auto group = rm->GetGroup();
+    GroupCfg start = nearCfgs[i];
+    GroupCfg d = directionCfgs[i];
 
-    for(auto robot : group->GetRobots()) {
-      auto individualCfg = cfg.GetRobotCfg(robot);
-      start.SetRobotCfg(robot,std::move(individualCfg));
-    }
-
-    for(auto robot : group->GetRobots()) {
-      auto individualCfg = direction.GetRobotCfg(robot);
-      d.SetRobotCfg(robot,std::move(individualCfg));
-    }
-
+    auto rm = start.GetGroupRoadmap();
     auto vid = rm->GetVID(start);
+
+    // Check if this is a passive group
+    auto group = rm->GetGroup();
+    bool passive = true;
+    for(auto robot : group->GetRobots()) {
+      passive = passive and robot->GetMultiBody()->IsPassive();
+    }
+
+    // Leave cfg stationary if it is
+    if(passive) { 
+      neighbors.push_back(vid);
+      continue;
+    }
 
     // Initialize minimum neighbor as staying put
     auto vec1 = d - start;
@@ -654,8 +713,8 @@ Extend(TID _qNear, size_t _history) {
   // Create tensor product vertex
   GroupCfg qNew(m_tensorProductRoadmap.get());
 
-  for(size_t i = 0; i < roadmaps.size(); i++) {
-    auto rm = roadmaps[i];
+  for(size_t i = 0; i < nearCfgs.size(); i++) {
+    auto rm = nearCfgs[i].GetGroupRoadmap();
     auto vid = neighbors[i];
 
     auto gcfg = rm->GetVertex(vid);
@@ -666,6 +725,8 @@ Extend(TID _qNear, size_t _history) {
     }
   }
 
+  if(qNew == cfg)
+    return MAX_INT;
 
   // Connect qNew to qNear
   auto lp = this->GetMPLibrary()->GetLocalPlanner(m_lpLabel);
@@ -679,11 +740,30 @@ Extend(TID _qNear, size_t _history) {
                         true,false,{});
 
   if(isConnected) {
+  
+    double cost = lpOut.m_edge.first.GetIntermediates().size();
+
+    // Add vertex to TPR
+    auto vid = m_tensorProductRoadmap->AddVertex(qNew);
+
+    // Add edge to TPR
+    m_tensorProductRoadmap->AddEdge(taskState.vid,vid,lpOut.m_edge.first);
+
+    // Add vertex to task graph
     TaskState newState;
-    newState.vid = m_tensorProductRoadmap->AddVertex(qNew);
+    newState.vid = vid; 
     newState.mode = taskState.mode;
 
-    return m_taskGraph->AddVertex(newState);
+    auto tid = m_taskGraph->AddVertex(newState);
+
+    // Add edge to task graph
+    TaskEdge edge;
+    edge.cost = cost;
+    m_taskGraph->AddEdge(_qNear,tid,edge);
+
+    // Mark history of this vertex
+    m_historyVertices[_history].insert(tid);
+    return tid;
   }
 
   return MAX_INT;
@@ -698,7 +778,7 @@ Rewire(VID _qNew, size_t _history) {
     
 void
 SimultaneousMultiArmEvaluator::
-AddToActionExtendedGraph(TID _qNew, TID _qBest, size_t _history) {
+AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
 
   ActionExtendedState qNew;
   qNew.vid = _qNew;
@@ -712,16 +792,16 @@ AddToActionExtendedGraph(TID _qNew, TID _qBest, size_t _history) {
 
   auto bestAID = m_actionExtendedGraph->GetVID(qBest);
 
-  auto taskEdge = m_taskGraph->GetEdge(_qNew,_qBest);
+  auto taskEdge = m_taskGraph->GetEdge(_qBest,_qNew);
   ActionExtendedEdge actionEdge;
   actionEdge.cost = taskEdge.cost;
 
-  m_actionExtendedGraph->AddEdge(newAID,bestAID,actionEdge);
+  m_actionExtendedGraph->AddEdge(bestAID,newAID,actionEdge);
 }
 
 void
 SimultaneousMultiArmEvaluator::
-CheckForModeTransition(TID _qNew) {
+CheckForModeTransition(TID _qNew, size_t _history) {
   
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
@@ -912,7 +992,12 @@ CheckForModeTransition(TID _qNew) {
     auto modeID = g->GetVID(newMode);
     newState.mode = modeID;
 
+    auto newHistory = m_actionHistories[_history];
+    newHistory.push_back(modeID);
+    auto hid = AddHistory(newHistory);
+
     auto newTaskVID = m_taskGraph->AddVertex(newState);
+    m_historyVertices[hid].insert(newTaskVID);
     m_taskGraph->AddEdge(_qNew,newTaskVID,edge);
   }
 }
@@ -990,6 +1075,26 @@ SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID) {
   }
 
   return splitCfgs;
+}
+
+size_t
+SimultaneousMultiArmEvaluator::
+AddHistory(const ActionHistory& _history) {
+
+  // Check if history exists already
+  size_t i = 0;
+  for(i=0; i < m_actionHistories.size(); i++) {
+    if(_history == m_actionHistories[i])
+      return i;
+  }
+
+  // Add new hisotry to set of histories
+  m_actionHistories.push_back(_history);
+
+  // Create entry for initial mode and history
+  m_modeHistories[_history.back()].push_back(i);
+
+  return i;
 }
 
 /*----------------------------------------------------------------------------*/

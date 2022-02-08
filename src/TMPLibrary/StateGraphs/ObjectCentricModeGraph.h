@@ -36,7 +36,7 @@ class ObjectCentricModeGraph : public StateGraph {
 
       bool operator==(const ModeInfo& _other) const {
         return robot     == _other.robot 
-           and formation == _other.formation
+           and ((!formation and !_other.formation) or formation == _other.formation or *formation == *_other.formation)
            and terrain   == _other.terrain;
       }
     };
@@ -126,6 +126,8 @@ class ObjectCentricModeGraph : public StateGraph {
     std::unordered_map<const Terrain*, size_t> m_capacities;
 
     std::vector<Robot*> m_robots;
+
+    std::unordered_map<RobotGroup*,std::set<Formation*>> m_groups;
 
     std::string m_mpStrategy;
  
