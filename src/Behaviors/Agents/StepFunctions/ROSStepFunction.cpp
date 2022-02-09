@@ -67,10 +67,7 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
     }
     else {
       m_armPub = nh.advertise<trajectory_msgs::JointTrajectory>(
-                  //"/arm_controller/command",
-                  //"/" + this->m_agent->GetRobot()->GetLabel()+"/scaled_pos_joint_traj_controller/command",
-                  "/ppl_joint_traj_controller/command",
-                  //"/"+m_agent->GetRobot()->GetLabel()+"/arm_controller/command",
+                  "/" + this->m_agent->GetRobot()->GetLabel() + "/ppl_joint_traj_controller/command",
                   10);
     }
 
@@ -132,8 +129,8 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   //auto js = s_jointStates;
 
   sensor_msgs::JointState msg;
-  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/ppl_joint_states");
-  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/ppl_joint_states");
+  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/ppl_joint_states");
+  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/ppl_joint_states");
 
   if(sharedMsg!=NULL)
     msg = *sharedMsg;
