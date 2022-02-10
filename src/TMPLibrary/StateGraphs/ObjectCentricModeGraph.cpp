@@ -19,6 +19,7 @@ ObjectCentricModeGraph(XMLNode& _node) : StateGraph(_node) {
   this->SetName("ObjectCentricModeGraph");
 
   m_mpStrategy = _node.Read("mpStrategy",true,"","MPStrategy to build roadmaps");
+  m_passiveStrategy = _node.Read("passiveStrategy",true,"","MPStrategy to sample passive object roadmaps");
 }
 
 ObjectCentricModeGraph::
@@ -230,9 +231,6 @@ BuildRoadmaps() {
         passive = passive and r->GetMultiBody()->IsPassive();
       }
 
-      if(passive)
-        continue;
-
       // Configure empty task for group
       GroupTask gt(group);
       for(auto robot : group->GetRobots()) {
@@ -243,8 +241,11 @@ BuildRoadmaps() {
         gt.AddTask(mt);
       }
 
+      std::string strategy = passive ? m_passiveStrategy
+                                     : m_mpStrategy;
+
       // Call MPLibrary to build roadmap
-      lib->Solve(prob,&gt,m_solution.get(),m_mpStrategy,LRand(),
+      lib->Solve(prob,&gt,m_solution.get(),strategy,LRand(),
           this->GetNameAndLabel());
     }
   }

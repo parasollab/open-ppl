@@ -26,6 +26,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>       TensorProductRoadmap;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>     GroupPathType;
     typedef GroupLPOutput<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupLPOutputType;
+    typedef std::unordered_map<std::string,Robot*>          RoleMap;
 
     typedef std::vector<std::pair<GroupRoadmapType*,VID>>   TransitionVertex;
     typedef std::unordered_map<Robot*,std::vector<Cfg>>     InteractionPath;
@@ -127,11 +128,11 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     TID Rewire(TID _qNew, size_t _history);
 
-    void AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history);
+    size_t AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history);
 
-    void CheckForModeTransition(TID _qNew, size_t _history);
+    void CheckForModeTransition(size_t _aid, size_t _history);
 
-    void CheckForGoal(TID _qNew);
+    void CheckForGoal(size_t _aid);
 
     std::vector<GroupCfg> SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID);
 
@@ -177,6 +178,8 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     /// Map of task vertices explored within a particulr history
     std::unordered_map<size_t,std::set<TID>> m_historyVertices;
+
+    std::vector<std::pair<bool,RoleMap>> m_plannedInteractions;
 
     ///@}
 };

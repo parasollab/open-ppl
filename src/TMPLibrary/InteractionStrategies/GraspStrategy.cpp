@@ -138,6 +138,7 @@ operator()(Interaction* _interaction, State& _start) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
       if(!cfg.GetRobot()) {
         std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+        m_roleMap.clear();
       	return false;
       }
       SetEEDOF(_interaction,cfg,stages[i]);
@@ -211,14 +212,17 @@ operator()(Interaction* _interaction, State& _start) {
     ResetStaticRobots();
 
     // Check if valid solution was found
-    if(toGraspPaths.empty())
+    if(toGraspPaths.empty()) {
+      m_roleMap.clear();
       return false;
+    }
 
     // Save plan information
     _interaction->SetToStagePaths(stages[i+1],toGraspPaths);
 
     if(i+1 == graspStage) {
       _start = InterimState(_interaction,stages[i+1],stages[i+1],toGraspPaths);
+      m_roleMap.clear();
       return true;
     }
     else 

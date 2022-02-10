@@ -4,6 +4,8 @@
 
 #include "ConfigurationSpace/Formation.h"
 
+#include "MPProblem/TaskHierarchy/Decomposition.h"
+
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
@@ -136,13 +138,13 @@ Run(Plan* _plan) {
     qBest = qNear;
 
     // Add Qnew to action extended graph and connect
-    AddToActionExtendedGraph(qBest,qNew,history);
+    auto aid = AddToActionExtendedGraph(qBest,qNew,history);
 
     // Check if Qnew is in a neighboring mode and create new vertex over there if so
-    CheckForModeTransition(qNew,history);
+    CheckForModeTransition(aid,history);
 
     // Check if Qnew is a goal configuration and update the path if so
-    CheckForGoal(qNew);
+    CheckForGoal(aid);
   }
 
   return false;
@@ -206,6 +208,10 @@ SelectMode() {
     if(histories.empty())
       continue;
 
+    //temp for debugging
+    if(mode == 2)
+      std::cout << "HERE" << std::endl;
+
     auto index = LRand() % histories.size();
     auto hid = histories[index];
 
@@ -262,6 +268,14 @@ SampleTransition(VID _source, VID _target) {
     auto stages = interaction->GetStages();
 
     for(auto pair : kv.second) {
+
+      auto iter = std::find(m_plannedInteractions.begin(),
+                            m_plannedInteractions.end(),
+                            pair);
+
+      if(iter != m_plannedInteractions.end())
+        continue;
+
       auto reverse = pair.first;
       auto roleMap = pair.second;
 
@@ -321,6 +335,7 @@ SampleTransition(VID _source, VID _target) {
 
         if(success) {
           ConnectToExistingRoadmap(interaction,state,end,reverse,_source,_target);
+          m_plannedInteractions.push_back(pair);
           break;
         }
       }
@@ -377,10 +392,28 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     totalCost += stageCost;
   }
 
+  if(_reverse) {
+    for(auto& kv : robotPaths) {
+      std::reverse(kv.second.begin(),kv.second.end());
+    }
+  }
+
   // Add start and end group cfgs to individual roadmaps
   TransitionVertex startVertices;
   TransitionVertex endVertices;
-  for(auto kv : _start) {
+
+  State start;
+  State end;
+  if(_reverse) {
+    start = _end;
+    end = _start;
+  }
+  else {
+    start = _start;
+    end = _end;
+  }
+    
+  for(auto kv : start) {
     auto group = kv.first;
     auto rm = sg->GetGroupRoadmap(group);
 
@@ -406,9 +439,9 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     startVertices.emplace_back(rm,vid);
   }
 
-  for(auto kv : _end) {
+  for(auto kv : end) {
     auto group = kv.first;
-    auto formations = kv.second.first->GetVertex(kv.second.second).GetFormations();
+    //auto formations = kv.second.first->GetVertex(kv.second.second).GetFormations();
     auto rm = sg->GetGroupRoadmap(group);
 
     rm->SetAllFormationsInactive();
@@ -776,7 +809,7 @@ Rewire(VID _qNew, size_t _history) {
   return _qNew;
 }
     
-void
+size_t
 SimultaneousMultiArmEvaluator::
 AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
 
@@ -797,17 +830,22 @@ AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
   actionEdge.cost = taskEdge.cost;
 
   m_actionExtendedGraph->AddEdge(bestAID,newAID,actionEdge);
+
+  return newAID;
 }
 
 void
 SimultaneousMultiArmEvaluator::
-CheckForModeTransition(TID _qNew, size_t _history) {
+CheckForModeTransition(size_t _aid, size_t _history) {
   
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
 
-  auto taskState = m_taskGraph->GetVertex(_qNew);
+  auto actionExtendedState = m_actionExtendedGraph->GetVertex(_aid);
+  auto qNew = actionExtendedState.vid;
+
+  auto taskState = m_taskGraph->GetVertex(qNew);
   auto mode = taskState.mode;
   auto tpv = m_tensorProductRoadmap->GetVertex(taskState.vid);
   auto cfgs = SplitTensorProductVertex(tpv,mode);
@@ -989,6 +1027,9 @@ CheckForModeTransition(TID _qNew, size_t _history) {
       }
     }
 
+    if(mode == 2)
+      std::cout << "HERE" << std::endl;
+
     auto modeID = g->GetVID(newMode);
     newState.mode = modeID;
 
@@ -998,14 +1039,50 @@ CheckForModeTransition(TID _qNew, size_t _history) {
 
     auto newTaskVID = m_taskGraph->AddVertex(newState);
     m_historyVertices[hid].insert(newTaskVID);
-    m_taskGraph->AddEdge(_qNew,newTaskVID,edge);
+    m_taskGraph->AddEdge(qNew,newTaskVID,edge);
+
+    ActionExtendedState actState;
+    actState.vid = newTaskVID;
+    actState.ahid = hid;
+
+    auto newAID = m_actionExtendedGraph->AddVertex(actState);
+
+    ActionExtendedEdge actEdge;
+    actEdge.cost = edge.cost;
+
+    m_actionExtendedGraph->AddEdge(_aid,newAID,actEdge);
   }
 }
 
 void
 SimultaneousMultiArmEvaluator::
-CheckForGoal(TID _qNew) {
+CheckForGoal(size_t _aid) {
+  
+  auto c = this->GetPlan()->GetCoordinator();
+  auto prob = this->GetMPProblem();
+  auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
 
+  auto actState = m_actionExtendedGraph->GetVertex(_aid);
+  auto taskState = m_taskGraph->GetVertex(actState.vid);
+  auto vid = taskState.vid;
+
+  auto gcfg = m_tensorProductRoadmap->GetVertex(vid);
+
+  // Check if cfg satisfies all of the constraints in the decomp
+  for(auto st : decomp->GetGroupMotionTasks()) {
+    auto gt = st->GetGroupMotionTask();
+    for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+      for(auto& c : iter->GetGoalConstraints()) {
+        auto robot = c->GetRobot();
+        auto cfg = gcfg.GetRobotCfg(robot);
+        if(!c->Satisfied(cfg))
+          return;
+      }
+    }
+  }
+
+  std::cout << "FOUND GOAL STATE AT " << gcfg.PrettyPrint() << std::endl;
+  exit(1);
 }
 
 std::vector<GroupCfg>

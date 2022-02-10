@@ -130,7 +130,9 @@ class ObjectCentricModeGraph : public StateGraph {
     std::unordered_map<RobotGroup*,std::set<Formation*>> m_groups;
 
     std::string m_mpStrategy;
- 
+
+    std::string m_passiveStrategy;
+
     ///@}
 
 };
