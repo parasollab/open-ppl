@@ -170,7 +170,7 @@
     </Metrics>
 
     <MapEvaluators>
-      <LazyQuery label="LazyQuery" debug="true"
+      <LazyQuery label="LazyQuery" debug="false"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
@@ -178,6 +178,9 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
+
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -199,6 +202,7 @@
     </MPStrategies>
 
     <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
