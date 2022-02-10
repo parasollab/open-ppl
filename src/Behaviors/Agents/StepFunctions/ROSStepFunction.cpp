@@ -129,11 +129,22 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   //auto js = s_jointStates;
 
   sensor_msgs::JointState msg;
-  auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/ppl_joint_states");
-  //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/ppl_joint_states");
 
-  if(sharedMsg!=NULL)
-    msg = *sharedMsg;
+  if(m_sim) {
+    auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/joint_states");
+    //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/ppl_joint_states");
+
+    if(sharedMsg!=NULL)
+      msg = *sharedMsg;
+  }
+  else {
+    auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/"+m_agent->GetRobot()->GetLabel()+"/ppl_joint_states");
+    //auto sharedMsg = ros::topic::waitForMessage<sensor_msgs::JointState>("/ppl_joint_states");
+
+    if(sharedMsg!=NULL)
+      msg = *sharedMsg;
+  }
+
   ROS_INFO_STREAM(m_agent->GetRobot()->GetLabel() << " Received: " << msg.position);
 
   auto js = msg.position;
