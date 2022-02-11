@@ -58,7 +58,8 @@ operator()(Interaction* _interaction, State& _start) {
     GeneratePathConstraints(startConditions,_interaction->GetStageConditions(next));
 
     // Get goal constraints
-    auto nextState = GenerateTransitionState(_interaction,_start,i);
+    auto solution = _interaction->GetToStageSolution(next);
+    auto nextState = GenerateTransitionState(_interaction,_start,i,solution);
     auto goalConstraintMap = GenerateConstraints(nextState);
     if(goalConstraintMap.empty())
       return false;
@@ -75,7 +76,6 @@ operator()(Interaction* _interaction, State& _start) {
     _interaction->SetToStageTasks(next,toNextStageTasks);
 
     // Ensure that all groups are in solution
-    auto solution = _interaction->GetToStageSolution(next);
     for(auto task : toNextStageTasks) {
       auto group = task->GetRobotGroup();
       solution->AddRobotGroup(group);
@@ -219,7 +219,7 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
     }
 
     // Attempt to create full state
-    auto state = GenerateTransitionState(_interaction,start,_next);
+    auto state = GenerateTransitionState(_interaction,start,_next-1,solution);
     if(!state.empty())
       return state;
   }
@@ -309,11 +309,10 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
 
 HandoffStrategy::State
 HandoffStrategy::
-GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next) {
+GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next, MPSolution* _solution) {
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
   auto stages = _interaction->GetStages();
-  auto solution = _interaction->GetToStageSolution(stages[_next]);
 
   // Seprate deliverers and receivers
   std::vector<Robot*> deliverers;
@@ -400,7 +399,7 @@ GenerateTransitionState(Interaction* _interaction, const State& _previous, const
     State transition;
     for(auto kv : _previous) {
       auto group = kv.first;
-      auto grm = solution->GetGroupRoadmap(group);
+      auto grm = _solution->GetGroupRoadmap(group);
       GroupCfg gcfg(grm);
       for(auto robot : group->GetRobots()) {
         Cfg cfg(robot);

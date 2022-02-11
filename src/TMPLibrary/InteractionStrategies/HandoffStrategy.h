@@ -33,7 +33,7 @@ class HandoffStrategy : public GraspStrategy {
     ///@name Helper Functions
     ///@{
 
-    State GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next);
+    State GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next, MPSolution* _solution);
 
     State GenerateInitialState(Interaction* _interaction, const State& _previous, const size_t _next);
 
