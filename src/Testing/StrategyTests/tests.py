@@ -45,10 +45,15 @@ for root, dirs, files in os.walk(output_dir):
 # Read the test file into an array of lines.
 lines = [line.strip() for line in open(test_file, 'r')]
 
+# Track the number of successes and failures
+num_tests = len(lines)
+successes = 0
+
 # Run each test.
 for line in lines:
   # Skip empty lines.
   if not line:
+    num_tests -= 1
     continue
 
   # Split the line into tokens.
@@ -61,7 +66,7 @@ for line in lines:
   # Execute the XML file.
   xml_path = xml_dir + xml_file
   debug_output = output_dir + os.path.basename(xml_file) + '.pmpl'
-  result = subprocess.run('../../pmpl -f ' + xml_path + ' >& ' + debug_output,
+  result = subprocess.run('../../pmpl -f ' + xml_path + ' > ' + debug_output,
       shell=True)
 
   # Check for aborted run.
@@ -70,6 +75,7 @@ for line in lines:
     continue
 
   # Check for errors (i.e. an output file was generated).
+  failed = False
   for output_file in output_files:
     output_path = output_dir + output_file
     # No file = no problem.
@@ -80,3 +86,13 @@ for line in lines:
     # Rut roh.
     print('Error: test', xml_file, 'failed to match correct output on',
         output_file)
+    failed = True
+  
+  if not failed:
+    successes += 1
+
+# Print the number of successes and failures
+print()
+print("Ran", num_tests, 'tests')
+print("Successes:", successes)
+print("Failures:", num_tests - successes)
