@@ -1,5 +1,5 @@
-#ifndef PPL_QUERY_METHOD_H_
-#define PPL_QUERY_METHOD_H_
+#ifndef PPL_QUERY_METHOD_TEST_H_
+#define PPL_QUERY_METHOD_TEST_H_
 
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
@@ -56,8 +56,6 @@ class QueryMethodTest : virtual public QueryMethod<MPTraits>,
     /// Construct a roadmap to test that edges and nodes
     void SingleSetup();
 
-    bool CheckPath();
-
     ///@}
 
     ///@name Helper Members
@@ -103,7 +101,11 @@ MainFunctionTest() {
   if(!singleResult) {
     passed = false;
     message = message + "\n\tQuery method failed to find a path.\n";
-  } else if (!CheckPath()) {
+  } 
+
+  double pathWeight = this->GetMPLibrary()->GetPath()->Length();
+
+  if (pathWeight != 3) {
     passed = false;
     message = message + "\n\tQuery method did not find the shortest path.\n";
   }
@@ -126,9 +128,7 @@ MainFunctionTest() {
 template <typename MPTraits>
 void
 QueryMethodTest<MPTraits>::
-SingleSetup() {
-  // TODO set this up!!!
-  
+SingleSetup() {  
   // Get Robot
   auto robot = this->GetMPProblem()->GetRobots()[0].get();
 
@@ -204,37 +204,6 @@ SingleSetup() {
 
   m_singleRoadmap = roadmap;
   m_singleTask    = task;
-}
-
-template <typename MPTraits>
-bool
-QueryMethodTest<MPTraits>::
-CheckPath() {
-  // Get Robot
-  auto robot = this->GetMPProblem()->GetRobots()[0].get();
-
-  auto p1 = CfgType(robot);
-  std::istringstream p1Stream("0 0 0 0 0 0 0");
-  p1.Read(p1Stream);
-
-  auto p2 = CfgType(robot);
-  std::istringstream p2Stream("0 20 -10 0 .3 .7 .8");
-  p2.Read(p2Stream);
-
-  // Other vertices in the roadmap
-  auto v1P = CfgType(robot);
-  std::istringstream v1Stream("0 20 0 0 0 0 0");
-  v1P.Read(v1Stream);
-
-  auto pathCfgs = this->GetMPLibrary()->GetPath()->Cfgs();
-  
-  if (pathCfgs.size() != 3)
-    return false;
-
-  if (pathCfgs[0] != p1 || pathCfgs[1] != v1P || pathCfgs[2] != p2)
-    return false;
-
-  return true;
 }
 
 #endif

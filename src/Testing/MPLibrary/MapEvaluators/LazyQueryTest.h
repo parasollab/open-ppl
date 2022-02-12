@@ -1,5 +1,5 @@
-#ifndef PPL_LAZY_QUERY_H_
-#define PPL_LAZY_QUERY_H_
+#ifndef PPL_LAZY_QUERY_TEST_H_
+#define PPL_LAZY_QUERY_TEST_H_
 
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
