@@ -154,8 +154,8 @@
 
     <Extenders>
       <!-- Test not yet added -->
-      <!--BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/-->
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
