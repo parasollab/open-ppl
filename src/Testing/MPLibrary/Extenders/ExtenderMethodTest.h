@@ -118,7 +118,6 @@ ExtenderMethodTest<MPTraits>::
 RobotGroupExtend(GroupCfgType& _new, GroupLPOutput<MPTraits>& _lpOutput) {
 
   auto start = GetGroupCfg();
-  std::cout << "num robots: " << start.GetNumRobots() << std::endl;
   auto& startCfg2 = start.GetRobotCfg(1);
   startCfg2[0] = 5;
 
@@ -127,8 +126,6 @@ RobotGroupExtend(GroupCfgType& _new, GroupLPOutput<MPTraits>& _lpOutput) {
     auto& cfg = goal.GetRobotCfg(i);
     cfg[1] = cfg[1]+5;
   }
-
-  std::cout << "num robots: " << goal.GetNumRobots() << std::endl;
 
   return this->Extend(start,goal,_new,_lpOutput);
 }
@@ -149,9 +146,7 @@ typename MPTraits::GroupCfgType
 ExtenderMethodTest<MPTraits>::
 GetGroupCfg() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  std::cout << "size: " << group->Size() << std::endl;
   auto groupRoadmap = this->GetMPLibrary()->GetGroupRoadmap(group);
-  std::cout << "map: " << groupRoadmap << std::endl;
   GroupCfgType gcfg(groupRoadmap);
   return gcfg;
 }

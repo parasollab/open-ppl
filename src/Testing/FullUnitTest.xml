@@ -146,14 +146,12 @@
     </Samplers>
 
     <LocalPlanners>
-    <!-- Test not yet added -->
     <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
           vcLabel="alwaysTrue"/>
     <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
     </LocalPlanners>
 
     <Extenders>
-      <!-- Test not yet added -->
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
         vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
     </Extenders>

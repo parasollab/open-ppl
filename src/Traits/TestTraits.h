@@ -29,6 +29,7 @@
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
+#include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
 
 //extenders includes
 #include "Testing/MPLibrary/Extenders/BasicExtenderTest.h"
@@ -102,6 +103,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+      StraightLineTest<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
