@@ -549,6 +549,10 @@ template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 AddFormation(Formation* _formation, bool _active) {
+
+  if(!_formation)
+    throw RunTimeException(WHERE) << "Adding null formation.";
+
   m_formations[_formation] = _active;
 }
 

@@ -516,6 +516,12 @@ GetBaseMovementType() const noexcept {
   return m_baseMovement;
 }
 
+const std::unordered_map<std::string,size_t>&
+MultiBody::
+GetLinkMap() {
+  return m_linkMap;
+}
+
 /*--------------------------- Geometric Properties ---------------------------*/
 
 const Vector3d&

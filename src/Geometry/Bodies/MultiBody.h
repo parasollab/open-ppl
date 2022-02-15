@@ -203,6 +203,8 @@ class MultiBody {
     /// Get the movement type of the base body.
     Body::MovementType GetBaseMovementType() const noexcept;
 
+    const std::unordered_map<std::string,size_t>& GetLinkMap();
+
     ///@}
     ///@name Geometric Properties
     ///@{

@@ -97,7 +97,7 @@ operator()(Interaction* _interaction, State& _start) {
   auto group = problem->AddRobotGroup(allRobots,allRobotsLabel);
 
   //TODO::Figure out where grasp stage is
-  size_t graspStage = stages.size() - 1;
+  size_t graspStage = stages.size() - 3;
   for(size_t i = 1; i < graspStage; i++) {
 
     // Add composite groups to to grasp solution
@@ -220,15 +220,104 @@ operator()(Interaction* _interaction, State& _start) {
     // Save plan information
     _interaction->SetToStagePaths(stages[i+1],toGraspPaths);
 
-    if(i+1 == graspStage) {
+    /*if(i+1 == graspStage) {
       _start = InterimState(_interaction,stages[i+1],stages[i+1],toGraspPaths);
       m_roleMap.clear();
       return true;
     }
-    else 
+    else */
       _start = InterimState(_interaction,stages[i+1],stages[i+2],toGraspPaths);
   }
-  //TODO::Compute to post grasp path
+
+  // Compute to post grasp path
+  
+  // Configure to stage solution
+  auto toStageSolution = _interaction->GetToStageSolution(stages[graspStage+1]);
+ 
+  // Configure start constraints from previous stage path end
+  auto startConstraints = GenerateConstraints(_start); 
+
+  // Get object placements
+  std::map<Robot*,Cfg> objectPoses;
+  for(auto object : objects) {  
+    Cfg objectPose(object);
+
+    // Check if object placement is given
+    auto initGroup = initialGroups[object];
+    auto given = originalStart[initGroup];
+    auto gcfg = given.first->GetVertex(given.second);
+    objectPose = gcfg.GetRobotCfg(object);
+
+    objectPoses[object] = objectPose;
+    objectPose.ConfigureRobot();
+  }
+
+  // Compute goal pose for robot based of transform and initial object pose
+  auto nextStageEEFrames = ComputeEEFrames(_interaction,objectPoses,graspStage+1);
+  std::unordered_map<Robot*,std::unique_ptr<CSpaceConstraint>> constraintMap;
+  for(auto kv : nextStageEEFrames) {
+    auto robot = kv.first;
+    auto cfg = ComputeManipulatorCfg(robot,kv.second);
+
+    SetEEDOF(_interaction,cfg,stages[graspStage]);
+
+    constraintMap[robot] = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
+  }
+  
+  // Sample group cfg from robot goal pose
+  // Assuming one active robot per group for now
+  State goal;
+  for(auto kv : _start) {
+    auto group = kv.first;
+    auto rm = kv.second.first;
+    rm->SetAllFormationsInactive();
+    for(auto f : rm->GetVertex(kv.second.second).GetFormations()) {
+      rm->AddFormation(f);
+    }
+
+    // Identify active robot
+    Robot* active;
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive())
+        continue;
+
+      active = robot;
+      break;
+    }
+
+    GroupCfg gcfg(rm);
+    gcfg.GetRandomGroupCfg(constraintMap[active]->GetBoundary());
+    auto vid = rm->AddVertex(gcfg);
+
+    goal[group] = std::make_pair(rm,vid);
+  }
+
+  // Convert group cfg to goal constraints
+  auto goalConstraints = GenerateConstraints(goal); 
+
+  // Create tasks from constraints
+  auto startConditions = _interaction->GetStageConditions(stages[graspStage]);
+  auto tasks = GenerateTasks(startConditions,startConstraints,goalConstraints);
+  _interaction->SetToStageTasks(stages[graspStage+1],tasks);
+
+  // Plan path
+  auto paths = PlanMotions(tasks,toStageSolution,
+      "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[graspStage+1],
+      {},_start);
+
+  ResetStaticRobots();
+
+  // Check if valid solution was found
+  if(paths.empty()) {
+    m_roleMap.clear();
+    return false;
+  }
+
+  // Save plan information
+  _interaction->SetToStagePaths(stages[graspStage+1],paths);
+
+  _start = InterimState(_interaction,stages[graspStage+2],stages[graspStage+1],paths);
+
 
   m_roleMap.clear();
   m_objectPoseTasks.clear();
@@ -361,7 +450,8 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       if(m_doctorBaseOrientation)
         refBaseTransformation = Transformation(refBaseTransformation.translation());
 
-      auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
+      //auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
+      auto translation = frame.translation() + (-refBaseTransformation).translation();
       auto rotation = (-refBaseTransformation).rotation() * frame.rotation();
 
       //auto translation = (-frame).rotation() * refBaseTransformation.translation() + (-frame).translation();

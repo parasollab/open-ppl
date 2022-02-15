@@ -1239,6 +1239,11 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
         auto oldVID = vit->descriptor();
         auto oldGcfg = vit->property();
 
+        localGrm->SetAllFormationsInactive();
+        for(auto f : oldGcfg.GetFormations()) {
+          localGrm->AddFormation(f);
+        }
+
         // Construct group cfg
         GroupCfg newGcfg(localGrm);
         for(size_t i = 0; i < group->GetRobots().size(); i++) {

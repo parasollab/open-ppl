@@ -423,7 +423,8 @@ InterimState(Interaction* _interaction, const std::string& _current,
     // Set formations
     auto grm = solution->GetGroupRoadmap(group);
     auto formation = f->GenerateFormation(roleMap);
-    grm->AddFormation(formation,true);
+    if(formation)
+      grm->AddFormation(formation,true);
 
     // Create initial group vertex
     auto gcfg = GroupCfg(grm);
