@@ -268,6 +268,12 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     else 
       endTimes[task] = startTime;
 
+    if(m_debug) {
+      std::cout << "Found path for " << task->GetLabel() 
+                << " from " << startTime << " to "
+                << startTime + timesteps << std::endl;
+    }
+
     // Check if new tasks are available to plan
     std::vector<SemanticTask*> toRemove;
     for(auto t : unsolved) {
@@ -342,7 +348,7 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
   double lastTimestep = 0;
   for(auto c : *m_currentConstraints) {
 
-    lastTimestep = std::max(double(c.first),lastTimestep);
+    lastTimestep = std::max(double(c.first.second),lastTimestep);
 
     if(false) {
       std::cout << "Check for caching here" << std::endl;
@@ -352,8 +358,14 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
       for(auto robot : constraintGroup->GetRobots()) {
         auto cfg = c.second.GetRobotCfg(robot);
         std::vector<Cfg> path = {cfg,cfg,cfg};
+        
+        auto duration = c.first.second - c.first.first;
+        for(size_t i = 0; i < duration; i++) {
+          path.push_back(cfg);
+        }
+
         DynamicObstacle dob(cfg.GetRobot(),path);
-        dob.SetStartTime(c.first-1);
+        dob.SetStartTime(c.first.first-1);
         this->GetMPProblem()->AddDynamicObstacle(std::move(dob));
       } 
     }
@@ -543,10 +555,21 @@ ValidationFunction(Node& _node) {
                   << std::endl;
               }
 
+              auto endT = t;
+              if(robot1->GetMultiBody()->IsPassive()) {
+                endT = endTimes[t1];
+              }
+              else if(robot2->GetMultiBody()->IsPassive()) {
+                endT = endTimes[t2];
+              }
+
+              // Temp hack for demo
+              endT = std::max(endT,t+100);
+
               // Create constraints
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
-              Constraint constraint1 = std::make_pair(t,cfg2);
-              Constraint constraint2 = std::make_pair(t,cfg1);
+              Constraint constraint1 = std::make_pair(std::make_pair(t,endT),cfg2);
+              Constraint constraint2 = std::make_pair(std::make_pair(t,endT),cfg1);
               constraints.emplace_back(t1,constraint1);
               constraints.emplace_back(t2,constraint2);
               return constraints;
@@ -702,8 +725,9 @@ RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
               const double _sourceTimestep, const double _bestTimestep) const {
 
   // Compute time when we will end this edge.
-  const size_t startTime = static_cast<size_t>(std::llround(_sourceTimestep));
-  const size_t endTime = startTime + _ei->property().GetTimeSteps();
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  const size_t startTime = static_cast<size_t>(std::llround(_sourceTimestep) * timeRes);
+  const size_t endTime = startTime + (_ei->property().GetTimeSteps() * timeRes);
 
   // If this end time isn't better than current best, we won't use it.
   // Return without checking conflicts to save computation.
@@ -804,7 +828,7 @@ NextBestSearch::
 LowerBound(size_t _bound) const {
   auto boundIt = m_currentConstraints->end();
   for(auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if(it->first >= _bound) {
+    if(it->first.first >= _bound) {
       boundIt = it;
       break;
     }
@@ -818,7 +842,7 @@ NextBestSearch::
 UpperBound(size_t _bound) const {
   auto boundIt = m_currentConstraints->end();
   for(auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if(it->first > _bound) {
+    if(it->first.second > _bound) {
       boundIt = it;
       break;
     }

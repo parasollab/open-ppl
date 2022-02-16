@@ -276,15 +276,16 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   for(const auto& obstacle : obstacles) {
     auto obStart = obstacle.GetStartTime();
+    const auto& path = obstacle.GetPath();
+    auto obEnd = obStart + path.size() - 1;
 
-    if(currentStep < obStart)
+    if(currentStep < obStart or currentStep > obEnd)
       continue;
 
     auto relativeStep = currentStep - obStart;
 
     // Determine the obstacle's position at the current timestep. If it is
     // already done moving, use its last position.
-    const auto& path = obstacle.GetPath();
     const size_t lastStep = path.size(),
                  //useStep  = std::min(currentStep, lastStep -1);
                  useStep  = std::min(relativeStep, lastStep -1);
@@ -333,15 +334,16 @@ IsSafe(const GroupCfgType& _cfg, const double _timestep) {
   const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   for(const auto& obstacle : obstacles) {
     auto obStart = obstacle.GetStartTime();
+    const auto& path = obstacle.GetPath();
+    auto obEnd = obStart + path.size() - 1;
 
-    if(currentStep < obStart)
+    if(currentStep < obStart or currentStep > obEnd)
       continue;
 
     auto relativeStep = currentStep - obStart;
 
     // Determine the obstacle's position at the current timestep. If it is
     // already done moving, use its last position.
-    const auto& path = obstacle.GetPath();
     const size_t lastStep = path.size(),
                  //useStep  = std::min(currentStep, lastStep -1);
                  useStep  = std::min(relativeStep, lastStep -1);

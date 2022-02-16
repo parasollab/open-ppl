@@ -24,7 +24,7 @@ class NextBestSearch : public TMPStrategyMethod {
     typedef size_t                                         VID;
     typedef MPTraits<Cfg>::GroupRoadmapType                GroupRoadmapType;
     typedef MPTraits<Cfg>::GroupPathType                   GroupPathType;
-    typedef std::pair<size_t,GroupCfg>                     Constraint;
+    typedef std::pair<std::pair<size_t,size_t>,GroupCfg>   Constraint;
     typedef CBSNode<SemanticTask,Constraint,GroupPathType> Node;
 
     typedef std::set<Constraint> ConstraintSet;

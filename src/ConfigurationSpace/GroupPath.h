@@ -386,6 +386,7 @@ operator=(const GroupPath& _p) {
   m_length       = _p.m_length;
   m_lengthCached = _p.m_lengthCached;
   m_timestepsCached = _p.m_timestepsCached;
+  m_waitingTimesteps = _p.m_waitingTimesteps;
 
   return *this;
 }
