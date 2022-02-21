@@ -1,9 +1,8 @@
-#ifndef PPL_NBOX_H
-#define PPL_NBOX_H
+#ifndef PPL_NBOX_TEST_H
+#define PPL_NBOX_TEST_H
 
 #include "Geometry/Shapes/NBox.h"
 #include "Testing/TestBaseObject.h"
-#include "Geometry/Boundaries/Range.h"
 
 /*-----------------------------------------------------------*/
 ///
@@ -42,7 +41,7 @@ class NBoxTest : public NBox,
     ///@name Interface
     ///@{
 
-    virtual TestResult RunTest() = 0;
+    virtual TestResult RunTest();
 
     ///@}
 
@@ -59,11 +58,18 @@ class NBoxTest : public NBox,
 
     friend std::istream& operator>>(std::istream& _is, NBox& _box);
 
+    void testContains();
 
+    void testClearance();
 
+    void testClearancePoint();
+
+    void testSamples();
+
+    void construct();
 
     // helpers for test
-    int dimension;
+    int m_dimension;
 
     NBox testBox;
 
@@ -73,11 +79,11 @@ class NBoxTest : public NBox,
 /*--------------------------- Construction ---------------------------*/
 
 NBoxTest::
-NBoxTest(const size_t _n): NBox(_n) {
+NBoxTest(const size_t _n) : NBox(_n) {
 }
 
 NBoxTest::
-NBoxTest(XMLNode& _node, const std::vector<double>& _center): NBox(_node, _center) {
+NBoxTest(const std::vector<double>& _center) : NBox(_center) {
 }
 
 NBoxTest::
@@ -86,7 +92,11 @@ NBoxTest::
 
 /*--------------------------- Tests ---------------------------*/
 
-
+typename NBoxTest::
+TestResult
+NBoxTest::RunTest() {
+  return TestResult();
+}
 
 // valid case
 
@@ -98,15 +108,17 @@ void NBoxTest::testContains() {
 
   construct();
 
+  bool passed;
+
   // this point should be contained
   std::vector<double> validP;
-  for (int i = 1; i <= dimension; i++) {
+  for (int i = 1; i <= m_dimension; i++) {
     validP.push_back(i - 0.1);
   }
 
   // this point should not be contained
   std::vector<double> invalidP;
-  for (int i = 1; i <= dimension; i++) {
+  for (int i = 1; i <= m_dimension; i++) {
     validP.push_back(2.0 * i);
   }
 
@@ -123,10 +135,12 @@ void NBoxTest::testClearance() {
 
   construct();
 
+  bool passed;
+
   // the origin point, whose clearance
   // should be equal to 1
   std::vector<double> testP;
-  for (int i = 1; i <= dimension; i++) {
+  for (int i = 1; i <= m_dimension; i++) {
     testP.push_back(0);
   }
 
@@ -146,19 +160,22 @@ void NBoxTest::testClearancePoint() {
 
   construct();
 
+  bool passed;
+
   // the origin point, whose clearance
   // point should be equal to (-1, 0, 0, ...)
   std::vector<double> testP;
-  for (int i = 1; i <= dimension; i++) {
+  for (int i = 1; i <= m_dimension; i++) {
     testP.push_back(0);
   }
 
   std::vector<double> expectedClearancePoint;
-  for (int i = 1; i <= dimension; i++) {
+  for (int i = 1; i <= m_dimension; i++) {
     expectedClearancePoint.push_back(0);
   }
 
-  double actualClearancePoint = testBox.Clearance(testP);
+  double expectedClearance = 1;  
+  double actualClearance = testBox.Clearance(testP);
 
   if (expectedClearance != actualClearance) {
     passed = false;
@@ -171,6 +188,7 @@ void NBoxTest::testClearancePoint() {
 } 
 
 void NBoxTest::testSamples() {
+  cout << " sss " << endl;
 
 } 
 
@@ -179,14 +197,13 @@ void NBoxTest::testSamples() {
 
 // construct an instance of the NBox()
 // should be run in every test case 
-void NBoxTest::construct {
-
-    // define a valid n dimensional box centered at origin
-    // with range equal to 2i where i is the dimension index
-    testBox = new NBox(dimension);
-    for (int i = 0; i < dimension; i++) {
-      testBox.setRange(i, -i, i);
-    }
+void NBoxTest::construct() {
+  // define a valid n dimensional box centered at origin
+  // with range equal to 2i where i is the dimension index
+  NBox* testBox = new NBox(m_dimension);
+  for (int i = 0; i < m_dimension; i++) {
+    testBox->SetRange(i, -i, i);
+  }
 
 }
 
