@@ -77,7 +77,7 @@
       </BasicPRM>
 
       <!-- These files are modified so that the validation strategy 
-      should identify that they are not correct and fail -->
+      should identify that the roadmap is correct and the path is incorrect -->
       <ValidationStrategy label="Test" target="LazyPRM" debug="true">
         <GoldStandard robot="boxy" type="roadmap"
           filename="../Outputs/ValidationStrategy.0.query1.map"/>
