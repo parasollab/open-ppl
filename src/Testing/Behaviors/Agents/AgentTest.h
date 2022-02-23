@@ -32,33 +32,20 @@ class AgentTest : virtual public Agent,
     ///@name Interface
     ///@{
 
-    // TODO do I need this, or just the individual tests
-
     virtual TestResult RunTest();
 
     ///@}
 
   protected:
-    ///@name Helper test functions
+
+    ///@name Simulation Interface Test Functions
     ///@{
 
-    TestResult TestSetTask();
+    virtual TestResult TestInitialize() = 0;
 
-    TestResult TestResetStartConstraint();
+    virtual TestResult TestStep() = 0;
 
-    TestResult TestInitialize();
-
-    TestResult TestStep();
-
-    TestResult TestUninitialize();
-
-    TestResult TestMinimumSteps();
-
-    TestResult TestProximityCheck();
-
-    TestResult TestHalt();
-
-    TestResult TestPauseAgent();
+    virtual TestResult TestUninitialize() = 0;
 
     ///@}
 };
@@ -76,86 +63,5 @@ AgentTest(Robot* const _r, const Agent& _a) : Agent(Robot* const _r, const Agent
 AgentTest::
 ~AgentTest() {}
 
-/*----------------------- Helper test functions -----------------------*/
-typename AgentTest::TestResult
-AgentTest::
-TestSetTask() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestResetStartConstraint() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestInitialize() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestStep() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestUninitialize() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestMinimumSteps() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestProximityCheck() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestHalt() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
-typename AgentTest::TestResult
-AgentTest::
-TestPauseAgent() {
-  bool passed = true;
-  std::string message = "";
-
-  return std::make_pair(passed, message);
-}
-
+/*--------------------------------------------------------------------*/
 #endif
