@@ -24,14 +24,10 @@ class MinkowskiDistanceTest : virtual public MinkowskiDistance<MPTraits>,
 
     MinkowskiDistanceTest(double _r1 = 3, double _r2 = 3, double _r3 = 1. / 3,
         bool _normalize = false);
+
     MinkowskiDistanceTest(XMLNode& _node);
+
     ~MinkowskiDistanceTest();
-
-    ///@}
-    ///@name Interface 
-    ///@{
-
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     ///@}
 
@@ -76,15 +72,6 @@ MinkowskiDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
 template<typename MPTraits>
 MinkowskiDistanceTest<MPTraits>::
 ~MinkowskiDistanceTest() {}
-
-/*---------------------------- Interface -----------------------------*/
-
-template <typename MPTraits>
-double
-MinkowskiDistanceTest<MPTraits>::
-Distance(const CfgType& _c1, const CfgType& _c2) {
-  return MinkowskiDistance<MPTraits>::Distance(_c1, _c2);
-}
 
 /*--------------------- Test Interface Functions ---------------------*/
 
@@ -145,7 +132,7 @@ TestIndividualScaleCfg() {
 
   CfgType c1 = this->GetIndividualCfg();
   CfgType c2 = this->IndividualScaleCfg();
-  double newLength = Distance(c1, c2);
+  double newLength = this->Distance(c1, c2);
 
   if (fabs(newLength - 10.0) > 1e-7) {
     passed = false;

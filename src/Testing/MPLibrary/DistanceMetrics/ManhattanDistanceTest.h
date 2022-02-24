@@ -23,14 +23,10 @@ class ManhattanDistanceTest : virtual public ManhattanDistance<MPTraits>,
     ///@{
 
     ManhattanDistanceTest(bool _normalize = false);
+
     ManhattanDistanceTest(XMLNode& _node);
+
     ~ManhattanDistanceTest();
-
-    ///@}
-    ///@name Interface 
-    ///@{
-
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     ///@}
 
@@ -75,15 +71,6 @@ ManhattanDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
 template<typename MPTraits>
 ManhattanDistanceTest<MPTraits>::
 ~ManhattanDistanceTest() {}
-
-/*---------------------------- Interface -----------------------------*/
-
-template <typename MPTraits>
-double
-ManhattanDistanceTest<MPTraits>::
-Distance(const CfgType& _c1, const CfgType& _c2) {
-  return ManhattanDistance<MPTraits>::Distance(_c1, _c2);
-}
 
 /*--------------------- Test Interface Functions ---------------------*/
 
@@ -144,7 +131,7 @@ TestIndividualScaleCfg() {
 
   CfgType c1 = this->GetIndividualCfg();
   CfgType c2 = this->IndividualScaleCfg();
-  double newLength = Distance(c1, c2);
+  double newLength = this->Distance(c1, c2);
 
   if (fabs(newLength - 10.0) > 1e-7) {
     passed = false;

@@ -23,14 +23,10 @@ class EuclideanDistanceTest : virtual public EuclideanDistance<MPTraits>,
     ///@{
 
     EuclideanDistanceTest(bool _normalize = false);
+
     EuclideanDistanceTest(XMLNode& _node);
+
     ~EuclideanDistanceTest();
-
-    ///@}
-    ///@name Interface 
-    ///@{
-
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
 
     ///@}
 
@@ -75,15 +71,6 @@ EuclideanDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
 template<typename MPTraits>
 EuclideanDistanceTest<MPTraits>::
 ~EuclideanDistanceTest() {}
-
-/*---------------------------- Interface -----------------------------*/
-
-template <typename MPTraits>
-double
-EuclideanDistanceTest<MPTraits>::
-Distance(const CfgType& _c1, const CfgType& _c2) {
-  return EuclideanDistance<MPTraits>::Distance(_c1, _c2);
-}
 
 /*--------------------- Test Interface Functions ---------------------*/
 
@@ -144,7 +131,7 @@ TestIndividualScaleCfg() {
 
   CfgType c1 = this->GetIndividualCfg();
   CfgType c2 = this->IndividualScaleCfg();
-  double newLength = Distance(c1, c2);
+  double newLength = this->Distance(c1, c2);
 
   if (fabs(newLength - 10.0) > 1e-7) {
     passed = false;
