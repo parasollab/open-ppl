@@ -1368,6 +1368,9 @@ ValidationFunction(CBSNodeType& _node) {
     maxTimestep = std::max(maxTimestep,kv.second->size());
   }
 
+  //TODO::Currently only allows capacity of 1, need to update to check for edge conflicts in loop and build 
+  //      capacity counts of vertices at each timestep that's checked at the end of the timestep loop iterations.
+
   for(size_t i = 0; i < maxTimestep; i++) {
     for(auto iter1 = _node.solutionMap.begin(); iter1 != _node.solutionMap.end(); iter1++) {
 
