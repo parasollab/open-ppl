@@ -78,6 +78,11 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     typedef GenericStateGraph<ActionExtendedState,
                               ActionExtendedEdge>        ActionExtendedGraph;
 
+    typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
+    typedef std::pair<std::pair<size_t,size_t>,size_t>           CBSConstraint;
+    typedef std::vector<size_t>                                  CBSSolution;
+    typedef CBSNode<Robot,CBSConstraint,CBSSolution>             CBSNodeType;
+
     ///@}
     ///@name Construction
     ///@{
@@ -139,6 +144,23 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     size_t AddHistory(const ActionHistory& _history);
 
     ///@}
+    ///@name Heuristic Functions
+    ///@{
+
+    std::unordered_map<Robot*,ModeInfo> ComputeMAPFSolution(ObjectMode _objectMode);
+
+    bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
+
+    std::vector<std::pair<Robot*,CBSConstraint>> ValidationFunction(CBSNodeType& _node);
+
+    double CostFunction(CBSNodeType& _node);
+
+    std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
+                     std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
+                     CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
+                     CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost);
+
+    ///@}
     ///@name Internal State
     ///@{
 
@@ -180,6 +202,9 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     std::unordered_map<size_t,std::set<TID>> m_historyVertices;
 
     std::vector<std::pair<bool,RoleMap>> m_plannedInteractions;
+
+    std::unordered_map<Robot*,size_t> m_heuristicStarts;
+    std::unordered_map<Robot*,size_t> m_heuristicGoals;
 
     ///@}
 };

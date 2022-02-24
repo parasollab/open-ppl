@@ -55,7 +55,9 @@ class ObjectCentricModeGraph : public StateGraph {
 
     typedef GenericStateGraph<ObjectMode,ObjectModeSwitch> GraphType;
     typedef GraphType::VID                                 VID;
-  
+ 
+    typedef GenericStateGraph<ModeInfo,double> SingleObjectModeGraph;
+ 
     ///@}
     ///@name Construction
     ///@{
@@ -80,9 +82,13 @@ class ObjectCentricModeGraph : public StateGraph {
 
     GraphType* GetObjectModeGraph();
 
+    SingleObjectModeGraph* GetSingleObjectModeGraph();
+
     MPSolution* GetMPSolution();
 
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
+
+    std::vector<Robot*> GetObjects();
 
     ///@}
     ///@name Debug
@@ -114,6 +120,11 @@ class ObjectCentricModeGraph : public StateGraph {
     void ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes, 
                    const std::set<Robot*>& _used);
 
+    void BuildSingleObjectModeGraph();
+
+    bool IsReachable(const Terrain* _terrain, Robot* _robot);
+
+    bool IsReachable(Robot* _robot1, Robot* _robot2);
 
     ///@}
     ///@name Internal State
@@ -121,6 +132,8 @@ class ObjectCentricModeGraph : public StateGraph {
 
     GraphType m_graph;
  
+    SingleObjectModeGraph m_singleModeGraph;
+
     std::unique_ptr<MPSolution> m_solution;
 
     std::unordered_map<const Terrain*, size_t> m_capacities;
@@ -139,5 +152,8 @@ class ObjectCentricModeGraph : public StateGraph {
 
 std::ostream& operator<<(std::ostream& _os, const ObjectCentricModeGraph::ObjectMode);
 std::istream& operator>>(std::istream& _is, const ObjectCentricModeGraph::ObjectMode);
+
+std::ostream& operator<<(std::ostream& _os, const ObjectCentricModeGraph::ModeInfo);
+std::istream& operator>>(std::istream& _is, const ObjectCentricModeGraph::ModeInfo);
 
 #endif

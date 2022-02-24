@@ -116,7 +116,14 @@ ObjectCentricModeGraph::
 GetObjectModeGraph() {
   return &m_graph;
 }
-    
+ 
+ObjectCentricModeGraph::SingleObjectModeGraph*
+ObjectCentricModeGraph::
+GetSingleObjectModeGraph() {
+  return &m_singleModeGraph;
+}
+
+   
 MPSolution* 
 ObjectCentricModeGraph::
 GetMPSolution() {
@@ -134,6 +141,20 @@ GetGroupRoadmap(RobotGroup* _group) {
   return m_solution->GetGroupRoadmap(_group);
 }
 
+std::vector<Robot*>
+ObjectCentricModeGraph::
+GetObjects() {
+
+  std::vector<Robot*> objects;
+
+  for(auto r : m_robots) {
+    if(r->GetMultiBody()->IsPassive()) {
+      objects.push_back(r);
+    }
+  }
+  
+  return objects;
+}
 /*---------------------------------- Debug  ----------------------------------*/
 
 void
@@ -871,6 +892,121 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
   }
 
 }
+    
+void
+ObjectCentricModeGraph::
+BuildSingleObjectModeGraph() {
+
+  // Add all robots to graph
+  std::map<Robot*,size_t> robotVIDs;
+
+  for(auto robot : m_robots) {
+
+    if(robot->GetMultiBody()->IsPassive())
+      continue;
+
+    ModeInfo info(robot);
+    auto vid = m_singleModeGraph.AddVertex(info);
+    robotVIDs[robot] = vid;
+  }
+
+  // Add all terrain regions to graph
+  const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
+  std::map<const Terrain*,size_t> regionVIDs;
+
+  for(auto kv : terrainMap) {
+    for(const auto& terrain : kv.second) {
+
+      ModeInfo info(nullptr,nullptr,&terrain);
+      auto vid = m_singleModeGraph.AddVertex(info);
+      regionVIDs[&terrain] = vid;
+    }
+  }
+
+  // Add robot - robot edges
+  for(auto iter1 = robotVIDs.begin(); iter1 != robotVIDs.end(); iter1++) {
+    for(auto iter2 = iter1; iter2 != robotVIDs.end(); iter2++) {
+
+      auto vid1 = iter1->second;
+      auto vid2 = iter2->second;
+
+      if(vid1 == vid2) {
+        m_singleModeGraph.AddEdge(vid1,vid2,0);
+        continue;
+      }
+     
+      auto robot1 = iter1->first;
+      auto robot2 = iter2->first;
+
+      if(IsReachable(robot1,robot2))
+        continue;
+
+      auto mb1 = robot1->GetMultiBody();
+      auto mb2 = robot2->GetMultiBody();
+
+      auto bbx1 = mb1->GetBase()->GetWorldBoundingBox();
+      auto bbx2 = mb2->GetBase()->GetWorldBoundingBox();
+
+      auto center1 = bbx1.GetCentroid();
+      auto center2 = bbx2.GetCentroid();
+
+      double distance = 0;
+      for(size_t i = 0; i < 3; i++) {
+        distance += center1[i] * center2[i];
+      }
+      distance = std::sqrt(distance);
+ 
+      m_singleModeGraph.AddEdge(vid1,vid2,distance);
+    }
+  }
+
+  // Add robot - region edges
+  for(auto iter1 = robotVIDs.begin(); iter1 != robotVIDs.end(); iter1++) {
+    for(auto iter2 = regionVIDs.begin(); iter2 != regionVIDs.end(); iter2++) {
+
+      auto robot = iter1->first;
+      auto terrain = iter2->first;
+
+      if(IsReachable(terrain,robot))
+        continue;
+
+      auto vid1 = iter1->second;
+      auto vid2 = iter2->second;
+
+      auto mb = robot->GetMultiBody();
+      auto bbx = mb->GetBase()->GetWorldBoundingBox();
+
+      auto boundary = terrain->GetBoundary() ? terrain->GetBoundary()
+                                             : terrain->GetBoundaries()[0].get();
+
+
+      auto center1 = bbx.GetCentroid();
+      auto center2 = boundary->GetCenter();
+
+      double distance = 0;
+      for(size_t i = 0; i < 3; i++) {
+        distance += center1[i] * center2[i];
+      }
+      distance = std::sqrt(distance);
+ 
+      m_singleModeGraph.AddEdge(vid1,vid2,distance);
+    }
+  }
+ 
+}
+
+bool
+ObjectCentricModeGraph::
+IsReachable(const Terrain* _terrain, Robot* _robot) {
+  return true;
+}
+
+bool
+ObjectCentricModeGraph::
+IsReachable(Robot* _robot1, Robot* _robot2) {
+  return true;
+}
+
 /*----------------------------------------------------------------------------*/
 
 std::ostream& 
@@ -880,6 +1016,16 @@ operator<<(std::ostream& _os, const ObjectCentricModeGraph::ObjectMode) {
 
 std::istream&
 operator>>(std::istream& _is, const ObjectCentricModeGraph::ObjectMode) {
+  return _is;
+}
+
+std::ostream& 
+operator<<(std::ostream& _os, const ObjectCentricModeGraph::ModeInfo) {
+  return _os;
+}
+
+std::istream&
+operator>>(std::istream& _is, const ObjectCentricModeGraph::ModeInfo) {
   return _is;
 }
 

@@ -81,6 +81,7 @@ Run(Plan* _plan) {
   auto prob = this->GetMPProblem();
   auto sg = static_cast<ObjectCentricModeGraph*>(
       this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetObjectModeGraph();
   auto c = this->GetPlan()->GetCoordinator();
 
   // Create composite group
@@ -115,7 +116,7 @@ Run(Plan* _plan) {
     std::cout << mode << " " << history << std::endl;
 
     // TODO::Compute Heuristic
-
+    ComputeMAPFSolution(g->GetVertex(mode));
 
 
     // Sample Transitions
@@ -1174,6 +1175,302 @@ AddHistory(const ActionHistory& _history) {
   return i;
 }
 
+/*-------------------------- Heuristic Functions -----------------------------*/
+
+std::unordered_map<Robot*,SimultaneousMultiArmEvaluator::ModeInfo>
+SimultaneousMultiArmEvaluator::
+ComputeMAPFSolution(ObjectMode _objectMode) {
+
+
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+      this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetSingleObjectModeGraph();
+
+  // Compute each object's starting vertex
+  for(auto kv : _objectMode) {
+    auto object = kv.first;
+    auto info = kv.second;
+    info.formation = nullptr;
+    auto start = g->GetVID(info);
+
+    m_heuristicStarts[object] = start;
+  }
+
+  // Compute each object's goal vertex
+  if(m_heuristicGoals.empty()) {
+    auto c = this->GetPlan()->GetCoordinator();
+    auto prob = this->GetMPProblem();
+    auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
+    const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
+
+    for(auto st : decomp->GetGroupMotionTasks()) {
+      auto gt = st->GetGroupMotionTask();
+      for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+        for(auto& c : iter->GetGoalConstraints()) {
+          auto object = c->GetRobot();
+          auto boundary = c->GetBoundary();
+          auto center = boundary->GetCenter();
+
+          Point3d p(center[0],center[1],center[2]);
+
+          for(const auto& terrain : terrainMap.at(object->GetCapability())) {
+            if(!terrain.InTerrain(p))
+              continue;
+    
+            ModeInfo info(nullptr,nullptr,&terrain);
+            auto goal = g->GetVID(info);
+            m_heuristicGoals[object] = goal;
+          }
+        }
+      }
+    }
+  }
+
+  // Configure CBS Functions
+  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+    [this](CBSNodeType& _node, Robot* _task) {
+      return LowLevelPlanner(_node,_task);
+    }
+  );
+
+  CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+    [this](CBSNodeType& _node) {
+      return this->ValidationFunction(_node);
+    }
+  );
+
+  CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+    [this](CBSNodeType& _node) {
+      return this->CostFunction(_node);
+    }
+  );
+
+  CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+    [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
+           CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
+           CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+      return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
+    }
+  );
+
+  std::vector<Robot*> objects = sg->GetObjects();
+
+  CBSNodeType solution = CBS(objects,validation,splitNode,lowLevel,cost);
+
+  // Extract next step for each object
+
+  std::unordered_map<Robot*,ModeInfo> nextStep;
+
+  for(auto kv : solution.solutionMap) {
+    auto robot = kv.first;
+    auto path = *kv.second;
+    auto vid = path.size() > 1 ? path[1] : path[0];
+    auto info = g->GetVertex(vid);
+    nextStep[robot] = info;
+  }
+
+  return nextStep;
+}
+
+bool
+SimultaneousMultiArmEvaluator::
+LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+      this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetSingleObjectModeGraph();
+
+  HeuristicSearch h(_robot);
+
+  // Get start and goal of robot in terms of vid in g
+  size_t start = m_heuristicStarts[_robot];
+  size_t goal = m_heuristicGoals[_robot]; 
+
+  SSSPTerminationCriterion<HeuristicSearch> termination(
+    [goal](typename HeuristicSearch::vertex_iterator& _vi,
+           const SSSPOutput<HeuristicSearch>& _sssp) {
+      return goal == _vi->property().first ? SSSPTermination::EndSearch
+                                           : SSSPTermination::Continue;
+    }
+  );
+
+  SSSPPathWeightFunction<HeuristicSearch> weight(
+    [](typename HeuristicSearch::adj_edge_iterator& _ei,
+       const double _sourceDistance,
+       const double _targetDistance) {
+      
+      return _sourceDistance + _ei->property();
+    }
+  );
+
+  SSSPHeuristicFunction<HeuristicSearch> heuristic(
+    [](const HeuristicSearch* _h, 
+       typename HeuristicSearch::vertex_descriptor _source,
+       typename HeuristicSearch::vertex_descriptor _target) {
+      //TODO::Standard A star heuristic over graph
+      return 0.0;
+    }
+  );
+
+  SSSPNeighborsFunction<HeuristicSearch> neighbors(
+    [g](HeuristicSearch* _h, typename HeuristicSearch::vertex_descriptor _vid) {
+      auto vertex = _h->GetVertex(_vid);
+      auto gvid = vertex.first;
+      auto timestep = vertex.second;
+      
+      auto vit = g->find_vertex(gvid);
+
+      for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+        auto target = eit->target();
+        auto neighbor = std::make_pair(target,timestep+1);
+        auto edge = eit->property();
+
+        auto nvid = _h->AddVertex(neighbor);
+        _h->AddEdge(_vid,nvid,edge);
+      } 
+    }
+  );
+
+  std::vector<size_t> starts = {start};
+  std::vector<size_t> goals = {goal};
+
+  auto sssp = AStarSSSP(&h,starts,goals,weight,heuristic,neighbors,termination);
+
+  // Check that a path was found
+  const size_t last = sssp.ordering.back();
+  if(last != goal) {
+    if(m_debug) {
+      std::cout << "Failed to find a path for " << _robot->GetLabel() << std::endl;
+    }
+    return false;
+  }
+
+  // Reconstruct the path
+  std::vector<size_t> path = {last};
+  auto current = last;
+  do {
+    current = sssp.parent.at(current);
+    path.push_back(current);
+  } while(current != start);
+  std::reverse(path.begin(),path.end());
+
+  // Save path in solution 
+  *(_node.solutionMap[_robot]) = path;
+
+  return true;
+}
+
+std::vector<std::pair<Robot*,SimultaneousMultiArmEvaluator::CBSConstraint>>
+SimultaneousMultiArmEvaluator::
+ValidationFunction(CBSNodeType& _node) {
+
+  size_t maxTimestep = 0;
+  for(auto kv : _node.solutionMap) {
+    maxTimestep = std::max(maxTimestep,kv.second->size());
+  }
+
+  for(size_t i = 0; i < maxTimestep; i++) {
+    for(auto iter1 = _node.solutionMap.begin(); iter1 != _node.solutionMap.end(); iter1++) {
+
+      auto object1 = iter1->first;
+      auto path1 = *(iter1->second);
+      auto s1 = std::min(i,path1.size()-1);
+      auto t1 = std::min(i+1,path1.size()-1);
+      auto source1 = path1[s1];
+      auto target1 = path1[t1];
+
+      auto iter2 = iter1;
+      iter2++;
+      for(;iter2 != _node.solutionMap.end(); iter2++) {
+        auto object2 = iter2->first;
+        auto path2 = *(iter2->second);
+        auto s2 = std::min(i,path1.size()-1);
+        auto t2 = std::min(i+1,path1.size()-1);
+        auto source2 = path1[s2];
+        auto target2 = path1[t2];
+
+        if(source1 == source2) {
+          if(m_debug) {
+            std::cout << "Found vertex conflict at timestep " << i
+                      << " between " << object1->GetLabel()
+                      << " and " << object2->GetLabel() 
+                      << std::endl;
+          }
+
+          auto constraint = std::make_pair(std::make_pair(source1,source1),i);
+          std::vector<std::pair<Robot*,CBSConstraint>> constraints;
+          constraints.push_back(std::make_pair(object1,constraint));
+          constraints.push_back(std::make_pair(object2,constraint));
+
+          return constraints;
+        }
+
+        if(source1 == target2 and target1 == source2) {
+          if(m_debug) {
+            std::cout << "Found edge conflict at timestep " << i
+                      << " between " << object1->GetLabel()
+                      << " and " << object2->GetLabel() 
+                      << std::endl;
+          }
+
+          auto constraint1 = std::make_pair(std::make_pair(source1,target1),i);
+          auto constraint2 = std::make_pair(std::make_pair(source2,target2),i);
+          std::vector<std::pair<Robot*,CBSConstraint>> constraints;
+          constraints.push_back(std::make_pair(object1,constraint1));
+          constraints.push_back(std::make_pair(object2,constraint2));
+
+          return constraints;
+        }
+      }
+    }
+  }
+  
+  return {};
+}
+
+double
+SimultaneousMultiArmEvaluator::
+CostFunction(CBSNodeType& _node) {
+
+  double cost = 0;
+  for(auto kv : _node.solutionMap) {
+    cost = std::max(cost,double(kv.second->size()));
+  }
+
+  return cost;
+}
+
+std::vector<SimultaneousMultiArmEvaluator::CBSNodeType>
+SimultaneousMultiArmEvaluator::
+SplitNodeFunction(CBSNodeType& _node,
+                  std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
+                  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
+                  CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+
+  std::vector<CBSNodeType> newNodes;
+
+  for(auto pair : _constraints) {
+    // Unpack constraint info
+    auto task = pair.first;
+    auto constraint = pair.second;
+
+    // Copy parent node
+    CBSNodeType child = _node;
+  
+    // Add new constraint
+    child.constraintMap[task].insert(constraint);
+
+    // Replan tasks affected by constraint. Skip if no valid replanned path is found
+    if(!_lowLevel(child,task)) 
+      continue;
+
+    // Update the cost and add to set of new nodes
+    double cost = _cost(child);
+    child.cost = cost;
+    newNodes.push_back(child);
+  }
+
+  return newNodes;
+}
 /*----------------------------------------------------------------------------*/
 
 istream&
