@@ -2,7 +2,7 @@
 #define PPL_GEOMETRY_TESTS_H_
 
 #include "Testing/TestBaseObject.h"
-
+#include "Utilities/XMLNode.h"
 #include "Testing/Geometry/Shapes/NBoxTest.h"
 
 class GeometryTests : public TestBaseObject {
@@ -18,7 +18,7 @@ class GeometryTests : public TestBaseObject {
 
     GeometryTests();
 
-    GeometryTests(const std::string& _xmlFile);
+    GeometryTests(XMLNode& _node);
 
     virtual ~GeometryTests();
 
@@ -37,27 +37,21 @@ class GeometryTests : public TestBaseObject {
 
 /*--------------------------- Construction ---------------------------*/
 
-MPProblemTests::
-MPProblemTests() {
-
-    m_nBoxTest = NBoxTest();
+GeometryTests::
+GeometryTests() {
 }
 
-MPProblemTests::
-MPProblemTests(const std::string& _xmlFile) {
 
-    m_nBoxTest = NBoxTest(_xmlFile);
-
-}
-
-MPProblemTests::
-~MPProblemTests() {}
+GeometryTests::
+~GeometryTests() {}
 /*----------------------------- Interface ----------------------------*/
 
-typename MPProblemTests::TestResult
-MPProblemTests::
+typename GeometryTests::TestResult
+GeometryTests::
 RunTest() {
-  return TestResult();
+  m_nBoxTest = new NBoxTest();
+  return m_nBoxTest->RunTest();
+  delete m_nBoxTest;
 }
 
 /*--------------------------------------------------------------------*/
