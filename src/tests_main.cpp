@@ -9,6 +9,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Testing/MPLibrary/MPLibraryTests.h"
 #include "Testing/TMPLibrary/TMPLibraryTests.h"
+#include "Testing/Behaviors/BehaviorsTests.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "Testing/MPProblem/MPProblemTests.h"
 #include "MPProblem/MPTask.h"
@@ -31,6 +32,8 @@ main(int _argc, char** _argv) {
 
   // Get the XML file name from the command line.
   std::string xmlFile = _argv[2];
+
+  BehaviorsTests* behaviors = new BehaviorsTests();
 
   // Parse the Problem node into an MPProblem object.
   MPProblemTests* problem = new MPProblemTests(xmlFile);
@@ -137,8 +140,11 @@ main(int _argc, char** _argv) {
   auto mpResults = mpl->RunTest();
   std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
   
+  auto behavResults = behaviors->RunTest();
+  std::cout << "PASSED: " << behavResults.first << std::endl << behavResults.second;
  
   // Release resources.
+  delete behaviors;
   delete problem;
   delete ppl;
   delete mpl;

@@ -7,7 +7,7 @@
 class Robot;
 class XMLNode;
 
-class AgentTest : virtual public Agent, 
+class AgentTest : public Agent, 
                   public TestBaseObject {
 
   public:
@@ -32,7 +32,7 @@ class AgentTest : virtual public Agent,
     ///@name Interface
     ///@{
 
-    virtual TestResult RunTest();
+    virtual TestResult RunTest() = 0;
 
     ///@}
 
@@ -55,10 +55,10 @@ AgentTest::
 AgentTest(Robot* const _r) : Agent(_r) {}
 
 AgentTest::
-AgentTest(Robot* const _r, XMLNode& _node) : Agent(Robot* const _r, XMLNode& _node) {}
+AgentTest(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {}
 
 AgentTest::
-AgentTest(Robot* const _r, const Agent& _a) : Agent(Robot* const _r, const Agent& _a) {}
+AgentTest(Robot* const _r, const Agent& _a) : Agent(_r, _a) {}
 
 AgentTest::
 ~AgentTest() {}

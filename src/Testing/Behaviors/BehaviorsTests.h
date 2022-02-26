@@ -2,7 +2,8 @@
 #define PPL_BEHAVIORS_TESTS_H_
 
 #include "Testing/TestBaseObject.h"
-#include "Testing/Behaviorsy/Agents/CoordinatorTest.h"
+#include "Utilities/XMLNode.h"
+#include "Testing/Behaviors/Agents/CoordinatorTest.h"
 
 class BehaviorsTests : public TestBaseObject {
   public:
@@ -17,7 +18,7 @@ class BehaviorsTests : public TestBaseObject {
 
     BehaviorsTests();
 
-    BehaviorsTests(const std::string& _xmlFile);
+    BehaviorsTests(XMLNode& _node);
 
     virtual ~BehaviorsTests();
 
@@ -31,20 +32,18 @@ class BehaviorsTests : public TestBaseObject {
   
   private:
 
-    // CoordinatorTest* m_coordinatorTest{nullptr};
+    ///@name Test objects
+    ///@{
+
+    CoordinatorTest* m_coordinatorTest{nullptr};
+
+    ///@}
 };
 
 /*--------------------------- Construction ---------------------------*/
 
 BehaviorsTests::
-BehaviorsTests() {
-  // TODO
-}
-
-BehaviorsTests::
-BehaviorsTests(const std::string& _xmlFile) {
-  // TODO
-}
+BehaviorsTests() {}
 
 BehaviorsTests::
 ~BehaviorsTests() {}
@@ -53,7 +52,32 @@ BehaviorsTests::
 typename BehaviorsTests::TestResult
 BehaviorsTests::
 RunTest() {
-  return TestResult(); // TODO
+  bool passed = true;
+  std::string message = "";
+  int total = 0;
+  int numPassed = 0;
+
+  message = message + "Running test for Coordinator...\n";
+  m_coordinatorTest = new CoordinatorTest(nullptr);
+  auto result = m_coordinatorTest->RunTest();
+
+  total++;
+  if (result.first) {
+    message = message + "PASSED!\n";
+    numPassed++;
+  }
+  else
+    message = message + "FAILED :(\n";
+
+  passed = passed and result.first;
+  message = message + result.second;
+
+  message = message + "\nCOMPLETED BEHAVIORS TESTS\n"
+                      "Total: " + std::to_string(total) + "\n"
+                      "Passed: " + std::to_string(numPassed) + "\n"
+                      "Failed: " + std::to_string(total - numPassed) + "\n\n";
+
+  return std::make_pair(passed, message);
 }
 
 /*--------------------------------------------------------------------*/
