@@ -105,6 +105,8 @@ GenerateRepresentation(const State& _start) {
   // Build mode graph from actions and start state
   BuildModeGraph(initialMode);
 
+  BuildSingleObjectModeGraph();
+
   if(m_debug)
     Print();
 }
@@ -721,8 +723,14 @@ void
 ObjectCentricModeGraph::
 ExpandApplications(const std::vector<std::vector<std::pair<Robot*,std::string>>>& _roleCombos, 
                    std::vector<std::pair<ObjectModeSwitch,std::set<Robot*>>>& _outgoing, 
-                   Interaction* _interaction, bool _reverse) {
-        
+                   Interaction* _interaction, bool _reverse, bool _initial) {
+       
+  if(!_initial and _outgoing.empty()) {
+    return;
+  }
+
+  std::vector<std::pair<ObjectModeSwitch,std::set<Robot*>>> newOutgoing;
+ 
   // Add action to all non-conflicting existing edges
   for(auto combo : _roleCombos) {
     for(auto pair : _outgoing) {
@@ -756,26 +764,35 @@ ExpandApplications(const std::vector<std::vector<std::pair<Robot*,std::string>>>
     
       edge[_interaction].emplace_back(_reverse,roleMap);
 
-      _outgoing.emplace_back(edge,used);
+      newOutgoing.emplace_back(edge,used);
     }
   }
-  // Create single action edges for all combinations
-  for(auto combo : _roleCombos) {
+  
+  if(_initial) {
+    // Create single action edges for all combinations
+    for(auto combo : _roleCombos) {
 
-    ObjectModeSwitch edge;
-    std::set<Robot*> used;
-    RoleMap roleMap;
+      ObjectModeSwitch edge;
+      std::set<Robot*> used;
+      RoleMap roleMap;
 
-    for(auto role : combo) {
-      auto robot = role.first;
-      auto label = role.second;
-      roleMap[label] = robot;
-      used.insert(robot);
+      for(auto role : combo) {
+        auto robot = role.first;
+        auto label = role.second;
+        roleMap[label] = robot;
+        used.insert(robot);
+      }
+
+      edge[_interaction].emplace_back(_reverse,roleMap);
+
+      newOutgoing.emplace_back(edge,used);
     }
+  }
 
-    edge[_interaction].emplace_back(_reverse,roleMap);
+  ExpandApplications(_roleCombos, newOutgoing, _interaction, _reverse, false);
 
-    _outgoing.emplace_back(edge,used);
+  for(auto elem : newOutgoing) {
+    _outgoing.push_back(elem);
   }
 }
 
@@ -914,7 +931,7 @@ BuildSingleObjectModeGraph() {
   const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
   std::map<const Terrain*,size_t> regionVIDs;
 
-  for(auto kv : terrainMap) {
+  for(auto& kv : terrainMap) {
     for(const auto& terrain : kv.second) {
 
       ModeInfo info(nullptr,nullptr,&terrain);
@@ -938,7 +955,7 @@ BuildSingleObjectModeGraph() {
       auto robot1 = iter1->first;
       auto robot2 = iter2->first;
 
-      if(IsReachable(robot1,robot2))
+      if(!IsReachable(robot1,robot2))
         continue;
 
       auto mb1 = robot1->GetMultiBody();
@@ -955,8 +972,12 @@ BuildSingleObjectModeGraph() {
         distance += center1[i] * center2[i];
       }
       distance = std::sqrt(distance);
+
+      //THIS IS RESETING IT TO ACTION DISTANCE
+      distance = 1.0;
  
       m_singleModeGraph.AddEdge(vid1,vid2,distance);
+      m_singleModeGraph.AddEdge(vid2,vid1,distance);
     }
   }
 
@@ -967,7 +988,7 @@ BuildSingleObjectModeGraph() {
       auto robot = iter1->first;
       auto terrain = iter2->first;
 
-      if(IsReachable(terrain,robot))
+      if(!IsReachable(terrain,robot))
         continue;
 
       auto vid1 = iter1->second;
@@ -988,9 +1009,19 @@ BuildSingleObjectModeGraph() {
         distance += center1[i] * center2[i];
       }
       distance = std::sqrt(distance);
+
+      //THIS IS RESETING IT TO ACTION DISTANCE
+      distance = 1.0;
  
       m_singleModeGraph.AddEdge(vid1,vid2,distance);
+      m_singleModeGraph.AddEdge(vid2,vid1,distance);
     }
+  }
+
+  // Add region self edges
+  for(auto iter = regionVIDs.begin(); iter != regionVIDs.end(); iter++) {
+    auto vid = iter->second;
+    m_singleModeGraph.AddEdge(vid,vid,0);
   }
  
 }

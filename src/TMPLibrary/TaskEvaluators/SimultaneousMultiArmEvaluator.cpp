@@ -1257,6 +1257,19 @@ ComputeMAPFSolution(ObjectMode _objectMode) {
 
   CBSNodeType solution = CBS(objects,validation,splitNode,lowLevel,cost);
 
+  if(m_debug) {
+    std::cout << "Heuristic Paths" << std::endl;
+    for(auto kv : solution.solutionMap) {
+      auto robot = kv.first;
+      auto path = *kv.second;
+      std::cout << "\t" << robot->GetLabel() << ": ";
+      for(auto vid : path) {
+        std::cout << vid << ", ";
+      }
+      std::cout << std::endl;
+    }
+  }
+
   // Extract next step for each object
 
   std::unordered_map<Robot*,ModeInfo> nextStep;
@@ -1279,11 +1292,28 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetSingleObjectModeGraph();
 
-  HeuristicSearch h(_robot);
+  auto h = std::shared_ptr<HeuristicSearch>(new HeuristicSearch(_robot));
+
+  auto constraints = _node.constraintMap[_robot];
 
   // Get start and goal of robot in terms of vid in g
-  size_t start = m_heuristicStarts[_robot];
-  size_t goal = m_heuristicGoals[_robot]; 
+  auto start = m_heuristicStarts[_robot];
+  size_t goal = m_heuristicGoals[_robot];
+
+  SSSPPathWeightFunction<SingleObjectModeGraph> cost2goWeight(
+    [](typename SingleObjectModeGraph::adj_edge_iterator& _ei,
+       const double _sourceDistance,
+       const double _targetDistance) {
+      
+      return _sourceDistance + _ei->property();
+    }
+  );
+
+  // Compute distance to goal for each vertex in g
+  auto dist2go = DijkstraSSSP(g,{goal},cost2goWeight).distance;  
+
+  auto startVertex = std::make_pair(start,0);
+  auto startVID = h->AddVertex(startVertex);
 
   SSSPTerminationCriterion<HeuristicSearch> termination(
     [goal](typename HeuristicSearch::vertex_iterator& _vi,
@@ -1294,20 +1324,41 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   );
 
   SSSPPathWeightFunction<HeuristicSearch> weight(
-    [](typename HeuristicSearch::adj_edge_iterator& _ei,
+    [constraints,h](typename HeuristicSearch::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-      
+     
+      auto source = h->GetVertex(_ei->source()).first;
+      auto target = h->GetVertex(_ei->target()).first;
+
+      auto timestep = h->GetVertex(_ei->source()).second;
+
+      auto edgeConstraint = std::make_pair(std::make_pair(source,target),timestep);
+      auto vertexConstraint = std::make_pair(std::make_pair(target,target),timestep+1);
+
+      if(constraints.count(edgeConstraint) or constraints.count(vertexConstraint))
+        return std::numeric_limits<double>::infinity();
+
       return _sourceDistance + _ei->property();
     }
   );
 
   SSSPHeuristicFunction<HeuristicSearch> heuristic(
-    [](const HeuristicSearch* _h, 
+    [dist2go](const HeuristicSearch* _h, 
        typename HeuristicSearch::vertex_descriptor _source,
        typename HeuristicSearch::vertex_descriptor _target) {
-      //TODO::Standard A star heuristic over graph
-      return 0.0;
+
+      // Distance to go heuristic
+      auto vertex = _h->GetVertex(_target);
+      double toGo = dist2go.at(vertex.first);
+
+      // Subtract epsilon from any neighboring vertex that is not waiting in place
+      // to encourage forward movement
+      if(_h->GetVertex(_source).first != vertex.first) {
+        //toGo -= std::numeric_limits<double>::epsilon();
+        toGo -= .01;
+      }
+      return std::max(0.0,toGo);
     }
   );
 
@@ -1330,14 +1381,14 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     }
   );
 
-  std::vector<size_t> starts = {start};
+  std::vector<size_t> starts = {startVID};
   std::vector<size_t> goals = {goal};
 
-  auto sssp = AStarSSSP(&h,starts,goals,weight,heuristic,neighbors,termination);
+  auto sssp = AStarSSSP(h.get(),starts,goals,weight,heuristic,neighbors,termination);
 
   // Check that a path was found
   const size_t last = sssp.ordering.back();
-  if(last != goal) {
+  if(h->GetVertex(last).first != goal) {
     if(m_debug) {
       std::cout << "Failed to find a path for " << _robot->GetLabel() << std::endl;
     }
@@ -1345,15 +1396,17 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   }
 
   // Reconstruct the path
-  std::vector<size_t> path = {last};
+  std::vector<size_t> path = {h->GetVertex(last).first};
   auto current = last;
   do {
     current = sssp.parent.at(current);
-    path.push_back(current);
-  } while(current != start);
+    path.push_back(h->GetVertex(current).first);
+  } while(current != startVID);
   std::reverse(path.begin(),path.end());
 
-  // Save path in solution 
+  // Save path in solution
+  if(!_node.solutionMap[_robot])
+    _node.solutionMap[_robot] = new vector<size_t>();
   *(_node.solutionMap[_robot]) = path;
 
   return true;
@@ -1388,8 +1441,8 @@ ValidationFunction(CBSNodeType& _node) {
         auto path2 = *(iter2->second);
         auto s2 = std::min(i,path1.size()-1);
         auto t2 = std::min(i+1,path1.size()-1);
-        auto source2 = path1[s2];
-        auto target2 = path1[t2];
+        auto source2 = path2[s2];
+        auto target2 = path2[t2];
 
         if(source1 == source2) {
           if(m_debug) {
@@ -1407,7 +1460,7 @@ ValidationFunction(CBSNodeType& _node) {
           return constraints;
         }
 
-        if(source1 == target2 and target1 == source2) {
+        if(source1 == target2 or target1 == source2) {
           if(m_debug) {
             std::cout << "Found edge conflict at timestep " << i
                       << " between " << object1->GetLabel()
@@ -1417,6 +1470,8 @@ ValidationFunction(CBSNodeType& _node) {
 
           auto constraint1 = std::make_pair(std::make_pair(source1,target1),i);
           auto constraint2 = std::make_pair(std::make_pair(source2,target2),i);
+          //auto constraint1 = std::make_pair(std::make_pair(target1,target1),i+1);
+          //auto constraint2 = std::make_pair(std::make_pair(target2,target2),i+1);
           std::vector<std::pair<Robot*,CBSConstraint>> constraints;
           constraints.push_back(std::make_pair(object1,constraint1));
           constraints.push_back(std::make_pair(object2,constraint2));
@@ -1434,9 +1489,22 @@ double
 SimultaneousMultiArmEvaluator::
 CostFunction(CBSNodeType& _node) {
 
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+      this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetSingleObjectModeGraph();
+
   double cost = 0;
   for(auto kv : _node.solutionMap) {
-    cost = std::max(cost,double(kv.second->size()));
+    //cost = std::max(cost,double(kv.second->size()));
+    double pathLength = 0;
+    const auto& path = *kv.second;
+    for(size_t i = 1; i < path.size(); i++) {
+      auto source = path[i-1];
+      auto target = path[i];
+      auto edge = g->GetEdge(source,target);
+      pathLength += edge;
+    }
+    cost += pathLength;
   }
 
   return cost;

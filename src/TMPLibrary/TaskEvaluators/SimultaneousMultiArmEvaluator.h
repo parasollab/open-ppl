@@ -19,6 +19,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     typedef ObjectCentricModeGraph::ObjectMode              ObjectMode;
     typedef ObjectCentricModeGraph::ObjectModeSwitch        ObjectModeSwitch;
     typedef ObjectCentricModeGraph::GraphType               GraphType;
+    typedef ObjectCentricModeGraph::SingleObjectModeGraph   SingleObjectModeGraph;
     typedef GraphType::VID                                  VID;
 
     typedef GroupLocalPlan<Cfg>                             GroupLocalPlanType;

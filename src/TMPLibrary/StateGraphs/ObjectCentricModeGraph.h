@@ -115,7 +115,7 @@ class ObjectCentricModeGraph : public StateGraph {
     void ExpandApplications(
                    const std::vector<std::vector<std::pair<Robot*,std::string>>>& _roleCombos, 
                    std::vector<std::pair<ObjectModeSwitch,std::set<Robot*>>>& _outgoing, 
-                   Interaction* _interaction, bool _reverse = false);
+                   Interaction* _interaction, bool _reverse = false, bool _initial=true);
 
     void ApplyEdge(ObjectModeSwitch _edge, VID _source, std::set<VID>& _newModes, 
                    const std::set<Robot*>& _used);
