@@ -4,6 +4,7 @@
 #include "Testing/TestBaseObject.h"
 #include "Utilities/XMLNode.h"
 #include "Testing/Behaviors/Agents/CoordinatorTest.h"
+#include "MPProblem/MPProblem.h"
 
 class BehaviorsTests : public TestBaseObject {
   public:
@@ -18,7 +19,7 @@ class BehaviorsTests : public TestBaseObject {
 
     BehaviorsTests();
 
-    BehaviorsTests(XMLNode& _node);
+    BehaviorsTests(MPProblem* _problem, const std::string& _filename);
 
     virtual ~BehaviorsTests();
 
@@ -31,10 +32,12 @@ class BehaviorsTests : public TestBaseObject {
     ///@}
   
   private:
-
     ///@name Test objects
     ///@{
 
+    MPProblem* m_problem{nullptr};
+    std::string m_xmlFilename;
+    XMLNode* m_coordinatorNode{nullptr};
     CoordinatorTest* m_coordinatorTest{nullptr};
 
     ///@}
@@ -44,6 +47,10 @@ class BehaviorsTests : public TestBaseObject {
 
 BehaviorsTests::
 BehaviorsTests() {}
+
+BehaviorsTests::
+BehaviorsTests(MPProblem* _problem, const std::string& _filename) : 
+                m_problem(_problem), m_xmlFilename(_filename) {}
 
 BehaviorsTests::
 ~BehaviorsTests() {}
@@ -58,7 +65,24 @@ RunTest() {
   int numPassed = 0;
 
   message = message + "Running test for Coordinator...\n";
-  m_coordinatorTest = new CoordinatorTest(nullptr);
+
+  // Get the coordinator node from the XML file
+  XMLNode input(m_xmlFilename, "Problem");
+
+  for(auto& child : input) {
+    if (child.Name() == "Robot") {
+      for (auto& grandchild : child) {
+        if (grandchild.Name() == "Agent") {
+          std::string type = grandchild.Read("type", true, "", "The Agent class name.");
+          if (type == "coordinator")
+            m_coordinatorNode = &grandchild;
+        }
+      }
+    }
+  }
+  
+  auto robot = m_problem->GetRobot("coordinator");
+  m_coordinatorTest = new CoordinatorTest(robot, *m_coordinatorNode);
   auto result = m_coordinatorTest->RunTest();
 
   total++;

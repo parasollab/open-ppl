@@ -108,7 +108,7 @@ RunTest() {
   auto result = TestInitialize();
   passed = passed and result.first;
   message = message + result.second;
-
+  
   result = TestStep();
   passed = passed and result.first;
   message = message + result.second;

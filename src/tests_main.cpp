@@ -33,10 +33,10 @@ main(int _argc, char** _argv) {
   // Get the XML file name from the command line.
   std::string xmlFile = _argv[2];
 
-  BehaviorsTests* behaviors = new BehaviorsTests();
-
   // Parse the Problem node into an MPProblem object.
   MPProblemTests* problem = new MPProblemTests(xmlFile);
+
+  BehaviorsTests* behaviors = new BehaviorsTests(problem, xmlFile);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibraryTests* ppl = new TMPLibraryTests(xmlFile);
