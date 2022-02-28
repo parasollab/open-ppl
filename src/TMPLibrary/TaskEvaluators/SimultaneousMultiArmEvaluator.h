@@ -126,11 +126,13 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     VID CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs);
 
-    TID Select(size_t _modeID, size_t _history);
+    TID Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuristic);
 
     GroupCfg SampleVertex(size_t _modeID);
 
-    TID Extend(TID _qNear, size_t _history);
+    TID Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic);
+
+    GroupCfg GetHeuristicDirection(size_t _mode, std::unordered_map<Robot*,size_t> _heuristic);
 
     TID Rewire(TID _qNew, size_t _history);
 
@@ -148,7 +150,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     ///@name Heuristic Functions
     ///@{
 
-    std::unordered_map<Robot*,ModeInfo> ComputeMAPFSolution(ObjectMode _objectMode);
+    std::unordered_map<Robot*,size_t> ComputeMAPFSolution(ObjectMode _objectMode);
 
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
@@ -207,6 +209,9 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     std::unordered_map<Robot*,size_t> m_heuristicStarts;
     std::unordered_map<Robot*,size_t> m_heuristicGoals;
 
+    std::map<std::pair<size_t,size_t>,size_t> m_modeVertexBias;
+
+    double m_heuristicProb{.8};
     ///@}
 };
 

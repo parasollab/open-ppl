@@ -116,7 +116,7 @@ Run(Plan* _plan) {
     std::cout << mode << " " << history << std::endl;
 
     // TODO::Compute Heuristic
-    ComputeMAPFSolution(g->GetVertex(mode));
+    auto nextStep = ComputeMAPFSolution(g->GetVertex(mode));
 
 
     // Sample Transitions
@@ -128,14 +128,14 @@ Run(Plan* _plan) {
 
     // RRT Logic
     // - Qnear = Sample vertex (from heursitic)
-    auto qNear = Select(mode,history);
+    auto qNear = Select(mode,history,nextStep);
     // - Qnew = Extend(Qnear,history,heuristic)
-    auto qNew = Extend(qNear,history);
+    auto qNew = Extend(qNear,history,nextStep);
     if(qNew == MAX_INT)
       continue;
     // - Qbest = rewire(Qnew)
     auto qBest = Rewire(qNew,history);
-    // TODO::Temp while Reqire does nothing
+    // TODO::Temp while Rewire does nothing
     qBest = qNear;
 
     // Add Qnew to action extended graph and connect
@@ -556,7 +556,13 @@ CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs) {
 
 SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
-Select(size_t _modeID, size_t _history) {
+Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuristic) {
+
+  auto biasKey = std::make_pair(_modeID,_history);
+  auto iter = m_modeVertexBias.find(biasKey);
+  
+  if(iter != m_modeVertexBias.end())
+    return iter->second;
 
   auto sample = SampleVertex(_modeID);
 
@@ -612,7 +618,7 @@ SampleVertex(size_t _modeID) {
 
 SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
-Extend(TID _qNear, size_t _history) {
+Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic) {
 
   auto prob = this->GetMPProblem();
 
@@ -621,7 +627,11 @@ Extend(TID _qNear, size_t _history) {
 
   // TODO::Use heuristic to select direction to extend
   // In the meantime, sample random vertex
-  auto direction = SampleVertex(taskState.mode);
+  GroupCfg direction;
+  if(DRand() <= m_heuristicProb)
+    direction = GetHeuristicDirection(taskState.mode,_heuristic);
+  else
+    direction = SampleVertex(taskState.mode);
 
   auto computeAngle = [](GroupCfg& _cfg1, GroupCfg& _cfg2) {
     double dot = 0;
@@ -801,6 +811,162 @@ Extend(TID _qNear, size_t _history) {
   }
 
   return MAX_INT;
+}
+
+    
+GroupCfg
+SimultaneousMultiArmEvaluator::
+GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heuristic) {
+
+  auto prob = this->GetMPProblem();
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+      this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetObjectModeGraph();
+  auto sog = sg->GetSingleObjectModeGraph();
+
+  auto mode = g->GetVertex(_modeID);
+
+  std::map<Robot*,RobotGroup*> sourceObjectGroups;
+  std::map<Robot*,RobotGroup*> targetObjectGroups;
+
+  std::map<Robot*,const Terrain*> sourceObjectTerrains;
+  std::map<Robot*,const Terrain*> targetObjectTerrains;
+
+  // Collect current robot group of each object
+  for(auto kv : mode) {
+    auto object = kv.first;
+    auto info = kv.second;
+
+    std::vector<Robot*> robots;
+
+    if(info.formation) {
+      for(auto robot : info.formation->GetRobots()) {
+        robots.push_back(robot);
+      }
+    }
+    else {
+      robots = {object};
+      sourceObjectTerrains[object] = info.terrain;
+    }
+
+    auto group = prob->AddRobotGroup(robots,"temp");
+    sourceObjectGroups[object] = group;
+  }
+
+  // Collect target robot group of each object
+  for(auto kv : _heuristic) {
+    auto object = kv.first;
+    auto vid = kv.second;
+    auto info = sog->GetVertex(vid);
+
+    std::vector<Robot*> robots;
+
+    if(info.formation) {
+      for(auto robot : info.formation->GetRobots()) {
+        robots.push_back(robot);
+      }
+    }
+    else {
+      robots = {object};
+      targetObjectTerrains[object] = info.terrain;
+    }
+
+    auto group = prob->AddRobotGroup(robots,"temp");
+    targetObjectGroups[object] = group;
+  }
+
+  // Check if any transitions match this switch
+  std::map<Robot*,TransitionVertex> directions;
+  for(auto kv : _heuristic) {
+    auto object = kv.first;
+    auto sourceGroup = sourceObjectGroups[object];
+    auto targetGroup = targetObjectGroups[object];
+
+    TransitionVertex direction;
+
+    for(auto kv : m_transitionMap) {
+      // Check if the group is the same
+      auto tv = kv.first;
+      bool contained = false;
+
+      for(auto pair : tv) {
+        if(sourceGroup == pair.first->GetGroup()) {
+          if(sourceGroup->Size() == 1) {
+            // Check that terrain matches
+            auto cfg = pair.first->GetVertex(pair.second).GetRobotCfg(object);
+            if(!sourceObjectTerrains[object]->InTerrain(cfg))
+              break;
+          }
+
+          contained = true;
+          break;
+        }
+      }
+
+      if(!contained)
+        continue;
+
+      for(auto kv2 : kv.second) {
+        auto tv2 = kv2.first;
+        bool contained = false;
+
+        for(auto pair : tv2) {
+          if(targetGroup == pair.first->GetGroup()) {
+            if(sourceGroup->Size() == 1) {
+              // Check that terrain matches
+              auto cfg = pair.first->GetVertex(pair.second).GetRobotCfg(object);
+              if(!sourceObjectTerrains[object]->InTerrain(cfg))
+                break;
+            }
+
+            contained = true;
+            break;
+          }
+        }
+
+        if(!contained)
+          continue;
+
+        direction = tv;
+        break;
+      }
+
+      if(direction == tv) 
+        break;
+    }
+
+    directions[object] = direction;
+  }
+
+  // Set active formations in TPR
+  m_tensorProductRoadmap->SetAllFormationsInactive();
+
+  std::vector<Formation*> formations;
+  for(auto kv : mode) {
+    auto info = kv.second;
+    if(!info.formation)
+      continue;
+
+    m_tensorProductRoadmap->AddFormation(info.formation);
+  }
+
+  // Create direction vertex
+  GroupCfg cfg(m_tensorProductRoadmap.get());
+  for(auto kv : directions) {
+    for(auto pair : kv.second) {
+      auto rm = pair.first;
+      auto vid = pair.second;
+      auto gcfg = rm->GetVertex(vid);
+
+      for(auto robot : rm->GetGroup()->GetRobots()) {
+        auto rcfg = gcfg.GetRobotCfg(robot);
+        cfg.SetRobotCfg(robot,std::move(rcfg));
+      }
+    }
+  }
+
+  return cfg;
+  
 }
 
 SimultaneousMultiArmEvaluator::TID
@@ -1177,7 +1343,7 @@ AddHistory(const ActionHistory& _history) {
 
 /*-------------------------- Heuristic Functions -----------------------------*/
 
-std::unordered_map<Robot*,SimultaneousMultiArmEvaluator::ModeInfo>
+std::unordered_map<Robot*,size_t>
 SimultaneousMultiArmEvaluator::
 ComputeMAPFSolution(ObjectMode _objectMode) {
 
@@ -1272,14 +1438,14 @@ ComputeMAPFSolution(ObjectMode _objectMode) {
 
   // Extract next step for each object
 
-  std::unordered_map<Robot*,ModeInfo> nextStep;
+  std::unordered_map<Robot*,size_t> nextStep;
 
   for(auto kv : solution.solutionMap) {
     auto robot = kv.first;
     auto path = *kv.second;
     auto vid = path.size() > 1 ? path[1] : path[0];
-    auto info = g->GetVertex(vid);
-    nextStep[robot] = info;
+    //auto info = g->GetVertex(vid);
+    nextStep[robot] = vid;
   }
 
   return nextStep;
