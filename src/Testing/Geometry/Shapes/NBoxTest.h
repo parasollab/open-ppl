@@ -4,14 +4,6 @@
 #include "Geometry/Shapes/NBox.h"
 #include "Testing/TestBaseObject.h"
 
-/*-----------------------------------------------------------*/
-///
-/// This is a base class to standardize the testing interface.
-/// All child classes should build their tests from the 
-/// RunTests function. 
-///
-/*-----------------------------------------------------------*/
-
 #include <cmath>
 #include <string>
 #include <utility>
@@ -56,18 +48,22 @@ class NBoxTest : public NBox,
 
     friend std::istream& operator>>(std::istream& _is, NBox& _box);
 
-    void testContains();
+    TestResult testContains();
 
-    void testClearance();
+    TestResult testClearance();
 
-    void testClearancePoint();
+    TestResult testClearancePoint();
 
-    void testSamples();
+    TestResult testSample();
 
-    void construct();
+    /// Helper for constructing an instance of the NBox
+    /// @return An instance of NBox 
+    NBox* construct();
 
-    // helpers for test
-    int m_dimension;
+    /// Helper for printing out the test result messages
+    void RunTestMessage(TestResult());
+
+    int m_dimension;  /// the dimension for the test box
 
 };
 
@@ -89,121 +85,192 @@ NBoxTest::
 typename NBoxTest::
 TestResult
 NBoxTest::RunTest() {
-  testContains();
+  std::cout << "TESTS FOR NBOX" << std::endl;
+
+  // RunTestMessage(testContains);
+  // RunTestMessage(testClerance);
+  // RunTestMessage(testClerancePoint);
+  // RunTestMessage(testSample);
+  TestResult containsTestResult = testContains();
+  std::cout << "PASSED: "<< containsTestResult.first << std::endl << containsTestResult.second;
+
+  TestResult clearanceTestResult = testClearance();
+  std::cout << "PASSED: "<< clearanceTestResult.first << std::endl << clearanceTestResult.second;
+
+  TestResult clearancePointTestResult = testClearancePoint();
+  std::cout << "PASSED: "<< clearancePointTestResult.first << std::endl << clearancePointTestResult.second;
+
+  TestResult sampleTestResult = testSample();
+  std::cout << "PASSED: "<< sampleTestResult.first << std::endl << sampleTestResult.second;
+
   return TestResult(true, "this is for testing infrastructure");
 }
 
-// valid case
 
-// edge cases
+typename NBoxTest::
+TestResult
+NBoxTest::testContains() {
 
+  NBox* testBox = construct();
 
-
-void NBoxTest::testContains() {
-
-  construct();
-
-  bool passed;
+  bool passed = true;
+  std::string message = "";
 
   // this point should be contained
   std::vector<double> validP;
-  for (int i = 1; i <= m_dimension; i++) {
-    validP.push_back(i - 0.1);
+  for (int i = 0; i < m_dimension; i++) {
+    validP.push_back((i + 1) / 2);
   }
 
   // this point should not be contained
   std::vector<double> invalidP;
-  for (int i = 1; i <= m_dimension; i++) {
-    validP.push_back(2.0 * i);
+  for (int i = 0; i < m_dimension; i++) {
+    invalidP.push_back(2.0 * (i + 1));
   }
 
-  if (!((NBox*)this)->Contains(validP) || ((NBox*)this->Contains(invalidP))) {
+  if (!testBox->Contains(validP)) {
     passed = false;
+    message = message + "\n\tNBox does not contain valid point.\n";
   } 
 
-  passed = true;
+  if (testBox->Contains(invalidP)) {
+    passed = false;
+    message = message + "\n\tNBox contains invalid point.\n";
+  }
 
-  if (passed)
-  	cout << "passed!" << endl;
-} 
+  if (passed) {
+    message = "NBox Contains: PASSED!\n";
+  } else {
+    message = "NBox Contains: Failed :(\n" + message;
+  }
 
-
-void NBoxTest::testClearance() {
-
-  // construct();
-
-  // bool passed;
-
-  // // the origin point, whose clearance
-  // // should be equal to 1
-  // std::vector<double> testP;
-  // for (int i = 1; i <= m_dimension; i++) {
-  //   testP.push_back(0);
-  // }
-
-  // double expectedClearance = 1;
-  // double actualClearance = testBox.Clearance(testP);
-
-  // if (expectedClearance != actualClearance) {
-  //   passed = false;
-  // }
-
-  // passed = true;
-
+  return std::make_pair(passed, message);
 
 } 
 
-void NBoxTest::testClearancePoint() {
 
-  // construct();
+typename NBoxTest::
+TestResult
+NBoxTest::testClearance() {
 
-  // bool passed;
+  NBox* testBox = construct();
 
-  // // the origin point, whose clearance
-  // // point should be equal to (-1, 0, 0, ...)
-  // std::vector<double> testP;
-  // for (int i = 1; i <= m_dimension; i++) {
-  //   testP.push_back(0);
-  // }
+  bool passed = true;
+  std::string message = "";
 
-  // std::vector<double> expectedClearancePoint;
-  // for (int i = 1; i <= m_dimension; i++) {
-  //   expectedClearancePoint.push_back(0);
-  // }
+  // the origin point, whose clearance
+  // should be equal to 1
+  std::vector<double> testP;
+  for (int i = 0; i < m_dimension; i++) {
+    testP.push_back(0);
+  }
 
-  // double expectedClearance = 1;  
-  // double actualClearance = testBox.Clearance(testP);
+  double expectedClearance = 1;
+  double actualClearance = testBox -> Clearance(testP);
 
-  // if (expectedClearance != actualClearance) {
-  //   passed = false;
-  // }
+  if (expectedClearance != actualClearance) {
+    passed = false;
+    message = message + "\n\tReturned incorrect clearance.\n";
+  }
 
-  // passed = true;
+  if (passed) {
+    message = "NBox Clearance: PASSED!\n";
+  } else {
+    message = "NBox Clearance: Failed :(\n" + message;
+  }
 
-
+  return std::make_pair(passed, message);
 
 } 
 
-void NBoxTest::testSamples() {
-  cout << " sss " << endl;
+typename NBoxTest::
+TestResult
+NBoxTest::testClearancePoint() {
+
+  NBox* testBox = construct();
+
+  bool passed = true;
+  std::string message = "";
+
+  // the origin point, whose clearance
+  // point should be equal to (-1, 0, 0, ...)
+  std::vector<double> testP;
+  for (int i = 1; i <= m_dimension; i++) {
+    testP.push_back(0);
+  }
+
+  std::vector<double> expectedClearancePoint;
+  expectedClearancePoint.push_back(1);
+  for (int i = 1; i < m_dimension; i++) {
+    expectedClearancePoint.push_back(0);
+  }
+
+  vector<double> actualClearancePoint = testBox -> ClearancePoint(testP);
+
+  if (expectedClearancePoint != actualClearancePoint) {
+    passed = false;
+    message = "\n\tReturned clearance point is incorrect.\n";
+  }
+
+  if (passed) {
+    message = "NBox Clearance point: PASSED!\n";
+  } else {
+    message = "NBox Clearance point: Failed :(\n" + message;
+  }
+
+  return std::make_pair(passed, message);
+
+} 
+
+
+typename NBoxTest::
+TestResult
+NBoxTest::testSample() {
+
+  NBox* testBox = construct();
+
+  bool passed = true;
+  std::string message = "";
+
+  // sample 100 random points and test if they lie within the box
+  for (int i = 0; i < 100; i++) {
+    vector<double> randomSamplePoint = testBox -> Sample();
+    if (!testBox -> Contains(randomSamplePoint)) {
+      passed = false;
+      message = message + "\n\tSampled point not in the box\n";
+    }
+  }
+
+  if (passed) {
+    message = "NBox Sample: PASSED!\n";
+  } else {
+    message = "NBox Sample: Failed :(\n" + message;
+  }
+
+  return std::make_pair(passed, message);
 
 } 
 
 
 /*---------------------------- Helpers --------------------------*/
 
-// construct an instance of the NBox()
-// should be run in every test case 
-void NBoxTest::construct() {
-  // define a valid n dimensional box centered at origin
-  // with range equal to 2i where i is the dimension index
+NBox* NBoxTest::construct() {
+  // define a valid n dimensional box centered at origin with range (i - 1, i + 1)
+  m_dimension = 3;
   NBox* testBox = new NBox(m_dimension);
+  
   for (int i = 0; i < m_dimension; i++) {
-    testBox->SetRange(i, -i, i);
+    testBox->SetRange(i, -i - 1, i + 1);
   }
+
+  return testBox;
 
 }
 
+void NBoxTest::RunTestMessage(TestResult inputTestFunction()) {
+  TestResult testResult = inputTestFunction();
+  std::cout << "PASSED: "<< testResult.first << std::endl << testResult.second;
+}
 
 
 
