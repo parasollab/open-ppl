@@ -255,8 +255,12 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto path = QueryPath(task,startTime,_node);
 
     // Check if path was found
-    if(!path)
+    if(!path) {
+      if(m_debug) {
+        std::cout << "Failed to find path for " << task->GetLabel() << std::endl;
+      }
       return false;
+    }
 
     // Save path to solution
     _node.solutionMap[task] = path;
