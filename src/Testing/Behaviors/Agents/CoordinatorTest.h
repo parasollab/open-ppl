@@ -108,7 +108,7 @@ RunTest() {
   auto result = TestInitialize();
   passed = passed and result.first;
   message = message + result.second;
-  
+
   result = TestStep();
   passed = passed and result.first;
   message = message + result.second;
@@ -128,6 +128,19 @@ TestInitialize() {
   bool passed = true;
   std::string message = "";
 
+  // Check that the number of child agents is initially zero and then increases
+  if (this->m_childAgents.size() != 0) {
+    passed = false;
+    message = message + "\n\tThe child agents are not correctly initialized.\n";
+  }
+
+  Initialize();
+
+  if (passed and (this->m_childAgents.size() <= 0)) {
+    passed = false;
+    message = message + "\n\tThe Coordinator has the incorrect number of child agents.\n";
+  }
+
   if (passed) {
     message = "Initialize::PASSED!\n";
   } else {
@@ -143,6 +156,8 @@ TestStep() {
   bool passed = true;
   std::string message = "";
 
+  // Calling Step will solve the problem, so better left to strategy tests
+
   if (passed) {
     message = "Step::PASSED!\n";
   } else {
@@ -157,6 +172,13 @@ CoordinatorTest::
 TestUninitialize() {
   bool passed = true;
   std::string message = "";
+
+  // Check that the solution and library are deleted
+  Uninitialize();
+  if (m_solution or m_library) {
+    passed = false;
+    message = message + "\n\tSolution or library was not deleted.\n";
+  }
 
   if (passed) {
     message = "Uninitialize::PASSED!\n";

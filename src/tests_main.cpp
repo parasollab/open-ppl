@@ -36,6 +36,7 @@ main(int _argc, char** _argv) {
   // Parse the Problem node into an MPProblem object.
   MPProblemTests* problem = new MPProblemTests(xmlFile);
 
+  // Create an object to test the Behaviors
   BehaviorsTests* behaviors = new BehaviorsTests(problem, xmlFile);
 
   // Parse the Library node into an TMPLibrary object.

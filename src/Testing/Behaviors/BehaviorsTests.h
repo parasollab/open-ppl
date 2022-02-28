@@ -5,6 +5,7 @@
 #include "Utilities/XMLNode.h"
 #include "Testing/Behaviors/Agents/CoordinatorTest.h"
 #include "MPProblem/MPProblem.h"
+#include "Simulator/Simulation.h"
 
 class BehaviorsTests : public TestBaseObject {
   public:
@@ -66,6 +67,9 @@ RunTest() {
 
   message = message + "Running test for Coordinator...\n";
 
+  // Create the simulation object needed for coordinator initialization
+  Simulation::Create(m_problem);
+
   // Get the coordinator node from the XML file
   XMLNode input(m_xmlFilename, "Problem");
 
@@ -81,10 +85,12 @@ RunTest() {
     }
   }
   
+  // Run the coordinator tests
   auto robot = m_problem->GetRobot("coordinator");
   m_coordinatorTest = new CoordinatorTest(robot, *m_coordinatorNode);
   auto result = m_coordinatorTest->RunTest();
 
+  // Track how many tests pass
   total++;
   if (result.first) {
     message = message + "PASSED!\n";
@@ -101,6 +107,8 @@ RunTest() {
                       "Passed: " + std::to_string(numPassed) + "\n"
                       "Failed: " + std::to_string(total - numPassed) + "\n\n";
 
+
+  delete m_coordinatorTest;
   return std::make_pair(passed, message);
 }
 
