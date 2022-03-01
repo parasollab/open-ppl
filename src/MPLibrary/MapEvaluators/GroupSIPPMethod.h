@@ -594,9 +594,9 @@ DynamicPathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
 
   State sourceState = m_sippGraph->GetVertex(source);
   double sourceDistance = _sourceDistance;
-  if(sourceDistance > 0) {
-    sourceDistance = sourceDistance - m_costToGoMap[sourceState.vid];
-  }
+  //if(sourceDistance > 0) {
+  //  sourceDistance = sourceDistance - m_costToGoMap[sourceState.vid];
+  //}
 
   // Compute new distance which is the number of timesteps at which
   // the robot would reach the target node.
