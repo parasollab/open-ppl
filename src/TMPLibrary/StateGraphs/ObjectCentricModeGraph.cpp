@@ -969,7 +969,7 @@ BuildSingleObjectModeGraph() {
 
       double distance = 0;
       for(size_t i = 0; i < 3; i++) {
-        distance += center1[i] * center2[i];
+        distance += std::pow((center1[i] - center2[i]),2);
       }
       distance = std::sqrt(distance);
 
@@ -1006,7 +1006,7 @@ BuildSingleObjectModeGraph() {
 
       double distance = 0;
       for(size_t i = 0; i < 3; i++) {
-        distance += center1[i] * center2[i];
+        distance += std::pow((center1[i] - center2[i]),2);
       }
       distance = std::sqrt(distance);
 
@@ -1029,13 +1029,64 @@ BuildSingleObjectModeGraph() {
 bool
 ObjectCentricModeGraph::
 IsReachable(const Terrain* _terrain, Robot* _robot) {
-  return true;
+
+  auto mb = _robot->GetMultiBody();
+  auto bbx = mb->GetBase()->GetWorldBoundingBox();
+
+  auto boundary = _terrain->GetBoundary() ? _terrain->GetBoundary()
+                                          : _terrain->GetBoundaries()[0].get();
+
+  auto center1 = bbx.GetCentroid();
+  auto center2 = boundary->GetCenter();
+
+  double distance = 0;
+  for(size_t i = 0; i < 3; i++) {
+    distance += std::pow((center1[i] - center2[i]),2);
+  }
+  distance = std::sqrt(distance);
+
+  // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
+  auto radius = mb->GetBoundingSphereRadius();
+  radius = 1;
+
+  auto maxDistFromCenter = boundary->GetMaxDist()/2;
+
+  if(distance < radius - maxDistFromCenter)
+    return true;
+
+  return false;
 }
 
 bool
 ObjectCentricModeGraph::
 IsReachable(Robot* _robot1, Robot* _robot2) {
-  return true;
+
+  auto mb1 = _robot1->GetMultiBody();
+  auto mb2 = _robot2->GetMultiBody();
+
+  auto bbx1 = mb1->GetBase()->GetWorldBoundingBox();
+  auto bbx2 = mb2->GetBase()->GetWorldBoundingBox();
+
+  auto center1 = bbx1.GetCentroid();
+  auto center2 = bbx2.GetCentroid();
+
+  double distance = 0;
+  for(size_t i = 0; i < 3; i++) {
+    distance += center1[i] * center2[i];
+  }
+  distance = std::sqrt(distance);
+
+  auto radius1 = mb1->GetBoundingSphereRadius();
+  auto radius2 = mb2->GetBoundingSphereRadius();
+
+  // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
+  radius1 = 1;
+  radius2 = 1;
+
+  if(distance < radius1 + radius2)
+    return true;
+
+  return false;
 }
 
 /*----------------------------------------------------------------------------*/

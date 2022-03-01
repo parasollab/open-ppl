@@ -180,6 +180,10 @@ operator*=(const Transformation& _t) {
   m_pqpModel.release();
   m_centroidCached = false;
 
+  ComputeSurfaceArea();
+  ComputeRadii();
+  ComputeInsidePoint();
+
   return *this;
 }
 

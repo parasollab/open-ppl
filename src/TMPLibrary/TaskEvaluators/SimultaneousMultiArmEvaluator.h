@@ -211,7 +211,9 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     std::map<std::pair<size_t,size_t>,size_t> m_modeVertexBias;
 
-    double m_heuristicProb{.8};
+    double m_heuristicProb{.5};
+
+    double m_goalBias{.5};
     ///@}
 };
 
