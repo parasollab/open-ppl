@@ -38,6 +38,12 @@ SimultaneousMultiArmEvaluator(XMLNode& _node) : TaskEvaluatorMethod(_node) {
 
   m_lpLabel = _node.Read("lpLabel",true,"",
             "Local planner to check validity within tensor product roadmap.");
+
+  m_heuristicProb = _node.Read("heuristicProb",false,m_heuristicProb,0.,1.,
+            "Probability of using heuristic in selecting direction to expand tree.");
+
+  m_goalBias = _node.Read("goalBias",false,m_goalBias,0.,1.,
+            "Probability of selecting mode towards goal.");
 }
 
 SimultaneousMultiArmEvaluator::
@@ -64,6 +70,47 @@ Initialize() {
   //for(auto n : neighbors) {
   //  SampleTransition(mode, n);
   //}
+
+  // Compute mode graph distance to go
+  auto c = this->GetPlan()->GetCoordinator();
+  auto prob = this->GetMPProblem();
+  auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
+
+  ObjectMode goalMode;  
+
+  for(auto st : decomp->GetGroupMotionTasks()) {
+    auto gt = st->GetGroupMotionTask();
+    for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+      for(auto& c : iter->GetGoalConstraints()) {
+        auto robot = c->GetRobot();
+        auto boundary = c->GetBoundary();
+
+        if(boundary->Type() == Boundary::Space::Workspace) {
+          throw RunTimeException(WHERE) << "Unsupported boundary type.";
+        }
+
+        auto dofs = boundary->GetCenter();
+        Cfg cfg(robot);
+        cfg.SetData(dofs);
+
+        const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
+        for(const auto& terrain : terrainMap.at(robot->GetCapability())) {
+          if(!terrain.InTerrain(cfg))
+            continue;
+
+          ModeInfo info(nullptr,nullptr,&terrain);
+          goalMode[robot] = info;
+          break;
+        }
+      }
+    }
+  }
+
+  auto goalVID = g->GetVID(goalMode);
+  if(goalVID == MAX_INT)
+    throw RunTimeException(WHERE) << "Failed to find or construct goal mode.";
+
+  //TODO::Compute dijkstra from goal backwards and save cost to go from each vertex
 
   Run();
 
@@ -839,10 +886,12 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
 
     std::vector<Robot*> robots;
 
-    if(info.formation) {
-      for(auto robot : info.formation->GetRobots()) {
-        robots.push_back(robot);
-      }
+    //if(info.formation) {
+    //  for(auto robot : info.formation->GetRobots()) {
+    //    robots.push_back(robot);
+    //  }
+    if(info.robot) {
+      robots = {object,info.robot};
     }
     else {
       robots = {object};
@@ -861,10 +910,12 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
 
     std::vector<Robot*> robots;
 
-    if(info.formation) {
-      for(auto robot : info.formation->GetRobots()) {
-        robots.push_back(robot);
-      }
+    //if(info.formation) {
+    //  for(auto robot : info.formation->GetRobots()) {
+    //    robots.push_back(robot);
+    //  }
+    if(info.robot) {
+      robots = {object,info.robot};
     }
     else {
       robots = {object};
@@ -912,10 +963,10 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
 
         for(auto pair : tv2) {
           if(targetGroup == pair.first->GetGroup()) {
-            if(sourceGroup->Size() == 1) {
+            if(targetGroup->Size() == 1) {
               // Check that terrain matches
               auto cfg = pair.first->GetVertex(pair.second).GetRobotCfg(object);
-              if(!sourceObjectTerrains[object]->InTerrain(cfg))
+              if(!targetObjectTerrains[object]->InTerrain(cfg))
                 break;
             }
 
