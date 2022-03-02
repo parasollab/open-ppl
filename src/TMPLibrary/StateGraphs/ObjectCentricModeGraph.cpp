@@ -3,6 +3,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 
 #include "MPProblem/Constraints/BoundaryConstraint.h"
+#include "MPProblem/TaskHierarchy/Decomposition.h"
 
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/FormationCondition.h"
@@ -79,6 +80,30 @@ Initialize() {
 
     // Add group and vertex to start state
     start[group] = std::make_pair(grm,vid);
+  }
+
+  // Add goal states for each individual task
+  auto decomp = problem->GetDecompositions(c->GetRobot())[0].get();
+  for(auto task : decomp->GetGroupMotionTasks()) {
+    auto gt = task->GetGroupMotionTask();
+    auto group = gt->GetRobotGroup();
+    m_solution->AddRobotGroup(group);
+    auto rm = m_solution->GetGroupRoadmap(group);
+
+    GroupCfg gcfg(rm);
+
+    for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+      auto robot = iter->GetRobot();
+      Cfg cfg(robot);
+      auto constraint = iter->GetGoalConstraints()[0].get();
+      auto boundary = constraint->GetBoundary();
+
+      cfg.GetRandomCfg(boundary);
+
+      gcfg.SetRobotCfg(robot,std::move(cfg));
+    }
+
+    rm->AddVertex(gcfg);
   }
 
   GenerateRepresentation(start);

@@ -150,6 +150,8 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     ///@name Heuristic Functions
     ///@{
 
+    void ComputeGoalBiasHeuristic();
+
     std::unordered_map<Robot*,size_t> ComputeMAPFSolution(ObjectMode _objectMode);
 
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
@@ -214,6 +216,10 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     double m_heuristicProb{.5};
 
     double m_goalBias{.5};
+
+    std::unordered_map<size_t,double> m_goalBiasCosts;
+    std::vector<size_t> m_orderedModesToGoal;
+
     ///@}
 };
 
