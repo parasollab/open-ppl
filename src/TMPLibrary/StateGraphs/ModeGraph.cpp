@@ -587,7 +587,7 @@ ConnectTransitions() {
           continue;
 
         std::cout << "Attempting to connect grounded vertices: "
-                  << vid1 << vid2 << std::endl;
+                  << vid1 << " -> " << vid2 << std::endl;
 
         auto vertex2 = m_groundedHypergraph.GetVertex(vid2);
 
@@ -654,6 +654,15 @@ ConnectTransitions() {
 
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
+
+        if(m_debug) {
+          std::cout << "Path for transition: " << vid1 << " -> " << vid2 << std::endl;
+          for(const auto& cfg : path->Cfgs()) {
+            std::cout << "\t" << cfg.PrettyPrint() << std::endl;
+          }
+          std::cout << std::endl;
+        }
+
         Transition transition;
         transition.taskSet.push_back({groupTask});
         transition.cost = path->TimeSteps();

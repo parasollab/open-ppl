@@ -685,7 +685,7 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
     auto distance = dm->Distance(sample,cfg);
 
     if(distance == std::numeric_limits<double>::infinity())
-      throw RunTimeException(WHERE) << "Comapring invalid candidates.";
+      throw RunTimeException(WHERE) << "Comparing invalid candidates.";
 
     if(distance < minDistance) {
       minDistance = distance;

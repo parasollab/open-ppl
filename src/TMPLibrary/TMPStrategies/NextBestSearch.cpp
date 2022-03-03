@@ -422,6 +422,8 @@ ValidationFunction(Node& _node) {
   std::unordered_map<SemanticTask*,size_t> endTimes;
   size_t finalTime = 0;
 
+  // Set of tasks which have no tasks dependent on them
+  std::set<SemanticTask*> finalTasks;
 
   // Build in order sequence of tasks
   while(ordering.size() < _node.solutionMap.size()) {
@@ -471,10 +473,16 @@ ValidationFunction(Node& _node) {
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
 
+      finalTasks.insert(task);
+
       // Update the end times of the preceeding tasks
       auto group1 = task->GetGroupMotionTask()->GetRobotGroup();
       for(auto dep : task->GetDependencies()) {
         for(auto t : dep.second) {
+
+          // Remove from final tasks
+          finalTasks.erase(t);
+
           // Check if robots overlap
           bool overlap = false;
           auto group2 = t->GetGroupMotionTask()->GetRobotGroup();
@@ -502,7 +510,7 @@ ValidationFunction(Node& _node) {
 
       // TODO::Check backfill of time gaps between robots doing anything
       // Check that timesteps lies within task range
-      if(startTimes[t1] > t or endTimes[t1] < t)
+      if(startTimes[t1] > t or (endTimes[t1] < t and !finalTasks.count(t1)))
         continue;
 
       // Configure first group at timestep
@@ -521,7 +529,7 @@ ValidationFunction(Node& _node) {
 
         // TODO::Check backfill of time gaps between robots doing anything
         // Check that timesteps lies within task range
-        if(startTimes[t2] > t or endTimes[t2] < t)
+        if(startTimes[t2] > t or (endTimes[t2] < t and !finalTasks.count(t2)))
           continue;
 
         // Configure second group at timestep
