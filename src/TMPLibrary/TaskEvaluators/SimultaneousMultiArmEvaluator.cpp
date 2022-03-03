@@ -59,6 +59,7 @@ Initialize() {
       this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
 
+
   // TODO::Temporary code to test helper functions
   if(g->Size() == 0)
     return;
@@ -71,7 +72,19 @@ Initialize() {
   //  SampleTransition(mode, n);
   //}
 
+  Run();
+
+}
+
+void
+SimultaneousMultiArmEvaluator::
+ComputeGoalBiasHeuristic() {
+
   // Compute mode graph distance to go
+  auto sg = static_cast<ObjectCentricModeGraph*>(
+      this->GetStateGraph(m_sgLabel).get());
+  auto g = sg->GetObjectModeGraph();
+
   auto c = this->GetPlan()->GetCoordinator();
   auto prob = this->GetMPProblem();
   auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
@@ -112,15 +125,38 @@ Initialize() {
 
   //TODO::Compute dijkstra from goal backwards and save cost to go from each vertex
 
-  Run();
+  SSSPPathWeightFunction<GraphType> cost2goWeight(
+    [](typename GraphType::adj_edge_iterator& _ei,
+       const double _sourceDistance,
+       const double _targetDistance) {
+      
+      //return _sourceDistance + _ei->property();
+      return _sourceDistance + 1;
+    }
+  );
 
+  // Compute distance to goal for each vertex in g
+  m_goalBiasCosts = DijkstraSSSP(g,{goalVID},cost2goWeight).distance;
+
+  std::vector<std::pair<double,size_t>> elems;
+
+  for(auto kv : m_goalBiasCosts) {
+    elems.emplace_back(kv.second,kv.first);
+  }
+
+  std::sort(elems.begin(),elems.end());
+
+  for(auto elem : elems) {
+    m_orderedModesToGoal.push_back(elem.second);
+  }
 }
-
 /*----------------------------- Helper Functions -----------------------------*/
 
 bool
 SimultaneousMultiArmEvaluator::
 Run(Plan* _plan) {
+
+  ComputeGoalBiasHeuristic();
 
   Plan* plan = _plan ? _plan : this->GetPlan();
   plan->Print();
@@ -246,6 +282,29 @@ SelectMode() {
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
+
+  if(DRand() < m_goalBias) {
+    for(auto mode : m_orderedModesToGoal) {
+      
+      auto histories = m_modeHistories[mode];
+  
+      if(histories.empty())
+        continue;
+
+      auto index = LRand() % histories.size();
+      auto hid = histories[index];
+
+      if(m_debug) {
+        std::cout << "Selected Mode " << mode << " with history [ ";
+        for(auto vid : m_actionHistories[hid]) {
+          std::cout << vid << ", ";
+        }
+        std::cout << "]" << std::endl;
+      }
+
+      return std::make_pair(mode,hid);
+    }
+  }
 
   while(true) {
     // For now, sample random mode
