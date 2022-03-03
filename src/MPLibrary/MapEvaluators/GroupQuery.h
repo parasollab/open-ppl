@@ -27,7 +27,7 @@ class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::GroupCfgType       CfgType;
+    typedef typename MPTraits::GroupCfgType       GroupCfgType;
     typedef typename MPTraits::GroupRoadmapType   GroupRoadmapType;
     typedef typename MPTraits::GroupWeightType    WeightType;
     typedef typename GroupRoadmapType::VID        VID;
@@ -89,6 +89,8 @@ class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
 
     SSSPPathWeightFunction<GroupRoadmapType> m_weightFunction;
 
+    std::string m_vcLabel;
+
     ///@}
 
 };
@@ -106,6 +108,9 @@ template <typename MPTraits>
 GroupQuery<MPTraits>::
 GroupQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("GroupQuery");
+
+  m_vcLabel = _node.Read("vcLabel",false,"",
+                         "Collision Detection method to use for dynamic obstacles.");
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/
@@ -343,9 +348,71 @@ double
 GroupQuery<MPTraits>::
 DynamicPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-  throw NotImplementedException(WHERE) << "This needs to be implemented to "
-                                       << "consider planning for a group in the "
-                                       << "presence of dynamic obstacles.";
+
+  // Get edge variables
+  auto edge = _ei->property();
+  auto source = _ei->source();
+  auto target = _ei->target();
+
+  // Assuming that _sourceDistance is in timesteps
+  size_t start = size_t(_sourceDistance);
+  size_t timesteps = size_t(edge.GetWeight());
+
+  auto cfgs = edge.GetIntermediates().empty() ? std::vector<GroupCfgType>()
+                                              : edge.GetIntermediates();
+
+  if(cfgs.empty()) {
+    auto rm = this->GetGroupRoadmap();
+    auto lib = this->GetMPLibrary();
+    cfgs = lib->ReconstructEdge(rm,source,target);
+  }
+
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto cd = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(vc);
+  auto prob = this->GetMPProblem();
+  auto dynamicObstacles = prob->GetDynamicObstacles();
+
+  for(size_t i = 0; i < timesteps; i++) {
+    auto cfg1 = cfgs[i];
+    cfg1.ConfigureRobot();
+
+    for(auto& obs : dynamicObstacles) {
+      if(start < obs.GetStartTime())
+        continue;
+
+      const auto& path = obs.GetPath();
+      const size_t index = start - obs.GetStartTime() + i;
+
+      const Cfg& cfg2 = index < path.size() ? path[index]
+                                            : path.back();
+      cfg2.ConfigureRobot();
+      auto mb2 = cfg2.GetMultiBody();
+
+      for(auto robot : cfg1.GetRobots()) {
+        auto mb1 = robot->GetMultiBody();
+       
+        CDInfo cdInfo; 
+        if(cd->IsMultiBodyCollision(cdInfo,mb1,mb2,this->GetNameAndLabel())) {
+          if(this->m_debug) {
+            std::cout << "Found collision between " 
+                      << robot->GetLabel()
+                      << " and dynamic obstacle "
+                      << cfg2.GetRobot()->GetLabel()
+                      << " at timestep "
+                      << start + i
+                      << "."
+                      << std::endl;
+          }
+  
+          return std::numeric_limits<double>::infinity();
+        }
+      }
+    }
+  }
+
+  const double edgeWeight  = _ei->property().GetWeight(),
+               newDistance = _sourceDistance + edgeWeight;
+  return newDistance;
 }
 
 /*----------------------------------------------------------------------------*/

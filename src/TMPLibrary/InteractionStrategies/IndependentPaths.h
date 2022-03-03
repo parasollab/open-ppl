@@ -61,6 +61,8 @@ class IndependentPaths : public InteractionStrategyMethod {
  
     State m_finalState;
 
+    bool m_sequential{false};
+
     ///@}
 };
 #endif

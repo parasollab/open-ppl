@@ -511,14 +511,18 @@ DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
   auto grm = _groupPath->GetRoadmap();
   auto group = grm->GetGroup();
   auto robots = group->GetRobots();
+  auto lib = this->GetMPLibrary();
  
   std::unordered_map<Robot*,std::vector<size_t>> individualVIDs;
  
-  auto& gcfgs = _groupPath->Cfgs();
+  auto& gcfgs = _groupPath->FullCfgs(lib);
   for(auto& gcfg : gcfgs) {
-    for(auto robot : robots) {
-      auto vid = gcfg.GetVID(robot);
-      individualVIDs[robot].push_back(vid);
+    for(size_t i = 0; i < robots.size(); i++) {
+      auto cfg = gcfg.GetRobotCfg(i);
+      auto rm = grm->GetRoadmap(i);
+      
+      auto vid = rm->AddVertex(cfg);
+      individualVIDs[cfg.GetRobot()].push_back(vid);
     }  
   }
 

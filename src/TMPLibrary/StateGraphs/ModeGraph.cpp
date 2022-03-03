@@ -1272,6 +1272,9 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
           // Reconstruct edge in local group roadmap
           GroupLocalPlan<Cfg> newEdge(localGrm);
+
+          newEdge.SetLPLabel(oldEdge.GetLPLabel());
+
           auto& edgeDescriptors = oldEdge.GetEdgeDescriptors();
           for(size_t i = 0; i < group->GetRobots().size(); i++) {
             auto oldEd = edgeDescriptors[i];

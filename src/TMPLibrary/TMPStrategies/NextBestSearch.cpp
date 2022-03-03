@@ -322,6 +322,8 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto solution = mg->GetMPSolution();
   auto lib = this->GetMPLibrary();
+  lib->SetTask(nullptr);
+  lib->SetGroupTask(_task->GetGroupMotionTask().get());
   auto problem = this->GetMPProblem();
   auto group = _task->GetGroupMotionTask()->GetRobotGroup();
 
@@ -427,6 +429,7 @@ ValidationFunction(Node& _node) {
     // Find the set of tasks that are ready to be validated
     for(auto kv :_node.solutionMap) {
       auto task = kv.first;
+      lib->SetGroupTask(task->GetGroupMotionTask().get()); 
 
       // Skip if already validated
       if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
@@ -451,7 +454,7 @@ ValidationFunction(Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-      
+     
       const auto cfgs = path->FullCfgsWithWait(lib);
       for(size_t i = 0; i < cfgs.size(); i++) {
         cfgPaths[task].push_back(cfgs[i]);
@@ -556,6 +559,10 @@ ValidationFunction(Node& _node) {
                   << cfg1.GetRobotCfg(robot1).PrettyPrint()
                   << "\n\t2: "
                   << cfg2.GetRobotCfg(robot2).PrettyPrint()
+                  << " during tasks "
+                  << t1->GetLabel()
+                  << " and "
+                  << t2->GetLabel()
                   << std::endl;
               }
 
@@ -886,6 +893,7 @@ SaveSolution(const Node& _node) {
     // Find the set of tasks that are ready to be validated
     for(auto kv :_node.solutionMap) {
       auto task = kv.first;
+      lib->SetGroupTask(task->GetGroupMotionTask().get()); 
 
       // Skip if already validated
       if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
