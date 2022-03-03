@@ -120,7 +120,7 @@ ComputeGoalBiasHeuristic() {
   }
 
   auto goalVID = g->GetVID(goalMode);
-  if(goalVID == MAX_INT)
+  if(goalVID == INVALID_VID)
     throw RunTimeException(WHERE) << "Failed to find or construct goal mode.";
 
   //TODO::Compute dijkstra from goal backwards and save cost to go from each vertex
@@ -683,6 +683,9 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
     auto taskState = m_taskGraph->GetVertex(vid);
     auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
     auto distance = dm->Distance(sample,cfg);
+
+    if(distance == std::numeric_limits<double>::infinity())
+      throw RunTimeException(WHERE) << "Comapring invalid candidates.";
 
     if(distance < minDistance) {
       minDistance = distance;
