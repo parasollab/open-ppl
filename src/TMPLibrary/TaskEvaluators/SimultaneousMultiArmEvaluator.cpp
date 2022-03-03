@@ -1307,8 +1307,36 @@ CheckForModeTransition(size_t _aid, size_t _history) {
       }
     }
 
-    if(mode == 2)
-      std::cout << "HERE" << std::endl;
+    // Check that mode matches cfg
+    {
+      auto checkCfg = m_tensorProductRoadmap->GetVertex(newState.vid);
+      for(auto f : checkCfg.GetFormations()) {
+        bool match = false;
+        for(auto kv : newMode) {
+          auto info = kv.second;
+          if(f == info.formation) {
+            match = true;  
+            break;
+          }
+        }
+        if(!match) {
+          throw RunTimeException(WHERE) << "Mismatched formations in mode and switch cfg.";
+        }
+      }
+      for(auto kv : newMode) {
+        auto info = kv.second;
+        bool match = false;
+        for(auto f : checkCfg.GetFormations()) {
+          if(f == info.formation) {
+            match = true;  
+            break;
+          }
+        }
+        if(!match) {
+          throw RunTimeException(WHERE) << "Mismatched formations in mode and switch cfg.";
+        }
+      }
+    }
 
     auto modeID = g->GetVID(newMode);
     newState.mode = modeID;
