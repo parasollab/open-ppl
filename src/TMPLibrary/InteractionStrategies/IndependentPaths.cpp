@@ -213,7 +213,7 @@ GenerateTasks(std::vector<std::string> _conditions,
               std::unordered_map<Robot*,Constraint*> _startConstraints,
               std::unordered_map<Robot*,Constraint*> _goalConstraints) {
 
-  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+  //auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
   auto as = this->GetTMPLibrary()->GetActionSpace();
   std::vector<std::shared_ptr<GroupTask>> groupTasks;
 
@@ -237,9 +237,9 @@ GenerateTasks(std::vector<std::string> _conditions,
 
     RobotGroup* group = this->GetMPProblem()->AddRobotGroup(robots,groupLabel);
     // Check if group is truly new and update MPSolution
-    if(group->GetLabel() == groupLabel) {
-      hcr->AddRobotGroup(group);
-    }
+    //if(group->GetLabel() == groupLabel) {
+    //  hcr->AddRobotGroup(group);
+    //}
    
     auto groupTask = shared_ptr<GroupTask>(new GroupTask(group));
 

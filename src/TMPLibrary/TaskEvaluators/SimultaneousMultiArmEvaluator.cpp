@@ -1186,6 +1186,8 @@ CheckForModeTransition(size_t _aid, size_t _history) {
     TaskEdge edge;
     size_t cost = 0;
 
+    std::set<Robot*> used;
+
     for(auto tv : trans) {
       auto map = m_transitionMap[tv];
       if(map.size() > 1)
@@ -1203,6 +1205,40 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         auto vid = pair.second;
         auto cfg = rm->GetVertex(vid);
         cfgs.push_back(cfg);
+
+        auto group = rm->GetGroup();
+        
+        Robot* object = nullptr;
+        Robot* robot = nullptr;
+
+        for(auto r : group->GetRobots()) {
+          used.insert(r);
+          if(r->GetMultiBody()->IsPassive()) {
+            object = r;
+          }
+          else {
+            robot = r;
+          }
+        }
+
+        if(!object)
+          continue;
+
+        if(robot) {
+          auto formation = cfg.GetFormations().begin();
+          newMode[object] = ModeInfo(robot,*formation,nullptr);
+        }
+        else {
+          const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
+          for(const auto& terrain : terrainMap.at(object->GetCapability())) {
+            // If object in terrain
+            auto indCfg = cfg.GetRobotCfg(object);
+            if(terrain.InTerrain(indCfg)) {
+              newMode[object] = ModeInfo(nullptr,nullptr,&terrain);
+              break;
+            }
+          }
+        } 
       }
 
       // Get cost of transition
@@ -1213,24 +1249,42 @@ CheckForModeTransition(size_t _aid, size_t _history) {
       }
     }
 
+    // Reconstruct mode
+
+    // Copy over modes of any non transitioning objects
+    for(auto kv : g->GetVertex(mode)) {
+      auto object = kv.first;
+      if(used.count(object))
+        continue;
+
+      newMode[object] = kv.second;
+    }
+
     edge.cost = cost;
 
     // Construct new TPV
     m_tensorProductRoadmap->SetAllFormationsInactive();
-    
+
+    /*    
     for(const auto& cfg : cfgs) {
       for(auto formation : cfg.GetFormations()) {
         m_tensorProductRoadmap->AddFormation(formation);
       }
     }
+    */
+    for(auto kv : newMode) {
+      auto formation = kv.second.formation;
+      if(formation)
+        m_tensorProductRoadmap->AddFormation(formation);
+    }
 
     GroupCfg newCfg(m_tensorProductRoadmap.get());
-    std::set<Robot*> used;
+    //std::set<Robot*> used;
     for(const auto& cfg : cfgs) {
       for(auto robot : cfg.GetGroupRoadmap()->GetGroup()->GetRobots()) {
         auto indCfg = cfg.GetRobotCfg(robot);
         newCfg.SetRobotCfg(robot,std::move(indCfg));
-        used.insert(robot);
+        //used.insert(robot);
       }
     }
 
@@ -1247,6 +1301,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
     auto newVID = m_tensorProductRoadmap->AddVertex(newCfg);
     newState.vid = newVID;
 
+  /*
     // Reconstruct mode
 
     // Copy over modes of any non transitioning objects
@@ -1270,9 +1325,9 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
       for(auto pair : target) {
         auto rm = pair.first;
-        auto group = rm->GetGroup();
         auto vid = pair.second;
         auto cfg = rm->GetVertex(vid);
+        auto group = rm->GetGroup();
         
         Robot* object = nullptr;
         Robot* robot = nullptr;
@@ -1306,7 +1361,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         } 
       }
     }
-
+    */
     // Check that mode matches cfg
     {
       auto checkCfg = m_tensorProductRoadmap->GetVertex(newState.vid);
@@ -1325,6 +1380,8 @@ CheckForModeTransition(size_t _aid, size_t _history) {
       }
       for(auto kv : newMode) {
         auto info = kv.second;
+        if(!info.formation)
+          continue;
         bool match = false;
         for(auto f : checkCfg.GetFormations()) {
           if(f == info.formation) {
