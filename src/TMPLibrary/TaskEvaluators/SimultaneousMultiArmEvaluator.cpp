@@ -79,6 +79,9 @@ Initialize() {
 void
 SimultaneousMultiArmEvaluator::
 ComputeGoalBiasHeuristic() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeGoalBiasHeuristic");
 
   // Compute mode graph distance to go
   auto sg = static_cast<ObjectCentricModeGraph*>(
@@ -196,6 +199,8 @@ ComputeGoalBiasHeuristic() {
 bool
 SimultaneousMultiArmEvaluator::
 Run(Plan* _plan) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
 
   ComputeGoalBiasHeuristic();
 
@@ -319,6 +324,9 @@ CreateRootNodes() {
 std::pair<size_t,size_t>
 SimultaneousMultiArmEvaluator::
 SelectMode() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SelectMode");
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
@@ -381,6 +389,9 @@ SelectMode() {
 std::set<SimultaneousMultiArmEvaluator::VID>
 SimultaneousMultiArmEvaluator::
 GetModeNeighbors(VID _vid) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GetModeNeighbors");
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
@@ -400,6 +411,9 @@ GetModeNeighbors(VID _vid) {
 bool
 SimultaneousMultiArmEvaluator::
 SampleTransition(VID _source, VID _target) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTransition");
 
   auto as = this->GetTMPLibrary()->GetActionSpace();
   auto prob = this->GetMPProblem();
@@ -498,6 +512,9 @@ void
 SimultaneousMultiArmEvaluator::
 ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, bool _reverse,
                          size_t _sourceMode, size_t _targetMode) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectToExistingRoadmap");
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
@@ -622,6 +639,9 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
 SimultaneousMultiArmEvaluator::VID
 SimultaneousMultiArmEvaluator::
 AddToRoadmap(GroupCfg _cfg) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddToRoadmap");
 
   auto lib = this->GetMPLibrary();
   auto sg = static_cast<ObjectCentricModeGraph*>(
@@ -665,6 +685,9 @@ AddToRoadmap(GroupCfg _cfg) {
 SimultaneousMultiArmEvaluator::VID
 SimultaneousMultiArmEvaluator::
 CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CreateTensorProductVertex");
   
   // Collect individual cfgs and active formations
   std::vector<std::pair<VID,Cfg>> individualCfgs;
@@ -705,6 +728,9 @@ CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs) {
 SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
 Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuristic) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Select");
 
   auto biasKey = std::make_pair(_modeID,_history);
   auto iter = m_modeVertexBias.find(biasKey);
@@ -741,6 +767,9 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
 GroupCfg
 SimultaneousMultiArmEvaluator::
 SampleVertex(size_t _modeID) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleVertex");
   
   auto env = this->GetMPProblem()->GetEnvironment();
   auto sg = static_cast<ObjectCentricModeGraph*>(
@@ -770,6 +799,9 @@ SampleVertex(size_t _modeID) {
 SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
 Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend");
 
   auto prob = this->GetMPProblem();
 
@@ -968,6 +1000,9 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
 GroupCfg
 SimultaneousMultiArmEvaluator::
 GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heuristic) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GetHeuristicDirection");
 
   auto prob = this->GetMPProblem();
   auto sg = static_cast<ObjectCentricModeGraph*>(
@@ -1134,6 +1169,9 @@ Rewire(VID _qNew, size_t _history) {
 size_t
 SimultaneousMultiArmEvaluator::
 AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddToActionExtendedGraph");
 
   ActionExtendedState qNew;
   qNew.vid = _qNew;
@@ -1159,6 +1197,9 @@ AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
 void
 SimultaneousMultiArmEvaluator::
 CheckForModeTransition(size_t _aid, size_t _history) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckForModeTransition");
   
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
@@ -1464,6 +1505,9 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 void
 SimultaneousMultiArmEvaluator::
 CheckForGoal(size_t _aid) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckForGoal");
   
   auto c = this->GetPlan()->GetCoordinator();
   auto prob = this->GetMPProblem();
@@ -1495,6 +1539,9 @@ CheckForGoal(size_t _aid) {
 std::vector<GroupCfg>
 SimultaneousMultiArmEvaluator::
 SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitTensorProductVertex");
 
   // Look at tensor product neighbors of start
   auto prob = this->GetMPProblem();
@@ -1564,6 +1611,9 @@ SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID) {
 size_t
 SimultaneousMultiArmEvaluator::
 AddHistory(const ActionHistory& _history) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddHistory");
 
   // Check if history exists already
   size_t i = 0;
@@ -1586,6 +1636,9 @@ AddHistory(const ActionHistory& _history) {
 std::unordered_map<Robot*,size_t>
 SimultaneousMultiArmEvaluator::
 ComputeMAPFSolution(ObjectMode _objectMode) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeMAPFSolution");
 
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
@@ -1694,6 +1747,10 @@ ComputeMAPFSolution(ObjectMode _objectMode) {
 bool
 SimultaneousMultiArmEvaluator::
 LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::LowLevelPlanner");
+
   auto sg = static_cast<ObjectCentricModeGraph*>(
       this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetSingleObjectModeGraph();
@@ -1821,6 +1878,9 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 std::vector<std::pair<Robot*,SimultaneousMultiArmEvaluator::CBSConstraint>>
 SimultaneousMultiArmEvaluator::
 ValidationFunction(CBSNodeType& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
 
   size_t maxTimestep = 0;
   for(auto kv : _node.solutionMap) {
@@ -1894,6 +1954,9 @@ ValidationFunction(CBSNodeType& _node) {
 double
 SimultaneousMultiArmEvaluator::
 CostFunction(CBSNodeType& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CostFunction");
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
       this->GetStateGraph(m_sgLabel).get());
@@ -1922,6 +1985,9 @@ SplitNodeFunction(CBSNodeType& _node,
                   std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
                   CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
                   CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
   std::vector<CBSNodeType> newNodes;
 

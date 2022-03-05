@@ -56,6 +56,10 @@ Initialize() {
 
   auto problem = this->GetMPProblem();
 
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Initialize");
+
   // Initialize MPSolution
   auto c = this->GetPlan()->GetCoordinator();
   m_solution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
@@ -352,6 +356,10 @@ void
 ModeGraph::
 SampleTransitions() {
 
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTransitions");
+
   // For each edge in the mode graph, generate n samples
   for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
 
@@ -444,6 +452,9 @@ ModeGraph::
 GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& _goalVIDs) {
 
   auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GenerateRoadmaps");
+
   auto decomp = plan->GetDecomposition();
   auto lib = this->GetMPLibrary();
   auto qSM = lib->GetSampler(m_querySM);
@@ -548,6 +559,10 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 void
 ModeGraph::
 ConnectTransitions() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectTransitions");
+
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
 
@@ -1118,6 +1133,9 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
                      std::unordered_map<RobotGroup*,Mode*> _startModeMap,
                      std::unordered_map<RobotGroup*,Mode*> _endModeMap) {
 
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SaveInteractionPaths");
   //auto problem = this->GetMPProblem();
 
   const auto& stages = _interaction->GetStages();

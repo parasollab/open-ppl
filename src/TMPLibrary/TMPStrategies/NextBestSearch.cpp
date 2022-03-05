@@ -47,6 +47,9 @@ NextBestSearch::
 PlanTasks() {
 
   auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
+
   auto originalDecomp = plan->GetDecomposition();
   auto te = this->GetTaskEvaluator(m_teLabel);
   te->Initialize();
@@ -78,6 +81,9 @@ double
 NextBestSearch::
 FindTaskPlan(Decomposition* _decomp) {
   auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::FindTaskPlan");
+
   plan->SetDecomposition(_decomp);
 
   auto te = this->GetTaskEvaluator(m_teLabel);
@@ -90,6 +96,10 @@ FindTaskPlan(Decomposition* _decomp) {
 void
 NextBestSearch::
 ComputeMotions(Node& _bestNode) {
+
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeMotions");
 
   // Configure CBS Functions
   CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType> lowLevel(
@@ -166,6 +176,9 @@ ComputeIntervals(GroupRoadmapType* _grm) {
 bool 
 NextBestSearch::
 LowLevelPlanner(Node& _node, SemanticTask* _task) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CBSLowLevelPlanner");
 
   std::unordered_map<SemanticTask*,double> startTimes;
   std::unordered_map<SemanticTask*,double> endTimes;
@@ -318,6 +331,9 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 NextBestSearch::GroupPathType*
 NextBestSearch::
 QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::QueryPath");
 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto solution = mg->GetMPSolution();
@@ -409,6 +425,9 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
 std::vector<std::pair<SemanticTask*,NextBestSearch::Constraint>>
 NextBestSearch::
 ValidationFunction(Node& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
 
   std::vector<SemanticTask*> ordering;
 
@@ -605,6 +624,10 @@ ValidationFunction(Node& _node) {
 double
 NextBestSearch::
 CostFunction(Node& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CostFunction");
+
   std::unordered_map<SemanticTask*,double> startTimes;
   std::unordered_map<SemanticTask*,double> endTimes;
   std::set<SemanticTask*> solved;
@@ -874,6 +897,9 @@ void
 NextBestSearch::
 SaveSolution(const Node& _node) {
   // TODO::Decide on final format. For now convert to paths for individual robots
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SaveSolution");
 
   // Collect all of the robots
   std::unordered_map<Robot*,std::vector<Cfg>> robotPaths;
@@ -992,7 +1018,6 @@ SaveSolution(const Node& _node) {
   // Initialize a decomposition
   auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
   Decomposition* decomp = new Decomposition(top);
-  auto plan = this->GetPlan();
   plan->SetDecomposition(decomp);
   
   for(auto kv : robotPaths) {

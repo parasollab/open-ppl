@@ -40,6 +40,10 @@ bool
 SubmodeQuery::
 Run(Plan* _plan) {
 
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
+
   if(!_plan)
     _plan = this->GetPlan();
 
@@ -67,6 +71,9 @@ Run(Plan* _plan) {
 SubmodeQuery::ActionHistory
 SubmodeQuery::
 CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory& _history) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CombineHistories");
   
   auto composite = _history;
   auto newStory = m_actionExtendedHypergraph.GetVertexType(_vid).history;
@@ -117,6 +124,9 @@ CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory&
 void
 SubmodeQuery::
 ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConvertToPlan");
 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto& gh = mg->GetGroundedHypergraph();
@@ -318,7 +328,6 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
     hyperarcTaskMap[aeh.hid] = previousStage;
   }
 
-  auto plan = this->GetPlan();
   plan->SetDecomposition(decomp);
   plan->SetCost(_output.weightMap.at(m_goalVID));
 }
