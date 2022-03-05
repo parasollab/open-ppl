@@ -1,7 +1,7 @@
-#ifndef PPL_NBOX_TEST_H
-#define PPL_NBOX_TEST_H
+#ifndef PPL_NSphere_TEST_H
+#define PPL_NSphere_TEST_H
 
-#include "Geometry/Shapes/NBox.h"
+#include "Geometry/Shapes/NSphere.h"
 #include "Testing/TestBaseObject.h"
 
 #include <cmath>
@@ -12,7 +12,7 @@
 #include <vector>
 #include <functional>
 
-class NBoxTest : public NBox,
+class NSphereTest : public NSphere,
 				public TestBaseObject {
   public: 
     ///@name LocalTypes
@@ -24,9 +24,9 @@ class NBoxTest : public NBox,
     ///@name Construction
     ///@{
 
-    explicit NBoxTest();
+    explicit NSphereTest();
 
-    virtual ~NBoxTest();
+    virtual ~NSphereTest();
 
     ///@}
     ///@name Interface
@@ -42,12 +42,12 @@ class NBoxTest : public NBox,
     ///@name Internal State
     ///@{
 
-    std::vector<double> m_center;        ///< The center point of the box.
+    std::vector<double> m_center;        ///< The center point of the sphere.
     std::vector<Range<double>> m_range;  ///< The range in each dimension.
 
     ///@}
 
-    friend std::istream& operator>>(std::istream& _is, NBox& _box);
+    friend std::istream& operator>>(std::istream& _is, NSphere& _sphere);
 
     TestResult TestContains();
 
@@ -57,11 +57,11 @@ class NBoxTest : public NBox,
 
     TestResult TestSample();
 
-    /// Helper for constructing an instance of the NBox. The NBox will have range (-i - 1, i +1)
-    /// where i is the dimension index
-    /// @param dimension the dimension of the NBox
-    /// @return An instance of NBox 
-    NBox* Construct(int dimension);
+    /// Helper for constructing an instance of the NSphere
+    /// @param dimension the dimension of the NSphere
+    /// @param radius the raidus of the NSphere
+    /// @return An instance of NSphere 
+    NSphere* Construct(int dimension, int radius);
 
     /// Helper for printing out the test result messages
     void RunTestMessage(TestResult (*inputTestFunction)());
@@ -72,26 +72,26 @@ class NBoxTest : public NBox,
 /*--------------------------- Construction ---------------------------*/
 
 
-NBoxTest::
-NBoxTest() : NBox(1) {
+NSphereTest::
+NSphereTest() : NSphere(1) {
 }
 
 
-NBoxTest::
-~NBoxTest() noexcept = default;
+NSphereTest::
+~NSphereTest() noexcept = default;
 
 
 /*--------------------------- Tests ---------------------------*/
 
-typename NBoxTest::
+typename NSphereTest::
 TestResult
-NBoxTest::RunTest() {
-  std::cout << "TESTS FOR NBOX" << std::endl;
+NSphereTest::RunTest() {
+  std::cout << "TESTS FOR NSphere" << std::endl;
 
-  // RunTestMessage(&NBoxTest::TestContains);
-  // RunTestMessage(&NBoxTest::testClerance);
-  // RunTestMessage(&NBoxTest::testClerancePoint);
-  // RunTestMessage(&NBoxTest::testSample);
+  // RunTestMessage(&NSphereTest::TestContains);
+  // RunTestMessage(&NSphereTest::testClerance);
+  // RunTestMessage(&NSphereTest::testClerancePoint);
+  // RunTestMessage(&NSphereTest::testSample);
   TestResult containsTestResult = TestContains();
   std::cout << "PASSED: "<< containsTestResult.first << std::endl << containsTestResult.second;
 
@@ -108,12 +108,13 @@ NBoxTest::RunTest() {
 }
 
 
-typename NBoxTest::
+typename NSphereTest::
 TestResult
-NBoxTest::TestContains() {
+NSphereTest::TestContains() {
 
   int dimension = 3;
-  NBox* testBox = Construct(dimension);
+  int radius = 1;
+  NSphere* testSphere = Construct(dimension, radius);
 
   bool passed = true;
   std::string message = "";
@@ -121,29 +122,29 @@ NBoxTest::TestContains() {
   // this point should be contained
   std::vector<double> validP;
   for (int i = 0; i < dimension; i++) {
-    validP.push_back((i + 1) / 2);
+    validP.push_back(radius/2);
   }
 
   // this point should not be contained
   std::vector<double> invalidP;
   for (int i = 0; i < dimension; i++) {
-    invalidP.push_back(2.0 * (i + 1));
+    invalidP.push_back(2.0 * radius);
   }
 
-  if (!testBox->Contains(validP)) {
+  if (!testSphere->Contains(validP)) {
     passed = false;
-    message = message + "\n\tNBox does not contain valid point.\n";
+    message = message + "\n\tNSphere does not contain valid point.\n";
   } 
 
-  if (testBox->Contains(invalidP)) {
+  if (testSphere->Contains(invalidP)) {
     passed = false;
-    message = message + "\n\tNBox contains invalid point.\n";
+    message = message + "\n\tNSphere contains invalid point.\n";
   }
 
   if (passed) {
-    message = "NBox Contains: PASSED!\n";
+    message = "NSphere Contains: PASSED!\n";
   } else {
-    message = "NBox Contains: Failed :(\n" + message;
+    message = "NSphere Contains: Failed :(\n" + message;
   }
 
   return std::make_pair(passed, message);
@@ -151,25 +152,26 @@ NBoxTest::TestContains() {
 } 
 
 
-typename NBoxTest::
+typename NSphereTest::
 TestResult
-NBoxTest::TestClearance() {
+NSphereTest::TestClearance() {
 
   int dimension = 3;
-  NBox* testBox = Construct(dimension);
+  int radius = 1;
+  NSphere* testSphere = Construct(dimension, radius);
 
   bool passed = true;
   std::string message = "";
 
   // the origin point, whose clearance
-  // should be equal to 1
+  // should be equal to the radius
   std::vector<double> testP;
   for (int i = 0; i < dimension; i++) {
     testP.push_back(0);
   }
 
-  double expectedClearance = 1;
-  double actualClearance = testBox -> Clearance(testP);
+  double expectedClearance = radius;
+  double actualClearance = testSphere -> Clearance(testP);
 
   if (expectedClearance != actualClearance) {
     passed = false;
@@ -177,39 +179,44 @@ NBoxTest::TestClearance() {
   }
 
   if (passed) {
-    message = "NBox Clearance: PASSED!\n";
+    message = "NSphere Clearance: PASSED!\n";
   } else {
-    message = "NBox Clearance: Failed :(\n" + message;
+    message = "NSphere Clearance: Failed :(\n" + message;
   }
 
   return std::make_pair(passed, message);
 
 } 
 
-typename NBoxTest::
+typename NSphereTest::
 TestResult
-NBoxTest::TestClearancePoint() {
+NSphereTest::TestClearancePoint() {
 
   int dimension = 3;
-  NBox* testBox = Construct(dimension);
+  int radius = 1;
+  NSphere* testsphere = Construct(dimension, radius);
 
   bool passed = true;
   std::string message = "";
 
-  // the origin point, whose clearance
-  // point should be equal to (-1, 0, 0, ...)
+  // note: the clearance point of the origin point would be
+  // (-nan, -nan, ...)
+
+  // a point on the surface of the sphere
+  // whose clearance point should be itself
   std::vector<double> testP;
-  for (int i = 1; i <= dimension; i++) {
+  testP.push_back(radius);
+  for (int i = 1; i < dimension; i++) {
     testP.push_back(0);
   }
 
   std::vector<double> expectedClearancePoint;
-  expectedClearancePoint.push_back(1);
+  expectedClearancePoint.push_back(radius);
   for (int i = 1; i < dimension; i++) {
     expectedClearancePoint.push_back(0);
   }
 
-  vector<double> actualClearancePoint = testBox -> ClearancePoint(testP);
+  vector<double> actualClearancePoint = testsphere -> ClearancePoint(testP);
 
   if (expectedClearancePoint != actualClearancePoint) {
     passed = false;
@@ -217,9 +224,9 @@ NBoxTest::TestClearancePoint() {
   }
 
   if (passed) {
-    message = "NBox Clearance point: PASSED!\n";
+    message = "NSphere Clearance point: PASSED!\n";
   } else {
-    message = "NBox Clearance point: Failed :(\n" + message;
+    message = "NSphere Clearance point: Failed :(\n" + message;
   }
 
   return std::make_pair(passed, message);
@@ -227,29 +234,30 @@ NBoxTest::TestClearancePoint() {
 } 
 
 
-typename NBoxTest::
+typename NSphereTest::
 TestResult
-NBoxTest::TestSample() {
+NSphereTest::TestSample() {
 
   int dimension = 3;
-  NBox* testBox = Construct(dimension);
+  int radius = 1;
+  NSphere* testsphere = Construct(dimension, radius);
 
   bool passed = true;
   std::string message = "";
 
-  // sample 100 random points and test if they lie within the box
+  // sample 100 random points and test if they lie within the sphere
   for (int i = 0; i < 100; i++) {
-    vector<double> randomSamplePoint = testBox -> Sample();
-    if (!testBox -> Contains(randomSamplePoint)) {
+    vector<double> randomSamplePoint = testsphere -> Sample();
+    if (!testsphere -> Contains(randomSamplePoint)) {
       passed = false;
-      message = message + "\n\tSampled point not in the box\n";
+      message = message + "\n\tSampled point not in the sphere\n";
     }
   }
 
   if (passed) {
-    message = "NBox Sample: PASSED!\n";
+    message = "NSphere Sample: PASSED!\n";
   } else {
-    message = "NBox Sample: Failed :(\n" + message;
+    message = "NSphere Sample: Failed :(\n" + message;
   }
 
   return std::make_pair(passed, message);
@@ -259,21 +267,18 @@ NBoxTest::TestSample() {
 
 /*---------------------------- Helpers --------------------------*/
 
-NBox* 
-NBoxTest::Construct(int dimension) {
-  // define a valid n dimensional box centered at origin with range (i - 1, i + 1)
-  NBox* testBox = new NBox(dimension);
-  
-  for (int i = 0; i < dimension; i++) {
-    testBox->SetRange(i, -i - 1, i + 1);
-  }
+NSphere* 
+NSphereTest::Construct(int dimension, int radius) {
 
-  return testBox;
+  // define a valid n dimensional sphere centered at origin with a given radius
+  NSphere* testSphere = new NSphere(dimension, radius);
+
+  return testSphere;
 
 }
 
 void 
-NBoxTest::RunTestMessage(TestResult (*inputTestFunction)()) {
+NSphereTest::RunTestMessage(TestResult (*inputTestFunction)()) {
   TestResult testResult = inputTestFunction();
   std::cout << "PASSED: "<< testResult.first << std::endl << testResult.second;
 }

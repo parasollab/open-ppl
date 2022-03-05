@@ -4,6 +4,8 @@
 #include "Testing/TestBaseObject.h"
 #include "Utilities/XMLNode.h"
 #include "Testing/Geometry/Shapes/NBoxTest.h"
+#include "Testing/Geometry/Shapes/NSphereTest.h"
+#include "Testing/Geometry/Shapes/NSphericalShellTest.h"
 
 class GeometryTests : public TestBaseObject {
   public:
@@ -33,6 +35,8 @@ class GeometryTests : public TestBaseObject {
   private:
 
     NBoxTest* m_nBoxTest{nullptr};
+    NSphereTest* m_nSphereTest{nullptr};
+    NSphericalShellTest* m_nSphericalShellTest{nullptr};
 };
 
 /*--------------------------- Construction ---------------------------*/
@@ -49,9 +53,18 @@ GeometryTests::
 typename GeometryTests::TestResult
 GeometryTests::
 RunTest() {
-  m_nBoxTest = new NBoxTest();
-  return m_nBoxTest->RunTest();
+  // m_nBoxTest = new NBoxTest();
+  // return m_nBoxTest->RunTest();
+
+  // m_nSphereTest = new NSphereTest();
+  // return m_nSphereTest->RunTest();
+
+  m_nSphericalShellTest = new NSphericalShellTest();
+  return m_nSphericalShellTest->RunTest();
+
   delete m_nBoxTest;
+  delete m_nSphereTest;
+  delete m_nSphericalShellTest;
 }
 
 /*--------------------------------------------------------------------*/
