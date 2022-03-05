@@ -85,6 +85,24 @@ ComputeGoalBiasHeuristic() {
       this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
 
+  GraphType* inverse = new GraphType(nullptr);
+
+  for(auto vit = g->begin(); vit != g->end(); vit++) {
+    auto vid = inverse->AddVertex(vit->property());
+    if(vid != vit->descriptor())
+      throw RunTimeException(WHERE) << "Mismatched graphs.";
+  }
+
+  for(auto vit = g->begin(); vit != g->end(); vit++) {
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+      auto source = eit->target();
+      auto target = eit->source();
+      auto edge = eit->property();
+  
+      inverse->AddEdge(source,target,edge);
+    }
+  }
+
   auto c = this->GetPlan()->GetCoordinator();
   auto prob = this->GetMPProblem();
   auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
@@ -119,6 +137,29 @@ ComputeGoalBiasHeuristic() {
     }
   }
 
+  if(m_debug) {
+    std::cout << "Single object mode graph details" << std::endl;
+    for(auto vit = g->begin(); vit != g->end(); vit++) {
+      std::cout <<  "Vertex: " << vit->descriptor() << std::endl;
+      auto vertex = vit->property();
+      for(auto kv : vertex) {
+        auto robot = kv.second.robot;
+        std::cout << kv.first->GetLabel() << " ";
+        if(robot) {
+          std::cout << "is held by: " << robot->GetLabel() << std::endl;
+        }
+        else {
+          auto boundary = kv.second.terrain->GetBoundaries()[0].get();
+          std::cout << "is at " << boundary->GetCenter() << std::endl;
+        }
+      }
+      for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+        std::cout << "\t-> " << eit->target() << std::endl;
+      }
+    }
+  }
+
+
   auto goalVID = g->GetVID(goalMode);
   if(goalVID == INVALID_VID)
     throw RunTimeException(WHERE) << "Failed to find or construct goal mode.";
@@ -136,7 +177,7 @@ ComputeGoalBiasHeuristic() {
   );
 
   // Compute distance to goal for each vertex in g
-  m_goalBiasCosts = DijkstraSSSP(g,{goalVID},cost2goWeight).distance;
+  m_goalBiasCosts = DijkstraSSSP(inverse,{goalVID},cost2goWeight).distance;
 
   std::vector<std::pair<double,size_t>> elems;
 
@@ -291,7 +332,8 @@ SelectMode() {
       if(histories.empty())
         continue;
 
-      auto index = LRand() % histories.size();
+      //auto index = LRand() % histories.size();
+      size_t index = 0;
       auto hid = histories[index];
 
       if(m_debug) {

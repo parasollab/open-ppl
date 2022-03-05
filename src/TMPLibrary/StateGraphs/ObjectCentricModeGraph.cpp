@@ -883,6 +883,16 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
         Formation* formation = nullptr;
 
         if(robot) {
+
+          // Check if robot can reach region or robot
+          auto oldModeInfo = mode[object];
+          if(oldModeInfo.robot and !IsReachable(oldModeInfo.robot,robot)) {
+            return;
+          }
+          else if(oldModeInfo.terrain and !IsReachable(mode[object].terrain,robot)) {
+            return;
+          }
+
           formation = f->GenerateFormation(temp);
           newMode[object] = ModeInfo(robot,formation,nullptr);
         }
@@ -917,6 +927,8 @@ ApplyEdge(ObjectModeSwitch _edge, VID _source,
     for(auto partial : partials) {
       for(const auto& terrain : terrainMap.at(object->GetCapability())) {
         // If reachable and terrain has capacity
+        if(!IsReachable(&terrain,mode[object].robot))
+          continue;
         partial[object] = ModeInfo(nullptr,nullptr,&terrain);
         newPartials.push_back(partial);
       }
