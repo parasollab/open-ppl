@@ -7,6 +7,7 @@
 #include "TMPLibrary/TMPStrategies/BasicHCR.h"
 #include "TMPLibrary/TMPStrategies/NextBestSearch.h"
 #include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
+#include "TMPLibrary/TMPStrategies/BasicTMPStrategyMethod.h"
 
 // PoIPlacementMethods to include
 
@@ -45,6 +46,7 @@ struct TMPTraits {
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
     BasicHCR,
+    BasicTMPStrategyMethod,
     NextBestSearch,
 		SimpleMotionMethod
       > TMPStrategyMethodList;
