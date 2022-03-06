@@ -274,7 +274,10 @@ Run(Plan* _plan) {
     CheckForModeTransition(aid,history);
 
     // Check if Qnew is a goal configuration and update the path if so
-    CheckForGoal(aid);
+    if(CheckForGoal(aid)) {
+      //TODO::Save plan in this->GetPlan();
+      return true;
+    }
   }
 
   return false;
@@ -1502,7 +1505,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
   }
 }
 
-void
+bool
 SimultaneousMultiArmEvaluator::
 CheckForGoal(size_t _aid) {
   auto plan = this->GetPlan();
@@ -1527,13 +1530,15 @@ CheckForGoal(size_t _aid) {
         auto robot = c->GetRobot();
         auto cfg = gcfg.GetRobotCfg(robot);
         if(!c->Satisfied(cfg))
-          return;
+          return false;
       }
     }
   }
 
-  std::cout << "FOUND GOAL STATE AT " << gcfg.PrettyPrint() << std::endl;
-  exit(1);
+  if(m_debug) {
+    std::cout << "FOUND GOAL STATE AT " << gcfg.PrettyPrint() << std::endl;
+  }
+  return true;
 }
 
 std::vector<GroupCfg>

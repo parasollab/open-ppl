@@ -140,7 +140,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     void CheckForModeTransition(size_t _aid, size_t _history);
 
-    void CheckForGoal(size_t _aid);
+    bool CheckForGoal(size_t _aid);
 
     std::vector<GroupCfg> SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID);
 
