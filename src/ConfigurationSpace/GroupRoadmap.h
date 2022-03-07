@@ -130,6 +130,11 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     using RoadmapGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
+    /// @param _source The source vertex.
+    /// @param _target The target vertex.
+    virtual void DeleteEdge(const VID _source, const VID _target) noexcept override;
+
+    /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
     virtual void DeleteEdge(EI _iterator) noexcept override;
 
@@ -370,6 +375,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // Execute post-add hooks.
     this->ExecuteAddEdgeHooks(ei);
 
+    this->m_predecessors[_target].insert(_source);
     ++m_timestamp;
   }
 }
@@ -417,6 +423,8 @@ AddVertex(const Vertex& _v) noexcept {
 
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(cfg);
+  this->m_predecessors[vid];
+  this->m_allVIDs.insert(vid);
   ++m_timestamp;
 
   // Execute post-add hooks.
@@ -474,6 +482,24 @@ DeleteVertex(const VID _v) noexcept {
 template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
+DeleteEdge(const VID _source, const VID _target) noexcept {
+  // Find the edge and crash if it isn't found.
+  const ED edgeDescriptor(_source, _target);
+  VI dummy;
+  EI edgeIterator;
+
+  const bool found = this->find_edge(edgeDescriptor, dummy, edgeIterator);
+  if(!found)
+    throw RunTimeException(WHERE) << "Edge (" << _source << ", " << _target
+                                  << ") does not exist.";
+
+  DeleteEdge(edgeIterator);
+}
+
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
   // Execute pre-delete hooks and update vizmo debug.
   this->ExecuteDeleteEdgeHooks(_iterator);
@@ -486,6 +512,12 @@ DeleteEdge(EI _iterator) noexcept {
 
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());
+
+  // Remove predessors as appropriate.
+  const VID source = _iterator->source(),
+            target = _iterator->target();
+
+  this->m_predecessors[target].erase(source);
   ++m_timestamp;
 }
 

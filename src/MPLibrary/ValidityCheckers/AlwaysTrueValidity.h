@@ -17,6 +17,8 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction
@@ -33,6 +35,8 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _callName) override;
 
+    bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, 
+        const std::string& _caller) override;
     ///@}
 };
 
@@ -61,6 +65,12 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
   return true;
 }
 
+template <typename MPTraits>
+bool
+AlwaysTrueValidity<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+  return true;
+}
 /*----------------------------------------------------------------------------*/
 
 #endif
