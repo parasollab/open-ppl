@@ -72,7 +72,7 @@ Initialize() {
   //  SampleTransition(mode, n);
   //}
 
-  Run();
+  //Run();
 
 }
 
@@ -276,10 +276,12 @@ Run(Plan* _plan) {
     // Check if Qnew is a goal configuration and update the path if so
     if(CheckForGoal(aid)) {
       //TODO::Save plan in this->GetPlan();
+      stats->SetStat("Success",1);
       return true;
     }
   }
 
+  stats->SetStat("Success",0);
   return false;
 }
 
