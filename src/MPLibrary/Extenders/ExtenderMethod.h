@@ -78,6 +78,8 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///         at least the minimum distance away from the starting point.
     virtual bool Extend(const CfgType& _start, const CfgType& _end,
         CfgType& _new, LPOutput<MPTraits>& _lp) = 0;
+    ///@example Extenders_UseCase.cpp
+    /// This is an example of how to use the extender methods.
 
     /// An optional version if CDInfo is desired. Not required to implement.
     virtual bool Extend(const CfgType& _start, const CfgType& _end,

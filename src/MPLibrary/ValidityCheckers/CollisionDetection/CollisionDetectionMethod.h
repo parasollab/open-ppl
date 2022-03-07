@@ -58,6 +58,8 @@ class CollisionDetectionMethod {
         const GMSPolyhedron& _polyhedron2,
         const mathtool::Transformation& _transformation2,
         CDInfo& _cdInfo);
+    ///@example CollisionDetection_UseCase.cpp
+    /// This is an example of how to use the collision detection methods.
 
     /// Check if a point is inside of a polyhedron.
     /// @param _point          The point to check.

@@ -112,6 +112,8 @@ class RoadmapGraph : public
     ///@name Construction
     ///@{
 
+    /// Construct a roadmap for a given robot.
+    /// @param _r The given robot.
     RoadmapGraph(Robot* const _r);
 
     ///@}
@@ -119,17 +121,32 @@ class RoadmapGraph : public
     ///@{
     /// Move and copy operations do not copy hook functions.
 
+    /// Construct a copy of the given roadmap.
+    /// @param _r The given roadmap.
     RoadmapGraph(const RoadmapGraph& _r);
+    /// Construct a copy of the given roadmap.
+    /// @param _r The given roadmap.
     RoadmapGraph(RoadmapGraph&& _r);
 
+    /// Copy the given roadmap into the current.
+    /// @param _r The given roadmap.
     RoadmapGraph& operator=(const RoadmapGraph& _r);
+    /// Copy the given roadmap into the current.
+    /// @param _r The given roadmap.
     RoadmapGraph& operator=(RoadmapGraph&& _r);
 
     ///@}
     ///@name Equality
     ///@{
 
+    /// Check if the current and given roadmaps are equal.
+    /// @param _r The given roadmap.
+    /// @return True is equal, false otherwise.
     bool operator==(const RoadmapGraph& _r) const noexcept;
+
+    /// Check if the current and given roadmaps are unequal.
+    /// @param _r The given roadmap.
+    /// @return True is unequal, false otherwise.
     bool operator!=(const RoadmapGraph& _r) const noexcept;
 
     ///@}
@@ -142,12 +159,12 @@ class RoadmapGraph : public
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept;
 
-    /// Add a new unique vertex to the graph with a designated descriptor. If it
-    /// already exists or the descriptor is already in use, a warning will be
-    /// printed to cerr.
-    /// @param _vid The desired descriptor.
-    /// @param _v The vertex property.
-    /// @return A new VID of the added vertex, or the VID of the existing vertex.
+    // Add a new unique vertex to the graph with a designated descriptor. If it
+    // already exists or the descriptor is already in use, a warning will be
+    // printed to cerr.
+    // @param _vid The desired descriptor.
+    // @param _v The vertex property.
+    // @return A new VID of the added vertex, or the VID of the existing vertex
     //virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
 
     /// Add a vertex to the graph without checking for uniqueness.
@@ -282,6 +299,12 @@ class RoadmapGraph : public
     /// @return True if the edge was located.
     bool GetEdge(const VID _source, const VID _target, EI& _ei) noexcept;
 
+    /// Retrieve an edge from the graph.
+    /// @param _source The source node VID.
+    /// @param _target The target node VID.
+    /// @param _ei An edge iterator, set to the specified edge if found or end
+    ///            otherwise.
+    /// @return True if the edge was located.
     /// @overload For const edge iterator.
     bool GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept;
 

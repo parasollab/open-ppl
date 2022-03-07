@@ -73,7 +73,18 @@ class PathType final {
     template <typename MPLibrary>
     const std::vector<CfgType> FullCfgs(MPLibrary* const _lib) const;
 
-		size_t TimeSteps() const;
+    /// Get the current full Cfg path with wait times. Steps are spaced one
+    /// environment resolution apart. This is not cached due to its size and
+    /// infrequent usage.
+    /// @param _lib The planning library to use.
+    /// @return The full path of configurations, including local-plan
+    ///         intermediates between the roadmap nodes and waiting.
+    template <typename MPLibrary>
+    const std::vector<CfgType> FullCfgsWithWait(MPLibrary* const _lib) const;
+
+    /// Get the number of timesteps calculated to traverse the path,
+    /// including waiting times.
+    size_t TimeSteps() const;
 
     /// Append another path to the end of this one.
     /// @param _p The path to append.
@@ -100,9 +111,18 @@ class PathType final {
     /// Clear cached data, but leave the VIDs.
     void FlushCache();
 
-		void SetFinalWaitTimeSteps(const size_t& _timeSteps);
+    /// Set the number of timesteps to wait after traversal of the path.
+    /// @param _timeSteps The number of desired timesteps.
+    void SetFinalWaitTimeSteps(const size_t& _timeSteps);
 
-		const size_t GetFinalWaitTimeSteps() const;
+    /// Get the number of timesteps to wait after traversal of the path.
+    const size_t GetFinalWaitTimeSteps() const;
+
+    /// Set the wait times at each vertex in path
+    /// Used in Safe Interval Path Planning
+    void SetWaitTimes(std::vector<size_t> _waitTimes);
+
+    std::vector<size_t> GetWaitTimes();
 
     ///@}
 
@@ -257,6 +277,53 @@ FullCfgs(MPLibrary* const _lib) const {
 }
 
 template <typename MPTraits>
+template <typename MPLibrary>
+const std::vector<typename MPTraits::CfgType>
+PathType<MPTraits>::
+FullCfgsWithWait(MPLibrary* const _lib) const {
+  if(m_vids.empty())
+    return std::vector<CfgType>();
+
+  if(m_waitingTimesteps.empty())
+    return FullCfgs(_lib);
+
+  // Insert the first vertex.
+  size_t vid = m_vids.front();
+  CfgType vertex = m_roadmap->GetVertex(vid);
+  std::vector<CfgType> out = {vertex};
+
+  // Insert first vertex however many timesteps it waits
+  //for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
+  for(size_t i = 0; i < m_waitingTimesteps[0]; ++i) {
+    out.push_back(vertex);
+  }
+
+  auto cnt = 1;
+  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
+    // Insert intermediates between vertices.
+
+    std::vector<CfgType> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    out.insert(out.end(), edge.begin(), edge.end());
+
+    // Insert the next vertex.
+    vid = *(it+1);
+    vertex = m_roadmap->GetVertex(vid);
+    out.push_back(vertex);
+    for(size_t i = 0; i < m_waitingTimesteps[cnt]; ++i) {
+      out.push_back(vertex);
+    }
+
+    cnt++;
+  }
+
+  auto last = out.back();
+  for(size_t i = 0; i < m_finalWaitTimeSteps; i++) {
+    out.push_back(last);
+  }
+  return out;
+}
+
+template <typename MPTraits>
 size_t
 PathType<MPTraits>::
 TimeSteps() const {
@@ -274,6 +341,9 @@ TimeSteps() const {
 		timesteps += edge.GetTimeSteps();
   }
 	timesteps += m_finalWaitTimeSteps;
+  for(auto w : m_waitingTimesteps) {
+    timesteps += w;
+  }
   return timesteps;
 }
 
@@ -341,6 +411,7 @@ PathType<MPTraits>::
 Clear() {
   FlushCache();
   m_vids.clear();
+  m_waitingTimesteps.clear();
 }
 
 
@@ -365,6 +436,26 @@ const size_t
 PathType<MPTraits>::
 GetFinalWaitTimeSteps() const {
 	return m_finalWaitTimeSteps;
+}
+
+template <typename MPTraits>
+void
+PathType<MPTraits>::
+SetWaitTimes(std::vector<size_t> _waitTimes) {
+  m_waitingTimesteps = _waitTimes;
+
+  // Check to make sure that size matches path length
+  if(m_waitingTimesteps.size() != m_vids.size()) {
+    throw RunTimeException(WHERE) << "Size of timestep vector does not "
+                                  << "match path length";
+  }
+}
+
+template <typename MPTraits>
+std::vector<size_t>
+PathType<MPTraits>::
+GetWaitTimes() {
+  return m_waitingTimesteps;
 }
 /*--------------------------------- Helpers ----------------------------------*/
 

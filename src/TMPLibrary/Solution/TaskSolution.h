@@ -5,7 +5,7 @@
 
 #ifndef PPL_TEST_TRAITS_H_
   #include "Traits/CfgTraits.h"
-#else 
+#else
   #include "Traits/TestTraits.h"
 #endif
 
@@ -32,22 +32,40 @@ class TaskSolution {
     ///@name Accessors
     ///@{
 
+    /// Get Task
+    /// @return Semantic task.
     SemanticTask* GetTask();
 
+    /// Set Robot
+    /// @param  _robot Robot.
     void SetRobot(Robot* _robot);
 
+    /// Get Robot
+    /// @return Robot.
     Robot* GetRobot();
 
+    /// Set Robot Group
+    /// @param _group.
     void SetRobotGroup(RobotGroup* _group);
 
+    /// Get Robot Group
+    /// @return Robot group.
     RobotGroup* GetRobotGroup();
 
+    /// Set Motions Solution
+    /// @param _solution.
     void SetMotionSolution(MPSolution* _solution);
 
+    /// Get Motions Solution
+    /// @return Solution.
     MPSolution* GetMotionSolution();
 
+    /// Set Start Time
+    /// @param _startTime.
     void SetStartTime(double _startTime);
 
+    /// Get Start Time
+    /// @return Start time.
     double GetStartTime();
 
     ///@}

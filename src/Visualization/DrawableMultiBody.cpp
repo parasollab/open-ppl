@@ -99,14 +99,14 @@ draw_select() {
 void
 DrawableMultiBody::
 draw_selected() {
-  /// @TODO
+  /// @todo
 }
 
 
 void
 DrawableMultiBody::
 draw_highlighted() {
-  /// @TODO
+  /// @todo
 }
 
 

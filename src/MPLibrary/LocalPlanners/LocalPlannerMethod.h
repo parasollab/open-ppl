@@ -88,6 +88,8 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     virtual bool IsConnected(const CfgType& _start, const CfgType& _end,
         CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false) = 0;
+    ///@example LocalPlanner_UseCase.cpp
+    /// This is an example of how to use the local planner methods.
 
     /// This version does not return a collision node.
     /// @overload

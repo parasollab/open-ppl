@@ -20,10 +20,10 @@ class TaskDecomposerMethod : public TMPBaseObject {
     ///@}
     ///@name Interface
     ///@{
-/*
- *  //TODO: Convert this to semantic task
-    virtual void BreakupTask(WholeTask* _wholeTask);
-*/
+
+   //@todo: Convert this to semantic task
+    // virtual void BreakupTask(WholeTask* _wholeTask);
+
     ///@}
 };
 

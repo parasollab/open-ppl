@@ -11,7 +11,7 @@ template <typename MPTraits>
 class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
   public:
 
-    enum Operator { LT , LEQ, GT, GEQ, MOD };
+    enum Operator { LT , LEQ, GT, GEQ, MOD }; ///< The supported operators
 
     ConditionalEvaluator(Operator _operator = LT, string _metric = "",
         double _value = 1.0);
@@ -24,9 +24,9 @@ class ConditionalEvaluator : public MapEvaluatorMethod<MPTraits> {
 
   protected:
 
-    Operator m_operator;
-    string m_metric;
-    double m_value;
+    Operator m_operator; ///< The operator to use
+    string m_metric; ///< The metric to evaluate
+    double m_value; ///< The numeric condition
 };
 
 

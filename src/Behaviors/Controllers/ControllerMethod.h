@@ -47,6 +47,8 @@ class ControllerMethod {
 
     /// Create a copy of this controller for another robot. This is provided so
     /// that we can copy controllers without knowing their derived type.
+    /// @param _r The robot receiving the cloned controller.
+    /// @return The cloned controller.
     virtual std::unique_ptr<ControllerMethod> Clone(Robot* const _r) const = 0;
 
     virtual ~ControllerMethod();
@@ -115,7 +117,7 @@ class ControllerMethod {
     /// Compute the control that produces the closest force to the ideal.
     /// @param _current The current configuration.
     /// @param _force The desired force in the robot's local frame.
-    /// @return The control whos result is nearest to _force.
+    /// @return The control whose result is nearest to _force.
     virtual Control ComputeNearestControl(const Cfg& _current,
         std::vector<double>&& _force);
 
@@ -123,7 +125,7 @@ class ControllerMethod {
     /// ideal.
     /// @param _current The current configuration.
     /// @param _force The desired force in the robot's local frame.
-    /// @return The control whos result is nearest to _force.
+    /// @return The control whose result is nearest to _force.
     virtual Control ComputeNearestContinuousControl(const Cfg& _current,
         std::vector<double>&& _force);
 
@@ -131,7 +133,7 @@ class ControllerMethod {
     /// ideal.
     /// @param _current The current configuration.
     /// @param _force The desired force in the robot's local frame.
-    /// @return The control whos result is nearest to _force.
+    /// @return The control whose result is nearest to _force.
     virtual Control ComputeNearestDiscreteControl(const Cfg& _current,
         std::vector<double>&& _force);
 
