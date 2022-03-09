@@ -47,6 +47,7 @@
 //path smoothing includes
 
 //connector includes
+#include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
@@ -161,6 +162,7 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+    CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;

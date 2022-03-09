@@ -601,6 +601,8 @@ ValidationFunction(Node& _node) {
                 endT = endTimes[t2];
               }
 
+              stats->IncStat(this->GetNameAndLabel() + "::CollisionFound");
+
               // Temp hack for demo
               endT = std::max(endT,t+100);
 

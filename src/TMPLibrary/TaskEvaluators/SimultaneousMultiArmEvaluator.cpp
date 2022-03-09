@@ -808,8 +808,6 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend");
 
-  auto prob = this->GetMPProblem();
-
   auto taskState = m_taskGraph->GetVertex(_qNear);
   auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
 
@@ -961,12 +959,24 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     return MAX_INT;
 
   // Connect qNew to qNear
+  return ExtendTaskVertices(_qNear, qNew, _history);
+}
+
+size_t
+SimultaneousMultiArmEvaluator::
+ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history) {
+
+  auto prob = this->GetMPProblem();
+  auto env = prob->GetEnvironment();
+
   auto lp = this->GetMPLibrary()->GetLocalPlanner(m_lpLabel);
   GroupLPOutputType lpOut(m_tensorProductRoadmap.get());
   GroupCfg col(m_tensorProductRoadmap.get());
-  auto env = prob->GetEnvironment();
 
-  auto isConnected = lp->IsConnected(cfg,qNew,col,&lpOut,
+  auto taskState = m_taskGraph->GetVertex(_source);
+  auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
+
+  auto isConnected = lp->IsConnected(cfg,_target,col,&lpOut,
                         env->GetPositionRes(),
                         env->GetOrientationRes(),
                         true,false,{});
@@ -976,7 +986,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     double cost = lpOut.m_edge.first.GetIntermediates().size();
 
     // Add vertex to TPR
-    auto vid = m_tensorProductRoadmap->AddVertex(qNew);
+    auto vid = m_tensorProductRoadmap->AddVertex(_target);
 
     // Add edge to TPR
     m_tensorProductRoadmap->AddEdge(taskState.vid,vid,lpOut.m_edge.first);
@@ -991,7 +1001,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     // Add edge to task graph
     TaskEdge edge;
     edge.cost = cost;
-    m_taskGraph->AddEdge(_qNear,tid,edge);
+    m_taskGraph->AddEdge(_source,tid,edge);
 
     // Mark history of this vertex
     m_historyVertices[_history].insert(tid);
@@ -1168,7 +1178,59 @@ SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
 Rewire(VID _qNew, size_t _history) {
   // TODO::Perform the rewire action
-  return _qNew;
+
+  //auto lib = this->GetMPLibrary();
+  //auto dm = lib->GetDistanceMetric(m_dmLabel);
+
+  // Get individual roadmap cfgs
+  auto newTaskState = m_taskGraph->GetVertex(_qNew);
+  auto newCfg = m_tensorProductRoadmap->GetVertex(newTaskState.vid);
+  auto newCfgs = SplitTensorProductVertex(newCfg,newTaskState.mode);
+
+  // Collect neighbors 
+  std::unordered_set<size_t> neighbors;
+  for(auto tid : m_historyVertices[_history]) {
+    auto taskState = m_taskGraph->GetVertex(tid);
+
+    if(taskState.mode != newTaskState.mode) 
+      throw RunTimeException(WHERE) << "Mismatched mdoes within same history vertices.";
+
+    // Check that there is an edge in the implicit tensor product roadmap
+    auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
+    auto cfgs = SplitTensorProductVertex(cfg,taskState.mode);
+    bool isEdge = true;
+
+    for(size_t i = 0; i < cfgs.size(); i++) {
+      auto rm = cfgs[i].GetGroupRoadmap();
+      auto vid1 = rm->GetVID(cfgs[i]);
+      auto vid2 = rm->GetVID(newCfgs[i]);
+
+      if(!rm->IsEdge(vid1,vid2)) {
+        isEdge = false;
+        break;
+      }
+    }
+
+    if(!isEdge)
+      continue;
+    
+    // Check if edge is a valid transition
+    auto newVID = ExtendTaskVertices(tid, newCfg, _history);
+    if(newVID == MAX_INT)
+      continue;
+    
+    neighbors.insert(tid);
+  }
+
+  //TODO::Perform Shortest path on task graph (tree) to get distance from
+  //      root to each of the neighbors.
+
+  //TODO::Attempt to rewire qNew with a better parent
+
+  //TODO::Attempt to rewire the neighbors through qNew
+
+  size_t qBest = MAX_INT;
+  return qBest;
 }
     
 size_t

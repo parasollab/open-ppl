@@ -132,6 +132,8 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     TID Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic);
 
+    TID ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history);
+
     GroupCfg GetHeuristicDirection(size_t _mode, std::unordered_map<Robot*,size_t> _heuristic);
 
     TID Rewire(TID _qNew, size_t _history);

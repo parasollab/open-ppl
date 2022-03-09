@@ -182,7 +182,11 @@ GroupSolution::
 GroupSolution(RobotGroup* const _group, MPSolutionType* const _solution)
   : freeMap(new GroupRoadmapType(_group, _solution)),
     obstMap(new GroupRoadmapType(_group, _solution)),
-    path   (new GroupPathType(freeMap.get())) { }
+    path   (new GroupPathType(freeMap.get())) { 
+  auto stats = _solution->GetStatClass();
+  freeMap->SetCCTracker(stats);
+  obstMap->SetCCTracker(stats);
+}
 
 
 template <typename MPTraits>

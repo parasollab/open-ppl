@@ -69,7 +69,20 @@ class CCsConnector: public ConnectorMethod<MPTraits> {
         const VertexSet* const _targetSet = nullptr,
         OutputIterator<RoadmapType>* const _collision = nullptr) override;
 
+    virtual void ConnectImpl(GroupRoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<GroupRoadmapType>* const _collision = nullptr) override;
+
     using ConnectorMethod<MPTraits>::m_neighborBuffer;
+
+    ///@}
+    ///@name Helpers
+    ///@{
+
+    template <typename AbstractRoadmapType>
+    void ConnectImplImpl(AbstractRoadmapType* const _r, const VID _source,
+        const VertexSet* const _targetSet = nullptr,
+        OutputIterator<AbstractRoadmapType>* const _collision = nullptr);
 
     ///@}
 
@@ -121,6 +134,28 @@ CCsConnector<MPTraits>::
 ConnectImpl(RoadmapType* const _r, const VID _source,
     const VertexSet* const _targetSet,
     OutputIterator<RoadmapType>* const _collision) {
+  ConnectImplImpl(_r, _source, _targetSet, _collision);
+}
+
+
+template <typename MPTraits>
+void
+CCsConnector<MPTraits>::
+ConnectImpl(GroupRoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<GroupRoadmapType>* const _collision) {
+  ConnectImplImpl(_r, _source, _targetSet, _collision);
+}
+
+/*---------------------------- Helper Functions ------------------------------*/
+
+template <typename MPTraits>
+template <typename AbstractRoadmapType>
+void
+CCsConnector<MPTraits>::
+ConnectImplImpl(AbstractRoadmapType* const _r, const VID _source,
+    const VertexSet* const _targetSet,
+    OutputIterator<AbstractRoadmapType>* const _collision) {
   // Find a representative for each CC.
   auto ccTracker = _r->GetCCTracker();
   const VertexSet representatives = ccTracker->GetRepresentatives();
@@ -166,7 +201,6 @@ ConnectImpl(RoadmapType* const _r, const VID _source,
     std::cout << "\tThere are now " << ccTracker->GetNumCCs() << " CCs."
               << std::endl;
 }
-
 /*----------------------------------------------------------------------------*/
 
 #endif
