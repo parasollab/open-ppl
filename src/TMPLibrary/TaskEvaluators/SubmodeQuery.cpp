@@ -530,6 +530,9 @@ HyperpathQuery() {
   // Compute heuristic values
   ComputeHeuristicValues();
 
+  if(m_heuristicMap.at(0) == 0)
+    throw RunTimeException(WHERE) << "Start not connected to goal.";
+
   // Define hyperpath query functors
   SSSHPTerminationCriterion termination(
     [this](size_t& _vid, const MBTOutput& _mbt) {

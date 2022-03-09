@@ -175,6 +175,11 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const CfgType& _cfg) {
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   if(m_cfgIntervals[&_cfg].empty()) {
     const std::vector<CfgType> cfg{_cfg};
     m_cfgIntervals[&_cfg] = ComputeSafeIntervals(cfg);
@@ -187,6 +192,11 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const GroupCfgType& _cfg) {
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   if(m_groupCfgIntervals[&_cfg].empty()) {
     const std::vector<GroupCfgType> cfg{_cfg};
     m_groupCfgIntervals[&_cfg] = ComputeSafeIntervals(cfg);
@@ -200,6 +210,11 @@ typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const WeightType& _weight, const VID _source,
   const VID _target, RoadmapType* _roadmap) {
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   //if(m_edgeIntervals[&_weight].empty()) {
     std::vector<CfgType> edge;
     edge.push_back(_roadmap->GetVertex(_source));
@@ -221,6 +236,11 @@ typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const GroupWeightType& _weight, const VID _source,
   const VID _target, GroupRoadmapType* _roadmap) {
+
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
 
   Intervals intervals;
 

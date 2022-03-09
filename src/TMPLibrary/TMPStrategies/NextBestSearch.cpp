@@ -32,7 +32,7 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
         "Validity checker to use for multirobot collision checking.");
 
   m_safeIntervalLabel = _node.Read("safeIntervalLabel",true,"",
-        "Safe interval tool to use for compute safe intervals of roadmap.");
+        "Safe interval tool to use for compute safe intervals of roadmap.");              
 }
 
 NextBestSearch::
@@ -46,9 +46,14 @@ void
 NextBestSearch::
 PlanTasks() {
 
+  if(m_debug) 
+    std::cout << this->GetNameAndLabel() + "::Starting to PlanTasks." << std::endl;
+
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
+  
+  stats->SetStat(this->GetNameAndLabel() + "::CollisionFound",0);
 
   auto originalDecomp = plan->GetDecomposition();
   auto te = this->GetTaskEvaluator(m_teLabel);
