@@ -68,6 +68,14 @@ PlanTasks() {
   std::vector<Decomposition*> taskSolutions;
 
   while(bestNode.cost > lowerBound) {
+
+    std::cout << "Computing plans. Current upperbound: "
+              << bestNode.cost
+              << ". Current lowerbound: "
+              << lowerBound
+              << "."
+              << std::endl;
+  
     lowerBound = FindTaskPlan(originalDecomp);
     taskSolutions.push_back(plan->GetDecomposition());
 
