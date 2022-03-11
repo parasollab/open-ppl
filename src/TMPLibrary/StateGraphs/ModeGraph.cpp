@@ -360,10 +360,13 @@ SampleTransitions() {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTransitions");
 
+  std::map<size_t,size_t> groundedInstanceTracker;
+
   // For each edge in the mode graph, generate n samples
   for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
 
     auto& hyperarc = kv.second;
+    groundedInstanceTracker[kv.first] = 0;
     
     // Check if hyperarc is a reversed action, and only plan
     // the forward actions as the reverse will also be saved
@@ -420,6 +423,7 @@ SampleTransitions() {
           if(!is->operator()(interaction,goalSet))
             continue;
 
+          groundedInstanceTracker[kv.first] = groundedInstanceTracker[kv.first] + 1;
           // Save interaction paths
           SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap,headModeMap);
           break;
@@ -438,11 +442,22 @@ SampleTransitions() {
           if(!is->operator()(interaction,goalSet))
             continue;
 
+          groundedInstanceTracker[kv.first] = groundedInstanceTracker[kv.first] + 1;
+
           // Save interaction paths
           SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap,headModeMap);
           break;
         }
       }
+    }
+  }
+
+  if(m_debug) {
+    std::cout << "Grounding instance count of each mode hyperarc." << std::endl;
+    for(auto kv : groundedInstanceTracker) {
+      auto hid = kv.first;
+      auto count = kv.second;
+      std::cout << hid << " : " << count << std::endl;
     }
   }
 }

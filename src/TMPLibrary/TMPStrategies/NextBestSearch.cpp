@@ -430,6 +430,11 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
 std::vector<std::pair<SemanticTask*,NextBestSearch::Constraint>>
 NextBestSearch::
 ValidationFunction(Node& _node) {
+
+  if(m_debug) {
+    std::cout << "VALIDATING NODE" << std::endl;
+  }
+
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
