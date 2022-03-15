@@ -46,6 +46,8 @@
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
+#include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
@@ -145,7 +147,9 @@ struct MPTraits {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>
       > MetricMethodList;
 
 

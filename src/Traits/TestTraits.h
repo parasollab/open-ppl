@@ -41,6 +41,9 @@
 #include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
+#include "Testing/MPLibrary/Metrics/NumNodesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/NumEdgesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/TimeMetricTest.h"
 
 //map evaluator includes
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
@@ -126,6 +129,9 @@ struct MPTraits {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
+      NumNodesMetricTest<MPTraits>,
+      NumEdgesMetricTest<MPTraits>,
+      TimeMetricTest<MPTraits>
       > MetricMethodList;
 
 

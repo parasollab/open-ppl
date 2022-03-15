@@ -1,5 +1,5 @@
 #ifndef PPL_METRIC_METHOD_TEST_H
-#define PPL_METRIC_METHOD_TEST_
+#define PPL_METRIC_METHOD_TEST_H
 
 #include "MPLibrary/Metrics/MetricMethod.h"
 #include "Testing/TestBaseObject.h"
