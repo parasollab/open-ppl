@@ -622,7 +622,7 @@ ValidationFunction(Node& _node) {
               stats->IncStat(this->GetNameAndLabel() + "::CollisionFound");
 
               // Temp hack for demo
-              endT = std::max(endT,t+100);
+              //endT = std::max(endT,t+100);
 
               // Create constraints
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
