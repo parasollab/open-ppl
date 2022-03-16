@@ -442,7 +442,8 @@ ValidationFunction(Node& _node) {
   std::vector<SemanticTask*> ordering;
 
   auto lib = this->GetMPLibrary();
-  auto vc = lib->GetValidityChecker(m_vcLabel);
+  auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits<Cfg>>*>(
+              lib->GetValidityChecker(m_vcLabel));
 
   std::unordered_map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
 

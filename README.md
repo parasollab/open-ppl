@@ -1,7 +1,45 @@
 # Parasol Motion Planning Library
 
 The PMPL library is a general code base for studying motion planning algorithms.
+This file lists the package dependencies for PMPL and how to install them.
+> Tested on Ubuntu 20.04
 
+## Requirements
+Required Packages:
+- build-essential
+- libboost-all-dev
+- make
+- cmake
+- libmpfr-dev
+- libeigen3-dev
+- qt4-default
+
+It is recommended to update programs on your system before continuing. However,
+this can sometimes break certain programs that require a specific package
+version, such as a graphics driver and CUDA library.
+
+To update your system, run the following commands:
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+To install the required packages, run the following commands:
+```
+sudo apt-get update
+sudo apt-get install build-essential libboost-all-dev make cmake libmpfr-dev libeigen3-dev
+```
+
+PMPL uses an old version of qt4 that is not available on the standard
+repositories. Please run the following commands to install qt4:
+```
+sudo add-apt-repository -y ppa:rock-core/qt4
+sudo apt-get update
+sudo apt-get install -y qt4-default
+```
+
+
+<!--
 ## Migration from SVN
 
 As part of the migration from SVN, we have separated our examples into their own repository at [pmpl\_envs](https://gitlab.engr.illinois.edu/parasol/envs.git). If you find that an input file you need is missing, please import it from the archived SVN repo to the new envs repo or ask Read for help.
@@ -13,8 +51,6 @@ Another important change is the removal of SVN externals. Our utilities now live
 Note that you generally only need one utilities checkout; multiple working copies of PMPL can and should share the same utilities folder.
 
 If you are working on a branch other than trunk, you may have issues with the utilities versions not matching your branch state. If this occurs, please try to update your branch to use the latest utilities. This should be straight-forward, but if it proves difficult please ask Read for help.
-
-## Requirements
 
 In addition to the dedicated utilities, PMPL requires several other libraries:
 - gcc
@@ -39,15 +75,18 @@ In addition to the dedicated utilities, PMPL requires several other libraries:
 - tetgen
 - tinyxml
 
+-->
 ## Build
 
-To build the traditional PMPL executable, go to `src` and run `make pmpl`.
+To build the traditional PPL executable, go to `src` and run `make pmpl`.
 
 To build the simulator, go to `src` and run `make sim`.
 
+<!--
 ## Usage
 
 **TODO**: Document the various ways to invoke the program.
+-->
 
 ## Tests
 

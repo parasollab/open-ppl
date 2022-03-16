@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <Problem baseFilename="example">
+
+    <Environment filename="3D/3d.env"
+      frictionCoefficient="0" gravity="0 0 0"/>
+
+    <Robot label="boxy" filename="3D/boxy.robot">
+     <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <!-- WARNING Support for multiple constraints is not yet implemented! -->
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+       <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </GoalConstraints>
+    </Task>
+
+  </Problem>
+
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+        pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
+        nShellsColl="0" nShellsFree="1" debug="false"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+    </LocalPlanners>
+
+    <Extenders>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" debug="true"
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="false"
+         graphSearchAlg="dijkstras"/>
+    </MapEvaluators>
+
+
+    <MPStrategies>
+
+      <BasicPRM label="BasicOBPRM" debug="true" querySampler="UniformRandomFree">
+         <Sampler label="OBPRM" number="10" attempts="10"/>
+         <Connector label="Closest"/>
+         <Evaluator label="Query"/>
+       </BasicPRM>
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+
+    <Solver mpStrategyLabel="BasicOBPRM" seed="0"
+      baseFilename="OBPRM" vizmoDebug="true"/>
+
+  </Library>
+
+</MotionPlanning>

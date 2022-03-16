@@ -32,6 +32,7 @@
 
 //sampler includes
 #include "MPLibrary/Samplers/TerrainSampler.h"
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -137,6 +138,7 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
     TerrainSampler<MPTraits>,
+    ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
     //DynamicRegionSampler<MPTraits>,
