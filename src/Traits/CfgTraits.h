@@ -29,11 +29,8 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
-<<<<<<< HEAD
 #include "MPLibrary/Samplers/DynamicRegionSampler.h"
-=======
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
->>>>>>> ce56e887c7d2b2e7e458a5184377c772dd4179a7
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
