@@ -83,7 +83,7 @@ ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxS
   // Parse the boundary data.
   if(!_bbxString.empty()) {
     if(!_pointString.empty()) {
-      throw RunTimeException(WHERE) << "Cannot parse both _pointString and _bbxString"
+      throw RunTimeException(WHERE) << "Cannot parse both _pointString and _bbxString";
     }
     // This is a bounding box constraint.
     std::istringstream bbxStream(_bbxString);
@@ -102,7 +102,7 @@ ParseBoundaryString(Robot* const _r, std::string _pointString, std::string _bbxS
     bbx->ShrinkToPoint(point);
   }
   else {
-    throw RunTimeException(WHERE) << "Cannot parse boundary string without _pointString or _bbxString"
+    throw RunTimeException(WHERE) << "Cannot parse boundary string without _pointString or _bbxString";
   }
 
   m_boundary = std::move(bbx);

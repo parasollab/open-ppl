@@ -22,7 +22,7 @@ class PoIPlacementMethod : public TMPBaseObject {
 
     ///@}
     ///@todo Convert to generic "Place" function
-    void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution);
+    // void virtual PlaceIT(InteractionTemplate* _it, MPSolution* _solution);
 };
 
 /*----------------------------------------------------------------------------*/
