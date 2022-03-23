@@ -32,6 +32,7 @@
 
 //sampler includes
 #include "MPLibrary/Samplers/TerrainSampler.h"
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -60,7 +61,6 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/DRRT.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
-#include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
@@ -137,6 +137,7 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
     TerrainSampler<MPTraits>,
+    ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
     //DynamicRegionSampler<MPTraits>,
@@ -180,7 +181,6 @@ struct MPTraits {
     ConditionalEvaluator<MPTraits>,
     DRRT<MPTraits>,
     GroupQuery<MPTraits>,
-    GroupSIPPMethod<MPTraits>,
     LazyQuery<MPTraits>,
     SIPPMethod<MPTraits>,
     QueryMethod<MPTraits>,

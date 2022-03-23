@@ -57,6 +57,12 @@ class DynamicObstacle {
     /// Set the obstacle start time.
     void SetStartTime(size_t _start);
 
+    /// Get the obstacle end time.
+    /// @return The obstacle's end time
+    const size_t GetEndTime() const noexcept;
+
+    /// Set the obstacle end time.
+    void SetEndTime(size_t _end);
     ///@}
 
   private:
@@ -67,6 +73,7 @@ class DynamicObstacle {
     Robot* m_robot{nullptr}; ///< The obstacle robot.
     std::vector<Cfg> m_path; ///< Assuming 1 cfg per time resolution.
     size_t m_startTime{0}; ///< Time that the path starts at.
+    size_t m_endTime{0}; ///< Time that the path ends at.
 
     ///@}
 

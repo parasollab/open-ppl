@@ -216,7 +216,11 @@ CollisionDetectionValidity(XMLNode& _node)
 
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
-  if(cdLabel == "PQP")
+  if(cdLabel == "BoundingSpheres")
+    m_cdMethod.reset(new BoundingSpheres());
+  else if(cdLabel == "InsideSpheres")
+    m_cdMethod.reset(new InsideSpheres());
+  else if(cdLabel == "PQP")
     m_cdMethod.reset(new PQP());
   else if(cdLabel == "PQP_SOLID")
     m_cdMethod.reset(new PQPSolid());

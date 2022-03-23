@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <Problem>
+    <Environment filename="../Envs/2D/2d.env"/>
+    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="-10 -10"/>
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="10 10"/>
+      </GoalConstraints>
+    </Task>
+  </Problem>
+
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+        pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
+        nShellsColl="0" nShellsFree="1" debug="false"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+    </LocalPlanners>
+
+    <Extenders>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" debug="true"
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="true"/>
+    </MapEvaluators>
+
+    <MPStrategies>
+
+      <BasicPRM label="BasicOBPRM" debug="true" querySampler="UniformRandomFree">
+         <Sampler label="OBPRM" number="10" attempts="10"/>
+         <Connector label="Closest"/>
+         <Evaluator label="Query"/>
+       </BasicPRM>
+
+      <ValidationStrategy label="Test" target="BasicOBPRM" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/OBPRM.0.query.map"/>
+      </ValidationStrategy>
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+
+    <Solver mpStrategyLabel="Test" seed="0"
+      baseFilename="../Scratch/OBPRM"/>
+
+  </Library>
+
+</MotionPlanning>

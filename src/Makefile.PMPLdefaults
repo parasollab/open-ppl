@@ -637,6 +637,7 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
+  MPLibrary/MapEvaluators/SIPPMethod.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \

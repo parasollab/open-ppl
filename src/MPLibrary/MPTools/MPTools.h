@@ -13,9 +13,9 @@
 #include "SkeletonClearanceUtility.h"
 #include "TetGenDecomposition.h"
 #include "TopologicalMap.h"
-#include "TRPTool.h"
+//#include "TRPTool.h"
 #include "ReachabilityUtil.h"
-#include "MPLibrary/MPTools/LKHSearch.h"
+//#include "MPLibrary/MPTools/LKHSearch.h"
 //#include "MPLibrary/LearningModels/SVMModel.h"
 
 
@@ -65,8 +65,8 @@ class MPToolsType final {
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
   LabelMap<TopologicalMap>           m_topologicalMaps;
   LabelMap<SafeIntervalTool>         m_safeIntervalTools;
-  LabelMap<LKHSearch>                m_lkhSearchTools;
-  LabelMap<TRPTool>                  m_trpTools;
+  //LabelMap<LKHSearch>                m_lkhSearchTools;
+  //LabelMap<TRPTool>                  m_trpTools;
   LabelMap<ReachabilityUtil>         m_reachabilityUtils;
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
@@ -188,6 +188,7 @@ class MPToolsType final {
     ///@name LKH Search
     ///@{
 
+    /*
     /// Get an LKH Search by label.
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
@@ -216,6 +217,7 @@ class MPToolsType final {
     void SetTRPTool(const std::string& _label,
         TRPTool<MPTraits>* const _utility);
 
+    */
     ///@}
     ///@name Decompositions
     ///@{
@@ -358,7 +360,7 @@ ParseXML(XMLNode& _node) {
 
       SetSafeIntervalTool(utility->GetLabel(), utility);
     }
-    else if(child.Name() == "LKHSearch") {
+    /*else if(child.Name() == "LKHSearch") {
       auto utility = new LKHSearch<MPTraits>(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -379,7 +381,7 @@ ParseXML(XMLNode& _node) {
             "unique.");
 
       SetTRPTool(utility->GetLabel(), utility);
-    }
+    }*/
     // Below here we are setting defaults rather than creating instances.
     else if(child.Name() == "ReebGraphConstruction") {
       if(parsedReebGraph)
@@ -431,8 +433,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_safeIntervalTools)
     pair.second->Initialize();
-  for(auto& pair : m_lkhSearchTools)
-    pair.second->Initialize();
+  //for(auto& pair : m_lkhSearchTools)
+  //  pair.second->Initialize();
   /// @todo Homogenize trp tool initialization.
   //for(auto& pair : m_trpTools)
   //  pair.second->Initialize();
@@ -465,10 +467,10 @@ MPToolsType<MPTraits>::
     delete pair.second;
   for(auto& pair : m_decompositions)
     delete pair.second;
-  for(auto& pair : m_lkhSearchTools)
-    delete pair.second;
-  for(auto& pair : m_trpTools)
-    delete pair.second;
+  //for(auto& pair : m_lkhSearchTools)
+  //  delete pair.second;
+  //for(auto& pair : m_trpTools)
+  //  delete pair.second;
   for(auto& pair : m_reachabilityUtils)
     delete pair.second;
 }
@@ -566,6 +568,7 @@ SetSafeIntervalTool(const std::string& _label,
 
 /*------------------------------- LKH Search ---------------------------------*/
 
+/*
 template <typename MPTraits>
 LKHSearch<MPTraits>*
 MPToolsType<MPTraits>::
@@ -582,9 +585,11 @@ SetLKHSearch(const std::string& _label,
     LKHSearch<MPTraits>* const _utility) {
   SetUtility(_label, _utility, m_lkhSearchTools);
 }
+*/
 
 /*-------------------------------- TRP Tool ----------------------------------*/
 
+/*
 template <typename MPTraits>
 TRPTool<MPTraits>*
 MPToolsType<MPTraits>::
@@ -601,7 +606,7 @@ SetTRPTool(const std::string& _label,
     TRPTool<MPTraits>* const _utility) {
   SetUtility(_label, _utility, m_trpTools);
 }
-
+*/
 
 /*----------------------------- Decompositions -------------------------------*/
 

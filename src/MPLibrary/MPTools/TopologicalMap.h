@@ -2,6 +2,7 @@
 #define PMPL_TOPOLOGICAL_MAP_H_
 
 #include "MPLibrary/MPBaseObject.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Utilities/Hash.h"
 #include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"
