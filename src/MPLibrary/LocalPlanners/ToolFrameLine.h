@@ -3,6 +3,7 @@
 
 #include "LocalPlannerMethod.h"
 
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/KDLModel.h"
 
 template <typename MPTraits>

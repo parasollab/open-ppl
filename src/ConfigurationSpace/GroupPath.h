@@ -219,6 +219,10 @@ TimeSteps() const {
     m_timesteps += edge.GetTimeSteps();
   }
 
+  for(auto w : m_waitingTimesteps) {
+    m_timesteps += w;
+  }
+
   return m_timesteps;
 }
 

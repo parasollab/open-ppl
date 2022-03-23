@@ -1,6 +1,6 @@
 #include "NextBestSearch.h"
 
-#include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
@@ -181,6 +181,7 @@ ComputeIntervals(GroupRoadmapType* _grm) {
 bool 
 NextBestSearch::
 LowLevelPlanner(Node& _node, SemanticTask* _task) {
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::CBSLowLevelPlanner");
@@ -267,7 +268,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto current = pq.top();
     pq.pop();
     auto task = current.second;
-    auto startTime = current.first;
+    auto startTime = current.first * timeRes;
 
     // Compute new path
     auto path = QueryPath(task,startTime,_node);
@@ -386,13 +387,14 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
         auto cfg = c.second.GetRobotCfg(robot);
         std::vector<Cfg> path = {cfg,cfg,cfg};
         
-        auto duration = c.first.second - c.first.first;
-        for(size_t i = 0; i < duration; i++) {
-          path.push_back(cfg);
-        }
+        //auto duration = c.first.second - c.first.first;
+        //for(size_t i = 0; i < duration; i++) {
+        //  path.push_back(cfg);
+        //}
 
         DynamicObstacle dob(cfg.GetRobot(),path);
         dob.SetStartTime(c.first.first-1);
+        dob.SetEndTime(c.first.second);
         this->GetMPProblem()->AddDynamicObstacle(std::move(dob));
       } 
     }
@@ -400,10 +402,11 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
 
   ComputeIntervals(grm);
 
-  auto q = dynamic_cast<GroupSIPPMethod<MPTraits<Cfg>>*>(
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  auto q = dynamic_cast<SIPPMethod<MPTraits<Cfg>>*>(
     this->GetMPLibrary()->GetMapEvaluator(m_queryLabel)
   );
-  q->SetMinEndtime(lastTimestep);
+  q->SetMinEndTime(double(lastTimestep) * timeRes);
   q->SetStartTime(_startTime);
 
   q->SetEdgeIntervals(m_edgeIntervals);

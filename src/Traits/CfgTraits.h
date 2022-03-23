@@ -61,7 +61,6 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/DRRT.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
-#include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
@@ -182,7 +181,6 @@ struct MPTraits {
     ConditionalEvaluator<MPTraits>,
     DRRT<MPTraits>,
     GroupQuery<MPTraits>,
-    GroupSIPPMethod<MPTraits>,
     LazyQuery<MPTraits>,
     SIPPMethod<MPTraits>,
     QueryMethod<MPTraits>,
