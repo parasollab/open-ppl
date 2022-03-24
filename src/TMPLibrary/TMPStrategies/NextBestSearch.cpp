@@ -258,7 +258,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
   std::set<SemanticTask*> unsolved;
   for(auto kv : _node.solutionMap) {
-    if(solved.count(kv.first))
+    if(solved.count(kv.first) or kv.first == _task)
       continue;
     unsolved.insert(kv.first);
   }
