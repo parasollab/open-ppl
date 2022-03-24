@@ -272,7 +272,9 @@ FullCfgs(MPLibrary* const _lib) const {
     // don't reconstruct the edge when it's for a part that has been placed off
     // to the side, just use the two cfgs. This edge will just be (start, end).
     if(!edge.SkipEdge()) {
-      std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, source, target);
+      auto e = m_roadmap->GetEdge(source,target);
+      auto edge = e.GetIntermediates().empty() ? e.GetIntermediates()
+                                              : _lib->ReconstructEdge(m_roadmap, source, target);
 
       if(!edge.empty()) {
         // Only grab the intermediate cfgs.
