@@ -33,10 +33,7 @@ class GeometryTests : public TestBaseObject {
     ///@}
   
   private:
-
-    NBoxTest* m_nBoxTest{nullptr};
-    NSphereTest* m_nSphereTest{nullptr};
-    NSphericalShellTest* m_nSphericalShellTest{nullptr};
+    vector<TestBaseObject*>* m_tests;
 };
 
 /*--------------------------- Construction ---------------------------*/
@@ -53,18 +50,55 @@ GeometryTests::
 typename GeometryTests::TestResult
 GeometryTests::
 RunTest() {
+  int total = 0, passed = 0, failed = 0;
+  TestResult res;
+  m_tests = new vector<TestBaseObject*>;
+
+  m_tests->push_back(new NBoxTest());
+  m_tests->push_back(new NSphereTest());
+  m_tests->push_back(new NSphericalShellTest());
+
+  for (auto it = m_tests->begin(); it != m_tests->end(); ++it ) {
+    auto test = dynamic_cast<TestBaseObject*>(*it);
+    res = test->RunTest();
+
+    total++;
+
+    if(res.first) {
+      passed++;
+    }
+    else {
+      failed++;
+    }
+  }
+
+  bool success = (failed == 0);
+  std::string message = "COMPLETED TESTS"
+                        "\nTotal: "  + std::to_string(total)  +
+                        "\nPassed: " + std::to_string(passed) +
+                        "\nFailed: " + std::to_string(failed) +
+                        "\n\n\n";
+
+
+  for (auto it = m_tests->begin(); it != m_tests->end(); ++it ) {
+    delete *it;
+  }
+
+  delete m_tests;
+
+  return std::make_pair(success,message);
+
   // m_nBoxTest = new NBoxTest();
-  // return m_nBoxTest->RunTest();
-
   // m_nSphereTest = new NSphereTest();
-  // return m_nSphereTest->RunTest();
+  // m_nSphericalShellTest = new NSphericalShellTest();
 
-  m_nSphericalShellTest = new NSphericalShellTest();
-  return m_nSphericalShellTest->RunTest();
+  // res = m_nBoxTest->RunTest();
+  // res = m_nSphereTest->RunTest();
+  // res = m_nSphericalShellTest->RunTest();
 
-  delete m_nBoxTest;
-  delete m_nSphereTest;
-  delete m_nSphericalShellTest;
+  // delete m_nBoxTest;
+  // delete m_nSphereTest;
+  // delete m_nSphericalShellTest;
 }
 
 /*--------------------------------------------------------------------*/
