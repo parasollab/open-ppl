@@ -273,7 +273,7 @@ FullCfgs(MPLibrary* const _lib) const {
     // to the side, just use the two cfgs. This edge will just be (start, end).
     if(!edge.SkipEdge()) {
       auto e = m_roadmap->GetEdge(source,target);
-      auto edge = e.GetIntermediates().empty() ? e.GetIntermediates()
+      auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
                                               : _lib->ReconstructEdge(m_roadmap, source, target);
 
       if(!edge.empty()) {
@@ -318,7 +318,10 @@ FullCfgsWithWait(MPLibrary* const _lib) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Insert intermediates between vertices.
 
-    std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    //std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    auto e = m_roadmap->GetEdge(*it,*(it+1));
+    auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
+                                              : _lib->ReconstructEdge(m_roadmap,*it,*(it+1));
     out.insert(out.end(), edge.begin(), edge.end());
 
     // Insert the next vertex.
