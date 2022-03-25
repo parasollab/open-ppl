@@ -219,8 +219,11 @@ ComputeIntervals(const WeightType& _weight, const VID _source,
   //if(m_edgeIntervals[&_weight].empty()) {
     std::vector<CfgType> edge;
     edge.push_back(_roadmap->GetVertex(_source));
-    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(
-        _roadmap, _source, _target);
+    auto e = _roadmap->GetEdge(_source,_target);
+    auto intermediates = !e.GetIntermediates().empty() ?
+                          e.GetIntermediates() :
+                          this->GetMPLibrary()->ReconstructEdge(
+                           _roadmap, _source, _target);
     edge.insert(edge.end(), intermediates.begin(), intermediates.end());
     edge.push_back(_roadmap->GetVertex(_target));
 
@@ -247,8 +250,13 @@ ComputeIntervals(const GroupWeightType& _weight, const VID _source,
 
   std::unordered_map<Robot*,std::vector<Cfg>> individualEdges;
   std::vector<GroupCfgType> edge = {_roadmap->GetVertex(_source)}; 
-  auto intermediates = this->GetMPLibrary()->ReconstructEdge(
-    _roadmap,_source,_target);
+  auto e = _roadmap->GetEdge(_source,_target);
+  auto intermediates = !e.GetIntermediates().empty() ?
+                        e.GetIntermediates() :
+                        this->GetMPLibrary()->ReconstructEdge(
+                          _roadmap, _source, _target);
+  //auto intermediates = this->GetMPLibrary()->ReconstructEdge(
+  //  _roadmap,_source,_target);
   edge.insert(edge.end(),intermediates.begin(),intermediates.end());
   edge.push_back(_roadmap->GetVertex(_target));  
 
