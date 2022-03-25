@@ -1020,7 +1020,7 @@ SaveSolution(const Node& _node) {
   }
 
   for(auto kv : robotPaths) {
-    std::cout << "PATH FOR: " << kv.first << std::endl;
+    std::cout << "PATH FOR: " << kv.first->GetLabel() << std::endl;
     std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
     for(size_t i = 0; i < kv.second.size(); i++) {
       auto cfg = kv.second[i];
