@@ -116,6 +116,8 @@ class NextBestSearch : public TMPStrategyMethod {
     VertexIntervals m_vertexIntervals;
     EdgeIntervals m_edgeIntervals;
 
+    bool m_savePaths{false};
+
     ///@}
 
 };

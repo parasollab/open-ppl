@@ -41,6 +41,8 @@ class FollowPath : public StepFunction {
     /// @param _dt The discrete timesteps
     virtual void MoveToWaypoint(const Cfg& _waypoint, double _dt);
 
+    void LoadPath();
+
     ///@}
     ///@name Internal State
     ///@{
@@ -52,6 +54,8 @@ class FollowPath : public StepFunction {
     double m_waypointThreshold{.05};
 
     size_t m_pathIndex{0}; ///< Index of current waypoint in the path.
+
+    std::string m_pathFile;
 
     ///@}
 

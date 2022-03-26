@@ -32,7 +32,10 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
         "Validity checker to use for multirobot collision checking.");
 
   m_safeIntervalLabel = _node.Read("safeIntervalLabel",true,"",
-        "Safe interval tool to use for compute safe intervals of roadmap.");              
+        "Safe interval tool to use for compute safe intervals of roadmap.");
+
+  m_savePaths =_node.Read("savePaths",false,m_savePaths,
+        "Flag to indicate if full paths should be output in files for reuse.");
 }
 
 NextBestSearch::
@@ -1030,12 +1033,26 @@ SaveSolution(const Node& _node) {
   }
 
   for(auto kv : robotPaths) {
-    std::cout << "PATH FOR: " << kv.first->GetLabel() << std::endl;
-    std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
+    if(m_debug) {
+      std::cout << "PATH FOR: " << kv.first->GetLabel() << std::endl;
+      std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
+    }
+
+    const std::string filename = this->GetMPProblem()->GetBaseFilename() 
+                               + "::FinalPath::" + kv.first->GetLabel();
+
+    std::ofstream ofs(filename);
+
     for(size_t i = 0; i < kv.second.size(); i++) {
       auto cfg = kv.second[i];
-      std::cout << "\t" << i << ": " << cfg.PrettyPrint() << std::endl;
+      if(m_debug) {
+        std::cout << "\t" << i << ": " << cfg.PrettyPrint() << std::endl;
+      }
+      if(m_savePaths) {
+        ofs << cfg << "\n";
+      }
     }
+    ofs.close();
     //::WritePath("hypergraph-"+kv.first->GetLabel()+".rdmp.path",kv.second);
   }
 
