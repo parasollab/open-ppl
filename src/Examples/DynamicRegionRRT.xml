@@ -2,9 +2,12 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
     <Problem>
         <Environment filename="./3D/hallway.xml" />
-        <Robot label="boxy" filename="./3D/iCreate.xml">
+        <!-- <Robot label="boxy" filename="./3D/iCreate.xml">
             <Agent type="planning" />
-        </Robot>
+        </Robot> -->
+        <Robot label="boxy" filename="3D/iCreate.xml">
+            <Agent type="pathFollowing" waypointDm="euclidean" waypointThreshold=".05" debug="true" />
+        </Robot>      
 
         <Task label="query" robot="boxy">
             <StartConstraints>
@@ -12,7 +15,7 @@
             </StartConstraints>
 
             <GoalConstraints>
-                <CSpaceConstraint point="5 0 0 0 0 0" />
+                <CSpaceConstraint point="5 1 0 0 0 0" />
             </GoalConstraints>
         </Task>
 
@@ -62,12 +65,13 @@
         </Metrics>
 
         <MapEvaluators>
+            <TimeEvaluator label="TimeEval" timeout="10" />
             <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
                 value="10000" operator=">="/>
             <QueryMethod label="Query" debug="true" graphSearchAlg="dijkstras"
                 safeIntervalToolLabel="SI" />
             <ComposeEvaluator label="BoundedQuery" operator="or">
-                <Evaluator label="NodesEval"/>
+                <Evaluator label="TimeEval"/>
                 <Evaluator label="Query"/>
             </ComposeEvaluator>
         </MapEvaluators>
