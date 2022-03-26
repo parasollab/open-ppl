@@ -163,7 +163,7 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
     // dimension.
     m_setGroupParameters = [this, e, exLabel](GroupRoadmapType* _r) {
       size_t dimension = 0;
-      double cFreeHyperVolume;
+      double cFreeHyperVolume = 1.;
       for(auto robot : _r->GetGroup()->GetRobots()) {
         auto cspace = robot->GetCSpace();
         auto vspace = robot->GetVSpace();
