@@ -847,7 +847,9 @@ IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
   // Reconstruct edge path at resolution level
   std::vector<GroupCfg> path;
   path.push_back(grm->GetVertex(_source));
-  std::vector<GroupCfg> edge = lib->ReconstructEdge(grm,_source,_target);
+  auto e = grm->GetEdge(_source,_target);
+  std::vector<GroupCfg> edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
+                             : lib->ReconstructEdge(grm,_source,_target);
   path.insert(path.end(),edge.begin(),edge.end());
   path.push_back(grm->GetVertex(_target));
 
