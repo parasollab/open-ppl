@@ -77,18 +77,26 @@
         </MapEvaluators>
 
         <MPStrategies>
-            <!-- DynamicRegionRRT -->
+            <!-- Old DynamicRegionRRT -->
             <BasicRRTStrategy label="DynamicRegionRRT" debug="true"
                 querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
                 nfLabel="Nearest" extenderLabel="BERO" growGoals="true"
                 connectorLabel="Closest">
                 <Evaluator label="BoundedQuery" />
             </BasicRRTStrategy>
+
+            <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
+                samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+                growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
+                penetration="1" velocityBiasing="false" velocityAlignment=".4"
+                decompositionLabel="fine" skeletonType="ma">
+                <Evaluator label="BoundedQuery" />
+            </DynamicRegionRRT>
         </MPStrategies>
 
         <!-- MPProblem allows multiple solvers to be specified and executed. -->
-        <Solver mpStrategyLabel="DynamicRegionRRT" seed="12345678"
-            baseFilename="DynamicRegionRRT" vizmoDebug="true" />
+        <Solver mpStrategyLabel="DRRRT" seed="12345678"
+            baseFilename="DRRRT" vizmoDebug="true" />
 
     </Library>
 
