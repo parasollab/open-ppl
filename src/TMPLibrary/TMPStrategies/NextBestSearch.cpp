@@ -279,10 +279,10 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto current = pq.top();
     pq.pop();
     auto task = current.second;
-    auto startTime = current.first * timeRes;
+    auto startTime = current.first;
 
     // Compute new path
-    auto path = QueryPath(task,startTime,_node);
+    auto path = QueryPath(task,startTime*timeRes,_node);
 
     // Check if path was found
     if(!path) {
@@ -347,7 +347,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
 NextBestSearch::GroupPathType*
 NextBestSearch::
-QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
+QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::QueryPath");
@@ -993,6 +993,15 @@ SaveSolution(const Node& _node) {
       else
         endTimes[task] = startTime;
 
+      if(m_debug) {
+        std::cout << task->GetLabel() 
+                  << " start: "
+                  << startTime
+                  << ". end: "
+                  << endTimes[task]
+                  << std::endl;
+      }
+
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
 
@@ -1000,6 +1009,13 @@ SaveSolution(const Node& _node) {
       for(auto dep : task->GetDependencies()) {
         for(auto t : dep.second) {
           endTimes[t] = startTime;
+
+          if(m_debug) {
+            std::cout << "Updating end time of " << t->GetLabel()
+                      << " to " << startTime
+                      << " because of " << task->GetLabel()
+                      << std::endl;
+          } 
         }
       }
     }

@@ -72,7 +72,7 @@ class NextBestSearch : public TMPStrategyMethod {
 
     bool LowLevelPlanner(Node& _node, SemanticTask* _task);
 
-    GroupPathType* QueryPath(SemanticTask* _task, const double& _startTime,
+    GroupPathType* QueryPath(SemanticTask* _task, const double _startTime,
                              const Node& _node);
 
     std::vector<std::pair<SemanticTask*,Constraint>> ValidationFunction(Node& _node);

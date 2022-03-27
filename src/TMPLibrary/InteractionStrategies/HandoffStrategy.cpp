@@ -14,6 +14,9 @@ HandoffStrategy() {
 HandoffStrategy::
 HandoffStrategy(XMLNode& _node) : GraspStrategy(_node) {
   this->SetName("HandoffStrategy");
+
+  m_physicalDemo = _node.Read("physicalDemo",false,m_physicalDemo,
+          "Flag to add extra constraints for clean physical demo.");
 }
 
 HandoffStrategy::
@@ -189,6 +192,9 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
   // Try for m_maxAttempts to generate a start state
   for(size_t i = 0; i < m_maxAttempts; i++) {
     State start;
+
+    std::vector<std::pair<GroupRoadmapType*,size_t>> vidsToDelete;
+
     // Sample a cfg for each deliverer
     for(auto group : deliverers) {
       // Configure library 
@@ -197,15 +203,75 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
       solution->AddRobotGroup(group);
       auto rm = solution->GetGroupRoadmap(group);
       // Check formation
-      
 
-      std::vector<GroupCfg> samples;
-      sampler->Sample(1,1,boundaryMap,std::back_inserter(samples));
-      if(samples.empty())
-        break;
+      GroupCfg cfg(rm);
 
-      auto cfg = samples[0];
+      if(!m_physicalDemo) {
+        std::vector<GroupCfg> samples;
+        sampler->Sample(1,1,boundaryMap,std::back_inserter(samples));
+        if(samples.empty())
+          break;
+
+        cfg = samples[0];
+      }
+      else {
+        // Hack to get clean physical demo handoffs
+        
+        // Get mean distance between robots
+        double x,y,z,count = 0;
+        for(auto group : deliverers) {
+          for(auto robot : group->GetRobots()) {
+            if(robot->GetMultiBody()->IsPassive())
+              continue;
+            auto transform = robot->GetMultiBody()->GetBase()->GetWorldTransformation();
+            auto translation = transform.translation();
+            x += translation[0];
+            y += translation[1];
+            z += translation[2];
+            count += 1;
+          }
+        }
+        for(auto group : receivers) {
+          for(auto robot : group->GetRobots()) {
+            if(robot->GetMultiBody()->IsPassive())
+              continue;
+            auto transform = robot->GetMultiBody()->GetBase()->GetWorldTransformation();
+            auto translation = transform.translation();
+            x += translation[0];
+            y += translation[1];
+            z += translation[2];
+            count += 1;
+          }
+        }
+
+        x = x/count;
+        y = y/count;
+        z = z/count;
+
+        // Get passive robot  
+        Robot* object;
+        for(auto robot : group->GetRobots()) {
+          if(robot->GetMultiBody()->IsPassive()) {
+            object = robot;
+            break;
+          }
+        }
+
+        Cfg objectCfg(object);
+
+        objectCfg[0] = x;
+        objectCfg[1] = y;
+        objectCfg[2] = z+.32;
+        objectCfg[3] = 0;
+        objectCfg[4] = 0;
+        objectCfg[5] = 0;
+
+        cfg.SetRobotCfg(object,std::move(objectCfg));
+
+      }
+
       auto vid = rm->AddVertex(cfg);
+      vidsToDelete.emplace_back(rm,vid);
       start[group] = std::make_pair(rm,vid);
     }
 
@@ -220,6 +286,13 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
 
     // Attempt to create full state
     auto state = GenerateTransitionState(_interaction,start,_next-1,solution);
+
+    if(m_physicalDemo) {
+      for(auto pair : vidsToDelete) {
+        pair.first->DeleteVertex(pair.second);
+      }
+    }
+  
     if(!state.empty())
       return state;
   }
@@ -382,7 +455,7 @@ GenerateTransitionState(Interaction* _interaction, const State& _previous, const
 
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
       if(!cfg.GetRobot()) {
-        std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+        std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel() << std::endl;
       	failed = true;
         break;
       }
