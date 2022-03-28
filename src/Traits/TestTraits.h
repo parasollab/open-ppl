@@ -20,6 +20,7 @@
 #include "Testing/MPLibrary/DistanceMetrics/ManhattanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WorkspaceTranslationDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -88,7 +89,8 @@ struct MPTraits {
   typedef boost::mpl::list<
       ManhattanDistanceTest<MPTraits>,
       MinkowskiDistanceTest<MPTraits>,
-      EuclideanDistanceTest<MPTraits>
+      EuclideanDistanceTest<MPTraits>,
+      WorkspaceTranslationDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
