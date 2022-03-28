@@ -14,9 +14,6 @@ HandoffStrategy() {
 HandoffStrategy::
 HandoffStrategy(XMLNode& _node) : GraspStrategy(_node) {
   this->SetName("HandoffStrategy");
-
-  m_physicalDemo = _node.Read("physicalDemo",false,m_physicalDemo,
-          "Flag to add extra constraints for clean physical demo.");
 }
 
 HandoffStrategy::
@@ -93,6 +90,26 @@ operator()(Interaction* _interaction, State& _start) {
 
     if(toNextStagePaths.empty())
       return false;
+
+    size_t delay = _interaction->GetDelay(next);
+    if(delay > 0) {
+      for(auto path : toNextStagePaths) {
+        auto pair = path->VIDsWaiting();
+        auto vids = pair.first;
+        auto wait = pair.second;
+        if(wait.empty()) {
+          auto last = vids.back();
+          std::vector<size_t> add(delay,last);
+          *path += add;
+          path->SetTimeSteps(path->TimeSteps() + delay);
+        }
+        else {
+          wait = std::vector<size_t>(vids.size(),0);
+          wait[wait.size()-1] += delay;
+          path->SetWaitTimes(wait);
+        }
+      }
+    }
 
     ResetStaticRobots();
 

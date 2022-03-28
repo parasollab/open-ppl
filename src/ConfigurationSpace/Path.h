@@ -352,10 +352,11 @@ TimeSteps() const {
 			m_timesteps++;
 			continue;
 		}
+    if(!m_waitingTimesteps.empty())
+      m_timesteps += m_waitingTimesteps[*it];
 		auto edge = m_roadmap->GetEdge(*it, *(it+1));
 		m_timesteps += edge.GetTimeSteps();
   }
-	m_timesteps += m_finalWaitTimeSteps;
   return m_timesteps;
 }
 

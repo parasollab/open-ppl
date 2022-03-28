@@ -66,6 +66,8 @@ class GraspStrategy : public IndependentPaths {
 
     bool m_doctorBaseOrientation{true};
 
+    bool m_physicalDemo{false};
+
     ///@}
 
 };

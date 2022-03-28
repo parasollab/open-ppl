@@ -51,8 +51,6 @@ class HandoffStrategy : public GraspStrategy {
 
     std::unordered_map<Robot*,Constraint*> m_pathConstraintMap;
 
-    bool m_physicalDemo{false};
-
     ///@}
 
 };

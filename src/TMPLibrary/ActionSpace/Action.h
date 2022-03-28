@@ -38,6 +38,8 @@ class Action : public TMPBaseObject {
 
     const bool IsReversible() const;
 
+    const size_t GetDelay(const std::string _stage) const;
+
     ///@}
 
   protected:
@@ -53,9 +55,13 @@ class Action : public TMPBaseObject {
     ///@{
 
     std::vector<std::string> m_stages;
+
     std::unordered_map<std::string,std::vector<std::string>> m_stageConditions;
 
+    std::unordered_map<std::string,size_t> m_postStageDelays;
+
     bool m_isReversible{false};
+
     ///@}
 };
 
