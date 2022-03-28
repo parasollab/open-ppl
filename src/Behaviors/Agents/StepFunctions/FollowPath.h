@@ -57,6 +57,8 @@ class FollowPath : public StepFunction {
 
     std::string m_pathFile;
 
+    bool m_loadedPath{false};
+
     ///@}
 
 };

@@ -35,7 +35,7 @@ StepAgent(double _dt) {
   if(!p)
     return;
 
-  if(!p->HasPlan() and m_pathFile != "") {
+  if(!p->HasPlan() and m_pathFile != "" and !m_loadedPath) {
     LoadPath();
   }
 
@@ -138,4 +138,6 @@ LoadPath() {
   }
 
   p->SetPlan(path);
+
+  m_loadedPath = true;
 }

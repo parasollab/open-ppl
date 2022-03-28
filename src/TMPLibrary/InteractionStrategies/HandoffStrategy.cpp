@@ -276,7 +276,7 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
 
         Cfg objectCfg(object);
 
-        objectCfg[0] = x;
+        objectCfg[0] = x+.015;
         objectCfg[1] = y;
         objectCfg[2] = z+.32;
         objectCfg[3] = 0;
