@@ -1,15 +1,14 @@
-#ifndef PPL_NUM_EDGES_METRIC_TEST_H
-#define PPL_NUM_EDGES_METRIC_TEST_H
+#ifndef PPL_NUM_EDGES_METRIC_TEST_H_
+#define PPL_NUM_EDGES_METRIC_TEST_H_
 
+#include "MetricMethodTest.h"
 #include "MPLibrary/Metrics/NumEdgesMetric.h"
-#include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 
-template <typename MPTraits>
-class NumEdgesMetricTest : virtual public NumEdgesMetric<MPTraits>,
-                           public MetricMethodTest<MPTraits> {
+class NumEdgesMetricTest :  public NumEdgesMetric,
+                               public MetricMethodTest {
 
   public:
-  
+
     ///@name Local Types
     ///@{
 
@@ -21,7 +20,7 @@ class NumEdgesMetricTest : virtual public NumEdgesMetric<MPTraits>,
 
     NumEdgesMetricTest();
 
-    NumEdgesMetricTest(XMLNode& _node);
+    NumEdgesMetricTest(MPProblem* _problem);
 
     ~NumEdgesMetricTest();
 
@@ -29,47 +28,46 @@ class NumEdgesMetricTest : virtual public NumEdgesMetric<MPTraits>,
 
   private:
 
-    ///@name Interface Test Function
+    ///@name Test Interface Functions
     ///@{
 
-    virtual TestResult MetricTest() override;
+    virtual TestResult TestMetric() override;
 
     ///@}
+
 };
 
 /*--------------------------- Construction ---------------------------*/
 
-template <typename MPTraits>
-NumEdgesMetricTest<MPTraits>::
-NumEdgesMetricTest() : NumEdgesMetric<MPTraits>() {}
+NumEdgesMetricTest::
+NumEdgesMetricTest() : NumEdgesMetric() {}
 
-template <typename MPTraits>
-NumEdgesMetricTest<MPTraits>::
-NumEdgesMetricTest(XMLNode& _node) : MetricMethod<MPTraits>(_node), 
-                                     NumEdgesMetric<MPTraits>(_node) {}
-
-template <typename MPTraits>
-NumEdgesMetricTest<MPTraits>::
-~NumEdgesMetricTest() {}
-
-/*----------------------------- Interface ----------------------------*/
-
-template <typename MPTraits>
-typename NumEdgesMetricTest<MPTraits>::TestResult
-NumEdgesMetricTest<MPTraits>::
-MetricTest() {
-  
-  bool passed = true;
-  std::string message = "";
-
-  
-  if (passed)
-    message = "MetricTest::PASSED!\n";
-  else
-    message = "MetricTest::FAILED :(\n" + message;
-  return std::make_pair(passed,message);
+NumEdgesMetricTest::
+NumEdgesMetricTest(MPProblem* _problem) : MetricMethodTest(),
+                                                             NumEdgesMetric(){
+  m_MPProblem = _problem;
 }
 
-/*--------------------------------------------------------------------*/
+NumEdgesMetricTest::
+~NumEdgesMetricTest() {}
+
+
+
+/*--------------------- Test Interface Functions ---------------------*/
+
+typename NumEdgesMetricTest::TestResult
+NumEdgesMetricTest::
+TestMetric() {
+
+  // Set up environment from parent
+  double metric = Metric();
+  double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->get_num_edges()) : (this->GetRoadmap()->get_num_edges());
+
+  // Correct value?
+  if(metric == expected){
+    return std::make_pair(true,"Testing NumEdgesMetric::PASSED");
+  }
+  return std::make_pair(true,"Testing NumEdgesMetric, Wrong number of edges recieved.");
+}
 
 #endif

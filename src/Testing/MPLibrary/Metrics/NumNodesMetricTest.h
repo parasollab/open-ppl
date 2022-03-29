@@ -1,15 +1,14 @@
-#ifndef PPL_NUM_NODES_METRIC_TEST_H
-#define PPL_NUM_NODES_METRIC_TEST_H
+#ifndef PPL_NUM_NODES_METRIC_TEST_H_
+#define PPL_NUM_NODES_METRIC_TEST_H_
 
+#include "MetricMethodTest.h"
 #include "MPLibrary/Metrics/NumNodesMetric.h"
-#include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 
-template <typename MPTraits>
-class NumNodesMetricTest : virtual public NumNodesMetric<MPTraits>,
-                           public MetricMethodTest<MPTraits> {
+class NumNodesMetricTest :  public NumNodesMetric,
+                               public MetricMethodTest {
 
   public:
-  
+
     ///@name Local Types
     ///@{
 
@@ -21,7 +20,7 @@ class NumNodesMetricTest : virtual public NumNodesMetric<MPTraits>,
 
     NumNodesMetricTest();
 
-    NumNodesMetricTest(XMLNode& _node);
+    NumNodesMetricTest(MPProblem* _problem);
 
     ~NumNodesMetricTest();
 
@@ -29,47 +28,46 @@ class NumNodesMetricTest : virtual public NumNodesMetric<MPTraits>,
 
   private:
 
-    ///@name Interface Test Function
+    ///@name Test Interface Functions
     ///@{
 
-    virtual TestResult MetricTest() override;
+    virtual TestResult TestMetric() override;
 
     ///@}
+
 };
 
 /*--------------------------- Construction ---------------------------*/
 
-template <typename MPTraits>
-NumNodesMetricTest<MPTraits>::
-NumNodesMetricTest() : NumNodesMetric<MPTraits>() {}
+NumNodesMetricTest::
+NumNodesMetricTest() : NumNodesMetric() {}
 
-template <typename MPTraits>
-NumNodesMetricTest<MPTraits>::
-NumNodesMetricTest(XMLNode& _node) : MetricMethod<MPTraits>(_node), 
-                                     NumNodesMetric<MPTraits>(_node) {}
-
-template <typename MPTraits>
-NumNodesMetricTest<MPTraits>::
-~NumNodesMetricTest() {}
-
-/*----------------------------- Interface ----------------------------*/
-
-template <typename MPTraits>
-typename NumNodesMetricTest<MPTraits>::TestResult
-NumNodesMetricTest<MPTraits>::
-MetricTest() {
-  
-  bool passed = true;
-  std::string message = "";
-
-  
-  if (passed)
-    message = "MetricTest::PASSED!\n";
-  else
-    message = "MetricTest::FAILED :(\n" + message;
-  return std::make_pair(passed,message);
+NumNodesMetricTest::
+NumNodesMetricTest(MPProblem* _problem) : MetricMethodTest(),
+                                                             NumNodesMetric(){
+  m_MPProblem = _problem;
 }
 
-/*--------------------------------------------------------------------*/
+NumNodesMetricTest::
+~NumNodesMetricTest() {}
+
+
+
+/*--------------------- Test Interface Functions ---------------------*/
+
+typename NumNodesMetricTest::TestResult
+NumNodesMetricTest::
+TestMetric() {
+
+  // Set up environment from parent
+  double metric = Metric();
+  double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->Size()) : (this->GetRoadmap()->Size());
+
+  // Correct value?
+  if(metric == expected){
+    return std::make_pair(true,"Testing NumNodesMetric::PASSED");
+  }
+  return std::make_pair(true,"Testing NumNodesMetric, Wrong number of nodes recieved.");
+}
 
 #endif

@@ -1,15 +1,14 @@
-#ifndef PPL_TIME_METRIC_TEST_H
-#define PPL_TIME_METRIC_TEST_H
+#ifndef PPL_TIME_METRIC_TEST_H_
+#define PPL_TIME_METRIC_TEST_H_
 
+#include "MetricMethodTest.h"
 #include "MPLibrary/Metrics/TimeMetric.h"
-#include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 
-template <typename MPTraits>
-class TimeMetricTest : virtual public TimeMetric<MPTraits>,
-                           public MetricMethodTest<MPTraits> {
+class TimeMetricTest :  public TimeMetric,
+                               public MetricMethodTest {
 
   public:
-  
+
     ///@name Local Types
     ///@{
 
@@ -21,7 +20,7 @@ class TimeMetricTest : virtual public TimeMetric<MPTraits>,
 
     TimeMetricTest();
 
-    TimeMetricTest(XMLNode& _node);
+    TimeMetricTest(MPProblem* _problem);
 
     ~TimeMetricTest();
 
@@ -29,47 +28,52 @@ class TimeMetricTest : virtual public TimeMetric<MPTraits>,
 
   private:
 
-    ///@name Interface Test Function
+    ///@name Test Interface Functions
     ///@{
 
-    virtual TestResult MetricTest() override;
+    virtual TestResult TestMetric() override;
 
     ///@}
+
 };
 
 /*--------------------------- Construction ---------------------------*/
 
-template <typename MPTraits>
-TimeMetricTest<MPTraits>::
-TimeMetricTest() : TimeMetric<MPTraits>() {}
+TimeMetricTest::
+TimeMetricTest() : TimeMetric() {}
 
-template <typename MPTraits>
-TimeMetricTest<MPTraits>::
-TimeMetricTest(XMLNode& _node) : MetricMethod<MPTraits>(_node), 
-                                 TimeMetric<MPTraits>(_node) {}
-
-template <typename MPTraits>
-TimeMetricTest<MPTraits>::
-~TimeMetricTest() {}
-
-/*----------------------------- Interface ----------------------------*/
-
-template <typename MPTraits>
-typename TimeMetricTest<MPTraits>::TestResult
-TimeMetricTest<MPTraits>::
-MetricTest() {
-  
-  bool passed = true;
-  std::string message = "";
-
-  
-  if (passed)
-    message = "MetricTest::PASSED!\n";
-  else
-    message = "MetricTest::FAILED :(\n" + message;
-  return std::make_pair(passed,message);
+TimeMetricTest::
+TimeMetricTest(MPProblem* _problem) : MetricMethodTest(),
+                                                             TimeMetric(){
+  m_MPProblem = _problem;
 }
 
-/*--------------------------------------------------------------------*/
+TimeMetricTest::
+~TimeMetricTest() {}
+
+
+
+/*--------------------- Test Interface Functions ---------------------*/
+
+typename TimeMetricTest::TestResult
+TimeMetricTest::
+TestMetric() {
+
+  // Set up environment from parent
+  double metric = Metric();
+  auto stats = this->GetStatClass();
+
+  // Report the elapsed time.
+  stats->StopClock(s_clockName);
+  stats->StartClock(s_clockName);
+
+  double expected = (double)stats->GetSeconds(s_clockName);
+
+  // Correct value?
+  if(metric == expected){
+    return std::make_pair(true,"Testing TimeMetric::PASSED");
+  }
+  return std::make_pair(true,"Testing TimeMetric, Wrong time elapsed recieved.");
+}
 
 #endif
