@@ -235,7 +235,10 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
         // Hack to get clean physical demo handoffs
         
         // Get mean distance between robots
-        double x,y,z,count = 0;
+        double x = 0;
+        double y = 0;
+        double z = 0;
+        double count = 0;
         for(auto group : deliverers) {
           for(auto robot : group->GetRobots()) {
             if(robot->GetMultiBody()->IsPassive())
@@ -266,7 +269,7 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
         z = z/count;
 
         // Get passive robot  
-        Robot* object;
+        Robot* object = nullptr;
         for(auto robot : group->GetRobots()) {
           if(robot->GetMultiBody()->IsPassive()) {
             object = robot;
