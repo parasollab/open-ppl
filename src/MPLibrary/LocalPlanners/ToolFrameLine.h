@@ -160,7 +160,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
 
   int numSteps;
   GroupCfgType stepsDummy(_c1);
-  stepsDummy.FindIncrement(_c1, _c2, &numSteps, env->GetPositionRes(), env->GetOrientationRes());
+  stepsDummy.FindIncrement(_c1, _c2, &numSteps, 10*env->GetPositionRes(), env->GetOrientationRes());
 
   // Find tool frame increment
   std::unordered_map<Robot*,std::vector<double>> posIncrements;

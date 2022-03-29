@@ -18,6 +18,9 @@ SubmodeQuery() {
 SubmodeQuery::
 SubmodeQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("SubmodeQuery");
+
+  m_reverseActions = _node.Read("reverseActions",false,m_reverseActions,
+        "Flag to allow immedaite reversal of actions in plan.");
 }
 
 SubmodeQuery::
@@ -518,6 +521,11 @@ ComputeHeuristicValues() {
   // Save output distances as heuristic values
   m_heuristicMap = output.distance;
 
+  m_maxDistance = 0;
+  for(auto kv : m_heuristicMap) {
+    m_maxDistance = std::max(kv.second,m_maxDistance);
+  }
+
 }
 
 
@@ -550,6 +558,13 @@ HyperpathQuery() {
 
   SSSHPForwardStar<ActionExtendedVertex,size_t> forwardStar(
     [this](const size_t& _vid, ActionExtendedHypergraph* _h) {
+        // temp debug
+        {
+          auto vertex = _h->GetVertexType(_vid);
+          auto gvid = vertex.groundedVID;
+          if(gvid == 2 or gvid == 4 or gvid == 6 or gvid == 8 or gvid == 58 or gvid == 59)
+            std::cout << "HERE" << std::endl;
+        }
       return this->HyperpathForwardStar(_vid,_h);
     }
   );
@@ -625,7 +640,12 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
   auto groundedVID = aev.groundedVID;
 
   // Check if vid's parent was in the same mode
+  // Used for inter mode blocks
   size_t blockedMode = MAX_INT;
+
+  // Extra for blocking reverse actions
+  std::vector<size_t> blockedVertices;
+
   auto vertexMode = mg->GetModeOfGroundedVID(groundedVID);
   auto incoming  = _h->GetIncomingHyperarcs(_vid);
   if(incoming.size() > 0) {
@@ -639,6 +659,12 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
       if(vertexMode == parentMode)
         blockedMode = vertexMode;
     }
+
+    for(auto parent : tail) {
+      auto parentVertex = _h->GetVertexType(parent);
+      auto gvid = parentVertex.groundedVID;
+      blockedVertices.push_back(gvid);
+    }
   }
 
   std::set<size_t> fullyGroundedHyperarcs;
@@ -647,10 +673,25 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
   // Grab forward star in grounded hypergraph
   for(auto hid : gh.GetOutgoingHyperarcs(groundedVID)) {
 
+    auto head = gh.GetHyperarc(hid).head;
+
+    // If this hyperarc is the reverse of the one that entered the vertex, continue;
+    if(blockedVertices.size() == head.size() and !m_reverseActions) {
+      bool match = true;
+      for(auto vid : blockedVertices) {
+        if(head.count(vid))
+          continue;
+
+        match = false;
+      }
+  
+      if(match)
+        continue;
+    }
+
     // If this vertex's parent is in the same submode,
     // ensure that there is not an additional transition within
     // that sumode.
-    auto head = gh.GetHyperarc(hid).head;
     if(head.size() == 1 and blockedMode != MAX_INT) {
       auto groundedHead = *(head.begin());
       auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
@@ -733,6 +774,9 @@ SubmodeQuery::
 HyperpathHeuristic(const size_t& _target) {
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
+  auto iter = m_heuristicMap.find(vid);
+  if(iter == m_heuristicMap.end())
+    return m_maxDistance;
   return m_heuristicMap.at(vid);
 }
 /*--------------------------------------------------------------------------*/
