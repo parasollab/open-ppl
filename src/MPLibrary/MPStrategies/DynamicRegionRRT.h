@@ -193,7 +193,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     const Vector3d GetVelocityBias(SamplingRegion* _region);
 
-    void CreateRegions(const Point3d& _p);
+    void CheckRegionProximity(const Point3d& _p);
 
     std::vector<SamplingRegion*> 
     CreateRegions(const WorkspaceSkeleton::vertex_iterator _iter);
@@ -422,7 +422,7 @@ AddNode(const CfgType& _newCfg) {
     // On each new sample, check if we need to advance our regions and generate
     // new ones. Add a roadmap hook to achieve this.
     auto vi = g->find_vertex(newVID);
-    CreateRegions(vi->property().GetPoint());
+    CheckRegionProximity(vi->property().GetPoint());
     AdvanceRegions(vi->property());
   }
 
@@ -813,7 +813,7 @@ GetVelocityBias(SamplingRegion* _region) {
 template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
-CreateRegions(const Point3d& _p) {
+CheckRegionProximity(const Point3d& _p) {
   auto& g = m_skeleton.GetGraph();
 
   // Check each skeleton node to see if a new region should be created.
