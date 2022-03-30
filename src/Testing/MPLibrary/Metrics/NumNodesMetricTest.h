@@ -4,8 +4,9 @@
 #include "MetricMethodTest.h"
 #include "MPLibrary/Metrics/NumNodesMetric.h"
 
-class NumNodesMetricTest :  public NumNodesMetric,
-                               public MetricMethodTest {
+template <typename MPTraits> // TODO need to add template to each method (See TimeMetricTest)
+class NumNodesMetricTest :  virtual public NumNodesMetric<MPTraits>,
+                            public MetricMethodTest<MPTraits> {
 
   public:
 
@@ -20,7 +21,7 @@ class NumNodesMetricTest :  public NumNodesMetric,
 
     NumNodesMetricTest();
 
-    NumNodesMetricTest(MPProblem* _problem);
+    NumNodesMetricTest(MPProblem* _problem); // TODO see TimeMetricTest comment about this
 
     ~NumNodesMetricTest();
 
@@ -45,7 +46,7 @@ NumNodesMetricTest() : NumNodesMetric() {}
 NumNodesMetricTest::
 NumNodesMetricTest(MPProblem* _problem) : MetricMethodTest(),
                                                              NumNodesMetric(){
-  m_MPProblem = _problem;
+  m_MPProblem = _problem; // TODO Delete this (see time metric test comment)
 }
 
 NumNodesMetricTest::
@@ -60,12 +61,12 @@ NumNodesMetricTest::
 TestMetric() {
 
   // Set up environment from parent
-  double metric = Metric();
+  double metric = Metric(); // TODO call methods of a parent class using this-> (ex. this->Metric())
   double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->Size()) : (this->GetRoadmap()->Size());
 
   // Correct value?
   if(metric == expected){
-    return std::make_pair(true,"Testing NumNodesMetric::PASSED");
+    return std::make_pair(true,"Testing NumNodesMetric::PASSED"); // TODO try to setup the strings like in Testing/Sampelrs/UniformRandomSamplerTest.h
   }
   return std::make_pair(true,"Testing NumNodesMetric, Wrong number of nodes recieved.");
 }

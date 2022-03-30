@@ -4,8 +4,9 @@
 #include "MetricMethodTest.h"
 #include "MPLibrary/Metrics/NumEdgesMetric.h"
 
-class NumEdgesMetricTest :  public NumEdgesMetric,
-                               public MetricMethodTest {
+// TODO add template annotations (see TimeMetricTest.h)
+class NumEdgesMetricTest :  virtual public NumEdgesMetric,
+                            public MetricMethodTest {
 
   public:
 
@@ -20,7 +21,7 @@ class NumEdgesMetricTest :  public NumEdgesMetric,
 
     NumEdgesMetricTest();
 
-    NumEdgesMetricTest(MPProblem* _problem);
+    NumEdgesMetricTest(MPProblem* _problem); // TODO see TimeMetricTest comment about this
 
     ~NumEdgesMetricTest();
 
@@ -58,6 +59,8 @@ NumEdgesMetricTest::
 typename NumEdgesMetricTest::TestResult
 NumEdgesMetricTest::
 TestMetric() {
+
+  // TODO see comments in NumNodesMetric.h
 
   // Set up environment from parent
   double metric = Metric();

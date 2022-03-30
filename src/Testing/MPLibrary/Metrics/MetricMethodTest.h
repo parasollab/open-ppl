@@ -5,8 +5,8 @@
 #include "Testing/TestBaseObject.h"
 
 template <typename MPTraits>
-class MetricMethodTest : public MetricMethod<MPTraits>,
-                                 public TestBaseObject {
+class MetricMethodTest : virtual public MetricMethod<MPTraits>,
+                         public TestBaseObject {
 
   public: 
 
