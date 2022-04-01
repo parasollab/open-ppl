@@ -36,17 +36,17 @@ Clock Name                                                        Time (Seconds)
   BruteForceNF::BFNF::FindNeighbors                                            0
   CCTracker::AddEdge                                                           0
   CCTracker::AddVertex                                                         0
-  GroupPRM::CompositePRM::Connect                                           1.38
-  GroupPRM::CompositePRM::EvaluateMap                                          0
-  GroupPRM::CompositePRM::InitAndRun                                        1.38
-  GroupPRM::CompositePRM::Initialize                                        1.38
-  GroupPRM::CompositePRM::Run                                                  0
-  GroupPRM::CompositePRM::Sample                                               0
-  GroupPRM::GenerateGoals                                                  0.001
-  GroupPRM::GenerateStart                                                      0
-  GroupQuery::CompositeQuery                                                   0
-  GroupQuery::GeneratePath                                                     0
+  GroupPRM::CompositePRM::Connect                                           1.37
+  GroupPRM::CompositePRM::EvaluateMap                                    5.8e-05
+  GroupPRM::CompositePRM::InitAndRun                                        1.37
+  GroupPRM::CompositePRM::Initialize                                        1.37
+  GroupPRM::CompositePRM::Run                                           0.000177
+  GroupPRM::CompositePRM::Sample                                        0.000104
+  GroupPRM::GenerateGoals                                               0.000259
+  GroupPRM::GenerateStart                                               0.000198
+  GroupQuery::CompositeQuery                                               5e-05
+  GroupQuery::GeneratePath                                                 4e-06
   MPLibrary::Initialize                                                        0
-  NeighborhoodConnector::ClosestTerrain::Connect                            1.38
+  NeighborhoodConnector::ClosestTerrain::Connect                            1.37
   StraightLine::sl_terrain::IsConnectedFunc                                    0
-  UniformRandomSampler::UniformRandomFreeTerrain::GroupSample                  0
+  UniformRandomSampler::UniformRandomFreeTerrain::GroupSample            0.00036

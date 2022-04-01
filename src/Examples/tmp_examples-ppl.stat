@@ -2,6 +2,6 @@
 
 Clock Name                                                        Time (Seconds)
 
-  StateGraphConstruction                                                       0
-  TaskEvaluationTime                                                    0.001002
-  TotalTMPStrategyTime                                                   5.06495
+  StateGraphConstruction                                                0.000464
+  TaskEvaluationTime                                                    0.000321
+  TotalTMPStrategyTime                                                    5.1139

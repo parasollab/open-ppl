@@ -37,16 +37,16 @@ Clock Name                                                        Time (Seconds)
   CCTracker::AddEdge                                                           0
   CCTracker::AddVertex                                                         0
   GroupPRM::CompositePRM::Connect                                           3.65
-  GroupPRM::CompositePRM::EvaluateMap                                          0
-  GroupPRM::CompositePRM::InitAndRun                                        3.65
-  GroupPRM::CompositePRM::Initialize                                        2.79
-  GroupPRM::CompositePRM::Run                                              0.861
-  GroupPRM::CompositePRM::Sample                                         8.4e-05
-  GroupPRM::GenerateGoals                                                  0.001
-  GroupPRM::GenerateStart                                                  0.001
-  GroupQuery::CompositeQuery                                                   0
-  GroupQuery::GeneratePath                                                     0
+  GroupPRM::CompositePRM::EvaluateMap                                   0.000216
+  GroupPRM::CompositePRM::InitAndRun                                        3.66
+  GroupPRM::CompositePRM::Initialize                                         2.8
+  GroupPRM::CompositePRM::Run                                              0.859
+  GroupPRM::CompositePRM::Sample                                        0.000235
+  GroupPRM::GenerateGoals                                                0.00118
+  GroupPRM::GenerateStart                                                0.00116
+  GroupQuery::CompositeQuery                                            0.000189
+  GroupQuery::GeneratePath                                               1.3e-05
   MPLibrary::Initialize                                                        0
   NeighborhoodConnector::ClosestTerrain::Connect                            3.65
   StraightLine::sl_terrain::IsConnectedFunc                                    0
-  UniformRandomSampler::UniformRandomFreeTerrain::GroupSample            8.4e-05
+  UniformRandomSampler::UniformRandomFreeTerrain::GroupSample            0.00139
