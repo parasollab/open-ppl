@@ -1,60 +1,104 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem>
-    <Environment filename="../Envs/3D/3d.env"/>
-    <Robot label="boxy" filename="../Envs/3D/boxy.robot"/>
+    <Environment filename="../Envs/3D/hallway.xml" />
+    <Robot label="boxy" filename="../Envs/3D/iCreate.xml"/> 
 
     <Task label="query" robot="boxy">
       <StartConstraints>
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
+          <CSpaceConstraint point="-5 0 0 0 0 0" />
       </StartConstraints>
 
       <GoalConstraints>
-        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+          <CSpaceConstraint point="5 1 0 0 0 0" />
       </GoalConstraints>
     </Task>
   </Problem>
 
+  <!-- Set available algorithms and parameters. -->
   <Library>
+
     <DistanceMetrics>
-      <Euclidean label="euclidean"/>
+        <Euclidean label="euclidean" />
     </DistanceMetrics>
 
     <ValidityCheckers>
-      <CollisionDetection label="rapid" method="RAPID"/>
+        <CollisionDetection label="rapid" method="RAPID" />
+        <CollisionDetection label="pqp_solid" method="PQP_SOLID" />
+        <AlwaysTrueValidity label="alwaysTrue" />
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-        k="1"/>
+        <BruteForceNF label="Nearest" dmLabel="euclidean"
+            unconnected="false" k="1" />
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+        <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue" />
+        <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" />
+        <DynamicRegionSampler label="DynamicRegionSampler"
+            samplerLabel="UniformRandom" explore=".2" regionFactor="2.5"
+            penetration="1" velocityBiasing="false" velocityAlignment=".4"
+            decompositionLabel="fine" skeletonType="ma" />
     </Samplers>
 
+    <LocalPlanners>
+        <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid" />
+    </LocalPlanners>
+
     <Extenders>
-      <BasicExtender label="BERO" debug="true" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="10." minDist=".01"/>
+        <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+            vcLabel="rapid" maxDist="4." minDist=".01" />
     </Extenders>
 
+    <Connectors>
+        <NeighborhoodConnector label="Closest" debug="false"
+            nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false" />
+    </Connectors>
+
+    <Metrics>
+        <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
     <MapEvaluators>
-      <RRTQuery label="RRTQuery"
-        nfLabel="Nearest" exLabel="BERO" fullRecreatePath="false" debug="true"/>
+        <TimeEvaluator label="TimeEval" timeout="10" />
+        <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+            value="10000" operator=">="/>
+        <QueryMethod label="Query" debug="true" graphSearchAlg="dijkstras"
+            safeIntervalToolLabel="SI" />
+        <ComposeEvaluator label="BoundedQuery" operator="or">
+            <Evaluator label="TimeEval"/>
+            <Evaluator label="Query"/>
+        </ComposeEvaluator>
     </MapEvaluators>
 
     <MPStrategies>
-      <DynamicRegionRRT label="DynamicRegionRRT"
-        growthFocus="0.01" dmLabel="euclidean" nfLabel="Nearest" vcLabel="rapid"
-        gtype="UNDIRECTED_TREE" debug="true" growGoals="false"
-        extenderLabel="BERO">
-        <Evaluator label="RRTQuery"/>
-      </DynamicRegionRRT>
+        <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
+            samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+            growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
+            penetration="1" velocityBiasing="false" velocityAlignment=".4"
+            decompositionLabel="fine" skeletonType="ma">
+            <Evaluator label="BoundedQuery" />
+        </DynamicRegionRRT>
+
+        <ValidationStrategy label="Test" target="DRRRT" debug="true">
+            <GoldStandard robot="boxy" type="roadmap"
+              filename="../Outputs/DRRRT.12345678.query.map"/>
+            <GoldStandard robot="boxy" type="cfgpath"
+              filename="../Outputs/DRRRT.12345678.query.rdmp.path"/>
+        </ValidationStrategy>
     </MPStrategies>
 
-    <Solver mpStrategyLabel="DynamicRegionRRT" seed="0"
-      baseFilename="../Scratch/DynamicRegionRRT"/>
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="Test" seed="12345678"
+      baseFilename="../Scratch/DRRRT"/>
+
+    <!-- <Solver mpStrategyLabel="DRRRT" seed="12345678"
+      baseFilename="DRRRT" vizmoDebug="true"/> -->
 
   </Library>
-
 </MotionPlanning>

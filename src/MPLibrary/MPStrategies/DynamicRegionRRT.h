@@ -11,13 +11,6 @@
 #include "Utilities/MPUtils.h"
 #include "Workspace/WorkspaceSkeleton.h"
 
-#include <random>
-#include <utility>
-#include <algorithm>
-#include <vector>
-
-#include "Vector.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dynamic Region-biased RRT algorithm.
 ///
@@ -65,7 +58,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
       SkeletonEdgeIterator edgeIterator; ///< Iterator to region's edge.
       size_t edgeIndex{0};   ///< Which edge point are we at?
       double attempts{1};    ///< Number of attempts to extend into this region.
-      double successes{0};   ///< Number of successful attempts.
+      double successes{1};   ///< Number of successful attempts.
 
       ///@}
 
@@ -163,9 +156,32 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     ///@name Helpers
     ///@{
 
+    /// Sample a configuration from within a sampling region using the sampler
+    /// given in m_samplerLabel.
+    /// @param _region The region to sample from.
+    /// @return A configuration with the sampling region.
     CfgType Sample(SamplingRegion* _region);
 
+    /// Sample a configuration from within a given boundary using the sampler
+    /// given in _samplerLabel.
+    /// @param _region The region to sample from.
+    /// @return A configuration with the boundary.
     CfgType Sample(const Boundary* const _boundary, const std::string* _samplerLabel);
+
+    /// Calculate the velocity bias along a region's skeleton edge.
+    /// @param _region The region whose skeleton edge to bias the velocity along.
+    /// @return The velocity bias.
+    const Vector3d GetVelocityBias(SamplingRegion* _region);
+
+    /// Determine if a region is touching a configuration.
+    /// @param _cfg The configuration.
+    /// @param _region The sampling region.
+    bool IsTouching(const Cfg& _cfg, SamplingRegion& _region);
+
+    /// Calculate the boundary around a sampling region.
+    /// @param _v The center of the sampling region.
+    /// @return The boundary with center _v and radius m_regionRadius.
+    CSpaceBoundingSphere MakeBoundary(const Vector3d& _v);
     
     ///@}
     ///@name Skeleton and Workspace
@@ -178,11 +194,11 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     void DirectSkeleton();
 
     /// Select a region based on weighted success probabilities
-    /// @return expansion region to be expanded
+    /// @return The sampling region to be expanded
     const size_t SelectSamplingRegion();
 
     /// Compute probabilities for selecting each sampling region.
-    /// @return probabiliities based on extension success
+    /// @return Probabilities based on extension success
     std::vector<double> ComputeProbabilities();
 
     /// Bias the velocity of a sample along a direction perscribed by
@@ -191,20 +207,28 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
     /// @param _region The region from which _cfg was sampled.
     void BiasVelocity(CfgType& _cfg, SamplingRegion* _region);
 
-    const Vector3d GetVelocityBias(SamplingRegion* _region);
-
+    /// Check if q_new is close enough to an unvisited skeleton vertex to create
+    /// new regions on the outgoing edges of that vertex. If so, create those
+    /// new regions.
+    /// @param _p The new configuration added to the roadmap.
     void CheckRegionProximity(const Point3d& _p);
 
+    /// Create new regions on the outgoing edges of the skeleton vertex.
+    /// @param _iter The skeleton vertex iterator.
+    /// @return The newly created sampling regions.
     std::vector<SamplingRegion*> 
     CreateRegions(const WorkspaceSkeleton::vertex_iterator _iter);
 
+    /// Advance all sampling regions until they are no longer touching the
+    /// newly added configuration.
+    /// @param _cfg The newly added configuration, q_new.
     void AdvanceRegions(const Cfg& _cfg);
 
+    /// Advance a region until it is either not longer touching a configuration
+    /// or until it reaches the end of its respective skeleton edge.
+    /// @param _cfg A configuration possibly touching the region.
+    /// @param _region The region to advance along its skeleton edge.
     bool AdvanceRegionToCompletion(const Cfg& _cfg, SamplingRegion& _region);
-
-    bool IsTouching(const Cfg& _cfg, SamplingRegion& _region);
-
-    CSpaceBoundingSphere MakeBoundary(const Vector3d& _v);
 
     ///@}
     ///@name Internal State
@@ -222,7 +246,7 @@ class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
 
     bool m_initialized{false};    ///< Have auxiliary structures been initialized?
 
-    /// Last pair of points we used to direct the skeleton.
+    /// Pair of points we use to direct the skeleton.
     std::pair<Point3d, Point3d> m_queryPair;
 
     /// The set of active dynamic sampling regions and associated metadata.
@@ -300,8 +324,21 @@ void
 DynamicRegionRRT<MPTraits>::Print(std::ostream& _os) const {
   BasicRRTStrategy<MPTraits>::Print(_os);
 
-  // TODO print internal state variables (do this last)
+  _os << "\tSkeleton Type:" << m_skeletonType << std::endl;
 
+  if(!m_decompositionLabel.empty())
+    _os << "\tWorkspace Decomposition Label:" << m_decompositionLabel << std::endl;
+
+  if(!m_scuLabel.empty())
+    _os << "\tSkeleton Clearance Utility:" << m_scuLabel << std::endl;
+
+  _os << "\tVelocity Biasing: " << m_velocityBiasing << std::endl;
+  _os << "\tVelocity Alignment: " << m_velocityAlignment << std::endl;
+
+  _os << "\tRegion Factor: " << m_regionFactor << std::endl;
+  _os << "\tRegion Radius: " << m_regionRadius << std::endl;
+  _os << "\tPenetration Factor: " << m_penetrationFactor << std::endl;
+  _os << "\tExploration Factor: " << m_explore << std::endl;
 }
 
 /*---------------------------- MPStrategy Overrides --------------------------*/
@@ -487,6 +524,125 @@ Sample(const Boundary* const _boundary, const std::string* _samplerLabel) {
   return target;
 }
 
+
+template <typename MPTraits>
+const Vector3d
+DynamicRegionRRT<MPTraits>::
+GetVelocityBias(SamplingRegion* _region) {
+  // Get the region data.
+  // const auto& regionData = m_regionData.at(region);
+  const size_t index = _region->edgeIndex;
+
+  // Find the skeleton edge path the region is traversing.
+  auto reit = _region->edgeIterator;
+  const auto& path = reit->property();
+
+  // Helper to make the biasing direction and print debug info.
+  auto makeBias = [&](const Vector3d& _start, const Vector3d& _end) {
+    if(this->m_debug)
+      std::cout << "Computed velocity bias: " << (_end - _start).normalize()
+                << "\n\tStart: " << _start
+                << "\n\tEnd:   " << _end
+                << std::endl;
+    return (_end - _start).normalize();
+  };
+
+  // If there is at least one valid path point after the current path index,
+  // then return the direction to the next point.
+  if(index < path.size() - 1) {
+    if(this->m_debug)
+      std::cout << "Biasing velocity along next path step"
+                << "\n\tPath index: " << index
+                << "\n\tPath size:  " << path.size()
+                << std::endl;
+    return makeBias(path[index], path[index + 1]);
+  }
+
+  // Otherwise, the region has reached a skeleton vertex.
+  WorkspaceSkeleton::VD targetVD = reit->target();
+  auto vertex = m_skeleton.FindVertex(targetVD);
+
+  // If the vertex has no outgoing edges, this is the end of the skeleton. In
+  // that case, use the previous biasing direction. All paths have at least two
+  // points so this is safe.
+  if(vertex->size() == 0) {
+    if(this->m_debug)
+      std::cout << "Biasing velocity along previous path step"
+                << "\n\tPath index: " << index
+                << "\n\tPath size:  " << path.size()
+                << std::endl;
+    return makeBias(path[index - 1], path[index]);
+  }
+
+  // Otherwise, randomly select an outgoing and use it's next point.
+  auto eit = vertex->begin();
+  const size_t nextEdgeIndex = LRand() % vertex->size();
+  std::advance(eit, nextEdgeIndex);
+  if(this->m_debug)
+    std::cout << "Biasing velocity along next edge (index " << nextEdgeIndex
+              << ")\n\tPath index: " << index
+              << "\n\tPath size:  " << path.size()
+              << "\n\tNext edge path size: " << eit->property().size()
+              << std::endl;
+  return makeBias(path[index], eit->property()[1]);
+}
+
+
+template <typename MPTraits>
+bool
+DynamicRegionRRT<MPTraits>::
+IsTouching(const Cfg& _cfg, SamplingRegion& _region) {
+  // Compute the penetration distance required. We want the robot's bounding
+  // sphere to penetrate the region by the fraction m_penetrationThreshold.
+  const double robotRadius  = _cfg.GetMultiBody()->GetBoundingSphereRadius(),
+               threshold    = 2 * robotRadius * m_penetrationFactor;
+
+  // Get the region boundary.
+  const auto center = _region.GetCenter();
+  auto boundary = MakeBoundary(center);
+
+  // Compute the penetration distance (maximally enclosed bounding diameter).
+  const Point3d robotCenter = _cfg.GetPoint();
+  const double penetration = boundary.GetClearance(robotCenter) + robotRadius;
+
+  // The configuration is touching if the penetration exceeds the threshold.
+  const bool touching = penetration >= threshold;
+
+  if(this->m_debug)
+    std::cout << "\t Touch test: " << (touching ? "passed" : "failed")
+              << "\n\t  Bounding sphere: " << robotCenter << " ; " << robotRadius
+              << "\n\t  Region:          " << _region.GetCenter() << " ; "
+              << m_regionRadius
+              << "\n\t  Bounding sphere penetrates by "
+              << std::setprecision(4)
+              << penetration << (touching ? " >= " : " < ") << threshold
+              << " units."
+              << std::endl;
+
+  return touching;
+}
+
+
+template <typename MPTraits>
+CSpaceBoundingSphere
+DynamicRegionRRT<MPTraits>::
+MakeBoundary(const Vector3d& _v) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::MakeBoundary");
+
+  const bool threeD = this->GetTask()->GetRobot()->GetMultiBody()->GetBaseType()
+                   == Body::Type::Volumetric;
+
+  // I'm not sure what the boundary code might do with a negative radius. Bound
+  // it below at zero just in case.
+  const double radius = std::max(0., m_regionRadius);
+
+  if (threeD)
+    return CSpaceBoundingSphere({_v[0], _v[1], _v[2]}, radius);
+  else
+    return CSpaceBoundingSphere({_v[0], _v[1]}, radius);
+}
+
 /*--------------------------- Skeleton and Workspace -------------------------*/
 
 template <typename MPTraits>
@@ -657,24 +813,28 @@ SelectSamplingRegion() {
   // Update all region probabilities.
   const std::vector<double> probabilities = ComputeProbabilities();
 
-  // Construct with random number generator with the region probabilities.
-  /// @todo Oops, this doesn't base the randomness on our seed. Fix by making a
-  ///       wrapper class which generates random numbers using our functions.
-  static std::default_random_engine generator(0);
-  std::discrete_distribution<size_t> distribution(probabilities.begin(),
-      probabilities.end());
 
-  const size_t index = distribution(generator);
+  // Select a region to sample from. The last region is the whole environment.
+  double rand = DRand();
+  double lowerBound = 0.0;
+  int index;
+
+  for(index = 0; index < (int)probabilities.size(); index++) {
+    if((lowerBound < rand) and (rand < lowerBound + probabilities[index]))
+      break;
+    
+    lowerBound += probabilities[index];
+  }
 
   if(this->m_debug) {
     std::cout << "Computed region selection probabilities ("
               << "last is whole env):\n\t";
 
-    for(auto p : distribution.probabilities())
+    for(auto p : probabilities)
       std::cout << std::setprecision(4) << p << " ";
 
     std::cout << "\n\tSelected index " << index
-              << (index == m_regions.size() ? "." : " (whole env).")
+              << (index != (int)m_regions.size() ? "." : " (whole env).")
               << std::endl;
   }
 
@@ -686,13 +846,6 @@ template <typename MPTraits>
 std::vector<double>
 DynamicRegionRRT<MPTraits>::
 ComputeProbabilities() {
-  /// @TODO The current implementation is O(|regions|) time, but we should be
-  ///       able to do it in O(1) by keeping a running total weight and adjusting
-  ///       it and the region weight after each sampling attempt. Main blocker
-  ///       at this time is the probability distribution object, which we could
-  ///       easily manually re-implement. Region deletion will still be
-  ///       O(|regions|) though because we need to update all the probabilites.
-  ///       Even an incremental solution here will be O(|regions|) on average.
 
   // Sum all weights of all current regions.
   double totalWeight = 0.;
@@ -743,70 +896,6 @@ BiasVelocity(CfgType& _cfg, SamplingRegion* _region) {
                 << m_velocityAlignment
                 << std::endl;
   } while(velocity * bias < m_velocityAlignment);
-}
-
-
-template <typename MPTraits>
-const Vector3d
-DynamicRegionRRT<MPTraits>::
-GetVelocityBias(SamplingRegion* _region) {
-  // Get the region data.
-  // const auto& regionData = m_regionData.at(region);
-  const size_t index = _region->edgeIndex;
-
-  // Find the skeleton edge path the region is traversing.
-  auto reit = _region->edgeIterator;
-  const auto& path = reit->property();
-
-  // Helper to make the biasing direction and print debug info.
-  auto makeBias = [&](const Vector3d& _start, const Vector3d& _end) {
-    if(this->m_debug)
-      std::cout << "Computed velocity bias: " << (_end - _start).normalize()
-                << "\n\tStart: " << _start
-                << "\n\tEnd:   " << _end
-                << std::endl;
-    return (_end - _start).normalize();
-  };
-
-  // If there is at least one valid path point after the current path index,
-  // then return the direction to the next point.
-  if(index < path.size() - 1) {
-    if(this->m_debug)
-      std::cout << "Biasing velocity along next path step"
-                << "\n\tPath index: " << index
-                << "\n\tPath size:  " << path.size()
-                << std::endl;
-    return makeBias(path[index], path[index + 1]);
-  }
-
-  // Otherwise, the region has reached a skeleton vertex.
-  WorkspaceSkeleton::VD targetVD = reit->target();
-  auto vertex = m_skeleton.FindVertex(targetVD);
-  // auto vertex = m_skeleton.GetGraph().find_vertex(reit->target());
-
-  // If the vertex has no outgoing edges, this is the end of the skeleton. In
-  // that case, use the previous biasing direction. All paths have at least two
-  // points so this is safe.
-  if(vertex->size() == 0) {
-    if(this->m_debug)
-      std::cout << "Biasing velocity along previous path step"
-                << "\n\tPath index: " << index
-                << "\n\tPath size:  " << path.size()
-                << std::endl;
-    return makeBias(path[index - 1], path[index]);
-  }
-
-  // Otherwise, randomly select an outgoing and use it's next point.
-  auto eit = vertex->begin();
-  const size_t nextEdgeIndex = LRand() % vertex->size();
-  std::advance(eit, nextEdgeIndex);
-  if(this->m_debug)
-    std::cout << "Biasing velocity along next edge (index " << nextEdgeIndex
-              << ")\n\tPath index: " << index
-              << "\n\tPath size:  " << path.size()
-              << "\n\tNext edge path size: " << eit->property().size()
-              << std::endl;
-  return makeBias(path[index], eit->property()[1]);
 }
 
 
@@ -959,62 +1048,6 @@ AdvanceRegionToCompletion(const Cfg& _cfg, SamplingRegion& _region) {
     std::cout << "\t Region is still traversing this edge." << std::endl;
 
   return false;
-}
-
-
-template <typename MPTraits>
-bool
-DynamicRegionRRT<MPTraits>::
-IsTouching(const Cfg& _cfg, SamplingRegion& _region) {
-  // Compute the penetration distance required. We want the robot's bounding
-  // sphere to penetrate the region by the fraction m_penetrationThreshold.
-  const double robotRadius  = _cfg.GetMultiBody()->GetBoundingSphereRadius(),
-               threshold    = 2 * robotRadius * m_penetrationFactor;
-
-  // Get the region boundary.
-  const auto center = _region.GetCenter();
-  auto boundary = MakeBoundary(center);
-
-  // Compute the penetration distance (maximally enclosed bounding diameter).
-  const Point3d robotCenter = _cfg.GetPoint();
-  const double penetration = boundary.GetClearance(robotCenter) + robotRadius;
-
-  // The configuration is touching if the penetration exceeds the threshold.
-  const bool touching = penetration >= threshold;
-
-  if(this->m_debug)
-    std::cout << "\t Touch test: " << (touching ? "passed" : "failed")
-              << "\n\t  Bounding sphere: " << robotCenter << " ; " << robotRadius
-              << "\n\t  Region:          " << _region.GetCenter() << " ; "
-              << m_regionRadius
-              << "\n\t  Bounding sphere penetrates by "
-              << std::setprecision(4)
-              << penetration << (touching ? " >= " : " < ") << threshold
-              << " units."
-              << std::endl;
-
-  return touching;
-}
-
-
-template <typename MPTraits>
-CSpaceBoundingSphere
-DynamicRegionRRT<MPTraits>::
-MakeBoundary(const Vector3d& _v) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::MakeBoundary");
-
-  const bool threeD = this->GetTask()->GetRobot()->GetMultiBody()->GetBaseType()
-                   == Body::Type::Volumetric;
-
-  // I'm not sure what the boundary code might do with a negative radius. Bound
-  // it below at zero just in case.
-  const double radius = std::max(0., m_regionRadius);
-
-  if (threeD)
-    return CSpaceBoundingSphere({_v[0], _v[1], _v[2]}, radius);
-  else
-    return CSpaceBoundingSphere({_v[0], _v[1]}, radius);
 }
 
 #endif

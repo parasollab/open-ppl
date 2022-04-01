@@ -2,9 +2,6 @@
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
     <Problem>
         <Environment filename="./3D/hallway.xml" />
-        <!-- <Robot label="boxy" filename="./3D/iCreate.xml">
-            <Agent type="planning" />
-        </Robot> -->
         <Robot label="boxy" filename="3D/iCreate.xml">
             <Agent type="pathFollowing" waypointDm="euclidean" waypointThreshold=".05" debug="true" />
         </Robot>      
@@ -77,14 +74,6 @@
         </MapEvaluators>
 
         <MPStrategies>
-            <!-- Old DynamicRegionRRT -->
-            <BasicRRTStrategy label="DynamicRegionRRT" debug="true"
-                querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
-                nfLabel="Nearest" extenderLabel="BERO" growGoals="true"
-                connectorLabel="Closest">
-                <Evaluator label="BoundedQuery" />
-            </BasicRRTStrategy>
-
             <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
                 samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
                 growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
