@@ -283,13 +283,13 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualSample");
-
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid, invalid;
   valid.reserve(_numNodes);
-
   // Try to generate _numNodes samples, using up to _maxAttempts tries per
   // sample.
+  //I suspect the dependent segfault must be happening here
+  //<<" _valid: "<<*_valid<<" _invalid "<<*_invalid
   for(size_t i = 0; i < _numNodes; ++i) {
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       cfg.GetRandomCfg(_boundary);
@@ -313,7 +313,6 @@ SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
     OutputIterator _valid) {
   std::vector<CfgType> invalid;
-
   Sample(_numNodes, _maxAttempts, _boundary, _valid, std::back_inserter(invalid));
 }
 
@@ -326,7 +325,6 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     OutputIterator _valid, OutputIterator _invalid) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualSample");
-
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid, invalid;
   valid.reserve(_numNodes);
@@ -357,7 +355,6 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     const Boundary* const _robotBoundary, const Boundary* const _eeBoundary,
     OutputIterator _valid) {
   std::vector<CfgType> invalid;
-
   Sample(_numNodes, _maxAttempts, _robotBoundary, _eeBoundary, _valid,
       std::back_inserter(invalid));
 }
@@ -414,7 +411,6 @@ Sample(size_t _numNodes, size_t _maxAttempts,
     GroupOutputIterator _valid, GroupOutputIterator _invalid) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
-
   GroupCfgType cfg(this->GetGroupRoadmap());
   std::vector<GroupCfgType> valid, invalid;
 
@@ -449,7 +445,7 @@ Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
       std::back_inserter(invalid));
 }
 
-
+//ANCHOR - Sampler  Function in Question
 template <typename MPTraits>
 void
 SamplerMethod<MPTraits>::
@@ -459,12 +455,14 @@ Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
   MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
 
   const Boundary* const envBoundary = this->GetEnvironment()->GetBoundary();
-
   GroupCfgType cfg(this->GetGroupRoadmap());
   std::vector<GroupCfgType> valid, invalid;
-
   // Try to generate _numNodes samples, using up to _maxAttempts tries per
   // sample.
+  // for (auto iter = _boundaryMap.begin(); iter!=_boundaryMap.end(); ++iter){
+  //   cout<<"Robot: "<<iter->first->GetLabel()<<" "; 
+  //   cout<<"Bounds: "<<*(iter->second)<<endl;
+  // }
   for(size_t i = 0; i < _numNodes; ++i) {
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
 
@@ -473,27 +471,28 @@ Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
       for(auto formation : this->GetGroupRoadmap()->GetActiveFormations()) {
         auto boundary = _boundaryMap.count(formation->GetLeader()) ? _boundaryMap.at(formation->GetLeader())
                                                   : envBoundary;
+
         auto cfgs = formation->GetRandomFormationCfg(boundary);
-	for(auto c : cfgs) {
+        for(auto c : cfgs) {
           auto robot = c.GetRobot();
           used.insert(robot);
           cfg.SetRobotCfg(robot,std::move(c));
-	}
+        }
       }
 
       // Generate a random configuration for each robot.
       for(size_t i = 0; i < cfg.GetNumRobots(); ++i) {
         // Determine the boundary to use.
         auto robot = cfg.GetRobot(i);
-	if(used.count(robot))
-	  continue;
+        if(used.count(robot)) continue;
         auto boundary = _boundaryMap.count(robot) ? _boundaryMap.at(robot)
                                                   : envBoundary;
         cfg.GetRobotCfg(i).GetRandomCfg(boundary);
       }
 
-      if(this->Sampler(cfg, _boundaryMap, valid, invalid))
+      if(this->Sampler(cfg, _boundaryMap, valid, invalid)){
         break;
+      }
     }
   }
 
@@ -503,6 +502,7 @@ Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
 
   std::copy(valid.begin(), valid.end(), _valid);
   std::copy(invalid.begin(), invalid.end(), _invalid);
+  auto vect = cfg.GetRobots();
 }
 
 
@@ -510,7 +510,7 @@ template <typename MPTraits>
 void
 SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
-    GroupOutputIterator _valid) {
+    GroupOutputIterator _valid) {  
   std::vector<GroupCfgType> invalid;
   Sample(_numNodes, _maxAttempts, _boundaryMap, _valid,
       std::back_inserter(invalid));

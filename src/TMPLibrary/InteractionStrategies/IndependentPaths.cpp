@@ -55,7 +55,6 @@ operator()(Interaction* _interaction, State& _state) {
 
   SetInteractionBoundary(_interaction,_state);
 
-
   // Assign interaction roles.
   const auto& stages = _interaction->GetStages();
   auto& preconditions = _interaction->GetStageConditions(stages[0]);
@@ -81,6 +80,14 @@ operator()(Interaction* _interaction, State& _state) {
     auto& goalConditions = _interaction->GetStageConditions(next);
     auto goalConstraintMap = GenerateConstraints(goalConditions,groups,
                                                  _state,staticRobots);
+    // cout<<"///////////////////////////////////////////////"<<endl;
+    // for (auto iter = goalConstraintMap.begin(); iter!=goalConstraintMap.end(); ++iter){
+    //   cout<<"TWC GOAL CONSTRAINTS: "<<iter->first->GetLabel()<<" "<<*(iter->second->GetBoundary())<<endl;
+    // }
+    // for (auto iter = startConstraintMap.begin(); iter!=startConstraintMap.end(); ++iter){
+    //   cout<<"TWC START CONSTRAINTS: "<<iter->first->GetLabel()<<" "<<*(iter->second->GetBoundary())<<endl;
+    // }
+    // cout<<"///////////////////////////////////////////////"<<endl;
 
     // Check that there are was goal constraint created.
     if(goalConstraintMap.empty())
@@ -107,7 +114,6 @@ operator()(Interaction* _interaction, State& _state) {
     // Check if a valid solution was found.
     if(toNextStagePaths.empty())
       break;
-
     // Save plan information.
     _interaction->SetToStagePaths(next,toNextStagePaths);
 
@@ -119,13 +125,29 @@ operator()(Interaction* _interaction, State& _state) {
     }
   }
 
-
+  //Creating a roadmap for each stage in the interaction.
+  //How to combine this into one roadmap?
+  for (size_t i = 0; i < stages.size(); i++) {
+        auto sol = _interaction->GetToStageSolution(stages[i]);
+        auto& startConditions = _interaction->GetStageConditions(stages[i]);
+        auto Robots = GetRobots(startConditions);   
+        for (auto Robot : Robots){  
+          if (Robot!=0){
+                auto rmp = sol->GetRoadmap(Robot);
+		auto lbl = Robot->GetLabel();
+		if (rmp!=0) rmp->Write(stages[i]+"_"+Robot->GetLabel()+".map", this->GetMPProblem()->GetEnvironment());
+          }
+        }
+  }
+  //auto sg = dynamic_cast<CombinedRoadmap*> this->GetStateGraph(m_sgLabel).get();
+  //sg->Write("handoffTemplateTest2"+".map", this->GetMPProblem()->GetEnvironment());
+  
   // Clear information from this planning run.
   m_roleMap.clear();
   m_interimCfgMap.clear();
   m_individualPaths.clear();
   m_finalState.clear();
-
+           
   return foundSolution;
 
 
@@ -305,6 +327,14 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
       //_solution->AddRobotGroup(group);
       
       // Call the MPLibrary solve function to expand the roadmap
+      for(auto robot : task.get()->GetRobotGroup()->GetRobots()) {
+        // cout<<robot->GetLabel()<<endl;
+        //_solution->AddRobot(robot);
+        robot->SetVirtual(false);
+      }
+      cout<<"Solution: "<<_solution<<endl;
+      cout<<"Strategy: "<<m_mpStrategyLabel<<endl;
+      cout<<"Label: "<<_label<<endl;
       lib->SetTask(nullptr);
       lib->Solve(prob,task.get(),_solution,m_mpStrategyLabel, LRand(),_label);
     }

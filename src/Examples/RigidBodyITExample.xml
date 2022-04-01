@@ -281,7 +281,7 @@
 
     <TaskEvaluators>
       <!-- This query searches over the hypergraph combined roadmap for a TMP solution -->
-      <HCRQuery label="HCRQuery" sgLabel="HCR" vcLabel="pqp_solid" debug="false"/>
+      <HCRQuery label="HCRQuery" sgLabel="HCR" vcLabel="pqp_solid" debug="true"/>
     </TaskEvaluators>
 
     <TaskDecomposers>

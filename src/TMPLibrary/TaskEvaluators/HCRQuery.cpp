@@ -297,7 +297,6 @@ ExtractPaths(const std::vector<HPElem>& _hyperpath) {
   return robotPaths;
 }
 
-
 void
 HCRQuery::
 ExtractPlan(Node _node) {
@@ -321,6 +320,7 @@ ExtractPlan(Node _node) {
   //if(m_debug)
   //  plan->Print();
 }
+
 
 std::vector<HCRQuery::HPElem>
 HCRQuery::

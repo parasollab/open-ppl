@@ -1,0 +1,423 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="tmp_examples">
+
+    <!-- The Environment is split into land and water to force a handoff to occur to reach the other side -->
+    <Environment filename="3D/3d-empty.env"
+      frictionCoefficient="0" gravity="0 0 0">
+      <Terrain capability="water">
+        <Boundary limits="[-5:25 ; -15:15 ; -25:25]"
+          space="workspace" shape="box" color="green" virtual="true"/>
+      </Terrain>
+      <Terrain capability="land">
+        <Boundary limits="[-25:-5 ; -15:15 ; -25:25]"
+          space="workspace" shape="box" color="blue" virtual="true"/>
+      </Terrain>
+      <Terrain capability="passive">
+        <Boundary limits="[-25:25 ; -15:15 ; -25:25]"
+          space="workspace" shape="box" color="red" virtual="true"/>
+      </Terrain>
+    </Environment>
+
+    <!-- One land robot to operate in the land region -->
+    <Robot label="boxy1" filename="3D/boxy.robot" capability="land">
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <!-- One water robot to poerate in the water region -->
+    <Robot label="boxy2" filename="3D/boxy.robot" capability="water">
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <!-- One "passive robot" object to be moved between regions -->
+    <Robot label="passive" capability="passive">
+      <MultiBody type="passive">
+        <Base filename="link.obj" color="0 1 0 1" type="volumetric"
+              movement="rotational" mass="1"/>
+      </MultiBody>
+    </Robot>
+
+    <!-- Robot groups denoting which combinations of robots can be formed -->
+    <RobotGroup label="robotGroup1" robotLabels="boxy1"/>
+    <RobotGroup label="robotGroup2" robotLabels="boxy2"/>
+    <RobotGroup label="grasp1" robotLabels="boxy1 passive"/>
+    <RobotGroup label="grasp2" robotLabels="boxy2 passive"/>
+
+    <!-- The coordinator to coordinate the planning and, if desired, execution of the plan -->
+    <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true">
+        <Member label="boxy1"/> 
+        <Member label="boxy2"/> 
+        <!-- The step function defines the coordinator behavior at each time step -->
+        <!-- This should not need to be changed -->
+        <StepFunction type="defaultcoordinator" debug="true"/>
+        <!-- The initial split into robot groups at the start of the plan -->
+        <!-- This setup has robot 1 holding the object and robot 2 free -->
+        <!-- The formation constraint in the first group specifies the exact transformation
+             between robot 1 and the object -->
+        <!-- There are additional optional parameters to specify which body indices the transformation
+             is between, but they default to the base -->
+        <!-- The formation code is in ConfigurationSpace/Formation.h/cpp if you want further info -->
+        <InitialGroup label="grasp1" leader="boxy1">
+          <FormationConstraint depRobot="passive" refRobot="boxy1" 
+                               translation="5 0 0" orientation="0 0 0"/>
+        </InitialGroup>
+        <InitialGroup label="robotGroup2"/>
+      </Agent>
+    </Robot>
+
+    <!-- Each declared group needs a GroupTask with start constraints -->
+    <!-- Each robot will start at the position defined in the last group task it is included in -->
+    <!-- This is clearly a bad design, but it's legacy and we haven't gotten to refactoring it yet -->
+    <!-- The actual task specification is below this in the Decomposition -->
+
+    <!-- The group tasks associated with the initial groups will go last, so that they set the start positions-->
+    <GroupTask label="NotImportant" group="grasp2">
+      <Task label="startLocation1" robot="boxy2">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+      <Task label="startLocation2" robot="passive">
+        <StartConstraints>
+          <CSpaceConstraint point="-15 5 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
+
+    <GroupTask label="NotImportant" group="robotGroup1">
+      <Task label="startLocation1" robot="boxy1">
+        <StartConstraints>
+          <CSpaceConstraint point="-20 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
+
+    <!-- Initial group starting positions -->
+    <GroupTask label="Grasp1Start" group="grasp1">
+      <Task label="startLocation1" robot="boxy1">
+        <StartConstraints>
+          <CSpaceConstraint point="-20 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+      <Task label="startLocation2" robot="passive">
+        <StartConstraints>
+          <CSpaceConstraint point="-15 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
+
+    <GroupTask label="Robot2Start" group="robotGroup2">
+      <Task label="startLocation2" robot="boxy2">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+      </Task>
+    </GroupTask>
+
+    <!-- Any task solved by the TMPLibrary is specified by a decomposition -->
+    <!-- A large set of decomposable tasks can be expressed a binary tree of semantic tasks, 
+        but here we will just have one task for simplicity -->
+    <!-- The task only needs a goal constraint as the start constraint will be generated later 
+         from the interaction end point-->
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first" fixedAllocation="true">
+        <!-- The goal constraint is set to be the entire environment, so that it will be complete
+             after the exhcange has occured -->
+        <GroupTask label="groupQuery" group="grasp2">
+          <Task label="query1" robot="boxy2">
+            <GoalConstraints>
+              <BoundaryConstraint shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
+            </GoalConstraints>
+          </Task>
+
+          <Task label="query2" robot="passive">
+            <GoalConstraints>
+              <BoundaryConstraint shape="box" limits="[-25:25 ; -15:15 ; -25:25]"/>
+            </GoalConstraints>
+          </Task>
+        </GroupTask>
+      </SemanticTask>
+    </Decomposition>
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
+        velWeight="0" avlWeight="0"/>
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
+        normalize="false"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" ignoreSelfCollision="true" interRobotCollision="true"/>
+      <TerrainValidity label="terrain" debug="false"/>
+      <ComposeValidity label="terrain_robot" operator="AND">
+        <ValidityChecker label="pqp_solid"/>
+        <ValidityChecker label="terrain"/>
+      </ComposeValidity>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" debug="true"/>
+      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot" debug="true"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
+      <StraightLine label="sl_terrain" binaryEvaluation="true" vcLabel="terrain_robot"/>
+    </LocalPlanners>
+
+    <Extenders>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" debug="false"
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestTerrain" debug="false"
+        nfLabel="BFNF" lpLabel="sl_terrain" checkIfSameCC="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="10" operator=">="/>
+      <ComposeEvaluator label="BoundedQuery" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+      <TimeEvaluator label="TimeEval" timeout="10"/>
+      <GroupQuery label="CompositeQuery" debug="true"/>
+    </MapEvaluators>
+    <MPStrategies>
+
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="BasicPRM1" debug="false">
+        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+        <Connector label="ClosestTerrain"/>
+        <Evaluator label="Query"/>
+      </BasicPRM>
+
+      <BasicPRM label="NodePRM" debug="false">
+        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+        <Connector label="ClosestTerrain"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
+
+      <!-- EvaluateMapStrategy -->
+      <EvaluateMapStrategy label="EvaluateMapStrategy">
+        <Evaluator label="NodesEval"/>
+      </EvaluateMapStrategy>
+
+      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="BasicPRM1">
+        <Evaluator label="TrueEvaluator"/>
+      </GroupDecoupledStrategy>
+
+      <GroupDecoupledStrategy label="DecoupledNodes" strategyLabel="NodePRM">
+        <Evaluator label="TrueEvaluator"/>
+      </GroupDecoupledStrategy>
+
+      <GroupPRM label="CompositePRM" debug="true">
+        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+        <Connector label="ClosestTerrain"/>
+        <Evaluator label="CompositeQuery"/>
+      </GroupPRM>
+
+      <GroupPRM label="CompositeNodes" debug="false">
+        <Sampler label="UniformRandomFreeTerrain" number="5" attempts="1"/>
+        <Connector label="ClosestTerrain"/>
+        <Evaluator label="NodesEval"/>
+      </GroupPRM>
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
+
+  </Library>
+
+  <!-- You should only need to modify the Interaction Strategies portion of the TMPLibrary -->
+  <TMPLibrary>
+    <TMPStrategies>
+      <!-- This Basic Hypergraph Combined Roadmap strategy is the one you'll want to use -->
+      <!-- It leverages a motion planning strategy to expand underlying roadmaps and also samples interactions 
+           to connect them -->
+      <!-- The choice of which interaction strategy to use is specified within the interaction node further down in the file -->
+      <BasicHCR label="BasicHCR" teLabel="HCRQuery" mpStrat="CompositeNodes" 
+                sgLabel="HCR" expansionProb="0." debug="true"/>
+    </TMPStrategies>
+
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
+
+    <TaskEvaluators>
+      <!-- This query searches over the hypergraph combined roadmap for a TMP solution -->
+      <HCRQuery label="HCRQuery" sgLabel="HCR" vcLabel="pqp_solid" debug="false"/>
+    </TaskEvaluators>
+
+    <TaskDecomposers>
+    </TaskDecomposers>
+
+    <TaskAllocators>
+    </TaskAllocators>
+
+    <!-- This is where you will want to add new Interaction Strategies -->
+    <InteractionStrategies>
+      <DependentPaths label="DepPaths" sgLabel="HCR" smLabel="UniformRandomFree"
+        vcLabel="terrain_robot" mpStrategy="CompositePRM" numNodes="100" debug="true"/>
+    </InteractionStrategies>
+
+    <StateGraphs>
+      <CombinedRoadmap label="HCR" debug="true"/>
+    </StateGraphs>
+
+    <TMPTools>
+    </TMPTools>
+
+    <ActionSpace>
+
+      <!-- Conditions -->
+      <!-- The set of conditions that are used to define various stages within (inter)actions -->
+
+      <!-- This is a formation condition that consists of one robot -->
+      <!-- It defines a role "R1" with a type "land" corresponding to a robot's capability" -->
+      <Condition label="Solo1" type="formation">
+        <Role name="R1" type="land"/>
+      </Condition>
+
+      <!-- This is a duplicate of the above except for the additional static tag -->
+      <!-- The purpose of the static tag will be explained in the interaction -->
+      <Condition label="Solo1-Static" type="formation" static="true">
+        <Role name="R1" type="land"/>
+      </Condition>
+
+      <Condition label="Solo2" type="formation">
+        <Role name="R2" type="water"/>
+      </Condition>
+
+      <!-- This is a multi-robot formaiton condition -->
+      <!-- Each robot has an associated role and type as before -->
+      <!-- There is an additional FormationConstraint in the P1 roel -->
+      <!-- This allows the specificiation of a transformation between a body in the 
+           robot assigned to this role and a body in the robot assigned to the reference 
+           role (refRole) -->
+      <!-- There are also depBody and refBody parameters reprsenting body indices for the 
+           transformation, but these are defaulted to 0 -->
+      <!-- The implementation of these explicit formations is in ConfigurationSpace/Formation.h -->
+      <Condition label="Grasp1" type="formation">
+        <Role name="R1" type="land"/>
+        <Role name="P1" type="passive">
+          <FormationConstraint refRole="R1" translation="5 0 0" orientation="0 0 0"/>
+        </Role>
+      </Condition>
+
+      <Condition label="Grasp2" type="formation">
+        <Role name="R2" type="water"/>
+        <Role name="P1" type="passive">
+          <FormationConstraint refRole="R2" translation="-5 0 0" orientation="0 0 0"/>
+        </Role>
+      </Condition>
+
+      <Condition label="Grasp2-Static" type="formation">
+        <Role name="R2" type="water"/>
+        <Role name="P1" type="passive">
+          <FormationConstraint refRole="R2" translation="-5 0 0" orientation="0 0 0"/>
+        </Role>
+      </Condition>
+
+      <Condition label="Exchange" type="formation" static="true">
+        <Role name="R1" type="land"/>
+        <Role name="P1" type="passive">
+          <FormationConstraint refRole="R1" translation="5 0 0" orientation="0 0 0"/>
+        </Role>
+        <Role name="R2" type="water">
+          <FormationConstraint refRole="R1" translation="10 0 0" orientation="0 0 0"/>
+        </Role>
+        
+      </Condition>
+
+      <!-- Actions -->
+      <!-- This is where the set of available (inter)actions is declared -->
+
+      <!-- Each interaction consists of a set of 'stages' -->
+      <!-- Each stage is used to generate intermediate conditions that must be met -->
+      <!-- This often corresponds to motion plans and the conditions are used to 
+           generate start/goal constraints -->
+      <!-- The isLabel is used to declare which interaction strategy should be used
+           to plan the interaction -->
+      <Interaction label="GraspExchange" isLabel="DepPaths">
+        <!-- This initial stage here declares that a robot group satisfying the Grasp1 
+             condition and a robot group statsifying the Solo2 condition must be present 
+             to start the interaction -->
+        <Stage label="Initial">
+          <Condition label="Grasp1"/>
+          <Condition label="Solo2"/>
+        </Stage>
+        <!-- This stage is used to specify the required formation for performing the 
+             exchange details in the "Exchange" condition -->
+        <!-- The included formation constraints are used to sample goal positions for 
+             transition from the initial stage to this stage -->
+        <!-- These goals are then used as start positions to transition to the next stage -->
+        <Stage label="EnterExchange">
+          <Condition label="Exchange"/>
+        </Stage>
+        <!-- The transition from the Enter and Exit Exchange stages actually involves no 
+             motion -->
+        <!-- The transition occuring here is from  a robot group consisting of both 
+             robots and the object to a pair of robot groups where robot 1 is free and 
+             robot 2 is now holding the object -->
+        <!-- This is where the static tag comes into play -->
+        <!-- Any robot that is within a static formation condition in both the start and 
+            end stages of a transition is held stationary between stages -->
+        <!-- This can be used like it is here to transition between various composite spaces
+             (which is helpful for generating intermediate goals with formation constraints)
+             or it can be used to hold a passive object in place while a robot moves to grasp 
+             it -->
+        <Stage label="ExitExchange">
+          <Condition label="Solo1-Static"/>
+          <Condition label="Grasp2-Static"/>
+        </Stage>
+        <!-- This final stage transtion is just moving out of the static conditions and the method
+             can generate any final goal that it wants -->
+        <!-- Specific or relative end positions can be specified using MotionConditions or this stage
+             can be removed and the robots will begin future actions from the previous stage configurations -->
+        <Stage label="Final">
+          <Condition label="Solo1"/>
+          <Condition label="Grasp2"/>
+        </Stage>
+      </Interaction>
+    </ActionSpace>
+  
+    <Solver tmpStrategyLabel="BasicHCR" baseFilename="action_space_example"/>
+  </TMPLibrary>
+
+</MotionPlanning>

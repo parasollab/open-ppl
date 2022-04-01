@@ -3,6 +3,8 @@
 
 #include "TMPLibrary/ActionSpace/Condition.h"
 #include "TMPLibrary/TMPBaseObject.h"
+//for dependent sampling
+#include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
 class FormationCondition;
 class Interaction;
@@ -19,6 +21,8 @@ class InteractionStrategyMethod : public TMPBaseObject {
     typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
     typedef GroupLocalPlan<Cfg>                              GroupWeightType;
+    typedef std::map<Robot*, const Boundary*> BoundaryMap;
+
 
     ///@}
     ///@name Construction
@@ -80,6 +84,14 @@ class InteractionStrategyMethod : public TMPBaseObject {
                                            const State& _state,
                                            const std::set<Robot*>& _staticRobots);
 
+    //This is used for the dependentpaths sampling method. Highly stylized after above func
+    std::unordered_map<Robot*,Constraint*> GenerateConstraintsDependent(
+                                           const std::vector<std::string>& _conditions,
+                                           const std::vector<RobotGroup*>& _groups,
+                                           const State& _state,
+                                           const std::set<Robot*>& _staticRobots);
+
+
     /// Sample a set of motion constraints for each group in the interaction boundary.
     /// @param _groups The robot groups to find constraints for.
     std::unordered_map<Robot*,Constraint*> SampleMotionConstraints(
@@ -87,6 +99,14 @@ class InteractionStrategyMethod : public TMPBaseObject {
                                            const std::vector<Robot*> _robots,
                                            const State& _state,
                                            const std::set<Robot*>& _staticRobots);
+
+    //Sampling for the dependent paths constraint
+    std::unordered_map<Robot*,Constraint*> SampleMotionConstraintsDependent(
+                                           const std::vector<std::string>& _conditions,
+                                           const std::vector<Robot*> _robots,
+                                           const State& _state,
+                                           const std::set<Robot*>& _staticRobots);
+
 
     void SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution);
 
@@ -102,6 +122,8 @@ class InteractionStrategyMethod : public TMPBaseObject {
                                   MotionCondition* _m);
 
     std::set<Robot*> GetStaticRobots(const std::vector<std::string>& _conditions);
+
+    std::set<Robot*> GetRobots(const std::vector<std::string>& _conditions);
 
     void ConfigureStaticRobots(const std::set<Robot*>& _staticRobots, const State& _state); 
 

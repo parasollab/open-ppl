@@ -156,7 +156,6 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
   auto vc = this->GetValidityChecker(m_vcLabel);
   const std::string callee = this->GetNameAndLabel() + "::Sampler";
   const bool isValid = vc->IsValid(_cfg, callee);
-
   // Store result.
   if(isValid)
     _valid.push_back(_cfg);

@@ -1,0 +1,36 @@
+TMPLibrary/ActionSpace/Action.h:    const std::vector<std::string>& GetStageConditions(const std::string& _stage) const;
+TMPLibrary/ActionSpace/Action.cpp:GetStageConditions(const std::string& _stage) const {
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:  auto& preconditions = _interaction->GetStageConditions(stages[0]);
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:    auto& startConditions = _interaction->GetStageConditions(current);
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:    auto& goalConditions = _interaction->GetStageConditions(next);
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:  auto& conditions = _interaction->GetStageConditions(_current);
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:  auto initialConditions = _interaction->GetStageConditions(stages[0]);
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:    auto startConditions = _interaction->GetStageConditions(stages[0]);
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:  auto pregraspConditions = _interaction->GetStageConditions(stages[_stage]);
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:  for(auto condition : _interaction->GetStageConditions(_stage)) {
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:  for(const auto label : _interaction->GetStageConditions(initialStage)) {
+Binary file TMPLibrary/InteractionStrategies/.DependentPaths_Testing_2.cpp.swp matches
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:  auto initialConditions = _interaction->GetStageConditions(stages[0]);
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:    auto& startConditions = _interaction->GetStageConditions(current);
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:  for(const auto label : _interaction->GetStageConditions(stages[_next])) {
+Binary file TMPLibrary/InteractionStrategies/.IndependentPaths.cpp.swp matches
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_2.cpp:  auto& preconditions = _interaction->GetStageConditions(stages[0]);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_2.cpp:    auto& startConditions = _interaction->GetStageConditions(current);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_2.cpp:    auto& goalConditions = _interaction->GetStageConditions(next);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_2.cpp:  auto& conditions = _interaction->GetStageConditions(_current);
+TMPLibrary/StateGraphs/ModeGraph.cpp:  for(auto label : _action->GetStageConditions(initialStage)) {
+TMPLibrary/StateGraphs/ModeGraph.cpp:  for(auto label : _action->GetStageConditions(finalStage)) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  for(auto label : _interaction->GetStageConditions(initialStage)) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:    for(auto label : _interaction->GetStageConditions(initialStage)) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  for(auto label : _interaction->GetStageConditions(initialStage)) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  for(auto label : _interaction->GetStageConditions(initialStage)) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  for(auto label : _interaction->GetStageConditions(initialStage)) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:      for(auto label : _interaction->GetStageConditions(initialStage)) {
+Binary file build/TMPLibrary/ActionSpace/Action.o matches
+Binary file build/TMPLibrary/InteractionStrategies/HandoffStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/InteractionStrategyMethod.o matches
+Binary file build/TMPLibrary/InteractionStrategies/GraspStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/IndependentPaths.o matches
+Binary file build/TMPLibrary/StateGraphs/ModeGraph.o matches
+Binary file build/TMPLibrary/TMPStrategies/BasicHCR.o matches
+Binary file ppl matches
