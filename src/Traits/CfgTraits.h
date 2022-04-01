@@ -29,7 +29,6 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
-#include "MPLibrary/Samplers/DynamicRegionSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
@@ -120,7 +119,6 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    DynamicRegionSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;

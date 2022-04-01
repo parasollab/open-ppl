@@ -39,10 +39,6 @@
     <Samplers>
         <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue" />
         <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" />
-        <DynamicRegionSampler label="DynamicRegionSampler"
-            samplerLabel="UniformRandom" explore=".2" regionFactor="2.5"
-            penetration="1" velocityBiasing="false" velocityAlignment=".4"
-            decompositionLabel="fine" skeletonType="ma" />
     </Samplers>
 
     <LocalPlanners>
