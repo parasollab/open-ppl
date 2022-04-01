@@ -64,6 +64,8 @@ void
 ChildAgent::
 Step(const double _dt) {
 
+  Initialize();
+
   if(m_stepFunction.get()) {
     this->m_stepFunction->StepAgent(_dt);
     return;

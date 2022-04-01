@@ -219,6 +219,10 @@ TimeSteps() const {
     m_timesteps += edge.GetTimeSteps();
   }
 
+  for(auto w : m_waitingTimesteps) {
+    m_timesteps += w;
+  }
+
   return m_timesteps;
 }
 
@@ -268,7 +272,9 @@ FullCfgs(MPLibrary* const _lib) const {
     // don't reconstruct the edge when it's for a part that has been placed off
     // to the side, just use the two cfgs. This edge will just be (start, end).
     if(!edge.SkipEdge()) {
-      std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, source, target);
+      auto e = m_roadmap->GetEdge(source,target);
+      auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
+                                              : _lib->ReconstructEdge(m_roadmap, source, target);
 
       if(!edge.empty()) {
         // Only grab the intermediate cfgs.
@@ -312,7 +318,10 @@ FullCfgsWithWait(MPLibrary* const _lib) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     // Insert intermediates between vertices.
 
-    std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    //std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, *it, *(it+1));
+    auto e = m_roadmap->GetEdge(*it,*(it+1));
+    auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
+                                              : _lib->ReconstructEdge(m_roadmap,*it,*(it+1));
     out.insert(out.end(), edge.begin(), edge.end());
 
     // Insert the next vertex.
@@ -386,6 +395,7 @@ operator=(const GroupPath& _p) {
   m_length       = _p.m_length;
   m_lengthCached = _p.m_lengthCached;
   m_timestepsCached = _p.m_timestepsCached;
+  m_waitingTimesteps = _p.m_waitingTimesteps;
 
   return *this;
 }

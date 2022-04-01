@@ -166,6 +166,7 @@
         vcLabel="rapid" maxDist="4." minDist=".01"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
+      <DiscreteExtender label="DiscreteExtender" lp="sl"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
         dmLabel="euclidean" vcLabel="rapid" fixed="false" best="true"
         numSteps="10" minDist=".01"/>
@@ -290,6 +291,7 @@
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
+      <DRRT label="DRRT" rrt="DiscreteRRT"/>
     </MapEvaluators>
 
     <!-- For **UAStrategy use** -->

@@ -229,7 +229,10 @@ class CombinedRoadmap : public StateGraph {
 };
 
 std::ostream& operator<<(std::ostream& _os, const CombinedRoadmap::TMPVertex& _vertex);
-//std::istream& operator>>(std::istream& _is, TMPVertex& _vertex);
+std::istream& operator>>(std::istream& _is, const CombinedRoadmap::TMPVertex& _vertex);
+
+std::ostream& operator<<(std::ostream& _os, const CombinedRoadmap::TMPHyperarc& _arc);
+std::istream& operator>>(std::istream& _is, const CombinedRoadmap::TMPHyperarc& _arc);
 
 /*----------------------------------------------------------------------------*/
 

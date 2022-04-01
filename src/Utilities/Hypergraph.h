@@ -1,6 +1,8 @@
 #ifndef _PPL_HYPERGRAPH_H_
 #define _PPL_HYPERGRAPH_H_
 
+#include "ConfigurationSpace/GenericStateGraph.h"
+
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 
@@ -27,6 +29,8 @@ class Hypergraph {
       HyperarcType property;
     };
 
+    typedef GenericStateGraph<VertexType,HyperarcType> GraphType;
+
     ///@}
     ///@name Construction
     ///@{
@@ -49,6 +53,8 @@ class Hypergraph {
 
     const std::unordered_map<size_t,Vertex>& GetVertexMap() const;
 
+    const size_t Size() const;
+
     ///@}
     ///@name Hyperarc Accessor Functions
     ///@{
@@ -70,6 +76,9 @@ class Hypergraph {
 
     void Print() const;
 
+    GraphType* GetGraph();
+    GraphType* GetReverseGraph();
+
   private: 
 
     ///@name Helper Functions
@@ -90,6 +99,9 @@ class Hypergraph {
     size_t m_vertexCounter{0};
 
     size_t m_hyperarcCounter{0};
+
+    GraphType m_graph;
+    GraphType m_reverseGraph;
 
     ///@}
 };
@@ -128,6 +140,10 @@ AddVertex(VertexType _vertex) {
   m_vertexMap[v.vid] = v;
   m_incomingHyperarcs[v.vid] = {};
   m_outgoingHyperarcs[v.vid] = {};
+
+  // Add to underlying graph
+  m_graph.AddVertex(_vertex);
+  m_reverseGraph.AddVertex(_vertex);
 
   return v.vid;
 }
@@ -176,6 +192,13 @@ GetVID(VertexType _vertex) const {
 }
     
 template <typename VertexType, typename HyperarcType>
+const size_t 
+Hypergraph<VertexType,HyperarcType>::
+Size() const {
+  return m_vertexMap.size();
+}
+
+template <typename VertexType, typename HyperarcType>
 const std::unordered_map<size_t,
       typename Hypergraph<VertexType,HyperarcType>::Vertex>& 
 Hypergraph<VertexType,HyperarcType>::
@@ -223,6 +246,14 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
 
   for(auto vid : h.tail) {
     m_outgoingHyperarcs[vid].insert(h.hid);
+  }
+
+  // Add to underlying graph
+  for(auto source : _tail) {
+    for(auto target : _head) {
+      m_graph.AddEdge(source,target,_hyperarc);
+      m_reverseGraph.AddEdge(target,source,_hyperarc);
+    }
   }
 
   return h.hid;
@@ -335,6 +366,20 @@ Print() const {
   }
 
   std::cout << "END OF HYPERGRAPH" << std::endl;
+}
+
+template <typename VertexType, typename HyperarcType>
+typename Hypergraph<VertexType,HyperarcType>::GraphType*
+Hypergraph<VertexType,HyperarcType>::
+GetGraph() {
+  return &m_graph;
+}
+
+template <typename VertexType, typename HyperarcType>
+typename Hypergraph<VertexType,HyperarcType>::GraphType*
+Hypergraph<VertexType,HyperarcType>::
+GetReverseGraph() {
+  return &m_reverseGraph;
 }
 
 /*-------------------------------------------------------------------*/

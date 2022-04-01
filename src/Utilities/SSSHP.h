@@ -111,6 +111,23 @@ DefaultSSSHPForwardStar() {
   };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Define a heuristic for the search.
+////////////////////////////////////////////////////////////////////////////////
+template <typename VertexType, typename HyperarcType> 
+using SSSHPHeuristic = 
+  std::function<double(const size_t _target)>;
+
+/// Create a standard SSSHP heuristic function. This simply returns 0.
+/// @return heuristic value.
+template <typename VertexType, typename HyperarcType>
+SSSHPHeuristic<VertexType,HyperarcType>
+DefaultSSSHPHeuristic() {
+  return [](const size_t& _target) {
+    return 0;
+  };
+}
+
 /// Compute the SSSP through a graph from a start node with Dijkstra's algorithm.
 template <typename VertexType, typename HyperarcType>
 MBTOutput
@@ -120,6 +137,7 @@ SBTDijkstra(
   SSSHPPathWeightFunction<VertexType,HyperarcType> _weight,
   SSSHPTerminationCriterion _termination,
   SSSHPForwardStar<VertexType,HyperarcType> _forwardStar,
+  SSSHPHeuristic<VertexType,HyperarcType> _heuristic,
   const double _sourceWeight = 0) {
 
   // Set up local variables.
@@ -151,17 +169,19 @@ SBTDijkstra(
     size_t parent; ///< The parent hyperarc id.
     size_t vid;    ///< The vertex id.
     double weight; ///< The weight for this visit of the node.
+    double heuristic; ///< The heuristic value of this node.
 
     /// Construct an element for the seaerch queue.
     /// @param _parent The parent hyperarc id.
     /// @param _vid    The vertex id.
     /// @param _wieght The weight of this visit.
-    element(const size_t _parent, const size_t _vid, const double _weight)
-      : parent(_parent), vid(_vid), weight(_weight) { }
+    element(const size_t _parent, const size_t _vid, const double _weight,
+            const double _heuristic)
+      : parent(_parent), vid(_vid), weight(_weight), heuristic(_heuristic) { }
 
     /// Total ordering by descreasing weight.
     bool operator>(const element _e) const noexcept {
-      return weight > _e.weight;
+      return weight + heuristic > _e.weight + _e.heuristic;
     }
 
   };
@@ -175,7 +195,7 @@ SBTDijkstra(
   std::set<size_t> visited;
 
   // Define a relax function.
-  auto relax = [&mbt, &pq, &_weight](size_t _target,
+  auto relax = [&mbt, &pq, &_weight, &_heuristic](size_t _target,
           const typename Hypergraph<VertexType,HyperarcType>::Hyperarc& _hyperarc) {
 
     const double newWeight = _weight(_hyperarc,mbt.weightMap,_target);
@@ -187,20 +207,19 @@ SBTDijkstra(
 
     // Otherwise, update the target distance and add the target to the queue.
     mbt.weightMap[_target] = newWeight;
-    pq.emplace(_hyperarc.hid, _target, newWeight);
+    auto heuristic = _heuristic(_target);
+    pq.emplace(_hyperarc.hid, _target, newWeight, heuristic);
   };
 
   // Intialize starting node in queue.
-  pq.emplace(MAX_INT,_source,_sourceWeight);
+  auto initHeuristic = _heuristic(_source);
+  pq.emplace(MAX_INT,_source,_sourceWeight,initHeuristic);
 
   // SBT-Dijkstras
   while(!pq.empty()) {
     // Get the next element.
     element current = pq.top();
     pq.pop();
-
-    if(current.vid == 878)
-      std::cout << "HERE" << std::endl;
 
     // If this node has already been visited, the element is stale. Discard.
     if(visited.count(current.vid))

@@ -35,8 +35,6 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
   m_querySM = _node.Read("querySM",true,"",
                "Sampler Method to use to generate query cfgs.");
 
-  m_expansionStrategy = _node.Read("expansionStrategy",true,"",
-                      "MPStrategy label to build initial roadaps.");
   m_queryStrategy = _node.Read("queryStrategy",true,"",
                       "MPStrategy label to query roadaps.");
   m_numUnactuatedSamples = _node.Read("numUnactuatedSamples",false,0,0,1000,
@@ -57,6 +55,10 @@ ModeGraph::
 Initialize() {
 
   auto problem = this->GetMPProblem();
+
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Initialize");
 
   // Initialize MPSolution
   auto c = this->GetPlan()->GetCoordinator();
@@ -170,6 +172,17 @@ ModeGraph::
 GetMPSolution() {
   return m_solution.get();
 }
+    
+ModeGraph::VID 
+ModeGraph::
+GetModeOfGroundedVID(const VID& _vid) const {
+  for(const auto& kv : m_modeGroundedVertices) {
+    if(kv.second.count(_vid))
+      return kv.first;
+  }
+  return MAX_INT;
+}
+
 /*---------------------------- Helper Functions ------------------------------*/
 
 std::vector<ModeGraph::VID>
@@ -343,10 +356,17 @@ void
 ModeGraph::
 SampleTransitions() {
 
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTransitions");
+
+  std::map<size_t,size_t> groundedInstanceTracker;
+
   // For each edge in the mode graph, generate n samples
   for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
 
     auto& hyperarc = kv.second;
+    groundedInstanceTracker[kv.first] = 0;
     
     // Check if hyperarc is a reversed action, and only plan
     // the forward actions as the reverse will also be saved
@@ -403,6 +423,7 @@ SampleTransitions() {
           if(!is->operator()(interaction,goalSet))
             continue;
 
+          groundedInstanceTracker[kv.first] = groundedInstanceTracker[kv.first] + 1;
           // Save interaction paths
           SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap,headModeMap);
           break;
@@ -421,11 +442,22 @@ SampleTransitions() {
           if(!is->operator()(interaction,goalSet))
             continue;
 
+          groundedInstanceTracker[kv.first] = groundedInstanceTracker[kv.first] + 1;
+
           // Save interaction paths
           SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap,headModeMap);
           break;
         }
       }
+    }
+  }
+
+  if(m_debug) {
+    std::cout << "Grounding instance count of each mode hyperarc." << std::endl;
+    for(auto kv : groundedInstanceTracker) {
+      auto hid = kv.first;
+      auto count = kv.second;
+      std::cout << hid << " : " << count << std::endl;
     }
   }
 }
@@ -435,6 +467,9 @@ ModeGraph::
 GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& _goalVIDs) {
 
   auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GenerateRoadmaps");
+
   auto decomp = plan->GetDecomposition();
   auto lib = this->GetMPLibrary();
   auto qSM = lib->GetSampler(m_querySM);
@@ -539,6 +574,10 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 void
 ModeGraph::
 ConnectTransitions() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectTransitions");
+
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
 
@@ -577,8 +616,8 @@ ConnectTransitions() {
         if(vid1 == vid2)
           continue;
 
-	std::cout << "Attempting to connect grounded vertices: "
-		  << vid1 << vid2 << std::endl;
+        std::cout << "Attempting to connect grounded vertices: "
+                  << vid1 << " -> " << vid2 << std::endl;
 
         auto vertex2 = m_groundedHypergraph.GetVertex(vid2);
 
@@ -645,6 +684,15 @@ ConnectTransitions() {
 
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
+
+        if(m_debug) {
+          std::cout << "Path for transition: " << vid1 << " -> " << vid2 << std::endl;
+          for(const auto& cfg : path->Cfgs()) {
+            std::cout << "\t" << cfg.PrettyPrint() << std::endl;
+          }
+          std::cout << std::endl;
+        }
+
         Transition transition;
         transition.taskSet.push_back({groupTask});
         transition.cost = path->TimeSteps();
@@ -669,14 +717,29 @@ ModeGraph::
 ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<VID>& _newModes) {
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
-  // Extract the formation constraints
+  // Extract the formation and motion constraints
   std::vector<FormationCondition*> initialFormationConditions;
+  std::vector<MotionCondition*> initialMotionConditions;
   auto initialStage = _action->GetStages()[0];
   for(auto label : _action->GetStageConditions(initialStage)) {
     auto c = as->GetCondition(label);
     auto f = dynamic_cast<FormationCondition*>(c);
-    if(f)
+    if(f) {
       initialFormationConditions.push_back(f);
+      continue;
+    }
+    auto m = dynamic_cast<MotionCondition*>(c);
+    if(m)
+      initialMotionConditions.push_back(m);
+  }
+
+  // Connect motion constraints
+  std::unordered_map<std::string,Constraint*> motionConstraintMap;
+  for(auto m : initialMotionConditions) {
+    for(auto role : m->GetRoles()) {
+      auto constraint = m->GetRoleConstraint(role);
+      motionConstraintMap[role] = constraint;
+    }
   }
 
   // Look at possible combinations of modes in the mode hyerpgraph 
@@ -704,8 +767,65 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       }
 
       // Check if the number of saved robots matches the required number
-      if(f->GetTypes().size() == used.size() and used.size() == mode->robotGroup->Size()) 
+      if(f->GetTypes().size() != used.size() or used.size() != mode->robotGroup->Size()) 
+        continue;
+
+      // Check if mode meets formation requirements
+      // Create state
+      State state;
+      state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+      std::unordered_map<std::string,Robot*> roleMap;
+      f->AssignRoles(roleMap,state);
+      bool satisfied = mode->formations.empty();
+      for(auto formation : mode->formations) {
+        if(f->DoesFormationMatch(roleMap,formation)) {
+          satisfied = true;
+          break;
+        }
+      }
+
+      if(!satisfied)
+        continue;
+
+      // Check if mode meets motion constraints
+      for(auto role : f->GetRoles()) {
+        // Check if role has associated motion constraint
+        auto iter1 = motionConstraintMap.find(role);
+        if(iter1 == motionConstraintMap.end())
+          continue;
+
+        // Check if constraint is in the mode
+        auto constraint = motionConstraintMap[role];
+        auto b1 = constraint->GetBoundary();
+        if(!b1)
+          continue;
+
+        for(const auto& c : mode->constraints) {
+          // Check if boundaries are the same
+          auto b2 = c->GetBoundary();
+          if(b1->Type() == b2->Type()
+            and b1->Name() == b2->Name()
+            and b1->GetDimension() == b2->GetDimension()
+            and b1->GetCenter() == b2->GetCenter()) {
+
+            bool match = true;
+            for(size_t i = 0; i < b1->GetDimension(); i++) {
+              if(!(b1->GetRange(i) == b2->GetRange(i))) {
+                match = false;
+              }
+            }
+            if(match)
+              continue;
+          }
+
+          satisfied = false;
+          break;
+        }
+      }
+
+      if(satisfied) {
         formationModes[i].push_back(vid);
+      }
     }
   }
 
@@ -748,7 +868,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
     }
 
     // Collect robot roles
-    std::unordered_map<std::string,Robot*> roleMap;
+    /*std::unordered_map<std::string,Robot*> roleMap;
     for(size_t i = 0; i < set.size(); i++) {
       auto vid = set[i];
       auto mode = m_modeHypergraph.GetVertexType(vid);
@@ -756,7 +876,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       State state;
       state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
       formationCondition->AssignRoles(roleMap,state);
-    }
+    }*/
 
     // Collect possible assignment of robots into groups
     std::vector<std::vector<std::vector<Robot*>>> possibleAssignments(finalFormationConditions.size());
@@ -791,9 +911,16 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
         auto formationCondition = finalFormationConditions[i];
         auto mode = combo[i];
 
+        // Construct role map for mode set
+        std::unordered_map<std::string,Robot*> roleMap;
+        State state;
+        state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+        formationCondition->AssignRoles(roleMap,state);
+
         // Create formation constraints from roleMap
         auto formation = formationCondition->GenerateFormation(roleMap);
-        mode->formations.insert(formation);
+        if(formation)
+          mode->formations.insert(formation);
 
         // Grab path constraints from final stage
         for(auto motionCondition : finalMotionConditions) {
@@ -818,7 +945,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
                 continue;
 
               auto constraint = c->Clone();
-	      constraint->SetRobot(robot);
+              constraint->SetRobot(robot);
               mode->constraints.push_back(std::move(constraint));
             }
           }
@@ -833,13 +960,28 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
     }
 
     for(auto modeSet : modeSetCombos) {
+
+      // TODO::Make sure this doesn't happen in the first place
+      // Make sure there is not any overlap in head and tail
+      bool overlap = false;
+
       std::set<VID> head;
       for(auto mode : modeSet) {
         //auto vid = m_modeHypergraph.AddVertex(mode);
+        auto oldSize = m_modeHypergraph.Size();
         auto vid = AddMode(mode);
+
+        if(tail.count(vid)) {
+          overlap = true;
+          break;
+        }
         head.insert(vid);
-        _newModes.push_back(vid);
+        if(oldSize < m_modeHypergraph.Size())
+          _newModes.push_back(vid);
       }
+
+      if(overlap)
+        continue;
 
       m_modeHypergraph.AddHyperarc(head,tail,std::make_pair(_action,false));
       if(_action->IsReversible()) {
@@ -1006,6 +1148,9 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
                      std::unordered_map<RobotGroup*,Mode*> _startModeMap,
                      std::unordered_map<RobotGroup*,Mode*> _endModeMap) {
 
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SaveInteractionPaths");
   //auto problem = this->GetMPProblem();
 
   const auto& stages = _interaction->GetStages();
@@ -1136,6 +1281,11 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
         auto oldVID = vit->descriptor();
         auto oldGcfg = vit->property();
 
+        localGrm->SetAllFormationsInactive();
+        for(auto f : oldGcfg.GetFormations()) {
+          localGrm->AddFormation(f);
+        }
+
         // Construct group cfg
         GroupCfg newGcfg(localGrm);
         for(size_t i = 0; i < group->GetRobots().size(); i++) {
@@ -1164,6 +1314,9 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
           // Reconstruct edge in local group roadmap
           GroupLocalPlan<Cfg> newEdge(localGrm);
+
+          newEdge.SetLPLabel(oldEdge.GetLPLabel());
+
           auto& edgeDescriptors = oldEdge.GetEdgeDescriptors();
           for(size_t i = 0; i < group->GetRobots().size(); i++) {
             auto oldEd = edgeDescriptors[i];
@@ -1488,3 +1641,43 @@ AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*
 }
 
 /*----------------------------------------------------------------------------*/
+
+istream&
+operator>>(istream& _is, const ModeGraph::Mode* _mode) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::Mode* _mode) {
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const ModeGraph::ReversibleAction _ra) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::ReversibleAction _ra) {
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const ModeGraph::GroundedVertex _vertex) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::GroundedVertex _vertex) {
+  return _os;
+}
+
+istream&
+operator>>(istream& _is, const ModeGraph::Transition _t) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const ModeGraph::Transition _t) {
+  return _os;
+}

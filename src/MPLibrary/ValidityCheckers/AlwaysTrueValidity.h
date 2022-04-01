@@ -16,7 +16,7 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}

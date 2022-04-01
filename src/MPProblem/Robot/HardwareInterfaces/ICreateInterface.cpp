@@ -21,9 +21,9 @@ ICreateInterface(const std::string& _ip, const unsigned short _port)
   // sitting on top of it running player).
   m_client     = new PlayerCc::PlayerClient(_ip, _port);
   m_position2d = new PlayerCc::Position2dProxy(m_client, 0);
-    /// @TODO Magic 0 is the proxy index, it should be removable.
+    /// @todo Magic 0 is the proxy index, it should be removable.
 
-  /// @TODO Check player interface for how to gracefully recover from a failed
+  /// @todo Check player interface for how to gracefully recover from a failed
   ///       conection attempt.
 
   m_client->StartThread();
@@ -87,7 +87,7 @@ FullStop() {
   m_position2d->SetSpeed(0, 0);
   m_lastControls.clear();
 
-  /// @TODO We may need a short wait here for the SetSpeed control to reach the
+  /// @todo We may need a short wait here for the SetSpeed control to reach the
   ///       robot - as is we may see non-zero velocities.
 
   // Query the current speeds.

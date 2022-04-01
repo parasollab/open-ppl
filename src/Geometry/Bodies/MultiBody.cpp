@@ -516,6 +516,12 @@ GetBaseMovementType() const noexcept {
   return m_baseMovement;
 }
 
+const std::unordered_map<std::string,size_t>&
+MultiBody::
+GetLinkMap() {
+  return m_linkMap;
+}
+
 /*--------------------------- Geometric Properties ---------------------------*/
 
 const Vector3d&
@@ -902,7 +908,6 @@ GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri) const 
   size_t pos = PosDOF();
   const size_t ori = OrientationDOF();
 
-  const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
 
   EulerAngle rotation(0, 0, 0);
   if(ori == 1) {
@@ -917,6 +922,8 @@ GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri) const 
     rotation.beta()  = _v[pos + 1] * PI; // about Y is the second Euler angle
     rotation.alpha() = _v[pos + 2] * PI; // about Z is the first Euler angle
   }
+
+  const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
 
   return Transformation(std::move(translation), std::move(rotation));
 }

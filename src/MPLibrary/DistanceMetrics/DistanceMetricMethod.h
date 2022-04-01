@@ -65,6 +65,8 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     /// returns the summed individual distances.
     /// @overload
     virtual double Distance(const GroupCfgType& _c1, const GroupCfgType& _c2);
+    ///@example DistanceMetric_UseCase.cpp
+    /// This is an example of how to use the distance metric methods.
 
     /// Compute the weight of an existing roadmap edge according to this metric.
     /// @param _r    The containing roadmap.
@@ -99,7 +101,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     /// @param _o Origin of scaling.
     virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o);
 
-    /// This vesion uses the default origin.
+    /// This version uses the default origin.
     /// @overload
     void ScaleCfg(double _length, CfgType& _c);
 

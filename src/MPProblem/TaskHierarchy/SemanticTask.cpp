@@ -362,3 +362,15 @@ SemanticTask::
 AddFormation(Formation* _formation) {
   m_formations.insert(_formation);
 }
+
+void
+SemanticTask::
+SetMPStrategy(std::string _strategy) {
+  m_mpStrategy = _strategy;
+}
+
+std::string
+SemanticTask::
+GetMPStrategy() {
+  return m_mpStrategy;
+}

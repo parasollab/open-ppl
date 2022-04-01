@@ -5,16 +5,10 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="tmp_examples">
 
-    <Environment filename="3D/3d-empty.env"
+    <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot" capability="boxy">
-      <Agent type="child" waypointDm="euclidean" waypointThreshold=".05">
-        <StepFunction type="followpath" waypointDm="euclidean" time="1"/>
-      </Agent>
-    </Robot>
-
-    <Robot label="boxy2" filename="3D/boxy.robot" capability="boxy">
+    <Robot label="boxy" filename="3D/boxy.robot">
       <!--
       <Agent type="planning"/>
       -->
@@ -23,58 +17,12 @@
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
-<<<<<<< HEAD
-      <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
-        <Member label="boxy"/>
-        <Member label="boxy2"/>
-=======
       <Agent type="coordinator" dmLabel="minkowski" debug="true">
         <Member label="boxy"/>
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
         <StepFunction type="defaultcoordinator" debug="true"/>
       </Agent>
     </Robot>
 
-<<<<<<< HEAD
-
-    <RobotGroup label="robotGroup" robotLabels="boxy boxy2"/>
-    <GroupTask label="groupQuery" group="robotGroup">
-      <Task label="startLocation" robot="boxy">
-        <StartConstraints>
-          <CSpaceConstraint point="0 0 0 0 0 0"/>
-        </StartConstraints>
-      </Task>
-      <Task label="startLocation2" robot="boxy2">
-        <StartConstraints>
-          <CSpaceConstraint point="10 0 0 0 0 0"/>
-        </StartConstraints>
-      </Task>
-    </GroupTask>
-
-
-		<Decomposition label="main" taskLabel="first" coordinator="coordinator">
-			<SemanticTask label="first">
-        <GroupTask label="groupQuery" group="robotGroup">
-          <Task label="startLocation" robot="boxy">
-            <StartConstraints>
-              <CSpaceConstraint point="0 5 0 0 0 0"/>
-            </StartConstraints>
-            <GoalConstraints>
-              <CSpaceConstraint point="0 6 0 0 0 0"/>
-            </GoalConstraints>
-          </Task>
-          <Task label="startLocation2" robot="boxy2">
-            <StartConstraints>
-              <CSpaceConstraint point="0 -5 0 0 0 0"/>
-            </StartConstraints>
-            <GoalConstraints>
-              <CSpaceConstraint point="0 -6 0 0 0 0"/>
-            </GoalConstraints>
-          </Task>
-        </GroupTask>
-			</SemanticTask>
-		</Decomposition>
-=======
     <Task label="startLocation" robot="boxy">
       <StartConstraints>
         <CSpaceConstraint point="0 0 0 0 0 0"/>
@@ -91,16 +39,15 @@
       <SemanticTask label="first">
         <Task label="query1" robot="boxy">
           <StartConstraints>
-            <CSpaceConstraint point="0 0 0 0 0 0"/>
+            <CSpaceConstraint point="0 5 0 0 0 0"/>
           </StartConstraints>
 
           <GoalConstraints>
-            <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+            <CSpaceConstraint point="0 -5 0 0.2 0.8 0.5"/>
           </GoalConstraints>
         </Task>
       </SemanticTask>
     </Decomposition>
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
 
   </Problem>
 
@@ -109,15 +56,9 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-<<<<<<< HEAD
-      <ScaledEuclidean label="scaledEuclidean" scale="0.5"/>
-      <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
-        velWeight="0" avlWeight="0"/>
-      <Manhattan label="manhattan"/>
-=======
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
       <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
         normalize="false"/>
+      <Manhattan label="manhattan"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -129,46 +70,34 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
+      <BruteForceNF label="Closest" dmLabel="euclidean" unconnected="true"
+        k="6"/>
     </NeighborhoodFinders>
 
     <Samplers>
-<<<<<<< HEAD
-=======
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
 
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
     </Samplers>
 
     <LocalPlanners>
-<<<<<<< HEAD
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" dmLabel="euclidean"/>
     </LocalPlanners>
 
     <Extenders>
-=======
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
-    </LocalPlanners>
-
-    <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="pqp_solid" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
     </PathModifiers>
 
     <Connectors>
-<<<<<<< HEAD
-      <NeighborhoodConnector label="Closest" debug="false"
-        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
-=======
       <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
+      <RewireConnector label="Rewire" nfLabel="Closest" lpLabel="sl"/>
     </Connectors>
 
     <Metrics>
@@ -177,78 +106,6 @@
     <MapEvaluators>
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
-<<<<<<< HEAD
-      <LazyQuery label="LazyQuery" debug="false"
-        vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
-        numEnhance="10" d="0.5" deleteInvalid="true">
-        <NodeConnectionMethod label="ClosestAlwaysTrue"/>
-        <Resolution mult="27"/>
-        <Resolution mult="16"/>
-        <Resolution mult="1"/>
-      </LazyQuery>
-      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
-      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="3" operator=">="/>
-      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
-        value="1000" operator=">"/>
-      <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
-        value="50" operator="%"/>
-      <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
-      <ComposeEvaluator label="BoundedQuery" operator="or">
-        <Evaluator label="NodesEval"/>
-        <Evaluator label="Query"/>
-      </ComposeEvaluator>
-      <TimeEvaluator label="TimeEval" timeout="10"/>
-      <GroupQuery label="CompositeQuery" debug="false"/>
-    </MapEvaluators>
-    <MPStrategies>
-
-
-      <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="false">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="Query"/>
-      </BasicPRM>
-
-      <BasicPRM label="NodePRM" debug="false">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
-      </BasicPRM>
-
-      <!-- LazyPRM -->
-      <BasicPRM label="LazyPRM" debug="false">
-        <Sampler label="UniformRandom" number="1" attempts="1"/>
-        <Connector label="ClosestAlwaysTrue"/>
-        <Evaluator label="LazyQuery"/>
-      </BasicPRM>
-
-      <!-- EvaluateMapStrategy -->
-      <EvaluateMapStrategy label="EvaluateMapStrategy">
-        <Evaluator label="NodesEval"/>
-      </EvaluateMapStrategy>
-
-      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="BasicPRM1">
-        <Evaluator label="TrueEvaluator"/>
-      </GroupDecoupledStrategy>
-
-      <GroupDecoupledStrategy label="DecoupledNodes" strategyLabel="NodePRM">
-        <Evaluator label="TrueEvaluator"/>
-      </GroupDecoupledStrategy>
-
-      <GroupPRM label="CompositePRM" debug="false">
-        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="CompositeQuery"/>
-      </GroupPRM>
-
-      <GroupPRM label="CompositeNodes" debug="false">
-        <Sampler label="UniformRandomFree" number="50" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
-      </GroupPRM>
-=======
     </MapEvaluators>
 
     <MPStrategies>
@@ -266,11 +123,19 @@
       </AdaptiveRRT>
 
       <BasicRRTStrategy label="RRT" debug="false"
-        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
-        goalDmLabel="minkowski" goalThreshold="5">
-        <!--Evaluator label="Query"/-->
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+      <!-- RRT Star -->
+      <BasicRRTStrategy label="RRTstar" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5" connectorLabel="Rewire">
+        <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
       <!-- Toggle PRM-->
@@ -281,7 +146,6 @@
         <Evaluator label="Query"/>
       </TogglePRMStrategy>
       
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
     </MPStrategies>
 
     <MPTools>
@@ -289,13 +153,10 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-<<<<<<< HEAD
-    <Solver mpStrategyLabel="CompositePRM" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
-=======
     <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> 
->>>>>>> dde699c8fc4f767fa3eebb5401dfeeae577e7486
+    <Solver mpStrategyLabel="RRTstar" seed="12345"
+      baseFilename="RRTstar" vizmoDebug="true"/> 
 
   </Library>
 

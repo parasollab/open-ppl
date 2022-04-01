@@ -9,7 +9,8 @@ class HandoffStrategy : public GraspStrategy {
     ///@name Local Types
     ///@{
 
-    typedef Condition::State State;
+    typedef Condition::State            State;
+    typedef Condition::GroupRoadmapType GroupRoadmapType;
 
     ///@}
     ///@name Construction
@@ -33,14 +34,22 @@ class HandoffStrategy : public GraspStrategy {
     ///@name Helper Functions
     ///@{
 
-    State GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next);
+    State GenerateTransitionState(Interaction* _interaction, const State& _previous, const size_t _next, MPSolution* _solution);
 
     State GenerateInitialState(Interaction* _interaction, const State& _previous, const size_t _next);
 
+    virtual std::vector<std::shared_ptr<GroupTask>> GenerateTasks(
+              std::vector<std::string> _conditions, 
+              std::unordered_map<Robot*,Constraint*> _startConstraints,
+              std::unordered_map<Robot*,Constraint*> _goalConstraints) override;
+
+    void GeneratePathConstraints(std::vector<std::string> _startConditions, 
+                                 std::vector<std::string> _endConditions);
     ///@}
     ///@name Internal State
     ///@{
 
+    std::unordered_map<Robot*,Constraint*> m_pathConstraintMap;
 
     ///@}
 

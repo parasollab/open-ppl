@@ -517,15 +517,18 @@ TASK_SRCS := \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
   TMPLibrary/StateGraphs/ModeGraph.cpp \
+  TMPLibrary/StateGraphs/ObjectCentricModeGraph.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/HCRQuery.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.cpp \
   TMPLibrary/TaskEvaluators/SubmodeQuery.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
   TMPLibrary/TMPStrategies/BasicHCR.cpp \
+  TMPLibrary/TMPStrategies/BasicTMPStrategyMethod.cpp \
   TMPLibrary/TMPStrategies/NextBestSearch.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
@@ -635,6 +638,7 @@ PMPL_SRCS := \
   Geometry/Shapes/NBox.cpp \
   Geometry/Shapes/NSphere.cpp \
   Geometry/Shapes/NSphericalShell.cpp \
+  MPLibrary/MapEvaluators/SIPPMethod.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
   MPLibrary/MPTools/RegionKit.cpp \

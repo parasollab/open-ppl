@@ -66,13 +66,13 @@ class TMPBaseObject {
     ///@}
     ///@name Method Pointer Types
     
-		typedef typename TMPLibrary::TMPStrategyMethodPointer         TMPStrategyMethodPointer;
-  	typedef typename TMPLibrary::PoIPlacementMethodPointer        PoIPlacementMethodPointer;
-  	typedef typename TMPLibrary::TaskEvaluatorMethodPointer       TaskEvaluatorMethodPointer;
-  	typedef typename TMPLibrary::TaskDecomposerMethodPointer      TaskDecomposerMethodPointer;
-  	typedef typename TMPLibrary::TaskAllocatorMethodPointer       TaskAllocatorMethodPointer;
-  	typedef typename TMPLibrary::StateGraphPointer                StateGraphPointer;
   	typedef typename TMPLibrary::InteractionStrategyMethodPointer InteractionStrategyMethodPointer;
+  	typedef typename TMPLibrary::PoIPlacementMethodPointer        PoIPlacementMethodPointer;
+  	typedef typename TMPLibrary::StateGraphPointer                StateGraphPointer;
+  	typedef typename TMPLibrary::TaskAllocatorMethodPointer       TaskAllocatorMethodPointer;
+  	typedef typename TMPLibrary::TaskDecomposerMethodPointer      TaskDecomposerMethodPointer;
+  	typedef typename TMPLibrary::TaskEvaluatorMethodPointer       TaskEvaluatorMethodPointer;
+		typedef typename TMPLibrary::TMPStrategyMethodPointer         TMPStrategyMethodPointer;
 		
     ///@}
     ///@name Construction
@@ -137,6 +137,7 @@ class TMPBaseObject {
     /// Get a Point-of-Interest placement method from the owning TMPLibrary
     PoIPlacementMethodPointer GetPoIPlacementMethod(const std::string&) const noexcept;
 
+    /// Get a TaskEvaluator from the owning TMPLibrary
     TaskEvaluatorMethodPointer GetTaskEvaluator(const std::string&) const noexcept;
 
     /// Get a TaskDecomposition from the owning TMPLibrary

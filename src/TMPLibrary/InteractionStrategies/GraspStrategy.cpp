@@ -28,6 +28,8 @@ GraspStrategy(XMLNode& _node) : IndependentPaths(_node) {
                     "ValidityChecker used to check object samples.");
   m_maxAttempts = _node.Read("maxAttempts", false, 100, 1, MAX_INT,
                   "Max number of attempts to get a valid pose sample.");
+  m_physicalDemo = _node.Read("physicalDemo",false,m_physicalDemo,
+          "Flag to add extra constraints for clean physical demo.");
 }
 
 GraspStrategy::
@@ -40,6 +42,7 @@ GraspStrategy::
 operator()(Interaction* _interaction, State& _start) {
 
   auto problem = this->GetPlan()->GetCoordinator()->GetRobot()->GetMPProblem();
+  auto lib = this->GetMPLibrary();
 
   _interaction->Initialize();
 
@@ -96,7 +99,7 @@ operator()(Interaction* _interaction, State& _start) {
   auto group = problem->AddRobotGroup(allRobots,allRobotsLabel);
 
   //TODO::Figure out where grasp stage is
-  size_t graspStage = stages.size() - 1;
+  size_t graspStage = stages.size() - 3;
   for(size_t i = 1; i < graspStage; i++) {
 
     // Add composite groups to to grasp solution
@@ -105,6 +108,7 @@ operator()(Interaction* _interaction, State& _start) {
     auto objGrm = toStageSolution->GetGroupRoadmap(objGroup);
 
     toStageSolution->AddRobotGroup(group);
+    lib->SetMPSolution(toStageSolution);
     auto grm = toStageSolution->GetGroupRoadmap(group);
 
     // Get object placements
@@ -136,7 +140,8 @@ operator()(Interaction* _interaction, State& _start) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
       if(!cfg.GetRobot()) {
         std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
-	return false;
+        m_roleMap.clear();
+      	return false;
       }
       SetEEDOF(_interaction,cfg,stages[i]);
       pregraspCfgs[kv.first] = cfg;
@@ -209,20 +214,135 @@ operator()(Interaction* _interaction, State& _start) {
     ResetStaticRobots();
 
     // Check if valid solution was found
-    if(toGraspPaths.empty())
+    if(toGraspPaths.empty()) {
+      m_roleMap.clear();
       return false;
+    }
 
     // Save plan information
     _interaction->SetToStagePaths(stages[i+1],toGraspPaths);
 
-    if(i+1 == graspStage) {
+    /*if(i+1 == graspStage) {
       _start = InterimState(_interaction,stages[i+1],stages[i+1],toGraspPaths);
+      m_roleMap.clear();
       return true;
     }
-    else 
+    else */
       _start = InterimState(_interaction,stages[i+1],stages[i+2],toGraspPaths);
   }
-  //TODO::Compute to post grasp path
+
+  // Compute to post grasp path
+  
+  // Configure to stage solution
+  auto toStageSolution = _interaction->GetToStageSolution(stages[graspStage+1]);
+ 
+  // Configure start constraints from previous stage path end
+  auto startConstraints = GenerateConstraints(_start); 
+
+  // Get object placements
+  std::map<Robot*,Cfg> objectPoses;
+  for(auto object : objects) {  
+    Cfg objectPose(object);
+
+    // Check if object placement is given
+    auto initGroup = initialGroups[object];
+    auto given = originalStart[initGroup];
+    auto gcfg = given.first->GetVertex(given.second);
+    objectPose = gcfg.GetRobotCfg(object);
+
+    objectPoses[object] = objectPose;
+    objectPose.ConfigureRobot();
+  }
+
+  // Compute goal pose for robot based of transform and initial object pose
+  auto nextStageEEFrames = ComputeEEFrames(_interaction,objectPoses,graspStage+1);
+  std::unordered_map<Robot*,std::unique_ptr<CSpaceConstraint>> constraintMap;
+  for(auto kv : nextStageEEFrames) {
+    auto robot = kv.first;
+    auto cfg = ComputeManipulatorCfg(robot,kv.second);
+
+    SetEEDOF(_interaction,cfg,stages[graspStage]);
+
+    constraintMap[robot] = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
+  }
+  
+  // Sample group cfg from robot goal pose
+  // Assuming one active robot per group for now
+  State goal;
+  for(auto kv : _start) {
+    auto group = kv.first;
+    auto rm = kv.second.first;
+    rm->SetAllFormationsInactive();
+    for(auto f : rm->GetVertex(kv.second.second).GetFormations()) {
+      rm->AddFormation(f);
+    }
+
+    // Identify active robot
+    Robot* active;
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive())
+        continue;
+
+      active = robot;
+      break;
+    }
+
+    GroupCfg gcfg(rm);
+    gcfg.GetRandomGroupCfg(constraintMap[active]->GetBoundary());
+    auto vid = rm->AddVertex(gcfg);
+
+    goal[group] = std::make_pair(rm,vid);
+  }
+
+  // Convert group cfg to goal constraints
+  auto goalConstraints = GenerateConstraints(goal); 
+
+  // Create tasks from constraints
+  auto startConditions = _interaction->GetStageConditions(stages[graspStage]);
+  auto tasks = GenerateTasks(startConditions,startConstraints,goalConstraints);
+  _interaction->SetToStageTasks(stages[graspStage+1],tasks);
+
+  // Plan path
+  auto paths = PlanMotions(tasks,toStageSolution,
+      "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[graspStage+1],
+      {},_start);
+
+  size_t delay = _interaction->GetDelay(stages[graspStage+1]);
+  if(delay > 0) {
+    for(auto path : paths) {
+      auto pair = path->VIDsWaiting();
+      auto vids = pair.first;
+      auto wait = pair.second;
+      if(wait.empty()) {
+        auto last = vids.back();
+        std::vector<size_t> add(delay,last);
+        *path += add;
+        path->SetTimeSteps(path->TimeSteps() + delay);
+      }
+      else {
+        wait = std::vector<size_t>(vids.size(),0);
+        wait[wait.size()-1] += delay;
+        path->SetWaitTimes(wait);
+      }
+    }
+  }
+
+  ResetStaticRobots();
+
+  // Check if valid solution was found
+  if(paths.empty()) {
+    m_roleMap.clear();
+    return false;
+  }
+
+  // Save plan information
+  _interaction->SetToStagePaths(stages[graspStage+1],paths);
+
+  _start = InterimState(_interaction,stages[graspStage+2],stages[graspStage+1],paths);
+
+
+  m_roleMap.clear();
+  m_objectPoseTasks.clear();
 
   return true;
 }
@@ -250,10 +370,12 @@ AssignRoles(const State& _state, const std::vector<std::string>& _conditions) {
       if(!m) 
         filteredConditions.push_back(condition);
     }
+    // Assign roles from filtered conditions
+    InteractionStrategyMethod::AssignRoles(_state,filteredConditions);
   }
-
-  // Assign roles from filtered conditions
-  InteractionStrategyMethod::AssignRoles(_state,filteredConditions);
+  else {
+    InteractionStrategyMethod::AssignRoles(_state,_conditions);
+  }
 }
 
 Cfg
@@ -340,7 +462,7 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       Transformation transform = roleInfo.transformation;
       Cfg cfg = objectPoses[robot];
 
-      auto frame = ComputeEEWorldFrame(cfg, transform);
+      auto frame = ComputeEEWorldFrame(cfg, -transform);
       
       auto refRobot = m_roleMap[roleInfo.referenceRole];
       auto refBase = refRobot->GetMultiBody()->GetBase();
@@ -350,7 +472,8 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       if(m_doctorBaseOrientation)
         refBaseTransformation = Transformation(refBaseTransformation.translation());
 
-      auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
+      //auto translation = (-refBaseTransformation).rotation() * frame.translation() + (-refBaseTransformation).translation();
+      auto translation = frame.translation() + (-refBaseTransformation).translation();
       auto rotation = (-refBaseTransformation).rotation() * frame.rotation();
 
       //auto translation = (-frame).rotation() * refBaseTransformation.translation() + (-frame).translation();
@@ -419,33 +542,40 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
           q_sols[i*6+0], q_sols[i*6+1], q_sols[i*6+2], q_sols[i*6+3], q_sols[i*6+4], q_sols[i*6+5]);
   }
   
-  if(num_sols == 0)
-    return Cfg(nullptr);
-
   //TODO::Validity check cfg and if invalid try the next solution
 
-  std::vector<double> data(_robot->GetMultiBody()->DOF()); //Should be 7
+  auto vc = this->GetMPLibrary()->GetValidityChecker(m_vcLabel);
 
-  data[0] =  q_sols[2]/PI; 
-  data[1] =  0;
-  data[2] =  q_sols[1]/PI;
-  data[3] =  q_sols[0]/PI;
-  data[4] =  q_sols[3]/PI;
-  data[5] =  q_sols[4]/PI;
-  data[6] =  q_sols[5]/PI;
+  for(int i = 0; i < num_sols; i++) {
 
-  for(size_t i = 0; i < data.size(); i++) {
-    if(i == 1)
-      continue;
+    std::vector<double> data(_robot->GetMultiBody()->DOF()); //Should be 7
 
-    if(data[i] > 1) {
-      data[i] = -2 + data[i];
+    data[0] =  q_sols[2]/PI; 
+    data[1] =  0;
+    data[2] =  q_sols[1]/PI;
+    data[3] =  q_sols[0]/PI;
+    data[4] =  q_sols[3]/PI;
+    data[5] =  q_sols[4]/PI;
+    data[6] =  q_sols[5]/PI;
+
+    for(size_t j = 0; j < data.size(); j++) {
+      if(j == 1)
+        continue;
+
+      if(data[j] > 1) {
+        data[j] = -2 + data[j];
+      }
     }
+
+    Cfg cfg(_robot);
+    cfg.SetData(data);
+
+    if(vc->IsValid(cfg,this->GetNameAndLabel()))
+      return cfg;
   }
- 
-  Cfg cfg(_robot);
-  cfg.SetData(data);
-  return cfg;
+
+  //if(num_sols == 0)
+  return Cfg(nullptr);
 
   #else
 

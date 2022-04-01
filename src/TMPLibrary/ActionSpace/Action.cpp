@@ -53,6 +53,12 @@ IsReversible() const {
   return m_isReversible;
 }
 
+const size_t
+Action::
+GetDelay(const std::string _stage) const {
+  return m_postStageDelays.at(_stage);
+}
+
 /*--------------------- Helper Functions ---------------------*/
 
 void
@@ -73,6 +79,11 @@ ParseXMLNode(XMLNode& _node) {
       std::string label = child.Read("label",true,"",
                                      "The label for this stage.");
       m_stages.push_back(label);
+
+      size_t delay = _node.Read("delay",false,0,0,MAX_INT,
+                      "Number of timesteps to pause after completing stage.");
+
+      m_postStageDelays[label] = delay;
 
       for(auto& grandchild : child) {
         auto condition = grandchild.Read("label",true,"",

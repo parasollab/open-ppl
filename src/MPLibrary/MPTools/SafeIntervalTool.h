@@ -3,11 +3,12 @@
 
 #include <vector>
 
+#include "ConfigurationSpace/GroupCfg.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/XMLNode.h"
 #include "MPProblem/DynamicObstacle.h"
 #include "MPProblem/Robot/Robot.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidityMethod.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +176,11 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const CfgType& _cfg) {
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   if(m_cfgIntervals[&_cfg].empty()) {
     const std::vector<CfgType> cfg{_cfg};
     m_cfgIntervals[&_cfg] = ComputeSafeIntervals(cfg);
@@ -187,6 +193,11 @@ template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const GroupCfgType& _cfg) {
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   if(m_groupCfgIntervals[&_cfg].empty()) {
     const std::vector<GroupCfgType> cfg{_cfg};
     m_groupCfgIntervals[&_cfg] = ComputeSafeIntervals(cfg);
@@ -200,11 +211,19 @@ typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
 ComputeIntervals(const WeightType& _weight, const VID _source,
   const VID _target, RoadmapType* _roadmap) {
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   //if(m_edgeIntervals[&_weight].empty()) {
     std::vector<CfgType> edge;
     edge.push_back(_roadmap->GetVertex(_source));
-    std::vector<CfgType> intermediates = this->GetMPLibrary()->ReconstructEdge(
-        _roadmap, _source, _target);
+    auto e = _roadmap->GetEdge(_source,_target);
+    auto intermediates = !e.GetIntermediates().empty() ?
+                          e.GetIntermediates() :
+                          this->GetMPLibrary()->ReconstructEdge(
+                           _roadmap, _source, _target);
     edge.insert(edge.end(), intermediates.begin(), intermediates.end());
     edge.push_back(_roadmap->GetVertex(_target));
 
@@ -222,12 +241,22 @@ SafeIntervalTool<MPTraits>::
 ComputeIntervals(const GroupWeightType& _weight, const VID _source,
   const VID _target, GroupRoadmapType* _roadmap) {
 
+  // If there are no dynamic obstacles, the safe interval is infinite.
+  const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
+  if(obstacles.empty())
+    return {Range<double>(0, std::numeric_limits<double>::max())};
+
   Intervals intervals;
 
   std::unordered_map<Robot*,std::vector<Cfg>> individualEdges;
   std::vector<GroupCfgType> edge = {_roadmap->GetVertex(_source)}; 
-  auto intermediates = this->GetMPLibrary()->ReconstructEdge(
-    _roadmap,_source,_target);
+  auto e = _roadmap->GetEdge(_source,_target);
+  auto intermediates = !e.GetIntermediates().empty() ?
+                        e.GetIntermediates() :
+                        this->GetMPLibrary()->ReconstructEdge(
+                          _roadmap, _source, _target);
+  //auto intermediates = this->GetMPLibrary()->ReconstructEdge(
+  //  _roadmap,_source,_target);
   edge.insert(edge.end(),intermediates.begin(),intermediates.end());
   edge.push_back(_roadmap->GetVertex(_target));  
 
@@ -266,7 +295,7 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(basevc);
 
   // Compute the step number associated with _timestep.
   const double timeRes = this->GetEnvironment()->GetTimeRes();
@@ -276,15 +305,16 @@ IsSafe(const CfgType& _cfg, const double _timestep) {
   const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   for(const auto& obstacle : obstacles) {
     auto obStart = obstacle.GetStartTime();
+    auto obEnd = obstacle.GetEndTime();
+    const auto& path = obstacle.GetPath();
 
-    if(currentStep < obStart)
+    if(currentStep < obStart or currentStep > obEnd)
       continue;
 
     auto relativeStep = currentStep - obStart;
 
     // Determine the obstacle's position at the current timestep. If it is
     // already done moving, use its last position.
-    const auto& path = obstacle.GetPath();
     const size_t lastStep = path.size(),
                  //useStep  = std::min(currentStep, lastStep -1);
                  useStep  = std::min(relativeStep, lastStep -1);
@@ -323,7 +353,7 @@ IsSafe(const GroupCfgType& _cfg, const double _timestep) {
   ///       leverage more efficient compose checks (like checking the bounding
   ///       spheres first).
   auto basevc = this->GetValidityChecker(m_vcLabel);
-  auto vc = dynamic_cast<CollisionDetectionValidity<MPTraits>*>(basevc);
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(basevc);
 
   // Compute the step number associated with _timestep.
   const double timeRes = this->GetEnvironment()->GetTimeRes();
@@ -333,15 +363,16 @@ IsSafe(const GroupCfgType& _cfg, const double _timestep) {
   const auto& obstacles = this->GetMPProblem()->GetDynamicObstacles();
   for(const auto& obstacle : obstacles) {
     auto obStart = obstacle.GetStartTime();
+    auto obEnd = obstacle.GetEndTime();
+    const auto& path = obstacle.GetPath();
 
-    if(currentStep < obStart)
+    if(currentStep < obStart or currentStep > obEnd)
       continue;
 
     auto relativeStep = currentStep - obStart;
 
     // Determine the obstacle's position at the current timestep. If it is
     // already done moving, use its last position.
-    const auto& path = obstacle.GetPath();
     const size_t lastStep = path.size(),
                  //useStep  = std::min(currentStep, lastStep -1);
                  useStep  = std::min(relativeStep, lastStep -1);
@@ -462,6 +493,132 @@ ComputeSafeIntervals(const std::vector<GroupCfg>& _cfgs) {
 
 //  std::map<CfgType, size_t> finalResting;
 
+  // Determine all of the intervals for which it is safe to start following this
+  // set of configurations.
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
+
+  // All intervals for this sequence.
+  Intervals safeIntervals = {Range<double>(0.,std::numeric_limits<double>::infinity())}; 
+
+  auto basevc = this->GetValidityChecker(m_vcLabel);
+  auto vc = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(basevc);
+
+  for(size_t i = 0; i < _cfgs.size(); i++) {
+    std::vector<std::pair<size_t,size_t>> collisions;
+
+    const auto& cfg1 = _cfgs[i];
+    cfg1.ConfigureRobot();
+
+    // Find all conflicts with intermediate cfg1
+    for(auto& obstacle : obstacles) {
+      auto& path = obstacle.GetPath();
+      size_t startTime = obstacle.GetStartTime();
+      for(size_t j = 0; j < path.size(); j++) {
+
+        // Check if edge can reach cfg1 by time the obstacle is at cfg2
+        const size_t time = startTime + j;
+        if(time < i)
+          continue;
+
+        const auto& cfg2 = path[j];
+        cfg2.ConfigureRobot();
+
+        for(auto robot : cfg1.GetRobots()) {
+          auto robotMultiBody = robot->GetMultiBody();
+          CDInfo cdInfo;
+          if(!vc->IsMultiBodyCollision(cdInfo, cfg2.GetMultiBody(), robotMultiBody,
+             this->GetNameAndLabel()))
+            continue;
+
+          if(j + 1 < path.size())
+            collisions.emplace_back(time,0);
+          else
+            collisions.emplace_back(time,obstacle.GetEndTime() - time);
+          break;
+        }
+      }
+    }
+
+    // Sort collision
+    std::sort(collisions.begin(),collisions.end());
+
+    // Update intervals
+    size_t index = 0;
+    for(auto col : collisions) {
+      const double& start = (double)(col.first-i) * timeRes;
+      const double& end = (double)(col.first+col.second-i) * timeRes;
+      bool past = false;
+      while(!safeIntervals[index].Contains(start)) {
+        if(safeIntervals[index].min > start) {
+          past = true;
+          break;
+        }
+        index++;
+      }
+
+      size_t endIndex = index;
+      if(start != end) {
+        past = false;
+        while(!safeIntervals[endIndex].Contains(end)) {
+          if(safeIntervals[endIndex].min > end) {
+            past = true;
+            break;
+          }
+          endIndex++;
+        }
+      }
+
+      if(past)
+        continue;
+
+      if(start == end) {
+        // Split interval
+        Range<double> newInterval(start+timeRes,safeIntervals[index].max);
+        if(safeIntervals[index].max - safeIntervals[index].min < timeRes) {
+          const auto iter = safeIntervals.begin();
+          safeIntervals.erase(iter+index);
+        }
+        else if(std::abs(safeIntervals[index].min - start) < timeRes) {
+          safeIntervals[index] = newInterval;
+        }
+        else if(std::abs(safeIntervals[index].max - start) < timeRes) {
+          safeIntervals[index].max = safeIntervals[index].max - timeRes;
+        }
+        else {
+          safeIntervals[index].max = start-timeRes;
+          const auto iter = safeIntervals.begin();
+          safeIntervals.insert(iter + index+1,newInterval);
+        }
+      }
+      else {
+        std::vector<size_t> toRemove;
+
+        Range<double> newInterval(end+timeRes,safeIntervals[endIndex].max);
+        const auto iter = safeIntervals.begin();
+        safeIntervals.insert(iter + endIndex+1,newInterval);
+
+        if(std::abs(safeIntervals[index].min - start) < timeRes) {
+          toRemove.push_back(index);
+        }
+        else {
+          safeIntervals[index].max = start-timeRes;
+        }
+
+        for(size_t j = index+1; j < endIndex; j++) {
+          toRemove.push_back(j);
+        }
+
+        for(int j = toRemove.size(); j > 0; j--) {
+          auto offset = toRemove[j-1];
+          const auto iter = safeIntervals.begin();
+          safeIntervals.erase(iter+offset);
+        }
+      }
+    }
+  }  
+
+  /*
+
   // Find the latest timestep in which a dynamic obstacle is still moving.
   size_t timeFinal = 0;
   for(auto& obstacle : obstacles) {
@@ -522,7 +679,7 @@ ComputeSafeIntervals(const std::vector<GroupCfg>& _cfgs) {
   else {
     safeIntervals.emplace_back((timeFinal +1) * timeRes, std::numeric_limits<double>::max());
   }
-
+  */
   return safeIntervals;
 }
 

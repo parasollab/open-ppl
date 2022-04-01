@@ -77,6 +77,9 @@ class ROSStepFunction : public FollowPath {
 
     ros::Subscriber m_boxerOdomSub; ///< Subscriber for boxer odometry.
 
+    //Temp:Trying something out
+    std::vector<double> m_previousGoal;
+
     ///@}
 };
 

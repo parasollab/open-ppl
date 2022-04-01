@@ -45,7 +45,7 @@ DynamicObstacle::
 GetPath() const noexcept {
   return m_path;
 }
-    
+
 const size_t 
 DynamicObstacle::
 GetStartTime() const noexcept {
@@ -57,4 +57,17 @@ DynamicObstacle::
 SetStartTime(size_t _start) {
   m_startTime = _start;
 }
+
+const size_t 
+DynamicObstacle::
+GetEndTime() const noexcept {
+  return m_endTime;
+}
+    
+void 
+DynamicObstacle::
+SetEndTime(size_t _end) {
+  m_endTime = _end;
+}
+
 /*----------------------------------------------------------------------------*/

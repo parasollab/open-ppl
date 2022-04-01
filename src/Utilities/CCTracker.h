@@ -17,11 +17,11 @@
 /// Track the set of CC's in a roadmap.
 ///
 /// For directed graphs, we will compute weak connectivity because it describes
-/// the typical usage for RRT and nonholonomic robots. One should recall however
-/// that in such cases, shared CC membership does not imply connectivity.
+/// the typical usage for RRT and nonholonomic robots. One should recall, however,
+/// that in such cases shared CC membership does not imply connectivity.
 ///
 /// For this to work correctly with directed trees, one must ensure that the
-/// graph always remains a tree. I.e., if you rewire the tree by switching a
+/// graph always remains a tree. For instance, if you rewire the tree by switching a
 /// vertex's parent, you must delete the old edge before adding the new one.
 ///
 /// @warning This class assumes that either all edges are bidirectional, or the
@@ -215,7 +215,7 @@ class CCTracker final {
     /// @return A CC which holds _vid.
     const VertexSet* FindCC(const VID _vid) const noexcept;
 
-    /// Recompute all CCs from scrathc. Complexity is linear in the size of the
+    /// Recompute all CCs from scratch. Complexity is linear in the size of the
     /// roadmap (O(V+E)).
     void RecomputeCCs() noexcept;
 
@@ -580,7 +580,7 @@ AddEdge(const edge_iterator _ei) noexcept {
   if(!m_enable)
     return;
 
-  /// @note This is linear in the size of the smaller CC if a merge occurs, or
+  /// @note This is linear in the size of the smaller CC if a merge occurs or
   ///       constant amortized otherwise.
   m_clockStart("CCTracker::AddEdge");
   nonstd::call_on_destruct stopper(m_clockStop, "CCTracker::AddEdge");

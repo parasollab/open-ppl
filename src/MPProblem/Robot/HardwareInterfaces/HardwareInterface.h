@@ -52,16 +52,24 @@ class HardwareInterface
     ///@{
     /// Get and set the robot's name, IP, port, and communication time.
 
+    /// Get robot's name
     const std::string& GetName() const noexcept;
+    /// Set robot's name
     void SetName(const std::string& _name) noexcept;
 
+    /// Get IP address for hardware controller
     const std::string& GetIP() const noexcept;
+    /// Set IP address for hardware controller
     void SetIP(const std::string& _ip) noexcept;
 
+    /// Get IP port for connection
     unsigned short GetPort() const noexcept;
+    /// Set IP port for connection
     void SetPort(const unsigned short _port) noexcept;
 
+    /// Get minimum time in seconds to send command
     double GetCommunicationTime() const noexcept;
+    /// Set minimum time in seconds to send command
     void SetCommunicationTime(const double _t) noexcept;
 
     virtual HardwareType GetHardwareType() const noexcept = 0;

@@ -6,6 +6,8 @@
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 
+#include "Utilities/SSSP.h"
+
 /*------------------------------ Construction ------------------------------*/
 
 SubmodeQuery::
@@ -16,6 +18,9 @@ SubmodeQuery() {
 SubmodeQuery::
 SubmodeQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("SubmodeQuery");
+
+  m_reverseActions = _node.Read("reverseActions",false,m_reverseActions,
+        "Flag to allow immedaite reversal of actions in plan.");
 }
 
 SubmodeQuery::
@@ -37,6 +42,10 @@ Initialize() {
 bool
 SubmodeQuery::
 Run(Plan* _plan) {
+
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
 
   if(!_plan)
     _plan = this->GetPlan();
@@ -65,6 +74,9 @@ Run(Plan* _plan) {
 SubmodeQuery::ActionHistory
 SubmodeQuery::
 CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory& _history) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CombineHistories");
   
   auto composite = _history;
   auto newStory = m_actionExtendedHypergraph.GetVertexType(_vid).history;
@@ -115,6 +127,9 @@ CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory&
 void
 SubmodeQuery::
 ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConvertToPlan");
 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto& gh = mg->GetGroundedHypergraph();
@@ -126,6 +141,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
   auto path = ConstructPath(last,parents,_output);
   path = AddDanglingNodes(path,parents);
+  path = OrderPath(path);
 
   if(m_debug) {
     std::cout << "Full Path" << std::endl;
@@ -213,11 +229,16 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
     if(elem.first)
       continue;
 
+    if(m_debug) {
+      std::cout << "Creating semantic tasks for hyperarc: " << elem.second << std::endl;
+    }
+
     // Convert hyperarc to semantic tasks
 
     // Get grounded hypergraph hyperarc
     auto aeh = m_actionExtendedHypergraph.GetHyperarc(elem.second);
     auto hyperarc = gh.GetHyperarcType(aeh.property);
+
 
     // Grab tasks of preceeding hyperarcs
     std::vector<SemanticTask*> previousStage;
@@ -237,22 +258,38 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
       }
     }
 
+ 
+    if(m_debug) {
+      std::cout << "Initial task dependencies" << std::endl;
+      for(auto task : previousStage) {
+        std::cout << "\t" << task->GetLabel() << std::endl;
+      }
+    }
+
     // Convert to set of sequentially dependent semantic tasks
     auto& taskSet = hyperarc.taskSet;
+    size_t counter = 0;
     for(auto stage : taskSet) {
 
-      if(stage.empty())
+      if(stage.empty()) {
+        counter++;
         continue;
+      }
   
       std::vector<SemanticTask*> currentStage;
       for(auto groupTask : stage) {
         // Create semantic task
         const std::string label = std::to_string(aeh.property) + ":" 
                             + std::to_string(aeh.hid) + ":"
+                            + "stage-" + std::to_string(counter) + ":"
                             + groupTask->GetRobotGroup()->GetLabel() + ":"
                             + groupTask->GetLabel();
         auto task = new SemanticTask(label,top.get(),decomp,
                  SemanticTask::SubtaskRelation::AND,false,true,groupTask);
+
+        if(m_debug) {
+          std::cout << "Creating task: " << task->GetLabel() << std::endl;
+        }
 
         for(auto f : hyperarc.taskFormations[groupTask.get()]) {
           task->AddFormation(f);
@@ -260,9 +297,16 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
 
         currentStage.push_back(task);
 
+        if(m_debug) {
+          std::cout << "With dependencies:" << std::endl;
+        }
+
         // Add stage depedencies
         for(auto previous : previousStage) {
           task->AddDependency(previous,SemanticTask::DependencyType::Completion);
+          if(m_debug) {
+            std::cout << "\t" << previous->GetLabel() << std::endl;
+          }
         }
 
         // Check if group has been given initial dependency
@@ -273,17 +317,20 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
         // If not, assign the dependency
         task->AddDependency(init.second,SemanticTask::DependencyType::Completion);
         init.first = true;
+        if(m_debug) {
+          std::cout << "Assign initial dependency: " << init.second->GetLabel() << std::endl;
+        }
       }
 
       // Iterate stage forward
       previousStage = currentStage;
+      counter++;
     }
 
     // Save last stage in hyperarc task map
     hyperarcTaskMap[aeh.hid] = previousStage;
   }
 
-  auto plan = this->GetPlan();
   plan->SetDecomposition(decomp);
   plan->SetCost(_output.weightMap.at(m_goalVID));
 }
@@ -398,11 +445,101 @@ AddDanglingNodes(std::vector<HPElem> _path, std::set<HPElem>& _parents) {
 
   return finalPath; 
 }
+
+std::vector<SubmodeQuery::HPElem>
+SubmodeQuery::
+OrderPath(std::vector<HPElem> _path) {
+  std::set<HPElem> used;
+
+  std::vector<HPElem> ordered = {_path.front()};
+  used.insert(_path.front());
+
+  while(ordered.size() != _path.size()) {
+    for(auto elem : _path) {
+      // Skip vertices
+      if(elem.first)
+        continue;
+
+      if(used.count(elem))
+        continue;
+
+      // Check if entire tail set is in the ordered path
+      auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(elem.second);
+      bool ready = true;
+      for(auto vid : hyperarc.tail) {
+        if(!used.count(std::make_pair(true,vid))) {
+          ready = false;
+          break;
+        }
+      }
+
+      // Skip if the entire tail set is not in the ordered path
+      if(!ready)
+        continue;
+
+      ordered.push_back(elem);
+      used.insert(elem);
+
+      for(auto vid : hyperarc.head) {
+        HPElem ve = std::make_pair(true,vid);
+        ordered.push_back(ve);
+        used.insert(ve);
+      }
+    }
+  }
+
+  return ordered; 
+}
+
+void
+SubmodeQuery::
+ComputeHeuristicValues() {
+  // Run a dijkstra search backwards through hypergraph as if it was a graph
+
+  // Get graph represnetation grounded hypergraph
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto& gh = mg->GetGroundedHypergraph();
+  auto g = gh.GetReverseGraph();
+
+  // Setup dijkstra functions
+  auto termination = SSSPDefaultTermination<ModeGraph::GroundedHypergraph::GraphType>();
+
+  SSSPPathWeightFunction<ModeGraph::GroundedHypergraph::GraphType> weight(
+    [this](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
+           const double _sourceDistance,
+           const double _targetDistance) {
+    auto groundedHA = _ei->property();
+    double edgeWeight = groundedHA.cost;
+    double newDistance = _sourceDistance + edgeWeight;
+    return newDistance;
+  });
+
+  // Run dijkstra backwards from sink
+  std::vector<size_t> starts = {1};
+  auto output = DijkstraSSSP(g,starts,weight,termination);
+
+  // Save output distances as heuristic values
+  m_heuristicMap = output.distance;
+
+  m_maxDistance = 0;
+  for(auto kv : m_heuristicMap) {
+    m_maxDistance = std::max(kv.second,m_maxDistance);
+  }
+
+}
+
+
 /*---------------------------- Hyperpath Functions -------------------------*/
 
 MBTOutput
 SubmodeQuery::
 HyperpathQuery() {
+
+  // Compute heuristic values
+  ComputeHeuristicValues();
+
+  if(m_heuristicMap.at(0) == 0)
+    throw RunTimeException(WHERE) << "Start not connected to goal.";
 
   // Define hyperpath query functors
   SSSHPTerminationCriterion termination(
@@ -421,13 +558,26 @@ HyperpathQuery() {
 
   SSSHPForwardStar<ActionExtendedVertex,size_t> forwardStar(
     [this](const size_t& _vid, ActionExtendedHypergraph* _h) {
+        // temp debug
+        {
+          auto vertex = _h->GetVertexType(_vid);
+          auto gvid = vertex.groundedVID;
+          if(gvid == 2 or gvid == 4 or gvid == 6 or gvid == 8 or gvid == 58 or gvid == 59)
+            std::cout << "HERE" << std::endl;
+        }
       return this->HyperpathForwardStar(_vid,_h);
+    }
+  );
+
+  SSSHPHeuristic<ActionExtendedVertex,size_t> heuristic(
+    [this](const size_t& _target) {
+      return this->HyperpathHeuristic(_target);
     }
   );
 
   m_goalVID = MAX_INT;
 
-  auto output = SBTDijkstra(&m_actionExtendedHypergraph,0,weight,termination,forwardStar);
+  auto output = SBTDijkstra(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
 
   m_previousSolutions.insert(m_goalVID);
 
@@ -489,11 +639,65 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
   auto aev = _h->GetVertexType(_vid);
   auto groundedVID = aev.groundedVID;
 
+  // Check if vid's parent was in the same mode
+  // Used for inter mode blocks
+  size_t blockedMode = MAX_INT;
+
+  // Extra for blocking reverse actions
+  std::vector<size_t> blockedVertices;
+
+  auto vertexMode = mg->GetModeOfGroundedVID(groundedVID);
+  auto incoming  = _h->GetIncomingHyperarcs(_vid);
+  if(incoming.size() > 0) {
+    auto hid = *(incoming.begin());
+    auto hyperarc = _h->GetHyperarc(hid);
+    auto tail = hyperarc.tail;
+    if(tail.size() == 1) {
+      auto parent = *(tail.begin());
+      auto parentVertex = _h->GetVertexType(parent);
+      auto parentMode = mg->GetModeOfGroundedVID(parentVertex.groundedVID);
+      if(vertexMode == parentMode)
+        blockedMode = vertexMode;
+    }
+
+    for(auto parent : tail) {
+      auto parentVertex = _h->GetVertexType(parent);
+      auto gvid = parentVertex.groundedVID;
+      blockedVertices.push_back(gvid);
+    }
+  }
+
   std::set<size_t> fullyGroundedHyperarcs;
 
   // Build partially grounded hyperarcs
   // Grab forward star in grounded hypergraph
   for(auto hid : gh.GetOutgoingHyperarcs(groundedVID)) {
+
+    auto head = gh.GetHyperarc(hid).head;
+
+    // If this hyperarc is the reverse of the one that entered the vertex, continue;
+    if(blockedVertices.size() == head.size() and !m_reverseActions) {
+      bool match = true;
+      for(auto vid : blockedVertices) {
+        if(head.count(vid))
+          continue;
+
+        match = false;
+      }
+  
+      if(match)
+        continue;
+    }
+
+    // If this vertex's parent is in the same submode,
+    // ensure that there is not an additional transition within
+    // that sumode.
+    if(head.size() == 1 and blockedMode != MAX_INT) {
+      auto groundedHead = *(head.begin());
+      auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
+      if(headModeVID == blockedMode)
+        continue;
+    }
 
     // Add brand new action extended hyperarc for this vid
     // It will get filled in and check for full grounding in loop
@@ -565,4 +769,23 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
   return fullyGroundedHyperarcs;
 }
 
+double 
+SubmodeQuery::
+HyperpathHeuristic(const size_t& _target) {
+  auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
+  auto vid = aev.groundedVID;
+  auto iter = m_heuristicMap.find(vid);
+  if(iter == m_heuristicMap.end())
+    return m_maxDistance;
+  return m_heuristicMap.at(vid);
+}
 /*--------------------------------------------------------------------------*/
+istream&
+operator>>(istream& _is, const SubmodeQuery::ActionExtendedVertex& _vertex) {
+  return _is;
+}
+
+ostream&
+operator<<(ostream& _os, const SubmodeQuery::ActionExtendedVertex& _vertex) {
+  return _os;
+}

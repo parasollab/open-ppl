@@ -17,6 +17,8 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+#include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -29,12 +31,14 @@
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
+#include "MPLibrary/LocalPlanners/StraightLine.h"
 
 //extenders includes
 
 //path smoothing includes
 
 //connector includes
+#include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
 
@@ -54,7 +58,7 @@
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
-/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// Essentially, the important types are the CfgType or the @cspace abstraction
 /// class, the WeightType or the edge type of the graph, and a type list for
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
@@ -83,6 +87,8 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    EuclideanDistance<MPTraits>,
+    MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -101,6 +107,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+    StraightLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -114,6 +121,7 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+      RewireConnectorTest<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world

@@ -373,7 +373,9 @@ PerformHyperpathQuery() {
 
   auto forwardStar = DefaultSSSHPForwardStar<TMPVertex,TMPHyperarc>();
 
-  auto output = SBTDijkstra(hypergraph,0,weight,termination,forwardStar);
+  auto heuristic = DefaultSSSHPHeuristic<TMPVertex,TMPHyperarc>();
+
+  auto output = SBTDijkstra(hypergraph,0,weight,termination,forwardStar,heuristic);
 
 
   // Check if query found a path.

@@ -94,6 +94,8 @@ class Formation {
  
     Robot* GetLeader() const;
  
+    const FormationConstraint& GetFormationConstraint(MultiBody* _mb);
+
     ///@}
 
   private:

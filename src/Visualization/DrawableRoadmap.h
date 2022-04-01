@@ -49,7 +49,7 @@ class DrawableRoadmap : public glutils::drawable  {
     /// vertices and edges.
     /// @param _graph The graph this DrawableRoadmap represents.
     /// @param _color The color to draw the cfgs and edges.
-    /// @param _name A name refering to this DrawableRoadmap
+    /// @param _name A name refering to this DrawableRoadmap.
     DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
         const std::string& _name = "");
 

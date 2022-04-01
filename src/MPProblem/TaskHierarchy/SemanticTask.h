@@ -161,6 +161,10 @@ class SemanticTask {
 
     void AddFormation(Formation* _formation);
 
+    void SetMPStrategy(std::string _strategy);
+
+    std::string GetMPStrategy();
+
 		///@}
 
 	private:
@@ -205,7 +209,8 @@ class SemanticTask {
 		DependencyMap	m_dependencyMap;
 	
     std::unordered_set<Formation*> m_formations;
-	
+
+    std::string m_mpStrategy;	
 		///@}
 };
 

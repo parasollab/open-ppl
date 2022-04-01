@@ -70,6 +70,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
     /// Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
+    ///@example MPStrategies_UseCase.cpp
+    /// This is an example of how to use the MPStrategies methods
 
     /// Set output file writing to on or off (on by default). This is used to
     /// suppress generation of roadmap, path, and stat files.

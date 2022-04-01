@@ -23,27 +23,34 @@
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
+#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/TerrainSampler.h"
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
 #include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/ToolFrameLine.h"
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/DiscreteExtender.h"
 #include "MPLibrary/Extenders/KinodynamicExtender.h"
 #include "MPLibrary/Extenders/MixExtender.h"
 
 //path smoothing includes
 
 //connector includes
+#include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
@@ -54,11 +61,12 @@
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/DRRT.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
-#include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
@@ -68,6 +76,7 @@
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -81,7 +90,7 @@
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
-/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// Essentially, the important types are the CfgType or the @cspace abstraction
 /// class, the WeightType or the edge type of the graph, and a type list for
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
@@ -117,30 +126,36 @@ struct MPTraits {
   typedef boost::mpl::list<
     AlwaysTrueValidity<MPTraits>,
     CollisionDetectionValidity<MPTraits>,
+    ComposeCollision<MPTraits>,
     ComposeValidity<MPTraits>,
     TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>
+    BruteForceNF<MPTraits>,
+    OptimalNF<MPTraits>,
+    RadiusNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
     TerrainSampler<MPTraits>,
+    ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
     //DynamicRegionSampler<MPTraits>,
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>
+    StraightLine<MPTraits>,
+    ToolFrameLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
     BasicExtender<MPTraits>,
+    DiscreteExtender<MPTraits>,
     KinodynamicExtender<MPTraits>,
     MixExtender<MPTraits>
       > ExtenderMethodList;
@@ -152,6 +167,7 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+    CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;
@@ -167,11 +183,12 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    DRRT<MPTraits>,
     GroupQuery<MPTraits>,
-    GroupSIPPMethod<MPTraits>,
     LazyQuery<MPTraits>,
     SIPPMethod<MPTraits>,
     QueryMethod<MPTraits>,
+    SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
@@ -183,6 +200,7 @@ struct MPTraits {
     EvaluateMapStrategy<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
+    GroupRRTStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>

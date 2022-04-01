@@ -24,7 +24,7 @@ class NextBestSearch : public TMPStrategyMethod {
     typedef size_t                                         VID;
     typedef MPTraits<Cfg>::GroupRoadmapType                GroupRoadmapType;
     typedef MPTraits<Cfg>::GroupPathType                   GroupPathType;
-    typedef std::pair<size_t,GroupCfg>                     Constraint;
+    typedef std::pair<std::pair<size_t,size_t>,GroupCfg>   Constraint;
     typedef CBSNode<SemanticTask,Constraint,GroupPathType> Node;
 
     typedef std::set<Constraint> ConstraintSet;
@@ -72,7 +72,7 @@ class NextBestSearch : public TMPStrategyMethod {
 
     bool LowLevelPlanner(Node& _node, SemanticTask* _task);
 
-    GroupPathType* QueryPath(SemanticTask* _task, const double& _startTime,
+    GroupPathType* QueryPath(SemanticTask* _task, const double _startTime,
                              const Node& _node);
 
     std::vector<std::pair<SemanticTask*,Constraint>> ValidationFunction(Node& _node);
@@ -115,6 +115,8 @@ class NextBestSearch : public TMPStrategyMethod {
     
     VertexIntervals m_vertexIntervals;
     EdgeIntervals m_edgeIntervals;
+
+    bool m_savePaths{false};
 
     ///@}
 

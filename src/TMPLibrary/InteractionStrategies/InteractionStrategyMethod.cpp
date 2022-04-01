@@ -95,6 +95,13 @@ AssignRoles(const State& _state, const std::vector<std::string>& _conditions) {
   std::unordered_set<RobotGroup*> usedGroups;
   AssignRolesFromConditions(_state,motionConditions,usedGroups);
   AssignRolesFromConditions(_state,formationConditions,usedGroups);
+
+  if(m_debug) {
+    std::cout << "Assigned roles as follows: " << std::endl;
+    for(auto kv : m_roleMap) {
+      std::cout << kv.first << "->" << kv.second->GetLabel() << std::endl;
+    }
+  }
 }
 
 void
@@ -778,20 +785,25 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
     }
   }
 }
+
 std::vector<Path*> 
 InteractionStrategyMethod::
 DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
   auto grm = _groupPath->GetRoadmap();
   auto group = grm->GetGroup();
   auto robots = group->GetRobots();
+  auto lib = this->GetMPLibrary();
  
   std::unordered_map<Robot*,std::vector<size_t>> individualVIDs;
  
-  auto& gcfgs = _groupPath->Cfgs();
+  auto& gcfgs = _groupPath->FullCfgs(lib);
   for(auto& gcfg : gcfgs) {
-    for(auto robot : robots) {
-      auto vid = gcfg.GetVID(robot);
-      individualVIDs[robot].push_back(vid);
+    for(size_t i = 0; i < robots.size(); i++) {
+      auto cfg = gcfg.GetRobotCfg(i);
+      auto rm = grm->GetRoadmap(i);
+      
+      auto vid = rm->AddVertex(cfg);
+      individualVIDs[cfg.GetRobot()].push_back(vid);
     }  
   }
 

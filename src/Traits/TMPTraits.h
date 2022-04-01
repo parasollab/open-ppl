@@ -7,12 +7,14 @@
 #include "TMPLibrary/TMPStrategies/BasicHCR.h"
 #include "TMPLibrary/TMPStrategies/NextBestSearch.h"
 #include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
+#include "TMPLibrary/TMPStrategies/BasicTMPStrategyMethod.h"
 
 // PoIPlacementMethods to include
 
 // TaskEvaluators to include
 #include "TMPLibrary/TaskEvaluators/HCRQuery.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
+#include "TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SubmodeQuery.h"
 
 // TaskDecomposers to include
@@ -20,8 +22,9 @@
 // TaskAllocators to include 
 
 // StateGraphs to include
-#include "TMPLibrary/StateGraphs/ModeGraph.h"
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/ModeGraph.h"
+#include "TMPLibrary/StateGraphs/ObjectCentricModeGraph.h"
 
 // InteractionStrategyMethods to include
 #include "TMPLibrary/InteractionStrategies/IndependentPaths.h"
@@ -44,6 +47,7 @@ struct TMPTraits {
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
     BasicHCR,
+    BasicTMPStrategyMethod,
     NextBestSearch,
 		SimpleMotionMethod
       > TMPStrategyMethodList;
@@ -56,6 +60,7 @@ struct TMPTraits {
   typedef boost::mpl::list<
     HCRQuery,
 		SimpleMotionEvaluator,
+    SimultaneousMultiArmEvaluator,
     SubmodeQuery
       > TaskEvaluatorMethodList;
 
@@ -68,8 +73,9 @@ struct TMPTraits {
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
+    CombinedRoadmap,
     ModeGraph,
-    CombinedRoadmap
+    ObjectCentricModeGraph
 			> StateGraphList;
 
 	typedef boost::mpl::list<

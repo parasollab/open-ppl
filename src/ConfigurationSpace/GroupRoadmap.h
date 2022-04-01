@@ -81,6 +81,7 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
     RobotGroup* GetGroup();
 
     /// Get the individual roadmap for a robot in the group.
+    /// @param _index The index of the desired robot.
     IndividualRoadmap* GetRoadmap(const size_t _index);
     const IndividualRoadmap* GetRoadmap(const size_t _index) const;
 
@@ -137,6 +138,11 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
     /// Import the base-class version for this (required because we've
     /// overridden one of the overloads).
     using GenericStateGraph<Vertex, Edge>::AddEdge;
+
+    /// Remove an edge from the graph if it exists.
+    /// @param _source The source vertex.
+    /// @param _source The target vertex.
+    virtual void DeleteEdge(const VID _source, const VID _target) noexcept override;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
@@ -418,6 +424,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // Execute post-add hooks.
     this->ExecuteAddEdgeHooks(ei);
 
+    this->m_predecessors[_target].insert(_source);
     ++m_timestamp;
   }
 }
@@ -463,14 +470,16 @@ AddVertex(const Vertex& _v) noexcept {
                                     << " does not exist!";
   }
 
+  // Copy the formation over from the input cfg
+  for(auto formation : _v.GetFormations()) {
+    cfg.AddFormation(formation);
+  }
+
   // The vertex does not exist. Add it now.
   const VID vid = this->add_vertex(cfg);
+  this->m_predecessors[vid];
   this->m_allVIDs.insert(vid);
   ++m_timestamp;
-
-  //debug
-  if(vid == 102)
-    std::cout << "HERE" << std::endl;
 
   // Execute post-add hooks.
   this->ExecuteAddVertexHooks(this->find_vertex(vid));
@@ -520,9 +529,26 @@ DeleteVertex(const VID _v) noexcept {
 
   // Delete the group vertex.
   this->delete_vertex(vi->descriptor());
+  this->m_allVIDs.erase(_v);
   ++m_timestamp;
 }
 
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+DeleteEdge(const VID _source, const VID _target) noexcept {
+  // Find the edge and crash if it isn't found.
+  const ED edgeDescriptor(_source, _target);
+  VI dummy;
+  EI edgeIterator;
+
+  const bool found = this->find_edge(edgeDescriptor, dummy, edgeIterator);
+  if(!found)
+    throw RunTimeException(WHERE) << "Edge (" << _source << ", " << _target
+                                  << ") does not exist.";
+
+  DeleteEdge(edgeIterator);
+}
 
 template <typename Vertex, typename Edge>
 void
@@ -539,6 +565,12 @@ DeleteEdge(EI _iterator) noexcept {
 
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());
+
+  // Remove predessors as appropriate.
+  const VID source = _iterator->source(),
+            target = _iterator->target();
+
+  this->m_predecessors[target].erase(source);
   ++m_timestamp;
 }
 
@@ -546,6 +578,10 @@ template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 AddFormation(Formation* _formation, bool _active) {
+
+  if(!_formation)
+    throw RunTimeException(WHERE) << "Adding null formation.";
+
   m_formations[_formation] = _active;
 }
 

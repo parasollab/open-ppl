@@ -16,10 +16,9 @@
     <Robot label="boxy-2" filename="3D/iCreate.xml">
       <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
     </Robot>
-    <!--Robot label="boxy-3" filename="3D/iCreate.xml">
+    <Robot label="boxy-3" filename="3D/iCreate.xml">
       <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
     </Robot>
-    <Robot label="boxy-4" filename="3D/iCreate.xml">
       <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
     </Robot>
     <Robot label="boxy-5" filename="3D/iCreate.xml">
@@ -33,9 +32,8 @@
     </Robot-->
 
     <!-- The robotLabels parameter lists all of the robots included in this group -->
-    <RobotGroup label="robotGroup" robotLabels="boxy-0 boxy-1"/>
-      <!--boxy-2 boxy-3 boxy-4
-	    boxy-5 boxy-6 boxy-7 " /-->
+    <RobotGroup label="robotGroup" robotLabels="boxy-0 boxy-1 boxy-2 boxy-3 
+          boxy-4 boxy-5 boxy-6 boxy-7"  /-->
 
     <GroupTask label="groupQuery" group="robotGroup">
       <Task label="query-0" robot="boxy-0">
@@ -54,7 +52,7 @@
           <CSpaceConstraint point="4.170000 0.836667 0.000000" />
         </GoalConstraints>
       </Task>
-      <!--Task label="query-2" robot="boxy-2">
+      <Task label="query-2" robot="boxy-2">
         <StartConstraints>
           <CSpaceConstraint point="-4.170000 -0.830000 0.000000" />
         </StartConstraints>
@@ -101,7 +99,7 @@
         <GoalConstraints>
           <CSpaceConstraint point="2.496667 4.170000 0.000000" />
         </GoalConstraints>
-      </Task-->
+      </Task>
     </GroupTask>
 
   </Problem>
@@ -120,11 +118,11 @@
       <CollisionDetection label="rapid" method="RAPID" />
       <CollisionDetection label="pqp" method="PQP" />
       <CollisionDetection label="pqp_solid" method="PQP_SOLID" />
-      <!--CollisionDetection label="spheres" method="BoundingSpheres" />
+      <CollisionDetection label="spheres" method="BoundingSpheres" />
       <ComposeCollision label="spheresAndPQPSolid" operator="and">
         <CollisionDetector label="spheres"/>
         <CollisionDetector label="pqp_solid"/>
-      </ComposeCollision-->
+      </ComposeCollision>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -139,10 +137,12 @@
 
     <LocalPlanners>
       <StraightLine label="sl" binaryEvaluation="false" vcLabel="pqp_solid" saveIntermediates="true" />
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="false" vcLabel="alwaysTrue" saveIntermediates="true" />
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="minkowski" vcLabel="alwaysTrue" maxDist="4." minDist=".01" />
+      <BasicExtender label="BERO" debug="false" dmLabel="minkowski" vcLabel="pqp_solid" maxDist="4." minDist=".01" />
+      <DiscreteExtender label="DiscreteExtender" lp="sl"/>
     </Extenders>
 
     <PathModifiers></PathModifiers>
@@ -155,12 +155,15 @@
       <TimeEvaluator label="TimeEval" timeout="1000" />
       <QueryMethod label="IndividualQuery" debug="false" safeIntervalToolLabel="SI" />
       <GroupSIPPMethod label="SIPP" safeIntervalToolLabel="SI"/>
+      <SIPPMethod label="SIPP" safeIntervalToolLabel="SI"/>
       <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
         <Evaluator label="TimeEval" />
         <Evaluator label="IndividualQuery" />
       </ComposeEvaluator>
 
       <CBSQuery label="CBSQuery" queryLabel="SIPP" debug="true" vcLabel="pqp_solid" safeIntervalToolLabel="SI" />
+      <DRRT label="DRRTEvaluator" rrt="DiscreteRRT"/>
+      <GroupQuery label="GroupQuery"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -169,6 +172,14 @@
         <Connector label="Closest" />
         <Evaluator label="BoundedIndividualQuery" />
       </BasicPRM>
+
+      <GroupRRTStrategy label="DiscreteRRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="DiscreteExtender"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="GroupQuery"/>
+      </GroupRRTStrategy>
 
       <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM">
         <Evaluator label="CBSQuery" />
@@ -179,14 +190,18 @@
         <Connector label="Closest"/>
         <Evaluator label="SIPP"/>
       </GroupPRM>
+
+      <GroupDecoupledStrategy label="dRRT" strategyLabel="IndividualPRM">
+        <Evaluator label="DRRTEvaluator" />
+      </GroupDecoupledStrategy>
     </MPStrategies>
 
     <MPTools>
-      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="false" />
+      <SafeIntervalTool label="SI" vcLabel="spheresAndPQPSolid" debug="true" />
     </MPTools>
 
     <!-- The seed can be changed to generate different roadmaps and paths -->
-    <Solver mpStrategyLabel="CompositePRM" seed="12345678" baseFilename="multi-robot-example" vizmoDebug="true" />
+    <Solver mpStrategyLabel="dRRT" seed="12345678" baseFilename="multi-robot-example" vizmoDebug="true" />
   </Library>
 
   <TMPLibrary>

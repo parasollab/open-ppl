@@ -17,10 +17,18 @@ class ChildAgent : public PathFollowingAgent {
     ///@name Construction
     ///@{
 
+    /// Create a child agent for a robot.
+    /// @param _r The robot which this agent will reason for.
     ChildAgent(Robot* const _r);
 
+    /// Create a child agent for a robot.
+    /// @param _r The robot which this agent will reason for.
+    /// @param _node The XML node to parse.
     ChildAgent(Robot* const _r, XMLNode& _node);
 
+    /// Copy a child agent for another robot.
+    /// @param _r The destination robot.
+    /// @param _a The agent to copy.
     ChildAgent(Robot* const _r, const ChildAgent& _a);
 
     virtual ~ChildAgent();
@@ -41,17 +49,19 @@ class ChildAgent : public PathFollowingAgent {
     ///@name Child Interface
     ///@{
 
+    /// Get a pointer to the coordinator of the current agent.
+    /// @return A pointer to the agent's coordinator.
     Coordinator* GetCoordinator();
 
-    ///Set m_parentAgent to the an agent of the same capability.
-    ///@param _parent The parent agent.
+    /// Set m_parentAgent to an agent of the same capability.
+    /// @param _parent The parent agent.
     void SetCoordinator(Coordinator* const _parent);
 
     ///@}
     ///@name Accessors
     ///@{
 
-    /// Returns this agents m_solution pointer
+    /// Returns this agent's m_solution pointer
     MPSolution* GetMPSolution();
 
     ///@}
@@ -61,7 +71,7 @@ class ChildAgent : public PathFollowingAgent {
     virtual bool SelectTask() override;
 
     /// Evaluate the agent's progress on its current task.
-    /// @return True if we should continue the current task, false otherwise.
+    /// @return True if the current task should be continued, false otherwise.
     virtual bool EvaluateTask();
 
     /// Continue executing the agent's current task.

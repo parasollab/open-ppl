@@ -19,6 +19,8 @@ FollowPath(Agent* _agent, XMLNode& _node) : StepFunction(_agent, _node) {
   m_waypointThreshold = _node.Read("waypointThreshold", false,
       m_waypointThreshold, 0., std::numeric_limits<double>::max(),
       "The robot is considered to have reached the waypoints within this threshold.");
+
+  m_pathFile = _node.Read("pathFile",false,"","Name of path file to load and follow.");
 }
 
 FollowPath::
@@ -30,7 +32,14 @@ void
 FollowPath::
 StepAgent(double _dt) {
   auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
-  if(p and p->HasPlan())
+  if(!p)
+    return;
+
+  if(!p->HasPlan() and m_pathFile != "" and !m_loadedPath) {
+    LoadPath();
+  }
+
+  if(p->HasPlan())
     ExecutePath(_dt);
 }
 
@@ -112,4 +121,23 @@ MoveToWaypoint(const Cfg& _waypoint, double _dt) {
 
   //TODO::Add hardware version
   robot->GetSimulationModel()->Execute(bestControl);
+}
+
+void
+FollowPath::
+LoadPath() {
+
+  auto p = dynamic_cast<PathFollowingAgent*>(m_agent);
+  std::vector<Cfg> path;
+
+  ifstream file(m_pathFile);
+
+  Cfg cfg(m_agent->GetRobot());
+  while(file >> cfg) {
+    path.push_back(cfg);
+  }
+
+  p->SetPlan(path);
+
+  m_loadedPath = true;
 }

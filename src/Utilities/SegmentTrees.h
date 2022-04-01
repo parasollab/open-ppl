@@ -62,7 +62,7 @@ class SegmentTrees {
     /// Build the Segment Trees
     void BuildSegmentTrees();
 
-    /// Finds the Enclosing Boundaries
+    /// Finds the Number of Enclosing Boundaries
     /// @param _p Point to search
     /// @param _e Range  of the point 
     /// @return Number of enclosing boundaries
@@ -148,7 +148,7 @@ template<typename PropertyType>
 void SegmentTrees<PropertyType>::BuildSegmentTrees() {
   delete m_tree2;
   delete m_tree3;
-  // Store the intervals of each boundaries with the input index as key index
+  // Store the intervals of each boundary with the input index as key index
   if(m_dimension == 2) {
     vector<Interval2> in;
     for(size_t i = 0; i < m_boundaries.size(); i++) {

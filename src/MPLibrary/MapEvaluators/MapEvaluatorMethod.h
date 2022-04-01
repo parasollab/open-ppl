@@ -13,9 +13,9 @@
 /// set of criteria.
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
+
 template <typename MPTraits>
 class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
-
   public:
 
     ///@name Construction
@@ -23,14 +23,13 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
 
     MapEvaluatorMethod() = default;
 
-    // MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
     MapEvaluatorMethod(XMLNode& _node);
 
     virtual ~MapEvaluatorMethod() = default;
 
     typedef std::unordered_map<size_t,
-                std::unordered_map<size_t,
-                    std::vector<Range<double>>>> EdgeIntervals;
+            std::unordered_map<size_t,
+            std::vector<Range<double>>>> EdgeIntervals;
 
     ///@}
     ///@name MapEvaluator Interface
@@ -39,9 +38,13 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     /// Evaluate a roadmap.
     /// @return True if this roadmap meets the evaluation criteria.
     virtual bool operator()() = 0;
+    ///@example MapEvaluator_UseCase.cpp
+    /// This is an example of how to use the map evaluator method.
 
+    /// Set the edge intervals of a roadmap
     virtual void SetEdgeIntervals(EdgeIntervals _edgeIntervals) {};
 
+    /// Set the minimum end time of a path
     virtual void SetMinEndtime(double _minEndtime) {};
 
     ///@}
@@ -77,9 +80,10 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
 
 };
 
+
 template<typename MPTraits>
 MapEvaluatorMethod<MPTraits>::
-MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) { 
+MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 }
 
 /*----------------------------- Active Robots --------------------------------*/
@@ -100,5 +104,6 @@ GetActiveRobots() const {
 }
 
 /*----------------------------------------------------------------------------*/
+
 
 #endif

@@ -17,6 +17,9 @@ IndependentPaths(XMLNode& _node) : InteractionStrategyMethod(_node) {
   this->SetName("IndependentPaths");
   m_mpStrategyLabel = _node.Read("mpStrategy", true, "",
                  "MPStrategy to use to plan interactions.");
+
+  m_sequential = _node.Read("sequential",false,m_sequential,
+                 "Flag indiciating if the paths should be sequentially planned to avoid each other.");
 }
 
 IndependentPaths::
@@ -232,7 +235,7 @@ GenerateTasks(std::vector<std::string> _conditions,
               std::unordered_map<Robot*,Constraint*> _startConstraints,
               std::unordered_map<Robot*,Constraint*> _goalConstraints) {
 
-  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+  //auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
   auto as = this->GetTMPLibrary()->GetActionSpace();
   std::vector<std::shared_ptr<GroupTask>> groupTasks;
 
@@ -256,9 +259,9 @@ GenerateTasks(std::vector<std::string> _conditions,
 
     RobotGroup* group = this->GetMPProblem()->AddRobotGroup(robots,groupLabel);
     // Check if group is truly new and update MPSolution
-    if(group->GetLabel() == groupLabel) {
-      hcr->AddRobotGroup(group);
-    }
+    //if(group->GetLabel() == groupLabel) {
+    //  hcr->AddRobotGroup(group);
+    //}
    
     auto groupTask = shared_ptr<GroupTask>(new GroupTask(group));
 
@@ -294,6 +297,10 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
 
   // Clear previous final state.
   m_finalState.clear();
+
+  // TODO::Refactor DO code to effeciently save copy of DOs while working in here
+  if(!prob->GetDynamicObstacles().empty())
+    throw RunTimeException(WHERE) << "Making assumption that there are no existing dynamic obstacles.";
 
   std::vector<Path*> paths;
 
@@ -345,8 +352,8 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
     auto groupPath = _solution->GetGroupPath(group);
     if(groupPath and !groupPath->Empty()) {
       if(m_debug) {
-        std::cout << "Cfg Path for " << _label << std::endl;
-        for(auto cfg : groupPath->Cfgs()) {
+        std::cout << "Cfg Path for " << _label << ": " << group->GetLabel() << std::endl;
+        for(auto cfg : groupPath->FullCfgs(lib)) {
           std::cout << cfg.PrettyPrint() << std::endl;
         }
       }
@@ -368,6 +375,12 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
       auto decoupledPaths = DecouplePath(_solution,groupPath);
       for(auto p : decoupledPaths) {
         paths.push_back(p);
+
+        if(m_sequential) {
+          DynamicObstacle dynamic(p->GetRobot(),p->Cfgs());
+          prob->AddDynamicObstacle(std::move(dynamic));
+        }
+
       }
       continue;
     }
@@ -382,6 +395,7 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
       auto path = _solution->GetPath(robot);
       if(path->Empty()) {
         //return nullptr;
+        prob->ClearDynamicObstacles();
         return {};
       }
 
@@ -402,11 +416,12 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
 
     // Reset nonstatic robots as virtual
     for(auto robot : group->GetRobots()) {
-      if(!_staticRobots.count(robot))
+      if(!_staticRobots.count(robot) and !m_sequential)
         robot->SetVirtual(true);
     }
   }
 
+  prob->ClearDynamicObstacles();
   return paths;
 }
 
@@ -453,7 +468,8 @@ InterimState(Interaction* _interaction, const std::string& _current,
     // Set formations
     auto grm = solution->GetGroupRoadmap(group);
     auto formation = f->GenerateFormation(roleMap);
-    grm->AddFormation(formation,true);
+    if(formation)
+      grm->AddFormation(formation,true);
 
     // Create initial group vertex
     auto gcfg = GroupCfg(grm);

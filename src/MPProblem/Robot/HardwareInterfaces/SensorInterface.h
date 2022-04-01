@@ -53,6 +53,7 @@ class SensorInterface : public HardwareInterface {
     virtual void SendCommand(const SensorCommand& _c) = 0;
 
     /// Check if the sensor has completed its measurement.
+    /// @return True if measurement ready to read
     bool IsReady() const noexcept;
 
     /// Get the timestep when the last measurement was completed.
@@ -65,13 +66,13 @@ class SensorInterface : public HardwareInterface {
     virtual std::vector<std::vector<double>> GetLastJointAngles();
 
     /// Get the measurement uncertainty.
-    /// @TODO This should maybe be a covariance matrix instead of an uncertainty
+    /// @todo This should maybe be a covariance matrix instead of an uncertainty
     ///       in each measured dimension.
     virtual std::vector<double> GetUncertainty() = 0;
 
     /// Get the measurement transformation matrix H such that a configuration c
     /// produces a measurement y = Hc.
-    /// @TODO We need a dynamically sizable matrix for this, either dlib or
+    /// @todo We need a dynamically sizable matrix for this, either dlib or
     ///       eigen will probably be the choice.
 
     ///@}

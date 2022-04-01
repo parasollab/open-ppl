@@ -105,6 +105,8 @@ class ModeGraph : public StateGraph {
 
     MPSolution* GetMPSolution();
   
+    VID GetModeOfGroundedVID(const VID& _vid) const;
+
     ///@}
 
   private:
@@ -177,8 +179,6 @@ class ModeGraph : public StateGraph {
 
     std::string m_querySM;
 
-    std::string m_expansionStrategy;
-
     std::string m_queryStrategy;
 
     size_t m_numUnactuatedSamples;
@@ -192,4 +192,15 @@ class ModeGraph : public StateGraph {
 
 };
 
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::Mode* _mode);
+std::istream& operator>>(std::istream& _is, const ModeGraph::Mode* _mode);
+
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::ReversibleAction _ra);
+std::istream& operator>>(std::istream& _is, const ModeGraph::ReversibleAction _ra);
+
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::GroundedVertex _vertex);
+std::istream& operator>>(std::istream& _is, const ModeGraph::GroundedVertex _vertex);
+
+std::ostream& operator<<(std::ostream& _os, const ModeGraph::Transition _t);
+std::istream& operator>>(std::istream& _is, const ModeGraph::Transition _t);
 #endif

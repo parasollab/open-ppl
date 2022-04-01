@@ -1,6 +1,6 @@
 #include "NextBestSearch.h"
 
-#include "MPLibrary/MapEvaluators/GroupSIPPMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 
@@ -33,6 +33,9 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_safeIntervalLabel = _node.Read("safeIntervalLabel",true,"",
         "Safe interval tool to use for compute safe intervals of roadmap.");
+
+  m_savePaths =_node.Read("savePaths",false,m_savePaths,
+        "Flag to indicate if full paths should be output in files for reuse.");
 }
 
 NextBestSearch::
@@ -46,7 +49,15 @@ void
 NextBestSearch::
 PlanTasks() {
 
+  if(m_debug) 
+    std::cout << this->GetNameAndLabel() + "::Starting to PlanTasks." << std::endl;
+
   auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
+  
+  stats->SetStat(this->GetNameAndLabel() + "::CollisionFound",0);
+
   auto originalDecomp = plan->GetDecomposition();
   auto te = this->GetTaskEvaluator(m_teLabel);
   te->Initialize();
@@ -60,6 +71,14 @@ PlanTasks() {
   std::vector<Decomposition*> taskSolutions;
 
   while(bestNode.cost > lowerBound) {
+
+    std::cout << "Computing plans. Current upperbound: "
+              << bestNode.cost
+              << ". Current lowerbound: "
+              << lowerBound
+              << "."
+              << std::endl;
+  
     lowerBound = FindTaskPlan(originalDecomp);
     taskSolutions.push_back(plan->GetDecomposition());
 
@@ -78,6 +97,9 @@ double
 NextBestSearch::
 FindTaskPlan(Decomposition* _decomp) {
   auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::FindTaskPlan");
+
   plan->SetDecomposition(_decomp);
 
   auto te = this->GetTaskEvaluator(m_teLabel);
@@ -90,6 +112,10 @@ FindTaskPlan(Decomposition* _decomp) {
 void
 NextBestSearch::
 ComputeMotions(Node& _bestNode) {
+
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeMotions");
 
   // Configure CBS Functions
   CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType> lowLevel(
@@ -166,6 +192,10 @@ ComputeIntervals(GroupRoadmapType* _grm) {
 bool 
 NextBestSearch::
 LowLevelPlanner(Node& _node, SemanticTask* _task) {
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CBSLowLevelPlanner");
 
   std::unordered_map<SemanticTask*,double> startTimes;
   std::unordered_map<SemanticTask*,double> endTimes;
@@ -239,7 +269,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
   std::set<SemanticTask*> unsolved;
   for(auto kv : _node.solutionMap) {
-    if(solved.count(kv.first))
+    if(solved.count(kv.first) or kv.first == _task)
       continue;
     unsolved.insert(kv.first);
   }
@@ -252,11 +282,15 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto startTime = current.first;
 
     // Compute new path
-    auto path = QueryPath(task,startTime,_node);
+    auto path = QueryPath(task,startTime*timeRes,_node);
 
     // Check if path was found
-    if(!path)
+    if(!path) {
+      if(m_debug) {
+        std::cout << "Failed to find path for " << task->GetLabel() << std::endl;
+      }
       return false;
+    }
 
     // Save path to solution
     _node.solutionMap[task] = path;
@@ -267,6 +301,12 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
       endTimes[task] = startTime + timesteps;// - 1;
     else 
       endTimes[task] = startTime;
+
+    if(m_debug) {
+      std::cout << "Found path for " << task->GetLabel() 
+                << " from " << startTime << " to "
+                << startTime + timesteps << std::endl;
+    }
 
     // Check if new tasks are available to plan
     std::vector<SemanticTask*> toRemove;
@@ -307,11 +347,16 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
 NextBestSearch::GroupPathType*
 NextBestSearch::
-QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
+QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::QueryPath");
 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto solution = mg->GetMPSolution();
   auto lib = this->GetMPLibrary();
+  lib->SetTask(nullptr);
+  lib->SetGroupTask(_task->GetGroupMotionTask().get());
   auto problem = this->GetMPProblem();
   auto group = _task->GetGroupMotionTask()->GetRobotGroup();
 
@@ -342,7 +387,7 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
   double lastTimestep = 0;
   for(auto c : *m_currentConstraints) {
 
-    lastTimestep = std::max(double(c.first),lastTimestep);
+    lastTimestep = std::max(double(c.first.second),lastTimestep);
 
     if(false) {
       std::cout << "Check for caching here" << std::endl;
@@ -352,8 +397,15 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
       for(auto robot : constraintGroup->GetRobots()) {
         auto cfg = c.second.GetRobotCfg(robot);
         std::vector<Cfg> path = {cfg,cfg,cfg};
+        
+        //auto duration = c.first.second - c.first.first;
+        //for(size_t i = 0; i < duration; i++) {
+        //  path.push_back(cfg);
+        //}
+
         DynamicObstacle dob(cfg.GetRobot(),path);
-        dob.SetStartTime(c.first-1);
+        dob.SetStartTime(c.first.first-1);
+        dob.SetEndTime(c.first.second);
         this->GetMPProblem()->AddDynamicObstacle(std::move(dob));
       } 
     }
@@ -361,10 +413,11 @@ QueryPath(SemanticTask* _task, const double& _startTime, const Node& _node) {
 
   ComputeIntervals(grm);
 
-  auto q = dynamic_cast<GroupSIPPMethod<MPTraits<Cfg>>*>(
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  auto q = dynamic_cast<SIPPMethod<MPTraits<Cfg>>*>(
     this->GetMPLibrary()->GetMapEvaluator(m_queryLabel)
   );
-  q->SetMinEndtime(lastTimestep);
+  q->SetMinEndTime(double(lastTimestep) * timeRes);
   q->SetStartTime(_startTime);
 
   q->SetEdgeIntervals(m_edgeIntervals);
@@ -392,10 +445,18 @@ std::vector<std::pair<SemanticTask*,NextBestSearch::Constraint>>
 NextBestSearch::
 ValidationFunction(Node& _node) {
 
+  if(m_debug) {
+    std::cout << "VALIDATING NODE" << std::endl;
+  }
+
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
+
   std::vector<SemanticTask*> ordering;
 
   auto lib = this->GetMPLibrary();
-  auto vc = static_cast<CollisionDetectionValidity<MPTraits<Cfg>>*>(
+  auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits<Cfg>>*>(
               lib->GetValidityChecker(m_vcLabel));
 
   std::unordered_map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
@@ -404,6 +465,8 @@ ValidationFunction(Node& _node) {
   std::unordered_map<SemanticTask*,size_t> endTimes;
   size_t finalTime = 0;
 
+  // Set of tasks which have no tasks dependent on them
+  std::set<SemanticTask*> finalTasks;
 
   // Build in order sequence of tasks
   while(ordering.size() < _node.solutionMap.size()) {
@@ -411,6 +474,7 @@ ValidationFunction(Node& _node) {
     // Find the set of tasks that are ready to be validated
     for(auto kv :_node.solutionMap) {
       auto task = kv.first;
+      lib->SetGroupTask(task->GetGroupMotionTask().get()); 
 
       // Skip if already validated
       if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
@@ -435,7 +499,7 @@ ValidationFunction(Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-      
+     
       const auto cfgs = path->FullCfgsWithWait(lib);
       for(size_t i = 0; i < cfgs.size(); i++) {
         cfgPaths[task].push_back(cfgs[i]);
@@ -452,10 +516,16 @@ ValidationFunction(Node& _node) {
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
 
+      finalTasks.insert(task);
+
       // Update the end times of the preceeding tasks
       auto group1 = task->GetGroupMotionTask()->GetRobotGroup();
       for(auto dep : task->GetDependencies()) {
         for(auto t : dep.second) {
+
+          // Remove from final tasks
+          finalTasks.erase(t);
+
           // Check if robots overlap
           bool overlap = false;
           auto group2 = t->GetGroupMotionTask()->GetRobotGroup();
@@ -483,7 +553,7 @@ ValidationFunction(Node& _node) {
 
       // TODO::Check backfill of time gaps between robots doing anything
       // Check that timesteps lies within task range
-      if(startTimes[t1] > t or endTimes[t1] < t)
+      if(startTimes[t1] > t or (endTimes[t1] < t and !finalTasks.count(t1)))
         continue;
 
       // Configure first group at timestep
@@ -502,7 +572,7 @@ ValidationFunction(Node& _node) {
 
         // TODO::Check backfill of time gaps between robots doing anything
         // Check that timesteps lies within task range
-        if(startTimes[t2] > t or endTimes[t2] < t)
+        if(startTimes[t2] > t or (endTimes[t2] < t and !finalTasks.count(t2)))
           continue;
 
         // Configure second group at timestep
@@ -540,13 +610,30 @@ ValidationFunction(Node& _node) {
                   << cfg1.GetRobotCfg(robot1).PrettyPrint()
                   << "\n\t2: "
                   << cfg2.GetRobotCfg(robot2).PrettyPrint()
+                  << " during tasks "
+                  << t1->GetLabel()
+                  << " and "
+                  << t2->GetLabel()
                   << std::endl;
               }
 
+              auto endT = t;
+              if(robot1->GetMultiBody()->IsPassive()) {
+                endT = endTimes[t1];
+              }
+              else if(robot2->GetMultiBody()->IsPassive()) {
+                endT = endTimes[t2];
+              }
+
+              stats->IncStat(this->GetNameAndLabel() + "::CollisionFound");
+
+              // Temp hack for demo
+              //endT = std::max(endT,t+100);
+
               // Create constraints
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
-              Constraint constraint1 = std::make_pair(t,cfg2);
-              Constraint constraint2 = std::make_pair(t,cfg1);
+              Constraint constraint1 = std::make_pair(std::make_pair(t,endT),cfg2);
+              Constraint constraint2 = std::make_pair(std::make_pair(t,endT),cfg1);
               constraints.emplace_back(t1,constraint1);
               constraints.emplace_back(t2,constraint2);
               return constraints;
@@ -563,6 +650,10 @@ ValidationFunction(Node& _node) {
 double
 NextBestSearch::
 CostFunction(Node& _node) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CostFunction");
+
   std::unordered_map<SemanticTask*,double> startTimes;
   std::unordered_map<SemanticTask*,double> endTimes;
   std::set<SemanticTask*> solved;
@@ -702,8 +793,9 @@ RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
               const double _sourceTimestep, const double _bestTimestep) const {
 
   // Compute time when we will end this edge.
-  const size_t startTime = static_cast<size_t>(std::llround(_sourceTimestep));
-  const size_t endTime = startTime + _ei->property().GetTimeSteps();
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  const size_t startTime = static_cast<size_t>(std::llround(_sourceTimestep) * timeRes);
+  const size_t endTime = startTime + (_ei->property().GetTimeSteps() * timeRes);
 
   // If this end time isn't better than current best, we won't use it.
   // Return without checking conflicts to save computation.
@@ -766,7 +858,9 @@ IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
   // Reconstruct edge path at resolution level
   std::vector<GroupCfg> path;
   path.push_back(grm->GetVertex(_source));
-  std::vector<GroupCfg> edge = lib->ReconstructEdge(grm,_source,_target);
+  auto e = grm->GetEdge(_source,_target);
+  std::vector<GroupCfg> edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
+                             : lib->ReconstructEdge(grm,_source,_target);
   path.insert(path.end(),edge.begin(),edge.end());
   path.push_back(grm->GetVertex(_target));
 
@@ -804,7 +898,7 @@ NextBestSearch::
 LowerBound(size_t _bound) const {
   auto boundIt = m_currentConstraints->end();
   for(auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if(it->first >= _bound) {
+    if(it->first.first >= _bound) {
       boundIt = it;
       break;
     }
@@ -818,7 +912,7 @@ NextBestSearch::
 UpperBound(size_t _bound) const {
   auto boundIt = m_currentConstraints->end();
   for(auto it = m_currentConstraints->begin(); it != m_currentConstraints->end(); it++) {
-    if(it->first > _bound) {
+    if(it->first.second > _bound) {
       boundIt = it;
       break;
     }
@@ -831,6 +925,9 @@ void
 NextBestSearch::
 SaveSolution(const Node& _node) {
   // TODO::Decide on final format. For now convert to paths for individual robots
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SaveSolution");
 
   // Collect all of the robots
   std::unordered_map<Robot*,std::vector<Cfg>> robotPaths;
@@ -858,6 +955,7 @@ SaveSolution(const Node& _node) {
     // Find the set of tasks that are ready to be validated
     for(auto kv :_node.solutionMap) {
       auto task = kv.first;
+      lib->SetGroupTask(task->GetGroupMotionTask().get()); 
 
       // Skip if already validated
       if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
@@ -895,6 +993,15 @@ SaveSolution(const Node& _node) {
       else
         endTimes[task] = startTime;
 
+      if(m_debug) {
+        std::cout << task->GetLabel() 
+                  << " start: "
+                  << startTime
+                  << ". end: "
+                  << endTimes[task]
+                  << std::endl;
+      }
+
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
 
@@ -902,6 +1009,13 @@ SaveSolution(const Node& _node) {
       for(auto dep : task->GetDependencies()) {
         for(auto t : dep.second) {
           endTimes[t] = startTime;
+
+          if(m_debug) {
+            std::cout << "Updating end time of " << t->GetLabel()
+                      << " to " << startTime
+                      << " because of " << task->GetLabel()
+                      << std::endl;
+          } 
         }
       }
     }
@@ -935,12 +1049,26 @@ SaveSolution(const Node& _node) {
   }
 
   for(auto kv : robotPaths) {
-    std::cout << "PATH FOR: " << kv.first << std::endl;
-    std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
+    if(m_debug) {
+      std::cout << "PATH FOR: " << kv.first->GetLabel() << std::endl;
+      std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
+    }
+
+    const std::string filename = this->GetMPProblem()->GetBaseFilename() 
+                               + "::FinalPath::" + kv.first->GetLabel();
+
+    std::ofstream ofs(filename);
+
     for(size_t i = 0; i < kv.second.size(); i++) {
       auto cfg = kv.second[i];
-      std::cout << "\t" << i << ": " << cfg.PrettyPrint() << std::endl;
+      if(m_debug) {
+        std::cout << "\t" << i << ": " << cfg.PrettyPrint() << std::endl;
+      }
+      if(m_savePaths) {
+        ofs << cfg << "\n";
+      }
     }
+    ofs.close();
     //::WritePath("hypergraph-"+kv.first->GetLabel()+".rdmp.path",kv.second);
   }
 
@@ -948,7 +1076,6 @@ SaveSolution(const Node& _node) {
   // Initialize a decomposition
   auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
   Decomposition* decomp = new Decomposition(top);
-  auto plan = this->GetPlan();
   plan->SetDecomposition(decomp);
   
   for(auto kv : robotPaths) {
@@ -985,7 +1112,6 @@ SaveSolution(const Node& _node) {
 
     // Save task solution in plan
     plan->SetTaskSolution(task,sol);
-    plan->AddAllocation(robot,task);
   }
   plan->Print();
 }
