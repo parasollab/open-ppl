@@ -821,7 +821,8 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
     throw ParseException(_node.Where()) << "Unknown body type (for base) '" << baseTypeLabel
                                  << "'. " << "Options are: 'planar', 'volumetric', "
                                  << "'fixed'.";
-    if (baseType!=baseType) cout<<""<<endl; //nonsense line to avoid compiler error
+    // Thomas - This breaks other compilers, so try to keep it local if you can
+    //if (baseType!=baseType) cout<<""<<endl; //nonsense line to avoid compiler error
   }
   Body::MovementType movementType;
   if(baseMovementLabel == "rotational")
@@ -834,7 +835,8 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
     throw ParseException(_node.Where()) << "Unknown movement type '" << baseMovementLabel << "'."
                                  << " Options are: 'rotational', "
                                  << "'translational', 'fixed'.";
-    if (movementType!=movementType) cout<<""<<endl; //nonsense line to avoid compiler error 
+    // Thomas - This breaks other compilers, so try to keep it local if you can
+    //if (movementType!=movementType) cout<<""<<endl; //nonsense line to avoid compiler error 
   } 
   #ifdef PPL_USE_URDF
   if (ext == "urdf") {

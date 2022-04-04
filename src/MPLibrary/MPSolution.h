@@ -118,8 +118,6 @@ class MPSolutionType final {
 
     RobotGroup* GetRobotGroup() const noexcept;
 
-    //const std::unordered_map<Robot*, RobotSolution>* GetIndividualSolutions() const noexcept;
-
     ///@}
 
   private:
@@ -410,13 +408,6 @@ MPSolutionType<MPTraits>::
 GetRobotGroup() const noexcept {
   return m_group;
 }
-
-/*template <typename MPTraits>
-inline
-const std::unordered_map<Robot*, typename MPSolutionType<MPTraits>::RobotSolution>* MPSolutionType<MPTraits>::
-GetIndividualSolutions() const noexcept {
-  return m_individualSolutions;
-}*/
 
 
 /*--------------------------------- Helpers ----------------------------------*/

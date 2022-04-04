@@ -83,14 +83,6 @@ operator()(Interaction* _interaction, State& _state) {
     auto& goalConditions = _interaction->GetStageConditions(next);
     auto goalConstraintMap = GenerateConstraints(goalConditions,groups,
                                                  _state,staticRobots);
-    // cout<<"///////////////////////////////////////////////"<<endl;
-    // for (auto iter = goalConstraintMap.begin(); iter!=goalConstraintMap.end(); ++iter){
-    //   cout<<"TWC GOAL CONSTRAINTS: "<<iter->first->GetLabel()<<" "<<*(iter->second->GetBoundary())<<endl;
-    // }
-    // for (auto iter = startConstraintMap.begin(); iter!=startConstraintMap.end(); ++iter){
-    //   cout<<"TWC START CONSTRAINTS: "<<iter->first->GetLabel()<<" "<<*(iter->second->GetBoundary())<<endl;
-    // }
-    // cout<<"///////////////////////////////////////////////"<<endl;
 
     // Check that there are was goal constraint created.
     if(goalConstraintMap.empty())
@@ -117,6 +109,7 @@ operator()(Interaction* _interaction, State& _state) {
     // Check if a valid solution was found.
     if(toNextStagePaths.empty())
       break;
+
     // Save plan information.
     _interaction->SetToStagePaths(next,toNextStagePaths);
 
@@ -128,6 +121,10 @@ operator()(Interaction* _interaction, State& _state) {
     }
   }
 
+  // Thomas - I commented this out bc it will make a mess on my problems. 
+  // It looks like some kind of debug output. Please wrap it in a if(m_deug)
+  // if that is the case.
+  /*
   //Creating a roadmap for each stage in the interaction.
   //How to combine this into one roadmap?
   for (size_t i = 0; i < stages.size(); i++) {
@@ -142,6 +139,7 @@ operator()(Interaction* _interaction, State& _state) {
           }
         }
   }
+  */
   //auto sg = dynamic_cast<CombinedRoadmap*> this->GetStateGraph(m_sgLabel).get();
   //sg->Write("handoffTemplateTest2"+".map", this->GetMPProblem()->GetEnvironment());
   

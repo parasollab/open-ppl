@@ -289,10 +289,9 @@ Sample(size_t _numNodes, size_t _maxAttempts,
   CfgType cfg(this->GetTask()->GetRobot());
   std::vector<CfgType> valid, invalid;
   valid.reserve(_numNodes);
+
   // Try to generate _numNodes samples, using up to _maxAttempts tries per
   // sample.
-  //I suspect the dependent segfault must be happening here
-  //<<" _valid: "<<*_valid<<" _invalid "<<*_invalid
   for(size_t i = 0; i < _numNodes; ++i) {
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
       cfg.GetRandomCfg(_boundary);
@@ -513,7 +512,7 @@ template <typename MPTraits>
 void
 SamplerMethod<MPTraits>::
 Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
-    GroupOutputIterator _valid) {  
+    GroupOutputIterator _valid) {
   std::vector<GroupCfgType> invalid;
   Sample(_numNodes, _maxAttempts, _boundaryMap, _valid,
       std::back_inserter(invalid));

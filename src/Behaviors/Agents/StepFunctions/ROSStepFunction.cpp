@@ -94,6 +94,12 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
     };
 
   }
+
+  m_baseRotation = _node.Read("baseRotation",false,0.,0.,1.0,
+                    "Adjustment of base position in real robot.");
+
+  m_baseJoint = _node.Read("baseJoint",false,"","Name of base rotational joint");
+
 }
 
 ROSStepFunction::
@@ -153,6 +159,17 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   if(js.size() == 0)
     return false;
 
+  size_t index = 0;
+  size_t baseJointIndex = MAX_INT;
+
+  for(auto joint : m_jointNames) {
+    if(joint == m_baseJoint)
+      baseJointIndex = index;
+    index++;
+  }
+ 
+  index = 0;
+
   // Convert joint angles to pmpl representation
   /*std::vector<double> jointStates;
   for(auto d : js) {
@@ -179,6 +196,7 @@ ReachedWaypointArm(const Cfg& _waypoint) {
         if(m_sim) {
           iter++;
         }
+        index++;
         break;
       }
       case Connection::JointType::Spherical:
@@ -188,13 +206,20 @@ ReachedWaypointArm(const Cfg& _waypoint) {
       default: 
       {
         auto jv = (*iter)/(KDL::PI);
+
+        if(baseJointIndex == index) {
+          jv = jv - m_baseRotation;
+        }
+
         //Hack to deal with nonsense ros joint status values that forget about joint limits
         if(jv > 1)
           jv = -2 + jv;
         else if(jv < -1)
           jv = 2 + jv;
+
         jointStates.push_back(jv);
         iter++;
+        index++;
       }
     }
     if(iter == js.end())
@@ -212,7 +237,7 @@ ReachedWaypointArm(const Cfg& _waypoint) {
 
   //Hack to deal with noisy wrist joint
   auto waypoint = _waypoint;
-  waypoint[5] = state[5];
+  waypoint[waypoint.DOF()-1] = state[state.DOF()-1];
 
   double distance = dm->Distance(state, waypoint);
 
@@ -316,8 +341,14 @@ MoveArm(std::vector<double> _goal, double _dt) {
     msg.joint_names.push_back("wrist_2_joint");
     msg.joint_names.push_back("wrist_3_joint");*/
 
+    size_t index = 0;
+    size_t baseJointIndex = MAX_INT;
+
     for(auto joint : m_jointNames) {
       msg.joint_names.push_back(joint);
+      if(joint == m_baseJoint)
+        baseJointIndex = index;
+      index++;
     }
 
     msg.points.resize(1);
@@ -352,6 +383,11 @@ MoveArm(std::vector<double> _goal, double _dt) {
         default: 
           {
             double value = (*iter)*KDL::PI;
+
+            if(msg.points[0].positions.size() == baseJointIndex) {
+              value += m_baseRotation * KDL::PI;
+            }
+
             msg.points[0].positions.push_back(value);
             parentJointValueMap[joint.get()] = value;
             iter++;
