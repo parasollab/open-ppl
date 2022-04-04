@@ -687,7 +687,7 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
     std::vector<GroupCfg> samples;
     sampler->Sample(m_numNodes,m_maxAttempts,boundary,
                     std::back_inserter(samples));
-    
+
     // Delete CSpace boundary if necessary
     if(_staticRobots.count(leader)) {
       delete boundary;
