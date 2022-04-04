@@ -21,6 +21,7 @@
 #include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/WeightedEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/ScaledEuclideanDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"

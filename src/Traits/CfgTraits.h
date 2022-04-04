@@ -20,6 +20,7 @@
 #include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"

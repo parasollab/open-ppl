@@ -119,7 +119,7 @@
       <Manhattan label="manhattan"/>
       <Minkowski label="minkowski"/>
       <Euclidean label="euclidean"/>
-      <WeightedEuclidean label="weightedeuclidean" posWeight=0.25 rotWeight=0.25 velWeight=0.25 avlWeight=0.25/>
+      <WeightedEuclidean label="weightedEuclidean" posWeight=0.25 rotWeight=0.25 velWeight=0.25 avlWeight=0.25/>
     </DistanceMetrics>
 
     <ValidityCheckers>
