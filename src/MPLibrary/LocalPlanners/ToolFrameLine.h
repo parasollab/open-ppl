@@ -158,10 +158,6 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   auto groupMap = _c1.GetGroupRoadmap();
   auto group = groupMap->GetGroup();
 
-  int numSteps;
-  GroupCfgType stepsDummy(_c1);
-  stepsDummy.FindIncrement(_c1, _c2, &numSteps, 10*env->GetPositionRes(), env->GetOrientationRes());
-
   // Find tool frame increment
   std::unordered_map<Robot*,std::vector<double>> posIncrements;
   std::unordered_map<Robot*,std::vector<double>> oriIncrements;
@@ -184,6 +180,16 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
 
     robots.push_back(robot);
   }
+
+  int numSteps;
+  // Currently assume only one leader
+  auto leader1 = _c1.GetRobotCfg(robots[0]);
+  auto leader2 = _c2.GetRobotCfg(robots[0]);
+  Cfg leaderDummy(robots[0]);
+  leaderDummy.FindIncrement(leader1,leader2, &numSteps, env->GetPositionRes(), env->GetOrientationRes());
+  GroupCfgType stepsDummy(_c1);
+  stepsDummy.FindIncrement(_c1, _c2, numSteps);
+
 
   for(auto robot : robots) {
     auto kdl = robot->GetKDLModel();
