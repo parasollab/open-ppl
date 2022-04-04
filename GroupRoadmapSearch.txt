@@ -1,0 +1,149 @@
+Traits/CfgTraits.h:#include "ConfigurationSpace/GroupRoadmap.h"
+Traits/TestTraits.h:#include "ConfigurationSpace/GroupRoadmap.h"
+TMPLibrary/TMPBaseObject.h:#include "ConfigurationSpace/GroupRoadmap.h"
+TMPLibrary/ActionSpace/Interaction.h:#include "ConfigurationSpace/GroupRoadmap.h"
+TMPLibrary/ActionSpace/MotionCondition.cpp:#include "ConfigurationSpace/GroupRoadmap.h"
+TMPLibrary/ActionSpace/Condition.h:#include "ConfigurationSpace/GroupRoadmap.h"
+TMPLibrary/StateGraphs/CombinedRoadmap.h:#include "ConfigurationSpace/GroupRoadmap.h"
+TMPLibrary/StateGraphs/ModeGraph.h:#include "ConfigurationSpace/GroupRoadmap.h"
+Binary file build/MPProblem/GroupTask.o matches
+Binary file build/TMPLibrary/Solution/TaskSolution.o matches
+Binary file build/TMPLibrary/Solution/Plan.o matches
+Binary file build/TMPLibrary/ActionSpace/MotionCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/ActionSpace.o matches
+Binary file build/TMPLibrary/ActionSpace/Condition.o matches
+Binary file build/TMPLibrary/ActionSpace/CompositeCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/ProximityCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/Interaction.o matches
+Binary file build/TMPLibrary/ActionSpace/FormationCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/Action.o matches
+Binary file build/TMPLibrary/InteractionStrategies/TemplateInteractions.o matches
+Binary file build/TMPLibrary/InteractionStrategies/HandoffStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/InteractionStrategyMethod.o matches
+Binary file build/TMPLibrary/InteractionStrategies/GraspStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/IndependentPaths.o matches
+Binary file build/TMPLibrary/StateGraphs/ModeGraph.o matches
+Binary file build/TMPLibrary/StateGraphs/CombinedRoadmap.o matches
+Binary file build/TMPLibrary/StateGraphs/StateGraph.o matches
+Binary file build/TMPLibrary/TMPLibrary.o matches
+Binary file build/TMPLibrary/TaskDecomposers/TaskDecomposerMethod.o matches
+Binary file build/TMPLibrary/TMPTools/TMPTools.o matches
+Binary file build/TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.o matches
+Binary file build/TMPLibrary/TaskEvaluators/SubmodeQuery.o matches
+Binary file build/TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.o matches
+Binary file build/TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.o matches
+Binary file build/TMPLibrary/TaskEvaluators/HCRQuery.o matches
+Binary file build/TMPLibrary/TMPBaseObject.o matches
+Binary file build/TMPLibrary/TMPStrategies/NextBestSearch.o matches
+Binary file build/TMPLibrary/TMPStrategies/BasicHCR.o matches
+Binary file build/TMPLibrary/TMPStrategies/SimpleMotionMethod.o matches
+Binary file build/TMPLibrary/TMPStrategies/TMPStrategyMethod.o matches
+Binary file build/TMPLibrary/TaskAllocators/TaskAllocatorMethod.o matches
+Binary file build/tmp_main.o matches
+Binary file build/ConfigurationSpace/GroupCfg.o matches
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupRoadmap.h ConfigurationSpace/Formation.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+build/Dependencies: ConfigurationSpace/GroupCfg.h ConfigurationSpace/GroupRoadmap.h \
+Binary file build/Behaviors/Agents/Coordinator.o matches
+Binary file build/Behaviors/Agents/AgentFactory_sim.o matches
+Binary file build/Behaviors/Agents/ChildAgent.o matches
+Binary file build/Behaviors/Agents/PathFollowingAgent.o matches
+Binary file build/Behaviors/Agents/StepFunctions/StepFunctionFactory.o matches
+Binary file build/Behaviors/Agents/StepFunctions/FollowPath.o matches
+Binary file build/Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.o matches
+Binary file build/Behaviors/Agents/PlanningAgent.o matches
+Binary file build/MPLibrary/PMPL.o matches
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<Vertex, Edge>     BaseType;
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:    using GenericStateGraph<Vertex, Edge>::AddEdge;
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
+StateGraphOut:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>::ClearHooks();
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<Vertex, Edge>     BaseType;
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    using GenericStateGraph<Vertex, Edge>::AddEdge;
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
+StateGraphOut:StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>::ClearHooks();
+Binary file libobprm.a matches
+Binary file ppl matches
+ConfigurationSpace/GroupCfg.h:#include "ConfigurationSpace/GroupRoadmap.h"
+ConfigurationSpace/GroupLocalPlan.h:#include "ConfigurationSpace/GroupRoadmap.h"
+ConfigurationSpace/GroupCfg.cpp:#include "ConfigurationSpace/GroupRoadmap.h"
+MPLibrary/LocalPlanners/StraightLine.h:#include "ConfigurationSpace/GroupRoadmap.h"
+MPLibrary/LocalPlanners/ControllerLP.h:#include "ConfigurationSpace/GroupRoadmap.h"
+MPLibrary/MapEvaluators/GroupSIPPMethod.h:#include "ConfigurationSpace/GroupRoadmap.h"
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<Vertex, Edge>     BaseType;
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    using GenericStateGraph<Vertex, Edge>::AddEdge;
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>::ClearHooks();

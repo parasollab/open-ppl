@@ -1,0 +1,2 @@
+TaskEvaluators/HCRQuery.cpp:      ::WritePath(this->GetBaseFilename()+"."+robot->GetLabel()+".rdmp.path",
+TMPStrategies/NextBestSearch.cpp:    //::WritePath("hypergraph-"+kv.first->GetLabel()+".rdmp.path",kv.second);

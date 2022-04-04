@@ -1172,7 +1172,6 @@ RunSolver(const Solver& _solver) {
   SetSeed(_solver.seed);
 
   GetMPStrategy(_solver.label)->operator()();
-
   // Close vizmo debug if necessary
   if(_solver.vizmoDebug)
     VDClose();

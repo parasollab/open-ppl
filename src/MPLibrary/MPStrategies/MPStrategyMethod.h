@@ -238,6 +238,7 @@ Run() {
     }
 
     Iterate();
+    //The original line was while(!EvaluateMap() and this->IsRunning())
   } while(!EvaluateMap() and this->IsRunning());
 }
 

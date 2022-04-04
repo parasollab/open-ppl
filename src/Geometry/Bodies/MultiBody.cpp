@@ -817,11 +817,13 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
     baseType = Body::Type::Volumetric;
   else if (baseTypeLabel == "fixed")
     baseType = Body::Type::Fixed;
-  else
+  else{
     throw ParseException(_node.Where()) << "Unknown body type (for base) '" << baseTypeLabel
                                  << "'. " << "Options are: 'planar', 'volumetric', "
                                  << "'fixed'.";
-
+    // Thomas - This breaks other compilers, so try to keep it local if you can
+    //if (baseType!=baseType) cout<<""<<endl; //nonsense line to avoid compiler error
+  }
   Body::MovementType movementType;
   if(baseMovementLabel == "rotational")
     movementType = Body::MovementType::Rotational;
@@ -829,11 +831,13 @@ ReadExternalFile(std::string _filename, XMLNode& _node) {
     movementType = Body::MovementType::Translational;
   else if(baseMovementLabel == "fixed")
     movementType = Body::MovementType::Fixed;
-  else
+  else{
     throw ParseException(_node.Where()) << "Unknown movement type '" << baseMovementLabel << "'."
                                  << " Options are: 'rotational', "
                                  << "'translational', 'fixed'.";
-
+    // Thomas - This breaks other compilers, so try to keep it local if you can
+    //if (movementType!=movementType) cout<<""<<endl; //nonsense line to avoid compiler error 
+  } 
   #ifdef PPL_USE_URDF
   if (ext == "urdf") {
     // Read the world link.

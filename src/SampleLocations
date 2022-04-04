@@ -1,0 +1,1592 @@
+MPProblem/Robot/Actuator.cpp:  return {const_cast<Actuator*>(this), m_controlSpace.Sample()};
+Traits/CfgTraits.h:#include "MPLibrary/Samplers/TerrainSampler.h"
+Traits/CfgTraits.h:#include "MPLibrary/Samplers/UniformRandomSampler.h"
+Traits/CfgTraits.h:    TerrainSampler<MPTraits>,
+Traits/CfgTraits.h:    UniformRandomSampler<MPTraits>
+Traits/CfgTraits.h:      > SamplerMethodList;
+Traits/CfgTraits.h:    //DynamicRegionSampler<MPTraits>,
+Traits/TestTraits.h:#include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
+Traits/TestTraits.h:      UniformRandomSamplerTest<MPTraits>
+Traits/TestTraits.h:      > SamplerMethodList;
+Examples/ITProximityExample.xml:    <Samplers>
+Examples/ITProximityExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/ITProximityExample.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot"/>
+Examples/ITProximityExample.xml:    </Samplers>
+Examples/ITProximityExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ITProximityExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ITProximityExample.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/ITProximityExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ITProximityExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="5" attempts="1"/>
+Examples/CoordinatorExample.xml:    <Samplers>
+Examples/CoordinatorExample.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/CoordinatorExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/CoordinatorExample.xml:      <UniformRandomSampler label="UniformRandomFreeRobot" vcLabel="pqp_solid_robot"/>
+Examples/CoordinatorExample.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot"/>
+Examples/CoordinatorExample.xml:    </Samplers>
+Examples/CoordinatorExample.xml:        <Sampler label="UniformRandomFree" number="40" attempts="1"/>
+Examples/CoordinatorExample.xml:        <Sampler label="UniformRandomFreeRobot" number="20" attempts="1"/>
+Examples/CoordinatorExample.xml:        <Sampler label="UniformRandomFreeRobot" number="20" attempts="1"/>
+Examples/DiffDriveTest/diffdrive.0.query1.stat:Sampler Statistics                                            Attempts Successes
+Examples/DiffDriveTest/diffdrive.0.query1.stat:  UniformRandomSampler::UniformRandomFree                         7242      7242
+Examples/DiffDriveTest/diffdrive.0.query1.stat:  All Samplers                                                    7242      7242
+Examples/DiffDriveTest/diffdrive.0.query1.stat:  UniformRandomSampler::UniformRandomFree::Sampler                          7242
+Examples/DiffDriveTest/diffdrive.0.query1.stat:  UniformRandomSampler::UniformRandomFree::Sample                          0.633
+Examples/DiffDriveTest/diffdrive.12345678.startLocation.stat:Sampler Statistics                                            Attempts Successes
+Examples/DiffDriveTest/diffdrive.12345678.startLocation.stat:  UniformRandomSampler::UniformRandom                               41        34
+Examples/DiffDriveTest/diffdrive.12345678.startLocation.stat:  All Samplers                                                      41        34
+Examples/DiffDriveTest/diffdrive.12345678.startLocation.stat:  UniformRandomSampler::UniformRandom::Sampler                                41
+Examples/DiffDriveTest/diffdrive.12345678.startLocation.stat:  BasicPRM::PRM::Sample                                                  0.00502
+Examples/DiffDriveTest/diffdrive.12345678.startLocation.stat:  UniformRandomSampler::UniformRandom::Sample                            0.00467
+Examples/DiffDriveTest/diffdrive.0.startLocation.stat:Sampler Statistics                                            Attempts Successes
+Examples/DiffDriveTest/diffdrive.0.startLocation.stat:  UniformRandomSampler::UniformRandom                               41        34
+Examples/DiffDriveTest/diffdrive.0.startLocation.stat:  All Samplers                                                      41        34
+Examples/DiffDriveTest/diffdrive.0.startLocation.stat:  UniformRandomSampler::UniformRandom::Sampler                                41
+Examples/DiffDriveTest/diffdrive.0.startLocation.stat:  BasicPRM::PRM::Sample                                                  0.00387
+Examples/DiffDriveTest/diffdrive.0.startLocation.stat:  UniformRandomSampler::UniformRandom::Sample                                  0
+Examples/DiffDriveTest/diffdrive.123456789.query1.stat:Sampler Statistics                                            Attempts Successes
+Examples/DiffDriveTest/diffdrive.123456789.query1.stat:  UniformRandomSampler::UniformRandomFree                          720       711
+Examples/DiffDriveTest/diffdrive.123456789.query1.stat:  All Samplers                                                     720       711
+Examples/DiffDriveTest/diffdrive.123456789.query1.stat:  UniformRandomSampler::UniformRandomFree::Sampler                           720
+Examples/DiffDriveTest/diffdrive.123456789.query1.stat:  UniformRandomSampler::UniformRandomFree::Sample                          0.048
+Examples/DiffDriveTest/BoxerMazeDemo.xml:    <Samplers>
+Examples/DiffDriveTest/BoxerMazeDemo.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="pqp_solid"/>
+Examples/DiffDriveTest/BoxerMazeDemo.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/DiffDriveTest/BoxerMazeDemo.xml:    </Samplers>
+Examples/DiffDriveTest/BoxerMazeDemo.xml:        <Sampler label="UniformRandomFree" number="100" attempts="1"/>
+Examples/DiffDriveTest/BoxerMazeDemo.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+Examples/DiffDriveTest/diffdrive.12345678.query1.stat:Sampler Statistics                                            Attempts Successes
+Examples/DiffDriveTest/diffdrive.12345678.query1.stat:  UniformRandomSampler::UniformRandom                               42        33
+Examples/DiffDriveTest/diffdrive.12345678.query1.stat:  All Samplers                                                      42        33
+Examples/DiffDriveTest/diffdrive.12345678.query1.stat:  UniformRandomSampler::UniformRandom::Sampler                                42
+Examples/DiffDriveTest/diffdrive.12345678.query1.stat:  BasicPRM::PRM::Sample                                                  0.00798
+Examples/DiffDriveTest/diffdrive.12345678.query1.stat:  UniformRandomSampler::UniformRandom::Sample                            0.00798
+Examples/DiffDriveTest/DiffDriveDemo.xml:    <Samplers>
+Examples/DiffDriveTest/DiffDriveDemo.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="pqp_solid"/>
+Examples/DiffDriveTest/DiffDriveDemo.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/DiffDriveTest/DiffDriveDemo.xml:    </Samplers>
+Examples/DiffDriveTest/DiffDriveDemo.xml:        <Sampler label="UniformRandomFree" number="100" attempts="1"/>
+Examples/DiffDriveTest/DiffDriveDemo.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+Examples/DiffDriveTest/DiffDriveDemo.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+Examples/SVMExamples.xml:    <Samplers>
+Examples/SVMExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/SVMExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/SVMExamples.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/SVMExamples.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/SVMExamples.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/SVMExamples.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/SVMExamples.xml:      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+Examples/SVMExamples.xml:      <MixSampler label="MixSampler">
+Examples/SVMExamples.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/SVMExamples.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/SVMExamples.xml:      </MixSampler>
+Examples/SVMExamples.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/SVMExamples.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/SVMExamples.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/SVMExamples.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/SVMExamples.xml:    </Samplers>
+Examples/SVMExamples.xml:        <Sampler method="UniformRandomFree" number="1" attempts="1"/>
+Examples/SVMExamples.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/SVMExamples.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/SVMExamples.xml:        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+Examples/SVMExamples.xml:        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+Examples/SVMExamples.xml:        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
+Examples/SVMExamples.xml:        samplerLabel="DynamicRegionSampler">
+Examples/SVMExamples.xml:        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+Examples/SVMExamples.xml:        initialSamples="200" ccIters="100" nfLabel="BFNF" vcLabel="rapid"
+Examples/SVMExamples.xml:        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
+Examples/SVMExamples.xml:        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
+Examples/SVMExamples.xml:      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
+Examples/SVMExamples.xml:        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+Examples/HandoffTest.xml:    <Samplers>
+Examples/HandoffTest.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/HandoffTest.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/HandoffTest.xml:      <UniformRandomSampler label="UniformRandomFreeRobot" vcLabel="pqp_solid_robot"/>
+Examples/HandoffTest.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_solid"/>
+Examples/HandoffTest.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/HandoffTest.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/HandoffTest.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/HandoffTest.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/HandoffTest.xml:      <MixSampler label="MixSampler">
+Examples/HandoffTest.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/HandoffTest.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/HandoffTest.xml:      </MixSampler>
+Examples/HandoffTest.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/HandoffTest.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/HandoffTest.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/HandoffTest.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/HandoffTest.xml:    </Samplers>
+Examples/HandoffTest.xml:        <Sampler method="UniformRandomFree" number="40" attempts="1"/>
+Examples/HandoffTest.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/HandoffTest.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/HandoffTest.xml:        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+Examples/HandoffTest.xml:        <Sampler method="UniformRandomFreeRobot" number="10" attempts="1"/>
+Examples/HandoffTest.xml:        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+Examples/HandoffTest.xml:        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
+Examples/HandoffTest.xml:        samplerLabel="DynamicRegionSampler">
+Examples/HandoffTest.xml:        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+Examples/HandoffTest.xml:        initialSamples="200" ccIters="100" nfLabel="BFNF" vcLabel="rapid"
+Examples/HandoffTest.xml:        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
+Examples/HandoffTest.xml:        <Sampler methodLabel="UniformRandomFree" number="10" attempts="10"/>
+Examples/HandoffTest.xml:      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
+Examples/HandoffTest.xml:        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+Examples/FreeTree/Example.xml:    <Samplers>
+Examples/FreeTree/Example.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="cd"/>
+Examples/FreeTree/Example.xml:    </Samplers>
+Examples/FreeTree/Example.xml:        <Sampler method="UniformRandom" number="10" attempts="10"/>
+Examples/ITExample.xml:    <Samplers>
+Examples/ITExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/ITExample.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot"/>
+Examples/ITExample.xml:    </Samplers>
+Examples/ITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ITExample.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/ITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="5" attempts="1"/>
+Examples/TMPExamples.xml:    <Samplers>
+Examples/TMPExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/TMPExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/TMPExamples.xml:    </Samplers>
+Examples/TMPExamples.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/TMPExamples.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/TMPExamples.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/TMPExamples.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/TMPExamples.xml:        <Sampler label="UniformRandomFree" number="50" attempts="1"/>
+Examples/TMPExamples.xml:        querySampler="UniformRandom" samplerLabel="UniformRandom"
+Examples/TMPExamples.xml:        querySampler="UniformRandom" samplerLabel="UniformRandom"
+Examples/TMPExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/ParallelCfgExamples.xml:    <Samplers>
+Examples/ParallelCfgExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/ParallelCfgExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Examples/ParallelCfgExamples.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false" pointSelection="cspace"
+Examples/ParallelCfgExamples.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean" useBBX="false"/>
+Examples/ParallelCfgExamples.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2" dmLabel="euclidean" useBBX="true"/>
+Examples/ParallelCfgExamples.xml:    </Samplers>
+Examples/ParallelCfgExamples.xml:        lpLabel="sl" dmLabel="euclidean" initialSamples="200" ccIters="100"
+Examples/ParallelCfgExamples.xml:        <Sampler method="UniformRandomFree" number="10"/>
+Examples/ParallelCfgExamples.xml:        <!-- the training samples (numTestSamples) should at most equal nmNodes -->
+Examples/ParallelCfgExamples.xml:        <!-- the training samples (numTestSamples) should at most equal nmNodes -->
+Examples/TenRiverTest/TenRiverTest.xml:    <Samplers>
+Examples/TenRiverTest/TenRiverTest.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/TenRiverTest/TenRiverTest.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/TenRiverTest/TenRiverTest.xml:      <UniformRandomSampler label="UniformRandomFreeRobot" vcLabel="pqp_solid_robot"/>
+Examples/TenRiverTest/TenRiverTest.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot"/>
+Examples/TenRiverTest/TenRiverTest.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/TenRiverTest/TenRiverTest.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/TenRiverTest/TenRiverTest.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/TenRiverTest/TenRiverTest.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/TenRiverTest/TenRiverTest.xml:      <MixSampler label="MixSampler">
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/TenRiverTest/TenRiverTest.xml:      </MixSampler>
+Examples/TenRiverTest/TenRiverTest.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/TenRiverTest/TenRiverTest.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/TenRiverTest/TenRiverTest.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/TenRiverTest/TenRiverTest.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/TenRiverTest/TenRiverTest.xml:    </Samplers>
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler label="UniformRandomFree" number="40" attempts="1"/>
+Examples/TenRiverTest/TenRiverTest.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/TenRiverTest/TenRiverTest.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/TenRiverTest/TenRiverTest.xml:        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler label="UniformRandomFreeRobot" number="20" attempts="1"/>
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
+Examples/TenRiverTest/TenRiverTest.xml:        samplerLabel="DynamicRegionSampler">
+Examples/TenRiverTest/TenRiverTest.xml:        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+Examples/LinkedExamples.xml:    <Samplers>
+Examples/LinkedExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/LinkedExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Examples/LinkedExamples.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/LinkedExamples.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/LinkedExamples.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/LinkedExamples.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/LinkedExamples.xml:      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+Examples/LinkedExamples.xml:      <MixSampler label="MixSampler">
+Examples/LinkedExamples.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/LinkedExamples.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/LinkedExamples.xml:      </MixSampler>
+Examples/LinkedExamples.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/LinkedExamples.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/LinkedExamples.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/LinkedExamples.xml:    </Samplers>
+Examples/LinkedExamples.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/LinkedExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/RigidBodyITExample.xml:    <Samplers>
+Examples/RigidBodyITExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/RigidBodyITExample.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot"/>
+Examples/RigidBodyITExample.xml:    </Samplers>
+Examples/RigidBodyITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/RigidBodyITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/RigidBodyITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/RigidBodyITExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="5" attempts="1"/>
+Examples/SIPPExample.xml:    <Samplers>
+Examples/SIPPExample.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/SIPPExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/SIPPExample.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/SIPPExample.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/SIPPExample.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/SIPPExample.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/SIPPExample.xml:      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="1 1 1"
+Examples/SIPPExample.xml:      <MixSampler label="MixSampler">
+Examples/SIPPExample.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/SIPPExample.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/SIPPExample.xml:      </MixSampler>
+Examples/SIPPExample.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/SIPPExample.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/SIPPExample.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/SIPPExample.xml:    </Samplers>
+Examples/SIPPExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/SIPPExample.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/SIPPExample.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/SIPPExample.xml:        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+Examples/SIPPExample.xml:        <Sampler label="UniformRandomFree" number="0" attempts="0"/>
+Examples/SIPPExample.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
+Examples/SIPPExample.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" vcLabel="pqp_solid" nfLabel="BFNF"
+Examples/SIPPExample.xml:        initSamples="10" maxRRTSize="100" attemptRatio="10" delta="5"
+Examples/SIPPExample.xml:        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+Examples/SIPPExample.xml:      <SparkBasicPRM label="SparkUniform" maxNPCCSize="2" initSamples="10"
+Examples/SIPPExample.xml:        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/SIPPExample.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:    <Samplers>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" debug="false"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <UniformRandomSampler label="UniformRandomFreeRobot" vcLabel="pqp_solid_robot" debug="false"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot" debug="false"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <MixSampler label="MixSampler">
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      </MixSampler>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:    </Samplers>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler label="UniformRandomFree" number="40" attempts="1"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <!--Sampler Method="MAPRM" number="10" attempts="10"/-->
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler label="UniformRandomFreeRobot" number="20" attempts="1"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler label="UniformRandomFree" number="20" attempts="1"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler method="UniformRandomFree" number="10" attempts="10"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler method="UniformRandomFree" number="100" attempts="100"/>
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        samplerLabel="DynamicRegionSampler">
+Examples/PhysicalExperiment407/RelayTestRiverBox.xml:        <Sampler methodLabel="UniformRandomFree" number="10" attempts="1"/>
+Examples/CfgExamples.xml:    <Samplers>
+Examples/CfgExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/CfgExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/CfgExamples.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/CfgExamples.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/CfgExamples.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/CfgExamples.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/CfgExamples.xml:      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+Examples/CfgExamples.xml:      <MixSampler label="MixSampler">
+Examples/CfgExamples.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/CfgExamples.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/CfgExamples.xml:      </MixSampler>
+Examples/CfgExamples.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/CfgExamples.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/CfgExamples.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/CfgExamples.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/CfgExamples.xml:    </Samplers>
+Examples/CfgExamples.xml:      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
+Examples/CfgExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/CfgExamples.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/CfgExamples.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/CfgExamples.xml:        <!--Sampler label="MAPRM" number="10" attempts="10"/-->
+Examples/CfgExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+Examples/CfgExamples.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
+Examples/CfgExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" vcLabel="pqp_solid" nfLabel="BFNF"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/CfgExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/FreeTreeBranched/Example.xml:      <UniformRandomSampler Label="UniformRandomFree" vcMethod="cd"/>
+Examples/MRTMPExamples.xml:    <Samplers>
+Examples/MRTMPExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/MRTMPExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/MRTMPExamples.xml:    </Samplers>
+Examples/MRTMPExamples.xml:        querySampler="UniformRandom" samplerLabel="UniformRandom"
+Examples/MRTMPExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+Examples/MRActionSpaceExample.xml:    <Samplers>
+Examples/MRActionSpaceExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/MRActionSpaceExample.xml:    </Samplers>
+Examples/MRActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/MRActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/MRActionSpaceExample.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/MRActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/MRActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="5" attempts="1"/>
+Examples/NonholonomicExamples.xml:    <Samplers>
+Examples/NonholonomicExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/NonholonomicExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/NonholonomicExamples.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/NonholonomicExamples.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/NonholonomicExamples.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/NonholonomicExamples.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/NonholonomicExamples.xml:      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+Examples/NonholonomicExamples.xml:      <MixSampler label="MixSampler">
+Examples/NonholonomicExamples.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/NonholonomicExamples.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/NonholonomicExamples.xml:      </MixSampler>
+Examples/NonholonomicExamples.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/NonholonomicExamples.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/NonholonomicExamples.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/NonholonomicExamples.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/NonholonomicExamples.xml:    </Samplers>
+Examples/NonholonomicExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/NonholonomicExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/NonholonomicExamples.xml:        querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
+Examples/NonholonomicExamples.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:    <Samplers>
+Examples/example_benchmark.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/example_benchmark.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/example_benchmark.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/example_benchmark.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/example_benchmark.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/example_benchmark.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/example_benchmark.xml:      <GridSampler label="Grid" vcLabel="pqp_solid" ticks="10 10 10"
+Examples/example_benchmark.xml:      <MixSampler label="MixSampler">
+Examples/example_benchmark.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/example_benchmark.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/example_benchmark.xml:      </MixSampler>
+Examples/example_benchmark.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/example_benchmark.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/example_benchmark.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"
+Examples/example_benchmark.xml:      <DynamicRegionSampler label="DynamicRegionSampler"
+Examples/example_benchmark.xml:    </Samplers>
+Examples/example_benchmark.xml:      <BasicPRM label="PRM-build" debug="false" querySampler="UniformRandomFree">
+Examples/example_benchmark.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/example_benchmark.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/example_benchmark.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/example_benchmark.xml:        <!--Sampler label="MAPRM" number="10" attempts="10"/-->
+Examples/example_benchmark.xml:      <BasicPRM label="PRM-query" debug="false" querySampler="UniformRandomFree">
+Examples/example_benchmark.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/example_benchmark.xml:        <!--Sampler Method="Gauss" number="10" attempts="10"/-->
+Examples/example_benchmark.xml:        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+Examples/example_benchmark.xml:        <!--Sampler label="MAPRM" number="10" attempts="10"/-->
+Examples/example_benchmark.xml:        <Sampler label="UniformRandomFree" number="10" attempts="10"/>
+Examples/example_benchmark.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="DynamicRegionSampler"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree">
+Examples/example_benchmark.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/example_benchmark.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" vcLabel="pqp_solid" nfLabel="BFNF"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/example_benchmark.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Examples/ModeGraphExample.xml:    <Samplers>
+Examples/ModeGraphExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/ModeGraphExample.xml:      <UniformRandomSampler label="UniformRandomFreeTerrain" vcLabel="terrain_robot"/>
+Examples/ModeGraphExample.xml:    </Samplers>
+Examples/ModeGraphExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ModeGraphExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ModeGraphExample.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/ModeGraphExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="1" attempts="1"/>
+Examples/ModeGraphExample.xml:        <Sampler label="UniformRandomFreeTerrain" number="5" attempts="1"/>
+Examples/ModeGraphExample.xml:                 numSamples="1" maxAttempts="5"/>
+Examples/TestExamples.xml:    <Samplers>
+Examples/TestExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/TestExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Examples/TestExamples.xml:      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+Examples/TestExamples.xml:      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+Examples/TestExamples.xml:      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+Examples/TestExamples.xml:      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+Examples/TestExamples.xml:      <GridSampler label="Grid" vcLabel="rapid">
+Examples/TestExamples.xml:      </GridSampler>
+Examples/TestExamples.xml:      <MixSampler label="MixSampler">
+Examples/TestExamples.xml:        <Sampler label="UniformRandomFree" p="0.8"/>
+Examples/TestExamples.xml:        <Sampler label="UniformRandom" p="0.2"/>
+Examples/TestExamples.xml:      </MixSampler>
+Examples/TestExamples.xml:      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+Examples/TestExamples.xml:      <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
+Examples/TestExamples.xml:      <WorkspaceImportanceSampler label="WIS" vcLabel="rapid" alpha="0.2"/>
+Examples/TestExamples.xml:    </Samplers>
+Examples/TestExamples.xml:        <Sampler label="UniformRandomFree" number="5" attempts="100"/>
+Examples/TestExamples.xml:        positional="true" attemptInvalidSamples="true"
+Examples/TestExamples.xml:        do2dEnvTests="true" forceNarrowPassageSamples2dEnv="false">
+Examples/TestExamples.xml:        <Sampler method="UniformRandom" number="500" attempts="5"/>
+Examples/TestExamples.xml:        attemptInvalidSamples="true"
+Examples/TestExamples.xml:        do2dEnvTests="false" forceNarrowPassageSamples2dEnv="false">
+Examples/TestExamples.xml:        <Sampler method="UniformRandom" number="500" attempts="5"/>
+Examples/TestExamples.xml:        attemptInvalidSamples="true"
+Examples/TestExamples.xml:        do2dEnvTests="false" forceNarrowPassageSamples2dEnv="false">
+Examples/TestExamples.xml:        <Sampler method="UniformRandom" number="1000" attempts="5"/>
+Examples/Groups/BoxPegs/GroupEffector.xml:    <Samplers>
+Examples/Groups/BoxPegs/GroupEffector.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp"/>
+Examples/Groups/BoxPegs/GroupEffector.xml:      <MatingNormalSamplerGroup label="MatingNormalSampler" dist="8"
+Examples/Groups/BoxPegs/GroupEffector.xml:      <MaskedProximitySamplerGroup label="MaskedProximitySampler"
+Examples/Groups/BoxPegs/GroupEffector.xml:      <MaskedProximitySamplerGroup label="MaskedProximitySamplerThanhLe"
+Examples/Groups/BoxPegs/GroupEffector.xml:    </Samplers>
+Examples/Groups/BoxPegs/GroupEffector.xml:        <MatingSampler method="MatingNormalSampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupEffector.xml:        <RRTSampler method="MaskedProximitySampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupEffector.xml:        samplerLabel="MaskedProximitySampler"
+Examples/Groups/BoxPegs/GroupTranslational.xml:    <Samplers>
+Examples/Groups/BoxPegs/GroupTranslational.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp"/>
+Examples/Groups/BoxPegs/GroupTranslational.xml:      <MatingNormalSamplerGroup label="MatingNormalSampler" dist="8"
+Examples/Groups/BoxPegs/GroupTranslational.xml:      <MaskedProximitySamplerGroup label="MaskedProximitySampler"
+Examples/Groups/BoxPegs/GroupTranslational.xml:      <MaskedProximitySamplerGroup label="MaskedProximitySamplerThanhLe"
+Examples/Groups/BoxPegs/GroupTranslational.xml:    </Samplers>
+Examples/Groups/BoxPegs/GroupTranslational.xml:        <MatingSampler method="MatingNormalSampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupTranslational.xml:        <RRTSampler method="MaskedProximitySampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupTranslational.xml:        samplerLabel="MaskedProximitySampler"
+Examples/Groups/BoxPegs/GroupRotational.xml:    <Samplers>
+Examples/Groups/BoxPegs/GroupRotational.xml:      <MatingNormalSamplerGroup label="MatingNormalSampler" dist="8"
+Examples/Groups/BoxPegs/GroupRotational.xml:      <MaskedProximitySamplerGroup label="MaskedProximitySampler"
+Examples/Groups/BoxPegs/GroupRotational.xml:      <MaskedProximitySamplerGroup label="MaskedProximitySamplerIMLRRT"
+Examples/Groups/BoxPegs/GroupRotational.xml:    </Samplers>
+Examples/Groups/BoxPegs/GroupRotational.xml:        <MatingSampler method="MatingNormalSampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupRotational.xml:        <RRTSampler method="MaskedProximitySampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupRotational.xml:        <MatingSampler method="MatingNormalSampler" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupRotational.xml:<!--         <RRTSampler method="MaskedRandomSampler" number="1" attempts="1"/> -->
+Examples/Groups/BoxPegs/GroupRotational.xml:        <RRTSampler method="MaskedProximitySamplerIMLRRT" number="1" attempts="1"/>
+Examples/Groups/BoxPegs/GroupRotational.xml:        samplerLabel="MaskedProximitySamplerIMLRRT"
+Examples/Groups/BoxPegs/GroupRotational.xml:        samplerLabel="MaskedProximitySampler"
+Examples/example.12345678.query.stat:Sampler Statistics                                            Attempts Successes
+Examples/example.12345678.query.stat:  UniformRandomSampler::UniformRandomFree                           22        21
+Examples/example.12345678.query.stat:  All Samplers                                                      22        21
+Examples/example.12345678.query.stat:  UniformRandomSampler::UniformRandomFree::Sampler                            22
+Examples/example.12345678.query.stat:  BasicPRM::BasicPRM1::Sample                                           0.000556
+Examples/example.12345678.query.stat:  UniformRandomSampler::UniformRandomFree::Sample                        1.7e-05
+Examples/MultiRobotExamples.xml:    <Samplers>
+Examples/MultiRobotExamples.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Examples/MultiRobotExamples.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/MultiRobotExamples.xml:    </Samplers>
+Examples/MultiRobotExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/MultiRobotExamples.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Examples/MultiRobotExample.xml:    <Samplers>
+Examples/MultiRobotExample.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue" />
+Examples/MultiRobotExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" />
+Examples/MultiRobotExample.xml:    </Samplers>
+Examples/MultiRobotExample.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5" />
+Examples/MultiRobotExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/FixedTree/Example.xml:    <Samplers>
+Examples/FixedTree/Example.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd_rapid"/>
+Examples/FixedTree/Example.xml:      <SimilarStructureSampler label="SimilarStructure" vcLabel="cd_rapid" debug="true" SamplesPerSeed="1">
+Examples/FixedTree/Example.xml:      </SimilarStructureSampler>
+Examples/FixedTree/Example.xml:    </Samplers>
+Examples/FixedTree/Example.xml:        <Sampler method="UniformRandomFree" Number="100" Attempts="10"/>
+Examples/ActionSpaceExample.xml:    <Samplers>
+Examples/ActionSpaceExample.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Examples/ActionSpaceExample.xml:    </Samplers>
+Examples/ActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/ActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/ActionSpaceExample.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Examples/ActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Examples/ActionSpaceExample.xml:        <Sampler label="UniformRandomFree" number="50" attempts="1"/>
+Workspace/GridOverlay.h:    /// @param _trials Sample this number of grid cells to test. Or, use zero to
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  m_firstSamplerLabel = _node.Read("firstSamplerLabel", true, "", "Sampler for first robot");
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  m_restSamplerLabel = _node.Read("restSamplerLabel", true, "", "Sampler for all but first robot");
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  cout << "First Sampler: " << m_firstSamplerLabel << endl;
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  auto firstSampler = sg->GetMPLibrary()->GetSampler(m_firstSamplerLabel);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  firstSampler->Print(std::cout);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  cout << "All Others Sampler: " << m_restSamplerLabel << endl;
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  auto restSampler = sg->GetMPLibrary()->GetSampler(m_restSamplerLabel);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:  restSampler->Print(std::cout);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:          // - Sample at the point of the goal constraint
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:          string samplerLabel = m_restSamplerLabel;
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:            samplerLabel = m_firstSamplerLabel;
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:          auto sampler = sg->GetMPLibrary()->GetSampler(samplerLabel);
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:              sampler->Sample(numNodes, numAttempts, taskBoundary,std::back_inserter(goalPoints));
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:            int numSamplerRuns = 0;
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:                  sampler->Sample(numNodes, numAttempts, envBoundary, &pointBoundary, std::back_inserter(tempGoalPoints));
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:                  sampler->Sample(numNodes, numAttempts, taskBoundary, std::back_inserter(tempGoalPoints));
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:                  numSamplerRuns++;
+TMPLibrary/InteractionStrategies/DependentPaths.h:    string m_firstSamplerLabel;
+TMPLibrary/InteractionStrategies/DependentPaths.h:    string m_restSamplerLabel;
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  m_firstSamplerLabel = _node.Read("firstSamplerLabel", true, "", "Sampler for first robot");
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  m_restSamplerLabel = _node.Read("restSamplerLabel", true, "", "Sampler for all but first robot");
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  cout << "First Sampler: " << m_firstSamplerLabel << endl;
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  auto firstSampler = sg->GetMPLibrary()->GetSampler(m_firstSamplerLabel);
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  firstSampler->Print(std::cout);
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  cout << "All Others Sampler: " << m_restSamplerLabel << endl;
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  auto restSampler = sg->GetMPLibrary()->GetSampler(m_restSamplerLabel);
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:  restSampler->Print(std::cout);
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:          // - Sample at the point of the goal constraint
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:          string samplerLabel = m_restSamplerLabel;
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:            samplerLabel = m_firstSamplerLabel;
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:          auto sampler = sg->GetMPLibrary()->GetSampler(samplerLabel);
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:              sampler->Sample(numNodes, numAttempts, taskBoundary,std::back_inserter(goalPoints));
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:            int numSamplerRuns = 0;
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:                  sampler->Sample(numNodes, numAttempts, envBoundary, &pointBoundary, std::back_inserter(tempGoalPoints));
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:                  sampler->Sample(numNodes, numAttempts, taskBoundary, std::back_inserter(tempGoalPoints));
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:                  numSamplerRuns++;
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:    SampleStartState(_interaction,_state);
+TMPLibrary/InteractionStrategies/TemplateInteractions.cpp:  // Transformation = Sample origin of transformation
+TMPLibrary/InteractionStrategies/TemplateInteractions.cpp:  // Sample start state from _interaction->GetPreConditions()
+Binary file TMPLibrary/InteractionStrategies/.DependentPaths.cpp.swp matches
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:                    "SamplerMethod used to create object pose samples.");
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:        objectPose = SampleObjectPose(object,_interaction);
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:    // Sample pregrasp joint angles
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:    // Sample grasp joint angles
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:SampleObjectPose(Robot* _object, Interaction* _interaction) {
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:  // Sample a stable object pose
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:    // Sample within the surface boundary
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:    auto sm = this->GetMPLibrary()->GetSampler(m_objectSMLabel);
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:    sm->Sample(1,1,boundary,std::back_inserter(samples));
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:      // Sample ee dof within boundary
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:      auto ee = range.Sample();
+TMPLibrary/InteractionStrategies/GraspStrategy.cpp:        throw RunTimeException(WHERE) << "Sampled EE position does not satisfy condition constraint.";
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:#include "MPLibrary/Samplers/SamplerMethod.h"
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:                             "Sampler method to use within strategy.");
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:  // Sample Motion Constraints for unconstrained groups.
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:  auto constraints = SampleMotionConstraints(_conditions,unconstrainedRobots,
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:SampleMotionConstraints(const std::vector<std::string>& _conditions,
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:    // Sample configurations for the group in the boundary.
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:    auto sampler = lib->GetSampler(m_smLabel);
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:    sampler->Sample(m_numNodes,m_maxAttempts,boundary,
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:    cout<<"TWC Samples "<<samples<<endl;
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:SampleStartState(Interaction* _interaction, State& _state) {
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:  //TODO::Sample a start state
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h:    /// Sample a set of motion constraints for each group in the interaction boundary.
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h:    std::unordered_map<Robot*,Constraint*> SampleMotionConstraints(
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h:    void SampleStartState(Interaction* _interaction, State& _state);
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h:    std::string m_smLabel; ///< Sampler method label
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:  auto sampler = lib->GetSampler(m_smLabel);
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:    // Sample cfgs for deliverers
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:      sampler->Sample(1,1,boundaryMap,std::back_inserter(samples));
+TMPLibrary/InteractionStrategies/HandoffStrategy.cpp:    // Sample cfgs for receivers
+Binary file TMPLibrary/InteractionStrategies/.IndependentPaths.cpp.swp matches
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  m_firstSamplerLabel = _node.Read("firstSamplerLabel", true, "", "Sampler for first robot");
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  m_restSamplerLabel = _node.Read("restSamplerLabel", true, "", "Sampler for all but first robot");
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  cout << "First Sampler: " << m_firstSamplerLabel << endl;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  auto firstSampler = sg->GetMPLibrary()->GetSampler(m_firstSamplerLabel);
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  firstSampler->Print(std::cout);
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  cout << "All Others Sampler: " << m_restSamplerLabel << endl;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  auto restSampler = sg->GetMPLibrary()->GetSampler(m_restSamplerLabel);
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:  restSampler->Print(std::cout);
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:          // - Sample at the point of the goal constraint
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:          string samplerLabel = m_restSamplerLabel;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:            samplerLabel = m_firstSamplerLabel;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:          auto sampler = sg->GetMPLibrary()->GetSampler(samplerLabel);
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:            sampler->Sample(numNodes, numAttempts, taskBoundary,std::back_inserter(goalPoints));
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:            int numSamplerRuns = 0;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:            while((numSamplerRuns < 1000) && (goalPoints.empty())){
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:                sampler->Sample(numNodes, numAttempts, envBoundary, &endEffectorBoundary,std::back_inserter(tempGoalPoints));
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:                sampler->Sample(numNodes, numAttempts, taskBoundary,std::back_inserter(tempGoalPoints));
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:                numSamplerRuns++;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:          cout << "Number of tries of sampler: " << numSamplerRuns << endl;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:      string samplerLabel = m_firstSamplerLabel;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:        samplerLabel = m_firstSamplerLabel;
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:      auto sampler = sg->GetMPLibrary()->GetSampler(samplerLabel);
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:        sampler->Sample(numNodes, numAttempts, taskBoundary,std::back_inserter(startPoints));
+TMPLibrary/InteractionStrategies/Dependent_Backup.cpp:	sampler->Sample(numNodes, numAttempts, taskBoundary,std::back_inserter(startPoints));
+TMPLibrary/InteractionStrategies/GraspStrategy.h:    Cfg SampleObjectPose(Robot* _object, Interaction* _interaction);
+TMPLibrary/InteractionStrategies/GraspStrategy.h:    std::string m_objectSMLabel; ///< Sampler method for object poses
+TMPLibrary/StateGraphs/ModeGraph.cpp:               "Sampler Method to use to generate unactuated cfgs.");
+TMPLibrary/StateGraphs/ModeGraph.cpp:               "Sampler Method to use to generate query cfgs.");
+TMPLibrary/StateGraphs/ModeGraph.cpp:  m_numUnactuatedSamples = _node.Read("numUnactuatedSamples",false,0,0,1000,
+TMPLibrary/StateGraphs/ModeGraph.cpp:  m_numInteractionSamples = _node.Read("numInteractionSamples",false,1,1,1000,
+TMPLibrary/StateGraphs/ModeGraph.cpp:  SampleNonActuatedCfgs(_start,startVIDs,goalVIDs);
+TMPLibrary/StateGraphs/ModeGraph.cpp:  SampleTransitions();
+TMPLibrary/StateGraphs/ModeGraph.cpp:SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& _goalVIDs) {
+TMPLibrary/StateGraphs/ModeGraph.cpp:  auto uaSM = lib->GetSampler(m_unactuatedSM);
+TMPLibrary/StateGraphs/ModeGraph.cpp:  auto qSM = lib->GetSampler(m_querySM);
+TMPLibrary/StateGraphs/ModeGraph.cpp:      // Sample goal cfg
+TMPLibrary/StateGraphs/ModeGraph.cpp:      qSM->Sample(1,m_maxAttempts,boundaryMap,std::back_inserter(samples));
+TMPLibrary/StateGraphs/ModeGraph.cpp:    // Sample other cfgs and add to grounded hypergraph
+TMPLibrary/StateGraphs/ModeGraph.cpp:    uaSM->Sample(m_numUnactuatedSamples,m_maxAttempts,b,std::back_inserter(samples));
+TMPLibrary/StateGraphs/ModeGraph.cpp:SampleTransitions() {
+TMPLibrary/StateGraphs/ModeGraph.cpp:      for(size_t i = 0; i < m_numInteractionSamples; i++) {
+TMPLibrary/StateGraphs/ModeGraph.cpp:  auto qSM = lib->GetSampler(m_querySM);
+TMPLibrary/StateGraphs/ModeGraph.cpp:      // Sample goal cfg
+TMPLibrary/StateGraphs/ModeGraph.cpp:      qSM->Sample(1,m_maxAttempts,boundaryMap,std::back_inserter(samples));
+TMPLibrary/StateGraphs/ModeGraph.h:    void SampleNonActuatedCfgs(const State& _start,std::set<VID>& _startVIDs,std::set<VID>& _goalVIDs);
+TMPLibrary/StateGraphs/ModeGraph.h:    void SampleTransitions();
+TMPLibrary/StateGraphs/ModeGraph.h:    size_t m_numUnactuatedSamples;
+TMPLibrary/StateGraphs/ModeGraph.h:    size_t m_numInteractionSamples;
+TMPLibrary/TMPStrategies/BasicHCR.cpp:    auto sr = SampleSemanticRoadmap();
+TMPLibrary/TMPStrategies/BasicHCR.cpp:      bool success = SampleInteraction(sr);
+TMPLibrary/TMPStrategies/BasicHCR.cpp:SampleSemanticRoadmap() {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  // Sample distribution
+TMPLibrary/TMPStrategies/BasicHCR.cpp:SampleInteraction(SemanticRoadmap* _sr) {
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  // Sample distribution
+TMPLibrary/TMPStrategies/BasicHCR.cpp:  //Todo::Sample a state from there
+TMPLibrary/TMPStrategies/BasicHCR.cpp:      //TODO::Sample vid from set or check all combos
+TMPLibrary/TMPStrategies/BasicHCR.h:    /// Sample a semantic roadmap from the current distribution
+TMPLibrary/TMPStrategies/BasicHCR.h:    SemanticRoadmap* SampleSemanticRoadmap();
+TMPLibrary/TMPStrategies/BasicHCR.h:    /// Sample an interaction from the current distribution and
+TMPLibrary/TMPStrategies/BasicHCR.h:    bool SampleInteraction(SemanticRoadmap* _sr);
+Test/XMLs/LazyTogglePRM.0.xml:    <Samplers>
+Test/XMLs/LazyTogglePRM.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Test/XMLs/LazyTogglePRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Test/XMLs/LazyTogglePRM.0.xml:    </Samplers>
+Test/XMLs/LazyTogglePRM.0.xml:        <Sampler label="UniformRandom" number="10" attempts="1"/>
+Test/XMLs/DynamicRegionRRT.0.xml:    <Samplers>
+Test/XMLs/DynamicRegionRRT.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Test/XMLs/DynamicRegionRRT.0.xml:    </Samplers>
+Test/XMLs/CBS.0.xml:    <Samplers>
+Test/XMLs/CBS.0.xml:      <UniformRandomSampler label="UniformRandomFree"
+Test/XMLs/CBS.0.xml:    </Samplers>
+Test/XMLs/CBS.0.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+Test/XMLs/QueryPRM.0.xml:    <Samplers>
+Test/XMLs/QueryPRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Test/XMLs/QueryPRM.0.xml:    </Samplers>
+Test/XMLs/QueryPRM.0.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Test/XMLs/BasicPRM.0.xml:    <Samplers>
+Test/XMLs/BasicPRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd" debug="true"/>
+Test/XMLs/BasicPRM.0.xml:    </Samplers>
+Test/XMLs/BasicPRM.0.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Test/XMLs/LazyPRM.0.xml:    <Samplers>
+Test/XMLs/LazyPRM.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Test/XMLs/LazyPRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Test/XMLs/LazyPRM.0.xml:    </Samplers>
+Test/XMLs/LazyPRM.0.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Test/XMLs/SST.0.xml:    <Samplers>
+Test/XMLs/SST.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Test/XMLs/SST.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Test/XMLs/SST.0.xml:    </Samplers>
+Test/XMLs/SST.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Test/XMLs/Syclop.0.xml:    <Samplers>
+Test/XMLs/Syclop.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Test/XMLs/Syclop.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Test/XMLs/Syclop.0.xml:    </Samplers>
+Test/XMLs/BasicRRT.0.xml:    <Samplers>
+Test/XMLs/BasicRRT.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Test/XMLs/BasicRRT.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Test/XMLs/BasicRRT.0.xml:    </Samplers>
+Test/XMLs/BasicRRT.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Test/XMLs/BasicRRT-oneway.0.xml:    <Samplers>
+Test/XMLs/BasicRRT-oneway.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Test/XMLs/BasicRRT-oneway.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Test/XMLs/BasicRRT-oneway.0.xml:    </Samplers>
+Test/XMLs/BasicRRT-oneway.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Test/XMLs/RRTStar.0.xml:    <Samplers>
+Test/XMLs/RRTStar.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Test/XMLs/RRTStar.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Test/XMLs/RRTStar.0.xml:    </Samplers>
+Test/XMLs/RRTStar.0.xml:      <!-- Sample more nodes than we need to test path refinement. -->
+Test/XMLs/RRTStar.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Binary file build/MPProblem/TaskHierarchy/SemanticTask.o matches
+Binary file build/MPProblem/Environment/Environment.o matches
+Binary file build/MPProblem/Robot/Actuator.o matches
+Binary file build/MPProblem/Robot/Robot.o matches
+Binary file build/MPProblem/RobotGroup/RobotGroup.o matches
+Binary file build/MPProblem/MPProblem.o matches
+Binary file build/MPProblem/GroupTask.o matches
+Binary file build/MPProblem/Constraints/CSpaceConstraint.o matches
+Binary file build/MPProblem/Constraints/BoundaryConstraint.o matches
+Binary file build/Workspace/WorkspaceDecomposition.o matches
+Binary file build/Workspace/GridOverlay.o matches
+Binary file build/TMPLibrary/Solution/TaskSolution.o matches
+Binary file build/TMPLibrary/Solution/Plan.o matches
+Binary file build/TMPLibrary/ActionSpace/MotionCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/ActionSpace.o matches
+Binary file build/TMPLibrary/ActionSpace/Condition.o matches
+Binary file build/TMPLibrary/ActionSpace/CompositeCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/ProximityCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/Interaction.o matches
+Binary file build/TMPLibrary/ActionSpace/FormationCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/Action.o matches
+Binary file build/TMPLibrary/InteractionStrategies/TemplateInteractions.o matches
+Binary file build/TMPLibrary/InteractionStrategies/HandoffStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/InteractionStrategyMethod.o matches
+Binary file build/TMPLibrary/InteractionStrategies/GraspStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/IndependentPaths.o matches
+Binary file build/TMPLibrary/StateGraphs/ModeGraph.o matches
+Binary file build/TMPLibrary/StateGraphs/CombinedRoadmap.o matches
+Binary file build/TMPLibrary/StateGraphs/StateGraph.o matches
+Binary file build/TMPLibrary/TMPLibrary.o matches
+Binary file build/TMPLibrary/TaskDecomposers/TaskDecomposerMethod.o matches
+Binary file build/TMPLibrary/TMPTools/TMPTools.o matches
+Binary file build/TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.o matches
+Binary file build/TMPLibrary/TaskEvaluators/SubmodeQuery.o matches
+Binary file build/TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.o matches
+Binary file build/TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.o matches
+Binary file build/TMPLibrary/TaskEvaluators/HCRQuery.o matches
+Binary file build/TMPLibrary/TMPBaseObject.o matches
+Binary file build/TMPLibrary/TMPStrategies/NextBestSearch.o matches
+Binary file build/TMPLibrary/TMPStrategies/BasicHCR.o matches
+Binary file build/TMPLibrary/TMPStrategies/SimpleMotionMethod.o matches
+Binary file build/TMPLibrary/TMPStrategies/TMPStrategyMethod.o matches
+Binary file build/TMPLibrary/TaskAllocators/TaskAllocatorMethod.o matches
+Binary file build/tmp_main.o matches
+Binary file build/Simulator/BulletModel.o matches
+Binary file build/Simulator/Simulation.o matches
+Binary file build/Simulator/BulletEngine.o matches
+Binary file build/Simulator/Conversions.o matches
+Binary file build/Simulator/MicroSimulator.o matches
+Binary file build/Geometry/GMSPolyhedron.o matches
+Binary file build/Geometry/Bodies/Connection.o matches
+Binary file build/Geometry/Bodies/Body.o matches
+Binary file build/Geometry/Bodies/MultiBody.o matches
+Binary file build/Geometry/Bodies/Chain.o matches
+Binary file build/Geometry/Boundaries/TetrahedralBoundary.o matches
+Binary file build/Geometry/Boundaries/CSpaceBoundingBox.o matches
+Binary file build/Geometry/Boundaries/AbstractBoundingSphere.o matches
+Binary file build/Geometry/Boundaries/WorkspaceBoundingBox.o matches
+Binary file build/Geometry/Boundaries/AbstractBoundingSphericalShell.o matches
+Binary file build/Geometry/Boundaries/WorkspaceBoundingSphericalShell.o matches
+Binary file build/Geometry/Boundaries/AbstractBoundingBox.o matches
+Binary file build/Geometry/Boundaries/CSpaceBoundingSphere.o matches
+Binary file build/Geometry/Boundaries/BoundaryIntersection.o matches
+Binary file build/Geometry/Boundaries/Boundary.o matches
+Binary file build/Geometry/Boundaries/WorkspaceBoundingSphere.o matches
+Binary file build/Geometry/Shapes/NBox.o matches
+Binary file build/Geometry/Shapes/NSphere.o matches
+Binary file build/Geometry/Shapes/NSphericalShell.o matches
+Binary file build/Visualization/DrawableCfg.o matches
+Binary file build/Visualization/DrawablePath.o matches
+Binary file build/Visualization/DrawableRoadmap.o matches
+Binary file build/Visualization/DrawableWorkspaceSkeleton.o matches
+Binary file build/Visualization/DrawableMultiBody.o matches
+Binary file build/Visualization/Gui/EditConnectionDialog.o matches
+Binary file build/Visualization/Gui/EditWidgets.o matches
+Binary file build/Visualization/Gui/EditBodyDialog.o matches
+Binary file build/Visualization/Gui/EditCfgDialog.o matches
+Binary file build/Visualization/Gui/EditMultiBodyDialog.o matches
+Binary file build/Visualization/Gui/Setup.o matches
+Binary file build/Visualization/Gui/SliderTextWidget.o matches
+Binary file build/ConfigurationSpace/Formation.o matches
+Binary file build/ConfigurationSpace/GroupCfg.o matches
+Binary file build/ConfigurationSpace/Cfg.o matches
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+build/Dependencies: MPLibrary/Samplers/SamplerMethod.h MPLibrary/MPTools/MPTools.h \
+build/Dependencies: MPLibrary/Samplers/TerrainSampler.h MPLibrary/Samplers/SamplerMethod.h \
+build/Dependencies: MPLibrary/Samplers/UniformRandomSampler.h \
+Binary file build/Behaviors/Controllers/ControlSetGenerators.o matches
+Binary file build/Behaviors/Agents/Coordinator.o matches
+Binary file build/Behaviors/Agents/Agent.o matches
+Binary file build/Behaviors/Agents/AgentFactory_sim.o matches
+Binary file build/Behaviors/Agents/ChildAgent.o matches
+Binary file build/Behaviors/Agents/PathFollowingAgent.o matches
+Binary file build/Behaviors/Agents/StepFunctions/StepFunctionFactory.o matches
+Binary file build/Behaviors/Agents/StepFunctions/FollowPath.o matches
+Binary file build/Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.o matches
+Binary file build/Behaviors/Agents/PlanningAgent.o matches
+Binary file build/MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.o matches
+Binary file build/MPLibrary/PMPL.o matches
+Binary file build/MPLibrary/MPTools/MeanCurvatureSkeleton3D.o matches
+Binary file build/MPLibrary/MPTools/TetGenDecomposition.o matches
+Binary file build/MPLibrary/MPTools/RegionKit.o matches
+Binary file build/Utilities/MetricUtils.o matches
+Binary file build/moc/moc_SliderTextWidget.o matches
+Binary file build/moc/moc_EditWidgets.o matches
+Binary file libobprm.a matches
+8/test/test.xml:    <Samplers>
+8/test/test.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/test/test.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/test/test.xml:    </Samplers>
+8/test/test.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/test/test.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/test/test.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/MultiRobotExamplesSim.xml:    <Samplers>
+8/MultiRobotExamplesSim.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/MultiRobotExamplesSim.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/MultiRobotExamplesSim.xml:    </Samplers>
+8/MultiRobotExamplesSim.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/MultiRobotExamplesSim.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/MultiRobotExamplesSim.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/cbs.9753126.groupQuery.stat:Sampler Statistics                                            Attempts Successes
+8/cbs.9753126.groupQuery.stat:  UniformRandomSampler::UniformRandomFree                          590       582
+8/cbs.9753126.groupQuery.stat:  All Samplers                                                     590       582
+8/cbs.9753126.groupQuery.stat:  UniformRandomSampler::UniformRandomFree::Sampler                           590
+8/cbs.9753126.groupQuery.stat:  BasicPRM::IndividualPRM::Sample                                         0.0309
+8/cbs.9753126.groupQuery.stat:  UniformRandomSampler::UniformRandomFree::Sample                         0.0258
+8/8-composite.xml:    <Samplers>
+8/8-composite.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/8-composite.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/8-composite.xml:    </Samplers>
+8/8-composite.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/8-composite.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/old.xml:    <Samplers>
+8/old.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/old.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/old.xml:    </Samplers>
+8/old.xml:        <!--samplingOnConflicts="true" newSamples="10" attempts="5"
+8/old.xml:        <Sampler label="UniformRandomFree" number="20" attempts="5"/>
+8/old.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/old.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/cbs.12345.groupQuery.stat:Sampler Statistics                                            Attempts Successes
+8/cbs.12345.groupQuery.stat:  UniformRandomSampler::UniformRandomFree                         1263      1254
+8/cbs.12345.groupQuery.stat:  All Samplers                                                    1263      1254
+8/cbs.12345.groupQuery.stat:  UniformRandomSampler::UniformRandomFree::Sampler                          1263
+8/cbs.12345.groupQuery.stat:  BasicPRM::IndividualPRM::Sample                                         0.0714
+8/cbs.12345.groupQuery.stat:  UniformRandomSampler::UniformRandomFree::Sample                         0.0564
+8/8-decoupled.xml:    <Samplers>
+8/8-decoupled.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/8-decoupled.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/8-decoupled.xml:    </Samplers>
+8/8-decoupled.xml:        <Sampler label="UniformRandomFree" number="5" attempts="5"/>
+8/8-decoupled.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/8-decoupled.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/8-cbs.xml:    <Samplers>
+8/8-cbs.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/8-cbs.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/8-cbs.xml:    </Samplers>
+8/8-cbs.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/8-cbs.xml:        <Sampler label="UniformRandomFree" number="20" attempts="5"/>
+8/8-cbs.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/8-cbs.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/test.xml:    <Samplers>
+8/test.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+8/test.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+8/test.xml:    </Samplers>
+8/test.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+8/test.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+8/test.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+Geometry/Bodies/Chain.cpp:  //This method is called by ReachableVolumeSampler::SampleInternal 
+Geometry/Boundaries/AbstractBoundingSphericalShell.cpp:  return NSphericalShell::Sample();
+Geometry/Boundaries/AbstractBoundingSphere.cpp:  return NSphere::Sample();
+Geometry/Boundaries/Range.h:  /// Sample the range for a random contained value with uniform probability.
+Geometry/Boundaries/Range.h:  T Sample() const noexcept;
+Geometry/Boundaries/Range.h:Sample() const noexcept {
+Geometry/Boundaries/BoundaryIntersection.cpp:RejectionSampleIntersection(const Boundary* const _b1, const Boundary* const _b2,
+Geometry/Boundaries/BoundaryIntersection.h:RejectionSampleIntersection(const Boundary* const _b1, const Boundary* const _b2,
+Geometry/Boundaries/AbstractBoundingBox.cpp:  return NBox::Sample();
+Geometry/Shapes/NSphericalShell.cpp:Sample() const {
+Geometry/Shapes/NBox.cpp:Sample() const {
+Geometry/Shapes/NBox.cpp:    point[i] = m_range[i].Sample();
+Geometry/Shapes/NSphere.cpp:Sample() const {
+Geometry/Shapes/NBox.h:    /// Sample a random point in the box with uniform probability.
+Geometry/Shapes/NBox.h:    std::vector<double> Sample() const;
+Geometry/Shapes/NSphere.h:    /// Sample a random point in the n-sphere with uniform probability via the
+Geometry/Shapes/NSphere.h:    std::vector<double> Sample() const;
+Geometry/Shapes/NSphericalShell.h:    /// Sample a random point in the n-spherical shell with uniform probability
+Geometry/Shapes/NSphericalShell.h:    std::vector<double> Sample() const;
+Testing/StrategyTests/Outputs/CBS.0.12345678.groupQuery.stat:Sampler Statistics                                            Attempts Successes
+Testing/StrategyTests/Outputs/CBS.0.12345678.groupQuery.stat:  UniformRandomSampler::UniformRandomFree                          112        96
+Testing/StrategyTests/Outputs/CBS.0.12345678.groupQuery.stat:  All Samplers                                                     112        96
+Testing/StrategyTests/Outputs/CBS.0.12345678.groupQuery.stat:  UniformRandomSampler::UniformRandomFree::Sampler                           112
+Testing/StrategyTests/Outputs/CBS.0.12345678.groupQuery.stat:  BasicPRM::IndividualPRM::Sample                                        0.00346
+Testing/StrategyTests/Outputs/CBS.0.12345678.groupQuery.stat:  UniformRandomSampler::UniformRandomFree::Sample                        0.00272
+Testing/StrategyTests/Outputs/TogglePRM.0.xml.pmpl:	Query Sampler: 
+Testing/StrategyTests/Outputs/TogglePRM.1.xml.pmpl:	Query Sampler: 
+Testing/StrategyTests/Outputs/TogglePRM.2.xml.pmpl:	Query Sampler: 
+Testing/StrategyTests/Outputs/TogglePRM.0.123456.query.stat:Sampler Statistics                                            Attempts Successes
+Testing/StrategyTests/Outputs/TogglePRM.0.123456.query.stat:  UniformRandomSampler::UniformRandomFree                          202       191
+Testing/StrategyTests/Outputs/TogglePRM.0.123456.query.stat:  All Samplers                                                     202       191
+Testing/StrategyTests/Outputs/TogglePRM.0.123456.query.stat:  UniformRandomSampler::UniformRandomFree::Sampler                           202
+Testing/StrategyTests/Outputs/TogglePRM.0.123456.query.stat:  UniformRandomSampler::UniformRandomFree::Sample                         0.0228
+Testing/StrategyTests/Outputs/TogglePRM.2.12345678.stat:Sampler Statistics                                            Attempts Successes
+Testing/StrategyTests/Outputs/TogglePRM.2.12345678.stat:  UniformRandomSampler::UniformRandomFree                           60        47
+Testing/StrategyTests/Outputs/TogglePRM.2.12345678.stat:  All Samplers                                                      60        47
+Testing/StrategyTests/Outputs/TogglePRM.2.12345678.stat:  UniformRandomSampler::UniformRandomFree::Sampler                            60
+Testing/StrategyTests/Outputs/TogglePRM.2.12345678.stat:  UniformRandomSampler::UniformRandomFree::Sample                        0.00397
+Testing/StrategyTests/XMLs/LazyTogglePRM.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/LazyTogglePRM.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Testing/StrategyTests/XMLs/LazyTogglePRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Testing/StrategyTests/XMLs/LazyTogglePRM.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/LazyTogglePRM.0.xml:        <Sampler label="UniformRandom" number="10" attempts="1"/>
+Testing/StrategyTests/XMLs/DynamicRegionRRT.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/DynamicRegionRRT.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Testing/StrategyTests/XMLs/DynamicRegionRRT.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/CBS.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/CBS.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Testing/StrategyTests/XMLs/CBS.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Testing/StrategyTests/XMLs/CBS.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/CBS.0.xml:        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+Testing/StrategyTests/XMLs/QueryPRM.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/QueryPRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+Testing/StrategyTests/XMLs/QueryPRM.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/QueryPRM.0.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Testing/StrategyTests/XMLs/BasicPRM.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/BasicPRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd" debug="true"/>
+Testing/StrategyTests/XMLs/BasicPRM.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/BasicPRM.0.xml:        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+Testing/StrategyTests/XMLs/LazyPRM.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/LazyPRM.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Testing/StrategyTests/XMLs/LazyPRM.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/LazyPRM.0.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Testing/StrategyTests/XMLs/SST.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/SST.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Testing/StrategyTests/XMLs/SST.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Testing/StrategyTests/XMLs/SST.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/SST.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Testing/StrategyTests/XMLs/TogglePRM.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" debug="true"/>
+Testing/StrategyTests/XMLs/TogglePRM.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.0.xml:          <Sampler label="UniformRandomFree" number="100" attempts="1"/>
+Testing/StrategyTests/XMLs/Syclop.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/Syclop.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Testing/StrategyTests/XMLs/Syclop.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+Testing/StrategyTests/XMLs/Syclop.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.2.xml:    <Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.2.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" debug="true"/>
+Testing/StrategyTests/XMLs/TogglePRM.2.xml:    </Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.2.xml:          <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Testing/StrategyTests/XMLs/BasicRRT.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/BasicRRT.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Testing/StrategyTests/XMLs/BasicRRT.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Testing/StrategyTests/XMLs/BasicRRT.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/BasicRRT.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Testing/StrategyTests/XMLs/BasicRRT-oneway.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/BasicRRT-oneway.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Testing/StrategyTests/XMLs/BasicRRT-oneway.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Testing/StrategyTests/XMLs/BasicRRT-oneway.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/BasicRRT-oneway.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Testing/StrategyTests/XMLs/RRTStar.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/RRTStar.0.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="cd"/>
+Testing/StrategyTests/XMLs/RRTStar.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+Testing/StrategyTests/XMLs/RRTStar.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/RRTStar.0.xml:      <!-- Sample more nodes than we need to test path refinement. -->
+Testing/StrategyTests/XMLs/RRTStar.0.xml:        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+Testing/StrategyTests/XMLs/AdaptiveRRT.0.xml:    <Samplers>
+Testing/StrategyTests/XMLs/AdaptiveRRT.0.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Testing/StrategyTests/XMLs/AdaptiveRRT.0.xml:    </Samplers>
+Testing/StrategyTests/XMLs/AdaptiveRRT.0.xml:        querySampler="UniformRandom" samplerLabel="UniformRandom"
+Testing/StrategyTests/XMLs/TogglePRM.1.xml:    <Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.1.xml:      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" debug="true"/>
+Testing/StrategyTests/XMLs/TogglePRM.1.xml:    </Samplers>
+Testing/StrategyTests/XMLs/TogglePRM.1.xml:        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+Testing/FullUnitTest.xml:    <Samplers>
+Testing/FullUnitTest.xml:      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+Testing/FullUnitTest.xml:    </Samplers>
+Testing/FullUnitTest.xml:        querySampler="UniformRandom" samplerLabel="UniformRandom"
+Testing/FullUnitTest.xml:        <Sampler label="UniformRandom" number="1" attempts="1"/>
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:#include "MPLibrary/Samplers/UniformRandomSampler.h"
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:#include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:class UniformRandomSamplerTest : virtual public UniformRandomSampler<MPTraits>, 
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:                                 public SamplerMethodTest<MPTraits> {
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    UniformRandomSamplerTest();
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    UniformRandomSamplerTest(XMLNode& _node);
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    ~UniformRandomSamplerTest();
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    virtual TestResult TestIndividualCfgSample() override;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    virtual TestResult TestIndividualCfgSampleWithEEConstraint() override;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    virtual TestResult TestGroupCfgSampleSingleBoundary() override;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    virtual TestResult TestGroupCfgSampleIndividualBoundaries() override;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest() : UniformRandomSampler<MPTraits>() {}
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest(XMLNode& _node) : SamplerMethod<MPTraits>(_node),
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:                                           UniformRandomSampler<MPTraits>(_node) {}
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:~UniformRandomSamplerTest() {}
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:typename UniformRandomSamplerTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:TestIndividualCfgSample() {
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:  this->IndividualCfgSample(boundary, valids, invalids);
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "IndividualCfgSample::PASSED!\n";
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "IndividualCfgSample::FAILED :(\n" + message;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:typename UniformRandomSamplerTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:TestIndividualCfgSampleWithEEConstraint() {
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:  //this->IndividualCfgSampleWithEEConstraint();
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "IndividualCfgSampleWithEEConstraint::PASSED!\n";
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "IndividualCfgSampleWithEEConstraint::FAILED :(\n" + message;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:typename UniformRandomSamplerTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:typename UniformRandomSamplerTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:TestGroupCfgSampleSingleBoundary() {
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:  //this->GroupCfgSampleSingleBoundary();
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "GroupCfgSampleSingleBoundary::PASSED!\n";
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "GroupCfgSampleSingleBoundary::FAILED :(\n" + message;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:typename UniformRandomSamplerTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:TestGroupCfgSampleIndividualBoundaries() {
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:  //this->GroupCfgSampleIndividualBoundaries();
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "GroupCfgSampleIndividualBoundaries::PASSED!\n";
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:    message = "GroupCfgSampleIndividualBoundaries::FAILED :(\n" + message;
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:typename UniformRandomSamplerTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h:UniformRandomSamplerTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:#include "MPLibrary/Samplers/SamplerMethod.h"
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:class SamplerMethodTest : virtual public SamplerMethod<MPTraits>, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    SamplerMethodTest();
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    ~SamplerMethodTest();
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual TestResult TestIndividualCfgSample() = 0;
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual TestResult TestIndividualCfgSampleWithEEConstraint() = 0;
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual TestResult TestGroupCfgSampleSingleBoundary() = 0;
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual TestResult TestGroupCfgSampleIndividualBoundaries() = 0;
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    //      function in the SamplerMethod class and return the same output.
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    //      needed to test the underlying SamplerMethod function.
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual void IndividualCfgSample(Boundary*& _boundary, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual void IndividualCfgSampleWithEEConstraint(Boundary*& _boundary, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual void GroupCfgSampleSingleBoundary(Boundary*& _boundary, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:    virtual void GroupCfgSampleIndividualBoundaries(std::map<Robot*,const Boundary*>& _boundaryMap, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest() : SamplerMethod<MPTraits>() {}
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:~SamplerMethodTest() {}
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:typename SamplerMethodTest<MPTraits>::TestResult
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  auto result = TestIndividualCfgSample();
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  result = TestIndividualCfgSampleWithEEConstraint();
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  result = TestGroupCfgSampleSingleBoundary();
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  result = TestGroupCfgSampleIndividualBoundaries();
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:IndividualCfgSample(Boundary*& _boundary, std::vector<Cfg>& _valids,
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  this->Sample(numNodes,maxAttempts,_boundary,std::back_inserter(_valids),
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:IndividualCfgSampleWithEEConstraint(Boundary*& _boundary, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  this->Sample(numNodes,maxAttempts,_boundary,_eeBoundary,
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:GroupCfgSampleSingleBoundary(Boundary*& _boundary, std::vector<GroupCfg>& _valids,
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  this->Sample(numNodes,maxAttempts,_boundary,std::back_inserter(_valids), 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:GroupCfgSampleIndividualBoundaries(std::map<Robot*,const Boundary*>& _boundaryMap, 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:  this->Sample(numNodes,maxAttempts,_boundaryMap,std::back_inserter(_valids), 
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/Samplers/SamplerMethodTest.h:SamplerMethodTest<MPTraits>::
+Testing/MPLibrary/MPLibraryTests.h:#include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
+Testing/MPLibrary/MPLibraryTests.h:    typedef MethodSet<MPTraits, SamplerMethodTest<MPTraits>>        SamplerTestSet;
+Testing/MPLibrary/MPLibraryTests.h:    SamplerTestSet*            m_samplerTests{nullptr};
+Testing/MPLibrary/MPLibraryTests.h:  // Sampler tests
+Testing/MPLibrary/MPLibraryTests.h:  m_samplerTests = new SamplerTestSet(this,
+Testing/MPLibrary/MPLibraryTests.h:      typename MPTraits::SamplerMethodList(), "Samplers");
+Testing/MPLibrary/MPLibraryTests.h:  else if(_node.Name() == "Samplers") {
+Binary file ppl matches
+ConfigurationSpace/Cfg.cpp:      m_dofs[i] = cspace->GetRange(i).Sample();
+ConfigurationSpace/Cfg.cpp:        m_vel[j] = vspace->GetRange(j).Sample();
+ConfigurationSpace/Formation.cpp:      dofs[i] = m_cspace.GetRange(i).Sample();
+Behaviors/Agents/Coordinator.cpp:  auto sampler = m_library->GetSampler("UniformRandomFree");
+Behaviors/Agents/Coordinator.cpp:    sampler->Sample(numNodes, numAttempts, env->GetBoundary(),
+Behaviors/Agents/Coordinator.cpp:    std::cout << "Sampled task" << std::endl
+MPLibrary/Samplers/SamplerMethod.h:template <typename MPTraits> class MixSampler;
+MPLibrary/Samplers/SamplerMethod.h:/// Base algorithm abstraction for \ref Samplers.
+MPLibrary/Samplers/SamplerMethod.h:/// SamplerMethod has three sets of important functions. The first two are the
+MPLibrary/Samplers/SamplerMethod.h:/// various public methods in the base class, @c Sample and @c Filter, and third
+MPLibrary/Samplers/SamplerMethod.h:/// @c Sampler.
+MPLibrary/Samplers/SamplerMethod.h:/// @c Sample is called in various ways but they break down into two forms:
+MPLibrary/Samplers/SamplerMethod.h:/// auto s = this->GetSampler(m_sLabel);
+MPLibrary/Samplers/SamplerMethod.h:/// s->Sample(num, attempts, bounds, std::back_inserter(valid));
+MPLibrary/Samplers/SamplerMethod.h:/// auto s = this->GetSampler(m_sLabel);
+MPLibrary/Samplers/SamplerMethod.h:/// @todo The present implementation of Sample temporarily saves invalid
+MPLibrary/Samplers/SamplerMethod.h:///       evidenced by their overriding of Sample rather than Sampler: we should
+MPLibrary/Samplers/SamplerMethod.h:/// @ingroup Samplers
+MPLibrary/Samplers/SamplerMethod.h:class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
+MPLibrary/Samplers/SamplerMethod.h:class SamplerMethod : public MPBaseObject<MPTraits> {
+MPLibrary/Samplers/SamplerMethod.h:    SamplerMethod() = default;
+MPLibrary/Samplers/SamplerMethod.h:    SamplerMethod(XMLNode& _node);
+MPLibrary/Samplers/SamplerMethod.h:    virtual ~SamplerMethod() = 0;
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:    ///@name Sampler Rule
+MPLibrary/Samplers/SamplerMethod.h:    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/SamplerMethod.h:    virtual bool Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
+MPLibrary/Samplers/SamplerMethod.h:    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/SamplerMethod.h:    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/SamplerMethod.h:    friend class MixSampler<MPTraits>;
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:~SamplerMethod() = default;
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:  MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualSample");
+MPLibrary/Samplers/SamplerMethod.h:      if(this->Sampler(cfg, _boundary, valid, invalid))
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
+MPLibrary/Samplers/SamplerMethod.h:  Sample(_numNodes, _maxAttempts, _boundary, _valid, std::back_inserter(invalid));
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:  MethodTimer mt(stats, this->GetNameAndLabel() + "::IndividualSample");
+MPLibrary/Samplers/SamplerMethod.h:      if(this->Sampler(cfg, _robotBoundary, _eeBoundary, valid, invalid))
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:  Sample(_numNodes, _maxAttempts, _robotBoundary, _eeBoundary, _valid,
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:      if(this->Sampler(*_first, _boundary, valid, invalid))
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/SamplerMethod.h:  MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
+MPLibrary/Samplers/SamplerMethod.h:      if(this->Sampler(cfg, _boundary, valid, invalid))
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
+MPLibrary/Samplers/SamplerMethod.h:  Sample(_numNodes, _maxAttempts, _boundary, _valid,
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/SamplerMethod.h:  MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
+MPLibrary/Samplers/SamplerMethod.h:      if(this->Sampler(cfg, _boundaryMap, valid, invalid))
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/SamplerMethod.h:  Sample(_numNodes, _maxAttempts, _boundaryMap, _valid,
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:/*------------------------------- Sampler Rule -------------------------------*/
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sampler(CfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/SamplerMethod.h:SamplerMethod<MPTraits>::
+MPLibrary/Samplers/SamplerMethod.h:Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:#include "SamplerMethod.h"
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:/// Base algorithm abstraction for \ref Disassembly Samplers.
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:/// The key addition to the SamplerMethod abstraction is the addition of active
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:/// @todo This method breaks the SamplerMethod API by requiring additional calls
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:///       for Sample to make sense, and by re-implementing the Filter
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:///       Sampler API. The Sampler should assume that every robot in the group
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:/// @ingroup Samplers
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:class MaskedSamplerMethodGroup : public SamplerMethod<MPTraits> {
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:    using typename SamplerMethod<MPTraits>::GroupOutputIterator;
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:    MaskedSamplerMethodGroup() = default;
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:    MaskedSamplerMethodGroup(XMLNode& _node);
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:    virtual ~MaskedSamplerMethodGroup() = 0;
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:    ///@name Sampler Mask Interface
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup<MPTraits>::
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup(XMLNode& _node) : SamplerMethod<MPTraits>(_node) { }
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup<MPTraits>::
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:~MaskedSamplerMethodGroup() = default;
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:/*-------------------------- Sampler Mask Interface --------------------------*/
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup<MPTraits>::
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:const typename MaskedSamplerMethodGroup<MPTraits>::GroupCfgType&
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup<MPTraits>::
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup<MPTraits>::
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:typename MaskedSamplerMethodGroup<MPTraits>::RobotFormation
+MPLibrary/Samplers/MaskedSamplerMethodGroup.h:MaskedSamplerMethodGroup<MPTraits>::
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:#include "MaskedSamplerMethodGroup.h"
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:/// @ingroup Samplers
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:class MaskedProximitySamplerGroup : public MaskedSamplerMethodGroup<MPTraits> {
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    using typename SamplerMethod<MPTraits>::GroupOutputIterator;
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    MaskedProximitySamplerGroup();
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    MaskedProximitySamplerGroup(XMLNode& _node);
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    virtual ~MaskedProximitySamplerGroup() = default;
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    ///@name Sampler Rule
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:MaskedProximitySamplerGroup<MPTraits>::
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:MaskedProximitySamplerGroup(XMLNode& _node)
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:    : MaskedSamplerMethodGroup<MPTraits>(_node) {
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:  this->SetName("MaskedProximitySamplerGroup");
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:MaskedProximitySamplerGroup<MPTraits>::
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:MaskedProximitySamplerGroup() : MaskedSamplerMethodGroup<MPTraits>() {
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:  this->SetName("MaskedProximitySamplerGroup");
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:/*---------------------------- Sampler Interface -----------------------------*/
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:MaskedProximitySamplerGroup<MPTraits>::
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/MaskedProximitySamplerGroup.h:  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+MPLibrary/Samplers/UniformRandomSampler.h:#include "SamplerMethod.h"
+MPLibrary/Samplers/UniformRandomSampler.h:/// @ingroup Samplers
+MPLibrary/Samplers/UniformRandomSampler.h:class UniformRandomSampler : virtual public SamplerMethod<MPTraits> {
+MPLibrary/Samplers/UniformRandomSampler.h:    using typename SamplerMethod<MPTraits>::BoundaryMap;
+MPLibrary/Samplers/UniformRandomSampler.h:    UniformRandomSampler();
+MPLibrary/Samplers/UniformRandomSampler.h:    UniformRandomSampler(XMLNode& _node);
+MPLibrary/Samplers/UniformRandomSampler.h:    virtual ~UniformRandomSampler() = default;
+MPLibrary/Samplers/UniformRandomSampler.h:    ///@name Sampler Rule
+MPLibrary/Samplers/UniformRandomSampler.h:    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/UniformRandomSampler.h:    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/UniformRandomSampler.h:    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler<MPTraits>::
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler() {
+MPLibrary/Samplers/UniformRandomSampler.h:  this->SetName("UniformRandomSampler");
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler<MPTraits>::
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
+MPLibrary/Samplers/UniformRandomSampler.h:  this->SetName("UniformRandomSampler");
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler<MPTraits>::
+MPLibrary/Samplers/UniformRandomSampler.h:  SamplerMethod<MPTraits>::Print(_os);
+MPLibrary/Samplers/UniformRandomSampler.h:/*------------------------------ Sampler Rule --------------------------------*/
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler<MPTraits>::
+MPLibrary/Samplers/UniformRandomSampler.h:Sampler(CfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/UniformRandomSampler.h:  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+MPLibrary/Samplers/UniformRandomSampler.h:    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler<MPTraits>::
+MPLibrary/Samplers/UniformRandomSampler.h:Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/UniformRandomSampler.h:  return Sampler(_cfg, emptyMap, _valid, _invalid);
+MPLibrary/Samplers/UniformRandomSampler.h:UniformRandomSampler<MPTraits>::
+MPLibrary/Samplers/UniformRandomSampler.h:Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/UniformRandomSampler.h:  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+MPLibrary/Samplers/UniformRandomSampler.h:    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+MPLibrary/Samplers/TerrainSampler.h:#include "SamplerMethod.h"
+MPLibrary/Samplers/TerrainSampler.h:class TerrainSampler : public SamplerMethod<MPTraits> {
+MPLibrary/Samplers/TerrainSampler.h:    using typename SamplerMethod<MPTraits>::BoundaryMap;
+MPLibrary/Samplers/TerrainSampler.h:    TerrainSampler();
+MPLibrary/Samplers/TerrainSampler.h:    TerrainSampler(XMLNode& _node);
+MPLibrary/Samplers/TerrainSampler.h:    virtual ~TerrainSampler();
+MPLibrary/Samplers/TerrainSampler.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/TerrainSampler.h:    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/TerrainSampler.h:    ///@name Sampler Rule
+MPLibrary/Samplers/TerrainSampler.h:    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/TerrainSampler.h:    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/TerrainSampler.h:    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler() : SamplerMethod<MPTraits>() {
+MPLibrary/Samplers/TerrainSampler.h:  this->SetName("TerrainSampler");
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
+MPLibrary/Samplers/TerrainSampler.h:  this->SetName("TerrainSampler");
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:~TerrainSampler() = default;
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:  SamplerMethod<MPTraits>::Print(_os);
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/TerrainSampler.h:  // MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
+MPLibrary/Samplers/TerrainSampler.h:  // Sample terrain from set of terrains
+MPLibrary/Samplers/TerrainSampler.h:  // auto terrainIdx = terrainRange.Sample();
+MPLibrary/Samplers/TerrainSampler.h:    SamplerMethod<MPTraits>::Sample(_numNodes * terrains.size(), _maxAttempts, terrain,
+MPLibrary/Samplers/TerrainSampler.h:  //     if(this->Sampler(cfg, terrain.GetBoundaries()[0].get(), valid, invalid))
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:Sample(size_t _numNodes, size_t _maxAttempts,
+MPLibrary/Samplers/TerrainSampler.h:  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
+MPLibrary/Samplers/TerrainSampler.h:      // Sample for formations 
+MPLibrary/Samplers/TerrainSampler.h:        // Sample leader in terrain
+MPLibrary/Samplers/TerrainSampler.h:        std::vector<CfgType> validSamples;
+MPLibrary/Samplers/TerrainSampler.h:        std::vector<CfgType> invalidSamples;
+MPLibrary/Samplers/TerrainSampler.h:        Sample(1,1,_boundary,
+MPLibrary/Samplers/TerrainSampler.h:            std::back_inserter(validSamples),
+MPLibrary/Samplers/TerrainSampler.h:            std::back_inserter(invalidSamples));
+MPLibrary/Samplers/TerrainSampler.h:        if(!validSamples.empty()) {
+MPLibrary/Samplers/TerrainSampler.h:          cfg = validSamples[0];
+MPLibrary/Samplers/TerrainSampler.h:        else if(!invalidSamples.empty()) {
+MPLibrary/Samplers/TerrainSampler.h:          cfg = invalidSamples[0];
+MPLibrary/Samplers/TerrainSampler.h:        // Sample rest of formation
+MPLibrary/Samplers/TerrainSampler.h:          validSamples.clear();
+MPLibrary/Samplers/TerrainSampler.h:          invalidSamples.clear();
+MPLibrary/Samplers/TerrainSampler.h:          Sampler(c,_boundary,validSamples,invalidSamples);
+MPLibrary/Samplers/TerrainSampler.h:          if(!validSamples.empty()) {
+MPLibrary/Samplers/TerrainSampler.h:            gcfg.SetRobotCfg(c.GetRobot(),std::move(validSamples[0]));
+MPLibrary/Samplers/TerrainSampler.h:          if(!invalidSamples.empty()) {
+MPLibrary/Samplers/TerrainSampler.h:            gcfg.SetRobotCfg(c.GetRobot(),std::move(invalidSamples[0]));
+MPLibrary/Samplers/TerrainSampler.h:      // Sample for remaining robots        
+MPLibrary/Samplers/TerrainSampler.h:        std::vector<CfgType> validSamples;
+MPLibrary/Samplers/TerrainSampler.h:        std::vector<CfgType> invalidSamples;
+MPLibrary/Samplers/TerrainSampler.h:        Sample(1,1,_boundary,
+MPLibrary/Samplers/TerrainSampler.h:            std::back_inserter(validSamples),
+MPLibrary/Samplers/TerrainSampler.h:            std::back_inserter(invalidSamples));
+MPLibrary/Samplers/TerrainSampler.h:        if(!validSamples.empty()) {
+MPLibrary/Samplers/TerrainSampler.h:          gcfg.SetRobotCfg(robot,std::move(validSamples[0]));
+MPLibrary/Samplers/TerrainSampler.h:        if(!invalidSamples.empty()) {
+MPLibrary/Samplers/TerrainSampler.h:          gcfg.SetRobotCfg(robot,std::move(invalidSamples[0]));
+MPLibrary/Samplers/TerrainSampler.h:/*------------------------------ Sampler Rule --------------------------------*/
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:Sampler(CfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/TerrainSampler.h:  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+MPLibrary/Samplers/TerrainSampler.h:    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+MPLibrary/Samplers/TerrainSampler.h:    VDComment("TerrainSampler::Cfg " + std::string(isValid ? "" : "in") +
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+MPLibrary/Samplers/TerrainSampler.h:  return Sampler(_cfg, emptyMap, _valid, _invalid);
+MPLibrary/Samplers/TerrainSampler.h:TerrainSampler<MPTraits>::
+MPLibrary/Samplers/TerrainSampler.h:Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+MPLibrary/Samplers/TerrainSampler.h:  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+MPLibrary/Samplers/TerrainSampler.h:    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+MPLibrary/MPStrategies/BasicPRM.h:    struct SamplerSetting {
+MPLibrary/MPStrategies/BasicPRM.h:    /// Sample and add configurations to the roadmap.
+MPLibrary/MPStrategies/BasicPRM.h:    std::vector<VID> Sample();
+MPLibrary/MPStrategies/BasicPRM.h:    /// Sampler labels with number and attempts of sampler.
+MPLibrary/MPStrategies/BasicPRM.h:    std::vector<SamplerSetting> m_samplers;
+MPLibrary/MPStrategies/BasicPRM.h:    if(child.Name() == "Sampler") {
+MPLibrary/MPStrategies/BasicPRM.h:      SamplerSetting s;
+MPLibrary/MPStrategies/BasicPRM.h:      s.label = child.Read("label", true, "", "Sampler Label");
+MPLibrary/MPStrategies/BasicPRM.h:  _os << "\tSamplers" << std::endl;
+MPLibrary/MPStrategies/BasicPRM.h:  // Sample new configurations.
+MPLibrary/MPStrategies/BasicPRM.h:  const std::vector<VID> vids = Sample();
+MPLibrary/MPStrategies/BasicPRM.h:Sample() {
+MPLibrary/MPStrategies/BasicPRM.h:  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::Sample");
+MPLibrary/MPStrategies/BasicPRM.h:    auto s = this->GetSampler(sampler.label);
+MPLibrary/MPStrategies/BasicPRM.h:    s->Sample(sampler.count, sampler.attempts, boundary,
+MPLibrary/MPStrategies/BasicPRM.h:      std::cout << "\tSampler '" << sampler.label << "' generated "
+MPLibrary/MPStrategies/DisassemblyMethod.h:#include "MPLibrary/Samplers/MaskedSamplerMethodGroup.h"
+MPLibrary/MPStrategies/DisassemblyMethod.h:    std::vector<GroupCfgType> GetMatingSamples(const RobotFormation& _subassembly);
+MPLibrary/MPStrategies/DisassemblyMethod.h:    std::map<std::string, std::pair<size_t, size_t> > m_matingSamplerLabels;
+MPLibrary/MPStrategies/DisassemblyMethod.h:    std::map<std::string, std::pair<size_t, size_t> > m_rrtSamplerLabels;
+MPLibrary/MPStrategies/DisassemblyMethod.h:    if(child.Name() == "MatingSampler") {
+MPLibrary/MPStrategies/DisassemblyMethod.h:      std::string s = child.Read("method", true, "", "Sampler Label");
+MPLibrary/MPStrategies/DisassemblyMethod.h:      m_matingSamplerLabels[s] = std::make_pair(num, attempts);
+MPLibrary/MPStrategies/DisassemblyMethod.h:    if(child.Name() == "RRTSampler") {
+MPLibrary/MPStrategies/DisassemblyMethod.h:      std::string s = child.Read("method", true, "", "Sampler Label");
+MPLibrary/MPStrategies/DisassemblyMethod.h:      m_rrtSamplerLabels[s] = std::make_pair(num, attempts);
+MPLibrary/MPStrategies/DisassemblyMethod.h:      << "\tMatingSamplers" << std::endl;
+MPLibrary/MPStrategies/DisassemblyMethod.h:  for(const auto& label : m_matingSamplerLabels)
+MPLibrary/MPStrategies/DisassemblyMethod.h:  _os << "\tRRTSamplers" << std::endl;
+MPLibrary/MPStrategies/DisassemblyMethod.h:  for(const auto& label : m_rrtSamplerLabels)
+MPLibrary/MPStrategies/DisassemblyMethod.h:GetMatingSamples(const RobotFormation& _subassembly) {
+MPLibrary/MPStrategies/DisassemblyMethod.h:  auto const sampler = m_matingSamplerLabels.begin();
+MPLibrary/MPStrategies/DisassemblyMethod.h:  auto const s = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+MPLibrary/MPStrategies/DisassemblyMethod.h:      this->GetSampler(sampler->first));
+MPLibrary/MPStrategies/DisassemblyMethod.h:  s->Sample(sampler->second.first, sampler->second.second,
+MPLibrary/MPStrategies/DisassemblyMethod.h:  const std::string samplerLabel = m_matingSamplerLabels.begin()->first;
+MPLibrary/MPStrategies/DisassemblyMethod.h:  auto const s = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+MPLibrary/MPStrategies/DisassemblyMethod.h:      this->GetSampler(samplerLabel));
+MPLibrary/MPStrategies/DisassemblyMethod.h:  const std::vector<GroupCfgType> samples = GetMatingSamples(_formation);
+MPLibrary/MPStrategies/DisassemblyMethod.h:  auto sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+MPLibrary/MPStrategies/DisassemblyMethod.h:      this->GetSampler(m_rrtSamplerLabels.begin()->first));
+MPLibrary/MPStrategies/DisassemblyMethod.h:  auto dirs = GetMatingSamples(_partIndices);
+MPLibrary/MPStrategies/DisassemblyMethod.h:  auto samples = GetMatingSamples(activeRobots);
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    /// Sample a target configuration to grow towards from an existing
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    size_t m_disperseTrials{3};   ///< Sample attempts for disperse search.
+MPLibrary/MPStrategies/BasicRRTStrategy.h:  m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Label");
+MPLibrary/MPStrategies/BasicRRTStrategy.h:  _os << "\tSampler: " << m_samplerLabel
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    const auto& samplerLabel = this->m_querySampler.empty()
+MPLibrary/MPStrategies/BasicRRTStrategy.h:                             : this->m_querySampler;
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    auto s = this->GetSampler(m_samplerLabel);
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    s->Sample(1, 100, this->GetEnvironment()->GetBoundary(),
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    if(!this->m_querySampler.empty())
+MPLibrary/MPStrategies/BasicRRTStrategy.h:      samplerLabel = &this->m_querySampler;
+MPLibrary/MPStrategies/BasicRRTStrategy.h:  auto s = this->GetSampler(*samplerLabel);
+MPLibrary/MPStrategies/BasicRRTStrategy.h:    s->Sample(1, 100, samplingBoundary, std::back_inserter(samples));
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:#include "MPLibrary/Samplers/MaskedSamplerMethodGroup.h"
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    std::string m_samplerLabel;  ///< Sampler label.
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:  m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler label (should "
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:                  << "Sample failed! Re-attempting, but counting this iteration."
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    // Sample succeeded.
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:  auto sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:      this->GetSampler(this->m_samplerLabel));
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:  std::vector<GroupCfgType> successfulSamples;
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:  sampler->Sample(1, numAttempts, this->GetEnvironment()->GetBoundary(),
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:                  std::back_inserter(successfulSamples));
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:  if(!successfulSamples.empty()) {
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    return std::make_pair(successfulSamples[LRand() % successfulSamples.size()],
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:  auto const sampler = dynamic_cast<MaskedSamplerMethodGroup<MPTraits>*>(
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:      this->GetSampler(this->m_samplerLabel));
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    throw RunTimeException(WHERE, "Sampler's and VC's active bodies don't match!");
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    std::vector<GroupCfgType> successfulSamples;
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    sampler->Sample(1, 1, this->GetEnvironment()->GetBoundary(),
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:                    std::back_inserter(successfulSamples));
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:    if(successfulSamples.empty())
+MPLibrary/MPStrategies/DisassemblyRRTStrategy.h:                          successfulSamples[LRand() % successfulSamples.size()];
+MPLibrary/MPStrategies/GroupPRM.h:    struct SamplerSetting {
+MPLibrary/MPStrategies/GroupPRM.h:    /// Sample and add configurations to the roadmap.
+MPLibrary/MPStrategies/GroupPRM.h:    std::vector<VID> Sample();
+MPLibrary/MPStrategies/GroupPRM.h:    /// Sampler labels with number and attempts of sampler.
+MPLibrary/MPStrategies/GroupPRM.h:    std::vector<SamplerSetting> m_samplers;
+MPLibrary/MPStrategies/GroupPRM.h:    if(child.Name() == "Sampler") {
+MPLibrary/MPStrategies/GroupPRM.h:      SamplerSetting s;
+MPLibrary/MPStrategies/GroupPRM.h:      s.label = child.Read("label", true, "", "Sampler Label");
+MPLibrary/MPStrategies/GroupPRM.h:  _os << "\tSamplers" << std::endl;
+MPLibrary/MPStrategies/GroupPRM.h:  // Sample new configurations.
+MPLibrary/MPStrategies/GroupPRM.h:  const std::vector<VID> vids = Sample();
+MPLibrary/MPStrategies/GroupPRM.h:Sample() {
+MPLibrary/MPStrategies/GroupPRM.h:  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::Sample");
+MPLibrary/MPStrategies/GroupPRM.h:    auto s = this->GetSampler(sampler.label);
+MPLibrary/MPStrategies/GroupPRM.h:      s->Sample(sampler.count, sampler.attempts, pathConstraintMap,
+MPLibrary/MPStrategies/GroupPRM.h:      s->Sample(sampler.count, sampler.attempts, boundary,
+MPLibrary/MPStrategies/GroupPRM.h:      std::cout << "\tSampler '" << sampler.label << "' generated "
+MPLibrary/MPStrategies/GroupStrategyMethod.h:#include "MPLibrary/Samplers/SamplerMethod.h"
+MPLibrary/MPStrategies/GroupStrategyMethod.h:    typedef typename SamplerMethod<MPTraits>::BoundaryMap BoundaryMap;
+MPLibrary/MPStrategies/GroupStrategyMethod.h:  const auto& samplerLabel = this->m_querySampler.empty() ? _samplerLabel
+MPLibrary/MPStrategies/GroupStrategyMethod.h:                                                          : this->m_querySampler;
+MPLibrary/MPStrategies/GroupStrategyMethod.h:  auto sampler = this->GetSampler(samplerLabel);
+MPLibrary/MPStrategies/GroupStrategyMethod.h:  // Sample start configurations which place all robots at covalid
+MPLibrary/MPStrategies/GroupStrategyMethod.h:  sampler->Sample(1, attempts, boundaryMap, std::back_inserter(cfgs));
+MPLibrary/MPStrategies/GroupStrategyMethod.h:  const auto& samplerLabel = this->m_querySampler.empty() ? _samplerLabel
+MPLibrary/MPStrategies/GroupStrategyMethod.h:                                                          : this->m_querySampler;
+MPLibrary/MPStrategies/GroupStrategyMethod.h:  auto sampler = this->GetSampler(samplerLabel);
+MPLibrary/MPStrategies/GroupStrategyMethod.h:    // Sample goal configurations which place all robots at covalid
+MPLibrary/MPStrategies/GroupStrategyMethod.h:    sampler->Sample(1, attempts, boundaryMap, std::back_inserter(cfgs));
+MPLibrary/MPStrategies/MPStrategyMethod.h:#include "MPLibrary/Samplers/SamplerMethod.h"
+MPLibrary/MPStrategies/MPStrategyMethod.h:    std::string m_querySampler;          ///< Sampler for generating start/goal.
+MPLibrary/MPStrategies/MPStrategyMethod.h:  m_querySampler = _node.Read("querySampler", false, "", "Start/goal sampler.");
+MPLibrary/MPStrategies/MPStrategyMethod.h:      << "\n\tQuery Sampler: " << m_querySampler
+MPLibrary/MPStrategies/MPStrategyMethod.h:  const auto& samplerLabel = m_querySampler.empty() ? _samplerLabel
+MPLibrary/MPStrategies/MPStrategyMethod.h:                                                    : m_querySampler;
+MPLibrary/MPStrategies/MPStrategyMethod.h:  auto sampler = this->GetSampler(samplerLabel);
+MPLibrary/MPStrategies/MPStrategyMethod.h:  sampler->Sample(1, 100, startBoundary, std::back_inserter(cfgs));
+MPLibrary/MPStrategies/MPStrategyMethod.h:    throw RunTimeException(WHERE) << "Sampled configuration from a start "
+MPLibrary/MPStrategies/MPStrategyMethod.h:  const auto& samplerLabel = m_querySampler.empty() ? _samplerLabel
+MPLibrary/MPStrategies/MPStrategyMethod.h:                                                    : m_querySampler;
+MPLibrary/MPStrategies/MPStrategyMethod.h:  auto sampler = this->GetSampler(samplerLabel);
+MPLibrary/MPStrategies/MPStrategyMethod.h:    // Sample a configuration.
+MPLibrary/MPStrategies/MPStrategyMethod.h:    sampler->Sample(1, 100, goalBoundary, std::back_inserter(cfgs));
+MPLibrary/MPStrategies/MPStrategyMethod.h:      throw RunTimeException(WHERE) << "Sampled configuration from goal " << i
+MPLibrary/MPStrategies/TogglePRMStrategy.h:    typedef typename BasicPRM<MPTraits>::SamplerSetting SamplerSetting;
+MPLibrary/MPStrategies/TogglePRMStrategy.h:    /// Sample new nodes and put them into the toggle queue.
+MPLibrary/MPStrategies/TogglePRMStrategy.h:    if(child.Name() == "Sampler") {
+MPLibrary/MPStrategies/TogglePRMStrategy.h:      SamplerSetting s;
+MPLibrary/MPStrategies/TogglePRMStrategy.h:      s.label = child.Read("label", true, "", "Sampler Label");
+MPLibrary/MPStrategies/TogglePRMStrategy.h:  _os << "\tSamplers";
+MPLibrary/MPStrategies/TogglePRMStrategy.h:    auto s = this->GetSampler(sampler.label);
+MPLibrary/MPStrategies/TogglePRMStrategy.h:    s->Sample(sampler.count, sampler.attempts,
+MPLibrary/MPBaseObject.h:    typedef typename MPLibrary::SamplerPointer         SamplerPointer;
+MPLibrary/MPBaseObject.h:    SamplerPointer GetSampler(const std::string&) const noexcept;
+MPLibrary/MPBaseObject.h:typename MPBaseObject<MPTraits>::SamplerPointer
+MPLibrary/MPBaseObject.h:GetSampler(const std::string& _label) const noexcept {
+MPLibrary/MPBaseObject.h:  return m_library->GetSampler(_label);
+MPLibrary/MPLibrary.h:#include "MPLibrary/Samplers/SamplerMethod.h"
+MPLibrary/MPLibrary.h:    typedef MethodSet<MPTraits, SamplerMethod<MPTraits>>        SamplerSet;
+MPLibrary/MPLibrary.h:    typedef typename SamplerSet::MethodPointer         SamplerPointer;
+MPLibrary/MPLibrary.h:    ///@name Sampler Accessors
+MPLibrary/MPLibrary.h:    const SamplerSet* const GetSamplers() const {return m_samplers;}
+MPLibrary/MPLibrary.h:    SamplerPointer GetSampler(const std::string& _l) {
+MPLibrary/MPLibrary.h:    void AddSampler(SamplerPointer _s, const std::string& _l) {
+MPLibrary/MPLibrary.h:    SamplerSet*            m_samplers{nullptr};
+MPLibrary/MPLibrary.h:  m_samplers = new SamplerSet(this,
+MPLibrary/MPLibrary.h:      typename MPTraits::SamplerMethodList(), "Samplers");
+MPLibrary/MPLibrary.h:  else if(_node.Name() == "Samplers") {
+Utilities/MetricUtils.cpp:        << std::setw(60) << std::left  << "Sampler Statistics"
+Utilities/MetricUtils.cpp:          << std::setw(58) << std::left << "All Samplers"

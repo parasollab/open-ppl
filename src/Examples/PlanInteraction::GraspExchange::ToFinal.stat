@@ -1,0 +1,52 @@
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandomFreeTerrain                     3         2
+  All Samplers                                                       3         2
+  Success Rate: 66.7%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl_terrain                             1           1       11600
+
+
+Collision Detection Calls                                                  Count
+
+  StraightLine::sl_terrain                                                 34800
+  UniformRandomSampler::UniformRandomFreeTerrain::Sampler                      7
+  All Collision Detectors                                                  34807
+
+
+Other Statistics                                                           Value
+
+  Graph Search                                                                 1
+  GroupQuery::CompositeQuery::FoundPath                                        1
+  QueryMethod::Query::FoundPath                                                0
+
+
+Averages                                                         Value     Count
+
+  NeighborhoodConnector::ClosestTerrain::CacheHitRatio               0         2
+
+
+Clock Name                                                        Time (Seconds)
+
+  BruteForceNF::BFNF::FindNeighbors                                            0
+  CCTracker::AddEdge                                                           0
+  CCTracker::AddVertex                                                         0
+  GroupPRM::CompositePRM::Connect                                           1.37
+  GroupPRM::CompositePRM::EvaluateMap                                    5.8e-05
+  GroupPRM::CompositePRM::InitAndRun                                        1.37
+  GroupPRM::CompositePRM::Initialize                                        1.37
+  GroupPRM::CompositePRM::Run                                           0.000177
+  GroupPRM::CompositePRM::Sample                                        0.000104
+  GroupPRM::GenerateGoals                                               0.000259
+  GroupPRM::GenerateStart                                               0.000198
+  GroupQuery::CompositeQuery                                               5e-05
+  GroupQuery::GeneratePath                                                 4e-06
+  MPLibrary::Initialize                                                        0
+  NeighborhoodConnector::ClosestTerrain::Connect                            1.37
+  StraightLine::sl_terrain::IsConnectedFunc                                    0
+  UniformRandomSampler::UniformRandomFreeTerrain::GroupSample            0.00036

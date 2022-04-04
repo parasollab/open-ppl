@@ -509,6 +509,7 @@ TASK_SRCS := \
   TMPLibrary/InteractionStrategies/GraspStrategy.cpp \
   TMPLibrary/InteractionStrategies/HandoffStrategy.cpp \
   TMPLibrary/InteractionStrategies/IndependentPaths.cpp \
+  TMPLibrary/InteractionStrategies/DependentPaths.cpp \
   TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp \
   TMPLibrary/InteractionStrategies/TemplateInteractions.cpp \
   TMPLibrary/PoIPlacementMethods/PoIPlacementMethod.cpp \

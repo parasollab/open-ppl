@@ -1,0 +1,16 @@
+Binary file build/TMPLibrary/ActionSpace/Interaction.o matches
+Binary file build/TMPLibrary/InteractionStrategies/TemplateInteractions.o matches
+Binary file build/TMPLibrary/InteractionStrategies/InteractionStrategyMethod.o matches
+Binary file build/TMPLibrary/StateGraphs/ModeGraph.o matches
+Binary file build/TMPLibrary/StateGraphs/CombinedRoadmap.o matches
+Binary file build/TMPLibrary/TaskEvaluators/HCRQuery.o matches
+Binary file build/Behaviors/Agents/Coordinator.o matches
+Binary file build/Behaviors/Agents/PlanningAgent.o matches
+Binary file build/MPLibrary/PMPL.o matches
+Binary file build/MPLibrary/MPTools/ReebGraphConstruction.o matches
+Binary file libobprm.a matches
+Binary file ppl matches
+ConfigurationSpace/GroupRoadmap.h:  stapl::sequential::write_graph(*this, ofs);
+ConfigurationSpace/GenericStateGraph.h:  stapl::sequential::write_graph(*this, ofs);
+ConfigurationSpace/RoadmapGraph.h:  stapl::sequential::write_graph(*this, ofs);
+MPLibrary/MPTools/ReebGraphConstruction.cpp:  stapl::sequential::write_graph(m_reebGraph, ofs);

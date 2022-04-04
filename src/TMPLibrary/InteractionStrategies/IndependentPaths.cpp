@@ -58,7 +58,6 @@ operator()(Interaction* _interaction, State& _state) {
 
   SetInteractionBoundary(_interaction,_state);
 
-
   // Assign interaction roles.
   const auto& stages = _interaction->GetStages();
   auto& preconditions = _interaction->GetStageConditions(stages[0]);
@@ -122,13 +121,34 @@ operator()(Interaction* _interaction, State& _state) {
     }
   }
 
-
+  // Thomas - I commented this out bc it will make a mess on my problems. 
+  // It looks like some kind of debug output. Please wrap it in a if(m_deug)
+  // if that is the case.
+  /*
+  //Creating a roadmap for each stage in the interaction.
+  //How to combine this into one roadmap?
+  for (size_t i = 0; i < stages.size(); i++) {
+        auto sol = _interaction->GetToStageSolution(stages[i]);
+        auto& startConditions = _interaction->GetStageConditions(stages[i]);
+        auto Robots = GetRobots(startConditions);   
+        for (auto Robot : Robots){  
+          if (Robot!=0){
+                auto rmp = sol->GetRoadmap(Robot);
+		auto lbl = Robot->GetLabel();
+		if (rmp!=0) rmp->Write(stages[i]+"_"+Robot->GetLabel()+".map", this->GetMPProblem()->GetEnvironment());
+          }
+        }
+  }
+  */
+  //auto sg = dynamic_cast<CombinedRoadmap*> this->GetStateGraph(m_sgLabel).get();
+  //sg->Write("handoffTemplateTest2"+".map", this->GetMPProblem()->GetEnvironment());
+  
   // Clear information from this planning run.
   m_roleMap.clear();
   m_interimCfgMap.clear();
   m_individualPaths.clear();
   m_finalState.clear();
-
+           
   return foundSolution;
 
 
@@ -312,6 +332,14 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
       //_solution->AddRobotGroup(group);
       
       // Call the MPLibrary solve function to expand the roadmap
+      for(auto robot : task.get()->GetRobotGroup()->GetRobots()) {
+        // cout<<robot->GetLabel()<<endl;
+        //_solution->AddRobot(robot);
+        robot->SetVirtual(false);
+      }
+      cout<<"Solution: "<<_solution<<endl;
+      cout<<"Strategy: "<<m_mpStrategyLabel<<endl;
+      cout<<"Label: "<<_label<<endl;
       lib->SetTask(nullptr);
       lib->Solve(prob,task.get(),_solution,m_mpStrategyLabel, LRand(),_label);
     }

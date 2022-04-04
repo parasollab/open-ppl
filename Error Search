@@ -1,0 +1,55 @@
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Examples/StagesTest.txt:Robot passive is already in solution.
+Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Binary file build/MPLibrary/PMPL.o matches
+Binary file libobprm.a matches
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy2 is already in solution.
+Error Search:Examples/StagesTest.txt:Robot passive is already in solution.
+Error Search:Examples/StagesTest.txt:Robot boxy1 is already in solution.
+Error Search:MPLibrary/MPSolution.h:              << " is already in solution."
+Binary file ppl matches
+MPLibrary/MPSolution.h:              << " is already in solution."

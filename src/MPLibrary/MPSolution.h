@@ -409,6 +409,7 @@ GetRobotGroup() const noexcept {
   return m_group;
 }
 
+
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>

@@ -1,0 +1,643 @@
+MPProblem/InteractionInformation.h:#include "ConfigurationSpace/GenericStateGraph.h"
+Traits/TMPTraits.h:// StateGraphs to include
+Traits/TMPTraits.h:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+Traits/TMPTraits.h:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+Traits/TMPTraits.h:			> StateGraphList;
+Traits/CfgTraits.h:#include "ConfigurationSpace/GenericStateGraph.h"
+Traits/CfgTraits.h://  typedef GenericStateGraph<C, W>              RoadmapType;
+Traits/CfgTraits.h:  typedef GenericStateGraph<C, W>         RoadmapType;
+Traits/TMPTestTraits.h:// StateGraphs to include
+Examples/ITProximityExample.xml:		<StateGraphs>
+Examples/ITProximityExample.xml:		</StateGraphs>
+Examples/CoordinatorExample.xml:		<StateGraphs>
+Examples/CoordinatorExample.xml:		</StateGraphs>
+Examples/DiffDriveTest/DiffDriveDemo-ppl.stat:  StateGraphConstruction                                                       0
+Examples/DiffDriveTest/BoxerMazeDemo.xml:    <StateGraphs>
+Examples/DiffDriveTest/BoxerMazeDemo.xml:    </StateGraphs>
+Examples/DiffDriveTest/DiffDriveDemo.xml:    <StateGraphs>
+Examples/DiffDriveTest/DiffDriveDemo.xml:    </StateGraphs>
+Examples/ITExample.xml:		<StateGraphs>
+Examples/ITExample.xml:		</StateGraphs>
+Examples/TMPExamples.xml:    <StateGraphs>
+Examples/TMPExamples.xml:    </StateGraphs>
+Examples/RigidBodyIT3.xml:    <StateGraphs>
+Examples/RigidBodyIT3.xml:    </StateGraphs>
+Examples/RigidBodyITExample.xml:    <StateGraphs>
+Examples/RigidBodyITExample.xml:    </StateGraphs>
+Examples/MRTMPExamples.xml:    <StateGraphs>
+Examples/MRTMPExamples.xml:    </StateGraphs>
+Examples/MRActionSpaceExample.xml:		<StateGraphs>
+Examples/MRActionSpaceExample.xml:		</StateGraphs>
+Examples/tmp_examples-ppl.stat:  StateGraphConstruction                                                       0
+Examples/ModeGraphExample.xml:		<StateGraphs>
+Examples/ModeGraphExample.xml:		</StateGraphs>
+Examples/ActionSpaceExample.xml:		<StateGraphs>
+Examples/ActionSpaceExample.xml:		</StateGraphs>
+TMPLibrary/TMPLibrary.h:class StateGraph;
+TMPLibrary/TMPLibrary.h:  	typedef TMPMethodSet<StateGraph>			   			   StateGraphSet;
+TMPLibrary/TMPLibrary.h:  	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
+TMPLibrary/TMPLibrary.h:    StateGraphPointer GetStateGraph(const std::string& _l);
+TMPLibrary/TMPLibrary.h:    void AddStateGraph(StateGraphPointer _sg, const std::string& _l);
+TMPLibrary/TMPLibrary.h:  	StateGraphSet*  		  		        m_stateGraphs;
+TMPLibrary/TMPBaseObject.h:class StateGraph;
+TMPLibrary/TMPBaseObject.h:    typedef TMPMethodSet<StateGraph>               StateGraphSet;
+TMPLibrary/TMPBaseObject.h:  	typedef typename TMPLibrary::StateGraphPointer                StateGraphPointer;
+TMPLibrary/TMPBaseObject.h:    /// Get the underlying StateGraph
+TMPLibrary/TMPBaseObject.h:    StateGraphPointer GetStateGraph(const std::string&) const noexcept;
+TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy){
+TMPLibrary/InteractionStrategies/DependentPaths.h:    void PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy);
+TMPLibrary/InteractionStrategies/DependentPaths.cpp:PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy){
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/InteractionStrategies/IndependentPaths.cpp:  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/InteractionStrategies/DependentPaths_backup.cpp:PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy){
+Binary file TMPLibrary/InteractionStrategies/.DependentPaths.cpp.swp matches
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:                             "StateGraph to use within strategy.");
+TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+Binary file TMPLibrary/InteractionStrategies/.DependentPaths.cpp.swo matches
+TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp:#include "TMPLibrary/StateGraphs/StateGraph.h"
+TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp:  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+Binary file TMPLibrary/InteractionStrategies/.IndependentPaths.cpp.swp matches
+TMPLibrary/StateGraphs/CombinedRoadmap.cpp:CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {
+TMPLibrary/StateGraphs/CombinedRoadmap.h:#include "TMPLibrary/StateGraphs/StateGraph.h"
+TMPLibrary/StateGraphs/CombinedRoadmap.h:class CombinedRoadmap : public StateGraph {
+TMPLibrary/StateGraphs/ModeGraph.cpp:ModeGraph(XMLNode& _node) : StateGraph(_node) {
+TMPLibrary/StateGraphs/ModeGraph.h:#include "StateGraph.h"
+TMPLibrary/StateGraphs/ModeGraph.h:class ModeGraph : public StateGraph {
+TMPLibrary/StateGraphs/StateGraph.cpp:#include "StateGraph.h"
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph() {}
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+TMPLibrary/StateGraphs/StateGraph.cpp:	m_graph = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
+TMPLibrary/StateGraphs/StateGraph.cpp:GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+TMPLibrary/StateGraphs/StateGraph.cpp:LoadStateGraph(){
+TMPLibrary/StateGraphs/StateGraph.cpp:	this->GetPlan()->GetCoordinator()->SetGenericStateGraph(m_graph);
+TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+TMPLibrary/StateGraphs/StateGraph.h:#include "ConfigurationSpace/GenericStateGraph.h"
+TMPLibrary/StateGraphs/StateGraph.h:class StateGraph : public TMPBaseObject {
+TMPLibrary/StateGraphs/StateGraph.h:    StateGraph();
+TMPLibrary/StateGraphs/StateGraph.h:    StateGraph(XMLNode& _node);
+TMPLibrary/StateGraphs/StateGraph.h:    virtual ~StateGraph() = default;
+TMPLibrary/StateGraphs/StateGraph.h:		virtual GenericStateGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
+TMPLibrary/StateGraphs/StateGraph.h:    virtual void LoadStateGraph();
+TMPLibrary/StateGraphs/StateGraph.h:		GenericStateGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
+TMPLibrary/TMPBaseObject.cpp:TMPBaseObject::StateGraphPointer
+TMPLibrary/TMPBaseObject.cpp:GetStateGraph(const std::string& _label) const noexcept {
+TMPLibrary/TMPBaseObject.cpp:  return m_tmpLibrary->GetStateGraph(_label);
+TMPLibrary/TMPLibrary.cpp:#include "TMPLibrary/StateGraphs/StateGraph.h"
+TMPLibrary/TMPLibrary.cpp:  m_stateGraphs = new StateGraphSet(this,
+TMPLibrary/TMPLibrary.cpp:                  typename TMPTraits::StateGraphList(), "StateGraphs");
+TMPLibrary/TMPLibrary.cpp:	this->GetPlan()->GetStatClass()->StartClock("StateGraphConstruction");
+TMPLibrary/TMPLibrary.cpp:	this->GetPlan()->GetStatClass()->StopClock("StateGraphConstruction");
+TMPLibrary/TMPLibrary.cpp:  else if(_node.Name() == "StateGraphs") {
+TMPLibrary/TMPLibrary.cpp:TMPLibrary::StateGraphPointer
+TMPLibrary/TMPLibrary.cpp:GetStateGraph(const std::string& _l) {
+TMPLibrary/TMPLibrary.cpp:AddStateGraph(StateGraphPointer _sg, const std::string& _l) {
+TMPLibrary/TMPTools/InteractionTemplate.h:#include "ConfigurationSpace/GenericStateGraph.h"
+TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg,DefaultWeight<Cfg>>*> GetRoadmaps() const;
+TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> GetRoadmaps();
+TMPLibrary/TMPTools/InteractionTemplate.h:    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* GetConnectedRoadmap() const;
+TMPLibrary/TMPTools/InteractionTemplate.h:    void AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
+TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_roadmaps;
+TMPLibrary/TMPTools/InteractionTemplate.h:    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* m_connectedRoadmap{nullptr};
+TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_pathlessRoadmaps;
+TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_pathOnlyRoadmaps;
+TMPLibrary/TaskEvaluators/SubmodeQuery.h:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+TMPLibrary/TaskEvaluators/HCRQuery.h:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h:    std::string m_sgLabel; ///< StateGraph Label
+TMPLibrary/TaskEvaluators/HCRQuery.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+Binary file TMPLibrary/TaskEvaluators/.HCRQuery.cpp.swp matches
+TMPLibrary/TMPStrategies/BasicHCR.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TMPStrategies/NextBestSearch.cpp:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+TMPLibrary/TMPStrategies/NextBestSearch.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+TMPLibrary/TMPStrategies/BasicHCR.h:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp:#include "TMPLibrary/StateGraphs/StateGraph.h"
+Old_Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+Old_Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/ModeGraph.cpp \
+Old_Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/StateGraph.cpp \
+Binary file build/TMPLibrary/ActionSpace/MotionCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/ActionSpace.o matches
+Binary file build/TMPLibrary/ActionSpace/Condition.o matches
+Binary file build/TMPLibrary/ActionSpace/CompositeCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/ProximityCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/Interaction.o matches
+Binary file build/TMPLibrary/ActionSpace/FormationCondition.o matches
+Binary file build/TMPLibrary/ActionSpace/Action.o matches
+Binary file build/TMPLibrary/InteractionStrategies/HandoffStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/GraspStrategy.o matches
+Binary file build/TMPLibrary/InteractionStrategies/IndependentPaths.o matches
+Binary file build/tmp_main.o matches
+Binary file build/Simulator/Simulation.o matches
+Binary file build/Visualization/DrawableRoadmap.o matches
+Binary file build/Visualization/DrawableWorkspaceSkeleton.o matches
+Binary file build/Visualization/Gui/EditConnectionDialog.o matches
+Binary file build/Visualization/Gui/Setup.o matches
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h Utilities/PMPLExceptions.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+build/Dependencies: TMPLibrary/ActionSpace/Action.h TMPLibrary/StateGraphs/CombinedRoadmap.h \
+build/Dependencies: TMPLibrary/StateGraphs/StateGraph.h Utilities/Hypergraph.h
+Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/ModeGraph.cpp \
+Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/StateGraph.cpp \
+Simulator/Simulation.cpp:AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+Simulator/Simulation.h:#include "ConfigurationSpace/GenericStateGraph.h"
+Simulator/Simulation.h:    size_t AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+Testing/TMPLibrary/TMPLibraryTests.h:    //typedef TMPMethodSet<StateGraph>               StateGraphSet;
+Testing/TMPLibrary/TMPLibraryTests.h:    //StateGraphTestSet*            m_stateGraphTests;
+Testing/FullUnitTest.xml:    <StateGraphs>
+Testing/FullUnitTest.xml:    </StateGraphs>
+Visualization/DrawableRoadmap.h://#include "ConfigurationSpace/GenericStateGraph.h"
+Visualization/DrawableRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+Visualization/DrawableRoadmap.h:    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+Visualization/DrawableRoadmap.h:    RoadmapType* m_graph;                     ///< Pointer to the GenericStateGraph.
+ConfigurationSpace/GroupRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+ConfigurationSpace/GroupRoadmap.h:class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
+ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<Vertex, Edge>     BaseType;
+ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+ConfigurationSpace/GroupRoadmap.h:    using GenericStateGraph<Vertex, Edge>::AddEdge;
+ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
+ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>::ClearHooks();
+ConfigurationSpace/GenericStateGraph.h:class GenericStateGraph: public
+ConfigurationSpace/GenericStateGraph.h:    typedef CCTracker<GenericStateGraph<Vertex, Edge>> CCTrackerType;
+ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph(Robot* const _r);
+ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph(const GenericStateGraph& _r);
+ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph(GenericStateGraph&& _r);
+ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph& operator=(const GenericStateGraph& _r);
+ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph& operator=(GenericStateGraph&& _r);
+ConfigurationSpace/GenericStateGraph.h:    bool operator==(const GenericStateGraph& _r) const noexcept;
+ConfigurationSpace/GenericStateGraph.h:    bool operator!=(const GenericStateGraph& _r) const noexcept;
+ConfigurationSpace/GenericStateGraph.h:    void AppendRoadmap(const GenericStateGraph& _r);
+ConfigurationSpace/GenericStateGraph.h:		//void ReadMessage(GenericStateGraph* _g, const std::string& _msg);
+ConfigurationSpace/GenericStateGraph.h:    /// encapsulation to prevent users of the GenericStateGraph from calling those
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph(Robot* const _r) : m_robot(_r) { }
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph(const GenericStateGraph& _r) : GenericStateGraph(_r.m_robot) {
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph(GenericStateGraph&& _r) : GenericStateGraph(_r.m_robot) {
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:operator=(const GenericStateGraph& _r) {
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:operator=(GenericStateGraph&& _r) {
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:operator==(const GenericStateGraph& _r) const noexcept {
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:operator!=(const GenericStateGraph& _r) const noexcept {
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << vi->descriptor()
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:AppendRoadmap(const GenericStateGraph& _r) {
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VertexSet&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VertexSet&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::CCTrackerType*
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:std::vector<typename GenericStateGraph<Vertex, Edge>::VID>
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::EP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::EP&
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:template <typename GenericStateGraph>
+ConfigurationSpace/GenericStateGraph.h:Read(GenericStateGraph* _g, const std::string& _filename) {
+ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::STAPLGraph STAPLGraph;
+ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::vertex_property Vertex;
+ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::edge_property Edge;
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:template <typename GenericStateGraph>
+ConfigurationSpace/GenericStateGraph.h:ReadMessage(GenericStateGraph* _g, const std::string& _msg) {
+ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::STAPLGraph STAPLGraph;
+ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::vertex_property Vertex;
+ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::edge_property Edge;
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+Behaviors/Agents/Coordinator.h:    typedef GenericStateGraph<CfgType, WeightType>         RoadmapType;
+Behaviors/Agents/Coordinator.h:		void SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+Behaviors/Agents/Coordinator.cpp:SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+MPLibrary/PMPL.cpp:template class GenericStateGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
+MPLibrary/PathModifiers/PathModifierMethod.h:    /// @param _graph GenericStateGraph containing path nodes
+MPLibrary/LocalPlanners/LPOutput.h:/// generated, and the edge weights to be added to the GenericStateGraph.
+MPLibrary/LocalPlanners/GroupLPOutput.h:/// generated, and the edge weights to be added to the GenericStateGraph.
+MPLibrary/MPStrategies/GroupStrategyMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+MPLibrary/MPStrategies/MPStrategyMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+MPLibrary/MapEvaluators/GroupSIPPMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+MPLibrary/MapEvaluators/GroupSIPPMethod.h:    typedef GenericStateGraph<State, std::pair<size_t,size_t>> SIPPGraph;
+MPLibrary/MapEvaluators/SIPPMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+MPLibrary/MapEvaluators/SIPPMethod.h:    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraphType;
+MPLibrary/MapEvaluators/SIPPMethod.h:    typedef GenericStateGraph<State, DefaultWeight<Cfg>> SIPPGraph;
+MPLibrary/MPSolution.h:#include "ConfigurationSpace/GenericStateGraph.h"
+MPLibrary/MPTools/RegionKit.h:    template <typename GenericStateGraph>
+MPLibrary/MPTools/RegionKit.h:        GenericStateGraph* _graph);
+MPLibrary/MPTools/RegionKit.h:template <typename GenericStateGraph>
+MPLibrary/MPTools/RegionKit.h:    const double _robotRadius, const std::string& _label, GenericStateGraph* _graph) {
+MPLibrary/MPTools/RegionKit.h:  if(_graph->IsHook(GenericStateGraph::HookType::AddVertex, _label))
+MPLibrary/MPTools/RegionKit.h:    _graph->RemoveHook(GenericStateGraph::HookType::AddVertex, _label);
+MPLibrary/MPTools/RegionKit.h:  auto addVertex = [this](typename GenericStateGraph::VI _vi) {
+MPLibrary/MPTools/RegionKit.h:  _graph->InstallHook(GenericStateGraph::HookType::AddVertex, _label, addVertex);
+MPLibrary/PMPL.h:extern template class GenericStateGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
+StateGraphOutput.txt:MPProblem/InteractionInformation.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:Traits/TMPTraits.h:// StateGraphs to include
+StateGraphOutput.txt:Traits/TMPTraits.h:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+StateGraphOutput.txt:Traits/TMPTraits.h:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:Traits/TMPTraits.h:			> StateGraphList;
+StateGraphOutput.txt:Traits/CfgTraits.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:Traits/CfgTraits.h://  typedef GenericStateGraph<C, W>              RoadmapType;
+StateGraphOutput.txt:Traits/CfgTraits.h:  typedef GenericStateGraph<C, W>         RoadmapType;
+StateGraphOutput.txt:Traits/TMPTestTraits.h:// StateGraphs to include
+StateGraphOutput.txt:Examples/ITProximityExample.xml:		<StateGraphs>
+StateGraphOutput.txt:Examples/ITProximityExample.xml:		</StateGraphs>
+StateGraphOutput.txt:Examples/CoordinatorExample.xml:		<StateGraphs>
+StateGraphOutput.txt:Examples/CoordinatorExample.xml:		</StateGraphs>
+StateGraphOutput.txt:Examples/DiffDriveTest/DiffDriveDemo-ppl.stat:  StateGraphConstruction                                                       0
+StateGraphOutput.txt:Examples/DiffDriveTest/BoxerMazeDemo.xml:    <StateGraphs>
+StateGraphOutput.txt:Examples/DiffDriveTest/BoxerMazeDemo.xml:    </StateGraphs>
+StateGraphOutput.txt:Examples/DiffDriveTest/DiffDriveDemo.xml:    <StateGraphs>
+StateGraphOutput.txt:Examples/DiffDriveTest/DiffDriveDemo.xml:    </StateGraphs>
+StateGraphOutput.txt:Examples/ITExample.xml:		<StateGraphs>
+StateGraphOutput.txt:Examples/ITExample.xml:		</StateGraphs>
+StateGraphOutput.txt:Examples/TMPExamples.xml:    <StateGraphs>
+StateGraphOutput.txt:Examples/TMPExamples.xml:    </StateGraphs>
+StateGraphOutput.txt:Examples/RigidBodyIT3.xml:    <StateGraphs>
+StateGraphOutput.txt:Examples/RigidBodyIT3.xml:    </StateGraphs>
+StateGraphOutput.txt:Examples/RigidBodyITExample.xml:    <StateGraphs>
+StateGraphOutput.txt:Examples/RigidBodyITExample.xml:    </StateGraphs>
+StateGraphOutput.txt:Examples/MRTMPExamples.xml:    <StateGraphs>
+StateGraphOutput.txt:Examples/MRTMPExamples.xml:    </StateGraphs>
+StateGraphOutput.txt:Examples/MRActionSpaceExample.xml:		<StateGraphs>
+StateGraphOutput.txt:Examples/MRActionSpaceExample.xml:		</StateGraphs>
+StateGraphOutput.txt:Examples/tmp_examples-ppl.stat:  StateGraphConstruction                                                       0
+StateGraphOutput.txt:Examples/ModeGraphExample.xml:		<StateGraphs>
+StateGraphOutput.txt:Examples/ModeGraphExample.xml:		</StateGraphs>
+StateGraphOutput.txt:Examples/ActionSpaceExample.xml:		<StateGraphs>
+StateGraphOutput.txt:Examples/ActionSpaceExample.xml:		</StateGraphs>
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.h:class StateGraph;
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.h:  	typedef TMPMethodSet<StateGraph>			   			   StateGraphSet;
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.h:  	typedef typename StateGraphSet::TMPMethodPointer  			    StateGraphPointer;
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.h:    StateGraphPointer GetStateGraph(const std::string& _l);
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.h:    void AddStateGraph(StateGraphPointer _sg, const std::string& _l);
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.h:  	StateGraphSet*  		  		        m_stateGraphs;
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.h:class StateGraph;
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.h:    typedef TMPMethodSet<StateGraph>               StateGraphSet;
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.h:  	typedef typename TMPLibrary::StateGraphPointer                StateGraphPointer;
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.h:    /// Get the underlying StateGraph
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.h:    StateGraphPointer GetStateGraph(const std::string&) const noexcept;
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/DependentPaths_Testing_1.cpp:PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy){
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/DependentPaths.h:    void PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy);
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/DependentPaths.cpp:PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy){
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/IndependentPaths.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/IndependentPaths.cpp:  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/DependentPaths_backup.cpp:PlanInteraction(StateGraph* sg, std::shared_ptr<MPProblem> problemCopy){
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:                             "StateGraph to use within strategy.");
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/InteractionStrategyMethod.cpp:  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp:#include "TMPLibrary/StateGraphs/StateGraph.h"
+StateGraphOutput.txt:TMPLibrary/InteractionStrategies/InteractionStrategyExample.cpp:  auto hcr = dynamic_cast<CombinedRoadmap*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/StateGraphs/CombinedRoadmap.cpp:CombinedRoadmap(XMLNode& _node) : StateGraph(_node) {
+StateGraphOutput.txt:TMPLibrary/StateGraphs/CombinedRoadmap.h:#include "TMPLibrary/StateGraphs/StateGraph.h"
+StateGraphOutput.txt:TMPLibrary/StateGraphs/CombinedRoadmap.h:class CombinedRoadmap : public StateGraph {
+StateGraphOutput.txt:TMPLibrary/StateGraphs/ModeGraph.cpp:ModeGraph(XMLNode& _node) : StateGraph(_node) {
+StateGraphOutput.txt:TMPLibrary/StateGraphs/ModeGraph.h:#include "StateGraph.h"
+StateGraphOutput.txt:TMPLibrary/StateGraphs/ModeGraph.h:class ModeGraph : public StateGraph {
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:#include "StateGraph.h"
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph() {}
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:	m_graph = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:LoadStateGraph(){
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:	this->GetPlan()->GetCoordinator()->SetGenericStateGraph(m_graph);
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.cpp:StateGraph::
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:class StateGraph : public TMPBaseObject {
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:    StateGraph();
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:    StateGraph(XMLNode& _node);
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:    virtual ~StateGraph() = default;
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:		virtual GenericStateGraph<Cfg,DefaultWeight<Cfg>>* GetGraph();
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:    virtual void LoadStateGraph();
+StateGraphOutput.txt:TMPLibrary/StateGraphs/StateGraph.h:		GenericStateGraph<Cfg,DefaultWeight<Cfg>>* m_graph{nullptr};
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.cpp:TMPBaseObject::StateGraphPointer
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.cpp:GetStateGraph(const std::string& _label) const noexcept {
+StateGraphOutput.txt:TMPLibrary/TMPBaseObject.cpp:  return m_tmpLibrary->GetStateGraph(_label);
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:#include "TMPLibrary/StateGraphs/StateGraph.h"
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:  m_stateGraphs = new StateGraphSet(this,
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:                  typename TMPTraits::StateGraphList(), "StateGraphs");
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:	this->GetPlan()->GetStatClass()->StartClock("StateGraphConstruction");
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:	this->GetPlan()->GetStatClass()->StopClock("StateGraphConstruction");
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:  else if(_node.Name() == "StateGraphs") {
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:TMPLibrary::StateGraphPointer
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:GetStateGraph(const std::string& _l) {
+StateGraphOutput.txt:TMPLibrary/TMPLibrary.cpp:AddStateGraph(StateGraphPointer _sg, const std::string& _l) {
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg,DefaultWeight<Cfg>>*> GetRoadmaps() const;
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> GetRoadmaps();
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* GetConnectedRoadmap() const;
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    void AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _roadmap);
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_roadmaps;
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    GenericStateGraph<Cfg, DefaultWeight<Cfg>>* m_connectedRoadmap{nullptr};
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_pathlessRoadmaps;
+StateGraphOutput.txt:TMPLibrary/TMPTools/InteractionTemplate.h:    std::vector<GenericStateGraph<Cfg, DefaultWeight<Cfg>>*> m_pathOnlyRoadmaps;
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/SubmodeQuery.h:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.h:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h:    std::string m_sgLabel; ///< StateGraph Label
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/HCRQuery.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TaskEvaluators/SubmodeQuery.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.cpp:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.cpp:              this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/NextBestSearch.cpp:#include "TMPLibrary/StateGraphs/ModeGraph.h"
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/NextBestSearch.cpp:  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/BasicHCR.h:#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+StateGraphOutput.txt:TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp:#include "TMPLibrary/StateGraphs/StateGraph.h"
+StateGraphOutput.txt:Old_Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+StateGraphOutput.txt:Old_Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/ModeGraph.cpp \
+StateGraphOutput.txt:Old_Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/StateGraph.cpp \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h Utilities/PMPLExceptions.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: ConfigurationSpace/GenericStateGraph.h \
+StateGraphOutput.txt:build/Dependencies: TMPLibrary/ActionSpace/Action.h TMPLibrary/StateGraphs/CombinedRoadmap.h \
+StateGraphOutput.txt:build/Dependencies: TMPLibrary/StateGraphs/StateGraph.h Utilities/Hypergraph.h
+StateGraphOutput.txt:Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+StateGraphOutput.txt:Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/ModeGraph.cpp \
+StateGraphOutput.txt:Makefile.PMPLdefaults:  TMPLibrary/StateGraphs/StateGraph.cpp \
+StateGraphOutput.txt:Simulator/Simulation.cpp:AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+StateGraphOutput.txt:Simulator/Simulation.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:Simulator/Simulation.h:    size_t AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+StateGraphOutput.txt:Testing/TMPLibrary/TMPLibraryTests.h:    //typedef TMPMethodSet<StateGraph>               StateGraphSet;
+StateGraphOutput.txt:Testing/TMPLibrary/TMPLibraryTests.h:    //StateGraphTestSet*            m_stateGraphTests;
+StateGraphOutput.txt:Testing/FullUnitTest.xml:    <StateGraphs>
+StateGraphOutput.txt:Testing/FullUnitTest.xml:    </StateGraphs>
+StateGraphOutput.txt:Visualization/DrawableRoadmap.h://#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:Visualization/DrawableRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:Visualization/DrawableRoadmap.h:    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+StateGraphOutput.txt:Visualization/DrawableRoadmap.h:    RoadmapType* m_graph;                     ///< Pointer to the GenericStateGraph.
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<Vertex, Edge>     BaseType;
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:    using GenericStateGraph<Vertex, Edge>::AddEdge;
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
+StateGraphOutput.txt:ConfigurationSpace/GroupRoadmap.h:  GenericStateGraph<Vertex, Edge>::ClearHooks();
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:class GenericStateGraph: public
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    typedef CCTracker<GenericStateGraph<Vertex, Edge>> CCTrackerType;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph(Robot* const _r);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph(const GenericStateGraph& _r);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph(GenericStateGraph&& _r);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph& operator=(const GenericStateGraph& _r);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    GenericStateGraph& operator=(GenericStateGraph&& _r);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    bool operator==(const GenericStateGraph& _r) const noexcept;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    bool operator!=(const GenericStateGraph& _r) const noexcept;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    void AppendRoadmap(const GenericStateGraph& _r);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:		//void ReadMessage(GenericStateGraph* _g, const std::string& _msg);
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    /// encapsulation to prevent users of the GenericStateGraph from calling those
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph(Robot* const _r) : m_robot(_r) { }
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph(const GenericStateGraph& _r) : GenericStateGraph(_r.m_robot) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph(GenericStateGraph&& _r) : GenericStateGraph(_r.m_robot) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:operator=(const GenericStateGraph& _r) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:operator=(GenericStateGraph&& _r) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:operator==(const GenericStateGraph& _r) const noexcept {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:operator!=(const GenericStateGraph& _r) const noexcept {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << vi->descriptor()
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:AppendRoadmap(const GenericStateGraph& _r) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VertexSet&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VID
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VertexSet&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::CCTrackerType*
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::VP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:const typename GenericStateGraph<Vertex, Edge>::VP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:std::vector<typename GenericStateGraph<Vertex, Edge>::VID>
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::EP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:typename GenericStateGraph<Vertex, Edge>::EP&
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:template <typename GenericStateGraph>
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:Read(GenericStateGraph* _g, const std::string& _filename) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::STAPLGraph STAPLGraph;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::vertex_property Vertex;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::edge_property Edge;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:template <typename GenericStateGraph>
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:ReadMessage(GenericStateGraph* _g, const std::string& _msg) {
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::STAPLGraph STAPLGraph;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::vertex_property Vertex;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:  typedef typename GenericStateGraph::edge_property Edge;
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:ConfigurationSpace/GenericStateGraph.h:GenericStateGraph<Vertex, Edge>::
+StateGraphOutput.txt:Behaviors/Agents/Coordinator.h:    typedef GenericStateGraph<CfgType, WeightType>         RoadmapType;
+StateGraphOutput.txt:Behaviors/Agents/Coordinator.h:		void SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+StateGraphOutput.txt:Behaviors/Agents/Coordinator.cpp:SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+StateGraphOutput.txt:MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:MPLibrary/PMPL.cpp:template class GenericStateGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
+StateGraphOutput.txt:MPLibrary/PathModifiers/PathModifierMethod.h:    /// @param _graph GenericStateGraph containing path nodes
+StateGraphOutput.txt:MPLibrary/LocalPlanners/LPOutput.h:/// generated, and the edge weights to be added to the GenericStateGraph.
+StateGraphOutput.txt:MPLibrary/LocalPlanners/GroupLPOutput.h:/// generated, and the edge weights to be added to the GenericStateGraph.
+StateGraphOutput.txt:MPLibrary/MPStrategies/GroupStrategyMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:MPLibrary/MPStrategies/MPStrategyMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:MPLibrary/MapEvaluators/GroupSIPPMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:MPLibrary/MapEvaluators/GroupSIPPMethod.h:    typedef GenericStateGraph<State, std::pair<size_t,size_t>> SIPPGraph;
+StateGraphOutput.txt:MPLibrary/MapEvaluators/SIPPMethod.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:MPLibrary/MapEvaluators/SIPPMethod.h:    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraphType;
+StateGraphOutput.txt:MPLibrary/MapEvaluators/SIPPMethod.h:    typedef GenericStateGraph<State, DefaultWeight<Cfg>> SIPPGraph;
+StateGraphOutput.txt:MPLibrary/MPSolution.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:    template <typename GenericStateGraph>
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:        GenericStateGraph* _graph);
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:template <typename GenericStateGraph>
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:    const double _robotRadius, const std::string& _label, GenericStateGraph* _graph) {
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:  if(_graph->IsHook(GenericStateGraph::HookType::AddVertex, _label))
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:    _graph->RemoveHook(GenericStateGraph::HookType::AddVertex, _label);
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:  auto addVertex = [this](typename GenericStateGraph::VI _vi) {
+StateGraphOutput.txt:MPLibrary/MPTools/RegionKit.h:  _graph->InstallHook(GenericStateGraph::HookType::AddVertex, _label, addVertex);
+StateGraphOutput.txt:MPLibrary/PMPL.h:extern template class GenericStateGraph<PMPLTraits::CfgType, PMPLTraits::WeightType>;
+StateGraphOutput.txt:Utilities/FibonocciHeap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+StateGraphOutput.txt:Utilities/FibonocciHeap.h:		typedef GenericStateGraph<State, Action> StateGraph;
+StateGraphOutput.txt:Utilities/FibonocciHeap.h:	Fibonacci(StateGraph* _stateGraph){
+StateGraphOutput.txt:Utilities/FibonocciHeap.h:		StateGraph* m_roadmap{nullptr};
+StateGraphOutput.txt:Utilities/FibonocciHeap.h:		StateGraph* m_highLevelGraph{nullptr};
+StateGraphOutput.txt:Utilities/FibonocciHeap.cpp:	//TODO NEED to update all of this and may be able to use GenericStateGraph's base functions
+Utilities/FibonocciHeap.h:#include "ConfigurationSpace/GenericStateGraph.h"
+Utilities/FibonocciHeap.h:		typedef GenericStateGraph<State, Action> StateGraph;
+Utilities/FibonocciHeap.h:	Fibonacci(StateGraph* _stateGraph){
+Utilities/FibonocciHeap.h:		StateGraph* m_roadmap{nullptr};
+Utilities/FibonocciHeap.h:		StateGraph* m_highLevelGraph{nullptr};
+Utilities/FibonocciHeap.cpp:	//TODO NEED to update all of this and may be able to use GenericStateGraph's base functions
