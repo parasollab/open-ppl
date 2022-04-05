@@ -38,6 +38,9 @@ KDLModel(XMLNode& _node, Robot* _robot) : m_robot(_robot) {
 
   m_chainTip = _node.Read("chainTip",true,"",
                                     "Tip of chain to compute FK/IK");
+
+  m_maxAttempts = _node.Read("maxAttempts",false,1,1,MAX_INT,
+                             "Number of attempts to solve IK.");
 }
 
 KDLModel::
@@ -210,9 +213,7 @@ InverseKinematics(std::vector<double> _pos, std::vector<double> _ori, std::vecto
                                     std::numeric_limits<double>::epsilon());
 
 
-  size_t maxAttempts = 1;
-
-  for(size_t i = 0; i < maxAttempts; i++) {
+  for(size_t i = 0; i < m_maxAttempts; i++) {
     // jntarrays
     KDL::JntArray q(chain.getNrOfJoints());
 

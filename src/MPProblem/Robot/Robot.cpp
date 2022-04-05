@@ -61,6 +61,12 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_fixed = _node.Read("fixed", false, m_fixed,
                        "Flag indicating if robot has a fixed base.");
 
+  m_baseRotation = _node.Read("baseRotation",false,0.,0.,1.0,
+                    "Adjustment of base position in real robot.");
+
+  m_baseJoint = _node.Read("baseJoint",false,"","Name of base rotational joint");
+
+
   std::string basePositionString = _node.Read("basePosition", false, "",
                        "String indiciating the xyz and rpy of the robot base if fixed.");
   std::istringstream basePositionStream(basePositionString);
@@ -686,6 +692,20 @@ bool
 Robot::
 IsFixed() const noexcept {
   return m_fixed;
+}
+
+
+double
+Robot::
+GetBaseRotation() const {
+  return m_baseRotation;
+}
+
+
+std::string
+Robot::
+GetBaseJoint() const {
+  return m_baseJoint;
 }
 
 /*---------------------------------- Debug -----------------------------------*/

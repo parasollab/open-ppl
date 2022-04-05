@@ -95,11 +95,6 @@ ROSStepFunction(Agent* _agent, XMLNode& _node)
 
   }
 
-  m_baseRotation = _node.Read("baseRotation",false,0.,0.,1.0,
-                    "Adjustment of base position in real robot.");
-
-  m_baseJoint = _node.Read("baseJoint",false,"","Name of base rotational joint");
-
 }
 
 ROSStepFunction::
@@ -163,7 +158,7 @@ ReachedWaypointArm(const Cfg& _waypoint) {
   size_t baseJointIndex = MAX_INT;
 
   for(auto joint : m_jointNames) {
-    if(joint == m_baseJoint)
+    if(joint == this->m_agent->GetRobot()->GetBaseJoint())
       baseJointIndex = index;
     index++;
   }
@@ -208,7 +203,7 @@ ReachedWaypointArm(const Cfg& _waypoint) {
         auto jv = (*iter)/(KDL::PI);
 
         if(baseJointIndex == index) {
-          jv = jv - m_baseRotation;
+          jv = jv - this->m_agent->GetRobot()->GetBaseRotation();
         }
 
         //Hack to deal with nonsense ros joint status values that forget about joint limits
@@ -346,7 +341,7 @@ MoveArm(std::vector<double> _goal, double _dt) {
 
     for(auto joint : m_jointNames) {
       msg.joint_names.push_back(joint);
-      if(joint == m_baseJoint)
+      if(joint == m_agent->GetRobot()->GetBaseJoint())
         baseJointIndex = index;
       index++;
     }
@@ -385,7 +380,7 @@ MoveArm(std::vector<double> _goal, double _dt) {
             double value = (*iter)*KDL::PI;
 
             if(msg.points[0].positions.size() == baseJointIndex) {
-              value += m_baseRotation * KDL::PI;
+              value += this->m_agent->GetRobot()->GetBaseRotation() * KDL::PI;
             }
 
             msg.points[0].positions.push_back(value);

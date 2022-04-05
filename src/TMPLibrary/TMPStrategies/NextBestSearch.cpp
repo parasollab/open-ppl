@@ -166,25 +166,140 @@ ComputeMotions(Node& _bestNode) {
 
 void
 NextBestSearch::
-ComputeIntervals(GroupRoadmapType* _grm) {
+ComputeIntervals(SemanticTask* _task, const Node& _node) {
   MethodTimer mt(this->GetPlan()->GetStatClass(),
     this->GetNameAndLabel()+"::ComputeIntervals");
+
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto solution = mg->GetMPSolution();
+  auto group = _task->GetGroupMotionTask()->GetRobotGroup();
+  auto grm = solution->GetGroupRoadmap(group);
 
   m_vertexIntervals.clear();
   m_edgeIntervals.clear();
 
+  /*
   auto si = this->GetMPLibrary()->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
 
-  for(auto vit = _grm->begin(); vit != _grm->end(); vit++) {
+  for(auto vit = grm->begin(); vit != grm->end(); vit++) {
 
     m_vertexIntervals[vit->descriptor()] = si->ComputeIntervals(
         vit->property());
 
     for(auto eit = vit->begin(); eit != vit->end(); eit++) {
       m_edgeIntervals[eit->source()][eit->target()] = si->ComputeIntervals(
-            eit->property(),eit->source(),eit->target(),_grm);
+            eit->property(),eit->source(),eit->target(),grm);
+    }
+  }*/
+
+  const auto& constraints = _node.constraintMap.at(_task);
+
+  UnsafeVertexIntervals vertexUnsafeIntervals;
+  UnsafeEdgeIntervals edgeUnsafeIntervals;
+
+  for(auto c : constraints) {
+    size_t index = c.second;
+    const auto& vertexIntervals = m_unsafeVertexIntervalMap[index][_task];
+    for(const auto& kv : vertexIntervals) {
+      const auto& vid = kv.first;
+      const auto& unsafes = kv.second;
+      for(const auto& unsafe : unsafes) {
+        vertexUnsafeIntervals[vid].push_back(unsafe);
+      }
+    }
+
+    const auto& edgeIntervals = m_unsafeEdgeIntervalMap[index][_task];
+    for(const auto& kv : edgeIntervals) {
+      const auto& edge = kv.first;
+      const auto& unsafes = kv.second;
+      for(const auto& unsafe : unsafes) {
+        edgeUnsafeIntervals[edge].push_back(unsafe);
+      }
     }
   }
+
+  for(auto vit = grm->begin(); vit != grm->end(); vit++) {
+
+    m_vertexIntervals[vit->descriptor()] = ConstructSafeIntervals(vertexUnsafeIntervals[vit->descriptor()]);
+ 
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+      m_edgeIntervals[eit->source()][eit->target()] = ConstructSafeIntervals(
+        edgeUnsafeIntervals[std::make_pair(eit->source(),eit->target())]);
+    }
+  }
+  
+}
+
+std::vector<Range<double>>
+NextBestSearch::
+ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
+
+  // Return infinite interval if there are no unsafe intervals
+  if(_unsafeIntervals.empty())
+    return {Range<double>(0,std::numeric_limits<double>::infinity())};
+
+  // Merge unsafe intervals
+  std::set<size_t> merged;
+  std::vector<Range<double>> unsafeIntervals;
+
+  const size_t size = _unsafeIntervals.size();
+  for(size_t i = 0; i < size; i++) {
+    if(merged.count(i))
+      continue;
+
+    const auto& interval1 = _unsafeIntervals[i];
+
+    double min = interval1.min;
+    double max = interval1.max;
+
+    for(size_t j = i+1; j < _unsafeIntervals.size(); j++) {
+      if(merged.count(j))
+        continue;
+
+      const auto& interval2 = _unsafeIntervals[j];
+      
+      // Check if there is no overlap
+      if(interval2.min > max or interval2.max < min)
+        continue;
+
+      // If there is, merge the intervals
+      min = std::min(min,interval2.min);
+      max = std::max(max,interval2.max);
+
+      merged.insert(j);
+    }
+
+    Range<double> interval(min,max);
+    unsafeIntervals.push_back(interval);
+  }
+
+  struct less_than {
+    inline bool operator()(const Range<double>& _r1, const Range<double>& _r2) {
+      return _r1.min < _r2.min;
+    }
+  };
+
+  std::sort(unsafeIntervals.begin(), unsafeIntervals.end(),less_than());
+
+  // Construct set of intervals
+  std::vector<Range<double>> intervals;
+
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  double min = 0;
+  double max = std::numeric_limits<double>::infinity();
+
+  auto iter = unsafeIntervals.begin();
+  while(iter != unsafeIntervals.end()) {
+    max = iter->min - timeRes;
+    intervals.emplace_back(min,max);
+    min = iter->max + timeRes;
+    iter++;
+  }
+
+  max = std::numeric_limits<double>::infinity();
+  intervals.emplace_back(min,max);
+
+  return intervals;
 }
 
 /*----------------------- CBS Functors -----------------------*/
@@ -393,9 +508,10 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
       std::cout << "Check for caching here" << std::endl;
     }
     else {
-      RobotGroup* constraintGroup = c.second.GetGroupRoadmap()->GetGroup();
+      auto constraintCfg = m_conflicts[c.second];
+      RobotGroup* constraintGroup = constraintCfg.GetGroupRoadmap()->GetGroup();
       for(auto robot : constraintGroup->GetRobots()) {
-        auto cfg = c.second.GetRobotCfg(robot);
+        auto cfg = constraintCfg.GetRobotCfg(robot);
         std::vector<Cfg> path = {cfg,cfg,cfg};
         
         //auto duration = c.first.second - c.first.first;
@@ -411,7 +527,7 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
     }
   }
 
-  ComputeIntervals(grm);
+  ComputeIntervals(_task,_node);
 
   const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
   auto q = dynamic_cast<SIPPMethod<MPTraits<Cfg>>*>(
@@ -451,6 +567,7 @@ ValidationFunction(Node& _node) {
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
 
   std::vector<SemanticTask*> ordering;
@@ -631,11 +748,92 @@ ValidationFunction(Node& _node) {
               //endT = std::max(endT,t+100);
 
               // Create constraints
+              m_conflicts.push_back(cfg2);
+              m_conflicts.push_back(cfg1);
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
-              Constraint constraint1 = std::make_pair(std::make_pair(t,endT),cfg2);
-              Constraint constraint2 = std::make_pair(std::make_pair(t,endT),cfg1);
+              Constraint constraint1 = std::make_pair(std::make_pair(t,endT),m_conflicts.size()-2);
+              Constraint constraint2 = std::make_pair(std::make_pair(t,endT),m_conflicts.size()-1);
               constraints.emplace_back(t1,constraint1);
               constraints.emplace_back(t2,constraint2);
+
+
+              auto edge1 = _node.solutionMap[t1]->GetEdgeAtTimestep(t-startTimes[t1]);
+              auto edge2 = _node.solutionMap[t2]->GetEdgeAtTimestep(t-startTimes[t2]);
+
+              double duration1 = 0;
+              double duration2 = 0;
+
+              if(edge1.first != edge1.second) {
+                duration1 = double(_node.solutionMap[t1]->GetRoadmap()->GetEdge(
+                                   edge1.first,edge1.second).GetTimeSteps()) * timeRes;
+              }
+      
+              if(edge2.first != edge2.second) {
+                duration2 = double(_node.solutionMap[t2]->GetRoadmap()->GetEdge(
+                                   edge2.first,edge2.second).GetTimeSteps()) * timeRes;
+              }
+
+              const double constraintStart = double(t) * timeRes;
+              const double constraintEnd = double(endT) * timeRes;
+
+              Range<double> interval1(std::max(0.,constraintStart-duration1),constraintEnd);
+              Range<double> interval2(std::max(0.,constraintStart-duration2),constraintEnd);
+
+              if(edge1.first == edge1.second) {
+                UnsafeVertexIntervals intervals;
+                intervals[edge1.first] = {interval1};
+
+                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+
+                taskVertexIntervals[t1] = intervals;
+                taskEdgeIntervals[t1] = {};
+
+                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+
+              }
+              else {
+                UnsafeEdgeIntervals intervals;
+                intervals[edge1] = {interval1};
+
+                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+
+                taskVertexIntervals[t1] = {};
+                taskEdgeIntervals[t1] = intervals;
+
+                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+              }
+
+              if(edge2.first == edge2.second) {
+                UnsafeVertexIntervals intervals;
+                intervals[edge2.first] = {interval2};
+
+                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+
+                taskVertexIntervals[t2] = intervals;
+                taskEdgeIntervals[t2] = {};
+
+                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+              }
+              else {
+                UnsafeEdgeIntervals intervals;
+                intervals[edge2] = {interval2};
+
+                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+
+                taskVertexIntervals[t2] = {};
+                taskEdgeIntervals[t2] = intervals;
+
+                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+              }
+
               return constraints;
             }
           }
@@ -830,7 +1028,7 @@ RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
       continue;
 
     if(this->m_debug) {
-      const GroupCfg& gcfg = iter->second;
+      const GroupCfg& gcfg = m_conflicts[iter->second];
       std::cout << "Edge (" << _ei->source() << ","
                 << _ei->target() << ") collides against group "
                 << gcfg.GetGroupRoadmap()->GetGroup()->GetLabel()
@@ -869,7 +1067,7 @@ IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
                     lib->GetValidityChecker(m_vcLabel));
 
   // Configure the other group at the constraint
-  auto constraintCfg = _constraint.second;
+  auto constraintCfg = m_conflicts[_constraint.second];
   constraintCfg.ConfigureRobot();
   auto constraintGroup = constraintCfg.GetGroupRoadmap()->GetGroup();
 

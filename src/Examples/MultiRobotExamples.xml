@@ -5,7 +5,7 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="example">
 
-    <Environment filename="3D/3d.xml"/>
+    <Environment filename="3D/3d.env"/>
 
     <Robot label="boxy-1" filename="3D/boxy.robot">
       <Agent type="planning"/>
@@ -58,7 +58,7 @@
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="40"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
-      <RandomNF label="RandomNF" dmLabel="euclidean" k="5"/>
+      <OptimalNF label="Optimal" dmLabel="euclidean" unconnected="false" nfType="k"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -78,39 +78,39 @@
     </Extenders>
 
     <PathModifiers>
-      <ShortcuttingPathModifier label="ShortcuttingPathModifier" lpLabel="sl"
-        debug="false"/>
     </PathModifiers>
 
     <Connectors>
       <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
         checkIfSameCC="true" debug="false"/>
+      <NeighborhoodConnector label="ClosestOptimal" debug="false"
+        nfLabel="Optimal" lpLabel="sl" checkIfSameCC="false"/>
+      <CCsConnector label="CCsConnector" nfLabel="BFNF" lpLabel="sl" debug="false"/>
     </Connectors>
 
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
-      <NumEdgesMetric label="NumEdges"/>
     </Metrics>
 
     <MapEvaluators>
       <TimeEvaluator label="TimeEval" timeout="10"/>
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="1000" operator=">="/>
+        value="500" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
 
-      <QueryMethod label="IndividualQuery" debug="true"
+      <QueryMethod label="IndividualQuery" debug="false"
         safeIntervalToolLabel="SI"/>
       <GroupQuery label="CompositeQuery"/>
       <GroupDecoupledQuery label="DecoupledQuery" queryLabel="IndividualQuery"
-        debug="true"/>
+        debug="false"/>
 
       <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="IndividualQuery"/>
       </ComposeEvaluator>
 
-      <ComposeEvaluator label="BoundedCompositeQuery" operator="or">
+      <ComposeEvaluator label="BoundedCompositeQuery" operator="and">
         <Evaluator label="NodesEval"/>
         <Evaluator label="CompositeQuery"/>
       </ComposeEvaluator>
@@ -123,21 +123,29 @@
 
 
     <MPStrategies>
-      <BasicPRM label="IndividualPRM">
+      <BasicPRM label="IndividualPRM" debug="false">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="BoundedIndividualQuery"/>
       </BasicPRM>
 
-      <GroupPRM label="CompositePRM" debug="true">
+      <GroupPRM label="CompositePRM" debug="false">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <Connector label="Closest"/>
+        <Connector label="CCsConnector"/>
         <Evaluator label="BoundedCompositeQuery"/>
       </GroupPRM>
 
-      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="IndividualPRM">
-        <Evaluator label="BoundedDecoupledQuery"/>
+      <GroupDecoupledStrategy label="DecoupledPRM" strategyLabel="IndividualPRM" debug="false">
+        <Evaluator label="DecoupledQuery"/>
       </GroupDecoupledStrategy>
+
+      <GroupPRM label="CompositePRMstar" debug="true">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="ClosestOptimal"/>
+        <Evaluator label="BoundedCompositeQuery"/>
+      </GroupPRM>
+
     </MPStrategies>
 
     <MPTools>
@@ -154,8 +162,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="DecoupledPRM" seed="12345678"
-      baseFilename="decoupled" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CompositePRMstar" seed="12345678"
+      baseFilename="coupled-star" vizmoDebug="true"/>
 
   </Library>
 

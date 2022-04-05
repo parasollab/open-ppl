@@ -111,6 +111,9 @@ class GroupPath final {
     void SetWaitTimes(std::vector<size_t> _waitTimes);
 
     std::vector<size_t> GetWaitTimes();
+
+    std::pair<size_t,size_t> GetEdgeAtTimestep(size_t _timestep);
+
     ///@}
 
   private:
@@ -439,6 +442,31 @@ std::vector<size_t>
 GroupPath<MPTraits>::
 GetWaitTimes() {
   return m_waitingTimesteps;
+}
+
+template <typename MPTraits>
+std::pair<size_t,size_t>
+GroupPath<MPTraits>::
+GetEdgeAtTimestep(size_t _timestep) {
+ 
+  size_t step = 0;
+  for(size_t i = 0; i + 1 < m_vids.size(); i++) {
+
+    if(!m_waitingTimesteps.empty())
+      step += m_waitingTimesteps[i];
+    
+    if(_timestep <= step)
+      return std::make_pair(i,i);
+
+    auto duration = m_roadmap->GetEdge(m_vids[i],m_vids[i+1]).GetTimeSteps();
+
+    step += duration;
+
+    if(_timestep <= step)
+      return std::make_pair(m_vids[i],m_vids[i+1]);
+  }
+
+  return std::make_pair(m_vids.back(),m_vids.back());
 }
 
 /*--------------------------------- Helpers ----------------------------------*/

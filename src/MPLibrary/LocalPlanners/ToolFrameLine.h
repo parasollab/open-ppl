@@ -67,6 +67,10 @@ class ToolFrameLine : public LocalPlannerMethod<MPTraits> {
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false);
 
+    bool ComputeIncrement(const std::vector<double>& _posIncrements,
+                 const std::vector<double>& _oriIncrements,
+                 CfgType& _current);
+
     GroupCfgType ComputeIncrement(const std::unordered_map<Robot*,std::vector<double>>& _posIncrements,
                  const std::unordered_map<Robot*,std::vector<double>>& _oriIncrements,
                  GroupCfgType& _current);
@@ -124,9 +128,103 @@ IsConnected(
   const std::string id = this->GetNameAndLabel();
   MethodTimer mt(this->GetStatClass(), id + "::IsConnected");
 
-  throw RunTimeException(WHERE) << "Not yet implemented.";
+  if(this->m_debug) {
+    std::cout << id
+              << "\n\tChecking line from " << _c1.PrettyPrint()
+              << " to " << _c2.PrettyPrint()
+              << std::endl;
+  }
 
-  return false;
+  // Initialize the LPOutput object.
+  _lpOutput->Clear();
+  _lpOutput->SetLPLabel(this->GetLabel());
+
+  auto env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto robot = _c1.GetRobot();
+
+  // Get number of steps
+  int numSteps;
+  Cfg stepsDummy(robot);
+  stepsDummy.FindIncrement(_c1,_c2, &numSteps, env->GetPositionRes(), env->GetOrientationRes());
+  
+  // Compute increment
+  std::vector<double> posIncrements;
+  std::vector<double> oriIncrements;
+
+  auto kdl = robot->GetKDLModel();
+  if(!kdl)
+    throw RunTimeException(WHERE) << "No KDL model for robot: " << robot->GetLabel();
+
+  auto frame1 = kdl->ForwardKinematics(_c1.GetData());
+
+  auto frame2 = kdl->ForwardKinematics(_c2.GetData());
+
+  // Compute Pose Increment
+  auto pos1 = frame1.pos;
+  auto pos2 = frame2.pos;
+
+  std::vector<double> posInc;
+
+  for(size_t i = 0; i < pos1.size(); i++) {
+    auto d = pos2[i] - pos1[i];
+    posIncrements.push_back(d/numSteps);
+  }
+
+  // Compute Orientation Increment
+  auto ori1 = frame1.ori;
+  auto ori2 = frame2.ori;
+
+  std::vector<double> oriInc;
+
+  for(size_t i = 0; i < 9; i++) {
+    auto d = ori2[i] - ori1[i];
+    oriIncrements.push_back(d/numSteps);
+  }
+
+  // Build and check local plan
+  int cdCounter = 0;
+  double distance = 0;
+  CfgType currentStep(_c1),
+          previousStep(robot);
+
+  for(int i = 1; i < numSteps; ++i) {
+    previousStep = currentStep;
+    if(!ComputeIncrement(posIncrements,oriIncrements,currentStep)) {
+      _col = previousStep;
+      return false;
+    }
+
+    distance += dm->Distance(previousStep,currentStep);
+
+    // Check collision if requested.
+    if(_checkCollision) {
+      ++cdCounter;
+      const bool inBounds = currentStep.InBounds(env->GetBoundary());
+      if(!inBounds or !vc->IsValid(currentStep, id)) {
+        _col = currentStep;
+        return false;
+      }
+    }
+
+    // Save the resolution-level path if requested.
+    if(_savePath)
+      _lpOutput->m_path.push_back(currentStep);
+  }
+
+  // The edge is valid. Add the distance to final cfg
+  distance += dm->Distance(currentStep,_c2);
+
+  auto& edge1 = _lpOutput->m_edge.first,
+      & edge2 = _lpOutput->m_edge.second;
+
+  edge1.SetWeight(edge1.GetWeight() + distance);
+  edge2.SetWeight(edge2.GetWeight() + distance);
+  edge1.SetTimeSteps(edge1.GetTimeSteps() + numSteps);
+  edge2.SetTimeSteps(edge2.GetTimeSteps() + numSteps);
+
+  return true;
 }
 
 template <typename MPTraits>
@@ -187,9 +285,6 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   auto leader2 = _c2.GetRobotCfg(robots[0]);
   Cfg leaderDummy(robots[0]);
   leaderDummy.FindIncrement(leader1,leader2, &numSteps, env->GetPositionRes(), env->GetOrientationRes());
-  GroupCfgType stepsDummy(_c1);
-  stepsDummy.FindIncrement(_c1, _c2, numSteps);
-
 
   for(auto robot : robots) {
     auto kdl = robot->GetKDLModel();
@@ -406,6 +501,39 @@ IsConnectedFunc(
 }
 
 template <typename MPTraits>
+bool
+ToolFrameLine<MPTraits>::
+ComputeIncrement(const std::vector<double>& _posIncrements,
+                 const std::vector<double>& _oriIncrements,
+                 CfgType& _current) { 
+
+  auto robot = _current.GetRobot();
+  auto kdl = robot->GetKDLModel();
+
+  auto frame = kdl->ForwardKinematics(_current.GetData());
+
+  for(size_t i = 0; i < _posIncrements.size(); i++) {
+    frame.pos[i] = frame.pos[i] + _posIncrements[i];
+  }
+
+  for(size_t i = 0; i < _oriIncrements.size(); i++) {
+    frame.ori[i] = frame.ori[i] + _oriIncrements[i];
+  }
+
+  auto jointValues = kdl->InverseKinematics(frame.pos, frame.ori, _current.GetData());
+
+  if(jointValues.empty()) {
+    if(this->m_debug) {
+      std::cout << "No joint angles found for (TODO::TYPE FRAME INFO)" << std::endl;
+    }
+    return false;
+  }
+
+  _current.SetData(jointValues);
+  return true;
+}
+
+template <typename MPTraits>
 typename ToolFrameLine<MPTraits>::GroupCfgType
 ToolFrameLine<MPTraits>::
 ComputeIncrement(const std::unordered_map<Robot*,std::vector<double>>& _posIncrements,
@@ -457,9 +585,6 @@ ComputeIncrement(const std::unordered_map<Robot*,std::vector<double>>& _posIncre
     GroupCfgType(nullptr);
 
   return valid[0];
-
-  
-
 }
 
 #endif

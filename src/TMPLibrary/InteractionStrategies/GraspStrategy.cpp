@@ -558,6 +558,10 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
     data[5] =  q_sols[4]/PI;
     data[6] =  q_sols[5]/PI;
 
+    //TODO::Find base joint index
+    const size_t baseJointIndex = 3;
+    data[baseJointIndex] += _robot->GetBaseRotation();
+
     for(size_t j = 0; j < data.size(); j++) {
       if(j == 1)
         continue;

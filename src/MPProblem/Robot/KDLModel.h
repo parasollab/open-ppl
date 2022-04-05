@@ -77,6 +77,8 @@ class KDLModel {
 
     std::map<std::pair<size_t,size_t>,size_t> m_includedIndices;
 
+    size_t m_maxAttempts;
+
     ///@}    
 
 };

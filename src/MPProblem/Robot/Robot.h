@@ -89,6 +89,8 @@ class Robot final {
   bool m_fixed{false};                ///< Does the robot have a fixed base.
   std::vector<double> m_basePosition; ///< Position for fixed robot base.
   bool m_manipulator{false};          ///< Is the robot a manipulator?
+  double m_baseRotation;              ///< How much is the physical base rotated differently than ppl model?
+  std::string m_baseJoint;            ///< Joint that rotates the base.
   std::string m_defaultStrategyLabel; ///< The robot's default MP Strategy.
 
   //////////////////////////////////////////////////////////////////////////////
@@ -352,6 +354,11 @@ class Robot final {
 		Cfg GetInitialCfg();
     /// Set initial configuration for the robot (not implemented)
 		void SetInitialCfg(Cfg _cfg);
+
+    double GetBaseRotation() const;
+
+    std::string GetBaseJoint() const;
+
     ///@}
 
 

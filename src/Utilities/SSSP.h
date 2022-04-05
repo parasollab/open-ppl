@@ -229,7 +229,7 @@ AStarSSSP(
     if(newG + newH >= targetCost)
       return;
 
-    cost[target] = newG + newH;
+    cost[target] = newG;
     frontier.emplace(source, target, newG, newH);
   };
 

@@ -17,9 +17,9 @@
     </Robot>
 
     <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
-      <Agent type="coordinator" dmLabel="minkowski" debug="true">
+      <Agent type="coordinator" dmLabel="minkowski" debug="false">
         <Member label="boxy"/>
-        <StepFunction type="defaultcoordinator" debug="true"/>
+        <StepFunction type="defaultcoordinator" debug="false"/>
       </Agent>
     </Robot>
 
@@ -58,7 +58,6 @@
       <Euclidean label="euclidean"/>
       <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
         normalize="false"/>
-      <Manhattan label="manhattan"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -74,6 +73,7 @@
         k="1"/>
       <BruteForceNF label="Closest" dmLabel="euclidean" unconnected="true"
         k="6"/>
+      <OptimalNF label="Optimal" dmLabel="euclidean" unconnected="false" nfType="k"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -95,21 +95,26 @@
     </PathModifiers>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" debug="true"
+      <NeighborhoodConnector label="Closest" debug="false"
         nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
       <RewireConnector label="Rewire" nfLabel="Closest" lpLabel="sl"/>
+      <NeighborhoodConnector label="ClosestOptimal" debug="false"
+        nfLabel="Optimal" lpLabel="sl" checkIfSameCC="false"/>
     </Connectors>
 
     <Metrics>
+      <NumNodesMetric label="NumNodes"/>
     </Metrics>
 
     <MapEvaluators>
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="100" operator=">="/>
     </MapEvaluators>
 
     <MPStrategies>
-      <AdaptiveRRT label="AdaptiveRRT" debug="true"
+      <AdaptiveRRT label="AdaptiveRRT" debug="false"
         querySampler="UniformRandom" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
@@ -145,6 +150,12 @@
         <ColConnector label="Closest"/>
         <Evaluator label="Query"/>
       </TogglePRMStrategy>
+
+      <BasicPRM label="PRMstar" debug="false" querySampler="UniformRandomFree">
+        <Sampler label="UniformRandomFree" number="1" attempts="1"/>
+        <Connector label="ClosestOptimal"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
       
     </MPStrategies>
 
@@ -153,10 +164,12 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="RRT" seed="12345678"
+    <!--Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> 
     <Solver mpStrategyLabel="RRTstar" seed="12345"
-      baseFilename="RRTstar" vizmoDebug="true"/> 
+      baseFilename="RRTstar" vizmoDebug="true"/--> 
+    <Solver mpStrategyLabel="PRMstar" seed="12345"
+      baseFilename="PRMstar" vizmoDebug="true"/> 
 
   </Library>
 

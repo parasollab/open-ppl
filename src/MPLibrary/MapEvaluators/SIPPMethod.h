@@ -126,7 +126,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     virtual void SetMinEndtime(double _minEndtime) override;
 
     /// Check if the path satisfies all constraints
-    bool SatisfyConstraints(double _time);
+    bool SatisfyConstraints(Range<double> _interval);
 
     ///@}
 
@@ -338,11 +338,14 @@ operator()() {
         }
       }
     
-      if(!found) 
-        throw RunTimeException(WHERE) << "Failed to find valid start interval for vid: "
-                                      << start
-                                      << " at time :"
-                                      << m_startTime;
+      if(!found) {
+        std::cout << "Failed to find valid start interval for vid: "
+                  << start
+                  << " at time :"
+                  << m_startTime;
+
+        return false;
+      }
 
       m_sippGraph = new SIPPGraph(nullptr);
       m_startVID = m_sippGraph->AddVertex(vertex);
@@ -383,7 +386,7 @@ GeneratePath(const size_t _start, const size_t _goal) {
 
       // Check if vertex has reached the goal roadmap vid and satisfies other constraints
       auto vertex = _vi->property();
-      if(_goal == vertex.vid && this->SatisfyConstraints(vertex.interval.max))
+      if(_goal == vertex.vid && this->SatisfyConstraints(vertex.interval))
         return SSSPTermination::EndSearch;
 
       return SSSPTermination::Continue;
@@ -425,7 +428,7 @@ GeneratePath(const size_t _start, const size_t _goal) {
 
   auto current = output.ordering.back();
   auto lastState = m_sippGraph->GetVertex(current);
-  if(_goal != lastState.vid or !SatisfyConstraints(lastState.interval.max)) {
+  if(_goal != lastState.vid or !SatisfyConstraints(lastState.interval)) {
     std::cout << "Failed to find a path." <<std::endl;
     return std::make_pair(std::vector<size_t>(),std::vector<size_t>());
   }
@@ -761,7 +764,9 @@ InitializeCostToGo(size_t _goal) {
         typename GroupRoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance,
         const double _targetDistance) {
-     return _sourceDistance + _ei->property().GetTimeSteps();
+
+     const double timeRes = this->GetEnvironment()->GetTimeRes();
+     return _sourceDistance + (double(_ei->property().GetTimeSteps()) * timeRes);
     };
     auto output = DijkstraSSSP(this->GetGroupRoadmap(), starts, weight, termination);
     m_costToGoMap = output.distance;
@@ -810,8 +815,8 @@ SetMinEndtime(double _minEndTime){
 template <typename MPTraits>
 bool
 SIPPMethod<MPTraits>::
-SatisfyConstraints(double _time) {
-  return _time > m_minEndTime;
+SatisfyConstraints(Range<double> _interval) {
+  return _interval.Contains(m_minEndTime);
 }
 
 /*------------------------------------------------------------*/

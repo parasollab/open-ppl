@@ -80,10 +80,6 @@ class ROSStepFunction : public FollowPath {
     //Temp:Trying something out
     std::vector<double> m_previousGoal;
 
-    double m_baseRotation;
-
-    std::string m_baseJoint;
-
     ///@}
 };
 
