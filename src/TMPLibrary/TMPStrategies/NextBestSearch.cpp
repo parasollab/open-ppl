@@ -291,7 +291,8 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
   auto iter = unsafeIntervals.begin();
   while(iter != unsafeIntervals.end()) {
     max = iter->min - timeRes;
-    intervals.emplace_back(min,max);
+    if(min < max)
+      intervals.emplace_back(min,max);
     min = iter->max + timeRes;
     iter++;
   }

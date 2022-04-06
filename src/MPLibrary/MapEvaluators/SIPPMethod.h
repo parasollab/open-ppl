@@ -442,7 +442,7 @@ GeneratePath(const size_t _start, const size_t _goal) {
   }
   else {
     const double timeRes = this->GetEnvironment()->GetTimeRes();
-    waitTimesteps.push_back((m_minEndTime - output.distance[current])/timeRes);
+    waitTimesteps.push_back(std::ceil((m_minEndTime - output.distance[current])/timeRes));
   }
   auto previous = current;
 
@@ -583,8 +583,8 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
       return std::numeric_limits<double>::infinity();
 
     waitTime = startTime - _sourceDistance;
-    m_waitTimesteps[source.vid][target.vid] = size_t(waitTime/timeRes);
   }
+  m_waitTimesteps[_ei->source()][_ei->target()] = size_t(std::ceil(waitTime/timeRes));
 
   double edgeCost;
 
