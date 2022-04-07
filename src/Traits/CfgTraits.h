@@ -12,11 +12,12 @@
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
@@ -43,17 +44,20 @@
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
+#include "MPLibrary/Connectors/CCsConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
+#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
-#include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
@@ -74,7 +78,7 @@
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
-/// Essentially, the important types are the CfgType or the @cspace abstraction
+/// Essentially the important types are, the CfgType or the @cspace abstraction
 /// class, the WeightType or the edge type of the graph, and a type list for
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
@@ -84,7 +88,9 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef RoadmapGraph<C, W>              RoadmapType;
+//  typedef GenericStateGraph<C, W>              RoadmapType;
+
+  typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
@@ -100,6 +106,7 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
+    ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
@@ -121,6 +128,7 @@ struct MPTraits {
     ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
+    //DynamicRegionSampler<MPTraits>,
 
   //types of local planners available in our world
   typedef boost::mpl::list<
@@ -140,7 +148,8 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     NeighborhoodConnector<MPTraits>,
-    RewireConnector<MPTraits>
+    RewireConnector<MPTraits>,
+    CCsConnector<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
@@ -154,6 +163,8 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    GroupDecoupledQuery<MPTraits>,
+    GroupQuery<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,

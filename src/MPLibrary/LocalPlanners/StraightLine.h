@@ -36,7 +36,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
 
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
-    typedef typename GroupCfgType::Formation    Formation;
+    typedef std::vector<size_t>                 RobotFormation;
 
     ///@}
     ///@name Construction
@@ -70,7 +70,7 @@ class StraightLine : public LocalPlannerMethod<MPTraits> {
         GroupLPOutput<MPTraits>* _lpOutput,
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false,
-        const Formation& _robotIndexes = Formation()) override;
+        const RobotFormation& _robotIndexes = RobotFormation()) override;
 
     ///@}
 
@@ -209,7 +209,7 @@ StraightLine<MPTraits>::
 IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
     GroupLPOutput<MPTraits>* _lpOutput, double _positionRes,
     double _orientationRes, bool _checkCollision, bool _savePath,
-    const Formation& _robotIndexes) {
+    const RobotFormation& _robotIndexes) {
   const std::string id = this->GetNameAndLabel();
   auto stats = this->GetStatClass();
   MethodTimer(stats, id + "::IsConnectedFunc");
@@ -231,26 +231,29 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto groupMap = _c1.GetGroupRoadmap();
 
+  //TODO::Make sure this really is not needed anymore
   // Determine whether multiple robots are moving and whether this is a
   // formation rotation (rotation about some leader robot).
-  const bool multipleParts = _robotIndexes.size() > 1;
-  const bool isRotational = _c1.OriDOF() > 0;
-  const bool formationRotation = multipleParts && isRotational;
-  const size_t leaderRobotIndex = _robotIndexes.empty() ? size_t(-1)
-                                                        : _robotIndexes[0];
+  //const bool multipleParts = _robotIndexes.size() > 1;
+  //const bool isRotational = _c1.OriDOF() > 0;
+  //const bool formationRotation = multipleParts && isRotational;
+  //const size_t leaderRobotIndex = _robotIndexes.empty() ? size_t(-1)
+  //                                                      : _robotIndexes[0];
 
   // Will find all the straight-line increments for each robot independently.
   // (Though the numSteps calculation is coupled with all moving robots).
   int numSteps;
-  GroupCfgType increment(groupMap);
+  GroupCfgType increment(_c1);
   increment.FindIncrement(_c1, _c2, &numSteps, _positionRes, _orientationRes);
 
   const GroupCfgType originalIncrement = increment;
 
+  //TODO::Make sure this really is not needed anymore
+  /*
   // Set up increment for all translating bodies, should there be more than one.
   if(multipleParts) {
     // Remove the rotational bits, as increment should only do the translation
-    // and then RotateFormationAboutLeader() will handle all rotations:
+    // and then RotateRobotFormationAboutLeader() will handle all rotations:
     increment = GroupCfgType(groupMap, true);
 
     // Overwrite all positional dofs from the leader's cfg for all active robots
@@ -258,6 +261,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
         originalIncrement.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
         _robotIndexes);
   }
+  */
 
   bool connected = true;
   int cdCounter = 0;
@@ -268,6 +272,8 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
     previousStep = currentStep;
     currentStep += increment;
 
+    //TODO::Make sure this really is not needed anymore
+    /*
     // Handle rotation of a formation. We will determine the rotation applied to
     // the leader robot and cause the others to rotate about it, maintaining
     // their realtive formation
@@ -283,23 +289,28 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
 
       // Find the previousStep transformation of the leader robot's base.
       previousStep.ConfigureRobot();
-      mathtool::Transformation initialTransform =
-          previousStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
-          GetWorldTransformation();
+      //TODO::Add this back in with updated formation support.
+      //mathtool::Transformation initialTransform =
+      //    previousStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+      //    GetWorldTransformation();
 
       // Find the new transformation of the leader robot's base.
       leaderStep.ConfigureRobot();
-      mathtool::Transformation finalTransform =
-          leaderStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
-          GetWorldTransformation();
+      //TODO::Add this back in with updated formation support.
+      //mathtool::Transformation finalTransform =
+      //    leaderStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+      //    GetWorldTransformation();
 
       // Find the relative transformation of the leader robot's base. This holds
       // the rotation to be applied to currentStep, which only increments
       // position in this case.
-      mathtool::Transformation delta = -initialTransform * finalTransform;
-      currentStep.RotateFormationAboutLeader(_robotIndexes, delta.rotation(),
-          this->m_debug);
+      //TODO::Update this to new Formation representation.
+      throw RunTimeException(WHERE) << "Not currently supported.";
+      //mathtool::Transformation delta = -initialTransform * finalTransform;
+      //currentStep.RotateRobotFormationAboutLeader(_robotIndexes, delta.rotation(),
+      //    this->m_debug);
     }
+    */
 
     // Check collision if requested.
     if(_checkCollision) {
@@ -318,6 +329,8 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   }
 
   // Set data in the LPOutput object.
+  _lpOutput->m_edge.first.SetTimeSteps(numSteps);
+  _lpOutput->m_edge.second.SetTimeSteps(numSteps);
   //_lpOutput->m_edge.first.SetWeight(numSteps);
   //_lpOutput->m_edge.second.SetWeight(numSteps);
   auto dm = this->GetDistanceMetric(m_dmLabel);

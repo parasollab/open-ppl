@@ -25,7 +25,11 @@ Cfg(Robot* const _robot) : m_robot(_robot) {
     m_dofs.resize(DOF(), 0);
     if(m_robot->IsNonholonomic())
       m_vel.resize(DOF(), 0);
+    m_covariance.resize(DOF(), DOF());
+    m_covariance.setZero();
+    // m_covariance.setIdentity();
   }
+  
 }
 
 
@@ -37,6 +41,9 @@ Cfg(const Vector3d& _v, Robot* const _robot) : m_robot(_robot) {
       m_dofs[i] = _v[i];
     if(m_robot->IsNonholonomic())
       m_vel.resize(DOF(), 0);
+    m_covariance.resize(DOF(), DOF());
+    m_covariance.setZero();
+    // m_covariance.setIdentity();
   }
 }
 
@@ -48,8 +55,9 @@ Cfg(const Cfg& _other) :
     m_dofs(_other.m_dofs),
     m_vel(_other.m_vel),
     m_robot(_other.m_robot),
+    m_covariance(_other.m_covariance),
     m_labelMap(_other.m_labelMap),
-    m_statMap(_other.m_statMap) { }
+    m_statMap(_other.m_statMap) {}
 
 
 Cfg::
@@ -59,6 +67,7 @@ Cfg(Cfg&& _other) :
     m_dofs(std::move(_other.m_dofs)),
     m_vel(std::move(_other.m_vel)),
     m_robot(_other.m_robot),
+    m_covariance(std::move(_other.m_covariance)),
     m_labelMap(std::move(_other.m_labelMap)),
     m_statMap(std::move(_other.m_statMap)) { }
 
@@ -81,6 +90,7 @@ operator=(const Cfg& _cfg) {
     m_robot = _cfg.m_robot;
     m_clearanceInfo = _cfg.m_clearanceInfo;
     m_witnessCfg = _cfg.m_witnessCfg;
+    m_covariance = _cfg.m_covariance;
   }
   return *this;
 }
@@ -99,6 +109,7 @@ operator=(Cfg&& _cfg) {
     m_robot = _cfg.m_robot;
     m_clearanceInfo = std::move(_cfg.m_clearanceInfo);
     m_witnessCfg = std::move(_cfg.m_witnessCfg);
+    m_covariance = std::move(_cfg.m_covariance);
   }
   return *this;
 }
@@ -154,6 +165,9 @@ operator-=(const Cfg& _cfg) {
         m_dofs[i] -= _cfg[i];
     }
   }
+
+  // Subtract covariance
+  // m_covariance = m_covariance - _cfg.m_covariance;
 
   for(size_t i = 0; i < m_vel.size(); ++i)
     m_vel[i] -= _cfg.m_vel[i];
@@ -946,8 +960,9 @@ GetRandomCfg(const Boundary* const _b) {
     // The result is valid if it satisfies all three boundaries.
     if(_b->InBoundary(*this)
         and cspace->InBoundary(m_dofs)
-        and (!vspace or vspace->InBoundary(m_vel)))
+        and (!vspace or vspace->InBoundary(m_vel))) {
       return;
+    }
   }
 
   // throw error message and some helpful statistics
@@ -1328,6 +1343,47 @@ EnforceVelocityLimits() noexcept {
   if(angularVel > maxAngularVel)
     for(size_t i = PosDOF(); i < PosDOF() + OriDOF(); ++i)
       m_vel[i] *= maxAngularVel / angularVel;
+}
+
+/*--------------------------------- Uncertainty ------------------------------*/
+
+std::pair<std::vector<double>, Eigen::MatrixXd>
+Cfg::
+GetDataWithCov() {
+  std::pair<std::vector<double>, Eigen::MatrixXd> data(m_dofs, m_covariance);
+  return data;
+}
+
+void
+Cfg::
+SetCovariance(const Eigen::MatrixXd& _covariance) {
+  m_covariance = _covariance;
+}
+
+const Eigen::MatrixXd&
+Cfg::
+GetCovariance() const noexcept {
+  return m_covariance;
+}
+
+void
+Cfg::
+SetEigenData(const Eigen::VectorXd& _data) {
+  std::vector<double> dofs(_data.data(), _data.data() + _data.size());
+  SetData(dofs);
+  NormalizeOrientation(); 
+}
+
+const Eigen::VectorXd
+Cfg::
+GetEigenData() const {
+  ///TODO: Add velocity
+  Eigen::VectorXd dofs(DOF());
+  for(size_t i = 0; i < DOF(); ++i) {
+    dofs[i] = m_dofs[i];
+  }
+
+  return dofs;
 }
 
 /*----------------------------------------------------------------------------*/

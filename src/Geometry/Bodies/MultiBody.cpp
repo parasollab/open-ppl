@@ -3,7 +3,6 @@
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/Connection.h"
 #include "Geometry/Boundaries/Boundary.h"
-#include "Utilities/XMLNode.h"
 
 #include <algorithm>
 #include <numeric>
@@ -66,6 +65,14 @@ MultiBody(XMLNode& _node) {
   const std::string type = _node.Read("type", true, "", "MultiBody type in "
       "{active, passive, internal}");
   m_multiBodyType = GetMultiBodyTypeFromTag(type, _node.Where());
+
+  const std::string filename = _node.Read("filename", false, "", "External file"
+        " description of multibody.");
+
+  if (filename != "") {
+    ReadExternalFile(filename, _node);
+    return;
+  }
 
   // Read the free bodies in the multibody node. Each body is either the Base
   // (just one) or a link (any number).
@@ -166,6 +173,13 @@ InitializeDOFs(const Boundary* const _b) {
                                DofType::Joint, joint->GetJointRange(0));
         m_dofInfo.emplace_back("Spherical Joint " + label + " Angle 1",
                                DofType::Joint, joint->GetJointRange(1));
+        break;
+      case Connection::JointType::Prismatic:
+        m_dofInfo.emplace_back("Prismatic Joint " + label + " Angle 0",
+                               DofType::Joint, joint->GetJointRange(0));
+        break;
+      case Connection::JointType::Mimic:
+        //m_dofInfo.emplace_back("Mimic Joint " + label,Range<double>());
         break;
       case Connection::JointType::NonActuated:
         break;
@@ -352,16 +366,23 @@ GetCurrentCfg() noexcept {
   // For each joint, copy its values.
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
-    if(joint->GetConnectionType() == Connection::JointType::NonActuated)
+    if(joint->GetConnectionType() == Connection::JointType::NonActuated
+       or joint->GetConnectionType() == Connection::JointType::Mimic)
       continue;
 
-    // Get the connection object's DHParameters.
+    const auto jointValues = joint->GetJointValues();
+/*    // Get the connection object's DHParameters.
     const DHParameters& dh = joint->GetDHParameters();
 
     // Set the joint DOF values from the DH params.
     *jnt++ = dh.m_theta / PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       *jnt++ = dh.m_alpha / PI;
+*/
+    // Set the joint DOF values from the connection
+    *jnt++ = jointValues[0];
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      *jnt++ = jointValues[1];
   }
 
   // If jnt is not at the end now, we did something wrong.
@@ -426,10 +447,12 @@ AddBody(Body&& _body) {
   ///       index order.
   m_bodies.push_back(std::move(_body));
   auto& body = m_bodies.back();
-  if(body.GetIndex() != m_bodies.size() - 1)
-    throw ParseException(WHERE) << "Added body with index "
-                                << body.GetIndex() << ", but it landed in slot "
-                                << m_bodies.size() << ".";
+  //I'm sure that commenting this out will allow some edge case behavior,
+  //I don't know what at the moment, and it is causing problems.
+  //if(body.GetIndex() != m_bodies.size() - 1)
+  //  throw ParseException(WHERE) << "Added body with index "
+  //                              << body.GetIndex() << ", but it landed in slot "
+  //                              << m_bodies.size() << ".";
   body.SetMultiBody(this);
 
   return body.GetIndex();
@@ -439,7 +462,8 @@ AddBody(Body&& _body) {
 Body*
 MultiBody::
 GetBase() noexcept {
-  return m_baseBody;
+  return &m_bodies[m_baseIndex];
+  //return m_baseBody;
 }
 
 
@@ -465,6 +489,13 @@ SetBaseBody(const size_t _index) {
 }
 
 
+void
+MultiBody::
+SetBaseType(Body::Type _bodyType) {
+  m_baseType = _bodyType;
+}
+
+
 Body::Type
 MultiBody::
 GetBaseType() const noexcept {
@@ -472,10 +503,23 @@ GetBaseType() const noexcept {
 }
 
 
+void
+MultiBody::
+SetBaseMovementType(Body::MovementType _movementType) {
+  m_baseMovement = _movementType;
+}
+
+
 Body::MovementType
 MultiBody::
 GetBaseMovementType() const noexcept {
   return m_baseMovement;
+}
+
+const std::unordered_map<std::string,size_t>&
+MultiBody::
+GetLinkMap() {
+  return m_linkMap;
 }
 
 /*--------------------------- Geometric Properties ---------------------------*/
@@ -513,7 +557,13 @@ MultiBody::
 GetJoint(const size_t _i) noexcept {
   return m_joints[_i].get();
 }
-
+    
+size_t
+MultiBody::
+AddJoint(Connection&& _joint) {
+  m_joints.emplace_back(new Connection(_joint));
+  return m_joints.size() - 1;
+}
 
 const DofType&
 MultiBody::
@@ -545,6 +595,11 @@ UpdateJointLimits() noexcept {
         m_dofInfo[i].range   = joint->get()->GetJointRange(0);
         m_dofInfo[++i].range = (++joint)->get()->GetJointRange(1);
         break;
+      case Connection::JointType::Prismatic:
+        throw RunTimeException(WHERE) << "Prismatic joints not yet suported.";
+        break;
+      case Connection::JointType::Mimic:
+        break;
       case Connection::JointType::NonActuated:
         break;
     }
@@ -575,21 +630,40 @@ Configure(const vector<double>& _v) {
 
   // Configure the base.
   if(m_baseType != Body::Type::Fixed) {
-    m_baseBody->Configure(GenerateBaseTransformation(_v));
+    GetBase()->Configure(GenerateBaseTransformation(_v));
     index = PosDOF() + OrientationDOF();
   }
 
+
   // Configure the links.
+  std::vector<Connection*> mimics;
+
   for(auto& joint : m_joints) {
     // Skip non-actuated joints.
     if(joint->GetConnectionType() == Connection::JointType::NonActuated)
       continue;
+    // Skip mimic joint for now
+    else if(joint->GetConnectionType() == Connection::JointType::Mimic) {
+      mimics.push_back(joint.get());
+      continue;
+    }
 
     // Adjust the joint to reflect new configuration.
-    auto& dh = joint->GetDHParameters();
+/*    auto& dh = joint->GetDHParameters();
     dh.m_theta = _v[index++] * PI;
     if(joint->GetConnectionType() == Connection::JointType::Spherical)
       dh.m_alpha = _v[index++] * PI;
+*/
+    std::vector<double> values;
+    values.push_back(_v[index++] * PI);
+    if(joint->GetConnectionType() == Connection::JointType::Spherical)
+      values.push_back(_v[index++] * PI);
+
+    joint->SetJointValues(values);
+  }
+
+  for(auto mimic : mimics) {
+    mimic->SetJointValues({});
   }
 
   // The base transform has been updated, now update the links.
@@ -725,6 +799,63 @@ Write(std::ostream& _os) const {
       _os << body.GetForwardConnection(j);
 }
 
+
+void
+MultiBody::
+ReadExternalFile(std::string _filename, XMLNode& _node) {
+  // // Get file extension to determine behavior.
+  // const std::string ext = _filename.substr(_filename.find_last_of(".") + 1);
+
+  // const std::string baseTypeLabel = _node.Read("baseType", true, "", "Body Type");
+  // const std::string baseMovementLabel = _node.Read("baseMovement", true, "",
+  //     "The movement type for the base");
+
+  // Body::Type baseType;
+  // if(baseTypeLabel == "planar")
+  //   baseType = Body::Type::Planar;
+  // else if (baseTypeLabel == "volumetric")
+  //   baseType = Body::Type::Volumetric;
+  // else if (baseTypeLabel == "fixed")
+  //   baseType = Body::Type::Fixed;
+  // else{
+  //   throw ParseException(_node.Where()) << "Unknown body type (for base) '" << baseTypeLabel
+  //                                << "'. " << "Options are: 'planar', 'volumetric', "
+  //                                << "'fixed'.";
+  //   // Thomas - This breaks other compilers, so try to keep it local if you can
+  //   //if (baseType!=baseType) cout<<""<<endl; //nonsense line to avoid compiler error
+  // }
+  // Body::MovementType movementType;
+  // if(baseMovementLabel == "rotational")
+  //   movementType = Body::MovementType::Rotational;
+  // else if(baseMovementLabel == "translational")
+  //   movementType = Body::MovementType::Translational;
+  // else if(baseMovementLabel == "fixed")
+  //   movementType = Body::MovementType::Fixed;
+  // else{
+  //   throw ParseException(_node.Where()) << "Unknown movement type '" << baseMovementLabel << "'."
+  //                                << " Options are: 'rotational', "
+  //                                << "'translational', 'fixed'.";
+  //   // Thomas - This breaks other compilers, so try to keep it local if you can
+  //   //if (movementType!=movementType) cout<<""<<endl; //nonsense line to avoid compiler error 
+  // } 
+  // #ifdef PPL_USE_URDF
+  // if (ext == "urdf") {
+  //   // Read the world link.
+  //   std::string worldLink = _node.Read("worldLink", false, "", "The link name "
+  //                                      "for the world link in a URDF.");
+  //   this->TranslateURDF(_node.GetPath() + _filename, worldLink,
+  //       baseType,movementType,_node);
+
+  //   return;
+  // }
+  // #endif
+
+  // // Failed to parse the file, so file type not supported. Throw exception.
+  // throw RunTimeException(WHERE) << "Files of type ." << ext
+  //                               << " are not supported.";
+}
+
+
 /*---------------------------------- Helpers ---------------------------------*/
 
 void
@@ -775,21 +906,26 @@ FindMultiBodyInfo() {
 
 Transformation
 MultiBody::
-GenerateBaseTransformation(const std::vector<double>& _v) const {
-  const size_t pos = PosDOF(),
-               ori = OrientationDOF();
+GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri) const {
+  size_t pos = PosDOF();
+  const size_t ori = OrientationDOF();
 
-  const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
 
   EulerAngle rotation(0, 0, 0);
   if(ori == 1) {
     rotation.alpha() = _v[pos] * PI;     // about Z
   }
-  else if(ori == 3) {
+  else if(ori == 3 or _forceOri) {
+    if(_forceOri and pos == 0) {
+      pos = 3;
+    }
+
     rotation.gamma() = _v[pos]     * PI; // about X is the third Euler angle
     rotation.beta()  = _v[pos + 1] * PI; // about Y is the second Euler angle
     rotation.alpha() = _v[pos + 2] * PI; // about Z is the first Euler angle
   }
+
+  const Vector3d translation(_v[0], _v[1], pos == 3 ? _v[2] : 0.);
 
   return Transformation(std::move(translation), std::move(rotation));
 }

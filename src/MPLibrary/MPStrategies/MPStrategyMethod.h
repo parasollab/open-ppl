@@ -1,7 +1,7 @@
 #ifndef PMPL_MP_STRATEGY_METHOD_H_
 #define PMPL_MP_STRATEGY_METHOD_H_
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/MPTask.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
@@ -70,8 +70,6 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
 
     /// Execute the strategy by calling Initialize, Run, and Finalize.
     void operator()();
-    ///@example MPStrategies_UseCase.cpp
-    /// This is an example of how to use the MPStrategies methods
 
     /// Set output file writing to on or off (on by default). This is used to
     /// suppress generation of roadmap, path, and stat files.
@@ -322,6 +320,7 @@ ClearRoadmap() {
   ///       any roadmap hooks. Methods which use hooks may have stale data after
   ///       clearing the map. To fix we'll need to replace with our own function
   ///       in RoadmapGraph.
+
   auto roadmap = this->GetRoadmap();
   roadmap->clear();
 

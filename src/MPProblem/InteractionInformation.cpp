@@ -6,32 +6,24 @@
 InteractionInformation::
 InteractionInformation(MPProblem* _problem, XMLNode& _node) : m_problem(_problem){
   // Parse the tasks within the Handoff Template
-
+  //
   m_label = _node.Read("label", true, "", "Label for the handoff template.");
 
   m_maxAttempts = _node.Read("maxAttempts", true, 0, 0, MAX_INT,
       "The number of attempts made to place the template in the real environment");
 
-  m_interactionWeight = _node.Read("interactionWeight", false, 0, -9999, 9999,
+  m_interactionWeight = _node.Read("interactionWeight", false, 0, 0, 9999,
       "The weight of the connecting edge between interaction robot configurations");
 
   m_savePaths = _node.Read("savePaths", false, false,
       "Indicates if the handoff requires explicit paths");
 
+  m_strategy = _node.Read("strategy", true, "", "Label for the MP strategy.");
+
   for(auto& child : _node) {
-    if(child.Name() == "Receiving") {
-      m_tasks.emplace_back(new MPTask(m_problem, *child.begin()));
-			m_taskType["receiving"].push_back(m_tasks.back());
+    if(child.Name() == "Task") {
+      m_tasks.emplace_back(new MPTask(m_problem, child));
     }
-		else if(child.Name() == "Delivering"){
-      m_tasks.emplace_back(new MPTask(m_problem, *child.begin()));
-			m_taskType["delivering"].push_back(m_tasks.back());
-		}
-		else if(child.Name() == "Auxiliary"){
-			throw RunTimeException(WHERE, "Auxiliary interactions are not yet supported.");
-      m_tasks.emplace_back(new MPTask(m_problem, *child.begin()));
-			m_taskType["auxiliary"].push_back(m_tasks.back());
-		}
     else if(child.Name() == "Location"){
       const std::string pointString = child.Read("point", false, "",
           "The center point of the handoff template");
@@ -84,14 +76,6 @@ GetInteractionTasks(){
   return m_tasks;
 }
 
-std::vector<std::shared_ptr<MPTask>>&
-InteractionInformation::
-GetTypeTasks(const std::string& _s){
-	if(_s != "receiving" and _s != "delivering" and _s != "auxiliary")
-		throw RunTimeException(WHERE, _s + " is not a recognized interaction task type.");
-  return m_taskType[_s];
-}
-
 double
 InteractionInformation::
 GetInteractionWeight() const{
@@ -120,4 +104,10 @@ Environment*
 InteractionInformation::
 GetInteractionEnvironment(){
   return m_interactionEnvironment.get();
+}
+
+std::string
+InteractionInformation::
+GetMPStrategy() const{
+  return m_strategy;
 }

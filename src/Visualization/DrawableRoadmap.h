@@ -2,7 +2,9 @@
 #define PMPL_DRAWABLE_ROADMAP_H_
 
 #include "DrawableCfg.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+//#include "ConfigurationSpace/GenericStateGraph.h"
+
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
 #include "Utilities/Hash.h"
 
@@ -30,9 +32,9 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@name Local Types
     ///@{
 
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>>   RoadmapType;
-    typedef typename RoadmapType::VI                VI;
-    typedef typename RoadmapType::EI                EI;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef typename RoadmapType::VI VI;
+    typedef typename RoadmapType::EI EI;
     typedef typename RoadmapType::VID               VID;
     typedef typename std::pair<VID, VID>            EdgeID;
 
@@ -47,7 +49,7 @@ class DrawableRoadmap : public glutils::drawable  {
     /// vertices and edges.
     /// @param _graph The graph this DrawableRoadmap represents.
     /// @param _color The color to draw the cfgs and edges.
-    /// @param _name A name refering to this DrawableRoadmap.
+    /// @param _name A name refering to this DrawableRoadmap
     DrawableRoadmap(RoadmapType* _graph, const glutils::color& _color,
         const std::string& _name = "");
 
@@ -103,6 +105,12 @@ class DrawableRoadmap : public glutils::drawable  {
     virtual void draw_highlighted() override;
 
     ///@}
+    ///@name Helpers
+    ///@{
+
+    std::vector<glutils::vector3f> GetCovEllipsePoints(glutils::vector3f _mean, Eigen::MatrixXd _cov);
+
+    ///@}
 
   private:
 
@@ -111,6 +119,7 @@ class DrawableRoadmap : public glutils::drawable  {
 
     std::unordered_map<VID, DrawableCfg> m_cfgs;    ///< Cfg renderings.
     std::unordered_map<EdgeID, PointPath> m_edges;  ///< Edge renderings.
+    std::unordered_map<EdgeID, std::vector<std::vector<glutils::vector3f>>> m_edgeCovs;
 
     /// Buffer for configurations.
     std::unordered_map<VID, DrawableCfg> m_bufferAddCfgs;
@@ -119,13 +128,14 @@ class DrawableRoadmap : public glutils::drawable  {
     /// Buffer for edges.
     std::unordered_map<EdgeID, PointPath> m_bufferAddEdges;
     std::unordered_set<EdgeID> m_bufferDeleteEdges;
+    std::unordered_map<EdgeID, std::vector<std::vector<glutils::vector3f>>> m_bufferAddEdgeCov;
 
     glutils::color m_color;                   ///< The rendering color.
     MultiBody m_multiBody;                    ///< Local copy of the multibody.
     std::unique_ptr<DrawableMultiBody> m_dmb; ///< The drawable multibody.
     std::atomic<bool> m_drawRobot{false};     ///< Draw the robots or a point?
     mutable std::mutex m_lock;                ///< Lock for updating the rendering.
-    RoadmapType* m_graph;                     ///< Pointer to the RoadmapGraph.
+    RoadmapType* m_graph;                     ///< Pointer to the GenericStateGraph.
 
     std::string m_name;                       ///< A name for this rendering.
 

@@ -556,6 +556,7 @@ PMPL_SRCS := \
   Behaviors/Controllers/SimpleController.cpp \
   Behaviors/Controllers/ICreateController.cpp \
   ConfigurationSpace/Cfg.cpp \
+  ConfigurationSpace/Formation.cpp \
   ConfigurationSpace/GroupCfg.cpp \
   ConfigurationSpace/ReachableVolumes.cpp \
   Geometry/GMSPolygon.cpp \
@@ -581,7 +582,6 @@ PMPL_SRCS := \
   Geometry/Shapes/NSphericalShell.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
-  MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp \

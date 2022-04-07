@@ -39,7 +39,6 @@ class GroupLocalPlan final {
     typedef DefaultWeight<CfgType>                  IndividualEdge;
     typedef GroupRoadmap<GroupCfg, GroupLocalPlan>  GroupRoadmapType;
     typedef std::vector<GroupCfg>                   GroupCfgPath;
-    typedef std::vector<size_t>                     Formation;
     typedef size_t                                  GroupVID;
 
     typedef stapl::edge_descriptor_impl<size_t>     ED;
@@ -160,6 +159,10 @@ class GroupLocalPlan final {
     /// Get the number of robots given in this group local plan.
     size_t GetNumRobots() const noexcept;
 
+    void SetTimeSteps(size_t _timesteps);
+
+    size_t GetTimeSteps() const;
+
     ///@}
     ///@name Stapl graph interface
     ///@{
@@ -210,6 +213,8 @@ class GroupLocalPlan final {
 
     bool m_skipEdge{false}; ///< Flag to skip full recreation in GroupPath::FullCfgs.
 
+    size_t m_timesteps;
+
     ///@}
 
 };
@@ -224,8 +229,8 @@ GroupLocalPlan(GroupRoadmapType* const _g, const std::string& _lpLabel,
       m_intermediates(_intermediates)  {
   if(m_groupMap)
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
-  else
-    std::cout << "Warning: no group map provided in group LP!" << std::endl;
+  //else
+    //std::cout << "Warning: no group map provided in group LP!" << std::endl;
 }
 
 /*--------------------------- Ordering and Equality --------------------------*/
@@ -234,6 +239,16 @@ template <typename CfgType>
 bool
 GroupLocalPlan<CfgType>::
 operator==(const GroupLocalPlan& _other) const noexcept {
+   
+  // Check that both edges have a group map
+  // If neither do, return true
+  if(!m_groupMap and !_other.m_groupMap)
+    return true;
+
+  // If only one does, return false
+  if(!m_groupMap or !_other.m_groupMap)
+    return false;
+ 
   // Ensure the edges belong to the same group.
   if(m_groupMap->GetGroup() != _other.m_groupMap->GetGroup())
     return false;
@@ -487,7 +502,21 @@ GroupLocalPlan<CfgType>::
 GetNumRobots() const noexcept {
   return m_groupMap->GetGroup()->Size();
 }
+    
+template <typename CfgType>
+void 
+GroupLocalPlan<CfgType>::
+SetTimeSteps(size_t _timesteps) {
+  m_timesteps = _timesteps;
+}
 
+template <typename CfgType>
+size_t 
+GroupLocalPlan<CfgType>::
+GetTimeSteps() const {
+  return m_timesteps;
+}
+ 
 /*---------------------- stapl graph interface helpers -----------------------*/
 
 template <typename CfgType>

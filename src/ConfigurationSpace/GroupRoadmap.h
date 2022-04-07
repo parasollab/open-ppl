@@ -1,7 +1,8 @@
 #ifndef PMPL_GROUP_ROADMAP_H_
 #define PMPL_GROUP_ROADMAP_H_
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/Formation.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
@@ -22,20 +23,20 @@
 /// Note that VIDs in this object refer to GROUP configuration VIDs.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename Vertex, typename Edge>
-class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
+class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef RoadmapGraph<Vertex, Edge>     BaseType;
+    typedef GenericStateGraph<Vertex, Edge>     BaseType;
 
     typedef typename BaseType::EID         ED;
     typedef typename Vertex::IndividualCfg IndividualCfg;
     typedef typename Edge::IndividualEdge  IndividualEdge;
     typedef typename Vertex::VIDSet        VIDSet;
-    typedef RoadmapGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
 
     typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
     typedef typename BaseType::edge_descriptor edge_descriptor;
@@ -48,6 +49,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
     using typename BaseType::VID;
     using typename BaseType::STAPLGraph;
 
+    using typename BaseType::VertexHook;
+    using typename BaseType::EdgeHook;
+    using typename BaseType::HookType;
     ///@}
     ///@name Construction
     ///@{
@@ -83,6 +87,12 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// Get the number of robots for the group this roadmap is for.
     size_t GetNumRobots() const noexcept;
+
+    /// Get the set of formations available in this roadmap.
+    const std::unordered_map<Formation*,bool>& GetFormations();
+
+    /// Get the set of currently active formations.
+    std::unordered_set<Formation*> GetActiveFormations();
 
     ///@}
     ///@name Input/Output
@@ -127,16 +137,32 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     /// Import the base-class version for this (required because we've
     /// overridden one of the overloads).
-    using RoadmapGraph<Vertex, Edge>::AddEdge;
+    using GenericStateGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
-    /// @param _target The target vertex.
+    /// @param _source The target vertex.
     virtual void DeleteEdge(const VID _source, const VID _target) noexcept override;
 
     /// Remove an edge from the graph if it exists.
     /// @param _iterator An iterator to the edge.
     virtual void DeleteEdge(EI _iterator) noexcept override;
+
+    /// Add a formation to this group roadmap.
+    /// @param _formation The formation to add.
+    /// @param _active The initial active/inactive status.
+    void AddFormation(Formation* _formation, bool _active = true); 
+
+    /// Set the active value of the formation to true.
+    /// @param The formation to set as active.
+    void SetFormationActive(Formation* _formation);
+
+    /// Set the active value of the formation to false.
+    /// @param The formation to set as inactive.
+    void SetFormationInactive(Formation* _formation);
+
+    /// Set the active value of all formations to false;
+    void SetAllFormationsInactive();
 
     ///@}
     ///@name Hooks
@@ -157,6 +183,9 @@ class GroupRoadmap final : public RoadmapGraph<Vertex, Edge> {
 
     std::vector<IndividualRoadmap*> m_roadmaps; ///< The individual roadmaps.
 
+    /// The set of available formations and their active=1/inactive=0 status.
+    std::unordered_map<Formation*,bool> m_formations; 
+
     using BaseType::m_timestamp;
 
     ///@}
@@ -169,7 +198,7 @@ template <typename Vertex, typename Edge>
 template <typename MPSolution>
 GroupRoadmap<Vertex, Edge>::
 GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
-  RoadmapGraph<Vertex, Edge>(nullptr), m_group(_g) {
+  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
 
   for(Robot* const robot : *m_group)
     m_roadmaps.push_back(_solution->GetRoadmap(robot));
@@ -211,6 +240,26 @@ GetNumRobots() const noexcept {
   return m_group->Size();
 }
 
+template <typename Vertex, typename Edge>
+const std::unordered_map<Formation*,bool>&
+GroupRoadmap<Vertex, Edge>::
+GetFormations() {
+  return m_formations;
+}
+
+template <typename Vertex, typename Edge>
+std::unordered_set<Formation*>
+GroupRoadmap<Vertex, Edge>::
+GetActiveFormations() {
+  std::unordered_set<Formation*> active;
+
+  for(const auto& formation : m_formations) {
+    if(formation.second) 
+      active.insert(formation.first);
+  }
+
+  return active;
+}
 
 /*-------------------------------Input/Output---------------------------------*/
 
@@ -304,7 +353,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // number of these that occur so that we can ensure SOME robot(s) moved.
     if(individualSourceVID == individualTargetVID) {
       ++numInactiveRobots;
-      continue;
+    //  continue;
     }
 
     // Assert that the individual vertices exist.
@@ -400,9 +449,9 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(this->IsVertex(cfg, vi)) {
-    std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
-              << " already in graph"
-              << std::endl;
+    //std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
+    //          << " already in graph"
+    //          << std::endl;
     return vi->descriptor();
   }
 
@@ -419,6 +468,11 @@ AddVertex(const Vertex& _v) noexcept {
     else if(roadmap->find_vertex(individualVID) == roadmap->end())
       throw RunTimeException(WHERE) << "Individual vertex " << individualVID
                                     << " does not exist!";
+  }
+
+  // Copy the formation over from the input cfg
+  for(auto formation : _v.GetFormations()) {
+    cfg.AddFormation(formation);
   }
 
   // The vertex does not exist. Add it now.
@@ -475,9 +529,9 @@ DeleteVertex(const VID _v) noexcept {
 
   // Delete the group vertex.
   this->delete_vertex(vi->descriptor());
+  this->m_allVIDs.erase(_v);
   ++m_timestamp;
 }
-
 
 template <typename Vertex, typename Edge>
 void
@@ -495,7 +549,6 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
 
   DeleteEdge(edgeIterator);
 }
-
 
 template <typename Vertex, typename Edge>
 void
@@ -521,13 +574,47 @@ DeleteEdge(EI _iterator) noexcept {
   ++m_timestamp;
 }
 
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+AddFormation(Formation* _formation, bool _active) {
+
+  if(!_formation)
+    throw RunTimeException(WHERE) << "Adding null formation.";
+
+  m_formations[_formation] = _active;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+SetFormationActive(Formation* _formation) {
+  m_formations[_formation] = true;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+SetFormationInactive(Formation* _formation) {
+  m_formations[_formation] = false;
+}
+
+template <typename Vertex, typename Edge>
+void
+GroupRoadmap<Vertex, Edge>::
+SetAllFormationsInactive() {
+  for(auto& kv : m_formations) {
+    kv.second = false;
+  }
+}
+
 /*----------------------------------- Hooks ----------------------------------*/
 
 template <typename Vertex, typename Edge>
 void
 GroupRoadmap<Vertex, Edge>::
 ClearHooks() noexcept {
-  RoadmapGraph<Vertex, Edge>::ClearHooks();
+  GenericStateGraph<Vertex, Edge>::ClearHooks();
 
   for(IndividualRoadmap* const map : m_roadmaps)
     map->ClearHooks();

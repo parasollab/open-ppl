@@ -24,7 +24,7 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     typedef typename MPTraits::CfgType         CfgType;
     typedef typename MPTraits::GroupCfgType    GroupCfgType;
     typedef typename MPTraits::GroupWeightType GroupWeightType;
-    typedef typename GroupCfgType::Formation   Formation;
+    typedef std::vector<size_t>                RobotFormation;
 
     ///@}
     ///@name Construction
@@ -54,11 +54,11 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
 
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
-        const Formation& _robotIndexes = Formation()) override;
+        const RobotFormation& _robotIndexes = RobotFormation()) override;
 
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-        const Formation& _robotIndexes = Formation()) override;
+        const RobotFormation& _robotIndexes = RobotFormation()) override;
 
     ///@}
 
@@ -87,11 +87,11 @@ class BasicExtender : public ExtenderMethod<MPTraits> {
     bool Expand(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
         double _posRes, double _oriRes,
-        const Formation& _robotIndexes = Formation());
+        const RobotFormation& _robotIndexes = RobotFormation());
     bool Expand(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
         CDInfo& _cdInfo, double _posRes, double _oriRes,
-        const Formation& _robotIndexes = Formation());
+        const RobotFormation& _robotIndexes = RobotFormation());
 
     ///@}
     ///@name Internal State
@@ -189,7 +189,7 @@ template <typename MPTraits>
 bool
 BasicExtender<MPTraits>::
 Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
-       GroupLPOutput<MPTraits>& _lp, const Formation& _robotIndexes) {
+       GroupLPOutput<MPTraits>& _lp, const RobotFormation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
 
   _lp.SetLPLabel(this->GetLabel());
@@ -205,7 +205,7 @@ bool
 BasicExtender<MPTraits>::
 Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
     GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-    const Formation& _robotIndexes) {
+    const RobotFormation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
 
   _lp.SetLPLabel(this->GetLabel());
@@ -312,7 +312,7 @@ bool
 BasicExtender<MPTraits>::
 Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
-    double _posRes, double _oriRes, const Formation& _robotIndexes) {
+    double _posRes, double _oriRes, const RobotFormation& _robotIndexes) {
   CDInfo cdInfo;
   return Expand(_start, _end, _newCfg, _delta, _lp, cdInfo, _posRes, _oriRes,
       _robotIndexes);
@@ -325,7 +325,7 @@ BasicExtender<MPTraits>::
 Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
     CDInfo& _cdInfo, double _posRes, double _oriRes,
-    const Formation& _robotIndexes) {
+    const RobotFormation& _robotIndexes) {
   if(_robotIndexes.empty())
     throw RunTimeException(WHERE) << "TODO: Need to fix group Cfg extenders to "
                                   << "work for the general case and not just "
@@ -342,17 +342,18 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   GroupCfgType previous = _start;
 
 
-
+  //TODO::Make sure this is no longer needed with new formation implementation
   /// Set these to true to have single parts treated (less efficiently) as
   /// multiple parts, which should now be identical.
-  const bool multipleParts = _robotIndexes.size() > 1;
-  const bool isRotational = _start.OriDOF() > 0;
-  const bool subassemblyRotation = multipleParts && isRotational;
+  //const bool multipleParts = _robotIndexes.size() > 1;
+  //const bool isRotational = _start.OriDOF() > 0;
+  //const bool subassemblyRotation = multipleParts && isRotational;
 
   GroupCfgType oneStep = _start; // The placeholder for computing steps of angles.
 
   int nTicks;
-  const unsigned int leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
+  //TODO::Make sure this is no longer needed with new formation implementation
+  //const unsigned int leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
 
   GroupCfgType incr(_start.GetGroupRoadmap());
 
@@ -361,14 +362,17 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   incr.FindIncrement(_start, _end, &nTicks, _posRes, _oriRes);
   const GroupCfgType incrUntouched = incr;
 
+  //TODO::Make sure this is no longer needed with new formation implementation
+  /*
   if(subassemblyRotation) {
     // Remove the rotational bits, as incr should only do the translation
-    // and then RotateFormationAboutLeader() will handle all rotations.
+    // and then RotateRobotFormationAboutLeader() will handle all rotations.
     incr = GroupCfgType(_start.GetGroupRoadmap(), true); // Ensure zeroed out.
     incr.OverwriteDofsForRobots(
             incrUntouched.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
             _robotIndexes);
   }
+  */
 
   // Move out from start towards dir, bounded by number of ticks allowed at a
   // given resolution and the distance _delta: the maximum distance to grow
@@ -383,7 +387,8 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     if(this->m_debug)
       std::cout << "Extending group on tick " << ticker << std::endl;
 
-    if(subassemblyRotation) {
+    //TODO::Make sure this is no longer needed with new formation implementation
+    /*if(subassemblyRotation) {
       // Handle subassembly rotation. We must update the delta transformation
       // due to Euler Angles not conforming to linear angle changes between cfgs
 
@@ -411,12 +416,14 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
         std::cout << "tick before rotation = " << tick.PrettyPrint()
                   << std::endl;
 
-      tick.RotateFormationAboutLeader(_robotIndexes, rotation, this->m_debug);
+      //TODO::Update this to new Formation representation.
+      throw RunTimeException(WHERE) << "Not currently supported.";
+      //tick.RotateRobotFormationAboutLeader(_robotIndexes, rotation, this->m_debug);
 
       if(this->m_debug)
         std::cout << "tick after rotation = " << tick.PrettyPrint()
                   << std::endl << std::endl;
-    }
+    }*/
 
     if(tick.InBounds(env->GetBoundary())) {
       //if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand", _robotIndexes)) {

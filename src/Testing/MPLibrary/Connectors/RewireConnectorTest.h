@@ -15,6 +15,7 @@ class RewireConnectorTest : virtual public RewireConnector<MPTraits>,
 
     typedef TestBaseObject::TestResult TestResult;
     typedef typename MPTraits::RoadmapType RoadmapType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     /// @}
     /// @name Construction
@@ -659,14 +660,14 @@ RobotGroupConnectRunTest(
   // Add Cfgs to roadmap. (Collect Vertex IDs to refer to them later)
 
   // Vector to create cfgs.
-  std::vector<typename MPTraits::GroupCfgType> cfgs;
+  std::vector<GroupCfgType> cfgs;
   // Vector to capture Vertex IDs for use later.
   std::vector<size_t> vIds;
 
 
   for (size_t i = 0; i < _vertexPoses.size(); i++) {
     // Create a new group Cfg and ensure that both robot's start config is 0.
-    cfgs.push_back(GroupCfg(roadmap));
+    cfgs.push_back(GroupCfgType(roadmap));
     for (size_t j = 0; j < cfgs[i].DOF(); j++) {
       (cfgs[i]).GetRobotCfg(size_t(0))[j] = 0.0;
       (cfgs[i]).GetRobotCfg(size_t(1))[j] = 0.0;

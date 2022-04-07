@@ -59,7 +59,6 @@ class CollisionDetectionValidity
 
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::GroupCfgType GroupCfg;
-    typedef typename GroupCfg::Formation    Formation;
 
     ///@}
     ///@name Construction
@@ -221,12 +220,12 @@ CollisionDetectionValidity(XMLNode& _node)
     m_cdMethod.reset(new BoundingSpheres());
   else if(cdLabel == "InsideSpheres")
     m_cdMethod.reset(new InsideSpheres());
-  else if(cdLabel == "RAPID")
-    m_cdMethod.reset(new Rapid());
   else if(cdLabel == "PQP")
     m_cdMethod.reset(new PQP());
   else if(cdLabel == "PQP_SOLID")
     m_cdMethod.reset(new PQPSolid());
+  else if(cdLabel == "RAPID")
+    m_cdMethod.reset(new Rapid());
   else
     throw ParseException(_node.Where()) << "Unknown collision detection library '"
                                         << cdLabel << "' requested.";
@@ -267,6 +266,8 @@ IsInsideObstacle(const Point3d& _p) {
           "IsInsideObstacle");
 
       const Body* const b = obst->GetBody(j);
+      if(b->IsVirtual())
+        continue;
       if(m_cdMethod->IsInsideObstacle(_p, b->GetPolyhedron(),
             b->GetWorldTransformation()))
         return true;
@@ -312,6 +313,8 @@ WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
           "WorkspaceVisibility");
 
       const Body* const b = obst->GetBody(j);
+      if(b->IsVirtual())
+        continue;
       if(m_cdMethod->IsInCollision(line, t,
                                    b->GetPolyhedron(),
                                    b->GetWorldTransformation(),
@@ -336,10 +339,14 @@ IsMultiBodyCollision(CDInfo& _cdInfo, const MultiBody* const _a,
   // Check each body in _a against each body in _b.
   for(size_t i = 0; i < _a->GetNumBodies(); ++i) {
     const Body* const b1 = _a->GetBody(i);
+    if(b1->IsVirtual())
+      continue;
 
     for(unsigned int j = 0; j < _b->GetNumBodies(); ++j) {
       cdInfo.ResetVars(allInfo);
       const Body* const b2 = _b->GetBody(j);
+      if(b2->IsVirtual())
+        continue;
       collision |= m_cdMethod->IsInCollision(b1->GetPolyhedron(),
                                              b1->GetWorldTransformation(),
                                              b2->GetPolyhedron(),
@@ -562,8 +569,12 @@ IsInSelfCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
 
   for(size_t i = 0; i < numBody - 1; ++i) {
     const Body* const body1 = _multibody->GetBody(i);
+    if(body1->IsVirtual())
+      continue;
     for(size_t j = i + 1; j < numBody; ++j) {
       const Body* const body2 = _multibody->GetBody(j);
+      if(body2->IsVirtual())
+        continue;
 
       // Check for ignoring adjacent links.
       if(m_ignoreAdjacentLinks and body1->IsAdjacent(body2))

@@ -16,9 +16,8 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::GroupCfgType  GroupCfgType;
-    typedef typename GroupCfgType::Formation Formation;
+    typedef typename MPTraits::CfgType      CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -35,8 +34,9 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _callName) override;
 
-    bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, 
+    virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) override;
+
     ///@}
 };
 
@@ -69,8 +69,15 @@ template <typename MPTraits>
 bool
 AlwaysTrueValidity<MPTraits>::
 IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
+
+  for(size_t i = 0; i < _cfg.GetNumRobots(); i++) {
+    auto& cfg = _cfg.GetRobotCfg(i);
+    cfg.SetLabel("Lazy",true);
+  } 
+
   return true;
 }
+
 /*----------------------------------------------------------------------------*/
 
 #endif

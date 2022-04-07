@@ -6,7 +6,7 @@
 #include "Utilities/PMPLExceptions.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "ConfigurationSpace/Weight.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
 #include <atomic>
 #include <cstddef>
@@ -119,7 +119,7 @@ class Simulation : public base_visualization {
     /// @param _graph the graph to rendered
     /// @param _c The line color.
     /// @return The ID of the path.
-    size_t AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+    size_t AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
         const glutils::color& _c);
 
     /// Remove a roadmap graphic from the scene.
