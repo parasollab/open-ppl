@@ -152,6 +152,8 @@ operator()(Interaction* _interaction, State& _start) {
     std::unordered_map<Robot*,Cfg> graspCfgs;
     for(auto kv : nextStageEEFrames) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
+      if(!cfg.GetRobot())
+        return false;
       SetEEDOF(_interaction,cfg,stages[i+1]);
 
       graspCfgs[kv.first] = cfg;
