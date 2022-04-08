@@ -4,7 +4,7 @@
 #include "MetricMethodTest.h"
 #include "MPLibrary/Metrics/NumEdgesMetric.h"
 
-// TODO add template annotations (see TimeMetricTest.h)
+template <typename MPTraits>
 class NumEdgesMetricTest :  virtual public NumEdgesMetric,
                             public MetricMethodTest {
 
@@ -21,7 +21,7 @@ class NumEdgesMetricTest :  virtual public NumEdgesMetric,
 
     NumEdgesMetricTest();
 
-    NumEdgesMetricTest(MPProblem* _problem); // TODO see TimeMetricTest comment about this
+    NumEdgesMetricTest(XMLNode& _node);
 
     ~NumEdgesMetricTest();
 
@@ -39,38 +39,36 @@ class NumEdgesMetricTest :  virtual public NumEdgesMetric,
 };
 
 /*--------------------------- Construction ---------------------------*/
-
+template <typename MPTraits>
 NumEdgesMetricTest::
 NumEdgesMetricTest() : NumEdgesMetric() {}
 
-NumEdgesMetricTest::
-NumEdgesMetricTest(MPProblem* _problem) : MetricMethodTest(),
-                                                             NumEdgesMetric(){
-  m_MPProblem = _problem;
-}
-
+template <typename MPTraits>
+NumEdgesMetricTest<MPTraits>::
+NumEdgesMetricTest(XMLNode& _node) : MetricMethodTest<MPTraits>(_node),
+                                           NumEdgesMetric<MPTraits>(_node) {}
+                                           
+template <typename MPTraits>
 NumEdgesMetricTest::
 ~NumEdgesMetricTest() {}
 
 
 
 /*--------------------- Test Interface Functions ---------------------*/
-
+template <typename MPTraits>
 typename NumEdgesMetricTest::TestResult
 NumEdgesMetricTest::
 TestMetric() {
 
-  // TODO see comments in NumNodesMetric.h
-
   // Set up environment from parent
-  double metric = Metric();
+  double metric = this->Metric();
   double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->get_num_edges()) : (this->GetRoadmap()->get_num_edges());
 
   // Correct value?
   if(metric == expected){
-    return std::make_pair(true,"Testing NumEdgesMetric::PASSED");
+    return std::make_pair(true,"NumEdgesMetric::PASSED");
   }
-  return std::make_pair(true,"Testing NumEdgesMetric, Wrong number of edges recieved.");
+  return std::make_pair(true,"NumEdgesMetric::FAILED, Wrong number of edges recieved.");
 }
 
 #endif

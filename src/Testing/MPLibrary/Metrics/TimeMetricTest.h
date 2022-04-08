@@ -21,9 +21,7 @@ class TimeMetricTest :  virtual public TimeMetric<MPTraits>,
 
     TimeMetricTest();
 
-    TimeMetricTest(MPProblem* _problem); // TODO delete this (see below)
-
-    // TODO you also need a constructor that takes in an XMLNode (see Testing/Samplers/UniformRandomSamplerTest for example)
+    TimeMetricTest(XMLNode& _node);
 
     ~TimeMetricTest();
 
@@ -48,10 +46,8 @@ TimeMetricTest() : MetricMethodTest<MPTraits>(), TimeMetric<MPTraits>() {}
 
 template <typename MPTraits>
 TimeMetricTest<MPTraits>::
-TimeMetricTest(MPProblem* _problem) : MetricMethodTest<MPTraits>(),
-                                      TimeMetric<MPTraits>(){
-  m_MPProblem = _problem; // TODO you can delete this. You can get the MPProblem with this->GetMPProblem().
-}
+TimeMetricTest(XMLNode& _node) : MetricMethodTest<MPTraits>(_node),
+                                           TimeMetric<MPTraits>(_node) {}
 
 template <typename MPTraits>
 TimeMetricTest<MPTraits>::
@@ -64,26 +60,18 @@ typename TimeMetricTest<MPTraits>::TestResult
 TimeMetricTest<MPTraits>::
 TestMetric() {
 
-  // Set up environment from parent
-  double metric = Metric();
-  auto stats = this->GetStatClass();
+  // Sleep
+  sleep(10);
 
-  // TODO what is s_clockName? (See TimeMetric.h), but you might not need it
-  // You might not want to call Metric() because you don't actually need a
-  // roadmap. Maybe just sleep for some time (https://www.cplusplus.com/reference/thread/this_thread/sleep_for/)
-  // and then check that the time metric call returns at least that long
-
-  // Report the elapsed time.
-  stats->StopClock(s_clockName);
-  stats->StartClock(s_clockName);
-
-  double expected = (double)stats->GetSeconds(s_clockName);
+  // Get time
+  double metric = (*this)();
+  double expected = 10;
 
   // Correct value?
-  if(metric == expected){
-    return std::make_pair(true,"Testing TimeMetric::PASSED");
+  if(metric >= expected){
+    return std::make_pair(true,"TimeMetric::PASSED");
   }
-  return std::make_pair(false,"Testing TimeMetric, Wrong time elapsed recieved.");
+  return std::make_pair(false,"TimeMetric::FAILED, Wrong time elapsed recieved.");
 }
 
 #endif
