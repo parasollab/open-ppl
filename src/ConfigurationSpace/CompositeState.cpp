@@ -8,11 +8,13 @@
 
 template <typename CfgType, typename GraphType>
 CompositeState<CfgType, GraphType>::
-CompositeState(GraphType* const _groupGraph) : m_groupGraph(_groupGraph) {
+CompositeState(GraphType* const _groupGraph, 
+  CfgType& (*_vertexGetter)(const VID)) : 
+  m_groupGraph(_groupGraph), m_vertexGetter(_vertexGetter) {
 
   // If no group map was given, this is a placeholder object. We can't do
   // anything with it since every meaningful operation requires a group map.
-  if(!m_groupGraph)
+  if(!m_groupGraph or !_vertexGetter)
     return;
 
   // Set the VID list to all invalid.

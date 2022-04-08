@@ -38,7 +38,8 @@ class CompositeState {
     /// @param _init Default-initialize local configurations?
     /// @todo This object does not work at all without a group map. We should
     ///       throw relevant exceptions if needed.
-    explicit CompositeState(GraphType* const _groupGraph = nullptr);
+    explicit CompositeState(GraphType* const _groupGraph = nullptr,  
+      CfgType& (*_vertexGetter)(const VID) = nullptr);
 
     ///@}
     ///@name Equality
