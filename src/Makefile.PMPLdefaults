@@ -556,6 +556,7 @@ PMPL_SRCS := \
   Behaviors/Controllers/SimpleController.cpp \
   Behaviors/Controllers/ICreateController.cpp \
   ConfigurationSpace/Cfg.cpp \
+  ConfigurationSpace/CompositeState.cpp \
   ConfigurationSpace/Formation.cpp \
   ConfigurationSpace/GroupCfg.cpp \
   ConfigurationSpace/ReachableVolumes.cpp \
