@@ -13,11 +13,11 @@
 
 GroupCfg::
 GroupCfg(GroupRoadmapType* const _groupMap, const bool _init) 
-     : m_groupMap(_groupMap) {
+     : CompositeState<IndividualCfg, GroupRoadmapType>(_groupMap, IndividualRoadmap::GetVertex) {
 
   // If no group map was given, this is a placeholder object. We can't do
   // anything with it since every meaningful operation requires a group map.
-  if(!m_groupMap)
+  if(!this->m_groupGraph)
     return;
 
   InitializeFormations();
@@ -37,7 +37,7 @@ bool
 GroupCfg::
 operator==(const GroupCfg& _other) const noexcept {
   // If _other is from another map, these are not the same.
-  if(m_groupMap != _other.m_groupMap)
+  if(this->m_groupGraph != _other.m_groupGraph)
     return false;
 
   // Else, compare VIDs if both are valid, or by-value other wise.
@@ -120,7 +120,7 @@ GroupCfg::
 operator+=(const GroupCfg& _other) {
   // We must require the exact same group, which indicates everything
   // lines up between the two cfgs (namely the exact robots/order of the group).
-  if(m_groupMap->GetGroup() != _other.m_groupMap->GetGroup())
+  if(this->m_groupGraph->GetGroup() != _other.m_groupGraph->GetGroup())
     throw RunTimeException(WHERE, "Cannot add GroupCfgs with different group "
                                   "roadmaps!");
 
@@ -163,7 +163,7 @@ operator+=(const GroupCfg& _other) {
     cfgs = formation->ConvertToIndividualCfgs(dofs);
 
     for(auto cfg : cfgs) {
-      const size_t index = m_groupMap->GetGroup()->GetGroupIndex(cfg.GetRobot());
+      const size_t index = this->m_groupGraph->GetGroup()->GetGroupIndex(cfg.GetRobot());
       auto copy = cfg;
       SetRobotCfg(index,std::move(copy));
       checked.insert(index);
@@ -187,7 +187,7 @@ GroupCfg::
 operator-=(const GroupCfg& _other) {
   // We must require the exact same group roadmap, which indicates everything
   // lines up between the two cfgs (namely the exact robots/order of the group).
-  if(m_groupMap != _other.m_groupMap)
+  if(this->m_groupGraph != _other.m_groupGraph)
     throw RunTimeException(WHERE, "Cannot add GroupCfgs with different group "
                                   "roadmaps!");
 
@@ -211,51 +211,13 @@ operator*=(const double& _val) {
   return *this;
 }
 
-
-/*---------------------------------- Robots ----------------------------------*/
-
-size_t
-GroupCfg::
-GetNumRobots() const noexcept {
-  return m_groupMap ? m_groupMap->GetGroup()->Size() : 0;
-}
-
-
-const std::vector<Robot*>&
-GroupCfg::
-GetRobots() const noexcept {
-  return m_groupMap->GetGroup()->GetRobots();
-}
-
-
-Robot*
-GroupCfg::
-GetRobot(const size_t _index) const {
-  VerifyIndex(_index);
-
-  Robot* const robot = m_groupMap->GetGroup()->GetRobot(_index);
-
-  /// @todo Remove this after we are very sure things are working.
-  if(!robot)
-    throw RunTimeException(WHERE) << "Error! Robot pointer was null.";
-
-  return robot;
-}
-
 /*---------------------------- Roadmap Accessors -----------------------------*/
-
-GroupCfg::GroupRoadmapType*
-GroupCfg::
-GetGroupRoadmap() const noexcept {
-  return m_groupMap;
-}
-
 
 GroupCfg
 GroupCfg::
 SetGroupRoadmap(GroupRoadmapType* const _newRoadmap) const {
   // Check that groups are compatible.
-  if(m_groupMap->GetGroup() != _newRoadmap->GetGroup())
+  if(this->m_groupGraph->GetGroup() != _newRoadmap->GetGroup())
     throw RunTimeException(WHERE) << "Trying to change roadmaps on incompatible "
                                   << "groups!";
 
@@ -267,21 +229,6 @@ SetGroupRoadmap(GroupRoadmapType* const _newRoadmap) const {
     newCfg.SetRobotCfg(i, IndividualCfg(GetRobotCfg(i)));
 
   return newCfg;
-}
-
-
-GroupCfg::VID
-GroupCfg::
-GetVID(const size_t _index) const noexcept {
-  VerifyIndex(_index);
-  return m_vids[_index];
-}
-
-GroupCfg::VID
-GroupCfg::
-GetVID(Robot* const _robot) const {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
-  return GetVID(index);
 }
     
 void
@@ -301,7 +248,7 @@ GetFormations() const {
 void
 GroupCfg::
 SetRobotCfg(Robot* const _robot, IndividualCfg&& _cfg) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = this->m_groupGraph->GetGroup()->GetGroupIndex(_robot);
   SetRobotCfg(index, std::move(_cfg));
 }
 
@@ -323,33 +270,8 @@ SetRobotCfg(const size_t _index, IndividualCfg&& _cfg) {
 
 void
 GroupCfg::
-SetRobotCfg(Robot* const _robot, const VID _vid) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
-  SetRobotCfg(index, _vid);
-}
-
-
-void
-GroupCfg::
-SetRobotCfg(const size_t _index, const VID _vid) {
-  VerifyIndex(_index);
-
-  m_vids[_index] = _vid;
-}
-
-
-void
-GroupCfg::
 ClearLocalCfgs() {
   m_localCfgs.clear();
-}
-
-
-GroupCfg::IndividualCfg&
-GroupCfg::
-GetRobotCfg(Robot* const _robot) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
-  return GetRobotCfg(index);
 }
 
 
@@ -360,19 +282,11 @@ GetRobotCfg(const size_t _index) {
 
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
-    return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
+    return this->m_groupGraph->GetRoadmap(_index)->GetVertex(vid);
   else {
     InitializeLocalCfgs();
     return m_localCfgs[_index];
   }
-}
-
-
-const GroupCfg::IndividualCfg&
-GroupCfg::
-GetRobotCfg(Robot* const _robot) const {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
-  return GetRobotCfg(index);
 }
 
 
@@ -385,7 +299,7 @@ GetRobotCfg(const size_t _index) const {
   // individual roadmap.
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
-    return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
+    return this->m_groupGraph->GetRoadmap(_index)->GetVertex(vid);
 
   try {
     return m_localCfgs.at(_index);
@@ -657,7 +571,7 @@ GroupCfg::
 OverwriteDofsForRobots(const GroupCfg& _fromCfg,
     const std::vector<Robot*>& _robots) {
   auto fromGroup = _fromCfg.GetGroupRoadmap()->GetGroup(),
-       toGroup   = m_groupMap->GetGroup();
+       toGroup   = this->m_groupGraph->GetGroup();
 
   for(Robot* const robot : _robots) {
     const size_t fromIndex = fromGroup->GetGroupIndex(robot),
@@ -693,13 +607,13 @@ FindIncrement(const GroupCfg& _start, const GroupCfg& _goal, const int _nTicks) 
   // Need positive number of ticks.
   if(_nTicks <= 0)
     throw RunTimeException(WHERE) << "Divide by 0";
-  if(_start.m_groupMap != _goal.m_groupMap)
+  if(_start.m_groupGraph != _goal.m_groupGraph)
     throw RunTimeException(WHERE) << "Cannot use two different groups (or group "
                                   << "roadmaps) with this operation currently!";
 
   // Find increment for all robots in formations.
   std::set<Robot*> found;
-  auto group = m_groupMap->GetGroup();
+  auto group = this->m_groupGraph->GetGroup();
 
   for(auto formation : m_formations) {
 
@@ -778,7 +692,7 @@ void
 GroupCfg::
 GetRandomGroupCfg(const Boundary* const _b) {
   std::set<Robot*> found;
-  auto group = m_groupMap->GetGroup();
+  auto group = this->m_groupGraph->GetGroup();
 
   for(size_t i = 0; i < GetNumRobots(); i++) {
     m_vids[i] = INVALID_VID;
@@ -866,7 +780,7 @@ IsLocalCfg(const size_t _robotIndex) const noexcept {
 void
 GroupCfg::
 InitializeFormations() noexcept {
-  m_formations = m_groupMap->GetActiveFormations();
+  m_formations = this->m_groupGraph->GetActiveFormations();
 }
 
 void
@@ -883,17 +797,6 @@ InitializeLocalCfgs() noexcept {
 
   for(size_t i = 0; i < numRobots; ++i)
     m_localCfgs[i] = IndividualCfg(GetRobot(i));
-}
-
-
-inline
-void
-GroupCfg::
-VerifyIndex(const size_t _robotIndex) const noexcept {
-  if(_robotIndex >= GetNumRobots())
-    throw RunTimeException(WHERE) << "Requested data for robot " << _robotIndex
-                                  << ", but the group has only " << GetNumRobots()
-                                  << " robots.";
 }
 
 /*----------------------------------------------------------------------------*/
