@@ -89,6 +89,8 @@ PlanTasks() {
     // TODO::Store solution in solution set
   }
 
+  stats->SetStat(this->GetNameAndLabel() + "::LowerBound",lowerBound);
+  stats->SetStat(this->GetNameAndLabel() + "::BestCost",bestNode.cost);
   // Save plan in proper format
   SaveSolution(bestNode);
 }
