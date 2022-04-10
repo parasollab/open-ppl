@@ -69,13 +69,10 @@ IndividualRobotFindNeighborsTest() {
   bool passed = true;
   std::string message = "";
 
-  //construct roadmap graph 
-
   auto robot = NeighborhoodFinderMethodTest<MPTraits>::GetMPProblem()->GetRobots()[0].get();
 
   RoadmapType* roadmap = new RoadmapType(robot);
 
-  // vertices 
   auto p1 = CfgType(robot);
   std::istringstream p1Stream("0 0 0 0 0 0 0");
   p1.Read(p1Stream);
@@ -96,12 +93,9 @@ IndividualRobotFindNeighborsTest() {
   v2P.Read(v2Stream);
   auto v2 = roadmap->AddVertex(v2P);
 
-  // Edges 
   roadmap->AddEdge(start, goal, WeightType("a",1.0));
   roadmap->AddEdge(start, v1, WeightType("b",2.0));
   roadmap->AddEdge(start, v2, WeightType("c",3.0));
-  //roadmap->AddEdge(start, goal, WeightType("d",4.0));
-  //roadmap->AddEdge(start, goal, WeightType("e",5.0));
 
   OutputIterator output; 
 
@@ -111,7 +105,6 @@ IndividualRobotFindNeighborsTest() {
   vec.push_back(goal);
   vec.push_back(v1);
   vec.push_back(v2);
-  // vec = {goal, v1, v2};
 
    if (this->m_k >= roadmap->Size()) {
 
@@ -125,18 +118,14 @@ IndividualRobotFindNeighborsTest() {
 
     size_t distance_max = vec[this->m_k];
 
-    //outputs = neighbors that neighborhood finder finds closest to start
-
     for (size_t i =0; i < output.size(); i++) {
+      if (output[i].distance > distance_max) {
+      passed = false; 
+      message = "IndividualRobotFindNeighbors::FAILED!\n";
+      }
+    }
 
-
-    //if the distance from base to vertex is less or equal distance max distance ?
-    if (output[i].distance > distance_max) {
-    passed = false; 
-    message = "IndividualRobotFindNeighbors::FAILED!\n";
-    }
-    }
-    }
+  }
 
    return std::make_pair(passed,message);
 }
