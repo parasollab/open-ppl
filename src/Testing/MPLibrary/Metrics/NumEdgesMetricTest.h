@@ -5,8 +5,8 @@
 #include "MPLibrary/Metrics/NumEdgesMetric.h"
 
 template <typename MPTraits>
-class NumEdgesMetricTest :  virtual public NumEdgesMetric,
-                            public MetricMethodTest {
+class NumEdgesMetricTest :  virtual public NumEdgesMetric<MPTraits>,
+                            public MetricMethodTest<MPTraits> {
 
   public:
 
@@ -40,24 +40,24 @@ class NumEdgesMetricTest :  virtual public NumEdgesMetric,
 
 /*--------------------------- Construction ---------------------------*/
 template <typename MPTraits>
-NumEdgesMetricTest::
-NumEdgesMetricTest() : NumEdgesMetric() {}
+NumEdgesMetricTest<MPTraits>::
+NumEdgesMetricTest() : NumEdgesMetric<MPTraits>() {}
 
 template <typename MPTraits>
 NumEdgesMetricTest<MPTraits>::
-NumEdgesMetricTest(XMLNode& _node) : MetricMethodTest<MPTraits>(_node),
+NumEdgesMetricTest(XMLNode& _node) : MetricMethod<MPTraits>(_node),
                                            NumEdgesMetric<MPTraits>(_node) {}
                                            
 template <typename MPTraits>
-NumEdgesMetricTest::
+NumEdgesMetricTest<MPTraits>::
 ~NumEdgesMetricTest() {}
 
 
 
 /*--------------------- Test Interface Functions ---------------------*/
 template <typename MPTraits>
-typename NumEdgesMetricTest::TestResult
-NumEdgesMetricTest::
+typename NumEdgesMetricTest<MPTraits>::TestResult
+NumEdgesMetricTest<MPTraits>::
 TestMetric() {
 
   // Set up environment from parent

@@ -50,6 +50,12 @@ class MetricMethodTest : virtual public MetricMethod<MPTraits>,
     virtual double Metric();
 
     ///@}
+    ///@name Helper Functions
+    ///@{
+  
+    CfgType GetIndividualCfg();
+
+    ///@}
 
 };
 
@@ -114,6 +120,17 @@ Metric() {
   // There's no one default test scenario that applies to all metrics
   // All metrics test different measurements
   return (*this)();
+}
+
+/*----------------------- Helper Functions ---------------------*/
+
+template <typename MPTraits>
+typename MPTraits::CfgType
+MetricMethodTest<MPTraits>::
+GetIndividualCfg() {
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  CfgType cfg(robot);
+  return cfg;
 }
 
 #endif

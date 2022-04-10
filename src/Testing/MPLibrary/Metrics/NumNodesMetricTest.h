@@ -40,24 +40,24 @@ class NumNodesMetricTest :  virtual public NumNodesMetric<MPTraits>,
 
 /*--------------------------- Construction ---------------------------*/
 template <typename MPTraits>
-NumNodesMetricTest::
-NumNodesMetricTest() : NumNodesMetric() {}
+NumNodesMetricTest<MPTraits>::
+NumNodesMetricTest() : NumNodesMetric<MPTraits>() {}
 
 template <typename MPTraits>
 NumNodesMetricTest<MPTraits>::
-NumNodesMetricTest(XMLNode& _node) : MetricMethodTest<MPTraits>(_node),
+NumNodesMetricTest(XMLNode& _node) : MetricMethod<MPTraits>(_node),
                                            NumNodesMetric<MPTraits>(_node) {}
 
 template <typename MPTraits>
-NumNodesMetricTest::
+NumNodesMetricTest<MPTraits>::
 ~NumNodesMetricTest() {}
 
 
 
 /*--------------------- Test Interface Functions ---------------------*/
 template <typename MPTraits>
-typename NumNodesMetricTest::TestResult
-NumNodesMetricTest::
+typename NumNodesMetricTest<MPTraits>::TestResult
+NumNodesMetricTest<MPTraits>::
 TestMetric() {
 
   // Set up environment from parent
