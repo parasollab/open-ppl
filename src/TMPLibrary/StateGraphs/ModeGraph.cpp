@@ -128,6 +128,11 @@ GenerateRepresentation(const State& _start) {
   std::set<VID> startVIDs;
   std::set<VID> goalVIDs;
 
+  if(m_debug) {
+    std::cout << "MODE HYPERGRAPH" << std::endl;
+    m_modeHypergraph.Print();
+  }
+
   SampleNonActuatedCfgs(_start,startVIDs,goalVIDs);
   SampleTransitions();
   GenerateRoadmaps(_start,startVIDs,goalVIDs);

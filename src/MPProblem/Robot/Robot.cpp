@@ -61,7 +61,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
   m_fixed = _node.Read("fixed", false, m_fixed,
                        "Flag indicating if robot has a fixed base.");
 
-  m_baseRotation = _node.Read("baseRotation",false,0.,0.,1.0,
+  m_baseRotation = _node.Read("baseRotation",false,0.,-1.0,1.0,
                     "Adjustment of base position in real robot.");
 
   m_baseJoint = _node.Read("baseJoint",false,"","Name of base rotational joint");

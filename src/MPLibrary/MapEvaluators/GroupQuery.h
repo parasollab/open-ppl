@@ -173,8 +173,22 @@ operator()() {
     }
 
     // Get the start VID for this subquery.
-    const VID start = path->Empty() ? *goalTracker->GetStartVIDs().begin()
-                                    : path->VIDs().back();
+    VID start = MAX_INT;
+    if(!path->Empty()) {
+      path->VIDs().back();
+    }
+    else {
+      for(auto vid : goalTracker->GetStartVIDs()) {
+        if(r->GetVertex(vid).GetFormations() == r->GetActiveFormations()) {
+          start = vid;
+          break;
+        }
+      }
+    }
+
+    if(start == MAX_INT)
+      throw RunTimeException(WHERE) << "No VIDs located for start.";
+
 
     // Get the goal VIDs for this subquery.
     const VIDSet& goals = goalTracker->GetGoalVIDs(m_goalIndex);
