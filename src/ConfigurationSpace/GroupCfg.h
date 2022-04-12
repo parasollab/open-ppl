@@ -39,20 +39,22 @@ class Formation;
 ///       case it will have all local cfgs. It should only get tied to a roadmap
 ///       with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
-class GroupCfg final : CompositeState<Cfg, GroupRoadmap<GroupCfg, GroupLocalPlan<Cfg>>> { // forward declaration :(
+class GroupCfg final : CompositeState<GenericStateGraph<Cfg, DefaultWeight<Cfg>>> {
 
   public:
 
     ///@name Local Types
     ///@{
 
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> IndividualRoadmap;
+
     typedef size_t           VID;      ///< A VID in an individual Robot roadmap.
     typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. Robot roadmaps.
 
     typedef Cfg              IndividualCfg;
-    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<IndividualCfg>> GroupRoadmapType;
+    typedef GroupRoadmap<IndividualRoadmap> GroupRoadmapType;
     
-    typedef typename GroupRoadmapType::IndividualRoadmap IndividualRoadmap;
+    // typedef typename GroupRoadmapType::IndividualRoadmap IndividualRoadmap;
 
     //TODO::Purge this everywhere and update to new formation class
     /// A formation represents a group of robots which are maintaining their

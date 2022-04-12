@@ -98,10 +98,10 @@ struct MPTraits {
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
   typedef GoalTrackerType<MPTraits>       GoalTracker;
 
-  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
+  typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
+  typedef GroupRoadmap<RoadmapType>    GroupRoadmapType;
   typedef GroupPath<MPTraits>                        GroupPathType;
-  typedef GroupCfg                                   GroupCfgType;
+  typedef GroupCfg<RoadmapType>                                   GroupCfgType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

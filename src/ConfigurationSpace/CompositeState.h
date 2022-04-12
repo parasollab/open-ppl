@@ -17,13 +17,15 @@ class RobotGroup;
 /// An aggregate configuration which represents a state for each robot
 /// in a robot group.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 class CompositeState {
 
   public:
 
     ///@name Local Types
     ///@{
+
+    typedef typename GraphType::Vertex CfgType;
 
     typedef size_t           VID;      ///< A VID in an individual graph.
     typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. graphs.
@@ -148,7 +150,7 @@ class CompositeState {
 
 };
 
-template <typename CfgType, typename GraphType>
-std::ostream& operator<<(std::ostream&, const CompositeState<CfgType, GraphType>&);
+template <typename GraphType>
+std::ostream& operator<<(std::ostream&, const CompositeState<GraphType>&);
 
 #endif

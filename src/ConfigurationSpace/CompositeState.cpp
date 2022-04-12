@@ -6,8 +6,8 @@
 
 /*------------------------------- Construction -------------------------------*/
 
-template <typename CfgType, typename GraphType>
-CompositeState<CfgType, GraphType>::
+template <typename GraphType>
+CompositeState<GraphType>::
 CompositeState(GraphType* const _groupGraph, 
   CfgType& (*_vertexGetter)(const VID)) : 
   m_groupGraph(_groupGraph), m_vertexGetter(_vertexGetter) {
@@ -24,10 +24,10 @@ CompositeState(GraphType* const _groupGraph,
 
 /*--------------------------------- Equality ---------------------------------*/
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 bool
-CompositeState<CfgType, GraphType>::
-operator==(const CompositeState<CfgType, GraphType>& _other) const noexcept {
+CompositeState<GraphType>::
+operator==(const CompositeState<GraphType>& _other) const noexcept {
   // If _other is from another map, these are not the same.
   if(m_groupGraph != _other.m_groupGraph)
     return false;
@@ -49,34 +49,34 @@ operator==(const CompositeState<CfgType, GraphType>& _other) const noexcept {
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 bool
-CompositeState<CfgType, GraphType>::
-operator!=(const CompositeState<CfgType, GraphType>& _other) const noexcept {
+CompositeState<GraphType>::
+operator!=(const CompositeState<GraphType>& _other) const noexcept {
   return !(*this == _other);
 }
 
 /*---------------------------------- Robots ----------------------------------*/
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 size_t
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetNumRobots() const noexcept {
   return m_groupGraph ? m_groupGraph->GetGroup()->Size() : 0;
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 const std::vector<Robot*>&
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetRobots() const noexcept {
   return m_groupGraph->GetGroup()->GetRobots();
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 Robot*
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetRobot(const size_t _index) const {
   VerifyIndex(_index);
 
@@ -91,24 +91,24 @@ GetRobot(const size_t _index) const {
 
 /*---------------------------- Roadmap Accessors -----------------------------*/
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 GraphType*
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetGraph() const noexcept {
   return m_groupGraph;
 }
 
-template <typename CfgType, typename GraphType>
-typename CompositeState<CfgType, GraphType>::VID
-CompositeState<CfgType, GraphType>::
+template <typename GraphType>
+typename CompositeState<GraphType>::VID
+CompositeState<GraphType>::
 GetVID(const size_t _index) const noexcept {
   VerifyIndex(_index);
   return m_vids[_index];
 }
 
-template <typename CfgType, typename GraphType>
-typename CompositeState<CfgType, GraphType>::VID
-CompositeState<CfgType, GraphType>::
+template <typename GraphType>
+typename CompositeState<GraphType>::VID
+CompositeState<GraphType>::
 GetVID(Robot* const _robot) const {
   const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
   return GetVID(index);
@@ -116,18 +116,18 @@ GetVID(Robot* const _robot) const {
 
 /*------------------------ Individual Configurations -------------------------*/
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 void
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 SetRobotCfg(Robot* const _robot, const VID _vid) {
   const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
   SetRobotCfg(index, _vid);
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 void
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 SetRobotCfg(const size_t _index, const VID _vid) {
   VerifyIndex(_index);
 
@@ -135,18 +135,18 @@ SetRobotCfg(const size_t _index, const VID _vid) {
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 CfgType&
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) {
   const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
   return GetRobotCfg(index);
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 CfgType&
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetRobotCfg(const size_t _index) {
   VerifyIndex(_index);
 
@@ -156,18 +156,18 @@ GetRobotCfg(const size_t _index) {
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 const CfgType&
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) const {
   const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
   return GetRobotCfg(index);
 }
 
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 const CfgType&
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 GetRobotCfg(const size_t _index) const {
   VerifyIndex(_index);
 
@@ -180,10 +180,10 @@ GetRobotCfg(const size_t _index) const {
 
 /*----------------------------------------------------------------------------*/
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 inline
 void
-CompositeState<CfgType, GraphType>::
+CompositeState<GraphType>::
 VerifyIndex(const size_t _robotIndex) const noexcept {
   if(_robotIndex >= GetNumRobots())
     throw RunTimeException(WHERE) << "Requested data for robot " << _robotIndex
@@ -193,9 +193,9 @@ VerifyIndex(const size_t _robotIndex) const noexcept {
 
 /*----------------------------------------------------------------------------*/
 
-template <typename CfgType, typename GraphType>
+template <typename GraphType>
 std::ostream&
-operator<<(std::ostream& _os, const CompositeState<CfgType, GraphType>& _compositeState) {
+operator<<(std::ostream& _os, const CompositeState<GraphType>& _compositeState) {
   // Might not need to be hidden behind GROUP_MAP, but doing for consistency
 #ifdef GROUP_MAP
   _os << "0 ";

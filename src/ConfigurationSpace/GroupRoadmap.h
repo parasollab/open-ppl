@@ -3,6 +3,7 @@
 
 #include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/CompositeGraph.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
@@ -22,20 +23,19 @@
 ///
 /// Note that VIDs in this object refer to GROUP configuration VIDs.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename Vertex, typename Edge>
-class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
+template <typename GraphType>
+class GroupRoadmap final : public CompositeGraph<GraphType> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef GenericStateGraph<Vertex, Edge>     BaseType;
+    typedef CompositeGraph<GraphType>    BaseType;
 
     typedef typename BaseType::EID         ED;
-    typedef typename Vertex::IndividualCfg IndividualCfg;
-    typedef typename Edge::IndividualEdge  IndividualEdge;
-    typedef typename Vertex::VIDSet        VIDSet;
+    typedef typename GraphType::Vertex IndividualCfg;
+    typedef typename GraphType::Edge  IndividualEdge;
     typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
 
     typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
@@ -76,17 +76,6 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
     ///@}
     ///@name Accessors
     ///@{
-
-    /// Get the robot group.
-    RobotGroup* GetGroup();
-
-    /// Get the individual roadmap for a robot in the group.
-    /// @param _index The index of the desired robot.
-    IndividualRoadmap* GetRoadmap(const size_t _index);
-    const IndividualRoadmap* GetRoadmap(const size_t _index) const;
-
-    /// Get the number of robots for the group this roadmap is for.
-    size_t GetNumRobots() const noexcept;
 
     /// Get the set of formations available in this roadmap.
     const std::unordered_map<Formation*,bool>& GetFormations();
@@ -137,7 +126,7 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
 
     /// Import the base-class version for this (required because we've
     /// overridden one of the overloads).
-    using GenericStateGraph<Vertex, Edge>::AddEdge;
+    using CompositeGraph<GraphType>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
@@ -179,14 +168,8 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
     ///@name Internal State
     ///@{
 
-    RobotGroup* const m_group; ///< The robot group.
-
-    std::vector<IndividualRoadmap*> m_roadmaps; ///< The individual roadmaps.
-
     /// The set of available formations and their active=1/inactive=0 status.
-    std::unordered_map<Formation*,bool> m_formations; 
-
-    using BaseType::m_timestamp;
+    std::unordered_map<Formation*,bool> m_formations;
 
     ///@}
 
@@ -194,62 +177,31 @@ class GroupRoadmap final : public GenericStateGraph<Vertex, Edge> {
 
 /*------------------------------- Construction -------------------------------*/
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 template <typename MPSolution>
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
-  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
+  CompositeGraph<IndividualRoadmap>(_g) {
 
-  for(Robot* const robot : *m_group)
-    m_roadmaps.push_back(_solution->GetRoadmap(robot));
+  std::vector<IndividualRoadmap*> roadmaps;
+  for(Robot* const robot : *_g)
+    roadmaps.push_back(_solution->GetRoadmap(robot));
+  
+  this->m_roadmaps = roadmaps;
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
 
-template <typename Vertex, typename Edge>
-inline
-RobotGroup*
-GroupRoadmap<Vertex, Edge>::
-GetGroup() {
-  return m_group;
-}
-
-
-template <typename Vertex, typename Edge>
-inline
-typename GroupRoadmap<Vertex, Edge>::IndividualRoadmap*
-GroupRoadmap<Vertex, Edge>::
-GetRoadmap(const size_t _index) {
-  return m_roadmaps[_index];
-}
-
-
-template <typename Vertex, typename Edge>
-inline
-const typename GroupRoadmap<Vertex, Edge>::IndividualRoadmap*
-GroupRoadmap<Vertex, Edge>::
-GetRoadmap(const size_t _index) const {
-  return m_roadmaps[_index];
-}
-
-
-template <typename Vertex, typename Edge>
-size_t
-GroupRoadmap<Vertex, Edge>::
-GetNumRobots() const noexcept {
-  return m_group->Size();
-}
-
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 const std::unordered_map<Formation*,bool>&
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 GetFormations() {
   return m_formations;
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 std::unordered_set<Formation*>
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 GetActiveFormations() {
   std::unordered_set<Formation*> active;
 
@@ -263,17 +215,17 @@ GetActiveFormations() {
 
 /*-------------------------------Input/Output---------------------------------*/
 
-//template <typename Vertex, typename Edge>
+//template <typename GraphType>
 //void
-//GroupRoadmap<Vertex, Edge>::
+//GroupRoadmap<GraphType>::
 //Read(const std::string& _filename) {
 //  throw NotImplementedException(WHERE);
 //}
 
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 Write(const std::string& _filename, Environment* _env) const {
   /// For now, we only support composite C-Space output as vizmo is the only
   /// vizualiser that has support for groups/composite robots.
@@ -281,9 +233,9 @@ Write(const std::string& _filename, Environment* _env) const {
 }
 
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 WriteCompositeGraph(const std::string& _filename, Environment* _env) const {
   #ifndef VIZMO_MAP
     throw RunTimeException(WHERE, "Cannot use this method without the vizmo map"
@@ -299,9 +251,9 @@ WriteCompositeGraph(const std::string& _filename, Environment* _env) const {
 }
 
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 std::string
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 PrettyPrint() const {
   std::ostringstream out;
   out << "Number of group vertices: " << this->get_num_vertices() << std::endl;
@@ -316,9 +268,9 @@ PrettyPrint() const {
 
 /*-------------------------------- Modifiers ---------------------------------*/
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   if(_source == _target)
     throw RunTimeException(WHERE) << "Tried to add edge between same VID "
@@ -425,14 +377,14 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     this->ExecuteAddEdgeHooks(ei);
 
     this->m_predecessors[_target].insert(_source);
-    ++m_timestamp;
+    ++this->m_timestamp;
   }
 }
 
 
-template <typename Vertex, typename Edge>
-typename GroupRoadmap<Vertex, Edge>::VID
-GroupRoadmap<Vertex, Edge>::
+template <typename GraphType>
+typename GroupRoadmap<GraphType>::VID
+GroupRoadmap<GraphType>::
 AddVertex(const Vertex& _v) noexcept {
   Vertex cfg; // Will be a copy of the const Vertex
   // Check that the group map is correct, if not, try and change it.
@@ -479,7 +431,7 @@ AddVertex(const Vertex& _v) noexcept {
   const VID vid = this->add_vertex(cfg);
   this->m_predecessors[vid];
   this->m_allVIDs.insert(vid);
-  ++m_timestamp;
+  ++this->m_timestamp;
 
   // Execute post-add hooks.
   this->ExecuteAddVertexHooks(this->find_vertex(vid));
@@ -488,9 +440,9 @@ AddVertex(const Vertex& _v) noexcept {
 }
 
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 DeleteVertex(const VID _v) noexcept {
  // Find the vertex and crash if it doesn't exist.
   VI vi = this->find_vertex(_v);
@@ -530,12 +482,12 @@ DeleteVertex(const VID _v) noexcept {
   // Delete the group vertex.
   this->delete_vertex(vi->descriptor());
   this->m_allVIDs.erase(_v);
-  ++m_timestamp;
+  ++this->m_timestamp;
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 DeleteEdge(const VID _source, const VID _target) noexcept {
   // Find the edge and crash if it isn't found.
   const ED edgeDescriptor(_source, _target);
@@ -550,9 +502,9 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
   DeleteEdge(edgeIterator);
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 DeleteEdge(EI _iterator) noexcept {
   // Execute pre-delete hooks and update vizmo debug.
   this->ExecuteDeleteEdgeHooks(_iterator);
@@ -571,12 +523,12 @@ DeleteEdge(EI _iterator) noexcept {
             target = _iterator->target();
 
   this->m_predecessors[target].erase(source);
-  ++m_timestamp;
+  ++this->m_timestamp;
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 AddFormation(Formation* _formation, bool _active) {
 
   if(!_formation)
@@ -585,39 +537,27 @@ AddFormation(Formation* _formation, bool _active) {
   m_formations[_formation] = _active;
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 SetFormationActive(Formation* _formation) {
   m_formations[_formation] = true;
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 SetFormationInactive(Formation* _formation) {
   m_formations[_formation] = false;
 }
 
-template <typename Vertex, typename Edge>
+template <typename GraphType>
 void
-GroupRoadmap<Vertex, Edge>::
+GroupRoadmap<GraphType>::
 SetAllFormationsInactive() {
   for(auto& kv : m_formations) {
     kv.second = false;
   }
-}
-
-/*----------------------------------- Hooks ----------------------------------*/
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-ClearHooks() noexcept {
-  GenericStateGraph<Vertex, Edge>::ClearHooks();
-
-  for(IndividualRoadmap* const map : m_roadmaps)
-    map->ClearHooks();
 }
 
 /*----------------------------------------------------------------------------*/
