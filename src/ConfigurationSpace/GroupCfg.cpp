@@ -901,6 +901,11 @@ void
 GroupCfg::
 InitializeFormations() noexcept {
   m_formations = m_groupMap->GetActiveFormations();
+
+  // TODO::Delete this debug
+  if(m_formations.size() == 2)
+    throw RunTimeException(WHERE) << "SHOULD NOT BE HAPPENING YET.";
+
 }
 
 void

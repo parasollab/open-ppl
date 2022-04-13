@@ -465,6 +465,7 @@ InterimState(Interaction* _interaction, const std::string& _current,
 
     // Set formations
     auto grm = solution->GetGroupRoadmap(group);
+    grm->SetAllFormationsInactive();
     auto formation = f->GenerateFormation(roleMap);
     if(formation)
       grm->AddFormation(formation,true);
