@@ -105,7 +105,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _start The start coordinate.
     /// @param _goal The goal coordinate.
     std::pair<std::vector<size_t>,std::vector<size_t>> 
-          GeneratePath(const size_t _start, const size_t _goal);
+          GeneratePath(const size_t _start, const std::vector<size_t> _goals);
 
     /// Set the distance metric to use
     void SetDMLabel(const std::string& _dmLabel);
@@ -144,7 +144,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     /// @param _start The start VID to use.
     /// @param _goals The goal VIDs to use.
     /// @return True if a path from _start to one of _goals was generated.
-    virtual bool PerformSubQuery(const size_t _start, const size_t _goal);
+    virtual bool PerformSubQuery(const size_t _start, const std::vector<size_t> _goals);
 
     /// Define a function for computing path weights w.r.t. dynamic obstacles.
     /// Here the metric is the number of time steps, and we return the distance
@@ -183,7 +183,9 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
                         size_t _rmTarget, AbstractRoadmap* _rm);
 
     /// Initialize the cost to go from the start point to the goal
-    void InitializeCostToGo(size_t _goal);
+    void InitializeCostToGo(const std::vector<size_t> _goal);
+
+    bool SameFormations(std::unordered_set<Formation*> _set1, std::unordered_set<Formation*> _set2);
 
     ///@}
     ///@name Internal State
@@ -302,8 +304,34 @@ operator()() {
     }
 
     // Get the start VID for this subquery.
-    const size_t start = m_startVID == MAX_INT ? *goalTracker->GetStartVIDs().begin()
-                                               : m_sippGraph->GetVertex(m_startVID).vid;
+    //const size_t start = m_startVID == MAX_INT ? *goalTracker->GetStartVIDs().begin()
+    //                                           : m_sippGraph->GetVertex(m_startVID).vid;
+
+    // Get the start VID for this subquery.
+    size_t start = MAX_INT;
+    if(m_startVID != MAX_INT) {
+      m_sippGraph->GetVertex(m_startVID).vid;
+    }
+    else if(this->GetTask()) {
+      start = *goalTracker->GetStartVIDs().begin();
+    }
+    else {
+      auto r = this->GetGroupRoadmap();
+
+      if(r->GetActiveFormations().empty()) {
+        start = *goalTracker->GetStartVIDs().begin();
+      }
+
+      for(auto vid : goalTracker->GetStartVIDs()) {
+        if(SameFormations(r->GetVertex(vid).GetFormations(),r->GetActiveFormations())) {
+          start = vid;
+          break;
+        }
+      }
+    }
+
+    if(start == MAX_INT)
+      throw RunTimeException(WHERE) << "No VIDs located for start.";
 
     // Get the goal VIDs for this subquery.
     const VIDSet& goals = goalTracker->GetGoalVIDs(m_goalIndex);
@@ -353,7 +381,7 @@ operator()() {
 
     // Perform this subquery. If it fails, there is no path.
     std::vector<size_t> g(goals.begin(),goals.end());
-    const bool success = PerformSubQuery(m_startVID, g[0]);
+    const bool success = PerformSubQuery(m_startVID, g);
     if(!success)
       return false;
 
@@ -375,18 +403,27 @@ operator()() {
 template <typename MPTraits>
 std::pair<std::vector<size_t>,std::vector<size_t>>
 SIPPMethod<MPTraits>::
-GeneratePath(const size_t _start, const size_t _goal) {
+GeneratePath(const size_t _start, const std::vector<size_t> _goals) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, "SIPPMethod::GeneratePath");
   stats->IncStat("SIPP Graph Search");
 
   // Set up termination criterion to exit early if we find goal node.
   SSSPTerminationCriterion<SIPPGraph> termination(
-      [_goal,this](typename SIPPGraph::vertex_iterator& _vi, const SSSPOutput<SIPPGraph>& _sssp) {
+      [_goals,this](typename SIPPGraph::vertex_iterator& _vi, const SSSPOutput<SIPPGraph>& _sssp) {
 
       // Check if vertex has reached the goal roadmap vid and satisfies other constraints
       auto vertex = _vi->property();
-      if(_goal == vertex.vid && this->SatisfyConstraints(vertex.interval))
+      
+      bool isGoal = false;
+      for(auto vid : _goals) {
+        if(vid == vertex.vid) {
+          isGoal = true;
+          break;
+        }
+      }
+
+      if(isGoal&& this->SatisfyConstraints(vertex.interval))
         return SSSPTermination::EndSearch;
 
       return SSSPTermination::Continue;
@@ -428,7 +465,16 @@ GeneratePath(const size_t _start, const size_t _goal) {
 
   auto current = output.ordering.back();
   auto lastState = m_sippGraph->GetVertex(current);
-  if(_goal != lastState.vid or !SatisfyConstraints(lastState.interval)) {
+
+  bool isGoal = false;
+  for(auto vid : _goals) {
+    if(vid == lastState.vid) {
+      isGoal = true; 
+      break;
+    }
+  }
+
+  if(!isGoal or !SatisfyConstraints(lastState.interval)) {
     std::cout << "Failed to find a path." <<std::endl;
     return std::make_pair(std::vector<size_t>(),std::vector<size_t>());
   }
@@ -502,9 +548,9 @@ Reset() {
 template <typename MPTraits>
 bool
 SIPPMethod<MPTraits>::
-PerformSubQuery(const size_t _start, const size_t _goal) {
-  InitializeCostToGo(_goal);
-  auto pair = this->GeneratePath(_start, _goal);
+PerformSubQuery(const size_t _start, const std::vector<size_t> _goals) {
+  InitializeCostToGo(_goals);
+  auto pair = this->GeneratePath(_start, _goals);
   auto path = pair.first;
   auto waitTimesteps = pair.second;
 
@@ -742,14 +788,14 @@ BuildNeighbors(typename SIPPGraph::vertex_descriptor _sippSource, size_t _rmTarg
 template<typename MPTraits>
 void
 SIPPMethod<MPTraits>::
-InitializeCostToGo(size_t _goal) {
+InitializeCostToGo(const vector<size_t> _goals) {
 
-  if(_goal == std::numeric_limits<size_t>::max()) {
+  /*if(_goal == std::numeric_limits<size_t>::max()) {
     throw RunTimeException(WHERE) << "Goal does not exist in current \
             roadmap" << std::endl;
-  }
+  }*/
 
-  std::vector<size_t> starts = {_goal};
+  std::vector<size_t> starts = _goals;
 
   if(this->GetGroupTask()) {
 
@@ -817,6 +863,48 @@ bool
 SIPPMethod<MPTraits>::
 SatisfyConstraints(Range<double> _interval) {
   return _interval.Contains(m_minEndTime);
+}
+
+template <typename MPTraits>
+bool
+SIPPMethod<MPTraits>::
+SameFormations(std::unordered_set<Formation*> _set1, std::unordered_set<Formation*> _set2) {
+  
+  bool matched = true;
+
+  for(auto f1 : _set1) {
+    matched = false;
+    for(auto f2 : _set2) {
+      if(*f1 == *f2) {
+        matched = true;
+        break;
+      }
+    }
+
+    if(!matched)
+      break;
+  }
+
+  if(!matched)
+    return std::numeric_limits<double>::infinity();
+
+  for(auto f2 : _set2) {
+    matched = false;
+    for(auto f1 : _set1) {
+      if(*f2 == *f1) {
+        matched = true;
+        break;
+      }
+    }
+
+    if(!matched)
+      break;
+  }
+
+  if(!matched)
+    return false;
+
+  return true;
 }
 
 /*------------------------------------------------------------*/

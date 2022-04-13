@@ -79,6 +79,8 @@ class GroupQuery final : public MapEvaluatorMethod<MPTraits> {
     double DynamicPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const;
 
+    bool SameFormations(std::unordered_set<Formation*> _set1, std::unordered_set<Formation*> _set2);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -179,7 +181,7 @@ operator()() {
     }
     else {
       for(auto vid : goalTracker->GetStartVIDs()) {
-        if(r->GetVertex(vid).GetFormations() == r->GetActiveFormations()) {
+        if(SameFormations(r->GetVertex(vid).GetFormations(),r->GetActiveFormations())) {
           start = vid;
           break;
         }
@@ -188,7 +190,6 @@ operator()() {
 
     if(start == MAX_INT)
       throw RunTimeException(WHERE) << "No VIDs located for start.";
-
 
     // Get the goal VIDs for this subquery.
     const VIDSet& goals = goalTracker->GetGoalVIDs(m_goalIndex);
@@ -427,6 +428,48 @@ DynamicPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
   const double edgeWeight  = _ei->property().GetWeight(),
                newDistance = _sourceDistance + edgeWeight;
   return newDistance;
+}
+
+template <typename MPTraits>
+bool
+GroupQuery<MPTraits>::
+SameFormations(std::unordered_set<Formation*> _set1, std::unordered_set<Formation*> _set2) {
+  
+  bool matched = true;
+
+  for(auto f1 : _set1) {
+    matched = false;
+    for(auto f2 : _set2) {
+      if(*f1 == *f2) {
+        matched = true;
+        break;
+      }
+    }
+
+    if(!matched)
+      break;
+  }
+
+  if(!matched)
+    return std::numeric_limits<double>::infinity();
+
+  for(auto f2 : _set2) {
+    matched = false;
+    for(auto f1 : _set1) {
+      if(*f2 == *f1) {
+        matched = true;
+        break;
+      }
+    }
+
+    if(!matched)
+      break;
+  }
+
+  if(!matched)
+    return false;
+
+  return true;
 }
 
 /*----------------------------------------------------------------------------*/

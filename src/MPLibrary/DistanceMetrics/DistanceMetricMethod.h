@@ -150,8 +150,45 @@ DistanceMetricMethod<MPTraits>::
 Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
 
   // If strict formations are required, check that the two cfgs match.
-  if(m_strictFormations and _c1.GetFormations() != _c2.GetFormations())
-    return std::numeric_limits<double>::infinity();
+  if(m_strictFormations) {
+
+    if(_c1.GetFormations().size() != _c2.GetFormations().size())
+      return std::numeric_limits<double>::infinity();
+
+    bool matched = true;
+
+    for(auto f1 : _c1.GetFormations()) {
+      matched = false;
+      for(auto f2 : _c2.GetFormations()) {
+        if(*f1 == *f2) {
+          matched = true;
+          break;
+        }
+      }
+
+      if(!matched)
+        break;
+    }
+
+    if(!matched)
+      return std::numeric_limits<double>::infinity();
+
+    for(auto f2 : _c2.GetFormations()) {
+      matched = false;
+      for(auto f1 : _c1.GetFormations()) {
+        if(*f2 == *f1) {
+          matched = true;
+          break;
+        }
+      }
+
+      if(!matched)
+        break;
+    }
+
+    if(!matched)
+      return std::numeric_limits<double>::infinity();
+  }
 
   double sum = 0;
   for(size_t i = 0; i < _c1.GetNumRobots(); ++i)

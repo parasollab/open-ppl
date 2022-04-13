@@ -403,7 +403,7 @@ AddBranches(std::vector<HPElem> _path, std::set<HPElem>& _parents, const MBTOutp
         finalPath.insert(iter+(i+offset),branchStart,branch.end());
 
         // Update offset
-        offset += branch.size();
+        offset += (branch.size()-1);
       }
     }
   }

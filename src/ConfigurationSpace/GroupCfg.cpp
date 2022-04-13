@@ -57,10 +57,44 @@ operator==(const GroupCfg& _other) const noexcept {
   if(m_formations.size() != _other.m_formations.size())
     return false; 
 
-  for(auto formation : _other.m_formations) {
-    if(!m_formations.count(formation))
-      return false;
+  //for(auto formation : _other.m_formations) {
+  //  if(!m_formations.count(formation))
+  //    return false;
+  //}
+
+  bool matched = true;
+
+  for(auto f1 : _other.GetFormations()) {
+    matched = false;
+    for(auto f2 : m_formations) {
+      if(*f1 == *f2) {
+        matched = true;
+        break;
+      }
+    }
+
+    if(!matched)
+      break;
   }
+
+  if(!matched)
+    return std::numeric_limits<double>::infinity();
+
+  for(auto f2 : m_formations) {
+    matched = false;
+    for(auto f1 : _other.GetFormations()) {
+      if(*f2 == *f1) {
+        matched = true;
+        break;
+      }
+    }
+
+    if(!matched)
+      break;
+  }
+
+  if(!matched)
+    return false;
 
   return true;
 }

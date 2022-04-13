@@ -365,13 +365,20 @@ SampleTransitions() {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTransitions");
 
-  std::map<size_t,size_t> groundedInstanceTracker;
+  // Set all robots and objects to virtual
+  auto c = this->GetPlan()->GetCoordinator();
+  for(auto& kv : c->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto r : group->GetRobots()) {
+      r->SetVirtual(true);
+    }
+  }
 
   // For each edge in the mode graph, generate n samples
   for(auto& kv : m_modeHypergraph.GetHyperarcMap()) {
 
     auto& hyperarc = kv.second;
-    groundedInstanceTracker[kv.first] = 0;
+    m_groundedInstanceTracker[kv.first] = 0;
     
     // Check if hyperarc is a reversed action, and only plan
     // the forward actions as the reverse will also be saved
@@ -403,6 +410,15 @@ SampleTransitions() {
     auto label = interaction->GetInteractionStrategyLabel();
     auto is = this->GetInteractionStrategyMethod(label);
 
+    // Set robots involved as non virtual
+    for(auto kv : modeSet) {
+      auto group = kv.first;
+      for(auto r : group->GetRobots()) {
+        r->SetVirtual(false);
+      }
+    }
+
+    bool foundInteraction = false;
     // If this hyperarc involves an unactuated mode, use the grounded vertices
     if(!unactuatedModes.empty()) {
       if(unactuatedModes.size() > 1)
@@ -428,7 +444,7 @@ SampleTransitions() {
           if(!is->operator()(interaction,goalSet))
             continue;
 
-          groundedInstanceTracker[kv.first] = groundedInstanceTracker[kv.first] + 1;
+          m_groundedInstanceTracker[kv.first] = m_groundedInstanceTracker[kv.first] + 1;
           // Save interaction paths
           SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap,headModeMap);
           break;
@@ -437,6 +453,7 @@ SampleTransitions() {
     }
     // Otherwise, sample completely new grounded vertices
     else {
+
       for(size_t i = 0; i < m_numInteractionSamples; i++) {
 
         for(size_t j = 0; j < m_maxAttempts; j++) {
@@ -447,7 +464,9 @@ SampleTransitions() {
           if(!is->operator()(interaction,goalSet))
             continue;
 
-          groundedInstanceTracker[kv.first] = groundedInstanceTracker[kv.first] + 1;
+          foundInteraction = true;
+
+          m_groundedInstanceTracker[kv.first] = m_groundedInstanceTracker[kv.first] + 1;
 
           // Save interaction paths
           SaveInteractionPaths(interaction,modeSet,goalSet,tailModeMap,headModeMap);
@@ -455,11 +474,37 @@ SampleTransitions() {
         }
       }
     }
+
+    // Set robots involved as back to virtual
+    for(auto kv : modeSet) {
+      auto group = kv.first;
+      for(auto r : group->GetRobots()) {
+        r->SetVirtual(true);
+      }
+    }
+
+    if(m_debug and !foundInteraction) {
+      std::cout << "Failed to find interaction for " << interaction->GetLabel()
+                << " with starting mode";
+      for(auto kv : modeSet) {
+        auto group = kv.first;
+        std::cout << " " << group->GetLabel();
+      }
+      std::cout << std::endl;
+    }
+  }
+
+  // Set all robots and objects to back to none virtual
+  for(auto& kv : c->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto r : group->GetRobots()) {
+      r->SetVirtual(false);
+    }
   }
 
   if(m_debug) {
     std::cout << "Grounding instance count of each mode hyperarc." << std::endl;
-    for(auto kv : groundedInstanceTracker) {
+    for(auto kv : m_groundedInstanceTracker) {
       auto hid = kv.first;
       auto count = kv.second;
       std::cout << hid << " : " << count << std::endl;
@@ -574,6 +619,12 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
     delete task;
   }
   */
+
+  // TODO::Collect set of modes for each robot-unique object type pairing
+
+  // TODO::For each pairing of individual robot to object type, build an initial roadmap
+
+  // TODO::Copy roadmap to all instances of individual robot-unique object type pairs
 }
 
 void
@@ -672,6 +723,14 @@ ConnectTransitions() {
         // Set robots not virtual
         for(auto robot : grm->GetGroup()->GetRobots()) {
           robot->SetVirtual(false);
+        }
+
+        if(m_debug) {
+          auto cfg1 = vertex1.property.first->GetVertex(vertex1.property.second);
+          auto cfg2 = vertex2.property.first->GetVertex(vertex2.property.second);
+          std::cout << "Querying path for " << cfg1.GetGroupRoadmap()->GetGroup()->GetLabel() << std::endl;
+          std::cout << "\tFrom: " << cfg1.PrettyPrint() << std::endl;
+          std::cout << "\tTo: " << cfg2.PrettyPrint() << std::endl;
         }
 
         // Query path for task
@@ -1212,6 +1271,10 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     for(auto task : tasks) {
       auto grm = solution->GetGroupRoadmap(task->GetRobotGroup());
       auto formations = grm->GetActiveFormations();
+
+      if(grm->GetGroup()->Size() > 1 and formations.empty())
+        throw RunTimeException(WHERE) << "AT THE MOMENT, THIS SHOULD NEVER HAPPEN.";
+
       transition.taskFormations[task.get()] = formations;
     }
     

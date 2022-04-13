@@ -171,6 +171,8 @@ class ModeGraph : public StateGraph {
 
     std::unordered_map<VID,std::unordered_set<VID>> m_modeGroundedVertices;
 
+    std::map<size_t,size_t> m_groundedInstanceTracker;
+
     std::set<size_t> m_unactuatedModes;
 
     // XML Parameters
