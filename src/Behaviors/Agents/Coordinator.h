@@ -8,6 +8,7 @@
 #include "TMPLibrary/TMPLibrary.h"
 
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/GroupCfg.h"
 
 #include "TMPLibrary/Solution/Plan.h"
 

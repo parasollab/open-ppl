@@ -23,20 +23,25 @@
 ///
 /// Note that VIDs in this object refer to GROUP configuration VIDs.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename GraphType>
-class GroupRoadmap final : public CompositeGraph<GraphType> {
+template <typename Vertex, typename Edge>
+class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef CompositeGraph<GraphType>    BaseType;
+    typedef CompositeGraph<Vertex, Edge>    BaseType;
+    typedef GroupRoadmap<Vertex, Edge> GroupRoadmapType;
 
     typedef typename BaseType::EID         ED;
-    typedef typename GraphType::Vertex IndividualCfg;
-    typedef typename GraphType::Edge  IndividualEdge;
-    typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+
+    // typedef typename Vertex::VID           VID;
+
+    typedef typename Vertex::IndividualGraph    IndividualRoadmap;
+    typedef typename IndividualRoadmap::CfgType  IndividualCfg;
+    typedef typename IndividualRoadmap::EdgeType    IndividualEdge;
+    // typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
 
     typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
     typedef typename BaseType::edge_descriptor edge_descriptor;
@@ -126,7 +131,7 @@ class GroupRoadmap final : public CompositeGraph<GraphType> {
 
     /// Import the base-class version for this (required because we've
     /// overridden one of the overloads).
-    using CompositeGraph<GraphType>::AddEdge;
+    using CompositeGraph<Vertex, Edge>::AddEdge;
 
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
@@ -157,9 +162,9 @@ class GroupRoadmap final : public CompositeGraph<GraphType> {
     ///@name Hooks
     ///@{
 
-    /// Uninstall all hooks from each individual roadmap. Should only be used at
-    /// the end of a library run to clean the roadmap object.
-    virtual void ClearHooks() noexcept override;
+    // /// Uninstall all hooks from each individual roadmap. Should only be used at
+    // /// the end of a library run to clean the roadmap object.
+    // virtual void ClearHooks() noexcept override;
 
     ///@}
 
@@ -177,11 +182,11 @@ class GroupRoadmap final : public CompositeGraph<GraphType> {
 
 /*------------------------------- Construction -------------------------------*/
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 template <typename MPSolution>
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
-  CompositeGraph<IndividualRoadmap>(_g) {
+  CompositeGraph<Vertex, Edge>(_g) {
 
   std::vector<IndividualRoadmap*> roadmaps;
   for(Robot* const robot : *_g)
@@ -192,16 +197,16 @@ GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
 
 /*-------------------------------- Accessors ---------------------------------*/
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 const std::unordered_map<Formation*,bool>&
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 GetFormations() {
   return m_formations;
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 std::unordered_set<Formation*>
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 GetActiveFormations() {
   std::unordered_set<Formation*> active;
 
@@ -215,17 +220,17 @@ GetActiveFormations() {
 
 /*-------------------------------Input/Output---------------------------------*/
 
-//template <typename GraphType>
+//template <typename Vertex, typename Edge>
 //void
-//GroupRoadmap<GraphType>::
+//GroupRoadmap<Vertex, Edge>::
 //Read(const std::string& _filename) {
 //  throw NotImplementedException(WHERE);
 //}
 
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 Write(const std::string& _filename, Environment* _env) const {
   /// For now, we only support composite C-Space output as vizmo is the only
   /// vizualiser that has support for groups/composite robots.
@@ -233,9 +238,9 @@ Write(const std::string& _filename, Environment* _env) const {
 }
 
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 WriteCompositeGraph(const std::string& _filename, Environment* _env) const {
   #ifndef VIZMO_MAP
     throw RunTimeException(WHERE, "Cannot use this method without the vizmo map"
@@ -251,15 +256,15 @@ WriteCompositeGraph(const std::string& _filename, Environment* _env) const {
 }
 
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 std::string
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 PrettyPrint() const {
   std::ostringstream out;
   out << "Number of group vertices: " << this->get_num_vertices() << std::endl;
   out << "Vertices in each individual roadmap:" << std::endl << "| ";
-  for(size_t i = 0; i < GetNumRobots(); ++i) {
-    out << "(Robot " << i << ") " << GetRoadmap(i)->get_num_vertices() << " | ";
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    out << "(Robot " << i << ") " << this->GetRoadmap(i)->get_num_vertices() << " | ";
   }
   out << std::endl;
 
@@ -268,9 +273,9 @@ PrettyPrint() const {
 
 /*-------------------------------- Modifiers ---------------------------------*/
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   if(_source == _target)
     throw RunTimeException(WHERE) << "Tried to add edge between same VID "
@@ -296,7 +301,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
   // First, make sure all the local edges are in the individual roadmaps.
   for(size_t i = 0; i < edgeDescriptors.size(); ++i) {
-    auto roadmap = m_roadmaps[i];
+    auto roadmap = this->m_roadmaps[i];
 
     const VID individualSourceVID = sourceCfg.GetVID(i),
               individualTargetVID = targetCfg.GetVID(i);
@@ -353,7 +358,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     }
   }
 
-  if(numInactiveRobots >= GetNumRobots())
+  if(numInactiveRobots >= this->GetNumRobots())
     throw RunTimeException(WHERE) << "No robots were moved in this edge!";
 
   // Now all of the individual edges are in the local maps. Clear out the local
@@ -382,13 +387,13 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 }
 
 
-template <typename GraphType>
-typename GroupRoadmap<GraphType>::VID
-GroupRoadmap<GraphType>::
+template <typename Vertex, typename Edge>
+typename GroupRoadmap<Vertex, Edge>::VID
+GroupRoadmap<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
   Vertex cfg; // Will be a copy of the const Vertex
   // Check that the group map is correct, if not, try and change it.
-  if(_v.GetGroupRoadmap() != this) {
+  if((GroupRoadmapType*)_v.GetGroupRoadmap() != this) {
     std::cerr << "GroupRoadmap::AddVertex: Warning! Group roadmap "
               << "doesn't match this, attempting to exchange the roadmap..."
               << std::endl;
@@ -408,8 +413,8 @@ AddVertex(const Vertex& _v) noexcept {
   }
 
   // Add each vid to individual roadmaps if not already present.
-  for(size_t i = 0; i < m_group->Size(); ++i) {
-    auto roadmap = GetRoadmap(i);
+  for(size_t i = 0; i < this->m_group->Size(); ++i) {
+    auto roadmap = this->GetRoadmap(i);
     auto robot   = roadmap->GetRobot();
     const VID individualVID = cfg.GetVID(i);
 
@@ -440,9 +445,9 @@ AddVertex(const Vertex& _v) noexcept {
 }
 
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 DeleteVertex(const VID _v) noexcept {
  // Find the vertex and crash if it doesn't exist.
   VI vi = this->find_vertex(_v);
@@ -485,9 +490,9 @@ DeleteVertex(const VID _v) noexcept {
   ++this->m_timestamp;
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 DeleteEdge(const VID _source, const VID _target) noexcept {
   // Find the edge and crash if it isn't found.
   const ED edgeDescriptor(_source, _target);
@@ -502,9 +507,9 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
   DeleteEdge(edgeIterator);
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
   // Execute pre-delete hooks and update vizmo debug.
   this->ExecuteDeleteEdgeHooks(_iterator);
@@ -512,8 +517,8 @@ DeleteEdge(EI _iterator) noexcept {
   // Delete the individual edges.
   auto& edge = _iterator->property();
   auto& descriptors = edge.GetEdgeDescriptors();
-  for(size_t i = 0; i < m_group->Size(); ++i)
-    GetRoadmap(i)->DeleteEdge(descriptors[i].source(), descriptors[i].target());
+  for(size_t i = 0; i < this->m_group->Size(); ++i)
+    this->GetRoadmap(i)->DeleteEdge(descriptors[i].source(), descriptors[i].target());
 
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());
@@ -526,9 +531,9 @@ DeleteEdge(EI _iterator) noexcept {
   ++this->m_timestamp;
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 AddFormation(Formation* _formation, bool _active) {
 
   if(!_formation)
@@ -537,23 +542,23 @@ AddFormation(Formation* _formation, bool _active) {
   m_formations[_formation] = _active;
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 SetFormationActive(Formation* _formation) {
   m_formations[_formation] = true;
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 SetFormationInactive(Formation* _formation) {
   m_formations[_formation] = false;
 }
 
-template <typename GraphType>
+template <typename Vertex, typename Edge>
 void
-GroupRoadmap<GraphType>::
+GroupRoadmap<Vertex, Edge>::
 SetAllFormationsInactive() {
   for(auto& kv : m_formations) {
     kv.second = false;

@@ -43,6 +43,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef std::vector<size_t>              RobotFormation;
 
     ///@}
@@ -268,7 +269,7 @@ BlindPath(const std::vector<GroupCfgType>& _waypoints, const double _posRes,
   // Blind local-plan between each intermediate,
   bool first = true;
   std::vector<GroupCfgType> out;
-  GroupLPOutput<MPTraits> lpOutput(_waypoints.at(0).GetGroupRoadmap());
+  GroupLPOutput<MPTraits> lpOutput((GroupRoadmapType*)_waypoints.at(0).GetGroupRoadmap());
   for(auto iter = _waypoints.begin(); iter + 1 != _waypoints.end(); ++iter) {
     // If this isn't the first configuration, then its an intermediate and must
     // be added to the path.

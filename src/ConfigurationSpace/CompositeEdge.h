@@ -3,6 +3,7 @@
 
 #include "ConfigurationSpace/Weight.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "ConfigurationSpace/CompositeState.h"
 #include "ConfigurationSpace/CompositeGraph.h"
 
 #include "containers/sequential/graph/graph_util.h"
@@ -10,6 +11,9 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+
+template <typename GraphType>
+class CompositeState;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,12 +37,17 @@ class CompositeEdge {
     ///@name Local Types
     ///@{
 
-    typedef typename GraphType::Vertex CfgType;
-    typedef typename GraphType::Edge   IndividualEdge;
+    typedef typename GraphType::CfgType    IndividualCfg;
+    typedef typename GraphType::EdgeType   IndividualEdge;
+
+    typedef CompositeState<GraphType> CompositeStateType;
+    typedef CompositeGraph<CompositeStateType, CompositeEdge> GroupRoadmapType;
+
+    // typedef GroupRoadmap<GroupCfg, GroupLocalPlan>  GroupRoadmapType;
 
     typedef double                                  EdgeWeight;
     // typedef DefaultWeight<GraphType>                  IndividualEdge;
-    typedef CompositeGraph<GraphType>  GroupRoadmapType;
+    // typedef CompositeGraph<GraphType>  GroupRoadmapType;
     // typedef std::vector<GroupCfg>                   GroupCfgPath;
     // typedef size_t                                  GroupVID;
 
@@ -53,7 +62,9 @@ class CompositeEdge {
     /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
     /// @param _w The weight of the plan. Defaults to 0.0.
     /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
-    CompositeEdge(GroupRoadmapType* const _g = nullptr, const double _w = 0.0);
+    CompositeEdge(GroupRoadmapType* const & _g = nullptr, const double _w = 0.0);
+
+    virtual ~CompositeEdge() = default;
 
     ///@}
     ///@name Ordering and Equality
@@ -117,9 +128,6 @@ class CompositeEdge {
     IndividualEdge* GetEdge(const size_t _robotIndex);
     const IndividualEdge* GetEdge(const size_t _robotIndex) const;
 
-    /// Get a vector of local edges in the plan.
-    std::vector<IndividualEdge>& GetLocalEdges() noexcept;
-
     /// Get a vector of local edges' descriptors.
     std::vector<ED>& GetEdgeDescriptors() noexcept;
 
@@ -156,7 +164,7 @@ class CompositeEdge {
 
     ///@}
 
-  private:
+  protected:
 
     ///@name Internal State
     ///@{
@@ -180,7 +188,7 @@ class CompositeEdge {
 
 template <typename GraphType>
 CompositeEdge<GraphType>::
-CompositeEdge(GroupRoadmapType* const _g, const double _w)
+CompositeEdge(GroupRoadmapType* const & _g, const double _w)
     : m_groupMap(_g), m_weight(_w) {
   if(m_groupMap)
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
@@ -209,8 +217,8 @@ operator==(const CompositeEdge& _other) const noexcept {
     return false;
 
   // Ensure the edges are equal.
-//  for(size_t i = 0; i < m_groupMap->GetGroup()->Size(); ++i) {
-  for(const size_t i : m_groupMap->GetGroup()->Size()) {
+  for(size_t i = 0; i < m_groupMap->GetGroup()->Size(); ++i) {
+  // for(const size_t i : m_groupMap->GetGroup()->Size()) {
     // If both descriptors are valid and equal, these edges are equal.
     const auto& ed1 = m_edges[i],
               & ed2 = _other.m_edges[i];

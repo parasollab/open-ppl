@@ -1,7 +1,9 @@
 #ifndef PPL_COMPOSITE_STATE_H_
 #define PPL_COMPOSITE_STATE_H_
 
-#include "ConfigurationSpace/GenericStateGraph.h"
+// #include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/CompositeGraph.h"
+#include "ConfigurationSpace/CompositeEdge.h"
 
 #include <cstddef>
 #include <iostream>
@@ -11,6 +13,9 @@
 
 class Robot;
 class RobotGroup;
+
+template <typename GraphType>
+class CompositeEdge;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,10 +30,16 @@ class CompositeState {
     ///@name Local Types
     ///@{
 
-    typedef typename GraphType::Vertex CfgType;
+    typedef typename GraphType::CfgType CfgType;
+    // typedef typename CompositeState<GraphType> CompositeStateType;
+    typedef CompositeEdge<GraphType>  CompositeEdgeType;
+
+    typedef CompositeGraph<CompositeState, CompositeEdgeType> GroupGraphType;
 
     typedef size_t           VID;      ///< A VID in an individual graph.
     typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. graphs.
+
+    typedef GraphType IndividualGraph;
 
     ///@}
     ///@name Construction
@@ -40,7 +51,7 @@ class CompositeState {
     /// @param _init Default-initialize local configurations?
     /// @todo This object does not work at all without a group map. We should
     ///       throw relevant exceptions if needed.
-    explicit CompositeState(GraphType* const _groupGraph = nullptr,  
+    explicit CompositeState(GroupGraphType* const _groupGraph = nullptr,  
       CfgType& (*_vertexGetter)(const VID) = nullptr);
 
     ///@}
@@ -79,7 +90,7 @@ class CompositeState {
     /// descriptors for non-local individual configurations.
 
     /// Get the group roadmap this group cfg is with respect to.
-    GraphType* GetGraph() const noexcept;
+    GroupGraphType* GetGroupRoadmap() const noexcept;
 
     /// Get the VID for a particular robot.
     /// @param _index The index (within the group) of the robot.
@@ -140,7 +151,7 @@ class CompositeState {
     ///@name Internal State
     ///@{
 
-    GraphType* m_groupGraph{nullptr};  ///< The group graph.
+    GroupGraphType* m_groupGraph{nullptr};  ///< The group graph.
 
     VIDSet m_vids;   ///< The individual VIDs in this aggregate configuration.
 

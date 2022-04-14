@@ -8,7 +8,7 @@
 
 template <typename GraphType>
 CompositeState<GraphType>::
-CompositeState(GraphType* const _groupGraph, 
+CompositeState(GroupGraphType* const _groupGraph, 
   CfgType& (*_vertexGetter)(const VID)) : 
   m_groupGraph(_groupGraph), m_vertexGetter(_vertexGetter) {
 
@@ -92,9 +92,9 @@ GetRobot(const size_t _index) const {
 /*---------------------------- Roadmap Accessors -----------------------------*/
 
 template <typename GraphType>
-GraphType*
+typename CompositeState<GraphType>::GroupGraphType*
 CompositeState<GraphType>::
-GetGraph() const noexcept {
+GetGroupRoadmap() const noexcept {
   return m_groupGraph;
 }
 
@@ -136,7 +136,7 @@ SetRobotCfg(const size_t _index, const VID _vid) {
 
 
 template <typename GraphType>
-CfgType&
+typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) {
   const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
@@ -145,7 +145,7 @@ GetRobotCfg(Robot* const _robot) {
 
 
 template <typename GraphType>
-CfgType&
+typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(const size_t _index) {
   VerifyIndex(_index);
@@ -157,7 +157,7 @@ GetRobotCfg(const size_t _index) {
 
 
 template <typename GraphType>
-const CfgType&
+const typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) const {
   const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
@@ -166,7 +166,7 @@ GetRobotCfg(Robot* const _robot) const {
 
 
 template <typename GraphType>
-const CfgType&
+const typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(const size_t _index) const {
   VerifyIndex(_index);

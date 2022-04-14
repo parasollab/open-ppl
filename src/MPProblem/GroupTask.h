@@ -5,6 +5,11 @@
 
 #include "nonstd/status.h"
 
+#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/GroupCfg.h"
+
 #include <map>
 #include <memory>
 #include <string>
@@ -12,12 +17,14 @@
 #include <vector>
 
 class Boundary;
-class GroupCfg;
 class Constraint;
 class MPProblem;
 class Robot;
 class RobotGroup;
 class XMLNode;
+
+// template <typename GraphType>
+// class GroupCfg;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +53,11 @@ class GroupTask {
 
     /// A set of individual tasks.
     typedef std::vector<MPTask>     TaskSet;
+
+    // this is a stupid fix, but idk how else to do it without having to change
+    // a lot of other stuff...
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> IndividualRoadmap;
+    typedef GroupCfg<IndividualRoadmap> GroupCfgType;
 
     typedef TaskSet::iterator       iterator;
     typedef TaskSet::const_iterator const_iterator;
@@ -137,7 +149,7 @@ class GroupTask {
     ///       forward before we had flushed out the tasks/groups. To be removed
     ///       at the earliest opportunity.
     /// @param _center Robot group to populate from
-    void GetStartConstraintCenter(GroupCfg& _center) const noexcept;
+    void GetStartConstraintCenter(GroupCfgType& _center) const noexcept;
 
     ///@}
     ///@name Constraint Evaluation
@@ -147,19 +159,19 @@ class GroupTask {
     /// @param _cfg The configuration to check.
     /// @return True if each robot satsifies its individual start constraints at
     ///         _cfg.
-    bool EvaluateStartConstraints(const GroupCfg& _cfg) const;
+    bool EvaluateStartConstraints(const GroupCfgType& _cfg) const;
 
     /// Evaluate whether a configuration satisfies the path constraints.
     /// @param _cfg The configuration to check.
     /// @return True if each robot satsifies its individual path constraints at
     ///         _cfg.
-    bool EvaluatePathConstraints(const GroupCfg& _cfg) const;
+    bool EvaluatePathConstraints(const GroupCfgType& _cfg) const;
 
     /// Evaluate whether a configuration satisfies the final goal constraints.
     /// @param _cfg The configuration to check.
     /// @return True if each robot satsifies its last individual goal constraints
     ///         at _cfg.
-    bool EvaluateGoalConstraints(const GroupCfg& _cfg) const;
+    bool EvaluateGoalConstraints(const GroupCfgType& _cfg) const;
 
     /// Evaluate whether a configuration satisfies the constraints for a
     /// designated goal.
@@ -167,7 +179,7 @@ class GroupTask {
     /// @param _index The goal index to check.
     /// @return True if each robot satsifies its individual goal constraints at
     ///         _cfg for goal _index.
-    bool EvaluateGoalConstraints(const GroupCfg& _cfg, const size_t _index) const;
+    bool EvaluateGoalConstraints(const GroupCfgType& _cfg, const size_t _index) const;
 
     ///@}
     ///@name Disassembly Items

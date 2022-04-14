@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/CompositeState.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
-#include "ConfigurationSpace/CompositeState.h"
 
 #include "Transformation.h"
 #include "Vector.h"
@@ -39,20 +39,25 @@ class Formation;
 ///       case it will have all local cfgs. It should only get tied to a roadmap
 ///       with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
-class GroupCfg final : CompositeState<GenericStateGraph<Cfg, DefaultWeight<Cfg>>> {
+template <typename GraphType>
+class GroupCfg final : public CompositeState<GraphType> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> IndividualRoadmap;
+    typedef GraphType IndividualGraph;
 
     typedef size_t           VID;      ///< A VID in an individual Robot roadmap.
     typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. Robot roadmaps.
 
-    typedef Cfg              IndividualCfg;
-    typedef GroupRoadmap<IndividualRoadmap> GroupRoadmapType;
+    typedef CompositeState<GraphType> BaseType;
+
+    typedef typename BaseType::GroupGraphType GroupGraphType;
+
+    typedef typename BaseType::CfgType      IndividualCfg;
+    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<GraphType>> GroupRoadmapType;
     
     // typedef typename GroupRoadmapType::IndividualRoadmap IndividualRoadmap;
 
@@ -73,8 +78,11 @@ class GroupCfg final : CompositeState<GenericStateGraph<Cfg, DefaultWeight<Cfg>>
     /// @param _init Default-initialize local configurations?
     /// @todo This object does not work at all without a group map. We should
     ///       throw relevant exceptions if needed.
-    explicit GroupCfg(GroupRoadmapType* const _groupMap = nullptr,
+    explicit GroupCfg(GroupRoadmapType* const& _groupMap = nullptr,
          const bool _init = false);
+
+    // explicit GroupCfg(GroupGraphType* const& _groupMap = nullptr,
+    //      const bool _init = false);
 
     ///@}
     ///@name Equality
@@ -131,6 +139,9 @@ class GroupCfg final : CompositeState<GenericStateGraph<Cfg, DefaultWeight<Cfg>>
     /// These functions provide access to the related group map (if any) and
     /// descriptors for non-local individual configurations.
 
+    /// Get the group roadmap this group cfg is with respect to.
+    GroupRoadmapType* GetGroupRoadmap() const noexcept;
+
     /// Change the roadmap that this group is using/in reference to. Also
     /// performs compatibility/verification tests to see if it's possible.
     /// Note: Does NOT add this new cfg to any roadmap, but makes all cfg info
@@ -162,10 +173,30 @@ class GroupCfg final : CompositeState<GenericStateGraph<Cfg, DefaultWeight<Cfg>>
     /// @param _cfg The cfg.
     void SetRobotCfg(const size_t _index, IndividualCfg&& _cfg);
 
+    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
+    /// @param _robot The robot which the cfg refers to.
+    /// @param _vid The cfg descriptor.
+    void SetRobotCfg(Robot* const _robot, const VID _vid);
+
+    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
+    /// @param _index The robot's group index which the cfg refers to.
+    /// @param _vid The cfg descriptor.
+    void SetRobotCfg(const size_t _index, const VID _vid);
+
+    /// Get the individual Cfg for a robot in the group.
+    /// @param _robot The robot which the cfg refers to.
+    /// @return The individual configuration for the indexed robot.
+    IndividualCfg& GetRobotCfg(Robot* const _robot);
+
     /// Get the individual Cfg for a robot in the group.
     /// @param _index The index of the robot.
     /// @return The individual configuration for the indexed robot.
     IndividualCfg& GetRobotCfg(const size_t _index);
+
+    /// Get the individual Cfg for a robot in the group.
+    /// @param _robot The robot which the cfg refers to.
+    /// @return The individual configuration for the indexed robot.
+    const IndividualCfg& GetRobotCfg(Robot* const _robot) const;
 
     /// Get the individual Cfg for a robot in the group.
     /// @param _index The index of the robot.
