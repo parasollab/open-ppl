@@ -1,5 +1,5 @@
-#ifndef PMPL_GROUP_LOCAL_PLAN_H_
-#define PMPL_GROUP_LOCAL_PLAN_H_
+#ifndef PPL_GROUP_LOCAL_PLAN_H_
+#define PPL_GROUP_LOCAL_PLAN_H_
 
 #include "ConfigurationSpace/CompositeEdge.h"
 #include "ConfigurationSpace/Cfg.h"
@@ -14,8 +14,7 @@
 #include <iostream>
 #include <vector>
 
-template <typename GraphType>
-class GroupCfg;
+template <typename GraphType> class GroupCfg;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A local plan for multiple robots. Each robot will be executing this motion
@@ -38,37 +37,30 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     ///@name Local Types
     ///@{
 
-    typedef CompositeEdge<GraphType> BaseType;
+    typedef CompositeEdge<GraphType>                   BaseType;
+    typedef typename BaseType::GroupGraphType          GroupGraphType;
+    typedef typename GraphType::CfgType                CfgType;
+    typedef typename GraphType::EdgeType               IndividualEdge;
+    typedef double                                     EdgeWeight;
 
-    typedef typename BaseType::GroupRoadmapType GroupGraphType;
-
-    typedef typename GraphType::CfgType CfgType;
-
-    typedef double                                  EdgeWeight;
-    typedef DefaultWeight<CfgType>                  IndividualEdge;
-    typedef GroupCfg<GraphType>                     GroupCfgType;
-    typedef GroupRoadmap<GroupCfgType, GroupLocalPlan>  GroupRoadmapType;
-    typedef std::vector<GroupCfgType>               GroupCfgPath;
-    typedef size_t                                  GroupVID;
-
-    typedef stapl::edge_descriptor_impl<size_t>     ED;
+    typedef GroupCfg<GraphType>                        GroupCfgType;
+    typedef GroupRoadmap<GroupCfgType, GroupLocalPlan> GroupRoadmapType;
+    typedef std::vector<GroupCfgType>                  GroupCfgPath;
+    typedef typename BaseType::CompositePath           CompositePath;
+    typedef stapl::edge_descriptor_impl<size_t>        ED;
 
     ///@}
     ///@name Construction
     ///@{
 
-    GroupLocalPlan(GroupRoadmapType* const& _g = nullptr,
-        const std::string& _lpLabel = "",
-        const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
-
     /// Constructs a GroupLocalPlan.
-    /// @param _g The group of robots to follow this edge. Defaults to nullptr.
+    /// @param _g The group roadmap in which this edge exists. Defaults to nullptr.
     /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
     /// @param _w The weight of the plan. Defaults to 0.0.
     /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
-    // GroupLocalPlan(GroupGraphType* const& _g = nullptr,
-    //     const std::string& _lpLabel = "",
-    //     const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
+    GroupLocalPlan(GroupRoadmapType* const& _g = nullptr,
+        const std::string& _lpLabel = "",
+        const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
 
     virtual ~GroupLocalPlan() = default;
 
@@ -86,10 +78,14 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     /// Reset the states of this object.
     void Clear() noexcept;
 
+    using CompositeEdge<GraphType>::GetIntermediates;
+
     /// Get the group configuration intermediates.
     GroupCfgPath& GetIntermediates() noexcept;
     /// Get the group configuration intermediates.
     const GroupCfgPath& GetIntermediates() const noexcept;
+
+    using CompositeEdge<GraphType>::SetIntermediates;
 
     /// Set the group configuration intermediates.
     void SetIntermediates(const GroupCfgPath& _cfgs);
@@ -104,10 +100,7 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     ///@name Individual Local Plans
     ///@{
 
-    /// Set the individual edge for a robot to a roadmap copy of an edge.
-    /// @param _robot The robot which the edge refers to.
-    /// @param _ed The edge descriptor.
-    void SetEdge(Robot* const _robot, const ED _ed);
+    using CompositeEdge<GraphType>::SetEdge;
 
     /// Set the individual edge for a robot to a local copy of an edge.
     /// @param _robot The robot which the edge refers to.
@@ -117,11 +110,13 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     /// overload for Robot pointer
     void SetEdge(Robot* const _robot, IndividualEdge&& _edge);
 
+    using CompositeEdge<GraphType>::GetEdge;
+
     /// Get the individual edge for a robot.
     /// @param _robot The robot which the edge refers to.
     /// @return A pointer to the edge for _robot. It will be null if it has not
     ///         yet been set.
-    const IndividualEdge* GetEdge(Robot* const _robot) const;
+    const IndividualEdge* GetEdge(Robot* const _robot) const override;
 
     /// Get a vector of local edges in the plan.
     std::vector<IndividualEdge>& GetLocalEdges() noexcept;
@@ -145,8 +140,6 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
 
     std::string m_lpLabel;   ///< Label of local planner that built this edge.
 
-    GroupCfgPath m_intermediates; ///< Group cfg intermediates.
-
     // The ordered formation for this local plan with respect to the robots
     // in m_groupMap. The first robot in the list is assumed to be the leader.
     std::vector<size_t> m_activeRobots;
@@ -164,16 +157,8 @@ template <typename GraphType>
 GroupLocalPlan<GraphType>::
 GroupLocalPlan(GroupRoadmapType* const & _g, const std::string& _lpLabel,
     const double _w, const GroupCfgPath& _intermediates)
-    : CompositeEdge<GraphType>((GroupGraphType*)_g, _w), m_lpLabel(_lpLabel),
-      m_intermediates(_intermediates)  {}
-
-
-// template <typename GraphType>
-// GroupLocalPlan<GraphType>::
-// GroupLocalPlan(GroupGraphType* const & _g, const std::string& _lpLabel,
-//     const double _w, const GroupCfgPath& _intermediates)
-//     : CompositeEdge<GraphType>(_g, _w), m_lpLabel(_lpLabel),
-//       m_intermediates(_intermediates)  {}
+    : CompositeEdge<GraphType>((GroupGraphType*)_g, _w, (CompositePath&)_intermediates), 
+    m_lpLabel(_lpLabel) {}
 
 /*------------------------- Misc Interface Functions -------------------------*/
 
@@ -200,7 +185,7 @@ Clear() noexcept {
   // Reset the initial state variables of this object:
   m_lpLabel.clear();
   this->m_weight = 0.;
-  m_intermediates.clear();
+  this->m_intermediates.clear();
 }
 
 
@@ -208,7 +193,7 @@ template <typename GraphType>
 typename GroupLocalPlan<GraphType>::GroupCfgPath&
 GroupLocalPlan<GraphType>::
 GetIntermediates() noexcept {
-  return m_intermediates;
+  return (GroupCfgPath&)this->GetIntermediates();
 }
 
 
@@ -216,7 +201,7 @@ template <typename GraphType>
 const typename GroupLocalPlan<GraphType>::GroupCfgPath&
 GroupLocalPlan<GraphType>::
 GetIntermediates() const noexcept {
-  return m_intermediates;
+  return (GroupCfgPath&)this->GetIntermediates();
 }
 
 
@@ -224,7 +209,7 @@ template <typename GraphType>
 void
 GroupLocalPlan<GraphType>::
 SetIntermediates(const GroupCfgPath& _cfgs) {
-  m_intermediates = _cfgs;
+  this->SetIntermediates((CompositePath&)_cfgs);
 }
 
 
@@ -244,16 +229,6 @@ SetLPLabel(const std::string _label) noexcept {
 }
 
 /*-------------------------- Individual Local Plans --------------------------*/
-
-template <typename GraphType>
-void
-GroupLocalPlan<GraphType>::
-SetEdge(Robot* const _robot, const ED _ed) {
-  const size_t index = this->m_groupMap->GetGroup()->GetGroupIndex(_robot);
-
-  this->m_edges[index] = _ed;
-}
-
 
 template <typename GraphType>
 void

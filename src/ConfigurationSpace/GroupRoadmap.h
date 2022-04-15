@@ -1,5 +1,5 @@
-#ifndef PMPL_GROUP_ROADMAP_H_
-#define PMPL_GROUP_ROADMAP_H_
+#ifndef PPL_GROUP_ROADMAP_H_
+#define PPL_GROUP_ROADMAP_H_
 
 #include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
@@ -8,10 +8,6 @@
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
-
-#ifndef INVALID_ED
-#define INVALID_ED ED{std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()}
-#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,21 +27,17 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
     ///@name Local Types
     ///@{
 
-    typedef CompositeGraph<Vertex, Edge>    BaseType;
-    typedef GroupRoadmap<Vertex, Edge> GroupRoadmapType;
+    typedef CompositeGraph<Vertex, Edge>         BaseType;
+    typedef GroupRoadmap<Vertex, Edge>           GroupRoadmapType;
 
-    typedef typename BaseType::EID         ED;
-
-    // typedef typename Vertex::VID           VID;
-
-    typedef typename Vertex::IndividualGraph    IndividualRoadmap;
+    typedef typename BaseType::EID               ED;
+    typedef typename Vertex::IndividualGraph     IndividualRoadmap;
     typedef typename IndividualRoadmap::CfgType  IndividualCfg;
-    typedef typename IndividualRoadmap::EdgeType    IndividualEdge;
-    // typedef GenericStateGraph<IndividualCfg, IndividualEdge> IndividualRoadmap;
+    typedef typename IndividualRoadmap::EdgeType IndividualEdge;
 
     typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
-    typedef typename BaseType::edge_descriptor edge_descriptor;
-    typedef typename BaseType::vertex_iterator vertex_iterator;
+    typedef typename BaseType::edge_descriptor   edge_descriptor;
+    typedef typename BaseType::vertex_iterator   vertex_iterator;
     typedef typename BaseType::vertex_descriptor vertex_descriptor;
 
     using typename BaseType::CVI;
@@ -57,6 +49,7 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
     using typename BaseType::VertexHook;
     using typename BaseType::EdgeHook;
     using typename BaseType::HookType;
+
     ///@}
     ///@name Construction
     ///@{
@@ -91,20 +84,6 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
     ///@}
     ///@name Input/Output
     ///@{
-
-    //virtual void Read(const std::string& _filename) override;
-
-    /// Write the roadmap using the current standard output rule.
-    /// @param _filename The file to write to.
-    /// @param _env The environment, to place in the roadmap.
-    virtual void Write(const std::string& _filename, Environment* _env) const
-        override;
-
-    /// Write the roadmap as a Vizmo-compatible composite C-Space path.
-    /// @param _filename The file to write to.
-    /// @param _env The environment, to place in the roadmap.
-    void WriteCompositeGraph(const std::string& _filename,
-                            Environment* const _env) const;
 
     std::string PrettyPrint() const;
 
@@ -219,42 +198,6 @@ GetActiveFormations() {
 }
 
 /*-------------------------------Input/Output---------------------------------*/
-
-//template <typename Vertex, typename Edge>
-//void
-//GroupRoadmap<Vertex, Edge>::
-//Read(const std::string& _filename) {
-//  throw NotImplementedException(WHERE);
-//}
-
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-Write(const std::string& _filename, Environment* _env) const {
-  /// For now, we only support composite C-Space output as vizmo is the only
-  /// vizualiser that has support for groups/composite robots.
-  WriteCompositeGraph(_filename, _env);
-}
-
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-WriteCompositeGraph(const std::string& _filename, Environment* _env) const {
-  #ifndef VIZMO_MAP
-    throw RunTimeException(WHERE, "Cannot use this method without the vizmo map"
-                                  " option enabled in the Makefile!");
-  #endif
-
-  std::ofstream ofs(_filename);
-  ofs << "#####ENVFILESTART#####" << std::endl
-      << _env->GetEnvFileName() << std::endl
-      << "#####ENVFILESTOP#####" << std::endl;
-
-  stapl::sequential::write_graph(*this, ofs);
-}
-
 
 template <typename Vertex, typename Edge>
 std::string

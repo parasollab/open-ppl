@@ -50,11 +50,6 @@ VDAddNode(const CfgType& _cfg) {
     (*vdo) << "AddNode " << _cfg << std::endl;
 }
 
-// template <>
-// inline
-// void
-// VDAddNode<GroupCfg>(const GroupCfg&) { }
-
 
 /// @TODO
 template <typename CfgType>
@@ -63,11 +58,6 @@ VDRemoveNode(const CfgType& _cfg) {
   if(vdo)
     (*vdo) << "RemoveNode " << _cfg << std::endl;
 }
-
-// template <>
-// inline
-// void
-// VDRemoveNode<GroupCfg>(const GroupCfg&) { }
 
 
 /// @TODO
@@ -78,11 +68,6 @@ VDAddEdge(const CfgType& _cfg1, const CfgType& _cfg2) {
     (*vdo) << "AddEdge " << _cfg1 << " " << _cfg2 << std::endl;
 }
 
-// template <>
-// inline
-// void
-// VDAddEdge<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
-
 
 /// @TODO
 template <typename CfgType>
@@ -91,11 +76,6 @@ VDRemoveEdge(const CfgType& _cfg1, const CfgType& _cfg2) {
   if(vdo)
     (*vdo) << "RemoveEdge " << _cfg1 << " " << _cfg2 << std::endl;
 }
-
-// template <>
-// inline
-// void
-// VDRemoveEdge<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
 
 
 /// @TODO
@@ -106,11 +86,6 @@ VDAddTempCfg(const CfgType& _cfg, const bool _valid) {
     (*vdo) << "AddTempCfg " << _cfg << " " << _valid << std::endl;
 }
 
-// template <>
-// inline
-// void
-// VDAddTempCfg<GroupCfg>(const GroupCfg&, const bool) { }
-
 
 /// @TODO
 template <typename CfgType>
@@ -120,11 +95,6 @@ VDAddTempRay(const CfgType& _cfg) {
     (*vdo) << "AddTempRay " << _cfg << std::endl;
 }
 
-// template <>
-// inline
-// void
-// VDAddTempRay<GroupCfg>(const GroupCfg&) { }
-
 
 /// @TODO
 template <typename CfgType>
@@ -133,11 +103,6 @@ VDAddTempEdge(const CfgType& _cfg1, const CfgType& _cfg2) {
   if(vdo)
     (*vdo) << "AddTempEdge " << _cfg1 << " " << _cfg2 << std::endl;
 }
-
-// template <>
-// inline
-// void
-// VDAddTempEdge<GroupCfg>(const GroupCfg&, const GroupCfg&) { }
 
 
 /// Add hook functions to track roadmap changes in the vizmo debug file.

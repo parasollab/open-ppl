@@ -1,7 +1,6 @@
 #ifndef PPL_COMPOSITE_STATE_H_
 #define PPL_COMPOSITE_STATE_H_
 
-// #include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/CompositeEdge.h"
 
@@ -16,13 +15,13 @@
 
 class Robot;
 class RobotGroup;
-
 template <typename GraphType> class CompositeEdge;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An aggregate configuration which represents a state for each robot
-/// in a robot group.
+/// An aggregate state which represents a state for each robot in a robot
+/// group.
+/// 'GraphType' represents the individual graph type for a single robot.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 class CompositeState {
@@ -32,14 +31,12 @@ class CompositeState {
     ///@name Local Types
     ///@{
 
-    typedef typename GraphType::CfgType CfgType;
-    // typedef typename CompositeState<GraphType> CompositeStateType;
-    typedef CompositeEdge<GraphType>  CompositeEdgeType;
-
-    typedef CompositeGraph<CompositeState, CompositeEdgeType> GroupGraphType;
-
     typedef size_t           VID;      ///< A VID in an individual graph.
     typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. graphs.
+    typedef typename GraphType::CfgType CfgType; ///< The indiv. graph vertex type.
+
+    typedef CompositeEdge<GraphType>                          CompositeEdgeType;
+    typedef CompositeGraph<CompositeState, CompositeEdgeType> GroupGraphType;
 
     typedef GraphType IndividualGraph;
 
@@ -47,34 +44,31 @@ class CompositeState {
     ///@name Construction
     ///@{
 
-    /// Construct a group configuration.
-    /// @param _groupMap The group roadmap to which this configuration belongs,
-    ///                  or null if it is not in a map.
-    /// @param _init Default-initialize local configurations?
-    /// @todo This object does not work at all without a group map. We should
+    /// Construct a composite state.
+    /// @param _groupGraph The composite graph to which this state belongs,
+    ///                    or null if it is not in a graph.
+    /// @todo This object does not work at all without a group graph. We should
     ///       throw relevant exceptions if needed.
     explicit CompositeState(GroupGraphType* const _groupGraph = nullptr);
-
-    // virtual ~CompositeState() = 0;
 
     ///@}
     ///@name Equality
     ///@{
 
-    /// Check if the current and given group configurations are equal.
-    /// @param _other The given group configuration.
+    /// Check if the current and given composite states are equal.
+    /// @param _other The given composite state.
     /// @return True if equal, false otherwise.
     virtual bool operator==(const CompositeState& _other) const noexcept;
 
-    /// Check if the current and given group configurations are unequal.
-    /// @param _other The given group configuration.
+    /// Check if the current and given composite states are unequal.
+    /// @param _other The given composite state.
     /// @return True if unequal, false otherwise.
     virtual bool operator!=(const CompositeState& _other) const noexcept;
 
     ///@}
     ///@name Robots
     ///@{
-    /// Access the robots within this group configuration.
+    /// Access the robots within this composite state.
 
     /// Get the number of robots.
     virtual size_t GetNumRobots() const noexcept;
@@ -87,56 +81,60 @@ class CompositeState {
     virtual Robot* GetRobot(const size_t _index) const;
 
     ///@}
-    ///@name Roadmap Accessors
+    ///@name Graph Accessors
     ///@{
-    /// These functions provide access to the related group map (if any) and
-    /// descriptors for non-local individual configurations.
+    /// These functions provide access to the related group graph (if any) and
+    /// descriptors for individual states.
 
-    /// Get the group roadmap this group cfg is with respect to.
+    /// Get the group graph this composite state is with respect to.
     virtual GroupGraphType* GetGroupGraph() const noexcept;
 
     /// Get the VID for a particular robot.
     /// @param _index The index (within the group) of the robot.
-    /// @return The VID of the robot's individual configuration, or INVALID_VID
-    ///         if it is a local configuration.
+    /// @return The VID of the robot's individual state, or INVALID_VID
+    ///         if it is not a valid VID in the invididual graph.
     virtual VID GetVID(const size_t _index) const noexcept;
 
+    /// Get the VID for a particular robot.
+    /// @param _robot The a robot within the group.
+    /// @return The VID of the robot's individual state, or INVALID_VID
+    ///         if it is not a valid VID in the invididual graph.
     virtual VID GetVID(Robot* const _robot) const;
  
     ///@}
-    ///@name Individual Configurations
+    ///@name Individual States
     ///@{
-    /// These functions manage the individual configurations that comprise this
-    /// group configuration.
+    /// These functions manage the individual states that comprise this
+    /// composite state.
 
-    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
-    /// @param _robot The robot which the cfg refers to.
-    /// @param _vid The cfg descriptor.
+    /// Set the individual state (cfg) for a robot to a graph copy of a state.
+    /// @param _robot The robot which the state refers to.
+    /// @param _vid The state descriptor.
     virtual void SetRobotCfg(Robot* const _robot, const VID _vid);
 
-    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
-    /// @param _index The robot's group index which the cfg refers to.
-    /// @param _vid The cfg descriptor.
+    /// Set the individual state (cfg) for a robot to a graph copy of a state.
+    /// @param _index The robot's group index which the state refers to.
+    /// @param _vid The state descriptor.
     virtual void SetRobotCfg(const size_t _index, const VID _vid);
 
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _robot The robot which the cfg refers to.
-    /// @return The individual configuration for the indexed robot.
+    /// Get the individual state (cfg) for a robot in the group.
+    /// @param _robot The robot which the state refers to.
+    /// @return The individual state for the indexed robot.
     virtual CfgType& GetRobotCfg(Robot* const _robot);
 
-    /// Get the individual Cfg for a robot in the group.
+    /// Get the individual state (cfg) for a robot in the group.
     /// @param _index The index of the robot.
-    /// @return The individual configuration for the indexed robot.
+    /// @return The individual state for the indexed robot.
     virtual CfgType& GetRobotCfg(const size_t _index);
 
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _robot The robot which the cfg refers to.
-    /// @return The individual configuration for the indexed robot.
+    /// Get the individual state (cfg) for a robot in the group.
+    /// @param _robot The robot which the state refers to.
+    /// @return The individual state for the indexed robot.
     virtual const CfgType& GetRobotCfg(Robot* const _robot) const;
 
-    /// Get the individual Cfg for a robot in the group.
+    /// Get the individual state (cfg) for a robot in the group.
     /// @param _index The index of the robot.
-    /// @return The individual configuration for the indexed robot.
+    /// @return The individual state for the indexed robot.
     virtual const CfgType& GetRobotCfg(const size_t _index) const;
 
     ///@}
@@ -156,7 +154,7 @@ class CompositeState {
 
     GroupGraphType* m_groupGraph{nullptr};  ///< The group graph.
 
-    VIDSet m_vids;   ///< The individual VIDs in this aggregate configuration.
+    VIDSet m_vids;   ///< The individual VIDs in this aggregate state.
 
     ///@}
 
@@ -171,8 +169,8 @@ template <typename GraphType>
 CompositeState<GraphType>::
 CompositeState(GroupGraphType* const _groupGraph) : m_groupGraph(_groupGraph) {
 
-  // If no group map was given, this is a placeholder object. We can't do
-  // anything with it since every meaningful operation requires a group map.
+  // If no group graph was given, this is a placeholder object. We can't do
+  // anything with it since every meaningful operation requires a group graph.
   if(!m_groupGraph)
     return;
 
@@ -187,7 +185,7 @@ template <typename GraphType>
 bool
 CompositeState<GraphType>::
 operator==(const CompositeState<GraphType>& _other) const noexcept {
-  // If _other is from another map, these are not the same.
+  // If _other is from another graph, these are not the same.
   if(m_groupGraph != _other.m_groupGraph)
     return false;
 
@@ -248,7 +246,7 @@ GetRobot(const size_t _index) const {
   return robot;
 }
 
-/*---------------------------- Roadmap Accessors -----------------------------*/
+/*------------------------------ Graph Accessors -----------------------------*/
 
 template <typename GraphType>
 typename CompositeState<GraphType>::GroupGraphType*
@@ -273,7 +271,7 @@ GetVID(Robot* const _robot) const {
   return GetVID(index);
 }
 
-/*------------------------ Individual Configurations -------------------------*/
+/*------------------------ Individual States -------------------------*/
 
 template <typename GraphType>
 void
@@ -333,8 +331,8 @@ CompositeState<GraphType>::
 GetRobotCfg(const size_t _index) const {
   VerifyIndex(_index);
 
-  // If we have a valid VID for this robot, fetch its configuration from its
-  // individual roadmap.
+  // If we have a valid VID for this robot, fetch its state from its
+  // individual graph.
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
     return m_groupGraph->GetRoadmap(_index)->GetVertex(vid);
@@ -366,7 +364,7 @@ operator<<(std::ostream& _os, const CompositeState<GraphType>& _compositeState) 
   _os << "0 ";
 #endif
 
-  // Loop through all robots in the group and print each one's cfg in order.
+  // Loop through all robots in the group and print each one's state in order.
   for(size_t i = 0; i < _compositeState.GetNumRobots(); ++i)
     _os << _compositeState.GetRobotCfg(i);
 

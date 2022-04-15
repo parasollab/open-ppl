@@ -1,5 +1,5 @@
-#ifndef PMPL_GROUP_CFG_H_
-#define PMPL_GROUP_CFG_H_
+#ifndef PPL_GROUP_CFG_H_
+#define PPL_GROUP_CFG_H_
 
 #include <cstddef>
 #include <iostream>
@@ -12,8 +12,8 @@
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
-#include "nonstd.h"
 
+#include "nonstd.h"
 #include "Transformation.h"
 #include "Vector.h"
 
@@ -34,6 +34,8 @@ class Formation;
 /// storage (m_localCfgs) which stores individual cfgs not yet in a roadmap.
 /// When adding a group cfg to a group roadmap, the VID is used in place after
 /// adding the individual cfg to the individual roadmap.
+/// 
+/// 'GraphType' represents the individual roadmap type for a single robot.
 ///
 /// @note Do not use 'SetRobotCfg' on a roadmap configuration with a non-VID:
 ///       The 'set' configuration will be lost since it is not in the individual
@@ -51,26 +53,12 @@ class GroupCfg final : public CompositeState<GraphType> {
     ///@name Local Types
     ///@{
 
-    typedef GraphType IndividualGraph;
-
-    typedef size_t           VID;      ///< A VID in an individual Robot roadmap.
-    typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. Robot roadmaps.
-
-    typedef CompositeState<GraphType> BaseType;
-
-    typedef typename BaseType::GroupGraphType GroupGraphType;
-
-    typedef typename BaseType::CfgType      IndividualCfg;
+    typedef CompositeState<GraphType>                         BaseType;
     typedef GroupRoadmap<GroupCfg, GroupLocalPlan<GraphType>> GroupRoadmapType;
-    
-    // typedef typename GroupRoadmapType::IndividualRoadmap IndividualRoadmap;
 
-    //TODO::Purge this everywhere and update to new formation class
-    /// A formation represents a group of robots which are maintaining their
-    /// configurations relative to a leader, such as maintaining a square or
-    /// V-shape while moving. The values are robot indexes (within the group,
-    /// not problem) with the first index denoting the leader robot. These are
-    /// not stored in configurations but may be required for edges.
+    typedef typename BaseType::VID                            VID;
+    typedef typename BaseType::GroupGraphType                 GroupGraphType;
+    typedef typename BaseType::CfgType                        IndividualCfg; 
 
     ///@}
     ///@name Construction
@@ -85,9 +73,6 @@ class GroupCfg final : public CompositeState<GraphType> {
     explicit GroupCfg(GroupRoadmapType* const& _groupMap = nullptr,
          const bool _init = false);
 
-    // explicit GroupCfg(GroupGraphType* const& _groupMap = nullptr,
-    //      const bool _init = false);
-
     ///@}
     ///@name Equality
     ///@{
@@ -96,10 +81,6 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// @param _other The given group configuration.
     /// @return True if equal, false otherwise.
     bool operator==(const GroupCfg& _other) const noexcept;
-    /// Check if the current and given group configurations are unequal.
-    /// @param _other The given group configuration.
-    /// @return True if unequal, false otherwise.
-    bool operator!=(const GroupCfg& _other) const noexcept;
 
     bool operator<(const GroupCfg& _other) const noexcept;
 
@@ -167,6 +148,8 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// These functions manage the individual configurations that comprise this
     /// group configuration.
 
+    using CompositeState<GraphType>::SetRobotCfg;
+
     /// Set the individual cfg for a robot to a local copy of an cfg.
     /// @param _robot The robot which the cfg refers to.
     /// @param _cfg The cfg.
@@ -177,35 +160,17 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// @param _cfg The cfg.
     void SetRobotCfg(const size_t _index, IndividualCfg&& _cfg);
 
-    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
-    /// @param _robot The robot which the cfg refers to.
-    /// @param _vid The cfg descriptor.
-    void SetRobotCfg(Robot* const _robot, const VID _vid);
-
-    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
-    /// @param _index The robot's group index which the cfg refers to.
-    /// @param _vid The cfg descriptor.
-    void SetRobotCfg(const size_t _index, const VID _vid);
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _robot The robot which the cfg refers to.
-    /// @return The individual configuration for the indexed robot.
-    IndividualCfg& GetRobotCfg(Robot* const _robot);
+    using CompositeState<GraphType>::GetRobotCfg;
 
     /// Get the individual Cfg for a robot in the group.
     /// @param _index The index of the robot.
     /// @return The individual configuration for the indexed robot.
-    IndividualCfg& GetRobotCfg(const size_t _index);
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _robot The robot which the cfg refers to.
-    /// @return The individual configuration for the indexed robot.
-    const IndividualCfg& GetRobotCfg(Robot* const _robot) const;
+    IndividualCfg& GetRobotCfg(const size_t _index) override;
 
     /// Get the individual Cfg for a robot in the group.
     /// @param _index The index of the robot.
     /// @return The individual configuration for the indexed robot.
-    const IndividualCfg& GetRobotCfg(const size_t _index) const;
+    const IndividualCfg& GetRobotCfg(const size_t _index) const override;
 
     /// Clear the Local Cfg information in the cfg (for after adding to roadmap)
     void ClearLocalCfgs();
@@ -447,25 +412,6 @@ GroupCfg(GroupRoadmapType* const& _groupMap, const bool _init)
     InitializeLocalCfgs();
 }
 
-
-// template <typename GraphType>
-// GroupCfg<GraphType>::
-// GroupCfg(GroupGraphType* const& _groupMap, const bool _init) 
-//      : CompositeState<GraphType>(_groupMap, GroupCfg<GraphType>::IndividualRoadmap::GetVertex) {
-
-//   // If no group map was given, this is a placeholder object. We can't do
-//   // anything with it since every meaningful operation requires a group map.
-//   if(!this->m_groupGraph)
-//     return;
-
-//   InitializeFormations();
-
-//   // Initialize local configurations if requested.
-//   if(_init)
-//     InitializeLocalCfgs();
-// }
-
-
 /*--------------------------------- Equality ---------------------------------*/
 
 template <typename GraphType>
@@ -501,13 +447,6 @@ operator==(const GroupCfg& _other) const noexcept {
   return true;
 }
 
-
-template <typename GraphType>
-bool
-GroupCfg<GraphType>::
-operator!=(const GroupCfg& _other) const noexcept {
-  return !(*this == _other);
-}
 
 template <typename GraphType>
 bool
@@ -728,36 +667,8 @@ SetRobotCfg(const size_t _index, IndividualCfg&& _cfg) {
 template <typename GraphType>
 void
 GroupCfg<GraphType>::
-SetRobotCfg(Robot* const _robot, const VID _vid) {
-  const size_t index = this->m_groupGraph->GetGroup()->GetGroupIndex(_robot);
-  SetRobotCfg(index, _vid);
-}
-
-
-template <typename GraphType>
-void
-GroupCfg<GraphType>::
-SetRobotCfg(const size_t _index, const VID _vid) {
-  this->VerifyIndex(_index);
-
-  this->m_vids[_index] = _vid;
-}
-
-
-template <typename GraphType>
-void
-GroupCfg<GraphType>::
 ClearLocalCfgs() {
   m_localCfgs.clear();
-}
-
-
-template <typename GraphType>
-typename GroupCfg<GraphType>::IndividualCfg&
-GroupCfg<GraphType>::
-GetRobotCfg(Robot* const _robot) {
-  const size_t index = this->m_groupGraph->GetGroup()->GetGroupIndex(_robot);
-  return GetRobotCfg(index);
 }
 
 
@@ -774,15 +685,6 @@ GetRobotCfg(const size_t _index) {
     InitializeLocalCfgs();
     return m_localCfgs[_index];
   }
-}
-
-
-template <typename GraphType>
-const typename GroupCfg<GraphType>::IndividualCfg&
-GroupCfg<GraphType>::
-GetRobotCfg(Robot* const _robot) const {
-  const size_t index = this->m_groupGraph->GetGroup()->GetGroupIndex(_robot);
-  return GetRobotCfg(index);
 }
 
 
@@ -943,18 +845,6 @@ RotateFormationAboutLeader(const Formation& _robotList,
 
   const mathtool::Transformation rotation(mathtool::Vector3d(0,0,0), _rotation);
 
-  if(_debug)
-    std::cout << "Rotating bodies " << _robotList << " with rotation = "
-              << rotation << std::endl;
-
-  // The transform to be applied to all parts (including the first one). We
-  // move the part to its relative world position with A at the world origin,
-  // then the rotation is applied, and we return the part to its relative
-  // position from A.
-  const mathtool::Transformation transform = initialLeaderTransform * rotation;
-
-  ApplyTransformationForRobots(_robotList, transform, initialLeaderTransform);
-}*/
 
 /*
 void

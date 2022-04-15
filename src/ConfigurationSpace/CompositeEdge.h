@@ -16,11 +16,9 @@ template <typename GraphType> class CompositeState;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A local plan for multiple robots. Each robot will be executing this motion
-/// simultaneously, and the total time is the same for each robot.
+/// A composite edge for multiple robots, which is composed of an individual
+/// edge for each robot. 'GraphType' refers to the individual robot graph type.
 ///
-/// @todo Remove the 'active robots'. All robots are always active in a group
-///       edge. We do need to retain formation data for reconstructing edges.
 /// @todo Remove the 'skip edge' stuff. There is no such thing as a skipped
 ///       edge: the disassembly code needs to be adjusted to only use the edges
 ///       they want.
@@ -39,31 +37,23 @@ class CompositeEdge {
     typedef typename GraphType::CfgType    IndividualCfg;
     typedef typename GraphType::EdgeType   IndividualEdge;
 
-    typedef CompositeState<GraphType> CompositeStateType;
-    typedef CompositeGraph<CompositeStateType, CompositeEdge> GroupRoadmapType;
+    typedef double                               EdgeWeight;
+    typedef stapl::edge_descriptor_impl<size_t>  ED;
 
-    // typedef GroupRoadmap<GroupCfg, GroupLocalPlan>  GroupRoadmapType;
-
-    typedef double                                  EdgeWeight;
-    // typedef DefaultWeight<GraphType>                  IndividualEdge;
-    // typedef CompositeGraph<GraphType>  GroupRoadmapType;
-    // typedef std::vector<GroupCfg>                   GroupCfgPath;
-    // typedef size_t                                  GroupVID;
-
-    typedef stapl::edge_descriptor_impl<size_t>     ED;
+    typedef CompositeState<GraphType>                         CompositeStateType;
+    typedef CompositeGraph<CompositeStateType, CompositeEdge> GroupGraphType;
+    typedef std::vector<CompositeStateType>                   CompositePath;
 
     ///@}
     ///@name Construction
     ///@{
 
     /// Constructs a CompositeEdge.
-    /// @param _g The group of robots to follow this edge. Defaults to nullptr.
-    /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
+    /// @param _g The group roadmap in which this edge exists. Defaults to nullptr.
     /// @param _w The weight of the plan. Defaults to 0.0.
-    /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
-    CompositeEdge(GroupRoadmapType* const & _g = nullptr, const double _w = 0.0);
-
-    // virtual ~CompositeEdge() = default;
+    /// @param _intermediates The intermediates along the edge. Defaults to CompositePath().
+    CompositeEdge(GroupGraphType* const & _g = nullptr, const double _w = 0.0, 
+      const CompositePath& _intermediates = CompositePath());
 
     ///@}
     ///@name Ordering and Equality
@@ -82,9 +72,9 @@ class CompositeEdge {
     virtual bool operator<(const CompositeEdge& _other) const noexcept;
 
     ///@}
-    ///@name Roadmap Edge Weight
+    ///@name Graph Edge Weight
     ///@{
-    /// Get/set the numeric weight for this local plan as used when querying a
+    /// Get/set the numeric weight for this edge as used when querying a
     /// roadmap.
 
     virtual EdgeWeight GetWeight() const noexcept;
@@ -102,11 +92,19 @@ class CompositeEdge {
     /// Reset the states of this object.
     virtual void Clear() noexcept;
 
+    /// Get the composite state intermediates.
+    CompositePath& GetIntermediates() noexcept;
+    /// Get the composite state intermediates.
+    const CompositePath& GetIntermediates() const noexcept;
+
+    /// Set the composite state intermediates.
+    void SetIntermediates(const CompositePath& _cfgs);
+
     ///@}
     ///@name Individual Local Plans
     ///@{
 
-    /// Set the individual edge for a robot to a roadmap copy of an edge.
+    /// Set the individual edge for a robot to a graph copy of an edge.
     /// @param _robot The robot which the edge refers to.
     /// @param _ed The edge descriptor.
     virtual void SetEdge(Robot* const _robot, const ED _ed);
@@ -168,10 +166,12 @@ class CompositeEdge {
     ///@name Internal State
     ///@{
 
-    GroupRoadmapType* m_groupMap{nullptr};  ///< The robot group which follows this edge.
+    GroupGraphType* m_groupMap{nullptr};  ///< The composite graph that this edge is in.
 
     /// The edge weight.
     double m_weight{std::numeric_limits<double>::infinity()};
+
+    CompositePath m_intermediates; ///< Group cfg intermediates.
 
     std::vector<ED> m_edges;           ///< Descriptors of the individual edges.
 
@@ -187,12 +187,36 @@ class CompositeEdge {
 
 template <typename GraphType>
 CompositeEdge<GraphType>::
-CompositeEdge(GroupRoadmapType* const & _g, const double _w)
-    : m_groupMap(_g), m_weight(_w) {
+CompositeEdge(GroupGraphType* const & _g, const double _w, 
+    const CompositePath& _intermediates)
+    : m_groupMap(_g), m_weight(_w), m_intermediates(_intermediates) {
   if(m_groupMap)
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
-  //else
-    //std::cout << "Warning: no group map provided in group LP!" << std::endl;
+}
+
+/*------------------------- Misc Interface Functions -------------------------*/
+
+template <typename GraphType>
+typename CompositeEdge<GraphType>::CompositePath&
+CompositeEdge<GraphType>::
+GetIntermediates() noexcept {
+  return m_intermediates;
+}
+
+
+template <typename GraphType>
+const typename CompositeEdge<GraphType>::CompositePath&
+CompositeEdge<GraphType>::
+GetIntermediates() const noexcept {
+  return m_intermediates;
+}
+
+
+template <typename GraphType>
+void
+CompositeEdge<GraphType>::
+SetIntermediates(const CompositePath& _path) {
+  m_intermediates = _path;
 }
 
 /*--------------------------- Ordering and Equality --------------------------*/
