@@ -307,6 +307,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       auto groundedVID = m_groundedHypergraph.AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _startVIDs.insert(groundedVID);
+      m_entryVertices.insert(groundedVID);
     }
 
     // Check if mode is in the goal conditions
@@ -338,6 +339,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       auto groundedVID = m_groundedHypergraph.AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _goalVIDs.insert(groundedVID);
+      m_exitVertices.insert(groundedVID);
     }
 
     // Sample other cfgs and add to grounded hypergraph
@@ -353,6 +355,8 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
 
       auto groundedVID = m_groundedHypergraph.AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
+      m_entryVertices.insert(groundedVID);
+      m_exitVertices.insert(groundedVID);
     }
   }
 }
@@ -548,6 +552,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
       auto groundedVID = m_groundedHypergraph.AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _startVIDs.insert(groundedVID);
+      m_entryVertices.insert(groundedVID);
     }
 
     // Check if mode is in the goal conditions
@@ -579,6 +584,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
       auto groundedVID = m_groundedHypergraph.AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _goalVIDs.insert(groundedVID);
+      m_exitVertices.insert(groundedVID);
     }
   }
 
@@ -634,7 +640,7 @@ ConnectTransitions() {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectTransitions");
 
-  auto lib = this->GetMPLibrary();
+  //auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
 
   // Set robots virtual
@@ -651,6 +657,9 @@ ConnectTransitions() {
     auto mode = m_modeHypergraph.GetVertexType(kv1.first);
 
     for(auto vid1 : m_modeGroundedVertices[kv1.first]) {
+
+      if(!m_entryVertices.count(vid1))
+        continue;
 
       auto vertex1 = m_groundedHypergraph.GetVertex(vid1);
 
@@ -672,8 +681,13 @@ ConnectTransitions() {
         if(vid1 == vid2)
           continue;
 
-        std::cout << "Attempting to connect grounded vertices: "
-                  << vid1 << " -> " << vid2 << std::endl;
+        if(!m_exitVertices.count(vid2))
+          continue;
+
+        if(m_debug) {
+          std::cout << "Attempting to connect grounded vertices: "
+                    << vid1 << " -> " << vid2 << std::endl;
+        }
 
         auto vertex2 = m_groundedHypergraph.GetVertex(vid2);
 
@@ -733,11 +747,16 @@ ConnectTransitions() {
           std::cout << "\tTo: " << cfg2.PrettyPrint() << std::endl;
         }
 
+
+        //TODO::TODO::TODO::TEMPORARY _ DELETE
+
+        /*
         // Query path for task
         lib->SetPreserveHooks(true);
         lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
             "Query transition path");
         lib->SetPreserveHooks(false);
+        */
 
         grm->SetAllFormationsInactive();
 
@@ -746,6 +765,9 @@ ConnectTransitions() {
           robot->SetVirtual(true);
         }
 
+        //TODO::TODO::TODO::TEMPORARY _ DELETE
+
+        /*
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
 
@@ -756,10 +778,13 @@ ConnectTransitions() {
           }
           std::cout << std::endl;
         }
+        */
 
         Transition transition;
         transition.taskSet.push_back({groupTask});
-        transition.cost = path->TimeSteps();
+        //TODO::TODO::TODO::TEMPORARY _ DELETE
+        //transition.cost = path->TimeSteps();
+        transition.cost = 100;
         transition.taskFormations[groupTask.get()] = formations;
 
         // Add arc to hypergraph
@@ -1466,14 +1491,28 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
   // Add the start state to the grounded vertices graph
   auto tail = AddStateToGroundedHypergraph(start,_startModeMap);
+  for(auto v : tail) {
+    m_exitVertices.insert(v);
+  }
 
   // Add the end state to the grounded vertices graph
   auto head = AddStateToGroundedHypergraph(end,_endModeMap);
+  for(auto v : head) {
+    m_entryVertices.insert(v);
+  }
 
   // Save transition in hypergraph
   m_groundedHypergraph.AddHyperarc(head,tail,transition);
 
   if(_interaction->IsReversible()) {
+
+    for(auto v : tail) {
+      m_entryVertices.insert(v);
+    }
+    for(auto v : head) {
+      m_exitVertices.insert(v);
+    }
+
     Transition reverse;
 
     // Reverse explicit paths

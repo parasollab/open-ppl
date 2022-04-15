@@ -510,6 +510,10 @@ ComputeHeuristicValues() {
            const double _targetDistance) {
     auto groundedHA = _ei->property();
     double edgeWeight = groundedHA.cost;
+
+    //TODO::Decide if this is what we want
+    //edgeWeight = 1;
+
     double newDistance = _sourceDistance + edgeWeight;
     return newDistance;
   });
@@ -614,7 +618,9 @@ HyperpathPathWeightFunction(
   auto& gh = mg->GetGroundedHypergraph();
   auto groundedHA = gh.GetHyperarcType(_hyperarc.property);
   
+  //TODO::DECIDE IF WE WANT THIS
   hyperarcWeight = groundedHA.cost;
+  //hyperarcWeight = 1;
 
   double tailWeight = 0;
 
@@ -772,12 +778,35 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 double 
 SubmodeQuery::
 HyperpathHeuristic(const size_t& _target) {
+
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto& gh = mg->GetGroundedHypergraph();
+
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
+
+  //TODO::Decide if this is what we want
+  auto grm = gh.GetVertexType(vid).first;
+  if(!grm)
+    return 0;
+
+  auto group = grm->GetGroup();
+  for(auto& r : group->GetRobots()) {
+    if(r->GetMultiBody()->IsPassive()) {
+      auto iter = m_heuristicMap.find(vid);
+      if(iter == m_heuristicMap.end())
+        return m_maxDistance;
+      return m_heuristicMap.at(vid);
+    }
+  }
+  return 0;
+
+  /*
   auto iter = m_heuristicMap.find(vid);
   if(iter == m_heuristicMap.end())
     return m_maxDistance;
   return m_heuristicMap.at(vid);
+  */
 }
 /*--------------------------------------------------------------------------*/
 istream&

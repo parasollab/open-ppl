@@ -189,6 +189,8 @@ class ModeGraph : public StateGraph {
 
     size_t m_maxAttempts;
 
+    std::set<size_t> m_entryVertices;
+    std::set<size_t> m_exitVertices;
 
     ///@}
 
