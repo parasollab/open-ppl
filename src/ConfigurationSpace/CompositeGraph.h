@@ -64,6 +64,8 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     /// Construct a group roadmap.
     CompositeGraph(RobotGroup* const _g, std::vector<IndividualGraph*> _graphs = {});
 
+    // virtual ~CompositeGraph() = 0;
+
     ///@}
     ///@name Disabled Functions
     ///@{
@@ -82,15 +84,15 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     ///@{
 
     /// Get the robot group.
-    RobotGroup* GetGroup();
+    virtual RobotGroup* GetGroup();
 
     /// Get the individual roadmap for a robot in the group.
     /// @param _index The index of the desired robot.
-    IndividualGraph* GetRoadmap(const size_t _index);
-    const IndividualGraph* GetRoadmap(const size_t _index) const;
+    virtual IndividualGraph* GetRoadmap(const size_t _index);
+    virtual const IndividualGraph* GetRoadmap(const size_t _index) const;
 
     /// Get the number of robots for the group this roadmap is for.
-    size_t GetNumRobots() const noexcept;
+    virtual size_t GetNumRobots() const noexcept;
 
     ///@}
     ///@name Input/Output

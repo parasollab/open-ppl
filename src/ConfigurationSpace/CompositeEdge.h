@@ -12,8 +12,7 @@
 #include <iostream>
 #include <vector>
 
-template <typename GraphType>
-class CompositeState;
+template <typename GraphType> class CompositeState;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +63,7 @@ class CompositeEdge {
     /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
     CompositeEdge(GroupRoadmapType* const & _g = nullptr, const double _w = 0.0);
 
-    virtual ~CompositeEdge() = default;
+    // virtual ~CompositeEdge() = default;
 
     ///@}
     ///@name Ordering and Equality
@@ -88,20 +87,20 @@ class CompositeEdge {
     /// Get/set the numeric weight for this local plan as used when querying a
     /// roadmap.
 
-    EdgeWeight GetWeight() const noexcept;
+    virtual EdgeWeight GetWeight() const noexcept;
 
-    void SetWeight(const EdgeWeight _w) noexcept;
+    virtual void SetWeight(const EdgeWeight _w) noexcept;
 
     ///@}
     ///@name Misc. Interface Functions
     ///@{
 
     // There is no current use case where these should ever get reset to false.
-    void SetSkipEdge() noexcept;
-    bool SkipEdge() const noexcept;
+    virtual void SetSkipEdge() noexcept;
+    virtual bool SkipEdge() const noexcept;
     
     /// Reset the states of this object.
-    void Clear() noexcept;
+    virtual void Clear() noexcept;
 
     ///@}
     ///@name Individual Local Plans
@@ -110,33 +109,33 @@ class CompositeEdge {
     /// Set the individual edge for a robot to a roadmap copy of an edge.
     /// @param _robot The robot which the edge refers to.
     /// @param _ed The edge descriptor.
-    void SetEdge(Robot* const _robot, const ED _ed);
+    virtual void SetEdge(Robot* const _robot, const ED _ed);
 
     /// Get the individual edge for a robot.
     /// @param _robot The robot which the edge refers to.
     /// @return A pointer to the edge for _robot. It will be null if it has not
     ///         yet been set.
-    IndividualEdge* GetEdge(Robot* const _robot);
+    virtual IndividualEdge* GetEdge(Robot* const _robot);
 
     /// Get the individual edge for a robot.
     /// @param _robot The robot which the edge refers to.
     /// @return A pointer to the edge for _robot. It will be null if it has not
     ///         yet been set.
-    const IndividualEdge* GetEdge(Robot* const _robot) const;
+    virtual const IndividualEdge* GetEdge(Robot* const _robot) const;
 
     ///Overloads for using index instead of robot pointer.
-    IndividualEdge* GetEdge(const size_t _robotIndex);
-    const IndividualEdge* GetEdge(const size_t _robotIndex) const;
+    virtual IndividualEdge* GetEdge(const size_t _robotIndex);
+    virtual const IndividualEdge* GetEdge(const size_t _robotIndex) const;
 
     /// Get a vector of local edges' descriptors.
-    std::vector<ED>& GetEdgeDescriptors() noexcept;
+    virtual std::vector<ED>& GetEdgeDescriptors() noexcept;
 
     /// Get the number of robots given in this group local plan.
-    size_t GetNumRobots() const noexcept;
+    virtual size_t GetNumRobots() const noexcept;
 
-    void SetTimeSteps(size_t _timesteps);
+    virtual void SetTimeSteps(size_t _timesteps);
 
-    size_t GetTimeSteps() const;
+    virtual size_t GetTimeSteps() const;
 
     ///@}
     ///@name Stapl graph interface
@@ -146,7 +145,7 @@ class CompositeEdge {
     virtual CompositeEdge operator+(const CompositeEdge& _other) const ;
 
     /// Get the weight of the plan.
-    double Weight() const noexcept;
+    virtual double Weight() const noexcept;
 
     ///@}
     ///@name Iteration
@@ -156,11 +155,11 @@ class CompositeEdge {
     typedef typename std::vector<ED>::iterator       iterator;
     typedef typename std::vector<ED>::const_iterator const_iterator;
 
-    iterator begin() noexcept;
-    iterator end() noexcept;
+    virtual iterator begin() noexcept;
+    virtual iterator end() noexcept;
 
-    const_iterator begin() const noexcept;
-    const_iterator end() const noexcept;
+    virtual const_iterator begin() const noexcept;
+    virtual const_iterator end() const noexcept;
 
     ///@}
 
