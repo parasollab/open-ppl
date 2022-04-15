@@ -796,10 +796,10 @@ HyperpathHeuristic(const size_t& _target) {
       auto iter = m_heuristicMap.find(vid);
       if(iter == m_heuristicMap.end())
         return m_maxDistance;
-      return m_heuristicMap.at(vid);
+      return m_heuristicMap.at(vid) + 0.1;
     }
   }
-  return 0;
+  return 0.1;
 
   /*
   auto iter = m_heuristicMap.find(vid);
