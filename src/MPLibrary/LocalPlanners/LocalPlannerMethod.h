@@ -43,7 +43,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::GroupCfgType  GroupCfgType;
-    typedef std::vector<size_t>              RobotFormation;
+    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction
@@ -102,14 +102,14 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupCfgType& _col, GroupLPOutput<MPTraits>* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false,
-        const RobotFormation& _formation = RobotFormation());
+        const Formation& _formation = Formation());
 
     /// This version for group configurations does not return a collision node.
     /// @overload
     bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
         GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false,
-        const RobotFormation& _formation = RobotFormation());
+        const Formation& _formation = Formation());
 
     /// Blind-plan between a set of waypoints. Also useful for reconstructing
     /// previously validated edges.
@@ -140,12 +140,12 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///                   formation at both _start and _end.
     std::vector<GroupCfgType> BlindPath(
         const std::vector<GroupCfgType>& _waypoints, const double _posRes,
-        const double _oriRes, const RobotFormation& _formation = RobotFormation());
+        const double _oriRes, const Formation& _formation = Formation());
 
     /// @overload This version assumes the environment's resolution values.
     std::vector<GroupCfgType> BlindPath(
         const std::vector<GroupCfgType>& _waypoints,
-        const RobotFormation& _formation = RobotFormation());
+        const Formation& _formation = Formation());
 
     ///@}
 
@@ -207,7 +207,7 @@ LocalPlannerMethod<MPTraits>::
 IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
     GroupCfgType& _col,
     GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, const RobotFormation& _formation) {
+    bool _checkCollision, bool _savePath, const Formation& _formation) {
   throw NotImplementedException(WHERE) << "No default implementation provided.";
 }
 
@@ -218,7 +218,7 @@ bool
 LocalPlannerMethod<MPTraits>::
 IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
     GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, const RobotFormation& _formation) {
+    bool _checkCollision, bool _savePath, const Formation& _formation) {
   GroupCfgType col(_start.GetGroupRoadmap());
   return IsConnected(_start, _end, col, _lpOutput, _posRes,
                      _oriRes, _checkCollision, _savePath, _formation);
@@ -264,7 +264,7 @@ template <typename MPTraits>
 std::vector<typename MPTraits::GroupCfgType>
 LocalPlannerMethod<MPTraits>::
 BlindPath(const std::vector<GroupCfgType>& _waypoints, const double _posRes,
-    const double _oriRes, const RobotFormation& _formation) {
+    const double _oriRes, const Formation& _formation) {
   // Blind local-plan between each intermediate,
   bool first = true;
   std::vector<GroupCfgType> out;
@@ -290,7 +290,7 @@ template <typename MPTraits>
 std::vector<typename MPTraits::GroupCfgType>
 LocalPlannerMethod<MPTraits>::
 BlindPath(const std::vector<GroupCfgType>& _waypoints,
-    const RobotFormation& _formation) {
+    const Formation& _formation) {
   auto env = this->GetEnvironment();
   return BlindPath(_waypoints, env->GetPositionRes(), env->GetOrientationRes(),
       _formation);

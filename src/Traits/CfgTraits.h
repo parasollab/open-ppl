@@ -125,7 +125,6 @@ struct MPTraits {
     ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
-    //DynamicRegionSampler<MPTraits>,
 
   //types of local planners available in our world
   typedef boost::mpl::list<

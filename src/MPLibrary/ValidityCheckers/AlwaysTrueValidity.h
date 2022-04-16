@@ -18,6 +18,7 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
     typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename GroupCfgType::Formation Formation;
 
     ///@}
     ///@name Construction
