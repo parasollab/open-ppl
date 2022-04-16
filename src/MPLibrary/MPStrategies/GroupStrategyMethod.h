@@ -33,7 +33,7 @@ class GroupStrategyMethod : public MPStrategyMethod<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
-    typedef typename MPTraits::CfgType           CfgType;
+    typedef typename MPTraits::CfgType          CfgType;
     typedef typename MPTraits::GroupCfgType      GroupCfgType;
     typedef typename MPTraits::GroupPathType     GroupPath;
     typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
@@ -243,33 +243,13 @@ GenerateGoals(const std::string& _samplerLabel) {
                 << std::endl;
     const auto& boundaryMap = boundaryMaps[i];
 
-    //THIS SHOULD BE DELETED LATER, IT TURNS ALL ROBOTS TO VIRTUAL SO THEY WILL NOT COLLIDE
-    // auto iter1 = boundaryMap.begin();
-    // while(iter1 != boundaryMap.end()){
-    //   iter1->first->SetVirtual(true);
-    //   ++iter1;
-    // }
     // Sample goal configurations which place all robots at covalid
     // configurations and mapped robots within their goal constraints.
     constexpr size_t attempts = 100;
     std::vector<GroupCfgType> cfgs;
     // TODO Write this API
     sampler->Sample(1, attempts, boundaryMap, std::back_inserter(cfgs));
-    auto iter = boundaryMap.begin();
-    while(iter != boundaryMap.end()){
-      cout<<"Robot: "<<endl;
-      cout<<iter->first->GetLabel()<<endl;
-      cout<<"Boundary: "<<endl;
-      cout<<*(iter->second)<<endl;
-      ++iter;
-    }
 
-    //THIS SHOULD BE REMOVED, IT WAS ADDED TO DETERMINE IF AN ERROR WOULD CONTINUE TO OCCUR IF I SET VIRTUAL
-    // auto iter2 = boundaryMap.begin();
-    // while(iter2 != boundaryMap.end()){
-    //   iter2->first->SetVirtual(false);
-    //   ++iter2;
-    // }
     // Throw an error if we failed to generate a single configuration.
     if(cfgs.empty())
       throw RunTimeException(WHERE) << "Could not generate valid goal "

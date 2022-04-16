@@ -144,8 +144,6 @@ EditJointLimitsWidget(QWidget* const _parent, const std::string& _label,
     case Connection::JointType::NonActuated:
       throw RunTimeException(WHERE, "Cannot edit limits for a non-actuated "
           "joint.");
-    case Connection::JointType::Prismatic:
-      throw RunTimeException(WHERE, "Prismatic joints are not yet supported");
     case Connection::JointType::Spherical:
       m_sliders[2] = new SliderTextWidget(this, "min2", -1, 1);
       m_sliders[3] = new SliderTextWidget(this, "max2", -1, 1);
@@ -154,10 +152,6 @@ EditJointLimitsWidget(QWidget* const _parent, const std::string& _label,
       break;
     case Connection::JointType::Revolute:
       SetValue(_connection.GetJointRange(0));
-      break;
-    case Connection::JointType::Mimic:
-      throw RunTimeException(WHERE, "Cannot edit limits for mimicing joint.");
-      break;
   }
 
   // Create a layout for the slider text widgets.

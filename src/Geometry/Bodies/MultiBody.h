@@ -4,9 +4,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <unordered_map>
-
-#include "Utilities/XMLNode.h"
 
 #include "Geometry/Bodies/Body.h"
 #include "Geometry/Boundaries/Range.h"
@@ -14,11 +11,7 @@
 class Boundary;
 class Cfg;
 class Connection;
-
-namespace urdf {
-  class Model;
-}
-//class XMLNode;
+class XMLNode;
 
 #ifdef DEBUG_BULLET_PROBLEMS
 class btMultiBody;
@@ -191,19 +184,11 @@ class MultiBody {
     /// @param _index The index of the body to use as the base.
     void SetBaseBody(const size_t _index);
 
-    /// Set the body to this _bodyType  .
-    void SetBaseType(Body::Type _bodyType);
-
     /// Get the body type of the base body.
     Body::Type GetBaseType() const noexcept;
 
     /// Get the movement type of the base body.
-    void SetBaseMovementType(Body::MovementType _movementType);
-
-    /// Get the movement type of the base body.
     Body::MovementType GetBaseMovementType() const noexcept;
-
-    const std::unordered_map<std::string,size_t>& GetLinkMap();
 
     ///@}
     ///@name Geometric Properties
@@ -225,11 +210,6 @@ class MultiBody {
     /// Get a specific Connection.
     /// @param _i The connection index.
     Connection* GetJoint(const size_t _i) noexcept;
-
-    /// Add a joint.
-    /// @param _joint The joint to add.
-    /// @return The index of the joint.
-    size_t AddJoint(Connection&& _joint);
 
     /// Get the DOF type for a specific degree of freedom.
     const DofType& GetDOFType(const size_t _i) const noexcept;
@@ -273,42 +253,7 @@ class MultiBody {
     /// @param _os The output stream to write to.
     void Write(std::ostream& _os) const;
 
-    /// Translate a URDF model of the robot into a MultiBody representation.
-    /// @param _urdf The URDF filename to load.
-    /// @param _worldLink The virtual link connecting the URDF model to the world frame.
-    /// @param _fixed A flag indicating if the robot model has a fixed base.
-    void TranslateURDF(std::string _urdf, std::string _worldLink, Body::Type
-        _baseType, Body::MovementType _baseMovement, XMLNode& _node);
-
-    void TranslateURDFFile(std::string _urdf, std::string _worldLink, Body::Type
-        _baseType, Body::MovementType _baseMovement);
-
-    /// Read an external file to add a MultiBody.
-    /// @param _filename The filename of the external file.
-    /// @param _node The XML node containing the filename and any extra information.
-    void ReadExternalFile(std::string _filename, XMLNode& _node);
-
-    /// Add a link to this multibody that is specified in the URDF model.
-    /// @param _name Name of the link to add.
-    /// @param _model The URDF model to extract the link info from.
-    /// @param _linkMap The map of link names to body indices
-    /// @param _childMap Map of link parentage.
-    /// @param _base flag indiciating if the link to be added is the base.
-    /// @param _fixed Flag indiciating if the link is fixed.
-    void AddURDFLink(std::string _name, size_t& _count,
-            urdf::Model& _model,
-            std::unordered_map<std::string,std::vector<std::string>>& _childMap,
-            bool _base = false);
-
     ///@}
-
-    /// TODO::Temporary move to public until base position can be pulled from gazebo
-    /// Generate the transformation for the base body at some set of DOF values.
-    /// @param _v The DOF values.
-    /// @param _forceOri Flag indiciating that the orientation should be set regardless of base type.
-    /// @return The base body transformation at _v.
-    Transformation GenerateBaseTransformation(const std::vector<double>& _v, bool _forceOri=false)
-        const;
 
   private:
 
@@ -330,6 +275,11 @@ class MultiBody {
     ///          configuration.
     void FindMultiBodyInfo();
 
+    /// Generate the transformation for the base body at some set of DOF values.
+    /// @param _v The DOF values.
+    /// @return The base body transformation at _v.
+    Transformation GenerateBaseTransformation(const std::vector<double>& _v)
+        const;
 
     ///@}
     ///@name Internal State
@@ -351,7 +301,6 @@ class MultiBody {
     std::vector<DofInfo> m_dofInfo;       ///< DofInfo for each motion
     std::vector<double> m_currentDofs;    ///< The current configuration DOFs
 
-    std::unordered_map<std::string,size_t> m_linkMap;
     ///@}
 };
 

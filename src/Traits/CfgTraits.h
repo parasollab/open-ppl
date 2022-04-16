@@ -51,8 +51,6 @@
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
-#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
-#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
@@ -78,7 +76,7 @@
 /// MPTraits is a type class which defines the motion planning universe. We
 /// construct our methods through a factory design pattern, and thus this states
 /// all available classes within an abstraction that you can use in the system.
-/// Essentially the important types are, the CfgType or the @cspace abstraction
+/// Essentially, the important types are the CfgType or the @cspace abstraction
 /// class, the WeightType or the edge type of the graph, and a type list for
 /// each algorithm abstraction --- here you only need to define what you need,
 /// as extraneous methods in the type class imply longer compile times.
@@ -88,7 +86,6 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-//  typedef GenericStateGraph<C, W>              RoadmapType;
 
   typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
@@ -163,8 +160,6 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
-    GroupDecoupledQuery<MPTraits>,
-    GroupQuery<MPTraits>,
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,

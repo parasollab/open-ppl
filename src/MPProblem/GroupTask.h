@@ -23,9 +23,6 @@ class Robot;
 class RobotGroup;
 class XMLNode;
 
-// template <typename GraphType>
-// class GroupCfg;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Describes a motion task for a group of robots as a set of individual tasks.
@@ -54,8 +51,6 @@ class GroupTask {
     /// A set of individual tasks.
     typedef std::vector<MPTask>     TaskSet;
 
-    // this is a stupid fix, but idk how else to do it without having to change
-    // a lot of other stuff...
     typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> IndividualRoadmap;
     typedef GroupCfg<IndividualRoadmap> GroupCfgType;
 

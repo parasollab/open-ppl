@@ -1,7 +1,6 @@
 #include "GroupTask.h"
 
 #include "ConfigurationSpace/Cfg.h"
-// #include "ConfigurationSpace/GroupCfg.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Constraints/Constraint.h"

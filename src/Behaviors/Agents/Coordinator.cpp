@@ -10,8 +10,6 @@
 #include "Behaviors/Agents/StepFunctions/StepFunction.h"
 #include "Behaviors/Controllers/ControllerMethod.h"
 
-#include "MPProblem/Constraints/BoundaryConstraint.h"
-#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 
 #include "Simulator/Simulation.h"
@@ -23,9 +21,6 @@
   #include "Traits/TestTraits.h"
 #endif
 
-#include "TMPLibrary/Solution/TaskSolution.h"
-
-#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/Solution/TaskSolution.h"
 
 #include "sandbox/gui/main_window.h"
@@ -46,11 +41,6 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
       const std::string memberLabel = child.Read("label", true, "",
           "The label of the member robot.");
       m_memberLabels.push_back(memberLabel);
-    }
-    else if(child.Name() == "MemberGroup") {
-      const std::string groupLabel = child.Read("label",true, "",
-          "The label of the member group.");
-      m_memberGroups.push_back(groupLabel);
     }
   }
 
@@ -263,7 +253,7 @@ InitializeAgents() {
   if(m_debug){
     std::cout << "Initializing Agents" << std::endl;
   }
-  for(auto agent : m_childAgents){
+  for(auto agent : m_childAgents) {
     agent->Initialize();
     agent->SetCoordinator(this);
   }
@@ -279,7 +269,7 @@ GetTMPLibrary() {
 
 void
 Coordinator::
-SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph){
+SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph) {
   *m_solution->GetRoadmap(m_robot) = *_graph;
 }
 
@@ -399,10 +389,4 @@ std::vector<ChildAgent*>
 Coordinator::
 GetChildAgents() {
   return m_childAgents;
-}
-
-std::vector<std::string>
-Coordinator::
-GetMemberGroups() {
-  return m_memberGroups;
 }

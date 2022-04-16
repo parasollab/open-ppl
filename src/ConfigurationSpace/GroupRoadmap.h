@@ -1,7 +1,6 @@
 #ifndef PPL_GROUP_ROADMAP_H_
 #define PPL_GROUP_ROADMAP_H_
 
-#include "ConfigurationSpace/Formation.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/CompositeGraph.h"
 #include "MPProblem/Environment/Environment.h"
@@ -72,16 +71,6 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
     GroupRoadmap& operator=(GroupRoadmap&&)      = delete;
 
     ///@}
-    ///@name Accessors
-    ///@{
-
-    /// Get the set of formations available in this roadmap.
-    const std::unordered_map<Formation*,bool>& GetFormations();
-
-    /// Get the set of currently active formations.
-    std::unordered_set<Formation*> GetActiveFormations();
-
-    ///@}
     ///@name Input/Output
     ///@{
 
@@ -121,22 +110,6 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
     /// @param _iterator An iterator to the edge.
     virtual void DeleteEdge(EI _iterator) noexcept override;
 
-    /// Add a formation to this group roadmap.
-    /// @param _formation The formation to add.
-    /// @param _active The initial active/inactive status.
-    void AddFormation(Formation* _formation, bool _active = true); 
-
-    /// Set the active value of the formation to true.
-    /// @param The formation to set as active.
-    void SetFormationActive(Formation* _formation);
-
-    /// Set the active value of the formation to false.
-    /// @param The formation to set as inactive.
-    void SetFormationInactive(Formation* _formation);
-
-    /// Set the active value of all formations to false;
-    void SetAllFormationsInactive();
-
     ///@}
     ///@name Hooks
     ///@{
@@ -144,16 +117,6 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
     // /// Uninstall all hooks from each individual roadmap. Should only be used at
     // /// the end of a library run to clean the roadmap object.
     // virtual void ClearHooks() noexcept override;
-
-    ///@}
-
-  protected:
-
-    ///@name Internal State
-    ///@{
-
-    /// The set of available formations and their active=1/inactive=0 status.
-    std::unordered_map<Formation*,bool> m_formations;
 
     ///@}
 
@@ -172,29 +135,6 @@ GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
     roadmaps.push_back(_solution->GetRoadmap(robot));
   
   this->m_roadmaps = roadmaps;
-}
-
-/*-------------------------------- Accessors ---------------------------------*/
-
-template <typename Vertex, typename Edge>
-const std::unordered_map<Formation*,bool>&
-GroupRoadmap<Vertex, Edge>::
-GetFormations() {
-  return m_formations;
-}
-
-template <typename Vertex, typename Edge>
-std::unordered_set<Formation*>
-GroupRoadmap<Vertex, Edge>::
-GetActiveFormations() {
-  std::unordered_set<Formation*> active;
-
-  for(const auto& formation : m_formations) {
-    if(formation.second) 
-      active.insert(formation.first);
-  }
-
-  return active;
 }
 
 /*-------------------------------Input/Output---------------------------------*/
@@ -336,7 +276,7 @@ GroupRoadmap<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
   Vertex cfg; // Will be a copy of the const Vertex
   // Check that the group map is correct, if not, try and change it.
-  if((GroupRoadmapType*)_v.GetGroupRoadmap() != this) {
+  if(_v.GetGroupRoadmap() != this) {
     std::cerr << "GroupRoadmap::AddVertex: Warning! Group roadmap "
               << "doesn't match this, attempting to exchange the roadmap..."
               << std::endl;
@@ -349,9 +289,9 @@ AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(this->IsVertex(cfg, vi)) {
-    //std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
-    //          << " already in graph"
-    //          << std::endl;
+    std::cerr << "\nGroupRoadmap::AddVertex: vertex " << vi->descriptor()
+              << " already in graph"
+              << std::endl;
     return vi->descriptor();
   }
 
@@ -368,11 +308,6 @@ AddVertex(const Vertex& _v) noexcept {
     else if(roadmap->find_vertex(individualVID) == roadmap->end())
       throw RunTimeException(WHERE) << "Individual vertex " << individualVID
                                     << " does not exist!";
-  }
-
-  // Copy the formation over from the input cfg
-  for(auto formation : _v.GetFormations()) {
-    cfg.AddFormation(formation);
   }
 
   // The vertex does not exist. Add it now.
@@ -472,40 +407,6 @@ DeleteEdge(EI _iterator) noexcept {
 
   this->m_predecessors[target].erase(source);
   ++this->m_timestamp;
-}
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-AddFormation(Formation* _formation, bool _active) {
-
-  if(!_formation)
-    throw RunTimeException(WHERE) << "Adding null formation.";
-
-  m_formations[_formation] = _active;
-}
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-SetFormationActive(Formation* _formation) {
-  m_formations[_formation] = true;
-}
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-SetFormationInactive(Formation* _formation) {
-  m_formations[_formation] = false;
-}
-
-template <typename Vertex, typename Edge>
-void
-GroupRoadmap<Vertex, Edge>::
-SetAllFormationsInactive() {
-  for(auto& kv : m_formations) {
-    kv.second = false;
-  }
 }
 
 /*----------------------------------------------------------------------------*/

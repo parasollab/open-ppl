@@ -6,7 +6,6 @@
 #include <map>
 #include <memory>
 #include <vector>
-#include <eigen3/Eigen/Dense>
 
 #include "Geometry/Boundaries/Range.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
@@ -60,8 +59,13 @@ class Cfg {
     /// @param _v The workspace location of the robot's reference point.
     /// @param _robot The robot to represent.
     explicit Cfg(const mathtool::Vector3d& _v, Robot* const _robot = nullptr);
-
+    
+    /// Construct a copy of a configuration.
+    /// @param _other The configuration to copy.
     Cfg(const Cfg& _other);
+
+    /// Construct a copy of a configuration.
+    /// @param _other The configuration to copy.
     Cfg(Cfg&& _other);
 
     virtual ~Cfg();
@@ -70,37 +74,96 @@ class Cfg {
     ///@name Assignment
     ///@{
 
+    /// Set a configuration equal to another.
+    /// @param _cfg The configuration to be set to.
     Cfg& operator=(const Cfg& _cfg);
+
+    /// Set a configuration equal to another.
+    /// @param _cfg The configuration to be set to.
     Cfg& operator=(Cfg&& _cfg);
 
+    /// Add a given configuration to the current, by each degree of freedom.
+    /// @param _cfg The configuration to be added.
     Cfg& operator+=(const Cfg& _cfg);
+    /// Subtract a given configuration from the current, by each degree of freedom.
+    /// @param _cfg The configuration to be subtracted.
     Cfg& operator-=(const Cfg& _cfg);
+    /// Multiply the current configuration by a given configuration, by each degree of freedom
+    /// @param _cfg The configuration to multiply the current.
     Cfg& operator*=(const Cfg& _cfg);
+    /// Divide the current configuration by a given configuration, by each degree of freedom.
+    /// @param _cfg The configuration to divide the current.
     Cfg& operator/=(const Cfg& _cfg);
-
+    /// Multiply the current configuration by a scalar.
+    /// @param _d The scalar used to multiply the current.
     Cfg& operator*=(const double _d);
+    /// Divide the current configuration by a scalar.
+    /// @param _d The scalar used to divide the current.
     Cfg& operator/=(const double _d);
 
     ///@}
     ///@name Arithmetic
     ///@{
 
+    /// Find the negative of the configuration.
     Cfg operator-() const;
 
+    /// Find the sum of the current and a given configuration, 
+    /// by each degree of freedom.
+    /// @param _cfg The configuration to be added. 
+    /// @return The sum of the configurations.
     Cfg operator+(const Cfg& _cfg) const;
+
+    /// Find the difference of the current and a given configuration, 
+    /// by each degree of freedom.
+    /// @param _cfg The configuration to be subtracted. 
+    /// @return The difference of the configurations.
     Cfg operator-(const Cfg& _cfg) const;
+
+    /// Find the product of the current and a given configuration, 
+    /// by each degree of freedom.
+    /// @param _cfg The configuration used to multiply the current. 
+    /// @return The product of the configurations.
     Cfg operator*(const Cfg& _cfg) const;
+
+    /// Find the quotient of the current and a given configuration, 
+    /// by each degree of freedom.
+    /// @param _cfg The configuration used to divide the current. 
+    /// @return The quotient of the configurations.
     Cfg operator/(const Cfg& _cfg) const;
 
+    /// Find the configuration obtained by multiplying the current
+    /// by a scalar.
+    /// @param _d The scalar used to multiply the current.
+    /// @return The multiplied configuration.
     Cfg operator*(const double _d) const;
+
+    /// Find the configuration obtained by dividing the current
+    /// by a scalar.
+    /// @param _d The scalar used to divide the current.
+    /// @return The divided configuration.
     Cfg operator/(const double _d) const;
 
     ///@}
     ///@name Equality
     ///@{
 
+    /// Check if the current and given configurations are equal.
+    /// @param _cfg The given configuration.
+    /// @return True is equal, false otherwise.
     bool operator==(const Cfg& _cfg) const;
+
+    /// Check if the current and given configurations are unequal.
+    /// @param _cfg The given configuration.
+    /// @return True is unequal, false otherwise.
     bool operator!=(const Cfg& _cfg) const;
+
+    /// Check if the current and given configurations are equal.
+    /// within a given set of resolutions.
+    /// @param _cfg The given configuration.
+    /// @param _posRes The resolution for positional degrees of freedom.
+    /// @param _oriRes The resolution for orientational degrees of freedom.
+    /// @return True if both are within the given resolutions, false otherwise.
     bool WithinResolution(const Cfg& _cfg, const double _posRes,
                           const double _oriRes) const;
 
@@ -108,29 +171,50 @@ class Cfg {
     ///@name Comparison
     ///@{
 
+    /// Check if the current configuration is less that the given.
+    /// @param _cfg The given configuration.
+    /// @return True if less than the given, false otherwise.
+    /// @todo The function currently seems to check each dof in order,
+    ///       returning T/F immediately unless exactly equal; is this intended?
     bool operator<(const Cfg& _cfg) const;
 
     ///@}
     ///@name Robot Info
     ///@{
 
-    /// Get the robot referenced by this configuration.
+    /// Get the robot corresponding to this configuration.
+    /// @return The corresponding robot.
     Robot* GetRobot() const noexcept;
 
-    /// Set the robot referenced by this configuration.
+    /// Set the robot corresponding to this configuration.
+    /// @param _r The desired new robot.
     void SetRobot(Robot* const _r) noexcept;
 
     /// Get the robot's multibody.
+    /// @return The robot's multibody.
     MultiBody* GetMultiBody() const noexcept;
 
+    /// Get the robot's DOF count.
+    /// @return The robot's DOF count.
     /// @warning For composite C-Space this returns a total DOF count.
     size_t DOF() const noexcept;
 
-    /// @warning For composite C-Space these functions return "per body" counts.
+    /// Get the robot's positional DOF count.
+    /// @return The robot's positional DOF count.
+    /// @warning For composite C-Space this function return "per body" counts.
     size_t PosDOF() const noexcept;
+
+    /// Get the robot's orientational DOF count.
+    /// @return The robot's orientational DOF count.
+    /// @warning For composite C-Space this function return "per body" counts.
     size_t OriDOF() const noexcept;
+
+    /// Get the robot's joint DOF count.
+    /// @return The robot's joint DOF count.
+    /// @warning For composite C-Space this function return "per body" counts.
     size_t JointDOF() const noexcept;
 
+    /// Is the robot nonholonomic?
     bool IsNonholonomic() const noexcept;
 
     ///@}
@@ -138,37 +222,53 @@ class Cfg {
     ///@{
 
     /// Access the data for a given DOF.
+    /// @param _dof The index of the desired DOF.
+    /// @return The desired DOF.
     double& operator[](const size_t _dof) noexcept;
     double operator[](const size_t _dof) const noexcept;
 
     /// Get the data for all DOFs.
+    /// @return A vector of all DOFs.
     const std::vector<double>& GetData() const noexcept;
 
     /// Access the velocity data for a given DOF.
+    /// @param _dof The index of the desired DOF.
+    /// @return The desired DOF's velocity data.
     double& Velocity(const size_t _dof) noexcept;
     double Velocity(const size_t _dof) const noexcept;
 
     /// Get the velocity data for all DOFs.
+    /// @return A vector of all DOF velocity data.
     const std::vector<double>& GetVelocity() const noexcept;
 
     /// Set the DOF data.
+    /// @param _data The vector of new DOF data.
     virtual void SetData(const std::vector<double>& _data);
     virtual void SetData(std::vector<double>&& _data);
 
     /// Set the joint DOF data. Other DOFs will remain unchanged.
+    /// @param _data The vector of new DOF joint data.
     void SetJointData(const std::vector<double>& _data);
 
     /// Get the robot's reference point.
     Point3d GetPoint() const noexcept;
 
+    /// Get a vector of the robot's positional DOFs.
     virtual std::vector<double> GetPosition() const;
+    /// Get a vector of the robot's rotational DOFs.
     virtual std::vector<double> GetRotation() const;
+    /// Get a vector of the robot's joint DOFs.
     virtual std::vector<double> GetJoints() const;
+    /// Get a vector of the robot's non-joint DOFs.
     virtual std::vector<double> GetNonJoints() const;
+    /// Get a vector of the robot's orientational DOFs.
     virtual std::vector<double> GetOrientation() const;
 
+    /// Get the magnitude of the robot's DOF vector.
     virtual double Magnitude() const;
+    /// Get the magnitude of the robot's positional DOF vector.
     virtual double PositionMagnitude() const;
+    /// Get the magnitude of the robot's orientational DOF vector.
     virtual double OrientationMagnitude() const;
 
     /// Get the position in R^3.
@@ -184,14 +284,20 @@ class Cfg {
     /// Get the world transformation of the robot's base.
     mathtool::Transformation GetBaseTransformation() const;
 
+    /// Sets the robot's linear position.
     void SetLinearPosition(const mathtool::Vector3d&);
+    /// Sets the robot's angular position.
     void SetAngularPosition(const mathtool::Vector3d&);
+    /// Sets the robot's euler angle.
     void SetEulerAngle(const mathtool::EulerAngle&);
+    /// Sets the robot's linear velocity.
     void SetLinearVelocity(const mathtool::Vector3d&);
+    /// Sets the robot's angular velocity.
     void SetAngularVelocity(const mathtool::Vector3d&);
+    /// Sets the robot's base tranformation.
     void SetBaseTransformation(const mathtool::Transformation&);
 
-		/// Transforms the cfg about a new frame of reference
+    /// Transforms the cfg about a new frame of reference
     void TransformCfg(const mathtool::Transformation&);
 
     ///@}
@@ -200,13 +306,20 @@ class Cfg {
     /// Each Cfg has a set of labels and stats. Label are boolean attributes,
     /// while stats are real-valued.
 
+    /// Get the robot's label for the given string identifier.
     bool GetLabel(const std::string& _label) const;
+    /// Does the robot have a given string label?
     bool IsLabel(const std::string& _label) const noexcept;
+    /// Set the robot's string label given the string identifier.
     void SetLabel(const std::string& _label, const bool _value) noexcept;
 
+    /// Get a statistic given a string identifier.
     double GetStat(const std::string& _stat) const;
+    /// Does the robot have a statistic given a string identifier?
     bool IsStat(const std::string& _stat) const noexcept;
+    /// Set  a statistic given a string identifier.
     void SetStat(const std::string& _stat, const double _value = 0) noexcept;
+    /// Increment a statistic given a string identifier.
     void IncrementStat(const std::string& _stat, const double _value = 1)
         noexcept;
 
@@ -229,8 +342,11 @@ class Cfg {
     /// Create a configuration where workspace robot's EVERY VERTEX
     /// is guaranteed to lie within the specified boundary. If
     /// a cfg can't be found, the program will abort.
-    /// The function will try a predefined number of times
+    /// The function will try a predefined number of times.
+    /// @param _b The given boundary.
     virtual void GetRandomCfg(const Boundary* const _b);
+    /// Create a configuration within the given environment.
+    /// @param _env The given environment.
     virtual void GetRandomCfg(Environment* _env);
 
     /// Randomly sample the velocity for this configuration.
@@ -355,20 +471,6 @@ class Cfg {
     void EnforceVelocityLimits() noexcept;
 
     ///@}
-    ///@name Uncertainty
-    ///@{
-
-    std::pair<std::vector<double>, Eigen::MatrixXd> GetDataWithCov();
-
-    void SetCovariance(const Eigen::MatrixXd& _covariance);
-
-    const Eigen::MatrixXd& GetCovariance() const noexcept;
-
-    void SetEigenData(const Eigen::VectorXd& _data);
-
-    const Eigen::VectorXd GetEigenData() const; 
-
-    ///@}
 
   protected:
 
@@ -378,10 +480,6 @@ class Cfg {
     std::vector<double> m_dofs;    ///< The DOF values.
     std::vector<double> m_vel;     ///< The velocities, if any.
     Robot* m_robot{nullptr};       ///< The robot this cfg refers to.
-
-    Eigen::MatrixXd m_covariance;  ///< Covariance Matrix
-    Eigen::VectorXd m_normWeights;
-    double m_meanNormWeight, m_covNormWeight, m_reachDist;
 
     std::map<std::string, bool> m_labelMap;  ///< A map of labels for this cfg.
     std::map<std::string, double> m_statMap; ///< A map of stats for this cfg.

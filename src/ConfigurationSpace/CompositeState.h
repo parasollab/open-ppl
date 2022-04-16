@@ -152,7 +152,7 @@ class CompositeState {
     ///@name Internal State
     ///@{
 
-    GroupGraphType* m_groupGraph{nullptr};  ///< The group graph.
+    GroupGraphType* m_groupMap{nullptr};  ///< The group graph.
 
     VIDSet m_vids;   ///< The individual VIDs in this aggregate state.
 
@@ -167,11 +167,11 @@ std::ostream& operator<<(std::ostream&, const CompositeState<GraphType>&);
 
 template <typename GraphType>
 CompositeState<GraphType>::
-CompositeState(GroupGraphType* const _groupGraph) : m_groupGraph(_groupGraph) {
+CompositeState(GroupGraphType* const _groupGraph) : m_groupMap(_groupGraph) {
 
   // If no group graph was given, this is a placeholder object. We can't do
   // anything with it since every meaningful operation requires a group graph.
-  if(!m_groupGraph)
+  if(!m_groupMap)
     return;
 
   // Set the VID list to all invalid.
@@ -186,7 +186,7 @@ bool
 CompositeState<GraphType>::
 operator==(const CompositeState<GraphType>& _other) const noexcept {
   // If _other is from another graph, these are not the same.
-  if(m_groupGraph != _other.m_groupGraph)
+  if(m_groupMap != _other.m_groupMap)
     return false;
 
   // Else, compare VIDs if both are valid, or by-value other wise.
@@ -219,7 +219,7 @@ template <typename GraphType>
 size_t
 CompositeState<GraphType>::
 GetNumRobots() const noexcept {
-  return m_groupGraph ? m_groupGraph->GetGroup()->Size() : 0;
+  return m_groupMap ? m_groupMap->GetGroup()->Size() : 0;
 }
 
 
@@ -227,7 +227,7 @@ template <typename GraphType>
 const std::vector<Robot*>&
 CompositeState<GraphType>::
 GetRobots() const noexcept {
-  return m_groupGraph->GetGroup()->GetRobots();
+  return m_groupMap->GetGroup()->GetRobots();
 }
 
 
@@ -237,7 +237,7 @@ CompositeState<GraphType>::
 GetRobot(const size_t _index) const {
   VerifyIndex(_index);
 
-  Robot* const robot = m_groupGraph->GetGroup()->GetRobot(_index);
+  Robot* const robot = m_groupMap->GetGroup()->GetRobot(_index);
 
   /// @todo Remove this after we are very sure things are working.
   if(!robot)
@@ -252,7 +252,7 @@ template <typename GraphType>
 typename CompositeState<GraphType>::GroupGraphType*
 CompositeState<GraphType>::
 GetGroupGraph() const noexcept {
-  return m_groupGraph;
+  return m_groupMap;
 }
 
 template <typename GraphType>
@@ -267,7 +267,7 @@ template <typename GraphType>
 typename CompositeState<GraphType>::VID
 CompositeState<GraphType>::
 GetVID(Robot* const _robot) const {
-  const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   return GetVID(index);
 }
 
@@ -277,7 +277,7 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(Robot* const _robot, const VID _vid) {
-  const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   SetRobotCfg(index, _vid);
 }
 
@@ -296,7 +296,7 @@ template <typename GraphType>
 typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) {
-  const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   return GetRobotCfg(index);
 }
 
@@ -309,7 +309,7 @@ GetRobotCfg(const size_t _index) {
 
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
-    return m_groupGraph->GetRoadmap(_index)->GetVertex(vid);
+    return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
   else
     throw RunTimeException(WHERE) << "Requested Cfg for robot " << _index
                                   << ", but it is invalid.";
@@ -320,7 +320,7 @@ template <typename GraphType>
 const typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) const {
-  const size_t index = m_groupGraph->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   return GetRobotCfg(index);
 }
 
@@ -335,7 +335,7 @@ GetRobotCfg(const size_t _index) const {
   // individual graph.
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
-    return m_groupGraph->GetRoadmap(_index)->GetVertex(vid);
+    return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
   else
     throw RunTimeException(WHERE) << "Requested Cfg for robot " << _index
                                   << ", but it is invalid.";

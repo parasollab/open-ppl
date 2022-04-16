@@ -556,7 +556,6 @@ PMPL_SRCS := \
   Behaviors/Controllers/SimpleController.cpp \
   Behaviors/Controllers/ICreateController.cpp \
   ConfigurationSpace/Cfg.cpp \
-  ConfigurationSpace/Formation.cpp \
   ConfigurationSpace/ReachableVolumes.cpp \
   Geometry/GMSPolygon.cpp \
   Geometry/GMSPolyhedron.cpp \
