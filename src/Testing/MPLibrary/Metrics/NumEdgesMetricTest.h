@@ -61,14 +61,14 @@ NumEdgesMetricTest<MPTraits>::
 TestMetric() {
 
   // Set up environment from parent
-  double metric = this->Metric();
-  double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->get_num_edges()) : (this->GetRoadmap()->get_num_edges());
+  double metric = (*this)();
+  double expected = this->GetGroupTask() ? (this->GetGroupRoadmap()->get_num_edges()) : (this->GetRoadmap()->get_num_edges());
 
   // Correct value?
   if(metric == expected){
     return std::make_pair(true,"NumEdgesMetric::PASSED");
   }
-  return std::make_pair(true,"NumEdgesMetric::FAILED, Wrong number of edges recieved.");
+  return std::make_pair(false,"NumEdgesMetric::FAILED, Wrong number of edges recieved.");
 }
 
 #endif

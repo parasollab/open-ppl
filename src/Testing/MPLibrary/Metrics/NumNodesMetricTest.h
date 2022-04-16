@@ -61,14 +61,14 @@ NumNodesMetricTest<MPTraits>::
 TestMetric() {
 
   // Set up environment from parent
-  double metric = this->Metric();
+  double metric = (*this)();
   double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->Size()) : (this->GetRoadmap()->Size());
 
   // Correct value?
   if(metric == expected){
     return std::make_pair(true,"NumNodesMetric::PASSED");
   }
-  return std::make_pair(true,"NumNodesMetric::FAILED, Wrong number of nodes recieved.");
+  return std::make_pair(false,"NumNodesMetric::FAILED, Wrong number of nodes recieved.");
 }
 
 #endif
