@@ -103,7 +103,8 @@ struct MPTraits {
     EuclideanDistance<MPTraits>,
     ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
-    WeightedEuclideanDistance<MPTraits>
+    WeightedEuclideanDistance<MPTraits>,
+    ScaledEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world

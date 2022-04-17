@@ -1,8 +1,8 @@
 # Configuration Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Set platform, debug mode, and address sanitizer if not already set.
-platform ?= LINUX_gcc
-debug    ?= 0
+platform ?= Ubuntu
+debug    ?= 1
 asan     ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
