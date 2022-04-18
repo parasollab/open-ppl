@@ -200,8 +200,12 @@ AStarSSSP(
     element(const VD _parent, const VD _target, const double _g,
             const double _h) : parent(_parent), vd(_target), g(_g), h(_h) {}
 
-    /// Total ordering by decreasing f = g + h
+    /// Total ordering by decreasing f = g + h.
+    /// Tie breaking on values of g.
     bool operator>(const element& _e) const noexcept {
+      if(g + h == _e.g + _e.h) 
+        return g > _e.g;
+
       return g + h > _e.g + _e.h;
     }
   };

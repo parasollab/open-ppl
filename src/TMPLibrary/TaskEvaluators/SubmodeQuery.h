@@ -113,7 +113,9 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     size_t m_goalVID;
 
     /// Map from grouneded hypergraph vertex to heuristic value
-    std::unordered_map<size_t,double> m_heuristicMap; 
+    std::unordered_map<size_t,double> m_costToGoMap; 
+
+    std::unordered_map<size_t,double> m_searchTimeHeuristicMap;
 
     double m_maxDistance;
 

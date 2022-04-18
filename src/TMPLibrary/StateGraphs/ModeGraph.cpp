@@ -747,9 +747,6 @@ ConnectTransitions() {
           std::cout << "\tTo: " << cfg2.PrettyPrint() << std::endl;
         }
 
-
-        //TODO::TODO::TODO::TEMPORARY _ DELETE
-
         /*
         // Query path for task
         lib->SetPreserveHooks(true);
@@ -765,9 +762,6 @@ ConnectTransitions() {
           robot->SetVirtual(true);
         }
 
-        //TODO::TODO::TODO::TEMPORARY _ DELETE
-
-        /*
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
 
@@ -778,13 +772,11 @@ ConnectTransitions() {
           }
           std::cout << std::endl;
         }
-        */
 
         Transition transition;
         transition.taskSet.push_back({groupTask});
-        //TODO::TODO::TODO::TEMPORARY _ DELETE
-        //transition.cost = path->TimeSteps();
-        transition.cost = 100;
+        transition.cost = path->TimeSteps();
+        //transition.cost = 100;
         transition.taskFormations[groupTask.get()] = formations;
 
         // Add arc to hypergraph

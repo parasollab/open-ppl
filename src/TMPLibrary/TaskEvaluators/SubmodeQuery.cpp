@@ -502,17 +502,52 @@ ComputeHeuristicValues() {
   auto g = gh.GetReverseGraph();
 
   // Setup dijkstra functions
-  auto termination = SSSPDefaultTermination<ModeGraph::GroundedHypergraph::GraphType>();
+  SSSPTerminationCriterion<ModeGraph::GroundedHypergraph::GraphType> termination(
+    [this](typename ModeGraph::GroundedHypergraph::GraphType::vertex_iterator& _vi,
+           const SSSPOutput<typename ModeGraph::GroundedHypergraph::GraphType>& _sssp) {
+    const auto& vertex = _vi->property();
+    auto grm = vertex.first;
+    if(!grm)
+      return SSSPTermination::Continue;
+
+    auto group = grm->GetGroup();
+
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive())
+        return SSSPTermination::Continue;
+    }
+
+    return SSSPTermination::EndBranch;
+  });
 
   SSSPPathWeightFunction<ModeGraph::GroundedHypergraph::GraphType> weight(
-    [this](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
+    [this,g](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
            const double _sourceDistance,
            const double _targetDistance) {
+
+    auto target = _ei->target();
+    auto grm = g->GetVertex(target).first;
+
+    bool hasObject = false;
+
+    if(grm) {
+      auto group = grm->GetGroup();
+      for(auto robot : group->GetRobots()) {
+        if(robot->GetMultiBody()->IsPassive()) {
+          hasObject = true;
+          break;
+        }
+      }
+    }
+
+    if(!hasObject and grm)
+      return std::numeric_limits<double>::infinity();
+
     auto groundedHA = _ei->property();
     double edgeWeight = groundedHA.cost;
 
     //TODO::Decide if this is what we want
-    //edgeWeight = 1;
+    //edgeWeight = std::min(1.,edgeWeight);
 
     double newDistance = _sourceDistance + edgeWeight;
     return newDistance;
@@ -523,13 +558,20 @@ ComputeHeuristicValues() {
   auto output = DijkstraSSSP(g,starts,weight,termination);
 
   // Save output distances as heuristic values
-  m_heuristicMap = output.distance;
+  m_costToGoMap = output.distance;
 
-  m_maxDistance = 0;
-  for(auto kv : m_heuristicMap) {
-    m_maxDistance = std::max(kv.second,m_maxDistance);
+
+  if(m_debug) {
+    std::cout << "Cost 2 Go Values" << std::endl;
   }
 
+  for(auto kv : m_costToGoMap) {
+    m_maxDistance = std::max(kv.second,m_maxDistance);
+
+    if(m_debug) {
+      std::cout << kv.first << " : " << kv.second << std::endl;
+    }
+  }
 }
 
 
@@ -542,7 +584,8 @@ HyperpathQuery() {
   // Compute heuristic values
   ComputeHeuristicValues();
 
-  if(m_heuristicMap.at(0) == 0)
+  // TODO::Change to check start vertex for each goal specified robot/object
+  if(m_costToGoMap.at(0) == 0)
     throw RunTimeException(WHERE) << "Start not connected to goal.";
 
   // Define hyperpath query functors
@@ -563,12 +606,15 @@ HyperpathQuery() {
   SSSHPForwardStar<ActionExtendedVertex,size_t> forwardStar(
     [this](const size_t& _vid, ActionExtendedHypergraph* _h) {
         // temp debug
-        {
-          auto vertex = _h->GetVertexType(_vid);
-          auto gvid = vertex.groundedVID;
-          if(gvid == 2 or gvid == 4 or gvid == 6 or gvid == 8 or gvid == 58 or gvid == 59)
-            std::cout << "HERE" << std::endl;
-        }
+        //{
+          //auto vertex = _h->GetVertexType(_vid);
+          //auto gvid = vertex.groundedVID;
+          //if(gvid == 2 or gvid == 4 or gvid == 6 or gvid == 8)
+          //  std::cout << "HERE" << std::endl;
+          //if(gvid == 3 or gvid == 5 or gvid == 7 or gvid == 9)
+          //  std::cout << "OMG!!!! We do actually make progress!" << std::endl;
+
+        //}
       return this->HyperpathForwardStar(_vid,_h);
     }
   );
@@ -620,7 +666,7 @@ HyperpathPathWeightFunction(
   
   //TODO::DECIDE IF WE WANT THIS
   hyperarcWeight = groundedHA.cost;
-  //hyperarcWeight = 1;
+  //hyperarcWeight = std::min(1.,groundedHA.cost);
 
   double tailWeight = 0;
 
@@ -638,7 +684,7 @@ HyperpathPathWeightFunction(
 std::set<size_t>
 SubmodeQuery::
 HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
-  
+ 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto& gh = mg->GetGroundedHypergraph();
 
@@ -673,6 +719,32 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
     }
   }
 
+  //TODO::Adding code to make it monotonic - decide if we want this or not
+  auto& modeHypergraph = mg->GetModeHypergraph();
+  std::set<size_t> visitedObjectRobotModes;
+  for(auto hid : aev.history) {
+    auto hyperarc = _h->GetHyperarc(hid);
+    for(auto v : hyperarc.tail) {
+      auto gvid  =_h->GetVertexType(v).groundedVID;
+      auto mvid = mg->GetModeOfGroundedVID(gvid);
+      if(mvid == MAX_INT)
+        break;
+
+      auto mode = modeHypergraph.GetVertexType(mvid);
+      
+      //TODO::Change this to look instead at robots with task specificiations
+      if(mode->robotGroup->Size() == 1)
+        continue;
+
+      for(auto robot : mode->robotGroup->GetRobots()) {
+        if(robot->GetMultiBody()->IsPassive()) {
+          visitedObjectRobotModes.insert(mvid);
+          break;
+        }
+      }
+    }
+  }
+
   std::set<size_t> fullyGroundedHyperarcs;
 
   // Build partially grounded hyperarcs
@@ -681,8 +753,24 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 
     auto head = gh.GetHyperarc(hid).head;
 
+    //if(head.count(1))
+    //  std::cout << "HAS SEEN THE GOAL!!!" << std::endl;
+
+    // TODO::Decide if we want monotonic
+    bool monotonic = true;
+    for(auto v : head) {
+      auto mvid = mg->GetModeOfGroundedVID(v);
+      if(visitedObjectRobotModes.count(mvid)) {
+        monotonic = false;
+        break;
+      }
+    }
+
+    if(!monotonic)
+      continue;
+
     // If this hyperarc is the reverse of the one that entered the vertex, continue;
-    if(blockedVertices.size() == head.size() and !m_reverseActions) {
+    if(blockedVertices.size() == head.size() and !m_reverseActions and monotonic) {
       bool match = true;
       for(auto vid : blockedVertices) {
         if(head.count(vid))
@@ -697,7 +785,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 
     // If this vertex's parent is in the same submode,
     // ensure that there is not an additional transition within
-    // that sumode.
+    // that submode.
     if(head.size() == 1 and blockedMode != MAX_INT) {
       auto groundedHead = *(head.begin());
       auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
@@ -755,6 +843,16 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
       for(auto v : gh.GetHyperarc(hid).head) {
         ActionExtendedVertex vertex;
         vertex.groundedVID = v;
+
+        //if(v == 1 or v == 0)
+        //  std::cout << "OMG!!!! Stuff is broken!" << std::endl;
+
+        //if(v == 3 or v == 5 or v == 7 or v == 9)
+        //  std::cout << "OMG!!!! We do actually make progress!" << std::endl;
+        //if(v == 1)
+        //  std::cout << "HAS ADDED THE HYPERARC TO THE GOAL!!!" << std::endl;
+
+
         vertex.history = compositeHistory;
         auto newVID = m_actionExtendedHypergraph.AddVertex(vertex);
         head.insert(newVID);
@@ -785,21 +883,145 @@ HyperpathHeuristic(const size_t& _target) {
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
 
+  //if(vid == 3 or vid == 5 or vid == 7 or vid == 9)
+  //  std::cout << "HEURISTIC ON GOAL VERTICES" << std::endl;
+  //if(vid == 1)
+  //  std::cout << "HEURISTIC ON GOAL" << std::endl;
+
   //TODO::Decide if this is what we want
   auto grm = gh.GetVertexType(vid).first;
-  if(!grm)
-    return 0;
+  if(!grm) {
+    m_searchTimeHeuristicMap[_target] = m_costToGoMap[vid];
+    return m_costToGoMap[_target];
+  }
 
+  // Check if group has a robot
+  bool hasRobot = false;
+  for(auto robot : grm->GetGroup()->GetRobots()) {
+    if(!robot->GetMultiBody()->IsPassive()) {
+      hasRobot = true;
+      break;
+    }
+  }
+
+  // Set heuristic to parent - arc length
+  auto incomings = m_actionExtendedHypergraph.GetIncomingHyperarcs(_target);
+  if(incomings.size() == 0)
+    throw RunTimeException(WHERE) << "All targets should have an incoming hyperarc";
+
+  auto incoming = *(incomings.begin());
+  auto incomingArc = m_actionExtendedHypergraph.GetHyperarc(incoming);
+  auto parent = *(incomingArc.tail.begin());
+  auto hyperarc = gh.GetHyperarcType(incomingArc.property);
+  // TODO::Adjust for proper trajectory cost
+  //double heuristic = m_searchTimeHeuristicMap[parent] - hyperarc.cost;
+  double heuristic = m_searchTimeHeuristicMap[parent] - 1;
+
+  // Check if this vertex is entering or exiting a submode 
+  auto groundedParentVID = m_actionExtendedHypergraph.GetVertexType(parent).groundedVID;
+  auto parentMode = mg->GetModeOfGroundedVID(groundedParentVID);
+  auto targetMode = mg->GetModeOfGroundedVID(vid);
+
+  // If parentMode != targetMode, then this is an entry vertex. 
+  // Return the heuristic as is
+  if(parentMode != targetMode) {
+    m_searchTimeHeuristicMap[_target] = heuristic;
+    if(hasRobot) 
+      return heuristic + 0.1;
+    return heuristic;
+  }
+
+  // Otherewise, we have an exit vertex.
+  // As an exit vertex, we only have one outgoing hyperarc in the action extended hypergraph
+  // Compute max heuristic from child nodes
+
+  auto outgoings = gh.GetOutgoingHyperarcs(vid);
+  size_t outgoing = MAX_INT;
+  
+  // Find outgoing hyperarc that exits the mode
+  for(auto hid : outgoings) {
+    auto ha = gh.GetHyperarc(hid);
+    for(auto v : ha.head) {
+      auto m = mg->GetModeOfGroundedVID(v);
+      if(m != targetMode) {
+        outgoing = hid;
+        break;
+      }
+    }
+    if(outgoing != MAX_INT)
+      break;
+  }
+
+  auto outgoingArc = gh.GetHyperarc(outgoing);
+
+  double cost2go = 0;
+  for(auto child : outgoingArc.head) {
+    cost2go = std::max(cost2go,m_costToGoMap[child]);
+  }
+
+  // TODO::Adjust for proper trajectory cost
+  //cost2go += 1;
+  cost2go += outgoingArc.property.cost;
+
+  heuristic = std::max(heuristic,cost2go);
+  m_searchTimeHeuristicMap[_target] = heuristic;
+  if(hasRobot) 
+    return heuristic + 0.1;
+  return heuristic;
+
+  /*
   auto group = grm->GetGroup();
   for(auto& r : group->GetRobots()) {
     if(r->GetMultiBody()->IsPassive()) {
       auto iter = m_heuristicMap.find(vid);
       if(iter == m_heuristicMap.end())
         return m_maxDistance;
-      return m_heuristicMap.at(vid) + 0.1;
+      auto value = m_heuristicMap.at(vid);
+      if(value == 0.) {
+        m_searchTimeHeuristicMap[_target] = value;
+        return value;
+      }
+      else {
+        m_searchTimeHeuristicMap[_target] = value;
+        return value + 0.1;
+      }
     }
   }
-  return 0.1;
+
+  // Heuristic for robot only modes
+  // Get heuristic value for parent
+  auto incoming = m_actionExtendedHypergraph.GetIncomingHyperarcs(_target);
+  if(incoming.size() < 1) {
+    m_searchTimeHeuristicMap[_target] = 0;
+    return 0.1;
+  }
+
+  double value = 0;
+  auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(*incoming.begin());
+  for(auto vid : hyperarc.tail) {
+    auto iter = m_searchTimeHeuristicMap.find(vid);
+    if(iter == m_searchTimeHeuristicMap.end())
+      throw RunTimeException(WHERE) << "THIS IS AN ISSUE.";
+
+    value = m_searchTimeHeuristicMap[vid];
+    break;
+  }
+
+  // Remove cost of hyperarc
+  
+  //TODO::DECIDE IF WE WANT THIS
+  //auto groundedHA = gh.GetHyperarcType(hyperarc.property);
+  //hyperarcWeight = groundedHA.cost;
+  double hyperarcWeight = 1;
+  
+  m_searchTimeHeuristicMap[_target] = value - hyperarcWeight;
+
+  if(value - hyperarcWeight < 0)
+    throw RunTimeException(WHERE) << "THIS IS AN ISSUE.";
+
+  return value - hyperarcWeight + 0.1;
+
+  */
 
   /*
   auto iter = m_heuristicMap.find(vid);

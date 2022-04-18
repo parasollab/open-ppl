@@ -180,7 +180,10 @@ SBTDijkstra(
       : parent(_parent), vid(_vid), weight(_weight), heuristic(_heuristic) { }
 
     /// Total ordering by descreasing weight.
+    /// Use weight as tie breaker.
     bool operator>(const element _e) const noexcept {
+      if(weight + heuristic == _e.weight + _e.heuristic)
+        return weight > _e.weight;
       return weight + heuristic > _e.weight + _e.heuristic;
     }
 
