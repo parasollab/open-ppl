@@ -119,7 +119,6 @@
       <Manhattan label="manhattan"/>
       <Minkowski label="minkowski"/>
       <Euclidean label="euclidean"/>
-      <WeightedEuclidean label="weightedEuclidean" posWeight=0.25 rotWeight=0.25 velWeight=0.25 avlWeight=0.25/>
       <LPSwept label="lpSwept" lpLabel="sl"/>
       <BinaryLPSwept label="binaryLPSwept" lpLabel="sl"/>
       <!--<TopologicalDistance label="topological"/>-->

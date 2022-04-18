@@ -111,7 +111,7 @@ struct MPTraits {
     LPSweptDistanceTest<MPTraits>,
     BinaryLPSweptDistanceTest<MPTraits>,
     //TopologicalDistanceTest<MPTraits>,
-    KnotTheoryDistanceTest<MPTraits>
+    KnotTheoryDistanceTest<MPTraits>,
     ScaledEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
