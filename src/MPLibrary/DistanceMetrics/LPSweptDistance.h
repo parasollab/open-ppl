@@ -25,7 +25,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
+class LPSweptDistance : virtual public DistanceMetricMethod<MPTraits> {
 
   public:
 
@@ -33,6 +33,7 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -69,9 +70,10 @@ class LPSweptDistance : public DistanceMetricMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    string m_lpLabel;
-    double m_positionRes, m_orientationRes;
-    bool m_useBBox;
+    string m_lpLabel;         ///< For Local Planner type
+    double m_positionRes;     ///< For position resolution
+    double m_orientationRes;  ///< For orientation resolution
+    bool m_useBBox;           ///< for whether to use bounding box
 
     ///@}
 };
@@ -89,8 +91,10 @@ LPSweptDistance(string _lpLabel, double _posRes, double _oriRes, bool _bbox) :
 
 template <typename MPTraits>
 LPSweptDistance<MPTraits>::
-LPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
+LPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
+    m_lpLabel(""), m_positionRes(0.1), m_orientationRes(0.1), m_useBBox(false) {
   this->SetName("LPSwept");
+  
   m_positionRes = _node.Read("posRes", false, nan(""), 0., 1000.,
       "position resolution");
   m_orientationRes = _node.Read("oriRes", false, nan(""), 0., 1000.,

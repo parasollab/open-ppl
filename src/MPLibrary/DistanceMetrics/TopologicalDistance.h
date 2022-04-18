@@ -21,7 +21,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class TopologicalDistance : public DistanceMetricMethod<MPTraits> {
+class TopologicalDistance : virtual public DistanceMetricMethod<MPTraits> {
 
   public:
 

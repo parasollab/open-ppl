@@ -23,7 +23,7 @@ class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
     ///@name Construction
     ///@{
 
-    BinaryLPSweptDistance(string _lp = "", double _posRes = .1,
+    BinaryLPSweptDistance(string _lp = "sl", double _posRes = .1,
         double _oriRes = .1, double _tolerance = .01, int _maxAttempts = 100,
         bool _bbox = false);
     BinaryLPSweptDistance(XMLNode& _node);

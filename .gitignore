@@ -2,6 +2,7 @@
 *.swo
 pmpl
 ppl
+tests
 sim
 build
 libobprm.a

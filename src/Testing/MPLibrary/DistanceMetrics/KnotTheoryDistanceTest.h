@@ -1,14 +1,14 @@
-#ifndef PPL_TOPOLOGICAL_DISTANCE_TEST_H_
-#define PPL_TOPOLOGICAL_DISTANCE_TEST_H_
+#ifndef PPL_KNOT_THEORY_DISTANCE_TEST_H_
+#define PPL_KNOT_THEORY_DISTANCE_TEST_H_
 
-#include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
+#include "MPLibrary/DistanceMetrics/KnotTheoryDistance.h"
 #include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 
 template <typename MPTraits>
-class TopologicalDistanceTest : virtual public TopologicalDistance<MPTraits>,
-                                public DistanceMetricMethodTest<MPTraits> {
+class KnotTheoryDistanceTest : virtual public KnotTheoryDistance<MPTraits>,
+                               public DistanceMetricMethodTest<MPTraits> {
 
-  public: 
+  public:
   
     ///@name Local Types
     ///@{
@@ -21,12 +21,13 @@ class TopologicalDistanceTest : virtual public TopologicalDistance<MPTraits>,
     ///@}
     ///@name Construction
     ///@{
+    
 
-    TopologicalDistanceTest();
+    KnotTheoryDistanceTest();
 
-    TopologicalDistanceTest(XMLNode& _node);
+    KnotTheoryDistanceTest(XMLNode& _node);
 
-    ~TopologicalDistanceTest();
+    ~KnotTheoryDistanceTest();
 
     ///@}
 
@@ -54,29 +55,29 @@ class TopologicalDistanceTest : virtual public TopologicalDistance<MPTraits>,
     double TrueIndividualCfgDistance();
 
     ///@}
-
 };
 
 /*--------------------------- Construction ---------------------------*/
 
-template<typename MPTraits>
-TopologicalDistanceTest<MPTraits>::
-TopologicalDistanceTest() : TopologicalDistance<MPTraits>() {}
 
 template<typename MPTraits>
-TopologicalDistanceTest<MPTraits>:: 
-TopologicalDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
-                                          TopologicalDistance<MPTraits>(_node) {}
+KnotTheoryDistanceTest<MPTraits>::
+KnotTheoryDistanceTest() : KnotTheoryDistance<MPTraits>() {}
 
 template<typename MPTraits>
-TopologicalDistanceTest<MPTraits>::
-~TopologicalDistanceTest() {}
+KnotTheoryDistanceTest<MPTraits>:: 
+KnotTheoryDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
+                                         KnotTheoryDistance<MPTraits>(_node) {}
+
+template<typename MPTraits>
+KnotTheoryDistanceTest<MPTraits>::
+~KnotTheoryDistanceTest() {}
 
 /*--------------------- Test Interface Functions ---------------------*/
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename KnotTheoryDistanceTest<MPTraits>::TestResult
+KnotTheoryDistanceTest<MPTraits>::
 TestIndividualCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -99,8 +100,8 @@ TestIndividualCfgDistance() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename KnotTheoryDistanceTest<MPTraits>::TestResult
+KnotTheoryDistanceTest<MPTraits>::
 TestIndividualEdgeWeight() {
   bool passed = true;
   std::string message = "";
@@ -123,8 +124,8 @@ TestIndividualEdgeWeight() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename KnotTheoryDistanceTest<MPTraits>::TestResult
+KnotTheoryDistanceTest<MPTraits>::
 TestIndividualScaleCfg() {
   bool passed = true;
   std::string message = "";
@@ -148,8 +149,8 @@ TestIndividualScaleCfg() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename KnotTheoryDistanceTest<MPTraits>::TestResult
+KnotTheoryDistanceTest<MPTraits>::
 TestGroupCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -174,8 +175,8 @@ TestGroupCfgDistance() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename KnotTheoryDistanceTest<MPTraits>::TestResult
+KnotTheoryDistanceTest<MPTraits>::
 TestGroupEdgeWeight() {
   bool passed = true;
   std::string message = "";
@@ -192,8 +193,8 @@ TestGroupEdgeWeight() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename KnotTheoryDistanceTest<MPTraits>::TestResult
+KnotTheoryDistanceTest<MPTraits>::
 TestGroupScaleCfg() {
   bool passed = true;
   std::string message = "";
@@ -213,15 +214,25 @@ TestGroupScaleCfg() {
 
 template <typename MPTraits>
 double
-TopologicalDistanceTest<MPTraits>::
+KnotTheoryDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
   CfgType cfg1 = this->GetIndividualCfg();
   CfgType cfg2 = this->GetIndividualCfg();
 
-  // Topological distance 
-  // TODO: Compute True Distance
-  double trueDist;
-  trueDist = -1;
+  // set cfg2's components
+  for(size_t i = 0; i < cfg2.PosDOF(); i++) {
+    cfg2[i] += 5;
+  }
+
+  for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
+    cfg2[i] += 0.5;
+  }
+
+
+  // TODO: knot theory distance 
+  double trueDist = 0.0;
+
+
   return trueDist;
 }
 

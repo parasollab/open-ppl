@@ -22,18 +22,24 @@
 #include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/WeightedEuclideanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/ScaledEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/BinaryLPSweptDistanceTest.h"
+//#include "Testing/MPLibrary/DistanceMetrics/TopologicalDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/KnotTheoryDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+
 //neighborhood finder includes
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
+#include "MPLibrary/LocalPlanners/StraightLine.h"
 
 //extenders includes
 
@@ -91,7 +97,11 @@ struct MPTraits {
       ManhattanDistanceTest<MPTraits>,
       MinkowskiDistanceTest<MPTraits>,
       EuclideanDistanceTest<MPTraits>,
-      WeightedEuclideanDistanceTest<MPTraits>
+      WeightedEuclideanDistanceTest<MPTraits>,
+      LPSweptDistanceTest<MPTraits>,
+      BinaryLPSweptDistanceTest<MPTraits>,
+      //TopologicalDistanceTest<MPTraits>,
+      KnotTheoryDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -105,7 +115,7 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      UniformRandomSamplerTest<MPTraits>
+      //UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
@@ -132,12 +142,12 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    LazyQueryTest<MPTraits>
+    //LazyQueryTest<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    ValidationStrategy<MPTraits>
+    //ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 

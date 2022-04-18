@@ -1,14 +1,14 @@
-#ifndef PPL_TOPOLOGICAL_DISTANCE_TEST_H_
-#define PPL_TOPOLOGICAL_DISTANCE_TEST_H_
+#ifndef PPL_LPSWEPT_DISTANCE_TEST_H_
+#define PPL_LPSWEPT_DISTANCE_TEST_H_
 
-#include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
+#include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
 #include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 
 template <typename MPTraits>
-class TopologicalDistanceTest : virtual public TopologicalDistance<MPTraits>,
-                                public DistanceMetricMethodTest<MPTraits> {
+class LPSweptDistanceTest : virtual public LPSweptDistance<MPTraits>,
+                            public DistanceMetricMethodTest<MPTraits> {
 
-  public: 
+  public:
   
     ///@name Local Types
     ///@{
@@ -21,12 +21,14 @@ class TopologicalDistanceTest : virtual public TopologicalDistance<MPTraits>,
     ///@}
     ///@name Construction
     ///@{
+    
 
-    TopologicalDistanceTest();
+    LPSweptDistanceTest(string _lpLabel="sl", double _positionRes = 0.1, 
+      double _orientationRes = 0.1, bool _bbox = false);
 
-    TopologicalDistanceTest(XMLNode& _node);
+    LPSweptDistanceTest(XMLNode& _node);
 
-    ~TopologicalDistanceTest();
+    ~LPSweptDistanceTest();
 
     ///@}
 
@@ -54,29 +56,31 @@ class TopologicalDistanceTest : virtual public TopologicalDistance<MPTraits>,
     double TrueIndividualCfgDistance();
 
     ///@}
-
 };
 
 /*--------------------------- Construction ---------------------------*/
 
-template<typename MPTraits>
-TopologicalDistanceTest<MPTraits>::
-TopologicalDistanceTest() : TopologicalDistance<MPTraits>() {}
 
 template<typename MPTraits>
-TopologicalDistanceTest<MPTraits>:: 
-TopologicalDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
-                                          TopologicalDistance<MPTraits>(_node) {}
+LPSweptDistanceTest<MPTraits>::
+LPSweptDistanceTest(string _lpLabel, double _positionRes, 
+  double _orientationRes, bool _bbox) :
+  LPSweptDistance<MPTraits>(_lpLabel, _positionRes, _orientationRes, _bbox) {}
 
 template<typename MPTraits>
-TopologicalDistanceTest<MPTraits>::
-~TopologicalDistanceTest() {}
+LPSweptDistanceTest<MPTraits>:: 
+LPSweptDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
+                                      LPSweptDistance<MPTraits>(_node) {}
+
+template<typename MPTraits>
+LPSweptDistanceTest<MPTraits>::
+~LPSweptDistanceTest() {}
 
 /*--------------------- Test Interface Functions ---------------------*/
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename LPSweptDistanceTest<MPTraits>::TestResult
+LPSweptDistanceTest<MPTraits>::
 TestIndividualCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -99,8 +103,8 @@ TestIndividualCfgDistance() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename LPSweptDistanceTest<MPTraits>::TestResult
+LPSweptDistanceTest<MPTraits>::
 TestIndividualEdgeWeight() {
   bool passed = true;
   std::string message = "";
@@ -123,8 +127,8 @@ TestIndividualEdgeWeight() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename LPSweptDistanceTest<MPTraits>::TestResult
+LPSweptDistanceTest<MPTraits>::
 TestIndividualScaleCfg() {
   bool passed = true;
   std::string message = "";
@@ -132,8 +136,8 @@ TestIndividualScaleCfg() {
   CfgType c1 = this->GetIndividualCfg();
   CfgType c2 = this->IndividualScaleCfg();
   double newLength = this->Distance(c1, c2);
-
-  if (fabs(newLength - 10.0) > 1e-7) {
+  
+  if (fabs(newLength - 10.0) > 1) {
     passed = false;
     message = message + "\n\tScaled distance is not the correct magnitude.\n";
   }
@@ -148,8 +152,8 @@ TestIndividualScaleCfg() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename LPSweptDistanceTest<MPTraits>::TestResult
+LPSweptDistanceTest<MPTraits>::
 TestGroupCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -174,8 +178,8 @@ TestGroupCfgDistance() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename LPSweptDistanceTest<MPTraits>::TestResult
+LPSweptDistanceTest<MPTraits>::
 TestGroupEdgeWeight() {
   bool passed = true;
   std::string message = "";
@@ -192,8 +196,8 @@ TestGroupEdgeWeight() {
 }
 
 template<typename MPTraits>
-typename TopologicalDistanceTest<MPTraits>::TestResult
-TopologicalDistanceTest<MPTraits>::
+typename LPSweptDistanceTest<MPTraits>::TestResult
+LPSweptDistanceTest<MPTraits>::
 TestGroupScaleCfg() {
   bool passed = true;
   std::string message = "";
@@ -213,15 +217,18 @@ TestGroupScaleCfg() {
 
 template <typename MPTraits>
 double
-TopologicalDistanceTest<MPTraits>::
+LPSweptDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
-  CfgType cfg1 = this->GetIndividualCfg();
-  CfgType cfg2 = this->GetIndividualCfg();
+  // LP Swept Distance will be sum of vertex displacements along straight line LP 
+  // path between two configs, where each pos component goes from 0. to 5. along
+  // path and each ori component goes from 0 to 0.5 along path, with 
+  // pos resolution of 0.1 and ori resolution of 0.1, without using bounding box
+  // and with the straightline local planner
+  //
+  // Under these particular conditions, the true distance is 8.97784. Should 
+  // the base unit test be changed, this value will have to be recalculated
+  double trueDist = 8.9778381120884;
 
-  // Topological distance 
-  // TODO: Compute True Distance
-  double trueDist;
-  trueDist = -1;
   return trueDist;
 }
 
