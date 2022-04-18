@@ -119,6 +119,12 @@
       <Manhattan label="manhattan"/>
       <Minkowski label="minkowski"/>
       <Euclidean label="euclidean"/>
+      <LPSwept label="lpSwept" lpLabel="sl"/>
+      <BinaryLPSwept label="binaryLPSwept" lpLabel="sl"/>
+      <!--<TopologicalDistance label="topological"/>-->
+      <!--<KnotTheory label="knotTheory"/>-->
+      <WeightedEuclidean label="weightedEuclidean" posWeight=0.25 rotWeight=0.25 velWeight=0.25 avlWeight=0.25/>
+      <ScaledEuclidean label="scaledEuclidean"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -141,10 +147,10 @@
     </Samplers>
 
     <LocalPlanners>
-    <!-- Test not yet added -->
-    <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+      <!-- Test not yet added -->
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
           vcLabel="alwaysTrue"/>
-    <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
     </LocalPlanners>
 
     <Extenders>
@@ -157,8 +163,8 @@
     </PathModifiers>
 
     <Connectors>
-    <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
-      lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
+        lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
     </Connectors>
 
     <Metrics>

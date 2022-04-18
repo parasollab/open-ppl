@@ -20,6 +20,12 @@
 #include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 #include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/BinaryLPSweptDistanceTest.h"
+//#include "Testing/MPLibrary/DistanceMetrics/TopologicalDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/KnotTheoryDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -103,6 +109,12 @@ struct MPTraits {
     ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
     WorkspaceTranslationDistance<MPTraits>
+    WeightedEuclideanDistance<MPTraits>,
+    LPSweptDistanceTest<MPTraits>,
+    BinaryLPSweptDistanceTest<MPTraits>,
+    //TopologicalDistanceTest<MPTraits>,
+    KnotTheoryDistanceTest<MPTraits>,
+    ScaledEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world

@@ -144,6 +144,11 @@ IndividualCfgDistance() {
     cfg2[i] += 0.5;
   }
 
+
+  //debugging
+  double distance = this->Distance(cfg1, cfg2);
+  std::cout << setprecision(14) << "Invidividual Distance: " << distance << std::endl;
+
   return this->Distance(cfg1,cfg2);
 }
 
@@ -175,6 +180,10 @@ IndividualEdgeWeight() {
   // Add edge
   DefaultWeight<CfgType> weight;
   roadmap.AddEdge(first,second,weight);
+  
+  //debugging
+  double distance = this->EdgeWeight(&roadmap,first,second);
+  std::cout << setprecision(14) << "Edge Weight: " << distance << std::endl;
 
   // Call distance metric method
   return this->EdgeWeight(&roadmap,first,second);
@@ -221,6 +230,10 @@ GroupCfgDistance() {
       cfg[j] += .5;
     }
   }
+  
+  //debugging
+  double distance = this->Distance(gcfg1,gcfg2);
+  std::cout << setprecision(14) << "GroupCFG Distance: " << distance << std::endl;
 
   // Call distance metric method
   return this->Distance(gcfg1,gcfg2);
