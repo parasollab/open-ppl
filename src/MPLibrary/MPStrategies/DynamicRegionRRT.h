@@ -24,7 +24,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename MPTraits>
-class DynamicRegionRRT : public BasicRRTStrategy<MPTraits> {
+class DynamicRegionRRT : virtual public BasicRRTStrategy<MPTraits> {
   public:
     ///@name Motion Planning Types
     ///@{

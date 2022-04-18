@@ -190,6 +190,15 @@
         <!--Evaluator label="Query"/-->
       <!--/BasicRRTStrategy-->
       <!-- LazyPRM-->
+
+      <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
+          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+          growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
+          penetration="1" velocityBiasing="false" velocityAlignment=".4"
+          decompositionLabel="fine" skeletonType="ma">
+          <Evaluator label="BoundedQuery" />
+      </DynamicRegionRRT>
+
       <BasicPRM label="LazyPRM" debug="true">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue" />
