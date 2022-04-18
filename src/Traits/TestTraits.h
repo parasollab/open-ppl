@@ -102,6 +102,7 @@ struct MPTraits {
       BinaryLPSweptDistanceTest<MPTraits>,
       //TopologicalDistanceTest<MPTraits>,
       KnotTheoryDistanceTest<MPTraits>
+      ScaledEuclideanDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world

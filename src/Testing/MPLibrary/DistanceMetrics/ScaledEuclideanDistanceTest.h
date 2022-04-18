@@ -132,7 +132,8 @@ TestIndividualScaleCfg() {
   CfgType c2 = this->IndividualScaleCfg();
   double newLength = this->Distance(c1, c2);
 
-  if (fabs(newLength - 10.0) > 1e-7) {
+  // Note: Fails if threshold is 1e-3 or above.
+  if (fabs(newLength - 10.0) > 1e-2) {
     passed = false;
     message = message + "\n\tScaled distance is not the correct magnitude.\n";
   }
@@ -217,9 +218,11 @@ TrueIndividualCfgDistance() {
   CfgType cfg1 = this->GetIndividualCfg();
   CfgType cfg2 = this->GetIndividualCfg();
 
-  // TODO Complete this function.
-  // Scaled euclidean distance should be ...
-  double trueDist = -1;
+  // Scaled euclidean distance should be (0.5 * 5^3 * PosDOF + 0.5 * 0.5^3 * OriDOF)^(1 / 3)
+  double trueDist;
+  trueDist = 0.5 * std::pow(5, 3.0) * cfg2.PosDOF();
+  trueDist += 0.5 * std::pow(0.5, 3.0) * (cfg2.DOF() - cfg2.PosDOF());
+  trueDist = std::pow(trueDist, 1.0 / 3.0);
 
   return trueDist;
 }

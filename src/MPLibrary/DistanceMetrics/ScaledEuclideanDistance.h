@@ -68,7 +68,7 @@ ScaledEuclideanDistance() : EuclideanDistance<MPTraits>() {
 
 template <typename MPTraits>
 ScaledEuclideanDistance<MPTraits>::
-ScaledEuclideanDistance(XMLNode& _node) : EuclideanDistance<MPTraits>(_node) {
+ScaledEuclideanDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node) {
   this->SetName("ScaledEuclidean");
   m_scale = _node.Read("scale", false, m_scale, 0.0, 1.0, "scale factor");
 }
@@ -90,6 +90,7 @@ double
 ScaledEuclideanDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
   const CfgType c = _c2 - _c1;
+  
   return pow(m_scale * this->PositionDistance(c)
       + (1 - m_scale) * this->OrientationDistance(c), this->m_r3);
 }
