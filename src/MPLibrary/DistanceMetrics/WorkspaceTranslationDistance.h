@@ -17,7 +17,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class WorkspaceTranslationDistance : public DistanceMetricMethod<MPTraits> {
+class WorkspaceTranslationDistance : virtual public DistanceMetricMethod<MPTraits> {
 
   public:
 

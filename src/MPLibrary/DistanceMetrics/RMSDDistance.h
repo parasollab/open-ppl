@@ -13,7 +13,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class RMSDDistance : public DistanceMetricMethod<MPTraits> {
+class RMSDDistance : virtual public DistanceMetricMethod<MPTraits> {
 
   public:
 

@@ -1,5 +1,5 @@
-#ifndef PPL_EUCLIDEAN_DISTANCE_TEST_H_
-#define PPL_EUCLIDEAN_DISTANCE_TEST_H_
+#ifndef PPL_WORKSPACETRANSLATION_DISTANCE_TEST_H_
+#define PPL_WORKSPACETRANSLATION_DISTANCE_TEST_H_
 
 #include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
 #include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
@@ -24,7 +24,7 @@ class WorkspaceTranslationDistanceTest : virtual public WorkspaceTranslationDist
 
     WorkspaceTranslationDistanceTest();
 
-    EuclideanDistanceTest(XMLNode& _node);
+    WorkspaceTranslationDistanceTest(XMLNode& _node);
 
     ~WorkspaceTranslationDistanceTest();
 
@@ -75,8 +75,8 @@ WorkspaceTranslationDistanceTest<MPTraits>::
 /*--------------------- Test Interface Functions ---------------------*/
 
 template<typename MPTraits>
-typename EuclideanDistanceTest<MPTraits>::TestResult
-EuclideanDistanceTest<MPTraits>::
+typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
+WorkspaceTranslationDistanceTest<MPTraits>::
 TestIndividualCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -219,18 +219,13 @@ TrueIndividualCfgDistance() {
   CfgType cfg2 = this->GetIndividualCfg();
 
   // Workspace translation distance should be 
-  double trueDist;
-  if (this->m_normalize) {
-    const double diagonal = this->GetEnvironment()->GetBoundary()->GetMaxDist(
-        2, 0.5);
-    trueDist = std::pow(5 / diagonal, 2) * cfg2.PosDOF();
-  } else {
-    trueDist = std::pow(5, 2) * cfg2.PosDOF();
-  }
-  trueDist += std::pow(0.5, 2) * (cfg2.DOF() - cfg2.PosDOF());
-  trueDist = std::pow(trueDist, 0.5);
+  auto& bodies = cfg2.GetMultiBody()->GetBodies();
+  
+  double trueDist = 0;
+  for(auto _ : bodies)
+    trueDist += Vector3d(1,2,3).normsqr();
 
-  return trueDist;
+  return std::sqrt(trueDist);
 }
 
 /*--------------------------------------------------------------------*/
