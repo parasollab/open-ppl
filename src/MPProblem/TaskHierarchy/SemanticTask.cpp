@@ -21,11 +21,12 @@ SemanticTask(MPProblem* _problem, XMLNode& _node, Decomposition* _decomp) {
 
 	std::transform(relation.begin(), relation.end(), relation.begin(), ::tolower);
 
-	if(relation == "and")
-		m_subtasksRelation = SubtaskRelation::AND;
-	else if(relation == "xor" or relation == "or")
+	if(relation == "xor" or relation == "or")
 		m_subtasksRelation = SubtaskRelation::XOR;
-	
+	else if(relation == "and")
+		m_subtasksRelation = SubtaskRelation::AND;
+  else //Default is currently AND
+		m_subtasksRelation = SubtaskRelation::AND;
 
 	m_decomposable = _node.Read("decomposable", false, true, 
 				"Indicates if a task is decomposable into subtasks.");

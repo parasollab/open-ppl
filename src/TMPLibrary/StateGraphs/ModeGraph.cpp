@@ -7,7 +7,6 @@
 #include "MPProblem/Constraints/BoundaryConstraint.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
-#include "MPProblem/TaskHierarchy/SemanticTask.h"
 
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/Interaction.h"
@@ -135,20 +134,28 @@ GenerateRepresentation(const State& _start) {
 
   SampleNonActuatedCfgs(_start,startVIDs,goalVIDs);
   SampleTransitions();
+
   GenerateRoadmaps(_start,startVIDs,goalVIDs);
   ConnectTransitions();
 
   Transition fromOrigin;
   m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
 
-  Transition toGoal;
-  m_groundedHypergraph.AddHyperarc({goalVID},goalVIDs,toGoal);
+  //Transition toGoal;
+  //m_groundedHypergraph.AddHyperarc({goalVID},goalVIDs,toGoal);
+  ConfigureGoalSets(goalVID, goalVIDs);
 
   if(m_debug) {
     std::cout << "MODE HYPERGRAPH" << std::endl;
     m_modeHypergraph.Print();
     std::cout << "GROUNDED HYPERGRAPH" << std::endl;
     m_groundedHypergraph.Print();
+    std::cout << "GROUNDED HYPERARC COSTS" << std::endl;
+    for(auto kv : m_groundedHypergraph.GetHyperarcMap()) {
+      auto hid = kv.first;
+      auto hyperarc = kv.second;
+      std::cout << hid << " : " << hyperarc.property.cost << std::endl;
+    }
   }
 }
 
@@ -340,6 +347,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _goalVIDs.insert(groundedVID);
       m_exitVertices.insert(groundedVID);
+      m_goalVertexTaskMap[st] = groundedVID;
     }
 
     // Sample other cfgs and add to grounded hypergraph
@@ -359,6 +367,89 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       m_exitVertices.insert(groundedVID);
     }
   }
+}
+
+void
+ModeGraph::
+ConfigureGoalSets(const size_t& _sink, std::set<VID>& _goalVIDs) {
+ 
+  // TODO::Find sets of valid goals to solve decomposition
+  std::vector<std::set<VID>> goalSets;
+
+  // TODO::Compile sets of completed tasks that satisfy the decomposition
+  // Currently assume one depth of OR values 
+  std::set<SemanticTask*> seen;
+  std::vector<std::set<SemanticTask*>> buckets;
+  for(auto kv : m_goalVertexTaskMap) {
+    auto st = kv.first;
+
+    if(seen.count(st))
+      continue;
+
+    seen.insert(st);
+    std::set<SemanticTask*> bucket = {st};
+
+    auto parent = st->GetParent();
+    auto type = parent->GetSubtaskRelation();
+    
+    if(type == SemanticTask::SubtaskRelation::XOR) {
+      for(auto sibling : parent->GetSubtasks()) {
+        bucket.insert(sibling);
+        seen.insert(sibling);
+      }
+    }
+
+    buckets.push_back(bucket);
+  }
+ 
+  auto taskSets = BuildTaskSets({},0,buckets);
+
+  for(auto set : taskSets) {
+    std::set<size_t> goalSet;
+    for(auto st : set) {
+      auto vid = m_goalVertexTaskMap[st];
+      goalSet.insert(vid);
+    }
+    goalSets.push_back(goalSet);
+  }
+
+  // Add transition from each set to the sink
+  for(auto set : goalSets) {
+    Transition toGoal;
+    m_groundedHypergraph.AddHyperarc({_sink},set,toGoal);
+  } 
+}
+
+std::vector<std::set<SemanticTask*>>
+ModeGraph::
+BuildTaskSets(std::set<SemanticTask*> _taskSet, size_t _index, 
+              const std::vector<std::set<SemanticTask*>>& _buckets) {
+  
+  if(_index == _buckets.size()) {
+    if(m_debug) {
+      std::cout << "Found Task Set:" << std::endl;
+      for(auto st : _taskSet) {
+        std::cout << "\t" << st->GetLabel();
+      }
+      std::cout << std::endl;
+    }
+    return {_taskSet};
+  }
+
+  auto bucket = _buckets[_index];
+
+  std::vector<std::set<SemanticTask*>> newSets;
+
+  for(auto st : bucket) {
+    auto taskSet = _taskSet;
+    taskSet.insert(st);
+    auto sets = BuildTaskSets(taskSet,_index+1,_buckets);
+    for(auto set : sets) {
+      newSets.push_back(set);
+    }
+  }
+
+  return newSets;
 }
 
 void
@@ -640,7 +731,7 @@ ConnectTransitions() {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectTransitions");
 
-  //auto lib = this->GetMPLibrary();
+  auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
 
   // Set robots virtual
@@ -747,13 +838,11 @@ ConnectTransitions() {
           std::cout << "\tTo: " << cfg2.PrettyPrint() << std::endl;
         }
 
-        /*
         // Query path for task
         lib->SetPreserveHooks(true);
         lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
             "Query transition path");
         lib->SetPreserveHooks(false);
-        */
 
         grm->SetAllFormationsInactive();
 

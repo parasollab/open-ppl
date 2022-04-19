@@ -9,6 +9,7 @@
 #include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
+#include "MPProblem/TaskHierarchy/SemanticTask.h"
 
 #include "TMPLibrary/ActionSpace/Action.h"
 
@@ -120,6 +121,11 @@ class ModeGraph : public StateGraph {
 
     void SampleNonActuatedCfgs(const State& _start,std::set<VID>& _startVIDs,std::set<VID>& _goalVIDs);
 
+    void ConfigureGoalSets(const size_t& _sink, std::set<VID>& _goalVIDs);
+
+    std::vector<std::set<SemanticTask*>> BuildTaskSets(std::set<SemanticTask*> _taskSet, size_t _index, 
+                                                 const std::vector<std::set<SemanticTask*>>& _buckets);
+
     void SampleTransitions();
 
     void GenerateRoadmaps(const State& _start,std::set<VID>& _startVIDs,std::set<VID>& _goalVIDs);
@@ -191,6 +197,8 @@ class ModeGraph : public StateGraph {
 
     std::set<size_t> m_entryVertices;
     std::set<size_t> m_exitVertices;
+
+    std::unordered_map<SemanticTask*,size_t> m_goalVertexTaskMap;
 
     ///@}
 
