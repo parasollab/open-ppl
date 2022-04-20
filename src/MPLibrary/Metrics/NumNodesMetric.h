@@ -28,6 +28,15 @@ class NumNodesMetric : public MetricMethod<MPTraits> {
     virtual double operator()() override;
 
     ///@}
+
+  private:
+
+    ///@name Internal State
+    ///@{
+
+    bool m_formationSpecific{true};
+
+    ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -43,6 +52,10 @@ template <typename MPTraits>
 NumNodesMetric<MPTraits>::
 NumNodesMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node){
   this->SetName("NumNodesMetric");
+
+  m_formationSpecific = _node.Read("formationSpecific",false,m_formationSpecific,
+          "Flag indiciating if metric should only count active formations in "
+          "group roadmap.");
 }
 
 /*---------------------------- Metric Interface ------------------------------*/
@@ -51,8 +64,48 @@ template <typename MPTraits>
 double
 NumNodesMetric<MPTraits>::
 operator()() {
-  if(this->GetGroupRoadmap())
-    return this->GetGroupRoadmap()->Size();
+  if(this->GetGroupRoadmap()) {
+    auto rm = this->GetGroupRoadmap();
+    if(!m_formationSpecific) 
+      return rm->Size();
+
+    auto activeFormations = rm->GetActiveFormations();
+
+    size_t count = 0;
+    for(auto vit = rm->begin(); vit != rm->end(); vit++) {
+      const auto& cfg = vit->property();
+      const auto& formations = cfg.GetFormations();
+      if(formations == activeFormations) {
+        count++;
+        continue;
+      }
+
+      if(formations.size() != activeFormations.size())
+        continue;
+
+      std::set<Formation*> seen;
+      bool match = false;
+      for(auto f1 : formations) {
+        match = false;
+        for(auto f2 : activeFormations) {
+          if(seen.count(f2))
+            continue;
+          if(*f1 == *f2) {
+            match = true;
+            seen.insert(f2);
+            break;
+          }
+        }
+        if(!match)
+          break;
+      }
+
+      if(match)
+        count++;
+    }
+
+    return count;
+  }
   else
     return this->GetRoadmap()->Size();
 }

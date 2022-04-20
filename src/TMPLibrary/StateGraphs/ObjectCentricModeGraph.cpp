@@ -346,6 +346,7 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
   auto stages = _interaction->GetStages();
   auto stage = _reverse ? stages.back() : stages.front();
   std::unordered_map<FormationCondition*,std::vector<RobotGroup*>> groupMatches;
+  size_t roleCount = 0;
 
   for(auto condition : _interaction->GetStageConditions(stage)) {
 
@@ -355,7 +356,9 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
     if(!f)
       continue;
 
+
     auto roles = f->GetRoles();
+    roleCount += roles.size();
 
     // Collect all matching groups
     std::vector<RobotGroup*> matches;
@@ -539,12 +542,15 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
   }
 
   
+  std::vector<std::vector<std::pair<Robot*,std::string>>> finalPartials;
   for(auto partial : partials) {
-
+    if(partial.size() == roleCount)
+      finalPartials.push_back(partial);
   }
 
+  
  
-  return partials; 
+  return finalPartials; 
 
   /*
   // Collect all possible assignments for robots.
