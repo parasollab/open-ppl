@@ -121,10 +121,11 @@
       <Euclidean label="euclidean"/>
       <LPSwept label="lpSwept" lpLabel="sl"/>
       <BinaryLPSwept label="binaryLPSwept" lpLabel="sl"/>
-      <!--<TopologicalDistance label="topological"/>-->
-      <!--<KnotTheory label="knotTheory"/>-->
       <WeightedEuclidean label="weightedEuclidean" posWeight=0.25 rotWeight=0.25 velWeight=0.25 avlWeight=0.25/>
       <ScaledEuclidean label="scaledEuclidean"/>
+      
+      <!--<TopologicalDistance label="topological"/>-->
+      <!--<KnotTheory label="knotTheory"/>-->
     </DistanceMetrics>
 
     <ValidityCheckers>

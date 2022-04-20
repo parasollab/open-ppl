@@ -39,7 +39,7 @@ class LPSweptDistance : virtual public DistanceMetricMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    LPSweptDistance(string _lpLabel="", double _positionRes = 0.1,
+    LPSweptDistance(string _lpLabel="sl", double _positionRes = 0.1,
         double _orientationRes = 0.1, bool _bbox = false);
     LPSweptDistance(XMLNode& _node);
     virtual ~LPSweptDistance() = default;
@@ -92,7 +92,7 @@ LPSweptDistance(string _lpLabel, double _posRes, double _oriRes, bool _bbox) :
 template <typename MPTraits>
 LPSweptDistance<MPTraits>::
 LPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
-    m_lpLabel(""), m_positionRes(0.1), m_orientationRes(0.1), m_useBBox(false) {
+    m_lpLabel("sl"), m_positionRes(0.1), m_orientationRes(0.1), m_useBBox(false) {
   this->SetName("LPSwept");
   
   m_positionRes = _node.Read("posRes", false, nan(""), 0., 1000.,
@@ -101,7 +101,7 @@ LPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
       "orientation resolution");
   m_useBBox = _node.Read("useBBox", false, false, "use bbox instead of robot "
       "vertices");
-  m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
+  m_lpLabel = _node.Read("lpLabel", true, "sl", "Local Planner");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/

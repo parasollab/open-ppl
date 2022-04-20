@@ -5,12 +5,14 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @todo This class should be replaced by an option in the base class.
+/// BinaryLPSwept Distance is LPSwept Distance with positon and orientation
+/// resolutions initially set and then doubled in granularity until distance
+/// converges, the environmental resolutions are met, or maxAttempts are reached
 ///
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class BinaryLPSweptDistance : public LPSweptDistance<MPTraits> {
+class BinaryLPSweptDistance : virtual public LPSweptDistance<MPTraits> {
 
   public:
 
@@ -67,7 +69,8 @@ BinaryLPSweptDistance(string _lp, double _posRes, double _oriRes,
 
 template <typename MPTraits>
 BinaryLPSweptDistance<MPTraits>::
-BinaryLPSweptDistance(XMLNode& _node) : LPSweptDistance<MPTraits>(_node) {
+BinaryLPSweptDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
+                                        LPSweptDistance<MPTraits>(_node) {
   this->SetName("BinaryLPSwept");
   m_tolerance = _node.Read("tolerance", false, 0.01, 0.0, 1000.0, "tolerance");
   m_maxAttempts = _node.Read("maxAttempts", false, 10, 1, 100, "maximum depth "

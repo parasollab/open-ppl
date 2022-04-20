@@ -23,7 +23,7 @@ class BinaryLPSweptDistanceTest : virtual public BinaryLPSweptDistance<MPTraits>
     ///@{
     
 
-    BinaryLPSweptDistanceTest(string _lpLabel="", double _positionRes = 0.1, 
+    BinaryLPSweptDistanceTest(string _lpLabel="sl", double _positionRes = 0.1, 
       double _orientationRes = 0.1, bool _bbox = false);
 
     BinaryLPSweptDistanceTest(XMLNode& _node);
@@ -231,9 +231,9 @@ TrueIndividualCfgDistance() {
   // or the distance converges. In this conditions, this resolution will 
   // converge immediately.
   //
-  // Under these particular conditions, the true distance is 8.9778381120884. 
+  // Under these particular conditions, the true distance is 8.9778363402258. 
   // Should the base unit test be changed, this value will have to be recalculated
-  double trueDist = 8.9778381120884;
+  double trueDist = 8.9778363402258;
 
   return trueDist;
 }

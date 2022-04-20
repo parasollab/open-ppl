@@ -2,7 +2,7 @@
 
 # Set platform, debug mode, and address sanitizer if not already set.
 platform ?= Ubuntu
-debug    ?= 0
+debug    ?= 1
 asan     ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
