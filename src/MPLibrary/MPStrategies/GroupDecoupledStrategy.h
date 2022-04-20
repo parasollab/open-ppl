@@ -140,7 +140,8 @@ Finalize() {
   double avgVertices = 0;
   auto groupTask = this->GetGroupTask();
   auto group = groupTask->GetRobotGroup();
-  auto groupRoadmap = this->GetGroupRoadmap();
+  auto groupRoadmap = this->GetGroupRoadmap(group);
+  auto groupPath = this->GetGroupPath(group);
   const double timeRes = this->GetEnvironment()->GetTimeRes();
 
   // Collect the full cfg paths for each robot.
@@ -189,6 +190,7 @@ Finalize() {
   // Add each path configuration to the group roadmap.
   const size_t numRobots = groupTask->Size();
   size_t lastVID = INVALID_VID;
+  std::vector<VID> groupPathVIDs;
   for(size_t i = 0; i < longestPath; ++i) {
     if(this->m_debug)
       std::cout << "Creating group path vertex " << i << std::endl;
@@ -203,6 +205,7 @@ Finalize() {
       cfg.SetRobotCfg(j, vid);
     }
     const VID vid = groupRoadmap->AddVertex(cfg);
+    groupPathVIDs.push_back(vid);
 
     if(this->m_debug)
       std::cout << "Created group VID " << vid << "." << std::endl;
@@ -245,6 +248,9 @@ Finalize() {
     }
     lastVID = vid;
   }
+
+  groupPath->Clear();
+  *groupPath += groupPathVIDs;
 
   GroupStrategyMethod<MPTraits>::Finalize();
 }
