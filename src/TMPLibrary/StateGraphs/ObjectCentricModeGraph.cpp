@@ -991,7 +991,8 @@ BuildSingleObjectModeGraph() {
       auto vid2 = iter2->second;
 
       if(vid1 == vid2) {
-        m_singleModeGraph.AddEdge(vid1,vid2,0);
+        //m_singleModeGraph.AddEdge(vid1,vid2,0);
+        m_singleModeGraph.AddEdge(vid1,vid2,1);
         continue;
       }
      
