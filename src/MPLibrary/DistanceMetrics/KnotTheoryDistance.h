@@ -96,26 +96,34 @@ template <typename MPTraits>
 double
 KnotTheoryDistance<MPTraits>::
 Knot(std::vector<Vector3d>& _c1, std::vector<Vector3d>& _c2) {
+  // ensure cfg contains more than one body
   if(_c1.size() < 2)
     throw RunTimeException(WHERE) << "_c1 has too few links (" << _c1.size()
                                   << ")";
 
   std::vector<Vector3d> unitVect(_c1.size()), unitVect2(_c2.size());
   double sum = 0, sign = 0, signsum = 0;
+  // for each body (except the last)
   for(size_t i = 0; i < _c1.size()-1; ++i) {
-
+    // if this body and the next are different
     if((_c1[i+1]-_c1[i]).norm() != 0)
+      // set unitVect[i] sum of this body and next, scaled by the magnitude of 
+      // the difference between this body and the next
       unitVect[i] = (_c1[i+1]+_c1[i])/(_c1[i+1]-_c1[i]).norm();
     else
+      // else use the 0 vector
       unitVect[i](0, 0, 0);
-
+    // repeat for second config
     if((_c2[i+1]-_c2[i]).norm() !=0)
       unitVect2[i] = (_c2[i+1]+_c2[i])/(_c2[i+1]-_c2[i]).norm();
     else
       unitVect2[i](0, 0, 0);
+    // take cross product of two 'unit' vectors and norm
+    // TODO: figure out why this is here
     double area = (unitVect[i] % unitVect2[i]).norm();
-    sign = unitVect2[i] * unitVect[i];
     sum += area;
+    // add dot product between two vectors to signsum
+    sign = unitVect2[i] * unitVect[i];
     signsum += sign;
   }
 

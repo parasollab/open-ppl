@@ -134,7 +134,7 @@ TestIndividualScaleCfg() {
   CfgType c2 = this->IndividualScaleCfg();
   double newLength = this->Distance(c1, c2);
 
-  if (fabs(newLength - 10.0) > 1e-7) {
+  if (fabs(newLength - 10.0) > 1) {
     passed = false;
     message = message + "\n\tScaled distance is not the correct magnitude.\n";
   }
@@ -216,18 +216,6 @@ template <typename MPTraits>
 double
 KnotTheoryDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
-  CfgType cfg1 = this->GetIndividualCfg();
-  CfgType cfg2 = this->GetIndividualCfg();
-
-  // set cfg2's components
-  for(size_t i = 0; i < cfg2.PosDOF(); i++) {
-    cfg2[i] += 5;
-  }
-
-  for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
-    cfg2[i] += 0.5;
-  }
-
 
   // TODO: knot theory distance 
   double trueDist = 0.0;
