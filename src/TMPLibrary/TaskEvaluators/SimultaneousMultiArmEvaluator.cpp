@@ -1866,7 +1866,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto timestep = h->GetVertex(_ei->source()).second;
 
       auto edgeConstraint = std::make_pair(std::make_pair(source,target),timestep);
-      auto vertexConstraint = std::make_pair(std::make_pair(target,target),timestep+1);
+      auto vertexConstraint = std::make_pair(std::make_pair(target,MAX_INT),timestep+1);
 
       if(constraints.count(edgeConstraint) or constraints.count(vertexConstraint))
         return std::numeric_limits<double>::infinity();
@@ -1937,7 +1937,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   std::reverse(path.begin(),path.end());
 
   // Save path in solution
-  if(!_node.solutionMap[_robot])
+  //if(!_node.solutionMap[_robot])
     _node.solutionMap[_robot] = new vector<size_t>();
   *(_node.solutionMap[_robot]) = path;
 
@@ -1974,8 +1974,8 @@ ValidationFunction(CBSNodeType& _node) {
       for(;iter2 != _node.solutionMap.end(); iter2++) {
         auto object2 = iter2->first;
         auto path2 = *(iter2->second);
-        auto s2 = std::min(i,path1.size()-1);
-        auto t2 = std::min(i+1,path1.size()-1);
+        auto s2 = std::min(i,path2.size()-1);
+        auto t2 = std::min(i+1,path2.size()-1);
         auto source2 = path2[s2];
         auto target2 = path2[t2];
 
@@ -1987,7 +1987,7 @@ ValidationFunction(CBSNodeType& _node) {
                       << std::endl;
           }
 
-          auto constraint = std::make_pair(std::make_pair(source1,source1),i);
+          auto constraint = std::make_pair(std::make_pair(source1,MAX_INT),i);
           std::vector<std::pair<Robot*,CBSConstraint>> constraints;
           constraints.push_back(std::make_pair(object1,constraint));
           constraints.push_back(std::make_pair(object2,constraint));
