@@ -6,7 +6,7 @@
 
 template <typename MPTraits>
 class WorkspaceTranslationDistanceTest : virtual public WorkspaceTranslationDistance<MPTraits>,
-                              public DistanceMetricMethodTest<MPTraits> {
+                                         public DistanceMetricMethodTest<MPTraits> {
 
   public: 
   
@@ -215,9 +215,11 @@ template <typename MPTraits>
 double
 WorkspaceTranslationDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
-  // Given a cfg at the origin and a cfg with each of the position DOFs increased by 5, 
-  // and all others increased by 0.5, we will get a workspace translation distance as follows
+  // Given a cfg at the origin and a cfg with each of the position DOFs 
+  // increased by 5, and all others increased by 0.5, we will get a workspace 
+  // translation distance of 8.6602540378444
   double distance = 8.6602540378444;
+  
   return distance;
 }
 

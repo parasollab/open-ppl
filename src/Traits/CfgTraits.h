@@ -25,11 +25,7 @@
 #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
 #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
-//#include "MPLibrary/DistanceMetrics/KnotTheoryDistance.h"
-//#include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
-//#include "Testing/MPLibrary/DistanceMetrics/BinaryLPSweptDistanceTest.h"
-//#include "Testing/MPLibrary/DistanceMetrics/TopologicalDistanceTest.h"
-//#include "Testing/MPLibrary/DistanceMetrics/KnotTheoryDistanceTest.h"
+
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -117,8 +113,6 @@ struct MPTraits {
     WeightedEuclideanDistance<MPTraits>,
     LPSweptDistance<MPTraits>,
     BinaryLPSweptDistance<MPTraits>,
-    //TopologicalDistanceTest<MPTraits>,
-    //KnotTheoryDistance<MPTraits>,
     ScaledEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 

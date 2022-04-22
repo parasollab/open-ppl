@@ -136,9 +136,6 @@ TestIndividualScaleCfg() {
   CfgType c1 = this->GetIndividualCfg();
   CfgType c2 = this->IndividualScaleCfg();
   double newLength = this->Distance(c1, c2);
-  
-  // debugging
-  std::cout << setprecision(15) << "scaled distance: " << newLength << std::endl;
 
   if (fabs(newLength - 10.0) > 1) {
     passed = false;
@@ -228,11 +225,11 @@ TrueIndividualCfgDistance() {
   // path and each ori component goes from 0 to 0.5 along path, with 
   // pos resolution starting at 0.1 and ori resolution starting 0.1, then
   // increasing (doubling) until either the environment resolution is met
-  // or the distance converges. In this conditions, this resolution will 
-  // converge immediately.
+  // or the distance converges.
   //
-  // Under these particular conditions, the true distance is 8.9778363402258. 
-  // Should the base unit test be changed, this value will have to be recalculated
+  // Under these particular conditions, the distance is 8.9778363402258. 
+  // Should the base unit test be changed, this value will have to be 
+  // recalculated
   double trueDist = 8.9778363402258;
 
   return trueDist;

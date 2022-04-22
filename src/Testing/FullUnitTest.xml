@@ -125,9 +125,6 @@
       <ScaledEuclidean label="scaledEuclidean"/>
       <WorkspaceTranslation label="workspaceTranslation" />
       <RMSD label="RMSD" />
-      
-      <!--<TopologicalDistance label="topological"/>-->
-      <!--<KnotTheory label="knotTheory"/>-->
     </DistanceMetrics>
 
     <ValidityCheckers>
