@@ -36,7 +36,8 @@ class RMSDDistance : virtual public DistanceMetricMethod<MPTraits> {
 
     virtual double Distance(const CfgType& _c1, const CfgType& _c2);
 
-    ///@}
+    // Overrides
+    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o) override;
 
   private:
 
@@ -73,7 +74,18 @@ RMSDDistance<MPTraits>::
 Distance(const CfgType& _c1, const CfgType& _c2) {
   auto x = GetCoordinatesForRMSD(_c1),
        y = GetCoordinatesForRMSD(_c2);
+       std::cout << "got coordinates"<<std::endl;
   return RMSD(x,y,x.size());
+}
+
+/*----------------------------- Overrides ---------------------------*/
+
+template <typename MPTraits>
+void
+RMSDDistance<MPTraits>::
+ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
+  // TODO: this method does not exist for RMSDDistance yet
+  return;
 }
 
 /*---------------------------------- Helpers ---------------------------------*/
@@ -116,6 +128,7 @@ RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
     _x[n] = _x[n] - sumx/_dim;
     _y[n] = _y[n] - sumy/_dim;
   }
+
 
   // now calc. e0 = 1/2*sum_of[xn^2 + yn^2]
   double e0 = 0.0;
@@ -179,7 +192,7 @@ RMSD(vector<Vector3d> _x, vector<Vector3d> _y, int _dim) {
   }
   if(z3 < 0) // small numercal error
     z3 = 0;
-
+    
   int sign = detR > 0 ? 1 : -1;
   double ee = e0 - sqrt(z1) - sqrt(z2) - sqrt(z3)*sign;
   if(ee<0) // small numercal error

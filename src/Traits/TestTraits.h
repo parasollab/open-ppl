@@ -21,6 +21,7 @@
 #include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/WorkspaceTranslationDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/RMSDDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/WeightedEuclideanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/ScaledEuclideanDistanceTest.h"
 #include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
@@ -98,7 +99,8 @@ struct MPTraits {
       ManhattanDistanceTest<MPTraits>,
       MinkowskiDistanceTest<MPTraits>,
       EuclideanDistanceTest<MPTraits>,
-      WorkspaceTranslationDistanceTest<MPTraits>
+      WorkspaceTranslationDistanceTest<MPTraits>,
+      RMSDDistanceTest<MPTraits>,
       WeightedEuclideanDistanceTest<MPTraits>,
       LPSweptDistanceTest<MPTraits>,
       BinaryLPSweptDistanceTest<MPTraits>,

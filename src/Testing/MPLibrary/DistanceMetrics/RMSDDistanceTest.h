@@ -1,11 +1,11 @@
-#ifndef PPL_WORKSPACETRANSLATION_DISTANCE_TEST_H_
-#define PPL_WORKSPACETRANSLATION_DISTANCE_TEST_H_
+#ifndef PPL_RMSD_DISTANCE_TEST_H_
+#define PPL_RMSD_DISTANCE_TEST_H_
 
-#include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
+#include "MPLibrary/DistanceMetrics/RMSDDistance.h"
 #include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
 
 template <typename MPTraits>
-class WorkspaceTranslationDistanceTest : virtual public WorkspaceTranslationDistance<MPTraits>,
+class RMSDDistanceTest : virtual public RMSDDistance<MPTraits>,
                               public DistanceMetricMethodTest<MPTraits> {
 
   public: 
@@ -22,11 +22,11 @@ class WorkspaceTranslationDistanceTest : virtual public WorkspaceTranslationDist
     ///@name Construction
     ///@{
 
-    WorkspaceTranslationDistanceTest();
+    RMSDDistanceTest();
 
-    WorkspaceTranslationDistanceTest(XMLNode& _node);
+    RMSDDistanceTest(XMLNode& _node);
 
-    ~WorkspaceTranslationDistanceTest();
+    ~RMSDDistanceTest();
 
     ///@}
 
@@ -60,23 +60,23 @@ class WorkspaceTranslationDistanceTest : virtual public WorkspaceTranslationDist
 /*--------------------------- Construction ---------------------------*/
 
 template<typename MPTraits>
-WorkspaceTranslationDistanceTest<MPTraits>::
-WorkspaceTranslationDistanceTest() : WorkspaceTranslationDistance<MPTraits>() {}
+RMSDDistanceTest<MPTraits>::
+RMSDDistanceTest() : RMSDDistance<MPTraits>() {}
 
 template<typename MPTraits>
-WorkspaceTranslationDistanceTest<MPTraits>:: 
-WorkspaceTranslationDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
-                                                   WorkspaceTranslationDistance<MPTraits>(_node) {}
+RMSDDistanceTest<MPTraits>:: 
+RMSDDistanceTest(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
+                                   RMSDDistance<MPTraits>(_node) {}
 
 template<typename MPTraits>
-WorkspaceTranslationDistanceTest<MPTraits>::
-~WorkspaceTranslationDistanceTest() {}
+RMSDDistanceTest<MPTraits>::
+~RMSDDistanceTest() {}
 
 /*--------------------- Test Interface Functions ---------------------*/
 
 template<typename MPTraits>
-typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
-WorkspaceTranslationDistanceTest<MPTraits>::
+typename RMSDDistanceTest<MPTraits>::TestResult
+RMSDDistanceTest<MPTraits>::
 TestIndividualCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -99,8 +99,8 @@ TestIndividualCfgDistance() {
 }
 
 template<typename MPTraits>
-typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
-WorkspaceTranslationDistanceTest<MPTraits>::
+typename RMSDDistanceTest<MPTraits>::TestResult
+RMSDDistanceTest<MPTraits>::
 TestIndividualEdgeWeight() {
   bool passed = true;
   std::string message = "";
@@ -123,20 +123,13 @@ TestIndividualEdgeWeight() {
 }
 
 template<typename MPTraits>
-typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
-WorkspaceTranslationDistanceTest<MPTraits>::
+typename RMSDDistanceTest<MPTraits>::TestResult
+RMSDDistanceTest<MPTraits>::
 TestIndividualScaleCfg() {
   bool passed = true;
   std::string message = "";
 
-  CfgType c1 = this->GetIndividualCfg();
-  CfgType c2 = this->IndividualScaleCfg();
-  double newLength = this->Distance(c1, c2);
-
-  if (fabs(newLength - 10.0) > 1) {
-    passed = false;
-    message = message + "\n\tScaled distance is not the correct magnitude.\n";
-  }
+  // TODO: This method does not exist for RMSDDistance yet
 
   if (passed) {
     message = "IndividualScaleCfg::PASSED!\n";
@@ -148,8 +141,8 @@ TestIndividualScaleCfg() {
 }
 
 template<typename MPTraits>
-typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
-WorkspaceTranslationDistanceTest<MPTraits>::
+typename RMSDDistanceTest<MPTraits>::TestResult
+RMSDDistanceTest<MPTraits>::
 TestGroupCfgDistance() {
   bool passed = true;
   std::string message = "";
@@ -174,8 +167,8 @@ TestGroupCfgDistance() {
 }
 
 template<typename MPTraits>
-typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
-WorkspaceTranslationDistanceTest<MPTraits>::
+typename RMSDDistanceTest<MPTraits>::TestResult
+RMSDDistanceTest<MPTraits>::
 TestGroupEdgeWeight() {
   bool passed = true;
   std::string message = "";
@@ -192,8 +185,8 @@ TestGroupEdgeWeight() {
 }
 
 template<typename MPTraits>
-typename WorkspaceTranslationDistanceTest<MPTraits>::TestResult
-WorkspaceTranslationDistanceTest<MPTraits>::
+typename RMSDDistanceTest<MPTraits>::TestResult
+RMSDDistanceTest<MPTraits>::
 TestGroupScaleCfg() {
   bool passed = true;
   std::string message = "";
@@ -213,11 +206,10 @@ TestGroupScaleCfg() {
 
 template <typename MPTraits>
 double
-WorkspaceTranslationDistanceTest<MPTraits>::
+RMSDDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
-  // Given a cfg at the origin and a cfg with each of the position DOFs increased by 5, 
-  // and all others increased by 0.5, we will get a workspace translation distance as follows
-  double distance = 8.6602540378444;
+  // The distance between two cfgs of a one-body system is always 0
+  double distance = 0;
   return distance;
 }
 
