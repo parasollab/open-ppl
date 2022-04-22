@@ -147,7 +147,9 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   double d = 0;
 
   // create vector containing all geometric bodies in _c1 (start config)
-  std::vector<GMSPolyhedron> poly2;
+  std::vector<GMSPolyhedron> poly1, poly2;
+  
+  
   auto robot = _c1.GetMultiBody();
   int bodyCount = robot->GetNumBodies();
   cfgs.begin()->ConfigureRobot();
@@ -159,8 +161,9 @@ Distance(const CfgType& _c1, const CfgType& _c2) {
   }
   // iterate through all cfg's in lp path
   for(auto cit = cfgs.begin(); cit + 1 != cfgs.end(); ++cit) {
-    // copy poly2 into poly1 (inefficient)
-    vector<GMSPolyhedron> poly1(poly2);
+    // swap vectors (by reference, O(1) operation)
+    poly1.std::vector<GMSPolyhedron>::swap(poly2);
+    
     // clear poly2
     poly2.clear();
     (cit+1)->ConfigureRobot();
