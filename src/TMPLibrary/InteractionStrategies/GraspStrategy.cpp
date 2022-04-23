@@ -49,6 +49,27 @@ operator()(Interaction* _interaction, State& _start) {
   // Get initial conditions
   auto stages = _interaction->GetStages();
 
+  if(m_debug) {
+    std::cout << "Planning interaction: " << _interaction->GetLabel()
+              << " with stages:" << std::endl;
+    for(auto s : stages) {
+      std::cout << "\t" << s << std::endl;
+    }
+    std::cout << " Initial State: " <<std::endl;
+    for(auto kv : _start) {
+      auto group = kv.first;
+      auto pair = kv.second;
+      auto rm = pair.first;
+      auto vid = pair.second;
+
+      std::cout << group->GetLabel() << " : ";
+      if(!rm)
+        std::cout << " null" << std::endl;
+      else 
+        std::cout << rm->GetVertex(vid) << std::endl;
+    }
+  } 
+
   // Check that there are at least 4 stages
   if(stages.size() < 3)
     throw RunTimeException(WHERE) << "Grasp sampling assumes at least 3 stages:"
