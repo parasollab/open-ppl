@@ -42,6 +42,9 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
                       "The number of samples to generate for each transtion.");
   m_maxAttempts = _node.Read("maxAttempts",false,1,1,1000,
                       "The max number of attempts to generate a sample.");
+
+  m_writeHypergraphs = _node.Read("writeHypergraphs",false,m_writeHypergraphs,
+                      "Flag to write hypergraphs to output files.");
 }
 
 ModeGraph::
@@ -156,6 +159,13 @@ GenerateRepresentation(const State& _start) {
       auto hyperarc = kv.second;
       std::cout << hid << " : " << hyperarc.property.cost << std::endl;
     }
+  }
+
+  if(m_writeHypergraphs) {
+    std::string base = this->GetMPProblem()->GetBaseFilename();
+
+    m_modeHypergraph.Print(base + "-mode-hypergraph.hyp");
+    m_groundedHypergraph.Print(base + "-grounded-hypergraph.hyp");
   }
 }
 
@@ -335,7 +345,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       qSM->Sample(1,m_maxAttempts,boundaryMap,std::back_inserter(samples));
       
       if(samples.size() == 0)
-        throw RunTimeException(WHERE) << "Unable to generate goal configuration for"
+        throw RunTimeException(WHERE) << "Unable to generate goal configuration for "
                                       << mode->robotGroup->GetLabel()
                                       << ".";
       // Add goal cfg to grounded hypergraph
@@ -514,11 +524,12 @@ SampleTransitions() {
     }
 
     bool foundInteraction = false;
+    bool canReach = false;
     // If this hyperarc involves an unactuated mode, use the grounded vertices
     if(!unactuatedModes.empty()) {
       if(unactuatedModes.size() > 1)
         throw RunTimeException(WHERE) << "Multiple unactuated modes in an "
-                      "interactionnot currently supported.";
+                      "interaction not currently supported.";
 
       auto unactuatedVID = unactuatedModes.begin()->first;
       auto unactuatedGroup = unactuatedModes.begin()->second;
@@ -530,14 +541,23 @@ SampleTransitions() {
         // Get grounded vertex
         auto groundedVertex = m_groundedHypergraph.GetVertexType(*iter);
 
-        // Make state copy and add grounded vertex to pass to IS.
-        // Will get overwritten as goal state
-        auto goalSet = modeSet;
-        goalSet[unactuatedGroup] = groundedVertex;
+        auto startSet = modeSet;
+        startSet[unactuatedGroup] = groundedVertex;
+
+        // Check if robot can even reach pose
+        if(!CanReach(startSet))
+          continue;
+
+        canReach = true;
 
         for(size_t j = 0; j < m_maxAttempts; j++) {
+          // Make state copy and add grounded vertex to pass to IS.
+          // Will get overwritten as goal state
+          auto goalSet = startSet;
           if(!is->operator()(interaction,goalSet))
             continue;
+
+          foundInteraction = true;
 
           m_groundedInstanceTracker[kv.first] = m_groundedInstanceTracker[kv.first] + 1;
           // Save interaction paths
@@ -555,6 +575,12 @@ SampleTransitions() {
 
           // Make state copy to pass by ref and get output state
           auto goalSet = modeSet;
+
+          // Check if robots can even reach to perform interaction
+          if(!CanReach(goalSet))
+            continue;
+
+          canReach = true;
 
           if(!is->operator()(interaction,goalSet))
             continue;
@@ -578,7 +604,7 @@ SampleTransitions() {
       }
     }
 
-    if(m_debug and !foundInteraction) {
+    if(m_debug and !foundInteraction and canReach) {
       std::cout << "Failed to find interaction for " << interaction->GetLabel()
                 << " with starting mode";
       for(auto kv : modeSet) {
@@ -589,7 +615,7 @@ SampleTransitions() {
     }
   }
 
-  // Set all robots and objects to back to none virtual
+  // Set all robots and objects to back to non-virtual
   for(auto& kv : c->GetInitialRobotGroups()) {
     auto group = kv.first;
     for(auto r : group->GetRobots()) {
@@ -1826,6 +1852,63 @@ AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*
   }
 
   return vids;
+}
+
+bool
+ModeGraph::
+CanReach(const State& _state) {
+  
+  // Construct bounding spheres
+  std::vector<std::pair<Vector3d,double>> spheres;
+
+  for(const auto& kv : _state) {
+    auto group = kv.first;
+    auto rm = kv.second.first;
+    auto vid = kv.second.second;
+    
+    if(rm and vid != MAX_INT) {
+      auto gcfg = rm->GetVertex(vid);
+      gcfg.ConfigureRobot();
+    }
+
+    for(auto robot : group->GetRobots()) {
+      auto mb = robot->GetMultiBody();
+
+      Vector3d center = mb->GetBase()->GetWorldTransformation().translation();
+      double radius = rm ? 0 : std::numeric_limits<double>::infinity();
+
+      if(!mb->IsPassive()) {
+        // TODO::Compute proper radius - for now, we know UR5e is roughly 1 meter
+        radius = 1;
+      }
+
+      spheres.emplace_back(center,radius);
+    }
+  }
+
+  // Check if all spheres intersect
+  for(size_t i = 0; i < spheres.size()-1; i++) {
+    const auto& sphere1 = spheres[i];
+    const auto& center1 = sphere1.first;
+    const auto& radius1 = sphere1.second;
+    
+    for(size_t j = i+1; j < spheres.size(); j++) {
+      const auto& sphere2 = spheres[j];
+      const auto& center2 = sphere2.first;
+      const auto& radius2 = sphere2.second;
+
+      double distance = 0;
+      for(size_t k = 0; k < 3; k++) {
+        distance += std::pow((center1[k]-center2[k]),2);
+      }
+      distance = sqrt(distance);
+
+      if(distance > radius1 + radius2)
+        return false;
+    }
+  }
+  
+  return true;
 }
 
 /*----------------------------------------------------------------------------*/

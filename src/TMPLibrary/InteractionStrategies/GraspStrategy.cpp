@@ -283,6 +283,11 @@ operator()(Interaction* _interaction, State& _start) {
   for(auto kv : nextStageEEFrames) {
     auto robot = kv.first;
     auto cfg = ComputeManipulatorCfg(robot,kv.second);
+    if(!cfg.GetRobot()) {
+      std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+      m_roleMap.clear();
+      return false;
+    }
 
     SetEEDOF(_interaction,cfg,stages[graspStage]);
 

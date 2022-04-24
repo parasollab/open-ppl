@@ -121,6 +121,8 @@ class SubmodeQuery : public TaskEvaluatorMethod {
 
     bool m_reverseActions{false};
 
+    bool m_writeHypergraph{false};
+
     ///@}
 };
 

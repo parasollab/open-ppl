@@ -159,6 +159,8 @@ class ModeGraph : public StateGraph {
 
     std::set<VID> AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap);
 
+    bool CanReach(const State& _state);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -199,6 +201,8 @@ class ModeGraph : public StateGraph {
     std::set<size_t> m_exitVertices;
 
     std::unordered_map<SemanticTask*,size_t> m_goalVertexTaskMap;
+
+    bool m_writeHypergraphs{false};
 
     ///@}
 

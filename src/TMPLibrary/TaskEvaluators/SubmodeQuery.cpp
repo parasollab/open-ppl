@@ -20,7 +20,10 @@ SubmodeQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("SubmodeQuery");
 
   m_reverseActions = _node.Read("reverseActions",false,m_reverseActions,
-        "Flag to allow immedaite reversal of actions in plan.");
+        "Flag to allow immediate reversal of actions in plan.");
+
+  m_writeHypergraph = _node.Read("writeHypergraph",false,m_writeHypergraph,
+                      "Flag to write hypergraphs to output files.");
 }
 
 SubmodeQuery::
@@ -67,6 +70,11 @@ Run(Plan* _plan) {
     return false;
 
   ConvertToPlan(output,_plan);
+
+  if(m_writeHypergraph) {
+    m_actionExtendedHypergraph.Print(this->GetMPProblem()->GetBaseFilename() +
+                "-action-extended.hyp");
+  }
 
   return true;
 }

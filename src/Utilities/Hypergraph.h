@@ -76,6 +76,8 @@ class Hypergraph {
 
     void Print() const;
 
+    void Print(std::string _filename) const;
+
     GraphType* GetGraph();
     GraphType* GetReverseGraph();
 
@@ -366,6 +368,48 @@ Print() const {
   }
 
   std::cout << "END OF HYPERGRAPH" << std::endl;
+}
+
+template <typename VertexType, typename HyperarcType>
+void
+Hypergraph<VertexType,HyperarcType>::
+Print(std::string _filename) const {
+
+  std::ofstream ofs(_filename);
+
+  ofs << "PRINTING HYPERGRAPH" << std::endl;
+
+  ofs << "Hyperarcs" << std::endl;
+  for(auto kv : m_hyperarcMap) {
+    auto hid = kv.first;
+    auto arc = kv.second;
+
+    ofs << hid << " : {Tail:[";
+
+    for(auto iter = arc.tail.begin(); iter != arc.tail.end(); iter++) {
+      ofs << *iter;
+      auto next = iter;
+      next++;
+      if(next != arc.tail.end()) {
+        ofs << ",";
+      }
+    }
+
+    ofs << "], Head:[";
+
+    for(auto iter = arc.head.begin(); iter != arc.head.end(); iter++) {
+      ofs << *iter;
+      auto next = iter;
+      next++;
+      if(next != arc.head.end()) {
+        ofs << ",";
+      }
+    }
+    ofs << "]}" << std::endl;
+  }
+
+  ofs << "END OF HYPERGRAPH" << std::endl;
+  ofs.close();
 }
 
 template <typename VertexType, typename HyperarcType>

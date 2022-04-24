@@ -456,6 +456,7 @@ GenerateTransitionState(Interaction* _interaction, const State& _previous, const
     if(!grm)
       continue;
     auto gcfg = grm->GetVertex(kv.second.second);
+    gcfg.ConfigureRobot();
     for(auto robot : group->GetRobots()) {
       if(!robot->GetMultiBody()->IsPassive())
         continue;
