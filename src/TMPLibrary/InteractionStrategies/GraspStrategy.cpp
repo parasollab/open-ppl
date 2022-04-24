@@ -156,6 +156,16 @@ operator()(Interaction* _interaction, State& _start) {
     // Sample pregrasp joint angles
     auto eeFrames = ComputeEEFrames(_interaction,objectPoses,i);
 
+    // Set all uninvolved robots to virtual
+    for(auto& robot : problem->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+    for(auto& kv : _start) {
+      for(auto robot : kv.first->GetRobots()) {
+        robot->SetVirtual(false);
+      }
+    }
+
     std::unordered_map<Robot*,Cfg> pregraspCfgs;
     for(auto kv : eeFrames) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
@@ -277,6 +287,16 @@ operator()(Interaction* _interaction, State& _start) {
     objectPose.ConfigureRobot();
   }
 
+  // Set all uninvolved robots to virtual
+  for(auto& robot : problem->GetRobots()) {
+    robot->SetVirtual(true);
+  }
+  for(auto& kv : _start) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
+
   // Compute goal pose for robot based of transform and initial object pose
   auto nextStageEEFrames = ComputeEEFrames(_interaction,objectPoses,graspStage+1);
   std::unordered_map<Robot*,std::unique_ptr<CSpaceConstraint>> constraintMap;
@@ -355,7 +375,11 @@ operator()(Interaction* _interaction, State& _start) {
     }
   }
 
-  ResetStaticRobots();
+
+  // Set all uninvolved robots to virtual
+  for(auto& robot : problem->GetRobots()) {
+    robot->SetVirtual(false);
+  }
 
   // Check if valid solution was found
   if(paths.empty()) {
@@ -604,6 +628,8 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
     if(vc->IsValid(cfg,this->GetNameAndLabel()))
       return cfg;
+    else 
+      std::cout << cfg << " invalid." << std::endl;
   }
 
   //if(num_sols == 0)
