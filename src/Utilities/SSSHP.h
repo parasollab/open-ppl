@@ -236,6 +236,9 @@ SBTDijkstra(
 
   // Initialize visited set
   std::set<size_t> visited;
+  for(auto vid : _mbt.ordering) {
+    visited.insert(vid);
+  }
 
   // Define a relax function.
   auto relax = [&_mbt, &_pq, &_weight, &_heuristic](size_t _target,

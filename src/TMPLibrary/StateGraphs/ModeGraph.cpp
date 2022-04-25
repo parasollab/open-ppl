@@ -645,6 +645,7 @@ ModeGraph::
 GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& _goalVIDs) {
 
   auto plan = this->GetPlan();
+  auto c = plan->GetCoordinator();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::GenerateRoadmaps");
 
@@ -653,6 +654,14 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
   auto prob = this->GetMPProblem();
   auto qSM = lib->GetSampler(m_querySM);
   lib->SetMPSolution(m_solution.get());
+
+  // Set all robots to virtual
+  for(auto pair : c->GetInitialRobotGroups()) {
+    auto group = pair.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  }
 
   for(auto& kv : m_modeHypergraph.GetVertexMap()) {
     // Check if mode is actuated
@@ -750,8 +759,26 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
     for(auto r : mode->robotGroup->GetRobots()) {
       auto t = MPTask(r);
+      for(const auto& c : mode->constraints) {
+        if(c->GetRobot() != r)
+          continue;
+        t.AddPathConstraint(std::move(c->Clone()));
+      }
       task->AddTask(t);
     } 
+
+    // Set active formation constraints
+    auto formations = mode->formations;
+    auto grm = m_solution->GetGroupRoadmap(mode->robotGroup);
+    grm->SetAllFormationsInactive();
+    for(auto f : formations) {
+      grm->SetFormationActive(f);
+    }
+
+    // Set robots not virtual
+    for(auto robot : grm->GetGroup()->GetRobots()) {
+      robot->SetVirtual(false);
+    }
 
     // Call the MPLibrary solve function to expand the roadmap
     lib->SetPreserveHooks(true);
@@ -767,6 +794,14 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
   // TODO::For each pairing of individual robot to object type, build an initial roadmap
 
   // TODO::Copy roadmap to all instances of individual robot-unique object type pairs
+
+  // Set all robots back to non-virtual
+  for(auto pair : c->GetInitialRobotGroups()) {
+    auto group = pair.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
 }
 
 void
@@ -925,7 +960,7 @@ ConnectTransitions() {
         transition.taskFormations[groupTask.get()] = formations;
 
         // Add arc to hypergraph
-        m_groundedHypergraph.AddHyperarc({vid2},{vid1},transition);
+        m_groundedHypergraph.AddHyperarc({vid2},{vid1},transition,true);
       }
     }
   }
@@ -1638,8 +1673,11 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     m_entryVertices.insert(v);
   }
 
-  // Save transition in hypergraph
-  m_groundedHypergraph.AddHyperarc(head,tail,transition);
+  // Make sure transition does not already exist in graph
+  if(m_groundedHypergraph.GetHID(head,tail) == MAX_INT) {
+    // Save transition in hypergraph
+    m_groundedHypergraph.AddHyperarc(head,tail,transition);
+  }
 
   if(_interaction->IsReversible()) {
 
@@ -1686,7 +1724,10 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     reverse.cost = transition.cost;
 
     // Save reverse transition in hypergraph
-    m_groundedHypergraph.AddHyperarc(tail,head,reverse);
+    if(m_groundedHypergraph.GetHID(tail,head) == MAX_INT) {
+      // Save transition in hypergraph
+      m_groundedHypergraph.AddHyperarc(tail,head,reverse);
+    }
   }
 
 

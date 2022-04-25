@@ -43,6 +43,7 @@ operator()(Interaction* _interaction, State& _start) {
 
   auto problem = this->GetPlan()->GetCoordinator()->GetRobot()->GetMPProblem();
   auto lib = this->GetMPLibrary();
+  auto plan = this->GetPlan();
 
   _interaction->Initialize();
 
@@ -378,7 +379,8 @@ operator()(Interaction* _interaction, State& _start) {
 
   // Set all uninvolved robots to virtual
   for(auto& robot : problem->GetRobots()) {
-    robot->SetVirtual(false);
+    if(robot.get() != plan->GetCoordinator()->GetRobot())
+      robot->SetVirtual(false);
   }
 
   // Check if valid solution was found

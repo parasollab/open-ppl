@@ -60,9 +60,11 @@ class Hypergraph {
     ///@{
 
     size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
-                       HyperarcType _hyperarc);
+                       HyperarcType _hyperarc, bool _overWrite = false);
 
     Hyperarc& GetHyperarc(size_t _hid);
+
+    size_t GetHID(std::set<size_t> _head, std::set<size_t> _tail);
 
     HyperarcType& GetHyperarcType(size_t _hid);
 
@@ -214,7 +216,7 @@ template <typename VertexType, typename HyperarcType>
 size_t 
 Hypergraph<VertexType,HyperarcType>::
 AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
-            HyperarcType _hyperarc) {
+            HyperarcType _hyperarc, bool _overWrite) {
 
   // Check if hyperarc already exists
   if(!_head.empty()) {
@@ -226,7 +228,10 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
         // Hyperarc already exists
         // Make sure there isn't a new property
         if(hyperarc.property != _hyperarc) {
-          throw RunTimeException(WHERE) << "Tried to add a different value for the hyperarc: "
+          if(_overWrite)
+            m_hyperarcMap[hid].property = _hyperarc;
+          else 
+            throw RunTimeException(WHERE) << "Tried to add a different value for the hyperarc: "
                                         << hyperarc.hid;
         }
         return hyperarc.hid;
@@ -274,6 +279,25 @@ GetHyperarc(size_t _hid) {
                                   << std::endl;
 
   return iter->second;
+}
+
+template <typename VertexType, typename HyperarcType>
+size_t
+Hypergraph<VertexType,HyperarcType>::
+GetHID(std::set<size_t> _head, std::set<size_t> _tail) {
+  
+  if(!_head.empty()) {
+    auto vid = *(_head.begin());
+    auto incomingHIDs = GetIncomingHyperarcs(vid);
+    for(auto hid : incomingHIDs) {
+      auto hyperarc = GetHyperarc(hid);
+      if(hyperarc.head == _head and hyperarc.tail == _tail) {
+        return hyperarc.hid;
+      }
+    }
+  }
+
+  return MAX_INT;
 }
 
 template <typename VertexType, typename HyperarcType>

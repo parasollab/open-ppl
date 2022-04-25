@@ -932,8 +932,8 @@ HyperpathHeuristic(const size_t& _target) {
   auto parent = *(incomingArc.tail.begin());
   auto hyperarc = gh.GetHyperarcType(incomingArc.property);
   // TODO::Adjust for proper trajectory cost
-  //double heuristic = m_searchTimeHeuristicMap[parent] - hyperarc.cost;
-  double heuristic = m_searchTimeHeuristicMap[parent] - 1;
+  double heuristic = m_searchTimeHeuristicMap[parent] - hyperarc.cost;
+  //double heuristic = m_searchTimeHeuristicMap[parent] - 1;
 
   // Check if this vertex is entering or exiting a submode 
   auto groundedParentVID = m_actionExtendedHypergraph.GetVertexType(parent).groundedVID;
