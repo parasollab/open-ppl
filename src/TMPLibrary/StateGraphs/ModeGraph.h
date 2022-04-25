@@ -161,6 +161,8 @@ class ModeGraph : public StateGraph {
 
     bool CanReach(const State& _state);
 
+    bool ContainsSolution(std::set<VID>& _startVIDs);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -190,6 +192,8 @@ class ModeGraph : public StateGraph {
     std::string m_querySM;
 
     std::string m_queryStrategy;
+
+    std::string m_expansionStrategy;
 
     size_t m_numUnactuatedSamples;
 

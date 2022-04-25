@@ -490,7 +490,22 @@ double
 GroupCfg::
 PositionMagnitude() const {
   double result = 0;
+
+  std::set<Robot*> seen;
+  for(auto f : m_formations) {
+    for(auto r : f->GetRobots()) {
+      seen.insert(r);
+    }
+
+    auto r = f->GetLeader();
+    const double m = GetRobotCfg(r).PositionMagnitude();
+    result += m * m;
+  }
+
   for(size_t i = 0; i < GetNumRobots(); ++i) {
+    if(seen.count(GetRobot(i)))
+      continue;
+
     const double m = GetRobotCfg(i).PositionMagnitude();
     result += m * m;
   }
@@ -502,7 +517,22 @@ double
 GroupCfg::
 OrientationMagnitude() const {
   double result = 0;
+
+  std::set<Robot*> seen;
+  for(auto f : m_formations) {
+    for(auto r : f->GetRobots()) {
+      seen.insert(r);
+    }
+
+    auto r = f->GetLeader();
+    const double m = GetRobotCfg(r).OrientationMagnitude();
+    result += m * m;
+  }
+
   for(size_t i = 0; i < GetNumRobots(); ++i) {
+    if(seen.count(GetRobot(i)))
+      continue;
+
     const double m = GetRobotCfg(i).OrientationMagnitude();
     result += m * m;
   }

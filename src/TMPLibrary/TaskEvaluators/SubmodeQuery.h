@@ -64,7 +64,7 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     ActionHistory CombineHistories(size_t _vid, const std::set<size_t>& _pgh,
                                    const ActionHistory& _history);
 
-    void ConvertToPlan(const MBTOutput& _output, Plan* _plan);
+    void ConvertToPlan(Plan* _plan);
 
     std::vector<HPElem> ConstructPath(size_t _sink, 
                 std::set<HPElem>& _parents, const MBTOutput& _mbt);
@@ -83,7 +83,7 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     ///@name Hyperpath Functions
     ///@{
 
-    MBTOutput HyperpathQuery();
+    void HyperpathQuery();
 
     SSSHPTermination HyperpathTermination(const size_t& _vid, const MBTOutput& _mbt);
 
@@ -122,6 +122,11 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     bool m_reverseActions{false};
 
     bool m_writeHypergraph{false};
+
+    // Saving frontier of hypergraph search
+    MBTOutput m_mbt;
+    
+    std::priority_queue<SSSHPElement,std::vector<SSSHPElement>,std::greater<SSSHPElement>> m_pq;
 
     ///@}
 };

@@ -128,10 +128,55 @@ DefaultSSSHPHeuristic() {
   };
 }
 
-/// Compute the SSSP through a graph from a start node with Dijkstra's algorithm.
+/// Queue Element
+/// This represents an instance of discovering a vertex in the
+/// Dijkstra search. A vertex may be discovered multiple times
+/// from different parent hyperarcs with different weights.
+struct SSSHPElement {
+
+  size_t parent; ///< The parent hyperarc id.
+  size_t vid;    ///< The vertex id.
+  double weight; ///< The weight for this visit of the node.
+  double heuristic; ///< The heuristic value of this node.
+
+  /// Construct an SSSHPElement for the seaerch queue.
+  /// @param _parent The parent hyperarc id.
+  /// @param _vid    The vertex id.
+  /// @param _wieght The weight of this visit.
+  SSSHPElement(const size_t _parent, const size_t _vid, const double _weight,
+      const double _heuristic)
+    : parent(_parent), vid(_vid), weight(_weight), heuristic(_heuristic) { }
+
+  /// Total ordering by descreasing weight.
+  /// Use weight as tie breaker.
+  bool operator>(const SSSHPElement _e) const noexcept {
+    if(weight + heuristic == _e.weight + _e.heuristic)
+      return weight > _e.weight;
+    return weight + heuristic > _e.weight + _e.heuristic;
+  }
+};
+
+/// Compute the SSSHP through a hypergraph from a start node with SBTDijkstra's algorithm.
 template <typename VertexType, typename HyperarcType>
 MBTOutput
 SBTDijkstra(
+  Hypergraph<VertexType,HyperarcType>* _h,
+  size_t _source,
+  SSSHPPathWeightFunction<VertexType,HyperarcType> _weight,
+  SSSHPTerminationCriterion _termination,
+  SSSHPForwardStar<VertexType,HyperarcType> _forwardStar,
+  SSSHPHeuristic<VertexType,HyperarcType> _heuristic,
+  const double _sourceWeight = 0) {
+
+  auto output = SBTDijkstraWithFrontier(_h,_source,_weight,
+                                        _termination,_forwardStar,
+                                        _heuristic,_sourceWeight);
+  return output.first;
+}
+
+template <typename VertexType, typename HyperarcType>
+std::pair<MBTOutput,std::priority_queue<SSSHPElement,std::vector<SSSHPElement>,std::greater<SSSHPElement>>>
+SBTDijkstraWithFrontier(
   Hypergraph<VertexType,HyperarcType>* _h,
   size_t _source,
   SSSHPPathWeightFunction<VertexType,HyperarcType> _weight,
@@ -145,96 +190,87 @@ SBTDijkstra(
   // Initialize the output object.
   MBTOutput mbt;
 
-  // Initialize tail node counts.
-  //std::unordered_map<size_t,size_t> tailNodeCounter; //k_j in paper
-  //for(const auto& kv : _h->GetHyperarcMap()) {
-  //  tailNodeCounter[kv.first] = 0;
-  //}
- 
   // Initialize vertex weights.
   for(const auto& kv : _h->GetVertexMap()) {
-    mbt.weightMap[kv.first] = MAX_INT;
+    mbt.weightMap[kv.first] = MAX_DBL;
   }
 
   mbt.weightMap[_source] = _sourceWeight;
-  
-  // Initialize queue
-  
-  /// Queue Element
-  /// This represents an instance of discovering a vertex in the
-  /// Dijkstra search. A vertex may be discovered multiple times
-  /// from different parent hyperarcs with different weights.
-  struct element {
-
-    size_t parent; ///< The parent hyperarc id.
-    size_t vid;    ///< The vertex id.
-    double weight; ///< The weight for this visit of the node.
-    double heuristic; ///< The heuristic value of this node.
-
-    /// Construct an element for the seaerch queue.
-    /// @param _parent The parent hyperarc id.
-    /// @param _vid    The vertex id.
-    /// @param _wieght The weight of this visit.
-    element(const size_t _parent, const size_t _vid, const double _weight,
-            const double _heuristic)
-      : parent(_parent), vid(_vid), weight(_weight), heuristic(_heuristic) { }
-
-    /// Total ordering by descreasing weight.
-    /// Use weight as tie breaker.
-    bool operator>(const element _e) const noexcept {
-      if(weight + heuristic == _e.weight + _e.heuristic)
-        return weight > _e.weight;
-      return weight + heuristic > _e.weight + _e.heuristic;
-    }
-
-  };
 
   // Define a min priority queue for Dijkstras.
-  std::priority_queue<element,
-                      std::vector<element>,
-                      std::greater<element>> pq;
-
-  // Initialize visited set
-  std::set<size_t> visited;
-
-  // Define a relax function.
-  auto relax = [&mbt, &pq, &_weight, &_heuristic](size_t _target,
-          const typename Hypergraph<VertexType,HyperarcType>::Hyperarc& _hyperarc) {
-
-    const double newWeight = _weight(_hyperarc,mbt.weightMap,_target);
-
-    // If the vertex has been seen before and the new distance is not better, quit.
-    auto iter = mbt.weightMap.find(_target);
-    if(iter != mbt.weightMap.end() and newWeight >= mbt.weightMap[_target])
-      return;
-
-    // Otherwise, update the target distance and add the target to the queue.
-    mbt.weightMap[_target] = newWeight;
-    auto heuristic = _heuristic(_target);
-    pq.emplace(_hyperarc.hid, _target, newWeight, heuristic);
-  };
+  std::priority_queue<SSSHPElement,
+                      std::vector<SSSHPElement>,
+                      std::greater<SSSHPElement>> pq;
 
   // Intialize starting node in queue.
   auto initHeuristic = _heuristic(_source);
   pq.emplace(MAX_INT,_source,_sourceWeight,initHeuristic);
 
-  // SBT-Dijkstras
-  while(!pq.empty()) {
-    // Get the next element.
-    element current = pq.top();
-    pq.pop();
+  SBTDijkstra(_h,mbt,pq,_weight,_termination,_forwardStar,_heuristic);
 
-    // If this node has already been visited, the element is stale. Discard.
+  return std::make_pair(mbt,pq);
+}
+
+
+
+template <typename VertexType, typename HyperarcType>
+void
+SBTDijkstra(
+  Hypergraph<VertexType,HyperarcType>* _h,
+  MBTOutput& _mbt,
+  std::priority_queue<SSSHPElement,std::vector<SSSHPElement>,std::greater<SSSHPElement>>& _pq,
+  SSSHPPathWeightFunction<VertexType,HyperarcType> _weight,
+  SSSHPTerminationCriterion _termination,
+  SSSHPForwardStar<VertexType,HyperarcType> _forwardStar,
+  SSSHPHeuristic<VertexType,HyperarcType> _heuristic) {
+
+  // Initialize tail node counts.
+  //std::unordered_map<size_t,size_t> tailNodeCounter; //k_j in paper
+  //for(const auto& kv : _h->GetHyperarcMap()) {
+  //  tailNodeCounter[kv.first] = 0;
+  //}
+
+  // Initialize queue
+  
+
+
+  // Initialize visited set
+  std::set<size_t> visited;
+
+  // Define a relax function.
+  auto relax = [&_mbt, &_pq, &_weight, &_heuristic](size_t _target,
+          const typename Hypergraph<VertexType,HyperarcType>::Hyperarc& _hyperarc) {
+
+    const double newWeight = _weight(_hyperarc,_mbt.weightMap,_target);
+
+    // If the vertex has been seen before and the new distance is not better, quit.
+    auto iter = _mbt.weightMap.find(_target);
+    if(iter != _mbt.weightMap.end() and newWeight >= _mbt.weightMap[_target])
+      return;
+
+    // Otherwise, update the target distance and add the target to the queue.
+    _mbt.weightMap[_target] = newWeight;
+    auto heuristic = _heuristic(_target);
+    _pq.emplace(_hyperarc.hid, _target, newWeight, heuristic);
+  };
+
+  // SBT-Dijkstras
+  while(!_pq.empty()) {
+    // Get the next SSSHPElement.
+    SSSHPElement current = _pq.top();
+    _pq.pop();
+
+    // If this node has already been visited, the SSSHPElement is stale. Discard.
     if(visited.count(current.vid))
       continue;
     visited.insert(current.vid);
 
     // Save the vertex's parent hyperarc.
-    mbt.vertexParentMap[current.vid] = current.parent;
-    mbt.ordering.push_back(current.vid);
+    _mbt.vertexParentMap[current.vid] = current.parent;
+    _mbt.ordering.push_back(current.vid);
 
     // Check for early termination
-    auto stop = _termination(current.vid,mbt);
+    auto stop = _termination(current.vid,_mbt);
 
     if(stop == SSSHPTermination::Continue)
       // Continue as usual.
@@ -264,7 +300,7 @@ SBTDijkstra(
         continue;
 
       // Set hyperarc parent vertex.
-      mbt.hyperarcParentMap[hid] = current.vid;
+      _mbt.hyperarcParentMap[hid] = current.vid;
 
       // Relax each vertex at the head of the hyperarc.
       for(auto vid : hyperarc.head) {
@@ -272,8 +308,6 @@ SBTDijkstra(
       }
     }
   }
-  
-  return mbt;
 }
 
 #endif

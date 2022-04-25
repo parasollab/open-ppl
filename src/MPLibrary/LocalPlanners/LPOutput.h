@@ -37,6 +37,8 @@ struct LPOutput {
   ///@name Internal State
   ///@{
 
+  //TODO::Redundancy in m_path and m_intermediates
+
   /// The resolution-level path computed by a local planner. Does not include
   /// the start or goal configurations.
   std::vector<CfgType> m_path;

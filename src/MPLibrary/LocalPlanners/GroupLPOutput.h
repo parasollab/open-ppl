@@ -45,6 +45,7 @@ struct GroupLPOutput {
 
   GroupRoadmapType* m_groupRoadmap{nullptr}; // Group this local plan is for.
 
+  //TODO::Redundancy in m_path and m_intermediates
   GroupCfgPath m_path;           // Path found by local planner.
   GroupCfgPath m_intermediates;
 
@@ -136,13 +137,25 @@ AddIntermediatesToWeights(const bool _saveIntermediates) {
 
   // Make a copy of the intermediates in reverse order for the backward edge.
   GroupCfgPath tmp;
-  tmp.reserve(m_intermediates.size());
-  std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
-            std::back_inserter(tmp));
 
-  // Set both edges.
-  m_edge.first.SetIntermediates(m_intermediates);
-  m_edge.second.SetIntermediates(tmp);
+  if(m_intermediates.size() > 0) {
+    tmp.reserve(m_intermediates.size());
+    std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
+        std::back_inserter(tmp));
+
+    // Set both edges.
+    m_edge.first.SetIntermediates(m_intermediates);
+    m_edge.second.SetIntermediates(tmp);
+  }
+  else {
+    tmp.reserve(m_path.size());
+    std::copy(m_path.rbegin(), m_path.rend(),
+        std::back_inserter(tmp));
+
+    // Set both edges.
+    m_edge.first.SetIntermediates(m_path);
+    m_edge.second.SetIntermediates(tmp);
+  }
 }
 
 template <typename MPTraits>

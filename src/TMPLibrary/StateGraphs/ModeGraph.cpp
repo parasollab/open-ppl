@@ -36,6 +36,8 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
 
   m_queryStrategy = _node.Read("queryStrategy",true,"",
                       "MPStrategy label to query roadaps.");
+  m_expansionStrategy = _node.Read("expansionStrategy",true,"",
+                      "MPStrategy label to query roadaps.");
   m_numUnactuatedSamples = _node.Read("numUnactuatedSamples",false,0,0,1000,
                       "The number of samples to generate for each unactuated mode.");
   m_numInteractionSamples = _node.Read("numInteractionSamples",false,1,1,1000,
@@ -135,18 +137,22 @@ GenerateRepresentation(const State& _start) {
     m_modeHypergraph.Print();
   }
 
-  SampleNonActuatedCfgs(_start,startVIDs,goalVIDs);
-  SampleTransitions();
+  do {
 
-  GenerateRoadmaps(_start,startVIDs,goalVIDs);
-  ConnectTransitions();
+    SampleNonActuatedCfgs(_start,startVIDs,goalVIDs);
+    SampleTransitions();
 
-  Transition fromOrigin;
-  m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
+    GenerateRoadmaps(_start,startVIDs,goalVIDs);
+    ConnectTransitions();
 
-  //Transition toGoal;
-  //m_groundedHypergraph.AddHyperarc({goalVID},goalVIDs,toGoal);
-  ConfigureGoalSets(goalVID, goalVIDs);
+    Transition fromOrigin;
+    m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
+
+    //Transition toGoal;
+    //m_groundedHypergraph.AddHyperarc({goalVID},goalVIDs,toGoal);
+    ConfigureGoalSets(goalVID, goalVIDs);
+
+  } while(!ContainsSolution(startVIDs));
 
   if(m_debug) {
     std::cout << "MODE HYPERGRAPH" << std::endl;
@@ -644,6 +650,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
   auto decomp = plan->GetDecomposition();
   auto lib = this->GetMPLibrary();
+  auto prob = this->GetMPProblem();
   auto qSM = lib->GetSampler(m_querySM);
   lib->SetMPSolution(m_solution.get());
 
@@ -720,11 +727,23 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
   /*
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
+  */
  
-  // For each mode in the mode hypergraph, run the expansion strategy
+  // For each actuated mode in the mode hypergraph, run the expansion strategy
   for(auto kv : m_modeHypergraph.GetVertexMap()) {
     auto vertex = kv.second;
     auto mode = vertex.property;
+
+    bool actuated = false;
+    for(auto robot : mode->robotGroup->GetRobots()) {
+      if(!robot->GetMultiBody()->IsPassive()) {
+        actuated = true;
+        break;
+      }
+    }
+
+    if(!actuated)
+      continue;
 
     // Initialize dummy task
     auto task = new GroupTask(mode->robotGroup);
@@ -742,7 +761,6 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
     delete task;
   }
-  */
 
   // TODO::Collect set of modes for each robot-unique object type pairing
 
@@ -881,12 +899,23 @@ ConnectTransitions() {
         // Extract cost of path from solution
         auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
 
-        if(m_debug) {
+        if(m_debug and !path->Empty()) {
           std::cout << "Path for transition: " << vid1 << " -> " << vid2 << std::endl;
           for(const auto& cfg : path->Cfgs()) {
             std::cout << "\t" << cfg.PrettyPrint() << std::endl;
           }
           std::cout << std::endl;
+        }
+
+        if(path->Empty()) {
+          if(m_debug) {
+            std::cout << "Failed to find a path for: " 
+                      << vid1 
+                      << " -> " 
+                      << vid2 
+                      << std::endl;
+          }
+          continue;
         }
 
         Transition transition;
@@ -1909,6 +1938,96 @@ CanReach(const State& _state) {
     }
   }
   
+  return true;
+}
+
+bool
+ModeGraph::
+ContainsSolution(std::set<VID>& _startVIDs) {
+
+  // Run a dijkstra search backwards through hypergraph as if it was a graph
+
+  // Get graph representation grounded hypergraph
+  auto g = m_groundedHypergraph.GetReverseGraph();
+
+  // Setup dijkstra functions
+  SSSPTerminationCriterion<ModeGraph::GroundedHypergraph::GraphType> termination(
+    [this](typename ModeGraph::GroundedHypergraph::GraphType::vertex_iterator& _vi,
+           const SSSPOutput<typename ModeGraph::GroundedHypergraph::GraphType>& _sssp) {
+    const auto& vertex = _vi->property();
+    auto grm = vertex.first;
+    if(!grm)
+      return SSSPTermination::Continue;
+
+    auto group = grm->GetGroup();
+
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive())
+        return SSSPTermination::Continue;
+    }
+
+    return SSSPTermination::EndBranch;
+  });
+
+  SSSPPathWeightFunction<ModeGraph::GroundedHypergraph::GraphType> weight(
+    [this,g](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
+           const double _sourceDistance,
+           const double _targetDistance) {
+
+    auto target = _ei->target();
+    auto grm = g->GetVertex(target).first;
+
+    bool hasObject = false;
+
+    if(grm) {
+      auto group = grm->GetGroup();
+      for(auto robot : group->GetRobots()) {
+        if(robot->GetMultiBody()->IsPassive()) {
+          hasObject = true;
+          break;
+        }
+      }
+    }
+
+    if(!hasObject and grm)
+      return std::numeric_limits<double>::infinity();
+
+    auto groundedHA = _ei->property();
+    double edgeWeight = groundedHA.cost;
+
+    //TODO::Decide if this is what we want
+    //edgeWeight = std::min(1.,edgeWeight);
+
+    double newDistance = _sourceDistance + edgeWeight;
+    return newDistance;
+  });
+
+  // Run dijkstra backwards from sink
+  std::vector<size_t> starts = {1};
+  auto output = DijkstraSSSP(g,starts,weight,termination);
+
+  // Ensure each object start vertex can reach the sink
+  for(auto v : _startVIDs) {
+
+    auto vertex = m_groundedHypergraph.GetVertexType(v);
+    auto group = vertex.first->GetGroup();
+    bool passive = false;
+
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive()) {
+        passive = true;
+        break;
+      }
+    }
+
+    if(!passive)
+      continue;
+
+    auto iter = output.distance.find(v);
+    if(iter == output.distance.end())
+      return false;
+  }
+
   return true;
 }
 

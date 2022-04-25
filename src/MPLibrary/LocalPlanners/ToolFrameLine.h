@@ -350,7 +350,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
     }
 
     // Save the resolution-level path if requested.
-    if(_savePath)
+    if(_savePath or this->m_saveIntermediates)
       _lpOutput->m_path.push_back(currentStep);
   }
 

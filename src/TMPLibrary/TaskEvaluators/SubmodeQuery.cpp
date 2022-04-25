@@ -59,7 +59,7 @@ Run(Plan* _plan) {
   auto sourceVID = m_actionExtendedHypergraph.AddVertex(source);
   m_vertexMap[source.groundedVID].insert(sourceVID);
 
-  auto output = HyperpathQuery();
+  HyperpathQuery();
 
   if(m_debug) {
     std::cout << "ACTION EXTENDED HYPERGRAPH" << std::endl;
@@ -69,7 +69,7 @@ Run(Plan* _plan) {
   if(m_goalVID == MAX_INT)
     return false;
 
-  ConvertToPlan(output,_plan);
+  ConvertToPlan(_plan);
 
   if(m_writeHypergraph) {
     m_actionExtendedHypergraph.Print(this->GetMPProblem()->GetBaseFilename() +
@@ -134,7 +134,7 @@ CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory&
 
 void
 SubmodeQuery::
-ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
+ConvertToPlan(Plan* _plan) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConvertToPlan");
@@ -147,7 +147,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
   HPElem source = std::make_pair(true,0);
   std::set<HPElem> parents = {source};
 
-  auto path = ConstructPath(last,parents,_output);
+  auto path = ConstructPath(last,parents,m_mbt);
   path = AddDanglingNodes(path,parents);
   path = OrderPath(path);
 
@@ -340,7 +340,7 @@ ConvertToPlan(const MBTOutput& _output, Plan* _plan) {
   }
 
   plan->SetDecomposition(decomp);
-  plan->SetCost(_output.weightMap.at(m_goalVID));
+  plan->SetCost(m_mbt.weightMap.at(m_goalVID));
 }
 
 std::vector<SubmodeQuery::HPElem>
@@ -504,7 +504,7 @@ SubmodeQuery::
 ComputeHeuristicValues() {
   // Run a dijkstra search backwards through hypergraph as if it was a graph
 
-  // Get graph represnetation grounded hypergraph
+  // Get graph representation grounded hypergraph
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
   auto& gh = mg->GetGroundedHypergraph();
   auto g = gh.GetReverseGraph();
@@ -585,7 +585,7 @@ ComputeHeuristicValues() {
 
 /*---------------------------- Hyperpath Functions -------------------------*/
 
-MBTOutput
+void
 SubmodeQuery::
 HyperpathQuery() {
 
@@ -633,13 +633,23 @@ HyperpathQuery() {
     }
   );
 
-  m_goalVID = MAX_INT;
 
-  auto output = SBTDijkstra(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
+  if(m_pq.empty()) {
+    m_goalVID = MAX_INT;
+    auto output = SBTDijkstraWithFrontier(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
+    m_mbt = output.first;
+    m_pq = output.second;
+  }
+  else {
+
+    m_mbt.weightMap[m_goalVID] = MAX_DBL;
+    m_mbt.vertexParentMap.erase(m_goalVID);
+
+    m_goalVID = MAX_INT;
+    SBTDijkstra(&m_actionExtendedHypergraph,m_mbt,m_pq,weight,termination,forwardStar,heuristic);
+  }
 
   m_previousSolutions.insert(m_goalVID);
-
-  return output;
 }
 
 SSSHPTermination
