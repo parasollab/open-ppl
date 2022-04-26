@@ -1,8 +1,6 @@
 #ifndef PMPL_STRAIGHT_LINE_H_
 #define PMPL_STRAIGHT_LINE_H_
 
-#include "ConfigurationSpace/GroupRoadmap.h"
-
 #include "LocalPlannerMethod.h"
 #include "GroupLPOutput.h"
 #include "LPOutput.h"

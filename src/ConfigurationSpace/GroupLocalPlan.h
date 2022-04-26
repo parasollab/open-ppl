@@ -3,8 +3,8 @@
 
 #include "ConfigurationSpace/CompositeEdge.h"
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
-#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Weight.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
@@ -44,7 +44,7 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     typedef double                                     EdgeWeight;
 
     typedef GroupCfg<GraphType>                        GroupCfgType;
-    typedef GroupRoadmap<GroupCfgType, GroupLocalPlan> GroupRoadmapType;
+    typedef CompositeGraph<GroupCfgType, GroupLocalPlan> GroupRoadmapType;
     typedef std::vector<GroupCfgType>                  GroupCfgPath;
     typedef typename BaseType::CompositePath           CompositePath;
     typedef stapl::edge_descriptor_impl<size_t>        ED;

@@ -7,10 +7,10 @@
 #include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
-#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
@@ -97,7 +97,7 @@ struct MPTraits {
 
   typedef GroupCfg<RoadmapType>                          GroupCfgType;
   typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
+  typedef CompositeGraph<GroupCfgType, GroupWeightType>  GroupRoadmapType;
   typedef GroupPath<MPTraits>                            GroupPathType;
 
   //types of distance metrics available in our world

@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/CompositeState.h"
-#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "MPProblem/Environment/Environment.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
@@ -52,7 +52,7 @@ class GroupCfg final : public CompositeState<GraphType> {
     ///@{
 
     typedef CompositeState<GraphType>                         BaseType;
-    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<GraphType>> GroupRoadmapType;
+    typedef CompositeGraph<GroupCfg, GroupLocalPlan<GraphType>> GroupRoadmapType;
 
     typedef typename BaseType::VID                            VID;
     typedef typename BaseType::GroupGraphType                 GroupGraphType;
