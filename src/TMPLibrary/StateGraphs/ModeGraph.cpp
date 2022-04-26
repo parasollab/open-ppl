@@ -1924,6 +1924,19 @@ AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*
     auto gvid = m_groundedHypergraph.AddVertex(kv.second);
     m_modeGroundedVertices[mvid].insert(gvid);
 
+    // Check if grounded vertex violates mode
+    auto gcfg = kv.second.first->GetVertex(kv.second.second);
+    for(auto& c : mode->constraints) {
+      auto robot = c->GetRobot();
+      auto cfg = gcfg.GetRobotCfg(robot);
+      if(!c->Satisfied(cfg)) {
+        throw RunTimeException(WHERE) << robot->GetLabel() 
+                                      << " violated mode constraints at : " 
+                                      << cfg
+                                      << std::endl;
+      }
+    }
+
     vids.insert(gvid);
   }
 
