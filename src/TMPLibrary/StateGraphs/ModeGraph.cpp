@@ -786,6 +786,11 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
             "ExpandModeRoadmap");
     lib->SetPreserveHooks(false);
 
+    // Set robots not virtual
+    for(auto robot : grm->GetGroup()->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+
     delete task;
   }
 
