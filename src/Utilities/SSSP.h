@@ -230,7 +230,7 @@ AStarSSSP(
                  newG       = _weight(_ei, sourceCost, targetCost),
                  newH       = _heuristic(_g, source, target);
 
-    if(newG + newH >= targetCost)
+    if(newG >= targetCost)
       return;
 
     cost[target] = newG;

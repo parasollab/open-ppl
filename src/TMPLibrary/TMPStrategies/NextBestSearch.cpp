@@ -738,10 +738,24 @@ ValidationFunction(Node& _node) {
               }
 
               auto endT = t;
-              if(robot1->GetMultiBody()->IsPassive()) {
+              bool group1Passive = true;
+              bool group2Passive = true;
+              for(auto r : group1->GetRobots()) {
+                if(!r->GetMultiBody()->IsPassive()) {
+                  group1Passive = false;
+                  break;
+                }
+              }
+              for(auto r : group2->GetRobots()) {
+                if(!r->GetMultiBody()->IsPassive()) {
+                  group2Passive = false;
+                  break;
+                }
+              }
+              if(group1Passive) {
                 endT = endTimes[t1];
               }
-              else if(robot2->GetMultiBody()->IsPassive()) {
+              else if(group2Passive) {
                 endT = endTimes[t2];
               }
 
@@ -750,18 +764,67 @@ ValidationFunction(Node& _node) {
               // Temp hack for demo
               //endT = std::max(endT,t+100);
 
+              // Check if conflict has been found before
+              size_t c1Index = MAX_INT;
+              size_t c2Index = MAX_INT;
+              for(size_t i = 0; i < m_conflicts.size(); i++) {
+                if(m_conflicts[i] == cfg2) {
+                  c1Index = i;
+                  break;
+                }
+                if(m_conflicts[i] == cfg1) {
+                  c2Index = i;
+                  break;
+                }
+              }
+
               // Create constraints
-              m_conflicts.push_back(cfg2);
-              m_conflicts.push_back(cfg1);
+              if(c1Index == MAX_INT and c2Index == MAX_INT) {
+
+                // Configure constraint 1
+                c1Index = m_conflicts.size();
+                m_conflicts.push_back(cfg2);
+
+                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+
+                taskVertexIntervals[t1] = {};
+                taskEdgeIntervals[t1] = {};
+
+                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+
+                // Configure constraint 2
+                c2Index = m_conflicts.size();
+                m_conflicts.push_back(cfg1);
+
+                taskVertexIntervals = std::map<SemanticTask*,UnsafeVertexIntervals>();
+                taskEdgeIntervals = std::map<SemanticTask*,UnsafeEdgeIntervals>();
+
+                taskVertexIntervals[t2] = {};
+                taskEdgeIntervals[t2] = {};
+
+                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+              }
+
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
-              Constraint constraint1 = std::make_pair(std::make_pair(t,endT),m_conflicts.size()-2);
-              Constraint constraint2 = std::make_pair(std::make_pair(t,endT),m_conflicts.size()-1);
-              constraints.emplace_back(t1,constraint1);
-              constraints.emplace_back(t2,constraint2);
+              Constraint constraint1 = std::make_pair(std::make_pair(t,endT),c1Index);
+              Constraint constraint2 = std::make_pair(std::make_pair(t,endT),c2Index);
+ 
+              if(c1Index != MAX_INT)
+                constraints.emplace_back(t1,constraint1);
+              if(c2Index != MAX_INT)
+                constraints.emplace_back(t2,constraint2);
 
 
               auto edge1 = _node.solutionMap[t1]->GetEdgeAtTimestep(t-startTimes[t1]);
               auto edge2 = _node.solutionMap[t2]->GetEdgeAtTimestep(t-startTimes[t2]);
+
+              if(m_debug) {
+                std::cout << "Edge 1: " << edge1 << std::endl;
+                std::cout << "Edge 2: " << edge2 << std::endl;
+              }
 
               double duration1 = 0;
               double duration2 = 0;
@@ -782,59 +845,83 @@ ValidationFunction(Node& _node) {
               Range<double> interval1(std::max(0.,constraintStart-duration1),constraintEnd);
               Range<double> interval2(std::max(0.,constraintStart-duration2),constraintEnd);
 
-              if(edge1.first == edge1.second) {
-                UnsafeVertexIntervals intervals;
-                intervals[edge1.first] = {interval1};
+              if(c1Index != MAX_INT) {
+                if(edge1.first == edge1.second) {
+                  /*
+                  UnsafeVertexIntervals intervals;
+                  intervals[edge1.first] = {interval1};
+  
+                  std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                  std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+  
+                  taskVertexIntervals[t1] = intervals;
+                  taskEdgeIntervals[t1] = {};
+  
+                  m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                  m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+                  */
+  
+                  auto& intervals = m_unsafeVertexIntervalMap[c1Index][t1][edge1.first];
+                  intervals.push_back(interval1);
 
-                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
-                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-
-                taskVertexIntervals[t1] = intervals;
-                taskEdgeIntervals[t1] = {};
-
-                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
-                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
-
+                }
+                else {
+                  /*
+                  UnsafeEdgeIntervals intervals;
+                  intervals[edge1] = {interval1};
+  
+                  std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                  std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+  
+                  taskVertexIntervals[t1] = {};
+                  taskEdgeIntervals[t1] = intervals;
+  
+                  m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                  m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+                  */
+    
+                  auto& intervals = m_unsafeEdgeIntervalMap[c1Index][t1][edge1];
+                  intervals.push_back(interval1);
+                }
               }
-              else {
-                UnsafeEdgeIntervals intervals;
-                intervals[edge1] = {interval1};
 
-                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
-                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-
-                taskVertexIntervals[t1] = {};
-                taskEdgeIntervals[t1] = intervals;
-
-                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
-                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
-              }
-
-              if(edge2.first == edge2.second) {
-                UnsafeVertexIntervals intervals;
-                intervals[edge2.first] = {interval2};
-
-                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
-                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-
-                taskVertexIntervals[t2] = intervals;
-                taskEdgeIntervals[t2] = {};
-
-                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
-                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
-              }
-              else {
-                UnsafeEdgeIntervals intervals;
-                intervals[edge2] = {interval2};
-
-                std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
-                std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-
-                taskVertexIntervals[t2] = {};
-                taskEdgeIntervals[t2] = intervals;
-
-                m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
-                m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+              if(c2Index != MAX_INT) {
+                if(edge2.first == edge2.second) {
+                  /*
+                  UnsafeVertexIntervals intervals;
+                  intervals[edge2.first] = {interval2};
+  
+                  std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                  std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+  
+                  taskVertexIntervals[t2] = intervals;
+                  taskEdgeIntervals[t2] = {};
+  
+                  m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                  m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+                  */
+  
+                  auto& intervals = m_unsafeVertexIntervalMap[c2Index][t2][edge2.first];
+                  intervals.push_back(interval2);
+                }
+                else {
+                  /*
+                  UnsafeEdgeIntervals intervals;
+                  intervals[edge2] = {interval2};
+  
+                  std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
+                  std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
+  
+                  taskVertexIntervals[t2] = {};
+                  taskEdgeIntervals[t2] = intervals;
+  
+                  m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
+                  m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
+                  */
+  
+                  auto& intervals = m_unsafeEdgeIntervalMap[c2Index][t2][edge2];
+                  intervals.push_back(interval2);
+                }
               }
 
               return constraints;
