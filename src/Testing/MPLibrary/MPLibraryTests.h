@@ -34,15 +34,15 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     ///@name Method Set Types
     ///@{
 
-    //typedef MethodSet<MPTraits, DistanceMetricMethodTest<MPTraits>> DistanceMetricTestSet;
+    typedef MethodSet<MPTraits, DistanceMetricMethodTest<MPTraits>> DistanceMetricTestSet;
     typedef MethodSet<MPTraits, ValidityCheckerMethodTest<MPTraits>>
                                                                     ValidityCheckerTestSet;
     typedef MethodSet<MPTraits, NeighborhoodFinderMethodTest<MPTraits>>
                                                                     NeighborhoodFinderTestSet;
     typedef MethodSet<MPTraits, SamplerMethodTest<MPTraits>>        SamplerTestSet;
-    //typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
+    typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
     typedef MethodSet<MPTraits, ExtenderMethodTest<MPTraits>>       ExtenderTestSet;
-    //typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
+    typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
     typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>     ConnectorTestSet;
     typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>        MetricTestSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethodTest<MPTraits>>   MapEvaluatorTestSet;
