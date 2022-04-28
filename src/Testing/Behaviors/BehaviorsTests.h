@@ -51,7 +51,7 @@ BehaviorsTests() {}
 
 BehaviorsTests::
 BehaviorsTests(MPProblem* _problem, const std::string& _filename) : 
-                m_problem(_problem), m_xmlFilename(_filename) {}
+               m_problem(_problem), m_xmlFilename(_filename) {}
 
 BehaviorsTests::
 ~BehaviorsTests() {}
@@ -95,9 +95,9 @@ RunTest() {
   if (result.first) {
     message = message + "PASSED!\n";
     numPassed++;
-  }
-  else
+  } else {
     message = message + "FAILED :(\n";
+  }
 
   passed = passed and result.first;
   message = message + result.second;
@@ -106,7 +106,6 @@ RunTest() {
                       "Total: " + std::to_string(total) + "\n"
                       "Passed: " + std::to_string(numPassed) + "\n"
                       "Failed: " + std::to_string(total - numPassed) + "\n\n";
-
 
   delete m_coordinatorTest;
   return std::make_pair(passed, message);

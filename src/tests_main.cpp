@@ -135,8 +135,7 @@ main(int _argc, char** _argv) {
 			//ppl->Solve(problem, decomp.get(), plan, c, team);
 		}
 	}
-
-
+  
   
   auto mpResults = mpl->RunTest();
   std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;

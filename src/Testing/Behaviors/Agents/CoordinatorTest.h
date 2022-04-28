@@ -5,8 +5,7 @@
 #include "Testing/Behaviors/Agents/AgentTest.h"
 #include "Testing/TestBaseObject.h"
 
-class CoordinatorTest : public Coordinator,
-                        public AgentTest {
+class CoordinatorTest : public Coordinator, public AgentTest {
 
   public: 
   
