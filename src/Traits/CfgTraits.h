@@ -29,6 +29,7 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -41,6 +42,7 @@
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
@@ -116,6 +118,7 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
+    ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
 
@@ -136,7 +139,8 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    NeighborhoodConnector<MPTraits>
+    NeighborhoodConnector<MPTraits>,
+    RewireConnector<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
