@@ -218,10 +218,10 @@ TrueIndividualCfgDistance() {
   CfgType cfg1 = this->GetIndividualCfg();
   CfgType cfg2 = this->GetIndividualCfg();
 
-  // Scaled euclidean distance should be (0.5 * 5^3 * PosDOF + 0.5 * 0.5^3 * OriDOF)^(1 / 3)
+  // Scaled euclidean distance should be (m_scale * 5^3 * PosDOF + (1 - m_scale) * 0.5^3 * OriDOF)^(1 / 3)
   double trueDist;
-  trueDist = 0.5 * std::pow(5, 3.0) * cfg2.PosDOF();
-  trueDist += 0.5 * std::pow(0.5, 3.0) * (cfg2.DOF() - cfg2.PosDOF());
+  trueDist = this->m_scale * std::pow(5, 3.0) * cfg2.PosDOF();
+  trueDist += (1 - this->m_scale) * std::pow(0.5, 3.0) * (cfg2.DOF() - cfg2.PosDOF());
   trueDist = std::pow(trueDist, 1.0 / 3.0);
 
   return trueDist;

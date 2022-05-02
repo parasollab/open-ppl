@@ -47,7 +47,7 @@ class ScaledEuclideanDistance : virtual public EuclideanDistance<MPTraits> {
 
     ///@}
 
-  private:
+  protected:
 
     ///@name Internal State
     ///@{

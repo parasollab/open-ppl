@@ -225,7 +225,6 @@ WeightedEuclideanDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
   CfgType cfg1 = this->GetIndividualCfg();
   CfgType cfg2 = this->GetIndividualCfg();
-  const CfgType diff = cfg2 - cfg1;
 
   // Weighted euclidean distance should be 0.25 * LinearPosition + 0.25 * AngularPosition)
   // LinearPosition is sqrt(5^2 * PosDOF) and AngularPosition is 0.5 (LinearVelocity and AngularVelocity are 0)
