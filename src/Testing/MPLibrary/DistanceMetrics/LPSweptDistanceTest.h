@@ -21,7 +21,6 @@ class LPSweptDistanceTest : virtual public LPSweptDistance<MPTraits>,
     ///@}
     ///@name Construction
     ///@{
-    
 
     LPSweptDistanceTest(string _lpLabel="sl", double _positionRes = 0.1, 
       double _orientationRes = 0.1, bool _bbox = false);

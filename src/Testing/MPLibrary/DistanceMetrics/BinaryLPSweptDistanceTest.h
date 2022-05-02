@@ -22,7 +22,6 @@ class BinaryLPSweptDistanceTest : virtual public BinaryLPSweptDistance<MPTraits>
     ///@name Construction
     ///@{
     
-
     BinaryLPSweptDistanceTest(string _lpLabel="sl", double _positionRes = 0.1, 
       double _orientationRes = 0.1, bool _bbox = false);
 
