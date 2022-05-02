@@ -219,19 +219,18 @@ double
 BinaryLPSweptDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
   
-  // BinaryLPSweptDistance will be sum of vertex displacements along sl LP 
+  // BinaryLPSweptDistance will be sum of vertex displacements along LP 
   // path between two configs, where each pos component goes from 0. to 5. along
   // path and each ori component goes from 0 to 0.5 along path, with 
   // pos resolution starting at 0.1 and ori resolution starting 0.1, then
   // increasing (doubling) until either the environment resolution is met
   // or the distance converges.
   //
-  // Under these particular conditions, the distance is 8.9778363402258. 
-  // Should the base unit test be changed, this value will have to be 
-  // recalculated
-  double trueDist = 8.9778363402258;
-
-  return trueDist;
+  // For the straight line local planner, this value is 8.9778363402258. 
+  if (this->m_lpLabel == "sl")
+    return 8.9778363402258;
+  // As more local planners are added, their ground truth values will be
+  // included below
 }
 
 /*--------------------------------------------------------------------*/

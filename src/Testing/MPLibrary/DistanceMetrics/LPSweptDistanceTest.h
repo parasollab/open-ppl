@@ -218,17 +218,16 @@ template <typename MPTraits>
 double
 LPSweptDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
-  // LP Swept Distance will be sum of vertex displacements along straight line LP 
+  // LP Swept Distance will be sum of vertex displacements along LP 
   // path between two configs, where each pos component goes from 0. to 5. along
   // path and each ori component goes from 0 to 0.5 along path, with 
   // pos resolution of 0.1 and ori resolution of 0.1, without using bounding box
-  // and with the straightline local planner
   //
-  // Under these particular conditions, the true distance is 8.97784. Should 
-  // the base unit test be changed, this value will have to be recalculated
-  double trueDist = 8.9778381120884;
-
-  return trueDist;
+  // For the straight line local planner, this value is 8.9778381120884.
+  if (this->m_lpLabel == "sl")
+    return 8.9778381120884;
+  // As more local planners are added, their ground truth values will be
+  // included below
 }
 
 /*--------------------------------------------------------------------*/
