@@ -132,7 +132,7 @@ IndividualRobotBlindPathTest() {
 
     // Check that the first path segment contains configurations that are
     // constantly increasing in the x direction (and no other direction)
-    while (idx+1 < path.size() and fabs(newCfg[0] - 10.0) > 1e-7) {
+    while (passed and idx+1 < path.size() and fabs(newCfg[0] - 10.0) > 1e-7) {
       if (cfg[0] >= newCfg[0] or fabs(newCfg[1]) > 1e-7 
           or fabs(newCfg[2]) > 1e-7) {
         passed = false;
@@ -151,7 +151,7 @@ IndividualRobotBlindPathTest() {
 
     // Check that the second path segment contains configurations that are 
     // constantly increasing in the y direction (and no other direction)
-    while (idx+1 < path.size() and fabs(newCfg[1] - 10.0) > 1e-7) {
+    while (passed and idx+1 < path.size() and fabs(newCfg[1] - 10.0) > 1e-7) {
       if (cfg[1] >= newCfg[1] or fabs(newCfg[0] - 10.0) > 1e-7 
           or fabs(newCfg[2]) > 1e-7) {
         passed = false;
