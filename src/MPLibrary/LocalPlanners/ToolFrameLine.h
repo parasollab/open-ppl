@@ -135,6 +135,8 @@ IsConnected(
               << std::endl;
   }
 
+  //SRand(12);
+
   // Initialize the LPOutput object.
   _lpOutput->Clear();
   _lpOutput->SetLPLabel(this->GetLabel());
@@ -246,6 +248,8 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
     if(!_robotIndexes.empty())
       std::cout << "\tUsing formation: " << _robotIndexes << std::endl;
   }
+
+  //SRand(12);
 
   // Initialize the LPOutput object.
   _lpOutput->Clear();

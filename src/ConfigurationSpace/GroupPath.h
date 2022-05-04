@@ -456,7 +456,7 @@ GetEdgeAtTimestep(size_t _timestep) {
       step += m_waitingTimesteps[i];
     
     if(_timestep <= step)
-      return std::make_pair(i,i);
+      return std::make_pair(m_vids[i],m_vids[i]);
 
     auto duration = m_roadmap->GetEdge(m_vids[i],m_vids[i+1]).GetTimeSteps();
 

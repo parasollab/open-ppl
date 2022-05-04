@@ -146,7 +146,8 @@ GenerateRepresentation(const State& _start) {
     ConnectTransitions();
 
     Transition fromOrigin;
-    m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
+    if(m_groundedHypergraph.GetHID(startVIDs,{originVID}) == MAX_INT)
+      m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
 
     //Transition toGoal;
     //m_groundedHypergraph.AddHyperarc({goalVID},goalVIDs,toGoal);
@@ -289,6 +290,15 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
   auto uaSM = lib->GetSampler(m_unactuatedSM);
   auto qSM = lib->GetSampler(m_querySM);
   lib->SetMPSolution(m_solution.get());
+
+  // Set all robots and objects to virtual
+  auto c = this->GetPlan()->GetCoordinator();
+  for(auto& kv : c->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto r : group->GetRobots()) {
+      r->SetVirtual(true);
+    }
+  }
  
   for(auto& kv : m_modeHypergraph.GetVertexMap()) {
     // Check if mode is unactuated
@@ -304,6 +314,10 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
 
     if(!unactuated)
       continue;
+
+    for(auto robot : mode->robotGroup->GetRobots()) {
+      robot->SetVirtual(false);
+    }
 
     m_unactuatedModes.insert(kv.first);
 
@@ -383,6 +397,14 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       m_exitVertices.insert(groundedVID);
     }
   }
+  
+  // Set all robots and objects to virtual
+  for(auto& kv : c->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto r : group->GetRobots()) {
+      r->SetVirtual(false);
+    }
+  }
 }
 
 void
@@ -432,7 +454,8 @@ ConfigureGoalSets(const size_t& _sink, std::set<VID>& _goalVIDs) {
   // Add transition from each set to the sink
   for(auto set : goalSets) {
     Transition toGoal;
-    m_groundedHypergraph.AddHyperarc({_sink},set,toGoal);
+    if(m_groundedHypergraph.GetHID({_sink},set) == MAX_INT)
+      m_groundedHypergraph.AddHyperarc({_sink},set,toGoal);
   } 
 }
 
@@ -759,6 +782,13 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
     for(auto r : mode->robotGroup->GetRobots()) {
       auto t = MPTask(r);
+
+      // Add start constraints
+      auto startCfg = prob->GetInitialCfg(r);
+      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
+      t.SetStartConstraint(std::move(startConstraint));
+
+      // Add mode/path constraints
       for(const auto& c : mode->constraints) {
         if(c->GetRobot() != r)
           continue;
