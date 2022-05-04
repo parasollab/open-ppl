@@ -665,7 +665,19 @@ DeleteEdge(const edge_iterator _ei) noexcept {
               << "  CC from root has " << discovered.size() << " vertices:\n"
               << "\t" << discovered
               << std::endl;
-    throw RunTimeException(WHERE) << "Edge vertices are not in the same CC.";
+    //TODO::Fix this and figure out where it is coming from. Suspect group roadmap shenanigans.
+    //throw RunTimeException(WHERE) << "Edge vertices "
+    std::cout << "Edge vertices "
+                                  << source 
+                                  << " and " 
+                                  << target 
+                                  << " are not in the same CC."
+                                  << "("
+                                  << sourceCC
+                                  << " and "
+                                  << targetCC
+                                  << "."
+                                  << std::endl;
   }
 
   // Check if the reverse edge exists. If so, this is an undirected graph and

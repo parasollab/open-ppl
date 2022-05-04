@@ -293,9 +293,6 @@ AddRobotGroup(const std::vector<Robot*> _robots, const std::string _label) {
     }
 
     if(match) {
-      std::cout << "Robot group already exists: "
-                << group->GetLabel()
-                << std::endl;
       return group.get();
     }
   }

@@ -321,6 +321,7 @@ BuildRoadmaps() {
 
           auto constraint = std::unique_ptr<BoundaryConstraint>(
                               new BoundaryConstraint(robot,std::move(boundary)));
+          mt.SetStartConstraint(std::move(constraint->Clone()));
           mt.AddPathConstraint(std::move(constraint));
         }
 

@@ -220,10 +220,6 @@ AddRobot(Robot* const _r) noexcept {
 
   auto iter = m_individualSolutions.find(_r);
   if(iter != m_individualSolutions.end()) {
-    std::cout << "Robot "
-              << _r->GetLabel()
-              << " is already in solution."
-              << std::endl;
     return;
   }
     
@@ -283,10 +279,6 @@ AddRobotGroup(RobotGroup* const _g) noexcept {
 
   auto iter = m_groupSolutions.find(_g);
   if(iter != m_groupSolutions.end()) {
-    std::cout << "Group :"
-              << _g->GetLabel()
-              << " already in solution." 
-              << std::endl;
     return;
   }
 

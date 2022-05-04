@@ -516,8 +516,7 @@ SampleTransition(VID _source, VID _target) {
         State end = state;
         success = is->operator()(interaction,end);
 
-        if(success) {
-          ConnectToExistingRoadmap(interaction,state,end,reverse,_source,_target);
+        if(success and ConnectToExistingRoadmap(interaction,state,end,reverse,_source,_target)) {
           m_plannedInteractions.push_back(pair);
           break;
         }
@@ -549,7 +548,7 @@ SampleTransition(VID _source, VID _target) {
   return false;
 }
 
-void
+bool
 SimultaneousMultiArmEvaluator::
 ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, bool _reverse,
                          size_t _sourceMode, size_t _targetMode) {
@@ -643,7 +642,15 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
 
     auto vid = AddToRoadmap(gcfg);
-    startVertices.emplace_back(rm,vid);
+    if(vid != MAX_INT) {
+      startVertices.emplace_back(rm,vid);
+    }
+    else {
+      for(auto pair : startVertices) {
+        pair.first->DeleteVertex(pair.second);
+      }
+      return false;
+    }
   }
 
   for(auto kv : end) {
@@ -670,11 +677,23 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
 
     auto vid = AddToRoadmap(gcfg);
-    endVertices.emplace_back(rm,vid);
+    if(vid != MAX_INT) {
+      endVertices.emplace_back(rm,vid);
+    }
+    else {
+      for(auto pair : endVertices) {
+        pair.first->DeleteVertex(pair.second);
+      }
+      for(auto pair : startVertices) {
+        pair.first->DeleteVertex(pair.second);
+      }
+      return false;
+    }
   }
 
   // Save key to edge in transition map
   m_transitionMap[startVertices][endVertices] = m_interactionPaths.back().get();
+  return true;
 }
 
 SimultaneousMultiArmEvaluator::VID
@@ -719,8 +738,22 @@ AddToRoadmap(GroupCfg _cfg) {
               << ") to " << rm->get_degree(vid)
               << " vertices." << std::endl;
   //}
-  if(rm->get_degree(vid == 0))
-    throw RunTimeException(WHERE) << "Could not connect interaction to roadmap";
+  
+  bool passive = true;
+  for(auto robot : _cfg.GetRobots()) {
+    if(!robot->GetMultiBody()->IsPassive()) {
+      passive = false;
+      break;
+    }
+  }
+
+  if(!passive and rm->get_degree(vid) == 0) {
+    if(m_debug) {
+      std::cout << "Could not connect interaction to roadmap" << std::endl;
+    }
+    rm->DeleteVertex(vid);
+    return MAX_INT;
+  }
 
   return vid;
 }
@@ -857,7 +890,8 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   else
     direction = SampleVertex(taskState.mode);
 
-  auto computeAngle = [](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+  auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
     double dot = 0;
     for(size_t i = 0; i < _cfg1.GetNumRobots(); i++) {
       auto cfg1 = _cfg1.GetRobotCfg(i);
@@ -928,6 +962,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   std::vector<VID> neighbors;
 
   for(size_t i = 0; i < nearCfgs.size(); i++) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::FindNearestNeighbor");
 
     // Create group cfgs within this roadmap
     GroupCfg start = nearCfgs[i];
@@ -982,6 +1017,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   GroupCfg qNew(m_tensorProductRoadmap.get());
 
   for(size_t i = 0; i < nearCfgs.size(); i++) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::Construction");
     auto rm = nearCfgs[i].GetGroupRoadmap();
     auto vid = neighbors[i];
 
@@ -1003,6 +1039,10 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
 size_t
 SimultaneousMultiArmEvaluator::
 ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history) {
+    
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ExtendTaskVertices");
 
   auto prob = this->GetMPProblem();
   auto env = prob->GetEnvironment();
