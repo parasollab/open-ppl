@@ -192,7 +192,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
        GroupLPOutput<MPTraits>& _lp, const RobotFormation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
 
-  _lp.SetLPLabel(this->GetLabel());
+  //_lp.SetLPLabel(this->GetLabel());
   _lp.SetActiveRobots(_robotIndexes);
 
   return Expand(_start, _end, _new, this->m_maxDist, _lp,
@@ -208,7 +208,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
     const RobotFormation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
 
-  _lp.SetLPLabel(this->GetLabel());
+  //_lp.SetLPLabel(this->GetLabel());
   _lp.SetActiveRobots(_robotIndexes);
 
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
@@ -326,12 +326,12 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     GroupCfgType& _newCfg, double _delta, GroupLPOutput<MPTraits>& _lp,
     CDInfo& _cdInfo, double _posRes, double _oriRes,
     const RobotFormation& _robotIndexes) {
-  if(_robotIndexes.empty())
-    throw RunTimeException(WHERE) << "TODO: Need to fix group Cfg extenders to "
-                                  << "work for the general case and not just "
-                                  << "disassembly. Code needs to be adjusted so "
-                                  << "that an empty formation means all robots "
-                                  << "move without using a formation.";
+  //if(_robotIndexes.empty())
+  //  throw RunTimeException(WHERE) << "TODO: Need to fix group Cfg extenders to "
+  //                                << "work for the general case and not just "
+  //                                << "disassembly. Code needs to be adjusted so "
+  //                                << "that an empty formation means all robots "
+  //                                << "move without using a formation.";
 
 
   Environment* const env = this->GetEnvironment();

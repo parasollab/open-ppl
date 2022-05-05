@@ -171,7 +171,7 @@ class GroupRRTStrategy : public GroupStrategyMethod<MPTraits> {
     /// @param _newVID The VID of a newly extended configuration.
     /// @param _boundary The goal boundary.
     /// @note This only applies when not growing goals.
-    void TryGoalExtension(const VID _newVID, const Boundary* const _boundary);
+    void TryGoalExtension(const VID _newVID, std::unordered_map<Robot*,const Boundary* const> _boundaryMap);
 
     ///@}
     ///@name Tree Helpers
@@ -745,57 +745,85 @@ template <typename MPTraits>
 void
 GroupRRTStrategy<MPTraits>::
 TryGoalExtension(const VID _newVID) {
-  /*// Make sure _newVID is valid.
+  // Make sure _newVID is valid.
   if(m_growGoals or m_goalDmLabel.empty() or _newVID == INVALID_VID)
     return;
 
   // Make sure we have goals.
-  const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
-  if(goalConstraints.empty())
-    return;
+  //const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+  //if(goalConstraints.empty())
+  //  return;
+  auto groupTask = this->GetGroupTask();
+  std::unordered_map<Robot*,const Boundary* const> boundaryMap;
+  for(auto iter = groupTask->begin(); iter != groupTask->end(); iter++) {
+    if(iter->GetGoalConstraints().empty())
+      continue;
+
+    if(iter->GetGoalConstraints().size() > 1) 
+      throw RunTimeException(WHERE) << "Currently do not support multi-goal composite rrt.";
+
+    auto robot = iter->GetRobot();
+
+    //boundaryMap[robot] = iter->GetGoalConstraints()[0]->GetBoundary();
+    boundaryMap.insert(std::make_pair(robot,iter->GetGoalConstraints()[0]->GetBoundary()));
+  }
 
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::TryGoalExtension");
 
   if(this->m_debug)
     std::cout << "Checking goal extension for new node " << _newVID << " at "
-              << this->GetRoadmap()->GetVertex(_newVID).PrettyPrint()
+              << this->GetGroupRoadmap()->GetVertex(_newVID).PrettyPrint()
               << std::endl;
 
-  for(const auto& constraint : goalConstraints)
-    TryGoalExtension(_newVID, constraint->GetBoundary());
-  */
+  //for(const auto& constraint : goalConstraints)
+    TryGoalExtension(_newVID, boundaryMap);
+  
 }
 
 
 template <typename MPTraits>
 void
 GroupRRTStrategy<MPTraits>::
-TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
+TryGoalExtension(const VID _newVID, std::unordered_map<Robot*,const Boundary* const> _boundaryMap) {
   /*if(!_boundary)
     throw RunTimeException(WHERE) << "Constraints which do not produce a "
                                   << "boundary are not supported.";
+  */
 
   // First check if _newVID is already in the goal region.
-  auto g = this->GetRoadmap();
-  const CfgType& cfg = g->GetVertex(_newVID);
-  const bool inGoal = _boundary->InBoundary(cfg);
+  auto g = this->GetGroupRoadmap();
+  const auto& groupCfg = g->GetVertex(_newVID);
+  bool inGoal = true;
+
+  for(auto kv : _boundaryMap) {
+    if(!kv.second->InBoundary(groupCfg.GetRobotCfg(kv.first))) {
+      inGoal = false;
+      break;
+    }
+  }
+
   if(inGoal) {
     if(this->m_debug)
       std::cout << "\tNode is already in this goal boundary." << std::endl;
     return;
   }
 
+  GroupCfgType targetGroupCfg(g);
+
+  for(auto kv : _boundaryMap) {
   // Get the nearest point to _newVID within this goal region.
-  std::vector<double> data = cfg.GetData();
-  _boundary->PushInside(data);
-  CfgType target(cfg.GetRobot());
-  target.SetData(data);
+    std::vector<double> data = groupCfg.GetRobotCfg(kv.first).GetData();
+    kv.second->PushInside(data);
+    CfgType target(kv.first);
+    target.SetData(data);
+    targetGroupCfg.SetRobotCfg(kv.first,std::move(target));
+  }
 
   // Check the nearest point to _newVID in each goal region. If it lies within
   // the goal threshold, try to extend towards it.
   auto dm = this->GetDistanceMetric(m_goalDmLabel);
-  const double distance = dm->Distance(cfg, target),
+  const double distance = dm->Distance(groupCfg, targetGroupCfg),
                range = m_goalThreshold == 0.
                      ? this->GetExtender(m_exLabel)->GetMaxDistance()
                      : m_goalThreshold;
@@ -803,7 +831,7 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
 
   if(this->m_debug)
     std::cout << "\tNearest goal configuration is " << distance << " / "
-              << range << " units away at " << target.PrettyPrint()
+              << range << " units away at " << targetGroupCfg.PrettyPrint()
               << "."
               << std::endl;
 
@@ -814,14 +842,22 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
     return;
   }
 
+
+
   // Try to extend towards the target.
-  const VID extended = this->Extend(_newVID, target);
+  const VID extended = this->Extend(_newVID, targetGroupCfg);
   if(extended == INVALID_VID)
     return;
 
   // Check if we reached the goal boundary.
-  const CfgType& extendedCfg = g->GetVertex(extended);
-  const bool reached = _boundary->InBoundary(extendedCfg);
+  const GroupCfgType& extendedCfg = g->GetVertex(extended);
+  bool reached = true;
+  for(auto kv : _boundaryMap) {
+    if(!kv.second->InBoundary(extendedCfg.GetRobotCfg(kv.first))) {
+      reached = false;
+      break;
+    }
+  }
   if(reached) {
     if(this->m_debug)
       std::cout << "\tExtension reached goal boundary." << std::endl;
@@ -837,11 +873,10 @@ TryGoalExtension(const VID _newVID, const Boundary* const _boundary) {
     if(this->m_debug)
       std::cout << "\tExtension made progress but did not reach goal, retrying."
                 << std::endl;
-    TryGoalExtension(extended, _boundary);
+    TryGoalExtension(extended, _boundaryMap);
   }
   else if(this->m_debug)
     std::cout << "\tExtension did not make progress." << std::endl;
-  */
 }
 
 /*------------------------------ Tree Helpers --------------------------------*/
