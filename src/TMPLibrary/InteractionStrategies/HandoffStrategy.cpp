@@ -478,7 +478,9 @@ GenerateTransitionState(Interaction* _interaction, const State& _previous, const
 
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
       if(!cfg.GetRobot()) {
-        std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel() << std::endl;
+        if(m_debug) {
+          std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel() << std::endl;
+        }
       	failed = true;
         break;
       }

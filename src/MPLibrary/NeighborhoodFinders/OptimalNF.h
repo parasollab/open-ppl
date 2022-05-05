@@ -5,6 +5,8 @@
 #include "BruteForceNF.h"
 #include "RadiusNF.h"
 
+#include "MPLibrary/Metrics/NumNodesMetric.h"
+
 #include <cmath>
 #include <functional>
 
@@ -265,7 +267,17 @@ OptimalNF(XMLNode& _node) : NeighborhoodFinderMethod<MPTraits>(_node) {
                       + (vspace ? vspace->GetDimension() : 0));
       }
 
-      this->SetKParameters(dimension,_r->Size());
+      size_t size = 0;
+      if(_r->GetFormations().empty()) {
+        size = _r->Size();
+      }
+      else {
+        NumNodesMetric<MPTraits>* metric = new NumNodesMetric<MPTraits>();
+        metric->SetMPLibrary(this->GetMPLibrary());
+        size = size_t(metric->operator()());
+      }
+
+      this->SetKParameters(dimension,size);
 
     };
 

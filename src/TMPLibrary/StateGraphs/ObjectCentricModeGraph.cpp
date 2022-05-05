@@ -260,10 +260,20 @@ BuildRoadmaps() {
   
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
-  auto b = prob->GetEnvironment()->GetBoundary();
+  //auto b = prob->GetEnvironment()->GetBoundary();
 
   for(auto kv : m_groups) {
     auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  }
+
+  for(auto kv : m_groups) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
     m_solution->AddRobotGroup(group);
     auto rm = m_solution->GetGroupRoadmap(group);
 
@@ -283,9 +293,38 @@ BuildRoadmaps() {
       GroupTask gt(group);
       for(auto robot : group->GetRobots()) {
         MPTask mt(robot);
-        auto c = std::unique_ptr<BoundaryConstraint>(
-            new BoundaryConstraint(robot,b->Clone()));
-        mt.SetStartConstraint(std::move(c));
+        //auto c = std::unique_ptr<BoundaryConstraint>(
+        //    new BoundaryConstraint(robot,b->Clone()));
+        //mt.SetStartConstraint(std::move(c));
+
+        //TODO::Figure out how to properly convey this information to this point
+        if(!robot->GetMultiBody()->IsPassive()) {
+
+          auto cspace = robot->GetCSpace();
+          auto boundary = std::unique_ptr<CSpaceBoundingBox>(
+                            new CSpaceBoundingBox(cspace->GetDimension()));
+
+          std::vector<std::pair<double,double>> bbx;
+
+          for(size_t i = 0; i < cspace->GetDimension(); i++) {
+            if(i == 1) {
+              double constraint = group->Size() == 1 ? 0.0 : 0.0001;
+              bbx.emplace_back(constraint,constraint);
+            }
+            else {
+              auto range = cspace->GetRange(i);
+              bbx.emplace_back(range.min,range.max);
+            }
+          }
+         
+          boundary->ResetBoundary(bbx,0);
+
+          auto constraint = std::unique_ptr<BoundaryConstraint>(
+                              new BoundaryConstraint(robot,std::move(boundary)));
+          mt.SetStartConstraint(std::move(constraint->Clone()));
+          mt.AddPathConstraint(std::move(constraint));
+        }
+
         gt.AddTask(mt);
       }
 
@@ -295,6 +334,16 @@ BuildRoadmaps() {
       // Call MPLibrary to build roadmap
       lib->Solve(prob,&gt,m_solution.get(),strategy,LRand(),
           this->GetNameAndLabel());
+    }
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  }
+
+  for(auto kv : m_groups) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
     }
   }
 }
@@ -1065,7 +1114,7 @@ BuildSingleObjectModeGraph() {
   // Add region self edges
   for(auto iter = regionVIDs.begin(); iter != regionVIDs.end(); iter++) {
     auto vid = iter->second;
-    m_singleModeGraph.AddEdge(vid,vid,0);
+    m_singleModeGraph.AddEdge(vid,vid,1);
   }
  
 }

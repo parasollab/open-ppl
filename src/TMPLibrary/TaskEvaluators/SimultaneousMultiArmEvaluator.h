@@ -119,7 +119,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     bool SampleTransition(VID _source, VID _target);
 
-    void ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end, 
+    bool ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end, 
                                   bool _reverse, size_t _sourceMode, size_t _targetMode);
     
     VID AddToRoadmap(GroupCfg _cfg);

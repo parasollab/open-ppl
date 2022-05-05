@@ -425,8 +425,14 @@ SampleTransition(VID _source, VID _target) {
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
+  auto c = plan->GetCoordinator();
 
   auto edge = g->GetEdge(_source, _target);
+
+  // Set all robots to virtual
+  for(auto& robot : prob->GetRobots()) {
+    robot->SetVirtual(true);
+  } 
 
   // Plan each interaction
   for(auto kv : edge) {
@@ -482,7 +488,16 @@ SampleTransition(VID _source, VID _target) {
         state[group] = std::make_pair(nullptr,MAX_INT);
       }
 
+      // Set relevant robots non virtual
+      for(auto kv : state) {
+        auto group = kv.first;
+        for(auto robot : group->GetRobots()) {
+          robot->SetVirtual(false);
+        }
+      }
+
       //Plan interaction
+      bool success = false;
       for(size_t i = 0; i < m_maxAttempts; i++) {
 
         // Get cfg for each passive group
@@ -499,21 +514,41 @@ SampleTransition(VID _source, VID _target) {
         }
  
         State end = state;
-        bool success = is->operator()(interaction,end);
+        success = is->operator()(interaction,end);
 
-        if(success) {
-          ConnectToExistingRoadmap(interaction,state,end,reverse,_source,_target);
+        if(success and ConnectToExistingRoadmap(interaction,state,end,reverse,_source,_target)) {
           m_plannedInteractions.push_back(pair);
           break;
+        }
+      }
+      if(!success) {
+        std::cout << "Failed to find interaction for " << interaction->GetLabel()
+                  << "with ";
+        for(auto kv : state) {
+          std::cout << kv.first->GetLabel() << " ";
+        }
+        std::cout << std::endl;
+      }
+          
+      // Set relevant robots back to virtual
+      for(auto kv : state) {
+        auto group = kv.first;
+        for(auto robot : group->GetRobots()) {
+          robot->SetVirtual(false);
         }
       }
     }
   }
 
+  for(auto& robot : prob->GetRobots()) {
+    if(robot.get() != c->GetRobot()) {
+      robot->SetVirtual(false);
+    }
+  } 
   return false;
 }
 
-void
+bool
 SimultaneousMultiArmEvaluator::
 ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, bool _reverse,
                          size_t _sourceMode, size_t _targetMode) {
@@ -607,7 +642,15 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
 
     auto vid = AddToRoadmap(gcfg);
-    startVertices.emplace_back(rm,vid);
+    if(vid != MAX_INT) {
+      startVertices.emplace_back(rm,vid);
+    }
+    else {
+      for(auto pair : startVertices) {
+        pair.first->DeleteVertex(pair.second);
+      }
+      return false;
+    }
   }
 
   for(auto kv : end) {
@@ -634,11 +677,23 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
 
     auto vid = AddToRoadmap(gcfg);
-    endVertices.emplace_back(rm,vid);
+    if(vid != MAX_INT) {
+      endVertices.emplace_back(rm,vid);
+    }
+    else {
+      for(auto pair : endVertices) {
+        pair.first->DeleteVertex(pair.second);
+      }
+      for(auto pair : startVertices) {
+        pair.first->DeleteVertex(pair.second);
+      }
+      return false;
+    }
   }
 
   // Save key to edge in transition map
   m_transitionMap[startVertices][endVertices] = m_interactionPaths.back().get();
+  return true;
 }
 
 SimultaneousMultiArmEvaluator::VID
@@ -678,10 +733,26 @@ AddToRoadmap(GroupCfg _cfg) {
   auto connector = lib->GetConnector(m_connectorLabel);
   connector->Connect(rm,vid);
 
-  if(m_debug) {
+  //if(m_debug) {
     std::cout << "Connected new vid (" << vid 
               << ") to " << rm->get_degree(vid)
               << " vertices." << std::endl;
+  //}
+  
+  bool passive = true;
+  for(auto robot : _cfg.GetRobots()) {
+    if(!robot->GetMultiBody()->IsPassive()) {
+      passive = false;
+      break;
+    }
+  }
+
+  if(!passive and rm->get_degree(vid) == 0) {
+    if(m_debug) {
+      std::cout << "Could not connect interaction to roadmap" << std::endl;
+    }
+    rm->DeleteVertex(vid);
+    return MAX_INT;
   }
 
   return vid;
@@ -819,7 +890,8 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   else
     direction = SampleVertex(taskState.mode);
 
-  auto computeAngle = [](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+  auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
     double dot = 0;
     for(size_t i = 0; i < _cfg1.GetNumRobots(); i++) {
       auto cfg1 = _cfg1.GetRobotCfg(i);
@@ -890,6 +962,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   std::vector<VID> neighbors;
 
   for(size_t i = 0; i < nearCfgs.size(); i++) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::FindNearestNeighbor");
 
     // Create group cfgs within this roadmap
     GroupCfg start = nearCfgs[i];
@@ -944,6 +1017,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   GroupCfg qNew(m_tensorProductRoadmap.get());
 
   for(size_t i = 0; i < nearCfgs.size(); i++) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::Construction");
     auto rm = nearCfgs[i].GetGroupRoadmap();
     auto vid = neighbors[i];
 
@@ -965,6 +1039,10 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
 size_t
 SimultaneousMultiArmEvaluator::
 ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history) {
+    
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ExtendTaskVertices");
 
   auto prob = this->GetMPProblem();
   auto env = prob->GetEnvironment();
@@ -1599,9 +1677,9 @@ CheckForGoal(size_t _aid) {
     }
   }
 
-  if(m_debug) {
+  //if(m_debug) {
     std::cout << "FOUND GOAL STATE AT " << gcfg.PrettyPrint() << std::endl;
-  }
+  //}
   return true;
 }
 
@@ -1886,10 +1964,10 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 
       // Subtract epsilon from any neighboring vertex that is not waiting in place
       // to encourage forward movement
-      if(_h->GetVertex(_source).first != vertex.first) {
+      //if(_h->GetVertex(_source).first != vertex.first) {
         //toGo -= std::numeric_limits<double>::epsilon();
-        toGo -= .01;
-      }
+      //  toGo -= .01;
+      //}
       return std::max(0.0,toGo);
     }
   );
@@ -1996,12 +2074,12 @@ ValidationFunction(CBSNodeType& _node) {
         }
 
         if(source1 == target2 or target1 == source2) {
-          if(m_debug) {
-            std::cout << "Found edge conflict at timestep " << i
-                      << " between " << object1->GetLabel()
-                      << " and " << object2->GetLabel() 
-                      << std::endl;
-          }
+          //if(m_debug) {
+          //  std::cout << "Found edge conflict at timestep " << i
+          //            << " between " << object1->GetLabel()
+          //            << " and " << object2->GetLabel() 
+          //            << std::endl;
+          //}
 
           auto constraint1 = std::make_pair(std::make_pair(source1,target1),i);
           auto constraint2 = std::make_pair(std::make_pair(source2,target2),i);

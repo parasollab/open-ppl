@@ -329,8 +329,16 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
         auto timesteps = kv.second->TimeSteps();
         if(timesteps > 0)
           endTimes[task] = timesteps-1;
-        else
-          endTimes[task] = 0;
+        //if(timesteps > 0) {
+        //  endTimes[task] = startTime + timesteps; //- 1;
+        //  if(startTime == 0) {
+        //    endTimes[task] = endTimes[task] - 1;
+        //  }
+        //}
+        else {
+          //endTimes[task] = 0;
+          endTimes[task] = -1;
+        }
         solved.insert(task);
       }
     }
@@ -371,10 +379,19 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
       startTimes[task] = startTime;
       //endTimes[task] = startTime + kv.second->TimeSteps();
       auto timesteps = kv.second->TimeSteps();
-      if(timesteps > 0)
-        endTimes[task] = startTime + timesteps;// - 1;
-      else 
-        endTimes[task] = startTime;
+      //if(timesteps > 0)
+      //  endTimes[task] = startTime + timesteps;// - 1;
+      //else 
+      //  endTimes[task] = startTime;
+      if(timesteps > 0) {
+        endTimes[task] = startTime + timesteps; //- 1;
+        if(startTime == 0) {
+          endTimes[task] = endTimes[task] - 1;
+        }
+      }
+      else {
+        endTimes[task] = 0;
+      }
     }
   } while(solved.size() != size);
  
@@ -399,6 +416,9 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto task = current.second;
     auto startTime = current.first;
 
+    if(m_debug) {
+      std::cout << "Start time for " << task->GetLabel() << " : TIME: " << startTime << std::endl;
+    }
     // Compute new path
     auto path = QueryPath(task,startTime*timeRes,_node);
 
@@ -415,10 +435,19 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     solved.insert(task);
 
     auto timesteps = path->TimeSteps();
-    if(timesteps > 0)
-      endTimes[task] = startTime + timesteps;// - 1;
-    else 
-      endTimes[task] = startTime;
+    //if(timesteps > 0)
+    //  endTimes[task] = startTime + timesteps;// - 1;
+    //else 
+    //  endTimes[task] = startTime;
+    if(timesteps > 0) {
+      endTimes[task] = startTime + timesteps; //- 1;
+      if(startTime == 0) {
+        endTimes[task] = endTimes[task] - 1;
+      }
+    }
+    else {
+      endTimes[task] = 0;
+    }
 
     if(m_debug) {
       std::cout << "Found path for " << task->GetLabel() 
@@ -627,11 +656,17 @@ ValidationFunction(Node& _node) {
 
       startTimes[task] = startTime;
 
-      auto timesteps = cfgPaths[task].size();
-      if(timesteps > 0)
-        endTimes[task] = startTime + timesteps - 1;
-      else
+      //auto timesteps = cfgPaths[task].size();
+      auto timesteps = path->TimeSteps();
+      if(timesteps > 0) {
+        endTimes[task] = startTime + timesteps; //- 1;
+        if(startTime == 0) {
+          endTimes[task] = endTimes[task] - 1;
+        }
+      }
+      else {
         endTimes[task] = startTime;
+      }
 
       finalTime = std::max(endTimes[task],finalTime);
       ordering.push_back(task);
@@ -735,6 +770,8 @@ ValidationFunction(Node& _node) {
                   << " and "
                   << t2->GetLabel()
                   << std::endl;
+                  
+                std::cout << "Task starts: " << startTimes[t1] << " " << startTimes[t2] << std::endl;
               }
 
               auto endT = t;
@@ -767,11 +804,15 @@ ValidationFunction(Node& _node) {
               // Check if conflict has been found before
               size_t c1Index = MAX_INT;
               size_t c2Index = MAX_INT;
-              for(size_t i = 0; i < m_conflicts.size(); i++) {
+              //for(size_t i = 0; i < m_conflicts.size(); i++) {
+              for(auto constraint : _node.constraintMap[t1]) {
+                size_t i = constraint.second;
                 if(m_conflicts[i] == cfg2) {
-                  c1Index = i;
                   break;
                 }
+              }
+              for(auto constraint : _node.constraintMap[t2]) {
+                size_t i = constraint.second;
                 if(m_conflicts[i] == cfg1) {
                   c2Index = i;
                   break;
@@ -862,6 +903,14 @@ ValidationFunction(Node& _node) {
                   */
   
                   auto& intervals = m_unsafeVertexIntervalMap[c1Index][t1][edge1.first];
+
+                  // Debug - remove when working
+                  for(auto elem : intervals) {
+                    if(elem == interval1) {
+                      std::cout << "OH CRAP" << std::endl;
+                    }
+                  }
+
                   intervals.push_back(interval1);
 
                 }
@@ -881,6 +930,14 @@ ValidationFunction(Node& _node) {
                   */
     
                   auto& intervals = m_unsafeEdgeIntervalMap[c1Index][t1][edge1];
+                  
+                  // Debug - remove when working
+                  for(auto elem : intervals) {
+                    if(elem == interval1) {
+                      std::cout << "OH CRAP" << std::endl;
+                    }
+                  }
+
                   intervals.push_back(interval1);
                 }
               }
@@ -902,6 +959,14 @@ ValidationFunction(Node& _node) {
                   */
   
                   auto& intervals = m_unsafeVertexIntervalMap[c2Index][t2][edge2.first];
+
+                  // Debug - remove when working
+                  for(auto elem : intervals) {
+                    if(elem == interval2) {
+                      std::cout << "OH CRAP" << std::endl;
+                    }
+                  }
+
                   intervals.push_back(interval2);
                 }
                 else {
@@ -920,6 +985,14 @@ ValidationFunction(Node& _node) {
                   */
   
                   auto& intervals = m_unsafeEdgeIntervalMap[c2Index][t2][edge2];
+
+                  // Debug - remove when working
+                  for(auto elem : intervals) {
+                    if(elem == interval2) {
+                      std::cout << "OH CRAP" << std::endl;
+                    }
+                  }
+
                   intervals.push_back(interval2);
                 }
               }
@@ -955,11 +1028,12 @@ CostFunction(Node& _node) {
 
     if(task->GetDependencies().empty()) {
       auto timesteps = kv.second->TimeSteps();
+      solved.insert(task);
       if(timesteps > 0)
-        endTimes[task] = timesteps;// - 1;
+        //endTimes[task] = timesteps; // - 1;
+        endTimes[task] = timesteps - 1;
       else
         endTimes[task] = 0;
-      solved.insert(task);
     }
   }
 
@@ -997,11 +1071,20 @@ CostFunction(Node& _node) {
       startTimes[task] = startTime;
       //double endTime = startTime + kv.second->TimeSteps();
       auto timesteps = kv.second->TimeSteps();
-      double endTime;
-      if(timesteps > 0)
-        endTime = startTime + timesteps;// - 1;
-      else 
-        endTime = startTime;
+      double endTime = 0;
+      //if(timesteps > 0)
+      //  endTimes[task] = startTime + timesteps;// - 1;
+      //else 
+      //  endTimes[task] = startTime;
+      if(timesteps > 0) {
+        endTimes[task] = startTime + timesteps; //- 1;
+        if(startTime == 0) {
+          endTimes[task] = endTimes[task] - 1;
+        }
+      }
+      else {
+        endTimes[task] = 0;
+      }
       endTimes[task] = endTime;
       cost = std::max(endTime,cost);
     }
@@ -1275,11 +1358,21 @@ SaveSolution(const Node& _node) {
       }
 
       startTimes[task] = startTime;
-      auto timesteps = cfgPaths[task].size();
-      if(timesteps > 0)
-        endTimes[task] = startTime + cfgPaths[task].size() - 1;
-      else
-        endTimes[task] = startTime;
+      auto timesteps = path->TimeSteps();
+      //auto timesteps = cfgPaths[task].size();
+      //if(timesteps > 0)
+      //  endTimes[task] = startTime + timesteps;// - 1;
+      //else 
+      //  endTimes[task] = startTime;
+      if(timesteps > 0) {
+        endTimes[task] = startTime + timesteps; //- 1;
+        if(startTime == 0) {
+          endTimes[task] = endTimes[task] - 1;
+        }
+      }
+      else {
+        endTimes[task] = 0;
+      }
 
       if(m_debug) {
         std::cout << task->GetLabel() 

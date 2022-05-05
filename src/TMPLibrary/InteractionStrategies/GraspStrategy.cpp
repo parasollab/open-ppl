@@ -171,7 +171,9 @@ operator()(Interaction* _interaction, State& _start) {
     for(auto kv : eeFrames) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
       if(!cfg.GetRobot()) {
-        std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+        if(m_debug) {
+          std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+        }
         m_roleMap.clear();
       	return false;
       }
@@ -305,7 +307,9 @@ operator()(Interaction* _interaction, State& _start) {
     auto robot = kv.first;
     auto cfg = ComputeManipulatorCfg(robot,kv.second);
     if(!cfg.GetRobot()) {
-      std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+      if(m_debug) {
+        std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
+      }
       m_roleMap.clear();
       return false;
     }
@@ -547,7 +551,9 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
   #ifdef PPL_USE_URDF
 
-  std::cout << "Computing IK for a UR5e. Other robots not currently supported." << std::endl;
+  if(m_debug) {
+    std::cout << "Computing IK for a UR5e. Other robots not currently supported." << std::endl;
+  }
 
   //TODO::Convert transform to individual ur_kin format
  
@@ -630,7 +636,7 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
     if(vc->IsValid(cfg,this->GetNameAndLabel()))
       return cfg;
-    else 
+    else if(m_debug) 
       std::cout << cfg << " invalid." << std::endl;
   }
 

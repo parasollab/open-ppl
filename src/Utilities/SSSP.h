@@ -204,7 +204,7 @@ AStarSSSP(
     /// Tie breaking on values of g.
     bool operator>(const element& _e) const noexcept {
       if(g + h == _e.g + _e.h) 
-        return g > _e.g;
+        return h > _e.h;
 
       return g + h > _e.g + _e.h;
     }
