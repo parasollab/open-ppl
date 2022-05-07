@@ -1429,6 +1429,44 @@ SaveSolution(const Node& _node) {
     }
   }
 
+  // Find changes in gripper dof and add buffers
+  std::vector<size_t> switches;
+  for(size_t t = 1; t < finalTime; t++) {
+    for(auto& kv : robotPaths) {
+      if(kv.first->GetMultiBody()->IsPassive())
+        continue;
+
+      const auto& path = kv.second;
+
+      if(t >= path.size())
+        continue;
+
+      auto cfg1 = path[t-1];
+      auto cfg2 = path[t];
+      
+      if(cfg1[1] != cfg2[1]) {
+        switches.push_back(t-1);
+        std::cout << "Found switch at " << t-1 << std::endl;
+      }
+    }
+  }
+
+  const size_t numCopies = 10;
+
+  for(size_t i = 0; i < switches.size(); i++) {
+    size_t t = switches[i] + numCopies*i;
+    for(auto& kv : robotPaths) {
+      auto& path = kv.second;
+
+      if(t >= path.size())
+        continue;
+
+      auto cfg = path[t];
+
+      path.insert(path.begin()+t,numCopies,cfg);
+    }
+  }
+
   for(auto kv : robotPaths) {
     if(m_debug) {
       std::cout << "PATH FOR: " << kv.first->GetLabel() << std::endl;
