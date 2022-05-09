@@ -1424,7 +1424,11 @@ SaveSolution(const Node& _node) {
         if(used.count(robot))
           continue;
         used.insert(robot);
-        robotPaths[robot].push_back(cfg1.GetRobotCfg(robot));
+        // Hack bc of direspect to path constraints
+        auto cfg = cfg1.GetRobotCfg(robot);
+        if(!robot->GetMultiBody()->IsPassive() and group1->Size() > 1)
+          cfg[1] = .0001;
+        robotPaths[robot].push_back(cfg);
       }
     }
   }
@@ -1444,9 +1448,12 @@ SaveSolution(const Node& _node) {
       auto cfg1 = path[t-1];
       auto cfg2 = path[t];
       
-      if(cfg1[1] != cfg2[1]) {
-        switches.push_back(t-1);
+      if(abs(cfg1[1] - cfg2[1]) >= .00001) {
+        if(switches.empty() or switches.back() != t-1)
+          switches.push_back(t-1);
+        switches.push_back(t);
         std::cout << "Found switch at " << t-1 << std::endl;
+        break;
       }
     }
   }
