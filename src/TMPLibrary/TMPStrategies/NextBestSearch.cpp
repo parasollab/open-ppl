@@ -808,6 +808,7 @@ ValidationFunction(Node& _node) {
               for(auto constraint : _node.constraintMap[t1]) {
                 size_t i = constraint.second;
                 if(m_conflicts[i] == cfg2) {
+                  c1Index = i;
                   break;
                 }
               }
