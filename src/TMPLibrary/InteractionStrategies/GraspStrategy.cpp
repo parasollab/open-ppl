@@ -551,6 +551,15 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
   #ifdef PPL_USE_URDF
 
+  auto coord = this->GetPlan()->GetCoordinator();
+  for(auto kv : coord->GetInitialRobotGroups()) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  } 
+
+  _robot->SetVirtual(false);
+
   if(m_debug) {
     std::cout << "Computing IK for a UR5e. Other robots not currently supported." << std::endl;
   }
@@ -634,11 +643,26 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
     Cfg cfg(_robot);
     cfg.SetData(data);
 
-    if(vc->IsValid(cfg,this->GetNameAndLabel()))
+    if(vc->IsValid(cfg,this->GetNameAndLabel())) {
+
+      for(auto kv : coord->GetInitialRobotGroups()) {
+        for(auto robot : kv.first->GetRobots()) {
+          robot->SetVirtual(false);
+        }
+      } 
+
       return cfg;
+    }
     else if(m_debug) 
       std::cout << cfg << " invalid." << std::endl;
   }
+
+
+  for(auto kv : coord->GetInitialRobotGroups()) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  } 
 
   //if(num_sols == 0)
   return Cfg(nullptr);

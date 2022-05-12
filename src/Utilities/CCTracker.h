@@ -666,8 +666,7 @@ DeleteEdge(const edge_iterator _ei) noexcept {
               << "\t" << discovered
               << std::endl;
     //TODO::Fix this and figure out where it is coming from. Suspect group roadmap shenanigans.
-    //throw RunTimeException(WHERE) << "Edge vertices "
-    std::cout << "Edge vertices "
+    throw RunTimeException(WHERE) << "Edge vertices "
                                   << source 
                                   << " and " 
                                   << target 

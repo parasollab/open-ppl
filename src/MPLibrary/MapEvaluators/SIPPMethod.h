@@ -587,6 +587,24 @@ SIPPMethod<MPTraits>::
 PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) {
 
+  // Vertify that path constraints are satisfied
+  /*
+  auto gt = this->GetGroupTask();
+  for(auto task = gt->begin(); task != gt->end(); task++) {
+    auto& pathConstraints = task->GetPathConstraints();
+    if(pathConstraints.empty())
+      continue;
+
+    auto grm = this->GetGroupRoadmap(gt->GetRobotGroup());
+    auto target = grm->GetVertex(_ei->target()).GetRobotCfg(task->GetRobot());
+
+    for(auto& c : pathConstraints) {
+      if(!c->Satisfied(target))
+        return std::numeric_limits<double>::infinity();
+    }
+  }
+  */
+
   //auto edge = _ei->property();
   auto source = m_sippGraph->GetVertex(_ei->source());
   auto target = m_sippGraph->GetVertex(_ei->target());

@@ -502,10 +502,23 @@ DeleteVertex(const VID _v) noexcept {
   // order to call the DeleteEdge hooks.
 
   // Delete the outbound edges.
-  for(auto edge = vi->begin(); edge != vi->end(); edge = vi->begin())
+  for(auto edge = vi->begin(); edge != vi->end(); edge = vi->begin()) {
+    auto target = edge->target();
     DeleteEdge(edge);
+ 
+    // Delete inbound equivalent edges.
+    // Need to do this now, or the CCTracker will break.
+    auto vit = this->find_vertex(target);
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+      if(eit->target() == _v) {
+        DeleteEdge(eit);
+        break;
+      }
+    } 
+  }
 
-  // Delete the inbound edges.
+  
+  // Delete the remaining inbound edges.
   /// @TODO This could be done faster with a directed preds graph, but I want to
   ///       profile it both ways to be sure of the costs before doing that. We
   ///       rarely delete vertices, so right now this is an edge case. If we
@@ -523,6 +536,7 @@ DeleteVertex(const VID _v) noexcept {
       DeleteEdge(edge);
     }
   }
+  
 
   // Execute pre-delete hooks and update vizmo debug.
   this->ExecuteDeleteVertexHooks(vi);

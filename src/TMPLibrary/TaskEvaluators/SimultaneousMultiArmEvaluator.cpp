@@ -277,11 +277,13 @@ Run(Plan* _plan) {
     if(CheckForGoal(aid)) {
       //TODO::Save plan in this->GetPlan();
       stats->SetStat("Success",1);
+      stats->SetStat("Steps",i);
       return true;
     }
   }
 
   stats->SetStat("Success",0);
+  stats->SetStat("Steps",m_maxIters);
   return false;
 }
 
@@ -647,7 +649,16 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
     else {
       for(auto pair : startVertices) {
-        pair.first->DeleteVertex(pair.second);
+        auto group = pair.first->GetGroup();
+        bool passive = true;
+        for(auto robot : group->GetRobots()) {
+          if(!robot->GetMultiBody()->IsPassive()) {
+            passive = false;
+            break;
+          }
+        }
+        if(!passive)
+          pair.first->DeleteVertex(pair.second);
       }
       return false;
     }
@@ -682,10 +693,26 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
     else {
       for(auto pair : endVertices) {
-        pair.first->DeleteVertex(pair.second);
+        bool passive = true;
+        for(auto robot : group->GetRobots()) {
+          if(!robot->GetMultiBody()->IsPassive()) {
+            passive = false;
+            break;
+          }
+        }
+        if(!passive)
+          pair.first->DeleteVertex(pair.second);
       }
       for(auto pair : startVertices) {
-        pair.first->DeleteVertex(pair.second);
+        bool passive = true;
+        for(auto robot : group->GetRobots()) {
+          if(!robot->GetMultiBody()->IsPassive()) {
+            passive = false;
+            break;
+          }
+        }
+        if(!passive)
+          pair.first->DeleteVertex(pair.second);
       }
       return false;
     }
@@ -806,7 +833,7 @@ SimultaneousMultiArmEvaluator::
 Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuristic) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
-  MethodTimer mt(stats,this->GetNameAndLabel() + "::Select");
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Selecting");
 
   auto biasKey = std::make_pair(_modeID,_history);
   auto iter = m_modeVertexBias.find(biasKey);
@@ -877,7 +904,7 @@ SimultaneousMultiArmEvaluator::
 Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
-  MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend");
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Extending");
 
   auto taskState = m_taskGraph->GetVertex(_qNear);
   auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
