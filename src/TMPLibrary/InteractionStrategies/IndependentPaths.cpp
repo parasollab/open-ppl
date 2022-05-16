@@ -104,7 +104,7 @@ operator()(Interaction* _interaction, State& _state) {
     auto toNextStagePaths = PlanMotions(toNextStageTasks,_interaction->GetToStageSolution(next),
                   "PlanInteraction::"+_interaction->GetLabel()+"::To"+next,staticRobots,_state);
 
-    ResetStaticRobots();
+    ResetStaticRobots(staticRobots);
 
     // Check if a valid solution was found.
     if(toNextStagePaths.empty())

@@ -1,8 +1,11 @@
 #include "HandoffStrategy.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/Interaction.h"
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
+#include "TMPLibrary/Solution/Plan.h"
 
 /*----------------------- Construction -----------------------*/
 
@@ -25,6 +28,24 @@ bool
 HandoffStrategy::
 operator()(Interaction* _interaction, State& _start) {
 
+  auto plan = this->GetPlan();
+  auto coord = plan->GetCoordinator();
+
+  // Set all robots to virtual
+  for(auto kv : coord->GetInitialRobotGroups()) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  } 
+
+  // Set all involved robots back to non virtual
+  for(auto kv : _start) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
+
   _interaction->Initialize();
   auto stages = _interaction->GetStages();
 
@@ -40,6 +61,7 @@ operator()(Interaction* _interaction, State& _start) {
   // Making assumptions that first and last stage are used to specify 
   // entry/exit modes only
   size_t finalStage = stages.size() - 1;
+  bool success = true;
   for(size_t i = 2; i < finalStage; i++) {
 
     auto current = stages[i-1];
@@ -51,8 +73,10 @@ operator()(Interaction* _interaction, State& _start) {
 
     // Get start constraints
     auto startConstraintMap = GenerateConstraints(_start);
-    if(startConstraintMap.empty())
-      return false;
+    if(startConstraintMap.empty()) {
+      success = false;
+      break;
+    }
 
     // Get path constraints
     GeneratePathConstraints(startConditions,_interaction->GetStageConditions(next));
@@ -61,8 +85,10 @@ operator()(Interaction* _interaction, State& _start) {
     auto solution = _interaction->GetToStageSolution(next);
     auto nextState = GenerateTransitionState(_interaction,_start,i,solution);
     auto goalConstraintMap = GenerateConstraints(nextState);
-    if(goalConstraintMap.empty())
-      return false;
+    if(goalConstraintMap.empty()) {
+      success = false;
+      break;
+    }
 
     // Get static robots
     auto staticRobots = GetStaticRobots(startConditions);
@@ -88,8 +114,10 @@ operator()(Interaction* _interaction, State& _start) {
     auto toNextStagePaths = PlanMotions(toNextStageTasks,solution,
                   "PlanInteraction::"+_interaction->GetLabel()+"::To"+next,staticRobots,_start);
 
-    if(toNextStagePaths.empty())
-      return false;
+    if(toNextStagePaths.empty()) {
+      success = false;
+      break;
+    }
 
     size_t delay = _interaction->GetDelay(next);
     if(delay > 0) {
@@ -111,11 +139,13 @@ operator()(Interaction* _interaction, State& _start) {
       }
     }
 
-    ResetStaticRobots();
+    ResetStaticRobots(staticRobots);
 
     // Check if a valid solution was found.
-    if(toNextStagePaths.empty())
+    if(toNextStagePaths.empty()) {
+      success = false;
       break;
+    }
 
     // Save plan information.
     _interaction->SetToStagePaths(next,toNextStagePaths);
@@ -133,6 +163,16 @@ operator()(Interaction* _interaction, State& _start) {
   m_interimCfgMap.clear();
   m_individualPaths.clear();
   m_finalState.clear();
+
+  // Set all uninvolved robots back to non virtual
+  for(auto kv : coord->GetInitialRobotGroups()) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  } 
+
+  if(!success)
+    return false;
 
   if(m_debug) {
     std::cout << "Final interaction state:" << std::endl;

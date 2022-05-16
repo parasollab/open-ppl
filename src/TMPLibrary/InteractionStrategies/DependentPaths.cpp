@@ -111,7 +111,7 @@ operator()(Interaction* _interaction, State& _state) {
     auto toNextStagePaths = PlanMotions(toNextStageTasks,_interaction->GetToStageSolution(next),
                   "PlanInteraction::"+_interaction->GetLabel()+"::To"+next,staticRobots,_state);
 
-    ResetStaticRobots();
+    ResetStaticRobots(staticRobots);
     //potential change to this line and line 93. This would use the start condition
     //from previous stage as 'precondition' for current stage
     //auto& preconditions=startConditions;

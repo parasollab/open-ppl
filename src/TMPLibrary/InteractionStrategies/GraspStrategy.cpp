@@ -44,6 +44,22 @@ operator()(Interaction* _interaction, State& _start) {
   auto problem = this->GetPlan()->GetCoordinator()->GetRobot()->GetMPProblem();
   auto lib = this->GetMPLibrary();
   auto plan = this->GetPlan();
+  auto coord = plan->GetCoordinator();
+
+  // Set all robots to virtual
+  for(auto kv : coord->GetInitialRobotGroups()) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  } 
+
+  // Set all involved robots back to non virtual
+  for(auto kv : _start) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
 
   _interaction->Initialize();
 
@@ -158,7 +174,7 @@ operator()(Interaction* _interaction, State& _start) {
     auto eeFrames = ComputeEEFrames(_interaction,objectPoses,i);
 
     // Set all uninvolved robots to virtual
-    for(auto& robot : problem->GetRobots()) {
+    /*for(auto& robot : problem->GetRobots()) {
       robot->SetVirtual(true);
     }
     for(auto& kv : _start) {
@@ -166,7 +182,7 @@ operator()(Interaction* _interaction, State& _start) {
         robot->SetVirtual(false);
       }
     }
-
+    */
     std::unordered_map<Robot*,Cfg> pregraspCfgs;
     for(auto kv : eeFrames) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
@@ -175,8 +191,15 @@ operator()(Interaction* _interaction, State& _start) {
           std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
         }
         m_roleMap.clear();
+        // Set all robots to virtual
+        for(auto kv : coord->GetInitialRobotGroups()) {
+          for(auto robot : kv.first->GetRobots()) {
+            robot->SetVirtual(false);
+          }
+        } 
       	return false;
       }
+
       SetEEDOF(_interaction,cfg,stages[i]);
       pregraspCfgs[kv.first] = cfg;
     }
@@ -186,8 +209,15 @@ operator()(Interaction* _interaction, State& _start) {
     std::unordered_map<Robot*,Cfg> graspCfgs;
     for(auto kv : nextStageEEFrames) {
       auto cfg = ComputeManipulatorCfg(kv.first,kv.second);
-      if(!cfg.GetRobot())
+      if(!cfg.GetRobot()) {
+        // Set all uninvolved robots back to non virtual
+        for(auto& robot : problem->GetRobots()) {
+          if(robot.get() != plan->GetCoordinator()->GetRobot()) {
+            robot->SetVirtual(false);
+          }
+        }
         return false;
+      }
       SetEEDOF(_interaction,cfg,stages[i+1]);
 
       graspCfgs[kv.first] = cfg;
@@ -247,11 +277,17 @@ operator()(Interaction* _interaction, State& _start) {
         "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[i+1],
         staticRobots,preGraspState);
 
-    ResetStaticRobots();
+    ResetStaticRobots(staticRobots);
 
     // Check if valid solution was found
     if(toGraspPaths.empty()) {
       m_roleMap.clear();
+      // Set all uninvolved robots back to non virtual
+      for(auto& robot : problem->GetRobots()) {
+        if(robot.get() != plan->GetCoordinator()->GetRobot()) {
+          robot->SetVirtual(false);
+        }
+      }
       return false;
     }
 
@@ -290,6 +326,7 @@ operator()(Interaction* _interaction, State& _start) {
     objectPose.ConfigureRobot();
   }
 
+  /*
   // Set all uninvolved robots to virtual
   for(auto& robot : problem->GetRobots()) {
     robot->SetVirtual(true);
@@ -299,6 +336,7 @@ operator()(Interaction* _interaction, State& _start) {
       robot->SetVirtual(false);
     }
   }
+  */
 
   // Compute goal pose for robot based of transform and initial object pose
   auto nextStageEEFrames = ComputeEEFrames(_interaction,objectPoses,graspStage+1);
@@ -311,6 +349,12 @@ operator()(Interaction* _interaction, State& _start) {
         std::cout << "Failed to find a valid grasp pose for " << kv.first->GetLabel();
       }
       m_roleMap.clear();
+      // Set all uninvolved robots back to non virtual
+      for(auto& robot : problem->GetRobots()) {
+        if(robot.get() != plan->GetCoordinator()->GetRobot()) {
+          robot->SetVirtual(false);
+        }
+      }
       return false;
     }
 
@@ -355,6 +399,18 @@ operator()(Interaction* _interaction, State& _start) {
   auto tasks = GenerateTasks(startConditions,startConstraints,goalConstraints);
   _interaction->SetToStageTasks(stages[graspStage+1],tasks);
 
+  /*
+  // Set all uninvolved robots to virtual
+  for(auto& robot : problem->GetRobots()) {
+    robot->SetVirtual(true);
+  }
+  for(auto& kv : _start) {
+    for(auto robot : kv.first->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
+  */
+
   // Plan path
   auto paths = PlanMotions(tasks,toStageSolution,
       "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[graspStage+1],
@@ -381,10 +437,11 @@ operator()(Interaction* _interaction, State& _start) {
   }
 
 
-  // Set all uninvolved robots to virtual
+  // Set all uninvolved robots back to non virtual
   for(auto& robot : problem->GetRobots()) {
-    if(robot.get() != plan->GetCoordinator()->GetRobot())
+    if(robot.get() != plan->GetCoordinator()->GetRobot()) {
       robot->SetVirtual(false);
+    }
   }
 
   // Check if valid solution was found
@@ -519,6 +576,7 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       const auto& roleInfo = f->GetRoleInfo(role); 
       Transformation transform = roleInfo.transformation;
       Cfg cfg = objectPoses[robot];
+      cfg.ConfigureRobot();
 
       auto frame = ComputeEEWorldFrame(cfg, -transform);
       
@@ -551,6 +609,7 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
   #ifdef PPL_USE_URDF
 
+  /*
   auto coord = this->GetPlan()->GetCoordinator();
   for(auto kv : coord->GetInitialRobotGroups()) {
     for(auto robot : kv.first->GetRobots()) {
@@ -559,6 +618,7 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
   } 
 
   _robot->SetVirtual(false);
+  */
 
   if(m_debug) {
     std::cout << "Computing IK for a UR5e. Other robots not currently supported." << std::endl;
@@ -645,11 +705,13 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
 
     if(vc->IsValid(cfg,this->GetNameAndLabel())) {
 
+      /*
       for(auto kv : coord->GetInitialRobotGroups()) {
         for(auto robot : kv.first->GetRobots()) {
           robot->SetVirtual(false);
         }
       } 
+      */
 
       return cfg;
     }
@@ -657,12 +719,13 @@ ComputeManipulatorCfg(Robot* _robot, Transformation& _transform) {
       std::cout << cfg << " invalid." << std::endl;
   }
 
-
+  /*
   for(auto kv : coord->GetInitialRobotGroups()) {
     for(auto robot : kv.first->GetRobots()) {
       robot->SetVirtual(false);
     }
   } 
+  */
 
   //if(num_sols == 0)
   return Cfg(nullptr);

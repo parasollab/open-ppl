@@ -127,7 +127,7 @@ class InteractionStrategyMethod : public TMPBaseObject {
 
     void ConfigureStaticRobots(const std::set<Robot*>& _staticRobots, const State& _state); 
 
-    void ResetStaticRobots();
+    void ResetStaticRobots(const std::set<Robot*>& _staticRobots);
 
     void MoveStateToLocalSolution(Interaction* _interaction, State& _state);
 

@@ -92,7 +92,8 @@ PlanTasks() {
 
   stats->SetStat(this->GetNameAndLabel() + "::BestCost",bestNode.cost);
   // Save plan in proper format
-  SaveSolution(bestNode);
+  if(m_savePaths)
+    SaveSolution(bestNode);
 }
     
 double
@@ -292,10 +293,10 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
 
   auto iter = unsafeIntervals.begin();
   while(iter != unsafeIntervals.end()) {
-    max = iter->min - timeRes;
+    max = iter->min - 2*timeRes;
     if(min < max)
       intervals.emplace_back(min,max);
-    min = iter->max + timeRes;
+    min = iter->max + 2*timeRes;
     iter++;
   }
 
@@ -1071,8 +1072,7 @@ CostFunction(Node& _node) {
 
       startTimes[task] = startTime;
       //double endTime = startTime + kv.second->TimeSteps();
-      auto timesteps = kv.second->TimeSteps();
-      double endTime = 0;
+      auto timesteps = double(kv.second->TimeSteps());
       //if(timesteps > 0)
       //  endTimes[task] = startTime + timesteps;// - 1;
       //else 
@@ -1086,8 +1086,7 @@ CostFunction(Node& _node) {
       else {
         endTimes[task] = 0;
       }
-      endTimes[task] = endTime;
-      cost = std::max(endTime,cost);
+      cost = std::max(endTimes[task],cost);
     }
   } while(solved.size() != size);
 

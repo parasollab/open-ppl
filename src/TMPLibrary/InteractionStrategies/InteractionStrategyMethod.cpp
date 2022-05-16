@@ -913,12 +913,8 @@ ConfigureStaticRobots(const std::set<Robot*>& _staticRobots, const State& _state
 
 void
 InteractionStrategyMethod::
-ResetStaticRobots() {
-  auto prob = this->GetTMPLibrary()->GetMPProblem();
-
-  for(const auto& robot : prob->GetRobots()) {
-    if(this->GetPlan()->GetCoordinator()->GetRobot() == robot.get())
-      continue;
+ResetStaticRobots(const std::set<Robot*>& _staticRobots) {
+  for(const auto& robot : _staticRobots) {
     robot->SetVirtual(false);
   }
 }

@@ -49,6 +49,8 @@ Run(Plan* _plan) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
+  MethodTimer mt_ind(stats,this->GetNameAndLabel() + "::Run_" + std::to_string(counter));
+  counter++;
 
   if(!_plan)
     _plan = this->GetPlan();

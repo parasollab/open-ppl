@@ -128,6 +128,8 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     
     std::priority_queue<SSSHPElement,std::vector<SSSHPElement>,std::greater<SSSHPElement>> m_pq;
 
+    size_t counter{0};
+
     ///@}
 };
 
