@@ -160,6 +160,25 @@ ComputeGoalBiasHeuristic() {
         std::cout << "\t-> " << eit->target() << std::endl;
       }
     }
+    std::cout << "Inverse single object mode graph details" << std::endl;
+    for(auto vit = inverse->begin(); vit != inverse->end(); vit++) {
+      std::cout <<  "Vertex: " << vit->descriptor() << std::endl;
+      auto vertex = vit->property();
+      for(auto kv : vertex) {
+        auto robot = kv.second.robot;
+        std::cout << kv.first->GetLabel() << " ";
+        if(robot) {
+          std::cout << "is held by: " << robot->GetLabel() << std::endl;
+        }
+        else {
+          auto boundary = kv.second.terrain->GetBoundaries()[0].get();
+          std::cout << "is at " << boundary->GetCenter() << std::endl;
+        }
+      }
+      for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+        std::cout << "\t-> " << eit->target() << std::endl;
+      }
+    }
   }
 
 
@@ -167,7 +186,7 @@ ComputeGoalBiasHeuristic() {
   if(goalVID == INVALID_VID)
     throw RunTimeException(WHERE) << "Failed to find or construct goal mode.";
 
-  //TODO::Compute dijkstra from goal backwards and save cost to go from each vertex
+  // Compute dijkstra from goal backwards and save cost to go from each vertex
 
   SSSPPathWeightFunction<GraphType> cost2goWeight(
     [](typename GraphType::adj_edge_iterator& _ei,
@@ -210,7 +229,7 @@ Run(Plan* _plan) {
   auto prob = this->GetMPProblem();
   auto sg = static_cast<ObjectCentricModeGraph*>(
       this->GetStateGraph(m_sgLabel).get());
-  auto g = sg->GetObjectModeGraph();
+  //auto g = sg->GetObjectModeGraph();
   auto c = this->GetPlan()->GetCoordinator();
 
   // Create composite group
@@ -244,12 +263,10 @@ Run(Plan* _plan) {
   
     std::cout << mode << " " << history << std::endl;
 
-    // TODO::Compute Heuristic
-    auto nextStep = ComputeMAPFSolution(g->GetVertex(mode));
-
+    // Compute Heuristic
+    auto nextStep = ComputeMAPFSolution(mode);
 
     // Sample Transitions
-
     auto neighbors = GetModeNeighbors(mode);
     for(auto n : neighbors) {
       SampleTransition(mode, n);
@@ -263,18 +280,18 @@ Run(Plan* _plan) {
     if(qNew == MAX_INT)
       continue;
     // - Qbest = rewire(Qnew)
-    auto qBest = Rewire(qNew,history);
-    // TODO::Temp while Rewire does nothing
-    qBest = qNear;
+    auto qBest = Rewire(qNew,qNear,history);
+    if(qBest == MAX_INT)
+      qBest = qNear;
 
     // Add Qnew to action extended graph and connect
     auto aid = AddToActionExtendedGraph(qBest,qNew,history);
 
     // Check if Qnew is in a neighboring mode and create new vertex over there if so
-    CheckForModeTransition(aid,history);
+    bool foundGoal = CheckForModeTransition(aid,history);
 
     // Check if Qnew is a goal configuration and update the path if so
-    if(CheckForGoal(aid)) {
+    if(foundGoal or CheckForGoal(aid)) {
       //TODO::Save plan in this->GetPlan();
       stats->SetStat("Success",1);
       stats->SetStat("Steps",i);
@@ -341,7 +358,8 @@ SelectMode() {
 
   if(DRand() < m_goalBias) {
     for(auto mode : m_orderedModesToGoal) {
-      
+     
+      // TODO::Allow for random tie breaks 
       auto histories = m_modeHistories[mode];
   
       if(histories.empty())
@@ -909,13 +927,15 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   auto taskState = m_taskGraph->GetVertex(_qNear);
   auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
 
-  // TODO::Use heuristic to select direction to extend
-  // In the meantime, sample random vertex
+  // Use heuristic to select direction to extend
   GroupCfg direction;
-  if(DRand() <= m_heuristicProb)
+  if(DRand() <= m_heuristicProb) {
     direction = GetHeuristicDirection(taskState.mode,_heuristic);
-  else
+  }
+  // Or sample random vertex
+  else {
     direction = SampleVertex(taskState.mode);
+  }
 
   auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
     MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
@@ -1110,6 +1130,9 @@ ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history)
 
     // Mark history of this vertex
     m_historyVertices[_history].insert(tid);
+
+    m_tpgDistance[tid] = m_tpgDistance[_source] + TensorProductGraphDistance(_source,tid);
+
     return tid;
   }
 
@@ -1281,8 +1304,11 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
 
 SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
-Rewire(VID _qNew, size_t _history) {
-  // TODO::Perform the rewire action
+Rewire(VID _qNew, VID _qNear, size_t _history) {
+
+  // Gather neighbors and check if any of them would even be an optimal rewire, 
+  // then, in order, try to extend that way, otherwise it's too expensive.
+
 
   //auto lib = this->GetMPLibrary();
   //auto dm = lib->GetDistanceMetric(m_dmLabel);
@@ -1292,8 +1318,12 @@ Rewire(VID _qNew, size_t _history) {
   auto newCfg = m_tensorProductRoadmap->GetVertex(newTaskState.vid);
   auto newCfgs = SplitTensorProductVertex(newCfg,newTaskState.mode);
 
+  const double originalDistance = m_tpgDistance[_qNew];
+
   // Collect neighbors 
-  std::unordered_set<size_t> neighbors;
+  //std::unordered_set<size_t> neighbors;
+  std::vector<std::pair<double,size_t>> neighbors;
+  std::vector<std::pair<double,size_t>> backNeighbors;
   for(auto tid : m_historyVertices[_history]) {
     auto taskState = m_taskGraph->GetVertex(tid);
 
@@ -1320,21 +1350,64 @@ Rewire(VID _qNew, size_t _history) {
       continue;
     
     // Check if edge is a valid transition
+    //auto newVID = ExtendTaskVertices(tid, newCfg, _history);
+    //if(newVID == MAX_INT)
+    //  continue;
+    
+    double distance = TensorProductGraphDistance(tid,_qNew);
+    backNeighbors.emplace_back(distance,tid);
+    distance += m_tpgDistance[tid];
+    if(distance < originalDistance) {
+      neighbors.emplace_back(distance,tid);
+    }
+
+  }
+
+  // Sort neighbors by rewire distance
+  std::sort(neighbors.begin(), neighbors.end());
+
+  size_t qBest = MAX_INT;
+
+  for(auto pair : neighbors) {
+    auto tid = pair.second;
     auto newVID = ExtendTaskVertices(tid, newCfg, _history);
     if(newVID == MAX_INT)
       continue;
-    
-    neighbors.insert(tid);
+
+    qBest = tid;
+    m_tpgDistance[_qNew] = pair.first;
+
+    // Check if this was the OG edge, other wise delete the old one
+    if(tid != _qNear) {
+      m_tensorProductRoadmap->DeleteEdge(_qNear,_qNew);
+    }
+
+    break;
   }
 
-  //TODO::Perform Shortest path on task graph (tree) to get distance from
-  //      root to each of the neighbors.
+  // Attempt to rewire the neighbors through qNew
+  for(auto pair : backNeighbors) {
+    const size_t tid = pair.second;
+    const double currentDistance = m_tpgDistance[tid];
+    const double newDistance = m_tpgDistance[_qNew] + pair.first;
+    
+    if(newDistance < currentDistance) {
 
-  //TODO::Attempt to rewire qNew with a better parent
+      // Try to connect the vertices
+      auto newVID = ExtendTaskVertices(tid, newCfg, _history);
+      if(newVID == MAX_INT)
+        continue;
 
-  //TODO::Attempt to rewire the neighbors through qNew
+      // Delete existing edge to kv.first
+      auto pred = m_tensorProductRoadmap->GetPredecessors(tid);
+      for(auto vid : pred) {
+        m_tensorProductRoadmap->DeleteEdge(vid,tid);
+      }
+      
+      m_tpgDistance[pair.second] = newDistance;
+    }
+  }
 
-  size_t qBest = MAX_INT;
   return qBest;
 }
     
@@ -1366,7 +1439,7 @@ AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
   return newAID;
 }
 
-void
+bool
 SimultaneousMultiArmEvaluator::
 CheckForModeTransition(size_t _aid, size_t _history) {
   auto plan = this->GetPlan();
@@ -1667,11 +1740,17 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
     auto newAID = m_actionExtendedGraph->AddVertex(actState);
 
+
     ActionExtendedEdge actEdge;
     actEdge.cost = edge.cost;
 
     m_actionExtendedGraph->AddEdge(_aid,newAID,actEdge);
+
+    if(CheckForGoal(newAID))
+      return true;
   }
+
+  return false;
 }
 
 bool
@@ -1809,18 +1888,24 @@ AddHistory(const ActionHistory& _history) {
 
 std::unordered_map<Robot*,size_t>
 SimultaneousMultiArmEvaluator::
-ComputeMAPFSolution(ObjectMode _objectMode) {
+ComputeMAPFSolution(size_t _objectMode) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeMAPFSolution");
+
+  if(m_cachedHeuristics.find(_objectMode) != m_cachedHeuristics.end()) {
+    return m_cachedHeuristics.at(_objectMode);
+  }
 
 
   auto sg = static_cast<ObjectCentricModeGraph*>(
       this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetSingleObjectModeGraph();
 
+  auto objectMode = sg->GetObjectModeGraph()->GetVertex(_objectMode);
+
   // Compute each object's starting vertex
-  for(auto kv : _objectMode) {
+  for(auto kv : objectMode) {
     auto object = kv.first;
     auto info = kv.second;
     info.formation = nullptr;
@@ -1914,6 +1999,8 @@ ComputeMAPFSolution(ObjectMode _objectMode) {
     //auto info = g->GetVertex(vid);
     nextStep[robot] = vid;
   }
+
+  m_cachedHeuristics[_objectMode] = nextStep;
 
   return nextStep;
 }
@@ -2147,7 +2234,8 @@ CostFunction(CBSNodeType& _node) {
       auto edge = g->GetEdge(source,target);
       pathLength += edge;
     }
-    cost += pathLength;
+    //cost += pathLength;
+    cost = std::max(cost,pathLength);
   }
 
   return cost;
@@ -2188,6 +2276,42 @@ SplitNodeFunction(CBSNodeType& _node,
 
   return newNodes;
 }
+    
+double
+SimultaneousMultiArmEvaluator::
+TensorProductGraphDistance(VID _source, VID _target) {
+  // Get distance in tensor product space
+  auto env = this->GetMPProblem()->GetEnvironment();
+  const double timeRes = env->GetTimeRes();
+
+  // Check if distance is already saved in the graph
+  if(m_tensorProductRoadmap->IsEdge(_source,_target))
+    return double(m_tensorProductRoadmap->GetEdge(_source,_target).GetTimeSteps()) * timeRes;
+
+  // Compute maximum individual robot timesteps in transitions
+  auto source = m_tensorProductRoadmap->GetVertex(_source);
+  auto target = m_tensorProductRoadmap->GetVertex(_target);
+
+  const double posRes = env->GetTimeRes();
+  const double oriRes = env->GetTimeRes();
+  int maxSteps = 0;
+
+  for(size_t i = 0; i < source.GetNumRobots(); i++) {
+    auto cfg1 = source.GetRobotCfg(i);
+    auto cfg2 = source.GetRobotCfg(i);
+
+    // Only consider active robots
+    if(cfg1.GetMultiBody()->IsPassive())
+      continue;
+
+    int steps = 0;
+    cfg1.FindIncrement(cfg1,cfg2,&steps,posRes,oriRes);
+    maxSteps = std::max(maxSteps,steps);
+  }
+
+  return double(maxSteps) * timeRes;
+}
+
 /*----------------------------------------------------------------------------*/
 
 istream&

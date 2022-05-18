@@ -136,11 +136,11 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     GroupCfg GetHeuristicDirection(size_t _mode, std::unordered_map<Robot*,size_t> _heuristic);
 
-    TID Rewire(TID _qNew, size_t _history);
+    TID Rewire(TID _qNew, TID _qNear, size_t _history);
 
     size_t AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history);
 
-    void CheckForModeTransition(size_t _aid, size_t _history);
+    bool CheckForModeTransition(size_t _aid, size_t _history);
 
     bool CheckForGoal(size_t _aid);
 
@@ -148,13 +148,15 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     size_t AddHistory(const ActionHistory& _history);
 
+    double TensorProductGraphDistance(VID _source, VID _target);
+
     ///@}
     ///@name Heuristic Functions
     ///@{
 
     void ComputeGoalBiasHeuristic();
 
-    std::unordered_map<Robot*,size_t> ComputeMAPFSolution(ObjectMode _objectMode);
+    std::unordered_map<Robot*,size_t> ComputeMAPFSolution(size_t _objectMode);
 
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
@@ -221,6 +223,10 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     std::unordered_map<size_t,double> m_goalBiasCosts;
     std::vector<size_t> m_orderedModesToGoal;
+
+    std::unordered_map<size_t,std::unordered_map<Robot*,size_t>> m_cachedHeuristics;
+
+    std::unordered_map<size_t,double> m_tpgDistance;
 
     ///@}
 };
