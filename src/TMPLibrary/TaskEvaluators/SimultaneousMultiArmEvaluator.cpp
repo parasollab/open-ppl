@@ -1786,6 +1786,7 @@ CheckForGoal(size_t _aid) {
   //if(m_debug) {
     std::cout << "FOUND GOAL STATE AT " << gcfg.PrettyPrint() << std::endl;
   //}
+  stats->SetStat("TimeSteps",m_tpgDistance[_aid]);
   return true;
 }
 
