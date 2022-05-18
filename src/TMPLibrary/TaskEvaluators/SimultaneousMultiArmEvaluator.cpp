@@ -1773,14 +1773,22 @@ CheckForGoal(size_t _aid) {
   auto gcfg = m_tensorProductRoadmap->GetVertex(vid);
 
   // Check if cfg satisfies all of the constraints in the decomp
+  std::set<SemanticTask*> satisfied;
   for(auto st : decomp->GetGroupMotionTasks()) {
+    auto parent = st->GetParent();
+    if(satisfied.count(parent))
+      continue;
+
     auto gt = st->GetGroupMotionTask();
+
     for(auto iter = gt->begin(); iter != gt->end(); iter++) {
       for(auto& c : iter->GetGoalConstraints()) {
         auto robot = c->GetRobot();
         auto cfg = gcfg.GetRobotCfg(robot);
         if(!c->Satisfied(cfg))
           return false;
+        if(parent->GetSubtaskRelation() == SemanticTask::SubtaskRelation::XOR)
+          satisfied.insert(parent);
       }
     }
   }
