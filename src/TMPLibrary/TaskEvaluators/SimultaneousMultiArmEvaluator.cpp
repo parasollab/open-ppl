@@ -1108,7 +1108,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history)
 
   if(isConnected) {
   
-    double cost = lpOut.m_edge.first.GetIntermediates().size();
+    double cost = lpOut.m_edge.first.GetTimeSteps();
 
     // Add vertex to TPR
     auto vid = m_tensorProductRoadmap->AddVertex(_target);
@@ -1746,6 +1746,8 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
     m_actionExtendedGraph->AddEdge(_aid,newAID,actEdge);
 
+    m_tpgDistance[newAID] = m_tpgDistance[_aid] + edge.cost;
+
     if(CheckForGoal(newAID))
       return true;
   }
@@ -1786,7 +1788,7 @@ CheckForGoal(size_t _aid) {
   //if(m_debug) {
     std::cout << "FOUND GOAL STATE AT " << gcfg.PrettyPrint() << std::endl;
   //}
-  stats->SetStat("TimeSteps",m_tpgDistance[_aid]);
+  stats->SetStat("PathLength",m_tpgDistance[_aid]);
   return true;
 }
 
