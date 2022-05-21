@@ -110,34 +110,65 @@ ComputeGoalBiasHeuristic() {
   auto prob = this->GetMPProblem();
   auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
 
-  ObjectMode goalMode;  
+  //ObjectMode goalMode;  
 
+  // TODO::Create goal mode options
+  std::vector<ObjectMode> goalModes = {ObjectMode()};
+  std::set<SemanticTask*> seen;
   for(auto st : decomp->GetGroupMotionTasks()) {
-    auto gt = st->GetGroupMotionTask();
-    for(auto iter = gt->begin(); iter != gt->end(); iter++) {
-      for(auto& c : iter->GetGoalConstraints()) {
-        auto robot = c->GetRobot();
-        auto boundary = c->GetBoundary();
+    auto parent = st->GetParent();
+    if(seen.count(parent))
+      continue;
 
-        if(boundary->Type() == Boundary::Space::Workspace) {
-          throw RunTimeException(WHERE) << "Unsupported boundary type.";
+    if(parent->GetSubtaskRelation() == SemanticTask::SubtaskRelation::XOR)
+      seen.insert(parent);
+
+    std::vector<ObjectMode> newGoalModes;
+
+    for(auto child : parent->GetSubtasks()) {
+
+      // Gather new ModeInfo for the task
+      auto gt = child->GetGroupMotionTask();
+      std::vector<std::pair<Robot*,ModeInfo>> newInfos;
+      for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+        for(auto& c : iter->GetGoalConstraints()) {
+          auto robot = c->GetRobot();
+          auto boundary = c->GetBoundary();
+
+          if(boundary->Type() == Boundary::Space::Workspace) {
+            throw RunTimeException(WHERE) << "Unsupported boundary type.";
+          }
+
+          auto dofs = boundary->GetCenter();
+          Cfg cfg(robot);
+          cfg.SetData(dofs);
+
+          const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
+          for(const auto& terrain : terrainMap.at(robot->GetCapability())) {
+            if(!terrain.InTerrain(cfg))
+              continue;
+
+            ModeInfo info(nullptr,nullptr,&terrain);
+            //goalMode[robot] = info;
+            newInfos.emplace_back(robot,info);
+            break;
+          }
+        } 
+      }
+
+      // Add Mode Infos to the goal modes
+      for(auto gm : goalModes) {
+        // Grab old mode and add infos to it
+        for(auto pair : newInfos) {
+          gm[pair.first] = pair.second;
         }
 
-        auto dofs = boundary->GetCenter();
-        Cfg cfg(robot);
-        cfg.SetData(dofs);
-
-        const auto& terrainMap = this->GetMPProblem()->GetEnvironment()->GetTerrains();
-        for(const auto& terrain : terrainMap.at(robot->GetCapability())) {
-          if(!terrain.InTerrain(cfg))
-            continue;
-
-          ModeInfo info(nullptr,nullptr,&terrain);
-          goalMode[robot] = info;
-          break;
-        }
+        // Add updated mode to new goal modes
+        newGoalModes.push_back(gm);
       }
     }
+
+    goalModes = newGoalModes;
   }
 
   if(m_debug) {
@@ -182,9 +213,19 @@ ComputeGoalBiasHeuristic() {
   }
 
 
-  auto goalVID = g->GetVID(goalMode);
-  if(goalVID == INVALID_VID)
+  std::vector<size_t> goalVIDs;
+  for(auto gm : goalModes) {
+    auto goalVID = g->GetVID(gm);
+    if(goalVID != MAX_INT and goalVID != INVALID_VID)
+      goalVIDs.push_back(goalVID);
+  }
+
+  if(goalVIDs.empty())
     throw RunTimeException(WHERE) << "Failed to find or construct goal mode.";
+
+  //auto goalVID = g->GetVID(goalMode);
+  //if(goalVID == INVALID_VID)
+  //  throw RunTimeException(WHERE) << "Failed to find or construct goal mode.";
 
   // Compute dijkstra from goal backwards and save cost to go from each vertex
 
@@ -199,7 +240,7 @@ ComputeGoalBiasHeuristic() {
   );
 
   // Compute distance to goal for each vertex in g
-  m_goalBiasCosts = DijkstraSSSP(inverse,{goalVID},cost2goWeight).distance;
+  m_goalBiasCosts = DijkstraSSSP(inverse,goalVIDs,cost2goWeight).distance;
 
   std::vector<std::pair<double,size_t>> elems;
 
@@ -370,7 +411,7 @@ SelectMode() {
       auto hid = histories[index];
 
       if(m_debug) {
-        std::cout << "Selected Mode " << mode << " with history [ ";
+        std::cout << "Selected (Heuristic) Mode " << mode << " with history [ ";
         for(auto vid : m_actionHistories[hid]) {
           std::cout << vid << ", ";
         }
@@ -398,7 +439,7 @@ SelectMode() {
     auto hid = histories[index];
 
     if(m_debug) {
-      std::cout << "Selected Mode " << mode << " with history [ ";
+      std::cout << "Selected (Random) Mode " << mode << " with history [ ";
       for(auto vid : m_actionHistories[hid]) {
         std::cout << vid << ", ";
       }
@@ -455,6 +496,8 @@ SampleTransition(VID _source, VID _target) {
   } 
 
   // Plan each interaction
+  bool fullSuccess = true;
+
   for(auto kv : edge) {
     auto interaction = kv.first;
     auto is = this->GetInteractionStrategyMethod(
@@ -541,13 +584,28 @@ SampleTransition(VID _source, VID _target) {
           break;
         }
       }
-      if(!success) {
-        std::cout << "Failed to find interaction for " << interaction->GetLabel()
-                  << "with ";
-        for(auto kv : state) {
-          std::cout << kv.first->GetLabel() << " ";
+
+      fullSuccess = success and fullSuccess;
+
+      if(m_debug) {
+        if(!success) {
+          std::cout << "Failed to find interaction for " << interaction->GetLabel()
+                    << "with ";
+          for(auto kv : state) {
+            std::cout << kv.first->GetLabel() << " ";
+          }
+          std::cout << std::endl;
+          std::cout << std::endl;
         }
-        std::cout << std::endl;
+        else {
+          std::cout << "Found interaction for " << interaction->GetLabel()
+                    << "with ";
+          for(auto kv : state) {
+            std::cout << kv.first->GetLabel() << " ";
+          }
+          std::cout << std::endl;
+          std::cout << std::endl;
+        }
       }
           
       // Set relevant robots back to virtual
@@ -558,6 +616,11 @@ SampleTransition(VID _source, VID _target) {
         }
       }
     }
+  }
+
+  if(m_debug and fullSuccess) {
+    std::cout << "Found full set of interactions from " 
+              << _source << "->" << _target << std::endl;
   }
 
   for(auto& robot : prob->GetRobots()) {
@@ -931,24 +994,42 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   GroupCfg direction;
   if(DRand() <= m_heuristicProb) {
     direction = GetHeuristicDirection(taskState.mode,_heuristic);
+    if(m_debug) {
+      std::cout << "Choosing heuristic direction: " << direction.PrettyPrint() << std::endl;
+    }
   }
   // Or sample random vertex
   else {
     direction = SampleVertex(taskState.mode);
+    if(m_debug) {
+      std::cout << "Choosing random direction: " << direction.PrettyPrint() << std::endl;
+    }
   }
 
   auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
     MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
+
+    if(_cfg1 == _cfg2)
+      return 0.;
+
     double dot = 0;
     for(size_t i = 0; i < _cfg1.GetNumRobots(); i++) {
       auto cfg1 = _cfg1.GetRobotCfg(i);
       auto cfg2 = _cfg2.GetRobotCfg(i);
 
+      if(cfg1.GetRobot()->GetMultiBody()->IsPassive())
+        continue;
+
       for(size_t j = 0; j < cfg1.DOF(); j++) {
         dot += cfg1[j] * cfg2[j];
       }
+      // Assuming that there is only one active robot
+      double cos = dot / (cfg1.Magnitude() * cfg2.Magnitude());
+      double angle = acos(cos);
+      return abs(angle);
     }
 
+    return 0.;
     double cos = dot / (_cfg1.Magnitude() * _cfg2.Magnitude());
     return abs(acos(cos));
   };
@@ -1034,6 +1115,13 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     // Initialize minimum neighbor as staying put
     auto vec1 = d - start;
     GroupCfg empty(rm);
+    for(auto robot : group->GetRobots()) {
+      Cfg cfg(robot);
+      for(size_t i = 0; i < cfg.DOF(); i++) {
+        cfg[i] = 0.000001;
+      }
+      empty.SetRobotCfg(robot,std::move(cfg));
+    }
     double minAngle = computeAngle(vec1,empty);
     size_t newVID = vid;
 
@@ -1268,6 +1356,8 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
         break;
     }
 
+    if(direction.empty() and sourceGroup != targetGroup)
+      throw RunTimeException(WHERE) << "Empty direction for " << object->GetLabel();
     directions[object] = direction;
   }
 
@@ -1401,7 +1491,8 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
       // Delete existing edge to kv.first
       auto pred = m_tensorProductRoadmap->GetPredecessors(tid);
       for(auto vid : pred) {
-        m_tensorProductRoadmap->DeleteEdge(vid,tid);
+        if(m_tensorProductRoadmap->IsEdge(vid,tid))
+          m_tensorProductRoadmap->DeleteEdge(vid,tid);
       }
       
       m_tpgDistance[pair.second] = newDistance;
@@ -1958,7 +2049,7 @@ ComputeMAPFSolution(size_t _objectMode) {
   // Configure CBS Functions
   CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
     [this](CBSNodeType& _node, Robot* _task) {
-      return LowLevelPlanner(_node,_task);
+      return this->LowLevelPlanner(_node,_task);
     }
   );
 
@@ -2183,12 +2274,12 @@ ValidationFunction(CBSNodeType& _node) {
         auto target2 = path2[t2];
 
         if(source1 == source2) {
-          if(m_debug) {
-            std::cout << "Found vertex conflict at timestep " << i
-                      << " between " << object1->GetLabel()
-                      << " and " << object2->GetLabel() 
-                      << std::endl;
-          }
+          //if(m_debug) {
+          //  std::cout << "Found vertex conflict at timestep " << i
+          //            << " between " << object1->GetLabel()
+          //            << " and " << object2->GetLabel() 
+          //            << std::endl;
+          //}
 
           auto constraint = std::make_pair(std::make_pair(source1,MAX_INT),i);
           std::vector<std::pair<Robot*,CBSConstraint>> constraints;

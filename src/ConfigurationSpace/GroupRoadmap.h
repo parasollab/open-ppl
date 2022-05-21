@@ -574,8 +574,10 @@ DeleteEdge(EI _iterator) noexcept {
   // Delete the individual edges.
   auto& edge = _iterator->property();
   auto& descriptors = edge.GetEdgeDescriptors();
-  for(size_t i = 0; i < m_group->Size(); ++i)
-    GetRoadmap(i)->DeleteEdge(descriptors[i].source(), descriptors[i].target());
+  for(size_t i = 0; i < m_group->Size(); ++i) {
+    if(GetRoadmap(i)->IsEdge(descriptors[i].source(),descriptors[i].target()))
+      GetRoadmap(i)->DeleteEdge(descriptors[i].source(), descriptors[i].target());
+  }
 
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());

@@ -447,239 +447,52 @@ GetAllApplications(Interaction* _interaction, VID _source, bool _reverse) {
       matches.push_back(group);
     }
 
+    if(matches.empty())
+      return {};
     groupMatches[f] = matches;
   }
 
-  // Construct group matches into entire robot role assignments
-  std::vector<std::vector<std::pair<Robot*,std::string>>> partials;
-
+  // Collect all sets of groups
+  std::vector<std::vector<std::pair<FormationCondition*,RobotGroup*>>> groupSets;
   for(auto kv : groupMatches) {
+    std::vector<std::vector<std::pair<FormationCondition*,RobotGroup*>>> copy;
     auto f = kv.first;
-    auto matches = kv.second;
-
-    // Set of robot role assignments
-    std::vector<std::vector<std::pair<Robot*,std::string>>> groupPartials;
-
-    // Construct all permutations within individual group
-    for(auto group : matches) {
-
-      std::vector<std::vector<std::pair<Robot*,std::string>>> newPartials;
-
-      for(auto role : f->GetRoles()) {
-        auto info = f->GetRoleInfo(role);
-        auto type = info.type;
-
-        // Options for individual role
-        std::vector<std::pair<Robot*,std::string>> roleOptions;
-
-
-        for(auto robot : group->GetRobots()) {
-          if(robot->GetCapability() == type) {
-            if(groupPartials.empty()) {
-              std::vector<std::pair<Robot*,std::string>> partial;
-              partial.emplace_back(robot,role);
-              newPartials.push_back(partial);
-            }
-            else {
-              for(auto partial : groupPartials) {
-                // Try to add assignment to existing partials
-
-                bool conflict = false;
-                for(auto assignment : partial) {
-                  if(robot == assignment.first) {
-                    conflict = true;
-                    break;
-                  }
-                }
-
-                // Quit if robot already exists in partial
-                if(conflict) 
-                  continue;
-
-                partial.emplace_back(robot,role);
-                newPartials.push_back(partial);
-              }
-            }
-          }
-        }
-  
+    auto groups = kv.second;
+    for(auto group : groups) {
+      auto pair = std::make_pair(f,group);
+      if(groupSets.empty()) {
+        copy.push_back({pair});
       }
-  
-      groupPartials = newPartials;
-
-    }    
-
-
-    if(groupPartials.empty())
-      return {};
-
-    std::vector<std::vector<std::pair<Robot*,std::string>>> candidatePartials = partials;
-    for(auto roleOptions : groupPartials) {
-
-      // Try to add group partials to system partials
-      std::vector<std::vector<std::pair<Robot*,std::string>>> newPartials;
-
-      for(auto gp : roleOptions) {  
-
-        if(candidatePartials.empty()) {
-          newPartials.push_back({gp});
-          continue;
-        }
-
-        for(auto partial : candidatePartials) {
-          // Check for conflcits
-          bool conflict = false;
-
-          //for(auto p1 : gp) {
-            for(auto p2 : partial) {
-              if(gp.first == p2.first) {
-                conflict = true;
-                break;
-              }
-            }
-            if(conflict)
-              break;
-          //}
-
-          if(conflict)
-            continue;
-
-          //for(auto pair : gp) {
-            partial.push_back(gp);
-          //}
-
-          newPartials.push_back(partial);
+      else {
+        for(auto set : groupSets) {
+          //TODO::Assumers no overlap in groups - fine for current problems
+          set.push_back(pair);
+          copy.push_back(set);
         }
       }
-
-      if(newPartials.empty())
-        return {};
-  
-      candidatePartials = newPartials;
     }
-
-    partials.clear();
-
-    // Check if new additions obey formation constraints
-    for(auto partial : candidatePartials) {
-      RoleMap roleMap;
-      size_t start = partial.size() - groupPartials.size();
-      Robot* object;
-      for(size_t i = start; i < partial.size(); i++)  {
-        auto pair = partial[i];
-        auto robot = pair.first;
-        auto role = pair.second;
-        roleMap[role] = robot;
-
-        if(robot->GetMultiBody()->IsPassive())
-          object = robot;
-      }
-
-
-      auto formation = f->GenerateFormation(roleMap);
-      bool okay = formation == mode[object].formation;
-      if(!okay and !formation)
-        continue;
-      okay = okay or (*formation == *(mode[object].formation));
-
-      if(!okay)
-        continue;
-
-      partials.push_back(partial);
-    }
-
+    groupSets = copy; 
   }
 
-  
-  std::vector<std::vector<std::pair<Robot*,std::string>>> finalPartials;
-  for(auto partial : partials) {
-    if(partial.size() == roleCount)
-      finalPartials.push_back(partial);
-  }
-
-  
- 
-  return finalPartials; 
-
-  /*
-  // Collect all possible assignments for robots.
-  std::unordered_map<std::string,std::vector<Robot*>> roleAssignments;
-
-  for(auto condition : _interaction->GetStageConditions(stages[0])) {
-
-    // Get formation condition
-    auto f = dynamic_cast<FormationCondition*>(as->GetCondition(condition));
-
-    if(!f)
-      continue;
-
-    // Collect all possible assignments of robots to types/roles
-    auto roles = f->GetRoles();
-
-    for(auto role : roles) {
-
-      auto info = f->GetRoleInfo(role);
-      auto type = info.type;
-
-      for(auto robot : m_robots) {
-        if(robot->GetCapability() == type) {
-          roleAssignments[role].push_back(robot);
-        }
-      }
-
-      // Check that condition can be satisfied
-      if(roleAssignments[role].empty())
-        return {};
-    }
-  }
-  
-  std::vector<std::vector<std::pair<Robot*,std::string>>> partials;
-
-  for(auto kv : roleAssignments) {
-    auto role = kv.first;
-    auto options = kv.second;
-
-    // If partials is empty, initialize with this role's assignments
-    if(partials.empty()) {
-      for(auto robot : options) {
-        auto p = std::make_pair(robot,role);
-        partials.push_back({p});
+  // Convert each group set into the return format
+  std::vector<std::vector<std::pair<Robot*,std::string>>> roleSets;
+  for(auto set : groupSets) {
+    std::vector<std::pair<Robot*,std::string>> roleSet;
+    for(auto pair : set) {
+      auto f = pair.first;
+      auto group = pair.second;
+      State state;
+      state[group] = std::make_pair(nullptr,MAX_INT);
+      std::unordered_map<std::string,Robot*> roleMap;
+      f->AssignRoles(roleMap,state);
+      for(auto kv : roleMap) {
+        roleSet.emplace_back(kv.second,kv.first);
       }
     }
-    // Create non-conflciting extensions
-    else {
-      std::vector<std::vector<std::pair<Robot*,std::string>>> extensions;
-
-      for(auto partial : partials) {
-        for(auto robot : options) {
-
-          auto extended = partial;
-
-          bool conflict = false;
-          for(auto p : partial) {
-            if(p.first == robot) {
-              conflict = true;
-              break;
-            }
-          }
-          if(conflict) 
-            continue;
-
-          extended.emplace_back(robot,role);
-          extensions.push_back(extended);
-        }
-      }
-
-      // No non-conflicting assignments exist
-      if(extensions.empty())
-        return {};
-
-      partials = extensions;
-    }
+    roleSets.push_back(roleSet);
   }
 
-  return partials;
-  */
+  return roleSets;
 }
 
 
@@ -1165,7 +978,7 @@ IsReachable(Robot* _robot1, Robot* _robot2) {
 
   double distance = 0;
   for(size_t i = 0; i < 3; i++) {
-    distance += center1[i] * center2[i];
+    distance += std::pow(center1[i] - center2[i],2);
   }
   distance = std::sqrt(distance);
 
@@ -1173,8 +986,8 @@ IsReachable(Robot* _robot1, Robot* _robot2) {
   auto radius2 = mb2->GetBoundingSphereRadius();
 
   // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
-  radius1 = 1;
-  radius2 = 1;
+  radius1 = .9;
+  radius2 = .9;
 
   if(distance < radius1 + radius2)
     return true;
