@@ -583,6 +583,9 @@ SampleTransition(VID _source, VID _target) {
           m_plannedInteractions.push_back(pair);
           break;
         }
+        else {
+          success = false;
+        }
       }
 
       fullSuccess = success and fullSuccess;

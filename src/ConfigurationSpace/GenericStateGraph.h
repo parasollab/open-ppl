@@ -678,9 +678,9 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
   const bool notNew = edgeDescriptor.id() == INVALID_EID;
 
   if(notNew) {
-    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
-              << _target << ") already exists, not adding."
-              << std::endl;
+    //std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
+    //          << _target << ") already exists, not adding."
+    //          << std::endl;
     return;
   }
 
